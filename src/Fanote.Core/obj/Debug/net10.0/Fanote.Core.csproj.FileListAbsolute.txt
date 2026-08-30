@@ -1,0 +1,11 @@
+C:\Users\nacho\Proyectos\fanote\.claude\worktrees\fanote-phase1-window-mechanics\src\Fanote.Core\bin\Debug\net10.0\Fanote.Core.deps.json
+C:\Users\nacho\Proyectos\fanote\.claude\worktrees\fanote-phase1-window-mechanics\src\Fanote.Core\bin\Debug\net10.0\Fanote.Core.dll
+C:\Users\nacho\Proyectos\fanote\.claude\worktrees\fanote-phase1-window-mechanics\src\Fanote.Core\bin\Debug\net10.0\Fanote.Core.pdb
+C:\Users\nacho\Proyectos\fanote\.claude\worktrees\fanote-phase1-window-mechanics\src\Fanote.Core\obj\Debug\net10.0\Fanote.Core.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\nacho\Proyectos\fanote\.claude\worktrees\fanote-phase1-window-mechanics\src\Fanote.Core\obj\Debug\net10.0\Fanote.Core.AssemblyInfoInputs.cache
+C:\Users\nacho\Proyectos\fanote\.claude\worktrees\fanote-phase1-window-mechanics\src\Fanote.Core\obj\Debug\net10.0\Fanote.Core.AssemblyInfo.cs
+C:\Users\nacho\Proyectos\fanote\.claude\worktrees\fanote-phase1-window-mechanics\src\Fanote.Core\obj\Debug\net10.0\Fanote.Core.csproj.CoreCompileInputs.cache
+C:\Users\nacho\Proyectos\fanote\.claude\worktrees\fanote-phase1-window-mechanics\src\Fanote.Core\obj\Debug\net10.0\Fanote.Core.dll
+C:\Users\nacho\Proyectos\fanote\.claude\worktrees\fanote-phase1-window-mechanics\src\Fanote.Core\obj\Debug\net10.0\refint\Fanote.Core.dll
+C:\Users\nacho\Proyectos\fanote\.claude\worktrees\fanote-phase1-window-mechanics\src\Fanote.Core\obj\Debug\net10.0\Fanote.Core.pdb
+C:\Users\nacho\Proyectos\fanote\.claude\worktrees\fanote-phase1-window-mechanics\src\Fanote.Core\obj\Debug\net10.0\ref\Fanote.Core.dll
