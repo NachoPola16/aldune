@@ -77,14 +77,14 @@ public partial class EdgeDockWindow : Window
         BeginAnimation(HeightProperty, new System.Windows.Media.Animation.DoubleAnimation(rect.Height, duration));
     }
 
-    public void SetNotes(IReadOnlyList<NoteModel> notes)
+    public void SetNotes(IReadOnlyList<Note> notes)
     {
         TabsList.ItemsSource = notes;
     }
 
     private void OnTabClick(object sender, RoutedEventArgs e)
     {
-        if (sender is FrameworkElement { Tag: NoteModel note })
+        if (sender is FrameworkElement { Tag: Note note })
         {
             var noteWindow = new NoteWindow(note);
             noteWindow.Show();

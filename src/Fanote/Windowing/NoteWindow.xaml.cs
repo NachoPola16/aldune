@@ -5,7 +5,7 @@ namespace Fanote.Windowing;
 
 public partial class NoteWindow : Window
 {
-    public NoteWindow(NoteModel note)
+    public NoteWindow(Note note)
     {
         InitializeComponent();
         TextBody.Text = note.Text;
