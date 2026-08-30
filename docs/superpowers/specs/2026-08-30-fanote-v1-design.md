@@ -97,8 +97,9 @@ incorporados en las secciones siguientes.
 
 ### Personalización
 
-- Tema claro/oscuro automático, siguiendo el tema del sistema operativo
-  (sin selector propio).
+- Tema claro/oscuro: sigue el tema del sistema operativo por defecto,
+  pero con un selector propio en Ajustes de tres estados (Sistema /
+  Claro / Oscuro) para forzar uno manualmente si el usuario lo prefiere.
 - Tipografía fija en el tema por defecto, elegida por legibilidad — sin
   selector de fuente/tamaño en v1.
 - La app respeta el ajuste de accesibilidad de Windows "Mostrar
