@@ -1,0 +1,13 @@
+<Window x:Class="Fanote.Windowing.NoteWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Fanote"
+        Width="260" Height="260"
+        WindowStyle="ToolWindow"
+        Topmost="True">
+    <TextBox x:Name="TextBody"
+             AcceptsReturn="True"
+             TextWrapping="Wrap"
+             Padding="8"
+             BorderThickness="0" />
+</Window>
