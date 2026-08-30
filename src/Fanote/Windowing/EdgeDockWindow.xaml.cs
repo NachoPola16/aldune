@@ -13,12 +13,14 @@ public partial class EdgeDockWindow : Window
     private readonly DispatcherTimer _collapseTimer;
     private readonly EdgePosition _edge;
     private readonly WorkingArea _workingArea;
+    private readonly NotesRepository _repository;
 
-    public EdgeDockWindow(EdgePosition edge, WorkingArea workingArea)
+    public EdgeDockWindow(EdgePosition edge, WorkingArea workingArea, NotesRepository repository)
     {
         InitializeComponent();
         _edge = edge;
         _workingArea = workingArea;
+        _repository = repository;
 
         _collapseTimer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(200) };
         _collapseTimer.Tick += (_, _) =>
@@ -77,6 +79,11 @@ public partial class EdgeDockWindow : Window
         BeginAnimation(HeightProperty, new System.Windows.Media.Animation.DoubleAnimation(rect.Height, duration));
     }
 
+    public void Refresh()
+    {
+        SetNotes(_repository.GetByState(NoteState.Active));
+    }
+
     public void SetNotes(IReadOnlyList<Note> notes)
     {
         TabsList.ItemsSource = notes;
@@ -86,9 +93,15 @@ public partial class EdgeDockWindow : Window
     {
         if (sender is FrameworkElement { Tag: Note note })
         {
-            var noteWindow = new NoteWindow(note);
+            var noteWindow = new NoteWindow(note, _repository, this);
             noteWindow.Show();
             NativeMethods.ForceActivate(noteWindow);
         }
+    }
+
+    private void OnNewNoteClick(object sender, RoutedEventArgs e)
+    {
+        _repository.Create(string.Empty, "#F5E3B3", screenOrigin: "primary");
+        Refresh();
     }
 }

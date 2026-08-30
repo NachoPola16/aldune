@@ -1,3 +1,4 @@
+using System.IO;
 using System.Windows;
 using Fanote.Core;
 using Fanote.Windowing;
@@ -10,17 +11,40 @@ public partial class App : Application
     {
         base.OnStartup(e);
 
+        var appDataDir = Path.Combine(
+            Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Fanote");
+        var settingsPath = Path.Combine(appDataDir, "settings.json");
+        var databasePath = Path.Combine(appDataDir, "notes.db");
+
+        if (DatabaseCorruptionGuard.IsValidSqliteFile(databasePath) is false && File.Exists(databasePath))
+        {
+            DatabaseCorruptionGuard.BackupAndRemove(databasePath);
+        }
+
+        var settingsService = new SettingsService(settingsPath);
+        var settings = settingsService.Load();
+
+        byte[] rawKey;
+        if (settings.WrappedDatabaseKey is null)
+        {
+            rawKey = DatabaseKeyProvider.GenerateKey();
+            settings.WrappedDatabaseKey = DatabaseKeyProvider.Wrap(rawKey);
+            settingsService.Save(settings);
+        }
+        else
+        {
+            rawKey = DatabaseKeyProvider.Unwrap(settings.WrappedDatabaseKey);
+        }
+
+        var cipher = new ContentCipher(rawKey);
+        var database = new NotesDatabase(databasePath);
+        var repository = new NotesRepository(database, cipher);
+
         var area = SystemParameters.WorkArea;
         var workingArea = new WorkingArea(area.Left, area.Top, area.Width, area.Height);
 
-        var dock = new EdgeDockWindow(EdgePosition.Right, workingArea);
-        var now = DateTimeOffset.UtcNow;
-        dock.SetNotes(new[]
-        {
-            new Note { Id = Guid.NewGuid(), Text = "Primera nota de prueba", Color = "#F5E3B3", CreatedAt = now, UpdatedAt = now, State = NoteState.Active, ScreenOrigin = "primary" },
-            new Note { Id = Guid.NewGuid(), Text = "Segunda nota", Color = "#C9E4DE", CreatedAt = now, UpdatedAt = now, State = NoteState.Active, ScreenOrigin = "primary" },
-            new Note { Id = Guid.NewGuid(), Text = "Tercera nota con más texto para probar el ajuste", Color = "#F2C6DE", CreatedAt = now, UpdatedAt = now, State = NoteState.Active, ScreenOrigin = "primary" },
-        });
+        var dock = new EdgeDockWindow(EdgePosition.Right, workingArea, repository);
+        dock.Refresh();
         dock.Show();
     }
 }
