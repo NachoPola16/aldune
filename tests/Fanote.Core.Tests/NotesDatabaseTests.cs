@@ -1,4 +1,5 @@
 using Fanote.Core;
+using Microsoft.Data.Sqlite;
 using Xunit;
 
 namespace Fanote.Core.Tests;
@@ -9,14 +10,13 @@ public class NotesDatabaseTests : IDisposable
 
     public void Dispose()
     {
-        GC.Collect();
-        GC.WaitForPendingFinalizers();
+        // Clear the SQLite connection pool to release file handles.
+        // Microsoft.Data.Sqlite pools connections by default; Dispose() returns them to the pool
+        // rather than closing them, so we must explicitly clear the pool before deleting the file.
+        using var connection = new SqliteConnection(new SqliteConnectionStringBuilder { DataSource = _dbPath }.ToString());
+        SqliteConnection.ClearPool(connection);
 
-        if (File.Exists(_dbPath))
-        {
-            try { File.Delete(_dbPath); }
-            catch { /* Ignore file deletion errors */ }
-        }
+        if (File.Exists(_dbPath)) File.Delete(_dbPath);
     }
 
     [Fact]
