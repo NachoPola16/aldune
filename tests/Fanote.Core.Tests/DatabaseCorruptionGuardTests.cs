@@ -10,12 +10,6 @@ public class DatabaseCorruptionGuardTests : IDisposable
 
     public void Dispose()
     {
-        // Clear the SQLite connection pool for the real database file created in the test.
-        // Microsoft.Data.Sqlite pools connections by default; Dispose() returns them to the pool
-        // rather than closing them, so we must explicitly clear the pool before deleting the file.
-        using var connection = new SqliteConnection(new SqliteConnectionStringBuilder { DataSource = _path }.ToString());
-        SqliteConnection.ClearPool(connection);
-
         // Clean up the main test file and any backup files.
         foreach (var file in Directory.GetFiles(Path.GetTempPath(), $"{Path.GetFileName(_path)}*"))
             File.Delete(file);
