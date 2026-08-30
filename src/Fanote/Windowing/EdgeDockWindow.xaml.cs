@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.Windows;
 using System.Windows.Interop;
 using System.Windows.Threading;
@@ -64,5 +65,18 @@ public partial class EdgeDockWindow : Window
         BeginAnimation(TopProperty, new System.Windows.Media.Animation.DoubleAnimation(rect.Y, duration));
         BeginAnimation(WidthProperty, new System.Windows.Media.Animation.DoubleAnimation(rect.Width, duration));
         BeginAnimation(HeightProperty, new System.Windows.Media.Animation.DoubleAnimation(rect.Height, duration));
+    }
+
+    public void SetNotes(IReadOnlyList<NoteModel> notes)
+    {
+        TabsList.ItemsSource = notes;
+    }
+
+    private void OnTabClick(object sender, RoutedEventArgs e)
+    {
+        if (sender is FrameworkElement { Tag: NoteModel note })
+        {
+            new NoteWindow(note).Show();
+        }
     }
 }

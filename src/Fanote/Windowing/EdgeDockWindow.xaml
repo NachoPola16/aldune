@@ -7,5 +7,16 @@
         Topmost="True"
         ResizeMode="NoResize"
         Background="#3A3A3A">
-    <Grid />
+    <ItemsControl x:Name="TabsList">
+        <ItemsControl.ItemTemplate>
+            <DataTemplate>
+                <Button Content="{Binding Text}"
+                        Background="{Binding Color}"
+                        Margin="4"
+                        Padding="6"
+                        Click="OnTabClick"
+                        Tag="{Binding}" />
+            </DataTemplate>
+        </ItemsControl.ItemTemplate>
+    </ItemsControl>
 </Window>
