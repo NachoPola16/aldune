@@ -51,6 +51,16 @@ public partial class EdgeDockWindow : Window
             ? EdgeGeometry.ExpandedRect(_workingArea, _edge)
             : EdgeGeometry.PillRect(_workingArea, _edge);
 
+        // Clear any animation left running (with FillBehavior.HoldEnd, the default) by a
+        // previous ApplyGeometry() call. A held animation outranks a plain local-value
+        // assignment in WPF's property value precedence, so without this, once any
+        // animation has ever run on this window, the instant-set branch below would
+        // silently become a no-op and the window would freeze in place forever.
+        BeginAnimation(LeftProperty, null);
+        BeginAnimation(TopProperty, null);
+        BeginAnimation(WidthProperty, null);
+        BeginAnimation(HeightProperty, null);
+
         if (!SystemParameters.ClientAreaAnimation)
         {
             Left = rect.X;
