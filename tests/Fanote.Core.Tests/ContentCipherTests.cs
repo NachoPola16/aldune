@@ -50,4 +50,23 @@ public class ContentCipherTests
         var encrypted = sut.Encrypt("");
         Assert.Equal("", sut.Decrypt(encrypted));
     }
+
+    [Fact]
+    public void Encrypt_AfterDispose_Throws()
+    {
+        var sut = new ContentCipher(TestKey);
+        sut.Dispose();
+
+        Assert.Throws<ObjectDisposedException>(() => sut.Encrypt("texto"));
+    }
+
+    [Fact]
+    public void Decrypt_AfterDispose_Throws()
+    {
+        var sut = new ContentCipher(TestKey);
+        var encrypted = sut.Encrypt("texto");
+        sut.Dispose();
+
+        Assert.Throws<ObjectDisposedException>(() => sut.Decrypt(encrypted));
+    }
 }

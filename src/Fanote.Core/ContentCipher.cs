@@ -12,6 +12,7 @@ public sealed class ContentCipher : IDisposable
     private const int KeySizeBytes = 32;
 
     private readonly byte[] _key;
+    private bool _disposed;
 
     public ContentCipher(byte[] key)
     {
@@ -21,8 +22,17 @@ public sealed class ContentCipher : IDisposable
         _key = (byte[])key.Clone();
     }
 
+    /// <remarks>
+    /// The internal byte-array copies used during encryption are zeroed after use, but the
+    /// <paramref name="plainText"/> string itself is not: .NET strings are immutable and cannot
+    /// be forcibly cleared. It persists in managed memory until garbage collection reclaims it,
+    /// which is not guaranteed to happen promptly and does not itself guarantee the backing
+    /// memory is zeroed.
+    /// </remarks>
     public EncryptedContent Encrypt(string plainText)
     {
+        ObjectDisposedException.ThrowIf(_disposed, this);
+
         var plainBytes = Encoding.UTF8.GetBytes(plainText);
         try
         {
@@ -42,8 +52,16 @@ public sealed class ContentCipher : IDisposable
         }
     }
 
+    /// <remarks>
+    /// The internal byte-array copy used during decryption is zeroed after use, but the
+    /// returned string is not: .NET strings are immutable and cannot be forcibly cleared. It
+    /// persists in managed memory until garbage collection reclaims it, which is not guaranteed
+    /// to happen promptly and does not itself guarantee the backing memory is zeroed.
+    /// </remarks>
     public string Decrypt(EncryptedContent encrypted)
     {
+        ObjectDisposedException.ThrowIf(_disposed, this);
+
         var plainBytes = new byte[encrypted.CipherText.Length];
         try
         {
@@ -62,5 +80,6 @@ public sealed class ContentCipher : IDisposable
     {
         // Zero the key from memory
         CryptographicOperations.ZeroMemory(_key);
+        _disposed = true;
     }
 }
