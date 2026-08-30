@@ -9,5 +9,7 @@ public partial class NoteWindow : Window
     {
         InitializeComponent();
         TextBody.Text = note.Text;
+
+        Loaded += (_, _) => TextBody.Focus();
     }
 }
