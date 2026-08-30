@@ -11,7 +11,7 @@ public class ContentCipherTests
     [Fact]
     public void EncryptThenDecrypt_RoundTrips()
     {
-        var sut = new ContentCipher(TestKey);
+        using var sut = new ContentCipher(TestKey);
         var encrypted = sut.Encrypt("hola, esto es una nota");
         var decrypted = sut.Decrypt(encrypted);
         Assert.Equal("hola, esto es una nota", decrypted);
@@ -20,7 +20,7 @@ public class ContentCipherTests
     [Fact]
     public void Encrypt_ProducesDifferentCipherTextForSamePlainText()
     {
-        var sut = new ContentCipher(TestKey);
+        using var sut = new ContentCipher(TestKey);
         var first = sut.Encrypt("misma nota");
         var second = sut.Encrypt("misma nota");
         Assert.NotEqual(Convert.ToBase64String(first.CipherText), Convert.ToBase64String(second.CipherText));
@@ -30,7 +30,7 @@ public class ContentCipherTests
     [Fact]
     public void Decrypt_WithTamperedCipherText_Throws()
     {
-        var sut = new ContentCipher(TestKey);
+        using var sut = new ContentCipher(TestKey);
         var encrypted = sut.Encrypt("texto original");
         encrypted.CipherText[0] ^= 0xFF;
 
@@ -46,7 +46,7 @@ public class ContentCipherTests
     [Fact]
     public void EncryptThenDecrypt_HandlesEmptyString()
     {
-        var sut = new ContentCipher(TestKey);
+        using var sut = new ContentCipher(TestKey);
         var encrypted = sut.Encrypt("");
         Assert.Equal("", sut.Decrypt(encrypted));
     }
