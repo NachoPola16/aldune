@@ -50,9 +50,19 @@ public partial class EdgeDockWindow : Window
             ? EdgeGeometry.ExpandedRect(_workingArea, _edge)
             : EdgeGeometry.PillRect(_workingArea, _edge);
 
-        Left = rect.X;
-        Top = rect.Y;
-        Width = rect.Width;
-        Height = rect.Height;
+        if (!SystemParameters.ClientAreaAnimation)
+        {
+            Left = rect.X;
+            Top = rect.Y;
+            Width = rect.Width;
+            Height = rect.Height;
+            return;
+        }
+
+        var duration = new Duration(TimeSpan.FromMilliseconds(200));
+        BeginAnimation(LeftProperty, new System.Windows.Media.Animation.DoubleAnimation(rect.X, duration));
+        BeginAnimation(TopProperty, new System.Windows.Media.Animation.DoubleAnimation(rect.Y, duration));
+        BeginAnimation(WidthProperty, new System.Windows.Media.Animation.DoubleAnimation(rect.Width, duration));
+        BeginAnimation(HeightProperty, new System.Windows.Media.Animation.DoubleAnimation(rect.Height, duration));
     }
 }
