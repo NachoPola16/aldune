@@ -51,6 +51,15 @@ public class FanStateMachineTests
     }
 
     [Fact]
+    public void PointerLeft_WhileCollapsed_StaysCollapsedAndArmsNothing()
+    {
+        var sut = new FanStateMachine();
+        sut.PointerLeft();
+        sut.CollapseTimerElapsed();
+        Assert.False(sut.IsExpanded);
+    }
+
+    [Fact]
     public void ExpansionChanged_FiresOnlyOnActualTransition()
     {
         var sut = new FanStateMachine();
