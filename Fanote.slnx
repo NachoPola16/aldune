@@ -1,0 +1,9 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/Fanote.Core/Fanote.Core.csproj" />
+    <Project Path="src/Fanote/Fanote.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/Fanote.Core.Tests/Fanote.Core.Tests.csproj" />
+  </Folder>
+</Solution>
