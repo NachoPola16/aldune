@@ -86,7 +86,9 @@ public partial class EdgeDockWindow : Window
     {
         if (sender is FrameworkElement { Tag: NoteModel note })
         {
-            new NoteWindow(note).Show();
+            var noteWindow = new NoteWindow(note);
+            noteWindow.Show();
+            NativeMethods.ForceActivate(noteWindow);
         }
     }
 }
