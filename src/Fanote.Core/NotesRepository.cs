@@ -107,8 +107,14 @@ public sealed class NotesRepository
             Id = Guid.Parse((string)reader["Id"]),
             Text = text,
             Color = (string)reader["Color"],
-            CreatedAt = DateTimeOffset.Parse((string)reader["CreatedAt"]),
-            UpdatedAt = DateTimeOffset.Parse((string)reader["UpdatedAt"]),
+            CreatedAt = DateTimeOffset.Parse(
+                (string)reader["CreatedAt"],
+                System.Globalization.CultureInfo.InvariantCulture,
+                System.Globalization.DateTimeStyles.RoundtripKind),
+            UpdatedAt = DateTimeOffset.Parse(
+                (string)reader["UpdatedAt"],
+                System.Globalization.CultureInfo.InvariantCulture,
+                System.Globalization.DateTimeStyles.RoundtripKind),
             State = Enum.Parse<NoteState>((string)reader["State"]),
             ScreenOrigin = (string)reader["ScreenOrigin"]
         };

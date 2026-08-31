@@ -120,8 +120,13 @@ public partial class EdgeDockWindow : Window
     {
         int step = _openNoteWindows.Count % NoteWindowMaxCascadeSteps;
 
-        noteWindow.Left = Left - noteWindow.Width - 12 - step * NoteWindowCascadeStep;
-        noteWindow.Top = Top + step * NoteWindowCascadeStep;
+        var left = Left - noteWindow.Width - 12 - step * NoteWindowCascadeStep;
+        var top = Top + step * NoteWindowCascadeStep;
+
+        // Clamp to the visible working area so later cascade steps (or a left-anchored dock)
+        // can't land a note window partially or fully off-screen on a narrow/short display.
+        noteWindow.Left = Math.Max(left, _workingArea.X);
+        noteWindow.Top = Math.Min(top, _workingArea.Y + _workingArea.Height - noteWindow.Height);
     }
 
     private void OnNewNoteClick(object sender, RoutedEventArgs e)

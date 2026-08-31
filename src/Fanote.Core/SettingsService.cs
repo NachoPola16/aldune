@@ -27,6 +27,21 @@ public sealed class SettingsService
             Directory.CreateDirectory(directory);
 
         var json = JsonSerializer.Serialize(settings);
-        File.WriteAllText(_settingsPath, json);
+
+        // Write to a temp file first, then atomically replace the real settings file. This file
+        // holds the ONLY copy of the wrapped database encryption key, so a truncating in-place
+        // write (File.WriteAllText) risks permanent key loss if the process crashes, loses power,
+        // or hits a full disk mid-write. File.Move(..., overwrite: true) is atomic on the same volume.
+        var tmpPath = _settingsPath + ".tmp";
+        try
+        {
+            File.WriteAllText(tmpPath, json);
+            File.Move(tmpPath, _settingsPath, overwrite: true);
+        }
+        finally
+        {
+            if (File.Exists(tmpPath))
+                File.Delete(tmpPath);
+        }
     }
 }
