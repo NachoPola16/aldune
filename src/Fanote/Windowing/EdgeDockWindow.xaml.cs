@@ -18,7 +18,6 @@ public partial class EdgeDockWindow : Window
 
     private const double NoteWindowCascadeStep = 30;
     private const int NoteWindowMaxCascadeSteps = 8;
-    private int _noteWindowsOpened;
 
     public EdgeDockWindow(EdgePosition edge, WorkingArea workingArea, NotesRepository repository)
     {
@@ -109,9 +108,9 @@ public partial class EdgeDockWindow : Window
             }
 
             var noteWindow = new NoteWindow(note, _repository, this);
+            PositionNoteWindow(noteWindow);
             _openNoteWindows[note.Id] = noteWindow;
             noteWindow.Closed += (_, _) => _openNoteWindows.Remove(note.Id);
-            PositionNoteWindow(noteWindow);
             noteWindow.Show();
             NativeMethods.ForceActivate(noteWindow);
         }
@@ -119,8 +118,7 @@ public partial class EdgeDockWindow : Window
 
     private void PositionNoteWindow(NoteWindow noteWindow)
     {
-        int step = _noteWindowsOpened % NoteWindowMaxCascadeSteps;
-        _noteWindowsOpened++;
+        int step = _openNoteWindows.Count % NoteWindowMaxCascadeSteps;
 
         noteWindow.Left = Left - noteWindow.Width - 12 - step * NoteWindowCascadeStep;
         noteWindow.Top = Top + step * NoteWindowCascadeStep;
