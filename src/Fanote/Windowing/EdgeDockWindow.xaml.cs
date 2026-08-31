@@ -13,12 +13,18 @@ public partial class EdgeDockWindow : Window
     private readonly DispatcherTimer _collapseTimer;
     private readonly EdgePosition _edge;
     private readonly WorkingArea _workingArea;
+    private readonly NotesRepository _repository;
+    private readonly Dictionary<Guid, NoteWindow> _openNoteWindows = new();
 
-    public EdgeDockWindow(EdgePosition edge, WorkingArea workingArea)
+    private const double NoteWindowCascadeStep = 30;
+    private const int NoteWindowMaxCascadeSteps = 8;
+
+    public EdgeDockWindow(EdgePosition edge, WorkingArea workingArea, NotesRepository repository)
     {
         InitializeComponent();
         _edge = edge;
         _workingArea = workingArea;
+        _repository = repository;
 
         _collapseTimer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(200) };
         _collapseTimer.Tick += (_, _) =>
@@ -77,18 +83,55 @@ public partial class EdgeDockWindow : Window
         BeginAnimation(HeightProperty, new System.Windows.Media.Animation.DoubleAnimation(rect.Height, duration));
     }
 
-    public void SetNotes(IReadOnlyList<NoteModel> notes)
+    public void Refresh()
+    {
+        SetNotes(_repository.GetByState(NoteState.Active));
+    }
+
+    public void SetNotes(IReadOnlyList<Note> notes)
     {
         TabsList.ItemsSource = notes;
     }
 
     private void OnTabClick(object sender, RoutedEventArgs e)
     {
-        if (sender is FrameworkElement { Tag: NoteModel note })
+        if (sender is FrameworkElement { Tag: Note note })
         {
-            var noteWindow = new NoteWindow(note);
+            if (_openNoteWindows.TryGetValue(note.Id, out var existing))
+            {
+                if (existing.WindowState == WindowState.Minimized)
+                    existing.WindowState = WindowState.Normal;
+
+                existing.Activate();
+                NativeMethods.ForceActivate(existing);
+                return;
+            }
+
+            var noteWindow = new NoteWindow(note, _repository, this);
+            PositionNoteWindow(noteWindow);
+            _openNoteWindows[note.Id] = noteWindow;
+            noteWindow.Closed += (_, _) => _openNoteWindows.Remove(note.Id);
             noteWindow.Show();
             NativeMethods.ForceActivate(noteWindow);
         }
+    }
+
+    private void PositionNoteWindow(NoteWindow noteWindow)
+    {
+        int step = _openNoteWindows.Count % NoteWindowMaxCascadeSteps;
+
+        var left = Left - noteWindow.Width - 12 - step * NoteWindowCascadeStep;
+        var top = Top + step * NoteWindowCascadeStep;
+
+        // Clamp to the visible working area so later cascade steps (or a left-anchored dock)
+        // can't land a note window partially or fully off-screen on a narrow/short display.
+        noteWindow.Left = Math.Max(left, _workingArea.X);
+        noteWindow.Top = Math.Min(top, _workingArea.Y + _workingArea.Height - noteWindow.Height);
+    }
+
+    private void OnNewNoteClick(object sender, RoutedEventArgs e)
+    {
+        _repository.Create(string.Empty, "#F5E3B3", screenOrigin: "primary");
+        Refresh();
     }
 }
