@@ -22,6 +22,7 @@ public partial class NoteWindow : Window
         _owner = owner;
 
         TextBody.Text = note.Text;
+        Title = NoteTitleHelper.GetTitle(note.Text);
         Loaded += (_, _) =>
         {
             TextBody.Focus();
@@ -38,6 +39,7 @@ public partial class NoteWindow : Window
 
         TextBody.TextChanged += (_, _) =>
         {
+            Title = NoteTitleHelper.GetTitle(TextBody.Text);
             _hasPendingEdit = true;
             _autosaveTimer.Stop();
             _autosaveTimer.Start();
