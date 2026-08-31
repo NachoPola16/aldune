@@ -96,6 +96,9 @@ public partial class EdgeDockWindow : Window
         {
             if (_openNoteWindows.TryGetValue(note.Id, out var existing))
             {
+                if (existing.WindowState == WindowState.Minimized)
+                    existing.WindowState = WindowState.Normal;
+
                 existing.Activate();
                 NativeMethods.ForceActivate(existing);
                 return;
