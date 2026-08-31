@@ -129,9 +129,21 @@ public partial class EdgeDockWindow : Window
         noteWindow.Top = Math.Min(top, _workingArea.Y + _workingArea.Height - noteWindow.Height);
     }
 
+    private static readonly string[] NoteColorPalette =
+    {
+        "#F5E3B3", // pale yellow
+        "#C9E4DE", // mint
+        "#F2C6DE", // pink
+        "#B8D8E8", // pale blue
+        "#D9C9E8", // pale lavender
+        "#F2D9B8", // pale peach
+    };
+
     private void OnNewNoteClick(object sender, RoutedEventArgs e)
     {
-        _repository.Create(string.Empty, "#F5E3B3", screenOrigin: "primary");
+        var existingCount = _repository.GetByState(NoteState.Active).Count;
+        var color = NoteColorPalette[existingCount % NoteColorPalette.Length];
+        _repository.Create(string.Empty, color, screenOrigin: "primary");
         Refresh();
     }
 }

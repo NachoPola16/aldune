@@ -7,6 +7,32 @@
         Topmost="True"
         ResizeMode="NoResize"
         Background="#3A3A3A">
+    <Window.Resources>
+        <Style x:Key="NoteTabButtonStyle" TargetType="Button">
+            <Setter Property="HorizontalContentAlignment" Value="Left" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Grid>
+                            <Border Background="{TemplateBinding Background}" CornerRadius="4" />
+                            <Border x:Name="HoverOverlay" Background="Black" Opacity="0" CornerRadius="4" />
+                            <ContentPresenter Margin="{TemplateBinding Padding}"
+                                              HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
+                                              VerticalAlignment="Center" />
+                        </Grid>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="HoverOverlay" Property="Opacity" Value="0.12" />
+                            </Trigger>
+                            <Trigger Property="IsPressed" Value="True">
+                                <Setter TargetName="HoverOverlay" Property="Opacity" Value="0.22" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+    </Window.Resources>
     <StackPanel>
         <ItemsControl x:Name="TabsList">
             <ItemsControl.ItemTemplate>
@@ -16,7 +42,8 @@
                             Margin="4"
                             Padding="6"
                             Click="OnTabClick"
-                            Tag="{Binding}" />
+                            Tag="{Binding}"
+                            Style="{StaticResource NoteTabButtonStyle}" />
                 </DataTemplate>
             </ItemsControl.ItemTemplate>
         </ItemsControl>
