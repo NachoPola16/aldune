@@ -22,7 +22,12 @@ public partial class NoteWindow : Window
         _owner = owner;
 
         TextBody.Text = note.Text;
-        Loaded += (_, _) => TextBody.Focus();
+        Loaded += (_, _) =>
+        {
+            TextBody.Focus();
+            TextBody.CaretIndex = TextBody.Text.Length;
+            TextBody.ScrollToEnd();
+        };
 
         _autosaveTimer = new DispatcherTimer { Interval = AutosaveDelay };
         _autosaveTimer.Tick += (_, _) =>

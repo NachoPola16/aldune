@@ -16,6 +16,10 @@ public partial class EdgeDockWindow : Window
     private readonly NotesRepository _repository;
     private readonly Dictionary<Guid, NoteWindow> _openNoteWindows = new();
 
+    private const double NoteWindowCascadeStep = 30;
+    private const int NoteWindowMaxCascadeSteps = 8;
+    private int _noteWindowsOpened;
+
     public EdgeDockWindow(EdgePosition edge, WorkingArea workingArea, NotesRepository repository)
     {
         InitializeComponent();
@@ -107,9 +111,19 @@ public partial class EdgeDockWindow : Window
             var noteWindow = new NoteWindow(note, _repository, this);
             _openNoteWindows[note.Id] = noteWindow;
             noteWindow.Closed += (_, _) => _openNoteWindows.Remove(note.Id);
+            PositionNoteWindow(noteWindow);
             noteWindow.Show();
             NativeMethods.ForceActivate(noteWindow);
         }
+    }
+
+    private void PositionNoteWindow(NoteWindow noteWindow)
+    {
+        int step = _noteWindowsOpened % NoteWindowMaxCascadeSteps;
+        _noteWindowsOpened++;
+
+        noteWindow.Left = Left - noteWindow.Width - 12 - step * NoteWindowCascadeStep;
+        noteWindow.Top = Top + step * NoteWindowCascadeStep;
     }
 
     private void OnNewNoteClick(object sender, RoutedEventArgs e)
