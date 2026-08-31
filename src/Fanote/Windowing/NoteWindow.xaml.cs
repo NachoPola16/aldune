@@ -38,7 +38,11 @@ public partial class NoteWindow : Window
             _autosaveTimer.Start();
         };
 
-        Closing += (_, _) => Flush();
+        Closing += (_, _) =>
+        {
+            Flush();
+            _owner.Refresh();
+        };
     }
 
     private void Flush()

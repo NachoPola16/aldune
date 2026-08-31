@@ -14,6 +14,7 @@ public partial class EdgeDockWindow : Window
     private readonly EdgePosition _edge;
     private readonly WorkingArea _workingArea;
     private readonly NotesRepository _repository;
+    private readonly Dictionary<Guid, NoteWindow> _openNoteWindows = new();
 
     public EdgeDockWindow(EdgePosition edge, WorkingArea workingArea, NotesRepository repository)
     {
@@ -93,7 +94,16 @@ public partial class EdgeDockWindow : Window
     {
         if (sender is FrameworkElement { Tag: Note note })
         {
+            if (_openNoteWindows.TryGetValue(note.Id, out var existing))
+            {
+                existing.Activate();
+                NativeMethods.ForceActivate(existing);
+                return;
+            }
+
             var noteWindow = new NoteWindow(note, _repository, this);
+            _openNoteWindows[note.Id] = noteWindow;
+            noteWindow.Closed += (_, _) => _openNoteWindows.Remove(note.Id);
             noteWindow.Show();
             NativeMethods.ForceActivate(noteWindow);
         }
