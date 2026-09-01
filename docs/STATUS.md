@@ -133,6 +133,19 @@ arreglados una vez:
   paquete opcional aparte — no confundir con el pulido visual moderno de
   arriba, que es una cosa distinta y más prioritaria ahora mismo.
 
+## Bugs visuales encontrados en la última prueba (sin arreglar todavía)
+
+1. **El panel desplegado tiene tamaño fijo (`ExpandedThickness`/`ExpandedLength` en
+   `EdgeGeometry.cs`) y corta las notas que no caben** en vez de mostrarlas
+   todas o hacer scroll — con varias notas, las últimas quedan cortadas a la
+   mitad. Hay que decidir: ¿el panel crece con el número de notas, o hace
+   scroll dentro de un tamaño máximo?
+2. **Durante el fotograma de la animación de despliegue se ve un glitch
+   visual momentáneo** (contenido mal encajado un instante). El usuario
+   sospecha que se arregla solo al resolver el punto 1 (si el contenido ya
+   no se corta, puede que el frame intermedio deje de verse mal) — a
+   confirmar una vez arreglado el punto 1, no asumir que ya está resuelto.
+
 ## Cómo seguir desde aquí
 
 No hay una única "siguiente tarea" fijada — quedó abierto a elegir entre:
