@@ -79,10 +79,22 @@
     <Grid>
         <DockPanel Margin="20">
             <StackPanel DockPanel.Dock="Bottom" Orientation="Horizontal" Margin="0,8,0,0">
-                <Button Content="Archivar" Click="OnArchiveClick" Margin="0,0,6,0" Padding="10,4"
-                        Style="{StaticResource NoteActionButtonStyle}" />
-                <Button Content="Papelera" Click="OnTrashClick" Padding="10,4"
-                        Style="{StaticResource NoteDangerButtonStyle}" />
+                <Button Click="OnArchiveClick" Margin="0,0,6,0" Padding="10,4"
+                        Style="{StaticResource NoteActionButtonStyle}">
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Text="&#xE7B8;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets"
+                                   VerticalAlignment="Center" Margin="0,0,6,0" />
+                        <TextBlock Text="Archivar" VerticalAlignment="Center" />
+                    </StackPanel>
+                </Button>
+                <Button Click="OnTrashClick" Padding="10,4"
+                        Style="{StaticResource NoteDangerButtonStyle}">
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Text="&#xE74D;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets"
+                                   VerticalAlignment="Center" Margin="0,0,6,0" />
+                        <TextBlock Text="Papelera" VerticalAlignment="Center" />
+                    </StackPanel>
+                </Button>
             </StackPanel>
             <StackPanel x:Name="ColorSwatches" DockPanel.Dock="Bottom" Orientation="Horizontal" Margin="0,8,0,0" />
             <Grid>
@@ -90,7 +102,6 @@
                 <TextBox x:Name="TextBody"
                          AcceptsReturn="True"
                          TextWrapping="Wrap"
-                         FontFamily="Segoe UI Variable Text, Segoe UI"
                          FontSize="14"
                          BorderThickness="0" />
             </Grid>

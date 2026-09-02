@@ -2,4 +2,13 @@
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              ShutdownMode="OnLastWindowClose">
+    <Application.Resources>
+        <!-- FontFamily is an inherited property, so setting it here on the implicit Window
+             style cascades to every control in EdgeDockWindow and NoteWindow that doesn't set
+             its own — Segoe UI Variable Text is Windows 11's own default UI font anyway, so
+             this brings the app's chrome in line with the system look instead of away from it. -->
+        <Style TargetType="Window">
+            <Setter Property="FontFamily" Value="Segoe UI Variable Text, Segoe UI" />
+        </Style>
+    </Application.Resources>
 </Application>

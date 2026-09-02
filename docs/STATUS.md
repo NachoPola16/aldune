@@ -233,6 +233,19 @@ verificado a mano en cada paso). Por si hace falta el detalle técnico luego:
    complejidad que la spec v1 evitó a propósito al decidir no añadir un
    campo de título real. Si se retoma, es una mejora real pero ya no un
    retoque rápido.
+9. **Iconos en Archivar/Papelera + tipografía unificada en toda la app.**
+   Los botones ahora llevan icono (glifo de "Segoe Fluent Icons", con
+   "Segoe MDL2 Assets" como *fallback* — ambas ya vienen con Windows, sin
+   assets nuevos: `U+E7B8` archivo, `U+E74D` papelera) además del texto.
+   `Segoe UI Variable Text` (la fuente de sistema por defecto en Windows
+   11) se aplica ahora a **toda** la UI, no solo al cuerpo de la nota —
+   vía un único `Style TargetType="Window"` en `App.xaml.Resources`, que
+   basta porque `FontFamily` es una propiedad heredada: se fija una vez
+   en cada `Window` (implícito, se aplica también a las subclases
+   `EdgeDockWindow`/`NoteWindow`) y cae en cascada a todos sus hijos que
+   no la fijen explícitamente ellos mismos. Con esto, el `FontFamily`
+   explícito que se había puesto en `TextBody` quedó redundante y se
+   quitó.
 
 ## Idea pendiente de brainstorming (no iniciada): pestañas en abanico estilo Hold My Notes
 
