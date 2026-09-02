@@ -40,16 +40,26 @@ internal static class NativeMethods
     private static extern int DwmExtendFrameIntoClientArea(IntPtr hWnd, ref MARGINS pMarInset);
 
     /// <summary>
-    /// Rounds the window's corners and gives it the standard system drop shadow, using the
-    /// same DWM composition Windows already applies to normal (non-borderless) windows —
-    /// works on an opaque window, so it doesn't need AllowsTransparency (which the design
-    /// deliberately avoids: it would disable ClearType text rendering). No-ops harmlessly on
-    /// Windows versions that don't support DWMWA_WINDOW_CORNER_PREFERENCE (pre-Windows 11).
+    /// Rounds the window's corners using the same DWM composition Windows already applies to
+    /// normal (non-borderless) windows — works on an opaque window, so it doesn't need
+    /// AllowsTransparency (which the design deliberately avoids: it would disable ClearType
+    /// text rendering). No-ops harmlessly on Windows versions that don't support
+    /// DWMWA_WINDOW_CORNER_PREFERENCE (pre-Windows 11).
     /// </summary>
-    internal static void ApplyRoundedCornersAndShadow(IntPtr hWnd)
+    internal static void ApplyRoundedCorners(IntPtr hWnd)
     {
         int preference = DWMWCP_ROUNDSMALL;
         DwmSetWindowAttribute(hWnd, DWMWA_WINDOW_CORNER_PREFERENCE, ref preference, sizeof(int));
+    }
+
+    /// <summary>
+    /// Rounded corners plus the standard system drop shadow, for a borderless window that
+    /// (unlike NoteWindow) doesn't already get the shadow via WindowChrome's own
+    /// GlassFrameThickness="-1".
+    /// </summary>
+    internal static void ApplyRoundedCornersAndShadow(IntPtr hWnd)
+    {
+        ApplyRoundedCorners(hWnd);
 
         var margins = new MARGINS { Left = -1, Right = -1, Top = -1, Bottom = -1 };
         DwmExtendFrameIntoClientArea(hWnd, ref margins);

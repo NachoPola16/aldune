@@ -1,9 +1,11 @@
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
+using System.Windows.Interop;
 using System.Windows.Media;
 using System.Windows.Threading;
 using Fanote.Core;
+using Fanote.Interop;
 
 namespace Fanote.Windowing;
 
@@ -56,7 +58,15 @@ public partial class NoteWindow : Window
             Flush();
             _owner.Refresh();
         };
+
+        SourceInitialized += (_, _) =>
+        {
+            var hwnd = new WindowInteropHelper(this).Handle;
+            NativeMethods.ApplyRoundedCorners(hwnd);
+        };
     }
+
+    private void OnCloseClick(object sender, RoutedEventArgs e) => Close();
 
     private void Flush()
     {

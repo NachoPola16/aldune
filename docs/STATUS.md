@@ -194,6 +194,62 @@ verificado a mano en cada paso). Por si hace falta el detalle técnico luego:
    paleta) y se cambia después desde la propia nota si se quiere; añadir
    un flyout sobre el pill (no-activating) se consideró complejidad
    innecesaria para el beneficio.
+7. **Ventana de nota sin barra de título nativa.** El usuario reportó que
+   la barra de título de `NoteWindow` (`WindowStyle="ToolWindow"`) salía
+   negra (tema oscuro de Windows aplicado a la barra nativa, no un fallo
+   intermitente). Cambiado a `WindowStyle="None"` + `WindowChrome`
+   (`System.Windows.Shell`, ya viene en WPF, no requiere paquete nuevo):
+   `CaptionHeight` da una zona arrastrable invisible arriba (el propio
+   color de la nota se ve a través, sin barra separada),
+   `ResizeBorderThickness` mantiene el redimensionado por los bordes, y
+   `GlassFrameThickness="-1"` da la sombra nativa del sistema (mismo
+   truco que `NativeMethods.ApplyRoundedCornersAndShadow` pero vía
+   WindowChrome en vez de P/Invoke manual, para no duplicar la llamada a
+   `DwmExtendFrameIntoClientArea`). Esquinas redondeadas vía
+   `NativeMethods.ApplyRoundedCorners` (la mitad de la función que ya
+   usaba el dock, ahora separada de la sombra en dos métodos). X de
+   cierre propia (`CloseButton`) integrada en la esquina, con
+   `WindowChrome.IsHitTestVisibleInChrome="True"` (necesario: por
+   defecto WindowChrome trata toda la zona de `CaptionHeight` como
+   arrastre, no clic). Botones Archivar/Papelera con un estilo plano
+   nuevo (`NoteActionButtonStyle`) a juego con el resto del rediseño.
+8. **Ajustes finos de la ventana de nota** (ronda de feedback visual
+   directa sobre capturas): margen uniforme de 20px por los cuatro lados
+   (antes descompensado, más aire arriba que a los lados/abajo);
+   `Papelera` con estilo propio en rojizo (`NoteDangerButtonStyle`,
+   plantilla separada de `NoteActionButtonStyle` — no `BasedOn`, porque el
+   color de *hover* también tenía que teñirse de rojo, no solo el de
+   reposo) para distinguir la acción destructiva a simple vista;
+   tipografía del cuerpo a `Segoe UI Variable Text` 14px (antes heredaba
+   el tamaño pequeño por defecto de `TextBox`; la spec v1 ya pedía "una
+   tipografía elegida por legibilidad" pero nunca se llegó a fijar
+   ninguna); texto de marcador de posición ("Escribe algo…") cuando la
+   nota está vacía, vía un `TextBlock` superpuesto con un `DataTrigger`
+   sobre `Text` del `TextBox` (solo visual, no se guarda como valor real).
+   **Decisión explícita que NO se hizo**: no llevar el efecto "título en
+   negrita" al propio cuadro de texto de la nota (solo existe en la
+   pestaña del dock y la barra de título) — hacerlo dentro exigiría texto
+   enriquecido (`RichTextBox` o un control de título separado), justo la
+   complejidad que la spec v1 evitó a propósito al decidir no añadir un
+   campo de título real. Si se retoma, es una mejora real pero ya no un
+   retoque rápido.
+
+## Idea pendiente de brainstorming (no iniciada): pestañas en abanico estilo Hold My Notes
+
+El usuario compartió una captura de referencia (landing de una app tipo
+Hold My Notes) con un patrón más ambicioso que el dock actual: en reposo,
+un pill fino con un guión de color por nota (ya tenemos esto); al pasar el
+ratón, las notas se despliegan como un abanico de pestañas *escalonadas*
+por el borde, cada una con su color y una etiqueta de texto rotada
+verticalmente (el nombre de la nota, no solo el color); al abrir una,
+la nota se desliza a tamaño completo **desde la posición de su propia
+pestaña**, no desde un panel genérico. Es una diferencia real de
+interacción frente al `ItemsControl` vertical con botones que hay hoy —
+cada nota necesitaría una posición/etiqueta estable y la animación de
+apertura tendría que originarse en esa posición. No es una tarea
+"bounded": si se retoma, empezar por `superpowers:brainstorming` en modo
+completo (probablemente arquitectónico, toca cómo `EdgeDockWindow`
+representa y anima cada nota) antes de tocar código.
 
 ## Cómo seguir desde aquí
 
@@ -203,6 +259,8 @@ Con el pulido visual moderno cerrado, sigue abierto elegir entre:
 2. Empezar la Fase 3 (multi-monitor + DPI) — leer los prerrequisitos de
    arriba antes de escribir el plan.
 3. Modo "Papel vintage" (ver spec v1), si se prioriza sobre lo anterior.
+4. Rediseño de pestañas en abanico estilo Hold My Notes (ver sección de
+   arriba) — más ambicioso, necesita su propio brainstorming.
 
 Si arrancas esto en una sesión/IA nueva: lee este archivo, la spec, y el plan
 de la última fase fusionada, y sigue el mismo flujo de skills descrito arriba

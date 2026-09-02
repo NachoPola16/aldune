@@ -3,18 +3,106 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         Title="Fanote"
         Width="260" Height="300"
-        WindowStyle="ToolWindow"
+        MinWidth="180" MinHeight="160"
+        WindowStyle="None"
+        AllowsTransparency="False"
+        ResizeMode="CanResize"
         Topmost="True">
-    <DockPanel>
-        <StackPanel DockPanel.Dock="Bottom" Orientation="Horizontal" Margin="4">
-            <Button Content="Archivar" Click="OnArchiveClick" Margin="0,0,4,0" Padding="6,2" />
-            <Button Content="Papelera" Click="OnTrashClick" Padding="6,2" />
-        </StackPanel>
-        <StackPanel x:Name="ColorSwatches" DockPanel.Dock="Bottom" Orientation="Horizontal" Margin="4,4,4,0" />
-        <TextBox x:Name="TextBody"
-                 AcceptsReturn="True"
-                 TextWrapping="Wrap"
-                 Padding="8"
-                 BorderThickness="0" />
-    </DockPanel>
+    <WindowChrome.WindowChrome>
+        <!-- No visible title bar: the top CaptionHeight strip is just the note's own tinted
+             background, draggable like a real sticky note, with only the close button opted
+             back into being clickable (see CloseButton below). GlassFrameThickness="-1" is the
+             standard WindowChrome shorthand for the native drop shadow on a borderless window;
+             rounded corners come separately from NativeMethods.ApplyRoundedCorners. -->
+        <WindowChrome CaptionHeight="22" ResizeBorderThickness="6" GlassFrameThickness="-1" CornerRadius="0" />
+    </WindowChrome.WindowChrome>
+    <Window.Resources>
+        <Style x:Key="NoteActionButtonStyle" TargetType="Button">
+            <Setter Property="Background" Value="#26000000" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="Bg" Background="{TemplateBinding Background}" CornerRadius="4">
+                            <ContentPresenter Margin="{TemplateBinding Padding}"
+                                              HorizontalAlignment="Center"
+                                              VerticalAlignment="Center" />
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Bg" Property="Background" Value="#40000000" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+        <!-- Same shape/behavior as NoteActionButtonStyle, but tinted red — Papelera is
+             destructive, so it gets a visually distinct "danger" cue at a glance. A separate
+             template (rather than BasedOn) because the hover color needs to shift red too, not
+             just the resting color that TemplateBinding would pick up. -->
+        <Style x:Key="NoteDangerButtonStyle" TargetType="Button">
+            <Setter Property="Background" Value="#33CC3333" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="Bg" Background="{TemplateBinding Background}" CornerRadius="4">
+                            <ContentPresenter Margin="{TemplateBinding Padding}"
+                                              HorizontalAlignment="Center"
+                                              VerticalAlignment="Center" />
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Bg" Property="Background" Value="#55CC3333" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+        <Style x:Key="CloseButtonStyle" TargetType="Button" BasedOn="{StaticResource NoteActionButtonStyle}">
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="FontSize" Value="12" />
+        </Style>
+        <Style x:Key="PlaceholderStyle" TargetType="TextBlock">
+            <Setter Property="Foreground" Value="#5A000000" />
+            <Setter Property="IsHitTestVisible" Value="False" />
+            <Setter Property="Visibility" Value="Collapsed" />
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding Text, ElementName=TextBody}" Value="">
+                    <Setter Property="Visibility" Value="Visible" />
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
+    </Window.Resources>
+    <Grid>
+        <DockPanel Margin="20">
+            <StackPanel DockPanel.Dock="Bottom" Orientation="Horizontal" Margin="0,8,0,0">
+                <Button Content="Archivar" Click="OnArchiveClick" Margin="0,0,6,0" Padding="10,4"
+                        Style="{StaticResource NoteActionButtonStyle}" />
+                <Button Content="Papelera" Click="OnTrashClick" Padding="10,4"
+                        Style="{StaticResource NoteDangerButtonStyle}" />
+            </StackPanel>
+            <StackPanel x:Name="ColorSwatches" DockPanel.Dock="Bottom" Orientation="Horizontal" Margin="0,8,0,0" />
+            <Grid>
+                <TextBlock Text="Escribe algo…" FontSize="14" Style="{StaticResource PlaceholderStyle}" />
+                <TextBox x:Name="TextBody"
+                         AcceptsReturn="True"
+                         TextWrapping="Wrap"
+                         FontFamily="Segoe UI Variable Text, Segoe UI"
+                         FontSize="14"
+                         BorderThickness="0" />
+            </Grid>
+        </DockPanel>
+        <Button x:Name="CloseButton"
+                Content="&#x2715;"
+                Width="22" Height="22"
+                Margin="0,2,2,0"
+                HorizontalAlignment="Right"
+                VerticalAlignment="Top"
+                Click="OnCloseClick"
+                WindowChrome.IsHitTestVisibleInChrome="True"
+                Style="{StaticResource CloseButtonStyle}" />
+    </Grid>
 </Window>
