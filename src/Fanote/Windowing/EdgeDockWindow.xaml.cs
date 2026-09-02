@@ -177,7 +177,8 @@ public partial class EdgeDockWindow : Window
         };
         button.BeginAnimation(OpacityProperty, opacityAnimation);
 
-        var translate = (TranslateTransform)button.RenderTransform;
+        var translate = new TranslateTransform(20, 0);
+        button.RenderTransform = translate;
         var slideAnimation = new System.Windows.Media.Animation.DoubleAnimation(20, 0, new Duration(TimeSpan.FromMilliseconds(200)))
         {
             BeginTime = delay

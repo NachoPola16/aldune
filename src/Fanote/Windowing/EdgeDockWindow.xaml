@@ -123,11 +123,7 @@
                                         Loaded="OnTabLoaded"
                                         Tag="{Binding}"
                                         Style="{StaticResource NoteTabButtonStyle}"
-                                        Opacity="0">
-                                    <Button.RenderTransform>
-                                        <TranslateTransform X="20" />
-                                    </Button.RenderTransform>
-                                </Button>
+                                        Opacity="0" />
                             </DataTemplate>
                         </ItemsControl.ItemTemplate>
                     </ItemsControl>
