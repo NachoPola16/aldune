@@ -15,19 +15,19 @@ public partial class EdgeDockWindow : Window
     private readonly EdgePosition _edge;
     private readonly WorkingArea _workingArea;
     private readonly NotesRepository _repository;
-    private readonly Dictionary<Guid, NoteWindow> _openNoteWindows = new();
+    private readonly AppCoordinator _coordinator;
     private bool _viewingArchive;
-    private NotesManagerWindow? _notesManagerWindow;
 
     private const double NoteWindowCascadeStep = 30;
     private const int NoteWindowMaxCascadeSteps = 8;
 
-    public EdgeDockWindow(EdgePosition edge, WorkingArea workingArea, NotesRepository repository)
+    public EdgeDockWindow(EdgePosition edge, MonitorInfo monitor, NotesRepository repository, AppCoordinator coordinator)
     {
         InitializeComponent();
         _edge = edge;
-        _workingArea = workingArea;
+        _workingArea = monitor.WorkArea;
         _repository = repository;
+        _coordinator = coordinator;
 
         _collapseTimer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(200) };
         _collapseTimer.Tick += (_, _) =>
@@ -148,45 +148,20 @@ public partial class EdgeDockWindow : Window
 
     private void OnManageArchiveClick(object sender, RoutedEventArgs e)
     {
-        if (_notesManagerWindow is not null)
-        {
-            _notesManagerWindow.Activate();
-            NativeMethods.ForceActivate(_notesManagerWindow);
-            return;
-        }
-
-        _notesManagerWindow = new NotesManagerWindow(_repository, this);
-        _notesManagerWindow.Closed += (_, _) => _notesManagerWindow = null;
-        _notesManagerWindow.Show();
-        NativeMethods.ForceActivate(_notesManagerWindow);
+        _coordinator.OpenOrActivateNotesManager();
     }
 
     private void OnTabClick(object sender, RoutedEventArgs e)
     {
         if (sender is FrameworkElement { Tag: Note note })
         {
-            if (_openNoteWindows.TryGetValue(note.Id, out var existing))
-            {
-                if (existing.WindowState == WindowState.Minimized)
-                    existing.WindowState = WindowState.Normal;
-
-                existing.Activate();
-                NativeMethods.ForceActivate(existing);
-                return;
-            }
-
-            var noteWindow = new NoteWindow(note, _repository, this);
-            PositionNoteWindow(noteWindow);
-            _openNoteWindows[note.Id] = noteWindow;
-            noteWindow.Closed += (_, _) => _openNoteWindows.Remove(note.Id);
-            noteWindow.Show();
-            NativeMethods.ForceActivate(noteWindow);
+            _coordinator.OpenOrActivateNote(note, this);
         }
     }
 
-    private void PositionNoteWindow(NoteWindow noteWindow)
+    internal void PositionNoteWindow(NoteWindow noteWindow)
     {
-        int step = _openNoteWindows.Count % NoteWindowMaxCascadeSteps;
+        int step = _coordinator.OpenNoteWindowCount % NoteWindowMaxCascadeSteps;
 
         var left = Left - noteWindow.Width - 12 - step * NoteWindowCascadeStep;
         var top = Top + step * NoteWindowCascadeStep;

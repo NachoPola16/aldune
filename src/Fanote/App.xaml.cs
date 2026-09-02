@@ -106,15 +106,21 @@ public partial class App : Application
         }
 
         var area = SystemParameters.WorkArea;
-        var workingArea = new WorkingArea(area.Left, area.Top, area.Width, area.Height);
+        var monitor = new MonitorInfo(
+            "primary",
+            new WorkingArea(area.Left, area.Top, area.Width, area.Height),
+            DpiScale: 1.0,
+            IsPrimary: true);
 
-        var dock = new EdgeDockWindow(EdgePosition.Right, workingArea, repository);
+        var coordinator = new AppCoordinator(repository);
+        var dock = new EdgeDockWindow(EdgePosition.Right, monitor, repository, coordinator);
+        coordinator.RegisterDock(dock);
 
         try
         {
             // The first place decryption of existing notes is actually attempted — this is where
             // case (c) (wrong key for this database) surfaces, not earlier in the bootstrap.
-            dock.Refresh();
+            coordinator.RefreshAll();
         }
         catch (AuthenticationTagMismatchException)
         {

@@ -17,16 +17,16 @@ public partial class NotesManagerWindow : Window
     private enum Filter { All, Active, Archived, Trashed }
 
     private readonly NotesRepository _repository;
-    private readonly EdgeDockWindow _owner;
+    private readonly AppCoordinator _coordinator;
     private List<NoteRow> _allRows = new();
     private List<NoteRow> _rows = new();
     private Filter _filter = Filter.All;
 
-    public NotesManagerWindow(NotesRepository repository, EdgeDockWindow owner)
+    public NotesManagerWindow(NotesRepository repository, AppCoordinator coordinator)
     {
         InitializeComponent();
         _repository = repository;
-        _owner = owner;
+        _coordinator = coordinator;
 
         SourceInitialized += (_, _) =>
         {
@@ -85,7 +85,7 @@ public partial class NotesManagerWindow : Window
             _repository.SetState(row.Note.Id, NoteState.Archived);
         }
         LoadRows();
-        _owner.Refresh();
+        _coordinator.RefreshAll();
     }
 
     private void OnRestoreSelectedClick(object sender, RoutedEventArgs e)
@@ -95,7 +95,7 @@ public partial class NotesManagerWindow : Window
             _repository.SetState(row.Note.Id, NoteState.Active);
         }
         LoadRows();
-        _owner.Refresh();
+        _coordinator.RefreshAll();
     }
 
     private void OnTrashSelectedClick(object sender, RoutedEventArgs e)
@@ -105,6 +105,6 @@ public partial class NotesManagerWindow : Window
             _repository.SetState(row.Note.Id, NoteState.Trashed);
         }
         LoadRows();
-        _owner.Refresh();
+        _coordinator.RefreshAll();
     }
 }

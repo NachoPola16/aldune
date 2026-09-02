@@ -15,16 +15,16 @@ public partial class NoteWindow : Window
 
     private readonly Note _note;
     private readonly NotesRepository _repository;
-    private readonly EdgeDockWindow _owner;
+    private readonly AppCoordinator _coordinator;
     private readonly DispatcherTimer _autosaveTimer;
     private bool _hasPendingEdit;
 
-    public NoteWindow(Note note, NotesRepository repository, EdgeDockWindow owner)
+    public NoteWindow(Note note, NotesRepository repository, AppCoordinator coordinator)
     {
         InitializeComponent();
         _note = note;
         _repository = repository;
-        _owner = owner;
+        _coordinator = coordinator;
 
         ApplyColor(note.Color);
         PopulateColorSwatches();
@@ -62,7 +62,7 @@ public partial class NoteWindow : Window
         Closing += (_, _) =>
         {
             Flush();
-            _owner.Refresh();
+            _coordinator.RefreshAll();
         };
 
         SourceInitialized += (_, _) =>
@@ -123,14 +123,14 @@ public partial class NoteWindow : Window
             swatch.BorderThickness = new Thickness((string)swatch.Tag == color ? 2 : 0);
         }
 
-        _owner.Refresh();
+        _coordinator.RefreshAll();
     }
 
     private void OnArchiveClick(object sender, RoutedEventArgs e)
     {
         Flush();
         _repository.SetState(_note.Id, NoteState.Archived);
-        _owner.Refresh();
+        _coordinator.RefreshAll();
         Close();
     }
 
@@ -138,7 +138,7 @@ public partial class NoteWindow : Window
     {
         _hasPendingEdit = false; // discard any pending edit — the note is being trashed, not saved
         _repository.SetState(_note.Id, NoteState.Trashed);
-        _owner.Refresh();
+        _coordinator.RefreshAll();
         Close();
     }
 
@@ -146,7 +146,7 @@ public partial class NoteWindow : Window
     {
         Flush();
         _repository.SetState(_note.Id, NoteState.Active);
-        _owner.Refresh();
+        _coordinator.RefreshAll();
         Close();
     }
 }
