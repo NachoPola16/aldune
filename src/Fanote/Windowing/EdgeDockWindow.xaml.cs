@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Linq;
 using System.Windows;
 using System.Windows.Interop;
 using System.Windows.Threading;
@@ -15,6 +16,8 @@ public partial class EdgeDockWindow : Window
     private readonly WorkingArea _workingArea;
     private readonly NotesRepository _repository;
     private readonly Dictionary<Guid, NoteWindow> _openNoteWindows = new();
+    private bool _viewingArchive;
+    private NotesManagerWindow? _notesManagerWindow;
 
     private const double NoteWindowCascadeStep = 30;
     private const int NoteWindowMaxCascadeSteps = 8;
@@ -114,12 +117,48 @@ public partial class EdgeDockWindow : Window
 
     public void Refresh()
     {
-        SetNotes(_repository.GetByState(NoteState.Active));
+        if (_viewingArchive)
+        {
+            var archived = _repository.GetByState(NoteState.Archived);
+            var trashed = _repository.GetByState(NoteState.Trashed);
+            SetNotes(archived.Concat(trashed).ToList());
+        }
+        else
+        {
+            SetNotes(_repository.GetByState(NoteState.Active));
+        }
     }
 
     public void SetNotes(IReadOnlyList<Note> notes)
     {
         TabsList.ItemsSource = notes;
+    }
+
+    private void OnToggleArchiveClick(object sender, RoutedEventArgs e)
+    {
+        _viewingArchive = !_viewingArchive;
+        if (_viewingArchive)
+        {
+            _repository.PurgeExpiredTrash(TimeSpan.FromDays(NotesRepository.DefaultTrashRetentionDays));
+        }
+        ToggleArchiveButton.Content = _viewingArchive ? "Activas" : "Archivadas";
+        NewNoteButton.Visibility = _viewingArchive ? Visibility.Collapsed : Visibility.Visible;
+        Refresh();
+    }
+
+    private void OnManageArchiveClick(object sender, RoutedEventArgs e)
+    {
+        if (_notesManagerWindow is not null)
+        {
+            _notesManagerWindow.Activate();
+            NativeMethods.ForceActivate(_notesManagerWindow);
+            return;
+        }
+
+        _notesManagerWindow = new NotesManagerWindow(_repository, this);
+        _notesManagerWindow.Closed += (_, _) => _notesManagerWindow = null;
+        _notesManagerWindow.Show();
+        NativeMethods.ForceActivate(_notesManagerWindow);
     }
 
     private void OnTabClick(object sender, RoutedEventArgs e)

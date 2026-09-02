@@ -135,6 +135,10 @@ public partial class App : Application
             return;
         }
 
+        // Cheap sweep so trash doesn't grow forever even for someone who never opens the
+        // Archivadas view (which also purges on entry, see EdgeDockWindow.OnToggleArchiveClick).
+        repository.PurgeExpiredTrash(TimeSpan.FromDays(NotesRepository.DefaultTrashRetentionDays));
+
         dock.Show();
     }
 

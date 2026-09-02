@@ -4,6 +4,11 @@ namespace Fanote.Core;
 
 public sealed class NotesRepository
 {
+    // No manual "permanently delete" action exists in the UI — trash empties itself after this
+    // many days instead. Based on UpdatedAt (there's no dedicated "trashed at" column, and adding
+    // one would need a schema migration this app doesn't have yet — see PurgeExpiredTrash).
+    public const int DefaultTrashRetentionDays = 30;
+
     private readonly NotesDatabase _database;
     private readonly ContentCipher _cipher;
 
@@ -104,6 +109,21 @@ public sealed class NotesRepository
         command.Parameters.AddWithValue("$updatedAt", DateTimeOffset.UtcNow.ToString("O"));
         command.Parameters.AddWithValue("$id", id.ToString());
         command.ExecuteNonQuery();
+    }
+
+    /// <summary>
+    /// Permanently deletes trashed notes whose <c>UpdatedAt</c> is older than <paramref name="retention"/>.
+    /// Never touches Active or Archived notes. Returns the number of notes removed.
+    /// </summary>
+    public int PurgeExpiredTrash(TimeSpan retention)
+    {
+        var cutoff = DateTimeOffset.UtcNow - retention;
+        using var connection = _database.OpenConnection();
+        using var command = connection.CreateCommand();
+        command.CommandText = "DELETE FROM Note WHERE State = $state AND UpdatedAt < $cutoff;";
+        command.Parameters.AddWithValue("$state", NoteState.Trashed.ToString());
+        command.Parameters.AddWithValue("$cutoff", cutoff.ToString("O"));
+        return command.ExecuteNonQuery();
     }
 
     private Note ReadNote(SqliteDataReader reader)

@@ -40,8 +40,15 @@ autoridad de diseño; todo lo demás (planes, código) se argumenta contra él.
   nativa de Windows 11, ventana de nota teñida del color de la nota, pastillas
   de color por nota visibles en el pill en reposo, y selector para cambiar el
   color de una nota ya creada.
+- **Botón "Archivadas" + `NotesManagerWindow`** (bounded — ver detalle en su
+  sección más abajo): vista combinada archivadas+papelera en el dock con
+  etiqueta de estado por pestaña, "Restaurar" en `NoteWindow` para notas no
+  activas, purga automática de la papelera a los 30 días
+  (`NotesRepository.PurgeExpiredTrash`), y una ventana aparte
+  (`NotesManagerWindow`) para archivar/restaurar/borrar en bloque con
+  filtro por estado.
 
-Tests: 70/70 pasando (`dotnet test` desde la raíz del repo).
+Tests: 71/71 pasando (`dotnet test` desde la raíz del repo).
 
 ## Cómo se ha trabajado (para mantener el mismo estilo)
 
@@ -264,15 +271,70 @@ apertura tendría que originarse en esa posición. No es una tarea
 completo (probablemente arquitectónico, toca cómo `EdgeDockWindow`
 representa y anima cada nota) antes de tocar código.
 
+## Botón "Archivadas" + gestor de notas (sesión 2026-09-02, bounded)
+
+Implementado y verificado a mano. Resumen para no repetir decisiones si se
+retoca:
+
+- **Dock**: botón "Archivadas"/"Activas" (`EdgeDockWindow`, campo
+  `_viewingArchive`) alterna `TabsList` entre notas activas y
+  archivadas+papelera combinadas (dos `GetByState` + `Concat`, sin método
+  nuevo de repositorio — no hace falta orden global para una vista de
+  repaso). Cada pestaña muestra una etiqueta pequeña "Archivada"/"Papelera"
+  (`NoteStateLabelConverter`, vacía y colapsada para notas activas —
+  puramente derivada de `Note.State`, sin necesidad de saber en qué vista
+  está el dock). `NoteWindow` muestra "Restaurar" en vez de
+  Archivar/Papelera cuando `Note.State != Active`. Sin borrado permanente
+  manual.
+- **Purga automática de la papelera**: `NotesRepository.PurgeExpiredTrash`
+  (TDD) borra notas en `Trashed` con `UpdatedAt` más viejo que
+  `DefaultTrashRetentionDays` (30, decisión del usuario). Se usa
+  `UpdatedAt` en vez de una columna `TrashedAt` nueva **a propósito**: esta
+  app no tiene sistema de migraciones (`NotesDatabase` solo hace
+  `CREATE TABLE IF NOT EXISTS`, una vez) — añadir una columna rompería las
+  bases de datos ya existentes. Se ejecuta al arrancar (`App.xaml.cs`) y
+  cada vez que se entra en la vista Archivadas del dock.
+- **`NotesManagerWindow`** (antes `ArchiveManagerWindow`, renombrada — ver
+  más abajo): ventana aparte para acciones en bloque (checkboxes,
+  "Seleccionar todo", Archivar/Restaurar/A la papelera, filtro
+  Todas/Activas/Archivadas/Papelera). Se creó una ventana propia en vez de
+  meter esto en el panel del dock porque **no cupo**: con checkboxes +
+  toolbar de 3 botones + lista en un panel de 320px, "A la papelera"
+  quedaba parcialmente fuera de la ventana y no se podía pulsar de forma
+  fiable — el mismo tipo de bug de overflow ya visto y arreglado una vez
+  en el propio dock. Lección aplicada aquí: la barra de botones usa
+  `WrapPanel`, no `StackPanel`, precisamente para que un overflow futuro
+  baje a una segunda línea en vez de salirse de la ventana sin avisar.
+  Empezó como "gestor de archivadas/papelera" pero el usuario pidió que
+  "Todas" incluyera también las activas — de ahí el renombrado a
+  `NotesManagerWindow` y el filtro con 4 estados en vez de 2.
+- **Selección en listas WPF**: `NoteRow` (`Fanote.Windowing`) envuelve cada
+  `Note` con un `IsSelected` bindable (`INotifyPropertyChanged`) —
+  deliberadamente fuera de `Fanote.Core`, la selección es un concepto de
+  UI, no de dominio. Se usa tanto en `NotesManagerWindow` como (antes,
+  luego revertido) en el propio dock.
+- **Bug real encontrado y arreglado**: un `RadioButton` con
+  `IsChecked="True"` puesto en XAML dispara su evento `Checked` **durante**
+  `InitializeComponent()`, antes de que elementos declarados más abajo en
+  el mismo árbol visual (`RowsList`) existan — causaba
+  `NullReferenceException` al abrir la ventana. Arreglo: quitar
+  `IsChecked="True"` del XAML y fijarlo por código *después* de
+  `InitializeComponent()`. Tenerlo en cuenta si se añade otro control con
+  estado inicial "marcado" que dispare un handler en el constructor.
+- **Descartado en el camino**: checkboxes de selección múltiple dentro del
+  propio dock (demasiado apretado en 320px, llevó al rediseño de arriba);
+  un desplegable de color al crear nota con "+" (se mantiene la rotación
+  automática + cambio posterior desde la nota); borrado permanente manual
+  (lo cubre la purga automática).
+
 ## Cómo seguir desde aquí
 
-Con el pulido visual moderno cerrado, sigue abierto elegir entre:
+Sigue abierto elegir entre:
 
-1. Diseñar e implementar el botón "Archivadas" (reemplaza vista del dock).
-2. Empezar la Fase 3 (multi-monitor + DPI) — leer los prerrequisitos de
+1. Empezar la Fase 3 (multi-monitor + DPI) — leer los prerrequisitos de
    arriba antes de escribir el plan.
-3. Modo "Papel vintage" (ver spec v1), si se prioriza sobre lo anterior.
-4. Rediseño de pestañas en abanico estilo Hold My Notes (ver sección de
+2. Modo "Papel vintage" (ver spec v1).
+3. Rediseño de pestañas en abanico estilo Hold My Notes (ver sección de
    arriba) — más ambicioso, necesita su propio brainstorming.
 
 Si arrancas esto en una sesión/IA nueva: lee este archivo, la spec, y el plan

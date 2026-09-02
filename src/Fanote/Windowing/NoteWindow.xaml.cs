@@ -29,6 +29,12 @@ public partial class NoteWindow : Window
         ApplyColor(note.Color);
         PopulateColorSwatches();
 
+        if (note.State != NoteState.Active)
+        {
+            ActiveActions.Visibility = Visibility.Collapsed;
+            InactiveActions.Visibility = Visibility.Visible;
+        }
+
         TextBody.Text = note.Text;
         Title = NoteTitleHelper.GetTitle(note.Text);
         Loaded += (_, _) =>
@@ -132,6 +138,14 @@ public partial class NoteWindow : Window
     {
         _hasPendingEdit = false; // discard any pending edit — the note is being trashed, not saved
         _repository.SetState(_note.Id, NoteState.Trashed);
+        _owner.Refresh();
+        Close();
+    }
+
+    private void OnRestoreClick(object sender, RoutedEventArgs e)
+    {
+        Flush();
+        _repository.SetState(_note.Id, NoteState.Active);
         _owner.Refresh();
         Close();
     }

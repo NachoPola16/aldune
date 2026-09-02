@@ -110,6 +110,39 @@ public class NotesRepositoryTests : IDisposable
     }
 
     [Fact]
+    public void PurgeExpiredTrash_RemovesOnlyTrashedNotesOlderThanRetention()
+    {
+        var oldTrashed = _sut.Create("vieja en papelera", "#FFFFFF", "primary");
+        _sut.SetState(oldTrashed.Id, NoteState.Trashed);
+        BackdateUpdatedAt(oldTrashed.Id, DateTimeOffset.UtcNow.AddDays(-31));
+
+        var recentTrashed = _sut.Create("reciente en papelera", "#FFFFFF", "primary");
+        _sut.SetState(recentTrashed.Id, NoteState.Trashed);
+
+        var oldArchived = _sut.Create("vieja archivada", "#FFFFFF", "primary");
+        _sut.SetState(oldArchived.Id, NoteState.Archived);
+        BackdateUpdatedAt(oldArchived.Id, DateTimeOffset.UtcNow.AddDays(-100));
+
+        var purgedCount = _sut.PurgeExpiredTrash(TimeSpan.FromDays(30));
+
+        Assert.Equal(1, purgedCount);
+        Assert.DoesNotContain(_sut.GetByState(NoteState.Trashed), n => n.Id == oldTrashed.Id);
+        Assert.Contains(_sut.GetByState(NoteState.Trashed), n => n.Id == recentTrashed.Id);
+        Assert.Contains(_sut.GetByState(NoteState.Archived), n => n.Id == oldArchived.Id);
+    }
+
+    private void BackdateUpdatedAt(Guid id, DateTimeOffset updatedAt)
+    {
+        using var connection = new SqliteConnection(new SqliteConnectionStringBuilder { DataSource = _dbPath }.ToString());
+        connection.Open();
+        using var command = connection.CreateCommand();
+        command.CommandText = "UPDATE Note SET UpdatedAt = $updatedAt WHERE Id = $id;";
+        command.Parameters.AddWithValue("$updatedAt", updatedAt.ToString("O"));
+        command.Parameters.AddWithValue("$id", id.ToString());
+        command.ExecuteNonQuery();
+    }
+
+    [Fact]
     public void GetByState_OrdersByCreatedAt()
     {
         var first = _sut.Create("primera", "#FFFFFF", "primary");
