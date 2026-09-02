@@ -3,6 +3,7 @@ using System.Security.Cryptography;
 using System.Text.Json;
 using System.Windows;
 using Fanote.Core;
+using Fanote.Interop;
 using Fanote.Windowing;
 using Microsoft.Data.Sqlite;
 
@@ -105,16 +106,27 @@ public partial class App : Application
             return;
         }
 
-        var area = SystemParameters.WorkArea;
-        var monitor = new MonitorInfo(
-            "primary",
-            new WorkingArea(area.Left, area.Top, area.Width, area.Height),
-            DpiScale: 1.0,
-            IsPrimary: true);
+        var monitors = MonitorEnumerator.EnumerateMonitors();
+        if (monitors.Count == 0)
+        {
+            // Practically impossible on real Windows (there's always at least one display), but
+            // treat it as a fourth bootstrap failure mode rather than crashing with no explanation.
+            MessageBox.Show(
+                "No se ha podido detectar ningún monitor conectado.",
+                "Fanote — no se puede iniciar",
+                MessageBoxButton.OK, MessageBoxImage.Error);
+            Shutdown(1);
+            return;
+        }
 
         var coordinator = new AppCoordinator(repository);
-        var dock = new EdgeDockWindow(EdgePosition.Right, monitor, repository, coordinator);
-        coordinator.RegisterDock(dock);
+        var docks = new List<EdgeDockWindow>();
+        foreach (var monitor in monitors)
+        {
+            var dock = new EdgeDockWindow(EdgePosition.Right, monitor, repository, coordinator);
+            coordinator.RegisterDock(dock);
+            docks.Add(dock);
+        }
 
         try
         {
@@ -145,7 +157,7 @@ public partial class App : Application
         // Archivadas view (which also purges on entry, see EdgeDockWindow.OnToggleArchiveClick).
         repository.PurgeExpiredTrash(TimeSpan.FromDays(NotesRepository.DefaultTrashRetentionDays));
 
-        dock.Show();
+        foreach (var dock in docks) dock.Show();
     }
 
     /// <summary>

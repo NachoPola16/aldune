@@ -18,6 +18,11 @@ public partial class EdgeDockWindow : Window
     private readonly AppCoordinator _coordinator;
     private bool _viewingArchive;
 
+    // Tracked ourselves rather than read back from Left/Top/Width/Height: those can observe NaN
+    // (WPF's uninitialized default) if something forces a resize/animation re-evaluation before
+    // the window has ever been positioned — see ApplyGeometry's comment on why this matters.
+    private Fanote.Core.Rect _currentRect;
+
     private const double NoteWindowCascadeStep = 30;
     private const int NoteWindowMaxCascadeSteps = 8;
 
@@ -28,6 +33,7 @@ public partial class EdgeDockWindow : Window
         _workingArea = monitor.WorkArea;
         _repository = repository;
         _coordinator = coordinator;
+        _currentRect = EdgeGeometry.PillRect(_workingArea, _edge);
 
         _collapseTimer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(200) };
         _collapseTimer.Tick += (_, _) =>
@@ -88,14 +94,23 @@ public partial class EdgeDockWindow : Window
             Height = rect.Height;
             PanelContent.Opacity = expanding ? 1 : 0;
             PillSwatches.Opacity = expanding ? 0 : 1;
+            _currentRect = rect;
             return;
         }
 
+        // Explicit From values, computed from our own tracked _currentRect rather than left null
+        // (which would make WPF look up Left/Top/Width/Height's own current value as the origin).
+        // That implicit lookup is what used to throw "DoubleAnimation cannot use default origin
+        // value of NaN": under PerMonitorV2 (see app.manifest), window creation can trigger an
+        // extra internal resize pass that re-evaluates this animation before Left/Top/Width/Height
+        // have ever actually been set, observing WPF's uninitialized NaN default. Supplying From
+        // ourselves sidesteps that lookup entirely.
         var duration = new Duration(TimeSpan.FromMilliseconds(200));
-        BeginAnimation(LeftProperty, new System.Windows.Media.Animation.DoubleAnimation(rect.X, duration));
-        BeginAnimation(TopProperty, new System.Windows.Media.Animation.DoubleAnimation(rect.Y, duration));
-        BeginAnimation(WidthProperty, new System.Windows.Media.Animation.DoubleAnimation(rect.Width, duration));
-        BeginAnimation(HeightProperty, new System.Windows.Media.Animation.DoubleAnimation(rect.Height, duration));
+        BeginAnimation(LeftProperty, new System.Windows.Media.Animation.DoubleAnimation(_currentRect.X, rect.X, duration));
+        BeginAnimation(TopProperty, new System.Windows.Media.Animation.DoubleAnimation(_currentRect.Y, rect.Y, duration));
+        BeginAnimation(WidthProperty, new System.Windows.Media.Animation.DoubleAnimation(_currentRect.Width, rect.Width, duration));
+        BeginAnimation(HeightProperty, new System.Windows.Media.Animation.DoubleAnimation(_currentRect.Height, rect.Height, duration));
+        _currentRect = rect;
 
         // The pill is much smaller than the expanded panel (e.g. 12px vs 220px thick), so the
         // note buttons spend most of the resize crammed into a width/height they don't fit —
