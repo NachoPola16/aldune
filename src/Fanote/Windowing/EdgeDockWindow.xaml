@@ -10,34 +10,17 @@
         Background="#3A3A3A">
     <Window.Resources>
         <local:NoteTitleConverter x:Key="NoteTitleConverter" />
-        <local:NoteStateLabelConverter x:Key="NoteStateLabelConverter" />
         <Style x:Key="NoteTabButtonStyle" TargetType="Button">
-            <Setter Property="HorizontalContentAlignment" Value="Left" />
             <Setter Property="ContentTemplate">
                 <Setter.Value>
                     <DataTemplate>
-                        <StackPanel>
-                            <TextBlock Text="{Binding Text, Converter={StaticResource NoteTitleConverter}}"
-                                       FontWeight="Bold"
-                                       TextTrimming="CharacterEllipsis" />
-                            <!-- Only ever non-empty for notes shown in the archive view (Active
-                                 notes never appear there) — collapsed rather than just empty text
-                                 so the active-notes view doesn't grow an extra blank line. -->
-                            <TextBlock Text="{Binding State, Converter={StaticResource NoteStateLabelConverter}}"
-                                       FontSize="10"
-                                       Opacity="0.65">
-                                <TextBlock.Style>
-                                    <Style TargetType="TextBlock">
-                                        <Setter Property="Visibility" Value="Visible" />
-                                        <Style.Triggers>
-                                            <DataTrigger Binding="{Binding State}" Value="Active">
-                                                <Setter Property="Visibility" Value="Collapsed" />
-                                            </DataTrigger>
-                                        </Style.Triggers>
-                                    </Style>
-                                </TextBlock.Style>
-                            </TextBlock>
-                        </StackPanel>
+                        <TextBlock Text="{Binding Text, Converter={StaticResource NoteTitleConverter}}"
+                                   FontWeight="Bold"
+                                   TextTrimming="CharacterEllipsis">
+                            <TextBlock.LayoutTransform>
+                                <RotateTransform Angle="-90" />
+                            </TextBlock.LayoutTransform>
+                        </TextBlock>
                     </DataTemplate>
                 </Setter.Value>
             </Setter>
@@ -47,9 +30,9 @@
                         <Grid>
                             <Border Background="{TemplateBinding Background}" CornerRadius="4" />
                             <Border x:Name="HoverOverlay" Background="Black" Opacity="0" CornerRadius="4" />
-                            <ContentPresenter Margin="{TemplateBinding Padding}"
-                                              HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
-                                              VerticalAlignment="Center" />
+                            <ContentPresenter HorizontalAlignment="Center"
+                                              VerticalAlignment="Center"
+                                              Margin="{TemplateBinding Padding}" />
                         </Grid>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsMouseOver" Value="True">
@@ -133,6 +116,7 @@
                             <DataTemplate>
                                 <Button Content="{Binding}"
                                         Background="{Binding Color}"
+                                        Height="36"
                                         Margin="4"
                                         Padding="6"
                                         Click="OnTabClick"
