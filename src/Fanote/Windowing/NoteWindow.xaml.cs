@@ -72,6 +72,31 @@ public partial class NoteWindow : Window
         };
     }
 
+    /// <summary>
+    /// Makes the window appear to grow from <paramref name="origin"/> (a tab's on-screen rect)
+    /// to whatever Left/Top/Width/Height are already set to (the final position PositionNoteWindow
+    /// computed) — call this after that positioning and before Show(). Explicit From/To throughout,
+    /// per the Phase 3a NaN-origin animation lesson.
+    /// </summary>
+    internal void AnimateFrom(System.Windows.Rect origin)
+    {
+        double targetLeft = Left;
+        double targetTop = Top;
+        double targetWidth = Width;
+        double targetHeight = Height;
+
+        Left = origin.X;
+        Top = origin.Y;
+        Width = origin.Width;
+        Height = origin.Height;
+
+        var duration = new Duration(TimeSpan.FromMilliseconds(200));
+        BeginAnimation(LeftProperty, new System.Windows.Media.Animation.DoubleAnimation(origin.X, targetLeft, duration));
+        BeginAnimation(TopProperty, new System.Windows.Media.Animation.DoubleAnimation(origin.Y, targetTop, duration));
+        BeginAnimation(WidthProperty, new System.Windows.Media.Animation.DoubleAnimation(origin.Width, targetWidth, duration));
+        BeginAnimation(HeightProperty, new System.Windows.Media.Animation.DoubleAnimation(origin.Height, targetHeight, duration));
+    }
+
     private void OnCloseClick(object sender, RoutedEventArgs e) => Close();
 
     private void Flush()

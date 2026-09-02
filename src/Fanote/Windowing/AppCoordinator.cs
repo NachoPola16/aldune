@@ -27,7 +27,7 @@ public sealed class AppCoordinator
 
     public void RegisterDock(EdgeDockWindow dock) => _docks.Add(dock);
 
-    public void OpenOrActivateNote(Note note, EdgeDockWindow requestingDock)
+    public void OpenOrActivateNote(Note note, EdgeDockWindow requestingDock, System.Windows.Rect? originRect = null)
     {
         if (_openNoteWindows.TryGetValue(note.Id, out var existing))
         {
@@ -41,6 +41,10 @@ public sealed class AppCoordinator
 
         var noteWindow = new NoteWindow(note, _repository, this);
         requestingDock.PositionNoteWindow(noteWindow);
+        if (originRect is { } origin)
+        {
+            noteWindow.AnimateFrom(origin);
+        }
         _openNoteWindows[note.Id] = noteWindow;
         noteWindow.Closed += (_, _) => _openNoteWindows.Remove(note.Id);
         noteWindow.Show();

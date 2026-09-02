@@ -150,9 +150,16 @@ public partial class EdgeDockWindow : Window
 
     private void OnTabClick(object sender, RoutedEventArgs e)
     {
-        if (sender is FrameworkElement { Tag: Note note })
+        if (sender is FrameworkElement { Tag: Note note } element)
         {
-            _coordinator.OpenOrActivateNote(note, this);
+            var screenPositionPixels = element.PointToScreen(new Point(0, 0));
+            var dpi = VisualTreeHelper.GetDpi(element);
+            var tabRect = new System.Windows.Rect(
+                screenPositionPixels.X / dpi.DpiScaleX,
+                screenPositionPixels.Y / dpi.DpiScaleY,
+                element.ActualWidth,
+                element.ActualHeight);
+            _coordinator.OpenOrActivateNote(note, this, tabRect);
         }
     }
 
