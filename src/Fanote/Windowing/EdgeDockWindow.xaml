@@ -120,8 +120,14 @@
                                         Margin="4"
                                         Padding="6"
                                         Click="OnTabClick"
+                                        Loaded="OnTabLoaded"
                                         Tag="{Binding}"
-                                        Style="{StaticResource NoteTabButtonStyle}" />
+                                        Style="{StaticResource NoteTabButtonStyle}"
+                                        Opacity="0">
+                                    <Button.RenderTransform>
+                                        <TranslateTransform X="20" />
+                                    </Button.RenderTransform>
+                                </Button>
                             </DataTemplate>
                         </ItemsControl.ItemTemplate>
                     </ItemsControl>

@@ -1,6 +1,8 @@
 using System.Collections.Generic;
 using System.Windows;
+using System.Windows.Controls;
 using System.Windows.Interop;
+using System.Windows.Media;
 using System.Windows.Threading;
 using Fanote.Core;
 using Fanote.Interop;
@@ -152,6 +154,28 @@ public partial class EdgeDockWindow : Window
         {
             _coordinator.OpenOrActivateNote(note, this);
         }
+    }
+
+    private void OnTabLoaded(object sender, RoutedEventArgs e)
+    {
+        var button = (Button)sender;
+        int index = TabsList.Items.IndexOf(button.DataContext);
+        if (index < 0) return;
+
+        var delay = TimeSpan.FromMilliseconds(45 * index);
+
+        var opacityAnimation = new System.Windows.Media.Animation.DoubleAnimation(0, 1, new Duration(TimeSpan.FromMilliseconds(150)))
+        {
+            BeginTime = delay
+        };
+        button.BeginAnimation(OpacityProperty, opacityAnimation);
+
+        var translate = (TranslateTransform)button.RenderTransform;
+        var slideAnimation = new System.Windows.Media.Animation.DoubleAnimation(20, 0, new Duration(TimeSpan.FromMilliseconds(200)))
+        {
+            BeginTime = delay
+        };
+        translate.BeginAnimation(TranslateTransform.XProperty, slideAnimation);
     }
 
     internal void PositionNoteWindow(NoteWindow noteWindow)
