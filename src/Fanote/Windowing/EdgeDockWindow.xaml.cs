@@ -16,7 +16,6 @@ public partial class EdgeDockWindow : Window
     private readonly WorkingArea _workingArea;
     private readonly NotesRepository _repository;
     private readonly AppCoordinator _coordinator;
-    private bool _viewingArchive;
     private int _noteCount;
 
     // Tracked ourselves rather than read back from Left/Top/Width/Height: those can observe NaN
@@ -133,16 +132,7 @@ public partial class EdgeDockWindow : Window
 
     public void Refresh()
     {
-        if (_viewingArchive)
-        {
-            var archived = _repository.GetByState(NoteState.Archived);
-            var trashed = _repository.GetByState(NoteState.Trashed);
-            SetNotes(archived.Concat(trashed).ToList());
-        }
-        else
-        {
-            SetNotes(_repository.GetByState(NoteState.Active));
-        }
+        SetNotes(_repository.GetByState(NoteState.Active));
     }
 
     public void SetNotes(IReadOnlyList<Note> notes)
@@ -150,18 +140,6 @@ public partial class EdgeDockWindow : Window
         TabsList.ItemsSource = notes;
         _noteCount = notes.Count;
         ApplyGeometry();
-    }
-
-    private void OnToggleArchiveClick(object sender, RoutedEventArgs e)
-    {
-        _viewingArchive = !_viewingArchive;
-        if (_viewingArchive)
-        {
-            _repository.PurgeExpiredTrash(TimeSpan.FromDays(NotesRepository.DefaultTrashRetentionDays));
-        }
-        ToggleArchiveButton.Content = _viewingArchive ? "Activas" : "Archivadas";
-        NewNoteButton.Visibility = _viewingArchive ? Visibility.Collapsed : Visibility.Visible;
-        Refresh();
     }
 
     private void OnManageArchiveClick(object sender, RoutedEventArgs e)

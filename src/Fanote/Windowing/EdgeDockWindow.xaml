@@ -99,44 +99,60 @@
                 </Setter.Value>
             </Setter>
         </Style>
+        <Style x:Key="CircularIconButtonStyle" TargetType="Button">
+            <Setter Property="Width" Value="32" />
+            <Setter Property="Height" Value="32" />
+            <Setter Property="Margin" Value="4" />
+            <Setter Property="Foreground" Value="White" />
+            <Setter Property="Background" Value="#33FFFFFF" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="Bg" Background="{TemplateBinding Background}" CornerRadius="16">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Bg" Property="Background" Value="#4DFFFFFF" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
     </Window.Resources>
     <Grid>
         <!-- Full tab list + "+ Nueva nota", shown once the panel is (nearly) fully expanded. -->
         <Grid x:Name="PanelContent">
-            <Grid.RowDefinitions>
-                <RowDefinition Height="*" />
-                <RowDefinition Height="Auto" />
-            </Grid.RowDefinitions>
-            <ScrollViewer Grid.Row="0"
-                          Margin="0,0,4,0"
+            <ScrollViewer Margin="0,0,4,0"
                           VerticalScrollBarVisibility="Auto"
                           HorizontalScrollBarVisibility="Disabled">
-                <ItemsControl x:Name="TabsList">
-                    <ItemsControl.ItemTemplate>
-                        <DataTemplate>
-                            <Button Content="{Binding}"
-                                    Background="{Binding Color}"
-                                    Margin="4"
-                                    Padding="6"
-                                    Click="OnTabClick"
-                                    Tag="{Binding}"
-                                    Style="{StaticResource NoteTabButtonStyle}" />
-                        </DataTemplate>
-                    </ItemsControl.ItemTemplate>
-                </ItemsControl>
+                <StackPanel>
+                    <ItemsControl x:Name="TabsList">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <Button Content="{Binding}"
+                                        Background="{Binding Color}"
+                                        Margin="4"
+                                        Padding="6"
+                                        Click="OnTabClick"
+                                        Tag="{Binding}"
+                                        Style="{StaticResource NoteTabButtonStyle}" />
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                    <Button x:Name="NewNoteButton" Click="OnNewNoteClick"
+                            Style="{StaticResource CircularIconButtonStyle}"
+                            ToolTip="Nueva nota">
+                        <TextBlock Text="+" FontSize="16" FontWeight="Bold" />
+                    </Button>
+                    <Button x:Name="ManageArchiveButton" Click="OnManageArchiveClick"
+                            Style="{StaticResource CircularIconButtonStyle}"
+                            ToolTip="Gestionar notas">
+                        <TextBlock Text="&#xE713;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" />
+                    </Button>
+                </StackPanel>
             </ScrollViewer>
-            <StackPanel Grid.Row="1" Orientation="Horizontal">
-                <Button x:Name="NewNoteButton" Content="+ Nueva nota" Margin="4" Padding="6" Click="OnNewNoteClick" />
-                <Button x:Name="ToggleArchiveButton" Content="Archivadas" Margin="4" Padding="6" Click="OnToggleArchiveClick" />
-                <!-- Bulk archive/restore/trash needs real room (checkboxes + a list + a toolbar
-                     don't fit this compact panel), so it opens its own properly-sized
-                     NotesManagerWindow instead of trying to do it inline here. Always visible —
-                     not just while viewing the archive — so it's reachable from either view. -->
-                <Button x:Name="ManageArchiveButton" Margin="4" Padding="6" Click="OnManageArchiveClick"
-                        ToolTip="Gestionar notas">
-                    <TextBlock Text="&#xE713;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" />
-                </Button>
-            </StackPanel>
         </Grid>
 
         <!-- Compact color-swatch preview shown while the pill is resting (collapsed). No
