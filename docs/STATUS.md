@@ -47,8 +47,21 @@ autoridad de diseño; todo lo demás (planes, código) se argumenta contra él.
   (`NotesRepository.PurgeExpiredTrash`), y una ventana aparte
   (`NotesManagerWindow`) para archivar/restaurar/borrar en bloque con
   filtro por estado.
+- **Fase 3a** (`docs/superpowers/plans/2026-09-02-fanote-phase3a-multimonitor-dpi.md`):
+  primera sub-entrega de la Fase 3 — un `EdgeDockWindow` real por cada
+  monitor conectado (antes solo el principal), con geometría y DPI reales
+  de Win32 (`MonitorEnumerator`, `app.manifest` con `PerMonitorV2`), y un
+  `AppCoordinator` a nivel de app para que las notas y la ventana de
+  gestión no se dupliquen entre docks. **Verificado de forma automática**
+  (build, 74/74 tests, inspección de rects de ventana reales vía
+  `EnumWindows`) contra el segundo monitor real del usuario (vertical) —
+  **pendiente el checklist manual de interacción** (hover/expandir/abrir
+  notas con el ratón en los dos monitores), que no se pudo hacer porque el
+  usuario estaba fuera durante la implementación. Ver la sección de
+  historial más abajo para el detalle, incluido un bug real de WPF
+  encontrado y arreglado en el camino.
 
-Tests: 71/71 pasando (`dotnet test` desde la raíz del repo).
+Tests: 74/74 pasando (`dotnet test` desde la raíz del repo).
 
 ## Cómo se ha trabajado (para mantener el mismo estilo)
 
@@ -95,25 +108,33 @@ cuando toque la fase correspondiente:
   `App.xaml.cs`, deduplicación de patrón `SqliteConnection.ClearPool()` en
   tests, etc.) — sin impacto funcional, solo mantenibilidad.
 
-## Prerrequisitos para la Fase 3 (multi-monitor + DPI) — detectados por la revisión final de la Fase 2
+## Prerrequisitos para la Fase 3, resto por hacer (sub-entregas 2+)
 
-Importante leer esto antes de empezar la Fase 3, para no repetir bugs ya
-arreglados una vez:
+Los puntos 1 y 2 originales (coordinador a nivel de app, geometría/DPI real
+por Win32) ya están resueltos por la Fase 3a — ver el historial más abajo.
+Queda:
 
-1. **`_openNoteWindows` (el diccionario que evita abrir la misma nota dos
-   veces) y `NoteWindow._owner`/`Refresh()` viven hoy en `EdgeDockWindow`**,
-   que es una instancia por monitor. Con multi-monitor habrá un dock por
-   pantalla — si esto no se mueve a un coordinador a nivel de aplicación
-   antes de crear el segundo dock, se reproduce exactamente el bug de
-   "ventanas duplicadas" y "etiqueta desactualizada" que costó varias rondas
-   arreglar en la Fase 2.
-2. **`SystemParameters.WorkArea` solo devuelve el área de trabajo del
-   monitor PRINCIPAL.** La Fase 3 necesita los límites reales de cada
-   monitor vía Win32 (`MonitorFromWindow`/`GetMonitorInfo`), con DPI
-   Per-Monitor V2 de verdad, no esta API.
-3. **`ScreenOrigin` está fijo al literal `"primary"` en todas las notas
-   creadas hasta ahora.** La Fase 3 tiene que decidir qué hacer con ese
-   valor centinela frente a identificadores reales de dispositivo estables.
+1. **`ScreenOrigin` sigue fijo al literal `"primary"` en todas las notas.**
+   Una sub-entrega futura tiene que decidir qué hacer con ese valor
+   centinela frente a IDs de dispositivo reales y estables (Win32 hoy solo
+   da `\\.\DISPLAY1`-style, que cambia al reconectar monitores — ver
+   `MonitorInfo.DeviceName` en `Fanote.Core`, documentado ahí como "no es
+   el id estable").
+2. **Con varios docks, todos muestran la misma lista completa de notas**
+   (se decidió así a propósito en la Fase 3a, mientras no haya IDs
+   estables por monitor — ver historial). Cuando se resuelva el punto 1,
+   cada dock podrá empezar a filtrar por su propio origen.
+3. **Sin toggle de Ajustes** para restringir la app a un solo monitor — no
+   existe ninguna UI de Ajustes todavía (`AppSettings` solo guarda la
+   clave de cifrado). Necesaria si se quiere ese control además de "en
+   todas las pantallas conectadas" (el único modo que hay ahora).
+4. **Sin hotplug en caliente**: conectar/desconectar un monitor con la app
+   ya corriendo no se maneja (`WM_DISPLAYCHANGE`) — hace falta reiniciar
+   la app para que detecte el cambio. Tampoco se maneja un cambio de
+   escala de DPI en caliente sin desconectar el monitor (WPF con
+   `PerMonitorV2` reescala solo las ventanas existentes, pero el
+   reposicionamiento fino del docking al borde no se ha probado para ese
+   caso).
 
 ## Prerrequisitos para la Fase 5 (import/export)
 
@@ -327,12 +348,86 @@ retoca:
   automática + cambio posterior desde la nota); borrado permanente manual
   (lo cubre la purga automática).
 
+## Fase 3a: multi-monitor real + DPI (sesión 2026-09-02, arquitectónico)
+
+Spec: `docs/superpowers/specs/2026-09-02-fanote-phase3a-multimonitor-dpi-design.md`.
+Plan: `docs/superpowers/plans/2026-09-02-fanote-phase3a-multimonitor-dpi.md`.
+Implementado siguiendo el plan tarea por tarea (5 tareas, 5 commits) mientras
+el usuario estaba fuera — ver ese hueco de verificación abajo.
+
+- **`Fanote.Core.MonitorInfo` + `DpiConversion`** (TDD): tipo de dato puro
+  por monitor (nombre de dispositivo, área de trabajo, escala de DPI,
+  si es el principal) y la conversión píxeles→DIP que necesita Win32
+  (Win32 da píxeles físicos; `Window.Left/Top/Width/Height` de WPF son
+  DIPs relativas al DPI de cada monitor una vez declarado `PerMonitorV2`).
+  3 tests nuevos.
+- **`Fanote.Interop.MonitorEnumerator`**: `EnumDisplayMonitors` +
+  `GetMonitorInfoW` + `GetDpiForMonitor` (Win32 puro, sin dependencia
+  nueva, mismo patrón que `NativeMethods.cs`). Si `GetDpiForMonitor` falla
+  para un monitor, asume 96 DPI en vez de propagar el error. Verificado
+  contra el hardware real del usuario (un volcado temporal a fichero, ya
+  que no había forma de mostrar un `MessageBox` interactivo sin el
+  usuario delante): detectó correctamente el monitor principal
+  (2560×1440) y el secundario en vertical (1440×2560, con offset negativo
+  respecto al principal).
+- **`src/Fanote/app.manifest`** declarando `PerMonitorV2`, referenciado
+  desde `Fanote.csproj` (`<ApplicationManifest>`). No existía ningún
+  manifest antes — la app corría con el DPI-awareness por defecto de
+  Windows para un proceso sin declarar.
+- **`AppCoordinator`** (`Fanote.Windowing`, una instancia para toda la
+  app): se lleva `_openNoteWindows` y el `NotesManagerWindow` único que
+  antes vivían dentro de `EdgeDockWindow` (que ahora es una instancia por
+  monitor). `NoteWindow`/`NotesManagerWindow` ya no reciben su
+  `EdgeDockWindow` "dueño", reciben el coordinador y llaman a
+  `RefreshAll()` — con varios docks mostrando la misma lista de notas
+  (ver prerrequisitos de arriba), archivar desde cualquiera tiene que
+  refrescarlos todos, no solo uno. `EdgeDockWindow.PositionNoteWindow`
+  pasó de `private` a `internal` porque el coordinador necesita llamarlo.
+- **`App.xaml.cs`**: crea un `EdgeDockWindow` por cada monitor que
+  devuelve `MonitorEnumerator.EnumerateMonitors()` (antes, uno solo con
+  `SystemParameters.WorkArea`, que solo daba el principal). Cero monitores
+  detectados se trata como un cuarto modo de fallo de arranque, igual que
+  los tres que ya había.
+- **Bug real de WPF encontrado y arreglado**: `EdgeDockWindow.ApplyGeometry`
+  animaba `Left/Top/Width/Height` sin `From` explícito, confiando en que
+  WPF mirase el valor "actual" de la propiedad como origen implícito. Al
+  añadir el `app.manifest` (`PerMonitorV2`), la creación de la ventana
+  puede disparar una pasada de resize interna adicional que reevalúa esa
+  animación **antes** de que esas propiedades tengan nunca un valor real,
+  viendo el `NaN` por defecto de WPF — lanzaba
+  `System.Windows.Media.Animation.AnimationException: ... cannot use
+  default origin value of 'NaN'`. Arreglo: `EdgeDockWindow` ahora lleva su
+  propio campo `_currentRect` con la geometría "actual" tal como la
+  entiende el propio código, y siempre pasa `From` y `To` explícitos a los
+  `DoubleAnimation`, sin depender nunca de esa búsqueda implícita.
+  Detectado y arreglado con la app corriendo de verdad contra los dos
+  monitores del usuario (inspección de rects de ventana vía P/Invoke
+  `EnumWindows`/`GetWindowRect` desde PowerShell, ya que no había nadie
+  delante de la pantalla para verlo a simple vista). **Si se toca de nuevo
+  `ApplyGeometry`, no volver a confiar en el origen implícito de una
+  animación — siempre pasar `From` explícito.**
+- **Verificado de forma automática**: build limpio, 74/74 tests, y los
+  rects de ventana reales de los dos docks (`(2534,640)-(2554,800)` en el
+  monitor principal, `(-26,659)-(-6,819)` en el secundario vertical)
+  coinciden con lo que calcula `EdgeGeometry.PillRect` para cada área de
+  trabajo real. **No verificado**: el checklist manual completo de
+  interacción del spec (hover, expandir, clicar pestañas desde los dos
+  docks, abrir "Gestionar notas" desde cada uno, archivar y comprobar que
+  ambos se actualizan) — necesita que el usuario lo prueba a mano la
+  próxima vez que retome esto.
+
 ## Cómo seguir desde aquí
 
-Sigue abierto elegir entre:
+Antes de nada, la próxima vez que se retome: **hacer el checklist manual
+de la Fase 3a** (ver arriba) con los dos monitores — es lo único que
+queda para dar la sub-entrega por completamente cerrada.
 
-1. Empezar la Fase 3 (multi-monitor + DPI) — leer los prerrequisitos de
-   arriba antes de escribir el plan.
+Después, sigue abierto elegir entre:
+
+1. Sub-entrega 2 de la Fase 3 (ver prerrequisitos arriba): toggle de
+   Ajustes para monitor único, IDs estables de dispositivo, hotplug en
+   caliente — probablemente necesita su propio brainstorming (algunas
+   piezas, como IDs estables, tocan el modelo de datos).
 2. Modo "Papel vintage" (ver spec v1).
 3. Rediseño de pestañas en abanico estilo Hold My Notes (ver sección de
    arriba) — más ambicioso, necesita su propio brainstorming.
