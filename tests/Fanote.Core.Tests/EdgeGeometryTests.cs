@@ -17,30 +17,51 @@ public class EdgeGeometryTests
 
     [Theory]
     [MemberData(nameof(Areas))]
-    public void PillRect_Right_IsFlushAgainstRightEdge(WorkingArea area)
+    public void PillRect_Right_IsInsetFromRightEdgeByMargin(WorkingArea area)
     {
         var rect = EdgeGeometry.PillRect(area, EdgePosition.Right);
-        Assert.Equal(area.X + area.Width - EdgeGeometry.PillThickness, rect.X);
+        Assert.Equal(area.X + area.Width - EdgeGeometry.PillThickness - EdgeGeometry.PillEdgeMargin, rect.X);
         Assert.Equal(EdgeGeometry.PillThickness, rect.Width);
     }
 
     [Theory]
     [MemberData(nameof(Areas))]
-    public void PillRect_Top_IsFlushAgainstTopEdge(WorkingArea area)
+    public void PillRect_Left_IsInsetFromLeftEdgeByMargin(WorkingArea area)
+    {
+        var rect = EdgeGeometry.PillRect(area, EdgePosition.Left);
+        Assert.Equal(area.X + EdgeGeometry.PillEdgeMargin, rect.X);
+        Assert.Equal(EdgeGeometry.PillThickness, rect.Width);
+    }
+
+    [Theory]
+    [MemberData(nameof(Areas))]
+    public void PillRect_Top_IsInsetFromTopEdgeByMargin(WorkingArea area)
     {
         var rect = EdgeGeometry.PillRect(area, EdgePosition.Top);
-        Assert.Equal(area.Y, rect.Y);
+        Assert.Equal(area.Y + EdgeGeometry.PillEdgeMargin, rect.Y);
         Assert.Equal(EdgeGeometry.PillThickness, rect.Height);
     }
 
     [Theory]
     [MemberData(nameof(Areas))]
-    public void ExpandedRect_SameEdge_IsLargerAndFlushLikePill(WorkingArea area)
+    public void PillRect_Bottom_IsInsetFromBottomEdgeByMargin(WorkingArea area)
+    {
+        var rect = EdgeGeometry.PillRect(area, EdgePosition.Bottom);
+        Assert.Equal(area.Y + area.Height - EdgeGeometry.PillThickness - EdgeGeometry.PillEdgeMargin, rect.Y);
+        Assert.Equal(EdgeGeometry.PillThickness, rect.Height);
+    }
+
+    [Theory]
+    [MemberData(nameof(Areas))]
+    public void ExpandedRect_SameEdge_IsLargerAndFlushAgainstTrueEdge(WorkingArea area)
     {
         var pill = EdgeGeometry.PillRect(area, EdgePosition.Left);
         var expanded = EdgeGeometry.ExpandedRect(area, EdgePosition.Left);
         Assert.True(expanded.Width > pill.Width);
-        Assert.Equal(pill.X, expanded.X);
+        // Unlike the pill (inset by PillEdgeMargin for its rounded corners/shadow), the
+        // expanded panel stays flush against the true screen edge.
+        Assert.Equal(area.X, expanded.X);
+        Assert.True(expanded.X < pill.X);
     }
 
     [Theory]

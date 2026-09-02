@@ -84,6 +84,17 @@ public sealed class NotesRepository
         command.ExecuteNonQuery();
     }
 
+    public void SetColor(Guid id, string color)
+    {
+        using var connection = _database.OpenConnection();
+        using var command = connection.CreateCommand();
+        command.CommandText = "UPDATE Note SET Color = $color, UpdatedAt = $updatedAt WHERE Id = $id;";
+        command.Parameters.AddWithValue("$color", color);
+        command.Parameters.AddWithValue("$updatedAt", DateTimeOffset.UtcNow.ToString("O"));
+        command.Parameters.AddWithValue("$id", id.ToString());
+        command.ExecuteNonQuery();
+    }
+
     public void SetState(Guid id, NoteState state)
     {
         using var connection = _database.OpenConnection();

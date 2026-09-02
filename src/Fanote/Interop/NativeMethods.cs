@@ -21,6 +21,40 @@ internal static class NativeMethods
         SetWindowLong(hWnd, GWL_EXSTYLE, exStyle | WS_EX_NOACTIVATE);
     }
 
+    private const int DWMWA_WINDOW_CORNER_PREFERENCE = 33;
+    private const int DWMWCP_ROUNDSMALL = 3;
+
+    [StructLayout(LayoutKind.Sequential)]
+    private struct MARGINS
+    {
+        public int Left;
+        public int Right;
+        public int Top;
+        public int Bottom;
+    }
+
+    [DllImport("dwmapi.dll")]
+    private static extern int DwmSetWindowAttribute(IntPtr hWnd, int dwAttribute, ref int pvAttribute, int cbAttribute);
+
+    [DllImport("dwmapi.dll")]
+    private static extern int DwmExtendFrameIntoClientArea(IntPtr hWnd, ref MARGINS pMarInset);
+
+    /// <summary>
+    /// Rounds the window's corners and gives it the standard system drop shadow, using the
+    /// same DWM composition Windows already applies to normal (non-borderless) windows —
+    /// works on an opaque window, so it doesn't need AllowsTransparency (which the design
+    /// deliberately avoids: it would disable ClearType text rendering). No-ops harmlessly on
+    /// Windows versions that don't support DWMWA_WINDOW_CORNER_PREFERENCE (pre-Windows 11).
+    /// </summary>
+    internal static void ApplyRoundedCornersAndShadow(IntPtr hWnd)
+    {
+        int preference = DWMWCP_ROUNDSMALL;
+        DwmSetWindowAttribute(hWnd, DWMWA_WINDOW_CORNER_PREFERENCE, ref preference, sizeof(int));
+
+        var margins = new MARGINS { Left = -1, Right = -1, Top = -1, Bottom = -1 };
+        DwmExtendFrameIntoClientArea(hWnd, ref margins);
+    }
+
     internal static void ForceActivate(Window window)
     {
         var hwnd = new WindowInteropHelper(window).EnsureHandle();

@@ -33,8 +33,15 @@ autoridad de diseño; todo lo demás (planes, código) se argumenta contra él.
   del dock y como título de la ventana — sin campo de título nuevo, solo
   presentación (`NoteTitleHelper.GetTitle`, en `Fanote.Core`, puramente
   computado a partir del texto existente).
+- **Arreglo de los dos bugs visuales pendientes + pulido visual moderno**
+  (bounded, sin spec/plan formal — ver detalle en "Bugs visuales" e
+  "Historial" más abajo): scroll en el panel desplegado, mitigación del
+  glitch de despliegue, pill en reposo con margen/esquinas redondeadas/sombra
+  nativa de Windows 11, ventana de nota teñida del color de la nota, pastillas
+  de color por nota visibles en el pill en reposo, y selector para cambiar el
+  color de una nota ya creada.
 
-Tests: 65/65 pasando (`dotnet test` desde la raíz del repo).
+Tests: 70/70 pasando (`dotnet test` desde la raíz del repo).
 
 ## Cómo se ha trabajado (para mantener el mismo estilo)
 
@@ -121,19 +128,17 @@ arreglados una vez:
   "Archivadas" que **reemplaza** temporalmente lo que se ve en el propio
   dock, reutilizando toda la lógica de pestañas que ya existe. Pendiente de
   diseñar/planificar cuando se retome.
-- **Pulido visual pendiente** (identificado mirando capturas de Hold My
-  Notes/noty-sepia, no implementado todavía): el pill en reposo no debería
-  ir a ras del borde de pantalla — mejor con un pequeño margen, esquinas
-  redondeadas y sombra suave (ahora mismo es un rectángulo recto pegado al
-  borde). La ventana de nota abierta debería tener el fondo teñido con el
-  color pastel de la nota (como un post-it de verdad), no siempre blanco
-  como ahora.
+- **Pulido visual moderno — HECHO** (ver "Historial: pulido visual y bugs
+  visuales" más abajo para el detalle técnico).
 - **Modo "Papel vintage"** (textura de papel, inclinación por nota, tipografía
   manuscrita, sonidos): sigue tal cual estaba en la spec original, como
-  paquete opcional aparte — no confundir con el pulido visual moderno de
-  arriba, que es una cosa distinta y más prioritaria ahora mismo.
+  paquete opcional aparte — sigue sin implementar, no confundir con el
+  pulido visual moderno de arriba (ya cerrado).
 
-## Bugs visuales de la sesión anterior (arreglados, uno parcialmente)
+## Historial: pulido visual y bugs visuales (sesión 2026-09-02)
+
+Bounded, sin spec/plan formal (brainstorming → implementación directa,
+verificado a mano en cada paso). Por si hace falta el detalle técnico luego:
 
 1. **Corte de notas en el panel desplegado — ARREGLADO.** El panel tenía
    tamaño fijo (`ExpandedThickness`/`ExpandedLength` en `EdgeGeometry.cs`) y
@@ -143,40 +148,61 @@ arreglados una vez:
    `EdgeDockWindow.xaml` el `StackPanel` raíz pasó a ser un `Grid` de dos
    filas (`*` + `Auto`), con la lista de pestañas dentro de un
    `ScrollViewer` (fila `*`) y el botón "+ Nueva nota" fijo en la fila
-   `Auto` de abajo, siempre visible. Se eligió scroll dentro de un tamaño
-   máximo (no crecer el panel con el nº de notas) para no tener que
-   recalcular geometría/posicionamiento cada vez que cambia el nº de notas.
-   Verificado a mano: con varias notas ya no se cortan, aparecen con scroll.
-2. **Glitch de un frame al desplegar — MITIGADO, no resuelto del todo.**
-   Confirmado que el bug es independiente del punto 1 (no se arregló solo).
-   Causa raíz: el pill (12px de grosor) y el panel desplegado (220px) tienen
-   una diferencia de tamaño tan grande que, durante los ~200ms de la
-   animación, las pestañas se renderizan encajadas en anchos/altos
-   intermedios que no les caben — de ahí el "contenido mal encajado un
-   instante". Mitigación aplicada en `EdgeDockWindow.xaml.cs`
-   (`ApplyGeometry`): el contenido (`PanelContent`, el `Grid` con las
-   pestañas) ahora se oculta (`Opacity`) al empezar a colapsar y solo
-   reaparece con fundido en los últimos 80ms de la expansión, cuando el
-   panel ya casi tiene su tamaño final — así se evita ver el encaje
-   intermedio. Probado a mano: ya no se ve el contenido mal encajado, pero
-   el crecimiento en sí (12px → 220px en 200ms) se sigue sintiendo algo
-   brusco — es un salto de tamaño grande, no ya un defecto de render. El
-   usuario decidió no perseguir esto más ahora mismo porque es probable que
-   se resuelva (o cambie de forma) al abordar el pulido visual pendiente de
-   abajo (dock con bordes redondeados/sombra en vez de un pill a ras del
-   borde) — revisar entonces si sigue percibiéndose brusco.
+   `Auto` de abajo, siempre visible.
+2. **Glitch de un frame al desplegar — mitigado, no resuelto del todo.**
+   Causa raíz: el pill y el panel desplegado tenían una diferencia de tamaño
+   tan grande (12px → 220px) que, durante los ~200ms de la animación, las
+   pestañas se renderizaban encajadas en anchos/altos intermedios que no les
+   cabían. Mitigación en `EdgeDockWindow.xaml.cs` (`ApplyGeometry`): el
+   contenido se oculta (`Opacity`) al empezar a colapsar y solo reaparece
+   con fundido en los últimos 80ms de la expansión. El crecimiento en sí
+   se sigue sintiendo algo brusco (es un salto de tamaño grande, no ya un
+   defecto de render) — el usuario decidió no perseguir esto más.
+3. **Pill en reposo con margen/esquinas redondeadas/sombra.** Nueva
+   constante `EdgeGeometry.PillEdgeMargin` (6px) que separa el pill del
+   borde físico de pantalla (solo el pill; el panel desplegado se queda
+   flush). Esquinas redondeadas y sombra vía APIs nativas de Windows 11
+   (`NativeMethods.ApplyRoundedCornersAndShadow`: `DwmSetWindowAttribute`
+   con `DWMWA_WINDOW_CORNER_PREFERENCE` + `DwmExtendFrameIntoClientArea`
+   con márgenes negativos para la sombra estándar del sistema) —
+   deliberadamente sin `AllowsTransparency` (la spec original ya descarta
+   eso porque rompe ClearType, ver diseño v1). Redondea las 4 esquinas por
+   igual (la API no permite solo 2); en el panel desplegado, al seguir
+   pegado al borde físico, el recorte en las esquinas ancladas es
+   imperceptible. En Windows 10 (sin esta API) no hace nada, sin roturas.
+4. **Ventana de nota teñida del color de la nota.** `NoteWindow` pinta su
+   `Background` y el del `TextBox` con el mismo pastel que ya usa la
+   pestaña del dock (`NoteWindow.ApplyColor`).
+5. **Pastillas de color en el pill de reposo** (inspirado en Hold My
+   Notes, capturas del usuario). `EdgeGeometry.PillThickness` subió de 12
+   a 20px para tener sitio. `EdgeDockWindow.xaml` tiene ahora dos paneles
+   superpuestos en el mismo `Grid`: `PanelContent` (lista completa, visible
+   expandido) y `PillSwatches` (mini cuadraditos de color por nota activa,
+   visible en reposo) — se alternan igual que el punto 2, con fundido
+   cruzado. **Cuidado con este patrón**: `Opacity` NO desactiva el
+   hit-testing en WPF — hubo que fijar `IsHitTestVisible` en ambos
+   explícitamente en `ApplyGeometry` (sincronizado, sin animar) porque el
+   panel invisible seguía interceptando los clics del panel visible debajo.
+   Si se añade un tercer panel superpuesto algún día, no olvidar este punto.
+6. **Selector de color en la ventana de nota.** Fila de 6 pastillas
+   (paleta compartida, extraída a `Fanote.Windowing.NoteColorPalette` para
+   que la usen tanto `EdgeDockWindow` como `NoteWindow`) — clic para
+   recolorear una nota ya creada. Nuevo `NotesRepository.SetColor`
+   (TDD, mismo patrón que `SetState`/`UpdateText`). Se decidió
+   deliberadamente NO añadir un desplegable de color al crear la nota con
+   "+" — el color se sigue asignando automáticamente (rotación de la
+   paleta) y se cambia después desde la propia nota si se quiere; añadir
+   un flyout sobre el pill (no-activating) se consideró complejidad
+   innecesaria para el beneficio.
 
 ## Cómo seguir desde aquí
 
-Sigue abierto a elegir entre estas opciones (ver sesión anterior):
+Con el pulido visual moderno cerrado, sigue abierto elegir entre:
 
-1. Terminar el pulido visual moderno pendiente (bordes redondeados/sombra del
-   dock, ventana de nota teñida de su color) — nótese que puede afectar o
-   resolver el punto 2 de arriba (el crecimiento brusco), al cambiar la
-   forma en reposo del dock.
-2. Diseñar e implementar el botón "Archivadas" (reemplaza vista del dock).
-3. Empezar la Fase 3 (multi-monitor + DPI) — leer los prerrequisitos de
+1. Diseñar e implementar el botón "Archivadas" (reemplaza vista del dock).
+2. Empezar la Fase 3 (multi-monitor + DPI) — leer los prerrequisitos de
    arriba antes de escribir el plan.
+3. Modo "Papel vintage" (ver spec v1), si se prioriza sobre lo anterior.
 
 Si arrancas esto en una sesión/IA nueva: lee este archivo, la spec, y el plan
 de la última fase fusionada, y sigue el mismo flujo de skills descrito arriba

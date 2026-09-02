@@ -97,6 +97,19 @@ public class NotesRepositoryTests : IDisposable
     }
 
     [Fact]
+    public void SetColor_ChangesColorAndUpdatedAt()
+    {
+        var created = _sut.Create("nota a recolorear", "#FFFFFF", "primary");
+        var originalUpdatedAt = created.UpdatedAt;
+
+        _sut.SetColor(created.Id, "#C9E4DE");
+
+        var reloaded = _sut.GetByState(NoteState.Active)[0];
+        Assert.Equal("#C9E4DE", reloaded.Color);
+        Assert.True(reloaded.UpdatedAt >= originalUpdatedAt);
+    }
+
+    [Fact]
     public void GetByState_OrdersByCreatedAt()
     {
         var first = _sut.Create("primera", "#FFFFFF", "primary");

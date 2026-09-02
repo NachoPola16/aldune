@@ -46,6 +46,7 @@ public partial class EdgeDockWindow : Window
         {
             var hwnd = new WindowInteropHelper(this).Handle;
             NativeMethods.MakeNonActivating(hwnd);
+            NativeMethods.ApplyRoundedCornersAndShadow(hwnd);
         };
 
         ApplyGeometry();
@@ -68,6 +69,13 @@ public partial class EdgeDockWindow : Window
         BeginAnimation(WidthProperty, null);
         BeginAnimation(HeightProperty, null);
         PanelContent.BeginAnimation(OpacityProperty, null);
+        PillSwatches.BeginAnimation(OpacityProperty, null);
+
+        // Opacity alone doesn't stop hit-testing in WPF — without this, whichever of the two
+        // overlapping panels is merely invisible (not the active one) still swallows clicks
+        // meant for the buttons underneath it.
+        PanelContent.IsHitTestVisible = expanding;
+        PillSwatches.IsHitTestVisible = !expanding;
 
         if (!SystemParameters.ClientAreaAnimation)
         {
@@ -76,6 +84,7 @@ public partial class EdgeDockWindow : Window
             Width = rect.Width;
             Height = rect.Height;
             PanelContent.Opacity = expanding ? 1 : 0;
+            PillSwatches.Opacity = expanding ? 0 : 1;
             return;
         }
 
@@ -89,12 +98,18 @@ public partial class EdgeDockWindow : Window
         // note buttons spend most of the resize crammed into a width/height they don't fit —
         // that's the "badly fit for an instant" glitch. Rather than chase every intermediate
         // layout, hide the content while the window is still mid-resize and only reveal it
-        // once it's nearly at full size (and hide it again the instant a collapse starts).
-        var contentAnimation = expanding
-            ? new System.Windows.Media.Animation.DoubleAnimation(0, 1, new Duration(TimeSpan.FromMilliseconds(80)))
-                { BeginTime = TimeSpan.FromMilliseconds(120) }
-            : new System.Windows.Media.Animation.DoubleAnimation(1, 0, new Duration(TimeSpan.FromMilliseconds(60)));
-        PanelContent.BeginAnimation(OpacityProperty, contentAnimation);
+        // once it's nearly at full size (and hide it again the instant a collapse starts). The
+        // pill's own color-swatch preview (PillSwatches) does the mirror image of this: it's
+        // what's showing while collapsed, so it fades out the instant expansion starts and
+        // back in only in the closing moments of collapse.
+        var fadeIn = new System.Windows.Media.Animation.DoubleAnimation(0, 1, new Duration(TimeSpan.FromMilliseconds(80)))
+        {
+            BeginTime = TimeSpan.FromMilliseconds(120)
+        };
+        var fadeOut = new System.Windows.Media.Animation.DoubleAnimation(1, 0, new Duration(TimeSpan.FromMilliseconds(60)));
+
+        PanelContent.BeginAnimation(OpacityProperty, expanding ? fadeIn : fadeOut);
+        PillSwatches.BeginAnimation(OpacityProperty, expanding ? fadeOut : fadeIn);
     }
 
     public void Refresh()
@@ -143,20 +158,10 @@ public partial class EdgeDockWindow : Window
         noteWindow.Top = Math.Min(top, _workingArea.Y + _workingArea.Height - noteWindow.Height);
     }
 
-    private static readonly string[] NoteColorPalette =
-    {
-        "#F5E3B3", // pale yellow
-        "#C9E4DE", // mint
-        "#F2C6DE", // pink
-        "#B8D8E8", // pale blue
-        "#D9C9E8", // pale lavender
-        "#F2D9B8", // pale peach
-    };
-
     private void OnNewNoteClick(object sender, RoutedEventArgs e)
     {
         var existingCount = _repository.GetByState(NoteState.Active).Count;
-        var color = NoteColorPalette[existingCount % NoteColorPalette.Length];
+        var color = NoteColorPalette.Colors[existingCount % NoteColorPalette.Colors.Length];
         _repository.Create(string.Empty, color, screenOrigin: "primary");
         Refresh();
     }

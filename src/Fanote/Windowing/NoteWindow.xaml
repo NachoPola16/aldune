@@ -10,6 +10,7 @@
             <Button Content="Archivar" Click="OnArchiveClick" Margin="0,0,4,0" Padding="6,2" />
             <Button Content="Papelera" Click="OnTrashClick" Padding="6,2" />
         </StackPanel>
+        <StackPanel x:Name="ColorSwatches" DockPanel.Dock="Bottom" Orientation="Horizontal" Margin="4,4,4,0" />
         <TextBox x:Name="TextBody"
                  AcceptsReturn="True"
                  TextWrapping="Wrap"
