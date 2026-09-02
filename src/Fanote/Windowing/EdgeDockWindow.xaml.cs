@@ -53,7 +53,8 @@ public partial class EdgeDockWindow : Window
 
     private void ApplyGeometry()
     {
-        var rect = _fanState.IsExpanded
+        bool expanding = _fanState.IsExpanded;
+        var rect = expanding
             ? EdgeGeometry.ExpandedRect(_workingArea, _edge)
             : EdgeGeometry.PillRect(_workingArea, _edge);
 
@@ -66,6 +67,7 @@ public partial class EdgeDockWindow : Window
         BeginAnimation(TopProperty, null);
         BeginAnimation(WidthProperty, null);
         BeginAnimation(HeightProperty, null);
+        PanelContent.BeginAnimation(OpacityProperty, null);
 
         if (!SystemParameters.ClientAreaAnimation)
         {
@@ -73,6 +75,7 @@ public partial class EdgeDockWindow : Window
             Top = rect.Y;
             Width = rect.Width;
             Height = rect.Height;
+            PanelContent.Opacity = expanding ? 1 : 0;
             return;
         }
 
@@ -81,6 +84,17 @@ public partial class EdgeDockWindow : Window
         BeginAnimation(TopProperty, new System.Windows.Media.Animation.DoubleAnimation(rect.Y, duration));
         BeginAnimation(WidthProperty, new System.Windows.Media.Animation.DoubleAnimation(rect.Width, duration));
         BeginAnimation(HeightProperty, new System.Windows.Media.Animation.DoubleAnimation(rect.Height, duration));
+
+        // The pill is much smaller than the expanded panel (e.g. 12px vs 220px thick), so the
+        // note buttons spend most of the resize crammed into a width/height they don't fit —
+        // that's the "badly fit for an instant" glitch. Rather than chase every intermediate
+        // layout, hide the content while the window is still mid-resize and only reveal it
+        // once it's nearly at full size (and hide it again the instant a collapse starts).
+        var contentAnimation = expanding
+            ? new System.Windows.Media.Animation.DoubleAnimation(0, 1, new Duration(TimeSpan.FromMilliseconds(80)))
+                { BeginTime = TimeSpan.FromMilliseconds(120) }
+            : new System.Windows.Media.Animation.DoubleAnimation(1, 0, new Duration(TimeSpan.FromMilliseconds(60)));
+        PanelContent.BeginAnimation(OpacityProperty, contentAnimation);
     }
 
     public void Refresh()

@@ -133,25 +133,47 @@ arreglados una vez:
   paquete opcional aparte — no confundir con el pulido visual moderno de
   arriba, que es una cosa distinta y más prioritaria ahora mismo.
 
-## Bugs visuales encontrados en la última prueba (sin arreglar todavía)
+## Bugs visuales de la sesión anterior (arreglados, uno parcialmente)
 
-1. **El panel desplegado tiene tamaño fijo (`ExpandedThickness`/`ExpandedLength` en
-   `EdgeGeometry.cs`) y corta las notas que no caben** en vez de mostrarlas
-   todas o hacer scroll — con varias notas, las últimas quedan cortadas a la
-   mitad. Hay que decidir: ¿el panel crece con el número de notas, o hace
-   scroll dentro de un tamaño máximo?
-2. **Durante el fotograma de la animación de despliegue se ve un glitch
-   visual momentáneo** (contenido mal encajado un instante). El usuario
-   sospecha que se arregla solo al resolver el punto 1 (si el contenido ya
-   no se corta, puede que el frame intermedio deje de verse mal) — a
-   confirmar una vez arreglado el punto 1, no asumir que ya está resuelto.
+1. **Corte de notas en el panel desplegado — ARREGLADO.** El panel tenía
+   tamaño fijo (`ExpandedThickness`/`ExpandedLength` en `EdgeGeometry.cs`) y
+   el `ItemsControl` de pestañas vivía en un `StackPanel` que se dimensiona a
+   su contenido ignorando el tamaño de la ventana — todo lo que no cabía
+   quedaba cortado por el HWND sin forma de llegar a ello. Fix: en
+   `EdgeDockWindow.xaml` el `StackPanel` raíz pasó a ser un `Grid` de dos
+   filas (`*` + `Auto`), con la lista de pestañas dentro de un
+   `ScrollViewer` (fila `*`) y el botón "+ Nueva nota" fijo en la fila
+   `Auto` de abajo, siempre visible. Se eligió scroll dentro de un tamaño
+   máximo (no crecer el panel con el nº de notas) para no tener que
+   recalcular geometría/posicionamiento cada vez que cambia el nº de notas.
+   Verificado a mano: con varias notas ya no se cortan, aparecen con scroll.
+2. **Glitch de un frame al desplegar — MITIGADO, no resuelto del todo.**
+   Confirmado que el bug es independiente del punto 1 (no se arregló solo).
+   Causa raíz: el pill (12px de grosor) y el panel desplegado (220px) tienen
+   una diferencia de tamaño tan grande que, durante los ~200ms de la
+   animación, las pestañas se renderizan encajadas en anchos/altos
+   intermedios que no les caben — de ahí el "contenido mal encajado un
+   instante". Mitigación aplicada en `EdgeDockWindow.xaml.cs`
+   (`ApplyGeometry`): el contenido (`PanelContent`, el `Grid` con las
+   pestañas) ahora se oculta (`Opacity`) al empezar a colapsar y solo
+   reaparece con fundido en los últimos 80ms de la expansión, cuando el
+   panel ya casi tiene su tamaño final — así se evita ver el encaje
+   intermedio. Probado a mano: ya no se ve el contenido mal encajado, pero
+   el crecimiento en sí (12px → 220px en 200ms) se sigue sintiendo algo
+   brusco — es un salto de tamaño grande, no ya un defecto de render. El
+   usuario decidió no perseguir esto más ahora mismo porque es probable que
+   se resuelva (o cambie de forma) al abordar el pulido visual pendiente de
+   abajo (dock con bordes redondeados/sombra en vez de un pill a ras del
+   borde) — revisar entonces si sigue percibiéndose brusco.
 
 ## Cómo seguir desde aquí
 
-No hay una única "siguiente tarea" fijada — quedó abierto a elegir entre:
+Sigue abierto a elegir entre estas opciones (ver sesión anterior):
 
 1. Terminar el pulido visual moderno pendiente (bordes redondeados/sombra del
-   dock, ventana de nota teñida de su color).
+   dock, ventana de nota teñida de su color) — nótese que puede afectar o
+   resolver el punto 2 de arriba (el crecimiento brusco), al cambiar la
+   forma en reposo del dock.
 2. Diseñar e implementar el botón "Archivadas" (reemplaza vista del dock).
 3. Empezar la Fase 3 (multi-monitor + DPI) — leer los prerrequisitos de
    arriba antes de escribir el plan.
