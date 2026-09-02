@@ -52,16 +52,13 @@ autoridad de diseño; todo lo demás (planes, código) se argumenta contra él.
   monitor conectado (antes solo el principal), con geometría y DPI reales
   de Win32 (`MonitorEnumerator`, `app.manifest` con `PerMonitorV2`), y un
   `AppCoordinator` a nivel de app para que las notas y la ventana de
-  gestión no se dupliquen entre docks. **Verificado de forma automática**
-  (build, 74/74 tests, inspección de rects de ventana reales vía
-  `EnumWindows`) contra el segundo monitor real del usuario (vertical) —
-  **pendiente el checklist manual de interacción** (hover/expandir/abrir
-  notas con el ratón en los dos monitores), que no se pudo hacer porque el
-  usuario estaba fuera durante la implementación. Ver la sección de
-  historial más abajo para el detalle, incluido un bug real de WPF
-  encontrado y arreglado en el camino.
+  gestión no se dupliquen entre docks. Verificado contra los dos monitores
+  reales del usuario (uno en vertical), incluido el checklist manual de
+  interacción — encontró y arregló un bug real de refresco entre docks
+  (ver historial más abajo) y, a raíz de probarlo, también se hizo que el
+  tamaño del pill/panel se ajuste al número de notas en vez de ser fijo.
 
-Tests: 74/74 pasando (`dotnet test` desde la raíz del repo).
+Tests: 80/80 pasando (`dotnet test` desde la raíz del repo).
 
 ## Cómo se ha trabajado (para mantener el mismo estilo)
 
@@ -406,23 +403,41 @@ el usuario estaba fuera — ver ese hueco de verificación abajo.
   delante de la pantalla para verlo a simple vista). **Si se toca de nuevo
   `ApplyGeometry`, no volver a confiar en el origen implícito de una
   animación — siempre pasar `From` explícito.**
-- **Verificado de forma automática**: build limpio, 74/74 tests, y los
-  rects de ventana reales de los dos docks (`(2534,640)-(2554,800)` en el
-  monitor principal, `(-26,659)-(-6,819)` en el secundario vertical)
-  coinciden con lo que calcula `EdgeGeometry.PillRect` para cada área de
-  trabajo real. **No verificado**: el checklist manual completo de
-  interacción del spec (hover, expandir, clicar pestañas desde los dos
-  docks, abrir "Gestionar notas" desde cada uno, archivar y comprobar que
-  ambos se actualizan) — necesita que el usuario lo prueba a mano la
-  próxima vez que retome esto.
+- **Verificado de forma automática primero**: build limpio, 74/74 tests, y
+  los rects de ventana reales de los dos docks (`(2534,640)-(2554,800)` en
+  el monitor principal, `(-26,659)-(-6,819)` en el secundario vertical)
+  coincidían con lo que calcula `EdgeGeometry.PillRect` para cada área de
+  trabajo real.
+- **Checklist manual — HECHO, encontró un bug real.** El usuario probó
+  con los dos monitores: crear una nota en el dock de un monitor no
+  actualizaba la pestaña en el dock del otro monitor **hasta** que pasaba
+  otra cosa (cerrar la ventana de la nota, archivar, etc.) que sí disparase
+  un refresco global. Causa: `EdgeDockWindow.OnNewNoteClick` llamaba a su
+  propio `Refresh()` en vez de `_coordinator.RefreshAll()` — un descuido
+  del refactor de la Fase 3a (sí se había cambiado `OnTabClick` y
+  `OnManageArchiveClick`, pero no este). Arreglado. El resto del checklist
+  (hover/expandir/pestañas/"Gestionar notas" desde los dos docks) quedó
+  confirmado sin más problemas.
+- **Tamaño del pill/panel según nº de notas** (pedido tras probar): antes
+  `PillRect`/`ExpandedRect` usaban una longitud fija
+  (`PillLength`=160, `ExpandedLength`=320) sin importar cuántas notas
+  hubiera — con pocas notas quedaba mucho hueco vacío. Ahora
+  `EdgeGeometry.PillRect`/`ExpandedRect` reciben `noteCount` y calculan la
+  longitud como `noteCount * PerNoteLength`, acotada entre un mínimo y un
+  máximo (`PillMinLength`/`PillMaxLength`=60/160,
+  `ExpandedMinLength`/`ExpandedMaxLength`=120/320) — TDD, 6 tests nuevos.
+  `EdgeDockWindow.SetNotes` ahora guarda el recuento y vuelve a llamar a
+  `ApplyGeometry()`, así que el tamaño se recalcula en caliente al
+  crear/archivar/borrar notas, no solo al expandir/colapsar. **Nota del
+  usuario**: el panel desplegado ahora puede verse pequeño con pocas
+  notas (una franja corta con solo 1-2 pestañas) — aceptado tal cual por
+  ahora, se espera que el rediseño de pestañas en abanico estilo Hold My
+  Notes (ver más abajo) cambie esta forma de todos modos.
 
 ## Cómo seguir desde aquí
 
-Antes de nada, la próxima vez que se retome: **hacer el checklist manual
-de la Fase 3a** (ver arriba) con los dos monitores — es lo único que
-queda para dar la sub-entrega por completamente cerrada.
-
-Después, sigue abierto elegir entre:
+Fase 3a cerrada del todo (checklist manual incluido). Sigue abierto elegir
+entre:
 
 1. Sub-entrega 2 de la Fase 3 (ver prerrequisitos arriba): toggle de
    Ajustes para monitor único, IDs estables de dispositivo, hotplug en
