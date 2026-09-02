@@ -19,7 +19,7 @@ public class EdgeGeometryTests
     [MemberData(nameof(Areas))]
     public void PillRect_Right_IsInsetFromRightEdgeByMargin(WorkingArea area)
     {
-        var rect = EdgeGeometry.PillRect(area, EdgePosition.Right);
+        var rect = EdgeGeometry.PillRect(area, EdgePosition.Right, noteCount: 3);
         Assert.Equal(area.X + area.Width - EdgeGeometry.PillThickness - EdgeGeometry.PillEdgeMargin, rect.X);
         Assert.Equal(EdgeGeometry.PillThickness, rect.Width);
     }
@@ -28,7 +28,7 @@ public class EdgeGeometryTests
     [MemberData(nameof(Areas))]
     public void PillRect_Left_IsInsetFromLeftEdgeByMargin(WorkingArea area)
     {
-        var rect = EdgeGeometry.PillRect(area, EdgePosition.Left);
+        var rect = EdgeGeometry.PillRect(area, EdgePosition.Left, noteCount: 3);
         Assert.Equal(area.X + EdgeGeometry.PillEdgeMargin, rect.X);
         Assert.Equal(EdgeGeometry.PillThickness, rect.Width);
     }
@@ -37,7 +37,7 @@ public class EdgeGeometryTests
     [MemberData(nameof(Areas))]
     public void PillRect_Top_IsInsetFromTopEdgeByMargin(WorkingArea area)
     {
-        var rect = EdgeGeometry.PillRect(area, EdgePosition.Top);
+        var rect = EdgeGeometry.PillRect(area, EdgePosition.Top, noteCount: 3);
         Assert.Equal(area.Y + EdgeGeometry.PillEdgeMargin, rect.Y);
         Assert.Equal(EdgeGeometry.PillThickness, rect.Height);
     }
@@ -46,7 +46,7 @@ public class EdgeGeometryTests
     [MemberData(nameof(Areas))]
     public void PillRect_Bottom_IsInsetFromBottomEdgeByMargin(WorkingArea area)
     {
-        var rect = EdgeGeometry.PillRect(area, EdgePosition.Bottom);
+        var rect = EdgeGeometry.PillRect(area, EdgePosition.Bottom, noteCount: 3);
         Assert.Equal(area.Y + area.Height - EdgeGeometry.PillThickness - EdgeGeometry.PillEdgeMargin, rect.Y);
         Assert.Equal(EdgeGeometry.PillThickness, rect.Height);
     }
@@ -55,8 +55,8 @@ public class EdgeGeometryTests
     [MemberData(nameof(Areas))]
     public void ExpandedRect_SameEdge_IsLargerAndFlushAgainstTrueEdge(WorkingArea area)
     {
-        var pill = EdgeGeometry.PillRect(area, EdgePosition.Left);
-        var expanded = EdgeGeometry.ExpandedRect(area, EdgePosition.Left);
+        var pill = EdgeGeometry.PillRect(area, EdgePosition.Left, noteCount: 3);
+        var expanded = EdgeGeometry.ExpandedRect(area, EdgePosition.Left, noteCount: 3);
         Assert.True(expanded.Width > pill.Width);
         // Unlike the pill (inset by PillEdgeMargin for its rounded corners/shadow), the
         // expanded panel stays flush against the true screen edge.
@@ -68,10 +68,10 @@ public class EdgeGeometryTests
     [MemberData(nameof(Areas))]
     public void ExpandedRect_Top_HasExpectedAbsoluteGeometry(WorkingArea area)
     {
-        var rect = EdgeGeometry.ExpandedRect(area, EdgePosition.Top);
-        Assert.Equal(area.X + (area.Width - EdgeGeometry.ExpandedLength) / 2, rect.X);
+        var rect = EdgeGeometry.ExpandedRect(area, EdgePosition.Top, noteCount: 20);
+        Assert.Equal(area.X + (area.Width - EdgeGeometry.ExpandedMaxLength) / 2, rect.X);
         Assert.Equal(area.Y, rect.Y);
-        Assert.Equal(EdgeGeometry.ExpandedLength, rect.Width);
+        Assert.Equal(EdgeGeometry.ExpandedMaxLength, rect.Width);
         Assert.Equal(EdgeGeometry.ExpandedThickness, rect.Height);
     }
 
@@ -79,10 +79,10 @@ public class EdgeGeometryTests
     [MemberData(nameof(Areas))]
     public void ExpandedRect_Bottom_HasExpectedAbsoluteGeometry(WorkingArea area)
     {
-        var rect = EdgeGeometry.ExpandedRect(area, EdgePosition.Bottom);
-        Assert.Equal(area.X + (area.Width - EdgeGeometry.ExpandedLength) / 2, rect.X);
+        var rect = EdgeGeometry.ExpandedRect(area, EdgePosition.Bottom, noteCount: 20);
+        Assert.Equal(area.X + (area.Width - EdgeGeometry.ExpandedMaxLength) / 2, rect.X);
         Assert.Equal(area.Y + area.Height - EdgeGeometry.ExpandedThickness, rect.Y);
-        Assert.Equal(EdgeGeometry.ExpandedLength, rect.Width);
+        Assert.Equal(EdgeGeometry.ExpandedMaxLength, rect.Width);
         Assert.Equal(EdgeGeometry.ExpandedThickness, rect.Height);
     }
 
@@ -90,22 +90,22 @@ public class EdgeGeometryTests
     [MemberData(nameof(Areas))]
     public void ExpandedRect_Left_HasExpectedAbsoluteGeometry(WorkingArea area)
     {
-        var rect = EdgeGeometry.ExpandedRect(area, EdgePosition.Left);
+        var rect = EdgeGeometry.ExpandedRect(area, EdgePosition.Left, noteCount: 20);
         Assert.Equal(area.X, rect.X);
-        Assert.Equal(area.Y + (area.Height - EdgeGeometry.ExpandedLength) / 2, rect.Y);
+        Assert.Equal(area.Y + (area.Height - EdgeGeometry.ExpandedMaxLength) / 2, rect.Y);
         Assert.Equal(EdgeGeometry.ExpandedThickness, rect.Width);
-        Assert.Equal(EdgeGeometry.ExpandedLength, rect.Height);
+        Assert.Equal(EdgeGeometry.ExpandedMaxLength, rect.Height);
     }
 
     [Theory]
     [MemberData(nameof(Areas))]
     public void ExpandedRect_Right_HasExpectedAbsoluteGeometry(WorkingArea area)
     {
-        var rect = EdgeGeometry.ExpandedRect(area, EdgePosition.Right);
+        var rect = EdgeGeometry.ExpandedRect(area, EdgePosition.Right, noteCount: 20);
         Assert.Equal(area.X + area.Width - EdgeGeometry.ExpandedThickness, rect.X);
-        Assert.Equal(area.Y + (area.Height - EdgeGeometry.ExpandedLength) / 2, rect.Y);
+        Assert.Equal(area.Y + (area.Height - EdgeGeometry.ExpandedMaxLength) / 2, rect.Y);
         Assert.Equal(EdgeGeometry.ExpandedThickness, rect.Width);
-        Assert.Equal(EdgeGeometry.ExpandedLength, rect.Height);
+        Assert.Equal(EdgeGeometry.ExpandedMaxLength, rect.Height);
     }
 
     [Theory]
@@ -113,7 +113,7 @@ public class EdgeGeometryTests
     [InlineData(EdgePosition.Bottom)]
     public void PillRect_TopOrBottom_IsHorizontallyCentered(EdgePosition edge)
     {
-        var rect = EdgeGeometry.PillRect(Area, edge);
+        var rect = EdgeGeometry.PillRect(Area, edge, noteCount: 3);
         double expectedCenter = Area.X + Area.Width / 2;
         double actualCenter = rect.X + rect.Width / 2;
         Assert.Equal(expectedCenter, actualCenter, precision: 3);
@@ -124,7 +124,7 @@ public class EdgeGeometryTests
     [InlineData(EdgePosition.Right)]
     public void PillRect_LeftOrRight_IsVerticallyCentered(EdgePosition edge)
     {
-        var rect = EdgeGeometry.PillRect(Area, edge);
+        var rect = EdgeGeometry.PillRect(Area, edge, noteCount: 3);
         double expectedCenter = Area.Y + Area.Height / 2;
         double actualCenter = rect.Y + rect.Height / 2;
         Assert.Equal(expectedCenter, actualCenter, precision: 3);
@@ -135,7 +135,7 @@ public class EdgeGeometryTests
     [InlineData(EdgePosition.Bottom)]
     public void PillRect_TopOrBottom_IsHorizontallyCentered_SecondaryArea(EdgePosition edge)
     {
-        var rect = EdgeGeometry.PillRect(SecondaryArea, edge);
+        var rect = EdgeGeometry.PillRect(SecondaryArea, edge, noteCount: 3);
         double expectedCenter = SecondaryArea.X + SecondaryArea.Width / 2;
         double actualCenter = rect.X + rect.Width / 2;
         Assert.Equal(expectedCenter, actualCenter, precision: 3);
@@ -146,9 +146,59 @@ public class EdgeGeometryTests
     [InlineData(EdgePosition.Right)]
     public void PillRect_LeftOrRight_IsVerticallyCentered_SecondaryArea(EdgePosition edge)
     {
-        var rect = EdgeGeometry.PillRect(SecondaryArea, edge);
+        var rect = EdgeGeometry.PillRect(SecondaryArea, edge, noteCount: 3);
         double expectedCenter = SecondaryArea.Y + SecondaryArea.Height / 2;
         double actualCenter = rect.Y + rect.Height / 2;
         Assert.Equal(expectedCenter, actualCenter, precision: 3);
+    }
+
+    [Fact]
+    public void PillRect_WithZeroNotes_UsesMinLength()
+    {
+        var rect = EdgeGeometry.PillRect(Area, EdgePosition.Right, noteCount: 0);
+        Assert.Equal(EdgeGeometry.PillMinLength, rect.Height);
+    }
+
+    [Fact]
+    public void PillRect_WithFewNotes_GrowsProportionally()
+    {
+        int noteCount = 4;
+        var rect = EdgeGeometry.PillRect(Area, EdgePosition.Right, noteCount);
+        double expectedLength = noteCount * EdgeGeometry.PillPerNoteLength;
+        Assert.True(expectedLength > EdgeGeometry.PillMinLength && expectedLength < EdgeGeometry.PillMaxLength,
+            "This test assumes 4 notes falls strictly between min and max — adjust the constants or this count if that changes.");
+        Assert.Equal(expectedLength, rect.Height, precision: 3);
+    }
+
+    [Fact]
+    public void PillRect_WithManyNotes_CapsAtMaxLength()
+    {
+        var rect = EdgeGeometry.PillRect(Area, EdgePosition.Right, noteCount: 1000);
+        Assert.Equal(EdgeGeometry.PillMaxLength, rect.Height);
+    }
+
+    [Fact]
+    public void ExpandedRect_WithZeroNotes_UsesMinLength()
+    {
+        var rect = EdgeGeometry.ExpandedRect(Area, EdgePosition.Right, noteCount: 0);
+        Assert.Equal(EdgeGeometry.ExpandedMinLength, rect.Height);
+    }
+
+    [Fact]
+    public void ExpandedRect_WithFewNotes_GrowsProportionally()
+    {
+        int noteCount = 4;
+        var rect = EdgeGeometry.ExpandedRect(Area, EdgePosition.Right, noteCount);
+        double expectedLength = noteCount * EdgeGeometry.ExpandedPerNoteLength;
+        Assert.True(expectedLength > EdgeGeometry.ExpandedMinLength && expectedLength < EdgeGeometry.ExpandedMaxLength,
+            "This test assumes 4 notes falls strictly between min and max — adjust the constants or this count if that changes.");
+        Assert.Equal(expectedLength, rect.Height, precision: 3);
+    }
+
+    [Fact]
+    public void ExpandedRect_WithManyNotes_CapsAtMaxLength()
+    {
+        var rect = EdgeGeometry.ExpandedRect(Area, EdgePosition.Right, noteCount: 1000);
+        Assert.Equal(EdgeGeometry.ExpandedMaxLength, rect.Height);
     }
 }

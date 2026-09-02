@@ -5,37 +5,57 @@ public static class EdgeGeometry
     // Thick enough to show a small rounded color swatch per note (see EdgeDockWindow's
     // PillSwatches), not just a bare hairline.
     public const double PillThickness = 20;
-    public const double PillLength = 160;
+
+    // The pill's length (along the edge) grows with how many notes there are instead of always
+    // being a fixed size — with only a couple of notes, a fixed-max pill left a lot of empty
+    // space below the swatches; with many, it still caps out so it doesn't take over the screen.
+    public const double PillPerNoteLength = 20; // matches a swatch's own height + margins
+    public const double PillMinLength = 60;
+    public const double PillMaxLength = 160;
+
     public const double ExpandedThickness = 220;
-    public const double ExpandedLength = 320;
+    public const double ExpandedPerNoteLength = 40; // roughly one tab row's height
+    public const double ExpandedMinLength = 120;
+    public const double ExpandedMaxLength = 320;
 
     // Room for the rounded corners and drop shadow the resting pill gets from the OS (see
     // NativeMethods) — without this gap they'd have nothing to render into at the screen edge.
     public const double PillEdgeMargin = 6;
 
-    public static Rect PillRect(WorkingArea area, EdgePosition edge) => edge switch
-    {
-        EdgePosition.Top => new Rect(
-            area.X + (area.Width - PillLength) / 2, area.Y + PillEdgeMargin, PillLength, PillThickness),
-        EdgePosition.Bottom => new Rect(
-            area.X + (area.Width - PillLength) / 2, area.Y + area.Height - PillThickness - PillEdgeMargin, PillLength, PillThickness),
-        EdgePosition.Left => new Rect(
-            area.X + PillEdgeMargin, area.Y + (area.Height - PillLength) / 2, PillThickness, PillLength),
-        EdgePosition.Right => new Rect(
-            area.X + area.Width - PillThickness - PillEdgeMargin, area.Y + (area.Height - PillLength) / 2, PillThickness, PillLength),
-        _ => throw new ArgumentOutOfRangeException(nameof(edge))
-    };
+    private static double ClampedLength(int noteCount, double perNote, double min, double max) =>
+        Math.Clamp(noteCount * perNote, min, max);
 
-    public static Rect ExpandedRect(WorkingArea area, EdgePosition edge) => edge switch
+    public static Rect PillRect(WorkingArea area, EdgePosition edge, int noteCount)
     {
-        EdgePosition.Top => new Rect(
-            area.X + (area.Width - ExpandedLength) / 2, area.Y, ExpandedLength, ExpandedThickness),
-        EdgePosition.Bottom => new Rect(
-            area.X + (area.Width - ExpandedLength) / 2, area.Y + area.Height - ExpandedThickness, ExpandedLength, ExpandedThickness),
-        EdgePosition.Left => new Rect(
-            area.X, area.Y + (area.Height - ExpandedLength) / 2, ExpandedThickness, ExpandedLength),
-        EdgePosition.Right => new Rect(
-            area.X + area.Width - ExpandedThickness, area.Y + (area.Height - ExpandedLength) / 2, ExpandedThickness, ExpandedLength),
-        _ => throw new ArgumentOutOfRangeException(nameof(edge))
-    };
+        double length = ClampedLength(noteCount, PillPerNoteLength, PillMinLength, PillMaxLength);
+        return edge switch
+        {
+            EdgePosition.Top => new Rect(
+                area.X + (area.Width - length) / 2, area.Y + PillEdgeMargin, length, PillThickness),
+            EdgePosition.Bottom => new Rect(
+                area.X + (area.Width - length) / 2, area.Y + area.Height - PillThickness - PillEdgeMargin, length, PillThickness),
+            EdgePosition.Left => new Rect(
+                area.X + PillEdgeMargin, area.Y + (area.Height - length) / 2, PillThickness, length),
+            EdgePosition.Right => new Rect(
+                area.X + area.Width - PillThickness - PillEdgeMargin, area.Y + (area.Height - length) / 2, PillThickness, length),
+            _ => throw new ArgumentOutOfRangeException(nameof(edge))
+        };
+    }
+
+    public static Rect ExpandedRect(WorkingArea area, EdgePosition edge, int noteCount)
+    {
+        double length = ClampedLength(noteCount, ExpandedPerNoteLength, ExpandedMinLength, ExpandedMaxLength);
+        return edge switch
+        {
+            EdgePosition.Top => new Rect(
+                area.X + (area.Width - length) / 2, area.Y, length, ExpandedThickness),
+            EdgePosition.Bottom => new Rect(
+                area.X + (area.Width - length) / 2, area.Y + area.Height - ExpandedThickness, length, ExpandedThickness),
+            EdgePosition.Left => new Rect(
+                area.X, area.Y + (area.Height - length) / 2, ExpandedThickness, length),
+            EdgePosition.Right => new Rect(
+                area.X + area.Width - ExpandedThickness, area.Y + (area.Height - length) / 2, ExpandedThickness, length),
+            _ => throw new ArgumentOutOfRangeException(nameof(edge))
+        };
+    }
 }

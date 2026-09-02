@@ -17,6 +17,7 @@ public partial class EdgeDockWindow : Window
     private readonly NotesRepository _repository;
     private readonly AppCoordinator _coordinator;
     private bool _viewingArchive;
+    private int _noteCount;
 
     // Tracked ourselves rather than read back from Left/Top/Width/Height: those can observe NaN
     // (WPF's uninitialized default) if something forces a resize/animation re-evaluation before
@@ -33,7 +34,7 @@ public partial class EdgeDockWindow : Window
         _workingArea = monitor.WorkArea;
         _repository = repository;
         _coordinator = coordinator;
-        _currentRect = EdgeGeometry.PillRect(_workingArea, _edge);
+        _currentRect = EdgeGeometry.PillRect(_workingArea, _edge, _noteCount);
 
         _collapseTimer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(200) };
         _collapseTimer.Tick += (_, _) =>
@@ -65,8 +66,8 @@ public partial class EdgeDockWindow : Window
     {
         bool expanding = _fanState.IsExpanded;
         var rect = expanding
-            ? EdgeGeometry.ExpandedRect(_workingArea, _edge)
-            : EdgeGeometry.PillRect(_workingArea, _edge);
+            ? EdgeGeometry.ExpandedRect(_workingArea, _edge, _noteCount)
+            : EdgeGeometry.PillRect(_workingArea, _edge, _noteCount);
 
         // Clear any animation left running (with FillBehavior.HoldEnd, the default) by a
         // previous ApplyGeometry() call. A held animation outranks a plain local-value
@@ -147,6 +148,8 @@ public partial class EdgeDockWindow : Window
     public void SetNotes(IReadOnlyList<Note> notes)
     {
         TabsList.ItemsSource = notes;
+        _noteCount = notes.Count;
+        ApplyGeometry();
     }
 
     private void OnToggleArchiveClick(object sender, RoutedEventArgs e)
@@ -192,6 +195,6 @@ public partial class EdgeDockWindow : Window
         var existingCount = _repository.GetByState(NoteState.Active).Count;
         var color = NoteColorPalette.Colors[existingCount % NoteColorPalette.Colors.Length];
         _repository.Create(string.Empty, color, screenOrigin: "primary");
-        Refresh();
+        _coordinator.RefreshAll();
     }
 }
