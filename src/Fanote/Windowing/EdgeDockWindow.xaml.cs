@@ -255,6 +255,17 @@ public partial class EdgeDockWindow : Window
 
     private void PlayTabEntrance(Button button, int index)
     {
+        // Increasing width by index + negative top margin overlap, validated in mockup
+        // (https://claude.ai/code/artifact/25194ada-e021-4222-bc03-722f78250544) — a fanned-out
+        // stack of cards rather than one full-width column. Set here (not in XAML) because both
+        // depend on the item's index, which XAML has no clean way to express; this already runs
+        // on every container both the first time it loads and on every replay of this method
+        // (see ApplyGeometry's expanding-branch loop), so re-assigning the same values each call
+        // is harmless. Width stays exactly the mockup's validated formula; the overlap is scaled
+        // from the mockup's ~19px (on a 64px-tall tab there) to this app's real 80px tab height.
+        button.Width = 32 + index * 14;
+        button.Margin = new Thickness(0, index == 0 ? 4 : -28, 0, 4);
+
         var delay = TimeSpan.FromMilliseconds(45 * index);
 
         button.BeginAnimation(OpacityProperty, null);

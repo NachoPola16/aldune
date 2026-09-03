@@ -27,9 +27,15 @@
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="Button">
+                        <!-- Rounded only on the left (the free edge, away from the physical screen edge this
+                             dock is flush against) — CornerRadius order matches CSS's (TopLeft, TopRight,
+                             BottomRight, BottomLeft), same convention as the validated mockup's
+                             "border-radius: 9px 0 0 9px". Squaring the right corners matters once
+                             SetWindowRgn ships (see docs/superpowers/specs/2026-09-03-fanote-window-region-clip-design.md):
+                             that region is built from these same tab rects and assumes this exact rounding side. -->
                         <Grid>
-                            <Border Background="{TemplateBinding Background}" CornerRadius="4" />
-                            <Border x:Name="HoverOverlay" Background="Black" Opacity="0" CornerRadius="4" />
+                            <Border Background="{TemplateBinding Background}" CornerRadius="9,0,0,9" />
+                            <Border x:Name="HoverOverlay" Background="Black" Opacity="0" CornerRadius="9,0,0,9" />
                             <ContentPresenter HorizontalAlignment="Center"
                                               VerticalAlignment="Center"
                                               Margin="{TemplateBinding Padding}" />
@@ -121,7 +127,7 @@
                             <Button Content="{Binding}"
                                     Background="{Binding Color}"
                                     Height="80"
-                                    Margin="4"
+                                    HorizontalAlignment="Right"
                                     Padding="6"
                                     Click="OnTabClick"
                                     Loaded="OnTabLoaded"
@@ -132,7 +138,7 @@
                     </ItemsControl.ItemTemplate>
                 </ItemsControl>
             </ScrollViewer>
-            <StackPanel Grid.Row="1">
+            <StackPanel x:Name="FooterPanel" Grid.Row="1">
                 <Button x:Name="NewNoteButton" Click="OnNewNoteClick"
                         Style="{StaticResource CircularIconButtonStyle}"
                         ToolTip="Nueva nota">
