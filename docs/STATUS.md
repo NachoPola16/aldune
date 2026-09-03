@@ -41,12 +41,19 @@ autoridad de diseño; todo lo demás (planes, código) se argumenta contra él.
   de color por nota visibles en el pill en reposo, y selector para cambiar el
   color de una nota ya creada.
 - **Botón "Archivadas" + `NotesManagerWindow`** (bounded — ver detalle en su
-  sección más abajo): vista combinada archivadas+papelera en el dock con
-  etiqueta de estado por pestaña, "Restaurar" en `NoteWindow` para notas no
-  activas, purga automática de la papelera a los 30 días
+  sección más abajo): "Restaurar" en `NoteWindow` para notas no activas,
+  purga automática de la papelera a los 30 días
   (`NotesRepository.PurgeExpiredTrash`), y una ventana aparte
   (`NotesManagerWindow`) para archivar/restaurar/borrar en bloque con
-  filtro por estado.
+  filtro por estado. El toggle "Archivadas"/"Activas" que esta sesión
+  añadió **al propio dock** fue retirado después por el rediseño de
+  pestañas en abanico (ver más abajo) — `NotesManagerWindow` es ahora la
+  única forma de ver notas archivadas/en papelera.
+- **Rediseño de pestañas en abanico estilo Hold My Notes** (arquitectónico —
+  ver detalle en su sección más abajo): panel desplegado del dock
+  rehecho con pestañas escalonadas, etiqueta de texto rotada
+  verticalmente por nota, y apertura de la nota creciendo desde la
+  posición de su propia pestaña.
 - **Fase 3a** (`docs/superpowers/plans/2026-09-02-fanote-phase3a-multimonitor-dpi.md`):
   primera sub-entrega de la Fase 3 — un `EdgeDockWindow` real por cada
   monitor conectado (antes solo el principal), con geometría y DPI reales
@@ -147,12 +154,14 @@ Queda:
 - **Título de nota**: NO se añade un campo de título real — la primera línea
   del texto libre se trata como título solo para mostrar (negrita, en la
   pestaña del dock y en la barra de título de la ventana). Ya implementado.
-- **Ver notas archivadas/en papelera**: se pospone (no hay plan todavía),
-  pero la dirección elegida SÍ está decidida: no una ventana nueva de
-  lista+detalle (como hace noty-sepia con ⌥⌘A) — mejor un botón
-  "Archivadas" que **reemplaza** temporalmente lo que se ve en el propio
-  dock, reutilizando toda la lógica de pestañas que ya existe. Pendiente de
-  diseñar/planificar cuando se retome.
+- **Ver notas archivadas/en papelera — HECHO, pero no como se decidió
+  aquí originalmente.** Esta sesión había descartado una ventana nueva de
+  lista+detalle a favor de un botón "Archivadas" que reemplazaba
+  temporalmente lo que se ve en el dock. Se implementó así primero, pero
+  el rediseño de pestañas en abanico (ver más abajo) lo revirtió: ahora
+  SÍ es una ventana aparte (`NotesManagerWindow`, ver su propia sección)
+  la única forma de ver notas archivadas/en papelera — el dock solo
+  muestra notas activas.
 - **Pulido visual moderno — HECHO** (ver "Historial: pulido visual y bugs
   visuales" más abajo para el detalle técnico).
 - **Modo "Papel vintage"** (textura de papel, inclinación por nota, tipografía
@@ -272,46 +281,43 @@ verificado a mano en cada paso). Por si hace falta el detalle técnico luego:
    explícito que se había puesto en `TextBody` quedó redundante y se
    quitó.
 
-## Idea pendiente de brainstorming (no iniciada): pestañas en abanico estilo Hold My Notes
+## Rediseño de pestañas en abanico estilo Hold My Notes — HECHO (ver sección
+propia más abajo)
 
-El usuario compartió una captura de referencia (landing de una app tipo
-Hold My Notes) con un patrón más ambicioso que el dock actual: en reposo,
-un pill fino con un guión de color por nota (ya tenemos esto); al pasar el
-ratón, las notas se despliegan como un abanico de pestañas *escalonadas*
-por el borde, cada una con su color y una etiqueta de texto rotada
-verticalmente (el nombre de la nota, no solo el color); al abrir una,
-la nota se desliza a tamaño completo **desde la posición de su propia
-pestaña**, no desde un panel genérico. Es una diferencia real de
-interacción frente al `ItemsControl` vertical con botones que hay hoy —
-cada nota necesitaría una posición/etiqueta estable y la animación de
-apertura tendría que originarse en esa posición. No es una tarea
-"bounded": si se retoma, empezar por `superpowers:brainstorming` en modo
-completo (probablemente arquitectónico, toca cómo `EdgeDockWindow`
-representa y anima cada nota) antes de tocar código.
+Idea originalmente planteada aquí como brainstorming sin empezar; ya
+implementada de punta a punta (spec → plan → subagent-driven-development).
+Ver "Rediseño de pestañas en abanico" más abajo para el detalle técnico
+completo.
 
 ## Botón "Archivadas" + gestor de notas (sesión 2026-09-02, bounded)
 
 Implementado y verificado a mano. Resumen para no repetir decisiones si se
-retoca:
+retoca. **Actualización posterior**: el toggle "Archivadas"/"Activas" del
+propio dock descrito en el primer punto fue **retirado** por el rediseño
+de pestañas en abanico (ver su propia sección más abajo) — el dock ahora
+solo muestra notas activas y `NotesManagerWindow` es la única vía para
+ver archivadas/papelera. El resto de esta sección (purga automática,
+`NotesManagerWindow`, lecciones de WPF) sigue vigente tal cual.
 
-- **Dock**: botón "Archivadas"/"Activas" (`EdgeDockWindow`, campo
-  `_viewingArchive`) alterna `TabsList` entre notas activas y
-  archivadas+papelera combinadas (dos `GetByState` + `Concat`, sin método
-  nuevo de repositorio — no hace falta orden global para una vista de
-  repaso). Cada pestaña muestra una etiqueta pequeña "Archivada"/"Papelera"
-  (`NoteStateLabelConverter`, vacía y colapsada para notas activas —
-  puramente derivada de `Note.State`, sin necesidad de saber en qué vista
-  está el dock). `NoteWindow` muestra "Restaurar" en vez de
-  Archivar/Papelera cuando `Note.State != Active`. Sin borrado permanente
-  manual.
+- **Dock (RETIRADO, ver nota arriba)**: botón "Archivadas"/"Activas"
+  (`EdgeDockWindow`, campo `_viewingArchive`) alternaba `TabsList` entre
+  notas activas y archivadas+papelera combinadas (dos `GetByState` +
+  `Concat`, sin método nuevo de repositorio — no hacía falta orden global
+  para una vista de repaso). Cada pestaña mostraba una etiqueta pequeña
+  "Archivada"/"Papelera" (`NoteStateLabelConverter`, vacía y colapsada
+  para notas activas — puramente derivada de `Note.State`). `NoteWindow`
+  sigue mostrando "Restaurar" en vez de Archivar/Papelera cuando
+  `Note.State != Active` (esto no cambió). Sin borrado permanente manual.
 - **Purga automática de la papelera**: `NotesRepository.PurgeExpiredTrash`
   (TDD) borra notas en `Trashed` con `UpdatedAt` más viejo que
   `DefaultTrashRetentionDays` (30, decisión del usuario). Se usa
   `UpdatedAt` en vez de una columna `TrashedAt` nueva **a propósito**: esta
   app no tiene sistema de migraciones (`NotesDatabase` solo hace
   `CREATE TABLE IF NOT EXISTS`, una vez) — añadir una columna rompería las
-  bases de datos ya existentes. Se ejecuta al arrancar (`App.xaml.cs`) y
-  cada vez que se entra en la vista Archivadas del dock.
+  bases de datos ya existentes. Se ejecuta al arrancar (`App.xaml.cs`) —
+  desde el rediseño de pestañas en abanico, ese arranque es el único
+  disparador (antes también se ejecutaba al entrar en la vista Archivadas
+  del dock, que ya no existe).
 - **`NotesManagerWindow`** (antes `ArchiveManagerWindow`, renombrada — ver
   más abajo): ventana aparte para acciones en bloque (checkboxes,
   "Seleccionar todo", Archivar/Restaurar/A la papelera, filtro
@@ -434,18 +440,70 @@ el usuario estaba fuera — ver ese hueco de verificación abajo.
   ahora, se espera que el rediseño de pestañas en abanico estilo Hold My
   Notes (ver más abajo) cambie esta forma de todos modos.
 
+## Rediseño de pestañas en abanico (sesión 2026-09-02/03, arquitectónico)
+
+Spec: `docs/superpowers/specs/2026-09-02-fanote-fan-tabs-redesign-design.md`.
+Plan: `docs/superpowers/plans/2026-09-02-fanote-fan-tabs-redesign.md`.
+Ejecutado con `superpowers:subagent-driven-development` en un worktree
+propio, 4 tareas + un arreglo post-hoc + una ronda de arreglo tras la
+revisión final de toda la rama.
+
+- **Qué cambia frente al panel anterior**: el `ItemsControl` vertical de
+  botones se sustituye por pestañas individuales con etiqueta de texto
+  rotada -90° (`LayoutTransform`, no `RenderTransform` — importante
+  porque intercambia los ejes de medida: el `Height` de la pestaña pasa a
+  ser el ancho disponible para el texto rotado), entrada escalonada
+  (~45ms por pestaña) al desplegarse, y apertura de nota que crece desde
+  la posición real de su propia pestaña en pantalla (antes crecía desde
+  un origen genérico). Se retiró el toggle "Archivadas"/"Activas" del
+  dock (ver nota en su sección de arriba) y los botones "+"/engranaje
+  pasaron a iconos circulares pequeños.
+- **`Fanote.Core.EdgeGeometry.ExpandedPerNoteLength`** subió de 40 a 88 —
+  la pestaña pasó a `Height="80"` para dar sitio real a la etiqueta
+  rotada (a 36px solo había ~24px de ancho para el texto, truncándolo a
+  1-2 caracteres).
+- **Bug real de WPF encontrado en pruebas manuales**: un
+  `TranslateTransform` declarado como XAML estático dentro de un
+  `DataTemplate` acaba congelado/compartido (`Freezable`) entre todas las
+  pestañas generadas — lanzaba `Cannot animate ... because the object is
+  sealed or frozen`. Arreglo: crear una instancia nueva de
+  `TranslateTransform` por código dentro de `OnTabLoaded`/
+  `PlayTabEntrance`, nunca una compartida en XAML.
+- **Hallazgos de la revisión final de toda la rama** (visibles solo mirando
+  el diff combinado, no tarea por tarea) y su arreglo:
+  1. La animación de entrada escalonada solo se disparaba una vez al
+     arrancar (ligada al evento `Loaded`, que no vuelve a dispararse al
+     pasar el ratón) — extraídos `PlayTabEntrance`/`ResetTabEntrance`
+     para que `ApplyGeometry` la repita en cada expansión y la resetee en
+     cada colapso.
+  2. Botones "+"/engranaje inalcanzables bajo el borde de scroll — vuelto
+     a un `Grid` de dos filas (lista con scroll + fila fija de botones,
+     el mismo patrón que ya se había aplicado una vez antes para el mismo
+     tipo de problema, ver "Historial: pulido visual" arriba).
+  3. `NoteWindow.AnimateFrom` dejaba animaciones de `Left/Top/Width/Height`
+     enganchadas para siempre (`FillBehavior.HoldEnd` sin limpiar) —
+     añadidos handlers `Completed` que limpian y fijan el valor final como
+     valor local plano, igual que ya hace `EdgeDockWindow.ApplyGeometry`.
+  4. Dos comentarios que aún mencionaban el toggle "Archivadas" del dock
+     ya retirado — reescritos.
+- **Verificado**: build limpio, 80/80 tests, app arranca sin excepciones.
+  **Pendiente de verificación visual humana** (los subagentes no tienen
+  ratón): que la animación escalonada realmente se repita al pasar el
+  ratón, que las etiquetas se lean mejor con la pestaña más alta, y que
+  los botones "+"/engranaje sean alcanzables en la práctica.
+
 ## Cómo seguir desde aquí
 
-Fase 3a cerrada del todo (checklist manual incluido). Sigue abierto elegir
-entre:
+Rediseño de pestañas en abanico cerrado (build+tests limpios, revisión
+final de rama sin hallazgos pendientes) — falta el pase de verificación
+manual del usuario descrito arriba antes de darlo por completamente
+cerrado. Sigue abierto elegir entre, para lo siguiente:
 
 1. Sub-entrega 2 de la Fase 3 (ver prerrequisitos arriba): toggle de
    Ajustes para monitor único, IDs estables de dispositivo, hotplug en
    caliente — probablemente necesita su propio brainstorming (algunas
    piezas, como IDs estables, tocan el modelo de datos).
 2. Modo "Papel vintage" (ver spec v1).
-3. Rediseño de pestañas en abanico estilo Hold My Notes (ver sección de
-   arriba) — más ambicioso, necesita su propio brainstorming.
 
 Si arrancas esto en una sesión/IA nueva: lee este archivo, la spec, y el plan
 de la última fase fusionada, y sigue el mismo flujo de skills descrito arriba
