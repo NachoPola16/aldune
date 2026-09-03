@@ -487,17 +487,119 @@ revisión final de toda la rama.
   4. Dos comentarios que aún mencionaban el toggle "Archivadas" del dock
      ya retirado — reescritos.
 - **Verificado**: build limpio, 80/80 tests, app arranca sin excepciones.
-  **Pendiente de verificación visual humana** (los subagentes no tienen
-  ratón): que la animación escalonada realmente se repita al pasar el
-  ratón, que las etiquetas se lean mejor con la pestaña más alta, y que
-  los botones "+"/engranaje sean alcanzables en la práctica.
+
+### Bugs reales encontrados en la verificación manual del usuario (sesión 2026-09-03)
+
+El pase de verificación manual de arriba SÍ encontró problemas reales —
+diagnosticados con `superpowers:systematic-debugging` (instrumentación
+temporal en `ApplyGeometry`/`PollHoverState` + sondeo de `GetWindowRect`
+por Win32 desde PowerShell contra el proceso real, no adivinando por
+capturas). Commit `af6b569`. Los tres bugs, todos detrás del mismo
+síntoma visible ("las pestañas se ven cortadas / el panel no se
+comporta bien"):
+
+1. `EdgeGeometry.ExpandedRect` nunca reservaba sitio para la fila fija de
+   botones "+"/engranaje — su hueco salía del mismo presupuesto de
+   longitud que las pestañas, así que la última pestaña quedaba a
+   caballo del borde del scroll. Añadida `ExpandedFooterLength = 80`.
+2. `ExpandedMaxLength` (320) no era múltiplo de `ExpandedPerNoteLength`
+   (88) — con notas suficientes para tocar el máximo, la vista inicial
+   sin hacer scroll ya cortaba la última pestaña a medias. Subido a 352
+   (4×88).
+3. El panel oscilaba entre colapsado/expandido cada ~200-400ms con el
+   ratón quieto encima: `ApplyGeometry` mueve el borde de la ventana
+   hacia fuera al expandir, y Win32 dispara un `WM_MOUSELEAVE` falso
+   cuando una ventana se mueve/redimensiona bajo un cursor quieto. Peor:
+   una vez que WPF dispara `MouseLeave` una vez, da por hecho
+   internamente que el puntero ya se fue — un handler que simplemente
+   ignora el evento falso no lo deshace, así que WPF nunca vuelve a
+   avisar de un `MouseLeave` real después, y el panel se queda
+   expandido para siempre. Sustituido `MouseEnter`/`MouseLeave` por un
+   sondeo cada 50ms de la posición real del cursor
+   (`NativeMethods.GetCursorScreenPosition`, `GetCursorPos` fresco vía
+   P/Invoke — `Mouse.GetPosition` refleja el último mensaje que recibió
+   esa ventana, que se queda obsoleto en cuanto deja de recibir
+   ninguno). Además, la `Height` animada en concreto podía terminar su
+   animación sin que la ventana real llegara a redimensionarse (`Width`
+   nunca mostró esto) — causa no resuelta del todo; cada propiedad
+   ahora fija su valor final como valor local plano al completar la
+   animación (mismo patrón que `NoteWindow.AnimateFrom`).
+
+**Incidente de privacidad**: durante el diagnóstico se tomó una captura
+de toda la pantalla virtual (`Graphics.CopyFromScreen`) que capturó
+ventanas ajenas del usuario (chat, otro editor, overlay de directo) —
+borrada de inmediato, no se repitió. Toda verificación visual posterior
+se hizo con capturas del propio usuario o con números de geometría
+(`GetWindowRect`), nunca con una captura de pantalla propia.
+
+### Diseño visual de las pestañas — validado en maqueta, PENDIENTE de implementar en código
+
+Tras arreglar los bugs de arriba, el usuario comparó el resultado
+contra la captura de referencia (una app tipo Hold My Notes) y señaló
+que **el ancho de la pestaña se dejó fuera de alcance en la spec
+original** ("el panel sigue usando `ExpandedRect`... lo que cambia es
+solo cómo se rellena por dentro") — por eso cada pestaña salió tan
+ancha como el panel entero (`ExpandedThickness=220`), en vez de ser
+una tira estrecha como en la referencia. Esto NO es un bug de
+implementación: el código hace exactamente lo que pedía la spec: la
+propia spec tenía un hueco frente a la referencia.
+
+Iterado en 4 rondas de maqueta (Artifact, no en el código real):
+`https://claude.ai/code/artifact/25194ada-e021-4222-bc03-722f78250544`
+(léela con `Artifact` acción `"read"` si retomas esto en otra sesión).
+**Diseño validado por el usuario** (última ronda de la maqueta):
+
+- Cada pestaña con **ancho creciente según su índice** en la pila
+  (`Width ≈ 32 + índice × 14`, aprox. — el índice ya se calcula en
+  `PlayTabEntrance` para el retardo de la animación), no todas del
+  mismo ancho — la de más abajo/más profunda en la pila sobresale
+  claramente más que la de arriba, como un fajo de fichas en abanico.
+  Solape vertical entre pestañas consecutivas vía `Margin.Top`
+  negativo (~19px en la maqueta).
+- `HorizontalAlignment="Left"` en vez de `Stretch` (o el lado que
+  corresponda según el borde del dock) — las pestañas cuelgan del
+  lado interior del panel, no ocupan todo el ancho.
+- El fondo oscuro del dock (`Background="#3A3A3A"`) **se mantiene** —
+  Fanote nunca puede ser `AllowsTransparency` (rompe ClearType, ya
+  descartado en la spec v1) — pero se **ciñe al ancho de la pestaña
+  más ancha** en vez de ser una caja de tamaño fijo con hueco muerto
+  alrededor (`width: max-content` en la maqueta CSS — en WPF,
+  `HorizontalAlignment="Left"`/`Right` + `Width` en el `Grid`/`Border`
+  contenedor en vez de un ancho fijo).
+- `EdgeGeometry.ExpandedThickness` (220, fijo) **no cambia** — sigue
+  fuera de alcance, la geometría exterior del panel es la misma que ya
+  está arreglada arriba.
+- **Pendiente de decidir, aparcado a propósito**: el usuario preferiría
+  que no hubiera fondo oscuro en absoluto entre pestañas (que se vea
+  el escritorio a través de los huecos, como en la referencia). Es
+  técnicamente posible sin romper ClearType — no vía
+  `AllowsTransparency`, sino recortando la **forma** de la ventana con
+  Win32 (`SetWindowRgn`), manteniendo la ventana igual de opaca/nítida
+  pero invisible fuera del contorno de las pestañas. Recortar así una
+  forma no rectangular, recalculada en cada cambio de nº de notas y en
+  cada frame de la animación de entrada escalonada, con cuidado del
+  DPI por monitor, es un cambio real de arquitectura — el usuario
+  decidió explícitamente tratarlo como su propia sesión de diseño
+  (brainstorming → spec → plan), no improvisarlo. **Empieza aquí la
+  próxima vez que se retome esto.**
 
 ## Cómo seguir desde aquí
 
-Rediseño de pestañas en abanico cerrado (build+tests limpios, revisión
-final de rama sin hallazgos pendientes) — falta el pase de verificación
-manual del usuario descrito arriba antes de darlo por completamente
-cerrado. Sigue abierto elegir entre, para lo siguiente:
+Rama `worktree-fanote-fan-tabs-redesign` (commit `af6b569`) tiene el
+comportamiento de geometría/hover ya arreglado y verificado, pero
+**todavía usa el diseño de pestaña original** (ancho completo, columna
+alineada) — el rediseño visual validado en la maqueta de arriba
+(ancho creciente por índice, escalonado, fondo ceñido) aún no se ha
+tocado en el XAML/código real. Antes de fusionar esta rama a `master`,
+falta:
+
+1. Implementar en código el diseño de pestañas validado arriba (maqueta
+   ya aprobada, solo falta llevarlo a `EdgeDockWindow.xaml`/`.xaml.cs`).
+2. Decidir y ejecutar (sesión de diseño propia) si se persigue el fondo
+   completamente recortado vía `SetWindowRgn`, o se deja el fondo ceñido
+   como diseño final.
+
+Después de eso, sigue abierto elegir entre, para lo siguiente:
 
 1. Sub-entrega 2 de la Fase 3 (ver prerrequisitos arriba): toggle de
    Ajustes para monitor único, IDs estables de dispositivo, hotplug en
