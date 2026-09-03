@@ -21,7 +21,21 @@ public static class EdgeGeometry
     // gives ~68px of room — enough for a reasonably short note title before ellipsis.
     public const double ExpandedPerNoteLength = 88;
     public const double ExpandedMinLength = 120;
-    public const double ExpandedMaxLength = 320;
+    // Must stay an exact multiple of ExpandedPerNoteLength. Once noteCount is large enough to
+    // hit this clamp, the ScrollViewer's initial (unscrolled) viewport is exactly this many
+    // pixels tall — if it isn't a whole number of tab-footprints, the last tab that fits
+    // straddles the viewport edge and renders half-cut from the very first hover, before the
+    // user has scrolled at all. 352 = 4 * 88 (4 full tabs visible before needing to scroll).
+    public const double ExpandedMaxLength = 352;
+
+    // EdgeDockWindow.xaml pins the "+"/gear buttons in their own fixed Grid row below the
+    // scrolling tab list, outside the ScrollViewer, so they're always reachable without
+    // scrolling (see the Important #4 fix in the fan-tabs redesign). That row's footprint has
+    // to come out of the window's own length budget in addition to what the tabs need, or the
+    // tabs get squeezed into less room than ExpandedPerNoteLength assumes and the last one ends
+    // up clipped by the ScrollViewer's own viewport instead of merely needing a scroll. Two
+    // CircularIconButtonStyle buttons (32px + 4+4 margin each = 40) stacked = 80.
+    public const double ExpandedFooterLength = 80;
 
     // Room for the rounded corners and drop shadow the resting pill gets from the OS (see
     // NativeMethods) — without this gap they'd have nothing to render into at the screen edge.
@@ -49,7 +63,8 @@ public static class EdgeGeometry
 
     public static Rect ExpandedRect(WorkingArea area, EdgePosition edge, int noteCount)
     {
-        double length = ClampedLength(noteCount, ExpandedPerNoteLength, ExpandedMinLength, ExpandedMaxLength);
+        double length = ClampedLength(noteCount, ExpandedPerNoteLength, ExpandedMinLength, ExpandedMaxLength)
+            + ExpandedFooterLength;
         return edge switch
         {
             EdgePosition.Top => new Rect(

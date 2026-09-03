@@ -69,9 +69,10 @@ public class EdgeGeometryTests
     public void ExpandedRect_Top_HasExpectedAbsoluteGeometry(WorkingArea area)
     {
         var rect = EdgeGeometry.ExpandedRect(area, EdgePosition.Top, noteCount: 20);
-        Assert.Equal(area.X + (area.Width - EdgeGeometry.ExpandedMaxLength) / 2, rect.X);
+        double expectedLength = EdgeGeometry.ExpandedMaxLength + EdgeGeometry.ExpandedFooterLength;
+        Assert.Equal(area.X + (area.Width - expectedLength) / 2, rect.X);
         Assert.Equal(area.Y, rect.Y);
-        Assert.Equal(EdgeGeometry.ExpandedMaxLength, rect.Width);
+        Assert.Equal(expectedLength, rect.Width);
         Assert.Equal(EdgeGeometry.ExpandedThickness, rect.Height);
     }
 
@@ -80,9 +81,10 @@ public class EdgeGeometryTests
     public void ExpandedRect_Bottom_HasExpectedAbsoluteGeometry(WorkingArea area)
     {
         var rect = EdgeGeometry.ExpandedRect(area, EdgePosition.Bottom, noteCount: 20);
-        Assert.Equal(area.X + (area.Width - EdgeGeometry.ExpandedMaxLength) / 2, rect.X);
+        double expectedLength = EdgeGeometry.ExpandedMaxLength + EdgeGeometry.ExpandedFooterLength;
+        Assert.Equal(area.X + (area.Width - expectedLength) / 2, rect.X);
         Assert.Equal(area.Y + area.Height - EdgeGeometry.ExpandedThickness, rect.Y);
-        Assert.Equal(EdgeGeometry.ExpandedMaxLength, rect.Width);
+        Assert.Equal(expectedLength, rect.Width);
         Assert.Equal(EdgeGeometry.ExpandedThickness, rect.Height);
     }
 
@@ -91,10 +93,11 @@ public class EdgeGeometryTests
     public void ExpandedRect_Left_HasExpectedAbsoluteGeometry(WorkingArea area)
     {
         var rect = EdgeGeometry.ExpandedRect(area, EdgePosition.Left, noteCount: 20);
+        double expectedLength = EdgeGeometry.ExpandedMaxLength + EdgeGeometry.ExpandedFooterLength;
         Assert.Equal(area.X, rect.X);
-        Assert.Equal(area.Y + (area.Height - EdgeGeometry.ExpandedMaxLength) / 2, rect.Y);
+        Assert.Equal(area.Y + (area.Height - expectedLength) / 2, rect.Y);
         Assert.Equal(EdgeGeometry.ExpandedThickness, rect.Width);
-        Assert.Equal(EdgeGeometry.ExpandedMaxLength, rect.Height);
+        Assert.Equal(expectedLength, rect.Height);
     }
 
     [Theory]
@@ -102,10 +105,11 @@ public class EdgeGeometryTests
     public void ExpandedRect_Right_HasExpectedAbsoluteGeometry(WorkingArea area)
     {
         var rect = EdgeGeometry.ExpandedRect(area, EdgePosition.Right, noteCount: 20);
+        double expectedLength = EdgeGeometry.ExpandedMaxLength + EdgeGeometry.ExpandedFooterLength;
         Assert.Equal(area.X + area.Width - EdgeGeometry.ExpandedThickness, rect.X);
-        Assert.Equal(area.Y + (area.Height - EdgeGeometry.ExpandedMaxLength) / 2, rect.Y);
+        Assert.Equal(area.Y + (area.Height - expectedLength) / 2, rect.Y);
         Assert.Equal(EdgeGeometry.ExpandedThickness, rect.Width);
-        Assert.Equal(EdgeGeometry.ExpandedMaxLength, rect.Height);
+        Assert.Equal(expectedLength, rect.Height);
     }
 
     [Theory]
@@ -181,7 +185,7 @@ public class EdgeGeometryTests
     public void ExpandedRect_WithZeroNotes_UsesMinLength()
     {
         var rect = EdgeGeometry.ExpandedRect(Area, EdgePosition.Right, noteCount: 0);
-        Assert.Equal(EdgeGeometry.ExpandedMinLength, rect.Height);
+        Assert.Equal(EdgeGeometry.ExpandedMinLength + EdgeGeometry.ExpandedFooterLength, rect.Height);
     }
 
     [Fact]
@@ -192,16 +196,16 @@ public class EdgeGeometryTests
         // the largest count that still falls strictly between the min and max bounds.
         int noteCount = 3;
         var rect = EdgeGeometry.ExpandedRect(Area, EdgePosition.Right, noteCount);
-        double expectedLength = noteCount * EdgeGeometry.ExpandedPerNoteLength;
-        Assert.True(expectedLength > EdgeGeometry.ExpandedMinLength && expectedLength < EdgeGeometry.ExpandedMaxLength,
+        double tabsLength = noteCount * EdgeGeometry.ExpandedPerNoteLength;
+        Assert.True(tabsLength > EdgeGeometry.ExpandedMinLength && tabsLength < EdgeGeometry.ExpandedMaxLength,
             "This test assumes 3 notes falls strictly between min and max — adjust the constants or this count if that changes.");
-        Assert.Equal(expectedLength, rect.Height, precision: 3);
+        Assert.Equal(tabsLength + EdgeGeometry.ExpandedFooterLength, rect.Height, precision: 3);
     }
 
     [Fact]
     public void ExpandedRect_WithManyNotes_CapsAtMaxLength()
     {
         var rect = EdgeGeometry.ExpandedRect(Area, EdgePosition.Right, noteCount: 1000);
-        Assert.Equal(EdgeGeometry.ExpandedMaxLength, rect.Height);
+        Assert.Equal(EdgeGeometry.ExpandedMaxLength + EdgeGeometry.ExpandedFooterLength, rect.Height);
     }
 }

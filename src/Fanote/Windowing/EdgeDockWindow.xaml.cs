@@ -13,11 +13,13 @@ public partial class EdgeDockWindow : Window
 {
     private readonly FanStateMachine _fanState = new();
     private readonly DispatcherTimer _collapseTimer;
+    private readonly DispatcherTimer _hoverPollTimer;
     private readonly EdgePosition _edge;
     private readonly WorkingArea _workingArea;
     private readonly NotesRepository _repository;
     private readonly AppCoordinator _coordinator;
     private int _noteCount;
+    private bool _pointerInside;
 
     // Tracked ourselves rather than read back from Left/Top/Width/Height: those can observe NaN
     // (WPF's uninitialized default) if something forces a resize/animation re-evaluation before
@@ -45,12 +47,19 @@ public partial class EdgeDockWindow : Window
 
         _fanState.ExpansionChanged += (_, _) => ApplyGeometry();
 
-        MouseEnter += (_, _) => _fanState.PointerEntered();
-        MouseLeave += (_, _) =>
-        {
-            _fanState.PointerLeft();
-            _collapseTimer.Start();
-        };
+        // Deliberately not WPF's MouseEnter/MouseLeave: ApplyGeometry moves and resizes this
+        // window on every expand/collapse (it slides the outer edge out while growing), and a
+        // window moving/resizing out from under a stationary cursor makes Win32 fire a spurious
+        // WM_MOUSELEAVE even though the pointer never actually left. Worse, once WPF has fired
+        // MouseLeave once, it considers the pointer already "left" internally — a later handler
+        // that merely ignores a spurious leave doesn't undo that, so WPF then never raises the
+        // real MouseLeave when the pointer genuinely moves away afterward, leaving the panel
+        // stuck expanded forever. Polling the true cursor position directly sidesteps this
+        // Win32-tracking confusion entirely: hover state is derived from where the pointer
+        // actually is right now, never from an event that may or may not reflect reality.
+        _hoverPollTimer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(50) };
+        _hoverPollTimer.Tick += (_, _) => PollHoverState();
+        _hoverPollTimer.Start();
 
         SourceInitialized += (_, _) =>
         {
@@ -60,6 +69,32 @@ public partial class EdgeDockWindow : Window
         };
 
         ApplyGeometry();
+    }
+
+    private void PollHoverState()
+    {
+        var dpi = VisualTreeHelper.GetDpi(this);
+        var cursorScreen = NativeMethods.GetCursorScreenPosition();
+        double cursorX = cursorScreen.X / dpi.DpiScaleX;
+        double cursorY = cursorScreen.Y / dpi.DpiScaleY;
+
+        // Width/Height (the animated DPs), not ActualWidth/ActualHeight — the latter only
+        // update once WPF's layout system catches up with the animation's current frame, which
+        // can lag a beat behind the value the animation clock has already reached.
+        bool isInside = cursorX >= Left && cursorX <= Left + Width
+            && cursorY >= Top && cursorY <= Top + Height;
+
+        if (isInside && !_pointerInside)
+        {
+            _pointerInside = true;
+            _fanState.PointerEntered();
+        }
+        else if (!isInside && _pointerInside)
+        {
+            _pointerInside = false;
+            _fanState.PointerLeft();
+            _collapseTimer.Start();
+        }
     }
 
     private void ApplyGeometry()
@@ -134,10 +169,29 @@ public partial class EdgeDockWindow : Window
         // have ever actually been set, observing WPF's uninitialized NaN default. Supplying From
         // ourselves sidesteps that lookup entirely.
         var duration = new Duration(TimeSpan.FromMilliseconds(200));
-        BeginAnimation(LeftProperty, new System.Windows.Media.Animation.DoubleAnimation(_currentRect.X, rect.X, duration));
-        BeginAnimation(TopProperty, new System.Windows.Media.Animation.DoubleAnimation(_currentRect.Y, rect.Y, duration));
-        BeginAnimation(WidthProperty, new System.Windows.Media.Animation.DoubleAnimation(_currentRect.Width, rect.Width, duration));
-        BeginAnimation(HeightProperty, new System.Windows.Media.Animation.DoubleAnimation(_currentRect.Height, rect.Height, duration));
+        var leftAnimation = new System.Windows.Media.Animation.DoubleAnimation(_currentRect.X, rect.X, duration);
+        var topAnimation = new System.Windows.Media.Animation.DoubleAnimation(_currentRect.Y, rect.Y, duration);
+        var widthAnimation = new System.Windows.Media.Animation.DoubleAnimation(_currentRect.Width, rect.Width, duration);
+        var heightAnimation = new System.Windows.Media.Animation.DoubleAnimation(_currentRect.Height, rect.Height, duration);
+
+        // Observed empirically: the animated Height in particular can finish its clock (WPF's own
+        // Height getter reports the target value) without the real underlying window actually
+        // being resized to match — Width doesn't show this, only Height does, for reasons that
+        // didn't resolve under investigation (ruled out: the DWM shadow/rounded-corners call, and
+        // ResizeMode). A direct assignment (the !ClientAreaAnimation branch above) always applies
+        // correctly, so force-commit each property's final value as a plain local value once its
+        // animation completes — this guarantees the settled state is correct even on the runs
+        // where the animation alone doesn't visibly reach it.
+        double targetX = rect.X, targetY = rect.Y, targetWidth = rect.Width, targetHeight = rect.Height;
+        leftAnimation.Completed += (_, _) => { BeginAnimation(LeftProperty, null); Left = targetX; };
+        topAnimation.Completed += (_, _) => { BeginAnimation(TopProperty, null); Top = targetY; };
+        widthAnimation.Completed += (_, _) => { BeginAnimation(WidthProperty, null); Width = targetWidth; };
+        heightAnimation.Completed += (_, _) => { BeginAnimation(HeightProperty, null); Height = targetHeight; };
+
+        BeginAnimation(LeftProperty, leftAnimation);
+        BeginAnimation(TopProperty, topAnimation);
+        BeginAnimation(WidthProperty, widthAnimation);
+        BeginAnimation(HeightProperty, heightAnimation);
         _currentRect = rect;
 
         // The pill is much smaller than the expanded panel (e.g. 12px vs 220px thick), so the

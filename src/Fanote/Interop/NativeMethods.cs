@@ -107,4 +107,28 @@ internal static class NativeMethods
     [DllImport("user32.dll")]
     [return: MarshalAs(UnmanagedType.Bool)]
     private static extern bool AttachThreadInput(uint idAttach, uint idAttachTo, [MarshalAs(UnmanagedType.Bool)] bool fAttach);
+
+    [StructLayout(LayoutKind.Sequential)]
+    private struct POINT
+    {
+        public int X;
+        public int Y;
+    }
+
+    [DllImport("user32.dll")]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    private static extern bool GetCursorPos(out POINT lpPoint);
+
+    /// <summary>
+    /// Physical-pixel screen position of the cursor, polled fresh via Win32 rather than read from
+    /// WPF's <c>Mouse.GetPosition</c> — that API reflects the last mouse message a given window
+    /// received, so once the cursor genuinely leaves a window (and it stops receiving any),
+    /// <c>Mouse.GetPosition</c> keeps reporting the last (inside) position forever instead of
+    /// updating. Callers must divide by their own window's DPI scale to convert to DIPs.
+    /// </summary>
+    internal static Point GetCursorScreenPosition()
+    {
+        GetCursorPos(out var point);
+        return new Point(point.X, point.Y);
+    }
 }
