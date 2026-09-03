@@ -1,6 +1,7 @@
 using System.Runtime.InteropServices;
 using System.Windows;
 using System.Windows.Interop;
+using Fanote.Core;
 
 namespace Fanote.Interop;
 
@@ -131,4 +132,72 @@ internal static class NativeMethods
         GetCursorPos(out var point);
         return new Point(point.X, point.Y);
     }
+
+    [DllImport("gdi32.dll")]
+    private static extern IntPtr CreateRoundRectRgn(int left, int top, int right, int bottom, int cornerWidth, int cornerHeight);
+
+    [DllImport("gdi32.dll")]
+    private static extern IntPtr CreateRectRgn(int left, int top, int right, int bottom);
+
+    [DllImport("gdi32.dll")]
+    private static extern int CombineRgn(IntPtr hrgnDest, IntPtr hrgnSrc1, IntPtr hrgnSrc2, int combineMode);
+
+    [DllImport("gdi32.dll")]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    private static extern bool DeleteObject(IntPtr hObject);
+
+    [DllImport("user32.dll")]
+    private static extern int SetWindowRgn(IntPtr hWnd, IntPtr hRgn, [MarshalAs(UnmanagedType.Bool)] bool bRedraw);
+
+    private const int RGN_OR = 2;
+
+    /// <summary>
+    /// Recorta la forma visible de <paramref name="hWnd"/> a la unión de las piezas dadas
+    /// (coordenadas en píxeles físicos, relativas a la esquina superior izquierda de la ventana).
+    /// CreateRoundRectRgn redondea las 4 esquinas por igual, así que una pieza con radio > 0 se
+    /// construye como la unión de un RoundRect completo con un Rect plano que cubre su mitad
+    /// derecha — eso "cuadra" las dos esquinas de la derecha encima, dejando solo las de la
+    /// izquierda redondeadas (el lado libre de cada pestaña, lejos del borde físico de pantalla;
+    /// ver EdgeDockWindow y la spec de este recorte). El HRGN final que llega a SetWindowRgn pasa a
+    /// ser propiedad del sistema (se libera solo, al reemplazarlo o cerrar la ventana) — cualquier
+    /// HRGN intermedio que no llegue ahí se libera aquí mismo con DeleteObject.
+    /// </summary>
+    internal static void SetTabFanRegion(IntPtr hWnd, IReadOnlyList<RegionPiece> pieces)
+    {
+        IntPtr accumulated = CreateRectRgn(0, 0, 0, 0);
+        foreach (var (bounds, cornerRadius) in pieces)
+        {
+            int left = (int)bounds.X;
+            int top = (int)bounds.Y;
+            int right = (int)(bounds.X + bounds.Width);
+            int bottom = (int)(bounds.Y + bounds.Height);
+
+            IntPtr piece;
+            if (cornerRadius > 0)
+            {
+                int diameter = (int)(cornerRadius * 2);
+                IntPtr rounded = CreateRoundRectRgn(left, top, right, bottom, diameter, diameter);
+                IntPtr rightHalfSquared = CreateRectRgn(left + (right - left) / 2, top, right, bottom);
+                piece = CreateRectRgn(0, 0, 0, 0);
+                CombineRgn(piece, rounded, rightHalfSquared, RGN_OR);
+                DeleteObject(rounded);
+                DeleteObject(rightHalfSquared);
+            }
+            else
+            {
+                piece = CreateRectRgn(left, top, right, bottom);
+            }
+
+            CombineRgn(accumulated, accumulated, piece, RGN_OR);
+            DeleteObject(piece);
+        }
+
+        SetWindowRgn(hWnd, accumulated, true);
+    }
+
+    /// <summary>
+    /// Quita cualquier recorte de forma aplicado por SetTabFanRegion, devolviendo la ventana a su
+    /// rectángulo completo normal — necesario porque el pill en reposo no usa regiones.
+    /// </summary>
+    internal static void ClearWindowRegion(IntPtr hWnd) => SetWindowRgn(hWnd, IntPtr.Zero, true);
 }
