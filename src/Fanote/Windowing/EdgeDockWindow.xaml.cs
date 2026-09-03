@@ -87,6 +87,33 @@ public partial class EdgeDockWindow : Window
         PanelContent.IsHitTestVisible = expanding;
         PillSwatches.IsHitTestVisible = !expanding;
 
+        // The staggered per-tab entrance (see OnTabLoaded/PlayTabEntrance) only fires from a
+        // Button's Loaded event, which happens once when SetNotes assigns TabsList.ItemsSource —
+        // NOT every time the panel expands. Without this, tabs only ever cascade in once at
+        // startup (while PanelContent is still invisible) and every subsequent hover just shows
+        // them all already-visible. Replay it explicitly on every expand, and reset each tab back
+        // to its hidden pre-entrance state on collapse so the next expand has something to reveal.
+        if (expanding)
+        {
+            for (int i = 0; i < TabsList.Items.Count; i++)
+            {
+                if (TabsList.ItemContainerGenerator.ContainerFromIndex(i) is Button button)
+                {
+                    PlayTabEntrance(button, i);
+                }
+            }
+        }
+        else
+        {
+            for (int i = 0; i < TabsList.Items.Count; i++)
+            {
+                if (TabsList.ItemContainerGenerator.ContainerFromIndex(i) is Button button)
+                {
+                    ResetTabEntrance(button);
+                }
+            }
+        }
+
         if (!SystemParameters.ClientAreaAnimation)
         {
             Left = rect.X;
@@ -169,8 +196,14 @@ public partial class EdgeDockWindow : Window
         int index = TabsList.Items.IndexOf(button.DataContext);
         if (index < 0) return;
 
+        PlayTabEntrance(button, index);
+    }
+
+    private void PlayTabEntrance(Button button, int index)
+    {
         var delay = TimeSpan.FromMilliseconds(45 * index);
 
+        button.BeginAnimation(OpacityProperty, null);
         var opacityAnimation = new System.Windows.Media.Animation.DoubleAnimation(0, 1, new Duration(TimeSpan.FromMilliseconds(150)))
         {
             BeginTime = delay
@@ -184,6 +217,18 @@ public partial class EdgeDockWindow : Window
             BeginTime = delay
         };
         translate.BeginAnimation(TranslateTransform.XProperty, slideAnimation);
+    }
+
+    private static void ResetTabEntrance(Button button)
+    {
+        button.BeginAnimation(OpacityProperty, null);
+        button.Opacity = 0;
+
+        if (button.RenderTransform is TranslateTransform translate)
+        {
+            translate.BeginAnimation(TranslateTransform.XProperty, null);
+            translate.X = 20;
+        }
     }
 
     internal void PositionNoteWindow(NoteWindow noteWindow)

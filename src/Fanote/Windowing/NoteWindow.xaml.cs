@@ -91,10 +91,27 @@ public partial class NoteWindow : Window
         Height = origin.Height;
 
         var duration = new Duration(TimeSpan.FromMilliseconds(200));
-        BeginAnimation(LeftProperty, new System.Windows.Media.Animation.DoubleAnimation(origin.X, targetLeft, duration));
-        BeginAnimation(TopProperty, new System.Windows.Media.Animation.DoubleAnimation(origin.Y, targetTop, duration));
-        BeginAnimation(WidthProperty, new System.Windows.Media.Animation.DoubleAnimation(origin.Width, targetWidth, duration));
-        BeginAnimation(HeightProperty, new System.Windows.Media.Animation.DoubleAnimation(origin.Height, targetHeight, duration));
+        var leftAnimation = new System.Windows.Media.Animation.DoubleAnimation(origin.X, targetLeft, duration);
+        var topAnimation = new System.Windows.Media.Animation.DoubleAnimation(origin.Y, targetTop, duration);
+        var widthAnimation = new System.Windows.Media.Animation.DoubleAnimation(origin.Width, targetWidth, duration);
+        var heightAnimation = new System.Windows.Media.Animation.DoubleAnimation(origin.Height, targetHeight, duration);
+
+        // FillBehavior.HoldEnd (the default) leaves these animations latched on Left/Top/
+        // Width/Height forever once they finish, outranking any later plain assignment — the
+        // same hazard already documented and guarded against in EdgeDockWindow.ApplyGeometry.
+        // Unlike the dock, this window is user-draggable/resizable (see NoteWindow.xaml's
+        // WindowChrome), so clear each animation and commit its final value as a plain local
+        // value once it completes, or a drag/resize right after opening could fight a still-
+        // active animation clock.
+        leftAnimation.Completed += (_, _) => { BeginAnimation(LeftProperty, null); Left = targetLeft; };
+        topAnimation.Completed += (_, _) => { BeginAnimation(TopProperty, null); Top = targetTop; };
+        widthAnimation.Completed += (_, _) => { BeginAnimation(WidthProperty, null); Width = targetWidth; };
+        heightAnimation.Completed += (_, _) => { BeginAnimation(HeightProperty, null); Height = targetHeight; };
+
+        BeginAnimation(LeftProperty, leftAnimation);
+        BeginAnimation(TopProperty, topAnimation);
+        BeginAnimation(WidthProperty, widthAnimation);
+        BeginAnimation(HeightProperty, heightAnimation);
     }
 
     private void OnCloseClick(object sender, RoutedEventArgs e) => Close();

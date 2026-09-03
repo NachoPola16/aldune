@@ -153,8 +153,11 @@ public partial class App : Application
             return;
         }
 
-        // Cheap sweep so trash doesn't grow forever even for someone who never opens the
-        // Archivadas view (which also purges on entry, see EdgeDockWindow.OnToggleArchiveClick).
+        // Cheap sweep so trash doesn't grow forever. This startup sweep is now the only
+        // trigger for it — earlier there was also a dock-side "Archivadas" view that purged
+        // on entry, but that view was removed by the fan-tabs redesign (NotesManagerWindow's
+        // gear icon is the only way to browse archived/trashed notes now, and it doesn't
+        // purge on open).
         repository.PurgeExpiredTrash(TimeSpan.FromDays(NotesRepository.DefaultTrashRetentionDays));
 
         foreach (var dock in docks) dock.Show();

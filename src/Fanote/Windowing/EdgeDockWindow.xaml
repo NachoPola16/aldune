@@ -107,38 +107,43 @@
     <Grid>
         <!-- Full tab list + "+ Nueva nota", shown once the panel is (nearly) fully expanded. -->
         <Grid x:Name="PanelContent">
-            <ScrollViewer Margin="0,0,4,0"
+            <Grid.RowDefinitions>
+                <RowDefinition Height="*" />
+                <RowDefinition Height="Auto" />
+            </Grid.RowDefinitions>
+            <ScrollViewer Grid.Row="0"
+                          Margin="0,0,4,0"
                           VerticalScrollBarVisibility="Auto"
                           HorizontalScrollBarVisibility="Disabled">
-                <StackPanel>
-                    <ItemsControl x:Name="TabsList">
-                        <ItemsControl.ItemTemplate>
-                            <DataTemplate>
-                                <Button Content="{Binding}"
-                                        Background="{Binding Color}"
-                                        Height="36"
-                                        Margin="4"
-                                        Padding="6"
-                                        Click="OnTabClick"
-                                        Loaded="OnTabLoaded"
-                                        Tag="{Binding}"
-                                        Style="{StaticResource NoteTabButtonStyle}"
-                                        Opacity="0" />
-                            </DataTemplate>
-                        </ItemsControl.ItemTemplate>
-                    </ItemsControl>
-                    <Button x:Name="NewNoteButton" Click="OnNewNoteClick"
-                            Style="{StaticResource CircularIconButtonStyle}"
-                            ToolTip="Nueva nota">
-                        <TextBlock Text="+" FontSize="16" FontWeight="Bold" />
-                    </Button>
-                    <Button x:Name="ManageArchiveButton" Click="OnManageArchiveClick"
-                            Style="{StaticResource CircularIconButtonStyle}"
-                            ToolTip="Gestionar notas">
-                        <TextBlock Text="&#xE713;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" />
-                    </Button>
-                </StackPanel>
+                <ItemsControl x:Name="TabsList">
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate>
+                            <Button Content="{Binding}"
+                                    Background="{Binding Color}"
+                                    Height="80"
+                                    Margin="4"
+                                    Padding="6"
+                                    Click="OnTabClick"
+                                    Loaded="OnTabLoaded"
+                                    Tag="{Binding}"
+                                    Style="{StaticResource NoteTabButtonStyle}"
+                                    Opacity="0" />
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
             </ScrollViewer>
+            <StackPanel Grid.Row="1">
+                <Button x:Name="NewNoteButton" Click="OnNewNoteClick"
+                        Style="{StaticResource CircularIconButtonStyle}"
+                        ToolTip="Nueva nota">
+                    <TextBlock Text="+" FontSize="16" FontWeight="Bold" />
+                </Button>
+                <Button x:Name="ManageArchiveButton" Click="OnManageArchiveClick"
+                        Style="{StaticResource CircularIconButtonStyle}"
+                        ToolTip="Gestionar notas">
+                    <TextBlock Text="&#xE713;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" />
+                </Button>
+            </StackPanel>
         </Grid>
 
         <!-- Compact color-swatch preview shown while the pill is resting (collapsed). No

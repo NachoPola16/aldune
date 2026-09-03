@@ -27,6 +27,12 @@ public sealed class AppCoordinator
 
     public void RegisterDock(EdgeDockWindow dock) => _docks.Add(dock);
 
+    /// <summary>
+    /// Opens <paramref name="note"/> in a new window, or activates its already-open one.
+    /// <paramref name="originRect"/> (the clicked tab's on-screen rect, used for the grow-from-tab
+    /// entrance) is ignored when the note is already open — that path just activates the existing
+    /// window, which is already at wherever the user put it.
+    /// </summary>
     public void OpenOrActivateNote(Note note, EdgeDockWindow requestingDock, System.Windows.Rect? originRect = null)
     {
         if (_openNoteWindows.TryGetValue(note.Id, out var existing))

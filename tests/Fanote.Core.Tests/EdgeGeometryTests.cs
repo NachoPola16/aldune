@@ -187,7 +187,10 @@ public class EdgeGeometryTests
     [Fact]
     public void ExpandedRect_WithFewNotes_GrowsProportionally()
     {
-        int noteCount = 4;
+        // 3, not 4 — with ExpandedPerNoteLength raised to 88 (to give the rotated vertical tab
+        // label room), 4 notes (352) would already exceed ExpandedMaxLength (320); 3 (264) is
+        // the largest count that still falls strictly between the min and max bounds.
+        int noteCount = 3;
         var rect = EdgeGeometry.ExpandedRect(Area, EdgePosition.Right, noteCount);
         double expectedLength = noteCount * EdgeGeometry.ExpandedPerNoteLength;
         Assert.True(expectedLength > EdgeGeometry.ExpandedMinLength && expectedLength < EdgeGeometry.ExpandedMaxLength,

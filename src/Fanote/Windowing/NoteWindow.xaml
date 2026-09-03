@@ -96,8 +96,9 @@
                     </StackPanel>
                 </Button>
             </StackPanel>
-            <!-- Shown instead of ActiveActions when the note isn't Active (i.e. opened from the
-                 dock's archive view) — restoring is the only action offered, see STATUS.md. -->
+            <!-- Shown instead of ActiveActions when the note isn't Active (i.e. opened from
+                 "Gestionar notas" while browsing archived/trashed notes) — restoring is the
+                 only action offered, see STATUS.md. -->
             <StackPanel x:Name="InactiveActions" DockPanel.Dock="Bottom" Orientation="Horizontal"
                         Margin="0,8,0,0" Visibility="Collapsed">
                 <Button Click="OnRestoreClick" Padding="10,4"

@@ -14,7 +14,12 @@ public static class EdgeGeometry
     public const double PillMaxLength = 160;
 
     public const double ExpandedThickness = 220;
-    public const double ExpandedPerNoteLength = 40; // roughly one tab row's height
+    // Bumped from an original 40 to 88 to give the rotated vertical tab label real room —
+    // LayoutTransform's -90° rotation swaps measure axes, so a tab's Height becomes the
+    // rotated TextBlock's available WIDTH; a 40px (or 36px rendered) tab left only ~24px for
+    // text after padding, trimming every title to 1-2 characters. 88 (80px tab + 4+4 margin)
+    // gives ~68px of room — enough for a reasonably short note title before ellipsis.
+    public const double ExpandedPerNoteLength = 88;
     public const double ExpandedMinLength = 120;
     public const double ExpandedMaxLength = 320;
 
