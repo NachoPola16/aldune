@@ -194,7 +194,7 @@ public class EdgeGeometryTests
         var rect = EdgeGeometry.ExpandedRect(Area, EdgePosition.Right, noteCount);
         double expectedLength = noteCount * EdgeGeometry.ExpandedPerNoteLength;
         Assert.True(expectedLength > EdgeGeometry.ExpandedMinLength && expectedLength < EdgeGeometry.ExpandedMaxLength,
-            "This test assumes 4 notes falls strictly between min and max — adjust the constants or this count if that changes.");
+            "This test assumes 3 notes falls strictly between min and max — adjust the constants or this count if that changes.");
         Assert.Equal(expectedLength, rect.Height, precision: 3);
     }
 
