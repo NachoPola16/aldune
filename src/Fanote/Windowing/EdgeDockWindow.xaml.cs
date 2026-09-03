@@ -26,6 +26,22 @@ public partial class EdgeDockWindow : Window
     // the window has ever been positioned — see ApplyGeometry's comment on why this matters.
     private Fanote.Core.Rect _currentRect;
 
+    private IntPtr _hwnd;
+    private readonly DispatcherTimer _regionApplyTimer;
+
+    // ItemsControl.ItemContainerGenerator.ContainerFromIndex returns a ContentPresenter here, not
+    // the Button from ItemTemplate — that's how a plain (unstyled) ItemsControl always generates
+    // its containers, only Selector-derived controls hand back the templated element directly. A
+    // `ContainerFromIndex(i) is Button` check (as this file's entrance/reset replay and the region
+    // computation both used to do) therefore silently never matches — found empirically via
+    // instrumentation while wiring up SetTabFanRegion (see the design spec) — 0 containers "found"
+    // every time, even though ItemContainerGenerator.Status correctly reports ContainersGenerated.
+    // Tracking the real Button references ourselves, populated as each one's own Loaded fires
+    // (always the actual Button, since Loaded is wired directly on it in the DataTemplate),
+    // sidesteps the container-type question entirely. Cleared on every SetNotes so a note being
+    // archived/added can't leave a stale index→Button mapping pointing at a recycled container.
+    private readonly Dictionary<int, Button> _tabButtons = new();
+
     private const double NoteWindowCascadeStep = 30;
     private const int NoteWindowMaxCascadeSteps = 8;
 
@@ -61,11 +77,25 @@ public partial class EdgeDockWindow : Window
         _hoverPollTimer.Tick += (_, _) => PollHoverState();
         _hoverPollTimer.Start();
 
+        // Recorta la forma del panel desplegado exactamente cuando su contenido empieza a hacerse
+        // visible (el fadeIn de ApplyGeometry tiene BeginTime=120ms) — no antes, ni al terminar la
+        // animación entera. Si se aplicara al terminar (Completed, t=200ms), el contenido ya llevaría
+        // un rato totalmente visible dentro de un rectángulo sin recortar, y el recorte final se vería
+        // como un "pop" — aplicado en el instante en que Opacity empieza a subir desde 0, en cambio,
+        // no hay nada visible todavía que se vea mal recortado. Si el BeginTime del fadeIn cambia
+        // alguna vez, este Interval tiene que moverse con él.
+        _regionApplyTimer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(120) };
+        _regionApplyTimer.Tick += (_, _) =>
+        {
+            _regionApplyTimer.Stop();
+            ApplyTabFanRegion();
+        };
+
         SourceInitialized += (_, _) =>
         {
-            var hwnd = new WindowInteropHelper(this).Handle;
-            NativeMethods.MakeNonActivating(hwnd);
-            NativeMethods.ApplyRoundedCornersAndShadow(hwnd);
+            _hwnd = new WindowInteropHelper(this).Handle;
+            NativeMethods.MakeNonActivating(_hwnd);
+            NativeMethods.ApplyRoundedCornersAndShadow(_hwnd);
         };
 
         ApplyGeometry();
@@ -97,12 +127,43 @@ public partial class EdgeDockWindow : Window
         }
     }
 
+    private void ApplyTabFanRegion()
+    {
+        if (_hwnd == IntPtr.Zero) return;
+
+        var dpi = VisualTreeHelper.GetDpi(this);
+        var tabRects = new List<Fanote.Core.Rect>();
+        foreach (var button in _tabButtons.Values)
+        {
+            var origin = button.TranslatePoint(new Point(0, 0), this);
+            tabRects.Add(new Fanote.Core.Rect(
+                origin.X * dpi.DpiScaleX, origin.Y * dpi.DpiScaleY,
+                button.ActualWidth * dpi.DpiScaleX, button.ActualHeight * dpi.DpiScaleY));
+        }
+
+        var footerOrigin = FooterPanel.TranslatePoint(new Point(0, 0), this);
+        var footerRect = new Fanote.Core.Rect(
+            footerOrigin.X * dpi.DpiScaleX, footerOrigin.Y * dpi.DpiScaleY,
+            FooterPanel.ActualWidth * dpi.DpiScaleX, FooterPanel.ActualHeight * dpi.DpiScaleY);
+
+        var pieces = TabRegionShape.BuildRegion(tabRects, footerRect, cornerRadius: 9 * dpi.DpiScaleX);
+        NativeMethods.SetTabFanRegion(_hwnd, pieces);
+    }
+
+    private void ClearTabFanRegion()
+    {
+        if (_hwnd == IntPtr.Zero) return;
+        NativeMethods.ClearWindowRegion(_hwnd);
+    }
+
     private void ApplyGeometry()
     {
         bool expanding = _fanState.IsExpanded;
         var rect = expanding
             ? EdgeGeometry.ExpandedRect(_workingArea, _edge, _noteCount)
             : EdgeGeometry.PillRect(_workingArea, _edge, _noteCount);
+
+        _regionApplyTimer.Stop();
 
         // Clear any animation left running (with FillBehavior.HoldEnd, the default) by a
         // previous ApplyGeometry() call. A held animation outranks a plain local-value
@@ -130,22 +191,16 @@ public partial class EdgeDockWindow : Window
         // to its hidden pre-entrance state on collapse so the next expand has something to reveal.
         if (expanding)
         {
-            for (int i = 0; i < TabsList.Items.Count; i++)
+            foreach (var (index, button) in _tabButtons)
             {
-                if (TabsList.ItemContainerGenerator.ContainerFromIndex(i) is Button button)
-                {
-                    PlayTabEntrance(button, i);
-                }
+                PlayTabEntrance(button, index);
             }
         }
         else
         {
-            for (int i = 0; i < TabsList.Items.Count; i++)
+            foreach (var button in _tabButtons.Values)
             {
-                if (TabsList.ItemContainerGenerator.ContainerFromIndex(i) is Button button)
-                {
-                    ResetTabEntrance(button);
-                }
+                ResetTabEntrance(button);
             }
         }
 
@@ -158,6 +213,7 @@ public partial class EdgeDockWindow : Window
             PanelContent.Opacity = expanding ? 1 : 0;
             PillSwatches.Opacity = expanding ? 0 : 1;
             _currentRect = rect;
+            if (expanding) ApplyTabFanRegion(); else ClearTabFanRegion();
             return;
         }
 
@@ -210,6 +266,15 @@ public partial class EdgeDockWindow : Window
 
         PanelContent.BeginAnimation(OpacityProperty, expanding ? fadeIn : fadeOut);
         PillSwatches.BeginAnimation(OpacityProperty, expanding ? fadeOut : fadeIn);
+
+        if (expanding)
+        {
+            _regionApplyTimer.Start();
+        }
+        else
+        {
+            ClearTabFanRegion();
+        }
     }
 
     public void Refresh()
@@ -219,6 +284,7 @@ public partial class EdgeDockWindow : Window
 
     public void SetNotes(IReadOnlyList<Note> notes)
     {
+        _tabButtons.Clear();
         TabsList.ItemsSource = notes;
         _noteCount = notes.Count;
         ApplyGeometry();
@@ -250,7 +316,20 @@ public partial class EdgeDockWindow : Window
         int index = TabsList.Items.IndexOf(button.DataContext);
         if (index < 0) return;
 
+        _tabButtons[index] = button;
         PlayTabEntrance(button, index);
+
+        // On a cold start, SetNotes/ApplyGeometry(expanding: true) can both run before any tab's
+        // Loaded has fired yet, which means _regionApplyTimer's 120ms callback can find an empty
+        // _tabButtons and apply a region that excludes every tab, not just the gaps between them.
+        // Recomputing here too, once each tab genuinely finishes loading, is a self-correcting
+        // safety net: harmless if the timer already got it right, the only thing that fixes it if
+        // it didn't. Only recompute while actually expanded — Loaded can fire at any time (e.g.
+        // right after SetNotes while the panel is still collapsed), and the pill never uses regions.
+        if (_fanState.IsExpanded)
+        {
+            ApplyTabFanRegion();
+        }
     }
 
     private void PlayTabEntrance(Button button, int index)
