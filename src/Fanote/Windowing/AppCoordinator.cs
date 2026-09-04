@@ -58,7 +58,7 @@ public sealed class AppCoordinator
         }
 
         var noteWindow = new NoteWindow(note, _repository, this);
-        requestingDock.PositionNoteWindow(noteWindow, originRect);
+        double slideFrom = requestingDock.PositionNoteWindow(noteWindow, originRect);
 
         _openNoteWindows[note.Id] = noteWindow;
         noteWindow.Closed += (_, _) =>
@@ -75,9 +75,9 @@ public sealed class AppCoordinator
         RefreshOpenState();
         noteWindow.Show();
 
-        if (originRect is { } origin)
+        if (originRect is not null)
         {
-            noteWindow.SlideInFrom(origin);
+            noteWindow.SlideInFrom(slideFrom);
         }
 
         NativeMethods.ForceActivate(noteWindow);

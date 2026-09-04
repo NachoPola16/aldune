@@ -43,8 +43,9 @@
                             <!-- Etiqueta del lomo: girada -90° con LayoutTransform (no Render:
                                  intercambia los ejes de medida, que es justo lo que hace falta
                                  para que el alto de la pestaña sea el ancho del texto). Alineada
-                                 a la izquierda y no centrada porque en reposo solo asoman los
-                                 16px de la derecha — así el reposo es color liso y nada más. Va
+                                 a la izquierda y no centrada porque en reposo solo asoma la banda
+                                 derecha de la pestaña (ver EdgeGeometry.RestClipLeft): así el
+                                 reposo es color liso y la etiqueta no llega a verse. Va
                                  en un tono oscuro del propio color de la nota, no en negro:
                                  el negro sería el único valor de la pestaña sin relación de hue
                                  con ella. -->
@@ -65,8 +66,7 @@
                             <!-- Troquelado. Marca dónde acaba el lomo y empieza el cuerpo: al
                                  abrir la nota, todo lo que queda a la izquierda de esta línea
                                  viaja con ella (ver NoteWindow y EdgeGeometry.SpineWidth). Los
-                                 16px a su derecha son el trocito de cuerpo que asoma, y son
-                                 exactamente lo que se ve del dock en reposo.
+                                 píxeles a su derecha son el trocito de cuerpo que asoma.
 
                                  Path + StrokeDashArray y no una OpacityMask en mosaico: es la
                                  receta estandar de WPF para una regla discontinua de alto

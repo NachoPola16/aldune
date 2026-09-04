@@ -82,8 +82,8 @@ public partial class NoteWindow : Window
 
     /// <summary>
     /// La nota sale del mazo deslizándose hacia la izquierda, con su lomo por delante — como
-    /// tirar de una ficha en un fichero. <paramref name="origin"/> es el rect en pantalla de la
-    /// pestaña sobre la que se ha hecho clic.
+    /// tirar de una ficha en un fichero. <paramref name="startLeft"/> lo calcula
+    /// <see cref="EdgeDockWindow.PositionNoteWindow"/>, ya acotado al monitor de este dock.
     ///
     /// Solo se anima <c>Left</c>. El alto, el ancho y el Top ya son los definitivos desde el
     /// primer frame, así que el contenido nunca se mide a un tamaño intermedio (misma razón por
@@ -91,16 +91,11 @@ public partial class NoteWindow : Window
     /// las cuatro propiedades a la vez y la nota "crecía" desde un rect diminuto, que es una
     /// aparición genérica: esto es un movimiento con dirección y con causa.
     /// </summary>
-    internal void SlideInFrom(System.Windows.Rect origin)
+    internal void SlideInFrom(double startLeft)
     {
         if (!SystemParameters.ClientAreaAnimation) return;
 
         double targetLeft = Left;
-
-        // El punto de partida alinea el lomo de la nota exactamente sobre la pestaña que estaba
-        // en el mazo: el resto del cuerpo arranca fuera de la pantalla, por la derecha, y entra
-        // deslizándose. Es literalmente la misma ficha, sacada del canto.
-        double startLeft = origin.X;
         if (Math.Abs(startLeft - targetLeft) < 1) return;
 
         Left = startLeft;

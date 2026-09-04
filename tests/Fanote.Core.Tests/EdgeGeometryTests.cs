@@ -159,6 +159,21 @@ public class EdgeGeometryTests
     }
 
     [Fact]
+    public void RestClip_LeavesGroundOnBothSidesOfTheDash()
+    {
+        // El recorte horizontal lo hace la pestana (UIElement.Clip), no la region: en reposo la
+        // region ES el contenedor, asi que una pestana sin recortar pinta sus 104px enteros por
+        // detras y el color llena la pastilla de lado a lado, sin marco. Fue exactamente lo que
+        // se vio en la app real.
+        double dashLeft = EdgeGeometry.RestClipLeft;
+        double dashRight = dashLeft + EdgeGeometry.RestDashWidth;
+
+        // En coordenadas de la propia pestana, el canto de la ventana cae en TabWidth.
+        Assert.Equal(EdgeGeometry.TabWidth - EdgeGeometry.RestDashInset, dashRight);
+        Assert.True(dashLeft > 0, "el recorte tiene que dejar fuera la etiqueta, que vive a la izquierda");
+    }
+
+    [Fact]
     public void RestDash_SitsInsideItsContainer_OnBothSides()
     {
         // El contenedor tiene que enmarcar el guion, no coincidir con el: esos pocos pixeles de
@@ -293,6 +308,39 @@ public class EdgeGeometryTests
             Assert.True(dashBottom <= tabTop + EdgeGeometry.TabHeight,
                 $"nota {i}: el guion acaba por debajo de su pestana");
         }
+    }
+
+    // --- Origen del deslizamiento al abrir una nota ---------------------------------------------
+
+    [Fact]
+    public void SlideOrigin_NeverPutsTheNoteOnTheNextMonitor()
+    {
+        // El bug reportado: el monitor vertical del usuario ocupa x -1440..0, asi que su canto
+        // derecho linda con el principal. Arrancar en la X de la pestana (-104) con una nota de
+        // 348 la dibujaba de x=0 a 244, encima de la otra pantalla.
+        var vertical = new WorkingArea(-1440, -541, 1440, 2560);
+        double origin = EdgeGeometry.SlideOriginFor(vertical, tabX: -104, noteLeft: -444, noteWidth: 348);
+
+        Assert.True(origin + 348 <= vertical.X + vertical.Width,
+            $"la nota arranca en {origin} y su borde derecho cae en {origin + 348}");
+    }
+
+    [Fact]
+    public void SlideOrigin_StaysToTheRightOfTheDestination()
+    {
+        // La nota se desliza hacia la izquierda: un origen por detras del destino la haria ir al
+        // reves. Caso limite: una nota mas ancha que el area de trabajo.
+        var narrow = new WorkingArea(0, 0, 300, 1000);
+        double origin = EdgeGeometry.SlideOriginFor(narrow, tabX: 260, noteLeft: 100, noteWidth: 348);
+        Assert.Equal(100, origin);
+    }
+
+    [Fact]
+    public void SlideOrigin_UsesTheTabWhenThereIsRoomForIt()
+    {
+        var wide = new WorkingArea(0, 0, 2560, 1440);
+        double origin = EdgeGeometry.SlideOriginFor(wide, tabX: 1800, noteLeft: 1500, noteWidth: 348);
+        Assert.Equal(1800, origin);
     }
 
     // --- Zona sensible en reposo ---------------------------------------------------------------

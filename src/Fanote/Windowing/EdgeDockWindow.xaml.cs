@@ -47,7 +47,7 @@ public partial class EdgeDockWindow : Window
     // referencias reales, pobladas desde el propio Loaded de cada Button, esquiva la cuestión del
     // tipo de contenedor por completo.
     private readonly Dictionary<int, Button> _tabButtons = new();
-    private readonly Dictionary<int, (ScaleTransform Scale, TranslateTransform Offset)> _tabTransforms = new();
+    private readonly Dictionary<int, (ScaleTransform Scale, TranslateTransform Offset, RectangleGeometry Clip)> _tabTransforms = new();
 
     private const double NoteWindowCascadeStep = 26;
     private const int NoteWindowMaxCascadeSteps = 6;
@@ -221,10 +221,18 @@ public partial class EdgeDockWindow : Window
             // tira (paso 32); la escala evita que, al juntarlas tanto, se solapen y tapen el fondo
             // del contenedor — sin ella no habría guiones separados, sino una mancha continua.
             double scaleY = TabRegionShape.Sweep(EdgeGeometry.RestScaleFor(), 1, progress);
+            double clipLeft = TabRegionShape.Sweep(EdgeGeometry.RestClipLeft, 0, progress);
+            double clipWidth = TabRegionShape.Sweep(EdgeGeometry.RestDashWidth, EdgeGeometry.TabWidth, progress);
+
             if (_tabTransforms.TryGetValue(index, out var transforms))
             {
                 transforms.Scale.ScaleY = scaleY;
                 transforms.Offset.Y = TabRegionShape.Sweep(EdgeGeometry.RestOffsetFor(index, _noteCount), 0, progress);
+
+                // El recorte horizontal va aquí y no en la región: en reposo la región es el
+                // contenedor, así que sin recortar la pestaña su color llenaría la pastilla de
+                // lado a lado y no se vería el marco de fondo.
+                transforms.Clip.Rect = new System.Windows.Rect(clipLeft, 0, clipWidth, EdgeGeometry.TabHeight);
             }
 
             // Una nota abierta se saca del mazo: su pestaña viaja con la ventana como lomo (ver
@@ -238,23 +246,18 @@ public partial class EdgeDockWindow : Window
             // TranslatePoint recorre la cadena de transformaciones del visual, así que esto ya
             // refleja la escala y el desplazamiento recién fijados.
             var origin = button.TranslatePoint(new Point(0, 0), this);
-            double fullWidth = button.ActualWidth;
             double renderedHeight = button.ActualHeight * scaleY;
 
-            double sweptWidth = TabRegionShape.Sweep(EdgeGeometry.RestDashWidth, fullWidth, progress);
-            // En reposo la tira va despegada del canto, como en la referencia; desplegadas, las
-            // pestañas van a ras. Por eso el borde derecho también barre, no solo el izquierdo.
-            double right = TabRegionShape.Sweep(
-                origin.X + fullWidth - EdgeGeometry.RestDashInset, origin.X + fullWidth, progress);
-
+            // La región sigue al recorte: mismo borde izquierdo y mismo ancho, así que las dos
+            // cosas no pueden desincronizarse.
             double top = Math.Max(origin.Y, viewportTop);
             double bottom = Math.Min(origin.Y + renderedHeight, viewportBottom);
             if (bottom <= top) continue; // scrolleada del todo fuera de la vista
 
             tabRects.Add(new Fanote.Core.Rect(
-                (right - sweptWidth) * dpi.DpiScaleX,
+                (origin.X + clipLeft) * dpi.DpiScaleX,
                 top * dpi.DpiScaleY,
-                sweptWidth * dpi.DpiScaleX,
+                clipWidth * dpi.DpiScaleX,
                 (bottom - top) * dpi.DpiScaleY));
         }
 
@@ -292,11 +295,13 @@ public partial class EdgeDockWindow : Window
         if (containerWidth > 0.5 && _noteCount > 0)
         {
             double containerRight = ActualWidth - EdgeGeometry.RestContainerInset;
+            // Sobresale por arriba y por abajo del primer y último guión: si empezara justo en el
+            // primero, la curva del extremo redondeado se lo comería.
             restContainer = new Fanote.Core.Rect(
                 (containerRight - containerWidth) * dpi.DpiScaleX,
-                EdgeGeometry.RestStripStart(_noteCount) * dpi.DpiScaleY,
+                (EdgeGeometry.RestStripStart(_noteCount) - EdgeGeometry.RestContainerPad) * dpi.DpiScaleY,
                 containerWidth * dpi.DpiScaleX,
-                EdgeGeometry.RestStripLength(_noteCount) * dpi.DpiScaleY);
+                (EdgeGeometry.RestStripLength(_noteCount) + 2 * EdgeGeometry.RestContainerPad) * dpi.DpiScaleY);
         }
 
         var pieces = TabRegionShape.BuildRegion(
@@ -399,7 +404,13 @@ public partial class EdgeDockWindow : Window
         group.Children.Add(scale);
         group.Children.Add(offset);
         button.RenderTransform = group;
-        _tabTransforms[index] = (scale, offset);
+
+        // Una sola instancia por pestaña, reutilizada en cada frame: Clip se recalcula ~17 veces
+        // por transición y no hace falta una geometría nueva cada vez.
+        var clip = new RectangleGeometry();
+        button.Clip = clip;
+
+        _tabTransforms[index] = (scale, offset, clip);
 
         // En arranque en frío, SetNotes puede correr antes de que ningún Loaded se dispare, así que
         // la región quedaría calculada sin pestañas. Recalcular aquí es la red de seguridad.
@@ -412,7 +423,17 @@ public partial class EdgeDockWindow : Window
     /// que es de donde el usuario acaba de "tirar" para sacarla del mazo. La cascada solo se aplica
     /// en horizontal y solo cuando ya hay otras notas abiertas, para que no se tapen entre ellas.
     /// </summary>
-    internal void PositionNoteWindow(NoteWindow noteWindow, System.Windows.Rect? tabRect = null)
+    /// <summary>
+    /// Coloca la ventana de una nota recién abierta y devuelve la X desde la que debe deslizarse.
+    ///
+    /// Ese origen está <b>acotado al área de trabajo de este monitor</b>. Antes se usaba tal cual
+    /// la X de la pestaña, con el cuerpo de la nota saliéndose por la derecha — lo que da por
+    /// hecho que a la derecha no hay nada. En el monitor vertical del usuario eso es falso
+    /// siempre: su canto derecho linda con el monitor principal, así que la nota arrancaba
+    /// dibujándose encima de lo que hubiera allí. Con el acotado, el deslizamiento arranca dentro
+    /// del propio monitor pase lo que pase, y no hay frames con media nota fuera de pantalla.
+    /// </summary>
+    internal double PositionNoteWindow(NoteWindow noteWindow, System.Windows.Rect? tabRect = null)
     {
         int step = _coordinator.OpenNoteWindowCount % NoteWindowMaxCascadeSteps;
 
@@ -426,6 +447,9 @@ public partial class EdgeDockWindow : Window
             top,
             _workingArea.Y,
             Math.Max(_workingArea.Y, _workingArea.Y + _workingArea.Height - noteWindow.Height));
+
+        return EdgeGeometry.SlideOriginFor(
+            _workingArea, tabRect?.X ?? noteWindow.Left, noteWindow.Left, noteWindow.Width);
     }
 
     private void OnNewNoteClick(object sender, RoutedEventArgs e)

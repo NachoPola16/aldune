@@ -76,6 +76,26 @@ public static class EdgeGeometry
     /// <summary>Separación del guión respecto al canto, dentro del contenedor.</summary>
     public const double RestDashInset = RestContainerInset + 4; // 8
 
+    /// <summary>
+    /// Cuánto sobresale el contenedor por arriba y por abajo del primer y último guión. Sin este
+    /// margen, el guión de arriba empieza exactamente en el borde redondeado del contenedor y la
+    /// curva se lo come: el contenedor deja de leerse como algo que los contiene.
+    /// </summary>
+    public const double RestContainerPad = 5;
+
+    /// <summary>
+    /// Borde izquierdo del recorte de una pestaña en reposo, en coordenadas de la propia pestaña.
+    ///
+    /// El recorte horizontal tiene que hacerlo la pestaña (con <c>UIElement.Clip</c>, que no toca
+    /// el layout), no la región: en reposo la región <b>es</b> el contenedor, así que una pestaña
+    /// sin recortar pinta sus 104px enteros por detrás y el color llena la pastilla de lado a
+    /// lado, sin dejar ver el marco de fondo que la enmarca.
+    ///
+    /// No se puede resolver con un ScaleX: aplastaría también la etiqueta, que en reposo está
+    /// fuera de la zona visible precisamente porque vive en el extremo izquierdo de la pestaña.
+    /// </summary>
+    public const double RestClipLeft = TabWidth - RestDashInset - RestDashWidth; // 78
+
     /// <summary>Zona sensible al ratón en reposo: la del contenedor.</summary>
     public const double RestSliverWidth = RestContainerWidth + RestContainerInset; // 30
 
@@ -203,6 +223,26 @@ public static class EdgeGeometry
                 area.X + area.Width - WindowThickness - EdgeMargin, area.Y + (area.Height - length) / 2, WindowThickness, length),
             _ => throw new ArgumentOutOfRangeException(nameof(edge))
         };
+    }
+
+    /// <summary>
+    /// Desde qué X debe empezar a deslizarse la ventana de una nota que se acaba de abrir.
+    ///
+    /// Lo natural sería arrancar en la X de su pestaña, con el cuerpo saliéndose por la derecha y
+    /// entrando al deslizarse. Pero eso da por hecho que a la derecha del dock no hay nada, y con
+    /// varios monitores es falso: el canto derecho de un monitor linda con el siguiente, así que
+    /// la nota arrancaba dibujándose <b>encima de la otra pantalla</b> (reportado por el usuario
+    /// con un juego a pantalla completa en ella). Acotando el origen al área de trabajo, el
+    /// deslizamiento arranca siempre dentro del propio monitor, y de paso desaparecen los frames
+    /// con media nota fuera de pantalla incluso con un solo monitor.
+    ///
+    /// Nunca devuelve algo a la izquierda de <paramref name="noteLeft"/>: la nota se desliza hacia
+    /// la izquierda, así que el origen tiene que estar a su derecha o coincidir (sin animación).
+    /// </summary>
+    public static double SlideOriginFor(WorkingArea area, double tabX, double noteLeft, double noteWidth)
+    {
+        double furthestRight = area.X + area.Width - noteWidth;
+        return Math.Max(Math.Min(tabX, furthestRight), noteLeft);
     }
 
     /// <summary>
