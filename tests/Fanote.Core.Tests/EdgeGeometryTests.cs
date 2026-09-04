@@ -65,12 +65,41 @@ public class EdgeGeometryTests
     }
 
     [Theory]
+    [InlineData(EdgePosition.Right)]
+    [InlineData(EdgePosition.Left)]
+    [InlineData(EdgePosition.Top)]
+    [InlineData(EdgePosition.Bottom)]
+    public void ExpandedRect_SharesTheStartOfThePillsLengthAxis_SoItGrowsInOneDirectionOnly(EdgePosition edge)
+    {
+        // Centering the expanded panel independently (by its own, much longer length) made its
+        // start slide in the opposite direction from its end as it opened — the two edges moved
+        // apart from a new shared center instead of the panel simply extending past the pill.
+        // Real user feedback (2026-09-04): that dual-direction motion read as "doesn't make
+        // sense". Anchoring both rects to the pill's own centering fixes one end in place, so
+        // opening only ever extends the other end.
+        var pill = EdgeGeometry.PillRect(Area, edge, noteCount: 5);
+        var expanded = EdgeGeometry.ExpandedRect(Area, edge, noteCount: 5);
+
+        if (edge is EdgePosition.Top or EdgePosition.Bottom)
+        {
+            Assert.Equal(pill.X, expanded.X, precision: 3);
+        }
+        else
+        {
+            Assert.Equal(pill.Y, expanded.Y, precision: 3);
+        }
+    }
+
+    [Theory]
     [MemberData(nameof(Areas))]
     public void ExpandedRect_Top_HasExpectedAbsoluteGeometry(WorkingArea area)
     {
+        var pill = EdgeGeometry.PillRect(area, EdgePosition.Top, noteCount: 20);
         var rect = EdgeGeometry.ExpandedRect(area, EdgePosition.Top, noteCount: 20);
         double expectedLength = EdgeGeometry.ExpandedMaxLength + EdgeGeometry.ExpandedFooterLength;
-        Assert.Equal(area.X + (area.Width - expectedLength) / 2, rect.X);
+        // Same start as the pill (see ExpandedRect_SharesTheStartOfThePillsLengthAxis...), not
+        // centered on its own (much longer) length.
+        Assert.Equal(pill.X, rect.X);
         Assert.Equal(area.Y, rect.Y);
         Assert.Equal(expectedLength, rect.Width);
         Assert.Equal(EdgeGeometry.ExpandedThickness, rect.Height);
@@ -80,9 +109,10 @@ public class EdgeGeometryTests
     [MemberData(nameof(Areas))]
     public void ExpandedRect_Bottom_HasExpectedAbsoluteGeometry(WorkingArea area)
     {
+        var pill = EdgeGeometry.PillRect(area, EdgePosition.Bottom, noteCount: 20);
         var rect = EdgeGeometry.ExpandedRect(area, EdgePosition.Bottom, noteCount: 20);
         double expectedLength = EdgeGeometry.ExpandedMaxLength + EdgeGeometry.ExpandedFooterLength;
-        Assert.Equal(area.X + (area.Width - expectedLength) / 2, rect.X);
+        Assert.Equal(pill.X, rect.X);
         Assert.Equal(area.Y + area.Height - EdgeGeometry.ExpandedThickness, rect.Y);
         Assert.Equal(expectedLength, rect.Width);
         Assert.Equal(EdgeGeometry.ExpandedThickness, rect.Height);
@@ -92,10 +122,11 @@ public class EdgeGeometryTests
     [MemberData(nameof(Areas))]
     public void ExpandedRect_Left_HasExpectedAbsoluteGeometry(WorkingArea area)
     {
+        var pill = EdgeGeometry.PillRect(area, EdgePosition.Left, noteCount: 20);
         var rect = EdgeGeometry.ExpandedRect(area, EdgePosition.Left, noteCount: 20);
         double expectedLength = EdgeGeometry.ExpandedMaxLength + EdgeGeometry.ExpandedFooterLength;
         Assert.Equal(area.X, rect.X);
-        Assert.Equal(area.Y + (area.Height - expectedLength) / 2, rect.Y);
+        Assert.Equal(pill.Y, rect.Y);
         Assert.Equal(EdgeGeometry.ExpandedThickness, rect.Width);
         Assert.Equal(expectedLength, rect.Height);
     }
@@ -104,10 +135,11 @@ public class EdgeGeometryTests
     [MemberData(nameof(Areas))]
     public void ExpandedRect_Right_HasExpectedAbsoluteGeometry(WorkingArea area)
     {
+        var pill = EdgeGeometry.PillRect(area, EdgePosition.Right, noteCount: 20);
         var rect = EdgeGeometry.ExpandedRect(area, EdgePosition.Right, noteCount: 20);
         double expectedLength = EdgeGeometry.ExpandedMaxLength + EdgeGeometry.ExpandedFooterLength;
         Assert.Equal(area.X + area.Width - EdgeGeometry.ExpandedThickness, rect.X);
-        Assert.Equal(area.Y + (area.Height - expectedLength) / 2, rect.Y);
+        Assert.Equal(pill.Y, rect.Y);
         Assert.Equal(EdgeGeometry.ExpandedThickness, rect.Width);
         Assert.Equal(expectedLength, rect.Height);
     }

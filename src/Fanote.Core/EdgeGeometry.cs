@@ -44,37 +44,63 @@ public static class EdgeGeometry
     private static double ClampedLength(int noteCount, double perNote, double min, double max) =>
         Math.Clamp(noteCount * perNote, min, max);
 
+    private static double PillLength(int noteCount) =>
+        ClampedLength(noteCount, PillPerNoteLength, PillMinLength, PillMaxLength);
+
+    private static double ExpandedLength(int noteCount) =>
+        ClampedLength(noteCount, ExpandedPerNoteLength, ExpandedMinLength, ExpandedMaxLength) + ExpandedFooterLength;
+
+    // The along-edge coordinate (Y for Left/Right docks, X for Top/Bottom) where the length axis
+    // starts, computed from the PILL's own length — used for both PillRect and ExpandedRect so
+    // the expanded panel always starts exactly where the pill starts and only ever extends past
+    // it in one direction. Centering each rect independently (by its own length) used to make the
+    // panel's start slide one way while its end dropped the other way as it opened — two edges
+    // moving apart from a freshly-recomputed center, rather than one fixed point with the panel
+    // simply extending past it. Real user feedback (2026-09-04): that dual-direction motion read
+    // as "the growth doesn't make sense" — this anchor is the fix.
+    private static double AnchorStart(WorkingArea area, EdgePosition edge, int noteCount)
+    {
+        double pillLength = PillLength(noteCount);
+        return edge switch
+        {
+            EdgePosition.Top or EdgePosition.Bottom => area.X + (area.Width - pillLength) / 2,
+            EdgePosition.Left or EdgePosition.Right => area.Y + (area.Height - pillLength) / 2,
+            _ => throw new ArgumentOutOfRangeException(nameof(edge))
+        };
+    }
+
     public static Rect PillRect(WorkingArea area, EdgePosition edge, int noteCount)
     {
-        double length = ClampedLength(noteCount, PillPerNoteLength, PillMinLength, PillMaxLength);
+        double length = PillLength(noteCount);
+        double anchorStart = AnchorStart(area, edge, noteCount);
         return edge switch
         {
             EdgePosition.Top => new Rect(
-                area.X + (area.Width - length) / 2, area.Y + PillEdgeMargin, length, PillThickness),
+                anchorStart, area.Y + PillEdgeMargin, length, PillThickness),
             EdgePosition.Bottom => new Rect(
-                area.X + (area.Width - length) / 2, area.Y + area.Height - PillThickness - PillEdgeMargin, length, PillThickness),
+                anchorStart, area.Y + area.Height - PillThickness - PillEdgeMargin, length, PillThickness),
             EdgePosition.Left => new Rect(
-                area.X + PillEdgeMargin, area.Y + (area.Height - length) / 2, PillThickness, length),
+                area.X + PillEdgeMargin, anchorStart, PillThickness, length),
             EdgePosition.Right => new Rect(
-                area.X + area.Width - PillThickness - PillEdgeMargin, area.Y + (area.Height - length) / 2, PillThickness, length),
+                area.X + area.Width - PillThickness - PillEdgeMargin, anchorStart, PillThickness, length),
             _ => throw new ArgumentOutOfRangeException(nameof(edge))
         };
     }
 
     public static Rect ExpandedRect(WorkingArea area, EdgePosition edge, int noteCount)
     {
-        double length = ClampedLength(noteCount, ExpandedPerNoteLength, ExpandedMinLength, ExpandedMaxLength)
-            + ExpandedFooterLength;
+        double length = ExpandedLength(noteCount);
+        double anchorStart = AnchorStart(area, edge, noteCount); // same anchor as the pill — see its remarks
         return edge switch
         {
             EdgePosition.Top => new Rect(
-                area.X + (area.Width - length) / 2, area.Y, length, ExpandedThickness),
+                anchorStart, area.Y, length, ExpandedThickness),
             EdgePosition.Bottom => new Rect(
-                area.X + (area.Width - length) / 2, area.Y + area.Height - ExpandedThickness, length, ExpandedThickness),
+                anchorStart, area.Y + area.Height - ExpandedThickness, length, ExpandedThickness),
             EdgePosition.Left => new Rect(
-                area.X, area.Y + (area.Height - length) / 2, ExpandedThickness, length),
+                area.X, anchorStart, ExpandedThickness, length),
             EdgePosition.Right => new Rect(
-                area.X + area.Width - ExpandedThickness, area.Y + (area.Height - length) / 2, ExpandedThickness, length),
+                area.X + area.Width - ExpandedThickness, anchorStart, ExpandedThickness, length),
             _ => throw new ArgumentOutOfRangeException(nameof(edge))
         };
     }

@@ -90,11 +90,18 @@ public partial class NoteWindow : Window
         Width = origin.Width;
         Height = origin.Height;
 
-        var duration = new Duration(TimeSpan.FromMilliseconds(200));
-        var leftAnimation = new System.Windows.Media.Animation.DoubleAnimation(origin.X, targetLeft, duration);
-        var topAnimation = new System.Windows.Media.Animation.DoubleAnimation(origin.Y, targetTop, duration);
-        var widthAnimation = new System.Windows.Media.Animation.DoubleAnimation(origin.Width, targetWidth, duration);
-        var heightAnimation = new System.Windows.Media.Animation.DoubleAnimation(origin.Height, targetHeight, duration);
+        // Same duration/easing as EdgeDockWindow.ApplyGeometry's panel animation (320ms, ease-out)
+        // — real user feedback (2026-09-04) that the original 200ms linear motion felt too abrupt
+        // applied here too, for consistency across every panel-growth animation in the app.
+        var duration = new Duration(TimeSpan.FromMilliseconds(320));
+        var easing = new System.Windows.Media.Animation.QuadraticEase
+        {
+            EasingMode = System.Windows.Media.Animation.EasingMode.EaseOut
+        };
+        var leftAnimation = new System.Windows.Media.Animation.DoubleAnimation(origin.X, targetLeft, duration) { EasingFunction = easing };
+        var topAnimation = new System.Windows.Media.Animation.DoubleAnimation(origin.Y, targetTop, duration) { EasingFunction = easing };
+        var widthAnimation = new System.Windows.Media.Animation.DoubleAnimation(origin.Width, targetWidth, duration) { EasingFunction = easing };
+        var heightAnimation = new System.Windows.Media.Animation.DoubleAnimation(origin.Height, targetHeight, duration) { EasingFunction = easing };
 
         // FillBehavior.HoldEnd (the default) leaves these animations latched on Left/Top/
         // Width/Height forever once they finish, outranking any later plain assignment — the

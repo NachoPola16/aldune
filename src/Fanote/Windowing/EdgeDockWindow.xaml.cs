@@ -78,13 +78,13 @@ public partial class EdgeDockWindow : Window
         _hoverPollTimer.Start();
 
         // Recorta la forma del panel desplegado exactamente cuando su contenido empieza a hacerse
-        // visible (el fadeIn de ApplyGeometry tiene BeginTime=120ms) — no antes, ni al terminar la
-        // animación entera. Si se aplicara al terminar (Completed, t=200ms), el contenido ya llevaría
+        // visible (el fadeIn de ApplyGeometry tiene BeginTime=190ms) — no antes, ni al terminar la
+        // animación entera. Si se aplicara al terminar (Completed, t=320ms), el contenido ya llevaría
         // un rato totalmente visible dentro de un rectángulo sin recortar, y el recorte final se vería
         // como un "pop" — aplicado en el instante en que Opacity empieza a subir desde 0, en cambio,
         // no hay nada visible todavía que se vea mal recortado. Si el BeginTime del fadeIn cambia
         // alguna vez, este Interval tiene que moverse con él.
-        _regionApplyTimer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(120) };
+        _regionApplyTimer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(190) };
         _regionApplyTimer.Tick += (_, _) =>
         {
             _regionApplyTimer.Stop();
@@ -239,11 +239,19 @@ public partial class EdgeDockWindow : Window
         // extra internal resize pass that re-evaluates this animation before Left/Top/Width/Height
         // have ever actually been set, observing WPF's uninitialized NaN default. Supplying From
         // ourselves sidesteps that lookup entirely.
-        var duration = new Duration(TimeSpan.FromMilliseconds(200));
-        var leftAnimation = new System.Windows.Media.Animation.DoubleAnimation(_currentRect.X, rect.X, duration);
-        var topAnimation = new System.Windows.Media.Animation.DoubleAnimation(_currentRect.Y, rect.Y, duration);
-        var widthAnimation = new System.Windows.Media.Animation.DoubleAnimation(_currentRect.Width, rect.Width, duration);
-        var heightAnimation = new System.Windows.Media.Animation.DoubleAnimation(_currentRect.Height, rect.Height, duration);
+        // 320ms with an ease-out curve, not the original 200ms linear — real user feedback
+        // (2026-09-04): the plain-linear, ~200ms motion read as too abrupt to register as an
+        // animation at all. Ease-out (fast start, settling in gently) reads as a natural "coming
+        // to rest" rather than the mechanical constant-speed slide linear gives.
+        var duration = new Duration(TimeSpan.FromMilliseconds(320));
+        var easing = new System.Windows.Media.Animation.QuadraticEase
+        {
+            EasingMode = System.Windows.Media.Animation.EasingMode.EaseOut
+        };
+        var leftAnimation = new System.Windows.Media.Animation.DoubleAnimation(_currentRect.X, rect.X, duration) { EasingFunction = easing };
+        var topAnimation = new System.Windows.Media.Animation.DoubleAnimation(_currentRect.Y, rect.Y, duration) { EasingFunction = easing };
+        var widthAnimation = new System.Windows.Media.Animation.DoubleAnimation(_currentRect.Width, rect.Width, duration) { EasingFunction = easing };
+        var heightAnimation = new System.Windows.Media.Animation.DoubleAnimation(_currentRect.Height, rect.Height, duration) { EasingFunction = easing };
 
         // Observed empirically: the animated Height in particular can finish its clock (WPF's own
         // Height getter reports the target value) without the real underlying window actually
@@ -273,11 +281,14 @@ public partial class EdgeDockWindow : Window
         // pill's own color-swatch preview (PillSwatches) does the mirror image of this: it's
         // what's showing while collapsed, so it fades out the instant expansion starts and
         // back in only in the closing moments of collapse.
-        var fadeIn = new System.Windows.Media.Animation.DoubleAnimation(0, 1, new Duration(TimeSpan.FromMilliseconds(80)))
+        // BeginTime + Duration add up to the 320ms geometry duration above, so content finishes
+        // fading in exactly as the panel finishes settling into place — see _regionApplyTimer's
+        // Interval, which has to move in lockstep with this BeginTime.
+        var fadeIn = new System.Windows.Media.Animation.DoubleAnimation(0, 1, new Duration(TimeSpan.FromMilliseconds(130)))
         {
-            BeginTime = TimeSpan.FromMilliseconds(120)
+            BeginTime = TimeSpan.FromMilliseconds(190)
         };
-        var fadeOut = new System.Windows.Media.Animation.DoubleAnimation(1, 0, new Duration(TimeSpan.FromMilliseconds(60)));
+        var fadeOut = new System.Windows.Media.Animation.DoubleAnimation(1, 0, new Duration(TimeSpan.FromMilliseconds(90)));
 
         PanelContent.BeginAnimation(OpacityProperty, expanding ? fadeIn : fadeOut);
         PillSwatches.BeginAnimation(OpacityProperty, expanding ? fadeOut : fadeIn);
@@ -360,10 +371,13 @@ public partial class EdgeDockWindow : Window
         button.Width = 32 + index * 14;
         button.Margin = new Thickness(0, index == 0 ? 4 : -28, 0, 4);
 
-        var delay = TimeSpan.FromMilliseconds(45 * index);
+        // Stagger, opacity and slide durations all lengthened, and the slide gained an ease-out
+        // curve — same "too fast and too linear to read as an animation" feedback (2026-09-04)
+        // that motivated the geometry animation's change above.
+        var delay = TimeSpan.FromMilliseconds(55 * index);
 
         button.BeginAnimation(OpacityProperty, null);
-        var opacityAnimation = new System.Windows.Media.Animation.DoubleAnimation(0, 1, new Duration(TimeSpan.FromMilliseconds(150)))
+        var opacityAnimation = new System.Windows.Media.Animation.DoubleAnimation(0, 1, new Duration(TimeSpan.FromMilliseconds(190)))
         {
             BeginTime = delay
         };
@@ -371,9 +385,10 @@ public partial class EdgeDockWindow : Window
 
         var translate = new TranslateTransform(20, 0);
         button.RenderTransform = translate;
-        var slideAnimation = new System.Windows.Media.Animation.DoubleAnimation(20, 0, new Duration(TimeSpan.FromMilliseconds(200)))
+        var slideAnimation = new System.Windows.Media.Animation.DoubleAnimation(20, 0, new Duration(TimeSpan.FromMilliseconds(240)))
         {
-            BeginTime = delay
+            BeginTime = delay,
+            EasingFunction = new System.Windows.Media.Animation.QuadraticEase { EasingMode = System.Windows.Media.Animation.EasingMode.EaseOut }
         };
         translate.BeginAnimation(TranslateTransform.XProperty, slideAnimation);
     }
