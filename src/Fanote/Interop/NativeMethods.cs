@@ -162,6 +162,22 @@ internal static class NativeMethods
         return new Point(point.X, point.Y);
     }
 
+    private const int VK_LBUTTON = 0x01;
+
+    [DllImport("user32.dll")]
+    private static extern short GetAsyncKeyState(int vKey);
+
+    /// <summary>
+    /// Whether the left mouse button is held down right now, anywhere on screen — checked so the
+    /// dock's hover polling can ignore the cursor merely passing over it while the user is
+    /// dragging something else that happens to share the same screen edge (e.g. a browser's
+    /// vertical scrollbar). The high-order bit of GetAsyncKeyState's result is set while the key
+    /// is currently pressed, regardless of which window has focus or receives mouse messages —
+    /// same reason this file already prefers polling Win32 state directly over WPF's own
+    /// Mouse/Keyboard APIs elsewhere (see GetCursorScreenPosition).
+    /// </summary>
+    internal static bool IsLeftButtonDown() => (GetAsyncKeyState(VK_LBUTTON) & 0x8000) != 0;
+
     [DllImport("gdi32.dll")]
     private static extern IntPtr CreateRoundRectRgn(int left, int top, int right, int bottom, int cornerWidth, int cornerHeight);
 

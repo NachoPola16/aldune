@@ -103,6 +103,14 @@ public partial class EdgeDockWindow : Window
 
     private void PollHoverState()
     {
+        // Ignore the cursor merely passing over the dock while the user is dragging something
+        // else that shares the same screen edge (e.g. a browser's vertical scrollbar) — freeze
+        // whatever expand/collapse state the dock is already in for the duration of the drag, and
+        // resume normal polling the moment the button is released. A plain click on a tab is
+        // unaffected: that's a quick press-and-release handled by WPF's own Button.Click, not by
+        // this polling loop.
+        if (NativeMethods.IsLeftButtonDown()) return;
+
         var dpi = VisualTreeHelper.GetDpi(this);
         var cursorScreen = NativeMethods.GetCursorScreenPosition();
         double cursorX = cursorScreen.X / dpi.DpiScaleX;
