@@ -24,7 +24,10 @@ public static class EdgeGeometry
     /// Alto de cada pestaña. La etiqueta va rotada -90° con LayoutTransform, que intercambia los
     /// ejes de medida: este alto es el <b>ancho</b> disponible para el texto.
     /// </summary>
-    public const double TabHeight = 80;
+    /// 100 y no 80: con 80 la etiqueta girada no llega ni para "NUEVA NOTA" (la que sale por
+    /// defecto al crear una nota) y salía cortada. El alto de la pestaña ES el ancho disponible
+    /// para el texto, porque la rotación con LayoutTransform intercambia los ejes de medida.
+    public const double TabHeight = 100;
 
     /// <summary>
     /// Hueco entre pestañas. Tiene que ser &gt; 0: la región se une con CombineRgn/RGN_OR, así que
@@ -34,7 +37,7 @@ public static class EdgeGeometry
 
     /// <summary>Paso real de una pestaña a la siguiente. El presupuesto de longitud se calcula con
     /// esto, así que layout y geometría no pueden discrepar.</summary>
-    public const double TabPitch = TabHeight + TabGap; // 88
+    public const double TabPitch = TabHeight + TabGap; // 108
 
     /// <summary>
     /// Ancho de <b>todas</b> las pestañas. Uniforme a propósito — ver el resumen de la clase.
@@ -44,8 +47,7 @@ public static class EdgeGeometry
     /// <summary>
     /// Distancia desde el borde derecho de la pestaña hasta la línea de troquelado. Todo lo que
     /// queda a la izquierda de esa línea es el lomo (etiqueta incluida); lo que queda a la derecha
-    /// es el trocito de cuerpo que asoma. Coincide con <see cref="RestSliverWidth"/> para que en
-    /// reposo el borde izquierdo del guión de color <b>sea</b> exactamente el troquelado.
+    /// es el trocito de cuerpo que asoma.
     /// </summary>
     public const double PerforationInset = 16;
 
@@ -54,17 +56,37 @@ public static class EdgeGeometry
 
     // --- Reposo -------------------------------------------------------------------------------
 
-    /// <summary>Lo que asoma de cada pestaña con el dock en reposo.</summary>
-    public const double RestSliverWidth = PerforationInset; // 16
+    /// <summary>Ancho del guión de color de cada nota en reposo.</summary>
+    public const double RestDashWidth = 18;
+
+    /// <summary>
+    /// Ancho del contenedor que agrupa los guiones en reposo. Más ancho que el guión, para que
+    /// enmarque cada uno con unos píxeles de fondo a cada lado.
+    ///
+    /// Este contenedor es lo que hace que la tira se lea como un objeto: sin él, cuatro pasteles
+    /// claros sueltos sobre un escritorio claro desaparecen (comprobado en la app real). El vídeo
+    /// de referencia lo tiene, aunque no se aprecia en su landing.
+    /// </summary>
+    public const double RestContainerWidth = 26;
+
+    /// <summary>Separación del contenedor respecto al canto de la pantalla. En reposo la tira va
+    /// despegada del borde (como en la referencia); las pestañas desplegadas sí van a ras.</summary>
+    public const double RestContainerInset = 4;
+
+    /// <summary>Separación del guión respecto al canto, dentro del contenedor.</summary>
+    public const double RestDashInset = RestContainerInset + 4; // 8
+
+    /// <summary>Zona sensible al ratón en reposo: la del contenedor.</summary>
+    public const double RestSliverWidth = RestContainerWidth + RestContainerInset; // 30
 
     /// <summary>Alto del guión de color de cada nota en reposo.</summary>
-    public const double RestDashLength = 24;
+    public const double RestDashLength = 26;
 
-    /// <summary>Hueco entre guiones en reposo.</summary>
+    /// <summary>Hueco entre guiones en reposo. Es lo que deja ver el fondo del contenedor.</summary>
     public const double RestGap = 6;
 
     /// <summary>Paso entre guiones en reposo.</summary>
-    public const double RestPitch = RestDashLength + RestGap; // 30
+    public const double RestPitch = RestDashLength + RestGap; // 32
 
     // --- Ventana ------------------------------------------------------------------------------
 
@@ -83,7 +105,7 @@ public static class EdgeGeometry
     /// exacto de <see cref="TabPitch"/> a propósito: si no lo fuera, la vista inicial sin
     /// scrollear cortaría la última pestaña por la mitad desde el primer hover.
     /// </summary>
-    public const double MaxContentLength = 4 * TabPitch; // 352
+    public const double MaxContentLength = 4 * TabPitch; // 432
 
     /// <summary>
     /// Alto de la fila fija de botones ("+" y engranaje), fuera del ScrollViewer para que siempre
@@ -143,6 +165,18 @@ public static class EdgeGeometry
     /// desplazamiento, la banda que la región deja ver para la nota 2 caería sobre píxeles de la
     /// nota 1, y los colores saldrían cambiados.
     /// </summary>
+    /// <summary>
+    /// Escala vertical de una pestaña en reposo.
+    ///
+    /// Hace falta porque el desplazamiento por sí solo no basta: una pestaña mide
+    /// <see cref="TabHeight"/> (100) y el paso en reposo es <see cref="RestPitch"/> (32), así que
+    /// con solo desplazarlas se solaparían 70px y taparían el fondo del contenedor — no se verían
+    /// guiones separados, sino una mancha continua. Escalándolas se quedan en su banda y el fondo
+    /// asoma por los huecos. Como en reposo solo se ve el extremo derecho de la pestaña, el
+    /// aplastamiento de la etiqueta (que vive en el extremo izquierdo) no llega a verse.
+    /// </summary>
+    public static double RestScaleFor() => RestDashLength / TabHeight;
+
     public static double RestOffsetFor(int index, int noteCount)
     {
         double dashCenter = RestStripStart(noteCount) + index * RestPitch + RestDashLength / 2;

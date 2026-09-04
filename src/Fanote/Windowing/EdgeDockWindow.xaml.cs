@@ -47,7 +47,7 @@ public partial class EdgeDockWindow : Window
     // referencias reales, pobladas desde el propio Loaded de cada Button, esquiva la cuestión del
     // tipo de contenedor por completo.
     private readonly Dictionary<int, Button> _tabButtons = new();
-    private readonly Dictionary<int, TranslateTransform> _tabOffsets = new();
+    private readonly Dictionary<int, (ScaleTransform Scale, TranslateTransform Offset)> _tabTransforms = new();
 
     private const double NoteWindowCascadeStep = 26;
     private const int NoteWindowMaxCascadeSteps = 6;
@@ -199,6 +199,7 @@ public partial class EdgeDockWindow : Window
         var dpi = VisualTreeHelper.GetDpi(this);
         var tabRects = new List<Fanote.Core.Rect>(_tabButtons.Count);
         double footerProgress = 0;
+        double firstTabProgress = _fanState.IsExpanded ? 1 : 0;
 
         // El ItemsControl no está virtualizado, así que con más notas de las que caben existen
         // Buttons colocados por debajo del viewport del ScrollViewer. TranslatePoint devuelve su
@@ -213,14 +214,17 @@ public partial class EdgeDockWindow : Window
             double progress = ProgressFor(index, elapsedMs);
 
             if (index == _noteCount - 1) footerProgress = progress;
+            if (index == 0) firstTabProgress = progress;
 
-            // El desplazamiento va en RenderTransform, no en Margin ni en layout: en reposo los
-            // guiones van con un paso de 30px y las pestañas desplegadas con uno de 88, así que
-            // sin mover la pestaña la banda que la región deja ver para la nota 2 caería sobre
-            // píxeles de la nota 1 y los colores saldrían cambiados.
-            if (_tabOffsets.TryGetValue(index, out var offset))
+            // Escala y desplazamiento van en RenderTransform, nunca en Margin ni en layout. El
+            // desplazamiento lleva cada pestaña de su hueco en el abanico (paso 108) al suyo en la
+            // tira (paso 32); la escala evita que, al juntarlas tanto, se solapen y tapen el fondo
+            // del contenedor — sin ella no habría guiones separados, sino una mancha continua.
+            double scaleY = TabRegionShape.Sweep(EdgeGeometry.RestScaleFor(), 1, progress);
+            if (_tabTransforms.TryGetValue(index, out var transforms))
             {
-                offset.Y = TabRegionShape.Sweep(EdgeGeometry.RestOffsetFor(index, _noteCount), 0, progress);
+                transforms.Scale.ScaleY = scaleY;
+                transforms.Offset.Y = TabRegionShape.Sweep(EdgeGeometry.RestOffsetFor(index, _noteCount), 0, progress);
             }
 
             // Una nota abierta se saca del mazo: su pestaña viaja con la ventana como lomo (ver
@@ -232,21 +236,19 @@ public partial class EdgeDockWindow : Window
             if (isOpen) continue;
 
             // TranslatePoint recorre la cadena de transformaciones del visual, así que esto ya
-            // incluye el RenderTransform recién fijado arriba.
+            // refleja la escala y el desplazamiento recién fijados.
             var origin = button.TranslatePoint(new Point(0, 0), this);
             double fullWidth = button.ActualWidth;
-            double fullHeight = button.ActualHeight;
+            double renderedHeight = button.ActualHeight * scaleY;
 
-            double sweptWidth = TabRegionShape.Sweep(EdgeGeometry.RestSliverWidth, fullWidth, progress);
-            double sweptHeight = TabRegionShape.Sweep(EdgeGeometry.RestDashLength, fullHeight, progress);
+            double sweptWidth = TabRegionShape.Sweep(EdgeGeometry.RestDashWidth, fullWidth, progress);
+            // En reposo la tira va despegada del canto, como en la referencia; desplegadas, las
+            // pestañas van a ras. Por eso el borde derecho también barre, no solo el izquierdo.
+            double right = TabRegionShape.Sweep(
+                origin.X + fullWidth - EdgeGeometry.RestDashInset, origin.X + fullWidth, progress);
 
-            // Anclada por la derecha (el borde físico de pantalla) y centrada sobre la pestaña ya
-            // desplazada: lo que se mueve es el borde izquierdo, barriendo hacia fuera, mientras
-            // el guión crece a lo alto hasta ser la pestaña entera.
-            double right = origin.X + fullWidth;
-            double centerY = origin.Y + fullHeight / 2;
-            double top = Math.Max(centerY - sweptHeight / 2, viewportTop);
-            double bottom = Math.Min(centerY + sweptHeight / 2, viewportBottom);
+            double top = Math.Max(origin.Y, viewportTop);
+            double bottom = Math.Min(origin.Y + renderedHeight, viewportBottom);
             if (bottom <= top) continue; // scrolleada del todo fuera de la vista
 
             tabRects.Add(new Fanote.Core.Rect(
@@ -256,20 +258,49 @@ public partial class EdgeDockWindow : Window
                 (bottom - top) * dpi.DpiScaleY));
         }
 
-        if (elapsedMs is null) footerProgress = _fanState.IsExpanded ? 1 : 0;
+        if (elapsedMs is null)
+        {
+            footerProgress = _fanState.IsExpanded ? 1 : 0;
+            firstTabProgress = footerProgress;
+        }
 
-        var footerOrigin = FooterPanel.TranslatePoint(new Point(0, 0), this);
-        double footerFull = FooterPanel.ActualWidth;
-        // Barre desde 0, no desde RestSliverWidth: en reposo no debe asomar nada del footer, o
-        // parecería una nota más de color gris al final de la tira.
-        double footerSwept = TabRegionShape.Sweep(0, footerFull, footerProgress);
-        var footerRect = new Fanote.Core.Rect(
-            (footerOrigin.X + footerFull - footerSwept) * dpi.DpiScaleX,
-            footerOrigin.Y * dpi.DpiScaleY,
-            footerSwept * dpi.DpiScaleX,
-            FooterPanel.ActualHeight * dpi.DpiScaleY);
+        // Cada botón es su propio círculo, no una caja rectangular que envuelva a los dos: esa
+        // caja era lo único del dock con esquinas en pico, y se leía como un panel suelto pegado
+        // debajo del abanico en lugar de como dos botones.
+        var circleRects = new List<Fanote.Core.Rect>(2);
+        foreach (var footerButton in new[] { NewNoteButton, ManageArchiveButton })
+        {
+            double diameter = footerButton.ActualWidth * footerProgress;
+            if (diameter <= 0.5) continue;
 
-        var pieces = TabRegionShape.BuildRegion(tabRects, footerRect, TabCornerRadius * dpi.DpiScaleX);
+            var buttonOrigin = footerButton.TranslatePoint(new Point(0, 0), this);
+            double cx = buttonOrigin.X + footerButton.ActualWidth / 2;
+            double cy = buttonOrigin.Y + footerButton.ActualHeight / 2;
+            circleRects.Add(new Fanote.Core.Rect(
+                (cx - diameter / 2) * dpi.DpiScaleX,
+                (cy - diameter / 2) * dpi.DpiScaleY,
+                diameter * dpi.DpiScaleX,
+                diameter * dpi.DpiScaleY));
+        }
+
+        // El contenedor oscuro que agrupa los guiones en reposo. Es lo que hace que la tira se lea
+        // como un objeto: sin él, cuatro pasteles claros sueltos sobre un escritorio claro
+        // desaparecen. Se retira en cuanto la transición arranca (ver ContainerProgress).
+        Fanote.Core.Rect? restContainer = null;
+        double containerWidth = TabRegionShape.Sweep(
+            EdgeGeometry.RestContainerWidth, 0, TabRegionShape.ContainerProgress(firstTabProgress));
+        if (containerWidth > 0.5 && _noteCount > 0)
+        {
+            double containerRight = ActualWidth - EdgeGeometry.RestContainerInset;
+            restContainer = new Fanote.Core.Rect(
+                (containerRight - containerWidth) * dpi.DpiScaleX,
+                EdgeGeometry.RestStripStart(_noteCount) * dpi.DpiScaleY,
+                containerWidth * dpi.DpiScaleX,
+                EdgeGeometry.RestStripLength(_noteCount) * dpi.DpiScaleY);
+        }
+
+        var pieces = TabRegionShape.BuildRegion(
+            tabRects, circleRects, restContainer, TabCornerRadius * dpi.DpiScaleX);
 
         // SetWindowRgn emite dos mensajes de ventana por llamada; saltarse los frames en los que la
         // forma redondeada a entero no ha cambiado quita bastantes llamadas de la transición, sobre
@@ -314,7 +345,7 @@ public partial class EdgeDockWindow : Window
     public void SetNotes(IReadOnlyList<Note> notes)
     {
         _tabButtons.Clear();
-        _tabOffsets.Clear();
+        _tabTransforms.Clear();
         _lastRegionKey = null;
         TabsList.ItemsSource = notes;
         _noteCount = notes.Count;
@@ -355,13 +386,20 @@ public partial class EdgeDockWindow : Window
 
         _tabButtons[index] = button;
 
-        // Una instancia nueva por pestaña, creada en código. Un TranslateTransform declarado en
-        // XAML dentro de un DataTemplate acaba congelado y compartido entre todos los contenedores
-        // generados (Freezable), y animarlo lanza "Cannot animate ... because the object is sealed
-        // or frozen" — ya pasó una vez en este mismo fichero, ver docs/STATUS.md.
+        // Instancias nuevas por pestaña, creadas en código. Un Transform declarado en XAML dentro
+        // de un DataTemplate acaba congelado y compartido entre todos los contenedores generados
+        // (Freezable), y tocarlo lanza "Cannot animate ... because the object is sealed or frozen"
+        // — ya pasó una vez en este mismo fichero, ver docs/STATUS.md.
+        //
+        // La escala se centra en el centro de la pestaña, para que el centro del rect renderizado
+        // caiga siempre donde lo pone el desplazamiento, sea cual sea la escala.
+        var scale = new ScaleTransform(1, 1) { CenterX = 0, CenterY = EdgeGeometry.TabHeight / 2 };
         var offset = new TranslateTransform();
-        button.RenderTransform = offset;
-        _tabOffsets[index] = offset;
+        var group = new TransformGroup();
+        group.Children.Add(scale);
+        group.Children.Add(offset);
+        button.RenderTransform = group;
+        _tabTransforms[index] = (scale, offset);
 
         // En arranque en frío, SetNotes puede correr antes de que ningún Loaded se dispare, así que
         // la región quedaría calculada sin pestañas. Recalcular aquí es la red de seguridad.

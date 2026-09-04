@@ -164,7 +164,7 @@ internal static class NativeMethods
     internal static void SetTabFanRegion(IntPtr hWnd, IReadOnlyList<RegionPiece> pieces)
     {
         IntPtr accumulated = CreateRectRgn(0, 0, 0, 0);
-        foreach (var (bounds, cornerRadius) in pieces)
+        foreach (var (bounds, cornerRadius, squareRightSide) in pieces)
         {
             int left = (int)bounds.X;
             int top = (int)bounds.Y;
@@ -180,11 +180,22 @@ internal static class NativeMethods
                 // como una pastilla redondeada y la pestaña con su esquina normal, sin ramas.
                 int diameter = (int)Math.Min(cornerRadius * 2, Math.Min(right - left, bottom - top));
                 IntPtr rounded = CreateRoundRectRgn(left, top, right, bottom, diameter, diameter);
-                IntPtr rightHalfSquared = CreateRectRgn(left + (right - left) / 2, top, right, bottom);
-                piece = CreateRectRgn(0, 0, 0, 0);
-                CombineRgn(piece, rounded, rightHalfSquared, RGN_OR);
-                DeleteObject(rounded);
-                DeleteObject(rightHalfSquared);
+
+                if (!squareRightSide)
+                {
+                    // Pastilla o círculo completo: el contenedor de reposo y los botones del
+                    // footer van despegados del canto de la pantalla, así que sus cuatro esquinas
+                    // se ven y las cuatro tienen que ir redondeadas.
+                    piece = rounded;
+                }
+                else
+                {
+                    IntPtr rightHalfSquared = CreateRectRgn(left + (right - left) / 2, top, right, bottom);
+                    piece = CreateRectRgn(0, 0, 0, 0);
+                    CombineRgn(piece, rounded, rightHalfSquared, RGN_OR);
+                    DeleteObject(rounded);
+                    DeleteObject(rightHalfSquared);
+                }
             }
             else
             {

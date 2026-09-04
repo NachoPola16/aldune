@@ -13,14 +13,16 @@ namespace Fanote.Windowing;
 /// A este tamaño (11px, en mayúsculas, girado 90°) el tracking no es decorativo: sin él las
 /// mayúsculas se apelmazan y la etiqueta se lee peor girada que horizontal.
 ///
-/// Se corta a <see cref="MaxCharacters"/> sin puntos suspensivos: un lomo es una etiqueta de
-/// archivador, y "COMPRA" cortado se sigue reconociendo, mientras que "COMP…" gasta un carácter
-/// de los pocos que hay en decir que falta algo.
+/// <b>No</b> recorta por numero de caracteres. Antes habia un tope duro de 9, elegido a ojo,
+/// y "NUEVA NOTA" (el titulo por defecto de una nota recien creada) tiene 10 — salia siempre
+/// cortada como "NUEVA NOT". Ahora recorta el propio TextBlock, con elipsis, y solo cuando
+/// de verdad no cabe en el alto de la pestana.
 /// </summary>
 public sealed class NoteTabLabelConverter : IValueConverter
 {
-    private const int MaxCharacters = 9;
-    private const char ThinSpace = ' ';
+    // Escape explicito y no el caracter literal: U+2009 es invisible en el editor y ya se
+    // perdio una vez editando este fichero con herramientas de texto.
+    private const char ThinSpace = '\u2009';
 
     public object Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
     {
@@ -28,7 +30,6 @@ public sealed class NoteTabLabelConverter : IValueConverter
         if (string.IsNullOrWhiteSpace(title)) return string.Empty;
 
         title = title.Trim().ToUpper(culture);
-        if (title.Length > MaxCharacters) title = title[..MaxCharacters].TrimEnd();
 
         var builder = new StringBuilder(title.Length * 2);
         for (int i = 0; i < title.Length; i++)

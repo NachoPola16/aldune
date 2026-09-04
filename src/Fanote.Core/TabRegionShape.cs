@@ -1,6 +1,12 @@
 namespace Fanote.Core;
 
-public readonly record struct RegionPiece(Rect Bounds, double CornerRadius);
+/// <summary>
+/// Una pieza de la forma recortada. <paramref name="SquareRightSide"/> distingue las pestañas
+/// (redondeadas solo por la izquierda, porque su lado derecho va a ras del canto de la pantalla)
+/// de las piezas que sí son pastillas o círculos completos: el contenedor de reposo y los botones
+/// del footer, que van despegados del canto.
+/// </summary>
+public readonly record struct RegionPiece(Rect Bounds, double CornerRadius, bool SquareRightSide = true);
 
 /// <summary>
 /// Cálculo puro de la forma recortada del dock. Deliberadamente sin combinar ni deduplicar rects:
@@ -82,18 +88,52 @@ public static class TabRegionShape
         Sweep(restWidth, fullWidth, progress);
 
     /// <summary>
-    /// Construye las piezas de la región a partir de los rects <b>ya calculados</b> de cada
-    /// pestaña y de la fila de botones. El footer va con radio 0 (rectángulo plano).
+    /// Progreso del contenedor de reposo, derivado del de la primera pestaña. Se va bastante antes
+    /// que ella (multiplicador 2.5): en cuanto el abanico empieza a abrirse, las pestañas se
+    /// reparten por toda la longitud de la ventana mientras el contenedor solo cubre la tira corta
+    /// de reposo, así que dejarlo puesto lo convertiría en una barra oscura suelta en medio del
+    /// abanico. Al replegar pasa lo simétrico: reaparece solo al final, cuando todo ha vuelto.
+    /// </summary>
+    public static double ContainerProgress(double firstTabProgress) =>
+        Math.Clamp(firstTabProgress * 2.5, 0, 1);
+
+    /// <summary>
+    /// Construye las piezas de la región a partir de los rects <b>ya calculados</b>.
+    ///
+    /// <paramref name="restContainer"/> es el contenedor oscuro que agrupa los guiones en reposo.
+    /// Sin él, cuatro pasteles claros sueltos sobre un escritorio claro desaparecen — es lo que
+    /// hace que la tira se lea como un objeto y no como manchas. Se omite (ancho 0) en cuanto la
+    /// transición arranca.
+    ///
+    /// <paramref name="circleRects"/> son los botones del footer, como círculos completos en vez
+    /// de una caja rectangular oscura.
     /// </summary>
     public static IReadOnlyList<RegionPiece> BuildRegion(
-        IReadOnlyList<Rect> tabRects, Rect footerRect, double cornerRadius)
+        IReadOnlyList<Rect> tabRects,
+        IReadOnlyList<Rect> circleRects,
+        Rect? restContainer,
+        double cornerRadius)
     {
-        var pieces = new List<RegionPiece>(tabRects.Count + 1);
+        var pieces = new List<RegionPiece>(tabRects.Count + circleRects.Count + 1);
+
+        if (restContainer is { } container && container.Width > 0 && container.Height > 0)
+        {
+            // Pastilla completa: va despegada del canto, así que se redondea por los cuatro lados.
+            pieces.Add(new RegionPiece(container, Math.Min(container.Width, container.Height) / 2,
+                SquareRightSide: false));
+        }
+
         foreach (var tab in tabRects)
         {
             pieces.Add(new RegionPiece(tab, cornerRadius));
         }
-        pieces.Add(new RegionPiece(footerRect, 0));
+
+        foreach (var circle in circleRects)
+        {
+            pieces.Add(new RegionPiece(circle, Math.Min(circle.Width, circle.Height) / 2,
+                SquareRightSide: false));
+        }
+
         return pieces;
     }
 }

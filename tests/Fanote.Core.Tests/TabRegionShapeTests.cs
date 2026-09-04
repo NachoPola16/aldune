@@ -5,59 +5,95 @@ namespace Fanote.Core.Tests;
 
 public class TabRegionShapeTests
 {
-    private static readonly Rect FooterRect = new(0, 300, 116, 80);
+    private static readonly Rect[] NoCircles = Array.Empty<Rect>();
+    private static readonly Rect[] TwoCircles = { new(0, 300, 32, 32), new(0, 340, 32, 32) };
 
     [Fact]
-    public void BuildRegion_NoTabs_ReturnsOnlyTheFooterPiece()
+    public void BuildRegion_NoTabsNoCirclesNoContainer_ReturnsNothing()
     {
-        var pieces = TabRegionShape.BuildRegion(Array.Empty<Rect>(), FooterRect, cornerRadius: 9);
-
-        var piece = Assert.Single(pieces);
-        Assert.Equal(FooterRect, piece.Bounds);
-        Assert.Equal(0, piece.CornerRadius);
+        var pieces = TabRegionShape.BuildRegion(Array.Empty<Rect>(), NoCircles, null, cornerRadius: 9);
+        Assert.Empty(pieces);
     }
 
     [Fact]
-    public void BuildRegion_OneTab_ReturnsTabPieceThenFooterPiece()
-    {
-        var tab = new Rect(0, 0, 32, 80);
-
-        var pieces = TabRegionShape.BuildRegion(new[] { tab }, FooterRect, cornerRadius: 9);
-
-        Assert.Equal(2, pieces.Count);
-        Assert.Equal(tab, pieces[0].Bounds);
-        Assert.Equal(9, pieces[0].CornerRadius);
-        Assert.Equal(FooterRect, pieces[1].Bounds);
-        Assert.Equal(0, pieces[1].CornerRadius);
-    }
-
-    [Fact]
-    public void BuildRegion_MultipleTabs_EachTabGetsTheGivenCornerRadius()
+    public void BuildRegion_Tabs_KeepTheGivenRadiusAndAreSquaredOnTheRight()
     {
         var tabs = new[]
         {
-            new Rect(0, 0, 32, 80),
-            new Rect(0, 56, 46, 80),
-            new Rect(0, 112, 60, 80),
+            new Rect(0, 0, 104, 100),
+            new Rect(0, 108, 104, 100),
         };
 
-        var pieces = TabRegionShape.BuildRegion(tabs, FooterRect, cornerRadius: 12);
+        var pieces = TabRegionShape.BuildRegion(tabs, NoCircles, null, cornerRadius: 12);
 
-        Assert.Equal(4, pieces.Count); // 3 pestañas + footer
+        Assert.Equal(2, pieces.Count);
         for (int i = 0; i < tabs.Length; i++)
         {
             Assert.Equal(tabs[i], pieces[i].Bounds);
             Assert.Equal(12, pieces[i].CornerRadius);
+            // El lado derecho va a ras del canto de la pantalla: redondearlo dejaria ver el
+            // escritorio por una muesca en el borde.
+            Assert.True(pieces[i].SquareRightSide);
         }
-        Assert.Equal(0, pieces[^1].CornerRadius);
     }
 
     [Fact]
-    public void BuildRegion_FooterPiece_AlwaysHasZeroCornerRadius()
+    public void BuildRegion_FooterButtons_AreFullCircles()
     {
-        var pieces = TabRegionShape.BuildRegion(Array.Empty<Rect>(), FooterRect, cornerRadius: 999);
+        var pieces = TabRegionShape.BuildRegion(Array.Empty<Rect>(), TwoCircles, null, cornerRadius: 12);
 
-        Assert.Equal(0, Assert.Single(pieces).CornerRadius);
+        Assert.Equal(2, pieces.Count);
+        foreach (var piece in pieces)
+        {
+            // Circulos completos, no la caja rectangular que los envolvia antes.
+            Assert.False(piece.SquareRightSide);
+            Assert.Equal(16, piece.CornerRadius);
+        }
+    }
+
+    [Fact]
+    public void BuildRegion_RestContainer_ComesFirstAndIsAFullPill()
+    {
+        var container = new Rect(0, 100, 26, 122);
+        var tabs = new[] { new Rect(0, 0, 104, 100) };
+
+        var pieces = TabRegionShape.BuildRegion(tabs, TwoCircles, container, cornerRadius: 12);
+
+        // Primero, para que quede debajo del resto en el orden de union.
+        Assert.Equal(container, pieces[0].Bounds);
+        Assert.Equal(13, pieces[0].CornerRadius); // media anchura: pastilla completa
+        Assert.False(pieces[0].SquareRightSide);
+        Assert.Equal(1 + tabs.Length + TwoCircles.Length, pieces.Count);
+    }
+
+    [Fact]
+    public void BuildRegion_RestContainer_IsDroppedOnceItHasNoWidth()
+    {
+        // ContainerProgress lo lleva a cero en cuanto arranca la transicion; una pieza de ancho 0
+        // no debe llegar al interop.
+        var pieces = TabRegionShape.BuildRegion(
+            Array.Empty<Rect>(), NoCircles, new Rect(0, 100, 0, 122), cornerRadius: 12);
+        Assert.Empty(pieces);
+    }
+
+    // --- Contenedor de reposo ------------------------------------------------------------------
+
+    [Fact]
+    public void ContainerProgress_ReachesOneWellBeforeTheFirstTabDoes()
+    {
+        // Se va antes que la primera pestana a proposito: al abrirse, las pestanas se reparten por
+        // toda la ventana mientras el contenedor solo cubre la tira corta de reposo, asi que
+        // dejarlo puesto lo convertiria en una barra oscura suelta en medio del abanico.
+        Assert.Equal(1, TabRegionShape.ContainerProgress(0.4));
+        Assert.True(TabRegionShape.ContainerProgress(0.2) > 0.2);
+    }
+
+    [Fact]
+    public void ContainerProgress_IsPinnedAtRestAndClamped()
+    {
+        Assert.Equal(0, TabRegionShape.ContainerProgress(0));
+        Assert.Equal(1, TabRegionShape.ContainerProgress(1));
+        Assert.Equal(0, TabRegionShape.ContainerProgress(-1));
     }
 
     // --- Curva ---------------------------------------------------------------------------------

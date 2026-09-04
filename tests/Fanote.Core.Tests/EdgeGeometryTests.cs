@@ -159,9 +159,31 @@ public class EdgeGeometryTests
     }
 
     [Fact]
-    public void RestSliverWidth_MatchesThePerforation_SoTheDashStartsExactlyAtTheFold()
+    public void RestDash_SitsInsideItsContainer_OnBothSides()
     {
-        Assert.Equal(EdgeGeometry.PerforationInset, EdgeGeometry.RestSliverWidth);
+        // El contenedor tiene que enmarcar el guion, no coincidir con el: esos pocos pixeles de
+        // fondo a cada lado son lo que hace que la tira se lea como un objeto y no como manchas.
+        Assert.True(EdgeGeometry.RestContainerWidth > EdgeGeometry.RestDashWidth);
+        Assert.True(EdgeGeometry.RestDashInset > EdgeGeometry.RestContainerInset);
+    }
+
+    [Fact]
+    public void RestScale_SquashesTabsEnoughToNotOverlapInTheStrip()
+    {
+        // Sin escalar, una pestana de 100px con paso de reposo 32 se solapa con la siguiente y
+        // tapa el fondo del contenedor: no habria guiones separados, sino una mancha continua.
+        double rendered = EdgeGeometry.TabHeight * EdgeGeometry.RestScaleFor();
+        Assert.Equal(EdgeGeometry.RestDashLength, rendered, precision: 9);
+        Assert.True(rendered < EdgeGeometry.RestPitch,
+            $"una pestana renderizada mide {rendered} y el paso es {EdgeGeometry.RestPitch}");
+    }
+
+    [Fact]
+    public void TabHeight_LeavesRoomForTheDefaultNoteTitle()
+    {
+        // "NUEVA NOTA" son 10 caracteres, y el alto de la pestana ES el ancho disponible para la
+        // etiqueta girada. Con 80 no cabia y salia cortada; esta cota lo deja anclado.
+        Assert.True(EdgeGeometry.TabHeight >= 100);
     }
 
     // --- Tira en reposo --------------------------------------------------------------------------

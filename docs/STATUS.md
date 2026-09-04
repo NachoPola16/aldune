@@ -65,7 +65,7 @@ autoridad de diseño; todo lo demás (planes, código) se argumenta contra él.
   (ver historial más abajo) y, a raíz de probarlo, también se hizo que el
   tamaño del pill/panel se ajuste al número de notas en vez de ser fijo.
 
-Tests: 112/112 pasando (`dotnet test` desde la raíz del repo).
+Tests: 117/117 pasando (`dotnet test` desde la raíz del repo).
 
 ## Cómo se ha trabajado (para mantener el mismo estilo)
 
@@ -756,7 +756,7 @@ grosor distinto.
 
 ### Verificación, y dos bugs que encontró
 
-Tests: 112/112. Build limpio.
+Tests: 117/117. Build limpio.
 
 1. **Sondeando la región de la app real con 5 notas**: `RestStripLength`
    heredaba el tope de `MaxContentLength` (4 pestañas), pero ese tope existe
@@ -779,6 +779,52 @@ aislamiento con `RenderTargetBitmap` desde PowerShell (`-STA`) verifica
 render sin lanzar la app y sin capturar nada de la pantalla del usuario — no
 tiene el problema de privacidad de la sesión 2026-09-03, y encontró dos cosas
 que sondear la región no podía encontrar.
+
+### Tercera ronda: texto cortado y reposo demasiado escondido
+
+Feedback del usuario sobre capturas de la app real. Dos quejas, dos causas
+distintas:
+
+1. **"Se corta el texto"** — culpa de un tope duro de 9 caracteres que había
+   puesto a ojo en `NoteTabLabelConverter`, y "NUEVA NOTA" (el título por
+   defecto) tiene 10. Encima, con `TabHeight` en 80 tampoco cabría entera
+   aunque no hubiera tope: el alto de la pestaña **es** el ancho disponible
+   para la etiqueta girada. Fuera el tope (ahora recorta el propio `TextBlock`
+   con elipsis y solo cuando de verdad no cabe) y `TabHeight` sube a 100.
+   `TabPitch` pasa a 108 y `MaxContentLength` a 432.
+2. **"No me gusta que quede así escondido"** — volviendo al vídeo se vio lo que
+   me había dejado: HMN **no** tiene guiones sueltos, tiene un **contenedor
+   oscuro** detrás que los agrupa y les da borde contra cualquier fondo. Sin
+   él, cuatro pasteles claros sobre un escritorio claro desaparecen. Añadido
+   como una pieza más de región (`RestContainerWidth`/`RestContainerInset`),
+   con la tira despegada del canto en reposo (desplegada sigue a ras).
+
+**Consecuencia técnica que no era obvia**: para que el fondo del contenedor
+asome entre guiones, las pestañas no pueden solaparse en reposo — y con 100px
+de alto y paso 32 se solapan 68. Hizo falta añadir una **escala vertical** por
+pestaña (`RestScaleFor`) además del desplazamiento. Sigue siendo
+`RenderTransform`, así que la garantía de "el layout se mide una vez a tamaño
+final" no se toca. Como en reposo solo se ve el extremo derecho de la pestaña,
+el aplastamiento de la etiqueta (que vive en el extremo izquierdo) no se ve.
+
+También: los botones "+"/engranaje pasan a ser **dos círculos** en la región,
+en vez de una caja rectangular que los envolvía — era lo único del dock con
+esquinas en pico. `RegionPiece` gana `SquareRightSide` para distinguir las
+pestañas (redondeadas solo por la izquierda, su lado derecho va a ras del
+canto) de las pastillas y círculos completos.
+
+### Segunda técnica de verificación: capturar solo el HWND propio
+
+Además del render aislado, se usó `PrintWindow` con `PW_RENDERFULLCONTENT`
+sobre **el HWND del dock y nada más**: pinta esa ventana en un DC propio, sin
+leer el escritorio ni ninguna otra ventana, así que no es una captura de
+pantalla y no reincide en el incidente de privacidad del 2026-09-03. Es lo
+único que podía confirmar que los guiones se ven **separados** dentro del
+contenedor, porque eso depende de que la escala vertical funcione y la región
+por sí sola no lo dice (en reposo la región es una única pastilla; el color y
+los huecos los pone el render de las pestañas que hay detrás).
+
+Tests: 117/117.
 
 ### `FANOTE_MONITOR_INDEX`
 
