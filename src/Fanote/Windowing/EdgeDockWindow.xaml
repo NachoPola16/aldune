@@ -7,15 +7,33 @@
         ShowInTaskbar="False"
         Topmost="True"
         ResizeMode="NoResize"
-        Background="#3A3A3A">
+        Background="#2A261F">
     <Window.Resources>
         <local:NoteTitleConverter x:Key="NoteTitleConverter" />
+        <local:NoteRimConverter x:Key="NoteRimConverter" />
+
+        <!-- El único modo de dar volumen a una pestaña aquí. La spec v1 descarta
+             AllowsTransparency (rompe ClearType), así que cada píxel dentro de la región es
+             opaco y no cabe ninguna sombra: la profundidad tiene que venir de dentro. Claro en
+             el borde libre (izquierda, la que sobresale) y algo más hondo hacia el borde físico
+             de pantalla, que es como caería la luz sobre una pestaña que asoma. -->
+        <LinearGradientBrush x:Key="TabSheen" StartPoint="0,0" EndPoint="1,0">
+            <GradientStop Offset="0" Color="#20FFFFFF" />
+            <GradientStop Offset="0.45" Color="#00FFFFFF" />
+            <GradientStop Offset="1" Color="#12000000" />
+        </LinearGradientBrush>
+
         <Style x:Key="NoteTabButtonStyle" TargetType="Button">
+            <Setter Property="Foreground" Value="#1E1A14" />
             <Setter Property="ContentTemplate">
                 <Setter.Value>
                     <DataTemplate>
+                        <!-- Pegada al borde libre (izquierda) y no centrada: en reposo solo asoman
+                             los 20px de la derecha, así que un título centrado asomaría a medias
+                             en las pestañas estrechas. Aquí el reposo es color liso y nada más. -->
                         <TextBlock Text="{Binding Text, Converter={StaticResource NoteTitleConverter}}"
-                                   FontWeight="Bold"
+                                   FontSize="12"
+                                   FontWeight="SemiBold"
                                    TextTrimming="CharacterEllipsis">
                             <TextBlock.LayoutTransform>
                                 <RotateTransform Angle="-90" />
@@ -27,73 +45,42 @@
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="Button">
-                        <!-- Rounded only on the left (the free edge, away from the physical screen edge this
-                             dock is flush against) — CornerRadius order matches CSS's (TopLeft, TopRight,
-                             BottomRight, BottomLeft), same convention as the validated mockup's
-                             "border-radius: 9px 0 0 9px". Squaring the right corners matters once
-                             SetWindowRgn ships (see docs/superpowers/specs/2026-09-03-fanote-window-region-clip-design.md):
-                             that region is built from these same tab rects and assumes this exact rounding side. -->
+                        <!-- Redondeada solo por la izquierda (el borde libre, lejos del borde
+                             físico de pantalla contra el que está pegado el dock). El orden de
+                             CornerRadius es (TopLeft, TopRight, BottomRight, BottomLeft). Que la
+                             derecha quede cuadrada no es estético: SetTabFanRegion construye la
+                             región a partir de estos mismos rects y da por hecho este lado. -->
                         <Grid>
-                            <Border Background="{TemplateBinding Background}" CornerRadius="9,0,0,9" />
-                            <Border x:Name="HoverOverlay" Background="Black" Opacity="0" CornerRadius="9,0,0,9" />
-                            <ContentPresenter HorizontalAlignment="Center"
+                            <Border Background="{TemplateBinding Background}"
+                                    BorderBrush="{Binding Color, Converter={StaticResource NoteRimConverter}}"
+                                    BorderThickness="1,1,0,1"
+                                    CornerRadius="9,0,0,9" />
+                            <Border Background="{StaticResource TabSheen}" CornerRadius="9,0,0,9" />
+                            <Border x:Name="HoverOverlay" Background="#1E1A14" Opacity="0" CornerRadius="9,0,0,9" />
+                            <ContentPresenter HorizontalAlignment="Left"
                                               VerticalAlignment="Center"
                                               Margin="{TemplateBinding Padding}" />
                         </Grid>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsMouseOver" Value="True">
-                                <Setter TargetName="HoverOverlay" Property="Opacity" Value="0.12" />
+                                <Setter TargetName="HoverOverlay" Property="Opacity" Value="0.10" />
                             </Trigger>
                             <Trigger Property="IsPressed" Value="True">
-                                <Setter TargetName="HoverOverlay" Property="Opacity" Value="0.22" />
+                                <Setter TargetName="HoverOverlay" Property="Opacity" Value="0.20" />
                             </Trigger>
                         </ControlTemplate.Triggers>
                     </ControlTemplate>
                 </Setter.Value>
             </Setter>
         </Style>
-        <!-- The default OS scrollbar chrome (light, boxy) looked jarring against the dock's dark
-             background and sat flush against the window's rounded corner, getting visually cut
-             off by the DWM corner clip. A slim flat thumb (no arrow buttons, invisible track)
-             fixes both: it fits the dark theme and leaves clearance from the corner. -->
-        <Style x:Key="SlimScrollBarThumb" TargetType="Thumb">
-            <Setter Property="Template">
-                <Setter.Value>
-                    <ControlTemplate TargetType="Thumb">
-                        <Border Background="#66FFFFFF" CornerRadius="3" />
-                    </ControlTemplate>
-                </Setter.Value>
-            </Setter>
-        </Style>
-        <Style TargetType="ScrollBar">
-            <Setter Property="Width" Value="6" />
-            <Setter Property="Background" Value="Transparent" />
-            <Setter Property="Template">
-                <Setter.Value>
-                    <ControlTemplate TargetType="ScrollBar">
-                        <Grid Background="{TemplateBinding Background}">
-                            <Track x:Name="PART_Track" IsDirectionReversed="True">
-                                <Track.Thumb>
-                                    <Thumb Style="{StaticResource SlimScrollBarThumb}" />
-                                </Track.Thumb>
-                                <Track.DecreaseRepeatButton>
-                                    <RepeatButton Command="ScrollBar.PageUpCommand" Opacity="0" />
-                                </Track.DecreaseRepeatButton>
-                                <Track.IncreaseRepeatButton>
-                                    <RepeatButton Command="ScrollBar.PageDownCommand" Opacity="0" />
-                                </Track.IncreaseRepeatButton>
-                            </Track>
-                        </Grid>
-                    </ControlTemplate>
-                </Setter.Value>
-            </Setter>
-        </Style>
+
         <Style x:Key="CircularIconButtonStyle" TargetType="Button">
             <Setter Property="Width" Value="32" />
             <Setter Property="Height" Value="32" />
             <Setter Property="Margin" Value="4" />
-            <Setter Property="Foreground" Value="White" />
-            <Setter Property="Background" Value="#33FFFFFF" />
+            <Setter Property="HorizontalAlignment" Value="Right" />
+            <Setter Property="Foreground" Value="#EDE7DC" />
+            <Setter Property="Background" Value="#3C3730" />
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="Button">
@@ -102,7 +89,10 @@
                         </Border>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsMouseOver" Value="True">
-                                <Setter TargetName="Bg" Property="Background" Value="#4DFFFFFF" />
+                                <Setter TargetName="Bg" Property="Background" Value="#4E4840" />
+                            </Trigger>
+                            <Trigger Property="IsPressed" Value="True">
+                                <Setter TargetName="Bg" Property="Background" Value="#5F584E" />
                             </Trigger>
                         </ControlTemplate.Triggers>
                     </ControlTemplate>
@@ -110,65 +100,58 @@
             </Setter>
         </Style>
     </Window.Resources>
-    <Grid>
-        <!-- Full tab list + "+ Nueva nota", shown once the panel is (nearly) fully expanded. -->
-        <Grid x:Name="PanelContent">
-            <Grid.RowDefinitions>
-                <RowDefinition Height="*" />
-                <RowDefinition Height="Auto" />
-            </Grid.RowDefinitions>
-            <ScrollViewer Grid.Row="0"
-                          Margin="0,0,4,0"
-                          VerticalScrollBarVisibility="Auto"
-                          HorizontalScrollBarVisibility="Disabled">
-                <ItemsControl x:Name="TabsList">
-                    <ItemsControl.ItemTemplate>
-                        <DataTemplate>
-                            <Button Content="{Binding}"
-                                    Background="{Binding Color}"
-                                    Height="80"
-                                    HorizontalAlignment="Right"
-                                    Padding="6"
-                                    Click="OnTabClick"
-                                    Loaded="OnTabLoaded"
-                                    Tag="{Binding}"
-                                    Style="{StaticResource NoteTabButtonStyle}"
-                                    Opacity="0" />
-                        </DataTemplate>
-                    </ItemsControl.ItemTemplate>
-                </ItemsControl>
-            </ScrollViewer>
-            <StackPanel x:Name="FooterPanel" Grid.Row="1">
-                <Button x:Name="NewNoteButton" Click="OnNewNoteClick"
-                        Style="{StaticResource CircularIconButtonStyle}"
-                        ToolTip="Nueva nota">
-                    <TextBlock Text="+" FontSize="16" FontWeight="Bold" />
-                </Button>
-                <Button x:Name="ManageArchiveButton" Click="OnManageArchiveClick"
-                        Style="{StaticResource CircularIconButtonStyle}"
-                        ToolTip="Gestionar notas">
-                    <TextBlock Text="&#xE713;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" />
-                </Button>
-            </StackPanel>
-        </Grid>
 
-        <!-- Compact color-swatch preview shown while the pill is resting (collapsed). No
-             scrollbar here even if it overflows — Auto would show the same slim thumb as the
-             tab list, but a resting pill isn't a place anyone scrolls (any hover over it expands
-             the panel instead), so it's just visual noise there. -->
-        <ScrollViewer x:Name="PillSwatches"
-                      VerticalScrollBarVisibility="Disabled"
+    <!-- Un solo panel, no dos superpuestos con fundido cruzado. El estado de reposo ya no es otro
+         contenido: son estas mismas pestañas, recortadas por la región a los 20px que asoman. Eso
+         se lleva por delante el patrón de Opacity + IsHitTestVisible sincronizados a mano que
+         documenta STATUS.md (punto 5 del "pulido visual"), porque ya no hay dos capas que puedan
+         robarse los clics la una a la otra. -->
+    <Grid x:Name="PanelContent">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <!-- Barra de scroll oculta, no reestilizada: la rueda del ratón sigue funcionando, y la
+             región recorta cualquier cosa que no sea una pestaña, así que una barra dibujada
+             sobre el fondo sería invisible de todos modos. Reinventar la barra de scroll era
+             además el tipo de afordancia estándar que no conviene recrear en una UI de producto. -->
+        <ScrollViewer x:Name="TabsScroll"
+                      Grid.Row="0"
+                      VerticalScrollBarVisibility="Hidden"
                       HorizontalScrollBarVisibility="Disabled">
-            <ItemsControl ItemsSource="{Binding ItemsSource, ElementName=TabsList}">
+            <ItemsControl x:Name="TabsList">
                 <ItemsControl.ItemTemplate>
                     <DataTemplate>
-                        <Border Background="{Binding Color}"
-                                Width="12" Height="14"
-                                Margin="4,3"
-                                CornerRadius="4" />
+                        <!-- Width se fija por código (depende del índice dentro del abanico, que
+                             XAML no puede expresar limpiamente). Sin Opacity="0" inicial: ya no
+                             hay animación de opacidad por pestaña — quien revela es la región. -->
+                        <Button Content="{Binding}"
+                                Background="{Binding Color}"
+                                Height="80"
+                                Margin="0,0,0,8"
+                                HorizontalAlignment="Right"
+                                Padding="10,0,0,0"
+                                Click="OnTabClick"
+                                Loaded="OnTabLoaded"
+                                Tag="{Binding}"
+                                Style="{StaticResource NoteTabButtonStyle}" />
                     </DataTemplate>
                 </ItemsControl.ItemTemplate>
             </ItemsControl>
         </ScrollViewer>
+
+        <StackPanel x:Name="FooterPanel" Grid.Row="1" HorizontalAlignment="Right">
+            <Button x:Name="NewNoteButton" Click="OnNewNoteClick"
+                    Style="{StaticResource CircularIconButtonStyle}"
+                    ToolTip="Nueva nota">
+                <TextBlock Text="&#xE710;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" FontSize="14" />
+            </Button>
+            <Button x:Name="ManageArchiveButton" Click="OnManageArchiveClick"
+                    Style="{StaticResource CircularIconButtonStyle}"
+                    ToolTip="Gestionar notas">
+                <TextBlock Text="&#xE713;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" FontSize="14" />
+            </Button>
+        </StackPanel>
     </Grid>
 </Window>

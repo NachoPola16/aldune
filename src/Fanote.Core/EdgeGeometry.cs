@@ -1,106 +1,152 @@
 namespace Fanote.Core;
 
+/// <summary>
+/// Geometría del dock. Desde el rediseño de movimiento (rama dock-motion-shape) la ventana del
+/// dock <b>no cambia de tamaño nunca</b>: siempre ocupa <see cref="WindowRect"/> (el rectángulo
+/// "expandido"), y lo que cambia entre reposo y desplegado es únicamente la región recortada
+/// (SetWindowRgn) dentro de ese rectángulo fijo.
+///
+/// El motivo es que animar Left/Top/Width/Height de un HWND obliga a WPF a rehacer el layout en
+/// cada frame intermedio, y de ahí salía toda la familia de fallos que documenta docs/STATUS.md:
+/// contenido encajado en anchos que no le caben, la Height que terminaba su animación sin que la
+/// ventana real se redimensionara, y el WM_MOUSELEAVE espurio que obligó a sondear el cursor.
+/// Con un rectángulo fijo, el layout se mide una sola vez a tamaño final y nunca en un tamaño
+/// intermedio, así que esa clase de fallo deja de ser posible por construcción.
+/// </summary>
 public static class EdgeGeometry
 {
-    // Thick enough to show a small rounded color swatch per note (see EdgeDockWindow's
-    // PillSwatches), not just a bare hairline.
-    public const double PillThickness = 20;
+    // --- Pestañas -----------------------------------------------------------------------------
 
-    // The pill's length (along the edge) grows with how many notes there are instead of always
-    // being a fixed size — with only a couple of notes, a fixed-max pill left a lot of empty
-    // space below the swatches; with many, it still caps out so it doesn't take over the screen.
-    public const double PillPerNoteLength = 20; // matches a swatch's own height + margins
-    public const double PillMinLength = 60;
-    public const double PillMaxLength = 160;
+    /// <summary>
+    /// Alto de cada pestaña. La etiqueta va rotada -90° con LayoutTransform, que intercambia los
+    /// ejes de medida: este alto es el <b>ancho</b> disponible para el texto. 80px deja ~68px de
+    /// texto tras el padding, que es lo mínimo para que un título corto no salga elidido a dos
+    /// caracteres.
+    /// </summary>
+    public const double TabHeight = 80;
 
-    public const double ExpandedThickness = 220;
-    // Bumped from an original 40 to 88 to give the rotated vertical tab label real room —
-    // LayoutTransform's -90° rotation swaps measure axes, so a tab's Height becomes the
-    // rotated TextBlock's available WIDTH; a 40px (or 36px rendered) tab left only ~24px for
-    // text after padding, trimming every title to 1-2 characters. 88 (80px tab + 4+4 margin)
-    // gives ~68px of room — enough for a reasonably short note title before ellipsis.
-    public const double ExpandedPerNoteLength = 88;
-    public const double ExpandedMinLength = 120;
-    // Must stay an exact multiple of ExpandedPerNoteLength. Once noteCount is large enough to
-    // hit this clamp, the ScrollViewer's initial (unscrolled) viewport is exactly this many
-    // pixels tall — if it isn't a whole number of tab-footprints, the last tab that fits
-    // straddles the viewport edge and renders half-cut from the very first hover, before the
-    // user has scrolled at all. 352 = 4 * 88 (4 full tabs visible before needing to scroll).
-    public const double ExpandedMaxLength = 352;
+    /// <summary>
+    /// Hueco entre pestañas. Tiene que ser &gt; 0: la región se construye con CombineRgn/RGN_OR,
+    /// así que dos pestañas que se solapen se funden en una sola mancha y el abanico desaparece.
+    /// El diseño anterior usaba Margin=-28 (solape) contra un presupuesto de 88px por nota — las
+    /// dos cifras se contradecían, y el resultado unido por RGN_OR era una columna irregular, no
+    /// un abanico.
+    /// </summary>
+    public const double TabGap = 8;
 
-    // EdgeDockWindow.xaml pins the "+"/gear buttons in their own fixed Grid row below the
-    // scrolling tab list, outside the ScrollViewer, so they're always reachable without
-    // scrolling (see the Important #4 fix in the fan-tabs redesign). That row's footprint has
-    // to come out of the window's own length budget in addition to what the tabs need, or the
-    // tabs get squeezed into less room than ExpandedPerNoteLength assumes and the last one ends
-    // up clipped by the ScrollViewer's own viewport instead of merely needing a scroll. Two
-    // CircularIconButtonStyle buttons (32px + 4+4 margin each = 40) stacked = 80.
-    public const double ExpandedFooterLength = 80;
+    /// <summary>Paso real de una pestaña a la siguiente. El presupuesto de longitud se calcula
+    /// con esto, así que layout y geometría no pueden volver a discrepar.</summary>
+    public const double TabPitch = TabHeight + TabGap; // 88
 
-    // Room for the rounded corners and drop shadow the resting pill gets from the OS (see
-    // NativeMethods) — without this gap they'd have nothing to render into at the screen edge.
-    public const double PillEdgeMargin = 6;
+    /// <summary>
+    /// Ancho de la pestaña más corta (la primera) y de la más larga (la última). El abanico
+    /// interpola entre ambos <b>en función de la fracción índice/(total-1)</b>, no sumando un
+    /// incremento fijo por índice como antes (32 + i*14): aquella fórmula no estaba acotada y con
+    /// 14 notas la pestaña ya era más ancha que la propia ventana.
+    /// </summary>
+    public const double TabMinWidth = 72;
+    public const double TabMaxWidth = 128;
 
-    private static double ClampedLength(int noteCount, double perNote, double min, double max) =>
-        Math.Clamp(noteCount * perNote, min, max);
+    /// <summary>Lo que asoma de cada pestaña cuando el dock está en reposo — la "tira" de color
+    /// que sustituye a las antiguas pastillas (PillSwatches) del pill.</summary>
+    public const double RestSliverWidth = 20;
 
-    private static double PillLength(int noteCount) =>
-        ClampedLength(noteCount, PillPerNoteLength, PillMinLength, PillMaxLength);
+    // --- Ventana ------------------------------------------------------------------------------
 
-    private static double ExpandedLength(int noteCount) =>
-        ClampedLength(noteCount, ExpandedPerNoteLength, ExpandedMinLength, ExpandedMaxLength) + ExpandedFooterLength;
+    /// <summary>
+    /// Grosor (perpendicular al borde) de la ventana del dock. Solo necesita cubrir la pestaña
+    /// más ancha; el resto se recorta con la región. Antes eran 220px para pestañas de 32-74px,
+    /// es decir tres veces el espacio que se usaba.
+    /// </summary>
+    public const double WindowThickness = TabMaxWidth + 12; // 140
 
-    // The along-edge coordinate (Y for Left/Right docks, X for Top/Bottom) where the length axis
-    // starts, computed from the PILL's own length — used for both PillRect and ExpandedRect so
-    // the expanded panel always starts exactly where the pill starts and only ever extends past
-    // it in one direction. Centering each rect independently (by its own length) used to make the
-    // panel's start slide one way while its end dropped the other way as it opened — two edges
-    // moving apart from a freshly-recomputed center, rather than one fixed point with the panel
-    // simply extending past it. Real user feedback (2026-09-04): that dual-direction motion read
-    // as "the growth doesn't make sense" — this anchor is the fix.
-    private static double AnchorStart(WorkingArea area, EdgePosition edge, int noteCount)
+    /// <summary>Longitud mínima de la ventana, para que con 0-1 notas el dock siga siendo un
+    /// objetivo de ratón razonable.</summary>
+    public const double MinContentLength = TabPitch;
+
+    /// <summary>
+    /// Máxima longitud dedicada a pestañas antes de que la lista pase a hacer scroll. Múltiplo
+    /// exacto de <see cref="TabPitch"/> a propósito: si no lo fuera, la vista inicial sin
+    /// scrollear cortaría la última pestaña por la mitad desde el primer hover. 352 = 4 * 88.
+    /// </summary>
+    public const double MaxContentLength = 4 * TabPitch; // 352
+
+    /// <summary>
+    /// Alto de la fila fija de botones ("+" y engranaje), fuera del ScrollViewer para que siempre
+    /// se puedan pulsar sin scrollear. Sale del presupuesto de longitud de la ventana <b>además</b>
+    /// de lo que necesitan las pestañas; si no se reserva, la última pestaña queda a caballo del
+    /// borde del scroll. Dos botones de 32px con 4+4 de margen = 80.
+    /// </summary>
+    public const double FooterLength = 80;
+
+    /// <summary>Separación del borde físico de la pantalla. Menor que antes (6): sin sombra DWM
+    /// activa —la región la desactiva— ya no hace falta reservarle sitio para renderizar.</summary>
+    public const double EdgeMargin = 2;
+
+    /// <summary>Ancho de la pestaña de índice <paramref name="index"/> dentro de un abanico de
+    /// <paramref name="noteCount"/> notas. Acotado siempre entre TabMinWidth y TabMaxWidth.</summary>
+    public static double TabWidth(int index, int noteCount)
     {
-        double pillLength = PillLength(noteCount);
+        if (noteCount <= 1) return TabMinWidth;
+        double t = Math.Clamp((double)index / (noteCount - 1), 0, 1);
+        return TabMinWidth + t * (TabMaxWidth - TabMinWidth);
+    }
+
+    /// <summary>Longitud que ocupan las pestañas, acotada. Sin el hueco sobrante de la última:
+    /// el paso incluye un hueco por pestaña, pero después de la última no hay nada que separar.</summary>
+    public static double TabStripLength(int noteCount)
+    {
+        if (noteCount <= 0) return 0;
+        return Math.Min(noteCount * TabPitch, MaxContentLength) - TabGap;
+    }
+
+    /// <summary>Longitud total de la ventana: pestañas (acotadas) + la fila de botones.</summary>
+    public static double WindowLength(int noteCount) =>
+        Math.Clamp(noteCount * TabPitch, MinContentLength, MaxContentLength) + FooterLength;
+
+    /// <summary>
+    /// El rectángulo de la ventana del dock, idéntico en reposo y desplegado. Se ancla por su
+    /// centro sobre el eje del borde.
+    /// </summary>
+    public static Rect WindowRect(WorkingArea area, EdgePosition edge, int noteCount)
+    {
+        double length = WindowLength(noteCount);
         return edge switch
         {
-            EdgePosition.Top or EdgePosition.Bottom => area.X + (area.Width - pillLength) / 2,
-            EdgePosition.Left or EdgePosition.Right => area.Y + (area.Height - pillLength) / 2,
+            EdgePosition.Top => new Rect(
+                area.X + (area.Width - length) / 2, area.Y + EdgeMargin, length, WindowThickness),
+            EdgePosition.Bottom => new Rect(
+                area.X + (area.Width - length) / 2, area.Y + area.Height - WindowThickness - EdgeMargin, length, WindowThickness),
+            EdgePosition.Left => new Rect(
+                area.X + EdgeMargin, area.Y + (area.Height - length) / 2, WindowThickness, length),
+            EdgePosition.Right => new Rect(
+                area.X + area.Width - WindowThickness - EdgeMargin, area.Y + (area.Height - length) / 2, WindowThickness, length),
             _ => throw new ArgumentOutOfRangeException(nameof(edge))
         };
     }
 
-    public static Rect PillRect(WorkingArea area, EdgePosition edge, int noteCount)
+    /// <summary>
+    /// La parte de <see cref="WindowRect"/> que es visible (y por tanto sensible al ratón) con el
+    /// dock en reposo: solo la tira de <see cref="RestSliverWidth"/> pegada al borde físico.
+    /// El sondeo de hover tiene que probar contra esto y no contra la ventana entera — la ventana
+    /// ahora es siempre ancha, pero sus zonas recortadas son transparentes al clic, así que
+    /// desplegarse al entrar en ellas sería desplegarse "por la nada".
+    /// </summary>
+    public static Rect RestingVisibleRect(WorkingArea area, EdgePosition edge, int noteCount)
     {
-        double length = PillLength(noteCount);
-        double anchorStart = AnchorStart(area, edge, noteCount);
-        return edge switch
-        {
-            EdgePosition.Top => new Rect(
-                anchorStart, area.Y + PillEdgeMargin, length, PillThickness),
-            EdgePosition.Bottom => new Rect(
-                anchorStart, area.Y + area.Height - PillThickness - PillEdgeMargin, length, PillThickness),
-            EdgePosition.Left => new Rect(
-                area.X + PillEdgeMargin, anchorStart, PillThickness, length),
-            EdgePosition.Right => new Rect(
-                area.X + area.Width - PillThickness - PillEdgeMargin, anchorStart, PillThickness, length),
-            _ => throw new ArgumentOutOfRangeException(nameof(edge))
-        };
-    }
+        var window = WindowRect(area, edge, noteCount);
 
-    public static Rect ExpandedRect(WorkingArea area, EdgePosition edge, int noteCount)
-    {
-        double length = ExpandedLength(noteCount);
-        double anchorStart = AnchorStart(area, edge, noteCount); // same anchor as the pill — see its remarks
+        // Solo lo que ocupan las pestañas, no la ventana entera: en reposo el footer no se dibuja
+        // (su barrido vale 0), así que incluirlo aquí daría una banda muerta al final de la tira
+        // donde el ratón desplegaría el dock sin haber nada visible bajo el cursor.
+        double length = TabStripLength(noteCount);
+
         return edge switch
         {
-            EdgePosition.Top => new Rect(
-                anchorStart, area.Y, length, ExpandedThickness),
-            EdgePosition.Bottom => new Rect(
-                anchorStart, area.Y + area.Height - ExpandedThickness, length, ExpandedThickness),
-            EdgePosition.Left => new Rect(
-                area.X, anchorStart, ExpandedThickness, length),
-            EdgePosition.Right => new Rect(
-                area.X + area.Width - ExpandedThickness, anchorStart, ExpandedThickness, length),
+            EdgePosition.Top => new Rect(window.X, window.Y, length, RestSliverWidth),
+            EdgePosition.Bottom => new Rect(window.X, window.Y + window.Height - RestSliverWidth, length, RestSliverWidth),
+            EdgePosition.Left => new Rect(window.X, window.Y, RestSliverWidth, length),
+            EdgePosition.Right => new Rect(window.X + window.Width - RestSliverWidth, window.Y, RestSliverWidth, length),
             _ => throw new ArgumentOutOfRangeException(nameof(edge))
         };
     }

@@ -135,6 +135,7 @@ public partial class NoteWindow : Window
         var brush = (Brush)new BrushConverter().ConvertFromString(color)!;
         Background = brush;
         TextBody.Background = brush;
+        WindowRim.BorderBrush = (Brush)new BrushConverter().ConvertFromString(NoteColorPalette.RimFor(color))!;
     }
 
     private void PopulateColorSwatches()
@@ -148,7 +149,10 @@ public partial class NoteWindow : Window
                 Height = 20,
                 Margin = new Thickness(2),
                 CornerRadius = new CornerRadius(4),
-                BorderBrush = Brushes.Black,
+                // Tinta, no negro puro: es el mismo anillo de selección sobre seis pasteles que
+                // comparten claridad, y el negro absoluto sería el único valor de la ventana sin
+                // relación de hue con el resto.
+                BorderBrush = (Brush)new BrushConverter().ConvertFromString(NoteColorPalette.Ink)!,
                 BorderThickness = new Thickness(color == _note.Color ? 2 : 0),
                 Cursor = Cursors.Hand,
                 Tag = color

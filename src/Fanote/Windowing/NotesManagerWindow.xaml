@@ -8,7 +8,7 @@
         WindowStyle="None"
         AllowsTransparency="False"
         ResizeMode="CanResize"
-        Background="#3A3A3A"
+        Background="#2A261F"
         Topmost="True">
     <WindowChrome.WindowChrome>
         <WindowChrome CaptionHeight="22" ResizeBorderThickness="6" GlassFrameThickness="-1" CornerRadius="0" />
@@ -16,9 +16,10 @@
     <Window.Resources>
         <local:NoteTitleConverter x:Key="NoteTitleConverter" />
         <local:NoteStateLabelConverter x:Key="NoteStateLabelConverter" />
+        <local:NoteRimConverter x:Key="NoteRimConverter" />
         <Style x:Key="ToolbarButtonStyle" TargetType="Button">
-            <Setter Property="Foreground" Value="White" />
-            <Setter Property="Background" Value="#33FFFFFF" />
+            <Setter Property="Foreground" Value="#EDE7DC" />
+            <Setter Property="Background" Value="#3C3730" />
             <Setter Property="BorderThickness" Value="0" />
             <Setter Property="Template">
                 <Setter.Value>
@@ -30,7 +31,7 @@
                         </Border>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsMouseOver" Value="True">
-                                <Setter TargetName="Bg" Property="Background" Value="#4DFFFFFF" />
+                                <Setter TargetName="Bg" Property="Background" Value="#4E4840" />
                             </Trigger>
                         </ControlTemplate.Triggers>
                     </ControlTemplate>
@@ -45,22 +46,22 @@
             <Setter Property="FontSize" Value="12" />
         </Style>
         <Style x:Key="FilterToggleStyle" TargetType="RadioButton">
-            <Setter Property="Foreground" Value="White" />
+            <Setter Property="Foreground" Value="#EDE7DC" />
             <Setter Property="Padding" Value="8,4" />
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="RadioButton">
-                        <Border x:Name="Bg" Background="#22FFFFFF" CornerRadius="4">
+                        <Border x:Name="Bg" Background="#332F28" CornerRadius="4">
                             <ContentPresenter Margin="{TemplateBinding Padding}"
                                               HorizontalAlignment="Center"
                                               VerticalAlignment="Center" />
                         </Border>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsChecked" Value="True">
-                                <Setter TargetName="Bg" Property="Background" Value="#55FFFFFF" />
+                                <Setter TargetName="Bg" Property="Background" Value="#6B6459" />
                             </Trigger>
                             <Trigger Property="IsMouseOver" Value="True">
-                                <Setter TargetName="Bg" Property="Background" Value="#33FFFFFF" />
+                                <Setter TargetName="Bg" Property="Background" Value="#443F37" />
                             </Trigger>
                         </ControlTemplate.Triggers>
                     </ControlTemplate>
@@ -70,7 +71,7 @@
     </Window.Resources>
     <Grid>
         <DockPanel Margin="16,20,16,16">
-            <TextBlock DockPanel.Dock="Top" Text="Gestionar notas" Foreground="White"
+            <TextBlock DockPanel.Dock="Top" Text="Gestionar notas" Foreground="#EDE7DC"
                        FontWeight="Bold" FontSize="14" Margin="0,0,0,10" />
             <WrapPanel DockPanel.Dock="Top" Margin="0,0,0,10">
                 <!-- IsChecked is set from code-behind after InitializeComponent, not here: a
@@ -121,7 +122,16 @@
                 <ItemsControl x:Name="RowsList">
                     <ItemsControl.ItemTemplate>
                         <DataTemplate>
-                            <Border Background="{Binding Note.Color}" CornerRadius="4" Margin="0,0,0,6" Padding="8">
+                            <!-- TextElement.Foreground, no Foreground a secas: Border no es un
+                                 Control y no tiene esa propiedad, pero la adjunta sí se hereda por
+                                 el árbol, que es lo que hace falta para teñir toda la fila de una
+                                 vez. Sin esto las filas heredan el negro por defecto de la
+                                 ventana, el único valor sin relación de hue con los pasteles
+                                 sobre los que se pinta. -->
+                            <Border Background="{Binding Note.Color}" TextElement.Foreground="#1E1A14"
+                                    BorderBrush="{Binding Note.Color, Converter={StaticResource NoteRimConverter}}"
+                                    BorderThickness="1"
+                                    CornerRadius="4" Margin="0,0,0,6" Padding="8">
                                 <StackPanel Orientation="Horizontal">
                                     <CheckBox IsChecked="{Binding IsSelected, Mode=TwoWay}"
                                               VerticalAlignment="Center" Margin="0,0,8,0" />

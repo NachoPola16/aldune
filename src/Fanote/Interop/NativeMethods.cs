@@ -25,20 +25,8 @@ internal static class NativeMethods
     private const int DWMWA_WINDOW_CORNER_PREFERENCE = 33;
     private const int DWMWCP_ROUNDSMALL = 3;
 
-    [StructLayout(LayoutKind.Sequential)]
-    private struct MARGINS
-    {
-        public int Left;
-        public int Right;
-        public int Top;
-        public int Bottom;
-    }
-
     [DllImport("dwmapi.dll")]
     private static extern int DwmSetWindowAttribute(IntPtr hWnd, int dwAttribute, ref int pvAttribute, int cbAttribute);
-
-    [DllImport("dwmapi.dll")]
-    private static extern int DwmExtendFrameIntoClientArea(IntPtr hWnd, ref MARGINS pMarInset);
 
     /// <summary>
     /// Rounds the window's corners using the same DWM composition Windows already applies to
@@ -51,48 +39,6 @@ internal static class NativeMethods
     {
         int preference = DWMWCP_ROUNDSMALL;
         DwmSetWindowAttribute(hWnd, DWMWA_WINDOW_CORNER_PREFERENCE, ref preference, sizeof(int));
-    }
-
-    /// <summary>
-    /// The standard system drop shadow, via the well-known "extend glass into the whole client
-    /// area" trick — DWM draws its normal window shadow around the window's full rectangular
-    /// bounds this way, without needing real glass transparency (which would break ClearType).
-    /// Only correct for a plain rectangular window: DWM's shadow (and this "glass extended"
-    /// treatment) tracks the window's outer RECT, not any custom SetWindowRgn shape, so applying
-    /// this while a shaped region is active makes DWM paint a translucent box across the
-    /// *unclipped* rectangle — confirmed on a real run (phone recording): exactly the dark
-    /// gutter/notches SetWindowRgn was meant to remove reappeared as a washed-out grey box, and
-    /// a jagged "L" shape during the resize animation, once the region and this shadow were both
-    /// live at once. Callers that shape their window (EdgeDockWindow's expanded panel) must pair
-    /// this with ClearShadow whenever the shape is active, and restore it once the shape is gone.
-    /// </summary>
-    internal static void ApplyShadow(IntPtr hWnd)
-    {
-        var margins = new MARGINS { Left = -1, Right = -1, Top = -1, Bottom = -1 };
-        DwmExtendFrameIntoClientArea(hWnd, ref margins);
-    }
-
-    /// <summary>
-    /// Undoes ApplyShadow — back to a plain window with no extended frame/shadow. Needed while a
-    /// custom SetWindowRgn shape is active (see ApplyShadow's remarks).
-    /// </summary>
-    internal static void ClearShadow(IntPtr hWnd)
-    {
-        var margins = new MARGINS { Left = 0, Right = 0, Top = 0, Bottom = 0 };
-        DwmExtendFrameIntoClientArea(hWnd, ref margins);
-    }
-
-    /// <summary>
-    /// Rounded corners plus the standard system drop shadow, for a borderless window that
-    /// (unlike NoteWindow) doesn't already get the shadow via WindowChrome's own
-    /// GlassFrameThickness="-1". Only valid while the window is a plain rectangle — see
-    /// ApplyShadow's remarks for why a shaped window (EdgeDockWindow, expanded) must not call
-    /// this while its custom region is active.
-    /// </summary>
-    internal static void ApplyRoundedCornersAndShadow(IntPtr hWnd)
-    {
-        ApplyRoundedCorners(hWnd);
-        ApplyShadow(hWnd);
     }
 
     internal static void ForceActivate(Window window)
@@ -197,6 +143,14 @@ internal static class NativeMethods
     private const int RGN_OR = 2;
 
     /// <summary>
+    /// <b>No combinar nunca con una sombra DWM.</b> La sombra (y el truco de
+    /// DwmExtendFrameIntoClientArea con márgenes negativos que la produce) sigue el RECT exterior
+    /// de la ventana, no la región: con las dos activas a la vez, DWM pinta una caja translúcida
+    /// justo sobre los huecos que esta región existe para quitar. Confirmado en una ejecución
+    /// real (grabación en vídeo): reaparecían como una caja grisácea lavada, más una "L" dentada
+    /// durante la animación. Por eso EdgeDockWindow ya no pide ni sombra ni esquinas redondeadas
+    /// por DWM — su forma entera la define esta región.
+    ///
     /// Recorta la forma visible de <paramref name="hWnd"/> a la unión de las piezas dadas
     /// (coordenadas en píxeles físicos, relativas a la esquina superior izquierda de la ventana).
     /// CreateRoundRectRgn redondea las 4 esquinas por igual, así que una pieza con radio > 0 se
@@ -239,10 +193,4 @@ internal static class NativeMethods
 
         SetWindowRgn(hWnd, accumulated, true);
     }
-
-    /// <summary>
-    /// Quita cualquier recorte de forma aplicado por SetTabFanRegion, devolviendo la ventana a su
-    /// rectángulo completo normal — necesario porque el pill en reposo no usa regiones.
-    /// </summary>
-    internal static void ClearWindowRegion(IntPtr hWnd) => SetWindowRgn(hWnd, IntPtr.Zero, true);
 }

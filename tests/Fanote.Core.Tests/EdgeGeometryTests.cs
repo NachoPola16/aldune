@@ -15,229 +15,263 @@ public class EdgeGeometryTests
         yield return new object[] { SecondaryArea };
     }
 
+    public static IEnumerable<object[]> Edges()
+    {
+        yield return new object[] { EdgePosition.Top };
+        yield return new object[] { EdgePosition.Bottom };
+        yield return new object[] { EdgePosition.Left };
+        yield return new object[] { EdgePosition.Right };
+    }
+
+    // --- Colocación de la ventana --------------------------------------------------------------
+
     [Theory]
     [MemberData(nameof(Areas))]
-    public void PillRect_Right_IsInsetFromRightEdgeByMargin(WorkingArea area)
+    public void WindowRect_Right_IsInsetFromRightEdgeByMargin(WorkingArea area)
     {
-        var rect = EdgeGeometry.PillRect(area, EdgePosition.Right, noteCount: 3);
-        Assert.Equal(area.X + area.Width - EdgeGeometry.PillThickness - EdgeGeometry.PillEdgeMargin, rect.X);
-        Assert.Equal(EdgeGeometry.PillThickness, rect.Width);
+        var rect = EdgeGeometry.WindowRect(area, EdgePosition.Right, noteCount: 3);
+        Assert.Equal(area.X + area.Width - EdgeGeometry.WindowThickness - EdgeGeometry.EdgeMargin, rect.X);
+        Assert.Equal(EdgeGeometry.WindowThickness, rect.Width);
     }
 
     [Theory]
     [MemberData(nameof(Areas))]
-    public void PillRect_Left_IsInsetFromLeftEdgeByMargin(WorkingArea area)
+    public void WindowRect_Left_IsInsetFromLeftEdgeByMargin(WorkingArea area)
     {
-        var rect = EdgeGeometry.PillRect(area, EdgePosition.Left, noteCount: 3);
-        Assert.Equal(area.X + EdgeGeometry.PillEdgeMargin, rect.X);
-        Assert.Equal(EdgeGeometry.PillThickness, rect.Width);
+        var rect = EdgeGeometry.WindowRect(area, EdgePosition.Left, noteCount: 3);
+        Assert.Equal(area.X + EdgeGeometry.EdgeMargin, rect.X);
+        Assert.Equal(EdgeGeometry.WindowThickness, rect.Width);
     }
 
     [Theory]
     [MemberData(nameof(Areas))]
-    public void PillRect_Top_IsInsetFromTopEdgeByMargin(WorkingArea area)
+    public void WindowRect_Top_IsInsetFromTopEdgeByMargin(WorkingArea area)
     {
-        var rect = EdgeGeometry.PillRect(area, EdgePosition.Top, noteCount: 3);
-        Assert.Equal(area.Y + EdgeGeometry.PillEdgeMargin, rect.Y);
-        Assert.Equal(EdgeGeometry.PillThickness, rect.Height);
+        var rect = EdgeGeometry.WindowRect(area, EdgePosition.Top, noteCount: 3);
+        Assert.Equal(area.Y + EdgeGeometry.EdgeMargin, rect.Y);
+        Assert.Equal(EdgeGeometry.WindowThickness, rect.Height);
     }
 
     [Theory]
     [MemberData(nameof(Areas))]
-    public void PillRect_Bottom_IsInsetFromBottomEdgeByMargin(WorkingArea area)
+    public void WindowRect_Bottom_IsInsetFromBottomEdgeByMargin(WorkingArea area)
     {
-        var rect = EdgeGeometry.PillRect(area, EdgePosition.Bottom, noteCount: 3);
-        Assert.Equal(area.Y + area.Height - EdgeGeometry.PillThickness - EdgeGeometry.PillEdgeMargin, rect.Y);
-        Assert.Equal(EdgeGeometry.PillThickness, rect.Height);
+        var rect = EdgeGeometry.WindowRect(area, EdgePosition.Bottom, noteCount: 3);
+        Assert.Equal(area.Y + area.Height - EdgeGeometry.WindowThickness - EdgeGeometry.EdgeMargin, rect.Y);
+        Assert.Equal(EdgeGeometry.WindowThickness, rect.Height);
     }
 
     [Theory]
-    [MemberData(nameof(Areas))]
-    public void ExpandedRect_SameEdge_IsLargerAndFlushAgainstTrueEdge(WorkingArea area)
+    [MemberData(nameof(Edges))]
+    public void WindowRect_IsCenteredOnTheEdgesLengthAxis(EdgePosition edge)
     {
-        var pill = EdgeGeometry.PillRect(area, EdgePosition.Left, noteCount: 3);
-        var expanded = EdgeGeometry.ExpandedRect(area, EdgePosition.Left, noteCount: 3);
-        Assert.True(expanded.Width > pill.Width);
-        // Unlike the pill (inset by PillEdgeMargin for its rounded corners/shadow), the
-        // expanded panel stays flush against the true screen edge.
-        Assert.Equal(area.X, expanded.X);
-        Assert.True(expanded.X < pill.X);
-    }
-
-    [Theory]
-    [InlineData(EdgePosition.Right)]
-    [InlineData(EdgePosition.Left)]
-    [InlineData(EdgePosition.Top)]
-    [InlineData(EdgePosition.Bottom)]
-    public void ExpandedRect_SharesTheStartOfThePillsLengthAxis_SoItGrowsInOneDirectionOnly(EdgePosition edge)
-    {
-        // Centering the expanded panel independently (by its own, much longer length) made its
-        // start slide in the opposite direction from its end as it opened — the two edges moved
-        // apart from a new shared center instead of the panel simply extending past the pill.
-        // Real user feedback (2026-09-04): that dual-direction motion read as "doesn't make
-        // sense". Anchoring both rects to the pill's own centering fixes one end in place, so
-        // opening only ever extends the other end.
-        var pill = EdgeGeometry.PillRect(Area, edge, noteCount: 5);
-        var expanded = EdgeGeometry.ExpandedRect(Area, edge, noteCount: 5);
+        var rect = EdgeGeometry.WindowRect(Area, edge, noteCount: 3);
+        double length = EdgeGeometry.WindowLength(3);
 
         if (edge is EdgePosition.Top or EdgePosition.Bottom)
         {
-            Assert.Equal(pill.X, expanded.X, precision: 3);
+            Assert.Equal(Area.X + (Area.Width - length) / 2, rect.X);
+            Assert.Equal(length, rect.Width);
         }
         else
         {
-            Assert.Equal(pill.Y, expanded.Y, precision: 3);
+            Assert.Equal(Area.Y + (Area.Height - length) / 2, rect.Y);
+            Assert.Equal(length, rect.Height);
         }
     }
 
     [Theory]
-    [MemberData(nameof(Areas))]
-    public void ExpandedRect_Top_HasExpectedAbsoluteGeometry(WorkingArea area)
+    [MemberData(nameof(Edges))]
+    public void WindowRect_StaysWithinTheWorkingArea(EdgePosition edge)
     {
-        var pill = EdgeGeometry.PillRect(area, EdgePosition.Top, noteCount: 20);
-        var rect = EdgeGeometry.ExpandedRect(area, EdgePosition.Top, noteCount: 20);
-        double expectedLength = EdgeGeometry.ExpandedMaxLength + EdgeGeometry.ExpandedFooterLength;
-        // Same start as the pill (see ExpandedRect_SharesTheStartOfThePillsLengthAxis...), not
-        // centered on its own (much longer) length.
-        Assert.Equal(pill.X, rect.X);
-        Assert.Equal(area.Y, rect.Y);
-        Assert.Equal(expectedLength, rect.Width);
-        Assert.Equal(EdgeGeometry.ExpandedThickness, rect.Height);
+        var rect = EdgeGeometry.WindowRect(SecondaryArea, edge, noteCount: 3);
+        Assert.True(rect.X >= SecondaryArea.X, $"left {rect.X} < area {SecondaryArea.X}");
+        Assert.True(rect.Y >= SecondaryArea.Y, $"top {rect.Y} < area {SecondaryArea.Y}");
+        Assert.True(rect.X + rect.Width <= SecondaryArea.X + SecondaryArea.Width);
+        Assert.True(rect.Y + rect.Height <= SecondaryArea.Y + SecondaryArea.Height);
     }
 
-    [Theory]
-    [MemberData(nameof(Areas))]
-    public void ExpandedRect_Bottom_HasExpectedAbsoluteGeometry(WorkingArea area)
-    {
-        var pill = EdgeGeometry.PillRect(area, EdgePosition.Bottom, noteCount: 20);
-        var rect = EdgeGeometry.ExpandedRect(area, EdgePosition.Bottom, noteCount: 20);
-        double expectedLength = EdgeGeometry.ExpandedMaxLength + EdgeGeometry.ExpandedFooterLength;
-        Assert.Equal(pill.X, rect.X);
-        Assert.Equal(area.Y + area.Height - EdgeGeometry.ExpandedThickness, rect.Y);
-        Assert.Equal(expectedLength, rect.Width);
-        Assert.Equal(EdgeGeometry.ExpandedThickness, rect.Height);
-    }
+    // --- Longitud según el número de notas -----------------------------------------------------
 
-    [Theory]
-    [MemberData(nameof(Areas))]
-    public void ExpandedRect_Left_HasExpectedAbsoluteGeometry(WorkingArea area)
+    [Fact]
+    public void WindowLength_WithZeroNotes_UsesMinContentPlusFooter()
     {
-        var pill = EdgeGeometry.PillRect(area, EdgePosition.Left, noteCount: 20);
-        var rect = EdgeGeometry.ExpandedRect(area, EdgePosition.Left, noteCount: 20);
-        double expectedLength = EdgeGeometry.ExpandedMaxLength + EdgeGeometry.ExpandedFooterLength;
-        Assert.Equal(area.X, rect.X);
-        Assert.Equal(pill.Y, rect.Y);
-        Assert.Equal(EdgeGeometry.ExpandedThickness, rect.Width);
-        Assert.Equal(expectedLength, rect.Height);
-    }
-
-    [Theory]
-    [MemberData(nameof(Areas))]
-    public void ExpandedRect_Right_HasExpectedAbsoluteGeometry(WorkingArea area)
-    {
-        var pill = EdgeGeometry.PillRect(area, EdgePosition.Right, noteCount: 20);
-        var rect = EdgeGeometry.ExpandedRect(area, EdgePosition.Right, noteCount: 20);
-        double expectedLength = EdgeGeometry.ExpandedMaxLength + EdgeGeometry.ExpandedFooterLength;
-        Assert.Equal(area.X + area.Width - EdgeGeometry.ExpandedThickness, rect.X);
-        Assert.Equal(pill.Y, rect.Y);
-        Assert.Equal(EdgeGeometry.ExpandedThickness, rect.Width);
-        Assert.Equal(expectedLength, rect.Height);
-    }
-
-    [Theory]
-    [InlineData(EdgePosition.Top)]
-    [InlineData(EdgePosition.Bottom)]
-    public void PillRect_TopOrBottom_IsHorizontallyCentered(EdgePosition edge)
-    {
-        var rect = EdgeGeometry.PillRect(Area, edge, noteCount: 3);
-        double expectedCenter = Area.X + Area.Width / 2;
-        double actualCenter = rect.X + rect.Width / 2;
-        Assert.Equal(expectedCenter, actualCenter, precision: 3);
-    }
-
-    [Theory]
-    [InlineData(EdgePosition.Left)]
-    [InlineData(EdgePosition.Right)]
-    public void PillRect_LeftOrRight_IsVerticallyCentered(EdgePosition edge)
-    {
-        var rect = EdgeGeometry.PillRect(Area, edge, noteCount: 3);
-        double expectedCenter = Area.Y + Area.Height / 2;
-        double actualCenter = rect.Y + rect.Height / 2;
-        Assert.Equal(expectedCenter, actualCenter, precision: 3);
-    }
-
-    [Theory]
-    [InlineData(EdgePosition.Top)]
-    [InlineData(EdgePosition.Bottom)]
-    public void PillRect_TopOrBottom_IsHorizontallyCentered_SecondaryArea(EdgePosition edge)
-    {
-        var rect = EdgeGeometry.PillRect(SecondaryArea, edge, noteCount: 3);
-        double expectedCenter = SecondaryArea.X + SecondaryArea.Width / 2;
-        double actualCenter = rect.X + rect.Width / 2;
-        Assert.Equal(expectedCenter, actualCenter, precision: 3);
-    }
-
-    [Theory]
-    [InlineData(EdgePosition.Left)]
-    [InlineData(EdgePosition.Right)]
-    public void PillRect_LeftOrRight_IsVerticallyCentered_SecondaryArea(EdgePosition edge)
-    {
-        var rect = EdgeGeometry.PillRect(SecondaryArea, edge, noteCount: 3);
-        double expectedCenter = SecondaryArea.Y + SecondaryArea.Height / 2;
-        double actualCenter = rect.Y + rect.Height / 2;
-        Assert.Equal(expectedCenter, actualCenter, precision: 3);
+        Assert.Equal(EdgeGeometry.MinContentLength + EdgeGeometry.FooterLength, EdgeGeometry.WindowLength(0));
     }
 
     [Fact]
-    public void PillRect_WithZeroNotes_UsesMinLength()
+    public void WindowLength_WithFewNotes_GrowsOnePitchPerNote()
     {
-        var rect = EdgeGeometry.PillRect(Area, EdgePosition.Right, noteCount: 0);
-        Assert.Equal(EdgeGeometry.PillMinLength, rect.Height);
+        const int noteCount = 3;
+        double tabs = noteCount * EdgeGeometry.TabPitch;
+        Assert.True(tabs > EdgeGeometry.MinContentLength && tabs < EdgeGeometry.MaxContentLength,
+            $"{noteCount} notas ({tabs}) deben caer entre el mínimo y el máximo para que este test pruebe algo");
+        Assert.Equal(tabs + EdgeGeometry.FooterLength, EdgeGeometry.WindowLength(noteCount), precision: 3);
     }
 
     [Fact]
-    public void PillRect_WithFewNotes_GrowsProportionally()
+    public void WindowLength_WithManyNotes_CapsAtMaxContent()
     {
-        int noteCount = 4;
-        var rect = EdgeGeometry.PillRect(Area, EdgePosition.Right, noteCount);
-        double expectedLength = noteCount * EdgeGeometry.PillPerNoteLength;
-        Assert.True(expectedLength > EdgeGeometry.PillMinLength && expectedLength < EdgeGeometry.PillMaxLength,
-            "This test assumes 4 notes falls strictly between min and max — adjust the constants or this count if that changes.");
-        Assert.Equal(expectedLength, rect.Height, precision: 3);
+        Assert.Equal(EdgeGeometry.MaxContentLength + EdgeGeometry.FooterLength, EdgeGeometry.WindowLength(1000));
     }
 
     [Fact]
-    public void PillRect_WithManyNotes_CapsAtMaxLength()
+    public void MaxContentLength_IsAWholeNumberOfTabPitches()
     {
-        var rect = EdgeGeometry.PillRect(Area, EdgePosition.Right, noteCount: 1000);
-        Assert.Equal(EdgeGeometry.PillMaxLength, rect.Height);
+        // Si no lo fuera, la última pestaña que entra en el viewport inicial del ScrollViewer
+        // quedaría cortada por la mitad desde el primer hover, antes de que nadie scrollee.
+        double tabs = EdgeGeometry.MaxContentLength / EdgeGeometry.TabPitch;
+        Assert.Equal(Math.Round(tabs), tabs, precision: 9);
     }
 
     [Fact]
-    public void ExpandedRect_WithZeroNotes_UsesMinLength()
+    public void TabPitch_MatchesTheLayoutsOwnHeightPlusGap()
     {
-        var rect = EdgeGeometry.ExpandedRect(Area, EdgePosition.Right, noteCount: 0);
-        Assert.Equal(EdgeGeometry.ExpandedMinLength + EdgeGeometry.ExpandedFooterLength, rect.Height);
+        // El diseño anterior presupuestaba 88px por nota mientras el layout usaba un solape de
+        // -28px sobre pestañas de 80 (paso real 52). Esta aserción existe para que geometría y
+        // layout no puedan volver a discrepar en silencio.
+        Assert.Equal(EdgeGeometry.TabHeight + EdgeGeometry.TabGap, EdgeGeometry.TabPitch);
     }
 
     [Fact]
-    public void ExpandedRect_WithFewNotes_GrowsProportionally()
+    public void TabGap_IsPositive_SoTheRegionDoesNotFuseAdjacentTabs()
     {
-        // 3, not 4 — with ExpandedPerNoteLength raised to 88 (to give the rotated vertical tab
-        // label room), 4 notes (352) would already exceed ExpandedMaxLength (320); 3 (264) is
-        // the largest count that still falls strictly between the min and max bounds.
-        int noteCount = 3;
-        var rect = EdgeGeometry.ExpandedRect(Area, EdgePosition.Right, noteCount);
-        double tabsLength = noteCount * EdgeGeometry.ExpandedPerNoteLength;
-        Assert.True(tabsLength > EdgeGeometry.ExpandedMinLength && tabsLength < EdgeGeometry.ExpandedMaxLength,
-            "This test assumes 3 notes falls strictly between min and max — adjust the constants or this count if that changes.");
-        Assert.Equal(tabsLength + EdgeGeometry.ExpandedFooterLength, rect.Height, precision: 3);
+        // La región se une con CombineRgn/RGN_OR: dos pestañas solapadas se funden en una sola
+        // mancha y el abanico deja de leerse como pestañas separadas.
+        Assert.True(EdgeGeometry.TabGap > 0);
+    }
+
+    // --- Anchos del abanico --------------------------------------------------------------------
+
+    [Fact]
+    public void TabWidth_FirstIsMin_LastIsMax()
+    {
+        Assert.Equal(EdgeGeometry.TabMinWidth, EdgeGeometry.TabWidth(0, 5));
+        Assert.Equal(EdgeGeometry.TabMaxWidth, EdgeGeometry.TabWidth(4, 5));
     }
 
     [Fact]
-    public void ExpandedRect_WithManyNotes_CapsAtMaxLength()
+    public void TabWidth_IsMonotonicallyIncreasing()
     {
-        var rect = EdgeGeometry.ExpandedRect(Area, EdgePosition.Right, noteCount: 1000);
-        Assert.Equal(EdgeGeometry.ExpandedMaxLength + EdgeGeometry.ExpandedFooterLength, rect.Height);
+        double previous = double.NegativeInfinity;
+        for (int i = 0; i < 6; i++)
+        {
+            double width = EdgeGeometry.TabWidth(i, 6);
+            Assert.True(width > previous, $"la pestaña {i} ({width}) no es más ancha que la anterior ({previous})");
+            previous = width;
+        }
+    }
+
+    [Theory]
+    [InlineData(1)]
+    [InlineData(3)]
+    [InlineData(30)]
+    [InlineData(300)]
+    public void TabWidth_NeverExceedsTheWindowThickness_AtAnyNoteCount(int noteCount)
+    {
+        // El fallo concreto de la fórmula anterior (32 + índice*14): no estaba acotada, así que a
+        // partir de ~14 notas la pestaña era más ancha que la propia ventana.
+        for (int i = 0; i < noteCount; i++)
+        {
+            double width = EdgeGeometry.TabWidth(i, noteCount);
+            Assert.InRange(width, EdgeGeometry.TabMinWidth, EdgeGeometry.TabMaxWidth);
+            Assert.True(width <= EdgeGeometry.WindowThickness,
+                $"la pestaña {i} de {noteCount} mide {width}, más que el grosor {EdgeGeometry.WindowThickness}");
+        }
+    }
+
+    [Fact]
+    public void TabWidth_WithASingleNote_IsTheMinimum()
+    {
+        Assert.Equal(EdgeGeometry.TabMinWidth, EdgeGeometry.TabWidth(0, 1));
+    }
+
+    // --- Zona sensible en reposo ---------------------------------------------------------------
+
+    [Theory]
+    [MemberData(nameof(Edges))]
+    public void RestingVisibleRect_IsTheSliverFlushAgainstTheScreenEdge(EdgePosition edge)
+    {
+        var window = EdgeGeometry.WindowRect(Area, edge, noteCount: 4);
+        var resting = EdgeGeometry.RestingVisibleRect(Area, edge, noteCount: 4);
+
+        // Siempre dentro de la ventana, y del grosor de una tira.
+        Assert.True(resting.X >= window.X && resting.Y >= window.Y);
+        Assert.True(resting.X + resting.Width <= window.X + window.Width);
+        Assert.True(resting.Y + resting.Height <= window.Y + window.Height);
+
+        double thickness = edge is EdgePosition.Left or EdgePosition.Right ? resting.Width : resting.Height;
+        Assert.Equal(EdgeGeometry.RestSliverWidth, thickness);
+    }
+
+    [Fact]
+    public void RestingVisibleRect_Right_HugsTheOuterEdgeOfTheWindow()
+    {
+        var window = EdgeGeometry.WindowRect(Area, EdgePosition.Right, noteCount: 4);
+        var resting = EdgeGeometry.RestingVisibleRect(Area, EdgePosition.Right, noteCount: 4);
+        Assert.Equal(window.X + window.Width, resting.X + resting.Width);
+    }
+
+    [Fact]
+    public void RestingVisibleRect_Left_HugsTheOuterEdgeOfTheWindow()
+    {
+        var window = EdgeGeometry.WindowRect(Area, EdgePosition.Left, noteCount: 4);
+        var resting = EdgeGeometry.RestingVisibleRect(Area, EdgePosition.Left, noteCount: 4);
+        Assert.Equal(window.X, resting.X);
+    }
+
+    [Theory]
+    [MemberData(nameof(Edges))]
+    public void RestingVisibleRect_StartsWithTheWindowButCoversOnlyTheTabStrip(EdgePosition edge)
+    {
+        const int noteCount = 4;
+        var window = EdgeGeometry.WindowRect(Area, edge, noteCount);
+        var resting = EdgeGeometry.RestingVisibleRect(Area, edge, noteCount);
+        double strip = EdgeGeometry.TabStripLength(noteCount);
+
+        if (edge is EdgePosition.Top or EdgePosition.Bottom)
+        {
+            Assert.Equal(window.X, resting.X);
+            Assert.Equal(strip, resting.Width);
+        }
+        else
+        {
+            Assert.Equal(window.Y, resting.Y);
+            Assert.Equal(strip, resting.Height);
+        }
+    }
+
+    [Fact]
+    public void RestingVisibleRect_DoesNotReachIntoTheFooterBand()
+    {
+        // En reposo el footer no se dibuja (su barrido vale 0). Si la zona sensible llegara hasta
+        // el final de la ventana, habría una banda muerta donde el ratón despliega el dock sin
+        // haber nada visible bajo el cursor. Verificado también contra la región real de la app:
+        // en reposo termina exactamente donde acaba la última pestaña.
+        const int noteCount = 4;
+        var window = EdgeGeometry.WindowRect(Area, EdgePosition.Right, noteCount);
+        var resting = EdgeGeometry.RestingVisibleRect(Area, EdgePosition.Right, noteCount);
+
+        Assert.True(resting.Y + resting.Height < window.Y + window.Height);
+        Assert.Equal(EdgeGeometry.FooterLength + EdgeGeometry.TabGap,
+            (window.Y + window.Height) - (resting.Y + resting.Height));
+    }
+
+    [Fact]
+    public void TabStripLength_HasNoTrailingGapAfterTheLastTab()
+    {
+        Assert.Equal(3 * EdgeGeometry.TabPitch - EdgeGeometry.TabGap, EdgeGeometry.TabStripLength(3));
+    }
+
+    [Fact]
+    public void TabStripLength_WithNoNotes_IsZero()
+    {
+        Assert.Equal(0, EdgeGeometry.TabStripLength(0));
+    }
+
+    [Fact]
+    public void TabStripLength_CapsWithTheScrollableContent()
+    {
+        Assert.Equal(EdgeGeometry.MaxContentLength - EdgeGeometry.TabGap, EdgeGeometry.TabStripLength(1000));
     }
 }

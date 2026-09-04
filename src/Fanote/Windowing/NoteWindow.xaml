@@ -66,7 +66,7 @@
             <Setter Property="FontSize" Value="12" />
         </Style>
         <Style x:Key="PlaceholderStyle" TargetType="TextBlock">
-            <Setter Property="Foreground" Value="#5A000000" />
+            <Setter Property="Foreground" Value="#5A1E1A14" />
             <Setter Property="IsHitTestVisible" Value="False" />
             <Setter Property="Visibility" Value="Collapsed" />
             <Style.Triggers>
@@ -76,6 +76,11 @@
             </Style.Triggers>
         </Style>
     </Window.Resources>
+    <!-- Mismo borde de 1px del hue de la nota que llevan las pestañas del dock (ver
+         NoteColorPalette.RimFor). Es lo único que puede separar la nota del escritorio: la spec v1
+         descarta AllowsTransparency para no romper ClearType, así que no hay sombra posible dentro
+         de la ventana. BorderBrush se fija por código en ApplyColor, que ya sabe el color. -->
+    <Border x:Name="WindowRim" BorderThickness="1">
     <Grid>
         <DockPanel Margin="20">
             <StackPanel x:Name="ActiveActions" DockPanel.Dock="Bottom" Orientation="Horizontal" Margin="0,8,0,0">
@@ -113,10 +118,14 @@
             <StackPanel x:Name="ColorSwatches" DockPanel.Dock="Bottom" Orientation="Horizontal" Margin="0,8,0,0" />
             <Grid>
                 <TextBlock Text="Escribe algo…" FontSize="14" Style="{StaticResource PlaceholderStyle}" />
+                <!-- Tinta tintada hacia el cálido, nunca #000 puro: sobre un pastel, el negro
+                     absoluto es el único color de la ventana que no comparte hue con nada. -->
                 <TextBox x:Name="TextBody"
                          AcceptsReturn="True"
                          TextWrapping="Wrap"
                          FontSize="14"
+                         Foreground="#1E1A14"
+                         CaretBrush="#1E1A14"
                          BorderThickness="0" />
             </Grid>
         </DockPanel>
@@ -130,4 +139,5 @@
                 WindowChrome.IsHitTestVisibleInChrome="True"
                 Style="{StaticResource CloseButtonStyle}" />
     </Grid>
+    </Border>
 </Window>
