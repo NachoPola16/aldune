@@ -124,6 +124,97 @@ internal static class NativeMethods
     /// </summary>
     internal static bool IsLeftButtonDown() => (GetAsyncKeyState(VK_LBUTTON) & 0x8000) != 0;
 
+    [StructLayout(LayoutKind.Sequential)]
+    private struct RECT
+    {
+        public int Left;
+        public int Top;
+        public int Right;
+        public int Bottom;
+    }
+
+    [StructLayout(LayoutKind.Sequential)]
+    private struct MONITORINFO
+    {
+        public int cbSize;
+        public RECT rcMonitor;
+        public RECT rcWork;
+        public int dwFlags;
+    }
+
+    private const uint MONITOR_DEFAULTTONEAREST = 2;
+
+    [DllImport("user32.dll")]
+    private static extern bool GetWindowRect(IntPtr hWnd, out RECT lpRect);
+
+    [DllImport("user32.dll")]
+    private static extern IntPtr MonitorFromWindow(IntPtr hWnd, uint dwFlags);
+
+    [DllImport("user32.dll")]
+    private static extern bool GetMonitorInfo(IntPtr hMonitor, ref MONITORINFO lpmi);
+
+    [DllImport("user32.dll", SetLastError = true)]
+    private static extern uint GetWindowThreadProcessId(IntPtr hWnd, out uint lpdwProcessId);
+
+    [DllImport("kernel32.dll")]
+    private static extern uint GetCurrentProcessId();
+
+    [DllImport("user32.dll", CharSet = CharSet.Unicode, SetLastError = true)]
+    private static extern int GetClassName(IntPtr hWnd, System.Text.StringBuilder lpClassName, int nMaxCount);
+
+    /// <summary>
+    /// Si en el monitor donde vive <paramref name="hWnd"/> hay ahora mismo una ventana de otro
+    /// proceso a pantalla completa (un juego, un vídeo). El dock lo consulta para apartarse: es
+    /// <c>Topmost</c>, así que si no se aparta se queda dibujado encima.
+    ///
+    /// Tres exclusiones, todas necesarias:
+    /// <list type="bullet">
+    /// <item>Ventanas del propio proceso — una nota nunca debe esconder su propio dock.</item>
+    /// <item>El escritorio y la barra de tareas (<c>Progman</c>, <c>WorkerW</c>,
+    /// <c>Shell_TrayWnd</c>): tapan el monitor entero pero no son aplicaciones, y son justo lo que
+    /// <c>GetForegroundWindow</c> devuelve cuando no hay nada en primer plano — sin excluirlas el
+    /// dock estaría escondido casi siempre.</item>
+    /// <item>Ventanas de otro monitor, comparando el <c>HMONITOR</c> en vez de coordenadas: cada
+    /// dock solo se aparta por lo que pasa en su propia pantalla.</item>
+    /// </list>
+    /// La comparación de rectángulos vive en <see cref="FullscreenDetection.CoversMonitor"/>, que
+    /// es donde está la distinción entre pantalla completa y ventana maximizada.
+    /// </summary>
+    internal static bool IsFullscreenAppCovering(IntPtr hWnd)
+    {
+        var foreground = GetForegroundWindow();
+        if (foreground == IntPtr.Zero || foreground == hWnd) return false;
+
+        GetWindowThreadProcessId(foreground, out uint processId);
+        if (processId == GetCurrentProcessId()) return false;
+
+        var className = new System.Text.StringBuilder(64);
+        GetClassName(foreground, className, className.Capacity);
+        switch (className.ToString())
+        {
+            case "Progman":
+            case "WorkerW":
+            case "Shell_TrayWnd":
+                return false;
+        }
+
+        var ourMonitor = MonitorFromWindow(hWnd, MONITOR_DEFAULTTONEAREST);
+        if (ourMonitor == IntPtr.Zero) return false;
+        if (MonitorFromWindow(foreground, MONITOR_DEFAULTTONEAREST) != ourMonitor) return false;
+
+        if (!GetWindowRect(foreground, out var windowRect)) return false;
+
+        var monitorInfo = new MONITORINFO { cbSize = Marshal.SizeOf<MONITORINFO>() };
+        if (!GetMonitorInfo(ourMonitor, ref monitorInfo)) return false;
+
+        return FullscreenDetection.CoversMonitor(
+            ToRect(windowRect),
+            ToRect(monitorInfo.rcMonitor));
+    }
+
+    private static Fanote.Core.Rect ToRect(RECT r) =>
+        new(r.Left, r.Top, r.Right - r.Left, r.Bottom - r.Top);
+
     [DllImport("gdi32.dll")]
     private static extern IntPtr CreateRoundRectRgn(int left, int top, int right, int bottom, int cornerWidth, int cornerHeight);
 

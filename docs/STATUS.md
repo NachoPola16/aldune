@@ -65,7 +65,7 @@ autoridad de diseño; todo lo demás (planes, código) se argumenta contra él.
   (ver historial más abajo) y, a raíz de probarlo, también se hizo que el
   tamaño del pill/panel se ajuste al número de notas en vez de ser fijo.
 
-Tests: 117/117 pasando (`dotnet test` desde la raíz del repo).
+Tests: 127/127 pasando (`dotnet test` desde la raíz del repo).
 
 ## Cómo se ha trabajado (para mantener el mismo estilo)
 
@@ -756,7 +756,7 @@ grosor distinto.
 
 ### Verificación, y dos bugs que encontró
 
-Tests: 117/117. Build limpio.
+Tests: 127/127. Build limpio.
 
 1. **Sondeando la región de la app real con 5 notas**: `RestStripLength`
    heredaba el tope de `MaxContentLength` (4 pestañas), pero ese tope existe
@@ -824,7 +824,66 @@ contenedor, porque eso depende de que la escala vertical funcione y la región
 por sí sola no lo dice (en reposo la región es una única pastilla; el color y
 los huecos los pone el render de las pestañas que hay detrás).
 
-Tests: 117/117.
+Tests: 127/127.
+
+### Cuarta ronda: la animación invadía el otro monitor, y el dock se aparta ante pantalla completa
+
+**1. La apertura de una nota se dibujaba en el monitor de al lado.** `SlideInFrom`
+arrancaba la ventana en la X de su pestaña con el cuerpo colgando por la
+derecha, lo que da por hecho que a la derecha del dock no hay nada. Con varios
+monitores es falso: el canto derecho de uno linda con el siguiente. En el
+vertical del usuario (x -1440..0), una nota de 348px arrancando en x=-104 se
+dibujaba de x=0 a 244 **encima del monitor principal**, donde había un juego.
+`EdgeGeometry.SlideOriginFor` acota ahora el origen al área de trabajo del
+dock. Efecto secundario bueno: tampoco quedan frames con media nota fuera de
+pantalla ni con un solo monitor.
+
+**2. Los guiones llenaban el contenedor de lado a lado**, sin el marco de fondo
+que lo hace legible como objeto. El recorte horizontal se estaba dejando a la
+región, pero **en reposo la región ES el contenedor**, así que una pestaña sin
+recortar pinta sus 104px enteros por detrás. Cada pestaña lleva ahora su propio
+`UIElement.Clip` (solo render, no toca layout) cuyo borde izquierdo barre con
+la transición, y la región usa los mismos números para que no se
+desincronicen. **Un `ScaleX` habría sido la solución obvia y es la mala**:
+aplastaría también la etiqueta, y la etiqueta solo está oculta en reposo porque
+vive en el extremo izquierdo de la pestaña. Añadido además
+`RestContainerPad`, porque sin margen la curva de las tapas se comía el primer
+y el último guión.
+
+### El dock se aparta ante una aplicación a pantalla completa
+
+Pedido por el usuario a raíz de lo anterior. El dock es `Topmost`, así que sin
+esto se queda dibujado encima de un juego o un vídeo.
+
+- `Fanote.Core.FullscreenDetection.CoversMonitor` (puro, con tests) compara la
+  ventana contra el rectángulo **completo** del monitor, no contra su área de
+  trabajo: así una ventana **maximizada** —que deja la barra de tareas a la
+  vista— no cuenta. Es la distinción que importa; esconder el dock cada vez que
+  alguien maximiza algo sería insufrible.
+- `NativeMethods.IsFullscreenAppCovering` hace las tres exclusiones necesarias:
+  ventanas del propio proceso (una nota no debe esconder su dock), el
+  escritorio y la barra de tareas (`Progman`/`WorkerW`/`Shell_TrayWnd`, que
+  tapan el monitor entero pero no son aplicaciones — y son justo lo que
+  `GetForegroundWindow` devuelve cuando no hay nada delante, así que sin
+  excluirlas el dock estaría escondido casi siempre), y las ventanas de otro
+  monitor (comparando `HMONITOR`, no coordenadas).
+- Sondeo propio a 500ms, aparte del de hover a 50ms: pasar a pantalla completa
+  no hay que detectarlo en 50ms, y quien tiene un juego delante agradece que no
+  le sondeen el primer plano 20 veces por segundo.
+- Se colapsa **antes** de esconderse, y de golpe: si se escondiera desplegado
+  volvería con el abanico abierto sin el ratón encima.
+- `Visibility` en vez de `Hide()`/`Show()`: esas arrastran semántica de
+  activación, y este dock es `WS_EX_NOACTIVATE` a propósito — no debe robar el
+  foco al volver, y menos a un juego que acaba de salir de pantalla completa.
+  Añadido también `ShowActivated="False"` en el XAML.
+
+**Verificado end-to-end contra la app corriendo** (script en el scratchpad, no
+versionado): creando una ventana sin bordes que cubre el monitor vertical, las
+ventanas visibles de Fanote pasan de 1 a 0 y vuelven a 1 al cerrarla. Y con una
+ventana 100px más corta que el monitor se queda en 1, que es el caso negativo
+que de verdad hay que proteger.
+
+Tests: 127/127.
 
 ### `FANOTE_MONITOR_INDEX`
 
@@ -834,13 +893,10 @@ necesidad real — poder probar sin invadir la pantalla donde el usuario estaba
 jugando — y es la pieza mínima del punto 3 de "Prerrequisitos para la Fase 3".
 Cuando ese punto se aborde de verdad, debería pasar a `AppSettings`.
 
-### Petición pendiente del usuario, no implementada
+### Petición del usuario de esa ronda — ya implementada
 
-Que **el dock se esconda solo cuando hay una ventana a pantalla completa** en
-su monitor (surgió por el videojuego). No se hizo por quedar fuera del encargo
-de esa ronda. El sitio natural es el sondeo de 50ms de
-`EdgeDockWindow.PollHoverState`, comparando el rect de `GetForegroundWindow`
-con el del monitor.
+Que el dock se esconda ante una ventana a pantalla completa: hecho en la cuarta
+ronda, ver su sección más arriba.
 
 ## Cómo seguir desde aquí
 
@@ -873,6 +929,11 @@ Checklist antes de darlo por bueno y fusionar:
     pestaña fuera de vista deja un agujero de fondo suelto.
 12. Los botones "+" y engranaje aparecen con la última pestaña y se pulsan.
 13. Nada se rompe en el segundo monitor (lanzar sin `FANOTE_MONITOR_INDEX`).
+14. Al abrir una nota, la animación **no se dibuja en el otro monitor** — este
+    era el bug reportado con un juego a pantalla completa al lado.
+15. Con un juego o un vídeo a pantalla completa delante, el dock desaparece de
+    ese monitor y vuelve al salir. Con una ventana solo **maximizada** debe
+    seguir viéndose.
 
 Si algo falla, el sitio es `EdgeDockWindow.ApplyRegion` (forma por frame),
 `TabRegionShape` (curva y escalonado, con tests) o `NoteWindow.SlideInFrom`.

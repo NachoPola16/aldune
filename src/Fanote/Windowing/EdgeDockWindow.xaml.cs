@@ -15,12 +15,14 @@ public partial class EdgeDockWindow : Window
     private readonly FanStateMachine _fanState = new();
     private readonly DispatcherTimer _collapseTimer;
     private readonly DispatcherTimer _hoverPollTimer;
+    private readonly DispatcherTimer _fullscreenPollTimer;
     private readonly EdgePosition _edge;
     private readonly WorkingArea _workingArea;
     private readonly NotesRepository _repository;
     private readonly AppCoordinator _coordinator;
     private int _noteCount;
     private bool _pointerInside;
+    private bool _hiddenByFullscreenApp;
 
     private IntPtr _hwnd;
 
@@ -77,6 +79,13 @@ public partial class EdgeDockWindow : Window
         _hoverPollTimer.Tick += (_, _) => PollHoverState();
         _hoverPollTimer.Start();
 
+        // Aparte del sondeo de hover y mucho mas lento: pasar a pantalla completa no es algo que
+        // haya que detectar en 50ms, y quien tiene un juego delante agradece que no le sondeemos
+        // el primer plano 20 veces por segundo.
+        _fullscreenPollTimer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(500) };
+        _fullscreenPollTimer.Tick += (_, _) => PollFullscreenApp();
+        _fullscreenPollTimer.Start();
+
         SourceInitialized += (_, _) =>
         {
             _hwnd = new WindowInteropHelper(this).Handle;
@@ -109,6 +118,7 @@ public partial class EdgeDockWindow : Window
         // Ignora que el cursor pase por encima mientras se arrastra otra cosa que comparta el mismo
         // borde de pantalla (p. ej. la barra de scroll de un navegador): congela el estado mientras
         // dure el arrastre. Un clic en una pestaña no se ve afectado — eso lo gestiona Button.Click.
+        if (_hiddenByFullscreenApp) return;
         if (NativeMethods.IsLeftButtonDown()) return;
 
         var dpi = VisualTreeHelper.GetDpi(this);
@@ -136,6 +146,48 @@ public partial class EdgeDockWindow : Window
             _pointerInside = false;
             _fanState.PointerLeft();
             _collapseTimer.Start();
+        }
+    }
+
+    /// <summary>
+    /// Esconde el dock mientras haya una aplicación a pantalla completa en su monitor, y lo
+    /// devuelve cuando deja de haberla. El dock es <c>Topmost</c>: sin esto se queda dibujado
+    /// encima de un juego o un vídeo a pantalla completa.
+    /// </summary>
+    private void PollFullscreenApp()
+    {
+        if (_hwnd == IntPtr.Zero) return;
+
+        bool covered = NativeMethods.IsFullscreenAppCovering(_hwnd);
+        if (covered == _hiddenByFullscreenApp) return;
+        _hiddenByFullscreenApp = covered;
+
+        if (covered)
+        {
+            // Colapsar ANTES de esconder, y de golpe. Si se escondiera estando desplegado,
+            // volvería más tarde con el abanico abierto sin que el ratón esté encima; y dejar
+            // corriendo la animación contra una ventana invisible es tiempo tirado.
+            _pointerInside = false;
+            _collapseTimer.Stop();
+            _fanState.PointerLeft();
+            _fanState.CollapseTimerElapsed();
+            StopTransition();
+            ApplyRegion();
+
+            // Visibility en vez de Hide(): Hide/Show sobre una Window arrastra semántica de
+            // activación que aquí no interesa — este dock es WS_EX_NOACTIVATE a propósito y no
+            // debe robar el foco al volver, y menos aún a un juego que acaba de salir de pantalla
+            // completa.
+            Visibility = Visibility.Hidden;
+        }
+        else
+        {
+            Visibility = Visibility.Visible;
+
+            // La región sobrevive al ocultar la ventana, pero volver a aplicarla es barato y evita
+            // depender de ello.
+            _lastRegionKey = null;
+            ApplyRegion();
         }
     }
 
