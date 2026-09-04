@@ -141,49 +141,136 @@ public class EdgeGeometryTests
         Assert.True(EdgeGeometry.TabGap > 0);
     }
 
-    // --- Anchos del abanico --------------------------------------------------------------------
+    // --- Ancho uniforme y lomo ------------------------------------------------------------------
 
     [Fact]
-    public void TabWidth_FirstIsMin_LastIsMax()
+    public void TabWidth_IsUniform_SoEveryNoteOpensWithTheSameSpine()
     {
-        Assert.Equal(EdgeGeometry.TabMinWidth, EdgeGeometry.TabWidth(0, 5));
-        Assert.Equal(EdgeGeometry.TabMaxWidth, EdgeGeometry.TabWidth(4, 5));
+        // Era 32 + indice*14: sin acotar (a partir de ~14 notas la pestana era mas ancha que la
+        // ventana) y, sobre todo, incoherente con el modelo nuevo — la pestana viaja con la nota
+        // como lomo al abrirla, asi que una escalera daria a cada nota un lomo distinto.
+        Assert.True(EdgeGeometry.TabWidth <= EdgeGeometry.WindowThickness);
     }
 
     [Fact]
-    public void TabWidth_IsMonotonicallyIncreasing()
+    public void SpineWidth_IsTheTabMinusThePartThatStaysShowingAtRest()
     {
-        double previous = double.NegativeInfinity;
-        for (int i = 0; i < 6; i++)
-        {
-            double width = EdgeGeometry.TabWidth(i, 6);
-            Assert.True(width > previous, $"la pestaña {i} ({width}) no es más ancha que la anterior ({previous})");
-            previous = width;
-        }
+        Assert.Equal(EdgeGeometry.TabWidth - EdgeGeometry.PerforationInset, EdgeGeometry.SpineWidth);
     }
 
-    [Theory]
-    [InlineData(1)]
-    [InlineData(3)]
-    [InlineData(30)]
-    [InlineData(300)]
-    public void TabWidth_NeverExceedsTheWindowThickness_AtAnyNoteCount(int noteCount)
+    [Fact]
+    public void RestSliverWidth_MatchesThePerforation_SoTheDashStartsExactlyAtTheFold()
     {
-        // El fallo concreto de la fórmula anterior (32 + índice*14): no estaba acotada, así que a
-        // partir de ~14 notas la pestaña era más ancha que la propia ventana.
+        Assert.Equal(EdgeGeometry.PerforationInset, EdgeGeometry.RestSliverWidth);
+    }
+
+    // --- Tira en reposo --------------------------------------------------------------------------
+
+    [Fact]
+    public void RestStripLength_IsFarShorterThanTheExpandedStrip()
+    {
+        // El punto entero del cambio: en reposo el dock insinua que hay notas en vez de ocupar el
+        // borde entero de la pantalla.
+        const int noteCount = 4;
+        Assert.True(EdgeGeometry.RestStripLength(noteCount) < EdgeGeometry.TabStripLength(noteCount) / 2,
+            $"reposo {EdgeGeometry.RestStripLength(noteCount)} frente a desplegado {EdgeGeometry.TabStripLength(noteCount)}");
+    }
+
+    [Fact]
+    public void RestStripLength_HasNoTrailingGap()
+    {
+        Assert.Equal(3 * EdgeGeometry.RestPitch - EdgeGeometry.RestGap, EdgeGeometry.RestStripLength(3));
+    }
+
+    [Fact]
+    public void RestStripLength_WithNoNotes_IsZero()
+    {
+        Assert.Equal(0, EdgeGeometry.RestStripLength(0));
+    }
+
+    [Fact]
+    public void RestStripLength_HasOneDashPerNote_EvenBeyondTheScrollCap()
+    {
+        // El tope de MaxContentLength es del abanico desplegado, que hace scroll. En reposo no hay
+        // scroll: el desplazamiento de reposo trae todas las notas a la tira, asi que todas tienen
+        // guion. Aplicar aqui aquel tope dejaba los guiones sobrantes visibles pero fuera de la
+        // zona sensible al raton — se veian y no se podian pulsar (bug real, encontrado sondeando
+        // la region de la app con 5 notas).
+        int beyondCap = (int)(EdgeGeometry.MaxContentLength / EdgeGeometry.TabPitch) + 1;
+        Assert.Equal(beyondCap * EdgeGeometry.RestPitch - EdgeGeometry.RestGap,
+            EdgeGeometry.RestStripLength(beyondCap));
+    }
+
+    [Fact]
+    public void RestingVisibleRect_CoversEveryDash_EvenBeyondTheScrollCap()
+    {
+        // La comprobacion que de verdad importa: el ultimo guion tiene que caer dentro de la zona
+        // sensible, o se ve y no responde.
+        int beyondCap = (int)(EdgeGeometry.MaxContentLength / EdgeGeometry.TabPitch) + 1;
+        var window = EdgeGeometry.WindowRect(Area, EdgePosition.Right, beyondCap);
+        var resting = EdgeGeometry.RestingVisibleRect(Area, EdgePosition.Right, beyondCap);
+
+        double lastDashBottom = window.Y + EdgeGeometry.RestStripStart(beyondCap)
+            + (beyondCap - 1) * EdgeGeometry.RestPitch + EdgeGeometry.RestDashLength;
+
+        Assert.True(lastDashBottom <= resting.Y + resting.Height,
+            $"el ultimo guion acaba en {lastDashBottom}, la zona sensible en {resting.Y + resting.Height}");
+    }
+
+    [Fact]
+    public void RestStripStart_IsNeverNegative()
+    {
+        // Un inicio negativo recortaria las PRIMERAS notas contra el borde superior de la ventana.
+        Assert.True(EdgeGeometry.RestStripStart(1000) >= 0);
+    }
+
+    [Fact]
+    public void RestStrip_IsCenteredWithinTheWindow()
+    {
+        // Solo mientras quepa: si la tira es mas larga que la ventana se pega arriba a proposito.
+        const int noteCount = 4;
+        double start = EdgeGeometry.RestStripStart(noteCount);
+        double end = start + EdgeGeometry.RestStripLength(noteCount);
+        double window = EdgeGeometry.WindowLength(noteCount);
+        Assert.Equal(start, window - end, precision: 9);
+    }
+
+    // --- Desplazamiento reposo -> desplegado -----------------------------------------------------
+
+    [Fact]
+    public void RestOffset_PutsEachTabsCentreOnItsOwnDash()
+    {
+        // Sin esto, la banda que la region deja ver para la nota 2 caeria sobre pixeles de la
+        // nota 1 y los colores saldrian cambiados: reposo y desplegado usan pasos distintos.
+        const int noteCount = 5;
         for (int i = 0; i < noteCount; i++)
         {
-            double width = EdgeGeometry.TabWidth(i, noteCount);
-            Assert.InRange(width, EdgeGeometry.TabMinWidth, EdgeGeometry.TabMaxWidth);
-            Assert.True(width <= EdgeGeometry.WindowThickness,
-                $"la pestaña {i} de {noteCount} mide {width}, más que el grosor {EdgeGeometry.WindowThickness}");
+            double tabCentre = i * EdgeGeometry.TabPitch + EdgeGeometry.TabHeight / 2;
+            double dashCentre = EdgeGeometry.RestStripStart(noteCount)
+                + i * EdgeGeometry.RestPitch + EdgeGeometry.RestDashLength / 2;
+            Assert.Equal(dashCentre, tabCentre + EdgeGeometry.RestOffsetFor(i, noteCount), precision: 9);
         }
     }
 
     [Fact]
-    public void TabWidth_WithASingleNote_IsTheMinimum()
+    public void RestOffset_KeepsTheDashInsideItsOwnTab()
     {
-        Assert.Equal(EdgeGeometry.TabMinWidth, EdgeGeometry.TabWidth(0, 1));
+        // La region deja ver una banda centrada en la pestana ya desplazada. Si el desplazamiento
+        // sacara esa banda fuera del alto de la pestana, se verian pixeles del fondo o de la nota
+        // vecina en lugar del color propio.
+        const int noteCount = 4;
+        for (int i = 0; i < noteCount; i++)
+        {
+            double offset = EdgeGeometry.RestOffsetFor(i, noteCount);
+            double tabTop = i * EdgeGeometry.TabPitch + offset;
+            double tabCentre = tabTop + EdgeGeometry.TabHeight / 2;
+            double dashTop = tabCentre - EdgeGeometry.RestDashLength / 2;
+            double dashBottom = tabCentre + EdgeGeometry.RestDashLength / 2;
+
+            Assert.True(dashTop >= tabTop, $"nota {i}: el guion empieza por encima de su pestana");
+            Assert.True(dashBottom <= tabTop + EdgeGeometry.TabHeight,
+                $"nota {i}: el guion acaba por debajo de su pestana");
+        }
     }
 
     // --- Zona sensible en reposo ---------------------------------------------------------------
@@ -227,34 +314,32 @@ public class EdgeGeometryTests
         const int noteCount = 4;
         var window = EdgeGeometry.WindowRect(Area, edge, noteCount);
         var resting = EdgeGeometry.RestingVisibleRect(Area, edge, noteCount);
-        double strip = EdgeGeometry.TabStripLength(noteCount);
+        double strip = EdgeGeometry.RestStripLength(noteCount);
 
+        double start = EdgeGeometry.RestStripStart(noteCount);
         if (edge is EdgePosition.Top or EdgePosition.Bottom)
         {
-            Assert.Equal(window.X, resting.X);
+            Assert.Equal(window.X + start, resting.X);
             Assert.Equal(strip, resting.Width);
         }
         else
         {
-            Assert.Equal(window.Y, resting.Y);
+            Assert.Equal(window.Y + start, resting.Y);
             Assert.Equal(strip, resting.Height);
         }
     }
 
     [Fact]
-    public void RestingVisibleRect_DoesNotReachIntoTheFooterBand()
+    public void RestingVisibleRect_IsInsetAtBothEndsOfTheWindow()
     {
-        // En reposo el footer no se dibuja (su barrido vale 0). Si la zona sensible llegara hasta
-        // el final de la ventana, habría una banda muerta donde el ratón despliega el dock sin
-        // haber nada visible bajo el cursor. Verificado también contra la región real de la app:
-        // en reposo termina exactamente donde acaba la última pestaña.
+        // La tira de reposo va centrada y es mucho mas corta que la ventana, asi que no puede
+        // tocar ninguno de los dos extremos — ni la banda del footer, que en reposo no se dibuja.
         const int noteCount = 4;
         var window = EdgeGeometry.WindowRect(Area, EdgePosition.Right, noteCount);
         var resting = EdgeGeometry.RestingVisibleRect(Area, EdgePosition.Right, noteCount);
 
+        Assert.True(resting.Y > window.Y);
         Assert.True(resting.Y + resting.Height < window.Y + window.Height);
-        Assert.Equal(EdgeGeometry.FooterLength + EdgeGeometry.TabGap,
-            (window.Y + window.Height) - (resting.Y + resting.Height));
     }
 
     [Fact]

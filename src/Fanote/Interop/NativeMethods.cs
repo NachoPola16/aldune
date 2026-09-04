@@ -174,7 +174,11 @@ internal static class NativeMethods
             IntPtr piece;
             if (cornerRadius > 0)
             {
-                int diameter = (int)(cornerRadius * 2);
+                // Acotado al propio tamaño de la pieza: el guión en reposo mide 16x24, y un radio
+                // pensado para una pestaña de 104x80 lo deformaría (CreateRoundRectRgn con un
+                // diámetro mayor que el lado da una forma degenerada). Acotándolo, el guión sale
+                // como una pastilla redondeada y la pestaña con su esquina normal, sin ramas.
+                int diameter = (int)Math.Min(cornerRadius * 2, Math.Min(right - left, bottom - top));
                 IntPtr rounded = CreateRoundRectRgn(left, top, right, bottom, diameter, diameter);
                 IntPtr rightHalfSquared = CreateRectRgn(left + (right - left) / 2, top, right, bottom);
                 piece = CreateRectRgn(0, 0, 0, 0);

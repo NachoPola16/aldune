@@ -119,6 +119,20 @@ public partial class App : Application
             return;
         }
 
+        // Filtro de monitor por variable de entorno. Existe porque durante el desarrollo hace
+        // falta poder lanzar la app sin invadir la otra pantalla (p. ej. si hay algo a pantalla
+        // completa en ella), y es la pieza mínima del punto 3 de "Prerrequisitos para la Fase 3":
+        // restringir la app a un solo monitor. Cuando ese punto se aborde de verdad, esto debería
+        // pasar a ser un ajuste de verdad en AppSettings, no una variable de entorno. Índice
+        // 0-based sobre el orden que devuelve MonitorEnumerator; un valor inválido se ignora, para
+        // que una variable mal puesta no deje la app sin ningún dock.
+        var onlyMonitor = Environment.GetEnvironmentVariable("FANOTE_MONITOR_INDEX");
+        if (int.TryParse(onlyMonitor, out int monitorIndex)
+            && monitorIndex >= 0 && monitorIndex < monitors.Count)
+        {
+            monitors = new[] { monitors[monitorIndex] };
+        }
+
         var coordinator = new AppCoordinator(repository);
         var docks = new List<EdgeDockWindow>();
         foreach (var monitor in monitors)

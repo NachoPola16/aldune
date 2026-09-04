@@ -13,6 +13,10 @@ public partial class NoteWindow : Window
 {
     private static readonly TimeSpan AutosaveDelay = TimeSpan.FromMilliseconds(500);
 
+    // El mismo conversor que usa la pestaña del dock, para que el lomo diga exactamente lo mismo
+    // (mayúsculas, con tracking, recortado igual) que decía la pestaña de la que salió.
+    private static readonly NoteTabLabelConverter _spineLabelConverter = new();
+
     private readonly Note _note;
     private readonly NotesRepository _repository;
     private readonly AppCoordinator _coordinator;
@@ -37,6 +41,8 @@ public partial class NoteWindow : Window
 
         TextBody.Text = note.Text;
         Title = NoteTitleHelper.GetTitle(note.Text);
+        SpineLabel.Text = (string)_spineLabelConverter.Convert(
+            note.Text, typeof(string), null, System.Globalization.CultureInfo.CurrentCulture);
         Loaded += (_, _) =>
         {
             TextBody.Focus();
@@ -54,6 +60,8 @@ public partial class NoteWindow : Window
         TextBody.TextChanged += (_, _) =>
         {
             Title = NoteTitleHelper.GetTitle(TextBody.Text);
+            SpineLabel.Text = (string)_spineLabelConverter.Convert(
+                TextBody.Text, typeof(string), null, System.Globalization.CultureInfo.CurrentCulture);
             _hasPendingEdit = true;
             _autosaveTimer.Stop();
             _autosaveTimer.Start();
@@ -73,52 +81,53 @@ public partial class NoteWindow : Window
     }
 
     /// <summary>
-    /// Makes the window appear to grow from <paramref name="origin"/> (a tab's on-screen rect)
-    /// to whatever Left/Top/Width/Height are already set to (the final position PositionNoteWindow
-    /// computed) — call this after that positioning and before Show(). Explicit From/To throughout,
-    /// per the Phase 3a NaN-origin animation lesson.
+    /// La nota sale del mazo deslizándose hacia la izquierda, con su lomo por delante — como
+    /// tirar de una ficha en un fichero. <paramref name="origin"/> es el rect en pantalla de la
+    /// pestaña sobre la que se ha hecho clic.
+    ///
+    /// Solo se anima <c>Left</c>. El alto, el ancho y el Top ya son los definitivos desde el
+    /// primer frame, así que el contenido nunca se mide a un tamaño intermedio (misma razón por
+    /// la que el dock dejó de redimensionar su ventana, ver EdgeDockWindow). Antes se animaban
+    /// las cuatro propiedades a la vez y la nota "crecía" desde un rect diminuto, que es una
+    /// aparición genérica: esto es un movimiento con dirección y con causa.
     /// </summary>
-    internal void AnimateFrom(System.Windows.Rect origin)
+    internal void SlideInFrom(System.Windows.Rect origin)
     {
+        if (!SystemParameters.ClientAreaAnimation) return;
+
         double targetLeft = Left;
-        double targetTop = Top;
-        double targetWidth = Width;
-        double targetHeight = Height;
 
-        Left = origin.X;
-        Top = origin.Y;
-        Width = origin.Width;
-        Height = origin.Height;
+        // El punto de partida alinea el lomo de la nota exactamente sobre la pestaña que estaba
+        // en el mazo: el resto del cuerpo arranca fuera de la pantalla, por la derecha, y entra
+        // deslizándose. Es literalmente la misma ficha, sacada del canto.
+        double startLeft = origin.X;
+        if (Math.Abs(startLeft - targetLeft) < 1) return;
 
-        // Same duration/easing as EdgeDockWindow.ApplyGeometry's panel animation (320ms, ease-out)
-        // — real user feedback (2026-09-04) that the original 200ms linear motion felt too abrupt
-        // applied here too, for consistency across every panel-growth animation in the app.
+        Left = startLeft;
+
         var duration = new Duration(TimeSpan.FromMilliseconds(320));
-        var easing = new System.Windows.Media.Animation.QuadraticEase
+        var animation = new System.Windows.Media.Animation.DoubleAnimation(startLeft, targetLeft, duration)
         {
-            EasingMode = System.Windows.Media.Animation.EasingMode.EaseOut
+            // Quíntica, no cuadrática: las curvas de salida suaves (quart/quint/expo) son lo que
+            // se lee como "viene a pararse". La QuadraticEase anterior era la más débil posible y
+            // apenas se distinguía de un desplazamiento lineal.
+            EasingFunction = new System.Windows.Media.Animation.QuinticEase
+            {
+                EasingMode = System.Windows.Media.Animation.EasingMode.EaseOut
+            }
         };
-        var leftAnimation = new System.Windows.Media.Animation.DoubleAnimation(origin.X, targetLeft, duration) { EasingFunction = easing };
-        var topAnimation = new System.Windows.Media.Animation.DoubleAnimation(origin.Y, targetTop, duration) { EasingFunction = easing };
-        var widthAnimation = new System.Windows.Media.Animation.DoubleAnimation(origin.Width, targetWidth, duration) { EasingFunction = easing };
-        var heightAnimation = new System.Windows.Media.Animation.DoubleAnimation(origin.Height, targetHeight, duration) { EasingFunction = easing };
 
-        // FillBehavior.HoldEnd (the default) leaves these animations latched on Left/Top/
-        // Width/Height forever once they finish, outranking any later plain assignment — the
-        // same hazard already documented and guarded against in EdgeDockWindow.ApplyGeometry.
-        // Unlike the dock, this window is user-draggable/resizable (see NoteWindow.xaml's
-        // WindowChrome), so clear each animation and commit its final value as a plain local
-        // value once it completes, or a drag/resize right after opening could fight a still-
-        // active animation clock.
-        leftAnimation.Completed += (_, _) => { BeginAnimation(LeftProperty, null); Left = targetLeft; };
-        topAnimation.Completed += (_, _) => { BeginAnimation(TopProperty, null); Top = targetTop; };
-        widthAnimation.Completed += (_, _) => { BeginAnimation(WidthProperty, null); Width = targetWidth; };
-        heightAnimation.Completed += (_, _) => { BeginAnimation(HeightProperty, null); Height = targetHeight; };
+        // FillBehavior.HoldEnd (el valor por defecto) dejaría esta animación enganchada a Left
+        // para siempre, por encima de cualquier asignación posterior — y esta ventana sí se puede
+        // arrastrar (ver WindowChrome en el XAML), así que arrastrarla justo después de abrirla
+        // pelearía contra un reloj de animación todavía activo.
+        animation.Completed += (_, _) =>
+        {
+            BeginAnimation(LeftProperty, null);
+            Left = targetLeft;
+        };
 
-        BeginAnimation(LeftProperty, leftAnimation);
-        BeginAnimation(TopProperty, topAnimation);
-        BeginAnimation(WidthProperty, widthAnimation);
-        BeginAnimation(HeightProperty, heightAnimation);
+        BeginAnimation(LeftProperty, animation);
     }
 
     private void OnCloseClick(object sender, RoutedEventArgs e) => Close();
@@ -133,9 +142,16 @@ public partial class NoteWindow : Window
     private void ApplyColor(string color)
     {
         var brush = (Brush)new BrushConverter().ConvertFromString(color)!;
+        var rim = (Brush)new BrushConverter().ConvertFromString(NoteColorPalette.RimFor(color))!;
+
         Background = brush;
         TextBody.Background = brush;
-        WindowRim.BorderBrush = (Brush)new BrushConverter().ConvertFromString(NoteColorPalette.RimFor(color))!;
+        WindowRim.BorderBrush = rim;
+
+        // El lomo comparte el fondo de la nota (es la misma ficha), y su etiqueta y su troquelado
+        // van en el tono oscuro del propio hue — igual que la pestaña del dock de la que viene.
+        SpineLabel.Foreground = rim;
+        Perforation.BorderBrush = rim;
     }
 
     private void PopulateColorSwatches()

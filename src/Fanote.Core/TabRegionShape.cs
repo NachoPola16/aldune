@@ -70,11 +70,16 @@ public static class TabRegionShape
         StaggerDelayMs(Math.Max(0, noteCount - 1)) + TabSweepMs;
 
     /// <summary>
-    /// Ancho visible de una pestaña a un progreso dado: interpola entre la tira en reposo y su
-    /// ancho completo.
+    /// Interpola linealmente entre el valor en reposo y el desplegado con el progreso ya
+    /// suavizado. Se usa para las tres cosas que cambian a la vez en una pestaña — ancho, alto y
+    /// el desplazamiento vertical que la lleva de su hueco en la tira a su hueco en el abanico.
     /// </summary>
+    public static double Sweep(double atRest, double expanded, double progress) =>
+        atRest + (expanded - atRest) * Math.Clamp(progress, 0, 1);
+
+    /// <summary>Ancho visible de una pestaña a un progreso dado.</summary>
     public static double SweptWidth(double restWidth, double fullWidth, double progress) =>
-        restWidth + (fullWidth - restWidth) * Math.Clamp(progress, 0, 1);
+        Sweep(restWidth, fullWidth, progress);
 
     /// <summary>
     /// Construye las piezas de la región a partir de los rects <b>ya calculados</b> de cada

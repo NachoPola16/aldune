@@ -9,14 +9,14 @@
         ResizeMode="NoResize"
         Background="#2A261F">
     <Window.Resources>
-        <local:NoteTitleConverter x:Key="NoteTitleConverter" />
+        <local:NoteTabLabelConverter x:Key="NoteTabLabelConverter" />
         <local:NoteRimConverter x:Key="NoteRimConverter" />
 
         <!-- El único modo de dar volumen a una pestaña aquí. La spec v1 descarta
              AllowsTransparency (rompe ClearType), así que cada píxel dentro de la región es
              opaco y no cabe ninguna sombra: la profundidad tiene que venir de dentro. Claro en
              el borde libre (izquierda, la que sobresale) y algo más hondo hacia el borde físico
-             de pantalla, que es como caería la luz sobre una pestaña que asoma. -->
+             de pantalla, que es como caería la luz sobre una ficha que asoma de un fichero. -->
         <LinearGradientBrush x:Key="TabSheen" StartPoint="0,0" EndPoint="1,0">
             <GradientStop Offset="0" Color="#20FFFFFF" />
             <GradientStop Offset="0.45" Color="#00FFFFFF" />
@@ -24,24 +24,6 @@
         </LinearGradientBrush>
 
         <Style x:Key="NoteTabButtonStyle" TargetType="Button">
-            <Setter Property="Foreground" Value="#1E1A14" />
-            <Setter Property="ContentTemplate">
-                <Setter.Value>
-                    <DataTemplate>
-                        <!-- Pegada al borde libre (izquierda) y no centrada: en reposo solo asoman
-                             los 20px de la derecha, así que un título centrado asomaría a medias
-                             en las pestañas estrechas. Aquí el reposo es color liso y nada más. -->
-                        <TextBlock Text="{Binding Text, Converter={StaticResource NoteTitleConverter}}"
-                                   FontSize="12"
-                                   FontWeight="SemiBold"
-                                   TextTrimming="CharacterEllipsis">
-                            <TextBlock.LayoutTransform>
-                                <RotateTransform Angle="-90" />
-                            </TextBlock.LayoutTransform>
-                        </TextBlock>
-                    </DataTemplate>
-                </Setter.Value>
-            </Setter>
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="Button">
@@ -54,19 +36,66 @@
                             <Border Background="{TemplateBinding Background}"
                                     BorderBrush="{Binding Color, Converter={StaticResource NoteRimConverter}}"
                                     BorderThickness="1,1,0,1"
-                                    CornerRadius="9,0,0,9" />
-                            <Border Background="{StaticResource TabSheen}" CornerRadius="9,0,0,9" />
-                            <Border x:Name="HoverOverlay" Background="#1E1A14" Opacity="0" CornerRadius="9,0,0,9" />
-                            <ContentPresenter HorizontalAlignment="Left"
-                                              VerticalAlignment="Center"
-                                              Margin="{TemplateBinding Padding}" />
+                                    CornerRadius="10,0,0,10" />
+                            <Border Background="{StaticResource TabSheen}" CornerRadius="10,0,0,10" />
+
+                            <!-- Etiqueta del lomo: girada -90° con LayoutTransform (no Render:
+                                 intercambia los ejes de medida, que es justo lo que hace falta
+                                 para que el alto de la pestaña sea el ancho del texto). Alineada
+                                 a la izquierda y no centrada porque en reposo solo asoman los
+                                 16px de la derecha — así el reposo es color liso y nada más. Va
+                                 en un tono oscuro del propio color de la nota, no en negro:
+                                 el negro sería el único valor de la pestaña sin relación de hue
+                                 con ella. -->
+                            <TextBlock Text="{Binding Text, Converter={StaticResource NoteTabLabelConverter}}"
+                                       Foreground="{Binding Color, Converter={StaticResource NoteRimConverter}}"
+                                       FontSize="11"
+                                       FontWeight="SemiBold"
+                                       TextTrimming="None"
+                                       HorizontalAlignment="Left"
+                                       VerticalAlignment="Center"
+                                       Margin="14,0,0,0">
+                                <TextBlock.LayoutTransform>
+                                    <RotateTransform Angle="-90" />
+                                </TextBlock.LayoutTransform>
+                            </TextBlock>
+
+                            <!-- Troquelado. Marca dónde acaba el lomo y empieza el cuerpo: al
+                                 abrir la nota, todo lo que queda a la izquierda de esta línea
+                                 viaja con ella (ver NoteWindow y EdgeGeometry.SpineWidth). Los
+                                 16px a su derecha son el trocito de cuerpo que asoma, y son
+                                 exactamente lo que se ve del dock en reposo. -->
+                            <Border Width="1"
+                                    HorizontalAlignment="Right"
+                                    Margin="0,7,16,7"
+                                    BorderThickness="1,0,0,0"
+                                    Opacity="0.45"
+                                    BorderBrush="{Binding Color, Converter={StaticResource NoteRimConverter}}"
+                                    SnapsToDevicePixels="True">
+                                <Border.OpacityMask>
+                                    <DrawingBrush TileMode="Tile"
+                                                  Viewport="0,0,1,6"
+                                                  ViewportUnits="Absolute"
+                                                  Stretch="None">
+                                        <DrawingBrush.Drawing>
+                                            <GeometryDrawing Brush="Black">
+                                                <GeometryDrawing.Geometry>
+                                                    <RectangleGeometry Rect="0,0,1,3" />
+                                                </GeometryDrawing.Geometry>
+                                            </GeometryDrawing>
+                                        </DrawingBrush.Drawing>
+                                    </DrawingBrush>
+                                </Border.OpacityMask>
+                            </Border>
+
+                            <Border x:Name="HoverOverlay" Background="#1E1A14" Opacity="0" CornerRadius="10,0,0,10" />
                         </Grid>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsMouseOver" Value="True">
-                                <Setter TargetName="HoverOverlay" Property="Opacity" Value="0.10" />
+                                <Setter TargetName="HoverOverlay" Property="Opacity" Value="0.08" />
                             </Trigger>
                             <Trigger Property="IsPressed" Value="True">
-                                <Setter TargetName="HoverOverlay" Property="Opacity" Value="0.20" />
+                                <Setter TargetName="HoverOverlay" Property="Opacity" Value="0.16" />
                             </Trigger>
                         </ControlTemplate.Triggers>
                     </ControlTemplate>
@@ -101,21 +130,18 @@
         </Style>
     </Window.Resources>
 
-    <!-- Un solo panel, no dos superpuestos con fundido cruzado. El estado de reposo ya no es otro
-         contenido: son estas mismas pestañas, recortadas por la región a los 20px que asoman. Eso
-         se lleva por delante el patrón de Opacity + IsHitTestVisible sincronizados a mano que
-         documenta STATUS.md (punto 5 del "pulido visual"), porque ya no hay dos capas que puedan
-         robarse los clics la una a la otra. -->
+    <!-- Un solo panel. El estado de reposo no es otro contenido: son estas mismas pestañas,
+         desplazadas con RenderTransform (nunca con layout) y recortadas por la región a los 16px
+         que asoman. -->
     <Grid x:Name="PanelContent">
         <Grid.RowDefinitions>
             <RowDefinition Height="*" />
             <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
 
-        <!-- Barra de scroll oculta, no reestilizada: la rueda del ratón sigue funcionando, y la
-             región recorta cualquier cosa que no sea una pestaña, así que una barra dibujada
-             sobre el fondo sería invisible de todos modos. Reinventar la barra de scroll era
-             además el tipo de afordancia estándar que no conviene recrear en una UI de producto. -->
+        <!-- Barra de scroll oculta, no reestilizada: la rueda sigue funcionando, y la región
+             recorta cualquier cosa que no sea una pestaña, así que una barra dibujada sobre el
+             fondo sería invisible igualmente. -->
         <ScrollViewer x:Name="TabsScroll"
                       Grid.Row="0"
                       VerticalScrollBarVisibility="Hidden"
@@ -123,15 +149,14 @@
             <ItemsControl x:Name="TabsList">
                 <ItemsControl.ItemTemplate>
                     <DataTemplate>
-                        <!-- Width se fija por código (depende del índice dentro del abanico, que
-                             XAML no puede expresar limpiamente). Sin Opacity="0" inicial: ya no
-                             hay animación de opacidad por pestaña — quien revela es la región. -->
+                        <!-- Ancho uniforme: si fuera una escalera, cada nota se abriría con un
+                             lomo de grosor distinto (ver EdgeGeometry). -->
                         <Button Content="{Binding}"
                                 Background="{Binding Color}"
+                                Width="104"
                                 Height="80"
                                 Margin="0,0,0,8"
                                 HorizontalAlignment="Right"
-                                Padding="10,0,0,0"
                                 Click="OnTabClick"
                                 Loaded="OnTabLoaded"
                                 Tag="{Binding}"
