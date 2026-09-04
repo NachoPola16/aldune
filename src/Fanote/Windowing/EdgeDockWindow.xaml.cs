@@ -148,12 +148,19 @@ public partial class EdgeDockWindow : Window
 
         var pieces = TabRegionShape.BuildRegion(tabRects, footerRect, cornerRadius: 9 * dpi.DpiScaleX);
         NativeMethods.SetTabFanRegion(_hwnd, pieces);
+
+        // DWM's shadow tracks the window's full rectangular bounds, not this custom shape — left
+        // on, it paints a translucent box across exactly the gutter/notches the region was meant
+        // to remove (confirmed on a real run, see NativeMethods.ApplyShadow's remarks). Always
+        // off while the shaped region is active; ClearTabFanRegion turns it back on.
+        NativeMethods.ClearShadow(_hwnd);
     }
 
     private void ClearTabFanRegion()
     {
         if (_hwnd == IntPtr.Zero) return;
         NativeMethods.ClearWindowRegion(_hwnd);
+        NativeMethods.ApplyShadow(_hwnd);
     }
 
     private void ApplyGeometry()
