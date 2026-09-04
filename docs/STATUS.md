@@ -65,7 +65,7 @@ autoridad de diseño; todo lo demás (planes, código) se argumenta contra él.
   (ver historial más abajo) y, a raíz de probarlo, también se hizo que el
   tamaño del pill/panel se ajuste al número de notas en vez de ser fijo.
 
-Tests: 80/80 pasando (`dotnet test` desde la raíz del repo).
+Tests: 107/107 pasando (`dotnet test` desde la raíz del repo).
 
 ## Cómo se ha trabajado (para mantener el mismo estilo)
 
@@ -583,21 +583,140 @@ Iterado en 4 rondas de maqueta (Artifact, no en el código real):
   (brainstorming → spec → plan), no improvisarlo. **Empieza aquí la
   próxima vez que se retome esto.**
 
+## Rediseño de movimiento y forma del dock (sesión 2026-09-04, arquitectónico)
+
+Rama `dock-motion-shape`, encima de `a4c6db8`. Sin spec/plan formal: partió
+de una queja directa del usuario ("no me gusta la apariencia ni las
+animaciones"), acotada en una ronda de preguntas a **movimiento + forma del
+dock** (la dirección estética general se dejó sin decidir a propósito, y el
+modo "Papel vintage" explícitamente para más adelante).
+
+### Por qué no bastaba con retocar números
+
+El commit anterior (`a4c6db8`, ese mismo día) ya había probado el arreglo
+conservador — alargar la transición de 200 a 320ms y meterle un easing — y
+no funcionó. El problema no eran las cifras sino el modelo:
+
+- Se animaban `Left/Top/Width/Height` del **HWND**. WPF rehace el layout en
+  cada frame intermedio, y de ahí sale toda la familia de fallos que
+  documentan las secciones de arriba.
+- Como el contenido no se puede ver bien durante ese resize, se ocultaba y
+  se hacía fundido con `BeginTime=190ms` sobre 320ms: **el 60% de la
+  apertura era una caja vacía creciendo**, y nada se movía a la vez.
+- `QuadraticEase` es la ease-out más débil que existe; apenas se lee como
+  un asentamiento.
+- El escalonado (55ms × índice, más los 190ms de offset) dejaba la última
+  pestaña sin asentar hasta ~760ms con 6 notas.
+
+### El cambio
+
+**La ventana del dock ya no se redimensiona nunca.** Siempre ocupa
+`EdgeGeometry.WindowRect`; lo único que se anima es la región recortada.
+El layout de WPF se mide una vez, a tamaño final, y jamás en un tamaño
+intermedio — esa clase entera de fallo deja de ser posible por
+construcción. En reposo la región son tiras de 20px del color de cada
+nota pegadas al borde; al pasar el ratón, el borde izquierdo de cada
+pestaña barre hacia fuera, escalonado.
+
+Con eso desaparecen también: el temporizador mágico de 190ms acoplado por
+comentario al `BeginTime` del fundido, el fundido cruzado entre
+`PanelContent` y `PillSwatches` (y el patrón de `Opacity` +
+`IsHitTestVisible` sincronizados a mano que exigía — ver punto 5 del
+"pulido visual"), y el encendido/apagado de la sombra DWM.
+
+**Se comprobó antes de apostar por esto** (búsqueda en la documentación de
+Microsoft, a sugerencia del usuario): `SetWindowRgn` emite
+`WM_WINDOWPOSCHANGING`/`WM_WINDOWPOSCHANGED` en **cada** llamada, y lo
+recomendado para animar forma por frame son *layered windows* — que la
+spec v1 descarta porque rompen ClearType. Por eso el recálculo por frame
+está acotado a propósito: solo durante los ~280ms de la transición (≈17
+frames), nunca en reposo ni desplegado quieto, y saltándose la llamada si
+los rects redondeados a entero no han cambiado. El `WM_MOUSELEAVE` espurio
+que eso podría provocar ya no importa, porque el hover se sondea contra la
+posición real del cursor desde `af6b569`.
+
+### Números que se contradecían, ahora atados por tests
+
+- `ExpandedPerNoteLength` presupuestaba 88px por nota mientras el layout
+  usaba `Margin=-28` sobre pestañas de 80px (paso real 52). Ahora
+  `TabPitch = TabHeight + TabGap`, con un test que lo fija.
+- Ese solape de -28 hacía que `CombineRgn`/`RGN_OR` **fundiera las pestañas
+  en una sola mancha** en vez de un abanico. `TabGap` es positivo, también
+  con test.
+- `width = 32 + índice*14` no estaba acotado: a partir de ~14 notas la
+  pestaña era más ancha que la ventana. Ahora interpola sobre
+  `índice/(total-1)`, acotada entre `TabMinWidth` y `TabMaxWidth` sea cual
+  sea el número de notas.
+- `ExpandedThickness` eran 220px para pestañas de 32-74px. `WindowThickness`
+  son 140, derivados de `TabMaxWidth`.
+
+### Bug encontrado con la app corriendo
+
+Verificado con `GetWindowRgn`/`GetRegionData` por P/Invoke desde PowerShell
+contra el proceso real (**no** con capturas de pantalla — ver el incidente
+de privacidad de la sesión 2026-09-03). La caja envolvente de la región
+llegaba a y=432 cuando las 4 pestañas visibles acaban en y=344: el
+`ItemsControl` no está virtualizado, así que existen `Button`s colocados
+por debajo del viewport del `ScrollViewer`, `TranslatePoint` devuelve su
+posición igualmente, y la región abría un agujero justo donde el
+`ScrollViewer` ya no dibuja nada. Arreglado acotando cada pieza al viewport.
+Tras el arreglo, la región en reposo es exactamente 4 pestañas en
+y 0..80 / 88..168 / 176..256 / 264..344, tira de 20px a ras del borde,
+idéntica en los dos monitores.
+
+### Paleta
+
+Derivada en OKLCH, no a ojo en hex. Las seis caras comparten L=0.87 exacto
+con el croma acotado hue a hue al máximo que sRGB representa — la paleta
+anterior mezclaba claridades dispares, así que unas notas pesaban más que
+otras sin que eso significara nada. Todas dan >10:1 contra la tinta
+`#1E1A14`. El `#3A3A3A` plano del chrome pasa a `#2A261F` (tintado, como
+el resto).
+
+Cada cara lleva un borde de 1px del mismo hue a L-0.16
+(`NoteColorPalette.Rims`, aplicado vía `NoteRimConverter`). Es la única
+forma de dar volumen aquí: sin `AllowsTransparency` todo píxel dentro de la
+región es opaco y no cabe ninguna sombra.
+
+**No se migran las notas existentes.** Las guardadas con los hex viejos
+siguen con su color: reasignarlo sería cambiar datos del usuario sin
+pedírselo. `RimFor` les calcula el borde oscureciendo el color
+proporcionalmente, así que no se ven planas al lado de las nuevas.
+
+### Pendiente
+
+Tests: 107/107. Build limpio. Estado de reposo verificado a nivel de píxel.
+**Falta la verificación manual del usuario** — nada de esto prueba cómo se
+siente la transición, que es justo la queja original. Checklist en la
+sección de abajo.
+
 ## Cómo seguir desde aquí
 
-Rama `worktree-fanote-fan-tabs-redesign` (commit `af6b569`) tiene el
-comportamiento de geometría/hover ya arreglado y verificado, pero
-**todavía usa el diseño de pestaña original** (ancho completo, columna
-alineada) — el rediseño visual validado en la maqueta de arriba
-(ancho creciente por índice, escalonado, fondo ceñido) aún no se ha
-tocado en el XAML/código real. Antes de fusionar esta rama a `master`,
-falta:
+Rama `dock-motion-shape` (sobre `worktree-fanote-fan-tabs-redesign`) tiene
+el rediseño de movimiento y forma del dock implementado y verificado por
+geometría, **pendiente de verificación manual**. Checklist antes de dar
+esto por bueno y fusionar:
 
-1. Implementar en código el diseño de pestañas validado arriba (maqueta
-   ya aprobada, solo falta llevarlo a `EdgeDockWindow.xaml`/`.xaml.cs`).
-2. Decidir y ejecutar (sesión de diseño propia) si se persigue el fondo
-   completamente recortado vía `SetWindowRgn`, o se deja el fondo ceñido
-   como diseño final.
+1. En reposo se ven N tiras de color separadas, una por nota, sin ninguna
+   franja gris al final de la columna.
+2. Al pasar el ratón, las pestañas salen escalonadas desde el borde (no
+   todas de golpe, no una caja vacía creciendo antes de que aparezca
+   nada), y la última asienta en ~350ms como mucho.
+3. Al salir el ratón, el abanico se cierra en orden inverso (primero la
+   más larga).
+4. Entrar y salir rápido varias veces seguidas no deja el dock a medio
+   abrir ni acumula animaciones.
+5. La etiqueta vertical de cada pestaña se lee, y no asoma en reposo.
+6. Con más de 4 notas: hay scroll con la rueda, y ninguna pestaña
+   scrolleada fuera de la vista deja un agujero de fondo suelto (este era
+   el bug encontrado; conviene reconfirmarlo a ojo).
+7. Los botones "+" y engranaje aparecen con la última pestaña y se pueden
+   pulsar.
+8. Clic en una pestaña sigue abriendo la nota creciendo desde su posición.
+9. Nada de esto se rompe en el segundo monitor (el vertical).
+
+Si algo de esto falla, el sitio es `EdgeDockWindow.ApplyRegion` (forma por
+frame) o `TabRegionShape` (curva y escalonado, ambos con tests).
 
 Después de eso, sigue abierto elegir entre, para lo siguiente:
 
