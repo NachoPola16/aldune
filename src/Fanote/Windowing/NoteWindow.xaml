@@ -103,26 +103,20 @@
             </TextBlock>
 
             <!-- El troquelado, en el mismo sitio que en la pestaña del dock: el pliegue por donde
-                 el lomo se une al cuerpo. Foreground/BorderBrush se fijan en ApplyColor. -->
-            <Border x:Name="Perforation"
-                    Width="1"
-                    HorizontalAlignment="Right"
-                    Margin="0,14,0,14"
-                    BorderThickness="1,0,0,0"
-                    Opacity="0.45"
-                    SnapsToDevicePixels="True">
-                <Border.OpacityMask>
-                    <DrawingBrush TileMode="Tile" Viewport="0,0,1,6" ViewportUnits="Absolute" Stretch="None">
-                        <DrawingBrush.Drawing>
-                            <GeometryDrawing Brush="Black">
-                                <GeometryDrawing.Geometry>
-                                    <RectangleGeometry Rect="0,0,1,3" />
-                                </GeometryDrawing.Geometry>
-                            </GeometryDrawing>
-                        </DrawingBrush.Drawing>
-                    </DrawingBrush>
-                </Border.OpacityMask>
-            </Border>
+                 el lomo se une al cuerpo. Stroke se fija en ApplyColor. -->
+            <Path x:Name="Perforation"
+                  StrokeThickness="1"
+                  StrokeDashArray="3 3"
+                  Stretch="Fill"
+                  Width="1"
+                  Opacity="0.7"
+                  HorizontalAlignment="Right"
+                  Margin="0,14,0,14"
+                  SnapsToDevicePixels="True">
+                <Path.Data>
+                    <LineGeometry StartPoint="0,0" EndPoint="0,1" />
+                </Path.Data>
+            </Path>
         </Grid>
 
         <Grid Grid.Column="1">

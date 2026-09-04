@@ -150,8 +150,9 @@ public partial class NoteWindow : Window
 
         // El lomo comparte el fondo de la nota (es la misma ficha), y su etiqueta y su troquelado
         // van en el tono oscuro del propio hue — igual que la pestaña del dock de la que viene.
-        SpineLabel.Foreground = rim;
-        Perforation.BorderBrush = rim;
+        SpineLabel.Foreground = (Brush)new BrushConverter().ConvertFromString(
+            NoteColorPalette.LabelFor(color))!;
+        Perforation.Stroke = rim;
     }
 
     private void PopulateColorSwatches()

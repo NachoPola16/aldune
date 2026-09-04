@@ -65,7 +65,7 @@ autoridad de diseño; todo lo demás (planes, código) se argumenta contra él.
   (ver historial más abajo) y, a raíz de probarlo, también se hizo que el
   tamaño del pill/panel se ajuste al número de notas en vez de ser fijo.
 
-Tests: 107/107 pasando (`dotnet test` desde la raíz del repo).
+Tests: 112/112 pasando (`dotnet test` desde la raíz del repo).
 
 ## Cómo se ha trabajado (para mantener el mismo estilo)
 
@@ -690,33 +690,150 @@ Tests: 107/107. Build limpio. Estado de reposo verificado a nivel de píxel.
 siente la transición, que es justo la queja original. Checklist en la
 sección de abajo.
 
+## La pestaña como lomo de la nota (sesión 2026-09-04, segunda ronda)
+
+Misma rama `dock-motion-shape`. Partió de que el usuario compartió un **vídeo
+de pantalla de Hold My Notes** (no solo la landing) y preguntó tres cosas:
+escalera o ancho uniforme, cómo debía abrirse la nota, y si con sombra.
+
+### Lo que el vídeo enseña y la landing no
+
+Se analizó extrayendo frames con `ffmpeg` (contact sheet + recortes del borde
+derecho a 60fps). Tres hallazgos que contradicen la maqueta promocional:
+
+1. **Las pestañas son todas del mismo ancho.** La escalera de anchos
+   crecientes es de la landing, no de la app.
+2. Cada pestaña lleva una **línea de troquelado punteada** cerca de su borde
+   derecho, y la etiqueta va en **un tono oscuro de su propio hue** (no en
+   negro), en mayúsculas y con tracking.
+3. **Al abrir, la pestaña no desaparece: se convierte en el lomo de la nota**,
+   y el conjunto se desliza a la izquierda saliéndose del mazo. El troquelado
+   es el pliegue por donde el lomo se une al cuerpo.
+
+De ahí sale el modelo mental que ahora documenta `EdgeGeometry`: **cada
+pestaña ES su nota, con casi todo el cuerpo fuera de pantalla**. Y eso fuerza
+el ancho uniforme — con una escalera, cada nota se abriría con un lomo de
+grosor distinto.
+
+### Decisiones del usuario
+
+- Ancho: **uniforme**.
+- Apertura: **deslizar con el lomo por delante**.
+- Reposo: **pill fino tipo HMN** (24px por nota en vez de 80).
+- Sombra: delegada. **Se decidió no activar `AllowsTransparency`.** Y se
+  corrigió una premisa mal planteada en la propia pregunta: `NoteWindow` ya
+  tiene sombra nativa real vía `GlassFrameThickness="-1"` sobre una ventana
+  opaca, sin coste de ClearType. Lo único que no puede tener sombra es el
+  dock, porque DWM la dibuja sobre el RECT completo y chocaría con la región.
+  El reparto correcto es: la nota, que se levanta del mazo, lleva sombra; el
+  mazo va a ras del canto y no la necesita.
+
+### Cambios
+
+- `EdgeGeometry.TabWidth` pasa a constante (104). `SpineWidth = TabWidth -
+  PerforationInset` (88), y `RestSliverWidth == PerforationInset` para que en
+  reposo el borde izquierdo del guión **sea** exactamente el troquelado.
+- Reposo: `RestDashLength` 24 con paso 30, frente a los 80/88 del desplegado.
+  Para 4 notas son ~114px contra 344. Las pestañas llegan a su hueco de reposo
+  con un `RenderTransform` por pestaña (`RestOffsetFor`), **nunca por layout**,
+  así que la garantía de ventana fija sigue en pie.
+- `NoteWindow` gana una columna de lomo (color de la nota, misma etiqueta, mismo
+  troquelado) y se abre animando **solo `Left`**, con ease-out quíntica. Alto,
+  ancho y Top son definitivos desde el primer frame, así que su contenido
+  tampoco se mide nunca a un tamaño intermedio. Sustituye a `AnimateFrom`, que
+  animaba las cuatro propiedades y hacía "crecer" la nota desde un rect
+  diminuto.
+- La ventana pasa de 260 a 348 de ancho, para que el cuerpo conserve sus 260
+  con el lomo de 88 delante.
+- `AppCoordinator.IsNoteOpen` permite al dock ocultar la pestaña cuya nota está
+  abierta (`Hidden`, no `Collapsed`, para que el mazo conserve el hueco vacío
+  de donde se sacó la ficha). Sin esto la misma etiqueta saldría dos veces.
+  `EdgeDockWindow.RefreshOpenState` hace solo eso, sin reconstruir la lista:
+  pasar por `SetNotes` reiniciaría la animación de entrada para nada.
+- `PositionNoteWindow` alinea la nota con la altura de **su propia pestaña**,
+  que es de donde el usuario acaba de tirar. La cascada queda solo en
+  horizontal.
+
+### Verificación, y dos bugs que encontró
+
+Tests: 112/112. Build limpio.
+
+1. **Sondeando la región de la app real con 5 notas**: `RestStripLength`
+   heredaba el tope de `MaxContentLength` (4 pestañas), pero ese tope existe
+   porque el abanico desplegado hace scroll y **la tira de reposo no**. El
+   quinto guión se dibujaba pero caía fuera de la zona sensible al ratón — se
+   veía y no se podía pulsar. Arreglado; `RestStripStart` además se acota a 0
+   para que una tira que desborde pierda las últimas notas y no las primeras.
+2. **Rasterizando la plantilla de pestaña en aislamiento** (script WPF en
+   PowerShell con `RenderTargetBitmap`, sin lanzar la app ni capturar
+   pantalla): la etiqueta iba en el color del filete, que da **1.74:1** contra
+   su cara. Diseñado para una línea de 1px, ilegible para texto de 11px en
+   mayúsculas. Se añadió una escala aparte, `NoteColorPalette.Labels` (mismo
+   hue a L-0.44, 5.3-5.6:1), con su `NoteLabelColorConverter`. El mismo render
+   confirmó que el troquelado sale discontinuo de verdad: la primera versión
+   usaba una `OpacityMask` en mosaico con `Stretch="None"`, que era una
+   apuesta; se cambió a `Path` + `StrokeDashArray`, la receta estándar.
+
+**Técnica que conviene reutilizar**: rasterizar una plantilla WPF en
+aislamiento con `RenderTargetBitmap` desde PowerShell (`-STA`) verifica
+render sin lanzar la app y sin capturar nada de la pantalla del usuario — no
+tiene el problema de privacidad de la sesión 2026-09-03, y encontró dos cosas
+que sondear la región no podía encontrar.
+
+### `FANOTE_MONITOR_INDEX`
+
+Variable de entorno que restringe la app a un monitor (índice 0-based sobre el
+orden de `MonitorEnumerator`; valor inválido se ignora). Nació de una
+necesidad real — poder probar sin invadir la pantalla donde el usuario estaba
+jugando — y es la pieza mínima del punto 3 de "Prerrequisitos para la Fase 3".
+Cuando ese punto se aborde de verdad, debería pasar a `AppSettings`.
+
+### Petición pendiente del usuario, no implementada
+
+Que **el dock se esconda solo cuando hay una ventana a pantalla completa** en
+su monitor (surgió por el videojuego). No se hizo por quedar fuera del encargo
+de esa ronda. El sitio natural es el sondeo de 50ms de
+`EdgeDockWindow.PollHoverState`, comparando el rect de `GetForegroundWindow`
+con el del monitor.
+
 ## Cómo seguir desde aquí
 
-Rama `dock-motion-shape` (sobre `worktree-fanote-fan-tabs-redesign`) tiene
-el rediseño de movimiento y forma del dock implementado y verificado por
-geometría, **pendiente de verificación manual**. Checklist antes de dar
-esto por bueno y fusionar:
+Rama `dock-motion-shape` (sobre `worktree-fanote-fan-tabs-redesign`). Dos
+rondas hechas: primero el modelo de movimiento (ventana fija + región
+animada), después el de la pestaña como lomo de la nota. Verificado por
+geometría y por render aislado, **pendiente de verificación manual**.
 
-1. En reposo se ven N tiras de color separadas, una por nota, sin ninguna
-   franja gris al final de la columna.
-2. Al pasar el ratón, las pestañas salen escalonadas desde el borde (no
-   todas de golpe, no una caja vacía creciendo antes de que aparezca
-   nada), y la última asienta en ~350ms como mucho.
-3. Al salir el ratón, el abanico se cierra en orden inverso (primero la
-   más larga).
-4. Entrar y salir rápido varias veces seguidas no deja el dock a medio
-   abrir ni acumula animaciones.
-5. La etiqueta vertical de cada pestaña se lee, y no asoma en reposo.
-6. Con más de 4 notas: hay scroll con la rueda, y ninguna pestaña
-   scrolleada fuera de la vista deja un agujero de fondo suelto (este era
-   el bug encontrado; conviene reconfirmarlo a ojo).
-7. Los botones "+" y engranaje aparecen con la última pestaña y se pueden
-   pulsar.
-8. Clic en una pestaña sigue abriendo la nota creciendo desde su posición.
-9. Nada de esto se rompe en el segundo monitor (el vertical).
+Checklist antes de darlo por bueno y fusionar:
 
-Si algo de esto falla, el sitio es `EdgeDockWindow.ApplyRegion` (forma por
-frame) o `TabRegionShape` (curva y escalonado, ambos con tests).
+1. En reposo se ve una tira corta de guiones de color, uno por nota, centrada
+   en el borde. No debe haber ninguna franja gris ni banda muerta al final.
+2. Todos los guiones responden al ratón, **incluido el último** (este fue un
+   bug real: con 5 notas el quinto se veía y no se podía pulsar).
+3. Al pasar el ratón, cada guión crece hasta ser su pestaña, escalonado y
+   deslizándose hacia fuera. La última asienta en ~350ms como mucho.
+4. Al salir, se cierra en orden inverso (primero la de más abajo).
+5. Entrar y salir rápido varias veces no deja el dock a medio abrir.
+6. La etiqueta vertical se lee (mayúsculas con tracking, en el tono oscuro de
+   su propio color) y **no asoma en reposo**.
+7. Se ve la línea de troquelado punteada cerca del borde derecho de cada
+   pestaña.
+8. Al hacer clic, la nota **se desliza hacia la izquierda** llevando su lomo
+   por delante, alineada con la altura de su pestaña — y esa pestaña
+   desaparece del mazo dejando el hueco.
+9. El lomo de la nota abierta muestra la misma etiqueta y el mismo troquelado
+   que tenía la pestaña.
+10. Al cerrar la nota, su pestaña vuelve a su sitio.
+11. Con más de 4 notas: hay scroll con la rueda en el desplegado, y ninguna
+    pestaña fuera de vista deja un agujero de fondo suelto.
+12. Los botones "+" y engranaje aparecen con la última pestaña y se pulsan.
+13. Nada se rompe en el segundo monitor (lanzar sin `FANOTE_MONITOR_INDEX`).
+
+Si algo falla, el sitio es `EdgeDockWindow.ApplyRegion` (forma por frame),
+`TabRegionShape` (curva y escalonado, con tests) o `NoteWindow.SlideInFrom`.
+
+Lo que ninguna de las verificaciones automáticas cubre es **cómo se siente**:
+sobre todo si el deslizamiento se lee como "tirar de una ficha de un fichero"
+o solo como que la nota aparece por la derecha.
 
 Después de eso, sigue abierto elegir entre, para lo siguiente:
 

@@ -11,6 +11,7 @@
     <Window.Resources>
         <local:NoteTabLabelConverter x:Key="NoteTabLabelConverter" />
         <local:NoteRimConverter x:Key="NoteRimConverter" />
+        <local:NoteLabelColorConverter x:Key="NoteLabelColorConverter" />
 
         <!-- El único modo de dar volumen a una pestaña aquí. La spec v1 descarta
              AllowsTransparency (rompe ClearType), así que cada píxel dentro de la región es
@@ -48,7 +49,7 @@
                                  el negro sería el único valor de la pestaña sin relación de hue
                                  con ella. -->
                             <TextBlock Text="{Binding Text, Converter={StaticResource NoteTabLabelConverter}}"
-                                       Foreground="{Binding Color, Converter={StaticResource NoteRimConverter}}"
+                                       Foreground="{Binding Color, Converter={StaticResource NoteLabelColorConverter}}"
                                        FontSize="11"
                                        FontWeight="SemiBold"
                                        TextTrimming="None"
@@ -64,29 +65,25 @@
                                  abrir la nota, todo lo que queda a la izquierda de esta línea
                                  viaja con ella (ver NoteWindow y EdgeGeometry.SpineWidth). Los
                                  16px a su derecha son el trocito de cuerpo que asoma, y son
-                                 exactamente lo que se ve del dock en reposo. -->
-                            <Border Width="1"
-                                    HorizontalAlignment="Right"
-                                    Margin="0,7,16,7"
-                                    BorderThickness="1,0,0,0"
-                                    Opacity="0.45"
-                                    BorderBrush="{Binding Color, Converter={StaticResource NoteRimConverter}}"
-                                    SnapsToDevicePixels="True">
-                                <Border.OpacityMask>
-                                    <DrawingBrush TileMode="Tile"
-                                                  Viewport="0,0,1,6"
-                                                  ViewportUnits="Absolute"
-                                                  Stretch="None">
-                                        <DrawingBrush.Drawing>
-                                            <GeometryDrawing Brush="Black">
-                                                <GeometryDrawing.Geometry>
-                                                    <RectangleGeometry Rect="0,0,1,3" />
-                                                </GeometryDrawing.Geometry>
-                                            </GeometryDrawing>
-                                        </DrawingBrush.Drawing>
-                                    </DrawingBrush>
-                                </Border.OpacityMask>
-                            </Border>
+                                 exactamente lo que se ve del dock en reposo.
+
+                                 Path + StrokeDashArray y no una OpacityMask en mosaico: es la
+                                 receta estandar de WPF para una regla discontinua de alto
+                                 variable. Stretch="Fill" sobre una LineGeometry degenerada estira
+                                 solo el eje que tiene longitud. -->
+                            <Path Stroke="{Binding Color, Converter={StaticResource NoteRimConverter}}"
+                                  StrokeThickness="1"
+                                  StrokeDashArray="3 3"
+                                  Stretch="Fill"
+                                  Width="1"
+                                  Opacity="0.7"
+                                  HorizontalAlignment="Right"
+                                  Margin="0,10,16,10"
+                                  SnapsToDevicePixels="True">
+                                <Path.Data>
+                                    <LineGeometry StartPoint="0,0" EndPoint="0,1" />
+                                </Path.Data>
+                            </Path>
 
                             <Border x:Name="HoverOverlay" Background="#1E1A14" Opacity="0" CornerRadius="10,0,0,10" />
                         </Grid>

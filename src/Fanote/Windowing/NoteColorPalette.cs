@@ -36,6 +36,26 @@ internal static class NoteColorPalette
         "#FFC5AF", // amber   oklch(0.87 0.073 42)   croma tope de gamut
     };
 
+    /// <summary>
+    /// Color de la etiqueta del lomo, en el mismo orden que <see cref="Colors"/>. Mismo hue a
+    /// L-0.44.
+    ///
+    /// Es una escala aparte de <see cref="Rims"/> y no un reaprovechamiento suyo: el borde se
+    /// diseñó como un filete de 1px y da 1.74:1 contra su cara, que para una línea está bien pero
+    /// para texto de 11px en mayúsculas es ilegible. Verificado rasterizando la plantilla de
+    /// pestaña en aislamiento antes de darla por buena. Estos tonos dan 5.3-5.6:1, por encima del
+    /// 4.5:1 que pide AA para texto normal (11px SemiBold no cuenta como texto grande).
+    /// </summary>
+    internal static readonly string[] Labels =
+    {
+        "#614E00", // citron
+        "#006123", // sage
+        "#005B63", // sky
+        "#3A4C83", // iris
+        "#743170", // rose
+        "#7D391D", // amber
+    };
+
     /// <summary>Borde de cada color, en el mismo orden que <see cref="Colors"/>.</summary>
     internal static readonly string[] Rims =
     {
@@ -62,6 +82,18 @@ internal static class NoteColorPalette
         int index = Array.IndexOf(Colors, color);
         if (index >= 0) return Rims[index];
         return Darken(color, 0.72) ?? color;
+    }
+
+    /// <summary>
+    /// El color de etiqueta que corresponde a una cara. Mismo trato que <see cref="RimFor"/> para
+    /// las notas heredadas, pero oscureciendo bastante más: aquí el resultado tiene que ser
+    /// legible como texto, no solo distinguirse como línea.
+    /// </summary>
+    internal static string LabelFor(string color)
+    {
+        int index = Array.IndexOf(Colors, color);
+        if (index >= 0) return Labels[index];
+        return Darken(color, 0.42) ?? Ink;
     }
 
     /// <summary>
