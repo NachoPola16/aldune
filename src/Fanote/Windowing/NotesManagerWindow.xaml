@@ -264,14 +264,6 @@
             </WrapPanel>
         </Border>
 
-        <CheckBox Grid.Row="1" x:Name="StartupCheck"
-                  Content="Abrir al iniciar sesión"
-                  Foreground="#A79E90" Background="#2A261F" FontSize="12"
-                  HorizontalAlignment="Right" VerticalAlignment="Center"
-                  Margin="0,0,20,0"
-                  Style="{StaticResource AppCheckBoxStyle}"
-                  Click="OnStartupToggled" />
-
         <!-- Casilla de tres estados y no un enlace de texto: es el patrón convencional para una
              lista con casillas, y sobre todo MUESTRA el estado. El enlace ya alternaba, pero no
              había forma de saber si estaba todo marcado o nada. Va alineada con las casillas de las

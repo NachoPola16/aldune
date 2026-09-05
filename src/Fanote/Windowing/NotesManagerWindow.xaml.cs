@@ -38,7 +38,6 @@ public partial class NotesManagerWindow : Window
         };
 
         FilterActive.IsChecked = true;
-        StartupCheck.IsChecked = StartupRegistration.IsEnabled();
         LoadRows();
     }
 
@@ -221,14 +220,6 @@ public partial class NotesManagerWindow : Window
 
     private void OnCloseClick(object sender, RoutedEventArgs e) => Close();
 
-    /// <summary>
-    /// La casilla refleja lo que de verdad quedó en el registro, no lo que se pidió: si una
-    /// directiva de grupo lo impide, marcarla igualmente sería mentir.
-    /// </summary>
-    private void OnStartupToggled(object sender, RoutedEventArgs e)
-    {
-        StartupCheck.IsChecked = StartupRegistration.SetEnabled(StartupCheck.IsChecked == true);
-    }
 
     private void OnSelectAllClick(object sender, RoutedEventArgs e)
     {

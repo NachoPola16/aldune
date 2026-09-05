@@ -18,6 +18,11 @@ public sealed class AppCoordinator
     private readonly Dictionary<Guid, NoteWindow> _openNoteWindows = new();
     private readonly List<EdgeDockWindow> _docks = new();
     private NotesManagerWindow? _notesManagerWindow;
+    private SettingsWindow? _settingsWindow;
+
+    /// <summary>Fabrica de la ventana de ajustes, inyectada por App: el coordinador no tiene por
+    /// que saber de SettingsService ni del atajo global, solo de que hay una ventana unica.</summary>
+    public Func<SettingsWindow>? SettingsWindowFactory { get; set; }
 
     public AppCoordinator(NotesRepository repository)
     {
@@ -138,6 +143,43 @@ public sealed class AppCoordinator
     {
         if (_docks.Count == 0) return;
         OpenOrActivateNotesManager(_docks[0]);
+    }
+
+    /// <summary>
+    /// Crea una nota y la abre. Es el camino del atajo global y del menu de la bandeja: los dos
+    /// sitios donde se pide una nota sin haber pulsado el "+" de ningun dock concreto.
+    /// </summary>
+    public void CreateAndOpenNote()
+    {
+        if (_docks.Count == 0) return;
+
+        var existing = _repository.GetByState(NoteState.Active).Count;
+        var color = NoteColorPalette.Colors[existing % NoteColorPalette.Colors.Length];
+        var note = _repository.Create(string.Empty, color, screenOrigin: "primary");
+
+        RefreshAll();
+
+        // Se abre para escribir directamente: crear una nota y tener que buscarla luego en el
+        // abanico no ahorra nada frente a no tener atajo.
+        OpenOrActivateNote(note, _docks[0]);
+    }
+
+    public void OpenSettings()
+    {
+        if (_settingsWindow is not null)
+        {
+            _settingsWindow.Activate();
+            NativeMethods.ForceActivate(_settingsWindow);
+            return;
+        }
+
+        if (SettingsWindowFactory is null) return;
+
+        _settingsWindow = SettingsWindowFactory();
+        if (_docks.Count > 0) _docks[0].CenterOnThisMonitor(_settingsWindow);
+        _settingsWindow.Closed += (_, _) => _settingsWindow = null;
+        _settingsWindow.Show();
+        NativeMethods.ForceActivate(_settingsWindow);
     }
 
     public void RefreshAll()

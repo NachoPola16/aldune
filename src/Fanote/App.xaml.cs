@@ -43,10 +43,13 @@ public partial class App : Application
         }
 
         NotesRepository repository;
+        // Fuera del try: los ajustes se siguen usando despues del arranque (la ventana de Ajustes
+        // los guarda), asi que no pueden quedarse dentro de este ambito.
+        var settingsService = new SettingsService(settingsPath);
+        AppSettings settings;
         try
         {
-            var settingsService = new SettingsService(settingsPath);
-            var settings = settingsService.Load();
+            settings = settingsService.Load();
 
             byte[] rawKey;
             if (settings.WrappedDatabaseKey is null)
@@ -171,12 +174,22 @@ public partial class App : Application
         // Icono de bandeja: hasta ahora la app no tenia forma de cerrarse ni de configurarse — se
         // lanzaba a mano y se cerraba matando el proceso. Un dock sin ventana propia necesita
         // algun sitio donde vivir, y la bandeja es el sitio convenido en Windows para eso.
-        _trayIcon = new TrayIcon(repository, coordinator);
+        // Atajo global. Se enciende segun lo guardado, y si falla (otra app ya tiene la
+        // combinacion) se refleja en los ajustes en vez de fallar en silencio.
+        _hotkey = new GlobalHotkey(coordinator.CreateAndOpenNote);
+        if (settings.GlobalHotkeyEnabled) _hotkey.Enable();
+
+        var hotkey = _hotkey;
+        var loadedSettings = settings;
+        coordinator.SettingsWindowFactory = () => new SettingsWindow(settingsService, loadedSettings, hotkey);
+
+        _trayIcon = new TrayIcon(coordinator);
 
         Exit += (_, _) =>
         {
             SystemEvents.DisplaySettingsChanged -= OnDisplaySettingsChanged;
             _trayIcon?.Dispose();
+            _hotkey?.Dispose();
         };
     }
 
@@ -212,6 +225,7 @@ public partial class App : Application
     
     private AppCoordinator? _coordinator;
     private TrayIcon? _trayIcon;
+    private GlobalHotkey? _hotkey;
     private NotesRepository? _repository;
     private DispatcherTimer? _rebuildDebounce;
 

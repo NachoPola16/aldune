@@ -1,0 +1,104 @@
+<Window x:Class="Fanote.Windowing.SettingsWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:local="clr-namespace:Fanote.Windowing"
+        Title="Ajustes de Fanote"
+        Width="420" SizeToContent="Height"
+        WindowStyle="None"
+        AllowsTransparency="False"
+        ResizeMode="NoResize"
+        Background="#2A261F"
+        Topmost="True">
+    <WindowChrome.WindowChrome>
+        <WindowChrome CaptionHeight="34" ResizeBorderThickness="0" GlassFrameThickness="-1" CornerRadius="0" />
+    </WindowChrome.WindowChrome>
+    <Window.Resources>
+        <!-- Misma casilla que el gestor: hereda Foreground, asi que una sola plantilla vale para
+             fondo oscuro y para filas de color. -->
+        <Style x:Key="AppCheckBoxStyle" TargetType="CheckBox">
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="CheckBox">
+                        <StackPanel Orientation="Horizontal" Background="Transparent">
+                            <Border x:Name="Box" Width="17" Height="17" CornerRadius="4"
+                                    BorderBrush="{TemplateBinding Foreground}"
+                                    BorderThickness="1.5"
+                                    Background="Transparent"
+                                    VerticalAlignment="Center">
+                                <TextBlock x:Name="Tick" Text="&#x2713;" FontSize="12" FontWeight="Bold"
+                                           Foreground="{TemplateBinding Background}"
+                                           HorizontalAlignment="Center" VerticalAlignment="Center"
+                                           Visibility="Collapsed" />
+                            </Border>
+                            <ContentPresenter Margin="10,0,0,0" VerticalAlignment="Center" />
+                        </StackPanel>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsChecked" Value="True">
+                                <Setter TargetName="Box" Property="Background" Value="{Binding Foreground, RelativeSource={RelativeSource TemplatedParent}}" />
+                                <Setter TargetName="Tick" Property="Visibility" Value="Visible" />
+                            </Trigger>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Box" Property="BorderThickness" Value="2" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style x:Key="CloseButtonStyle" TargetType="Button">
+            <Setter Property="Foreground" Value="#EDE7DC" />
+            <Setter Property="FontSize" Value="13" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="Bg" Background="Transparent" CornerRadius="6">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Bg" Property="Background" Value="#4E4840" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+    </Window.Resources>
+
+    <StackPanel Margin="0,0,0,20">
+        <!-- CaptionHeight cubre esta franja, asi que la ventana se arrastra desde aqui. -->
+        <Grid Margin="24,18,14,0">
+            <TextBlock Text="Ajustes" Foreground="#F5F0E6" FontSize="17" FontWeight="SemiBold" />
+            <Button Content="&#x2715;" Width="28" Height="28"
+                    HorizontalAlignment="Right" VerticalAlignment="Top"
+                    Click="OnCloseClick"
+                    WindowChrome.IsHitTestVisibleInChrome="True"
+                    Style="{StaticResource CloseButtonStyle}" />
+        </Grid>
+
+        <!-- Cada ajuste con su explicacion debajo: son dos cosas que el usuario no puede deducir
+             mirandolas, y una casilla suelta con tres palabras no las cuenta. -->
+        <StackPanel Margin="24,22,24,0">
+            <CheckBox x:Name="StartupCheck"
+                      Content="Abrir Fanote al iniciar sesión"
+                      Foreground="#EDE7DC" Background="#2A261F" FontSize="13"
+                      Style="{StaticResource AppCheckBoxStyle}"
+                      Click="OnStartupToggled" />
+            <TextBlock Text="También puedes quitarlo desde Administrador de tareas, en la pestaña Inicio."
+                       Foreground="#8A8175" FontSize="11" TextWrapping="Wrap" Margin="27,6,0,0" />
+        </StackPanel>
+
+        <Border Background="#3C3730" Height="1" Margin="24,20,24,0" />
+
+        <StackPanel Margin="24,20,24,0">
+            <CheckBox x:Name="HotkeyCheck"
+                      Foreground="#EDE7DC" Background="#2A261F" FontSize="13"
+                      Style="{StaticResource AppCheckBoxStyle}"
+                      Click="OnHotkeyToggled" />
+            <TextBlock x:Name="HotkeyHint"
+                       Foreground="#8A8175" FontSize="11" TextWrapping="Wrap" Margin="27,6,0,0" />
+        </StackPanel>
+    </StackPanel>
+</Window>

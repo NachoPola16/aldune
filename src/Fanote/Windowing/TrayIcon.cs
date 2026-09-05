@@ -1,7 +1,6 @@
 using System.Drawing;
 using System.Windows;
 using System.Windows.Forms;
-using Fanote.Core;
 
 namespace Fanote.Windowing;
 
@@ -19,26 +18,11 @@ namespace Fanote.Windowing;
 internal sealed class TrayIcon : IDisposable
 {
     private readonly NotifyIcon _icon;
-    private readonly ToolStripMenuItem _startupItem;
-    private readonly NotesRepository _repository;
     private readonly AppCoordinator _coordinator;
 
-    internal TrayIcon(NotesRepository repository, AppCoordinator coordinator)
+    internal TrayIcon(AppCoordinator coordinator)
     {
-        _repository = repository;
         _coordinator = coordinator;
-
-        _startupItem = new ToolStripMenuItem("Abrir al iniciar sesión")
-        {
-            CheckOnClick = false, // se marca desde el estado real del registro, no del clic
-            Checked = StartupRegistration.IsEnabled()
-        };
-        _startupItem.Click += (_, _) =>
-        {
-            // Se refleja lo que de verdad quedó guardado, no lo que se pidió: si el registro está
-            // restringido por directiva, la marca no debe mentir.
-            _startupItem.Checked = StartupRegistration.SetEnabled(!_startupItem.Checked);
-        };
 
         var menu = new ContextMenuStrip
         {
@@ -53,10 +37,12 @@ internal sealed class TrayIcon : IDisposable
             BackColor = Ground,
             ForeColor = Ink
         };
-        menu.Items.Add(new ToolStripMenuItem("Nueva nota", null, (_, _) => CreateNote()));
+        menu.Items.Add(new ToolStripMenuItem("Nueva nota", null, (_, _) => _coordinator.CreateAndOpenNote()));
         menu.Items.Add(new ToolStripMenuItem("Gestionar notas…", null, (_, _) => _coordinator.OpenNotesManager()));
         menu.Items.Add(new ToolStripSeparator());
-        menu.Items.Add(_startupItem);
+        // "Ajustes…" en vez del interruptor de arranque suelto: ya son dos ajustes (arranque y
+        // atajo global) y van a ser mas, y un menu contextual no es sitio para configurar nada.
+        menu.Items.Add(new ToolStripMenuItem("Ajustes…", null, (_, _) => _coordinator.OpenSettings()));
         menu.Items.Add(new ToolStripSeparator());
         // Shutdown de WPF, no Application.Exit de WinForms: el bucle de mensajes lo lleva WPF, y
         // ademas "Application" seria ambiguo entre los dos espacios de nombres.
@@ -70,11 +56,6 @@ internal sealed class TrayIcon : IDisposable
             Visible = true,
             ContextMenuStrip = menu
         };
-
-        // Se relee el registro cada vez que se abre el menú, no solo al crearlo: el arranque
-        // automático también se puede quitar desde Administrador de tareas > Inicio, y sin esto el
-        // menú seguiría enseñándolo marcado.
-        menu.Opening += (_, _) => _startupItem.Checked = StartupRegistration.IsEnabled();
 
         // Doble clic al icono abre el gestor, que es la única ventana "de verdad" de la app.
         _icon.DoubleClick += (_, _) => _coordinator.OpenNotesManager();
@@ -110,14 +91,6 @@ internal sealed class TrayIcon : IDisposable
             if (extracted is not null) return extracted;
         }
         return SystemIcons.Application;
-    }
-
-    private void CreateNote()
-    {
-        var existing = _repository.GetByState(NoteState.Active).Count;
-        var color = NoteColorPalette.Colors[existing % NoteColorPalette.Colors.Length];
-        _repository.Create(string.Empty, color, screenOrigin: "primary");
-        _coordinator.RefreshAll();
     }
 
     public void Dispose()
