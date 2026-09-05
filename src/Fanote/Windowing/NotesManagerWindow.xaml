@@ -172,23 +172,15 @@
             <RowDefinition Height="*" />
             <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
+        <!-- La casilla comparte fila con la lista y se ancla arriba; la lista lleva el margen
+             superior que la deja pasar. Asi la casilla no roba una fila entera de alto. -->
 
         <!-- Cabecera. CaptionHeight cubre esta franja, así que la ventana se arrastra desde aquí. -->
         <Grid Grid.Row="0" Margin="20,18,14,0">
             <StackPanel>
                 <TextBlock Text="Gestionar notas" Foreground="#F5F0E6"
                            FontSize="17" FontWeight="SemiBold" />
-                <StackPanel Orientation="Horizontal" Margin="0,3,0,0">
-                    <TextBlock x:Name="SubtitleText" Foreground="#A79E90" FontSize="12"
-                               VerticalAlignment="Center" />
-                    <!-- Aquí y no en la barra de abajo: no es una acción sobre la selección, es una
-                         forma de hacerla. Sacarla de allí además deja sitio para que las tres
-                         acciones quepan en una sola línea, que era lo que las partía en dos. -->
-                    <Button x:Name="SelectAllButton" Content="Seleccionar todo"
-                            Click="OnSelectAllClick" Margin="10,0,0,0" Padding="0"
-                            VerticalAlignment="Center"
-                            Style="{StaticResource LinkButtonStyle}" />
-                </StackPanel>
+                <TextBlock x:Name="SubtitleText" Foreground="#A79E90" FontSize="12" Margin="0,3,0,0" />
             </StackPanel>
             <Button x:Name="CloseButton"
                     Content="&#x2715;"
@@ -216,7 +208,18 @@
             </WrapPanel>
         </Border>
 
-        <Grid Grid.Row="2" Margin="20,14,12,0">
+        <!-- Casilla de tres estados y no un enlace de texto: es el patrón convencional para una
+             lista con casillas, y sobre todo MUESTRA el estado. El enlace ya alternaba, pero no
+             había forma de saber si estaba todo marcado o nada. Va alineada con las casillas de las
+             filas, que es donde el ojo la busca. -->
+        <CheckBox Grid.Row="2" x:Name="SelectAllCheck"
+                  Content="Seleccionar todo"
+                  Foreground="#A79E90" FontSize="12"
+                  IsThreeState="True"
+                  Click="OnSelectAllClick"
+                  Margin="32,12,20,0" VerticalAlignment="Top" />
+
+        <Grid Grid.Row="2" Margin="20,38,12,0">
             <ScrollViewer x:Name="RowsScroll" VerticalScrollBarVisibility="Auto"
                           HorizontalScrollBarVisibility="Disabled" Padding="0,0,8,0">
                 <ItemsControl x:Name="RowsList">
@@ -289,6 +292,15 @@
              pulsarse (pasó exactamente eso una vez). WrapPanel baja el sobrante a otra línea. -->
         <Border Grid.Row="3" Background="#25211B" Padding="20,12">
             <DockPanel>
+                <!-- El arranque automático también aquí, no solo en el clic derecho de la bandeja:
+                     un ajuste escondido en un menú contextual es un ajuste que nadie encuentra, y
+                     esta es la única ventana de verdad que tiene la app. -->
+                <CheckBox x:Name="StartupCheck" DockPanel.Dock="Left"
+                          Content="Abrir al iniciar sesión"
+                          Foreground="#A79E90" FontSize="12"
+                          VerticalAlignment="Center"
+                          Click="OnStartupToggled" />
+
                 <!-- Margin vertical en los elementos: si el WrapPanel llega a partirse a un ancho
                      muy estrecho, las dos líneas se tocaban y los botones parecían solaparse. -->
                 <WrapPanel HorizontalAlignment="Right">

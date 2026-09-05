@@ -38,6 +38,7 @@ public partial class NotesManagerWindow : Window
         };
 
         FilterAll.IsChecked = true;
+        StartupCheck.IsChecked = StartupRegistration.IsEnabled();
         LoadRows();
     }
 
@@ -88,7 +89,14 @@ public partial class NotesManagerWindow : Window
         ArchiveButton.IsEnabled = any;
         RestoreButton.IsEnabled = any;
         TrashButton.IsEnabled = any;
-        SelectAllButton.IsEnabled = _rows.Count > 0;
+
+        SelectAllCheck.IsEnabled = _rows.Count > 0;
+        // Indeterminada cuando hay algo pero no todo: es justo lo que una casilla de tres estados
+        // existe para decir. Se fija aquí y no en el clic porque también cambia al marcar filas
+        // sueltas o al cambiar de filtro.
+        SelectAllCheck.IsChecked = _rows.Count > 0 && _rows.All(r => r.IsSelected) ? true
+            : _rows.Any(r => r.IsSelected) ? null
+            : false;
 
         SubtitleText.Text = selected switch
         {
@@ -214,10 +222,23 @@ public partial class NotesManagerWindow : Window
 
     private void OnCloseClick(object sender, RoutedEventArgs e) => Close();
 
+    /// <summary>
+    /// La casilla refleja lo que de verdad quedó en el registro, no lo que se pidió: si una
+    /// directiva de grupo lo impide, marcarla igualmente sería mentir.
+    /// </summary>
+    private void OnStartupToggled(object sender, RoutedEventArgs e)
+    {
+        StartupCheck.IsChecked = StartupRegistration.SetEnabled(StartupCheck.IsChecked == true);
+    }
+
     private void OnSelectAllClick(object sender, RoutedEventArgs e)
     {
+        // Se decide por el estado de las filas, no por el de la casilla: una casilla de tres
+        // estados cicla sola al pulsarla (marcada -> indeterminada -> vacía) y eso daría un tercer
+        // clic que no hace nada. Aquí siempre alterna entre todo y nada.
         bool allSelected = _rows.Count > 0 && _rows.All(r => r.IsSelected);
         foreach (var row in _rows) row.IsSelected = !allSelected;
+        UpdateSelectionState();
     }
 
     private void OnArchiveSelectedClick(object sender, RoutedEventArgs e)

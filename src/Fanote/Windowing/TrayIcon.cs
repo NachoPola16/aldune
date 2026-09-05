@@ -45,7 +45,11 @@ internal sealed class TrayIcon : IDisposable
             // El renderer por defecto de WinForms es gris claro y con bordes de otra epoca. Con
             // uno propio el menu usa los mismos tonos que el dock y el gestor.
             Renderer = new ToolStripProfessionalRenderer(new DarkMenuColors()),
-            ShowImageMargin = false,
+            // ShowImageMargin TIENE que quedarse en true: en WinForms la marca de verificación se
+            // dibuja precisamente en ese margen, así que apagarlo (que era lo que había, por
+            // estética) dejaba "Abrir al iniciar sesión" funcionando a ciegas — se activaba de
+            // verdad, pero sin nada que lo dijera.
+            ShowImageMargin = true,
             BackColor = Ground,
             ForeColor = Ink
         };
@@ -66,6 +70,11 @@ internal sealed class TrayIcon : IDisposable
             Visible = true,
             ContextMenuStrip = menu
         };
+
+        // Se relee el registro cada vez que se abre el menú, no solo al crearlo: el arranque
+        // automático también se puede quitar desde Administrador de tareas > Inicio, y sin esto el
+        // menú seguiría enseñándolo marcado.
+        menu.Opening += (_, _) => _startupItem.Checked = StartupRegistration.IsEnabled();
 
         // Doble clic al icono abre el gestor, que es la única ventana "de verdad" de la app.
         _icon.DoubleClick += (_, _) => _coordinator.OpenNotesManager();
