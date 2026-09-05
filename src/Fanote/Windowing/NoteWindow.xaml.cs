@@ -3,6 +3,7 @@ using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Interop;
 using System.Windows.Media;
+using System.Windows.Media.Animation;
 using System.Windows.Threading;
 using Fanote.Core;
 using Fanote.Interop;
@@ -68,6 +69,10 @@ public partial class NoteWindow : Window
             _autosaveTimer.Start();
         };
 
+        // Antes del handler de abajo: si este cancela, el guardado del otro corre igual en la
+        // segunda pasada, y Flush es idempotente.
+        Closing += OnClosingWithAnimation;
+
         Closing += (_, _) =>
         {
             Flush();
@@ -81,16 +86,23 @@ public partial class NoteWindow : Window
         };
     }
 
+    private static readonly TimeSpan SlideDuration = TimeSpan.FromMilliseconds(260);
+
+    private bool _closingAnimationDone;
+
     /// <summary>
-    /// La nota sale del mazo deslizándose hacia la izquierda, con su lomo por delante — como
+    /// La nota sale del mazo deslizándose hacia la izquierda, con su cabecera por delante — como
     /// tirar de una ficha en un fichero. <paramref name="startLeft"/> lo calcula
-    /// <see cref="EdgeDockWindow.PositionNoteWindow"/>, ya acotado al monitor de este dock.
+    /// <see cref="EdgeDockWindow.PositionNoteWindow"/>, ya acotado al monitor de ese dock.
     ///
-    /// Solo se anima <c>Left</c>. El alto, el ancho y el Top ya son los definitivos desde el
-    /// primer frame, así que el contenido nunca se mide a un tamaño intermedio (misma razón por
-    /// la que el dock dejó de redimensionar su ventana, ver EdgeDockWindow). Antes se animaban
-    /// las cuatro propiedades a la vez y la nota "crecía" desde un rect diminuto, que es una
-    /// aparición genérica: esto es un movimiento con dirección y con causa.
+    /// Se anima <c>Left</c> y, a la vez, el contenido se desliza un poco <b>más</b> y aparece: sin
+    /// eso la ventana entraba a plena opacidad de golpe y solo el rectángulo se movía, que se lee
+    /// como una ventana que salta, no como algo que se saca de un sitio. Los dos desplazamientos a
+    /// distinta velocidad dan la sensación de que la cabecera tira del cuerpo.
+    ///
+    /// El alto, el ancho y el Top son definitivos desde el primer frame, así que el contenido nunca
+    /// se mide a un tamaño intermedio — misma razón por la que el dock dejó de redimensionar su
+    /// ventana (ver EdgeDockWindow).
     /// </summary>
     internal void SlideInFrom(double startLeft)
     {
@@ -101,29 +113,58 @@ public partial class NoteWindow : Window
 
         Left = startLeft;
 
-        var duration = new Duration(TimeSpan.FromMilliseconds(320));
-        var animation = new System.Windows.Media.Animation.DoubleAnimation(startLeft, targetLeft, duration)
-        {
-            // Quíntica, no cuadrática: las curvas de salida suaves (quart/quint/expo) son lo que
-            // se lee como "viene a pararse". La QuadraticEase anterior era la más débil posible y
-            // apenas se distinguía de un desplazamiento lineal.
-            EasingFunction = new System.Windows.Media.Animation.QuinticEase
-            {
-                EasingMode = System.Windows.Media.Animation.EasingMode.EaseOut
-            }
-        };
+        var duration = new Duration(SlideDuration);
+        // Quíntica: las curvas de salida suaves (quart/quint/expo) son lo que se lee como "viene a
+        // pararse". La QuadraticEase original era la más débil posible y apenas se distinguía de un
+        // desplazamiento lineal.
+        IEasingFunction Ease() => new QuinticEase { EasingMode = EasingMode.EaseOut };
 
-        // FillBehavior.HoldEnd (el valor por defecto) dejaría esta animación enganchada a Left
-        // para siempre, por encima de cualquier asignación posterior — y esta ventana sí se puede
-        // arrastrar (ver WindowChrome en el XAML), así que arrastrarla justo después de abrirla
-        // pelearía contra un reloj de animación todavía activo.
-        animation.Completed += (_, _) =>
+        var slide = new DoubleAnimation(startLeft, targetLeft, duration) { EasingFunction = Ease() };
+
+        // FillBehavior.HoldEnd dejaría esta animación enganchada a Left para siempre, por encima de
+        // cualquier asignación posterior — y esta ventana se puede arrastrar (ver WindowChrome),
+        // así que moverla justo después de abrirla pelearía contra un reloj todavía activo.
+        slide.Completed += (_, _) =>
         {
             BeginAnimation(LeftProperty, null);
             Left = targetLeft;
         };
+        BeginAnimation(LeftProperty, slide);
 
-        BeginAnimation(LeftProperty, animation);
+        // El contenido llega con un poco de retraso respecto al marco. No se anima Window.Opacity:
+        // WPF la implementa con una ventana por capas, que es justo lo que esta ventana evita para
+        // conservar ClearType en el texto que escribes.
+        var content = (UIElement)Content;
+        var lag = new TranslateTransform();
+        content.RenderTransform = lag;
+        content.BeginAnimation(OpacityProperty, new DoubleAnimation(0.4, 1, new Duration(SlideDuration)));
+        lag.BeginAnimation(TranslateTransform.XProperty,
+            new DoubleAnimation(26, 0, duration) { EasingFunction = Ease() });
+    }
+
+    /// <summary>
+    /// Al cerrar, la nota vuelve al mazo por donde salió en vez de desaparecer de golpe.
+    ///
+    /// Cerrar hay que cancelarlo y repetirlo al terminar la animación, porque no existe forma de
+    /// aplazar un Close en WPF. <see cref="_closingAnimationDone"/> corta el bucle. Flush corre en
+    /// las dos pasadas y es idempotente (mira <c>_hasPendingEdit</c>), así que no guarda dos veces.
+    /// </summary>
+    private void OnClosingWithAnimation(object? sender, System.ComponentModel.CancelEventArgs e)
+    {
+        if (_closingAnimationDone || !SystemParameters.ClientAreaAnimation) return;
+
+        _closingAnimationDone = true;
+        e.Cancel = true;
+
+        var duration = new Duration(TimeSpan.FromMilliseconds(160));
+        var slide = new DoubleAnimation(Left, Left + 40, duration)
+        {
+            EasingFunction = new QuadraticEase { EasingMode = EasingMode.EaseIn }
+        };
+        slide.Completed += (_, _) => Close();
+
+        ((UIElement)Content).BeginAnimation(OpacityProperty, new DoubleAnimation(1, 0, duration));
+        BeginAnimation(LeftProperty, slide);
     }
 
     private void OnCloseClick(object sender, RoutedEventArgs e) => Close();

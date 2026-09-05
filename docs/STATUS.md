@@ -65,7 +65,7 @@ autoridad de diseño; todo lo demás (planes, código) se argumenta contra él.
   (ver historial más abajo) y, a raíz de probarlo, también se hizo que el
   tamaño del pill/panel se ajuste al número de notas en vez de ser fijo.
 
-Tests: 104/104 pasando (`dotnet test` desde la raíz del repo).
+Tests: 113/113 pasando (`dotnet test` desde la raíz del repo).
 
 ## Cómo se ha trabajado (para mantener el mismo estilo)
 
@@ -968,6 +968,50 @@ anima solo las pestanas nuevas, en vez de rehacer la entrada del abanico
 entero — que hacia que crear una nota pareciera un refresco y no una insercion.
 
 Tests: 104/104 (bajan de 130 porque desaparecieron los de region).
+
+### Septima ronda: recorte, apilado, gestor y ubicacion
+
+- **El titulo se cortaba** por aritmetica, no por tipografia. `WindowThickness`
+  reserva UN `ShadowMargin` (el lado derecho va a ras del canto y no aloja
+  sombra), pero el Grid raiz llevaba `Margin="18"` a los cuatro lados: 36px de
+  226 dejaban 190 para una pestana de 208, y al ir alineada a la derecha perdia
+  18px por la izquierda, justo donde vive el margen de la etiqueta. Margen
+  asimetrico; verificado en la app: 226-18 = 208 clavados.
+- **El mismo bug desplazaba el footer**: al alinearse a la derecha se paraba
+  18px antes que las pestanas, y por eso los botones se veian corridos a la
+  izquierda respecto al abanico.
+- **Las pestanas solapadas se leian como un bloque macizo** porque la sombra
+  apuntaba hacia abajo: se apilan hacia abajo y cada una tapa a la anterior, asi
+  que la sombra caia justo donde la siguiente la ocultaba. Proyectada hacia
+  arriba (`Direction=95`), cada una deja un canto oscuro sobre la de encima, que
+  es como se ve un mazo escalonado. Elegido renderizando tres variantes juntas;
+  la del canto claro parecia bisel. Los botones conservan sombra descendente,
+  que no se apilan.
+- **"Gestionar notas" salia siempre en el monitor principal**: no fijaba
+  posicion y Windows la ponia en (0,0). Ahora `OpenOrActivateNotesManager` toma
+  el dock que la pide y `CenterOnThisMonitor` la centra en su area de trabajo.
+- **Barra de scroll del gestor**: fina y oscura. Matiz sobre una decision
+  anterior — una ronda descarto barras personalizadas citando el anti-patron de
+  "reinventar afordancias estandar". Esto no las reinventa, las **tine**:
+  conserva arrastre, clic en la pista y rueda; solo cambia color y grosor.
+- **Animaciones en el gestor**: las filas que dejan la vista actual salen
+  deslizandose a la derecha antes de recargar, y cambiar de filtro entra
+  apareciendo y subiendo. `RowsLeavingView` mantiene eso honesto: en el filtro
+  "Todas" no se va ninguna, solo cambia su chip, asi que no se anima nada.
+- **Apertura y cierre de nota revisados**: se anima `Left` y, ademas, el
+  contenido entra con retraso y apareciendo — sin eso la ventana llegaba a plena
+  opacidad de golpe y solo el rectangulo se movia. **No se anima
+  `Window.Opacity`**: WPF la implementa con una ventana por capas, justo lo que
+  esta ventana evita para conservar ClearType. Al cerrar, la nota vuelve al
+  mazo; hay que cancelar el Close y repetirlo al terminar (WPF no permite
+  aplazarlo), con un flag para cortar el bucle — `Flush` es idempotente, asi que
+  correr en las dos pasadas no guarda dos veces.
+- **La vista previa de la pestana** (segunda linea con el cuerpo de la nota)
+  hace que la pestana diga que hay dentro y no solo como se llama. Se esconde
+  entera por debajo de `PreviewVisiblePitch` en vez de quedar cortada a media
+  linea, que parece un fallo de render.
+
+Tests: 113/113.
 
 ### `FANOTE_MONITOR_INDEX`
 

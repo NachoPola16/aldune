@@ -361,7 +361,17 @@ public partial class EdgeDockWindow : Window
 
     private void OnManageArchiveClick(object sender, RoutedEventArgs e)
     {
-        _coordinator.OpenOrActivateNotesManager();
+        _coordinator.OpenOrActivateNotesManager(this);
+    }
+
+    /// <summary>
+    /// Centra <paramref name="window"/> en el monitor de este dock. Una ventana sin posición fijada
+    /// acaba en (0,0), o sea siempre en el monitor principal, aunque la hayas abierto desde el otro.
+    /// </summary>
+    internal void CenterOnThisMonitor(Window window)
+    {
+        window.Left = _workingArea.X + (_workingArea.Width - window.Width) / 2;
+        window.Top = _workingArea.Y + (_workingArea.Height - window.Height) / 2;
     }
 
     private void OnTabClick(object sender, RoutedEventArgs e)

@@ -110,8 +110,8 @@
         <Style x:Key="CircularIconButtonStyle" TargetType="Button">
             <Setter Property="Width" Value="34" />
             <Setter Property="Height" Value="34" />
-            <Setter Property="Margin" Value="5,0,0,0" />
-            <Setter Property="Foreground" Value="#EDE7DC" />
+            <Setter Property="Margin" Value="10,0,0,0" />
+            <Setter Property="Foreground" Value="#C9C0B2" />
             <Setter Property="Background" Value="#3C3730" />
             <Setter Property="Template">
                 <Setter.Value>
@@ -200,17 +200,26 @@
                 </ItemsControl>
             </ScrollViewer>
 
+            <!-- Alineado a la derecha igual que las pestañas, con un respiro de 8px para que el
+                 botón no quede pegado al canto de la pantalla y su sombra tenga dónde caer. Antes
+                 el Grid raíz llevaba margen también a la derecha, así que este footer se paraba
+                 18px antes que las pestañas y se veía desplazado a la izquierda respecto a ellas. -->
             <StackPanel x:Name="FooterPanel" Grid.Row="1" Orientation="Horizontal"
-                        HorizontalAlignment="Right" Margin="0,10,0,0">
+                        HorizontalAlignment="Right" Margin="0,14,8,0">
                 <Button x:Name="ManageArchiveButton" Click="OnManageArchiveClick"
                         Style="{StaticResource CircularIconButtonStyle}"
                         ToolTip="Gestionar notas">
                     <TextBlock Text="&#xE713;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" FontSize="15" />
                 </Button>
+                <!-- Crear nota es la acción principal del dock, así que pesa más que el
+                     engranaje: más grande y más clara. Ir las dos iguales las dejaba a la par
+                     cuando no lo están. -->
                 <Button x:Name="NewNoteButton" Click="OnNewNoteClick"
+                        Width="40" Height="40"
+                        Background="#575044" Foreground="#F5F0E6"
                         Style="{StaticResource CircularIconButtonStyle}"
                         ToolTip="Nueva nota">
-                    <TextBlock Text="&#xE710;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" FontSize="15" />
+                    <TextBlock Text="&#xE710;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" FontSize="17" />
                 </Button>
             </StackPanel>
         </Grid>

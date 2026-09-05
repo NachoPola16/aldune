@@ -145,8 +145,11 @@ public static class EdgeGeometry
     /// <summary>Longitud mínima, para que con 0-1 notas siga siendo un objetivo razonable.</summary>
     public const double MinContentLength = NaturalPitch;
 
-    /// <summary>Alto de la fila de botones ("+" y engranaje), fuera de la lista con scroll.</summary>
-    public const double FooterLength = 56;
+    /// <summary>
+    /// Alto de la fila de botones ("+" y engranaje), fuera de la lista con scroll para que siempre
+    /// se puedan pulsar. Es el botón mayor (40) más su margen superior (14) y aire para la sombra.
+    /// </summary>
+    public const double FooterLength = 64;
 
     /// <summary>Separación del borde físico de la pantalla.</summary>
     public const double EdgeMargin = 0;

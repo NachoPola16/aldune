@@ -103,16 +103,27 @@ public sealed class AppCoordinator
         NativeMethods.ForceActivate(noteWindow);
     }
 
-    public void OpenOrActivateNotesManager()
+    /// <summary>
+    /// Abre el gestor de notas, o activa el que ya haya.
+    ///
+    /// <paramref name="requestingDock"/> decide en qué pantalla sale. Sin él, la ventana no fijaba
+    /// posición y Windows la ponía en (0,0) — o sea, siempre en el monitor principal, aunque
+    /// hubieras pulsado el engranaje en el otro.
+    /// </summary>
+    public void OpenOrActivateNotesManager(EdgeDockWindow requestingDock)
     {
         if (_notesManagerWindow is not null)
         {
+            if (_notesManagerWindow.WindowState == WindowState.Minimized)
+                _notesManagerWindow.WindowState = WindowState.Normal;
+
             _notesManagerWindow.Activate();
             NativeMethods.ForceActivate(_notesManagerWindow);
             return;
         }
 
         _notesManagerWindow = new NotesManagerWindow(_repository, this);
+        requestingDock.CenterOnThisMonitor(_notesManagerWindow);
         _notesManagerWindow.Closed += (_, _) => _notesManagerWindow = null;
         _notesManagerWindow.Show();
         NativeMethods.ForceActivate(_notesManagerWindow);
