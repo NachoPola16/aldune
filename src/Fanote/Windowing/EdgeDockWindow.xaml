@@ -26,6 +26,7 @@
         <local:NoteTabLabelConverter x:Key="NoteTabLabelConverter" />
         <local:NoteRimConverter x:Key="NoteRimConverter" />
         <local:NoteLabelColorConverter x:Key="NoteLabelColorConverter" />
+        <local:NoteSnippetConverter x:Key="NoteSnippetConverter" />
 
         <DropShadowEffect x:Key="CardShadow" BlurRadius="14" ShadowDepth="3" Direction="200"
                           Color="#000000" Opacity="0.30" />
@@ -52,24 +53,38 @@
                                     CornerRadius="10,0,0,10" />
                             <Border Background="{StaticResource TabSheen}" CornerRadius="10,0,0,10" />
 
-                            <!-- Título horizontal, anclado arriba. Al solaparse las pestañas solo
-                                 queda visible la franja superior de cada una, así que es ahí donde
-                                 tiene que vivir la etiqueta. Va en un tono oscuro del propio color
-                                 de la nota: el negro sería el único valor de la pestaña sin
-                                 relación de hue con ella. -->
-                            <TextBlock Text="{Binding Text, Converter={StaticResource NoteTabLabelConverter}}"
-                                       Foreground="{Binding Color, Converter={StaticResource NoteLabelColorConverter}}"
-                                       FontSize="12"
-                                       FontWeight="SemiBold"
-                                       TextTrimming="CharacterEllipsis"
-                                       TextWrapping="NoWrap"
-                                       VerticalAlignment="Top"
-                                       HorizontalAlignment="Left"
-                                       Margin="16,11,26,0" />
+                            <!-- Dos líneas, ancladas arriba. Al solaparse las pestañas solo queda
+                                 visible la franja superior de cada una, así que ahí tiene que
+                                 vivir el título; la vista previa es lo primero que se sacrifica, y
+                                 está bien porque el título es lo que no puede faltar.
+
+                                 Ambas en tonos del propio color de la nota: el negro sería el
+                                 único valor de la pestaña sin relación de hue con ella. -->
+                            <StackPanel x:Name="LabelStack" VerticalAlignment="Top" Margin="16,9,20,0">
+                                <TextBlock Text="{Binding Text, Converter={StaticResource NoteTabLabelConverter}}"
+                                           Foreground="{Binding Color, Converter={StaticResource NoteLabelColorConverter}}"
+                                           FontSize="12"
+                                           FontWeight="SemiBold"
+                                           TextTrimming="CharacterEllipsis"
+                                           TextWrapping="NoWrap" />
+                                <TextBlock x:Name="SnippetText"
+                                           Text="{Binding Text, Converter={StaticResource NoteSnippetConverter}}"
+                                           Foreground="{Binding Color, Converter={StaticResource NoteLabelColorConverter}}"
+                                           Opacity="0.62"
+                                           FontSize="11"
+                                           TextTrimming="CharacterEllipsis"
+                                           TextWrapping="NoWrap"
+                                           Margin="0,2,0,0" />
+                            </StackPanel>
 
                             <Border x:Name="HoverOverlay" Background="#1E1A14" Opacity="0" CornerRadius="10,0,0,10" />
                         </Grid>
                         <ControlTemplate.Triggers>
+                            <DataTrigger Binding="{Binding Text, Converter={StaticResource NoteSnippetConverter}}" Value="">
+                                <Setter TargetName="SnippetText" Property="Visibility" Value="Collapsed" />
+                                <Setter TargetName="LabelStack" Property="VerticalAlignment" Value="Center" />
+                                <Setter TargetName="LabelStack" Property="Margin" Value="16,0,20,0" />
+                            </DataTrigger>
                             <Trigger Property="IsMouseOver" Value="True">
                                 <Setter TargetName="HoverOverlay" Property="Opacity" Value="0.07" />
                             </Trigger>
@@ -159,7 +174,7 @@
                             <Button Content="{Binding}"
                                     Background="{Binding Color}"
                                     Width="208"
-                                    Height="40"
+                                    Height="52"
                                     HorizontalAlignment="Right"
                                     Click="OnTabClick"
                                     Loaded="OnTabLoaded"

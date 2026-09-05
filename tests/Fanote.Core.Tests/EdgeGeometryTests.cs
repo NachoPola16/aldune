@@ -108,11 +108,14 @@ public class EdgeGeometryTests
         // de 2560px de alto las notas cabian sin solaparse y el abanico ocupaba media pantalla —
         // justo lo que el solape venia a evitar. El tope absoluto es lo que lo corrige.
         //
-        // Con etiqueta horizontal la pestana bajo de 100 a 40px, asi que ahora caben ~10 notas sin
-        // solapar en vez de 4: esa holgura es exactamente la ganancia de pasar a horizontal.
-        Assert.Equal(EdgeGeometry.NaturalPitch, EdgeGeometry.PitchFor(Vertical, EdgePosition.Right, 8));
-        Assert.True(EdgeGeometry.PitchFor(Vertical, EdgePosition.Right, 16) < EdgeGeometry.NaturalPitch,
-            "con dieciseis notas ya deberian solaparse, por alto que sea el monitor");
+        // Con etiqueta horizontal la pestana bajo de 100 a 52px (dos lineas: titulo y vista
+        // previa), asi que caben 7 notas sin solapar en vez de 4. La octava ya solapa, y muy poco:
+        // la degradacion es gradual, no un salto.
+        Assert.Equal(EdgeGeometry.NaturalPitch, EdgeGeometry.PitchFor(Vertical, EdgePosition.Right, 7));
+        Assert.True(EdgeGeometry.PitchFor(Vertical, EdgePosition.Right, 8) < EdgeGeometry.NaturalPitch,
+            "con ocho notas ya deberian solaparse, por alto que sea el monitor");
+        Assert.True(EdgeGeometry.PitchFor(Vertical, EdgePosition.Right, 8) > EdgeGeometry.TabHeight,
+            "y con ocho el solape tiene que ser leve, no un salto");
     }
 
     [Fact]
@@ -238,6 +241,23 @@ public class EdgeGeometryTests
         // necesitaba ~90px, asi que solo funcionaba sin solapar.
         Assert.True(EdgeGeometry.MinPitch >= 20);
         Assert.True(EdgeGeometry.MinPitch < EdgeGeometry.TabHeight);
+    }
+
+    [Fact]
+    public void Preview_IsShownWhileTabsAreNotSquashed_AndHiddenOnceTheyAre()
+    {
+        // Media linea de vista previa asomando por debajo de la pestana siguiente parece un fallo
+        // de render, no una decision: pasado ese punto se esconde entera y queda solo el titulo.
+        Assert.True(EdgeGeometry.ShowsPreview(Vertical, EdgePosition.Right, 5));
+        Assert.False(EdgeGeometry.ShowsPreview(Vertical, EdgePosition.Right, 40));
+    }
+
+    [Fact]
+    public void PreviewThreshold_IsBelowTheTabHeight()
+    {
+        // Si fuera mayor, la vista previa se escondería incluso sin solape ninguno.
+        Assert.True(EdgeGeometry.PreviewVisiblePitch < EdgeGeometry.NaturalPitch);
+        Assert.True(EdgeGeometry.PreviewVisiblePitch > EdgeGeometry.MinPitch);
     }
 
     // --- Tira en reposo --------------------------------------------------------------------------

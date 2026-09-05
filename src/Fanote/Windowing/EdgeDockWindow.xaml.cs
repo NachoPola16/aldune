@@ -337,6 +337,28 @@ public partial class EdgeDockWindow : Window
         }));
     }
 
+    /// <summary>
+    /// Esconde la vista previa de una pestaña cuando el solape no le deja sitio.
+    ///
+    /// Se limpia el valor local en vez de fijarlo a Visible: la plantilla ya tiene un DataTrigger
+    /// que la colapsa cuando la nota no tiene cuerpo, y en WPF un valor local gana a un trigger —
+    /// fijarlo aquí a Visible resucitaría la línea vacía de las notas sin cuerpo.
+    /// </summary>
+    private void ApplyPreviewVisibility(Button button)
+    {
+        button.ApplyTemplate();
+        if (button.Template.FindName("SnippetText", button) is not TextBlock snippet) return;
+
+        if (EdgeGeometry.ShowsPreview(_workingArea, _edge, _noteCount))
+        {
+            snippet.ClearValue(VisibilityProperty);
+        }
+        else
+        {
+            snippet.Visibility = Visibility.Collapsed;
+        }
+    }
+
     private void OnManageArchiveClick(object sender, RoutedEventArgs e)
     {
         _coordinator.OpenOrActivateNotesManager();
@@ -366,6 +388,7 @@ public partial class EdgeDockWindow : Window
         _tabButtons[index] = button;
         button.Margin = _tabMargin;
         button.Opacity = _fanState.IsExpanded ? 1 : 0;
+        ApplyPreviewVisibility(button);
     }
 
     /// <summary>

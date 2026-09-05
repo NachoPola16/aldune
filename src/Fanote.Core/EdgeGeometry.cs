@@ -22,8 +22,14 @@ public static class EdgeGeometry
 {
     // --- Pestañas -----------------------------------------------------------------------------
 
-    /// <summary>Alto de cada pestaña: una línea de título con aire por arriba y por abajo.</summary>
-    public const double TabHeight = 40;
+    /// <summary>
+    /// Alto de cada pestaña: dos líneas — el título y, debajo, las primeras palabras del cuerpo.
+    ///
+    /// Con una sola línea sobraban ~110px vacíos a la derecha del título. El hueco no era un
+    /// problema de tamaño sino capacidad sin usar: la segunda línea convierte la pestaña en algo
+    /// que dice qué hay dentro de la nota, no solo cómo se llama.
+    /// </summary>
+    public const double TabHeight = 52;
 
     /// <summary>
     /// Ancho de todas las pestañas. Uniforme: la pestaña viaja con la nota al abrirla y se
@@ -35,14 +41,26 @@ public static class EdgeGeometry
     public const double TabGap = 8;
 
     /// <summary>Paso entre pestañas cuando caben todas.</summary>
-    public const double NaturalPitch = TabHeight + TabGap; // 44
+    public const double NaturalPitch = TabHeight + TabGap; // 60
+
+    /// <summary>
+    /// Paso por debajo del cual la vista previa se esconde entera en vez de quedar cortada por la
+    /// pestaña siguiente. Media línea de texto asomando parece un fallo de render, no una
+    /// decisión: mejor enseñar solo el título, que es lo que no puede faltar.
+    /// </summary>
+    public const double PreviewVisiblePitch = TabHeight - 4;
+
+    /// <summary>Si a este paso cabe la vista previa completa.</summary>
+    public static bool ShowsPreview(WorkingArea area, EdgePosition edge, int noteCount) =>
+        PitchFor(area, edge, noteCount) >= PreviewVisiblePitch;
 
     /// <summary>
     /// Paso mínimo al solaparse. Es lo que queda visible de cada pestaña, y por tanto si se lee o
     /// no su título: por debajo de esto el abanico deja de decirte cuál es cuál, que es su único
-    /// trabajo. Con etiqueta horizontal basta con ~24px, frente a los ~90 que exigía la vertical.
+    /// trabajo. Con etiqueta horizontal basta con ~26px —lo justo para la línea del título, que es
+    /// lo que no puede faltar—, frente a los ~90 que exigía la vertical.
     /// </summary>
-    public const double MinPitch = 24;
+    public const double MinPitch = 26;
 
     /// <summary>Fracción del alto útil del monitor que el abanico desplegado puede ocupar.</summary>
     public const double MaxScreenFraction = 0.7;
