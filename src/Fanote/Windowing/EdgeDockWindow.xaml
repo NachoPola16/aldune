@@ -28,8 +28,18 @@
         <local:NoteLabelColorConverter x:Key="NoteLabelColorConverter" />
         <local:NoteSnippetConverter x:Key="NoteSnippetConverter" />
 
-        <DropShadowEffect x:Key="CardShadow" BlurRadius="14" ShadowDepth="3" Direction="200"
-                          Color="#000000" Opacity="0.30" />
+        <!-- Hacia ARRIBA (Direction 95), no hacia abajo. Las pestañas se apilan hacia abajo y cada
+             una tapa a la anterior, así que una sombra descendente cae justo donde la siguiente la
+             oculta y no separa nada: con solape leve el abanico se leía como un bloque macizo.
+             Proyectada hacia arriba, cada pestaña deja un canto oscuro sobre la de encima, que es
+             exactamente como se ve un mazo escalonado. Comprobado contra las tres variantes
+             renderizadas en aislamiento. -->
+        <DropShadowEffect x:Key="CardShadow" BlurRadius="9" ShadowDepth="3" Direction="95"
+                          Color="#000000" Opacity="0.38" />
+
+        <!-- Los botones no se apilan, así que su sombra sí cae hacia abajo como es natural. -->
+        <DropShadowEffect x:Key="ButtonShadow" BlurRadius="10" ShadowDepth="2" Direction="270"
+                          Color="#000000" Opacity="0.35" />
 
         <!-- Reflejo en los cantos, cara plana en medio. Con una rampa larga el degradado se leía
              como tal y las pestañas parecían plástico brillante iluminado de lado, no papel. -->
@@ -110,7 +120,7 @@
                              1 bit, y una circunferencia es curva pura, o sea el peor caso. -->
                         <Grid>
                             <Ellipse x:Name="Bg" Fill="{TemplateBinding Background}"
-                                     Effect="{StaticResource CardShadow}" />
+                                     Effect="{StaticResource ButtonShadow}" />
                             <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
                         </Grid>
                         <ControlTemplate.Triggers>
@@ -127,7 +137,12 @@
         </Style>
     </Window.Resources>
 
-    <Grid Margin="18">
+    <!-- Margen asimétrico: sin derecha. WindowThickness reserva UN ShadowMargin, no dos, porque
+         el lado derecho va a ras del canto de la pantalla y ahí no hay sombra que alojar. Con
+         Margin="18" a los cuatro lados quedaban 190px para una pestaña de 208, así que se
+         recortaba 18px por la izquierda — justo donde vive el margen de la etiqueta, y por eso el
+         título salía cortado. -->
+    <Grid Margin="18,18,0,18">
         <!-- Dos capas superpuestas con fundido cruzado. Volver a este patrón (que una ronda
              anterior había eliminado) es correcto ahora: lo que lo hacía frágil era tener que
              mantener la región sincronizada con él, y ya no hay región. El cuidado que sí sigue
@@ -142,7 +157,7 @@
                 VerticalAlignment="Center"
                 Width="20"
                 Padding="0,5"
-                Effect="{StaticResource CardShadow}">
+                Effect="{StaticResource ButtonShadow}">
             <ItemsControl ItemsSource="{Binding ItemsSource, ElementName=TabsList}">
                 <ItemsControl.ItemTemplate>
                     <DataTemplate>

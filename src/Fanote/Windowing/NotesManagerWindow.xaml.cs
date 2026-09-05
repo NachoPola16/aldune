@@ -1,6 +1,9 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Windows;
+using System.Windows.Controls;
+using System.Windows.Media;
+using System.Windows.Media.Animation;
 using System.Windows.Interop;
 using Fanote.Core;
 using Fanote.Interop;
@@ -110,7 +113,103 @@ public partial class NotesManagerWindow : Window
             : sender == FilterArchived ? Filter.Archived
             : sender == FilterTrashed ? Filter.Trashed
             : Filter.All;
+
         ApplyFilter();
+        PlayListEntrance();
+    }
+
+    /// <summary>
+    /// Qué filas seleccionadas dejan de pertenecer a la vista actual al pasar a
+    /// <paramref name="newState"/>.
+    ///
+    /// En el filtro "Todas" no se va ninguna: solo cambia su chip de estado. Animarlas saliendo
+    /// ahí seria mentir sobre lo que pasa, y ademas volverian a aparecer de inmediato.
+    /// </summary>
+    private IReadOnlyList<NoteRow> RowsLeavingView(NoteState newState)
+    {
+        if (_filter == Filter.All) return Array.Empty<NoteRow>();
+
+        var stays = _filter switch
+        {
+            Filter.Active => NoteState.Active,
+            Filter.Archived => NoteState.Archived,
+            _ => NoteState.Trashed
+        };
+
+        return newState == stays
+            ? Array.Empty<NoteRow>()
+            : _rows.Where(r => r.IsSelected).ToList();
+    }
+
+    private static readonly Duration ListFade = new(TimeSpan.FromMilliseconds(160));
+
+    /// <summary>
+    /// La lista entra apareciendo y subiendo un poco al cambiar de filtro. Sin esto, pasar de
+    /// "Todas" a "Papelera" cambiaba el contenido de golpe y no quedaba claro que fuera otra vista
+    /// y no un refresco.
+    /// </summary>
+    private void PlayListEntrance()
+    {
+        if (!SystemParameters.ClientAreaAnimation) return;
+
+        var slide = new TranslateTransform();
+        RowsList.RenderTransform = slide;
+
+        RowsList.BeginAnimation(OpacityProperty, new DoubleAnimation(0, 1, ListFade));
+        slide.BeginAnimation(TranslateTransform.YProperty,
+            new DoubleAnimation(10, 0, ListFade)
+            {
+                EasingFunction = new QuinticEase { EasingMode = EasingMode.EaseOut }
+            });
+    }
+
+    /// <summary>
+    /// Anima la salida de las filas que dejan de pertenecer a la vista actual y, al terminar,
+    /// recarga. <paramref name="reload"/> corre igual si no hay nada que animar.
+    ///
+    /// Sirve para que archivar o enviar a la papelera se vea como que la nota <b>se va a otra
+    /// sección</b>, en vez de desaparecer sin más de una lista que se rehace.
+    /// </summary>
+    private void AnimateOut(IReadOnlyList<NoteRow> leaving, Action reload)
+    {
+        var containers = leaving
+            .Select(row => RowsList.ItemContainerGenerator.ContainerFromItem(row) as UIElement)
+            .Where(c => c is not null)
+            .Cast<UIElement>()
+            .ToList();
+
+        if (containers.Count == 0 || !SystemParameters.ClientAreaAnimation)
+        {
+            reload();
+            return;
+        }
+
+        var duration = new Duration(TimeSpan.FromMilliseconds(180));
+        bool reloaded = false;
+
+        foreach (var container in containers)
+        {
+            var slide = new TranslateTransform();
+            container.RenderTransform = slide;
+
+            // Hacia la derecha: es el lado por el que estan el dock y el resto de secciones, asi
+            // que la nota "se va" hacia donde va a estar, no a un sitio cualquiera.
+            slide.BeginAnimation(TranslateTransform.XProperty,
+                new DoubleAnimation(0, 40, duration)
+                {
+                    EasingFunction = new QuadraticEase { EasingMode = EasingMode.EaseIn }
+                });
+
+            var fade = new DoubleAnimation(1, 0, duration);
+            fade.Completed += (_, _) =>
+            {
+                // Varias filas terminan a la vez; recargar una sola vez.
+                if (reloaded) return;
+                reloaded = true;
+                reload();
+            };
+            container.BeginAnimation(OpacityProperty, fade);
+        }
     }
 
     private void OnCloseClick(object sender, RoutedEventArgs e) => Close();
@@ -123,31 +222,43 @@ public partial class NotesManagerWindow : Window
 
     private void OnArchiveSelectedClick(object sender, RoutedEventArgs e)
     {
-        foreach (var row in _rows.Where(r => r.IsSelected))
+        var leaving = RowsLeavingView(NoteState.Archived);
+        AnimateOut(leaving, () =>
         {
-            _repository.SetState(row.Note.Id, NoteState.Archived);
-        }
-        LoadRows();
-        _coordinator.RefreshAll();
+            foreach (var row in _rows.Where(r => r.IsSelected))
+            {
+                _repository.SetState(row.Note.Id, NoteState.Archived);
+            }
+            LoadRows();
+            _coordinator.RefreshAll();
+        });
     }
 
     private void OnRestoreSelectedClick(object sender, RoutedEventArgs e)
     {
-        foreach (var row in _rows.Where(r => r.IsSelected))
+        var leaving = RowsLeavingView(NoteState.Active);
+        AnimateOut(leaving, () =>
         {
-            _repository.SetState(row.Note.Id, NoteState.Active);
-        }
-        LoadRows();
-        _coordinator.RefreshAll();
+            foreach (var row in _rows.Where(r => r.IsSelected))
+            {
+                _repository.SetState(row.Note.Id, NoteState.Active);
+            }
+            LoadRows();
+            _coordinator.RefreshAll();
+        });
     }
 
     private void OnTrashSelectedClick(object sender, RoutedEventArgs e)
     {
-        foreach (var row in _rows.Where(r => r.IsSelected))
+        var leaving = RowsLeavingView(NoteState.Trashed);
+        AnimateOut(leaving, () =>
         {
-            _repository.SetState(row.Note.Id, NoteState.Trashed);
-        }
-        LoadRows();
-        _coordinator.RefreshAll();
+            foreach (var row in _rows.Where(r => r.IsSelected))
+            {
+                _repository.SetState(row.Note.Id, NoteState.Trashed);
+            }
+            LoadRows();
+            _coordinator.RefreshAll();
+        });
     }
 }

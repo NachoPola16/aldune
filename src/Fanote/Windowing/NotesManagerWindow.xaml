@@ -67,6 +67,54 @@
             <Setter Property="Padding" Value="0" />
         </Style>
 
+        <!-- Barra de scroll fina y a juego con el fondo oscuro. La del sistema es clara y ancha, y
+             sobre este fondo canta muchísimo. Esto es <b>teñir</b> una afordancia estándar, no
+             reinventarla: conserva arrastre del pulgar, clic en la pista y rueda; solo cambia el
+             color y el grosor. -->
+        <Style x:Key="SlimThumb" TargetType="Thumb">
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Thumb">
+                        <Border x:Name="Bar" Background="#4E4840" CornerRadius="3" Margin="2,0" />
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Bar" Property="Background" Value="#6B6459" />
+                            </Trigger>
+                            <Trigger Property="IsDragging" Value="True">
+                                <Setter TargetName="Bar" Property="Background" Value="#857D70" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style TargetType="ScrollBar">
+            <Setter Property="Width" Value="10" />
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ScrollBar">
+                        <Grid Background="{TemplateBinding Background}">
+                            <Track x:Name="PART_Track" IsDirectionReversed="True">
+                                <Track.Thumb>
+                                    <Thumb Style="{StaticResource SlimThumb}" />
+                                </Track.Thumb>
+                                <!-- Sin flechas: la pista sigue paginando al hacer clic, que es el
+                                     comportamiento estándar que importa conservar. -->
+                                <Track.DecreaseRepeatButton>
+                                    <RepeatButton Command="ScrollBar.PageUpCommand" Opacity="0" />
+                                </Track.DecreaseRepeatButton>
+                                <Track.IncreaseRepeatButton>
+                                    <RepeatButton Command="ScrollBar.PageDownCommand" Opacity="0" />
+                                </Track.IncreaseRepeatButton>
+                            </Track>
+                        </Grid>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
         <!-- Filtros como control segmentado: cuatro opciones excluyentes de un mismo eje se leen
              mejor juntas en una pastilla que como cuatro botones sueltos. -->
         <Style x:Key="FilterToggleStyle" TargetType="RadioButton">
@@ -138,8 +186,9 @@
             </WrapPanel>
         </Border>
 
-        <Grid Grid.Row="2" Margin="20,14,20,0">
-            <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+        <Grid Grid.Row="2" Margin="20,14,12,0">
+            <ScrollViewer x:Name="RowsScroll" VerticalScrollBarVisibility="Auto"
+                          HorizontalScrollBarVisibility="Disabled" Padding="0,0,8,0">
                 <ItemsControl x:Name="RowsList">
                     <ItemsControl.ItemTemplate>
                         <DataTemplate>
