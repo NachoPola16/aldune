@@ -390,6 +390,20 @@ public partial class EdgeDockWindow : Window
         NativeMethods.SetTabFanRegion(_hwnd, pieces);
     }
 
+    /// <summary>
+    /// Para todo lo que este dock tiene en marcha antes de cerrarlo. Sin esto, un dock cerrado al
+    /// reconstruir por cambio de pantallas dejaría vivos sus dos DispatcherTimer y, si estaba a
+    /// media transición, su handler de CompositionTarget.Rendering — que es un evento estático:
+    /// seguiría llamando a ApplyRegion sobre un HWND ya destruido en cada frame, para siempre.
+    /// </summary>
+    internal void PrepareForClose()
+    {
+        StopTransition();
+        _hoverPollTimer.Stop();
+        _collapseTimer.Stop();
+        _fullscreenPollTimer.Stop();
+    }
+
     public void Refresh()
     {
         SetNotes(_repository.GetByState(NoteState.Active));

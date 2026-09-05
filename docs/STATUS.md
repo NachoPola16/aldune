@@ -65,7 +65,7 @@ autoridad de diseño; todo lo demás (planes, código) se argumenta contra él.
   (ver historial más abajo) y, a raíz de probarlo, también se hizo que el
   tamaño del pill/panel se ajuste al número de notas en vez de ser fijo.
 
-Tests: 127/127 pasando (`dotnet test` desde la raíz del repo).
+Tests: 130/130 pasando (`dotnet test` desde la raíz del repo).
 
 ## Cómo se ha trabajado (para mantener el mismo estilo)
 
@@ -884,6 +884,50 @@ ventana 100px más corta que el monitor se queda en 1, que es el caso negativo
 que de verdad hay que proteger.
 
 Tests: 127/127.
+
+### Quinta ronda: etiqueta cortada, solape que no ocurria, y hotplug de monitores
+
+- **La etiqueta se salia del alto de la pestana.** No eran dos lineas (mal
+  leido por mi en la primera captura): era una sola linea desbordando por
+  abajo. Causa: el tracking con espacio fino (U+2009) alargaba la etiqueta un
+  ~25%. Se pasa al espacio capilar (U+200A), que conserva el espaciado y entra
+  con holgura, y el espacio de la frase pasa a duro (U+00A0) — era el unico
+  sitio por donde podia partirse en dos columnas. `TextWrapping="NoWrap"`
+  explicito en pestana y lomo. Comprobado renderizando cinco variantes en
+  aislamiento.
+- **El solape no ocurria.** El presupuesto estaba atado solo a una fraccion de
+  pantalla, y el 80% de un monitor de 2560px son ~1900px: ocho notas cabian sin
+  solaparse. Un monitor alto no significa que quieras un dock alto, asi que hay
+  un tope absoluto (`MaxFanLength`) ademas de la fraccion. Ahora solapa desde la
+  quinta nota y el abanico se queda en 480px entre 5 y 12; pasada la 13 manda
+  `MinPitch` y el abanico se pasa de largo (y scrollea) antes que apretar las
+  pestanas hasta que no se lea cual es cual.
+- **Al apagar un monitor, su dock se duplicaba en el que quedaba.** Era el hueco
+  documentado en "Prerrequisitos para la Fase 3" punto 4 (sin hotplug). Los
+  docks se posicionan con coordenadas absolutas calculadas una vez, asi que
+  cuando un monitor desaparece Windows reubica el dock huerfano sobre el otro y
+  quedan dos apilados. Ahora `App` escucha
+  `SystemEvents.DisplaySettingsChanged`, con un retardo reiniciable de 600ms
+  (Windows dispara varios seguidos al reconfigurar), y reconstruye los docks
+  contra la lista de monitores nueva. `AppCoordinator.CloseAllDocks` +
+  `EdgeDockWindow.PrepareForClose`, que para los dos timers y el handler de
+  `CompositionTarget.Rendering` — es un evento **estatico**, asi que un dock
+  cerrado a media transicion seguiria llamando a `ApplyRegion` sobre un HWND
+  destruido en cada frame, para siempre.
+  Las ventanas de nota abiertas sobreviven: no guardan referencia a ningun dock.
+- **Reordenado el arranque**: `BuildDocks` termina llamando a `RefreshAll`, que
+  es donde de verdad se intenta descifrar por primera vez, asi que tiene que ir
+  **dentro** del try/catch de `AuthenticationTagMismatchException` — si no, el
+  caso (c) escaparia sin traducirse a su mensaje.
+
+**Error de proceso que costo una ronda entera**: un `dotnet build` iba en el
+mismo bloque de PowerShell que un heredoc `<<'EOF'`, que PowerShell no soporta.
+El fallo es de *parseo*, asi que aborta el bloque entero antes de ejecutar nada
+— la compilacion nunca corrio y luego se relanzo con `--no-build`. El usuario
+estuvo evaluando el binario anterior a los arreglos. Para commits multilinea,
+usar Bash; y comprobar la fecha del binario antes de dar por bueno un lanzamiento.
+
+Tests: 130/130.
 
 ### `FANOTE_MONITOR_INDEX`
 

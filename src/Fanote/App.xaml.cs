@@ -2,6 +2,8 @@ using System.IO;
 using System.Security.Cryptography;
 using System.Text.Json;
 using System.Windows;
+using System.Windows.Threading;
+using Microsoft.Win32;
 using Fanote.Core;
 using Fanote.Interop;
 using Fanote.Windowing;
@@ -106,8 +108,7 @@ public partial class App : Application
             return;
         }
 
-        var monitors = MonitorEnumerator.EnumerateMonitors();
-        if (monitors.Count == 0)
+        if (MonitorEnumerator.EnumerateMonitors().Count == 0)
         {
             // Practically impossible on real Windows (there's always at least one display), but
             // treat it as a fourth bootstrap failure mode rather than crashing with no explanation.
@@ -119,34 +120,17 @@ public partial class App : Application
             return;
         }
 
-        // Filtro de monitor por variable de entorno. Existe porque durante el desarrollo hace
-        // falta poder lanzar la app sin invadir la otra pantalla (p. ej. si hay algo a pantalla
-        // completa en ella), y es la pieza mínima del punto 3 de "Prerrequisitos para la Fase 3":
-        // restringir la app a un solo monitor. Cuando ese punto se aborde de verdad, esto debería
-        // pasar a ser un ajuste de verdad en AppSettings, no una variable de entorno. Índice
-        // 0-based sobre el orden que devuelve MonitorEnumerator; un valor inválido se ignora, para
-        // que una variable mal puesta no deje la app sin ningún dock.
-        var onlyMonitor = Environment.GetEnvironmentVariable("FANOTE_MONITOR_INDEX");
-        if (int.TryParse(onlyMonitor, out int monitorIndex)
-            && monitorIndex >= 0 && monitorIndex < monitors.Count)
-        {
-            monitors = new[] { monitors[monitorIndex] };
-        }
-
         var coordinator = new AppCoordinator(repository);
-        var docks = new List<EdgeDockWindow>();
-        foreach (var monitor in monitors)
-        {
-            var dock = new EdgeDockWindow(EdgePosition.Right, monitor, repository, coordinator);
-            coordinator.RegisterDock(dock);
-            docks.Add(dock);
-        }
-
+        _coordinator = coordinator;
+        _repository = repository;
         try
         {
-            // The first place decryption of existing notes is actually attempted — this is where
-            // case (c) (wrong key for this database) surfaces, not earlier in the bootstrap.
-            coordinator.RefreshAll();
+            // BuildDocks termina llamando a RefreshAll, que es el primer sitio donde de verdad se
+            // intenta descifrar las notas existentes — aquí es donde aflora el caso (c), clave
+            // equivocada para esta base de datos, no antes en el arranque. Por eso la construcción
+            // va dentro del try y no fuera: si se dejara fuera, esa excepción escaparía sin que
+            // nadie la tradujera al mensaje de abajo.
+            BuildDocks();
         }
         catch (AuthenticationTagMismatchException)
         {
@@ -174,7 +158,16 @@ public partial class App : Application
         // purge on open).
         repository.PurgeExpiredTrash(TimeSpan.FromDays(NotesRepository.DefaultTrashRetentionDays));
 
-        foreach (var dock in docks) dock.Show();
+        // Apagar, encender o reconfigurar un monitor con la app corriendo. Sin esto, Windows
+        // reubica el dock huérfano del monitor que desaparece sobre el que queda, y acabas con dos
+        // docks apilados en la misma pantalla — reportado por el usuario al apagar un monitor.
+        //
+        // Los docks se posicionan con coordenadas absolutas calculadas una sola vez (ver
+        // EdgeGeometry.WindowRect), así que no pueden recolocarse solos: la única salida correcta
+        // es reconstruirlos contra la lista de monitores nueva. Se engancha al final del arranque,
+        // ya con el descifrado verificado, para no reconstruir nada si la app va a abortar.
+        SystemEvents.DisplaySettingsChanged += OnDisplaySettingsChanged;
+        Exit += (_, _) => SystemEvents.DisplaySettingsChanged -= OnDisplaySettingsChanged;
     }
 
     /// <summary>
@@ -205,5 +198,62 @@ public partial class App : Application
 
             return repository;
         }
+    }
+    
+    private AppCoordinator? _coordinator;
+    private NotesRepository? _repository;
+    private DispatcherTimer? _rebuildDebounce;
+
+    /// <summary>
+    /// Crea un dock por cada monitor conectado ahora mismo. Se llama al arrancar y cada vez que
+    /// cambia la configuración de pantallas.
+    /// </summary>
+    private void BuildDocks()
+    {
+        if (_coordinator is null || _repository is null) return;
+
+        var monitors = MonitorEnumerator.EnumerateMonitors();
+        if (monitors.Count == 0) return; // sin pantallas no hay nada que colocar; ya volverá otra
+
+        // Filtro de monitor por variable de entorno. Existe porque durante el desarrollo hace
+        // falta poder lanzar la app sin invadir la otra pantalla (p. ej. si hay algo a pantalla
+        // completa en ella), y es la pieza mínima del punto 3 de "Prerrequisitos para la Fase 3":
+        // restringir la app a un solo monitor. Cuando ese punto se aborde de verdad, esto debería
+        // pasar a ser un ajuste de verdad en AppSettings, no una variable de entorno.
+        var onlyMonitor = Environment.GetEnvironmentVariable("FANOTE_MONITOR_INDEX");
+        if (int.TryParse(onlyMonitor, out int monitorIndex)
+            && monitorIndex >= 0 && monitorIndex < monitors.Count)
+        {
+            monitors = new[] { monitors[monitorIndex] };
+        }
+
+        foreach (var monitor in monitors)
+        {
+            var dock = new EdgeDockWindow(EdgePosition.Right, monitor, _repository, _coordinator);
+            _coordinator.RegisterDock(dock);
+            dock.Show();
+        }
+
+        _coordinator.RefreshAll();
+    }
+
+    private void OnDisplaySettingsChanged(object? sender, EventArgs e)
+    {
+        // Con retardo y reiniciable: cambiar de pantallas dispara varios DisplaySettingsChanged
+        // seguidos (Windows reconfigura en pasos), y reconstruir los docks en cada uno significa
+        // crear y destruir ventanas varias veces por nada. Esperar a que pare deja una sola
+        // reconstrucción, ya contra la disposición definitiva.
+        _rebuildDebounce ??= new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(600) };
+        _rebuildDebounce.Tick -= OnRebuildTick;
+        _rebuildDebounce.Tick += OnRebuildTick;
+        _rebuildDebounce.Stop();
+        _rebuildDebounce.Start();
+    }
+
+    private void OnRebuildTick(object? sender, EventArgs e)
+    {
+        _rebuildDebounce?.Stop();
+        _coordinator?.CloseAllDocks();
+        BuildDocks();
     }
 }

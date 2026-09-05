@@ -1,3 +1,4 @@
+using System.Linq;
 using System.Windows;
 using Fanote.Core;
 using Fanote.Interop;
@@ -33,6 +34,25 @@ public sealed class AppCoordinator
     public bool IsNoteOpen(Guid noteId) => _openNoteWindows.ContainsKey(noteId);
 
     public void RegisterDock(EdgeDockWindow dock) => _docks.Add(dock);
+
+    /// <summary>
+    /// Cierra todos los docks actuales. Lo usa <c>App</c> al cambiar la configuración de pantallas
+    /// para reconstruirlos contra los monitores que haya ahora.
+    ///
+    /// Las ventanas de nota abiertas <b>no</b> se tocan: no guardan referencia a ningún dock (solo
+    /// al coordinador), así que sobreviven al recambio. Lo único que se pierde es que una nota
+    /// abierta ya no vuelve a "su" dock, cosa que tampoco tenía sentido si su monitor ha
+    /// desaparecido.
+    /// </summary>
+    public void CloseAllDocks()
+    {
+        foreach (var dock in _docks.ToList())
+        {
+            dock.PrepareForClose();
+            dock.Close();
+        }
+        _docks.Clear();
+    }
 
     private void RefreshOpenState()
     {
