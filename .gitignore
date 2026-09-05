@@ -5,3 +5,7 @@ obj/
 
 # Worktrees y estado local de Claude Code: nunca deben versionarse.
 .claude/
+
+# Salida de `dotnet publish -p:PublishProfile=portable`: 80 MB de .NET autocontenido que se
+# regeneran con un comando. Lo que se versiona es el perfil, no su resultado.
+publish/

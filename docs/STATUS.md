@@ -65,7 +65,7 @@ autoridad de diseño; todo lo demás (planes, código) se argumenta contra él.
   (ver historial más abajo) y, a raíz de probarlo, también se hizo que el
   tamaño del pill/panel se ajuste al número de notas en vez de ser fijo.
 
-Tests: 113/113 pasando (`dotnet test` desde la raíz del repo).
+Tests: 132/132 pasando (`dotnet test` desde la raíz del repo).
 
 ## Cómo se ha trabajado (para mantener el mismo estilo)
 
@@ -1066,11 +1066,91 @@ crearse no habria forma de salir salvo el Administrador de tareas.
 
 Tests: 113/113.
 
+## Atajo configurable, estado vacío y portable (sesión 2026-09-05, segunda ronda)
+
+Tres cosas que salieron de usar la app de verdad, no de mirarla.
+
+### El atajo global tenía que ser configurable, no elegido por mí
+
+`Ctrl+Alt+N` no hacía nada en la máquina del usuario: la tenía asignada a
+"siguiente canción". Windows **no comparte una combinación entre aplicaciones**
+— se la queda la primera que la pide —, así que no existe una combinación por
+defecto que sea segura. Cualquiera que elija chocará con alguien.
+
+- **`Fanote.Core.HotkeyBinding`** (record con modificadores y tecla virtual).
+  Vive en Core, y no en la ventana de ajustes, por una razón concreta: el
+  `DisplayName` que se enseña en pantalla tiene que salir de los mismos bits que
+  se registran en Win32. Si la interfaz compusiera el texto por su cuenta podría
+  anunciar una combinación distinta de la que de verdad está activa, y eso es un
+  bug que nadie reporta porque parece cosa suya.
+- **Se captura pulsando, no eligiendo de una lista.** El botón escucha la
+  siguiente combinación (Esc cancela). Dos desplegables de "modificador" y
+  "tecla" obligan a traducir mentalmente algo que uno ya sabe pulsar.
+- **Se exige al menos un modificador**: sin él, el atajo se tragaría esa tecla en
+  todo el sistema.
+- Un modificador suelto no cierra la captura — mientras se mantiene Ctrl sin
+  haber elegido tecla se sigue escuchando, en vez de registrar "Ctrl + Ctrl".
+- El defecto pasa a `Ctrl+Shift+N`, y **la pista de la ventana dice la verdad**:
+  si `RegisterHotKey` falló porque otra app ya la tenía, lo dice y pide otra.
+- `AppSettings.GlobalHotkeyEnabled` nace en `true` a propósito, para que un
+  `settings.json` ya existente se actualice con el atajo activo en vez de
+  aparecer apagado sin que nadie lo apagara.
+
+### Sin notas, el dock era invisible y no se podía hacer nada
+
+Con la base de datos vacía no había tira de guiones (cero guiones), luego no
+había nada donde pasar el ratón, luego no había forma de crear la primera nota.
+La app quedaba muerta justo en el único momento en que todo el mundo la ve: al
+estrenarla. Ahora, con cero notas, el dock **se muestra ya desplegado** y sin
+tira en reposo — no hay nada que colapsar, y los botones "+" y engranaje quedan
+a la vista.
+
+También se corrigió el guión suelto descentrado dentro del óvalo: el `Padding`
+vertical del contenedor y el `Margin` inferior de cada guión sumaban dos veces
+por abajo. El contenedor solo pone el hueco de arriba.
+
+### Portable: un `.exe` y nada más
+
+`src/Fanote/Properties/PublishProfiles/portable.pubxml`, y se usa así:
+
+    dotnet publish src/Fanote -p:PublishProfile=portable   →   publish/portable/Fanote.exe
+
+Decisiones que no son obvias leyendo el fichero:
+
+- **Perfil, no propiedades en el `.csproj`.** `RuntimeIdentifier` también afecta
+  a `dotnet build` y `dotnet run`, así que meterlo en el proyecto ralentizaría
+  cada compilación de desarrollo por algo que solo importa al publicar.
+- **Autocontenido** (~82 MB): un portable que antes exige instalar el runtime de
+  .NET no es portable.
+- **Sin recorte (`PublishTrimmed=false`)**: WPF usa reflexión por todas partes y
+  el recortador se lleva tipos que hacen falta. Fallaría al abrir una ventana, no
+  al compilar, que es la peor forma de fallar.
+- **Dos propiedades para un solo `.pdb`**: `DebugType=none` silencia a Fanote,
+  pero el `.pdb` de Fanote.Core llegaba por otra vía — se copia como *fichero
+  acompañante* de la referencia a ese proyecto, y solo
+  `AllowedReferenceRelatedFileExtensions` lo para.
+- `publish/` va al `.gitignore`: se versiona el perfil, no sus 82 MB de
+  resultado.
+
+**Verificado contra el ejecutable publicado ya en marcha** (no contra el de
+desarrollo):
+
+- `ProcessPath` apunta al `.exe` real, no al directorio temporal de extracción
+  del single-file. De eso depende el arranque con Windows: si apuntara al temporal,
+  la clave del registro quedaría escrita hacia una ruta que desaparece.
+- El atajo global queda registrado (pedirlo desde otro proceso es rechazado).
+- `Icon.ExtractAssociatedIcon` sobre el single-file devuelve 32×32, así que el
+  icono de bandeja carga.
+- Un dock por monitor, los dos visibles. Un `visible=False` observado antes en el
+  monitor primario era el ocultado por pantalla completa funcionando (había un
+  juego delante), no una regresión.
+
+Tests: 132/132.
+
 ## Cómo seguir desde aquí
 
-Rama `dock-motion-shape`, encima de `worktree-fanote-fan-tabs-redesign` (que a
-su vez sigue sin fusionar en `master` — son dos niveles de trabajo apilado, ver
-"Cómo seguir" al final).
+**Todo lo anterior está ya fusionado en `master`**; las ramas apiladas
+(`dock-motion-shape` sobre `worktree-fanote-fan-tabs-redesign`) se cerraron.
 
 El diseño actual, en una frase: **la ventana del dock no cambia de tamaño
 nunca**, es transparente, y su contenido son dos capas que se cruzan con
@@ -1115,13 +1195,29 @@ Riesgo específico de esta rama, sin verificar: el dock pasó a
 `AllowsTransparency`, lo que cambia cómo compone WPF. Si aparece parpadeo o
 lentitud al desplegar, es nuevo y viene de ahí.
 
-Después de eso, sigue abierto elegir entre, para lo siguiente:
+### Lo siguiente, por orden y con el porqué
 
-1. Sub-entrega 2 de la Fase 3 (ver prerrequisitos arriba): toggle de
+1. **Inglés y selector de idioma** (pedido explícitamente). Se aplazó a
+   propósito hasta tener el portable: cada texto que se extraiga mientras la
+   interfaz se sigue moviendo es un texto que habrá que volver a extraer. Son
+   ~60 cadenas en cinco ventanas más el menú de bandeja. Plan: `.resx`,
+   selector en Ajustes, e idioma del sistema como valor inicial.
+2. **Buscar notas.** No existe, y es lo primero que se echará en falta hacia las
+   20 notas — el abanico solapado deja de ser navegable mucho antes que la
+   lista del gestor.
+3. **Más atajos**: desplegar/ocultar el abanico, `Esc` para cerrar la nota
+   activa, `Ctrl+F` para buscar (depende del punto 2).
+4. **Instalador**. Ojo: sin certificado de firma de código (de pago) SmartScreen
+   avisará igual, así que el instalador no quita esa fricción, solo la mueve.
+5. Sub-entrega 2 de la Fase 3 (ver prerrequisitos arriba): toggle de
    Ajustes para monitor único, IDs estables de dispositivo, hotplug en
    caliente — probablemente necesita su propio brainstorming (algunas
    piezas, como IDs estables, tocan el modelo de datos).
-2. Modo "Papel vintage" (ver spec v1).
+6. Modo "Papel vintage" (ver spec v1).
+
+**Descartado, no pendiente**: gestos de trackpad. Windows no expone gestos de
+panel táctil a las aplicaciones como tales; el atajo de teclado es la respuesta
+realista a esa petición.
 
 Si arrancas esto en una sesión/IA nueva: lee este archivo, la spec, y el plan
 de la última fase fusionada, y sigue el mismo flujo de skills descrito arriba
