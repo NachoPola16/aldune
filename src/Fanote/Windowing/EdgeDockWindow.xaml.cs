@@ -319,6 +319,13 @@ public partial class EdgeDockWindow : Window
             firstTabProgress = footerProgress;
         }
 
+        // Sin notas, los botones se ven siempre. En reposo el footer normalmente está fuera de la
+        // región (aparece al desplegar el abanico), pero con cero notas no hay abanico que
+        // desplegar ni tira que sobrevolar: la región quedaba vacía, el dock invisible y
+        // transparente al clic, y no había forma de crear la primera nota. Callejón sin salida en
+        // instalación limpia, que solo se da exactamente en ese estado.
+        if (_noteCount == 0) footerProgress = 1;
+
         // Cada botón es su propio círculo, no una caja rectangular que envuelva a los dos: esa
         // caja era lo único del dock con esquinas en pico, y se leía como un panel suelto pegado
         // debajo del abanico en lugar de como dos botones.
