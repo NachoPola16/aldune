@@ -221,6 +221,7 @@
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />
             <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
@@ -278,11 +279,46 @@
             </WrapPanel>
         </Border>
 
+        <!-- Busca dentro del filtro activo, no a través de los tres a la vez: mezclar estados en
+             los resultados reabriría el mismo problema que "Todas" ya causó (ver más arriba) para
+             el borrado permanente, que solo tiene sentido en Papelera. Cambiar de pestaña conserva
+             el texto, así que buscar y luego mirar en otra categoría no obliga a escribirlo dos
+             veces. -->
+        <Border Grid.Row="2" Background="#332F28" CornerRadius="7" Margin="20,10,20,0">
+            <Grid>
+                <TextBlock Text="&#xE721;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets"
+                           Foreground="#6B6459" FontSize="13"
+                           Margin="10,0,0,0"
+                           HorizontalAlignment="Left" VerticalAlignment="Center" />
+                <!-- El marcador de posición es un TextBlock aparte, no el Text de un TextBox vacío:
+                     WPF no tiene watermark nativo, y esto evita que "Buscar…" se confunda con un
+                     valor real que haya que borrar antes de escribir. -->
+                <TextBlock x:Name="SearchPlaceholder" Text="Buscar en tus notas…"
+                           Foreground="#6B6459" FontSize="13"
+                           Margin="28,0,0,0"
+                           HorizontalAlignment="Left" VerticalAlignment="Center"
+                           IsHitTestVisible="False" />
+                <TextBox x:Name="SearchBox"
+                         Background="Transparent" Foreground="#EDE7DC" CaretBrush="#EDE7DC"
+                         FontSize="13" BorderThickness="0"
+                         Padding="0,9" Margin="28,0,28,0"
+                         VerticalContentAlignment="Center"
+                         TextChanged="OnSearchTextChanged" />
+                <Button x:Name="SearchClearButton" Content="&#x2715;" FontSize="9"
+                        Width="20" Height="20" Margin="0,0,6,0"
+                        HorizontalAlignment="Right" VerticalAlignment="Center"
+                        Visibility="Collapsed"
+                        ToolTip="Borrar búsqueda"
+                        Click="OnSearchClearClick"
+                        Style="{StaticResource CloseButtonStyle}" />
+            </Grid>
+        </Border>
+
         <!-- Casilla de tres estados y no un enlace de texto: es el patrón convencional para una
              lista con casillas, y sobre todo MUESTRA el estado. El enlace ya alternaba, pero no
              había forma de saber si estaba todo marcado o nada. Va alineada con las casillas de las
              filas, que es donde el ojo la busca. -->
-        <CheckBox Grid.Row="2" x:Name="SelectAllCheck"
+        <CheckBox Grid.Row="3" x:Name="SelectAllCheck"
                   Content="Seleccionar todo"
                   Foreground="#A79E90" Background="#2A261F" FontSize="12"
                   IsThreeState="True"
@@ -290,7 +326,7 @@
                   Click="OnSelectAllClick"
                   Margin="32,12,20,0" VerticalAlignment="Top" />
 
-        <Grid Grid.Row="2" Margin="20,38,12,0">
+        <Grid Grid.Row="3" Margin="20,38,12,0">
             <ScrollViewer x:Name="RowsScroll" VerticalScrollBarVisibility="Auto"
                           HorizontalScrollBarVisibility="Disabled" Padding="0,0,8,0">
                 <ItemsControl x:Name="RowsList">
@@ -364,7 +400,7 @@
         <!-- WrapPanel, no StackPanel: estos botones no caben en una línea al ancho mínimo, y un
              StackPanel dejaría el último saliéndose de la ventana sin recortar pero sin poder
              pulsarse (pasó exactamente eso una vez). WrapPanel baja el sobrante a otra línea. -->
-        <Border Grid.Row="3" Background="#25211B" Padding="20,12">
+        <Border Grid.Row="4" Background="#25211B" Padding="20,12">
             <DockPanel>
                 <!-- "Eliminar" separado del resto y a la izquierda: es la unica accion sin vuelta
                      atras de toda la app, asi que no comparte vecindario con las reversibles.

@@ -24,6 +24,7 @@ public partial class NotesManagerWindow : Window
     private List<NoteRow> _allRows = new();
     private List<NoteRow> _rows = new();
     private Filter _filter = Filter.Active;
+    private string _searchText = "";
 
     public NotesManagerWindow(NotesRepository repository, AppCoordinator coordinator)
     {
@@ -63,12 +64,17 @@ public partial class NotesManagerWindow : Window
     {
         // _rows is a filtered VIEW over _allRows (same NoteRow instances, not copies), so a
         // selection made under one filter is still there if the user switches filters and back.
-        _rows = _filter switch
+        IEnumerable<NoteRow> byState = _filter switch
         {
-            Filter.Archived => _allRows.Where(r => r.Note.State == NoteState.Archived).ToList(),
-            Filter.Trashed => _allRows.Where(r => r.Note.State == NoteState.Trashed).ToList(),
-            _ => _allRows.Where(r => r.Note.State == NoteState.Active).ToList()
+            Filter.Archived => _allRows.Where(r => r.Note.State == NoteState.Archived),
+            Filter.Trashed => _allRows.Where(r => r.Note.State == NoteState.Trashed),
+            _ => _allRows.Where(r => r.Note.State == NoteState.Active)
         };
+
+        // La búsqueda se queda dentro del filtro activo, no lo sustituye: mezclar estados en los
+        // resultados dejaría "Eliminar" (más abajo) actuando sobre notas que no están en la
+        // papelera, y ese botón existe justo para no poder saltarse la papelera.
+        _rows = byState.Where(r => NoteSearch.Matches(r.Note.Text, _searchText)).ToList();
         RowsList.ItemsSource = _rows;
 
         // Borrar del todo solo tiene sentido sobre lo que ya esta en la papelera.
@@ -107,13 +113,33 @@ public partial class NotesManagerWindow : Window
         };
 
         EmptyState.Visibility = _rows.Count == 0 ? Visibility.Visible : Visibility.Collapsed;
-        EmptyState.Text = _filter switch
-        {
-            Filter.Active => "No hay notas activas. Crea una con el botón + del borde de la pantalla.",
-            Filter.Archived => "No has archivado ninguna nota todavía.",
-            Filter.Trashed => "La papelera está vacía. Lo que envíes aquí se borra solo a los 30 días.",
-            _ => "Todavía no hay notas. Crea una con el botón + del borde de la pantalla."
-        };
+        // Con búsqueda activa, el hueco vacío es del texto escrito, no del filtro: decir "no hay
+        // notas activas" cuando en realidad sí las hay, solo que ninguna contiene lo buscado, sería
+        // mentir sobre la causa.
+        EmptyState.Text = _searchText.Trim().Length > 0
+            ? $"Ninguna nota contiene «{_searchText.Trim()}»."
+            : _filter switch
+            {
+                Filter.Active => "No hay notas activas. Crea una con el botón + del borde de la pantalla.",
+                Filter.Archived => "No has archivado ninguna nota todavía.",
+                Filter.Trashed => "La papelera está vacía. Lo que envíes aquí se borra solo a los 30 días.",
+                _ => "Todavía no hay notas. Crea una con el botón + del borde de la pantalla."
+            };
+    }
+
+    private void OnSearchTextChanged(object sender, TextChangedEventArgs e)
+    {
+        _searchText = SearchBox.Text;
+        SearchPlaceholder.Visibility = _searchText.Length == 0 ? Visibility.Visible : Visibility.Collapsed;
+        SearchClearButton.Visibility = _searchText.Length == 0 ? Visibility.Collapsed : Visibility.Visible;
+        ApplyFilter();
+    }
+
+    private void OnSearchClearClick(object sender, RoutedEventArgs e)
+    {
+        // Vaciar el cuadro ya dispara OnSearchTextChanged, que vuelve a aplicar el filtro.
+        SearchBox.Clear();
+        SearchBox.Focus();
     }
 
     private void OnFilterChanged(object sender, RoutedEventArgs e)
