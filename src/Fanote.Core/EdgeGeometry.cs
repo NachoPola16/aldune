@@ -32,7 +32,7 @@ public static class EdgeGeometry
     public const double TabWidth = 208;
 
     /// <summary>Hueco entre pestañas cuando caben todas sin solaparse.</summary>
-    public const double TabGap = 4;
+    public const double TabGap = 8;
 
     /// <summary>Paso entre pestañas cuando caben todas.</summary>
     public const double NaturalPitch = TabHeight + TabGap; // 44

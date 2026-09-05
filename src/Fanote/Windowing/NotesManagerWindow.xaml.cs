@@ -44,6 +44,15 @@ public partial class NotesManagerWindow : Window
         var archived = _repository.GetByState(NoteState.Archived);
         var trashed = _repository.GetByState(NoteState.Trashed);
         _allRows = active.Concat(archived).Concat(trashed).Select(n => new NoteRow(n)).ToList();
+
+        // Los botones de acción se habilitan según haya o no selección, así que hay que enterarse
+        // de cada marca. NoteRow ya es INotifyPropertyChanged para el binding del CheckBox; esto
+        // solo se engancha a la misma notificación.
+        foreach (var row in _allRows)
+        {
+            row.PropertyChanged += (_, _) => UpdateSelectionState();
+        }
+
         ApplyFilter();
     }
 
@@ -59,6 +68,40 @@ public partial class NotesManagerWindow : Window
             _ => _allRows
         };
         RowsList.ItemsSource = _rows;
+        UpdateSelectionState();
+    }
+
+    /// <summary>
+    /// Mantiene al día el subtítulo, el estado vacío y qué acciones están disponibles.
+    ///
+    /// Las acciones se deshabilitan sin selección en vez de dejarlas pulsables sin efecto: un
+    /// botón que no hace nada es peor que uno que dice que no puede.
+    /// </summary>
+    private void UpdateSelectionState()
+    {
+        int selected = _allRows.Count(r => r.IsSelected);
+        bool any = selected > 0;
+
+        ArchiveButton.IsEnabled = any;
+        RestoreButton.IsEnabled = any;
+        TrashButton.IsEnabled = any;
+        SelectAllButton.IsEnabled = _rows.Count > 0;
+
+        SubtitleText.Text = selected switch
+        {
+            0 => _rows.Count == 1 ? "1 nota" : $"{_rows.Count} notas",
+            1 => "1 seleccionada",
+            _ => $"{selected} seleccionadas"
+        };
+
+        EmptyState.Visibility = _rows.Count == 0 ? Visibility.Visible : Visibility.Collapsed;
+        EmptyState.Text = _filter switch
+        {
+            Filter.Active => "No hay notas activas. Crea una con el botón + del borde de la pantalla.",
+            Filter.Archived => "No has archivado ninguna nota todavía.",
+            Filter.Trashed => "La papelera está vacía. Lo que envíes aquí se borra solo a los 30 días.",
+            _ => "Todavía no hay notas. Crea una con el botón + del borde de la pantalla."
+        };
     }
 
     private void OnFilterChanged(object sender, RoutedEventArgs e)

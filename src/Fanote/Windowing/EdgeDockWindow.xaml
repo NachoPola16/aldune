@@ -67,23 +67,6 @@
                                        HorizontalAlignment="Left"
                                        Margin="16,11,26,0" />
 
-                            <!-- Troquelado: el pliegue por donde la cabecera se une al cuerpo.
-                                 Path + StrokeDashArray, la receta estándar de WPF para una regla
-                                 discontinua de largo variable. -->
-                            <Path Stroke="{Binding Color, Converter={StaticResource NoteRimConverter}}"
-                                  StrokeThickness="1"
-                                  StrokeDashArray="3 3"
-                                  Stretch="Fill"
-                                  Width="1"
-                                  Opacity="0.6"
-                                  HorizontalAlignment="Right"
-                                  Margin="0,7,14,7"
-                                  SnapsToDevicePixels="True">
-                                <Path.Data>
-                                    <LineGeometry StartPoint="0,0" EndPoint="0,1" />
-                                </Path.Data>
-                            </Path>
-
                             <Border x:Name="HoverOverlay" Background="#1E1A14" Opacity="0" CornerRadius="10,0,0,10" />
                         </Grid>
                         <ControlTemplate.Triggers>
