@@ -17,13 +17,13 @@ namespace Fanote.Windowing;
 /// </summary>
 public partial class NotesManagerWindow : Window
 {
-    private enum Filter { All, Active, Archived, Trashed }
+    private enum Filter { Active, Archived, Trashed }
 
     private readonly NotesRepository _repository;
     private readonly AppCoordinator _coordinator;
     private List<NoteRow> _allRows = new();
     private List<NoteRow> _rows = new();
-    private Filter _filter = Filter.All;
+    private Filter _filter = Filter.Active;
 
     public NotesManagerWindow(NotesRepository repository, AppCoordinator coordinator)
     {
@@ -37,7 +37,7 @@ public partial class NotesManagerWindow : Window
             NativeMethods.ApplyRoundedCorners(hwnd);
         };
 
-        FilterAll.IsChecked = true;
+        FilterActive.IsChecked = true;
         StartupCheck.IsChecked = StartupRegistration.IsEnabled();
         LoadRows();
     }
@@ -66,12 +66,14 @@ public partial class NotesManagerWindow : Window
         // selection made under one filter is still there if the user switches filters and back.
         _rows = _filter switch
         {
-            Filter.Active => _allRows.Where(r => r.Note.State == NoteState.Active).ToList(),
             Filter.Archived => _allRows.Where(r => r.Note.State == NoteState.Archived).ToList(),
             Filter.Trashed => _allRows.Where(r => r.Note.State == NoteState.Trashed).ToList(),
-            _ => _allRows
+            _ => _allRows.Where(r => r.Note.State == NoteState.Active).ToList()
         };
         RowsList.ItemsSource = _rows;
+
+        // Borrar del todo solo tiene sentido sobre lo que ya esta en la papelera.
+        DeleteButton.Visibility = _filter == Filter.Trashed ? Visibility.Visible : Visibility.Collapsed;
         UpdateSelectionState();
     }
 
@@ -117,10 +119,9 @@ public partial class NotesManagerWindow : Window
 
     private void OnFilterChanged(object sender, RoutedEventArgs e)
     {
-        _filter = sender == FilterActive ? Filter.Active
-            : sender == FilterArchived ? Filter.Archived
+        _filter = sender == FilterArchived ? Filter.Archived
             : sender == FilterTrashed ? Filter.Trashed
-            : Filter.All;
+            : Filter.Active;
 
         ApplyFilter();
         PlayListEntrance();
@@ -135,13 +136,11 @@ public partial class NotesManagerWindow : Window
     /// </summary>
     private IReadOnlyList<NoteRow> RowsLeavingView(NoteState newState)
     {
-        if (_filter == Filter.All) return Array.Empty<NoteRow>();
-
         var stays = _filter switch
         {
-            Filter.Active => NoteState.Active,
             Filter.Archived => NoteState.Archived,
-            _ => NoteState.Trashed
+            Filter.Trashed => NoteState.Trashed,
+            _ => NoteState.Active
         };
 
         return newState == stays
@@ -264,6 +263,31 @@ public partial class NotesManagerWindow : Window
             {
                 _repository.SetState(row.Note.Id, NoteState.Active);
             }
+            LoadRows();
+            _coordinator.RefreshAll();
+        });
+    }
+
+    /// <summary>
+    /// Borrado permanente. Unica accion irreversible de la app, asi que pide confirmacion y dice
+    /// cuantas notas se lleva por delante — un "¿seguro?" sin cifra no informa de nada.
+    /// </summary>
+    private void OnDeleteSelectedClick(object sender, RoutedEventArgs e)
+    {
+        var selected = _rows.Where(r => r.IsSelected).ToList();
+        if (selected.Count == 0) return;
+
+        var message = selected.Count == 1
+            ? "Se eliminará 1 nota definitivamente. Esta acción no se puede deshacer."
+            : $"Se eliminarán {selected.Count} notas definitivamente. Esta acción no se puede deshacer.";
+
+        var answer = MessageBox.Show(this, message, "Eliminar definitivamente",
+            MessageBoxButton.OKCancel, MessageBoxImage.Warning, MessageBoxResult.Cancel);
+        if (answer != MessageBoxResult.OK) return;
+
+        AnimateOut(selected, () =>
+        {
+            foreach (var row in selected) _repository.Delete(row.Note.Id);
             LoadRows();
             _coordinator.RefreshAll();
         });

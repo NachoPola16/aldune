@@ -112,6 +112,23 @@ public sealed class NotesRepository
     }
 
     /// <summary>
+    /// Permanently deletes a note, whatever its state. Returns whether a row was actually removed.
+    ///
+    /// Deliberately not exposed anywhere except the trash view: skipping the bin would remove the
+    /// safety net that makes SetState(Trashed) a forgiving action rather than a destructive one.
+    /// The 30-day purge is the automatic path; this is the manual one, for when you do not want to
+    /// wait a month for something to actually be gone.
+    /// </summary>
+    public bool Delete(Guid id)
+    {
+        using var connection = _database.OpenConnection();
+        using var command = connection.CreateCommand();
+        command.CommandText = "DELETE FROM Note WHERE Id = $id;";
+        command.Parameters.AddWithValue("$id", id.ToString());
+        return command.ExecuteNonQuery() > 0;
+    }
+
+    /// <summary>
     /// Permanently deletes trashed notes whose <c>UpdatedAt</c> is older than <paramref name="retention"/>.
     /// Never touches Active or Archived notes. Returns the number of notes removed.
     /// </summary>

@@ -135,6 +135,58 @@
             </Setter>
         </Style>
 
+        <!-- Las casillas por defecto de WPF son un cuadrado claro con borde fino de otra epoca:
+             sobre las filas de color y sobre el fondo oscuro cantan. Esta hereda Foreground, asi
+             que la misma plantilla sirve para las filas (tinta sobre pastel) y para las de chrome
+             (gris claro sobre fondo oscuro) sin duplicarla. -->
+        <Style x:Key="AppCheckBoxStyle" TargetType="CheckBox">
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="CheckBox">
+                        <StackPanel Orientation="Horizontal" Background="Transparent">
+                            <Border x:Name="Box" Width="17" Height="17" CornerRadius="4"
+                                    BorderBrush="{TemplateBinding Foreground}"
+                                    BorderThickness="1.5"
+                                    Background="Transparent"
+                                    VerticalAlignment="Center">
+                                <Grid>
+                                    <!-- Marca y guion comparten sitio: uno u otro, nunca los dos. -->
+                                    <TextBlock x:Name="Tick" Text="&#x2713;" FontSize="12"
+                                               FontWeight="Bold"
+                                               Foreground="{TemplateBinding Background}"
+                                               HorizontalAlignment="Center" VerticalAlignment="Center"
+                                               Visibility="Collapsed" />
+                                    <Border x:Name="Dash" Width="9" Height="2" CornerRadius="1"
+                                            Background="{TemplateBinding Background}"
+                                            HorizontalAlignment="Center" VerticalAlignment="Center"
+                                            Visibility="Collapsed" />
+                                </Grid>
+                            </Border>
+                            <ContentPresenter Margin="8,0,0,0" VerticalAlignment="Center" />
+                        </StackPanel>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsChecked" Value="True">
+                                <Setter TargetName="Box" Property="Background" Value="{Binding Foreground, RelativeSource={RelativeSource TemplatedParent}}" />
+                                <Setter TargetName="Tick" Property="Visibility" Value="Visible" />
+                            </Trigger>
+                            <!-- Indeterminada: guion, no marca. Es lo que dice "algunas, no todas". -->
+                            <Trigger Property="IsChecked" Value="{x:Null}">
+                                <Setter TargetName="Box" Property="Background" Value="{Binding Foreground, RelativeSource={RelativeSource TemplatedParent}}" />
+                                <Setter TargetName="Dash" Property="Visibility" Value="Visible" />
+                            </Trigger>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Box" Property="BorderThickness" Value="2" />
+                            </Trigger>
+                            <Trigger Property="IsEnabled" Value="False">
+                                <Setter Property="Opacity" Value="0.4" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
         <!-- Filtros como control segmentado: cuatro opciones excluyentes de un mismo eje se leen
              mejor juntas en una pastilla que como cuatro botones sueltos. -->
         <Style x:Key="FilterToggleStyle" TargetType="RadioButton">
@@ -197,8 +249,12 @@
                 <!-- IsChecked se fija desde el code-behind tras InitializeComponent, no aquí: un
                      IsChecked="True" en XAML dispara Checked mientras el árbol se está
                      construyendo, antes de que RowsList exista — ver el constructor. -->
-                <RadioButton x:Name="FilterAll" GroupName="NotesFilter" Content="Todas"
-                             Checked="OnFilterChanged" Style="{StaticResource FilterToggleStyle}" />
+                <!-- Sin "Todas". Mezclaba tres categorias mentales distintas (lo que tienes, lo
+                     que guardaste, lo que tiraste) en una sola lista donde el estado solo se
+                     distinguia por un chip pequeno, y ademas obligaba a un caso especial en las
+                     animaciones: bajo "Todas" archivar no saca la nota de la vista, asi que no
+                     podia animarse como que se va. Tres estados, y "Activas" por defecto, que es
+                     lo que uno quiere ver al abrir. -->
                 <RadioButton x:Name="FilterActive" GroupName="NotesFilter" Content="Activas"
                              Checked="OnFilterChanged" Style="{StaticResource FilterToggleStyle}" />
                 <RadioButton x:Name="FilterArchived" GroupName="NotesFilter" Content="Archivadas"
@@ -208,14 +264,23 @@
             </WrapPanel>
         </Border>
 
+        <CheckBox Grid.Row="1" x:Name="StartupCheck"
+                  Content="Abrir al iniciar sesión"
+                  Foreground="#A79E90" Background="#2A261F" FontSize="12"
+                  HorizontalAlignment="Right" VerticalAlignment="Center"
+                  Margin="0,0,20,0"
+                  Style="{StaticResource AppCheckBoxStyle}"
+                  Click="OnStartupToggled" />
+
         <!-- Casilla de tres estados y no un enlace de texto: es el patrón convencional para una
              lista con casillas, y sobre todo MUESTRA el estado. El enlace ya alternaba, pero no
              había forma de saber si estaba todo marcado o nada. Va alineada con las casillas de las
              filas, que es donde el ojo la busca. -->
         <CheckBox Grid.Row="2" x:Name="SelectAllCheck"
                   Content="Seleccionar todo"
-                  Foreground="#A79E90" FontSize="12"
+                  Foreground="#A79E90" Background="#2A261F" FontSize="12"
                   IsThreeState="True"
+                  Style="{StaticResource AppCheckBoxStyle}"
                   Click="OnSelectAllClick"
                   Margin="32,12,20,0" VerticalAlignment="Top" />
 
@@ -242,6 +307,9 @@
 
                                     <CheckBox Grid.Column="0"
                                               IsChecked="{Binding IsSelected, Mode=TwoWay}"
+                                              Foreground="#1E1A14"
+                                              Background="{Binding Note.Color}"
+                                              Style="{StaticResource AppCheckBoxStyle}"
                                               VerticalAlignment="Center" Margin="0,0,12,0" />
 
                                     <TextBlock Grid.Column="1"
@@ -292,14 +360,21 @@
              pulsarse (pasó exactamente eso una vez). WrapPanel baja el sobrante a otra línea. -->
         <Border Grid.Row="3" Background="#25211B" Padding="20,12">
             <DockPanel>
-                <!-- El arranque automático también aquí, no solo en el clic derecho de la bandeja:
-                     un ajuste escondido en un menú contextual es un ajuste que nadie encuentra, y
-                     esta es la única ventana de verdad que tiene la app. -->
-                <CheckBox x:Name="StartupCheck" DockPanel.Dock="Left"
-                          Content="Abrir al iniciar sesión"
-                          Foreground="#A79E90" FontSize="12"
-                          VerticalAlignment="Center"
-                          Click="OnStartupToggled" />
+                <!-- "Eliminar" separado del resto y a la izquierda: es la unica accion sin vuelta
+                     atras de toda la app, asi que no comparte vecindario con las reversibles.
+                     Solo aparece en la papelera — ofrecerlo en las demas vistas permitiria saltarse
+                     la papelera, que es justo la red de seguridad que la hace util. -->
+                <Button x:Name="DeleteButton" DockPanel.Dock="Left"
+                        Click="OnDeleteSelectedClick"
+                        Visibility="Collapsed"
+                        VerticalAlignment="Center"
+                        Style="{StaticResource DangerToolbarButtonStyle}">
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Text="&#xE74D;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets"
+                                   VerticalAlignment="Center" Margin="0,0,6,0" />
+                        <TextBlock Text="Eliminar" VerticalAlignment="Center" />
+                    </StackPanel>
+                </Button>
 
                 <!-- Margin vertical en los elementos: si el WrapPanel llega a partirse a un ancho
                      muy estrecho, las dos líneas se tocaban y los botones parecían solaparse. -->
