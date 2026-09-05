@@ -129,6 +129,17 @@ public sealed class AppCoordinator
         NativeMethods.ForceActivate(_notesManagerWindow);
     }
 
+    /// <summary>
+    /// Abre el gestor sin que lo pida un dock — desde el menu de la bandeja. Se coloca sobre el
+    /// primer dock disponible, que es lo mas parecido a "donde vive la app" cuando la peticion no
+    /// viene de una pantalla concreta.
+    /// </summary>
+    public void OpenNotesManager()
+    {
+        if (_docks.Count == 0) return;
+        OpenOrActivateNotesManager(_docks[0]);
+    }
+
     public void RefreshAll()
     {
         foreach (var dock in _docks) dock.Refresh();

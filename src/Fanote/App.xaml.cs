@@ -167,7 +167,17 @@ public partial class App : Application
         // es reconstruirlos contra la lista de monitores nueva. Se engancha al final del arranque,
         // ya con el descifrado verificado, para no reconstruir nada si la app va a abortar.
         SystemEvents.DisplaySettingsChanged += OnDisplaySettingsChanged;
-        Exit += (_, _) => SystemEvents.DisplaySettingsChanged -= OnDisplaySettingsChanged;
+
+        // Icono de bandeja: hasta ahora la app no tenia forma de cerrarse ni de configurarse — se
+        // lanzaba a mano y se cerraba matando el proceso. Un dock sin ventana propia necesita
+        // algun sitio donde vivir, y la bandeja es el sitio convenido en Windows para eso.
+        _trayIcon = new TrayIcon(repository, coordinator);
+
+        Exit += (_, _) =>
+        {
+            SystemEvents.DisplaySettingsChanged -= OnDisplaySettingsChanged;
+            _trayIcon?.Dispose();
+        };
     }
 
     /// <summary>
@@ -201,6 +211,7 @@ public partial class App : Application
     }
     
     private AppCoordinator? _coordinator;
+    private TrayIcon? _trayIcon;
     private NotesRepository? _repository;
     private DispatcherTimer? _rebuildDebounce;
 

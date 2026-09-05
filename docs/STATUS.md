@@ -1026,6 +1026,46 @@ Cuando ese punto se aborde de verdad, debería pasar a `AppSettings`.
 Que el dock se esconda ante una ventana a pantalla completa: hecho en la cuarta
 ronda, ver su sección más arriba.
 
+## Icono de bandeja, arranque con Windows e icono de la app (sesion 2026-09-05)
+
+Cierra el agujero mas grande que quedaba de producto: **la app no tenia forma de
+cerrarse ni de configurarse**. Se lanzaba a mano y se cerraba matando el
+proceso.
+
+- **`TrayIcon`** (`System.Windows.Forms.NotifyIcon`): nueva nota, gestionar
+  notas, "Abrir al iniciar sesion" y salir. Doble clic abre el gestor. Menu con
+  `ProfessionalColorTable` propia para que no desentone con el resto — el
+  renderer por defecto de WinForms es gris claro y de otra epoca.
+- **`UseWindowsForms` obliga a un ajuste**: mete `System.Windows.Forms` y
+  `System.Drawing` en los global usings de TODO el proyecto, y ahi chocan con
+  WPF (`Application`, `Button`, `Point`, `Color` existen en los dos mundos), asi
+  que cada fichero empezaba a dar CS0104. Se sacan con `<Using Remove=...>` y
+  solo `TrayIcon.cs` los pide explicitamente.
+- **`ShutdownMode` pasa a `OnExplicitShutdown`**: con bandeja, cerrar la ultima
+  nota no debe cerrar la app. Se sale por el menu, o por los `Shutdown(1)` de
+  los fallos de arranque.
+- **`StartupRegistration`**: clave `Run` de HKCU, no de maquina — no pide
+  permisos de administrador, y es la que Windows enseña y deja desactivar en
+  Administrador de tareas > Inicio, asi que siempre hay una segunda via para
+  quitarlo. La ruta va entrecomillada: sin comillas, una ruta con espacios
+  haria que Windows ejecutara el primer trozo y pasara el resto como argumentos.
+  El menu refleja lo que de verdad quedo guardado, no lo que se pidio, por si el
+  registro esta restringido por directiva.
+- **Icono** (`src/Fanote/Assets/fanote.ico`, generado con un script de un solo
+  uso): fichas de colores asomando por el canto derecho sobre el fondo tintado,
+  que es literalmente lo que hace la app. Dos detalles del formato:
+  - Los tamanos <=48px van en **BMP**, no PNG. Windows admite PNG dentro de .ico
+    desde Vista, pero GDI+ tropieza con esas entradas (`Icon.ToBitmap` revienta
+    con "Requested range extends past the end of the array") y el icono de
+    bandeja pasa por ahi. 256px si va en PNG: en BMP ocuparia 256KB.
+  - A 16px tres barras con sus huecos son papilla, asi que ese tamano tiene un
+    dibujo propio de dos barras mas gruesas.
+
+**Riesgo asumido**: con `OnExplicitShutdown`, si el icono de bandeja fallara al
+crearse no habria forma de salir salvo el Administrador de tareas.
+
+Tests: 113/113.
+
 ## Cómo seguir desde aquí
 
 Rama `dock-motion-shape`, encima de `worktree-fanote-fan-tabs-redesign` (que a
