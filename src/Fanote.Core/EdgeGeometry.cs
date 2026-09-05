@@ -120,7 +120,11 @@ public static class EdgeGeometry
     /// <summary>Cuánto sobresale el contenedor del primer y último guión.</summary>
     public const double RestContainerPad = 5;
 
-    /// <summary>Zona sensible al ratón en reposo.</summary>
+    /// <summary>
+    /// Zona sensible al ratón en reposo: el contenedor más su separación del canto, más otro tanto
+    /// de holgura por el lado libre. Cubre de sobra la tira visible, que es lo que se quiere — un
+    /// objetivo de 20px de ancho pegado al borde es incómodo de acertar si la zona no perdona algo.
+    /// </summary>
     public const double RestSliverWidth = RestContainerWidth + RestContainerInset * 2;
 
     /// <summary>Longitud de la tira de guiones en reposo: uno por nota.</summary>

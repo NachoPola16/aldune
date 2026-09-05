@@ -1028,47 +1028,52 @@ ronda, ver su sección más arriba.
 
 ## Cómo seguir desde aquí
 
-Rama `dock-motion-shape` (sobre `worktree-fanote-fan-tabs-redesign`). Dos
-rondas hechas: primero el modelo de movimiento (ventana fija + región
-animada), después el de la pestaña como lomo de la nota. Verificado por
-geometría y por render aislado, **pendiente de verificación manual**.
+Rama `dock-motion-shape`, encima de `worktree-fanote-fan-tabs-redesign` (que a
+su vez sigue sin fusionar en `master` — son dos niveles de trabajo apilado, ver
+"Cómo seguir" al final).
 
-Checklist antes de darlo por bueno y fusionar:
+El diseño actual, en una frase: **la ventana del dock no cambia de tamaño
+nunca**, es transparente, y su contenido son dos capas que se cruzan con
+fundido — la tira de guiones en reposo y el abanico de pestañas horizontales
+desplegado. No queda nada de la maquinaria de regiones.
 
-1. En reposo se ve una tira corta de guiones de color, uno por nota, centrada
-   en el borde. No debe haber ninguna franja gris ni banda muerta al final.
-2. Todos los guiones responden al ratón, **incluido el último** (este fue un
-   bug real: con 5 notas el quinto se veía y no se podía pulsar).
-3. Al pasar el ratón, cada guión crece hasta ser su pestaña, escalonado y
-   deslizándose hacia fuera. La última asienta en ~350ms como mucho.
-4. Al salir, se cierra en orden inverso (primero la de más abajo).
-5. Entrar y salir rápido varias veces no deja el dock a medio abrir.
-6. La etiqueta vertical se lee (mayúsculas con tracking, en el tono oscuro de
-   su propio color) y **no asoma en reposo**.
-7. Se ve la línea de troquelado punteada cerca del borde derecho de cada
-   pestaña.
-8. Al hacer clic, la nota **se desliza hacia la izquierda** llevando su lomo
-   por delante, alineada con la altura de su pestaña — y esa pestaña
-   desaparece del mazo dejando el hueco.
-9. El lomo de la nota abierta muestra la misma etiqueta y el mismo troquelado
-   que tenía la pestaña.
-10. Al cerrar la nota, su pestaña vuelve a su sitio.
-11. Con más de 4 notas: hay scroll con la rueda en el desplegado, y ninguna
-    pestaña fuera de vista deja un agujero de fondo suelto.
-12. Los botones "+" y engranaje aparecen con la última pestaña y se pulsan.
-13. Nada se rompe en el segundo monitor (lanzar sin `FANOTE_MONITOR_INDEX`).
-14. Al abrir una nota, la animación **no se dibuja en el otro monitor** — este
-    era el bug reportado con un juego a pantalla completa al lado.
-15. Con un juego o un vídeo a pantalla completa delante, el dock desaparece de
-    ese monitor y vuelve al salir. Con una ventana solo **maximizada** debe
-    seguir viéndose.
+Checklist manual antes de dar la rama por buena:
 
-Si algo falla, el sitio es `EdgeDockWindow.ApplyRegion` (forma por frame),
-`TabRegionShape` (curva y escalonado, con tests) o `NoteWindow.SlideInFrom`.
+1. En reposo se ve una tira corta y oscura, despegada del canto, con un guión
+   de color por nota. Todos responden al ratón, **incluido el último**.
+2. Al pasar el ratón, las pestañas entran escalonadas deslizándose desde el
+   canto; la última asienta en ~350ms como mucho.
+3. Las curvas se ven **suaves**, sin escalones de píxeles: las esquinas de las
+   pestañas, las tapas de la tira y sobre todo los círculos de "+" y engranaje.
+4. Cada pestaña muestra su título entero y, debajo, las primeras palabras del
+   cuerpo. Una nota sin cuerpo centra su título en vez de dejar un renglón
+   vacío.
+5. Con 8 notas o más las pestañas se solapan y el abanico deja de crecer. Se
+   leen como fichas apiladas, no como un bloque: cada una tiene un canto oscuro
+   sobre la anterior.
+6. Al solaparse mucho, la vista previa desaparece entera (no cortada a media
+   línea) y el título sigue leyéndose.
+7. Los botones "+" y engranaje quedan alineados a la derecha con las pestañas,
+   sin pegarse al canto, y el "+" pesa más que el engranaje.
+8. Al hacer clic, la nota sale deslizándose con su cabecera por delante, y su
+   pestaña desaparece del mazo dejando el hueco. Al cerrarla vuelve hacia el
+   mazo y la pestaña reaparece.
+9. **La animación no se dibuja nunca en el otro monitor.**
+10. Crear una nota anima solo esa pestaña, no rehace el abanico entero.
+11. "Gestionar notas" se abre **en el monitor desde el que pulsaste**, con su
+    barra de scroll fina y oscura. Sin selección, las tres acciones están
+    deshabilitadas. Cada filtro vacío dice algo útil.
+12. Archivar o enviar a la papelera desde un filtro concreto anima la fila
+    saliendo; desde "Todas" no, porque ahí la nota no se va a ninguna parte.
+13. Con un juego o vídeo a pantalla completa delante, el dock desaparece de ese
+    monitor y vuelve al salir. Con una ventana solo **maximizada** sigue
+    viéndose.
+14. Apagar un monitor con la app abierta deja **un solo dock**, no dos apilados
+    en el que queda; al encenderlo vuelve el segundo.
 
-Lo que ninguna de las verificaciones automáticas cubre es **cómo se siente**:
-sobre todo si el deslizamiento se lee como "tirar de una ficha de un fichero"
-o solo como que la nota aparece por la derecha.
+Riesgo específico de esta rama, sin verificar: el dock pasó a
+`AllowsTransparency`, lo que cambia cómo compone WPF. Si aparece parpadeo o
+lentitud al desplegar, es nuevo y viene de ahí.
 
 Después de eso, sigue abierto elegir entre, para lo siguiente:
 

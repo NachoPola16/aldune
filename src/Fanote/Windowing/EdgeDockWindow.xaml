@@ -150,12 +150,18 @@
              explícitamente en ApplyState, o la capa invisible se come los clics de la visible. -->
 
         <!-- Reposo: la tira de guiones dentro de su contenedor. -->
+        <!-- Los numeros de aqui son los de EdgeGeometry: Width = RestContainerWidth (20),
+             Margin derecho = RestContainerInset (5), Padding = RestContainerPad (5), y el guion
+             de abajo RestDashWidth x RestDashLength con RestGap de separacion. Tienen que ir
+             juntos: RestingVisibleRect calcula la zona sensible al raton con esas constantes, asi
+             que si el XAML se separa de ellas el raton deja de coincidir con lo que se ve. -->
         <Border x:Name="RestStrip"
                 Background="#2A261F"
                 CornerRadius="10"
                 HorizontalAlignment="Right"
                 VerticalAlignment="Center"
                 Width="20"
+                Margin="0,0,5,0"
                 Padding="0,5"
                 Effect="{StaticResource ButtonShadow}">
             <ItemsControl ItemsSource="{Binding ItemsSource, ElementName=TabsList}">
