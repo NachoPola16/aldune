@@ -65,7 +65,7 @@ autoridad de diseño; todo lo demás (planes, código) se argumenta contra él.
   (ver historial más abajo) y, a raíz de probarlo, también se hizo que el
   tamaño del pill/panel se ajuste al número de notas en vez de ser fijo.
 
-Tests: 132/132 pasando (`dotnet test` desde la raíz del repo).
+Tests: 140/140 pasando (`dotnet test` desde la raíz del repo).
 
 ## Cómo se ha trabajado (para mantener el mismo estilo)
 
@@ -1147,6 +1147,37 @@ desarrollo):
 
 Tests: 132/132.
 
+## Buscar notas (sesión 2026-09-05, tercera ronda)
+
+Primer punto de la lista de "lo siguiente" de la ronda anterior — la app ya se
+puede usar a diario gracias al portable, y esto era lo primero que se echaría
+en falta al crecer más allá de un puñado de notas.
+
+- **`Fanote.Core.NoteSearch.Matches(texto, consulta)`**: en Core, no en la
+  ventana, porque es la única pieza con lógica real que vale la pena cubrir con
+  tests en vez de con clics — recorta espacios, una consulta vacía coincide con
+  todo (así borrar la caja no necesita un camino aparte de "sin búsqueda"), y
+  compara sin distinguir mayúsculas pero sí acentos (vía la cultura actual, no
+  `OrdinalIgnoreCase`).
+- **La búsqueda se queda dentro del filtro activo**, no lo sustituye por una
+  vista mezclada de los tres estados. La razón es el botón "Eliminar" (borrado
+  permanente): solo aparece bajo "Papelera", y una búsqueda que mezclara
+  estados lo dejaría actuando sobre notas que no están ahí de verdad — ese
+  botón existe justo para que no se pueda saltar la papelera por accidente. El
+  texto escrito persiste al cambiar de pestaña, así que mirar el mismo término
+  en otra categoría no obliga a reescribirlo.
+- **El estado vacío distingue la causa**: "ninguna nota contiene «X»" cuando
+  hay búsqueda, en vez de reciclar el mensaje de "no hay notas en este filtro"
+  — ese mensaje sería mentira si de hecho sí hay notas y solo ninguna coincide.
+
+**Verificado con una ventana renderizada de forma aislada** (un proyecto
+descartable en el scratchpad, `RenderTargetBitmap` sobre el HWND de la propia
+ventana, nunca una captura de pantalla) contra datos de prueba sembrados a
+mano: coincide dentro de "Activas", se mantiene acotada al cambiar a
+"Archivadas", y el mensaje de "sin resultados" nombra el término buscado.
+
+Tests: 140/140.
+
 ## Cómo seguir desde aquí
 
 **Todo lo anterior está ya fusionado en `master`**; las ramas apiladas
@@ -1197,16 +1228,14 @@ lentitud al desplegar, es nuevo y viene de ahí.
 
 ### Lo siguiente, por orden y con el porqué
 
-1. **Inglés y selector de idioma** (pedido explícitamente). Se aplazó a
-   propósito hasta tener el portable: cada texto que se extraiga mientras la
-   interfaz se sigue moviendo es un texto que habrá que volver a extraer. Son
-   ~60 cadenas en cinco ventanas más el menú de bandeja. Plan: `.resx`,
-   selector en Ajustes, e idioma del sistema como valor inicial.
-2. **Buscar notas.** No existe, y es lo primero que se echará en falta hacia las
-   20 notas — el abanico solapado deja de ser navegable mucho antes que la
-   lista del gestor.
+1. **Inglés y selector de idioma** (pedido explícitamente). Sigue siendo lo
+   siguiente natural: ~60 cadenas en cinco ventanas más el menú de bandeja.
+   Plan: `.resx`, selector en Ajustes, e idioma del sistema como valor inicial.
+2. **`Ctrl+F` para enfocar la búsqueda** dentro de "Gestionar notas" (la
+   búsqueda en sí ya existe — ver sección de arriba — esto es solo el atajo de
+   teclado para llegar a la caja sin usar el ratón).
 3. **Más atajos**: desplegar/ocultar el abanico, `Esc` para cerrar la nota
-   activa, `Ctrl+F` para buscar (depende del punto 2).
+   activa.
 4. **Instalador**. Ojo: sin certificado de firma de código (de pago) SmartScreen
    avisará igual, así que el instalador no quita esa fricción, solo la mueve.
 5. Sub-entrega 2 de la Fase 3 (ver prerrequisitos arriba): toggle de
