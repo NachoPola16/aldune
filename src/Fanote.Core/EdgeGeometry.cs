@@ -30,14 +30,55 @@ public static class EdgeGeometry
     public const double TabHeight = 100;
 
     /// <summary>
-    /// Hueco entre pestañas. Tiene que ser &gt; 0: la región se une con CombineRgn/RGN_OR, así que
-    /// dos pestañas solapadas se funden en una sola mancha y el abanico desaparece.
+    /// Hueco entre pestañas <b>cuando caben todas</b>. En cuanto hay que solaparlas (ver
+    /// <see cref="PitchFor"/>) desaparece, y con él los huecos de la región.
     /// </summary>
     public const double TabGap = 8;
 
-    /// <summary>Paso real de una pestaña a la siguiente. El presupuesto de longitud se calcula con
-    /// esto, así que layout y geometría no pueden discrepar.</summary>
-    public const double TabPitch = TabHeight + TabGap; // 108
+    /// <summary>Paso entre pestañas cuando caben todas sin solaparse.</summary>
+    public const double NaturalPitch = TabHeight + TabGap; // 108
+
+    /// <summary>
+    /// Paso mínimo al que pueden llegar a solaparse. Es lo que queda visible de cada pestaña, y
+    /// por tanto cuánta etiqueta se llega a leer: por debajo de esto el abanico deja de decirte
+    /// cuál es cuál, que es el único trabajo de una pestaña.
+    /// </summary>
+    public const double MinPitch = 34;
+
+    /// <summary>
+    /// Fracción del alto útil del monitor que el abanico desplegado puede ocupar. No más, para que
+    /// no dé la sensación de adueñarse de la pantalla.
+    /// </summary>
+    public const double MaxScreenFraction = 0.8;
+
+    /// <summary>
+    /// Paso real entre pestañas: se encoge conforme hay más notas, de modo que el abanico ocupa
+    /// aproximadamente el mismo sitio tanto con cuatro notas como con veinte.
+    ///
+    /// Antes era una constante y la longitud se topaba, lo que dejaba las pestañas sobrantes
+    /// <b>fuera del viewport del ScrollViewer y sin dibujar al desplegar</b> — se veían en reposo
+    /// (donde el desplazamiento las trae a la tira) y desaparecían al pasar el ratón, sin ninguna
+    /// barra de scroll que avisara de que había más. Bug reportado por el usuario al crear la
+    /// quinta nota.
+    ///
+    /// Consecuencia asumida: al solaparse, la región (que es una unión, RGN_OR) deja de tener
+    /// huecos y el abanico pasa de peine a losa continua. La separación entre pestañas la dan
+    /// entonces el filete de 1px y la esquina redondeada de cada una, no el escritorio de por
+    /// medio.
+    /// </summary>
+    public static double PitchFor(WorkingArea area, EdgePosition edge, int noteCount)
+    {
+        if (noteCount <= 1) return NaturalPitch;
+
+        double available = edge is EdgePosition.Left or EdgePosition.Right ? area.Height : area.Width;
+        double budget = available * MaxScreenFraction - FooterLength;
+
+        // Lo que ocupan sin solaparse: la última se ve entera, las demás aportan un paso.
+        double natural = (noteCount - 1) * NaturalPitch + TabHeight;
+        if (natural <= budget) return NaturalPitch;
+
+        return Math.Max((budget - TabHeight) / (noteCount - 1), MinPitch);
+    }
 
     /// <summary>
     /// Ancho de <b>todas</b> las pestañas. Uniforme a propósito — ver el resumen de la clase.
@@ -56,8 +97,12 @@ public static class EdgeGeometry
 
     // --- Reposo -------------------------------------------------------------------------------
 
-    /// <summary>Ancho del guión de color de cada nota en reposo.</summary>
-    public const double RestDashWidth = 18;
+    /// <summary>
+    /// Ancho del guión de color en reposo. Estrecho y alargado a propósito: con 18x26 salían casi
+    /// cuadrados y la tira se leía como un selector de color, no como el canto de unas fichas.
+    /// Comprobado renderizando tres proporciones en aislamiento sobre fondo claro antes de elegir.
+    /// </summary>
+    public const double RestDashWidth = 12;
 
     /// <summary>
     /// Ancho del contenedor que agrupa los guiones en reposo. Más ancho que el guión, para que
@@ -67,7 +112,7 @@ public static class EdgeGeometry
     /// claros sueltos sobre un escritorio claro desaparecen (comprobado en la app real). El vídeo
     /// de referencia lo tiene, aunque no se aprecia en su landing.
     /// </summary>
-    public const double RestContainerWidth = 26;
+    public const double RestContainerWidth = 20;
 
     /// <summary>Separación del contenedor respecto al canto de la pantalla. En reposo la tira va
     /// despegada del borde (como en la referencia); las pestañas desplegadas sí van a ras.</summary>
@@ -94,19 +139,19 @@ public static class EdgeGeometry
     /// No se puede resolver con un ScaleX: aplastaría también la etiqueta, que en reposo está
     /// fuera de la zona visible precisamente porque vive en el extremo izquierdo de la pestaña.
     /// </summary>
-    public const double RestClipLeft = TabWidth - RestDashInset - RestDashWidth; // 78
+    public const double RestClipLeft = TabWidth - RestDashInset - RestDashWidth; // 84
 
     /// <summary>Zona sensible al ratón en reposo: la del contenedor.</summary>
-    public const double RestSliverWidth = RestContainerWidth + RestContainerInset; // 30
+    public const double RestSliverWidth = RestContainerWidth + RestContainerInset; // 24
 
     /// <summary>Alto del guión de color de cada nota en reposo.</summary>
-    public const double RestDashLength = 26;
+    public const double RestDashLength = 34;
 
     /// <summary>Hueco entre guiones en reposo. Es lo que deja ver el fondo del contenedor.</summary>
-    public const double RestGap = 6;
+    public const double RestGap = 5;
 
     /// <summary>Paso entre guiones en reposo.</summary>
-    public const double RestPitch = RestDashLength + RestGap; // 32
+    public const double RestPitch = RestDashLength + RestGap; // 39
 
     // --- Ventana ------------------------------------------------------------------------------
 
@@ -118,14 +163,7 @@ public static class EdgeGeometry
 
     /// <summary>Longitud mínima de la ventana, para que con 0-1 notas siga siendo un objetivo de
     /// ratón razonable.</summary>
-    public const double MinContentLength = TabPitch;
-
-    /// <summary>
-    /// Máxima longitud dedicada a pestañas antes de que la lista pase a hacer scroll. Múltiplo
-    /// exacto de <see cref="TabPitch"/> a propósito: si no lo fuera, la vista inicial sin
-    /// scrollear cortaría la última pestaña por la mitad desde el primer hover.
-    /// </summary>
-    public const double MaxContentLength = 4 * TabPitch; // 432
+    public const double MinContentLength = NaturalPitch;
 
     /// <summary>
     /// Alto de la fila fija de botones ("+" y engranaje), fuera del ScrollViewer para que siempre
@@ -138,12 +176,12 @@ public static class EdgeGeometry
     /// reservar fuera de la ventana, y las fichas de un fichero van pegadas al canto.</summary>
     public const double EdgeMargin = 0;
 
-    /// <summary>Longitud que ocupan las pestañas desplegadas, acotada. Sin el hueco sobrante de la
-    /// última: el paso incluye un hueco por pestaña, pero tras la última no hay nada que separar.</summary>
-    public static double TabStripLength(int noteCount)
+    /// <summary>Longitud que ocupan las pestañas desplegadas: un paso por cada una salvo la
+    /// última, que se ve entera.</summary>
+    public static double TabStripLength(WorkingArea area, EdgePosition edge, int noteCount)
     {
         if (noteCount <= 0) return 0;
-        return Math.Min(noteCount * TabPitch, MaxContentLength) - TabGap;
+        return (noteCount - 1) * PitchFor(area, edge, noteCount) + TabHeight;
     }
 
     /// <summary>
@@ -162,20 +200,20 @@ public static class EdgeGeometry
         return noteCount * RestPitch - RestGap;
     }
 
-    /// <summary>Longitud total de la ventana: pestañas (acotadas) + la fila de botones.</summary>
-    public static double WindowLength(int noteCount) =>
-        Math.Clamp(noteCount * TabPitch, MinContentLength, MaxContentLength) + FooterLength;
+    /// <summary>Longitud total de la ventana: el abanico + la fila de botones.</summary>
+    public static double WindowLength(WorkingArea area, EdgePosition edge, int noteCount) =>
+        Math.Max(TabStripLength(area, edge, noteCount), MinContentLength) + FooterLength;
 
     /// <summary>
     /// Desplazamiento a lo largo del eje de longitud, dentro de la ventana, donde empieza la tira
     /// de guiones en reposo. Centrada respecto a la ventana, de modo que el dock en reposo queda
     /// centrado en el borde de la pantalla igual que el desplegado.
     /// </summary>
-    public static double RestStripStart(int noteCount) =>
+    public static double RestStripStart(WorkingArea area, EdgePosition edge, int noteCount) =>
         // Nunca negativo: con muchísimas notas la tira es más larga que la ventana, y un inicio
         // negativo recortaría las PRIMERAS notas contra el borde superior. Pegándola arriba, las
         // que sobran son las últimas, que es la degradación menos sorprendente.
-        Math.Max(0, (WindowLength(noteCount) - RestStripLength(noteCount)) / 2);
+        Math.Max(0, (WindowLength(area, edge, noteCount) - RestStripLength(noteCount)) / 2);
 
     /// <summary>
     /// Cuánto hay que desplazar la pestaña <paramref name="index"/> (sin tocar el layout, con un
@@ -197,10 +235,10 @@ public static class EdgeGeometry
     /// </summary>
     public static double RestScaleFor() => RestDashLength / TabHeight;
 
-    public static double RestOffsetFor(int index, int noteCount)
+    public static double RestOffsetFor(WorkingArea area, EdgePosition edge, int index, int noteCount)
     {
-        double dashCenter = RestStripStart(noteCount) + index * RestPitch + RestDashLength / 2;
-        double tabCenter = index * TabPitch + TabHeight / 2;
+        double dashCenter = RestStripStart(area, edge, noteCount) + index * RestPitch + RestDashLength / 2;
+        double tabCenter = index * PitchFor(area, edge, noteCount) + TabHeight / 2;
         return dashCenter - tabCenter;
     }
 
@@ -210,7 +248,7 @@ public static class EdgeGeometry
     /// </summary>
     public static Rect WindowRect(WorkingArea area, EdgePosition edge, int noteCount)
     {
-        double length = WindowLength(noteCount);
+        double length = WindowLength(area, edge, noteCount);
         return edge switch
         {
             EdgePosition.Top => new Rect(
@@ -253,10 +291,11 @@ public static class EdgeGeometry
     public static Rect RestingVisibleRect(WorkingArea area, EdgePosition edge, int noteCount)
     {
         var window = WindowRect(area, edge, noteCount);
-        double start = RestStripStart(noteCount);
+        double start = RestStripStart(area, edge, noteCount);
         // Acotada a lo que queda de ventana: la zona sensible no puede prometer más de lo que
         // realmente se ve, porque lo que cae fuera de la ventana lo recorta Windows.
-        double length = Math.Min(RestStripLength(noteCount), WindowLength(noteCount) - start);
+        double length = Math.Min(
+            RestStripLength(noteCount), WindowLength(area, edge, noteCount) - start);
 
         return edge switch
         {

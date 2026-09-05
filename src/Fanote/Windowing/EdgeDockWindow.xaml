@@ -19,10 +19,14 @@
              opaco y no cabe ninguna sombra: la profundidad tiene que venir de dentro. Claro en
              el borde libre (izquierda, la que sobresale) y algo más hondo hacia el borde físico
              de pantalla, que es como caería la luz sobre una ficha que asoma de un fichero. -->
+        <!-- Los topes van pegados a los cantos y la cara queda plana en medio. Con una rampa
+             larga (0 -> 0.45 -> 1) el degradado se leía como tal y las pestañas parecían plástico
+             brillante iluminado de lado, no papel. -->
         <LinearGradientBrush x:Key="TabSheen" StartPoint="0,0" EndPoint="1,0">
-            <GradientStop Offset="0" Color="#20FFFFFF" />
-            <GradientStop Offset="0.45" Color="#00FFFFFF" />
-            <GradientStop Offset="1" Color="#12000000" />
+            <GradientStop Offset="0" Color="#1AFFFFFF" />
+            <GradientStop Offset="0.10" Color="#00FFFFFF" />
+            <GradientStop Offset="0.88" Color="#00000000" />
+            <GradientStop Offset="1" Color="#14000000" />
         </LinearGradientBrush>
 
         <Style x:Key="NoteTabButtonStyle" TargetType="Button">
@@ -57,10 +61,15 @@
                                        TextTrimming="CharacterEllipsis"
                                        MaxWidth="92"
                                        HorizontalAlignment="Left"
-                                       VerticalAlignment="Center"
-                                       Margin="14,0,0,0">
+                                       VerticalAlignment="Top"
+                                       Margin="14,10,0,0">
+                                <!-- +90 (de arriba abajo), no -90. Al solaparse las pestañas, de
+                                     cada una solo queda visible su franja SUPERIOR: la de abajo la
+                                     tapa la siguiente. Con -90 el texto empieza abajo, así que lo
+                                     visible sería el final de la etiqueta. Girando al revés y
+                                     anclándola arriba, lo que se lee es siempre el principio. -->
                                 <TextBlock.LayoutTransform>
-                                    <RotateTransform Angle="-90" />
+                                    <RotateTransform Angle="90" />
                                 </TextBlock.LayoutTransform>
                             </TextBlock>
 
@@ -154,7 +163,6 @@
                                 Background="{Binding Color}"
                                 Width="104"
                                 Height="100"
-                                Margin="0,0,0,8"
                                 HorizontalAlignment="Right"
                                 Click="OnTabClick"
                                 Loaded="OnTabLoaded"

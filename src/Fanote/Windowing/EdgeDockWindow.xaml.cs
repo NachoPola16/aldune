@@ -279,7 +279,7 @@ public partial class EdgeDockWindow : Window
             if (_tabTransforms.TryGetValue(index, out var transforms))
             {
                 transforms.Scale.ScaleY = scaleY;
-                transforms.Offset.Y = TabRegionShape.Sweep(EdgeGeometry.RestOffsetFor(index, _noteCount), 0, progress);
+                transforms.Offset.Y = TabRegionShape.Sweep(EdgeGeometry.RestOffsetFor(_workingArea, _edge, index, _noteCount), 0, progress);
 
                 // El recorte horizontal va aquí y no en la región: en reposo la región es el
                 // contenedor, así que sin recortar la pestaña su color llenaría la pastilla de
@@ -351,7 +351,7 @@ public partial class EdgeDockWindow : Window
             // primero, la curva del extremo redondeado se lo comería.
             restContainer = new Fanote.Core.Rect(
                 (containerRight - containerWidth) * dpi.DpiScaleX,
-                (EdgeGeometry.RestStripStart(_noteCount) - EdgeGeometry.RestContainerPad) * dpi.DpiScaleY,
+                (EdgeGeometry.RestStripStart(_workingArea, _edge, _noteCount) - EdgeGeometry.RestContainerPad) * dpi.DpiScaleY,
                 containerWidth * dpi.DpiScaleX,
                 (EdgeGeometry.RestStripLength(_noteCount) + 2 * EdgeGeometry.RestContainerPad) * dpi.DpiScaleY);
         }
@@ -442,6 +442,13 @@ public partial class EdgeDockWindow : Window
         if (index < 0) return;
 
         _tabButtons[index] = button;
+
+        // El solape va en Margin (layout), no en RenderTransform: solo cambia cuando cambia el
+        // número de notas — que ya pasa por SetNotes y recoloca la ventana — y nunca durante una
+        // transición de hover, así que no reintroduce el medir-a-tamaños-intermedios que motivó
+        // todo este rediseño. Negativo cuando toca solaparse.
+        double pitch = EdgeGeometry.PitchFor(_workingArea, _edge, _noteCount);
+        button.Margin = new Thickness(0, 0, 0, pitch - EdgeGeometry.TabHeight);
 
         // Instancias nuevas por pestaña, creadas en código. Un Transform declarado en XAML dentro
         // de un DataTemplate acaba congelado y compartido entre todos los contenedores generados

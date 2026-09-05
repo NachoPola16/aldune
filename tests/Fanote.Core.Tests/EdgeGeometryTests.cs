@@ -66,7 +66,7 @@ public class EdgeGeometryTests
     public void WindowRect_IsCenteredOnTheEdgesLengthAxis(EdgePosition edge)
     {
         var rect = EdgeGeometry.WindowRect(Area, edge, noteCount: 3);
-        double length = EdgeGeometry.WindowLength(3);
+        double length = EdgeGeometry.WindowLength(Area, edge, 3);
 
         if (edge is EdgePosition.Top or EdgePosition.Bottom)
         {
@@ -91,54 +91,89 @@ public class EdgeGeometryTests
         Assert.True(rect.Y + rect.Height <= SecondaryArea.Y + SecondaryArea.Height);
     }
 
-    // --- Longitud según el número de notas -----------------------------------------------------
+    // --- Solape: el abanico ocupa lo mismo haya las notas que haya -------------------------------
+
+    private static readonly WorkingArea Vertical = new(-1440, -541, 1440, 2560);
 
     [Fact]
-    public void WindowLength_WithZeroNotes_UsesMinContentPlusFooter()
+    public void Pitch_WithFewNotes_LeavesThemFullySeparated()
     {
-        Assert.Equal(EdgeGeometry.MinContentLength + EdgeGeometry.FooterLength, EdgeGeometry.WindowLength(0));
+        Assert.Equal(EdgeGeometry.NaturalPitch, EdgeGeometry.PitchFor(Vertical, EdgePosition.Right, 4));
     }
 
     [Fact]
-    public void WindowLength_WithFewNotes_GrowsOnePitchPerNote()
+    public void Pitch_ShrinksAsNotesPileUp()
     {
-        const int noteCount = 3;
-        double tabs = noteCount * EdgeGeometry.TabPitch;
-        Assert.True(tabs > EdgeGeometry.MinContentLength && tabs < EdgeGeometry.MaxContentLength,
-            $"{noteCount} notas ({tabs}) deben caer entre el mínimo y el máximo para que este test pruebe algo");
-        Assert.Equal(tabs + EdgeGeometry.FooterLength, EdgeGeometry.WindowLength(noteCount), precision: 3);
+        double few = EdgeGeometry.PitchFor(Vertical, EdgePosition.Right, 20);
+        double many = EdgeGeometry.PitchFor(Vertical, EdgePosition.Right, 40);
+        Assert.True(many < few, $"con 40 notas el paso ({many}) deberia ser menor que con 20 ({few})");
+        Assert.True(few <= EdgeGeometry.NaturalPitch);
     }
 
     [Fact]
-    public void WindowLength_WithManyNotes_CapsAtMaxContent()
+    public void Pitch_NeverGoesBelowTheLegibilityFloor()
     {
-        Assert.Equal(EdgeGeometry.MaxContentLength + EdgeGeometry.FooterLength, EdgeGeometry.WindowLength(1000));
+        // Lo que queda visible de cada pestana es un paso, y por tanto cuanta etiqueta se lee.
+        Assert.Equal(EdgeGeometry.MinPitch, EdgeGeometry.PitchFor(Vertical, EdgePosition.Right, 1000));
     }
 
     [Fact]
-    public void MaxContentLength_IsAWholeNumberOfTabPitches()
+    public void Pitch_WithASingleNote_IsNatural()
     {
-        // Si no lo fuera, la última pestaña que entra en el viewport inicial del ScrollViewer
-        // quedaría cortada por la mitad desde el primer hover, antes de que nadie scrollee.
-        double tabs = EdgeGeometry.MaxContentLength / EdgeGeometry.TabPitch;
-        Assert.Equal(Math.Round(tabs), tabs, precision: 9);
+        Assert.Equal(EdgeGeometry.NaturalPitch, EdgeGeometry.PitchFor(Vertical, EdgePosition.Right, 1));
     }
 
     [Fact]
-    public void TabPitch_MatchesTheLayoutsOwnHeightPlusGap()
+    public void TabStrip_StaysWithinTheScreenBudget_UntilTheFloorBites()
     {
-        // El diseño anterior presupuestaba 88px por nota mientras el layout usaba un solape de
-        // -28px sobre pestañas de 80 (paso real 52). Esta aserción existe para que geometría y
-        // layout no puedan volver a discrepar en silencio.
-        Assert.Equal(EdgeGeometry.TabHeight + EdgeGeometry.TabGap, EdgeGeometry.TabPitch);
+        // El punto del solape: entre 5 y 20 notas el abanico ocupa aproximadamente lo mismo, en vez
+        // de crecer sin parar o de dejar las sobrantes sin dibujar.
+        double budget = Vertical.Height * EdgeGeometry.MaxScreenFraction - EdgeGeometry.FooterLength;
+        for (int n = 5; n <= 20; n++)
+        {
+            double strip = EdgeGeometry.TabStripLength(Vertical, EdgePosition.Right, n);
+            Assert.True(strip <= budget + 1, $"con {n} notas el abanico mide {strip}, presupuesto {budget}");
+        }
     }
 
     [Fact]
-    public void TabGap_IsPositive_SoTheRegionDoesNotFuseAdjacentTabs()
+    public void TabStrip_GrowsWithNoteCount_ButSublinearly()
     {
-        // La región se une con CombineRgn/RGN_OR: dos pestañas solapadas se funden en una sola
-        // mancha y el abanico deja de leerse como pestañas separadas.
-        Assert.True(EdgeGeometry.TabGap > 0);
+        double five = EdgeGeometry.TabStripLength(Vertical, EdgePosition.Right, 5);
+        double fifty = EdgeGeometry.TabStripLength(Vertical, EdgePosition.Right, 50);
+        Assert.True(fifty > five);
+        Assert.True(fifty < five * 10, "solapando, 10 veces mas notas no pueden ocupar 10 veces mas");
+    }
+
+    [Fact]
+    public void TabStrip_WithOneNote_IsExactlyOneTab()
+    {
+        Assert.Equal(EdgeGeometry.TabHeight, EdgeGeometry.TabStripLength(Vertical, EdgePosition.Right, 1));
+    }
+
+    [Fact]
+    public void TabStrip_WithNoNotes_IsZero()
+    {
+        Assert.Equal(0, EdgeGeometry.TabStripLength(Vertical, EdgePosition.Right, 0));
+    }
+
+    [Fact]
+    public void WindowLength_AlwaysLeavesRoomForTheFooter()
+    {
+        foreach (int n in new[] { 0, 1, 4, 12, 40 })
+        {
+            double window = EdgeGeometry.WindowLength(Vertical, EdgePosition.Right, n);
+            double strip = EdgeGeometry.TabStripLength(Vertical, EdgePosition.Right, n);
+            Assert.True(window - strip >= EdgeGeometry.FooterLength - 0.001,
+                $"con {n} notas quedan {window - strip} para el footer");
+        }
+    }
+
+    [Fact]
+    public void WindowLength_WithNoNotes_StillHasAMinimumTarget()
+    {
+        Assert.Equal(EdgeGeometry.MinContentLength + EdgeGeometry.FooterLength,
+            EdgeGeometry.WindowLength(Vertical, EdgePosition.Right, 0));
     }
 
     // --- Ancho uniforme y lomo ------------------------------------------------------------------
@@ -209,8 +244,8 @@ public class EdgeGeometryTests
         // El punto entero del cambio: en reposo el dock insinua que hay notas en vez de ocupar el
         // borde entero de la pantalla.
         const int noteCount = 4;
-        Assert.True(EdgeGeometry.RestStripLength(noteCount) < EdgeGeometry.TabStripLength(noteCount) / 2,
-            $"reposo {EdgeGeometry.RestStripLength(noteCount)} frente a desplegado {EdgeGeometry.TabStripLength(noteCount)}");
+        Assert.True(EdgeGeometry.RestStripLength(noteCount) < EdgeGeometry.TabStripLength(Area, EdgePosition.Right, noteCount) / 2,
+            $"reposo {EdgeGeometry.RestStripLength(noteCount)} frente a desplegado {EdgeGeometry.TabStripLength(Area, EdgePosition.Right, noteCount)}");
     }
 
     [Fact]
@@ -228,12 +263,12 @@ public class EdgeGeometryTests
     [Fact]
     public void RestStripLength_HasOneDashPerNote_EvenBeyondTheScrollCap()
     {
-        // El tope de MaxContentLength es del abanico desplegado, que hace scroll. En reposo no hay
+        // El abanico desplegado solapa las pestanas para que quepan; en reposo no hay
         // scroll: el desplazamiento de reposo trae todas las notas a la tira, asi que todas tienen
         // guion. Aplicar aqui aquel tope dejaba los guiones sobrantes visibles pero fuera de la
         // zona sensible al raton — se veian y no se podian pulsar (bug real, encontrado sondeando
         // la region de la app con 5 notas).
-        int beyondCap = (int)(EdgeGeometry.MaxContentLength / EdgeGeometry.TabPitch) + 1;
+        const int beyondCap = 12;
         Assert.Equal(beyondCap * EdgeGeometry.RestPitch - EdgeGeometry.RestGap,
             EdgeGeometry.RestStripLength(beyondCap));
     }
@@ -243,11 +278,11 @@ public class EdgeGeometryTests
     {
         // La comprobacion que de verdad importa: el ultimo guion tiene que caer dentro de la zona
         // sensible, o se ve y no responde.
-        int beyondCap = (int)(EdgeGeometry.MaxContentLength / EdgeGeometry.TabPitch) + 1;
+        const int beyondCap = 12;
         var window = EdgeGeometry.WindowRect(Area, EdgePosition.Right, beyondCap);
         var resting = EdgeGeometry.RestingVisibleRect(Area, EdgePosition.Right, beyondCap);
 
-        double lastDashBottom = window.Y + EdgeGeometry.RestStripStart(beyondCap)
+        double lastDashBottom = window.Y + EdgeGeometry.RestStripStart(Area, EdgePosition.Right, beyondCap)
             + (beyondCap - 1) * EdgeGeometry.RestPitch + EdgeGeometry.RestDashLength;
 
         Assert.True(lastDashBottom <= resting.Y + resting.Height,
@@ -258,7 +293,7 @@ public class EdgeGeometryTests
     public void RestStripStart_IsNeverNegative()
     {
         // Un inicio negativo recortaria las PRIMERAS notas contra el borde superior de la ventana.
-        Assert.True(EdgeGeometry.RestStripStart(1000) >= 0);
+        Assert.True(EdgeGeometry.RestStripStart(Area, EdgePosition.Right, 1000) >= 0);
     }
 
     [Fact]
@@ -266,9 +301,9 @@ public class EdgeGeometryTests
     {
         // Solo mientras quepa: si la tira es mas larga que la ventana se pega arriba a proposito.
         const int noteCount = 4;
-        double start = EdgeGeometry.RestStripStart(noteCount);
+        double start = EdgeGeometry.RestStripStart(Area, EdgePosition.Right, noteCount);
         double end = start + EdgeGeometry.RestStripLength(noteCount);
-        double window = EdgeGeometry.WindowLength(noteCount);
+        double window = EdgeGeometry.WindowLength(Area, EdgePosition.Right, noteCount);
         Assert.Equal(start, window - end, precision: 9);
     }
 
@@ -282,10 +317,12 @@ public class EdgeGeometryTests
         const int noteCount = 5;
         for (int i = 0; i < noteCount; i++)
         {
-            double tabCentre = i * EdgeGeometry.TabPitch + EdgeGeometry.TabHeight / 2;
-            double dashCentre = EdgeGeometry.RestStripStart(noteCount)
+            double tabCentre = i * EdgeGeometry.PitchFor(Area, EdgePosition.Right, noteCount)
+                + EdgeGeometry.TabHeight / 2;
+            double dashCentre = EdgeGeometry.RestStripStart(Area, EdgePosition.Right, noteCount)
                 + i * EdgeGeometry.RestPitch + EdgeGeometry.RestDashLength / 2;
-            Assert.Equal(dashCentre, tabCentre + EdgeGeometry.RestOffsetFor(i, noteCount), precision: 9);
+            Assert.Equal(dashCentre,
+                tabCentre + EdgeGeometry.RestOffsetFor(Area, EdgePosition.Right, i, noteCount), precision: 9);
         }
     }
 
@@ -298,8 +335,8 @@ public class EdgeGeometryTests
         const int noteCount = 4;
         for (int i = 0; i < noteCount; i++)
         {
-            double offset = EdgeGeometry.RestOffsetFor(i, noteCount);
-            double tabTop = i * EdgeGeometry.TabPitch + offset;
+            double offset = EdgeGeometry.RestOffsetFor(Area, EdgePosition.Right, i, noteCount);
+            double tabTop = i * EdgeGeometry.PitchFor(Area, EdgePosition.Right, noteCount) + offset;
             double tabCentre = tabTop + EdgeGeometry.TabHeight / 2;
             double dashTop = tabCentre - EdgeGeometry.RestDashLength / 2;
             double dashBottom = tabCentre + EdgeGeometry.RestDashLength / 2;
@@ -385,8 +422,8 @@ public class EdgeGeometryTests
         var window = EdgeGeometry.WindowRect(Area, edge, noteCount);
         var resting = EdgeGeometry.RestingVisibleRect(Area, edge, noteCount);
         double strip = EdgeGeometry.RestStripLength(noteCount);
+        double start = EdgeGeometry.RestStripStart(Area, edge, noteCount);
 
-        double start = EdgeGeometry.RestStripStart(noteCount);
         if (edge is EdgePosition.Top or EdgePosition.Bottom)
         {
             Assert.Equal(window.X + start, resting.X);
@@ -412,21 +449,4 @@ public class EdgeGeometryTests
         Assert.True(resting.Y + resting.Height < window.Y + window.Height);
     }
 
-    [Fact]
-    public void TabStripLength_HasNoTrailingGapAfterTheLastTab()
-    {
-        Assert.Equal(3 * EdgeGeometry.TabPitch - EdgeGeometry.TabGap, EdgeGeometry.TabStripLength(3));
-    }
-
-    [Fact]
-    public void TabStripLength_WithNoNotes_IsZero()
-    {
-        Assert.Equal(0, EdgeGeometry.TabStripLength(0));
-    }
-
-    [Fact]
-    public void TabStripLength_CapsWithTheScrollableContent()
-    {
-        Assert.Equal(EdgeGeometry.MaxContentLength - EdgeGeometry.TabGap, EdgeGeometry.TabStripLength(1000));
-    }
 }
