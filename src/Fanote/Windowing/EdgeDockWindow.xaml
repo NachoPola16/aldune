@@ -3,159 +3,231 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:local="clr-namespace:Fanote.Windowing"
         WindowStyle="None"
-        AllowsTransparency="False"
         ShowInTaskbar="False"
+        ShowActivated="False"
         Topmost="True"
         ResizeMode="NoResize"
-        Background="#3A3A3A">
+        AllowsTransparency="True"
+        Background="Transparent">
+    <!-- AllowsTransparency, a diferencia del resto de la app. Antes la forma del dock la recortaba
+         SetWindowRgn, y una región es una máscara de 1 BIT: un píxel está dentro o fuera, sin
+         medios tonos, así que toda curva salía escalonada — las esquinas de las pestañas y sobre
+         todo los botones circulares, que son curva pura. No había ningún parámetro que suavizar.
+
+         El precio es que esta ventana pierde el suavizado subpixel (ClearType) en su texto, que es
+         lo que la spec v1 quería evitar. Se asume solo aquí: el texto del dock son etiquetas cortas
+         de una línea, mientras que NoteWindow — la superficie donde de verdad se lee y se escribe —
+         sigue siendo opaca y conserva ClearType.
+
+         A cambio desaparece toda la maquinaria de región: SetWindowRgn por frame, el bucle de
+         CompositionTarget.Rendering, el recorte al viewport y el clip por pestaña. La forma la
+         dibuja WPF, con antialiasing, y encima el dock puede tener sombra de verdad. -->
     <Window.Resources>
-        <local:NoteTitleConverter x:Key="NoteTitleConverter" />
-        <local:NoteStateLabelConverter x:Key="NoteStateLabelConverter" />
+        <local:NoteTabLabelConverter x:Key="NoteTabLabelConverter" />
+        <local:NoteRimConverter x:Key="NoteRimConverter" />
+        <local:NoteLabelColorConverter x:Key="NoteLabelColorConverter" />
+        <local:NoteSnippetConverter x:Key="NoteSnippetConverter" />
+
+        <!-- Hacia ARRIBA (Direction 95), no hacia abajo. Las pestañas se apilan hacia abajo y cada
+             una tapa a la anterior, así que una sombra descendente cae justo donde la siguiente la
+             oculta y no separa nada: con solape leve el abanico se leía como un bloque macizo.
+             Proyectada hacia arriba, cada pestaña deja un canto oscuro sobre la de encima, que es
+             exactamente como se ve un mazo escalonado. Comprobado contra las tres variantes
+             renderizadas en aislamiento. -->
+        <DropShadowEffect x:Key="CardShadow" BlurRadius="9" ShadowDepth="3" Direction="95"
+                          Color="#000000" Opacity="0.38" />
+
+        <!-- Los botones no se apilan, así que su sombra sí cae hacia abajo como es natural. -->
+        <DropShadowEffect x:Key="ButtonShadow" BlurRadius="10" ShadowDepth="2" Direction="270"
+                          Color="#000000" Opacity="0.35" />
+
+        <!-- Reflejo en los cantos, cara plana en medio. Con una rampa larga el degradado se leía
+             como tal y las pestañas parecían plástico brillante iluminado de lado, no papel. -->
+        <LinearGradientBrush x:Key="TabSheen" StartPoint="0,0" EndPoint="1,0">
+            <GradientStop Offset="0" Color="#1AFFFFFF" />
+            <GradientStop Offset="0.08" Color="#00FFFFFF" />
+            <GradientStop Offset="0.92" Color="#00000000" />
+            <GradientStop Offset="1" Color="#14000000" />
+        </LinearGradientBrush>
+
         <Style x:Key="NoteTabButtonStyle" TargetType="Button">
-            <Setter Property="HorizontalContentAlignment" Value="Left" />
-            <Setter Property="ContentTemplate">
-                <Setter.Value>
-                    <DataTemplate>
-                        <StackPanel>
-                            <TextBlock Text="{Binding Text, Converter={StaticResource NoteTitleConverter}}"
-                                       FontWeight="Bold"
-                                       TextTrimming="CharacterEllipsis" />
-                            <!-- Only ever non-empty for notes shown in the archive view (Active
-                                 notes never appear there) — collapsed rather than just empty text
-                                 so the active-notes view doesn't grow an extra blank line. -->
-                            <TextBlock Text="{Binding State, Converter={StaticResource NoteStateLabelConverter}}"
-                                       FontSize="10"
-                                       Opacity="0.65">
-                                <TextBlock.Style>
-                                    <Style TargetType="TextBlock">
-                                        <Setter Property="Visibility" Value="Visible" />
-                                        <Style.Triggers>
-                                            <DataTrigger Binding="{Binding State}" Value="Active">
-                                                <Setter Property="Visibility" Value="Collapsed" />
-                                            </DataTrigger>
-                                        </Style.Triggers>
-                                    </Style>
-                                </TextBlock.Style>
-                            </TextBlock>
-                        </StackPanel>
-                    </DataTemplate>
-                </Setter.Value>
-            </Setter>
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="Button">
-                        <Grid>
-                            <Border Background="{TemplateBinding Background}" CornerRadius="4" />
-                            <Border x:Name="HoverOverlay" Background="Black" Opacity="0" CornerRadius="4" />
-                            <ContentPresenter Margin="{TemplateBinding Padding}"
-                                              HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
-                                              VerticalAlignment="Center" />
+                        <!-- Redondeada solo por la izquierda: el lado derecho va a ras del canto de
+                             la pantalla y redondearlo dejaría ver el escritorio por una muesca. -->
+                        <Grid Effect="{StaticResource CardShadow}">
+                            <Border Background="{TemplateBinding Background}"
+                                    BorderBrush="{Binding Color, Converter={StaticResource NoteRimConverter}}"
+                                    BorderThickness="1,1,0,1"
+                                    CornerRadius="10,0,0,10" />
+                            <Border Background="{StaticResource TabSheen}" CornerRadius="10,0,0,10" />
+
+                            <!-- Dos líneas, ancladas arriba. Al solaparse las pestañas solo queda
+                                 visible la franja superior de cada una, así que ahí tiene que
+                                 vivir el título; la vista previa es lo primero que se sacrifica, y
+                                 está bien porque el título es lo que no puede faltar.
+
+                                 Ambas en tonos del propio color de la nota: el negro sería el
+                                 único valor de la pestaña sin relación de hue con ella. -->
+                            <StackPanel x:Name="LabelStack" VerticalAlignment="Top" Margin="16,9,20,0">
+                                <TextBlock Text="{Binding Text, Converter={StaticResource NoteTabLabelConverter}}"
+                                           Foreground="{Binding Color, Converter={StaticResource NoteLabelColorConverter}}"
+                                           FontSize="12"
+                                           FontWeight="SemiBold"
+                                           TextTrimming="CharacterEllipsis"
+                                           TextWrapping="NoWrap" />
+                                <TextBlock x:Name="SnippetText"
+                                           Text="{Binding Text, Converter={StaticResource NoteSnippetConverter}}"
+                                           Foreground="{Binding Color, Converter={StaticResource NoteLabelColorConverter}}"
+                                           Opacity="0.62"
+                                           FontSize="11"
+                                           TextTrimming="CharacterEllipsis"
+                                           TextWrapping="NoWrap"
+                                           Margin="0,2,0,0" />
+                            </StackPanel>
+
+                            <Border x:Name="HoverOverlay" Background="#1E1A14" Opacity="0" CornerRadius="10,0,0,10" />
                         </Grid>
                         <ControlTemplate.Triggers>
+                            <DataTrigger Binding="{Binding Text, Converter={StaticResource NoteSnippetConverter}}" Value="">
+                                <Setter TargetName="SnippetText" Property="Visibility" Value="Collapsed" />
+                                <Setter TargetName="LabelStack" Property="VerticalAlignment" Value="Center" />
+                                <Setter TargetName="LabelStack" Property="Margin" Value="16,0,20,0" />
+                            </DataTrigger>
                             <Trigger Property="IsMouseOver" Value="True">
-                                <Setter TargetName="HoverOverlay" Property="Opacity" Value="0.12" />
+                                <Setter TargetName="HoverOverlay" Property="Opacity" Value="0.07" />
                             </Trigger>
                             <Trigger Property="IsPressed" Value="True">
-                                <Setter TargetName="HoverOverlay" Property="Opacity" Value="0.22" />
+                                <Setter TargetName="HoverOverlay" Property="Opacity" Value="0.15" />
                             </Trigger>
                         </ControlTemplate.Triggers>
                     </ControlTemplate>
                 </Setter.Value>
             </Setter>
         </Style>
-        <!-- The default OS scrollbar chrome (light, boxy) looked jarring against the dock's dark
-             background and sat flush against the window's rounded corner, getting visually cut
-             off by the DWM corner clip. A slim flat thumb (no arrow buttons, invisible track)
-             fixes both: it fits the dark theme and leaves clearance from the corner. -->
-        <Style x:Key="SlimScrollBarThumb" TargetType="Thumb">
+
+        <Style x:Key="CircularIconButtonStyle" TargetType="Button">
+            <Setter Property="Width" Value="34" />
+            <Setter Property="Height" Value="34" />
+            <Setter Property="Margin" Value="10,0,0,0" />
+            <Setter Property="Foreground" Value="#C9C0B2" />
+            <Setter Property="Background" Value="#3C3730" />
             <Setter Property="Template">
                 <Setter.Value>
-                    <ControlTemplate TargetType="Thumb">
-                        <Border Background="#66FFFFFF" CornerRadius="3" />
-                    </ControlTemplate>
-                </Setter.Value>
-            </Setter>
-        </Style>
-        <Style TargetType="ScrollBar">
-            <Setter Property="Width" Value="6" />
-            <Setter Property="Background" Value="Transparent" />
-            <Setter Property="Template">
-                <Setter.Value>
-                    <ControlTemplate TargetType="ScrollBar">
-                        <Grid Background="{TemplateBinding Background}">
-                            <Track x:Name="PART_Track" IsDirectionReversed="True">
-                                <Track.Thumb>
-                                    <Thumb Style="{StaticResource SlimScrollBarThumb}" />
-                                </Track.Thumb>
-                                <Track.DecreaseRepeatButton>
-                                    <RepeatButton Command="ScrollBar.PageUpCommand" Opacity="0" />
-                                </Track.DecreaseRepeatButton>
-                                <Track.IncreaseRepeatButton>
-                                    <RepeatButton Command="ScrollBar.PageDownCommand" Opacity="0" />
-                                </Track.IncreaseRepeatButton>
-                            </Track>
+                    <ControlTemplate TargetType="Button">
+                        <!-- Círculo de verdad, ya sin escalonado: con la región era una máscara de
+                             1 bit, y una circunferencia es curva pura, o sea el peor caso. -->
+                        <Grid>
+                            <Ellipse x:Name="Bg" Fill="{TemplateBinding Background}"
+                                     Effect="{StaticResource ButtonShadow}" />
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
                         </Grid>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Bg" Property="Fill" Value="#4E4840" />
+                            </Trigger>
+                            <Trigger Property="IsPressed" Value="True">
+                                <Setter TargetName="Bg" Property="Fill" Value="#5F584E" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
                     </ControlTemplate>
                 </Setter.Value>
             </Setter>
         </Style>
     </Window.Resources>
-    <Grid>
-        <!-- Full tab list + "+ Nueva nota", shown once the panel is (nearly) fully expanded. -->
-        <Grid x:Name="PanelContent">
+
+    <!-- Margen asimétrico: sin derecha. WindowThickness reserva UN ShadowMargin, no dos, porque
+         el lado derecho va a ras del canto de la pantalla y ahí no hay sombra que alojar. Con
+         Margin="18" a los cuatro lados quedaban 190px para una pestaña de 208, así que se
+         recortaba 18px por la izquierda — justo donde vive el margen de la etiqueta, y por eso el
+         título salía cortado. -->
+    <Grid Margin="18,18,0,18">
+        <!-- Dos capas superpuestas con fundido cruzado. Volver a este patrón (que una ronda
+             anterior había eliminado) es correcto ahora: lo que lo hacía frágil era tener que
+             mantener la región sincronizada con él, y ya no hay región. El cuidado que sí sigue
+             valiendo es que Opacity NO desactiva el hit-testing en WPF — IsHitTestVisible se fija
+             explícitamente en ApplyState, o la capa invisible se come los clics de la visible. -->
+
+        <!-- Reposo: la tira de guiones dentro de su contenedor. -->
+        <!-- Los numeros de aqui son los de EdgeGeometry: Width = RestContainerWidth (20),
+             Margin derecho = RestContainerInset (5), Padding = RestContainerPad (5), y el guion
+             de abajo RestDashWidth x RestDashLength con RestGap de separacion. Tienen que ir
+             juntos: RestingVisibleRect calcula la zona sensible al raton con esas constantes, asi
+             que si el XAML se separa de ellas el raton deja de coincidir con lo que se ve. -->
+        <Border x:Name="RestStrip"
+                Background="#2A261F"
+                CornerRadius="10"
+                HorizontalAlignment="Right"
+                VerticalAlignment="Center"
+                Width="20"
+                Margin="0,0,5,0"
+                Padding="0,5"
+                Effect="{StaticResource ButtonShadow}">
+            <ItemsControl ItemsSource="{Binding ItemsSource, ElementName=TabsList}">
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate>
+                        <Border Background="{Binding Color}"
+                                Width="12" Height="26"
+                                Margin="0,0,0,5"
+                                HorizontalAlignment="Center"
+                                CornerRadius="6" />
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+        </Border>
+
+        <!-- Desplegado: el abanico y los botones. -->
+        <Grid x:Name="FanPanel" Opacity="0">
             <Grid.RowDefinitions>
                 <RowDefinition Height="*" />
                 <RowDefinition Height="Auto" />
             </Grid.RowDefinitions>
-            <ScrollViewer Grid.Row="0"
-                          Margin="0,0,4,0"
-                          VerticalScrollBarVisibility="Auto"
+
+            <ScrollViewer x:Name="TabsScroll"
+                          Grid.Row="0"
+                          VerticalAlignment="Center"
+                          VerticalScrollBarVisibility="Hidden"
                           HorizontalScrollBarVisibility="Disabled">
                 <ItemsControl x:Name="TabsList">
                     <ItemsControl.ItemTemplate>
                         <DataTemplate>
                             <Button Content="{Binding}"
                                     Background="{Binding Color}"
-                                    Margin="4"
-                                    Padding="6"
+                                    Width="208"
+                                    Height="52"
+                                    HorizontalAlignment="Right"
                                     Click="OnTabClick"
+                                    Loaded="OnTabLoaded"
                                     Tag="{Binding}"
                                     Style="{StaticResource NoteTabButtonStyle}" />
                         </DataTemplate>
                     </ItemsControl.ItemTemplate>
                 </ItemsControl>
             </ScrollViewer>
-            <StackPanel Grid.Row="1" Orientation="Horizontal">
-                <Button x:Name="NewNoteButton" Content="+ Nueva nota" Margin="4" Padding="6" Click="OnNewNoteClick" />
-                <Button x:Name="ToggleArchiveButton" Content="Archivadas" Margin="4" Padding="6" Click="OnToggleArchiveClick" />
-                <!-- Bulk archive/restore/trash needs real room (checkboxes + a list + a toolbar
-                     don't fit this compact panel), so it opens its own properly-sized
-                     NotesManagerWindow instead of trying to do it inline here. Always visible —
-                     not just while viewing the archive — so it's reachable from either view. -->
-                <Button x:Name="ManageArchiveButton" Margin="4" Padding="6" Click="OnManageArchiveClick"
+
+            <!-- Alineado a la derecha igual que las pestañas, con un respiro de 8px para que el
+                 botón no quede pegado al canto de la pantalla y su sombra tenga dónde caer. Antes
+                 el Grid raíz llevaba margen también a la derecha, así que este footer se paraba
+                 18px antes que las pestañas y se veía desplazado a la izquierda respecto a ellas. -->
+            <StackPanel x:Name="FooterPanel" Grid.Row="1" Orientation="Horizontal"
+                        HorizontalAlignment="Right" Margin="0,14,8,0">
+                <Button x:Name="ManageArchiveButton" Click="OnManageArchiveClick"
+                        Style="{StaticResource CircularIconButtonStyle}"
                         ToolTip="Gestionar notas">
-                    <TextBlock Text="&#xE713;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" />
+                    <TextBlock Text="&#xE713;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" FontSize="15" />
+                </Button>
+                <!-- Crear nota es la acción principal del dock, así que pesa más que el
+                     engranaje: más grande y más clara. Ir las dos iguales las dejaba a la par
+                     cuando no lo están. -->
+                <Button x:Name="NewNoteButton" Click="OnNewNoteClick"
+                        Width="40" Height="40"
+                        Background="#575044" Foreground="#F5F0E6"
+                        Style="{StaticResource CircularIconButtonStyle}"
+                        ToolTip="Nueva nota">
+                    <TextBlock Text="&#xE710;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" FontSize="17" />
                 </Button>
             </StackPanel>
         </Grid>
-
-        <!-- Compact color-swatch preview shown while the pill is resting (collapsed). No
-             scrollbar here even if it overflows — Auto would show the same slim thumb as the
-             tab list, but a resting pill isn't a place anyone scrolls (any hover over it expands
-             the panel instead), so it's just visual noise there. -->
-        <ScrollViewer x:Name="PillSwatches"
-                      VerticalScrollBarVisibility="Disabled"
-                      HorizontalScrollBarVisibility="Disabled">
-            <ItemsControl ItemsSource="{Binding ItemsSource, ElementName=TabsList}">
-                <ItemsControl.ItemTemplate>
-                    <DataTemplate>
-                        <Border Background="{Binding Color}"
-                                Width="12" Height="14"
-                                Margin="4,3"
-                                CornerRadius="4" />
-                    </DataTemplate>
-                </ItemsControl.ItemTemplate>
-            </ItemsControl>
-        </ScrollViewer>
     </Grid>
 </Window>

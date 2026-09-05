@@ -3,64 +3,140 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:local="clr-namespace:Fanote.Windowing"
         Title="Gestionar notas"
-        Width="340" Height="420"
-        MinWidth="260" MinHeight="280"
+        Width="420" Height="560"
+        MinWidth="360" MinHeight="360"
         WindowStyle="None"
         AllowsTransparency="False"
         ResizeMode="CanResize"
-        Background="#3A3A3A"
+        Background="#2A261F"
         Topmost="True">
     <WindowChrome.WindowChrome>
-        <WindowChrome CaptionHeight="22" ResizeBorderThickness="6" GlassFrameThickness="-1" CornerRadius="0" />
+        <WindowChrome CaptionHeight="34" ResizeBorderThickness="6" GlassFrameThickness="-1" CornerRadius="0" />
     </WindowChrome.WindowChrome>
     <Window.Resources>
         <local:NoteTitleConverter x:Key="NoteTitleConverter" />
         <local:NoteStateLabelConverter x:Key="NoteStateLabelConverter" />
+        <local:NoteRimConverter x:Key="NoteRimConverter" />
+        <local:NoteLabelColorConverter x:Key="NoteLabelColorConverter" />
+
         <Style x:Key="ToolbarButtonStyle" TargetType="Button">
-            <Setter Property="Foreground" Value="White" />
-            <Setter Property="Background" Value="#33FFFFFF" />
+            <Setter Property="Foreground" Value="#EDE7DC" />
+            <Setter Property="Background" Value="#3C3730" />
             <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="Padding" Value="12,7" />
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="Button">
-                        <Border x:Name="Bg" Background="{TemplateBinding Background}" CornerRadius="4">
+                        <Border x:Name="Bg" Background="{TemplateBinding Background}" CornerRadius="6">
                             <ContentPresenter Margin="{TemplateBinding Padding}"
                                               HorizontalAlignment="Center"
                                               VerticalAlignment="Center" />
                         </Border>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsMouseOver" Value="True">
-                                <Setter TargetName="Bg" Property="Background" Value="#4DFFFFFF" />
+                                <Setter TargetName="Bg" Property="Background" Value="#4E4840" />
+                            </Trigger>
+                            <Trigger Property="IsPressed" Value="True">
+                                <Setter TargetName="Bg" Property="Background" Value="#5F584E" />
+                            </Trigger>
+                            <!-- Sin nada seleccionado estas acciones no tienen sobre qué actuar.
+                                 Antes seguían pulsables y no hacían nada, que es peor que decir
+                                 que no se puede: el estado deshabilitado es la respuesta. -->
+                            <Trigger Property="IsEnabled" Value="False">
+                                <Setter TargetName="Bg" Property="Background" Value="#332F28" />
+                                <Setter Property="Foreground" Value="#6B6459" />
                             </Trigger>
                         </ControlTemplate.Triggers>
                     </ControlTemplate>
                 </Setter.Value>
             </Setter>
         </Style>
+
         <Style x:Key="DangerToolbarButtonStyle" TargetType="Button" BasedOn="{StaticResource ToolbarButtonStyle}">
-            <Setter Property="Background" Value="#40CC3333" />
+            <Setter Property="Background" Value="#5A2A28" />
         </Style>
+
+        <Style x:Key="QuietButtonStyle" TargetType="Button" BasedOn="{StaticResource ToolbarButtonStyle}">
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="Foreground" Value="#A79E90" />
+        </Style>
+
         <Style x:Key="CloseButtonStyle" TargetType="Button" BasedOn="{StaticResource ToolbarButtonStyle}">
             <Setter Property="Background" Value="Transparent" />
-            <Setter Property="FontSize" Value="12" />
+            <Setter Property="FontSize" Value="13" />
+            <Setter Property="Padding" Value="0" />
         </Style>
+
+        <!-- Barra de scroll fina y a juego con el fondo oscuro. La del sistema es clara y ancha, y
+             sobre este fondo canta muchísimo. Esto es <b>teñir</b> una afordancia estándar, no
+             reinventarla: conserva arrastre del pulgar, clic en la pista y rueda; solo cambia el
+             color y el grosor. -->
+        <Style x:Key="SlimThumb" TargetType="Thumb">
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Thumb">
+                        <Border x:Name="Bar" Background="#4E4840" CornerRadius="3" Margin="2,0" />
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Bar" Property="Background" Value="#6B6459" />
+                            </Trigger>
+                            <Trigger Property="IsDragging" Value="True">
+                                <Setter TargetName="Bar" Property="Background" Value="#857D70" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style TargetType="ScrollBar">
+            <Setter Property="Width" Value="10" />
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ScrollBar">
+                        <Grid Background="{TemplateBinding Background}">
+                            <Track x:Name="PART_Track" IsDirectionReversed="True">
+                                <Track.Thumb>
+                                    <Thumb Style="{StaticResource SlimThumb}" />
+                                </Track.Thumb>
+                                <!-- Sin flechas: la pista sigue paginando al hacer clic, que es el
+                                     comportamiento estándar que importa conservar. -->
+                                <Track.DecreaseRepeatButton>
+                                    <RepeatButton Command="ScrollBar.PageUpCommand" Opacity="0" />
+                                </Track.DecreaseRepeatButton>
+                                <Track.IncreaseRepeatButton>
+                                    <RepeatButton Command="ScrollBar.PageDownCommand" Opacity="0" />
+                                </Track.IncreaseRepeatButton>
+                            </Track>
+                        </Grid>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- Filtros como control segmentado: cuatro opciones excluyentes de un mismo eje se leen
+             mejor juntas en una pastilla que como cuatro botones sueltos. -->
         <Style x:Key="FilterToggleStyle" TargetType="RadioButton">
-            <Setter Property="Foreground" Value="White" />
-            <Setter Property="Padding" Value="8,4" />
+            <Setter Property="Foreground" Value="#A79E90" />
+            <Setter Property="Padding" Value="12,6" />
+            <Setter Property="FontSize" Value="12" />
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="RadioButton">
-                        <Border x:Name="Bg" Background="#22FFFFFF" CornerRadius="4">
+                        <Border x:Name="Bg" Background="Transparent" CornerRadius="5">
                             <ContentPresenter Margin="{TemplateBinding Padding}"
                                               HorizontalAlignment="Center"
                                               VerticalAlignment="Center" />
                         </Border>
                         <ControlTemplate.Triggers>
-                            <Trigger Property="IsChecked" Value="True">
-                                <Setter TargetName="Bg" Property="Background" Value="#55FFFFFF" />
-                            </Trigger>
                             <Trigger Property="IsMouseOver" Value="True">
-                                <Setter TargetName="Bg" Property="Background" Value="#33FFFFFF" />
+                                <Setter TargetName="Bg" Property="Background" Value="#3C3730" />
+                            </Trigger>
+                            <Trigger Property="IsChecked" Value="True">
+                                <Setter TargetName="Bg" Property="Background" Value="#4E4840" />
+                                <Setter Property="Foreground" Value="#F5F0E6" />
+                                <Setter Property="FontWeight" Value="SemiBold" />
                             </Trigger>
                         </ControlTemplate.Triggers>
                     </ControlTemplate>
@@ -68,98 +144,151 @@
             </Setter>
         </Style>
     </Window.Resources>
+
     <Grid>
-        <DockPanel Margin="16,20,16,16">
-            <TextBlock DockPanel.Dock="Top" Text="Gestionar notas" Foreground="White"
-                       FontWeight="Bold" FontSize="14" Margin="0,0,0,10" />
-            <WrapPanel DockPanel.Dock="Top" Margin="0,0,0,10">
-                <!-- IsChecked is set from code-behind after InitializeComponent, not here: a
-                     XAML-declared IsChecked="True" fires Checked while the tree is still being
-                     built, before RowsList (declared later) exists yet — see the constructor. -->
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <!-- Cabecera. CaptionHeight cubre esta franja, así que la ventana se arrastra desde aquí. -->
+        <Grid Grid.Row="0" Margin="20,18,14,0">
+            <StackPanel>
+                <TextBlock Text="Gestionar notas" Foreground="#F5F0E6"
+                           FontSize="17" FontWeight="SemiBold" />
+                <TextBlock x:Name="SubtitleText" Foreground="#A79E90" FontSize="12" Margin="0,3,0,0" />
+            </StackPanel>
+            <Button x:Name="CloseButton"
+                    Content="&#x2715;"
+                    Width="28" Height="28"
+                    HorizontalAlignment="Right"
+                    VerticalAlignment="Top"
+                    Click="OnCloseClick"
+                    WindowChrome.IsHitTestVisibleInChrome="True"
+                    Style="{StaticResource CloseButtonStyle}" />
+        </Grid>
+
+        <Border Grid.Row="1" Background="#332F28" CornerRadius="7" Margin="20,16,20,0" Padding="3">
+            <WrapPanel>
+                <!-- IsChecked se fija desde el code-behind tras InitializeComponent, no aquí: un
+                     IsChecked="True" en XAML dispara Checked mientras el árbol se está
+                     construyendo, antes de que RowsList exista — ver el constructor. -->
                 <RadioButton x:Name="FilterAll" GroupName="NotesFilter" Content="Todas"
-                             Checked="OnFilterChanged" Style="{StaticResource FilterToggleStyle}" Margin="0,0,6,6" />
+                             Checked="OnFilterChanged" Style="{StaticResource FilterToggleStyle}" />
                 <RadioButton x:Name="FilterActive" GroupName="NotesFilter" Content="Activas"
-                             Checked="OnFilterChanged" Style="{StaticResource FilterToggleStyle}" Margin="0,0,6,6" />
+                             Checked="OnFilterChanged" Style="{StaticResource FilterToggleStyle}" />
                 <RadioButton x:Name="FilterArchived" GroupName="NotesFilter" Content="Archivadas"
-                             Checked="OnFilterChanged" Style="{StaticResource FilterToggleStyle}" Margin="0,0,6,6" />
+                             Checked="OnFilterChanged" Style="{StaticResource FilterToggleStyle}" />
                 <RadioButton x:Name="FilterTrashed" GroupName="NotesFilter" Content="Papelera"
-                             Checked="OnFilterChanged" Style="{StaticResource FilterToggleStyle}" Margin="0,0,0,6" />
+                             Checked="OnFilterChanged" Style="{StaticResource FilterToggleStyle}" />
             </WrapPanel>
-            <!-- WrapPanel, not StackPanel: these buttons don't all fit on one line at this
-                 window's minimum width, and a StackPanel would let the last one run off the edge
-                 of the window unclipped-but-unclickable (exactly what happened before this fix)
-                 — WrapPanel instead drops overflow to a second line, usable at any size. -->
-            <WrapPanel DockPanel.Dock="Bottom" Margin="0,10,0,0">
-                <Button Content="Seleccionar todo" Click="OnSelectAllClick" Margin="0,0,6,6" Padding="8,4"
-                        Style="{StaticResource ToolbarButtonStyle}" />
-                <Button Click="OnArchiveSelectedClick" Margin="0,0,6,6" Padding="8,4"
-                        Style="{StaticResource ToolbarButtonStyle}">
-                    <StackPanel Orientation="Horizontal">
-                        <TextBlock Text="&#xE7B8;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets"
-                                   VerticalAlignment="Center" Margin="0,0,6,0" />
-                        <TextBlock Text="Archivar" VerticalAlignment="Center" />
-                    </StackPanel>
-                </Button>
-                <Button Click="OnRestoreSelectedClick" Margin="0,0,6,6" Padding="8,4"
-                        Style="{StaticResource ToolbarButtonStyle}">
-                    <StackPanel Orientation="Horizontal">
-                        <TextBlock Text="&#xE7A7;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets"
-                                   VerticalAlignment="Center" Margin="0,0,6,0" />
-                        <TextBlock Text="Restaurar" VerticalAlignment="Center" />
-                    </StackPanel>
-                </Button>
-                <Button Click="OnTrashSelectedClick" Margin="0,0,0,6" Padding="8,4"
-                        Style="{StaticResource DangerToolbarButtonStyle}">
-                    <StackPanel Orientation="Horizontal">
-                        <TextBlock Text="&#xE74D;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets"
-                                   VerticalAlignment="Center" Margin="0,0,6,0" />
-                        <TextBlock Text="A la papelera" VerticalAlignment="Center" />
-                    </StackPanel>
-                </Button>
-            </WrapPanel>
-            <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+        </Border>
+
+        <Grid Grid.Row="2" Margin="20,14,12,0">
+            <ScrollViewer x:Name="RowsScroll" VerticalScrollBarVisibility="Auto"
+                          HorizontalScrollBarVisibility="Disabled" Padding="0,0,8,0">
                 <ItemsControl x:Name="RowsList">
                     <ItemsControl.ItemTemplate>
                         <DataTemplate>
-                            <Border Background="{Binding Note.Color}" CornerRadius="4" Margin="0,0,0,6" Padding="8">
-                                <StackPanel Orientation="Horizontal">
-                                    <CheckBox IsChecked="{Binding IsSelected, Mode=TwoWay}"
-                                              VerticalAlignment="Center" Margin="0,0,8,0" />
-                                    <StackPanel>
-                                        <TextBlock Text="{Binding Note.Text, Converter={StaticResource NoteTitleConverter}}"
-                                                   FontWeight="Bold" TextTrimming="CharacterEllipsis" />
-                                        <!-- Empty (and collapsed) for Active notes — see
-                                             NoteStateLabelConverter — so this manager's Active
-                                             rows don't grow an extra blank line. -->
+                            <!-- TextElement.Foreground, no Foreground a secas: Border no es un
+                                 Control y no tiene esa propiedad, pero la adjunta sí se hereda por
+                                 el árbol, que es lo que hace falta para tenir toda la fila. -->
+                            <Border Background="{Binding Note.Color}"
+                                    TextElement.Foreground="#1E1A14"
+                                    BorderBrush="{Binding Note.Color, Converter={StaticResource NoteRimConverter}}"
+                                    BorderThickness="1"
+                                    CornerRadius="8" Margin="0,0,0,8" Padding="12,10">
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto" />
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="Auto" />
+                                    </Grid.ColumnDefinitions>
+
+                                    <CheckBox Grid.Column="0"
+                                              IsChecked="{Binding IsSelected, Mode=TwoWay}"
+                                              VerticalAlignment="Center" Margin="0,0,12,0" />
+
+                                    <TextBlock Grid.Column="1"
+                                               Text="{Binding Note.Text, Converter={StaticResource NoteTitleConverter}}"
+                                               FontWeight="SemiBold" FontSize="13"
+                                               VerticalAlignment="Center"
+                                               TextTrimming="CharacterEllipsis" />
+
+                                    <!-- Chip de estado, en el tono oscuro del propio color de la
+                                         nota. Vacío y colapsado para las activas, así que sus
+                                         filas no crecen una línea de más. -->
+                                    <Border Grid.Column="2"
+                                            Background="#22000000"
+                                            CornerRadius="4" Padding="7,3" Margin="10,0,0,0"
+                                            VerticalAlignment="Center">
+                                        <Border.Style>
+                                            <Style TargetType="Border">
+                                                <Setter Property="Visibility" Value="Visible" />
+                                                <Style.Triggers>
+                                                    <DataTrigger Binding="{Binding Note.State}" Value="Active">
+                                                        <Setter Property="Visibility" Value="Collapsed" />
+                                                    </DataTrigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </Border.Style>
                                         <TextBlock Text="{Binding Note.State, Converter={StaticResource NoteStateLabelConverter}}"
-                                                   FontSize="10" Opacity="0.65">
-                                            <TextBlock.Style>
-                                                <Style TargetType="TextBlock">
-                                                    <Setter Property="Visibility" Value="Visible" />
-                                                    <Style.Triggers>
-                                                        <DataTrigger Binding="{Binding Note.State}" Value="Active">
-                                                            <Setter Property="Visibility" Value="Collapsed" />
-                                                        </DataTrigger>
-                                                    </Style.Triggers>
-                                                </Style>
-                                            </TextBlock.Style>
-                                        </TextBlock>
-                                    </StackPanel>
-                                </StackPanel>
+                                                   FontSize="10" FontWeight="SemiBold"
+                                                   Foreground="{Binding Note.Color, Converter={StaticResource NoteLabelColorConverter}}" />
+                                    </Border>
+                                </Grid>
                             </Border>
                         </DataTemplate>
                     </ItemsControl.ItemTemplate>
                 </ItemsControl>
             </ScrollViewer>
-        </DockPanel>
-        <Button x:Name="CloseButton"
-                Content="&#x2715;"
-                Width="22" Height="22"
-                Margin="0,2,2,0"
-                HorizontalAlignment="Right"
-                VerticalAlignment="Top"
-                Click="OnCloseClick"
-                WindowChrome.IsHitTestVisibleInChrome="True"
-                Style="{StaticResource CloseButtonStyle}" />
+
+            <!-- Estado vacío: dice qué pasa y por qué, en vez de dejar un hueco en blanco. -->
+            <TextBlock x:Name="EmptyState"
+                       Foreground="#6B6459" FontSize="13"
+                       HorizontalAlignment="Center" VerticalAlignment="Center"
+                       TextAlignment="Center" TextWrapping="Wrap"
+                       MaxWidth="260"
+                       Visibility="Collapsed" />
+        </Grid>
+
+        <!-- WrapPanel, no StackPanel: estos botones no caben en una línea al ancho mínimo, y un
+             StackPanel dejaría el último saliéndose de la ventana sin recortar pero sin poder
+             pulsarse (pasó exactamente eso una vez). WrapPanel baja el sobrante a otra línea. -->
+        <Border Grid.Row="3" Background="#25211B" Padding="20,12">
+            <DockPanel>
+                <Button x:Name="SelectAllButton" DockPanel.Dock="Left" Content="Seleccionar todo"
+                        Click="OnSelectAllClick" VerticalAlignment="Center"
+                        Style="{StaticResource QuietButtonStyle}" />
+                <WrapPanel HorizontalAlignment="Right">
+                    <Button x:Name="ArchiveButton" Click="OnArchiveSelectedClick" Margin="6,0,0,0"
+                            Style="{StaticResource ToolbarButtonStyle}">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="&#xE7B8;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets"
+                                       VerticalAlignment="Center" Margin="0,0,6,0" />
+                            <TextBlock Text="Archivar" VerticalAlignment="Center" />
+                        </StackPanel>
+                    </Button>
+                    <Button x:Name="RestoreButton" Click="OnRestoreSelectedClick" Margin="6,0,0,0"
+                            Style="{StaticResource ToolbarButtonStyle}">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="&#xE7A7;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets"
+                                       VerticalAlignment="Center" Margin="0,0,6,0" />
+                            <TextBlock Text="Restaurar" VerticalAlignment="Center" />
+                        </StackPanel>
+                    </Button>
+                    <Button x:Name="TrashButton" Click="OnTrashSelectedClick" Margin="6,0,0,0"
+                            Style="{StaticResource DangerToolbarButtonStyle}">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="&#xE74D;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets"
+                                       VerticalAlignment="Center" Margin="0,0,6,0" />
+                            <TextBlock Text="A la papelera" VerticalAlignment="Center" />
+                        </StackPanel>
+                    </Button>
+                </WrapPanel>
+            </DockPanel>
+        </Border>
     </Grid>
 </Window>

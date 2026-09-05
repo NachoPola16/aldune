@@ -1,6 +1,7 @@
 using System.Runtime.InteropServices;
 using System.Windows;
 using System.Windows.Interop;
+using Fanote.Core;
 
 namespace Fanote.Interop;
 
@@ -24,20 +25,8 @@ internal static class NativeMethods
     private const int DWMWA_WINDOW_CORNER_PREFERENCE = 33;
     private const int DWMWCP_ROUNDSMALL = 3;
 
-    [StructLayout(LayoutKind.Sequential)]
-    private struct MARGINS
-    {
-        public int Left;
-        public int Right;
-        public int Top;
-        public int Bottom;
-    }
-
     [DllImport("dwmapi.dll")]
     private static extern int DwmSetWindowAttribute(IntPtr hWnd, int dwAttribute, ref int pvAttribute, int cbAttribute);
-
-    [DllImport("dwmapi.dll")]
-    private static extern int DwmExtendFrameIntoClientArea(IntPtr hWnd, ref MARGINS pMarInset);
 
     /// <summary>
     /// Rounds the window's corners using the same DWM composition Windows already applies to
@@ -50,19 +39,6 @@ internal static class NativeMethods
     {
         int preference = DWMWCP_ROUNDSMALL;
         DwmSetWindowAttribute(hWnd, DWMWA_WINDOW_CORNER_PREFERENCE, ref preference, sizeof(int));
-    }
-
-    /// <summary>
-    /// Rounded corners plus the standard system drop shadow, for a borderless window that
-    /// (unlike NoteWindow) doesn't already get the shadow via WindowChrome's own
-    /// GlassFrameThickness="-1".
-    /// </summary>
-    internal static void ApplyRoundedCornersAndShadow(IntPtr hWnd)
-    {
-        ApplyRoundedCorners(hWnd);
-
-        var margins = new MARGINS { Left = -1, Right = -1, Top = -1, Bottom = -1 };
-        DwmExtendFrameIntoClientArea(hWnd, ref margins);
     }
 
     internal static void ForceActivate(Window window)
@@ -107,4 +83,136 @@ internal static class NativeMethods
     [DllImport("user32.dll")]
     [return: MarshalAs(UnmanagedType.Bool)]
     private static extern bool AttachThreadInput(uint idAttach, uint idAttachTo, [MarshalAs(UnmanagedType.Bool)] bool fAttach);
+
+    [StructLayout(LayoutKind.Sequential)]
+    private struct POINT
+    {
+        public int X;
+        public int Y;
+    }
+
+    [DllImport("user32.dll")]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    private static extern bool GetCursorPos(out POINT lpPoint);
+
+    /// <summary>
+    /// Physical-pixel screen position of the cursor, polled fresh via Win32 rather than read from
+    /// WPF's <c>Mouse.GetPosition</c> — that API reflects the last mouse message a given window
+    /// received, so once the cursor genuinely leaves a window (and it stops receiving any),
+    /// <c>Mouse.GetPosition</c> keeps reporting the last (inside) position forever instead of
+    /// updating. Callers must divide by their own window's DPI scale to convert to DIPs.
+    /// </summary>
+    internal static Point GetCursorScreenPosition()
+    {
+        GetCursorPos(out var point);
+        return new Point(point.X, point.Y);
+    }
+
+    private const int VK_LBUTTON = 0x01;
+
+    [DllImport("user32.dll")]
+    private static extern short GetAsyncKeyState(int vKey);
+
+    /// <summary>
+    /// Whether the left mouse button is held down right now, anywhere on screen — checked so the
+    /// dock's hover polling can ignore the cursor merely passing over it while the user is
+    /// dragging something else that happens to share the same screen edge (e.g. a browser's
+    /// vertical scrollbar). The high-order bit of GetAsyncKeyState's result is set while the key
+    /// is currently pressed, regardless of which window has focus or receives mouse messages —
+    /// same reason this file already prefers polling Win32 state directly over WPF's own
+    /// Mouse/Keyboard APIs elsewhere (see GetCursorScreenPosition).
+    /// </summary>
+    internal static bool IsLeftButtonDown() => (GetAsyncKeyState(VK_LBUTTON) & 0x8000) != 0;
+
+    [StructLayout(LayoutKind.Sequential)]
+    private struct RECT
+    {
+        public int Left;
+        public int Top;
+        public int Right;
+        public int Bottom;
+    }
+
+    [StructLayout(LayoutKind.Sequential)]
+    private struct MONITORINFO
+    {
+        public int cbSize;
+        public RECT rcMonitor;
+        public RECT rcWork;
+        public int dwFlags;
+    }
+
+    private const uint MONITOR_DEFAULTTONEAREST = 2;
+
+    [DllImport("user32.dll")]
+    private static extern bool GetWindowRect(IntPtr hWnd, out RECT lpRect);
+
+    [DllImport("user32.dll")]
+    private static extern IntPtr MonitorFromWindow(IntPtr hWnd, uint dwFlags);
+
+    [DllImport("user32.dll")]
+    private static extern bool GetMonitorInfo(IntPtr hMonitor, ref MONITORINFO lpmi);
+
+    [DllImport("user32.dll", SetLastError = true)]
+    private static extern uint GetWindowThreadProcessId(IntPtr hWnd, out uint lpdwProcessId);
+
+    [DllImport("kernel32.dll")]
+    private static extern uint GetCurrentProcessId();
+
+    [DllImport("user32.dll", CharSet = CharSet.Unicode, SetLastError = true)]
+    private static extern int GetClassName(IntPtr hWnd, System.Text.StringBuilder lpClassName, int nMaxCount);
+
+    /// <summary>
+    /// Si en el monitor donde vive <paramref name="hWnd"/> hay ahora mismo una ventana de otro
+    /// proceso a pantalla completa (un juego, un vídeo). El dock lo consulta para apartarse: es
+    /// <c>Topmost</c>, así que si no se aparta se queda dibujado encima.
+    ///
+    /// Tres exclusiones, todas necesarias:
+    /// <list type="bullet">
+    /// <item>Ventanas del propio proceso — una nota nunca debe esconder su propio dock.</item>
+    /// <item>El escritorio y la barra de tareas (<c>Progman</c>, <c>WorkerW</c>,
+    /// <c>Shell_TrayWnd</c>): tapan el monitor entero pero no son aplicaciones, y son justo lo que
+    /// <c>GetForegroundWindow</c> devuelve cuando no hay nada en primer plano — sin excluirlas el
+    /// dock estaría escondido casi siempre.</item>
+    /// <item>Ventanas de otro monitor, comparando el <c>HMONITOR</c> en vez de coordenadas: cada
+    /// dock solo se aparta por lo que pasa en su propia pantalla.</item>
+    /// </list>
+    /// La comparación de rectángulos vive en <see cref="FullscreenDetection.CoversMonitor"/>, que
+    /// es donde está la distinción entre pantalla completa y ventana maximizada.
+    /// </summary>
+    internal static bool IsFullscreenAppCovering(IntPtr hWnd)
+    {
+        var foreground = GetForegroundWindow();
+        if (foreground == IntPtr.Zero || foreground == hWnd) return false;
+
+        GetWindowThreadProcessId(foreground, out uint processId);
+        if (processId == GetCurrentProcessId()) return false;
+
+        var className = new System.Text.StringBuilder(64);
+        GetClassName(foreground, className, className.Capacity);
+        switch (className.ToString())
+        {
+            case "Progman":
+            case "WorkerW":
+            case "Shell_TrayWnd":
+                return false;
+        }
+
+        var ourMonitor = MonitorFromWindow(hWnd, MONITOR_DEFAULTTONEAREST);
+        if (ourMonitor == IntPtr.Zero) return false;
+        if (MonitorFromWindow(foreground, MONITOR_DEFAULTTONEAREST) != ourMonitor) return false;
+
+        if (!GetWindowRect(foreground, out var windowRect)) return false;
+
+        var monitorInfo = new MONITORINFO { cbSize = Marshal.SizeOf<MONITORINFO>() };
+        if (!GetMonitorInfo(ourMonitor, ref monitorInfo)) return false;
+
+        return FullscreenDetection.CoversMonitor(
+            ToRect(windowRect),
+            ToRect(monitorInfo.rcMonitor));
+    }
+
+    private static Fanote.Core.Rect ToRect(RECT r) =>
+        new(r.Left, r.Top, r.Right - r.Left, r.Bottom - r.Top);
+
 }

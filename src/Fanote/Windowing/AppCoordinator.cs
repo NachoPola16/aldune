@@ -1,3 +1,4 @@
+using System.Linq;
 using System.Windows;
 using Fanote.Core;
 using Fanote.Interop;
@@ -25,9 +26,46 @@ public sealed class AppCoordinator
 
     public int OpenNoteWindowCount => _openNoteWindows.Count;
 
+    /// <summary>
+    /// Si esta nota ya tiene ventana abierta. El dock lo consulta para ocultar su pestaña: al
+    /// abrirse, la nota se lleva esa pestaña consigo como lomo, así que dejarla también en el mazo
+    /// mostraría la misma etiqueta dos veces.
+    /// </summary>
+    public bool IsNoteOpen(Guid noteId) => _openNoteWindows.ContainsKey(noteId);
+
     public void RegisterDock(EdgeDockWindow dock) => _docks.Add(dock);
 
-    public void OpenOrActivateNote(Note note, EdgeDockWindow requestingDock)
+    /// <summary>
+    /// Cierra todos los docks actuales. Lo usa <c>App</c> al cambiar la configuración de pantallas
+    /// para reconstruirlos contra los monitores que haya ahora.
+    ///
+    /// Las ventanas de nota abiertas <b>no</b> se tocan: no guardan referencia a ningún dock (solo
+    /// al coordinador), así que sobreviven al recambio. Lo único que se pierde es que una nota
+    /// abierta ya no vuelve a "su" dock, cosa que tampoco tenía sentido si su monitor ha
+    /// desaparecido.
+    /// </summary>
+    public void CloseAllDocks()
+    {
+        foreach (var dock in _docks.ToList())
+        {
+            dock.PrepareForClose();
+            dock.Close();
+        }
+        _docks.Clear();
+    }
+
+    private void RefreshOpenState()
+    {
+        foreach (var dock in _docks) dock.RefreshOpenState();
+    }
+
+    /// <summary>
+    /// Opens <paramref name="note"/> in a new window, or activates its already-open one.
+    /// <paramref name="originRect"/> (the clicked tab's on-screen rect) is where the note slides
+    /// out from, and also what its vertical position is aligned to. Ignored when the note is
+    /// already open — that path just activates the existing window, wherever the user put it.
+    /// </summary>
+    public void OpenOrActivateNote(Note note, EdgeDockWindow requestingDock, System.Windows.Rect? originRect = null)
     {
         if (_openNoteWindows.TryGetValue(note.Id, out var existing))
         {
@@ -40,23 +78,52 @@ public sealed class AppCoordinator
         }
 
         var noteWindow = new NoteWindow(note, _repository, this);
-        requestingDock.PositionNoteWindow(noteWindow);
+        double slideFrom = requestingDock.PositionNoteWindow(noteWindow, originRect);
+
         _openNoteWindows[note.Id] = noteWindow;
-        noteWindow.Closed += (_, _) => _openNoteWindows.Remove(note.Id);
+        noteWindow.Closed += (_, _) =>
+        {
+            _openNoteWindows.Remove(note.Id);
+            // Devuelve la pestaña a su hueco en el mazo. Va aquí y no en el Closing de NoteWindow
+            // porque Closing se dispara *antes* de que esta entrada se quite del diccionario, así
+            // que un refresco desde allí seguiría viendo la nota como abierta.
+            RefreshOpenState();
+        };
+
+        // El orden importa: la pestaña tiene que desaparecer del mazo antes de que la ventana se
+        // muestre, o durante la deslizada se vería la etiqueta duplicada (en el lomo y en el mazo).
+        RefreshOpenState();
         noteWindow.Show();
+
+        if (originRect is not null)
+        {
+            noteWindow.SlideInFrom(slideFrom);
+        }
+
         NativeMethods.ForceActivate(noteWindow);
     }
 
-    public void OpenOrActivateNotesManager()
+    /// <summary>
+    /// Abre el gestor de notas, o activa el que ya haya.
+    ///
+    /// <paramref name="requestingDock"/> decide en qué pantalla sale. Sin él, la ventana no fijaba
+    /// posición y Windows la ponía en (0,0) — o sea, siempre en el monitor principal, aunque
+    /// hubieras pulsado el engranaje en el otro.
+    /// </summary>
+    public void OpenOrActivateNotesManager(EdgeDockWindow requestingDock)
     {
         if (_notesManagerWindow is not null)
         {
+            if (_notesManagerWindow.WindowState == WindowState.Minimized)
+                _notesManagerWindow.WindowState = WindowState.Normal;
+
             _notesManagerWindow.Activate();
             NativeMethods.ForceActivate(_notesManagerWindow);
             return;
         }
 
         _notesManagerWindow = new NotesManagerWindow(_repository, this);
+        requestingDock.CenterOnThisMonitor(_notesManagerWindow);
         _notesManagerWindow.Closed += (_, _) => _notesManagerWindow = null;
         _notesManagerWindow.Show();
         NativeMethods.ForceActivate(_notesManagerWindow);
