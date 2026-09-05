@@ -1,9 +1,10 @@
 using System.Collections.Generic;
-using System.Diagnostics;
+using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Interop;
 using System.Windows.Media;
+using System.Windows.Media.Animation;
 using System.Windows.Threading;
 using Fanote.Core;
 using Fanote.Interop;
@@ -26,34 +27,21 @@ public partial class EdgeDockWindow : Window
 
     private IntPtr _hwnd;
 
-    // --- Estado de la transición ---------------------------------------------------------------
+    // La ventana no se redimensiona nunca (ver EdgeGeometry): siempre ocupa WindowRect. Animar
+    // Left/Top/Width/Height de un HWND obliga a WPF a rehacer el layout en cada frame intermedio, y
+    // de ahí salía toda la familia de fallos que documenta docs/STATUS.md.
     //
-    // La ventana no se redimensiona nunca (ver EdgeGeometry): siempre ocupa WindowRect, y lo único
-    // que se anima es la región recortada más un RenderTransform por pestaña. Ninguna de las dos
-    // cosas toca el layout, así que WPF mide una sola vez a tamaño final y jamás en un tamaño
-    // intermedio — que era la causa raíz de toda la familia de fallos de docs/STATUS.md.
-    //
-    // El precio es recalcular la región por frame mientras dura la transición. SetWindowRgn emite
-    // WM_WINDOWPOSCHANGING/CHANGED en cada llamada, así que está acotado a propósito: solo durante
-    // los ~350ms de la transición, nunca en reposo ni desplegado quieto, y saltándose la llamada si
-    // los rects redondeados a entero no han cambiado respecto al frame anterior.
-    private readonly Stopwatch _transitionClock = new();
-    private bool _transitionRunning;
-    private bool _transitionExpanding;
-    private List<(int Left, int Top, int Right, int Bottom)>? _lastRegionKey;
-
-    // ItemsControl.ItemContainerGenerator.ContainerFromIndex devuelve un ContentPresenter, no el
-    // Button del ItemTemplate — así genera sus contenedores un ItemsControl normal; solo los
-    // derivados de Selector devuelven el elemento plantillado directamente. Un `is Button` sobre
-    // ContainerFromIndex por tanto no casa nunca (comprobado empíricamente). Guardar aquí las
-    // referencias reales, pobladas desde el propio Loaded de cada Button, esquiva la cuestión del
-    // tipo de contenedor por completo.
+    // Lo que se anima es puro WPF sobre el contenido. Ya no hay región que recalcular por frame ni
+    // bucle de CompositionTarget.Rendering: con AllowsTransparency la forma la dibuja WPF.
     private readonly Dictionary<int, Button> _tabButtons = new();
-    private readonly Dictionary<int, (ScaleTransform Scale, TranslateTransform Offset, RectangleGeometry Clip)> _tabTransforms = new();
+
+    // Para animar solo las pestañas nuevas al crear una nota, en vez de rehacer la entrada entera.
+    private HashSet<Guid> _knownNoteIds = new();
+
+    private Thickness _tabMargin = new(0, 0, 0, EdgeGeometry.TabGap);
 
     private const double NoteWindowCascadeStep = 26;
     private const int NoteWindowMaxCascadeSteps = 6;
-    private const double TabCornerRadius = 10;
 
     public EdgeDockWindow(EdgePosition edge, MonitorInfo monitor, NotesRepository repository, AppCoordinator coordinator)
     {
@@ -70,18 +58,17 @@ public partial class EdgeDockWindow : Window
             _fanState.CollapseTimerElapsed();
         };
 
-        _fanState.ExpansionChanged += (_, _) => StartTransition(_fanState.IsExpanded);
+        _fanState.ExpansionChanged += (_, _) => ApplyState(animate: true);
 
-        // Deliberadamente no MouseEnter/MouseLeave de WPF: la región recortada cambia qué parte de
-        // la ventana recibe ratón, y sondear la posición real del cursor no depende de que Win32
-        // acierte con su seguimiento. Ver el historial en docs/STATUS.md.
+        // Deliberadamente no MouseEnter/MouseLeave de WPF: sondear la posición real del cursor no
+        // depende de que Win32 acierte con su seguimiento, y la ventana es mayormente transparente,
+        // así que sus propios eventos de ratón no coinciden con lo que se ve. Ver docs/STATUS.md.
         _hoverPollTimer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(50) };
         _hoverPollTimer.Tick += (_, _) => PollHoverState();
         _hoverPollTimer.Start();
 
-        // Aparte del sondeo de hover y mucho mas lento: pasar a pantalla completa no es algo que
-        // haya que detectar en 50ms, y quien tiene un juego delante agradece que no le sondeemos
-        // el primer plano 20 veces por segundo.
+        // Aparte y mucho más lento: pasar a pantalla completa no hay que detectarlo en 50ms, y
+        // quien tiene un juego delante agradece que no le sondeen el primer plano 20 veces/s.
         _fullscreenPollTimer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(500) };
         _fullscreenPollTimer.Tick += (_, _) => PollFullscreenApp();
         _fullscreenPollTimer.Start();
@@ -90,14 +77,11 @@ public partial class EdgeDockWindow : Window
         {
             _hwnd = new WindowInteropHelper(this).Handle;
             NativeMethods.MakeNonActivating(_hwnd);
-            // Ni esquinas redondeadas ni sombra vía DWM: la forma la define la región, y la sombra
-            // DWM sigue el RECT completo de la ventana, así que pintaría una caja translúcida
-            // sobre los huecos que la región existe para quitar (ver NativeMethods).
             ApplyWindowRect();
-            ApplyRegion();
         };
 
         ApplyWindowRect();
+        ApplyState(animate: false);
     }
 
     /// <summary>
@@ -115,10 +99,10 @@ public partial class EdgeDockWindow : Window
 
     private void PollHoverState()
     {
-        // Ignora que el cursor pase por encima mientras se arrastra otra cosa que comparta el mismo
-        // borde de pantalla (p. ej. la barra de scroll de un navegador): congela el estado mientras
-        // dure el arrastre. Un clic en una pestaña no se ve afectado — eso lo gestiona Button.Click.
         if (_hiddenByFullscreenApp) return;
+
+        // Ignora que el cursor pase por encima mientras se arrastra otra cosa que comparta el mismo
+        // borde de pantalla (p. ej. la barra de scroll de un navegador).
         if (NativeMethods.IsLeftButtonDown()) return;
 
         var dpi = VisualTreeHelper.GetDpi(this);
@@ -126,9 +110,8 @@ public partial class EdgeDockWindow : Window
         double cursorX = cursorScreen.X / dpi.DpiScaleX;
         double cursorY = cursorScreen.Y / dpi.DpiScaleY;
 
-        // Contra la zona realmente visible, no contra la ventana entera: lo recortado por la región
-        // es transparente al ratón, así que desplegarse al entrar ahí sería desplegarse por pasar
-        // el ratón sobre nada.
+        // Contra la zona realmente visible, no contra la ventana entera: casi toda es transparente,
+        // y desplegarse al entrar ahí sería desplegarse por pasar el ratón sobre nada.
         var hitRect = _fanState.IsExpanded
             ? EdgeGeometry.WindowRect(_workingArea, _edge, _noteCount)
             : EdgeGeometry.RestingVisibleRect(_workingArea, _edge, _noteCount);
@@ -150,9 +133,8 @@ public partial class EdgeDockWindow : Window
     }
 
     /// <summary>
-    /// Esconde el dock mientras haya una aplicación a pantalla completa en su monitor, y lo
-    /// devuelve cuando deja de haberla. El dock es <c>Topmost</c>: sin esto se queda dibujado
-    /// encima de un juego o un vídeo a pantalla completa.
+    /// Esconde el dock mientras haya una aplicación a pantalla completa en su monitor. El dock es
+    /// <c>Topmost</c>: sin esto se queda dibujado encima de un juego o un vídeo.
     /// </summary>
     private void PollFullscreenApp()
     {
@@ -164,245 +146,128 @@ public partial class EdgeDockWindow : Window
 
         if (covered)
         {
-            // Colapsar ANTES de esconder, y de golpe. Si se escondiera estando desplegado,
-            // volvería más tarde con el abanico abierto sin que el ratón esté encima; y dejar
-            // corriendo la animación contra una ventana invisible es tiempo tirado.
+            // Colapsar antes de esconder, y de golpe: si se escondiera desplegado volvería con el
+            // abanico abierto sin el ratón encima.
             _pointerInside = false;
             _collapseTimer.Stop();
             _fanState.PointerLeft();
             _fanState.CollapseTimerElapsed();
-            StopTransition();
-            ApplyRegion();
+            ApplyState(animate: false);
 
-            // Visibility en vez de Hide(): Hide/Show sobre una Window arrastra semántica de
-            // activación que aquí no interesa — este dock es WS_EX_NOACTIVATE a propósito y no
-            // debe robar el foco al volver, y menos aún a un juego que acaba de salir de pantalla
-            // completa.
+            // Visibility en vez de Hide(): esas arrastran semántica de activación, y este dock es
+            // WS_EX_NOACTIVATE a propósito — no debe robar el foco al volver, y menos a un juego
+            // que acaba de salir de pantalla completa.
             Visibility = Visibility.Hidden;
         }
         else
         {
             Visibility = Visibility.Visible;
-
-            // La región sobrevive al ocultar la ventana, pero volver a aplicarla es barato y evita
-            // depender de ello.
-            _lastRegionKey = null;
-            ApplyRegion();
         }
     }
 
-    // --- Transición ----------------------------------------------------------------------------
+    // --- Estado y animación ---------------------------------------------------------------------
 
-    private void StartTransition(bool expanding)
+    private static readonly Duration CrossfadeDuration = new(TimeSpan.FromMilliseconds(180));
+
+    private static IEasingFunction EaseOut() =>
+        new QuinticEase { EasingMode = EasingMode.EaseOut };
+
+    /// <summary>
+    /// Cruza entre la tira de reposo y el abanico. Sin región que mantener sincronizada, esto es
+    /// una animación WPF normal sobre dos capas superpuestas.
+    /// </summary>
+    private void ApplyState(bool animate)
     {
-        _transitionExpanding = expanding;
+        bool expanded = _fanState.IsExpanded;
 
-        if (!SystemParameters.ClientAreaAnimation)
+        // Opacity NO desactiva el hit-testing en WPF: sin esto, la capa invisible se come los clics
+        // de la visible. Es el mismo tropiezo que ya documenta docs/STATUS.md.
+        FanPanel.IsHitTestVisible = expanded;
+        RestStrip.IsHitTestVisible = !expanded;
+
+        if (!animate || !SystemParameters.ClientAreaAnimation)
         {
-            StopTransition();
-            ApplyRegion();
+            FanPanel.BeginAnimation(OpacityProperty, null);
+            RestStrip.BeginAnimation(OpacityProperty, null);
+            FanPanel.Opacity = expanded ? 1 : 0;
+            RestStrip.Opacity = expanded ? 0 : 1;
+            ResetTabEntrance(settled: expanded);
             return;
         }
 
-        _transitionClock.Restart();
-        if (!_transitionRunning)
+        Fade(FanPanel, expanded ? 1 : 0);
+        Fade(RestStrip, expanded ? 0 : 1);
+
+        if (expanded) ReplayTabEntrance();
+    }
+
+    private static void Fade(UIElement element, double to)
+    {
+        var animation = new DoubleAnimation(to, CrossfadeDuration) { EasingFunction = EaseOut() };
+        // FillBehavior.HoldEnd deja la animación enganchada por encima de cualquier asignación
+        // posterior; limpiarla y fijar el valor final evita que un cambio de estado posterior sea
+        // un no-op silencioso.
+        animation.Completed += (_, _) =>
         {
-            _transitionRunning = true;
-            CompositionTarget.Rendering += OnRenderingFrame;
-        }
+            element.BeginAnimation(OpacityProperty, null);
+            element.Opacity = to;
+        };
+        element.BeginAnimation(OpacityProperty, animation);
     }
 
-    private void StopTransition()
+    /// <summary>Entrada escalonada de las pestañas al desplegar el abanico.</summary>
+    private void ReplayTabEntrance()
     {
-        if (!_transitionRunning) return;
-        _transitionRunning = false;
-        CompositionTarget.Rendering -= OnRenderingFrame;
-        _transitionClock.Stop();
-    }
-
-    private void OnRenderingFrame(object? sender, EventArgs e)
-    {
-        double elapsed = _transitionClock.Elapsed.TotalMilliseconds;
-        ApplyRegion(elapsed);
-
-        if (elapsed >= TabRegionShape.TotalDurationMs(_noteCount))
-        {
-            StopTransition();
-            ApplyRegion(); // estado final exacto, sin depender del último frame que llegara
-        }
-    }
-
-    private double ProgressFor(int index, double? elapsedMs)
-    {
-        if (elapsedMs is null) return _fanState.IsExpanded ? 1 : 0;
-        return _transitionExpanding
-            ? TabRegionShape.TabProgress(index, elapsedMs.Value)
-            : TabRegionShape.TabCollapseProgress(index, _noteCount, elapsedMs.Value);
-    }
-
-    /// <summary>
-    /// Recalcula y aplica la región, y con ella el desplazamiento vertical de cada pestaña. Sin
-    /// <paramref name="elapsedMs"/> aplica el estado asentado.
-    /// </summary>
-    private void ApplyRegion(double? elapsedMs = null)
-    {
-        if (_hwnd == IntPtr.Zero) return;
-
-        var dpi = VisualTreeHelper.GetDpi(this);
-        var tabRects = new List<Fanote.Core.Rect>(_tabButtons.Count);
-        double footerProgress = 0;
-        double firstTabProgress = _fanState.IsExpanded ? 1 : 0;
-
-        // El ItemsControl no está virtualizado, así que con más notas de las que caben existen
-        // Buttons colocados por debajo del viewport del ScrollViewer. TranslatePoint devuelve su
-        // posición igualmente, y sin acotarlos la región abriría un agujero justo donde el
-        // ScrollViewer ya no dibuja la pestaña.
-        var scrollOrigin = TabsScroll.TranslatePoint(new Point(0, 0), this);
-        double viewportTop = scrollOrigin.Y;
-        double viewportBottom = scrollOrigin.Y + TabsScroll.ActualHeight;
-
         foreach (var (index, button) in _tabButtons)
         {
-            double progress = ProgressFor(index, elapsedMs);
-
-            if (index == _noteCount - 1) footerProgress = progress;
-            if (index == 0) firstTabProgress = progress;
-
-            // Escala y desplazamiento van en RenderTransform, nunca en Margin ni en layout. El
-            // desplazamiento lleva cada pestaña de su hueco en el abanico (paso 108) al suyo en la
-            // tira (paso 32); la escala evita que, al juntarlas tanto, se solapen y tapen el fondo
-            // del contenedor — sin ella no habría guiones separados, sino una mancha continua.
-            double scaleY = TabRegionShape.Sweep(EdgeGeometry.RestScaleFor(), 1, progress);
-            double clipLeft = TabRegionShape.Sweep(EdgeGeometry.RestClipLeft, 0, progress);
-            double clipWidth = TabRegionShape.Sweep(EdgeGeometry.RestDashWidth, EdgeGeometry.TabWidth, progress);
-
-            if (_tabTransforms.TryGetValue(index, out var transforms))
-            {
-                transforms.Scale.ScaleY = scaleY;
-                transforms.Offset.Y = TabRegionShape.Sweep(EdgeGeometry.RestOffsetFor(_workingArea, _edge, index, _noteCount), 0, progress);
-
-                // El recorte horizontal va aquí y no en la región: en reposo la región es el
-                // contenedor, así que sin recortar la pestaña su color llenaría la pastilla de
-                // lado a lado y no se vería el marco de fondo.
-                transforms.Clip.Rect = new System.Windows.Rect(clipLeft, 0, clipWidth, EdgeGeometry.TabHeight);
-            }
-
-            // Una nota abierta se saca del mazo: su pestaña viaja con la ventana como lomo (ver
-            // NoteWindow), así que dejarla también aquí mostraría la misma etiqueta dos veces.
-            // Hidden y no Collapsed a propósito — conserva su hueco, y el mazo enseña el sitio
-            // vacío de donde se sacó la ficha.
-            bool isOpen = button.Tag is Note note && _coordinator.IsNoteOpen(note.Id);
-            button.Visibility = isOpen ? Visibility.Hidden : Visibility.Visible;
-            if (isOpen) continue;
-
-            // TranslatePoint recorre la cadena de transformaciones del visual, así que esto ya
-            // refleja la escala y el desplazamiento recién fijados.
-            var origin = button.TranslatePoint(new Point(0, 0), this);
-            double renderedHeight = button.ActualHeight * scaleY;
-
-            // La región sigue al recorte: mismo borde izquierdo y mismo ancho, así que las dos
-            // cosas no pueden desincronizarse.
-            double top = Math.Max(origin.Y, viewportTop);
-            double bottom = Math.Min(origin.Y + renderedHeight, viewportBottom);
-            if (bottom <= top) continue; // scrolleada del todo fuera de la vista
-
-            tabRects.Add(new Fanote.Core.Rect(
-                (origin.X + clipLeft) * dpi.DpiScaleX,
-                top * dpi.DpiScaleY,
-                clipWidth * dpi.DpiScaleX,
-                (bottom - top) * dpi.DpiScaleY));
+            PlayEntrance(button, FanTiming.StaggerDelayMs(index));
         }
-
-        if (elapsedMs is null)
-        {
-            footerProgress = _fanState.IsExpanded ? 1 : 0;
-            firstTabProgress = footerProgress;
-        }
-
-        // Sin notas, los botones se ven siempre. En reposo el footer normalmente está fuera de la
-        // región (aparece al desplegar el abanico), pero con cero notas no hay abanico que
-        // desplegar ni tira que sobrevolar: la región quedaba vacía, el dock invisible y
-        // transparente al clic, y no había forma de crear la primera nota. Callejón sin salida en
-        // instalación limpia, que solo se da exactamente en ese estado.
-        if (_noteCount == 0) footerProgress = 1;
-
-        // Cada botón es su propio círculo, no una caja rectangular que envuelva a los dos: esa
-        // caja era lo único del dock con esquinas en pico, y se leía como un panel suelto pegado
-        // debajo del abanico en lugar de como dos botones.
-        var circleRects = new List<Fanote.Core.Rect>(2);
-        foreach (var footerButton in new[] { NewNoteButton, ManageArchiveButton })
-        {
-            double diameter = footerButton.ActualWidth * footerProgress;
-            if (diameter <= 0.5) continue;
-
-            var buttonOrigin = footerButton.TranslatePoint(new Point(0, 0), this);
-            double cx = buttonOrigin.X + footerButton.ActualWidth / 2;
-            double cy = buttonOrigin.Y + footerButton.ActualHeight / 2;
-            circleRects.Add(new Fanote.Core.Rect(
-                (cx - diameter / 2) * dpi.DpiScaleX,
-                (cy - diameter / 2) * dpi.DpiScaleY,
-                diameter * dpi.DpiScaleX,
-                diameter * dpi.DpiScaleY));
-        }
-
-        // El contenedor oscuro que agrupa los guiones en reposo. Es lo que hace que la tira se lea
-        // como un objeto: sin él, cuatro pasteles claros sueltos sobre un escritorio claro
-        // desaparecen. Se retira en cuanto la transición arranca (ver ContainerProgress).
-        Fanote.Core.Rect? restContainer = null;
-        double containerWidth = TabRegionShape.Sweep(
-            EdgeGeometry.RestContainerWidth, 0, TabRegionShape.ContainerProgress(firstTabProgress));
-        if (containerWidth > 0.5 && _noteCount > 0)
-        {
-            double containerRight = ActualWidth - EdgeGeometry.RestContainerInset;
-            // Sobresale por arriba y por abajo del primer y último guión: si empezara justo en el
-            // primero, la curva del extremo redondeado se lo comería.
-            restContainer = new Fanote.Core.Rect(
-                (containerRight - containerWidth) * dpi.DpiScaleX,
-                (EdgeGeometry.RestStripStart(_workingArea, _edge, _noteCount) - EdgeGeometry.RestContainerPad) * dpi.DpiScaleY,
-                containerWidth * dpi.DpiScaleX,
-                (EdgeGeometry.RestStripLength(_noteCount) + 2 * EdgeGeometry.RestContainerPad) * dpi.DpiScaleY);
-        }
-
-        var pieces = TabRegionShape.BuildRegion(
-            tabRects, circleRects, restContainer, TabCornerRadius * dpi.DpiScaleX);
-
-        // SetWindowRgn emite dos mensajes de ventana por llamada; saltarse los frames en los que la
-        // forma redondeada a entero no ha cambiado quita bastantes llamadas de la transición, sobre
-        // todo al final de la curva, donde la ease-out apenas avanza.
-        var key = new List<(int, int, int, int)>(pieces.Count);
-        foreach (var piece in pieces)
-        {
-            key.Add(((int)piece.Bounds.X, (int)piece.Bounds.Y,
-                     (int)(piece.Bounds.X + piece.Bounds.Width),
-                     (int)(piece.Bounds.Y + piece.Bounds.Height)));
-        }
-        if (_lastRegionKey is not null && key.Count == _lastRegionKey.Count)
-        {
-            bool same = true;
-            for (int i = 0; i < key.Count && same; i++)
-            {
-                if (!key[i].Equals(_lastRegionKey[i])) same = false;
-            }
-            if (same) return;
-        }
-        _lastRegionKey = key;
-
-        NativeMethods.SetTabFanRegion(_hwnd, pieces);
     }
 
-    /// <summary>
-    /// Para todo lo que este dock tiene en marcha antes de cerrarlo. Sin esto, un dock cerrado al
-    /// reconstruir por cambio de pantallas dejaría vivos sus dos DispatcherTimer y, si estaba a
-    /// media transición, su handler de CompositionTarget.Rendering — que es un evento estático:
-    /// seguiría llamando a ApplyRegion sobre un HWND ya destruido en cada frame, para siempre.
-    /// </summary>
-    internal void PrepareForClose()
+    private void ResetTabEntrance(bool settled)
     {
-        StopTransition();
-        _hoverPollTimer.Stop();
-        _collapseTimer.Stop();
-        _fullscreenPollTimer.Stop();
+        foreach (var button in _tabButtons.Values)
+        {
+            button.BeginAnimation(OpacityProperty, null);
+            button.Opacity = settled ? 1 : 0;
+            if (button.RenderTransform is TranslateTransform translate && !translate.IsFrozen)
+            {
+                translate.BeginAnimation(TranslateTransform.XProperty, null);
+                translate.X = 0;
+            }
+        }
     }
+
+    /// <summary>Una pestaña entra deslizándose desde el canto de la pantalla y apareciendo.</summary>
+    private static void PlayEntrance(Button button, double delayMs)
+    {
+        var delay = TimeSpan.FromMilliseconds(delayMs);
+        var duration = new Duration(TimeSpan.FromMilliseconds(FanTiming.TabSweepMs));
+
+        button.BeginAnimation(OpacityProperty, null);
+        button.BeginAnimation(OpacityProperty,
+            new DoubleAnimation(0, 1, duration) { BeginTime = delay });
+
+        // Instancia nueva por pestaña: un TranslateTransform declarado en XAML dentro de un
+        // DataTemplate acaba congelado y compartido entre contenedores (Freezable), y animarlo
+        // lanza "Cannot animate ... because the object is sealed or frozen" — ya pasó una vez, ver
+        // docs/STATUS.md.
+        if (button.RenderTransform is not TranslateTransform translate || translate.IsFrozen)
+        {
+            translate = new TranslateTransform();
+            button.RenderTransform = translate;
+        }
+
+        translate.BeginAnimation(TranslateTransform.XProperty, null);
+        translate.BeginAnimation(TranslateTransform.XProperty,
+            new DoubleAnimation(EdgeGeometry.TabWidth * 0.55, 0, duration)
+            {
+                BeginTime = delay,
+                EasingFunction = EaseOut()
+            });
+    }
+
+    // --- Contenido ------------------------------------------------------------------------------
 
     public void Refresh()
     {
@@ -410,30 +275,66 @@ public partial class EdgeDockWindow : Window
     }
 
     /// <summary>
-    /// Recalcula solo qué pestañas están ocultas por tener su nota abierta, sin reconstruir la
-    /// lista. Separado de <see cref="Refresh"/> a propósito: abrir o cerrar una nota no cambia qué
-    /// notas hay, y pasar por SetNotes reiniciaría la animación de entrada por nada.
+    /// Recalcula qué pestañas están ocultas por tener su nota abierta, sin reconstruir la lista:
+    /// abrir o cerrar una nota no cambia qué notas hay, y pasar por SetNotes reiniciaría la entrada
+    /// para nada.
     /// </summary>
     public void RefreshOpenState()
     {
-        _lastRegionKey = null;
-        ApplyRegion();
+        foreach (var button in _tabButtons.Values)
+        {
+            bool isOpen = button.Tag is Note note && _coordinator.IsNoteOpen(note.Id);
+            // Hidden y no Collapsed: conserva su hueco, y el mazo enseña el sitio vacío de donde se
+            // sacó la ficha.
+            button.Visibility = isOpen ? Visibility.Hidden : Visibility.Visible;
+        }
     }
 
     public void SetNotes(IReadOnlyList<Note> notes)
     {
+        var previousIds = _knownNoteIds;
+        _knownNoteIds = notes.Select(n => n.Id).ToHashSet();
+
         _tabButtons.Clear();
-        _tabTransforms.Clear();
-        _lastRegionKey = null;
         TabsList.ItemsSource = notes;
+
+        bool countChanged = notes.Count != _noteCount;
         _noteCount = notes.Count;
 
-        // La longitud de la ventana depende del número de notas. Se fija aquí, de una vez, en vez
-        // de animarse: crear o archivar una nota cambia el tamaño del dock, y eso es un cambio de
-        // contenido, no una transición de hover.
-        ApplyWindowRect();
+        // El solape depende del número de notas y va en Margin (layout). Solo cambia aquí, nunca
+        // durante una transición de hover, así que no reintroduce el medir-a-tamaños-intermedios.
+        double pitch = EdgeGeometry.PitchFor(_workingArea, _edge, _noteCount);
+        _tabMargin = new Thickness(0, 0, 0, pitch - EdgeGeometry.TabHeight);
 
-        Dispatcher.BeginInvoke(DispatcherPriority.Loaded, new Action(() => ApplyRegion()));
+        if (countChanged) ApplyWindowRect();
+
+        // Solo las notas que no estaban antes. Crear una nota anima esa pestaña y deja las demás
+        // quietas, en vez de rehacer la entrada del abanico entero — que es lo que hacía que añadir
+        // una nota pareciera un refresco y no una inserción.
+        var arrived = _knownNoteIds.Except(previousIds).ToHashSet();
+
+        Dispatcher.BeginInvoke(DispatcherPriority.Loaded, new Action(() =>
+        {
+            RefreshOpenState();
+
+            if (!_fanState.IsExpanded)
+            {
+                ResetTabEntrance(settled: false);
+                return;
+            }
+
+            foreach (var button in _tabButtons.Values)
+            {
+                if (button.Tag is Note note && arrived.Contains(note.Id))
+                {
+                    PlayEntrance(button, 0);
+                }
+                else
+                {
+                    button.Opacity = 1;
+                }
+            }
+        }));
     }
 
     private void OnManageArchiveClick(object sender, RoutedEventArgs e)
@@ -463,65 +364,21 @@ public partial class EdgeDockWindow : Window
         if (index < 0) return;
 
         _tabButtons[index] = button;
-
-        // El solape va en Margin (layout), no en RenderTransform: solo cambia cuando cambia el
-        // número de notas — que ya pasa por SetNotes y recoloca la ventana — y nunca durante una
-        // transición de hover, así que no reintroduce el medir-a-tamaños-intermedios que motivó
-        // todo este rediseño. Negativo cuando toca solaparse.
-        double pitch = EdgeGeometry.PitchFor(_workingArea, _edge, _noteCount);
-        button.Margin = new Thickness(0, 0, 0, pitch - EdgeGeometry.TabHeight);
-
-        // Instancias nuevas por pestaña, creadas en código. Un Transform declarado en XAML dentro
-        // de un DataTemplate acaba congelado y compartido entre todos los contenedores generados
-        // (Freezable), y tocarlo lanza "Cannot animate ... because the object is sealed or frozen"
-        // — ya pasó una vez en este mismo fichero, ver docs/STATUS.md.
-        //
-        // La escala se centra en el centro de la pestaña, para que el centro del rect renderizado
-        // caiga siempre donde lo pone el desplazamiento, sea cual sea la escala.
-        var scale = new ScaleTransform(1, 1) { CenterX = 0, CenterY = EdgeGeometry.TabHeight / 2 };
-        var offset = new TranslateTransform();
-        var group = new TransformGroup();
-        group.Children.Add(scale);
-        group.Children.Add(offset);
-        button.RenderTransform = group;
-
-        // Una sola instancia por pestaña, reutilizada en cada frame: Clip se recalcula ~17 veces
-        // por transición y no hace falta una geometría nueva cada vez.
-        var clip = new RectangleGeometry();
-        button.Clip = clip;
-
-        _tabTransforms[index] = (scale, offset, clip);
-
-        // En arranque en frío, SetNotes puede correr antes de que ningún Loaded se dispare, así que
-        // la región quedaría calculada sin pestañas. Recalcular aquí es la red de seguridad.
-        _lastRegionKey = null;
-        ApplyRegion();
+        button.Margin = _tabMargin;
+        button.Opacity = _fanState.IsExpanded ? 1 : 0;
     }
 
     /// <summary>
-    /// Coloca la ventana de una nota recién abierta: alineada con la altura de su propia pestaña,
-    /// que es de donde el usuario acaba de "tirar" para sacarla del mazo. La cascada solo se aplica
-    /// en horizontal y solo cuando ya hay otras notas abiertas, para que no se tapen entre ellas.
-    /// </summary>
-    /// <summary>
-    /// Coloca la ventana de una nota recién abierta y devuelve la X desde la que debe deslizarse.
-    ///
-    /// Ese origen está <b>acotado al área de trabajo de este monitor</b>. Antes se usaba tal cual
-    /// la X de la pestaña, con el cuerpo de la nota saliéndose por la derecha — lo que da por
-    /// hecho que a la derecha no hay nada. En el monitor vertical del usuario eso es falso
-    /// siempre: su canto derecho linda con el monitor principal, así que la nota arrancaba
-    /// dibujándose encima de lo que hubiera allí. Con el acotado, el deslizamiento arranca dentro
-    /// del propio monitor pase lo que pase, y no hay frames con media nota fuera de pantalla.
+    /// Coloca la ventana de una nota recién abierta, alineada con la altura de su propia pestaña, y
+    /// devuelve la X desde la que debe deslizarse (acotada al monitor de este dock).
     /// </summary>
     internal double PositionNoteWindow(NoteWindow noteWindow, System.Windows.Rect? tabRect = null)
     {
         int step = _coordinator.OpenNoteWindowCount % NoteWindowMaxCascadeSteps;
 
-        var left = Left - noteWindow.Width + EdgeGeometry.PerforationInset - step * NoteWindowCascadeStep;
+        var left = Left + EdgeGeometry.ShadowMargin - noteWindow.Width - step * NoteWindowCascadeStep;
         var top = tabRect?.Y ?? Top;
 
-        // Acotado al área de trabajo visible para que un escalón alto de la cascada (o un dock
-        // anclado a la izquierda) no deje la ventana parcial o totalmente fuera de pantalla.
         noteWindow.Left = Math.Max(left, _workingArea.X);
         noteWindow.Top = Math.Clamp(
             top,
@@ -538,5 +395,16 @@ public partial class EdgeDockWindow : Window
         var color = NoteColorPalette.Colors[existingCount % NoteColorPalette.Colors.Length];
         _repository.Create(string.Empty, color, screenOrigin: "primary");
         _coordinator.RefreshAll();
+    }
+
+    /// <summary>
+    /// Para todo lo que este dock tiene en marcha antes de cerrarlo, al reconstruir por un cambio
+    /// de pantallas. Sin esto sus timers seguirían vivos sobre una ventana ya cerrada.
+    /// </summary>
+    internal void PrepareForClose()
+    {
+        _hoverPollTimer.Stop();
+        _collapseTimer.Stop();
+        _fullscreenPollTimer.Stop();
     }
 }

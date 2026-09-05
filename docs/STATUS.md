@@ -65,7 +65,7 @@ autoridad de diseño; todo lo demás (planes, código) se argumenta contra él.
   (ver historial más abajo) y, a raíz de probarlo, también se hizo que el
   tamaño del pill/panel se ajuste al número de notas en vez de ser fijo.
 
-Tests: 130/130 pasando (`dotnet test` desde la raíz del repo).
+Tests: 104/104 pasando (`dotnet test` desde la raíz del repo).
 
 ## Cómo se ha trabajado (para mantener el mismo estilo)
 
@@ -928,6 +928,46 @@ estuvo evaluando el binario anterior a los arreglos. Para commits multilinea,
 usar Bash; y comprobar la fecha del binario antes de dar por bueno un lanzamiento.
 
 Tests: 130/130.
+
+### Sexta ronda: transparencia, etiquetas horizontales, y adios a las regiones
+
+Dos decisiones del usuario que se reforzaban entre si.
+
+**1. Transparencia en el dock.** Las curvas salian escalonadas y no habia nada
+que pulir: `SetWindowRgn` recorta con una mascara de **1 bit** — un pixel esta
+dentro o fuera, sin medios tonos — asi que toda curva de la region salia
+dentada. Peor en los botones circulares, que son curva pura. Es la misma raiz
+por la que el dock no podia llevar sombra.
+
+`EdgeDockWindow` pasa a `AllowsTransparency="True"`. El precio es perder
+ClearType en **esa** ventana; se asume solo ahi, porque su texto son etiquetas
+cortas de una linea, mientras que `NoteWindow` —donde de verdad se lee y se
+escribe— sigue opaca y lo conserva.
+
+A cambio **desaparece toda la maquinaria de region**: `SetWindowRgn` por frame,
+el bucle de `CompositionTarget.Rendering`, el recorte al viewport, el clip por
+pestana, `RegionPiece`, `TabRegionShape.BuildRegion` y ~150 lineas de interop
+GDI. La forma la dibuja WPF con antialiasing, la animacion pasa a ser WPF
+normal (dos capas con fundido cruzado + entrada escalonada por `BeginTime`), y
+el dock gana sombras reales. `TabRegionShape` se queda solo con los tiempos y
+se renombra a `FanTiming`.
+
+**2. Etiquetas horizontales.** Con solape, la franja visible de cada pestana es
+un paso: una etiqueta horizontal necesita ~18px de alto y una vertical ~90px,
+asi que la vertical solo funcionaba sin solapar. Al pasar a horizontal la
+pestana baja de 100 a 40px de alto y **caben ~10 notas sin solapar en vez de
+4**, ademas de leerse el titulo entero siempre.
+
+Consecuencia en la ventana de nota: el lomo vertical ya no encaja con una
+pestana horizontal, asi que pasa a ser **cabecera** — la misma pestana que
+estaba en el mazo, ahora como barra de titulo de la nota, con el troquelado
+horizontal debajo separandola del cuerpo.
+
+**Animacion al anadir nota**: `SetNotes` compara los ids con los de antes y
+anima solo las pestanas nuevas, en vez de rehacer la entrada del abanico
+entero — que hacia que crear una nota pareciera un refresco y no una insercion.
+
+Tests: 104/104 (bajan de 130 porque desaparecieron los de region).
 
 ### `FANOTE_MONITOR_INDEX`
 

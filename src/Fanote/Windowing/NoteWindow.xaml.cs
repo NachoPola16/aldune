@@ -43,6 +43,7 @@ public partial class NoteWindow : Window
         Title = NoteTitleHelper.GetTitle(note.Text);
         SpineLabel.Text = (string)_spineLabelConverter.Convert(
             note.Text, typeof(string), null, System.Globalization.CultureInfo.CurrentCulture);
+        Header.Background = Brushes.Transparent; // la cabecera comparte el fondo de la nota
         Loaded += (_, _) =>
         {
             TextBody.Focus();

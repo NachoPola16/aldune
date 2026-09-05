@@ -3,29 +3,39 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:local="clr-namespace:Fanote.Windowing"
         WindowStyle="None"
-        AllowsTransparency="False"
         ShowInTaskbar="False"
         ShowActivated="False"
         Topmost="True"
         ResizeMode="NoResize"
-        Background="#2A261F">
+        AllowsTransparency="True"
+        Background="Transparent">
+    <!-- AllowsTransparency, a diferencia del resto de la app. Antes la forma del dock la recortaba
+         SetWindowRgn, y una región es una máscara de 1 BIT: un píxel está dentro o fuera, sin
+         medios tonos, así que toda curva salía escalonada — las esquinas de las pestañas y sobre
+         todo los botones circulares, que son curva pura. No había ningún parámetro que suavizar.
+
+         El precio es que esta ventana pierde el suavizado subpixel (ClearType) en su texto, que es
+         lo que la spec v1 quería evitar. Se asume solo aquí: el texto del dock son etiquetas cortas
+         de una línea, mientras que NoteWindow — la superficie donde de verdad se lee y se escribe —
+         sigue siendo opaca y conserva ClearType.
+
+         A cambio desaparece toda la maquinaria de región: SetWindowRgn por frame, el bucle de
+         CompositionTarget.Rendering, el recorte al viewport y el clip por pestaña. La forma la
+         dibuja WPF, con antialiasing, y encima el dock puede tener sombra de verdad. -->
     <Window.Resources>
         <local:NoteTabLabelConverter x:Key="NoteTabLabelConverter" />
         <local:NoteRimConverter x:Key="NoteRimConverter" />
         <local:NoteLabelColorConverter x:Key="NoteLabelColorConverter" />
 
-        <!-- El único modo de dar volumen a una pestaña aquí. La spec v1 descarta
-             AllowsTransparency (rompe ClearType), así que cada píxel dentro de la región es
-             opaco y no cabe ninguna sombra: la profundidad tiene que venir de dentro. Claro en
-             el borde libre (izquierda, la que sobresale) y algo más hondo hacia el borde físico
-             de pantalla, que es como caería la luz sobre una ficha que asoma de un fichero. -->
-        <!-- Los topes van pegados a los cantos y la cara queda plana en medio. Con una rampa
-             larga (0 -> 0.45 -> 1) el degradado se leía como tal y las pestañas parecían plástico
-             brillante iluminado de lado, no papel. -->
+        <DropShadowEffect x:Key="CardShadow" BlurRadius="14" ShadowDepth="3" Direction="200"
+                          Color="#000000" Opacity="0.30" />
+
+        <!-- Reflejo en los cantos, cara plana en medio. Con una rampa larga el degradado se leía
+             como tal y las pestañas parecían plástico brillante iluminado de lado, no papel. -->
         <LinearGradientBrush x:Key="TabSheen" StartPoint="0,0" EndPoint="1,0">
             <GradientStop Offset="0" Color="#1AFFFFFF" />
-            <GradientStop Offset="0.10" Color="#00FFFFFF" />
-            <GradientStop Offset="0.88" Color="#00000000" />
+            <GradientStop Offset="0.08" Color="#00FFFFFF" />
+            <GradientStop Offset="0.92" Color="#00000000" />
             <GradientStop Offset="1" Color="#14000000" />
         </LinearGradientBrush>
 
@@ -33,64 +43,41 @@
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="Button">
-                        <!-- Redondeada solo por la izquierda (el borde libre, lejos del borde
-                             físico de pantalla contra el que está pegado el dock). El orden de
-                             CornerRadius es (TopLeft, TopRight, BottomRight, BottomLeft). Que la
-                             derecha quede cuadrada no es estético: SetTabFanRegion construye la
-                             región a partir de estos mismos rects y da por hecho este lado. -->
-                        <Grid>
+                        <!-- Redondeada solo por la izquierda: el lado derecho va a ras del canto de
+                             la pantalla y redondearlo dejaría ver el escritorio por una muesca. -->
+                        <Grid Effect="{StaticResource CardShadow}">
                             <Border Background="{TemplateBinding Background}"
                                     BorderBrush="{Binding Color, Converter={StaticResource NoteRimConverter}}"
                                     BorderThickness="1,1,0,1"
                                     CornerRadius="10,0,0,10" />
                             <Border Background="{StaticResource TabSheen}" CornerRadius="10,0,0,10" />
 
-                            <!-- Etiqueta del lomo: girada -90° con LayoutTransform (no Render:
-                                 intercambia los ejes de medida, que es justo lo que hace falta
-                                 para que el alto de la pestaña sea el ancho del texto). Alineada
-                                 a la izquierda y no centrada porque en reposo solo asoma la banda
-                                 derecha de la pestaña (ver EdgeGeometry.RestClipLeft): así el
-                                 reposo es color liso y la etiqueta no llega a verse. Va
-                                 en un tono oscuro del propio color de la nota, no en negro:
-                                 el negro sería el único valor de la pestaña sin relación de hue
-                                 con ella. -->
+                            <!-- Título horizontal, anclado arriba. Al solaparse las pestañas solo
+                                 queda visible la franja superior de cada una, así que es ahí donde
+                                 tiene que vivir la etiqueta. Va en un tono oscuro del propio color
+                                 de la nota: el negro sería el único valor de la pestaña sin
+                                 relación de hue con ella. -->
                             <TextBlock Text="{Binding Text, Converter={StaticResource NoteTabLabelConverter}}"
                                        Foreground="{Binding Color, Converter={StaticResource NoteLabelColorConverter}}"
-                                       FontSize="11"
+                                       FontSize="12"
                                        FontWeight="SemiBold"
                                        TextTrimming="CharacterEllipsis"
                                        TextWrapping="NoWrap"
-                                       MaxWidth="86"
-                                       HorizontalAlignment="Left"
                                        VerticalAlignment="Top"
-                                       Margin="14,10,0,0">
-                                <!-- +90 (de arriba abajo), no -90. Al solaparse las pestañas, de
-                                     cada una solo queda visible su franja SUPERIOR: la de abajo la
-                                     tapa la siguiente. Con -90 el texto empieza abajo, así que lo
-                                     visible sería el final de la etiqueta. Girando al revés y
-                                     anclándola arriba, lo que se lee es siempre el principio. -->
-                                <TextBlock.LayoutTransform>
-                                    <RotateTransform Angle="90" />
-                                </TextBlock.LayoutTransform>
-                            </TextBlock>
+                                       HorizontalAlignment="Left"
+                                       Margin="16,11,26,0" />
 
-                            <!-- Troquelado. Marca dónde acaba el lomo y empieza el cuerpo: al
-                                 abrir la nota, todo lo que queda a la izquierda de esta línea
-                                 viaja con ella (ver NoteWindow y EdgeGeometry.SpineWidth). Los
-                                 píxeles a su derecha son el trocito de cuerpo que asoma.
-
-                                 Path + StrokeDashArray y no una OpacityMask en mosaico: es la
-                                 receta estandar de WPF para una regla discontinua de alto
-                                 variable. Stretch="Fill" sobre una LineGeometry degenerada estira
-                                 solo el eje que tiene longitud. -->
+                            <!-- Troquelado: el pliegue por donde la cabecera se une al cuerpo.
+                                 Path + StrokeDashArray, la receta estándar de WPF para una regla
+                                 discontinua de largo variable. -->
                             <Path Stroke="{Binding Color, Converter={StaticResource NoteRimConverter}}"
                                   StrokeThickness="1"
                                   StrokeDashArray="3 3"
                                   Stretch="Fill"
                                   Width="1"
-                                  Opacity="0.7"
+                                  Opacity="0.6"
                                   HorizontalAlignment="Right"
-                                  Margin="0,10,16,10"
+                                  Margin="0,7,14,7"
                                   SnapsToDevicePixels="True">
                                 <Path.Data>
                                     <LineGeometry StartPoint="0,0" EndPoint="0,1" />
@@ -101,10 +88,10 @@
                         </Grid>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsMouseOver" Value="True">
-                                <Setter TargetName="HoverOverlay" Property="Opacity" Value="0.08" />
+                                <Setter TargetName="HoverOverlay" Property="Opacity" Value="0.07" />
                             </Trigger>
                             <Trigger Property="IsPressed" Value="True">
-                                <Setter TargetName="HoverOverlay" Property="Opacity" Value="0.16" />
+                                <Setter TargetName="HoverOverlay" Property="Opacity" Value="0.15" />
                             </Trigger>
                         </ControlTemplate.Triggers>
                     </ControlTemplate>
@@ -113,24 +100,27 @@
         </Style>
 
         <Style x:Key="CircularIconButtonStyle" TargetType="Button">
-            <Setter Property="Width" Value="32" />
-            <Setter Property="Height" Value="32" />
-            <Setter Property="Margin" Value="4" />
-            <Setter Property="HorizontalAlignment" Value="Right" />
+            <Setter Property="Width" Value="34" />
+            <Setter Property="Height" Value="34" />
+            <Setter Property="Margin" Value="5,0,0,0" />
             <Setter Property="Foreground" Value="#EDE7DC" />
             <Setter Property="Background" Value="#3C3730" />
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="Button">
-                        <Border x:Name="Bg" Background="{TemplateBinding Background}" CornerRadius="16">
+                        <!-- Círculo de verdad, ya sin escalonado: con la región era una máscara de
+                             1 bit, y una circunferencia es curva pura, o sea el peor caso. -->
+                        <Grid>
+                            <Ellipse x:Name="Bg" Fill="{TemplateBinding Background}"
+                                     Effect="{StaticResource CardShadow}" />
                             <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
-                        </Border>
+                        </Grid>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsMouseOver" Value="True">
-                                <Setter TargetName="Bg" Property="Background" Value="#4E4840" />
+                                <Setter TargetName="Bg" Property="Fill" Value="#4E4840" />
                             </Trigger>
                             <Trigger Property="IsPressed" Value="True">
-                                <Setter TargetName="Bg" Property="Background" Value="#5F584E" />
+                                <Setter TargetName="Bg" Property="Fill" Value="#5F584E" />
                             </Trigger>
                         </ControlTemplate.Triggers>
                     </ControlTemplate>
@@ -139,52 +129,77 @@
         </Style>
     </Window.Resources>
 
-    <!-- Un solo panel. El estado de reposo no es otro contenido: son estas mismas pestañas,
-         desplazadas con RenderTransform (nunca con layout) y recortadas por la región a los 16px
-         que asoman. -->
-    <Grid x:Name="PanelContent">
-        <Grid.RowDefinitions>
-            <RowDefinition Height="*" />
-            <RowDefinition Height="Auto" />
-        </Grid.RowDefinitions>
+    <Grid Margin="18">
+        <!-- Dos capas superpuestas con fundido cruzado. Volver a este patrón (que una ronda
+             anterior había eliminado) es correcto ahora: lo que lo hacía frágil era tener que
+             mantener la región sincronizada con él, y ya no hay región. El cuidado que sí sigue
+             valiendo es que Opacity NO desactiva el hit-testing en WPF — IsHitTestVisible se fija
+             explícitamente en ApplyState, o la capa invisible se come los clics de la visible. -->
 
-        <!-- Barra de scroll oculta, no reestilizada: la rueda sigue funcionando, y la región
-             recorta cualquier cosa que no sea una pestaña, así que una barra dibujada sobre el
-             fondo sería invisible igualmente. -->
-        <ScrollViewer x:Name="TabsScroll"
-                      Grid.Row="0"
-                      VerticalScrollBarVisibility="Hidden"
-                      HorizontalScrollBarVisibility="Disabled">
-            <ItemsControl x:Name="TabsList">
+        <!-- Reposo: la tira de guiones dentro de su contenedor. -->
+        <Border x:Name="RestStrip"
+                Background="#2A261F"
+                CornerRadius="10"
+                HorizontalAlignment="Right"
+                VerticalAlignment="Center"
+                Width="20"
+                Padding="0,5"
+                Effect="{StaticResource CardShadow}">
+            <ItemsControl ItemsSource="{Binding ItemsSource, ElementName=TabsList}">
                 <ItemsControl.ItemTemplate>
                     <DataTemplate>
-                        <!-- Ancho uniforme: si fuera una escalera, cada nota se abriría con un
-                             lomo de grosor distinto (ver EdgeGeometry). -->
-                        <Button Content="{Binding}"
-                                Background="{Binding Color}"
-                                Width="104"
-                                Height="100"
-                                HorizontalAlignment="Right"
-                                Click="OnTabClick"
-                                Loaded="OnTabLoaded"
-                                Tag="{Binding}"
-                                Style="{StaticResource NoteTabButtonStyle}" />
+                        <Border Background="{Binding Color}"
+                                Width="12" Height="26"
+                                Margin="0,0,0,5"
+                                HorizontalAlignment="Center"
+                                CornerRadius="6" />
                     </DataTemplate>
                 </ItemsControl.ItemTemplate>
             </ItemsControl>
-        </ScrollViewer>
+        </Border>
 
-        <StackPanel x:Name="FooterPanel" Grid.Row="1" HorizontalAlignment="Right">
-            <Button x:Name="NewNoteButton" Click="OnNewNoteClick"
-                    Style="{StaticResource CircularIconButtonStyle}"
-                    ToolTip="Nueva nota">
-                <TextBlock Text="&#xE710;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" FontSize="14" />
-            </Button>
-            <Button x:Name="ManageArchiveButton" Click="OnManageArchiveClick"
-                    Style="{StaticResource CircularIconButtonStyle}"
-                    ToolTip="Gestionar notas">
-                <TextBlock Text="&#xE713;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" FontSize="14" />
-            </Button>
-        </StackPanel>
+        <!-- Desplegado: el abanico y los botones. -->
+        <Grid x:Name="FanPanel" Opacity="0">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="*" />
+                <RowDefinition Height="Auto" />
+            </Grid.RowDefinitions>
+
+            <ScrollViewer x:Name="TabsScroll"
+                          Grid.Row="0"
+                          VerticalAlignment="Center"
+                          VerticalScrollBarVisibility="Hidden"
+                          HorizontalScrollBarVisibility="Disabled">
+                <ItemsControl x:Name="TabsList">
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate>
+                            <Button Content="{Binding}"
+                                    Background="{Binding Color}"
+                                    Width="208"
+                                    Height="40"
+                                    HorizontalAlignment="Right"
+                                    Click="OnTabClick"
+                                    Loaded="OnTabLoaded"
+                                    Tag="{Binding}"
+                                    Style="{StaticResource NoteTabButtonStyle}" />
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+            </ScrollViewer>
+
+            <StackPanel x:Name="FooterPanel" Grid.Row="1" Orientation="Horizontal"
+                        HorizontalAlignment="Right" Margin="0,10,0,0">
+                <Button x:Name="ManageArchiveButton" Click="OnManageArchiveClick"
+                        Style="{StaticResource CircularIconButtonStyle}"
+                        ToolTip="Gestionar notas">
+                    <TextBlock Text="&#xE713;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" FontSize="15" />
+                </Button>
+                <Button x:Name="NewNoteButton" Click="OnNewNoteClick"
+                        Style="{StaticResource CircularIconButtonStyle}"
+                        ToolTip="Nueva nota">
+                    <TextBlock Text="&#xE710;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" FontSize="15" />
+                </Button>
+            </StackPanel>
+        </Grid>
     </Grid>
 </Window>

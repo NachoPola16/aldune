@@ -104,11 +104,15 @@ public class EdgeGeometryTests
     [Fact]
     public void Pitch_OverlapsOnceThereAreEnoughNotes_EvenOnATallMonitor()
     {
-        // El bug: con el presupuesto atado solo a la fraccion de pantalla, en un monitor de 2560px
-        // de alto ocho notas cabian sin solaparse y el abanico ocupaba media pantalla — que es
+        // El bug original: con el presupuesto atado solo a la fraccion de pantalla, en un monitor
+        // de 2560px de alto las notas cabian sin solaparse y el abanico ocupaba media pantalla —
         // justo lo que el solape venia a evitar. El tope absoluto es lo que lo corrige.
-        Assert.True(EdgeGeometry.PitchFor(Vertical, EdgePosition.Right, 8) < EdgeGeometry.NaturalPitch,
-            "con ocho notas ya deberian solaparse, por alto que sea el monitor");
+        //
+        // Con etiqueta horizontal la pestana bajo de 100 a 40px, asi que ahora caben ~10 notas sin
+        // solapar en vez de 4: esa holgura es exactamente la ganancia de pasar a horizontal.
+        Assert.Equal(EdgeGeometry.NaturalPitch, EdgeGeometry.PitchFor(Vertical, EdgePosition.Right, 8));
+        Assert.True(EdgeGeometry.PitchFor(Vertical, EdgePosition.Right, 16) < EdgeGeometry.NaturalPitch,
+            "con dieciseis notas ya deberian solaparse, por alto que sea el monitor");
     }
 
     [Fact]
@@ -208,80 +212,64 @@ public class EdgeGeometryTests
     [Fact]
     public void WindowLength_WithNoNotes_StillHasAMinimumTarget()
     {
-        Assert.Equal(EdgeGeometry.MinContentLength + EdgeGeometry.FooterLength,
+        // Incluye el aire de sombra: sin region que recorte, la sombra se dibuja fuera de la
+        // pestana y necesita sitio dentro de la ventana o saldria cortada por el borde del HWND.
+        Assert.Equal(
+            EdgeGeometry.MinContentLength + EdgeGeometry.FooterLength + EdgeGeometry.ShadowMargin * 2,
             EdgeGeometry.WindowLength(Vertical, EdgePosition.Right, 0));
     }
 
-    // --- Ancho uniforme y lomo ------------------------------------------------------------------
+    // --- Ancho uniforme --------------------------------------------------------------------------
 
     [Fact]
-    public void TabWidth_IsUniform_SoEveryNoteOpensWithTheSameSpine()
+    public void TabWidth_IsUniform_SoEveryNoteOpensWithTheSameHeader()
     {
-        // Era 32 + indice*14: sin acotar (a partir de ~14 notas la pestana era mas ancha que la
-        // ventana) y, sobre todo, incoherente con el modelo nuevo — la pestana viaja con la nota
-        // como lomo al abrirla, asi que una escalera daria a cada nota un lomo distinto.
-        Assert.True(EdgeGeometry.TabWidth <= EdgeGeometry.WindowThickness);
+        // La pestana viaja con la nota al abrirla y se convierte en su cabecera: anchos distintos
+        // darian cabeceras distintas.
+        Assert.True(EdgeGeometry.TabWidth > 0);
+        Assert.True(EdgeGeometry.TabWidth < EdgeGeometry.WindowThickness);
     }
 
     [Fact]
-    public void SpineWidth_IsTheTabMinusThePartThatStaysShowingAtRest()
+    public void HorizontalLabel_NeedsFarLessBandThanAVerticalOne()
     {
-        Assert.Equal(EdgeGeometry.TabWidth - EdgeGeometry.PerforationInset, EdgeGeometry.SpineWidth);
-    }
-
-    [Fact]
-    public void RestClip_LeavesGroundOnBothSidesOfTheDash()
-    {
-        // El recorte horizontal lo hace la pestana (UIElement.Clip), no la region: en reposo la
-        // region ES el contenedor, asi que una pestana sin recortar pinta sus 104px enteros por
-        // detras y el color llena la pastilla de lado a lado, sin marco. Fue exactamente lo que
-        // se vio en la app real.
-        double dashLeft = EdgeGeometry.RestClipLeft;
-        double dashRight = dashLeft + EdgeGeometry.RestDashWidth;
-
-        // En coordenadas de la propia pestana, el canto de la ventana cae en TabWidth.
-        Assert.Equal(EdgeGeometry.TabWidth - EdgeGeometry.RestDashInset, dashRight);
-        Assert.True(dashLeft > 0, "el recorte tiene que dejar fuera la etiqueta, que vive a la izquierda");
-    }
-
-    [Fact]
-    public void RestDash_SitsInsideItsContainer_OnBothSides()
-    {
-        // El contenedor tiene que enmarcar el guion, no coincidir con el: esos pocos pixeles de
-        // fondo a cada lado son lo que hace que la tira se lea como un objeto y no como manchas.
-        Assert.True(EdgeGeometry.RestContainerWidth > EdgeGeometry.RestDashWidth);
-        Assert.True(EdgeGeometry.RestDashInset > EdgeGeometry.RestContainerInset);
-    }
-
-    [Fact]
-    public void RestScale_SquashesTabsEnoughToNotOverlapInTheStrip()
-    {
-        // Sin escalar, una pestana de 100px con paso de reposo 32 se solapa con la siguiente y
-        // tapa el fondo del contenedor: no habria guiones separados, sino una mancha continua.
-        double rendered = EdgeGeometry.TabHeight * EdgeGeometry.RestScaleFor();
-        Assert.Equal(EdgeGeometry.RestDashLength, rendered, precision: 9);
-        Assert.True(rendered < EdgeGeometry.RestPitch,
-            $"una pestana renderizada mide {rendered} y el paso es {EdgeGeometry.RestPitch}");
-    }
-
-    [Fact]
-    public void TabHeight_LeavesRoomForTheDefaultNoteTitle()
-    {
-        // "NUEVA NOTA" son 10 caracteres, y el alto de la pestana ES el ancho disponible para la
-        // etiqueta girada. Con 80 no cabia y salia cortada; esta cota lo deja anclado.
-        Assert.True(EdgeGeometry.TabHeight >= 100);
+        // El motivo de pasar a etiquetas horizontales: con solape la franja visible de cada pestana
+        // es un paso, y MinPitch (24) da de sobra para una linea de texto. Una etiqueta vertical
+        // necesitaba ~90px, asi que solo funcionaba sin solapar.
+        Assert.True(EdgeGeometry.MinPitch >= 20);
+        Assert.True(EdgeGeometry.MinPitch < EdgeGeometry.TabHeight);
     }
 
     // --- Tira en reposo --------------------------------------------------------------------------
 
     [Fact]
-    public void RestStripLength_IsFarShorterThanTheExpandedStrip()
+    public void RestStrip_IsFarShorterThanTheFan()
     {
-        // El punto entero del cambio: en reposo el dock insinua que hay notas en vez de ocupar el
-        // borde entero de la pantalla.
-        const int noteCount = 4;
-        Assert.True(EdgeGeometry.RestStripLength(noteCount) < EdgeGeometry.TabStripLength(Area, EdgePosition.Right, noteCount) / 2,
-            $"reposo {EdgeGeometry.RestStripLength(noteCount)} frente a desplegado {EdgeGeometry.TabStripLength(Area, EdgePosition.Right, noteCount)}");
+        const int noteCount = 6;
+        Assert.True(EdgeGeometry.RestStripLength(noteCount)
+            < EdgeGeometry.TabStripLength(Area, EdgePosition.Right, noteCount),
+            "en reposo el dock insinua que hay notas, no ocupa lo que el abanico");
+    }
+
+    [Fact]
+    public void RestDash_IsElongated_NotASquareChip()
+    {
+        // Con guiones casi cuadrados la tira se leia como un selector de color y no como el canto
+        // de unas fichas. Comprobado renderizando tres proporciones en aislamiento.
+        Assert.True(EdgeGeometry.RestDashLength > EdgeGeometry.RestDashWidth * 2);
+    }
+
+    [Fact]
+    public void RestingVisibleRect_HugsTheOuterEdgeAndFitsInsideTheWindow()
+    {
+        const int noteCount = 6;
+        var window = EdgeGeometry.WindowRect(Area, EdgePosition.Right, noteCount);
+        var resting = EdgeGeometry.RestingVisibleRect(Area, EdgePosition.Right, noteCount);
+
+        Assert.Equal(window.X + window.Width, resting.X + resting.Width);
+        Assert.True(resting.Y >= window.Y);
+        Assert.True(resting.Y + resting.Height <= window.Y + window.Height + 0.001);
+        Assert.Equal(EdgeGeometry.RestSliverWidth, resting.Width);
     }
 
     [Fact]
@@ -296,92 +284,7 @@ public class EdgeGeometryTests
         Assert.Equal(0, EdgeGeometry.RestStripLength(0));
     }
 
-    [Fact]
-    public void RestStripLength_HasOneDashPerNote_EvenBeyondTheScrollCap()
-    {
-        // El abanico desplegado solapa las pestanas para que quepan; en reposo no hay
-        // scroll: el desplazamiento de reposo trae todas las notas a la tira, asi que todas tienen
-        // guion. Aplicar aqui aquel tope dejaba los guiones sobrantes visibles pero fuera de la
-        // zona sensible al raton — se veian y no se podian pulsar (bug real, encontrado sondeando
-        // la region de la app con 5 notas).
-        const int beyondCap = 12;
-        Assert.Equal(beyondCap * EdgeGeometry.RestPitch - EdgeGeometry.RestGap,
-            EdgeGeometry.RestStripLength(beyondCap));
-    }
-
-    [Fact]
-    public void RestingVisibleRect_CoversEveryDash_EvenBeyondTheScrollCap()
-    {
-        // La comprobacion que de verdad importa: el ultimo guion tiene que caer dentro de la zona
-        // sensible, o se ve y no responde.
-        const int beyondCap = 12;
-        var window = EdgeGeometry.WindowRect(Area, EdgePosition.Right, beyondCap);
-        var resting = EdgeGeometry.RestingVisibleRect(Area, EdgePosition.Right, beyondCap);
-
-        double lastDashBottom = window.Y + EdgeGeometry.RestStripStart(Area, EdgePosition.Right, beyondCap)
-            + (beyondCap - 1) * EdgeGeometry.RestPitch + EdgeGeometry.RestDashLength;
-
-        Assert.True(lastDashBottom <= resting.Y + resting.Height,
-            $"el ultimo guion acaba en {lastDashBottom}, la zona sensible en {resting.Y + resting.Height}");
-    }
-
-    [Fact]
-    public void RestStripStart_IsNeverNegative()
-    {
-        // Un inicio negativo recortaria las PRIMERAS notas contra el borde superior de la ventana.
-        Assert.True(EdgeGeometry.RestStripStart(Area, EdgePosition.Right, 1000) >= 0);
-    }
-
-    [Fact]
-    public void RestStrip_IsCenteredWithinTheWindow()
-    {
-        // Solo mientras quepa: si la tira es mas larga que la ventana se pega arriba a proposito.
-        const int noteCount = 4;
-        double start = EdgeGeometry.RestStripStart(Area, EdgePosition.Right, noteCount);
-        double end = start + EdgeGeometry.RestStripLength(noteCount);
-        double window = EdgeGeometry.WindowLength(Area, EdgePosition.Right, noteCount);
-        Assert.Equal(start, window - end, precision: 9);
-    }
-
     // --- Desplazamiento reposo -> desplegado -----------------------------------------------------
-
-    [Fact]
-    public void RestOffset_PutsEachTabsCentreOnItsOwnDash()
-    {
-        // Sin esto, la banda que la region deja ver para la nota 2 caeria sobre pixeles de la
-        // nota 1 y los colores saldrian cambiados: reposo y desplegado usan pasos distintos.
-        const int noteCount = 5;
-        for (int i = 0; i < noteCount; i++)
-        {
-            double tabCentre = i * EdgeGeometry.PitchFor(Area, EdgePosition.Right, noteCount)
-                + EdgeGeometry.TabHeight / 2;
-            double dashCentre = EdgeGeometry.RestStripStart(Area, EdgePosition.Right, noteCount)
-                + i * EdgeGeometry.RestPitch + EdgeGeometry.RestDashLength / 2;
-            Assert.Equal(dashCentre,
-                tabCentre + EdgeGeometry.RestOffsetFor(Area, EdgePosition.Right, i, noteCount), precision: 9);
-        }
-    }
-
-    [Fact]
-    public void RestOffset_KeepsTheDashInsideItsOwnTab()
-    {
-        // La region deja ver una banda centrada en la pestana ya desplazada. Si el desplazamiento
-        // sacara esa banda fuera del alto de la pestana, se verian pixeles del fondo o de la nota
-        // vecina en lugar del color propio.
-        const int noteCount = 4;
-        for (int i = 0; i < noteCount; i++)
-        {
-            double offset = EdgeGeometry.RestOffsetFor(Area, EdgePosition.Right, i, noteCount);
-            double tabTop = i * EdgeGeometry.PitchFor(Area, EdgePosition.Right, noteCount) + offset;
-            double tabCentre = tabTop + EdgeGeometry.TabHeight / 2;
-            double dashTop = tabCentre - EdgeGeometry.RestDashLength / 2;
-            double dashBottom = tabCentre + EdgeGeometry.RestDashLength / 2;
-
-            Assert.True(dashTop >= tabTop, $"nota {i}: el guion empieza por encima de su pestana");
-            Assert.True(dashBottom <= tabTop + EdgeGeometry.TabHeight,
-                $"nota {i}: el guion acaba por debajo de su pestana");
-        }
-    }
 
     // --- Origen del deslizamiento al abrir una nota ---------------------------------------------
 
@@ -448,41 +351,6 @@ public class EdgeGeometryTests
         var window = EdgeGeometry.WindowRect(Area, EdgePosition.Left, noteCount: 4);
         var resting = EdgeGeometry.RestingVisibleRect(Area, EdgePosition.Left, noteCount: 4);
         Assert.Equal(window.X, resting.X);
-    }
-
-    [Theory]
-    [MemberData(nameof(Edges))]
-    public void RestingVisibleRect_StartsWithTheWindowButCoversOnlyTheTabStrip(EdgePosition edge)
-    {
-        const int noteCount = 4;
-        var window = EdgeGeometry.WindowRect(Area, edge, noteCount);
-        var resting = EdgeGeometry.RestingVisibleRect(Area, edge, noteCount);
-        double strip = EdgeGeometry.RestStripLength(noteCount);
-        double start = EdgeGeometry.RestStripStart(Area, edge, noteCount);
-
-        if (edge is EdgePosition.Top or EdgePosition.Bottom)
-        {
-            Assert.Equal(window.X + start, resting.X);
-            Assert.Equal(strip, resting.Width);
-        }
-        else
-        {
-            Assert.Equal(window.Y + start, resting.Y);
-            Assert.Equal(strip, resting.Height);
-        }
-    }
-
-    [Fact]
-    public void RestingVisibleRect_IsInsetAtBothEndsOfTheWindow()
-    {
-        // La tira de reposo va centrada y es mucho mas corta que la ventana, asi que no puede
-        // tocar ninguno de los dos extremos — ni la banda del footer, que en reposo no se dibuja.
-        const int noteCount = 4;
-        var window = EdgeGeometry.WindowRect(Area, EdgePosition.Right, noteCount);
-        var resting = EdgeGeometry.RestingVisibleRect(Area, EdgePosition.Right, noteCount);
-
-        Assert.True(resting.Y > window.Y);
-        Assert.True(resting.Y + resting.Height < window.Y + window.Height);
     }
 
 }
