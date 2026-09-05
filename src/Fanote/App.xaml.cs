@@ -177,7 +177,7 @@ public partial class App : Application
         // Atajo global. Se enciende segun lo guardado, y si falla (otra app ya tiene la
         // combinacion) se refleja en los ajustes en vez de fallar en silencio.
         _hotkey = new GlobalHotkey(coordinator.CreateAndOpenNote);
-        if (settings.GlobalHotkeyEnabled) _hotkey.Enable();
+        if (settings.GlobalHotkeyEnabled) _hotkey.Enable(settings.Hotkey);
 
         var hotkey = _hotkey;
         var loadedSettings = settings;

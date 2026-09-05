@@ -220,6 +220,8 @@ public partial class NotesManagerWindow : Window
 
     private void OnCloseClick(object sender, RoutedEventArgs e) => Close();
 
+    private void OnSettingsClick(object sender, RoutedEventArgs e) => _coordinator.OpenSettings();
+
 
     private void OnSelectAllClick(object sender, RoutedEventArgs e)
     {

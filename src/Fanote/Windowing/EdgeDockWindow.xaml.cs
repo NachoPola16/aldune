@@ -112,7 +112,9 @@ public partial class EdgeDockWindow : Window
 
         // Contra la zona realmente visible, no contra la ventana entera: casi toda es transparente,
         // y desplegarse al entrar ahí sería desplegarse por pasar el ratón sobre nada.
-        var hitRect = _fanState.IsExpanded
+        // Sin notas la ventana entera es zona sensible: no hay tira que sobrevolar, y los botones
+        // tienen que poder pulsarse sin desplegar nada primero.
+        var hitRect = _fanState.IsExpanded || _noteCount == 0
             ? EdgeGeometry.WindowRect(_workingArea, _edge, _noteCount)
             : EdgeGeometry.RestingVisibleRect(_workingArea, _edge, _noteCount);
 
@@ -178,7 +180,14 @@ public partial class EdgeDockWindow : Window
     /// </summary>
     private void ApplyState(bool animate)
     {
-        bool expanded = _fanState.IsExpanded;
+        // Sin notas no hay tira de reposo que ensenar — quedaba un pegote oscuro diminuto en el
+        // canto, sin nada dentro y sin decir nada — ni abanico que desplegar. Se muestran los
+        // botones directamente: son la unica accion posible en ese estado, y ademas la unica forma
+        // de crear la primera nota.
+        bool empty = _noteCount == 0;
+        bool expanded = _fanState.IsExpanded || empty;
+
+        RestStrip.Visibility = empty ? Visibility.Collapsed : Visibility.Visible;
 
         // Opacity NO desactiva el hit-testing en WPF: sin esto, la capa invisible se come los clics
         // de la visible. Es el mismo tropiezo que ya documenta docs/STATUS.md.
@@ -306,7 +315,12 @@ public partial class EdgeDockWindow : Window
         double pitch = EdgeGeometry.PitchFor(_workingArea, _edge, _noteCount);
         _tabMargin = new Thickness(0, 0, 0, pitch - EdgeGeometry.TabHeight);
 
-        if (countChanged) ApplyWindowRect();
+        if (countChanged)
+        {
+            ApplyWindowRect();
+            // Pasar de cero a una nota (o al reves) cambia que capa se ensena, no solo el tamano.
+            ApplyState(animate: false);
+        }
 
         // Solo las notas que no estaban antes. Crear una nota anima esa pestaña y deja las demás
         // quietas, en vez de rehacer la entrada del abanico entero — que es lo que hacía que añadir

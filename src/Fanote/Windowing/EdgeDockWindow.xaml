@@ -155,7 +155,11 @@
              valiendo es que Opacity NO desactiva el hit-testing en WPF — IsHitTestVisible se fija
              explícitamente en ApplyState, o la capa invisible se come los clics de la visible. -->
 
-        <!-- Reposo: la tira de guiones dentro de su contenedor. -->
+        <!-- Reposo: la tira de guiones dentro de su contenedor.
+
+             El relleno va solo ARRIBA: cada guion ya lleva su propio margen inferior, asi que un
+             relleno simetrico sumaba dos veces por abajo y la tira quedaba descentrada dentro del
+             contenedor — 5px, muy visibles con una sola nota. -->
         <!-- Los numeros de aqui son los de EdgeGeometry: Width = RestContainerWidth (20),
              Margin derecho = RestContainerInset (5), Padding = RestContainerPad (5), y el guion
              de abajo RestDashWidth x RestDashLength con RestGap de separacion. Tienen que ir
@@ -168,7 +172,7 @@
                 VerticalAlignment="Center"
                 Width="20"
                 Margin="0,0,5,0"
-                Padding="0,5"
+                Padding="0,5,0,0"
                 Effect="{StaticResource ButtonShadow}">
             <ItemsControl ItemsSource="{Binding ItemsSource, ElementName=TabsList}">
                 <ItemsControl.ItemTemplate>

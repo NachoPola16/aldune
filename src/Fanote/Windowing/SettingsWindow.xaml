@@ -47,6 +47,32 @@
             </Setter>
         </Style>
 
+        <Style x:Key="RecordButtonStyle" TargetType="Button">
+            <Setter Property="Foreground" Value="#EDE7DC" />
+            <Setter Property="Background" Value="#3C3730" />
+            <Setter Property="FontSize" Value="12" />
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="Bg" Background="{TemplateBinding Background}" CornerRadius="6">
+                            <ContentPresenter Margin="{TemplateBinding Padding}"
+                                              HorizontalAlignment="Center" VerticalAlignment="Center" />
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Bg" Property="Background" Value="#4E4840" />
+                            </Trigger>
+                            <Trigger Property="IsEnabled" Value="False">
+                                <Setter TargetName="Bg" Property="Background" Value="#332F28" />
+                                <Setter Property="Foreground" Value="#6B6459" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
         <Style x:Key="CloseButtonStyle" TargetType="Button">
             <Setter Property="Foreground" Value="#EDE7DC" />
             <Setter Property="FontSize" Value="13" />
@@ -94,11 +120,25 @@
 
         <StackPanel Margin="24,20,24,0">
             <CheckBox x:Name="HotkeyCheck"
+                      Content="Crear una nota con un atajo de teclado"
                       Foreground="#EDE7DC" Background="#2A261F" FontSize="13"
                       Style="{StaticResource AppCheckBoxStyle}"
                       Click="OnHotkeyToggled" />
+
+            <StackPanel Orientation="Horizontal" Margin="27,10,0,0">
+                <!-- Un boton que captura la siguiente combinacion, no una lista de teclas: escoger
+                     modificador y tecla en dos desplegables obliga a traducir mentalmente lo que
+                     uno ya sabe pulsar. -->
+                <Button x:Name="HotkeyButton" Click="OnRecordHotkeyClick"
+                        MinWidth="150" Padding="12,7"
+                        Style="{StaticResource RecordButtonStyle}" />
+                <Button x:Name="HotkeyResetButton" Content="Restablecer" Click="OnResetHotkeyClick"
+                        Margin="8,0,0,0" Padding="12,7"
+                        Style="{StaticResource RecordButtonStyle}" />
+            </StackPanel>
+
             <TextBlock x:Name="HotkeyHint"
-                       Foreground="#8A8175" FontSize="11" TextWrapping="Wrap" Margin="27,6,0,0" />
+                       Foreground="#8A8175" FontSize="11" TextWrapping="Wrap" Margin="27,10,0,0" />
         </StackPanel>
     </StackPanel>
 </Window>

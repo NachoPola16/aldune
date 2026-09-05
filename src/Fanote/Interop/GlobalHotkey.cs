@@ -1,5 +1,6 @@
 using System.Runtime.InteropServices;
 using System.Windows.Interop;
+using Fanote.Core;
 
 namespace Fanote.Interop;
 
@@ -20,11 +21,7 @@ internal sealed class GlobalHotkey : IDisposable
 
     // MOD_NOREPEAT: sin esto, mantener pulsada la combinación dispara sin parar y crea una nota por
     // repetición de teclado.
-    private const uint MOD_ALT = 0x0001;
-    private const uint MOD_CONTROL = 0x0002;
     private const uint MOD_NOREPEAT = 0x4000;
-
-    private const uint VK_N = 0x4E;
 
     [DllImport("user32.dll", SetLastError = true)]
     private static extern bool RegisterHotKey(IntPtr hWnd, int id, uint fsModifiers, uint vk);
@@ -36,9 +33,10 @@ internal sealed class GlobalHotkey : IDisposable
     private readonly Action _onPressed;
     private bool _registered;
 
-    /// <summary>Cómo se llama el atajo de cara al usuario. Un único sitio, para que la interfaz no
-    /// pueda contar una combinación distinta de la que de verdad está registrada.</summary>
-    internal const string DisplayName = "Ctrl + Alt + N";
+    private HotkeyBinding _binding = HotkeyBinding.Default;
+
+    /// <summary>La combinación registrada ahora mismo.</summary>
+    internal HotkeyBinding Binding => _binding;
 
     /// <summary>Si el atajo está activo ahora mismo. Falso también cuando otra aplicación ya tenía
     /// esa combinación: Windows no la comparte, y el primero que la pide se la queda.</summary>
@@ -58,11 +56,20 @@ internal sealed class GlobalHotkey : IDisposable
         _source.AddHook(OnMessage);
     }
 
-    /// <summary>Registra el atajo. Devuelve si lo consiguió.</summary>
-    internal bool Enable()
+    /// <summary>
+    /// Registra <paramref name="binding"/>. Devuelve si lo consiguió.
+    ///
+    /// Siempre da de baja lo anterior primero: cambiar de combinación sin soltar la vieja dejaría
+    /// las dos activas, y la antigua seguiría creando notas hasta cerrar la app.
+    /// </summary>
+    internal bool Enable(HotkeyBinding binding)
     {
-        if (_registered) return true;
-        _registered = RegisterHotKey(_source.Handle, HotkeyId, MOD_CONTROL | MOD_ALT | MOD_NOREPEAT, VK_N);
+        Disable();
+        if (!binding.IsValid) return false;
+
+        _binding = binding;
+        _registered = RegisterHotKey(
+            _source.Handle, HotkeyId, binding.Modifiers | MOD_NOREPEAT, binding.Key);
         return _registered;
     }
 

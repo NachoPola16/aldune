@@ -234,6 +234,20 @@
                            FontSize="17" FontWeight="SemiBold" />
                 <TextBlock x:Name="SubtitleText" Foreground="#A79E90" FontSize="12" Margin="0,3,0,0" />
             </StackPanel>
+            <!-- Acceso a Ajustes tambien desde aqui. Estaban solo en el clic derecho de la
+                 bandeja, y ahi no los encontro el usuario: esta es la ventana que uno abre cuando
+                 busca "donde se configura esto". -->
+            <Button x:Name="SettingsButton"
+                    Content="&#xE713;"
+                    FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets"
+                    Width="28" Height="28"
+                    Margin="0,0,32,0"
+                    HorizontalAlignment="Right"
+                    VerticalAlignment="Top"
+                    ToolTip="Ajustes"
+                    Click="OnSettingsClick"
+                    WindowChrome.IsHitTestVisibleInChrome="True"
+                    Style="{StaticResource CloseButtonStyle}" />
             <Button x:Name="CloseButton"
                     Content="&#x2715;"
                     Width="28" Height="28"
