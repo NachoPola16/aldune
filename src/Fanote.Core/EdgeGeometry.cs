@@ -46,10 +46,19 @@ public static class EdgeGeometry
     public const double MinPitch = 34;
 
     /// <summary>
-    /// Fracción del alto útil del monitor que el abanico desplegado puede ocupar. No más, para que
-    /// no dé la sensación de adueñarse de la pantalla.
+    /// Fracción del alto útil del monitor que el abanico desplegado puede ocupar.
     /// </summary>
-    public const double MaxScreenFraction = 0.8;
+    public const double MaxScreenFraction = 0.7;
+
+    /// <summary>
+    /// Tope absoluto de longitud del abanico, además de la fracción de pantalla.
+    ///
+    /// Sin él, en un monitor de 2560px de alto el presupuesto salían ~1900px: ocho notas cabían
+    /// sin solaparse y el abanico ocupaba media pantalla, que es justo lo que el solape venía a
+    /// evitar. La fracción sola no basta porque un monitor muy alto no significa que quieras un
+    /// dock muy alto — el dock debe seguir siendo un objeto compacto en el canto.
+    /// </summary>
+    public const double MaxFanLength = 560;
 
     /// <summary>
     /// Paso real entre pestañas: se encoge conforme hay más notas, de modo que el abanico ocupa
@@ -71,7 +80,7 @@ public static class EdgeGeometry
         if (noteCount <= 1) return NaturalPitch;
 
         double available = edge is EdgePosition.Left or EdgePosition.Right ? area.Height : area.Width;
-        double budget = available * MaxScreenFraction - FooterLength;
+        double budget = Math.Min(available * MaxScreenFraction, MaxFanLength) - FooterLength;
 
         // Lo que ocupan sin solaparse: la última se ve entera, las demás aportan un paso.
         double natural = (noteCount - 1) * NaturalPitch + TabHeight;

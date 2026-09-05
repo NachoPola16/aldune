@@ -59,7 +59,8 @@
                                        FontSize="11"
                                        FontWeight="SemiBold"
                                        TextTrimming="CharacterEllipsis"
-                                       MaxWidth="92"
+                                       TextWrapping="NoWrap"
+                                       MaxWidth="86"
                                        HorizontalAlignment="Left"
                                        VerticalAlignment="Top"
                                        Margin="14,10,0,0">

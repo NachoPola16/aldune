@@ -102,11 +102,32 @@ public class EdgeGeometryTests
     }
 
     [Fact]
+    public void Pitch_OverlapsOnceThereAreEnoughNotes_EvenOnATallMonitor()
+    {
+        // El bug: con el presupuesto atado solo a la fraccion de pantalla, en un monitor de 2560px
+        // de alto ocho notas cabian sin solaparse y el abanico ocupaba media pantalla — que es
+        // justo lo que el solape venia a evitar. El tope absoluto es lo que lo corrige.
+        Assert.True(EdgeGeometry.PitchFor(Vertical, EdgePosition.Right, 8) < EdgeGeometry.NaturalPitch,
+            "con ocho notas ya deberian solaparse, por alto que sea el monitor");
+    }
+
+    [Fact]
+    public void TabStrip_NeverExceedsTheAbsoluteCap_UntilTheLegibilityFloorBites()
+    {
+        for (int n = 1; n <= 14; n++)
+        {
+            double strip = EdgeGeometry.TabStripLength(Vertical, EdgePosition.Right, n);
+            Assert.True(strip <= EdgeGeometry.MaxFanLength + 1,
+                $"con {n} notas el abanico mide {strip}, tope {EdgeGeometry.MaxFanLength}");
+        }
+    }
+
+    [Fact]
     public void Pitch_ShrinksAsNotesPileUp()
     {
-        double few = EdgeGeometry.PitchFor(Vertical, EdgePosition.Right, 20);
-        double many = EdgeGeometry.PitchFor(Vertical, EdgePosition.Right, 40);
-        Assert.True(many < few, $"con 40 notas el paso ({many}) deberia ser menor que con 20 ({few})");
+        double few = EdgeGeometry.PitchFor(Vertical, EdgePosition.Right, 6);
+        double many = EdgeGeometry.PitchFor(Vertical, EdgePosition.Right, 12);
+        Assert.True(many < few, $"con 12 notas el paso ({many}) deberia ser menor que con 6 ({few})");
         Assert.True(few <= EdgeGeometry.NaturalPitch);
     }
 
@@ -126,13 +147,28 @@ public class EdgeGeometryTests
     [Fact]
     public void TabStrip_StaysWithinTheScreenBudget_UntilTheFloorBites()
     {
-        // El punto del solape: entre 5 y 20 notas el abanico ocupa aproximadamente lo mismo, en vez
-        // de crecer sin parar o de dejar las sobrantes sin dibujar.
-        double budget = Vertical.Height * EdgeGeometry.MaxScreenFraction - EdgeGeometry.FooterLength;
-        for (int n = 5; n <= 20; n++)
+        // El punto del solape: mientras el paso pueda encogerse, el abanico ocupa lo mismo haya 5
+        // notas o 12, en vez de crecer sin parar o de dejar las sobrantes sin dibujar.
+        double budget = Math.Min(Vertical.Height * EdgeGeometry.MaxScreenFraction,
+            EdgeGeometry.MaxFanLength) - EdgeGeometry.FooterLength;
+
+        for (int n = 5; n <= 40; n++)
         {
+            double pitch = EdgeGeometry.PitchFor(Vertical, EdgePosition.Right, n);
             double strip = EdgeGeometry.TabStripLength(Vertical, EdgePosition.Right, n);
-            Assert.True(strip <= budget + 1, $"con {n} notas el abanico mide {strip}, presupuesto {budget}");
+
+            if (pitch > EdgeGeometry.MinPitch)
+            {
+                Assert.True(strip <= budget + 1,
+                    $"con {n} notas el abanico mide {strip}, presupuesto {budget}");
+            }
+            else
+            {
+                // Pasado el suelo de legibilidad manda el suelo, no el presupuesto: preferimos
+                // que el abanico se pase de largo (y scrollee) antes que dejar las pestanas tan
+                // juntas que no se lea cual es cual.
+                Assert.Equal(EdgeGeometry.MinPitch, pitch);
+            }
         }
     }
 

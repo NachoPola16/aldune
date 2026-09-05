@@ -94,6 +94,7 @@
             <TextBlock x:Name="SpineLabel"
                        FontSize="11"
                        FontWeight="SemiBold"
+                       TextWrapping="NoWrap"
                        HorizontalAlignment="Left"
                        VerticalAlignment="Top"
                        Margin="14,10,0,0">
