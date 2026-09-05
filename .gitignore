@@ -2,3 +2,6 @@ bin/
 obj/
 .vs/
 *.user
+
+# Worktrees y estado local de Claude Code: nunca deben versionarse.
+.claude/

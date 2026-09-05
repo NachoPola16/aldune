@@ -56,9 +56,29 @@
             <Setter Property="Background" Value="#5A2A28" />
         </Style>
 
-        <Style x:Key="QuietButtonStyle" TargetType="Button" BasedOn="{StaticResource ToolbarButtonStyle}">
+        <Style x:Key="LinkButtonStyle" TargetType="Button">
+            <Setter Property="Foreground" Value="#8FB0D8" />
+            <Setter Property="FontSize" Value="12" />
             <Setter Property="Background" Value="Transparent" />
-            <Setter Property="Foreground" Value="#A79E90" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <TextBlock x:Name="Label" Text="{TemplateBinding Content}"
+                                   Foreground="{TemplateBinding Foreground}"
+                                   FontSize="{TemplateBinding FontSize}" />
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Label" Property="TextDecorations" Value="Underline" />
+                            </Trigger>
+                            <Trigger Property="IsEnabled" Value="False">
+                                <Setter TargetName="Label" Property="Foreground" Value="#5A554C" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
         </Style>
 
         <Style x:Key="CloseButtonStyle" TargetType="Button" BasedOn="{StaticResource ToolbarButtonStyle}">
@@ -158,7 +178,17 @@
             <StackPanel>
                 <TextBlock Text="Gestionar notas" Foreground="#F5F0E6"
                            FontSize="17" FontWeight="SemiBold" />
-                <TextBlock x:Name="SubtitleText" Foreground="#A79E90" FontSize="12" Margin="0,3,0,0" />
+                <StackPanel Orientation="Horizontal" Margin="0,3,0,0">
+                    <TextBlock x:Name="SubtitleText" Foreground="#A79E90" FontSize="12"
+                               VerticalAlignment="Center" />
+                    <!-- Aquí y no en la barra de abajo: no es una acción sobre la selección, es una
+                         forma de hacerla. Sacarla de allí además deja sitio para que las tres
+                         acciones quepan en una sola línea, que era lo que las partía en dos. -->
+                    <Button x:Name="SelectAllButton" Content="Seleccionar todo"
+                            Click="OnSelectAllClick" Margin="10,0,0,0" Padding="0"
+                            VerticalAlignment="Center"
+                            Style="{StaticResource LinkButtonStyle}" />
+                </StackPanel>
             </StackPanel>
             <Button x:Name="CloseButton"
                     Content="&#x2715;"
@@ -259,11 +289,10 @@
              pulsarse (pasó exactamente eso una vez). WrapPanel baja el sobrante a otra línea. -->
         <Border Grid.Row="3" Background="#25211B" Padding="20,12">
             <DockPanel>
-                <Button x:Name="SelectAllButton" DockPanel.Dock="Left" Content="Seleccionar todo"
-                        Click="OnSelectAllClick" VerticalAlignment="Center"
-                        Style="{StaticResource QuietButtonStyle}" />
+                <!-- Margin vertical en los elementos: si el WrapPanel llega a partirse a un ancho
+                     muy estrecho, las dos líneas se tocaban y los botones parecían solaparse. -->
                 <WrapPanel HorizontalAlignment="Right">
-                    <Button x:Name="ArchiveButton" Click="OnArchiveSelectedClick" Margin="6,0,0,0"
+                    <Button x:Name="ArchiveButton" Click="OnArchiveSelectedClick" Margin="8,3,0,3"
                             Style="{StaticResource ToolbarButtonStyle}">
                         <StackPanel Orientation="Horizontal">
                             <TextBlock Text="&#xE7B8;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets"
@@ -271,7 +300,7 @@
                             <TextBlock Text="Archivar" VerticalAlignment="Center" />
                         </StackPanel>
                     </Button>
-                    <Button x:Name="RestoreButton" Click="OnRestoreSelectedClick" Margin="6,0,0,0"
+                    <Button x:Name="RestoreButton" Click="OnRestoreSelectedClick" Margin="8,3,0,3"
                             Style="{StaticResource ToolbarButtonStyle}">
                         <StackPanel Orientation="Horizontal">
                             <TextBlock Text="&#xE7A7;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets"
@@ -279,12 +308,12 @@
                             <TextBlock Text="Restaurar" VerticalAlignment="Center" />
                         </StackPanel>
                     </Button>
-                    <Button x:Name="TrashButton" Click="OnTrashSelectedClick" Margin="6,0,0,0"
+                    <Button x:Name="TrashButton" Click="OnTrashSelectedClick" Margin="8,3,0,3"
                             Style="{StaticResource DangerToolbarButtonStyle}">
                         <StackPanel Orientation="Horizontal">
                             <TextBlock Text="&#xE74D;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets"
                                        VerticalAlignment="Center" Margin="0,0,6,0" />
-                            <TextBlock Text="A la papelera" VerticalAlignment="Center" />
+                            <TextBlock Text="Papelera" VerticalAlignment="Center" />
                         </StackPanel>
                     </Button>
                 </WrapPanel>

@@ -42,7 +42,7 @@
              template (rather than BasedOn) because the hover color needs to shift red too, not
              just the resting color that TemplateBinding would pick up. -->
         <Style x:Key="NoteDangerButtonStyle" TargetType="Button">
-            <Setter Property="Background" Value="#33CC3333" />
+            <Setter Property="Background" Value="#66B02F2F" />
             <Setter Property="BorderThickness" Value="0" />
             <Setter Property="Template">
                 <Setter.Value>
@@ -54,7 +54,7 @@
                         </Border>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsMouseOver" Value="True">
-                                <Setter TargetName="Bg" Property="Background" Value="#55CC3333" />
+                                <Setter TargetName="Bg" Property="Background" Value="#8CB02F2F" />
                             </Trigger>
                         </ControlTemplate.Triggers>
                     </ControlTemplate>
@@ -99,6 +99,18 @@
                        VerticalAlignment="Center"
                        HorizontalAlignment="Left"
                        Margin="16,0,44,0" />
+
+            <!-- En la cabecera, no en el cuerpo. Estaba dentro de la fila de abajo, así que
+                 flotaba bajo la línea de troquelado en vez de alinearse con el título. -->
+            <Button x:Name="CloseButton"
+                    Content="&#x2715;"
+                    Width="26" Height="26"
+                    Margin="0,0,10,0"
+                    HorizontalAlignment="Right"
+                    VerticalAlignment="Center"
+                    Click="OnCloseClick"
+                    WindowChrome.IsHitTestVisibleInChrome="True"
+                    Style="{StaticResource CloseButtonStyle}" />
 
             <!-- El troquelado, en el mismo sitio que en la pestaña del dock: el pliegue por donde
                  la cabecera se une al cuerpo. Stroke se fija en ApplyColor. -->
@@ -165,16 +177,7 @@
                          BorderThickness="0" />
             </Grid>
         </DockPanel>
-        <Button x:Name="CloseButton"
-                Content="&#x2715;"
-                Width="22" Height="22"
-                Margin="0,2,2,0"
-                HorizontalAlignment="Right"
-                VerticalAlignment="Top"
-                Click="OnCloseClick"
-                WindowChrome.IsHitTestVisibleInChrome="True"
-                Style="{StaticResource CloseButtonStyle}" />
-    </Grid>
+        </Grid>
     </Grid>
     </Border>
 </Window>

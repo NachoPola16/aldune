@@ -38,8 +38,8 @@
                           Color="#000000" Opacity="0.38" />
 
         <!-- Los botones no se apilan, así que su sombra sí cae hacia abajo como es natural. -->
-        <DropShadowEffect x:Key="ButtonShadow" BlurRadius="10" ShadowDepth="2" Direction="270"
-                          Color="#000000" Opacity="0.35" />
+        <DropShadowEffect x:Key="ButtonShadow" BlurRadius="12" ShadowDepth="2" Direction="270"
+                          Color="#000000" Opacity="0.45" />
 
         <!-- Reflejo en los cantos, cara plana en medio. Con una rampa larga el degradado se leía
              como tal y las pestañas parecían plástico brillante iluminado de lado, no papel. -->
@@ -117,9 +117,15 @@
                 <Setter.Value>
                     <ControlTemplate TargetType="Button">
                         <!-- Círculo de verdad, ya sin escalonado: con la región era una máscara de
-                             1 bit, y una circunferencia es curva pura, o sea el peor caso. -->
+                             1 bit, y una circunferencia es curva pura, o sea el peor caso.
+
+                             Relleno oscuro + aro claro + sombra: el dock flota sobre el fondo de
+                             escritorio que sea, y un botón de un solo tono desaparece contra la
+                             mitad de ellos. Sobre fondo claro lo delatan el relleno y la sombra;
+                             sobre fondo oscuro, el aro. Cualquiera de los dos basta. -->
                         <Grid>
                             <Ellipse x:Name="Bg" Fill="{TemplateBinding Background}"
+                                     Stroke="#8FA79E90" StrokeThickness="1"
                                      Effect="{StaticResource ButtonShadow}" />
                             <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
                         </Grid>

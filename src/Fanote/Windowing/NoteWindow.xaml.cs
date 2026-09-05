@@ -199,20 +199,44 @@ public partial class NoteWindow : Window
             var swatch = new Border
             {
                 Background = (Brush)new BrushConverter().ConvertFromString(color)!,
-                Width = 20,
-                Height = 20,
-                Margin = new Thickness(2),
-                CornerRadius = new CornerRadius(4),
-                // Tinta, no negro puro: es el mismo anillo de selección sobre seis pasteles que
-                // comparten claridad, y el negro absoluto sería el único valor de la ventana sin
-                // relación de hue con el resto.
+                Width = 22,
+                Height = 22,
+                Margin = new Thickness(3),
+                CornerRadius = new CornerRadius(5),
+                // Tinta, no negro puro: es el mismo anillo sobre seis pasteles que comparten
+                // claridad, y el negro absoluto sería el único valor de la ventana sin relación de
+                // hue con el resto.
                 BorderBrush = (Brush)new BrushConverter().ConvertFromString(NoteColorPalette.Ink)!,
-                BorderThickness = new Thickness(color == _note.Color ? 2 : 0),
                 Cursor = Cursors.Hand,
-                Tag = color
+                Tag = color,
+                // La marca de selección vive dentro, no en el borde. El color seleccionado es por
+                // definición el de la nota, así que su pastilla se funde con el fondo y el anillo
+                // solo dibujaba un cuadrado vacío: parecía un hueco, no la opción activa. Un tick
+                // se ve igual coincida o no el color.
+                Child = new TextBlock
+                {
+                    Text = "\u2713",
+                    FontSize = 13,
+                    FontWeight = FontWeights.Bold,
+                    HorizontalAlignment = HorizontalAlignment.Center,
+                    VerticalAlignment = VerticalAlignment.Center,
+                    Foreground = (Brush)new BrushConverter().ConvertFromString(
+                        NoteColorPalette.LabelFor(color))!,
+                    IsHitTestVisible = false
+                }
             };
+            ApplySwatchSelection(swatch, color == _note.Color);
             swatch.MouseLeftButtonUp += OnColorSwatchClick;
             ColorSwatches.Children.Add(swatch);
+        }
+    }
+
+    private static void ApplySwatchSelection(Border swatch, bool selected)
+    {
+        swatch.BorderThickness = new Thickness(selected ? 2 : 0);
+        if (swatch.Child is UIElement tick)
+        {
+            tick.Visibility = selected ? Visibility.Visible : Visibility.Collapsed;
         }
     }
 
@@ -227,7 +251,7 @@ public partial class NoteWindow : Window
 
         foreach (Border swatch in ColorSwatches.Children)
         {
-            swatch.BorderThickness = new Thickness((string)swatch.Tag == color ? 2 : 0);
+            ApplySwatchSelection(swatch, (string)swatch.Tag == color);
         }
 
         _coordinator.RefreshAll();
