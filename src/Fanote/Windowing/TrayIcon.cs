@@ -1,6 +1,7 @@
 using System.Drawing;
 using System.Windows;
 using System.Windows.Forms;
+using Fanote.Resources;
 
 namespace Fanote.Windowing;
 
@@ -37,22 +38,22 @@ internal sealed class TrayIcon : IDisposable
             BackColor = Ground,
             ForeColor = Ink
         };
-        menu.Items.Add(new ToolStripMenuItem("Nueva nota", null, (_, _) => _coordinator.CreateAndOpenNote()));
-        menu.Items.Add(new ToolStripMenuItem("Gestionar notas…", null, (_, _) => _coordinator.OpenNotesManager()));
+        menu.Items.Add(new ToolStripMenuItem(Strings.TrayNewNote, null, (_, _) => _coordinator.CreateAndOpenNote()));
+        menu.Items.Add(new ToolStripMenuItem(Strings.TrayManageNotes, null, (_, _) => _coordinator.OpenNotesManager()));
         menu.Items.Add(new ToolStripSeparator());
         // "Ajustes…" en vez del interruptor de arranque suelto: ya son dos ajustes (arranque y
         // atajo global) y van a ser mas, y un menu contextual no es sitio para configurar nada.
-        menu.Items.Add(new ToolStripMenuItem("Ajustes…", null, (_, _) => _coordinator.OpenSettings()));
+        menu.Items.Add(new ToolStripMenuItem(Strings.TraySettings, null, (_, _) => _coordinator.OpenSettings()));
         menu.Items.Add(new ToolStripSeparator());
         // Shutdown de WPF, no Application.Exit de WinForms: el bucle de mensajes lo lleva WPF, y
         // ademas "Application" seria ambiguo entre los dos espacios de nombres.
-        menu.Items.Add(new ToolStripMenuItem("Salir", null,
+        menu.Items.Add(new ToolStripMenuItem(Strings.TrayExit, null,
             (_, _) => System.Windows.Application.Current.Shutdown()));
 
         _icon = new NotifyIcon
         {
             Icon = LoadIcon(),
-            Text = "Fanote",
+            Text = Strings.AppName,
             Visible = true,
             ContextMenuStrip = menu
         };

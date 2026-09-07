@@ -8,7 +8,20 @@ namespace Fanote.Interop;
 internal static class NativeMethods
 {
     private const int GWL_EXSTYLE = -20;
+    private const int GWL_STYLE = -16;
     private const int WS_EX_NOACTIVATE = 0x08000000;
+    private const int WS_MAXIMIZE = 0x01000000;
+    private const int WS_CAPTION = 0x00C00000;
+
+    private static readonly IntPtr HWND_TOPMOST = new(-1);
+    private const uint SWP_NOSIZE = 0x0001;
+    private const uint SWP_NOMOVE = 0x0002;
+    private const uint SWP_NOACTIVATE = 0x0010;
+    private const uint SWP_FRAMECHANGED = 0x0020;
+
+    [DllImport("user32.dll", SetLastError = true)]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    private static extern bool SetWindowPos(IntPtr hWnd, IntPtr hWndInsertAfter, int X, int Y, int cx, int cy, uint uFlags);
 
     [DllImport("user32.dll", SetLastError = true)]
     private static extern int GetWindowLong(IntPtr hWnd, int nIndex);
@@ -20,6 +33,19 @@ internal static class NativeMethods
     {
         int exStyle = GetWindowLong(hWnd, GWL_EXSTYLE);
         SetWindowLong(hWnd, GWL_EXSTYLE, exStyle | WS_EX_NOACTIVATE);
+        EnsureTopmost(hWnd);
+    }
+
+    /// <summary>
+    /// Reafirma que la ventana este en la capa superior (HWND_TOPMOST) de Windows sin activar
+    /// el foco ni robar el primer plano (SWP_NOACTIVATE).
+    /// </summary>
+    internal static void EnsureTopmost(IntPtr hWnd)
+    {
+        if (hWnd != IntPtr.Zero)
+        {
+            SetWindowPos(hWnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE | SWP_FRAMECHANGED);
+        }
     }
 
     private const int DWMWA_WINDOW_CORNER_PREFERENCE = 33;
@@ -151,6 +177,23 @@ internal static class NativeMethods
     private static extern IntPtr MonitorFromWindow(IntPtr hWnd, uint dwFlags);
 
     [DllImport("user32.dll")]
+    private static extern IntPtr MonitorFromPoint(POINT pt, uint dwFlags);
+
+    /// <summary>
+    /// El HMONITOR donde está el cursor ahora mismo. Lo usa <c>AppCoordinator</c> para decidir en
+    /// qué pantalla abrir una ventana que no tiene "su" monitor propio (Ajustes, el gestor de notas
+    /// o una nota nueva por atajo global, todos ellos alcanzables desde la bandeja) — comparado con
+    /// <see cref="MonitorFromHwnd"/> de cada dock para encontrar cuál vive en esa misma pantalla.
+    /// </summary>
+    internal static IntPtr MonitorFromCursor()
+    {
+        GetCursorPos(out var point);
+        return MonitorFromPoint(point, MONITOR_DEFAULTTONEAREST);
+    }
+
+    internal static IntPtr MonitorFromHwnd(IntPtr hWnd) => MonitorFromWindow(hWnd, MONITOR_DEFAULTTONEAREST);
+
+    [DllImport("user32.dll")]
     private static extern bool GetMonitorInfo(IntPtr hMonitor, ref MONITORINFO lpmi);
 
     [DllImport("user32.dll", SetLastError = true)]
@@ -162,12 +205,16 @@ internal static class NativeMethods
     [DllImport("user32.dll", CharSet = CharSet.Unicode, SetLastError = true)]
     private static extern int GetClassName(IntPtr hWnd, System.Text.StringBuilder lpClassName, int nMaxCount);
 
+    [DllImport("user32.dll")]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    private static extern bool IsZoomed(IntPtr hWnd);
+
     /// <summary>
     /// Si en el monitor donde vive <paramref name="hWnd"/> hay ahora mismo una ventana de otro
     /// proceso a pantalla completa (un juego, un vídeo). El dock lo consulta para apartarse: es
     /// <c>Topmost</c>, así que si no se aparta se queda dibujado encima.
     ///
-    /// Tres exclusiones, todas necesarias:
+    /// Exclusiones necesarias:
     /// <list type="bullet">
     /// <item>Ventanas del propio proceso — una nota nunca debe esconder su propio dock.</item>
     /// <item>El escritorio y la barra de tareas (<c>Progman</c>, <c>WorkerW</c>,
@@ -176,6 +223,9 @@ internal static class NativeMethods
     /// dock estaría escondido casi siempre.</item>
     /// <item>Ventanas de otro monitor, comparando el <c>HMONITOR</c> en vez de coordenadas: cada
     /// dock solo se aparta por lo que pasa en su propia pantalla.</item>
+    /// <item>Ventanas maximizadas estándar (<c>IsZoomed</c> o con <c>WS_CAPTION</c>): aunque en pantallas
+    /// con barra de tareas auto-oculta o multimonitor cubran todo el monitor, son ventanas normales
+    /// (navegador con pestañas, explorador, etc.) y NO videojuegos o vídeos a pantalla completa.</item>
     /// </list>
     /// La comparación de rectángulos vive en <see cref="FullscreenDetection.CoversMonitor"/>, que
     /// es donde está la distinción entre pantalla completa y ventana maximizada.
@@ -198,6 +248,17 @@ internal static class NativeMethods
                 return false;
         }
 
+        // Si la ventana está maximizada por el SO o tiene barra de título (WS_CAPTION), es una ventana
+        // de aplicación con pestañas / controles normales (p. ej. Chrome maximizado), no un videojuego
+        // en pantalla completa exclusiva o borderless.
+        if (IsZoomed(foreground)) return false;
+
+        int style = GetWindowLong(foreground, GWL_STYLE);
+        if ((style & WS_MAXIMIZE) != 0 || (style & WS_CAPTION) == WS_CAPTION)
+        {
+            return false;
+        }
+
         var ourMonitor = MonitorFromWindow(hWnd, MONITOR_DEFAULTTONEAREST);
         if (ourMonitor == IntPtr.Zero) return false;
         if (MonitorFromWindow(foreground, MONITOR_DEFAULTTONEAREST) != ourMonitor) return false;
@@ -215,4 +276,49 @@ internal static class NativeMethods
     private static Fanote.Core.Rect ToRect(RECT r) =>
         new(r.Left, r.Top, r.Right - r.Left, r.Bottom - r.Top);
 
+    [StructLayout(LayoutKind.Sequential)]
+    private struct PROCESS_POWER_THROTTLING_STATE
+    {
+        public uint Version;
+        public uint ControlMask;
+        public uint StateMask;
+    }
+
+    private const int ProcessPowerThrottling = 4; // PROCESS_INFORMATION_CLASS
+    private const uint PROCESS_POWER_THROTTLING_CURRENT_VERSION = 1;
+    private const uint PROCESS_POWER_THROTTLING_EXECUTION_SPEED = 0x1;
+
+    [DllImport("kernel32.dll")]
+    private static extern IntPtr GetCurrentProcess();
+
+    [DllImport("kernel32.dll", SetLastError = true)]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    private static extern bool SetProcessInformation(
+        IntPtr hProcess, int processInformationClass, ref PROCESS_POWER_THROTTLING_STATE processInformation, uint processInformationSize);
+
+    /// <summary>
+    /// Desactiva el "power throttling" (EcoQoS) que Windows aplica a procesos en segundo plano
+    /// tras un rato de inactividad, para reducir su consumo de CPU. Fanote vive casi siempre en
+    /// segundo plano (nadie lo tiene "en primer plano" para escribir salvo cuando abre una nota),
+    /// así que Windows lo trata como candidato a ese throttling — y el primer frame de una
+    /// animación justo después de que se reactive el proceso sale con tirones, porque el hilo de
+    /// UI arranca con el reloj/prioridad todavía reducidos. Esto reproduce el patrón reportado:
+    /// "la animación se ve peor cuando llevas un rato sin abrir ninguna nota".
+    ///
+    /// Llamar una vez al arrancar la app basta: el ajuste es por proceso y persiste mientras viva.
+    /// Sin efecto secundario conocido — es la mitigación estándar de Microsoft para apps
+    /// interactivas que pasan la mayor parte del tiempo sin foco (reproductores, notificadores).
+    /// </summary>
+    internal static void DisablePowerThrottling()
+    {
+        var state = new PROCESS_POWER_THROTTLING_STATE
+        {
+            Version = PROCESS_POWER_THROTTLING_CURRENT_VERSION,
+            ControlMask = PROCESS_POWER_THROTTLING_EXECUTION_SPEED,
+            StateMask = 0, // 0 = no aplicar throttling de velocidad de ejecucion a este proceso
+        };
+        SetProcessInformation(
+            GetCurrentProcess(), ProcessPowerThrottling, ref state,
+            (uint)Marshal.SizeOf<PROCESS_POWER_THROTTLING_STATE>());
+    }
 }

@@ -1,6 +1,7 @@
 using System.Globalization;
 using System.Windows.Data;
 using Fanote.Core;
+using Fanote.Resources;
 
 namespace Fanote.Windowing;
 
@@ -10,8 +11,8 @@ public sealed class NoteStateLabelConverter : IValueConverter
     {
         return value switch
         {
-            NoteState.Archived => "Archivada",
-            NoteState.Trashed => "Papelera",
+            NoteState.Archived => Strings.Archived,
+            NoteState.Trashed => Strings.Trash,
             _ => string.Empty
         };
     }

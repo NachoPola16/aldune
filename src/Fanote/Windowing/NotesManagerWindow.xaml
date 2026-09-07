@@ -2,7 +2,8 @@
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:local="clr-namespace:Fanote.Windowing"
-        Title="Gestionar notas"
+        xmlns:res="clr-namespace:Fanote.Resources"
+        Title="{x:Static res:Strings.ManageNotesTitle}"
         Width="420" Height="560"
         MinWidth="360" MinHeight="360"
         WindowStyle="None"
@@ -91,49 +92,8 @@
              sobre este fondo canta muchísimo. Esto es <b>teñir</b> una afordancia estándar, no
              reinventarla: conserva arrastre del pulgar, clic en la pista y rueda; solo cambia el
              color y el grosor. -->
-        <Style x:Key="SlimThumb" TargetType="Thumb">
-            <Setter Property="Template">
-                <Setter.Value>
-                    <ControlTemplate TargetType="Thumb">
-                        <Border x:Name="Bar" Background="#4E4840" CornerRadius="3" Margin="2,0" />
-                        <ControlTemplate.Triggers>
-                            <Trigger Property="IsMouseOver" Value="True">
-                                <Setter TargetName="Bar" Property="Background" Value="#6B6459" />
-                            </Trigger>
-                            <Trigger Property="IsDragging" Value="True">
-                                <Setter TargetName="Bar" Property="Background" Value="#857D70" />
-                            </Trigger>
-                        </ControlTemplate.Triggers>
-                    </ControlTemplate>
-                </Setter.Value>
-            </Setter>
-        </Style>
-
-        <Style TargetType="ScrollBar">
-            <Setter Property="Width" Value="10" />
-            <Setter Property="Background" Value="Transparent" />
-            <Setter Property="Template">
-                <Setter.Value>
-                    <ControlTemplate TargetType="ScrollBar">
-                        <Grid Background="{TemplateBinding Background}">
-                            <Track x:Name="PART_Track" IsDirectionReversed="True">
-                                <Track.Thumb>
-                                    <Thumb Style="{StaticResource SlimThumb}" />
-                                </Track.Thumb>
-                                <!-- Sin flechas: la pista sigue paginando al hacer clic, que es el
-                                     comportamiento estándar que importa conservar. -->
-                                <Track.DecreaseRepeatButton>
-                                    <RepeatButton Command="ScrollBar.PageUpCommand" Opacity="0" />
-                                </Track.DecreaseRepeatButton>
-                                <Track.IncreaseRepeatButton>
-                                    <RepeatButton Command="ScrollBar.PageDownCommand" Opacity="0" />
-                                </Track.IncreaseRepeatButton>
-                            </Track>
-                        </Grid>
-                    </ControlTemplate>
-                </Setter.Value>
-            </Setter>
-        </Style>
+        <!-- La barra de scroll fina y oscura vive ahora en App.xaml, para no repetirla en cada
+             ventana que necesite scroll. -->
 
         <!-- Las casillas por defecto de WPF son un cuadrado claro con borde fino de otra epoca:
              sobre las filas de color y sobre el fondo oscuro cantan. Esta hereda Foreground, asi
@@ -231,7 +191,7 @@
         <!-- Cabecera. CaptionHeight cubre esta franja, así que la ventana se arrastra desde aquí. -->
         <Grid Grid.Row="0" Margin="20,18,14,0">
             <StackPanel>
-                <TextBlock Text="Gestionar notas" Foreground="#F5F0E6"
+                <TextBlock Text="{x:Static res:Strings.ManageNotesTitle}" Foreground="#F5F0E6"
                            FontSize="17" FontWeight="SemiBold" />
                 <TextBlock x:Name="SubtitleText" Foreground="#A79E90" FontSize="12" Margin="0,3,0,0" />
             </StackPanel>
@@ -245,7 +205,7 @@
                     Margin="0,0,32,0"
                     HorizontalAlignment="Right"
                     VerticalAlignment="Top"
-                    ToolTip="Ajustes"
+                    ToolTip="{x:Static res:Strings.SettingsTooltip}"
                     Click="OnSettingsClick"
                     WindowChrome.IsHitTestVisibleInChrome="True"
                     Style="{StaticResource CloseButtonStyle}" />
@@ -270,11 +230,11 @@
                      animaciones: bajo "Todas" archivar no saca la nota de la vista, asi que no
                      podia animarse como que se va. Tres estados, y "Activas" por defecto, que es
                      lo que uno quiere ver al abrir. -->
-                <RadioButton x:Name="FilterActive" GroupName="NotesFilter" Content="Activas"
+                <RadioButton x:Name="FilterActive" GroupName="NotesFilter" Content="{x:Static res:Strings.FilterActive}"
                              Checked="OnFilterChanged" Style="{StaticResource FilterToggleStyle}" />
-                <RadioButton x:Name="FilterArchived" GroupName="NotesFilter" Content="Archivadas"
+                <RadioButton x:Name="FilterArchived" GroupName="NotesFilter" Content="{x:Static res:Strings.FilterArchived}"
                              Checked="OnFilterChanged" Style="{StaticResource FilterToggleStyle}" />
-                <RadioButton x:Name="FilterTrashed" GroupName="NotesFilter" Content="Papelera"
+                <RadioButton x:Name="FilterTrashed" GroupName="NotesFilter" Content="{x:Static res:Strings.FilterTrashed}"
                              Checked="OnFilterChanged" Style="{StaticResource FilterToggleStyle}" />
             </WrapPanel>
         </Border>
@@ -293,7 +253,7 @@
                 <!-- El marcador de posición es un TextBlock aparte, no el Text de un TextBox vacío:
                      WPF no tiene watermark nativo, y esto evita que "Buscar…" se confunda con un
                      valor real que haya que borrar antes de escribir. -->
-                <TextBlock x:Name="SearchPlaceholder" Text="Buscar en tus notas…"
+                <TextBlock x:Name="SearchPlaceholder" Text="{x:Static res:Strings.SearchPlaceholder}"
                            Foreground="#6B6459" FontSize="13"
                            Margin="28,0,0,0"
                            HorizontalAlignment="Left" VerticalAlignment="Center"
@@ -308,7 +268,7 @@
                         Width="20" Height="20" Margin="0,0,6,0"
                         HorizontalAlignment="Right" VerticalAlignment="Center"
                         Visibility="Collapsed"
-                        ToolTip="Borrar búsqueda"
+                        ToolTip="{x:Static res:Strings.ClearSearchTooltip}"
                         Click="OnSearchClearClick"
                         Style="{StaticResource CloseButtonStyle}" />
             </Grid>
@@ -319,7 +279,7 @@
              había forma de saber si estaba todo marcado o nada. Va alineada con las casillas de las
              filas, que es donde el ojo la busca. -->
         <CheckBox Grid.Row="3" x:Name="SelectAllCheck"
-                  Content="Seleccionar todo"
+                  Content="{x:Static res:Strings.SelectAll}"
                   Foreground="#A79E90" Background="#2A261F" FontSize="12"
                   IsThreeState="True"
                   Style="{StaticResource AppCheckBoxStyle}"
@@ -414,7 +374,7 @@
                     <StackPanel Orientation="Horizontal">
                         <TextBlock Text="&#xE74D;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets"
                                    VerticalAlignment="Center" Margin="0,0,6,0" />
-                        <TextBlock Text="Eliminar" VerticalAlignment="Center" />
+                        <TextBlock Text="{x:Static res:Strings.Delete}" VerticalAlignment="Center" />
                     </StackPanel>
                 </Button>
 
@@ -426,7 +386,7 @@
                         <StackPanel Orientation="Horizontal">
                             <TextBlock Text="&#xE7B8;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets"
                                        VerticalAlignment="Center" Margin="0,0,6,0" />
-                            <TextBlock Text="Archivar" VerticalAlignment="Center" />
+                            <TextBlock Text="{x:Static res:Strings.Archive}" VerticalAlignment="Center" />
                         </StackPanel>
                     </Button>
                     <Button x:Name="RestoreButton" Click="OnRestoreSelectedClick" Margin="8,3,0,3"
@@ -434,7 +394,7 @@
                         <StackPanel Orientation="Horizontal">
                             <TextBlock Text="&#xE7A7;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets"
                                        VerticalAlignment="Center" Margin="0,0,6,0" />
-                            <TextBlock Text="Restaurar" VerticalAlignment="Center" />
+                            <TextBlock Text="{x:Static res:Strings.Restore}" VerticalAlignment="Center" />
                         </StackPanel>
                     </Button>
                     <Button x:Name="TrashButton" Click="OnTrashSelectedClick" Margin="8,3,0,3"
@@ -442,7 +402,7 @@
                         <StackPanel Orientation="Horizontal">
                             <TextBlock Text="&#xE74D;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets"
                                        VerticalAlignment="Center" Margin="0,0,6,0" />
-                            <TextBlock Text="Papelera" VerticalAlignment="Center" />
+                            <TextBlock Text="{x:Static res:Strings.Trash}" VerticalAlignment="Center" />
                         </StackPanel>
                     </Button>
                 </WrapPanel>

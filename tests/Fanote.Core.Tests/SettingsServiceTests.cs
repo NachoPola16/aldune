@@ -38,10 +38,13 @@ public class SettingsServiceTests : IDisposable
     }
 
     [Fact]
-    public void Save_CreatesParentDirectoryIfMissing()
+    public void SaveThenLoad_MonitorSettings_RoundTrips()
     {
         var sut = new SettingsService(_settingsPath);
-        sut.Save(new AppSettings { WrappedDatabaseKey = new byte[] { 9 } });
-        Assert.True(File.Exists(_settingsPath));
+        sut.Save(new AppSettings { TargetMonitorIndex = 1, HideOnFullscreen = false });
+
+        var loaded = sut.Load();
+        Assert.Equal(1, loaded.TargetMonitorIndex);
+        Assert.False(loaded.HideOnFullscreen);
     }
 }

@@ -49,4 +49,34 @@ public class NotesDatabaseTests : IDisposable
         using var connection = sut.OpenConnection();
         Assert.Equal(System.Data.ConnectionState.Open, connection.State);
     }
+
+    [Fact]
+    public void Constructor_RecreatesNotePlacementTable_WhenItPredatesMonitorKey()
+    {
+        // Reproduce una base de datos real creada antes de que la posición recordada pasara a ser
+        // por pantalla: NotePlacement existe, pero sin la columna MonitorKey.
+        using (var connection = new SqliteConnection(
+            new SqliteConnectionStringBuilder { DataSource = _dbPath }.ToString()))
+        {
+            connection.Open();
+            using var command = connection.CreateCommand();
+            command.CommandText = """
+                CREATE TABLE NotePlacement (
+                    NoteId TEXT PRIMARY KEY NOT NULL,
+                    Left REAL NOT NULL,
+                    Top REAL NOT NULL,
+                    Width REAL NOT NULL,
+                    Height REAL NOT NULL
+                );
+                """;
+            command.ExecuteNonQuery();
+        }
+
+        var sut = new NotesDatabase(_dbPath);
+
+        using var check = sut.OpenConnection();
+        using var pragma = check.CreateCommand();
+        pragma.CommandText = "SELECT COUNT(*) FROM pragma_table_info('NotePlacement') WHERE name = 'MonitorKey';";
+        Assert.Equal(1L, (long)pragma.ExecuteScalar()!);
+    }
 }

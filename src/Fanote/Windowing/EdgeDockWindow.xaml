@@ -2,6 +2,7 @@
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:local="clr-namespace:Fanote.Windowing"
+        xmlns:res="clr-namespace:Fanote.Resources"
         WindowStyle="None"
         ShowInTaskbar="False"
         ShowActivated="False"
@@ -174,7 +175,10 @@
                 Margin="0,0,5,0"
                 Padding="0,5,0,0"
                 Effect="{StaticResource ButtonShadow}">
-            <ItemsControl ItemsSource="{Binding ItemsSource, ElementName=TabsList}">
+            <!-- ItemsSource se fija desde SetNotes, no se ata a TabsList: en reposo solo se dibujan
+                 los guiones que caben en la ventana (ver EdgeGeometry.VisibleRestDashes), porque esta
+                 tira no hace scroll y los sobrantes se recortarían. -->
+            <ItemsControl x:Name="RestList">
                 <ItemsControl.ItemTemplate>
                     <DataTemplate>
                         <Border Background="{Binding Color}"
@@ -194,12 +198,20 @@
                 <RowDefinition Height="Auto" />
             </Grid.RowDefinitions>
 
+            <!-- Auto y no Hidden: desde que la ventana tiene tope (ver EdgeGeometry.FanBudget), con
+                 muchas notas queda abanico fuera de la vista, y sin barra no habría ninguna pista de
+                 que se puede seguir bajando. -->
             <ScrollViewer x:Name="TabsScroll"
                           Grid.Row="0"
                           VerticalAlignment="Center"
-                          VerticalScrollBarVisibility="Hidden"
+                          VerticalScrollBarVisibility="Auto"
                           HorizontalScrollBarVisibility="Disabled">
-                <ItemsControl x:Name="TabsList">
+                <!-- Margen = EdgeGeometry.TabShadowHeadroom (14). Va aquí, dentro del contenido
+                     desplazable, y no como Padding del ScrollViewer: el recorte del viewport cae
+                     justo en ese borde, así que como relleno la sombra se seguiría perdiendo. Sin
+                     esto, la primera pestaña se veía como un rectángulo de canto recto — su sombra
+                     va hacia arriba y no tenía dónde dibujarse. -->
+                <ItemsControl x:Name="TabsList" Margin="0,14,0,0">
                     <ItemsControl.ItemTemplate>
                         <DataTemplate>
                             <Button Content="{Binding}"
@@ -209,6 +221,10 @@
                                     HorizontalAlignment="Right"
                                     Click="OnTabClick"
                                     Loaded="OnTabLoaded"
+                                    MouseRightButtonUp="OnTabRightClick"
+                                    PreviewMouseLeftButtonDown="OnTabDragStart"
+                                    PreviewMouseMove="OnTabDragMove"
+                                    PreviewMouseLeftButtonUp="OnTabDragEnd"
                                     Tag="{Binding}"
                                     Style="{StaticResource NoteTabButtonStyle}" />
                         </DataTemplate>
@@ -217,27 +233,59 @@
             </ScrollViewer>
 
             <!-- Alineado a la derecha igual que las pestañas, con un respiro de 8px para que el
-                 botón no quede pegado al canto de la pantalla y su sombra tenga dónde caer. Antes
+                 panel no quede pegado al canto de la pantalla y su sombra tenga dónde caer. Antes
                  el Grid raíz llevaba margen también a la derecha, así que este footer se paraba
-                 18px antes que las pestañas y se veía desplazado a la izquierda respecto a ellas. -->
-            <StackPanel x:Name="FooterPanel" Grid.Row="1" Orientation="Horizontal"
-                        HorizontalAlignment="Right" Margin="0,14,8,0">
-                <Button x:Name="ManageArchiveButton" Click="OnManageArchiveClick"
-                        Style="{StaticResource CircularIconButtonStyle}"
-                        ToolTip="Gestionar notas">
-                    <TextBlock Text="&#xE713;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" FontSize="15" />
-                </Button>
-                <!-- Crear nota es la acción principal del dock, así que pesa más que el
-                     engranaje: más grande y más clara. Ir las dos iguales las dejaba a la par
-                     cuando no lo están. -->
-                <Button x:Name="NewNoteButton" Click="OnNewNoteClick"
-                        Width="40" Height="40"
-                        Background="#575044" Foreground="#F5F0E6"
-                        Style="{StaticResource CircularIconButtonStyle}"
-                        ToolTip="Nueva nota">
-                    <TextBlock Text="&#xE710;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" FontSize="17" />
-                </Button>
-            </StackPanel>
+                 18px antes que las pestañas y se veía desplazado a la izquierda respecto a ellas.
+
+                 El Border oscuro es el mismo tratamiento que ya lleva RestStrip (mismo Background,
+                 misma idea de "objeto con borde propio contra cualquier fondo de escritorio") —
+                 sin él, con cero notas el footer eran dos círculos sueltos flotando sobre el
+                 escritorio, sin nada que los agrupe como "esto es el dock". CornerRadius a pastilla
+                 (mitad del alto real: 7 relleno + 40 del botón mayor + 7 relleno = 54, radio 27). -->
+            <Border Grid.Row="1" Background="#2A261F" CornerRadius="27"
+                    HorizontalAlignment="Right" Margin="0,14,8,0" Padding="7">
+                <StackPanel x:Name="FooterPanel" Orientation="Horizontal">
+                    <Button x:Name="ManageArchiveButton" Click="OnManageArchiveClick"
+                            Style="{StaticResource CircularIconButtonStyle}"
+                            ToolTip="{x:Static res:Strings.ManageNotesTooltip}">
+                        <TextBlock Text="&#xE713;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" FontSize="15" />
+                    </Button>
+                    <!-- Crear nota es la acción principal del dock, así que pesa más que el
+                         engranaje: más grande y más clara. Ir las dos iguales las dejaba a la par
+                         cuando no lo están. -->
+                    <Button x:Name="NewNoteButton" Click="OnNewNoteClick"
+                            Width="40" Height="40"
+                            Background="#575044" Foreground="#F5F0E6"
+                            Style="{StaticResource CircularIconButtonStyle}"
+                            ToolTip="{x:Static res:Strings.NewNoteTooltip}">
+                        <TextBlock Text="&#xE710;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" FontSize="17" />
+                    </Button>
+                </StackPanel>
+            </Border>
         </Grid>
+
+        <!-- Clic derecho en una pestaña: cambiar color, archivar o tirar a la papelera sin abrir la
+             nota. Antes cambiar el color obligaba a abrirla, leerla y cerrarla. Placement="MousePoint"
+             lo saca donde se pulsó; mientras está abierto, PollHoverState no colapsa el abanico (si
+             no, mover el ratón hacia el menú lo cerraría bajo los pies). -->
+        <Popup x:Name="TabMenuPopup" StaysOpen="False" AllowsTransparency="True"
+               PopupAnimation="Fade" Placement="MousePoint">
+            <Border Background="#2A261F" CornerRadius="10" Padding="8" Margin="10">
+                <Border.Effect>
+                    <DropShadowEffect BlurRadius="16" ShadowDepth="3" Direction="270"
+                                      Color="#000000" Opacity="0.5" />
+                </Border.Effect>
+                <StackPanel MinWidth="186">
+                    <StackPanel x:Name="TabMenuSwatches" Orientation="Horizontal" Margin="6,4,6,8" />
+                    <Border Background="#3C3730" Height="1" Margin="0,0,0,4" />
+                    <Button Content="{x:Static res:Strings.OpenNote}" Click="OnTabMenuOpenClick"
+                            Style="{StaticResource NoteMenuItemStyle}" />
+                    <Button Content="{x:Static res:Strings.Archive}" Click="OnTabMenuArchiveClick"
+                            Style="{StaticResource NoteMenuItemStyle}" />
+                    <Button Content="{x:Static res:Strings.MoveToTrash}" Click="OnTabMenuTrashClick"
+                            Style="{StaticResource NoteMenuDangerStyle}" />
+                </StackPanel>
+            </Border>
+        </Popup>
     </Grid>
 </Window>

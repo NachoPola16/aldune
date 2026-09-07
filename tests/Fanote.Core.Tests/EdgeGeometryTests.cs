@@ -157,7 +157,7 @@ public class EdgeGeometryTests
         // El punto del solape: mientras el paso pueda encogerse, el abanico ocupa lo mismo haya 5
         // notas o 12, en vez de crecer sin parar o de dejar las sobrantes sin dibujar.
         double budget = Math.Min(Vertical.Height * EdgeGeometry.MaxScreenFraction,
-            EdgeGeometry.MaxFanLength) - EdgeGeometry.FooterLength;
+            EdgeGeometry.MaxFanLength) - EdgeGeometry.FooterLength - EdgeGeometry.TabShadowHeadroom;
 
         for (int n = 5; n <= 40; n++)
         {
@@ -203,12 +203,15 @@ public class EdgeGeometryTests
     [Fact]
     public void WindowLength_AlwaysLeavesRoomForTheFooter()
     {
+        // Contra el abanico VISIBLE, no contra el total: desde que la ventana tiene tope, lo que
+        // pasa del presupuesto vive fuera de la vista y se alcanza con scroll (ver FanBudget), asi
+        // que comparar contra el total mediria algo que ya no esta dentro de la ventana.
         foreach (int n in new[] { 0, 1, 4, 12, 40 })
         {
             double window = EdgeGeometry.WindowLength(Vertical, EdgePosition.Right, n);
-            double strip = EdgeGeometry.TabStripLength(Vertical, EdgePosition.Right, n);
-            Assert.True(window - strip >= EdgeGeometry.FooterLength - 0.001,
-                $"con {n} notas quedan {window - strip} para el footer");
+            double visible = EdgeGeometry.VisibleStripLength(Vertical, EdgePosition.Right, n);
+            Assert.True(window - visible >= EdgeGeometry.FooterLength - 0.001,
+                $"con {n} notas quedan {window - visible} para el footer");
         }
     }
 
@@ -218,7 +221,8 @@ public class EdgeGeometryTests
         // Incluye el aire de sombra: sin region que recorte, la sombra se dibuja fuera de la
         // pestana y necesita sitio dentro de la ventana o saldria cortada por el borde del HWND.
         Assert.Equal(
-            EdgeGeometry.MinContentLength + EdgeGeometry.FooterLength + EdgeGeometry.ShadowMargin * 2,
+            EdgeGeometry.MinContentLength + EdgeGeometry.TabShadowHeadroom
+                + EdgeGeometry.FooterLength + EdgeGeometry.ShadowMargin * 2,
             EdgeGeometry.WindowLength(Vertical, EdgePosition.Right, 0));
     }
 
@@ -306,37 +310,72 @@ public class EdgeGeometryTests
 
     // --- Desplazamiento reposo -> desplegado -----------------------------------------------------
 
-    // --- Origen del deslizamiento al abrir una nota ---------------------------------------------
+    // --- Tope del abanico y de la tira de reposo ------------------------------------------------
 
     [Fact]
-    public void SlideOrigin_NeverPutsTheNoteOnTheNextMonitor()
+    public void WindowLength_StopsGrowing_OnceTheFanHitsItsBudget()
     {
-        // El bug reportado: el monitor vertical del usuario ocupa x -1440..0, asi que su canto
-        // derecho linda con el principal. Arrancar en la X de la pestana (-104) con una nota de
-        // 348 la dibujaba de x=0 a 244, encima de la otra pantalla.
-        var vertical = new WorkingArea(-1440, -541, 1440, 2560);
-        double origin = EdgeGeometry.SlideOriginFor(vertical, tabX: -104, noteLeft: -444, noteWidth: 348);
+        // El bug: el suelo de legibilidad (MinPitch) manda sobre el reparto, asi que con muchas
+        // notas el abanico se pasaba del presupuesto y la ventana crecia con el — el dock dejaba de
+        // ser compacto y podia salirse de la pantalla. Ahora se acota y lo que sobra se scrollea.
+        double budget = EdgeGeometry.FanBudget(Vertical, EdgePosition.Right);
+        double cap = budget + EdgeGeometry.TabShadowHeadroom + EdgeGeometry.FooterLength
+            + EdgeGeometry.ShadowMargin * 2;
 
-        Assert.True(origin + 348 <= vertical.X + vertical.Width,
-            $"la nota arranca en {origin} y su borde derecho cae en {origin + 348}");
+        foreach (int n in new[] { 20, 40, 100, 500 })
+        {
+            Assert.True(EdgeGeometry.WindowLength(Vertical, EdgePosition.Right, n) <= cap + 0.001,
+                $"con {n} notas la ventana mide {EdgeGeometry.WindowLength(Vertical, EdgePosition.Right, n)}, tope {cap}");
+        }
     }
 
     [Fact]
-    public void SlideOrigin_StaysToTheRightOfTheDestination()
+    public void WindowLength_WithFewNotes_StillFitsTheWholeFan()
     {
-        // La nota se desliza hacia la izquierda: un origen por detras del destino la haria ir al
-        // reves. Caso limite: una nota mas ancha que el area de trabajo.
-        var narrow = new WorkingArea(0, 0, 300, 1000);
-        double origin = EdgeGeometry.SlideOriginFor(narrow, tabX: 260, noteLeft: 100, noteWidth: 348);
-        Assert.Equal(100, origin);
+        // El tope no debe recortar cuando no hace falta: con pocas notas se sigue viendo entero.
+        foreach (int n in new[] { 1, 2, 4 })
+        {
+            double strip = EdgeGeometry.TabStripLength(Vertical, EdgePosition.Right, n);
+            Assert.Equal(strip, EdgeGeometry.VisibleStripLength(Vertical, EdgePosition.Right, n));
+        }
     }
 
     [Fact]
-    public void SlideOrigin_UsesTheTabWhenThereIsRoomForIt()
+    public void RestDashes_NeverExceedWhatFitsInTheWindow()
     {
-        var wide = new WorkingArea(0, 0, 2560, 1440);
-        double origin = EdgeGeometry.SlideOriginFor(wide, tabX: 1800, noteLeft: 1500, noteWidth: 348);
-        Assert.Equal(1800, origin);
+        // La tira de reposo no hace scroll: los guiones que no caben se recortarian contra el borde
+        // de la ventana, y ya paso una vez que uno se veia pero caia fuera de la zona sensible.
+        foreach (int n in new[] { 1, 5, 20, 60, 200 })
+        {
+            int dashes = EdgeGeometry.VisibleRestDashes(Vertical, EdgePosition.Right, n);
+            double drawn = EdgeGeometry.RestStripLength(dashes) + EdgeGeometry.RestContainerPad * 2;
+
+            Assert.True(dashes <= n, $"con {n} notas se dibujan {dashes} guiones");
+            Assert.True(drawn <= EdgeGeometry.WindowLength(Vertical, EdgePosition.Right, n) + 0.001,
+                $"con {n} notas la tira mide {drawn} en una ventana de {EdgeGeometry.WindowLength(Vertical, EdgePosition.Right, n)}");
+        }
+    }
+
+    [Fact]
+    public void RestDashes_WithFewNotes_ShowsThemAll()
+    {
+        foreach (int n in new[] { 0, 1, 4, 8 })
+        {
+            Assert.Equal(n, EdgeGeometry.VisibleRestDashes(Vertical, EdgePosition.Right, n));
+        }
+    }
+
+    [Fact]
+    public void RestingVisibleRect_MatchesTheDashesActuallyDrawn()
+    {
+        // La zona sensible tiene que coincidir con lo que se ve: ni franja muerta que responde al
+        // raton, ni guion visible que no responde.
+        int dashes = EdgeGeometry.VisibleRestDashes(Vertical, EdgePosition.Right, 200);
+        double expected = EdgeGeometry.RestStripLength(dashes) + EdgeGeometry.RestContainerPad * 2;
+
+        var rect = EdgeGeometry.RestingVisibleRect(Vertical, EdgePosition.Right, 200);
+
+        Assert.Equal(expected, rect.Height, 3);
     }
 
     // --- Zona sensible en reposo ---------------------------------------------------------------

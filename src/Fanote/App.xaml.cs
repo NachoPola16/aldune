@@ -6,6 +6,7 @@ using System.Windows.Threading;
 using Microsoft.Win32;
 using Fanote.Core;
 using Fanote.Interop;
+using Fanote.Resources;
 using Fanote.Windowing;
 using Microsoft.Data.Sqlite;
 
@@ -17,6 +18,18 @@ public partial class App : Application
     {
         base.OnStartup(e);
 
+        // Adivinado por el idioma de Windows hasta que se lea AppSettings.Language más abajo (o
+        // para siempre, si nunca se llega a leer — p. ej. settings.json corrupto). Así incluso los
+        // mensajes de error del arranque más temprano salen en el idioma que toca la mayoría de las
+        // veces, en vez de siempre en inglés.
+        ApplyLanguage(null);
+
+        // Ver el comentario de DisablePowerThrottling: Fanote vive casi siempre sin foco, y
+        // Windows puede reducirle CPU/prioridad tras un rato así — mitigacion contra el reporte de
+        // animaciones que se ven peor "tras un rato sin abrir ninguna nota". Sin coste ni efecto
+        // secundario si el diagnostico resulta no ser este; se deja siempre activo.
+        NativeMethods.DisablePowerThrottling();
+
         // Safety net for exceptions raised during normal operation, AFTER startup has already
         // succeeded (autosave, new-note, refresh, etc. — see NoteWindow.Flush, EdgeDockWindow's
         // OnNewNoteClick/Refresh). This is not a substitute for the explicit bootstrap error
@@ -26,8 +39,8 @@ public partial class App : Application
         DispatcherUnhandledException += (_, args) =>
         {
             MessageBox.Show(
-                $"Ha ocurrido un error inesperado: {args.Exception.Message}\n\nLa aplicación continuará, pero esta acción concreta puede no haberse completado.",
-                "Fanote — error",
+                Strings.UnexpectedErrorMessage(args.Exception.Message),
+                Strings.UnexpectedErrorTitle,
                 MessageBoxButton.OK, MessageBoxImage.Warning);
             args.Handled = true;
         };
@@ -50,6 +63,7 @@ public partial class App : Application
         try
         {
             settings = settingsService.Load();
+            ApplyLanguage(settings.Language);
 
             byte[] rawKey;
             if (settings.WrappedDatabaseKey is null)
@@ -78,12 +92,8 @@ public partial class App : Application
             // case we deliberately do NOT generate a fresh key over a damaged settings file: that
             // would silently orphan every existing encrypted note forever, with no way back.
             MessageBox.Show(
-                "No se puede descifrar la base de datos de notas con la clave almacenada.\n\n" +
-                "La causa más probable es que se haya restablecido la contraseña de Windows de este " +
-                "usuario, lo que destruye de forma permanente la clave protegida. Esto no se puede " +
-                "recuperar técnicamente, salvo que exista una copia de seguridad exportada previamente " +
-                "(esa función aún no existe en esta versión).",
-                "Fanote — no se puede iniciar",
+                Strings.KeyUnwrapFailedMessage,
+                Strings.CannotStartTitle,
                 MessageBoxButton.OK, MessageBoxImage.Error);
             Shutdown(1);
             return;
@@ -93,10 +103,8 @@ public partial class App : Application
             // Case (b), retry already attempted and failed inside BootstrapDatabase: the database
             // file is damaged beyond automatic recovery. Fatal.
             MessageBox.Show(
-                "No se ha podido abrir ni recrear la base de datos de notas tras un intento de " +
-                "recuperación automática. Es posible que el disco esté lleno o que el archivo siga " +
-                "dañado.",
-                "Fanote — no se puede iniciar",
+                Strings.DatabaseUnrecoverableMessage,
+                Strings.CannotStartTitle,
                 MessageBoxButton.OK, MessageBoxImage.Error);
             Shutdown(1);
             return;
@@ -104,8 +112,8 @@ public partial class App : Application
         catch (Exception ex)
         {
             MessageBox.Show(
-                $"No se ha podido iniciar Fanote debido a un error inesperado: {ex.Message}",
-                "Fanote — no se puede iniciar",
+                Strings.UnexpectedStartupFailureMessage(ex.Message),
+                Strings.CannotStartTitle,
                 MessageBoxButton.OK, MessageBoxImage.Error);
             Shutdown(1);
             return;
@@ -116,16 +124,17 @@ public partial class App : Application
             // Practically impossible on real Windows (there's always at least one display), but
             // treat it as a fourth bootstrap failure mode rather than crashing with no explanation.
             MessageBox.Show(
-                "No se ha podido detectar ningún monitor conectado.",
-                "Fanote — no se puede iniciar",
+                Strings.NoMonitorsMessage,
+                Strings.CannotStartTitle,
                 MessageBoxButton.OK, MessageBoxImage.Error);
             Shutdown(1);
             return;
         }
 
-        var coordinator = new AppCoordinator(repository);
+        var coordinator = new AppCoordinator(repository, settings);
         _coordinator = coordinator;
         _repository = repository;
+        _settings = settings;
         try
         {
             // BuildDocks termina llamando a RefreshAll, que es el primer sitio donde de verdad se
@@ -144,11 +153,8 @@ public partial class App : Application
             // user's only chance of ever recovering their notes (e.g. if they later find their old
             // settings.json).
             MessageBox.Show(
-                "La base de datos de notas no se ha podido descifrar con la clave actual.\n\n" +
-                "La causa más probable es que el archivo de configuración que contenía la clave se " +
-                "haya perdido, sustituido o proceda de otra instalación. Las notas NO se han eliminado " +
-                "y siguen almacenadas de forma segura, pero no se pueden leer en este momento.",
-                "Fanote — no se puede iniciar",
+                Strings.KeyMismatchMessage,
+                Strings.CannotStartTitle,
                 MessageBoxButton.OK, MessageBoxImage.Error);
             Shutdown(1);
             return;
@@ -181,7 +187,12 @@ public partial class App : Application
 
         var hotkey = _hotkey;
         var loadedSettings = settings;
-        coordinator.SettingsWindowFactory = () => new SettingsWindow(settingsService, loadedSettings, hotkey);
+        coordinator.SettingsWindowFactory = () => new SettingsWindow(settingsService, loadedSettings, hotkey, coordinator);
+        coordinator.RebuildDocksAction = () =>
+        {
+            coordinator.CloseAllDocks();
+            BuildDocks();
+        };
 
         _trayIcon = new TrayIcon(coordinator);
 
@@ -191,6 +202,23 @@ public partial class App : Application
             _trayIcon?.Dispose();
             _hotkey?.Dispose();
         };
+    }
+
+    /// <summary>
+    /// Fija el idioma de toda la interfaz. <paramref name="explicitLanguage"/> es
+    /// <c>AppSettings.Language</c> ("es"/"en"/null); con <c>null</c> se seguirá el idioma de
+    /// Windows. Hay que llamarlo antes de construir cualquier ventana: los enlaces
+    /// <c>{x:Static}</c> del XAML se resuelven al construir, no cuando cambia <c>Strings.Current</c>
+    /// después — por eso <see cref="OnStartup"/> lo llama dos veces (una adivinando, por si el
+    /// arranque falla antes de leer los ajustes de verdad).
+    /// </summary>
+    private static void ApplyLanguage(string? explicitLanguage)
+    {
+        Strings.Current = explicitLanguage is "es" or "en"
+            ? explicitLanguage
+            : System.Globalization.CultureInfo.CurrentUICulture.TwoLetterISOLanguageName == "es" ? "es" : "en";
+
+        NoteTitleHelper.PlaceholderTitle = Strings.NewNotePlaceholder;
     }
 
     /// <summary>
@@ -214,9 +242,8 @@ public partial class App : Application
             var repository = BootstrapDatabase(databasePath, cipher, allowRetry: false);
 
             MessageBox.Show(
-                "El archivo de notas existente estaba dañado. Se ha conservado una copia en un archivo " +
-                "\".corrupt-<fecha>\" junto al original, y se ha creado una base de datos nueva y vacía.",
-                "Fanote — base de datos recuperada",
+                Strings.DatabaseRecoveredMessage,
+                Strings.DatabaseRecoveredTitle,
                 MessageBoxButton.OK, MessageBoxImage.Information);
 
             return repository;
@@ -227,6 +254,7 @@ public partial class App : Application
     private TrayIcon? _trayIcon;
     private GlobalHotkey? _hotkey;
     private NotesRepository? _repository;
+    private AppSettings? _settings;
     private DispatcherTimer? _rebuildDebounce;
 
     /// <summary>
@@ -240,21 +268,28 @@ public partial class App : Application
         var monitors = MonitorEnumerator.EnumerateMonitors();
         if (monitors.Count == 0) return; // sin pantallas no hay nada que colocar; ya volverá otra
 
-        // Filtro de monitor por variable de entorno. Existe porque durante el desarrollo hace
-        // falta poder lanzar la app sin invadir la otra pantalla (p. ej. si hay algo a pantalla
-        // completa en ella), y es la pieza mínima del punto 3 de "Prerrequisitos para la Fase 3":
-        // restringir la app a un solo monitor. Cuando ese punto se aborde de verdad, esto debería
-        // pasar a ser un ajuste de verdad en AppSettings, no una variable de entorno.
-        var onlyMonitor = Environment.GetEnvironmentVariable("FANOTE_MONITOR_INDEX");
-        if (int.TryParse(onlyMonitor, out int monitorIndex)
+        // Filtro de monitor: miramos TargetMonitorIndex de los ajustes guardados. Si no esta fijado,
+        // se mira la variable de entorno FANOTE_MONITOR_INDEX como alternativa/fallback.
+        int? targetIndex = _settings?.TargetMonitorIndex;
+        if (targetIndex is null)
+        {
+            var onlyMonitor = Environment.GetEnvironmentVariable("FANOTE_MONITOR_INDEX");
+            if (int.TryParse(onlyMonitor, out int envIndex))
+            {
+                targetIndex = envIndex;
+            }
+        }
+
+        if (targetIndex is { } monitorIndex
             && monitorIndex >= 0 && monitorIndex < monitors.Count)
         {
             monitors = new[] { monitors[monitorIndex] };
         }
 
+        var edge = _settings?.DockEdge ?? EdgePosition.Right;
         foreach (var monitor in monitors)
         {
-            var dock = new EdgeDockWindow(EdgePosition.Right, monitor, _repository, _coordinator);
+            var dock = new EdgeDockWindow(edge, monitor, _repository, _coordinator, _settings);
             _coordinator.RegisterDock(dock);
             dock.Show();
         }

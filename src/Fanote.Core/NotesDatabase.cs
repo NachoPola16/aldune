@@ -22,6 +22,8 @@ public sealed class NotesDatabase
     private void Initialize()
     {
         using var connection = OpenConnection();
+        DropOutdatedNotePlacementTable(connection);
+
         using var command = connection.CreateCommand();
         command.CommandText = """
             CREATE TABLE IF NOT EXISTS Note (
@@ -35,7 +37,50 @@ public sealed class NotesDatabase
                 State TEXT NOT NULL,
                 ScreenOrigin TEXT NOT NULL
             );
+
+            CREATE TABLE IF NOT EXISTS NotePlacement (
+                NoteId TEXT NOT NULL,
+                MonitorKey TEXT NOT NULL,
+                Left REAL NOT NULL,
+                Top REAL NOT NULL,
+                Width REAL NOT NULL,
+                Height REAL NOT NULL,
+                PRIMARY KEY (NoteId, MonitorKey)
+            );
+
+            -- El orden manual del mazo. Aparte de Note por el mismo motivo que NotePlacement: esa
+            -- tabla tiene el contenido real del usuario y no hay migraciones. Position es REAL para
+            -- poder insertar entre dos notas sin renumerar (ver Fanote.Core.NoteOrdering).
+            CREATE TABLE IF NOT EXISTS NoteOrder (
+                NoteId TEXT PRIMARY KEY NOT NULL,
+                Position REAL NOT NULL
+            );
             """;
         command.ExecuteNonQuery();
+    }
+
+    /// <summary>
+    /// Esta app no tiene sistema de migraciones (ver docs/STATUS.md): cada tabla se crea una vez
+    /// con <c>CREATE TABLE IF NOT EXISTS</c> y ya está, lo que basta mientras nunca cambie una
+    /// existente. <c>NotePlacement</c> sí cambió — ganó <c>MonitorKey</c> como parte de su clave
+    /// primaria (recordar posición pasó de ser global a por pantalla), y una base de datos ya
+    /// creada con el esquema viejo se queda con él para siempre si no se hace algo aquí, porque
+    /// <c>CREATE TABLE IF NOT EXISTS</c> no toca una tabla que ya existe.
+    ///
+    /// La solución no es una migración fila a fila: <c>NotePlacement</c> es caché de UI (dónde
+    /// estaba una ventana), no contenido del usuario como <c>Note</c> — perder las posiciones
+    /// recordadas de una versión anterior no pierde ninguna nota, así que basta con recrear la
+    /// tabla entera si le falta la columna nueva.
+    /// </summary>
+    private static void DropOutdatedNotePlacementTable(SqliteConnection connection)
+    {
+        using var check = connection.CreateCommand();
+        check.CommandText = "SELECT COUNT(*) FROM pragma_table_info('NotePlacement') WHERE name = 'MonitorKey';";
+        var hasMonitorKey = Convert.ToInt64(check.ExecuteScalar()!) > 0;
+        if (hasMonitorKey) return;
+
+        using var drop = connection.CreateCommand();
+        drop.CommandText = "DROP TABLE IF EXISTS NotePlacement;";
+        drop.ExecuteNonQuery();
     }
 }

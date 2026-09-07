@@ -1178,10 +1178,573 @@ mano: coincide dentro de "Activas", se mantiene acotada al cambiar a
 
 Tests: 140/140.
 
+## Prioridad del dock, arreglo de pantalla completa y selector de monitor en Ajustes (sesión 2026-09-06)
+
+Resuelve la incidencia donde Fanote se iba al fondo o desaparecía al interactuar con aplicaciones maximizadas (p. ej. seleccionar pestañas en Chrome), mantiene la ocultación ante videojuegos en pantalla completa real, y traslada el control de monitor de la variable de entorno a la UI de Ajustes.
+
+### Causa raíz del falso positivo de pantalla completa
+
+- En configuraciones con barra de tareas auto-oculta o multimonitor donde la barra no resta espacio en pantalla, `Bounds == WorkingArea`.
+- Una ventana maximizada estándar de Windows (como Chrome con pestañas) mide físicamente unos pocos píxeles más que el monitor (`X = -8, Y = -8, Width = W + 16, Height = H + 16` por los bordes de redimensionado invisibles de Win32).
+- `FullscreenDetection.CoversMonitor` asumía que una ventana maximizada nunca cubría el monitor completo porque la barra de tareas lo impedía. Al ser `Bounds == WorkingArea`, la condición matemática se cumplía siempre que el usuario hacía clic en una pestaña de una ventana maximizada.
+- `IsFullscreenAppCovering` concluía erróneamente que una ventana maximizada era un videojuego a pantalla completa, y `PollFullscreenApp` ponía el dock en `Visibility.Hidden`.
+
+### Cambios realizados
+
+1. **Distinción estricta de maximizado vs fullscreen**:
+   - `NativeMethods` incorpora `IsZoomed(foreground)` y comprobación de `WS_MAXIMIZE` y `WS_CAPTION`. Si una ventana está maximizada por el SO o tiene barra de título/menú de aplicación tradicional, se excluye de inmediato de la detección de pantalla completa.
+   - `FullscreenDetection.CoversMonitor` gana un parámetro opcional `isZoomed = false` para verificar que solo ventanas no maximizadas que cubren el monitor (videojuegos borderless o exclusivos, vídeos F11) cuentan como pantalla completa.
+   - Tests añadidos en `FullscreenDetectionTests` (142/142 tests pasando).
+
+2. **Prioridad Topmost reforzada**:
+   - `NativeMethods.EnsureTopmost(hWnd)` reafirma `HWND_TOPMOST` con `SWP_NOACTIVATE | SWP_FRAMECHANGED` sin robar el foco.
+   - `EdgeDockWindow` lo llama al inicializarse, al sobrevolar (`PollHoverState`) y al volver de un estado oculto, garantizando que el dock nunca quede tapado por ventanas estándar.
+
+3. **Selector de pantalla y opciones en Ajustes**:
+   - `AppSettings.TargetMonitorIndex`: índice opcional para fijar Fanote en un monitor concreto (`null` = todas las pantallas conectadas).
+   - `AppSettings.HideOnFullscreen`: opción booleana para habilitar/deshabilitar la ocultación ante videojuegos (por defecto `true`).
+   - `SettingsWindow.xaml`: nueva sección visual "Pantallas donde mostrar Fanote" con selector de tarjetas estilizadas (`MonitorRadioStyle`) generado dinámicamente con las pantallas conectadas (nombre, resolución, indicación de monitor principal), y casilla para el auto-ocultado ante videojuegos.
+   - `AppCoordinator.RebuildDocks()`: reconstruye los docks en caliente al cambiar la selección en Ajustes sin necesidad de reiniciar la app.
+
+Tests: 142/142 pasando.
+
+### Segunda ronda: recordar posición de la nota, borde izquierdo, animación tras inactividad, ayuda rápida
+
+Continuación de la misma sesión, tras verificación manual del usuario de lo anterior. Pidió además:
+que las notas recuerden dónde se dejaron (sensación de post-it real), un selector de borde del
+dock, investigar por qué la animación de abrir una nota se ve más brusca "cuando llevas un rato sin
+abrir ninguna", y una revisión de ergonomía general.
+
+1. **Las notas recuerdan su posición y tamaño** (`AppSettings.RememberNotePositions`, por defecto
+   activado — el campo ya existía sin usar, junto con la tabla `NotePlacement` y
+   `NotesRepository.SavePlacement/GetPlacement/DeletePlacement`, de una ronda anterior a un corte de
+   contexto):
+   - `NoteWindow.SavePlacementOnce` guarda `Left/Top/Width/Height` en el **primer** evento
+     `Closing`, antes de que `OnClosingWithAnimation` cancele el cierre y anime la nota deslizándose
+     fuera de la pantalla — si se guardara después, se persistiría la posición a medio deslizar, no
+     la real. Un flag (`_placementSaved`) evita que la segunda pasada de `Closing` (cuando la
+     animación termina y cierra de verdad) sobrescriba el valor bueno.
+   - `AppCoordinator.TryRestorePlacement` decide al abrir: si hay una posición guardada y sigue
+     siendo visible en algún monitor conectado ahora mismo (`PlacementValidation.IsVisibleOnMonitors`,
+     contra la lista completa de monitores, no solo el del dock que pidió abrir la nota), la nota
+     aparece ahí directamente, **sin** la animación de deslizarse desde su pestaña — así lo decidió
+     el usuario explícitamente, para que se sienta como un post-it que sigue donde lo dejaste, no
+     como una ventana que se abre desde el dock. Sin posición guardada, o si el monitor donde estaba
+     ya no existe, se comporta como siempre.
+   - Se guarda siempre al cerrar, la hayas movido tú o no: la primera vez que una nota se cierra, su
+     sitio (aunque sea el de la cascada automática) queda fijado. Si el usuario prefiere que solo
+     cuente cuando la arrastra de verdad, hay que distinguir ambos casos — no se hizo, decisión
+     explícita por simplicidad.
+   - Tests nuevos en `PlacementValidationTests` (no tenía ninguno; la lógica ya existía sin probar).
+
+2. **Selector de borde del dock: Izquierda/Derecha** (`AppSettings.DockEdge`, por defecto
+   `Right` — también existía sin usar). Arriba/Abajo queda fuera a propósito: la apertura de nota
+   (`EdgeDockWindow.PositionNoteWindow`, `NoteWindow.SlideInFrom`) solo anima `Left` en horizontal, y
+   generalizarla a vertical es un cambio real, no solo exponer un selector — se decidió acotar el
+   alcance en vez de improvisarlo.
+   - `EdgeGeometry.WindowRect`/`RestingVisibleRect` ya soportaban los 4 bordes (geometría del dock en
+     sí); lo que faltaba era la apertura de nota. Con el dock a la izquierda, el canto interior de la
+     pestaña (por donde sale la nota) es `Left(dock) + TabWidth` en vez de `Left(dock) + ShadowMargin`
+     — el margen de sombra vive siempre en el lado interior, opuesto al canto físico de pantalla que
+     esa pestaña toca (deducido por simetría con `RestingVisibleRect`, que ya trataba los dos lados
+     así).
+   - `EdgeGeometry.SlideOriginForLeftEdge` (nuevo, con tests): misma idea que `SlideOriginFor` pero
+     en la dirección contraria — la nota sale hacia la derecha, así que el origen se acota entre el
+     canto físico izquierdo y el destino final, nunca más allá.
+   - Nueva sección "Lado de la pantalla" en Ajustes, mismo estilo de tarjetas que el selector de
+     monitor, con reconstrucción en caliente de los docks al cambiar.
+   - **Pendiente de verificación manual del usuario** — geometría nueva, hay que verla en pantalla
+     con el dock a la izquierda de verdad.
+
+3. **Hipótesis sobre la animación brusca tras inactividad**: Fanote vive casi siempre sin foco (nadie
+   lo activa como una ventana normal salvo al abrir una nota), así que Windows puede clasificarlo
+   como candidato a "power throttling" (EcoQoS) — reducir su prioridad/CPU tras un rato en segundo
+   plano. El primer frame de una animación justo después de que el proceso se reactive puede salir
+   con tirones porque el hilo de UI arranca con el reloj/prioridad aún reducidos — encaja con el
+   patrón descrito ("se ve peor tras un rato sin abrir ninguna nota"). Mitigación aplicada:
+   `NativeMethods.DisablePowerThrottling()` (`SetProcessInformation` con
+   `PROCESS_POWER_THROTTLING_EXECUTION_SPEED` desactivado), llamada una vez en `App.OnStartup`. Sin
+   coste ni efecto secundario conocido si el diagnóstico resultara no ser este. **Pendiente de
+   verificación manual** — es un problema intermitente, solo se puede confirmar usando la app en el
+   día a día.
+
+4. **Pulido de ergonomía menor**:
+   - `NoteWindow`: Esc cierra la nota (antes solo la X); el texto se autoguarda igual, así que no se
+     pierde nada.
+   - Nueva sección "Ayuda rápida" al final de Ajustes (mismo sitio que ya explicaba cada opción):
+     gestos del dock, Esc, el atajo configurado (se actualiza solo si se cambia), y el icono de la
+     bandeja — no había ninguna ayuda visible en la app hasta ahora, todo se descubría por accidente.
+   - Valoración de ergonomía general (sin cambios de código): distribución de botones, papelera sin
+     confirmación (mitigado por la papelera de 30 días) y arrastre libre se consideraron ya
+     razonables; no se identificaron más ajustes claramente necesarios.
+
+Tests: 150/150 pasando.
+
+### Tercera ronda: animación de apertura consistente, y Ajustes/notas por atajo en la pantalla del cursor
+
+Feedback del usuario tras usar lo de arriba un rato, antes incluso de la verificación manual
+pendiente. Dos cambios más:
+
+1. **Animación de abrir nota, unificada — se quita el deslizamiento desde la pestaña.** El usuario
+   dudaba entre perfeccionarla, quitarla, o hacerla igual venga de donde venga; se le presentaron
+   tres opciones (fundido+crecimiento consistente, deslizamiento siempre pero con origen inventado,
+   o ninguna animación) y eligió la primera. Motivo real para preferirla, más allá del gusto: con
+   posición recordada (ver ronda anterior) una nota reaparecida no tenía ninguna relación geométrica
+   con el dock, así que "deslizar siempre" habría exigido inventar un origen arbitrario — y el
+   deslizamiento largo por la pantalla era además un candidato más al tirón que motivó investigar
+   `DisablePowerThrottling` en primer lugar.
+   - `NoteWindow.SlideInFrom` (deslizaba `Left` + fundido/desplazamiento del contenido) sustituido
+     por `NoteWindow.PlayOpenAnimation`: fundido + `ScaleTransform` del 95% al 100% con
+     `RenderTransformOrigin` centrado, 180ms, siempre ya en la posición definitiva. Se llama siempre
+     (antes `SlideInFrom` solo corría si `originRect` no era nulo, así que una nota creada por atajo
+     global no tenía ninguna animación de apertura — ahora sí, la misma que todas).
+   - `OnClosingWithAnimation` (deslizaba `Left+40` + fundido) sustituido por el mismo fundido +
+     encogimiento al 95%, simétrico a la apertura, 140ms.
+   - `EdgeDockWindow.PositionNoteWindow` deja de devolver un "origen de deslizamiento" (pasa de
+     `double` a `void`) — solo calcula la posición final de cascada junto a la pestaña, que sigue
+     haciendo falta cuando no hay posición recordada.
+   - Código muerto retirado: `EdgeGeometry.SlideOriginFor`/`SlideOriginForLeftEdge` y sus 6 tests
+     (3 preexistentes + 3 de la ronda anterior) — nada los llama ya.
+
+2. **La posición recordada de una nota pasa a ser por pantalla, no global.** Reportado por el
+   usuario antes de que el `Left`/`Right` de la ronda anterior llegara a probarse: si una nota se
+   dejó en el monitor vertical y se abre desde el dock del horizontal, no debe "traerse" desde la
+   vertical — cada pantalla tiene que recordar su propio sitio, igual que si hubiera dos monitores
+   horizontales.
+   - `NotePlacement` gana `MonitorKey` (el `MonitorInfo.DeviceName` del monitor, p. ej.
+     `\\.\DISPLAY1`) como parte de su clave — la tabla `NotePlacement` pasa a tener clave primaria
+     compuesta `(NoteId, MonitorKey)`. **Corrección sobre lo dicho al principio de esta sesión**: se
+     asumió que la tabla nunca había llegado a usarse de verdad y que por tanto no hacía falta
+     migración — falso, la sesión anterior ya la había creado en la base de datos real del usuario
+     (con el esquema viejo, sin `MonitorKey`) al probar el guardado de posición, y
+     `CREATE TABLE IF NOT EXISTS` no toca una tabla que ya existe: el primer intento de usar
+     `SavePlacement`/`GetPlacement` con el esquema nuevo rompía con `SQLite Error 1: no such column:
+     MonitorKey`. Arreglado en `NotesDatabase.DropOutdatedNotePlacementTable` (nuevo, TDD): si la
+     tabla existe sin esa columna, se recrea entera antes del `CREATE TABLE IF NOT EXISTS` de
+     siempre — seguro porque `NotePlacement` es caché de UI (dónde estaba una ventana), no contenido
+     del usuario como `Note`; perder posiciones recordadas de antes de esta sesión no pierde
+     ninguna nota.
+   - `NotesRepository.SavePlacement`/`GetPlacement` ganan el parámetro `monitorKey`. `DeletePlacement`
+     (y el `DELETE` en línea de `Delete`/`PurgeExpiredTrash`) siguen borrando por `NoteId` sin más:
+     borrar una nota borra su recuerdo en **todas** las pantallas, no solo una.
+   - `Fanote.Core.MonitorLookup.DeviceNameAt` (nuevo, con tests): dado un rectángulo, en qué monitor
+     cae su centro — puro, sin Win32, para poder probarlo. Se usa en dos sitios distintos:
+     - `NoteWindow.SavePlacementOnce` lo usa contra la posición **actual** de la nota al cerrarla
+       (puede haberse arrastrado a otra pantalla desde que se abrió).
+     - `AppCoordinator.TryRestorePlacement` en cambio busca por el monitor **del dock que pidió
+       abrir la nota** (`EdgeDockWindow.MonitorKey`, nuevo — cada dock ya conocía su
+       `WorkingArea` pero no guardaba el `DeviceName`), no por dónde vaya a caer la nota: hay que
+       saber si hay un recuerdo para esa pantalla antes de decidir su posición, no después.
+   - Tests nuevos: `MonitorLookupTests`, `NotesRepositoryPlacementTests` (la lógica de
+     `SavePlacement`/`GetPlacement` no tenía ninguno hasta ahora, ronda incluida).
+
+3. **Ajustes y "Gestionar notas" (desde la bandeja) se abren en la pantalla del cursor, no siempre
+   en el primer monitor registrado.** Mismo bug de fondo que ya se corrigió para el selector de
+   monitor: `AppCoordinator.OpenSettings`/`OpenNotesManager`/`CreateAndOpenNote` usaban siempre
+   `_docks[0]` para centrar la ventana o decidir dónde cae la nota nueva por atajo — en
+   multimonitor, si la bandeja o el atajo se usan estando en el segundo monitor, la ventana saltaba
+   al primero igualmente.
+   - `NativeMethods.MonitorFromCursor()`/`MonitorFromHwnd()` (nuevos): HMONITOR del cursor y de un
+     HWND dado, vía `MonitorFromPoint`/`MonitorFromWindow`.
+   - `EdgeDockWindow.IsOnMonitor(IntPtr)` (nuevo): si el dock vive en ese HMONITOR.
+   - `AppCoordinator.DockNearCursor()` (nuevo): el dock del monitor donde está el cursor ahora
+     mismo, con `_docks.FirstOrDefault()` como último recurso. Sustituye a `_docks[0]` en los tres
+     sitios de arriba.
+
+Tests: 156/156 pasando. **Pendiente de verificación manual del usuario**, igual que el resto de
+esta sesión — el propio motivo de estos cambios fue feedback llegado antes de completar esa
+verificación.
+
+### Un arreglo más de la verificación manual: margen de la nota nueva
+
+La nota nueva se abría pegada al canto del dock (captura del usuario: el borde de la nota tocaba
+casi el panel desplegado). Herencia de cuando la nota tenía que arrancar ahí para "deslizarse hacia
+fuera" — sin esa animación (ver más arriba), quedarse pegada ya no vendía nada, solo se veía
+encimada. `EdgeDockWindow.NoteWindowGapFromDock` (nuevo, 24px) separa la posición de cascada por
+defecto del canto del dock en los dos bordes (izquierda/derecha). Solo afecta a notas sin posición
+recordada — una vez que el usuario mueve una nota y la cierra, su sitio guardado manda y este
+margen deja de aplicar.
+
+Tests: 156/156 pasando.
+
+### Panel oscuro detrás de los botones del footer (gear/"+")
+
+El usuario compartió una captura del estado sin notas: solo se ven dos círculos (ajustes y "+")
+flotando sobre el escritorio, sin nada que los agrupe. Causa: es el único sitio del dock donde un
+elemento no lleva el tratamiento de "panel oscuro redondeado" que sí llevan la tira de reposo y el
+contenedor de guiones (`RestStrip`) — sin él, dos círculos sueltos desaparecen visualmente contra
+la mitad de los fondos de escritorio posibles.
+
+Se discutieron dos preguntas más antes del cambio, ambas resueltas sin tocar código:
+- **¿Solo con hover, incluso sin notas?** No — con cero notas la tira de reposo no tiene guiones que
+  mostrar, así que exigir además pasar el ratón dejaría la primera vez sin ninguna pista de que ahí
+  hay un "+". Se mantiene siempre visible cuando no hay notas (decisión ya tomada en una ronda
+  anterior, reconfirmada aquí).
+- **¿Botón de cerrar la app en el dock?** No — ya existe "Salir" en el menú de la bandeja (el sitio
+  estándar de Windows para esto), y añadirlo junto a "+"/ajustes en un panel tan compacto y de uso
+  frecuente sería un riesgo real de clic accidental que mata toda la app.
+
+Cambio: `Border` con el mismo `Background="#2A261F"` de `RestStrip` envolviendo `FooterPanel`,
+`CornerRadius="27"` (pastilla, radio = mitad del alto real). `EdgeGeometry.FooterLength` sube de 64
+a 78 para que el nuevo relleno (7px arriba/abajo) no le quite al botón mayor el aire que ya tenía
+reservado para su sombra — los tests lo referencian simbólicamente (`EdgeGeometry.FooterLength`),
+no como `64` literal, así que no hizo falta tocar ninguno.
+
+Tests: 156/156 pasando.
+
+## Tareas, panel de acciones, logo y limpieza visual (sesión 2026-09-06, cuarta ronda)
+
+Partió de una investigación de mercado (resumida en **`docs/ROADMAP.md`**, que desde ahora guarda
+todo lo aplazado y lo descartado con su razón — leerlo antes de proponer funcionalidades nuevas). El
+hallazgo que la motiva: **el concepto de Fanote no existe en Windows**; las dos apps equivalentes
+(Hold My Notes y noty) son solo macOS.
+
+### Casillas de tarea (`Fanote.Core.TaskLines`, TDD)
+
+Una línea que empieza por `"☐ "` o `"☒ "` es una tarea. **Son texto plano, no un control**: el cuerpo
+de la nota es un `TextBox` plano a propósito (la spec v1 descartó el texto enriquecido), y como
+prefijo de texto la casilla se cifra, se busca, se exporta y aparece en la pestaña del dock sin
+código nuevo en ninguno de esos sitios. `TaskLines` es puro y probado (30 tests); `NoteWindow` solo
+traduce gestos: clic en el glifo lo marca, `Ctrl+L` convierte la línea en tarea, Enter continúa la
+lista y una tarea vacía + Enter la termina.
+
+**El glifo marcado es `☒` (U+2612), no `☑` (U+2611).** No es capricho: rasterizando los dos en la
+fuente real de la nota (`RenderTargetBitmap` en aislamiento, la técnica que ya documenta la sesión
+del 2026-09-04) se ve que `☑` **no está en Segoe UI Variable Text** y cae en una fuente sustituta que
+lo dibuja como un cuadrado negro macizo — más pesado que el `☐` fino, **más ancho** (el texto de la
+tarea se desplazaba al marcarla) y el único negro puro de una ventana que evita el negro absoluto a
+propósito. `☒` sale de la misma fuente que `☐`: mismo peso, misma anchura. `☑` se sigue **aceptando
+al leer** (llega pegado desde otras apps), pero nunca se escribe.
+
+La pestaña del dock enseña ahora el progreso: `NoteTitleHelper.GetTabPreview` antepone `"1/3 · "`
+cuando la nota tiene tareas, y `GetPreview` se come los glifos (en una línea de ~26 caracteres,
+repetir `☐` gasta el hueco en decir lo que el contador ya dice).
+
+### El cuerpo de la nota, liberado
+
+Los seis colores y los botones Archivar/Papelera estaban **siempre visibles** al pie de cada nota:
+~90 px de una ventana de 320, **casi un tercio del alto**, ocupados de forma permanente por acciones
+que se usan una vez cada mucho, restándoselo al texto. Ahora el cuerpo es solo texto y todo eso vive
+en un panel que abre el botón `⋯` de la cabecera (color, «siempre encima», archivar, papelera).
+
+- **«Siempre encima»** es nuevo: `NoteWindow` estaba clavado a `Topmost="True"`, así que una nota
+  que dejabas abierta se quedaba sobre todo lo demás sin escapatoria. El interruptor es **por
+  sesión**, no se guarda (haría falta una columna nueva en la tabla `Note`, la que sí tiene datos
+  reales del usuario — ver `ROADMAP.md`).
+- Mismo panel en el **clic derecho sobre una pestaña del dock**: color, abrir, archivar, papelera sin
+  abrir la nota. Antes cambiar un color obligaba a abrirla, cambiarlo y cerrarla. Mientras ese menú
+  está abierto, `PollHoverState` no colapsa el abanico: el menú cae fuera de la zona sensible y
+  moverse hacia él contaría como salir.
+
+### Limpieza visual y deduplicación
+
+- **`SettingsWindow` podía crecer más que la pantalla** — `SizeToContent="Height"` con seis secciones
+  más la ayuda: en un portátil con escalado, las últimas opciones quedaban fuera **sin scroll para
+  alcanzarlas**. Ahora tiene `ScrollViewer` y `MaxHeight` calculado contra el área de trabajo real.
+- La barra de scroll oscura y los estilos de las filas de menú **suben a `App.xaml`**: estaban
+  definidos dentro de `NotesManagerWindow` y ya hacían falta en dos ventanas más.
+
+### Logo
+
+Se mantiene el concepto (tres pestañas de color cortadas por el canto derecho: el producto dibujado,
+con la paleta real). Lo que falla es el tamaño pequeño: a 16 px — bandeja, barra de tareas, Alt+Tab,
+donde más se ve — tres barras finas con sus huecos se empastan y el icono se lee como una lista
+genérica. El `.ico` se regenera ahora por programa con **dos variantes**: tres barras para 48 px y
+más, y **dos barras mucho más gruesas para 16/24/32**. El corte a ras del canto derecho se consigue
+recortando el dibujo contra el propio cuadrado redondeado, que es lo que conserva la idea de
+"ancladas al borde". Script en el scratchpad de la sesión; si hay que repetirlo, está descrito aquí.
+
+### Ronda de feedback sobre lo anterior
+
+Cuatro cosas, tres de ellas fallos reales encontrados usando la app:
+
+1. **Bug: el abanico se desplegaba mal tras crear una nota.** Ver su propia sección más abajo — hizo
+   falta instrumentar la app real para dar con la causa, y el primer arreglo no era el bueno.
+2. **La pestaña de arriba se veía como un rectángulo de canto recto, sin sombra.** La sombra de las
+   pestañas se proyecta hacia arriba a propósito (cada una sombrea a la de encima), pero la primera
+   no tiene ninguna encima y su sombra caía fuera del contenido — y el `ScrollViewer` recorta a su
+   viewport. Añadido `EdgeGeometry.TabShadowHeadroom` (14 px) como **margen de la lista**, no como
+   `Padding` del `ScrollViewer`: el recorte ocurre justo en ese borde, así que como relleno la
+   sombra se habría seguido perdiendo. El test que fija la composición de `WindowLength` detectó el
+   cambio y se actualizó.
+3. **"Siempre encima" no decía qué hacía** (el usuario preguntó literalmente qué era). Ahora el
+   botón dice el estado actual y debajo lo explica en una línea. Y **el menú lleva ya "Convertir en
+   tarea" con su atajo escrito al lado** (`Ctrl+L`): un atajo que solo está documentado en Ajustes
+   no lo descubre nadie.
+4. **Título duplicado — resuelto quitando el texto de la cabecera.** El título es la primera línea
+   del cuerpo, que está dos centímetros más abajo, y es lo que enseña la pestaña del dock. La
+   cabecera sigue leyéndose como la pestaña que viajó con la nota por su color y su troquelado. Se
+   descartó hacerla editable (sería un campo de título de verdad: columna nueva en `Note`,
+   migración, qué mostrar cuando está vacío — lo que la spec v1 evitó) y se descartó la vista previa
+   al pasar el ratón; las dos razones, en `ROADMAP.md`.
+
+### El bug de la entrada escalonada, diagnosticado con instrumentación
+
+Merece sección propia porque **la primera hipótesis era plausible, encajaba con el historial del
+proyecto, y era falsa** — y porque el registro que lo resolvió es reproducible.
+
+**Síntoma** (afinado por el usuario en dos rondas): crear una nota → apartar el ratón → volver a
+pasarlo. El abanico "hace la animación pero peor". Sigue mal en cada despliegue posterior **hasta que
+se abre y se cierra una nota**, y entonces vuelve a ir bien.
+
+**Primera hipótesis, descartada**: `PlayEntrance` no limpiaba sus animaciones (`FillBehavior.HoldEnd`)
+y los `Opacity = …` posteriores eran no-ops silenciosos. Era un fallo real —este proyecto ya había
+tropezado dos veces con `HoldEnd`— y se arregló, **pero no era la causa**: el usuario confirmó que
+seguía pasando.
+
+**Cómo se resolvió**: instrumentación temporal en `SetNotes`, `OnTabLoaded`, `ApplyState` y
+`ReplayTabEntrance` volcando a `%LOCALAPPDATA%\Fanote\dock-debug.log`, y el usuario reproduciendo.
+El registro dio la respuesta en dos líneas comparadas:
+
+```
+al CREAR una nota:   OnTabLoaded indice=0..6, expandido=True,  opacidad fijada a 1
+al CERRAR una nota:  OnTabLoaded indice=0..6, expandido=False, opacidad fijada a 0
+```
+
+**Causa raíz**: `PlayEntrance` anima la opacidad de 0 a 1 **con `BeginTime`** (el escalonado). Durante
+ese retardo la animación todavía no manda y WPF pinta el **valor base** de la propiedad. Al crear una
+nota, `OnTabLoaded` corre con el abanico abierto y deja todas las pestañas con opacidad base **1**;
+así que en el siguiente despliegue cada pestaña se veía entera desde el primer frame, **pegaba un
+salto a invisible** al arrancar su animación, y solo entonces hacía el fundido: un parpadeo
+escalonado en lugar de una entrada. Y no se corregía solo porque al colapsar nadie devuelve las
+pestañas a 0 — solo lo hacía un `SetNotes` con el dock ya cerrado, que es exactamente lo que ocurre
+al cerrar una nota. De ahí el "hasta que no abro y cierro una nota no vuelve a ir bien".
+
+**Arreglo**: `PlayEntrance` fija ahora los valores de partida (`Opacity = 0`, `translate.X = from`)
+antes de lanzar cada animación, en vez de dar por hecho que alguien los dejó bien. La animación es
+autosuficiente y ya no depende del estado previo.
+
+**Lección para la próxima**: con `BeginTime`, el valor base es lo que se ve durante el retardo —
+fijarlo siempre explícitamente. Y ante un bug de estado en la UI, instrumentar antes que deducir: la
+hipótesis "encaja con un fallo que ya tuvimos" costó una ronda entera.
+
+### La última pestaña se cortaba, y el abanico dejaba de ser compacto
+
+Dos fallos de geometría encontrados con ~18 notas de prueba.
+
+1. **La última pestaña salía recortada por abajo.** El solape se consigue con un `Margin.Bottom`
+   **negativo** en cada pestaña (paso 26 con pestañas de 52 → −26). La última también lo llevaba, y
+   ahí no solapa con nada: solo hacía que el `StackPanel` se midiera 26px más corto de lo que esa
+   pestaña ocupa de verdad, así que el `ScrollViewer` la recortaba justo por esa diferencia. Ahora la
+   última no lleva margen (`OnTabLoaded`). Con pocas notas no se veía porque el paso natural (60) es
+   mayor que el alto (52) y el margen sale positivo.
+2. **La ventana crecía sin tope.** `MaxFanLength` existe para que el dock siga siendo compacto, pero
+   `MinPitch` (el suelo de legibilidad) manda sobre el reparto de `PitchFor`, así que a partir de
+   ~19 notas el abanico se pasaba del presupuesto y, como `WindowLength` se dimensionaba al abanico,
+   **crecía la ventana** en vez de entrar a funcionar el scroll; con 40 notas habría ocupado casi
+   toda la pantalla. Extraído `EdgeGeometry.FanBudget` (el presupuesto, ahora compartido por
+   `PitchFor` y `WindowLength`) y añadido `VisibleStripLength`: lo que pasa del tope se alcanza con
+   la rueda. El `ScrollViewer` pasa de `Hidden` a `Auto` para que haya alguna pista de que hay más.
+
+**Efecto secundario que hubo que atender a la vez**: la tira de guiones en reposo dibuja uno por nota
+y **no hace scroll**. Mientras la ventana crecía con las notas, eso quedaba disimulado; con tope, los
+guiones sobrantes se habrían recortado contra el borde. Añadidos `RestDashCapacity` /
+`VisibleRestDashes`, y `RestingVisibleRect` pasa a medir contra los guiones que **se dibujan de
+verdad**, para que la zona sensible al ratón coincida con lo que se ve (ya hubo una vez un guion
+visible que no respondía al ratón, ver más arriba).
+
+Un test existente (`WindowLength_AlwaysLeavesRoomForTheFooter`) detectó el cambio de significado:
+comparaba contra el abanico total y ahora tiene que comparar contra el visible. 6 tests nuevos.
+
+Tests: 198/198. **Pendiente de verificación manual del usuario.**
+
+## Reordenar el mazo arrastrando (sesión 2026-09-06, quinta ronda)
+
+Último punto pendiente de la lista del usuario junto con la internacionalización.
+
+### Cómo se guarda el orden
+
+Tabla propia, `NoteOrder (NoteId TEXT PRIMARY KEY, Position REAL)` — **no** una columna en `Note`,
+por lo mismo que `NotePlacement`: esa tabla tiene el contenido real y no hay migraciones.
+
+`Position` es `REAL` y no un índice entero **a propósito**: mover una nota entre otras dos es
+escribir **una sola fila** (el punto medio de sus vecinas) en vez de renumerar la lista entera en
+cada arrastre. La lógica vive en `Fanote.Core.NoteOrdering` (pura, 16 tests).
+
+Dos casos que hay que cubrir sí o sí, y están cubiertos:
+
+- **Notas sin orden todavía** (las de antes de que esto existiera): `GetByState` ordena por
+  `COALESCE(o.Position, 1e18), CreatedAt`, así que conviven sin numerar nada por adelantado y una
+  nota nueva aparece al final, que es donde se la espera. La primera vez que se arrastra,
+  `MoveNote` numera la lista entera de una vez.
+- **El hueco se agota.** Partir un intervalo por la mitad muchas veces seguidas en el mismo sitio
+  acaba topando con la precisión del `double`. `NoteOrdering.Between` devuelve `null` ahí y
+  `MoveNote` renumera y reintenta — sin eso, a partir de cierto momento arrastrar dejaría de hacer
+  nada en silencio. Hay un test que hace 60 movimientos al mismo hueco y comprueba que no se pierde
+  ni se duplica ninguna nota.
+
+### El gesto
+
+- Umbral de arrastre: el del sistema (`SystemParameters.MinimumVerticalDragDistance`), no uno
+  inventado — por debajo de eso Windows lo considera un clic, y mucha gente mueve el ratón un par de
+  píxeles al pulsar.
+- **Solo se mueve la pestaña arrastrada**; las demás no se apartan en vivo. Con el solape del
+  abanico, animar huecos exigiría recolocarlas todas en cada frame, y el orden real no se conoce
+  hasta soltar. Al soltar, la lista se refresca ya ordenada.
+- Dos interferencias que había que desactivar durante el arrastre: el `Click` del botón (soltar tras
+  arrastrar habría abierto además la nota — bandera `_suppressNextClick`) y el sondeo de hover, que
+  habría colapsado el abanico al salirse el gesto de la zona sensible.
+
+Tests: 223/223. **Pendiente de verificación manual del usuario.**
+
+## El título, resuelto: la cabecera edita la primera línea (sesión 2026-09-07)
+
+El usuario dijo que quitar el texto de la cabecera **no le convencía**, así que se maquetaron las
+cuatro alternativas y se renderizaron al lado, en vez de discutirlas. Al hacerlo apareció el
+argumento que faltaba y que descartó la opción "campo de título aparte": **el texto de la nota se
+cifra en un solo bloque**; un título guardado por separado tendría que cifrarse por su cuenta (blob,
+nonce y tag propios) o quedarse en claro, filtrando justo lo más descriptivo de cada nota. Y meterlo
+dentro del mismo bloque cifrado es, literalmente, "la primera línea".
+
+De ahí salió una quinta opción que no estaba sobre la mesa y es la que se hizo: **la cabecera muestra
+y edita la primera línea; el cuerpo empieza en la segunda.**
+
+- `Fanote.Core.NoteText.Split`/`Join` (puro, 16 tests, incluida la ida y vuelta y un test que
+  comprueba que el título de la cabecera coincide con el que enseña la pestaña del dock).
+  `Join` no añade salto de línea con el cuerpo vacío: si no, una nota de una línea acumularía uno
+  nuevo en cada apertura.
+- **Nada cambia en cómo se guarda**: la nota sigue siendo un texto único que se cifra de una pieza.
+- El cursor cruza entre los dos cuadros: Enter y Abajo bajan al cuerpo, Arriba desde la primera línea
+  del cuerpo sube al título. **No** se implementa unir con Retroceso — exige fusión de líneas y a
+  medias se siente roto; al principio de un cuadro de texto, que Retroceso no haga nada es lo normal.
+- Una nota vacía abre el foco en el título; una que ya tiene texto, al final del cuerpo.
+- **`WindowChrome.CaptionHeight` sube de 22 a 40** (el alto de la cabecera). El cuadro del título se
+  comía la mitad de la franja de arrastre, y arrastrar es como se coloca una nota — más ahora que
+  recuerdan su sitio. Con la franja completa se arrastra por el hueco alrededor del título, que queda
+  excluido vía `IsHitTestVisibleInChrome`, igual que la barra de pestañas de un navegador.
+
+### También: el arrastre del mazo se movía con demasiado poco
+
+Reportado nada más probarlo. El destino se redondeaba al hueco más cercano, y como las pestañas se
+solapan el paso es de 26px con pestañas de 52: moverla 13px ya la recolocaba. Correcto sobre el papel
+y desagradable en la mano. Añadida `NoteOrdering.SlotHysteresis` (0.75): hay que arrastrar tres
+cuartos de hueco para que cambie de sitio, y el destino se calcula desde el índice que ocupaba más el
+desplazamiento, no desde la posición absoluta — así no depende del origen de la lista ni del scroll.
+
+### Dos ajustes inmediatos al probarlo
+
+1. **El marcador "Título" se quedaba pintado detrás del título escrito.** `TitlePlaceholderStyle`
+   usaba `BasedOn` sobre `PlaceholderStyle`, y **heredar un estilo hereda también sus disparadores**:
+   el marcador del título se hacía visible cuando el **cuerpo** estaba vacío. Ahora es un estilo
+   suelto con su propio disparador. *Cuidado con `BasedOn` cuando el estilo base lleva triggers.*
+2. **Tipografía del título.** Decidido con render comparativo (8 fuentes de Windows, título a tamaño
+   real sobre el color de la nota). El cuerpo **se queda en la fuente de sistema** y el título pasa a
+   **Ink Free** (manuscrita, con respaldo a la de sistema).
+
+   El motivo de no llevar la manuscrita al cuerpo lo enseñó el render y no se deduce razonando: las
+   fuentes manuscritas **no tienen los glifos `☐`/`☒`**, así que Windows los saca de otra fuente y
+   vuelven a verse desalineados — justo lo que se arregló eligiendo `☒` por sus métricas. Además
+   ocupan más alto y caben menos líneas. El título es una línea y no lleva casillas: ahí la
+   personalidad sale gratis.
+
+   **Descartado un selector de fuentes.** Según la búsqueda, en las apps de notas de Windows lo que
+   la gente pide de verdad es **tamaño** (legibilidad y accesibilidad), no familia; y un selector de
+   familia reintroduciría el desalineado de las casillas. Si se retoma, que sea de tamaño. Ver
+   `ROADMAP.md`.
+
+Tests: 247/247. **Pendiente de verificación manual del usuario.**
+
+## Internacionalización a inglés (sesión 2026-09-07, Sonnet)
+
+Último pendiente de la lista original de esta sesión. Cambio de modelo explícito del usuario: de
+Opus (las rondas anteriores, con criterio de diseño real) a Sonnet para este, que es sustituir
+cadenas en ~12 ficheros — trabajo mecánico, no de razonar.
+
+### La decisión antes del código: ¿inglés sin más, o selector?
+
+El propio usuario usa Fanote en español a diario. Traducir todo a inglés sin más se lo habría
+quitado. Se preguntó explícitamente y se eligió: **selector Español/Inglés en Ajustes**, con
+resolución en tres pasos —
+
+1. `AppSettings.Language` (`"es"`/`"en"`/`null`). `null` = "sigue el idioma de Windows", y sigue
+   así mientras el usuario nunca elija uno a mano: si `Language` es `null`, no se fija nada en el
+   fichero, así que la app reacciona sola si el idioma de Windows cambiara entre arranques.
+2. Elegir un idioma en Ajustes lo fija de forma explícita y permanente — mismo patrón que
+   `TargetMonitorIndex`/`DockEdge`.
+3. `App.OnStartup` resuelve y fija `Fanote.Resources.Strings.Current` **antes** de construir
+   cualquier ventana. Se llama dos veces: una nada más entrar (adivinando por el idioma de Windows,
+   por si el arranque falla antes de leer los ajustes de verdad — así hasta los mensajes de error
+   más tempranos salen en el idioma que toca la mayoría de las veces) y otra en cuanto
+   `settings.Language` está disponible de verdad.
+
+**El cambio de idioma exige reiniciar Fanote para verse en todas las ventanas**, decisión explícita
+y documentada en el propio texto de Ajustes: los enlaces `{x:Static}` de WPF se resuelven al
+construir cada ventana, no cuando cambia una propiedad después. Reconstruir en caliente todas las
+ventanas abiertas —incluidas notas con texto sin guardar— para simular un cambio en vivo habría sido
+más frágil que pedir un reinicio, así que no se intentó.
+
+### Por qué diccionario a mano y no .resx
+
+Se decidió explícitamente **no** usar el mecanismo estándar de recursos de .NET (`.resx` +
+ensamblados satélite por cultura). Dos motivos:
+
+1. La generación de código de un `.resx` (`Strings.Designer.cs`) depende de herramientas de Visual
+   Studio no garantizadas en cualquier máquina donde esto se compile con `dotnet build` a secas.
+2. Con dos idiomas y un fichero satélite por cada uno, el error más común es traducir uno y
+   olvidarse del otro. `Fanote.Resources.Strings` (nuevo) es una clase con una propiedad estática
+   por texto y **las dos versiones en la misma línea** (`T("English", "Español")`), así que no hay
+   dos ficheros que se puedan desincronizar.
+
+Encaja además con el estilo ya establecido del proyecto (P/Invoke a mano en vez de paquetes,
+ensamblado del `.ico` por código en vez de herramientas externas): menos piezas moviéndose, más
+control.
+
+### El único hueco que queda a propósito
+
+`Fanote.Core.HotkeyBinding.DisplayName` (el nombre del atajo, "Ctrl + Shift + N") se queda **sin
+traducir**: "Ctrl"/"Alt"/"Shift"/"Win" y las letras/números ya son universales, pero "Espacio",
+"Supr" y "sin asignar" seguirán en español aunque la interfaz esté en inglés. Vive en Core, que es
+la capa deliberadamente libre de Win32 *y* de idiomas, y sus tests (`HotkeyBindingTests`) fijan esos
+tres textos literalmente. Cambiarlo exigía convertir una propiedad en un método parametrizado y
+tocar esos tests por tres palabras que casi nunca se ven (el atajo por defecto no usa ninguna, y
+hace falta rebindear a Espacio/Supr o dejarlo sin asignar para que aparezcan). Se dejó así a
+propósito en vez de tocarlo de pasada; anotado por si se retoma.
+
+### `NoteTitleHelper.PlaceholderTitle`, de `const` a mutable
+
+Es Core, así que no sabe de idiomas — pero es lo que ven la pestaña del dock y la barra de tareas
+para una nota vacía. Pasó de `const string = "Nueva nota"` a una propiedad mutable con valor por
+defecto en inglés (`"New note"`), y `App.OnStartup` la fija a `Strings.NewNotePlaceholder` al
+resolver el idioma. No rompió ningún test: `NoteTitleHelperTests` ya comparaba contra
+`NoteTitleHelper.PlaceholderTitle` simbólicamente, no contra un literal.
+
+Tests: 247/247 (sin cambios — nada de esto tenía lógica nueva que probar, es cableado). Verificado
+que la app arranca sin excepciones con `Language` en `"en"`, `"es"` y ausente (sigue Windows).
+**Pendiente de verificación visual del usuario** — es la primera vez que se ve la interfaz en
+inglés de verdad.
+
+## Ajustes a dos columnas (sesión 2026-09-07)
+
+El usuario probó la interfaz en inglés y compartió una captura: con siete secciones más la ayuda
+rápida, la ventana de una sola columna (420px) se salía por abajo en su pantalla — justo el punto
+#1 que había quedado pendiente en la revisión de apariencia de una ronda anterior ("SettingsWindow
+puede crecer más que la pantalla", ver `docs/ROADMAP.md`).
+
+**Verificado con una maqueta antes de tocar el XAML real** (misma técnica que las comparaciones de
+fuentes/título/icono): renderizando el contenido real a dos columnas de 760px de ancho, la altura
+baja de ~1050px a ~610px — la mitad. Aprobado por el usuario antes de implementar.
+
+- **Columna izquierda** ("cómo se usa la app en general"): Inicio con Windows, atajo de teclado,
+  idioma.
+- **Columna derecha** ("dónde y cómo vive el dock"): pantallas, borde del dock, ocultar ante
+  pantalla completa, recordar posición de las notas.
+- **Ayuda rápida** se queda a todo el ancho abajo, fuera de las columnas: es texto de referencia
+  largo, se lee peor partido en una columna estrecha que en una franja ancha.
+- El `ScrollViewer`/`MaxHeight` de la ronda anterior se mantienen como red de seguridad para
+  pantallas muy pequeñas o muy escaladas, aunque con dos columnas ya no deberían hacer falta en el
+  caso normal.
+
+**Se preguntó también** si Ajustes y "Gestionar notas" debían recordar una posición fija en vez de
+centrarse en el monitor del cursor cada vez que se abren (comportamiento actual, sin cambios): el
+usuario prefirió dejarlo como está — centrado es predecible y nunca deja la ventana fuera de
+pantalla si cambia la configuración de monitores, que sí sería un riesgo real si se persistiera una
+posición exacta como hacen las notas.
+
+Tests: 247/247 (sin cambios en lógica, solo XAML). **Pendiente de verificación visual del usuario.**
+
 ## Cómo seguir desde aquí
 
-**Todo lo anterior está ya fusionado en `master`**; las ramas apiladas
-(`dock-motion-shape` sobre `worktree-fanote-fan-tabs-redesign`) se cerraron.
+**Todo lo anterior está ya integrado**; los cambios compilan con 0 advertencias y 0 errores.
 
 El diseño actual, en una frase: **la ventana del dock no cambia de tamaño
 nunca**, es transparente, y su contenido son dos capas que se cruzan con

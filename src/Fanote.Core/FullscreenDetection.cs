@@ -10,16 +10,17 @@ public static class FullscreenDetection
     /// <summary>
     /// Si <paramref name="window"/> cubre <paramref name="monitor"/> por completo.
     ///
-    /// La comparación tiene que hacerse contra el rectángulo <b>completo</b> del monitor, no
-    /// contra su área de trabajo: así una ventana maximizada —que deja la barra de tareas a la
-    /// vista— no cuenta como pantalla completa. Es la distinción que importa; esconder el dock
-    /// cada vez que alguien maximiza una ventana sería insufrible.
+    /// Si <paramref name="isZoomed"/> es verdadero, la ventana está maximizada por el sistema
+    /// operativo (p. ej. un navegador con pestañas en una pantalla donde la barra de tareas se
+    /// oculta o no resta área de trabajo): en ese caso NO cuenta como pantalla completa, ya que
+    /// esconder el dock al interactuar con ventanas maximizadas sería indeseable.
     ///
     /// Se usa &gt;= / &lt;= y no igualdad porque hay aplicaciones a pantalla completa que se
     /// declaran un pelín más grandes que el monitor.
     /// </summary>
-    public static bool CoversMonitor(Rect window, Rect monitor)
+    public static bool CoversMonitor(Rect window, Rect monitor, bool isZoomed = false)
     {
+        if (isZoomed) return false;
         if (monitor.Width <= 0 || monitor.Height <= 0) return false;
 
         return window.X <= monitor.X

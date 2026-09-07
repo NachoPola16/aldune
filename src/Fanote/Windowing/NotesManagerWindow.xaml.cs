@@ -7,6 +7,7 @@ using System.Windows.Media.Animation;
 using System.Windows.Interop;
 using Fanote.Core;
 using Fanote.Interop;
+using Fanote.Resources;
 
 namespace Fanote.Windowing;
 
@@ -107,9 +108,9 @@ public partial class NotesManagerWindow : Window
 
         SubtitleText.Text = selected switch
         {
-            0 => _rows.Count == 1 ? "1 nota" : $"{_rows.Count} notas",
-            1 => "1 seleccionada",
-            _ => $"{selected} seleccionadas"
+            0 => _rows.Count == 1 ? Strings.OneNote : Strings.NotesCount(_rows.Count),
+            1 => Strings.OneSelected,
+            _ => Strings.SelectedCount(selected)
         };
 
         EmptyState.Visibility = _rows.Count == 0 ? Visibility.Visible : Visibility.Collapsed;
@@ -117,13 +118,13 @@ public partial class NotesManagerWindow : Window
         // notas activas" cuando en realidad sí las hay, solo que ninguna contiene lo buscado, sería
         // mentir sobre la causa.
         EmptyState.Text = _searchText.Trim().Length > 0
-            ? $"Ninguna nota contiene «{_searchText.Trim()}»."
+            ? Strings.NoSearchResults(_searchText.Trim())
             : _filter switch
             {
-                Filter.Active => "No hay notas activas. Crea una con el botón + del borde de la pantalla.",
-                Filter.Archived => "No has archivado ninguna nota todavía.",
-                Filter.Trashed => "La papelera está vacía. Lo que envíes aquí se borra solo a los 30 días.",
-                _ => "Todavía no hay notas. Crea una con el botón + del borde de la pantalla."
+                Filter.Active => Strings.EmptyActive,
+                Filter.Archived => Strings.EmptyArchived,
+                Filter.Trashed => Strings.EmptyTrashed,
+                _ => Strings.EmptyNone
             };
     }
 
@@ -297,10 +298,10 @@ public partial class NotesManagerWindow : Window
         if (selected.Count == 0) return;
 
         var message = selected.Count == 1
-            ? "Se eliminará 1 nota definitivamente. Esta acción no se puede deshacer."
-            : $"Se eliminarán {selected.Count} notas definitivamente. Esta acción no se puede deshacer.";
+            ? Strings.ConfirmDeleteOne
+            : Strings.ConfirmDeleteMany(selected.Count);
 
-        var answer = MessageBox.Show(this, message, "Eliminar definitivamente",
+        var answer = MessageBox.Show(this, message, Strings.DeletePermanentlyTitle,
             MessageBoxButton.OKCancel, MessageBoxImage.Warning, MessageBoxResult.Cancel);
         if (answer != MessageBoxResult.OK) return;
 

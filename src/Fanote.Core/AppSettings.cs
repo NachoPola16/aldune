@@ -27,4 +27,36 @@ public sealed class AppSettings
         HotkeyModifiers is { } mods && HotkeyKey is { } key && new HotkeyBinding(mods, key).IsValid
             ? new HotkeyBinding(mods, key)
             : HotkeyBinding.Default;
+
+    /// <summary>
+    /// Índice 0-based del monitor al que restringir Fanote, según la enumeración de Win32.
+    /// <c>null</c> significa mostrar el dock en todas las pantallas conectadas (por defecto).
+    /// </summary>
+    public int? TargetMonitorIndex { get; set; }
+
+    /// <summary>
+    /// Si el dock debe ocultarse automáticamente cuando una aplicación o juego pase a pantalla
+    /// completa real en ese monitor. Por defecto <c>true</c>.
+    /// </summary>
+    public bool HideOnFullscreen { get; set; } = true;
+
+    /// <summary>
+    /// Borde de la pantalla donde se ancla el dock de Fanote. Por defecto derecha (EdgePosition.Right).
+    /// </summary>
+    public EdgePosition DockEdge { get; set; } = EdgePosition.Right;
+
+    /// <summary>
+    /// Si las notas deben recordar su última posición y tamaño en el escritorio cuando el usuario las mueve
+    /// (comportamiento libre tipo post-it). Por defecto <c>true</c>.
+    /// </summary>
+    public bool RememberNotePositions { get; set; } = true;
+
+    /// <summary>
+    /// Idioma de la interfaz: "es" o "en". <c>null</c> significa "sigue el idioma de Windows" —
+    /// mientras el usuario nunca elija uno explícitamente en Ajustes, la app sigue el idioma del
+    /// sistema aunque este cambie entre arranques. Se fija de forma explícita y permanente en
+    /// cuanto se elige uno en el selector de Ajustes, igual que <see cref="TargetMonitorIndex"/> o
+    /// <see cref="DockEdge"/>.
+    /// </summary>
+    public string? Language { get; set; }
 }

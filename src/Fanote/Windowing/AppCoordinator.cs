@@ -15,6 +15,7 @@ namespace Fanote.Windowing;
 public sealed class AppCoordinator
 {
     private readonly NotesRepository _repository;
+    private readonly AppSettings? _settings;
     private readonly Dictionary<Guid, NoteWindow> _openNoteWindows = new();
     private readonly List<EdgeDockWindow> _docks = new();
     private NotesManagerWindow? _notesManagerWindow;
@@ -24,9 +25,18 @@ public sealed class AppCoordinator
     /// que saber de SettingsService ni del atajo global, solo de que hay una ventana unica.</summary>
     public Func<SettingsWindow>? SettingsWindowFactory { get; set; }
 
-    public AppCoordinator(NotesRepository repository)
+    /// <summary>
+    /// Accion para reconstruir los docks en caliente (inyectada por App), usada al cambiar
+    /// la pantalla elegida en Ajustes sin necesidad de reiniciar la app.
+    /// </summary>
+    public Action? RebuildDocksAction { get; set; }
+
+    public void RebuildDocks() => RebuildDocksAction?.Invoke();
+
+    public AppCoordinator(NotesRepository repository, AppSettings? settings = null)
     {
         _repository = repository;
+        _settings = settings;
     }
 
     public int OpenNoteWindowCount => _openNoteWindows.Count;
@@ -65,6 +75,20 @@ public sealed class AppCoordinator
     }
 
     /// <summary>
+    /// El dock que vive en el monitor donde está el cursor ahora mismo, o el primero registrado si
+    /// no se encuentra ninguno (arranque sin movimiento de ratón, o el cursor ya no está en ningún
+    /// monitor conocido). Lo usan los tres caminos que no tienen "su" monitor propio porque entran
+    /// desde la bandeja, no desde un dock concreto: Ajustes, "Gestionar notas" y la nota nueva por
+    /// atajo global — antes los tres usaban siempre <c>_docks[0]</c>, así que en un sistema
+    /// multimonitor podían abrirse en la pantalla equivocada.
+    /// </summary>
+    private EdgeDockWindow? DockNearCursor()
+    {
+        var cursorMonitor = NativeMethods.MonitorFromCursor();
+        return _docks.FirstOrDefault(d => d.IsOnMonitor(cursorMonitor)) ?? _docks.FirstOrDefault();
+    }
+
+    /// <summary>
     /// Opens <paramref name="note"/> in a new window, or activates its already-open one.
     /// <paramref name="originRect"/> (the clicked tab's on-screen rect) is where the note slides
     /// out from, and also what its vertical position is aligned to. Ignored when the note is
@@ -82,8 +106,19 @@ public sealed class AppCoordinator
             return;
         }
 
-        var noteWindow = new NoteWindow(note, _repository, this);
-        double slideFrom = requestingDock.PositionNoteWindow(noteWindow, originRect);
+        var noteWindow = new NoteWindow(note, _repository, this, _settings);
+
+        // Si la nota tiene una posición guardada PARA ESTA PANTALLA (la del dock que la pidió) y
+        // sigue a la vista, reaparece ahí directamente — sensación de post-it real, no de "otra
+        // ventana que se abre desde el dock". Por pantalla y no una posición única: abrirla desde
+        // el dock del monitor vertical no debe traerla desde donde se dejó en el horizontal (o
+        // viceversa) — cada pantalla tiene su propio recuerdo. Sin posición guardada para esta
+        // pantalla, sigue el camino de siempre: cascada junto a la pestaña que se pulsó.
+        bool restoredPlacement = TryRestorePlacement(noteWindow, note.Id, requestingDock.MonitorKey);
+        if (!restoredPlacement)
+        {
+            requestingDock.PositionNoteWindow(noteWindow, originRect);
+        }
 
         _openNoteWindows[note.Id] = noteWindow;
         noteWindow.Closed += (_, _) =>
@@ -96,16 +131,41 @@ public sealed class AppCoordinator
         };
 
         // El orden importa: la pestaña tiene que desaparecer del mazo antes de que la ventana se
-        // muestre, o durante la deslizada se vería la etiqueta duplicada (en el lomo y en el mazo).
+        // muestre, o durante la aparición se vería la etiqueta duplicada (en el lomo y en el mazo).
         RefreshOpenState();
         noteWindow.Show();
-
-        if (originRect is not null)
-        {
-            noteWindow.SlideInFrom(slideFrom);
-        }
+        noteWindow.PlayOpenAnimation();
 
         NativeMethods.ForceActivate(noteWindow);
+    }
+
+    /// <summary>
+    /// Si el ajuste está activado y hay una posición guardada para <paramref name="noteId"/> en
+    /// <paramref name="monitorKey"/> que siga siendo visible ahora mismo, la aplica a
+    /// <paramref name="noteWindow"/> y devuelve <c>true</c>. La validez de "sigue siendo visible"
+    /// se comprueba contra todos los monitores actuales (no solo <paramref name="monitorKey"/>) por
+    /// si ese monitor cambió de resolución; la búsqueda en sí sí es específica de esa pantalla — ver
+    /// el comentario en <see cref="OpenOrActivateNote"/>.
+    /// </summary>
+    private bool TryRestorePlacement(NoteWindow noteWindow, Guid noteId, string monitorKey)
+    {
+        if (_settings is not { RememberNotePositions: true }) return false;
+
+        var placement = _repository.GetPlacement(noteId, monitorKey);
+        if (placement is null) return false;
+
+        var monitors = MonitorEnumerator.EnumerateMonitors();
+        if (!PlacementValidation.IsVisibleOnMonitors(
+                placement.Left, placement.Top, placement.Width, placement.Height, monitors))
+        {
+            return false;
+        }
+
+        noteWindow.Left = placement.Left;
+        noteWindow.Top = placement.Top;
+        noteWindow.Width = placement.Width;
+        noteWindow.Height = placement.Height;
+        return true;
     }
 
     /// <summary>
@@ -141,8 +201,9 @@ public sealed class AppCoordinator
     /// </summary>
     public void OpenNotesManager()
     {
-        if (_docks.Count == 0) return;
-        OpenOrActivateNotesManager(_docks[0]);
+        var dock = DockNearCursor();
+        if (dock is null) return;
+        OpenOrActivateNotesManager(dock);
     }
 
     /// <summary>
@@ -151,7 +212,8 @@ public sealed class AppCoordinator
     /// </summary>
     public void CreateAndOpenNote()
     {
-        if (_docks.Count == 0) return;
+        var dock = DockNearCursor();
+        if (dock is null) return;
 
         var existing = _repository.GetByState(NoteState.Active).Count;
         var color = NoteColorPalette.Colors[existing % NoteColorPalette.Colors.Length];
@@ -161,7 +223,7 @@ public sealed class AppCoordinator
 
         // Se abre para escribir directamente: crear una nota y tener que buscarla luego en el
         // abanico no ahorra nada frente a no tener atajo.
-        OpenOrActivateNote(note, _docks[0]);
+        OpenOrActivateNote(note, dock);
     }
 
     public void OpenSettings()
@@ -176,7 +238,7 @@ public sealed class AppCoordinator
         if (SettingsWindowFactory is null) return;
 
         _settingsWindow = SettingsWindowFactory();
-        if (_docks.Count > 0) _docks[0].CenterOnThisMonitor(_settingsWindow);
+        DockNearCursor()?.CenterOnThisMonitor(_settingsWindow);
         _settingsWindow.Closed += (_, _) => _settingsWindow = null;
         _settingsWindow.Show();
         NativeMethods.ForceActivate(_settingsWindow);

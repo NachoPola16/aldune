@@ -50,4 +50,39 @@ public class NoteTitleHelperPreviewTests
     {
         Assert.Equal(string.Empty, NoteTitleHelper.GetPreview("titulo\n   \n\t\n"));
     }
+
+    // --- Vista previa con casillas de tarea -----------------------------------------------------
+
+    [Fact]
+    public void Preview_DropsTheCheckboxGlyphs()
+    {
+        // El contador de GetTabPreview ya dice cuantas hay; repetir el glifo delante de cada tarea
+        // solo gasta los ~26 caracteres de la linea.
+        Assert.Equal("pan leche", NoteTitleHelper.GetPreview("Compra\r\n☒ pan\r\n☐ leche"));
+    }
+
+    [Fact]
+    public void TabPreview_LeadsWithTheTaskProgress()
+    {
+        Assert.Equal("1/2 · pan leche", NoteTitleHelper.GetTabPreview("Compra\r\n☒ pan\r\n☐ leche"));
+    }
+
+    [Fact]
+    public void TabPreview_WithoutTasks_IsJustThePreview()
+    {
+        Assert.Equal("cuerpo", NoteTitleHelper.GetTabPreview("titulo\r\ncuerpo"));
+    }
+
+    [Fact]
+    public void TabPreview_WithTasksButNoOtherText_IsOnlyTheProgress()
+    {
+        Assert.Equal("0/2", NoteTitleHelper.GetTabPreview("Compra\r\n☐ \r\n☐ "));
+    }
+
+    [Fact]
+    public void TabPreview_CountsATaskOnTheTitleLineToo()
+    {
+        // El titulo es la primera linea; si es una tarea, cuenta como tal.
+        Assert.Equal("0/1", NoteTitleHelper.GetTabPreview("☐ comprar pan"));
+    }
 }

@@ -32,6 +32,26 @@ public class FullscreenDetectionTests
     }
 
     [Fact]
+    public void CoversMonitor_MaximisedWindowEvenWhenCoveringEntireMonitor_IsNotFullscreen()
+    {
+        // Caso real del usuario: la barra de tareas esta auto-oculta o en un monitor secundario
+        // donde WorkArea == Monitor. La ventana maximizada cubre todo el monitor pero tiene
+        // isZoomed = true (WS_MAXIMIZE): NO debe considerarse pantalla completa.
+        Assert.False(FullscreenDetection.CoversMonitor(Monitor, Monitor, isZoomed: true));
+
+        var oversized = new Rect(Monitor.X - 8, Monitor.Y - 8, Monitor.Width + 16, Monitor.Height + 16);
+        Assert.False(FullscreenDetection.CoversMonitor(oversized, Monitor, isZoomed: true));
+    }
+
+    [Fact]
+    public void CoversMonitor_TrueFullscreenGameNotZoomed_IsFullscreen()
+    {
+        // Un videojuego o video F11 a pantalla completa no esta maximizado por el SO (isZoomed = false)
+        // y cubre el monitor: SI debe detectarse como pantalla completa.
+        Assert.True(FullscreenDetection.CoversMonitor(Monitor, Monitor, isZoomed: false));
+    }
+
+    [Fact]
     public void CoversMonitor_WindowOnAnotherMonitor_IsNotFullscreen()
     {
         var primary = new Rect(0, 0, 2560, 1440);
