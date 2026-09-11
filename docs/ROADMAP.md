@@ -210,11 +210,18 @@ traducen a la sintaxis de tareas de Markdown (`- [ ]` / `- [x]`), tal como decí
 implementó solo Markdown, no texto plano aparte (ver el brainstorming en `STATUS.md` para el porqué).
 Una nota a la vez desde `NoteWindow`, o en bloque desde `NotesManagerWindow`.
 
-### Recordatorios con notificación de Windows
+### ~~Recordatorios con notificación de Windows~~ — HECHO (ver `STATUS.md`)
 
-**El mayor hueco funcional frente a la competencia de Windows** y lo más alabado de Notezilla. Fanote
-no tiene nada. Convierte "notas bonitas" en "notas que te avisan". Necesita sesión de diseño propia:
-programación, persistencia, integración con las notificaciones del sistema, posponer.
+**El mayor hueco funcional frente a la competencia de Windows** y lo más alabado de Notezilla. Un solo
+recordatorio puntual por nota (En 1 hora / Esta noche / Mañana 9:00, o calendario + hora manual),
+aviso nativo de Windows vía el icono de bandeja ya existente, e insignia en la pestaña del dock.
+Detalle completo, incluidos los 5 huecos de integración que encontró la revisión final de toda la
+rama (y se arreglaron en una sola ronda) y lo que queda pendiente de verificación manual del usuario
+(el aviso visual en pantalla), en `STATUS.md`.
+
+**No implementado, sigue pendiente si se retoma**: posponer un recordatorio ya sonado (hoy hay que
+ponerlo desde cero, con el mismo panel de siempre — no hay un atajo de "posponer 10 minutos" sobre un
+aviso que acaba de sonar).
 
 ### Sincronización entre dispositivos — decidido: se hará, las dos vías
 
