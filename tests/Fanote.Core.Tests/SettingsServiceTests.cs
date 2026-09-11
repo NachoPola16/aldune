@@ -47,4 +47,49 @@ public class SettingsServiceTests : IDisposable
         Assert.Equal(1, loaded.TargetMonitorIndex);
         Assert.False(loaded.HideOnFullscreen);
     }
+
+    [Fact]
+    public void SaveThenLoad_AutoHideCompletedTasksSettings_RoundTrips()
+    {
+        var sut = new SettingsService(_settingsPath);
+        sut.Save(new AppSettings
+        {
+            AutoHideCompletedTasks = true,
+            AutoHideCompletedTasksDelayValue = 3,
+            AutoHideCompletedTasksDelayUnit = TaskDelayUnit.Weeks
+        });
+
+        var loaded = sut.Load();
+        Assert.True(loaded.AutoHideCompletedTasks);
+        Assert.Equal(3, loaded.AutoHideCompletedTasksDelayValue);
+        Assert.Equal(TaskDelayUnit.Weeks, loaded.AutoHideCompletedTasksDelayUnit);
+        Assert.Equal(TimeSpan.FromDays(21), loaded.AutoHideCompletedTasksDelay);
+    }
+
+    [Fact]
+    public void Load_WhenFileDoesNotExist_DefaultsAutoHideCompletedTasksToOffWithOneDay()
+    {
+        var sut = new SettingsService(_settingsPath);
+        var settings = sut.Load();
+
+        Assert.False(settings.AutoHideCompletedTasks);
+        Assert.Equal(1, settings.AutoHideCompletedTasksDelayValue);
+        Assert.Equal(TaskDelayUnit.Days, settings.AutoHideCompletedTasksDelayUnit);
+    }
+
+    [Fact]
+    public void Load_WhenFileDoesNotExist_DefaultsTrashRetentionToThirtyDays()
+    {
+        var sut = new SettingsService(_settingsPath);
+        Assert.Equal(NotesRepository.DefaultTrashRetentionDays, sut.Load().TrashRetentionDays);
+    }
+
+    [Fact]
+    public void SaveThenLoad_TrashRetentionDays_RoundTrips()
+    {
+        var sut = new SettingsService(_settingsPath);
+        sut.Save(new AppSettings { TrashRetentionDays = 7 });
+
+        Assert.Equal(7, sut.Load().TrashRetentionDays);
+    }
 }

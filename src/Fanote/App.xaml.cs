@@ -137,6 +137,21 @@ public partial class App : Application
         _settings = settings;
         try
         {
+            // Barrido del ajuste opcional "borrar tareas completadas solas" (ver
+            // Fanote.Core.TaskCompletion) para toda nota activa — no solo la que esté abierta,
+            // que NoteWindow ya cubre por su cuenta al abrirse. Va dentro de este try y no fuera,
+            // ni después de BuildDocks: GetByState ya descifra, así que si la clave no encaja
+            // (caso (c) de abajo) es aquí donde puede aflorar por primera vez, y tiene que
+            // traducirse al mismo mensaje.
+            if (settings.AutoHideCompletedTasks)
+            {
+                var delay = settings.AutoHideCompletedTasksDelay;
+                foreach (var note in repository.GetByState(NoteState.Active))
+                {
+                    repository.PruneExpiredCompletedTasks(note.Id, note.Text, delay);
+                }
+            }
+
             // BuildDocks termina llamando a RefreshAll, que es el primer sitio donde de verdad se
             // intenta descifrar las notas existentes — aquí es donde aflora el caso (c), clave
             // equivocada para esta base de datos, no antes en el arranque. Por eso la construcción
@@ -164,8 +179,9 @@ public partial class App : Application
         // trigger for it — earlier there was also a dock-side "Archivadas" view that purged
         // on entry, but that view was removed by the fan-tabs redesign (NotesManagerWindow's
         // gear icon is the only way to browse archived/trashed notes now, and it doesn't
-        // purge on open).
-        repository.PurgeExpiredTrash(TimeSpan.FromDays(NotesRepository.DefaultTrashRetentionDays));
+        // purge on open). The retention period is user-configurable now (AppSettings.TrashRetentionDays,
+        // defaulting to NotesRepository.DefaultTrashRetentionDays), not a fixed constant.
+        repository.PurgeExpiredTrash(TimeSpan.FromDays(settings.TrashRetentionDays));
 
         // Apagar, encender o reconfigurar un monitor con la app corriendo. Sin esto, Windows
         // reubica el dock huérfano del monitor que desaparece sobre el que queda, y acabas con dos
@@ -176,6 +192,14 @@ public partial class App : Application
         // es reconstruirlos contra la lista de monitores nueva. Se engancha al final del arranque,
         // ya con el descifrado verificado, para no reconstruir nada si la app va a abortar.
         SystemEvents.DisplaySettingsChanged += OnDisplaySettingsChanged;
+
+        // Sin esto, apagar o reiniciar el equipo con notas abiertas podía dejarlas sin guardar: el
+        // cierre normal de una nota cancela su primer intento para reproducir la animación de salida
+        // y solo guarda de verdad cuando esa animación termina (ver NoteWindow.OnClosingWithAnimation)
+        // — pero Windows no espera a eso al terminar la sesión, así que el proceso podía cortarse
+        // antes de que el guardado real llegara a dispararse. SessionEnding llega con margen antes de
+        // que Windows fuerce el cierre, así que aquí se guarda ya, sin pasar por esa animación.
+        SystemEvents.SessionEnding += OnSessionEnding;
 
         // Icono de bandeja: hasta ahora la app no tenia forma de cerrarse ni de configurarse — se
         // lanzaba a mano y se cerraba matando el proceso. Un dock sin ventana propia necesita
@@ -199,9 +223,15 @@ public partial class App : Application
         Exit += (_, _) =>
         {
             SystemEvents.DisplaySettingsChanged -= OnDisplaySettingsChanged;
+            SystemEvents.SessionEnding -= OnSessionEnding;
             _trayIcon?.Dispose();
             _hotkey?.Dispose();
         };
+    }
+
+    private void OnSessionEnding(object? sender, SessionEndingEventArgs e)
+    {
+        _coordinator?.FlushAllOpenNotes();
     }
 
     /// <summary>
@@ -291,6 +321,16 @@ public partial class App : Application
         {
             var dock = new EdgeDockWindow(edge, monitor, _repository, _coordinator, _settings);
             _coordinator.RegisterDock(dock);
+
+            // Antes de Show(), no después: un dock recién construido no sabe todavía cuántas notas
+            // hay (_noteCount empieza en 0), así que ApplyState lo trata como el caso "vacío" de
+            // verdad y enseña los botones directamente — el diseño correcto cuando de verdad no hay
+            // notas, pero aquí era temporal y se corregía solo un instante después, al llegar el
+            // RefreshAll() de más abajo. Ese instante es justo el parpadeo que reportó el usuario al
+            // cambiar de pantalla en Ajustes (se ve el pie de botones fuera de sitio y luego el dock
+            // "se coloca"). Refrescar antes de mostrar deja el dock ya con sus datos reales desde el
+            // primer frame que se pinta.
+            dock.Refresh();
             dock.Show();
         }
 

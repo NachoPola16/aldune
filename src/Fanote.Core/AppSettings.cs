@@ -59,4 +59,36 @@ public sealed class AppSettings
     /// <see cref="DockEdge"/>.
     /// </summary>
     public string? Language { get; set; }
+
+    /// <summary>
+    /// Si las tareas marcadas como hechas (☒) deben borrarse solas de la nota pasado un tiempo. Por
+    /// defecto desactivado: es una edición automática del texto de la nota, así que nadie la sufre
+    /// sin haberla pedido explícitamente en Ajustes.
+    /// </summary>
+    public bool AutoHideCompletedTasks { get; set; }
+
+    /// <summary>Cuántas unidades de <see cref="AutoHideCompletedTasksDelayUnit"/> esperar. Por defecto 1.</summary>
+    public int AutoHideCompletedTasksDelayValue { get; set; } = 1;
+
+    /// <summary>Por defecto días: "1 día" es el plazo de fábrica si se activa el ajuste sin tocar nada más.</summary>
+    public TaskDelayUnit AutoHideCompletedTasksDelayUnit { get; set; } = TaskDelayUnit.Days;
+
+    /// <summary>Los dos campos de arriba ya convertidos a <see cref="TimeSpan"/>.</summary>
+    public TimeSpan AutoHideCompletedTasksDelay => AutoHideCompletedTasksDelayUnit switch
+    {
+        TaskDelayUnit.Minutes => TimeSpan.FromMinutes(AutoHideCompletedTasksDelayValue),
+        TaskDelayUnit.Hours => TimeSpan.FromHours(AutoHideCompletedTasksDelayValue),
+        TaskDelayUnit.Weeks => TimeSpan.FromDays(7 * AutoHideCompletedTasksDelayValue),
+        _ => TimeSpan.FromDays(AutoHideCompletedTasksDelayValue),
+    };
+
+    /// <summary>
+    /// Días que una nota se queda en la papelera antes de que la purga automática la borre para
+    /// siempre (ver <see cref="NotesRepository.PurgeExpiredTrash"/>). Era una constante fija
+    /// (<see cref="NotesRepository.DefaultTrashRetentionDays"/>, todavía el valor de fábrica aquí) —
+    /// pasó a Ajustes tras revisar qué otros valores fijos del código tenía sentido dejar elegir al
+    /// usuario, ya que no hay ningún motivo técnico para que 30 sea mejor que otro número para
+    /// alguien en concreto.
+    /// </summary>
+    public int TrashRetentionDays { get; set; } = NotesRepository.DefaultTrashRetentionDays;
 }

@@ -1,4 +1,6 @@
 using System.Collections.Generic;
+using System.IO;
+using System.IO.Compression;
 using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
@@ -8,6 +10,7 @@ using System.Windows.Interop;
 using Fanote.Core;
 using Fanote.Interop;
 using Fanote.Resources;
+using Microsoft.Win32;
 
 namespace Fanote.Windowing;
 
@@ -97,6 +100,8 @@ public partial class NotesManagerWindow : Window
         ArchiveButton.IsEnabled = any;
         RestoreButton.IsEnabled = any;
         TrashButton.IsEnabled = any;
+        // Exportar no depende de haber marcado algo: sin selección exporta el filtro entero.
+        ExportButton.IsEnabled = _rows.Count > 0;
 
         SelectAllCheck.IsEnabled = _rows.Count > 0;
         // Indeterminada cuando hay algo pero no todo: es justo lo que una casilla de tres estados
@@ -245,6 +250,32 @@ public partial class NotesManagerWindow : Window
         }
     }
 
+    private static readonly TimeSpan OpenDuration = TimeSpan.FromMilliseconds(180);
+
+    /// <summary>
+    /// Mismo fundido + crecimiento desde el 95% que <c>NoteWindow.PlayOpenAnimation</c> y
+    /// <c>SettingsWindow.PlayOpenAnimation</c> — las tres ventanas de la app se abren igual, en vez
+    /// de que solo la nota y Ajustes se sientan "vivas" y esta aparezca de golpe. Llamada desde
+    /// <see cref="AppCoordinator"/> justo después de <c>Show()</c>.
+    /// </summary>
+    internal void PlayOpenAnimation()
+    {
+        if (!SystemParameters.ClientAreaAnimation) return;
+
+        var content = (UIElement)Content;
+        content.RenderTransformOrigin = new Point(0.5, 0.5);
+        var scale = new ScaleTransform(0.95, 0.95);
+        content.RenderTransform = scale;
+
+        var duration = new Duration(OpenDuration);
+        IEasingFunction Ease() => new QuinticEase { EasingMode = EasingMode.EaseOut };
+
+        content.Opacity = 0;
+        content.BeginAnimation(OpacityProperty, new DoubleAnimation(0, 1, duration) { EasingFunction = Ease() });
+        scale.BeginAnimation(ScaleTransform.ScaleXProperty, new DoubleAnimation(0.95, 1, duration) { EasingFunction = Ease() });
+        scale.BeginAnimation(ScaleTransform.ScaleYProperty, new DoubleAnimation(0.95, 1, duration) { EasingFunction = Ease() });
+    }
+
     private void OnCloseClick(object sender, RoutedEventArgs e) => Close();
 
     private void OnSettingsClick(object sender, RoutedEventArgs e) => _coordinator.OpenSettings();
@@ -325,5 +356,98 @@ public partial class NotesManagerWindow : Window
             LoadRows();
             _coordinator.RefreshAll();
         });
+    }
+
+    /// <summary>
+    /// Exporta lo marcado, o todo el filtro actual si no hay ninguna selección. Pregunta primero
+    /// carpeta con .md sueltos o un único .zip — mutuamente excluyentes, para no dejar el mismo
+    /// contenido dos veces en el mismo sitio (ver la decisión en docs/STATUS.md).
+    /// </summary>
+    private void OnExportSelectedClick(object sender, RoutedEventArgs e)
+    {
+        var toExport = _rows.Where(r => r.IsSelected).ToList();
+        if (toExport.Count == 0) toExport = _rows;
+        if (toExport.Count == 0) return;
+
+        var choice = MessageBox.Show(this, Strings.ExportAsZipPrompt, Strings.ExportFormatTitle,
+            MessageBoxButton.YesNoCancel, MessageBoxImage.Question, MessageBoxResult.Yes);
+        if (choice == MessageBoxResult.Cancel) return;
+
+        if (choice == MessageBoxResult.Yes) ExportAsZip(toExport);
+        else ExportAsFolder(toExport);
+    }
+
+    private void ExportAsFolder(List<NoteRow> toExport)
+    {
+        var dialog = new OpenFolderDialog { Title = Strings.ExportFolderDialogTitle };
+        if (dialog.ShowDialog(this) != true) return;
+
+        try
+        {
+            var used = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            foreach (var row in toExport)
+            {
+                var fileName = UniqueName(MarkdownExport.SuggestedFileName(row.Note.Text), used,
+                    name => File.Exists(Path.Combine(dialog.FolderName, name)));
+                File.WriteAllText(Path.Combine(dialog.FolderName, fileName), MarkdownExport.ToMarkdown(row.Note.Text));
+            }
+        }
+        catch (Exception ex)
+        {
+            ShowExportError(ex);
+        }
+    }
+
+    private void ExportAsZip(List<NoteRow> toExport)
+    {
+        var dialog = new SaveFileDialog
+        {
+            FileName = "Fanote export.zip",
+            Filter = Strings.ZipFileFilter,
+            DefaultExt = ".zip"
+        };
+        if (dialog.ShowDialog(this) != true) return;
+
+        try
+        {
+            // Las entradas se escriben directamente en el .zip, sin pasar por ficheros .md
+            // sueltos en disco — así el zip no deja nada más a su lado.
+            using var archive = ZipFile.Open(dialog.FileName, ZipArchiveMode.Create);
+            var used = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            foreach (var row in toExport)
+            {
+                var fileName = UniqueName(MarkdownExport.SuggestedFileName(row.Note.Text), used);
+                using var writer = new StreamWriter(archive.CreateEntry(fileName).Open());
+                writer.Write(MarkdownExport.ToMarkdown(row.Note.Text));
+            }
+        }
+        catch (Exception ex)
+        {
+            ShowExportError(ex);
+        }
+    }
+
+    private void ShowExportError(Exception ex) =>
+        MessageBox.Show(this, Strings.UnexpectedErrorMessage(ex.Message), Strings.UnexpectedErrorTitle,
+            MessageBoxButton.OK, MessageBoxImage.Error);
+
+    /// <summary>
+    /// <paramref name="fileName"/> si no choca con nada en <paramref name="used"/> (otra nota de esta
+    /// misma exportación) ni con <paramref name="alsoTaken"/> (un fichero que ya existiera de una
+    /// exportación anterior — solo aplica al exportar como carpeta, el .zip siempre es nuevo); si no,
+    /// añade " (2)", " (3)"... hasta encontrar uno libre.
+    /// </summary>
+    private static string UniqueName(string fileName, HashSet<string> used, Func<string, bool>? alsoTaken = null)
+    {
+        var stem = Path.GetFileNameWithoutExtension(fileName);
+        var extension = Path.GetExtension(fileName);
+        var candidate = fileName;
+        for (int suffix = 2; used.Contains(candidate) || (alsoTaken?.Invoke(candidate) ?? false); suffix++)
+        {
+            candidate = $"{stem} ({suffix}){extension}";
+        }
+
+        used.Add(candidate);
+        return candidate;
     }
 }

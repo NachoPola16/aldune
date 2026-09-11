@@ -1,3 +1,4 @@
+using System.IO;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
@@ -8,6 +9,7 @@ using System.Windows.Threading;
 using Fanote.Core;
 using Fanote.Interop;
 using Fanote.Resources;
+using Microsoft.Win32;
 
 namespace Fanote.Windowing;
 
@@ -51,14 +53,45 @@ public partial class NoteWindow : Window
         Title = NoteTitleHelper.GetTitle(note.Text); // el de la ventana: barra de tareas, Alt+Tab
         Header.Background = Brushes.Transparent; // la cabecera comparte el fondo de la nota
 
+        _autosaveTimer = new DispatcherTimer { Interval = AutosaveDelay };
+        _autosaveTimer.Tick += (_, _) =>
+        {
+            _autosaveTimer.Stop();
+            Flush();
+            // Barato y aprovecha un temporizador que ya existe, en vez de uno nuevo solo para esto:
+            // no cubre el caso de dejar la nota abierta sin tocarla durante todo el plazo (el
+            // autoguardado no se dispara sin editar), pero sí el caso normal de seguir trabajando
+            // en la nota mientras una tarea de antes va venciendo.
+            PruneExpiredTasks();
+        };
+
         Loaded += (_, _) =>
         {
             // Una nota vacía empieza por el título, que es lo primero que se escribe; una que ya
-            // tiene algo, por el final del cuerpo, para seguir escribiendo donde se dejó.
+            // tiene algo, por una línea nueva en blanco debajo del cuerpo, no encima del último
+            // carácter — así reabrir una nota para añadir algo no continúa sin querer la última
+            // palabra que se había dejado escrita.
             if (string.IsNullOrEmpty(note.Text))
             {
                 TitleBox.Focus();
                 return;
+            }
+
+            // Si la última línea ya es una tarea vacía ("☐ " sin nada detrás), ya es en sí misma
+            // una línea en blanco esperando texto — igual que pedía el usuario: si se dejó una
+            // casilla puesta y sin rellenar, el cursor tiene que ir justo detrás de ella, no una
+            // línea más abajo, que sería un hueco de más antes de poder escribir la tarea.
+            var lastLine = TaskLines.LineContaining(TextBody.Text, TextBody.Text.Length);
+
+            // La línea en blanco es solo de trabajo, para que el cursor tenga dónde ir: si se
+            // cierra la nota sin escribir nada más, no debe guardarse de más. Por eso se deshace
+            // el "hay cambios sin guardar" que el propio TextChanged dispara al añadirla — Flush
+            // no tiene nada real que guardar todavía.
+            if (TextBody.Text.Length > 0 && !TextBody.Text.EndsWith('\n') && !TaskLines.IsEmptyTaskLine(lastLine))
+            {
+                TextBody.Text += "\r\n";
+                _hasPendingEdit = false;
+                _autosaveTimer.Stop();
             }
 
             TextBody.Focus();
@@ -66,14 +99,23 @@ public partial class NoteWindow : Window
             TextBody.ScrollToEnd();
         };
 
-        _autosaveTimer = new DispatcherTimer { Interval = AutosaveDelay };
-        _autosaveTimer.Tick += (_, _) =>
-        {
-            _autosaveTimer.Stop();
-            Flush();
-        };
+        // Al abrir es el único momento garantizado en el que se revisa esta nota concreta aparte
+        // del arranque de la app (que solo barre todas las notas una vez, ver App.xaml.cs) — si el
+        // plazo venció mientras la nota estaba cerrada, aquí es donde se nota.
+        Loaded += (_, _) => PruneExpiredTasks();
 
-        TextBody.TextChanged += (_, _) => OnEdited();
+        TextBody.TextChanged += (_, _) =>
+        {
+            OnEdited();
+            // El texto puede cambiar sin que el ratón se mueva -- por ejemplo, una tarea que se
+            // autoborra sola (ver PruneExpiredTasks) mientras el cursor sigue quieto encima de la
+            // casilla que acaba de desaparecer. Sin esto, el resaltado se quedaba "flotando" en su
+            // última posición conocida hasta el siguiente movimiento real del ratón, en vez de
+            // recolocarse o desaparecer al momento. UpdateLayout fuerza el nuevo layout antes de
+            // preguntar por rectángulos de caracteres, que si no reflejarían el texto anterior.
+            TextBody.UpdateLayout();
+            RefreshCheckboxHoverAfterTextChange();
+        };
         TitleBox.TextChanged += (_, _) => OnEdited();
 
         Closing += SavePlacementOnce;
@@ -95,6 +137,8 @@ public partial class NoteWindow : Window
 
         TextBody.PreviewKeyDown += OnBodyKeyDown;
         TextBody.PreviewMouseLeftButtonDown += OnBodyMouseDown;
+        TextBody.MouseMove += OnBodyMouseMove;
+        TextBody.MouseLeave += OnBodyMouseLeave;
         TitleBox.PreviewKeyDown += OnTitleKeyDown;
 
         SourceInitialized += (_, _) =>
@@ -123,6 +167,20 @@ public partial class NoteWindow : Window
         if (monitorKey is null) return; // el centro de la nota no cae en ningún monitor conocido
 
         _repository.SavePlacement(_note.Id, monitorKey, Left, Top, Width, Height);
+    }
+
+    /// <summary>
+    /// Guarda el texto pendiente y la posición de esta nota YA, sin pasar por el ciclo normal de
+    /// cierre (que cancela el primer intento para reproducir la animación de salida y solo cierra
+    /// de verdad al terminar, ver <see cref="OnClosingWithAnimation"/>). Windows no espera a que esa
+    /// animación termine al apagar o reiniciar el equipo — <c>App.OnSessionEnding</c> llama aquí
+    /// para cada nota abierta en cuanto llega el aviso de cierre de sesión, en vez de arriesgarse a
+    /// que el proceso se corte antes de que la animación complete y dispare el guardado real.
+    /// </summary>
+    internal void FlushForShutdown()
+    {
+        Flush();
+        SavePlacementOnce(this, new System.ComponentModel.CancelEventArgs());
     }
 
     private static readonly TimeSpan OpenDuration = TimeSpan.FromMilliseconds(180);
@@ -232,6 +290,23 @@ public partial class NoteWindow : Window
 
     private void OnBodyKeyDown(object sender, KeyEventArgs e)
     {
+        // Alt+Arriba/Alt+Abajo: sube o baja la línea del cursor, intercambiándola con la vecina
+        // (ver Fanote.Core.LineMovement para el porqué de un atajo en vez de arrastrar dentro del
+        // TextBox). Va antes que el resto de gestos de Arriba/Abajo para que tenga prioridad sobre
+        // "cruzar al título" en la primera línea. Se marca Handled aunque no haya vecina (ya es la
+        // primera o última línea): Alt+flecha no hace nada por defecto en un TextBox, así que no hay
+        // comportamiento nativo al que dejar paso.
+        if (e.Key is Key.Up or Key.Down && Keyboard.Modifiers == ModifierKeys.Alt)
+        {
+            var direction = e.Key == Key.Up ? LineDirection.Up : LineDirection.Down;
+            if (LineMovement.Move(TextBody.Text, TextBody.CaretIndex, direction) is { } moved)
+            {
+                ReplaceBody(moved.Text, moved.Caret);
+            }
+            e.Handled = true;
+            return;
+        }
+
         // Arriba en la primera línea del cuerpo: el sitio de encima es el título.
         if (e.Key == Key.Up && TextBody.GetLineIndexFromCharacterIndex(TextBody.CaretIndex) == 0)
         {
@@ -262,17 +337,84 @@ public partial class NoteWindow : Window
         }
     }
 
+    /// <summary>Una casilla de tarea localizada por un punto del ratón: dónde está el glifo (para
+    /// marcarla) y el rectángulo que hay que resaltar (para el hover).</summary>
+    private readonly record struct CheckboxZone(int GlyphIndex, System.Windows.Rect VisualRect);
+
+    /// <summary>
+    /// Busca la casilla de tarea "bajo" un punto, con una zona de clic más generosa que el propio
+    /// glifo: toda la indentación de la línea más el glifo y el espacio que lo sigue cuentan como
+    /// "la casilla", no solo el carácter exacto — el usuario pidió poder marcarla sin acertar el
+    /// glifo a pixel. El rectángulo visual, en cambio, se ciñe al glifo + su espacio (lo que se ve),
+    /// no a la indentación en blanco, para que el resaltado del hover no incluya hueco vacío.
+    /// </summary>
+    private CheckboxZone? FindCheckboxZoneAt(Point position)
+    {
+        int index = TextBody.GetCharacterIndexFromPoint(position, snapToText: true);
+        if (index < 0) return null;
+
+        var text = TextBody.Text;
+        int lineStart = TaskLines.LineStart(text, index);
+        var line = TaskLines.LineContaining(text, index);
+        int glyph = TaskLines.GlyphIndex(line);
+        if (glyph < 0) return null;
+
+        int glyphIndex = lineStart + glyph;
+        // El espacio detrás del glifo es opcional (ver TaskLines.PrefixLength): si el texto de la
+        // tarea le va pegado sin espacio, la zona de clic no debe comerse su primera letra.
+        int zoneEnd = glyphIndex + TaskLines.PrefixLength(line, glyph);
+        if (index < lineStart || index > zoneEnd) return null;
+
+        // GetRectFromCharacterIndex da rectángulos de CARET (la línea entera de alto/ancho de
+        // avance, incluido el interlineado y el hueco lateral que el tipo de letra reserva
+        // alrededor del glifo), no la caja visual de la tinta del propio carácter — un primer
+        // intento que centraba un cuadrado de FontSize*1.3 dentro de ese rect de línea seguía
+        // saliendo casi tan alto como la línea entera (18.2 de 18.62px), el doble de la tinta real
+        // (9.9px), y el usuario lo vio "más grande... y desplazado" en cuanto lo probó.
+        //
+        // Los números de abajo (0.093/0.82 de ancho, 0.282/0.53 de alto) salen de medir la tinta
+        // real del glifo ☐ en Segoe UI Variable Text a 14px píxel a píxel (renderizado en
+        // aislamiento y escaneado por color, mismo tipo de técnica que ya se usó para decidir ☒
+        // frente a ☑ — ver docs/STATUS.md), no de una fórmula general: si el glifo o el tamaño de
+        // fuente cambiaran alguna vez, habría que volver a medir. Con FontSize=14 esto da una caja
+        // de ~13x13px, ajustada al cuadrado visible más 3px de aire alrededor.
+        var glyphRect = TextBody.GetRectFromCharacterIndex(glyphIndex);
+
+        if (position.Y < glyphRect.Top || position.Y > glyphRect.Top + glyphRect.Height)
+        {
+            // GetCharacterIndexFromPoint con snapToText:true ignora la distancia vertical: un clic
+            // muy por debajo de la última línea (en el hueco vacío del TextBox) igualmente "cae" en
+            // el carácter más cercano de esa línea, así que sin esto se podía marcar una tarea desde
+            // bastante más abajo, sin estar encima de verdad — reportado por el usuario tras
+            // probarlo. Se descarta cualquier punto que no caiga dentro del alto real de esa línea.
+            return null;
+        }
+
+        var afterGlyphRect = TextBody.GetRectFromCharacterIndex(glyphIndex + 1);
+        double caretWidth = afterGlyphRect.Left - glyphRect.Left;
+
+        const double padding = 3;
+        double tightLeft = glyphRect.Left + caretWidth * 0.093;
+        double tightWidth = caretWidth * 0.82;
+        double tightTop = glyphRect.Top + glyphRect.Height * 0.282;
+        double tightHeight = glyphRect.Height * 0.53;
+
+        var visualRect = new System.Windows.Rect(
+            tightLeft - padding / 2, tightTop - padding / 2,
+            tightWidth + padding, tightHeight + padding);
+
+        return new CheckboxZone(glyphIndex, visualRect);
+    }
+
     private void OnBodyMouseDown(object sender, MouseButtonEventArgs e)
     {
-        int index = TextBody.GetCharacterIndexFromPoint(e.GetPosition(TextBody), snapToText: false);
-        if (index < 0) return;
+        var zone = FindCheckboxZoneAt(e.GetPosition(TextBody));
+        if (zone is not { } z) return;
 
-        // Se prueba también el carácter anterior: GetCharacterIndexFromPoint devuelve el límite de
-        // carácter más cercano, así que un clic en la mitad derecha del glifo cae ya en el espacio
-        // de detrás. Sin esto, media casilla no respondería.
-        var toggled = TaskLines.ToggleCheckboxAt(TextBody.Text, index)
-                      ?? TaskLines.ToggleCheckboxAt(TextBody.Text, index - 1);
+        var toggled = TaskLines.ToggleCheckboxAt(TextBody.Text, z.GlyphIndex);
         if (toggled is null) return;
+
+        RecordTaskToggle(toggled, z.GlyphIndex);
 
         int caret = TextBody.CaretIndex;
         ReplaceBody(toggled, caret);
@@ -281,6 +423,106 @@ public partial class NoteWindow : Window
         // sitio donde se pulsó, que no es lo que se pretendía al marcar una casilla.
         TextBody.Focus();
         e.Handled = true;
+    }
+
+    /// <summary>Resalta la casilla bajo un punto (ver <see cref="FindCheckboxZoneAt"/>) y cambia el
+    /// cursor a una mano, para que se note que es clicable — antes solo se veía el cursor de texto
+    /// normal, indistinguible de pasar por cualquier otra parte de la nota. Recibe el punto en vez
+    /// de leerlo de un evento de ratón porque también se llama cuando el texto cambia sin que el
+    /// ratón se haya movido (ver el <c>TextChanged</c> del constructor).</summary>
+    private void UpdateCheckboxHover(Point position)
+    {
+        var zone = FindCheckboxZoneAt(position);
+        if (zone is { } z)
+        {
+            TaskHoverHighlight.Visibility = Visibility.Visible;
+            Canvas.SetLeft(TaskHoverHighlight, z.VisualRect.Left);
+            Canvas.SetTop(TaskHoverHighlight, z.VisualRect.Top);
+            TaskHoverHighlight.Width = z.VisualRect.Width;
+            TaskHoverHighlight.Height = z.VisualRect.Height;
+            TextBody.Cursor = Cursors.Hand;
+        }
+        else
+        {
+            TaskHoverHighlight.Visibility = Visibility.Collapsed;
+            TextBody.Cursor = Cursors.IBeam;
+        }
+    }
+
+    private void OnBodyMouseMove(object sender, MouseEventArgs e) => UpdateCheckboxHover(e.GetPosition(TextBody));
+
+    /// <summary>
+    /// Se llama tras cualquier cambio de texto (ver el <c>TextChanged</c> del constructor), pero
+    /// solo para corregir o esconder un resaltado que YA estaba visible — nunca para encenderlo de
+    /// la nada. Sin esta distinción, convertir una línea en tarea con Ctrl+L (o cualquier otro
+    /// cambio por teclado) podía hacer aparecer el resaltado de golpe si el ratón, quieto en
+    /// cualquier sitio, resultaba estar sobre la casilla recién creada — pareciendo una casilla ya
+    /// "seleccionada" sin que nadie la hubiera tocado con el ratón (reportado por el usuario,
+    /// 2026-09-11). Solo un movimiento real del ratón (<see cref="OnBodyMouseMove"/>) puede pasar el
+    /// resaltado de oculto a visible; un cambio de texto únicamente puede apagarlo o recolocarlo si
+    /// ya estaba encendido.
+    /// </summary>
+    private void RefreshCheckboxHoverAfterTextChange()
+    {
+        if (TaskHoverHighlight.Visibility != Visibility.Visible) return;
+        UpdateCheckboxHover(Mouse.GetPosition(TextBody));
+    }
+
+    private void OnBodyMouseLeave(object sender, MouseEventArgs e)
+    {
+        TaskHoverHighlight.Visibility = Visibility.Collapsed;
+        TextBody.Cursor = Cursors.IBeam;
+    }
+
+    /// <summary>
+    /// Si el ajuste de borrar tareas completadas está activo, guarda o borra cuándo se marcó esta
+    /// línea concreta como hecha (ver <see cref="Fanote.Core.TaskCompletion"/>). El hash se calcula
+    /// sobre el texto sin el glifo, así que desmarcar y volver a marcar la misma tarea más tarde
+    /// reinicia el reloj en vez de arrastrar el momento en que se marcó la primera vez.
+    /// </summary>
+    private void RecordTaskToggle(string afterText, int glyphIndex)
+    {
+        if (_settings is not { AutoHideCompletedTasks: true }) return;
+
+        var line = TaskLines.LineContaining(afterText, glyphIndex);
+        var hash = TaskCompletion.HashLine(line);
+        bool nowChecked = afterText[glyphIndex] == TaskLines.Checked || afterText[glyphIndex] == TaskLines.CheckedAlternate;
+
+        if (nowChecked) _repository.RecordTaskCompletion(_note.Id, hash, DateTimeOffset.UtcNow);
+        else _repository.ClearTaskCompletion(_note.Id, hash);
+    }
+
+    /// <summary>
+    /// Borra del cuerpo las tareas marcadas cuyo plazo ya venció (ver <see cref="Fanote.Core.TaskCompletion"/>).
+    /// Solo opera sobre <c>TextBody</c>, no sobre el texto completo de la nota: igual que Ctrl+L o el
+    /// clic en la casilla, las tareas solo importan en el cuerpo — el título casi nunca lo es.
+    /// </summary>
+    private void PruneExpiredTasks()
+    {
+        if (_settings is not { AutoHideCompletedTasks: true } settings) return;
+
+        var completions = _repository.GetTaskCompletions(_note.Id);
+        if (completions.Count == 0) return;
+
+        var result = TaskCompletion.Prune(TextBody.Text, completions, DateTimeOffset.UtcNow, settings.AutoHideCompletedTasksDelay);
+        foreach (var hash in result.HashesToClear)
+        {
+            _repository.ClearTaskCompletion(_note.Id, hash);
+        }
+
+        if (result.Changed)
+        {
+            ReplaceBody(result.Text, Math.Min(TextBody.CaretIndex, result.Text.Length));
+            OnEdited();
+        }
+    }
+
+    /// <summary>El asa de la cabecera es un elemento normal (no zona de "caption" de WindowChrome) para
+    /// que el cursor pueda cambiar a mano encima — así que el arrastre en sí hay que dispararlo aquí,
+    /// en vez de dejar que WindowChrome lo maneje solo como con el resto de la cabecera.</summary>
+    private void OnGripMouseDown(object sender, MouseButtonEventArgs e)
+    {
+        if (e.LeftButton == MouseButtonState.Pressed) DragMove();
     }
 
     private void OnCloseClick(object sender, RoutedEventArgs e) => Close();
@@ -410,6 +652,34 @@ public partial class NoteWindow : Window
 
         _coordinator.RefreshAll();
         ActionsPopup.IsOpen = false;
+    }
+
+    /// <summary>
+    /// Exporta el texto en vivo de la nota (título+cuerpo, tal como están en pantalla ahora mismo,
+    /// no lo último guardado) — ver <see cref="MarkdownExport"/> para la conversión.
+    /// </summary>
+    private void OnExportClick(object sender, RoutedEventArgs e)
+    {
+        ActionsPopup.IsOpen = false;
+        var text = NoteText.Join(TitleBox.Text, TextBody.Text);
+
+        var dialog = new SaveFileDialog
+        {
+            FileName = MarkdownExport.SuggestedFileName(text),
+            Filter = Strings.MarkdownFileFilter,
+            DefaultExt = ".md"
+        };
+        if (dialog.ShowDialog(this) != true) return;
+
+        try
+        {
+            File.WriteAllText(dialog.FileName, MarkdownExport.ToMarkdown(text));
+        }
+        catch (Exception ex)
+        {
+            MessageBox.Show(this, Strings.UnexpectedErrorMessage(ex.Message), Strings.UnexpectedErrorTitle,
+                MessageBoxButton.OK, MessageBoxImage.Error);
+        }
     }
 
     private void OnArchiveClick(object sender, RoutedEventArgs e)

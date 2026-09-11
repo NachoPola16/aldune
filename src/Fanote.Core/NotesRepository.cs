@@ -134,6 +134,7 @@ public sealed class NotesRepository
         command.CommandText = """
             DELETE FROM Note WHERE Id = $id;
             DELETE FROM NotePlacement WHERE NoteId = $id;
+            DELETE FROM TaskCompletion WHERE NoteId = $id;
             """;
         command.Parameters.AddWithValue("$id", id.ToString());
         return command.ExecuteNonQuery() > 0;
@@ -304,6 +305,79 @@ public sealed class NotesRepository
         command.CommandText = "DELETE FROM NotePlacement WHERE NoteId = $noteId;";
         command.Parameters.AddWithValue("$noteId", noteId.ToString());
         command.ExecuteNonQuery();
+    }
+
+    /// <summary>Guarda o actualiza cuándo se marcó como hecha la tarea identificada por <paramref name="lineHash"/>
+    /// (ver <see cref="TaskCompletion.HashLine"/>). Volver a marcar una tarea ya registrada reemplaza el
+    /// momento anterior, no lo acumula.</summary>
+    public void RecordTaskCompletion(Guid noteId, string lineHash, DateTimeOffset completedAt)
+    {
+        using var connection = _database.OpenConnection();
+        using var command = connection.CreateCommand();
+        command.CommandText = """
+            INSERT OR REPLACE INTO TaskCompletion (NoteId, LineHash, CompletedAt)
+            VALUES ($noteId, $lineHash, $completedAt);
+            """;
+        command.Parameters.AddWithValue("$noteId", noteId.ToString());
+        command.Parameters.AddWithValue("$lineHash", lineHash);
+        command.Parameters.AddWithValue("$completedAt", completedAt.ToString("O"));
+        command.ExecuteNonQuery();
+    }
+
+    /// <summary>Borra el registro de cuándo se marcó una tarea (al desmarcarla, o al descubrir que ya no
+    /// corresponde a ninguna tarea marcada de verdad — ver <see cref="PruneExpiredCompletedTasks"/>).</summary>
+    public void ClearTaskCompletion(Guid noteId, string lineHash)
+    {
+        using var connection = _database.OpenConnection();
+        using var command = connection.CreateCommand();
+        command.CommandText = "DELETE FROM TaskCompletion WHERE NoteId = $noteId AND LineHash = $lineHash;";
+        command.Parameters.AddWithValue("$noteId", noteId.ToString());
+        command.Parameters.AddWithValue("$lineHash", lineHash);
+        command.ExecuteNonQuery();
+    }
+
+    public IReadOnlyDictionary<string, DateTimeOffset> GetTaskCompletions(Guid noteId)
+    {
+        using var connection = _database.OpenConnection();
+        using var command = connection.CreateCommand();
+        command.CommandText = "SELECT LineHash, CompletedAt FROM TaskCompletion WHERE NoteId = $noteId;";
+        command.Parameters.AddWithValue("$noteId", noteId.ToString());
+
+        var results = new Dictionary<string, DateTimeOffset>();
+        using var reader = command.ExecuteReader();
+        while (reader.Read())
+        {
+            results[(string)reader["LineHash"]] = DateTimeOffset.Parse(
+                (string)reader["CompletedAt"],
+                System.Globalization.CultureInfo.InvariantCulture,
+                System.Globalization.DateTimeStyles.RoundtripKind);
+        }
+        return results;
+    }
+
+    /// <summary>
+    /// Aplica el ajuste "borrar tareas completadas solas" a una nota: quita del texto las líneas
+    /// marcadas cuyo plazo haya vencido (<see cref="TaskCompletion.Prune"/>), guarda el resultado si
+    /// cambió algo, y limpia los registros de <c>TaskCompletion</c> que ya no correspondan a ninguna
+    /// tarea marcada — así una tarea editada, desmarcada o borrada a mano no deja basura atrás sin
+    /// necesidad de un barrido aparte. Devuelve si se borró alguna línea.
+    /// </summary>
+    public bool PruneExpiredCompletedTasks(Guid noteId, string currentText, TimeSpan delay)
+    {
+        var completions = GetTaskCompletions(noteId);
+        if (completions.Count == 0) return false;
+
+        var result = TaskCompletion.Prune(currentText, completions, DateTimeOffset.UtcNow, delay);
+        foreach (var hash in result.HashesToClear)
+        {
+            ClearTaskCompletion(noteId, hash);
+        }
+
+        if (result.Changed)
+        {
+            UpdateText(noteId, result.Text);
+        }
+        return result.Changed;
     }
 
     private Note ReadNote(SqliteDataReader reader)

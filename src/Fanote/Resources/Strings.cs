@@ -45,6 +45,8 @@ public static class Strings
     public static string MoreActionsTooltip => T("More actions", "Más acciones");
     public static string CloseTooltip => T("Close (Esc)", "Cerrar (Esc)");
     public static string ConvertToTask => T("Convert to task", "Convertir en tarea");
+    public static string ExportToMarkdown => T("Export to Markdown", "Exportar a Markdown");
+    public static string MarkdownFileFilter => T("Markdown file (*.md)|*.md", "Archivo Markdown (*.md)|*.md");
     public static string PinnedOn => T("✓  Always on top", "✓  Siempre encima");
     public static string PinnedOff => T("Always on top", "Siempre encima");
     public static string PinnedOnHint => T("The note stays in front of other windows.", "La nota se queda por delante de las demás ventanas.");
@@ -53,6 +55,7 @@ public static class Strings
     // --- Dock (mazo anclado al borde) -------------------------------------------------------------
 
     public static string ManageNotesTooltip => T("Manage notes", "Gestionar notas");
+    public static string OpenAllNotesTooltip => T("Open all notes (closes them all if they're already open)", "Abrir todas las notas (las cierra todas si ya están abiertas)");
     public static string NewNoteTooltip => T("New note", "Nueva nota");
     public static string OpenNote => T("Open", "Abrir");
 
@@ -68,6 +71,13 @@ public static class Strings
     public static string SelectAll => T("Select all", "Seleccionar todo");
     public static string Delete => T("Delete", "Eliminar");
     public static string DeletePermanentlyTitle => T("Delete permanently", "Eliminar definitivamente");
+    public static string Export => T("Export", "Exportar");
+    public static string ExportFolderDialogTitle => T("Choose a folder to export to", "Elige una carpeta donde exportar");
+    public static string ExportFormatTitle => T("Export notes", "Exportar notas");
+    public static string ExportAsZipPrompt => T(
+        "Export as a single .zip file?\n\nChoose “No” to get loose .md files in a folder instead.",
+        "¿Exportar como un único archivo .zip?\n\nElige «No» para tener los archivos .md sueltos en una carpeta.");
+    public static string ZipFileFilter => T("Zip file (*.zip)|*.zip", "Archivo zip (*.zip)|*.zip");
 
     public static string OneNote => T("1 note", "1 nota");
     public static string NotesCount(int count) => T($"{count} notes", $"{count} notas");
@@ -120,8 +130,8 @@ public static class Strings
         return T($"Screen {number}{primary} ({width}×{height})", $"Pantalla {number}{primary} ({width}×{height})");
     }
 
-    public static string HideOnFullscreenCheckbox => T("Hide dock during fullscreen games", "Ocultar dock ante videojuegos a pantalla completa");
-    public static string HideOnFullscreenHint => T("Hides the dock automatically while you play in fullscreen. Doesn't affect regular maximized windows (like a browser with tabs).", "Oculta el dock automáticamente cuando juegues a pantalla completa. No afecta a ventanas normales maximizadas (como el navegador con pestañas).");
+    public static string HideOnFullscreenCheckbox => T("Hide dock in fullscreen", "Ocultar dock a pantalla completa");
+    public static string HideOnFullscreenHint => T("Hides the dock automatically over any real fullscreen window — games, videos, presentations. Doesn't affect regular maximized windows (like a browser with tabs).", "Oculta el dock automáticamente ante cualquier ventana a pantalla completa de verdad — juegos, vídeos, presentaciones. No afecta a ventanas normales maximizadas (como el navegador con pestañas).");
 
     public static string EdgeSectionTitle => T("Screen edge", "Lado de la pantalla");
     public static string EdgeSectionHint => T("Which edge the Fanote dock lives on.", "En qué borde vive el dock de Fanote.");
@@ -131,6 +141,18 @@ public static class Strings
     public static string RememberPositionsCheckbox => T("Remember note positions", "Recordar la posición de las notas");
     public static string RememberPositionsHint => T("When you close a note, it reopens in the same spot and size on the desktop — like a real sticky note.", "Al cerrar una nota, la próxima vez se abre en el mismo sitio y con el mismo tamaño en el escritorio — como un post-it de verdad.");
 
+    public static string AutoHideCompletedTasksCheckbox => T("Delete completed tasks automatically", "Borrar automáticamente las tareas completadas");
+    public static string AutoHideCompletedTasksHint => T("A checked task stays for a while so you can still see it, then its line is removed from the note for good.", "Una tarea marcada se queda un tiempo por si quieres verla, y después su línea se borra de la nota para siempre.");
+    public static string AutoHideCompletedTasksDelayLabel => T("After:", "Después de:");
+    public static string TaskDelayMinutesUnit => T("minutes", "minutos");
+    public static string TaskDelayHoursUnit => T("hours", "horas");
+    public static string TaskDelayDaysUnit => T("days", "días");
+    public static string TaskDelayWeeksUnit => T("weeks", "semanas");
+
+    public static string TrashRetentionTitle => T("Trash", "Papelera");
+    public static string TrashRetentionHint => T("A trashed note is deleted for good after this many days.", "Una nota en la papelera se borra para siempre pasados estos días.");
+    public static string TrashRetentionDaysUnit => T("days", "días");
+
     public static string LanguageSectionTitle => T("Language", "Idioma");
     public static string LanguageSectionHint => T("Restarting Fanote applies the change to every window.", "Reiniciar Fanote aplica el cambio en todas las ventanas.");
 
@@ -139,6 +161,7 @@ public static class Strings
     public static string QuickHelpDrag => T("• Click a tab to open that note; drag it yourself to move it — it will remember the spot.", "• Haz clic en una pestaña para abrir esa nota; arrástrala tú para moverla — recordará el sitio.");
     public static string QuickHelpRightClick => T("• Right-click a tab: change color, archive, or send to trash without opening it.", "• Clic derecho en una pestaña: cambiar color, archivar o tirar a la papelera sin abrirla.");
     public static string QuickHelpTask => T("• Ctrl+L turns a line into a task. Click the checkbox to check it off, and Enter\n   keeps the list going on its own.", "• Ctrl+L convierte una línea en tarea. Haz clic en la casilla para marcarla, y Enter\n   sigue la lista sola.");
+    public static string QuickHelpMoveLine => T("• Alt+Up/Down moves the current line up or down — handy for reordering a checklist.", "• Alt+Arriba/Abajo sube o baja la línea del cursor — útil para reordenar una lista de tareas.");
     public static string QuickHelpMenu => T("• The ⋯ button on a note opens color, “always on top,” archive and trash.", "• El botón ⋯ de una nota abre color, «siempre encima», archivar y papelera.");
     public static string QuickHelpEscape => T("• Esc closes the open note without losing what you wrote (it autosaves).", "• Esc cierra la nota abierta sin perder lo escrito (se guarda solo).");
     public static string QuickHelpHotkeyOn(string combo) =>

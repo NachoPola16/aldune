@@ -124,7 +124,23 @@
              primeros 22px como zona de arrastre, así que sin eso no se podría ni hacer clic para
              escribir el título. -->
         <Grid x:Name="Header" Grid.Row="0">
-            <Grid Margin="16,0,74,0" VerticalAlignment="Center">
+            <!-- WindowChrome.IsHitTestVisibleInChrome="True" a propósito, aunque el resto de la
+                 cabecera se arrastra sin él (como zona de "caption" implícita): una zona de
+                 "caption" nunca recibe los eventos normales de ratón de WPF (MouseEnter, Cursor…),
+                 así que sin esto no había forma de que el cursor cambiara aquí para indicar que se
+                 puede arrastrar. Al ser un elemento normal, el arrastre se dispara a mano con
+                 DragMove() en OnGripMouseDown en vez de depender de WindowChrome. -->
+            <TextBlock x:Name="DragHandle"
+                       Text="&#xE76F;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets"
+                       FontSize="13" Foreground="#4A1E1A14"
+                       Background="Transparent"
+                       HorizontalAlignment="Left" VerticalAlignment="Center"
+                       Margin="12,0,0,0" Padding="4"
+                       Cursor="SizeAll"
+                       WindowChrome.IsHitTestVisibleInChrome="True"
+                       PreviewMouseLeftButtonDown="OnGripMouseDown" />
+
+            <Grid Margin="32,0,74,0" VerticalAlignment="Center">
                 <!-- Manuscrita solo aquí, y a propósito. El cuerpo se queda en la fuente de sistema
                      porque una manuscrita ahí cuesta legibilidad, hace caber menos líneas, y sobre
                      todo **no tiene los glifos de las casillas** (☐/☒): Windows los sacaría de otra
@@ -143,6 +159,8 @@
                          Foreground="#1E1A14"
                          CaretBrush="#1E1A14"
                          Background="Transparent"
+                         SelectionBrush="#40000000"
+                         SelectionOpacity="1"
                          BorderThickness="0"
                          Padding="0"
                          AcceptsReturn="False"
@@ -210,6 +228,11 @@
                                    Foreground="#8A8175" FontSize="11" TextWrapping="Wrap"
                                    Margin="9,0,9,6" />
 
+                        <Button x:Name="ExportButton" Click="OnExportClick"
+                                Content="{x:Static res:Strings.ExportToMarkdown}"
+                                Style="{StaticResource NoteMenuItemStyle}" />
+                        <Border Background="#3C3730" Height="1" Margin="0,4,0,4" />
+
                         <Button x:Name="ArchiveButton" Click="OnArchiveClick"
                                 Content="{x:Static res:Strings.Archive}"
                                 Style="{StaticResource NoteMenuItemStyle}" />
@@ -255,8 +278,20 @@
                      FontSize="14"
                      Foreground="#1E1A14"
                      CaretBrush="#1E1A14"
+                     SelectionBrush="#40000000"
+                     SelectionOpacity="1"
                      VerticalScrollBarVisibility="Auto"
                      BorderThickness="0" />
+            <!-- Resalta la casilla de tarea al pasar el ratón por encima, para que se note que es
+                 clicable (antes solo cambiaba el cursor de texto normal, indistinguible de pasar
+                 por cualquier otro sitio). IsHitTestVisible="False" para que el ratón siga llegando
+                 al TextBox de debajo tal cual: este Canvas solo pinta, nunca intercepta clics.
+                 Mismo tono que NoteActionButtonStyle (#26000000) para el mismo lenguaje de hover
+                 que ya usan los botones de la cabecera. -->
+            <Canvas IsHitTestVisible="False">
+                <Border x:Name="TaskHoverHighlight" Background="#26000000" CornerRadius="3"
+                        Visibility="Collapsed" />
+            </Canvas>
         </Grid>
     </Grid>
     </Border>

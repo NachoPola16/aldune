@@ -92,6 +92,37 @@
                 </Setter.Value>
             </Setter>
         </Style>
+        <!-- Chip compacto para el plazo (minutos/horas/dias/semanas): las tarjetas de
+             MonitorRadioStyle son demasiado altas para cuatro opciones de una sola palabra en fila.
+             Mismo patron que FilterToggleStyle del gestor de notas. -->
+        <Style x:Key="DelayUnitToggleStyle" TargetType="RadioButton">
+            <Setter Property="Foreground" Value="#A79E90" />
+            <Setter Property="Padding" Value="10,5" />
+            <Setter Property="FontSize" Value="12" />
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="RadioButton">
+                        <Border x:Name="Bg" Background="Transparent" CornerRadius="5">
+                            <ContentPresenter Margin="{TemplateBinding Padding}"
+                                              HorizontalAlignment="Center"
+                                              VerticalAlignment="Center" />
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Bg" Property="Background" Value="#3C3730" />
+                            </Trigger>
+                            <Trigger Property="IsChecked" Value="True">
+                                <Setter TargetName="Bg" Property="Background" Value="#4E4840" />
+                                <Setter Property="Foreground" Value="#F5F0E6" />
+                                <Setter Property="FontWeight" Value="SemiBold" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
         <Style x:Key="MonitorRadioStyle" TargetType="RadioButton">
             <Setter Property="Foreground" Value="#EDE7DC" />
             <Setter Property="FontSize" Value="13" />
@@ -204,6 +235,61 @@
                                Foreground="#8A8175" FontSize="11" TextWrapping="Wrap" Margin="0,4,0,10" />
 
                     <StackPanel x:Name="LanguageListContainer" />
+                </StackPanel>
+
+                <Border Background="#3C3730" Height="1" Margin="0,20,0,0" />
+
+                <StackPanel Margin="0,20,0,0">
+                    <CheckBox x:Name="AutoHideTasksCheck"
+                              Content="{x:Static res:Strings.AutoHideCompletedTasksCheckbox}"
+                              Foreground="#EDE7DC" Background="#2A261F" FontSize="13"
+                              Style="{StaticResource AppCheckBoxStyle}"
+                              Click="OnAutoHideTasksToggled" />
+                    <TextBlock Text="{x:Static res:Strings.AutoHideCompletedTasksHint}"
+                               Foreground="#8A8175" FontSize="11" TextWrapping="Wrap" Margin="27,6,0,0" />
+
+                    <StackPanel x:Name="AutoHideTasksDelayPanel" Orientation="Horizontal" Margin="27,10,0,0">
+                        <TextBlock Text="{x:Static res:Strings.AutoHideCompletedTasksDelayLabel}"
+                                   Foreground="#EDE7DC" FontSize="13" VerticalAlignment="Center" Margin="0,0,8,0" />
+                        <!-- Numero + unidad, no un desplegable fijo de "1 dia/1 semana": el usuario
+                             pidio poder elegir cualquier plazo, no solo unos pocos preajustados. -->
+                        <Border Background="#332F28" CornerRadius="6" VerticalAlignment="Center">
+                            <TextBox x:Name="AutoHideTasksDelayValueBox"
+                                     Background="Transparent" Foreground="#EDE7DC" CaretBrush="#EDE7DC"
+                                     BorderThickness="0" FontSize="13" Width="30" MaxLength="3"
+                                     TextAlignment="Center" Padding="6,6"
+                                     PreviewTextInput="OnDelayValuePreviewTextInput"
+                                     TextChanged="OnDelayValueChanged" />
+                        </Border>
+                        <Border Background="#332F28" CornerRadius="7" Padding="3" Margin="8,0,0,0" VerticalAlignment="Center">
+                            <WrapPanel x:Name="DelayUnitContainer" />
+                        </Border>
+                    </StackPanel>
+                </StackPanel>
+
+                <Border Background="#3C3730" Height="1" Margin="0,20,0,0" />
+
+                <!-- Antes una constante fija en el código (NotesRepository.DefaultTrashRetentionDays);
+                     no hay ningún motivo para que 30 sea mejor que otro número para todo el mundo,
+                     así que pasa a ser elegible aquí, igual que el plazo de arriba. -->
+                <StackPanel Margin="0,20,0,0">
+                    <TextBlock Text="{x:Static res:Strings.TrashRetentionTitle}"
+                               Foreground="#EDE7DC" FontSize="13" FontWeight="SemiBold" />
+                    <TextBlock Text="{x:Static res:Strings.TrashRetentionHint}"
+                               Foreground="#8A8175" FontSize="11" TextWrapping="Wrap" Margin="0,4,0,10" />
+
+                    <StackPanel Orientation="Horizontal">
+                        <Border Background="#332F28" CornerRadius="6" VerticalAlignment="Center">
+                            <TextBox x:Name="TrashRetentionValueBox"
+                                     Background="Transparent" Foreground="#EDE7DC" CaretBrush="#EDE7DC"
+                                     BorderThickness="0" FontSize="13" Width="30" MaxLength="3"
+                                     TextAlignment="Center" Padding="6,6"
+                                     PreviewTextInput="OnTrashRetentionPreviewTextInput"
+                                     TextChanged="OnTrashRetentionChanged" />
+                        </Border>
+                        <TextBlock Text="{x:Static res:Strings.TrashRetentionDaysUnit}"
+                                   Foreground="#EDE7DC" FontSize="13" VerticalAlignment="Center" Margin="8,0,0,0" />
+                    </StackPanel>
                 </StackPanel>
             </StackPanel>
 

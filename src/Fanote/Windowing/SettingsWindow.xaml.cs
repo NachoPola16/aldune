@@ -2,6 +2,8 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Interop;
+using System.Windows.Media;
+using System.Windows.Media.Animation;
 using Fanote.Core;
 using Fanote.Interop;
 using Fanote.Resources;
@@ -40,20 +42,59 @@ public partial class SettingsWindow : Window
         HotkeyCheck.IsChecked = _settings.GlobalHotkeyEnabled;
         HideOnFullscreenCheck.IsChecked = _settings.HideOnFullscreen;
         RememberPositionsCheck.IsChecked = _settings.RememberNotePositions;
+        AutoHideTasksCheck.IsChecked = _settings.AutoHideCompletedTasks;
+        AutoHideTasksDelayValueBox.Text = _settings.AutoHideCompletedTasksDelayValue.ToString();
+        TrashRetentionValueBox.Text = _settings.TrashRetentionDays.ToString();
         UpdateHotkeyUi(); // tambien deja lista la seccion de Ayuda rapida, ver UpdateQuickHelp
         PopulateMonitors();
         PopulateEdges();
         PopulateLanguages();
+        PopulateDelayUnits();
+        UpdateAutoHideTasksUi();
 
         // Tope de alto contra la pantalla real, no un número fijo: con SizeToContent="Height" la
         // ventana crece con su contenido, y en un portátil con escalado las últimas secciones se
         // quedaban fuera sin scroll para alcanzarlas. El ScrollViewer del XAML se encarga del resto.
+        //
+        // SystemParameters.WorkArea es SIEMPRE el área de trabajo del monitor PRIMARIO del sistema,
+        // nunca la del monitor donde esta ventana vaya a mostrarse de verdad — con portátil +
+        // monitor externo, si el externo es el primario (caso típico), esto calculaba el tope
+        // contra la pantalla grande y Ajustes se salía por abajo en la pequeña del portátil
+        // (reportado por el usuario, 2026-09-11). Valor de reserva aquí, por si algún día se
+        // muestra sin pasar por AppCoordinator.OpenSettings (que sí conoce el monitor correcto):
+        // CenterOnThisMonitor lo corrige contra el monitor real justo después, en el camino normal.
         MaxHeight = SystemParameters.WorkArea.Height * 0.9;
 
         PreviewKeyDown += OnPreviewKeyDown;
 
         SourceInitialized += (_, _) =>
             NativeMethods.ApplyRoundedCorners(new WindowInteropHelper(this).Handle);
+    }
+
+    private static readonly TimeSpan OpenDuration = TimeSpan.FromMilliseconds(180);
+
+    /// <summary>
+    /// Mismo fundido + crecimiento desde el 95% que usa <c>NoteWindow.PlayOpenAnimation</c> — el
+    /// usuario pidió que abrir Ajustes se sintiera igual que abrir una nota, en vez de aparecer de
+    /// golpe. Llamada desde <see cref="AppCoordinator.OpenSettings"/> justo después de <c>Show()</c>,
+    /// igual que la nota.
+    /// </summary>
+    internal void PlayOpenAnimation()
+    {
+        if (!SystemParameters.ClientAreaAnimation) return;
+
+        var content = (UIElement)Content;
+        content.RenderTransformOrigin = new Point(0.5, 0.5);
+        var scale = new ScaleTransform(0.95, 0.95);
+        content.RenderTransform = scale;
+
+        var duration = new Duration(OpenDuration);
+        IEasingFunction Ease() => new QuinticEase { EasingMode = EasingMode.EaseOut };
+
+        content.Opacity = 0;
+        content.BeginAnimation(OpacityProperty, new DoubleAnimation(0, 1, duration) { EasingFunction = Ease() });
+        scale.BeginAnimation(ScaleTransform.ScaleXProperty, new DoubleAnimation(0.95, 1, duration) { EasingFunction = Ease() });
+        scale.BeginAnimation(ScaleTransform.ScaleYProperty, new DoubleAnimation(0.95, 1, duration) { EasingFunction = Ease() });
     }
 
     private void OnCloseClick(object sender, RoutedEventArgs e) => Close();
@@ -186,6 +227,7 @@ public partial class SettingsWindow : Window
             Strings.QuickHelpDrag,
             Strings.QuickHelpRightClick,
             Strings.QuickHelpTask,
+            Strings.QuickHelpMoveLine,
             Strings.QuickHelpMenu,
             Strings.QuickHelpEscape,
             hotkeyLine,
@@ -287,6 +329,84 @@ public partial class SettingsWindow : Window
     {
         _settings.RememberNotePositions = RememberPositionsCheck.IsChecked == true;
         _settingsService.Save(_settings);
+    }
+
+    private void OnAutoHideTasksToggled(object sender, RoutedEventArgs e)
+    {
+        _settings.AutoHideCompletedTasks = AutoHideTasksCheck.IsChecked == true;
+        _settingsService.Save(_settings);
+        UpdateAutoHideTasksUi();
+    }
+
+    /// <summary>El campo de plazo solo tiene sentido con el ajuste activado.</summary>
+    private void UpdateAutoHideTasksUi()
+    {
+        AutoHideTasksDelayPanel.IsEnabled = AutoHideTasksCheck.IsChecked == true;
+    }
+
+    // Solo digitos: un desplegable de unidad al lado ya cubre "cuanto tiempo", y dejar pasar
+    // letras o signos obligaria a validar despues en vez de evitarlo al teclear.
+    private void OnDelayValuePreviewTextInput(object sender, TextCompositionEventArgs e)
+    {
+        e.Handled = !e.Text.All(char.IsDigit);
+    }
+
+    private void OnDelayValueChanged(object sender, TextChangedEventArgs e)
+    {
+        // Mientras el numero no sea valido (cuadro vacio a mitad de borrar, o "0") no hay nada que
+        // guardar todavia -- se guarda en cuanto vuelva a serlo, sin forzar un valor por defecto a
+        // mitad de escritura.
+        if (!int.TryParse(AutoHideTasksDelayValueBox.Text, out var value) || value < 1) return;
+
+        if (_settings.AutoHideCompletedTasksDelayValue == value) return;
+        _settings.AutoHideCompletedTasksDelayValue = value;
+        _settingsService.Save(_settings);
+    }
+
+    private void OnTrashRetentionPreviewTextInput(object sender, TextCompositionEventArgs e)
+    {
+        e.Handled = !e.Text.All(char.IsDigit);
+    }
+
+    private void OnTrashRetentionChanged(object sender, TextChangedEventArgs e)
+    {
+        if (!int.TryParse(TrashRetentionValueBox.Text, out var value) || value < 1) return;
+
+        if (_settings.TrashRetentionDays == value) return;
+        _settings.TrashRetentionDays = value;
+        _settingsService.Save(_settings);
+    }
+
+    private void PopulateDelayUnits()
+    {
+        DelayUnitContainer.Children.Clear();
+        AddDelayUnitRadio(TaskDelayUnit.Minutes, Strings.TaskDelayMinutesUnit);
+        AddDelayUnitRadio(TaskDelayUnit.Hours, Strings.TaskDelayHoursUnit);
+        AddDelayUnitRadio(TaskDelayUnit.Days, Strings.TaskDelayDaysUnit);
+        AddDelayUnitRadio(TaskDelayUnit.Weeks, Strings.TaskDelayWeeksUnit);
+    }
+
+    private void AddDelayUnitRadio(TaskDelayUnit unit, string label)
+    {
+        var radio = new RadioButton
+        {
+            GroupName = "DelayUnitGroup",
+            Style = (Style)FindResource("DelayUnitToggleStyle"),
+            Tag = unit,
+            Content = label,
+            IsChecked = _settings.AutoHideCompletedTasksDelayUnit == unit
+        };
+        radio.Checked += OnDelayUnitChanged;
+        DelayUnitContainer.Children.Add(radio);
+    }
+
+    private void OnDelayUnitChanged(object sender, RoutedEventArgs e)
+    {
+        if (sender is RadioButton { IsChecked: true, Tag: TaskDelayUnit unit } && _settings.AutoHideCompletedTasksDelayUnit != unit)
+        {
+            _settings.AutoHideCompletedTasksDelayUnit = unit;
+            _settingsService.Save(_settings);
+        }
     }
 
     // Los nombres de los idiomas ("Español"/"English") no se traducen: un idioma se nombra a sí

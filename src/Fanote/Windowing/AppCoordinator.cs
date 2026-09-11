@@ -51,6 +51,20 @@ public sealed class AppCoordinator
     public void RegisterDock(EdgeDockWindow dock) => _docks.Add(dock);
 
     /// <summary>
+    /// Fuerza el guardado inmediato (texto + posición) de todas las notas abiertas, sin pasar por su
+    /// animación de cierre — usado por <c>App.OnSessionEnding</c> cuando Windows avisa de que la
+    /// sesión va a terminar (apagar, reiniciar, cerrar sesión), porque no da tiempo a esperar a que
+    /// cada nota complete su cierre normal.
+    /// </summary>
+    public void FlushAllOpenNotes()
+    {
+        foreach (var window in _openNoteWindows.Values)
+        {
+            window.FlushForShutdown();
+        }
+    }
+
+    /// <summary>
     /// Cierra todos los docks actuales. Lo usa <c>App</c> al cambiar la configuración de pantallas
     /// para reconstruirlos contra los monitores que haya ahora.
     ///
@@ -191,6 +205,7 @@ public sealed class AppCoordinator
         requestingDock.CenterOnThisMonitor(_notesManagerWindow);
         _notesManagerWindow.Closed += (_, _) => _notesManagerWindow = null;
         _notesManagerWindow.Show();
+        _notesManagerWindow.PlayOpenAnimation();
         NativeMethods.ForceActivate(_notesManagerWindow);
     }
 
@@ -226,6 +241,52 @@ public sealed class AppCoordinator
         OpenOrActivateNote(note, dock);
     }
 
+    /// <summary>
+    /// Abre todas las notas activas de golpe, para verlas a todas a la vez como una mesa de
+    /// post-its — pedido explícito del usuario. Las que ya están abiertas no se tocan: activarlas
+    /// una a una de paso no ganaría nada, solo dejaría el foco en la última. Las que no, se
+    /// cascadean solas: <see cref="EdgeDockWindow.PositionNoteWindow"/> ya calcula su paso de
+    /// cascada a partir de cuántas ventanas de nota hay abiertas en cada momento, así que no hace
+    /// falta ningún cálculo nuevo aquí para que no queden todas exactamente superpuestas.
+    /// </summary>
+    public void OpenAllNotes()
+    {
+        var dock = DockNearCursor();
+        if (dock is null) return;
+
+        foreach (var note in _repository.GetByState(NoteState.Active))
+        {
+            if (IsNoteOpen(note.Id)) continue;
+            OpenOrActivateNote(note, dock);
+        }
+    }
+
+    /// <summary>
+    /// Cierra todas las notas que estén abiertas ahora mismo, sin importar cómo se abrieran (por el
+    /// botón, o una a una a mano). <c>ToList()</c> antes de recorrer: cerrar cada ventana dispara su
+    /// <c>Closed</c>, que se quita a sí misma de <c>_openNoteWindows</c> — recorrer el diccionario
+    /// en directo mientras se modifica lanzaría.
+    /// </summary>
+    public void CloseAllNoteWindows()
+    {
+        foreach (var window in _openNoteWindows.Values.ToList())
+        {
+            window.Close();
+        }
+    }
+
+    /// <summary>
+    /// El botón "abrir todas" del dock, convertido en interruptor: si hay alguna nota abierta ahora
+    /// mismo (todas o solo algunas — no importa cómo se llegara a ese estado), cierra todas; si no
+    /// hay ninguna, las abre todas. Más predecible que un estado de tres vías ("ninguna/algunas/
+    /// todas"): la pregunta que responde siempre es la misma, "¿hay algo abierto ahora mismo?".
+    /// </summary>
+    public void ToggleAllNotes()
+    {
+        if (OpenNoteWindowCount > 0) CloseAllNoteWindows();
+        else OpenAllNotes();
+    }
+
     public void OpenSettings()
     {
         if (_settingsWindow is not null)
@@ -241,6 +302,7 @@ public sealed class AppCoordinator
         DockNearCursor()?.CenterOnThisMonitor(_settingsWindow);
         _settingsWindow.Closed += (_, _) => _settingsWindow = null;
         _settingsWindow.Show();
+        _settingsWindow.PlayOpenAnimation();
         NativeMethods.ForceActivate(_settingsWindow);
     }
 

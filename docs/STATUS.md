@@ -111,6 +111,23 @@ cuando toque la fase correspondiente:
   `AuthenticationTagMismatchException` no se confunde con el caso DPAPI en
   `App.xaml.cs`, deduplicación de patrón `SqliteConnection.ClearPool()` en
   tests, etc.) — sin impacto funcional, solo mantenibilidad.
+- **La tira de reposo del dock a veces desaparece del todo, sola, sin nada a
+  pantalla completa** (reportado por el usuario, 2026-09-09; ya le había
+  pasado antes de esta sesión, no es nuevo). Vuelve a verse en cuanto se pasa
+  el ratón por encima. Hipótesis, sin confirmar todavía: es el riesgo que ya
+  se dejó anotado sin verificar al pasar el dock a `AllowsTransparency="True"`
+  (ver la sección "Rediseño de movimiento y forma del dock" más abajo) — una
+  ventana WPF "layered" que deja de recomponerse tras algún evento del
+  sistema (¿reanudar tras suspender? ¿reconectar un monitor? ¿aleatorio en
+  uso continuado?) hasta que algo fuerza un repintado, que es justo lo que
+  hace la animación de opacidad al pasar el ratón (`EdgeDockWindow.ApplyState`/
+  `Fade`, tocar `Opacity` obliga a WPF a recomponer de verdad). **No se ha
+  implementado ningún arreglo todavía** — hace falta primero confirmar el
+  disparador real (preguntado al usuario, respuesta pendiente) antes de
+  enganchar un repintado forzado al evento correcto en vez de un parche
+  genérico. Si se confirma que es tras reanudar del sueño, el sitio natural
+  es `SystemEvents.PowerModeChanged` en `App.xaml.cs`, mismo patrón que ya
+  usa `OnDisplaySettingsChanged` para los cambios de monitor.
 
 ## Prerrequisitos para la Fase 3, resto por hacer (sub-entregas 2+)
 
@@ -1815,3 +1832,661 @@ Si arrancas esto en una sesión/IA nueva: lee este archivo, la spec, y el plan
 de la última fase fusionada, y sigue el mismo flujo de skills descrito arriba
 (brainstorming → writing-plans → subagent-driven-development) para lo que sea
 que decidas hacer a continuación.
+
+## Borrar tareas completadas solas (sesión 2026-09-09, bounded)
+
+Idea del usuario, brainstorming corto en el chat (sin spec/plan formal — extensión acotada sobre
+`Fanote.Core.TaskLines`, que ya existía). Ajuste nuevo en Ajustes, **desactivado por defecto**: al
+activarlo, una tarea marcada como hecha (☒) se borra sola de la nota pasado un plazo configurable.
+
+### Decisiones tomadas en el brainstorming
+
+- **Es un borrado de verdad, no un ocultar visual.** El cuerpo de la nota es un `TextBox` plano
+  atado directamente al texto real (ver `Fanote.Core.TaskLines`) — mostrar algo distinto de lo que
+  hay guardado exigiría el texto enriquecido que la spec v1 ya descartó a propósito. Al vencer el
+  plazo, la línea se quita del texto de la nota, como si el usuario la hubiera borrado él mismo.
+- **Desactivado por defecto.** Es una edición automática del texto de la nota: nadie la sufre sin
+  haberla pedido explícitamente en Ajustes.
+- **Plazo configurable de verdad, no solo unos preajustados.** Número + unidad (minutos / horas /
+  días / semanas), no un desplegable fijo de "1 día / 1 semana" — el usuario lo pidió explícitamente
+  tras ver la primera propuesta de tres opciones fijas.
+
+### Cómo se guarda cuándo se marcó cada tarea
+
+Tabla nueva, `TaskCompletion (NoteId, LineHash, CompletedAt)` — aparte de `Note`, mismo motivo que
+`NoteOrder`/`NotePlacement`: esa tabla tiene el contenido real del usuario y esta app no tiene
+sistema de migraciones.
+
+Cada tarea se identifica por un **hash de su contenido** (`Fanote.Core.TaskCompletion.HashLine`,
+SHA-256 del texto sin el glifo), no por su posición en la nota: la posición cambia con cualquier
+edición alrededor, y el hash sigue apuntando a la misma tarea aunque la nota crezca o encoja por
+otro sitio. El hash se calcula sin el glifo a propósito, así que desmarcar y volver a marcar la
+misma tarea más tarde reinicia el reloj en vez de arrastrar el momento en que se marcó la primera
+vez. Dos tareas con texto idéntico en la misma nota comparten hash y por tanto también el reloj —
+igual que `NoteOrdering` acepta posiciones duplicadas, se acepta aquí por la misma razón: colisión
+rara y sin consecuencia grave.
+
+`Fanote.Core.TaskCompletion.Prune` (puro, TDD) recibe el texto, los `CompletedAt` conocidos, la
+hora actual y el plazo, y devuelve el texto sin las líneas vencidas más los hashes que ya no
+corresponden a ninguna tarea marcada (editada, desmarcada o borrada a mano por otro camino) para
+que el llamante los limpie — así un registro huérfano no se queda para siempre sin necesitar un
+barrido aparte.
+
+**Bug real encontrado por los propios tests, antes de tocar la app real**: un `string.Join('\n',
+kept)` ingenuo para reconstruir el texto deja un `\r` colgando al borrar la **última** línea de una
+nota en CRLF (`"algo\r\n☒ hecho"` se quedaba en `"algo\r"` en vez de `"algo"`) — el `\r` de la
+primera línea pertenece a su propio separador, no a la línea borrada. Arreglado en
+`TaskCompletion.JoinLines`, con test de regresión.
+
+### Cuándo se aplica de verdad
+
+Dos disparadores, mismo espíritu que `NotesRepository.PurgeExpiredTrash` (barrido barato, no un
+reloj en tiempo real):
+
+1. **Al arrancar la app** (`App.xaml.cs`, dentro del mismo `try` que `BuildDocks` — `GetByState` ya
+   descifra, así que un fallo de clave tiene que traducirse al mismo mensaje que el resto del
+   arranque): recorre todas las notas activas.
+2. **Al abrir una nota concreta** (`NoteWindow`, evento `Loaded`): cubre el hueco de una nota que
+   lleva cerrada más que el plazo pero la app sigue corriendo desde antes.
+
+Además, en cada ciclo del autoguardado de una nota abierta (barato, reaprovecha un temporizador que
+ya existe) — **no cubre** dejar la nota abierta sin tocarla durante todo el plazo, porque el
+autoguardado no se dispara sin editar. Aceptado como limitación conocida, igual que la purga de
+papelera solo corre al arrancar: el ajuste por defecto es "1 día", así que el caso real (una nota
+que se deja abierta sin editar más de un día seguido) es raro.
+
+### Ajustes
+
+Nueva sección en la columna izquierda (junto a Idioma): casilla "Borrar automáticamente las tareas
+completadas" +, debajo, un campo numérico y una fila de chips (Minutos/Horas/Días/Semanas) para el
+plazo — mismo patrón visual que el resto de Ajustes (chips como en el filtro de "Gestionar notas",
+tarjetas de radio para el resto). Nada de `ComboBox`: habría introducido un control nuevo sin
+estilo oscuro ya hecho en la app, cuando los chips ya resuelven lo mismo reutilizando lo que existe.
+
+Tests: 271/271. Build limpio. Portable republicado y relanzado sin errores. **Pendiente de
+verificación manual del usuario** (marcar una tarea, activar el ajuste con un plazo corto, y
+comprobar que desaparece sola).
+
+## Tres retoques sueltos de la nota y Ajustes (sesión 2026-09-09, bounded, sobre la marcha)
+
+Pedidos directamente en el chat mientras se discutía sincronización, sin brainstorming formal por
+ser acotados sobre UI ya existente:
+
+- **Asa de arrastre en la cabecera de la nota.** El usuario reportó que no se notaba dónde se podía
+  pinchar para mover la ventana (la cabecera entera ya era arrastrable vía
+  `WindowChrome.CaptionHeight`, pero sin ninguna pista visual). Añadido un glifo de "agarre"
+  (`&#xE76F;`, Segoe Fluent Icons/MDL2) a la izquierda de la cabecera, **sin** `IsHitTestVisibleInChrome`
+  — sigue siendo zona de arrastre, el icono es puramente indicativo. `TitleBox` se corrió de
+  `Margin="16,..."` a `"32,..."` para dejarle sitio.
+- **Casillas de tarea: hover visible + zona de clic más generosa.** Antes solo cambiaba a cursor de
+  texto normal al pasar por encima de una casilla, indistinguible del resto de la nota. Como el
+  cuerpo es un `TextBox` plano (texto real, no controles — ver `Fanote.Core.TaskLines`), resaltar
+  "solo la casilla" no es gratis: se añadió un `Canvas` `IsHitTestVisible="False"` superpuesto al
+  `TextBox` (`TaskHoverHighlight`, un `Border` que seguimos posicionando por código con
+  `GetRectFromCharacterIndex`) que seguimos con el ratón. Aprovechado el mismo cambio para dos cosas
+  más: la zona de **clic** para marcar ahora cubre la indentación + el glifo + su espacio (no solo el
+  carácter exacto del glifo) — el usuario pidió poder marcarla sin acertar a pixel —, y el cursor
+  cambia a mano dentro de esa zona. `TaskLines.LineStart` pasó de privado a público para que
+  `NoteWindow` pueda mapear la casilla de una línea a su posición absoluta en el texto completo. La
+  lógica de "encontrar la casilla bajo un punto" vive en un solo sitio (`NoteWindow.FindCheckboxZoneAt`)
+  y la usan tanto el clic como el hover, para no duplicar el cálculo.
+- **Animación al abrir Ajustes.** Mismo fundido + crecimiento desde el 95% que ya usa
+  `NoteWindow.PlayOpenAnimation` (180ms, `QuinticEase`), copiado tal cual a `SettingsWindow` y
+  disparado desde `AppCoordinator.OpenSettings` justo después de `Show()` — mismo patrón que ya
+  sigue `AppCoordinator.OpenOrActivateNote` para las notas.
+
+Tests: 271/271 (sin cambios de lógica en Core salvo la visibilidad de `LineStart`). Build limpio.
+**Pendiente de verificación manual del usuario** — hover/clic de casillas y asa de arrastre son
+interactivos, no se pueden probar sin mover el ratón de verdad.
+
+### Feedback tras probarlo: dos arreglos más (misma sesión)
+
+- **"Gestionar notas" seguía sin animación al abrir.** Solo se había pedido para Ajustes; al verlo
+  al lado ya animado, se notó que esta ventana desentonaba. Mismo `PlayOpenAnimation` copiado a
+  `NotesManagerWindow`, disparado desde `AppCoordinator.OpenOrActivateNotesManager` tras `Show()` —
+  las tres ventanas de la app (nota, Ajustes, gestor) se abren ahora igual.
+- **El resaltado de la casilla se veía "más grande... y desplazado".** Causa: `GetRectFromCharacterIndex`
+  da el rectángulo de **caret** (alto de línea entero, con interlineado) del carácter, no la caja
+  visual del glifo — y encima se extendía hasta el espacio que sigue al glifo, no solo hasta el
+  propio glifo. Arreglado en `NoteWindow.FindCheckboxZoneAt`: el ancho se acota al glifo solo (sin
+  el espacio) y el alto pasa a un cuadrado del tamaño de la fuente, centrado verticalmente dentro de
+  la línea en vez de ocupar todo su alto. La zona de **clic** (más generosa, indentación + glifo +
+  espacio) no cambia — el ajuste fue solo del rectángulo que se pinta, no de qué cuenta como clic.
+
+Tests: 271/271. Build limpio. Portable republicado y relanzado. **Pendiente de verificación visual
+del usuario** — el ajuste de tamaño/posición del resaltado se hizo a ciegas por descripción, no
+viendo el render.
+
+### El resaltado de la casilla, arreglado de verdad: medido a pixel, no descrito de palabra
+
+El primer arreglo de arriba (cuadrado de `FontSize*1.3` centrado en la línea) también se descartó:
+el usuario mandó una captura y siguió sin convencerle. En vez de seguir ajustando números a ciegas
+por descripción, se aplicó la misma técnica que ya usó este proyecto para decidir ☒ frente a ☑ y el
+ancho de las pestañas — renderizar en aislamiento y medir, esta vez con un script de PowerShell +
+WPF (`Add-Type -AssemblyName PresentationCore, PresentationFramework, WindowsBase`, sin lanzar la
+app ni abrir ninguna ventana real) que:
+
+1. Rasteriza el `TextBox` real (mismo `FontFamily`/`FontSize` que `NoteWindow.TextBody`) con fondo
+   blanco puro y escanea los píxeles para encontrar los límites exactos de la tinta del glifo ☐,
+   distintos del rectángulo de **caret** que da `GetRectFromCharacterIndex` (ese rectángulo mide la
+   línea entera con su interlineado, no la tinta visible — con `FontSize=14` la tinta real mide
+   ~9.9px de alto contra los ~18.6px de la línea completa, **el doble**).
+2. Con esos números, renderiza varias propuestas una al lado de otra sobre el mismo fondo cian de la
+   nota (`#83E7F2`, el color exacto de la captura del usuario) y las lee de vuelta con la
+   herramienta de lectura de imágenes — comparando el resaltado ya implementado contra el corregido
+   antes de tocar el código de verdad, en vez de adivinar.
+
+Con eso se confirmó a ojo que el resaltado implementado sí era visiblemente más grande que el propio
+glifo (se salía por los cuatro lados). `NoteWindow.FindCheckboxZoneAt` pasa de "centrar un cuadrado
+de `FontSize*1.3`" a una caja derivada de fracciones medidas de la tinta real (0.093/0.82 de la
+anchura de avance, 0.282/0.53 de la altura de línea) más 3px de aire alrededor — una caja de ~13x13
+para el tamaño de fuente actual, ajustada al glifo visible en vez de al rectángulo de caret que lo
+contiene. **Los números son específicos de este glifo a 14px en Segoe UI Variable Text**: si el
+tamaño de fuente cambiara algún día (ver "tamaño de texto" en `ROADMAP.md`), habría que remedir, no
+solo reescalar la fórmula a ojo.
+
+Tests: 271/271. Build limpio. Portable republicado y relanzado. **Pendiente de verificación visual
+del usuario** — esta vez sí verificado con un render antes de tocar código, pero el veredicto final
+en la app real (sombras, DPI del monitor, etc. pueden diferir del render aislado) lo tiene que dar
+quien lo use.
+
+### Dos bugs más encontrados al probarlo: casilla pegada al texto, y resaltado que se quedaba flotando
+
+- **Marcar una tarea sin espacio entre el glifo y el texto.** Hasta ahora `TaskLines.GlyphIndex`
+  exigía un espacio justo detrás del glifo para contar la línea como tarea — protección deliberada
+  contra un ☐ suelto en mitad de una frase. El usuario pidió explícitamente que también se pudiera
+  marcar una casilla con el texto pegado sin espacio (p. ej. tras borrar el espacio sin querer
+  mientras se edita). Se quitó esa exigencia: ahora basta con que el glifo sea el primer carácter no
+  en blanco de la línea. Fanote **sigue sin escribir** nunca una tarea así (`Prefix` sigue siendo
+  `"☐ "`, con espacio) — solo se relajó el reconocimiento de una que ya llegue así.
+  - Nuevo `TaskLines.PrefixLength(line, glyphIndex)`: 2 si hay espacio detrás del glifo, 1 si no.
+    Centraliza la única diferencia real entre una tarea bien escrita y una con el texto pegado, para
+    no repetir la comprobación en cada sitio que necesitaba saber "cuántos caracteres quito". Tres
+    sitios lo necesitaban y antes asumían `+2` a ciegas: `ToggleTaskLineAt` (Ctrl+L, o se comía la
+    primera letra real de la tarea al quitar el prefijo), `EnterContinuation` (mismo problema al
+    calcular si la tarea estaba vacía) y `TaskCompletion.HashLine` (el hash del ajuste de
+    autoborrado habría cambiado cada vez según si quedaba o no el espacio, rompiendo el seguimiento
+    de cuándo se marcó). `ToggleCheckboxAt` no necesitó cambios: solo voltea un carácter, le da igual
+    lo que venga detrás.
+- **El resaltado de la casilla a veces tardaba en irse.** Causa real: el ajuste nuevo de "borrar
+  tareas completadas solas" puede quitar una línea del texto **sin que el ratón se mueva** (se
+  dispara desde el temporizador de autoguardado, ver `PruneExpiredTasks`) — si el cursor estaba
+  quieto sobre la casilla que acababa de desaparecer, el resaltado se quedaba pintado en su última
+  posición conocida hasta el siguiente movimiento real del ratón, que era quien lo recalculaba.
+  Arreglado enganchando también el resaltado a `TextBody.TextChanged` (con un `UpdateLayout()` antes
+  de preguntar por rectángulos de caracteres, para no leer el layout todavía viejo): cualquier
+  cambio de texto —lo escriba el usuario o lo borre el autoborrado— recalcula el resaltado contra la
+  posición *actual* del ratón (`Mouse.GetPosition`), no solo los eventos de movimiento.
+
+Tests: 280/280 (9 nuevos: `PrefixLength`, el caso sin espacio en `ToggleTaskLineAt`/`EnterContinuation`/
+`ToggleCheckboxAt`, y que `TaskCompletion.HashLine` no cambie según haya o no espacio). Build limpio.
+Portable republicado y relanzado. **Pendiente de verificación manual del usuario** para ambos —
+sobre todo el del resaltado flotante, que depende de que el autoborrado dispare de verdad mientras
+el ratón está quieto encima.
+
+### Un tercer bug del mismo hover: se podía marcar sin estar encima de verdad
+
+Reportado nada más probar los dos arreglos de arriba: con el ratón bastante por debajo de una
+casilla, en el hueco vacío del cuerpo de la nota, seguía dejando marcarla. Causa:
+`GetCharacterIndexFromPoint(position, snapToText: true)` (cambiado de `false` a `true` en la ronda
+del ancho del resaltado, ver más arriba) solo mira qué carácter está horizontalmente más cerca — un
+clic muy por debajo de la última línea "cae" igualmente en un carácter de esa línea, sin tener en
+cuenta la distancia vertical real. `FindCheckboxZoneAt` ahora comprueba además que el punto del
+ratón caiga dentro del alto real de la línea de la casilla (`GetRectFromCharacterIndex(glyphIndex).Top`/
+`.Height`) antes de aceptar la zona — si está por encima o por debajo de esa franja, no cuenta, por
+muy cerca que quede horizontalmente.
+
+Build limpio (fix solo en `NoteWindow`, capa WPF sin cobertura de `Fanote.Core.Tests`). Portable
+republicado y relanzado. **Pendiente de verificación manual del usuario.**
+
+### Cursor de "mover" en el asa de arrastre
+
+Pedido explícito: que el ratón cambie a la cruceta de mover (`Cursors.SizeAll`) al pasar por encima
+del asa de la cabecera (ver más arriba, sesión anterior), no solo verse el icono.
+
+**No es tan simple como poner `Cursor="SizeAll"` en el `TextBlock` del asa.** El resto de la
+cabecera se arrastra dejando que `WindowChrome` la trate como zona de "caption" implícita (sin
+`IsHitTestVisibleInChrome`) — pero una zona de caption es territorio de Windows, no de WPF: los
+eventos normales de ratón (`MouseEnter`, y con ellos cualquier `Cursor` que WPF quisiera aplicar)
+no llegan ahí. Por eso el asa pasa a ser un elemento normal
+(`WindowChrome.IsHitTestVisibleInChrome="True"`, `Background="Transparent"` para que el `Padding`
+también cuente como zona sensible) con su propio `Cursor="SizeAll"`, y el arrastre en sí se dispara
+a mano en `OnGripMouseDown` con `DragMove()` — el método estándar de WPF para iniciar el arrastre
+nativo de una ventana desde un control cualquiera, en vez de depender de que `WindowChrome` lo
+reconozca como caption.
+
+Tests: 280/280 (sin cambios en Core). Build limpio. Portable republicado y relanzado. **Pendiente
+de verificación manual del usuario.**
+
+### Color de selección de texto, y cursor al reabrir una nota
+
+- **Selección de texto sin el azul del sistema.** `TitleBox`/`TextBody` ganan
+  `SelectionBrush="#40000000"` + `SelectionOpacity="1"` — mismo tono que ya usan los botones de la
+  cabecera al pasar el ratón (`NoteActionButtonStyle`), reutilizado en vez de inventar un color
+  nuevo. Verificado con un render contra los seis colores de la paleta antes de tocar el XAML real
+  (la selección de un `TextBox` no se pinta sin foco de teclado real, así que el render simula el
+  mismo tinte a mano sobre el rectángulo real del texto en vez de fiarse de `TextBox.Select()` en un
+  árbol visual desconectado — mismo tipo de limitación que ya se documentó al comparar tratamientos
+  de hover para la casilla de tarea, ver más arriba).
+- **Cursor en una línea nueva al reabrir una nota con texto.** Antes el cursor iba justo al final
+  del último carácter, así que seguir escribiendo continuaba sin querer la última palabra. Ahora, si
+  el cuerpo no termina ya en un salto de línea, se le añade uno antes de posicionar el cursor —
+  puramente de trabajo: no marca la nota como editada (se deshace a mano el `_hasPendingEdit` que el
+  propio `TextChanged` dispara al añadirlo), así que cerrar la nota sin escribir nada más no deja
+  una línea en blanco de más guardada. Si se aprovecha esa línea para escribir algo, se guarda como
+  cualquier otro cambio normal.
+
+Tests: 280/280 (sin cambios en Core — los dos cambios son de UI). Build limpio, 0 advertencias
+(hubo que adelantar la construcción de `_autosaveTimer` antes del primer `Loaded`, que ahora lo usa,
+para que el análisis de nulabilidad no se quejara). Portable republicado y relanzado. **Pendiente de
+verificación manual del usuario.**
+
+## Mover líneas con Alt+Arriba/Abajo, abrir todas las notas, y papelera configurable (sesión 2026-09-09)
+
+Tres peticiones sueltas en la misma sesión.
+
+### Alt+Arriba/Alt+Abajo para reordenar líneas
+
+Pedido original: poder arrastrar tareas con casilla para reordenarlas dentro de una nota. Se le puso
+delante el coste real antes de implementar nada: el cuerpo es un `TextBox` plano a propósito (spec
+v1, sin texto enriquecido), así que arrastrar líneas ahí dentro exige simular el gesto a mano
+(distinguirlo del clic de marcar la casilla, dibujar una línea fantasma seguir el ratón, reconstruir
+el texto al soltar) — bastante más complejo que nada hecho hasta ahora, y en tensión con esa misma
+decisión de diseño. El usuario eligió la alternativa más simple: un atajo de teclado que intercambia
+la línea del cursor con la de arriba o abajo, igual que en cualquier editor de código.
+
+- **`Fanote.Core.LineMovement`** (nuevo, TDD): puro, no se limita a tareas — cualquier línea se
+  puede subir o bajar, que es lo que hacen otros editores con este mismo atajo y evita una
+  restricción arbitraria. **Bug real atrapado por los propios tests antes de tocar la app**:
+  intercambiar dos líneas obtenidas con `text.Split('\n')` sin más se lleva por delante el `\r` de
+  cada una (que en realidad pertenece al separador de esa posición, no al contenido que se mueve) —
+  mismo tipo de bug que ya apareció una vez al borrar líneas en `TaskCompletion.JoinLines`. Arreglado
+  separando cada línea en (contenido, terminador) y intercambiando solo el contenido; el terminador
+  se queda fijo por posición.
+- `NoteWindow.OnBodyKeyDown` traduce el gesto, con prioridad sobre "Arriba en la primera línea sube
+  al título" (para que Alt+Arriba en la primera línea no cruce al título en su lugar). Documentado
+  en la Ayuda rápida de Ajustes.
+
+### Botón "Abrir todas las notas" en el dock
+
+Pedido para ver todas las notas a la vez, como una mesa de post-its, sin abrirlas de una en una.
+`AppCoordinator.OpenAllNotes()` recorre las notas activas y abre las que no lo estén ya, reutilizando
+`OpenOrActivateNote` nota a nota — el cascadeo automático que ya calcula
+`EdgeDockWindow.PositionNoteWindow` (a partir de cuántas ventanas de nota hay abiertas) evita que
+salgan todas exactamente superpuestas, sin ningún cálculo nuevo. Icono nuevo en el pie del dock
+(`&#xE8A9;`, Segoe Fluent Icons) junto a "Gestionar notas" y "+"; **elegido sin verificación visual
+del glifo real** — puede que no sea el más claro y convenga revisarlo la próxima vez que se vea en
+pantalla.
+
+### Auditoría de ajustes fijos, y papelera configurable
+
+El usuario pidió revisar qué valores fijos del código tendría sentido dejar elegir al usuario. Se
+repasaron las constantes de comportamiento (no las de geometría/temporización interna, que no son
+material de Ajustes): la que destacó fue `NotesRepository.DefaultTrashRetentionDays` (30, fijo) —
+sin ningún motivo técnico para que 30 sea mejor que otro número para alguien en concreto, mismo
+argumento que ya llevó al plazo configurable de "borrar tareas completadas". Nueva
+`AppSettings.TrashRetentionDays` (por defecto 30, el mismo valor de fábrica), nueva sección en
+Ajustes (número + "días", mismo patrón visual que el resto). `App.xaml.cs` pasa a usar
+`settings.TrashRetentionDays` en vez de la constante directamente.
+
+**Candidato encontrado y aplazado a propósito, no implementado esta vez**: tamaño de texto
+(pequeño/normal/grande, aplicado a todas las notas) — ya está en `docs/ROADMAP.md` como "si algún
+día se añade algo, que sea esto", respaldado por la investigación de mercado. Se dejó fuera de esta
+ronda porque toca tipografía en varias ventanas a la vez y es lo bastante grande como para merecer
+su propio paso, no colarse de refilón en una sesión de arreglos sueltos.
+
+Tests: 291/291 (11 nuevos: `LineMovement` completo, y el round-trip de `TrashRetentionDays`). Build
+limpio, 0 advertencias. Portable republicado y relanzado. **Pendiente de verificación manual del
+usuario** en los tres — sobre todo el icono de "abrir todas", que no se ha visto renderizado de
+verdad todavía.
+
+### "Abrir todas" pasa a ser un interruptor
+
+Pedido nada más probar el botón: que darle otra vez cierre todas las notas, no solo las abra. Se
+decidió la regla exacta con el usuario (no estaba claro qué debía pasar con algunas abiertas y otras
+no): **la pregunta es binaria, "¿hay algo abierto ahora mismo?"**, no de tres vías
+(ninguna/algunas/todas) — si hay alguna nota abierta, sea como sea que se abriera (por el botón o a
+mano), el botón las cierra todas; si no hay ninguna, las abre todas. Más predecible que intentar
+distinguir "algunas" de "todas".
+
+`AppCoordinator.CloseAllNoteWindows()` (nuevo) cierra cada ventana de nota abierta —
+`.ToList()` antes de recorrer `_openNoteWindows.Values`, porque cerrar cada una dispara su `Closed`,
+que se quita a sí misma del diccionario mientras se está recorriendo. `ToggleAllNotes()` decide entre
+abrir y cerrar según `OpenNoteWindowCount`; el botón del dock llama a este método en vez de
+`OpenAllNotes()` directamente. Tooltip actualizado para explicar el interruptor.
+
+Tests: 291/291 (sin cambios en Core — cambio solo en `AppCoordinator`, capa WPF). Build limpio.
+Portable republicado y relanzado. **Pendiente de verificación manual del usuario.**
+
+### Tooltips oscuros en toda la app
+
+El tooltip de sistema (claro) era el único texto flotante de Fanote que no seguía su propio estilo —
+desentonaba tanto sobre el chrome oscuro como sobre el pastel de una nota. `App.xaml` gana un
+`Style TargetType="ToolTip"` **implícito** (sin `x:Key`, mismo patrón que los estilos ya existentes
+de `Window`/`ScrollBar` ahí mismo): cualquier `ToolTip="..."` ya existente en cualquier ventana sale
+con este aspecto sin tocar ninguno de los sitios donde se usa. Mismo tratamiento visual que
+`ActionsPopup` (fondo `Ground` #2A261F, esquinas redondeadas, sombra caída), para que se sienta de
+la misma familia que el resto de paneles flotantes de la app.
+
+Build limpio. Portable republicado y relanzado. **Pendiente de verificación manual del usuario** —
+no se verificó con un render aislado (un `ToolTip` vive en su propio `Popup`/capa, más enrevesado de
+forzar a renderizar fuera de pantalla que un control normal); el estilo replica uno ya probado
+(`ActionsPopup`), pero conviene confirmarlo pasando el ratón de verdad.
+
+## El dock a la izquierda no quedaba pegado al borde de la pantalla — arreglado
+
+Reportado con capturas (2026-09-09): con `AppSettings.DockEdge = Left`, tanto la tira de reposo como
+el abanico desplegado se veían con un hueco claro entre ellos y el borde físico izquierdo de la
+pantalla — a la derecha (el borde ya probado) no pasaba. **No es lo mismo** que la desaparición
+intermitente de la tira documentada arriba en "Deuda técnica conocida": esto era un desplazamiento
+reproducible siempre, no algo esporádico.
+
+### Causa
+
+`EdgeGeometry.WindowRect` ya distinguía los cuatro bordes y posicionaba la propia ventana del dock
+correctamente pegada al lado físico que tocara. El bug estaba un nivel más adentro: `RestStrip`
+(la tira de guiones), las pestañas del abanico (`TabsList`, dentro de su `DataTemplate`) y el pie de
+botones (`FooterBorder`, sin nombre hasta ahora) estaban alineados **`HorizontalAlignment="Right"`
+directamente en el XAML**, sin condicionar por borde — el valor correcto solo para
+`EdgePosition.Right`, el único borde con el que se diseñó originalmente todo esto (Izquierda se
+añadió después reutilizando la misma plantilla visual sin espejarla). Con el dock a la izquierda, la
+ventana se colocaba bien pegada al borde físico, pero su contenido seguía alineado contra el lado
+**interior** del dock en vez del exterior — de ahí el hueco.
+
+`EdgeDockWindow.PositionNoteWindow` (dónde se abre la nota en sí al pulsar una pestaña) **nunca tuvo
+este bug**: ya calculaba la posición distinguiendo los dos bordes correctamente. Lo que hacía que
+todo el conjunto se viera roto era solo el contenido del dock, no la nota que se abre desde él.
+
+### Arreglo
+
+Nuevo `EdgeDockWindow.ApplyEdgeAlignment()`, llamado una vez en el constructor: si `_edge` es
+`EdgePosition.Left`, espeja `HorizontalAlignment` a `Left` y el margen (leído del propio `Margin`
+declarado en XAML, no un número repetido a mano) de `RestStrip` y `FooterBorder`. Las pestañas del
+abanico se generan de nuevo en cada `SetNotes` (vía `ItemsControl`/`DataTemplate`), así que no basta
+con corregirlas una vez: `OnTabLoaded` (que ya se ejecuta por cada pestaña generada) aplica el mismo
+espejado por botón.
+
+No se tocó nada de `EdgeGeometry` ni de `PositionNoteWindow` — el bug estaba enteramente en
+alineaciones de XAML no condicionadas por borde, nunca en la geometría en sí (que ya era correcta,
+como demuestran los tests de `EdgeGeometryTests` que siguen pasando sin cambios).
+
+Build limpio. Portable republicado y relanzado. **Pendiente de verificación manual del usuario**
+—cambio puramente visual, dependiente de tener `DockEdge = Left` activo para verlo.
+
+### La forma de la pestaña también estaba pensada solo para la derecha
+
+Tras el arreglo de arriba, el usuario señaló con una captura que faltaba algo: la propia **forma**
+de cada pestaña del abanico (`NoteTabButtonStyle`) sigue redondeada solo por la izquierda —
+`CornerRadius="10,0,0,10"` a mano en el XAML, con el comentario original explicándolo: *"el lado
+derecho va a ras del canto de la pantalla y redondearlo dejaría ver el escritorio por una muesca"* —
+correcto para `EdgePosition.Right`, pero con el dock a la izquierda es el lado **izquierdo** el que
+toca el canto real, así que la curva tenía que espejarse igual que la alineación. El texto de dentro
+se queda tal cual, alineado a la izquierda — pedido explícito del usuario, y de hecho no había que
+tocarlo: el redondeo es de la forma exterior, no de dónde se ancla el texto.
+
+**Verificado con un render antes de tocar el XAML real** (mismo tipo de comparación aislada que ya se
+usó para el resaltado de la casilla): tarjeta derecha (actual) contra tarjeta izquierda (espejada)
+lado a lado, mismo `CornerRadius`/`BorderThickness`/degradado que usaría la app de verdad — confirmó
+visualmente que el espejo queda limpio antes de aplicarlo.
+
+- `NoteTabButtonStyle` gana `x:Name` en los dos `Border` que llevaban la forma (`CardBorder`,
+  `SheenBorder` — `HoverOverlay` ya lo tenía), para poder alcanzarlos desde código vía
+  `button.Template.FindName(...)` una vez aplicada la plantilla.
+- Nuevo recurso `TabSheenLeftEdge`: el mismo degradado `TabSheen` (reflejo de luz en el canto
+  redondeado, sombra tenue en el canto a ras) pero con `StartPoint`/`EndPoint` invertidos — más
+  simple que reconstruir los `GradientStop` a mano, y evita duplicar los cuatro valores de color.
+- `EdgeDockWindow.ApplyLeftEdgeTabShape(Button)` (llamado desde `OnTabLoaded`, junto al espejado de
+  alineación que ya existía ahí): espeja `CornerRadius` de los tres bordes y `BorderThickness` del
+  borde principal, y cambia el `Background` del borde de brillo al recurso invertido. Dos funciones
+  puras y reutilizables, `Mirror(CornerRadius)`/`MirrorHorizontal(Thickness)`, en vez de escribir los
+  números al revés a mano en cada sitio.
+- **No se tocó** `CardShadow` (la sombra de la tarjeta, `Direction="95"`, casi vertical — la asimetría
+  es mínima y no se consideró que mereciera la pena la complejidad de espejar también un ángulo de
+  sombra) ni el margen del texto dentro de la pestaña (el usuario pidió explícitamente dejarlo como
+  está).
+
+Build limpio. Portable republicado y relanzado. **Pendiente de verificación manual del usuario en la
+app real** — el render aislado confirmó la forma, pero no las sombras/DPI del monitor real.
+
+### La causa real del hueco que quedaba: el `Grid` raíz, no cada elemento por separado
+
+El usuario reportó que, tras los dos arreglos de arriba, seguía habiendo hueco — tira, abanico y
+**botones** del pie, todos por igual. Causa encontrada: el `Grid` que contiene *todo* el contenido
+del dock (`RestStrip`, `FanPanel`, `FooterBorder`) lleva `Margin="18,18,0,18"` **en el propio XAML**
+— asimétrico a propósito, sin margen a la derecha porque ese lado va a ras del canto real de la
+pantalla y no hay sombra que alojar ahí (comentario original, ver el XAML). Correcto solo para
+`EdgePosition.Right`. Con la izquierda, el lado que va a ras es el opuesto — así que aunque
+`RestStrip`/`FooterBorder`/las pestañas ya estuvieran bien alineados **dentro** de este `Grid` (los
+dos arreglos anteriores), el propio `Grid` seguía siendo un lienzo recortado 18px por el lado
+equivocado: sus hijos podían alinearse "a la izquierda" todo lo que quisieran, que seguían viviendo
+18px más adentro de lo que debían.
+
+Esto explica por qué "los botones también" — están dentro del mismo `Grid`, así que arreglar
+`FooterBorder` por separado no bastaba mientras el contenedor que lo envuelve siguiera encogido.
+
+**Arreglo**: el `Grid` gana `x:Name="ContentGrid"`, y `ApplyEdgeAlignment` (el mismo método de los
+arreglos anteriores) le espeja el margen para `EdgePosition.Left` — `Margin.Left` pasa a
+`Margin.Right` y viceversa, leídos del propio XAML en vez de repetir `18`/`0` a mano.
+
+Build limpio. Portable republicado y relanzado — el usuario ya tenía `DockEdge` en Izquierda
+guardado de antes, así que este relanzamiento debería mostrar el arreglo sin tocar Ajustes.
+**Pendiente de verificación manual del usuario.**
+
+### El pie de botones, mismo espejo: orden invertido, no solo movido de sitio
+
+Última pregunta del usuario tras ver el hueco ya arreglado: los tres botones del pie (abrir todas,
+gestionar, nueva nota) seguían en el mismo orden de lectura que a la derecha — ¿se deja así, o se
+invierte también? Respuesta aplicada: **se invierte**. En el XAML (pensado para la derecha) "+" va
+último, y como el grupo entero se pega al lado derecho, ser el último de la fila significa ser el más
+cercano al canto real de la pantalla. Mover solo el grupo entero a la izquierda sin tocar el orden
+interno dejaba "+" como el más *lejano* del canto en vez del más cercano — cada botón cambiaba su
+posición relativa a la pantalla, justo lo contrario de lo que se busca en un espejo (que cada cosa
+conserve su distancia al borde, no su orden de lectura).
+
+`ApplyEdgeAlignment` invierte la colección `FooterPanel.Children` para `EdgePosition.Left` — ahora
+"+" sigue siendo el botón más cercano al canto real en los dos bordes.
+
+Build limpio. Portable republicado y relanzado. **Pendiente de verificación manual del usuario.**
+
+## Tres arreglos más para cerrar la ronda (sesión 2026-09-11)
+
+### Arrastrar una pestaña hacia abajo la dejaba detrás del pie de botones
+
+Causa: `FanPanel` es un `Grid` de dos filas — fila 0 el abanico (`TabsScroll`), fila 1 `FooterBorder`.
+Al declararse después en el XAML, `FooterBorder` pinta por encima por defecto. El
+`Panel.SetZIndex(_dragButton, 1000)` que ya pone `OnTabDragMove` en la pestaña arrastrada solo compite
+con sus hermanas **dentro** del `StackPanel` de `TabsList` — no alcanza a `FooterBorder`, que vive un
+nivel más arriba, en otra fila del mismo `Grid`. Arrastrar una pestaña lo bastante abajo como para
+solapar con esa fila la dejaba por detrás de los botones. Arreglado con `Panel.ZIndex="1"` fijo en
+`TabsScroll`, para que el abanico entero (arrastre incluido) quede siempre por encima del pie.
+
+### El resaltado de la casilla podía aparecer solo, sin que el ratón la tocara
+
+Reportado al crear una tarea con Ctrl+L: la casilla nueva a veces salía ya con el tinte de "casilla
+bajo el ratón", sin haber pasado el ratón por ahí. Causa: el arreglo de la ronda anterior (el
+resaltado se recalcula en cada `TextChanged`, no solo al mover el ratón, para que una tarea
+autoborrada no dejara el tinte flotando) tenía un efecto secundario no querido — cualquier cambio de
+texto por **teclado** (Ctrl+L, escribir, Enter) también recalculaba contra la posición *actual* del
+ratón, y si el ratón estaba quieto encima de donde cae la casilla nueva, el tinte se encendía sin que
+nadie lo hubiera pedido con un gesto de ratón de verdad.
+
+Arreglo: separar las dos direcciones del cambio. `RefreshCheckboxHoverAfterTextChange` (nuevo, es lo
+que ahora llama el `TextChanged`) solo actúa si el resaltado **ya estaba visible** — puede apagarlo o
+recolocarlo, pero nunca encenderlo desde cero. Solo un movimiento real del ratón
+(`OnBodyMouseMove`) puede pasarlo de oculto a visible. Con esto, el caso de la tarea autoborrada
+sigue arreglado (el resaltado estaba visible, se apaga) y el de Ctrl+L también (el resaltado estaba
+oculto, sigue oculto).
+
+### Las notas no recordaban su posición al apagar o reiniciar el equipo
+
+El usuario reportó perder las posiciones guardadas al cerrar la app y reabrirla, o al apagar/reiniciar
+el PC. Investigado el camino normal de cierre (tray "Salir" → `Application.Current.Shutdown()`): los
+tres handlers de `Closing` de `NoteWindow` (`SavePlacementOnce`, `OnClosingWithAnimation`, el que hace
+`Flush()`) se disparan los tres en la **misma pasada**, aunque el segundo cancele el cierre para
+reproducir la animación de salida — así que guardar posición y texto ya ocurría de forma síncrona ahí,
+sin depender de que la animación de ~140ms llegara a completarse. Ese camino ya estaba bien.
+
+**El hueco real estaba en el apagado/reinicio del sistema**: no había ningún manejo de
+`Microsoft.Win32.SystemEvents.SessionEnding` (el aviso que Windows manda antes de cerrar la sesión).
+Sin él, Windows puede terminar el proceso sin pasar por el ciclo normal de `Closing` de cada ventana
+—y menos aún esperar a que la animación de cierre complete—, así que una nota abierta en ese momento
+podía perder tanto el texto sin guardar como la posición.
+
+- `NoteWindow.FlushForShutdown()` (nuevo, `internal`): guarda texto y posición ya, sin pasar por el
+  ciclo de cierre normal ni su animación — llama a `Flush()` y `SavePlacementOnce` directamente.
+- `AppCoordinator.FlushAllOpenNotes()` (nuevo): lo llama para cada nota abierta.
+- `App.xaml.cs` engancha `SystemEvents.SessionEnding` (mismo patrón que ya usa
+  `DisplaySettingsChanged`, con su baja correspondiente en `Exit`) para llamar a
+  `FlushAllOpenNotes()` en cuanto llega el aviso, con margen antes de que Windows fuerce el cierre.
+
+Tests: 291/291 (sin cambios en Core — los tres arreglos son de capa WPF). Build limpio. Portable
+republicado y relanzado. **Pendiente de verificación manual del usuario** en los tres — el de
+apagar/reiniciar en particular solo se puede confirmar de verdad reiniciando el equipo de verdad con
+una nota abierta y sin guardar.
+
+## Ajustes se salía por abajo en la pantalla del portátil
+
+Reportado por el usuario: en multimonitor (portátil + externo), Ajustes se cortaba por abajo en la
+pantalla más pequeña del portátil. Causa: `SettingsWindow` calculaba su `MaxHeight` contra
+`SystemParameters.WorkArea` — que en WPF es **siempre** el área de trabajo del monitor **primario**
+del sistema, nunca la del monitor donde la ventana se muestra de verdad. Con el monitor externo
+como primario (caso típico de este tipo de configuración), el tope salía calculado contra la
+pantalla grande, y de nada servía si Ajustes terminaba abriéndose en la del portátil.
+
+`EdgeDockWindow.CenterOnThisMonitor` (que ya centra la ventana contra el monitor correcto, el del
+propio dock que la abrió) ahora también fija `window.MaxHeight` contra `_workingArea.Height * 0.9` —
+el área de trabajo real del monitor donde se va a mostrar, no la del primario. Corre antes de
+`Show()`, así que la ventana nunca llega a pintarse con el tope equivocado. La línea original en el
+constructor de `SettingsWindow` se queda como valor de reserva para el caso (no usado en la práctica)
+de mostrarla sin pasar por `AppCoordinator.OpenSettings`. Mismo arreglo beneficia de paso a
+`NotesManagerWindow`, que comparte el mismo método aunque tenga alto fijo en vez de `SizeToContent`.
+
+Tests: 291/291 (sin cambios en Core). Build limpio. Portable republicado y relanzado. **Pendiente de
+verificación manual del usuario** en la pantalla del portátil.
+
+## Cursor en una tarea vacía al reabrir, y parpadeo al cambiar de pantalla en Ajustes (sesión 2026-09-11)
+
+### El cursor no respetaba una tarea ya vacía esperando texto
+
+Pedido del usuario: si se deja una nota con una casilla puesta pero sin texto detrás (`"☐ "` solo),
+al reabrirla el cursor tiene que ir justo ahí, no en una línea nueva debajo — una tarea vacía ya es
+en sí misma "una línea en blanco esperando texto", así que añadirle otra debajo deja un hueco de más
+antes de poder escribir la tarea.
+
+Nuevo `TaskLines.IsEmptyTaskLine(line)` (puro, TDD): una tarea es "vacía" si no tiene contenido real
+después del prefijo (glifo, o glifo+espacio según `PrefixLength`). Se reaprovecha también dentro de
+`EnterContinuation`, que ya calculaba exactamente lo mismo a mano para decidir si Enter debía
+terminar la lista — un sitio menos con la misma lógica repetida. El `Loaded` de `NoteWindow` ahora
+comprueba la última línea del cuerpo con este método antes de decidir si añade la línea en blanco de
+trabajo: si ya es una tarea vacía, no añade nada y dan el cursor cae de forma natural justo detrás
+del prefijo.
+
+Tests: 299/299 (8 nuevos para `IsEmptyTaskLine`). Build limpio.
+
+### El dock parpadeaba al cambiar de pantalla en Ajustes
+
+Reportado por el usuario: al cambiar el destino del dock (una pantalla concreta, o todas) en
+Ajustes, se veía un instante el pie de botones (el "+", el engranaje...) fuera de sitio antes de que
+el dock se recolocara. Causa: `App.BuildDocks()` (el mismo método que arma los docks al arrancar y al
+reconstruir tras un cambio de pantallas) mostraba cada `EdgeDockWindow` con `Show()` **antes** de
+decirle qué notas hay — un dock recién construido nace con `_noteCount = 0`, y `ApplyState` trata
+eso como el caso "vacío" de verdad (a propósito: sin notas, enseña los botones directamente porque
+son la única acción posible). Ese estado "vacío" se pintaba en la pantalla real durante el instante
+que tardaba en llegar el `RefreshAll()` de después, que es lo que de verdad rellena `_noteCount` con
+las notas reales y corrige el estado — justo el parpadeo descrito.
+
+Arreglo: `dock.Refresh()` antes de `dock.Show()` en el bucle de `BuildDocks()`, para que el dock ya
+tenga sus datos reales (y por tanto el estado correcto de reposo/vacío) desde el primer frame que se
+llega a pintar. El `RefreshAll()` final se queda igual, por si acaso, pero ya no tiene nada que
+corregir en el caso normal.
+
+Tests: 299/299 (sin cambios en Core — el arreglo es de capa WPF). Build limpio. Portable republicado
+y relanzado. **Pendiente de verificación manual del usuario** en los dos.
+
+## Exportar a Markdown (sesión 2026-09-11)
+
+Primer punto de `docs/ROADMAP.md` que se implementa de la lista de "pendiente y decidido: se hará".
+La regla de conversión de casillas ya estaba decidida ahí; quedaba por decidir alcance, formato y
+forma de guardar — resuelto con `superpowers:brainstorming` (bounded, sin spec formal) antes de
+tocar código:
+
+- **Alcance**: una nota a la vez (desde `NoteWindow`) **y** en bloque (desde `NotesManagerWindow`).
+- **Formato**: solo Markdown — es el que ya menciona el roadmap y el que mejor conserva estructura.
+- **Ubicación**: diálogo nativo (`Microsoft.Win32.SaveFileDialog`/`OpenFolderDialog`, este último ya
+  disponible en .NET sin tirar de WinForms pese a que el proyecto tiene `UseWindowsForms` habilitado
+  solo por `TrayIcon`), no una carpeta fija.
+
+### `Fanote.Core.MarkdownExport` (nuevo, TDD)
+
+Puro, mismo patrón que `NoteTitleHelper`/`TaskLines`, sin dependencia de WPF:
+
+- `ToMarkdown(string noteText)`: reutiliza `NoteTitleHelper.GetTitle` y `NoteText.Split` tal cual
+  (el título exportado es el mismo que ya se ve en la pestaña del dock, no un cálculo aparte) —
+  título como encabezado `# `, y cada línea de tarea del cuerpo (`TaskLines.GlyphIndex`/
+  `PrefixLength`/`IsChecked`, ☐/☒/☑) traducida a `- [ ]`/`- [x]` conservando la sangría delante del
+  guion. El resto del texto no se toca.
+- `SuggestedFileName(string noteText)`: título saneado (fuera los caracteres inválidos de nombre de
+  fichero en Windows, recorte a 80 caracteres, `"Nota"` si queda vacío tras sanear) + `.md`.
+
+14 tests nuevos: encabezado, cuerpo normal intacto, las tres variantes de casilla, sangría
+preservada, el caso "glifo pegado al texto sin espacio" (`PrefixLength`), varias tareas mezcladas
+con texto suelto, y el saneado de nombre de fichero (caracteres inválidos, texto vacío, título muy
+largo).
+
+### Capa WPF
+
+- **`NoteWindow`**: nueva entrada "Exportar a Markdown" en el menú "⋯" (`ActionsPopup`), separada de
+  Archivar/Papelera por su propio divisor — exporta el texto **en vivo** de la ventana (título+cuerpo
+  tal como están en pantalla en ese momento, no lo último guardado en la base de datos), con
+  `SaveFileDialog` y el nombre sugerido por `MarkdownExport.SuggestedFileName`.
+- **`NotesManagerWindow`**: nuevo botón "Exportar" en la barra de herramientas (mismo `WrapPanel` que
+  ya usan los demás, por la misma razón documentada más arriba en "Botón Archivadas + gestor de
+  notas": un botón más no cabía en una sola línea). A diferencia de Archivar/Restaurar/Papelera, este
+  botón **no exige selección**: exporta las filas marcadas si hay alguna, o todas las del filtro
+  activo si no hay ninguna — así sirve tanto para sacar una nota suelta como para un volcado completo
+  de "Todas" sin tener que marcarlas una a una. Un fichero `.md` por nota en la carpeta elegida, con
+  sufijo numérico `" (2)"`, `" (3)"`... si dos notas generan el mismo nombre de fichero o si ya existe
+  uno igual de una exportación anterior en esa misma carpeta.
+- Ninguno de los dos vuelca el BLOB cifrado: `NoteWindow` ya tiene el texto en claro en sus dos
+  `TextBox`, y `NotesManagerWindow` ya carga `Note.Text` descifrado vía `NotesRepository.GetByState`
+  (como el resto de la ventana) — `ContentCipher` no aparece en ningún punto de este cambio.
+- Icono del botón de exportar en bloque (`&#xE896;`, Segoe Fluent Icons) **elegido sin verificación
+  visual del render real** — mismo aviso que ya se dejó anotado para el icono de "abrir todas" (ver
+  más arriba); puede que convenga revisarlo la próxima vez que se vea en pantalla.
+- Textos nuevos en `Fanote.Resources.Strings` (ES/EN): `ExportToMarkdown`, `MarkdownFileFilter`,
+  `Export`, `ExportFolderDialogTitle`.
+
+Tests: 313/313 (14 nuevos, todos en Core). Build limpio, 0 advertencias. **Pendiente de verificación
+manual del usuario** en los dos puntos — sobre todo el diálogo de carpeta en bloque, que no se ha
+visto abrirse de verdad todavía.
+
+### Además del `.md` suelto, un `.zip` en el export en bloque — revisado dos veces
+
+Preguntado tras ver el resumen de arriba: ¿carpeta con `.md` sueltos, o `.zip`? Ya estaba
+implementado como "carpeta normal" (lo de arriba). El usuario pidió poder elegir entre las dos —
+aclarado que se refería a un diálogo, pero dejó la decisión abierta ("lo que consideres mejor"). Se
+optó primero por **las dos cosas siempre, sin preguntar** (mismo criterio que el descarte del
+selector de color al crear nota, "complejidad innecesaria para el beneficio") — implementado así una
+primera vez.
+
+**El usuario corrigió esa decisión de inmediato**: prefiere el diálogo después de todo, en concreto
+para no llenar la carpeta de descargas con el mismo contenido dos veces (los `.md` sueltos y el `.zip`
+a la vez). Motivo válido que el criterio anterior no había pesado — aquí no aplica el mismo argumento
+que con el selector de color (ese evitaba un paso sin coste alguno para el resultado; aquí "siempre
+las dos cosas" sí tiene un coste real, duplicar contenido en el disco del usuario).
+
+**Diseño final**: `MessageBox.Show` con `YesNoCancel` antes de elegir destino — "Sí" exporta como
+`.zip` único (`SaveFileDialog`), "No" como carpeta con `.md` sueltos (`OpenFolderDialog`),
+mutuamente excluyentes. En el camino del `.zip`, las notas se escriben **directamente como entradas
+del archivo** (`ZipArchiveEntry.Open()` + `StreamWriter`) sin pasar por ficheros `.md` sueltos en
+disco primero — así el `.zip` no deja nada más a su lado tampoco. `UniqueFileName` se generalizó a
+`UniqueName` con un `Func<string, bool>? alsoTaken` opcional: la comprobación contra disco
+(`File.Exists`) solo tiene sentido en el camino de carpeta, el `.zip` siempre es un fichero nuevo.
+
+**Corrección de proceso, anotada para no repetirla**: el usuario pidió explícitamente dejar de
+reconstruir y relanzar el portable tras cada cambio suelto — solo al cierre de una sesión larga de
+cambios. `dotnet build`/`dotnet test` y la documentación en `STATUS.md`/`ROADMAP.md` siguen
+haciéndose en cada cambio; lo que se agrupa es solo publicar+relanzar el `.exe`.
+
+Tests: 313/313 (sin cambios — el zip es capa WPF, mismo patrón que el resto del export en bloque).
+Build limpio.

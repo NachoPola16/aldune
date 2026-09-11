@@ -381,6 +381,18 @@
                 <!-- Margin vertical en los elementos: si el WrapPanel llega a partirse a un ancho
                      muy estrecho, las dos líneas se tocaban y los botones parecían solaparse. -->
                 <WrapPanel HorizontalAlignment="Right">
+                    <!-- Exporta la selección si hay alguna marcada, o todas las del filtro actual si
+                         no — no depende de tener algo seleccionado, a diferencia de los botones de
+                         abajo. Glifo elegido sin verificación visual del render real, igual que ya
+                         pasó una vez con el de "abrir todas" (ver docs/STATUS.md). -->
+                    <Button x:Name="ExportButton" Click="OnExportSelectedClick" Margin="8,3,0,3"
+                            Style="{StaticResource ToolbarButtonStyle}">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="&#xE896;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets"
+                                       VerticalAlignment="Center" Margin="0,0,6,0" />
+                            <TextBlock Text="{x:Static res:Strings.Export}" VerticalAlignment="Center" />
+                        </StackPanel>
+                    </Button>
                     <Button x:Name="ArchiveButton" Click="OnArchiveSelectedClick" Margin="8,3,0,3"
                             Style="{StaticResource ToolbarButtonStyle}">
                         <StackPanel Orientation="Horizontal">

@@ -55,6 +55,17 @@ public sealed class NotesDatabase
                 NoteId TEXT PRIMARY KEY NOT NULL,
                 Position REAL NOT NULL
             );
+
+            -- Cuándo se marcó cada tarea como hecha, para el ajuste opcional "borrar tareas
+            -- completadas solas" (ver Fanote.Core.TaskCompletion). Aparte de Note por el mismo
+            -- motivo que NoteOrder/NotePlacement. LineHash identifica la tarea por su contenido, no
+            -- por su posición, porque la posición cambia con cualquier edición alrededor.
+            CREATE TABLE IF NOT EXISTS TaskCompletion (
+                NoteId TEXT NOT NULL,
+                LineHash TEXT NOT NULL,
+                CompletedAt TEXT NOT NULL,
+                PRIMARY KEY (NoteId, LineHash)
+            );
             """;
         command.ExecuteNonQuery();
     }

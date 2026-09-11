@@ -51,18 +51,34 @@
             <GradientStop Offset="1" Color="#14000000" />
         </LinearGradientBrush>
 
+        <!-- Mismos GradientStop que TabSheen, con el sentido de la línea invertido (StartPoint/
+             EndPoint al revés): el claro cae ahora en el canto derecho y el oscuro en el izquierdo,
+             para el dock a la izquierda — ver ApplyEdgeMirroring en el code-behind, que elige entre
+             las dos según _edge en vez de calcular un degradado nuevo cada vez. -->
+        <LinearGradientBrush x:Key="TabSheenLeftEdge" StartPoint="1,0" EndPoint="0,0">
+            <GradientStop Offset="0" Color="#1AFFFFFF" />
+            <GradientStop Offset="0.08" Color="#00FFFFFF" />
+            <GradientStop Offset="0.92" Color="#00000000" />
+            <GradientStop Offset="1" Color="#14000000" />
+        </LinearGradientBrush>
+
         <Style x:Key="NoteTabButtonStyle" TargetType="Button">
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="Button">
                         <!-- Redondeada solo por la izquierda: el lado derecho va a ras del canto de
-                             la pantalla y redondearlo dejaría ver el escritorio por una muesca. -->
+                             la pantalla y redondearlo dejaría ver el escritorio por una muesca. Es
+                             el valor correcto para EdgePosition.Right — con el dock a la izquierda,
+                             OnTabLoaded espeja CornerRadius/BorderThickness de CardBorder y
+                             SheenBorder (y cambia su Background a TabSheenLeftEdge), porque entonces
+                             es el lado IZQUIERDO el que va a ras del canto real de la pantalla. -->
                         <Grid Effect="{StaticResource CardShadow}">
-                            <Border Background="{TemplateBinding Background}"
+                            <Border x:Name="CardBorder"
+                                    Background="{TemplateBinding Background}"
                                     BorderBrush="{Binding Color, Converter={StaticResource NoteRimConverter}}"
                                     BorderThickness="1,1,0,1"
                                     CornerRadius="10,0,0,10" />
-                            <Border Background="{StaticResource TabSheen}" CornerRadius="10,0,0,10" />
+                            <Border x:Name="SheenBorder" Background="{StaticResource TabSheen}" CornerRadius="10,0,0,10" />
 
                             <!-- Dos líneas, ancladas arriba. Al solaparse las pestañas solo queda
                                  visible la franja superior de cada una, así que ahí tiene que
@@ -148,8 +164,15 @@
          el lado derecho va a ras del canto de la pantalla y ahí no hay sombra que alojar. Con
          Margin="18" a los cuatro lados quedaban 190px para una pestaña de 208, así que se
          recortaba 18px por la izquierda — justo donde vive el margen de la etiqueta, y por eso el
-         título salía cortado. -->
-    <Grid Margin="18,18,0,18">
+         título salía cortado.
+
+         Correcto solo para EdgePosition.Right. Con el dock a la izquierda es el lado IZQUIERDO el
+         que va a ras del canto real, así que este margen se espeja por código en
+         EdgeDockWindow.ApplyEdgeAlignment — era la causa real del hueco que seguía viéndose incluso
+         después de corregir la tira/pestañas/pie por separado: todo eso vive DENTRO de este Grid,
+         así que un Grid ya encogido 18px por el lado equivocado deja hueco pase lo que pase con la
+         alineación de sus hijos. -->
+    <Grid x:Name="ContentGrid" Margin="18,18,0,18">
         <!-- Dos capas superpuestas con fundido cruzado. Volver a este patrón (que una ronda
              anterior había eliminado) es correcto ahora: lo que lo hacía frágil era tener que
              mantener la región sincronizada con él, y ya no hay región. El cuidado que sí sigue
@@ -166,6 +189,8 @@
              de abajo RestDashWidth x RestDashLength con RestGap de separacion. Tienen que ir
              juntos: RestingVisibleRect calcula la zona sensible al raton con esas constantes, asi
              que si el XAML se separa de ellas el raton deja de coincidir con lo que se ve. -->
+        <!-- HorizontalAlignment/Margin espejados por código para el dock a la izquierda — ver el
+             comentario junto a FooterBorder más abajo, mismo bug y mismo arreglo. -->
         <Border x:Name="RestStrip"
                 Background="#2A261F"
                 CornerRadius="10"
@@ -200,9 +225,19 @@
 
             <!-- Auto y no Hidden: desde que la ventana tiene tope (ver EdgeGeometry.FanBudget), con
                  muchas notas queda abanico fuera de la vista, y sin barra no habría ninguna pista de
-                 que se puede seguir bajando. -->
+                 que se puede seguir bajando.
+
+                 Panel.ZIndex="1": FooterBorder es la fila 1 de este mismo Grid y, al declararse
+                 después en el XAML, pintaría por encima por defecto. El ZIndex que
+                 OnTabDragMove pone en la pestaña que se arrastra (Panel.SetZIndex(_dragButton,
+                 1000)) solo compite con sus hermanas DENTRO del StackPanel de TabsList — no
+                 alcanza a FooterBorder, que vive un nivel más arriba, en otra fila de este Grid.
+                 Sin esto, arrastrar una pestaña hacia abajo lo bastante para solapar con la fila
+                 del pie la dejaba por detrás de los botones (reportado por el usuario,
+                 2026-09-11). -->
             <ScrollViewer x:Name="TabsScroll"
                           Grid.Row="0"
+                          Panel.ZIndex="1"
                           VerticalAlignment="Center"
                           VerticalScrollBarVisibility="Auto"
                           HorizontalScrollBarVisibility="Disabled">
@@ -242,9 +277,26 @@
                  sin él, con cero notas el footer eran dos círculos sueltos flotando sobre el
                  escritorio, sin nada que los agrupe como "esto es el dock". CornerRadius a pastilla
                  (mitad del alto real: 7 relleno + 40 del botón mayor + 7 relleno = 54, radio 27). -->
-            <Border Grid.Row="1" Background="#2A261F" CornerRadius="27"
+            <!-- HorizontalAlignment/Margin de este Border y de RestStrip/las pestañas de arriba se
+                 fijan también por código en el constructor de EdgeDockWindow (ApplyEdgeAlignment):
+                 lo escrito aquí es el valor para el dock a la derecha, y se espeja a la izquierda en
+                 caliente si _edge es EdgePosition.Left. Bug real corregido (usuario, 2026-09-09):
+                 con el dock a la izquierda, la ventana ya se posicionaba bien pegada al borde físico
+                 de la pantalla, pero este contenido seguía alineado "a la derecha" sin más — es
+                 decir, contra el lado INTERIOR del dock en vez del exterior, dejando un hueco entre
+                 la tira/pestañas y el borde real de la pantalla. -->
+            <Border x:Name="FooterBorder" Grid.Row="1" Background="#2A261F" CornerRadius="27"
                     HorizontalAlignment="Right" Margin="0,14,8,0" Padding="7">
                 <StackPanel x:Name="FooterPanel" Orientation="Horizontal">
+                    <!-- "Ver todas": interruptor, no solo abrir. Si hay alguna nota abierta ahora
+                         mismo las cierra todas; si no hay ninguna, las abre todas de golpe (como
+                         una mesa de post-its) — pedido explícito del usuario para no tener que
+                         abrirlas ni cerrarlas de una en una. Ver AppCoordinator.ToggleAllNotes. -->
+                    <Button x:Name="OpenAllButton" Click="OnOpenAllClick"
+                            Style="{StaticResource CircularIconButtonStyle}"
+                            ToolTip="{x:Static res:Strings.OpenAllNotesTooltip}">
+                        <TextBlock Text="&#xE8A9;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" FontSize="15" />
+                    </Button>
                     <Button x:Name="ManageArchiveButton" Click="OnManageArchiveClick"
                             Style="{StaticResource CircularIconButtonStyle}"
                             ToolTip="{x:Static res:Strings.ManageNotesTooltip}">

@@ -62,6 +62,7 @@ public partial class EdgeDockWindow : Window
     {
         InitializeComponent();
         _edge = edge;
+        ApplyEdgeAlignment();
         _workingArea = monitor.WorkArea;
         _monitorKey = monitor.DeviceName;
         _repository = repository;
@@ -100,6 +101,82 @@ public partial class EdgeDockWindow : Window
         ApplyWindowRect();
         ApplyState(animate: false);
     }
+
+    /// <summary>
+    /// La tira de reposo, las pestañas del abanico y el pie de botones se declaran en XAML alineados
+    /// "a la derecha" — el valor correcto para <see cref="EdgePosition.Right"/>, que fue el único
+    /// borde con el que se diseñó esto. Con el dock a la izquierda la VENTANA ya se coloca bien
+    /// pegada al borde físico de la pantalla (<see cref="EdgeGeometry.WindowRect"/> ya distingue los
+    /// bordes), pero ese contenido interno seguía alineado contra el lado equivocado: el interior
+    /// del dock en vez del exterior, dejando un hueco entre la tira/pestañas y el borde real de la
+    /// pantalla (reportado por el usuario con capturas, 2026-09-09). Aquí se espeja para
+    /// <see cref="EdgePosition.Left"/>; los botones de cada pestaña se mirror aparte en
+    /// <see cref="OnTabLoaded"/>, porque se generan de nuevo cada vez que cambia la lista de notas.
+    /// </summary>
+    private void ApplyEdgeAlignment()
+    {
+        if (_edge != EdgePosition.Left) return;
+
+        // La causa raíz: el Grid que contiene todo lo demás reserva su margen de sombra en los tres
+        // lados "de dentro" (izquierda/arriba/abajo) y ninguno "a ras" (derecha) — correcto para
+        // EdgePosition.Right, donde ese lado ya toca el canto real de la pantalla. A la izquierda es
+        // al revés. Sin espejar esto, da igual cómo se alineen RestStrip/FooterBorder/pestañas por
+        // dentro: seguirían viviendo en un lienzo ya encogido por el lado equivocado.
+        ContentGrid.Margin = new Thickness(0, ContentGrid.Margin.Top, ContentGrid.Margin.Left, ContentGrid.Margin.Bottom);
+
+        RestStrip.HorizontalAlignment = HorizontalAlignment.Left;
+        RestStrip.Margin = new Thickness(RestStrip.Margin.Right, 0, 0, 0);
+
+        FooterBorder.HorizontalAlignment = HorizontalAlignment.Left;
+        FooterBorder.Margin = new Thickness(FooterBorder.Margin.Right, FooterBorder.Margin.Top, 0, 0);
+
+        // Orden invertido, no solo el grupo movido de sitio: en el XAML (pensado para la derecha) el
+        // botón "+" es el último y por tanto el más cercano al canto real de la pantalla (el grupo
+        // está pegado a la derecha, así que el último de la fila es el que toca el borde). Si solo
+        // se movía el grupo entero a la izquierda sin tocar el orden, "+" pasaba a ser el más LEJANO
+        // del canto en vez del más cercano — cada botón cambiaba su posición relativa a la pantalla,
+        // que es justo lo que un espejo no debería hacer. Invertir la lista de hijos conserva la
+        // distancia de cada botón al borde real, en vez de conservar su orden de lectura.
+        var buttons = FooterPanel.Children.Cast<UIElement>().Reverse().ToList();
+        FooterPanel.Children.Clear();
+        foreach (var button in buttons) FooterPanel.Children.Add(button);
+    }
+
+    /// <summary>
+    /// Además de alinearse a la izquierda (ver <see cref="ApplyEdgeAlignment"/>), cada pestaña tiene
+    /// su propia forma pensada para el dock a la derecha: redondeada solo por la izquierda, con el
+    /// lado derecho a ras del canto físico de la pantalla ("redondearlo dejaría ver el escritorio
+    /// por una muesca", ver <c>NoteTabButtonStyle</c> en el XAML). Con el dock a la izquierda es al
+    /// revés: el lado izquierdo es el que toca el canto real, así que la curva y el filo del borde
+    /// tienen que espejarse — pedido explícito del usuario tras ver la captura ("la curva debería
+    /// estar a la derecha, como un espejo"). El texto de dentro (título/vista previa) no se toca:
+    /// sigue alineado a la izquierda igual que siempre, según pidió también.
+    /// </summary>
+    private void ApplyLeftEdgeTabShape(Button button)
+    {
+        button.HorizontalAlignment = HorizontalAlignment.Left;
+
+        if (button.Template.FindName("CardBorder", button) is Border card)
+        {
+            card.CornerRadius = Mirror(card.CornerRadius);
+            card.BorderThickness = MirrorHorizontal(card.BorderThickness);
+        }
+
+        if (button.Template.FindName("SheenBorder", button) is Border sheen)
+        {
+            sheen.CornerRadius = Mirror(sheen.CornerRadius);
+            sheen.Background = (Brush)FindResource("TabSheenLeftEdge");
+        }
+
+        if (button.Template.FindName("HoverOverlay", button) is Border hover)
+        {
+            hover.CornerRadius = Mirror(hover.CornerRadius);
+        }
+    }
+
+    private static CornerRadius Mirror(CornerRadius r) => new(r.TopRight, r.TopLeft, r.BottomLeft, r.BottomRight);
+
+    private static Thickness MirrorHorizontal(Thickness t) => new(t.Right, t.Top, t.Left, t.Bottom);
 
     /// <summary>
     /// Fija el rectángulo de la ventana. Se llama al construir y cuando cambia el número de notas
@@ -453,6 +530,11 @@ public partial class EdgeDockWindow : Window
         _coordinator.OpenOrActivateNotesManager(this);
     }
 
+    private void OnOpenAllClick(object sender, RoutedEventArgs e)
+    {
+        _coordinator.ToggleAllNotes();
+    }
+
     /// <summary>
     /// Si este dock vive en el mismo monitor físico que <paramref name="hMonitor"/>. Lo usa
     /// <c>AppCoordinator</c> para encontrar el dock del monitor donde está el cursor, al abrir una
@@ -472,9 +554,20 @@ public partial class EdgeDockWindow : Window
     /// <summary>
     /// Centra <paramref name="window"/> en el monitor de este dock. Una ventana sin posición fijada
     /// acaba en (0,0), o sea siempre en el monitor principal, aunque la hayas abierto desde el otro.
+    ///
+    /// También acota su alto contra ESTE monitor, no el que tuviera puesto por su cuenta (p. ej.
+    /// <c>SettingsWindow</c> se pone un <c>MaxHeight</c> de reserva contra
+    /// <c>SystemParameters.WorkArea</c> en su constructor — que en WPF es SIEMPRE el monitor
+    /// PRIMARIO del sistema, nunca el monitor real donde la ventana se va a mostrar). Con portátil
+    /// + monitor externo, si el externo es el primario, esa reserva se queda corta y la ventana se
+    /// sale por abajo en la pantalla pequeña del portátil (reportado por el usuario, 2026-09-11).
+    /// Aquí sí se conoce el monitor de verdad, así que se corrige antes de que la ventana se
+    /// muestre por primera vez.
     /// </summary>
     internal void CenterOnThisMonitor(Window window)
     {
+        window.MaxHeight = _workingArea.Height * 0.9;
+
         window.Left = _workingArea.X + (_workingArea.Width - window.Width) / 2;
         window.Top = _workingArea.Y + (_workingArea.Height - window.Height) / 2;
     }
@@ -712,6 +805,11 @@ public partial class EdgeDockWindow : Window
         if (index < 0) return;
 
         _tabButtons[index] = button;
+
+        // Mismo espejado que ApplyEdgeAlignment, pero por botón: el XAML declara cada pestaña
+        // alineada "a la derecha" (correcto para EdgePosition.Right) y ItemsControl las regenera
+        // enteras en cada SetNotes, así que no basta con corregirlo una vez en el constructor.
+        if (_edge == EdgePosition.Left) ApplyLeftEdgeTabShape(button);
 
         // La última no lleva el margen negativo del solape. El solape se consigue con un
         // Margin.Bottom negativo (paso 26 con pestañas de 52 → -26), y en la última eso no solapa

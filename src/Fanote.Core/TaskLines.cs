@@ -3,8 +3,9 @@ namespace Fanote.Core;
 /// <summary>
 /// Casillas de tarea dentro del texto de una nota.
 ///
-/// Son texto plano, no un tipo aparte: una línea que empieza por <c>"☐ "</c> o <c>"☑ "</c> es una
-/// tarea, y nada más. Esa decisión no es pereza — el cuerpo de la nota es un <c>TextBox</c> plano a
+/// Son texto plano, no un tipo aparte: una línea que empieza (tras la sangría) por <c>☐</c>, <c>☒</c>
+/// o <c>☑</c> es una tarea — con o sin espacio detrás del glifo, ver <see cref="GlyphIndex"/> y
+/// <see cref="PrefixLength"/>. Esa decisión no es pereza — el cuerpo de la nota es un <c>TextBox</c> plano a
 /// propósito (la spec v1 descartó texto enriquecido, ver docs/STATUS.md), así que una casilla que
 /// fuera un control de verdad exigiría un <c>RichTextBox</c> y arrastraría con él el formato, el
 /// portapapeles con estilos y un modelo de guardado distinto. Como prefijo de texto, en cambio, la
@@ -44,8 +45,11 @@ public static class TaskLines
 
     /// <summary>
     /// Índice del glifo de casilla dentro de <paramref name="line"/>, o -1 si esa línea no es una
-    /// tarea. Se permite sangría delante (para listas indentadas) y se exige un espacio detrás: así
-    /// un ☐ suelto escrito en mitad de una frase no convierte la línea en tarea sin querer.
+    /// tarea. Se permite sangría delante (para listas indentadas). No se exige un espacio detrás
+    /// del glifo: da igual que el texto de la tarea le vaya pegado sin espacio (por ejemplo, al
+    /// borrar el espacio sin querer mientras se edita) — sigue siendo una tarea marcable mientras el
+    /// glifo sea el primer carácter no en blanco de la línea. Fanote nunca *escribe* una tarea sin
+    /// ese espacio (ver <see cref="Prefix"/>), pero sí reconoce y deja marcar una que llegue así.
     /// </summary>
     public static int GlyphIndex(string line)
     {
@@ -54,12 +58,45 @@ public static class TaskLines
 
         if (i >= line.Length) return -1;
         if (!IsBoxGlyph(line[i])) return -1;
-        if (i + 1 >= line.Length || line[i + 1] != ' ') return -1;
 
         return i;
     }
 
     public static bool IsTaskLine(string line) => GlyphIndex(line) >= 0;
+
+    /// <summary>
+    /// Cuántos caracteres ocupa el prefijo de casilla en esta línea a partir de
+    /// <paramref name="glyphIndex"/> (el que devuelve <see cref="GlyphIndex"/>, relativo a esta
+    /// línea): 2 si hay un espacio justo detrás del glifo, o 1 si el texto de la tarea empieza
+    /// pegado a él (o si el glifo es lo único que hay). Centraliza la única diferencia real entre
+    /// una tarea "bien escrita" y una a la que se le pegó el texto, para que quitar el prefijo o
+    /// medir dónde empieza el contenido no dependa de asumir siempre 2.
+    /// </summary>
+    public static int PrefixLength(string line, int glyphIndex) =>
+        glyphIndex + 1 < line.Length && line[glyphIndex + 1] == ' ' ? 2 : 1;
+
+    /// <summary>
+    /// Si <paramref name="line"/> es una tarea sin contenido real después del prefijo — una casilla
+    /// recién creada (con Ctrl+L, o al continuar una lista con Enter) en la que todavía no se ha
+    /// escrito nada. Usada tanto para saber cuándo Enter debe terminar la lista en vez de continuarla
+    /// (<see cref="EnterContinuation"/>) como para decidir dónde poner el cursor al reabrir una nota
+    /// (ver <c>NoteWindow</c>): una tarea vacía ya es "una línea en blanco esperando texto", así que
+    /// no hace falta añadirle otra debajo.
+    /// </summary>
+    public static bool IsEmptyTaskLine(string line)
+    {
+        int glyph = GlyphIndex(line);
+        return glyph >= 0 && line[(glyph + PrefixLength(line, glyph))..].Trim().Length == 0;
+    }
+
+    /// <summary>La línea completa que contiene <paramref name="index"/> (usada por <c>TaskCompletion</c> para
+    /// saber qué línea acaba de marcarse o desmarcarse).</summary>
+    public static string LineContaining(string text, int index)
+    {
+        int start = LineStart(text, index);
+        int end = LineEnd(text, index);
+        return text[start..end];
+    }
 
     public static bool IsChecked(string line)
     {
@@ -106,9 +143,10 @@ public static class TaskLines
         int glyph = GlyphIndex(line);
         if (glyph >= 0)
         {
-            // Quitar: fuera el glifo y su espacio.
-            var stripped = line.Remove(glyph, 2);
-            int caretInLine = Math.Max(caret - start - 2, glyph);
+            // Quitar: fuera el glifo y, si lo tiene, el espacio que lo sigue (ver PrefixLength).
+            int prefixLength = PrefixLength(line, glyph);
+            var stripped = line.Remove(glyph, prefixLength);
+            int caretInLine = Math.Max(caret - start - prefixLength, glyph);
             return (string.Concat(text.AsSpan(0, start), stripped, text.AsSpan(end)), start + caretInLine);
         }
 
@@ -144,8 +182,7 @@ public static class TaskLines
         // dos, que es lo que hace un editor normal y lo que el usuario espera.
         if (caret != end) return null;
 
-        var rest = line[(glyph + 2)..];
-        if (rest.Trim().Length == 0)
+        if (IsEmptyTaskLine(line))
         {
             var cleared = line[..glyph].TrimEnd();
             return (string.Concat(text.AsSpan(0, start), cleared, text.AsSpan(end)), start + cleared.Length);
@@ -170,7 +207,10 @@ public static class TaskLines
         return (done, total);
     }
 
-    private static int LineStart(string text, int index)
+    /// <summary>Índice donde empieza la línea que contiene <paramref name="index"/>. Público para quien
+    /// necesita mapear un punto de la línea (p. ej. el glifo) a su posición absoluta en el texto
+    /// completo — ver <c>NoteWindow</c>, ampliación de la zona de clic de la casilla.</summary>
+    public static int LineStart(string text, int index)
     {
         for (int i = Math.Min(index, text.Length) - 1; i >= 0; i--)
         {

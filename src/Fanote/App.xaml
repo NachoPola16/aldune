@@ -82,6 +82,31 @@
             </Setter>
         </Style>
 
+        <!-- El tooltip de sistema es claro (blanco/gris), y desentona tanto sobre el chrome oscuro
+             del dock/Ajustes/gestor como sobre el pastel de una nota — es el único texto flotante
+             de toda la app que no sigue su propio estilo. Aquí y no en cada ventana, como el resto
+             de estilos de esta sección: son implícitos (sin x:Key), así que un ToolTip="..." normal
+             en cualquier ventana ya sale con este aspecto sin tocar cada sitio donde se usa.
+             Mismo tratamiento que ActionsPopup (fondo Ground, esquinas redondeadas, sombra caída),
+             para que se sienta parte de la misma familia visual que el resto de paneles flotantes. -->
+        <Style TargetType="ToolTip">
+            <Setter Property="Foreground" Value="#EDE7DC" />
+            <Setter Property="FontSize" Value="12" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ToolTip">
+                        <Border Background="#2A261F" CornerRadius="6" Padding="9,6">
+                            <Border.Effect>
+                                <DropShadowEffect BlurRadius="12" ShadowDepth="2" Direction="270"
+                                                  Color="#000000" Opacity="0.4" />
+                            </Border.Effect>
+                            <ContentPresenter />
+                        </Border>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
         <Style TargetType="ScrollBar">
             <Setter Property="Width" Value="10" />
             <Setter Property="Background" Value="Transparent" />

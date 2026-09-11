@@ -21,11 +21,19 @@ public class TaskLinesTests
     }
 
     [Fact]
-    public void IsTaskLine_GlyphWithoutASpaceAfterIt_IsNotATask()
+    public void IsTaskLine_GlyphWithTextGluedRightAfterIt_IsStillATask()
     {
-        // Un ☐ suelto escrito a mano no debe convertir la linea en tarea sin querer.
-        Assert.False(TaskLines.IsTaskLine("☐comprar"));
-        Assert.False(TaskLines.IsTaskLine("☐"));
+        // Decisión revertida a propósito: el usuario pidió poder marcar una tarea aunque se le
+        // haya pegado el texto al glifo sin espacio (p. ej. al borrar el espacio sin querer
+        // mientras se edita) -- antes esto no contaba como tarea, ahora sí. Ver TaskLines.PrefixLength
+        // para cómo se sigue quitando el prefijo correctamente en ambos casos.
+        Assert.True(TaskLines.IsTaskLine("☐comprar"));
+    }
+
+    [Fact]
+    public void IsTaskLine_GlyphAlone_IsATask()
+    {
+        Assert.True(TaskLines.IsTaskLine("☐"));
     }
 
     [Fact]
@@ -104,6 +112,34 @@ public class TaskLinesTests
         Assert.Null(TaskLines.ToggleCheckboxAt("☐ x", 99));
     }
 
+    [Fact]
+    public void ToggleCheckboxAt_GlyphWithTextGluedRightAfterIt_StillToggles()
+    {
+        // ToggleCheckboxAt solo voltea un caracter, asi que ya funcionaba sin cambios en cuanto
+        // GlyphIndex reconoce la linea -- lo que confirma este test es justo eso.
+        Assert.Equal("☒comprar", TaskLines.ToggleCheckboxAt("☐comprar", 0));
+    }
+
+    // --- PrefixLength (cuánto ocupa el prefijo de casilla) --------------------------------------
+
+    [Fact]
+    public void PrefixLength_WithASpaceAfterTheGlyph_IsTwo()
+    {
+        Assert.Equal(2, TaskLines.PrefixLength("☐ comprar", 0));
+    }
+
+    [Fact]
+    public void PrefixLength_WithTextGluedRightAfterTheGlyph_IsOne()
+    {
+        Assert.Equal(1, TaskLines.PrefixLength("☐comprar", 0));
+    }
+
+    [Fact]
+    public void PrefixLength_GlyphAloneAtTheEndOfTheLine_IsOne()
+    {
+        Assert.Equal(1, TaskLines.PrefixLength("☐", 0));
+    }
+
     // --- Convertir una línea en tarea (atajo de teclado) ----------------------------------------
 
     [Fact]
@@ -148,6 +184,17 @@ public class TaskLinesTests
         var (text, caret) = TaskLines.ToggleTaskLineAt("", caret: 0);
         Assert.Equal("☐ ", text);
         Assert.Equal(2, caret);
+    }
+
+    [Fact]
+    public void ToggleTaskLineAt_GlyphWithTextGluedRightAfterIt_StripsOnlyTheGlyph()
+    {
+        // Sin PrefixLength esto quitaria 2 caracteres a ciegas (glifo + "espacio" asumido) y se
+        // comeria la "c" de "comprar", dejando "omprar" -- justo el bug que motiva PrefixLength.
+        var (text, caret) = TaskLines.ToggleTaskLineAt("☐comprar pan", caret: 5);
+
+        Assert.Equal("comprar pan", text);
+        Assert.Equal(4, caret);
     }
 
     // --- Continuar la lista con Enter -----------------------------------------------------------
@@ -207,6 +254,27 @@ public class TaskLinesTests
         Assert.Equal("☒ hecho\r\n☐ ", result!.Value.Text);
     }
 
+    [Fact]
+    public void EnterContinuation_GlyphWithTextGluedRightAfterIt_StillContinuesTheList()
+    {
+        // Sin PrefixLength, "rest" se calcularia como line[2..] y se comeria la "o" de "hecho".
+        var text = "☒hecho";
+        var result = TaskLines.EnterContinuation(text, text.Length);
+
+        Assert.Equal("☒hecho\r\n☐ ", result!.Value.Text);
+    }
+
+    [Fact]
+    public void EnterContinuation_GlyphAloneWithTextGluedAfterItRemoved_EndsTheList()
+    {
+        // Una tarea sin espacio y sin contenido de verdad (solo el glifo) tambien tiene que poder
+        // terminar la lista con Enter, igual que la version bien formada.
+        var text = "☐";
+        var result = TaskLines.EnterContinuation(text, text.Length);
+
+        Assert.Equal("", result!.Value.Text);
+    }
+
     // --- Recuento -------------------------------------------------------------------------------
 
     [Fact]
@@ -230,5 +298,43 @@ public class TaskLinesTests
     public void Count_WorksWithUnixNewlines()
     {
         Assert.Equal((1, 2), TaskLines.Count("☒ uno\n☐ dos"));
+    }
+
+    // --- LineContaining ---------------------------------------------------------------------------
+
+    [Fact]
+    public void LineContaining_ReturnsTheFullLineAtTheGivenIndex()
+    {
+        var text = "primera\r\n☒ segunda linea\r\ntercera";
+        int indexInsideSecondLine = text.IndexOf("segunda", StringComparison.Ordinal);
+
+        Assert.Equal("☒ segunda linea", TaskLines.LineContaining(text, indexInsideSecondLine));
+    }
+
+    [Fact]
+    public void LineContaining_OnASingleLineText_ReturnsTheWholeText()
+    {
+        Assert.Equal("☒ unica linea", TaskLines.LineContaining("☒ unica linea", 3));
+    }
+
+    // --- IsEmptyTaskLine --------------------------------------------------------------------------
+
+    [Theory]
+    [InlineData("☐ ", true)]
+    [InlineData("☐", true)]
+    [InlineData("☐   ", true)] // solo espacios detrás, sigue sin contenido real
+    [InlineData("☐ comprar pan", false)]
+    [InlineData("☐comprar", false)]
+    [InlineData("comprar pan", false)]
+    [InlineData("", false)]
+    public void IsEmptyTaskLine_RecognisesATaskWithNoRealContent(string line, bool expected)
+    {
+        Assert.Equal(expected, TaskLines.IsEmptyTaskLine(line));
+    }
+
+    [Fact]
+    public void IsEmptyTaskLine_CheckedEmptyTaskIsAlsoEmpty()
+    {
+        Assert.True(TaskLines.IsEmptyTaskLine("☒ "));
     }
 }

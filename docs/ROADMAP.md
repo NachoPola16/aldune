@@ -109,6 +109,88 @@ con una tabla aparte, `NoteOrder (NoteId TEXT PRIMARY KEY, Position REAL NOT NUL
 hizo con `NotePlacement`. `Position` en `REAL` y no `INTEGER` **a propósito**: permite insertar entre
 dos notas (media aritmética de sus posiciones) sin renumerar toda la lista en cada arrastre.
 
+### ~~Dock a la izquierda no se ve bien~~ — RESUELTO (ver `STATUS.md`)
+
+Causa real, encontrada con capturas del usuario (2026-09-09): `RestStrip`, las pestañas del abanico
+y el pie de botones estaban alineados "a la derecha" **en el XAML mismo**, sin condicionar por
+borde — valor correcto solo para `EdgePosition.Right`, que fue el único con el que se diseñó esto
+originalmente. La ventana del dock (`EdgeGeometry.WindowRect`) ya se posicionaba bien pegada al
+borde físico de la pantalla con `DockEdge = Left`, pero ese contenido interno seguía alineado contra
+el lado equivocado (el interior del dock, no el exterior), dejando el hueco que se veía en las
+capturas. Arreglado espejando esas tres alineaciones por código cuando el borde es Izquierda — ver
+`STATUS.md` para el detalle técnico. `EdgeDockWindow.PositionNoteWindow` (dónde se abre la nota en
+sí) nunca tuvo el bug: ya distinguía los bordes correctamente.
+
+**Segunda ronda, misma causa de fondo**: la propia forma de cada pestaña (`CornerRadius`/
+`BorderThickness`/degradado de brillo en `NoteTabButtonStyle`) también estaba pensada solo para el
+borde derecho — redondeada por la izquierda, a ras por la derecha. Espejada igual, verificado con un
+render aislado antes de tocar el XAML real.
+
+**Tercera ronda, la causa raíz de verdad**: seguía habiendo hueco (tira, abanico y botones del pie
+por igual) porque el `Grid` que envuelve *todo* el contenido del dock tiene su propio
+`Margin="18,18,0,18"` asimétrico en el XAML — sin margen a la derecha, correcto solo para
+`EdgePosition.Right`. Ningún ajuste dentro de ese `Grid` podía compensar que el propio contenedor ya
+estuviera encogido por el lado equivocado. Espejado también. Detalle completo en `STATUS.md`.
+
+### Bordes Arriba y Abajo para el dock — sigue pendiente, arquitectónico
+
+El usuario pidió explícitamente diseñar también los bordes **Arriba** y **Abajo** — la spec original
+de las pestañas en abanico los excluyó a propósito ("exigiría deslizar en vertical, que queda fuera
+de esta ronda", ver `EdgeDockWindow.PopulateEdges`, que hoy solo ofrece Izquierda/Derecha en
+Ajustes). **Hallazgo al investigar el bug de arriba**: `Fanote.Core.EdgeGeometry` (la geometría pura,
+con tests) **ya contempla los cuatro bordes** — `WindowRect`/`RestingVisibleRect` tienen casos
+`Top`/`Bottom` completos, no solo Izquierda/Derecha. Lo que falta es todo lo demás: exponer la
+opción en Ajustes, la tira de reposo dibujada horizontal en vez de vertical (el `RestStrip`/`RestList`
+del XAML asumen columna), rotar o quitar el giro de las etiquetas de pestaña, y
+`EdgeDockWindow.PositionNoteWindow` (hoy solo distingue Izquierda de "lo demás") para las cuatro
+direcciones. Menos trabajo del que parecía en un principio gracias a la geometría ya hecha, pero
+sigue siendo su propia sesión de diseño — empezar por ahí la próxima vez.
+
+### Plantillas de disposición de notas en el escritorio — pendiente, sin diseñar
+
+Idea del usuario (2026-09-09): en vez de arrastrar cada nota a mano para dejarlas ordenadas,
+ofrecer plantillas de disposición automática (rejilla, cascada uniforme, columnas...) que las
+coloquen todas de golpe. Conecta directamente con "Abrir todas las notas" (ver `STATUS.md`, misma
+sesión): hoy esa función solo cascada con un desplazamiento diagonal fijo
+(`EdgeDockWindow.NoteWindowCascadeStep`/`NoteWindowMaxCascadeSteps`), que con varias notas abiertas a
+la vez deja una pila desordenada en vez de algo "ordenado".
+
+**La colocación libre actual (arrastrar cada nota donde se quiera) tiene que seguir disponible** —
+las plantillas son una opción más, no un reemplazo. Encaja con `AppSettings.RememberNotePositions`
+tal como existe hoy: seguirá siendo el modo por defecto, y una plantilla es algo que el usuario pide
+explícitamente cuando quiere ordenar de golpe, no algo que se imponga.
+
+Preguntas sin responder para cuando le toque su sesión de diseño:
+
+- ¿Qué plantillas ofrecer de entrada? Rejilla y cascada uniforme parecen las dos obvias; ¿alguna más?
+- ¿Se aplica solo al usar "Abrir todas", o también como acción aparte sobre notas que ya están
+  abiertas (reordenarlas sin cerrarlas)?
+- Interacción con `AppSettings.RememberNotePositions`: aplicar una plantilla sobrescribe la posición
+  guardada de cada nota. ¿Se pierde ese recuerdo sin más, se pregunta antes, o se puede deshacer?
+- En multimonitor, ¿la plantilla se aplica por pantalla (cada dock coloca solo las suyas) o hay que
+  pensar en el conjunto de todos los monitores a la vez?
+
+### Color de nota libre, además de la paleta — pendiente, sin diseñar
+
+Idea del usuario (2026-09-11): además de los 6 colores de `NoteColorPalette`, poder elegir un color
+libre para una nota concreta. **La paleta actual se queda como está por defecto** — mismo patrón que
+"plantillas de disposición" y "sincronización" más arriba: la opción estructurada de fábrica sigue
+siendo el camino normal, y la libertad es algo que se pide explícitamente, no un reemplazo. Motivo
+para no tocar el valor por defecto: la paleta está pensada a propósito (seis colores derivados en
+OKLCH con la misma claridad exacta, para que "el color sea identidad, no jerarquía" y ninguna nota
+pese visualmente más que otra) — un color elegido libremente puede romper ese equilibrio a propósito,
+que es justo lo que se busca al elegirlo.
+
+**Ya existe la mitad de la infraestructura**: `NoteColorPalette.RimFor`/`LabelFor` ya calculan un
+borde y un color de etiqueta razonables para cualquier hexadecimal fuera de la paleta (oscureciendo
+proporcionalmente) — hoy ese camino solo se usa para notas heredadas con colores antiguos, pero
+serviría igual para un color elegido a mano. Falta el propio selector de color (un `ColorDialog` de
+Windows, o algo propio a juego con el resto de la app) y decidir dónde vive: ¿un color más en la fila
+de pastillas del menú "⋯" que abre un selector, o una entrada aparte? Su propia sesión de diseño
+cuando le toque — no es grande, pero antes se descartó explícitamente un selector de color en la
+creación de la nota ("complejidad innecesaria para el beneficio", ver más abajo), así que conviene no
+repetir ese argumento sin pensarlo primero.
+
 ### ~~Internacionalizar a inglés~~ — HECHO (ver `STATUS.md`)
 
 No fue solo traducir: el usuario usa Fanote en español a diario, así que se añadió un selector
@@ -120,11 +202,13 @@ idioma pide reiniciar la app para verse en todas las ventanas.
 asignar" — ver el porqué en `STATUS.md`. Si se retoma, hay que convertir esa propiedad en un método
 parametrizado y tocar `HotkeyBindingTests`, que fija esos tres textos literalmente.
 
-### Exportar a Markdown / texto plano
+### ~~Exportar a Markdown / texto plano~~ — HECHO (ver `STATUS.md`)
 
 Lo tienen las dos rivales de macOS. Además de utilidad es una **función de confianza** ("no te
 secuestro tus datos"), que pesa más si algún día se cobra. Al exportar, las casillas `☐`/`☒` se
-traducen a la sintaxis de tareas de Markdown (`- [ ]` / `- [x]`).
+traducen a la sintaxis de tareas de Markdown (`- [ ]` / `- [x]`), tal como decía este punto — se
+implementó solo Markdown, no texto plano aparte (ver el brainstorming en `STATUS.md` para el porqué).
+Una nota a la vez desde `NoteWindow`, o en bloque desde `NotesManagerWindow`.
 
 ### Recordatorios con notificación de Windows
 
@@ -132,22 +216,48 @@ traducen a la sintaxis de tareas de Markdown (`- [ ]` / `- [x]`).
 no tiene nada. Convierte "notas bonitas" en "notas que te avisan". Necesita sesión de diseño propia:
 programación, persistencia, integración con las notificaciones del sistema, posponer.
 
+### Sincronización entre dispositivos — decidido: se hará, las dos vías
+
+Antes estaba aparcado como "descartado por ahora, no tocar hasta que alguien lo pida de verdad" —
+el usuario lo pidió (2026-09-09), así que pasa aquí. Todavía sin spec ni plan:
+es arquitectónico y le toca su propia sesión de diseño completa cuando se aborde. Lo que ya se decidió
+en el brainstorming de esta sesión, para no volver a discutirlo desde cero:
+
+- **Las dos vías, no una sola** — decisión explícita del usuario tras ver el trade-off:
+  1. **Carpeta elegida por el usuario** (OneDrive, Google Drive, Dropbox, Syncthing — cualquiera que
+     ya sincronice una carpeta normal del disco). Fanote nunca habla con ninguna nube: guarda un
+     fichero cifrado por nota dentro de esa carpeta y reconstruye. Mantiene "sin cuenta, sin
+     servidor", funciona con cualquier proveedor (incluido ninguno, con Syncthing), y es la vía que
+     de forma natural sirve también a un futuro cliente en otro sistema operativo (Android/iOS,
+     mencionados por el usuario como posibles pero sin decidir) — ese cliente futuro sincronizaría
+     leyendo la misma carpeta a través de su propia app de Drive/OneDrive, sin que Fanote tenga que
+     hablar con la API de nadie.
+  2. **Fanote habla directamente con la API de Google Drive** (OAuth, sin cliente de escritorio de
+     por medio). Pedida explícitamente a pesar del coste, que quede anotado para cuando se diseñe:
+     hace falta el flujo de login de Google, guardar y renovar un token (delicado, misma familia de
+     problema que la clave de cifrado — ver `DatabaseKeyProvider` en `STATUS.md`), registrar la app
+     en Google Cloud y, si Fanote se publica algún día, pasar su proceso de verificación de apps
+     OAuth (si no, sale un aviso de "app no verificada"). Y contradice, para quien la use, el propio
+     diferenciador que la investigación de mercado de más arriba señaló ("sin cuenta, nunca") — por
+     eso tiene que ser una vía **opcional**, nunca la única, con la vía 1 siempre disponible por
+     defecto.
+- **Aviso técnico que sigue vigente para la vía 1** (ya estaba anotado antes de que esto se decidiera):
+  *no* sincronizar el fichero SQLite directamente — las carpetas de sync corrompen bases de datos
+  abiertas por dos máquinas a la vez. Un fichero cifrado por nota, reconstruible, es la única forma
+  segura.
+- **Sin decidir todavía, para la sesión de diseño**: qué pasa si la misma nota se edita en dos
+  dispositivos antes de sincronizar (probablemente "gana la más reciente" por `UpdatedAt`, dado que
+  esto es una herramienta personal de una persona, no colaborativa — pero no se ha confirmado con el
+  usuario); formato exacto del fichero por nota; cómo detectar cambios remotos sin un cliente que
+  avise (¿vigilar la carpeta con `FileSystemWatcher`, sondear al arrancar, las dos?); qué pasa si dos
+  dispositivos crean una nota nueva "al mismo tiempo" (con `Guid` como Id, no debería colisionar,
+  pero conviene confirmarlo explícitamente en la spec).
+
 ---
 
 ## 3. Descartado por ahora, con su razón
 
 Que no se vuelva a proponer sin leer esto primero.
-
-### Sincronización entre equipos — aplazado
-
-Es el motivo nº1 por el que la gente paga Notezilla, así que tarde o temprano se pedirá. La forma
-correcta para Fanote sería **una carpeta que elige el usuario** (OneDrive, Dropbox, Syncthing), no un
-servidor propio: mantiene la promesa de "sin cuenta, sin servidor".
-
-**Aviso técnico importante para quien lo retome**: *no* sincronizar el fichero SQLite directamente —
-las carpetas de sync corrompen bases de datos abiertas por dos máquinas. Habría que sincronizar un
-fichero cifrado por nota y reconstruir. Riesgo alto, merece su propia spec. No tocar hasta que
-alguien lo pida de verdad.
 
 ### Notas por escritorio virtual de Windows — descartado
 
@@ -196,6 +306,18 @@ no hacerlo:
    enseña título, una línea de vista previa y el progreso de tareas.
 
 Si se retoma, que sea como ajuste opcional y con un retardo de ~500 ms antes de aparecer.
+
+### Arrastrar para reordenar líneas dentro de una nota — descartado a favor de un atajo
+
+Pedido explícito del usuario (2026-09-09): mover de sitio las tareas con casilla arrastrándolas
+dentro del cuerpo de la nota, como el mazo ya permite con notas enteras. Se descartó **el arrastre en
+sí**, no la posibilidad de reordenar: el cuerpo es un `TextBox` plano a propósito (spec v1, sin texto
+enriquecido), así que arrastrar líneas ahí dentro exige simular el gesto a mano — distinguirlo del
+clic de marcar la casilla, dibujar una línea fantasma que siga el ratón, reconstruir el texto al
+soltar — bastante más complejo que nada hecho hasta ahora y en tensión directa con esa decisión de
+diseño. Implementado en su lugar (ver `STATUS.md`): Alt+Arriba/Alt+Abajo intercambia la línea del
+cursor con la vecina, mismo resultado sin arrastrar nada. Si el arrastre de verdad se pide otra vez
+con más insistencia, el coste de arriba sigue siendo el mismo — no ha cambiado nada que lo abarate.
 
 ### Otros descartes menores
 
