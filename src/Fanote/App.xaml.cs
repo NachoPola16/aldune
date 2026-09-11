@@ -221,12 +221,24 @@ public partial class App : Application
         _trayIcon = new TrayIcon(coordinator);
 
         _reminderScheduler = new ReminderScheduler(repository, coordinator, _trayIcon.Icon);
-        _reminderScheduler.CheckDueReminders(); // catch-up: avisa ya de lo vencido con la app cerrada
+        // Catch-up: avisa ya de lo vencido con la app cerrada. Diferido con BeginInvoke en vez de
+        // llamado aquí mismo, en línea: este punto de OnStartup queda FUERA del último try/catch de
+        // arranque (ver el comentario de DispatcherUnhandledException más arriba — OnStartup no
+        // enruta de forma fiable sus excepciones ahí), así que un fallo aquí -por ejemplo un
+        // SqliteException por un fichero de BD bloqueado, o un error dentro de ShowBalloonTip-
+        // tumbaría la app entera al arrancar sin ningún mensaje, en una app que por lo demás explica
+        // cualquier fallo de arranque. Diferir la llamada la deja correr ya bajo el bucle de mensajes
+        // normal, con DispatcherUnhandledException cubriéndola como a cualquier otro error en
+        // steady-state. Efecto colateral bueno: al ejecutarse después de BuildDocks (que ya hizo su
+        // propio RefreshAll), y con el RefreshAll que ahora hace CheckDueReminders al final, el dock
+        // queda repintado correctamente si esta primera pasada llega a limpiar algún recordatorio.
+        Dispatcher.BeginInvoke(DispatcherPriority.Background, () => _reminderScheduler.CheckDueReminders());
 
         Exit += (_, _) =>
         {
             SystemEvents.DisplaySettingsChanged -= OnDisplaySettingsChanged;
             SystemEvents.SessionEnding -= OnSessionEnding;
+            _reminderScheduler?.Dispose();
             _trayIcon?.Dispose();
             _hotkey?.Dispose();
         };

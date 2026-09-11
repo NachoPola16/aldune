@@ -160,4 +160,52 @@ public class NotesRepositoryReminderTests : IDisposable
     {
         Assert.Null(_sut.GetById(Guid.NewGuid()));
     }
+
+    [Fact]
+    public void GetDueReminders_ExcludesTrashedNotes()
+    {
+        var note = _sut.Create("nota archivada en la papelera", "#F5E3B3", "primary");
+        _sut.SetReminder(note.Id, DateTimeOffset.UtcNow.AddMinutes(-5));
+        _sut.SetState(note.Id, NoteState.Trashed);
+
+        var due = _sut.GetDueReminders(DateTimeOffset.UtcNow);
+
+        Assert.Empty(due);
+    }
+
+    [Fact]
+    public void GetDueReminders_ExcludesArchivedNotes()
+    {
+        var note = _sut.Create("nota archivada", "#F5E3B3", "primary");
+        _sut.SetReminder(note.Id, DateTimeOffset.UtcNow.AddMinutes(-5));
+        _sut.SetState(note.Id, NoteState.Archived);
+
+        var due = _sut.GetDueReminders(DateTimeOffset.UtcNow);
+
+        Assert.Empty(due);
+    }
+
+    [Fact]
+    public void GetPendingReminders_ExcludesTrashedNotes()
+    {
+        var note = _sut.Create("nota en la papelera", "#F5E3B3", "primary");
+        _sut.SetReminder(note.Id, DateTimeOffset.UtcNow.AddHours(1));
+        _sut.SetState(note.Id, NoteState.Trashed);
+
+        var pending = _sut.GetPendingReminders();
+
+        Assert.Empty(pending);
+    }
+
+    [Fact]
+    public void GetPendingReminders_ExcludesArchivedNotes()
+    {
+        var note = _sut.Create("nota archivada", "#F5E3B3", "primary");
+        _sut.SetReminder(note.Id, DateTimeOffset.UtcNow.AddHours(1));
+        _sut.SetState(note.Id, NoteState.Archived);
+
+        var pending = _sut.GetPendingReminders();
+
+        Assert.Empty(pending);
+    }
 }

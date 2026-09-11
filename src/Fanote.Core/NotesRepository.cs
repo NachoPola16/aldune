@@ -356,13 +356,20 @@ public sealed class NotesRepository
 
     /// <summary>Recordatorios vencidos a <paramref name="now"/> (inclusive) — usado tanto por el
     /// sondeo periódico como por el catch-up al arrancar (ver Fanote.Windowing.ReminderScheduler).
-    /// No los borra: quien llama decide cuándo limpiarlos (ClearReminder), después de avisar.</summary>
+    /// No los borra: quien llama decide cuándo limpiarlos (ClearReminder), después de avisar.
+    /// Excluye recordatorios de notas archivadas o en la papelera: el dock solo lista notas activas
+    /// (GetByState(Active)), así que un aviso de una nota que ya no aparece en ningún sitio sería
+    /// invisible salvo por el globo mismo, y al hacer clic llevaría a un sitio confuso.</summary>
     public IReadOnlyList<(Guid NoteId, DateTimeOffset DueAt)> GetDueReminders(DateTimeOffset now)
     {
         using var connection = _database.OpenConnection();
         using var command = connection.CreateCommand();
-        command.CommandText = "SELECT NoteId, DueAt FROM NoteReminder WHERE DueAt <= $now;";
+        command.CommandText = """
+            SELECT NoteId, DueAt FROM NoteReminder
+            WHERE DueAt <= $now AND NoteId IN (SELECT Id FROM Note WHERE State = $activeState);
+            """;
         command.Parameters.AddWithValue("$now", now.ToUniversalTime().ToString("O"));
+        command.Parameters.AddWithValue("$activeState", NoteState.Active.ToString());
 
         var results = new List<(Guid, DateTimeOffset)>();
         using var reader = command.ExecuteReader();
@@ -379,12 +386,17 @@ public sealed class NotesRepository
     }
 
     /// <summary>Todos los recordatorios activos, para pintar el indicador en el dock sin una consulta
-    /// por nota (ver EdgeDockWindow.SetNotes).</summary>
+    /// por nota (ver EdgeDockWindow.SetNotes). Excluye recordatorios de notas archivadas o en la
+    /// papelera, mismo motivo que <see cref="GetDueReminders"/>: el dock solo lista notas activas.</summary>
     public IReadOnlyDictionary<Guid, DateTimeOffset> GetPendingReminders()
     {
         using var connection = _database.OpenConnection();
         using var command = connection.CreateCommand();
-        command.CommandText = "SELECT NoteId, DueAt FROM NoteReminder;";
+        command.CommandText = """
+            SELECT NoteId, DueAt FROM NoteReminder
+            WHERE NoteId IN (SELECT Id FROM Note WHERE State = $activeState);
+            """;
+        command.Parameters.AddWithValue("$activeState", NoteState.Active.ToString());
 
         var results = new Dictionary<Guid, DateTimeOffset>();
         using var reader = command.ExecuteReader();
