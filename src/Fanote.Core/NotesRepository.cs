@@ -135,6 +135,7 @@ public sealed class NotesRepository
             DELETE FROM Note WHERE Id = $id;
             DELETE FROM NotePlacement WHERE NoteId = $id;
             DELETE FROM TaskCompletion WHERE NoteId = $id;
+            DELETE FROM NoteReminder WHERE NoteId = $id;
             """;
         command.Parameters.AddWithValue("$id", id.ToString());
         return command.ExecuteNonQuery() > 0;
@@ -151,6 +152,7 @@ public sealed class NotesRepository
         using var command = connection.CreateCommand();
         command.CommandText = """
             DELETE FROM NotePlacement WHERE NoteId IN (SELECT Id FROM Note WHERE State = $state AND UpdatedAt < $cutoff);
+            DELETE FROM NoteReminder WHERE NoteId IN (SELECT Id FROM Note WHERE State = $state AND UpdatedAt < $cutoff);
             DELETE FROM Note WHERE State = $state AND UpdatedAt < $cutoff;
             """;
         command.Parameters.AddWithValue("$state", NoteState.Trashed.ToString());
@@ -305,6 +307,112 @@ public sealed class NotesRepository
         command.CommandText = "DELETE FROM NotePlacement WHERE NoteId = $noteId;";
         command.Parameters.AddWithValue("$noteId", noteId.ToString());
         command.ExecuteNonQuery();
+    }
+
+    /// <summary>
+    /// Pone (o reemplaza) el recordatorio puntual de una nota. Se guarda siempre convertido a UTC,
+    /// aunque quien llama trabaje en hora local (el selector de la nota, los atajos de
+    /// <see cref="ReminderPresets"/>) — misma convención que <c>CreatedAt</c>/<c>UpdatedAt</c>.
+    /// </summary>
+    public void SetReminder(Guid noteId, DateTimeOffset dueAt)
+    {
+        using var connection = _database.OpenConnection();
+        using var command = connection.CreateCommand();
+        command.CommandText = """
+            INSERT OR REPLACE INTO NoteReminder (NoteId, DueAt) VALUES ($noteId, $dueAt);
+            """;
+        command.Parameters.AddWithValue("$noteId", noteId.ToString());
+        command.Parameters.AddWithValue("$dueAt", dueAt.ToUniversalTime().ToString("O"));
+        command.ExecuteNonQuery();
+    }
+
+    /// <summary>Quita el recordatorio de una nota, si tenía uno. No falla si no tenía ninguno.</summary>
+    public void ClearReminder(Guid noteId)
+    {
+        using var connection = _database.OpenConnection();
+        using var command = connection.CreateCommand();
+        command.CommandText = "DELETE FROM NoteReminder WHERE NoteId = $noteId;";
+        command.Parameters.AddWithValue("$noteId", noteId.ToString());
+        command.ExecuteNonQuery();
+    }
+
+    /// <summary>El recordatorio activo de una nota, o null si no tiene ninguno — para pintar el
+    /// estado actual en el menú "⋯" de la nota abierta.</summary>
+    public DateTimeOffset? GetReminder(Guid noteId)
+    {
+        using var connection = _database.OpenConnection();
+        using var command = connection.CreateCommand();
+        command.CommandText = "SELECT DueAt FROM NoteReminder WHERE NoteId = $noteId;";
+        command.Parameters.AddWithValue("$noteId", noteId.ToString());
+
+        var result = command.ExecuteScalar();
+        return result is null
+            ? null
+            : DateTimeOffset.Parse(
+                (string)result,
+                System.Globalization.CultureInfo.InvariantCulture,
+                System.Globalization.DateTimeStyles.RoundtripKind);
+    }
+
+    /// <summary>Recordatorios vencidos a <paramref name="now"/> (inclusive) — usado tanto por el
+    /// sondeo periódico como por el catch-up al arrancar (ver Fanote.Windowing.ReminderScheduler).
+    /// No los borra: quien llama decide cuándo limpiarlos (ClearReminder), después de avisar.</summary>
+    public IReadOnlyList<(Guid NoteId, DateTimeOffset DueAt)> GetDueReminders(DateTimeOffset now)
+    {
+        using var connection = _database.OpenConnection();
+        using var command = connection.CreateCommand();
+        command.CommandText = "SELECT NoteId, DueAt FROM NoteReminder WHERE DueAt <= $now;";
+        command.Parameters.AddWithValue("$now", now.ToUniversalTime().ToString("O"));
+
+        var results = new List<(Guid, DateTimeOffset)>();
+        using var reader = command.ExecuteReader();
+        while (reader.Read())
+        {
+            results.Add((
+                Guid.Parse((string)reader["NoteId"]),
+                DateTimeOffset.Parse(
+                    (string)reader["DueAt"],
+                    System.Globalization.CultureInfo.InvariantCulture,
+                    System.Globalization.DateTimeStyles.RoundtripKind)));
+        }
+        return results;
+    }
+
+    /// <summary>Todos los recordatorios activos, para pintar el indicador en el dock sin una consulta
+    /// por nota (ver EdgeDockWindow.SetNotes).</summary>
+    public IReadOnlyDictionary<Guid, DateTimeOffset> GetPendingReminders()
+    {
+        using var connection = _database.OpenConnection();
+        using var command = connection.CreateCommand();
+        command.CommandText = "SELECT NoteId, DueAt FROM NoteReminder;";
+
+        var results = new Dictionary<Guid, DateTimeOffset>();
+        using var reader = command.ExecuteReader();
+        while (reader.Read())
+        {
+            results[Guid.Parse((string)reader["NoteId"])] = DateTimeOffset.Parse(
+                (string)reader["DueAt"],
+                System.Globalization.CultureInfo.InvariantCulture,
+                System.Globalization.DateTimeStyles.RoundtripKind);
+        }
+        return results;
+    }
+
+    /// <summary>Una nota por Id, descifrada — para cuando solo se tiene el Guid (p. ej.
+    /// ReminderScheduler, que solo conoce el NoteId de un recordatorio vencido) y no la lista
+    /// completa que ya da GetByState.</summary>
+    public Note? GetById(Guid id)
+    {
+        using var connection = _database.OpenConnection();
+        using var command = connection.CreateCommand();
+        command.CommandText = """
+            SELECT Id, EncryptedText, Nonce, Tag, Color, CreatedAt, UpdatedAt, State, ScreenOrigin
+            FROM Note WHERE Id = $id;
+            """;
+        command.Parameters.AddWithValue("$id", id.ToString());
+
+        using var reader = command.ExecuteReader();
+        return reader.Read() ? ReadNote(reader) : null;
     }
 
     /// <summary>Guarda o actualiza cuándo se marcó como hecha la tarea identificada por <paramref name="lineHash"/>

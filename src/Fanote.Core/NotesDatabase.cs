@@ -66,6 +66,16 @@ public sealed class NotesDatabase
                 CompletedAt TEXT NOT NULL,
                 PRIMARY KEY (NoteId, LineHash)
             );
+
+            -- Recordatorio puntual (no recurrente) de una nota, como mucho uno activo a la vez —
+            -- de ahí NoteId como clave primaria en vez de una compuesta o un Id propio: poner uno
+            -- nuevo reemplaza cualquiera anterior. Aparte de Note por el mismo motivo que las demás:
+            -- esa tabla tiene el contenido real del usuario y no hay migraciones. Se borra la fila
+            -- al dispararse (ver Fanote.Windowing.ReminderScheduler) o al cancelarse a mano.
+            CREATE TABLE IF NOT EXISTS NoteReminder (
+                NoteId TEXT PRIMARY KEY NOT NULL,
+                DueAt TEXT NOT NULL
+            );
             """;
         command.ExecuteNonQuery();
     }
