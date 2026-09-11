@@ -48,6 +48,14 @@ public static class Strings
     public static string ConvertToTask => T("Convert to task", "Convertir en tarea");
     public static string ExportToMarkdown => T("Export to Markdown", "Exportar a Markdown");
     public static string MarkdownFileFilter => T("Markdown file (*.md)|*.md", "Archivo Markdown (*.md)|*.md");
+    public static string ReminderMenuEntry => T("Reminder", "Recordatorio");
+    public static string ReminderSet(DateTimeOffset dueAt) =>
+        T($"Reminder: {dueAt:dd/MM HH:mm}", $"Recordatorio: {dueAt:dd/MM HH:mm}");
+    public static string ReminderInOneHour => T("In 1 hour", "En 1 hora");
+    public static string ReminderTonight => T("Tonight", "Esta noche");
+    public static string ReminderTomorrowMorning => T("Tomorrow 9:00", "Mañana 9:00");
+    public static string ReminderSave => T("Save", "Guardar");
+    public static string ReminderClear => T("Remove reminder", "Quitar recordatorio");
     public static string PinnedOn => T("✓  Always on top", "✓  Siempre encima");
     public static string PinnedOff => T("Always on top", "Siempre encima");
     public static string PinnedOnHint => T("The note stays in front of other windows.", "La nota se queda por delante de las demás ventanas.");

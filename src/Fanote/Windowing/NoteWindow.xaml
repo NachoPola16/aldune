@@ -228,6 +228,42 @@
                                    Foreground="#8A8175" FontSize="11" TextWrapping="Wrap"
                                    Margin="9,0,9,6" />
 
+                        <Button x:Name="ReminderButton" Click="OnReminderMenuClick"
+                                Style="{StaticResource NoteMenuItemStyle}" />
+
+                        <!-- Colapsado hasta que se pulsa ReminderButton. Mismo panel sirve para
+                             poner un recordatorio nuevo y para "posponer": al abrir la nota desde
+                             el aviso, el recordatorio que sonó ya se limpió solo, así que este
+                             mismo flujo sin más UI aparte pone uno nuevo. -->
+                        <StackPanel x:Name="ReminderPanel" Visibility="Collapsed" Margin="9,0,9,8">
+                            <Button x:Name="ReminderInOneHourButton" Click="OnReminderPresetClick"
+                                    Content="{x:Static res:Strings.ReminderInOneHour}"
+                                    Style="{StaticResource NoteMenuItemStyle}" />
+                            <Button x:Name="ReminderTonightButton" Click="OnReminderPresetClick"
+                                    Content="{x:Static res:Strings.ReminderTonight}"
+                                    Style="{StaticResource NoteMenuItemStyle}" />
+                            <Button x:Name="ReminderTomorrowButton" Click="OnReminderPresetClick"
+                                    Content="{x:Static res:Strings.ReminderTomorrowMorning}"
+                                    Style="{StaticResource NoteMenuItemStyle}" />
+
+                            <Calendar x:Name="ReminderCalendar" Margin="0,6,0,4" HorizontalAlignment="Center" />
+
+                            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,0,0,8">
+                                <TextBox x:Name="ReminderHourBox" Width="34" Text="09" TextAlignment="Center" />
+                                <TextBlock Text=":" VerticalAlignment="Center" Margin="4,0" Foreground="#EDE7DC" />
+                                <TextBox x:Name="ReminderMinuteBox" Width="34" Text="00" TextAlignment="Center" />
+                            </StackPanel>
+
+                            <Button x:Name="ReminderSaveButton" Click="OnReminderSaveClick"
+                                    Content="{x:Static res:Strings.ReminderSave}"
+                                    Style="{StaticResource NoteMenuItemStyle}" />
+                            <Button x:Name="ReminderClearButton" Click="OnReminderClearClick"
+                                    Content="{x:Static res:Strings.ReminderClear}"
+                                    Visibility="Collapsed"
+                                    Style="{StaticResource NoteMenuDangerStyle}" />
+                        </StackPanel>
+                        <Border Background="#3C3730" Height="1" Margin="0,4,0,4" />
+
                         <Button x:Name="ExportButton" Click="OnExportClick"
                                 Content="{x:Static res:Strings.ExportToMarkdown}"
                                 Style="{StaticResource NoteMenuItemStyle}" />

@@ -45,6 +45,7 @@ public partial class NoteWindow : Window
         }
 
         UpdatePinButton();
+        UpdateReminderButton();
 
         // La nota es un solo texto; la cabecera edita su primera línea y el cuerpo el resto.
         var (title, body) = NoteText.Split(note.Text);
@@ -652,6 +653,56 @@ public partial class NoteWindow : Window
 
         _coordinator.RefreshAll();
         ActionsPopup.IsOpen = false;
+    }
+
+    private void OnReminderMenuClick(object sender, RoutedEventArgs e)
+    {
+        ReminderPanel.Visibility = ReminderPanel.Visibility == Visibility.Visible
+            ? Visibility.Collapsed
+            : Visibility.Visible;
+    }
+
+    private void OnReminderPresetClick(object sender, RoutedEventArgs e)
+    {
+        var now = DateTimeOffset.Now;
+        var dueAt = sender == ReminderInOneHourButton ? ReminderPresets.InOneHour(now)
+            : sender == ReminderTonightButton ? ReminderPresets.Tonight(now)
+            : ReminderPresets.TomorrowMorning(now);
+
+        SaveReminder(dueAt);
+    }
+
+    private void OnReminderSaveClick(object sender, RoutedEventArgs e)
+    {
+        if (ReminderCalendar.SelectedDate is not { } date) return;
+        if (!int.TryParse(ReminderHourBox.Text, out int hour) || hour is < 0 or > 23) return;
+        if (!int.TryParse(ReminderMinuteBox.Text, out int minute) || minute is < 0 or > 59) return;
+
+        var local = new DateTimeOffset(date.Year, date.Month, date.Day, hour, minute, 0, DateTimeOffset.Now.Offset);
+        SaveReminder(local);
+    }
+
+    private void SaveReminder(DateTimeOffset dueAt)
+    {
+        _repository.SetReminder(_note.Id, dueAt);
+        ReminderPanel.Visibility = Visibility.Collapsed;
+        UpdateReminderButton();
+        _coordinator.RefreshAll(); // para que el badge del dock (Task 5) se actualice ya
+    }
+
+    private void OnReminderClearClick(object sender, RoutedEventArgs e)
+    {
+        _repository.ClearReminder(_note.Id);
+        ReminderPanel.Visibility = Visibility.Collapsed;
+        UpdateReminderButton();
+        _coordinator.RefreshAll();
+    }
+
+    private void UpdateReminderButton()
+    {
+        var dueAt = _repository.GetReminder(_note.Id);
+        ReminderButton.Content = dueAt is { } due ? Strings.ReminderSet(due.ToLocalTime()) : Strings.ReminderMenuEntry;
+        ReminderClearButton.Visibility = dueAt is null ? Visibility.Collapsed : Visibility.Visible;
     }
 
     /// <summary>
