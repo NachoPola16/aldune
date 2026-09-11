@@ -104,6 +104,20 @@
                                            Margin="0,2,0,0" />
                             </StackPanel>
 
+                            <!-- Solo el glifo importa aquí, no si hay hueco para más: cuando las
+                                 pestañas se apilan solo se ve la franja superior de cada una (ver
+                                 el comentario de LabelStack), así que el badge va en esa misma
+                                 franja, arriba a la derecha. Glifo elegido sin verificación visual
+                                 todavía — mismo aviso que el resto de iconos de esta sesión, ver
+                                 docs/STATUS.md. -->
+                            <TextBlock x:Name="ReminderBadge"
+                                       Text="&#xE917;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets"
+                                       FontSize="11"
+                                       Foreground="{Binding Color, Converter={StaticResource NoteLabelColorConverter}}"
+                                       HorizontalAlignment="Right" VerticalAlignment="Top"
+                                       Margin="0,8,10,0"
+                                       Visibility="Collapsed" />
+
                             <Border x:Name="HoverOverlay" Background="#1E1A14" Opacity="0" CornerRadius="10,0,0,10" />
                         </Grid>
                         <ControlTemplate.Triggers>

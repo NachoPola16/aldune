@@ -41,6 +41,8 @@ public partial class EdgeDockWindow : Window
     // Para animar solo las pestañas nuevas al crear una nota, en vez de rehacer la entrada entera.
     private HashSet<Guid> _knownNoteIds = new();
 
+    private IReadOnlyDictionary<Guid, DateTimeOffset> _pendingReminders = new Dictionary<Guid, DateTimeOffset>();
+
     private Thickness _tabMargin = new(0, 0, 0, EdgeGeometry.TabGap);
 
     private const double NoteWindowCascadeStep = 26;
@@ -449,6 +451,7 @@ public partial class EdgeDockWindow : Window
     {
         var previousIds = _knownNoteIds;
         _knownNoteIds = notes.Select(n => n.Id).ToHashSet();
+        _pendingReminders = _repository.GetPendingReminders();
 
         _tabButtons.Clear();
         TabsList.ItemsSource = notes;
@@ -523,6 +526,17 @@ public partial class EdgeDockWindow : Window
         {
             snippet.Visibility = Visibility.Collapsed;
         }
+    }
+
+    /// <summary>Muestra u oculta el glifo de reloj de una pestaña según si su nota tiene un
+    /// recordatorio pendiente — ver ApplyPreviewVisibility para el mismo patrón de FindName.</summary>
+    private void ApplyReminderBadge(Button button)
+    {
+        button.ApplyTemplate();
+        if (button.Template.FindName("ReminderBadge", button) is not TextBlock badge) return;
+
+        bool hasReminder = button.Tag is Note note && _pendingReminders.ContainsKey(note.Id);
+        badge.Visibility = hasReminder ? Visibility.Visible : Visibility.Collapsed;
     }
 
     private void OnManageArchiveClick(object sender, RoutedEventArgs e)
@@ -821,6 +835,7 @@ public partial class EdgeDockWindow : Window
 
         button.Opacity = _fanState.IsExpanded ? 1 : 0;
         ApplyPreviewVisibility(button);
+        ApplyReminderBadge(button);
     }
 
     /// <summary>
