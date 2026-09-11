@@ -107,6 +107,25 @@
             </Setter>
         </Style>
 
+        <!-- El Calendar del selector de recordatorio (NoteWindow) usa la plantilla por defecto de
+             WPF, pensada para tema claro — sobre el panel oscuro del "⋯" (#2A261F) se veía como un
+             recuadro blanco ajeno al resto de la app. Implícitos (sin x:Key) para que CalendarButton/
+             CalendarDayButton salgan así en cualquier Calendar futuro sin repetir esto — mismo criterio
+             que ToolTip/ScrollBar más arriba. Solo se toca Foreground (el estado "normal" del día):
+             los estados especiales (hoy, seleccionado, deshabilitado) siguen usando los colores por
+             defecto de la plantilla, que ya funcionan razonablemente sobre fondo oscuro. -->
+        <Style TargetType="CalendarDayButton">
+            <Setter Property="Foreground" Value="#EDE7DC" />
+        </Style>
+        <Style TargetType="CalendarButton">
+            <Setter Property="Foreground" Value="#EDE7DC" />
+        </Style>
+        <Style x:Key="DarkCalendarStyle" TargetType="Calendar">
+            <Setter Property="Background" Value="#2A261F" />
+            <Setter Property="BorderBrush" Value="#3C3730" />
+            <Setter Property="Foreground" Value="#EDE7DC" />
+        </Style>
+
         <Style TargetType="ScrollBar">
             <Setter Property="Width" Value="10" />
             <Setter Property="Background" Value="Transparent" />

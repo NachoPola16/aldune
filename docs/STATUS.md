@@ -2490,3 +2490,117 @@ haciéndose en cada cambio; lo que se agrupa es solo publicar+relanzar el `.exe`
 
 Tests: 313/313 (sin cambios — el zip es capa WPF, mismo patrón que el resto del export en bloque).
 Build limpio.
+
+## Recordatorios con notificación de Windows (sesión 2026-09-11/12)
+
+Segundo punto de `docs/ROADMAP.md` §2 implementado — "el mayor hueco funcional frente a la
+competencia de Windows" según la investigación de mercado. Spec y plan escritos con
+`superpowers:brainstorming`/`writing-plans` (`docs/superpowers/specs/2026-09-11-fanote-reminders-design.md`,
+`docs/superpowers/plans/2026-09-11-fanote-reminders.md`), ejecutados con
+`superpowers:subagent-driven-development` en un worktree aparte (`fanote-reminders`), 5 tareas + una
+ronda de arreglos tras la revisión final de toda la rama.
+
+### Qué hay
+
+- **Recordatorio puntual por nota** (uno activo a la vez, se reemplaza al poner uno nuevo): entrada
+  "Recordatorio" en el menú "⋯" de `NoteWindow`, con panel desplegable — tres atajos (`ReminderPresets`:
+  En 1 hora / Esta noche a las 20:00 / Mañana a las 9:00, puro y testeado en el límite exacto de las
+  20:00) o calendario + hora/minuto manual.
+- **Aviso nativo de Windows** (`ReminderScheduler`): sondea cada 30s con un `DispatcherTimer` y hace
+  una pasada de catch-up al arrancar, para que un recordatorio vencido con la app cerrada avise igual
+  al reabrir. Reutiliza el `NotifyIcon` que ya crea `TrayIcon` (no un segundo icono de bandeja) y
+  `ShowBalloonTip`; clic en el aviso abre la nota (`AppCoordinator.OpenNoteById`, nuevo).
+- **Insignia en la pestaña del dock**: reloj pequeño (`&#xE917;`, Segoe Fluent Icons) en la esquina de
+  cualquier pestaña con recordatorio pendiente — verificado visualmente que el glifo se ve como un
+  reloj reconocible, no hizo falta cambiarlo.
+- Tabla nueva `NoteReminder` (`NoteId` como clave primaria, sin FK — mismo patrón que `NotePlacement`/
+  `TaskCompletion`), nunca una columna en `Note`. Los timestamps se guardan en UTC
+  (`DateTimeOffset.ToUniversalTime().ToString("O")`), igual que `CreatedAt`/`UpdatedAt`; los cálculos
+  de cara al usuario (presets, el selector) trabajan en hora local.
+
+### Lo que encontró la revisión final de toda la rama (y se arregló, una sola ronda)
+
+Las cinco tareas pasaron su propia revisión individual limpias, pero una revisión de conjunto
+(modelo más capaz, sobre las cinco a la vez) encontró 5 huecos de integración que ningún task-review
+aislado podía ver:
+
+1. Saltar un recordatorio no refrescaba el dock — la insignia se quedaba pegada hasta una acción no
+   relacionada. Arreglado: `ReminderScheduler` llama a `_coordinator.RefreshAll()` tras avisar.
+2. Una nota archivada o en la papelera seguía disparando su recordatorio (y no había insignia en
+   ningún sitio para avisar de eso, porque el dock solo lista notas activas). Arreglado: `GetDueReminders`/
+   `GetPendingReminders` ahora filtran por `Note.State = Active`, con 4 tests nuevos.
+3. `ReminderScheduler` asumía que solo hay un aviso visible a la vez para decidir qué nota abrir al
+   hacer clic — pero en Windows 10/11 los avisos se apilan en el Centro de actividades y siguen siendo
+   pulsables. Si sonaban dos recordatorios de nota única seguidos, pulsar el primero (ya viejo) podía
+   abrir la nota del segundo. No tiene arreglo completo (la API de `NotifyIcon` no expone qué aviso
+   concreto se pulsó) — mitigado: al cerrarse un aviso (`BalloonTipClosed`) se olvida qué nota
+   recordaba, así que un clic tardío sobre un aviso viejo abre como mucho el gestor de notas, nunca la
+   nota equivocada. Comentario del código corregido para no afirmar una garantía que no se cumple.
+4. La pasada de catch-up al arrancar corría fuera de la protección de errores de `OnStartup` (el
+   propio comentario del fichero ya avisaba de que el manejador global no coge de forma fiable
+   excepciones ahí), y un fallo persistente en el sondeo de 30s habría abierto un cuadro de diálogo
+   modal cada 30 segundos para siempre. Arreglado: el catch-up se difiere con `Dispatcher.BeginInvoke`
+   para que caiga dentro de la protección normal, y `CheckDueReminders` para el temporizador si algo
+   falla (como mucho un aviso, no un bucle infinito).
+5. `ReminderScheduler` no se destruía nunca — un aviso disparado justo al cerrar la app, después de
+   `_trayIcon.Dispose()`, podía lanzar `ObjectDisposedException` sobre el `NotifyIcon` ya liberado.
+   Arreglado: `ReminderScheduler` implementa `IDisposable` (para el temporizador, desengancha sus dos
+   eventos) y se destruye antes que `_trayIcon` al salir.
+
+Los cinco arreglos fueron a una segunda revisión (acotada, solo el diff del arreglo) que los confirmó
+sin encontrar nada nuevo roto.
+
+### Pendiente de verificación manual del usuario
+
+El único punto que ni la implementación ni las revisiones pudieron confirmar de forma visual: que el
+aviso de Windows aparece de verdad en pantalla y que al pulsarlo abre la nota correcta. Se confirmó de
+forma indirecta (a nivel de base de datos: `ClearReminder` se ejecuta, y la misma rama de código llama
+a `ShowBalloonTip` justo después, incondicionalmente) pero no se vio el globo en sí — un intento de
+capturarlo con capturas de pantalla no dio con la región correcta de la pantalla (barra de tareas en
+modo autoocultar) y se descartó insistir para no repetir una captura de escritorio completo (una de
+ellas capturó de refilón contenido personal ajeno a la app, borrada al momento). **Para probarlo**:
+poner un recordatorio a 1 minuto vista y comprobar que salta el aviso de Windows y que el clic abre la
+nota correcta.
+
+### Otros hallazgos, anotados pero no arreglados (fuera de alcance de esta sesión)
+
+- `NoteWindow` no refresca en vivo el texto del botón "Recordatorio" si el `ReminderScheduler` lo
+  limpia en segundo plano mientras esa misma ventana está abierta — solo se refresca al abrir la
+  ventana o al usar Guardar/Quitar. Poco probable que se note en uso real; reabrir la nota lo corrige.
+- El selector de fecha/hora no avisa de nada si se pone una fecha ya pasada (dispara en menos de 30s)
+  ni distingue eso de un error de escritura.
+- Con Asistente de concentración/notificaciones desactivadas para Fanote, un recordatorio se pierde en
+  silencio (la fila se borra igual, avise Windows o no) — sin rastro en ningún sitio de que sonó.
+- Formato de fecha en el recordatorio (`dd/MM HH:mm`) usa los separadores de la configuración regional
+  activa vía interpolación de cadena — en la mayoría de configuraciones (incluida la española) se ve
+  bien, pero técnicamente no está forzado a invariante.
+
+Tests: 335/335 (18 nuevos: 11 CRUD de recordatorio + 7 de `ReminderPresets`, más 4 de exclusión por
+estado ya contados dentro de los 335). Build limpio, 0 advertencias nuevas.
+
+### Retoque posterior: el `Calendar` del selector en modo oscuro
+
+Preguntado tras ver el panel en uso: el `Calendar` de WPF usa su plantilla por defecto (pensada para
+tema claro) y se veía como un recuadro claro ajeno al resto del panel oscuro del "⋯". Se probó primero
+`ThemeMode="Dark"` (la propiedad de tema Fluent de WPF en .NET 9+) directamente sobre el control —
+**no existe como propiedad de elemento en esta versión** (falla en tiempo de compilación, `MC3072`),
+solo parece estar disponible a nivel de `Application`/`Window`, y aplicarla ahí recolorearía toda la
+app con la paleta Fluent genérica en vez de la propia. Se optó por lo más quirúrgico: `Foreground` de
+`CalendarDayButton`/`CalendarButton` puestos implícitos en `App.xaml` (mismo patrón que `ToolTip`/
+`ScrollBar` de esa misma sección) y un `DarkCalendarStyle` con `Background`/`BorderBrush`/`Foreground`
+reutilizando exactamente la paleta ya en uso en `NoteWindow.xaml` (`#2A261F`/`#3C3730`/`#EDE7DC`), sin
+inventar tonos nuevos. Solo se toca el estado "normal" del día — los estados especiales (hoy,
+seleccionado) siguen con los colores por defecto de la plantilla.
+
+Verificado una vez con una captura recortada a los límites reales del panel (mes/año y rejilla de días
+legibles en claro sobre oscuro) antes de que un error de cálculo en un recorte posterior capturara
+contenido ajeno a Fanote en el monitor equivocado (ver más abajo) y se decidiera parar ahí. **Queda sin
+tocar y anotado para si se retoma**: las dos cajas de texto de hora/minuto (`ReminderHourBox`/
+`ReminderMinuteBox`) tienen el mismo problema (recuadro blanco por defecto) y no se tocaron en esta
+pasada — el usuario preguntó específicamente por el calendario.
+
+**Incidente durante la verificación manual, anotado por transparencia**: al calcular automáticamente
+el rectángulo de una captura de pantalla para comprobar el resultado, un cálculo con coordenadas
+incorrectas capturó contenido de otra aplicación en el monitor horizontal (que el usuario tenía en uso
+en ese momento) en vez de limitarse al panel de Fanote. Se borró el fichero al momento sin más
+inspección. El usuario aclaró que cualquier prueba visual futura debe limitarse al monitor vertical.
