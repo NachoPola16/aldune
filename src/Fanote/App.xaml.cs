@@ -220,6 +220,9 @@ public partial class App : Application
 
         _trayIcon = new TrayIcon(coordinator);
 
+        _reminderScheduler = new ReminderScheduler(repository, coordinator, _trayIcon.Icon);
+        _reminderScheduler.CheckDueReminders(); // catch-up: avisa ya de lo vencido con la app cerrada
+
         Exit += (_, _) =>
         {
             SystemEvents.DisplaySettingsChanged -= OnDisplaySettingsChanged;
@@ -286,6 +289,7 @@ public partial class App : Application
     private NotesRepository? _repository;
     private AppSettings? _settings;
     private DispatcherTimer? _rebuildDebounce;
+    private ReminderScheduler? _reminderScheduler;
 
     /// <summary>
     /// Crea un dock por cada monitor conectado ahora mismo. Se llama al arrancar y cada vez que

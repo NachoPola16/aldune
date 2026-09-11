@@ -25,6 +25,7 @@ public static class Strings
     // --- General / compartido entre ventanas -----------------------------------------------------
 
     public static string AppName => "Fanote";
+    public static string ReminderManyDue(int count) => T($"{count} reminders pending", $"{count} recordatorios pendientes");
     public static string Archive => T("Archive", "Archivar");
     public static string Restore => T("Restore", "Restaurar");
     public static string MoveToTrash => T("Move to trash", "Mover a la papelera");

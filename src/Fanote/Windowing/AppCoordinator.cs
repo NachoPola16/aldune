@@ -154,6 +154,23 @@ public sealed class AppCoordinator
     }
 
     /// <summary>
+    /// Abre (o activa) una nota a partir de solo su Id, sin que lo pida un dock concreto — el mismo
+    /// patrón que <see cref="CreateAndOpenNote"/>/<see cref="OpenNotesManager"/>, usado por
+    /// <see cref="ReminderScheduler"/> cuando un recordatorio se dispara: solo conoce el NoteId, no
+    /// una referencia al dock que originó la petición.
+    /// </summary>
+    public void OpenNoteById(Guid noteId)
+    {
+        var dock = DockNearCursor();
+        if (dock is null) return;
+
+        var note = _repository.GetById(noteId);
+        if (note is null) return; // la nota se borró entre que sonó el recordatorio y el clic
+
+        OpenOrActivateNote(note, dock);
+    }
+
+    /// <summary>
     /// Si el ajuste está activado y hay una posición guardada para <paramref name="noteId"/> en
     /// <paramref name="monitorKey"/> que siga siendo visible ahora mismo, la aplica a
     /// <paramref name="noteWindow"/> y devuelve <c>true</c>. La validez de "sigue siendo visible"

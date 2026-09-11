@@ -21,6 +21,10 @@ internal sealed class TrayIcon : IDisposable
     private readonly NotifyIcon _icon;
     private readonly AppCoordinator _coordinator;
 
+    /// <summary>El NotifyIcon que ya crea esta clase, reutilizado por ReminderScheduler para avisar
+    /// de recordatorios — un segundo icono de bandeja sería confuso.</summary>
+    internal NotifyIcon Icon => _icon;
+
     internal TrayIcon(AppCoordinator coordinator)
     {
         _coordinator = coordinator;
@@ -81,14 +85,14 @@ internal sealed class TrayIcon : IDisposable
         public override Color SeparatorLight => ColorTranslator.FromHtml("#3C3730");
     }
 
-    private static Icon LoadIcon()
+    private static System.Drawing.Icon LoadIcon()
     {
         // El icono viaja incrustado en el ejecutable (ApplicationIcon en el csproj), así que se
         // saca de ahí en vez de depender de que exista un fichero suelto junto al .exe.
         var path = Environment.ProcessPath;
         if (path is not null)
         {
-            var extracted = Icon.ExtractAssociatedIcon(path);
+            var extracted = System.Drawing.Icon.ExtractAssociatedIcon(path);
             if (extracted is not null) return extracted;
         }
         return SystemIcons.Application;
