@@ -2651,3 +2651,37 @@ real (creando y borrando una nota de prueba, limitado al monitor vertical): escr
 Enter continúa la lista, Ctrl+L sobre una viñeta la convierte en tarea y viceversa, Enter en una viñeta
 vacía termina la lista, y el botón del menú "⋯" muestra el texto y el atajo correctos. Build limpio, 0
 advertencias nuevas.
+
+## Sangría de listas con Tab/Mayús+Tab — "árboles" sin modelo nuevo (sesión 2026-09-12)
+
+Pedido del usuario ("árboles de listas con divisiones y subdivisiones") + revisar el comportamiento de
+Tab en la nota. Bounded (`superpowers:brainstorming`): tras mirar el código, `TaskLines`/`BulletLines`
+ya reconocían sangría arbitraria delante del glifo (y `EnterContinuation` ya la conservaba al continuar
+con Enter) — lo único que faltaba de verdad era una forma de generarla desde el teclado. Preguntado
+explícitamente si además de sangría se quería plegar/colapsar ramas: **no**, solo sangría visual, así
+que no hizo falta ningún modelo de árbol nuevo.
+
+### `Fanote.Core.ListIndent` (nuevo, TDD)
+
+`Indent`/`Outdent`: sobre una línea de tarea o viñeta, añaden o quitan 4 espacios al principio (un
+nivel). Devuelven `null` si la línea no es ni tarea ni viñeta, para que `NoteWindow` deje pasar el Tab
+normal. `Outdent` en el nivel raíz no baja de cero (se queda igual, pero sigue "manejando" la tecla).
+
+### Tab en `NoteWindow` — el comportamiento real que se pidió revisar
+
+Antes, `TextBody` no tenía `AcceptsTab`, así que Tab sacaba el foco del cuadro de texto sin ningún
+beneficio en esta ventana. Ahora: sobre una tarea o viñeta, Tab/Mayús+Tab suben/bajan un nivel; sobre
+una línea normal, Tab inserta una tabulación literal (`AcceptsTab="True"`, cambio real de
+comportamiento) en vez de sacar el foco. Mayús+Tab en línea normal se deja como estaba (navegación de
+foco hacia atrás) — gesto raro mientras se escribe prosa, no se ha tocado.
+
+Tests: 386/386 (12 nuevos de `ListIndent`). Verificado a mano contra la app real (limitado al monitor
+vertical, nota de prueba borrada al terminar): Tab en una tarea indenta y mantiene el foco, Mayús+Tab
+la devuelve al nivel raíz, y Tab en texto suelto inserta una tabulación en vez de escaparse. Build
+limpio, 0 advertencias nuevas.
+
+**Anotados por el usuario en la misma sesión, pendientes de arreglar (ver `ROADMAP.md` §5)**: el caret
+de `TitleBox` se cruza con la "T" del placeholder cuando el título está vacío; el botón "⋯" no cierra
+el menú al pulsarlo de nuevo estando abierto (lo reabre en su lugar, sospecha de bug clásico de
+`Popup`/`StaysOpen="False"`). Ninguno de los dos se ha tocado todavía — quedan para el Grupo B o una
+sesión aparte.

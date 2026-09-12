@@ -337,6 +337,29 @@ public partial class NoteWindow : Window
             return;
         }
 
+        // Tab: sobre una tarea o viñeta, sube un nivel de sangría. En una línea normal deja pasar el
+        // Tab nativo (AcceptsTab="True" en el XAML), que inserta una tabulación literal — antes sacaba
+        // el foco de TextBody sin ningún beneficio real en esta ventana.
+        if (e.Key == Key.Tab && Keyboard.Modifiers == ModifierKeys.None)
+        {
+            if (ListIndent.Indent(TextBody.Text, TextBody.CaretIndex) is { } indented)
+            {
+                ReplaceBody(indented.Text, indented.Caret);
+                e.Handled = true;
+            }
+        }
+
+        // Mayús+Tab: baja un nivel. En una línea normal no se toca (queda la navegación de foco hacia
+        // atrás de siempre, gesto raro mientras se escribe prosa).
+        if (e.Key == Key.Tab && Keyboard.Modifiers == ModifierKeys.Shift)
+        {
+            if (ListIndent.Outdent(TextBody.Text, TextBody.CaretIndex) is { } outdented)
+            {
+                ReplaceBody(outdented.Text, outdented.Caret);
+                e.Handled = true;
+            }
+        }
+
         // Enter al final de una tarea o una viñeta: la lista sigue sola. Cada clase decide si toca
         // continuar, terminar la lista (línea vacía) o no hacer nada — en ese último caso, Enter normal.
         if (e.Key == Key.Return && Keyboard.Modifiers == ModifierKeys.None)

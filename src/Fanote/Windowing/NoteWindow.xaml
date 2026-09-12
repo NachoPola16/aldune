@@ -319,6 +319,7 @@
                  absoluto es el único color de la ventana que no comparte hue con nada. -->
             <TextBox x:Name="TextBody"
                      AcceptsReturn="True"
+                     AcceptsTab="True"
                      TextWrapping="Wrap"
                      FontSize="14"
                      Foreground="#1E1A14"

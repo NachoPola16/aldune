@@ -398,6 +398,13 @@ Pendiente, por orden de importancia:
 6. ~~El abanico puede dejar de ser compacto con muchas notas.~~ **Hecho** — ver `STATUS.md`. La
    ventana tiene tope (`EdgeGeometry.FanBudget`), lo que sobra se scrollea, y la tira de reposo solo
    dibuja los guiones que caben.
+7. **El cursor de escritura se cruza con la "T" de "Title"** en la cabecera cuando el título está
+   vacío — reportado por el usuario con captura (2026-09-12). El caret parpadeante de `TitleBox` se
+   dibuja en el mismo punto que el placeholder, en vez de dejarle su sitio.
+8. **El botón "⋯" no cierra el menú al volver a pulsarlo estando abierto** — lo vuelve a abrir en su
+   lugar (reportado 2026-09-12). Sospecha: el `Popup` (`StaysOpen="False"`) se cierra solo por el clic
+   "de fuera" antes de que `OnMenuClick` llegue a ejecutarse, así que el toggle parte de `IsOpen` ya en
+   `false` y lo reabre — bug clásico de WPF con popups que se cierran solos. Pendiente de arreglar.
 
 ## 6. Logo
 
