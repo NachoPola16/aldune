@@ -276,6 +276,9 @@
                         <Button x:Name="ExportButton" Click="OnExportClick"
                                 Content="{x:Static res:Strings.ExportToMarkdown}"
                                 Style="{StaticResource NoteMenuItemStyle}" />
+                        <Button x:Name="RestoreSizeButton" Click="OnRestoreSizeClick"
+                                Content="{x:Static res:Strings.RestoreSize}"
+                                Style="{StaticResource NoteMenuItemStyle}" />
                         <Border Background="#3C3730" Height="1" Margin="0,4,0,4" />
 
                         <Button x:Name="ArchiveButton" Click="OnArchiveClick"

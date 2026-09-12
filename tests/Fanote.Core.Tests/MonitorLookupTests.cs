@@ -49,4 +49,26 @@ public class MonitorLookupTests
         Assert.Null(MonitorLookup.DeviceNameAt(
             100, 100, 300, 200, Array.Empty<MonitorInfo>()));
     }
+
+    // --- MonitorAt (mismo criterio del centro, pero devuelve el monitor entero) -------------------
+
+    [Fact]
+    public void MonitorAt_CenterInsideAMonitor_ReturnsIt()
+    {
+        var result = MonitorLookup.MonitorAt(100, 100, 300, 200, new[] { Primary, Vertical });
+        Assert.Equal(Primary, result);
+    }
+
+    [Fact]
+    public void MonitorAt_CenterInsideTheOtherMonitor_ReturnsThatOne()
+    {
+        var result = MonitorLookup.MonitorAt(-900, 800, 400, 200, new[] { Primary, Vertical });
+        Assert.Equal(Vertical, result);
+    }
+
+    [Fact]
+    public void MonitorAt_CenterOffAllMonitors_ReturnsNull()
+    {
+        Assert.Null(MonitorLookup.MonitorAt(5000, 5000, 300, 200, new[] { Primary, Vertical }));
+    }
 }

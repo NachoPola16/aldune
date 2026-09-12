@@ -47,6 +47,7 @@ public static class Strings
     public static string CloseTooltip => T("Close (Esc)", "Cerrar (Esc)");
     public static string ConvertToTask => T("Convert to task", "Convertir en tarea");
     public static string ConvertToBullet => T("Convert to list", "Convertir en lista");
+    public static string RestoreSize => T("Restore size", "Restaurar tamaño");
     public static string ExportToMarkdown => T("Export to Markdown", "Exportar a Markdown");
     public static string MarkdownFileFilter => T("Markdown file (*.md)|*.md", "Archivo Markdown (*.md)|*.md");
     public static string ReminderMenuEntry => T("Reminder", "Recordatorio");

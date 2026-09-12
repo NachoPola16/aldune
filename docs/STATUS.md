@@ -2685,3 +2685,68 @@ de `TitleBox` se cruza con la "T" del placeholder cuando el título está vacío
 el menú al pulsarlo de nuevo estando abierto (lo reabre en su lugar, sospecha de bug clásico de
 `Popup`/`StaysOpen="False"`). Ninguno de los dos se ha tocado todavía — quedan para el Grupo B o una
 sesión aparte.
+
+## Grupo B: la nota se ajusta sola de tamaño al escribir (sesión 2026-09-12)
+
+Pedido del usuario: que la nota crezca sola al escribir en vez de tener que estirar la pestaña a mano,
+más un botón para restaurar el tamaño. Bounded. El diseño cambió una vez a mitad de verificación
+manual, con el usuario viéndolo en vivo — anotado abajo con el porqué.
+
+### `Fanote.Core.MonitorLookup.MonitorAt` (nuevo, TDD)
+
+`DeviceNameAt` ya encontraba el monitor real (no `SystemParameters.WorkArea`, que siempre da el
+principal) donde cae el centro de una ventana, pero solo devolvía su nombre. `MonitorAt` es lo mismo
+pero devuelve el `MonitorInfo` entero — hace falta su `WorkArea` para el tope de crecimiento.
+`DeviceNameAt` ahora delega en él, sin cambiar su firma pública.
+
+### `NoteWindow.FitHeightToContent`
+
+Ajusta el alto de la ventana al contenido actual en cada `TextChanged` y al abrir la nota — crece si
+no cabe, encoge si sobra sitio, entre `DefaultHeight` (320, el tamaño de fábrica, nunca encoge por
+debajo) y `MaxHeight` (700px, o el área de trabajo real del monitor si es menor — nunca
+`SystemParameters.WorkArea`, mismo aviso que ya tiene `SettingsWindow`).
+
+**Un arrastre manual del borde bloquea el ajuste automático para el resto de esa apertura** — el
+usuario ha tomado el control, y seguir tocándole el tamaño mientras escribe sería pelearse con él. El
+botón "Restaurar tamaño" (menú "⋯") lo desbloquea y vuelve a 300×320, re-creciendo en el acto si el
+contenido ya no cabe ahí. La distinción entre "cambio nuestro" y "arrastre real" no se guarda en
+ningún sitio — cada apertura empieza otra vez en modo automático, sea cual sea el alto con el que se
+guardó la nota la última vez (ese alto puede venir tanto de un ajuste automático anterior como de un
+arrastre real, y no hay forma barata de distinguirlos entre sesiones sin tocar el esquema de la base de
+datos).
+
+**Bug encontrado y arreglado a mitad de verificación**: `AppCoordinator.TryRestorePlacement` fija
+`Width`/`Height` (para restaurar la posición guardada) *antes* de `Show()` — enganchar `SizeChanged`
+directamente en el constructor disparaba ese cambio como si fuera un arrastre manual, bloqueando el
+ajuste automático nada más abrir cualquier nota con posición guardada, antes incluso de verse.
+Arreglado enganchándolo dentro de `Loaded` en su lugar, cuando la restauración ya ha terminado.
+
+**Cambio de diseño en vivo**: la primera versión solo crecía, nunca encogía (decisión explícita previa
+del usuario). Al verlo en uso real, pidió lo contrario — que encoja también al borrar texto, "igual que
+crece pero al revés", salvo que se haya tocado a mano. Se cambió sin volver a todo el proceso de
+brainstorming: es la misma pieza, con el mismo mecanismo, solo que simétrico en las dos direcciones.
+
+**Ajustado también en vivo**: el límite inicial (90% del alto del monitor) dejaba crecer la nota casi
+hasta llenar la pantalla vertical entera, y el usuario reportó parpadeo de la barra de scroll durante
+el crecimiento. Bajado a un tope fijo de 700px (con el monitor real como límite aparte para pantallas
+pequeñas), y añadido un segundo `UpdateLayout()` tras cambiar el alto para que el nuevo diseño se
+asiente antes de que se pinte el siguiente fotograma — evita que la barra de scroll llegue a mostrarse
+un instante durante el propio ajuste.
+
+**Incidente durante la verificación manual, anotado por transparencia**: al simular la escritura con
+`SendKeys` para probar el límite de crecimiento, el foco se escapó de la ventana de la nota hacia la
+terminal del propio usuario en algún punto de una tanda larga de pulsaciones, y varias líneas de prueba
+llegaron como mensajes reales suyos. Se cortó esa vía de prueba al momento y el resto de la
+verificación se hizo con `ValuePattern.SetValue` (fija el texto vía UI Automation sin simular teclado
+real, así que no puede volver a escaparse a ningún sitio).
+
+Tests: 389/389 (3 nuevos de `MonitorLookup.MonitorAt`; el resto de la lógica es capa WPF, sin tests
+automáticos por el mismo criterio que el resto de esa capa). Verificado a mano contra la app real
+(limitado al monitor vertical, con `ValuePattern.SetValue`, nota de prueba borrada al terminar):
+crece hasta el tope de 700px, encoge de vuelta a 320 al borrar texto, un redimensionado manual
+(`TransformPattern.Resize`) bloquea el ajuste hasta pulsar "Restaurar tamaño", que lo reactiva y
+vuelve a crecer si hace falta. Build limpio, 0 advertencias nuevas.
+
+**Pendiente, no abordado en esta sesión**: el rediseño visual de la barra de scroll en sí (el usuario
+lo sigue queriendo, pero sin poder describir qué le falla — hace falta una maqueta con opciones
+concretas antes de poder decidir, no solo la pregunta abierta).

@@ -17,12 +17,38 @@ public partial class NoteWindow : Window
 {
     private static readonly TimeSpan AutosaveDelay = TimeSpan.FromMilliseconds(500);
 
+    /// <summary>El tamaño de fábrica de una nota nueva (ver el XAML) — al lo que vuelve el botón
+    /// "Restaurar tamaño", y el piso al que se encoge sola una nota con poco texto (no tiene sentido
+    /// que el ajuste automático deje una nota más pequeña que esto).</summary>
+    private const double DefaultWidth = 300;
+    private const double DefaultHeight = 320;
+
+    /// <summary>Tope absoluto de alto para el ajuste automático — no tiene sentido que una nota crezca
+    /// hasta ocupar la pantalla entera. El monitor real de la nota (no <c>SystemParameters.WorkArea</c>,
+    /// que siempre da el principal) actúa como límite aparte para pantallas pequeñas, por si este valor
+    /// fuera mayor que el propio monitor.</summary>
+    private const double MaxAutoFitHeight = 700;
+
     private readonly Note _note;
     private readonly NotesRepository _repository;
     private readonly AppCoordinator _coordinator;
     private readonly AppSettings? _settings;
     private readonly DispatcherTimer _autosaveTimer;
     private bool _hasPendingEdit;
+
+    /// <summary>Si esta nota se ha redimensionado a mano (arrastrando el borde) durante esta apertura
+    /// concreta — a partir de ahí, <see cref="FitHeightToContent"/> deja de tocar el alto hasta que se
+    /// pulse "Restaurar tamaño". No se guarda en ningún sitio: cada apertura empieza en modo ajuste
+    /// automático de nuevo, sea cual sea el alto con el que se guardó la última vez (ver
+    /// <see cref="SavePlacementOnce"/> — ese alto puede venir tanto de un ajuste automático anterior
+    /// como de un arrastre real, y no hay forma barata de distinguirlos entre sesiones sin tocar el
+    /// esquema; distinguirlo solo dentro de esta sesión es lo que de verdad importa en la práctica).</summary>
+    private bool _hasManualSize;
+
+    /// <summary>Evita que el propio cambio de tamaño de <see cref="FitHeightToContent"/> o
+    /// <see cref="OnRestoreSizeClick"/> se malinterprete como un arrastre manual en el
+    /// <c>SizeChanged</c> de más abajo.</summary>
+    private bool _isAutoResizing;
 
     public NoteWindow(Note note, NotesRepository repository, AppCoordinator coordinator, AppSettings? settings = null)
     {
@@ -105,6 +131,27 @@ public partial class NoteWindow : Window
         // plazo venció mientras la nota estaba cerrada, aquí es donde se nota.
         Loaded += (_, _) => PruneExpiredTasks();
 
+        // Una nota que ya traía más o menos texto del que le corresponde a su alto guardado (escrito
+        // antes de que existiera el ajuste automático, o el alto de la última sesión ya no encaja)
+        // se ajusta también al abrirla, no solo al seguir escribiendo -- así "el alto refleja lo que
+        // hay escrito" es cierto siempre, no solo a partir de ahora.
+        Loaded += (_, _) =>
+        {
+            SetMaxHeightForCurrentMonitor();
+            FitHeightToContent();
+
+            // Enganchado aquí y no antes en el constructor: AppCoordinator.TryRestorePlacement fija
+            // Width/Height (para restaurar la posición guardada) antes de Show(), y eso dispararía
+            // SizeChanged con _isAutoResizing todavía en false -- marcaría la nota como "tamaño
+            // manual" nada más abrirla, antes incluso de que se viera. Un arrastre real del borde
+            // (el único SizeChanged que puede llegar a partir de aquí sin pasar por _isAutoResizing)
+            // fija el tamaño para el resto de esta apertura hasta "Restaurar tamaño".
+            SizeChanged += (_, _) =>
+            {
+                if (!_isAutoResizing) _hasManualSize = true;
+            };
+        };
+
         TextBody.TextChanged += (_, _) =>
         {
             OnEdited();
@@ -116,6 +163,7 @@ public partial class NoteWindow : Window
             // preguntar por rectángulos de caracteres, que si no reflejarían el texto anterior.
             TextBody.UpdateLayout();
             RefreshCheckboxHoverAfterTextChange();
+            FitHeightToContent();
         };
         TitleBox.TextChanged += (_, _) => OnEdited();
 
@@ -168,6 +216,47 @@ public partial class NoteWindow : Window
         if (monitorKey is null) return; // el centro de la nota no cae en ningún monitor conocido
 
         _repository.SavePlacement(_note.Id, monitorKey, Left, Top, Width, Height);
+    }
+
+    /// <summary>
+    /// Tope real de alto para el ajuste automático: el menor entre <see cref="MaxAutoFitHeight"/> y
+    /// el <see cref="MonitorInfo.WorkArea"/> real del monitor donde está el centro de la nota ahora
+    /// mismo (no <c>SystemParameters.WorkArea</c>, que siempre da el monitor principal del sistema —
+    /// mismo aviso que ya deja <c>SettingsWindow</c>). Si el centro no cae en ningún monitor conocido,
+    /// se queda solo con <see cref="MaxAutoFitHeight"/>.
+    /// </summary>
+    private void SetMaxHeightForCurrentMonitor()
+    {
+        var monitor = MonitorLookup.MonitorAt(Left, Top, Width, Height, MonitorEnumerator.EnumerateMonitors());
+        MaxHeight = monitor is { } m ? Math.Min(MaxAutoFitHeight, m.WorkArea.Height * 0.9) : MaxAutoFitHeight;
+    }
+
+    /// <summary>
+    /// Ajusta el alto al contenido actual — crece si no cabe, encoge si sobra sitio, nunca por debajo
+    /// de <see cref="DefaultHeight"/> ni por encima de <c>MaxHeight</c> (puesto por
+    /// <see cref="SetMaxHeightForCurrentMonitor"/>). No hace nada si <see cref="_hasManualSize"/>: un
+    /// arrastre real del usuario en esta apertura tiene la última palabra hasta "Restaurar tamaño".
+    ///
+    /// <c>Height - TextBody.ViewportHeight</c> es todo lo que NO es el propio cuerpo de texto
+    /// (cabecera, márgenes) — sumado al alto real del contenido (<c>ExtentHeight</c>) da el alto de
+    /// ventana que hace falta, sin tener que conocer esos números a mano. El segundo
+    /// <c>UpdateLayout()</c> asienta el nuevo alto antes de que WPF pinte el siguiente fotograma, para
+    /// que la barra de scroll no llegue a parpadear visible durante el propio ajuste.
+    /// </summary>
+    private void FitHeightToContent()
+    {
+        if (_hasManualSize) return;
+
+        double chromeHeight = Height - TextBody.ViewportHeight;
+        double desired = Math.Clamp(TextBody.ExtentHeight + chromeHeight, DefaultHeight, MaxHeight);
+
+        if (Math.Abs(desired - Height) < 0.5) return;
+
+        _isAutoResizing = true;
+        Height = desired;
+        _isAutoResizing = false;
+
+        TextBody.UpdateLayout();
     }
 
     /// <summary>
@@ -586,6 +675,24 @@ public partial class NoteWindow : Window
         ReplaceBody(text, caret);
         ActionsPopup.IsOpen = false;
         TextBody.Focus();
+    }
+
+    /// <summary>Deshace un tamaño puesto a mano y reactiva el ajuste automático para el resto de esta
+    /// apertura: si con 300×320 el texto ya no cabe, <see cref="FitHeightToContent"/> lo vuelve a
+    /// agrandar en el acto — "restaurar" no pelea con el contenido, solo con el tamaño que se puso a
+    /// mano.</summary>
+    private void OnRestoreSizeClick(object sender, RoutedEventArgs e)
+    {
+        _hasManualSize = false;
+
+        _isAutoResizing = true;
+        Width = DefaultWidth;
+        Height = DefaultHeight;
+        _isAutoResizing = false;
+
+        TextBody.UpdateLayout();
+        FitHeightToContent();
+        ActionsPopup.IsOpen = false;
     }
 
     /// <summary>
