@@ -75,6 +75,36 @@ public class MarkdownExportTests
             result);
     }
 
+    // --- ToMarkdown: listas con viñeta ---------------------------------------------------------------
+
+    [Fact]
+    public void ToMarkdown_BulletLine_BecomesMarkdownDash()
+    {
+        var result = MarkdownExport.ToMarkdown("Título\r\n→ comprar pan");
+        Assert.Equal("# Título\r\n\r\n- comprar pan", result);
+    }
+
+    [Fact]
+    public void ToMarkdown_IndentedBullet_KeepsIndentBeforeTheDash()
+    {
+        var result = MarkdownExport.ToMarkdown("Título\r\n    → anidada");
+        Assert.Equal("# Título\r\n\r\n    - anidada", result);
+    }
+
+    [Fact]
+    public void ToMarkdown_BulletGlyphGluedToText_StillConverts()
+    {
+        var result = MarkdownExport.ToMarkdown("Título\r\n→pegado");
+        Assert.Equal("# Título\r\n\r\n- pegado", result);
+    }
+
+    [Fact]
+    public void ToMarkdown_TasksAndBulletsTogether_EachUsesItsOwnMarker()
+    {
+        var result = MarkdownExport.ToMarkdown("Título\r\n☐ tarea\r\n→ punto\r\nMás texto");
+        Assert.Equal("# Título\r\n\r\n- [ ] tarea\r\n- punto\r\nMás texto", result);
+    }
+
     // --- SuggestedFileName ---------------------------------------------------------------------------
 
     [Fact]

@@ -317,7 +317,8 @@ public partial class NoteWindow : Window
             return;
         }
 
-        // Ctrl+L: convierte la línea en tarea, o le quita la casilla si ya lo era.
+        // Ctrl+L: convierte la línea en tarea, o le quita la casilla si ya lo era. Sobre una lista con
+        // viñeta, la convierte en tarea en vez de apilar los dos prefijos (ver TaskLines.ToggleTaskLineAt).
         if (e.Key == Key.L && Keyboard.Modifiers == ModifierKeys.Control)
         {
             var (text, caret) = TaskLines.ToggleTaskLineAt(TextBody.Text, TextBody.CaretIndex);
@@ -326,13 +327,28 @@ public partial class NoteWindow : Window
             return;
         }
 
-        // Enter al final de una tarea: la lista sigue sola. TaskLines decide si toca continuar,
-        // terminar la lista (tarea vacía) o no hacer nada — en ese último caso, Enter normal.
+        // Ctrl+Shift+L: lo mismo que Ctrl+L pero para una lista con viñeta (→) en vez de una tarea —
+        // atajo nuevo a propósito, no un ciclo sobre Ctrl+L, para no mezclar los dos significados.
+        if (e.Key == Key.L && Keyboard.Modifiers == (ModifierKeys.Control | ModifierKeys.Shift))
+        {
+            var (text, caret) = BulletLines.ToggleBulletLineAt(TextBody.Text, TextBody.CaretIndex);
+            ReplaceBody(text, caret);
+            e.Handled = true;
+            return;
+        }
+
+        // Enter al final de una tarea o una viñeta: la lista sigue sola. Cada clase decide si toca
+        // continuar, terminar la lista (línea vacía) o no hacer nada — en ese último caso, Enter normal.
         if (e.Key == Key.Return && Keyboard.Modifiers == ModifierKeys.None)
         {
-            if (TaskLines.EnterContinuation(TextBody.Text, TextBody.CaretIndex) is { } result)
+            if (TaskLines.EnterContinuation(TextBody.Text, TextBody.CaretIndex) is { } taskResult)
             {
-                ReplaceBody(result.Text, result.Caret);
+                ReplaceBody(taskResult.Text, taskResult.Caret);
+                e.Handled = true;
+            }
+            else if (BulletLines.EnterContinuation(TextBody.Text, TextBody.CaretIndex) is { } bulletResult)
+            {
+                ReplaceBody(bulletResult.Text, bulletResult.Caret);
                 e.Handled = true;
             }
         }
@@ -535,6 +551,15 @@ public partial class NoteWindow : Window
     private void OnTaskClick(object sender, RoutedEventArgs e)
     {
         var (text, caret) = TaskLines.ToggleTaskLineAt(TextBody.Text, TextBody.CaretIndex);
+        ReplaceBody(text, caret);
+        ActionsPopup.IsOpen = false;
+        TextBody.Focus();
+    }
+
+    /// <summary>Lo mismo que Ctrl+Shift+L, para quien no conoce el atajo.</summary>
+    private void OnBulletClick(object sender, RoutedEventArgs e)
+    {
+        var (text, caret) = BulletLines.ToggleBulletLineAt(TextBody.Text, TextBody.CaretIndex);
         ReplaceBody(text, caret);
         ActionsPopup.IsOpen = false;
         TextBody.Focus();

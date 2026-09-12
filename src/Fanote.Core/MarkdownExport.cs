@@ -35,14 +35,27 @@ public static class MarkdownExport
     private static string ConvertLine(string rawLine)
     {
         var line = rawLine.TrimEnd('\r');
-        int glyph = TaskLines.GlyphIndex(line);
-        if (glyph < 0) return line;
 
-        int prefixLength = TaskLines.PrefixLength(line, glyph);
-        var indent = line[..glyph];
-        var content = line[(glyph + prefixLength)..];
-        var marker = TaskLines.IsChecked(line) ? "[x]" : "[ ]";
-        return $"{indent}- {marker} {content}";
+        int taskGlyph = TaskLines.GlyphIndex(line);
+        if (taskGlyph >= 0)
+        {
+            int prefixLength = TaskLines.PrefixLength(line, taskGlyph);
+            var indent = line[..taskGlyph];
+            var content = line[(taskGlyph + prefixLength)..];
+            var marker = TaskLines.IsChecked(line) ? "[x]" : "[ ]";
+            return $"{indent}- {marker} {content}";
+        }
+
+        int bulletGlyph = BulletLines.GlyphIndex(line);
+        if (bulletGlyph >= 0)
+        {
+            int prefixLength = BulletLines.PrefixLength(line, bulletGlyph);
+            var indent = line[..bulletGlyph];
+            var content = line[(bulletGlyph + prefixLength)..];
+            return $"{indent}- {content}";
+        }
+
+        return line;
     }
 
     /// <summary>

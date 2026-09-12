@@ -222,6 +222,14 @@
                             </Grid>
                         </Button>
 
+                        <Button x:Name="BulletButton" Click="OnBulletClick"
+                                Style="{StaticResource NoteMenuItemStyle}">
+                            <Grid Width="200">
+                                <TextBlock Text="{x:Static res:Strings.ConvertToBullet}" HorizontalAlignment="Left" />
+                                <TextBlock Text="Ctrl+Shift+L" Foreground="#8A8175" HorizontalAlignment="Right" />
+                            </Grid>
+                        </Button>
+
                         <Button x:Name="PinButton" Click="OnPinClick"
                                 Style="{StaticResource NoteMenuItemStyle}" />
                         <TextBlock x:Name="PinHint"

@@ -187,6 +187,24 @@ public class TaskLinesTests
     }
 
     [Fact]
+    public void ToggleTaskLineAt_ABulletLine_ConvertsItToATaskInstead()
+    {
+        // Pulsar el atajo de tarea sobre una viñea ya existente la convierte, no la apila -- mismo
+        // criterio simétrico que BulletLines.ToggleBulletLineAt con una tarea.
+        var (text, caret) = TaskLines.ToggleTaskLineAt("→ comprar pan", caret: 9);
+
+        Assert.Equal("☐ comprar pan", text);
+        Assert.Equal(9, caret);
+    }
+
+    [Fact]
+    public void ToggleTaskLineAt_ABulletLineWithIndent_KeepsTheIndentAfterConverting()
+    {
+        var (text, _) = TaskLines.ToggleTaskLineAt("    → sub-punto", caret: 0);
+        Assert.Equal("    ☐ sub-punto", text);
+    }
+
+    [Fact]
     public void ToggleTaskLineAt_GlyphWithTextGluedRightAfterIt_StripsOnlyTheGlyph()
     {
         // Sin PrefixLength esto quitaria 2 caracteres a ciegas (glifo + "espacio" asumido) y se

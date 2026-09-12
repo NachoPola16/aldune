@@ -130,8 +130,11 @@ public static class TaskLines
     }
 
     /// <summary>
-    /// Convierte en tarea la línea donde está el cursor, o le quita el prefijo si ya lo era. El
-    /// cursor se desplaza con el texto para que siga señalando la misma palabra.
+    /// Convierte en tarea la línea donde está el cursor, o le quita el prefijo si ya lo era. Si la
+    /// línea ya era una lista con viñeta (<see cref="BulletLines"/>), la convierte en tarea en vez de
+    /// apilar los dos prefijos — mismo criterio simétrico que
+    /// <see cref="BulletLines.ToggleBulletLineAt"/> con una tarea. El cursor se desplaza con el texto
+    /// para que siga señalando la misma palabra.
     /// </summary>
     public static (string Text, int Caret) ToggleTaskLineAt(string text, int caret)
     {
@@ -148,6 +151,18 @@ public static class TaskLines
             var stripped = line.Remove(glyph, prefixLength);
             int caretInLine = Math.Max(caret - start - prefixLength, glyph);
             return (string.Concat(text.AsSpan(0, start), stripped, text.AsSpan(end)), start + caretInLine);
+        }
+
+        int bulletGlyph = BulletLines.GlyphIndex(line);
+        if (bulletGlyph >= 0)
+        {
+            // Convertir: fuera el prefijo de viñeta, dentro el de tarea, en el mismo sitio.
+            int bulletPrefixLength = BulletLines.PrefixLength(line, bulletGlyph);
+            var replaced = line.Remove(bulletGlyph, bulletPrefixLength).Insert(bulletGlyph, Prefix);
+            int caretInLine = caret - start >= bulletGlyph + bulletPrefixLength
+                ? caret - start - bulletPrefixLength + Prefix.Length
+                : caret - start;
+            return (string.Concat(text.AsSpan(0, start), replaced, text.AsSpan(end)), start + caretInLine);
         }
 
         // Poner: detrás de la sangría que ya tuviera la línea.
@@ -210,21 +225,7 @@ public static class TaskLines
     /// <summary>Índice donde empieza la línea que contiene <paramref name="index"/>. Público para quien
     /// necesita mapear un punto de la línea (p. ej. el glifo) a su posición absoluta en el texto
     /// completo — ver <c>NoteWindow</c>, ampliación de la zona de clic de la casilla.</summary>
-    public static int LineStart(string text, int index)
-    {
-        for (int i = Math.Min(index, text.Length) - 1; i >= 0; i--)
-        {
-            if (text[i] == '\n') return i + 1;
-        }
-        return 0;
-    }
+    public static int LineStart(string text, int index) => LineText.Start(text, index);
 
-    private static int LineEnd(string text, int index)
-    {
-        for (int i = Math.Max(index, 0); i < text.Length; i++)
-        {
-            if (text[i] == '\r' || text[i] == '\n') return i;
-        }
-        return text.Length;
-    }
+    private static int LineEnd(string text, int index) => LineText.End(text, index);
 }

@@ -2604,3 +2604,50 @@ el rectángulo de una captura de pantalla para comprobar el resultado, un cálcu
 incorrectas capturó contenido de otra aplicación en el monitor horizontal (que el usuario tenía en uso
 en ese momento) en vez de limitarse al panel de Fanote. Se borró el fichero al momento sin más
 inspección. El usuario aclaró que cualquier prueba visual futura debe limitarse al monitor vertical.
+
+## Listas con viñeta (flecha), hermanas de las tareas (sesión 2026-09-12)
+
+Pedido del usuario: poder hacer listas con guion/flecha, igual que ya se puede convertir una línea en
+tarea. Bounded (`superpowers:brainstorming`, sin spec formal): extiende un patrón que ya existía
+(`TaskLines`/Ctrl+L) en vez de crear algo nuevo desde cero.
+
+**Glifo — flecha `→` (U+2192), no un guion.** Decidido con un render aislado (`RenderTargetBitmap`,
+misma técnica que ya sirvió para elegir `☒`) comparando guion/guion largo/raya/flecha/viñeta/triángulo
+sobre el fondo pastel real de la nota: los seis miden la misma altura de línea en `Segoe UI Variable
+Text` (ninguno cae a fuente sustituta), así que la decisión fue de significado, no de métricas. Se
+descartó el guion normal (y también la raya) porque es un carácter que alguien podría escribir de
+verdad al empezar una frase — el sistema lo detectaría como lista sin querer. La flecha, como `☐`,
+nadie la teclea por accidente.
+
+### `Fanote.Core.BulletLines` (nuevo, TDD) + `Fanote.Core.LineText` (extraído)
+
+Hermana de `TaskLines`, mismo patrón exacto (prefijo de texto plano `"→ "`, sin `RichTextBox`) pero sin
+estado propio — una viñeta no se marca, solo está o no está. Se extrajo `LineText.Start`/`End` (dónde
+empieza/acaba una línea) a una clase compartida pequeña, ya que `TaskLines.LineStart` era público y la
+lógica se iba a duplicar entre las dos clases; `TaskLines` ahora delega ahí sin cambiar su API pública.
+
+**Conversión cruzada, no apilado**: pulsar el atajo de tarea sobre una línea que ya es una viñeta la
+convierte en tarea (y viceversa), en vez de dejar los dos prefijos juntos — `TaskLines.ToggleTaskLineAt`
+y `BulletLines.ToggleBulletLineAt` cada una reconoce el prefijo de la otra family como caso especial.
+Enter continúa la lista igual que con tareas (nueva línea con `→ `; en una viñeta vacía, Enter termina
+la lista). Ninguna de las dos cuenta para el recuento de tareas del dock (`TaskLines.Count` no cambia).
+
+### Atajo y menú
+
+**Ctrl+Shift+L**, atajo nuevo a propósito (decisión del usuario tras preguntarle): Ctrl+L se queda solo
+para tareas, no se convirtió en un ciclo de tres estados para no mezclar los dos significados. Botón
+"Convertir en lista" en el menú "⋯", justo debajo de "Convertir en tarea", mismo patrón (atajo escrito
+al lado) para quien no lo conoce.
+
+### Exportar a Markdown
+
+Una línea con viñeta sale como `- contenido` (guion estándar de Markdown) — cero traducción especial,
+a diferencia de una tarea que necesita `[ ]`/`[x]`. `MarkdownExport.ConvertLine` ahora comprueba tarea
+primero y viñeta después, cada una con su propio marcador.
+
+Tests: 374/374 (39 nuevos: 20 de `BulletLines`, 2 de conversión cruzada en `TaskLinesTests`, 4 de
+Markdown, y el resto de la reubicación de `LineText` sin romper nada). Verificado a mano contra la app
+real (creando y borrando una nota de prueba, limitado al monitor vertical): escribir, Ctrl+Shift+L,
+Enter continúa la lista, Ctrl+L sobre una viñeta la convierte en tarea y viceversa, Enter en una viñeta
+vacía termina la lista, y el botón del menú "⋯" muestra el texto y el atajo correctos. Build limpio, 0
+advertencias nuevas.
