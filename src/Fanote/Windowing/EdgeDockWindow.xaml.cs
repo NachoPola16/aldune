@@ -929,7 +929,7 @@ public partial class EdgeDockWindow : Window
 
     private void OnScrollIndicatorMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
     {
-        if (TabsScroll.ExtentHeight <= TabsScroll.ViewportHeight + 0.5) return;
+        if (!HasScrollableTabs()) return;
 
         Point point = e.GetPosition(ScrollOverlay);
         double thumbTop = Canvas.GetTop(ScrollRailThumb);
@@ -1062,10 +1062,7 @@ public partial class EdgeDockWindow : Window
     {
         double extent = TabsScroll.ExtentHeight;
         double viewport = TabsScroll.ViewportHeight;
-        bool scrollable = _fanState.IsExpanded
-            && _noteCount > 0
-            && viewport > 0
-            && extent > viewport + 0.5;
+        bool scrollable = HasScrollableTabs();
 
         ScrollOverlay.Visibility = scrollable && !IsTopBottomEdge
             ? Visibility.Visible
@@ -1116,6 +1113,15 @@ public partial class EdgeDockWindow : Window
         Canvas.SetTop(ScrollRailThumb, offsetRange <= 0
             ? 0
             : scrollRange * TabsScroll.VerticalOffset / offsetRange);
+    }
+
+    private bool HasScrollableTabs()
+    {
+        return _fanState.IsExpanded
+            && _noteCount > 0
+            && TabsScroll.ViewportHeight > 0
+            && TabsScroll.ExtentHeight > TabsScroll.ViewportHeight
+                + EdgeGeometry.TabShadowHeadroom + 0.5;
     }
 
     private void QueueScrollIndicatorUpdate()
