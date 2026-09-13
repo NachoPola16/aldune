@@ -1795,21 +1795,40 @@ public partial class EdgeDockWindow : Window
     {
         if (_tabMenuNote is not { } note) return;
 
-        TagEditorTextBox.Text = string.Join(", ", note.Tags);
+        DockTagAssignmentItems.Children.Clear();
+        var tags = _repository.GetAllTags();
+        DockTagAssignmentEmptyText.Visibility = tags.Count == 0 ? Visibility.Visible : Visibility.Collapsed;
+        foreach (var tag in tags)
+        {
+            DockTagAssignmentItems.Children.Add(new CheckBox
+            {
+                Content = tag,
+                Tag = tag,
+                IsChecked = note.Tags.Any(existing =>
+                    string.Equals(existing, tag, StringComparison.OrdinalIgnoreCase)),
+                Foreground = Brushes.White,
+                Background = new SolidColorBrush(Color.FromRgb(42, 38, 31))
+            });
+        }
+
         TagEditorPopup.PlacementTarget = _tabMenuOwner;
         TagEditorPopup.Placement = PlacementMode.Bottom;
         TagEditorPopup.IsOpen = true;
         _tabMenuCloseTimer.Stop();
         TabMenuPopup.IsOpen = false;
-        TagEditorTextBox.Focus();
-        TagEditorTextBox.SelectAll();
+        TagEditorPopup.Focus();
     }
 
     private void OnSaveTagsClick(object sender, RoutedEventArgs e)
     {
         if (_tabMenuNote is { } note)
         {
-            var tags = TagEditorTextBox.Text.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+            var tags = DockTagAssignmentItems.Children.OfType<CheckBox>()
+                .Where(checkBox => checkBox.IsChecked == true)
+                .Select(checkBox => checkBox.Tag as string)
+                .Where(tag => tag is not null)
+                .Cast<string>()
+                .ToArray();
             _repository.SetTags(note.Id, tags);
             _coordinator.RefreshAll();
         }
