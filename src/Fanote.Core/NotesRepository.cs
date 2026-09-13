@@ -66,6 +66,7 @@ public sealed class NotesRepository
         using var command = connection.CreateCommand();
         command.CommandText = """
             SELECT n.Id, n.EncryptedText, n.Nonce, n.Tag, n.Color, n.CreatedAt, n.UpdatedAt, n.State, n.ScreenOrigin
+            , n.IsProtected, n.ProtectionSalt, n.ProtectionCipherText, n.ProtectionNonce, n.ProtectionTag
             FROM Note n LEFT JOIN NoteOrder o ON o.NoteId = n.Id
             WHERE n.State = $state
             ORDER BY COALESCE(o.Position, 1e18), n.CreatedAt;
@@ -89,6 +90,7 @@ public sealed class NotesRepository
         using var command = connection.CreateCommand();
         command.CommandText = """
             SELECT Id, EncryptedText, Nonce, Tag, Color, CreatedAt, UpdatedAt, State, ScreenOrigin
+            , IsProtected, ProtectionSalt, ProtectionCipherText, ProtectionNonce, ProtectionTag
             FROM Note ORDER BY CreatedAt;
             """;
 
@@ -158,6 +160,7 @@ public sealed class NotesRepository
         using var command = connection.CreateCommand();
         command.CommandText = """
             SELECT n.Id, n.EncryptedText, n.Nonce, n.Tag, n.Color, n.CreatedAt, n.UpdatedAt, n.State, n.ScreenOrigin
+            , n.IsProtected, n.ProtectionSalt, n.ProtectionCipherText, n.ProtectionNonce, n.ProtectionTag
             FROM Note n
             JOIN NoteTag nt ON nt.NoteId = n.Id
             JOIN Tag t ON t.Id = nt.TagId
@@ -303,7 +306,7 @@ public sealed class NotesRepository
         using var command = connection.CreateCommand();
         command.CommandText = """
             UPDATE Note SET EncryptedText = $text, Nonce = $nonce, Tag = $tag, UpdatedAt = $updatedAt
-            WHERE Id = $id;
+            WHERE Id = $id AND IsProtected = 0;
             """;
         command.Parameters.AddWithValue("$text", encrypted.CipherText);
         command.Parameters.AddWithValue("$nonce", encrypted.Nonce);
@@ -372,12 +375,16 @@ public sealed class NotesRepository
     /// <summary>Aplica una nota remota ya resuelta por el motor de sincronización.</summary>
     public void ApplySyncNote(Note note)
     {
-        var encrypted = _cipher.Encrypt(note.Text);
+        if (note.IsProtected && note.ProtectedContent is null)
+            throw new FormatException("A protected note is missing its encrypted content.");
+        var encrypted = _cipher.Encrypt(note.IsProtected ? string.Empty : note.Text);
         using var connection = _database.OpenConnection();
         using var command = connection.CreateCommand();
         command.CommandText = """
-            INSERT INTO Note (Id, EncryptedText, Nonce, Tag, Color, CreatedAt, UpdatedAt, State, ScreenOrigin)
-            VALUES ($id, $text, $nonce, $tag, $color, $createdAt, $updatedAt, $state, $screenOrigin)
+            INSERT INTO Note (Id, EncryptedText, Nonce, Tag, Color, CreatedAt, UpdatedAt, State, ScreenOrigin,
+                              IsProtected, ProtectionSalt, ProtectionCipherText, ProtectionNonce, ProtectionTag)
+            VALUES ($id, $text, $nonce, $tag, $color, $createdAt, $updatedAt, $state, $screenOrigin,
+                    $isProtected, $salt, $protectedText, $protectedNonce, $protectedTag)
             ON CONFLICT(Id) DO UPDATE SET
                 EncryptedText = excluded.EncryptedText,
                 Nonce = excluded.Nonce,
@@ -386,7 +393,12 @@ public sealed class NotesRepository
                 CreatedAt = excluded.CreatedAt,
                 UpdatedAt = excluded.UpdatedAt,
                 State = excluded.State,
-                ScreenOrigin = excluded.ScreenOrigin;
+                ScreenOrigin = excluded.ScreenOrigin,
+                IsProtected = excluded.IsProtected,
+                ProtectionSalt = excluded.ProtectionSalt,
+                ProtectionCipherText = excluded.ProtectionCipherText,
+                ProtectionNonce = excluded.ProtectionNonce,
+                ProtectionTag = excluded.ProtectionTag;
             DELETE FROM SyncTombstone WHERE NoteId = $id;
             """;
         command.Parameters.AddWithValue("$id", note.Id.ToString());
@@ -398,6 +410,11 @@ public sealed class NotesRepository
         command.Parameters.AddWithValue("$updatedAt", note.UpdatedAt.ToString("O"));
         command.Parameters.AddWithValue("$state", note.State.ToString());
         command.Parameters.AddWithValue("$screenOrigin", note.ScreenOrigin);
+        command.Parameters.AddWithValue("$isProtected", note.IsProtected ? 1 : 0);
+        command.Parameters.AddWithValue("$salt", (object?)note.ProtectedContent?.Salt ?? DBNull.Value);
+        command.Parameters.AddWithValue("$protectedText", (object?)note.ProtectedContent?.CipherText ?? DBNull.Value);
+        command.Parameters.AddWithValue("$protectedNonce", (object?)note.ProtectedContent?.Nonce ?? DBNull.Value);
+        command.Parameters.AddWithValue("$protectedTag", (object?)note.ProtectedContent?.Tag ?? DBNull.Value);
         command.ExecuteNonQuery();
         SetTags(note.Id, note.Tags);
     }
@@ -420,6 +437,84 @@ public sealed class NotesRepository
         command.Parameters.AddWithValue("$deletedAt", tombstone.DeletedAt.ToString("O"));
         command.Parameters.AddWithValue("$deviceId", tombstone.DeviceId);
         command.ExecuteNonQuery();
+    }
+
+    public ProtectedNoteContent Protect(Guid id, string password)
+    {
+        var note = GetById(id) ?? throw new InvalidOperationException("The note no longer exists.");
+        if (note.IsProtected) throw new InvalidOperationException("The note is already protected.");
+        var protectedContent = ProtectedNoteContent.Protect(note.Text, password);
+        UpdateProtectionColumns(id, protectedContent, _cipher.Encrypt(string.Empty));
+        return protectedContent;
+    }
+
+    public bool TryUnlock(Guid id, string password, out Note? unlocked)
+    {
+        unlocked = GetById(id);
+        if (unlocked is null || !unlocked.IsProtected || unlocked.ProtectedContent is null) return false;
+        if (!unlocked.ProtectedContent.TryUnprotect(password, out var plaintext)) return false;
+        unlocked.Text = plaintext;
+        unlocked.IsUnlocked = true;
+        return true;
+    }
+
+    public bool RemoveProtection(Guid id, string password)
+    {
+        if (!TryUnlock(id, password, out var unlocked) || unlocked is null) return false;
+        var encrypted = _cipher.Encrypt(unlocked.Text);
+        using var connection = _database.OpenConnection();
+        using var command = connection.CreateCommand();
+        command.CommandText = """
+            UPDATE Note SET EncryptedText = $text, Nonce = $nonce, Tag = $tag,
+                IsProtected = 0, ProtectionSalt = NULL, ProtectionCipherText = NULL,
+                ProtectionNonce = NULL, ProtectionTag = NULL, UpdatedAt = $updatedAt
+            WHERE Id = $id;
+            """;
+        AddEncryptedParameters(command, encrypted);
+        command.Parameters.AddWithValue("$updatedAt", DateTimeOffset.UtcNow.ToString("O"));
+        command.Parameters.AddWithValue("$id", id.ToString());
+        command.ExecuteNonQuery();
+        return true;
+    }
+
+    public void UpdateProtectedText(Guid id, string newText, string password)
+    {
+        var note = GetById(id) ?? throw new InvalidOperationException("The note no longer exists.");
+        if (!note.IsProtected || note.ProtectedContent is null ||
+            !note.ProtectedContent.TryUnprotect(password, out _))
+            throw new UnauthorizedAccessException("The protected note password is incorrect.");
+
+        UpdateProtectionColumns(id, note.ProtectedContent.Reprotect(newText, password),
+            _cipher.Encrypt(string.Empty));
+    }
+
+    private void UpdateProtectionColumns(Guid id, ProtectedNoteContent protectedContent,
+        EncryptedContent normalContent)
+    {
+        using var connection = _database.OpenConnection();
+        using var command = connection.CreateCommand();
+        command.CommandText = """
+            UPDATE Note SET EncryptedText = $text, Nonce = $nonce, Tag = $tag,
+                IsProtected = 1, ProtectionSalt = $salt, ProtectionCipherText = $protectedText,
+                ProtectionNonce = $protectedNonce, ProtectionTag = $protectedTag,
+                UpdatedAt = $updatedAt
+            WHERE Id = $id;
+            """;
+        AddEncryptedParameters(command, normalContent);
+        command.Parameters.AddWithValue("$salt", protectedContent.Salt);
+        command.Parameters.AddWithValue("$protectedText", protectedContent.CipherText);
+        command.Parameters.AddWithValue("$protectedNonce", protectedContent.Nonce);
+        command.Parameters.AddWithValue("$protectedTag", protectedContent.Tag);
+        command.Parameters.AddWithValue("$updatedAt", DateTimeOffset.UtcNow.ToString("O"));
+        command.Parameters.AddWithValue("$id", id.ToString());
+        command.ExecuteNonQuery();
+    }
+
+    private static void AddEncryptedParameters(SqliteCommand command, EncryptedContent encrypted)
+    {
+        command.Parameters.AddWithValue("$text", encrypted.CipherText);
+        command.Parameters.AddWithValue("$nonce", encrypted.Nonce);
+        command.Parameters.AddWithValue("$tag", encrypted.Tag);
     }
 
     /// <summary>
@@ -715,6 +810,7 @@ public sealed class NotesRepository
         using var command = connection.CreateCommand();
         command.CommandText = """
             SELECT Id, EncryptedText, Nonce, Tag, Color, CreatedAt, UpdatedAt, State, ScreenOrigin
+            , IsProtected, ProtectionSalt, ProtectionCipherText, ProtectionNonce, ProtectionTag
             FROM Note WHERE Id = $id;
             """;
         command.Parameters.AddWithValue("$id", id.ToString());
@@ -804,7 +900,15 @@ public sealed class NotesRepository
         var cipherText = (byte[])reader["EncryptedText"];
         var nonce = (byte[])reader["Nonce"];
         var tag = (byte[])reader["Tag"];
-        var text = _cipher.Decrypt(new EncryptedContent(cipherText, nonce, tag));
+        bool isProtected = Convert.ToInt32(reader["IsProtected"]) != 0;
+        var protectedContent = isProtected ? new ProtectedNoteContent
+        {
+            Salt = (string)reader["ProtectionSalt"],
+            CipherText = (string)reader["ProtectionCipherText"],
+            Nonce = (string)reader["ProtectionNonce"],
+            Tag = (string)reader["ProtectionTag"]
+        } : null;
+        var text = isProtected ? string.Empty : _cipher.Decrypt(new EncryptedContent(cipherText, nonce, tag));
 
         return new Note
         {
@@ -820,7 +924,10 @@ public sealed class NotesRepository
                 System.Globalization.CultureInfo.InvariantCulture,
                 System.Globalization.DateTimeStyles.RoundtripKind),
             State = Enum.Parse<NoteState>((string)reader["State"]),
-            ScreenOrigin = (string)reader["ScreenOrigin"]
+            ScreenOrigin = (string)reader["ScreenOrigin"],
+            IsProtected = isProtected,
+            ProtectedContent = protectedContent,
+            IsUnlocked = !isProtected
         };
     }
 }

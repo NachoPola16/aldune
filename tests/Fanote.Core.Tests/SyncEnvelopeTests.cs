@@ -33,6 +33,35 @@ public sealed class SyncEnvelopeTests
     }
 
     [Fact]
+    public void ProtectedNoteRoundTrip_StaysLockedAndCarriesOnlyProtectedContent()
+    {
+        var key = RandomNumberGenerator.GetBytes(32);
+        var note = new Note
+        {
+            Id = Guid.NewGuid(),
+            Text = string.Empty,
+            Color = "mint",
+            CreatedAt = DateTimeOffset.UtcNow.AddMinutes(-2),
+            UpdatedAt = DateTimeOffset.UtcNow,
+            State = NoteState.Active,
+            ScreenOrigin = "monitor-1",
+            IsProtected = true,
+            ProtectedContent = ProtectedNoteContent.Protect("Título secreto\r\nContenido privado", "clave-segura")
+        };
+
+        var envelope = SyncEnvelopeCodec.CreateNote(note, key, "device-a");
+        var restored = SyncEnvelopeCodec.DecryptNote(
+            SyncEnvelopeCodec.Deserialize(SyncEnvelopeCodec.Serialize(envelope)), key);
+
+        Assert.True(restored.IsProtected);
+        Assert.Empty(restored.Text);
+        Assert.NotNull(restored.ProtectedContent);
+        Assert.True(restored.ProtectedContent!.TryUnprotect("clave-segura", out var text));
+        Assert.Equal("Título secreto\r\nContenido privado", text);
+        Assert.False(restored.ProtectedContent.TryUnprotect("incorrecta", out _));
+    }
+
+    [Fact]
     public void FolderTransport_ReplacesObjectsAtomicallyByNoteId()
     {
         var folder = Path.Combine(Path.GetTempPath(), "fanote-sync-" + Guid.NewGuid().ToString("N"));

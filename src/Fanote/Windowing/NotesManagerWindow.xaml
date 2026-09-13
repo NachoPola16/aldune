@@ -367,7 +367,7 @@
                                               VerticalAlignment="Center" Margin="0,0,12,0" />
 
                                     <TextBlock Grid.Column="1"
-                                               Text="{Binding Note.Text, Converter={StaticResource NoteTitleConverter}}"
+                                               Text="{Binding Note, Converter={StaticResource NoteTitleConverter}}"
                                                FontWeight="SemiBold" FontSize="13"
                                                VerticalAlignment="Center"
                                                TextTrimming="CharacterEllipsis" />

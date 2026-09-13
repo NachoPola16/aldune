@@ -28,10 +28,9 @@ public sealed record SyncTombstone(Guid NoteId, DateTimeOffset DeletedAt, string
 /// <summary>Ventana de formatos que una versiÃ³n de Fanote sabe leer.</summary>
 public static class SyncCompatibility
 {
-    // Format 2 adds the optional encrypted Tags field. Keeping format 1 in the read window lets
-    // this version receive data from older clients; older clients reject format 2 instead of
-    // silently writing a later copy without the user's tags.
-    public const int CurrentFormat = 2;
+    // Format 2 added tags. Format 3 adds protected-note ciphertext and metadata. Older clients
+    // reject it instead of silently replacing a protected note with an unprotected copy.
+    public const int CurrentFormat = 3;
     public const int MinimumSupportedFormat = 1;
 
     public static bool IsSupported(int format) =>
@@ -299,7 +298,9 @@ public static class SyncEnvelopeCodec
             UpdatedAt = note.UpdatedAt,
             State = note.State,
             ScreenOrigin = note.ScreenOrigin,
-            Tags = note.Tags.ToArray()
+            Tags = note.Tags.ToArray(),
+            IsProtected = note.IsProtected,
+            ProtectedContent = note.ProtectedContent
         }, JsonOptions);
 
         try
@@ -358,6 +359,8 @@ public static class SyncEnvelopeCodec
 
         if (payload.Id != envelope.NoteId || payload.UpdatedAt != envelope.UpdatedAt)
             throw new FormatException("The sync note metadata does not match its encrypted content.");
+        if (payload.IsProtected && payload.ProtectedContent is null)
+            throw new FormatException("The protected sync note is missing its encrypted content.");
 
         return new Note
         {
@@ -368,7 +371,10 @@ public static class SyncEnvelopeCodec
             UpdatedAt = payload.UpdatedAt,
             State = payload.State,
             ScreenOrigin = payload.ScreenOrigin,
-            Tags = payload.Tags ?? Array.Empty<string>()
+            Tags = payload.Tags ?? Array.Empty<string>(),
+            IsProtected = payload.IsProtected,
+            ProtectedContent = payload.ProtectedContent,
+            IsUnlocked = !payload.IsProtected
         };
     }
 
@@ -396,6 +402,8 @@ public static class SyncEnvelopeCodec
         public NoteState State { get; set; }
         public string ScreenOrigin { get; set; } = string.Empty;
         public string[]? Tags { get; set; }
+        public bool IsProtected { get; set; }
+        public ProtectedNoteContent? ProtectedContent { get; set; }
     }
 }
 

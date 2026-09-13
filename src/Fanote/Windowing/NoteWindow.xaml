@@ -241,6 +241,9 @@
                         <Button x:Name="CustomColorButton" Click="OnCustomColorClick"
                                 Content="{x:Static res:Strings.CustomColor}"
                                 Style="{StaticResource NoteMenuItemStyle}" />
+                        <Button x:Name="ProtectionButton" Click="OnProtectionClick"
+                                Content="{x:Static res:Strings.ProtectNote}"
+                                Style="{StaticResource NoteMenuItemStyle}" />
                         <Border Background="#3C3730" Height="1" Margin="0,0,0,4" />
 
                         <!-- Con su atajo escrito al lado: es la única forma de que alguien descubra

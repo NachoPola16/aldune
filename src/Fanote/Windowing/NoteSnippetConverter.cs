@@ -12,7 +12,9 @@ namespace Fanote.Windowing;
 public sealed class NoteSnippetConverter : IValueConverter
 {
     public object Convert(object? value, Type targetType, object? parameter, CultureInfo culture) =>
-        NoteTitleHelper.GetTabPreview(value as string ?? string.Empty);
+        value is Note note && note.IsProtected
+            ? string.Empty
+            : NoteTitleHelper.GetTabPreview(value as string ?? string.Empty);
 
     public object ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture) =>
         throw new NotSupportedException();

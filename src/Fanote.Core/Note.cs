@@ -17,4 +17,9 @@ public sealed class Note
     public required NoteState State { get; set; }
     public required string ScreenOrigin { get; set; }
     public IReadOnlyList<string> Tags { get; set; } = Array.Empty<string>();
+    public bool IsProtected { get; set; }
+    public ProtectedNoteContent? ProtectedContent { get; set; }
+
+    [System.Text.Json.Serialization.JsonIgnore]
+    public bool IsUnlocked { get; set; }
 }

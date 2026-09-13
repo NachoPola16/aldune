@@ -71,6 +71,38 @@ public class NotesRepositoryTests : IDisposable
     }
 
     [Fact]
+    public void ProtectedNote_HidesTextUntilCorrectPassword()
+    {
+        var created = _sut.Create("Título secreto\r\nContenido privado", "#FFFFFF", "primary");
+
+        _sut.Protect(created.Id, "clave-segura");
+
+        var locked = _sut.GetById(created.Id)!;
+        Assert.True(locked.IsProtected);
+        Assert.False(locked.IsUnlocked);
+        Assert.Empty(locked.Text);
+        Assert.False(_sut.TryUnlock(created.Id, "incorrecta", out _));
+        Assert.True(_sut.TryUnlock(created.Id, "clave-segura", out var unlocked));
+        Assert.Equal("Título secreto\r\nContenido privado", unlocked!.Text);
+    }
+
+    [Fact]
+    public void ProtectedNote_CanBeEditedAndProtectionRemoved()
+    {
+        var created = _sut.Create("uno", "#FFFFFF", "primary");
+        _sut.Protect(created.Id, "clave-segura");
+
+        _sut.UpdateProtectedText(created.Id, "dos", "clave-segura");
+        Assert.True(_sut.TryUnlock(created.Id, "clave-segura", out var unlocked));
+        Assert.Equal("dos", unlocked!.Text);
+
+        Assert.True(_sut.RemoveProtection(created.Id, "clave-segura"));
+        var plain = _sut.GetById(created.Id)!;
+        Assert.False(plain.IsProtected);
+        Assert.Equal("dos", plain.Text);
+    }
+
+    [Fact]
     public void SetState_MovesNoteBetweenStateQueries()
     {
         var created = _sut.Create("nota a archivar", "#FFFFFF", "primary");

@@ -1674,6 +1674,7 @@ public partial class EdgeDockWindow : Window
         _tabMenuNote = note;
         TabMenuArchiveButton.Content = note.State == NoteState.Active ? Strings.Archive : Strings.Restore;
         TabMenuTrashButton.Content = note.State == NoteState.Trashed ? Strings.Restore : Strings.MoveToTrash;
+        TabMenuProtectionButton.Content = note.IsProtected ? Strings.RemoveProtection : Strings.ProtectNote;
         BuildTabMenuSwatches(note);
         TabMenuPopup.IsOpen = true;
         e.Handled = true;
@@ -1749,6 +1750,34 @@ public partial class EdgeDockWindow : Window
         var note = _tabMenuNote;
         CloseTabMenu();
         if (note is not null) _coordinator.OpenOrActivateNote(note, this);
+    }
+
+    private void OnTabMenuProtectionClick(object sender, RoutedEventArgs e)
+    {
+        if (_tabMenuNote is not { } note) return;
+        CloseTabMenu();
+
+        if (note.IsProtected)
+        {
+            var password = PasswordPromptWindow.Show(this, Strings.RemoveProtection,
+                Strings.ProtectedNoteHint, confirm: false);
+            if (password is null) return;
+            if (!_repository.RemoveProtection(note.Id, password))
+            {
+                MessageBox.Show(this, Strings.WrongPassword, Strings.AppName,
+                    MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+        }
+        else
+        {
+            var password = PasswordPromptWindow.Show(this, Strings.ProtectNote,
+                Strings.ProtectNoteHint, confirm: true);
+            if (password is null) return;
+            _repository.Protect(note.Id, password);
+        }
+
+        _coordinator.RefreshAll();
     }
 
     private void OnTabMenuArchiveClick(object sender, RoutedEventArgs e)

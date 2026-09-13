@@ -32,6 +32,7 @@ public partial class NoteWindow : Window
     private readonly NotesRepository _repository;
     private readonly AppCoordinator _coordinator;
     private readonly AppSettings? _settings;
+    private string? _protectionPassword;
     private readonly DispatcherTimer _autosaveTimer;
     private bool _hasPendingEdit;
 
@@ -51,7 +52,8 @@ public partial class NoteWindow : Window
     private bool _isConstrainingToMonitor;
     private string? _placementMonitorKey;
 
-    public NoteWindow(Note note, NotesRepository repository, AppCoordinator coordinator, AppSettings? settings = null)
+    public NoteWindow(Note note, NotesRepository repository, AppCoordinator coordinator,
+        AppSettings? settings = null, string? protectionPassword = null)
     {
         InitializeComponent();
         _initialWidth = Width;
@@ -60,6 +62,7 @@ public partial class NoteWindow : Window
         _repository = repository;
         _coordinator = coordinator;
         _settings = settings;
+        _protectionPassword = protectionPassword;
 
         ApplyColor(note.Color);
         PopulateColorSwatches();
@@ -75,6 +78,7 @@ public partial class NoteWindow : Window
 
         UpdatePinButton();
         UpdateReminderButton();
+        ProtectionButton.Content = note.IsProtected ? Strings.RemoveProtection : Strings.ProtectNote;
 
         // La nota es un solo texto; la cabecera edita su primera línea y el cuerpo el resto.
         var (title, body) = NoteText.Split(note.Text);
@@ -182,6 +186,12 @@ public partial class NoteWindow : Window
         Closing += (_, _) =>
         {
             Flush();
+            if (_closingAnimationDone && _note.IsProtected)
+            {
+                _note.Text = string.Empty;
+                _note.IsUnlocked = false;
+                _protectionPassword = null;
+            }
             _coordinator.RefreshAll();
         };
 
@@ -941,11 +951,62 @@ public partial class NoteWindow : Window
         PinHint.Text = Topmost ? Strings.PinnedOnHint : Strings.PinnedOffHint;
     }
 
+    private void OnProtectionClick(object sender, RoutedEventArgs e)
+    {
+        if (_note.IsProtected)
+        {
+            Flush();
+            if (_protectionPassword is null || !_repository.RemoveProtection(_note.Id, _protectionPassword))
+            {
+                MessageBox.Show(this, Strings.WrongPassword, Strings.AppName,
+                    MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+
+            _note.IsProtected = false;
+            _note.ProtectedContent = null;
+            _note.IsUnlocked = true;
+            _protectionPassword = null;
+            ProtectionButton.Content = Strings.ProtectNote;
+            ActionsPopup.IsOpen = false;
+            return;
+        }
+
+        var password = PasswordPromptWindow.Show(this, Strings.ProtectNote,
+            Strings.ProtectNoteHint, confirm: true);
+        if (password is null) return;
+
+        try
+        {
+            Flush();
+            _note.ProtectedContent = _repository.Protect(_note.Id, password);
+            _note.IsProtected = true;
+            _note.IsUnlocked = true;
+            _protectionPassword = password;
+            ProtectionButton.Content = Strings.RemoveProtection;
+            ActionsPopup.IsOpen = false;
+            _coordinator.RefreshAll();
+        }
+        catch (Exception ex)
+        {
+            MessageBox.Show(this, Strings.UnexpectedErrorMessage(ex.Message), Strings.UnexpectedErrorTitle,
+                MessageBoxButton.OK, MessageBoxImage.Error);
+        }
+    }
+
     private void Flush()
     {
         if (!_hasPendingEdit) return;
         _hasPendingEdit = false;
-        _repository.UpdateText(_note.Id, CurrentText);
+        if (_note.IsProtected)
+        {
+            if (_protectionPassword is null) throw new InvalidOperationException("The protected note is locked.");
+            _repository.UpdateProtectedText(_note.Id, CurrentText, _protectionPassword);
+        }
+        else
+        {
+            _repository.UpdateText(_note.Id, CurrentText);
+        }
     }
 
     private void ApplyColor(string color)

@@ -3,6 +3,7 @@ using System.Windows;
 using System.Windows.Threading;
 using Fanote.Core;
 using Fanote.Interop;
+using Fanote.Resources;
 
 namespace Fanote.Windowing;
 
@@ -150,7 +151,24 @@ public sealed class AppCoordinator
             return;
         }
 
-        var noteWindow = new NoteWindow(note, _repository, this, _settings);
+        string? protectionPassword = null;
+        if (note.IsProtected)
+        {
+            var password = PasswordPromptWindow.Show(requestingDock, Strings.UnlockNote,
+                Strings.ProtectedNoteHint, confirm: false);
+            if (password is null) return;
+            if (!_repository.TryUnlock(note.Id, password, out var unlocked) || unlocked is null)
+            {
+                MessageBox.Show(requestingDock, Strings.WrongPassword, Strings.AppName,
+                    MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+
+            note = unlocked;
+            protectionPassword = password;
+        }
+
+        var noteWindow = new NoteWindow(note, _repository, this, _settings, protectionPassword);
 
         // Si la nota tiene una posición guardada PARA ESTA PANTALLA (la del dock que la pidió) y
         // sigue a la vista, reaparece ahí directamente — sensación de post-it real, no de "otra

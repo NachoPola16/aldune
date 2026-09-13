@@ -35,7 +35,12 @@ public sealed class NotesDatabase
                 CreatedAt TEXT NOT NULL,
                 UpdatedAt TEXT NOT NULL,
                 State TEXT NOT NULL,
-                ScreenOrigin TEXT NOT NULL
+                ScreenOrigin TEXT NOT NULL,
+                IsProtected INTEGER NOT NULL DEFAULT 0,
+                ProtectionSalt TEXT,
+                ProtectionCipherText TEXT,
+                ProtectionNonce TEXT,
+                ProtectionTag TEXT
             );
 
             CREATE TABLE IF NOT EXISTS NotePlacement (
@@ -114,6 +119,34 @@ public sealed class NotesDatabase
             );
             """;
         command.ExecuteNonQuery();
+        EnsureNoteProtectionColumns(connection);
+    }
+
+    private static void EnsureNoteProtectionColumns(SqliteConnection connection)
+    {
+        var existing = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        using (var check = connection.CreateCommand())
+        {
+            check.CommandText = "SELECT name FROM pragma_table_info('Note');";
+            using var reader = check.ExecuteReader();
+            while (reader.Read()) existing.Add((string)reader[0]);
+        }
+
+        var columns = new Dictionary<string, string>
+        {
+            ["IsProtected"] = "INTEGER NOT NULL DEFAULT 0",
+            ["ProtectionSalt"] = "TEXT",
+            ["ProtectionCipherText"] = "TEXT",
+            ["ProtectionNonce"] = "TEXT",
+            ["ProtectionTag"] = "TEXT"
+        };
+        foreach (var column in columns)
+        {
+            if (existing.Contains(column.Key)) continue;
+            using var alter = connection.CreateCommand();
+            alter.CommandText = $"ALTER TABLE Note ADD COLUMN {column.Key} {column.Value};";
+            alter.ExecuteNonQuery();
+        }
     }
 
     /// <summary>

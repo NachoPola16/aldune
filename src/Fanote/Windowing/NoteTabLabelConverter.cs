@@ -2,6 +2,7 @@ using System.Globalization;
 using System.Text;
 using System.Windows.Data;
 using Fanote.Core;
+using Fanote.Resources;
 
 namespace Fanote.Windowing;
 
@@ -35,7 +36,9 @@ public sealed class NoteTabLabelConverter : IValueConverter
 
     public object Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
     {
-        var title = NoteTitleHelper.GetTitle(value as string ?? string.Empty);
+        var title = value is Note note && note.IsProtected
+            ? Strings.ProtectedNote
+            : NoteTitleHelper.GetTitle(value as string ?? string.Empty);
         if (string.IsNullOrWhiteSpace(title)) return string.Empty;
 
         title = title.Trim().ToUpper(culture).Replace(' ', NoBreakSpace);

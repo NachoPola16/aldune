@@ -62,6 +62,11 @@ repositorio. La base de datos y la clave protegida no deben compartirse ni subir
 - [`docs/STATUS.md`](docs/STATUS.md): estado técnico y decisiones de implementación.
 - [`docs/superpowers/`](docs/superpowers/): especificaciones y planes de trabajo.
 
+Las notas también pueden protegerse individualmente con contraseña. El contenido se cifra con una
+clave derivada de esa contraseña; Aldune no guarda la contraseña y la nota aparece bloqueada en el
+dock y en el gestor hasta introducirla. La protección se conserva al sincronizar, pero hay que usar
+la misma contraseña en cada dispositivo. Si se pierde, esa nota no se puede recuperar.
+
 ## Licencia
 
 La licencia pública todavía no está decidida.

@@ -472,7 +472,9 @@ public sealed class SyncService
             UpdatedAt = updatedAt,
             State = note.State,
             ScreenOrigin = note.ScreenOrigin,
-            Tags = note.Tags.ToArray()
+            Tags = note.Tags.ToArray(),
+            IsProtected = note.IsProtected,
+            ProtectedContent = note.ProtectedContent
         };
         return SyncEnvelopeCodec.CreateNote(copy, key, deviceId);
     }
