@@ -348,10 +348,9 @@
                                    FontWeight="SemiBold" />
                         <TextBlock Text="{x:Static res:Strings.NoteTagsHint}" Foreground="#A99D8D"
                                    FontSize="11" Margin="0,3,0,8" />
-                        <TextBox x:Name="NoteTagsTextBox" Height="30" Padding="7,4"
-                                 Background="#403A32" Foreground="#F5F0E6"
-                                 BorderBrush="#62594D" BorderThickness="1"
-                                 FocusVisualStyle="{x:Null}" />
+                        <TextBlock x:Name="NoteTagAssignmentEmptyText" Text="{x:Static res:Strings.DockViewNoTags}"
+                                   Foreground="#A99D8D" FontSize="11" Visibility="Collapsed" />
+                        <StackPanel x:Name="NoteTagAssignmentItems" />
                         <Button Content="{x:Static res:Strings.SaveTags}" Click="OnSaveTagsClick"
                                 HorizontalAlignment="Right" Margin="0,8,0,0"
                                 Style="{StaticResource NoteMenuItemStyle}" />

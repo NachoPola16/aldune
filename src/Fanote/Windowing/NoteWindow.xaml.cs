@@ -1103,18 +1103,38 @@ public partial class NoteWindow : Window
 
     private void OnTagsClick(object sender, RoutedEventArgs e)
     {
-        NoteTagsTextBox.Text = string.Join(", ", _note.Tags);
+        NoteTagAssignmentItems.Children.Clear();
+        var tags = _repository.GetAllTags();
+        NoteTagAssignmentEmptyText.Visibility = tags.Count == 0 ? Visibility.Visible : Visibility.Collapsed;
+        foreach (var tag in tags)
+        {
+            NoteTagAssignmentItems.Children.Add(new CheckBox
+            {
+                Content = tag,
+                Tag = tag,
+                IsChecked = _note.Tags.Any(existing =>
+                    string.Equals(existing, tag, StringComparison.OrdinalIgnoreCase)),
+                Foreground = Brushes.White,
+                Background = new SolidColorBrush(Color.FromRgb(42, 38, 31)),
+                Style = (Style)FindResource("AppCheckBoxStyle")
+            });
+        }
+
         ActionsPopup.IsOpen = false;
         TagsPopup.IsOpen = true;
-        NoteTagsTextBox.Focus();
-        NoteTagsTextBox.SelectAll();
+        TagsPopup.Focus();
     }
 
     private void OnSaveTagsClick(object sender, RoutedEventArgs e)
     {
-        var tags = NoteTagsTextBox.Text.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+        var tags = NoteTagAssignmentItems.Children.OfType<CheckBox>()
+            .Where(checkBox => checkBox.IsChecked == true)
+            .Select(checkBox => checkBox.Tag as string)
+            .Where(tag => tag is not null)
+            .Cast<string>()
+            .ToArray();
         _repository.SetTags(_note.Id, tags);
-        _note.Tags = tags.Distinct(StringComparer.OrdinalIgnoreCase).Take(20).ToArray();
+        _note.Tags = tags;
         TagsPopup.IsOpen = false;
         _coordinator.RefreshAll();
     }
