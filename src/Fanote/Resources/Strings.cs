@@ -119,6 +119,10 @@ public static class Strings
     public static string NoteTags => T("Tags…", "Etiquetas…");
     public static string NoteTagsHint => T("Separate tags with commas.", "Separa las etiquetas con comas.");
     public static string SaveTags => T("Save tags", "Guardar etiquetas");
+    public static string ManageTags => T("Manage tags", "Gestionar etiquetas");
+    public static string NewTag => T("New tag", "Nueva etiqueta");
+    public static string CreateTag => T("Create", "Crear");
+    public static string DeleteTag => T("Delete", "Eliminar");
     public static string AllTags => T("All tags", "Todas las etiquetas");
     public static string TagFilterTooltip => T("Filter by tag", "Filtrar por etiqueta");
     public static string NoTagResults(string tag) =>

@@ -282,8 +282,34 @@
                           SelectionChanged="OnTagFilterChanged"
                            Style="{StaticResource TagFilterStyle}"
                            Visibility="Collapsed" />
+                <Button x:Name="ManageTagsButton" Content="{x:Static res:Strings.ManageTags}"
+                        Click="OnManageTagsClick" Margin="4,0,0,0"
+                        Style="{StaticResource ToolbarButtonStyle}" />
             </WrapPanel>
         </Border>
+
+        <Popup x:Name="TagManagerPopup" AllowsTransparency="True" Focusable="True"
+               StaysOpen="False" Placement="Bottom" PopupAnimation="Fade">
+            <Border Background="#2D2923" BorderBrush="#5F584E" BorderThickness="1"
+                    CornerRadius="7" Padding="12">
+                <StackPanel Width="260">
+                    <TextBlock Text="{x:Static res:Strings.ManageTags}" Foreground="#F5F0E6"
+                               FontWeight="SemiBold" />
+                    <StackPanel Orientation="Horizontal" Margin="0,8,0,12">
+                        <TextBox x:Name="NewTagTextBox" Width="170" Height="30" Padding="7,4"
+                                 Background="#403A32" Foreground="#F5F0E6" BorderBrush="#6B6459"
+                                 CaretBrush="#F5F0E6" />
+                        <Button Content="{x:Static res:Strings.CreateTag}" Click="OnCreateTagClick"
+                                Margin="8,0,0,0" Style="{StaticResource ToolbarButtonStyle}" />
+                    </StackPanel>
+                    <TextBlock Text="{x:Static res:Strings.AllTags}" Foreground="#A79E90"
+                               FontSize="11" Margin="0,0,0,5" />
+                    <TextBlock x:Name="TagManagerEmptyText" Text="{x:Static res:Strings.DockViewNoTags}"
+                               Foreground="#A79E90" FontSize="11" Visibility="Collapsed" />
+                    <StackPanel x:Name="TagManagerItems" />
+                </StackPanel>
+            </Border>
+        </Popup>
 
         <!-- Busca dentro del filtro activo, no a través de los tres a la vez: mezclar estados en
              los resultados reabriría el mismo problema que "Todas" ya causó (ver más arriba) para

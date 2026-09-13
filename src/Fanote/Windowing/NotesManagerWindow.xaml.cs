@@ -237,6 +237,64 @@ public partial class NotesManagerWindow : Window
         PlayListEntrance();
     }
 
+    private void OnManageTagsClick(object sender, RoutedEventArgs e)
+    {
+        PopulateTagManager();
+        TagManagerPopup.PlacementTarget = ManageTagsButton;
+        TagManagerPopup.IsOpen = true;
+        TagManagerPopup.Focus();
+        e.Handled = true;
+    }
+
+    private void PopulateTagManager()
+    {
+        TagManagerItems.Children.Clear();
+        var tags = _repository.GetAllTags();
+        TagManagerEmptyText.Visibility = tags.Count == 0 ? Visibility.Visible : Visibility.Collapsed;
+
+        foreach (var tag in tags)
+        {
+            var row = new DockPanel { Margin = new Thickness(0, 0, 0, 4) };
+            row.Children.Add(new TextBlock
+            {
+                Text = tag,
+                Foreground = Brushes.White,
+                VerticalAlignment = VerticalAlignment.Center
+            });
+            var delete = new Button
+            {
+                Content = Strings.DeleteTag,
+                Tag = tag,
+                Margin = new Thickness(8, 0, 0, 0),
+                Style = (Style)FindResource("DangerToolbarButtonStyle")
+            };
+            delete.Click += OnDeleteTagClick;
+            DockPanel.SetDock(delete, Dock.Right);
+            row.Children.Add(delete);
+            TagManagerItems.Children.Add(row);
+        }
+    }
+
+    private void OnCreateTagClick(object sender, RoutedEventArgs e)
+    {
+        if (!_repository.CreateTag(NewTagTextBox.Text)) return;
+
+        NewTagTextBox.Clear();
+        PopulateTagManager();
+        LoadTagFilterOptions();
+        _coordinator.RefreshAll();
+    }
+
+    private void OnDeleteTagClick(object sender, RoutedEventArgs e)
+    {
+        if (sender is not Button { Tag: string tag }) return;
+
+        _repository.DeleteTag(tag);
+        PopulateTagManager();
+        LoadRows();
+        _coordinator.RefreshAll();
+    }
+
     private void OnEditTagsClick(object sender, RoutedEventArgs e)
     {
         if (sender is not Button { Tag: NoteRow row } button) return;

@@ -112,6 +112,41 @@ public sealed class NotesRepository
         return result;
     }
 
+    public bool CreateTag(string name)
+    {
+        var normalized = name.Trim();
+        if (normalized.Length == 0) return false;
+
+        using var connection = _database.OpenConnection();
+        using var command = connection.CreateCommand();
+        command.CommandText = "INSERT OR IGNORE INTO Tag (Id, Name) VALUES ($id, $name);";
+        command.Parameters.AddWithValue("$id", Guid.NewGuid().ToString());
+        command.Parameters.AddWithValue("$name", normalized);
+        return command.ExecuteNonQuery() > 0;
+    }
+
+    public bool DeleteTag(string name)
+    {
+        using var connection = _database.OpenConnection();
+        using var transaction = connection.BeginTransaction();
+        using var deleteLinks = connection.CreateCommand();
+        deleteLinks.Transaction = transaction;
+        deleteLinks.CommandText = """
+            DELETE FROM NoteTag
+            WHERE TagId IN (SELECT Id FROM Tag WHERE Name = $name COLLATE NOCASE);
+            """;
+        deleteLinks.Parameters.AddWithValue("$name", name.Trim());
+        deleteLinks.ExecuteNonQuery();
+
+        using var deleteTag = connection.CreateCommand();
+        deleteTag.Transaction = transaction;
+        deleteTag.CommandText = "DELETE FROM Tag WHERE Name = $name COLLATE NOCASE;";
+        deleteTag.Parameters.AddWithValue("$name", name.Trim());
+        bool deleted = deleteTag.ExecuteNonQuery() > 0;
+        transaction.Commit();
+        return deleted;
+    }
+
     public void SetTags(Guid noteId, IEnumerable<string> tags)
     {
         var normalized = tags

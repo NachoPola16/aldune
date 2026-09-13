@@ -40,6 +40,20 @@ public sealed class NotesRepositoryTagTests : IDisposable
         Assert.Empty(_repository.GetAllTags());
     }
 
+    [Fact]
+    public void CreateAndDeleteTag_ManagesGlobalTagAndAssignments()
+    {
+        var note = _repository.Create("note", "#F5E3B3", "primary");
+
+        Assert.True(_repository.CreateTag("Trabajo"));
+        Assert.False(_repository.CreateTag(" trabajo "));
+        _repository.SetTags(note.Id, new[] { "Trabajo" });
+
+        Assert.True(_repository.DeleteTag("TRABAJO"));
+        Assert.Empty(_repository.GetAllTags());
+        Assert.Empty(_repository.GetByState(NoteState.Active).Single().Tags);
+    }
+
     public void Dispose()
     {
         using var connection = new SqliteConnection(new SqliteConnectionStringBuilder { DataSource = _dbPath }.ToString());
