@@ -1807,7 +1807,8 @@ public partial class EdgeDockWindow : Window
                 IsChecked = note.Tags.Any(existing =>
                     string.Equals(existing, tag, StringComparison.OrdinalIgnoreCase)),
                 Foreground = Brushes.White,
-                Background = new SolidColorBrush(Color.FromRgb(42, 38, 31))
+                Background = new SolidColorBrush(Color.FromRgb(42, 38, 31)),
+                Style = (Style)FindResource("AppCheckBoxStyle")
             });
         }
 

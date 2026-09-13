@@ -339,8 +339,8 @@
                 </Border>
             </Popup>
 
-            <Popup x:Name="TagsPopup" PlacementTarget="{Binding ElementName=TagsButton}"
-                   Placement="Bottom" HorizontalOffset="-35" StaysOpen="False"
+                 <Popup x:Name="TagsPopup" PlacementTarget="{Binding ElementName=MenuButton}"
+                     Placement="Bottom" HorizontalOffset="-160" Focusable="True" StaysOpen="False"
                    AllowsTransparency="True" PopupAnimation="Fade">
                 <Border Background="#2A261F" CornerRadius="10" Padding="12">
                     <StackPanel Width="230">

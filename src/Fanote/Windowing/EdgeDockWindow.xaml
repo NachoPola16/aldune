@@ -606,7 +606,7 @@
         </Popup>
 
          <Popup x:Name="TagEditorPopup" AllowsTransparency="True" Focusable="True"
-             StaysOpen="True" PopupAnimation="Fade" Placement="MousePoint">
+             StaysOpen="False" PopupAnimation="Fade" Placement="MousePoint">
             <Border Background="#2A261F" CornerRadius="10" Padding="12">
                 <StackPanel Width="230">
                     <TextBlock Text="{x:Static res:Strings.NoteTags}" Foreground="#F5F0E6"

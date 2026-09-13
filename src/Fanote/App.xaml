@@ -121,6 +121,48 @@
             </Setter>
         </Style>
 
+        <Style x:Key="AppCheckBoxStyle" TargetType="CheckBox">
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="FocusVisualStyle" Value="{x:Null}" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="CheckBox">
+                        <StackPanel Orientation="Horizontal" Background="Transparent">
+                            <Border x:Name="Box" Width="17" Height="17" CornerRadius="4"
+                                    BorderBrush="{TemplateBinding Foreground}"
+                                    BorderThickness="1.5" Background="Transparent"
+                                    VerticalAlignment="Center">
+                                <Grid>
+                                    <TextBlock x:Name="Tick" Text="&#x2713;" FontSize="12"
+                                               FontWeight="Bold" Foreground="{TemplateBinding Background}"
+                                               HorizontalAlignment="Center" VerticalAlignment="Center"
+                                               Visibility="Collapsed" />
+                                    <Border x:Name="Dash" Width="9" Height="2" CornerRadius="1"
+                                            Background="{TemplateBinding Background}"
+                                            HorizontalAlignment="Center" VerticalAlignment="Center"
+                                            Visibility="Collapsed" />
+                                </Grid>
+                            </Border>
+                            <ContentPresenter Margin="8,0,0,0" VerticalAlignment="Center" />
+                        </StackPanel>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsChecked" Value="True">
+                                <Setter TargetName="Box" Property="Background" Value="{Binding Foreground, RelativeSource={RelativeSource TemplatedParent}}" />
+                                <Setter TargetName="Tick" Property="Visibility" Value="Visible" />
+                            </Trigger>
+                            <Trigger Property="IsChecked" Value="{x:Null}">
+                                <Setter TargetName="Box" Property="Background" Value="{Binding Foreground, RelativeSource={RelativeSource TemplatedParent}}" />
+                                <Setter TargetName="Dash" Property="Visibility" Value="Visible" />
+                            </Trigger>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Box" Property="BorderThickness" Value="2" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
         <!-- Barra de scroll fina y oscura, aquí y no en cada ventana: la barra por defecto de WPF es
              gris claro con flechas, y canta sobre cualquier superficie de esta app. Estaba definida
              solo dentro de NotesManagerWindow; subirla a la aplicación evita duplicarla en cada

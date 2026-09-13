@@ -197,7 +197,7 @@
             <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
 
-        <Popup x:Name="TagEditorPopup" AllowsTransparency="True" Focusable="True" StaysOpen="True"
+        <Popup x:Name="TagEditorPopup" AllowsTransparency="True" Focusable="True" StaysOpen="False"
                Placement="Bottom" PopupAnimation="Fade">
             <Border Background="#2D2923" BorderBrush="#5F584E" BorderThickness="1"
                     CornerRadius="7" Padding="12">
