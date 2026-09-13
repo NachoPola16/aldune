@@ -261,7 +261,8 @@
         </Grid>
 
         <Border Grid.Row="1" Background="#332F28" CornerRadius="7" Margin="20,16,20,0" Padding="3">
-            <WrapPanel>
+            <StackPanel>
+                <WrapPanel>
                 <!-- IsChecked se fija desde el code-behind tras InitializeComponent, no aquí: un
                      IsChecked="True" en XAML dispara Checked mientras el árbol se está
                      construyendo, antes de que RowsList exista — ver el constructor. -->
@@ -282,10 +283,12 @@
                           SelectionChanged="OnTagFilterChanged"
                            Style="{StaticResource TagFilterStyle}"
                            Visibility="Collapsed" />
+                </WrapPanel>
                 <Button x:Name="ManageTagsButton" Content="{x:Static res:Strings.ManageTags}"
-                    Click="OnManageTagsClick" Margin="16,0,0,0"
+                        Click="OnManageTagsClick" HorizontalAlignment="Left"
+                        Margin="4,6,4,3" Padding="10,5"
                         Style="{StaticResource ToolbarButtonStyle}" />
-            </WrapPanel>
+            </StackPanel>
         </Border>
 
         <Popup x:Name="TagManagerPopup" AllowsTransparency="True" Focusable="True"
