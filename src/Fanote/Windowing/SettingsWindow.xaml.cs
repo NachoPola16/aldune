@@ -51,6 +51,7 @@ public partial class SettingsWindow : Window
         StartupCheck.IsChecked = StartupRegistration.IsEnabled();
         HotkeyCheck.IsChecked = _settings.GlobalHotkeyEnabled;
         HideOnFullscreenCheck.IsChecked = _settings.HideOnFullscreen;
+        KeepDockOpenCheck.IsChecked = _settings.KeepDockOpen;
         RememberPositionsCheck.IsChecked = _settings.RememberNotePositions;
         AutoHideTasksCheck.IsChecked = _settings.AutoHideCompletedTasks;
         AutoHideTasksDelayValueBox.Text = _settings.AutoHideCompletedTasksDelayValue.ToString();
@@ -384,6 +385,13 @@ public partial class SettingsWindow : Window
     {
         _settings.HideOnFullscreen = HideOnFullscreenCheck.IsChecked == true;
         _settingsService.Save(_settings);
+    }
+
+    private void OnKeepDockOpenToggled(object sender, RoutedEventArgs e)
+    {
+        _settings.KeepDockOpen = KeepDockOpenCheck.IsChecked == true;
+        _settingsService.Save(_settings);
+        _coordinator?.RefreshAll();
     }
 
     private void PopulateEdges()

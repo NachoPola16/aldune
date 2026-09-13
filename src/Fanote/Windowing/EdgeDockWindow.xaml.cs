@@ -387,6 +387,15 @@ public partial class EdgeDockWindow : Window
     {
         if (_hiddenByFullscreenApp) return;
 
+        if (_settings?.KeepDockOpen == true)
+        {
+            _pointerInside = true;
+            _hoverReentryBlocked = false;
+            _collapseTimer.Stop();
+            if (_noteCount > 0 && !_fanState.IsExpanded) _fanState.PointerEntered();
+            return;
+        }
+
         // Con el menú de una pestaña abierto, el abanico se queda como está: el menú sale fuera de
         // la zona sensible del dock, así que mover el ratón hacia él contaría como salir y lo
         // cerraría justo cuando el usuario va a pulsarlo.

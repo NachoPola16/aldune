@@ -123,6 +123,7 @@ public static class Strings
     public static string NewTag => T("New tag", "Nueva etiqueta");
     public static string CreateTag => T("Create", "Crear");
     public static string DeleteTag => T("Delete", "Eliminar");
+    public static string DeleteTagTooltip => T("Delete tag", "Eliminar etiqueta");
     public static string AllTags => T("All tags", "Todas las etiquetas");
     public static string TagFilterTooltip => T("Filter by tag", "Filtrar por etiqueta");
     public static string NoTagResults(string tag) =>
@@ -211,6 +212,8 @@ public static class Strings
 
     public static string HideOnFullscreenCheckbox => T("Hide dock in fullscreen", "Ocultar dock a pantalla completa");
     public static string HideOnFullscreenHint => T("Hides the dock automatically over any real fullscreen window — games, videos, presentations. Doesn't affect regular maximized windows (like a browser with tabs).", "Oculta el dock automáticamente ante cualquier ventana a pantalla completa de verdad — juegos, vídeos, presentaciones. No afecta a ventanas normales maximizadas (como el navegador con pestañas).");
+    public static string KeepDockOpenCheckbox => T("Keep dock open", "Mantener el dock abierto");
+    public static string KeepDockOpenHint => T("Keeps the dock expanded until you turn this off.", "Mantiene el dock desplegado hasta que desactives esta opción.");
 
     public static string EdgeSectionTitle => T("Screen edge", "Lado de la pantalla");
     public static string EdgeSectionHint => T("Which edge the Aldune dock lives on.", "En qué borde vive el dock de Aldune.");

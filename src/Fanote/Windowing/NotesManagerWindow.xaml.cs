@@ -263,9 +263,13 @@ public partial class NotesManagerWindow : Window
             });
             var delete = new Button
             {
-                Content = Strings.DeleteTag,
+                Content = "\uE74D",
+                FontFamily = new FontFamily("Segoe Fluent Icons, Segoe MDL2 Assets"),
+                Width = 28,
+                Height = 28,
                 Tag = tag,
                 Margin = new Thickness(8, 0, 0, 0),
+                ToolTip = Strings.DeleteTagTooltip,
                 Style = (Style)FindResource("DangerToolbarButtonStyle")
             };
             delete.Click += OnDeleteTagClick;

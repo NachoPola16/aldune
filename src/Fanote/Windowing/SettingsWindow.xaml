@@ -579,6 +579,16 @@
                 <Border Background="#3C3730" Height="1" Margin="0,20,0,0" />
 
                 <StackPanel Margin="0,20,0,0">
+                    <CheckBox x:Name="KeepDockOpenCheck"
+                              Content="{x:Static res:Strings.KeepDockOpenCheckbox}"
+                              Foreground="#EDE7DC" Background="#2A261F" FontSize="13"
+                              Style="{StaticResource AppCheckBoxStyle}"
+                              Click="OnKeepDockOpenToggled" />
+                    <TextBlock Text="{x:Static res:Strings.KeepDockOpenHint}"
+                               Foreground="#8A8175" FontSize="11" TextWrapping="Wrap" Margin="27,6,0,0" />
+                </StackPanel>
+
+                <StackPanel Margin="0,20,0,0">
                     <CheckBox x:Name="RememberPositionsCheck"
                               Content="{x:Static res:Strings.RememberPositionsCheckbox}"
                               Foreground="#EDE7DC" Background="#2A261F" FontSize="13"

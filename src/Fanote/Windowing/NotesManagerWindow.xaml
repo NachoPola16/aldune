@@ -283,7 +283,7 @@
                            Style="{StaticResource TagFilterStyle}"
                            Visibility="Collapsed" />
                 <Button x:Name="ManageTagsButton" Content="{x:Static res:Strings.ManageTags}"
-                        Click="OnManageTagsClick" Margin="4,0,0,0"
+                    Click="OnManageTagsClick" Margin="16,0,0,0"
                         Style="{StaticResource ToolbarButtonStyle}" />
             </WrapPanel>
         </Border>

@@ -94,6 +94,9 @@ public sealed class AppSettings
     /// </summary>
     public bool HideOnFullscreen { get; set; } = true;
 
+    /// <summary>Si el dock debe permanecer desplegado aunque el cursor salga de él.</summary>
+    public bool KeepDockOpen { get; set; }
+
     /// <summary>
     /// Borde de la pantalla donde se ancla el dock de Fanote. Por defecto derecha (EdgePosition.Right).
     /// </summary>
