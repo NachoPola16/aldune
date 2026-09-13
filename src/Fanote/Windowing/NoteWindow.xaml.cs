@@ -1101,6 +1101,24 @@ public partial class NoteWindow : Window
         ActionsPopup.IsOpen = false;
     }
 
+    private void OnTagsClick(object sender, RoutedEventArgs e)
+    {
+        NoteTagsTextBox.Text = string.Join(", ", _note.Tags);
+        ActionsPopup.IsOpen = false;
+        TagsPopup.IsOpen = true;
+        NoteTagsTextBox.Focus();
+        NoteTagsTextBox.SelectAll();
+    }
+
+    private void OnSaveTagsClick(object sender, RoutedEventArgs e)
+    {
+        var tags = NoteTagsTextBox.Text.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+        _repository.SetTags(_note.Id, tags);
+        _note.Tags = tags.Distinct(StringComparer.OrdinalIgnoreCase).Take(20).ToArray();
+        TagsPopup.IsOpen = false;
+        _coordinator.RefreshAll();
+    }
+
     private void OnReminderMenuClick(object sender, RoutedEventArgs e)
     {
         ReminderPanel.Visibility = ReminderPanel.Visibility == Visibility.Visible

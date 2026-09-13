@@ -72,6 +72,12 @@
             <Setter Property="Background" Value="Transparent" />
             <Setter Property="FontSize" Value="12" />
         </Style>
+        <Style x:Key="NoteTextBoxStyle" TargetType="TextBox">
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="BorderBrush" Value="Transparent" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="FocusVisualStyle" Value="{x:Null}" />
+        </Style>
 
         <!-- NoteMenuItemStyle y NoteMenuDangerStyle (las filas del panel de acciones) viven en
              App.xaml: el mismo panel se usa aquí y en el menú contextual de la pestaña del dock. -->
@@ -164,6 +170,7 @@
                            Margin="4,0,0,0"
                            VerticalAlignment="Center" />
                 <TextBox x:Name="TitleBox"
+                         Style="{StaticResource NoteTextBoxStyle}"
                          FontFamily="Ink Free, Segoe UI Variable Text"
                          FontSize="17"
                          Foreground="#1E1A14"
@@ -244,6 +251,9 @@
                         <Button x:Name="ProtectionButton" Click="OnProtectionClick"
                                 Content="{x:Static res:Strings.ProtectNote}"
                                 Style="{StaticResource NoteMenuItemStyle}" />
+                        <Button x:Name="TagsButton" Click="OnTagsClick"
+                            Content="{x:Static res:Strings.NoteTags}"
+                            Style="{StaticResource NoteMenuItemStyle}" />
                         <Border Background="#3C3730" Height="1" Margin="0,0,0,4" />
 
                         <!-- Con su atajo escrito al lado: es la única forma de que alguien descubra
@@ -329,6 +339,26 @@
                 </Border>
             </Popup>
 
+            <Popup x:Name="TagsPopup" PlacementTarget="{Binding ElementName=TagsButton}"
+                   Placement="Bottom" HorizontalOffset="-35" StaysOpen="False"
+                   AllowsTransparency="True" PopupAnimation="Fade">
+                <Border Background="#2A261F" CornerRadius="10" Padding="12">
+                    <StackPanel Width="230">
+                        <TextBlock Text="{x:Static res:Strings.NoteTags}" Foreground="#F5F0E6"
+                                   FontWeight="SemiBold" />
+                        <TextBlock Text="{x:Static res:Strings.NoteTagsHint}" Foreground="#A99D8D"
+                                   FontSize="11" Margin="0,3,0,8" />
+                        <TextBox x:Name="NoteTagsTextBox" Height="30" Padding="7,4"
+                                 Background="#403A32" Foreground="#F5F0E6"
+                                 BorderBrush="#62594D" BorderThickness="1"
+                                 FocusVisualStyle="{x:Null}" />
+                        <Button Content="{x:Static res:Strings.SaveTags}" Click="OnSaveTagsClick"
+                                HorizontalAlignment="Right" Margin="0,8,0,0"
+                                Style="{StaticResource NoteMenuItemStyle}" />
+                    </StackPanel>
+                </Border>
+            </Popup>
+
             <!-- El troquelado, en el mismo sitio que en la pestaña del dock: el pliegue por donde
                  la cabecera se une al cuerpo. Stroke se fija en ApplyColor. -->
             <Path x:Name="Perforation"
@@ -355,6 +385,7 @@
             <!-- Tinta tintada hacia el cálido, nunca #000 puro: sobre un pastel, el negro
                  absoluto es el único color de la ventana que no comparte hue con nada. -->
             <TextBox x:Name="TextBody"
+                     Style="{StaticResource NoteTextBoxStyle}"
                      AcceptsReturn="True"
                      AcceptsTab="True"
                      TextWrapping="Wrap"
