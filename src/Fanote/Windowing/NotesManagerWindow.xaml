@@ -307,8 +307,6 @@
                          Padding="0,9" Margin="28,0,28,0"
                          VerticalContentAlignment="Center"
                          TextChanged="OnSearchTextChanged" />
-                         VerticalContentAlignment="Center"
-                         TextChanged="OnSearchTextChanged" />
                 <Button x:Name="SearchClearButton" Content="&#x2715;" FontSize="9"
                         Width="20" Height="20" Margin="0,0,6,0"
                         HorizontalAlignment="Right" VerticalAlignment="Center"
