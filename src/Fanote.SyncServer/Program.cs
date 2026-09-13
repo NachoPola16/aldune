@@ -131,7 +131,7 @@ app.Run();
 
 static string ObjectFile(string objectPath, Guid id) => Path.Combine(objectPath, $"{id:N}.json");
 
-public partial class Program;
-
 static string? GetEnvironmentVariable(string currentName, string legacyName)
     => Environment.GetEnvironmentVariable(currentName) ?? Environment.GetEnvironmentVariable(legacyName);
+
+public partial class Program;
