@@ -45,8 +45,7 @@ public partial class App : Application
             args.Handled = true;
         };
 
-        var appDataDir = Path.Combine(
-            Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Fanote");
+        var appDataDir = ResolveAppDataDirectory();
         var settingsPath = Path.Combine(appDataDir, "settings.json");
         var databasePath = Path.Combine(appDataDir, "notes.db");
 
@@ -268,6 +267,25 @@ public partial class App : Application
             : System.Globalization.CultureInfo.CurrentUICulture.TwoLetterISOLanguageName == "es" ? "es" : "en";
 
         NoteTitleHelper.PlaceholderTitle = Strings.NewNotePlaceholder;
+    }
+
+    private static string ResolveAppDataDirectory()
+    {
+        var localAppData = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
+        var current = Path.Combine(localAppData, "Aldune");
+        var legacy = Path.Combine(localAppData, "Fanote");
+
+        // El nombre visible cambió a Aldune, pero las instalaciones anteriores guardaban aquí sus
+        // notas. Se migra una sola vez antes de abrir settings.json o notes.db; si Windows no deja
+        // mover la carpeta, se conserva la ruta antigua para no dejar la app aparentemente vacía.
+        if (!Directory.Exists(current) && Directory.Exists(legacy))
+        {
+            try { Directory.Move(legacy, current); }
+            catch (IOException) { return legacy; }
+            catch (UnauthorizedAccessException) { return legacy; }
+        }
+
+        return current;
     }
 
     /// <summary>

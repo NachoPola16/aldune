@@ -612,8 +612,9 @@ correcto y se mantiene: dibuja literalmente el producto y usa la paleta real.
 
 ### Decisión de marca para la beta (2026-09-13)
 
-Se adopta **Aldune** como nombre visible de la aplicación y del instalador. `Fanote` se conserva
-como nombre interno del repositorio, los namespaces y la carpeta de datos para no romper las notas
+Se adopta **Aldune** como nombre visible de la aplicación, de los datos locales y del instalador.
+`Fanote` se conserva como nombre interno del repositorio, los namespaces y los identificadores del
+protocolo para no romper las notas
 ni la configuración existente. El icono actual
 también se mantiene: las tres tarjetas escalonadas representan directamente el dock y conectan con
 la paleta real de las notas. No se hará un rediseño completo antes de validar el producto con uso
@@ -628,6 +629,12 @@ El problema es de tamaño pequeño: a 16 px — bandeja, barra de tareas, Alt+Ta
 — tres barras finas con huecos se empastan y acaban leyéndose como un icono genérico de lista. La
 solución es la estándar en diseño de iconos: **una variante propia para 16 y 32 px**, con menos
 barras y más gruesas, en vez de reescalar la de 256.
+
+## Ruta de datos tras el cambio de marca
+
+Aldune guarda los datos nuevos en `%LOCALAPPDATA%\\Aldune`. Al actualizar desde una instalación
+anterior, la primera ejecución intenta mover `%LOCALAPPDATA%\\Fanote` a la nueva ruta; si Windows lo
+impide, continúa usando la ruta antigua para no ocultar ni perder las notas.
 
 ## 7. Pulido visual de lanzamiento
 

@@ -2,14 +2,21 @@
 
 ## Nombre
 
-**Aldune** pasa a ser el nombre de la aplicación y del instalador. `Fanote` queda como nombre
-interno del repositorio, los namespaces y la carpeta de datos para conservar compatibilidad.
+**Aldune** pasa a ser el nombre de la aplicación, de los datos locales y del instalador. `Fanote`
+queda como nombre interno del repositorio, los namespaces y los identificadores del protocolo para
+conservar compatibilidad.
 
 Antes de una publicación comercial conviene hacer una búsqueda completa de marca, dominios y
 nombres en las tiendas. Ya existe al menos una aplicación con el nombre muy parecido `FanNote`.
 
 El nombre no se considera libre de forma definitiva hasta comprobar marca, dominios, tiendas y
 posibles conflictos en los idiomas objetivo.
+
+## Ruta de datos local
+
+La identidad visible usa ahora `%LOCALAPPDATA%\\Aldune`. La primera ejecución de la versión Aldune
+migra automáticamente la carpeta anterior `%LOCALAPPDATA%\\Fanote` si todavía no existe la nueva.
+`Fanote` se conserva en namespaces, nombres de proyecto y protocolo para no romper compatibilidad.
 
 ## Icono actual
 

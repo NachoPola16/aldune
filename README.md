@@ -40,7 +40,7 @@ El proyecto ofrece dos formatos:
 
 - portable: `aldune.exe` dentro de un ZIP, sin instalación;
 - instalador normal: crea accesos directos y un desinstalador, sin borrar las notas de
-  `%LOCALAPPDATA%\\Fanote`.
+  `%LOCALAPPDATA%\\Aldune`.
 
 Para crear ambos en Windows, instala Inno Setup 6 y ejecuta:
 
@@ -53,7 +53,7 @@ al crear una etiqueta `v*`, por ejemplo `v0.5.0`.
 
 ## Datos locales
 
-La aplicación guarda sus datos en `%LOCALAPPDATA%\Fanote`, no junto al ejecutable ni dentro del
+La aplicación guarda sus datos en `%LOCALAPPDATA%\Aldune`, no junto al ejecutable ni dentro del
 repositorio. La base de datos y la clave protegida no deben compartirse ni subirse a GitHub.
 
 ## Documentación del proyecto
