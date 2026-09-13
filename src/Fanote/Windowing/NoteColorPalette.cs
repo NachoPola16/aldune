@@ -97,6 +97,51 @@ internal static class NoteColorPalette
     }
 
     /// <summary>
+    /// The note editor uses the same warm-dark ink for every note. Custom colors therefore need
+    /// to stay in the light range; accepting a dark color here would technically work but would
+    /// make the title and body unreadable. The six built-in colors are already designed to pass.
+    /// </summary>
+    internal static bool IsReadableCustom(string color)
+    {
+        if (!TryGetRgb(color, out var r, out var g, out var b)) return false;
+
+        var backgroundLuminance = RelativeLuminance(r, g, b);
+        var inkLuminance = RelativeLuminance(0x1E, 0x1A, 0x14);
+        var contrast = (Math.Max(backgroundLuminance, inkLuminance) + 0.05)
+            / (Math.Min(backgroundLuminance, inkLuminance) + 0.05);
+        return contrast >= 4.5;
+    }
+
+    private static bool TryGetRgb(string color, out int r, out int g, out int b)
+    {
+        r = g = b = 0;
+        if (color.Length != 7 || color[0] != '#') return false;
+        if (!int.TryParse(color.AsSpan(1), System.Globalization.NumberStyles.HexNumber,
+                System.Globalization.CultureInfo.InvariantCulture, out int rgb))
+        {
+            return false;
+        }
+
+        r = (rgb >> 16) & 0xFF;
+        g = (rgb >> 8) & 0xFF;
+        b = rgb & 0xFF;
+        return true;
+    }
+
+    private static double RelativeLuminance(int r, int g, int b)
+    {
+        static double Channel(int value)
+        {
+            var channel = value / 255.0;
+            return channel <= 0.03928
+                ? channel / 12.92
+                : Math.Pow((channel + 0.055) / 1.055, 2.4);
+        }
+
+        return 0.2126 * Channel(r) + 0.7152 * Channel(g) + 0.0722 * Channel(b);
+    }
+
+    /// <summary>
     /// Escala los tres canales de un <c>#RRGGBB</c>. Aproxima la caída de L-0.16 que usan los
     /// bordes de la paleta, sin meter una conversión OKLCH completa en tiempo de ejecución por un
     /// caso que solo afecta a notas heredadas. Devuelve null si el color no es parseable.

@@ -1,0 +1,19 @@
+services:
+  fanote-sync:
+    build:
+      context: .
+      dockerfile: src/Fanote.SyncServer/Dockerfile
+    container_name: fanote-sync
+    restart: unless-stopped
+    environment:
+      FANOTE_SYNC_TOKEN: ${FANOTE_SYNC_TOKEN:?Define FANOTE_SYNC_TOKEN in .env}
+      FANOTE_SYNC_TOKENS: ${FANOTE_SYNC_TOKENS:-}
+      FANOTE_DATA_DIR: /data
+      ASPNETCORE_URLS: http://+:8080
+    ports:
+      - "${FANOTE_SYNC_PORT:-8087}:8080"
+    volumes:
+      - fanote-sync-data:/data
+
+volumes:
+  fanote-sync-data:

@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
@@ -21,7 +22,10 @@ public partial class SettingsWindow : Window
     private readonly AppSettings _settings;
     private readonly GlobalHotkey _hotkey;
     private readonly AppCoordinator? _coordinator;
+    private readonly SyncService? _syncService;
     private bool _recording;
+    private bool _syncUiReady;
+    private bool _loadingSyncProfile;
 
     // Constructor interno, no publico: GlobalHotkey es internal, y la ventana solo se crea desde
     // AppCoordinator.SettingsWindowFactory. El XAML generado solo llama a InitializeComponent, asi
@@ -30,13 +34,19 @@ public partial class SettingsWindow : Window
         SettingsService settingsService,
         AppSettings settings,
         GlobalHotkey hotkey,
-        AppCoordinator? coordinator = null)
+        AppCoordinator? coordinator = null,
+        SyncService? syncService = null)
     {
         InitializeComponent();
+        // SizeToContent="Height" todavía no conoce el alto final hasta que la ventana entra en
+        // el árbol visual. Mantener la ventana invisible durante ese primer layout evita que en
+        // una pantalla vertical se vea un fotograma en (0,0) antes de recentrarla.
+        Opacity = 0;
         _settingsService = settingsService;
         _settings = settings;
         _hotkey = hotkey;
         _coordinator = coordinator;
+        _syncService = syncService;
 
         StartupCheck.IsChecked = StartupRegistration.IsEnabled();
         HotkeyCheck.IsChecked = _settings.GlobalHotkeyEnabled;
@@ -50,7 +60,12 @@ public partial class SettingsWindow : Window
         PopulateEdges();
         PopulateLanguages();
         PopulateDelayUnits();
+        UpdateInterfaceModeUi();
         UpdateAutoHideTasksUi();
+        SyncProfileStore.Ensure(_settings);
+        PopulateSyncProfiles();
+        LoadSyncProfileFields();
+        _syncUiReady = true;
 
         // Tope de alto contra la pantalla real, no un número fijo: con SizeToContent="Height" la
         // ventana crece con su contenido, y en un portátil con escalado las últimas secciones se
@@ -76,12 +91,15 @@ public partial class SettingsWindow : Window
     /// <summary>
     /// Mismo fundido + crecimiento desde el 95% que usa <c>NoteWindow.PlayOpenAnimation</c> — el
     /// usuario pidió que abrir Ajustes se sintiera igual que abrir una nota, en vez de aparecer de
-    /// golpe. Llamada desde <see cref="AppCoordinator.OpenSettings"/> justo después de <c>Show()</c>,
-    /// igual que la nota.
+    /// golpe. Se llama después del layout inicial, cuando la ventana ya está centrada en su monitor.
     /// </summary>
     internal void PlayOpenAnimation()
     {
-        if (!SystemParameters.ClientAreaAnimation) return;
+        if (!SystemParameters.ClientAreaAnimation)
+        {
+            Opacity = 1;
+            return;
+        }
 
         var content = (UIElement)Content;
         content.RenderTransformOrigin = new Point(0.5, 0.5);
@@ -92,12 +110,87 @@ public partial class SettingsWindow : Window
         IEasingFunction Ease() => new QuinticEase { EasingMode = EasingMode.EaseOut };
 
         content.Opacity = 0;
+        BeginAnimation(OpacityProperty, new DoubleAnimation(0, 1, duration) { EasingFunction = Ease() });
         content.BeginAnimation(OpacityProperty, new DoubleAnimation(0, 1, duration) { EasingFunction = Ease() });
         scale.BeginAnimation(ScaleTransform.ScaleXProperty, new DoubleAnimation(0.95, 1, duration) { EasingFunction = Ease() });
         scale.BeginAnimation(ScaleTransform.ScaleYProperty, new DoubleAnimation(0.95, 1, duration) { EasingFunction = Ease() });
     }
 
     private void OnCloseClick(object sender, RoutedEventArgs e) => Close();
+
+    private void OnExitClick(object sender, RoutedEventArgs e) =>
+        Application.Current.Shutdown();
+
+    private void OnRestartClick(object sender, RoutedEventArgs e)
+    {
+        var executable = Environment.ProcessPath;
+        if (string.IsNullOrWhiteSpace(executable)) return;
+
+        _settingsService.Save(_settings);
+        Process.Start(new ProcessStartInfo(executable) { UseShellExecute = true });
+        Application.Current.Shutdown();
+    }
+
+    private void OnInterfaceModeClick(object sender, RoutedEventArgs e)
+    {
+        _settings.SimplifiedMode = !_settings.SimplifiedMode;
+        _settingsService.Save(_settings);
+        UpdateInterfaceModeUi();
+    }
+
+    private void UpdateInterfaceModeUi()
+    {
+        AdvancedSettingsPanel.Visibility = _settings.SimplifiedMode
+            ? Visibility.Collapsed
+            : Visibility.Visible;
+        InterfaceModeButton.Content = _settings.SimplifiedMode
+            ? Strings.SwitchToCompleteMode
+            : Strings.SwitchToSimplifiedMode;
+    }
+
+    private void OnMinimizeClick(object sender, RoutedEventArgs e) => WindowState = WindowState.Minimized;
+
+    private void OnMaximizeClick(object sender, RoutedEventArgs e) =>
+        ToggleMaximized();
+
+    private void ToggleMaximized()
+    {
+        if (WindowState == WindowState.Maximized)
+        {
+            WindowState = WindowState.Normal;
+            SizeToContent = SizeToContent.Height;
+            RestoreNormalHeightLimit();
+            return;
+        }
+
+        // SizeToContent y MaxHeight son útiles en modo normal para no cortar Ajustes, pero ambos
+        // interfieren con el estado maximizado: WPF intenta medir el contenido y lo deja en el
+        // límite del 90% en vez de ocupar el área de trabajo completa.
+        SizeToContent = SizeToContent.Manual;
+        MaxHeight = double.PositiveInfinity;
+        WindowState = WindowState.Maximized;
+    }
+
+    private void RestoreNormalHeightLimit()
+    {
+        var monitor = MonitorLookup.MonitorAt(Left, Top, Width, Height, MonitorEnumerator.EnumerateMonitors());
+        MaxHeight = (monitor?.WorkArea.Height ?? SystemParameters.WorkArea.Height) * 0.9;
+    }
+
+    private void OnWindowStateChanged(object? sender, EventArgs e)
+    {
+        if (MaximizeButton is not null)
+        {
+            if (WindowState == WindowState.Maximized)
+            {
+                MaxHeight = double.PositiveInfinity;
+            }
+            MaximizeButton.ToolTip = WindowState == WindowState.Maximized
+                ? Strings.RestoreWindowTooltip
+                : Strings.MaximizeWindowTooltip;
+            MaximizeGlyph.Text = WindowState == WindowState.Maximized ? "\uE923" : "\uE922";
+        }
+    }
 
     /// <summary>
     /// La casilla refleja lo que de verdad quedó en el registro, no lo que se pidió: si una
@@ -231,7 +324,9 @@ public partial class SettingsWindow : Window
             Strings.QuickHelpMenu,
             Strings.QuickHelpEscape,
             hotkeyLine,
-            Strings.QuickHelpTray
+            Strings.QuickHelpTray,
+            Strings.QuickHelpSync,
+            Strings.QuickHelpSearch
         });
     }
 
@@ -291,14 +386,13 @@ public partial class SettingsWindow : Window
         _settingsService.Save(_settings);
     }
 
-    // Solo Izquierda/Derecha: son los dos bordes donde una nota se abre deslizándose en
-    // horizontal (ver EdgeDockWindow.PositionNoteWindow). Arriba/Abajo exigiría deslizar en
-    // vertical, que queda fuera de esta ronda.
     private void PopulateEdges()
     {
         EdgeListContainer.Children.Clear();
         AddEdgeRadio(EdgePosition.Right, Strings.EdgeRight);
         AddEdgeRadio(EdgePosition.Left, Strings.EdgeLeft);
+        AddEdgeRadio(EdgePosition.Top, Strings.EdgeTop);
+        AddEdgeRadio(EdgePosition.Bottom, Strings.EdgeBottom);
     }
 
     private void AddEdgeRadio(EdgePosition edge, string label)
@@ -375,6 +469,401 @@ public partial class SettingsWindow : Window
         if (_settings.TrashRetentionDays == value) return;
         _settings.TrashRetentionDays = value;
         _settingsService.Save(_settings);
+    }
+
+    private void OnSyncEnabledToggled(object sender, RoutedEventArgs e)
+    {
+        if (!_syncUiReady) return;
+        _settings.SyncEnabled = SyncEnabledCheck.IsChecked == true;
+        _settingsService.Save(_settings);
+        _coordinator?.ConfigureAutomaticSync();
+        UpdateSyncUi();
+    }
+
+    private void OnSyncProfileChanged(object sender, SelectionChangedEventArgs e)
+    {
+        if (!_syncUiReady || _loadingSyncProfile || SyncProfileBox.SelectedItem is not ComboBoxItem { Tag: string id }) return;
+
+        // Persistir antes de cambiar evita que los cambios escritos en el perfil anterior se
+        // mezclen con el nuevo (en especial la clave envuelta y las notas seleccionadas).
+        _settingsService.Save(_settings);
+        _settings.ActiveSyncProfileId = id;
+        SyncProfileStore.LoadActiveToLegacy(_settings);
+
+        _loadingSyncProfile = true;
+        _syncUiReady = false;
+        try
+        {
+            LoadSyncProfileFields();
+            _settingsService.Save(_settings);
+        }
+        finally
+        {
+            _syncUiReady = true;
+            _loadingSyncProfile = false;
+        }
+        _coordinator?.ConfigureAutomaticSync();
+    }
+
+    private void OnSyncNewProfileClick(object sender, RoutedEventArgs e)
+    {
+        if (!_syncUiReady) return;
+        _settingsService.Save(_settings);
+        SyncProfileStore.Create(_settings, Strings.SyncProfileNewName(_settings.SyncProfiles.Count + 1));
+        _settingsService.Save(_settings);
+        ReloadSyncProfileUi();
+        _coordinator?.ConfigureAutomaticSync();
+    }
+
+    private void OnSyncDeleteProfileClick(object sender, RoutedEventArgs e)
+    {
+        if (!_syncUiReady) return;
+        if (_settings.SyncProfiles.Count <= 1)
+        {
+            MessageBox.Show(this, Strings.SyncProfileLastRemaining, Strings.SyncSectionTitle,
+                MessageBoxButton.OK, MessageBoxImage.Information);
+            return;
+        }
+
+        if (MessageBox.Show(this, Strings.SyncProfileDeleteConfirm, Strings.SyncSectionTitle,
+                MessageBoxButton.YesNo, MessageBoxImage.Warning) != MessageBoxResult.Yes)
+            return;
+
+        _settingsService.Save(_settings);
+        SyncProfileStore.DeleteActive(_settings);
+        _settingsService.Save(_settings);
+        ReloadSyncProfileUi();
+        _coordinator?.ConfigureAutomaticSync();
+    }
+
+    private void OnSyncProfileNameLostFocus(object sender, RoutedEventArgs e)
+    {
+        if (!_syncUiReady) return;
+        var profile = SyncProfileStore.GetActive(_settings);
+        var name = SyncProfileNameBox.Text.Trim();
+        if (string.IsNullOrWhiteSpace(name)) name = Strings.SyncProfileNewName(1);
+        if (profile.Name == name) return;
+
+        profile.Name = name;
+        _settingsService.Save(_settings);
+        PopulateSyncProfiles();
+    }
+
+    private void PopulateSyncProfiles()
+    {
+        _loadingSyncProfile = true;
+        try
+        {
+            SyncProfileBox.Items.Clear();
+            foreach (var profile in _settings.SyncProfiles)
+            {
+                SyncProfileBox.Items.Add(new ComboBoxItem { Content = profile.Name, Tag = profile.Id });
+            }
+
+            var index = _settings.SyncProfiles.FindIndex(profile => profile.Id == _settings.ActiveSyncProfileId);
+            SyncProfileBox.SelectedIndex = index < 0 ? 0 : index;
+            var activeName = SyncProfileStore.GetActive(_settings).Name;
+            SyncProfileNameBox.Text = activeName;
+            SyncProfileNameDisplayText.Text = activeName;
+            bool hasProfileChoices = _settings.SyncProfiles.Count > 1;
+            SyncProfileBox.Visibility = hasProfileChoices ? Visibility.Visible : Visibility.Collapsed;
+            SyncProfileNameDisplay.Visibility = hasProfileChoices ? Visibility.Collapsed : Visibility.Visible;
+        }
+        finally
+        {
+            _loadingSyncProfile = false;
+        }
+    }
+
+    private void ReloadSyncProfileUi()
+    {
+        _loadingSyncProfile = true;
+        _syncUiReady = false;
+        try
+        {
+            PopulateSyncProfiles();
+            LoadSyncProfileFields();
+        }
+        finally
+        {
+            _syncUiReady = true;
+            _loadingSyncProfile = false;
+        }
+    }
+
+    private void LoadSyncProfileFields()
+    {
+        SyncEnabledCheck.IsChecked = _settings.SyncEnabled;
+        SyncAllNotesRadio.IsChecked = _settings.SyncScope != SyncScopeKind.SelectedNotes;
+        SyncSelectedNotesRadio.IsChecked = _settings.SyncScope == SyncScopeKind.SelectedNotes;
+        SyncFolderRadio.IsChecked = _settings.SyncTransport == SyncTransportKind.Folder;
+        SyncServerRadio.IsChecked = _settings.SyncTransport == SyncTransportKind.Server;
+        SyncWebDavRadio.IsChecked = _settings.SyncTransport == SyncTransportKind.WebDav;
+        SyncFolderPathBox.Text = _settings.SyncFolderPath ?? string.Empty;
+        SyncServerUrlBox.Text = _settings.SyncServerUrl ?? string.Empty;
+        SyncServerTokenBox.Text = _syncService?.GetServerToken() ?? string.Empty;
+        SyncWebDavUsernameBox.Text = _settings.SyncWebDavUsername ?? string.Empty;
+        SyncWebDavPasswordBox.Password = _syncService?.GetWebDavPassword() ?? string.Empty;
+        SyncCodeBox.Clear();
+        SyncAutomaticCheck.IsChecked = _settings.SyncAutomatically;
+        SyncIntervalValueBox.Text = Math.Clamp(_settings.SyncIntervalMinutes, 1, 1440).ToString();
+        UpdateSyncLastSyncUi();
+        UpdateSyncConflictsUi();
+        UpdateSyncUi();
+    }
+
+    private void OnSyncScopeChanged(object sender, RoutedEventArgs e)
+    {
+        if (!_syncUiReady || sender is not RadioButton { IsChecked: true } radio) return;
+
+        _settings.SyncScope = radio == SyncSelectedNotesRadio
+            ? SyncScopeKind.SelectedNotes
+            : SyncScopeKind.AllNotes;
+        _settingsService.Save(_settings);
+        UpdateSyncUi();
+    }
+
+    private void OnSyncChooseNotesClick(object sender, RoutedEventArgs e)
+    {
+        _coordinator?.OpenSyncNotesSelector(this);
+        UpdateSyncUi();
+    }
+
+    private void OnSyncProviderChanged(object sender, RoutedEventArgs e)
+    {
+        if (!_syncUiReady || sender is not RadioButton { IsChecked: true } radio) return;
+        _settings.SyncTransport = radio == SyncServerRadio
+            ? SyncTransportKind.Server
+            : radio == SyncWebDavRadio
+                ? SyncTransportKind.WebDav
+                : SyncTransportKind.Folder;
+        _settingsService.Save(_settings);
+        UpdateSyncUi();
+    }
+
+    private void OnSyncValueChanged(object sender, TextChangedEventArgs e)
+    {
+        if (!_syncUiReady) return;
+        _settings.SyncFolderPath = SyncFolderPathBox.Text.Trim();
+        _settings.SyncServerUrl = SyncServerUrlBox.Text.Trim();
+        _settingsService.Save(_settings);
+    }
+
+    private void OnSyncTokenLostFocus(object sender, RoutedEventArgs e)
+    {
+        if (!_syncUiReady || _syncService is null) return;
+        _syncService.SetServerToken(SyncServerTokenBox.Text);
+        SyncServerTokenBox.Text = _syncService.GetServerToken();
+        _settingsService.Save(_settings);
+    }
+
+    private void OnSyncWebDavUsernameLostFocus(object sender, RoutedEventArgs e)
+    {
+        if (!_syncUiReady) return;
+        _settings.SyncWebDavUsername = SyncWebDavUsernameBox.Text.Trim();
+        _settingsService.Save(_settings);
+    }
+
+    private void OnSyncWebDavPasswordLostFocus(object sender, RoutedEventArgs e)
+    {
+        if (!_syncUiReady || _syncService is null) return;
+        _syncService.SetWebDavPassword(SyncWebDavPasswordBox.Password);
+        SyncWebDavPasswordBox.Password = _syncService.GetWebDavPassword();
+    }
+
+    private void OnSyncAutomaticToggled(object sender, RoutedEventArgs e)
+    {
+        if (!_syncUiReady) return;
+        _settings.SyncAutomatically = SyncAutomaticCheck.IsChecked == true;
+        _settingsService.Save(_settings);
+        _coordinator?.ConfigureAutomaticSync();
+        UpdateSyncUi();
+    }
+
+    private void OnSyncIntervalPreviewTextInput(object sender, TextCompositionEventArgs e)
+    {
+        e.Handled = !e.Text.All(char.IsDigit);
+    }
+
+    private void OnSyncIntervalLostFocus(object sender, RoutedEventArgs e)
+    {
+        if (!_syncUiReady) return;
+        if (!int.TryParse(SyncIntervalValueBox.Text, out var minutes))
+            minutes = _settings.SyncIntervalMinutes;
+
+        _settings.SyncIntervalMinutes = Math.Clamp(minutes, 1, 1440);
+        SyncIntervalValueBox.Text = _settings.SyncIntervalMinutes.ToString();
+        _settingsService.Save(_settings);
+        _coordinator?.ConfigureAutomaticSync();
+    }
+
+    private void OnSyncBrowseClick(object sender, RoutedEventArgs e)
+    {
+        using var dialog = new System.Windows.Forms.FolderBrowserDialog
+        {
+            Description = Strings.SyncFolderLabel,
+            SelectedPath = SyncFolderPathBox.Text
+        };
+        if (dialog.ShowDialog() != System.Windows.Forms.DialogResult.OK) return;
+
+        SyncFolderPathBox.Text = dialog.SelectedPath;
+        _settings.SyncFolderPath = dialog.SelectedPath;
+        _settingsService.Save(_settings);
+    }
+
+    private void OnSyncGenerateCodeClick(object sender, RoutedEventArgs e)
+    {
+        if (_syncService is null) return;
+        try
+        {
+            SyncCodeBox.Text = _syncService.GetOrCreateSyncCode();
+            Clipboard.SetText(SyncCodeBox.Text);
+            SyncStatusText.Text = Strings.SyncCodeCopiedStatus;
+        }
+        catch (Exception ex)
+        {
+            SyncStatusText.Text = Strings.SyncErrorStatus(ex.Message);
+        }
+    }
+
+    private void OnSyncShareProfileClick(object sender, RoutedEventArgs e)
+    {
+        if (_syncService is null) return;
+        try
+        {
+            SyncCodeBox.Text = _syncService.GetOrCreateShareCode();
+            Clipboard.SetText(SyncCodeBox.Text);
+            SyncStatusText.Text = Strings.SyncShareCodeCopiedStatus;
+        }
+        catch (Exception ex)
+        {
+            SyncStatusText.Text = Strings.SyncErrorStatus(ex.Message);
+        }
+    }
+
+    private void OnSyncRevokeAccessClick(object sender, RoutedEventArgs e)
+    {
+        if (_syncService is null || _settings.SyncEnabled != true) return;
+
+        var answer = MessageBox.Show(this, Strings.SyncRevokeAccessConfirm, Strings.SyncSectionTitle,
+            MessageBoxButton.OKCancel, MessageBoxImage.Warning, MessageBoxResult.Cancel);
+        if (answer != MessageBoxResult.OK) return;
+
+        try
+        {
+            if (_syncService.RevokeSharedAccess(out var error))
+            {
+                SyncCodeBox.Clear();
+                SyncStatusText.Text = Strings.SyncRevokeAccessCompletedStatus;
+            }
+            else
+            {
+                SyncStatusText.Text = Strings.SyncErrorStatus(error ?? "The old profile codes could not be revoked.");
+            }
+        }
+        catch (Exception ex)
+        {
+            SyncStatusText.Text = Strings.SyncErrorStatus(ex.Message);
+        }
+    }
+
+    private void OnSyncImportCodeClick(object sender, RoutedEventArgs e)
+    {
+        if (_syncService is null) return;
+        try
+        {
+            _syncService.ImportSyncCode(SyncCodeBox.Text);
+            ReloadSyncProfileUi();
+            SyncStatusText.Text = Strings.SyncCodeImportedStatus;
+        }
+        catch (FormatException)
+        {
+            SyncStatusText.Text = Strings.SyncInvalidCode;
+        }
+        catch (Exception ex)
+        {
+            SyncStatusText.Text = Strings.SyncErrorStatus(ex.Message);
+        }
+    }
+
+    private void OnSyncNowClick(object sender, RoutedEventArgs e)
+    {
+        if (_syncService is null || _coordinator is null) return;
+        try
+        {
+            var result = _coordinator.Synchronize();
+            SyncStatusText.Text = result.Succeeded
+                ? Strings.SyncCompletedStatus(result.Uploaded, result.Downloaded)
+                : result.Error?.Contains("401", StringComparison.Ordinal) == true
+                    ? Strings.SyncUnauthorizedStatus
+                    : Strings.SyncErrorStatus(result.Error ?? "Unknown error");
+            UpdateSyncLastSyncUi();
+            UpdateSyncConflictsUi();
+        }
+        catch (Exception ex)
+        {
+            SyncStatusText.Text = Strings.SyncErrorStatus(ex.Message);
+        }
+    }
+
+    private void UpdateSyncUi()
+    {
+        bool enabled = SyncEnabledCheck.IsChecked == true;
+        bool folder = SyncFolderRadio.IsChecked == true;
+        bool server = SyncServerRadio.IsChecked == true;
+        bool webDav = SyncWebDavRadio.IsChecked == true;
+        SyncFolderRadio.IsEnabled = enabled;
+        SyncServerRadio.IsEnabled = enabled;
+        SyncWebDavRadio.IsEnabled = enabled;
+        SyncFolderPathBox.IsEnabled = enabled && folder;
+        SyncBrowseButton.IsEnabled = enabled && folder;
+        SyncServerUrlBox.IsEnabled = enabled && !folder;
+        SyncServerTokenGrid.Visibility = server ? Visibility.Visible : Visibility.Collapsed;
+        SyncServerTokenBox.IsEnabled = enabled && server;
+        SyncWebDavUsernameGrid.Visibility = webDav ? Visibility.Visible : Visibility.Collapsed;
+        SyncWebDavPasswordGrid.Visibility = webDav ? Visibility.Visible : Visibility.Collapsed;
+        SyncWebDavHintText.Visibility = webDav ? Visibility.Visible : Visibility.Collapsed;
+        SyncWebDavUsernameBox.IsEnabled = enabled && webDav;
+        SyncWebDavPasswordBox.IsEnabled = enabled && webDav;
+        SyncCodeBox.IsEnabled = enabled;
+        SyncGenerateCodeButton.IsEnabled = enabled;
+        SyncShareProfileButton.IsEnabled = enabled;
+        SyncRevokeAccessButton.IsEnabled = enabled && _settings.WrappedSyncKey is not null;
+        SyncImportCodeButton.IsEnabled = enabled;
+        SyncNowButton.IsEnabled = enabled;
+        SyncAllNotesRadio.IsEnabled = enabled;
+        SyncSelectedNotesRadio.IsEnabled = enabled;
+        SyncChooseNotesButton.IsEnabled = enabled;
+        SyncAutomaticCheck.IsEnabled = enabled;
+        SyncIntervalValueBox.IsEnabled = enabled && _settings.SyncAutomatically;
+        SyncNewProfileButton.IsEnabled = true;
+        SyncDeleteProfileButton.IsEnabled = _settings.SyncProfiles.Count > 1;
+        SyncProfileNameBox.IsEnabled = true;
+        if (!enabled) SyncStatusText.Text = Strings.SyncDisabledStatus;
+        else if (string.IsNullOrWhiteSpace(SyncStatusText.Text)) SyncStatusText.Text = Strings.SyncReadyStatus;
+        SyncSelectionSummary.Text = _settings.SyncScope == SyncScopeKind.SelectedNotes
+            ? Strings.SyncSelectedCount(_settings.SyncNoteIds.Count)
+            : Strings.SyncScopeAll;
+    }
+
+    private void UpdateSyncLastSyncUi()
+    {
+        SyncLastSyncText.Text = _settings.LastSyncAt is { } at
+            ? Strings.SyncLastSyncAt(at)
+            : Strings.SyncLastSyncNever;
+    }
+
+    private void UpdateSyncConflictsUi()
+    {
+        var count = _syncService?.GetConflicts().Count ?? 0;
+        SyncConflictsText.Text = count == 0 ? Strings.SyncNoConflicts : Strings.SyncConflictsCount(count);
+        SyncConflictsButton.Visibility = count == 0 ? Visibility.Collapsed : Visibility.Visible;
+        SyncConflictsButton.IsEnabled = _settings.SyncEnabled;
+    }
+
+    private void OnSyncConflictsClick(object sender, RoutedEventArgs e)
+    {
+        _coordinator?.OpenSyncConflicts();
     }
 
     private void PopulateDelayUnits()

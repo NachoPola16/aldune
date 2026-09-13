@@ -17,11 +17,14 @@ public sealed class SettingsService
             return new AppSettings();
 
         var json = File.ReadAllText(_settingsPath);
-        return JsonSerializer.Deserialize<AppSettings>(json) ?? new AppSettings();
+        var settings = JsonSerializer.Deserialize<AppSettings>(json) ?? new AppSettings();
+        SyncProfileStore.Ensure(settings);
+        return settings;
     }
 
     public void Save(AppSettings settings)
     {
+        SyncProfileStore.SaveActiveFromLegacy(settings);
         var directory = Path.GetDirectoryName(_settingsPath);
         if (!string.IsNullOrEmpty(directory))
             Directory.CreateDirectory(directory);

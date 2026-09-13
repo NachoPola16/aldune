@@ -2,16 +2,19 @@
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:local="clr-namespace:Fanote.Windowing"
+        xmlns:app="clr-namespace:Fanote"
         xmlns:res="clr-namespace:Fanote.Resources"
         Title="{x:Static res:Strings.SettingsWindowTitle}"
-        Width="760" SizeToContent="Height"
+        Width="920" SizeToContent="Height"
         WindowStyle="None"
         AllowsTransparency="False"
-        ResizeMode="NoResize"
-        Background="#2A261F"
-        Topmost="True">
+        WindowStartupLocation="Manual"
+        ResizeMode="CanResize"
+        Background="{StaticResource FanoteGroundBrush}"
+        Topmost="False"
+        StateChanged="OnWindowStateChanged">
     <WindowChrome.WindowChrome>
-        <WindowChrome CaptionHeight="34" ResizeBorderThickness="0" GlassFrameThickness="-1" CornerRadius="0" />
+        <WindowChrome CaptionHeight="34" ResizeBorderThickness="6" GlassFrameThickness="-1" CornerRadius="0" />
     </WindowChrome.WindowChrome>
     <Window.Resources>
         <!-- Misma casilla que el gestor: hereda Foreground, asi que una sola plantilla vale para
@@ -73,6 +76,14 @@
                 </Setter.Value>
             </Setter>
         </Style>
+
+        <Style x:Key="DangerRecordButtonStyle" TargetType="Button" BasedOn="{StaticResource RecordButtonStyle}">
+            <Setter Property="Background" Value="#5A2A28" />
+            <Setter Property="Foreground" Value="#F0C1BA" />
+        </Style>
+
+        <Style x:Key="SyncProfileComboStyle" TargetType="ComboBox" BasedOn="{StaticResource DarkComboBoxStyle}" />
+        <Style x:Key="SyncProfileItemStyle" TargetType="ComboBoxItem" BasedOn="{StaticResource DarkComboBoxItemStyle}" />
 
         <Style x:Key="CloseButtonStyle" TargetType="Button">
             <Setter Property="Foreground" Value="#EDE7DC" />
@@ -171,11 +182,25 @@
         <!-- CaptionHeight cubre esta franja, asi que la ventana se arrastra desde aqui. -->
         <Grid Margin="24,18,14,0">
             <TextBlock Text="{x:Static res:Strings.SettingsHeader}" Foreground="#F5F0E6" FontSize="17" FontWeight="SemiBold" />
-            <Button Content="&#x2715;" Width="28" Height="28"
-                    HorizontalAlignment="Right" VerticalAlignment="Top"
-                    Click="OnCloseClick"
-                    WindowChrome.IsHitTestVisibleInChrome="True"
-                    Style="{StaticResource CloseButtonStyle}" />
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Top">
+                <Button Content="&#x2014;" Width="28" Height="28"
+                        ToolTip="{x:Static res:Strings.MinimizeWindowTooltip}"
+                        Click="OnMinimizeClick"
+                        WindowChrome.IsHitTestVisibleInChrome="True"
+                        Style="{StaticResource CloseButtonStyle}" />
+                <Button x:Name="MaximizeButton" Width="28" Height="28"
+                        ToolTip="{x:Static res:Strings.MaximizeWindowTooltip}"
+                        Click="OnMaximizeClick"
+                        WindowChrome.IsHitTestVisibleInChrome="True"
+                        Style="{StaticResource CloseButtonStyle}">
+                    <TextBlock x:Name="MaximizeGlyph" Text="&#xE922;"
+                               FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" FontSize="11" />
+                </Button>
+                <Button Content="&#x2715;" Width="28" Height="28"
+                        Click="OnCloseClick"
+                        WindowChrome.IsHitTestVisibleInChrome="True"
+                        Style="{StaticResource CloseButtonStyle}" />
+            </StackPanel>
         </Grid>
 
         <!-- Dos columnas en vez de una sola tira larga: con siete secciones más la ayuda, la
@@ -183,7 +208,23 @@
              usuario, con captura). Izquierda: cómo se usa la app en general. Derecha: dónde y cómo
              vive el dock en el escritorio. Cada ajuste sigue con su explicación debajo, como
              siempre: son cosas que no se deducen mirándolas. -->
-        <Grid Margin="24,22,24,0">
+        <Border x:Name="InterfaceModePanel" Margin="24,18,24,0"
+                Background="#332F28" CornerRadius="8" Padding="12">
+            <Grid>
+                <StackPanel Margin="0,0,170,0">
+                    <TextBlock Text="{x:Static res:Strings.InterfaceModeSectionTitle}"
+                               Foreground="#EDE7DC" FontSize="13" FontWeight="SemiBold" />
+                    <TextBlock Text="{x:Static res:Strings.InterfaceModeHint}"
+                               Foreground="#A79E90" FontSize="11" TextWrapping="Wrap" Margin="0,4,0,0" />
+                </StackPanel>
+                <Button x:Name="InterfaceModeButton"
+                        HorizontalAlignment="Right" VerticalAlignment="Center"
+                        Padding="12,7" Click="OnInterfaceModeClick"
+                        Style="{StaticResource RecordButtonStyle}" />
+            </Grid>
+        </Border>
+
+        <Grid x:Name="AdvancedSettingsPanel" Margin="24,22,24,0">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="*" />
                 <ColumnDefinition Width="24" />
@@ -291,6 +332,213 @@
                                    Foreground="#EDE7DC" FontSize="13" VerticalAlignment="Center" Margin="8,0,0,0" />
                     </StackPanel>
                 </StackPanel>
+
+                <Border Background="#3C3730" Height="1" Margin="0,20,0,0" />
+
+                <StackPanel Margin="0,20,0,0">
+                    <TextBlock Text="{x:Static res:Strings.SyncSectionTitle}"
+                               Foreground="#EDE7DC" FontSize="13" FontWeight="SemiBold" />
+                    <TextBlock Text="{x:Static res:Strings.SyncSectionHint}"
+                               Foreground="#8A8175" FontSize="11" TextWrapping="Wrap" Margin="0,4,0,10" />
+                    <Grid Margin="0,0,0,8">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Text="{x:Static res:Strings.SyncProfileLabel}" Foreground="#EDE7DC"
+                                   VerticalAlignment="Center" Margin="0,0,8,0" />
+                        <Border x:Name="SyncProfileNameDisplay" Grid.Column="1" Background="#332F28"
+                                CornerRadius="6" Padding="7,5">
+                            <TextBlock x:Name="SyncProfileNameDisplayText" Foreground="#EDE7DC"
+                                       VerticalAlignment="Center" />
+                        </Border>
+                        <ComboBox x:Name="SyncProfileBox" Grid.Column="1"
+                                  Style="{StaticResource SyncProfileComboStyle}"
+                                  ItemContainerStyle="{StaticResource SyncProfileItemStyle}"
+                                  SelectionChanged="OnSyncProfileChanged" />
+                        <Button x:Name="SyncNewProfileButton" Grid.Column="2"
+                                Content="{x:Static res:Strings.SyncNewProfile}" Click="OnSyncNewProfileClick"
+                                Margin="6,0,0,0" Padding="8,5" Style="{StaticResource RecordButtonStyle}" />
+                        <Button x:Name="SyncDeleteProfileButton" Grid.Column="3"
+                                Content="{x:Static res:Strings.SyncDeleteProfile}" Click="OnSyncDeleteProfileClick"
+                                Margin="6,0,0,0" Padding="8,5" Style="{StaticResource RecordButtonStyle}" />
+                    </Grid>
+                    <Grid Margin="0,0,0,8">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Text="{x:Static res:Strings.SyncProfileNameLabel}" Foreground="#8A8175"
+                                   VerticalAlignment="Center" Margin="0,0,8,0" />
+                        <TextBox x:Name="SyncProfileNameBox" Grid.Column="1"
+                                 Background="#332F28" Foreground="#EDE7DC" BorderThickness="0"
+                                 Padding="7,5" LostFocus="OnSyncProfileNameLostFocus" />
+                    </Grid>
+                    <CheckBox x:Name="SyncEnabledCheck"
+                              Content="{x:Static res:Strings.SyncEnabledCheckbox}"
+                              Foreground="#EDE7DC" Background="#2A261F" FontSize="13"
+                              Style="{StaticResource AppCheckBoxStyle}"
+                              Click="OnSyncEnabledToggled" />
+                    <TextBlock Text="{x:Static res:Strings.SyncScopeHint}" Foreground="#8A8175"
+                               FontSize="11" TextWrapping="Wrap" Margin="27,8,0,0" />
+                    <StackPanel Orientation="Horizontal" Margin="27,7,0,0">
+                        <RadioButton x:Name="SyncAllNotesRadio" Content="{x:Static res:Strings.SyncScopeAll}"
+                                     GroupName="SyncScope" Tag="AllNotes"
+                                     Style="{StaticResource DelayUnitToggleStyle}"
+                                     Checked="OnSyncScopeChanged" />
+                        <RadioButton x:Name="SyncSelectedNotesRadio" Content="{x:Static res:Strings.SyncScopeSelected}"
+                                     GroupName="SyncScope" Tag="SelectedNotes" Margin="4,0,0,0"
+                                     Style="{StaticResource DelayUnitToggleStyle}"
+                                     Checked="OnSyncScopeChanged" />
+                    </StackPanel>
+                    <StackPanel Orientation="Horizontal" Margin="27,7,0,0">
+                        <Button x:Name="SyncChooseNotesButton" Content="{x:Static res:Strings.SyncChooseNotes}"
+                                Click="OnSyncChooseNotesClick" Padding="10,6"
+                                Style="{StaticResource RecordButtonStyle}" />
+                        <TextBlock x:Name="SyncSelectionSummary" Foreground="#8A8175"
+                                   FontSize="11" VerticalAlignment="Center" Margin="10,0,0,0" />
+                    </StackPanel>
+
+                    <StackPanel Orientation="Horizontal" Margin="27,8,0,0">
+                        <RadioButton x:Name="SyncFolderRadio" Content="{x:Static res:Strings.SyncFolderOption}"
+                                     GroupName="SyncProvider" Tag="Folder"
+                                     Style="{StaticResource DelayUnitToggleStyle}"
+                                     Checked="OnSyncProviderChanged" />
+                        <RadioButton x:Name="SyncServerRadio" Content="{x:Static res:Strings.SyncServerOption}"
+                                     GroupName="SyncProvider" Tag="Server" Margin="4,0,0,0"
+                                     Style="{StaticResource DelayUnitToggleStyle}"
+                                     Checked="OnSyncProviderChanged" />
+                        <RadioButton x:Name="SyncWebDavRadio" Content="{x:Static res:Strings.SyncWebDavOption}"
+                                     GroupName="SyncProvider" Tag="WebDav" Margin="4,0,0,0"
+                                     Style="{StaticResource DelayUnitToggleStyle}"
+                                     Checked="OnSyncProviderChanged" />
+                    </StackPanel>
+
+                    <Grid Margin="27,10,0,0">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Text="{x:Static res:Strings.SyncFolderLabel}" Foreground="#EDE7DC"
+                                   VerticalAlignment="Center" Margin="0,0,8,0" />
+                        <TextBox x:Name="SyncFolderPathBox" Grid.Column="1" MinWidth="130"
+                                 Background="#332F28" Foreground="#EDE7DC" BorderThickness="0"
+                                 Padding="7,6" TextChanged="OnSyncValueChanged" />
+                        <Button x:Name="SyncBrowseButton" Grid.Column="2"
+                                Content="{x:Static res:Strings.SyncBrowseButton}" Click="OnSyncBrowseClick"
+                                Margin="8,0,0,0" Padding="10,6" Style="{StaticResource RecordButtonStyle}" />
+                    </Grid>
+
+                    <Grid Margin="27,8,0,0">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Text="{x:Static res:Strings.SyncServerUrlLabel}" Foreground="#EDE7DC"
+                                   VerticalAlignment="Center" Margin="0,0,8,0" />
+                        <TextBox x:Name="SyncServerUrlBox" Grid.Column="1" MinWidth="130"
+                                 Background="#332F28" Foreground="#EDE7DC" BorderThickness="0"
+                                 Padding="7,6" TextChanged="OnSyncValueChanged" />
+                    </Grid>
+                    <Grid x:Name="SyncServerTokenGrid" Margin="27,8,0,0">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Text="{x:Static res:Strings.SyncServerTokenLabel}" Foreground="#EDE7DC"
+                                   VerticalAlignment="Center" Margin="0,0,8,0" />
+                        <TextBox x:Name="SyncServerTokenBox" Grid.Column="1" MinWidth="130"
+                                 Background="#332F28" Foreground="#EDE7DC" BorderThickness="0"
+                                 Padding="7,6" LostFocus="OnSyncTokenLostFocus" />
+                    </Grid>
+
+                    <Grid x:Name="SyncWebDavUsernameGrid" Margin="27,8,0,0" Visibility="Collapsed">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Text="{x:Static res:Strings.SyncWebDavUsernameLabel}" Foreground="#EDE7DC"
+                                   VerticalAlignment="Center" Margin="0,0,8,0" />
+                        <TextBox x:Name="SyncWebDavUsernameBox" Grid.Column="1" MinWidth="130"
+                                 Background="#332F28" Foreground="#EDE7DC" BorderThickness="0"
+                                 Padding="7,6" LostFocus="OnSyncWebDavUsernameLostFocus" />
+                    </Grid>
+                    <Grid x:Name="SyncWebDavPasswordGrid" Margin="27,8,0,0" Visibility="Collapsed">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Text="{x:Static res:Strings.SyncWebDavPasswordLabel}" Foreground="#EDE7DC"
+                                   VerticalAlignment="Center" Margin="0,0,8,0" />
+                        <PasswordBox x:Name="SyncWebDavPasswordBox" Grid.Column="1" MinWidth="130"
+                                     Background="#332F28" Foreground="#EDE7DC" BorderThickness="0"
+                                     Padding="7,6" LostFocus="OnSyncWebDavPasswordLostFocus" />
+                    </Grid>
+                    <TextBlock x:Name="SyncWebDavHintText" Text="{x:Static res:Strings.SyncWebDavHint}" Foreground="#8A8175"
+                               FontSize="11" TextWrapping="Wrap" Margin="27,4,0,0" />
+
+                    <TextBlock Text="{x:Static res:Strings.SyncCodeLabel}" Foreground="#EDE7DC"
+                               Margin="27,12,0,0" />
+                    <TextBox x:Name="SyncCodeBox" Margin="27,6,0,0"
+                             Background="#332F28" Foreground="#EDE7DC" BorderThickness="0"
+                             Padding="7,6" />
+                    <TextBlock Text="{x:Static res:Strings.SyncCodeHint}" Foreground="#8A8175"
+                               FontSize="11" TextWrapping="Wrap" Margin="27,5,0,0" />
+                    <TextBlock Text="{x:Static res:Strings.SyncShareCodeHint}" Foreground="#8A8175"
+                               FontSize="11" TextWrapping="Wrap" Margin="27,3,0,0" />
+                    <WrapPanel Margin="27,8,0,0">
+                        <Button x:Name="SyncGenerateCodeButton" Content="{x:Static res:Strings.SyncGenerateCodeButton}"
+                                Click="OnSyncGenerateCodeClick" Margin="0,0,7,6" Padding="10,6"
+                                Style="{StaticResource RecordButtonStyle}" />
+                        <Button x:Name="SyncShareProfileButton" Content="{x:Static res:Strings.SyncShareProfileButton}"
+                                Click="OnSyncShareProfileClick" Margin="0,0,7,6" Padding="10,6"
+                                Style="{StaticResource RecordButtonStyle}" />
+                        <Button x:Name="SyncRevokeAccessButton" Content="{x:Static res:Strings.SyncRevokeAccessButton}"
+                                Click="OnSyncRevokeAccessClick" Margin="0,0,7,6" Padding="10,6"
+                                Style="{StaticResource DangerRecordButtonStyle}" />
+                        <Button x:Name="SyncImportCodeButton" Content="{x:Static res:Strings.SyncImportCodeButton}"
+                                Click="OnSyncImportCodeClick" Margin="0,0,7,6" Padding="10,6"
+                                Style="{StaticResource RecordButtonStyle}" />
+                        <Button x:Name="SyncNowButton" Content="{x:Static res:Strings.SyncNowButton}"
+                                Click="OnSyncNowClick" Margin="0,0,7,6" Padding="10,6"
+                                Style="{StaticResource RecordButtonStyle}" />
+                    </WrapPanel>
+                    <TextBlock Text="{x:Static res:Strings.SyncRevokeAccessHint}" Foreground="#8A8175"
+                               FontSize="11" TextWrapping="Wrap" Margin="27,5,0,0" />
+                    <TextBlock x:Name="SyncStatusText" Foreground="#8A8175" FontSize="11"
+                               TextWrapping="Wrap" Margin="27,8,0,0" />
+                    <CheckBox x:Name="SyncAutomaticCheck"
+                              Content="{x:Static res:Strings.SyncAutomaticCheckbox}"
+                              Foreground="#EDE7DC" Background="#2A261F" FontSize="13"
+                              Style="{StaticResource AppCheckBoxStyle}"
+                              Margin="0,12,0,0" Click="OnSyncAutomaticToggled" />
+                    <TextBlock Text="{x:Static res:Strings.SyncAutomaticHint}" Foreground="#8A8175"
+                               FontSize="11" TextWrapping="Wrap" Margin="27,5,0,0" />
+                    <StackPanel Orientation="Horizontal" Margin="27,8,0,0">
+                        <TextBlock Text="{x:Static res:Strings.SyncIntervalLabel}" Foreground="#EDE7DC"
+                                   VerticalAlignment="Center" Margin="0,0,8,0" />
+                        <Border Background="#332F28" CornerRadius="6">
+                            <TextBox x:Name="SyncIntervalValueBox" Width="38" MaxLength="4"
+                                     Background="Transparent" Foreground="#EDE7DC" CaretBrush="#EDE7DC"
+                                     BorderThickness="0" Padding="6,5" TextAlignment="Center"
+                                     PreviewTextInput="OnSyncIntervalPreviewTextInput"
+                                     LostFocus="OnSyncIntervalLostFocus" />
+                        </Border>
+                    </StackPanel>
+                    <TextBlock x:Name="SyncLastSyncText" Foreground="#8A8175" FontSize="11"
+                               Margin="27,7,0,0" />
+                    <StackPanel Orientation="Horizontal" Margin="27,8,0,0">
+                        <TextBlock x:Name="SyncConflictsText" Foreground="#C9A46C" FontSize="11"
+                                   VerticalAlignment="Center" />
+                        <Button x:Name="SyncConflictsButton"
+                                Content="{x:Static res:Strings.SyncConflictsButton}"
+                                Click="OnSyncConflictsClick" Margin="10,0,0,0" Padding="9,5"
+                                Style="{StaticResource RecordButtonStyle}" />
+                    </StackPanel>
+                </StackPanel>
             </StackPanel>
 
             <Border Grid.Column="1" Background="#3C3730" Width="1" HorizontalAlignment="Center" />
@@ -350,6 +598,27 @@
             <TextBlock x:Name="QuickHelpText"
                        Foreground="#8A8175" FontSize="11" TextWrapping="Wrap" Margin="0,8,0,0" LineHeight="18" />
         </StackPanel>
+
+        <Border Background="#3C3730" Height="1" Margin="24,20,24,0" />
+
+        <Grid Margin="24,16,24,0">
+            <StackPanel>
+                <TextBlock Text="{x:Static res:Strings.ApplicationSectionTitle}"
+                           Foreground="#EDE7DC" FontSize="13" FontWeight="SemiBold" />
+                <TextBlock Text="{x:Static app:AppInfo.DisplayVersion}"
+                           Foreground="#8A8175" FontSize="11" Margin="0,5,0,0" />
+            </StackPanel>
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center">
+                <Button Content="{x:Static res:Strings.RestartApplicationButton}"
+                        Padding="12,7" Click="OnRestartClick"
+                        ToolTip="{x:Static res:Strings.RestartAppTooltip}"
+                        Style="{StaticResource RecordButtonStyle}" />
+                <Button Content="{x:Static res:Strings.ExitApplicationButton}"
+                        Margin="8,0,0,0" Padding="12,7" Click="OnExitClick"
+                        ToolTip="{x:Static res:Strings.ExitAppTooltip}"
+                        Style="{StaticResource RecordButtonStyle}" />
+            </StackPanel>
+        </Grid>
     </StackPanel>
     </ScrollViewer>
 </Window>

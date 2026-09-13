@@ -14,9 +14,7 @@ implementar en código", para el contexto de cómo surgió esto.
 El rediseño de pestañas en abanico (`2026-09-02-fanote-fan-tabs-redesign-design.md`)
 cambió la interacción pero dejó fuera de alcance explícitamente el ancho de
 cada pestaña — hoy todas ocupan el ancho completo del panel
-(`EdgeGeometry.ExpandedThickness=220`). Una maqueta posterior (Artifact,
-iterada en 4 rondas,
-`https://claude.ai/code/artifact/25194ada-e021-4222-bc03-722f78250544`)
+(`EdgeGeometry.ExpandedThickness=220`). Una maqueta visual externa, iterada en 4 rondas,
 validó un ancho creciente por índice (`Width ≈ 32 + índice×14`) con
 solape vertical, como un fajo de fichas escalonado — ese diseño **no es
 parte de esta spec**: es trabajo bounded, previo y separado, que se

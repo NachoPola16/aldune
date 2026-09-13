@@ -1,5 +1,6 @@
 using System.Linq;
 using System.Windows;
+using System.Windows.Threading;
 using Fanote.Core;
 using Fanote.Interop;
 
@@ -14,12 +15,21 @@ namespace Fanote.Windowing;
 /// </summary>
 public sealed class AppCoordinator
 {
+    private const int MaxTemplateNotes = 12;
+    private const double TemplateMargin = 24;
+    private const double TemplateGap = 18;
+
     private readonly NotesRepository _repository;
     private readonly AppSettings? _settings;
+    private readonly SettingsService? _settingsService;
+    private readonly SyncService? _syncService;
     private readonly Dictionary<Guid, NoteWindow> _openNoteWindows = new();
     private readonly List<EdgeDockWindow> _docks = new();
+    private Dictionary<Guid, bool>? _noteTopmostBeforeDockMenu;
     private NotesManagerWindow? _notesManagerWindow;
     private SettingsWindow? _settingsWindow;
+    private SyncConflictsWindow? _syncConflictsWindow;
+    private System.Threading.Timer? _autoSyncTimer;
 
     /// <summary>Fabrica de la ventana de ajustes, inyectada por App: el coordinador no tiene por
     /// que saber de SettingsService ni del atajo global, solo de que hay una ventana unica.</summary>
@@ -33,13 +43,33 @@ public sealed class AppCoordinator
 
     public void RebuildDocks() => RebuildDocksAction?.Invoke();
 
-    public AppCoordinator(NotesRepository repository, AppSettings? settings = null)
+    public AppCoordinator(
+        NotesRepository repository,
+        AppSettings? settings = null,
+        SyncService? syncService = null,
+        SettingsService? settingsService = null)
     {
         _repository = repository;
         _settings = settings;
+        _syncService = syncService;
+        _settingsService = settingsService;
     }
 
     public int OpenNoteWindowCount => _openNoteWindows.Count;
+
+    public void OpenSyncConflicts()
+    {
+        if (_syncService is null) return;
+        if (_syncConflictsWindow is { IsVisible: true })
+        {
+            _syncConflictsWindow.Activate();
+            return;
+        }
+
+        _syncConflictsWindow = new SyncConflictsWindow(_syncService, this);
+        _syncConflictsWindow.Closed += (_, _) => _syncConflictsWindow = null;
+        _syncConflictsWindow.Show();
+    }
 
     /// <summary>
     /// Si esta nota ya tiene ventana abierta. El dock lo consulta para ocultar su pestaña: al
@@ -266,7 +296,7 @@ public sealed class AppCoordinator
     /// cascada a partir de cuántas ventanas de nota hay abiertas en cada momento, así que no hace
     /// falta ningún cálculo nuevo aquí para que no queden todas exactamente superpuestas.
     /// </summary>
-    public void OpenAllNotes()
+    public void OpenAllNotes(NoteLayoutTemplate layout = NoteLayoutTemplate.Normal)
     {
         var dock = DockNearCursor();
         if (dock is null) return;
@@ -276,6 +306,179 @@ public sealed class AppCoordinator
             if (IsNoteOpen(note.Id)) continue;
             OpenOrActivateNote(note, dock);
         }
+
+        // TambiÃ©n se ejecuta para Normal: si ya habÃ­a notas abiertas, elegir "Normal cascade"
+        // debe tener un efecto visible y no limitarse a guardar una preferencia para el siguiente
+        // ciclo de abrir/cerrar.
+        Application.Current.Dispatcher.BeginInvoke(DispatcherPriority.Loaded, new Action(() =>
+        {
+            ArrangeOpenNotes(layout, dock);
+        }));
+    }
+
+    public void OpenSyncNotesSelector(Window owner)
+    {
+        if (_settings is null || _settingsService is null) return;
+
+        var selector = new SyncNotesWindow(_repository, _settings, _settingsService)
+        {
+            Owner = owner
+        };
+        selector.ShowDialog();
+    }
+
+    private void ArrangeOpenNotes(NoteLayoutTemplate layout, EdgeDockWindow preferredDock)
+    {
+        var monitors = MonitorEnumerator.EnumerateMonitors();
+        var fallbackMonitor = monitors.FirstOrDefault(m => m.DeviceName == preferredDock.MonitorKey);
+        var windows = _openNoteWindows.Values.ToList();
+
+        foreach (var window in windows)
+        {
+            if (window.WindowState == WindowState.Minimized)
+            {
+                window.WindowState = WindowState.Normal;
+            }
+            window.UpdateLayout();
+        }
+
+        var groups = windows
+            .Select(window =>
+            {
+                var monitor = MonitorLookup.MonitorAt(
+                    window.Left, window.Top, window.Width, window.Height, monitors);
+                return (Window: window, Monitor: monitor ?? fallbackMonitor);
+            })
+            .Where(item => item.Monitor.DeviceName is not null)
+            .GroupBy(item => item.Monitor.DeviceName);
+
+        foreach (var group in groups)
+        {
+            var monitor = group.First().Monitor;
+            ArrangeWindowsOnMonitor(group.Select(item => item.Window).ToList(), monitor.WorkArea, layout);
+        }
+    }
+
+    private static void ArrangeWindowsOnMonitor(
+        IReadOnlyList<NoteWindow> windows,
+        WorkingArea area,
+        NoteLayoutTemplate layout)
+    {
+        if (windows.Count == 0) return;
+
+        double availableWidth = Math.Max(1, area.Width - TemplateMargin * 2);
+        double availableHeight = Math.Max(1, area.Height - TemplateMargin * 2);
+        var templateWindows = windows.Take(MaxTemplateNotes).ToList();
+        var overflowWindows = windows.Skip(MaxTemplateNotes).ToList();
+
+        switch (layout)
+        {
+            case NoteLayoutTemplate.Grid:
+                int gridColumns = GridColumnsFor(
+                    templateWindows.Count,
+                    availableWidth,
+                    availableHeight,
+                    maxColumns: 4);
+                PlaceInCells(templateWindows, area, TemplateMargin, availableWidth, availableHeight, gridColumns);
+                break;
+
+            case NoteLayoutTemplate.Columns:
+                int columnCount = GridColumnsFor(
+                    templateWindows.Count,
+                    availableWidth,
+                    availableHeight,
+                    maxColumns: availableWidth >= availableHeight ? 3 : 2);
+                PlaceInCells(templateWindows, area, TemplateMargin, availableWidth, availableHeight, columnCount);
+                break;
+
+            default:
+                double maxWidth = windows.Max(window => Math.Max(window.Width, window.MinWidth));
+                double maxHeight = windows.Max(window => Math.Max(window.Height, window.MinHeight));
+                double step = Math.Min(
+                    TemplateGap,
+                    Math.Min(
+                        availableWidth > maxWidth ? (availableWidth - maxWidth) / Math.Max(1, windows.Count - 1) : 0,
+                        availableHeight > maxHeight ? (availableHeight - maxHeight) / Math.Max(1, windows.Count - 1) : 0));
+                double totalWidth = maxWidth + step * (windows.Count - 1);
+                double totalHeight = maxHeight + step * (windows.Count - 1);
+                double startLeft = area.X + Math.Max(TemplateMargin, (area.Width - totalWidth) / 2);
+                double startTop = area.Y + Math.Max(TemplateMargin, (area.Height - totalHeight) / 2);
+
+                for (int index = 0; index < windows.Count; index++)
+                {
+                    SetWindowPosition(windows[index], area, startLeft + index * step, startTop + index * step);
+                }
+                break;
+        }
+
+        if (overflowWindows.Count > 0)
+        {
+            // Más allá del límite la plantilla deja de intentar comprimir la pantalla. Las notas
+            // restantes siguen abiertas y se colocan en una pequeña cascada, con sus cabeceras
+            // visibles, para que nunca parezca que han desaparecido.
+            double overflowLeft = area.X + area.Width - TemplateMargin - overflowWindows.Max(window => window.Width);
+            double overflowTop = area.Y + TemplateMargin;
+            for (int index = 0; index < overflowWindows.Count; index++)
+            {
+                SetWindowPosition(
+                    overflowWindows[index],
+                    area,
+                    overflowLeft - index * TemplateGap,
+                    overflowTop + index * TemplateGap);
+            }
+        }
+    }
+
+    private static int GridColumnsFor(int count, double availableWidth, double availableHeight, int maxColumns)
+    {
+        if (count <= 1) return 1;
+
+        bool landscape = availableWidth >= availableHeight;
+        int columns = (int)Math.Ceiling(Math.Sqrt(count * availableWidth / availableHeight));
+
+        // En una pantalla vertical conviene conservar una columna mientras haya pocas notas. En
+        // una horizontal, dos notas ya forman una fila natural. A partir de ahí la raíz cuadrada
+        // mantiene las celdas equilibradas sin crear filas excesivamente altas o anchas.
+        if (count == 2) columns = landscape ? 2 : 1;
+        else if (count == 3) columns = landscape ? 3 : 1;
+
+        return Math.Clamp(columns, 1, Math.Min(maxColumns, count));
+    }
+
+    private static void PlaceInCells(
+        IReadOnlyList<NoteWindow> windows,
+        WorkingArea area,
+        double margin,
+        double availableWidth,
+        double availableHeight,
+        int columnCount)
+    {
+        int rowCount = (int)Math.Ceiling(windows.Count / (double)columnCount);
+        double cellWidth = availableWidth / columnCount;
+        double cellHeight = availableHeight / rowCount;
+
+        for (int index = 0; index < windows.Count; index++)
+        {
+            int column = index % columnCount;
+            int row = index / columnCount;
+            var window = windows[index];
+            double left = area.X + margin + column * cellWidth + (cellWidth - window.Width) / 2;
+            double top = area.Y + margin + row * cellHeight + (cellHeight - window.Height) / 2;
+            SetWindowPosition(window, area, left, top);
+        }
+    }
+
+    private static void SetWindowPosition(NoteWindow window, WorkingArea area, double left, double top)
+    {
+        double targetLeft = Math.Clamp(
+            left,
+            area.X,
+            Math.Max(area.X, area.X + area.Width - window.Width));
+        double targetTop = Math.Clamp(
+            top,
+            area.Y,
+            Math.Max(area.Y, area.Y + area.Height - window.Height));
+        window.MoveToLayoutPosition(targetLeft, targetTop);
     }
 
     /// <summary>
@@ -301,7 +504,44 @@ public sealed class AppCoordinator
     public void ToggleAllNotes()
     {
         if (OpenNoteWindowCount > 0) CloseAllNoteWindows();
-        else OpenAllNotes();
+        else OpenAllNotes(_settings?.DefaultNoteLayout ?? NoteLayoutTemplate.Normal);
+    }
+
+    public void SetDefaultNoteLayout(NoteLayoutTemplate layout)
+    {
+        if (_settings is null) return;
+
+        _settings.DefaultNoteLayout = layout;
+        _settingsService?.Save(_settings);
+    }
+
+    internal void SuspendNotesAboveDockMenu()
+    {
+        if (_noteTopmostBeforeDockMenu is not null) return;
+
+        _noteTopmostBeforeDockMenu = _openNoteWindows.ToDictionary(
+            pair => pair.Key,
+            pair => pair.Value.Topmost);
+
+        foreach (var window in _openNoteWindows.Values)
+        {
+            window.Topmost = false;
+        }
+    }
+
+    internal void RestoreNotesAboveDockMenu()
+    {
+        if (_noteTopmostBeforeDockMenu is null) return;
+
+        foreach (var pair in _noteTopmostBeforeDockMenu)
+        {
+            if (_openNoteWindows.TryGetValue(pair.Key, out var window))
+            {
+                window.Topmost = pair.Value;
+            }
+        }
+
+        _noteTopmostBeforeDockMenu = null;
     }
 
     public void OpenSettings()
@@ -315,16 +555,75 @@ public sealed class AppCoordinator
 
         if (SettingsWindowFactory is null) return;
 
+        var settingsDock = DockNearCursor();
         _settingsWindow = SettingsWindowFactory();
-        DockNearCursor()?.CenterOnThisMonitor(_settingsWindow);
+        settingsDock?.CenterOnThisMonitor(_settingsWindow);
         _settingsWindow.Closed += (_, _) => _settingsWindow = null;
         _settingsWindow.Show();
-        _settingsWindow.PlayOpenAnimation();
+        var shownSettingsWindow = _settingsWindow;
+        shownSettingsWindow.Dispatcher.BeginInvoke(DispatcherPriority.Loaded, new Action(() =>
+        {
+            if (ReferenceEquals(_settingsWindow, shownSettingsWindow) && shownSettingsWindow.IsVisible)
+            {
+                // SizeToContent termina de medir el ScrollViewer al mostrar la ventana. Recentrar
+                // en Loaded evita calcular Top con la altura antigua y cortar la cabecera por arriba.
+                settingsDock?.CenterOnThisMonitor(shownSettingsWindow);
+                shownSettingsWindow.PlayOpenAnimation();
+            }
+        }));
         NativeMethods.ForceActivate(_settingsWindow);
     }
 
     public void RefreshAll()
     {
         foreach (var dock in _docks) dock.Refresh();
+        _notesManagerWindow?.Refresh();
+    }
+
+    public void SetDockView(DockViewKind view, string? tag = null)
+    {
+        if (_settings is null) return;
+        _settings.DockView = view;
+        _settings.DockTagFilter = view == DockViewKind.Tag ? tag : null;
+        _settingsService?.Save(_settings);
+        RefreshAll();
+    }
+
+    /// <summary>Activa o desactiva el sondeo automático según los ajustes actuales.</summary>
+    public void ConfigureAutomaticSync()
+    {
+        _autoSyncTimer?.Dispose();
+        _autoSyncTimer = null;
+
+        if (_syncService is null || _settings is not { SyncEnabled: true, SyncAutomatically: true }) return;
+
+        int minutes = Math.Clamp(_settings.SyncIntervalMinutes, 1, 1440);
+        _autoSyncTimer = new System.Threading.Timer(_ =>
+        {
+            var result = _syncService.Synchronize();
+            if (result.Succeeded)
+            {
+                Application.Current.Dispatcher.BeginInvoke(DispatcherPriority.Background, new Action(RefreshAll));
+            }
+        }, null, TimeSpan.FromMinutes(minutes), TimeSpan.FromMinutes(minutes));
+    }
+
+    /// <summary>Sincroniza y repinta las ventanas abiertas con los datos que haya ganado el merge.</summary>
+    public SyncResult Synchronize()
+    {
+        if (_syncService is null) return new(0, 0, 0, 0, "Sync is not available.");
+        var result = _syncService.Synchronize();
+        if (result.Succeeded)
+        {
+            if (Application.Current.Dispatcher.CheckAccess()) RefreshAll();
+            else Application.Current.Dispatcher.BeginInvoke(DispatcherPriority.Background, new Action(RefreshAll));
+        }
+        return result;
+    }
+
+    public void Dispose()
+    {
+        _autoSyncTimer?.Dispose();
+        _autoSyncTimer = null;
     }
 }

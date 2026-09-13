@@ -34,7 +34,7 @@
 
 - [ ] **Step 1: Create the class library, test project, and WPF app**
 
-Run from the repo root (`c:/Users/nacho/Proyectos/fanote`):
+Run from the repository root:
 
 ```bash
 dotnet new classlib -n Fanote.Core -o src/Fanote.Core --framework net10.0

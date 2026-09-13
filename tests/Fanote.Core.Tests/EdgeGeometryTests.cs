@@ -49,7 +49,8 @@ public class EdgeGeometryTests
     {
         var rect = EdgeGeometry.WindowRect(area, EdgePosition.Top, noteCount: 3);
         Assert.Equal(area.Y + EdgeGeometry.EdgeMargin, rect.Y);
-        Assert.Equal(EdgeGeometry.WindowThickness, rect.Height);
+        Assert.Equal(EdgeGeometry.HorizontalWindowWidth(area, EdgePosition.Top, 3), rect.Width);
+        Assert.Equal(EdgeGeometry.WindowLength(area, EdgePosition.Top, 3), rect.Height);
     }
 
     [Theory]
@@ -57,8 +58,19 @@ public class EdgeGeometryTests
     public void WindowRect_Bottom_IsInsetFromBottomEdgeByMargin(WorkingArea area)
     {
         var rect = EdgeGeometry.WindowRect(area, EdgePosition.Bottom, noteCount: 3);
-        Assert.Equal(area.Y + area.Height - EdgeGeometry.WindowThickness - EdgeGeometry.EdgeMargin, rect.Y);
-        Assert.Equal(EdgeGeometry.WindowThickness, rect.Height);
+        Assert.Equal(area.Y + area.Height - EdgeGeometry.WindowLength(area, EdgePosition.Bottom, 3) - EdgeGeometry.EdgeMargin, rect.Y);
+        Assert.Equal(EdgeGeometry.HorizontalWindowWidth(area, EdgePosition.Bottom, 3), rect.Width);
+        Assert.Equal(EdgeGeometry.WindowLength(area, EdgePosition.Bottom, 3), rect.Height);
+    }
+
+    [Fact]
+    public void TopAndBottomUseTheSameVerticalPreviewGeometryAsTheSideDock()
+    {
+        Assert.Equal(EdgeGeometry.TabHeight, EdgeGeometry.TabStripLength(Area, EdgePosition.Top, 1));
+        Assert.Equal(
+            2 * EdgeGeometry.TabHeight + EdgeGeometry.TabGap,
+            EdgeGeometry.TabStripLength(Area, EdgePosition.Bottom, 2));
+        Assert.Equal(EdgeGeometry.NaturalPitch, EdgeGeometry.PitchFor(Area, EdgePosition.Top, 2));
     }
 
     [Theory]
@@ -70,8 +82,10 @@ public class EdgeGeometryTests
 
         if (edge is EdgePosition.Top or EdgePosition.Bottom)
         {
-            Assert.Equal(Area.X + (Area.Width - length) / 2, rect.X);
-            Assert.Equal(length, rect.Width);
+            double width = EdgeGeometry.HorizontalWindowWidth(Area, edge, 3);
+            Assert.Equal(Area.X + (Area.Width - width) / 2, rect.X);
+            Assert.Equal(width, rect.Width);
+            Assert.Equal(length, rect.Height);
         }
         else
         {
@@ -102,7 +116,7 @@ public class EdgeGeometryTests
     }
 
     [Fact]
-    public void Pitch_OverlapsOnceThereAreEnoughNotes_EvenOnATallMonitor()
+    public void Pitch_OverlapsOnceTheTallMonitorBudgetIsReached()
     {
         // El bug original: con el presupuesto atado solo a la fraccion de pantalla, en un monitor
         // de 2560px de alto las notas cabian sin solaparse y el abanico ocupaba media pantalla —
@@ -111,38 +125,28 @@ public class EdgeGeometryTests
         // Con etiqueta horizontal la pestana bajo de 100 a 52px (dos lineas: titulo y vista
         // previa), asi que caben 7 notas sin solapar en vez de 4. La octava ya solapa, y muy poco:
         // la degradacion es gradual, no un salto.
-        Assert.Equal(EdgeGeometry.NaturalPitch, EdgeGeometry.PitchFor(Vertical, EdgePosition.Right, 7));
-        Assert.True(EdgeGeometry.PitchFor(Vertical, EdgePosition.Right, 8) < EdgeGeometry.NaturalPitch,
-            "con ocho notas ya deberian solaparse, por alto que sea el monitor");
-        Assert.True(EdgeGeometry.PitchFor(Vertical, EdgePosition.Right, 8) > EdgeGeometry.TabHeight,
-            "y con ocho el solape tiene que ser leve, no un salto");
-    }
-
-    [Fact]
-    public void TabStrip_NeverExceedsTheAbsoluteCap_UntilTheLegibilityFloorBites()
-    {
-        for (int n = 1; n <= 14; n++)
-        {
-            double strip = EdgeGeometry.TabStripLength(Vertical, EdgePosition.Right, n);
-            Assert.True(strip <= EdgeGeometry.MaxFanLength + 1,
-                $"con {n} notas el abanico mide {strip}, tope {EdgeGeometry.MaxFanLength}");
-        }
+        Assert.Equal(EdgeGeometry.NaturalPitch, EdgeGeometry.PitchFor(Vertical, EdgePosition.Right, 20));
+        Assert.True(EdgeGeometry.PitchFor(Vertical, EdgePosition.Right, 40) < EdgeGeometry.NaturalPitch,
+            "al alcanzar el presupuesto del monitor alto las notas deben solaparse");
+        Assert.True(EdgeGeometry.PitchFor(Vertical, EdgePosition.Right, 40) > EdgeGeometry.TabHeight,
+            "el solape tiene que ser gradual, no un salto");
     }
 
     [Fact]
     public void Pitch_ShrinksAsNotesPileUp()
     {
         double few = EdgeGeometry.PitchFor(Vertical, EdgePosition.Right, 6);
-        double many = EdgeGeometry.PitchFor(Vertical, EdgePosition.Right, 12);
+        double many = EdgeGeometry.PitchFor(Area, EdgePosition.Right, 20);
         Assert.True(many < few, $"con 12 notas el paso ({many}) deberia ser menor que con 6 ({few})");
         Assert.True(few <= EdgeGeometry.NaturalPitch);
     }
 
     [Fact]
-    public void Pitch_NeverGoesBelowTheLegibilityFloor()
+    public void Pitch_UsesNaturalCardsOnceTheLegibilityFloorWouldBeReached()
     {
-        // Lo que queda visible de cada pestana es un paso, y por tanto cuanta etiqueta se lee.
-        Assert.Equal(EdgeGeometry.MinPitch, EdgeGeometry.PitchFor(Vertical, EdgePosition.Right, 1000));
+        // Cuando el solape ya no puede conservar una franja legible, el exceso pasa al scroll y
+        // las tarjetas vuelven a separarse como en el diseño normal.
+        Assert.Equal(EdgeGeometry.NaturalPitch, EdgeGeometry.PitchFor(Vertical, EdgePosition.Right, 1000));
     }
 
     [Fact]
@@ -152,12 +156,11 @@ public class EdgeGeometryTests
     }
 
     [Fact]
-    public void TabStrip_StaysWithinTheScreenBudget_UntilTheFloorBites()
+    public void TabStrip_StaysWithinTheScreenBudget_UntilScrollTakesOver()
     {
         // El punto del solape: mientras el paso pueda encogerse, el abanico ocupa lo mismo haya 5
         // notas o 12, en vez de crecer sin parar o de dejar las sobrantes sin dibujar.
-        double budget = Math.Min(Vertical.Height * EdgeGeometry.MaxScreenFraction,
-            EdgeGeometry.MaxFanLength) - EdgeGeometry.FooterLength - EdgeGeometry.TabShadowHeadroom;
+        double budget = EdgeGeometry.FanBudget(Vertical, EdgePosition.Right);
 
         for (int n = 5; n <= 40; n++)
         {
@@ -171,10 +174,11 @@ public class EdgeGeometryTests
             }
             else
             {
-                // Pasado el suelo de legibilidad manda el suelo, no el presupuesto: preferimos
-                // que el abanico se pase de largo (y scrollee) antes que dejar las pestanas tan
-                // juntas que no se lea cual es cual.
-                Assert.Equal(EdgeGeometry.MinPitch, pitch);
+                // Al llegar al suelo de legibilidad, las tarjetas recuperan su paso natural y el
+                // exceso se desplaza dentro del ScrollViewer.
+                Assert.Equal(EdgeGeometry.NaturalPitch, pitch);
+                Assert.True(strip > budget,
+                    $"con {n} notas el abanico debe pasar al scroll");
             }
         }
     }
@@ -241,9 +245,9 @@ public class EdgeGeometryTests
     public void HorizontalLabel_NeedsFarLessBandThanAVerticalOne()
     {
         // El motivo de pasar a etiquetas horizontales: con solape la franja visible de cada pestana
-        // es un paso, y MinPitch (24) da de sobra para una linea de texto. Una etiqueta vertical
+        // es un paso, y MinPitch (32) da de sobra para una linea de texto. Una etiqueta vertical
         // necesitaba ~90px, asi que solo funcionaba sin solapar.
-        Assert.True(EdgeGeometry.MinPitch >= 20);
+        Assert.True(EdgeGeometry.MinPitch >= 30);
         Assert.True(EdgeGeometry.MinPitch < EdgeGeometry.TabHeight);
     }
 
@@ -253,7 +257,7 @@ public class EdgeGeometryTests
         // Media linea de vista previa asomando por debajo de la pestana siguiente parece un fallo
         // de render, no una decision: pasado ese punto se esconde entera y queda solo el titulo.
         Assert.True(EdgeGeometry.ShowsPreview(Vertical, EdgePosition.Right, 5));
-        Assert.False(EdgeGeometry.ShowsPreview(Vertical, EdgePosition.Right, 40));
+        Assert.False(EdgeGeometry.ShowsPreview(Area, EdgePosition.Right, 20));
     }
 
     [Fact]
@@ -357,12 +361,67 @@ public class EdgeGeometryTests
     }
 
     [Fact]
+    public void RestDashes_NeverExceedTheSideContentViewport()
+    {
+        // En los laterales la tira está dentro de ContentGrid, que deja ShadowMargin arriba y
+        // abajo. La ventana completa no representa el espacio que realmente puede pintar el rail.
+        foreach (int n in new[] { 20, 40, 100, 200 })
+        {
+            int dashes = EdgeGeometry.VisibleRestDashes(Vertical, EdgePosition.Right, n);
+            double drawn = EdgeGeometry.RestStripLength(dashes) + EdgeGeometry.RestContainerPad * 2;
+            double viewport = EdgeGeometry.WindowLength(Vertical, EdgePosition.Right, n)
+                - EdgeGeometry.ShadowMargin * 2;
+
+            Assert.True(drawn <= viewport + 0.001,
+                $"con {n} notas la tira mide {drawn} y el viewport real {viewport}");
+        }
+    }
+
+    [Fact]
     public void RestDashes_WithFewNotes_ShowsThemAll()
     {
         foreach (int n in new[] { 0, 1, 4, 8 })
         {
             Assert.Equal(n, EdgeGeometry.VisibleRestDashes(Vertical, EdgePosition.Right, n));
         }
+    }
+
+    [Theory]
+    [InlineData(EdgePosition.Top)]
+    [InlineData(EdgePosition.Bottom)]
+    public void HorizontalRestStrip_FitsTheDashesItAdvertises(EdgePosition edge)
+    {
+        const int noteCount = 7;
+        int dashes = EdgeGeometry.VisibleRestDashes(Area, edge, noteCount);
+        double drawn = EdgeGeometry.RestStripLength(edge, dashes) + EdgeGeometry.RestContainerPad * 2;
+
+        Assert.Equal(noteCount, dashes);
+        Assert.True(drawn <= EdgeGeometry.WindowThickness);
+    }
+
+    [Theory]
+    [InlineData(EdgePosition.Top)]
+    [InlineData(EdgePosition.Bottom)]
+    public void HorizontalRestStrip_ShowsTenNotesWithoutClipping(EdgePosition edge)
+    {
+        Assert.Equal(10, EdgeGeometry.VisibleRestDashes(Area, edge, 10));
+        Assert.True(
+            EdgeGeometry.RestStripLength(edge, 10) + EdgeGeometry.RestContainerPad * 2
+                <= EdgeGeometry.HorizontalWindowWidth(Area, edge, 10));
+    }
+
+    [Theory]
+    [InlineData(EdgePosition.Top)]
+    [InlineData(EdgePosition.Bottom)]
+    public void HorizontalDockWidthGrowsWithTheNumberOfNotes(EdgePosition edge)
+    {
+        double expectedThree = Math.Max(
+            EdgeGeometry.WindowThickness,
+            EdgeGeometry.RestStripLength(edge, 3) + 2 * EdgeGeometry.RestContainerPad);
+        Assert.Equal(expectedThree, EdgeGeometry.HorizontalWindowWidth(Area, edge, 3));
+        Assert.True(
+            EdgeGeometry.HorizontalWindowWidth(Area, edge, 10)
+                > EdgeGeometry.HorizontalWindowWidth(Area, edge, 3));
     }
 
     [Fact]

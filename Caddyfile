@@ -1,0 +1,7 @@
+{$FANOTE_SYNC_DOMAIN} {
+    reverse_proxy fanote-sync:8080
+
+    header {
+        Strict-Transport-Security "max-age=31536000; includeSubDomains"
+    }
+}

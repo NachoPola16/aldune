@@ -76,6 +76,42 @@ public sealed class NotesDatabase
                 NoteId TEXT PRIMARY KEY NOT NULL,
                 DueAt TEXT NOT NULL
             );
+
+            CREATE TABLE IF NOT EXISTS Tag (
+                Id TEXT PRIMARY KEY NOT NULL,
+                Name TEXT NOT NULL COLLATE NOCASE UNIQUE
+            );
+
+            CREATE TABLE IF NOT EXISTS NoteTag (
+                NoteId TEXT NOT NULL,
+                TagId TEXT NOT NULL,
+                PRIMARY KEY (NoteId, TagId)
+            );
+
+            -- Las eliminaciones permanentes se conservan como tombstones para que una copia antigua
+            -- de otro dispositivo no haga reaparecer la nota al sincronizar.
+            CREATE TABLE IF NOT EXISTS SyncTombstone (
+                NoteId TEXT PRIMARY KEY NOT NULL,
+                DeletedAt TEXT NOT NULL,
+                DeviceId TEXT NOT NULL
+            );
+
+            -- A conflict keeps only the losing version, encrypted with the local database key.
+            -- It is a recovery queue, not a second sync source: dismissing it never changes the
+            -- canonical remote version, while restoring it deliberately applies that version.
+            CREATE TABLE IF NOT EXISTS SyncConflict (
+                Id TEXT PRIMARY KEY NOT NULL,
+                NoteId TEXT NOT NULL,
+                OccurredAt TEXT NOT NULL,
+                WinnerUpdatedAt TEXT NOT NULL,
+                WinnerDeviceId TEXT NOT NULL,
+                LosingUpdatedAt TEXT NOT NULL,
+                LosingDeviceId TEXT NOT NULL,
+                LosingTombstone INTEGER NOT NULL,
+                EncryptedNote BLOB,
+                NoteNonce BLOB,
+                NoteTag BLOB
+            );
             """;
         command.ExecuteNonQuery();
     }

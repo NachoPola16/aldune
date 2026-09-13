@@ -9,7 +9,11 @@
         Topmost="True"
         ResizeMode="NoResize"
         AllowsTransparency="True"
-        Background="Transparent">
+        Background="Transparent"
+        UseLayoutRounding="True"
+        SnapsToDevicePixels="True"
+        TextOptions.TextFormattingMode="Display"
+        PreviewKeyDown="OnDockPreviewKeyDown">
     <!-- AllowsTransparency, a diferencia del resto de la app. Antes la forma del dock la recortaba
          SetWindowRgn, y una región es una máscara de 1 BIT: un píxel está dentro o fuera, sin
          medios tonos, así que toda curva salía escalonada — las esquinas de las pestañas y sobre
@@ -29,6 +33,18 @@
         <local:NoteLabelColorConverter x:Key="NoteLabelColorConverter" />
         <local:NoteSnippetConverter x:Key="NoteSnippetConverter" />
 
+        <ItemsPanelTemplate x:Key="HorizontalItemsPanelTemplate">
+            <StackPanel Orientation="Horizontal" />
+        </ItemsPanelTemplate>
+
+        <DataTemplate x:Key="HorizontalRestDashTemplate">
+            <Border Background="{Binding Color}"
+                    Width="26" Height="12"
+                    Margin="0,0,5,0"
+                    HorizontalAlignment="Center"
+                    CornerRadius="6" />
+        </DataTemplate>
+
         <!-- Hacia ARRIBA (Direction 95), no hacia abajo. Las pestañas se apilan hacia abajo y cada
              una tapa a la anterior, así que una sombra descendente cae justo donde la siguiente la
              oculta y no separa nada: con solape leve el abanico se leía como un bloque macizo.
@@ -36,6 +52,12 @@
              exactamente como se ve un mazo escalonado. Comprobado contra las tres variantes
              renderizadas en aislamiento. -->
         <DropShadowEffect x:Key="CardShadow" BlurRadius="9" ShadowDepth="3" Direction="95"
+                          Color="#000000" Opacity="0.38" />
+
+        <DropShadowEffect x:Key="CardShadowTop" BlurRadius="9" ShadowDepth="3" Direction="270"
+                          Color="#000000" Opacity="0.38" />
+
+        <DropShadowEffect x:Key="CardShadowBottom" BlurRadius="9" ShadowDepth="3" Direction="90"
                           Color="#000000" Opacity="0.38" />
 
         <!-- Los botones no se apilan, así que su sombra sí cae hacia abajo como es natural. -->
@@ -72,7 +94,7 @@
                              OnTabLoaded espeja CornerRadius/BorderThickness de CardBorder y
                              SheenBorder (y cambia su Background a TabSheenLeftEdge), porque entonces
                              es el lado IZQUIERDO el que va a ras del canto real de la pantalla. -->
-                        <Grid Effect="{StaticResource CardShadow}">
+                        <Grid x:Name="CardRoot" Effect="{StaticResource CardShadow}">
                             <Border x:Name="CardBorder"
                                     Background="{TemplateBinding Background}"
                                     BorderBrush="{Binding Color, Converter={StaticResource NoteRimConverter}}"
@@ -142,6 +164,7 @@
             <Setter Property="Width" Value="34" />
             <Setter Property="Height" Value="34" />
             <Setter Property="Margin" Value="10,0,0,0" />
+            <Setter Property="FocusVisualStyle" Value="{x:Null}" />
             <Setter Property="Foreground" Value="#C9C0B2" />
             <Setter Property="Background" Value="#3C3730" />
             <Setter Property="Template">
@@ -172,6 +195,64 @@
                 </Setter.Value>
             </Setter>
         </Style>
+        <Style x:Key="ScrollArrowButtonStyle" TargetType="Button">
+            <Setter Property="Width" Value="22" />
+            <Setter Property="Height" Value="22" />
+            <Setter Property="Padding" Value="0" />
+            <Setter Property="Margin" Value="0,2" />
+            <Setter Property="Foreground" Value="#E8D8C5" />
+            <Setter Property="Background" Value="#B52A241E" />
+            <Setter Property="BorderBrush" Value="#D08F7965" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="ArrowBorder"
+                                Background="{TemplateBinding Background}"
+                                BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="{TemplateBinding BorderThickness}"
+                                CornerRadius="11">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="ArrowBorder" Property="Background" Value="#D14A3D31" />
+                                <Setter TargetName="ArrowBorder" Property="BorderBrush" Value="#F0C7A5" />
+                            </Trigger>
+                            <Trigger Property="IsPressed" Value="True">
+                                <Setter TargetName="ArrowBorder" Property="Background" Value="#E05B4939" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- El ContextMenu nativo trae un marco y una sombra del tema de Windows que no pertenecen
+             al dock. El panel interior ya dibuja su propia superficie, radio y sombra, asÃ­ que el
+             contenedor del menÃº solo debe presentar los elementos sin aÃ±adir otra caja. -->
+        <Style x:Key="DockContextMenuStyle" TargetType="ContextMenu">
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="BorderBrush" Value="Transparent" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="Padding" Value="0" />
+            <Setter Property="FocusVisualStyle" Value="{x:Null}" />
+            <Setter Property="OverridesDefaultStyle" Value="True" />
+            <Setter Property="HasDropShadow" Value="False" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ContextMenu">
+                        <Border Background="Transparent" Padding="0">
+                            <ItemsPresenter />
+                        </Border>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- Salir es una acción secundaria: está disponible, pero no debe competir visualmente con
+             crear nota, gestionar u organizar. El icono de encendido comunica salir de Fanote sin
+             confundirse con la X de cerrar una nota. -->
     </Window.Resources>
 
     <!-- Margen asimétrico: sin derecha. WindowThickness reserva UN ShadowMargin, no dos, porque
@@ -249,12 +330,30 @@
                  Sin esto, arrastrar una pestaña hacia abajo lo bastante para solapar con la fila
                  del pie la dejaba por detrás de los botones (reportado por el usuario,
                  2026-09-11). -->
-            <ScrollViewer x:Name="TabsScroll"
-                          Grid.Row="0"
-                          Panel.ZIndex="1"
-                          VerticalAlignment="Center"
-                          VerticalScrollBarVisibility="Auto"
-                          HorizontalScrollBarVisibility="Disabled">
+            <Grid x:Name="NotesColumn"
+                  Width="208"
+                  HorizontalAlignment="Center"
+                  VerticalAlignment="Stretch"
+                  Panel.ZIndex="1">
+                <ScrollViewer x:Name="TabsScroll"
+                              VerticalAlignment="Stretch"
+                              Focusable="True"
+                              Background="Transparent"
+                              BorderBrush="Transparent"
+                              BorderThickness="0"
+                              FocusVisualStyle="{x:Null}"
+                              PreviewMouseWheel="OnTabsPreviewMouseWheel"
+                              VerticalScrollBarVisibility="Hidden"
+                              HorizontalScrollBarVisibility="Disabled">
+                <!-- El desplazamiento sigue disponible con la rueda, pero la barra del sistema no
+                     debe reservar una columna invisible: esa columna estrechaba el viewport y
+                     recortaba el borde derecho de las tarjetas. -->
+                <ScrollViewer.Resources>
+                    <Style TargetType="ScrollBar">
+                        <Setter Property="Width" Value="0" />
+                        <Setter Property="Visibility" Value="Hidden" />
+                    </Style>
+                </ScrollViewer.Resources>
                 <!-- Margen = EdgeGeometry.TabShadowHeadroom (14). Va aquí, dentro del contenido
                      desplazable, y no como Padding del ScrollViewer: el recorte del viewport cae
                      justo en ese borde, así que como relleno la sombra se seguiría perdiendo. Sin
@@ -270,6 +369,8 @@
                                     HorizontalAlignment="Right"
                                     Click="OnTabClick"
                                     Loaded="OnTabLoaded"
+                                    MouseEnter="OnTabMouseEnter"
+                                    MouseLeave="OnTabMouseLeave"
                                     MouseRightButtonUp="OnTabRightClick"
                                     PreviewMouseLeftButtonDown="OnTabDragStart"
                                     PreviewMouseMove="OnTabDragMove"
@@ -279,7 +380,69 @@
                         </DataTemplate>
                     </ItemsControl.ItemTemplate>
                 </ItemsControl>
-            </ScrollViewer>
+                </ScrollViewer>
+
+            <!-- Indicador propio del dock: queda superpuesto al borde de las tarjetas y no consume
+                 ancho del viewport como el ScrollBar de WPF. El desplazamiento sigue haciéndose
+                 con la rueda; aquí solo mostramos la posición y cuánto contenido queda. -->
+                <Grid x:Name="ScrollOverlay"
+                      Width="12"
+                      Height="{Binding ActualHeight, ElementName=TabsScroll}"
+                      HorizontalAlignment="Right"
+                      VerticalAlignment="Center"
+                      Panel.ZIndex="2"
+                      IsHitTestVisible="True"
+                      Cursor="Hand"
+                      MouseLeftButtonDown="OnScrollIndicatorMouseLeftButtonDown"
+                      MouseMove="OnScrollIndicatorMouseMove"
+                      MouseLeftButtonUp="OnScrollIndicatorMouseLeftButtonUp"
+                      Visibility="Collapsed">
+                <Border x:Name="ScrollRailTrack"
+                        Width="12"
+                        HorizontalAlignment="Center"
+                        VerticalAlignment="Stretch"
+                        Margin="0,8"
+                        Background="#B52A241E"
+                        CornerRadius="4"
+                        BorderBrush="#C08B7461"
+                        BorderThickness="1" />
+                <Canvas x:Name="ScrollRailCanvas" Margin="0,8">
+                    <Border x:Name="ScrollRailThumb"
+                            Width="8"
+                            Height="32"
+                            Background="#E1C2A88F"
+                            BorderBrush="#F2DCC2"
+                            BorderThickness="1"
+                            CornerRadius="4" />
+                </Canvas>
+                </Grid>
+
+            <!-- En los docks superior e inferior la barra vertical se sustituye por una indicaciÃ³n
+                 de navegaciÃ³n mÃ¡s natural para la columna de tarjetas: dos flechas pequeÃ±as,
+                 colocadas en el mismo canto que ocuparÃ­a el rail. La rueda sigue desplazando la
+                 lista y las flechas del teclado funcionan cuando el dock tiene el foco. -->
+                <StackPanel x:Name="ScrollArrowOverlay"
+                            Width="26"
+                            HorizontalAlignment="Right"
+                            VerticalAlignment="Center"
+                            Panel.ZIndex="3"
+                            Visibility="Collapsed">
+                <Button PreviewMouseLeftButtonDown="OnScrollArrowMouseDown"
+                        PreviewMouseLeftButtonUp="OnScrollArrowMouseUp"
+                        Tag="-1"
+                        Style="{StaticResource ScrollArrowButtonStyle}"
+                        ToolTip="{x:Static res:Strings.ScrollNotesUpTooltip}">
+                    <TextBlock Text="↑" FontSize="13" FontWeight="SemiBold" />
+                </Button>
+                <Button PreviewMouseLeftButtonDown="OnScrollArrowMouseDown"
+                        PreviewMouseLeftButtonUp="OnScrollArrowMouseUp"
+                        Tag="1"
+                        Style="{StaticResource ScrollArrowButtonStyle}"
+                        ToolTip="{x:Static res:Strings.ScrollNotesDownTooltip}">
+                    <TextBlock Text="↓" FontSize="13" FontWeight="SemiBold" />
+                </Button>
+                </StackPanel>
+            </Grid>
 
             <!-- Alineado a la derecha igual que las pestañas, con un respiro de 8px para que el
                  panel no quede pegado al canto de la pantalla y su sombra tenga dónde caer. Antes
@@ -307,14 +470,22 @@
                          una mesa de post-its) — pedido explícito del usuario para no tener que
                          abrirlas ni cerrarlas de una en una. Ver AppCoordinator.ToggleAllNotes. -->
                     <Button x:Name="OpenAllButton" Click="OnOpenAllClick"
+                            PreviewMouseRightButtonUp="OnOpenAllRightClick"
                             Style="{StaticResource CircularIconButtonStyle}"
                             ToolTip="{x:Static res:Strings.OpenAllNotesTooltip}">
                         <TextBlock Text="&#xE8A9;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" FontSize="15" />
                     </Button>
                     <Button x:Name="ManageArchiveButton" Click="OnManageArchiveClick"
+                            PreviewMouseRightButtonUp="OnManageArchiveRightClick"
                             Style="{StaticResource CircularIconButtonStyle}"
                             ToolTip="{x:Static res:Strings.ManageNotesTooltip}">
                         <TextBlock Text="&#xE713;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" FontSize="15" />
+                    </Button>
+                    <Button x:Name="SyncButton" Click="OnSyncClick"
+                            PreviewMouseRightButtonUp="OnSyncRightClick"
+                            Style="{StaticResource CircularIconButtonStyle}"
+                            ToolTip="{x:Static res:Strings.SyncNowButton}">
+                        <TextBlock Text="↻" FontSize="17" />
                     </Button>
                     <!-- Crear nota es la acción principal del dock, así que pesa más que el
                          engranaje: más grande y más clara. Ir las dos iguales las dejaba a la par
@@ -328,28 +499,123 @@
                     </Button>
                 </StackPanel>
             </Border>
+
+            <!-- Popup propio en vez de ContextMenu: el ContextMenu de WPF conserva una capa de
+                 foco del tema del sistema aunque se reemplace su plantilla, y esa capa aparecía
+                 como el rectángulo azul alrededor del menú. -->
+            <Popup x:Name="OpenAllMenuPopup"
+                   AllowsTransparency="True"
+                   Focusable="False"
+                   StaysOpen="False"
+                   PopupAnimation="Fade"
+                   Placement="Bottom"
+                   PlacementTarget="{Binding ElementName=OpenAllButton}"
+                   Opened="OnOpenAllMenuOpened"
+                   Closed="OnOpenAllMenuClosed">
+                <Border Background="#2A261F" CornerRadius="10" Padding="8">
+                    <Border.Effect>
+                        <DropShadowEffect BlurRadius="16" ShadowDepth="3" Direction="270"
+                                          Color="#000000" Opacity="0.5" />
+                    </Border.Effect>
+                    <StackPanel MinWidth="190">
+                        <TextBlock Text="{x:Static res:Strings.OpenAllModeTitle}"
+                                   Foreground="#C8B9A8" FontSize="11"
+                                   FontWeight="SemiBold" Margin="8,3,8,6" />
+                        <Button Content="{x:Static res:Strings.OpenAllNormal}"
+                                Click="OnOpenAllNormalClick"
+                                Style="{StaticResource NoteMenuItemStyle}" />
+                        <Button Content="{x:Static res:Strings.OpenAllGrid}"
+                                Click="OnOpenAllGridClick"
+                                Style="{StaticResource NoteMenuItemStyle}" />
+                        <Button Content="{x:Static res:Strings.OpenAllColumns}"
+                                Click="OnOpenAllColumnsClick"
+                                Style="{StaticResource NoteMenuItemStyle}" />
+                        <Border Background="#4A443B" Height="1" Margin="0,6,0,6" />
+                        <Button Content="{x:Static res:Strings.CloseAllNotes}"
+                                Click="OnCloseAllClick"
+                                Style="{StaticResource NoteMenuDangerStyle}" />
+                    </StackPanel>
+                </Border>
+            </Popup>
+
+            <Popup x:Name="DockViewPopup"
+                   AllowsTransparency="True" Focusable="False" StaysOpen="False"
+                   PopupAnimation="Fade" PlacementTarget="{Binding ElementName=DockViewButton}"
+                   Opened="OnDockViewPopupOpened" Closed="OnDockViewPopupClosed">
+                <Border Background="#2A261F" CornerRadius="10" Padding="8">
+                    <Border.Effect>
+                        <DropShadowEffect BlurRadius="16" ShadowDepth="3" Direction="270"
+                                          Color="#000000" Opacity="0.5" />
+                    </Border.Effect>
+                    <StackPanel MinWidth="190">
+                        <TextBlock Text="{x:Static res:Strings.DockViewTitle}"
+                                   Foreground="#C8B9A8" FontSize="11" FontWeight="SemiBold"
+                                   Margin="8,3,8,6" />
+                        <Button Content="{x:Static res:Strings.DockViewActive}" Tag="Active"
+                                Click="OnDockViewChoiceClick" Style="{StaticResource NoteMenuItemStyle}" />
+                        <Button Content="{x:Static res:Strings.DockViewArchived}" Tag="Archived"
+                                Click="OnDockViewChoiceClick" Style="{StaticResource NoteMenuItemStyle}" />
+                        <Button Content="{x:Static res:Strings.DockViewTrash}" Tag="Trashed"
+                                Click="OnDockViewChoiceClick" Style="{StaticResource NoteMenuDangerStyle}" />
+                        <Border Background="#4A443B" Height="1" Margin="0,6,0,6" />
+                        <TextBlock Text="{x:Static res:Strings.DockViewTags}"
+                                   Foreground="#C8B9A8" FontSize="11" Margin="8,0,8,4" />
+                        <StackPanel x:Name="DockTagItems" />
+                        <TextBlock x:Name="DockNoTagsText" Text="{x:Static res:Strings.DockViewNoTags}"
+                                   Foreground="#81786C" FontSize="11" Margin="8,4,8,2"
+                                   Visibility="Collapsed" />
+                    </StackPanel>
+                </Border>
+            </Popup>
+
         </Grid>
 
         <!-- Clic derecho en una pestaña: cambiar color, archivar o tirar a la papelera sin abrir la
              nota. Antes cambiar el color obligaba a abrirla, leerla y cerrarla. Placement="MousePoint"
              lo saca donde se pulsó; mientras está abierto, PollHoverState no colapsa el abanico (si
              no, mover el ratón hacia el menú lo cerraría bajo los pies). -->
-        <Popup x:Name="TabMenuPopup" StaysOpen="False" AllowsTransparency="True"
-               PopupAnimation="Fade" Placement="MousePoint">
-            <Border Background="#2A261F" CornerRadius="10" Padding="8" Margin="10">
+         <Popup x:Name="TabMenuPopup" StaysOpen="False" AllowsTransparency="True"
+                PopupAnimation="Fade" Placement="MousePoint" HorizontalOffset="6" VerticalOffset="6">
+            <Border x:Name="TabMenuSurface"
+                    Background="#2A261F" CornerRadius="10" Padding="8"
+                    MouseEnter="OnTabMenuMouseEnter"
+                    MouseLeave="OnTabMenuMouseLeave">
                 <Border.Effect>
                     <DropShadowEffect BlurRadius="16" ShadowDepth="3" Direction="270"
                                       Color="#000000" Opacity="0.5" />
                 </Border.Effect>
                 <StackPanel MinWidth="186">
                     <StackPanel x:Name="TabMenuSwatches" Orientation="Horizontal" Margin="6,4,6,8" />
+                    <Button Content="{x:Static res:Strings.CustomColor}" Click="OnTabMenuCustomColorClick"
+                            Style="{StaticResource NoteMenuItemStyle}" />
                     <Border Background="#3C3730" Height="1" Margin="0,0,0,4" />
                     <Button Content="{x:Static res:Strings.OpenNote}" Click="OnTabMenuOpenClick"
                             Style="{StaticResource NoteMenuItemStyle}" />
-                    <Button Content="{x:Static res:Strings.Archive}" Click="OnTabMenuArchiveClick"
+                    <Button x:Name="TabMenuArchiveButton" Content="{x:Static res:Strings.Archive}"
+                            Click="OnTabMenuArchiveClick"
                             Style="{StaticResource NoteMenuItemStyle}" />
-                    <Button Content="{x:Static res:Strings.MoveToTrash}" Click="OnTabMenuTrashClick"
+                    <Button Content="{x:Static res:Strings.NoteTags}" Click="OnTabMenuTagsClick"
+                            Style="{StaticResource NoteMenuItemStyle}" />
+                    <Button x:Name="TabMenuTrashButton" Content="{x:Static res:Strings.MoveToTrash}"
+                            Click="OnTabMenuTrashClick"
                             Style="{StaticResource NoteMenuDangerStyle}" />
+                </StackPanel>
+            </Border>
+        </Popup>
+
+        <Popup x:Name="TagEditorPopup" AllowsTransparency="True" Focusable="False"
+               StaysOpen="False" PopupAnimation="Fade" Placement="MousePoint">
+            <Border Background="#2A261F" CornerRadius="10" Padding="12">
+                <StackPanel Width="230">
+                    <TextBlock Text="{x:Static res:Strings.NoteTags}" Foreground="#F5F0E6"
+                               FontSize="12" FontWeight="SemiBold" Margin="2,0,2,7" />
+                    <TextBlock Text="{x:Static res:Strings.NoteTagsHint}" Foreground="#A99D8D"
+                               FontSize="11" TextWrapping="Wrap" Margin="2,0,2,7" />
+                    <TextBox x:Name="TagEditorTextBox" Height="30" Padding="7,4"
+                             Background="#403A32" Foreground="#F5F0E6" BorderBrush="#62594D"
+                             CaretBrush="#F5F0E6" />
+                    <Button Content="{x:Static res:Strings.SaveTags}" Click="OnSaveTagsClick"
+                            Style="{StaticResource NoteMenuItemStyle}" Margin="0,8,0,0" />
                 </StackPanel>
             </Border>
         </Popup>

@@ -3,9 +3,43 @@ obj/
 .vs/
 *.user
 
-# Worktrees y estado local de Claude Code: nunca deben versionarse.
+# Worktrees y estado local de herramientas: nunca deben versionarse.
 .claude/
 
 # Salida de `dotnet publish -p:PublishProfile=portable`: 80 MB de .NET autocontenido que se
 # regeneran con un comando. Lo que se versiona es el perfil, no su resultado.
 publish/
+dist/
+
+# Informes y artefactos locales de herramientas de análisis.
+graphify-out/
+
+# Datos locales de ejecución si alguna prueba manual o configuración alternativa los deja en el
+# directorio del proyecto. La aplicación normal los guarda en %LOCALAPPDATA%\Fanote.
+notes.db
+notes.db-*
+settings.json
+settings.json.*
+*.corrupt-*
+
+# Logs, volcados y archivos temporales.
+*.log
+*.dmp
+*.tmp
+*.bak
+
+# Credenciales o certificados que nunca deben terminar en el repositorio.
+.env
+.env.*
+!.env.example
+*.pfx
+*.p12
+*.pem
+*.key
+
+# Configuración local habitual de otros editores y herramientas.
+.idea/
+.vscode/
+*.suo
+*.userosscache
+*.sln.docstates

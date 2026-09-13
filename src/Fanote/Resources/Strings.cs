@@ -24,7 +24,7 @@ public static class Strings
 
     // --- General / compartido entre ventanas -----------------------------------------------------
 
-    public static string AppName => "Fanote";
+    public static string AppName => "Aldune";
     public static string ReminderManyDue(int count) => T($"{count} reminders pending", $"{count} recordatorios pendientes");
     public static string Archive => T("Archive", "Archivar");
     public static string Restore => T("Restore", "Restaurar");
@@ -47,6 +47,24 @@ public static class Strings
     public static string CloseTooltip => T("Close (Esc)", "Cerrar (Esc)");
     public static string ConvertToTask => T("Convert to task", "Convertir en tarea");
     public static string ConvertToBullet => T("Convert to list", "Convertir en lista");
+    public static string CustomColor => T("Choose another color…", "Elegir otro color…");
+    public static string CustomColorContrastError => T(
+        "Choose a lighter color so the note text stays readable.",
+        "Elige un color más claro para que el texto de la nota siga siendo legible.");
+    public static string CustomColorWindowTitle => T("Custom note color", "Color personalizado de la nota");
+    public static string CustomColorWindowHint => T(
+        "Choose a light tone so the note stays easy to read.",
+        "Elige un tono claro para que la nota siga siendo fácil de leer.");
+    public static string CustomColorPreview => T("Preview", "Vista previa");
+    public static string CustomColorSpectrumHint => T(
+        "Pick a tone visually, then fine-tune it below.",
+        "Elige un tono visualmente y ajÃºstalo debajo.");
+    public static string CustomColorHexLabel => T("HEX color", "Color HEX");
+    public static string CustomColorRgbLabel => T("Fine tune with RGB", "Ajuste fino con RGB");
+    public static string CustomColorReadable => T("Readable text", "Texto legible");
+    public static string CustomColorInvalidHex => T("Enter a color like #F5E3B3.", "Escribe un color como #F5E3B3.");
+    public static string CustomColorCancel => T("Cancel", "Cancelar");
+    public static string CustomColorApply => T("Use this color", "Usar este color");
     public static string RestoreSize => T("Restore size", "Restaurar tamaño");
     public static string ExportToMarkdown => T("Export to Markdown", "Exportar a Markdown");
     public static string MarkdownFileFilter => T("Markdown file (*.md)|*.md", "Archivo Markdown (*.md)|*.md");
@@ -67,8 +85,32 @@ public static class Strings
 
     public static string ManageNotesTooltip => T("Manage notes", "Gestionar notas");
     public static string OpenAllNotesTooltip => T("Open all notes (closes them all if they're already open)", "Abrir todas las notas (las cierra todas si ya están abiertas)");
+    public static string OpenAllMenuTitle => T("Open all with...", "Abrir todas con...");
+    public static string OpenAllModeTitle => T("Opening mode", "Modo de apertura");
+    public static string OpenAllNormal => T("Normal cascade", "Cascada normal");
+    public static string CloseAllNotes => T("Close all notes", "Cerrar todas las notas");
+    public static string OpenAllGrid => T("Grid", "Cuadrícula");
+    public static string OpenAllColumns => T("Columns", "Columnas");
     public static string NewNoteTooltip => T("New note", "Nueva nota");
+    public static string ExitAppTooltip => T("Exit Aldune", "Salir de Aldune");
+    public static string ScrollNotesUpTooltip => T("Show earlier notes", "Ver notas anteriores");
+    public static string ScrollNotesDownTooltip => T("Show later notes", "Ver notas siguientes");
     public static string OpenNote => T("Open", "Abrir");
+    public static string DockViewTooltip => T("Dock view", "Vista del dock");
+    public static string DockViewTitle => T("Show in dock", "Mostrar en el dock");
+    public static string DockViewActive => T("Active notes", "Notas activas");
+    public static string DockViewArchived => T("Archived notes", "Notas archivadas");
+    public static string DockViewTrash => T("Trash", "Papelera");
+    public static string DockViewTags => T("By tag", "Por etiqueta");
+    public static string DockViewAllTags => T("Choose a tag", "Elegir una etiqueta");
+    public static string DockViewNoTags => T("No tags yet", "Aún no hay etiquetas");
+    public static string NoteTags => T("Tags…", "Etiquetas…");
+    public static string NoteTagsHint => T("Separate tags with commas.", "Separa las etiquetas con comas.");
+    public static string SaveTags => T("Save tags", "Guardar etiquetas");
+    public static string AllTags => T("All tags", "Todas las etiquetas");
+    public static string TagFilterTooltip => T("Filter by tag", "Filtrar por etiqueta");
+    public static string NoTagResults(string tag) =>
+        T($"No notes have the tag “{tag}”.", $"Ninguna nota tiene la etiqueta «{tag}».");
 
     // --- Gestor de notas ---------------------------------------------------------------------------
 
@@ -116,10 +158,20 @@ public static class Strings
 
     // --- Ventana de Ajustes -------------------------------------------------------------------------
 
-    public static string SettingsWindowTitle => T("Fanote settings", "Ajustes de Fanote");
+    public static string SettingsWindowTitle => T("Aldune settings", "Ajustes de Aldune");
     public static string SettingsHeader => T("Settings", "Ajustes");
+    public static string InterfaceModeSectionTitle => T("Interface mode", "Modo de interfaz");
+    public static string InterfaceModeHint => T(
+        "The simplified mode keeps the essentials and hides advanced options. You can switch back at any time.",
+        "El modo simplificado conserva lo esencial y oculta las opciones avanzadas. Puedes volver al modo completo cuando quieras.");
+    public static string SwitchToSimplifiedMode => T("Use simplified mode", "Usar modo simplificado");
+    public static string SwitchToCompleteMode => T("Use complete mode", "Usar modo completo");
+    public static string ApplicationSectionTitle => T("Application", "Aplicación");
+    public static string RestartApplicationButton => T("Restart Aldune", "Reiniciar Aldune");
+    public static string RestartAppTooltip => T("Restart Aldune", "Reiniciar Aldune");
+    public static string ExitApplicationButton => T("Exit Aldune", "Salir de Aldune");
 
-    public static string StartupCheckbox => T("Open Fanote at sign-in", "Abrir Fanote al iniciar sesión");
+    public static string StartupCheckbox => T("Open Aldune at sign-in", "Abrir Aldune al iniciar sesión");
     public static string StartupHint => T("You can also remove it from Task Manager, in the Startup tab.", "También puedes quitarlo desde Administrador de tareas, en la pestaña Inicio.");
 
     public static string HotkeyCheckbox => T("Create a note with a keyboard shortcut", "Crear una nota con un atajo de teclado");
@@ -132,8 +184,8 @@ public static class Strings
         T($"Couldn't activate it: another application already uses {combo}. Choose a different combination.",
           $"No se ha podido activar: otra aplicación ya usa {combo}. Elige otra combinación.");
 
-    public static string MonitorSectionTitle => T("Screens where Fanote shows", "Pantallas donde mostrar Fanote");
-    public static string MonitorSectionHint => T("Choose whether to show Fanote's dock on every screen or restrict it to one.", "Elige si deseas ver el dock de Fanote en todas las pantallas o restringirlo a una específica.");
+    public static string MonitorSectionTitle => T("Screens where Aldune shows", "Pantallas donde mostrar Aldune");
+    public static string MonitorSectionHint => T("Choose whether to show Aldune's dock on every screen or restrict it to one.", "Elige si deseas ver el dock de Aldune en todas las pantallas o restringirlo a una específica.");
     public static string AllScreens => T("On every connected screen", "En todas las pantallas conectadas");
     public static string ScreenLabel(int number, bool isPrimary, int width, int height)
     {
@@ -145,9 +197,11 @@ public static class Strings
     public static string HideOnFullscreenHint => T("Hides the dock automatically over any real fullscreen window — games, videos, presentations. Doesn't affect regular maximized windows (like a browser with tabs).", "Oculta el dock automáticamente ante cualquier ventana a pantalla completa de verdad — juegos, vídeos, presentaciones. No afecta a ventanas normales maximizadas (como el navegador con pestañas).");
 
     public static string EdgeSectionTitle => T("Screen edge", "Lado de la pantalla");
-    public static string EdgeSectionHint => T("Which edge the Fanote dock lives on.", "En qué borde vive el dock de Fanote.");
+    public static string EdgeSectionHint => T("Which edge the Aldune dock lives on.", "En qué borde vive el dock de Aldune.");
     public static string EdgeRight => T("Right", "Derecha");
     public static string EdgeLeft => T("Left", "Izquierda");
+    public static string EdgeTop => T("Top", "Arriba");
+    public static string EdgeBottom => T("Bottom", "Abajo");
 
     public static string RememberPositionsCheckbox => T("Remember note positions", "Recordar la posición de las notas");
     public static string RememberPositionsHint => T("When you close a note, it reopens in the same spot and size on the desktop — like a real sticky note.", "Al cerrar una nota, la próxima vez se abre en el mismo sitio y con el mismo tamaño en el escritorio — como un post-it de verdad.");
@@ -164,8 +218,106 @@ public static class Strings
     public static string TrashRetentionHint => T("A trashed note is deleted for good after this many days.", "Una nota en la papelera se borra para siempre pasados estos días.");
     public static string TrashRetentionDaysUnit => T("days", "días");
 
+    public static string SyncSectionTitle => T("Sync between devices", "Sincronización entre dispositivos");
+    public static string SyncSectionHint => T(
+        "Notes stay encrypted. Use a shared folder, your own Aldune server, or WebDAV.",
+        "Las notas permanecen cifradas. Usa una carpeta compartida o tu propio servidor de sincronización de Aldune.");
+    public static string SyncEnabledCheckbox => T("Enable sync", "Activar sincronización");
+    public static string SyncFolderOption => T("Shared folder / NAS", "Carpeta compartida / NAS");
+    public static string SyncServerOption => T("Self-hosted server", "Servidor propio");
+    public static string SyncWebDavOption => T("WebDAV / Nextcloud", "WebDAV / Nextcloud");
+    public static string SyncFolderLabel => T("Folder:", "Carpeta:");
+    public static string SyncServerUrlLabel => T("Server URL:", "URL del servidor:");
+    public static string SyncServerTokenLabel => T("Access token:", "Token de acceso:");
+    public static string SyncWebDavUsernameLabel => T("Username:", "Usuario:");
+    public static string SyncWebDavPasswordLabel => T("Password:", "Contraseña:");
+    public static string SyncWebDavHint => T(
+        "Use an app password when your provider supports it. Aldune stores it protected on this device.",
+        "Usa una contraseña de aplicación si tu proveedor la admite. Aldune la protege en este dispositivo.");
+    public static string SyncBrowseButton => T("Browse…", "Examinar…");
+    public static string SyncCodeLabel => T("Device sync code:", "Código de sincronización:");
+    public static string SyncGenerateCodeButton => T("Generate / copy", "Generar / copiar");
+    public static string SyncShareProfileButton => T("Share profile", "Compartir perfil");
+    public static string SyncRevokeAccessButton => T("Revoke old codes", "Revocar códigos anteriores");
+    public static string SyncRevokeAccessHint => T(
+        "Replaces this link's key. Devices using an old code will need a new invitation.",
+        "Cambia la clave de este vínculo. Los dispositivos con un código antiguo necesitarán una invitación nueva.");
+    public static string SyncRevokeAccessConfirm => T(
+        "Replace this profile's sync key? Every device using an older code will stop syncing until it imports a new invitation.",
+        "¿Cambiar la clave de este perfil? Los dispositivos que usen un código antiguo dejarán de sincronizarse hasta importar una invitación nueva.");
+    public static string SyncRevokeAccessCompletedStatus => T(
+        "Old profile codes were revoked. Generate and share a new invitation with the devices that should keep syncing.",
+        "Los códigos antiguos del perfil han sido revocados. Genera y comparte una invitación nueva con los dispositivos autorizados.");
+    public static string SyncShareCodeHint => T(
+        "This invitation also carries the profile name and self-hosted server URL. It never contains the access token.",
+        "Esta invitaciÃ³n tambiÃ©n lleva el nombre del perfil y la URL del servidor propio. Nunca contiene el token de acceso.");
+    public static string SyncShareCodeCopiedStatus => T("Profile code copied to the clipboard.", "CÃ³digo de perfil copiado al portapapeles.");
+    public static string SyncImportCodeButton => T("Import code", "Importar código");
+    public static string SyncNowButton => T("Sync now", "Sincronizar ahora");
+    public static string SyncProfileLabel => T("Sync profile", "Perfil de sincronizaciÃ³n");
+    public static string SyncProfileNameLabel => T("Name:", "Nombre:");
+    public static string SyncNewProfile => T("New", "Nuevo");
+    public static string SyncDeleteProfile => T("Delete", "Eliminar");
+    public static string SyncProfileNewName(int number) => T($"Sync link {number}", $"VÃ­nculo {number}");
+    public static string SyncProfileDeleteConfirm => T(
+        "Delete this sync profile? Its local connection settings will be removed.",
+        "Â¿Eliminar este perfil de sincronizaciÃ³n? Se borrarÃ¡n sus ajustes de conexiÃ³n locales.");
+    public static string SyncProfileLastRemaining => T(
+        "Keep at least one sync profile.",
+        "Debe quedar al menos un perfil de sincronizaciÃ³n.");
+    public static string SyncScopeAll => T("All notes", "Todas las notas");
+    public static string SyncScopeSelected => T("Selected notes", "Notas seleccionadas");
+    public static string SyncScopeHint => T(
+        "Choose which notes this sync link can exchange. The selection stays local to this device.",
+        "Elige qué notas puede intercambiar este vínculo. La selección se guarda solo en este dispositivo.");
+    public static string SyncChooseNotes => T("Choose notes…", "Elegir notas…");
+    public static string SyncSelectedCount(int count) => T(
+        $"{count} selected for sync", $"{count} seleccionadas para sincronizar");
+    public static string SyncNotesWindowTitle => T("Choose notes to sync", "Elegir notas para sincronizar");
+    public static string SyncNotesWindowHint => T(
+        "Only the checked notes and their changes will use this sync link.",
+        "Solo las notas marcadas y sus cambios usarán este vínculo de sincronización.");
+    public static string SyncNotesSave => T("Save selection", "Guardar selección");
+    public static string SyncNotesCancel => T("Cancel", "Cancelar");
+    public static string SyncNotesEmpty => T("There are no notes to choose yet.", "Todavía no hay notas para elegir.");
+    public static string SyncAutomaticCheckbox => T("Sync periodically", "Sincronizar periódicamente");
+    public static string SyncAutomaticHint => T("Aldune checks for changes in the background while it is running.", "Aldune comprueba cambios en segundo plano mientras está abierta.");
+    public static string SyncIntervalLabel => T("Every minutes:", "Cada minutos:");
+    public static string SyncCodeHint => T(
+        "Use the same code on each device. Keep it private: it unlocks your notes.",
+        "Usa el mismo código en cada dispositivo. Guárdalo en privado: permite descifrar tus notas.");
+    public static string SyncDisabledStatus => T("Sync is disabled.", "La sincronización está desactivada.");
+    public static string SyncReadyStatus => T("Ready to sync.", "Lista para sincronizar.");
+    public static string SyncCompletedStatus(int uploaded, int downloaded) =>
+        T($"Sync complete: {uploaded} uploaded, {downloaded} downloaded.",
+          $"Sincronización completada: {uploaded} subidas, {downloaded} descargadas.");
+    public static string SyncErrorStatus(string details) => T($"Sync error: {details}", $"Error de sincronización: {details}");
+    public static string SyncCodeCopiedStatus => T("Code copied to the clipboard.", "Código copiado al portapapeles.");
+    public static string SyncCodeImportedStatus => T(
+        "Code imported. Check the connection and add the access token if this is a self-hosted server.",
+        "Código importado. Comprueba la conexión y añade el token de acceso si es un servidor propio.");
+    public static string SyncInvalidCode => T("That sync code is not valid.", "Ese código de sincronización no es válido.");
+    public static string SyncLastSyncNever => T("Last sync: never", "Última sincronización: nunca");
+    public static string SyncLastSyncAt(DateTimeOffset at) =>
+        T($"Last sync: {at.ToLocalTime():g}", $"Última sincronización: {at.ToLocalTime():g}");
+    public static string SyncConflictsButton => T("Review conflicts", "Revisar conflictos");
+    public static string SyncConflictsCount(int count) =>
+        T($"{count} conflict(s) saved for review", $"{count} conflicto(s) guardado(s) para revisar");
+    public static string SyncNoConflicts => T("No saved conflicts.", "No hay conflictos guardados.");
+    public static string SyncConflictTitle => T("Sync conflicts", "Conflictos de sincronización");
+    public static string SyncConflictHint => T(
+        "Aldune kept the winning version active. You can restore the other version or dismiss this record.",
+        "Aldune mantiene activa la versión ganadora. Puedes restaurar la otra versión o descartar este registro.");
+    public static string SyncConflictRestore => T("Restore this version", "Restaurar esta versión");
+    public static string SyncConflictDismiss => T("Dismiss", "Descartar");
+    public static string SyncConflictDeleted => T("Deleted version", "Versión eliminada");
+    public static string SyncErrorTitle => T("Aldune sync", "Sincronización de Aldune");
+    public static string SyncUnauthorizedStatus => T(
+        "The server rejected the token. Paste only the value after FANOTE_SYNC_TOKEN=.",
+        "El servidor ha rechazado el token. Pega solo el valor que aparece después de FANOTE_SYNC_TOKEN=.");
+
     public static string LanguageSectionTitle => T("Language", "Idioma");
-    public static string LanguageSectionHint => T("Restarting Fanote applies the change to every window.", "Reiniciar Fanote aplica el cambio en todas las ventanas.");
+    public static string LanguageSectionHint => T("Restarting Aldune applies the change to every window.", "Reiniciar Aldune aplica el cambio en todas las ventanas.");
 
     public static string QuickHelpTitle => T("Quick help", "Ayuda rápida");
     public static string QuickHelpHover => T("• Hover over the screen edge to fan out the notes.", "• Pasa el ratón por el borde de la pantalla para desplegar las notas.");
@@ -179,16 +331,22 @@ public static class Strings
         T($"• {combo} creates a new note from anywhere.", $"• {combo} crea una nota nueva desde cualquier sitio.");
     public static string QuickHelpHotkeyOff => T("• The keyboard shortcut is off; turn it on above to create notes without going to the edge.", "• El atajo de teclado está desactivado; actívalo arriba para crear notas sin ir al borde.");
     public static string QuickHelpTray => T("• The tray icon opens the notes manager and these settings.", "• El icono de la bandeja abre el gestor de notas y estos ajustes.");
+    public static string QuickHelpSync => T("• Sync now is available in the dock; automatic sync can be enabled in Settings.", "• Puedes sincronizar desde el dock y activar la sincronización automática en Ajustes.");
+    public static string QuickHelpSearch => T("• In Manage notes, Ctrl+F focuses the search box and selects the current search.", "• En Gestionar notas, Ctrl+F enfoca la búsqueda y selecciona el texto actual.");
+
+    public static string MinimizeWindowTooltip => T("Minimize", "Minimizar");
+    public static string MaximizeWindowTooltip => T("Maximize", "Maximizar");
+    public static string RestoreWindowTooltip => T("Restore", "Restaurar");
 
     // --- Arranque / errores de arranque --------------------------------------------------------------
 
-    public static string UnexpectedErrorTitle => T("Fanote — error", "Fanote — error");
+    public static string UnexpectedErrorTitle => T("Aldune — error", "Aldune — error");
     public static string UnexpectedErrorMessage(string details) =>
         T($"An unexpected error occurred: {details}\n\nThe application will continue, but this particular action may not have completed.",
           $"Ha ocurrido un error inesperado: {details}\n\nLa aplicación continuará, pero esta acción concreta puede no haberse completado.");
 
-    public static string CannotStartTitle => T("Fanote — can't start", "Fanote — no se puede iniciar");
-    public static string DatabaseRecoveredTitle => T("Fanote — database recovered", "Fanote — base de datos recuperada");
+    public static string CannotStartTitle => T("Aldune — can't start", "Aldune — no se puede iniciar");
+    public static string DatabaseRecoveredTitle => T("Aldune — database recovered", "Aldune — base de datos recuperada");
 
     public static string KeyUnwrapFailedMessage => T(
         "The notes database can't be decrypted with the stored key.\n\n" +
@@ -209,8 +367,8 @@ public static class Strings
         "dañado.");
 
     public static string UnexpectedStartupFailureMessage(string details) =>
-        T($"Fanote couldn't start due to an unexpected error: {details}",
-          $"No se ha podido iniciar Fanote debido a un error inesperado: {details}");
+        T($"Aldune couldn't start due to an unexpected error: {details}",
+          $"No se ha podido iniciar Aldune debido a un error inesperado: {details}");
 
     public static string NoMonitorsMessage => T("No connected monitor could be detected.", "No se ha podido detectar ningún monitor conectado.");
 

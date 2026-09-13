@@ -1,0 +1,14 @@
+* text=auto eol=lf
+
+*.cs text
+*.xaml text
+*.xml text
+*.json text
+*.md text
+*.yml text
+*.yaml text
+
+*.ico binary
+*.png binary
+*.jpg binary
+*.jpeg binary

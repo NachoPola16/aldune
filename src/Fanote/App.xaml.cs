@@ -131,7 +131,8 @@ public partial class App : Application
             return;
         }
 
-        var coordinator = new AppCoordinator(repository, settings);
+        var syncService = new SyncService(repository, settings, settingsService);
+        var coordinator = new AppCoordinator(repository, settings, syncService, settingsService);
         _coordinator = coordinator;
         _repository = repository;
         _settings = settings;
@@ -211,7 +212,9 @@ public partial class App : Application
 
         var hotkey = _hotkey;
         var loadedSettings = settings;
-        coordinator.SettingsWindowFactory = () => new SettingsWindow(settingsService, loadedSettings, hotkey, coordinator);
+        coordinator.SettingsWindowFactory = () => new SettingsWindow(
+            settingsService, loadedSettings, hotkey, coordinator, syncService);
+        coordinator.ConfigureAutomaticSync();
         coordinator.RebuildDocksAction = () =>
         {
             coordinator.CloseAllDocks();
@@ -239,6 +242,7 @@ public partial class App : Application
             SystemEvents.DisplaySettingsChanged -= OnDisplaySettingsChanged;
             SystemEvents.SessionEnding -= OnSessionEnding;
             _reminderScheduler?.Dispose();
+            _coordinator?.Dispose();
             _trayIcon?.Dispose();
             _hotkey?.Dispose();
         };

@@ -8,6 +8,13 @@ Sesión de origen: 2026-09-06.
 
 ---
 
+## Versión visible de la aplicación
+
+La ronda actual se identifica como **v0.5.0**. La versión se muestra en Ajustes y también en el texto
+del icono de la bandeja. Cada actualización grande deberá incrementar este número siguiendo SemVer:
+parches para correcciones, versión menor para funcionalidades nuevas y versión mayor cuando haya
+cambios incompatibles.
+
 ## 1. Investigación de mercado (2026-09-06)
 
 Se buscó si el concepto de Fanote ya existe y si hay hueco. Resumen de lo encontrado, con fuentes.
@@ -98,6 +105,15 @@ Alternativas a poner sobre la mesa, con su render al lado:
 Ver `STATUS.md`. Se mantiene aquí la decisión de diseño por si hay que retomarla: tabla `NoteOrder`
 aparte con `Position REAL`, para mover una nota escribiendo una sola fila en vez de renumerar.
 
+### ~~Solapamiento visual al arrastrar hacia abajo~~ — IMPLEMENTADO (pendiente de verificación visual)
+
+Al arrastrar una pestaña hacia abajo, debe pasar visualmente por delante de las pestañas que
+atraviesa, igual que cuando se arrastra hacia arriba. El orden lógico y la persistencia ya funcionan;
+durante el gesto se eleva el botón seleccionado y, sobre todo, su `ContentPresenter`/contenedor real
+del `ItemsControl`, que es el que decide la capa entre pestañas solapadas. Al soltar se restauran esos
+valores y se recalcula el orden normal. Falta comprobar visualmente en el dock que una pestaña
+arrastrada hacia abajo queda delante de todas las que atraviesa.
+
 ### Reordenar notas arrastrando en el mazo (diseño original, ya implementado)
 
 Hoy el orden es `CreatedAt` y no se puede cambiar. En una metáfora de mazo de fichas, no poder
@@ -132,21 +148,23 @@ por igual) porque el `Grid` que envuelve *todo* el contenido del dock tiene su p
 `EdgePosition.Right`. Ningún ajuste dentro de ese `Grid` podía compensar que el propio contenedor ya
 estuviera encogido por el lado equivocado. Espejado también. Detalle completo en `STATUS.md`.
 
-### Bordes Arriba y Abajo para el dock — sigue pendiente, arquitectónico
+### ~~Bordes Arriba y Abajo para el dock~~ — HECHO, pendiente solo una futura revisión opcional de diseño
 
 El usuario pidió explícitamente diseñar también los bordes **Arriba** y **Abajo** — la spec original
 de las pestañas en abanico los excluyó a propósito ("exigiría deslizar en vertical, que queda fuera
-de esta ronda", ver `EdgeDockWindow.PopulateEdges`, que hoy solo ofrece Izquierda/Derecha en
+de esta ronda", ver la nota histórica de `EdgeDockWindow.PopulateEdges`, que entonces solo ofrecía
+Izquierda/Derecha en
 Ajustes). **Hallazgo al investigar el bug de arriba**: `Fanote.Core.EdgeGeometry` (la geometría pura,
-con tests) **ya contempla los cuatro bordes** — `WindowRect`/`RestingVisibleRect` tienen casos
-`Top`/`Bottom` completos, no solo Izquierda/Derecha. Lo que falta es todo lo demás: exponer la
-opción en Ajustes, la tira de reposo dibujada horizontal en vez de vertical (el `RestStrip`/`RestList`
-del XAML asumen columna), rotar o quitar el giro de las etiquetas de pestaña, y
-`EdgeDockWindow.PositionNoteWindow` (hoy solo distingue Izquierda de "lo demás") para las cuatro
-direcciones. Menos trabajo del que parecía en un principio gracias a la geometría ya hecha, pero
-sigue siendo su propia sesión de diseño — empezar por ahí la próxima vez.
+con tests) **ya contemplaba los cuatro bordes**, pero el primer layout de Arriba/Abajo era incorrecto:
+trataba una tarjeta lateral como si se pudiera rotar sin cambiar sus medidas. El diseño corregido
+mantiene una barra horizontal en reposo y, al desplegarse, abre una columna vertical de tarjetas
+anchas de 208px, igual que las laterales, para que el título conserve espacio. Arriba crece hacia
+abajo y Abajo hacia arriba; si hay muchas notas, el scroll es vertical. El grosor del dock, el
+presupuesto de longitud, el arrastre y la apertura de notas usan ahora esa geometría específica.
+La implementación actual queda cerrada para esta ronda. La alternativa de tarjetas anchas apiladas
+hacia dentro se conserva únicamente como posible revisión visual futura.
 
-### Plantillas de disposición de notas en el escritorio — pendiente, sin diseñar
+### ~~Plantillas de disposición de notas en el escritorio~~ — HECHO
 
 Idea del usuario (2026-09-09): en vez de arrastrar cada nota a mano para dejarlas ordenadas,
 ofrecer plantillas de disposición automática (rejilla, cascada uniforme, columnas...) que las
@@ -170,7 +188,66 @@ Preguntas sin responder para cuando le toque su sesión de diseño:
 - En multimonitor, ¿la plantilla se aplica por pantalla (cada dock coloca solo las suyas) o hay que
   pensar en el conjunto de todos los monitores a la vez?
 
-### Color de nota libre, además de la paleta — pendiente, sin diseñar
+### ~~Acciones contextuales del dock~~ — HECHO, con mejoras futuras opcionales
+
+Primera entrega implementada: el clic derecho sobre el botÃ³n de abrir todas ofrece modo normal,
+cuadrÃ­cula, columnas y cerrar todas. La elecciÃ³n queda guardada como modo
+predeterminado del botÃ³n; el modo normal sigue siendo el valor inicial y debe elegirse de forma
+explÃ­cita para volver a Ã©l. La plantilla se aplica por monitor y solo cambia posiciones cuando el
+usuario la elige. Los cambios de distribuciÃ³n se animan brevemente para evitar saltos bruscos.
+La cuadrÃ­cula y las columnas son sensibles al nÃºmero de notas y a la orientaciÃ³n de la pantalla:
+hasta 12 notas se distribuyen en una plantilla compacta; las restantes quedan abiertas en una
+cascada legible para evitar comprimirlas hasta hacerlas inutilizables.
+
+El clic derecho sobre una nota ya tiene utilidad real: abrirla, cambiar su color, archivarla o
+enviarla a la papelera. Falta decidir si los botones del pie del dock también deben ofrecer un menú
+contextual, sin quitarles su acción normal con clic izquierdo. Ideas iniciales:
+
+- `+`: crear una nota desde el portapapeles o crearla con una plantilla rápida.
+- "Abrir todas": elegir una disposición (cascada, rejilla o columnas) antes de abrirlas.
+- "Gestionar notas": abrir directamente Activas, Archivadas o Papelera.
+
+Debe evitarse llenar el dock de opciones avanzadas: el menú contextual solo debe aportar atajos que
+sean difíciles de descubrir o que ahorren varios pasos.
+
+### Etiquetas, vistas del dock y sincronización selectiva — primera entrega
+
+Se ha añadido una primera base usable: las notas tienen etiquetas persistentes, editables desde el
+menú contextual de la pestaña, y el dock puede mostrar activas, archivadas, papelera o solo las
+activas de una etiqueta. La papelera no aparece en la vista normal. El clic derecho del botón de
+gestión abre directamente ese selector, para conservar los botones principales sin llenarlos de
+submenús.
+
+Las etiquetas forman parte del formato cifrado de sincronización 2. El formato 1 se puede leer,
+pero una versión antigua rechaza el formato 2 para no eliminar etiquetas silenciosamente al guardar
+una versión posterior. Queda para la siguiente ronda diseñar la sincronización selectiva de notas,
+varios perfiles de sincronización y compartir una nota con otra persona; no se deben mezclar esas
+identidades con el código de dispositivo actual.
+
+La primera parte de esa siguiente ronda ya está implementada: en Ajustes se puede elegir sincronizar
+todas las notas o una selección concreta. El ámbito selectivo es local a la instalación y excluye
+tanto publicaciones como descargas fuera de la selección. Los perfiles independientes y el código
+para compartir una selección ya están implementados; queda pendiente mejorar el flujo de invitación
+y revocación sin mezclarlo con el vínculo de “Mis dispositivos”.
+
+### Modo simplificado / modo completo — IMPLEMENTADO
+
+Ofrecer en Ajustes un botón claro para cambiar entre una **versión completa** y una **versión
+simplificada** de Fanote, pensado para quien quiera usar las notas sin tantas opciones. No sería otra
+instalación ni una base de datos distinta: sería un modo de interfaz reversible y persistente.
+
+El modo simplificado debería conservar el núcleo (dock, crear/abrir notas y gestor básico) y ocultar
+la configuración avanzada, como selección de monitor, borde, atajo global, pantalla completa,
+retención de papelera y automatización de tareas. El botón debe permitir volver al modo completo sin
+perder ni resetear ajustes; cambiar de modo no puede tocar las notas.
+
+Pendiente de decidir en una sesión de diseño:
+
+- si el cambio se aplica al instante o pide reiniciar;
+- si el gestor de notas simplificado mantiene archivado/papelera o solo las notas activas;
+- qué texto y ubicación del botón hacen evidente que se puede volver al modo completo.
+
+### ~~Color de nota libre, además de la paleta~~ — HECHO
 
 Idea del usuario (2026-09-11): además de los 6 colores de `NoteColorPalette`, poder elegir un color
 libre para una nota concreta. **La paleta actual se queda como está por defecto** — mismo patrón que
@@ -223,12 +300,14 @@ rama (y se arreglaron en una sola ronda) y lo que queda pendiente de verificaci�
 ponerlo desde cero, con el mismo panel de siempre — no hay un atajo de "posponer 10 minutos" sobre un
 aviso que acaba de sonar).
 
-### Sincronización entre dispositivos — decidido: se hará, las dos vías
+### Sincronización entre dispositivos — base implementada, con dos vías
 
 Antes estaba aparcado como "descartado por ahora, no tocar hasta que alguien lo pida de verdad" —
-el usuario lo pidió (2026-09-09), así que pasa aquí. Todavía sin spec ni plan:
-es arquitectónico y le toca su propia sesión de diseño completa cuando se aborde. Lo que ya se decidió
-en el brainstorming de esta sesión, para no volver a discutirlo desde cero:
+el usuario lo pidió y ahora pasa a implementación incremental. El núcleo inicial ya usa sobres JSON
+con contenido cifrado por nota, clave compartida independiente de DPAPI, tombstones, escritura atómica
+y resolución determinista por fecha/dispositivo. El siguiente bloque visualiza la configuración,
+permite sincronización manual y ofrece sincronización periódica en segundo plano.
+Lo que ya se decidió en el brainstorming de esta sesión, para no volver a discutirlo desde cero:
 
 - **Las dos vías, no una sola** — decisión explícita del usuario tras ver el trade-off:
   1. **Carpeta elegida por el usuario** (OneDrive, Google Drive, Dropbox, Syncthing — cualquiera que
@@ -252,6 +331,29 @@ en el brainstorming de esta sesión, para no volver a discutirlo desde cero:
   *no* sincronizar el fichero SQLite directamente — las carpetas de sync corrompen bases de datos
   abiertas por dos máquinas a la vez. Un fichero cifrado por nota, reconstruible, es la única forma
   segura.
+- **Vía autohosteable, también decidida** — no dependerá de un servicio de Fanote:
+  1. **Carpeta local, UNC o NAS**: para una carpeta compartida en la red (`\\servidor\\fanote`) o
+     una carpeta sincronizada por Syncthing/Nextcloud/otro cliente. Es la primera implementación y
+     cubre el caso "mi propio servidor dentro de casa" sin añadir una API nueva.
+  2. **WebDAV sobre HTTPS**: para un servidor accesible desde fuera de la red, especialmente
+     Nextcloud/ownCloud o un servidor WebDAV propio. Fanote guardará la URL y una credencial de
+     aplicación, no la contraseña principal cuando el servidor ofrezca esa posibilidad.
+  3. **API dedicada de Fanote**: queda como opción futura, solo si WebDAV no cubre algún caso real;
+     implicaría mantener servidor, autenticación, TLS, versiones y migraciones propias.
+- **Orden propuesto de implementación**:
+  1. núcleo de sincronización independiente del transporte, con ficheros cifrados por nota,
+     manifiesto, eliminaciones representadas por *tombstones*, escritura atómica y recuperación;
+  2. transporte de carpeta local/UNC/NAS;
+  3. transporte WebDAV autohosteable;
+  4. Google Drive directo como integración opcional posterior (OAuth y renovación de tokens).
+- **Clave compartida entre dispositivos** — la protección DPAPI actual queda solo para proteger la
+  copia local. Para que otro equipo pueda descifrar las notas habrá que introducir una clave de sync
+  independiente, transferible mediante código/frase de recuperación y protegida localmente en cada
+  equipo. Nunca se subirá una clave DPAPI ligada a un único usuario de Windows.
+- **Política inicial recomendada** — `Guid` para evitar colisiones al crear notas, `UpdatedAt` más un
+  desempate determinista por dispositivo para conflictos de la misma nota, y *tombstones* para que
+  una eliminación no reaparezca al sincronizar un equipo antiguo. La interfaz deberá mostrar estado,
+  última sincronización, errores y conflictos recuperables.
 - **Sin decidir todavía, para la sesión de diseño**: qué pasa si la misma nota se edita en dos
   dispositivos antes de sincronizar (probablemente "gana la más reciente" por `UpdatedAt`, dado que
   esto es una herramienta personal de una persona, no colaborativa — pero no se ha confirmado con el
@@ -259,6 +361,51 @@ en el brainstorming de esta sesión, para no volver a discutirlo desde cero:
   avise (¿vigilar la carpeta con `FileSystemWatcher`, sondear al arrancar, las dos?); qué pasa si dos
   dispositivos crean una nota nueva "al mismo tiempo" (con `Guid` como Id, no debería colisionar,
   pero conviene confirmarlo explícitamente en la spec).
+
+#### Servidor propio con Docker Compose
+
+La primera versión del servidor autohosteable se añade como `src/Fanote.SyncServer` y se puede levantar
+con `docker-compose.sync.yml`. Es un almacén HTTP de objetos cifrados, no una base de datos con texto
+de notas: guarda los sobres sin conocer la clave. El usuario configura una IP/hostname y puerto (por
+defecto `8087`) en Fanote, junto con un token de acceso. El volumen Docker conserva los objetos aunque
+se recree el contenedor.
+
+La API y el formato no dependen de Windows: un futuro cliente de Android, iOS, macOS o Linux podrá
+usar el mismo endpoint HTTP y la misma clave compartida. DPAPI solo protege la copia local del token y
+de la clave en Windows; nunca se envía al servidor.
+
+HTTPS detrás de un proxy inverso, rotación de tokens e interfaz de resolución de conflictos ya están
+preparados o implementados. Falta probar el despliegue HTTPS real con un dominio del usuario.
+
+#### Próxima revisión de sincronización
+
+Antes de dar por cerrada esta primera versión, queda anotado este checklist:
+
+1. ~~**Validar conflictos reales**~~: hecho con dos bases independientes y una carpeta compartida.
+2. ~~**Acceso seguro desde fuera de la red local**~~: composición HTTPS con Caddy preparada; falta
+   validación en el servidor real.
+3. ~~**Endurecer la autenticación**~~: rotación de tokens documentada mediante `FANOTE_SYNC_TOKENS`.
+4. ~~**Interfaz de conflictos**~~: revisar, restaurar o descartar la versión perdedora.
+5. **Clientes multiplataforma**: reutilizar el formato y la API para futuras versiones de Android,
+   iOS, macOS y Linux.
+6. ~~**Compatibilidad entre versiones**~~: ventana de formatos soportados y rechazo claro de versiones
+   incompatibles ya implementados.
+
+#### Bloque WebDAV implementado
+
+La importación guiada y la revocación segura de perfiles ya están implementadas. La revocación guarda
+una clave pendiente y vuelve a cifrar los sobres antes de activarla; si la aplicación se cierra a
+mitad, la siguiente sincronización reanuda el proceso. Los dispositivos con el código antiguo deben
+importar una invitación nueva. El siguiente bloque es el transporte WebDAV sobre HTTPS para servidores
+como Nextcloud y otros servicios autohosteables.
+
+La interfaz ya permite configurar WebDAV/Nextcloud con usuario y contraseña protegida localmente.
+La invitación transporta la URL, pero no credenciales. Para Internet debe usarse siempre HTTPS.
+
+#### Siguiente bloque recomendado
+
+Probar WebDAV contra una instalación real de Nextcloud/ownCloud y, después, priorizar los clientes
+multiplataforma reutilizando el formato común de sincronización.
 
 ---
 
@@ -406,12 +553,96 @@ Pendiente, por orden de importancia:
    "de fuera" antes de que `OnMenuClick` llegue a ejecutarse, así que el toggle parte de `IsOpen` ya en
    `false` y lo reabre — bug clásico de WPF con popups que se cierran solos. Pendiente de arreglar.
 
+7. ~~Caret del título~~ **Hecho** (2026-09-12): el marcador se oculta mientras el campo tiene
+   el foco, dejando el cursor libre.
+8. ~~Menú `⋯` que no se cierra al repetir clic~~ **Hecho** (2026-09-12): el segundo clic se
+   captura antes de que el `Popup` lo interprete como clic exterior.
+9. **Colores de nota personalizados** — **Hecho** (2026-09-12): la paleta rápida se conserva y
+   el menú de acciones ofrece un selector libre, limitado a colores legibles.
+10. **Revisión de ventanas y movimiento** — **Hecho** (2026-09-12): el gestor gana aire y nitidez,
+   se eliminan focos azules del chrome y las transiciones quedan más ágiles.
+
+### Validación de conflictos de sincronización — HECHO (2026-09-12)
+
+Se han reproducido con dos bases de datos independientes y una carpeta compartida los casos de
+edición en ambos dispositivos y de borrado frente a una edición antigua. La versión más reciente
+gana y el dispositivo remoto converge; una eliminación más reciente se conserva como tombstone y
+no hace reaparecer la nota. El sobre de tombstone usa ahora el identificador real del dispositivo
+que lo publica para que el desempate sea estable.
+
+### HTTPS para el servidor autohosteable — PREPARADO (2026-09-12)
+
+Se aÃ±adiÃ³ `docker-compose.sync.https.yml` con Caddy como proxy inverso, certificados automÃ¡ticos y
+persistencia de su configuraciÃ³n. El servicio de sincronizaciÃ³n ya no se publica directamente en
+Internet en ese modo. Falta probarlo en el servidor real con un dominio y DNS controlados por el
+usuario; la composiciÃ³n HTTP local sigue intacta.
+
+### Rotación y revocación de tokens — HECHO (2026-09-12)
+
+El servidor acepta una lista temporal de tokens mediante `FANOTE_SYNC_TOKENS`, con prioridad sobre
+el token único anterior. Esto permite publicar el nuevo token, actualizar los dispositivos y retirar
+el antiguo sin dejar la sincronización inutilizada durante el cambio. La revocación se hace quitando
+el token de la lista y recreando el contenedor.
+
+### Interfaz para resolver conflictos — HECHO (2026-09-12)
+
+Los conflictos ya no desaparecen tras el desempate automático: se conserva localmente la versión
+perdedora cifrada con la clave de la base de datos. Ajustes muestra cuántos hay y abre una ventana
+con acciones para restaurar esa versión o descartar el registro. Restaurar la versión perdedora le
+da una marca temporal nueva para que la decisión pueda volver a sincronizarse.
+
+### Perfiles de sincronizaciÃ³n — HECHO (2026-09-13)
+
+Ajustes permite crear varios perfiles independientes. Cada uno conserva su nombre, transporte,
+servidor o carpeta, token, clave de sincronizaciÃ³n, selecciÃ³n de notas y Ãºltima sincronizaciÃ³n.
+La configuraciÃ³n existente se migra automÃ¡ticamente como `Mis dispositivos`. Esto prepara
+compartir una selecciÃ³n de notas con otra persona sin mezclarla con el perfil de los dispositivos
+propios; queda pendiente mejorar el flujo de invitaciÃ³n e intercambio de perfiles.
+
+### CÃ³digo de perfil compartido — HECHO (2026-09-13)
+
+El perfil compartido puede incluir la selecciÃ³n de notas junto con la clave de sincronizaciÃ³n. AsÃ­,
+otro usuario puede recibir solo esas notas aunque aÃºn no las tenga localmente. El cÃ³digo no incluye
+la URL, la carpeta ni el token del servidor, que se configuran por separado.
+
 ## 6. Logo
 
 El concepto actual (tres pestañas de color pegadas al canto derecho, cortadas por el borde) es
 correcto y se mantiene: dibuja literalmente el producto y usa la paleta real.
 
+### Decisión de marca para la beta (2026-09-13)
+
+Se adopta **Aldune** como nombre visible de la aplicación y del instalador. `Fanote` se conserva
+como nombre interno del repositorio, los namespaces y la carpeta de datos para no romper las notas
+ni la configuración existente. El icono actual
+también se mantiene: las tres tarjetas escalonadas representan directamente el dock y conectan con
+la paleta real de las notas. No se hará un rediseño completo antes de validar el producto con uso
+real.
+
+Antes de una publicación comercial o de cobrar por la aplicación se hará una comprobación final de
+marca, dominios y tiendas, porque existe al menos un nombre muy parecido, **FanNote**. Si el nombre
+cambia, se rediseñarán juntos el icono, el instalador y los recursos públicos, en vez de cambiar solo
+el logo.
+
 El problema es de tamaño pequeño: a 16 px — bandeja, barra de tareas, Alt+Tab, que es donde más se ve
 — tres barras finas con huecos se empastan y acaban leyéndose como un icono genérico de lista. La
 solución es la estándar en diseño de iconos: **una variante propia para 16 y 32 px**, con menos
 barras y más gruesas, en vez de reescalar la de 256.
+
+## 7. Pulido visual de lanzamiento
+
+Bloque activo después de cerrar la funcionalidad principal. Se conserva la identidad actual y se
+revisan solo los detalles que más afectan a la sensación de producto:
+
+1. **Tipografía**: fijar una escala corta y coherente para títulos, cuerpo y texto auxiliar.
+2. **Iconos**: usar una familia consistente y corregir tamaños y alineación óptica en ventanas,
+   dock y bandeja.
+3. **Espaciado**: revisar márgenes y separación entre grupos en Ajustes y Gestionar notas.
+4. **Estados**: comprobar hover, pulsación, foco, deshabilitado, error y éxito sin introducir
+   nuevas formas de interacción.
+
+No se añade todavía un sistema completo de temas ni una versión Lite. Se estudiarán después de
+obtener uso real y medir si existe una necesidad clara.
+
+El primer pulido ya aplicado incluye la base visual compartida, el ajuste de nitidez de las ventanas,
+la separacion de los botones de sincronizacion y un ICO con tres tarjetas legibles en tamanos pequenos.

@@ -16,4 +16,5 @@ public sealed class Note
     public required DateTimeOffset UpdatedAt { get; set; }
     public required NoteState State { get; set; }
     public required string ScreenOrigin { get; set; }
+    public IReadOnlyList<string> Tags { get; set; } = Array.Empty<string>();
 }

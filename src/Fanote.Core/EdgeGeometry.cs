@@ -14,9 +14,9 @@ namespace Fanote.Core;
 ///    solapan conforme se acumulan (ver <see cref="PitchFor"/>), en vez de crecer sin parar o de
 ///    toparse dejando las sobrantes sin dibujar.
 ///
-/// Las etiquetas son <b>horizontales</b>. Con solape, la franja visible de cada pestaña es corta:
-/// una etiqueta horizontal necesita ~18px de alto y una vertical ~90px, así que la vertical solo
-/// funcionaba sin solapar. Horizontal deja leer el título entero siempre.
+    /// Las tarjetas son <b>anchas y horizontales</b> en los cuatro bordes. En los laterales se apilan
+    /// en vertical; arriba y abajo conservan esa misma tarjeta y crecen hacia dentro del monitor,
+    /// en vez de intentar rotarla o comprimirla en una fila baja.
 /// </summary>
 public static class EdgeGeometry
 {
@@ -52,44 +52,39 @@ public static class EdgeGeometry
 
     /// <summary>Si a este paso cabe la vista previa completa.</summary>
     public static bool ShowsPreview(WorkingArea area, EdgePosition edge, int noteCount) =>
-        PitchFor(area, edge, noteCount) >= PreviewVisiblePitch;
+        edge is EdgePosition.Top or EdgePosition.Bottom
+            || PitchFor(area, edge, noteCount) >= PreviewVisiblePitch;
 
     /// <summary>
     /// Paso mínimo al solaparse. Es lo que queda visible de cada pestaña, y por tanto si se lee o
     /// no su título: por debajo de esto el abanico deja de decirte cuál es cuál, que es su único
-    /// trabajo. Con etiqueta horizontal basta con ~26px —lo justo para la línea del título, que es
-    /// lo que no puede faltar—, frente a los ~90 que exigía la vertical.
+    /// trabajo. Se reservan 32px para la franja superior, suficiente para que la línea del título no
+    /// quede tapada por la siguiente tarjeta; cuando hay más solape se oculta solo la preview.
     /// </summary>
-    public const double MinPitch = 26;
+    public const double MinPitch = 32;
 
     /// <summary>Fracción del alto útil del monitor que el abanico desplegado puede ocupar.</summary>
-    public const double MaxScreenFraction = 0.7;
+    public const double MaxScreenFraction = 0.9;
 
     /// <summary>
-    /// Tope absoluto de longitud del abanico, además de la fracción de pantalla. Un monitor muy
-    /// alto no significa que quieras un dock muy alto: el dock debe seguir siendo un objeto
-    /// compacto en el canto.
-    /// </summary>
-    public const double MaxFanLength = 520;
-
-    /// <summary>
-    /// Lo máximo que puede medir el abanico desplegado, descontando lo que ocupan la fila de botones
+    /// El abanico puede usar el espacio que permita el monitor, pero siempre deja sitio para las
+    /// sombras, la botonera y el margen de seguridad del dock. Es lo máximo que puede medir el
+    /// abanico desplegado, descontando lo que ocupan la fila de botones
     /// y el aire de la sombra. Es el presupuesto que reparte <see cref="PitchFor"/> **y** el tope al
-    /// que se ciñe <see cref="WindowLength"/>: si no lo respetaran los dos, pasa lo que pasaba antes
-    /// — el suelo de legibilidad (<see cref="MinPitch"/>) manda sobre el reparto, el abanico se sale
-    /// del presupuesto, y como la ventana se dimensionaba al abanico, **crecía la ventana** en vez de
-    /// entrar a funcionar el scroll. Con muchas notas el dock dejaba de ser un objeto compacto en el
-    /// canto y podía salirse de la pantalla.
+    /// que se ciñe <see cref="WindowLength"/>: si no lo respetaran los dos, el abanico podría salir
+    /// de la pantalla antes de que entrase en funcionamiento el scroll.
     /// </summary>
     public static double FanBudget(WorkingArea area, EdgePosition edge)
     {
-        double available = edge is EdgePosition.Left or EdgePosition.Right ? area.Height : area.Width;
-        double budget = Math.Min(available * MaxScreenFraction, MaxFanLength)
+        double available = area.Height;
+        double budget = available * MaxScreenFraction
+            - FooterLength - TabShadowHeadroom;
+        double fitBudget = available - ShadowMargin * 2
             - FooterLength - TabShadowHeadroom;
 
         // Nunca por debajo del mínimo: en una pantalla diminuta el presupuesto podría salir negativo
         // y arrastrar al resto de cálculos.
-        return Math.Max(budget, MinContentLength);
+        return Math.Max(Math.Min(budget, fitBudget), MinContentLength);
     }
 
     /// <summary>Paso real entre pestañas: se encoge conforme hay más notas.</summary>
@@ -103,7 +98,13 @@ public static class EdgeGeometry
         double natural = (noteCount - 1) * NaturalPitch + TabHeight;
         if (natural <= budget) return NaturalPitch;
 
-        return Math.Max((budget - TabHeight) / (noteCount - 1), MinPitch);
+        double compressedPitch = (budget - TabHeight) / (noteCount - 1);
+
+        // Mientras el solape siga siendo legible, aprovechamos el espacio del monitor. Si para
+        // mantener todas las tarjetas dentro del presupuesto habría que bajar de MinPitch, dejamos
+        // de comprimirlas: el ScrollViewer conserva las tarjetas a tamaño natural y se recorre el
+        // resto. Así no aparecen títulos apretados ni tarjetas partidas por la activación del scroll.
+        return compressedPitch < MinPitch ? NaturalPitch : Math.Max(compressedPitch, MinPitch);
     }
 
     /// <summary>Longitud del abanico desplegado.</summary>
@@ -153,6 +154,10 @@ public static class EdgeGeometry
         return noteCount * RestPitch - RestGap;
     }
 
+    /// <summary>Longitud de la tira de reposo para el borde indicado.</summary>
+    public static double RestStripLength(EdgePosition edge, int noteCount)
+        => RestStripLength(noteCount);
+
     /// <summary>
     /// Cuántos guiones de reposo caben de verdad dentro de la ventana.
     ///
@@ -165,10 +170,17 @@ public static class EdgeGeometry
     /// </summary>
     public static int RestDashCapacity(WorkingArea area, EdgePosition edge, int noteCount)
     {
-        double usable = WindowLength(area, edge, noteCount) - RestContainerPad * 2;
+        double available = edge is EdgePosition.Top or EdgePosition.Bottom
+            ? HorizontalWindowWidth(area, edge, noteCount)
+            // En los laterales RestStrip vive dentro de ContentGrid, que deja ShadowMargin
+            // arriba y abajo para la sombra. La ventana completa no es espacio útil: usarla aquí
+            // admitía una pastilla más de la que luego podía medir el Border y la última quedaba
+            // cortada por el viewport.
+            : Math.Max(0, WindowLength(area, edge, noteCount) - ShadowMargin * 2);
+        double usable = available - RestContainerPad * 2;
         if (usable <= 0) return 0;
 
-        // n guiones ocupan n*RestPitch - RestGap.
+        // n guiones ocupan n*pitch - gap.
         int capacity = (int)Math.Floor((usable + RestGap) / RestPitch);
         return Math.Max(capacity, 0);
     }
@@ -188,6 +200,22 @@ public static class EdgeGeometry
 
     /// <summary>Grosor de la ventana: la pestaña más el aire de su sombra.</summary>
     public const double WindowThickness = TabWidth + ShadowMargin;
+
+    /// <summary>
+    /// Ancho adaptativo del dock superior/inferior. Crece con la tira de reposo, como la longitud
+    /// del dock lateral crece con sus pestañas, pero queda limitado para no ocupar toda la pantalla.
+    /// </summary>
+    public static double HorizontalWindowWidth(WorkingArea area, EdgePosition edge, int noteCount)
+    {
+        if (edge is not (EdgePosition.Top or EdgePosition.Bottom)) return WindowThickness;
+
+        double required = Math.Max(
+            WindowThickness,
+            RestStripLength(noteCount) + RestContainerPad * 2);
+        double fitBudget = Math.Max(WindowThickness, area.Width - ShadowMargin * 2);
+        double budget = Math.Max(WindowThickness, Math.Min(area.Width * MaxScreenFraction, fitBudget));
+        return Math.Min(required, budget);
+    }
 
     /// <summary>Longitud mínima, para que con 0-1 notas siga siendo un objetivo razonable.</summary>
     public const double MinContentLength = NaturalPitch;
@@ -235,9 +263,12 @@ public static class EdgeGeometry
         return edge switch
         {
             EdgePosition.Top => new Rect(
-                area.X + (area.Width - length) / 2, area.Y + EdgeMargin, length, WindowThickness),
+                area.X + (area.Width - HorizontalWindowWidth(area, edge, noteCount)) / 2,
+                area.Y + EdgeMargin, HorizontalWindowWidth(area, edge, noteCount), length),
             EdgePosition.Bottom => new Rect(
-                area.X + (area.Width - length) / 2, area.Y + area.Height - WindowThickness - EdgeMargin, length, WindowThickness),
+                area.X + (area.Width - HorizontalWindowWidth(area, edge, noteCount)) / 2,
+                area.Y + area.Height - length - EdgeMargin,
+                HorizontalWindowWidth(area, edge, noteCount), length),
             EdgePosition.Left => new Rect(
                 area.X + EdgeMargin, area.Y + (area.Height - length) / 2, WindowThickness, length),
             EdgePosition.Right => new Rect(
@@ -261,8 +292,11 @@ public static class EdgeGeometry
         // notas de las que caben, la zona sensible tiene que coincidir con lo que se ve, o habría
         // una franja que responde al ratón sin nada debajo (o al revés).
         int dashes = VisibleRestDashes(area, edge, noteCount);
-        double length = Math.Min(RestStripLength(dashes) + RestContainerPad * 2, windowLength);
-        double start = Math.Max(0, (windowLength - length) / 2);
+        double stripAxisLength = edge is EdgePosition.Top or EdgePosition.Bottom
+            ? window.Width
+            : windowLength;
+        double length = Math.Min(RestStripLength(edge, dashes) + RestContainerPad * 2, stripAxisLength);
+        double start = Math.Max(0, (stripAxisLength - length) / 2);
 
         return edge switch
         {

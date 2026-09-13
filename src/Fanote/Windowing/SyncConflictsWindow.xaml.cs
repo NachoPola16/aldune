@@ -1,0 +1,79 @@
+using System.Windows;
+using System.Windows.Interop;
+using Fanote.Core;
+using Fanote.Interop;
+using Fanote.Resources;
+
+namespace Fanote.Windowing;
+
+public partial class SyncConflictsWindow : Window
+{
+    private readonly SyncService _syncService;
+    private readonly AppCoordinator _coordinator;
+
+    public SyncConflictsWindow(SyncService syncService, AppCoordinator coordinator)
+    {
+        InitializeComponent();
+        _syncService = syncService;
+        _coordinator = coordinator;
+        SourceInitialized += (_, _) =>
+        {
+            var hwnd = new WindowInteropHelper(this).Handle;
+            NativeMethods.ApplyRoundedCorners(hwnd);
+        };
+        LoadRows();
+    }
+
+    private void LoadRows()
+    {
+        var rows = _syncService.GetConflicts()
+            .Select(conflict => new ConflictRow(conflict))
+            .ToList();
+        ConflictsList.ItemsSource = rows;
+        EmptyState.Visibility = rows.Count == 0 ? Visibility.Visible : Visibility.Collapsed;
+    }
+
+    private void OnRestoreClick(object sender, RoutedEventArgs e)
+    {
+        if (sender is FrameworkElement { Tag: Guid conflictId } &&
+            _syncService.RestoreConflict(conflictId))
+        {
+            _coordinator.RefreshAll();
+            LoadRows();
+        }
+    }
+
+    private void OnDismissClick(object sender, RoutedEventArgs e)
+    {
+        if (sender is FrameworkElement { Tag: Guid conflictId } &&
+            _syncService.DismissConflict(conflictId))
+        {
+            LoadRows();
+        }
+    }
+
+    private void OnCloseClick(object sender, RoutedEventArgs e) => Close();
+
+    private void OnWindowStateChanged(object? sender, EventArgs e)
+    {
+        // Kept as a named handler so the custom chrome remains consistent with Settings and the
+        // notes manager when Windows restores/maximizes this auxiliary window.
+    }
+
+    private sealed class ConflictRow
+    {
+        public ConflictRow(SyncConflict conflict)
+        {
+            Conflict = conflict;
+            LosingTitle = conflict.Losing.Note is { } note
+                ? NoteTitleHelper.GetTitle(note.Text)
+                : Strings.SyncConflictDeleted;
+            Details = $"{conflict.Losing.DeviceId} · {conflict.Losing.UpdatedAt.ToLocalTime():g}  →  " +
+                      $"{conflict.Winner.DeviceId} · {conflict.Winner.UpdatedAt.ToLocalTime():g}";
+        }
+
+        public SyncConflict Conflict { get; }
+        public string LosingTitle { get; }
+        public string Details { get; }
+    }
+}

@@ -561,9 +561,8 @@ una tira estrecha como en la referencia. Esto NO es un bug de
 implementación: el código hace exactamente lo que pedía la spec: la
 propia spec tenía un hueco frente a la referencia.
 
-Iterado en 4 rondas de maqueta (Artifact, no en el código real):
-`https://claude.ai/code/artifact/25194ada-e021-4222-bc03-722f78250544`
-(léela con `Artifact` acción `"read"` si retomas esto en otra sesión).
+Iterado en 4 rondas de una maqueta visual externa, no en el código real. La maqueta no forma parte
+del repositorio; se conserva aquí únicamente la decisión de diseño resultante.
 **Diseño validado por el usuario** (última ronda de la maqueta):
 
 - Cada pestaña con **ancho creciente según su índice** en la pila
@@ -2702,14 +2701,14 @@ pero devuelve el `MonitorInfo` entero — hace falta su `WorkArea` para el tope 
 ### `NoteWindow.FitHeightToContent`
 
 Ajusta el alto de la ventana al contenido actual en cada `TextChanged` y al abrir la nota — crece si
-no cabe, encoge si sobra sitio, entre `DefaultHeight` (320, el tamaño de fábrica, nunca encoge por
-debajo) y `MaxHeight` (700px, o el área de trabajo real del monitor si es menor — nunca
+no cabe, encoge si sobra sitio, entre el alto inicial definido en XAML (320px en la configuración
+actual, nunca encoge por debajo) y `MaxHeight` (700px, o el área de trabajo real del monitor si es menor — nunca
 `SystemParameters.WorkArea`, mismo aviso que ya tiene `SettingsWindow`).
 
 **Un arrastre manual del borde bloquea el ajuste automático para el resto de esa apertura** — el
 usuario ha tomado el control, y seguir tocándole el tamaño mientras escribe sería pelearse con él. El
-botón "Restaurar tamaño" (menú "⋯") lo desbloquea y vuelve a 300×320, re-creciendo en el acto si el
-contenido ya no cabe ahí. La distinción entre "cambio nuestro" y "arrastre real" no se guarda en
+botón "Restaurar tamaño" (menú "⋯") lo desbloquea y vuelve al tamaño inicial de la ventana, sin
+re-crecer en ese mismo clic aunque el contenido ya no quepa ahí. La distinción entre "cambio nuestro" y "arrastre real" no se guarda en
 ningún sitio — cada apertura empieza otra vez en modo automático, sea cual sea el alto con el que se
 guardó la nota la última vez (ese alto puede venir tanto de un ajuste automático anterior como de un
 arrastre real, y no hay forma barata de distinguirlos entre sesiones sin tocar el esquema de la base de
@@ -2744,9 +2743,232 @@ Tests: 389/389 (3 nuevos de `MonitorLookup.MonitorAt`; el resto de la lógica es
 automáticos por el mismo criterio que el resto de esa capa). Verificado a mano contra la app real
 (limitado al monitor vertical, con `ValuePattern.SetValue`, nota de prueba borrada al terminar):
 crece hasta el tope de 700px, encoge de vuelta a 320 al borrar texto, un redimensionado manual
-(`TransformPattern.Resize`) bloquea el ajuste hasta pulsar "Restaurar tamaño", que lo reactiva y
-vuelve a crecer si hace falta. Build limpio, 0 advertencias nuevas.
+(`TransformPattern.Resize`) bloquea el ajuste hasta pulsar "Restaurar tamaño". Ese botón devuelve la
+ventana al tamaño inicial real definido al crearla, aunque el contenido actual sea más largo; deja el
+scroll disponible si hace falta y reactiva el autoajuste para los siguientes cambios de texto. Build
+limpio, 0 advertencias nuevas.
 
 **Pendiente, no abordado en esta sesión**: el rediseño visual de la barra de scroll en sí (el usuario
 lo sigue queriendo, pero sin poder describir qué le falla — hace falta una maqueta con opciones
 concretas antes de poder decidir, no solo la pregunta abierta).
+
+## Solapamiento de pestañas al arrastrar hacia abajo (sesión 2026-09-12)
+
+Al arrastrar una pestaña hacia abajo, el movimiento y el orden persistían, pero la pestaña podía
+quedar visualmente detrás de las que atravesaba. El intento de usar una `DragLayer` con una copia
+visual resultó demasiado invasivo y se retiró: podía introducir estados visuales distintos del botón
+real. La implementación que queda mantiene la pestaña real en su sitio, pero durante el gesto eleva
+el `Button`, el contenedor devuelto por `ItemContainerGenerator` y el `ContentPresenter` real. Al
+soltar restaura esos valores y después calcula/persiste el nuevo índice.
+
+Tests: 389/389. Build de la aplicación correcto en salida temporal (la instancia abierta de Fanote
+bloquea su DLL/EXE de `bin`); quedan las 4 advertencias CA1416 ya existentes de `DatabaseKeyProvider`.
+Pendiente de verificación visual manual con varias pestañas, arrastrando una de las primeras hacia
+abajo por delante de las siguientes.
+
+## Bordes superior e inferior del dock (sesión 2026-09-12)
+
+Se habilitaron Arriba y Abajo en Ajustes. Para esos bordes, `EdgeDockWindow` conserva una barra de
+reposo horizontal, pero al desplegarse usa la misma columna vertical de tarjetas anchas que el dock
+lateral. El solape y el arrastre siguen usando el eje vertical; las formas de las pestañas dejan el
+canto físico sin borde redondeado. `PositionNoteWindow` coloca la nota debajo del dock superior o
+encima del inferior, manteniendo el acotado al monitor. Izquierda y Derecha conservan su layout y
+comportamiento anteriores.
+
+Build de la aplicación correcto, sin advertencias; tests: 389/389. Pendiente de verificación manual
+en una instalación con el dock configurado primero en Arriba y después en Abajo, incluyendo muchas
+notas, scroll, reordenación y apertura desde la pestaña.
+
+## Rediseño geométrico de Arriba/Abajo (sesión 2026-09-12)
+
+La primera implementación horizontal era una adaptación incompleta del dock lateral: intentaba poner
+las tarjetas verticales en fila, desperdiciando el espacio y recortando la lectura del título. Se
+reemplazó por un diseño propio para esos bordes: en reposo queda una barra horizontal; al desplegarse,
+la ventana conserva el ancho útil del lateral (226px de ventana y 208px por tarjeta) y muestra las
+previews en una columna vertical. Arriba crece hacia abajo y Abajo hacia arriba; las muchas notas
+usan scroll vertical. El pie de acciones queda junto al canto físico, con una separación compacta de
+la primera/última tarjeta, y la barra de reposo conserva sus guiones en horizontal.
+
+Tests: 390/390. Build correcto, 0 errores y 0 advertencias nuevas. El portable se ha regenerado y
+abierto desde `publish/portable/Fanote.exe` para la validación visual manual.
+
+## Guion final recortado en los docks superior e inferior (sesión 2026-09-12)
+
+Al crear una nota con el dock en Arriba o Abajo, el último guion de color podía quedar cortado:
+la barra de reposo se medía contra los 208px interiores de las tarjetas, aunque necesitaba el ancho
+completo de la ventana. `RestStrip` usa ahora los 226px completos y la geometría queda cubierta por
+una prueba específica para ambos bordes.
+
+Tests: 392/392. Portable republicado y relanzado desde `publish/portable/Fanote.exe`.
+
+## Tira superior/inferior para muchas notas y refresco del gestor (sesión 2026-09-12)
+
+Con diez notas, la tira horizontal seguía usando guiones del tamaño lateral y solo mostraba seis
+completos más otro recortado. Arriba y abajo usan ahora guiones compactos, calculados con su medida
+real, para mostrar diez completos dentro de los 226px disponibles. Los laterales mantienen sus
+guiones anteriores.
+
+`NotesManagerWindow` expone una recarga desde repositorio y `AppCoordinator.RefreshAll()` la llama
+junto con los docks. Crear, editar, archivar, restaurar o eliminar una nota desde otra ventana ya
+actualiza el gestor si está abierto.
+
+Tests: 394/394. Build correcto. Portable republicado y abierto desde `publish/portable/Fanote.exe`.
+
+La verificación visual posterior mostró que la barra todavía quedaba limitada por el `ContentGrid`
+interior de 208px y los guiones se alineaban a la izquierda. Se separaron ambos espacios: el
+`ContentGrid` ocupa ahora los 226px de la ventana y `FanPanel` conserva el margen interior de 9px;
+la tira horizontal se centra dentro de toda la ventana.
+
+Tests: 394/394. Portable republicado y abierto de nuevo para validación manual.
+
+## Dock superior/inferior adaptativo y selección múltiple en Gestionar notas (sesión 2026-09-12)
+
+El ancho del dock superior/inferior dejó de ser fijo: crece con la tira de notas, igual que el dock
+lateral crece en vertical, con un límite para no ocupar toda la pantalla. Las tarjetas siguen
+conservando sus 208px útiles y los guiones mantienen su tamaño legible.
+
+En `Gestionar notas`, la fila completa alterna la selección con un clic. `Shift` selecciona un rango
+entre filas y `Ctrl+Shift` añade otro rango a la selección existente. La casilla `Seleccionar todo`
+sigue disponible.
+
+Tests: 396/396. Build correcto. Portable republicado y abierto desde `publish/portable/Fanote.exe`.
+
+## Transporte WebDAV para sincronizaciÃ³n (sesiÃ³n 2026-09-13)
+
+Fanote ya permite elegir WebDAV/Nextcloud como transporte independiente de la carpeta compartida y
+del servidor Fanote. Usa `PROPFIND`, `MKCOL`, `GET`, `PUT` y `DELETE` sobre sobres cifrados por nota.
+La URL puede viajar en una invitaciÃ³n de perfil, pero el usuario y la contraseÃ±a de aplicaciÃ³n se
+configuran por dispositivo; la contraseÃ±a queda protegida localmente.
+
+Tests: 428/428. Pendiente: probarlo contra una instalaciÃ³n real de Nextcloud/ownCloud.
+
+## Invitaciones de perfiles de sincronización (sesión 2026-09-13)
+
+Los códigos de perfil pasan a v2 y pueden incluir el nombre del vínculo y la URL del servidor propio
+para que la importación sea guiada. El token de acceso y el contenido de las notas nunca se incluyen.
+Los códigos v1 existentes siguen siendo válidos. Al importar, Fanote actualiza el transporte y la URL
+del servidor y deja el token para introducirlo localmente.
+
+Build correcto. Tests: 426/426. Portable v0.5.0 republicado y abierto.
+
+## RevocaciÃ³n segura de perfiles de sincronizaciÃ³n (sesiÃ³n 2026-09-13)
+
+Ajustes incorpora `Revocar cÃ³digos anteriores`. La operaciÃ³n sincroniza antes de rotar la clave,
+guarda una clave pendiente reanudable, vuelve a cifrar los sobres y limpia los objetos que ya no
+pertenecen al Ã¡mbito. Los sobres re-cifrados reciben una versiÃ³n posterior para que un dispositivo
+con la clave antigua no pueda republicarlos. El servidor propio expone el borrado autenticado de
+objetos que necesita esta operaciÃ³n.
+
+La prueba de integraciÃ³n confirma que el cÃ³digo antiguo deja de sincronizar y que una invitaciÃ³n nueva
+recupera el vÃ­nculo. Tests: 427/427.
+
+## RevisiÃ³n inicial de Gestionar notas (sesiÃ³n 2026-09-13)
+
+La selecciÃ³n de una fila ahora se distingue tambiÃ©n por el borde y la opacidad de la propia nota,
+no solo por la casilla. Las filas son enfocables y el doble clic abre la nota completa; el clic normal
+conserva la selecciÃ³n para acciones en bloque.
+
+Build correcto. Tests: 425/425. Se ha generado la versiÃ³n actualizada en
+`publish/portable-next/Fanote.exe`; la carpeta `publish/portable` no se puede reemplazar mientras
+sus dos instancias sigan abiertas.
+
+## Notas contenidas en el monitor y barra de desplazamiento (sesiÃ³n 2026-09-13)
+
+Las notas recalculan sus lÃ­mites de ancho y alto segÃºn el Ã¡rea de trabajo del monitor actual. Si
+crecen cerca del borde inferior, se recolocan dentro de la pantalla; cuando el contenido supera el
+alto permitido, el cuerpo mantiene el desplazamiento vertical en vez de dejar salir la ventana.
+TambiÃ©n se desactiva el desplazamiento horizontal para que el texto se adapte al ancho disponible.
+
+La barra global gana contraste sobre las notas de color, con un pulgar redondeado, borde sutil y
+estados diferenciados al pasar el ratÃ³n o arrastrar.
+
+Tests: 410/410. Build correcto. Portable republicado y abierto desde `publish/portable/Fanote.exe`.
+
+## Atajo de búsqueda en Gestionar notas (sesiÃ³n 2026-09-13)
+
+`Ctrl+F` enfoca el campo de búsqueda de Gestionar notas y selecciona el texto actual para poder
+reemplazarlo directamente. La ayuda rápida de Ajustes también lo documenta en español e inglés.
+
+Tests: 410/410. Build correcto. Portable republicado y abierto desde `publish/portable/Fanote.exe`.
+
+## Pulido de ventanas y color libre de nota (sesión 2026-09-12)
+
+Se afinó la respuesta visual del dock y de las ventanas: el cierre del dock espera 90 ms y las
+transiciones de entrada/cambio quedan alrededor de 150 ms, conservando el ease-out. `NotesManagerWindow`
+ahora tiene algo más de ancho útil, redondeo de píxeles y no muestra el rectángulo de foco azul en
+sus controles de chrome.
+
+El marcador `Title` se oculta mientras el campo tiene el foco para que el caret no atraviese la
+primera letra. El botón `⋯` captura el segundo clic antes del autocierre del `Popup`, por lo que
+ahora abre y cierra de forma determinista.
+
+El menú de acciones de cada nota mantiene las seis pastillas rápidas y añade **Elegir otro color…**
+mediante el selector nativo. Los colores personalizados se guardan como RGB hexadecimal y se
+rechazan si no alcanzan contraste suficiente con la tinta de la nota.
+
+## Conflictos de sincronización validados (sesión 2026-09-12)
+
+Se añadieron pruebas de extremo a extremo con dos bases de datos, dos identificadores de dispositivo
+y una carpeta compartida: edición concurrente con convergencia a la versión más reciente, borrado
+posterior a una edición antigua y desempate estable del tombstone. También se corrigió el sobre de
+borrado para publicar el identificador real del dispositivo, en vez del valor interno `local`.
+
+Build correcto. Tests: 403/403.
+
+## HTTPS del servidor autohosteable preparado (sesión 2026-09-12)
+
+Se añadió `docker-compose.sync.https.yml` junto con `Caddyfile`. Caddy publica únicamente los
+puertos 80/443, obtiene y renueva el certificado del dominio configurado y reenvía al servicio
+`fanote-sync` por la red interna de Docker. El puerto HTTP directo no se publica en esta variante.
+
+La composición se validó con `docker compose config`. Falta la prueba de despliegue real, porque
+requiere un dominio/DNS y acceso al servidor del usuario.
+
+## Rotación de tokens del servidor (sesión 2026-09-12)
+
+El servidor mantiene compatibilidad con `FANOTE_SYNC_TOKEN` y añade `FANOTE_SYNC_TOKENS`, una lista
+separada por comas con prioridad sobre el valor antiguo. La ventana de solapamiento permite migrar
+los clientes uno a uno; al eliminar el token viejo de la lista queda revocado. La comparación usa
+bytes en tiempo constante y no se añadió ningún endpoint de administración.
+
+Build correcto. Tests: 410/410.
+
+## Interfaz de conflictos de sincronización (sesión 2026-09-12)
+
+Los conflictos guardan ahora la versión perdedora cifrada en la base local. Ajustes muestra el
+número pendiente y abre `SyncConflictsWindow`, donde se puede restaurar la versión perdedora o
+descartar el registro. Solo queda un conflicto visible por nota y restaurar una versión le asigna
+una marca temporal nueva para que la decisión se publique en la siguiente sincronización.
+
+Build correcto. Tests: 410/410.
+
+## Modo simplificado de Ajustes (sesiÃ³n 2026-09-12)
+
+Se aÃ±adiÃ³ `AppSettings.SimplifiedMode` y un selector persistente en Ajustes. El modo simplificado
+oculta el bloque de opciones avanzadas, pero mantiene accesibles el cambio de modo, la versiÃ³n y la
+salida de la aplicaciÃ³n. El cambio se aplica al instante y no altera notas ni el resto de valores
+guardados.
+
+Build correcto. Tests: 400/400. Portable v0.5.0 publicada.
+
+## Esquinas superiores del dock (sesión 2026-09-12)
+
+Las tarjetas del dock superior redondean ahora también sus esquinas superiores, manteniendo el dock
+inferior espejado con las esquinas interiores redondeadas.
+
+La validación visual mostró un último desajuste: la pastilla negra estaba usando el ancho adaptativo
+completo de la ventana, en lugar de ceñirse a los guiones que contiene, y el margen del último guion
+dejaba los lados desiguales. La ventana sigue creciendo para las tarjetas, pero la pastilla ahora
+usa solo el ancho de su contenido, descuenta el margen final y se centra.
+
+Tests: 396/396. Portable republicado y abierto de nuevo.
+
+## Nitidez de la lista al añadir notas (sesión 2026-09-12)
+
+La pila podía verse borrosa durante las inserciones porque la tarjeta nueva se desplazaba con un
+`TranslateTransform` mientras el resto se recolocaba con pasos fraccionarios. Se mantiene el fundido
+de entrada, pero las inserciones nuevas ya no se trasladan; el desplazamiento animado se conserva al
+abrir el abanico. `EdgeDockWindow` activa además redondeo de layout, píxeles y formato de texto de
+display para que las tarjetas se dibujen nítidas.
+
+Tests: 396/396. Build correcto. Portable republicado y abierto desde `publish/portable/Fanote.exe`.

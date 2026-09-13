@@ -1,4 +1,5 @@
 using Microsoft.Data.Sqlite;
+using System.Text.Json;
 
 namespace Fanote.Core;
 
@@ -77,8 +78,223 @@ public sealed class NotesRepository
         {
             results.Add(ReadNote(reader));
         }
+        HydrateTags(results);
         return results;
     }
+
+    /// <summary>Todas las notas actuales, incluidos archivadas y papelera, para exportación/sync.</summary>
+    public IReadOnlyList<Note> GetAllForSync()
+    {
+        using var connection = _database.OpenConnection();
+        using var command = connection.CreateCommand();
+        command.CommandText = """
+            SELECT Id, EncryptedText, Nonce, Tag, Color, CreatedAt, UpdatedAt, State, ScreenOrigin
+            FROM Note ORDER BY CreatedAt;
+            """;
+
+        var results = new List<Note>();
+        using var reader = command.ExecuteReader();
+        while (reader.Read()) results.Add(ReadNote(reader));
+        HydrateTags(results);
+        return results;
+    }
+
+    public IReadOnlyList<string> GetAllTags()
+    {
+        using var connection = _database.OpenConnection();
+        using var command = connection.CreateCommand();
+        command.CommandText = "SELECT Name FROM Tag ORDER BY Name COLLATE NOCASE;";
+        using var reader = command.ExecuteReader();
+        var result = new List<string>();
+        while (reader.Read()) result.Add((string)reader["Name"]);
+        return result;
+    }
+
+    public void SetTags(Guid noteId, IEnumerable<string> tags)
+    {
+        var normalized = tags
+            .Select(tag => tag.Trim())
+            .Where(tag => tag.Length > 0)
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .Take(20)
+            .ToList();
+
+        using var connection = _database.OpenConnection();
+        using var transaction = connection.BeginTransaction();
+        using (var delete = connection.CreateCommand())
+        {
+            delete.Transaction = transaction;
+            delete.CommandText = "DELETE FROM NoteTag WHERE NoteId = $noteId;";
+            delete.Parameters.AddWithValue("$noteId", noteId.ToString());
+            delete.ExecuteNonQuery();
+        }
+
+        foreach (var name in normalized)
+        {
+            using var add = connection.CreateCommand();
+            add.Transaction = transaction;
+            add.CommandText = """
+                INSERT OR IGNORE INTO Tag (Id, Name) VALUES ($tagId, $name);
+                INSERT OR IGNORE INTO NoteTag (NoteId, TagId)
+                SELECT $noteId, Id FROM Tag WHERE Name = $name COLLATE NOCASE;
+                """;
+            add.Parameters.AddWithValue("$tagId", Guid.NewGuid().ToString());
+            add.Parameters.AddWithValue("$name", name);
+            add.Parameters.AddWithValue("$noteId", noteId.ToString());
+            add.ExecuteNonQuery();
+        }
+
+        using var cleanup = connection.CreateCommand();
+        cleanup.Transaction = transaction;
+        cleanup.CommandText = "DELETE FROM Tag WHERE Id NOT IN (SELECT TagId FROM NoteTag);";
+        cleanup.ExecuteNonQuery();
+        transaction.Commit();
+    }
+
+    public IReadOnlyList<Note> GetByTag(string tag, NoteState state)
+    {
+        var notes = new List<Note>();
+        using var connection = _database.OpenConnection();
+        using var command = connection.CreateCommand();
+        command.CommandText = """
+            SELECT n.Id, n.EncryptedText, n.Nonce, n.Tag, n.Color, n.CreatedAt, n.UpdatedAt, n.State, n.ScreenOrigin
+            FROM Note n
+            JOIN NoteTag nt ON nt.NoteId = n.Id
+            JOIN Tag t ON t.Id = nt.TagId
+            LEFT JOIN NoteOrder o ON o.NoteId = n.Id
+            WHERE n.State = $state AND t.Name = $tag COLLATE NOCASE
+            ORDER BY COALESCE(o.Position, 1e18), n.CreatedAt;
+            """;
+        command.Parameters.AddWithValue("$state", state.ToString());
+        command.Parameters.AddWithValue("$tag", tag);
+        using var reader = command.ExecuteReader();
+        while (reader.Read()) notes.Add(ReadNote(reader));
+        HydrateTags(notes);
+        return notes;
+    }
+
+    private void HydrateTags(IReadOnlyList<Note> notes)
+    {
+        if (notes.Count == 0) return;
+        using var connection = _database.OpenConnection();
+        using var command = connection.CreateCommand();
+        command.CommandText = "SELECT nt.NoteId, t.Name FROM NoteTag nt JOIN Tag t ON t.Id = nt.TagId;";
+        var byId = notes.ToDictionary(note => note.Id, _ => new List<string>());
+        using var reader = command.ExecuteReader();
+        while (reader.Read())
+        {
+            if (byId.TryGetValue(Guid.Parse((string)reader["NoteId"]), out var tags))
+                tags.Add((string)reader["Name"]);
+        }
+        foreach (var note in notes) note.Tags = byId[note.Id];
+    }
+
+    public IReadOnlyList<SyncTombstone> GetSyncTombstones()
+    {
+        using var connection = _database.OpenConnection();
+        using var command = connection.CreateCommand();
+        command.CommandText = "SELECT NoteId, DeletedAt, DeviceId FROM SyncTombstone;";
+
+        var results = new List<SyncTombstone>();
+        using var reader = command.ExecuteReader();
+        while (reader.Read())
+        {
+            results.Add(new SyncTombstone(
+                Guid.Parse((string)reader["NoteId"]),
+                DateTimeOffset.Parse((string)reader["DeletedAt"],
+                    System.Globalization.CultureInfo.InvariantCulture,
+                    System.Globalization.DateTimeStyles.RoundtripKind),
+                (string)reader["DeviceId"]));
+        }
+        return results;
+    }
+
+    public IReadOnlyList<SyncConflict> GetSyncConflicts()
+    {
+        using var connection = _database.OpenConnection();
+        using var command = connection.CreateCommand();
+        command.CommandText = """
+            SELECT Id, NoteId, OccurredAt, WinnerUpdatedAt, WinnerDeviceId,
+                   LosingUpdatedAt, LosingDeviceId, LosingTombstone,
+                   EncryptedNote, NoteNonce, NoteTag
+            FROM SyncConflict ORDER BY OccurredAt DESC;
+            """;
+
+        var results = new List<SyncConflict>();
+        using var reader = command.ExecuteReader();
+        while (reader.Read())
+        {
+            Note? losingNote = null;
+            if (reader["EncryptedNote"] is byte[] encrypted &&
+                reader["NoteNonce"] is byte[] nonce &&
+                reader["NoteTag"] is byte[] tag)
+            {
+                var json = _cipher.Decrypt(new EncryptedContent(encrypted, nonce, tag));
+                losingNote = JsonSerializer.Deserialize<Note>(json);
+            }
+
+            results.Add(new SyncConflict(
+                Guid.Parse((string)reader["Id"]),
+                Guid.Parse((string)reader["NoteId"]),
+                ParseDate(reader["OccurredAt"]),
+                new SyncConflictVersion(ParseDate(reader["WinnerUpdatedAt"]),
+                    (string)reader["WinnerDeviceId"], false, null),
+                new SyncConflictVersion(ParseDate(reader["LosingUpdatedAt"]),
+                    (string)reader["LosingDeviceId"], Convert.ToInt32(reader["LosingTombstone"]) != 0,
+                    losingNote)));
+        }
+
+        return results;
+    }
+
+    public void SaveSyncConflict(SyncConflict conflict)
+    {
+        EncryptedContent? encryptedNote = null;
+        if (conflict.Losing.Note is not null)
+        {
+            var json = JsonSerializer.Serialize(conflict.Losing.Note);
+            encryptedNote = _cipher.Encrypt(json);
+        }
+
+        using var connection = _database.OpenConnection();
+        using var command = connection.CreateCommand();
+        command.CommandText = """
+            DELETE FROM SyncConflict WHERE NoteId = $noteId;
+            INSERT OR REPLACE INTO SyncConflict
+                (Id, NoteId, OccurredAt, WinnerUpdatedAt, WinnerDeviceId,
+                 LosingUpdatedAt, LosingDeviceId, LosingTombstone,
+                 EncryptedNote, NoteNonce, NoteTag)
+            VALUES ($id, $noteId, $occurredAt, $winnerUpdatedAt, $winnerDeviceId,
+                    $losingUpdatedAt, $losingDeviceId, $losingTombstone,
+                    $encryptedNote, $noteNonce, $noteTag);
+            """;
+        command.Parameters.AddWithValue("$id", conflict.Id.ToString());
+        command.Parameters.AddWithValue("$noteId", conflict.NoteId.ToString());
+        command.Parameters.AddWithValue("$occurredAt", conflict.OccurredAt.ToString("O"));
+        command.Parameters.AddWithValue("$winnerUpdatedAt", conflict.Winner.UpdatedAt.ToString("O"));
+        command.Parameters.AddWithValue("$winnerDeviceId", conflict.Winner.DeviceId);
+        command.Parameters.AddWithValue("$losingUpdatedAt", conflict.Losing.UpdatedAt.ToString("O"));
+        command.Parameters.AddWithValue("$losingDeviceId", conflict.Losing.DeviceId);
+        command.Parameters.AddWithValue("$losingTombstone", conflict.Losing.Tombstone ? 1 : 0);
+        command.Parameters.AddWithValue("$encryptedNote", (object?)encryptedNote?.CipherText ?? DBNull.Value);
+        command.Parameters.AddWithValue("$noteNonce", (object?)encryptedNote?.Nonce ?? DBNull.Value);
+        command.Parameters.AddWithValue("$noteTag", (object?)encryptedNote?.Tag ?? DBNull.Value);
+        command.ExecuteNonQuery();
+    }
+
+    public void DeleteSyncConflict(Guid conflictId)
+    {
+        using var connection = _database.OpenConnection();
+        using var command = connection.CreateCommand();
+        command.CommandText = "DELETE FROM SyncConflict WHERE Id = $id;";
+        command.Parameters.AddWithValue("$id", conflictId.ToString());
+        command.ExecuteNonQuery();
+    }
+
+    private static DateTimeOffset ParseDate(object value) => DateTimeOffset.Parse(
+        (string)value,
+        System.Globalization.CultureInfo.InvariantCulture,
+        System.Globalization.DateTimeStyles.RoundtripKind);
 
     public void UpdateText(Guid id, string newText)
     {
@@ -130,15 +346,80 @@ public sealed class NotesRepository
     public bool Delete(Guid id)
     {
         using var connection = _database.OpenConnection();
+        using (var existsCommand = connection.CreateCommand())
+        {
+            existsCommand.CommandText = "SELECT EXISTS (SELECT 1 FROM Note WHERE Id = $id);";
+            existsCommand.Parameters.AddWithValue("$id", id.ToString());
+            if (Convert.ToInt32(existsCommand.ExecuteScalar()) == 0) return false;
+        }
+
+        using var command = connection.CreateCommand();
+        command.CommandText = """
+            INSERT OR REPLACE INTO SyncTombstone (NoteId, DeletedAt, DeviceId)
+            VALUES ($id, $deletedAt, 'local');
+            DELETE FROM Note WHERE Id = $id;
+            DELETE FROM NotePlacement WHERE NoteId = $id;
+            DELETE FROM TaskCompletion WHERE NoteId = $id;
+            DELETE FROM NoteReminder WHERE NoteId = $id;
+            DELETE FROM NoteTag WHERE NoteId = $id;
+            """;
+        command.Parameters.AddWithValue("$id", id.ToString());
+        command.Parameters.AddWithValue("$deletedAt", DateTimeOffset.UtcNow.ToString("O"));
+        command.ExecuteNonQuery();
+        return true;
+    }
+
+    /// <summary>Aplica una nota remota ya resuelta por el motor de sincronización.</summary>
+    public void ApplySyncNote(Note note)
+    {
+        var encrypted = _cipher.Encrypt(note.Text);
+        using var connection = _database.OpenConnection();
+        using var command = connection.CreateCommand();
+        command.CommandText = """
+            INSERT INTO Note (Id, EncryptedText, Nonce, Tag, Color, CreatedAt, UpdatedAt, State, ScreenOrigin)
+            VALUES ($id, $text, $nonce, $tag, $color, $createdAt, $updatedAt, $state, $screenOrigin)
+            ON CONFLICT(Id) DO UPDATE SET
+                EncryptedText = excluded.EncryptedText,
+                Nonce = excluded.Nonce,
+                Tag = excluded.Tag,
+                Color = excluded.Color,
+                CreatedAt = excluded.CreatedAt,
+                UpdatedAt = excluded.UpdatedAt,
+                State = excluded.State,
+                ScreenOrigin = excluded.ScreenOrigin;
+            DELETE FROM SyncTombstone WHERE NoteId = $id;
+            """;
+        command.Parameters.AddWithValue("$id", note.Id.ToString());
+        command.Parameters.AddWithValue("$text", encrypted.CipherText);
+        command.Parameters.AddWithValue("$nonce", encrypted.Nonce);
+        command.Parameters.AddWithValue("$tag", encrypted.Tag);
+        command.Parameters.AddWithValue("$color", note.Color);
+        command.Parameters.AddWithValue("$createdAt", note.CreatedAt.ToString("O"));
+        command.Parameters.AddWithValue("$updatedAt", note.UpdatedAt.ToString("O"));
+        command.Parameters.AddWithValue("$state", note.State.ToString());
+        command.Parameters.AddWithValue("$screenOrigin", note.ScreenOrigin);
+        command.ExecuteNonQuery();
+        SetTags(note.Id, note.Tags);
+    }
+
+    /// <summary>Aplica una eliminación remota sin generar una segunda tombstone local.</summary>
+    public void ApplySyncTombstone(SyncTombstone tombstone)
+    {
+        using var connection = _database.OpenConnection();
         using var command = connection.CreateCommand();
         command.CommandText = """
             DELETE FROM Note WHERE Id = $id;
             DELETE FROM NotePlacement WHERE NoteId = $id;
             DELETE FROM TaskCompletion WHERE NoteId = $id;
             DELETE FROM NoteReminder WHERE NoteId = $id;
+            DELETE FROM NoteTag WHERE NoteId = $id;
+            INSERT OR REPLACE INTO SyncTombstone (NoteId, DeletedAt, DeviceId)
+            VALUES ($id, $deletedAt, $deviceId);
             """;
-        command.Parameters.AddWithValue("$id", id.ToString());
-        return command.ExecuteNonQuery() > 0;
+        command.Parameters.AddWithValue("$id", tombstone.NoteId.ToString());
+        command.Parameters.AddWithValue("$deletedAt", tombstone.DeletedAt.ToString("O"));
+        command.Parameters.AddWithValue("$deviceId", tombstone.DeviceId);
+        command.ExecuteNonQuery();
     }
 
     /// <summary>
@@ -149,15 +430,30 @@ public sealed class NotesRepository
     {
         var cutoff = DateTimeOffset.UtcNow - retention;
         using var connection = _database.OpenConnection();
+        using var countCommand = connection.CreateCommand();
+        countCommand.CommandText = """
+            SELECT COUNT(*) FROM Note WHERE State = $state AND UpdatedAt < $cutoff;
+            """;
+        countCommand.Parameters.AddWithValue("$state", NoteState.Trashed.ToString());
+        countCommand.Parameters.AddWithValue("$cutoff", cutoff.ToString("O"));
+        int removed = Convert.ToInt32(countCommand.ExecuteScalar());
+        if (removed == 0) return 0;
+
         using var command = connection.CreateCommand();
         command.CommandText = """
+            INSERT OR REPLACE INTO SyncTombstone (NoteId, DeletedAt, DeviceId)
+            SELECT Id, $deletedAt, 'local' FROM Note
+            WHERE State = $state AND UpdatedAt < $cutoff;
             DELETE FROM NotePlacement WHERE NoteId IN (SELECT Id FROM Note WHERE State = $state AND UpdatedAt < $cutoff);
             DELETE FROM NoteReminder WHERE NoteId IN (SELECT Id FROM Note WHERE State = $state AND UpdatedAt < $cutoff);
+            DELETE FROM NoteTag WHERE NoteId IN (SELECT Id FROM Note WHERE State = $state AND UpdatedAt < $cutoff);
             DELETE FROM Note WHERE State = $state AND UpdatedAt < $cutoff;
             """;
         command.Parameters.AddWithValue("$state", NoteState.Trashed.ToString());
         command.Parameters.AddWithValue("$cutoff", cutoff.ToString("O"));
-        return command.ExecuteNonQuery();
+        command.Parameters.AddWithValue("$deletedAt", DateTimeOffset.UtcNow.ToString("O"));
+        command.ExecuteNonQuery();
+        return removed;
     }
 
     /// <summary>
@@ -424,7 +720,10 @@ public sealed class NotesRepository
         command.Parameters.AddWithValue("$id", id.ToString());
 
         using var reader = command.ExecuteReader();
-        return reader.Read() ? ReadNote(reader) : null;
+        if (!reader.Read()) return null;
+        var note = ReadNote(reader);
+        HydrateTags(new[] { note });
+        return note;
     }
 
     /// <summary>Guarda o actualiza cuándo se marcó como hecha la tarea identificada por <paramref name="lineHash"/>

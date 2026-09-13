@@ -12,6 +12,11 @@ internal static class NativeMethods
     private const int WS_EX_NOACTIVATE = 0x08000000;
     private const int WS_MAXIMIZE = 0x01000000;
     private const int WS_CAPTION = 0x00C00000;
+    private const int WH_KEYBOARD_LL = 13;
+    internal const int WM_KEYDOWN = 0x0100;
+    internal const int WM_KEYUP = 0x0101;
+    internal const int WM_SYSKEYDOWN = 0x0104;
+    internal const int WM_SYSKEYUP = 0x0105;
 
     private static readonly IntPtr HWND_TOPMOST = new(-1);
     private const uint SWP_NOSIZE = 0x0001;
@@ -22,6 +27,21 @@ internal static class NativeMethods
     [DllImport("user32.dll", SetLastError = true)]
     [return: MarshalAs(UnmanagedType.Bool)]
     private static extern bool SetWindowPos(IntPtr hWnd, IntPtr hWndInsertAfter, int X, int Y, int cx, int cy, uint uFlags);
+
+    internal delegate IntPtr LowLevelKeyboardProc(int nCode, IntPtr wParam, IntPtr lParam);
+
+    [DllImport("user32.dll", SetLastError = true)]
+    private static extern IntPtr SetWindowsHookEx(int idHook, LowLevelKeyboardProc callback, IntPtr hMod, uint threadId);
+
+    [DllImport("user32.dll", SetLastError = true)]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    private static extern bool UnhookWindowsHookEx(IntPtr hook);
+
+    [DllImport("user32.dll")]
+    private static extern IntPtr CallNextHookEx(IntPtr hook, int nCode, IntPtr wParam, IntPtr lParam);
+
+    [DllImport("kernel32.dll", CharSet = CharSet.Unicode, SetLastError = true)]
+    private static extern IntPtr GetModuleHandle(string? moduleName);
 
     [DllImport("user32.dll", SetLastError = true)]
     private static extern int GetWindowLong(IntPtr hWnd, int nIndex);
@@ -35,6 +55,30 @@ internal static class NativeMethods
         SetWindowLong(hWnd, GWL_EXSTYLE, exStyle | WS_EX_NOACTIVATE);
         EnsureTopmost(hWnd);
     }
+
+    /// <summary>
+    /// Permite activar el dock después de una interacción explícita del usuario. Mientras solo se
+    /// muestra al pasar el ratón sigue siendo no activable y no roba el foco a la aplicación que se
+    /// está usando; al pulsar una flecha, en cambio, el dock necesita recibir las siguientes teclas.
+    /// </summary>
+    internal static void AllowActivation(IntPtr hWnd)
+    {
+        int exStyle = GetWindowLong(hWnd, GWL_EXSTYLE);
+        SetWindowLong(hWnd, GWL_EXSTYLE, exStyle & ~WS_EX_NOACTIVATE);
+    }
+
+    internal static IntPtr InstallKeyboardHook(LowLevelKeyboardProc callback) =>
+        SetWindowsHookEx(WH_KEYBOARD_LL, callback, GetModuleHandle(null), 0);
+
+    internal static void UninstallKeyboardHook(IntPtr hook)
+    {
+        if (hook != IntPtr.Zero) UnhookWindowsHookEx(hook);
+    }
+
+    internal static IntPtr ContinueKeyboardHook(IntPtr hook, int code, IntPtr wParam, IntPtr lParam) =>
+        CallNextHookEx(hook, code, wParam, lParam);
+
+    internal static int GetKeyboardVirtualKey(IntPtr hookData) => Marshal.ReadInt32(hookData);
 
     /// <summary>
     /// Reafirma que la ventana este en la capa superior (HWND_TOPMOST) de Windows sin activar
@@ -172,6 +216,14 @@ internal static class NativeMethods
 
     [DllImport("user32.dll")]
     private static extern bool GetWindowRect(IntPtr hWnd, out RECT lpRect);
+
+    internal static bool IsCursorOverWindow(IntPtr hWnd)
+    {
+        if (hWnd == IntPtr.Zero || !GetCursorPos(out var point) || !GetWindowRect(hWnd, out var rect)) return false;
+
+        return point.X >= rect.Left && point.X < rect.Right
+            && point.Y >= rect.Top && point.Y < rect.Bottom;
+    }
 
     [DllImport("user32.dll")]
     private static extern IntPtr MonitorFromWindow(IntPtr hWnd, uint dwFlags);

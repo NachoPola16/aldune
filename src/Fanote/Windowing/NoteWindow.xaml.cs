@@ -17,11 +17,10 @@ public partial class NoteWindow : Window
 {
     private static readonly TimeSpan AutosaveDelay = TimeSpan.FromMilliseconds(500);
 
-    /// <summary>El tamaño de fábrica de una nota nueva (ver el XAML) — al lo que vuelve el botón
-    /// "Restaurar tamaño", y el piso al que se encoge sola una nota con poco texto (no tiene sentido
-    /// que el ajuste automático deje una nota más pequeña que esto).</summary>
-    private const double DefaultWidth = 300;
-    private const double DefaultHeight = 320;
+    /// <summary>El tamaño inicial real de esta ventana, capturado desde el XAML. Es el tamaño al que
+    /// vuelve "Restaurar tamaño" y el mínimo al que puede encogerse el ajuste automático.</summary>
+    private readonly double _initialWidth;
+    private readonly double _initialHeight;
 
     /// <summary>Tope absoluto de alto para el ajuste automático — no tiene sentido que una nota crezca
     /// hasta ocupar la pantalla entera. El monitor real de la nota (no <c>SystemParameters.WorkArea</c>,
@@ -49,10 +48,14 @@ public partial class NoteWindow : Window
     /// <see cref="OnRestoreSizeClick"/> se malinterprete como un arrastre manual en el
     /// <c>SizeChanged</c> de más abajo.</summary>
     private bool _isAutoResizing;
+    private bool _isConstrainingToMonitor;
+    private string? _placementMonitorKey;
 
     public NoteWindow(Note note, NotesRepository repository, AppCoordinator coordinator, AppSettings? settings = null)
     {
         InitializeComponent();
+        _initialWidth = Width;
+        _initialHeight = Height;
         _note = note;
         _repository = repository;
         _coordinator = coordinator;
@@ -137,8 +140,8 @@ public partial class NoteWindow : Window
         // hay escrito" es cierto siempre, no solo a partir de ahora.
         Loaded += (_, _) =>
         {
-            SetMaxHeightForCurrentMonitor();
-            FitHeightToContent();
+        ConstrainToCurrentMonitor(fitContent: true);
+            _placementMonitorKey = GetCurrentMonitorKey();
 
             // Enganchado aquí y no antes en el constructor: AppCoordinator.TryRestorePlacement fija
             // Width/Height (para restaurar la posición guardada) antes de Show(), y eso dispararía
@@ -148,9 +151,11 @@ public partial class NoteWindow : Window
             // fija el tamaño para el resto de esta apertura hasta "Restaurar tamaño".
             SizeChanged += (_, _) =>
             {
-                if (!_isAutoResizing) _hasManualSize = true;
+                if (!_isAutoResizing && !_isConstrainingToMonitor) _hasManualSize = true;
             };
         };
+
+        LocationChanged += (_, _) => OnLocationChanged();
 
         TextBody.TextChanged += (_, _) =>
         {
@@ -164,6 +169,7 @@ public partial class NoteWindow : Window
             TextBody.UpdateLayout();
             RefreshCheckboxHoverAfterTextChange();
             FitHeightToContent();
+            ClampToWorkArea();
         };
         TitleBox.TextChanged += (_, _) => OnEdited();
 
@@ -210,12 +216,60 @@ public partial class NoteWindow : Window
     /// </summary>
     private void SavePlacementOnce(object? sender, System.ComponentModel.CancelEventArgs e)
     {
+        SavePlacementForCurrentMonitor();
+    }
+
+    private void OnLocationChanged()
+    {
+        if (!IsLoaded || _isConstrainingToMonitor || WindowState != WindowState.Normal) return;
+
+        if (NativeMethods.IsLeftButtonDown())
+        {
+            ClampDuringMonitorDrag();
+            return;
+        }
+
+        ConstrainToCurrentMonitor(fitContent: !_hasManualSize);
+        var monitorKey = GetCurrentMonitorKey();
+        if (monitorKey is null || monitorKey == _placementMonitorKey) return;
+
+        // La pertenencia cambia cuando el centro cruza al otro monitor. Guardarlo en ese momento
+        // hace que la nota ya pertenezca a la segunda pantalla aunque siga abierta o Fanote se
+        // cierre de forma inesperada antes del siguiente cierre normal.
+        _placementMonitorKey = monitorKey;
+        SavePlacementForCurrentMonitor();
+    }
+
+    private void ClampDuringMonitorDrag()
+    {
+        var position = MonitorBounds.ClampIntoMonitorUnion(
+            Left,
+            Top,
+            Width,
+            Height,
+            MonitorEnumerator.EnumerateMonitors());
+
+        if (Math.Abs(position.Left - Left) < 0.5 && Math.Abs(position.Top - Top) < 0.5) return;
+
+        bool wasConstraining = _isConstrainingToMonitor;
+        _isConstrainingToMonitor = true;
+        Left = position.Left;
+        Top = position.Top;
+        _isConstrainingToMonitor = wasConstraining;
+    }
+
+    private string? GetCurrentMonitorKey() =>
+        MonitorLookup.DeviceNameAt(Left, Top, Width, Height, MonitorEnumerator.EnumerateMonitors());
+
+    private void SavePlacementForCurrentMonitor()
+    {
         if (_settings is not { RememberNotePositions: true }) return;
 
-        var monitorKey = MonitorLookup.DeviceNameAt(Left, Top, Width, Height, MonitorEnumerator.EnumerateMonitors());
-        if (monitorKey is null) return; // el centro de la nota no cae en ningún monitor conocido
+        var monitorKey = GetCurrentMonitorKey();
+        if (monitorKey is null) return;
 
         _repository.SavePlacement(_note.Id, monitorKey, Left, Top, Width, Height);
+        _placementMonitorKey = monitorKey;
     }
 
     /// <summary>
@@ -225,30 +279,88 @@ public partial class NoteWindow : Window
     /// mismo aviso que ya deja <c>SettingsWindow</c>). Si el centro no cae en ningún monitor conocido,
     /// se queda solo con <see cref="MaxAutoFitHeight"/>.
     /// </summary>
-    private void SetMaxHeightForCurrentMonitor()
+    private void ConstrainToCurrentMonitor(bool fitContent)
     {
-        var monitor = MonitorLookup.MonitorAt(Left, Top, Width, Height, MonitorEnumerator.EnumerateMonitors());
-        MaxHeight = monitor is { } m ? Math.Min(MaxAutoFitHeight, m.WorkArea.Height * 0.9) : MaxAutoFitHeight;
+        if (_isConstrainingToMonitor || !IsLoaded || WindowState != WindowState.Normal) return;
+
+        var monitors = MonitorEnumerator.EnumerateMonitors();
+        var monitor = MonitorLookup.MonitorAt(Left, Top, Width, Height, monitors);
+        if (monitor is not { } m) return;
+
+        _isConstrainingToMonitor = true;
+        MaxWidth = Math.Max(MinWidth, m.WorkArea.Width);
+        // MaxHeight must describe the real resize/snap limit, not the smaller limit used only by
+        // automatic content fitting. FancyZones and Win+Arrow read this WPF property and would
+        // otherwise refuse to give the note the full height of a zone.
+        MaxHeight = Math.Max(MinHeight, m.WorkArea.Height);
+
+        if (fitContent) FitHeightToContent();
+        ClampToMonitorUnion(monitors);
+        _isConstrainingToMonitor = false;
+    }
+
+    private void ClampToWorkArea()
+    {
+        var monitors = MonitorEnumerator.EnumerateMonitors();
+        var monitor = MonitorLookup.MonitorAt(Left, Top, Width, Height, monitors);
+        if (monitor is not null) ClampToMonitorUnion(monitors);
+    }
+
+    private void ClampToMonitorUnion(IReadOnlyList<MonitorInfo> monitors)
+    {
+        if (WindowState != WindowState.Normal) return;
+
+        var position = MonitorBounds.ClampIntoMonitorUnion(Left, Top, Width, Height, monitors);
+
+        if (Math.Abs(position.Left - Left) < 0.5 && Math.Abs(position.Top - Top) < 0.5) return;
+
+        bool wasConstraining = _isConstrainingToMonitor;
+        _isConstrainingToMonitor = true;
+        Left = position.Left;
+        Top = position.Top;
+        _isConstrainingToMonitor = wasConstraining;
     }
 
     /// <summary>
     /// Ajusta el alto al contenido actual — crece si no cabe, encoge si sobra sitio, nunca por debajo
-    /// de <see cref="DefaultHeight"/> ni por encima de <c>MaxHeight</c> (puesto por
-    /// <see cref="SetMaxHeightForCurrentMonitor"/>). No hace nada si <see cref="_hasManualSize"/>: un
-    /// arrastre real del usuario en esta apertura tiene la última palabra hasta "Restaurar tamaño".
+    /// de <see cref="_initialHeight"/> ni por encima de <c>MaxHeight</c> (puesto por
+    /// <see cref="ConstrainToCurrentMonitor"/>). Si <see cref="_hasManualSize"/>, no toca el alto
+    /// (un arrastre real del usuario en esta apertura tiene la última palabra hasta "Restaurar
+    /// tamaño"), pero sí deja la barra de scroll visible de verdad: en modo manual el ajuste
+    /// automático no va a corregir nada, así que hace falta poder desplazarse.
     ///
     /// <c>Height - TextBody.ViewportHeight</c> es todo lo que NO es el propio cuerpo de texto
     /// (cabecera, márgenes) — sumado al alto real del contenido (<c>ExtentHeight</c>) da el alto de
-    /// ventana que hace falta, sin tener que conocer esos números a mano. El segundo
-    /// <c>UpdateLayout()</c> asienta el nuevo alto antes de que WPF pinte el siguiente fotograma, para
-    /// que la barra de scroll no llegue a parpadear visible durante el propio ajuste.
+    /// ventana que hace falta, sin tener que conocer esos números a mano.
+    ///
+    /// La barra de scroll de <c>TextBody</c> se mantiene oculta (<c>Hidden</c>, no <c>Auto</c>)
+    /// mientras el modo automático pueda seguir corrigiendo el alto: cualquier desbordamiento en ese
+    /// caso es transitorio por definición (el propio ajuste de aquí lo resuelve en el acto, cada vez
+    /// que el texto cambia), así que mostrarla sería solo un parpadeo de un fotograma mientras el
+    /// nuevo alto de la ventana termina de aplicarse a nivel de Windows (un <c>UpdateLayout()</c> del
+    /// lado de WPF no basta para forzar ese redimensionado real a tiempo). Solo se deja <c>Auto</c>
+    /// cuando el desbordamiento es real y permanente: ya en modo manual, o ya en el tope de
+    /// <c>MaxHeight</c> sin que el contenido quepa ahí tampoco.
     /// </summary>
     private void FitHeightToContent()
     {
-        if (_hasManualSize) return;
+        if (_hasManualSize)
+        {
+            TextBody.VerticalScrollBarVisibility = ScrollBarVisibility.Auto;
+            return;
+        }
 
         double chromeHeight = Height - TextBody.ViewportHeight;
-        double desired = Math.Clamp(TextBody.ExtentHeight + chromeHeight, DefaultHeight, MaxHeight);
+        double neededHeight = TextBody.ExtentHeight + chromeHeight;
+        double autoFitMaxHeight = Math.Max(MinHeight, Math.Min(
+            MaxAutoFitHeight,
+            MonitorLookup.MonitorAt(Left, Top, Width, Height, MonitorEnumerator.EnumerateMonitors())
+                ?.WorkArea.Height * 0.9 ?? MaxAutoFitHeight));
+        double desired = Math.Clamp(neededHeight, _initialHeight, autoFitMaxHeight);
+
+        TextBody.VerticalScrollBarVisibility = neededHeight > autoFitMaxHeight + 0.5
+            ? ScrollBarVisibility.Auto
+            : ScrollBarVisibility.Hidden;
 
         if (Math.Abs(desired - Height) < 0.5) return;
 
@@ -257,6 +369,7 @@ public partial class NoteWindow : Window
         _isAutoResizing = false;
 
         TextBody.UpdateLayout();
+        ClampToWorkArea();
     }
 
     /// <summary>
@@ -273,7 +386,7 @@ public partial class NoteWindow : Window
         SavePlacementOnce(this, new System.ComponentModel.CancelEventArgs());
     }
 
-    private static readonly TimeSpan OpenDuration = TimeSpan.FromMilliseconds(180);
+    private static readonly TimeSpan OpenDuration = TimeSpan.FromMilliseconds(150);
     private static readonly TimeSpan CloseDuration = TimeSpan.FromMilliseconds(140);
 
     private bool _closingAnimationDone;
@@ -303,6 +416,41 @@ public partial class NoteWindow : Window
         content.BeginAnimation(OpacityProperty, new DoubleAnimation(0, 1, duration) { EasingFunction = Ease() });
         scale.BeginAnimation(ScaleTransform.ScaleXProperty, new DoubleAnimation(0.95, 1, duration) { EasingFunction = Ease() });
         scale.BeginAnimation(ScaleTransform.ScaleYProperty, new DoubleAnimation(0.95, 1, duration) { EasingFunction = Ease() });
+    }
+
+    /// <summary>Desplaza la nota suavemente al elegir otra plantilla de disposiciÃ³n.</summary>
+    internal void MoveToLayoutPosition(double left, double top)
+    {
+        BeginAnimation(LeftProperty, null);
+        BeginAnimation(TopProperty, null);
+
+        if (!SystemParameters.ClientAreaAnimation || !IsVisible ||
+            (Math.Abs(Left - left) < 0.5 && Math.Abs(Top - top) < 0.5))
+        {
+            Left = left;
+            Top = top;
+            return;
+        }
+
+        var duration = new Duration(TimeSpan.FromMilliseconds(220));
+        var ease = new QuinticEase { EasingMode = EasingMode.EaseOut };
+        var leftAnimation = new DoubleAnimation(Left, left, duration) { EasingFunction = ease };
+        var topAnimation = new DoubleAnimation(Top, top, duration) { EasingFunction = ease };
+        topAnimation.Completed += (_, _) =>
+        {
+            BeginAnimation(LeftProperty, null);
+            BeginAnimation(TopProperty, null);
+            Left = left;
+            Top = top;
+        };
+        BeginAnimation(LeftProperty, leftAnimation);
+        BeginAnimation(TopProperty, topAnimation);
+    }
+
+    private void StopLayoutPositionAnimation()
+    {
+        BeginAnimation(LeftProperty, null);
+        BeginAnimation(TopProperty, null);
     }
 
     /// <summary>
@@ -651,13 +799,80 @@ public partial class NoteWindow : Window
     /// en vez de dejar que WindowChrome lo maneje solo como con el resto de la cabecera.</summary>
     private void OnGripMouseDown(object sender, MouseButtonEventArgs e)
     {
-        if (e.LeftButton == MouseButtonState.Pressed) DragMove();
+        if (e.LeftButton == MouseButtonState.Pressed)
+        {
+            StopLayoutPositionAnimation();
+            try
+            {
+                DragMove();
+            }
+            finally
+            {
+                // Durante DragMove no se limita la posición, para que la nota pueda cruzar el
+                // borde entre monitores. Al soltarla se recalculan el monitor propietario, los
+                // límites de tamaño y la posición visible, y se guarda el nuevo monitor.
+                OnLocationChanged();
+            }
+        }
     }
 
     private void OnCloseClick(object sender, RoutedEventArgs e) => Close();
 
-    private void OnMenuClick(object sender, RoutedEventArgs e) =>
-        ActionsPopup.IsOpen = !ActionsPopup.IsOpen;
+    private void OnMinimizeClick(object sender, RoutedEventArgs e) => WindowState = WindowState.Minimized;
+
+    private void OnMaximizeClick(object sender, RoutedEventArgs e) =>
+        ToggleMaximized();
+
+    private void ToggleMaximized()
+    {
+        if (WindowState == WindowState.Maximized)
+        {
+            WindowState = WindowState.Normal;
+            ConstrainToCurrentMonitor(fitContent: !_hasManualSize);
+            return;
+        }
+
+        // El tope de ajuste automÃ¡tico protege el tamaÃ±o normal de una nota, pero no debe impedir
+        // que el usuario elija ocupar toda la pantalla de forma explÃ­cita.
+        MaxHeight = double.PositiveInfinity;
+        MaxWidth = double.PositiveInfinity;
+        WindowState = WindowState.Maximized;
+    }
+
+    private void OnWindowStateChanged(object? sender, EventArgs e)
+    {
+        if (MaximizeGlyph is not null)
+        {
+            if (WindowState == WindowState.Maximized)
+            {
+                MaxHeight = double.PositiveInfinity;
+                MaxWidth = double.PositiveInfinity;
+            }
+            MaximizeGlyph.Text = WindowState == WindowState.Maximized ? "\uE923" : "\uE922";
+        }
+        if (MaximizeButton is not null)
+        {
+            MaximizeButton.ToolTip = WindowState == WindowState.Maximized
+                ? Strings.RestoreWindowTooltip
+                : Strings.MaximizeWindowTooltip;
+        }
+    }
+
+    private void OnMenuPreviewMouseDown(object sender, MouseButtonEventArgs e)
+    {
+        // Popup.StaysOpen=False closes the popup during the button's mouse-down routed event. Handle
+        // the second click before that outside-click logic runs, otherwise it immediately reopens
+        // in OnMenuClick and the ellipsis appears to be broken.
+        if (!ActionsPopup.IsOpen) return;
+
+        ActionsPopup.IsOpen = false;
+        e.Handled = true;
+    }
+
+    private void OnMenuClick(object sender, RoutedEventArgs e)
+    {
+        if (!e.Handled) ActionsPopup.IsOpen = true;
+    }
 
     /// <summary>Lo mismo que Ctrl+L, para quien no conoce el atajo (que es casi todo el mundo).</summary>
     private void OnTaskClick(object sender, RoutedEventArgs e)
@@ -677,21 +892,24 @@ public partial class NoteWindow : Window
         TextBody.Focus();
     }
 
-    /// <summary>Deshace un tamaño puesto a mano y reactiva el ajuste automático para el resto de esta
-    /// apertura: si con 300×320 el texto ya no cabe, <see cref="FitHeightToContent"/> lo vuelve a
-    /// agrandar en el acto — "restaurar" no pelea con el contenido, solo con el tamaño que se puso a
-    /// mano.</summary>
+    /// <summary>Devuelve la ventana al tamaño inicial con el que se creó, sin autoagrandarla en ese
+    /// mismo clic. El ajuste automático queda reactivado para los siguientes cambios de texto.</summary>
     private void OnRestoreSizeClick(object sender, RoutedEventArgs e)
     {
         _hasManualSize = false;
 
         _isAutoResizing = true;
-        Width = DefaultWidth;
-        Height = DefaultHeight;
+        Width = _initialWidth;
+        Height = _initialHeight;
         _isAutoResizing = false;
 
+        // Al volver al tamaño original el contenido puede dejar de caber. Medimos con la barra
+        // oculta para no contar su propio ancho y la mostramos solo si el desbordamiento es real.
+        TextBody.VerticalScrollBarVisibility = ScrollBarVisibility.Hidden;
         TextBody.UpdateLayout();
-        FitHeightToContent();
+        TextBody.VerticalScrollBarVisibility = TextBody.ExtentHeight > TextBody.ViewportHeight + 0.5
+            ? ScrollBarVisibility.Auto
+            : ScrollBarVisibility.Hidden;
         ActionsPopup.IsOpen = false;
     }
 
@@ -806,6 +1024,18 @@ public partial class NoteWindow : Window
             ApplySwatchSelection(swatch, (string)swatch.Tag == color);
         }
 
+        _coordinator.RefreshAll();
+        ActionsPopup.IsOpen = false;
+    }
+
+    private void OnCustomColorClick(object sender, RoutedEventArgs e)
+    {
+        var color = CustomColorWindow.Show(this, _note.Color);
+        if (color is null) return;
+
+        _note.Color = color;
+        _repository.SetColor(_note.Id, color);
+        ApplyColor(color);
         _coordinator.RefreshAll();
         ActionsPopup.IsOpen = false;
     }

@@ -6,12 +6,119 @@
          ultima nota no debe cerrar la app. Se sale por "Salir" del menu de la bandeja, o por los
          Shutdown(1) explicitos de los fallos de arranque. -->
     <Application.Resources>
+        <!-- Base visual compartida. Los colores de cada nota siguen siendo independientes, pero el
+             chrome de Fanote parte de estos mismos valores en todas las ventanas. -->
+        <SolidColorBrush x:Key="FanoteGroundBrush" Color="#2A261F" />
+        <SolidColorBrush x:Key="FanoteSurfaceBrush" Color="#332F28" />
+        <SolidColorBrush x:Key="FanoteRaisedBrush" Color="#3C3730" />
+        <SolidColorBrush x:Key="FanoteHoverBrush" Color="#4E4840" />
+        <SolidColorBrush x:Key="FanotePressedBrush" Color="#5F584E" />
+        <SolidColorBrush x:Key="FanoteTextBrush" Color="#EDE7DC" />
+        <SolidColorBrush x:Key="FanoteMutedTextBrush" Color="#A79E90" />
+        <SolidColorBrush x:Key="FanoteHintBrush" Color="#8A8175" />
+        <SolidColorBrush x:Key="FanoteDividerBrush" Color="#3C3730" />
+
         <!-- FontFamily is an inherited property, so setting it here on the implicit Window
              style cascades to every control in EdgeDockWindow and NoteWindow that doesn't set
              its own — Segoe UI Variable Text is Windows 11's own default UI font anyway, so
              this brings the app's chrome in line with the system look instead of away from it. -->
         <Style TargetType="Window">
             <Setter Property="FontFamily" Value="Segoe UI Variable Text, Segoe UI" />
+            <Setter Property="FontSize" Value="13" />
+            <Setter Property="UseLayoutRounding" Value="True" />
+            <Setter Property="SnapsToDevicePixels" Value="True" />
+            <Setter Property="TextOptions.TextFormattingMode" Value="Display" />
+        </Style>
+
+        <Style x:Key="DarkComboBoxItemStyle" TargetType="ComboBoxItem">
+            <Setter Property="Foreground" Value="#EDE7DC" />
+            <Setter Property="Background" Value="#2A261F" />
+            <Setter Property="Padding" Value="8,6" />
+            <Setter Property="HorizontalContentAlignment" Value="Left" />
+            <Setter Property="FocusVisualStyle" Value="{x:Null}" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ComboBoxItem">
+                        <Border x:Name="ItemBackground" Background="{TemplateBinding Background}"
+                                Padding="{TemplateBinding Padding}" CornerRadius="4">
+                            <ContentPresenter TextElement.Foreground="{TemplateBinding Foreground}"
+                                              HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}" />
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsHighlighted" Value="True">
+                                <Setter TargetName="ItemBackground" Property="Background" Value="#403B33" />
+                            </Trigger>
+                            <Trigger Property="IsSelected" Value="True">
+                                <Setter TargetName="ItemBackground" Property="Background" Value="#4E4840" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style x:Key="DarkComboBoxStyle" TargetType="ComboBox">
+            <Setter Property="Foreground" Value="#EDE7DC" />
+            <Setter Property="Background" Value="#332F28" />
+            <Setter Property="BorderBrush" Value="#62594D" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="Padding" Value="8,5" />
+            <Setter Property="FontSize" Value="12" />
+            <Setter Property="FocusVisualStyle" Value="{x:Null}" />
+            <Setter Property="ItemContainerStyle" Value="{StaticResource DarkComboBoxItemStyle}" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ComboBox">
+                        <Grid>
+                            <ToggleButton x:Name="DropDownButton" Focusable="False"
+                                          IsChecked="{Binding IsDropDownOpen, RelativeSource={RelativeSource TemplatedParent}}"
+                                          ClickMode="Press">
+                                <ToggleButton.Template>
+                                    <ControlTemplate TargetType="ToggleButton">
+                                        <ContentPresenter />
+                                    </ControlTemplate>
+                                </ToggleButton.Template>
+                                <Border x:Name="Field" Background="{TemplateBinding Background}"
+                                        BorderBrush="{TemplateBinding BorderBrush}"
+                                        BorderThickness="{TemplateBinding BorderThickness}"
+                                        CornerRadius="6" Padding="{TemplateBinding Padding}">
+                                    <Grid>
+                                        <ContentPresenter Content="{TemplateBinding SelectionBoxItem}"
+                                                          ContentTemplate="{TemplateBinding SelectionBoxItemTemplate}"
+                                                          TextElement.Foreground="{TemplateBinding Foreground}"
+                                                          VerticalAlignment="Center" />
+                                        <TextBlock Text="&#x2304;" FontSize="12"
+                                                   Foreground="#A79E90" HorizontalAlignment="Right"
+                                                   VerticalAlignment="Center" Margin="8,0,1,3" />
+                                    </Grid>
+                                </Border>
+                            </ToggleButton>
+                            <Popup x:Name="DropDown" Placement="Bottom" AllowsTransparency="True"
+                                   Focusable="False" IsOpen="{TemplateBinding IsDropDownOpen}"
+                                   PopupAnimation="Fade" PlacementTarget="{Binding ElementName=DropDownButton}">
+                                <Border Background="#2A261F" BorderBrush="#62594D" BorderThickness="1"
+                                        CornerRadius="6" Padding="3" Width="{Binding ActualWidth, ElementName=DropDownButton}">
+                                    <ScrollViewer MaxHeight="{TemplateBinding MaxDropDownHeight}"
+                                                  CanContentScroll="True" HorizontalScrollBarVisibility="Disabled">
+                                        <ItemsPresenter KeyboardNavigation.DirectionalNavigation="Contained" />
+                                    </ScrollViewer>
+                                </Border>
+                            </Popup>
+                        </Grid>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Field" Property="BorderBrush" Value="#8A8175" />
+                            </Trigger>
+                            <Trigger Property="IsDropDownOpen" Value="True">
+                                <Setter TargetName="Field" Property="BorderBrush" Value="#B39A7E" />
+                            </Trigger>
+                            <Trigger Property="IsEnabled" Value="False">
+                                <Setter TargetName="Field" Property="Opacity" Value="0.45" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
         </Style>
 
         <!-- Barra de scroll fina y oscura, aquí y no en cada ventana: la barra por defecto de WPF es
@@ -22,13 +129,20 @@
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="Thumb">
-                        <Border x:Name="Bar" Background="#4E4840" CornerRadius="3" Margin="2,0" />
+                        <Border x:Name="Bar"
+                                Background="#806A55"
+                                BorderBrush="#B39A7E"
+                                BorderThickness="1"
+                                CornerRadius="4"
+                                Margin="1,2" />
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsMouseOver" Value="True">
-                                <Setter TargetName="Bar" Property="Background" Value="#6B6459" />
+                                <Setter TargetName="Bar" Property="Background" Value="#A18465" />
+                                <Setter TargetName="Bar" Property="BorderBrush" Value="#D0B28E" />
                             </Trigger>
                             <Trigger Property="IsDragging" Value="True">
-                                <Setter TargetName="Bar" Property="Background" Value="#857D70" />
+                                <Setter TargetName="Bar" Property="Background" Value="#B79570" />
+                                <Setter TargetName="Bar" Property="BorderBrush" Value="#E0C6A4" />
                             </Trigger>
                         </ControlTemplate.Triggers>
                     </ControlTemplate>
@@ -44,6 +158,7 @@
             <Setter Property="Foreground" Value="#EDE7DC" />
             <Setter Property="FontSize" Value="13" />
             <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="FocusVisualStyle" Value="{x:Null}" />
             <Setter Property="HorizontalContentAlignment" Value="Left" />
             <Setter Property="Padding" Value="9,7" />
             <Setter Property="Template">
@@ -65,6 +180,7 @@
 
         <Style x:Key="NoteMenuDangerStyle" TargetType="Button" BasedOn="{StaticResource NoteMenuItemStyle}">
             <Setter Property="Foreground" Value="#E8A0A0" />
+            <Setter Property="FocusVisualStyle" Value="{x:Null}" />
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="Button">
@@ -127,8 +243,8 @@
         </Style>
 
         <Style TargetType="ScrollBar">
-            <Setter Property="Width" Value="10" />
-            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="Width" Value="12" />
+            <Setter Property="Background" Value="#26000000" />
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="ScrollBar">
@@ -140,10 +256,16 @@
                                 <!-- Sin flechas: la pista sigue paginando al hacer clic, que es el
                                      comportamiento estándar que importa conservar. -->
                                 <Track.DecreaseRepeatButton>
-                                    <RepeatButton Command="ScrollBar.PageUpCommand" Opacity="0" />
+                                    <RepeatButton Command="ScrollBar.PageUpCommand"
+                                                  Opacity="0"
+                                                  Focusable="False"
+                                                  BorderThickness="0" />
                                 </Track.DecreaseRepeatButton>
                                 <Track.IncreaseRepeatButton>
-                                    <RepeatButton Command="ScrollBar.PageDownCommand" Opacity="0" />
+                                    <RepeatButton Command="ScrollBar.PageDownCommand"
+                                                  Opacity="0"
+                                                  Focusable="False"
+                                                  BorderThickness="0" />
                                 </Track.IncreaseRepeatButton>
                             </Track>
                         </Grid>

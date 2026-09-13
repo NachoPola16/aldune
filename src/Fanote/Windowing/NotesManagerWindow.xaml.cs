@@ -4,6 +4,7 @@ using System.IO.Compression;
 using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Animation;
 using System.Windows.Interop;
@@ -29,6 +30,9 @@ public partial class NotesManagerWindow : Window
     private List<NoteRow> _rows = new();
     private Filter _filter = Filter.Active;
     private string _searchText = "";
+    private string? _tagFilter;
+    private bool _loadingTagFilter;
+    private NoteRow? _selectionAnchor;
 
     public NotesManagerWindow(NotesRepository repository, AppCoordinator coordinator)
     {
@@ -48,6 +52,7 @@ public partial class NotesManagerWindow : Window
 
     private void LoadRows()
     {
+        _selectionAnchor = null;
         var active = _repository.GetByState(NoteState.Active);
         var archived = _repository.GetByState(NoteState.Archived);
         var trashed = _repository.GetByState(NoteState.Trashed);
@@ -61,8 +66,54 @@ public partial class NotesManagerWindow : Window
             row.PropertyChanged += (_, _) => UpdateSelectionState();
         }
 
+        LoadTagFilterOptions();
         ApplyFilter();
     }
+
+    private void LoadTagFilterOptions()
+    {
+        _loadingTagFilter = true;
+        try
+        {
+            var tags = _repository.GetAllTags().ToList();
+            TagFilterBox.Items.Clear();
+            TagFilterBox.Visibility = tags.Count == 0 ? Visibility.Collapsed : Visibility.Visible;
+            if (tags.Count == 0)
+            {
+                _tagFilter = null;
+                return;
+            }
+
+            TagFilterBox.Items.Add(new ComboBoxItem { Content = Strings.AllTags, Tag = null });
+            foreach (var tag in tags)
+            {
+                TagFilterBox.Items.Add(new ComboBoxItem { Content = tag, Tag = tag });
+            }
+
+            int selectedIndex = 0;
+            if (_tagFilter is not null)
+            {
+                for (int i = 1; i < TagFilterBox.Items.Count; i++)
+                {
+                    if (string.Equals(((ComboBoxItem)TagFilterBox.Items[i]).Tag as string,
+                            _tagFilter, StringComparison.OrdinalIgnoreCase))
+                    {
+                        selectedIndex = i;
+                        break;
+                    }
+                }
+            }
+
+            TagFilterBox.SelectedIndex = selectedIndex;
+        }
+        finally
+        {
+            _loadingTagFilter = false;
+        }
+    }
+
+    /// <summary>Recarga la lista cuando una operación externa cambia el repositorio.</summary>
+    public void Refresh() => LoadRows();
 
     private void ApplyFilter()
     {
@@ -78,11 +129,19 @@ public partial class NotesManagerWindow : Window
         // La búsqueda se queda dentro del filtro activo, no lo sustituye: mezclar estados en los
         // resultados dejaría "Eliminar" (más abajo) actuando sobre notas que no están en la
         // papelera, y ese botón existe justo para no poder saltarse la papelera.
+        if (!string.IsNullOrWhiteSpace(_tagFilter))
+        {
+            byState = byState.Where(r => r.Note.Tags.Any(tag =>
+                string.Equals(tag, _tagFilter, StringComparison.OrdinalIgnoreCase)));
+        }
+
         _rows = byState.Where(r => NoteSearch.Matches(r.Note.Text, _searchText)).ToList();
         RowsList.ItemsSource = _rows;
 
         // Borrar del todo solo tiene sentido sobre lo que ya esta en la papelera.
         DeleteButton.Visibility = _filter == Filter.Trashed ? Visibility.Visible : Visibility.Collapsed;
+        // En la papelera "Mover a la papelera" no hace nada y se confunde con eliminar.
+        TrashButton.Visibility = _filter == Filter.Trashed ? Visibility.Collapsed : Visibility.Visible;
         UpdateSelectionState();
     }
 
@@ -126,6 +185,7 @@ public partial class NotesManagerWindow : Window
             ? Strings.NoSearchResults(_searchText.Trim())
             : _filter switch
             {
+                Filter.Active when !string.IsNullOrWhiteSpace(_tagFilter) => Strings.NoTagResults(_tagFilter!),
                 Filter.Active => Strings.EmptyActive,
                 Filter.Archived => Strings.EmptyArchived,
                 Filter.Trashed => Strings.EmptyTrashed,
@@ -141,6 +201,15 @@ public partial class NotesManagerWindow : Window
         ApplyFilter();
     }
 
+    private void OnPreviewKeyDown(object sender, KeyEventArgs e)
+    {
+        if (e.Key != Key.F || Keyboard.Modifiers != ModifierKeys.Control) return;
+
+        SearchBox.Focus();
+        SearchBox.SelectAll();
+        e.Handled = true;
+    }
+
     private void OnSearchClearClick(object sender, RoutedEventArgs e)
     {
         // Vaciar el cuadro ya dispara OnSearchTextChanged, que vuelve a aplicar el filtro.
@@ -154,6 +223,15 @@ public partial class NotesManagerWindow : Window
             : sender == FilterTrashed ? Filter.Trashed
             : Filter.Active;
 
+        ApplyFilter();
+        PlayListEntrance();
+    }
+
+    private void OnTagFilterChanged(object sender, SelectionChangedEventArgs e)
+    {
+        if (_loadingTagFilter || TagFilterBox.SelectedItem is not ComboBoxItem item) return;
+
+        _tagFilter = item.Tag as string;
         ApplyFilter();
         PlayListEntrance();
     }
@@ -179,7 +257,7 @@ public partial class NotesManagerWindow : Window
             : _rows.Where(r => r.IsSelected).ToList();
     }
 
-    private static readonly Duration ListFade = new(TimeSpan.FromMilliseconds(160));
+    private static readonly Duration ListFade = new(TimeSpan.FromMilliseconds(140));
 
     /// <summary>
     /// La lista entra apareciendo y subiendo un poco al cambiar de filtro. Sin esto, pasar de
@@ -222,7 +300,7 @@ public partial class NotesManagerWindow : Window
             return;
         }
 
-        var duration = new Duration(TimeSpan.FromMilliseconds(180));
+        var duration = new Duration(TimeSpan.FromMilliseconds(150));
         bool reloaded = false;
 
         foreach (var container in containers)
@@ -250,7 +328,7 @@ public partial class NotesManagerWindow : Window
         }
     }
 
-    private static readonly TimeSpan OpenDuration = TimeSpan.FromMilliseconds(180);
+    private static readonly TimeSpan OpenDuration = TimeSpan.FromMilliseconds(150);
 
     /// <summary>
     /// Mismo fundido + crecimiento desde el 95% que <c>NoteWindow.PlayOpenAnimation</c> y
@@ -278,6 +356,45 @@ public partial class NotesManagerWindow : Window
 
     private void OnCloseClick(object sender, RoutedEventArgs e) => Close();
 
+    private void OnMinimizeClick(object sender, RoutedEventArgs e) => WindowState = WindowState.Minimized;
+
+    private void OnMaximizeClick(object sender, RoutedEventArgs e) =>
+        ToggleMaximized();
+
+    private void ToggleMaximized()
+    {
+        if (WindowState == WindowState.Maximized)
+        {
+            WindowState = WindowState.Normal;
+            RestoreNormalHeightLimit();
+            return;
+        }
+
+        MaxHeight = double.PositiveInfinity;
+        WindowState = WindowState.Maximized;
+    }
+
+    private void RestoreNormalHeightLimit()
+    {
+        var monitor = MonitorLookup.MonitorAt(Left, Top, Width, Height, MonitorEnumerator.EnumerateMonitors());
+        MaxHeight = (monitor?.WorkArea.Height ?? SystemParameters.WorkArea.Height) * 0.9;
+    }
+
+    private void OnWindowStateChanged(object? sender, EventArgs e)
+    {
+        if (MaximizeButton is not null)
+        {
+            if (WindowState == WindowState.Maximized)
+            {
+                MaxHeight = double.PositiveInfinity;
+            }
+            MaximizeButton.ToolTip = WindowState == WindowState.Maximized
+                ? Strings.RestoreWindowTooltip
+                : Strings.MaximizeWindowTooltip;
+            MaximizeGlyph.Text = WindowState == WindowState.Maximized ? "\uE923" : "\uE922";
+        }
+    }
+
     private void OnSettingsClick(object sender, RoutedEventArgs e) => _coordinator.OpenSettings();
 
 
@@ -288,7 +405,113 @@ public partial class NotesManagerWindow : Window
         // clic que no hace nada. Aquí siempre alterna entre todo y nada.
         bool allSelected = _rows.Count > 0 && _rows.All(r => r.IsSelected);
         foreach (var row in _rows) row.IsSelected = !allSelected;
+        _selectionAnchor = null;
         UpdateSelectionState();
+    }
+
+    /// <summary>
+    /// Hace clicable toda la fila, no solo la casilla. Un clic normal alterna esa fila; con Shift se
+    /// selecciona el intervalo entre la última fila marcada y la actual. Ctrl+Shift añade el
+    /// intervalo a la selección existente.
+    /// </summary>
+    private void OnRowMouseLeftButtonUp(object sender, MouseButtonEventArgs e)
+    {
+        if (sender is not FrameworkElement { DataContext: NoteRow row }) return;
+
+        // El segundo MouseUp de un doble clic no debe deshacer la selección que hizo el primero.
+        if (e.ClickCount >= 2 && FindVisualAncestor<CheckBox>(e.OriginalSource as DependencyObject) is null)
+        {
+            e.Handled = true;
+            return;
+        }
+
+        // Si el clic empezó sobre la casilla, su binding ya se encarga de alternarla y aquí solo
+        // conservamos la fila como ancla para el siguiente Shift+clic.
+        if (FindVisualAncestor<CheckBox>(e.OriginalSource as DependencyObject) is not null)
+        {
+            _selectionAnchor = row;
+            return;
+        }
+
+        SelectFromRow(row, Keyboard.Modifiers);
+        e.Handled = true;
+    }
+
+    private void OnRowMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+    {
+        if (sender is not FrameworkElement { DataContext: NoteRow row }) return;
+        if (e.ClickCount < 2 || FindVisualAncestor<CheckBox>(e.OriginalSource as DependencyObject) is not null)
+            return;
+
+        // El gestor sigue usando un clic para seleccionar. El doble clic conserva ese gesto y
+        // añade la acción esperable en una lista: abrir la nota completa.
+        _coordinator.OpenNoteById(row.Note.Id);
+        e.Handled = true;
+    }
+
+    private void OnRowCheckBoxPreviewMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+    {
+        if (sender is not CheckBox { DataContext: NoteRow row }) return;
+
+        if (Keyboard.Modifiers.HasFlag(ModifierKeys.Shift))
+        {
+            SelectRange(row, Keyboard.Modifiers.HasFlag(ModifierKeys.Control));
+            e.Handled = true;
+            return;
+        }
+
+        _selectionAnchor = row;
+    }
+
+    private void SelectFromRow(NoteRow row, ModifierKeys modifiers)
+    {
+        if (modifiers.HasFlag(ModifierKeys.Shift))
+        {
+            SelectRange(row, modifiers.HasFlag(ModifierKeys.Control));
+            return;
+        }
+
+        row.IsSelected = !row.IsSelected;
+        _selectionAnchor = row;
+        UpdateSelectionState();
+    }
+
+    private void SelectRange(NoteRow row, bool append)
+    {
+        int targetIndex = _rows.IndexOf(row);
+        int anchorIndex = _selectionAnchor is null ? -1 : _rows.IndexOf(_selectionAnchor);
+        if (targetIndex < 0) return;
+
+        if (anchorIndex < 0)
+        {
+            row.IsSelected = true;
+            _selectionAnchor = row;
+            UpdateSelectionState();
+            return;
+        }
+
+        if (!append)
+        {
+            foreach (var visibleRow in _rows) visibleRow.IsSelected = false;
+        }
+
+        int first = Math.Min(anchorIndex, targetIndex);
+        int last = Math.Max(anchorIndex, targetIndex);
+        for (int i = first; i <= last; i++) _rows[i].IsSelected = true;
+
+        _selectionAnchor = row;
+        UpdateSelectionState();
+    }
+
+    private static T? FindVisualAncestor<T>(DependencyObject? current) where T : DependencyObject
+    {
+        while (current is not null)
+        {
+            if (current is T match) return match;
+            current = VisualTreeHelper.GetParent(current);
+        }
+
+        return null;
     }
 
     private void OnArchiveSelectedClick(object sender, RoutedEventArgs e)
@@ -402,7 +625,7 @@ public partial class NotesManagerWindow : Window
     {
         var dialog = new SaveFileDialog
         {
-            FileName = "Fanote export.zip",
+            FileName = "Aldune export.zip",
             Filter = Strings.ZipFileFilter,
             DefaultExt = ".zip"
         };

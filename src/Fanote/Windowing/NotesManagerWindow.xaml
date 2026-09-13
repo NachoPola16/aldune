@@ -4,13 +4,18 @@
         xmlns:local="clr-namespace:Fanote.Windowing"
         xmlns:res="clr-namespace:Fanote.Resources"
         Title="{x:Static res:Strings.ManageNotesTitle}"
-        Width="420" Height="560"
-        MinWidth="360" MinHeight="360"
+        Width="450" Height="560"
+        MinWidth="380" MinHeight="360"
+        UseLayoutRounding="True"
+        SnapsToDevicePixels="True"
         WindowStyle="None"
         AllowsTransparency="False"
         ResizeMode="CanResize"
-        Background="#2A261F"
-        Topmost="True">
+        Background="{StaticResource FanoteGroundBrush}"
+        Topmost="False"
+        TextOptions.TextFormattingMode="Display"
+        PreviewKeyDown="OnPreviewKeyDown"
+        StateChanged="OnWindowStateChanged">
     <WindowChrome.WindowChrome>
         <WindowChrome CaptionHeight="34" ResizeBorderThickness="6" GlassFrameThickness="-1" CornerRadius="0" />
     </WindowChrome.WindowChrome>
@@ -24,6 +29,7 @@
             <Setter Property="Foreground" Value="#EDE7DC" />
             <Setter Property="Background" Value="#3C3730" />
             <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="FocusVisualStyle" Value="{x:Null}" />
             <Setter Property="Padding" Value="12,7" />
             <Setter Property="Template">
                 <Setter.Value>
@@ -63,6 +69,7 @@
             <Setter Property="Background" Value="Transparent" />
             <Setter Property="BorderThickness" Value="0" />
             <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="FocusVisualStyle" Value="{x:Null}" />
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="Button">
@@ -101,6 +108,7 @@
              (gris claro sobre fondo oscuro) sin duplicarla. -->
         <Style x:Key="AppCheckBoxStyle" TargetType="CheckBox">
             <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="FocusVisualStyle" Value="{x:Null}" />
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="CheckBox">
@@ -153,6 +161,7 @@
             <Setter Property="Foreground" Value="#A79E90" />
             <Setter Property="Padding" Value="12,6" />
             <Setter Property="FontSize" Value="12" />
+            <Setter Property="FocusVisualStyle" Value="{x:Null}" />
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="RadioButton">
@@ -175,6 +184,8 @@
                 </Setter.Value>
             </Setter>
         </Style>
+
+        <Style x:Key="TagFilterStyle" TargetType="ComboBox" BasedOn="{StaticResource DarkComboBoxStyle}" />
     </Window.Resources>
 
     <Grid>
@@ -198,25 +209,35 @@
             <!-- Acceso a Ajustes tambien desde aqui. Estaban solo en el clic derecho de la
                  bandeja, y ahi no los encontro el usuario: esta es la ventana que uno abre cuando
                  busca "donde se configura esto". -->
-            <Button x:Name="SettingsButton"
-                    Content="&#xE713;"
-                    FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets"
-                    Width="28" Height="28"
-                    Margin="0,0,32,0"
-                    HorizontalAlignment="Right"
-                    VerticalAlignment="Top"
-                    ToolTip="{x:Static res:Strings.SettingsTooltip}"
-                    Click="OnSettingsClick"
-                    WindowChrome.IsHitTestVisibleInChrome="True"
-                    Style="{StaticResource CloseButtonStyle}" />
-            <Button x:Name="CloseButton"
-                    Content="&#x2715;"
-                    Width="28" Height="28"
-                    HorizontalAlignment="Right"
-                    VerticalAlignment="Top"
-                    Click="OnCloseClick"
-                    WindowChrome.IsHitTestVisibleInChrome="True"
-                    Style="{StaticResource CloseButtonStyle}" />
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Top">
+                <Button Content="&#x2014;" Width="28" Height="28"
+                        ToolTip="{x:Static res:Strings.MinimizeWindowTooltip}"
+                        Click="OnMinimizeClick"
+                        WindowChrome.IsHitTestVisibleInChrome="True"
+                        Style="{StaticResource CloseButtonStyle}" />
+                <Button x:Name="MaximizeButton" Width="28" Height="28"
+                        ToolTip="{x:Static res:Strings.MaximizeWindowTooltip}"
+                        Click="OnMaximizeClick"
+                        WindowChrome.IsHitTestVisibleInChrome="True"
+                        Style="{StaticResource CloseButtonStyle}">
+                    <TextBlock x:Name="MaximizeGlyph" Text="&#xE922;"
+                               FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" FontSize="11" />
+                </Button>
+                <Button x:Name="SettingsButton"
+                        Content="&#xE713;"
+                        FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets"
+                        Width="28" Height="28"
+                        ToolTip="{x:Static res:Strings.SettingsTooltip}"
+                        Click="OnSettingsClick"
+                        WindowChrome.IsHitTestVisibleInChrome="True"
+                        Style="{StaticResource CloseButtonStyle}" />
+                <Button x:Name="CloseButton"
+                        Content="&#x2715;"
+                        Width="28" Height="28"
+                        Click="OnCloseClick"
+                        WindowChrome.IsHitTestVisibleInChrome="True"
+                        Style="{StaticResource CloseButtonStyle}" />
+            </StackPanel>
         </Grid>
 
         <Border Grid.Row="1" Background="#332F28" CornerRadius="7" Margin="20,16,20,0" Padding="3">
@@ -236,6 +257,11 @@
                              Checked="OnFilterChanged" Style="{StaticResource FilterToggleStyle}" />
                 <RadioButton x:Name="FilterTrashed" GroupName="NotesFilter" Content="{x:Static res:Strings.FilterTrashed}"
                              Checked="OnFilterChanged" Style="{StaticResource FilterToggleStyle}" />
+                <ComboBox x:Name="TagFilterBox" Width="145" Height="30" Margin="8,0,4,0"
+                          ToolTip="{x:Static res:Strings.TagFilterTooltip}"
+                          SelectionChanged="OnTagFilterChanged"
+                           Style="{StaticResource TagFilterStyle}"
+                           Visibility="Collapsed" />
             </WrapPanel>
         </Border>
 
@@ -297,9 +323,34 @@
                                  el árbol, que es lo que hace falta para tenir toda la fila. -->
                             <Border Background="{Binding Note.Color}"
                                     TextElement.Foreground="#1E1A14"
-                                    BorderBrush="{Binding Note.Color, Converter={StaticResource NoteRimConverter}}"
-                                    BorderThickness="1"
-                                    CornerRadius="8" Margin="0,0,0,8" Padding="12,10">
+                                    CornerRadius="8" Margin="0,0,0,8" Padding="12,10"
+                                    Cursor="Hand"
+                                    Focusable="True"
+                                    FocusVisualStyle="{x:Null}"
+                                    KeyboardNavigation.IsTabStop="True"
+                                    MouseLeftButtonDown="OnRowMouseLeftButtonDown"
+                                    MouseLeftButtonUp="OnRowMouseLeftButtonUp"
+                                    >
+                                <Border.Style>
+                                    <Style TargetType="Border">
+                                        <Setter Property="BorderBrush" Value="{Binding Note.Color, Converter={StaticResource NoteRimConverter}}" />
+                                        <Setter Property="BorderThickness" Value="1" />
+                                        <Setter Property="Opacity" Value="0.96" />
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding IsSelected}" Value="True">
+                                                <Setter Property="BorderBrush" Value="#F5F0E6" />
+                                                <Setter Property="BorderThickness" Value="2" />
+                                                <Setter Property="Opacity" Value="1" />
+                                            </DataTrigger>
+                                            <Trigger Property="IsKeyboardFocusWithin" Value="True">
+                                                <Setter Property="BorderBrush" Value="#F5F0E6" />
+                                            </Trigger>
+                                            <Trigger Property="IsMouseOver" Value="True">
+                                                <Setter Property="Opacity" Value="1" />
+                                            </Trigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </Border.Style>
                                 <Grid>
                                     <Grid.ColumnDefinitions>
                                         <ColumnDefinition Width="Auto" />
@@ -312,6 +363,7 @@
                                               Foreground="#1E1A14"
                                               Background="{Binding Note.Color}"
                                               Style="{StaticResource AppCheckBoxStyle}"
+                                              PreviewMouseLeftButtonDown="OnRowCheckBoxPreviewMouseLeftButtonDown"
                                               VerticalAlignment="Center" Margin="0,0,12,0" />
 
                                     <TextBlock Grid.Column="1"

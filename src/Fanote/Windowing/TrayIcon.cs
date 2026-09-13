@@ -1,6 +1,7 @@
 using System.Drawing;
 using System.Windows;
 using System.Windows.Forms;
+using Fanote;
 using Fanote.Resources;
 
 namespace Fanote.Windowing;
@@ -57,7 +58,7 @@ internal sealed class TrayIcon : IDisposable
         _icon = new NotifyIcon
         {
             Icon = LoadIcon(),
-            Text = Strings.AppName,
+            Text = AppInfo.DisplayVersion,
             Visible = true,
             ContextMenuStrip = menu
         };
