@@ -736,6 +736,7 @@ public partial class EdgeDockWindow : Window
         _pendingReminders = _repository.GetPendingReminders();
 
         _tabButtons.Clear();
+        TabsScroll.ScrollToHome();
         TabsList.ItemsSource = notes;
 
         // La tira de reposo no hace scroll, así que solo se dibujan los guiones que caben: el resto
@@ -1118,7 +1119,7 @@ public partial class EdgeDockWindow : Window
     private bool HasScrollableTabs()
     {
         return _fanState.IsExpanded
-            && _noteCount > 0
+            && _noteCount > 1
             && TabsScroll.ViewportHeight > 0
             && TabsScroll.ExtentHeight > TabsScroll.ViewportHeight
                 + EdgeGeometry.TabShadowHeadroom + 0.5;
