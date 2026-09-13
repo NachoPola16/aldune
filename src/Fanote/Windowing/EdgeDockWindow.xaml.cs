@@ -32,6 +32,8 @@ public partial class EdgeDockWindow : Window
     private readonly AppCoordinator _coordinator;
     private readonly AppSettings? _settings;
     private int _noteCount;
+    private DockViewKind? _lastView;
+    private string? _lastTagFilter;
     private bool _pointerInside;
     private bool _hoverReentryBlocked;
     private bool _hoverLayoutHold;
@@ -702,6 +704,11 @@ public partial class EdgeDockWindow : Window
     public void Refresh()
     {
         var view = _settings?.DockView ?? DockViewKind.Active;
+        var tagFilter = _settings?.DockTagFilter;
+        bool viewChanged = _lastView != view
+            || !string.Equals(_lastTagFilter, tagFilter, StringComparison.OrdinalIgnoreCase);
+        _lastView = view;
+        _lastTagFilter = tagFilter;
         var notes = view switch
         {
             DockViewKind.Archived => _repository.GetByState(NoteState.Archived),
@@ -710,7 +717,7 @@ public partial class EdgeDockWindow : Window
                 _repository.GetByTag(_settings!.DockTagFilter!, NoteState.Active),
             _ => _repository.GetByState(NoteState.Active)
         };
-        SetNotes(notes);
+        SetNotes(notes, animateArrivals: !viewChanged);
     }
 
     /// <summary>
@@ -729,7 +736,7 @@ public partial class EdgeDockWindow : Window
         }
     }
 
-    public void SetNotes(IReadOnlyList<Note> notes)
+    public void SetNotes(IReadOnlyList<Note> notes, bool animateArrivals = true)
     {
         var previousIds = _knownNoteIds;
         _knownNoteIds = notes.Select(n => n.Id).ToHashSet();
@@ -770,7 +777,9 @@ public partial class EdgeDockWindow : Window
         // Solo las notas que no estaban antes. Crear una nota anima esa pestaña y deja las demás
         // quietas, en vez de rehacer la entrada del abanico entero — que es lo que hacía que añadir
         // una nota pareciera un refresco y no una inserción.
-        var arrived = _knownNoteIds.Except(previousIds).ToHashSet();
+        var arrived = animateArrivals
+            ? _knownNoteIds.Except(previousIds).ToHashSet()
+            : new HashSet<Guid>();
 
         Dispatcher.BeginInvoke(DispatcherPriority.Loaded, new Action(() =>
         {
