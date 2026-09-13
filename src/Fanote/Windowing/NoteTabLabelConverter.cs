@@ -36,9 +36,11 @@ public sealed class NoteTabLabelConverter : IValueConverter
 
     public object Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
     {
-        var title = value is Note note && note.IsProtected
+        var note = value as Note;
+        var text = note?.Text ?? value as string ?? string.Empty;
+        var title = note is { IsProtected: true }
             ? Strings.ProtectedNote
-            : NoteTitleHelper.GetTitle(value as string ?? string.Empty);
+            : NoteTitleHelper.GetTitle(text);
         if (string.IsNullOrWhiteSpace(title)) return string.Empty;
 
         title = title.Trim().ToUpper(culture).Replace(' ', NoBreakSpace);
