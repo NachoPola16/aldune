@@ -718,6 +718,7 @@ public partial class EdgeDockWindow : Window
             _ => _repository.GetByState(NoteState.Active)
         };
         SetNotes(notes, animateArrivals: !viewChanged);
+        if (viewChanged) HoldHoverDuringLayout();
     }
 
     /// <summary>
