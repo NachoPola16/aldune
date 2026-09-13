@@ -32,6 +32,7 @@ public partial class NotesManagerWindow : Window
     private string _searchText = "";
     private string? _tagFilter;
     private bool _loadingTagFilter;
+    private NoteRow? _tagEditRow;
     private NoteRow? _selectionAnchor;
 
     public NotesManagerWindow(NotesRepository repository, AppCoordinator coordinator)
@@ -234,6 +235,34 @@ public partial class NotesManagerWindow : Window
         _tagFilter = item.Tag as string;
         ApplyFilter();
         PlayListEntrance();
+    }
+
+    private void OnEditTagsClick(object sender, RoutedEventArgs e)
+    {
+        if (sender is not Button { Tag: NoteRow row } button) return;
+
+        _tagEditRow = row;
+        TagEditorTextBox.Text = string.Join(", ", row.Note.Tags);
+        TagEditorPopup.PlacementTarget = button;
+        TagEditorPopup.IsOpen = true;
+        TagEditorTextBox.Focus();
+        TagEditorTextBox.SelectAll();
+        e.Handled = true;
+    }
+
+    private void OnSaveTagsClick(object sender, RoutedEventArgs e)
+    {
+        if (_tagEditRow is not null)
+        {
+            var tags = TagEditorTextBox.Text.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+            _repository.SetTags(_tagEditRow.Note.Id, tags);
+            LoadRows();
+            _coordinator.RefreshAll();
+        }
+
+        TagEditorPopup.IsOpen = false;
+        _tagEditRow = null;
+        e.Handled = true;
     }
 
     /// <summary>

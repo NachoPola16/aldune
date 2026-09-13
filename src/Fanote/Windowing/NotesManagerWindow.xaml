@@ -196,6 +196,26 @@
             <RowDefinition Height="*" />
             <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
+
+        <Popup x:Name="TagEditorPopup" AllowsTransparency="True" StaysOpen="False"
+               Placement="Bottom" PopupAnimation="Fade">
+            <Border Background="#2D2923" BorderBrush="#5F584E" BorderThickness="1"
+                    CornerRadius="7" Padding="12">
+                <StackPanel Width="230">
+                    <TextBlock Text="{x:Static res:Strings.NoteTags}" Foreground="#F5F0E6"
+                               FontWeight="SemiBold" />
+                    <TextBlock Text="{x:Static res:Strings.NoteTagsHint}" Foreground="#A79E90"
+                               FontSize="11" Margin="0,3,0,8" />
+                    <TextBox x:Name="TagEditorTextBox" Height="30" Padding="7,4"
+                             Background="#403A32" Foreground="#F5F0E6" BorderBrush="#6B6459"
+                             CaretBrush="#F5F0E6" />
+                    <Button Content="{x:Static res:Strings.SaveTags}" Margin="0,8,0,0"
+                            HorizontalAlignment="Right" Click="OnSaveTagsClick"
+                            Style="{StaticResource ToolbarButtonStyle}" />
+                </StackPanel>
+            </Border>
+        </Popup>
+
         <!-- La casilla comparte fila con la lista y se ancla arriba; la lista lleva el margen
              superior que la deja pasar. Asi la casilla no roba una fila entera de alto. -->
 
@@ -276,9 +296,6 @@
                            Foreground="#6B6459" FontSize="13"
                            Margin="10,0,0,0"
                            HorizontalAlignment="Left" VerticalAlignment="Center" />
-                <!-- El marcador de posición es un TextBlock aparte, no el Text de un TextBox vacío:
-                     WPF no tiene watermark nativo, y esto evita que "Buscar…" se confunda con un
-                     valor real que haya que borrar antes de escribir. -->
                 <TextBlock x:Name="SearchPlaceholder" Text="{x:Static res:Strings.SearchPlaceholder}"
                            Foreground="#6B6459" FontSize="13"
                            Margin="28,0,0,0"
@@ -288,6 +305,8 @@
                          Background="Transparent" Foreground="#EDE7DC" CaretBrush="#EDE7DC"
                          FontSize="13" BorderThickness="0"
                          Padding="0,9" Margin="28,0,28,0"
+                         VerticalContentAlignment="Center"
+                         TextChanged="OnSearchTextChanged" />
                          VerticalContentAlignment="Center"
                          TextChanged="OnSearchTextChanged" />
                 <Button x:Name="SearchClearButton" Content="&#x2715;" FontSize="9"
@@ -366,11 +385,21 @@
                                               PreviewMouseLeftButtonDown="OnRowCheckBoxPreviewMouseLeftButtonDown"
                                               VerticalAlignment="Center" Margin="0,0,12,0" />
 
-                                    <TextBlock Grid.Column="1"
-                                               Text="{Binding Note, Converter={StaticResource NoteTitleConverter}}"
-                                               FontWeight="SemiBold" FontSize="13"
-                                               VerticalAlignment="Center"
-                                               TextTrimming="CharacterEllipsis" />
+                                    <Grid Grid.Column="1">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="Auto" />
+                                        </Grid.ColumnDefinitions>
+                                        <TextBlock Grid.Column="0"
+                                                   Text="{Binding Note, Converter={StaticResource NoteTitleConverter}}"
+                                                   FontWeight="SemiBold" FontSize="13"
+                                                   VerticalAlignment="Center"
+                                                   TextTrimming="CharacterEllipsis" />
+                                        <Button Grid.Column="1" Tag="{Binding}"
+                                                Content="{x:Static res:Strings.NoteTags}"
+                                                Click="OnEditTagsClick" Margin="10,0,0,0"
+                                                Style="{StaticResource LinkButtonStyle}" />
+                                    </Grid>
 
                                     <!-- Chip de estado, en el tono oscuro del propio color de la
                                          nota. Vacío y colapsado para las activas, así que sus

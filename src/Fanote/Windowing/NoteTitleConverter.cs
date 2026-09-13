@@ -11,7 +11,7 @@ public sealed class NoteTitleConverter : IValueConverter
     {
         return value is Note note && note.IsProtected
             ? Strings.ProtectedNote
-            : NoteTitleHelper.GetTitle(value as string ?? string.Empty);
+            : NoteTitleHelper.GetTitle(value is Note unprotectedNote ? unprotectedNote.Text : string.Empty);
     }
 
     public object ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture)
