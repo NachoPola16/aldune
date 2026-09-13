@@ -242,11 +242,26 @@ public partial class NotesManagerWindow : Window
         if (sender is not Button { Tag: NoteRow row } button) return;
 
         _tagEditRow = row;
-        TagEditorTextBox.Text = string.Join(", ", row.Note.Tags);
+        TagChoiceItems.Children.Clear();
+        var tags = _repository.GetAllTags();
+        TagChoiceEmptyText.Visibility = tags.Count == 0 ? Visibility.Visible : Visibility.Collapsed;
+        foreach (var tag in tags)
+        {
+            TagChoiceItems.Children.Add(new CheckBox
+            {
+                Content = tag,
+                Tag = tag,
+                IsChecked = row.Note.Tags.Any(existing =>
+                    string.Equals(existing, tag, StringComparison.OrdinalIgnoreCase)),
+                Foreground = Brushes.White,
+                Background = new SolidColorBrush(Color.FromRgb(45, 41, 35)),
+                Style = (Style)FindResource("AppCheckBoxStyle")
+            });
+        }
+
         TagEditorPopup.PlacementTarget = button;
         TagEditorPopup.IsOpen = true;
-        TagEditorTextBox.Focus();
-        TagEditorTextBox.SelectAll();
+        TagEditorPopup.Focus();
         e.Handled = true;
     }
 
@@ -254,7 +269,12 @@ public partial class NotesManagerWindow : Window
     {
         if (_tagEditRow is not null)
         {
-            var tags = TagEditorTextBox.Text.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+            var tags = TagChoiceItems.Children.OfType<CheckBox>()
+                .Where(checkBox => checkBox.IsChecked == true)
+                .Select(checkBox => checkBox.Tag as string)
+                .Where(tag => tag is not null)
+                .Cast<string>()
+                .ToArray();
             _repository.SetTags(_tagEditRow.Note.Id, tags);
             LoadRows();
             _coordinator.RefreshAll();

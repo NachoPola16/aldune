@@ -64,7 +64,7 @@
         </Style>
 
         <Style x:Key="LinkButtonStyle" TargetType="Button">
-            <Setter Property="Foreground" Value="#8FB0D8" />
+            <Setter Property="Foreground" Value="#1E1A14" />
             <Setter Property="FontSize" Value="12" />
             <Setter Property="Background" Value="Transparent" />
             <Setter Property="BorderThickness" Value="0" />
@@ -197,7 +197,7 @@
             <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
 
-        <Popup x:Name="TagEditorPopup" AllowsTransparency="True" StaysOpen="False"
+        <Popup x:Name="TagEditorPopup" AllowsTransparency="True" Focusable="True" StaysOpen="True"
                Placement="Bottom" PopupAnimation="Fade">
             <Border Background="#2D2923" BorderBrush="#5F584E" BorderThickness="1"
                     CornerRadius="7" Padding="12">
@@ -206,9 +206,9 @@
                                FontWeight="SemiBold" />
                     <TextBlock Text="{x:Static res:Strings.NoteTagsHint}" Foreground="#A79E90"
                                FontSize="11" Margin="0,3,0,8" />
-                    <TextBox x:Name="TagEditorTextBox" Height="30" Padding="7,4"
-                             Background="#403A32" Foreground="#F5F0E6" BorderBrush="#6B6459"
-                             CaretBrush="#F5F0E6" />
+                    <TextBlock x:Name="TagChoiceEmptyText" Text="{x:Static res:Strings.DockViewNoTags}"
+                               Foreground="#A79E90" FontSize="11" Visibility="Collapsed" />
+                    <StackPanel x:Name="TagChoiceItems" />
                     <Button Content="{x:Static res:Strings.SaveTags}" Margin="0,8,0,0"
                             HorizontalAlignment="Right" Click="OnSaveTagsClick"
                             Style="{StaticResource ToolbarButtonStyle}" />
