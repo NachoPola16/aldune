@@ -29,6 +29,7 @@ public sealed class AppCoordinator
     private Dictionary<Guid, bool>? _noteTopmostBeforeDockMenu;
     private NotesManagerWindow? _notesManagerWindow;
     private SettingsWindow? _settingsWindow;
+    private bool _openingSettings;
     private SyncConflictsWindow? _syncConflictsWindow;
     private System.Threading.Timer? _autoSyncTimer;
 
@@ -564,6 +565,8 @@ public sealed class AppCoordinator
 
     public void OpenSettings()
     {
+        if (_openingSettings) return;
+
         if (_settingsWindow is not null)
         {
             _settingsWindow.Activate();
@@ -573,23 +576,37 @@ public sealed class AppCoordinator
 
         if (SettingsWindowFactory is null) return;
 
-        var settingsDock = DockNearCursor();
-        _settingsWindow = SettingsWindowFactory();
-        settingsDock?.CenterOnThisMonitor(_settingsWindow);
-        _settingsWindow.Closed += (_, _) => _settingsWindow = null;
-        _settingsWindow.Show();
-        var shownSettingsWindow = _settingsWindow;
-        shownSettingsWindow.Dispatcher.BeginInvoke(DispatcherPriority.Loaded, new Action(() =>
+        _openingSettings = true;
+        try
         {
-            if (ReferenceEquals(_settingsWindow, shownSettingsWindow) && shownSettingsWindow.IsVisible)
+            var settingsDock = DockNearCursor();
+            _settingsWindow = SettingsWindowFactory();
+            settingsDock?.CenterOnThisMonitor(_settingsWindow);
+            _settingsWindow.Closed += (_, _) =>
             {
-                // SizeToContent termina de medir el ScrollViewer al mostrar la ventana. Recentrar
-                // en Loaded evita calcular Top con la altura antigua y cortar la cabecera por arriba.
-                settingsDock?.CenterOnThisMonitor(shownSettingsWindow);
-                shownSettingsWindow.PlayOpenAnimation();
-            }
-        }));
-        NativeMethods.ForceActivate(_settingsWindow);
+                _settingsWindow = null;
+                _openingSettings = false;
+            };
+            _settingsWindow.Show();
+            var shownSettingsWindow = _settingsWindow;
+            shownSettingsWindow.Dispatcher.BeginInvoke(DispatcherPriority.Loaded, new Action(() =>
+            {
+                if (ReferenceEquals(_settingsWindow, shownSettingsWindow) && shownSettingsWindow.IsVisible)
+                {
+                    // SizeToContent termina de medir el ScrollViewer al mostrar la ventana. Recentrar
+                    // en Loaded evita calcular Top con la altura antigua y cortar la cabecera por arriba.
+                    settingsDock?.CenterOnThisMonitor(shownSettingsWindow);
+                    shownSettingsWindow.PlayOpenAnimation();
+                }
+            }));
+            NativeMethods.ForceActivate(_settingsWindow);
+        }
+        catch
+        {
+            _settingsWindow = null;
+            _openingSettings = false;
+            throw;
+        }
     }
 
     public void RefreshAll()
