@@ -1,26 +1,27 @@
 services:
-  fanote-sync:
+  aldune-sync:
     build:
       context: .
       dockerfile: src/Fanote.SyncServer/Dockerfile
-    container_name: fanote-sync
+    container_name: aldune-sync
     restart: unless-stopped
     environment:
-      FANOTE_SYNC_TOKEN: ${FANOTE_SYNC_TOKEN:?Define FANOTE_SYNC_TOKEN in .env}
-      FANOTE_SYNC_TOKENS: ${FANOTE_SYNC_TOKENS:-}
-      FANOTE_DATA_DIR: /data
+      # ALDUNE_* es el nombre actual; el fallback conserva los .env antiguos.
+      ALDUNE_SYNC_TOKEN: ${ALDUNE_SYNC_TOKEN:-${FANOTE_SYNC_TOKEN:-}}
+      ALDUNE_SYNC_TOKENS: ${ALDUNE_SYNC_TOKENS:-${FANOTE_SYNC_TOKENS:-}}
+      ALDUNE_DATA_DIR: /data
       ASPNETCORE_URLS: http://+:8080
     expose:
       - "8080"
     volumes:
-      - fanote-sync-data:/data
+      - aldune-sync-data:/data
 
   caddy:
     image: caddy:2-alpine
-    container_name: fanote-sync-caddy
+    container_name: aldune-sync-caddy
     restart: unless-stopped
     environment:
-      FANOTE_SYNC_DOMAIN: ${FANOTE_SYNC_DOMAIN:?Define FANOTE_SYNC_DOMAIN in .env}
+      ALDUNE_SYNC_DOMAIN: ${ALDUNE_SYNC_DOMAIN:-${FANOTE_SYNC_DOMAIN:?Define ALDUNE_SYNC_DOMAIN (or legacy FANOTE_SYNC_DOMAIN) in .env}}
     ports:
       - "80:80"
       - "443:443"
@@ -29,9 +30,11 @@ services:
       - caddy-data:/data
       - caddy-config:/config
     depends_on:
-      - fanote-sync
+      - aldune-sync
 
 volumes:
-  fanote-sync-data:
+  # Mantiene el nombre físico anterior para no perder los datos ya sincronizados.
+  aldune-sync-data:
+    name: fanote-sync-data
   caddy-data:
   caddy-config:

@@ -1,21 +1,24 @@
 services:
-  fanote-sync:
+  aldune-sync:
     build:
       context: .
       dockerfile: src/Fanote.SyncServer/Dockerfile
-    container_name: fanote-sync
+    container_name: aldune-sync
     restart: unless-stopped
     environment:
-      FANOTE_SYNC_TOKEN: ${FANOTE_SYNC_TOKEN:?Define FANOTE_SYNC_TOKEN in .env}
-      FANOTE_SYNC_TOKENS: ${FANOTE_SYNC_TOKENS:-}
-      FANOTE_DATA_DIR: /data
+      # ALDUNE_* es el nombre actual; el fallback conserva los .env antiguos.
+      ALDUNE_SYNC_TOKEN: ${ALDUNE_SYNC_TOKEN:-${FANOTE_SYNC_TOKEN:-}}
+      ALDUNE_SYNC_TOKENS: ${ALDUNE_SYNC_TOKENS:-${FANOTE_SYNC_TOKENS:-}}
+      ALDUNE_DATA_DIR: /data
       ASPNETCORE_URLS: http://+:8080
     # Nginx y cloudflared son los unicos servicios que deben acceder al puerto.
-    # Cambia FANOTE_SYNC_PORT si el puerto 8097 ya esta ocupado en el servidor.
+    # Cambia ALDUNE_SYNC_PORT si el puerto 8097 ya esta ocupado en el servidor.
     ports:
-      - "127.0.0.1:${FANOTE_SYNC_PORT:-8097}:8080"
+      - "127.0.0.1:${ALDUNE_SYNC_PORT:-${FANOTE_SYNC_PORT:-8097}}:8080"
     volumes:
-      - fanote-sync-data:/data
+      - aldune-sync-data:/data
 
 volumes:
-  fanote-sync-data:
+  # Mantiene el nombre físico anterior para no perder los datos ya sincronizados.
+  aldune-sync-data:
+    name: fanote-sync-data

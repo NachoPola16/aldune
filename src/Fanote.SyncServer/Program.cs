@@ -4,12 +4,12 @@ using Fanote.Core;
 var builder = WebApplication.CreateBuilder(args);
 var app = builder.Build();
 
-var dataPath = Environment.GetEnvironmentVariable("FANOTE_DATA_DIR") ?? "/data";
+var dataPath = GetEnvironmentVariable("ALDUNE_DATA_DIR", "FANOTE_DATA_DIR") ?? "/data";
 var tokens = SyncTokenSet.Parse(
-    Environment.GetEnvironmentVariable("FANOTE_SYNC_TOKENS"),
-    Environment.GetEnvironmentVariable("FANOTE_SYNC_TOKEN"));
+    GetEnvironmentVariable("ALDUNE_SYNC_TOKENS", "FANOTE_SYNC_TOKENS"),
+    GetEnvironmentVariable("ALDUNE_SYNC_TOKEN", "FANOTE_SYNC_TOKEN"));
 if (tokens.Count == 0)
-    throw new InvalidOperationException("FANOTE_SYNC_TOKEN or FANOTE_SYNC_TOKENS must be configured.");
+    throw new InvalidOperationException("ALDUNE_SYNC_TOKEN or ALDUNE_SYNC_TOKENS must be configured.");
 
 var objectPath = Path.Combine(dataPath, "objects");
 Directory.CreateDirectory(objectPath);
@@ -132,3 +132,6 @@ app.Run();
 static string ObjectFile(string objectPath, Guid id) => Path.Combine(objectPath, $"{id:N}.json");
 
 public partial class Program;
+
+static string? GetEnvironmentVariable(string currentName, string legacyName)
+    => Environment.GetEnvironmentVariable(currentName) ?? Environment.GetEnvironmentVariable(legacyName);

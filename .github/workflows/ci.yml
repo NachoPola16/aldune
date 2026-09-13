@@ -21,10 +21,10 @@ jobs:
           dotnet-version: 10.0.x
 
       - name: Restore
-        run: dotnet restore Fanote.slnx
+        run: dotnet restore Aldune.slnx
 
       - name: Build
-        run: dotnet build Fanote.slnx --configuration Release --no-restore
+        run: dotnet build Aldune.slnx --configuration Release --no-restore
 
       - name: Test
-        run: dotnet test Fanote.slnx --configuration Release --no-build --no-restore
+        run: dotnet test Aldune.slnx --configuration Release --no-build --no-restore
