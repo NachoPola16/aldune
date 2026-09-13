@@ -37,7 +37,7 @@ public static class Strings
     /// todavía. Se copia a <see cref="Fanote.Core.NoteTitleHelper.PlaceholderTitle"/> al arrancar
     /// (Core no depende de idiomas) — ver <c>App.OnStartup</c>.
     /// </summary>
-    public static string NewNotePlaceholder => T("New note", "Nueva nota");
+    public static string NewNotePlaceholder => T("Untitled", "Sin título");
 
     // --- Ventana de nota --------------------------------------------------------------------------
 

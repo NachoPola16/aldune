@@ -15,7 +15,7 @@ dist/
 graphify-out/
 
 # Datos locales de ejecución si alguna prueba manual o configuración alternativa los deja en el
-# directorio del proyecto. La aplicación normal los guarda en %LOCALAPPDATA%\Fanote.
+# directorio del proyecto. La aplicación normal los guarda en %LOCALAPPDATA%\Aldune.
 notes.db
 notes.db-*
 settings.json

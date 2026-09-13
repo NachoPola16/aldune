@@ -147,7 +147,6 @@ Pure Fanote.Core types: MonitorInfo is the plain per-monitor data
 does the pixel->DIP math Win32 monitor enumeration will need, kept
 here so it's unit-testable without touching Win32.
 
-Co-Authored-By: Claude Sonnet 5 <noreply@anthropic.com>
 EOF
 )"
 ```
@@ -304,7 +303,6 @@ primary monitor's, which is why this exists. Pure Win32 P/Invoke, no
 new dependency. Verified manually (message box listing detected
 monitors); not yet wired into App.xaml.cs, see Task 5.
 
-Co-Authored-By: Claude Sonnet 5 <noreply@anthropic.com>
 EOF
 )"
 ```
@@ -382,7 +380,6 @@ Microsoft-recommended way to opt a WPF app into per-monitor DPI —
 without it, the Win32 monitor/DPI enumeration added in the previous
 commit would have no effect on how windows actually render.
 
-Co-Authored-By: Claude Sonnet 5 <noreply@anthropic.com>
 EOF
 )"
 ```
@@ -784,7 +781,6 @@ specific owning EdgeDockWindow, calling RefreshAll() so every dock
 stays in sync (they currently all mirror the same note list — see
 Phase 3a spec).
 
-Co-Authored-By: Claude Sonnet 5 <noreply@anthropic.com>
 EOF
 )"
 ```
@@ -935,7 +931,6 @@ monitor. No settings toggle yet to restrict to one monitor, no stable
 per-monitor device ids, no live hotplug handling — all deferred to a
 later Phase 3 sub-delivery per the design spec.
 
-Co-Authored-By: Claude Sonnet 5 <noreply@anthropic.com>
 EOF
 )"
 ```

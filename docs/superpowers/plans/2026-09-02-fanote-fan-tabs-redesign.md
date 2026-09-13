@@ -211,7 +211,6 @@ small circular buttons at the end of the (now single, scrollable)
 column of tabs and buttons, instead of a bottom bar of three text/icon
 buttons. Sets up the layout for the tab-template redesign next.
 
-Co-Authored-By: Claude Sonnet 5 <noreply@anthropic.com>
 EOF
 )"
 ```
@@ -328,7 +327,6 @@ dock's expanded panel only ever shows active notes (previous commit).
 The NoteStateLabelConverter class itself is untouched; only its now-
 unused resource declaration in this file is removed.
 
-Co-Authored-By: Claude Sonnet 5 <noreply@anthropic.com>
 EOF
 )"
 ```
@@ -444,7 +442,6 @@ updated, a note changing state while the panel is already expanded
 replays every tab's entrance animation, not just the changed one — not
 fixed here, YAGNI unless it proves annoying in practice.
 
-Co-Authored-By: Claude Sonnet 5 <noreply@anthropic.com>
 EOF
 )"
 ```
@@ -633,7 +630,6 @@ Verification gap: the DPI conversion can't be exercised on this
 machine's current monitors, both reporting 100% scale — noted in
 STATUS.md rather than claimed as fully verified.
 
-Co-Authored-By: Claude Sonnet 5 <noreply@anthropic.com>
 EOF
 )"
 ```

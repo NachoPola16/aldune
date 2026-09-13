@@ -58,6 +58,62 @@ La invitaciÃ³n de perfil puede transportar la URL de WebDAV, pero cada disposi
 su propia cuenta o contraseÃ±a de aplicaciÃ³n. La carpeta WebDAV debe permitir `MKCOL`, `PROPFIND`,
 `GET`, `PUT` y `DELETE`; la mayorÃ­a de instalaciones de Nextcloud y ownCloud ya lo permiten.
 
+### Nginx + Cloudflare Tunnel
+
+Si el servidor ya usa Nginx y Cloudflare Tunnel, esta es la variante recomendada. No ejecutes
+tambien la composicion con Caddy: ambos intentarian ocupar los mismos puertos de proxy.
+
+Usa `docker-compose.sync.nginx.yml`, que publica el servidor solo en `127.0.0.1`:
+
+```powershell
+Copy-Item .env.example .env
+# Edita .env y define un secreto largo:
+# FANOTE_SYNC_TOKEN=un-secreto-largo-y-aleatorio
+docker compose -f docker-compose.sync.nginx.yml up -d --build
+curl http://127.0.0.1:8097/health
+```
+
+En Nginx, crea un host para el subdominio elegido, por ejemplo `sync.example.com`:
+
+```nginx
+server {
+    listen 80;
+    server_name sync.example.com;
+
+    location / {
+        proxy_pass http://127.0.0.1:8097;
+        proxy_http_version 1.1;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+}
+```
+
+En Cloudflare Tunnel añade una ruta `Published application` con este destino local:
+
+```text
+Hostname: sync.example.com
+Service:  http://127.0.0.1:80
+```
+
+Cloudflare termina el HTTPS público y el túnel conecta con Nginx por localhost; no hace falta abrir
+el puerto 8097 en el router ni publicarlo en Internet. En Aldune configura
+`https://sync.example.com/` y usa el mismo token y código de sincronización de los otros dispositivos.
+
+Si gestionas el túnel mediante `config.yml`, la regla equivalente es:
+
+```yaml
+ingress:
+  - hostname: sync.example.com
+    service: http://127.0.0.1:80
+  - service: http_status:404
+```
+
+Valida la configuración con `cloudflared tunnel ingress validate` y crea el DNS con
+`cloudflared tunnel route dns <TUNNEL> sync.example.com`, si no lo has creado desde el panel.
+
 ### HTTPS con Caddy
 
 Para exponer el servidor con HTTPS automÃ¡tico mediante un dominio pÃºblico, usa la composiciÃ³n
