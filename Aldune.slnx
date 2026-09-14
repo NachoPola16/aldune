@@ -1,10 +1,10 @@
 <Solution>
   <Folder Name="/src/">
-    <Project Path="src/Fanote.Core/Fanote.Core.csproj" />
-    <Project Path="src/Fanote/Fanote.csproj" />
-    <Project Path="src/Fanote.SyncServer/Fanote.SyncServer.csproj" />
+    <Project Path="src/Aldune.Core/Aldune.Core.csproj" />
+    <Project Path="src/Aldune/Aldune.csproj" />
+    <Project Path="src/Aldune.SyncServer/Aldune.SyncServer.csproj" />
   </Folder>
   <Folder Name="/tests/">
-    <Project Path="tests/Fanote.Core.Tests/Fanote.Core.Tests.csproj" />
+    <Project Path="tests/Aldune.Core.Tests/Aldune.Core.Tests.csproj" />
   </Folder>
 </Solution>

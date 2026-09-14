@@ -175,7 +175,7 @@ invitaciones antiguas `fanote-profile-v1` siguen siendo compatibles.
 
 ## Compatibilidad futura
 
-La compatibilidad se controla por el formato de sincronizaciÃ³n, no por el nÃºmero visible de Fanote.
+La compatibilidad se controla por el formato de sincronización, no por el número visible de Aldune.
 Las actualizaciones que mantengan el mismo formato pueden sincronizarse entre sÃ­. Si una versiÃ³n
 introduce un cambio incompatible, aumenta el formato y cada cliente acepta solo la ventana que sabe
 leer (`MinimumSupportedFormat`-`CurrentFormat`). Una versiÃ³n demasiado antigua o futura devuelve

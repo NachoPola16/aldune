@@ -1,0 +1,532 @@
+<Window x:Class="Aldune.Windowing.NotesManagerWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:local="clr-namespace:Aldune.Windowing"
+        xmlns:res="clr-namespace:Aldune.Resources"
+        Title="{x:Static res:Strings.ManageNotesTitle}"
+        Width="450" Height="560"
+        MinWidth="380" MinHeight="360"
+        UseLayoutRounding="True"
+        SnapsToDevicePixels="True"
+        WindowStyle="None"
+        AllowsTransparency="False"
+        ResizeMode="CanResize"
+        Background="{StaticResource AlduneGroundBrush}"
+        Topmost="False"
+        TextOptions.TextFormattingMode="Display"
+        PreviewKeyDown="OnPreviewKeyDown"
+        StateChanged="OnWindowStateChanged">
+    <WindowChrome.WindowChrome>
+        <WindowChrome CaptionHeight="34" ResizeBorderThickness="6" GlassFrameThickness="-1" CornerRadius="0" />
+    </WindowChrome.WindowChrome>
+    <Window.Resources>
+        <local:NoteTitleConverter x:Key="NoteTitleConverter" />
+        <local:NoteStateLabelConverter x:Key="NoteStateLabelConverter" />
+        <local:NoteRimConverter x:Key="NoteRimConverter" />
+        <local:NoteLabelColorConverter x:Key="NoteLabelColorConverter" />
+
+        <Style x:Key="ToolbarButtonStyle" TargetType="Button">
+            <Setter Property="Foreground" Value="#EDE7DC" />
+            <Setter Property="Background" Value="#3C3730" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="FocusVisualStyle" Value="{x:Null}" />
+            <Setter Property="Padding" Value="12,7" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="Bg" Background="{TemplateBinding Background}" CornerRadius="6">
+                            <ContentPresenter Margin="{TemplateBinding Padding}"
+                                              HorizontalAlignment="Center"
+                                              VerticalAlignment="Center" />
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Bg" Property="Background" Value="#4E4840" />
+                            </Trigger>
+                            <Trigger Property="IsPressed" Value="True">
+                                <Setter TargetName="Bg" Property="Background" Value="#5F584E" />
+                            </Trigger>
+                            <!-- Sin nada seleccionado estas acciones no tienen sobre qué actuar.
+                                 Antes seguían pulsables y no hacían nada, que es peor que decir
+                                 que no se puede: el estado deshabilitado es la respuesta. -->
+                            <Trigger Property="IsEnabled" Value="False">
+                                <Setter TargetName="Bg" Property="Background" Value="#332F28" />
+                                <Setter Property="Foreground" Value="#6B6459" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style x:Key="DangerToolbarButtonStyle" TargetType="Button" BasedOn="{StaticResource ToolbarButtonStyle}">
+            <Setter Property="Background" Value="#5A2A28" />
+        </Style>
+
+        <Style x:Key="LinkButtonStyle" TargetType="Button">
+            <Setter Property="Foreground" Value="#1E1A14" />
+            <Setter Property="FontSize" Value="12" />
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="FocusVisualStyle" Value="{x:Null}" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <TextBlock x:Name="Label" Text="{TemplateBinding Content}"
+                                   Foreground="{TemplateBinding Foreground}"
+                                   FontSize="{TemplateBinding FontSize}" />
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Label" Property="TextDecorations" Value="Underline" />
+                            </Trigger>
+                            <Trigger Property="IsEnabled" Value="False">
+                                <Setter TargetName="Label" Property="Foreground" Value="#5A554C" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style x:Key="CloseButtonStyle" TargetType="Button" BasedOn="{StaticResource ToolbarButtonStyle}">
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="FontSize" Value="13" />
+            <Setter Property="Padding" Value="0" />
+        </Style>
+
+        <!-- Barra de scroll fina y a juego con el fondo oscuro. La del sistema es clara y ancha, y
+             sobre este fondo canta muchísimo. Esto es <b>teñir</b> una afordancia estándar, no
+             reinventarla: conserva arrastre del pulgar, clic en la pista y rueda; solo cambia el
+             color y el grosor. -->
+        <!-- La barra de scroll fina y oscura vive ahora en App.xaml, para no repetirla en cada
+             ventana que necesite scroll. -->
+
+        <!-- Las casillas por defecto de WPF son un cuadrado claro con borde fino de otra epoca:
+             sobre las filas de color y sobre el fondo oscuro cantan. Esta hereda Foreground, asi
+             que la misma plantilla sirve para las filas (tinta sobre pastel) y para las de chrome
+             (gris claro sobre fondo oscuro) sin duplicarla. -->
+        <Style x:Key="AppCheckBoxStyle" TargetType="CheckBox">
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="FocusVisualStyle" Value="{x:Null}" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="CheckBox">
+                        <StackPanel Orientation="Horizontal" Background="Transparent">
+                            <Border x:Name="Box" Width="17" Height="17" CornerRadius="4"
+                                    BorderBrush="{TemplateBinding Foreground}"
+                                    BorderThickness="1.5"
+                                    Background="Transparent"
+                                    VerticalAlignment="Center">
+                                <Grid>
+                                    <!-- Marca y guion comparten sitio: uno u otro, nunca los dos. -->
+                                    <TextBlock x:Name="Tick" Text="&#x2713;" FontSize="12"
+                                               FontWeight="Bold"
+                                               Foreground="{TemplateBinding Background}"
+                                               HorizontalAlignment="Center" VerticalAlignment="Center"
+                                               Visibility="Collapsed" />
+                                    <Border x:Name="Dash" Width="9" Height="2" CornerRadius="1"
+                                            Background="{TemplateBinding Background}"
+                                            HorizontalAlignment="Center" VerticalAlignment="Center"
+                                            Visibility="Collapsed" />
+                                </Grid>
+                            </Border>
+                            <ContentPresenter Margin="8,0,0,0" VerticalAlignment="Center" />
+                        </StackPanel>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsChecked" Value="True">
+                                <Setter TargetName="Box" Property="Background" Value="{Binding Foreground, RelativeSource={RelativeSource TemplatedParent}}" />
+                                <Setter TargetName="Tick" Property="Visibility" Value="Visible" />
+                            </Trigger>
+                            <!-- Indeterminada: guion, no marca. Es lo que dice "algunas, no todas". -->
+                            <Trigger Property="IsChecked" Value="{x:Null}">
+                                <Setter TargetName="Box" Property="Background" Value="{Binding Foreground, RelativeSource={RelativeSource TemplatedParent}}" />
+                                <Setter TargetName="Dash" Property="Visibility" Value="Visible" />
+                            </Trigger>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Box" Property="BorderThickness" Value="2" />
+                            </Trigger>
+                            <Trigger Property="IsEnabled" Value="False">
+                                <Setter Property="Opacity" Value="0.4" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- Filtros como control segmentado: cuatro opciones excluyentes de un mismo eje se leen
+             mejor juntas en una pastilla que como cuatro botones sueltos. -->
+        <Style x:Key="FilterToggleStyle" TargetType="RadioButton">
+            <Setter Property="Foreground" Value="#A79E90" />
+            <Setter Property="Padding" Value="12,6" />
+            <Setter Property="FontSize" Value="12" />
+            <Setter Property="FocusVisualStyle" Value="{x:Null}" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="RadioButton">
+                        <Border x:Name="Bg" Background="Transparent" CornerRadius="5">
+                            <ContentPresenter Margin="{TemplateBinding Padding}"
+                                              HorizontalAlignment="Center"
+                                              VerticalAlignment="Center" />
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Bg" Property="Background" Value="#3C3730" />
+                            </Trigger>
+                            <Trigger Property="IsChecked" Value="True">
+                                <Setter TargetName="Bg" Property="Background" Value="#4E4840" />
+                                <Setter Property="Foreground" Value="#F5F0E6" />
+                                <Setter Property="FontWeight" Value="SemiBold" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style x:Key="TagFilterStyle" TargetType="ComboBox" BasedOn="{StaticResource DarkComboBoxStyle}" />
+    </Window.Resources>
+
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <Popup x:Name="TagEditorPopup" AllowsTransparency="True" Focusable="True" StaysOpen="False"
+               Placement="Bottom" PopupAnimation="Fade">
+            <Border Background="#2D2923" BorderBrush="#5F584E" BorderThickness="1"
+                    CornerRadius="7" Padding="12">
+                <StackPanel Width="230">
+                    <TextBlock Text="{x:Static res:Strings.NoteTags}" Foreground="#F5F0E6"
+                               FontWeight="SemiBold" />
+                    <TextBlock Text="{x:Static res:Strings.NoteTagsHint}" Foreground="#A79E90"
+                               FontSize="11" Margin="0,3,0,8" />
+                    <TextBlock x:Name="TagChoiceEmptyText" Text="{x:Static res:Strings.DockViewNoTags}"
+                               Foreground="#A79E90" FontSize="11" Visibility="Collapsed" />
+                    <StackPanel x:Name="TagChoiceItems" />
+                    <Button Content="{x:Static res:Strings.SaveTags}" Margin="0,8,0,0"
+                            HorizontalAlignment="Right" Click="OnSaveTagsClick"
+                            Style="{StaticResource ToolbarButtonStyle}" />
+                </StackPanel>
+            </Border>
+        </Popup>
+
+        <!-- La casilla comparte fila con la lista y se ancla arriba; la lista lleva el margen
+             superior que la deja pasar. Asi la casilla no roba una fila entera de alto. -->
+
+        <!-- Cabecera. CaptionHeight cubre esta franja, así que la ventana se arrastra desde aquí. -->
+        <Grid Grid.Row="0" Margin="20,18,14,0">
+            <StackPanel>
+                <TextBlock Text="{x:Static res:Strings.ManageNotesTitle}" Foreground="#F5F0E6"
+                           FontSize="17" FontWeight="SemiBold" />
+                <TextBlock x:Name="SubtitleText" Foreground="#A79E90" FontSize="12" Margin="0,3,0,0" />
+            </StackPanel>
+            <!-- Acceso a Ajustes tambien desde aqui. Estaban solo en el clic derecho de la
+                 bandeja, y ahi no los encontro el usuario: esta es la ventana que uno abre cuando
+                 busca "donde se configura esto". -->
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Top">
+                <Button Content="&#x2014;" Width="28" Height="28"
+                        ToolTip="{x:Static res:Strings.MinimizeWindowTooltip}"
+                        Click="OnMinimizeClick"
+                        WindowChrome.IsHitTestVisibleInChrome="True"
+                        Style="{StaticResource CloseButtonStyle}" />
+                <Button x:Name="MaximizeButton" Width="28" Height="28"
+                        ToolTip="{x:Static res:Strings.MaximizeWindowTooltip}"
+                        Click="OnMaximizeClick"
+                        WindowChrome.IsHitTestVisibleInChrome="True"
+                        Style="{StaticResource CloseButtonStyle}">
+                    <TextBlock x:Name="MaximizeGlyph" Text="&#xE922;"
+                               FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" FontSize="11" />
+                </Button>
+                <Button x:Name="SettingsButton"
+                        Content="&#xE713;"
+                        FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets"
+                        Width="28" Height="28"
+                        ToolTip="{x:Static res:Strings.SettingsTooltip}"
+                        Click="OnSettingsClick"
+                        WindowChrome.IsHitTestVisibleInChrome="True"
+                        Style="{StaticResource CloseButtonStyle}" />
+                <Button x:Name="CloseButton"
+                        Content="&#x2715;"
+                        Width="28" Height="28"
+                        Click="OnCloseClick"
+                        WindowChrome.IsHitTestVisibleInChrome="True"
+                        Style="{StaticResource CloseButtonStyle}" />
+            </StackPanel>
+        </Grid>
+
+        <Border Grid.Row="1" Background="#332F28" CornerRadius="7" Margin="20,16,20,0" Padding="3">
+            <StackPanel>
+                <WrapPanel>
+                <!-- IsChecked se fija desde el code-behind tras InitializeComponent, no aquí: un
+                     IsChecked="True" en XAML dispara Checked mientras el árbol se está
+                     construyendo, antes de que RowsList exista — ver el constructor. -->
+                <!-- Sin "Todas". Mezclaba tres categorias mentales distintas (lo que tienes, lo
+                     que guardaste, lo que tiraste) en una sola lista donde el estado solo se
+                     distinguia por un chip pequeno, y ademas obligaba a un caso especial en las
+                     animaciones: bajo "Todas" archivar no saca la nota de la vista, asi que no
+                     podia animarse como que se va. Tres estados, y "Activas" por defecto, que es
+                     lo que uno quiere ver al abrir. -->
+                <RadioButton x:Name="FilterActive" GroupName="NotesFilter" Content="{x:Static res:Strings.FilterActive}"
+                             Checked="OnFilterChanged" Style="{StaticResource FilterToggleStyle}" />
+                <RadioButton x:Name="FilterArchived" GroupName="NotesFilter" Content="{x:Static res:Strings.FilterArchived}"
+                             Checked="OnFilterChanged" Style="{StaticResource FilterToggleStyle}" />
+                <RadioButton x:Name="FilterTrashed" GroupName="NotesFilter" Content="{x:Static res:Strings.FilterTrashed}"
+                             Checked="OnFilterChanged" Style="{StaticResource FilterToggleStyle}" />
+                <ComboBox x:Name="TagFilterBox" Width="145" Height="30" Margin="8,0,4,0"
+                          ToolTip="{x:Static res:Strings.TagFilterTooltip}"
+                          SelectionChanged="OnTagFilterChanged"
+                           Style="{StaticResource TagFilterStyle}"
+                           Visibility="Collapsed" />
+                </WrapPanel>
+                <Button x:Name="ManageTagsButton" Content="{x:Static res:Strings.ManageTags}"
+                        Click="OnManageTagsClick" HorizontalAlignment="Left"
+                        Margin="4,6,4,3" Padding="10,5"
+                        Style="{StaticResource ToolbarButtonStyle}" />
+            </StackPanel>
+        </Border>
+
+        <Popup x:Name="TagManagerPopup" AllowsTransparency="True" Focusable="True"
+               StaysOpen="False" Placement="Bottom" PopupAnimation="Fade">
+            <Border Background="#2D2923" BorderBrush="#5F584E" BorderThickness="1"
+                    CornerRadius="7" Padding="12">
+                <StackPanel Width="260">
+                    <TextBlock Text="{x:Static res:Strings.ManageTags}" Foreground="#F5F0E6"
+                               FontWeight="SemiBold" />
+                    <StackPanel Orientation="Horizontal" Margin="0,8,0,12">
+                        <TextBox x:Name="NewTagTextBox" Width="170" Height="30" Padding="7,4"
+                                 Background="#403A32" Foreground="#F5F0E6" BorderBrush="#6B6459"
+                                 CaretBrush="#F5F0E6" />
+                        <Button Content="{x:Static res:Strings.CreateTag}" Click="OnCreateTagClick"
+                                Margin="8,0,0,0" Style="{StaticResource ToolbarButtonStyle}" />
+                    </StackPanel>
+                    <TextBlock Text="{x:Static res:Strings.AllTags}" Foreground="#A79E90"
+                               FontSize="11" Margin="0,0,0,5" />
+                    <TextBlock x:Name="TagManagerEmptyText" Text="{x:Static res:Strings.DockViewNoTags}"
+                               Foreground="#A79E90" FontSize="11" Visibility="Collapsed" />
+                    <StackPanel x:Name="TagManagerItems" />
+                </StackPanel>
+            </Border>
+        </Popup>
+
+        <!-- Busca dentro del filtro activo, no a través de los tres a la vez: mezclar estados en
+             los resultados reabriría el mismo problema que "Todas" ya causó (ver más arriba) para
+             el borrado permanente, que solo tiene sentido en Papelera. Cambiar de pestaña conserva
+             el texto, así que buscar y luego mirar en otra categoría no obliga a escribirlo dos
+             veces. -->
+        <Border Grid.Row="2" Background="#332F28" CornerRadius="7" Margin="20,10,20,0">
+            <Grid>
+                <TextBlock Text="&#xE721;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets"
+                           Foreground="#6B6459" FontSize="13"
+                           Margin="10,0,0,0"
+                           HorizontalAlignment="Left" VerticalAlignment="Center" />
+                <TextBlock x:Name="SearchPlaceholder" Text="{x:Static res:Strings.SearchPlaceholder}"
+                           Foreground="#6B6459" FontSize="13"
+                           Margin="28,0,0,0"
+                           HorizontalAlignment="Left" VerticalAlignment="Center"
+                           IsHitTestVisible="False" />
+                <TextBox x:Name="SearchBox"
+                         Background="Transparent" Foreground="#EDE7DC" CaretBrush="#EDE7DC"
+                         FontSize="13" BorderThickness="0"
+                         Padding="0,9" Margin="28,0,28,0"
+                         VerticalContentAlignment="Center"
+                         TextChanged="OnSearchTextChanged" />
+                <Button x:Name="SearchClearButton" Content="&#x2715;" FontSize="9"
+                        Width="20" Height="20" Margin="0,0,6,0"
+                        HorizontalAlignment="Right" VerticalAlignment="Center"
+                        Visibility="Collapsed"
+                        ToolTip="{x:Static res:Strings.ClearSearchTooltip}"
+                        Click="OnSearchClearClick"
+                        Style="{StaticResource CloseButtonStyle}" />
+            </Grid>
+        </Border>
+
+        <!-- Casilla de tres estados y no un enlace de texto: es el patrón convencional para una
+             lista con casillas, y sobre todo MUESTRA el estado. El enlace ya alternaba, pero no
+             había forma de saber si estaba todo marcado o nada. Va alineada con las casillas de las
+             filas, que es donde el ojo la busca. -->
+        <CheckBox Grid.Row="3" x:Name="SelectAllCheck"
+                  Content="{x:Static res:Strings.SelectAll}"
+                  Foreground="#A79E90" Background="#2A261F" FontSize="12"
+                  IsThreeState="True"
+                  Style="{StaticResource AppCheckBoxStyle}"
+                  Click="OnSelectAllClick"
+                  Margin="32,12,20,0" VerticalAlignment="Top" />
+
+        <Grid Grid.Row="3" Margin="20,38,12,0">
+            <ScrollViewer x:Name="RowsScroll" VerticalScrollBarVisibility="Auto"
+                          HorizontalScrollBarVisibility="Disabled" Padding="0,0,8,0">
+                <ItemsControl x:Name="RowsList">
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate>
+                            <!-- TextElement.Foreground, no Foreground a secas: Border no es un
+                                 Control y no tiene esa propiedad, pero la adjunta sí se hereda por
+                                 el árbol, que es lo que hace falta para tenir toda la fila. -->
+                            <Border Background="{Binding Note.Color}"
+                                    TextElement.Foreground="#1E1A14"
+                                    CornerRadius="8" Margin="0,0,0,8" Padding="12,10"
+                                    Cursor="Hand"
+                                    Focusable="True"
+                                    FocusVisualStyle="{x:Null}"
+                                    KeyboardNavigation.IsTabStop="True"
+                                    MouseLeftButtonDown="OnRowMouseLeftButtonDown"
+                                    MouseLeftButtonUp="OnRowMouseLeftButtonUp"
+                                    >
+                                <Border.Style>
+                                    <Style TargetType="Border">
+                                        <Setter Property="BorderBrush" Value="{Binding Note.Color, Converter={StaticResource NoteRimConverter}}" />
+                                        <Setter Property="BorderThickness" Value="1" />
+                                        <Setter Property="Opacity" Value="0.96" />
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding IsSelected}" Value="True">
+                                                <Setter Property="BorderBrush" Value="#F5F0E6" />
+                                                <Setter Property="BorderThickness" Value="2" />
+                                                <Setter Property="Opacity" Value="1" />
+                                            </DataTrigger>
+                                            <Trigger Property="IsKeyboardFocusWithin" Value="True">
+                                                <Setter Property="BorderBrush" Value="#F5F0E6" />
+                                            </Trigger>
+                                            <Trigger Property="IsMouseOver" Value="True">
+                                                <Setter Property="Opacity" Value="1" />
+                                            </Trigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </Border.Style>
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto" />
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="Auto" />
+                                    </Grid.ColumnDefinitions>
+
+                                    <CheckBox Grid.Column="0"
+                                              IsChecked="{Binding IsSelected, Mode=TwoWay}"
+                                              Foreground="#1E1A14"
+                                              Background="{Binding Note.Color}"
+                                              Style="{StaticResource AppCheckBoxStyle}"
+                                              PreviewMouseLeftButtonDown="OnRowCheckBoxPreviewMouseLeftButtonDown"
+                                              VerticalAlignment="Center" Margin="0,0,12,0" />
+
+                                    <Grid Grid.Column="1">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="Auto" />
+                                        </Grid.ColumnDefinitions>
+                                        <TextBlock Grid.Column="0"
+                                                   Text="{Binding Note, Converter={StaticResource NoteTitleConverter}}"
+                                                   FontWeight="SemiBold" FontSize="13"
+                                                   VerticalAlignment="Center"
+                                                   TextTrimming="CharacterEllipsis" />
+                                        <Button Grid.Column="1" Tag="{Binding}"
+                                                Content="{x:Static res:Strings.NoteTags}"
+                                                Click="OnEditTagsClick" Margin="10,0,0,0"
+                                                Style="{StaticResource LinkButtonStyle}" />
+                                    </Grid>
+
+                                    <!-- Chip de estado, en el tono oscuro del propio color de la
+                                         nota. Vacío y colapsado para las activas, así que sus
+                                         filas no crecen una línea de más. -->
+                                    <Border Grid.Column="2"
+                                            Background="#22000000"
+                                            CornerRadius="4" Padding="7,3" Margin="10,0,0,0"
+                                            VerticalAlignment="Center">
+                                        <Border.Style>
+                                            <Style TargetType="Border">
+                                                <Setter Property="Visibility" Value="Visible" />
+                                                <Style.Triggers>
+                                                    <DataTrigger Binding="{Binding Note.State}" Value="Active">
+                                                        <Setter Property="Visibility" Value="Collapsed" />
+                                                    </DataTrigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </Border.Style>
+                                        <TextBlock Text="{Binding Note.State, Converter={StaticResource NoteStateLabelConverter}}"
+                                                   FontSize="10" FontWeight="SemiBold"
+                                                   Foreground="{Binding Note.Color, Converter={StaticResource NoteLabelColorConverter}}" />
+                                    </Border>
+                                </Grid>
+                            </Border>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+            </ScrollViewer>
+
+            <!-- Estado vacío: dice qué pasa y por qué, en vez de dejar un hueco en blanco. -->
+            <TextBlock x:Name="EmptyState"
+                       Foreground="#6B6459" FontSize="13"
+                       HorizontalAlignment="Center" VerticalAlignment="Center"
+                       TextAlignment="Center" TextWrapping="Wrap"
+                       MaxWidth="260"
+                       Visibility="Collapsed" />
+        </Grid>
+
+        <!-- WrapPanel, no StackPanel: estos botones no caben en una línea al ancho mínimo, y un
+             StackPanel dejaría el último saliéndose de la ventana sin recortar pero sin poder
+             pulsarse (pasó exactamente eso una vez). WrapPanel baja el sobrante a otra línea. -->
+        <Border Grid.Row="4" Background="#25211B" Padding="20,12">
+            <DockPanel>
+                <!-- "Eliminar" separado del resto y a la izquierda: es la unica accion sin vuelta
+                     atras de toda la app, asi que no comparte vecindario con las reversibles.
+                     Solo aparece en la papelera — ofrecerlo en las demas vistas permitiria saltarse
+                     la papelera, que es justo la red de seguridad que la hace util. -->
+                <Button x:Name="DeleteButton" DockPanel.Dock="Left"
+                        Click="OnDeleteSelectedClick"
+                        Visibility="Collapsed"
+                        VerticalAlignment="Center"
+                        Style="{StaticResource DangerToolbarButtonStyle}">
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Text="&#xE74D;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets"
+                                   VerticalAlignment="Center" Margin="0,0,6,0" />
+                        <TextBlock Text="{x:Static res:Strings.Delete}" VerticalAlignment="Center" />
+                    </StackPanel>
+                </Button>
+
+                <!-- Margin vertical en los elementos: si el WrapPanel llega a partirse a un ancho
+                     muy estrecho, las dos líneas se tocaban y los botones parecían solaparse. -->
+                <WrapPanel HorizontalAlignment="Right">
+                    <!-- Exporta la selección si hay alguna marcada, o todas las del filtro actual si
+                         no — no depende de tener algo seleccionado, a diferencia de los botones de
+                         abajo. Glifo elegido sin verificación visual del render real, igual que ya
+                         pasó una vez con el de "abrir todas" (ver docs/STATUS.md). -->
+                    <Button x:Name="ExportButton" Click="OnExportSelectedClick" Margin="8,3,0,3"
+                            Style="{StaticResource ToolbarButtonStyle}">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="&#xE896;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets"
+                                       VerticalAlignment="Center" Margin="0,0,6,0" />
+                            <TextBlock Text="{x:Static res:Strings.Export}" VerticalAlignment="Center" />
+                        </StackPanel>
+                    </Button>
+                    <Button x:Name="ArchiveButton" Click="OnArchiveSelectedClick" Margin="8,3,0,3"
+                            Style="{StaticResource ToolbarButtonStyle}">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="&#xE7B8;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets"
+                                       VerticalAlignment="Center" Margin="0,0,6,0" />
+                            <TextBlock Text="{x:Static res:Strings.Archive}" VerticalAlignment="Center" />
+                        </StackPanel>
+                    </Button>
+                    <Button x:Name="RestoreButton" Click="OnRestoreSelectedClick" Margin="8,3,0,3"
+                            Style="{StaticResource ToolbarButtonStyle}">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="&#xE7A7;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets"
+                                       VerticalAlignment="Center" Margin="0,0,6,0" />
+                            <TextBlock Text="{x:Static res:Strings.Restore}" VerticalAlignment="Center" />
+                        </StackPanel>
+                    </Button>
+                    <Button x:Name="TrashButton" Click="OnTrashSelectedClick" Margin="8,3,0,3"
+                            Style="{StaticResource DangerToolbarButtonStyle}">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="&#xE74D;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets"
+                                       VerticalAlignment="Center" Margin="0,0,6,0" />
+                            <TextBlock Text="{x:Static res:Strings.Trash}" VerticalAlignment="Center" />
+                        </StackPanel>
+                    </Button>
+                </WrapPanel>
+            </DockPanel>
+        </Border>
+    </Grid>
+</Window>

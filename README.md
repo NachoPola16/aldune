@@ -19,14 +19,14 @@ Consulta [docs/SYNC.md](docs/SYNC.md) para configurar Docker Compose.
 
 ```powershell
 dotnet restore Aldune.slnx
-dotnet build src/Fanote/Fanote.csproj -c Release
+dotnet build src/Aldune/Aldune.csproj -c Release
 dotnet test Aldune.slnx --no-restore
 ```
 
 ## Crear el portable
 
 ```powershell
-dotnet publish src/Fanote/Fanote.csproj -c Release -r win-x64 --self-contained true `
+dotnet publish src/Aldune/Aldune.csproj -c Release -r win-x64 --self-contained true `
   /p:PublishSingleFile=true /p:IncludeNativeLibrariesForSelfExtract=true `
   /p:DebugSymbols=false /p:DebugType=None -o publish/portable
 ```

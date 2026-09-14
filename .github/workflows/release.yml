@@ -22,7 +22,7 @@ jobs:
           dotnet-version: 10.0.x
 
       - name: Restore
-        run: dotnet restore src/Fanote/Fanote.csproj -r win-x64
+        run: dotnet restore src/Aldune/Aldune.csproj -r win-x64
 
       - name: Install Inno Setup
         run: choco install innosetup --no-progress -y

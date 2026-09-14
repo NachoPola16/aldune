@@ -1,0 +1,33 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <ItemGroup>
+    <ProjectReference Include="..\Aldune.Core\Aldune.Core.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- UseWindowsForms mete System.Windows.Forms y System.Drawing en los global usings de TODO el
+         proyecto, y ahi chocan con WPF: Application, Button, Point y Color existen en los dos
+         mundos, asi que cada fichero empezaba a dar CS0104. Se sacan del ambito global y solo
+         TrayIcon.cs los pide explicitamente, que es el unico sitio que necesita WinForms. -->
+    <Using Remove="System.Windows.Forms" />
+    <Using Remove="System.Drawing" />
+  </ItemGroup>
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <AssemblyName>aldune</AssemblyName>
+    <TargetFramework>net10.0-windows</TargetFramework>
+    <Version>0.5.1</Version>
+    <AssemblyVersion>0.5.1.0</AssemblyVersion>
+    <FileVersion>0.5.1.0</FileVersion>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <UseWPF>true</UseWPF>
+    <!-- Solo por NotifyIcon: WPF no trae icono de bandeja, y el envoltorio de WinForms es bastante
+         menos codigo que hablar con Shell_NotifyIcon por P/Invoke. -->
+    <UseWindowsForms>true</UseWindowsForms>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
+    <ApplicationIcon>Assets\aldune.ico</ApplicationIcon>
+  </PropertyGroup>
+
+</Project>

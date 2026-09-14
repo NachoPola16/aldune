@@ -2,7 +2,7 @@ services:
   aldune-sync:
     build:
       context: .
-      dockerfile: src/Fanote.SyncServer/Dockerfile
+      dockerfile: src/Aldune.SyncServer/Dockerfile
     container_name: aldune-sync
     restart: unless-stopped
     environment:

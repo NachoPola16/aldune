@@ -9,7 +9,7 @@ $distDir = Join-Path $root "dist"
 $issPath = Join-Path $root "installer\Aldune.iss"
 
 if (-not $SkipPublish) {
-    dotnet publish (Join-Path $root "src\Fanote\Fanote.csproj") `
+    dotnet publish (Join-Path $root "src\Aldune\Aldune.csproj") `
         -c Release -r win-x64 --self-contained true `
         -p:PublishSingleFile=true `
         -p:IncludeNativeLibrariesForSelfExtract=true `
