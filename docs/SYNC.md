@@ -28,17 +28,32 @@ debe ser solo el valor de la derecha de `ALDUNE_SYNC_TOKEN=`. El botón `Sincron
 disponible en Ajustes y en el dock; también puedes activar la sincronización periódica y elegir el
 intervalo. Ajustes muestra la última sincronización correcta.
 
-Las variables antiguas `FANOTE_SYNC_TOKEN`, `FANOTE_SYNC_TOKENS`, `FANOTE_SYNC_PORT` y
-`FANOTE_SYNC_DOMAIN` siguen aceptándose como compatibilidad para instalaciones existentes, pero las
-nuevas configuraciones deben usar los nombres `ALDUNE_*`.
+Los nombres de las variables de entorno son los de `ALDUNE_*`. Hasta el 2026-09-15 se llamaban
+`FANOTE_*` y ya no se aceptan: si tu `.env` todavía usa `FANOTE_SYNC_TOKEN`, `FANOTE_SYNC_TOKENS`,
+`FANOTE_SYNC_PORT` o `FANOTE_SYNC_DOMAIN`, renómbralos. Sin token el servidor se niega a arrancar,
+así que el fallo es inmediato y visible, no silencioso.
 
 En Ajustes también puedes elegir entre `Todas las notas` y `Notas seleccionadas`. En el segundo modo,
 solo las notas marcadas en `Elegir notas…` se publican o se descargan en ese vínculo. La selección se
 guarda localmente y no se envía al servidor.
 
 El servidor es un almacén de blobs y no necesita SQLite. El volumen lógico `aldune-sync-data` contiene
-los objetos y sobrevive a actualizaciones del contenedor. Internamente conserva el nombre físico
-`fanote-sync-data` para que una instalación existente no pierda sus datos al actualizar la composición.
+los objetos y sobrevive a actualizaciones del contenedor. Su nombre físico se configura con
+`ALDUNE_SYNC_VOLUME` (por defecto `aldune-sync-data`).
+
+### Migrar un servidor que ya sincronizaba
+
+Hasta el 2026-09-15 la aplicación se llamaba Fanote: el servidor guardaba sus objetos en un volumen
+Docker llamado `fanote-sync-data` y leía variables de entorno `FANOTE_*`.
+
+- **Volumen**: si tu servidor ya tiene objetos sincronizados en ese volumen, añade a `.env`
+  `ALDUNE_SYNC_VOLUME=fanote-sync-data` para que el contenedor siga montando el mismo volumen.
+- **Variables de entorno**: renombra las `FANOTE_*` a `ALDUNE_*`.
+
+Si no lo haces, el contenedor arranca con un volumen vacío. No se pierde nada: los objetos antiguos
+siguen en el disco (el volumen anterior no se borra) y cada dispositivo vuelve a subir sus notas al
+sincronizar. Lo que sí se pierde es el historial de conflictos y las marcas de borrado del almacén,
+así que una nota que se hubiera borrado en un dispositivo podría reaparecer desde otro.
 
 La versión inicial está pensada para una red privada o detrás de una VPN. No se debe publicar el
 puerto HTTP directamente en Internet: para acceso externo hay que poner HTTPS delante (proxy inverso,
@@ -48,20 +63,20 @@ VPN o túnel seguro). La protección TLS y la rotación de tokens quedan en el r
 
 En Ajustes puedes elegir `WebDAV / Nextcloud` para usar una carpeta WebDAV propia o la de
 Nextcloud/ownCloud. Introduce la URL de una carpeta que ya exista, el usuario y, preferiblemente,
-una contraseÃ±a de aplicaciÃ³n. Aldune crea dentro de ella la carpeta `objects/` y guarda allÃ­ los
-sobres cifrados por nota. La contraseÃ±a se protege localmente en Windows y nunca entra en el cÃ³digo
-de invitaciÃ³n ni se sube como parte de los datos.
+una contraseña de aplicación. Aldune crea dentro de ella la carpeta `objects/` y guarda allí los
+sobres cifrados por nota. La contraseña se protege localmente en Windows y nunca entra en el código
+de invitación ni se sube como parte de los datos.
 
-Para acceso fuera de la red usa siempre una URL `https://`. En una instalaciÃ³n de Nextcloud, la URL
+Para acceso fuera de la red usa siempre una URL `https://`. En una instalación de Nextcloud, la URL
 suele tener esta forma:
 
 ```text
 https://cloud.example.com/remote.php/dav/files/usuario/Aldune/
 ```
 
-La invitaciÃ³n de perfil puede transportar la URL de WebDAV, pero cada dispositivo debe introducir
-su propia cuenta o contraseÃ±a de aplicaciÃ³n. La carpeta WebDAV debe permitir `MKCOL`, `PROPFIND`,
-`GET`, `PUT` y `DELETE`; la mayorÃ­a de instalaciones de Nextcloud y ownCloud ya lo permiten.
+La invitación de perfil puede transportar la URL de WebDAV, pero cada dispositivo debe introducir
+su propia cuenta o contraseña de aplicación. La carpeta WebDAV debe permitir `MKCOL`, `PROPFIND`,
+`GET`, `PUT` y `DELETE`; la mayoría de instalaciones de Nextcloud y ownCloud ya lo permiten.
 
 ### Nginx + Cloudflare Tunnel
 
@@ -121,26 +136,26 @@ Valida la configuración con `cloudflared tunnel ingress validate` y crea el DNS
 
 ### HTTPS con Caddy
 
-Para exponer el servidor con HTTPS automÃ¡tico mediante un dominio pÃºblico, usa la composiciÃ³n
+Para exponer el servidor con HTTPS automático mediante un dominio público, usa la composición
 preparada en `docker-compose.sync.https.yml`. Requiere que el DNS de `ALDUNE_SYNC_DOMAIN` apunte al
 servidor y que los puertos 80 y 443 lleguen a Docker:
 
 ```powershell
 Copy-Item .env.example .env
-# AÃ±ade tambiÃ©n al .env:
+# Añade también al .env:
 # ALDUNE_SYNC_DOMAIN=sync.example.com
 docker compose -f docker-compose.sync.https.yml up -d --build
 ```
 
 Caddy obtiene y renueva el certificado, y solo publica Caddy hacia Internet; `aldune-sync` queda en
 la red interna de Docker. En Aldune configura `https://sync.example.com/`. Los datos de Caddy viven
-en los volÃºmenes `caddy-data` y `caddy-config`, separados de los sobres cifrados de Aldune.
+en los volúmenes `caddy-data` y `caddy-config`, separados de los sobres cifrados de Aldune.
 
 Si el servidor solo se accede por VPN o red local, conserva `docker-compose.sync.yml` y usa HTTP dentro
-de esa red. No desactives la verificaciÃ³n TLS en el cliente para evitar errores de certificado.
+de esa red. No desactives la verificación TLS en el cliente para evitar errores de certificado.
 
-La rotaciÃ³n de tokens y la interfaz de conflictos ya estÃ¡n implementadas. Para HTTPS real falta
-probar la composiciÃ³n con un dominio y DNS controlados por el usuario.
+La rotación de tokens y la interfaz de conflictos ya están implementadas. Para HTTPS real falta
+probar la composición con un dominio y DNS controlados por el usuario.
 
 ### Rotación de tokens
 
@@ -156,30 +171,30 @@ todos usen el nuevo, deja solo `ALDUNE_SYNC_TOKENS=nuevo-token` y recrea el cont
 antiguo queda revocado. La lista tiene prioridad sobre `ALDUNE_SYNC_TOKEN`; nunca pongas tokens en
 la URL ni en el repositorio.
 
-### Perfiles de sincronizaciÃ³n
+### Perfiles de sincronización
 
 Puedes crear varios perfiles desde Ajustes. Cada perfil mantiene su transporte, servidor o carpeta,
-token, clave de sincronizaciÃ³n, notas seleccionadas y Ãºltima sincronizaciÃ³n por separado. La
-configuraciÃ³n antigua se migra al perfil `Mis dispositivos` al abrirla por primera vez. Para
+token, clave de sincronización, notas seleccionadas y última sincronización por separado. La
+configuración antigua se migra al perfil `Mis dispositivos` al abrirla por primera vez. Para
 compartir una nota con otra persona, crea otro perfil, selecciona solo esa nota y comparte el
-cÃ³digo de ese perfil; el flujo futuro de invitaciÃ³n y revocaciÃ³n de perfiles queda pendiente.
+código de ese perfil; el flujo futuro de invitación y revocación de perfiles queda pendiente.
 
-### Compartir una selecciÃ³n de notas
+### Compartir una selección de notas
 
 En el perfil de origen, crea o selecciona un perfil, marca `Notas seleccionadas` y elige las notas.
-`Compartir perfil` copia una invitaciÃ³n que contiene la clave, los identificadores de esa selecciÃ³n,
+`Compartir perfil` copia una invitación que contiene la clave, los identificadores de esa selección,
 el nombre del perfil y, si usa un servidor propio, su URL. En el otro dispositivo, crea el perfil,
-pega el cÃ³digo y pulsa `Importar cÃ³digo`; el transporte y la URL del servidor se rellenan solos,
-pero el token siempre debe introducirse aparte. El token nunca viaja dentro del cÃ³digo. Las
+pega el código y pulsa `Importar código`; el transporte y la URL del servidor se rellenan solos,
+pero el token siempre debe introducirse aparte. El token nunca viaja dentro del código. Las
 invitaciones antiguas (`fanote-profile-v1` y `fanote-profile-v2`) siguen siendo compatibles; los
 nuevos se generan con el prefijo de la marca vigente (`aldune-profile-v2`).
 
 ## Compatibilidad futura
 
 La compatibilidad se controla por el formato de sincronización, no por el número visible de Aldune.
-Las actualizaciones que mantengan el mismo formato pueden sincronizarse entre sÃ­. Si una versiÃ³n
+Las actualizaciones que mantengan el mismo formato pueden sincronizarse entre sí. Si una versión
 introduce un cambio incompatible, aumenta el formato y cada cliente acepta solo la ventana que sabe
-leer (`MinimumSupportedFormat`-`CurrentFormat`). Una versiÃ³n demasiado antigua o futura devuelve
+leer (`MinimumSupportedFormat`-`CurrentFormat`). Una versión demasiado antigua o futura devuelve
 un error claro y no aplica datos parcialmente.
 
 El formato de los sobres y la API son JSON/HTTP y no dependen de Windows, WPF, SQLite ni DPAPI. Un

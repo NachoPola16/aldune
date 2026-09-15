@@ -1,23 +1,23 @@
-# Fanote Fase 3a: Multi-monitor real + DPI — Implementation Plan
+# Aldune Fase 3a: Multi-monitor real + DPI — Implementation Plan
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Make Fanote's dock appear on every connected monitor with correct real geometry and DPI, instead of only ever appearing on the primary monitor via `SystemParameters.WorkArea`.
+**Goal:** Make Aldune's dock appear on every connected monitor with correct real geometry and DPI, instead of only ever appearing on the primary monitor via `SystemParameters.WorkArea`.
 
 **Architecture:** Enumerate real monitors via Win32 (`EnumDisplayMonitors`/`GetMonitorInfoW`/`GetDpiForMonitor`), declare the app `PerMonitorV2` DPI-aware via `app.manifest`, and introduce an `AppCoordinator` that centralizes note-window/notes-manager-window lifecycle across however many `EdgeDockWindow` instances now exist (one per monitor) so they never duplicate windows.
 
 **Tech Stack:** C# / WPF / .NET 10, Win32 P/Invoke (user32.dll, shcore.dll), xUnit.
 
-**Spec:** `docs/superpowers/specs/2026-09-02-fanote-phase3a-multimonitor-dpi-design.md`
+**Spec:** `docs/superpowers/specs/2026-09-02-aldune-phase3a-multimonitor-dpi-design.md`
 
 ## Global Constraints
 
-- No new NuGet dependencies — pure Win32 P/Invoke, consistent with `Fanote.Interop.NativeMethods`.
+- No new NuGet dependencies — pure Win32 P/Invoke, consistent with `Aldune.Interop.NativeMethods`.
 - Monitor detection happens once at startup only — no live hotplug/`WM_DISPLAYCHANGE` handling in this plan (deferred, see spec "Fuera de alcance").
 - `EdgePosition.Right` stays hardcoded for every dock — no per-screen edge position, no Settings UI in this plan.
 - With `ScreenOrigin` still hardcoded `"primary"` for every note, **every dock must show the exact same full list of notes** — they mirror each other. Do not attempt any per-monitor note filtering in this plan.
-- Every new pure-logic type goes in `Fanote.Core` and gets xUnit tests. Win32/WPF-only code (monitor enumeration, the coordinator, window classes) has no automated tests — verify manually, consistent with the rest of this codebase's window/interop code.
-- Kill any running `Fanote.exe` before rebuilding (`tasklist //FI "IMAGENAME eq Fanote.exe"` then `taskkill //PID <pid> //F`) — the build will fail with a file-lock error otherwise.
+- Every new pure-logic type goes in `Aldune.Core` and gets xUnit tests. Win32/WPF-only code (monitor enumeration, the coordinator, window classes) has no automated tests — verify manually, consistent with the rest of this codebase's window/interop code.
+- Kill any running `aldune.exe` before rebuilding (`tasklist //FI "IMAGENAME eq aldune.exe"` then `taskkill //PID <pid> //F`) — the build will fail with a file-lock error otherwise.
 - Run `dotnet test` after every task; all existing tests must keep passing (71 at the time of writing).
 
 ---
@@ -25,22 +25,22 @@
 ## Task 1: `MonitorInfo` + `DpiConversion`
 
 **Files:**
-- Create: `src/Fanote.Core/MonitorInfo.cs`
-- Create: `src/Fanote.Core/DpiConversion.cs`
-- Test: `tests/Fanote.Core.Tests/DpiConversionTests.cs`
+- Create: `src/Aldune.Core/MonitorInfo.cs`
+- Create: `src/Aldune.Core/DpiConversion.cs`
+- Test: `tests/Aldune.Core.Tests/DpiConversionTests.cs`
 
 **Interfaces:**
-- Produces: `Fanote.Core.MonitorInfo` (record struct: `DeviceName: string`, `WorkArea: WorkingArea`, `DpiScale: double`, `IsPrimary: bool`); `Fanote.Core.DpiConversion.ToWorkingArea(Rect pixelBounds, double dpiScale) : WorkingArea`. Both consumed by Task 2 (`MonitorEnumerator`) and Task 4 (`AppCoordinator`/window constructors).
+- Produces: `Aldune.Core.MonitorInfo` (record struct: `DeviceName: string`, `WorkArea: WorkingArea`, `DpiScale: double`, `IsPrimary: bool`); `Aldune.Core.DpiConversion.ToWorkingArea(Rect pixelBounds, double dpiScale) : WorkingArea`. Both consumed by Task 2 (`MonitorEnumerator`) and Task 4 (`AppCoordinator`/window constructors).
 
 - [ ] **Step 1: Write the failing tests**
 
-Create `tests/Fanote.Core.Tests/DpiConversionTests.cs`:
+Create `tests/Aldune.Core.Tests/DpiConversionTests.cs`:
 
 ```csharp
-using Fanote.Core;
+using Aldune.Core;
 using Xunit;
 
-namespace Fanote.Core.Tests;
+namespace Aldune.Core.Tests;
 
 public class DpiConversionTests
 {
@@ -85,15 +85,15 @@ public class DpiConversionTests
 
 - [ ] **Step 2: Run tests to verify they fail**
 
-Run: `cd fanote && dotnet test tests/Fanote.Core.Tests --filter "FullyQualifiedName~DpiConversionTests"`
+Run: `cd aldune && dotnet test tests/Aldune.Core.Tests --filter "FullyQualifiedName~DpiConversionTests"`
 Expected: build error — `DpiConversion` does not exist. (This is the correct RED: the type is missing, not a typo.)
 
 - [ ] **Step 3: Create `MonitorInfo`**
 
-Create `src/Fanote.Core/MonitorInfo.cs`:
+Create `src/Aldune.Core/MonitorInfo.cs`:
 
 ```csharp
-namespace Fanote.Core;
+namespace Aldune.Core;
 
 /// <summary>
 /// One connected monitor's real geometry and DPI. <see cref="DeviceName"/> is whatever Win32
@@ -105,16 +105,16 @@ public readonly record struct MonitorInfo(string DeviceName, WorkingArea WorkAre
 
 - [ ] **Step 4: Implement `DpiConversion`**
 
-Create `src/Fanote.Core/DpiConversion.cs`:
+Create `src/Aldune.Core/DpiConversion.cs`:
 
 ```csharp
-namespace Fanote.Core;
+namespace Aldune.Core;
 
 /// <summary>
 /// Win32 gives monitor bounds in physical pixels; WPF's Window.Left/Top/Width/Height are
 /// interpreted in DIPs relative to that specific monitor's own DPI scale once the app declares
 /// PerMonitorV2 awareness (see app.manifest). This is the pixel-to-DIP conversion — kept as pure
-/// math in Fanote.Core so it's unit-testable without any Win32/WPF dependency.
+/// math in Aldune.Core so it's unit-testable without any Win32/WPF dependency.
 /// </summary>
 public static class DpiConversion
 {
@@ -128,21 +128,21 @@ public static class DpiConversion
 
 - [ ] **Step 5: Run tests to verify they pass**
 
-Run: `cd fanote && dotnet test tests/Fanote.Core.Tests --filter "FullyQualifiedName~DpiConversionTests"`
+Run: `cd aldune && dotnet test tests/Aldune.Core.Tests --filter "FullyQualifiedName~DpiConversionTests"`
 Expected: 3 passed.
 
-Run the full suite too: `cd fanote && dotnet test`
+Run the full suite too: `cd aldune && dotnet test`
 Expected: all passing (74 = 71 existing + 3 new).
 
 - [ ] **Step 6: Commit**
 
 ```bash
-cd fanote
-git add src/Fanote.Core/MonitorInfo.cs src/Fanote.Core/DpiConversion.cs tests/Fanote.Core.Tests/DpiConversionTests.cs
+cd aldune
+git add src/Aldune.Core/MonitorInfo.cs src/Aldune.Core/DpiConversion.cs tests/Aldune.Core.Tests/DpiConversionTests.cs
 git commit -m "$(cat <<'EOF'
 Add MonitorInfo and DpiConversion for per-monitor geometry (Phase 3a)
 
-Pure Fanote.Core types: MonitorInfo is the plain per-monitor data
+Pure Aldune.Core types: MonitorInfo is the plain per-monitor data
 (device name, work area, DPI scale, is-primary); DpiConversion.ToWorkingArea
 does the pixel->DIP math Win32 monitor enumeration will need, kept
 here so it's unit-testable without touching Win32.
@@ -156,24 +156,24 @@ EOF
 ## Task 2: Win32 monitor enumeration (`MonitorEnumerator`)
 
 **Files:**
-- Create: `src/Fanote/Interop/MonitorEnumerator.cs`
-- Modify (temporarily, for manual verification, then reverted): `src/Fanote/App.xaml.cs`
+- Create: `src/Aldune/Interop/MonitorEnumerator.cs`
+- Modify (temporarily, for manual verification, then reverted): `src/Aldune/App.xaml.cs`
 
 **Interfaces:**
-- Consumes: `Fanote.Core.MonitorInfo`, `Fanote.Core.DpiConversion.ToWorkingArea(Rect, double)`, `Fanote.Core.Rect` (Task 1).
-- Produces: `Fanote.Interop.MonitorEnumerator.EnumerateMonitors() : IReadOnlyList<MonitorInfo>`. Consumed by Task 5.
+- Consumes: `Aldune.Core.MonitorInfo`, `Aldune.Core.DpiConversion.ToWorkingArea(Rect, double)`, `Aldune.Core.Rect` (Task 1).
+- Produces: `Aldune.Interop.MonitorEnumerator.EnumerateMonitors() : IReadOnlyList<MonitorInfo>`. Consumed by Task 5.
 
 This is pure Win32 P/Invoke — no automated test is possible (nothing to unit test that isn't Win32 itself). Verify it manually with a temporary call.
 
 - [ ] **Step 1: Implement `MonitorEnumerator`**
 
-Create `src/Fanote/Interop/MonitorEnumerator.cs`:
+Create `src/Aldune/Interop/MonitorEnumerator.cs`:
 
 ```csharp
 using System.Runtime.InteropServices;
-using Fanote.Core;
+using Aldune.Core;
 
-namespace Fanote.Interop;
+namespace Aldune.Interop;
 
 /// <summary>
 /// Real per-monitor bounds and DPI via Win32 — SystemParameters.WorkArea (WPF) only ever returns
@@ -261,38 +261,38 @@ internal static class MonitorEnumerator
 
 - [ ] **Step 2: Verify it manually**
 
-Temporarily add this at the very top of `OnStartup` in `src/Fanote/App.xaml.cs` (right after `base.OnStartup(e);`), and add `using Fanote.Interop;` to the top of the file:
+Temporarily add this at the very top of `OnStartup` in `src/Aldune/App.xaml.cs` (right after `base.OnStartup(e);`), and add `using Aldune.Interop;` to the top of the file:
 
 ```csharp
-var monitorDebugInfo = string.Join("\n", Fanote.Interop.MonitorEnumerator.EnumerateMonitors()
+var monitorDebugInfo = string.Join("\n", Aldune.Interop.MonitorEnumerator.EnumerateMonitors()
     .Select(m => $"{m.DeviceName}: {m.WorkArea} @ {m.DpiScale}x primary={m.IsPrimary}"));
 MessageBox.Show(monitorDebugInfo, "Monitors detected");
 ```
 
-Kill any running `Fanote.exe`, then run:
+Kill any running `aldune.exe`, then run:
 ```bash
-cd fanote
-dotnet build src/Fanote/Fanote.csproj
-dotnet run --project src/Fanote --no-build -c Debug
+cd aldune
+dotnet build src/Aldune/Aldune.csproj
+dotnet run --project src/Aldune --no-build -c Debug
 ```
 
 Expected: a message box lists every connected monitor with plausible work-area numbers (matching what Windows Display Settings shows) and the right one flagged `primary=True`. Close the box, close the app.
 
-**Remove the temporary debug block and the `using Fanote.Interop;` line you added** — this was verification only, not part of the feature (`App.xaml.cs` gets its real integration in Task 5).
+**Remove the temporary debug block and the `using Aldune.Interop;` line you added** — this was verification only, not part of the feature (`App.xaml.cs` gets its real integration in Task 5).
 
 - [ ] **Step 3: Confirm the app still builds clean and tests still pass**
 
-Run: `cd fanote && dotnet build src/Fanote/Fanote.csproj -v quiet`
+Run: `cd aldune && dotnet build src/Aldune/Aldune.csproj -v quiet`
 Expected: Build succeeded, 0 errors.
 
-Run: `cd fanote && dotnet test`
+Run: `cd aldune && dotnet test`
 Expected: all still passing (no change in count — this task added no new automated tests).
 
 - [ ] **Step 4: Commit**
 
 ```bash
-cd fanote
-git add src/Fanote/Interop/MonitorEnumerator.cs
+cd aldune
+git add src/Aldune/Interop/MonitorEnumerator.cs
 git commit -m "$(cat <<'EOF'
 Add Win32 monitor enumeration (Phase 3a)
 
@@ -312,21 +312,21 @@ EOF
 ## Task 3: `app.manifest` declaring PerMonitorV2 DPI awareness
 
 **Files:**
-- Create: `src/Fanote/app.manifest`
-- Modify: `src/Fanote/Fanote.csproj`
+- Create: `src/Aldune/app.manifest`
+- Modify: `src/Aldune/Aldune.csproj`
 
 **Interfaces:** None (build/runtime configuration only, no code interface).
 
-Without this, nothing else in this plan has any effect: Windows would keep treating Fanote as DPI-unaware and scale an already-rendered bitmap instead of letting each window render natively at its own monitor's DPI.
+Without this, nothing else in this plan has any effect: Windows would keep treating Aldune as DPI-unaware and scale an already-rendered bitmap instead of letting each window render natively at its own monitor's DPI.
 
 - [ ] **Step 1: Create the manifest**
 
-Create `src/Fanote/app.manifest`:
+Create `src/Aldune/app.manifest`:
 
 ```xml
 <?xml version="1.0" encoding="utf-8"?>
 <assembly manifestVersion="1.0" xmlns="urn:schemas-microsoft-com:asm.v1">
-  <assemblyIdentity version="1.0.0.0" name="Fanote.app"/>
+  <assemblyIdentity version="1.0.0.0" name="Aldune.app"/>
   <application xmlns="urn:schemas-microsoft-com:asm.v3">
     <windowsSettings>
       <dpiAwareness xmlns="http://schemas.microsoft.com/SMI/2016/WindowsSettings">PerMonitorV2</dpiAwareness>
@@ -337,7 +337,7 @@ Create `src/Fanote/app.manifest`:
 
 - [ ] **Step 2: Reference it from the project file**
 
-In `src/Fanote/Fanote.csproj`, add `<ApplicationManifest>` inside the existing `<PropertyGroup>`:
+In `src/Aldune/Aldune.csproj`, add `<ApplicationManifest>` inside the existing `<PropertyGroup>`:
 
 ```xml
   <PropertyGroup>
@@ -352,29 +352,29 @@ In `src/Fanote/Fanote.csproj`, add `<ApplicationManifest>` inside the existing `
 
 - [ ] **Step 3: Verify it builds and the manifest is embedded**
 
-Kill any running `Fanote.exe`, then:
+Kill any running `aldune.exe`, then:
 ```bash
-cd fanote
-dotnet build src/Fanote/Fanote.csproj -v quiet
+cd aldune
+dotnet build src/Aldune/Aldune.csproj -v quiet
 ```
 Expected: Build succeeded, 0 errors.
 
-Run the app once (`dotnet run --project src/Fanote --no-build -c Debug`) and confirm it still looks and behaves exactly as before (pill docks to the right edge, expands on hover, notes open normally) — this is a pure regression check, nothing should look different yet on a single monitor. Close the app.
+Run the app once (`dotnet run --project src/Aldune --no-build -c Debug`) and confirm it still looks and behaves exactly as before (pill docks to the right edge, expands on hover, notes open normally) — this is a pure regression check, nothing should look different yet on a single monitor. Close the app.
 
 - [ ] **Step 4: Run the full test suite**
 
-Run: `cd fanote && dotnet test`
+Run: `cd aldune && dotnet test`
 Expected: all still passing, unchanged count.
 
 - [ ] **Step 5: Commit**
 
 ```bash
-cd fanote
-git add src/Fanote/app.manifest src/Fanote/Fanote.csproj
+cd aldune
+git add src/Aldune/app.manifest src/Aldune/Aldune.csproj
 git commit -m "$(cat <<'EOF'
 Declare PerMonitorV2 DPI awareness via app.manifest (Phase 3a)
 
-No app.manifest existed before this, so Fanote ran under whatever
+No app.manifest existed before this, so Aldune ran under whatever
 Windows defaults to for a DPI-unaware process. This is the standard,
 Microsoft-recommended way to opt a WPF app into per-monitor DPI —
 without it, the Win32 monitor/DPI enumeration added in the previous
@@ -389,28 +389,28 @@ EOF
 ## Task 4: `AppCoordinator` + refactor `EdgeDockWindow`/`NoteWindow`/`NotesManagerWindow`
 
 **Files:**
-- Create: `src/Fanote/Windowing/AppCoordinator.cs`
-- Modify: `src/Fanote/Windowing/EdgeDockWindow.xaml.cs`
-- Modify: `src/Fanote/Windowing/NoteWindow.xaml.cs`
-- Modify: `src/Fanote/Windowing/NotesManagerWindow.xaml.cs`
-- Modify: `src/Fanote/App.xaml.cs`
+- Create: `src/Aldune/Windowing/AppCoordinator.cs`
+- Modify: `src/Aldune/Windowing/EdgeDockWindow.xaml.cs`
+- Modify: `src/Aldune/Windowing/NoteWindow.xaml.cs`
+- Modify: `src/Aldune/Windowing/NotesManagerWindow.xaml.cs`
+- Modify: `src/Aldune/App.xaml.cs`
 
 **Interfaces:**
-- Consumes: `Fanote.Core.MonitorInfo` (Task 1).
-- Produces: `Fanote.Windowing.AppCoordinator` — constructor `AppCoordinator(NotesRepository repository)`; `RegisterDock(EdgeDockWindow dock)`; `OpenNoteWindowCount: int`; `OpenOrActivateNote(Note note, EdgeDockWindow requestingDock)`; `OpenOrActivateNotesManager()`; `RefreshAll()`. `EdgeDockWindow`'s new constructor signature `EdgeDockWindow(EdgePosition edge, MonitorInfo monitor, NotesRepository repository, AppCoordinator coordinator)` and its now-`internal` `PositionNoteWindow(NoteWindow)` are consumed by Task 5.
+- Consumes: `Aldune.Core.MonitorInfo` (Task 1).
+- Produces: `Aldune.Windowing.AppCoordinator` — constructor `AppCoordinator(NotesRepository repository)`; `RegisterDock(EdgeDockWindow dock)`; `OpenNoteWindowCount: int`; `OpenOrActivateNote(Note note, EdgeDockWindow requestingDock)`; `OpenOrActivateNotesManager()`; `RefreshAll()`. `EdgeDockWindow`'s new constructor signature `EdgeDockWindow(EdgePosition edge, MonitorInfo monitor, NotesRepository repository, AppCoordinator coordinator)` and its now-`internal` `PositionNoteWindow(NoteWindow)` are consumed by Task 5.
 
 This is a pure refactor: behavior must be **identical** to today when there's a single monitor, since `App.xaml.cs` in this task still creates only one dock (from a `MonitorInfo` synthesized out of `SystemParameters.WorkArea`, exactly matching what it does today) — real multi-monitor enumeration is Task 5. Verify via regression, not new capability.
 
 - [ ] **Step 1: Create `AppCoordinator`**
 
-Create `src/Fanote/Windowing/AppCoordinator.cs`:
+Create `src/Aldune/Windowing/AppCoordinator.cs`:
 
 ```csharp
 using System.Windows;
-using Fanote.Core;
-using Fanote.Interop;
+using Aldune.Core;
+using Aldune.Interop;
 
-namespace Fanote.Windowing;
+namespace Aldune.Windowing;
 
 /// <summary>
 /// One instance for the whole app (not one per dock/monitor). Owns what used to live inside
@@ -479,7 +479,7 @@ public sealed class AppCoordinator
 
 - [ ] **Step 2: Refactor `EdgeDockWindow.xaml.cs`**
 
-In `src/Fanote/Windowing/EdgeDockWindow.xaml.cs`, replace the field declarations and constructor:
+In `src/Aldune/Windowing/EdgeDockWindow.xaml.cs`, replace the field declarations and constructor:
 
 ```csharp
     private readonly FanStateMachine _fanState = new();
@@ -610,7 +610,7 @@ with:
 
 - [ ] **Step 3: Refactor `NoteWindow.xaml.cs`**
 
-In `src/Fanote/Windowing/NoteWindow.xaml.cs`, replace:
+In `src/Aldune/Windowing/NoteWindow.xaml.cs`, replace:
 
 ```csharp
     private readonly Note _note;
@@ -647,15 +647,15 @@ with:
 Then replace every occurrence of `_owner.Refresh();` with `_coordinator.RefreshAll();` — there are 5, in `Closing`, `OnColorSwatchClick`, `OnArchiveClick`, `OnTrashClick`, and `OnRestoreClick`. Use a project-wide find/replace scoped to this file, or edit each occurrence individually; either way, verify afterwards with:
 
 ```bash
-cd fanote
-grep -n "_owner" src/Fanote/Windowing/NoteWindow.xaml.cs
+cd aldune
+grep -n "_owner" src/Aldune/Windowing/NoteWindow.xaml.cs
 ```
 
 Expected: no output (no remaining references).
 
 - [ ] **Step 4: Refactor `NotesManagerWindow.xaml.cs`**
 
-In `src/Fanote/Windowing/NotesManagerWindow.xaml.cs`, replace:
+In `src/Aldune/Windowing/NotesManagerWindow.xaml.cs`, replace:
 
 ```csharp
     private readonly NotesRepository _repository;
@@ -690,8 +690,8 @@ with:
 Then replace the 3 occurrences of `_owner.Refresh();` (in `OnArchiveSelectedClick`, `OnRestoreSelectedClick`, `OnTrashSelectedClick`) with `_coordinator.RefreshAll();`. Verify:
 
 ```bash
-cd fanote
-grep -n "_owner" src/Fanote/Windowing/NotesManagerWindow.xaml.cs
+cd aldune
+grep -n "_owner" src/Aldune/Windowing/NotesManagerWindow.xaml.cs
 ```
 
 Expected: no output.
@@ -744,29 +744,29 @@ And replace the final `dock.Show();` with the same call (it's still valid — `d
 
 - [ ] **Step 6: Build and fix any compile errors**
 
-Run: `cd fanote && dotnet build src/Fanote/Fanote.csproj -v quiet`
-Expected: Build succeeded, 0 errors. If there are errors, they're almost certainly a missed `_owner` → `_coordinator` rename or a missing `using Fanote.Core;` for `MonitorInfo` in `App.xaml.cs` (it's already imported there) — fix and rebuild.
+Run: `cd aldune && dotnet build src/Aldune/Aldune.csproj -v quiet`
+Expected: Build succeeded, 0 errors. If there are errors, they're almost certainly a missed `_owner` → `_coordinator` rename or a missing `using Aldune.Core;` for `MonitorInfo` in `App.xaml.cs` (it's already imported there) — fix and rebuild.
 
 - [ ] **Step 7: Regression-test manually with one monitor**
 
-Kill any running `Fanote.exe`, then:
+Kill any running `aldune.exe`, then:
 ```bash
-cd fanote
-dotnet run --project src/Fanote --no-build -c Debug
+cd aldune
+dotnet run --project src/Aldune --no-build -c Debug
 ```
 
 Walk through: pill docks to the right edge and expands on hover; click "+ Nueva nota" and confirm it appears; open it, type something, close it, confirm the tab shows the text; click "Archivadas" and confirm archived/trashed notes show with their state label; open "Gestionar notas" (gear icon), archive/restore/trash a note from there, confirm the dock's tab list updates; click a note tab twice in a row and confirm it activates the existing window rather than opening a second one. Everything should look and behave **exactly like before this task** — this is a pure refactor.
 
 - [ ] **Step 8: Run the full test suite**
 
-Run: `cd fanote && dotnet test`
+Run: `cd aldune && dotnet test`
 Expected: all still passing, unchanged count (this task added no new automated tests — it's a WPF/coordinator refactor).
 
 - [ ] **Step 9: Commit**
 
 ```bash
-cd fanote
-git add src/Fanote/Windowing/AppCoordinator.cs src/Fanote/Windowing/EdgeDockWindow.xaml.cs src/Fanote/Windowing/NoteWindow.xaml.cs src/Fanote/Windowing/NotesManagerWindow.xaml.cs src/Fanote/App.xaml.cs
+cd aldune
+git add src/Aldune/Windowing/AppCoordinator.cs src/Aldune/Windowing/EdgeDockWindow.xaml.cs src/Aldune/Windowing/NoteWindow.xaml.cs src/Aldune/Windowing/NotesManagerWindow.xaml.cs src/Aldune/App.xaml.cs
 git commit -m "$(cat <<'EOF'
 Introduce AppCoordinator; move note-window ownership out of EdgeDockWindow
 
@@ -790,16 +790,16 @@ EOF
 ## Task 5: One `EdgeDockWindow` per real connected monitor
 
 **Files:**
-- Modify: `src/Fanote/App.xaml.cs`
+- Modify: `src/Aldune/App.xaml.cs`
 
 **Interfaces:**
-- Consumes: `Fanote.Interop.MonitorEnumerator.EnumerateMonitors()` (Task 2), `AppCoordinator`/`EdgeDockWindow(EdgePosition, MonitorInfo, NotesRepository, AppCoordinator)` (Task 4).
+- Consumes: `Aldune.Interop.MonitorEnumerator.EnumerateMonitors()` (Task 2), `AppCoordinator`/`EdgeDockWindow(EdgePosition, MonitorInfo, NotesRepository, AppCoordinator)` (Task 4).
 
 This is the actual new capability — everything before this task was preparation. Verify with the real second monitor.
 
 - [ ] **Step 1: Replace the single-monitor setup with real enumeration**
 
-In `src/Fanote/App.xaml.cs`, add `using Fanote.Interop;` to the top of the file (alongside the existing `using Fanote.Core;` / `using Fanote.Windowing;`).
+In `src/Aldune/App.xaml.cs`, add `using Aldune.Interop;` to the top of the file (alongside the existing `using Aldune.Core;` / `using Aldune.Windowing;`).
 
 Replace:
 
@@ -835,7 +835,7 @@ with:
             // treat it as a fourth bootstrap failure mode rather than crashing with no explanation.
             MessageBox.Show(
                 "No se ha podido detectar ningún monitor conectado.",
-                "Fanote — no se puede iniciar",
+                "Aldune — no se puede iniciar",
                 MessageBoxButton.OK, MessageBoxImage.Error);
             Shutdown(1);
             return;
@@ -884,7 +884,7 @@ with:
 
 - [ ] **Step 2: Build**
 
-Run: `cd fanote && dotnet build src/Fanote/Fanote.csproj -v quiet`
+Run: `cd aldune && dotnet build src/Aldune/Aldune.csproj -v quiet`
 Expected: Build succeeded, 0 errors.
 
 - [ ] **Step 3: Regression-test with the second monitor disconnected/disabled**
@@ -893,10 +893,10 @@ If possible, temporarily work with just the primary monitor active and confirm b
 
 - [ ] **Step 4: Manual verification with both monitors**
 
-Kill any running `Fanote.exe`, then run with both monitors connected (the second one in portrait):
+Kill any running `aldune.exe`, then run with both monitors connected (the second one in portrait):
 ```bash
-cd fanote
-dotnet run --project src/Fanote --no-build -c Debug
+cd aldune
+dotnet run --project src/Aldune --no-build -c Debug
 ```
 
 Walk through the full checklist from the spec:
@@ -910,14 +910,14 @@ Walk through the full checklist from the spec:
 
 - [ ] **Step 5: Run the full test suite one last time**
 
-Run: `cd fanote && dotnet test`
+Run: `cd aldune && dotnet test`
 Expected: all passing (74 — no new automated tests in this task; the deliverable is verified manually per the spec's testing section).
 
 - [ ] **Step 6: Commit**
 
 ```bash
-cd fanote
-git add src/Fanote/App.xaml.cs
+cd aldune
+git add src/Aldune/App.xaml.cs
 git commit -m "$(cat <<'EOF'
 Create one EdgeDockWindow per connected monitor (Phase 3a)
 

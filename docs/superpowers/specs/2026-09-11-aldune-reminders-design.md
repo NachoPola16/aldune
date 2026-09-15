@@ -1,14 +1,14 @@
-# Fanote — Recordatorios con notificación de Windows (design spec)
+# Aldune — Recordatorios con notificación de Windows (design spec)
 
 Añade un recordatorio puntual (fecha/hora concreta, no recurrente) por nota,
 con aviso nativo de Windows al vencer y posponer sencillo. Ver
 `docs/ROADMAP.md`, sección "Recordatorios con notificación de Windows" —
 marcado ahí como el mayor hueco funcional frente a la competencia (Notezilla
-lo tiene y es lo más alabado de esa app; Fanote hoy no tiene nada de esto).
+lo tiene y es lo más alabado de esa app; Aldune hoy no tiene nada de esto).
 
 ## Contexto y motivación
 
-Fanote no tiene ninguna forma de que una nota "avise" en un momento
+Aldune no tiene ninguna forma de que una nota "avise" en un momento
 concreto — hoy solo existe si el usuario recuerda mirarla. Notezilla, la
 referencia explícita del roadmap, ofrece justo esto y es su función más
 alabada. Es un subsistema nuevo (persistencia + disparo periódico + aviso
@@ -19,7 +19,7 @@ Decisiones tomadas en el brainstorming de esta sesión, con su motivo, para
 no volver a discutirlas desde cero:
 
 - **Por nota entera, no por línea/tarea suelta dentro de una nota.** Encaja
-  con la metáfora de post-it de Fanote (y con lo que hace la propia
+  con la metáfora de post-it de Aldune (y con lo que hace la propia
   Notezilla citada) y no contradice la decisión ya tomada varias veces de
   mantener el cuerpo como `TextBox` plano sin campos estructurados (mismo
   argumento que descartó el título separado, el arrastre de líneas y el
@@ -49,7 +49,7 @@ no volver a discutirlas desde cero:
   abre en menos de un segundo al hacer clic, así que posponer desde ahí no
   es un paso pesado.
 - **Un recordatorio vencido con la app cerrada o el PC dormido avisa igual
-  al volver a abrir Fanote**, en vez de descartarse en silencio — coherente
+  al volver a abrir Aldune**, en vez de descartarse en silencio — coherente
   con "no te secuestro datos ni acciones".
 - **Selector con atajos rápidos** ("En 1 hora", "Esta noche", "Mañana
   9:00") **+ fecha/hora exacta** para el resto de casos, no solo un
@@ -60,21 +60,21 @@ no volver a discutirlas desde cero:
 
 **Dentro:**
 
-- Tabla nueva `NoteReminder` (`Fanote.Core.NotesDatabase`), con
+- Tabla nueva `NoteReminder` (`Aldune.Core.NotesDatabase`), con
   `NotesRepository.SetReminder`/`ClearReminder`/`GetReminder`/
   `GetDueReminders`/`GetPendingReminders`.
 - `Delete`/`PurgeExpiredTrash` de `NotesRepository` amplíados para limpiar
   también `NoteReminder` de la nota que se borra — mismo cuidado que ya
   tienen con `NotePlacement`.
-- `Fanote.Windowing.ReminderScheduler` (nuevo): sondeo periódico mientras
-  Fanote corre + una pasada de catch-up al arrancar, dispara el aviso vía
+- `Aldune.Windowing.ReminderScheduler` (nuevo): sondeo periódico mientras
+  Aldune corre + una pasada de catch-up al arrancar, dispara el aviso vía
   `NotifyIcon`.
 - Entrada "Recordatorio" en el menú "⋯" de `NoteWindow`: poner, ver, quitar
   un recordatorio para la nota abierta. Mismo panel sirve para posponer
   (abrir la nota desde el aviso y volver a poner uno nuevo).
 - Indicador visual en la pestaña del dock (`EdgeDockWindow`) para notas con
   recordatorio pendiente.
-- Localización de los textos nuevos en `Fanote.Resources.Strings` (ES/EN).
+- Localización de los textos nuevos en `Aldune.Resources.Strings` (ES/EN).
 
 **Fuera de alcance (no en esta ronda):**
 
@@ -83,16 +83,16 @@ no volver a discutirlas desde cero:
 - Toast interactivo con botones de acción incrustados (`CommunityToolkit.
   WinUI.Notifications`) — descartado explícitamente por la tensión con
   "portable, sin huella"; ver más arriba.
-- Cualquier disparo cuando Fanote no está corriendo (Task Scheduler,
+- Cualquier disparo cuando Aldune no está corriendo (Task Scheduler,
   `ScheduledToastNotification`...) — aceptado a propósito: el dock tampoco
-  existe si Fanote no corre, así que no es una limitación nueva frente al
+  existe si Aldune no corre, así que no es una limitación nueva frente al
   resto de la app.
 - Sonido/vibración distintos del que ya trae la notificación nativa de
   Windows por defecto.
 
 ## Componentes y cambios
 
-### `Fanote.Core.NotesDatabase` — tabla nueva
+### `Aldune.Core.NotesDatabase` — tabla nueva
 
 ```sql
 CREATE TABLE IF NOT EXISTS NoteReminder (
@@ -108,7 +108,7 @@ patrón que `NotePlacement`, con `CREATE TABLE IF NOT EXISTS` y sin
 migraciones — una base de datos ya existente del usuario simplemente gana la
 tabla la primera vez que arranca con esta versión.
 
-### `Fanote.Core.NotesRepository` — métodos nuevos
+### `Aldune.Core.NotesRepository` — métodos nuevos
 
 - `SetReminder(Guid noteId, DateTimeOffset dueAt)`: `INSERT OR REPLACE`,
   mismo patrón que `SavePlacement`/`MoveNote`.
@@ -132,7 +132,7 @@ tabla la primera vez que arranca con esta versión.
   huérfano que `GetDueReminders` intentaría resolver contra una nota que ya
   no existe.
 
-### `Fanote.Windowing.ReminderScheduler` (nuevo)
+### `Aldune.Windowing.ReminderScheduler` (nuevo)
 
 Instanciado una vez desde `App.xaml.cs`, junto al resto de servicios de
 nivel de aplicación (mismo sitio que ya arma `AppCoordinator`/`TrayIcon`).
@@ -182,7 +182,7 @@ el resto de entradas del menú.
     proponer una hora que ya pasó hoy).
   - **"Mañana 9:00"**: el día siguiente a las 9:00, siempre — no depende de
     la hora actual.
-  `Fanote.Core.ReminderPresets` (nuevo, puro, TDD) calcula las tres a partir
+  `Aldune.Core.ReminderPresets` (nuevo, puro, TDD) calcula las tres a partir
   de un `DateTimeOffset "now"` explícito, para poder testear "esta noche"
   en los dos lados del límite de las 20:00 sin depender del reloj real.
 - **Con recordatorio puesto**: la entrada del menú muestra la fecha/hora en
@@ -222,7 +222,7 @@ esta sesión) junto al título cuando corresponde.
   cierto.
 - **`ShowBalloonTip` mientras Windows tiene las notificaciones silenciadas**
   (modo concentración/pantalla completa): comportamiento nativo del
-  sistema, Fanote no lo detecta ni lo gestiona — coherente con no
+  sistema, Aldune no lo detecta ni lo gestiona — coherente con no
   interferir con las decisiones del usuario sobre su propio sistema.
 
 ## Testing
@@ -245,5 +245,5 @@ WPF (temporizador, `NotifyIcon`, UI) — sin test automatizado, mismo patrón
 que el resto de esa capa en el proyecto (autoguardado, sondeo de hover,
 animaciones). Se verifica a mano: poner un recordatorio a 1-2 minutos,
 confirmar que el aviso llega y que el clic abre la nota correcta; forzar el
-caso de "app cerrada al vencer" cerrando Fanote y reabriendo después de la
+caso de "app cerrada al vencer" cerrando Aldune y reabriendo después de la
 hora puesta.

@@ -4,12 +4,13 @@ using Aldune.Core;
 var builder = WebApplication.CreateBuilder(args);
 var app = builder.Build();
 
-var dataPath = GetEnvironmentVariable("ALDUNE_DATA_DIR", "FANOTE_DATA_DIR") ?? "/data";
+var dataPath = Environment.GetEnvironmentVariable(BrandIdentity.SyncDataDirEnvVar) ?? "/data";
 var tokens = SyncTokenSet.Parse(
-    GetEnvironmentVariable("ALDUNE_SYNC_TOKENS", "FANOTE_SYNC_TOKENS"),
-    GetEnvironmentVariable("ALDUNE_SYNC_TOKEN", "FANOTE_SYNC_TOKEN"));
+    Environment.GetEnvironmentVariable(BrandIdentity.SyncTokensEnvVar),
+    Environment.GetEnvironmentVariable(BrandIdentity.SyncTokenEnvVar));
 if (tokens.Count == 0)
-    throw new InvalidOperationException("ALDUNE_SYNC_TOKEN or ALDUNE_SYNC_TOKENS must be configured.");
+    throw new InvalidOperationException(
+        $"{BrandIdentity.SyncTokenEnvVar} or {BrandIdentity.SyncTokensEnvVar} must be configured.");
 
 var objectPath = Path.Combine(dataPath, "objects");
 Directory.CreateDirectory(objectPath);
@@ -130,8 +131,5 @@ app.MapDelete("/api/v1/objects/{id:guid}", (Guid id) =>
 app.Run();
 
 static string ObjectFile(string objectPath, Guid id) => Path.Combine(objectPath, $"{id:N}.json");
-
-static string? GetEnvironmentVariable(string currentName, string legacyName)
-    => Environment.GetEnvironmentVariable(currentName) ?? Environment.GetEnvironmentVariable(legacyName);
 
 public partial class Program;

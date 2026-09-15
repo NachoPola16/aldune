@@ -1,8 +1,8 @@
-# Fanote v1 — Design Spec
+# Aldune v1 — Design Spec
 
 ## Contexto y objetivo
 
-Fanote es una aplicación de notas para Windows inspirada en Hold My Notes,
+Aldune es una aplicación de notas para Windows inspirada en Hold My Notes,
 Noty (aimen08/noty) y noty-sepia: notas ancladas al borde de la pantalla
 que viven como una fina franja ("pill") y se despliegan en abanico al
 pasar el ratón por encima. Ninguna de las referencias existe para
@@ -130,7 +130,7 @@ envejecimiento) se aplaza a v1.1 — ver esa sección.
     alcance de v1, así que no se resuelve ahora — solo se deja
     constancia de la dependencia para cuando se retome).
 - **Exportar/Importar** (para mover las notas a otro ordenador o hacer
-  copia de seguridad): genera un archivo propio (`.fanotebackup`, un
+  copia de seguridad): genera un archivo propio (`.aldunebackup`, un
   zip con JSON dentro, con un campo de versión de formato desde v1 para
   poder evolucionar el formato sin romper backups antiguos) que
   contiene las notas **sin cifrar**. Es una decisión deliberada: la
@@ -225,7 +225,7 @@ por criterio técnico puro):
   (pasa el 99% del tiempo inactiva).
 - Se descarta Rust + windowing nativo: técnicamente sólido y sin
   garbage collector, pero el patrón concreto de ventana que necesita
-  Fanote tiene muchísimo menos precedente en el ecosistema Rust en
+  Aldune tiene muchísimo menos precedente en el ecosistema Rust en
   Windows que en WPF — mayor riesgo de quedarse atascado resolviendo
   problemas de plataforma por primera vez.
 - Se descartan Electron y Tauri: Electron tiene un coste de RAM en
@@ -310,11 +310,11 @@ de alcance.
   recuperable. (b) La contraseña de la cuenta de Windows fue reseteada
   por un administrador — esto **destruye permanentemente** la clave
   DPAPI y con ella el acceso a todas las notas cifradas; no hay
-  recuperación posible salvo restaurar desde un `.fanotebackup`
+  recuperación posible salvo restaurar desde un `.aldunebackup`
   exportado previamente. El mensaje debe decir esto explícitamente,
   porque es la causa más probable en la práctica y la única sin ninguna
   solución técnica.
-- **Import de un `.fanotebackup` corrupto o de versión de formato no
+- **Import de un `.aldunebackup` corrupto o de versión de formato no
   reconocida**: se valida el formato (incluida la versión) antes de
   tocar la base de datos real; si falla, se rechaza con un mensaje
   claro sin modificar nada de lo existente.
@@ -359,7 +359,7 @@ de este orden — son v1.1, después de que v1 funcione de punta a punta.
 
 ## Nombre
 
-**Fanote** (fan + note) — sin colisiones encontradas en búsquedas de
+**Aldune** (fan + note) — sin colisiones encontradas en búsquedas de
 apps/software existentes en el momento de escribir esta spec. Se
 descartaron "EdgeNotes" (app de notas de borde de pantalla ya existente
 en Microsoft Store, mismo concepto), "Perch" (tomado por Perch AI) y

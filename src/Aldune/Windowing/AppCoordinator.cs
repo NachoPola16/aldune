@@ -326,7 +326,7 @@ public sealed class AppCoordinator
             OpenOrActivateNote(note, dock);
         }
 
-        // TambiÃ©n se ejecuta para Normal: si ya habÃ­a notas abiertas, elegir "Normal cascade"
+        // También se ejecuta para Normal: si ya había notas abiertas, elegir "Normal cascade"
         // debe tener un efecto visible y no limitarse a guardar una preferencia para el siguiente
         // ciclo de abrir/cerrar.
         Application.Current.Dispatcher.BeginInvoke(DispatcherPriority.Loaded, new Action(() =>

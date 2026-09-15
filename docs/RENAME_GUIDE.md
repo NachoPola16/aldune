@@ -54,8 +54,9 @@ Qué **no** hace, y hay que hacerlo a mano:
 - **Cambiar el `AppId` del instalador.** `installer/*.iss` lleva un GUID fijo: si lo cambias, el
   instalador crea una segunda entrada en «Aplicaciones instaladas» en vez de actualizar la que ya
   existe.
-- **Cambiar el nombre físico del volumen de Docker.** `fanote-sync-data` guarda los datos ya
-  sincronizados del servidor; renombrarlo los deja huérfanos.
+- **Decidir el volumen del servidor.** Por defecto es `aldune-sync-data`; un servidor que ya
+sincronizaba conserva el suyo poniendo `ALDUNE_SYNC_VOLUME=fanote-sync-data` en su `.env`
+(ver `SYNC.md`).
 
 ## 3. Lista de comprobación posterior
 
@@ -88,6 +89,8 @@ Resumen del cambio real (2026-09-15). Sirve de ejemplo de lo que suele quedar a 
 6. Se conservó **todo** lo `Legacy*`, el volumen `fanote-sync-data` y las referencias a los
    documentos históricos de `docs/superpowers/`.
 7. Se dejó `scripts/rename-brand.ps1 -DryRun` y estos dos documentos para no volver a buscar a mano.
+8. Se quitaron los fallbacks `FANOTE_*`: las variables de entorno son solo `ALDUNE_*`, y el
+   servidor se niega a arrancar sin token para que el fallo sea visible en vez de silencioso.
 
 Compatibilidad del punto 4: una versión anterior a este cambio no puede importar un código de perfil
 emitido después (el prefijo es otro), pero la versión nueva sí lee todos los códigos antiguos. Las

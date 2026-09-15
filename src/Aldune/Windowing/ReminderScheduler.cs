@@ -10,7 +10,7 @@ namespace Aldune.Windowing;
 /// mientras la app corre (<see cref="PollInterval"/>) y hace una pasada de catch-up al arrancar
 /// (<see cref="CheckDueReminders"/>, llamada explícitamente desde App.OnStartup) para que un
 /// recordatorio vencido con la app cerrada avise igual, en vez de perderse en silencio — ver
-/// docs/superpowers/specs/2026-09-11-fanote-reminders-design.md.
+/// docs/superpowers/specs/2026-09-11-aldune-reminders-design.md.
 ///
 /// Usa el NotifyIcon que ya crea TrayIcon (inyectado, no uno nuevo) y ShowBalloonTip en vez de un
 /// toast interactivo de verdad: la razón (no depender de un acceso directo con ruta fija, que

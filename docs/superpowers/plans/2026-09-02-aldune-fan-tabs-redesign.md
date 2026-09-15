@@ -1,4 +1,4 @@
-# Fanote Fan-Tabs Redesign Implementation Plan
+# Aldune Fan-Tabs Redesign Implementation Plan
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
@@ -8,15 +8,15 @@
 
 **Tech Stack:** C# / WPF / .NET 10 (existing stack, no new dependencies).
 
-**Spec:** `docs/superpowers/specs/2026-09-02-fanote-fan-tabs-redesign-design.md`
+**Spec:** `docs/superpowers/specs/2026-09-02-aldune-fan-tabs-redesign-design.md`
 
 ## Global Constraints
 
 - Resting pill (`PillSwatches`, the color dashes) does not change at all.
 - `EdgeGeometry.PillRect`/`ExpandedRect` do not change — the panel's outer rectangle is still computed from note count exactly as today.
 - The dock's expanded panel shows **only active notes** — no more "Archivadas"/"Activas" toggle in the dock itself. `NotesManagerWindow` (unchanged) remains the only way to browse archived/trashed notes.
-- No new `Fanote.Core` logic and no new automated tests — this is WPF presentation/animation, verified manually, consistent with how the rest of this app's window mechanics are tested (see spec's Testing section).
-- Kill any running `Fanote.exe` before rebuilding (`tasklist //FI "IMAGENAME eq Fanote.exe"` then `taskkill //PID <pid> //F`) — the build fails with a file-lock error otherwise.
+- No new `Aldune.Core` logic and no new automated tests — this is WPF presentation/animation, verified manually, consistent with how the rest of this app's window mechanics are tested (see spec's Testing section).
+- Kill any running `aldune.exe` before rebuilding (`tasklist //FI "IMAGENAME eq aldune.exe"` then `taskkill //PID <pid> //F`) — the build fails with a file-lock error otherwise.
 - Run `dotnet test` after every task; all 80 existing tests must keep passing (this plan adds none).
 
 ---
@@ -24,8 +24,8 @@
 ## Task 1: Simplify dock controls — drop Archivadas toggle, circular +/gear buttons
 
 **Files:**
-- Modify: `src/Fanote/Windowing/EdgeDockWindow.xaml`
-- Modify: `src/Fanote/Windowing/EdgeDockWindow.xaml.cs`
+- Modify: `src/Aldune/Windowing/EdgeDockWindow.xaml`
+- Modify: `src/Aldune/Windowing/EdgeDockWindow.xaml.cs`
 
 **Interfaces:**
 - Produces: `EdgeDockWindow` with no `_viewingArchive` field and no `OnToggleArchiveClick` handler; `Refresh()` unconditionally shows active notes. Consumed by nothing else (self-contained UI simplification) — sets up the layout Task 2 builds the new tab template into.
@@ -178,29 +178,29 @@ The trash auto-purge that used to run inside `OnToggleArchiveClick` (`_repositor
 
 - [ ] **Step 4: Build**
 
-Kill any running `Fanote.exe`, then:
+Kill any running `aldune.exe`, then:
 ```bash
-cd fanote
-dotnet build src/Fanote/Fanote.csproj -v quiet
+cd aldune
+dotnet build src/Aldune/Aldune.csproj -v quiet
 ```
 Expected: Build succeeded, 0 errors. (If `ToggleArchiveButton` or `_viewingArchive` show up in an error, a reference to them was missed — search the file for both names and remove/update.)
 
 - [ ] **Step 5: Manual regression check**
 
-Run: `dotnet run --project src/Fanote --no-build -c Debug`
+Run: `dotnet run --project src/Aldune --no-build -c Debug`
 
 Confirm: hovering the pill still expands the panel; the tab list still shows active notes and scrolls when there are many; clicking a tab still opens/activates its note; the "+" button (now a small circle) still creates a note; the gear button (now a small circle, no longer a bottom bar) still opens "Gestionar notas"; there is no "Archivadas" button anywhere in the dock; opening "Gestionar notas" and filtering by Archivadas/Papelera there still works (unchanged window).
 
 - [ ] **Step 6: Run the full test suite**
 
-Run: `cd fanote && dotnet test`
-Expected: 80 passed (unchanged — this task touches no `Fanote.Core` code).
+Run: `cd aldune && dotnet test`
+Expected: 80 passed (unchanged — this task touches no `Aldune.Core` code).
 
 - [ ] **Step 7: Commit**
 
 ```bash
-cd fanote
-git add src/Fanote/Windowing/EdgeDockWindow.xaml src/Fanote/Windowing/EdgeDockWindow.xaml.cs
+cd aldune
+git add src/Aldune/Windowing/EdgeDockWindow.xaml src/Aldune/Windowing/EdgeDockWindow.xaml.cs
 git commit -m "$(cat <<'EOF'
 Drop dock's Archivadas toggle; +/gear become small circular buttons
 
@@ -220,7 +220,7 @@ EOF
 ## Task 2: Redesign the tab template — vertical rotated label
 
 **Files:**
-- Modify: `src/Fanote/Windowing/EdgeDockWindow.xaml`
+- Modify: `src/Aldune/Windowing/EdgeDockWindow.xaml`
 
 **Interfaces:**
 - Consumes: `NoteTitleConverter` (existing, unchanged).
@@ -296,10 +296,10 @@ In the `TabsList.ItemTemplate`'s `DataTemplate` (from Task 1), add an explicit `
 
 - [ ] **Step 4: Build**
 
-Kill any running `Fanote.exe`, then:
+Kill any running `aldune.exe`, then:
 ```bash
-cd fanote
-dotnet build src/Fanote/Fanote.csproj -v quiet
+cd aldune
+dotnet build src/Aldune/Aldune.csproj -v quiet
 ```
 Expected: Build succeeded, 0 errors.
 
@@ -309,14 +309,14 @@ Run the app. Expand the dock with a few notes present. Confirm: each tab shows i
 
 - [ ] **Step 6: Run the full test suite**
 
-Run: `cd fanote && dotnet test`
+Run: `cd aldune && dotnet test`
 Expected: 80 passed.
 
 - [ ] **Step 7: Commit**
 
 ```bash
-cd fanote
-git add src/Fanote/Windowing/EdgeDockWindow.xaml
+cd aldune
+git add src/Aldune/Windowing/EdgeDockWindow.xaml
 git commit -m "$(cat <<'EOF'
 Redesign tab template: vertical rotated label, no more state line
 
@@ -336,8 +336,8 @@ EOF
 ## Task 3: Staggered per-tab entrance animation
 
 **Files:**
-- Modify: `src/Fanote/Windowing/EdgeDockWindow.xaml`
-- Modify: `src/Fanote/Windowing/EdgeDockWindow.xaml.cs`
+- Modify: `src/Aldune/Windowing/EdgeDockWindow.xaml`
+- Modify: `src/Aldune/Windowing/EdgeDockWindow.xaml.cs`
 
 **Interfaces:**
 - Produces: `EdgeDockWindow.OnTabLoaded(object, RoutedEventArgs)` — internal event handler, not consumed elsewhere.
@@ -405,10 +405,10 @@ Add `using System.Windows.Controls;` to the top of `EdgeDockWindow.xaml.cs` if i
 
 - [ ] **Step 3: Build**
 
-Kill any running `Fanote.exe`, then:
+Kill any running `aldune.exe`, then:
 ```bash
-cd fanote
-dotnet build src/Fanote/Fanote.csproj -v quiet
+cd aldune
+dotnet build src/Aldune/Aldune.csproj -v quiet
 ```
 Expected: Build succeeded, 0 errors. If `Button` or `TranslateTransform` are unresolved, add the missing `using System.Windows.Controls;` / `using System.Windows.Media;` (the latter is very likely already present, used elsewhere in this file for `DoubleAnimation`).
 
@@ -418,14 +418,14 @@ Run the app with at least 3-4 notes. Hover the pill. Confirm: tabs slide/fade in
 
 - [ ] **Step 5: Run the full test suite**
 
-Run: `cd fanote && dotnet test`
+Run: `cd aldune && dotnet test`
 Expected: 80 passed.
 
 - [ ] **Step 6: Commit**
 
 ```bash
-cd fanote
-git add src/Fanote/Windowing/EdgeDockWindow.xaml src/Fanote/Windowing/EdgeDockWindow.xaml.cs
+cd aldune
+git add src/Aldune/Windowing/EdgeDockWindow.xaml src/Aldune/Windowing/EdgeDockWindow.xaml.cs
 git commit -m "$(cat <<'EOF'
 Add staggered entrance animation per tab (~45ms apart)
 
@@ -451,9 +451,9 @@ EOF
 ## Task 4: Open a note growing from its own tab's position
 
 **Files:**
-- Modify: `src/Fanote/Windowing/AppCoordinator.cs`
-- Modify: `src/Fanote/Windowing/EdgeDockWindow.xaml.cs`
-- Modify: `src/Fanote/Windowing/NoteWindow.xaml.cs`
+- Modify: `src/Aldune/Windowing/AppCoordinator.cs`
+- Modify: `src/Aldune/Windowing/EdgeDockWindow.xaml.cs`
+- Modify: `src/Aldune/Windowing/NoteWindow.xaml.cs`
 
 **Interfaces:**
 - Produces: `AppCoordinator.OpenOrActivateNote(Note note, EdgeDockWindow requestingDock, System.Windows.Rect? originRect = null)` (signature change — the two-argument call sites in `EdgeDockWindow` get updated in this same task); `NoteWindow.AnimateFrom(System.Windows.Rect origin)` (new, internal).
@@ -514,7 +514,7 @@ with:
     }
 ```
 
-(`System.Windows.Rect` is qualified explicitly here — despite the `using System.Windows;` at the top of this file already covering it, `AppCoordinator.cs` also has `using Fanote.Core;`, which has its own `Rect` type. Bare `Rect` would be CS0104 ambiguous, the same mistake already made and caught twice earlier in this project — see `EdgeDockWindow._currentRect`'s declaration.)
+(`System.Windows.Rect` is qualified explicitly here — despite the `using System.Windows;` at the top of this file already covering it, `AppCoordinator.cs` also has `using Aldune.Core;`, which has its own `Rect` type. Bare `Rect` would be CS0104 ambiguous, the same mistake already made and caught twice earlier in this project — see `EdgeDockWindow._currentRect`'s declaration.)
 
 - [ ] **Step 2: Capture the clicked tab's screen position in `EdgeDockWindow.OnTabClick`**
 
@@ -549,7 +549,7 @@ with:
     }
 ```
 
-(`System.Windows.Rect` is qualified explicitly here because this file also has `using Fanote.Core;`, which has its own `Rect` — same ambiguity already hit once in this file for `_currentRect`, see its declaration a few lines up. `element.ActualWidth`/`ActualHeight` are already in DIPs — WPF layout sizes always are — so only the `PointToScreen` pixel coordinates need dividing by the DPI scale, not the width/height.)
+(`System.Windows.Rect` is qualified explicitly here because this file also has `using Aldune.Core;`, which has its own `Rect` — same ambiguity already hit once in this file for `_currentRect`, see its declaration a few lines up. `element.ActualWidth`/`ActualHeight` are already in DIPs — WPF layout sizes always are — so only the `PointToScreen` pixel coordinates need dividing by the DPI scale, not the width/height.)
 
 Add `using System.Windows.Media;` to the top of `EdgeDockWindow.xaml.cs` if it isn't already there (needed for `VisualTreeHelper`) — check first; `System.Windows.Media.Animation` is already imported via fully-qualified use elsewhere in this file, but `VisualTreeHelper` lives in the parent `System.Windows.Media` namespace specifically.
 
@@ -584,16 +584,16 @@ Add this method to `NoteWindow.xaml.cs` (e.g. right after the constructor):
     }
 ```
 
-`System.Windows.Rect` is qualified explicitly here too — `NoteWindow.xaml.cs` also has `using Fanote.Core;`, same ambiguity.
+`System.Windows.Rect` is qualified explicitly here too — `NoteWindow.xaml.cs` also has `using Aldune.Core;`, same ambiguity.
 
 Note `NoteWindow.xaml` sets `MinWidth="180" MinHeight="160"` — WPF clamps the window's actually-rendered size to those minimums regardless of the animated `Width`/`Height` DP value, so the window won't visibly shrink all the way down to a ~30×36px tab's exact size at the start of the animation; it'll still visibly grow, just from ~180×160 rather than the tab's literal dimensions. This is an accepted, harmless side effect of a pre-existing constraint — not a bug to chase.
 
 - [ ] **Step 4: Build**
 
-Kill any running `Fanote.exe`, then:
+Kill any running `aldune.exe`, then:
 ```bash
-cd fanote
-dotnet build src/Fanote/Fanote.csproj -v quiet
+cd aldune
+dotnet build src/Aldune/Aldune.csproj -v quiet
 ```
 Expected: Build succeeded, 0 errors.
 
@@ -605,14 +605,14 @@ Run the app. Click a tab to open its note — confirm the note window visibly gr
 
 - [ ] **Step 6: Run the full test suite**
 
-Run: `cd fanote && dotnet test`
+Run: `cd aldune && dotnet test`
 Expected: 80 passed.
 
 - [ ] **Step 7: Commit**
 
 ```bash
-cd fanote
-git add src/Fanote/Windowing/AppCoordinator.cs src/Fanote/Windowing/EdgeDockWindow.xaml.cs src/Fanote/Windowing/NoteWindow.xaml.cs
+cd aldune
+git add src/Aldune/Windowing/AppCoordinator.cs src/Aldune/Windowing/EdgeDockWindow.xaml.cs src/Aldune/Windowing/NoteWindow.xaml.cs
 git commit -m "$(cat <<'EOF'
 Open a note growing from its own tab's screen position
 

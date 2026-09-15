@@ -41,19 +41,19 @@ public static class BrandIdentity
     /// </summary>
     public static readonly string[] LegacySyncProfileCodePrefixes = ["fanote-profile-v2:", "fanote-profile-v1:"];
 
-    /// <summary>Nombres de variables de entorno para sincronización (actual y heredada).</summary>
+    /// <summary>
+    /// Nombres de las variables de entorno de sincronización, que son los mismos que esperan
+    /// docker-compose.sync*.yml y .env.example: si se renombra alguna hay que cambiarla también ahí.
+    /// Las leen el cliente (SyncService), la aplicación (App) y el servidor (Aldune.SyncServer).
+    /// </summary>
     public const string SyncTokenEnvVar = "ALDUNE_SYNC_TOKEN";
-    public const string LegacySyncTokenEnvVar = "FANOTE_SYNC_TOKEN";
 
     public const string SyncTokensEnvVar = "ALDUNE_SYNC_TOKENS";
-    public const string LegacySyncTokensEnvVar = "FANOTE_SYNC_TOKENS";
 
     public const string SyncPortEnvVar = "ALDUNE_SYNC_PORT";
-    public const string LegacySyncPortEnvVar = "FANOTE_SYNC_PORT";
 
     public const string SyncDataDirEnvVar = "ALDUNE_DATA_DIR";
-    public const string LegacySyncDataDirEnvVar = "FANOTE_DATA_DIR";
 
+    /// <summary>Monitor al que forzar el dock en pruebas manuales (ver App.OnDisplaySettingsChanged).</summary>
     public const string MonitorIndexEnvVar = "ALDUNE_MONITOR_INDEX";
-    public const string LegacyMonitorIndexEnvVar = "FANOTE_MONITOR_INDEX";
 }

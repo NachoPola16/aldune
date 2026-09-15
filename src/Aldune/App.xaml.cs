@@ -337,12 +337,11 @@ public partial class App : Application
         if (monitors.Count == 0) return; // sin pantallas no hay nada que colocar; ya volverá otra
 
         // Filtro de monitor: miramos TargetMonitorIndex de los ajustes guardados. Si no esta fijado,
-        // se mira la variable de entorno ALDUNE_MONITOR_INDEX (o FANOTE_MONITOR_INDEX como alternativa/fallback).
+        // se mira la variable de entorno BrandIdentity.MonitorIndexEnvVar (util en pruebas manuales).
         int? targetIndex = _settings?.TargetMonitorIndex;
         if (targetIndex is null)
         {
-            var onlyMonitor = Environment.GetEnvironmentVariable("ALDUNE_MONITOR_INDEX")
-                ?? Environment.GetEnvironmentVariable("FANOTE_MONITOR_INDEX");
+            var onlyMonitor = Environment.GetEnvironmentVariable(BrandIdentity.MonitorIndexEnvVar);
             if (int.TryParse(onlyMonitor, out int envIndex))
             {
                 targetIndex = envIndex;

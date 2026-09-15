@@ -7,9 +7,9 @@ balloon tip (Action Center) when it's due, with quick presets, a manual
 date/time picker, and a small badge on the dock tab.
 
 **Architecture:** A new `NoteReminder` table (one row per note, `NoteId`
-primary key) holds the due timestamp. `Fanote.Core.NotesRepository` gets
+primary key) holds the due timestamp. `Aldune.Core.NotesRepository` gets
 CRUD methods for it, plus `GetById` (missing until now). A new
-`Fanote.Windowing.ReminderScheduler` polls every 30s via a `DispatcherTimer`
+`Aldune.Windowing.ReminderScheduler` polls every 30s via a `DispatcherTimer`
 and does one catch-up pass at startup, firing `NotifyIcon.ShowBalloonTip` on
 the tray icon `TrayIcon` already owns. `NoteWindow` gets a "Recordatorio"
 entry in its "⋯" menu with an inline picker (three presets + calendar/time).
@@ -20,7 +20,7 @@ reminder.
 `System.Windows.Forms.NotifyIcon` (already a dependency via
 `UseWindowsForms`), xUnit.
 
-**Spec:** `docs/superpowers/specs/2026-09-11-fanote-reminders-design.md`
+**Spec:** `docs/superpowers/specs/2026-09-11-aldune-reminders-design.md`
 
 ## Global Constraints
 
@@ -47,11 +47,11 @@ reminder.
 ### Task 1: `NoteReminder` table + core repository methods
 
 **Files:**
-- Modify: `src/Fanote.Core/NotesDatabase.cs:41-68` (add table to the
+- Modify: `src/Aldune.Core/NotesDatabase.cs:41-68` (add table to the
   `CREATE TABLE` block)
-- Modify: `src/Fanote.Core/NotesRepository.cs` (add methods; extend
+- Modify: `src/Aldune.Core/NotesRepository.cs` (add methods; extend
   `Delete` and `PurgeExpiredTrash`)
-- Test: `tests/Fanote.Core.Tests/NotesRepositoryReminderTests.cs` (new)
+- Test: `tests/Aldune.Core.Tests/NotesRepositoryReminderTests.cs` (new)
 
 **Interfaces:**
 - Produces (used by Task 2 is unrelated; used directly by Task 3 and Task 4):
@@ -64,18 +64,18 @@ reminder.
 
 - [ ] **Step 1: Write the failing tests**
 
-Create `tests/Fanote.Core.Tests/NotesRepositoryReminderTests.cs`:
+Create `tests/Aldune.Core.Tests/NotesRepositoryReminderTests.cs`:
 
 ```csharp
-using Fanote.Core;
+using Aldune.Core;
 using Microsoft.Data.Sqlite;
 using Xunit;
 
-namespace Fanote.Core.Tests;
+namespace Aldune.Core.Tests;
 
 public class NotesRepositoryReminderTests : IDisposable
 {
-    private readonly string _dbPath = Path.Combine(Path.GetTempPath(), $"fanote-reminder-test-{Guid.NewGuid()}.db");
+    private readonly string _dbPath = Path.Combine(Path.GetTempPath(), $"aldune-reminder-test-{Guid.NewGuid()}.db");
     private readonly NotesRepository _sut;
 
     public NotesRepositoryReminderTests()
@@ -240,7 +240,7 @@ Expected: FAIL to compile — `SetReminder`, `ClearReminder`, `GetReminder`,
 
 - [ ] **Step 3: Add the `NoteReminder` table**
 
-In `src/Fanote.Core/NotesDatabase.cs`, inside `Initialize()`'s
+In `src/Aldune.Core/NotesDatabase.cs`, inside `Initialize()`'s
 `command.CommandText`, right after the `TaskCompletion` table (currently
 ends at line 68, just before the closing `"""`), add:
 
@@ -250,7 +250,7 @@ ends at line 68, just before the closing `"""`), add:
             -- de ahí NoteId como clave primaria en vez de una compuesta o un Id propio: poner uno
             -- nuevo reemplaza cualquiera anterior. Aparte de Note por el mismo motivo que las demás:
             -- esa tabla tiene el contenido real del usuario y no hay migraciones. Se borra la fila
-            -- al dispararse (ver Fanote.Windowing.ReminderScheduler) o al cancelarse a mano.
+            -- al dispararse (ver Aldune.Windowing.ReminderScheduler) o al cancelarse a mano.
             CREATE TABLE IF NOT EXISTS NoteReminder (
                 NoteId TEXT PRIMARY KEY NOT NULL,
                 DueAt TEXT NOT NULL
@@ -259,7 +259,7 @@ ends at line 68, just before the closing `"""`), add:
 
 - [ ] **Step 4: Add the repository methods**
 
-In `src/Fanote.Core/NotesRepository.cs`, add after `DeletePlacement` (the
+In `src/Aldune.Core/NotesRepository.cs`, add after `DeletePlacement` (the
 method ending at line 308):
 
 ```csharp
@@ -310,7 +310,7 @@ method ending at line 308):
     }
 
     /// <summary>Recordatorios vencidos a <paramref name="now"/> (inclusive) — usado tanto por el
-    /// sondeo periódico como por el catch-up al arrancar (ver Fanote.Windowing.ReminderScheduler).
+    /// sondeo periódico como por el catch-up al arrancar (ver Aldune.Windowing.ReminderScheduler).
     /// No los borra: quien llama decide cuándo limpiarlos (ClearReminder), después de avisar.</summary>
     public IReadOnlyList<(Guid NoteId, DateTimeOffset DueAt)> GetDueReminders(DateTimeOffset now)
     {
@@ -373,7 +373,7 @@ method ending at line 308):
 
 - [ ] **Step 5: Wire `NoteReminder` into `Delete` and `PurgeExpiredTrash`**
 
-In `src/Fanote.Core/NotesRepository.cs`, `Delete` (currently):
+In `src/Aldune.Core/NotesRepository.cs`, `Delete` (currently):
 
 ```csharp
         command.CommandText = """
@@ -428,17 +428,17 @@ changes).
 - [ ] **Step 7: Commit**
 
 ```bash
-git add src/Fanote.Core/NotesDatabase.cs src/Fanote.Core/NotesRepository.cs tests/Fanote.Core.Tests/NotesRepositoryReminderTests.cs
+git add src/Aldune.Core/NotesDatabase.cs src/Aldune.Core/NotesRepository.cs tests/Aldune.Core.Tests/NotesRepositoryReminderTests.cs
 git commit -m "Add NoteReminder table and repository CRUD for note reminders"
 ```
 
 ---
 
-### Task 2: `Fanote.Core.ReminderPresets` (pure)
+### Task 2: `Aldune.Core.ReminderPresets` (pure)
 
 **Files:**
-- Create: `src/Fanote.Core/ReminderPresets.cs`
-- Test: `tests/Fanote.Core.Tests/ReminderPresetsTests.cs` (new)
+- Create: `src/Aldune.Core/ReminderPresets.cs`
+- Test: `tests/Aldune.Core.Tests/ReminderPresetsTests.cs` (new)
 
 **Interfaces:**
 - Consumes: nothing (pure, no dependency on Task 1).
@@ -449,13 +449,13 @@ git commit -m "Add NoteReminder table and repository CRUD for note reminders"
 
 - [ ] **Step 1: Write the failing tests**
 
-Create `tests/Fanote.Core.Tests/ReminderPresetsTests.cs`:
+Create `tests/Aldune.Core.Tests/ReminderPresetsTests.cs`:
 
 ```csharp
-using Fanote.Core;
+using Aldune.Core;
 using Xunit;
 
-namespace Fanote.Core.Tests;
+namespace Aldune.Core.Tests;
 
 public class ReminderPresetsTests
 {
@@ -512,16 +512,16 @@ Expected: FAIL to compile — `ReminderPresets` doesn't exist yet.
 
 - [ ] **Step 3: Implement `ReminderPresets`**
 
-Create `src/Fanote.Core/ReminderPresets.cs`:
+Create `src/Aldune.Core/ReminderPresets.cs`:
 
 ```csharp
-namespace Fanote.Core;
+namespace Aldune.Core;
 
 /// <summary>
 /// Los tres atajos rápidos del selector de recordatorio de <c>NoteWindow</c>. Puro y parametrizado
 /// por <c>now</c> (en vez de leer <c>DateTimeOffset.Now</c> internamente) para poder testear "Esta
 /// noche" a los dos lados del límite de las 20:00 sin depender del reloj real — ver
-/// docs/superpowers/specs/2026-09-11-fanote-reminders-design.md.
+/// docs/superpowers/specs/2026-09-11-aldune-reminders-design.md.
 ///
 /// Todo se calcula en la hora local de <paramref name="now"/> (mismo <c>Offset</c> que trae), no en
 /// UTC: quien llama (NoteWindow) trabaja con <c>DateTimeOffset.Now</c>, y la conversión a UTC pasa a
@@ -559,7 +559,7 @@ Expected: PASS, all 7 tests (4 `[Fact]` + 3 `[Theory]` cases).
 - [ ] **Step 5: Commit**
 
 ```bash
-git add src/Fanote.Core/ReminderPresets.cs tests/Fanote.Core.Tests/ReminderPresetsTests.cs
+git add src/Aldune.Core/ReminderPresets.cs tests/Aldune.Core.Tests/ReminderPresetsTests.cs
 git commit -m "Add ReminderPresets for the reminder picker's quick shortcuts"
 ```
 
@@ -568,11 +568,11 @@ git commit -m "Add ReminderPresets for the reminder picker's quick shortcuts"
 ### Task 3: `ReminderScheduler` + tray/coordinator wiring
 
 **Files:**
-- Modify: `src/Fanote/Windowing/TrayIcon.cs` (expose the `NotifyIcon`)
-- Modify: `src/Fanote/Windowing/AppCoordinator.cs` (add `OpenNoteById`)
-- Create: `src/Fanote/Windowing/ReminderScheduler.cs`
-- Modify: `src/Fanote/Resources/Strings.cs` (two new strings)
-- Modify: `src/Fanote/App.xaml.cs` (construct and run the catch-up pass)
+- Modify: `src/Aldune/Windowing/TrayIcon.cs` (expose the `NotifyIcon`)
+- Modify: `src/Aldune/Windowing/AppCoordinator.cs` (add `OpenNoteById`)
+- Create: `src/Aldune/Windowing/ReminderScheduler.cs`
+- Modify: `src/Aldune/Resources/Strings.cs` (two new strings)
+- Modify: `src/Aldune/App.xaml.cs` (construct and run the catch-up pass)
 
 **Interfaces:**
 - Consumes: `NotesRepository.GetDueReminders`/`ClearReminder`/`GetById`
@@ -588,7 +588,7 @@ Constraints). Verified manually at the end of the task.
 
 - [ ] **Step 1: Expose the tray `NotifyIcon`**
 
-In `src/Fanote/Windowing/TrayIcon.cs`, add this property right after the
+In `src/Aldune/Windowing/TrayIcon.cs`, add this property right after the
 `_coordinator` field (line 22):
 
 ```csharp
@@ -599,7 +599,7 @@ In `src/Fanote/Windowing/TrayIcon.cs`, add this property right after the
 
 - [ ] **Step 2: Add `AppCoordinator.OpenNoteById`**
 
-In `src/Fanote/Windowing/AppCoordinator.cs`, add this method right after
+In `src/Aldune/Windowing/AppCoordinator.cs`, add this method right after
 `OpenOrActivateNote` (after the closing brace at line 154):
 
 ```csharp
@@ -624,7 +624,7 @@ In `src/Fanote/Windowing/AppCoordinator.cs`, add this method right after
 
 - [ ] **Step 3: Add the two new strings**
 
-In `src/Fanote/Resources/Strings.cs`, add right after `AppName` (line 27):
+In `src/Aldune/Resources/Strings.cs`, add right after `AppName` (line 27):
 
 ```csharp
     public static string ReminderManyDue(int count) => T($"{count} reminders pending", $"{count} recordatorios pendientes");
@@ -635,22 +635,22 @@ just `Strings.AppName`, already defined.)
 
 - [ ] **Step 4: Implement `ReminderScheduler`**
 
-Create `src/Fanote/Windowing/ReminderScheduler.cs`:
+Create `src/Aldune/Windowing/ReminderScheduler.cs`:
 
 ```csharp
 using System.Windows.Forms;
 using System.Windows.Threading;
-using Fanote.Core;
-using Fanote.Resources;
+using Aldune.Core;
+using Aldune.Resources;
 
-namespace Fanote.Windowing;
+namespace Aldune.Windowing;
 
 /// <summary>
 /// Dispara el aviso nativo de Windows cuando un recordatorio de nota vence. Sondea cada 30s
 /// mientras la app corre (<see cref="PollInterval"/>) y hace una pasada de catch-up al arrancar
 /// (<see cref="CheckDueReminders"/>, llamada explícitamente desde App.OnStartup) para que un
 /// recordatorio vencido con la app cerrada avise igual, en vez de perderse en silencio — ver
-/// docs/superpowers/specs/2026-09-11-fanote-reminders-design.md.
+/// docs/superpowers/specs/2026-09-11-aldune-reminders-design.md.
 ///
 /// Usa el NotifyIcon que ya crea TrayIcon (inyectado, no uno nuevo) y ShowBalloonTip en vez de un
 /// toast interactivo de verdad: la razón (no depender de un acceso directo con ruta fija, que
@@ -751,21 +751,21 @@ Expected: all tests still pass (this task adds no new automated tests).
 
 - [ ] **Step 7: Manual verification**
 
-1. `dotnet run --project src/Fanote`.
+1. `dotnet run --project src/Aldune`.
 2. Open a note, use the debugger/temporarily lower `PollInterval` if
    needed, or just wait — but for a quick check, skip ahead to Task 4
    first (it's what actually lets you *set* a reminder from the UI). Come
    back to this manual check once Task 4 is done: set a reminder 1-2
    minutes out from `NoteWindow`, wait, confirm the Windows notification
    appears with the note's title and clicking it opens that note.
-2. Close Fanote, use a temporary test (or just accept a longer wait) to
+2. Close Aldune, use a temporary test (or just accept a longer wait) to
    confirm the catch-up path: set a reminder, close the app before it
    fires, reopen — the balloon should appear immediately on next launch.
 
 - [ ] **Step 8: Commit**
 
 ```bash
-git add src/Fanote/Windowing/TrayIcon.cs src/Fanote/Windowing/AppCoordinator.cs src/Fanote/Windowing/ReminderScheduler.cs src/Fanote/Resources/Strings.cs src/Fanote/App.xaml.cs
+git add src/Aldune/Windowing/TrayIcon.cs src/Aldune/Windowing/AppCoordinator.cs src/Aldune/Windowing/ReminderScheduler.cs src/Aldune/Resources/Strings.cs src/Aldune/App.xaml.cs
 git commit -m "Add ReminderScheduler: poll due reminders and notify via the tray icon"
 ```
 
@@ -774,9 +774,9 @@ git commit -m "Add ReminderScheduler: poll due reminders and notify via the tray
 ### Task 4: `NoteWindow` — set / view / clear a reminder
 
 **Files:**
-- Modify: `src/Fanote/Windowing/NoteWindow.xaml` (menu entry + inline panel)
-- Modify: `src/Fanote/Windowing/NoteWindow.xaml.cs` (event handlers)
-- Modify: `src/Fanote/Resources/Strings.cs` (reminder picker strings)
+- Modify: `src/Aldune/Windowing/NoteWindow.xaml` (menu entry + inline panel)
+- Modify: `src/Aldune/Windowing/NoteWindow.xaml.cs` (event handlers)
+- Modify: `src/Aldune/Resources/Strings.cs` (reminder picker strings)
 
 **Interfaces:**
 - Consumes: `NotesRepository.SetReminder`/`GetReminder`/`ClearReminder`
@@ -790,7 +790,7 @@ Verified manually.
 
 - [ ] **Step 1: Add the reminder strings**
 
-In `src/Fanote/Resources/Strings.cs`, add inside the "Ventana de nota"
+In `src/Aldune/Resources/Strings.cs`, add inside the "Ventana de nota"
 section, right after `ConvertToTask` (and the `ExportToMarkdown`/
 `MarkdownFileFilter` pair added earlier in this same section):
 
@@ -811,7 +811,7 @@ format sidesteps needing one for a first version.)
 
 - [ ] **Step 2: Add the menu entry + inline panel to the XAML**
 
-In `src/Fanote/Windowing/NoteWindow.xaml`, inside `ActionsPopup`'s
+In `src/Aldune/Windowing/NoteWindow.xaml`, inside `ActionsPopup`'s
 `StackPanel`, the current content (after the Export changes made earlier
 this session) reads:
 
@@ -869,7 +869,7 @@ order is Task/Pin/**Reminder**/Export/divider/Archive-Restore-Trash:
 
 - [ ] **Step 3: Add the code-behind**
 
-In `src/Fanote/Windowing/NoteWindow.xaml.cs`, add these methods right
+In `src/Aldune/Windowing/NoteWindow.xaml.cs`, add these methods right
 before `OnExportClick` (added earlier this session, currently just above
 `OnArchiveClick`):
 
@@ -939,7 +939,7 @@ Expected: 0 errors, 0 new warnings.
 
 - [ ] **Step 5: Manual verification**
 
-1. `dotnet run --project src/Fanote`, open a note.
+1. `dotnet run --project src/Aldune`, open a note.
 2. Click "⋯" → "Recordatorio" — the panel expands with three presets, a
    calendar, and hour/minute boxes.
 3. Click "En 1 hora" — the panel collapses, the menu entry now reads
@@ -956,7 +956,7 @@ Expected: 0 errors, 0 new warnings.
 - [ ] **Step 6: Commit**
 
 ```bash
-git add src/Fanote/Windowing/NoteWindow.xaml src/Fanote/Windowing/NoteWindow.xaml.cs src/Fanote/Resources/Strings.cs
+git add src/Aldune/Windowing/NoteWindow.xaml src/Aldune/Windowing/NoteWindow.xaml.cs src/Aldune/Resources/Strings.cs
 git commit -m "Let NoteWindow set, view, and clear a note's reminder"
 ```
 
@@ -965,9 +965,9 @@ git commit -m "Let NoteWindow set, view, and clear a note's reminder"
 ### Task 5: Dock tab reminder badge
 
 **Files:**
-- Modify: `src/Fanote/Windowing/EdgeDockWindow.xaml` (badge element in the
+- Modify: `src/Aldune/Windowing/EdgeDockWindow.xaml` (badge element in the
   tab template)
-- Modify: `src/Fanote/Windowing/EdgeDockWindow.xaml.cs` (populate + apply)
+- Modify: `src/Aldune/Windowing/EdgeDockWindow.xaml.cs` (populate + apply)
 
 **Interfaces:**
 - Consumes: `NotesRepository.GetPendingReminders` (Task 1).
@@ -977,7 +977,7 @@ This task is WPF-layer UI — no automated tests. Verified manually.
 
 - [ ] **Step 1: Add the badge element to the tab template**
 
-In `src/Fanote/Windowing/EdgeDockWindow.xaml`, inside `NoteTabButtonStyle`'s
+In `src/Aldune/Windowing/EdgeDockWindow.xaml`, inside `NoteTabButtonStyle`'s
 `ControlTemplate`, the current content (in the `Grid`) is:
 
 ```xml
@@ -1014,7 +1014,7 @@ Insert the badge between them:
 
 - [ ] **Step 2: Populate and apply it in code-behind**
 
-In `src/Fanote/Windowing/EdgeDockWindow.xaml.cs`, add a field near
+In `src/Aldune/Windowing/EdgeDockWindow.xaml.cs`, add a field near
 `_tabButtons` (search for `private readonly Dictionary<int, Button> _tabButtons`):
 
 ```csharp
@@ -1057,7 +1057,7 @@ Expected: 0 errors, 0 new warnings.
 
 - [ ] **Step 4: Manual verification**
 
-1. `dotnet run --project src/Fanote`.
+1. `dotnet run --project src/Aldune`.
 2. Set a reminder on a note (Task 4's UI).
 3. Hover the dock to expand it — the note's tab shows the clock badge in
    its top-right corner.
@@ -1076,7 +1076,7 @@ nothing broke across the whole feature.
 - [ ] **Step 6: Commit**
 
 ```bash
-git add src/Fanote/Windowing/EdgeDockWindow.xaml src/Fanote/Windowing/EdgeDockWindow.xaml.cs
+git add src/Aldune/Windowing/EdgeDockWindow.xaml src/Aldune/Windowing/EdgeDockWindow.xaml.cs
 git commit -m "Show a clock badge on dock tabs with a pending reminder"
 ```
 
@@ -1095,5 +1095,5 @@ once all 5 tasks are verified:
   `STATUS.md`).
 - [ ] Republish the portable build and relaunch it (per the batched
   cadence: end of this session's work, not per task —
-  `dotnet publish src/Fanote/Fanote.csproj -p:PublishProfile=portable`,
-  clean up stray `*_wpftmp.csproj`, relaunch `./publish/portable/Fanote.exe`).
+  `dotnet publish src/Aldune/Aldune.csproj -p:PublishProfile=portable`,
+  clean up stray `*_wpftmp.csproj`, relaunch `./publish/portable/aldune.exe`).

@@ -171,15 +171,11 @@ public sealed class SyncService
     public static string NormalizeServerToken(string token)
     {
         var value = token.Trim();
-        const string aldunePrefix = "ALDUNE_SYNC_TOKEN=";
-        const string fanotePrefix = "FANOTE_SYNC_TOKEN=";
-        if (value.StartsWith(aldunePrefix, StringComparison.OrdinalIgnoreCase))
-            value = value[aldunePrefix.Length..].Trim();
-        else if (value.StartsWith(fanotePrefix, StringComparison.OrdinalIgnoreCase))
-            value = value[fanotePrefix.Length..].Trim();
+        var tokenPrefix = BrandIdentity.SyncTokenEnvVar + "=";
+        if (value.StartsWith(tokenPrefix, StringComparison.OrdinalIgnoreCase))
+            value = value[tokenPrefix.Length..].Trim();
 
-        int literalPort = value.IndexOf("\\nALDUNE_SYNC_PORT=", StringComparison.OrdinalIgnoreCase);
-        if (literalPort < 0) literalPort = value.IndexOf("\\nFANOTE_SYNC_PORT=", StringComparison.OrdinalIgnoreCase);
+        int literalPort = value.IndexOf("\\n" + BrandIdentity.SyncPortEnvVar + "=", StringComparison.OrdinalIgnoreCase);
         if (literalPort >= 0) value = value[..literalPort];
 
         int actualPort = value.IndexOf('\n');

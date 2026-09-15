@@ -4,7 +4,7 @@
 /// Los tres atajos rápidos del selector de recordatorio de <c>NoteWindow</c>. Puro y parametrizado
 /// por <c>now</c> (en vez de leer <c>DateTimeOffset.Now</c> internamente) para poder testear "Esta
 /// noche" a los dos lados del límite de las 20:00 sin depender del reloj real — ver
-/// docs/superpowers/specs/2026-09-11-fanote-reminders-design.md.
+/// docs/superpowers/specs/2026-09-11-aldune-reminders-design.md.
 ///
 /// Todo se calcula en la hora local de <paramref name="now"/> (mismo <c>Offset</c> que trae), no en
 /// UTC: quien llama (NoteWindow) trabaja con <c>DateTimeOffset.Now</c>, y la conversión a UTC pasa a

@@ -34,7 +34,7 @@ que mirar antes de buscar cadenas por el repositorio:
 | `DatabaseFileName` | `notes.db` | Fichero SQLite dentro de la carpeta de datos. |
 | `SyncProfileCodePrefix` | `aldune-profile-v2:` | Prefijo de los códigos de perfil que emite `SyncShareCodeCodec`. |
 | `SyncTokenEnvVar`, `SyncTokensEnvVar`, `SyncPortEnvVar`, `SyncDataDirEnvVar`, `MonitorIndexEnvVar` | `ALDUNE_*` | Variables de entorno del cliente y del servidor. |
-| `Legacy*` | `Fanote`, `FANOTE_*`, `fanote-profile-*` | Compatibilidad con lo anterior: **no se toca** al renombrar. |
+| `Legacy*` | `Fanote`, `fanote-profile-*` | Compatibilidad con lo anterior: **no se toca** al renombrar. |
 
 El icono vive en `src/Aldune/Assets/`: `aldune.ico` (el que usan el ejecutable y el instalador) y los
 `.svg` de origen (`aldune-logo.svg`, `aldune-logo-small.svg`).
@@ -68,11 +68,12 @@ sincronizar. Están marcados como `Legacy*` a propósito:
 | `LegacyAppDataDirectoryName` | `Fanote` | `App.xaml.cs` migra `%LOCALAPPDATA%\Fanote` a la carpeta nueva una sola vez, en el primer arranque. |
 | `LegacyStartupRegistryKey` | `Fanote` | Migración del valor anterior del arranque automático. |
 | `LegacySyncProfileCodePrefixes` | `fanote-profile-v2:`, `fanote-profile-v1:` | Los códigos de perfil ya compartidos siguen importándose. |
-| `LegacySync*EnvVar`, `LegacyMonitorIndexEnvVar` | `FANOTE_*` | `.env` y servidores ya desplegados. |
-| Fallbacks de `FANOTE_*` en `SyncService`, `App.xaml.cs` y `SyncServer/Program.cs` | — | Leer el token de un `.env` o de un pegado antiguo. |
-| Nombre físico del volumen Docker | `fanote-sync-data` | Los datos del servidor viven ahí; el alias lógico ya se llama `aldune-sync-data`. |
-| Rutas `docs/superpowers/**/…fanote…md` | — | Son documentos históricos fechados: el nombre del fichero forma parte del histórico y hay enlaces que apuntan a él. |
-| Borrado de `fanote.exe` en `build-installer.ps1` | — | Limpieza del portable antiguo si quedó en `publish/portable`. |
+| Volumen Docker de un servidor que ya sincronizaba | `fanote-sync-data` | Se conserva poniendo `ALDUNE_SYNC_VOLUME=fanote-sync-data` en el `.env` del servidor; por defecto el volumen nuevo se llama `aldune-sync-data`. Ver `SYNC.md`. |
+| Entradas históricas de `docs/STATUS.md` y `docs/superpowers/` | — | Describen lo que se hizo cuando la aplicación se llamaba Fanote; son un registro, no configuración. |
+
+
+Las variables de entorno `FANOTE_*` **dejaron de aceptarse** el 2026-09-15: las únicas válidas son
+las `ALDUNE_*`, y hubo que renombrarlas en los `.env` existentes.
 
 ## Comprobar que no quedan restos
 

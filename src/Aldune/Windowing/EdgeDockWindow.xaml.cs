@@ -125,8 +125,8 @@ public partial class EdgeDockWindow : Window
         _fullscreenPollTimer.Start();
 
         // No depende del foco de la ventana. El dock usa WS_EX_NOACTIVATE para no robar el foco a la
-        // aplicaciÃ³n que el usuario estÃ¡ usando, pero sus flechas deben responder al clic y mantener
-        // pulsado aunque esa aplicaciÃ³n siga activa.
+        // aplicación que el usuario está usando, pero sus flechas deben responder al clic y mantener
+        // pulsado aunque esa aplicación siga activa.
         _arrowScrollTimer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(55) };
         _arrowScrollTimer.Tick += (_, _) =>
         {
@@ -847,9 +847,9 @@ public partial class EdgeDockWindow : Window
         _arrowScrollTimer.Start();
         ((UIElement)sender).CaptureMouse();
 
-        // El clic ya es una elecciÃ³n explÃ­cita del usuario. Solo en ese caso permitimos que el dock
-        // reciba el foco, para que despuÃ©s ↑/↓ y PageUp/PageDown funcionen; el simple hover sigue sin
-        // robar el foco a la aplicaciÃ³n que estaba usando.
+        // El clic ya es una elección explícita del usuario. Solo en ese caso permitimos que el dock
+        // reciba el foco, para que después ↑/↓ y PageUp/PageDown funcionen; el simple hover sigue sin
+        // robar el foco a la aplicación que estaba usando.
         NativeMethods.AllowActivation(_hwnd);
         NativeMethods.ForceActivate(this);
         Keyboard.Focus(TabsScroll);
@@ -1049,7 +1049,7 @@ public partial class EdgeDockWindow : Window
         }
 
         // Antes de que WPF genere los primeros contenedores, el viewport sirve como reserva para
-        // que la primera apertura no se cierre durante el layout. DespuÃ©s solo las tarjetas reales
+        // que la primera apertura no se cierre durante el layout. Después solo las tarjetas reales
         // mantienen abierto el dock.
         return _tabButtons.Count == 0;
     }
@@ -1310,8 +1310,8 @@ public partial class EdgeDockWindow : Window
         RaiseOpenAllMenu();
 
         // Las notas son ventanas Topmost porque ese es el comportamiento de los post-its. El
-        // ContextMenu vive en otro HWND, asÃ­ que un post-it colocado justo debajo podrÃ­a pintarse
-        // por encima de este selector. Se eleva solo mientras estÃ¡ abierto y no roba el foco.
+        // ContextMenu vive en otro HWND, así que un post-it colocado justo debajo podría pintarse
+        // por encima de este selector. Se eleva solo mientras está abierto y no roba el foco.
         Dispatcher.BeginInvoke(DispatcherPriority.Loaded, new Action(() =>
         {
             if (menu.IsOpen) RaiseOpenAllMenu();

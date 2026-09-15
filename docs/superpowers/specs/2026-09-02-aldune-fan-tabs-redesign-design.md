@@ -1,4 +1,4 @@
-# Fanote — Rediseño de pestañas en abanico (design spec)
+# Aldune — Rediseño de pestañas en abanico (design spec)
 
 Rediseña cómo se muestra el panel desplegado del dock: de una lista de
 botones en un `ItemsControl`/`ScrollViewer` a pestañas individuales
@@ -178,7 +178,7 @@ construir la `NoteWindow`.
 
 ## Testing
 
-Sin lógica nueva de `Fanote.Core` que testear — la posición de cada
+Sin lógica nueva de `Aldune.Core` que testear — la posición de cada
 pestaña es layout estándar de WPF, y la posición en pantalla para animar
 la apertura se lee con `PointToScreen` en el momento del clic, sin
 cálculo propio que aislar en una función pura. Se verifica a mano,

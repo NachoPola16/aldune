@@ -40,10 +40,10 @@ public sealed class AppSettings
     /// <summary>Clave de sincronización protegida para este usuario y equipo, nunca subida al transporte.</summary>
     public byte[]? WrappedSyncKey { get; set; }
 
-    /// <summary>Clave nueva pendiente de publicar durante una revocaciÃ³n segura.</summary>
+    /// <summary>Clave nueva pendiente de publicar durante una revocación segura.</summary>
     public byte[]? WrappedPendingSyncKey { get; set; }
 
-    /// <summary>Indica que hay una rotaciÃ³n de clave que debe poder reanudarse tras un cierre.</summary>
+    /// <summary>Indica que hay una rotación de clave que debe poder reanudarse tras un cierre.</summary>
     public bool SyncKeyRotationPending { get; set; }
 
     /// <summary>Si este vínculo sincroniza todo el cuaderno o solo una selección local.</summary>
@@ -108,7 +108,7 @@ public sealed class AppSettings
     /// </summary>
     public bool RememberNotePositions { get; set; } = true;
 
-    /// <summary>DistribuciÃ³n que usa el botÃ³n de abrir todas por defecto.</summary>
+    /// <summary>Distribución que usa el botón de abrir todas por defecto.</summary>
     public NoteLayoutTemplate DefaultNoteLayout { get; set; } = NoteLayoutTemplate.Normal;
 
     /// <summary>

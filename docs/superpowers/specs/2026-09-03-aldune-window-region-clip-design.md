@@ -1,4 +1,4 @@
-# Fanote — Recorte de forma del panel desplegado con SetWindowRgn (design spec)
+# Aldune — Recorte de forma del panel desplegado con SetWindowRgn (design spec)
 
 Quita el fondo oscuro rectangular que hoy queda visible en los "escalones"
 entre pestañas de distinto ancho (una vez implementado el diseño de
@@ -11,7 +11,7 @@ implementar en código", para el contexto de cómo surgió esto.
 
 ## Contexto y motivación
 
-El rediseño de pestañas en abanico (`2026-09-02-fanote-fan-tabs-redesign-design.md`)
+El rediseño de pestañas en abanico (`2026-09-02-aldune-fan-tabs-redesign-design.md`)
 cambió la interacción pero dejó fuera de alcance explícitamente el ancho de
 cada pestaña — hoy todas ocupan el ancho completo del panel
 (`EdgeGeometry.ExpandedThickness=220`). Una maqueta visual externa, iterada en 4 rondas,
@@ -40,11 +40,11 @@ Win32, no con transparencia WPF.
   pestaña (redondeado solo en el lado libre, cuadrado en el lado pegado
   al borde de pantalla) más un rectángulo plano para la fila de botones
   "+"/engranaje.
-- Nueva función pura `Fanote.Core.TabRegionShape.BuildRegion(...)`
+- Nueva función pura `Aldune.Core.TabRegionShape.BuildRegion(...)`
   (testeable con `dotnet test`, sin Win32) que calcula qué piezas
   (rectángulo + radio de esquina) forman la silueta, a partir de los
   rects de pestaña y del footer.
-- Nuevo interop en `Fanote.Interop.NativeMethods`
+- Nuevo interop en `Aldune.Interop.NativeMethods`
   (`CreateRoundRectRgn`/`CreateRectRgn`/`CombineRgn`/`SetWindowRgn`/
   `DeleteObject`) y un punto de aplicación en `EdgeDockWindow` que
   construye el `HRGN` a partir de las piezas y lo aplica/quita en los
@@ -82,12 +82,12 @@ Win32, no con transparencia WPF.
 
 ## Componentes y cambios
 
-### `Fanote.Core.TabRegionShape` (nuevo)
+### `Aldune.Core.TabRegionShape` (nuevo)
 
 Función pura, sin Win32, testeable:
 
 ```csharp
-namespace Fanote.Core;
+namespace Aldune.Core;
 
 public readonly record struct RegionPiece(Rect Bounds, double CornerRadius);
 
@@ -116,10 +116,10 @@ importe cómo se combinan a nivel Win32. Deliberadamente simple: la única
 lógica real es "una pieza redondeada por pestaña más una plana para el
 footer", así que no hay mucho que testear más allá de recuento de piezas
 y que el footer sale con radio 0 — pero se hace TDD igualmente por
-consistencia con el resto de `Fanote.Core` y porque es el único sitio
+consistencia con el resto de `Aldune.Core` y porque es el único sitio
 donde se puede verificar esto sin lanzar la app real.
 
-### `Fanote.Interop.NativeMethods` — nuevas declaraciones
+### `Aldune.Interop.NativeMethods` — nuevas declaraciones
 
 ```csharp
 [DllImport("gdi32.dll")]
@@ -154,7 +154,7 @@ Dos métodos internos nuevos, siguiendo el mismo estilo que
 /// del último HRGN que le pasa a SetWindowRgn (Windows lo libera él solo); cualquier HRGN
 /// intermedio que no llegue a eso se libera aquí mismo con DeleteObject.
 /// </summary>
-internal static void SetTabFanRegion(IntPtr hWnd, IReadOnlyList<Fanote.Core.RegionPiece> pieces)
+internal static void SetTabFanRegion(IntPtr hWnd, IReadOnlyList<Aldune.Core.RegionPiece> pieces)
 {
     IntPtr accumulated = CreateRectRgn(0, 0, 0, 0);
     foreach (var (bounds, cornerRadius) in pieces)
@@ -259,19 +259,19 @@ resuelto):
 
 ```csharp
 var dpi = VisualTreeHelper.GetDpi(this);
-var tabRects = new List<Fanote.Core.Rect>();
+var tabRects = new List<Aldune.Core.Rect>();
 for (int i = 0; i < TabsList.Items.Count; i++)
 {
     if (TabsList.ItemContainerGenerator.ContainerFromIndex(i) is Button button)
     {
         var origin = button.TranslatePoint(new Point(0, 0), this); // DIP, relativo a esta ventana
-        tabRects.Add(new Fanote.Core.Rect(
+        tabRects.Add(new Aldune.Core.Rect(
             origin.X * dpi.DpiScaleX, origin.Y * dpi.DpiScaleY,
             button.ActualWidth * dpi.DpiScaleX, button.ActualHeight * dpi.DpiScaleY));
     }
 }
 var footerOrigin = FooterPanel.TranslatePoint(new Point(0, 0), this);
-var footerRect = new Fanote.Core.Rect(
+var footerRect = new Aldune.Core.Rect(
     footerOrigin.X * dpi.DpiScaleX, footerOrigin.Y * dpi.DpiScaleY,
     FooterPanel.ActualWidth * dpi.DpiScaleX, FooterPanel.ActualHeight * dpi.DpiScaleY);
 
@@ -310,7 +310,7 @@ partan del mismo elemento.
 
 ## Testing
 
-- `TabRegionShape.BuildRegionTests` (TDD, `Fanote.Core.Tests` o el
+- `TabRegionShape.BuildRegionTests` (TDD, `Aldune.Core.Tests` o el
   proyecto de test que corresponda): 0 pestañas (solo footer), 1
   pestaña, N pestañas, que cada pestaña sale con el `cornerRadius` dado
   y el footer con 0.

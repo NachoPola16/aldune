@@ -60,7 +60,7 @@ public static class Strings
     public static string CustomColorPreview => T("Preview", "Vista previa");
     public static string CustomColorSpectrumHint => T(
         "Pick a tone visually, then fine-tune it below.",
-        "Elige un tono visualmente y ajÃºstalo debajo.");
+        "Elige un tono visualmente y ajústalo debajo.");
     public static string CustomColorHexLabel => T("HEX color", "Color HEX");
     public static string CustomColorRgbLabel => T("Fine tune with RGB", "Ajuste fino con RGB");
     public static string CustomColorReadable => T("Readable text", "Texto legible");
@@ -271,21 +271,21 @@ public static class Strings
         "Los códigos antiguos del perfil han sido revocados. Genera y comparte una invitación nueva con los dispositivos autorizados.");
     public static string SyncShareCodeHint => T(
         "This invitation also carries the profile name and self-hosted server URL. It never contains the access token.",
-        "Esta invitaciÃ³n tambiÃ©n lleva el nombre del perfil y la URL del servidor propio. Nunca contiene el token de acceso.");
-    public static string SyncShareCodeCopiedStatus => T("Profile code copied to the clipboard.", "CÃ³digo de perfil copiado al portapapeles.");
+        "Esta invitación también lleva el nombre del perfil y la URL del servidor propio. Nunca contiene el token de acceso.");
+    public static string SyncShareCodeCopiedStatus => T("Profile code copied to the clipboard.", "Código de perfil copiado al portapapeles.");
     public static string SyncImportCodeButton => T("Import code", "Importar código");
     public static string SyncNowButton => T("Sync now", "Sincronizar ahora");
-    public static string SyncProfileLabel => T("Sync profile", "Perfil de sincronizaciÃ³n");
+    public static string SyncProfileLabel => T("Sync profile", "Perfil de sincronización");
     public static string SyncProfileNameLabel => T("Name:", "Nombre:");
     public static string SyncNewProfile => T("New", "Nuevo");
     public static string SyncDeleteProfile => T("Delete", "Eliminar");
-    public static string SyncProfileNewName(int number) => T($"Sync link {number}", $"VÃ­nculo {number}");
+    public static string SyncProfileNewName(int number) => T($"Sync link {number}", $"Vínculo {number}");
     public static string SyncProfileDeleteConfirm => T(
         "Delete this sync profile? Its local connection settings will be removed.",
-        "Â¿Eliminar este perfil de sincronizaciÃ³n? Se borrarÃ¡n sus ajustes de conexiÃ³n locales.");
+        "¿Eliminar este perfil de sincronización? Se borrarán sus ajustes de conexión locales.");
     public static string SyncProfileLastRemaining => T(
         "Keep at least one sync profile.",
-        "Debe quedar al menos un perfil de sincronizaciÃ³n.");
+        "Debe quedar al menos un perfil de sincronización.");
     public static string SyncScopeAll => T("All notes", "Todas las notas");
     public static string SyncScopeSelected => T("Selected notes", "Notas seleccionadas");
     public static string SyncScopeHint => T(

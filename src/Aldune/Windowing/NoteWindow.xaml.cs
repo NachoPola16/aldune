@@ -428,7 +428,7 @@ public partial class NoteWindow : Window
         scale.BeginAnimation(ScaleTransform.ScaleYProperty, new DoubleAnimation(0.95, 1, duration) { EasingFunction = Ease() });
     }
 
-    /// <summary>Desplaza la nota suavemente al elegir otra plantilla de disposiciÃ³n.</summary>
+    /// <summary>Desplaza la nota suavemente al elegir otra plantilla de disposición.</summary>
     internal void MoveToLayoutPosition(double left, double top)
     {
         BeginAnimation(LeftProperty, null);
@@ -842,8 +842,8 @@ public partial class NoteWindow : Window
             return;
         }
 
-        // El tope de ajuste automÃ¡tico protege el tamaÃ±o normal de una nota, pero no debe impedir
-        // que el usuario elija ocupar toda la pantalla de forma explÃ­cita.
+        // El tope de ajuste automático protege el tamaño normal de una nota, pero no debe impedir
+        // que el usuario elija ocupar toda la pantalla de forma explícita.
         MaxHeight = double.PositiveInfinity;
         MaxWidth = double.PositiveInfinity;
         WindowState = WindowState.Maximized;

@@ -6,9 +6,9 @@ services:
     container_name: aldune-sync
     restart: unless-stopped
     environment:
-      # ALDUNE_* es el nombre actual; el fallback conserva los .env antiguos.
-      ALDUNE_SYNC_TOKEN: ${ALDUNE_SYNC_TOKEN:-${FANOTE_SYNC_TOKEN:-}}
-      ALDUNE_SYNC_TOKENS: ${ALDUNE_SYNC_TOKENS:-${FANOTE_SYNC_TOKENS:-}}
+      # Nombres de las variables: BrandIdentity.SyncTokenEnvVar / SyncTokensEnvVar (Aldune.Core).
+      ALDUNE_SYNC_TOKEN: ${ALDUNE_SYNC_TOKEN:-}
+      ALDUNE_SYNC_TOKENS: ${ALDUNE_SYNC_TOKENS:-}
       ALDUNE_DATA_DIR: /data
       ASPNETCORE_URLS: http://+:8080
     expose:
@@ -21,7 +21,7 @@ services:
     container_name: aldune-sync-caddy
     restart: unless-stopped
     environment:
-      ALDUNE_SYNC_DOMAIN: ${ALDUNE_SYNC_DOMAIN:-${FANOTE_SYNC_DOMAIN:?Define ALDUNE_SYNC_DOMAIN (or legacy FANOTE_SYNC_DOMAIN) in .env}}
+      ALDUNE_SYNC_DOMAIN: ${ALDUNE_SYNC_DOMAIN:?Define ALDUNE_SYNC_DOMAIN in .env}
     ports:
       - "80:80"
       - "443:443"
@@ -33,8 +33,10 @@ services:
       - aldune-sync
 
 volumes:
-  # Mantiene el nombre físico anterior para no perder los datos ya sincronizados.
+  # Nombre fisico del volumen en el servidor. Es configurable para que un servidor que ya
+  # sincronizaba antes del cambio de marca siga usando el volumen que tenia, en vez de arrancar
+  # con un almacen vacio: ver docs/SYNC.md, 'Migrar un servidor que ya sincronizaba'.
   aldune-sync-data:
-    name: fanote-sync-data
+    name: ${ALDUNE_SYNC_VOLUME:-aldune-sync-data}
   caddy-data:
   caddy-config:

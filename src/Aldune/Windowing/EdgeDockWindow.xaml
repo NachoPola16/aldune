@@ -229,8 +229,8 @@
         </Style>
 
         <!-- El ContextMenu nativo trae un marco y una sombra del tema de Windows que no pertenecen
-             al dock. El panel interior ya dibuja su propia superficie, radio y sombra, asÃ­ que el
-             contenedor del menÃº solo debe presentar los elementos sin aÃ±adir otra caja. -->
+             al dock. El panel interior ya dibuja su propia superficie, radio y sombra, así que el
+             contenedor del menú solo debe presentar los elementos sin añadir otra caja. -->
         <Style x:Key="DockContextMenuStyle" TargetType="ContextMenu">
             <Setter Property="Background" Value="Transparent" />
             <Setter Property="BorderBrush" Value="Transparent" />
@@ -417,9 +417,9 @@
                 </Canvas>
                 </Grid>
 
-            <!-- En los docks superior e inferior la barra vertical se sustituye por una indicaciÃ³n
-                 de navegaciÃ³n mÃ¡s natural para la columna de tarjetas: dos flechas pequeÃ±as,
-                 colocadas en el mismo canto que ocuparÃ­a el rail. La rueda sigue desplazando la
+            <!-- En los docks superior e inferior la barra vertical se sustituye por una indicación
+                 de navegación más natural para la columna de tarjetas: dos flechas pequeñas,
+                 colocadas en el mismo canto que ocuparía el rail. La rueda sigue desplazando la
                  lista y las flechas del teclado funcionan cuando el dock tiene el foco. -->
                 <StackPanel x:Name="ScrollArrowOverlay"
                             Width="26"

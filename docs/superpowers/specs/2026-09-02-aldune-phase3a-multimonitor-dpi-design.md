@@ -1,4 +1,4 @@
-# Fanote Fase 3a — Multi-monitor real + DPI por monitor (design spec)
+# Aldune Fase 3a — Multi-monitor real + DPI por monitor (design spec)
 
 Primera sub-entrega de la Fase 3 (multi-monitor + DPI, ver
 `docs/STATUS.md`). La Fase 3 completa se troceó porque mezcla piezas
@@ -11,7 +11,7 @@ un monitor.
 
 ## Contexto y motivación
 
-Hoy Fanote crea un único `EdgeDockWindow`, siempre en el monitor
+Hoy Aldune crea un único `EdgeDockWindow`, siempre en el monitor
 principal, usando `SystemParameters.WorkArea` para su geometría — una
 API de WPF que **solo devuelve el área de trabajo del monitor
 principal**, sin importar cuántos monitores haya conectados. Tampoco
@@ -19,7 +19,7 @@ existe ningún `app.manifest` que declare a la aplicación consciente de
 DPI por monitor (`PerMonitorV2`), así que hoy corre bajo el
 comportamiento por defecto de Windows para un proceso sin declarar.
 
-Esto es exactamente el hueco que la spec v1 (`2026-08-30-fanote-v1-design.md`)
+Esto es exactamente el hueco que la spec v1 (`2026-08-30-aldune-v1-design.md`)
 señala en su sección "Núcleo": "consciente de DPI por monitor (Per-Monitor
 V2)" y "multi-monitor: la app puede mostrarse en todas las pantallas
 conectadas". Los prerrequisitos ya identificados en `docs/STATUS.md` tras
@@ -83,7 +83,7 @@ la revisión final de la Fase 2 son el punto de partida de este diseño:
 
 ## Componentes
 
-### `Fanote.Core.MonitorInfo` (nuevo)
+### `Aldune.Core.MonitorInfo` (nuevo)
 
 Tipo de dato puro, sin dependencias de Win32/WPF — fácil de testear:
 
@@ -97,7 +97,7 @@ public readonly record struct MonitorInfo(
     bool IsPrimary);
 ```
 
-### Conversión píxeles → DIP (nuevo, `Fanote.Core`)
+### Conversión píxeles → DIP (nuevo, `Aldune.Core`)
 
 Win32 da rectángulos en píxeles físicos; WPF interpreta
 `Window.Left/Top/Width/Height` en DIPs relativas a la escala de DPI de
@@ -118,7 +118,7 @@ Con esto, **`EdgeGeometry.cs` no cambia nada** — sus cálculos de
 importa la unidad mientras sea consistente. Cada dock recibe ya las
 DIPs correctas de su propio monitor.
 
-### Enumeración de monitores (nuevo, `Fanote.Interop`)
+### Enumeración de monitores (nuevo, `Aldune.Interop`)
 
 Nuevos métodos junto a `NativeMethods.cs` (o un fichero nuevo
 `MonitorEnumerator.cs` en el mismo namespace si `NativeMethods.cs` se
@@ -134,16 +134,16 @@ patrón ya establecido en el proyecto (`NativeMethods.cs`) y con la
 justificación de stack tecnológico de la spec v1 ("acceso completo a
 Win32 vía P/Invoke cuando hace falta bajar de nivel").
 
-### `app.manifest` (nuevo, `src/Fanote/`)
+### `app.manifest` (nuevo, `src/Aldune/`)
 
 Declara `<dpiAwareness>PerMonitorV2</dpiAwareness>` (namespace
 `http://schemas.microsoft.com/SMI/2016/WindowsSettings`). Referenciado
-desde `Fanote.csproj`. Sin esto, nada de lo anterior tiene efecto:
+desde `Aldune.csproj`. Sin esto, nada de lo anterior tiene efecto:
 Windows seguiría tratando a la app como no consciente de DPI por
 monitor y escalaría un mapa de bits ya renderizado en vez de dejar que
 cada ventana se renderice nítida en su propio monitor.
 
-### `AppCoordinator` (nuevo, `Fanote.Windowing`)
+### `AppCoordinator` (nuevo, `Aldune.Windowing`)
 
 Una sola instancia para toda la app (no una por dock). Sustituye lo que
 hoy vive dentro de `EdgeDockWindow`:
@@ -255,7 +255,7 @@ repartidas entre monitores.
 ## Testing
 
 - `DpiConversion.ToWorkingArea`: tests unitarios normales en
-  `Fanote.Core.Tests`, con varias escalas (100%, 150%, 200%) — pura
+  `Aldune.Core.Tests`, con varias escalas (100%, 150%, 200%) — pura
   aritmética, sin Win32 de por medio.
 - `MonitorInfo`: tipo de dato, sin lógica propia que testear más allá de
   la conversión anterior.
@@ -283,9 +283,9 @@ repartidas entre monitores.
 
 ## Orden de implementación sugerido
 
-1. `Fanote.Core.MonitorInfo` + `DpiConversion` (TDD, sin dependencias).
+1. `Aldune.Core.MonitorInfo` + `DpiConversion` (TDD, sin dependencias).
 2. `app.manifest` + enumeración Win32 de monitores
-   (`Fanote.Interop`) — verificable con un `Console.WriteLine` temporal
+   (`Aldune.Interop`) — verificable con un `Console.WriteLine` temporal
    o test manual antes de tocar las ventanas.
 3. `AppCoordinator` (aún sin usar).
 4. Refactor de `EdgeDockWindow`/`NoteWindow`/`NotesManagerWindow` para

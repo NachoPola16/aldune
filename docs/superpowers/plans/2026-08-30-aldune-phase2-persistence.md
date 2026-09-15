@@ -1,18 +1,18 @@
-# Fanote Phase 2: Persistence Implementation Plan
+# Aldune Phase 2: Persistence Implementation Plan
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** Replace Phase 1's three hardcoded fake in-memory notes with real, encrypted, persisted notes: SQLite storage, envelope encryption (AES-GCM content key wrapped via Windows DPAPI), CRUD, archive/trash state, and autosave with debounce + flush-on-exit.
 
-**Architecture:** All persistence logic (`Note`/`NoteState`, `ContentCipher`, `DatabaseKeyProvider`, `SettingsService`, `NotesDatabase`, `NotesRepository`) lives in `Fanote.Core` — none of it depends on WPF, only on SQLite (via `Microsoft.Data.Sqlite`) and Windows' DPAPI (via `System.Security.Cryptography.ProtectedData`, which works from any TFM but only functions at runtime on Windows — acceptable since Fanote is Windows-only per the spec). This keeps the whole persistence layer unit-testable against real temp SQLite files and real DPAPI round-trips, with zero UI thread involved. The `Fanote` WPF project only wires this layer into `App.xaml.cs` (bootstrap), `EdgeDockWindow` (load real notes, add a "new note" affordance), and `NoteWindow` (autosave, archive/trash actions).
+**Architecture:** All persistence logic (`Note`/`NoteState`, `ContentCipher`, `DatabaseKeyProvider`, `SettingsService`, `NotesDatabase`, `NotesRepository`) lives in `Aldune.Core` — none of it depends on WPF, only on SQLite (via `Microsoft.Data.Sqlite`) and Windows' DPAPI (via `System.Security.Cryptography.ProtectedData`, which works from any TFM but only functions at runtime on Windows — acceptable since Aldune is Windows-only per the spec). This keeps the whole persistence layer unit-testable against real temp SQLite files and real DPAPI round-trips, with zero UI thread involved. The `Aldune` WPF project only wires this layer into `App.xaml.cs` (bootstrap), `EdgeDockWindow` (load real notes, add a "new note" affordance), and `NoteWindow` (autosave, archive/trash actions).
 
 **Tech Stack:** C# / .NET 10, `Microsoft.Data.Sqlite` (SQLite access), `System.Security.Cryptography.AesGcm` (built into .NET, no package needed — content encryption), `System.Security.Cryptography.ProtectedData` (DPAPI key wrapping), `System.Text.Json` (settings file), xUnit.
 
-**Spec:** `docs/superpowers/specs/2026-08-30-fanote-v1-design.md` (sections: Modelo de datos, Almacenamiento, Manejo de errores)
+**Spec:** `docs/superpowers/specs/2026-08-30-aldune-v1-design.md` (sections: Modelo de datos, Almacenamiento, Manejo de errores)
 
 ## Global Constraints
 
-- All persistence code lives in `Fanote.Core` (`net10.0`, no `System.Windows.*` references) — same rule as Phase 1, extended to the new domain.
+- All persistence code lives in `Aldune.Core` (`net10.0`, no `System.Windows.*` references) — same rule as Phase 1, extended to the new domain.
 - Content is encrypted with AES-256-GCM using a per-database key; that key (not each note individually) is wrapped with DPAPI (`DataProtectionScope.CurrentUser`) and stored in the local settings file, per the spec's envelope-encryption design.
 - Note state is a single enum (`Active` / `Archived` / `Trashed`) — archiving and trashing are the same mechanism with a different value, not two systems (per spec).
 - Autosave has no visible "Save" button; edits persist via a debounced write, and any pending debounced write is flushed immediately on app/window close (per spec).
@@ -23,12 +23,12 @@
 ### Task 1: Add dependencies; replace the Phase 1 placeholder `NoteModel` with the real `Note`/`NoteState` shape
 
 **Files:**
-- Modify: `src/Fanote.Core/Fanote.Core.csproj` (add package references)
-- Delete: `src/Fanote.Core/NoteModel.cs`
-- Create: `src/Fanote.Core/Note.cs`
-- Modify: `src/Fanote/Windowing/EdgeDockWindow.xaml.cs` (update `SetNotes`/`OnTabClick` to use `Note` instead of `NoteModel`)
-- Modify: `src/Fanote/Windowing/NoteWindow.xaml.cs` (update constructor parameter type)
-- Modify: `src/Fanote/App.xaml.cs` (update the 3 fake notes' construction to the new shape — temporary, replaced for real in Task 8)
+- Modify: `src/Aldune.Core/Aldune.Core.csproj` (add package references)
+- Delete: `src/Aldune.Core/NoteModel.cs`
+- Create: `src/Aldune.Core/Note.cs`
+- Modify: `src/Aldune/Windowing/EdgeDockWindow.xaml.cs` (update `SetNotes`/`OnTabClick` to use `Note` instead of `NoteModel`)
+- Modify: `src/Aldune/Windowing/NoteWindow.xaml.cs` (update constructor parameter type)
+- Modify: `src/Aldune/App.xaml.cs` (update the 3 fake notes' construction to the new shape — temporary, replaced for real in Task 8)
 
 **Interfaces:**
 - Produces: `NoteState` enum (`Active`, `Archived`, `Trashed`); `Note` class with `Guid Id`, `string Text` (mutable), `string Color` (mutable), `DateTimeOffset CreatedAt`, `DateTimeOffset UpdatedAt` (mutable), `NoteState State` (mutable), `string ScreenOrigin` (mutable) — this is the full shape from the spec's Modelo de datos section. `ScreenOrigin` is unused until Phase 3 (multi-monitor) but included now since it's a schema-shape decision, cheaper to make once than to migrate later.
@@ -37,17 +37,17 @@
 - [ ] **Step 1: Add package references**
 
 ```bash
-dotnet add src/Fanote.Core/Fanote.Core.csproj package Microsoft.Data.Sqlite
-dotnet add src/Fanote.Core/Fanote.Core.csproj package System.Security.Cryptography.ProtectedData
+dotnet add src/Aldune.Core/Aldune.Core.csproj package Microsoft.Data.Sqlite
+dotnet add src/Aldune.Core/Aldune.Core.csproj package System.Security.Cryptography.ProtectedData
 ```
 
 - [ ] **Step 2: Delete the Phase 1 placeholder and create the real `Note` shape**
 
-Delete `src/Fanote.Core/NoteModel.cs`.
+Delete `src/Aldune.Core/NoteModel.cs`.
 
 ```csharp
-// src/Fanote.Core/Note.cs
-namespace Fanote.Core;
+// src/Aldune.Core/Note.cs
+namespace Aldune.Core;
 
 public enum NoteState
 {
@@ -73,7 +73,7 @@ public sealed class Note
 Replace every `NoteModel` reference with `Note`:
 
 ```csharp
-// src/Fanote/Windowing/EdgeDockWindow.xaml.cs — SetNotes and OnTabClick
+// src/Aldune/Windowing/EdgeDockWindow.xaml.cs — SetNotes and OnTabClick
 public void SetNotes(IReadOnlyList<Note> notes)
 {
     TabsList.ItemsSource = notes;
@@ -95,7 +95,7 @@ private void OnTabClick(object sender, RoutedEventArgs e)
 - [ ] **Step 4: Update `NoteWindow.xaml.cs`**
 
 ```csharp
-// src/Fanote/Windowing/NoteWindow.xaml.cs
+// src/Aldune/Windowing/NoteWindow.xaml.cs
 public partial class NoteWindow : Window
 {
     public NoteWindow(Note note)
@@ -110,7 +110,7 @@ public partial class NoteWindow : Window
 - [ ] **Step 5: Update the 3 fake notes in `App.xaml.cs` to the new shape (temporary — Task 8 replaces this block entirely with real persistence)**
 
 ```csharp
-// src/Fanote/App.xaml.cs — inside OnStartup, replace the SetNotes(new[] { ... }) call
+// src/Aldune/App.xaml.cs — inside OnStartup, replace the SetNotes(new[] { ... }) call
 var now = DateTimeOffset.UtcNow;
 dock.SetNotes(new[]
 {
@@ -123,15 +123,15 @@ dock.SetNotes(new[]
 - [ ] **Step 6: Build and verify**
 
 Run: `dotnet build`
-Expected: Build succeeds, 0 errors. (Existing `Fanote.Core.Tests` still pass unchanged — this task touches no tested logic.)
+Expected: Build succeeds, 0 errors. (Existing `Aldune.Core.Tests` still pass unchanged — this task touches no tested logic.)
 
-Run: `dotnet run --project src/Fanote`, confirm the app still launches and shows the 3 fake notes exactly as in Phase 1 (this task is a pure rename/reshape, behavior must be identical). Terminate the process after confirming.
+Run: `dotnet run --project src/Aldune`, confirm the app still launches and shows the 3 fake notes exactly as in Phase 1 (this task is a pure rename/reshape, behavior must be identical). Terminate the process after confirming.
 
 - [ ] **Step 7: Commit**
 
 ```bash
-git add src/Fanote.Core/Fanote.Core.csproj src/Fanote.Core/Note.cs src/Fanote/Windowing/EdgeDockWindow.xaml.cs src/Fanote/Windowing/NoteWindow.xaml.cs src/Fanote/App.xaml.cs
-git rm src/Fanote.Core/NoteModel.cs
+git add src/Aldune.Core/Aldune.Core.csproj src/Aldune.Core/Note.cs src/Aldune/Windowing/EdgeDockWindow.xaml.cs src/Aldune/Windowing/NoteWindow.xaml.cs src/Aldune/App.xaml.cs
+git rm src/Aldune.Core/NoteModel.cs
 git commit -m "Replace placeholder NoteModel with the real Note/NoteState shape"
 ```
 
@@ -140,8 +140,8 @@ git commit -m "Replace placeholder NoteModel with the real Note/NoteState shape"
 ### Task 2: `ContentCipher` — AES-GCM encryption for note text
 
 **Files:**
-- Create: `src/Fanote.Core/ContentCipher.cs`
-- Test: `tests/Fanote.Core.Tests/ContentCipherTests.cs`
+- Create: `src/Aldune.Core/ContentCipher.cs`
+- Test: `tests/Aldune.Core.Tests/ContentCipherTests.cs`
 
 **Interfaces:**
 - Produces: `readonly record struct EncryptedContent(byte[] CipherText, byte[] Nonce, byte[] Tag)`; `ContentCipher` class with constructor `ContentCipher(byte[] key)` (32-byte AES-256 key), methods `EncryptedContent Encrypt(string plainText)` and `string Decrypt(EncryptedContent encrypted)`.
@@ -150,12 +150,12 @@ git commit -m "Replace placeholder NoteModel with the real Note/NoteState shape"
 - [ ] **Step 1: Write the failing tests**
 
 ```csharp
-// tests/Fanote.Core.Tests/ContentCipherTests.cs
+// tests/Aldune.Core.Tests/ContentCipherTests.cs
 using System.Security.Cryptography;
-using Fanote.Core;
+using Aldune.Core;
 using Xunit;
 
-namespace Fanote.Core.Tests;
+namespace Aldune.Core.Tests;
 
 public class ContentCipherTests
 {
@@ -208,17 +208,17 @@ public class ContentCipherTests
 
 - [ ] **Step 2: Run tests to verify they fail**
 
-Run: `dotnet test tests/Fanote.Core.Tests`
+Run: `dotnet test tests/Aldune.Core.Tests`
 Expected: Fails to compile — `ContentCipher`/`EncryptedContent` don't exist yet.
 
 - [ ] **Step 3: Implement `ContentCipher`**
 
 ```csharp
-// src/Fanote.Core/ContentCipher.cs
+// src/Aldune.Core/ContentCipher.cs
 using System.Security.Cryptography;
 using System.Text;
 
-namespace Fanote.Core;
+namespace Aldune.Core;
 
 public readonly record struct EncryptedContent(byte[] CipherText, byte[] Nonce, byte[] Tag);
 
@@ -262,13 +262,13 @@ public sealed class ContentCipher
 
 - [ ] **Step 4: Run tests to verify they pass**
 
-Run: `dotnet test tests/Fanote.Core.Tests`
+Run: `dotnet test tests/Aldune.Core.Tests`
 Expected: All 5 new tests pass, plus all pre-existing tests still pass.
 
 - [ ] **Step 5: Commit**
 
 ```bash
-git add src/Fanote.Core/ContentCipher.cs tests/Fanote.Core.Tests/ContentCipherTests.cs
+git add src/Aldune.Core/ContentCipher.cs tests/Aldune.Core.Tests/ContentCipherTests.cs
 git commit -m "Add ContentCipher: AES-GCM encryption for note text"
 ```
 
@@ -277,8 +277,8 @@ git commit -m "Add ContentCipher: AES-GCM encryption for note text"
 ### Task 3: `DatabaseKeyProvider` — DPAPI key wrapping
 
 **Files:**
-- Create: `src/Fanote.Core/DatabaseKeyProvider.cs`
-- Test: `tests/Fanote.Core.Tests/DatabaseKeyProviderTests.cs`
+- Create: `src/Aldune.Core/DatabaseKeyProvider.cs`
+- Test: `tests/Aldune.Core.Tests/DatabaseKeyProviderTests.cs`
 
 **Interfaces:**
 - Produces: `static class DatabaseKeyProvider` with `static byte[] GenerateKey()`, `static byte[] Wrap(byte[] rawKey)`, `static byte[] Unwrap(byte[] wrappedKey)`.
@@ -289,11 +289,11 @@ This runs real DPAPI on the current Windows user session — no mocking, since t
 - [ ] **Step 1: Write the failing tests**
 
 ```csharp
-// tests/Fanote.Core.Tests/DatabaseKeyProviderTests.cs
-using Fanote.Core;
+// tests/Aldune.Core.Tests/DatabaseKeyProviderTests.cs
+using Aldune.Core;
 using Xunit;
 
-namespace Fanote.Core.Tests;
+namespace Aldune.Core.Tests;
 
 public class DatabaseKeyProviderTests
 {
@@ -333,16 +333,16 @@ public class DatabaseKeyProviderTests
 
 - [ ] **Step 2: Run tests to verify they fail**
 
-Run: `dotnet test tests/Fanote.Core.Tests`
+Run: `dotnet test tests/Aldune.Core.Tests`
 Expected: Fails to compile — `DatabaseKeyProvider` doesn't exist yet.
 
 - [ ] **Step 3: Implement `DatabaseKeyProvider`**
 
 ```csharp
-// src/Fanote.Core/DatabaseKeyProvider.cs
+// src/Aldune.Core/DatabaseKeyProvider.cs
 using System.Security.Cryptography;
 
-namespace Fanote.Core;
+namespace Aldune.Core;
 
 public static class DatabaseKeyProvider
 {
@@ -360,13 +360,13 @@ public static class DatabaseKeyProvider
 
 - [ ] **Step 4: Run tests to verify they pass**
 
-Run: `dotnet test tests/Fanote.Core.Tests`
+Run: `dotnet test tests/Aldune.Core.Tests`
 Expected: All 4 new tests pass, plus all pre-existing tests still pass.
 
 - [ ] **Step 5: Commit**
 
 ```bash
-git add src/Fanote.Core/DatabaseKeyProvider.cs tests/Fanote.Core.Tests/DatabaseKeyProviderTests.cs
+git add src/Aldune.Core/DatabaseKeyProvider.cs tests/Aldune.Core.Tests/DatabaseKeyProviderTests.cs
 git commit -m "Add DatabaseKeyProvider: DPAPI wrapping for the database content key"
 ```
 
@@ -375,9 +375,9 @@ git commit -m "Add DatabaseKeyProvider: DPAPI wrapping for the database content 
 ### Task 4: `SettingsService` — local JSON settings file holding the wrapped key
 
 **Files:**
-- Create: `src/Fanote.Core/AppSettings.cs`
-- Create: `src/Fanote.Core/SettingsService.cs`
-- Test: `tests/Fanote.Core.Tests/SettingsServiceTests.cs`
+- Create: `src/Aldune.Core/AppSettings.cs`
+- Create: `src/Aldune.Core/SettingsService.cs`
+- Test: `tests/Aldune.Core.Tests/SettingsServiceTests.cs`
 
 **Interfaces:**
 - Produces: `AppSettings` class with `byte[]? WrappedDatabaseKey { get; set; }`; `SettingsService` class with constructor `SettingsService(string settingsPath)`, methods `AppSettings Load()` (returns a fresh `AppSettings` if the file doesn't exist yet) and `void Save(AppSettings settings)`.
@@ -386,15 +386,15 @@ git commit -m "Add DatabaseKeyProvider: DPAPI wrapping for the database content 
 - [ ] **Step 1: Write the failing tests**
 
 ```csharp
-// tests/Fanote.Core.Tests/SettingsServiceTests.cs
-using Fanote.Core;
+// tests/Aldune.Core.Tests/SettingsServiceTests.cs
+using Aldune.Core;
 using Xunit;
 
-namespace Fanote.Core.Tests;
+namespace Aldune.Core.Tests;
 
 public class SettingsServiceTests : IDisposable
 {
-    private readonly string _tempDir = Path.Combine(Path.GetTempPath(), $"fanote-settings-test-{Guid.NewGuid()}");
+    private readonly string _tempDir = Path.Combine(Path.GetTempPath(), $"aldune-settings-test-{Guid.NewGuid()}");
     private readonly string _settingsPath;
 
     public SettingsServiceTests()
@@ -438,14 +438,14 @@ public class SettingsServiceTests : IDisposable
 
 - [ ] **Step 2: Run tests to verify they fail**
 
-Run: `dotnet test tests/Fanote.Core.Tests`
+Run: `dotnet test tests/Aldune.Core.Tests`
 Expected: Fails to compile — `AppSettings`/`SettingsService` don't exist yet.
 
 - [ ] **Step 3: Implement**
 
 ```csharp
-// src/Fanote.Core/AppSettings.cs
-namespace Fanote.Core;
+// src/Aldune.Core/AppSettings.cs
+namespace Aldune.Core;
 
 public sealed class AppSettings
 {
@@ -454,10 +454,10 @@ public sealed class AppSettings
 ```
 
 ```csharp
-// src/Fanote.Core/SettingsService.cs
+// src/Aldune.Core/SettingsService.cs
 using System.Text.Json;
 
-namespace Fanote.Core;
+namespace Aldune.Core;
 
 public sealed class SettingsService
 {
@@ -491,13 +491,13 @@ public sealed class SettingsService
 
 - [ ] **Step 4: Run tests to verify they pass**
 
-Run: `dotnet test tests/Fanote.Core.Tests`
+Run: `dotnet test tests/Aldune.Core.Tests`
 Expected: All 3 new tests pass, plus all pre-existing tests still pass.
 
 - [ ] **Step 5: Commit**
 
 ```bash
-git add src/Fanote.Core/AppSettings.cs src/Fanote.Core/SettingsService.cs tests/Fanote.Core.Tests/SettingsServiceTests.cs
+git add src/Aldune.Core/AppSettings.cs src/Aldune.Core/SettingsService.cs tests/Aldune.Core.Tests/SettingsServiceTests.cs
 git commit -m "Add SettingsService: local JSON settings file for the wrapped database key"
 ```
 
@@ -506,8 +506,8 @@ git commit -m "Add SettingsService: local JSON settings file for the wrapped dat
 ### Task 5: `NotesDatabase` — SQLite schema and connection
 
 **Files:**
-- Create: `src/Fanote.Core/NotesDatabase.cs`
-- Test: `tests/Fanote.Core.Tests/NotesDatabaseTests.cs`
+- Create: `src/Aldune.Core/NotesDatabase.cs`
+- Test: `tests/Aldune.Core.Tests/NotesDatabaseTests.cs`
 
 **Interfaces:**
 - Produces: `NotesDatabase` class with constructor `NotesDatabase(string databasePath)` (creates the `Note` table if it doesn't exist), method `SqliteConnection OpenConnection()` (returns a new, already-open connection — callers are responsible for disposing it).
@@ -516,15 +516,15 @@ git commit -m "Add SettingsService: local JSON settings file for the wrapped dat
 - [ ] **Step 1: Write the failing tests**
 
 ```csharp
-// tests/Fanote.Core.Tests/NotesDatabaseTests.cs
-using Fanote.Core;
+// tests/Aldune.Core.Tests/NotesDatabaseTests.cs
+using Aldune.Core;
 using Xunit;
 
-namespace Fanote.Core.Tests;
+namespace Aldune.Core.Tests;
 
 public class NotesDatabaseTests : IDisposable
 {
-    private readonly string _dbPath = Path.Combine(Path.GetTempPath(), $"fanote-test-{Guid.NewGuid()}.db");
+    private readonly string _dbPath = Path.Combine(Path.GetTempPath(), $"aldune-test-{Guid.NewGuid()}.db");
 
     public void Dispose()
     {
@@ -566,16 +566,16 @@ public class NotesDatabaseTests : IDisposable
 
 - [ ] **Step 2: Run tests to verify they fail**
 
-Run: `dotnet test tests/Fanote.Core.Tests`
+Run: `dotnet test tests/Aldune.Core.Tests`
 Expected: Fails to compile — `NotesDatabase` doesn't exist yet.
 
 - [ ] **Step 3: Implement `NotesDatabase`**
 
 ```csharp
-// src/Fanote.Core/NotesDatabase.cs
+// src/Aldune.Core/NotesDatabase.cs
 using Microsoft.Data.Sqlite;
 
-namespace Fanote.Core;
+namespace Aldune.Core;
 
 public sealed class NotesDatabase
 {
@@ -618,13 +618,13 @@ public sealed class NotesDatabase
 
 - [ ] **Step 4: Run tests to verify they pass**
 
-Run: `dotnet test tests/Fanote.Core.Tests`
+Run: `dotnet test tests/Aldune.Core.Tests`
 Expected: All 3 new tests pass, plus all pre-existing tests still pass.
 
 - [ ] **Step 5: Commit**
 
 ```bash
-git add src/Fanote.Core/NotesDatabase.cs tests/Fanote.Core.Tests/NotesDatabaseTests.cs
+git add src/Aldune.Core/NotesDatabase.cs tests/Aldune.Core.Tests/NotesDatabaseTests.cs
 git commit -m "Add NotesDatabase: SQLite schema and connection management"
 ```
 
@@ -633,8 +633,8 @@ git commit -m "Add NotesDatabase: SQLite schema and connection management"
 ### Task 6: `NotesRepository` — CRUD, wired to database + cipher
 
 **Files:**
-- Create: `src/Fanote.Core/NotesRepository.cs`
-- Test: `tests/Fanote.Core.Tests/NotesRepositoryTests.cs`
+- Create: `src/Aldune.Core/NotesRepository.cs`
+- Test: `tests/Aldune.Core.Tests/NotesRepositoryTests.cs`
 
 **Interfaces:**
 - Consumes: `NotesDatabase` (Task 5), `ContentCipher` (Task 2), `Note`/`NoteState` (Task 1).
@@ -643,15 +643,15 @@ git commit -m "Add NotesDatabase: SQLite schema and connection management"
 - [ ] **Step 1: Write the failing tests**
 
 ```csharp
-// tests/Fanote.Core.Tests/NotesRepositoryTests.cs
-using Fanote.Core;
+// tests/Aldune.Core.Tests/NotesRepositoryTests.cs
+using Aldune.Core;
 using Xunit;
 
-namespace Fanote.Core.Tests;
+namespace Aldune.Core.Tests;
 
 public class NotesRepositoryTests : IDisposable
 {
-    private readonly string _dbPath = Path.Combine(Path.GetTempPath(), $"fanote-repo-test-{Guid.NewGuid()}.db");
+    private readonly string _dbPath = Path.Combine(Path.GetTempPath(), $"aldune-repo-test-{Guid.NewGuid()}.db");
     private readonly NotesRepository _sut;
 
     public NotesRepositoryTests()
@@ -752,16 +752,16 @@ public class NotesRepositoryTests : IDisposable
 
 - [ ] **Step 2: Run tests to verify they fail**
 
-Run: `dotnet test tests/Fanote.Core.Tests`
+Run: `dotnet test tests/Aldune.Core.Tests`
 Expected: Fails to compile — `NotesRepository` doesn't exist yet.
 
 - [ ] **Step 3: Implement `NotesRepository`**
 
 ```csharp
-// src/Fanote.Core/NotesRepository.cs
+// src/Aldune.Core/NotesRepository.cs
 using Microsoft.Data.Sqlite;
 
-namespace Fanote.Core;
+namespace Aldune.Core;
 
 public sealed class NotesRepository
 {
@@ -879,13 +879,13 @@ public sealed class NotesRepository
 
 - [ ] **Step 4: Run tests to verify they pass**
 
-Run: `dotnet test tests/Fanote.Core.Tests`
+Run: `dotnet test tests/Aldune.Core.Tests`
 Expected: All 6 new tests pass, plus all pre-existing tests still pass.
 
 - [ ] **Step 5: Commit**
 
 ```bash
-git add src/Fanote.Core/NotesRepository.cs tests/Fanote.Core.Tests/NotesRepositoryTests.cs
+git add src/Aldune.Core/NotesRepository.cs tests/Aldune.Core.Tests/NotesRepositoryTests.cs
 git commit -m "Add NotesRepository: encrypted CRUD over SQLite"
 ```
 
@@ -894,8 +894,8 @@ git commit -m "Add NotesRepository: encrypted CRUD over SQLite"
 ### Task 7: Startup error handling — corrupt database and unavailable DPAPI key
 
 **Files:**
-- Create: `src/Fanote.Core/DatabaseCorruptionGuard.cs`
-- Test: `tests/Fanote.Core.Tests/DatabaseCorruptionGuardTests.cs`
+- Create: `src/Aldune.Core/DatabaseCorruptionGuard.cs`
+- Test: `tests/Aldune.Core.Tests/DatabaseCorruptionGuardTests.cs`
 
 **Interfaces:**
 - Produces: `static class DatabaseCorruptionGuard` with `static bool IsValidSqliteFile(string path)` — checks the first 16 bytes of a file against SQLite's fixed magic header (`"SQLite format 3\0"`), returning `false` for a missing, empty, or non-SQLite file. `static void BackupAndRemove(string path)` — copies a corrupt file to `<path>.corrupt-<timestamp>` and deletes the original, so `NotesDatabase`'s next construction creates a fresh empty database instead of failing.
@@ -906,15 +906,15 @@ This task implements the spec's "base de datos corrupta/ilegible al arrancar: se
 - [ ] **Step 1: Write the failing tests**
 
 ```csharp
-// tests/Fanote.Core.Tests/DatabaseCorruptionGuardTests.cs
-using Fanote.Core;
+// tests/Aldune.Core.Tests/DatabaseCorruptionGuardTests.cs
+using Aldune.Core;
 using Xunit;
 
-namespace Fanote.Core.Tests;
+namespace Aldune.Core.Tests;
 
 public class DatabaseCorruptionGuardTests : IDisposable
 {
-    private readonly string _path = Path.Combine(Path.GetTempPath(), $"fanote-corrupt-test-{Guid.NewGuid()}.db");
+    private readonly string _path = Path.Combine(Path.GetTempPath(), $"aldune-corrupt-test-{Guid.NewGuid()}.db");
 
     public void Dispose()
     {
@@ -959,14 +959,14 @@ public class DatabaseCorruptionGuardTests : IDisposable
 
 - [ ] **Step 2: Run tests to verify they fail**
 
-Run: `dotnet test tests/Fanote.Core.Tests`
+Run: `dotnet test tests/Aldune.Core.Tests`
 Expected: Fails to compile — `DatabaseCorruptionGuard` doesn't exist yet.
 
 - [ ] **Step 3: Implement `DatabaseCorruptionGuard`**
 
 ```csharp
-// src/Fanote.Core/DatabaseCorruptionGuard.cs
-namespace Fanote.Core;
+// src/Aldune.Core/DatabaseCorruptionGuard.cs
+namespace Aldune.Core;
 
 public static class DatabaseCorruptionGuard
 {
@@ -995,13 +995,13 @@ public static class DatabaseCorruptionGuard
 
 - [ ] **Step 4: Run tests to verify they pass**
 
-Run: `dotnet test tests/Fanote.Core.Tests`
+Run: `dotnet test tests/Aldune.Core.Tests`
 Expected: All 4 new tests pass, plus all pre-existing tests still pass.
 
 - [ ] **Step 5: Commit**
 
 ```bash
-git add src/Fanote.Core/DatabaseCorruptionGuard.cs tests/Fanote.Core.Tests/DatabaseCorruptionGuardTests.cs
+git add src/Aldune.Core/DatabaseCorruptionGuard.cs tests/Aldune.Core.Tests/DatabaseCorruptionGuardTests.cs
 git commit -m "Add DatabaseCorruptionGuard: detect and quarantine corrupt SQLite files"
 ```
 
@@ -1010,9 +1010,9 @@ git commit -m "Add DatabaseCorruptionGuard: detect and quarantine corrupt SQLite
 ### Task 8: Wire real persistence into the app; add a way to create a note
 
 **Files:**
-- Modify: `src/Fanote/App.xaml.cs` (bootstrap: settings → key → cipher → database → repository, replacing the 3 fake notes with a real repository-backed load)
-- Modify: `src/Fanote/Windowing/EdgeDockWindow.xaml` (add a "+" button to the tabs list for creating a new note)
-- Modify: `src/Fanote/Windowing/EdgeDockWindow.xaml.cs` (wire the "+" button to `NotesRepository.Create`, refresh `SetNotes` afterward)
+- Modify: `src/Aldune/App.xaml.cs` (bootstrap: settings → key → cipher → database → repository, replacing the 3 fake notes with a real repository-backed load)
+- Modify: `src/Aldune/Windowing/EdgeDockWindow.xaml` (add a "+" button to the tabs list for creating a new note)
+- Modify: `src/Aldune/Windowing/EdgeDockWindow.xaml.cs` (wire the "+" button to `NotesRepository.Create`, refresh `SetNotes` afterward)
 
 **Interfaces:**
 - Consumes: `SettingsService`/`AppSettings` (Task 4), `DatabaseKeyProvider` (Task 3), `ContentCipher` (Task 2), `NotesDatabase`/`NotesRepository` (Tasks 5-6), `DatabaseCorruptionGuard` (Task 7).
@@ -1021,13 +1021,13 @@ git commit -m "Add DatabaseCorruptionGuard: detect and quarantine corrupt SQLite
 - [ ] **Step 1: Rewrite `App.xaml.cs`'s bootstrap**
 
 ```csharp
-// src/Fanote/App.xaml.cs
+// src/Aldune/App.xaml.cs
 using System.IO;
 using System.Windows;
-using Fanote.Core;
-using Fanote.Windowing;
+using Aldune.Core;
+using Aldune.Windowing;
 
-namespace Fanote;
+namespace Aldune;
 
 public partial class App : Application
 {
@@ -1036,7 +1036,7 @@ public partial class App : Application
         base.OnStartup(e);
 
         var appDataDir = Path.Combine(
-            Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Fanote");
+            Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Aldune");
         var settingsPath = Path.Combine(appDataDir, "settings.json");
         var databasePath = Path.Combine(appDataDir, "notes.db");
 
@@ -1077,8 +1077,8 @@ public partial class App : Application
 - [ ] **Step 2: Add a "+" tab to `EdgeDockWindow.xaml`**
 
 ```xml
-<!-- src/Fanote/Windowing/EdgeDockWindow.xaml -->
-<Window x:Class="Fanote.Windowing.EdgeDockWindow"
+<!-- src/Aldune/Windowing/EdgeDockWindow.xaml -->
+<Window x:Class="Aldune.Windowing.EdgeDockWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         WindowStyle="None"
@@ -1108,7 +1108,7 @@ public partial class App : Application
 - [ ] **Step 3: Wire the repository into `EdgeDockWindow.xaml.cs`**
 
 ```csharp
-// src/Fanote/Windowing/EdgeDockWindow.xaml.cs
+// src/Aldune/Windowing/EdgeDockWindow.xaml.cs
 public partial class EdgeDockWindow : Window
 {
     private readonly FanStateMachine _fanState = new();
@@ -1164,12 +1164,12 @@ public partial class EdgeDockWindow : Window
 Run: `dotnet build`
 Expected: Build fails at this point specifically because `NoteWindow`'s constructor doesn't yet accept `(Note, NotesRepository, EdgeDockWindow)` — Task 9 completes it. **Do not attempt to make this task's build green by guessing Task 9's `NoteWindow` changes** — instead, temporarily stub `NoteWindow`'s constructor to accept and ignore the two extra parameters (`public NoteWindow(Note note, NotesRepository repository, EdgeDockWindow owner)`, storing nothing new yet) so this task's own build passes cleanly, and let Task 9 give the real implementation using those fields. Confirm `dotnet build` succeeds with this stub in place.
 
-Run: `dotnet run --project src/Fanote`. Click "+ Nueva nota" a couple of times, confirm new (empty) tabs appear. Close the app, delete nothing, run it again — confirm the notes created are still there (real persistence, not the old fake in-memory list). Terminate cleanly.
+Run: `dotnet run --project src/Aldune`. Click "+ Nueva nota" a couple of times, confirm new (empty) tabs appear. Close the app, delete nothing, run it again — confirm the notes created are still there (real persistence, not the old fake in-memory list). Terminate cleanly.
 
 - [ ] **Step 5: Commit**
 
 ```bash
-git add src/Fanote/App.xaml.cs src/Fanote/Windowing/EdgeDockWindow.xaml src/Fanote/Windowing/EdgeDockWindow.xaml.cs src/Fanote/Windowing/NoteWindow.xaml.cs
+git add src/Aldune/App.xaml.cs src/Aldune/Windowing/EdgeDockWindow.xaml src/Aldune/Windowing/EdgeDockWindow.xaml.cs src/Aldune/Windowing/NoteWindow.xaml.cs
 git commit -m "Wire real persistence into the app; add note creation"
 ```
 
@@ -1178,8 +1178,8 @@ git commit -m "Wire real persistence into the app; add note creation"
 ### Task 9: Autosave and archive/trash actions on `NoteWindow`
 
 **Files:**
-- Modify: `src/Fanote/Windowing/NoteWindow.xaml` (add "Archivar" and "Papelera" buttons)
-- Modify: `src/Fanote/Windowing/NoteWindow.xaml.cs` (debounced autosave, flush-on-exit, archive/trash actions)
+- Modify: `src/Aldune/Windowing/NoteWindow.xaml` (add "Archivar" and "Papelera" buttons)
+- Modify: `src/Aldune/Windowing/NoteWindow.xaml.cs` (debounced autosave, flush-on-exit, archive/trash actions)
 
 **Interfaces:**
 - Consumes: `NotesRepository` (Task 6), `EdgeDockWindow.Refresh()` (Task 8, to update the dock's tab list after an archive/trash action removes a note from the Active view).
@@ -1188,11 +1188,11 @@ git commit -m "Wire real persistence into the app; add note creation"
 - [ ] **Step 1: Add the action buttons to `NoteWindow.xaml`**
 
 ```xml
-<!-- src/Fanote/Windowing/NoteWindow.xaml -->
-<Window x:Class="Fanote.Windowing.NoteWindow"
+<!-- src/Aldune/Windowing/NoteWindow.xaml -->
+<Window x:Class="Aldune.Windowing.NoteWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="Fanote"
+        Title="Aldune"
         Width="260" Height="300"
         WindowStyle="ToolWindow"
         Topmost="True">
@@ -1213,12 +1213,12 @@ git commit -m "Wire real persistence into the app; add note creation"
 - [ ] **Step 2: Implement debounced autosave, flush-on-exit, and archive/trash**
 
 ```csharp
-// src/Fanote/Windowing/NoteWindow.xaml.cs
+// src/Aldune/Windowing/NoteWindow.xaml.cs
 using System.Windows;
 using System.Windows.Threading;
-using Fanote.Core;
+using Aldune.Core;
 
-namespace Fanote.Windowing;
+namespace Aldune.Windowing;
 
 public partial class NoteWindow : Window
 {
@@ -1287,7 +1287,7 @@ public partial class NoteWindow : Window
 Run: `dotnet build`
 Expected: Build succeeds — this completes the `NoteWindow` constructor Task 8 stubbed out.
 
-Run: `dotnet run --project src/Fanote`. Full manual checklist:
+Run: `dotnet run --project src/Aldune`. Full manual checklist:
 1. Open a note, type something, close the window (via the × button) without clicking Archivar/Papelera — reopen the app (restart it) and confirm the edit was saved (flush-on-exit works).
 2. Open a note, type something, wait ~1 second without closing, then check (e.g. by looking at the app's data file timestamp, or by force-closing and reopening) that the edit was already saved before you closed anything (debounced autosave works, not just flush-on-exit).
 3. Click "Archivar" on a note — it disappears from the dock's tab list (Active view). (There's no "show archived" UI yet — that's a later phase; for now, confirming it *leaves* the active list is enough.)
@@ -1297,7 +1297,7 @@ Run: `dotnet run --project src/Fanote`. Full manual checklist:
 - [ ] **Step 4: Commit**
 
 ```bash
-git add src/Fanote/Windowing/NoteWindow.xaml src/Fanote/Windowing/NoteWindow.xaml.cs
+git add src/Aldune/Windowing/NoteWindow.xaml src/Aldune/Windowing/NoteWindow.xaml.cs
 git commit -m "Add debounced autosave, flush-on-exit, and archive/trash actions"
 ```
 

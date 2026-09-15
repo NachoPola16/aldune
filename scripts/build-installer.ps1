@@ -42,12 +42,6 @@ New-Item -ItemType Directory -Path $distDir -Force | Out-Null
 & $isccPath $issPath
 if ($LASTEXITCODE -ne 0) { throw "Inno Setup terminó con código $LASTEXITCODE." }
 
-# Nombre anterior del portable (Fanote): si quedo un ejecutable viejo en publish/portable, se borra
-# para que el ZIP no arrastre los dos. Ver docs/BRANDING.md.
-$legacyPortable = Join-Path $portableDir "fanote.exe"
-if (Test-Path -LiteralPath $legacyPortable) {
-    Remove-Item -LiteralPath $legacyPortable -Force
-}
 $portableZip = Join-Path $distDir "aldune-portable-win-x64.zip"
 Compress-Archive -Path (Join-Path $portableDir "aldune.exe") -DestinationPath $portableZip -Force
 Write-Host "Instalador y portable creados en $distDir"

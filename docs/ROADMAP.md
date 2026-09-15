@@ -190,12 +190,12 @@ Preguntas sin responder para cuando le toque su sesión de diseño:
 
 ### ~~Acciones contextuales del dock~~ — HECHO, con mejoras futuras opcionales
 
-Primera entrega implementada: el clic derecho sobre el botÃ³n de abrir todas ofrece modo normal,
-cuadrÃ­cula, columnas y cerrar todas. La elecciÃ³n queda guardada como modo
-predeterminado del botÃ³n; el modo normal sigue siendo el valor inicial y debe elegirse de forma
-explÃ­cita para volver a Ã©l. La plantilla se aplica por monitor y solo cambia posiciones cuando el
-usuario la elige. Los cambios de distribuciÃ³n se animan brevemente para evitar saltos bruscos.
-La cuadrÃ­cula y las columnas son sensibles al nÃºmero de notas y a la orientaciÃ³n de la pantalla:
+Primera entrega implementada: el clic derecho sobre el botón de abrir todas ofrece modo normal,
+cuadrícula, columnas y cerrar todas. La elección queda guardada como modo
+predeterminado del botón; el modo normal sigue siendo el valor inicial y debe elegirse de forma
+explícita para volver a él. La plantilla se aplica por monitor y solo cambia posiciones cuando el
+usuario la elige. Los cambios de distribución se animan brevemente para evitar saltos bruscos.
+La cuadrícula y las columnas son sensibles al número de notas y a la orientación de la pantalla:
 hasta 12 notas se distribuyen en una plantilla compacta; las restantes quedan abiertas en una
 cascada legible para evitar comprimirlas hasta hacerlas inutilizables.
 
@@ -572,10 +572,10 @@ que lo publica para que el desempate sea estable.
 
 ### HTTPS para el servidor autohosteable — PREPARADO (2026-09-12)
 
-Se aÃ±adiÃ³ `docker-compose.sync.https.yml` con Caddy como proxy inverso, certificados automÃ¡ticos y
-persistencia de su configuraciÃ³n. El servicio de sincronizaciÃ³n ya no se publica directamente en
+Se añadió `docker-compose.sync.https.yml` con Caddy como proxy inverso, certificados automáticos y
+persistencia de su configuración. El servicio de sincronización ya no se publica directamente en
 Internet en ese modo. Falta probarlo en el servidor real con un dominio y DNS controlados por el
-usuario; la composiciÃ³n HTTP local sigue intacta.
+usuario; la composición HTTP local sigue intacta.
 
 ### Rotación y revocación de tokens — HECHO (2026-09-12)
 
@@ -591,18 +591,18 @@ perdedora cifrada con la clave de la base de datos. Ajustes muestra cuántos hay
 con acciones para restaurar esa versión o descartar el registro. Restaurar la versión perdedora le
 da una marca temporal nueva para que la decisión pueda volver a sincronizarse.
 
-### Perfiles de sincronizaciÃ³n — HECHO (2026-09-13)
+### Perfiles de sincronización — HECHO (2026-09-13)
 
 Ajustes permite crear varios perfiles independientes. Cada uno conserva su nombre, transporte,
-servidor o carpeta, token, clave de sincronizaciÃ³n, selecciÃ³n de notas y Ãºltima sincronizaciÃ³n.
-La configuraciÃ³n existente se migra automÃ¡ticamente como `Mis dispositivos`. Esto prepara
-compartir una selecciÃ³n de notas con otra persona sin mezclarla con el perfil de los dispositivos
-propios; queda pendiente mejorar el flujo de invitaciÃ³n e intercambio de perfiles.
+servidor o carpeta, token, clave de sincronización, selección de notas y última sincronización.
+La configuración existente se migra automáticamente como `Mis dispositivos`. Esto prepara
+compartir una selección de notas con otra persona sin mezclarla con el perfil de los dispositivos
+propios; queda pendiente mejorar el flujo de invitación e intercambio de perfiles.
 
-### CÃ³digo de perfil compartido — HECHO (2026-09-13)
+### Código de perfil compartido — HECHO (2026-09-13)
 
-El perfil compartido puede incluir la selecciÃ³n de notas junto con la clave de sincronizaciÃ³n. AsÃ­,
-otro usuario puede recibir solo esas notas aunque aÃºn no las tenga localmente. El cÃ³digo no incluye
+El perfil compartido puede incluir la selección de notas junto con la clave de sincronización. Así,
+otro usuario puede recibir solo esas notas aunque aún no las tenga localmente. El código no incluye
 la URL, la carpeta ni el token del servidor, que se configuran por separado.
 
 ## 6. Logo
@@ -619,10 +619,11 @@ nombre visible y se terminó el 2026-09-15 con el interno; el mapa de dónde viv
 compatibilidad y el procedimiento para el próximo cambio están en `BRANDING.md` y `RENAME_GUIDE.md`.
 
 Se conservan a propósito, porque renombrarlos rompería instalaciones ya existentes: la carpeta
-`%LOCALAPPDATA%\Fanote` y la clave antigua del registro de arranque (solo para migrarlas una vez),
-las variables de entorno `FANOTE_*` (se siguen leyendo como alternativa), los prefijos de los códigos
-de perfil `fanote-profile-v1:` y `fanote-profile-v2:` (se siguen importando) y el nombre físico del
-volumen Docker `fanote-sync-data` (contiene los objetos ya sincronizados).
+`%LOCALAPPDATA%\Fanote` y la clave antigua del registro de arranque (solo para migrarlas una vez) y
+los prefijos de los códigos de perfil `fanote-profile-v1:` y `fanote-profile-v2:` (se siguen
+importando). Las variables de entorno `FANOTE_*` ya no se aceptan — hubo que renombrarlas en los
+`.env` — y el nombre físico del volumen Docker es configurable con `ALDUNE_SYNC_VOLUME`, cuyo valor
+para un servidor que ya tuviera datos sincronizados sigue siendo el nombre antiguo (ver `SYNC.md`).
 
 El icono actual también se mantiene: las tres tarjetas escalonadas representan directamente el dock y
 conectan con la paleta real de las notas. No se hará un rediseño completo antes de validar el producto

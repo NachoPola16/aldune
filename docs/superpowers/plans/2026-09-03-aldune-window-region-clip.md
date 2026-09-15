@@ -9,10 +9,10 @@ ancha) recortando la forma real del `HWND` del panel desplegado con
 oscuro — sin `AllowsTransparency` (rompe ClearType, descartado en la spec
 v1).
 
-**Architecture:** Una función pura en `Fanote.Core` calcula qué piezas
+**Architecture:** Una función pura en `Aldune.Core` calcula qué piezas
 (rectángulo + radio de esquina) forman la silueta del abanico a partir de
 los rects de pestaña/footer ya conocidos por WPF; un interop nuevo en
-`Fanote.Interop.NativeMethods` construye el `HRGN` real (Win32
+`Aldune.Interop.NativeMethods` construye el `HRGN` real (Win32
 `CreateRoundRectRgn`/`CombineRgn`/`SetWindowRgn`) a partir de esas piezas;
 `EdgeDockWindow` llama a ese interop en los dos puntos que su animación de
 expandir/colapsar ya tiene para alternar contenido visible/invisible — no
@@ -20,7 +20,7 @@ se añade ningún hook nuevo de por-frame.
 
 **Tech Stack:** .NET 10 / WPF, P/Invoke a `gdi32.dll`/`user32.dll`, xUnit.
 
-**Spec:** `docs/superpowers/specs/2026-09-03-fanote-window-region-clip-design.md`
+**Spec:** `docs/superpowers/specs/2026-09-03-aldune-window-region-clip-design.md`
 
 ## Global Constraints
 
@@ -41,15 +41,15 @@ se añade ningún hook nuevo de por-frame.
 
 ---
 
-## Task 1: `TabRegionShape` — cálculo puro de la silueta (Fanote.Core, TDD)
+## Task 1: `TabRegionShape` — cálculo puro de la silueta (Aldune.Core, TDD)
 
 **Files:**
-- Create: `src/Fanote.Core/TabRegionShape.cs`
-- Test: `tests/Fanote.Core.Tests/TabRegionShapeTests.cs`
+- Create: `src/Aldune.Core/TabRegionShape.cs`
+- Test: `tests/Aldune.Core.Tests/TabRegionShapeTests.cs`
 
 **Interfaces:**
-- Produces: `Fanote.Core.RegionPiece` (record struct: `Rect Bounds`,
-  `double CornerRadius`) y `Fanote.Core.TabRegionShape.BuildRegion(
+- Produces: `Aldune.Core.RegionPiece` (record struct: `Rect Bounds`,
+  `double CornerRadius`) y `Aldune.Core.TabRegionShape.BuildRegion(
   IReadOnlyList<Rect> tabRects, Rect footerRect, double cornerRadius)
   -> IReadOnlyList<RegionPiece>` — los usa `NativeMethods.SetTabFanRegion`
   en la Task 2 y `EdgeDockWindow` en la Task 3.
@@ -57,10 +57,10 @@ se añade ningún hook nuevo de por-frame.
 - [ ] **Step 1: Escribir los tests (fallarán porque `TabRegionShape` no existe aún)**
 
 ```csharp
-using Fanote.Core;
+using Aldune.Core;
 using Xunit;
 
-namespace Fanote.Core.Tests;
+namespace Aldune.Core.Tests;
 
 public class TabRegionShapeTests
 {
@@ -124,12 +124,12 @@ public class TabRegionShapeTests
 - [ ] **Step 2: Confirmar que fallan por falta del tipo**
 
 Run: `dotnet test --filter TabRegionShapeTests`
-Expected: FAIL — error de compilación, `TabRegionShape`/`RegionPiece` no existen en `Fanote.Core`.
+Expected: FAIL — error de compilación, `TabRegionShape`/`RegionPiece` no existen en `Aldune.Core`.
 
 - [ ] **Step 3: Implementar `TabRegionShape`**
 
 ```csharp
-namespace Fanote.Core;
+namespace Aldune.Core;
 
 public readonly record struct RegionPiece(Rect Bounds, double CornerRadius);
 
@@ -165,7 +165,7 @@ Expected: PASS — 84/84 (los 80 ya existentes + estos 4 nuevos).
 - [ ] **Step 6: Commit**
 
 ```bash
-git add src/Fanote.Core/TabRegionShape.cs tests/Fanote.Core.Tests/TabRegionShapeTests.cs
+git add src/Aldune.Core/TabRegionShape.cs tests/Aldune.Core.Tests/TabRegionShapeTests.cs
 git commit -m "Add TabRegionShape: pure computation of the fan-shaped region's pieces"
 ```
 
@@ -174,10 +174,10 @@ git commit -m "Add TabRegionShape: pure computation of the fan-shaped region's p
 ## Task 2: Interop Win32 — `SetTabFanRegion`/`ClearWindowRegion`
 
 **Files:**
-- Modify: `src/Fanote/Interop/NativeMethods.cs`
+- Modify: `src/Aldune/Interop/NativeMethods.cs`
 
 **Interfaces:**
-- Consumes: `Fanote.Core.RegionPiece` (Task 1).
+- Consumes: `Aldune.Core.RegionPiece` (Task 1).
 - Produces: `NativeMethods.SetTabFanRegion(IntPtr hWnd, IReadOnlyList<RegionPiece> pieces)` y
   `NativeMethods.ClearWindowRegion(IntPtr hWnd)` — los usa `EdgeDockWindow` en la Task 3.
 
@@ -218,7 +218,7 @@ private const int RGN_OR = 2;
 /// ser propiedad del sistema (se libera solo, al reemplazarlo o cerrar la ventana) — cualquier
 /// HRGN intermedio que no llegue ahí se libera aquí mismo con DeleteObject.
 /// </summary>
-internal static void SetTabFanRegion(IntPtr hWnd, IReadOnlyList<Fanote.Core.RegionPiece> pieces)
+internal static void SetTabFanRegion(IntPtr hWnd, IReadOnlyList<Aldune.Core.RegionPiece> pieces)
 {
     IntPtr accumulated = CreateRectRgn(0, 0, 0, 0);
     foreach (var (bounds, cornerRadius) in pieces)
@@ -263,7 +263,7 @@ internal static void ClearWindowRegion(IntPtr hWnd) => SetWindowRgn(hWnd, IntPtr
 Al principio de `NativeMethods.cs`, junto a los `using` ya existentes, añadir:
 
 ```csharp
-using Fanote.Core;
+using Aldune.Core;
 ```
 
 - [ ] **Step 3: Build limpio**
@@ -274,7 +274,7 @@ Expected: `Build succeeded`, 0 errores (los 4 warnings `CA1416` preexistentes de
 - [ ] **Step 4: Commit**
 
 ```bash
-git add src/Fanote/Interop/NativeMethods.cs
+git add src/Aldune/Interop/NativeMethods.cs
 git commit -m "Add SetTabFanRegion/ClearWindowRegion Win32 interop"
 ```
 
@@ -283,7 +283,7 @@ git commit -m "Add SetTabFanRegion/ClearWindowRegion Win32 interop"
 ## Task 3: Cablear el recorte en `EdgeDockWindow`
 
 **Files:**
-- Modify: `src/Fanote/Windowing/EdgeDockWindow.xaml.cs`
+- Modify: `src/Aldune/Windowing/EdgeDockWindow.xaml.cs`
 
 **Interfaces:**
 - Consumes: `TabRegionShape.BuildRegion` (Task 1),
@@ -348,20 +348,20 @@ private void ApplyTabFanRegion()
     if (_hwnd == IntPtr.Zero) return;
 
     var dpi = VisualTreeHelper.GetDpi(this);
-    var tabRects = new List<Fanote.Core.Rect>();
+    var tabRects = new List<Aldune.Core.Rect>();
     for (int i = 0; i < TabsList.Items.Count; i++)
     {
         if (TabsList.ItemContainerGenerator.ContainerFromIndex(i) is Button button)
         {
             var origin = button.TranslatePoint(new Point(0, 0), this);
-            tabRects.Add(new Fanote.Core.Rect(
+            tabRects.Add(new Aldune.Core.Rect(
                 origin.X * dpi.DpiScaleX, origin.Y * dpi.DpiScaleY,
                 button.ActualWidth * dpi.DpiScaleX, button.ActualHeight * dpi.DpiScaleY));
         }
     }
 
     var footerOrigin = FooterPanel.TranslatePoint(new Point(0, 0), this);
-    var footerRect = new Fanote.Core.Rect(
+    var footerRect = new Aldune.Core.Rect(
         footerOrigin.X * dpi.DpiScaleX, footerOrigin.Y * dpi.DpiScaleY,
         FooterPanel.ActualWidth * dpi.DpiScaleX, FooterPanel.ActualHeight * dpi.DpiScaleY);
 
@@ -413,7 +413,7 @@ else
 Run: `dotnet build`
 Expected: `Build succeeded`.
 
-Run: `dotnet run --project src/Fanote` (lanzar y cerrar a los pocos
+Run: `dotnet run --project src/Aldune` (lanzar y cerrar a los pocos
 segundos, o `Ctrl+C` desde la terminal)
 Expected: arranca sin excepciones, igual que antes de este cambio — la
 verificación visual completa es la Task 4.
@@ -421,12 +421,12 @@ verificación visual completa es la Task 4.
 - [ ] **Step 5: Correr toda la suite**
 
 Run: `dotnet test`
-Expected: PASS — 84/84 (sin tests nuevos en esta tarea, solo confirmar que no se rompió nada de `Fanote.Core`).
+Expected: PASS — 84/84 (sin tests nuevos en esta tarea, solo confirmar que no se rompió nada de `Aldune.Core`).
 
 - [ ] **Step 6: Commit**
 
 ```bash
-git add src/Fanote/Windowing/EdgeDockWindow.xaml.cs
+git add src/Aldune/Windowing/EdgeDockWindow.xaml.cs
 git commit -m "Clip the expanded dock panel's shape to its tabs via SetWindowRgn"
 ```
 
@@ -435,7 +435,7 @@ git commit -m "Clip the expanded dock panel's shape to its tabs via SetWindowRgn
 ## Task 4: Verificación manual (checklist humano)
 
 No automatizable — mismo patrón que el resto de la mecánica de ventana de
-esta app. `dotnet run --project src/Fanote` y comprobar a mano:
+esta app. `dotnet run --project src/Aldune` y comprobar a mano:
 
 - [ ] Con varias notas de distinto ancho de pestaña, al expandir se ve el
   escritorio en los escalones entre pestañas y en el hueco a la izquierda

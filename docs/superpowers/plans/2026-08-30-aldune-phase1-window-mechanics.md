@@ -1,19 +1,19 @@
-# Fanote Phase 1: Window Mechanics Implementation Plan
+# Aldune Phase 1: Window Mechanics Implementation Plan
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Build the core edge-docked, hover-fan-out window mechanism on a single monitor — the highest-uncertainty part of Fanote — as a runnable demo with fake in-memory notes. No persistence, no multi-monitor, no tray/hotkey yet; those are later plans (Phase 2-5 per the spec's suggested order).
+**Goal:** Build the core edge-docked, hover-fan-out window mechanism on a single monitor — the highest-uncertainty part of Aldune — as a runnable demo with fake in-memory notes. No persistence, no multi-monitor, no tray/hotkey yet; those are later plans (Phase 2-5 per the spec's suggested order).
 
-**Architecture:** Two projects split by platform-dependence: `Fanote.Core` is a plain, platform-agnostic .NET class library holding pure logic (the hover/collapse state machine, edge-position geometry math, the note data shape) with zero WPF references, so it's fast to unit-test. `Fanote` is the WPF app (Windows-only) that turns that logic into real windows — a borderless, always-on-top, non-activating `EdgeDockWindow` that resizes itself in place between a small "pill" rect and a larger "expanded" rect (instead of using a transparent overlay with toggled click-through, which the spec's design review found to be self-contradictory), and a normal `NoteWindow` for the expanded single note.
+**Architecture:** Two projects split by platform-dependence: `Aldune.Core` is a plain, platform-agnostic .NET class library holding pure logic (the hover/collapse state machine, edge-position geometry math, the note data shape) with zero WPF references, so it's fast to unit-test. `Aldune` is the WPF app (Windows-only) that turns that logic into real windows — a borderless, always-on-top, non-activating `EdgeDockWindow` that resizes itself in place between a small "pill" rect and a larger "expanded" rect (instead of using a transparent overlay with toggled click-through, which the spec's design review found to be self-contradictory), and a normal `NoteWindow` for the expanded single note.
 
-**Tech Stack:** C# / .NET 10 (`net10.0` for Fanote.Core and its tests, `net10.0-windows` for the WPF app), WPF, Win32 interop via P/Invoke (`user32.dll`), xUnit for tests.
+**Tech Stack:** C# / .NET 10 (`net10.0` for Aldune.Core and its tests, `net10.0-windows` for the WPF app), WPF, Win32 interop via P/Invoke (`user32.dll`), xUnit for tests.
 
-**Spec:** `docs/superpowers/specs/2026-08-30-fanote-v1-design.md`
+**Spec:** `docs/superpowers/specs/2026-08-30-aldune-v1-design.md`
 
 ## Global Constraints
 
 - Windows-only app; the WPF project targets `net10.0-windows` with `<UseWPF>true</UseWPF>`.
-- Pure logic (state machine, geometry math, data shapes) lives in `Fanote.Core` (`net10.0`, no `System.Windows.*` references) so it can be unit-tested without a UI thread. WPF-specific code (windows, interop) lives only in the `Fanote` project.
+- Pure logic (state machine, geometry math, data shapes) lives in `Aldune.Core` (`net10.0`, no `System.Windows.*` references) so it can be unit-tested without a UI thread. WPF-specific code (windows, interop) lives only in the `Aldune` project.
 - The pill/dock window must never steal keyboard focus on hover (`WS_EX_NOACTIVATE`); the expanded note window must activate normally.
 - No transparent-overlay-with-toggled-click-through design (rejected in the spec review as self-contradictory) — the dock window resizes itself in place instead.
 - Respect the Windows accessibility setting for animations (`SystemParameters.ClientAreaAnimation`) — skip animating the resize when it's off.
@@ -24,10 +24,10 @@
 ### Task 1: Solution and project scaffolding
 
 **Files:**
-- Create: `Fanote.sln`
-- Create: `src/Fanote.Core/Fanote.Core.csproj`
-- Create: `tests/Fanote.Core.Tests/Fanote.Core.Tests.csproj`
-- Create: `src/Fanote/Fanote.csproj` (plus the default `App.xaml`/`App.xaml.cs`/`MainWindow.xaml`/`MainWindow.xaml.cs` from the WPF template — left untouched until Task 9)
+- Create: `Aldune.sln`
+- Create: `src/Aldune.Core/Aldune.Core.csproj`
+- Create: `tests/Aldune.Core.Tests/Aldune.Core.Tests.csproj`
+- Create: `src/Aldune/Aldune.csproj` (plus the default `App.xaml`/`App.xaml.cs`/`MainWindow.xaml`/`MainWindow.xaml.cs` from the WPF template — left untouched until Task 9)
 
 **Interfaces:**
 - Produces: a solution that builds, and a test project wired to run (0 real tests yet) — every later task depends on this existing and building.
@@ -37,23 +37,23 @@
 Run from the repository root:
 
 ```bash
-dotnet new classlib -n Fanote.Core -o src/Fanote.Core --framework net10.0
-dotnet new xunit -n Fanote.Core.Tests -o tests/Fanote.Core.Tests --framework net10.0
-dotnet new wpf -n Fanote -o src/Fanote --framework net10.0-windows
+dotnet new classlib -n Aldune.Core -o src/Aldune.Core --framework net10.0
+dotnet new xunit -n Aldune.Core.Tests -o tests/Aldune.Core.Tests --framework net10.0
+dotnet new wpf -n Aldune -o src/Aldune --framework net10.0-windows
 ```
 
 - [ ] **Step 2: Wire project references**
 
 ```bash
-dotnet add tests/Fanote.Core.Tests/Fanote.Core.Tests.csproj reference src/Fanote.Core/Fanote.Core.csproj
-dotnet add src/Fanote/Fanote.csproj reference src/Fanote.Core/Fanote.Core.csproj
+dotnet add tests/Aldune.Core.Tests/Aldune.Core.Tests.csproj reference src/Aldune.Core/Aldune.Core.csproj
+dotnet add src/Aldune/Aldune.csproj reference src/Aldune.Core/Aldune.Core.csproj
 ```
 
 - [ ] **Step 3: Create the solution and add all three projects**
 
 ```bash
-dotnet new sln -n Fanote
-dotnet sln add src/Fanote.Core/Fanote.Core.csproj tests/Fanote.Core.Tests/Fanote.Core.Tests.csproj src/Fanote/Fanote.csproj
+dotnet new sln -n Aldune
+dotnet sln add src/Aldune.Core/Aldune.Core.csproj tests/Aldune.Core.Tests/Aldune.Core.Tests.csproj src/Aldune/Aldune.csproj
 ```
 
 - [ ] **Step 4: Verify the solution builds and tests run**
@@ -62,17 +62,17 @@ Run: `dotnet build`
 Expected: Build succeeds, 0 errors (the default classlib `Class1.cs` and the WPF template's default window are fine as-is for now).
 
 Run: `dotnet test`
-Expected: The default xUnit template's sample test (`UnitTest1`) passes — confirms the test project is correctly wired to `Fanote.Core`.
+Expected: The default xUnit template's sample test (`UnitTest1`) passes — confirms the test project is correctly wired to `Aldune.Core`.
 
 - [ ] **Step 5: Remove the template's placeholder class and test**
 
-Delete `src/Fanote.Core/Class1.cs` and `tests/Fanote.Core.Tests/UnitTest1.cs` — they were only scaffolding to prove the wiring works.
+Delete `src/Aldune.Core/Class1.cs` and `tests/Aldune.Core.Tests/UnitTest1.cs` — they were only scaffolding to prove the wiring works.
 
 - [ ] **Step 6: Commit**
 
 ```bash
-git add Fanote.sln src/Fanote.Core src/Fanote tests/Fanote.Core.Tests
-git commit -m "Scaffold Fanote solution: Core library, WPF app, test project"
+git add Aldune.sln src/Aldune.Core src/Aldune tests/Aldune.Core.Tests
+git commit -m "Scaffold Aldune solution: Core library, WPF app, test project"
 ```
 
 ---
@@ -80,10 +80,10 @@ git commit -m "Scaffold Fanote solution: Core library, WPF app, test project"
 ### Task 2: Edge geometry math
 
 **Files:**
-- Create: `src/Fanote.Core/EdgePosition.cs`
-- Create: `src/Fanote.Core/Geometry.cs`
-- Create: `src/Fanote.Core/EdgeGeometry.cs`
-- Test: `tests/Fanote.Core.Tests/EdgeGeometryTests.cs`
+- Create: `src/Aldune.Core/EdgePosition.cs`
+- Create: `src/Aldune.Core/Geometry.cs`
+- Create: `src/Aldune.Core/EdgeGeometry.cs`
+- Test: `tests/Aldune.Core.Tests/EdgeGeometryTests.cs`
 
 **Interfaces:**
 - Produces: `EdgePosition` enum (`Top`, `Bottom`, `Left`, `Right`); `Rect` and `WorkingArea` record structs with `double X, Y, Width, Height`; `EdgeGeometry.PillRect(WorkingArea, EdgePosition) : Rect` and `EdgeGeometry.ExpandedRect(WorkingArea, EdgePosition) : Rect`; constants `EdgeGeometry.PillThickness`, `PillLength`, `ExpandedThickness`, `ExpandedLength` (all `double`).
@@ -92,11 +92,11 @@ git commit -m "Scaffold Fanote solution: Core library, WPF app, test project"
 - [ ] **Step 1: Write the failing tests**
 
 ```csharp
-// tests/Fanote.Core.Tests/EdgeGeometryTests.cs
-using Fanote.Core;
+// tests/Aldune.Core.Tests/EdgeGeometryTests.cs
+using Aldune.Core;
 using Xunit;
 
-namespace Fanote.Core.Tests;
+namespace Aldune.Core.Tests;
 
 public class EdgeGeometryTests
 {
@@ -153,14 +153,14 @@ public class EdgeGeometryTests
 
 - [ ] **Step 2: Run tests to verify they fail**
 
-Run: `dotnet test tests/Fanote.Core.Tests`
+Run: `dotnet test tests/Aldune.Core.Tests`
 Expected: Fails to compile — `EdgePosition`, `WorkingArea`, `EdgeGeometry` don't exist yet.
 
 - [ ] **Step 3: Implement the types**
 
 ```csharp
-// src/Fanote.Core/EdgePosition.cs
-namespace Fanote.Core;
+// src/Aldune.Core/EdgePosition.cs
+namespace Aldune.Core;
 
 public enum EdgePosition
 {
@@ -172,8 +172,8 @@ public enum EdgePosition
 ```
 
 ```csharp
-// src/Fanote.Core/Geometry.cs
-namespace Fanote.Core;
+// src/Aldune.Core/Geometry.cs
+namespace Aldune.Core;
 
 public readonly record struct Rect(double X, double Y, double Width, double Height);
 
@@ -181,8 +181,8 @@ public readonly record struct WorkingArea(double X, double Y, double Width, doub
 ```
 
 ```csharp
-// src/Fanote.Core/EdgeGeometry.cs
-namespace Fanote.Core;
+// src/Aldune.Core/EdgeGeometry.cs
+namespace Aldune.Core;
 
 public static class EdgeGeometry
 {
@@ -221,13 +221,13 @@ public static class EdgeGeometry
 
 - [ ] **Step 4: Run tests to verify they pass**
 
-Run: `dotnet test tests/Fanote.Core.Tests`
+Run: `dotnet test tests/Aldune.Core.Tests`
 Expected: All 8 tests pass (2 facts + 2 theories × 2 cases each = 6, plus the 2 single facts = 8 total).
 
 - [ ] **Step 5: Commit**
 
 ```bash
-git add src/Fanote.Core/EdgePosition.cs src/Fanote.Core/Geometry.cs src/Fanote.Core/EdgeGeometry.cs tests/Fanote.Core.Tests/EdgeGeometryTests.cs
+git add src/Aldune.Core/EdgePosition.cs src/Aldune.Core/Geometry.cs src/Aldune.Core/EdgeGeometry.cs tests/Aldune.Core.Tests/EdgeGeometryTests.cs
 git commit -m "Add edge geometry math for pill/expanded window rects"
 ```
 
@@ -236,8 +236,8 @@ git commit -m "Add edge geometry math for pill/expanded window rects"
 ### Task 3: Hover/collapse state machine
 
 **Files:**
-- Create: `src/Fanote.Core/FanStateMachine.cs`
-- Test: `tests/Fanote.Core.Tests/FanStateMachineTests.cs`
+- Create: `src/Aldune.Core/FanStateMachine.cs`
+- Test: `tests/Aldune.Core.Tests/FanStateMachineTests.cs`
 
 **Interfaces:**
 - Produces: `FanStateMachine` class with `bool IsExpanded { get; }`, `event EventHandler? ExpansionChanged`, and methods `PointerEntered()`, `PointerLeft()`, `CollapseTimerElapsed()`. This class has no notion of real time or WPF timers — the WPF layer (Task 5) is responsible for starting/stopping a `DispatcherTimer` and calling `CollapseTimerElapsed()` when it fires, which is what makes this class trivially unit-testable.
@@ -248,11 +248,11 @@ This directly implements the spec's fix for the "MouseLeave alone is unreliable"
 - [ ] **Step 1: Write the failing tests**
 
 ```csharp
-// tests/Fanote.Core.Tests/FanStateMachineTests.cs
-using Fanote.Core;
+// tests/Aldune.Core.Tests/FanStateMachineTests.cs
+using Aldune.Core;
 using Xunit;
 
-namespace Fanote.Core.Tests;
+namespace Aldune.Core.Tests;
 
 public class FanStateMachineTests
 {
@@ -318,14 +318,14 @@ public class FanStateMachineTests
 
 - [ ] **Step 2: Run tests to verify they fail**
 
-Run: `dotnet test tests/Fanote.Core.Tests`
+Run: `dotnet test tests/Aldune.Core.Tests`
 Expected: Fails to compile — `FanStateMachine` doesn't exist yet.
 
 - [ ] **Step 3: Implement `FanStateMachine`**
 
 ```csharp
-// src/Fanote.Core/FanStateMachine.cs
-namespace Fanote.Core;
+// src/Aldune.Core/FanStateMachine.cs
+namespace Aldune.Core;
 
 public sealed class FanStateMachine
 {
@@ -366,13 +366,13 @@ public sealed class FanStateMachine
 
 - [ ] **Step 4: Run tests to verify they pass**
 
-Run: `dotnet test tests/Fanote.Core.Tests`
+Run: `dotnet test tests/Aldune.Core.Tests`
 Expected: All 6 new tests pass, plus the 8 from Task 2 (14 total).
 
 - [ ] **Step 5: Commit**
 
 ```bash
-git add src/Fanote.Core/FanStateMachine.cs tests/Fanote.Core.Tests/FanStateMachineTests.cs
+git add src/Aldune.Core/FanStateMachine.cs tests/Aldune.Core.Tests/FanStateMachineTests.cs
 git commit -m "Add FanStateMachine with debounced collapse"
 ```
 
@@ -381,7 +381,7 @@ git commit -m "Add FanStateMachine with debounced collapse"
 ### Task 4: Note data shape
 
 **Files:**
-- Create: `src/Fanote.Core/NoteModel.cs`
+- Create: `src/Aldune.Core/NoteModel.cs`
 
 **Interfaces:**
 - Produces: `NoteModel` class with `Guid Id`, `string Text` (mutable), `string Color` (mutable) — mirrors the `Note` table from the spec's data model, minus the fields (`ScreenOrigin`, `CreatedAt`, `UpdatedAt`, `State`) that only matter once persistence exists in Phase 2. This is intentionally a placeholder shape for Phase 1's fake in-memory notes, not the final persisted model.
@@ -392,8 +392,8 @@ No test file for this task — it's a plain data holder with no logic to verify;
 - [ ] **Step 1: Implement `NoteModel`**
 
 ```csharp
-// src/Fanote.Core/NoteModel.cs
-namespace Fanote.Core;
+// src/Aldune.Core/NoteModel.cs
+namespace Aldune.Core;
 
 public sealed class NoteModel
 {
@@ -405,13 +405,13 @@ public sealed class NoteModel
 
 - [ ] **Step 2: Verify the library still builds**
 
-Run: `dotnet build src/Fanote.Core`
+Run: `dotnet build src/Aldune.Core`
 Expected: Build succeeds.
 
 - [ ] **Step 3: Commit**
 
 ```bash
-git add src/Fanote.Core/NoteModel.cs
+git add src/Aldune.Core/NoteModel.cs
 git commit -m "Add NoteModel placeholder data shape"
 ```
 
@@ -420,7 +420,7 @@ git commit -m "Add NoteModel placeholder data shape"
 ### Task 5: Non-activating window interop
 
 **Files:**
-- Create: `src/Fanote/Interop/NativeMethods.cs`
+- Create: `src/Aldune/Interop/NativeMethods.cs`
 
 **Interfaces:**
 - Produces: `internal static class NativeMethods` with `internal static void MakeNonActivating(IntPtr hwnd)`, applying `WS_EX_NOACTIVATE` to an existing window handle.
@@ -431,10 +431,10 @@ This is Win32 interop with no automated test — it's verified manually as part 
 - [ ] **Step 1: Implement the interop wrapper**
 
 ```csharp
-// src/Fanote/Interop/NativeMethods.cs
+// src/Aldune/Interop/NativeMethods.cs
 using System.Runtime.InteropServices;
 
-namespace Fanote.Interop;
+namespace Aldune.Interop;
 
 internal static class NativeMethods
 {
@@ -457,13 +457,13 @@ internal static class NativeMethods
 
 - [ ] **Step 2: Verify the app project still builds**
 
-Run: `dotnet build src/Fanote`
+Run: `dotnet build src/Aldune`
 Expected: Build succeeds. (`MakeNonActivating` isn't called from anywhere yet — that's Task 6 — so there's nothing to run beyond confirming it compiles.)
 
 - [ ] **Step 3: Commit**
 
 ```bash
-git add src/Fanote/Interop/NativeMethods.cs
+git add src/Aldune/Interop/NativeMethods.cs
 git commit -m "Add WS_EX_NOACTIVATE interop wrapper"
 ```
 
@@ -472,11 +472,11 @@ git commit -m "Add WS_EX_NOACTIVATE interop wrapper"
 ### Task 6: EdgeDockWindow — the pill that resizes on hover
 
 **Files:**
-- Create: `src/Fanote/Windowing/EdgeDockWindow.xaml`
-- Create: `src/Fanote/Windowing/EdgeDockWindow.xaml.cs`
+- Create: `src/Aldune/Windowing/EdgeDockWindow.xaml`
+- Create: `src/Aldune/Windowing/EdgeDockWindow.xaml.cs`
 
 **Interfaces:**
-- Consumes: `Fanote.Core.EdgePosition`, `Fanote.Core.WorkingArea`, `Fanote.Core.EdgeGeometry` (Task 2), `Fanote.Core.FanStateMachine` (Task 3), `Fanote.Interop.NativeMethods.MakeNonActivating` (Task 5).
+- Consumes: `Aldune.Core.EdgePosition`, `Aldune.Core.WorkingArea`, `Aldune.Core.EdgeGeometry` (Task 2), `Aldune.Core.FanStateMachine` (Task 3), `Aldune.Interop.NativeMethods.MakeNonActivating` (Task 5).
 - Produces: `EdgeDockWindow(EdgePosition edge, WorkingArea workingArea)` constructor; this is what Task 7 extends (animation) and Task 8 extends (tabs/notes).
 
 This is the task where the spec's design-review fix actually gets built: the window has a real, opaque background and resizes itself between the pill rect and the expanded rect — there is no transparent overlay and no click-through toggling.
@@ -484,8 +484,8 @@ This is the task where the spec's design-review fix actually gets built: the win
 - [ ] **Step 1: Create the XAML**
 
 ```xml
-<!-- src/Fanote/Windowing/EdgeDockWindow.xaml -->
-<Window x:Class="Fanote.Windowing.EdgeDockWindow"
+<!-- src/Aldune/Windowing/EdgeDockWindow.xaml -->
+<Window x:Class="Aldune.Windowing.EdgeDockWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         WindowStyle="None"
@@ -501,14 +501,14 @@ This is the task where the spec's design-review fix actually gets built: the win
 - [ ] **Step 2: Implement the code-behind**
 
 ```csharp
-// src/Fanote/Windowing/EdgeDockWindow.xaml.cs
+// src/Aldune/Windowing/EdgeDockWindow.xaml.cs
 using System.Windows;
 using System.Windows.Interop;
 using System.Windows.Threading;
-using Fanote.Core;
-using Fanote.Interop;
+using Aldune.Core;
+using Aldune.Interop;
 
-namespace Fanote.Windowing;
+namespace Aldune.Windowing;
 
 public partial class EdgeDockWindow : Window
 {
@@ -564,35 +564,35 @@ public partial class EdgeDockWindow : Window
 
 - [ ] **Step 3: Wire a throwaway manual entry point to see it run**
 
-Temporarily replace the body of `OnStartup` in `src/Fanote/App.xaml.cs` (generated by the template) with:
+Temporarily replace the body of `OnStartup` in `src/Aldune/App.xaml.cs` (generated by the template) with:
 
 ```csharp
 protected override void OnStartup(StartupEventArgs e)
 {
     base.OnStartup(e);
     var area = SystemParameters.WorkArea;
-    var workingArea = new Fanote.Core.WorkingArea(area.Left, area.Top, area.Width, area.Height);
-    new Fanote.Windowing.EdgeDockWindow(Fanote.Core.EdgePosition.Right, workingArea).Show();
+    var workingArea = new Aldune.Core.WorkingArea(area.Left, area.Top, area.Width, area.Height);
+    new Aldune.Windowing.EdgeDockWindow(Aldune.Core.EdgePosition.Right, workingArea).Show();
 }
 ```
 
-Also remove `StartupUri="MainWindow.xaml"` from `src/Fanote/App.xaml` if the template generated it, since we're creating the window in code now.
+Also remove `StartupUri="MainWindow.xaml"` from `src/Aldune/App.xaml` if the template generated it, since we're creating the window in code now.
 
 - [ ] **Step 4: Manual verification**
 
-Run: `dotnet run --project src/Fanote`
+Run: `dotnet run --project src/Aldune`
 
 Expected, checked by hand:
 1. A thin dark strip appears flush against the right edge of the primary monitor, vertically centered.
 2. Moving the mouse onto the strip makes it grow into a larger rectangle, still flush against the right edge (instantly — animation comes in Task 7).
 3. Moving the mouse away from the expanded rectangle, then immediately back onto it before ~200ms pass, keeps it expanded without flickering closed (this is `FanStateMachine`'s cancel-on-re-entry behavior — the concrete case Opus's review flagged).
 4. Moving the mouse away and waiting collapses it back to the thin strip after ~200ms.
-5. Open Notepad, click into it, then hover the mouse over the Fanote strip without clicking — Notepad's title bar must stay highlighted as the active window (confirms `WS_EX_NOACTIVATE` is working; hovering must never steal focus).
+5. Open Notepad, click into it, then hover the mouse over the Aldune strip without clicking — Notepad's title bar must stay highlighted as the active window (confirms `WS_EX_NOACTIVATE` is working; hovering must never steal focus).
 
 - [ ] **Step 5: Commit**
 
 ```bash
-git add src/Fanote/Windowing/EdgeDockWindow.xaml src/Fanote/Windowing/EdgeDockWindow.xaml.cs src/Fanote/App.xaml src/Fanote/App.xaml.cs
+git add src/Aldune/Windowing/EdgeDockWindow.xaml src/Aldune/Windowing/EdgeDockWindow.xaml.cs src/Aldune/App.xaml src/Aldune/App.xaml.cs
 git commit -m "Add EdgeDockWindow: resizing pill/fan mechanism"
 ```
 
@@ -601,7 +601,7 @@ git commit -m "Add EdgeDockWindow: resizing pill/fan mechanism"
 ### Task 7: Respect the Windows animation setting
 
 **Files:**
-- Modify: `src/Fanote/Windowing/EdgeDockWindow.xaml.cs` (the `ApplyGeometry` method from Task 6)
+- Modify: `src/Aldune/Windowing/EdgeDockWindow.xaml.cs` (the `ApplyGeometry` method from Task 6)
 
 **Interfaces:**
 - Consumes: `System.Windows.SystemParameters.ClientAreaAnimation` (built into WPF — no interop needed for this one, it already reflects the OS accessibility setting).
@@ -610,7 +610,7 @@ git commit -m "Add EdgeDockWindow: resizing pill/fan mechanism"
 - [ ] **Step 1: Replace `ApplyGeometry` with an animated version**
 
 ```csharp
-// src/Fanote/Windowing/EdgeDockWindow.xaml.cs — replace the existing ApplyGeometry method
+// src/Aldune/Windowing/EdgeDockWindow.xaml.cs — replace the existing ApplyGeometry method
 private void ApplyGeometry()
 {
     var rect = _fanState.IsExpanded
@@ -636,7 +636,7 @@ private void ApplyGeometry()
 
 - [ ] **Step 2: Manual verification**
 
-Run: `dotnet run --project src/Fanote`
+Run: `dotnet run --project src/Aldune`
 
 Expected, checked by hand:
 1. With Windows animations on (default): Settings → Accessibility → Visual effects → "Animation effects" enabled. Hovering the pill now grows it smoothly over ~200ms instead of snapping instantly.
@@ -646,7 +646,7 @@ Expected, checked by hand:
 - [ ] **Step 3: Commit**
 
 ```bash
-git add src/Fanote/Windowing/EdgeDockWindow.xaml.cs
+git add src/Aldune/Windowing/EdgeDockWindow.xaml.cs
 git commit -m "Animate dock resize, respecting the Windows animation accessibility setting"
 ```
 
@@ -655,21 +655,21 @@ git commit -m "Animate dock resize, respecting the Windows animation accessibili
 ### Task 8: NoteWindow — the expanded single note
 
 **Files:**
-- Create: `src/Fanote/Windowing/NoteWindow.xaml`
-- Create: `src/Fanote/Windowing/NoteWindow.xaml.cs`
+- Create: `src/Aldune/Windowing/NoteWindow.xaml`
+- Create: `src/Aldune/Windowing/NoteWindow.xaml.cs`
 
 **Interfaces:**
-- Consumes: `Fanote.Core.NoteModel` (Task 4).
+- Consumes: `Aldune.Core.NoteModel` (Task 4).
 - Produces: `NoteWindow(NoteModel note)` constructor. Unlike `EdgeDockWindow`, this window activates normally (no `WS_EX_NOACTIVATE`) — clicking a note tab must let the user start typing immediately.
 
 - [ ] **Step 1: Create the XAML**
 
 ```xml
-<!-- src/Fanote/Windowing/NoteWindow.xaml -->
-<Window x:Class="Fanote.Windowing.NoteWindow"
+<!-- src/Aldune/Windowing/NoteWindow.xaml -->
+<Window x:Class="Aldune.Windowing.NoteWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="Fanote"
+        Title="Aldune"
         Width="260" Height="260"
         WindowStyle="ToolWindow"
         Topmost="True">
@@ -684,11 +684,11 @@ git commit -m "Animate dock resize, respecting the Windows animation accessibili
 - [ ] **Step 2: Implement the code-behind**
 
 ```csharp
-// src/Fanote/Windowing/NoteWindow.xaml.cs
+// src/Aldune/Windowing/NoteWindow.xaml.cs
 using System.Windows;
-using Fanote.Core;
+using Aldune.Core;
 
-namespace Fanote.Windowing;
+namespace Aldune.Windowing;
 
 public partial class NoteWindow : Window
 {
@@ -702,10 +702,10 @@ public partial class NoteWindow : Window
 
 - [ ] **Step 3: Manual verification**
 
-Temporarily add, at the end of `OnStartup` in `src/Fanote/App.xaml.cs`:
+Temporarily add, at the end of `OnStartup` in `src/Aldune/App.xaml.cs`:
 
 ```csharp
-new Fanote.Windowing.NoteWindow(new Fanote.Core.NoteModel
+new Aldune.Windowing.NoteWindow(new Aldune.Core.NoteModel
 {
     Id = Guid.NewGuid(),
     Text = "Nota de prueba",
@@ -713,14 +713,14 @@ new Fanote.Windowing.NoteWindow(new Fanote.Core.NoteModel
 }).Show();
 ```
 
-Run: `dotnet run --project src/Fanote`
+Run: `dotnet run --project src/Aldune`
 
 Expected, checked by hand: a second window opens showing "Nota de prueba" in an editable text box, and it has keyboard focus immediately (typing works without clicking into it first). Remove this temporary snippet after verifying — Task 9 wires `NoteWindow` properly via the tab click.
 
 - [ ] **Step 4: Commit**
 
 ```bash
-git add src/Fanote/Windowing/NoteWindow.xaml src/Fanote/Windowing/NoteWindow.xaml.cs
+git add src/Aldune/Windowing/NoteWindow.xaml src/Aldune/Windowing/NoteWindow.xaml.cs
 git commit -m "Add NoteWindow for the expanded single-note view"
 ```
 
@@ -729,11 +729,11 @@ git commit -m "Add NoteWindow for the expanded single-note view"
 ### Task 9: Wire fake notes as clickable tabs, end-to-end demo
 
 **Files:**
-- Modify: `src/Fanote/Windowing/EdgeDockWindow.xaml` (add the tabs `ItemsControl`)
-- Modify: `src/Fanote/Windowing/EdgeDockWindow.xaml.cs` (add `SetNotes` and the click handler)
-- Modify: `src/Fanote/App.xaml` (remove `StartupUri`, since there's no `MainWindow` in this app)
-- Modify: `src/Fanote/App.xaml.cs` (final `OnStartup` wiring)
-- Delete: `src/Fanote/MainWindow.xaml`, `src/Fanote/MainWindow.xaml.cs` (template scaffolding, unused — `EdgeDockWindow` and `NoteWindow` are the app's only windows)
+- Modify: `src/Aldune/Windowing/EdgeDockWindow.xaml` (add the tabs `ItemsControl`)
+- Modify: `src/Aldune/Windowing/EdgeDockWindow.xaml.cs` (add `SetNotes` and the click handler)
+- Modify: `src/Aldune/App.xaml` (remove `StartupUri`, since there's no `MainWindow` in this app)
+- Modify: `src/Aldune/App.xaml.cs` (final `OnStartup` wiring)
+- Delete: `src/Aldune/MainWindow.xaml`, `src/Aldune/MainWindow.xaml.cs` (template scaffolding, unused — `EdgeDockWindow` and `NoteWindow` are the app's only windows)
 
 **Interfaces:**
 - Consumes: everything from Tasks 2–8.
@@ -742,8 +742,8 @@ git commit -m "Add NoteWindow for the expanded single-note view"
 - [ ] **Step 1: Add the tabs list to the XAML**
 
 ```xml
-<!-- src/Fanote/Windowing/EdgeDockWindow.xaml -->
-<Window x:Class="Fanote.Windowing.EdgeDockWindow"
+<!-- src/Aldune/Windowing/EdgeDockWindow.xaml -->
+<Window x:Class="Aldune.Windowing.EdgeDockWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         WindowStyle="None"
@@ -770,7 +770,7 @@ git commit -m "Add NoteWindow for the expanded single-note view"
 - [ ] **Step 2: Add `SetNotes` and the click handler**
 
 ```csharp
-// src/Fanote/Windowing/EdgeDockWindow.xaml.cs — add these members to the existing class
+// src/Aldune/Windowing/EdgeDockWindow.xaml.cs — add these members to the existing class
 using System.Collections.Generic;
 // (add alongside the existing usings)
 
@@ -791,14 +791,14 @@ private void OnTabClick(object sender, RoutedEventArgs e)
 - [ ] **Step 3: Delete the unused MainWindow scaffolding**
 
 ```bash
-rm src/Fanote/MainWindow.xaml src/Fanote/MainWindow.xaml.cs
+rm src/Aldune/MainWindow.xaml src/Aldune/MainWindow.xaml.cs
 ```
 
 - [ ] **Step 4: Finalize `App.xaml` and `App.xaml.cs`**
 
 ```xml
-<!-- src/Fanote/App.xaml -->
-<Application x:Class="Fanote.App"
+<!-- src/Aldune/App.xaml -->
+<Application x:Class="Aldune.App"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              ShutdownMode="OnLastWindowClose">
@@ -806,12 +806,12 @@ rm src/Fanote/MainWindow.xaml src/Fanote/MainWindow.xaml.cs
 ```
 
 ```csharp
-// src/Fanote/App.xaml.cs
+// src/Aldune/App.xaml.cs
 using System.Windows;
-using Fanote.Core;
-using Fanote.Windowing;
+using Aldune.Core;
+using Aldune.Windowing;
 
-namespace Fanote;
+namespace Aldune;
 
 public partial class App : Application
 {
@@ -836,7 +836,7 @@ public partial class App : Application
 
 - [ ] **Step 5: Full manual verification of the Phase 1 milestone**
 
-Run: `dotnet run --project src/Fanote`
+Run: `dotnet run --project src/Aldune`
 
 Expected, checked by hand — this is the complete Phase 1 acceptance checklist from the spec's Testing section, scoped to a single monitor:
 1. The pill appears on the right edge; hovering fans it out into 3 colored tabs.

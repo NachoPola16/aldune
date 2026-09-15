@@ -5,26 +5,27 @@ otra IA, empieza por aquí. Todo lo importante vive en el repositorio (specs,
 planes, commits), no solo en una conversación concreta.
 
 > **Nota de nombres.** El proyecto se llamó **Fanote** hasta el 2026-09-15. Las entradas anteriores de
-> este documento y los nombres de fichero de `docs/superpowers/` conservan ese nombre a propósito
-> (registro histórico y enlaces ya existentes). Los identificadores `FANOTE_*`, `%LOCALAPPDATA%\Fanote`
-> y los slugs `fanote-*` que aparecen aquí son compatibilidad deliberada, no restos de renombrado;
-> el mapa completo está en `docs/BRANDING.md`.
+> este documento describen el proyecto tal y como estaba entonces, así que conservan ese nombre y los
+> identificadores de aquella época. Los que siguen apareciendo hoy son compatibilidad deliberada, no
+> restos de renombrado: `%LOCALAPPDATA%\Fanote` (migración de datos), los prefijos de los códigos de
+> perfil `fanote-profile-v1:` y `fanote-profile-v2:` y el volumen `fanote-sync-data` de un servidor
+> que ya sincronizaba. El mapa completo está en `docs/BRANDING.md`.
 
 ## Qué es Aldune
 
 App de notas para Windows (WPF/.NET 10), inspirada en Hold My Notes / Noty /
 noty-sepia (macOS): notas ancladas al borde de la pantalla que se despliegan
 en abanico al pasar el ratón por encima. Ver el diseño completo en
-`docs/superpowers/specs/2026-08-30-fanote-v1-design.md` — ese documento es la
+`docs/superpowers/specs/2026-08-30-aldune-v1-design.md` — ese documento es la
 autoridad de diseño; todo lo demás (planes, código) se argumenta contra él.
 
 ## Qué hay hecho (fusionado en `master`)
 
-- **Fase 1** (`docs/superpowers/plans/2026-08-30-fanote-phase1-window-mechanics.md`):
+- **Fase 1** (`docs/superpowers/plans/2026-08-30-aldune-phase1-window-mechanics.md`):
   mecánica de ventana — pill anclado al borde, hover con abanico, ventana de
   nota que activa el foco correctamente, animación respetando el ajuste de
   accesibilidad de Windows. Un solo monitor, notas falsas en memoria.
-- **Fase 2** (`docs/superpowers/plans/2026-08-30-fanote-phase2-persistence.md`):
+- **Fase 2** (`docs/superpowers/plans/2026-08-30-aldune-phase2-persistence.md`):
   persistencia real — SQLite, cifrado AES-GCM con clave envuelta en DPAPI
   (ligada a tu usuario de Windows), CRUD, papelera/archivado, autoguardado con
   debounce y guardado forzado al cerrar, manejo de errores de arranque (clave
@@ -60,7 +61,7 @@ autoridad de diseño; todo lo demás (planes, código) se argumenta contra él.
   rehecho con pestañas escalonadas, etiqueta de texto rotada
   verticalmente por nota, y apertura de la nota creciendo desde la
   posición de su propia pestaña.
-- **Fase 3a** (`docs/superpowers/plans/2026-09-02-fanote-phase3a-multimonitor-dpi.md`):
+- **Fase 3a** (`docs/superpowers/plans/2026-09-02-aldune-phase3a-multimonitor-dpi.md`):
   primera sub-entrega de la Fase 3 — un `EdgeDockWindow` real por cada
   monitor conectado (antes solo el principal), con geometría y DPI reales
   de Win32 (`MonitorEnumerator`, `app.manifest` con `PerMonitorV2`), y un
@@ -376,8 +377,8 @@ ver archivadas/papelera. El resto de esta sección (purga automática,
 
 ## Fase 3a: multi-monitor real + DPI (sesión 2026-09-02, arquitectónico)
 
-Spec: `docs/superpowers/specs/2026-09-02-fanote-phase3a-multimonitor-dpi-design.md`.
-Plan: `docs/superpowers/plans/2026-09-02-fanote-phase3a-multimonitor-dpi.md`.
+Spec: `docs/superpowers/specs/2026-09-02-aldune-phase3a-multimonitor-dpi-design.md`.
+Plan: `docs/superpowers/plans/2026-09-02-aldune-phase3a-multimonitor-dpi.md`.
 Implementado siguiendo el plan tarea por tarea (5 tareas, 5 commits) mientras
 el usuario estaba fuera — ver ese hueco de verificación abajo.
 
@@ -465,8 +466,8 @@ el usuario estaba fuera — ver ese hueco de verificación abajo.
 
 ## Rediseño de pestañas en abanico (sesión 2026-09-02/03, arquitectónico)
 
-Spec: `docs/superpowers/specs/2026-09-02-fanote-fan-tabs-redesign-design.md`.
-Plan: `docs/superpowers/plans/2026-09-02-fanote-fan-tabs-redesign.md`.
+Spec: `docs/superpowers/specs/2026-09-02-aldune-fan-tabs-redesign-design.md`.
+Plan: `docs/superpowers/plans/2026-09-02-aldune-fan-tabs-redesign.md`.
 Ejecutado con `superpowers:subagent-driven-development` en un worktree
 propio, 4 tareas + un arreglo post-hoc + una ronda de arreglo tras la
 revisión final de toda la rama.
@@ -2500,8 +2501,8 @@ Build limpio.
 
 Segundo punto de `docs/ROADMAP.md` §2 implementado — "el mayor hueco funcional frente a la
 competencia de Windows" según la investigación de mercado. Spec y plan escritos con
-`superpowers:brainstorming`/`writing-plans` (`docs/superpowers/specs/2026-09-11-fanote-reminders-design.md`,
-`docs/superpowers/plans/2026-09-11-fanote-reminders.md`), ejecutados con
+`superpowers:brainstorming`/`writing-plans` (`docs/superpowers/specs/2026-09-11-aldune-reminders-design.md`,
+`docs/superpowers/plans/2026-09-11-aldune-reminders.md`), ejecutados con
 `superpowers:subagent-driven-development` en un worktree aparte (`fanote-reminders`), 5 tareas + una
 ronda de arreglos tras la revisión final de toda la rama.
 
@@ -2839,14 +2840,14 @@ sigue disponible.
 
 Tests: 396/396. Build correcto. Portable republicado y abierto desde `publish/portable/aldune.exe`.
 
-## Transporte WebDAV para sincronizaciÃ³n (sesiÃ³n 2026-09-13)
+## Transporte WebDAV para sincronización (sesión 2026-09-13)
 
 Aldune ya permite elegir WebDAV/Nextcloud como transporte independiente de la carpeta compartida y
 del servidor Aldune. Usa `PROPFIND`, `MKCOL`, `GET`, `PUT` y `DELETE` sobre sobres cifrados por nota.
-La URL puede viajar en una invitaciÃ³n de perfil, pero el usuario y la contraseÃ±a de aplicaciÃ³n se
-configuran por dispositivo; la contraseÃ±a queda protegida localmente.
+La URL puede viajar en una invitación de perfil, pero el usuario y la contraseña de aplicación se
+configuran por dispositivo; la contraseña queda protegida localmente.
 
-Tests: 428/428. Pendiente: probarlo contra una instalaciÃ³n real de Nextcloud/ownCloud.
+Tests: 428/428. Pendiente: probarlo contra una instalación real de Nextcloud/ownCloud.
 
 ## Invitaciones de perfiles de sincronización (sesión 2026-09-13)
 
@@ -2857,40 +2858,40 @@ del servidor y deja el token para introducirlo localmente.
 
 Build correcto. Tests: 426/426. Portable v0.5.0 republicado y abierto.
 
-## RevocaciÃ³n segura de perfiles de sincronizaciÃ³n (sesiÃ³n 2026-09-13)
+## Revocación segura de perfiles de sincronización (sesión 2026-09-13)
 
-Ajustes incorpora `Revocar cÃ³digos anteriores`. La operaciÃ³n sincroniza antes de rotar la clave,
+Ajustes incorpora `Revocar códigos anteriores`. La operación sincroniza antes de rotar la clave,
 guarda una clave pendiente reanudable, vuelve a cifrar los sobres y limpia los objetos que ya no
-pertenecen al Ã¡mbito. Los sobres re-cifrados reciben una versiÃ³n posterior para que un dispositivo
+pertenecen al ámbito. Los sobres re-cifrados reciben una versión posterior para que un dispositivo
 con la clave antigua no pueda republicarlos. El servidor propio expone el borrado autenticado de
-objetos que necesita esta operaciÃ³n.
+objetos que necesita esta operación.
 
-La prueba de integraciÃ³n confirma que el cÃ³digo antiguo deja de sincronizar y que una invitaciÃ³n nueva
-recupera el vÃ­nculo. Tests: 427/427.
+La prueba de integración confirma que el código antiguo deja de sincronizar y que una invitación nueva
+recupera el vínculo. Tests: 427/427.
 
-## RevisiÃ³n inicial de Gestionar notas (sesiÃ³n 2026-09-13)
+## Revisión inicial de Gestionar notas (sesión 2026-09-13)
 
-La selecciÃ³n de una fila ahora se distingue tambiÃ©n por el borde y la opacidad de la propia nota,
+La selección de una fila ahora se distingue también por el borde y la opacidad de la propia nota,
 no solo por la casilla. Las filas son enfocables y el doble clic abre la nota completa; el clic normal
-conserva la selecciÃ³n para acciones en bloque.
+conserva la selección para acciones en bloque.
 
-Build correcto. Tests: 425/425. Se ha generado la versiÃ³n actualizada en
+Build correcto. Tests: 425/425. Se ha generado la versión actualizada en
 `publish/portable-next/aldune.exe`; la carpeta `publish/portable` no se puede reemplazar mientras
 sus dos instancias sigan abiertas.
 
-## Notas contenidas en el monitor y barra de desplazamiento (sesiÃ³n 2026-09-13)
+## Notas contenidas en el monitor y barra de desplazamiento (sesión 2026-09-13)
 
-Las notas recalculan sus lÃ­mites de ancho y alto segÃºn el Ã¡rea de trabajo del monitor actual. Si
+Las notas recalculan sus límites de ancho y alto según el área de trabajo del monitor actual. Si
 crecen cerca del borde inferior, se recolocan dentro de la pantalla; cuando el contenido supera el
 alto permitido, el cuerpo mantiene el desplazamiento vertical en vez de dejar salir la ventana.
-TambiÃ©n se desactiva el desplazamiento horizontal para que el texto se adapte al ancho disponible.
+También se desactiva el desplazamiento horizontal para que el texto se adapte al ancho disponible.
 
 La barra global gana contraste sobre las notas de color, con un pulgar redondeado, borde sutil y
-estados diferenciados al pasar el ratÃ³n o arrastrar.
+estados diferenciados al pasar el ratón o arrastrar.
 
 Tests: 410/410. Build correcto. Portable republicado y abierto desde `publish/portable/aldune.exe`.
 
-## Atajo de búsqueda en Gestionar notas (sesiÃ³n 2026-09-13)
+## Atajo de búsqueda en Gestionar notas (sesión 2026-09-13)
 
 `Ctrl+F` enfoca el campo de búsqueda de Gestionar notas y selecciona el texto actual para poder
 reemplazarlo directamente. La ayuda rápida de Ajustes también lo documenta en español e inglés.
@@ -2948,11 +2949,11 @@ una marca temporal nueva para que la decisión se publique en la siguiente sincr
 
 Build correcto. Tests: 410/410.
 
-## Modo simplificado de Ajustes (sesiÃ³n 2026-09-12)
+## Modo simplificado de Ajustes (sesión 2026-09-12)
 
-Se aÃ±adiÃ³ `AppSettings.SimplifiedMode` y un selector persistente en Ajustes. El modo simplificado
-oculta el bloque de opciones avanzadas, pero mantiene accesibles el cambio de modo, la versiÃ³n y la
-salida de la aplicaciÃ³n. El cambio se aplica al instante y no altera notas ni el resto de valores
+Se añadió `AppSettings.SimplifiedMode` y un selector persistente en Ajustes. El modo simplificado
+oculta el bloque de opciones avanzadas, pero mantiene accesibles el cambio de modo, la versión y la
+salida de la aplicación. El cambio se aplica al instante y no altera notas ni el resto de valores
 guardados.
 
 Build correcto. Tests: 400/400. Portable v0.5.0 publicada.
