@@ -350,7 +350,7 @@ internal static class NativeMethods
 
     /// <summary>
     /// Desactiva el "power throttling" (EcoQoS) que Windows aplica a procesos en segundo plano
-    /// tras un rato de inactividad, para reducir su consumo de CPU. Fanote vive casi siempre en
+    /// tras un rato de inactividad, para reducir su consumo de CPU. Aldune vive casi siempre en
     /// segundo plano (nadie lo tiene "en primer plano" para escribir salvo cuando abre una nota),
     /// así que Windows lo trata como candidato a ese throttling — y el primer frame de una
     /// animación justo después de que se reactive el proceso sale con tirones, porque el hilo de

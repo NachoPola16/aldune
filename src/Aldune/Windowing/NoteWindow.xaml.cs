@@ -244,7 +244,7 @@ public partial class NoteWindow : Window
         if (monitorKey is null || monitorKey == _placementMonitorKey) return;
 
         // La pertenencia cambia cuando el centro cruza al otro monitor. Guardarlo en ese momento
-        // hace que la nota ya pertenezca a la segunda pantalla aunque siga abierta o Fanote se
+        // hace que la nota ya pertenezca a la segunda pantalla aunque siga abierta o Aldune se
         // cierre de forma inesperada antes del siguiente cierre normal.
         _placementMonitorKey = monitorKey;
         SavePlacementForCurrentMonitor();

@@ -25,7 +25,7 @@ public sealed record SyncRemoteObject(SyncEnvelope Envelope, byte[] Bytes);
 
 public sealed record SyncTombstone(Guid NoteId, DateTimeOffset DeletedAt, string DeviceId);
 
-/// <summary>Ventana de formatos que una versiÃ³n de Fanote sabe leer.</summary>
+/// <summary>Ventana de formatos que una versión de Aldune sabe leer.</summary>
 public static class SyncCompatibility
 {
     // Format 2 added tags. Format 3 adds protected-note ciphertext and metadata. Older clients
@@ -163,17 +163,48 @@ public sealed record SyncShareCodeData(
 /// </summary>
 public static class SyncShareCodeCodec
 {
-    private const string LegacyPrefix = "fanote-profile-v1:";
-    private const string Prefix = "fanote-profile-v2:";
+    // El prefijo vigente lo declara BrandIdentity: así el nombre de marca vive en un único sitio
+    // y rebautizar la aplicación no obliga a tocar este códec (solo hay que añadir el prefijo
+    // antiguo a BrandIdentity.LegacySyncProfileCodePrefixes).
+    private const string Prefix = BrandIdentity.SyncProfileCodePrefix;
+
+    /// <summary>Versión del documento que emite <see cref="Encode"/> (sufijo del prefijo vigente).</summary>
+    private const int CurrentDocumentVersion = 2;
+
     private const int MaxNoteIds = 10_000;
     private const int MaxProfileNameLength = 120;
     private const int MaxServerUrlLength = 2_048;
 
-    public static bool IsShareCode(string value)
+    public static bool IsShareCode(string value) => TrySplitPrefix(value.Trim(), out _, out _);
+
+    /// <summary>
+    /// Separa un código de perfil en el prefijo (marca + versión del documento) y el resto.
+    /// Acepta el prefijo vigente y los heredados: los códigos generados antes del cambio de marca
+    /// tienen que seguir importándose.
+    /// </summary>
+    private static bool TrySplitPrefix(string value, out string payload, out int documentVersion)
     {
-        var trimmed = value.Trim();
-        return trimmed.StartsWith(LegacyPrefix, StringComparison.OrdinalIgnoreCase) ||
-               trimmed.StartsWith(Prefix, StringComparison.OrdinalIgnoreCase);
+        payload = string.Empty;
+        documentVersion = 0;
+
+        if (value.StartsWith(Prefix, StringComparison.OrdinalIgnoreCase))
+        {
+            payload = value[Prefix.Length..];
+            documentVersion = CurrentDocumentVersion;
+            return true;
+        }
+
+        foreach (var legacyPrefix in BrandIdentity.LegacySyncProfileCodePrefixes)
+        {
+            if (!value.StartsWith(legacyPrefix, StringComparison.OrdinalIgnoreCase)) continue;
+            payload = value[legacyPrefix.Length..];
+            // El propio prefijo heredado lleva la versión del formato ("…-v1:" / "…-v2:"), así que
+            // no hace falta mantener aparte la correspondencia prefijo → versión.
+            documentVersion = legacyPrefix.EndsWith("-v1:", StringComparison.Ordinal) ? 1 : CurrentDocumentVersion;
+            return true;
+        }
+
+        return false;
     }
 
     public static string Encode(
@@ -187,7 +218,7 @@ public static class SyncShareCodeCodec
         ArgumentNullException.ThrowIfNull(key);
         var document = new SyncShareCodeDocument
         {
-            Version = 2,
+            Version = CurrentDocumentVersion,
             Key = SyncKeyFormat.Encode(key),
             Scope = scope,
             NoteIds = noteIds.Distinct().Take(MaxNoteIds).ToArray(),
@@ -202,16 +233,14 @@ public static class SyncShareCodeCodec
     public static SyncShareCodeData Decode(string value)
     {
         var trimmed = value.Trim();
-        if (!IsShareCode(trimmed)) throw new FormatException("That is not an Aldune profile code.");
+        if (!TrySplitPrefix(trimmed, out var payload, out var documentVersion))
+            throw new FormatException("That is not an Aldune profile code.");
 
         try
         {
-            bool legacy = trimmed.StartsWith(LegacyPrefix, StringComparison.OrdinalIgnoreCase);
-            var prefix = legacy ? LegacyPrefix : Prefix;
-            var payload = trimmed[prefix.Length..];
             var document = JsonSerializer.Deserialize<SyncShareCodeDocument>(FromBase64Url(payload))
                 ?? throw new FormatException("The profile code is empty.");
-            if ((legacy && document.Version != 1) || (!legacy && document.Version != 2) ||
+            if (document.Version != documentVersion ||
                 !Enum.IsDefined(document.Scope) || string.IsNullOrWhiteSpace(document.Key))
                 throw new FormatException("The profile code version is not supported.");
             var noteIds = document.NoteIds ?? Array.Empty<Guid>();

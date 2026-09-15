@@ -211,7 +211,7 @@ public partial class SettingsWindow : Window
 
         // Igual que arriba: se guarda y se muestra lo que se consiguió. Windows no comparte una
         // combinación entre aplicaciones — se la queda la primera que la pide —, así que activarla
-        // puede fallar por causas ajenas a Fanote.
+        // puede fallar por causas ajenas a Aldune.
         _settings.GlobalHotkeyEnabled = wanted;
         HotkeyCheck.IsChecked = wanted;
         _settingsService.Save(_settings);
@@ -941,7 +941,7 @@ public partial class SettingsWindow : Window
             _settingsService.Save(_settings);
             // No se recarga en caliente: los enlaces {x:Static} del XAML se resuelven al construir
             // cada ventana, así que un cambio de idioma solo se ve entero tras reiniciar (ver
-            // Fanote.Resources.Strings). Rehacer todas las ventanas abiertas —incluidas notas con
+            // Aldune.Resources.Strings). Rehacer todas las ventanas abiertas —incluidas notas con
             // texto sin guardar— para simular un cambio en caliente sería más frágil que pedir un
             // reinicio, así que no se intenta.
         }

@@ -6,7 +6,7 @@ namespace Aldune.Core.Tests;
 
 public sealed class NotesRepositoryTagTests : IDisposable
 {
-    private readonly string _dbPath = Path.Combine(Path.GetTempPath(), $"fanote-tags-{Guid.NewGuid()}.db");
+    private readonly string _dbPath = Path.Combine(Path.GetTempPath(), $"aldune-tags-{Guid.NewGuid()}.db");
     private readonly NotesRepository _repository;
 
     public NotesRepositoryTagTests()

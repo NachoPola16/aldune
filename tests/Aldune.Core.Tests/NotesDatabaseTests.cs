@@ -6,7 +6,7 @@ namespace Aldune.Core.Tests;
 
 public class NotesDatabaseTests : IDisposable
 {
-    private readonly string _dbPath = Path.Combine(Path.GetTempPath(), $"fanote-test-{Guid.NewGuid()}.db");
+    private readonly string _dbPath = Path.Combine(Path.GetTempPath(), $"aldune-test-{Guid.NewGuid()}.db");
 
     public void Dispose()
     {

@@ -34,7 +34,11 @@ public static class BrandIdentity
     /// <summary>Prefijo para códigos de compartición de perfiles de sincronización.</summary>
     public const string SyncProfileCodePrefix = "aldune-profile-v2:";
 
-    /// <summary>Prefijos heredados compatibles para códigos de compartición.</summary>
+    /// <summary>
+    /// Prefijos heredados que se siguen aceptando al importar un código de compartición. Los
+    /// códigos ya emitidos con un nombre anterior (Fanote) tienen que seguir funcionando, así que
+    /// al rebautizar la aplicación se añade el prefijo vigente a esta lista, no se sustituye.
+    /// </summary>
     public static readonly string[] LegacySyncProfileCodePrefixes = ["fanote-profile-v2:", "fanote-profile-v1:"];
 
     /// <summary>Nombres de variables de entorno para sincronización (actual y heredada).</summary>

@@ -11,7 +11,7 @@ namespace Aldune.Core.Tests;
 /// </summary>
 public class NotesRepositoryDeleteTests : IDisposable
 {
-    private readonly string _databasePath = Path.Combine(Path.GetTempPath(), $"fanote-delete-{Guid.NewGuid():N}.db");
+    private readonly string _databasePath = Path.Combine(Path.GetTempPath(), $"aldune-delete-{Guid.NewGuid():N}.db");
     private readonly NotesRepository _repository;
 
     public NotesRepositoryDeleteTests()

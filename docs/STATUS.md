@@ -1,10 +1,16 @@
-# Fanote — Estado del proyecto
+# Aldune — Estado del proyecto
 
 Documento de continuidad: si retomas este proyecto en otra sesión, otro chat, u
 otra IA, empieza por aquí. Todo lo importante vive en el repositorio (specs,
 planes, commits), no solo en una conversación concreta.
 
-## Qué es Fanote
+> **Nota de nombres.** El proyecto se llamó **Fanote** hasta el 2026-09-15. Las entradas anteriores de
+> este documento y los nombres de fichero de `docs/superpowers/` conservan ese nombre a propósito
+> (registro histórico y enlaces ya existentes). Los identificadores `FANOTE_*`, `%LOCALAPPDATA%\Fanote`
+> y los slugs `fanote-*` que aparecen aquí son compatibilidad deliberada, no restos de renombrado;
+> el mapa completo está en `docs/BRANDING.md`.
+
+## Qué es Aldune
 
 App de notas para Windows (WPF/.NET 10), inspirada en Hold My Notes / Noty /
 noty-sepia (macOS): notas ancladas al borde de la pantalla que se despliegan
@@ -31,7 +37,7 @@ autoridad de diseño; todo lo demás (planes, código) se argumenta contra él.
   variados por nota nueva (paleta de 6 pasteles, rotando), y tratamiento de
   "título": la primera línea de cada nota se muestra en negrita en la pestaña
   del dock y como título de la ventana — sin campo de título nuevo, solo
-  presentación (`NoteTitleHelper.GetTitle`, en `Fanote.Core`, puramente
+  presentación (`NoteTitleHelper.GetTitle`, en `Aldune.Core`, puramente
   computado a partir del texto existente).
 - **Arreglo de los dos bugs visuales pendientes + pulido visual moderno**
   (bounded, sin spec/plan formal — ver detalle en "Bugs visuales" e
@@ -85,7 +91,7 @@ Tests: 140/140 pasando (`dotnet test` desde la raíz del repo).
 - **Verificación manual**: los subagentes no siempre tienen forma de mover el
   ratón/hacer clic en la app real — cuando el comportamiento es
   interactivo (hover, foco de ventana, arrastrar), lo prueba el humano
-  directamente lanzando `dotnet run --project src/Fanote` y siguiendo un
+  directamente lanzando `dotnet run --project src/Aldune` y siguiendo un
   checklist concreto.
 - **Preferencia del usuario confirmada**: entender el porqué de las
   decisiones técnicas, no solo el qué — las explicaciones detalladas en la
@@ -139,7 +145,7 @@ Queda:
    Una sub-entrega futura tiene que decidir qué hacer con ese valor
    centinela frente a IDs de dispositivo reales y estables (Win32 hoy solo
    da `\\.\DISPLAY1`-style, que cambia al reconectar monitores — ver
-   `MonitorInfo.DeviceName` en `Fanote.Core`, documentado ahí como "no es
+   `MonitorInfo.DeviceName` en `Aldune.Core`, documentado ahí como "no es
    el id estable").
 2. **Con varios docks, todos muestran la misma lista completa de notas**
    (se decidió así a propósito en la Fase 3a, mientras no haya IDs
@@ -236,7 +242,7 @@ verificado a mano en cada paso). Por si hace falta el detalle técnico luego:
    panel invisible seguía interceptando los clics del panel visible debajo.
    Si se añade un tercer panel superpuesto algún día, no olvidar este punto.
 6. **Selector de color en la ventana de nota.** Fila de 6 pastillas
-   (paleta compartida, extraída a `Fanote.Windowing.NoteColorPalette` para
+   (paleta compartida, extraída a `Aldune.Windowing.NoteColorPalette` para
    que la usen tanto `EdgeDockWindow` como `NoteWindow`) — clic para
    recolorear una nota ya creada. Nuevo `NotesRepository.SetColor`
    (TDD, mismo patrón que `SetState`/`UpdateText`). Se decidió
@@ -349,9 +355,9 @@ ver archivadas/papelera. El resto de esta sección (purga automática,
   Empezó como "gestor de archivadas/papelera" pero el usuario pidió que
   "Todas" incluyera también las activas — de ahí el renombrado a
   `NotesManagerWindow` y el filtro con 4 estados en vez de 2.
-- **Selección en listas WPF**: `NoteRow` (`Fanote.Windowing`) envuelve cada
+- **Selección en listas WPF**: `NoteRow` (`Aldune.Windowing`) envuelve cada
   `Note` con un `IsSelected` bindable (`INotifyPropertyChanged`) —
-  deliberadamente fuera de `Fanote.Core`, la selección es un concepto de
+  deliberadamente fuera de `Aldune.Core`, la selección es un concepto de
   UI, no de dominio. Se usa tanto en `NotesManagerWindow` como (antes,
   luego revertido) en el propio dock.
 - **Bug real encontrado y arreglado**: un `RadioButton` con
@@ -375,13 +381,13 @@ Plan: `docs/superpowers/plans/2026-09-02-fanote-phase3a-multimonitor-dpi.md`.
 Implementado siguiendo el plan tarea por tarea (5 tareas, 5 commits) mientras
 el usuario estaba fuera — ver ese hueco de verificación abajo.
 
-- **`Fanote.Core.MonitorInfo` + `DpiConversion`** (TDD): tipo de dato puro
+- **`Aldune.Core.MonitorInfo` + `DpiConversion`** (TDD): tipo de dato puro
   por monitor (nombre de dispositivo, área de trabajo, escala de DPI,
   si es el principal) y la conversión píxeles→DIP que necesita Win32
   (Win32 da píxeles físicos; `Window.Left/Top/Width/Height` de WPF son
   DIPs relativas al DPI de cada monitor una vez declarado `PerMonitorV2`).
   3 tests nuevos.
-- **`Fanote.Interop.MonitorEnumerator`**: `EnumDisplayMonitors` +
+- **`Aldune.Interop.MonitorEnumerator`**: `EnumDisplayMonitors` +
   `GetMonitorInfoW` + `GetDpiForMonitor` (Win32 puro, sin dependencia
   nueva, mismo patrón que `NativeMethods.cs`). Si `GetDpiForMonitor` falla
   para un monitor, asume 96 DPI en vez de propagar el error. Verificado
@@ -390,11 +396,11 @@ el usuario estaba fuera — ver ese hueco de verificación abajo.
   usuario delante): detectó correctamente el monitor principal
   (2560×1440) y el secundario en vertical (1440×2560, con offset negativo
   respecto al principal).
-- **`src/Fanote/app.manifest`** declarando `PerMonitorV2`, referenciado
-  desde `Fanote.csproj` (`<ApplicationManifest>`). No existía ningún
+- **`src/Aldune/app.manifest`** declarando `PerMonitorV2`, referenciado
+  desde `Aldune.csproj` (`<ApplicationManifest>`). No existía ningún
   manifest antes — la app corría con el DPI-awareness por defecto de
   Windows para un proceso sin declarar.
-- **`AppCoordinator`** (`Fanote.Windowing`, una instancia para toda la
+- **`AppCoordinator`** (`Aldune.Windowing`, una instancia para toda la
   app): se lleva `_openNoteWindows` y el `NotesManagerWindow` único que
   antes vivían dentro de `EdgeDockWindow` (que ahora es una instancia por
   monitor). `NoteWindow`/`NotesManagerWindow` ya no reciben su
@@ -475,7 +481,7 @@ revisión final de toda la rama.
   un origen genérico). Se retiró el toggle "Archivadas"/"Activas" del
   dock (ver nota en su sección de arriba) y los botones "+"/engranaje
   pasaron a iconos circulares pequeños.
-- **`Fanote.Core.EdgeGeometry.ExpandedPerNoteLength`** subió de 40 a 88 —
+- **`Aldune.Core.EdgeGeometry.ExpandedPerNoteLength`** subió de 40 a 88 —
   la pestaña pasó a `Height="80"` para dar sitio real a la etiqueta
   rotada (a 36px solo había ~24px de ancho para el texto, truncándolo a
   1-2 caracteres).
@@ -576,7 +582,7 @@ del repositorio; se conserva aquí únicamente la decisión de diseño resultant
   corresponda según el borde del dock) — las pestañas cuelgan del
   lado interior del panel, no ocupan todo el ancho.
 - El fondo oscuro del dock (`Background="#3A3A3A"`) **se mantiene** —
-  Fanote nunca puede ser `AllowsTransparency` (rompe ClearType, ya
+  Aldune nunca puede ser `AllowsTransparency` (rompe ClearType, ya
   descartado en la spec v1) — pero se **ciñe al ancho de la pestaña
   más ancha** en vez de ser una caja de tamaño fijo con hueco muerto
   alrededor (`width: max-content` en la maqueta CSS — en WPF,
@@ -871,7 +877,7 @@ y el último guión.
 Pedido por el usuario a raíz de lo anterior. El dock es `Topmost`, así que sin
 esto se queda dibujado encima de un juego o un vídeo.
 
-- `Fanote.Core.FullscreenDetection.CoversMonitor` (puro, con tests) compara la
+- `Aldune.Core.FullscreenDetection.CoversMonitor` (puro, con tests) compara la
   ventana contra el rectángulo **completo** del monitor, no contra su área de
   trabajo: así una ventana **maximizada** —que deja la barra de tareas a la
   vista— no cuenta. Es la distinción que importa; esconder el dock cada vez que
@@ -895,7 +901,7 @@ esto se queda dibujado encima de un juego o un vídeo.
 
 **Verificado end-to-end contra la app corriendo** (script en el scratchpad, no
 versionado): creando una ventana sin bordes que cubre el monitor vertical, las
-ventanas visibles de Fanote pasan de 1 a 0 y vuelven a 1 al cerrarla. Y con una
+ventanas visibles de Aldune pasan de 1 a 0 y vuelven a 1 al cerrarla. Y con una
 ventana 100px más corta que el monitor se queda en 1, que es el caso negativo
 que de verdad hay que proteger.
 
@@ -1067,7 +1073,7 @@ proceso.
   haria que Windows ejecutara el primer trozo y pasara el resto como argumentos.
   El menu refleja lo que de verdad quedo guardado, no lo que se pidio, por si el
   registro esta restringido por directiva.
-- **Icono** (`src/Fanote/Assets/fanote.ico`, generado con un script de un solo
+- **Icono** (`src/Aldune/Assets/aldune.ico`, generado con un script de un solo
   uso): fichas de colores asomando por el canto derecho sobre el fondo tintado,
   que es literalmente lo que hace la app. Dos detalles del formato:
   - Los tamanos <=48px van en **BMP**, no PNG. Windows admite PNG dentro de .ico
@@ -1093,7 +1099,7 @@ Tres cosas que salieron de usar la app de verdad, no de mirarla.
 — se la queda la primera que la pide —, así que no existe una combinación por
 defecto que sea segura. Cualquiera que elija chocará con alguien.
 
-- **`Fanote.Core.HotkeyBinding`** (record con modificadores y tecla virtual).
+- **`Aldune.Core.HotkeyBinding`** (record con modificadores y tecla virtual).
   Vive en Core, y no en la ventana de ajustes, por una razón concreta: el
   `DisplayName` que se enseña en pantalla tiene que salir de los mismos bits que
   se registran en Win32. Si la interfaz compusiera el texto por su cuenta podría
@@ -1127,9 +1133,9 @@ por abajo. El contenedor solo pone el hueco de arriba.
 
 ### Portable: un `.exe` y nada más
 
-`src/Fanote/Properties/PublishProfiles/portable.pubxml`, y se usa así:
+`src/Aldune/Properties/PublishProfiles/portable.pubxml`, y se usa así:
 
-    dotnet publish src/Fanote -p:PublishProfile=portable   →   publish/portable/Fanote.exe
+    dotnet publish src/Aldune -p:PublishProfile=portable   →   publish/portable/aldune.exe
 
 Decisiones que no son obvias leyendo el fichero:
 
@@ -1141,8 +1147,8 @@ Decisiones que no son obvias leyendo el fichero:
 - **Sin recorte (`PublishTrimmed=false`)**: WPF usa reflexión por todas partes y
   el recortador se lleva tipos que hacen falta. Fallaría al abrir una ventana, no
   al compilar, que es la peor forma de fallar.
-- **Dos propiedades para un solo `.pdb`**: `DebugType=none` silencia a Fanote,
-  pero el `.pdb` de Fanote.Core llegaba por otra vía — se copia como *fichero
+- **Dos propiedades para un solo `.pdb`**: `DebugType=none` silencia a Aldune,
+  pero el `.pdb` de Aldune.Core llegaba por otra vía — se copia como *fichero
   acompañante* de la referencia a ese proyecto, y solo
   `AllowedReferenceRelatedFileExtensions` lo para.
 - `publish/` va al `.gitignore`: se versiona el perfil, no sus 82 MB de
@@ -1169,7 +1175,7 @@ Primer punto de la lista de "lo siguiente" de la ronda anterior — la app ya se
 puede usar a diario gracias al portable, y esto era lo primero que se echaría
 en falta al crecer más allá de un puñado de notas.
 
-- **`Fanote.Core.NoteSearch.Matches(texto, consulta)`**: en Core, no en la
+- **`Aldune.Core.NoteSearch.Matches(texto, consulta)`**: en Core, no en la
   ventana, porque es la única pieza con lógica real que vale la pena cubrir con
   tests en vez de con clics — recorta espacios, una consulta vacía coincide con
   todo (así borrar la caja no necesita un camino aparte de "sin búsqueda"), y
@@ -1196,7 +1202,7 @@ Tests: 140/140.
 
 ## Prioridad del dock, arreglo de pantalla completa y selector de monitor en Ajustes (sesión 2026-09-06)
 
-Resuelve la incidencia donde Fanote se iba al fondo o desaparecía al interactuar con aplicaciones maximizadas (p. ej. seleccionar pestañas en Chrome), mantiene la ocultación ante videojuegos en pantalla completa real, y traslada el control de monitor de la variable de entorno a la UI de Ajustes.
+Resuelve la incidencia donde Aldune se iba al fondo o desaparecía al interactuar con aplicaciones maximizadas (p. ej. seleccionar pestañas en Chrome), mantiene la ocultación ante videojuegos en pantalla completa real, y traslada el control de monitor de la variable de entorno a la UI de Ajustes.
 
 ### Causa raíz del falso positivo de pantalla completa
 
@@ -1217,9 +1223,9 @@ Resuelve la incidencia donde Fanote se iba al fondo o desaparecía al interactua
    - `EdgeDockWindow` lo llama al inicializarse, al sobrevolar (`PollHoverState`) y al volver de un estado oculto, garantizando que el dock nunca quede tapado por ventanas estándar.
 
 3. **Selector de pantalla y opciones en Ajustes**:
-   - `AppSettings.TargetMonitorIndex`: índice opcional para fijar Fanote en un monitor concreto (`null` = todas las pantallas conectadas).
+   - `AppSettings.TargetMonitorIndex`: índice opcional para fijar Aldune en un monitor concreto (`null` = todas las pantallas conectadas).
    - `AppSettings.HideOnFullscreen`: opción booleana para habilitar/deshabilitar la ocultación ante videojuegos (por defecto `true`).
-   - `SettingsWindow.xaml`: nueva sección visual "Pantallas donde mostrar Fanote" con selector de tarjetas estilizadas (`MonitorRadioStyle`) generado dinámicamente con las pantallas conectadas (nombre, resolución, indicación de monitor principal), y casilla para el auto-ocultado ante videojuegos.
+   - `SettingsWindow.xaml`: nueva sección visual "Pantallas donde mostrar Aldune" con selector de tarjetas estilizadas (`MonitorRadioStyle`) generado dinámicamente con las pantallas conectadas (nombre, resolución, indicación de monitor principal), y casilla para el auto-ocultado ante videojuegos.
    - `AppCoordinator.RebuildDocks()`: reconstruye los docks en caliente al cambiar la selección en Ajustes sin necesidad de reiniciar la app.
 
 Tests: 142/142 pasando.
@@ -1272,7 +1278,7 @@ abrir ninguna", y una revisión de ergonomía general.
    - **Pendiente de verificación manual del usuario** — geometría nueva, hay que verla en pantalla
      con el dock a la izquierda de verdad.
 
-3. **Hipótesis sobre la animación brusca tras inactividad**: Fanote vive casi siempre sin foco (nadie
+3. **Hipótesis sobre la animación brusca tras inactividad**: Aldune vive casi siempre sin foco (nadie
    lo activa como una ventana normal salvo al abrir una nota), así que Windows puede clasificarlo
    como candidato a "power throttling" (EcoQoS) — reducir su prioridad/CPU tras un rato en segundo
    plano. El primer frame de una animación justo después de que el proceso se reactive puede salir
@@ -1343,7 +1349,7 @@ pendiente. Dos cambios más:
    - `NotesRepository.SavePlacement`/`GetPlacement` ganan el parámetro `monitorKey`. `DeletePlacement`
      (y el `DELETE` en línea de `Delete`/`PurgeExpiredTrash`) siguen borrando por `NoteId` sin más:
      borrar una nota borra su recuerdo en **todas** las pantallas, no solo una.
-   - `Fanote.Core.MonitorLookup.DeviceNameAt` (nuevo, con tests): dado un rectángulo, en qué monitor
+   - `Aldune.Core.MonitorLookup.DeviceNameAt` (nuevo, con tests): dado un rectángulo, en qué monitor
      cae su centro — puro, sin Win32, para poder probarlo. Se usa en dos sitios distintos:
      - `NoteWindow.SavePlacementOnce` lo usa contra la posición **actual** de la nota al cerrarla
        (puede haberse arrastrado a otra pantalla desde que se abrió).
@@ -1412,10 +1418,10 @@ Tests: 156/156 pasando.
 
 Partió de una investigación de mercado (resumida en **`docs/ROADMAP.md`**, que desde ahora guarda
 todo lo aplazado y lo descartado con su razón — leerlo antes de proponer funcionalidades nuevas). El
-hallazgo que la motiva: **el concepto de Fanote no existe en Windows**; las dos apps equivalentes
+hallazgo que la motiva: **el concepto de Aldune no existe en Windows**; las dos apps equivalentes
 (Hold My Notes y noty) son solo macOS.
 
-### Casillas de tarea (`Fanote.Core.TaskLines`, TDD)
+### Casillas de tarea (`Aldune.Core.TaskLines`, TDD)
 
 Una línea que empieza por `"☐ "` o `"☒ "` es una tarea. **Son texto plano, no un control**: el cuerpo
 de la nota es un `TextBox` plano a propósito (la spec v1 descartó el texto enriquecido), y como
@@ -1575,7 +1581,7 @@ por lo mismo que `NotePlacement`: esa tabla tiene el contenido real y no hay mig
 
 `Position` es `REAL` y no un índice entero **a propósito**: mover una nota entre otras dos es
 escribir **una sola fila** (el punto medio de sus vecinas) en vez de renumerar la lista entera en
-cada arrastre. La lógica vive en `Fanote.Core.NoteOrdering` (pura, 16 tests).
+cada arrastre. La lógica vive en `Aldune.Core.NoteOrdering` (pura, 16 tests).
 
 Dos casos que hay que cubrir sí o sí, y están cubiertos:
 
@@ -1615,7 +1621,7 @@ dentro del mismo bloque cifrado es, literalmente, "la primera línea".
 De ahí salió una quinta opción que no estaba sobre la mesa y es la que se hizo: **la cabecera muestra
 y edita la primera línea; el cuerpo empieza en la segunda.**
 
-- `Fanote.Core.NoteText.Split`/`Join` (puro, 16 tests, incluida la ida y vuelta y un test que
+- `Aldune.Core.NoteText.Split`/`Join` (puro, 16 tests, incluida la ida y vuelta y un test que
   comprueba que el título de la cabecera coincide con el que enseña la pestaña del dock).
   `Join` no añade salto de línea con el cuerpo vacío: si no, una nota de una línea acumularía uno
   nuevo en cada apertura.
@@ -1668,7 +1674,7 @@ cadenas en ~12 ficheros — trabajo mecánico, no de razonar.
 
 ### La decisión antes del código: ¿inglés sin más, o selector?
 
-El propio usuario usa Fanote en español a diario. Traducir todo a inglés sin más se lo habría
+El propio usuario usa Aldune en español a diario. Traducir todo a inglés sin más se lo habría
 quitado. Se preguntó explícitamente y se eligió: **selector Español/Inglés en Ajustes**, con
 resolución en tres pasos —
 
@@ -1677,13 +1683,13 @@ resolución en tres pasos —
    fichero, así que la app reacciona sola si el idioma de Windows cambiara entre arranques.
 2. Elegir un idioma en Ajustes lo fija de forma explícita y permanente — mismo patrón que
    `TargetMonitorIndex`/`DockEdge`.
-3. `App.OnStartup` resuelve y fija `Fanote.Resources.Strings.Current` **antes** de construir
+3. `App.OnStartup` resuelve y fija `Aldune.Resources.Strings.Current` **antes** de construir
    cualquier ventana. Se llama dos veces: una nada más entrar (adivinando por el idioma de Windows,
    por si el arranque falla antes de leer los ajustes de verdad — así hasta los mensajes de error
    más tempranos salen en el idioma que toca la mayoría de las veces) y otra en cuanto
    `settings.Language` está disponible de verdad.
 
-**El cambio de idioma exige reiniciar Fanote para verse en todas las ventanas**, decisión explícita
+**El cambio de idioma exige reiniciar Aldune para verse en todas las ventanas**, decisión explícita
 y documentada en el propio texto de Ajustes: los enlaces `{x:Static}` de WPF se resuelven al
 construir cada ventana, no cuando cambia una propiedad después. Reconstruir en caliente todas las
 ventanas abiertas —incluidas notas con texto sin guardar— para simular un cambio en vivo habría sido
@@ -1697,7 +1703,7 @@ ensamblados satélite por cultura). Dos motivos:
 1. La generación de código de un `.resx` (`Strings.Designer.cs`) depende de herramientas de Visual
    Studio no garantizadas en cualquier máquina donde esto se compile con `dotnet build` a secas.
 2. Con dos idiomas y un fichero satélite por cada uno, el error más común es traducir uno y
-   olvidarse del otro. `Fanote.Resources.Strings` (nuevo) es una clase con una propiedad estática
+   olvidarse del otro. `Aldune.Resources.Strings` (nuevo) es una clase con una propiedad estática
    por texto y **las dos versiones en la misma línea** (`T("English", "Español")`), así que no hay
    dos ficheros que se puedan desincronizar.
 
@@ -1707,7 +1713,7 @@ control.
 
 ### El único hueco que queda a propósito
 
-`Fanote.Core.HotkeyBinding.DisplayName` (el nombre del atajo, "Ctrl + Shift + N") se queda **sin
+`Aldune.Core.HotkeyBinding.DisplayName` (el nombre del atajo, "Ctrl + Shift + N") se queda **sin
 traducir**: "Ctrl"/"Alt"/"Shift"/"Win" y las letras/números ya son universales, pero "Espacio",
 "Supr" y "sin asignar" seguirán en español aunque la interfaz esté en inglés. Vive en Core, que es
 la capa deliberadamente libre de Win32 *y* de idiomas, y sus tests (`HotkeyBindingTests`) fijan esos
@@ -1835,13 +1841,13 @@ que decidas hacer a continuación.
 ## Borrar tareas completadas solas (sesión 2026-09-09, bounded)
 
 Idea del usuario, brainstorming corto en el chat (sin spec/plan formal — extensión acotada sobre
-`Fanote.Core.TaskLines`, que ya existía). Ajuste nuevo en Ajustes, **desactivado por defecto**: al
+`Aldune.Core.TaskLines`, que ya existía). Ajuste nuevo en Ajustes, **desactivado por defecto**: al
 activarlo, una tarea marcada como hecha (☒) se borra sola de la nota pasado un plazo configurable.
 
 ### Decisiones tomadas en el brainstorming
 
 - **Es un borrado de verdad, no un ocultar visual.** El cuerpo de la nota es un `TextBox` plano
-  atado directamente al texto real (ver `Fanote.Core.TaskLines`) — mostrar algo distinto de lo que
+  atado directamente al texto real (ver `Aldune.Core.TaskLines`) — mostrar algo distinto de lo que
   hay guardado exigiría el texto enriquecido que la spec v1 ya descartó a propósito. Al vencer el
   plazo, la línea se quita del texto de la nota, como si el usuario la hubiera borrado él mismo.
 - **Desactivado por defecto.** Es una edición automática del texto de la nota: nadie la sufre sin
@@ -1856,7 +1862,7 @@ Tabla nueva, `TaskCompletion (NoteId, LineHash, CompletedAt)` — aparte de `Not
 `NoteOrder`/`NotePlacement`: esa tabla tiene el contenido real del usuario y esta app no tiene
 sistema de migraciones.
 
-Cada tarea se identifica por un **hash de su contenido** (`Fanote.Core.TaskCompletion.HashLine`,
+Cada tarea se identifica por un **hash de su contenido** (`Aldune.Core.TaskCompletion.HashLine`,
 SHA-256 del texto sin el glifo), no por su posición en la nota: la posición cambia con cualquier
 edición alrededor, y el hash sigue apuntando a la misma tarea aunque la nota crezca o encoja por
 otro sitio. El hash se calcula sin el glifo a propósito, así que desmarcar y volver a marcar la
@@ -1865,7 +1871,7 @@ vez. Dos tareas con texto idéntico en la misma nota comparten hash y por tanto 
 igual que `NoteOrdering` acepta posiciones duplicadas, se acepta aquí por la misma razón: colisión
 rara y sin consecuencia grave.
 
-`Fanote.Core.TaskCompletion.Prune` (puro, TDD) recibe el texto, los `CompletedAt` conocidos, la
+`Aldune.Core.TaskCompletion.Prune` (puro, TDD) recibe el texto, los `CompletedAt` conocidos, la
 hora actual y el plazo, y devuelve el texto sin las líneas vencidas más los hashes que ya no
 corresponden a ninguna tarea marcada (editada, desmarcada o borrada a mano por otro camino) para
 que el llamante los limpie — así un registro huérfano no se queda para siempre sin necesitar un
@@ -1919,7 +1925,7 @@ ser acotados sobre UI ya existente:
   `Margin="16,..."` a `"32,..."` para dejarle sitio.
 - **Casillas de tarea: hover visible + zona de clic más generosa.** Antes solo cambiaba a cursor de
   texto normal al pasar por encima de una casilla, indistinguible del resto de la nota. Como el
-  cuerpo es un `TextBox` plano (texto real, no controles — ver `Fanote.Core.TaskLines`), resaltar
+  cuerpo es un `TextBox` plano (texto real, no controles — ver `Aldune.Core.TaskLines`), resaltar
   "solo la casilla" no es gratis: se añadió un `Canvas` `IsHitTestVisible="False"` superpuesto al
   `TextBox` (`TaskHoverHighlight`, un `Border` que seguimos posicionando por código con
   `GetRectFromCharacterIndex`) que seguimos con el ratón. Aprovechado el mismo cambio para dos cosas
@@ -1996,7 +2002,7 @@ quien lo use.
   contra un ☐ suelto en mitad de una frase. El usuario pidió explícitamente que también se pudiera
   marcar una casilla con el texto pegado sin espacio (p. ej. tras borrar el espacio sin querer
   mientras se edita). Se quitó esa exigencia: ahora basta con que el glifo sea el primer carácter no
-  en blanco de la línea. Fanote **sigue sin escribir** nunca una tarea así (`Prefix` sigue siendo
+  en blanco de la línea. Aldune **sigue sin escribir** nunca una tarea así (`Prefix` sigue siendo
   `"☐ "`, con espacio) — solo se relajó el reconocimiento de una que ya llegue así.
   - Nuevo `TaskLines.PrefixLength(line, glyphIndex)`: 2 si hay espacio detrás del glifo, 1 si no.
     Centraliza la única diferencia real entre una tarea bien escrita y una con el texto pegado, para
@@ -2035,7 +2041,7 @@ ratón caiga dentro del alto real de la línea de la casilla (`GetRectFromCharac
 `.Height`) antes de aceptar la zona — si está por encima o por debajo de esa franja, no cuenta, por
 muy cerca que quede horizontalmente.
 
-Build limpio (fix solo en `NoteWindow`, capa WPF sin cobertura de `Fanote.Core.Tests`). Portable
+Build limpio (fix solo en `NoteWindow`, capa WPF sin cobertura de `Aldune.Core.Tests`). Portable
 republicado y relanzado. **Pendiente de verificación manual del usuario.**
 
 ### Cursor de "mover" en el asa de arrastre
@@ -2094,7 +2100,7 @@ el texto al soltar) — bastante más complejo que nada hecho hasta ahora, y en 
 decisión de diseño. El usuario eligió la alternativa más simple: un atajo de teclado que intercambia
 la línea del cursor con la de arriba o abajo, igual que en cualquier editor de código.
 
-- **`Fanote.Core.LineMovement`** (nuevo, TDD): puro, no se limita a tareas — cualquier línea se
+- **`Aldune.Core.LineMovement`** (nuevo, TDD): puro, no se limita a tareas — cualquier línea se
   puede subir o bajar, que es lo que hacen otros editores con este mismo atajo y evita una
   restricción arbitraria. **Bug real atrapado por los propios tests antes de tocar la app**:
   intercambiar dos líneas obtenidas con `text.Split('\n')` sin más se lleva por delante el `\r` de
@@ -2159,7 +2165,7 @@ Portable republicado y relanzado. **Pendiente de verificación manual del usuari
 
 ### Tooltips oscuros en toda la app
 
-El tooltip de sistema (claro) era el único texto flotante de Fanote que no seguía su propio estilo —
+El tooltip de sistema (claro) era el único texto flotante de Aldune que no seguía su propio estilo —
 desentonaba tanto sobre el chrome oscuro como sobre el pastel de una nota. `App.xaml` gana un
 `Style TargetType="ToolTip"` **implícito** (sin `x:Key`, mismo patrón que los estilos ya existentes
 de `Window`/`ScrollBar` ahí mismo): cualquier `ToolTip="..."` ya existente en cualquier ventana sale
@@ -2415,7 +2421,7 @@ tocar código:
   disponible en .NET sin tirar de WinForms pese a que el proyecto tiene `UseWindowsForms` habilitado
   solo por `TrayIcon`), no una carpeta fija.
 
-### `Fanote.Core.MarkdownExport` (nuevo, TDD)
+### `Aldune.Core.MarkdownExport` (nuevo, TDD)
 
 Puro, mismo patrón que `NoteTitleHelper`/`TaskLines`, sin dependencia de WPF:
 
@@ -2452,7 +2458,7 @@ largo).
 - Icono del botón de exportar en bloque (`&#xE896;`, Segoe Fluent Icons) **elegido sin verificación
   visual del render real** — mismo aviso que ya se dejó anotado para el icono de "abrir todas" (ver
   más arriba); puede que convenga revisarlo la próxima vez que se vea en pantalla.
-- Textos nuevos en `Fanote.Resources.Strings` (ES/EN): `ExportToMarkdown`, `MarkdownFileFilter`,
+- Textos nuevos en `Aldune.Resources.Strings` (ES/EN): `ExportToMarkdown`, `MarkdownFileFilter`,
   `Export`, `ExportFolderDialogTitle`.
 
 Tests: 313/313 (14 nuevos, todos en Core). Build limpio, 0 advertencias. **Pendiente de verificación
@@ -2568,7 +2574,7 @@ nota correcta.
   ventana o al usar Guardar/Quitar. Poco probable que se note en uso real; reabrir la nota lo corrige.
 - El selector de fecha/hora no avisa de nada si se pone una fecha ya pasada (dispara en menos de 30s)
   ni distingue eso de un error de escritura.
-- Con Asistente de concentración/notificaciones desactivadas para Fanote, un recordatorio se pierde en
+- Con Asistente de concentración/notificaciones desactivadas para Aldune, un recordatorio se pierde en
   silencio (la fila se borra igual, avise Windows o no) — sin rastro en ningún sitio de que sonó.
 - Formato de fecha en el recordatorio (`dd/MM HH:mm`) usa los separadores de la configuración regional
   activa vía interpolación de cadena — en la mayoría de configuraciones (incluida la española) se ve
@@ -2593,7 +2599,7 @@ seleccionado) siguen con los colores por defecto de la plantilla.
 
 Verificado una vez con una captura recortada a los límites reales del panel (mes/año y rejilla de días
 legibles en claro sobre oscuro) antes de que un error de cálculo en un recorte posterior capturara
-contenido ajeno a Fanote en el monitor equivocado (ver más abajo) y se decidiera parar ahí. **Queda sin
+contenido ajeno a Aldune en el monitor equivocado (ver más abajo) y se decidiera parar ahí. **Queda sin
 tocar y anotado para si se retoma**: las dos cajas de texto de hora/minuto (`ReminderHourBox`/
 `ReminderMinuteBox`) tienen el mismo problema (recuadro blanco por defecto) y no se tocaron en esta
 pasada — el usuario preguntó específicamente por el calendario.
@@ -2601,7 +2607,7 @@ pasada — el usuario preguntó específicamente por el calendario.
 **Incidente durante la verificación manual, anotado por transparencia**: al calcular automáticamente
 el rectángulo de una captura de pantalla para comprobar el resultado, un cálculo con coordenadas
 incorrectas capturó contenido de otra aplicación en el monitor horizontal (que el usuario tenía en uso
-en ese momento) en vez de limitarse al panel de Fanote. Se borró el fichero al momento sin más
+en ese momento) en vez de limitarse al panel de Aldune. Se borró el fichero al momento sin más
 inspección. El usuario aclaró que cualquier prueba visual futura debe limitarse al monitor vertical.
 
 ## Listas con viñeta (flecha), hermanas de las tareas (sesión 2026-09-12)
@@ -2618,7 +2624,7 @@ descartó el guion normal (y también la raya) porque es un carácter que alguie
 verdad al empezar una frase — el sistema lo detectaría como lista sin querer. La flecha, como `☐`,
 nadie la teclea por accidente.
 
-### `Fanote.Core.BulletLines` (nuevo, TDD) + `Fanote.Core.LineText` (extraído)
+### `Aldune.Core.BulletLines` (nuevo, TDD) + `Aldune.Core.LineText` (extraído)
 
 Hermana de `TaskLines`, mismo patrón exacto (prefijo de texto plano `"→ "`, sin `RichTextBox`) pero sin
 estado propio — una viñeta no se marca, solo está o no está. Se extrajo `LineText.Start`/`End` (dónde
@@ -2660,7 +2666,7 @@ con Enter) — lo único que faltaba de verdad era una forma de generarla desde 
 explícitamente si además de sangría se quería plegar/colapsar ramas: **no**, solo sangría visual, así
 que no hizo falta ningún modelo de árbol nuevo.
 
-### `Fanote.Core.ListIndent` (nuevo, TDD)
+### `Aldune.Core.ListIndent` (nuevo, TDD)
 
 `Indent`/`Outdent`: sobre una línea de tarea o viñeta, añaden o quitan 4 espacios al principio (un
 nivel). Devuelven `null` si la línea no es ni tarea ni viñeta, para que `NoteWindow` deje pasar el Tab
@@ -2691,7 +2697,7 @@ Pedido del usuario: que la nota crezca sola al escribir en vez de tener que esti
 más un botón para restaurar el tamaño. Bounded. El diseño cambió una vez a mitad de verificación
 manual, con el usuario viéndolo en vivo — anotado abajo con el porqué.
 
-### `Fanote.Core.MonitorLookup.MonitorAt` (nuevo, TDD)
+### `Aldune.Core.MonitorLookup.MonitorAt` (nuevo, TDD)
 
 `DeviceNameAt` ya encontraba el monitor real (no `SystemParameters.WorkArea`, que siempre da el
 principal) donde cae el centro de una ventana, pero solo devolvía su nombre. `MonitorAt` es lo mismo
@@ -2761,7 +2767,7 @@ real. La implementación que queda mantiene la pestaña real en su sitio, pero d
 el `Button`, el contenedor devuelto por `ItemContainerGenerator` y el `ContentPresenter` real. Al
 soltar restaura esos valores y después calcula/persiste el nuevo índice.
 
-Tests: 389/389. Build de la aplicación correcto en salida temporal (la instancia abierta de Fanote
+Tests: 389/389. Build de la aplicación correcto en salida temporal (la instancia abierta de Aldune
 bloquea su DLL/EXE de `bin`); quedan las 4 advertencias CA1416 ya existentes de `DatabaseKeyProvider`.
 Pendiente de verificación visual manual con varias pestañas, arrastrando una de las primeras hacia
 abajo por delante de las siguientes.
@@ -2790,7 +2796,7 @@ usan scroll vertical. El pie de acciones queda junto al canto físico, con una s
 la primera/última tarjeta, y la barra de reposo conserva sus guiones en horizontal.
 
 Tests: 390/390. Build correcto, 0 errores y 0 advertencias nuevas. El portable se ha regenerado y
-abierto desde `publish/portable/Fanote.exe` para la validación visual manual.
+abierto desde `publish/portable/aldune.exe` para la validación visual manual.
 
 ## Guion final recortado en los docks superior e inferior (sesión 2026-09-12)
 
@@ -2799,7 +2805,7 @@ la barra de reposo se medía contra los 208px interiores de las tarjetas, aunque
 completo de la ventana. `RestStrip` usa ahora los 226px completos y la geometría queda cubierta por
 una prueba específica para ambos bordes.
 
-Tests: 392/392. Portable republicado y relanzado desde `publish/portable/Fanote.exe`.
+Tests: 392/392. Portable republicado y relanzado desde `publish/portable/aldune.exe`.
 
 ## Tira superior/inferior para muchas notas y refresco del gestor (sesión 2026-09-12)
 
@@ -2812,7 +2818,7 @@ guiones anteriores.
 junto con los docks. Crear, editar, archivar, restaurar o eliminar una nota desde otra ventana ya
 actualiza el gestor si está abierto.
 
-Tests: 394/394. Build correcto. Portable republicado y abierto desde `publish/portable/Fanote.exe`.
+Tests: 394/394. Build correcto. Portable republicado y abierto desde `publish/portable/aldune.exe`.
 
 La verificación visual posterior mostró que la barra todavía quedaba limitada por el `ContentGrid`
 interior de 208px y los guiones se alineaban a la izquierda. Se separaron ambos espacios: el
@@ -2831,12 +2837,12 @@ En `Gestionar notas`, la fila completa alterna la selección con un clic. `Shift
 entre filas y `Ctrl+Shift` añade otro rango a la selección existente. La casilla `Seleccionar todo`
 sigue disponible.
 
-Tests: 396/396. Build correcto. Portable republicado y abierto desde `publish/portable/Fanote.exe`.
+Tests: 396/396. Build correcto. Portable republicado y abierto desde `publish/portable/aldune.exe`.
 
 ## Transporte WebDAV para sincronizaciÃ³n (sesiÃ³n 2026-09-13)
 
-Fanote ya permite elegir WebDAV/Nextcloud como transporte independiente de la carpeta compartida y
-del servidor Fanote. Usa `PROPFIND`, `MKCOL`, `GET`, `PUT` y `DELETE` sobre sobres cifrados por nota.
+Aldune ya permite elegir WebDAV/Nextcloud como transporte independiente de la carpeta compartida y
+del servidor Aldune. Usa `PROPFIND`, `MKCOL`, `GET`, `PUT` y `DELETE` sobre sobres cifrados por nota.
 La URL puede viajar en una invitaciÃ³n de perfil, pero el usuario y la contraseÃ±a de aplicaciÃ³n se
 configuran por dispositivo; la contraseÃ±a queda protegida localmente.
 
@@ -2846,7 +2852,7 @@ Tests: 428/428. Pendiente: probarlo contra una instalaciÃ³n real de Nextcloud/
 
 Los códigos de perfil pasan a v2 y pueden incluir el nombre del vínculo y la URL del servidor propio
 para que la importación sea guiada. El token de acceso y el contenido de las notas nunca se incluyen.
-Los códigos v1 existentes siguen siendo válidos. Al importar, Fanote actualiza el transporte y la URL
+Los códigos v1 existentes siguen siendo válidos. Al importar, Aldune actualiza el transporte y la URL
 del servidor y deja el token para introducirlo localmente.
 
 Build correcto. Tests: 426/426. Portable v0.5.0 republicado y abierto.
@@ -2869,7 +2875,7 @@ no solo por la casilla. Las filas son enfocables y el doble clic abre la nota co
 conserva la selecciÃ³n para acciones en bloque.
 
 Build correcto. Tests: 425/425. Se ha generado la versiÃ³n actualizada en
-`publish/portable-next/Fanote.exe`; la carpeta `publish/portable` no se puede reemplazar mientras
+`publish/portable-next/aldune.exe`; la carpeta `publish/portable` no se puede reemplazar mientras
 sus dos instancias sigan abiertas.
 
 ## Notas contenidas en el monitor y barra de desplazamiento (sesiÃ³n 2026-09-13)
@@ -2882,14 +2888,14 @@ TambiÃ©n se desactiva el desplazamiento horizontal para que el texto se adapte
 La barra global gana contraste sobre las notas de color, con un pulgar redondeado, borde sutil y
 estados diferenciados al pasar el ratÃ³n o arrastrar.
 
-Tests: 410/410. Build correcto. Portable republicado y abierto desde `publish/portable/Fanote.exe`.
+Tests: 410/410. Build correcto. Portable republicado y abierto desde `publish/portable/aldune.exe`.
 
 ## Atajo de búsqueda en Gestionar notas (sesiÃ³n 2026-09-13)
 
 `Ctrl+F` enfoca el campo de búsqueda de Gestionar notas y selecciona el texto actual para poder
 reemplazarlo directamente. La ayuda rápida de Ajustes también lo documenta en español e inglés.
 
-Tests: 410/410. Build correcto. Portable republicado y abierto desde `publish/portable/Fanote.exe`.
+Tests: 410/410. Build correcto. Portable republicado y abierto desde `publish/portable/aldune.exe`.
 
 ## Pulido de ventanas y color libre de nota (sesión 2026-09-12)
 
@@ -2971,4 +2977,4 @@ de entrada, pero las inserciones nuevas ya no se trasladan; el desplazamiento an
 abrir el abanico. `EdgeDockWindow` activa además redondeo de layout, píxeles y formato de texto de
 display para que las tarjetas se dibujen nítidas.
 
-Tests: 396/396. Build correcto. Portable republicado y abierto desde `publish/portable/Fanote.exe`.
+Tests: 396/396. Build correcto. Portable republicado y abierto desde `publish/portable/aldune.exe`.

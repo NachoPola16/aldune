@@ -9,7 +9,7 @@ using Aldune.Resources;
 namespace Aldune.Windowing;
 
 /// <summary>
-/// Color editor that follows Fanote's dark chrome instead of opening the unrelated WinForms
+/// Color editor that follows Aldune's dark chrome instead of opening the unrelated WinForms
 /// color dialog. The HEX field is the precise input; the RGB sliders provide a quick visual way
 /// to tune the same value. Dark colors are shown but cannot be applied because note text uses a
 /// fixed warm-dark ink.

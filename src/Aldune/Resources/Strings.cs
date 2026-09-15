@@ -334,8 +334,8 @@ public static class Strings
     public static string SyncConflictDeleted => T("Deleted version", "Versión eliminada");
     public static string SyncErrorTitle => T("Aldune sync", "Sincronización de Aldune");
     public static string SyncUnauthorizedStatus => T(
-        "The server rejected the token. Paste only the value after FANOTE_SYNC_TOKEN=.",
-        "El servidor ha rechazado el token. Pega solo el valor que aparece después de FANOTE_SYNC_TOKEN=.");
+        "The server rejected the token. Paste only the value after ALDUNE_SYNC_TOKEN=.",
+        "El servidor ha rechazado el token. Pega solo el valor que aparece después de ALDUNE_SYNC_TOKEN=.");
 
     public static string LanguageSectionTitle => T("Language", "Idioma");
     public static string LanguageSectionHint => T("Restarting Aldune applies the change to every window.", "Reiniciar Aldune aplica el cambio en todas las ventanas.");

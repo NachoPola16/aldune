@@ -24,7 +24,7 @@ public partial class App : Application
         // veces, en vez de siempre en inglés.
         ApplyLanguage(null);
 
-        // Ver el comentario de DisablePowerThrottling: Fanote vive casi siempre sin foco, y
+        // Ver el comentario de DisablePowerThrottling: Aldune vive casi siempre sin foco, y
         // Windows puede reducirle CPU/prioridad tras un rato así — mitigacion contra el reporte de
         // animaciones que se ven peor "tras un rato sin abrir ninguna nota". Sin coste ni efecto
         // secundario si el diagnostico resulta no ser este; se deja siempre activo.
@@ -47,7 +47,7 @@ public partial class App : Application
 
         var appDataDir = ResolveAppDataDirectory();
         var settingsPath = Path.Combine(appDataDir, "settings.json");
-        var databasePath = Path.Combine(appDataDir, "notes.db");
+        var databasePath = Path.Combine(appDataDir, BrandIdentity.DatabaseFileName);
 
         if (DatabaseCorruptionGuard.IsValidSqliteFile(databasePath) is false && File.Exists(databasePath))
         {

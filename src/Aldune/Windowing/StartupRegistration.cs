@@ -4,7 +4,7 @@ using Aldune.Core;
 namespace Aldune.Windowing;
 
 /// <summary>
-/// Arrancar Fanote al iniciar sesión, vía la clave <c>Run</c> del usuario.
+/// Arrancar Aldune al iniciar sesión, vía la clave <c>Run</c> del usuario.
 ///
 /// Se usa <c>HKEY_CURRENT_USER</c> y no la de máquina a propósito: no requiere permisos de
 /// administrador, y una app de notas personales no tiene por qué arrancar para todos los usuarios
@@ -41,7 +41,7 @@ internal static class StartupRegistration
             if (key is null) return false;
 
             if (key.GetValue(ValueName) is null && key.GetValue(LegacyValueName) is not null &&
-                string.Equals(System.IO.Path.GetFileName(Environment.ProcessPath), "aldune.exe", StringComparison.OrdinalIgnoreCase))
+                string.Equals(System.IO.Path.GetFileName(Environment.ProcessPath), BrandIdentity.ExecutableName, StringComparison.OrdinalIgnoreCase))
             {
                 key.Close();
                 using var writableKey = Registry.CurrentUser.OpenSubKey(RunKey, writable: true);

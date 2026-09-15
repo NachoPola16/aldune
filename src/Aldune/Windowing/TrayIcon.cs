@@ -7,7 +7,7 @@ using Aldune.Resources;
 namespace Aldune.Windowing;
 
 /// <summary>
-/// El icono de Fanote en la bandeja del sistema.
+/// El icono de Aldune en la bandeja del sistema.
 ///
 /// Antes de esto la app no tenía forma de cerrarse ni de configurarse: se lanzaba a mano y se
 /// cerraba matando el proceso. Un dock sin ventana propia necesita algún sitio donde vivir, y la

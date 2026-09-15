@@ -6,7 +6,7 @@ namespace Aldune.Core.Tests;
 
 public class DatabaseCorruptionGuardTests : IDisposable
 {
-    private readonly string _path = Path.Combine(Path.GetTempPath(), $"fanote-corrupt-test-{Guid.NewGuid()}.db");
+    private readonly string _path = Path.Combine(Path.GetTempPath(), $"aldune-corrupt-test-{Guid.NewGuid()}.db");
 
     public void Dispose()
     {

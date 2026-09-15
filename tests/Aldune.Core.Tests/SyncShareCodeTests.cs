@@ -29,7 +29,7 @@ public sealed class SyncShareCodeTests
         Assert.Equal("Compartir con Ana", decoded.ProfileName);
         Assert.Equal(SyncTransportKind.Server, decoded.Transport);
         Assert.Equal("https://sync.example.test:8443/", decoded.ServerUrl);
-        Assert.StartsWith("fanote-profile-v2:", code, StringComparison.Ordinal);
+        Assert.StartsWith(BrandIdentity.SyncProfileCodePrefix, code, StringComparison.Ordinal);
         Assert.DoesNotContain(Convert.ToBase64String(key), code, StringComparison.Ordinal);
     }
 
@@ -63,12 +63,12 @@ public sealed class SyncShareCodeTests
             Array.Empty<Guid>(),
             "Nextcloud personal",
             SyncTransportKind.WebDav,
-            "https://cloud.example.test/remote.php/dav/files/nacho/Fanote/");
+            "https://cloud.example.test/remote.php/dav/files/nacho/Aldune/");
 
         var decoded = SyncShareCodeCodec.Decode(code);
 
         Assert.Equal(SyncTransportKind.WebDav, decoded.Transport);
-        Assert.Equal("https://cloud.example.test/remote.php/dav/files/nacho/Fanote/", decoded.ServerUrl);
+        Assert.Equal("https://cloud.example.test/remote.php/dav/files/nacho/Aldune/", decoded.ServerUrl);
         Assert.DoesNotContain("password", code, StringComparison.OrdinalIgnoreCase);
     }
 
@@ -80,6 +80,32 @@ public sealed class SyncShareCodeTests
 
         Assert.False(SyncShareCodeCodec.IsShareCode(code));
         Assert.Equal(key, SyncKeyFormat.Decode(code));
+    }
+
+    [Fact]
+    public void LegacyV2ProfileCodeStillImports()
+    {
+        var key = RandomNumberGenerator.GetBytes(32);
+        var code = SyncShareCodeCodec.Encode(
+            key,
+            SyncScopeKind.AllNotes,
+            Array.Empty<Guid>(),
+            "Perfil anterior",
+            SyncTransportKind.Server,
+            "https://sync.example.test:8443/");
+
+        // El código que se emite ahora lleva el prefijo de la marca vigente
+        Assert.StartsWith(BrandIdentity.SyncProfileCodePrefix, code, StringComparison.Ordinal);
+
+        // y el mismo código con el prefijo anterior (Fanote) tiene que seguir importandose
+        var legacyCode = "fanote-profile-v2:" + code[BrandIdentity.SyncProfileCodePrefix.Length..];
+        var decoded = SyncShareCodeCodec.Decode(legacyCode);
+
+        Assert.Equal(key, decoded.Key);
+        Assert.Equal(SyncScopeKind.AllNotes, decoded.Scope);
+        Assert.Equal("Perfil anterior", decoded.ProfileName);
+        Assert.Equal(SyncTransportKind.Server, decoded.Transport);
+        Assert.Equal("https://sync.example.test:8443/", decoded.ServerUrl);
     }
 
     [Fact]

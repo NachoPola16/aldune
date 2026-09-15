@@ -61,7 +61,7 @@ public sealed class HttpSyncTransport : ISyncTransport
     {
         if (response.StatusCode == System.Net.HttpStatusCode.Unauthorized)
             throw new InvalidOperationException(
-                "The sync server rejected the token (401). Paste only the value after FANOTE_SYNC_TOKEN=.");
+                "The sync server rejected the token (401). Paste only the value after ALDUNE_SYNC_TOKEN=.");
         response.EnsureSuccessStatusCode();
     }
 

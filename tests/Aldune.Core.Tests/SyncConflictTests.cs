@@ -10,7 +10,7 @@ namespace Aldune.Core.Tests;
 /// </summary>
 public sealed class SyncConflictTests : IDisposable
 {
-    private readonly string _root = Path.Combine(Path.GetTempPath(), $"fanote-sync-conflicts-{Guid.NewGuid():N}");
+    private readonly string _root = Path.Combine(Path.GetTempPath(), $"aldune-sync-conflicts-{Guid.NewGuid():N}");
     private readonly string _sharedFolder;
     private readonly Device _deviceA;
     private readonly Device _deviceB;

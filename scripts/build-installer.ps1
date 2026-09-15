@@ -42,6 +42,8 @@ New-Item -ItemType Directory -Path $distDir -Force | Out-Null
 & $isccPath $issPath
 if ($LASTEXITCODE -ne 0) { throw "Inno Setup terminó con código $LASTEXITCODE." }
 
+# Nombre anterior del portable (Fanote): si quedo un ejecutable viejo en publish/portable, se borra
+# para que el ZIP no arrastre los dos. Ver docs/BRANDING.md.
 $legacyPortable = Join-Path $portableDir "fanote.exe"
 if (Test-Path -LiteralPath $legacyPortable) {
     Remove-Item -LiteralPath $legacyPortable -Force

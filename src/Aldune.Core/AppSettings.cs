@@ -83,7 +83,7 @@ public sealed class AppSettings
             : HotkeyBinding.Default;
 
     /// <summary>
-    /// Índice 0-based del monitor al que restringir Fanote, según la enumeración de Win32.
+    /// Índice 0-based del monitor al que restringir Aldune, según la enumeración de Win32.
     /// <c>null</c> significa mostrar el dock en todas las pantallas conectadas (por defecto).
     /// </summary>
     public int? TargetMonitorIndex { get; set; }
@@ -98,7 +98,7 @@ public sealed class AppSettings
     public bool KeepDockOpen { get; set; }
 
     /// <summary>
-    /// Borde de la pantalla donde se ancla el dock de Fanote. Por defecto derecha (EdgePosition.Right).
+    /// Borde de la pantalla donde se ancla el dock de Aldune. Por defecto derecha (EdgePosition.Right).
     /// </summary>
     public EdgePosition DockEdge { get; set; } = EdgePosition.Right;
 

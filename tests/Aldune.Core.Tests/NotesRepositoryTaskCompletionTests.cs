@@ -6,7 +6,7 @@ namespace Aldune.Core.Tests;
 
 public class NotesRepositoryTaskCompletionTests : IDisposable
 {
-    private readonly string _dbPath = Path.Combine(Path.GetTempPath(), $"fanote-taskcompletion-test-{Guid.NewGuid()}.db");
+    private readonly string _dbPath = Path.Combine(Path.GetTempPath(), $"aldune-taskcompletion-test-{Guid.NewGuid()}.db");
     private readonly NotesRepository _sut;
 
     public NotesRepositoryTaskCompletionTests()

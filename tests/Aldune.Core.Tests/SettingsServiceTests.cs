@@ -5,7 +5,7 @@ namespace Aldune.Core.Tests;
 
 public class SettingsServiceTests : IDisposable
 {
-    private readonly string _tempDir = Path.Combine(Path.GetTempPath(), $"fanote-settings-test-{Guid.NewGuid()}");
+    private readonly string _tempDir = Path.Combine(Path.GetTempPath(), $"aldune-settings-test-{Guid.NewGuid()}");
     private readonly string _settingsPath;
 
     public SettingsServiceTests()

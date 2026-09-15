@@ -1,4 +1,4 @@
-# Fanote — Hoja de ruta y decisiones pendientes
+# Aldune — Hoja de ruta y decisiones pendientes
 
 Documento hermano de `STATUS.md`. Aquel cuenta **lo que está hecho y por qué**; este guarda **lo que
 no se ha hecho, lo que se descartó y con qué razón**, para que no haya que volver a investigarlo ni
@@ -17,11 +17,11 @@ cambios incompatibles.
 
 ## 1. Investigación de mercado (2026-09-06)
 
-Se buscó si el concepto de Fanote ya existe y si hay hueco. Resumen de lo encontrado, con fuentes.
+Se buscó si el concepto de Aldune ya existe y si hay hueco. Resumen de lo encontrado, con fuentes.
 
 ### El hallazgo principal
 
-**El concepto de Fanote no existe en Windows.** Las dos apps que inspiran el diseño son ambas solo
+**El concepto de Aldune no existe en Windows.** Las dos apps que inspiran el diseño son ambas solo
 macOS, y no hay equivalente nativo en Windows:
 
 | App | Plataforma | Modelo | Precio |
@@ -34,17 +34,17 @@ Los jugadores de **Windows** (Notezilla, Simple Sticky Notes, 7 Sticky Notes, St
 Microsoft Sticky Notes) son **todos** del modelo clásico "notas sueltas por el escritorio". Ninguno
 usa el modelo de mazo anclado al canto.
 
-**Conclusión**: si Fanote sale al público, no entra en un mercado saturado — ocupa un hueco vacío.
+**Conclusión**: si Aldune sale al público, no entra en un mercado saturado — ocupa un hueco vacío.
 
 ### Qué critican de la competencia
 
 - **Notezilla** (29,95 $ pago único o 19,95 $/año): lo más alabado son los **recordatorios** y la
   sincronización. Lo más criticado: *"colocar las notas exactamente donde quieres es molesto"* — que
-  es justo lo que Fanote ya resuelve con la posición recordada por pantalla — y el precio.
+  es justo lo que Aldune ya resuelve con la posición recordada por pantalla — y el precio.
 - **Microsoft Sticky Notes**: sin etiquetas, sin listas separadas, sin ordenar arrastrando, retrasos
   de sync con OneDrive, cuatro años sin actualizaciones importantes.
 - Existe una categoría entera de apps de notas **solo-local + cifradas + sin cuenta** con demanda
-  real (Secure Local Notes, LocalNotes, y adyacentes como Obsidian/Joplin/Logseq). Fanote ya cumple
+  real (Secure Local Notes, LocalNotes, y adyacentes como Obsidian/Joplin/Logseq). Aldune ya cumple
   eso de fábrica y conviene decirlo explícitamente en cualquier página de presentación.
 
 ### Precio, si algún día se vende
@@ -73,7 +73,7 @@ ir en claro, filtrando justo lo más descriptivo de cada nota. Y meterlo dentro 
 cifrado es, literalmente, "la primera línea".
 
 De ahí salió una quinta opción que no estaba sobre la mesa y es la que se implementó: **la cabecera
-muestra y edita la primera línea, y el cuerpo empieza en la segunda** (`Fanote.Core.NoteText` parte y
+muestra y edita la primera línea, y el cuerpo empieza en la segunda** (`Aldune.Core.NoteText` parte y
 recompone). Sin duplicado, sin cabecera vacía, con título editable, y sin cambiar absolutamente nada
 de cómo se guarda ni se cifra.
 
@@ -154,7 +154,7 @@ El usuario pidió explícitamente diseñar también los bordes **Arriba** y **Ab
 de las pestañas en abanico los excluyó a propósito ("exigiría deslizar en vertical, que queda fuera
 de esta ronda", ver la nota histórica de `EdgeDockWindow.PopulateEdges`, que entonces solo ofrecía
 Izquierda/Derecha en
-Ajustes). **Hallazgo al investigar el bug de arriba**: `Fanote.Core.EdgeGeometry` (la geometría pura,
+Ajustes). **Hallazgo al investigar el bug de arriba**: `Aldune.Core.EdgeGeometry` (la geometría pura,
 con tests) **ya contemplaba los cuatro bordes**, pero el primer layout de Arriba/Abajo era incorrecto:
 trataba una tarjeta lateral como si se pudiera rotar sin cambiar sus medidas. El diseño corregido
 mantiene una barra horizontal en reposo y, al desplegarse, abre una columna vertical de tarjetas
@@ -233,7 +233,7 @@ y revocación sin mezclarlo con el vínculo de “Mis dispositivos”.
 ### Modo simplificado / modo completo — IMPLEMENTADO
 
 Ofrecer en Ajustes un botón claro para cambiar entre una **versión completa** y una **versión
-simplificada** de Fanote, pensado para quien quiera usar las notas sin tantas opciones. No sería otra
+simplificada** de Aldune, pensado para quien quiera usar las notas sin tantas opciones. No sería otra
 instalación ni una base de datos distinta: sería un modo de interfaz reversible y persistente.
 
 El modo simplificado debería conservar el núcleo (dock, crear/abrir notas y gestor básico) y ocultar
@@ -270,9 +270,9 @@ repetir ese argumento sin pensarlo primero.
 
 ### ~~Internacionalizar a inglés~~ — HECHO (ver `STATUS.md`)
 
-No fue solo traducir: el usuario usa Fanote en español a diario, así que se añadió un selector
+No fue solo traducir: el usuario usa Aldune en español a diario, así que se añadió un selector
 Español/Inglés en Ajustes (`AppSettings.Language`) en vez de sustituir sin más. Textos en
-`Fanote.Resources.Strings` (diccionario a mano, no `.resx` — motivo en `STATUS.md`). El cambio de
+`Aldune.Resources.Strings` (diccionario a mano, no `.resx` — motivo en `STATUS.md`). El cambio de
 idioma pide reiniciar la app para verse en todas las ventanas.
 
 **Hueco que queda a propósito**: `HotkeyBinding.DisplayName` (Core) no traduce "Espacio"/"Supr"/"sin
@@ -311,18 +311,18 @@ Lo que ya se decidió en el brainstorming de esta sesión, para no volver a disc
 
 - **Las dos vías, no una sola** — decisión explícita del usuario tras ver el trade-off:
   1. **Carpeta elegida por el usuario** (OneDrive, Google Drive, Dropbox, Syncthing — cualquiera que
-     ya sincronice una carpeta normal del disco). Fanote nunca habla con ninguna nube: guarda un
+     ya sincronice una carpeta normal del disco). Aldune nunca habla con ninguna nube: guarda un
      fichero cifrado por nota dentro de esa carpeta y reconstruye. Mantiene "sin cuenta, sin
      servidor", funciona con cualquier proveedor (incluido ninguno, con Syncthing), y es la vía que
      de forma natural sirve también a un futuro cliente en otro sistema operativo (Android/iOS,
      mencionados por el usuario como posibles pero sin decidir) — ese cliente futuro sincronizaría
-     leyendo la misma carpeta a través de su propia app de Drive/OneDrive, sin que Fanote tenga que
+     leyendo la misma carpeta a través de su propia app de Drive/OneDrive, sin que Aldune tenga que
      hablar con la API de nadie.
-  2. **Fanote habla directamente con la API de Google Drive** (OAuth, sin cliente de escritorio de
+  2. **Aldune habla directamente con la API de Google Drive** (OAuth, sin cliente de escritorio de
      por medio). Pedida explícitamente a pesar del coste, que quede anotado para cuando se diseñe:
      hace falta el flujo de login de Google, guardar y renovar un token (delicado, misma familia de
      problema que la clave de cifrado — ver `DatabaseKeyProvider` en `STATUS.md`), registrar la app
-     en Google Cloud y, si Fanote se publica algún día, pasar su proceso de verificación de apps
+     en Google Cloud y, si Aldune se publica algún día, pasar su proceso de verificación de apps
      OAuth (si no, sale un aviso de "app no verificada"). Y contradice, para quien la use, el propio
      diferenciador que la investigación de mercado de más arriba señaló ("sin cuenta, nunca") — por
      eso tiene que ser una vía **opcional**, nunca la única, con la vía 1 siempre disponible por
@@ -331,14 +331,14 @@ Lo que ya se decidió en el brainstorming de esta sesión, para no volver a disc
   *no* sincronizar el fichero SQLite directamente — las carpetas de sync corrompen bases de datos
   abiertas por dos máquinas a la vez. Un fichero cifrado por nota, reconstruible, es la única forma
   segura.
-- **Vía autohosteable, también decidida** — no dependerá de un servicio de Fanote:
-  1. **Carpeta local, UNC o NAS**: para una carpeta compartida en la red (`\\servidor\\fanote`) o
+- **Vía autohosteable, también decidida** — no dependerá de un servicio de Aldune:
+  1. **Carpeta local, UNC o NAS**: para una carpeta compartida en la red (`\\servidor\\aldune`) o
      una carpeta sincronizada por Syncthing/Nextcloud/otro cliente. Es la primera implementación y
      cubre el caso "mi propio servidor dentro de casa" sin añadir una API nueva.
   2. **WebDAV sobre HTTPS**: para un servidor accesible desde fuera de la red, especialmente
-     Nextcloud/ownCloud o un servidor WebDAV propio. Fanote guardará la URL y una credencial de
+     Nextcloud/ownCloud o un servidor WebDAV propio. Aldune guardará la URL y una credencial de
      aplicación, no la contraseña principal cuando el servidor ofrezca esa posibilidad.
-  3. **API dedicada de Fanote**: queda como opción futura, solo si WebDAV no cubre algún caso real;
+  3. **API dedicada de Aldune**: queda como opción futura, solo si WebDAV no cubre algún caso real;
      implicaría mantener servidor, autenticación, TLS, versiones y migraciones propias.
 - **Orden propuesto de implementación**:
   1. núcleo de sincronización independiente del transporte, con ficheros cifrados por nota,
@@ -364,10 +364,10 @@ Lo que ya se decidió en el brainstorming de esta sesión, para no volver a disc
 
 #### Servidor propio con Docker Compose
 
-La primera versión del servidor autohosteable se añade como `src/Fanote.SyncServer` y se puede levantar
+La primera versión del servidor autohosteable se añade como `src/Aldune.SyncServer` y se puede levantar
 con `docker-compose.sync.yml`. Es un almacén HTTP de objetos cifrados, no una base de datos con texto
 de notas: guarda los sobres sin conocer la clave. El usuario configura una IP/hostname y puerto (por
-defecto `8087`) en Fanote, junto con un token de acceso. El volumen Docker conserva los objetos aunque
+defecto `8087`) en Aldune, junto con un token de acceso. El volumen Docker conserva los objetos aunque
 se recree el contenedor.
 
 La API y el formato no dependen de Windows: un futuro cliente de Android, iOS, macOS o Linux podrá
@@ -476,7 +476,7 @@ con más insistencia, el coste de arriba sigue siendo el mismo — no ha cambiad
 ### Otros descartes menores
 
 - **Etiquetas y carpetas**: es la queja nº1 de Microsoft Sticky Notes, pero choca con el minimalismo
-  de Fanote (el mazo son notas activas, punto). Si crece la lista de notas, la respuesta correcta
+  de Aldune (el mazo son notas activas, punto). Si crece la lista de notas, la respuesta correcta
   probablemente sea mejorar el gestor y la búsqueda, no añadir jerarquía.
 - **Adjuntar imágenes / capturas** (lo tienen MS Sticky Notes y BetterStickies): rompería el modelo
   de texto plano, que es lo que hace posible el cifrado simple, la búsqueda y la exportación. No sin
@@ -610,15 +610,23 @@ la URL, la carpeta ni el token del servidor, que se configuran por separado.
 El concepto actual (tres pestañas de color pegadas al canto derecho, cortadas por el borde) es
 correcto y se mantiene: dibuja literalmente el producto y usa la paleta real.
 
-### Decisión de marca para la beta (2026-09-13)
+### Decisión de marca (2026-09-13, cerrada el 2026-09-15)
 
-Se adopta **Aldune** como nombre visible de la aplicación, de los datos locales y del instalador.
-`Fanote` se conserva como nombre interno del repositorio, los namespaces y los identificadores del
-protocolo para no romper las notas
-ni la configuración existente. El icono actual
-también se mantiene: las tres tarjetas escalonadas representan directamente el dock y conectan con
-la paleta real de las notas. No se hará un rediseño completo antes de validar el producto con uso
-real.
+Se adopta **Aldune** como nombre de la aplicación en todos los niveles: nombre visible, proyectos y
+namespaces (`src/Aldune`, `src/Aldune.Core`, `src/Aldune.SyncServer`), datos locales, ejecutable,
+instalador, documentación y despliegue de sincronización. El rebranding empezó el 2026-09-13 con el
+nombre visible y se terminó el 2026-09-15 con el interno; el mapa de dónde vive el nombre, qué es
+compatibilidad y el procedimiento para el próximo cambio están en `BRANDING.md` y `RENAME_GUIDE.md`.
+
+Se conservan a propósito, porque renombrarlos rompería instalaciones ya existentes: la carpeta
+`%LOCALAPPDATA%\Fanote` y la clave antigua del registro de arranque (solo para migrarlas una vez),
+las variables de entorno `FANOTE_*` (se siguen leyendo como alternativa), los prefijos de los códigos
+de perfil `fanote-profile-v1:` y `fanote-profile-v2:` (se siguen importando) y el nombre físico del
+volumen Docker `fanote-sync-data` (contiene los objetos ya sincronizados).
+
+El icono actual también se mantiene: las tres tarjetas escalonadas representan directamente el dock y
+conectan con la paleta real de las notas. No se hará un rediseño completo antes de validar el producto
+con uso real.
 
 Antes de una publicación comercial o de cobrar por la aplicación se hará una comprobación final de
 marca, dominios y tiendas, porque existe al menos un nombre muy parecido, **FanNote**. Si el nombre

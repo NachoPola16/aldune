@@ -739,7 +739,7 @@ public partial class NotesManagerWindow : Window
     {
         var dialog = new SaveFileDialog
         {
-            FileName = "Aldune export.zip",
+            FileName = $"{BrandIdentity.AppName} export.zip",
             Filter = Strings.ZipFileFilter,
             DefaultExt = ".zip"
         };

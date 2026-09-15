@@ -171,7 +171,8 @@ En el perfil de origen, crea o selecciona un perfil, marca `Notas seleccionadas`
 el nombre del perfil y, si usa un servidor propio, su URL. En el otro dispositivo, crea el perfil,
 pega el cÃ³digo y pulsa `Importar cÃ³digo`; el transporte y la URL del servidor se rellenan solos,
 pero el token siempre debe introducirse aparte. El token nunca viaja dentro del cÃ³digo. Las
-invitaciones antiguas `fanote-profile-v1` siguen siendo compatibles.
+invitaciones antiguas (`fanote-profile-v1` y `fanote-profile-v2`) siguen siendo compatibles; los
+nuevos se generan con el prefijo de la marca vigente (`aldune-profile-v2`).
 
 ## Compatibilidad futura
 

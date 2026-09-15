@@ -7,7 +7,7 @@ public sealed class SyncProfileStoreTests
     [Fact]
     public void LegacySettingsAreMigratedWithoutLosingTheActiveConnection()
     {
-        var path = Path.Combine(Path.GetTempPath(), $"fanote-settings-{Guid.NewGuid():N}.json");
+        var path = Path.Combine(Path.GetTempPath(), $"aldune-settings-{Guid.NewGuid():N}.json");
         try
         {
             var original = new AppSettings
@@ -43,7 +43,7 @@ public sealed class SyncProfileStoreTests
     [Fact]
     public void ProfilesKeepIndependentTransportAndSelection()
     {
-        var settings = new AppSettings { SyncFolderPath = "\\\\nas\\fanote" };
+        var settings = new AppSettings { SyncFolderPath = "\\\\nas\\aldune" };
         SyncProfileStore.Ensure(settings);
         var devicesId = settings.ActiveSyncProfileId;
 
@@ -56,7 +56,7 @@ public sealed class SyncProfileStoreTests
 
         settings.ActiveSyncProfileId = devicesId;
         SyncProfileStore.LoadActiveToLegacy(settings);
-        Assert.Equal("\\\\nas\\fanote", settings.SyncFolderPath);
+        Assert.Equal("\\\\nas\\aldune", settings.SyncFolderPath);
         Assert.Equal(SyncTransportKind.Folder, settings.SyncTransport);
         Assert.Equal(SyncScopeKind.AllNotes, settings.SyncScope);
 

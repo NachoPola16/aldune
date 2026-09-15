@@ -781,7 +781,7 @@ public sealed class NotesRepository
     }
 
     /// <summary>Recordatorios vencidos a <paramref name="now"/> (inclusive) — usado tanto por el
-    /// sondeo periódico como por el catch-up al arrancar (ver Fanote.Windowing.ReminderScheduler).
+    /// sondeo periódico como por el catch-up al arrancar (ver Aldune.Windowing.ReminderScheduler).
     /// No los borra: quien llama decide cuándo limpiarlos (ClearReminder), después de avisar.
     /// Excluye recordatorios de notas archivadas o en la papelera: el dock solo lista notas activas
     /// (GetByState(Active)), así que un aviso de una nota que ya no aparece en ningún sitio sería

@@ -17,8 +17,8 @@ namespace Aldune.Core.Tests;
 /// </summary>
 public class EnvelopeEncryptionTests : IDisposable
 {
-    private readonly string _dbPath = Path.Combine(Path.GetTempPath(), $"fanote-envelope-test-{Guid.NewGuid()}.db");
-    private readonly string _settingsDir = Path.Combine(Path.GetTempPath(), $"fanote-envelope-settings-{Guid.NewGuid()}");
+    private readonly string _dbPath = Path.Combine(Path.GetTempPath(), $"aldune-envelope-test-{Guid.NewGuid()}.db");
+    private readonly string _settingsDir = Path.Combine(Path.GetTempPath(), $"aldune-envelope-settings-{Guid.NewGuid()}");
     private readonly string _settingsPath;
 
     public EnvelopeEncryptionTests()

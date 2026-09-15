@@ -64,6 +64,8 @@ repositorio. La base de datos y la clave protegida no deben compartirse ni subir
 
 - [`docs/ROADMAP.md`](docs/ROADMAP.md): funcionalidades previstas y decisiones pendientes.
 - [`docs/STATUS.md`](docs/STATUS.md): estado técnico y decisiones de implementación.
+- [`docs/BRANDING.md`](docs/BRANDING.md): dónde vive el nombre de la aplicación y qué es compatibilidad.
+- [`docs/RENAME_GUIDE.md`](docs/RENAME_GUIDE.md): cómo cambiar de nombre sin romper nada.
 - [`docs/superpowers/`](docs/superpowers/): especificaciones y planes de trabajo.
 
 Las notas también pueden protegerse individualmente con contraseña. El contenido se cifra con una

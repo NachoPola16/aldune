@@ -48,7 +48,7 @@ public static class TaskLines
     /// tarea. Se permite sangría delante (para listas indentadas). No se exige un espacio detrás
     /// del glifo: da igual que el texto de la tarea le vaya pegado sin espacio (por ejemplo, al
     /// borrar el espacio sin querer mientras se edita) — sigue siendo una tarea marcable mientras el
-    /// glifo sea el primer carácter no en blanco de la línea. Fanote nunca *escribe* una tarea sin
+    /// glifo sea el primer carácter no en blanco de la línea. Aldune nunca *escribe* una tarea sin
     /// ese espacio (ver <see cref="Prefix"/>), pero sí reconoce y deja marcar una que llegue así.
     /// </summary>
     public static int GlyphIndex(string line)

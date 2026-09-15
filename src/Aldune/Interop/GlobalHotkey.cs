@@ -7,7 +7,7 @@ namespace Aldune.Interop;
 /// <summary>
 /// Atajo de teclado global: crear una nota sin tocar el ratón, esté donde esté el foco.
 ///
-/// Es lo que separa a Fanote de tener que ir al borde de la pantalla, esperar el abanico y pulsar
+/// Es lo que separa a Aldune de tener que ir al borde de la pantalla, esperar el abanico y pulsar
 /// "+". Una nota que cuesta tres gestos se escribe en otro sitio.
 ///
 /// Se registra contra una ventana <b>solo de mensajes</b> (HWND_MESSAGE) propia, no contra un dock:
@@ -46,7 +46,7 @@ internal sealed class GlobalHotkey : IDisposable
     {
         _onPressed = onPressed;
 
-        var parameters = new HwndSourceParameters("AlduneHotkey")
+        var parameters = new HwndSourceParameters(BrandIdentity.WindowMessageClassName)
         {
             // -3 es HWND_MESSAGE: una ventana que solo existe para recibir mensajes, sin sitio en
             // pantalla, sin barra de tareas y sin aparecer en Alt+Tab.

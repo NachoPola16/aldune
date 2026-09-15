@@ -6,7 +6,7 @@ public static class NoteTitleHelper
     /// El título de una nota sin texto todavía. Mutable y no <c>const</c> a propósito: Core no
     /// depende de nada de idiomas (es la capa Win32-libre del proyecto), así que es la capa WPF
     /// quien fija esto una vez al arrancar, según el idioma resuelto de la interfaz — ver
-    /// <c>Fanote.Resources.Strings</c> y <c>App.OnStartup</c>.
+    /// <c>Aldune.Resources.Strings</c> y <c>App.OnStartup</c>.
     /// </summary>
     public static string PlaceholderTitle { get; set; } = "New note";
 

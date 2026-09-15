@@ -6,7 +6,7 @@ namespace Aldune.Core.Tests;
 
 public class NotesRepositoryReminderTests : IDisposable
 {
-    private readonly string _dbPath = Path.Combine(Path.GetTempPath(), $"fanote-reminder-test-{Guid.NewGuid()}.db");
+    private readonly string _dbPath = Path.Combine(Path.GetTempPath(), $"aldune-reminder-test-{Guid.NewGuid()}.db");
     private readonly NotesRepository _sut;
 
     public NotesRepositoryReminderTests()

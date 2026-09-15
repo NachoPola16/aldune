@@ -64,7 +64,7 @@ public sealed class SyncEnvelopeTests
     [Fact]
     public void FolderTransport_ReplacesObjectsAtomicallyByNoteId()
     {
-        var folder = Path.Combine(Path.GetTempPath(), "fanote-sync-" + Guid.NewGuid().ToString("N"));
+        var folder = Path.Combine(Path.GetTempPath(), "aldune-sync-" + Guid.NewGuid().ToString("N"));
         Directory.CreateDirectory(folder);
         try
         {
