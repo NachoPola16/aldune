@@ -39,7 +39,6 @@ que mirar antes de buscar cadenas por el repositorio:
 El icono vive en `src/Aldune/Assets/`: `aldune.ico` (el que usan el ejecutable y el instalador) y los
 `.svg` de origen (`aldune-logo.svg`, `aldune-logo-small.svg`).
 
-
 ## Dónde más aparece el nombre (no sale de `BrandIdentity`)
 
 Estos sitios hay que cambiarlos a mano, o con `scripts/rename-brand.ps1`, que los cubre todos:
