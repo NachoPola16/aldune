@@ -339,6 +339,7 @@ public static class Strings
     public static string SyncConflictRestore => T("Restore this version", "Restaurar esta versión");
     public static string SyncConflictDismiss => T("Dismiss", "Descartar");
     public static string SyncConflictDismissAll => T("Dismiss all", "Descartar todo");
+    public static string SyncConflictDismissAllShort => T("All", "Todo");
     public static string SyncConflictDismissAllConfirm(int count) => T(
         $"Dismiss all {count} conflicts? The losing versions will be discarded permanently.",
         $"¿Descartar los {count} conflictos? Las versiones perdedoras se descartarán definitivamente.");

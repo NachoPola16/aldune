@@ -3006,4 +3006,21 @@ siendo local: un mismo escritorio no significa nada en monitores distintos, así
 orden del mazo. Las versiones anteriores al formato 4 rechazan los sobres nuevos con un error claro;
 todos los dispositivos tienen que usar esta versión para seguir sincronizando.
 
-Tests: 435/435. Build correcto.
+## Correcciones del dock y de la ventana de conflictos (sesión 2026-09-15)
+
+**Los botones de la cabecera de conflictos no siempre respondían.** La franja superior de esa ventana
+es zona de arrastre (`WindowChrome CaptionHeight="34"`), así que el clic sobre los botones nuevos caía
+en el arrastre y no en el botón: solo funcionaba el trozo que sobresalía por debajo de la franja, de
+ahí el "a veces". Se marcan con `WindowChrome.IsHitTestVisibleInChrome="True"`, igual que ya hacían
+`NoteWindow`, `SettingsWindow` y el gestor. Además la ventana se activa al abrirse
+(`NativeMethods.ForceActivate`), porque los docks y las notas son `Topmost` y podían dejarla detrás.
+El aviso de la cabecera reserva ahora el ancho de los botones, que antes se le echaban encima.
+
+**"Abrir todas" abría en la pantalla equivocada.** Usaba `DockNearCursor()`, y el cursor casi nunca
+está sobre el dock que se acaba de pulsar: con un dock en cada monitor, pulsar el botón del dock
+principal abría las notas en el vertical. Ahora `OpenAllNotes` y `ToggleAllNotes` reciben el dock que
+pidió la acción, así que abrir (y el "Normal cascade" del menú) ocurre en la pantalla de ese dock.
+El interruptor sigue cerrando las notas de la vista en curso, estén donde estén, y "Cerrar todas" del
+menú contextual sigue siendo global.
+
+Tests: 435/435. Build correcto. Version 0.7.1.

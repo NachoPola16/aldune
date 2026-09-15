@@ -1316,7 +1316,7 @@ public partial class EdgeDockWindow : Window
 
     private void OnOpenAllClick(object sender, RoutedEventArgs e)
     {
-        _coordinator.ToggleAllNotes();
+        _coordinator.ToggleAllNotes(this);
     }
 
     private void OnOpenAllRightClick(object sender, MouseButtonEventArgs e)
@@ -1395,7 +1395,7 @@ public partial class EdgeDockWindow : Window
     private void SelectOpenAllLayout(NoteLayoutTemplate layout)
     {
         _coordinator.SetDefaultNoteLayout(layout);
-        _coordinator.OpenAllNotes(layout);
+        _coordinator.OpenAllNotes(this, layout);
     }
 
     /// <summary>

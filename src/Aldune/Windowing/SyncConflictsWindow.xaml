@@ -48,18 +48,31 @@
         </Grid.RowDefinitions>
 
         <Grid Grid.Row="0" Margin="20,18,14,14">
-            <StackPanel>
+            <!-- El margen derecho reserva el sitio de los botones: el aviso es largo y, sin esto, el
+                 texto se dibujaba por debajo de ellos (los botones van encima y lo tapaban). -->
+            <StackPanel Margin="0,0,140,0">
                 <TextBlock Text="{x:Static res:Strings.SyncConflictTitle}" Foreground="#F5F0E6"
                            FontSize="17" FontWeight="SemiBold" />
                 <TextBlock Text="{x:Static res:Strings.SyncConflictHint}" Foreground="#A79E90"
                            FontSize="12" TextWrapping="Wrap" Margin="0,4,0,0" />
             </StackPanel>
-            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Top">
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Top"
+                        WindowChrome.IsHitTestVisibleInChrome="True">
+                <!-- La cabecera es zona de arrastre (CaptionHeight): sin IsHitTestVisibleInChrome el
+                     clic llegaría al arrastre en vez de al botón, igual que ya pasa en NoteWindow y
+                     SettingsWindow. -->
                 <Button Content="{x:Static res:Strings.SyncConflictDismissAll}"
                         Click="OnDismissAllClick" Margin="0,0,8,0"
+                        WindowChrome.IsHitTestVisibleInChrome="True"
+                        Style="{StaticResource ConflictDangerButtonStyle}" />
+                <Button Content="{x:Static res:Strings.SyncConflictDismissAllShort}"
+                        Click="OnDismissAllClick" Margin="0,0,8,0"
+                        WindowChrome.IsHitTestVisibleInChrome="True"
                         Style="{StaticResource ConflictDangerButtonStyle}" />
                 <Button Content="&#x2715;" Width="28" Height="28"
-                        Click="OnCloseClick" Style="{StaticResource ConflictButtonStyle}" />
+                        Click="OnCloseClick"
+                        WindowChrome.IsHitTestVisibleInChrome="True"
+                        Style="{StaticResource ConflictButtonStyle}" />
             </StackPanel>
         </Grid>
 

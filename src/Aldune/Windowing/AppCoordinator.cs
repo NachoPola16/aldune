@@ -71,6 +71,11 @@ public sealed class AppCoordinator
         _syncConflictsWindow = new SyncConflictsWindow(_syncService, this);
         _syncConflictsWindow.Closed += (_, _) => _syncConflictsWindow = null;
         _syncConflictsWindow.Show();
+
+        // Igual que el gestor de notas: los docks y las notas son Topmost, asi que una ventana normal
+        // puede quedar por debajo aunque se acabe de abrir. Sin esto, sus botones "no dejan clicar"
+        // cuando el dock de ese canto se cruza con la ventana.
+        NativeMethods.ForceActivate(_syncConflictsWindow);
     }
 
     /// <summary>
@@ -319,20 +324,18 @@ public sealed class AppCoordinator
     /// cascada a partir de cuántas ventanas de nota hay abiertas en cada momento, así que no hace
     /// falta ningún cálculo nuevo aquí para que no queden todas exactamente superpuestas.
     /// </summary>
-    public void OpenAllNotes(NoteLayoutTemplate layout = NoteLayoutTemplate.Normal)
+    public void OpenAllNotes(EdgeDockWindow requestingDock, NoteLayoutTemplate layout = NoteLayoutTemplate.Normal)
     {
-        var dock = DockNearCursor();
-        if (dock is null) return;
-
         foreach (var note in NotesForCurrentDockView())
         {
             if (IsNoteOpen(note.Id)) continue;
-            OpenOrActivateNote(note, dock);
+            OpenOrActivateNote(note, requestingDock);
         }
 
         // También se ejecuta para Normal: si ya había notas abiertas, elegir "Normal cascade"
         // debe tener un efecto visible y no limitarse a guardar una preferencia para el siguiente
         // ciclo de abrir/cerrar.
+        var dock = requestingDock;
         Application.Current.Dispatcher.BeginInvoke(DispatcherPriority.Loaded, new Action(() =>
         {
             ArrangeOpenNotes(layout, dock);
@@ -547,8 +550,13 @@ public sealed class AppCoordinator
     /// "Todas" significa las de la vista en curso: en la vista de una etiqueta el interruptor abre y
     /// cierra solo esas, igual que el resto de botones del pie. "Cerrar todas" del menú contextual
     /// sigue siendo global, porque ahí el usuario está pidiendo cerrarlo todo explícitamente.
+    ///
+    /// El dock que pide decide la pantalla: abrir desde la pestaña de un dock tiene que pintar en
+    /// esa pantalla, no en la del cursor. Con dos docks, uno en cada monitor, el cursor casi nunca
+    /// está sobre el dock que se acaba de pulsar — está sobre la pantalla donde se está trabajando —
+    /// y adivinar por cursor abre las notas en el monitor equivocado.
     /// </summary>
-    public void ToggleAllNotes()
+    public void ToggleAllNotes(EdgeDockWindow requestingDock)
     {
         var view = NotesForCurrentDockView();
         var openInView = view.Where(note => IsNoteOpen(note.Id)).ToList();
@@ -564,7 +572,7 @@ public sealed class AppCoordinator
             return;
         }
 
-        OpenAllNotes(_settings?.DefaultNoteLayout ?? NoteLayoutTemplate.Normal);
+        OpenAllNotes(requestingDock, _settings?.DefaultNoteLayout ?? NoteLayoutTemplate.Normal);
     }
 
     public void SetDefaultNoteLayout(NoteLayoutTemplate layout)
