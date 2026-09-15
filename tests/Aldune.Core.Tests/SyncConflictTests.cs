@@ -187,6 +187,29 @@ public sealed class SyncConflictTests : IDisposable
         Assert.Equal(noteId, _deviceB.Repository.GetAllForSync().Single().Id);
     }
 
+    [Fact]
+    public void DockOrderTravelsInsideTheEncryptedEnvelope()
+    {
+        var note = _deviceA.Repository.Create("original", "#EBD38B", "primary");
+        ShareKeyAndSynchronizeInitialNote(note.Id);
+        Assert.True(_deviceB.Sync.Synchronize().Succeeded);
+
+        // El orden viaja solo si tiene momento: arrastrar pone fecha a la nota para que el sobre se
+        // vuelva a publicar. Sin eso el segundo dispositivo conservaría el orden antiguo.
+        var first = _deviceA.Repository.Create("first", "#EBD38B", "primary");
+        var second = _deviceA.Repository.Create("second", "#EBD38B", "primary");
+        var ids = _deviceA.Repository.GetByState(NoteState.Active).Select(n => n.Id).ToList();
+        var before = _deviceA.Repository.GetById(first.Id)!.UpdatedAt;
+        _deviceA.Repository.MoveNote(second.Id, targetIndex: 0, ids);
+
+        Assert.True(_deviceA.Repository.GetById(second.Id)!.UpdatedAt > before);
+        Assert.True(_deviceA.Sync.Synchronize().Succeeded);
+        Assert.True(_deviceB.Sync.Synchronize().Succeeded);
+
+        Assert.Equal("second", _deviceB.Repository.GetByState(NoteState.Active).First().Text);
+        Assert.NotNull(_deviceB.Repository.GetById(second.Id)!.DockPosition);
+    }
+
     private Device CreateDevice(string deviceId)
     {
         var deviceRoot = Path.Combine(_root, deviceId);

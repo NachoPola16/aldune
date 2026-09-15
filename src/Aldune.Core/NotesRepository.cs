@@ -67,6 +67,7 @@ public sealed class NotesRepository
         command.CommandText = """
             SELECT n.Id, n.EncryptedText, n.Nonce, n.Tag, n.Color, n.CreatedAt, n.UpdatedAt, n.State, n.ScreenOrigin
             , n.IsProtected, n.ProtectionSalt, n.ProtectionCipherText, n.ProtectionNonce, n.ProtectionTag
+            , o.Position AS DockPosition
             FROM Note n LEFT JOIN NoteOrder o ON o.NoteId = n.Id
             WHERE n.State = $state
             ORDER BY COALESCE(o.Position, 1e18), n.CreatedAt;
@@ -89,9 +90,10 @@ public sealed class NotesRepository
         using var connection = _database.OpenConnection();
         using var command = connection.CreateCommand();
         command.CommandText = """
-            SELECT Id, EncryptedText, Nonce, Tag, Color, CreatedAt, UpdatedAt, State, ScreenOrigin
-            , IsProtected, ProtectionSalt, ProtectionCipherText, ProtectionNonce, ProtectionTag
-            FROM Note ORDER BY CreatedAt;
+            SELECT n.Id, n.EncryptedText, n.Nonce, n.Tag, n.Color, n.CreatedAt, n.UpdatedAt, n.State, n.ScreenOrigin
+            , n.IsProtected, n.ProtectionSalt, n.ProtectionCipherText, n.ProtectionNonce, n.ProtectionTag
+            , o.Position AS DockPosition
+            FROM Note n LEFT JOIN NoteOrder o ON o.NoteId = n.Id ORDER BY n.CreatedAt;
             """;
 
         var results = new List<Note>();
@@ -196,6 +198,7 @@ public sealed class NotesRepository
         command.CommandText = """
             SELECT n.Id, n.EncryptedText, n.Nonce, n.Tag, n.Color, n.CreatedAt, n.UpdatedAt, n.State, n.ScreenOrigin
             , n.IsProtected, n.ProtectionSalt, n.ProtectionCipherText, n.ProtectionNonce, n.ProtectionTag
+            , o.Position AS DockPosition
             FROM Note n
             JOIN NoteTag nt ON nt.NoteId = n.Id
             JOIN Tag t ON t.Id = nt.TagId
@@ -462,6 +465,21 @@ public sealed class NotesRepository
         command.Parameters.AddWithValue("$protectedNonce", (object?)note.ProtectedContent?.Nonce ?? DBNull.Value);
         command.Parameters.AddWithValue("$protectedTag", (object?)note.ProtectedContent?.Tag ?? DBNull.Value);
         command.ExecuteNonQuery();
+
+        // El orden del mazo viaja dentro de la nota. Si el sobre lo trae, se aplica; si no (un sobre
+        // de una versión anterior a que el orden se sincronizara), se conserva el orden local en
+        // vez de dejar la nota sin posición.
+        if (note.DockPosition is { } position)
+        {
+            using var orderCommand = connection.CreateCommand();
+            orderCommand.CommandText = """
+                INSERT OR REPLACE INTO NoteOrder (NoteId, Position) VALUES ($noteId, $position);
+                """;
+            orderCommand.Parameters.AddWithValue("$noteId", note.Id.ToString());
+            orderCommand.Parameters.AddWithValue("$position", position);
+            orderCommand.ExecuteNonQuery();
+        }
+
         SetTags(note.Id, note.Tags);
     }
 
@@ -473,6 +491,7 @@ public sealed class NotesRepository
         command.CommandText = """
             DELETE FROM Note WHERE Id = $id;
             DELETE FROM NotePlacement WHERE NoteId = $id;
+            DELETE FROM NoteOrder WHERE NoteId = $id;
             DELETE FROM TaskCompletion WHERE NoteId = $id;
             DELETE FROM NoteReminder WHERE NoteId = $id;
             DELETE FROM NoteTag WHERE NoteId = $id;
@@ -672,6 +691,7 @@ public sealed class NotesRepository
         if (!reordered.Where(id => id != noteId).All(positions.ContainsKey))
         {
             SetOrderPositions(reordered);
+            TouchUpdatedAt(reordered);
             return;
         }
 
@@ -685,10 +705,33 @@ public sealed class NotesRepository
         {
             // El hueco se ha agotado de tanto partirlo por la mitad en el mismo sitio.
             SetOrderPositions(reordered);
+            TouchUpdatedAt(reordered);
             return;
         }
 
         SetOrder(noteId, target.Value);
+        TouchUpdatedAt(new[] { noteId });
+    }
+
+    /// <summary>Marca notas como recién cambiadas sin tocar su contenido. El orden del mazo no vive
+    /// en la fila de la nota, pero sí viaja con ella (<see cref="Note.DockPosition"/>) dentro del
+    /// sobre: reordenar tiene que refrescar el momento de la última edición, porque si no el sobre
+    /// de la nota no se volvería a publicar y el otro dispositivo conservaría el orden antiguo.</summary>
+    private void TouchUpdatedAt(IReadOnlyList<Guid> noteIds)
+    {
+        var now = DateTimeOffset.UtcNow.ToString("O");
+        using var connection = _database.OpenConnection();
+        using var transaction = connection.BeginTransaction();
+        foreach (var id in noteIds)
+        {
+            using var command = connection.CreateCommand();
+            command.Transaction = transaction;
+            command.CommandText = "UPDATE Note SET UpdatedAt = $updatedAt WHERE Id = $id;";
+            command.Parameters.AddWithValue("$updatedAt", now);
+            command.Parameters.AddWithValue("$id", id.ToString());
+            command.ExecuteNonQuery();
+        }
+        transaction.Commit();
     }
 
     /// <summary>Posiciones limpias y espaciadas para toda la lista, en el orden dado.</summary>
@@ -855,9 +898,10 @@ public sealed class NotesRepository
         using var connection = _database.OpenConnection();
         using var command = connection.CreateCommand();
         command.CommandText = """
-            SELECT Id, EncryptedText, Nonce, Tag, Color, CreatedAt, UpdatedAt, State, ScreenOrigin
-            , IsProtected, ProtectionSalt, ProtectionCipherText, ProtectionNonce, ProtectionTag
-            FROM Note WHERE Id = $id;
+            SELECT n.Id, n.EncryptedText, n.Nonce, n.Tag, n.Color, n.CreatedAt, n.UpdatedAt, n.State, n.ScreenOrigin
+            , n.IsProtected, n.ProtectionSalt, n.ProtectionCipherText, n.ProtectionNonce, n.ProtectionTag
+            , o.Position AS DockPosition
+            FROM Note n LEFT JOIN NoteOrder o ON o.NoteId = n.Id WHERE n.Id = $id;
             """;
         command.Parameters.AddWithValue("$id", id.ToString());
 
@@ -971,9 +1015,21 @@ public sealed class NotesRepository
                 System.Globalization.DateTimeStyles.RoundtripKind),
             State = Enum.Parse<NoteState>((string)reader["State"]),
             ScreenOrigin = (string)reader["ScreenOrigin"],
+            DockPosition = ReadDockPosition(reader),
             IsProtected = isProtected,
             ProtectedContent = protectedContent,
             IsUnlocked = !isProtected
         };
+    }
+
+    /// <summary>
+    /// Posición del mazo si la consulta la trajo (los cuatro SELECT de notas la traen). Es null si
+    /// la nota no tiene orden manual o si viene de un sobre de una versión anterior a que el orden
+    /// se sincronizara: en ese caso conserva su orden local en vez de perderlo.
+    /// </summary>
+    private static double? ReadDockPosition(SqliteDataReader reader)
+    {
+        int index = reader.GetOrdinal("DockPosition");
+        return reader.IsDBNull(index) ? null : reader.GetDouble(index);
     }
 }

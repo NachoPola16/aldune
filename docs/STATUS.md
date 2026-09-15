@@ -2994,3 +2994,16 @@ las notas: solo borra los registros de la cola de recuperación, así que la ver
 siendo la activa en cada una.
 
 Tests: 434/434. Build correcto. Portable v0.6.0 publicada.
+
+## Posición del mazo sincronizada (sesión 2026-09-15)
+
+El orden de las pestañas dentro del dock viaja en el sobre cifrado (`Note.DockPosition`, formato de
+sincronización 4). Arrastrar una nota refresca su `UpdatedAt` para que el sobre se vuelva a publicar;
+sin eso el otro dispositivo conservaría el orden antiguo. Al aplicar un sobre con posición se guarda
+en `NoteOrder`, y si el sobre no la trae (versión anterior) se conserva el orden local en vez de
+perderlo. `ApplySyncTombstone` también borra `NoteOrder`. La posición de la ventana en pantalla sigue
+siendo local: un mismo escritorio no significa nada en monitores distintos, así que solo viaja el
+orden del mazo. Las versiones anteriores al formato 4 rechazan los sobres nuevos con un error claro;
+todos los dispositivos tienen que usar esta versión para seguir sincronizando.
+
+Tests: 435/435. Build correcto.

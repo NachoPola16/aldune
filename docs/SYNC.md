@@ -201,11 +201,13 @@ El formato de los sobres y la API son JSON/HTTP y no dependen de Windows, WPF, S
 futuro cliente para Android, iOS, macOS o Linux podrá reutilizar el servidor. DPAPI solo protege la
 clave y el token guardados localmente en la versión Windows.
 
-La versión de formato 2 sincroniza también las etiquetas dentro del contenido cifrado. El formato 1
-sigue siendo legible, pero una versión antigua de Aldune rechazará sobres de formato 2 para no
-reescribir una nota nueva y perder sus etiquetas sin avisar. El contenido, color, estado, fecha de
-creación y eliminaciones permanentes siguen sincronizándose; las posiciones de las ventanas se
-quedan locales a cada dispositivo, porque un mismo escritorio no tiene sentido en monitores distintos.
+La versión de formato 2 sincroniza también las etiquetas dentro del contenido cifrado. El formato 3
+añade las notas protegidas. La versión de formato 4 añade la posición de cada nota dentro del mazo
+(`NoteOrder.Position`), para que todos los dispositivos enseñen el mismo orden de pestañas; las
+posiciones de las ventanas siguen siendo locales a cada dispositivo, porque un mismo escritorio no
+tiene sentido en monitores distintos. Un cliente antiguo rechaza los sobres que no sabe leer con un
+error claro en vez de aplicar datos parcialmente: una versión antigua reescribiría la nota sin la
+posición y desharía el reordenado sin avisar.
 
 La selección puede ser distinta en cada perfil. Para compartir una nota con otra persona, crea un
 perfil separado, selecciona solo esa nota y comparte el código de ese perfil.

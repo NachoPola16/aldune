@@ -28,9 +28,11 @@ public sealed record SyncTombstone(Guid NoteId, DateTimeOffset DeletedAt, string
 /// <summary>Ventana de formatos que una versión de Aldune sabe leer.</summary>
 public static class SyncCompatibility
 {
-    // Format 2 added tags. Format 3 adds protected-note ciphertext and metadata. Older clients
-    // reject it instead of silently replacing a protected note with an unprotected copy.
-    public const int CurrentFormat = 3;
+    // Format 2 added tags. Format 3 adds protected-note ciphertext and metadata. Format 4 adds the
+    // position of the note inside the dock, so every device shows the same deck order. Older
+    // clients reject what they cannot read instead of silently dropping it: a format 3 client would
+    // rewrite the note without the position and quietly undo the reorder.
+    public const int CurrentFormat = 4;
     public const int MinimumSupportedFormat = 1;
 
     public static bool IsSupported(int format) =>
@@ -329,7 +331,8 @@ public static class SyncEnvelopeCodec
             ScreenOrigin = note.ScreenOrigin,
             Tags = note.Tags.ToArray(),
             IsProtected = note.IsProtected,
-            ProtectedContent = note.ProtectedContent
+            ProtectedContent = note.ProtectedContent,
+            DockPosition = note.DockPosition
         }, JsonOptions);
 
         try
@@ -403,6 +406,7 @@ public static class SyncEnvelopeCodec
             Tags = payload.Tags ?? Array.Empty<string>(),
             IsProtected = payload.IsProtected,
             ProtectedContent = payload.ProtectedContent,
+            DockPosition = payload.DockPosition,
             IsUnlocked = !payload.IsProtected
         };
     }
@@ -433,6 +437,7 @@ public static class SyncEnvelopeCodec
         public string[]? Tags { get; set; }
         public bool IsProtected { get; set; }
         public ProtectedNoteContent? ProtectedContent { get; set; }
+        public double? DockPosition { get; set; }
     }
 }
 
