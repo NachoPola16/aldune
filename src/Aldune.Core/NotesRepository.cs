@@ -329,6 +329,17 @@ public sealed class NotesRepository
         command.ExecuteNonQuery();
     }
 
+    /// <summary>Descarta todos los conflictos de golpe y devuelve cuántos había. Es la operación de
+    /// "descartar todo" de la ventana de conflictos: vacía la cola de recuperación entera sin tocar
+    /// las notas — en cada una sigue siendo la versión ganadora la que está activa.</summary>
+    public int DeleteAllSyncConflicts()
+    {
+        using var connection = _database.OpenConnection();
+        using var command = connection.CreateCommand();
+        command.CommandText = "DELETE FROM SyncConflict;";
+        return command.ExecuteNonQuery();
+    }
+
     private static DateTimeOffset ParseDate(object value) => DateTimeOffset.Parse(
         (string)value,
         System.Globalization.CultureInfo.InvariantCulture,

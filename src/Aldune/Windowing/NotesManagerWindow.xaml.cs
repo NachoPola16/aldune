@@ -35,11 +35,12 @@ public partial class NotesManagerWindow : Window
     private NoteRow? _tagEditRow;
     private NoteRow? _selectionAnchor;
 
-    public NotesManagerWindow(NotesRepository repository, AppCoordinator coordinator)
+    public NotesManagerWindow(NotesRepository repository, AppCoordinator coordinator, string? tagFilter = null)
     {
         InitializeComponent();
         _repository = repository;
         _coordinator = coordinator;
+        _tagFilter = tagFilter;
 
         SourceInitialized += (_, _) =>
         {
@@ -48,6 +49,18 @@ public partial class NotesManagerWindow : Window
         };
 
         FilterActive.IsChecked = true;
+        LoadRows();
+    }
+
+    /// <summary>
+    /// Aplica un filtro de etiqueta desde fuera: el botón de gestionar del dock llega aquí cuando el
+    /// dock está en la vista de una etiqueta. Recargar también restablece la selección, que es lo
+    /// esperable al cambiar de filtro. Si ya estaba ese filtro, no se toca nada.
+    /// </summary>
+    public void ApplyTagFilter(string? tag)
+    {
+        if (string.Equals(_tagFilter, tag, StringComparison.OrdinalIgnoreCase)) return;
+        _tagFilter = tag;
         LoadRows();
     }
 

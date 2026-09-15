@@ -54,8 +54,13 @@
                 <TextBlock Text="{x:Static res:Strings.SyncConflictHint}" Foreground="#A79E90"
                            FontSize="12" TextWrapping="Wrap" Margin="0,4,0,0" />
             </StackPanel>
-            <Button Content="&#x2715;" Width="28" Height="28" HorizontalAlignment="Right"
-                    Click="OnCloseClick" Style="{StaticResource ConflictButtonStyle}" />
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Top">
+                <Button Content="{x:Static res:Strings.SyncConflictDismissAll}"
+                        Click="OnDismissAllClick" Margin="0,0,8,0"
+                        Style="{StaticResource ConflictDangerButtonStyle}" />
+                <Button Content="&#x2715;" Width="28" Height="28"
+                        Click="OnCloseClick" Style="{StaticResource ConflictButtonStyle}" />
+            </StackPanel>
         </Grid>
 
         <Grid Grid.Row="1" Margin="20,0,20,20">

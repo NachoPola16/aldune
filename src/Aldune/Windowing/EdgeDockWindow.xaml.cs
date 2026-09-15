@@ -727,7 +727,42 @@ public partial class EdgeDockWindow : Window
             _ => _repository.GetByState(NoteState.Active)
         };
         SetNotes(notes, animateArrivals: !viewChanged);
-        if (viewChanged) HoldHoverDuringLayout();
+        if (viewChanged)
+        {
+            HoldHoverDuringLayout();
+            UpdateTagAwareTooltips();
+        }
+    }
+
+    /// <summary>
+    /// Etiqueta de la vista en curso, o null si el dock no está filtrando por etiqueta. La usan los
+    /// botones del pie para actuar dentro de la vista que se está viendo en vez de sobre todas las
+    /// notas: crear una nota desde la vista de una etiqueta y que nazca sin ella obligaría a buscarla
+    /// después en "todas" para etiquetarla a mano, justo después de haber elegido no verlas todas.
+    /// </summary>
+    private string? CurrentTagFilter
+    {
+        get
+        {
+            var tag = _settings?.DockTagFilter;
+            return _settings?.DockView == DockViewKind.Tag && !string.IsNullOrWhiteSpace(tag) ? tag : null;
+        }
+    }
+
+    /// <summary>
+    /// Los tooltips del pie describen lo que va a hacer cada botón, así que cambian con la vista: en
+    /// la vista de una etiqueta "+" ya no crea "una nota" a secas, sino una nota de esa etiqueta.
+    /// </summary>
+    private void UpdateTagAwareTooltips()
+    {
+        var tag = CurrentTagFilter;
+        NewNoteButton.ToolTip = tag is null ? Strings.NewNoteTooltip : Strings.NewNoteTaggedTooltip(tag);
+        ManageArchiveButton.ToolTip = tag is null
+            ? Strings.ManageNotesTooltip
+            : Strings.ManageNotesTaggedTooltip(tag);
+        OpenAllButton.ToolTip = tag is null
+            ? Strings.OpenAllNotesTooltip
+            : Strings.OpenAllNotesTaggedTooltip(tag);
     }
 
     /// <summary>
@@ -1191,7 +1226,7 @@ public partial class EdgeDockWindow : Window
 
     private void OnManageArchiveClick(object sender, RoutedEventArgs e)
     {
-        _coordinator.OpenOrActivateNotesManager(this);
+        _coordinator.OpenOrActivateNotesManager(this, CurrentTagFilter);
     }
 
     private void OnManageArchiveRightClick(object sender, MouseButtonEventArgs e)
@@ -1971,7 +2006,12 @@ public partial class EdgeDockWindow : Window
         HoldHoverDuringLayout();
         var existingCount = _repository.GetByState(NoteState.Active).Count;
         var color = NoteColorPalette.Colors[existingCount % NoteColorPalette.Colors.Length];
-        _repository.Create(string.Empty, color, screenOrigin: "primary");
+        var note = _repository.Create(string.Empty, color, screenOrigin: "primary");
+
+        // En la vista de una etiqueta la nota nace ya con ella: si no, el filtro la escondería nada
+        // más crearla y habría que ir a buscarla a "todas" para etiquetarla a mano.
+        if (CurrentTagFilter is { } tag) _repository.SetTags(note.Id, new[] { tag });
+
         _coordinator.RefreshAll();
     }
 

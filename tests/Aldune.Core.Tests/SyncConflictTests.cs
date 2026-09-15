@@ -55,6 +55,33 @@ public sealed class SyncConflictTests : IDisposable
     }
 
     [Fact]
+    public void DismissAllConflicts_ClearsTheQueueWithoutTouchingTheNotes()
+    {
+        var note = _deviceA.Repository.Create("original", "#EBD38B", "primary");
+        ShareKeyAndSynchronizeInitialNote(note.Id);
+
+        // Two divergent edits leave one conflict on each side. Dismissing all has to empty the
+        // queue without applying anything and without touching the notes themselves.
+        _deviceB.Repository.UpdateText(note.Id, "edit from B");
+        Assert.True(_deviceB.Sync.Synchronize().Succeeded);
+        Thread.Sleep(20);
+        _deviceA.Repository.UpdateText(note.Id, "edit from A");
+        Assert.True(_deviceA.Sync.Synchronize().Succeeded);
+        Assert.True(_deviceB.Sync.Synchronize().Succeeded);
+
+        var conflictsBefore = _deviceB.Sync.GetConflicts().Count;
+        Assert.True(conflictsBefore > 0);
+        var textBefore = _deviceB.Repository.GetAllForSync().Single().Text;
+
+        var dismissed = _deviceB.Sync.DismissAllConflicts();
+
+        Assert.Equal(conflictsBefore, dismissed);
+        Assert.Empty(_deviceB.Sync.GetConflicts());
+        Assert.Equal(textBefore, _deviceB.Repository.GetAllForSync().Single().Text);
+        Assert.Equal(0, _deviceB.Sync.DismissAllConflicts());
+    }
+
+    [Fact]
     public void NewerDelete_BeatsAnOlderEditAndDoesNotResurrect()
     {
         var note = _deviceA.Repository.Create("original", "#AAE6B1", "primary");

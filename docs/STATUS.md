@@ -2979,3 +2979,18 @@ abrir el abanico. `EdgeDockWindow` activa además redondeo de layout, píxeles y
 display para que las tarjetas se dibujen nítidas.
 
 Tests: 396/396. Build correcto. Portable republicado y abierto desde `publish/portable/aldune.exe`.
+
+## Botones del dock ligados a la etiqueta y descarte masivo de conflictos (sesión 2026-09-15)
+
+Los botones del pie del dock se comportan ahora dentro de la vista en curso. En la vista de una
+etiqueta: `+` crea la nota ya etiquetada con ella, "abrir todas" abre y cierra solo las notas de esa
+etiqueta y "gestionar" abre el gestor con ese filtro aplicado, también si ya estaba abierto. La
+sincronización sigue siendo global, igual que "Cerrar todas" del menú contextual. Los tooltips del
+pie cambian con la vista para que se vea qué va a hacer cada botón antes de pulsarlo.
+
+La ventana de conflictos añade "Descartar todo", con confirmación, para vaciar la cola entera de una
+vez (`SyncService.DismissAllConflicts` -> `NotesRepository.DeleteAllSyncConflicts`). Descartar no toca
+las notas: solo borra los registros de la cola de recuperación, así que la versión ganadora sigue
+siendo la activa en cada una.
+
+Tests: 434/434. Build correcto. Portable v0.6.0 publicada.

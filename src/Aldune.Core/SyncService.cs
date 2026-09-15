@@ -192,6 +192,11 @@ public sealed class SyncService
         return true;
     }
 
+    /// <summary>Descarta todos los conflictos de golpe y devuelve cuántos había. Es el "descartar
+    /// todo" de la ventana de conflictos: vacía la cola de recuperación sin tocar las notas, igual
+    /// que <see cref="DismissConflict"/> hace con una sola.</summary>
+    public int DismissAllConflicts() => _repository.DeleteAllSyncConflicts();
+
     public bool RestoreConflict(Guid conflictId)
     {
         var conflict = _repository.GetSyncConflicts().FirstOrDefault(item => item.Id == conflictId);

@@ -52,6 +52,27 @@ public partial class SyncConflictsWindow : Window
         }
     }
 
+    private void OnDismissAllClick(object sender, RoutedEventArgs e)
+    {
+        var count = _syncService.GetConflicts().Count;
+        if (count == 0) return;
+
+        // Descartar todo tira a la vez todas las versiones perdedoras, así que se pide confirmación:
+        // con unos cientos de conflictos acumulados es demasiado fácil pulsarlo sin querer.
+        var choice = MessageBox.Show(
+            this,
+            Strings.SyncConflictDismissAllConfirm(count),
+            Strings.SyncConflictTitle,
+            MessageBoxButton.YesNo,
+            MessageBoxImage.Warning,
+            MessageBoxResult.No);
+
+        if (choice != MessageBoxResult.Yes) return;
+
+        _syncService.DismissAllConflicts();
+        LoadRows();
+    }
+
     private void OnCloseClick(object sender, RoutedEventArgs e) => Close();
 
     private void OnWindowStateChanged(object? sender, EventArgs e)

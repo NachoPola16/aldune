@@ -255,19 +255,23 @@ public sealed class AppCoordinator
     /// posición y Windows la ponía en (0,0) — o sea, siempre en el monitor principal, aunque
     /// hubieras pulsado el engranaje en el otro.
     /// </summary>
-    public void OpenOrActivateNotesManager(EdgeDockWindow requestingDock)
+    public void OpenOrActivateNotesManager(EdgeDockWindow requestingDock, string? tagFilter = null)
     {
         if (_notesManagerWindow is not null)
         {
             if (_notesManagerWindow.WindowState == WindowState.Minimized)
                 _notesManagerWindow.WindowState = WindowState.Normal;
 
+            // Pedir "gestionar" desde la vista de una etiqueta tiene que enseñar esa etiqueta aunque
+            // el gestor ya estuviera abierto enseñando otra cosa.
+            if (tagFilter is not null) _notesManagerWindow.ApplyTagFilter(tagFilter);
+
             _notesManagerWindow.Activate();
             NativeMethods.ForceActivate(_notesManagerWindow);
             return;
         }
 
-        _notesManagerWindow = new NotesManagerWindow(_repository, this);
+        _notesManagerWindow = new NotesManagerWindow(_repository, this, tagFilter);
         requestingDock.CenterOnThisMonitor(_notesManagerWindow);
         _notesManagerWindow.Closed += (_, _) => _notesManagerWindow = null;
         _notesManagerWindow.Show();
@@ -320,7 +324,7 @@ public sealed class AppCoordinator
         var dock = DockNearCursor();
         if (dock is null) return;
 
-        foreach (var note in _repository.GetByState(NoteState.Active))
+        foreach (var note in NotesForCurrentDockView())
         {
             if (IsNoteOpen(note.Id)) continue;
             OpenOrActivateNote(note, dock);
@@ -520,10 +524,47 @@ public sealed class AppCoordinator
     /// hay ninguna, las abre todas. Más predecible que un estado de tres vías ("ninguna/algunas/
     /// todas"): la pregunta que responde siempre es la misma, "¿hay algo abierto ahora mismo?".
     /// </summary>
+    /// <summary>
+    /// Notas que el dock está enseñando en este momento. En la vista por etiqueta son solo las de esa
+    /// etiqueta, así que "abrir todas" desde ahí abre esas y no el mazo entero: desparramar por la
+    /// pantalla notas que el usuario acaba de decidir no ver rompería el filtro que acaba de elegir.
+    /// </summary>
+    private IReadOnlyList<Note> NotesForCurrentDockView()
+    {
+        var tag = _settings?.DockTagFilter;
+        if (_settings?.DockView == DockViewKind.Tag && !string.IsNullOrWhiteSpace(tag))
+            return _repository.GetByTag(tag, NoteState.Active);
+
+        return _repository.GetByState(NoteState.Active);
+    }
+
+    /// <summary>
+    /// El botón "abrir todas" del dock, convertido en interruptor: si hay alguna nota abierta ahora
+    /// mismo (todas o solo algunas — no importa cómo se llegara a ese estado), cierra todas; si no
+    /// hay ninguna, las abre todas. Más predecible que un estado de tres vías ("ninguna/algunas/
+    /// todas"): la pregunta que responde siempre es la misma, "¿hay algo abierto ahora mismo?".
+    ///
+    /// "Todas" significa las de la vista en curso: en la vista de una etiqueta el interruptor abre y
+    /// cierra solo esas, igual que el resto de botones del pie. "Cerrar todas" del menú contextual
+    /// sigue siendo global, porque ahí el usuario está pidiendo cerrarlo todo explícitamente.
+    /// </summary>
     public void ToggleAllNotes()
     {
-        if (OpenNoteWindowCount > 0) CloseAllNoteWindows();
-        else OpenAllNotes(_settings?.DefaultNoteLayout ?? NoteLayoutTemplate.Normal);
+        var view = NotesForCurrentDockView();
+        var openInView = view.Where(note => IsNoteOpen(note.Id)).ToList();
+
+        if (openInView.Count > 0)
+        {
+            // ToList antes de cerrar: cada Close dispara el Closed que la quita del diccionario, y
+            // recorrerlo en directo mientras se modifica lanzaría.
+            foreach (var window in openInView.Select(note => _openNoteWindows[note.Id]).ToList())
+            {
+                window.Close();
+            }
+            return;
+        }
+
+        OpenAllNotes(_settings?.DefaultNoteLayout ?? NoteLayoutTemplate.Normal);
     }
 
     public void SetDefaultNoteLayout(NoteLayoutTemplate layout)

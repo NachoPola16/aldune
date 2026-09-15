@@ -86,6 +86,8 @@ public static class Strings
     // --- Dock (mazo anclado al borde) -------------------------------------------------------------
 
     public static string ManageNotesTooltip => T("Manage notes", "Gestionar notas");
+    public static string ManageNotesTaggedTooltip(string tag) => T(
+        $"Manage the notes with the tag \"{tag}\"", $"Gestionar las notas con la etiqueta \"{tag}\"");
     public static string OpenAllNotesTooltip => T("Open all notes (closes them all if they're already open)", "Abrir todas las notas (las cierra todas si ya están abiertas)");
     public static string OpenAllMenuTitle => T("Open all with...", "Abrir todas con...");
     public static string OpenAllModeTitle => T("Opening mode", "Modo de apertura");
@@ -94,6 +96,11 @@ public static class Strings
     public static string OpenAllGrid => T("Grid", "Cuadrícula");
     public static string OpenAllColumns => T("Columns", "Columnas");
     public static string NewNoteTooltip => T("New note", "Nueva nota");
+    public static string NewNoteTaggedTooltip(string tag) => T(
+        $"New note with the tag \"{tag}\"", $"Nueva nota con la etiqueta \"{tag}\"");
+    public static string OpenAllNotesTaggedTooltip(string tag) => T(
+        $"Open the notes with the tag \"{tag}\" (closes them if they're already open)",
+        $"Abrir las notas con la etiqueta \"{tag}\" (las cierra si ya están abiertas)");
     public static string ExitAppTooltip => T("Exit Aldune", "Salir de Aldune");
     public static string ScrollNotesUpTooltip => T("Show earlier notes", "Ver notas anteriores");
     public static string ScrollNotesDownTooltip => T("Show later notes", "Ver notas siguientes");
@@ -331,6 +338,10 @@ public static class Strings
         "Aldune mantiene activa la versión ganadora. Puedes restaurar la otra versión o descartar este registro.");
     public static string SyncConflictRestore => T("Restore this version", "Restaurar esta versión");
     public static string SyncConflictDismiss => T("Dismiss", "Descartar");
+    public static string SyncConflictDismissAll => T("Dismiss all", "Descartar todo");
+    public static string SyncConflictDismissAllConfirm(int count) => T(
+        $"Dismiss all {count} conflicts? The losing versions will be discarded permanently.",
+        $"¿Descartar los {count} conflictos? Las versiones perdedoras se descartarán definitivamente.");
     public static string SyncConflictDeleted => T("Deleted version", "Versión eliminada");
     public static string SyncErrorTitle => T("Aldune sync", "Sincronización de Aldune");
     public static string SyncUnauthorizedStatus => T(
