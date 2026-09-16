@@ -83,7 +83,21 @@ su propia cuenta o contraseña de aplicación. La carpeta WebDAV debe permitir `
 Si el servidor ya usa Nginx y Cloudflare Tunnel, esta es la variante recomendada. No ejecutes
 tambien la composicion con Caddy: ambos intentarian ocupar los mismos puertos de proxy.
 
-Usa `docker-compose.sync.nginx.yml`, que publica el servidor solo en `127.0.0.1`:
+Usa `docker-compose.sync.nginx.yml`. Para que solo Nginx/cloudflared accedan al servidor, el bloque
+`ports` debe tener esta forma:
+
+```yaml
+ports:
+  - "127.0.0.1:${ALDUNE_SYNC_PORT:-8097}:8080"
+```
+
+Si quitas `127.0.0.1:` y dejas `"${ALDUNE_SYNC_PORT:-8097}:8080"`, Docker escucha en todas las
+interfaces y permite acceso directo desde la red. Eso no debe exponerse a Internet sin HTTPS y un
+proxy o firewall delante.
+
+La configuración versionada usa actualmente la variante abierta a la red porque así está configurado
+tu servidor. Si el tráfico entra por un proxy que corre directamente en el host, añade `127.0.0.1:`
+para restringirlo:
 
 ```powershell
 Copy-Item .env.example .env

@@ -11,10 +11,13 @@ services:
       ALDUNE_SYNC_TOKENS: ${ALDUNE_SYNC_TOKENS:-}
       ALDUNE_DATA_DIR: /data
       ASPNETCORE_URLS: http://+:8080
-    # Nginx y cloudflared son los unicos servicios que deben acceder al puerto.
+    # Esta variante escucha en todas las interfaces y permite acceso directo desde la red. Si quieres
+    # que solo Nginx/cloudflared del servidor accedan al puerto, añade 127.0.0.1: delante del puerto:
+    # "127.0.0.1:${ALDUNE_SYNC_PORT:-8097}:8080". No expongas esta variante a Internet sin HTTPS
+    # y autenticacion de red/proxy delante.
     # Cambia ALDUNE_SYNC_PORT si el puerto 8097 ya esta ocupado en el servidor.
     ports:
-      - "127.0.0.1:${ALDUNE_SYNC_PORT:-8097}:8080"
+      - "${ALDUNE_SYNC_PORT:-8097}:8080"
     volumes:
       - aldune-sync-data:/data
 
