@@ -163,6 +163,7 @@ public partial class EdgeDockWindow : Window
         _openAllMenuTopmostTimer.Tick += (_, _) =>
         {
             RaiseOpenAllMenu();
+            RaiseNewNoteMenu();
             RaiseDockViewPopup();
         };
 
@@ -1448,6 +1449,68 @@ public partial class EdgeDockWindow : Window
         e.Handled = true;
     }
 
+    private void OnNewNoteRightClick(object sender, MouseButtonEventArgs e)
+    {
+        NewNoteMenuPopup.PlacementTarget = NewNoteButton;
+        NewNoteMenuPopup.Placement = _edge switch
+        {
+            EdgePosition.Top => PlacementMode.Bottom,
+            EdgePosition.Bottom => PlacementMode.Top,
+            EdgePosition.Left => PlacementMode.Right,
+            _ => PlacementMode.Left
+        };
+        NewNoteMenuPopup.IsOpen = true;
+        e.Handled = true;
+    }
+
+    private void OnNewNoteMenuPopupOpened(object sender, EventArgs e)
+    {
+        NewNoteMenuClipboardButton.Content = Strings.NewNoteFromClipboard;
+        NewNoteMenuPinButton.Content = _settings?.KeepDockOpen == true
+            ? Strings.KeepDockOpenOn
+            : Strings.KeepDockOpenOff;
+
+        _coordinator.SuspendNotesAboveDockMenu();
+        _openAllMenuTopmostTimer.Start();
+        RaiseNewNoteMenu();
+    }
+
+    private void OnNewNoteMenuClosed(object sender, EventArgs e)
+    {
+        _openAllMenuTopmostTimer.Stop();
+        _coordinator.RestoreNotesAboveDockMenu();
+    }
+
+    private void OnNewNoteMenuCreateClick(object sender, RoutedEventArgs e) =>
+        CreateNote(string.Empty);
+
+    private void OnNewNoteMenuClipboardClick(object sender, RoutedEventArgs e)
+    {
+        var text = Clipboard.ContainsText() ? Clipboard.GetText() : string.Empty;
+        CreateNote(text);
+    }
+
+    private void OnNewNoteMenuPinToggleClick(object sender, RoutedEventArgs e)
+    {
+        _coordinator.SetKeepDockOpen(_settings?.KeepDockOpen != true);
+        NewNoteMenuPinButton.Content = _settings?.KeepDockOpen == true
+            ? Strings.KeepDockOpenOn
+            : Strings.KeepDockOpenOff;
+        HoldOpenForNextInteraction();
+    }
+
+    private void RaiseNewNoteMenu()
+    {
+        if (!NewNoteMenuPopup.IsOpen
+            || NewNoteMenuPopup.Child is not Visual child
+            || PresentationSource.FromVisual(child) is not HwndSource source)
+        {
+            return;
+        }
+
+        NativeMethods.EnsureTopmost(source.Handle);
+    }
+
     private void OnOpenAllClick(object sender, RoutedEventArgs e)
     {
         _coordinator.ToggleAllNotes(this);
@@ -2196,10 +2259,15 @@ public partial class EdgeDockWindow : Window
 
     private void OnNewNoteClick(object sender, RoutedEventArgs e)
     {
+        CreateNote(string.Empty);
+    }
+
+    private void CreateNote(string content)
+    {
         HoldHoverDuringLayout();
         var existingCount = _repository.GetByState(NoteState.Active).Count;
         var color = NoteColorPalette.Colors[existingCount % NoteColorPalette.Colors.Length];
-        var note = _repository.Create(string.Empty, color, screenOrigin: "primary");
+        var note = _repository.Create(content, color, screenOrigin: "primary");
 
         // En la vista de una etiqueta la nota nace ya con ella: si no, el filtro la escondería nada
         // más crearla y habría que ir a buscarla a "todas" para etiquetarla a mano.

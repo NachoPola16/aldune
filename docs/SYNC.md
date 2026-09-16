@@ -122,6 +122,59 @@ Cloudflare termina el HTTPS público y el túnel conecta con Nginx por localhost
 el puerto 8097 en el router ni publicarlo en Internet. En Aldune configura
 `https://sync.example.com/` y usa el mismo token y código de sincronización de los otros dispositivos.
 
+### Actualizar el servidor desde Git
+
+El servidor no necesita una copia manual de `src/` ni de los ficheros publicados de Windows. El
+`Dockerfile` compila dentro de Docker `src/Aldune.SyncServer` y su referencia a `src/Aldune.Core`,
+por lo que basta con mantener un checkout del repositorio y reconstruir la imagen. Los objetos
+sincronizados permanecen en el volumen Docker y el `.env` debe vivir fuera del checkout para que los
+secretos nunca entren en Git.
+
+Configuración inicial recomendada en un servidor Linux:
+
+```bash
+sudo mkdir -p /opt/aldune-sync
+sudo git clone --depth 1 https://github.com/NachoPola16/aldune.git /opt/aldune-sync
+sudo install -m 600 /dev/null /etc/aldune-sync.env
+sudo nano /etc/aldune-sync.env
+```
+
+En `/etc/aldune-sync.env` define al menos un token, y conserva también cualquier configuración del
+servidor existente, por ejemplo:
+
+```dotenv
+ALDUNE_SYNC_TOKEN=un-secreto-largo-y-aleatorio
+ALDUNE_SYNC_PORT=8097
+# Si el servidor ya usaba el almacén antiguo:
+# ALDUNE_SYNC_VOLUME=fanote-sync-data
+```
+
+Para la variante recomendada con Nginx y Cloudflare Tunnel, ejecuta la primera actualización así:
+
+```bash
+sudo env ALDUNE_ENV_FILE=/etc/aldune-sync.env \
+  bash /opt/aldune-sync/scripts/update-sync-server.sh
+```
+
+En las siguientes versiones solo hace falta repetir ese comando. El script hace `git pull --ff-only`
+de `main`, reconstruye `docker-compose.sync.nginx.yml` con `--build`, conserva el volumen de datos y
+comprueba `/health`. No copia `src/`, no modifica el `.env` y falla antes de actualizar si falta el
+fichero de secretos.
+
+Si se usa otra composición, se puede seleccionar sin editar el script:
+
+```bash
+sudo env ALDUNE_ENV_FILE=/etc/aldune-sync.env \
+  ALDUNE_COMPOSE_FILE=docker-compose.sync.https.yml \
+  ALDUNE_HEALTH_URL=http://127.0.0.1:8087/health \
+  bash /opt/aldune-sync/scripts/update-sync-server.sh
+```
+
+Para desplegar desde otro directorio se puede usar `ALDUNE_REPO_DIR`; para una rama distinta,
+`ALDUNE_BRANCH`. El repositorio público no requiere credenciales para el `git pull`; si se hace
+privado, configura una deploy key de solo lectura en el servidor, nunca un token dentro de este
+repositorio ni del fichero de sincronización.
+
 Si gestionas el túnel mediante `config.yml`, la regla equivalente es:
 
 ```yaml
