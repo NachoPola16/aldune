@@ -98,6 +98,10 @@ public static class Strings
     public static string OpenAllGrid => T("Grid", "Cuadrícula");
     public static string OpenAllColumns => T("Columns", "Columnas");
     public static string NewNoteTooltip => T("New note", "Nueva nota");
+    public static string NewNoteFromClipboard => T("New note from clipboard", "Nueva nota desde el portapapeles");
+    public static string NoClipboardText => T("The clipboard has no text to paste.", "El portapapeles no tiene texto para pegar.");
+    public static string KeepDockOpenOn => T("✓  Keep dock open", "✓  Mantener el dock abierto");
+    public static string KeepDockOpenOff => T("Keep dock open", "Mantener el dock abierto");
     public static string NewNoteTaggedTooltip(string tag) => T(
         $"New note with the tag \"{tag}\"", $"Nueva nota con la etiqueta \"{tag}\"");
     public static string OpenAllNotesTaggedTooltip(string tag) => T(

@@ -66,6 +66,20 @@ public sealed class AppCoordinator
     /// </summary>
     public int DockCount => _docks.Count;
 
+    /// <summary>
+    /// El mismo ajuste que la casilla de Ajustes, a mano desde el botón derecho del "+". Guarda el
+    /// valor y repinta docks y ajustes: si el usuario lo fija desde ese menú con Ajustes abierto, la
+    /// casilla tiene que reflejarlo en el acto y no solo al reabrir la ventana.
+    /// </summary>
+    public void SetKeepDockOpen(bool keepOpen)
+    {
+        if (_settings is null) return;
+
+        _settings.KeepDockOpen = keepOpen;
+        _settingsService?.Save(_settings);
+        RefreshAll();
+    }
+
     public void OpenSyncConflicts()
     {
         if (_syncService is null) return;

@@ -491,6 +491,7 @@
                          engranaje: más grande y más clara. Ir las dos iguales las dejaba a la par
                          cuando no lo están. -->
                     <Button x:Name="NewNoteButton" Click="OnNewNoteClick"
+                            PreviewMouseRightButtonUp="OnNewNoteRightClick"
                             Width="40" Height="40"
                             Background="#575044" Foreground="#F5F0E6"
                             Style="{StaticResource CircularIconButtonStyle}"
@@ -503,6 +504,35 @@
             <!-- Popup propio en vez de ContextMenu: el ContextMenu de WPF conserva una capa de
                  foco del tema del sistema aunque se reemplace su plantilla, y esa capa aparecía
                  como el rectángulo azul alrededor del menú. -->
+            <Popup x:Name="NewNoteMenuPopup"
+                   AllowsTransparency="True"
+                   Focusable="False"
+                   StaysOpen="False"
+                   PopupAnimation="Fade"
+                   Placement="Bottom"
+                   PlacementTarget="{Binding ElementName=NewNoteButton}"
+                   Opened="OnNewNoteMenuPopupOpened"
+                   Closed="OnNewNoteMenuClosed">
+                <Border Background="#2A261F" CornerRadius="10" Padding="8">
+                    <Border.Effect>
+                        <DropShadowEffect BlurRadius="16" ShadowDepth="3" Direction="270"
+                                          Color="#000000" Opacity="0.5" />
+                    </Border.Effect>
+                    <StackPanel MinWidth="190">
+                        <Button Content="{x:Static res:Strings.NewNoteTooltip}"
+                                Click="OnNewNoteMenuCreateClick"
+                                Style="{StaticResource NoteMenuItemStyle}" />
+                        <Button x:Name="NewNoteMenuClipboardButton"
+                                Click="OnNewNoteMenuClipboardClick"
+                                Style="{StaticResource NoteMenuItemStyle}" />
+                        <Border Background="#4A443B" Height="1" Margin="0,6,0,6" />
+                        <Button x:Name="NewNoteMenuPinButton"
+                                Click="OnNewNoteMenuPinToggleClick"
+                                Style="{StaticResource NoteMenuItemStyle}" />
+                    </StackPanel>
+                </Border>
+            </Popup>
+
             <Popup x:Name="OpenAllMenuPopup"
                    AllowsTransparency="True"
                    Focusable="False"
