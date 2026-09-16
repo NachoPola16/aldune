@@ -3109,3 +3109,21 @@ el resultado en el tooltip ("Sincronización completada: X enviadas, Y recibidas
 Ajustes) y su tooltip de siempre restaurado después. El aviso con detalles del error sigue existiendo
 para los fallos, igual que antes.
 
+## El dock no se pliega mientras sincroniza, y las notas siguen a la vista (sesión 2026-09-16)
+
+Dos cambios pedidos por el uso diario:
+
+**Sincronizar sin que el dock se pliegue.** Hasta que la sincronización del botón del dock no termina
+—y no se ve su resultado— el dock no se pliega: el sondeo de hover también respeta la marca
+`_syncBusy`, así que se mantiene desplegado aunque el cursor ya no esté encima. Al terminar, el
+resultado conocido (✓ verde o aviso rojo durante unos segundos) arma de nuevo el margen de cortesía
+para que se pueda leer, y después decide el sondeo normal.
+
+**Cambiar de vista cierra lo que ya no toca.** `AppCoordinator.SetDockView` cierra automáticamente las
+notas abiertas que no pertenecen a la nueva vista (`CloseNotesOutsideCurrentView`, contra
+`NotesForCurrentDockView`): cambiar de etiqueta —o de vista— es cambiar de mesa de trabajo, y una
+ventana abierta de otra etiqueta se quedaba en la pantalla representando un filtro que el dock ya no
+aplicaba. Cerrar guarda la nota, no pierde nada.
+
+Tests: 441/441. Build correcto. Portable nuevo probado arrancando.
+

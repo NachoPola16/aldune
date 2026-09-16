@@ -768,7 +768,30 @@ public sealed class AppCoordinator
         _settings.DockView = view;
         _settings.DockTagFilter = view == DockViewKind.Tag ? tag : null;
         _settingsService?.Save(_settings);
+
+        CloseNotesOutsideCurrentView();
         RefreshAll();
+    }
+
+    /// <summary>
+    /// Cierra las notas abiertas que ya no pertenecen a la vista en curso del dock. Cambiar de vista o
+    /// de etiqueta es cambiar de mesa de trabajo: una nota abierta que ya no está en lo que el dock
+    /// enseña cerraría sola su ventana — se guarda al cerrar, no se pierde nada — en vez de quedarse en
+    /// la pantalla representando un filtro que el dock ya no aplica. Lo pidió el usuario para el cambio
+    /// entre etiquetas; la regla es la misma para cualquier vista.
+    ///
+    /// ToList antes de cerrar: cada Close dispara el Closed que la quita del diccionario.
+    /// </summary>
+    private void CloseNotesOutsideCurrentView()
+    {
+        var inView = NotesForCurrentDockView().Select(note => note.Id).ToHashSet();
+
+        foreach (var window in _openNoteWindows.Values
+                     .Where(window => !inView.Contains(window.Note.Id))
+                     .ToList())
+        {
+            window.Close();
+        }
     }
 
     /// <summary>Activa o desactiva el sondeo automático según los ajustes actuales.</summary>

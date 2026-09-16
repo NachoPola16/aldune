@@ -427,9 +427,10 @@ public partial class EdgeDockWindow : Window
             return;
 
         // Lo mismo durante el margen de cortesía de una acción recién hecha (ver
-        // HoldOpenForNextInteraction): ni sondeo ni plegado hasta que caduque. _pointerInside se
-        // mantiene en true a propósito: al caducar, la rama de salida de más abajo es la que decide.
-        if (DateTime.UtcNow < _interactionGraceUntil)
+        // HoldOpenForNextInteraction), y mientras haya una sincronización en curso (ver
+        // SetSyncBusy): ni sondeo ni plegado hasta que termine. _pointerInside se mantiene en true
+        // a propósito: al terminar, la rama de salida de más abajo es la que decide.
+        if (_syncBusy || DateTime.UtcNow < _interactionGraceUntil)
         {
             _pointerInside = true;
             _hoverReentryBlocked = false;
@@ -1353,6 +1354,10 @@ public partial class EdgeDockWindow : Window
     /// segunda sincronización a la vez no aporta nada); al terminar, un ✓ verde o un aviso rojo con el
     /// resultado en el tooltip durante unos segundos. Antes solo había aviso cuando fallaba: un clic
     /// sin respuesta visible no dice si sincronizó de verdad.
+    ///
+    /// Mientras está ocupado, el sondeo de hover tampoco pliega el dock (ver PollHoverState): la
+    /// sincronización puede tardar, y el resultado hay que poder verlo aunque el cursor ya no esté
+    /// encima.
     /// </summary>
     private void SetSyncBusy(bool busy)
     {
@@ -1387,6 +1392,10 @@ public partial class EdgeDockWindow : Window
         SyncButtonGlyph.FontSize = 15;
         SyncButtonGlyph.Foreground = ok ? SyncOkBrush : SyncErrorBrush;
         SyncButton.ToolTip = tooltip;
+
+        // Que el resultado se pueda leer: el dock aguanta otro margen aunque el cursor ya no esté
+        // encima, y después decide el sondeo normal.
+        _interactionGraceUntil = DateTime.UtcNow + InteractionGrace;
 
         _syncFeedbackTimer.Stop();
         _syncFeedbackTimer.Start();
