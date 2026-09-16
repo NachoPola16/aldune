@@ -26,10 +26,14 @@ fi
 cd "$repo_dir"
 git pull --ff-only origin "$branch"
 
-docker compose \
+compose_args=(
     --env-file "$env_file" \
-    -f "$repo_dir/$compose_file" \
-    up -d --build --remove-orphans
+    -f "$repo_dir/$compose_file"
+)
+
+docker compose "${compose_args[@]}" config --quiet
+docker compose "${compose_args[@]}" build --pull
+docker compose "${compose_args[@]}" up -d --remove-orphans
 
 if command -v curl >/dev/null 2>&1; then
     curl --fail --silent --show-error --max-time 15 "$health_url" >/dev/null

@@ -157,9 +157,18 @@ sudo env ALDUNE_ENV_FILE=/etc/aldune-sync.env \
 ```
 
 En las siguientes versiones solo hace falta repetir ese comando. El script hace `git pull --ff-only`
-de `main`, reconstruye `docker-compose.sync.nginx.yml` con `--build`, conserva el volumen de datos y
-comprueba `/health`. No copia `src/`, no modifica el `.env` y falla antes de actualizar si falta el
-fichero de secretos.
+de `main`, valida la composición, reconstruye la imagen con `docker compose build --pull` para
+refrescar también las imágenes base de .NET, conserva el volumen de datos y comprueba `/health`. No
+copia `src/`, no modifica el `.env` y falla antes de actualizar si falta el fichero de secretos.
+
+El volumen contiene los sobres sincronizados y sobrevive a la recreación del contenedor, pero sigue
+siendo necesario incluirlo en las copias de seguridad del servidor. No ejecutes `docker compose down
+-v` ni `docker volume prune` como parte de una actualización: esas operaciones pueden eliminar datos.
+
+Se eligió este pull manual frente a desplegar directamente desde GitHub Actions porque el servidor no
+necesita una clave SSH ni un secreto de producción en GitHub, no requiere exponer Docker al exterior y
+el cambio se puede revisar antes de aplicarlo. Si el repositorio se hiciera privado, usa una deploy key
+de solo lectura o un GitHub App con permisos mínimos; no guardes un token personal en el repositorio.
 
 Si se usa otra composición, se puede seleccionar sin editar el script:
 
