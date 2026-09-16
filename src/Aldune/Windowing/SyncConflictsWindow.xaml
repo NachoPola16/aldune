@@ -65,10 +65,6 @@
                         Click="OnDismissAllClick" Margin="0,0,8,0"
                         WindowChrome.IsHitTestVisibleInChrome="True"
                         Style="{StaticResource ConflictDangerButtonStyle}" />
-                <Button Content="{x:Static res:Strings.SyncConflictDismissAllShort}"
-                        Click="OnDismissAllClick" Margin="0,0,8,0"
-                        WindowChrome.IsHitTestVisibleInChrome="True"
-                        Style="{StaticResource ConflictDangerButtonStyle}" />
                 <Button Content="&#x2715;" Width="28" Height="28"
                         Click="OnCloseClick"
                         WindowChrome.IsHitTestVisibleInChrome="True"

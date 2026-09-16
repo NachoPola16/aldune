@@ -326,6 +326,9 @@ public partial class SettingsWindow : Window
             Strings.QuickHelpEscape,
             hotkeyLine,
             Strings.QuickHelpTray,
+            Strings.QuickHelpDockMenus,
+            Strings.QuickHelpAutoHideTasks,
+            Strings.QuickHelpConflicts,
             Strings.QuickHelpSync,
             Strings.QuickHelpSearch
         });

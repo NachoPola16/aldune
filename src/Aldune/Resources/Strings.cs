@@ -345,7 +345,6 @@ public static class Strings
     public static string SyncConflictRestore => T("Restore this version", "Restaurar esta versión");
     public static string SyncConflictDismiss => T("Dismiss", "Descartar");
     public static string SyncConflictDismissAll => T("Dismiss all", "Descartar todo");
-    public static string SyncConflictDismissAllShort => T("All", "Todo");
     public static string SyncConflictDismissAllConfirm(int count) => T(
         $"Dismiss all {count} conflicts? The losing versions will be discarded permanently.",
         $"¿Descartar los {count} conflictos? Las versiones perdedoras se descartarán definitivamente.");
@@ -370,6 +369,15 @@ public static class Strings
         T($"• {combo} creates a new note from anywhere.", $"• {combo} crea una nota nueva desde cualquier sitio.");
     public static string QuickHelpHotkeyOff => T("• The keyboard shortcut is off; turn it on above to create notes without going to the edge.", "• El atajo de teclado está desactivado; actívalo arriba para crear notas sin ir al borde.");
     public static string QuickHelpTray => T("• The tray icon opens the notes manager and these settings.", "• El icono de la bandeja abre el gestor de notas y estos ajustes.");
+    public static string QuickHelpDockMenus => T(
+        "• Right-click the dock buttons for views, tags, notes from the clipboard, settings and Keep dock open.",
+        "• Clic derecho en los botones del dock para ver vistas, tags, notas desde el portapapeles, Ajustes y Mantener el dock abierto.");
+    public static string QuickHelpAutoHideTasks => T(
+        "• Completed tasks can disappear automatically after the delay configured in Settings.",
+        "• Las tareas completadas pueden desaparecer automáticamente tras el plazo configurado en Ajustes.");
+    public static string QuickHelpConflicts => T(
+        "• Sync conflicts can be reviewed in Settings; restore the losing version or dismiss the record.",
+        "• Los conflictos de sincronización se revisan en Ajustes; puedes restaurar la versión perdedora o descartar el registro.");
     public static string QuickHelpSync => T("• Sync now is available in the dock; automatic sync can be enabled in Settings.", "• Puedes sincronizar desde el dock y activar la sincronización automática en Ajustes.");
     public static string QuickHelpSearch => T("• In Manage notes, Ctrl+F focuses the search box and selects the current search.", "• En Gestionar notas, Ctrl+F enfoca la búsqueda y selecciona el texto actual.");
 
