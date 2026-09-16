@@ -9,14 +9,21 @@ $distDir = Join-Path $root "dist"
 $issPath = Join-Path $root "installer\Aldune.iss"
 
 if (-not $SkipPublish) {
+    # Los símbolos de depuración se apagan en Aldune.csproj (solo para el proyecto de la app), no aquí
+    # con -p:DebugType=None: una propiedad global de MSBuild se aplica también a los proyectos
+    # referenciados, y así Aldune.Core se compilaba en Release sin .pdb y el siguiente
+    # "dotnet test -c Release" fallaba con MSB3030 al copiarlo. Ver docs/STATUS.md, sesión 2026-09-16.
     dotnet publish (Join-Path $root "src\Aldune\Aldune.csproj") `
         -c Release -r win-x64 --self-contained true `
         -p:PublishSingleFile=true `
         -p:IncludeNativeLibrariesForSelfExtract=true `
         -p:PublishTrimmed=false `
-        -p:DebugSymbols=false `
-        -p:DebugType=None `
         -o $portableDir
+
+    # El publish arrastra tambien el .pdb de las dependencias (Aldune.Core.pdb), que a quien descarga
+    # el portable o el instalador no le sirve de nada: los dos reparten solo aldune.exe.
+    Remove-Item -Path (Join-Path $portableDir "*.pdb") -Force -ErrorAction SilentlyContinue
+
     if ($LASTEXITCODE -ne 0) { throw "dotnet publish terminó con código $LASTEXITCODE." }
 }
 

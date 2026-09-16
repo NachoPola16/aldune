@@ -19,9 +19,9 @@
     <!-- Metadatos de marca: son los que Windows muestra en las propiedades del .exe, en el
          Administrador de tareas y en el dialogo de Inno Setup. Sin esto, apareceria el nombre
          tecnico del ensamblado ("aldune", en minusculas) en vez del nombre del producto. -->
-    <Version>0.7.0</Version>
-    <AssemblyVersion>0.7.0.0</AssemblyVersion>
-    <FileVersion>0.7.0.0</FileVersion>
+    <Version>0.8.0</Version>
+    <AssemblyVersion>0.8.0.0</AssemblyVersion>
+    <FileVersion>0.8.0.0</FileVersion>
     <Product>Aldune</Product>
     <AssemblyTitle>Aldune</AssemblyTitle>
     <Company>Aldune</Company>
@@ -35,6 +35,18 @@
     <UseWindowsForms>true</UseWindowsForms>
     <ApplicationManifest>app.manifest</ApplicationManifest>
     <ApplicationIcon>Assets\aldune.ico</ApplicationIcon>
+  </PropertyGroup>
+
+  <!-- Sin simbolos de depuracion al compilar en Release: el instalador solo reparte aldune.exe, y un
+       .pdb suelto a su lado no le sirve a nadie. Esto vivia en scripts/build-installer.ps1 como
+       -p:DebugSymbols=false -p:DebugType=None, pero una propiedad global de MSBuild alcanza tambien a
+       los proyectos referenciados: Aldune.Core se compilaba en Release sin .pdb, su copia de
+       bin\Release quedaba sin regenerar (la compilacion de Core estaba "al dia") y el siguiente
+       "dotnet test -c Release" fallaba con MSB3030 al intentar copiarla. Aqui solo afecta a este
+       proyecto, que es el unico que se publica. Ver docs/STATUS.md, sesion 2026-09-16. -->
+  <PropertyGroup Condition="'$(Configuration)' == 'Release'">
+    <DebugType>none</DebugType>
+    <DebugSymbols>false</DebugSymbols>
   </PropertyGroup>
 
 </Project>

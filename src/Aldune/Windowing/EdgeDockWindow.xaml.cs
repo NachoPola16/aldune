@@ -34,6 +34,10 @@ public partial class EdgeDockWindow : Window
     private int _noteCount;
     private DockViewKind? _lastView;
     private string? _lastTagFilter;
+
+    /// <summary>Pantalla de destino elegida en el menú de "abrir todas", o <c>null</c> para la de este
+    /// dock. Se reinicia cada vez que se abre el menú (ver <see cref="PopulateOpenAllMonitors"/>).</summary>
+    private string? _layoutMonitorKey;
     private bool _pointerInside;
     private bool _hoverReentryBlocked;
     private bool _hoverLayoutHold;
@@ -1340,6 +1344,9 @@ public partial class EdgeDockWindow : Window
     {
         if (sender is not Popup menu) return;
 
+        _layoutMonitorKey = _monitorKey;
+        PopulateOpenAllMonitors();
+
         _coordinator.SuspendNotesAboveDockMenu();
         _openAllMenuTopmostTimer.Start();
         RaiseOpenAllMenu();
@@ -1392,10 +1399,66 @@ public partial class EdgeDockWindow : Window
     private void OnCloseAllClick(object sender, RoutedEventArgs e) =>
         _coordinator.CloseAllNoteWindows();
 
+    private void OnRestoreOriginalPositionsClick(object sender, RoutedEventArgs e)
+    {
+        _coordinator.RestoreNotePositions(this, _layoutMonitorKey);
+    }
+
+    /// <summary>
+    /// Ofrece elegir a qué pantalla mandar la disposición. Solo aparece cuando hace falta: con un dock
+    /// en cada pantalla la elige el propio dock que se pulsa, y en una pantalla sin dock no habría
+    /// forma de pedirlo (ver <see cref="AppCoordinator.DockCount"/>). La marca ✓ señala la elegida y el
+    /// botón no cierra el menú, para poder elegir pantalla primero y disposición después.
+    /// </summary>
+    private void PopulateOpenAllMonitors()
+    {
+        OpenAllMonitorContainer.Children.Clear();
+
+        var monitors = MonitorEnumerator.EnumerateMonitors();
+        bool canChoose = monitors.Count > 1 && _coordinator.DockCount < monitors.Count;
+        var visibility = canChoose ? Visibility.Visible : Visibility.Collapsed;
+        OpenAllMonitorSeparator.Visibility = visibility;
+        OpenAllMonitorTitle.Visibility = visibility;
+        OpenAllMonitorContainer.Visibility = visibility;
+
+        if (!canChoose)
+        {
+            // Sin nada que elegir, el destino es la pantalla de este dock y no queda apuntada una
+            // pantalla antigua para la próxima acción.
+            _layoutMonitorKey = _monitorKey;
+            return;
+        }
+
+        for (int i = 0; i < monitors.Count; i++)
+        {
+            var monitor = monitors[i];
+            string label = Strings.ScreenLabel(
+                i + 1, monitor.IsPrimary, (int)monitor.WorkArea.Width, (int)monitor.WorkArea.Height);
+
+            var button = new Button
+            {
+                Style = (Style)FindResource("NoteMenuItemStyle"),
+                Content = monitor.DeviceName == _layoutMonitorKey ? "✓  " + label : label,
+                Tag = monitor.DeviceName
+            };
+            button.Click += OnLayoutMonitorClick;
+            OpenAllMonitorContainer.Children.Add(button);
+        }
+    }
+
+    private void OnLayoutMonitorClick(object sender, RoutedEventArgs e)
+    {
+        if (sender is not Button { Tag: string monitorKey }) return;
+
+        _layoutMonitorKey = monitorKey;
+        PopulateOpenAllMonitors();
+        e.Handled = true;
+    }
+
     private void SelectOpenAllLayout(NoteLayoutTemplate layout)
     {
         _coordinator.SetDefaultNoteLayout(layout);
-        _coordinator.OpenAllNotes(this, layout);
+        _coordinator.OpenAllNotes(this, layout, _layoutMonitorKey);
     }
 
     /// <summary>

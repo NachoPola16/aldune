@@ -91,8 +91,10 @@ public static class Strings
     public static string OpenAllNotesTooltip => T("Open all notes (closes them all if they're already open)", "Abrir todas las notas (las cierra todas si ya están abiertas)");
     public static string OpenAllMenuTitle => T("Open all with...", "Abrir todas con...");
     public static string OpenAllModeTitle => T("Opening mode", "Modo de apertura");
+    public static string OpenAllMonitorTitle => T("Open notes on", "Abrir las notas en");
     public static string OpenAllNormal => T("Normal cascade", "Cascada normal");
     public static string CloseAllNotes => T("Close all notes", "Cerrar todas las notas");
+    public static string RestoreOriginalPositions => T("Restore original positions", "Restaurar posiciones originales");
     public static string OpenAllGrid => T("Grid", "Cuadrícula");
     public static string OpenAllColumns => T("Columns", "Columnas");
     public static string NewNoteTooltip => T("New note", "Nueva nota");

@@ -59,6 +59,13 @@ public sealed class AppCoordinator
 
     public int OpenNoteWindowCount => _openNoteWindows.Count;
 
+    /// <summary>
+    /// Cuántos docks hay ahora mismo (uno por pantalla que deba mostrarlo). El menú de "abrir todas"
+    /// solo ofrece elegir pantalla cuando alguna se queda sin dock: con un dock en cada monitor, la
+    /// pantalla ya la decide el dock que se pulsa; donde no hay dock no habría forma de pedirlo.
+    /// </summary>
+    public int DockCount => _docks.Count;
+
     public void OpenSyncConflicts()
     {
         if (_syncService is null) return;
@@ -144,8 +151,16 @@ public sealed class AppCoordinator
     /// <paramref name="originRect"/> (the clicked tab's on-screen rect) is where the note slides
     /// out from, and also what its vertical position is aligned to. Ignored when the note is
     /// already open — that path just activates the existing window, wherever the user put it.
+    ///
+    /// <paramref name="targetMonitorKey"/> abre la nota en otra pantalla que la de
+    /// <paramref name="requestingDock"/> — solo lo usan las opciones del menú que se pueden mandar a
+    /// otra pantalla (ver <see cref="OpenAllNotes"/> y <see cref="RestoreNotePositions"/>).
     /// </summary>
-    public void OpenOrActivateNote(Note note, EdgeDockWindow requestingDock, System.Windows.Rect? originRect = null)
+    public void OpenOrActivateNote(
+        Note note,
+        EdgeDockWindow requestingDock,
+        System.Windows.Rect? originRect = null,
+        string? targetMonitorKey = null)
     {
         if (_openNoteWindows.TryGetValue(note.Id, out var existing))
         {
@@ -176,16 +191,21 @@ public sealed class AppCoordinator
 
         var noteWindow = new NoteWindow(note, _repository, this, _settings, protectionPassword);
 
-        // Si la nota tiene una posición guardada PARA ESTA PANTALLA (la del dock que la pidió) y
-        // sigue a la vista, reaparece ahí directamente — sensación de post-it real, no de "otra
-        // ventana que se abre desde el dock". Por pantalla y no una posición única: abrirla desde
-        // el dock del monitor vertical no debe traerla desde donde se dejó en el horizontal (o
-        // viceversa) — cada pantalla tiene su propio recuerdo. Sin posición guardada para esta
-        // pantalla, sigue el camino de siempre: cascada junto a la pestaña que se pulsó.
-        bool restoredPlacement = TryRestorePlacement(noteWindow, note.Id, requestingDock.MonitorKey);
+        // Si la nota tiene una posición guardada PARA ESA PANTALLA y sigue a la vista, reaparece ahí
+        // directamente — sensación de post-it real, no de "otra ventana que se abre desde el dock".
+        // Por pantalla y no una posición única: abrirla desde el dock del monitor vertical no debe
+        // traerla desde donde se dejó en el horizontal (o viceversa) — cada pantalla tiene su propio
+        // recuerdo.
+        string placementKey = targetMonitorKey ?? requestingDock.MonitorKey;
+        bool restoredPlacement = TryRestorePlacement(noteWindow, note.Id, placementKey);
         if (!restoredPlacement)
         {
-            requestingDock.PositionNoteWindow(noteWindow, originRect);
+            // Sin posición guardada, el camino de siempre es la cascada junto a la pestaña que se
+            // pulsó, pero eso solo vale si la nota sale en la pantalla de ESE dock. Si se pidió otra,
+            // el reparto exacto lo hace ArrangeOpenNotes un momento después: aquí basta con que nazca
+            // dentro de la pantalla elegida, en vez de asomar por la del dock.
+            if (placementKey == requestingDock.MonitorKey) requestingDock.PositionNoteWindow(noteWindow, originRect);
+            else CenterNoteOnMonitor(noteWindow, placementKey);
         }
 
         _openNoteWindows[note.Id] = noteWindow;
@@ -246,10 +266,7 @@ public sealed class AppCoordinator
             return false;
         }
 
-        noteWindow.Left = placement.Left;
-        noteWindow.Top = placement.Top;
-        noteWindow.Width = placement.Width;
-        noteWindow.Height = placement.Height;
+        noteWindow.ApplyPlacement(placement.Left, placement.Top, placement.Width, placement.Height);
         return true;
     }
 
@@ -323,13 +340,19 @@ public sealed class AppCoordinator
     /// cascadean solas: <see cref="EdgeDockWindow.PositionNoteWindow"/> ya calcula su paso de
     /// cascada a partir de cuántas ventanas de nota hay abiertas en cada momento, así que no hace
     /// falta ningún cálculo nuevo aquí para que no queden todas exactamente superpuestas.
+    ///
+    /// <paramref name="targetMonitorKey"/> manda la disposición a otra pantalla que la del dock que
+    /// pidió la acción; sin él, a la de ese dock (ver <see cref="ArrangeOpenNotes"/>).
     /// </summary>
-    public void OpenAllNotes(EdgeDockWindow requestingDock, NoteLayoutTemplate layout = NoteLayoutTemplate.Normal)
+    public void OpenAllNotes(
+        EdgeDockWindow requestingDock,
+        NoteLayoutTemplate layout = NoteLayoutTemplate.Normal,
+        string? targetMonitorKey = null)
     {
         foreach (var note in NotesForCurrentDockView())
         {
             if (IsNoteOpen(note.Id)) continue;
-            OpenOrActivateNote(note, requestingDock);
+            OpenOrActivateNote(note, requestingDock, targetMonitorKey: targetMonitorKey);
         }
 
         // También se ejecuta para Normal: si ya había notas abiertas, elegir "Normal cascade"
@@ -338,7 +361,7 @@ public sealed class AppCoordinator
         var dock = requestingDock;
         Application.Current.Dispatcher.BeginInvoke(DispatcherPriority.Loaded, new Action(() =>
         {
-            ArrangeOpenNotes(layout, dock);
+            ArrangeOpenNotes(layout, dock, targetMonitorKey);
         }));
     }
 
@@ -353,10 +376,27 @@ public sealed class AppCoordinator
         selector.ShowDialog();
     }
 
-    private void ArrangeOpenNotes(NoteLayoutTemplate layout, EdgeDockWindow preferredDock)
+    /// <summary>
+    /// Reparte las notas abiertas con la plantilla elegida, todas en la misma pantalla: la del dock
+    /// que pidió la acción, o <paramref name="targetMonitorKey"/> si se pidió otra de las que no
+    /// tienen dock (ver <see cref="DockCount"/>).
+    ///
+    /// Antes agrupaba las ventanas por el monitor en el que estuvieran y repartía cada grupo en el
+    /// suyo, así que con notas en las dos pantallas "cuadrícula" dejaba dos cuadrículas de una columna
+    /// y no se veía ninguna disposición. Una disposición es una: si se pide desde un dock, o para una
+    /// pantalla concreta, todas van ahí.
+    /// </summary>
+    private void ArrangeOpenNotes(
+        NoteLayoutTemplate layout,
+        EdgeDockWindow preferredDock,
+        string? targetMonitorKey = null)
     {
         var monitors = MonitorEnumerator.EnumerateMonitors();
-        var fallbackMonitor = monitors.FirstOrDefault(m => m.DeviceName == preferredDock.MonitorKey);
+        if (MonitorLookup.TargetOrFallback(targetMonitorKey, preferredDock.MonitorKey, monitors) is not { } target)
+        {
+            return; // ni la pantalla pedida ni la del dock existen ahora mismo
+        }
+
         var windows = _openNoteWindows.Values.ToList();
 
         foreach (var window in windows)
@@ -368,21 +408,7 @@ public sealed class AppCoordinator
             window.UpdateLayout();
         }
 
-        var groups = windows
-            .Select(window =>
-            {
-                var monitor = MonitorLookup.MonitorAt(
-                    window.Left, window.Top, window.Width, window.Height, monitors);
-                return (Window: window, Monitor: monitor ?? fallbackMonitor);
-            })
-            .Where(item => item.Monitor.DeviceName is not null)
-            .GroupBy(item => item.Monitor.DeviceName);
-
-        foreach (var group in groups)
-        {
-            var monitor = group.First().Monitor;
-            ArrangeWindowsOnMonitor(group.Select(item => item.Window).ToList(), monitor.WorkArea, layout);
-        }
+        ArrangeWindowsOnMonitor(windows, target.WorkArea, layout);
     }
 
     private static void ArrangeWindowsOnMonitor(
@@ -508,6 +534,28 @@ public sealed class AppCoordinator
     }
 
     /// <summary>
+    /// Coloca una nota recién creada en el centro de la pantalla indicada. Es el reparto por defecto
+    /// cuando la nota se abre en una pantalla que no es la del dock que la pidió:
+    /// <see cref="EdgeDockWindow.PositionNoteWindow"/> la pega a ESE dock, que está en otra. El reparto
+    /// definitivo (cascada, cuadrícula, columnas) lo hace <see cref="ArrangeOpenNotes"/> un momento
+    /// después.
+    /// </summary>
+    private static void CenterNoteOnMonitor(NoteWindow noteWindow, string monitorKey)
+    {
+        if (MonitorLookup.ForDeviceName(monitorKey, MonitorEnumerator.EnumerateMonitors()) is not { } monitor) return;
+
+        var area = monitor.WorkArea;
+        noteWindow.Left = Math.Clamp(
+            area.X + (area.Width - noteWindow.Width) / 2,
+            area.X,
+            Math.Max(area.X, area.X + area.Width - noteWindow.Width));
+        noteWindow.Top = Math.Clamp(
+            area.Y + (area.Height - noteWindow.Height) / 2,
+            area.Y,
+            Math.Max(area.Y, area.Y + area.Height - noteWindow.Height));
+    }
+
+    /// <summary>
     /// Cierra todas las notas que estén abiertas ahora mismo, sin importar cómo se abrieran (por el
     /// botón, o una a una a mano). <c>ToList()</c> antes de recorrer: cerrar cada ventana dispara su
     /// <c>Closed</c>, que se quita a sí misma de <c>_openNoteWindows</c> — recorrer el diccionario
@@ -610,6 +658,56 @@ public sealed class AppCoordinator
         }
 
         _noteTopmostBeforeDockMenu = null;
+    }
+
+    /// <summary>
+    /// Devuelve cada nota abierta a la posición y el tamaño que tenía guardados en una pantalla — los
+    /// mismos que aplica <see cref="TryRestorePlacement"/> al abrirla, y que guarda
+    /// <c>NoteWindow.SavePlacementForCurrentMonitor</c> en la tabla <c>NotePlacement</c> del
+    /// repositorio. Es la opción "Restaurar posiciones originales" del menú del dock: deshace de un
+    /// golpe el reparto en cuadrícula o columnas.
+    ///
+    /// La pantalla es la del dock que pidió la acción (o <paramref name="targetMonitorKey"/> si se
+    /// eligió otra): las notas vuelven a su sitio EN ESA pantalla, aunque estuvieran repartidas por
+    /// otras. Una nota que no tenga posición recordada ahí — o cuya posición ya no caiga dentro de esa
+    /// pantalla, porque cambió de resolución o de sitio — vuelve al reparto inicial de siempre, la
+    /// cascada: antes esas se quedaban donde estaban y la opción parecía no hacer nada.
+    /// </summary>
+    internal void RestoreNotePositions(EdgeDockWindow requestingDock, string? targetMonitorKey = null)
+    {
+        var monitors = MonitorEnumerator.EnumerateMonitors();
+        if (MonitorLookup.TargetOrFallback(targetMonitorKey, requestingDock.MonitorKey, monitors) is not { } target)
+        {
+            return; // ni la pantalla pedida ni la del dock existen ahora mismo
+        }
+
+        var withoutPlacement = new List<NoteWindow>();
+
+        // ToList antes de mover: fijar Left/Top dispara LocationChanged, que puede tocar la posición
+        // mientras se recorre el diccionario.
+        foreach (var window in _openNoteWindows.Values.ToList())
+        {
+            var placement = _settings is { RememberNotePositions: true }
+                ? _repository.GetPlacement(window.Note.Id, target.DeviceName)
+                : null;
+
+            // Contra ESTA pantalla y no contra todas: una posición recordada en el monitor que se
+            // acaba de desenchufar no sirve para devolver la nota a esta.
+            if (placement is null || !PlacementValidation.IsVisibleOnMonitors(
+                    placement.Left, placement.Top, placement.Width, placement.Height, new[] { target }))
+            {
+                withoutPlacement.Add(window);
+                continue;
+            }
+
+            // Una nota maximizada ignoraría Left/Top/Width/Height, así que el tamaño guardado solo se
+            // puede aplicar en estado normal.
+            if (window.WindowState != WindowState.Normal) window.WindowState = WindowState.Normal;
+
+            window.ApplyPlacement(placement.Left, placement.Top, placement.Width, placement.Height);
+        }
+
+        ArrangeWindowsOnMonitor(withoutPlacement, target.WorkArea, NoteLayoutTemplate.Normal);
     }
 
     public void OpenSettings()

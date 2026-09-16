@@ -27,12 +27,17 @@ dotnet test Aldune.slnx --no-restore
 
 ```powershell
 dotnet publish src/Aldune/Aldune.csproj -c Release -r win-x64 --self-contained true `
-  /p:PublishSingleFile=true /p:IncludeNativeLibrariesForSelfExtract=true `
-  /p:DebugSymbols=false /p:DebugType=None -o publish/portable
+  -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true `
+  -p:PublishTrimmed=false -o publish/portable
 ```
 
 El resultado es `publish/portable/aldune.exe`. Esa carpeta está excluida de Git porque se puede
 regenerar y ocupa mucho espacio.
+
+Los símbolos de depuración se apagan en `src/Aldune/Aldune.csproj` (solo en Release), no con `-p:` en
+la línea de comandos: una propiedad global de MSBuild alcanza también a los proyectos referenciados y
+deja a `Aldune.Core` sin `.pdb` en Release, con lo que el siguiente `dotnet test -c Release` falla con
+`MSB3030` al copiarlo (ver `docs/STATUS.md`, sesión 2026-09-16).
 
 ## Distribución para usuarios
 

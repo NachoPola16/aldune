@@ -1,4 +1,4 @@
-﻿using System.IO;
+using System.IO;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
@@ -36,6 +36,9 @@ public partial class NoteWindow : Window
     private readonly DispatcherTimer _autosaveTimer;
     private bool _hasPendingEdit;
 
+    /// <summary>El objeto de nota asociado a esta ventana.</summary>
+    public Note Note => _note;
+
     /// <summary>Si esta nota se ha redimensionado a mano (arrastrando el borde) durante esta apertura
     /// concreta — a partir de ahí, <see cref="FitHeightToContent"/> deja de tocar el alto hasta que se
     /// pulse "Restaurar tamaño". No se guarda en ningún sitio: cada apertura empieza en modo ajuste
@@ -51,6 +54,13 @@ public partial class NoteWindow : Window
     private bool _isAutoResizing;
     private bool _isConstrainingToMonitor;
     private string? _placementMonitorKey;
+
+    /// <summary>Si el movimiento en curso lo está haciendo el coordinador para recolocar la nota en
+    /// una plantilla (cuadrícula, columnas, cascada, "restaurar posiciones originales") y no el
+    /// usuario. Mientras dura, <c>OnLocationChanged</c> ni reacota la ventana contra el monitor ni
+    /// guarda la posición: al cruzar de pantalla guardaba la posición de mitad de camino como si
+    /// fuera la elegida, y "restaurar posiciones originales" la tomaba por buena.</summary>
+    private bool _isLayoutMove;
 
     public NoteWindow(Note note, NotesRepository repository, AppCoordinator coordinator,
         AppSettings? settings = null, string? protectionPassword = null)
@@ -231,7 +241,7 @@ public partial class NoteWindow : Window
 
     private void OnLocationChanged()
     {
-        if (!IsLoaded || _isConstrainingToMonitor || WindowState != WindowState.Normal) return;
+        if (!IsLoaded || _isConstrainingToMonitor || _isLayoutMove || WindowState != WindowState.Normal) return;
 
         if (NativeMethods.IsLeftButtonDown())
         {
@@ -280,6 +290,26 @@ public partial class NoteWindow : Window
 
         _repository.SavePlacement(_note.Id, monitorKey, Left, Top, Width, Height);
         _placementMonitorKey = monitorKey;
+    }
+
+    /// <summary>
+    /// Coloca la ventana en una posición y un tamaño guardados (los de la tabla <c>NotePlacement</c>).
+    /// Lo usan <see cref="AppCoordinator.TryRestorePlacement"/> al abrir una nota y
+    /// <see cref="AppCoordinator.RestoreNotePositions"/> al devolverlas todas a su sitio desde el menú
+    /// del dock.
+    ///
+    /// El cambio de tamaño va marcado como automático para que el <c>SizeChanged</c> de más arriba no
+    /// lo lea como un arrastre del usuario y congele el ajuste de alto para el resto de la sesión: ese
+    /// tamaño es el de la sesión anterior, no una decisión de ahora.
+    /// </summary>
+    internal void ApplyPlacement(double left, double top, double width, double height)
+    {
+        _isAutoResizing = true;
+        Left = left;
+        Top = top;
+        Width = width;
+        Height = height;
+        _isAutoResizing = false;
     }
 
     /// <summary>
@@ -428,7 +458,10 @@ public partial class NoteWindow : Window
         scale.BeginAnimation(ScaleTransform.ScaleYProperty, new DoubleAnimation(0.95, 1, duration) { EasingFunction = Ease() });
     }
 
-    /// <summary>Desplaza la nota suavemente al elegir otra plantilla de disposición.</summary>
+    /// <summary>Desplaza la nota suavemente al elegir otra plantilla de disposición (o al devolverla a
+    /// su posición original desde el menú del dock). Va marcado como <see cref="_isLayoutMove"/>: lo
+    /// mueve el coordinador, no el usuario, así que no debe reacotarse contra el monitor de turno ni
+    /// guardar la posición a mitad del recorrido.</summary>
     internal void MoveToLayoutPosition(double left, double top)
     {
         BeginAnimation(LeftProperty, null);
@@ -437,11 +470,18 @@ public partial class NoteWindow : Window
         if (!SystemParameters.ClientAreaAnimation || !IsVisible ||
             (Math.Abs(Left - left) < 0.5 && Math.Abs(Top - top) < 0.5))
         {
+            _isLayoutMove = true;
             Left = left;
             Top = top;
+            _isLayoutMove = false;
             return;
         }
 
+        // El flag se suelta al terminar la animación. Si otra recolocación la interrumpe, esta ya no
+        // dispara su Completed (sus animaciones se quitan en los BeginAnimation de arriba), pero la
+        // que llega lo vuelve a poner y lo suelta ella. El único otro camino que mueve la ventana es
+        // el arrastre del usuario, que lo limpia al empezar (OnGripMouseDown).
+        _isLayoutMove = true;
         var duration = new Duration(TimeSpan.FromMilliseconds(220));
         var ease = new QuinticEase { EasingMode = EasingMode.EaseOut };
         var leftAnimation = new DoubleAnimation(Left, left, duration) { EasingFunction = ease };
@@ -452,6 +492,7 @@ public partial class NoteWindow : Window
             BeginAnimation(TopProperty, null);
             Left = left;
             Top = top;
+            _isLayoutMove = false;
         };
         BeginAnimation(LeftProperty, leftAnimation);
         BeginAnimation(TopProperty, topAnimation);
@@ -812,6 +853,9 @@ public partial class NoteWindow : Window
         if (e.LeftButton == MouseButtonState.Pressed)
         {
             StopLayoutPositionAnimation();
+            // El arrastre es del usuario: si venía de una recolocación del coordinador, esta deja de
+            // mandar (ver _isLayoutMove).
+            _isLayoutMove = false;
             try
             {
                 DragMove();

@@ -32,4 +32,32 @@ public static class MonitorLookup
 
         return null;
     }
+
+    /// <summary>
+    /// El monitor con ese <see cref="MonitorInfo.DeviceName"/>, o <c>null</c> si ya no está conectado
+    /// (p. ej. la pantalla elegida en un menú que se ha desenchufado antes del clic).
+    /// </summary>
+    public static MonitorInfo? ForDeviceName(string deviceName, IEnumerable<MonitorInfo> monitors)
+    {
+        foreach (var monitor in monitors)
+        {
+            if (monitor.DeviceName == deviceName) return monitor;
+        }
+
+        return null;
+    }
+
+    /// <summary>
+    /// La pantalla a la que mandar una disposición de notas: la pedida en
+    /// <paramref name="targetDeviceName"/> si se indicó una y sigue conectada, y si no la de
+    /// <paramref name="fallbackDeviceName"/> (la del dock que pidió la acción). <c>null</c> solo si
+    /// tampoco existe esa segunda.
+    /// </summary>
+    public static MonitorInfo? TargetOrFallback(
+        string? targetDeviceName,
+        string fallbackDeviceName,
+        IEnumerable<MonitorInfo> monitors) =>
+        targetDeviceName is not null
+            ? ForDeviceName(targetDeviceName, monitors) ?? ForDeviceName(fallbackDeviceName, monitors)
+            : ForDeviceName(fallbackDeviceName, monitors);
 }

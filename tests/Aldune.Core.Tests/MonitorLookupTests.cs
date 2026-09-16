@@ -71,4 +71,47 @@ public class MonitorLookupTests
     {
         Assert.Null(MonitorLookup.MonitorAt(5000, 5000, 300, 200, new[] { Primary, Vertical }));
     }
+
+    // --- A que pantalla se manda una disposicion de notas (menu del dock) ---------------------------
+
+    [Fact]
+    public void ForDeviceName_KnownDevice_ReturnsIt()
+    {
+        Assert.Equal(Vertical, MonitorLookup.ForDeviceName(Vertical.DeviceName, new[] { Primary, Vertical }));
+    }
+
+    [Fact]
+    public void ForDeviceName_UnknownDevice_ReturnsNull()
+    {
+        Assert.Null(MonitorLookup.ForDeviceName(@"\\.\DISPLAY9", new[] { Primary, Vertical }));
+    }
+
+    [Fact]
+    public void TargetOrFallback_TargetStillConnected_Wins()
+    {
+        Assert.Equal(Vertical, MonitorLookup.TargetOrFallback(
+            Vertical.DeviceName, Primary.DeviceName, new[] { Primary, Vertical }));
+    }
+
+    [Fact]
+    public void TargetOrFallback_NoTarget_IsTheDockScreen()
+    {
+        Assert.Equal(Primary, MonitorLookup.TargetOrFallback(
+            null, Primary.DeviceName, new[] { Primary, Vertical }));
+    }
+
+    [Fact]
+    public void TargetOrFallback_TargetDisconnected_FallsBackToTheDockScreen()
+    {
+        // La pantalla elegida en el menu se desenchufo entre que se abrio el menu y el clic.
+        Assert.Equal(Primary, MonitorLookup.TargetOrFallback(
+            @"\\.\DISPLAY9", Primary.DeviceName, new[] { Primary, Vertical }));
+    }
+
+    [Fact]
+    public void TargetOrFallback_NeitherExists_ReturnsNull()
+    {
+        Assert.Null(MonitorLookup.TargetOrFallback(
+            @"\\.\DISPLAY9", @"\\.\DISPLAY8", new[] { Primary, Vertical }));
+    }
 }

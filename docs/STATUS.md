@@ -3023,4 +3023,54 @@ pidió la acción, así que abrir (y el "Normal cascade" del menú) ocurre en la
 El interruptor sigue cerrando las notas de la vista en curso, estén donde estén, y "Cerrar todas" del
 menú contextual sigue siendo global.
 
-Tests: 435/435. Build correcto. Version 0.7.1.
+
+## Disposiciones y "restaurar posiciones" en la pantalla del dock (sesión 2026-09-16)
+
+El menú de "Abrir todas" del dock tiene una opción nueva, **"Restaurar posiciones originales"**
+(`AppCoordinator.RestoreNotePositions`), debajo del separador y junto a "Cerrar todas las notas":
+devuelve cada nota abierta a la posición y el tamaño que tenía guardados, sin tener que cerrarlas y
+reabrirlas una a una para deshacer un reparto en cuadrícula o columnas.
+
+Tanto esa opción como las tres disposiciones (cascada, cuadrícula, columnas) actúan **en la pantalla
+del dock que se pulsa**, con el destino resuelto por `MonitorLookup.TargetOrFallback`: la pantalla
+elegida si se eligió una y sigue conectada, y si no la de ese dock. `ArrangeOpenNotes` ya no agrupa las
+ventanas por el monitor en el que estuvieran —con notas en dos pantallas, "cuadrícula" dejaba dos
+cuadrículas de una columna— sino que reparte todas en la pantalla de destino. Al abrir en otra pantalla,
+la nota nace ya centrada en ella en vez de asomar por la del dock (`AppCoordinator.CenterNoteOnMonitor`).
+
+Con más de una pantalla y alguna sin dock (`AppCoordinator.DockCount`), el menú enseña además un
+selector "Abrir las notas en" con una entrada por pantalla (`Strings.ScreenLabel`, la misma etiqueta
+que Ajustes). Sin él no habría forma de pedir una pantalla donde no hay dock que pulsar: con un dock en
+cada pantalla la elige el propio dock, y por eso el selector solo aparece cuando alguna se queda sin
+él. La elegida va marcada con ✓ y el clic no cierra el menú, para poder elegir pantalla primero y
+disposición después.
+
+Las notas vuelven a su sitio con la posición recordada en esa pantalla (la tabla `NotePlacement` que ya
+usa `TryRestorePlacement` al abrir una nota, así que no hay estado nuevo que mantener ni que
+sincronizar), validada contra ESA pantalla y no contra todas: una posición recordada en el monitor que
+se acaba de desenchufar no sirve para devolver la nota a esta. Las que no tengan ninguna —o cuya
+posición ya no caiga dentro, porque la pantalla cambió de resolución o de sitio, o porque "recordar la
+última posición" está desactivado— vuelven al reparto inicial de siempre, la cascada: antes se quedaban
+donde estaban y la opción parecía no hacer nada.
+
+Los movimientos del coordinador van marcados (`NoteWindow._isLayoutMove`) para que `OnLocationChanged`
+no reacote la ventana contra el monitor de turno ni guarde la posición a mitad de camino: al cruzar de
+pantalla, la posición intermedia se guardaba como si fuera la elegida por el usuario, y "restaurar
+posiciones originales" la tomaba por buena después. El flag se suelta al terminar la animación y lo
+limpia el arrastre del usuario al empezar, que es el único otro camino que mueve la ventana.
+
+Tests: 441/441 (seis nuevos en `MonitorLookupTests`). Build correcto.
+
+## Símbolos de depuración fuera del publish, y la trampa del `-p:DebugType=None` (sesión 2026-09-16)
+
+`scripts/build-installer.ps1` apagaba los símbolos con `-p:DebugSymbols=false -p:DebugType=None` en la
+línea de comandos. Una propiedad global de MSBuild se aplica también a los proyectos referenciados, así
+que `Aldune.Core` se compilaba en Release sin `.pdb` y su copia de `bin\Release\net10.0` desaparecía.
+Como la compilación de Core quedaba "al día", el `.pdb` no se regeneraba, y el siguiente
+`dotnet test -c Release` fallaba con `MSB3030: Could not copy the file ...\Aldune.Core.pdb` al
+intentar copiarlo. Ese ajuste vive ahora en `Aldune.csproj` (solo Release y solo para el proyecto de
+la app, que es el único que se publica), donde no alcanza a Core. El instalador sigue generando el
+mismo `aldune.exe` sin `.pdb` al lado.
+
+Tests: 435/435. Build correcto. Instalador y portable generados en `dist/`.
+

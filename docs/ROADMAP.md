@@ -183,18 +183,26 @@ Preguntas sin responder para cuando le toque su sesión de diseño:
 - ¿Qué plantillas ofrecer de entrada? Rejilla y cascada uniforme parecen las dos obvias; ¿alguna más?
 - ¿Se aplica solo al usar "Abrir todas", o también como acción aparte sobre notas que ya están
   abiertas (reordenarlas sin cerrarlas)?
-- Interacción con `AppSettings.RememberNotePositions`: aplicar una plantilla sobrescribe la posición
-  guardada de cada nota. ¿Se pierde ese recuerdo sin más, se pregunta antes, o se puede deshacer?
-- En multimonitor, ¿la plantilla se aplica por pantalla (cada dock coloca solo las suyas) o hay que
-  pensar en el conjunto de todos los monitores a la vez?
+- ~~Interacción con `AppSettings.RememberNotePositions`: aplicar una plantilla sobrescribe la posición
+  guardada de cada nota. ¿Se pierde ese recuerdo sin más, se pregunta antes, o se puede deshacer?~~
+  **Resuelto** (2026-09-16, ver `STATUS.md`): el movimiento de la plantilla no guarda la posición —va
+  marcado como recolocación del coordinador (`NoteWindow._isLayoutMove`)—, así que el recuerdo de cada
+  nota sobrevive mientras esté colocada; solo se pierde si se cierra la nota estando colocada, que es la
+  regla general de "recordar la última posición". Y se puede deshacer: "Restaurar posiciones
+  originales", en el mismo menú.
+- ~~En multimonitor, ¿la plantilla se aplica por pantalla (cada dock coloca solo las suyas) o hay que
+  pensar en el conjunto de todos los monitores a la vez?~~ **Resuelto** (2026-09-16): todas a una
+  pantalla, la del dock que se pulsa —una disposición repartida entre dos monitores no es una
+  disposición—. Si hay más pantallas que docks, el menú deja elegir a cuál (ver `STATUS.md`).
 
 ### ~~Acciones contextuales del dock~~ — HECHO, con mejoras futuras opcionales
 
 Primera entrega implementada: el clic derecho sobre el botón de abrir todas ofrece modo normal,
 cuadrícula, columnas y cerrar todas. La elección queda guardada como modo
 predeterminado del botón; el modo normal sigue siendo el valor inicial y debe elegirse de forma
-explícita para volver a él. La plantilla se aplica por monitor y solo cambia posiciones cuando el
-usuario la elige. Los cambios de distribución se animan brevemente para evitar saltos bruscos.
+explícita para volver a él. La plantilla se aplica en la pantalla del dock que se pulsa (o en la que se
+elija, si alguna pantalla se queda sin dock) y solo cambia posiciones cuando el usuario la elige. Los
+cambios de distribución se animan brevemente para evitar saltos bruscos.
 La cuadrícula y las columnas son sensibles al número de notas y a la orientación de la pantalla:
 hasta 12 notas se distribuyen en una plantilla compacta; las restantes quedan abiertas en una
 cascada legible para evitar comprimirlas hasta hacerlas inutilizables.
