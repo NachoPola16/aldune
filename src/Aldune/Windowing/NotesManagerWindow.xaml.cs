@@ -267,13 +267,21 @@ public partial class NotesManagerWindow : Window
 
         foreach (var tag in tags)
         {
-            var row = new DockPanel { Margin = new Thickness(0, 0, 0, 4) };
-            row.Children.Add(new TextBlock
+            var row = new Border
+            {
+                Background = new SolidColorBrush(Color.FromRgb(64, 58, 50)),
+                CornerRadius = new CornerRadius(6),
+                Padding = new Thickness(9, 5, 6, 5),
+                Margin = new Thickness(0, 0, 0, 6)
+            };
+            var content = new DockPanel();
+            var label = new TextBlock
             {
                 Text = tag,
                 Foreground = Brushes.White,
-                VerticalAlignment = VerticalAlignment.Center
-            });
+                VerticalAlignment = VerticalAlignment.Center,
+                TextTrimming = TextTrimming.CharacterEllipsis
+            };
             var delete = new Button
             {
                 Content = "\uE74D",
@@ -282,7 +290,6 @@ public partial class NotesManagerWindow : Window
                 Height = 28,
                 Padding = new Thickness(0),
                 Tag = tag,
-                Margin = new Thickness(8, 0, 0, 0),
                 ToolTip = Strings.DeleteTagTooltip,
                 HorizontalContentAlignment = HorizontalAlignment.Center,
                 VerticalContentAlignment = VerticalAlignment.Center,
@@ -290,7 +297,9 @@ public partial class NotesManagerWindow : Window
             };
             delete.Click += OnDeleteTagClick;
             DockPanel.SetDock(delete, Dock.Right);
-            row.Children.Add(delete);
+            content.Children.Add(delete);
+            content.Children.Add(label);
+            row.Child = content;
             TagManagerItems.Children.Add(row);
         }
     }
@@ -331,6 +340,7 @@ public partial class NotesManagerWindow : Window
                 Tag = tag,
                 IsChecked = row.Note.Tags.Any(existing =>
                     string.Equals(existing, tag, StringComparison.OrdinalIgnoreCase)),
+                Margin = new Thickness(0, 0, 0, 8),
                 Foreground = Brushes.White,
                 Background = new SolidColorBrush(Color.FromRgb(45, 41, 35)),
                 Style = (Style)FindResource("AppCheckBoxStyle")

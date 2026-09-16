@@ -208,7 +208,10 @@
                                FontSize="11" Margin="0,3,0,8" />
                     <TextBlock x:Name="TagChoiceEmptyText" Text="{x:Static res:Strings.DockViewNoTags}"
                                Foreground="#A79E90" FontSize="11" Visibility="Collapsed" />
-                    <StackPanel x:Name="TagChoiceItems" />
+                    <ScrollViewer MaxHeight="230" VerticalScrollBarVisibility="Auto"
+                                  HorizontalScrollBarVisibility="Disabled">
+                        <StackPanel x:Name="TagChoiceItems" />
+                    </ScrollViewer>
                     <Button Content="{x:Static res:Strings.SaveTags}" Margin="0,8,0,0"
                             HorizontalAlignment="Right" Click="OnSaveTagsClick"
                             Style="{StaticResource ToolbarButtonStyle}" />
@@ -284,10 +287,15 @@
                            Style="{StaticResource TagFilterStyle}"
                            Visibility="Collapsed" />
                 </WrapPanel>
-                <Button x:Name="ManageTagsButton" Content="{x:Static res:Strings.ManageTags}"
-                        Click="OnManageTagsClick" HorizontalAlignment="Left"
-                        Margin="4,6,4,3" Padding="10,5"
-                        Style="{StaticResource ToolbarButtonStyle}" />
+                <Button x:Name="ManageTagsButton" Click="OnManageTagsClick"
+                        HorizontalAlignment="Left" Margin="4,6,4,3"
+                        Style="{StaticResource ToolbarButtonStyle}">
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Text="&#xE713;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets"
+                                   Margin="0,0,7,0" />
+                        <TextBlock Text="{x:Static res:Strings.ManageTags}" />
+                    </StackPanel>
+                </Button>
             </StackPanel>
         </Border>
 
@@ -295,21 +303,34 @@
                StaysOpen="False" Placement="Bottom" PopupAnimation="Fade">
             <Border Background="#2D2923" BorderBrush="#5F584E" BorderThickness="1"
                     CornerRadius="7" Padding="12">
-                <StackPanel Width="260">
+                <StackPanel Width="290">
                     <TextBlock Text="{x:Static res:Strings.ManageTags}" Foreground="#F5F0E6"
                                FontWeight="SemiBold" />
-                    <StackPanel Orientation="Horizontal" Margin="0,8,0,12">
-                        <TextBox x:Name="NewTagTextBox" Width="170" Height="30" Padding="7,4"
+                    <Grid Margin="0,10,0,14">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <TextBox x:Name="NewTagTextBox" Grid.Column="0" Height="32" Padding="9,5"
                                  Background="#403A32" Foreground="#F5F0E6" BorderBrush="#6B6459"
                                  CaretBrush="#F5F0E6" />
-                        <Button Content="{x:Static res:Strings.CreateTag}" Click="OnCreateTagClick"
-                                Margin="8,0,0,0" Style="{StaticResource ToolbarButtonStyle}" />
-                    </StackPanel>
+                        <Button Grid.Column="1" Click="OnCreateTagClick"
+                                Margin="8,0,0,0" Style="{StaticResource ToolbarButtonStyle}">
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="&#xE710;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets"
+                                           Margin="0,0,6,0" />
+                                <TextBlock Text="{x:Static res:Strings.CreateTag}" />
+                            </StackPanel>
+                        </Button>
+                    </Grid>
                     <TextBlock Text="{x:Static res:Strings.AllTags}" Foreground="#A79E90"
                                FontSize="11" Margin="0,0,0,5" />
                     <TextBlock x:Name="TagManagerEmptyText" Text="{x:Static res:Strings.DockViewNoTags}"
                                Foreground="#A79E90" FontSize="11" Visibility="Collapsed" />
-                    <StackPanel x:Name="TagManagerItems" />
+                    <ScrollViewer MaxHeight="220" VerticalScrollBarVisibility="Auto"
+                                  HorizontalScrollBarVisibility="Disabled">
+                        <StackPanel x:Name="TagManagerItems" />
+                    </ScrollViewer>
                 </StackPanel>
             </Border>
         </Popup>

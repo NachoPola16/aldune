@@ -412,6 +412,16 @@ public partial class EdgeDockWindow : Window
     {
         if (_hiddenByFullscreenApp) return;
 
+        // Fuera de pantalla completa el dock no tiene ningún camino válido que lo oculte. Si WPF o
+        // el gestor de ventanas lo deja no visible, repararlo aquí evita que vuelva solo al pasar el
+        // ratón por la zona sin convertir la inactividad en una orden de ocultar.
+        if (Visibility != Visibility.Visible)
+        {
+            Visibility = Visibility.Visible;
+            ApplyState(animate: false);
+            if (_hwnd != IntPtr.Zero) NativeMethods.EnsureTopmost(_hwnd);
+        }
+
         if (_settings?.KeepDockOpen == true)
         {
             _pointerInside = true;
@@ -1281,9 +1291,9 @@ public partial class EdgeDockWindow : Window
 
     private void OnDockViewPopupOpened(object sender, EventArgs e)
     {
-        // Abrir el selector ya es empezar la interacción: que no se pliegue el dock mientras se
-        // hojea (el margen se renueva al elegir, ver OnDockViewChoiceClick).
-        HoldOpenForNextInteraction();
+        DockViewKeepDockButton.Content = _settings?.KeepDockOpen == true
+            ? Strings.KeepDockOpenOn
+            : Strings.KeepDockOpenOff;
 
         _coordinator.SuspendNotesAboveDockMenu();
         _openAllMenuTopmostTimer.Start();
@@ -1292,8 +1302,11 @@ public partial class EdgeDockWindow : Window
 
     private void OnDockViewPopupClosed(object sender, EventArgs e)
     {
+        _interactionGraceUntil = DateTime.MinValue;
+        _hoverLayoutHold = false;
         if (!OpenAllMenuPopup.IsOpen) _openAllMenuTopmostTimer.Stop();
         _coordinator.RestoreNotesAboveDockMenu();
+        PollHoverState();
     }
 
     private void OpenDockViewPopup()
@@ -1334,7 +1347,6 @@ public partial class EdgeDockWindow : Window
             return;
 
         _coordinator.SetDockView(view);
-        HoldOpenForNextInteraction();
         DockViewPopup.IsOpen = false;
     }
 
@@ -1342,8 +1354,21 @@ public partial class EdgeDockWindow : Window
     {
         if (sender is Button { Tag: string tag })
             _coordinator.SetDockView(DockViewKind.Tag, tag);
-        HoldOpenForNextInteraction();
         DockViewPopup.IsOpen = false;
+    }
+
+    private void OnDockViewKeepDockToggleClick(object sender, RoutedEventArgs e)
+    {
+        bool keepOpen = _settings?.KeepDockOpen != true;
+        DockViewPopup.IsOpen = false;
+        _coordinator.SetKeepDockOpen(keepOpen);
+
+        if (!keepOpen)
+        {
+            _interactionGraceUntil = DateTime.MinValue;
+            _hoverLayoutHold = false;
+            PollHoverState();
+        }
     }
 
     private static readonly Brush SyncOkBrush = CreateSyncBrush(0xA9, 0xC9, 0xA4);
@@ -1472,10 +1497,6 @@ public partial class EdgeDockWindow : Window
     private void OnNewNoteMenuPopupOpened(object sender, EventArgs e)
     {
         NewNoteMenuClipboardButton.Content = Strings.NewNoteFromClipboard;
-        NewNoteMenuPinButton.Content = _settings?.KeepDockOpen == true
-            ? Strings.KeepDockOpenOn
-            : Strings.KeepDockOpenOff;
-
         _coordinator.SuspendNotesAboveDockMenu();
         _openAllMenuTopmostTimer.Start();
         RaiseNewNoteMenu();
@@ -1494,23 +1515,6 @@ public partial class EdgeDockWindow : Window
     {
         var text = Clipboard.ContainsText() ? Clipboard.GetText() : string.Empty;
         CreateNoteFromMenu(text);
-    }
-
-    private void OnNewNoteMenuPinToggleClick(object sender, RoutedEventArgs e)
-    {
-        bool keepOpen = _settings?.KeepDockOpen != true;
-        NewNoteMenuPopup.IsOpen = false;
-        _coordinator.SetKeepDockOpen(keepOpen);
-        NewNoteMenuPinButton.Content = _settings?.KeepDockOpen == true
-            ? Strings.KeepDockOpenOn
-            : Strings.KeepDockOpenOff;
-
-        if (!keepOpen)
-        {
-            _interactionGraceUntil = DateTime.MinValue;
-            _hoverLayoutHold = false;
-            PollHoverState();
-        }
     }
 
     private void RaiseNewNoteMenu()

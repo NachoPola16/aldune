@@ -525,10 +525,6 @@
                         <Button x:Name="NewNoteMenuClipboardButton"
                                 Click="OnNewNoteMenuClipboardClick"
                                 Style="{StaticResource NoteMenuItemStyle}" />
-                        <Border Background="#4A443B" Height="1" Margin="0,6,0,6" />
-                        <Button x:Name="NewNoteMenuPinButton"
-                                Click="OnNewNoteMenuPinToggleClick"
-                                Style="{StaticResource NoteMenuItemStyle}" />
                     </StackPanel>
                 </Border>
             </Popup>
@@ -609,6 +605,10 @@
                         <TextBlock x:Name="DockNoTagsText" Text="{x:Static res:Strings.DockViewNoTags}"
                                    Foreground="#81786C" FontSize="11" Margin="8,4,8,2"
                                    Visibility="Collapsed" />
+                        <Border Background="#4A443B" Height="1" Margin="0,6,0,6" />
+                        <Button x:Name="DockViewKeepDockButton"
+                            Click="OnDockViewKeepDockToggleClick"
+                            Style="{StaticResource NoteMenuItemStyle}" />
                     </StackPanel>
                 </Border>
             </Popup>

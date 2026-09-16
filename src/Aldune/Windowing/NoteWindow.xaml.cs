@@ -16,6 +16,7 @@ namespace Aldune.Windowing;
 public partial class NoteWindow : Window
 {
     private static readonly TimeSpan AutosaveDelay = TimeSpan.FromMilliseconds(500);
+    private static readonly TimeSpan TaskPruneInterval = TimeSpan.FromMinutes(1);
 
     /// <summary>El tamaño inicial real de esta ventana, capturado desde el XAML. Es el tamaño al que
     /// vuelve "Restaurar tamaño" y el mínimo al que puede encogerse el ajuste automático.</summary>
@@ -34,6 +35,7 @@ public partial class NoteWindow : Window
     private readonly AppSettings? _settings;
     private string? _protectionPassword;
     private readonly DispatcherTimer _autosaveTimer;
+    private readonly DispatcherTimer _taskPruneTimer;
     private bool _hasPendingEdit;
 
     /// <summary>El objeto de nota asociado a esta ventana.</summary>
@@ -102,12 +104,15 @@ public partial class NoteWindow : Window
         {
             _autosaveTimer.Stop();
             Flush();
-            // Barato y aprovecha un temporizador que ya existe, en vez de uno nuevo solo para esto:
-            // no cubre el caso de dejar la nota abierta sin tocarla durante todo el plazo (el
-            // autoguardado no se dispara sin editar), pero sí el caso normal de seguir trabajando
-            // en la nota mientras una tarea de antes va venciendo.
             PruneExpiredTasks();
         };
+
+        // Las tareas pueden vencer aunque la nota permanezca abierta y no se edite. El autoguardado
+        // solo se dispara tras cambios, así que hace falta una comprobación independiente para que
+        // el plazo de Ajustes no dependa de cerrar y volver a abrir la nota.
+        _taskPruneTimer = new DispatcherTimer { Interval = TaskPruneInterval };
+        _taskPruneTimer.Tick += (_, _) => PruneExpiredTasks();
+        _taskPruneTimer.Start();
 
         Loaded += (_, _) =>
         {
@@ -188,6 +193,8 @@ public partial class NoteWindow : Window
         TitleBox.TextChanged += (_, _) => OnEdited();
 
         Closing += SavePlacementOnce;
+
+        Closed += (_, _) => _taskPruneTimer.Stop();
 
         // Antes del handler de abajo: si este cancela, el guardado del otro corre igual en la
         // segunda pasada, y Flush es idempotente.
