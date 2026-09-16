@@ -284,6 +284,7 @@ public static class Strings
     public static string SyncShareCodeCopiedStatus => T("Profile code copied to the clipboard.", "Código de perfil copiado al portapapeles.");
     public static string SyncImportCodeButton => T("Import code", "Importar código");
     public static string SyncNowButton => T("Sync now", "Sincronizar ahora");
+    public static string SyncInProgressStatus => T("Syncing…", "Sincronizando…");
     public static string SyncProfileLabel => T("Sync profile", "Perfil de sincronización");
     public static string SyncProfileNameLabel => T("Name:", "Nombre:");
     public static string SyncNewProfile => T("New", "Nuevo");

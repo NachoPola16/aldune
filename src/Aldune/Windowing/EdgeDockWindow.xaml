@@ -485,7 +485,7 @@
                             PreviewMouseRightButtonUp="OnSyncRightClick"
                             Style="{StaticResource CircularIconButtonStyle}"
                             ToolTip="{x:Static res:Strings.SyncNowButton}">
-                        <TextBlock Text="↻" FontSize="17" />
+                        <TextBlock x:Name="SyncButtonGlyph" Text="↻" FontSize="17" />
                     </Button>
                     <!-- Crear nota es la acción principal del dock, así que pesa más que el
                          engranaje: más grande y más clara. Ir las dos iguales las dejaba a la par

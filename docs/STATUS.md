@@ -3098,3 +3098,14 @@ De paso, el `PlacementTarget` del selector apuntaba a un `DockViewButton` que no
 
 Tests: 441/441. Build correcto. Portable nuevo probado arrancando.
 
+## Feedback al sincronizar desde el dock (sesión 2026-09-16)
+
+El botón de sincronizar del dock no decía nada al terminar: solo había aviso cuando fallaba, así que
+un clic sin respuesta visible no permitía saber si sincronizó de verdad.
+
+Ahora, mientras corre, la flecha gira y el botón se desactiva (una segunda sincronización a la vez no
+aporta nada); al terminar, el botón enseña un ✓ verde o un aviso rojo durante un par de segundos, con
+el resultado en el tooltip ("Sincronización completada: X enviadas, Y recibidas", el mismo texto que
+Ajustes) y su tooltip de siempre restaurado después. El aviso con detalles del error sigue existiendo
+para los fallos, igual que antes.
+

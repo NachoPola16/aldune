@@ -24,6 +24,10 @@ public partial class EdgeDockWindow : Window
     private readonly DispatcherTimer _arrowScrollTimer;
     private readonly DispatcherTimer _openAllMenuTopmostTimer;
     private readonly DispatcherTimer _tabMenuCloseTimer;
+    private readonly DispatcherTimer _syncFeedbackTimer;
+
+    /// <summary>Si hay una sincronización en curso desde el botón del dock (ver OnSyncClick).</summary>
+    private bool _syncBusy;
     private readonly NativeMethods.LowLevelKeyboardProc _keyboardHookProc;
     private readonly EdgePosition _edge;
     private readonly WorkingArea _workingArea;
@@ -170,6 +174,15 @@ public partial class EdgeDockWindow : Window
             {
                 CloseTabMenu();
             }
+        };
+
+        // El feedback de sincronizar (✓ o aviso en el botón) se deshace solo: al poco rato vuelve la
+        // flecha de siempre con su tooltip.
+        _syncFeedbackTimer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(2.6) };
+        _syncFeedbackTimer.Tick += (_, _) =>
+        {
+            _syncFeedbackTimer.Stop();
+            RestoreSyncButton();
         };
 
         SourceInitialized += (_, _) =>
@@ -1325,15 +1338,98 @@ public partial class EdgeDockWindow : Window
         DockViewPopup.IsOpen = false;
     }
 
+    private static readonly Brush SyncOkBrush = CreateSyncBrush(0xA9, 0xC9, 0xA4);
+    private static readonly Brush SyncErrorBrush = CreateSyncBrush(0xE8, 0xA0, 0xA0);
+
+    private static Brush CreateSyncBrush(byte red, byte green, byte blue)
+    {
+        var brush = new SolidColorBrush(Color.FromRgb(red, green, blue));
+        brush.Freeze();
+        return brush;
+    }
+
+    /// <summary>
+    /// Feedback del botón de sincronizar: mientras corre, la flecha gira y el botón se desactiva (una
+    /// segunda sincronización a la vez no aporta nada); al terminar, un ✓ verde o un aviso rojo con el
+    /// resultado en el tooltip durante unos segundos. Antes solo había aviso cuando fallaba: un clic
+    /// sin respuesta visible no dice si sincronizó de verdad.
+    /// </summary>
+    private void SetSyncBusy(bool busy)
+    {
+        _syncBusy = busy;
+        SyncButton.IsEnabled = !busy;
+
+        if (SyncButtonGlyph.RenderTransform is RotateTransform spinning)
+        {
+            spinning.BeginAnimation(RotateTransform.AngleProperty, null);
+            SyncButtonGlyph.RenderTransform = null;
+        }
+
+        if (!busy) return;
+
+        SyncButton.ToolTip = Strings.SyncInProgressStatus;
+
+        var spin = new RotateTransform();
+        SyncButtonGlyph.RenderTransform = spin;
+        SyncButtonGlyph.RenderTransformOrigin = new Point(0.5, 0.5);
+        spin.BeginAnimation(
+            RotateTransform.AngleProperty,
+            new DoubleAnimation(0, 360, new Duration(TimeSpan.FromSeconds(1.1)))
+            {
+                RepeatBehavior = RepeatBehavior.Forever
+            });
+    }
+
+    private void ShowSyncResult(bool ok, string tooltip)
+    {
+        SyncButtonGlyph.Text = ok ? "\uE73E" : "\uE783";
+        SyncButtonGlyph.FontFamily = new FontFamily("Segoe Fluent Icons, Segoe MDL2 Assets");
+        SyncButtonGlyph.FontSize = 15;
+        SyncButtonGlyph.Foreground = ok ? SyncOkBrush : SyncErrorBrush;
+        SyncButton.ToolTip = tooltip;
+
+        _syncFeedbackTimer.Stop();
+        _syncFeedbackTimer.Start();
+    }
+
+    private void RestoreSyncButton()
+    {
+        if (_syncBusy) return; // el feedback caducado no debe reactivar un botón ocupado
+
+        SyncButtonGlyph.Text = "↻";
+        SyncButtonGlyph.FontSize = 17;
+        SyncButtonGlyph.ClearValue(TextBlock.FontFamilyProperty);
+        SyncButtonGlyph.ClearValue(TextBlock.ForegroundProperty);
+        SyncButton.ToolTip = Strings.SyncNowButton;
+    }
+
     private async void OnSyncClick(object sender, RoutedEventArgs e)
     {
-        var result = await Task.Run(_coordinator.Synchronize);
-        if (!result.Succeeded)
+        SetSyncBusy(true);
+        try
         {
+            var result = await Task.Run(_coordinator.Synchronize);
+            SetSyncBusy(false);
+
+            if (result.Succeeded)
+            {
+                ShowSyncResult(ok: true, Strings.SyncCompletedStatus(result.Uploaded, result.Downloaded));
+                return;
+            }
+
+            ShowSyncResult(ok: false, Strings.SyncErrorStatus(result.Error ?? "Unknown error"));
+
             var message = result.Error?.Contains("401", StringComparison.Ordinal) == true
                 ? Strings.SyncUnauthorizedStatus
                 : Strings.SyncErrorStatus(result.Error ?? "Unknown error");
             MessageBox.Show(message, Strings.SyncErrorTitle, MessageBoxButton.OK, MessageBoxImage.Warning);
+        }
+        catch (Exception ex)
+        {
+            SetSyncBusy(false);
+            ShowSyncResult(ok: false, Strings.SyncErrorStatus(ex.Message));
+            MessageBox.Show(Strings.SyncErrorStatus(ex.Message), Strings.SyncErrorTitle,
+                MessageBoxButton.OK, MessageBoxImage.Warning);
         }
     }
 
@@ -2147,6 +2243,7 @@ public partial class EdgeDockWindow : Window
         _collapseTimer.Stop();
         _fullscreenPollTimer.Stop();
         _arrowScrollTimer.Stop();
+        _syncFeedbackTimer.Stop();
         NativeMethods.UninstallKeyboardHook(_keyboardHook);
         _keyboardHook = IntPtr.Zero;
     }
