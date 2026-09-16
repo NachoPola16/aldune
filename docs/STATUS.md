@@ -3074,3 +3074,27 @@ mismo `aldune.exe` sin `.pdb` al lado.
 
 Tests: 435/435. Build correcto. Instalador y portable generados en `dist/`.
 
+## El dock aguanta un margen tras cambiar de vista o etiqueta (sesión 2026-09-16)
+
+Cambiar de vista o de etiqueta es ponerse a buscar una nota, no cerrar el dock, pero era justo cuando
+más brusco se quedaba: mientras el selector está abierto el sondeo de hover no decide nada, y al
+cerrarse ve el cursor fuera de la zona sensible —que además acaba de cambiar de tamaño con el nuevo
+recuento de notas— y pliega el dock al instante.
+
+Ahora esas acciones arman un margen de cortesía de 4 segundos (`EdgeDockWindow.InteractionGrace` /
+`HoldOpenForNextInteraction`): se arma al abrir el selector y se renueva al elegir vista o etiqueta.
+Durante el margen el sondeo no decide nada (igual que con un popup abierto) y el abanico se mantiene
+desplegado; al caducar manda la comprobación normal de dentro/fuera, así que si el cursor volvió a
+pasar por encima no cambia nada, y si sigue fuera el dock se pliega con el pliegue de siempre.
+
+Es una cortesía puntual por acción, no un modo: el ajuste "mantener el dock abierto"
+(`AppSettings.KeepDockOpen`) sigue mandando cuando está activo. El mecanismo es genérico — cualquier
+otro botón que invite a una interacción consecutiva solo tiene que llamar a
+`HoldOpenForNextInteraction()`.
+
+De paso, el `PlacementTarget` del selector apuntaba a un `DockViewButton` que no existe en el XAML
+(error de binding silencioso): ahora apunta a `ManageArchiveButton`, el botón de verdad al que
+`OpenDockViewPopup` ya reasignaba el destino por código.
+
+Tests: 441/441. Build correcto. Portable nuevo probado arrancando.
+

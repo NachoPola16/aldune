@@ -38,6 +38,13 @@ public partial class EdgeDockWindow : Window
     /// <summary>Pantalla de destino elegida en el menú de "abrir todas", o <c>null</c> para la de este
     /// dock. Se reinicia cada vez que se abre el menú (ver <see cref="PopulateOpenAllMonitors"/>).</summary>
     private string? _layoutMonitorKey;
+
+    /// <summary>Margen que el dock aguanta desplegado tras una acción que invita a otra consecutiva
+    /// (cambiar de vista o de etiqueta para buscar una nota), aunque el cursor ya no esté encima.</summary>
+    private static readonly TimeSpan InteractionGrace = TimeSpan.FromSeconds(4);
+
+    /// <summary>Hasta cuándo vale ese margen; <see cref="DateTime.MinValue"/> si no hay ninguno activo.</summary>
+    private DateTime _interactionGraceUntil = DateTime.MinValue;
     private bool _pointerInside;
     private bool _hoverReentryBlocked;
     private bool _hoverLayoutHold;
@@ -405,6 +412,18 @@ public partial class EdgeDockWindow : Window
         // cerraría justo cuando el usuario va a pulsarlo.
         if (TabMenuPopup.IsOpen || OpenAllMenuPopup.IsOpen || DockViewPopup.IsOpen || TagEditorPopup.IsOpen)
             return;
+
+        // Lo mismo durante el margen de cortesía de una acción recién hecha (ver
+        // HoldOpenForNextInteraction): ni sondeo ni plegado hasta que caduque. _pointerInside se
+        // mantiene en true a propósito: al caducar, la rama de salida de más abajo es la que decide.
+        if (DateTime.UtcNow < _interactionGraceUntil)
+        {
+            _pointerInside = true;
+            _hoverReentryBlocked = false;
+            _collapseTimer.Stop();
+            if (_noteCount > 0 && !_fanState.IsExpanded) _fanState.PointerEntered();
+            return;
+        }
 
         // Lo mismo mientras se arrastra una pestaña: el gesto puede salirse de la zona sensible, y
         // colapsar el abanico a mitad de arrastre dejaría la nota en el aire.
@@ -1241,6 +1260,10 @@ public partial class EdgeDockWindow : Window
 
     private void OnDockViewPopupOpened(object sender, EventArgs e)
     {
+        // Abrir el selector ya es empezar la interacción: que no se pliegue el dock mientras se
+        // hojea (el margen se renueva al elegir, ver OnDockViewChoiceClick).
+        HoldOpenForNextInteraction();
+
         _coordinator.SuspendNotesAboveDockMenu();
         _openAllMenuTopmostTimer.Start();
         RaiseDockViewPopup();
@@ -1290,6 +1313,7 @@ public partial class EdgeDockWindow : Window
             return;
 
         _coordinator.SetDockView(view);
+        HoldOpenForNextInteraction();
         DockViewPopup.IsOpen = false;
     }
 
@@ -1297,6 +1321,7 @@ public partial class EdgeDockWindow : Window
     {
         if (sender is Button { Tag: string tag })
             _coordinator.SetDockView(DockViewKind.Tag, tag);
+        HoldOpenForNextInteraction();
         DockViewPopup.IsOpen = false;
     }
 
@@ -2076,6 +2101,25 @@ public partial class EdgeDockWindow : Window
         if (CurrentTagFilter is { } tag) _repository.SetTags(note.Id, new[] { tag });
 
         _coordinator.RefreshAll();
+    }
+
+/// <summary>
+    /// Mantiene el dock desplegado un margen (<see cref="InteractionGrace"/>) tras una acción que
+    /// invita a otra consecutiva — cambiar de vista o de etiqueta es ponerse a buscar una nota, no
+    /// cerrar el dock. Mientras el selector está abierto el sondeo no decide nada, pero al cerrarse
+    /// ve el cursor fuera de la zona sensible, que además acaba de cambiar de tamaño con el nuevo
+    /// recuento de notas, y lo pliega justo cuando el usuario va a usarlo.
+    ///
+    /// El margen caduca solo: pasado, manda la comprobación normal de dentro/fuera, y si el cursor
+    /// volvió a pasar por encima tampoco cambia nada. No es el ajuste "mantener el dock abierto"
+    /// (<c>AppSettings.KeepDockOpen</c>): esto es una cortesía puntual, no un modo permanente.
+    /// </summary>
+    private void HoldOpenForNextInteraction()
+    {
+        _interactionGraceUntil = DateTime.UtcNow + InteractionGrace;
+        _hoverReentryBlocked = false;
+        _collapseTimer.Stop();
+        if (_noteCount > 0 && !_fanState.IsExpanded) _fanState.PointerEntered();
     }
 
     private void HoldHoverDuringLayout()

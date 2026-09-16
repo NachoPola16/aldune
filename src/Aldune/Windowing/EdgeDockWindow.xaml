@@ -555,7 +555,7 @@
 
             <Popup x:Name="DockViewPopup"
                    AllowsTransparency="True" Focusable="False" StaysOpen="False"
-                   PopupAnimation="Fade" PlacementTarget="{Binding ElementName=DockViewButton}"
+                   PopupAnimation="Fade" PlacementTarget="{Binding ElementName=ManageArchiveButton}"
                    Opened="OnDockViewPopupOpened" Closed="OnDockViewPopupClosed">
                 <Border Background="#2A261F" CornerRadius="10" Padding="8">
                     <Border.Effect>
