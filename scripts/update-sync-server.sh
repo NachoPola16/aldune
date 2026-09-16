@@ -5,7 +5,7 @@ repo_dir="${ALDUNE_REPO_DIR:-$(CDPATH= cd -- "$(dirname -- "${BASH_SOURCE[0]}")/
 env_file="${ALDUNE_ENV_FILE:-$repo_dir/.env}"
 compose_file="${ALDUNE_COMPOSE_FILE:-docker-compose.sync.nginx.yml}"
 branch="${ALDUNE_BRANCH:-main}"
-health_url="${ALDUNE_HEALTH_URL:-http://127.0.0.1:8097/health}"
+configured_port="${ALDUNE_SYNC_PORT:-}"
 
 if [[ ! -d "$repo_dir/.git" ]]; then
     echo "No se ha encontrado un checkout Git en: $repo_dir" >&2
@@ -17,6 +17,14 @@ if [[ ! -f "$env_file" ]]; then
     echo "Crea ALDUNE_SYNC_TOKEN (o ALDUNE_SYNC_TOKENS) antes de actualizar." >&2
     exit 1
 fi
+
+if [[ -z "$configured_port" ]]; then
+    configured_port="$({ sed -n 's/^[[:space:]]*ALDUNE_SYNC_PORT[[:space:]]*=[[:space:]]*//p' "$env_file" \
+        | sed 's/[[:space:]]*#.*$//' \
+        | head -n 1; } | tr -d '\r' | xargs)"
+fi
+
+health_url="${ALDUNE_HEALTH_URL:-http://127.0.0.1:${configured_port:-8087}/health}"
 
 if ! command -v docker >/dev/null 2>&1; then
     echo "No se ha encontrado Docker CLI." >&2

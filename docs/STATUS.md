@@ -19,7 +19,7 @@ en abanico al pasar el ratón por encima. Ver el diseño completo en
 `docs/superpowers/specs/2026-08-30-aldune-v1-design.md` — ese documento es la
 autoridad de diseño; todo lo demás (planes, código) se argumenta contra él.
 
-## Qué hay hecho (fusionado en `master`)
+## Qué hay hecho (fusionado en `main`)
 
 - **Fase 1** (`docs/superpowers/plans/2026-08-30-aldune-phase1-window-mechanics.md`):
   mecánica de ventana — pill anclado al borde, hover con abanico, ventana de
@@ -72,7 +72,7 @@ autoridad de diseño; todo lo demás (planes, código) se argumenta contra él.
   (ver historial más abajo) y, a raíz de probarlo, también se hizo que el
   tamaño del pill/panel se ajuste al número de notas en vez de ser fijo.
 
-Tests: 140/140 pasando (`dotnet test` desde la raíz del repo).
+Tests: 441/441 pasando (`dotnet test tests/Aldune.Core.Tests -c Release`).
 
 ## Cómo se ha trabajado (para mantener el mismo estilo)
 
@@ -1036,7 +1036,7 @@ Tests: 104/104 (bajan de 130 porque desaparecieron los de region).
 
 Tests: 113/113.
 
-### `FANOTE_MONITOR_INDEX`
+### `ALDUNE_MONITOR_INDEX`
 
 Variable de entorno que restringe la app a un monitor (índice 0-based sobre el
 orden de `MonitorEnumerator`; valor inválido se ignora). Nació de una

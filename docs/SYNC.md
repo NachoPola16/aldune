@@ -15,8 +15,8 @@ no hay que abrir ni editar esos ficheros manualmente.
 
 En el servidor:
 
-```powershell
-Copy-Item .env.example .env
+```bash
+cp .env.example .env
 # Edita .env y sustituye ALDUNE_SYNC_TOKEN por un secreto largo y aleatorio.
 docker compose -f docker-compose.sync.yml up -d --build
 ```
@@ -55,9 +55,9 @@ siguen en el disco (el volumen anterior no se borra) y cada dispositivo vuelve a
 sincronizar. Lo que sí se pierde es el historial de conflictos y las marcas de borrado del almacén,
 así que una nota que se hubiera borrado en un dispositivo podría reaparecer desde otro.
 
-La versión inicial está pensada para una red privada o detrás de una VPN. No se debe publicar el
-puerto HTTP directamente en Internet: para acceso externo hay que poner HTTPS delante (proxy inverso,
-VPN o túnel seguro). La protección TLS y la rotación de tokens quedan en el roadmap.
+La versión HTTP está pensada para una red privada o detrás de una VPN. No se debe publicar el puerto
+HTTP directamente en Internet: para acceso externo hay que poner HTTPS delante (proxy inverso, VPN o
+túnel seguro). La rotación de tokens ya está implementada; la terminación TLS corresponde al proxy.
 
 ## WebDAV, Nextcloud y ownCloud
 
@@ -88,23 +88,25 @@ Usa `docker-compose.sync.nginx.yml`. Para que solo Nginx/cloudflared accedan al 
 
 ```yaml
 ports:
-  - "127.0.0.1:${ALDUNE_SYNC_PORT:-8097}:8080"
+  - "127.0.0.1:${ALDUNE_SYNC_PORT:-8087}:8080"
 ```
 
-Si quitas `127.0.0.1:` y dejas `"${ALDUNE_SYNC_PORT:-8097}:8080"`, Docker escucha en todas las
+Si quitas `127.0.0.1:` y dejas `"${ALDUNE_SYNC_PORT:-8087}:8080"`, Docker escucha en todas las
 interfaces y permite acceso directo desde la red. Eso no debe exponerse a Internet sin HTTPS y un
 proxy o firewall delante.
 
-La configuración versionada usa actualmente la variante abierta a la red porque así está configurado
-tu servidor. Si el tráfico entra por un proxy que corre directamente en el host, añade `127.0.0.1:`
-para restringirlo:
+La configuración versionada usa la variante abierta a la red para permitir que un proxy en otro
+contenedor acceda al servicio. Si el tráfico entra por un proxy que corre directamente en el host,
+añade `127.0.0.1:` para restringirlo. Si Nginx Proxy Manager u otro proxy corre en otro contenedor,
+`127.0.0.1` apunta a ese contenedor, no al host: usa una red Docker compartida o la dirección del
+host y conserva el binding abierto solo si la red y el firewall lo permiten:
 
-```powershell
-Copy-Item .env.example .env
+```bash
+cp .env.example .env
 # Edita .env y define un secreto largo:
 # ALDUNE_SYNC_TOKEN=un-secreto-largo-y-aleatorio
 docker compose -f docker-compose.sync.nginx.yml up -d --build
-curl http://127.0.0.1:8097/health
+curl "http://127.0.0.1:${ALDUNE_SYNC_PORT:-8087}/health"
 ```
 
 En Nginx, crea un host para el subdominio elegido, por ejemplo `sync.example.com`:
@@ -115,7 +117,7 @@ server {
     server_name sync.example.com;
 
     location / {
-        proxy_pass http://127.0.0.1:8097;
+        proxy_pass http://127.0.0.1:<PUERTO_LOCAL>;
         proxy_http_version 1.1;
         proxy_set_header Host $host;
         proxy_set_header X-Real-IP $remote_addr;
@@ -133,7 +135,7 @@ Service:  http://127.0.0.1:80
 ```
 
 Cloudflare termina el HTTPS público y el túnel conecta con Nginx por localhost; no hace falta abrir
-el puerto 8097 en el router ni publicarlo en Internet. En Aldune configura
+el puerto local del servidor en el router ni publicarlo directamente en Internet. En Aldune configura
 `https://sync.example.com/` y usa el mismo token y código de sincronización de los otros dispositivos.
 
 ### Actualizar el servidor desde Git
@@ -158,7 +160,7 @@ servidor existente, por ejemplo:
 
 ```dotenv
 ALDUNE_SYNC_TOKEN=un-secreto-largo-y-aleatorio
-ALDUNE_SYNC_PORT=8097
+ALDUNE_SYNC_PORT=8087
 # Si el servidor ya usaba el almacén antiguo:
 # ALDUNE_SYNC_VOLUME=fanote-sync-data
 ```

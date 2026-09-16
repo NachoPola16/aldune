@@ -10,7 +10,7 @@ Sesión de origen: 2026-09-06.
 
 ## Versión visible de la aplicación
 
-La ronda actual se identifica como **v0.5.0**. La versión se muestra en Ajustes y también en el texto
+La ronda actual se identifica como **v0.8.0**. La versión se muestra en Ajustes y también en el texto
 del icono de la bandeja. Cada actualización grande deberá incrementar este número siguiendo SemVer:
 parches para correcciones, versión menor para funcionalidades nuevas y versión mayor cuando haya
 cambios incompatibles.
@@ -392,7 +392,7 @@ Antes de dar por cerrada esta primera versión, queda anotado este checklist:
 1. ~~**Validar conflictos reales**~~: hecho con dos bases independientes y una carpeta compartida.
 2. ~~**Acceso seguro desde fuera de la red local**~~: composición HTTPS con Caddy preparada; falta
    validación en el servidor real.
-3. ~~**Endurecer la autenticación**~~: rotación de tokens documentada mediante `FANOTE_SYNC_TOKENS`.
+3. ~~**Endurecer la autenticación**~~: rotación de tokens documentada mediante `ALDUNE_SYNC_TOKENS`.
 4. ~~**Interfaz de conflictos**~~: revisar, restaurar o descartar la versión perdedora.
 5. **Clientes multiplataforma**: reutilizar el formato y la API para futuras versiones de Android,
    iOS, macOS y Linux.
@@ -587,7 +587,7 @@ usuario; la composición HTTP local sigue intacta.
 
 ### Rotación y revocación de tokens — HECHO (2026-09-12)
 
-El servidor acepta una lista temporal de tokens mediante `FANOTE_SYNC_TOKENS`, con prioridad sobre
+El servidor acepta una lista temporal de tokens mediante `ALDUNE_SYNC_TOKENS`, con prioridad sobre
 el token único anterior. Esto permite publicar el nuevo token, actualizar los dispositivos y retirar
 el antiguo sin dejar la sincronización inutilizada durante el cambio. La revocación se hace quitando
 el token de la lista y recreando el contenedor.

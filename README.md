@@ -54,7 +54,7 @@ Para crear ambos en Windows, instala Inno Setup 6 y ejecuta:
 ```
 
 Los archivos se generan en `dist/`. Las versiones publicadas se preparan automáticamente en GitHub
-al crear una etiqueta `v*`, por ejemplo `v0.5.0`.
+al crear una etiqueta `v*`, por ejemplo `v0.8.0`.
 
 Para un servidor que ya tenga Nginx y Cloudflare Tunnel, usa
 `docker-compose.sync.nginx.yml`; la guía de [sincronización](docs/SYNC.md) incluye la configuración

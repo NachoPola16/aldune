@@ -45,8 +45,8 @@ Qué **no** hace, y hay que hacerlo a mano:
 - **Registrar la compatibilidad, y hacerlo al final.** Los códigos de perfil llevan la marca dentro
   del prefijo. Hazlo **después** de ejecutar el script y **a mano**, porque el script reescribiría
   cualquier valor heredado que contenga el nombre vigente: añade el prefijo que acabas de dejar atrás
-  a `BrandIdentity.LegacySyncProfileCodePrefixes` (con el cambio Fanote → Aldune eso fue
-  `"aldune-profile-v2:"`) para que los códigos ya compartidos se sigan importando.
+   a `BrandIdentity.LegacySyncProfileCodePrefixes` (con el cambio Fanote → Aldune eso fue
+   `"fanote-profile-v2:"`) para que los códigos ya compartidos se sigan importando.
 - **Rehacer el histórico.** El script reescribe también la tabla «Historial de nombres» de
   `BRANDING.md` y la sección 4 de esta guía, que son un registro: vuelve a dejarlas como estaban y
   añade la fila o el bloque nuevos.
