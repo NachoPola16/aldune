@@ -1067,6 +1067,22 @@ public partial class NoteWindow : Window
 
         Background = brush;
         TextBody.Background = brush;
+        var foreground = NoteColorPalette.ForegroundFor(color);
+        var ink = (Brush)new BrushConverter().ConvertFromString(foreground)!;
+        Resources["NoteInkBrush"] = ink;
+        Resources["NotePlaceholderBrush"] = ink;
+        // Move hover away from the foreground so text retains contrast on middle tones too.
+        bool darkenHover = foreground == NoteColorContrast.White
+            || Array.IndexOf(NoteColorPalette.Colors, color) >= 0;
+        Resources["NoteHoverBrush"] = (Brush)new BrushConverter().ConvertFromString(
+            darkenHover ? "#40000000" : "#40FFFFFF")!;
+        Resources["NoteTaskHoverBrush"] = (Brush)new BrushConverter().ConvertFromString(
+            darkenHover ? "#26000000" : "#26FFFFFF")!;
+        TextBody.Foreground = TitleBox.Foreground = ink;
+        TextBody.CaretBrush = TitleBox.CaretBrush = ink;
+        TextBody.SelectionBrush = TitleBox.SelectionBrush = ink;
+        TextBody.SelectionTextBrush = TitleBox.SelectionTextBrush = brush;
+        Foreground = ink;
         WindowRim.BorderBrush = rim;
 
         // El troquelado va en el tono oscuro del propio hue — igual que la pestaña del dock de la

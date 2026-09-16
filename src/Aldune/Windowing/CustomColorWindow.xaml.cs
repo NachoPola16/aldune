@@ -11,8 +11,7 @@ namespace Aldune.Windowing;
 /// <summary>
 /// Color editor that follows Aldune's dark chrome instead of opening the unrelated WinForms
 /// color dialog. The HEX field is the precise input; the RGB sliders provide a quick visual way
-/// to tune the same value. Dark colors are shown but cannot be applied because note text uses a
-/// fixed warm-dark ink.
+/// to tune the same value. The preview and note share an adaptive WCAG-readable foreground.
 /// </summary>
 public partial class CustomColorWindow : Window
 {
@@ -101,9 +100,10 @@ public partial class CustomColorWindow : Window
             PreviewHex.Text = _selectedColor;
             HexBox.Text = _selectedColor;
             var previewInk = new SolidColorBrush((Color)ColorConverter.ConvertFromString(
-                IsLightEnoughForInk(mediaColor) ? "#1E1A14" : "#F5F0E6")!);
+                NoteColorPalette.ForegroundFor(_selectedColor))!);
             PreviewLabel.Foreground = previewInk;
             PreviewHex.Foreground = previewInk;
+            PreviewSwatch.BorderBrush = previewInk;
 
             if (updateSliders)
             {
@@ -171,6 +171,4 @@ public partial class CustomColorWindow : Window
 
     private static string ToHex(Color color) => $"#{color.R:X2}{color.G:X2}{color.B:X2}";
 
-    private static bool IsLightEnoughForInk(Color color) =>
-        (0.2126 * color.R + 0.7152 * color.G + 0.0722 * color.B) >= 142;
 }

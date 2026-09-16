@@ -24,6 +24,10 @@
         <WindowChrome CaptionHeight="40" ResizeBorderThickness="6" GlassFrameThickness="-1" CornerRadius="0" />
     </WindowChrome.WindowChrome>
     <Window.Resources>
+        <SolidColorBrush x:Key="NoteInkBrush" Color="#1E1A14" />
+        <SolidColorBrush x:Key="NotePlaceholderBrush" Color="#1E1A14" />
+        <SolidColorBrush x:Key="NoteHoverBrush" Color="#40000000" />
+        <SolidColorBrush x:Key="NoteTaskHoverBrush" Color="#26000000" />
         <Style x:Key="NoteActionButtonStyle" TargetType="Button">
             <Setter Property="Background" Value="#26000000" />
             <Setter Property="BorderThickness" Value="0" />
@@ -37,7 +41,7 @@
                         </Border>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsMouseOver" Value="True">
-                                <Setter TargetName="Bg" Property="Background" Value="#40000000" />
+                                <Setter TargetName="Bg" Property="Background" Value="{DynamicResource NoteHoverBrush}" />
                             </Trigger>
                         </ControlTemplate.Triggers>
                     </ControlTemplate>
@@ -70,6 +74,7 @@
         </Style>
         <Style x:Key="CloseButtonStyle" TargetType="Button" BasedOn="{StaticResource NoteActionButtonStyle}">
             <Setter Property="Background" Value="Transparent" />
+            <Setter Property="Foreground" Value="{DynamicResource NoteInkBrush}" />
             <Setter Property="FontSize" Value="12" />
         </Style>
         <Style x:Key="NoteTextBoxStyle" TargetType="TextBox">
@@ -82,7 +87,7 @@
         <!-- NoteMenuItemStyle y NoteMenuDangerStyle (las filas del panel de acciones) viven en
              App.xaml: el mismo panel se usa aquí y en el menú contextual de la pestaña del dock. -->
         <Style x:Key="PlaceholderStyle" TargetType="TextBlock">
-            <Setter Property="Foreground" Value="#5A1E1A14" />
+            <Setter Property="Foreground" Value="{DynamicResource NotePlaceholderBrush}" />
             <Setter Property="IsHitTestVisible" Value="False" />
             <Setter Property="Visibility" Value="Collapsed" />
             <Style.Triggers>
@@ -97,7 +102,7 @@
              y entonces "Título" se quedaba pintado por detrás del título que acabas de escribir,
              que es exactamente lo que se veía. -->
         <Style x:Key="TitlePlaceholderStyle" TargetType="TextBlock">
-            <Setter Property="Foreground" Value="#5A1E1A14" />
+            <Setter Property="Foreground" Value="{DynamicResource NotePlaceholderBrush}" />
             <Setter Property="IsHitTestVisible" Value="False" />
             <Setter Property="Visibility" Value="Collapsed" />
             <Style.Triggers>
@@ -142,7 +147,7 @@
                  DragMove() en OnGripMouseDown en vez de depender de WindowChrome. -->
             <TextBlock x:Name="DragHandle"
                        Text="&#xE76F;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets"
-                       FontSize="13" Foreground="#4A1E1A14"
+                       FontSize="13" Foreground="{DynamicResource NoteInkBrush}"
                        Background="Transparent"
                        HorizontalAlignment="Left" VerticalAlignment="Center"
                        Margin="12,0,0,0" Padding="4"
@@ -403,7 +408,7 @@
                  Mismo tono que NoteActionButtonStyle (#26000000) para el mismo lenguaje de hover
                  que ya usan los botones de la cabecera. -->
             <Canvas IsHitTestVisible="False">
-                <Border x:Name="TaskHoverHighlight" Background="#26000000" CornerRadius="3"
+                <Border x:Name="TaskHoverHighlight" Background="{DynamicResource NoteTaskHoverBrush}" CornerRadius="3"
                         Visibility="Collapsed" />
             </Canvas>
         </Grid>

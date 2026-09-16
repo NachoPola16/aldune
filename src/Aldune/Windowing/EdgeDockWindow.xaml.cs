@@ -1302,7 +1302,6 @@ public partial class EdgeDockWindow : Window
 
     private void OnDockViewPopupClosed(object sender, EventArgs e)
     {
-        _interactionGraceUntil = DateTime.MinValue;
         _hoverLayoutHold = false;
         if (!OpenAllMenuPopup.IsOpen) _openAllMenuTopmostTimer.Stop();
         _coordinator.RestoreNotesAboveDockMenu();
@@ -1347,13 +1346,15 @@ public partial class EdgeDockWindow : Window
             return;
 
         _coordinator.SetDockView(view);
+        HoldOpenForNextInteraction();
         DockViewPopup.IsOpen = false;
     }
 
     private void OnDockTagChoiceClick(object sender, RoutedEventArgs e)
     {
-        if (sender is Button { Tag: string tag })
-            _coordinator.SetDockView(DockViewKind.Tag, tag);
+        if (sender is not Button { Tag: string tag }) return;
+        _coordinator.SetDockView(DockViewKind.Tag, tag);
+        HoldOpenForNextInteraction();
         DockViewPopup.IsOpen = false;
     }
 
@@ -2309,9 +2310,10 @@ public partial class EdgeDockWindow : Window
         if (CurrentTagFilter is { } tag) _repository.SetTags(note.Id, new[] { tag });
 
         _coordinator.RefreshAll();
+        HoldOpenForNextInteraction();
     }
 
-/// <summary>
+    /// <summary>
     /// Mantiene el dock desplegado un margen (<see cref="InteractionGrace"/>) tras una acción que
     /// invita a otra consecutiva — cambiar de vista o de etiqueta es ponerse a buscar una nota, no
     /// cerrar el dock. Mientras el selector está abierto el sondeo no decide nada, pero al cerrarse
@@ -2325,6 +2327,8 @@ public partial class EdgeDockWindow : Window
     private void HoldOpenForNextInteraction()
     {
         _interactionGraceUntil = DateTime.UtcNow + InteractionGrace;
+        _hoverLayoutHold = false;
+        _pointerInside = true;
         _hoverReentryBlocked = false;
         _collapseTimer.Stop();
         if (_noteCount > 0 && !_fanState.IsExpanded) _fanState.PointerEntered();

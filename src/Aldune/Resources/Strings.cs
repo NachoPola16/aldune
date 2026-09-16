@@ -51,12 +51,12 @@ public static class Strings
     public static string ConvertToBullet => T("Convert to list", "Convertir en lista");
     public static string CustomColor => T("Choose another color…", "Elegir otro color…");
     public static string CustomColorContrastError => T(
-        "Choose a lighter color so the note text stays readable.",
-        "Elige un color más claro para que el texto de la nota siga siendo legible.");
+        "Enter a valid HEX color.",
+        "Escribe un color HEX válido.");
     public static string CustomColorWindowTitle => T("Custom note color", "Color personalizado de la nota");
     public static string CustomColorWindowHint => T(
-        "Choose a light tone so the note stays easy to read.",
-        "Elige un tono claro para que la nota siga siendo fácil de leer.");
+        "Text color adapts to keep your note readable.",
+        "El color del texto se adapta para que la nota siga siendo legible.");
     public static string CustomColorPreview => T("Preview", "Vista previa");
     public static string CustomColorSpectrumHint => T(
         "Pick a tone visually, then fine-tune it below.",
@@ -70,6 +70,26 @@ public static class Strings
     public static string RestoreSize => T("Restore size", "Restaurar tamaño");
     public static string ExportToMarkdown => T("Export to Markdown", "Exportar a Markdown");
     public static string MarkdownFileFilter => T("Markdown file (*.md)|*.md", "Archivo Markdown (*.md)|*.md");
+
+    // --- Actualizaciones ---------------------------------------------------------------------------
+
+    public static string TrayCheckForUpdates => T("Check for updates…", "Buscar actualizaciones…");
+    public static string UpdateChecking => T("Checking for updates…", "Buscando actualizaciones…");
+    public static string UpdateCurrentMessage => T("Aldune is up to date.", "Aldune está actualizado.");
+    public static string UpdateErrorMessage => T(
+        "The update check failed. Try again later.",
+        "No se ha podido comprobar si hay actualizaciones. Inténtalo más tarde.");
+    public static string UpdateAvailableMessage(string version) =>
+        T($"Aldune {version} is available.",
+          $"Aldune {version} está disponible.");
+    public static string UpdateAvailableTitle => T("Update available", "Actualización disponible");
+    public static string UpdateDownload => T("Download", "Descargar");
+    public static string UpdateLater => T("Later", "Más tarde");
+    public static string UpdateWindowTitle => T("Aldune update", "Actualización de Aldune");
+    public static string UpdateClose => T("Close", "Cerrar");
+    public static string UpdateOpenErrorMessage => T(
+        "The download page couldn't be opened.",
+        "No se ha podido abrir la página de descarga.");
     public static string ReminderMenuEntry => T("Reminder", "Recordatorio");
     public static string ReminderSet(DateTimeOffset dueAt) =>
         T($"Reminder: {dueAt:dd/MM HH:mm}", $"Recordatorio: {dueAt:dd/MM HH:mm}");

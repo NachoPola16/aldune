@@ -220,7 +220,8 @@ public partial class App : Application
             BuildDocks();
         };
 
-        _trayIcon = new TrayIcon(coordinator);
+        _updateNotifier = new UpdateNotifier();
+        _trayIcon = new TrayIcon(coordinator, _updateNotifier.CheckManually);
 
         _reminderScheduler = new ReminderScheduler(repository, coordinator, _trayIcon.Icon);
         // Catch-up: avisa ya de lo vencido con la app cerrada. Diferido con BeginInvoke en vez de
@@ -240,6 +241,7 @@ public partial class App : Application
         {
             SystemEvents.DisplaySettingsChanged -= OnDisplaySettingsChanged;
             SystemEvents.SessionEnding -= OnSessionEnding;
+            _updateNotifier?.Dispose();
             _reminderScheduler?.Dispose();
             _coordinator?.Dispose();
             _trayIcon?.Dispose();
@@ -324,6 +326,7 @@ public partial class App : Application
     private AppSettings? _settings;
     private DispatcherTimer? _rebuildDebounce;
     private ReminderScheduler? _reminderScheduler;
+    private UpdateNotifier? _updateNotifier;
 
     /// <summary>
     /// Crea un dock por cada monitor conectado ahora mismo. Se llama al arrancar y cada vez que

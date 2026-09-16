@@ -3127,3 +3127,37 @@ aplicaba. Cerrar guarda la nota, no pierde nada.
 
 Tests: 441/441. Build correcto. Portable nuevo probado arrancando.
 
+
+## Margen del dock tras crear una nota o cambiar de etiqueta (sesión 2026-09-16)
+
+El margen de cortesía de 4 segundos (`HoldOpenForNextInteraction`) existía pero ya no se armaba en dos
+de sus casos originales: `CreateNote` y las elecciones de vista/etiqueta no lo llamaban, y
+`OnDockViewPopupClosed` además lo borraba (`_interactionGraceUntil = DateTime.MinValue`) al cerrarse el
+selector — justo cuando el usuario va a usar el dock. Ahora elegir vista/etiqueta lo arma antes de
+cerrar el selector (el selector sí se cierra; lo que aguanta es el dock), crear una nota lo arma tras
+`RefreshAll`, y el cierre del selector ya no lo destruye. `HoldOpenForNextInteraction` fija también
+`_pointerInside` y limpia `_hoverLayoutHold` para que el sondeo no lo pille a mitad de la transición.
+
+## Colores oscuros con texto adaptable (sesión 2026-09-16)
+
+El editor bloqueaba cualquier color cuyo contraste con la tinta oscura fija no llegase a AA, así que
+no se podía poner una nota oscura. Ahora `NoteColorContrast` (Core, WCAG con luminancia linealizada)
+elige el texto: tinta cálida sobre claros, blanco sobre oscuros, y negro en la franja intermedia donde
+tinta y blanco se quedan bajo 4.5:1. Se aplica a cuerpo, título, caret, selección, placeholders,
+controles de cabecera y vista previa del editor de color; el aviso del dock (`LabelFor`) también se
+adapta, conservando los tonos de la paleta pastel. Los errores del editor ahora solo validan HEX.
+
+## Aviso de nuevas versiones (sesión 2026-09-16)
+
+`ReleaseUpdateChecker` (Core) consulta `api.github.com/repos/NachoPola16/aldune/releases/latest` con
+User-Agent y cabeceras de API propias; solo acepta tags numéricos estables (`vX.Y.Z`), descarta
+draft/prerelease, y nunca usa `html_url` ni assets del JSON: construye la URL de la página de la
+release con el tag validado. `UpdateNotifier` (Windowing) sondea 20 s después de arrancar y luego cada
+24 h, avisa con una ventana modeless que no roba el foco (Descargar / Más tarde; Esc cierra) y muestra
+feedback en las comprobaciones manuales del menú de la bandeja ("Buscar actualizaciones…"). Nunca
+instala nada. Recordado por versión durante la sesión. Versión subida a **0.9.0** (función nueva) y
+documentación de versión actualizada.
+
+Tests: 506/506 unitarios más la prueba WPF de humo (`tests/Aldune.Ui.SmokeTests`, escenario real
+popup → elección de etiqueta → `Closed` → gracia de 4 s → caducidad con el cursor fuera; PASS).
+Build correcto. Portable nuevo probado arrancando.

@@ -26,7 +26,7 @@ internal sealed class TrayIcon : IDisposable
     /// de recordatorios — un segundo icono de bandeja sería confuso.</summary>
     internal NotifyIcon Icon => _icon;
 
-    internal TrayIcon(AppCoordinator coordinator)
+    internal TrayIcon(AppCoordinator coordinator, Action? checkForUpdates = null)
     {
         _coordinator = coordinator;
 
@@ -49,6 +49,8 @@ internal sealed class TrayIcon : IDisposable
         // "Ajustes…" en vez del interruptor de arranque suelto: ya son dos ajustes (arranque y
         // atajo global) y van a ser mas, y un menu contextual no es sitio para configurar nada.
         menu.Items.Add(new ToolStripMenuItem(Strings.TraySettings, null, (_, _) => _coordinator.OpenSettings()));
+        if (checkForUpdates is not null)
+            menu.Items.Add(new ToolStripMenuItem(Strings.TrayCheckForUpdates, null, (_, _) => checkForUpdates()));
         menu.Items.Add(new ToolStripSeparator());
         // Shutdown de WPF, no Application.Exit de WinForms: el bucle de mensajes lo lleva WPF, y
         // ademas "Application" seria ambiguo entre los dos espacios de nombres.
