@@ -424,7 +424,11 @@ public partial class EdgeDockWindow : Window
         // Con el menú de una pestaña abierto, el abanico se queda como está: el menú sale fuera de
         // la zona sensible del dock, así que mover el ratón hacia él contaría como salir y lo
         // cerraría justo cuando el usuario va a pulsarlo.
-        if (TabMenuPopup.IsOpen || OpenAllMenuPopup.IsOpen || DockViewPopup.IsOpen || TagEditorPopup.IsOpen)
+        if (TabMenuPopup.IsOpen
+            || OpenAllMenuPopup.IsOpen
+            || DockViewPopup.IsOpen
+            || NewNoteMenuPopup.IsOpen
+            || TagEditorPopup.IsOpen)
             return;
 
         // Lo mismo durante el margen de cortesía de una acción recién hecha (ver
@@ -1264,7 +1268,9 @@ public partial class EdgeDockWindow : Window
 
     private void OnManageArchiveClick(object sender, RoutedEventArgs e)
     {
+        HoldHoverDuringLayout();
         _coordinator.OpenOrActivateNotesManager(this, CurrentTagFilter);
+        e.Handled = true;
     }
 
     private void OnManageArchiveRightClick(object sender, MouseButtonEventArgs e)
@@ -1482,21 +1488,29 @@ public partial class EdgeDockWindow : Window
     }
 
     private void OnNewNoteMenuCreateClick(object sender, RoutedEventArgs e) =>
-        CreateNote(string.Empty);
+        CreateNoteFromMenu(string.Empty);
 
     private void OnNewNoteMenuClipboardClick(object sender, RoutedEventArgs e)
     {
         var text = Clipboard.ContainsText() ? Clipboard.GetText() : string.Empty;
-        CreateNote(text);
+        CreateNoteFromMenu(text);
     }
 
     private void OnNewNoteMenuPinToggleClick(object sender, RoutedEventArgs e)
     {
-        _coordinator.SetKeepDockOpen(_settings?.KeepDockOpen != true);
+        bool keepOpen = _settings?.KeepDockOpen != true;
+        NewNoteMenuPopup.IsOpen = false;
+        _coordinator.SetKeepDockOpen(keepOpen);
         NewNoteMenuPinButton.Content = _settings?.KeepDockOpen == true
             ? Strings.KeepDockOpenOn
             : Strings.KeepDockOpenOff;
-        HoldOpenForNextInteraction();
+
+        if (!keepOpen)
+        {
+            _interactionGraceUntil = DateTime.MinValue;
+            _hoverLayoutHold = false;
+            PollHoverState();
+        }
     }
 
     private void RaiseNewNoteMenu()
@@ -1513,7 +1527,9 @@ public partial class EdgeDockWindow : Window
 
     private void OnOpenAllClick(object sender, RoutedEventArgs e)
     {
+        HoldHoverDuringLayout();
         _coordinator.ToggleAllNotes(this);
+        e.Handled = true;
     }
 
     private void OnOpenAllRightClick(object sender, MouseButtonEventArgs e)
@@ -1590,11 +1606,12 @@ public partial class EdgeDockWindow : Window
         SelectOpenAllLayout(NoteLayoutTemplate.Columns);
 
     private void OnCloseAllClick(object sender, RoutedEventArgs e) =>
-        _coordinator.CloseAllNoteWindows();
+        CloseOpenAllMenuAfter(_coordinator.CloseAllNoteWindows);
 
     private void OnRestoreOriginalPositionsClick(object sender, RoutedEventArgs e)
     {
         _coordinator.RestoreNotePositions(this, _layoutMonitorKey);
+        OpenAllMenuPopup.IsOpen = false;
     }
 
     /// <summary>
@@ -1652,6 +1669,7 @@ public partial class EdgeDockWindow : Window
     {
         _coordinator.SetDefaultNoteLayout(layout);
         _coordinator.OpenAllNotes(this, layout, _layoutMonitorKey);
+        OpenAllMenuPopup.IsOpen = false;
     }
 
     /// <summary>
@@ -2178,6 +2196,7 @@ public partial class EdgeDockWindow : Window
     private void CloseDockPopups()
     {
         _openAllMenuTopmostTimer.Stop();
+        if (NewNoteMenuPopup.IsOpen) NewNoteMenuPopup.IsOpen = false;
         if (OpenAllMenuPopup.IsOpen) OpenAllMenuPopup.IsOpen = false;
         if (DockViewPopup.IsOpen) DockViewPopup.IsOpen = false;
         if (TagEditorPopup.IsOpen) TagEditorPopup.IsOpen = false;
@@ -2260,6 +2279,18 @@ public partial class EdgeDockWindow : Window
     private void OnNewNoteClick(object sender, RoutedEventArgs e)
     {
         CreateNote(string.Empty);
+    }
+
+    private void CreateNoteFromMenu(string content)
+    {
+        NewNoteMenuPopup.IsOpen = false;
+        CreateNote(content);
+    }
+
+    private void CloseOpenAllMenuAfter(Action action)
+    {
+        OpenAllMenuPopup.IsOpen = false;
+        action();
     }
 
     private void CreateNote(string content)
