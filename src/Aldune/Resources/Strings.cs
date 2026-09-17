@@ -112,7 +112,6 @@ public static class Strings
     public static string OpenAllMenuTitle => T("Open all with...", "Abrir todas con...");
     public static string OpenAllModeTitle => T("Opening mode", "Modo de apertura");
     public static string OpenAllMonitorTitle => T("Open notes on", "Abrir las notas en");
-    public static string OpenAllNormal => T("Normal cascade", "Cascada normal");
     public static string CloseAllNotes => T("Close all notes", "Cerrar todas las notas");
     public static string RestoreOriginalPositions => T("Restore original positions", "Restaurar posiciones originales");
     public static string OpenAllGrid => T("Grid", "Cuadrícula");
@@ -321,10 +320,12 @@ public static class Strings
         "Debe quedar al menos un perfil de sincronización.");
     public static string SyncScopeAll => T("All notes", "Todas las notas");
     public static string SyncScopeSelected => T("Selected notes", "Notas seleccionadas");
+    public static string SyncScopeTag => T("Notes with a tag", "Notas con una etiqueta");
     public static string SyncScopeHint => T(
         "Choose which notes this sync link can exchange. The selection stays local to this device.",
         "Elige qué notas puede intercambiar este vínculo. La selección se guarda solo en este dispositivo.");
     public static string SyncChooseNotes => T("Choose notes…", "Elegir notas…");
+    public static string SyncChooseTag => T("Choose tag…", "Elegir etiqueta…");
     public static string SyncSelectedCount(int count) => T(
         $"{count} selected for sync", $"{count} seleccionadas para sincronizar");
     public static string SyncNotesWindowTitle => T("Choose notes to sync", "Elegir notas para sincronizar");

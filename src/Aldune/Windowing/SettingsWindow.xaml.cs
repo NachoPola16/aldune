@@ -65,6 +65,7 @@ public partial class SettingsWindow : Window
         UpdateAutoHideTasksUi();
         SyncProfileStore.Ensure(_settings);
         PopulateSyncProfiles();
+        PopulateSyncTags();
         LoadSyncProfileFields();
         _syncUiReady = true;
 
@@ -605,8 +606,9 @@ public partial class SettingsWindow : Window
     private void LoadSyncProfileFields()
     {
         SyncEnabledCheck.IsChecked = _settings.SyncEnabled;
-        SyncAllNotesRadio.IsChecked = _settings.SyncScope != SyncScopeKind.SelectedNotes;
+        SyncAllNotesRadio.IsChecked = _settings.SyncScope == SyncScopeKind.AllNotes;
         SyncSelectedNotesRadio.IsChecked = _settings.SyncScope == SyncScopeKind.SelectedNotes;
+        SyncTagRadio.IsChecked = _settings.SyncScope == SyncScopeKind.Tag;
         SyncFolderRadio.IsChecked = _settings.SyncTransport == SyncTransportKind.Folder;
         SyncServerRadio.IsChecked = _settings.SyncTransport == SyncTransportKind.Server;
         SyncWebDavRadio.IsChecked = _settings.SyncTransport == SyncTransportKind.WebDav;
@@ -623,13 +625,22 @@ public partial class SettingsWindow : Window
         UpdateSyncUi();
     }
 
+    private void PopulateSyncTags()
+    {
+        SyncTagBox.Items.Clear();
+        foreach (var tag in _coordinator?.GetSyncTags() ?? Array.Empty<string>())
+            SyncTagBox.Items.Add(new ComboBoxItem { Content = tag, Tag = tag });
+        SyncTagBox.SelectedIndex = SyncTagBox.Items.OfType<ComboBoxItem>()
+            .ToList().FindIndex(item => string.Equals(item.Tag as string, _settings.SyncTag,
+                StringComparison.OrdinalIgnoreCase));
+    }
+
     private void OnSyncScopeChanged(object sender, RoutedEventArgs e)
     {
         if (!_syncUiReady || sender is not RadioButton { IsChecked: true } radio) return;
 
-        _settings.SyncScope = radio == SyncSelectedNotesRadio
-            ? SyncScopeKind.SelectedNotes
-            : SyncScopeKind.AllNotes;
+        _settings.SyncScope = radio == SyncSelectedNotesRadio ? SyncScopeKind.SelectedNotes
+            : radio == SyncTagRadio ? SyncScopeKind.Tag : SyncScopeKind.AllNotes;
         _settingsService.Save(_settings);
         UpdateSyncUi();
     }
@@ -637,6 +648,14 @@ public partial class SettingsWindow : Window
     private void OnSyncChooseNotesClick(object sender, RoutedEventArgs e)
     {
         _coordinator?.OpenSyncNotesSelector(this);
+        UpdateSyncUi();
+    }
+
+    private void OnSyncTagChanged(object sender, SelectionChangedEventArgs e)
+    {
+        if (!_syncUiReady || SyncTagBox.SelectedItem is not ComboBoxItem { Tag: string tag }) return;
+        _settings.SyncTag = tag;
+        _settingsService.Save(_settings);
         UpdateSyncUi();
     }
 
@@ -844,7 +863,10 @@ public partial class SettingsWindow : Window
         SyncNowButton.IsEnabled = enabled;
         SyncAllNotesRadio.IsEnabled = enabled;
         SyncSelectedNotesRadio.IsEnabled = enabled;
+        SyncTagRadio.IsEnabled = enabled;
         SyncChooseNotesButton.IsEnabled = enabled;
+        SyncTagBox.Visibility = _settings.SyncScope == SyncScopeKind.Tag ? Visibility.Visible : Visibility.Collapsed;
+        SyncTagBox.IsEnabled = enabled;
         SyncAutomaticCheck.IsEnabled = enabled;
         SyncIntervalValueBox.IsEnabled = enabled && _settings.SyncAutomatically;
         SyncNewProfileButton.IsEnabled = true;
@@ -854,6 +876,7 @@ public partial class SettingsWindow : Window
         else if (string.IsNullOrWhiteSpace(SyncStatusText.Text)) SyncStatusText.Text = Strings.SyncReadyStatus;
         SyncSelectionSummary.Text = _settings.SyncScope == SyncScopeKind.SelectedNotes
             ? Strings.SyncSelectedCount(_settings.SyncNoteIds.Count)
+            : _settings.SyncScope == SyncScopeKind.Tag ? (_settings.SyncTag ?? Strings.SyncChooseTag)
             : Strings.SyncScopeAll;
     }
 

@@ -72,7 +72,14 @@ autoridad de diseño; todo lo demás (planes, código) se argumenta contra él.
   (ver historial más abajo) y, a raíz de probarlo, también se hizo que el
   tamaño del pill/panel se ajuste al número de notas en vez de ser fijo.
 
-Tests: 441/441 pasando (`dotnet test tests/Aldune.Core.Tests -c Release`).
+Tests: 506/506 pasando (`dotnet test tests/Aldune.Core.Tests --no-restore`).
+
+- **Cambios de pantallas, disposición y sincronización**: al reconstruir los docks por un cambio de
+  monitores se conserva la pantalla física de cada nota abierta y se restaura cuando vuelve a estar
+  disponible. Las notas nuevas destinadas a otra pantalla aparecen cerca del borde del dock, no en el
+  centro. Se retiró `Normal cascade`; `Restaurar posiciones originales` queda como acción explícita.
+  Manage Notes usa texto adaptativo para que también sea legible sobre notas oscuras. Sync admite
+  limitar un vínculo a una etiqueta y conserva ese filtro en perfiles compartidos.
 
 ## Cómo se ha trabajado (para mantener el mismo estilo)
 

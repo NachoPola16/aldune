@@ -394,7 +394,9 @@ public partial class App : Application
     private void OnRebuildTick(object? sender, EventArgs e)
     {
         _rebuildDebounce?.Stop();
+        _coordinator?.RememberOpenNoteMonitors();
         _coordinator?.CloseAllDocks();
         BuildDocks();
+        _coordinator?.RestoreOpenNotesAfterDisplayChange();
     }
 }

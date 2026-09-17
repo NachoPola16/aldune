@@ -34,6 +34,19 @@ public sealed class SyncShareCodeTests
     }
 
     [Fact]
+    public void ProfileCodeRoundTripsTagScope()
+    {
+        var key = RandomNumberGenerator.GetBytes(32);
+        var code = SyncShareCodeCodec.Encode(
+            key, SyncScopeKind.Tag, Array.Empty<Guid>(), "Trabajo", SyncTransportKind.Folder, null, "trabajo");
+
+        var decoded = SyncShareCodeCodec.Decode(code);
+
+        Assert.Equal(SyncScopeKind.Tag, decoded.Scope);
+        Assert.Equal("trabajo", decoded.Tag);
+    }
+
+    [Fact]
     public void LegacyProfileCodeStillImports()
     {
         var key = RandomNumberGenerator.GetBytes(32);

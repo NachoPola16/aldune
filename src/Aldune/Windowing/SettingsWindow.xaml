@@ -392,6 +392,10 @@
                                      GroupName="SyncScope" Tag="SelectedNotes" Margin="4,0,0,0"
                                      Style="{StaticResource DelayUnitToggleStyle}"
                                      Checked="OnSyncScopeChanged" />
+                        <RadioButton x:Name="SyncTagRadio" Content="{x:Static res:Strings.SyncScopeTag}"
+                                     GroupName="SyncScope" Tag="Tag" Margin="4,0,0,0"
+                                     Style="{StaticResource DelayUnitToggleStyle}"
+                                     Checked="OnSyncScopeChanged" />
                     </StackPanel>
                     <StackPanel Orientation="Horizontal" Margin="27,7,0,0">
                         <Button x:Name="SyncChooseNotesButton" Content="{x:Static res:Strings.SyncChooseNotes}"
@@ -399,6 +403,9 @@
                                 Style="{StaticResource RecordButtonStyle}" />
                         <TextBlock x:Name="SyncSelectionSummary" Foreground="#8A8175"
                                    FontSize="11" VerticalAlignment="Center" Margin="10,0,0,0" />
+                        <ComboBox x:Name="SyncTagBox" Width="150" Height="30" Margin="10,0,0,0"
+                                  Style="{StaticResource SyncProfileComboStyle}"
+                                  SelectionChanged="OnSyncTagChanged" />
                     </StackPanel>
 
                     <StackPanel Orientation="Horizontal" Margin="27,8,0,0">

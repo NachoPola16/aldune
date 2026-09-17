@@ -80,6 +80,7 @@ public static class SyncProfileStore
         settings.SyncKeyRotationPending = profile.SyncKeyRotationPending;
         settings.SyncScope = profile.SyncScope;
         settings.SyncNoteIds = profile.SyncNoteIds?.ToList() ?? new List<Guid>();
+        settings.SyncTag = profile.SyncTag;
     }
 
     public static void SaveActiveFromLegacy(AppSettings settings)
@@ -104,6 +105,7 @@ public static class SyncProfileStore
         profile.SyncKeyRotationPending = settings.SyncKeyRotationPending;
         profile.SyncScope = settings.SyncScope;
         profile.SyncNoteIds = settings.SyncNoteIds?.ToList() ?? new List<Guid>();
+        profile.SyncTag = settings.SyncTag;
     }
 
     private static void EnsureWithoutProjection(AppSettings settings)
@@ -135,6 +137,7 @@ public static class SyncProfileStore
         SyncKeyRotationPending = settings.SyncKeyRotationPending,
         SyncScope = settings.SyncScope,
         SyncNoteIds = settings.SyncNoteIds?.ToList() ?? new List<Guid>(),
+        SyncTag = settings.SyncTag,
     };
 
     private static byte[]? Clone(byte[]? value) => value is null ? null : (byte[])value.Clone();

@@ -32,6 +32,7 @@ public sealed class AppCoordinator
     private bool _openingSettings;
     private SyncConflictsWindow? _syncConflictsWindow;
     private System.Threading.Timer? _autoSyncTimer;
+    private readonly Dictionary<Guid, string?> _noteMonitorsBeforeDisplayChange = new();
 
     /// <summary>Fabrica de la ventana de ajustes, inyectada por App: el coordinador no tiene por
     /// que saber de SettingsService ni del atajo global, solo de que hay una ventana unica.</summary>
@@ -141,6 +142,28 @@ public sealed class AppCoordinator
         _docks.Clear();
     }
 
+    public void RememberOpenNoteMonitors()
+    {
+        _noteMonitorsBeforeDisplayChange.Clear();
+        foreach (var pair in _openNoteWindows)
+            _noteMonitorsBeforeDisplayChange[pair.Key] = pair.Value.CurrentMonitorKey;
+    }
+
+    public void RestoreOpenNotesAfterDisplayChange()
+    {
+        foreach (var pair in _noteMonitorsBeforeDisplayChange.ToList())
+        {
+            if (pair.Value is null || !_openNoteWindows.TryGetValue(pair.Key, out var window)) continue;
+            var placement = _repository.GetPlacement(pair.Key, pair.Value);
+            if (placement is null) continue;
+            if (PlacementValidation.IsVisibleOnMonitors(
+                    placement.Left, placement.Top, placement.Width, placement.Height,
+                    MonitorEnumerator.EnumerateMonitors()))
+                window.ApplyPlacement(placement.Left, placement.Top, placement.Width, placement.Height);
+        }
+        _noteMonitorsBeforeDisplayChange.Clear();
+    }
+
     private void RefreshOpenState()
     {
         foreach (var dock in _docks) dock.RefreshOpenState();
@@ -219,7 +242,7 @@ public sealed class AppCoordinator
             // el reparto exacto lo hace ArrangeOpenNotes un momento después: aquí basta con que nazca
             // dentro de la pantalla elegida, en vez de asomar por la del dock.
             if (placementKey == requestingDock.MonitorKey) requestingDock.PositionNoteWindow(noteWindow, originRect);
-            else CenterNoteOnMonitor(noteWindow, placementKey);
+            else PositionNearMonitorEdge(noteWindow, placementKey);
         }
 
         _openNoteWindows[note.Id] = noteWindow;
@@ -315,6 +338,7 @@ public sealed class AppCoordinator
         NativeMethods.ForceActivate(_notesManagerWindow);
     }
 
+    public IReadOnlyList<string> GetSyncTags() => _repository.GetAllTags();
     /// <summary>
     /// Abre el gestor sin que lo pida un dock — desde el menu de la bandeja. Se coloca sobre el
     /// primer dock disponible, que es lo mas parecido a "donde vive la app" cuando la peticion no
@@ -548,25 +572,27 @@ public sealed class AppCoordinator
     }
 
     /// <summary>
-    /// Coloca una nota recién creada en el centro de la pantalla indicada. Es el reparto por defecto
+    /// Coloca una nota recién creada cerca del borde del dock de la pantalla indicada. Es el reparto por defecto
     /// cuando la nota se abre en una pantalla que no es la del dock que la pidió:
     /// <see cref="EdgeDockWindow.PositionNoteWindow"/> la pega a ESE dock, que está en otra. El reparto
     /// definitivo (cascada, cuadrícula, columnas) lo hace <see cref="ArrangeOpenNotes"/> un momento
     /// después.
     /// </summary>
-    private static void CenterNoteOnMonitor(NoteWindow noteWindow, string monitorKey)
+    private void PositionNearMonitorEdge(NoteWindow noteWindow, string monitorKey)
     {
         if (MonitorLookup.ForDeviceName(monitorKey, MonitorEnumerator.EnumerateMonitors()) is not { } monitor) return;
 
         var area = monitor.WorkArea;
-        noteWindow.Left = Math.Clamp(
-            area.X + (area.Width - noteWindow.Width) / 2,
-            area.X,
-            Math.Max(area.X, area.X + area.Width - noteWindow.Width));
-        noteWindow.Top = Math.Clamp(
-            area.Y + (area.Height - noteWindow.Height) / 2,
-            area.Y,
-            Math.Max(area.Y, area.Y + area.Height - noteWindow.Height));
+        const double gap = 42;
+        var edge = _settings?.DockEdge ?? EdgePosition.Right;
+        double left = edge == EdgePosition.Left ? area.X + gap
+            : edge == EdgePosition.Right ? area.X + area.Width - noteWindow.Width - gap
+            : area.X + (area.Width - noteWindow.Width) / 2;
+        double top = edge == EdgePosition.Top ? area.Y + gap
+            : edge == EdgePosition.Bottom ? area.Y + area.Height - noteWindow.Height - gap
+            : area.Y + (area.Height - noteWindow.Height) / 2;
+        noteWindow.Left = Math.Clamp(left, area.X, Math.Max(area.X, area.X + area.Width - noteWindow.Width));
+        noteWindow.Top = Math.Clamp(top, area.Y, Math.Max(area.Y, area.Y + area.Height - noteWindow.Height));
     }
 
     /// <summary>

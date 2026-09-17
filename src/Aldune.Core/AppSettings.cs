@@ -52,6 +52,9 @@ public sealed class AppSettings
     /// <summary>Identificadores incluidos cuando <see cref="SyncScope"/> es selectivo.</summary>
     public List<Guid> SyncNoteIds { get; set; } = new();
 
+    /// <summary>Etiqueta incluida cuando <see cref="SyncScope"/> es <see cref="SyncScopeKind.Tag"/>.</summary>
+    public string? SyncTag { get; set; }
+
     /// <summary>Perfiles independientes de sincronización. El perfil activo se refleja en los campos anteriores.</summary>
     public List<SyncProfileSettings> SyncProfiles { get; set; } = new();
 

@@ -25,4 +25,5 @@ public sealed class SyncProfileSettings
     public bool SyncKeyRotationPending { get; set; }
     public SyncScopeKind SyncScope { get; set; } = SyncScopeKind.AllNotes;
     public List<Guid> SyncNoteIds { get; set; } = new();
+    public string? SyncTag { get; set; }
 }

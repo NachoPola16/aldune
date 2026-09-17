@@ -389,7 +389,7 @@
                                  Control y no tiene esa propiedad, pero la adjunta sí se hereda por
                                  el árbol, que es lo que hace falta para tenir toda la fila. -->
                             <Border Background="{Binding Note.Color}"
-                                    TextElement.Foreground="#1E1A14"
+                                    TextElement.Foreground="{Binding Note.Color, Converter={StaticResource NoteLabelColorConverter}}"
                                     CornerRadius="8" Margin="0,0,0,8" Padding="12,10"
                                     Cursor="Hand"
                                     Focusable="True"
@@ -427,7 +427,7 @@
 
                                     <CheckBox Grid.Column="0"
                                               IsChecked="{Binding IsSelected, Mode=TwoWay}"
-                                              Foreground="#1E1A14"
+                                              Foreground="{Binding Note.Color, Converter={StaticResource NoteLabelColorConverter}}"
                                               Background="{Binding Note.Color}"
                                               Style="{StaticResource AppCheckBoxStyle}"
                                               PreviewMouseLeftButtonDown="OnRowCheckBoxPreviewMouseLeftButtonDown"
@@ -442,11 +442,16 @@
                                                    Text="{Binding Note, Converter={StaticResource NoteTitleConverter}}"
                                                    FontWeight="SemiBold" FontSize="13"
                                                    VerticalAlignment="Center"
-                                                   TextTrimming="CharacterEllipsis" />
+                                                   TextTrimming="CharacterEllipsis"
+                                                   Foreground="{Binding Note.Color, Converter={StaticResource NoteLabelColorConverter}}" />
                                         <Button Grid.Column="1" Tag="{Binding}"
                                                 Content="{x:Static res:Strings.NoteTags}"
                                                 Click="OnEditTagsClick" Margin="10,0,0,0"
-                                                Style="{StaticResource LinkButtonStyle}" />
+                                                Style="{StaticResource LinkButtonStyle}">
+                                            <Button.Foreground>
+                                                <Binding Path="Note.Color" Converter="{StaticResource NoteLabelColorConverter}" />
+                                            </Button.Foreground>
+                                        </Button>
                                     </Grid>
 
                                     <!-- Chip de estado, en el tono oscuro del propio color de la

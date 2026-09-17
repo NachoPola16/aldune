@@ -3,5 +3,6 @@
 public enum SyncScopeKind
 {
     AllNotes,
-    SelectedNotes
+    SelectedNotes,
+    Tag
 }

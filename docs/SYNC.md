@@ -33,9 +33,11 @@ Los nombres de las variables de entorno son los de `ALDUNE_*`. Hasta el 2026-09-
 `FANOTE_SYNC_PORT` o `FANOTE_SYNC_DOMAIN`, renómbralos. Sin token el servidor se niega a arrancar,
 así que el fallo es inmediato y visible, no silencioso.
 
-En Ajustes también puedes elegir entre `Todas las notas` y `Notas seleccionadas`. En el segundo modo,
-solo las notas marcadas en `Elegir notas…` se publican o se descargan en ese vínculo. La selección se
-guarda localmente y no se envía al servidor.
+En Ajustes también puedes elegir entre `Todas las notas`, `Notas seleccionadas` o `Notas con una
+etiqueta`. En el segundo modo, solo las notas marcadas en `Elegir notas…` se publican o se descargan
+en ese vínculo. En el tercero, se intercambian únicamente las notas que tengan la etiqueta elegida.
+La selección se guarda localmente y no se envía al servidor, salvo el nombre de la etiqueta dentro de
+un código de invitación de perfil.
 
 El servidor es un almacén de blobs y no necesita SQLite. El volumen lógico `aldune-sync-data` contiene
 los objetos y sobrevive a actualizaciones del contenedor. Su nombre físico se configura con

@@ -547,9 +547,6 @@
                         <TextBlock Text="{x:Static res:Strings.OpenAllModeTitle}"
                                    Foreground="#C8B9A8" FontSize="11"
                                    FontWeight="SemiBold" Margin="8,3,8,6" />
-                        <Button Content="{x:Static res:Strings.OpenAllNormal}"
-                                Click="OnOpenAllNormalClick"
-                                Style="{StaticResource NoteMenuItemStyle}" />
                         <Button Content="{x:Static res:Strings.OpenAllGrid}"
                                 Click="OnOpenAllGridClick"
                                 Style="{StaticResource NoteMenuItemStyle}" />

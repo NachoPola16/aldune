@@ -155,7 +155,8 @@ public sealed record SyncShareCodeData(
     IReadOnlyList<Guid> NoteIds,
     string? ProfileName = null,
     SyncTransportKind? Transport = null,
-    string? ServerUrl = null);
+    string? ServerUrl = null,
+    string? Tag = null);
 
 /// <summary>
 /// Código opcional para compartir un perfil. A diferencia del código de dispositivo, incluye el
@@ -215,7 +216,8 @@ public static class SyncShareCodeCodec
         IEnumerable<Guid> noteIds,
         string? profileName = null,
         SyncTransportKind? transport = null,
-        string? serverUrl = null)
+        string? serverUrl = null,
+        string? tag = null)
     {
         ArgumentNullException.ThrowIfNull(key);
         var document = new SyncShareCodeDocument
@@ -224,6 +226,7 @@ public static class SyncShareCodeCodec
             Key = SyncKeyFormat.Encode(key),
             Scope = scope,
             NoteIds = noteIds.Distinct().Take(MaxNoteIds).ToArray(),
+            Tag = tag,
             ProfileName = NormalizeProfileName(profileName),
             Transport = transport,
             ServerUrl = NormalizeServerUrl(serverUrl)
@@ -264,7 +267,8 @@ public static class SyncShareCodeCodec
                 noteIds.Distinct().ToArray(),
                 NormalizeProfileName(document.ProfileName),
                 document.Transport,
-                serverUrl);
+                serverUrl,
+                document.Tag);
         }
         catch (JsonException ex)
         {
@@ -305,6 +309,7 @@ public static class SyncShareCodeCodec
         public string Key { get; set; } = string.Empty;
         public SyncScopeKind Scope { get; set; }
         public Guid[] NoteIds { get; set; } = Array.Empty<Guid>();
+        public string? Tag { get; set; }
         public string? ProfileName { get; set; }
         public SyncTransportKind? Transport { get; set; }
         public string? ServerUrl { get; set; }

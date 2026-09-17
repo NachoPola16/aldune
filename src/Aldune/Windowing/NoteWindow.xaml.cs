@@ -288,6 +288,8 @@ public partial class NoteWindow : Window
     private string? GetCurrentMonitorKey() =>
         MonitorLookup.DeviceNameAt(Left, Top, Width, Height, MonitorEnumerator.EnumerateMonitors());
 
+    internal string? CurrentMonitorKey => _placementMonitorKey ?? GetCurrentMonitorKey();
+
     private void SavePlacementForCurrentMonitor()
     {
         if (_settings is not { RememberNotePositions: true }) return;
