@@ -626,8 +626,11 @@
                            Foreground="#8A8175" FontSize="11" Margin="0,5,0,0" />
             </StackPanel>
             <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center">
+                <Button Content="{x:Static res:Strings.TrayCheckForUpdates}"
+                    Padding="12,7" Click="OnCheckForUpdatesClick"
+                    Style="{StaticResource RecordButtonStyle}" />
                 <Button Content="{x:Static res:Strings.RestartApplicationButton}"
-                        Padding="12,7" Click="OnRestartClick"
+                    Margin="8,0,0,0" Padding="12,7" Click="OnRestartClick"
                         ToolTip="{x:Static res:Strings.RestartAppTooltip}"
                         Style="{StaticResource RecordButtonStyle}" />
                 <Button Content="{x:Static res:Strings.ExitApplicationButton}"

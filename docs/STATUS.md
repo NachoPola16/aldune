@@ -80,6 +80,9 @@ Tests: 506/506 pasando (`dotnet test tests/Aldune.Core.Tests --no-restore`).
   antes de terminar de enumerar la pantalla. `Restaurar posiciones originales` abre todas las notas
   de la vista, recupera las posiciones guardadas y coloca las restantes cerca del borde del dock,
   no en el centro. Se retiró `Normal cascade`.
+- **Actualizaciones desde Ajustes**: la sección Aplicación incluye `Buscar actualizaciones…`, que
+  usa el mismo comprobador de releases que la bandeja y permite abrir la descarga cuando existe una
+  versión nueva.
   Manage Notes usa texto adaptativo para que también sea legible sobre notas oscuras. Sync admite
   limitar un vínculo a una etiqueta y conserva ese filtro en perfiles compartidos.
 

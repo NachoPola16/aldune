@@ -212,7 +212,8 @@ public partial class App : Application
         var hotkey = _hotkey;
         var loadedSettings = settings;
         coordinator.SettingsWindowFactory = () => new SettingsWindow(
-            settingsService, loadedSettings, hotkey, coordinator, syncService);
+            settingsService, loadedSettings, hotkey, coordinator, syncService,
+            () => _updateNotifier?.CheckManually());
         coordinator.ConfigureAutomaticSync();
         coordinator.RebuildDocksAction = () =>
         {

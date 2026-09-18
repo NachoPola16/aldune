@@ -23,6 +23,7 @@ public partial class SettingsWindow : Window
     private readonly GlobalHotkey _hotkey;
     private readonly AppCoordinator? _coordinator;
     private readonly SyncService? _syncService;
+    private readonly Action? _checkForUpdates;
     private bool _recording;
     private bool _syncUiReady;
     private bool _loadingSyncProfile;
@@ -35,7 +36,8 @@ public partial class SettingsWindow : Window
         AppSettings settings,
         GlobalHotkey hotkey,
         AppCoordinator? coordinator = null,
-        SyncService? syncService = null)
+        SyncService? syncService = null,
+        Action? checkForUpdates = null)
     {
         InitializeComponent();
         // SizeToContent="Height" todavía no conoce el alto final hasta que la ventana entra en
@@ -47,6 +49,7 @@ public partial class SettingsWindow : Window
         _hotkey = hotkey;
         _coordinator = coordinator;
         _syncService = syncService;
+        _checkForUpdates = checkForUpdates;
 
         StartupCheck.IsChecked = StartupRegistration.IsEnabled();
         HotkeyCheck.IsChecked = _settings.GlobalHotkeyEnabled;
@@ -119,6 +122,8 @@ public partial class SettingsWindow : Window
     }
 
     private void OnCloseClick(object sender, RoutedEventArgs e) => Close();
+
+    private void OnCheckForUpdatesClick(object sender, RoutedEventArgs e) => _checkForUpdates?.Invoke();
 
     private void OnExitClick(object sender, RoutedEventArgs e) =>
         Application.Current.Shutdown();
