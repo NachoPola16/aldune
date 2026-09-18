@@ -325,6 +325,7 @@ public partial class App : Application
     private NotesRepository? _repository;
     private AppSettings? _settings;
     private DispatcherTimer? _rebuildDebounce;
+    private int _displayRebuildAttempts;
     private ReminderScheduler? _reminderScheduler;
     private UpdateNotifier? _updateNotifier;
 
@@ -388,15 +389,28 @@ public partial class App : Application
         _rebuildDebounce.Tick -= OnRebuildTick;
         _rebuildDebounce.Tick += OnRebuildTick;
         _rebuildDebounce.Stop();
+        _displayRebuildAttempts = 0;
         _rebuildDebounce.Start();
     }
 
     private void OnRebuildTick(object? sender, EventArgs e)
     {
-        _rebuildDebounce?.Stop();
+        _displayRebuildAttempts++;
         _coordinator?.RememberOpenNoteMonitors();
         _coordinator?.CloseAllDocks();
         BuildDocks();
         _coordinator?.RestoreOpenNotesAfterDisplayChange();
+
+        // Windows can raise DisplaySettingsChanged before the driver has published the final
+        // monitor list. Keep rebuilding briefly so a monitor that is powering back on gets its
+        // dock without requiring another user action.
+        if (_displayRebuildAttempts >= 5)
+        {
+            _rebuildDebounce?.Stop();
+            return;
+        }
+
+        _rebuildDebounce?.Stop();
+        _rebuildDebounce?.Start();
     }
 }

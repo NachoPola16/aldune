@@ -76,8 +76,10 @@ Tests: 506/506 pasando (`dotnet test tests/Aldune.Core.Tests --no-restore`).
 
 - **Cambios de pantallas, disposición y sincronización**: al reconstruir los docks por un cambio de
   monitores se conserva la pantalla física de cada nota abierta y se restaura cuando vuelve a estar
-  disponible. Las notas nuevas destinadas a otra pantalla aparecen cerca del borde del dock, no en el
-  centro. Se retiró `Normal cascade`; `Restaurar posiciones originales` queda como acción explícita.
+  disponible; el rebuild se reintenta durante unos segundos porque Windows puede publicar el cambio
+  antes de terminar de enumerar la pantalla. `Restaurar posiciones originales` abre todas las notas
+  de la vista, recupera las posiciones guardadas y coloca las restantes cerca del borde del dock,
+  no en el centro. Se retiró `Normal cascade`.
   Manage Notes usa texto adaptativo para que también sea legible sobre notas oscuras. Sync admite
   limitar un vínculo a una etiqueta y conserva ese filtro en perfiles compartidos.
 
