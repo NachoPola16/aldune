@@ -23,6 +23,7 @@ settings.json.*
 *.corrupt-*
 
 # Logs, volcados y archivos temporales.
+tmp/
 *.log
 *.dmp
 *.tmp
