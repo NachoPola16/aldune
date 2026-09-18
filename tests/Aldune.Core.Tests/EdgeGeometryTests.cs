@@ -297,7 +297,8 @@ public class EdgeGeometryTests
         Assert.Equal(window.X + window.Width, resting.X + resting.Width);
         Assert.True(resting.Y >= window.Y);
         Assert.True(resting.Y + resting.Height <= window.Y + window.Height + 0.001);
-        Assert.Equal(EdgeGeometry.RestSliverWidth, resting.Width);
+        // La zona sensible es la tira mas la holgura de punteria (RestHitSlop), nunca mas estrecha.
+        Assert.Equal(EdgeGeometry.RestSliverWidth + EdgeGeometry.RestHitSlop, resting.Width);
     }
 
     [Fact]
@@ -428,13 +429,13 @@ public class EdgeGeometryTests
     public void RestingVisibleRect_MatchesTheDashesActuallyDrawn()
     {
         // La zona sensible tiene que coincidir con lo que se ve: ni franja muerta que responde al
-        // raton, ni guion visible que no responde.
+        // raton, ni guion visible que no responde. Solo se le suma la holgura de punteria.
         int dashes = EdgeGeometry.VisibleRestDashes(Vertical, EdgePosition.Right, 200);
         double expected = EdgeGeometry.RestStripLength(dashes) + EdgeGeometry.RestContainerPad * 2;
 
         var rect = EdgeGeometry.RestingVisibleRect(Vertical, EdgePosition.Right, 200);
 
-        Assert.Equal(expected, rect.Height, 3);
+        Assert.Equal(expected + EdgeGeometry.RestHitSlop * 2, rect.Height, 3);
     }
 
     // --- Zona sensible en reposo ---------------------------------------------------------------
@@ -452,7 +453,9 @@ public class EdgeGeometryTests
         Assert.True(resting.Y + resting.Height <= window.Y + window.Height);
 
         double thickness = edge is EdgePosition.Left or EdgePosition.Right ? resting.Width : resting.Height;
-        Assert.Equal(EdgeGeometry.RestSliverWidth, thickness);
+        // Como minimo la tira; como mucho la tira mas la holgura de punteria por ambos lados.
+        Assert.True(thickness >= EdgeGeometry.RestSliverWidth);
+        Assert.True(thickness <= EdgeGeometry.RestSliverWidth + EdgeGeometry.RestHitSlop * 2);
     }
 
     [Fact]

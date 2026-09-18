@@ -3173,3 +3173,29 @@ documentación de versión actualizada.
 Tests: 506/506 unitarios más la prueba WPF de humo (`tests/Aldune.Ui.SmokeTests`, escenario real
 popup → elección de etiqueta → `Closed` → gracia de 4 s → caducidad con el cursor fuera; PASS).
 Build correcto. Portable nuevo probado arrancando.
+
+## Hover del dock: cortesía al abrir ventanas y zona de reposo más generosa (sesión 2026-09-18)
+
+Dos fallos de puntería que hacían el dock "soso" justo al usarlo deprisa:
+
+1. **Pulsar un botón del pie nada más abrir el dock no respondía.** Si el cursor llegaba a
+   "Gestionar notas" (o a ajustes/color/protección) antes de que el abanico terminara de
+   desplegarse, la ventana abierta robaba el foco y el cursor quedaba sobre un hueco que
+   `PollHoverState` interpretaba como salida: el dock se plegaba bajo los pies y, con
+   `_hoverReentryBlocked` armado, dejaba de responder hasta sacar el ratón lejos. Arreglo:
+   `EdgeDockWindow.HoldOpenForWindow()` arma una cortesía de 3 s (`HoverOpenGrace`) que congela el
+   estado de hover, limpia `_hoverReentryBlocked` y mantiene el abanico abierto mientras la nueva
+   ventana toma el foco. La llaman los clics que abren ventana desde el dock
+   (`OnManageArchiveClick`, `OnSyncRightClick`, `OnTabMenuCustomColorClick`,
+   `OnTabMenuProtectionClick`).
+
+2. **Al volver a abrir el dock con varias notas ya abiertas se cerraba solo.** En reposo la zona
+   sensible era la tira de guiones, de unos 12 px. Con todas las notas abiertas tapando el canto, el
+   cursor casi nunca cae justo encima al reabrir: el primer sondeo lo daba por fuera y lo plegaba.
+   Arreglo: `EdgeGeometry.RestingVisibleRect` se ensancha `RestHitSlop` (12 px) por cada lado, sin
+   salirse de la ventana. El hit-test de WPF sigue sin cubrir el hueco transparente (eso no
+   cambia); es solo el sondeo de hover el que perdona la puntería.
+
+Los tests que fijaban el grosor exacto de la tira se actualizan a la nueva banda
+(`RestingVisibleRect_*`: ahora la zona es la tira + la holgura, nunca más estrecha).
+507/507 en verde. Versión subida a **0.9.1**.

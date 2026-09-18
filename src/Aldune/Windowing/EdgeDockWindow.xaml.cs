@@ -49,6 +49,19 @@ public partial class EdgeDockWindow : Window
 
     /// <summary>Hasta cuándo vale ese margen; <see cref="DateTime.MinValue"/> si no hay ninguno activo.</summary>
     private DateTime _interactionGraceUntil = DateTime.MinValue;
+
+    /// <summary>
+    /// Margen que el dock aguanta desplegado tras abrir otra ventana desde él (gestionar notas,
+    /// ajustes, sincronizar…). Sin él, si el cursor llegó al botón antes de que el abanico terminara
+    /// de desplegarse —pulsación rápida nada más asomar el dock— la ventana abierta roba el foco y el
+    /// cursor queda sobre un hueco que el sondeo interpreta como salida: el dock se pliega bajo los
+    /// pies y, con <c>_hoverReentryBlocked</c> armado, deja de responder hasta sacar el ratón lejos.
+    /// </summary>
+    private static readonly TimeSpan HoverOpenGrace = TimeSpan.FromSeconds(3);
+
+    /// <summary>Hasta cuándo vale <see cref="HoverOpenGrace"/>; <c>MinValue</c> si no hay ninguno.</summary>
+    private DateTime _hoverGraceUntil = DateTime.MinValue;
+
     private bool _pointerInside;
     private bool _hoverReentryBlocked;
     private bool _hoverLayoutHold;
@@ -485,6 +498,16 @@ public partial class EdgeDockWindow : Window
                 _collapseTimer.Stop();
                 return;
             }
+        }
+
+        // Cortesía al abrir otra ventana desde el dock: mientras corre, el sondeo no decide nada y
+        // el abanico se queda abierto aunque el cursor esté fuera. En cuanto caduca, el sondeo
+        // normal vuelve a mandar y, si el cursor sigue fuera, lo pliega como siempre.
+        if (DateTime.UtcNow < _hoverGraceUntil)
+        {
+            _pointerInside = true;
+            _collapseTimer.Stop();
+            return;
         }
 
         var windowRect = EdgeGeometry.WindowRect(_workingArea, _edge, _noteCount);
@@ -1279,6 +1302,7 @@ public partial class EdgeDockWindow : Window
     private void OnManageArchiveClick(object sender, RoutedEventArgs e)
     {
         HoldHoverDuringLayout();
+        HoldOpenForWindow();
         _coordinator.OpenOrActivateNotesManager(this, CurrentTagFilter);
         e.Handled = true;
     }
@@ -1477,6 +1501,7 @@ public partial class EdgeDockWindow : Window
 
     private void OnSyncRightClick(object sender, MouseButtonEventArgs e)
     {
+        HoldOpenForWindow();
         _coordinator.OpenSettings();
         e.Handled = true;
     }
@@ -2077,6 +2102,7 @@ public partial class EdgeDockWindow : Window
     {
         if (_tabMenuNote is not { } note) return;
 
+        HoldOpenForWindow();
         var color = CustomColorWindow.Show(this, note.Color);
         if (color is null) return;
 
@@ -2096,6 +2122,7 @@ public partial class EdgeDockWindow : Window
     {
         if (_tabMenuNote is not { } note) return;
         CloseTabMenu();
+        HoldOpenForWindow();
 
         if (note.IsProtected)
         {
@@ -2331,6 +2358,21 @@ public partial class EdgeDockWindow : Window
         _pointerInside = true;
         _hoverReentryBlocked = false;
         _collapseTimer.Stop();
+        if (_noteCount > 0 && !_fanState.IsExpanded) _fanState.PointerEntered();
+    }
+
+    /// <summary>
+    /// Margen de cortesía al abrir otra ventana desde este dock. Fija el estado de hover para que el
+    /// sondeo no lo cierre bajo los pies mientras la nueva ventana roba el foco, y limpia
+    /// <c>_hoverReentryBlocked</c> para que el siguiente pase del ratón lo reabra sin exigir primero
+    /// una salida completa de la ventana.
+    /// </summary>
+    private void HoldOpenForWindow()
+    {
+        _hoverGraceUntil = DateTime.UtcNow.Add(HoverOpenGrace);
+        _pointerInside = true;
+        _collapseTimer.Stop();
+        _hoverReentryBlocked = false;
         if (_noteCount > 0 && !_fanState.IsExpanded) _fanState.PointerEntered();
     }
 

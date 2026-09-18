@@ -1,4 +1,4 @@
-﻿namespace Aldune.Core;
+namespace Aldune.Core;
 
 /// <summary>
 /// Geometría del dock.
@@ -277,11 +277,21 @@ public static class EdgeGeometry
         };
     }
 
+    /// <summary>Holgura extra alrededor de la tira de reposo en la zona sensible.</summary>
+    public const double RestHitSlop = 12;
+
     /// <summary>
     /// La parte de <see cref="WindowRect"/> sensible al ratón con el dock en reposo: la tira de
     /// guiones, no la ventana entera. Con transparencia el resto de la ventana ya es transparente
     /// al clic, pero el sondeo de hover tampoco debe desplegar el dock por pasar el ratón sobre una
     /// zona vacía.
+    ///
+    /// La tira visible es muy fina (unos 12 px). Apuntar con esa precisión es incómodo y, sobre todo,
+    /// al volver a abrir el dock con varias notas ya abiertas —que tapan el canto— el cursor casi
+    /// nunca cae justo encima: si la zona no perdona algo, el primer sondeo lo da por fuera y pliega
+    /// el dock nada más desplegarlo. Por eso la zona sensible se ensancha <see cref="RestHitSlop"/>
+    /// px en cada dirección, sin salirse de la ventana: sigue sin cubrir el hueco transparente, pero
+    /// perdona la puntería.
     /// </summary>
     public static Rect RestingVisibleRect(WorkingArea area, EdgePosition edge, int noteCount)
     {
@@ -298,7 +308,7 @@ public static class EdgeGeometry
         double length = Math.Min(RestStripLength(edge, dashes) + RestContainerPad * 2, stripAxisLength);
         double start = Math.Max(0, (stripAxisLength - length) / 2);
 
-        return edge switch
+        Rect tight = edge switch
         {
             EdgePosition.Top => new Rect(window.X + start, window.Y, length, RestSliverWidth),
             EdgePosition.Bottom => new Rect(window.X + start, window.Y + window.Height - RestSliverWidth, length, RestSliverWidth),
@@ -306,6 +316,18 @@ public static class EdgeGeometry
             EdgePosition.Right => new Rect(window.X + window.Width - RestSliverWidth, window.Y + start, RestSliverWidth, length),
             _ => throw new ArgumentOutOfRangeException(nameof(edge))
         };
+
+        // Ensanchar el objetivo, acotado a la ventana para no invadir el escritorio de alrededor.
+        double slopX = Math.Min(RestHitSlop, Math.Max(0, tight.X - window.X));
+        double slopRight = Math.Min(RestHitSlop, Math.Max(0, window.X + window.Width - (tight.X + tight.Width)));
+        double slopY = Math.Min(RestHitSlop, Math.Max(0, tight.Y - window.Y));
+        double slopBottom = Math.Min(RestHitSlop, Math.Max(0, window.Y + window.Height - (tight.Y + tight.Height)));
+
+        return new Rect(
+            tight.X - slopX,
+            tight.Y - slopY,
+            tight.Width + slopX + slopRight,
+            tight.Height + slopY + slopBottom);
     }
 
 }
