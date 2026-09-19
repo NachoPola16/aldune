@@ -715,12 +715,47 @@ cubrirla paso a paso. **Una sola release al final de la ronda.**
 
 ### Tanda B — Interacción (en curso)
 
-6. **Desplegables que no son interruptor.** El panel de acciones de la ventana de nota ya cierra al
-   volver a pulsar el disparador (`OnMenuPreviewMouseDown`); los popups del dock y del gestor no.
-   **Pendiente.**
-7. **Rueda del ratón bajo el cursor.** Hoy el dock solo la usa en los bordes Arriba/Abajo
-   (`OnTabsPreviewMouseWheel` exige `IsTopBottomEdge`); en Izquierda/Derecha no, y las listas del
-   gestor tampoco. **Pendiente.**
+6. **Desplegables que no son interruptor.** El panel de acciones de la ventana de nota intenta cerrar al
+   volver a pulsar el disparador (`OnMenuPreviewMouseDown`), pero **no funciona**, y la causa está
+   comprobada en la fuente de WPF (`Popup.cs`): con `StaysOpen="False"` el popup toma la captura del
+   ratón (`Mouse.Capture(_popupRoot, CaptureMode.SubTree)`) y se descarta **en el mouse-down** — hay un
+   comentario en el propio WPF sobre descartar popups anidados "uno en MouseDown y otro en MouseUp".
+   Es decir: cuando el clic llega al disparador, `Popup.IsOpen` YA es `false`, así que consultarlo ahí
+   responde siempre "cerrado" y el handler reabre. Los cuatro menús de clic derecho del dock
+   (`OpenAllMenuPopup`, `DockViewPopup`, `NewNoteMenuPopup`, `TabMenuPopup`) tienen el mismo problema.
+
+   **Diseño decidido** (no reanalizar): un helper reutilizable `PopupToggle` que decide desde el evento
+   `Closed` del popup, no desde `IsOpen`. Se "arma" solo si al cerrarse se cumplen las dos cosas:
+
+   - el puntero está **sobre el disparador** en ese instante (`trigger.IsMouseOver`), y
+   - hay un **botón del ratón pulsado** en ese instante (`Mouse.LeftButton`/`RightButton == Pressed`).
+
+   Las dos juntas son exactamente la firma de "lo ha cerrado el propio disparador". Descartan los demás
+   cierres sin necesidad de temporizadores: elegir una opción (el puntero está en el menú, no en el
+   disparador), `Esc` y el cierre automático por alejarse el ratón (ninguno tiene botón pulsado).
+   El disparador consume la marca en su mouse-up/click (`ShouldConsumeOpen`) y la limpia en su
+   mouse-down para que no se filtre a la interacción siguiente.
+   Queda por cablear: los 4 popups del dock + `ActionsPopup` de la nota + los 2 del gestor
+   (`TagEditorPopup`, `TagManagerPopup`).
+7. **Rueda del ratón bajo el cursor.** Hallazgo: `OnTabsPreviewMouseWheel` no es el problema de fondo —
+   solo reasigna la rueda a `ScrollByArrow` en los bordes Arriba/Abajo. El problema real es que **el dock
+   nunca se activa** (`ShowActivated="False"`; la activación solo se concede explícitamente con
+   `NativeMethods.AllowActivation` al pulsar las flechas, línea 969), y Windows entrega
+   `WM_MOUSEWHEEL` a la ventana **con el foco**, confiando en que su `DefWindowProc` lo reenvíe a la
+   ventana bajo el cursor. Si la app con el foco se come ese mensaje (Chrome y muchas otras lo hacen),
+   la rueda no llega al dock.
+
+   **Precedente ya presente en el proyecto**: el dock instala un hook de teclado de bajo nivel
+   (`WH_KEYBOARD_LL`; `NativeMethods.InstallKeyboardHook`, `EdgeDockWindow.OnGlobalKeyboardHook`,
+   `UninstallKeyboardHook` al cerrar) justo para capturar ↑/↓ sin tener el foco. El arreglo coherente es
+   un hook de ratón análogo (`WH_MOUSE_LL` + `MSLLHOOKSTRUCT`) que capture `WM_MOUSEWHEEL` cuando el
+   cursor está sobre el HWND del dock (`NativeMethods.IsCursorOverWindow` ya existe) y mande el delta a
+   la superficie desplazable bajo el cursor. Con el hook, los cuatro bordes son el mismo camino.
+
+   **Por confirmar en la app antes de programar el hook**: las listas del gestor y las notas viven en
+   ventanas normales que sí se activan, así que ahí el desplazamiento al pasar el ratón es el nativo de
+   WPF y probablemente ya funciona; lo que puede fallar de verdad es solo el dock (y el cuerpo de la nota
+   sin foco, donde el `TextBox` necesita el foco — eso es comportamiento nativo y puede ser lo deseable).
 8. **Casilla de tarea vacía: clicar al lado marca en vez de escribir.** **Hecho:** el clic se acepta
    solo dentro de la misma caja que se resalta al pasar el ratón (`visualRect.Contains`), en vez de
    valer cualquier punto desde el inicio de línea hasta el fin del prefijo.
