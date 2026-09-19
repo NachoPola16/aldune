@@ -722,21 +722,18 @@ cubrirla paso a paso. **Una sola release al final de la ronda.**
    comentario en el propio WPF sobre descartar popups anidados "uno en MouseDown y otro en MouseUp".
    Es decir: cuando el clic llega al disparador, `Popup.IsOpen` YA es `false`, así que consultarlo ahí
    responde siempre "cerrado" y el handler reabre. Los cuatro menús de clic derecho del dock
-   (`OpenAllMenuPopup`, `DockViewPopup`, `NewNoteMenuPopup`, `TabMenuPopup`) tienen el mismo problema.
+   (`OpenAllMenuPopup`, `DockViewPopup`, `NewNoteMenuPopup`, `TabMenuPopup`) y los dos del gestor
+   (`TagManagerPopup`, `TagEditorPopup`) tienen el mismo problema.
 
-   **Diseño decidido** (no reanalizar): un helper reutilizable `PopupToggle` que decide desde el evento
-   `Closed` del popup, no desde `IsOpen`. Se "arma" solo si al cerrarse se cumplen las dos cosas:
-
-   - el puntero está **sobre el disparador** en ese instante (`trigger.IsMouseOver`), y
-   - hay un **botón del ratón pulsado** en ese instante (`Mouse.LeftButton`/`RightButton == Pressed`).
-
-   Las dos juntas son exactamente la firma de "lo ha cerrado el propio disparador". Descartan los demás
-   cierres sin necesidad de temporizadores: elegir una opción (el puntero está en el menú, no en el
-   disparador), `Esc` y el cierre automático por alejarse el ratón (ninguno tiene botón pulsado).
-   El disparador consume la marca en su mouse-up/click (`ShouldConsumeOpen`) y la limpia en su
-   mouse-down para que no se filtre a la interacción siguiente.
-   Queda por cablear: los 4 popups del dock + `ActionsPopup` de la nota + los 2 del gestor
-   (`TagEditorPopup`, `TagManagerPopup`).
+   **Hecho.** Helper reutilizable `PopupToggle` (`Windowing`), que decide desde el evento
+   `Popup.Closed` en vez de desde `IsOpen`: se arma solo si al cerrarse (a) el puntero está sobre el
+   disparador — **comprobado por coordenadas**, no con `IsMouseOver`, que con la captura del popup
+   activa ya no refleja dónde está el cursor — y (b) hay un botón del ratón pulsado. Esas dos cosas
+   juntas son la firma de "lo ha cerrado el propio disparador"; los demás cierres (elegir una opción,
+   `Esc`, el cierre automático del menú de pestaña) no cumplen ninguna de las dos y no se comen el
+   siguiente clic. El disparador consulta `ShouldConsumeOpen()` en su mouse-up/click. El disparador del
+   menú de pestaña es variable (cada pestaña es la suya), así que `SetTrigger` se llama en cada
+   apertura; el resto usa el botón fijo de su pie.
 7. **Rueda / autoscroll bajo el cursor.** Hallazgo: `OnTabsPreviewMouseWheel` no era el problema de
    fondo. El problema real es que el dock nunca se activa (`WS_EX_NOACTIVATE`, `ShowActivated="False"`)
    y Windows entrega `WM_MOUSEWHEEL` a la ventana **con el foco**, confiando en que su `DefWindowProc`

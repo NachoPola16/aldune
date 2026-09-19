@@ -32,6 +32,8 @@ public partial class NotesManagerWindow : Window
     private string _searchText = "";
     private string? _tagFilter;
     private bool _loadingTagFilter;
+    private readonly PopupToggle _tagManagerToggle;
+    private readonly PopupToggle _tagEditorToggle;
     private AutoScrollManager? _autoScroll;
     private NoteRow? _tagEditRow;
     private NoteRow? _selectionAnchor;
@@ -51,7 +53,9 @@ public partial class NotesManagerWindow : Window
 
         FilterActive.IsChecked = true;
         _autoScroll = new AutoScrollManager(RowsHost, RowsScroll, null);
-        Closed += (_, _) => _autoScroll.Stop();
+        _tagManagerToggle = new PopupToggle(TagManagerPopup);
+        _tagEditorToggle = new PopupToggle(TagEditorPopup);
+        Closed += (_, _) => { _autoScroll.Stop(); };
         LoadRows();
     }
 
@@ -255,8 +259,15 @@ public partial class NotesManagerWindow : Window
 
     private void OnManageTagsClick(object sender, RoutedEventArgs e)
     {
+        if (_tagManagerToggle.ShouldConsumeOpen())
+        {
+            e.Handled = true;
+            return;
+        }
+
         PopulateTagManager();
         TagManagerPopup.PlacementTarget = ManageTagsButton;
+        _tagManagerToggle.SetTrigger(ManageTagsButton);
         TagManagerPopup.IsOpen = true;
         TagManagerPopup.Focus();
         e.Handled = true;
@@ -331,6 +342,14 @@ public partial class NotesManagerWindow : Window
     {
         if (sender is not Button { Tag: NoteRow row } button) return;
 
+        // Mismo interruptor que el resto de popups: si el descarte del popup cerró por este botón,
+        // este clic es el que cierra, no hay que volver a rellenar ni a abrir.
+        if (_tagEditorToggle.ShouldConsumeOpen())
+        {
+            e.Handled = true;
+            return;
+        }
+
         _tagEditRow = row;
         TagChoiceItems.Children.Clear();
         var tags = _repository.GetAllTags();
@@ -351,6 +370,7 @@ public partial class NotesManagerWindow : Window
         }
 
         TagEditorPopup.PlacementTarget = button;
+        _tagEditorToggle.SetTrigger(button);
         TagEditorPopup.IsOpen = true;
         TagEditorPopup.Focus();
         e.Handled = true;

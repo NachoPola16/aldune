@@ -25,7 +25,11 @@ public partial class EdgeDockWindow : Window
     private readonly DispatcherTimer _openAllMenuTopmostTimer;
     private readonly DispatcherTimer _tabMenuCloseTimer;
     private readonly DispatcherTimer _syncFeedbackTimer;
-    private AutoScrollManager? _autoScroll;
+    private readonly AutoScrollManager? _autoScroll;
+    private readonly PopupToggle _newNoteToggle;
+    private readonly PopupToggle _openAllToggle;
+    private readonly PopupToggle _dockViewToggle;
+    private readonly PopupToggle _tabMenuToggle;
 
     /// <summary>Si hay una sincronización en curso desde el botón del dock (ver OnSyncClick).</summary>
     private bool _syncBusy;
@@ -209,6 +213,10 @@ public partial class EdgeDockWindow : Window
         };
 
         _autoScroll = new AutoScrollManager(NotesColumn, TabsScroll, null);
+        _newNoteToggle = new PopupToggle(NewNoteMenuPopup);
+        _openAllToggle = new PopupToggle(OpenAllMenuPopup);
+        _dockViewToggle = new PopupToggle(DockViewPopup);
+        _tabMenuToggle = new PopupToggle(TabMenuPopup);
         Closed += (_, _) => _autoScroll.Stop();
 
         ApplyWindowRect();
@@ -1319,6 +1327,12 @@ public partial class EdgeDockWindow : Window
 
     private void OnManageArchiveRightClick(object sender, MouseButtonEventArgs e)
     {
+        if (_dockViewToggle.ShouldConsumeOpen())
+        {
+            e.Handled = true;
+            return;
+        }
+
         OpenDockViewPopup();
         e.Handled = true;
     }
@@ -1353,6 +1367,7 @@ public partial class EdgeDockWindow : Window
             _ => PlacementMode.Left
         };
         BuildDockTagChoices();
+        _dockViewToggle.SetTrigger(ManageArchiveButton);
         DockViewPopup.IsOpen = true;
     }
 
@@ -1518,6 +1533,14 @@ public partial class EdgeDockWindow : Window
 
     private void OnNewNoteRightClick(object sender, MouseButtonEventArgs e)
     {
+        // El descarte de StaysOpen=False ocurre en el mouse-down (con la captura del popup), antes de
+        // que este handler vea el mouse-up: un segundo clic derecho no debe reabrirlo.
+        if (_newNoteToggle.ShouldConsumeOpen())
+        {
+            e.Handled = true;
+            return;
+        }
+
         NewNoteMenuPopup.PlacementTarget = NewNoteButton;
         NewNoteMenuPopup.Placement = _edge switch
         {
@@ -1526,6 +1549,7 @@ public partial class EdgeDockWindow : Window
             EdgePosition.Left => PlacementMode.Right,
             _ => PlacementMode.Left
         };
+        _newNoteToggle.SetTrigger(NewNoteButton);
         NewNoteMenuPopup.IsOpen = true;
         e.Handled = true;
     }
@@ -1574,6 +1598,12 @@ public partial class EdgeDockWindow : Window
 
     private void OnOpenAllRightClick(object sender, MouseButtonEventArgs e)
     {
+        if (_openAllToggle.ShouldConsumeOpen())
+        {
+            e.Handled = true;
+            return;
+        }
+
         OpenAllMenuPopup.PlacementTarget = OpenAllButton;
         OpenAllMenuPopup.Placement = _edge switch
         {
@@ -1582,6 +1612,7 @@ public partial class EdgeDockWindow : Window
             EdgePosition.Left => PlacementMode.Right,
             _ => PlacementMode.Left
         };
+        _openAllToggle.SetTrigger(OpenAllButton);
         OpenAllMenuPopup.IsOpen = true;
         e.Handled = true;
     }
@@ -2041,6 +2072,12 @@ public partial class EdgeDockWindow : Window
     private void OnTabRightClick(object sender, MouseButtonEventArgs e)
     {
         if (sender is not FrameworkElement { Tag: Note note }) return;
+        if (_tabMenuToggle.ShouldConsumeOpen())
+        {
+            _tabMenuNote = null;
+            e.Handled = true;
+            return;
+        }
 
         _tabMenuOwner = (FrameworkElement)sender;
         _tabMenuPointerOverTab = true;
@@ -2051,6 +2088,7 @@ public partial class EdgeDockWindow : Window
         TabMenuTrashButton.Content = note.State == NoteState.Trashed ? Strings.Restore : Strings.MoveToTrash;
         TabMenuProtectionButton.Content = note.IsProtected ? Strings.RemoveProtection : Strings.ProtectNote;
         BuildTabMenuSwatches(note);
+        _tabMenuToggle.SetTrigger(_tabMenuOwner);
         TabMenuPopup.IsOpen = true;
         e.Handled = true;
     }

@@ -57,6 +57,7 @@ public partial class NoteWindow : Window
     private bool _isConstrainingToMonitor;
     private string? _placementMonitorKey;
     private AutoScrollManager? _autoScroll;
+    private PopupToggle? _menuToggle;
 
     /// <summary>
     /// Estado anterior de la ventana, para distinguir "acaba de minimizarse" de "acaba de volver de
@@ -949,18 +950,24 @@ public partial class NoteWindow : Window
 
     private void OnMenuPreviewMouseDown(object sender, MouseButtonEventArgs e)
     {
-        // Popup.StaysOpen=False closes the popup during the button's mouse-down routed event. Handle
-        // the second click before that outside-click logic runs, otherwise it immediately reopens
-        // in OnMenuClick and the ellipsis appears to be broken.
-        if (!ActionsPopup.IsOpen) return;
-
-        ActionsPopup.IsOpen = false;
-        e.Handled = true;
+        // _menuToggle decide en Click si este gesto abre o consume el cierre del descarte. Aquí
+        // no hay nada que hacer: con la captura del popup activa, IsOpen ya es false cuando este
+        // evento llega y la comprobación "está abierto" de aquí no puede funcionar nunca.
+        _ = e;
     }
 
     private void OnMenuClick(object sender, RoutedEventArgs e)
     {
-        if (!e.Handled) ActionsPopup.IsOpen = true;
+        // El descarte de StaysOpen=False ocurre en el mouse-down, antes de este Click: si ese
+        // descarte lo provocó el propio disparador, este clic es el que cierra, no hay que abrir.
+        if (_menuToggle is not null && _menuToggle.ShouldConsumeOpen())
+        {
+            ActionsPopup.IsOpen = false;
+            e.Handled = true;
+            return;
+        }
+
+        ActionsPopup.IsOpen = true;
     }
 
     /// <summary>Lo mismo que Ctrl+L, para quien no conoce el atajo (que es casi todo el mundo).</summary>
