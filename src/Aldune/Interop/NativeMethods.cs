@@ -191,6 +191,8 @@ internal static class NativeMethods
     }
 
     private const int VK_LBUTTON = 0x01;
+    private const int VK_RBUTTON = 0x02;
+    private const int VK_MBUTTON = 0x04;
 
     [DllImport("user32.dll")]
     private static extern short GetAsyncKeyState(int vKey);
@@ -205,6 +207,17 @@ internal static class NativeMethods
     /// Mouse/Keyboard APIs elsewhere (see GetCursorScreenPosition).
     /// </summary>
     internal static bool IsLeftButtonDown() => (GetAsyncKeyState(VK_LBUTTON) & 0x8000) != 0;
+
+    /// <summary>
+    /// Si hay algún botón del ratón pulsado ahora mismo, en cualquier punto de la pantalla. El
+    /// autoscroll lo sondea para apagarse cuando el usuario clica fuera de la ventana: un clic así
+    /// no llega como evento a la ventana (sobre todo en el dock, que es no activable), y es la forma
+    /// natural de salir del modo.
+    /// </summary>
+    internal static bool IsAnyMouseButtonDown() =>
+        (GetAsyncKeyState(VK_LBUTTON) & 0x8000) != 0
+        || (GetAsyncKeyState(VK_RBUTTON) & 0x8000) != 0
+        || (GetAsyncKeyState(VK_MBUTTON) & 0x8000) != 0;
 
     [StructLayout(LayoutKind.Sequential)]
     private struct RECT

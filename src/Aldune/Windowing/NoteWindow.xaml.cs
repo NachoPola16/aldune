@@ -56,6 +56,7 @@ public partial class NoteWindow : Window
     private bool _isAutoResizing;
     private bool _isConstrainingToMonitor;
     private string? _placementMonitorKey;
+    private AutoScrollManager? _autoScroll;
 
     /// <summary>
     /// Estado anterior de la ventana, para distinguir "acaba de minimizarse" de "acaba de volver de
@@ -77,6 +78,8 @@ public partial class NoteWindow : Window
         InitializeComponent();
         _initialWidth = Width;
         _initialHeight = Height;
+        _autoScroll = new AutoScrollManager(BodyHost, null, TextBody);
+        Closed += (_, _) => _autoScroll.Stop();
         _note = note;
         _repository = repository;
         _coordinator = coordinator;

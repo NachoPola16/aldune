@@ -383,7 +383,8 @@
         <!-- Solo texto. Todo lo demás (color, fijar, archivar, papelera) vive en el panel del "⋯"
              de la cabecera: una nota de 300x320 no puede permitirse un tercio de su alto en botones
              permanentes. -->
-        <Grid Grid.Row="1" Margin="20,14,20,20">
+
+        <Grid x:Name="BodyHost" Grid.Row="1" Margin="20,14,20,20">
             <TextBlock Text="{x:Static res:Strings.BodyPlaceholder}" FontSize="14"
                        Style="{StaticResource PlaceholderStyle}" TextWrapping="Wrap" />
             <!-- Tinta tintada hacia el cálido, nunca #000 puro: sobre un pastel, el negro

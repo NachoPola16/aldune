@@ -32,6 +32,7 @@ public partial class NotesManagerWindow : Window
     private string _searchText = "";
     private string? _tagFilter;
     private bool _loadingTagFilter;
+    private AutoScrollManager? _autoScroll;
     private NoteRow? _tagEditRow;
     private NoteRow? _selectionAnchor;
 
@@ -49,6 +50,8 @@ public partial class NotesManagerWindow : Window
         };
 
         FilterActive.IsChecked = true;
+        _autoScroll = new AutoScrollManager(RowsHost, RowsScroll, null);
+        Closed += (_, _) => _autoScroll.Stop();
         LoadRows();
     }
 

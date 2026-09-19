@@ -737,25 +737,21 @@ cubrirla paso a paso. **Una sola release al final de la ronda.**
    mouse-down para que no se filtre a la interacción siguiente.
    Queda por cablear: los 4 popups del dock + `ActionsPopup` de la nota + los 2 del gestor
    (`TagEditorPopup`, `TagManagerPopup`).
-7. **Rueda del ratón bajo el cursor.** Hallazgo: `OnTabsPreviewMouseWheel` no es el problema de fondo —
-   solo reasigna la rueda a `ScrollByArrow` en los bordes Arriba/Abajo. El problema real es que **el dock
-   nunca se activa** (`ShowActivated="False"`; la activación solo se concede explícitamente con
-   `NativeMethods.AllowActivation` al pulsar las flechas, línea 969), y Windows entrega
-   `WM_MOUSEWHEEL` a la ventana **con el foco**, confiando en que su `DefWindowProc` lo reenvíe a la
-   ventana bajo el cursor. Si la app con el foco se come ese mensaje (Chrome y muchas otras lo hacen),
-   la rueda no llega al dock.
+7. **Rueda / autoscroll bajo el cursor.** Hallazgo: `OnTabsPreviewMouseWheel` no era el problema de
+   fondo. El problema real es que el dock nunca se activa (`WS_EX_NOACTIVATE`, `ShowActivated="False"`)
+   y Windows entrega `WM_MOUSEWHEEL` a la ventana **con el foco**, confiando en que su `DefWindowProc`
+   lo reenvíe a la ventana bajo el cursor; varias apps se lo comen y el dock no lo recibe.
 
-   **Precedente ya presente en el proyecto**: el dock instala un hook de teclado de bajo nivel
-   (`WH_KEYBOARD_LL`; `NativeMethods.InstallKeyboardHook`, `EdgeDockWindow.OnGlobalKeyboardHook`,
-   `UninstallKeyboardHook` al cerrar) justo para capturar ↑/↓ sin tener el foco. El arreglo coherente es
-   un hook de ratón análogo (`WH_MOUSE_LL` + `MSLLHOOKSTRUCT`) que capture `WM_MOUSEWHEEL` cuando el
-   cursor está sobre el HWND del dock (`NativeMethods.IsCursorOverWindow` ya existe) y mande el delta a
-   la superficie desplazable bajo el cursor. Con el hook, los cuatro bordes son el mismo camino.
-
-   **Por confirmar en la app antes de programar el hook**: las listas del gestor y las notas viven en
-   ventanas normales que sí se activan, así que ahí el desplazamiento al pasar el ratón es el nativo de
-   WPF y probablemente ya funciona; lo que puede fallar de verdad es solo el dock (y el cuerpo de la nota
-   sin foco, donde el `TextBox` necesita el foco — eso es comportamiento nativo y puede ser lo deseable).
+   Lo que pidió el usuario al final no era la rueda nativa sino el **autoscroll clásico**: un clic
+   central fija un punto de origen y, desde ahí, la vista se desplaza sola en la dirección del cursor
+   (arriba, abajo y, si la superficie lo permite, izquierda y derecha), más rápido cuanto más lejos.
+   **Hecho:** `AutoScrollManager` (nuevo, `Windowing`) lo implementa para las tres superficies: el
+   abanico del dock, la lista del gestor y el cuerpo de la nota. Sondea el cursor con Win32 —con la
+   API de WPF se quedaría congelado en cuanto el cursor saliera de la ventana, que es lo normal en este
+   modo—, no usa ningún hook global (el clic central sí llega a las ventanas no activables) y se apaga
+   con otro clic central, cualquier otro botón, Esc, la rueda o al mover la barra a mano. El glifo del
+   punto de origen es el recurso compartido `AutoScrollOriginGlyph` (`App.xaml`), con `x:Shared="False"`
+   para que dos ventanas no peleen por la misma instancia visual.
 8. **Casilla de tarea vacía: clicar al lado marca en vez de escribir.** **Hecho:** el clic se acepta
    solo dentro de la misma caja que se resalta al pasar el ratón (`visualRect.Contains`), en vez de
    valer cualquier punto desde el inicio de línea hasta el fin del prefijo.

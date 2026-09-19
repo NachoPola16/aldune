@@ -25,6 +25,7 @@ public partial class EdgeDockWindow : Window
     private readonly DispatcherTimer _openAllMenuTopmostTimer;
     private readonly DispatcherTimer _tabMenuCloseTimer;
     private readonly DispatcherTimer _syncFeedbackTimer;
+    private AutoScrollManager? _autoScroll;
 
     /// <summary>Si hay una sincronización en curso desde el botón del dock (ver OnSyncClick).</summary>
     private bool _syncBusy;
@@ -206,6 +207,9 @@ public partial class EdgeDockWindow : Window
             _keyboardHook = NativeMethods.InstallKeyboardHook(_keyboardHookProc);
             ApplyWindowRect();
         };
+
+        _autoScroll = new AutoScrollManager(NotesColumn, TabsScroll, null);
+        Closed += (_, _) => _autoScroll.Stop();
 
         ApplyWindowRect();
         ApplyState(animate: false);

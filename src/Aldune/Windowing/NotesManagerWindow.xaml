@@ -379,7 +379,7 @@
                   Click="OnSelectAllClick"
                   Margin="32,12,20,0" VerticalAlignment="Top" />
 
-        <Grid Grid.Row="3" Margin="20,38,12,0">
+        <Grid x:Name="RowsHost" Grid.Row="3" Margin="20,38,12,0">
             <ScrollViewer x:Name="RowsScroll" VerticalScrollBarVisibility="Auto"
                           HorizontalScrollBarVisibility="Disabled" Padding="0,0,8,0">
                 <ItemsControl x:Name="RowsList">
