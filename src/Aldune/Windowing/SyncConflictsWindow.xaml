@@ -5,7 +5,7 @@
         Title="{x:Static res:Strings.SyncConflictTitle}"
         Width="560" Height="500" MinWidth="440" MinHeight="320"
         WindowStyle="None" ResizeMode="CanResize" Background="#2A261F"
-        Topmost="False" StateChanged="OnWindowStateChanged">
+        Topmost="True" StateChanged="OnWindowStateChanged">
     <WindowChrome.WindowChrome>
         <WindowChrome CaptionHeight="34" ResizeBorderThickness="6" GlassFrameThickness="-1" CornerRadius="0" />
     </WindowChrome.WindowChrome>

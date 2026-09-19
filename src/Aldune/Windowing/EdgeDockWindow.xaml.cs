@@ -849,10 +849,16 @@ public partial class EdgeDockWindow : Window
     {
         foreach (var button in _tabButtons.Values)
         {
-            bool isOpen = button.Tag is Note note && _coordinator.IsNoteOpen(note.Id);
+            // Minimizada cuenta como "fuera de la mesa": su ficha vuelve al mazo, y pulsarla la
+            // restaura (ver AppCoordinator.OpenOrActivateNote). Solo desaparece la pestaña cuando la
+            // ventana está a la vista de verdad — antes bastaba con que existiera, así que minimizar
+            // una nota la borraba del dock sin forma de recuperarla desde ahí.
+            bool onDesk = button.Tag is Note note
+                && _coordinator.IsNoteOpen(note.Id)
+                && !_coordinator.IsNoteMinimized(note.Id);
             // Hidden y no Collapsed: conserva su hueco, y el mazo enseña el sitio vacío de donde se
             // sacó la ficha.
-            button.Visibility = isOpen ? Visibility.Hidden : Visibility.Visible;
+            button.Visibility = onDesk ? Visibility.Hidden : Visibility.Visible;
         }
     }
 

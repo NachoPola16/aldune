@@ -11,7 +11,7 @@
         WindowStartupLocation="Manual"
         ResizeMode="CanResize"
         Background="{StaticResource AlduneGroundBrush}"
-        Topmost="False"
+        Topmost="True"
         StateChanged="OnWindowStateChanged">
     <WindowChrome.WindowChrome>
         <WindowChrome CaptionHeight="34" ResizeBorderThickness="6" GlassFrameThickness="-1" CornerRadius="0" />

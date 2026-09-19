@@ -111,6 +111,18 @@ internal static class NativeMethods
         DwmSetWindowAttribute(hWnd, DWMWA_WINDOW_CORNER_PREFERENCE, ref preference, sizeof(int));
     }
 
+    /// <summary>
+    /// Sube la ventana a lo más alto de la capa superior sin robarle el foco a quien escribe.
+    ///
+    /// Hace falta además de <c>Topmost = true</c>: entre varias ventanas Topmost, la que se acaba de
+    /// activar no siempre queda por encima — Windows reordena el grupo por activación, y una nota
+    /// activada después tapa al gestor. Pasar <c>HWND_TOPMOST</c> en <c>hWndInsertAfter</c> coloca
+    /// esta ventana por delante de todas las topmost, que es justo lo que se pide al pulsar
+    /// "Gestionar notas" o "Ajustes" por segunda vez.
+    /// </summary>
+    internal static void RaiseTopmostWindow(Window window) =>
+        EnsureTopmost(new WindowInteropHelper(window).EnsureHandle());
+
     internal static void ForceActivate(Window window)
     {
         var hwnd = new WindowInteropHelper(window).EnsureHandle();

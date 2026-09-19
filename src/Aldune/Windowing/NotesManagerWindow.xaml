@@ -12,7 +12,7 @@
         AllowsTransparency="False"
         ResizeMode="CanResize"
         Background="{StaticResource AlduneGroundBrush}"
-        Topmost="False"
+        Topmost="True"
         TextOptions.TextFormattingMode="Display"
         PreviewKeyDown="OnPreviewKeyDown"
         StateChanged="OnWindowStateChanged">

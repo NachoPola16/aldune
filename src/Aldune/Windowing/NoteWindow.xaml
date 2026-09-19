@@ -400,7 +400,20 @@
                      SelectionOpacity="1"
                      VerticalScrollBarVisibility="Auto"
                      HorizontalScrollBarVisibility="Disabled"
-                     BorderThickness="0" />
+                     BorderThickness="0">
+                <!-- Aire entre el texto y la barra de scroll. El Padding del TextBox no sirve para
+                     esto: la barra vive DENTRO del ScrollViewer interno (PART_ContentHost), así que
+                     el padding desplaza texto y barra juntos y no separa nada. Un estilo implícito
+                     de ScrollBar en los recursos del propio TextBox sí alcanza a esa barra interna
+                     (mismo patrón que se usa para los ComboBoxItem de un ComboBox), y el margen
+                     izquierdo ensancha su columna del Grid del ScrollViewer: el texto acaba 8px
+                     antes de donde empieza la barra. -->
+                <TextBox.Resources>
+                    <Style TargetType="ScrollBar">
+                        <Setter Property="Margin" Value="8,0,0,0" />
+                    </Style>
+                </TextBox.Resources>
+            </TextBox>
             <!-- Resalta la casilla de tarea al pasar el ratón por encima, para que se note que es
                  clicable (antes solo cambiaba el cursor de texto normal, indistinguible de pasar
                  por cualquier otro sitio). IsHitTestVisible="False" para que el ratón siga llegando

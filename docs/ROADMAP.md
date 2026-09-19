@@ -670,3 +670,81 @@ obtener uso real y medir si existe una necesidad clara.
 
 El primer pulido ya aplicado incluye la base visual compartida, el ajuste de nitidez de las ventanas,
 la separacion de los botones de sincronizacion y un ICO con tres tarjetas legibles en tamanos pequenos.
+
+---
+
+## 8. Ronda de pulido de interacción (sesión 2026-09-18)
+
+Ronda pedida por el usuario como lista de puntos concretos, agrupada aquí en cuatro tandas para
+cubrirla paso a paso. **Una sola release al final de la ronda.**
+
+### Alcance decidido
+
+- **Modo claro: NO en esta ronda.** Se estudia después de esta ronda de interacción. La razón no es
+  solo el volumen (afecta a todas las XAML y a los recursos `Aldune*Brush`, hoy pensados para fondo
+  oscuro): el punto 7 de "Pulido visual de lanzamiento" ya dice que no se añade un sistema de temas
+  hasta tener uso real. Queda como candidato firme de la ronda siguiente.
+- **Recuperación de nota con contraseña olvidada: NO se implementa.** No es un olvido, es una
+  decisión de diseño: la nota se cifra con una clave derivada de la contraseña y Aldune **no guarda
+  la contraseña**. Cualquier "recuperación" exige una segunda credencial (frase de recuperación) que
+  hay que presentar al proteger la nota, y eso contradice la promesa actual ("si se pierde, esa nota
+  no se puede recuperar"). Lo que sí entra en esta ronda es **avisar mejor antes de proteger**: el
+  diálogo de contraseña debe decir explícitamente que no hay recuperación posible. Si en el futuro se
+  quiere recuperación real, el camino es la frase de recuperación guardada aparte, nunca una puerta
+  trasera en el cifrado.
+
+### Tanda A — Ventanas y legibilidad (en curso)
+
+1. **El gestor de notas y Ajustes se quedaban detrás de las notas.** Causa: `Topmost="False"` en
+   `NotesManagerWindow`, `SettingsWindow` y `SyncConflictsWindow`, mientras las notas y los docks son
+   `Topmost="True"`. Una ventana normal queda siempre por debajo, así que había que pulsar dos veces.
+   **Hecho:** las tres pasan a `Topmost="True"` y se abren con `AppCoordinator.RaiseAppWindow`, que
+   además aparta las notas de la capa superior mientras viven (el mismo mecanismo del menú del dock,
+   ahora con contador para que dos dueños no se pisen) y sube la ventana al frente.
+2. **Minimizar una nota hacía desaparecer su pestaña del dock.** `RefreshOpenState` ocultaba la
+   pestaña con solo estar abierta la ventana, sin mirar `WindowState`. **Hecho.**
+3. **Selección de texto ilegible.** `ApplyColor` pintaba la selección con la tinta **opaca**, así que
+   se veía un bloque macizo del color del texto. **Hecho:** lavado translúcido de la tinta.
+4. **Poco aire entre la barra de scroll de la nota y el texto.** **Hecho** con un estilo implícito de
+   `ScrollBar` en los recursos del `TextBox`: el `Padding` del control no habría servido, porque la
+   barra vive dentro del `ScrollViewer` interno y el padding desplaza texto y barra a la vez.
+5. **Las notificaciones salían siempre en el monitor primario.** `UpdateAvailableWindow` usa
+   `SystemParameters.WorkArea`, que es siempre el primario, ignorando desde qué pantalla se pidió.
+   **Pendiente** (siguiente paso): hay que resolver el monitor del origen y colocarla en su esquina.
+
+### Tanda B — Interacción (pendiente)
+
+6. **Desplegables que no son interruptor.** El panel de acciones de la ventana de nota ya cierra al
+   volver a pulsar el disparador (`OnMenuPreviewMouseDown`); los popups del dock y del gestor no.
+7. **Rueda del ratón bajo el cursor.** Hoy el dock solo la usa en los bordes Arriba/Abajo; en
+   Izquierda/Derecha no, y las listas del gestor tampoco.
+8. **Casilla de tarea vacía: clicar al lado marca en vez de escribir.** El clic se acepta desde el
+   inicio de línea hasta el fin del prefijo, no solo sobre la caja de la casilla.
+9. **Asignador de etiquetas del dock distinto del del gestor**: son dos implementaciones; se unifican
+   en la del gestor.
+10. **Las plantillas reparten en orden de apertura**, no en el orden del mazo, así que la nota que cae
+    en cada celda parece aleatoria.
+
+### Tanda C — Diseño y UX (pendiente; aquí se usa la skill `impeccable`)
+
+11. **Menú de los 3 puntos de la nota**: orden de las opciones, agrupar o recortar, y valorar una
+    versión simplificada frente a una avanzada.
+12. **El desplegable del dock debe aguantar más / quedarse fijo** al abrirse con clic derecho.
+13. **"Restaurar posiciones originales"**: decidir si se queda (con mejor nombre y explicación) o se
+    sustituye por otra acción.
+14. **Menú contextual nativo de copiar/pegar/cortar** con la estética de la app en modo oscuro.
+
+### Tanda D — Cierre (pendiente)
+
+15. Revisión de interacciones con trackpad y atajos; decidir si se añade algo.
+16. Actualizar documentación: `STATUS.md`, este roadmap, ayuda rápida y `README` si toca.
+17. Release.
+
+### Decisiones pendientes de confirmar con el usuario
+
+- Las notificaciones deben salir en la pantalla desde la que se pidió (dock/ventana). En la bandeja,
+  que no tiene ventana de origen, la referencia natural es el cursor.
+- Hasta dónde llega la rueda del ratón: dock, listas del gestor y scroll de la nota.
+- Orden de las celdas de las plantillas: el del mazo (propuesto) o uno distinto.
+- Qué pasa con "Restaurar posiciones originales".
+- Menú de los 3 puntos: versión única recortada o dos versiones conmutables en Ajustes.

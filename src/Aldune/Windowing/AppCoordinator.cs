@@ -26,7 +26,16 @@ public sealed class AppCoordinator
     private readonly SyncService? _syncService;
     private readonly Dictionary<Guid, NoteWindow> _openNoteWindows = new();
     private readonly List<EdgeDockWindow> _docks = new();
-    private Dictionary<Guid, bool>? _noteTopmostBeforeDockMenu;
+    private Dictionary<Guid, bool>? _noteTopmostBeforeSuspension;
+
+    /// <summary>
+    /// Cuántas ventanas han pedido a la vez que las notas dejen de estar "siempre encima". Es un
+    /// contador y no un booleano porque los dueños se solapan: el menú de una pestaña del dock puede
+    /// estar abierto mientras también lo está el gestor de notas, y el primero en cerrarse no debe
+    /// devolver la capa superior a las notas del segundo. Con el contador, la instantánea de estados
+    /// se toma al entrar el primero y se restaura al salir el último.
+    /// </summary>
+    private int _alwaysOnTopSuspensions;
     private NotesManagerWindow? _notesManagerWindow;
     private SettingsWindow? _settingsWindow;
     private bool _openingSettings;
@@ -86,18 +95,22 @@ public sealed class AppCoordinator
         if (_syncService is null) return;
         if (_syncConflictsWindow is { IsVisible: true })
         {
-            _syncConflictsWindow.Activate();
+            RaiseAppWindow(_syncConflictsWindow);
             return;
         }
 
         _syncConflictsWindow = new SyncConflictsWindow(_syncService, this);
-        _syncConflictsWindow.Closed += (_, _) => _syncConflictsWindow = null;
+        _syncConflictsWindow.Closed += (_, _) =>
+        {
+            _syncConflictsWindow = null;
+            RestoreNotesAboveDockMenu();
+        };
         _syncConflictsWindow.Show();
 
-        // Igual que el gestor de notas: los docks y las notas son Topmost, asi que una ventana normal
+        // Igual que el gestor de notas: los docks y las notas son Topmost, así que una ventana normal
         // puede quedar por debajo aunque se acabe de abrir. Sin esto, sus botones "no dejan clicar"
         // cuando el dock de ese canto se cruza con la ventana.
-        NativeMethods.ForceActivate(_syncConflictsWindow);
+        RaiseAppWindow(_syncConflictsWindow);
     }
 
     /// <summary>
@@ -106,6 +119,16 @@ public sealed class AppCoordinator
     /// mostraría la misma etiqueta dos veces.
     /// </summary>
     public bool IsNoteOpen(Guid noteId) => _openNoteWindows.ContainsKey(noteId);
+
+    /// <summary>
+    /// Si la ventana de esa nota está abierta pero minimizada.
+    ///
+    /// El dock lo necesita para decidir si enseña su pestaña: minimizar una nota es sacarla de la mesa
+    /// sin cerrarla, así que la ficha tiene que volver al mazo. Antes solo miraba si la ventana
+    /// existía, y minimizarla la hacía desaparecer del dock sin forma de recuperarla desde ahí.
+    /// </summary>
+    public bool IsNoteMinimized(Guid noteId) =>
+        _openNoteWindows.TryGetValue(noteId, out var window) && window.WindowState == WindowState.Minimized;
 
     public void RegisterDock(EdgeDockWindow dock) => _docks.Add(dock);
 
@@ -325,17 +348,22 @@ public sealed class AppCoordinator
             // el gestor ya estuviera abierto enseñando otra cosa.
             if (tagFilter is not null) _notesManagerWindow.ApplyTagFilter(tagFilter);
 
-            _notesManagerWindow.Activate();
-            NativeMethods.ForceActivate(_notesManagerWindow);
+            // Por encima de todo, no solo activado: una nota activada después tapa el gestor, y eso
+            // es justo lo que obligaba a pulsar dos veces (ver RaiseAppWindow).
+            RaiseAppWindow(_notesManagerWindow);
             return;
         }
 
         _notesManagerWindow = new NotesManagerWindow(_repository, this, tagFilter);
         requestingDock.CenterOnThisMonitor(_notesManagerWindow);
-        _notesManagerWindow.Closed += (_, _) => _notesManagerWindow = null;
+        _notesManagerWindow.Closed += (_, _) =>
+        {
+            _notesManagerWindow = null;
+            RestoreNotesAboveDockMenu();
+        };
         _notesManagerWindow.Show();
         _notesManagerWindow.PlayOpenAnimation();
-        NativeMethods.ForceActivate(_notesManagerWindow);
+        RaiseAppWindow(_notesManagerWindow);
     }
 
     public IReadOnlyList<string> GetSyncTags() => _repository.GetAllTags();
@@ -673,9 +701,10 @@ public sealed class AppCoordinator
 
     internal void SuspendNotesAboveDockMenu()
     {
-        if (_noteTopmostBeforeDockMenu is not null) return;
+        _alwaysOnTopSuspensions++;
+        if (_alwaysOnTopSuspensions > 1) return;
 
-        _noteTopmostBeforeDockMenu = _openNoteWindows.ToDictionary(
+        _noteTopmostBeforeSuspension = _openNoteWindows.ToDictionary(
             pair => pair.Key,
             pair => pair.Value.Topmost);
 
@@ -687,17 +716,43 @@ public sealed class AppCoordinator
 
     internal void RestoreNotesAboveDockMenu()
     {
-        if (_noteTopmostBeforeDockMenu is null) return;
+        if (_alwaysOnTopSuspensions == 0) return;
 
-        foreach (var pair in _noteTopmostBeforeDockMenu)
+        _alwaysOnTopSuspensions--;
+        if (_alwaysOnTopSuspensions > 0) return;
+
+        if (_noteTopmostBeforeSuspension is not null)
         {
-            if (_openNoteWindows.TryGetValue(pair.Key, out var window))
+            foreach (var pair in _noteTopmostBeforeSuspension)
             {
-                window.Topmost = pair.Value;
+                if (_openNoteWindows.TryGetValue(pair.Key, out var window))
+                {
+                    window.Topmost = pair.Value;
+                }
             }
         }
 
-        _noteTopmostBeforeDockMenu = null;
+        _noteTopmostBeforeSuspension = null;
+    }
+
+    /// <summary>
+    /// Deja una ventana propia (gestor de notas, Ajustes, conflictos) por encima de todo durante su
+    /// vida útil.
+    ///
+    /// Las notas y los docks son <c>Topmost</c> porque ese es el comportamiento de un post-it, así que
+    /// una ventana de la app que no lo fuera quedaba siempre debajo y había que pulsarla dos veces:
+    /// la primera la abría detrás de las notas, la segunda la activaba. Aquí se apartan las notas
+    /// mientras la ventana vive (mismo mecanismo que ya usaba el menú de una pestaña del dock) y se
+    /// sube la ventana al frente de la capa superior.
+    ///
+    /// El llamante debe emparejar esto con <see cref="RestoreNotesAboveDockMenu"/> al cerrarse.
+    /// </summary>
+    internal void RaiseAppWindow(Window window)
+    {
+        SuspendNotesAboveDockMenu();
+        window.Activate();
+        NativeMethods.RaiseTopmostWindow(window);
+        NativeMethods.ForceActivate(window);
     }
 
     /// <summary>
@@ -804,14 +859,14 @@ public sealed class AppCoordinator
 
         if (_settingsWindow is not null)
         {
-            _settingsWindow.Activate();
-            NativeMethods.ForceActivate(_settingsWindow);
+            RaiseAppWindow(_settingsWindow);
             return;
         }
 
         if (SettingsWindowFactory is null) return;
 
         _openingSettings = true;
+        bool suspended = false;
         try
         {
             var settingsDock = DockNearCursor();
@@ -821,6 +876,7 @@ public sealed class AppCoordinator
             {
                 _settingsWindow = null;
                 _openingSettings = false;
+                RestoreNotesAboveDockMenu();
             };
             _settingsWindow.Show();
             var shownSettingsWindow = _settingsWindow;
@@ -834,12 +890,16 @@ public sealed class AppCoordinator
                     shownSettingsWindow.PlayOpenAnimation();
                 }
             }));
-            NativeMethods.ForceActivate(_settingsWindow);
+            suspended = true;
+            RaiseAppWindow(_settingsWindow);
         }
         catch
         {
             _settingsWindow = null;
             _openingSettings = false;
+            // Solo si de verdad se llegó a suspender: si estalló antes, devolver una suspensión que
+            // no es nuestra descuadraría el contador del menú del dock.
+            if (suspended) RestoreNotesAboveDockMenu();
             throw;
         }
     }

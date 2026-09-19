@@ -57,6 +57,13 @@ public partial class NoteWindow : Window
     private bool _isConstrainingToMonitor;
     private string? _placementMonitorKey;
 
+    /// <summary>
+    /// Estado anterior de la ventana, para distinguir "acaba de minimizarse" de "acaba de volver de
+    /// minimizada" en <see cref="OnWindowStateChanged"/>. Ambos casos cambian si el dock enseña la
+    /// pestaña de esta nota (ver <c>EdgeDockWindow.RefreshOpenState</c>).
+    /// </summary>
+    private WindowState _windowStateBefore = WindowState.Normal;
+
     /// <summary>Si el movimiento en curso lo está haciendo el coordinador para recolocar la nota en
     /// una plantilla (cuadrícula, columnas, cascada, "restaurar posiciones originales") y no el
     /// usuario. Mientras dura, <c>OnLocationChanged</c> ni reacota la ventana contra el monitor ni
@@ -919,6 +926,16 @@ public partial class NoteWindow : Window
                 ? Strings.RestoreWindowTooltip
                 : Strings.MaximizeWindowTooltip;
         }
+
+        // Minimizar es sacar la nota de la mesa: el dock vuelve a enseñar su pestaña mientras esté
+        // minimizada (ver EdgeDockWindow.RefreshOpenState), así que hay que repintarlo en los dos
+        // sentidos — al minimizar y al volver.
+        if (WindowState == WindowState.Minimized || _windowStateBefore == WindowState.Minimized)
+        {
+            _coordinator.RefreshAll();
+        }
+
+        _windowStateBefore = WindowState;
     }
 
     private void OnMenuPreviewMouseDown(object sender, MouseButtonEventArgs e)
@@ -1082,7 +1099,12 @@ public partial class NoteWindow : Window
             darkenHover ? "#26000000" : "#26FFFFFF")!;
         TextBody.Foreground = TitleBox.Foreground = ink;
         TextBody.CaretBrush = TitleBox.CaretBrush = ink;
-        TextBody.SelectionBrush = TitleBox.SelectionBrush = ink;
+        // La selección NO puede ser la tinta opaca: un bloque macizo del color del texto tapa lo
+        // seleccionado y se lee como un rectángulo negro (reportado por el usuario). Translúcida se
+        // ve la selección, y el texto seleccionado va del color de la nota, así que el contraste se
+        // invierte en los dos sentidos: tinta oscura bajo texto claro en notas claras, y al revés en
+        // las oscuras.
+        TextBody.SelectionBrush = TitleBox.SelectionBrush = TranslucentInk(ink);
         TextBody.SelectionTextBrush = TitleBox.SelectionTextBrush = brush;
         Foreground = ink;
         WindowRim.BorderBrush = rim;
@@ -1091,6 +1113,19 @@ public partial class NoteWindow : Window
         // que viene, que es lo que sigue diciendo que esta cabecera es esa pestaña.
         Perforation.Stroke = rim;
     }
+
+    /// <summary>Opacidad del lavado de selección: ni 1.0 (tapa lo seleccionado) ni casi nada (no se ve).</summary>
+    private const byte SelectionWashAlpha = 0x66;
+
+    /// <summary>
+    /// La misma tinta, translúcida, para el lavado de selección. Si el color no llegara como
+    /// <see cref="SolidColorBrush"/> se devuelve tal cual: pintar la selección con la tinta opaca es
+    /// mejor que no tener ninguna.
+    /// </summary>
+    private static Brush TranslucentInk(Brush ink) =>
+        ink is SolidColorBrush solid
+            ? new SolidColorBrush(Color.FromArgb(SelectionWashAlpha, solid.Color.R, solid.Color.G, solid.Color.B))
+            : ink;
 
     private void PopulateColorSwatches()
     {
