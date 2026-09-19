@@ -747,6 +747,12 @@ public partial class NoteWindow : Window
             tightLeft - padding / 2, tightTop - padding / 2,
             tightWidth + padding, tightHeight + padding);
 
+        // La zona de clic es EXACTAMENTE la caja que se resalta al pasar el ratón. Antes bastaba con
+        // que el índice de carácter cayera entre el inicio de línea y el fin del prefijo, así que en
+        // una tarea vacía (`- [ ] `) cualquier punto del hueco de la derecha contaba como casilla y
+        // marcar en vez de escribir era lo que pasaba al clicar para poner el cursor en el texto.
+        if (!visualRect.Contains(position)) return null;
+
         return new CheckboxZone(glyphIndex, visualRect);
     }
 

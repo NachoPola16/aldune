@@ -463,7 +463,18 @@ public sealed class AppCoordinator
             return; // ni la pantalla pedida ni la del dock existen ahora mismo
         }
 
-        var windows = _openNoteWindows.Values.ToList();
+        // Orden del MAZO, no el de apertura. `_openNoteWindows` es un diccionario, así que su orden
+        // es el de inserción: repartir en ese orden hacía que la nota que caía en cada celda pareciera
+        // aleatoria y que la cuadrícula no se correspondiera con el abanico. Con el mismo orden que el
+        // dock, la primera celda es la primera pestaña.
+        var deckOrder = NotesForCurrentDockView()
+            .Select((note, index) => (note.Id, index))
+            .ToDictionary(entry => entry.Id, entry => entry.index);
+
+        var windows = _openNoteWindows
+            .OrderBy(pair => deckOrder.TryGetValue(pair.Key, out int index) ? index : int.MaxValue)
+            .Select(pair => pair.Value)
+            .ToList();
 
         foreach (var window in windows)
         {

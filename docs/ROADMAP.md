@@ -713,18 +713,23 @@ cubrirla paso a paso. **Una sola release al final de la ronda.**
    **Hecho:** `MonitorEnumerator.MonitorContainingCursor` resuelve el monitor del cursor (que en una
    acción disparada por clic es el de origen) y el aviso se coloca en su esquina inferior derecha.
 
-### Tanda B — Interacción (pendiente)
+### Tanda B — Interacción (en curso)
 
 6. **Desplegables que no son interruptor.** El panel de acciones de la ventana de nota ya cierra al
    volver a pulsar el disparador (`OnMenuPreviewMouseDown`); los popups del dock y del gestor no.
-7. **Rueda del ratón bajo el cursor.** Hoy el dock solo la usa en los bordes Arriba/Abajo; en
-   Izquierda/Derecha no, y las listas del gestor tampoco.
-8. **Casilla de tarea vacía: clicar al lado marca en vez de escribir.** El clic se acepta desde el
-   inicio de línea hasta el fin del prefijo, no solo sobre la caja de la casilla.
-9. **Asignador de etiquetas del dock distinto del del gestor**: son dos implementaciones; se unifican
-   en la del gestor.
+   **Pendiente.**
+7. **Rueda del ratón bajo el cursor.** Hoy el dock solo la usa en los bordes Arriba/Abajo
+   (`OnTabsPreviewMouseWheel` exige `IsTopBottomEdge`); en Izquierda/Derecha no, y las listas del
+   gestor tampoco. **Pendiente.**
+8. **Casilla de tarea vacía: clicar al lado marca en vez de escribir.** **Hecho:** el clic se acepta
+   solo dentro de la misma caja que se resalta al pasar el ratón (`visualRect.Contains`), en vez de
+   valer cualquier punto desde el inicio de línea hasta el fin del prefijo.
+9. **Asignador de etiquetas del dock distinto del del gestor**: son dos implementaciones
+   (`OnTabMenuTagsClick` + `DockTagAssignmentItems` frente a `TagChoiceItems` + `OnSaveTagsClick`);
+   se unifican en la del gestor. **Pendiente.**
 10. **Las plantillas reparten en orden de apertura**, no en el orden del mazo, así que la nota que cae
-    en cada celda parece aleatoria.
+    en cada celda parece aleatoria. **Hecho:** `ArrangeOpenNotes` ordena las ventanas por su índice en
+    la vista del dock (`NotesForCurrentDockView`).
 
 ### Tanda C — Diseño y UX (pendiente; aquí se usa la skill `impeccable`)
 
