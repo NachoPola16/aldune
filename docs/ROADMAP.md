@@ -708,9 +708,10 @@ cubrirla paso a paso. **Una sola release al final de la ronda.**
 4. **Poco aire entre la barra de scroll de la nota y el texto.** **Hecho** con un estilo implícito de
    `ScrollBar` en los recursos del `TextBox`: el `Padding` del control no habría servido, porque la
    barra vive dentro del `ScrollViewer` interno y el padding desplaza texto y barra a la vez.
-5. **Las notificaciones salían siempre en el monitor primario.** `UpdateAvailableWindow` usa
+5. **Las notificaciones salían siempre en el monitor primario.** `UpdateAvailableWindow` usaba
    `SystemParameters.WorkArea`, que es siempre el primario, ignorando desde qué pantalla se pidió.
-   **Pendiente** (siguiente paso): hay que resolver el monitor del origen y colocarla en su esquina.
+   **Hecho:** `MonitorEnumerator.MonitorContainingCursor` resuelve el monitor del cursor (que en una
+   acción disparada por clic es el de origen) y el aviso se coloca en su esquina inferior derecha.
 
 ### Tanda B — Interacción (pendiente)
 
@@ -740,11 +741,15 @@ cubrirla paso a paso. **Una sola release al final de la ronda.**
 16. Actualizar documentación: `STATUS.md`, este roadmap, ayuda rápida y `README` si toca.
 17. Release.
 
-### Decisiones pendientes de confirmar con el usuario
+### Decisiones tomadas con el usuario (2026-09-18)
 
-- Las notificaciones deben salir en la pantalla desde la que se pidió (dock/ventana). En la bandeja,
-  que no tiene ventana de origen, la referencia natural es el cursor.
-- Hasta dónde llega la rueda del ratón: dock, listas del gestor y scroll de la nota.
-- Orden de las celdas de las plantillas: el del mazo (propuesto) o uno distinto.
-- Qué pasa con "Restaurar posiciones originales".
-- Menú de los 3 puntos: versión única recortada o dos versiones conmutables en Ajustes.
+- **Notificaciones**: que salgan en la pantalla desde la que se pidieron y nunca en la otra. Desde la
+  bandeja, la del cursor.
+- **Rueda del ratón**: las tres — dock (los cuatro bordes), listas del gestor y scroll de la nota.
+- **Plantillas**: el orden de celdas sigue el **orden del mazo**, no el de apertura.
+- **"Restaurar posiciones originales"**: se hacen **las dos cosas** — el botón pasa a colocar todas
+  las notas en cascada junto al dock, y se conserva la restauración de las posiciones guardadas.
+- **Menú de los 3 puntos**: solo **redistribución y agrupación** de los botones; no se añade un modo
+  simplificado/avanzado conmutable.
+- **Aire entre scroll y texto**: 8 px (a validar en la app; es una constante).
+- **Menú de copiar/pegar/cortar**: se replantilla con la estética de la app.

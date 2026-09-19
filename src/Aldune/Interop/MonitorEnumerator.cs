@@ -48,6 +48,40 @@ internal static class MonitorEnumerator
     [DllImport("shcore.dll")]
     private static extern int GetDpiForMonitor(IntPtr hmonitor, MonitorDpiType dpiType, out uint dpiX, out uint dpiY);
 
+    /// <summary>
+    /// El monitor sobre el que está el cursor, o <c>null</c> si no cae en ninguno de los conectados.
+    ///
+    /// Existe para colocar avisos: <c>SystemParameters.WorkArea</c> (lo que usaba el aviso de
+    /// actualizaciones) devuelve SIEMPRE el monitor primario, así que el aviso podía salir en la otra
+    /// pantalla. El cursor sirve de origen porque quien dispara un aviso lo hace con un clic — el
+    /// botón de ajustes, la bandeja — y en ese momento el cursor está, por definición, en la pantalla
+    /// desde la que se pidió.
+    ///
+    /// La comparación se hace en píxeles físicos, que son las unidades de <c>GetCursorPos</c>: el
+    /// área de trabajo se guarda en DIPs (ver <see cref="DpiConversion"/>), así que se deshace la
+    /// conversión con la escala de ese mismo monitor.
+    /// </summary>
+    internal static MonitorInfo? MonitorContainingCursor()
+    {
+        var cursor = NativeMethods.GetCursorScreenPosition();
+
+        foreach (var monitor in EnumerateMonitors())
+        {
+            var area = monitor.WorkArea;
+            double scale = monitor.DpiScale > 0 ? monitor.DpiScale : 1.0;
+            double left = area.X * scale;
+            double top = area.Y * scale;
+
+            if (cursor.X >= left && cursor.X < left + area.Width * scale
+                && cursor.Y >= top && cursor.Y < top + area.Height * scale)
+            {
+                return monitor;
+            }
+        }
+
+        return null;
+    }
+
     internal static IReadOnlyList<MonitorInfo> EnumerateMonitors()
     {
         var results = new List<MonitorInfo>();

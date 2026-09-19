@@ -6,6 +6,7 @@ using System.Windows.Controls;
 using System.Windows.Media;
 using System.Windows.Threading;
 using Aldune.Core;
+using Aldune.Interop;
 using Aldune.Resources;
 
 namespace Aldune.Windowing;
@@ -83,7 +84,10 @@ internal sealed class UpdateNotifier : IDisposable
     {
         if (_window is null)
         {
-            var window = new UpdateAvailableWindow();
+            // La pantalla del origen (ver MonitorEnumerator.MonitorContainingCursor), no la primaria:
+            // `SystemParameters.WorkArea` devolvía siempre la primaria, así que pedir la comprobación
+            // desde un dock de la pantalla secundaria hacía salir el aviso en la otra.
+            var window = new UpdateAvailableWindow(MonitorEnumerator.MonitorContainingCursor()?.WorkArea);
             _window = window;
             window.Closed += (_, _) => { if (_window == window) _window = null; };
             window.SetMessage(message, downloadUri);
@@ -118,7 +122,7 @@ internal sealed class UpdateAvailableWindow : Window
     private readonly Button _close = new() { MinWidth = 90, Padding = new Thickness(12, 7, 12, 7), Margin = new Thickness(12, 0, 0, 0) };
     private Uri? _downloadUri;
 
-    internal UpdateAvailableWindow()
+    internal UpdateAvailableWindow(WorkingArea? targetArea)
     {
         Title = Strings.UpdateWindowTitle;
         Width = 380;
@@ -129,10 +133,14 @@ internal sealed class UpdateAvailableWindow : Window
         WindowStartupLocation = WindowStartupLocation.Manual;
         Background = (Brush)FindResource("AlduneGroundBrush");
         Foreground = (Brush)FindResource("AlduneTextBrush");
-        var area = SystemParameters.WorkArea;
-        Left = Math.Max(area.Left, area.Right - Width - 20);
-        Top = Math.Max(area.Top, area.Bottom - 230);
-        SizeChanged += (_, _) => Top = Math.Max(SystemParameters.WorkArea.Top, SystemParameters.WorkArea.Bottom - ActualHeight - 20);
+        // Sin monitor de origen (no se pudo leer el cursor) se mantiene el rincón de siempre.
+        var area = targetArea ?? new WorkingArea(
+            SystemParameters.WorkArea.Left,
+            SystemParameters.WorkArea.Top,
+            SystemParameters.WorkArea.Width,
+            SystemParameters.WorkArea.Height);
+        PlaceInCorner(area);
+        SizeChanged += (_, _) => PlaceInCorner(area);
         var panel = new StackPanel { Margin = new Thickness(22) };
         panel.Children.Add(new TextBlock
         {
@@ -157,6 +165,18 @@ internal sealed class UpdateAvailableWindow : Window
             Close();
             e.Handled = true;
         };
+    }
+
+    /// <summary>
+    /// Rincón inferior derecho del monitor dado, con el mismo aire que deja el resto de avisos. El
+    /// alto real solo se conoce tras la primera medida (la ventana es <c>SizeToContent</c>), así que
+    /// se llama también desde <c>SizeChanged</c>.
+    /// </summary>
+    private void PlaceInCorner(WorkingArea area)
+    {
+        double height = ActualHeight > 0 ? ActualHeight : 230;
+        Left = Math.Max(area.X, area.X + area.Width - Width - 20);
+        Top = Math.Max(area.Y, area.Y + area.Height - height - 20);
     }
 
     internal void SetMessage(string message, Uri? downloadUri)
