@@ -369,8 +369,6 @@
                                     HorizontalAlignment="Right"
                                     Click="OnTabClick"
                                     Loaded="OnTabLoaded"
-                                    MouseEnter="OnTabMouseEnter"
-                                    MouseLeave="OnTabMouseLeave"
                                     MouseRightButtonUp="OnTabRightClick"
                                     PreviewMouseLeftButtonDown="OnTabDragStart"
                                     PreviewMouseMove="OnTabDragMove"
@@ -566,6 +564,9 @@
                                    Visibility="Collapsed" />
                         <StackPanel x:Name="OpenAllMonitorContainer" Visibility="Collapsed" />
                         <Border Background="#4A443B" Height="1" Margin="0,6,0,6" />
+                        <Button Content="{x:Static res:Strings.CascadeNearDock}"
+                                Click="OnCascadeNearDockClick"
+                                Style="{StaticResource NoteMenuItemStyle}" />
                         <Button Content="{x:Static res:Strings.RestoreOriginalPositions}"
                                 Click="OnRestoreOriginalPositionsClick"
                                 Style="{StaticResource NoteMenuItemStyle}" />
@@ -619,9 +620,7 @@
          <Popup x:Name="TabMenuPopup" StaysOpen="False" AllowsTransparency="True"
                 PopupAnimation="Fade" Placement="MousePoint" HorizontalOffset="6" VerticalOffset="6">
             <Border x:Name="TabMenuSurface"
-                    Background="#2A261F" CornerRadius="10" Padding="8"
-                    MouseEnter="OnTabMenuMouseEnter"
-                    MouseLeave="OnTabMenuMouseLeave">
+                    Background="#2A261F" CornerRadius="10" Padding="8">
                 <Border.Effect>
                     <DropShadowEffect BlurRadius="16" ShadowDepth="3" Direction="270"
                                       Color="#000000" Opacity="0.5" />

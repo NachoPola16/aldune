@@ -759,14 +759,28 @@ cubrirla paso a paso. **Una sola release al final de la ronda.**
     en cada celda parece aleatoria. **Hecho:** `ArrangeOpenNotes` ordena las ventanas por su índice en
     la vista del dock (`NotesForCurrentDockView`).
 
-### Tanda C — Diseño y UX (pendiente; aquí se usa la skill `impeccable`)
+### Tanda C — Diseño y UX (hecho en esta sesión)
 
-11. **Menú de los 3 puntos de la nota**: orden de las opciones, agrupar o recortar, y valorar una
-    versión simplificada frente a una avanzada.
-12. **El desplegable del dock debe aguantar más / quedarse fijo** al abrirse con clic derecho.
-13. **"Restaurar posiciones originales"**: decidir si se queda (con mejor nombre y explicación) o se
-    sustituye por otra acción.
+11. **Menú de los 3 puntos de la nota**: solo **redistribución y agrupación** de los botones; no se añade un modo
+    simplificado/avanzado conmutable. **Hecho.** Cuatro bloques por intención: escritura (tarea, viñeta, con
+    su atajo a la vista — sigue siendo la única forma de descubrir Ctrl+L sin ir a Ajustes), recordatorio,
+    estado de la nota (color, fijar con su explicación, proteger, etiquetas) y, separado al final, lo que
+    guarda fuera o destruye (exportar, restaurar tamaño, archivar, papelera). Mismo criterio que Distill de
+    `impeccable` (agrupar por intención, jerarquía en cuatro bloques) aplicado a mano sobre el XAML.
+12. **El desplegable del dock se cerraba solo al alejar el ratón** (timer de 550 ms). **Hecho:** el menú de
+    pestaña ahora es fijo — solo lo cierra un clic fuera (nativo de `StaysOpen="False"`) o elegir una opción.
+    Fuera el timer, los flags y los cuatro handlers de entrar/salir, tanto del `code-behind` como del XAML.
+13. **"Restaurar posiciones originales"**: se hacen **las dos cosas** — el botón pasa a colocar todas
+    las notas en cascada junto al dock, y se conserva la restauración de las posiciones guardadas.
+    **Hecho:** entrada nueva `CascadeNearDock` ("Cascada junto al dock") que abre las notas de la vista y las
+    coloca en escalera diagonal desde el canto del dock (paso 32 px para que la cabecera de cada una asome
+    de la anterior; comprime a partir de la sexta); `RestoreOriginalPositions` se mantiene tal cual como
+    deshacer de cuadrícula/columnas.
 14. **Menú contextual nativo de copiar/pegar/cortar** con la estética de la app en modo oscuro.
+    **Hecho:** estilos implícitos `ContextMenu` + `MenuItem` en `App.xaml`, con la misma superficie que el
+    resto de flotantes (Ground + esquinas + sombra) y las mismas filas de `NoteMenuItemStyle`. Los comandos
+    siguen siendo los nativos, con la traducción del Windows del usuario, no una inventada. Lo coge
+    cualquier `TextBox` (notas, Ajustes, gestor, recordatorios) sin tocar cada ventana.
 
 ### Tanda D — Cierre (pendiente)
 

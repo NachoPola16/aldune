@@ -23,7 +23,6 @@ public partial class EdgeDockWindow : Window
     private readonly DispatcherTimer _fullscreenPollTimer;
     private readonly DispatcherTimer _arrowScrollTimer;
     private readonly DispatcherTimer _openAllMenuTopmostTimer;
-    private readonly DispatcherTimer _tabMenuCloseTimer;
     private readonly DispatcherTimer _syncFeedbackTimer;
     private readonly AutoScrollManager? _autoScroll;
     private readonly PopupToggle _newNoteToggle;
@@ -185,15 +184,10 @@ public partial class EdgeDockWindow : Window
             RaiseDockViewPopup();
         };
 
-        _tabMenuCloseTimer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(550) };
-        _tabMenuCloseTimer.Tick += (_, _) =>
-        {
-            _tabMenuCloseTimer.Stop();
-            if (TabMenuPopup.IsOpen && !_tabMenuPointerOverTab && !_tabMenuPointerOverSurface)
-            {
-                CloseTabMenu();
-            }
-        };
+        // El menú de una pestaña se queda fijo: no se cierra solo por alejar el ratón. Antes había un
+        // timer de 550ms que lo pliegueaba en cuanto el cursor salía de la pestaña o del propio menú,
+        // y el usuario lo pedía abierto "más rato o fijo" — el cierre pasa a ser suyo (un clic fuera,
+        // o elegir una opción), que es como se comportan los menús del resto de la app.
 
         // El feedback de sincronizar (✓ o aviso en el botón) se deshace solo: al poco rato vuelve la
         // flecha de siempre con su tooltip.
@@ -1685,6 +1679,12 @@ public partial class EdgeDockWindow : Window
         OpenAllMenuPopup.IsOpen = false;
     }
 
+    private void OnCascadeNearDockClick(object sender, RoutedEventArgs e)
+    {
+        _coordinator.CascadeNotesNearDock(this, _layoutMonitorKey);
+        OpenAllMenuPopup.IsOpen = false;
+    }
+
     /// <summary>
     /// Ofrece elegir a qué pantalla mandar la disposición. Solo aparece cuando hace falta: con un dock
     /// en cada pantalla la elige el propio dock que se pulsa, y en una pantalla sin dock no habría
@@ -2027,47 +2027,6 @@ public partial class EdgeDockWindow : Window
 
     private Note? _tabMenuNote;
     private FrameworkElement? _tabMenuOwner;
-    private bool _tabMenuPointerOverTab;
-    private bool _tabMenuPointerOverSurface;
-
-    private void OnTabMouseEnter(object sender, MouseEventArgs e)
-    {
-        if (ReferenceEquals(sender, _tabMenuOwner))
-        {
-            _tabMenuPointerOverTab = true;
-            _tabMenuCloseTimer.Stop();
-        }
-    }
-
-    private void OnTabMouseLeave(object sender, MouseEventArgs e)
-    {
-        if (ReferenceEquals(sender, _tabMenuOwner))
-        {
-            _tabMenuPointerOverTab = false;
-            ScheduleTabMenuClose();
-        }
-    }
-
-    private void OnTabMenuMouseEnter(object sender, MouseEventArgs e)
-    {
-        _tabMenuPointerOverSurface = true;
-        _tabMenuCloseTimer.Stop();
-    }
-
-    private void OnTabMenuMouseLeave(object sender, MouseEventArgs e)
-    {
-        _tabMenuPointerOverSurface = false;
-        ScheduleTabMenuClose();
-    }
-
-    private void ScheduleTabMenuClose()
-    {
-        if (TabMenuPopup.IsOpen)
-        {
-            _tabMenuCloseTimer.Stop();
-            _tabMenuCloseTimer.Start();
-        }
-    }
 
     private void OnTabRightClick(object sender, MouseButtonEventArgs e)
     {
@@ -2080,9 +2039,6 @@ public partial class EdgeDockWindow : Window
         }
 
         _tabMenuOwner = (FrameworkElement)sender;
-        _tabMenuPointerOverTab = true;
-        _tabMenuPointerOverSurface = false;
-        _tabMenuCloseTimer.Stop();
         _tabMenuNote = note;
         TabMenuArchiveButton.Content = note.State == NoteState.Active ? Strings.Archive : Strings.Restore;
         TabMenuTrashButton.Content = note.State == NoteState.Trashed ? Strings.Restore : Strings.MoveToTrash;
@@ -2230,7 +2186,6 @@ public partial class EdgeDockWindow : Window
         TagEditorPopup.PlacementTarget = _tabMenuOwner;
         TagEditorPopup.Placement = PlacementMode.Bottom;
         TagEditorPopup.IsOpen = true;
-        _tabMenuCloseTimer.Stop();
         TabMenuPopup.IsOpen = false;
         TagEditorPopup.Focus();
     }
@@ -2265,12 +2220,9 @@ public partial class EdgeDockWindow : Window
 
     private void CloseTabMenu()
     {
-        _tabMenuCloseTimer.Stop();
         TabMenuPopup.IsOpen = false;
         _tabMenuNote = null;
         _tabMenuOwner = null;
-        _tabMenuPointerOverTab = false;
-        _tabMenuPointerOverSurface = false;
     }
 
     private void CloseDockPopups()

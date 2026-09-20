@@ -116,6 +116,7 @@ public static class Strings
     public static string RestoreOriginalPositions => T("Restore original positions", "Restaurar posiciones originales");
     public static string OpenAllGrid => T("Grid", "Cuadrícula");
     public static string OpenAllColumns => T("Columns", "Columnas");
+    public static string CascadeNearDock => T("Cascade by the dock", "Cascada junto al dock");
     public static string NewNoteTooltip => T("New note", "Nueva nota");
     public static string NewNoteFromClipboard => T("New note from clipboard", "Nueva nota desde el portapapeles");
     public static string KeepDockOpenOn => T("✓  Keep dock open", "✓  Mantener el dock abierto");

@@ -249,20 +249,11 @@
                                           Color="#000000" Opacity="0.5" />
                     </Border.Effect>
                     <StackPanel MinWidth="230">
-                        <StackPanel x:Name="ColorSwatches" Orientation="Horizontal" Margin="6,4,6,8" />
-                        <Button x:Name="CustomColorButton" Click="OnCustomColorClick"
-                                Content="{x:Static res:Strings.CustomColor}"
-                                Style="{StaticResource NoteMenuItemStyle}" />
-                        <Button x:Name="ProtectionButton" Click="OnProtectionClick"
-                                Content="{x:Static res:Strings.ProtectNote}"
-                                Style="{StaticResource NoteMenuItemStyle}" />
-                        <Button x:Name="TagsButton" Click="OnTagsClick"
-                            Content="{x:Static res:Strings.NoteTags}"
-                            Style="{StaticResource NoteMenuItemStyle}" />
-                        <Border Background="#3C3730" Height="1" Margin="0,0,0,4" />
-
-                        <!-- Con su atajo escrito al lado: es la única forma de que alguien descubra
-                             que Ctrl+L existe sin ir a buscarlo a Ajustes. -->
+                        <!-- Agrupado por intención, no por orden de implementación: arriba lo que se usa
+                             escribiendo (tarea y viñeta, con su atajo a la vista — es la única forma de
+                             descubrir que Ctrl+L existe sin ir a Ajustes), luego el recordatorio, luego
+                             la nota (color, fijar, proteger, etiquetas) y al final, separado, lo que
+                             guarda fuera o destruye. Cuatro bloques, no once opciones seguidas. -->
                         <Button x:Name="TaskButton" Click="OnTaskClick"
                                 Style="{StaticResource NoteMenuItemStyle}">
                             <Grid Width="200">
@@ -278,12 +269,7 @@
                                 <TextBlock Text="Ctrl+Shift+L" Foreground="#8A8175" HorizontalAlignment="Right" />
                             </Grid>
                         </Button>
-
-                        <Button x:Name="PinButton" Click="OnPinClick"
-                                Style="{StaticResource NoteMenuItemStyle}" />
-                        <TextBlock x:Name="PinHint"
-                                   Foreground="#8A8175" FontSize="11" TextWrapping="Wrap"
-                                   Margin="9,0,9,6" />
+                        <Border Background="#3C3730" Height="1" Margin="0,0,0,4" />
 
                         <Button x:Name="ReminderButton" Click="OnReminderMenuClick"
                                 Style="{StaticResource NoteMenuItemStyle}" />
@@ -320,6 +306,26 @@
                                     Visibility="Collapsed"
                                     Style="{StaticResource NoteMenuDangerStyle}" />
                         </StackPanel>
+                        <Border Background="#3C3730" Height="1" Margin="0,0,0,4" />
+
+                        <!-- Color y estado de la nota: el bloque entero vive en este tercer grupo.
+                             PinHint explica en una línea qué es "fijar" — "siempre encima" a secas
+                             no dice nada a quien no conoce el concepto. -->
+                        <StackPanel x:Name="ColorSwatches" Orientation="Horizontal" Margin="6,4,6,8" />
+                        <Button x:Name="CustomColorButton" Click="OnCustomColorClick"
+                                Content="{x:Static res:Strings.CustomColor}"
+                                Style="{StaticResource NoteMenuItemStyle}" />
+                        <Button x:Name="PinButton" Click="OnPinClick"
+                                Style="{StaticResource NoteMenuItemStyle}" />
+                        <TextBlock x:Name="PinHint"
+                                   Foreground="#8A8175" FontSize="11" TextWrapping="Wrap"
+                                   Margin="9,0,9,6" />
+                        <Button x:Name="ProtectionButton" Click="OnProtectionClick"
+                                Content="{x:Static res:Strings.ProtectNote}"
+                                Style="{StaticResource NoteMenuItemStyle}" />
+                        <Button x:Name="TagsButton" Click="OnTagsClick"
+                                Content="{x:Static res:Strings.NoteTags}"
+                                Style="{StaticResource NoteMenuItemStyle}" />
                         <Border Background="#3C3730" Height="1" Margin="0,4,0,4" />
 
                         <Button x:Name="ExportButton" Click="OnExportClick"

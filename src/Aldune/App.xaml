@@ -284,6 +284,63 @@
             <Setter Property="Foreground" Value="#EDE7DC" />
         </Style>
 
+        <!-- El menú nativo de un TextBox (cortar/copiar/pegar) sale con el tema claro de Windows:
+             sobre una nota pastel pasa, pero dentro de Ajustes, el gestor o el propio panel oscuro del
+             "⋯" (ReminderHourBox/ReminderMinuteBox, NewTagTextBox...) es el único flotante claro de la
+             app. Implícito, como ToolTip y Calendar: lo coge cualquier TextBox futuro sin tocarlo. Los
+             comandos siguen siendo los nativos (con su traducción del Windows del usuario), solo se
+             replantilla la superficie y las filas a la familia NoteMenuItemStyle. -->
+        <Style TargetType="ContextMenu">
+            <Setter Property="Background" Value="#2A261F" />
+            <Setter Property="BorderBrush" Value="#5F584E" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="Padding" Value="8" />
+            <Setter Property="FocusVisualStyle" Value="{x:Null}" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ContextMenu">
+                        <Border Background="{TemplateBinding Background}"
+                                BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="{TemplateBinding BorderThickness}"
+                                CornerRadius="10" Padding="{TemplateBinding Padding}">
+                            <Border.Effect>
+                                <DropShadowEffect BlurRadius="12" ShadowDepth="2" Direction="270"
+                                                  Color="#000000" Opacity="0.4" />
+                            </Border.Effect>
+                            <ItemsPresenter />
+                        </Border>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style TargetType="MenuItem">
+            <Setter Property="Foreground" Value="#EDE7DC" />
+            <Setter Property="FontSize" Value="13" />
+            <Setter Property="Padding" Value="9,7" />
+            <Setter Property="FocusVisualStyle" Value="{x:Null}" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="MenuItem">
+                        <Border x:Name="Bg" Background="Transparent" CornerRadius="6"
+                                Padding="{TemplateBinding Padding}">
+                            <ContentPresenter ContentSource="Header"
+                                              HorizontalAlignment="Left" VerticalAlignment="Center"
+                                              RecognizesAccessKey="True" />
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsHighlighted" Value="True">
+                                <Setter TargetName="Bg" Property="Background" Value="#403B33" />
+                            </Trigger>
+                            <Trigger Property="IsEnabled" Value="False">
+                                <Setter Property="Foreground" Value="#8A8175" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
         <!-- Origen del autoscroll (el punto donde se hizo el clic central). Se fija por código en
              VisualOffset o en el color de la nota; aquí solo vive la forma. -->
         <Canvas x:Key="AutoScrollOriginGlyph" x:Shared="False" Width="24" Height="24">

@@ -767,6 +767,72 @@ public sealed class AppCoordinator
     }
 
     /// <summary>
+    /// Abre todas las notas de la vista en cascada junto al dock que pidió la acción — solapadas en
+    /// diagonal desde el canto del dock, en el orden del mazo. Es la opción "Cascada junto al dock"
+    /// del menú del dock: la forma rápida de recoger el escritorio sin decidir una disposición (para
+    /// una disposición pensada están "Cuadrícula" y "Columnas").
+    ///
+    /// Va en la pantalla del dock que la pidió (o <paramref name="targetMonitorKey"/> si se eligió
+    /// otra), igual que el resto de disposiciones del menú.
+    /// </summary>
+    internal void CascadeNotesNearDock(EdgeDockWindow requestingDock, string? targetMonitorKey = null)
+    {
+        var monitors = MonitorEnumerator.EnumerateMonitors();
+        if (MonitorLookup.TargetOrFallback(targetMonitorKey, requestingDock.MonitorKey, monitors) is not { } target)
+        {
+            return; // ni la pantalla pedida ni la del dock existen ahora mismo
+        }
+
+        foreach (var note in NotesForCurrentDockView())
+        {
+            if (!IsNoteOpen(note.Id))
+                OpenOrActivateNote(note, requestingDock, targetMonitorKey: target.DeviceName);
+        }
+
+        Application.Current.Dispatcher.BeginInvoke(DispatcherPriority.Loaded, new Action(() =>
+            CascadeOpenNotesNearDock(target.WorkArea, _settings?.DockEdge ?? EdgePosition.Right)));
+    }
+
+    /// <summary>
+    /// Cascada pegada al canto que indica <paramref name="edge"/>, en diagonal hacia dentro. Cada
+    /// ventana deja asomar la cabecera de la anterior (el paso es menor que la ventana), así que es
+    /// fácil coger cualquiera sin adivinar qué hay debajo. Con muchas notas la cascada se comprime a
+    /// partir de la sexta: no hay pantalla donde quepa una en escalera eterna de una en una.
+    /// </summary>
+    private void CascadeOpenNotesNearDock(WorkingArea area, EdgePosition edge)
+    {
+        // ToList antes de mover: fijar Left/Top dispara LocationChanged, que puede tocar la posición
+        // mientras se recorre el diccionario.
+        var windows = _openNoteWindows.Values.ToList();
+        if (windows.Count == 0) return;
+
+        const double gap = 46;
+        const double step = 32;
+        const int maxLevels = 5;
+
+        foreach (var (window, index) in windows.Select((window, index) => (window, index)))
+        {
+            if (window.WindowState != WindowState.Normal) window.WindowState = WindowState.Normal;
+
+            int level = Math.Min(index, maxLevels);
+
+            double left = edge switch
+            {
+                EdgePosition.Left => area.X + gap + level * step,
+                EdgePosition.Right => area.X + area.Width - window.Width - gap - level * step,
+                _ => area.X + gap + level * step
+            };
+            double top = edge switch
+            {
+                EdgePosition.Top => area.Y + gap + level * step,
+                EdgePosition.Bottom => area.Y + area.Height - window.Height - gap - level * step,
+                _ => area.Y + gap + level * step
+            };
+
+            SetWindowPosition(window, area, left, top);
+        }
+    }
+
     /// Abre todas las notas de la vista y devuelve cada una a la posición y el tamaño que tenía guardados en una pantalla — los
     /// mismos que aplica <see cref="TryRestorePlacement"/> al abrirla, y que guarda
     /// <c>NoteWindow.SavePlacementForCurrentMonitor</c> en la tabla <c>NotePlacement</c> del
