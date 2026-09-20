@@ -551,6 +551,9 @@
                         <Button Content="{x:Static res:Strings.OpenAllColumns}"
                                 Click="OnOpenAllColumnsClick"
                                 Style="{StaticResource NoteMenuItemStyle}" />
+                        <Button Content="{x:Static res:Strings.CascadeNearDock}"
+                                Click="OnCascadeNearDockClick"
+                                Style="{StaticResource NoteMenuItemStyle}" />
                         <!-- Pantalla de destino: solo se ve cuando hay mas de una pantalla y alguna sin
                              dock (con un dock en cada monitor la elige el propio dock que se pulsa).
                              Los botones los construye PopulateOpenAllMonitors. -->
@@ -564,12 +567,6 @@
                                    Visibility="Collapsed" />
                         <StackPanel x:Name="OpenAllMonitorContainer" Visibility="Collapsed" />
                         <Border Background="#4A443B" Height="1" Margin="0,6,0,6" />
-                        <Button Content="{x:Static res:Strings.CascadeNearDock}"
-                                Click="OnCascadeNearDockClick"
-                                Style="{StaticResource NoteMenuItemStyle}" />
-                        <Button Content="{x:Static res:Strings.RestoreOriginalPositions}"
-                                Click="OnRestoreOriginalPositionsClick"
-                                Style="{StaticResource NoteMenuItemStyle}" />
                         <Button Content="{x:Static res:Strings.CloseAllNotes}"
                                 Click="OnCloseAllClick"
                                 Style="{StaticResource NoteMenuDangerStyle}" />

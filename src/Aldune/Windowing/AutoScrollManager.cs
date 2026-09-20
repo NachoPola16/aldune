@@ -29,12 +29,13 @@ internal sealed class AutoScrollManager
     private const double DeadZone = 10;
 
     /// <summary>Distancia en DIPs a partir de la cual la velocidad alcanza el tope.</summary>
-    private const double FullSpeedDistance = 160;
+    private const double FullSpeedDistance = 140;
 
-    /// <summary>Desplazamiento máximo por tick, en DIPs.</summary>
-    private const double MaxStepPerTick = 16;
+    /// <summary>Desplazamiento máximo por tick, en DIPs. ~60fps × 26 px ≈ 1560 px/s: ágil pero no
+    /// instantáneo.</summary>
+    private const double MaxStepPerTick = 26;
 
-    private readonly DispatcherTimer _timer = new() { Interval = TimeSpan.FromMilliseconds(33) };
+    private readonly DispatcherTimer _timer = new() { Interval = TimeSpan.FromMilliseconds(16) };
     private readonly Panel _host;
     private readonly ScrollViewer? _scrollViewer;
     private readonly TextBox? _textBox;

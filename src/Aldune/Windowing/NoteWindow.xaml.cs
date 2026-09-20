@@ -57,7 +57,7 @@ public partial class NoteWindow : Window
     private bool _isConstrainingToMonitor;
     private string? _placementMonitorKey;
     private AutoScrollManager? _autoScroll;
-    private PopupToggle? _menuToggle;
+    private readonly PopupToggle _menuToggle;
 
     /// <summary>
     /// Estado anterior de la ventana, para distinguir "acaba de minimizarse" de "acaba de volver de
@@ -80,6 +80,7 @@ public partial class NoteWindow : Window
         _initialWidth = Width;
         _initialHeight = Height;
         _autoScroll = new AutoScrollManager(BodyHost, null, TextBody);
+        _menuToggle = new PopupToggle(ActionsPopup);
         Closed += (_, _) => _autoScroll.Stop();
         _note = note;
         _repository = repository;
@@ -314,9 +315,8 @@ public partial class NoteWindow : Window
 
     /// <summary>
     /// Coloca la ventana en una posición y un tamaño guardados (los de la tabla <c>NotePlacement</c>).
-    /// Lo usan <see cref="AppCoordinator.TryRestorePlacement"/> al abrir una nota y
-    /// <see cref="AppCoordinator.RestoreNotePositions"/> al devolverlas todas a su sitio desde el menú
-    /// del dock.
+    /// Lo usa <see cref="AppCoordinator.TryRestorePlacement"/> al abrir una nota, que es cuando la
+    /// posición guardada vuelve a mandar sobre el escritorio.
     ///
     /// El cambio de tamaño va marcado como automático para que el <c>SizeChanged</c> de más arriba no
     /// lo lea como un arrastre del usuario y congele el ajuste de alto para el resto de la sesión: ese

@@ -337,6 +337,13 @@ public partial class App : Application
     private AppSettings? _settings;
     private DispatcherTimer? _rebuildDebounce;
     private int _displayRebuildAttempts;
+    /// <summary>
+    /// La firma del conjunto de pantallas tal como estaba la última vez que la app la conoció entera,
+    /// antes de empezar a reconfigurar. No es el estado real en el instante del cambio (el evento
+    /// <c>DisplaySettingsChanged</c> puede llegar cuando el driver ya ha apagado la pantalla), así que
+    /// fijarla ahí guardaría justo el estado equivocado. Se actualiza tras cada reconstrucción buena,
+    /// que es cuando la lista de monitores y los docks ya están alineados.
+    /// </summary>
     private string _preChangeMonitorKey = string.Empty;
     private ReminderScheduler? _reminderScheduler;
     private UpdateNotifier? _updateNotifier;
@@ -389,6 +396,12 @@ public partial class App : Application
         }
 
         _coordinator.RefreshAll();
+
+        // La firma del último estado conocido bueno se actualiza aquí, tras reconstruir: es lo único
+        // que puede comparar el tick contra "¿sigue el conjunto como antes del cambio?". Fijarla en
+        // el evento de cambio la dejaría con el estado roto si el evento llega con la pantalla ya
+        // fuera de la lista.
+        _preChangeMonitorKey = MonitorSignature(MonitorEnumerator.EnumerateMonitors());
     }
 
     private void OnDisplaySettingsChanged(object? sender, EventArgs e)
@@ -401,7 +414,9 @@ public partial class App : Application
         _rebuildDebounce.Tick -= OnRebuildTick;
         _rebuildDebounce.Tick += OnRebuildTick;
         _rebuildDebounce.Stop();
-        _preChangeMonitorKey = MonitorSignature(MonitorEnumerator.EnumerateMonitors());
+        // No se fija aquí: el evento puede llegar con la pantalla ya apagada de la lista, así que la
+        // firma del "antes" sería la del estado roto. El valor bueno viene del último rebuild, que es
+        // el único momento en que la app tiene monitores y docks alineados.
         _displayRebuildAttempts = 0;
         _rebuildDebounce.Start();
     }
@@ -430,9 +445,9 @@ public partial class App : Application
         // completarse (el driver publica la pantalla enchufada en pasos), y si el último rebuild cae
         // en mitad del camino, el dock se reconstruye con lo que haya en ese momento — normalmente la
         // otra pantalla — y ahí se queda. Por eso el criterio de parada ya no es solo "llevo N ticks",
-        // sino "el conjunto de pantallas vuelve a ser el de antes del cambio": mientras siga distinto,
-        // se sigue reconstruyendo cada 600 ms para que la pantalla que vuelve recupere su dock. El tope
-        // (12 ticks) existe para que un cambio permanente no reconstruya eternamente.
+        // sino "el conjunto de pantallas vuelve a ser el de antes del cambio" — el que quedó grabado
+        // en el último rebuild bueno (ver BuildDocks). El tope de 12 ticks corta un cambio permanente
+        // (un monitor que se va de verdad) para no reconstruir eternamente.
         var current = MonitorSignature(MonitorEnumerator.EnumerateMonitors());
         if (current == _preChangeMonitorKey || _displayRebuildAttempts >= 12)
         {

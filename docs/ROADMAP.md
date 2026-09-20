@@ -770,12 +770,14 @@ cubrirla paso a paso. **Una sola release al final de la ronda.**
 12. **El desplegable del dock se cerraba solo al alejar el ratón** (timer de 550 ms). **Hecho:** el menú de
     pestaña ahora es fijo — solo lo cierra un clic fuera (nativo de `StaysOpen="False"`) o elegir una opción.
     Fuera el timer, los flags y los cuatro handlers de entrar/salir, tanto del `code-behind` como del XAML.
-13. **"Restaurar posiciones originales"**: se hacen **las dos cosas** — el botón pasa a colocar todas
-    las notas en cascada junto al dock, y se conserva la restauración de las posiciones guardadas.
-    **Hecho:** entrada nueva `CascadeNearDock` ("Cascada junto al dock") que abre las notas de la vista y las
-    coloca en escalera diagonal desde el canto del dock (paso 32 px para que la cabecera de cada una asome
-    de la anterior; comprime a partir de la sexta); `RestoreOriginalPositions` se mantiene tal cual como
-    deshacer de cuadrícula/columnas.
+13. **Las disposiciones del menú de "abrir todas"** — cuadrícula, columnas y cascada — quedan como las
+    tres únicas, y **"Restaurar posiciones originales" se elimina**: el usuario no sabía qué hacía y el
+    mismo trabajo lo cubre recordar la posición al abrir cada nota. Además la cascada se pega al canto
+    del dock (antes quedaba arriba a la derecha, lejos del abanico).
+    **Novedad de negocio**: una nota nueva **entra en la disposición elegida**. Al abrir cualquier nota
+    con una disposición distinta de la Normal, se redistribuyen las abiertas de esa pantalla para que
+    quepa — así "abrir todas en columnas" es un estado del escritorio y no una acción de un instante, y
+    las notas que se abran después encajan donde toca. Con Normal (fábrica) no se toca nada.
 14. **Menú contextual nativo de copiar/pegar/cortar** con la estética de la app en modo oscuro.
     **Hecho:** estilos implícitos `ContextMenu` + `MenuItem` en `App.xaml`, con la misma superficie que el
     resto de flotantes (Ground + esquinas + sombra) y las mismas filas de `NoteMenuItemStyle`. Los comandos
@@ -799,6 +801,21 @@ cubrirla paso a paso. **Una sola release al final de la ronda.**
     rápida. Ver "Efectos secundarios del apagado de pantalla" para el tercer punto de esta tanda.
 17. **Documentación y versión**: `STATUS.md`, este roadmap, ayuda rápida y `README` al día; versión a
     **0.10.0** (funcionalidad nueva) en `Aldune.csproj` y aquí.
+
+### Correcciones sobre la v0.10.0 (misma sesión, tras probarla el usuario)
+
+- **El autoscroll iba lento** (tick de 33 ms y tope bajo): pasa a 16 ms con tope mayor.
+- **El "⋯" de la nota no cerraba al volver a pulsarlo**: el toggle (`PopupToggle`) se declaraba pero
+  **nunca se instanciaba** en `NoteWindow` — el campo quedaba `null` y el guard no se evaluaba jamás.
+  Ahora se crea en el constructor.
+- **Cut/Copy/Paste salían blancos**: el estilo implícito de `ContextMenu` no fijaba `Foreground`, y los
+  `MenuItem` heredaban el de sistema (negro sobre oscuro). Ahora el propio menú trae el tono de tinta.
+- **Hover de la bandeja**: `DarkMenuColors` pinta el hover plano y sin degradados, incluido el de la
+  fila marcada ("Ocultar el dock").
+- **Bug del monitor al apagar la pantalla** (visto en la prueba): la firma del "antes" se calculaba en
+  el evento de cambio, cuando el driver ya había sacado la pantalla de la lista, así que guardaba el
+  estado roto. Ahora se graba tras cada reconstrucción buena, que es el único momento en que la app
+  tiene monitores y docks alineados.
 
 ### Ocultar el dock (pedido durante la ronda)
 

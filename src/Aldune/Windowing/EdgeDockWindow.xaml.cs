@@ -1694,12 +1694,6 @@ public partial class EdgeDockWindow : Window
     private void OnCloseAllClick(object sender, RoutedEventArgs e) =>
         CloseOpenAllMenuAfter(_coordinator.CloseAllNoteWindows);
 
-    private void OnRestoreOriginalPositionsClick(object sender, RoutedEventArgs e)
-    {
-        _coordinator.RestoreNotePositions(this, _layoutMonitorKey);
-        OpenAllMenuPopup.IsOpen = false;
-    }
-
     private void OnCascadeNearDockClick(object sender, RoutedEventArgs e)
     {
         _coordinator.CascadeNotesNearDock(this, _layoutMonitorKey);

@@ -1,4 +1,4 @@
-﻿using System.Linq;
+using System.Linq;
 using System.Windows;
 using System.Windows.Threading;
 using Aldune.Core;
@@ -245,7 +245,7 @@ public sealed class AppCoordinator
     ///
     /// <paramref name="targetMonitorKey"/> abre la nota en otra pantalla que la de
     /// <paramref name="requestingDock"/> — solo lo usan las opciones del menú que se pueden mandar a
-    /// otra pantalla (ver <see cref="OpenAllNotes"/> y <see cref="RestoreNotePositions"/>).
+    /// otra pantalla (ver <see cref="OpenAllNotes"/>).
     /// </summary>
     public void OpenOrActivateNote(
         Note note,
@@ -316,6 +316,17 @@ public sealed class AppCoordinator
         noteWindow.PlayOpenAnimation();
 
         NativeMethods.ForceActivate(noteWindow);
+
+        // Si hay una disposición elegida (cuadrícula, columnas o cascada), la nota entra en ella en
+        // vez de caer en cascada junto a su pestaña: se redistribuyen las abiertas de esa pantalla
+        // para que quepa. Es lo que convierte "abrir todas en columnas" en un estado del escritorio y
+        // no en una acción de un instante — al abrir cualquiera después, encaja donde toca. Con la
+        // disposición Normal (la de fábrica) no se toca nada: manda la cascada de siempre.
+        if (_settings?.DefaultNoteLayout is { } layout && layout != NoteLayoutTemplate.Normal)
+        {
+            Application.Current.Dispatcher.BeginInvoke(DispatcherPriority.Loaded, new Action(() =>
+                ArrangeOpenNotes(layout, requestingDock, targetMonitorKey)));
+        }
     }
 
     /// <summary>
@@ -837,7 +848,10 @@ public sealed class AppCoordinator
         var windows = _openNoteWindows.Values.ToList();
         if (windows.Count == 0) return;
 
-        const double gap = 46;
+        // El gap mínimo deja la primera pegada al dock y los siguientes pegados a la anterior: con
+        // 46 px de base el abanico se separaba demasiado del canto y "se movía arriba a la derecha"
+        // en vez de quedar junto al dock.
+        const double gap = 22;
         const double step = 32;
         const int maxLevels = 5;
 
@@ -857,7 +871,9 @@ public sealed class AppCoordinator
             {
                 EdgePosition.Top => area.Y + gap + level * step,
                 EdgePosition.Bottom => area.Y + area.Height - window.Height - gap - level * step,
-                _ => area.Y + gap + level * step
+                // En los laterales la cascada arranca en el centro del dock, no arriba del todo: con
+                // el gap vertical la primera quedaba pegada arriba, separada del abanico.
+                _ => area.Y + (area.Height - window.Height) / 2 + level * step
             };
 
             SetWindowPosition(window, area, left, top);
@@ -876,91 +892,6 @@ public sealed class AppCoordinator
     /// pantalla, porque cambió de resolución o de sitio — se coloca cerca del dock, para que la
     /// acción siempre tenga un resultado visible.
     /// </summary>
-    internal void RestoreNotePositions(EdgeDockWindow requestingDock, string? targetMonitorKey = null)
-    {
-        var monitors = MonitorEnumerator.EnumerateMonitors();
-        if (MonitorLookup.TargetOrFallback(targetMonitorKey, requestingDock.MonitorKey, monitors) is not { } target)
-        {
-            return; // ni la pantalla pedida ni la del dock existen ahora mismo
-        }
-
-        foreach (var note in NotesForCurrentDockView())
-        {
-            if (!IsNoteOpen(note.Id))
-                OpenOrActivateNote(note, requestingDock, targetMonitorKey: target.DeviceName);
-        }
-
-        Application.Current.Dispatcher.BeginInvoke(DispatcherPriority.Loaded, new Action(() =>
-            RestoreOpenNotesToMonitor(target.DeviceName)));
-    }
-
-    private void RestoreOpenNotesToMonitor(string targetMonitorKey)
-    {
-        if (MonitorLookup.ForDeviceName(targetMonitorKey, MonitorEnumerator.EnumerateMonitors()) is not { } target)
-            return;
-
-        var withoutPlacement = new List<NoteWindow>();
-
-        // ToList antes de mover: fijar Left/Top dispara LocationChanged, que puede tocar la posición
-        // mientras se recorre el diccionario.
-        foreach (var window in _openNoteWindows.Values.ToList())
-        {
-            var placement = _settings is { RememberNotePositions: true }
-                ? _repository.GetPlacement(window.Note.Id, targetMonitorKey)
-                : null;
-
-            // Contra ESTA pantalla y no contra todas: una posición recordada en el monitor que se
-            // acaba de desenchufar no sirve para devolver la nota a esta.
-            if (placement is null || !PlacementValidation.IsVisibleOnMonitors(
-                    placement.Left, placement.Top, placement.Width, placement.Height, new[] { target }))
-            {
-                withoutPlacement.Add(window);
-                continue;
-            }
-
-            // Una nota maximizada ignoraría Left/Top/Width/Height, así que el tamaño guardado solo se
-            // puede aplicar en estado normal.
-            if (window.WindowState != WindowState.Normal) window.WindowState = WindowState.Normal;
-
-            window.ApplyPlacement(placement.Left, placement.Top, placement.Width, placement.Height);
-        }
-
-        ArrangeWindowsNearDock(withoutPlacement, target.WorkArea, _settings?.DockEdge ?? EdgePosition.Right);
-    }
-
-    private static void ArrangeWindowsNearDock(
-        IReadOnlyList<NoteWindow> windows,
-        WorkingArea area,
-        EdgePosition edge)
-    {
-        const double edgeGap = 42;
-        const double noteGap = 12;
-
-        for (int index = 0; index < windows.Count; index++)
-        {
-            var window = windows[index];
-            double left = edge switch
-            {
-                EdgePosition.Left => area.X + edgeGap,
-                EdgePosition.Right => area.X + area.Width - window.Width - edgeGap,
-                _ => area.X + edgeGap + index * (window.Width + noteGap)
-            };
-            double top = edge switch
-            {
-                EdgePosition.Top => area.Y + edgeGap,
-                EdgePosition.Bottom => area.Y + area.Height - window.Height - edgeGap,
-                _ => area.Y + edgeGap + index * (window.Height + noteGap)
-            };
-
-            if (edge is EdgePosition.Top or EdgePosition.Bottom)
-                left = area.X + edgeGap + index * (window.Width + noteGap);
-            else
-                top = area.Y + edgeGap + index * (window.Height + noteGap);
-
-            SetWindowPosition(window, area, left, top);
-        }
-    }
-
     public void OpenSettings()
     {
         if (_openingSettings) return;

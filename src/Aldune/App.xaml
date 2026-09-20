@@ -292,6 +292,7 @@
              replantilla la superficie y las filas a la familia NoteMenuItemStyle. -->
         <Style TargetType="ContextMenu">
             <Setter Property="Background" Value="#2A261F" />
+            <Setter Property="Foreground" Value="#EDE7DC" />
             <Setter Property="BorderBrush" Value="#5F584E" />
             <Setter Property="BorderThickness" Value="1" />
             <Setter Property="Padding" Value="8" />

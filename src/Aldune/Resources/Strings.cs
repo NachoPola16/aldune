@@ -113,7 +113,6 @@ public static class Strings
     public static string OpenAllModeTitle => T("Opening mode", "Modo de apertura");
     public static string OpenAllMonitorTitle => T("Open notes on", "Abrir las notas en");
     public static string CloseAllNotes => T("Close all notes", "Cerrar todas las notas");
-    public static string RestoreOriginalPositions => T("Restore original positions", "Restaurar posiciones originales");
     public static string OpenAllGrid => T("Grid", "Cuadrícula");
     public static string OpenAllColumns => T("Columns", "Columnas");
     public static string CascadeNearDock => T("Cascade by the dock", "Cascada junto al dock");

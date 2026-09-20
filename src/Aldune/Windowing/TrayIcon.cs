@@ -88,16 +88,28 @@ internal sealed class TrayIcon : IDisposable
     private sealed class DarkMenuColors : ProfessionalColorTable
     {
         public override Color ToolStripDropDownBackground => Ground;
+        // Hover de las filas: sin degradado (los gradientes del renderer por defecto son los que
+        // hacen que un item "encendido" parezca de otro tema) y con el mismo tono que usa el dock
+        // para sus menús (#4E4840). El borde del item activo se mantiene en el mismo tono para que
+        // el resalte se lea como relleno y no como una caja con borde.
         public override Color MenuItemSelected => ColorTranslator.FromHtml("#4E4840");
         public override Color MenuItemSelectedGradientBegin => ColorTranslator.FromHtml("#4E4840");
         public override Color MenuItemSelectedGradientEnd => ColorTranslator.FromHtml("#4E4840");
-        public override Color MenuItemBorder => ColorTranslator.FromHtml("#4E4840");
+        public override Color MenuItemBorder => Color.Transparent;
         public override Color MenuBorder => ColorTranslator.FromHtml("#3C3730");
         public override Color ImageMarginGradientBegin => Ground;
         public override Color ImageMarginGradientMiddle => Ground;
         public override Color ImageMarginGradientEnd => Ground;
         public override Color SeparatorDark => ColorTranslator.FromHtml("#3C3730");
         public override Color SeparatorLight => ColorTranslator.FromHtml("#3C3730");
+        // El hover de una fila marcada (Checked) pinta encima con estos dos: sin ellos, la marca de
+        // verificación sobre "Ocultar el dock" se leía sobre el gris del tema de sistema.
+        public override Color CheckBackground => ColorTranslator.FromHtml("#4E4840");
+        public override Color CheckSelectedBackground => ColorTranslator.FromHtml("#4E4840");
+        public override Color ButtonSelectedHighlight => ColorTranslator.FromHtml("#4E4840");
+        public override Color ButtonSelectedGradientBegin => ColorTranslator.FromHtml("#4E4840");
+        public override Color ButtonSelectedGradientEnd => ColorTranslator.FromHtml("#4E4840");
+        public override Color ButtonSelectedBorder => Color.Transparent;
     }
 
     private static System.Drawing.Icon LoadIcon()
