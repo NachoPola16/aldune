@@ -130,7 +130,38 @@ public sealed class AppCoordinator
     public bool IsNoteMinimized(Guid noteId) =>
         _openNoteWindows.TryGetValue(noteId, out var window) && window.WindowState == WindowState.Minimized;
 
+    /// <summary>
+    /// Si el dock está a la vista. No se guarda en los ajustes a propósito: ocultarlo es una acción
+    /// de un momento (una película a pantalla completa), no una preferencia, y persistirla significaría
+    /// arrancar algún día sin dock y sin recordar por qué.
+    /// </summary>
+    public bool DocksVisible { get; private set; } = true;
+
+    /// <summary>
+    /// Oculta o vuelve a mostrar todos los docks sin cerrarlos: al volver, cada uno recupera su
+    /// sitio, su monitor y su capa superior.
+    ///
+    /// Hace falta porque la detección de pantalla completa no cubre todo: el caso que lo pidió es
+    /// poner un vídeo a pantalla completa en el navegador, que a veces Windows no reporta como tal
+    /// (pasa con la pantalla completa sin bordes de algunos reproductores web), y entonces el dock
+    /// se queda encima del vídeo. Con esto el usuario lo aparta y lo devuelve cuando quiere.
+    /// </summary>
+    public void SetDocksVisible(bool visible)
+    {
+        if (DocksVisible == visible) return;
+
+        DocksVisible = visible;
+        foreach (var dock in _docks)
+        {
+            dock.SetUserHidden(!visible);
+        }
+    }
+
+    /// <summary>Interruptor para el atajo global y la bandeja.</summary>
+    public void ToggleDocksVisible() => SetDocksVisible(!DocksVisible);
+
     public void RegisterDock(EdgeDockWindow dock) => _docks.Add(dock);
+
 
     /// <summary>
     /// Fuerza el guardado inmediato (texto + posición) de todas las notas abiertas, sin pasar por su

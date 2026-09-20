@@ -46,6 +46,18 @@ internal sealed class TrayIcon : IDisposable
         menu.Items.Add(new ToolStripMenuItem(Strings.TrayNewNote, null, (_, _) => _coordinator.CreateAndOpenNote()));
         menu.Items.Add(new ToolStripMenuItem(Strings.TrayManageNotes, null, (_, _) => _coordinator.OpenNotesManager()));
         menu.Items.Add(new ToolStripSeparator());
+
+        // Ocultar el dock. Es la salida para las pantallas completas que Windows no reporta como
+        // tales (vídeo a pantalla completa en el navegador), donde el dock se queda encima. Va con
+        // marca de verificación invertida — la fila se llama "Ocultar el dock" y sale marcada
+        // mientras está oculto, que es el estado que acaba de provocar el clic.
+        var hideDockItem = new ToolStripMenuItem(Strings.TrayToggleDock) { CheckOnClick = false };
+        hideDockItem.Click += (_, _) => _coordinator.ToggleDocksVisible();
+        menu.Items.Add(hideDockItem);
+        // La marca se refresca al abrir el menú en vez de por evento: es gratis, y así no hay forma
+        // de que se quede desincronizada (el atajo global también oculta el dock, sin pasar por aquí).
+        menu.Opening += (_, _) => hideDockItem.Checked = !_coordinator.DocksVisible;
+        menu.Items.Add(new ToolStripSeparator());
         // "Ajustes…" en vez del interruptor de arranque suelto: ya son dos ajustes (arranque y
         // atajo global) y van a ser mas, y un menu contextual no es sitio para configurar nada.
         menu.Items.Add(new ToolStripMenuItem(Strings.TraySettings, null, (_, _) => _coordinator.OpenSettings()));

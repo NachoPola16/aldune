@@ -3199,3 +3199,44 @@ Dos fallos de puntería que hacían el dock "soso" justo al usarlo deprisa:
 Los tests que fijaban el grosor exacto de la tira se actualizan a la nueva banda
 (`RestingVisibleRect_*`: ahora la zona es la tira + la holgura, nunca más estrecha).
 507/507 en verde. Versión subida a **0.9.1**.
+
+## Ronda de pulido de interacción (sesión 2026-09-18)
+
+Ronda entera dedicada a interacción y pulido, pedida por el usuario como lista de puntos. El detalle
+punto por punto, con la causa raíz de cada uno y las decisiones tomadas, está en `docs/ROADMAP.md`
+→ "8. Ronda de pulido de interacción". Resumen de lo que cambió:
+
+- **Ventanas propias al frente**: gestor de notas, Ajustes y conflictos pasan a `Topmost` y se abren con
+  `AppCoordinator.RaiseAppWindow`, que aparta las notas de la capa superior mientras viven (el mecanismo
+  del menú del dock, ahora con contador para que dos dueños no se pisen) y sube la ventana al frente.
+- **Minimizar una nota** vuelve a poner su ficha en el mazo; antes la borraba del dock.
+- **Selección de texto legible**: `ApplyColor` pintaba la selección con la tinta **opaca** (un bloque
+  macizo del color del texto); ahora es un lavado translúcido.
+- **Las notificaciones salen en la pantalla del origen**, no siempre en la primaria.
+- **Aire entre la barra de scroll y el texto** de la nota, con un estilo implícito de `ScrollBar` en los
+  recursos del `TextBox` (el `Padding` del control no habría servido: la barra vive dentro del
+  `ScrollViewer` interno y el padding mueve texto y barra a la vez).
+- **La casilla de tarea vacía ya no se marca** al clicar al lado: la zona de clic es exactamente la caja
+  que se resalta al pasar el ratón.
+- **Las plantillas reparten en orden del mazo**, así que la nota que cae en cada celda ya no parece
+  aleatoria.
+- **Autoscroll con clic central** (`AutoScrollManager`) en el abanico del dock, la lista del gestor y el
+  cuerpo de la nota: el cursor manda y la vista se desplaza sola; otro clic lo apaga.
+- **Los desplegables son interruptor** (`PopupToggle`): volver a pulsar el disparador cierra en vez de
+  reabrir. Causa comprobada en la fuente de WPF: con `StaysOpen="False"` el popup toma la captura del
+  ratón y se descarta en el mouse-down, así que el handler del disparador nunca ve `IsOpen=true`.
+- **Menú "⋯" de la nota agrupado** en cuatro bloques por intención (escritura, recordatorio, estado de la
+  nota, guardar fuera/destruir).
+- **El menú de una pestaña del dock ya no se cierra solo** al alejar el ratón (fuera el timer de 550 ms).
+- **"Cascada junto al dock"** (nueva) y "Restaurar posiciones originales" conservada como estaba.
+- **Menú contextual de copiar/pegar/cortar** con la estética oscura, por estilos implícitos.
+- **Ocultar el dock con `Ctrl+Alt+H`** y desde la bandeja, para las pantallas completas que Windows no
+  reporta como tales.
+- **Ajuste de gestos de trackpad** (`TrackpadGestures`), disponible solo si `TouchpadDetector` encuentra
+  un trackpad de precisión. **No verificado en hardware**: el equipo de desarrollo no tiene trackpad.
+- **Bug de monitores**: al apagar y encender una pantalla, el dock se quedaba en la otra. Ahora la
+  reconstrucción continúa hasta que el conjunto de pantallas vuelve al de antes del cambio
+  (`MonitorSignature`), en vez de parar a los 5 ticks. **Pendiente de verificar por el usuario.**
+
+Versión subida a **0.10.0**. 507/507 tests y build correctos.
+

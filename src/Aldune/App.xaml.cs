@@ -4,6 +4,7 @@ using System.Text.Json;
 using System.Windows;
 using System.Windows.Threading;
 using Microsoft.Win32;
+using System.Linq;
 using Aldune.Core;
 using Aldune.Interop;
 using Aldune.Resources;
@@ -209,6 +210,13 @@ public partial class App : Application
         _hotkey = new GlobalHotkey(coordinator.CreateAndOpenNote);
         if (settings.GlobalHotkeyEnabled) _hotkey.Enable(settings.Hotkey);
 
+        // Segundo atajo, fijo (Ctrl+Alt+H): ocultar y devolver el dock. No es configurable a
+        // propósito — es una acción de emergencia para cuando el dock estorba encima de un vídeo a
+        // pantalla completa, y el sitio para configurar atajos ya está en Ajustes para el de crear
+        // nota. Si el registro falla (otra app lo tiene cogido) no pasa nada: queda la bandeja.
+        _dockHotkey = new GlobalHotkey(coordinator.ToggleDocksVisible);
+        _dockHotkey.Enable(HotkeyBinding.DockToggleDefault);
+
         var hotkey = _hotkey;
         var loadedSettings = settings;
         coordinator.SettingsWindowFactory = () => new SettingsWindow(
@@ -247,6 +255,7 @@ public partial class App : Application
             _coordinator?.Dispose();
             _trayIcon?.Dispose();
             _hotkey?.Dispose();
+            _dockHotkey?.Dispose();
         };
     }
 
@@ -323,10 +332,12 @@ public partial class App : Application
     private AppCoordinator? _coordinator;
     private TrayIcon? _trayIcon;
     private GlobalHotkey? _hotkey;
+    private GlobalHotkey? _dockHotkey;
     private NotesRepository? _repository;
     private AppSettings? _settings;
     private DispatcherTimer? _rebuildDebounce;
     private int _displayRebuildAttempts;
+    private string _preChangeMonitorKey = string.Empty;
     private ReminderScheduler? _reminderScheduler;
     private UpdateNotifier? _updateNotifier;
 
@@ -390,9 +401,22 @@ public partial class App : Application
         _rebuildDebounce.Tick -= OnRebuildTick;
         _rebuildDebounce.Tick += OnRebuildTick;
         _rebuildDebounce.Stop();
+        _preChangeMonitorKey = MonitorSignature(MonitorEnumerator.EnumerateMonitors());
         _displayRebuildAttempts = 0;
         _rebuildDebounce.Start();
     }
+
+    /// <summary>
+    /// Firma del conjunto de pantallas: qué monitores hay y qué tamaño tienen, por nombre de
+    /// dispositivo. Solo sirve para comparar "¿sigue todo igual?" entre dos momentos de este mismo
+    /// proceso, por eso no hace falta nada estable entre reinicios (ver el aviso de DeviceName en
+    /// <see cref="MonitorInfo"/>): basta con que dos conjuntos distintos no firmen nunca igual.
+    /// </summary>
+    private static string MonitorSignature(IReadOnlyList<MonitorInfo> monitors) =>
+        string.Join(";", monitors
+            .OrderBy(monitor => monitor.DeviceName, StringComparer.Ordinal)
+            .Select(monitor => monitor.DeviceName + "|" + (int)Math.Round(monitor.WorkArea.Width)
+                + "x" + (int)Math.Round(monitor.WorkArea.Height)));
 
     private void OnRebuildTick(object? sender, EventArgs e)
     {
@@ -402,10 +426,15 @@ public partial class App : Application
         BuildDocks();
         _coordinator?.RestoreOpenNotesAfterDisplayChange();
 
-        // Windows can raise DisplaySettingsChanged before the driver has published the final
-        // monitor list. Keep rebuilding briefly so a monitor that is powering back on gets its
-        // dock without requiring another user action.
-        if (_displayRebuildAttempts >= 5)
+        // Lo que fallaba al apagar y encender una pantalla: la lista de monitores tarda en volver a
+        // completarse (el driver publica la pantalla enchufada en pasos), y si el último rebuild cae
+        // en mitad del camino, el dock se reconstruye con lo que haya en ese momento — normalmente la
+        // otra pantalla — y ahí se queda. Por eso el criterio de parada ya no es solo "llevo N ticks",
+        // sino "el conjunto de pantallas vuelve a ser el de antes del cambio": mientras siga distinto,
+        // se sigue reconstruyendo cada 600 ms para que la pantalla que vuelve recupere su dock. El tope
+        // (12 ticks) existe para que un cambio permanente no reconstruya eternamente.
+        var current = MonitorSignature(MonitorEnumerator.EnumerateMonitors());
+        if (current == _preChangeMonitorKey || _displayRebuildAttempts >= 12)
         {
             _rebuildDebounce?.Stop();
             return;

@@ -117,6 +117,15 @@ public static class Strings
     public static string OpenAllGrid => T("Grid", "Cuadrícula");
     public static string OpenAllColumns => T("Columns", "Columnas");
     public static string CascadeNearDock => T("Cascade by the dock", "Cascada junto al dock");
+    public static string TrayToggleDock => T("Hide the dock", "Ocultar el dock");
+    public static string TrackpadGesturesCheckbox => T("Trackpad gestures",
+        "Gestos de trackpad");
+    public static string TrackpadGesturesHint => T(
+        "Scrolls with the trackpad are read as continuous gestures instead of mouse notches, so two fingers move the list in proportion instead of jumping. Only available when a precision trackpad is detected.",
+        "Los deslizamientos del trackpad se leen como gestos continuos en vez de muescas de ratón, así que dos dedos mueven la lista en proporción en vez de a saltos. Solo está disponible cuando se detecta un trackpad de precisión.");
+    public static string TrackpadGesturesNotFound => T(
+        "No precision trackpad detected on this PC, so it can't be turned on.",
+        "No se ha detectado un trackpad de precisión en este equipo, así que no se puede activar.");
     public static string NewNoteTooltip => T("New note", "Nueva nota");
     public static string NewNoteFromClipboard => T("New note from clipboard", "Nueva nota desde el portapapeles");
     public static string KeepDockOpenOn => T("✓  Keep dock open", "✓  Mantener el dock abierto");
@@ -391,6 +400,9 @@ public static class Strings
         T($"• {combo} creates a new note from anywhere.", $"• {combo} crea una nota nueva desde cualquier sitio.");
     public static string QuickHelpHotkeyOff => T("• The keyboard shortcut is off; turn it on above to create notes without going to the edge.", "• El atajo de teclado está desactivado; actívalo arriba para crear notas sin ir al borde.");
     public static string QuickHelpTray => T("• The tray icon opens the notes manager and these settings.", "• El icono de la bandeja abre el gestor de notas y estos ajustes.");
+    public static string QuickHelpHideDock => T(
+        "• Ctrl+Alt+H hides the dock and brings it back — handy for fullscreen videos Windows doesn't report as such. The tray menu has the same switch.",
+        "• Ctrl+Alt+H oculta el dock y lo devuelve — útil para vídeos a pantalla completa que Windows no reporta como tales. El menú de la bandeja tiene el mismo interruptor.");
     public static string QuickHelpDockMenus => T(
         "• Right-click the dock buttons for views, tags, notes from the clipboard, settings and Keep dock open.",
         "• Clic derecho en los botones del dock para ver vistas, tags, notas desde el portapapeles, Ajustes y Mantener el dock abierto.");

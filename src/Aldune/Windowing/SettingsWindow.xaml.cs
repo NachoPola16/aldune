@@ -56,6 +56,7 @@ public partial class SettingsWindow : Window
         HideOnFullscreenCheck.IsChecked = _settings.HideOnFullscreen;
         KeepDockOpenCheck.IsChecked = _settings.KeepDockOpen;
         RememberPositionsCheck.IsChecked = _settings.RememberNotePositions;
+        PopulateTrackpadGestures();
         AutoHideTasksCheck.IsChecked = _settings.AutoHideCompletedTasks;
         AutoHideTasksDelayValueBox.Text = _settings.AutoHideCompletedTasksDelayValue.ToString();
         TrashRetentionValueBox.Text = _settings.TrashRetentionDays.ToString();
@@ -332,6 +333,7 @@ public partial class SettingsWindow : Window
             Strings.QuickHelpEscape,
             hotkeyLine,
             Strings.QuickHelpTray,
+            Strings.QuickHelpHideDock,
             Strings.QuickHelpDockMenus,
             Strings.QuickHelpAutoHideTasks,
             Strings.QuickHelpConflicts,
@@ -401,6 +403,35 @@ public partial class SettingsWindow : Window
         _settings.KeepDockOpen = KeepDockOpenCheck.IsChecked == true;
         _settingsService.Save(_settings);
         _coordinator?.RefreshAll();
+    }
+
+    /// <summary>
+    /// El ajuste de gestos de trackpad solo se deja tocar si de verdad hay uno: sin hardware no hay
+    /// nada que interpretar, y un interruptor que se puede encender sin efecto es peor que uno que
+    /// explica por qué no está disponible. Se apaga también el valor guardado, para que no quede un
+    /// <c>true</c> heredado de otro equipo dando vueltas.
+    /// </summary>
+    private void PopulateTrackpadGestures()
+    {
+        bool hasTouchpad = TouchpadDetector.HasPrecisionTouchpad();
+        TrackpadGesturesCheck.IsEnabled = hasTouchpad;
+
+        if (!hasTouchpad && _settings.TrackpadGestures)
+        {
+            _settings.TrackpadGestures = false;
+            _settingsService.Save(_settings);
+        }
+
+        TrackpadGesturesCheck.IsChecked = hasTouchpad && _settings.TrackpadGestures;
+        TrackpadGesturesHint.Text = hasTouchpad
+            ? Strings.TrackpadGesturesHint
+            : Strings.TrackpadGesturesNotFound;
+    }
+
+    private void OnTrackpadGesturesToggled(object sender, RoutedEventArgs e)
+    {
+        _settings.TrackpadGestures = TrackpadGesturesCheck.IsChecked == true;
+        _settingsService.Save(_settings);
     }
 
     private void PopulateEdges()

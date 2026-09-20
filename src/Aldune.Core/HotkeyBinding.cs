@@ -26,6 +26,14 @@ public sealed record HotkeyBinding(uint Modifiers, uint Key)
     public static HotkeyBinding Default => new(ModControl | ModShift, 0x4E);
 
     /// <summary>
+    /// Ctrl + Alt + H: ocultar o devolver el dock. Tiene que ser un atajo y no solo una fila de la
+    /// bandeja porque el caso que lo pide es un vídeo a pantalla completa, donde la bandeja tampoco
+    /// está a la vista. Ctrl+Alt+H (H de hide) no lo usa Windows para nada y es fácil de recordar;
+    /// se descartan las combinaciones con Win para no pisar atajos del sistema.
+    /// </summary>
+    public static HotkeyBinding DockToggleDefault => new(ModControl | ModAlt, 0x48);
+
+    /// <summary>
     /// Si la combinación es registrable. Sin al menos un modificador, un atajo global se tragaría
     /// esa tecla en todo el sistema, que es justo lo que no debe hacer una app de notas.
     /// </summary>

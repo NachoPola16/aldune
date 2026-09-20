@@ -101,6 +101,15 @@ public sealed class AppSettings
     public bool KeepDockOpen { get; set; }
 
     /// <summary>
+    /// Si la rueda se interpreta como gesto continuo (paso proporcional al delta) en vez de como
+    /// muescas de ratón. Solo tiene sentido con trackpad de precisión: con un ratón los deltas ya son
+    /// muescas completas y el resultado es el mismo. Ajustes lo deja deshabilitado y apagado cuando no
+    /// detecta trackpad (ver <c>TouchpadDetector</c>), así que un <c>true</c> guardado en un equipo sin
+    /// trackpad no supone nada: el ajuste solo se lee cuando hay gestos que interpretar.
+    /// </summary>
+    public bool TrackpadGestures { get; set; } = true;
+
+    /// <summary>
     /// Borde de la pantalla donde se ancla el dock de Aldune. Por defecto derecha (EdgePosition.Right).
     /// </summary>
     public EdgePosition DockEdge { get; set; } = EdgePosition.Right;

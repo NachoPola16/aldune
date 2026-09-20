@@ -604,6 +604,16 @@
                     <TextBlock Text="{x:Static res:Strings.RememberPositionsHint}"
                                Foreground="#8A8175" FontSize="11" TextWrapping="Wrap" Margin="27,6,0,0" />
                 </StackPanel>
+
+                <StackPanel Margin="0,20,0,0">
+                    <CheckBox x:Name="TrackpadGesturesCheck"
+                              Content="{x:Static res:Strings.TrackpadGesturesCheckbox}"
+                              Foreground="#EDE7DC" Background="#2A261F" FontSize="13"
+                              Style="{StaticResource AppCheckBoxStyle}"
+                              Click="OnTrackpadGesturesToggled" />
+                    <TextBlock x:Name="TrackpadGesturesHint"
+                               Foreground="#8A8175" FontSize="11" TextWrapping="Wrap" Margin="27,6,0,0" />
+                </StackPanel>
             </StackPanel>
         </Grid>
 

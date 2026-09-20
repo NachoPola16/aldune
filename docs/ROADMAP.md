@@ -10,7 +10,7 @@ Sesión de origen: 2026-09-06.
 
 ## Versión visible de la aplicación
 
-La ronda actual se identifica como **v0.9.1**. La versión se muestra en Ajustes y también en el texto
+La ronda actual se identifica como **v0.10.0**. La versión se muestra en Ajustes y también en el texto
 del icono de la bandeja. Cada actualización grande deberá incrementar este número siguiendo SemVer:
 parches para correcciones, versión menor para funcionalidades nuevas y versión mayor cuando haya
 cambios incompatibles.
@@ -782,11 +782,50 @@ cubrirla paso a paso. **Una sola release al final de la ronda.**
     siguen siendo los nativos, con la traducción del Windows del usuario, no una inventada. Lo coge
     cualquier `TextBox` (notas, Ajustes, gestor, recordatorios) sin tocar cada ventana.
 
-### Tanda D — Cierre (pendiente)
+### Tanda D — Cierre (hecho en esta sesión)
 
-15. Revisión de interacciones con trackpad y atajos; decidir si se añade algo.
-16. Actualizar documentación: `STATUS.md`, este roadmap, ayuda rápida y `README` si toca.
-17. Release.
+15. **Trackpad**: revisado. Un trackpad de precisión no manda gestos propios a una app de escritorio —
+    manda rueda (y rueda horizontal) con deltas pequeños y seguidos, así que "interacciones de trackpad"
+    no es una lista de gestos que se puedan activar: es **cómo se interpreta la rueda**. Ajuste nuevo
+    `AppSettings.TrackpadGestures`: con él encendido, el abanico del dock usa paso proporcional al delta
+    (un gesto de dos dedos mueve lo que debe) en vez del paso fijo de una muesca de ratón por evento.
+    `TouchpadDetector` (`Interop`, best-effort por registro) decide si el ajuste está disponible: sin
+    trackpad de precisión, Ajustes lo deja **deshabilitado y apagado**, y explica por qué. **No
+    verificado en hardware real**: el equipo de desarrollo no tiene trackpad (`PrecisionTouchPad` no
+    existe en el registro), así que lo único comprobado es que la detección responde "no" y que el
+    interruptor sale bloqueado con su explicación. Con ratón el camino no cambia (deltas ≥ 120).
+    El clic central (autoscroll, punto 7) es la alternativa de trackpad para desplazar sin rueda.
+16. **Trackpad y atajos, documentados**: `Ctrl+Alt+H` (nuevo) y el interruptor de bandeja en la ayuda
+    rápida. Ver "Efectos secundarios del apagado de pantalla" para el tercer punto de esta tanda.
+17. **Documentación y versión**: `STATUS.md`, este roadmap, ayuda rápida y `README` al día; versión a
+    **0.10.0** (funcionalidad nueva) en `Aldune.csproj` y aquí.
+
+### Ocultar el dock (pedido durante la ronda)
+
+`Ctrl+Alt+H` y una fila en el menú de la bandeja ("Ocultar el dock", con marca mientras lo está) ocultan
+el dock sin cerrarlo y lo devuelven. Motivo: hay pantallas completas que Windows **no** reporta como
+tales (vídeo a pantalla completa dentro de un navegador, sobre todo sin bordes), así que la detección de
+pantalla completa no las cubre y el dock se queda encima. El atajo es imprescindible en ese caso porque
+la bandeja tampoco está a la vista. `AppCoordinator.DocksVisible` **no se guarda**: es una acción de un
+momento, no una preferencia, y persistirla significaría arrancar algún día sin dock y sin recordar por qué.
+
+### Efectos secundarios del apagado de pantalla (bug reportado)
+
+**Síntoma**: con dos monitores, apagar uno mueve su dock a la otra pantalla; al volver a encenderlo, el
+dock se queda donde se movió en vez de regresar.
+
+**Causa**: al reconstruir los docks tras un `DisplaySettingsChanged`, Windows publica la lista de
+monitores en varios pasos y `App.OnRebuildTick` paraba a los **5 ticks** (≈3 s) contara lo que contara.
+Si la pantalla que vuelve tarda más en aparecer en la lista, el último rebuild se hace con un solo
+monitor, ese dock se crea en la pantalla equivocada y ya no hay más intentos.
+
+**Arreglo**: el criterio de parada pasa a ser "el conjunto de pantallas ya es el de antes del cambio"
+(firma por nombre de dispositivo y tamaño, `MonitorSignature`) y solo el tope de 12 ticks corta un cambio
+permanente. Mientras el conjunto siga distinto se sigue reconstruyendo cada 600 ms, así que la pantalla
+que vuelve recupera su dock sola.
+
+**Pendiente de verificar por el usuario**: apagar y encender la pantalla otra vez con la app abierta.
+
 
 ### Decisiones tomadas con el usuario (2026-09-18)
 

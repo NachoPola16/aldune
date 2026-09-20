@@ -481,6 +481,11 @@ public partial class EdgeDockWindow : Window
         // borde de pantalla (p. ej. la barra de scroll de un navegador).
         if (NativeMethods.IsLeftButtonDown()) return;
 
+        // Un dock oculto no responde al ratón: el sondeo compara el cursor contra el rectángulo de la
+        // ventana, y una ventana oculta conserva el suyo, así que sin esto intentaría desplegar algo
+        // que no se ve (y al volver lo haría por sorpresa).
+        if (!IsVisible) return;
+
         var dpi = VisualTreeHelper.GetDpi(this);
         var cursorScreen = NativeMethods.GetCursorScreenPosition();
         double cursorX = cursorScreen.X / dpi.DpiScaleX;
@@ -944,11 +949,27 @@ public partial class EdgeDockWindow : Window
 
     private void OnTabsPreviewMouseWheel(object sender, MouseWheelEventArgs e)
     {
-        if (!IsTopBottomEdge || !_fanState.IsExpanded || e.Delta == 0) return;
+        if (!_fanState.IsExpanded || e.Delta == 0) return;
+
+        // La rueda de un ratón llega en muescas de 120; un trackpad de precisión (gesto de dos dedos)
+        // manda muchos eventos pequeños y seguidos. Con el paso fijo de una muesca por evento, un
+        // solo gesto de trackpad saltaría media lista: con el ajuste de gestos de trackpad encendido
+        // el paso pasa a ser proporcional al delta, y un ratón sigue comportándose igual (sus deltas
+        // son muescas completas). Ver AppSettings.TrackpadGestures.
+        if (_settings is { TrackpadGestures: true } && !IsFullWheelNotch(e.Delta))
+        {
+            TabsScroll.ScrollToVerticalOffset(
+                TabsScroll.VerticalOffset - e.Delta / 120.0 * ArrowScrollStep);
+            e.Handled = true;
+            return;
+        }
 
         ScrollByArrow(e.Delta < 0 ? 1 : -1);
         e.Handled = true;
     }
+
+    /// <summary>Una muesca completa de rueda de ratón: Windows la define como múltiplo de 120.</summary>
+    private static bool IsFullWheelNotch(int delta) => Math.Abs(delta) >= 120;
 
     private void ScrollByArrow(int direction, double step = ArrowScrollStep)
     {
@@ -1774,6 +1795,38 @@ public partial class EdgeDockWindow : Window
     /// Aquí sí se conoce el monitor de verdad, así que se corrige antes de que la ventana se
     /// muestre por primera vez.
     /// </summary>
+    /// <summary>
+    /// Oculta el dock sin cerrarlo, o lo devuelve. Lo usa el interruptor de la bandeja y su atajo
+    /// global para el caso que la detección de pantalla completa no cubre (vídeo a pantalla completa
+    /// que Windows no reporta como tal).
+    ///
+    /// Al ocultar se pliega el abanico y se cierran los popups primero: una ventana oculta con un
+    /// menú abierto dejaría el menú flotando solo, y al volver aparecería desplegado sin motivo.
+    /// Al mostrar se reafirman la geometría y la capa superior, porque ocultar y mostrar una ventana
+    /// puede devolverla por debajo de las notas.
+    /// </summary>
+    internal void SetUserHidden(bool hidden)
+    {
+        if (hidden)
+        {
+            CloseDockPopups();
+            _autoScroll?.Stop();
+            if (_fanState.IsExpanded)
+            {
+                _fanState.PointerLeft();
+                _fanState.CollapseTimerElapsed();
+            }
+
+            Hide();
+            return;
+        }
+
+        Show();
+        ApplyWindowRect();
+        if (_hwnd != IntPtr.Zero) NativeMethods.EnsureTopmost(_hwnd);
+        Refresh();
+    }
+
     internal void CenterOnThisMonitor(Window window)
     {
         window.MaxHeight = _workingArea.Height * 0.9;
