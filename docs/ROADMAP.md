@@ -10,7 +10,7 @@ Sesión de origen: 2026-09-06.
 
 ## Versión visible de la aplicación
 
-La ronda actual se identifica como **v0.10.0**. La versión se muestra en Ajustes y también en el texto
+La ronda actual se identifica como **v0.10.1**. La versión se muestra en Ajustes y también en el texto
 del icono de la bandeja. Cada actualización grande deberá incrementar este número siguiendo SemVer:
 parches para correcciones, versión menor para funcionalidades nuevas y versión mayor cuando haya
 cambios incompatibles.
@@ -817,7 +817,7 @@ cubrirla paso a paso. **Una sola release al final de la ronda.**
   estado roto. Ahora se graba tras cada reconstrucción buena, que es el único momento en que la app
   tiene monitores y docks alineados.
 
-### Revisión sobre la 0.10.0 (segunda pasada)
+### Revisión sobre la 0.10.0 (segunda pasada; publicada como 0.10.1)
 
 - **El ciclo de monitores seguía parando tras el primer rebuild**: `_preChangeMonitorKey` se fijaba
   **dentro** de `BuildDocks`, así que la comparación del tick contra la firma recién construida era
