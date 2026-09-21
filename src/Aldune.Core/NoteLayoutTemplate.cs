@@ -5,5 +5,7 @@ public enum NoteLayoutTemplate
 {
     Normal,
     Grid,
-    Columns
+    Columns,
+    /// <summary>Cascada junto al dock desplegado. Al final del enum: el valor se guarda como número.</summary>
+    DockCascade
 }

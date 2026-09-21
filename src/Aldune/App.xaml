@@ -303,7 +303,9 @@
                         <Border Background="{TemplateBinding Background}"
                                 BorderBrush="{TemplateBinding BorderBrush}"
                                 BorderThickness="{TemplateBinding BorderThickness}"
-                                CornerRadius="10" Padding="{TemplateBinding Padding}">
+                                CornerRadius="10" Padding="{TemplateBinding Padding}" Margin="10">
+                            <!-- Margin="10": sin aire alrededor la sombra cae fuera del HWND del menú y sale
+                                 recortada; es el mismo margen que llevan los demás paneles flotantes. -->
                             <Border.Effect>
                                 <DropShadowEffect BlurRadius="12" ShadowDepth="2" Direction="270"
                                                   Color="#000000" Opacity="0.4" />

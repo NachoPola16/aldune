@@ -29,7 +29,15 @@ internal static class DarkTextContextMenu
         // Respeta el que ya tenga puesto quien lo quiera distinto (p. ej. una caja sin menú).
         if (sender is not TextBoxBase box || box.ContextMenu is not null) return;
 
-        var menu = new ContextMenu();
+        // Se abre hacia la derecha y abajo del puntero, como un menú contextual normal. Los -6 cancelan
+        // parte del aire de 10 px que el estilo deja para la sombra, para que la esquina del menú
+        // quede junto al puntero y no separada de él.
+        var menu = new ContextMenu
+        {
+            Placement = PlacementMode.MousePoint,
+            HorizontalOffset = -6,
+            VerticalOffset = -6
+        };
         menu.Items.Add(Item(Strings.Cut, ApplicationCommands.Cut, box));
         menu.Items.Add(Item(Strings.Copy, ApplicationCommands.Copy, box));
         menu.Items.Add(Item(Strings.Paste, ApplicationCommands.Paste, box));

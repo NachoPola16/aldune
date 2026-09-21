@@ -462,6 +462,14 @@ public sealed class AppCoordinator
         NoteLayoutTemplate layout = NoteLayoutTemplate.Normal,
         string? targetMonitorKey = null)
     {
+        // La cascada junto al dock es una plantilla más (se recuerda como las demás): el clic izquierdo
+        // del botón vuelve a abrir en ella, no en la cascada por defecto de cada pestaña.
+        if (layout == NoteLayoutTemplate.DockCascade)
+        {
+            CascadeNotesNearDock(requestingDock, targetMonitorKey);
+            return;
+        }
+
         foreach (var note in NotesForCurrentDockView())
         {
             if (IsNoteOpen(note.Id)) continue;
@@ -529,6 +537,13 @@ public sealed class AppCoordinator
         if (MonitorLookup.TargetOrFallback(targetMonitorKey, preferredDock.MonitorKey, monitors) is not { } target)
         {
             return; // ni la pantalla pedida ni la del dock existen ahora mismo
+        }
+
+        if (layout == NoteLayoutTemplate.DockCascade)
+        {
+            CascadeOpenNotesNearDock(
+                target.WorkArea, _settings?.DockEdge ?? EdgePosition.Right, NotesForCurrentDockView().Count);
+            return;
         }
 
         var windows = OpenWindowsInDeckOrder();

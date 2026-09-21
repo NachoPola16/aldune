@@ -10,7 +10,7 @@ Sesión de origen: 2026-09-06.
 
 ## Versión visible de la aplicación
 
-La ronda actual se identifica como **v0.10.3**. La versión se muestra en Ajustes y también en el texto
+La ronda actual se identifica como **v0.10.4**. La versión se muestra en Ajustes y también en el texto
 del icono de la bandeja. Cada actualización grande deberá incrementar este número siguiendo SemVer:
 parches para correcciones, versión menor para funcionalidades nuevas y versión mayor cuando haya
 cambios incompatibles.
@@ -860,6 +860,18 @@ cubrirla paso a paso. **Una sola release al final de la ronda.**
   dock en un lateral y por filas con el dock arriba o abajo.
 - **Barra de scroll de la nota** con la tinta de la nota (pulgar fino, pista transparente).
 - Fuera el comentario huérfano de "Restaurar posiciones" sobre `OpenSettings`.
+
+### Ajustes sobre la 0.10.3 (publicada como 0.10.4)
+
+- **"Cascada junto al dock" ahora es una plantilla que se recuerda** (`NoteLayoutTemplate.DockCascade`,
+  al final del enum porque se guarda como número). Antes solo se recordaban Normal, Cuadrícula y
+  Columnas: tras cascadear, cerrar y pulsar el botón con clic izquierdo, las notas salían en otra
+  disposición. Ahora el clic izquierdo repite la última elegida, cascada incluida, y una nota abierta
+  suelta encaja en ella.
+- **Menú de cortar/copiar/pegar**: se abre explícitamente hacia la derecha y abajo del puntero
+  (`PlacementMode.MousePoint`) y su plantilla deja 10 px de aire para la sombra, que salía recortada.
+- Revisión de animaciones: ya son coherentes (150-220 ms, ease-out, escala 0,95 + fundido) y no se toca
+  nada. Los desplegables del dock se abren hacia dentro de la pantalla según el canto, a propósito.
 
 ### Ocultar el dock (pedido durante la ronda)
 
