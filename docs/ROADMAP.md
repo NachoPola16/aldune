@@ -10,7 +10,7 @@ Sesión de origen: 2026-09-06.
 
 ## Versión visible de la aplicación
 
-La ronda actual se identifica como **v0.10.2**. La versión se muestra en Ajustes y también en el texto
+La ronda actual se identifica como **v0.10.3**. La versión se muestra en Ajustes y también en el texto
 del icono de la bandeja. Cada actualización grande deberá incrementar este número siguiendo SemVer:
 parches para correcciones, versión menor para funcionalidades nuevas y versión mayor cuando haya
 cambios incompatibles.
@@ -843,6 +843,23 @@ cubrirla paso a paso. **Una sola release al final de la ronda.**
   `RestoreOpenNotesToMonitor` y el texto `Strings.RestoreOriginalPositions` — todo sin referencias
   desde ningún lado. **Si el usuario echa de menos la restauración, se recupera de git** (el código
   sigue entero en el historial) en vez de dejar la mitad muerta.
+
+### Correcciones sobre la 0.10.2 (publicada como 0.10.3)
+
+- **El "⋯" de la nota se reabría al pulsarlo con el menú abierto**: el `PopupToggle` de `NoteWindow`
+  nunca recibía su disparador (`SetTrigger`), así que no podía saber que el cierre lo había provocado
+  el propio botón. Los toggles del dock y del gestor sí lo fijaban; este no.
+- **El menú de copiar/pegar seguía claro**: el menú nativo de un TextBox es una subclase interna de
+  `ContextMenu` y los estilos implícitos de WPF casan solo por tipo exacto. `DarkTextContextMenu` da a
+  cada TextBox un `ContextMenu` propio (Cortar/Copiar/Pegar con los comandos nativos) que sí recibe el
+  estilo oscuro de `App.xaml`.
+- **Cascada junto al dock con hueco para el abanico**: `NoteCascade` (Core, con tests para los 4
+  cantos) arranca junto al rectángulo del dock desplegado (`EdgeGeometry.WindowRect`), no del canto.
+- **Orden de las plantillas**: abrir varias notas lanzaba un reparto por nota (`arrangeAfterOpen`), que
+  se pisaban entre sí; ahora el lote hace uno solo. Cuadrícula/columnas se rellenan por columnas con el
+  dock en un lateral y por filas con el dock arriba o abajo.
+- **Barra de scroll de la nota** con la tinta de la nota (pulgar fino, pista transparente).
+- Fuera el comentario huérfano de "Restaurar posiciones" sobre `OpenSettings`.
 
 ### Ocultar el dock (pedido durante la ronda)
 

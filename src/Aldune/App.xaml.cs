@@ -24,6 +24,7 @@ public partial class App : Application
         // mensajes de error del arranque más temprano salen en el idioma que toca la mayoría de las
         // veces, en vez de siempre en inglés.
         ApplyLanguage(null);
+        DarkTextContextMenu.Register();
 
         // Ver el comentario de DisablePowerThrottling: Aldune vive casi siempre sin foco, y
         // Windows puede reducirle CPU/prioridad tras un rato así — mitigacion contra el reporte de

@@ -19,9 +19,9 @@
     <!-- Metadatos de marca: son los que Windows muestra en las propiedades del .exe, en el
          Administrador de tareas y en el dialogo de Inno Setup. Sin esto, apareceria el nombre
          tecnico del ensamblado ("aldune", en minusculas) en vez del nombre del producto. -->
-    <Version>0.10.2</Version>
-    <AssemblyVersion>0.10.2.0</AssemblyVersion>
-    <FileVersion>0.10.2.0</FileVersion>
+    <Version>0.10.3</Version>
+    <AssemblyVersion>0.10.3.0</AssemblyVersion>
+    <FileVersion>0.10.3.0</FileVersion>
     <Product>Aldune</Product>
     <AssemblyTitle>Aldune</AssemblyTitle>
     <Company>Aldune</Company>

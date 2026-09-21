@@ -251,7 +251,8 @@ public sealed class AppCoordinator
         Note note,
         EdgeDockWindow requestingDock,
         System.Windows.Rect? originRect = null,
-        string? targetMonitorKey = null)
+        string? targetMonitorKey = null,
+        bool arrangeAfterOpen = true)
     {
         if (_openNoteWindows.TryGetValue(note.Id, out var existing))
         {
@@ -322,7 +323,11 @@ public sealed class AppCoordinator
         // para que quepa. Es lo que convierte "abrir todas en columnas" en un estado del escritorio y
         // no en una acción de un instante — al abrir cualquiera después, encaja donde toca. Con la
         // disposición Normal (la de fábrica) no se toca nada: manda la cascada de siempre.
-        if (_settings?.DefaultNoteLayout is { } layout && layout != NoteLayoutTemplate.Normal)
+        // arrangeAfterOpen=false cuando quien abre es un lote (abrir todas, cascada): el lote hace UN
+        // reparto al final. Con uno por nota, N repartos concurrentes sobre ventanas que aún se
+        // animan pisaban las posiciones unos a otros y el orden final dependía de las carreras.
+        if (arrangeAfterOpen
+            && _settings?.DefaultNoteLayout is { } layout && layout != NoteLayoutTemplate.Normal)
         {
             Application.Current.Dispatcher.BeginInvoke(DispatcherPriority.Loaded, new Action(() =>
                 ArrangeOpenNotes(layout, requestingDock, targetMonitorKey)));
@@ -460,7 +465,7 @@ public sealed class AppCoordinator
         foreach (var note in NotesForCurrentDockView())
         {
             if (IsNoteOpen(note.Id)) continue;
-            OpenOrActivateNote(note, requestingDock, targetMonitorKey: targetMonitorKey);
+            OpenOrActivateNote(note, requestingDock, targetMonitorKey: targetMonitorKey, arrangeAfterOpen: false);
         }
 
         // También se ejecuta para Normal: si ya había notas abiertas, elegir "Normal cascade"
@@ -537,13 +542,18 @@ public sealed class AppCoordinator
             window.UpdateLayout();
         }
 
-        ArrangeWindowsOnMonitor(windows, target.WorkArea, layout);
+        // Con el dock en un lateral el abanico se lee de arriba abajo, así que las celdas se rellenan
+        // por columnas para que la primera columna sea la primera tanda de pestañas. Con el dock
+        // arriba o abajo, la lectura natural es por filas.
+        bool columnMajor = (_settings?.DockEdge ?? EdgePosition.Right) is EdgePosition.Left or EdgePosition.Right;
+        ArrangeWindowsOnMonitor(windows, target.WorkArea, layout, columnMajor);
     }
 
     private static void ArrangeWindowsOnMonitor(
         IReadOnlyList<NoteWindow> windows,
         WorkingArea area,
-        NoteLayoutTemplate layout)
+        NoteLayoutTemplate layout,
+        bool columnMajor)
     {
         if (windows.Count == 0) return;
 
@@ -560,7 +570,7 @@ public sealed class AppCoordinator
                     availableWidth,
                     availableHeight,
                     maxColumns: 4);
-                PlaceInCells(templateWindows, area, TemplateMargin, availableWidth, availableHeight, gridColumns);
+                PlaceInCells(templateWindows, area, TemplateMargin, availableWidth, availableHeight, gridColumns, columnMajor);
                 break;
 
             case NoteLayoutTemplate.Columns:
@@ -569,7 +579,7 @@ public sealed class AppCoordinator
                     availableWidth,
                     availableHeight,
                     maxColumns: availableWidth >= availableHeight ? 3 : 2);
-                PlaceInCells(templateWindows, area, TemplateMargin, availableWidth, availableHeight, columnCount);
+                PlaceInCells(templateWindows, area, TemplateMargin, availableWidth, availableHeight, columnCount, columnMajor);
                 break;
 
             default:
@@ -632,7 +642,8 @@ public sealed class AppCoordinator
         double margin,
         double availableWidth,
         double availableHeight,
-        int columnCount)
+        int columnCount,
+        bool columnMajor)
     {
         int rowCount = (int)Math.Ceiling(windows.Count / (double)columnCount);
         double cellWidth = availableWidth / columnCount;
@@ -640,8 +651,8 @@ public sealed class AppCoordinator
 
         for (int index = 0; index < windows.Count; index++)
         {
-            int column = index % columnCount;
-            int row = index / columnCount;
+            int column = columnMajor ? index / rowCount : index % columnCount;
+            int row = columnMajor ? index % rowCount : index / columnCount;
             var window = windows[index];
             double left = area.X + margin + column * cellWidth + (cellWidth - window.Width) / 2;
             double top = area.Y + margin + row * cellHeight + (cellHeight - window.Height) / 2;
@@ -838,20 +849,22 @@ public sealed class AppCoordinator
         foreach (var note in NotesForCurrentDockView())
         {
             if (!IsNoteOpen(note.Id))
-                OpenOrActivateNote(note, requestingDock, targetMonitorKey: target.DeviceName);
+                OpenOrActivateNote(note, requestingDock, targetMonitorKey: target.DeviceName, arrangeAfterOpen: false);
         }
 
+        int deckSize = NotesForCurrentDockView().Count;
         Application.Current.Dispatcher.BeginInvoke(DispatcherPriority.Loaded, new Action(() =>
-            CascadeOpenNotesNearDock(target.WorkArea, _settings?.DockEdge ?? EdgePosition.Right)));
+            CascadeOpenNotesNearDock(target.WorkArea, _settings?.DockEdge ?? EdgePosition.Right, deckSize)));
     }
 
     /// <summary>
-    /// Cascada pegada al canto que indica <paramref name="edge"/>, en diagonal hacia dentro. Cada
-    /// ventana deja asomar la cabecera de la anterior (el paso es menor que la ventana), así que es
-    /// fácil coger cualquiera sin adivinar qué hay debajo. Con muchas notas la cascada se comprime a
-    /// partir de la sexta: no hay pantalla donde quepa una en escalera eterna de una en una.
+    /// Cascada junto al dock que indica <paramref name="edge"/>, dejando libre el hueco donde se
+    /// despliega su abanico (ver <see cref="NoteCascade"/>). Cada ventana deja asomar la cabecera de la
+    /// anterior (el paso es menor que la ventana), así que es fácil coger cualquiera sin adivinar qué
+    /// hay debajo. Con muchas notas la cascada se comprime a partir de la sexta: no hay pantalla donde
+    /// quepa una en escalera eterna de una en una.
     /// </summary>
-    private void CascadeOpenNotesNearDock(WorkingArea area, EdgePosition edge)
+    private void CascadeOpenNotesNearDock(WorkingArea area, EdgePosition edge, int deckSize)
     {
         // ToList antes de mover: fijar Left/Top dispara LocationChanged, que puede tocar la posición
         // mientras se recorre el diccionario. Orden del mazo, igual que las plantillas: la cascada lee
@@ -859,50 +872,16 @@ public sealed class AppCoordinator
         var windows = OpenWindowsInDeckOrder();
         if (windows.Count == 0) return;
 
-        // El gap mínimo deja la primera pegada al dock y los siguientes pegados a la anterior: con
-        // 46 px de base el abanico se separaba demasiado del canto y "se movía arriba a la derecha"
-        // en vez de quedar junto al dock.
-        const double gap = 22;
-        const double step = 32;
-        const int maxLevels = 5;
-
-        foreach (var (window, index) in windows.Select((window, index) => (window, index)))
+        for (int index = 0; index < windows.Count; index++)
         {
+            var window = windows[index];
             if (window.WindowState != WindowState.Normal) window.WindowState = WindowState.Normal;
 
-            int level = Math.Min(index, maxLevels);
-
-            double left = edge switch
-            {
-                EdgePosition.Left => area.X + gap + level * step,
-                EdgePosition.Right => area.X + area.Width - window.Width - gap - level * step,
-                _ => area.X + gap + level * step
-            };
-            double top = edge switch
-            {
-                EdgePosition.Top => area.Y + gap + level * step,
-                EdgePosition.Bottom => area.Y + area.Height - window.Height - gap - level * step,
-                // En los laterales la cascada arranca en el centro del dock, no arriba del todo: con
-                // el gap vertical la primera quedaba pegada arriba, separada del abanico.
-                _ => area.Y + (area.Height - window.Height) / 2 + level * step
-            };
-
+            var (left, top) = NoteCascade.Position(area, edge, deckSize, window.Width, window.Height, index);
             SetWindowPosition(window, area, left, top);
         }
     }
 
-    /// Abre todas las notas de la vista y devuelve cada una a la posición y el tamaño que tenía guardados en una pantalla — los
-    /// mismos que aplica <see cref="TryRestorePlacement"/> al abrirla, y que guarda
-    /// <c>NoteWindow.SavePlacementForCurrentMonitor</c> en la tabla <c>NotePlacement</c> del
-    /// repositorio. Es la opción "Restaurar posiciones originales" del menú del dock: deshace de un
-    /// golpe el reparto en cuadrícula o columnas.
-    ///
-    /// La pantalla es la del dock que pidió la acción (o <paramref name="targetMonitorKey"/> si se
-    /// eligió otra): las notas vuelven a su sitio EN ESA pantalla, aunque estuvieran repartidas por
-    /// otras. Una nota que no tenga posición recordada ahí — o cuya posición ya no caiga dentro de esa
-    /// pantalla, porque cambió de resolución o de sitio — se coloca cerca del dock, para que la
-    /// acción siempre tenga un resultado visible.
-    /// </summary>
     public void OpenSettings()
     {
         if (_openingSettings) return;

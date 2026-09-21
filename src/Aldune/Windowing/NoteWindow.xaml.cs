@@ -81,6 +81,9 @@ public partial class NoteWindow : Window
         _initialHeight = Height;
         _autoScroll = new AutoScrollManager(BodyHost, null, TextBody);
         _menuToggle = new PopupToggle(ActionsPopup);
+        // Sin disparador el toggle no puede saber que el cierre lo provocó el propio "⋯" y el clic
+        // siempre reabría el menú: PopupToggle solo consume el open si el puntero está sobre él.
+        _menuToggle.SetTrigger(MenuButton);
         Closed += (_, _) => _autoScroll.Stop();
         _note = note;
         _repository = repository;
