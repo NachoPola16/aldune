@@ -222,7 +222,6 @@
                         Content="&#x22EF;"
                         Width="26" Height="26"
                         FontSize="14"
-                        PreviewMouseLeftButtonDown="OnMenuPreviewMouseDown"
                         Click="OnMenuClick"
                         ToolTip="{x:Static res:Strings.MoreActionsTooltip}"
                         WindowChrome.IsHitTestVisibleInChrome="True"

@@ -338,7 +338,8 @@ public partial class SettingsWindow : Window
             Strings.QuickHelpAutoHideTasks,
             Strings.QuickHelpConflicts,
             Strings.QuickHelpSync,
-            Strings.QuickHelpSearch
+            Strings.QuickHelpSearch,
+            Strings.QuickHelpAutoScroll
         });
     }
 

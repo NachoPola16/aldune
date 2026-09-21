@@ -485,6 +485,27 @@ public sealed class AppCoordinator
     }
 
     /// <summary>
+    /// Las ventanas de nota abiertas, en el orden del MAZO (el de las pestañas del dock), no en el de
+    /// apertura. `_openNoteWindows` es un diccionario y su orden es el de inserción: repartir en ese
+    /// orden hacía que la nota que caía en cada celda de una disposición pareciera aleatoria y que la
+    /// cuadrícula no se correspondiera con el abanico. Con el mismo orden que el dock, la primera celda
+    /// es la primera pestaña. Las que no estén en la vista actual (no pueden, porque las cierra
+    /// <c>CloseNotesOutsideCurrentView</c>) quedarían al final, pero se deja la defensa por si algún
+    /// día cambia esa regla.
+    /// </summary>
+    private List<NoteWindow> OpenWindowsInDeckOrder()
+    {
+        var deckOrder = NotesForCurrentDockView()
+            .Select((note, index) => (note.Id, index))
+            .ToDictionary(entry => entry.Id, entry => entry.index);
+
+        return _openNoteWindows
+            .OrderBy(pair => deckOrder.TryGetValue(pair.Key, out int index) ? index : int.MaxValue)
+            .Select(pair => pair.Value)
+            .ToList();
+    }
+
+    /// <summary>
     /// Reparte las notas abiertas con la plantilla elegida, todas en la misma pantalla: la del dock
     /// que pidió la acción, o <paramref name="targetMonitorKey"/> si se pidió otra de las que no
     /// tienen dock (ver <see cref="DockCount"/>).
@@ -505,18 +526,7 @@ public sealed class AppCoordinator
             return; // ni la pantalla pedida ni la del dock existen ahora mismo
         }
 
-        // Orden del MAZO, no el de apertura. `_openNoteWindows` es un diccionario, así que su orden
-        // es el de inserción: repartir en ese orden hacía que la nota que caía en cada celda pareciera
-        // aleatoria y que la cuadrícula no se correspondiera con el abanico. Con el mismo orden que el
-        // dock, la primera celda es la primera pestaña.
-        var deckOrder = NotesForCurrentDockView()
-            .Select((note, index) => (note.Id, index))
-            .ToDictionary(entry => entry.Id, entry => entry.index);
-
-        var windows = _openNoteWindows
-            .OrderBy(pair => deckOrder.TryGetValue(pair.Key, out int index) ? index : int.MaxValue)
-            .Select(pair => pair.Value)
-            .ToList();
+        var windows = OpenWindowsInDeckOrder();
 
         foreach (var window in windows)
         {
@@ -844,8 +854,9 @@ public sealed class AppCoordinator
     private void CascadeOpenNotesNearDock(WorkingArea area, EdgePosition edge)
     {
         // ToList antes de mover: fijar Left/Top dispara LocationChanged, que puede tocar la posición
-        // mientras se recorre el diccionario.
-        var windows = _openNoteWindows.Values.ToList();
+        // mientras se recorre el diccionario. Orden del mazo, igual que las plantillas: la cascada lee
+        // la primera pestaña más cerca del dock y así sucesivamente.
+        var windows = OpenWindowsInDeckOrder();
         if (windows.Count == 0) return;
 
         // El gap mínimo deja la primera pegada al dock y los siguientes pegados a la anterior: con

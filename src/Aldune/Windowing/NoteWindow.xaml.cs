@@ -948,14 +948,6 @@ public partial class NoteWindow : Window
         _windowStateBefore = WindowState;
     }
 
-    private void OnMenuPreviewMouseDown(object sender, MouseButtonEventArgs e)
-    {
-        // _menuToggle decide en Click si este gesto abre o consume el cierre del descarte. Aquí
-        // no hay nada que hacer: con la captura del popup activa, IsOpen ya es false cuando este
-        // evento llega y la comprobación "está abierto" de aquí no puede funcionar nunca.
-        _ = e;
-    }
-
     private void OnMenuClick(object sender, RoutedEventArgs e)
     {
         // El descarte de StaysOpen=False ocurre en el mouse-down, antes de este Click: si ese

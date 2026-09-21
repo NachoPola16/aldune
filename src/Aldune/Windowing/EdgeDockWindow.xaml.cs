@@ -457,7 +457,8 @@ public partial class EdgeDockWindow : Window
             || OpenAllMenuPopup.IsOpen
             || DockViewPopup.IsOpen
             || NewNoteMenuPopup.IsOpen
-            || TagEditorPopup.IsOpen)
+            || TagEditorPopup.IsOpen
+            || _autoScroll is { IsActive: true })
             return;
 
         // Lo mismo durante el margen de cortesía de una acción recién hecha (ver

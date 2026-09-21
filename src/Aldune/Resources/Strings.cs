@@ -117,6 +117,7 @@ public static class Strings
     public static string OpenAllColumns => T("Columns", "Columnas");
     public static string CascadeNearDock => T("Cascade by the dock", "Cascada junto al dock");
     public static string TrayToggleDock => T("Hide the dock", "Ocultar el dock");
+    public static string TrayShowDock => T("Show the dock", "Mostrar el dock");
     public static string TrackpadGesturesCheckbox => T("Trackpad gestures",
         "Gestos de trackpad");
     public static string TrackpadGesturesHint => T(
@@ -413,6 +414,9 @@ public static class Strings
         "• Los conflictos de sincronización se revisan en Ajustes; puedes restaurar la versión perdedora o descartar el registro.");
     public static string QuickHelpSync => T("• Sync now is available in the dock; automatic sync can be enabled in Settings.", "• Puedes sincronizar desde el dock y activar la sincronización automática en Ajustes.");
     public static string QuickHelpSearch => T("• In Manage notes, Ctrl+F focuses the search box and selects the current search.", "• En Gestionar notas, Ctrl+F enfoca la búsqueda y selecciona el texto actual.");
+    public static string QuickHelpAutoScroll => T(
+        "• Middle-click on a long list or note turns on autoscroll: the view follows the cursor on its own; another click stops it.",
+        "• El clic central sobre una lista larga o una nota activa el autodesplazamiento: la vista sigue al cursor sola; otro clic lo apaga.");
 
     public static string MinimizeWindowTooltip => T("Minimize", "Minimizar");
     public static string MaximizeWindowTooltip => T("Maximize", "Maximizar");

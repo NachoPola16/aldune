@@ -817,6 +817,25 @@ cubrirla paso a paso. **Una sola release al final de la ronda.**
   estado roto. Ahora se graba tras cada reconstrucción buena, que es el único momento en que la app
   tiene monitores y docks alineados.
 
+### Revisión sobre la 0.10.0 (segunda pasada)
+
+- **El ciclo de monitores seguía parando tras el primer rebuild**: `_preChangeMonitorKey` se fijaba
+  **dentro** de `BuildDocks`, así que la comparación del tick contra la firma recién construida era
+  siempre verdadera y el ciclo se daba por terminado sin esperar a que la pantalla volviera. Ahora el
+  criterio es de **estabilidad**: se reconstruye mientras la firma cambie de un tick a otro, con una
+  espera mínima de 3 s desde el cambio (para drivers lentos que publican la pantalla en 1-2 s) y tope
+  de 20 ticks. El debounce inicial baja de 600 a 400 ms, que es lo que se notaba de "tarda más de lo
+  debido".
+- **La bandeja decía siempre "Ocultar el dock"** con una marca de verificación invertida: ahora el
+  texto dice la acción — "Ocultar el dock" a la vista, "Mostrar el dock" oculto — y la marca ha
+  desaparecido.
+- **La cascada y las plantillas van en orden del mazo**, extraído a `OpenWindowsInDeckOrder()` para no
+  duplicarlo: antes la cascada usaba el orden de apertura del diccionario.
+- **El autoscroll aguanta el abanico abierto** mientras está activo: sin eso, alejar el ratón para
+  desplazarse más rápido plegaba el dock bajo el cursor.
+- **Fuera el `OnMenuPreviewMouseDown` muerto** de la nota (y su enganche en el XAML): desde que
+  `PopupToggle` decide en el Click, ese handler era un no-op que confundía más de lo que explicaba.
+
 ### Ocultar el dock (pedido durante la ronda)
 
 `Ctrl+Alt+H` y una fila en el menú de la bandeja ("Ocultar el dock", con marca mientras lo está) ocultan
