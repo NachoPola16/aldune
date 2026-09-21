@@ -10,7 +10,7 @@ Sesión de origen: 2026-09-06.
 
 ## Versión visible de la aplicación
 
-La ronda actual se identifica como **v0.10.1**. La versión se muestra en Ajustes y también en el texto
+La ronda actual se identifica como **v0.10.2**. La versión se muestra en Ajustes y también en el texto
 del icono de la bandeja. Cada actualización grande deberá incrementar este número siguiendo SemVer:
 parches para correcciones, versión menor para funcionalidades nuevas y versión mayor cuando haya
 cambios incompatibles.
@@ -817,7 +817,7 @@ cubrirla paso a paso. **Una sola release al final de la ronda.**
   estado roto. Ahora se graba tras cada reconstrucción buena, que es el único momento en que la app
   tiene monitores y docks alineados.
 
-### Revisión sobre la 0.10.0 (segunda pasada; publicada como 0.10.1)
+### Revisión sobre la 0.10.0 (segunda pasada; publicada como 0.10.2: unificación)
 
 - **El ciclo de monitores seguía parando tras el primer rebuild**: `_preChangeMonitorKey` se fijaba
   **dentro** de `BuildDocks`, así que la comparación del tick contra la firma recién construida era
@@ -835,6 +835,14 @@ cubrirla paso a paso. **Una sola release al final de la ronda.**
   desplazarse más rápido plegaba el dock bajo el cursor.
 - **Fuera el `OnMenuPreviewMouseDown` muerto** de la nota (y su enganche en el XAML): desde que
   `PopupToggle` decide en el Click, ese handler era un no-op que confundía más de lo que explicaba.
+- **Unificación de dos sesiones en paralelo**: al trabajar dos sesiones a la vez en el mismo árbol, la
+  otra sesión implementó por su cuenta el trackpad (`TouchpadDetector`, `AppSettings.TrackpadGestures`,
+  casilla en Ajustes) y publicó la `v0.10.1` con el menú de "abrir todas" **sin** "Restaurar
+  posiciones" (eliminado, no renombrado). Al juntar, se respeta su decisión y se elimina lo que
+  sobraba: `OnRestoreOriginalPositionsClick`, `Coordinator.RestoreNotePositions`,
+  `RestoreOpenNotesToMonitor` y el texto `Strings.RestoreOriginalPositions` — todo sin referencias
+  desde ningún lado. **Si el usuario echa de menos la restauración, se recupera de git** (el código
+  sigue entero en el historial) en vez de dejar la mitad muerta.
 
 ### Ocultar el dock (pedido durante la ronda)
 
