@@ -267,6 +267,15 @@ public partial class NoteWindow : Window
 
         if (NativeMethods.IsLeftButtonDown())
         {
+            // Con el botón izquierdo pulsado, cualquier LocationChanged es un arrastre real del
+            // usuario — tanto si viene del asa (DragMove en OnGripMouseDown) como si viene de la
+            // zona de "caption" implícita del resto de la cabecera, que WindowChrome arrastra sola
+            // sin pasar por ningún evento propio. Este es el único sitio que ve ambos casos a la vez.
+            // La disposición global (cascada, cuadrícula...) deja de describir dónde está esta nota;
+            // si no se avisa, "Desplegar todas" la recolocaría según esa disposición y perdería el
+            // movimiento manual. SetDefaultNoteLayout no vuelve a tocar disco una vez ya está en
+            // Normal, así que llamarlo en cada frame del arrastre no cuesta writes de más.
+            _coordinator.NoteMovedManually();
             ClampDuringMonitorDrag();
             return;
         }
@@ -885,10 +894,9 @@ public partial class NoteWindow : Window
             // El arrastre es del usuario: si venía de una recolocación del coordinador, esta deja de
             // mandar (ver _isLayoutMove).
             _isLayoutMove = false;
-            // Y la disposición global (cascada, cuadrícula...) deja de describir dónde está esta nota:
-            // si no se avisa, "Desplegar todas" la recolocaría según esa disposición y perdería el
-            // movimiento manual que se acaba de hacer.
-            _coordinator.NoteMovedManually();
+            // El aviso a AppCoordinator de que esto es un movimiento manual vive en OnLocationChanged
+            // (ve también el arrastre por la cabecera normal, no solo el asa) — no hace falta
+            // duplicarlo aquí.
             try
             {
                 DragMove();

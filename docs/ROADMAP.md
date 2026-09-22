@@ -10,7 +10,7 @@ Sesión de origen: 2026-09-06.
 
 ## Versión visible de la aplicación
 
-La ronda actual se identifica como **v0.10.5**. La versión se muestra en Ajustes y también en el texto
+La ronda actual se identifica como **v0.10.6**. La versión se muestra en Ajustes y también en el texto
 del icono de la bandeja. Cada actualización grande deberá incrementar este número siguiendo SemVer:
 parches para correcciones, versión menor para funcionalidades nuevas y versión mayor cuando haya
 cambios incompatibles.
@@ -929,3 +929,9 @@ cascada".
   se comprime en vez de clamparse a un tope fijo, así que siempre asoma algo de cada nota.
 - **Accesibilidad**: `AutomationProperties.Name` en los botones de icono que solo tenían `ToolTip`
   (dock, nota, ajustes, gestor de notas, selector de color).
+
+### Ajustes sobre la 0.10.5 (publicada como 0.10.6)
+
+- **La cascada seguía reapareciendo al mover una nota por la cabecera normal** (no por la asa): el aviso
+  que desactiva la plantilla automática solo se disparaba desde la asa (`OnGripMouseDown`); movido a
+  `OnLocationChanged`, que ve el arrastre venga de donde venga. Detalle en `docs/STATUS.md`.

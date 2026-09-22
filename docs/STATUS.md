@@ -3311,5 +3311,31 @@ que queda pendiente.
 - **Seguridad — sin cambios.** Revisado a fondo el único punto pendiente (URI de actualización) y
   confirmado que ya era seguro por construcción — ver más abajo.
 
-Tests: 534/534 (`dotnet test tests/Aldune.Core.Tests`). Build limpio.
+Tests: 534/534 (`dotnet test tests/Aldune.Core.Tests`). Build limpio. Publicado como **0.10.5**.
+
+## Cascada seguía reapareciendo tras mover una nota por la cabecera (sesión 2026-09-22, bounded)
+
+Reportado por el usuario nada más instalar la 0.10.5: cascada junto al dock, mueve las notas a su gusto,
+las cierra con el botón, vuelve a pulsarlo y reaparecen en cascada otra vez (con el dock en un borde
+horizontal, cerca del centro de la pantalla, porque ahí es donde ese borde centra su ventana) — "no
+quiero eso en ninguna situación".
+
+**Causa real**: el arreglo de la ronda anterior (`NoteWindow.NoteMovedManually()` desactivando la
+plantilla automática) solo se disparaba desde `OnGripMouseDown`, el asa explícita de la cabecera
+(`DragHandle`, un icono pequeño arriba a la izquierda). Pero el resto de la cabecera se arrastra sola
+como zona de "caption" implícita de `WindowChrome` — la forma natural y más común de mover una nota,
+agarrándola por cualquier punto de la cabecera — y ese camino nunca pasa por `OnGripMouseDown`, así que
+`DefaultNoteLayout` nunca se reseteaba a `Normal` si el usuario movía la nota así.
+
+**Arreglo**: el aviso se movió a `NoteWindow.OnLocationChanged`, dentro de la rama que ya existía para
+cuando el botón izquierdo sigue pulsado (`NativeMethods.IsLeftButtonDown()`) — ese es el único punto que
+ve el arrastre en curso sea cual sea el mecanismo (asa con `DragMove()` o caption implícita de
+`WindowChrome`), porque ambos generan los mismos eventos `LocationChanged` mientras el botón está
+pulsado. Se quitó la llamada duplicada de `OnGripMouseDown`. `AppCoordinator.SetDefaultNoteLayout` ya no
+toca disco una vez el ajuste está en `Normal` (comprobación previa), así que llamarlo en cada frame del
+arrastre no genera escrituras de más — solo la primera vez que detecta que había una plantilla activa.
+
+Tests: 534/534. Build limpio. Publicado como **0.10.6**, y el servidor de sincronización actualizado por
+SSH tras el release (ver `docs/SYNC.md` para el procedimiento general — la configuración concreta del
+servidor del usuario es intencionalmente privada y no vive en este repositorio).
 
