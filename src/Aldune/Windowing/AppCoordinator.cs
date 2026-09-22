@@ -788,6 +788,20 @@ public sealed class AppCoordinator
         _settingsService?.Save(_settings);
     }
 
+    /// <summary>
+    /// Aviso de que el usuario acaba de arrastrar una nota a mano (ver <see cref="NoteWindow.OnGripMouseDown"/>).
+    /// Si la disposición global activa era una plantilla automática (cascada, cuadrícula, columnas), deja de
+    /// describir dónde está de verdad esa nota: sin este aviso, "Desplegar todas" volvía a recalcular esa
+    /// disposición desde cero la próxima vez y sobrescribía la posición recién elegida a mano.
+    /// </summary>
+    internal void NoteMovedManually()
+    {
+        if (_settings is { DefaultNoteLayout: not NoteLayoutTemplate.Normal })
+        {
+            SetDefaultNoteLayout(NoteLayoutTemplate.Normal);
+        }
+    }
+
     internal void SuspendNotesAboveDockMenu()
     {
         _alwaysOnTopSuspensions++;

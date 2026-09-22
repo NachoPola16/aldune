@@ -105,7 +105,8 @@
                 </StackPanel>
                 <Button Content="&#x2715;" Width="27" Height="27" HorizontalAlignment="Right"
                         Style="{StaticResource ColorDialogButtonStyle}" Padding="0"
-                        Click="OnCancelClick" ToolTip="{x:Static res:Strings.CloseTooltip}" />
+                        Click="OnCancelClick" ToolTip="{x:Static res:Strings.CloseTooltip}"
+                        AutomationProperties.Name="{x:Static res:Strings.CloseTooltip}" />
             </Grid>
 
             <StackPanel Grid.Row="1" Margin="0,16,0,0">

@@ -253,13 +253,23 @@
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="ToolTip">
-                        <Border Background="#2A261F" CornerRadius="6" Padding="9,6">
-                            <Border.Effect>
-                                <DropShadowEffect BlurRadius="12" ShadowDepth="2" Direction="270"
-                                                  Color="#000000" Opacity="0.4" />
-                            </Border.Effect>
-                            <ContentPresenter />
-                        </Border>
+                        <!-- Dos capas en vez de un solo Border con Effect: un Effect (DropShadowEffect,
+                             Blur, etc.) obliga a WPF a rasterizar todo el subárbol a un bitmap a
+                             resolución fija y luego estirarlo, así que con el Effect y el texto en el
+                             mismo Border, el texto sale borroso en monitores con escala >100%. La capa
+                             de sombra (sin contenido, solo el relleno) sí puede rasterizarse sin que se
+                             note; la de contenido va encima, sin Effect, y sale nítida siempre. -->
+                        <Grid>
+                            <Border Background="#2A261F" CornerRadius="6">
+                                <Border.Effect>
+                                    <DropShadowEffect BlurRadius="12" ShadowDepth="2" Direction="270"
+                                                      Color="#000000" Opacity="0.4" />
+                                </Border.Effect>
+                            </Border>
+                            <Border Background="#2A261F" CornerRadius="6" Padding="9,6">
+                                <ContentPresenter />
+                            </Border>
+                        </Grid>
                     </ControlTemplate>
                 </Setter.Value>
             </Setter>
@@ -300,18 +310,30 @@
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="ContextMenu">
-                        <Border Background="{TemplateBinding Background}"
-                                BorderBrush="{TemplateBinding BorderBrush}"
-                                BorderThickness="{TemplateBinding BorderThickness}"
-                                CornerRadius="10" Padding="{TemplateBinding Padding}" Margin="10">
-                            <!-- Margin="10": sin aire alrededor la sombra cae fuera del HWND del menú y sale
-                                 recortada; es el mismo margen que llevan los demás paneles flotantes. -->
-                            <Border.Effect>
-                                <DropShadowEffect BlurRadius="12" ShadowDepth="2" Direction="270"
-                                                  Color="#000000" Opacity="0.4" />
-                            </Border.Effect>
-                            <ItemsPresenter />
-                        </Border>
+                        <!-- Margin="10": sin aire alrededor la sombra cae fuera del HWND del menú y sale
+                             recortada; es el mismo margen que llevan los demás paneles flotantes.
+                             Dos capas en vez de un solo Border con Effect: el Effect fuerza a WPF a
+                             rasterizar todo el subárbol (incluido el texto de ItemsPresenter) a un
+                             bitmap de resolución fija que luego se estira, y en monitores con escala
+                             >100% eso sale borroso. La capa de sombra no lleva contenido (rasterizarla
+                             no se nota), la de contenido va encima sin Effect y sale siempre nítida. -->
+                        <Grid Margin="10">
+                            <Border Background="{TemplateBinding Background}"
+                                    BorderBrush="{TemplateBinding BorderBrush}"
+                                    BorderThickness="{TemplateBinding BorderThickness}"
+                                    CornerRadius="10">
+                                <Border.Effect>
+                                    <DropShadowEffect BlurRadius="12" ShadowDepth="2" Direction="270"
+                                                      Color="#000000" Opacity="0.4" />
+                                </Border.Effect>
+                            </Border>
+                            <Border Background="{TemplateBinding Background}"
+                                    BorderBrush="{TemplateBinding BorderBrush}"
+                                    BorderThickness="{TemplateBinding BorderThickness}"
+                                    CornerRadius="10" Padding="{TemplateBinding Padding}">
+                                <ItemsPresenter />
+                            </Border>
+                        </Grid>
                     </ControlTemplate>
                 </Setter.Value>
             </Setter>

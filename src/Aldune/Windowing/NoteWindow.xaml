@@ -204,6 +204,7 @@
                 <Button x:Name="MinimizeButton"
                         Width="26" Height="26"
                         ToolTip="{x:Static res:Strings.MinimizeWindowTooltip}"
+                        AutomationProperties.Name="{x:Static res:Strings.MinimizeWindowTooltip}"
                         Click="OnMinimizeClick"
                         WindowChrome.IsHitTestVisibleInChrome="True"
                         Style="{StaticResource CloseButtonStyle}">
@@ -212,6 +213,7 @@
                 <Button x:Name="MaximizeButton"
                         Width="26" Height="26"
                         ToolTip="{x:Static res:Strings.MaximizeWindowTooltip}"
+                        AutomationProperties.Name="{x:Static res:Strings.MaximizeWindowTooltip}"
                         Click="OnMaximizeClick"
                         WindowChrome.IsHitTestVisibleInChrome="True"
                         Style="{StaticResource CloseButtonStyle}">
@@ -224,6 +226,7 @@
                         FontSize="14"
                         Click="OnMenuClick"
                         ToolTip="{x:Static res:Strings.MoreActionsTooltip}"
+                        AutomationProperties.Name="{x:Static res:Strings.MoreActionsTooltip}"
                         WindowChrome.IsHitTestVisibleInChrome="True"
                         Style="{StaticResource CloseButtonStyle}" />
                 <Button x:Name="CloseButton"
@@ -231,6 +234,7 @@
                         Width="26" Height="26"
                         Click="OnCloseClick"
                         ToolTip="{x:Static res:Strings.CloseTooltip}"
+                        AutomationProperties.Name="{x:Static res:Strings.CloseTooltip}"
                         WindowChrome.IsHitTestVisibleInChrome="True"
                         Style="{StaticResource CloseButtonStyle}" />
             </StackPanel>
@@ -242,11 +246,17 @@
                    StaysOpen="False"
                    AllowsTransparency="True"
                    PopupAnimation="Fade">
-                <Border Background="#2A261F" CornerRadius="10" Padding="8" Margin="10">
-                    <Border.Effect>
-                        <DropShadowEffect BlurRadius="16" ShadowDepth="3" Direction="270"
-                                          Color="#000000" Opacity="0.5" />
-                    </Border.Effect>
+                <!-- Dos capas en vez de un Border con Effect: el Effect rasteriza el subárbol entero
+                     (texto incluido) a un bitmap de resolución fija, borroso en monitores con escala
+                     >100%. La capa de sombra no lleva contenido; la de contenido va sin Effect. -->
+                <Grid Margin="10">
+                    <Border Background="#2A261F" CornerRadius="10">
+                        <Border.Effect>
+                            <DropShadowEffect BlurRadius="16" ShadowDepth="3" Direction="270"
+                                              Color="#000000" Opacity="0.5" />
+                        </Border.Effect>
+                    </Border>
+                    <Border Background="#2A261F" CornerRadius="10" Padding="8">
                     <StackPanel MinWidth="230">
                         <!-- Agrupado por intención, no por orden de implementación: arriba lo que se usa
                              escribiendo (tarea y viñeta, con su atajo a la vista — es la única forma de
@@ -346,7 +356,8 @@
                                 Content="{x:Static res:Strings.MoveToTrash}"
                                 Style="{StaticResource NoteMenuDangerStyle}" />
                     </StackPanel>
-                </Border>
+                    </Border>
+                </Grid>
             </Popup>
 
                  <Popup x:Name="TagsPopup" PlacementTarget="{Binding ElementName=MenuButton}"

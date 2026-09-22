@@ -10,7 +10,7 @@ Sesión de origen: 2026-09-06.
 
 ## Versión visible de la aplicación
 
-La ronda actual se identifica como **v0.10.4**. La versión se muestra en Ajustes y también en el texto
+La ronda actual se identifica como **v0.10.5**. La versión se muestra en Ajustes y también en el texto
 del icono de la bandeja. Cada actualización grande deberá incrementar este número siguiendo SemVer:
 parches para correcciones, versión menor para funcionalidades nuevas y versión mayor cuando haya
 cambios incompatibles.
@@ -912,3 +912,20 @@ que vuelve recupera su dock sola.
   simplificado/avanzado conmutable.
 - **Aire entre scroll y texto**: 8 px (a validar en la app; es una constante).
 - **Menú de copiar/pegar/cortar**: se replantilla con la estética de la app.
+
+### Ajustes sobre la 0.10.4 (publicada como 0.10.5)
+
+Auditoría general (bugs, seguridad, visual/UX, calidad) pedida por el usuario, seguida de una ronda de
+arreglos. Detalle técnico completo en `docs/STATUS.md` → "Auditoría general + arreglos de nitidez y
+cascada".
+
+- **Menú de copiar/pegar (y demás paneles flotantes) ya no sale borroso** en monitores con escala
+  >100%: el `DropShadowEffect` forzaba a WPF a rasterizar el texto junto con la sombra a un bitmap de
+  resolución fija. Se separó la sombra del contenido en `ContextMenu`, `ToolTip`, los popups del dock
+  y de la nota, y también en las tarjetas del abanico (título/preview de cada pestaña).
+- **"Desplegar todas" ya no vuelve a cascada** si se movió una nota a mano: mover una nota desactiva la
+  plantilla automática activa.
+- **Cascada junto al dock**: con muchas notas ya no se solapan del todo unas encima de otras — el paso
+  se comprime en vez de clamparse a un tope fijo, así que siempre asoma algo de cada nota.
+- **Accesibilidad**: `AutomationProperties.Name` en los botones de icono que solo tenían `ToolTip`
+  (dock, nota, ajustes, gestor de notas, selector de color).

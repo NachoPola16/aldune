@@ -3240,3 +3240,76 @@ punto por punto, con la causa raíz de cada uno y las decisiones tomadas, está 
 
 Versión subida a **0.10.0**. 507/507 tests y build correctos.
 
+## Auditoría general + arreglos de nitidez y cascada (sesión 2026-09-22, bounded)
+
+Auditoría de codebase pedida por el usuario (bugs, seguridad, visual/UX, calidad) vía un subagente de
+exploración de solo lectura, seguida de una ronda de arreglos directos (brainstorming → implementación,
+sin spec/plan formal). Detalle completo del análisis en la conversación; aquí solo lo que cambió y lo
+que queda pendiente.
+
+- **Menú contextual de copiar/pegar (y otros paneles flotantes) borrosos en monitores con escala >100%
+  — ARREGLADO.** Causa raíz: `DropShadowEffect` aplicado al mismo `Border` que el contenido fuerza a
+  WPF a rasterizar todo el subárbol (texto incluido) a un bitmap de resolución fija que luego se
+  estira, emborronando el texto en monitores con escala DPI >100% (la app es `PerMonitorV2` aware,
+  `app.manifest`). Arreglo aplicado al `ContextMenu`/`ToolTip` implícitos de `App.xaml` y a los 5
+  popups con el mismo patrón en `NoteWindow.xaml` (ActionsPopup) y `EdgeDockWindow.xaml`
+  (NewNoteMenuPopup, OpenAllMenuPopup, DockViewPopup, TabMenuPopup): separar la sombra en una capa sin
+  contenido (un `Border` de fondo con el `Effect`, sin hijos) de la capa de contenido (mismo `Border`
+  encima, sin `Effect`) dentro de un `Grid`. **Pendiente, mismo patrón sin tocar todavía**: `CardShadow`/
+  `CardShadowTop`/`CardShadowBottom`/`ButtonShadow` en `EdgeDockWindow.xaml` (tarjetas del abanico y
+  botones circulares del dock) tienen el mismo problema pero el `Effect` va directo en el `Grid`/
+  `Ellipse` que ya tiene estructura propia (con `TemplateBinding`, triggers) — separar la capa ahí es
+  más invasivo y se dejó fuera de esta ronda a propósito.
+- **"Desplegar todas" volvía a cascada tras mover una nota a mano — ARREGLADO.** La disposición elegida
+  se guarda como un único valor global (`AppSettings.DefaultNoteLayout`), y nada invalidaba ese valor
+  al arrastrar una nota. Ahora `NoteWindow.OnGripMouseDown` llama a `AppCoordinator.NoteMovedManually()`,
+  que vuelve el ajuste a `Normal` si había una plantilla automática activa (cascada, cuadrícula,
+  columnas) — la próxima vez que se pulse "Desplegar todas" ya no sobrescribe la posición manual.
+- **Notas completamente ocultas en cascada a partir de la sexta — ARREGLADO.** `NoteCascade.Position`
+  clampaba el nivel de escalonado a un tope fijo (`MaxLevels=5`) sin tener en cuenta el tamaño del
+  mazo ni de la pantalla: a partir del sexto nivel todas las notas caían en las mismas coordenadas,
+  tapándose del todo. Ahora el paso entre notas (`StepFor`) se comprime según el hueco real disponible
+  en pantalla para el mazo completo, con un piso de `MinStep=18` — nunca menos, así siempre asoma algo
+  de cada nota; con pocas notas el paso sigue siendo el natural (`Step=32`). Mismo criterio que ya usa
+  `EdgeGeometry.PitchFor` para comprimir el paso entre pestañas. `NoteCascadeTests` reescrito: se quitó
+  el test que fijaba el clamp a `MaxLevels` (ya no existe) y se añadió uno que reproduce el bug directo
+  (`ManyNotes_NeverLandOnTheExactSamePosition`, 20 notas, ninguna posición repetida).
+- **Seguridad**: revisión general sin hallazgos (cifrado AES-GCM + DPAPI correctos, sin
+  `eval`/`innerHTML`/deserialización insegura, rutas de sync con `{id:guid}`). El punto pendiente de la
+  ronda anterior (URI de descarga pasada a `Process.Start` en `UpdateNotifier.cs`) se verificó a fondo:
+  `ReleaseUpdateChecker.CheckAsync` nunca usa `html_url` ni assets del JSON de la API de GitHub —
+  construye la URL con un prefijo HTTPS fijo (`https://github.com/NachoPola16/aldune/releases/tag/`)
+  más un tag validado por `TryParseVersion` (solo dígitos y puntos, sin separadores de ruta posibles).
+  No es una URI controlable por el atacante; sin cambios necesarios. El otro `Process.Start`
+  (`SettingsWindow.OnRestartClick`) solo relanza el propio ejecutable vía `Environment.ProcessPath`,
+  también sin entrada de usuario. Sin hallazgos de seguridad pendientes.
+- **Accesibilidad — ARREGLADO.** Ningún botón/control de solo icono tenía `AutomationProperties.Name`,
+  así que un lector de pantalla no anunciaba nada útil al enfocarlos (o leía el glifo Unicode crudo).
+  Añadido `AutomationProperties.Name` con el mismo texto que el `ToolTip` ya existente en ~20 controles
+  de `EdgeDockWindow.xaml`, `NoteWindow.xaml`, `SettingsWindow.xaml`, `NotesManagerWindow.xaml` y
+  `CustomColorWindow.xaml` (trabajo mecánico, vía subagente `mecanico`); dos botones de cerrar que ni
+  siquiera tenían `ToolTip` (`NotesManagerWindow` y `SettingsWindow`) recibieron ambos atributos.
+  **No tocado a propósito**: `FocusVisualStyle="{x:Null}"` en `ContextMenu`/`MenuItem` sigue quitando el
+  anillo de foco por teclado — es una decisión estética explícita de rondas anteriores, cambiarla es un
+  trade-off visual que no venía pedido en esta ronda.
+- **Pendiente, sin tocar esta ronda — calidad de código**: `AppCoordinator.cs` (1026 líneas) concentra
+  demasiada responsabilidad (abrir/cerrar notas, disposiciones, coordinar docks, ventanas de
+  ajustes/gestor/sync); y existen dos algoritmos de cascada independientes — `NoteCascade` (para
+  "Cascada junto al dock", arreglado arriba) y la cascada ad-hoc de `EdgeDockWindow.xaml.cs` al abrir
+  una nota individual junto a su pestaña. Evaluado esta sesión: no es la misma necesidad (una coloca
+  el mazo entero desde el dock, la otra una nota nueva relativa a su pestaña con clamp a pantalla
+  propio) y unificarlas es un cambio de arquitectura, no un bug — se deja como deuda documentada en vez
+  de forzarlo dentro de una ronda de bugs/pulido.
+- **Tarjetas del abanico del dock (título/preview) también borrosas — ARREGLADO.** Mismo patrón que el
+  menú de copiar/pegar: `CardShadow`/`CardShadowTop`/`CardShadowBottom` (`EdgeDockWindow.xaml`) iban en
+  el mismo `Grid` (`CardRoot`) que el texto de cada pestaña. Separado en una capa `CardShadowLayer` sin
+  contenido (su `CornerRadius` sigue el de `CardBorder` por binding, así que el espejado de
+  `ApplyLeftEdgeTabShape`/`ApplyTopBottomTabShape` no necesitó tocarse) y el `Effect` (incluido el que
+  cambia dinámicamente según el borde en `ApplyTopBottomTabShape`) se movió ahí. `ButtonShadow` (botones
+  circulares del pie y tira de reposo) no necesitaba arreglo: ya estaba en una `Ellipse`/`Border` sin
+  texto, separada del `ContentPresenter`/dashes de color.
+- **Seguridad — sin cambios.** Revisado a fondo el único punto pendiente (URI de actualización) y
+  confirmado que ya era seguro por construcción — ver más abajo.
+
+Tests: 534/534 (`dotnet test tests/Aldune.Core.Tests`). Build limpio.
+

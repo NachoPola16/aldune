@@ -885,6 +885,10 @@ public partial class NoteWindow : Window
             // El arrastre es del usuario: si venía de una recolocación del coordinador, esta deja de
             // mandar (ver _isLayoutMove).
             _isLayoutMove = false;
+            // Y la disposición global (cascada, cuadrícula...) deja de describir dónde está esta nota:
+            // si no se avisa, "Desplegar todas" la recolocaría según esa disposición y perdería el
+            // movimiento manual que se acaba de hacer.
+            _coordinator.NoteMovedManually();
             try
             {
                 DragMove();

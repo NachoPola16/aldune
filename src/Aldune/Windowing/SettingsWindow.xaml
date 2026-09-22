@@ -185,11 +185,13 @@
             <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Top">
                 <Button Content="&#x2014;" Width="28" Height="28"
                         ToolTip="{x:Static res:Strings.MinimizeWindowTooltip}"
+                        AutomationProperties.Name="{x:Static res:Strings.MinimizeWindowTooltip}"
                         Click="OnMinimizeClick"
                         WindowChrome.IsHitTestVisibleInChrome="True"
                         Style="{StaticResource CloseButtonStyle}" />
                 <Button x:Name="MaximizeButton" Width="28" Height="28"
                         ToolTip="{x:Static res:Strings.MaximizeWindowTooltip}"
+                        AutomationProperties.Name="{x:Static res:Strings.MaximizeWindowTooltip}"
                         Click="OnMaximizeClick"
                         WindowChrome.IsHitTestVisibleInChrome="True"
                         Style="{StaticResource CloseButtonStyle}">
@@ -197,6 +199,8 @@
                                FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" FontSize="11" />
                 </Button>
                 <Button Content="&#x2715;" Width="28" Height="28"
+                        ToolTip="{x:Static res:Strings.CloseTooltip}"
+                        AutomationProperties.Name="{x:Static res:Strings.CloseTooltip}"
                         Click="OnCloseClick"
                         WindowChrome.IsHitTestVisibleInChrome="True"
                         Style="{StaticResource CloseButtonStyle}" />
@@ -642,10 +646,12 @@
                 <Button Content="{x:Static res:Strings.RestartApplicationButton}"
                     Margin="8,0,0,0" Padding="12,7" Click="OnRestartClick"
                         ToolTip="{x:Static res:Strings.RestartAppTooltip}"
+                        AutomationProperties.Name="{x:Static res:Strings.RestartAppTooltip}"
                         Style="{StaticResource RecordButtonStyle}" />
                 <Button Content="{x:Static res:Strings.ExitApplicationButton}"
                         Margin="8,0,0,0" Padding="12,7" Click="OnExitClick"
                         ToolTip="{x:Static res:Strings.ExitAppTooltip}"
+                        AutomationProperties.Name="{x:Static res:Strings.ExitAppTooltip}"
                         Style="{StaticResource RecordButtonStyle}" />
             </StackPanel>
         </Grid>

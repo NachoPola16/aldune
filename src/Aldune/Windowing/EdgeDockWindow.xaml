@@ -94,7 +94,17 @@
                              OnTabLoaded espeja CornerRadius/BorderThickness de CardBorder y
                              SheenBorder (y cambia su Background a TabSheenLeftEdge), porque entonces
                              es el lado IZQUIERDO el que va a ras del canto real de la pantalla. -->
-                        <Grid x:Name="CardRoot" Effect="{StaticResource CardShadow}">
+                        <!-- CardShadowLayer, no CardRoot, lleva el Effect: un Effect fuerza a WPF a
+                             rasterizar todo el subárbol (título/preview incluidos) a un bitmap de
+                             resolución fija, borroso en monitores con escala >100%. La capa de sombra
+                             es un Border opaco sin contenido (solo importa su silueta para el
+                             DropShadowEffect, no su color) detrás de todo lo demás, que sí sale nítido
+                             al no llevar Effect. CornerRadius atado a CardBorder por binding para no
+                             duplicar su espejado (ApplyLeftEdgeTabShape/ApplyTopBottomTabShape). -->
+                        <Grid x:Name="CardRoot">
+                            <Border x:Name="CardShadowLayer" Background="{TemplateBinding Background}"
+                                    Effect="{StaticResource CardShadow}"
+                                    CornerRadius="{Binding ElementName=CardBorder, Path=CornerRadius}" />
                             <Border x:Name="CardBorder"
                                     Background="{TemplateBinding Background}"
                                     BorderBrush="{Binding Color, Converter={StaticResource NoteRimConverter}}"
@@ -429,14 +439,16 @@
                         PreviewMouseLeftButtonUp="OnScrollArrowMouseUp"
                         Tag="-1"
                         Style="{StaticResource ScrollArrowButtonStyle}"
-                        ToolTip="{x:Static res:Strings.ScrollNotesUpTooltip}">
+                        ToolTip="{x:Static res:Strings.ScrollNotesUpTooltip}"
+                        AutomationProperties.Name="{x:Static res:Strings.ScrollNotesUpTooltip}">
                     <TextBlock Text="↑" FontSize="13" FontWeight="SemiBold" />
                 </Button>
                 <Button PreviewMouseLeftButtonDown="OnScrollArrowMouseDown"
                         PreviewMouseLeftButtonUp="OnScrollArrowMouseUp"
                         Tag="1"
                         Style="{StaticResource ScrollArrowButtonStyle}"
-                        ToolTip="{x:Static res:Strings.ScrollNotesDownTooltip}">
+                        ToolTip="{x:Static res:Strings.ScrollNotesDownTooltip}"
+                        AutomationProperties.Name="{x:Static res:Strings.ScrollNotesDownTooltip}">
                     <TextBlock Text="↓" FontSize="13" FontWeight="SemiBold" />
                 </Button>
                 </StackPanel>
@@ -470,19 +482,22 @@
                     <Button x:Name="OpenAllButton" Click="OnOpenAllClick"
                             PreviewMouseRightButtonUp="OnOpenAllRightClick"
                             Style="{StaticResource CircularIconButtonStyle}"
-                            ToolTip="{x:Static res:Strings.OpenAllNotesTooltip}">
+                            ToolTip="{x:Static res:Strings.OpenAllNotesTooltip}"
+                            AutomationProperties.Name="{x:Static res:Strings.OpenAllNotesTooltip}">
                         <TextBlock Text="&#xE8A9;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" FontSize="15" />
                     </Button>
                     <Button x:Name="ManageArchiveButton" Click="OnManageArchiveClick"
                             PreviewMouseRightButtonUp="OnManageArchiveRightClick"
                             Style="{StaticResource CircularIconButtonStyle}"
-                            ToolTip="{x:Static res:Strings.ManageNotesTooltip}">
+                            ToolTip="{x:Static res:Strings.ManageNotesTooltip}"
+                            AutomationProperties.Name="{x:Static res:Strings.ManageNotesTooltip}">
                         <TextBlock Text="&#xE713;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" FontSize="15" />
                     </Button>
                     <Button x:Name="SyncButton" Click="OnSyncClick"
                             PreviewMouseRightButtonUp="OnSyncRightClick"
                             Style="{StaticResource CircularIconButtonStyle}"
-                            ToolTip="{x:Static res:Strings.SyncNowButton}">
+                            ToolTip="{x:Static res:Strings.SyncNowButton}"
+                            AutomationProperties.Name="{x:Static res:Strings.SyncNowButton}">
                         <TextBlock x:Name="SyncButtonGlyph" Text="↻" FontSize="17" />
                     </Button>
                     <!-- Crear nota es la acción principal del dock, así que pesa más que el
@@ -493,7 +508,8 @@
                             Width="40" Height="40"
                             Background="#575044" Foreground="#F5F0E6"
                             Style="{StaticResource CircularIconButtonStyle}"
-                            ToolTip="{x:Static res:Strings.NewNoteTooltip}">
+                            ToolTip="{x:Static res:Strings.NewNoteTooltip}"
+                            AutomationProperties.Name="{x:Static res:Strings.NewNoteTooltip}">
                         <TextBlock Text="&#xE710;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" FontSize="17" />
                     </Button>
                 </StackPanel>
@@ -511,20 +527,27 @@
                    PlacementTarget="{Binding ElementName=NewNoteButton}"
                    Opened="OnNewNoteMenuPopupOpened"
                    Closed="OnNewNoteMenuClosed">
-                <Border Background="#2A261F" CornerRadius="10" Padding="8">
-                    <Border.Effect>
-                        <DropShadowEffect BlurRadius="16" ShadowDepth="3" Direction="270"
-                                          Color="#000000" Opacity="0.5" />
-                    </Border.Effect>
-                    <StackPanel MinWidth="190">
-                        <Button Content="{x:Static res:Strings.NewNoteTooltip}"
-                                Click="OnNewNoteMenuCreateClick"
-                                Style="{StaticResource NoteMenuItemStyle}" />
-                        <Button x:Name="NewNoteMenuClipboardButton"
-                                Click="OnNewNoteMenuClipboardClick"
-                                Style="{StaticResource NoteMenuItemStyle}" />
-                    </StackPanel>
-                </Border>
+                <!-- Dos capas en vez de un Border con Effect: el Effect rasteriza el subárbol entero
+                     (texto incluido) a un bitmap de resolución fija, borroso en monitores con escala
+                     >100%. La capa de sombra no lleva contenido; la de contenido va sin Effect. -->
+                <Grid>
+                    <Border Background="#2A261F" CornerRadius="10">
+                        <Border.Effect>
+                            <DropShadowEffect BlurRadius="16" ShadowDepth="3" Direction="270"
+                                              Color="#000000" Opacity="0.5" />
+                        </Border.Effect>
+                    </Border>
+                    <Border Background="#2A261F" CornerRadius="10" Padding="8">
+                        <StackPanel MinWidth="190">
+                            <Button Content="{x:Static res:Strings.NewNoteTooltip}"
+                                    Click="OnNewNoteMenuCreateClick"
+                                    Style="{StaticResource NoteMenuItemStyle}" />
+                            <Button x:Name="NewNoteMenuClipboardButton"
+                                    Click="OnNewNoteMenuClipboardClick"
+                                    Style="{StaticResource NoteMenuItemStyle}" />
+                        </StackPanel>
+                    </Border>
+                </Grid>
             </Popup>
 
             <Popup x:Name="OpenAllMenuPopup"
@@ -536,76 +559,84 @@
                    PlacementTarget="{Binding ElementName=OpenAllButton}"
                    Opened="OnOpenAllMenuOpened"
                    Closed="OnOpenAllMenuClosed">
-                <Border Background="#2A261F" CornerRadius="10" Padding="8">
-                    <Border.Effect>
-                        <DropShadowEffect BlurRadius="16" ShadowDepth="3" Direction="270"
-                                          Color="#000000" Opacity="0.5" />
-                    </Border.Effect>
-                    <StackPanel MinWidth="190">
-                        <TextBlock Text="{x:Static res:Strings.OpenAllModeTitle}"
-                                   Foreground="#C8B9A8" FontSize="11"
-                                   FontWeight="SemiBold" Margin="8,3,8,6" />
-                        <Button Content="{x:Static res:Strings.OpenAllGrid}"
-                                Click="OnOpenAllGridClick"
-                                Style="{StaticResource NoteMenuItemStyle}" />
-                        <Button Content="{x:Static res:Strings.OpenAllColumns}"
-                                Click="OnOpenAllColumnsClick"
-                                Style="{StaticResource NoteMenuItemStyle}" />
-                        <Button Content="{x:Static res:Strings.CascadeNearDock}"
-                                Click="OnCascadeNearDockClick"
-                                Style="{StaticResource NoteMenuItemStyle}" />
-                        <!-- Pantalla de destino: solo se ve cuando hay mas de una pantalla y alguna sin
-                             dock (con un dock en cada monitor la elige el propio dock que se pulsa).
-                             Los botones los construye PopulateOpenAllMonitors. -->
-                        <Border x:Name="OpenAllMonitorSeparator"
-                                Background="#4A443B" Height="1" Margin="0,6,0,6"
-                                Visibility="Collapsed" />
-                        <TextBlock x:Name="OpenAllMonitorTitle"
-                                   Text="{x:Static res:Strings.OpenAllMonitorTitle}"
-                                   Foreground="#C8B9A8" FontSize="11"
-                                   FontWeight="SemiBold" Margin="8,3,8,6"
-                                   Visibility="Collapsed" />
-                        <StackPanel x:Name="OpenAllMonitorContainer" Visibility="Collapsed" />
-                        <Border Background="#4A443B" Height="1" Margin="0,6,0,6" />
-                        <Button Content="{x:Static res:Strings.CloseAllNotes}"
-                                Click="OnCloseAllClick"
-                                Style="{StaticResource NoteMenuDangerStyle}" />
-                    </StackPanel>
-                </Border>
+                <Grid>
+                    <Border Background="#2A261F" CornerRadius="10">
+                        <Border.Effect>
+                            <DropShadowEffect BlurRadius="16" ShadowDepth="3" Direction="270"
+                                              Color="#000000" Opacity="0.5" />
+                        </Border.Effect>
+                    </Border>
+                    <Border Background="#2A261F" CornerRadius="10" Padding="8">
+                        <StackPanel MinWidth="190">
+                            <TextBlock Text="{x:Static res:Strings.OpenAllModeTitle}"
+                                       Foreground="#C8B9A8" FontSize="11"
+                                       FontWeight="SemiBold" Margin="8,3,8,6" />
+                            <Button Content="{x:Static res:Strings.OpenAllGrid}"
+                                    Click="OnOpenAllGridClick"
+                                    Style="{StaticResource NoteMenuItemStyle}" />
+                            <Button Content="{x:Static res:Strings.OpenAllColumns}"
+                                    Click="OnOpenAllColumnsClick"
+                                    Style="{StaticResource NoteMenuItemStyle}" />
+                            <Button Content="{x:Static res:Strings.CascadeNearDock}"
+                                    Click="OnCascadeNearDockClick"
+                                    Style="{StaticResource NoteMenuItemStyle}" />
+                            <!-- Pantalla de destino: solo se ve cuando hay mas de una pantalla y alguna sin
+                                 dock (con un dock en cada monitor la elige el propio dock que se pulsa).
+                                 Los botones los construye PopulateOpenAllMonitors. -->
+                            <Border x:Name="OpenAllMonitorSeparator"
+                                    Background="#4A443B" Height="1" Margin="0,6,0,6"
+                                    Visibility="Collapsed" />
+                            <TextBlock x:Name="OpenAllMonitorTitle"
+                                       Text="{x:Static res:Strings.OpenAllMonitorTitle}"
+                                       Foreground="#C8B9A8" FontSize="11"
+                                       FontWeight="SemiBold" Margin="8,3,8,6"
+                                       Visibility="Collapsed" />
+                            <StackPanel x:Name="OpenAllMonitorContainer" Visibility="Collapsed" />
+                            <Border Background="#4A443B" Height="1" Margin="0,6,0,6" />
+                            <Button Content="{x:Static res:Strings.CloseAllNotes}"
+                                    Click="OnCloseAllClick"
+                                    Style="{StaticResource NoteMenuDangerStyle}" />
+                        </StackPanel>
+                    </Border>
+                </Grid>
             </Popup>
 
             <Popup x:Name="DockViewPopup"
                    AllowsTransparency="True" Focusable="False" StaysOpen="False"
                    PopupAnimation="Fade" PlacementTarget="{Binding ElementName=ManageArchiveButton}"
                    Opened="OnDockViewPopupOpened" Closed="OnDockViewPopupClosed">
-                <Border Background="#2A261F" CornerRadius="10" Padding="8">
-                    <Border.Effect>
-                        <DropShadowEffect BlurRadius="16" ShadowDepth="3" Direction="270"
-                                          Color="#000000" Opacity="0.5" />
-                    </Border.Effect>
-                    <StackPanel MinWidth="190">
-                        <TextBlock Text="{x:Static res:Strings.DockViewTitle}"
-                                   Foreground="#C8B9A8" FontSize="11" FontWeight="SemiBold"
-                                   Margin="8,3,8,6" />
-                        <Button Content="{x:Static res:Strings.DockViewActive}" Tag="Active"
-                                Click="OnDockViewChoiceClick" Style="{StaticResource NoteMenuItemStyle}" />
-                        <Button Content="{x:Static res:Strings.DockViewArchived}" Tag="Archived"
-                                Click="OnDockViewChoiceClick" Style="{StaticResource NoteMenuItemStyle}" />
-                        <Button Content="{x:Static res:Strings.DockViewTrash}" Tag="Trashed"
-                                Click="OnDockViewChoiceClick" Style="{StaticResource NoteMenuDangerStyle}" />
-                        <Border Background="#4A443B" Height="1" Margin="0,6,0,6" />
-                        <TextBlock Text="{x:Static res:Strings.DockViewTags}"
-                                   Foreground="#C8B9A8" FontSize="11" Margin="8,0,8,4" />
-                        <StackPanel x:Name="DockTagItems" />
-                        <TextBlock x:Name="DockNoTagsText" Text="{x:Static res:Strings.DockViewNoTags}"
-                                   Foreground="#81786C" FontSize="11" Margin="8,4,8,2"
-                                   Visibility="Collapsed" />
-                        <Border Background="#4A443B" Height="1" Margin="0,6,0,6" />
-                        <Button x:Name="DockViewKeepDockButton"
-                            Click="OnDockViewKeepDockToggleClick"
-                            Style="{StaticResource NoteMenuItemStyle}" />
-                    </StackPanel>
-                </Border>
+                <Grid>
+                    <Border Background="#2A261F" CornerRadius="10">
+                        <Border.Effect>
+                            <DropShadowEffect BlurRadius="16" ShadowDepth="3" Direction="270"
+                                              Color="#000000" Opacity="0.5" />
+                        </Border.Effect>
+                    </Border>
+                    <Border Background="#2A261F" CornerRadius="10" Padding="8">
+                        <StackPanel MinWidth="190">
+                            <TextBlock Text="{x:Static res:Strings.DockViewTitle}"
+                                       Foreground="#C8B9A8" FontSize="11" FontWeight="SemiBold"
+                                       Margin="8,3,8,6" />
+                            <Button Content="{x:Static res:Strings.DockViewActive}" Tag="Active"
+                                    Click="OnDockViewChoiceClick" Style="{StaticResource NoteMenuItemStyle}" />
+                            <Button Content="{x:Static res:Strings.DockViewArchived}" Tag="Archived"
+                                    Click="OnDockViewChoiceClick" Style="{StaticResource NoteMenuItemStyle}" />
+                            <Button Content="{x:Static res:Strings.DockViewTrash}" Tag="Trashed"
+                                    Click="OnDockViewChoiceClick" Style="{StaticResource NoteMenuDangerStyle}" />
+                            <Border Background="#4A443B" Height="1" Margin="0,6,0,6" />
+                            <TextBlock Text="{x:Static res:Strings.DockViewTags}"
+                                       Foreground="#C8B9A8" FontSize="11" Margin="8,0,8,4" />
+                            <StackPanel x:Name="DockTagItems" />
+                            <TextBlock x:Name="DockNoTagsText" Text="{x:Static res:Strings.DockViewNoTags}"
+                                       Foreground="#81786C" FontSize="11" Margin="8,4,8,2"
+                                       Visibility="Collapsed" />
+                            <Border Background="#4A443B" Height="1" Margin="0,6,0,6" />
+                            <Button x:Name="DockViewKeepDockButton"
+                                Click="OnDockViewKeepDockToggleClick"
+                                Style="{StaticResource NoteMenuItemStyle}" />
+                        </StackPanel>
+                    </Border>
+                </Grid>
             </Popup>
 
         </Grid>
@@ -616,31 +647,35 @@
              no, mover el ratón hacia el menú lo cerraría bajo los pies). -->
          <Popup x:Name="TabMenuPopup" StaysOpen="False" AllowsTransparency="True"
                 PopupAnimation="Fade" Placement="MousePoint" HorizontalOffset="6" VerticalOffset="6">
-            <Border x:Name="TabMenuSurface"
-                    Background="#2A261F" CornerRadius="10" Padding="8">
-                <Border.Effect>
-                    <DropShadowEffect BlurRadius="16" ShadowDepth="3" Direction="270"
-                                      Color="#000000" Opacity="0.5" />
-                </Border.Effect>
-                <StackPanel MinWidth="186">
-                    <StackPanel x:Name="TabMenuSwatches" Orientation="Horizontal" Margin="6,4,6,8" />
-                    <Button Content="{x:Static res:Strings.CustomColor}" Click="OnTabMenuCustomColorClick"
-                            Style="{StaticResource NoteMenuItemStyle}" />
-                    <Border Background="#3C3730" Height="1" Margin="0,0,0,4" />
-                    <Button Content="{x:Static res:Strings.OpenNote}" Click="OnTabMenuOpenClick"
-                            Style="{StaticResource NoteMenuItemStyle}" />
-                    <Button x:Name="TabMenuProtectionButton" Content="{x:Static res:Strings.ProtectNote}"
-                            Click="OnTabMenuProtectionClick" Style="{StaticResource NoteMenuItemStyle}" />
-                    <Button x:Name="TabMenuArchiveButton" Content="{x:Static res:Strings.Archive}"
-                            Click="OnTabMenuArchiveClick"
-                            Style="{StaticResource NoteMenuItemStyle}" />
-                    <Button Content="{x:Static res:Strings.NoteTags}" Click="OnTabMenuTagsClick"
-                            Style="{StaticResource NoteMenuItemStyle}" />
-                    <Button x:Name="TabMenuTrashButton" Content="{x:Static res:Strings.MoveToTrash}"
-                            Click="OnTabMenuTrashClick"
-                            Style="{StaticResource NoteMenuDangerStyle}" />
-                </StackPanel>
-            </Border>
+            <Grid>
+                <Border Background="#2A261F" CornerRadius="10">
+                    <Border.Effect>
+                        <DropShadowEffect BlurRadius="16" ShadowDepth="3" Direction="270"
+                                          Color="#000000" Opacity="0.5" />
+                    </Border.Effect>
+                </Border>
+                <Border x:Name="TabMenuSurface"
+                        Background="#2A261F" CornerRadius="10" Padding="8">
+                    <StackPanel MinWidth="186">
+                        <StackPanel x:Name="TabMenuSwatches" Orientation="Horizontal" Margin="6,4,6,8" />
+                        <Button Content="{x:Static res:Strings.CustomColor}" Click="OnTabMenuCustomColorClick"
+                                Style="{StaticResource NoteMenuItemStyle}" />
+                        <Border Background="#3C3730" Height="1" Margin="0,0,0,4" />
+                        <Button Content="{x:Static res:Strings.OpenNote}" Click="OnTabMenuOpenClick"
+                                Style="{StaticResource NoteMenuItemStyle}" />
+                        <Button x:Name="TabMenuProtectionButton" Content="{x:Static res:Strings.ProtectNote}"
+                                Click="OnTabMenuProtectionClick" Style="{StaticResource NoteMenuItemStyle}" />
+                        <Button x:Name="TabMenuArchiveButton" Content="{x:Static res:Strings.Archive}"
+                                Click="OnTabMenuArchiveClick"
+                                Style="{StaticResource NoteMenuItemStyle}" />
+                        <Button Content="{x:Static res:Strings.NoteTags}" Click="OnTabMenuTagsClick"
+                                Style="{StaticResource NoteMenuItemStyle}" />
+                        <Button x:Name="TabMenuTrashButton" Content="{x:Static res:Strings.MoveToTrash}"
+                                Click="OnTabMenuTrashClick"
+                                Style="{StaticResource NoteMenuDangerStyle}" />
+                    </StackPanel>
+                </Border>
+            </Grid>
         </Popup>
 
          <Popup x:Name="TagEditorPopup" AllowsTransparency="True" Focusable="True"

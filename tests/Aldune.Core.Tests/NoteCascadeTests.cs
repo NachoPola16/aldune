@@ -35,7 +35,7 @@ public class NoteCascadeTests
     public void LaterNotes_MoveAwayFromTheDock_NeverTowardIt(WorkingArea area, EdgePosition edge)
     {
         var dock = EdgeGeometry.WindowRect(area, edge, noteCount: 8);
-        for (int level = 1; level <= NoteCascade.MaxLevels; level++)
+        for (int level = 1; level < 8; level++)
         {
             var (left, top) = NoteCascade.Position(area, edge, 8, W, H, level);
             bool overlaps = left < dock.X + dock.Width && left + W > dock.X
@@ -60,11 +60,30 @@ public class NoteCascadeTests
         Assert.Equal(dock.X + dock.Width + NoteCascade.DockGap, left);
     }
 
-    [Fact]
-    public void Level_IsCappedAtMaxLevels()
+    // Bug real: con un mazo grande, el paso se clampaba a un tope fijo (MaxLevels) y a partir de la
+    // sexta nota todas caían exactamente en las mismas coordenadas, tapándose del todo entre sí. El
+    // paso ahora se comprime en vez de clamparse, así que dos notas consecutivas nunca coinciden.
+    [Theory]
+    [MemberData(nameof(AreasAndEdges))]
+    public void ManyNotes_NeverLandOnTheExactSamePosition(WorkingArea area, EdgePosition edge)
     {
-        var capped = NoteCascade.Position(Area, EdgePosition.Left, 5, W, H, NoteCascade.MaxLevels);
-        var beyond = NoteCascade.Position(Area, EdgePosition.Left, 5, W, H, NoteCascade.MaxLevels + 9);
-        Assert.Equal(capped, beyond);
+        const int deckSize = 20;
+        (double Left, double Top)? previous = null;
+        for (int level = 0; level < deckSize; level++)
+        {
+            var position = NoteCascade.Position(area, edge, deckSize, W, H, level);
+            Assert.NotEqual(previous, position);
+            previous = position;
+        }
+    }
+
+    // Con pocas notas hay hueco de sobra: el paso natural no se comprime.
+    [Fact]
+    public void FewNotes_UseTheNaturalStep()
+    {
+        var first = NoteCascade.Position(Area, EdgePosition.Left, 3, W, H, 0);
+        var second = NoteCascade.Position(Area, EdgePosition.Left, 3, W, H, 1);
+        Assert.Equal(NoteCascade.Step, second.Left - first.Left);
+        Assert.Equal(NoteCascade.Step, second.Top - first.Top);
     }
 }

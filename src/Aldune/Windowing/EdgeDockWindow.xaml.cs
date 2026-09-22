@@ -2062,9 +2062,9 @@ public partial class EdgeDockWindow : Window
             hover.CornerRadius = radius;
         }
 
-        if (button.Template.FindName("CardRoot", button) is Grid root)
+        if (button.Template.FindName("CardShadowLayer", button) is Border shadowLayer)
         {
-            root.Effect = (Effect)FindResource(_edge == EdgePosition.Top
+            shadowLayer.Effect = (Effect)FindResource(_edge == EdgePosition.Top
                 ? "CardShadowTop"
                 : "CardShadowBottom");
         }

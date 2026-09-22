@@ -235,11 +235,13 @@
             <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Top">
                 <Button Content="&#x2014;" Width="28" Height="28"
                         ToolTip="{x:Static res:Strings.MinimizeWindowTooltip}"
+                        AutomationProperties.Name="{x:Static res:Strings.MinimizeWindowTooltip}"
                         Click="OnMinimizeClick"
                         WindowChrome.IsHitTestVisibleInChrome="True"
                         Style="{StaticResource CloseButtonStyle}" />
                 <Button x:Name="MaximizeButton" Width="28" Height="28"
                         ToolTip="{x:Static res:Strings.MaximizeWindowTooltip}"
+                        AutomationProperties.Name="{x:Static res:Strings.MaximizeWindowTooltip}"
                         Click="OnMaximizeClick"
                         WindowChrome.IsHitTestVisibleInChrome="True"
                         Style="{StaticResource CloseButtonStyle}">
@@ -251,12 +253,15 @@
                         FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets"
                         Width="28" Height="28"
                         ToolTip="{x:Static res:Strings.SettingsTooltip}"
+                        AutomationProperties.Name="{x:Static res:Strings.SettingsTooltip}"
                         Click="OnSettingsClick"
                         WindowChrome.IsHitTestVisibleInChrome="True"
                         Style="{StaticResource CloseButtonStyle}" />
                 <Button x:Name="CloseButton"
                         Content="&#x2715;"
                         Width="28" Height="28"
+                        ToolTip="{x:Static res:Strings.CloseTooltip}"
+                        AutomationProperties.Name="{x:Static res:Strings.CloseTooltip}"
                         Click="OnCloseClick"
                         WindowChrome.IsHitTestVisibleInChrome="True"
                         Style="{StaticResource CloseButtonStyle}" />
@@ -283,6 +288,7 @@
                              Checked="OnFilterChanged" Style="{StaticResource FilterToggleStyle}" />
                 <ComboBox x:Name="TagFilterBox" Width="145" Height="30" Margin="8,0,4,0"
                           ToolTip="{x:Static res:Strings.TagFilterTooltip}"
+                          AutomationProperties.Name="{x:Static res:Strings.TagFilterTooltip}"
                           SelectionChanged="OnTagFilterChanged"
                            Style="{StaticResource TagFilterStyle}"
                            Visibility="Collapsed" />
@@ -362,6 +368,7 @@
                         HorizontalAlignment="Right" VerticalAlignment="Center"
                         Visibility="Collapsed"
                         ToolTip="{x:Static res:Strings.ClearSearchTooltip}"
+                        AutomationProperties.Name="{x:Static res:Strings.ClearSearchTooltip}"
                         Click="OnSearchClearClick"
                         Style="{StaticResource CloseButtonStyle}" />
             </Grid>
