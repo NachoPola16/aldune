@@ -3339,3 +3339,41 @@ Tests: 534/534. Build limpio. Publicado como **0.10.6**, y el servidor de sincro
 SSH tras el release (ver `docs/SYNC.md` para el procedimiento general — la configuración concreta del
 servidor del usuario es intencionalmente privada y no vive en este repositorio).
 
+## La cascada seguía apareciendo en el centro tras "Desplegar todas" (sesión 2026-09-22, bounded)
+
+El usuario probó la 0.10.6 y el síntoma persistía: cascada junto al dock, mover las notas a mano, cerrar,
+reabrir con el botón — vuelven a aparecer en una cascada diagonal, esta vez claramente **centrada en la
+pantalla**, no cerca del dock. El arreglo anterior (mover el aviso de `NoteMovedManually` a
+`OnLocationChanged`) era correcto pero insuficiente: no era la misma causa.
+
+**Causa real**: `AppCoordinator.OpenAllNotes` — el método detrás del botón "Desplegar todas" — abre cada
+nota (que ya cae en su posición recordada vía `TryRestorePlacement`, gracias a `arrangeAfterOpen: false`)
+y **después, incondicionalmente, para cualquier plantilla incluida `Normal`**, encolaba una llamada a
+`ArrangeOpenNotes`. Esa función, para `Normal`, ejecuta la rama `default` de
+`ArrangeWindowsOnMonitor`: una cascada diagonal cuyo punto de partida se calcula centrado en el área de
+trabajo (`startLeft`/`startTop` a partir de `(area.Width - totalWidth) / 2`) — exactamente la cascada
+centrada de la captura. Es decir, **ignoraba a propósito la posición recién restaurada de cada nota** y
+las reordenaba todas en diagonal, sin relación con dónde estaban antes de cerrarlas.
+
+Este comportamiento tenía sentido para un camino de la UI que ya no existe: elegir "Normal" explícitamente
+desde el menú del dock mientras había notas abiertas, para que tuviera "un efecto visible" (comentario
+original). Ese botón de menú (`OnOpenAllNormalClick`) está en el code-behind pero no está enlazado a
+ningún control del XAML actual — código muerto, ver `docs/ROADMAP.md`. El único camino real por el que
+`layout == Normal` llega a `OpenAllNotes` hoy es tras un movimiento manual (el arreglo de la ronda
+anterior), y ahí lo único correcto es no tocar nada: cada nota ya cayó donde tenía que caer dentro del
+propio bucle de apertura.
+
+**Arreglo**: `OpenAllNotes` ahora corta antes del `Dispatcher.BeginInvoke` cuando `layout == Normal` — ni
+siquiera encola el reparto. Coincide con lo que ya hace el camino de abrir **una** nota suelta
+(`OpenOrActivateNote`, línea con el comentario "Con la disposición Normal... no se toca nada"): antes
+había dos caminos con el mismo nombre de plantilla y comportamiento contradictorio (uno respetaba la
+posición, el otro la sobrescribía); ahora los dos respetan `Normal` de la misma forma. Grid/Columns/
+DockCascade siguen llamando a `ArrangeOpenNotes` sin cambios, porque esas sí necesitan repartir todas las
+notas a la vez.
+
+Sin tests nuevos: `AppCoordinator`/`ArrangeOpenNotes` es lógica de ventanas WPF, fuera de
+`Aldune.Core.Tests` (mismo patrón que el resto de `Windowing`). Verificado leyendo el camino completo
+(`OpenAllNotes` → `ArrangeWindowsOnMonitor` → rama `default`) y contrastado con la captura de pantalla del
+usuario, que mostraba el patrón de cascada centrada exacto que produce esa rama. Tests: 534/534
+(Aldune.Core, sin cambios). Build limpio. Publicado como **0.10.7**.
+

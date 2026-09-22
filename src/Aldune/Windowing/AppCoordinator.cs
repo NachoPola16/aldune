@@ -476,9 +476,16 @@ public sealed class AppCoordinator
             OpenOrActivateNote(note, requestingDock, targetMonitorKey: targetMonitorKey, arrangeAfterOpen: false);
         }
 
-        // También se ejecuta para Normal: si ya había notas abiertas, elegir "Normal cascade"
-        // debe tener un efecto visible y no limitarse a guardar una preferencia para el siguiente
-        // ciclo de abrir/cerrar.
+        // Con Normal no se reparte nada mas: cada nota ya cayo donde tocaba dentro del bucle de arriba
+        // (su posicion recordada por pantalla via TryRestorePlacement, o si no la tenia, en cascada
+        // junto a su pestana - ver OpenOrActivateNote). Antes esto llamaba a ArrangeOpenNotes tambien
+        // para Normal, que reparte TODAS las notas abiertas (incluidas las que ya estaban) en una
+        // cascada diagonal centrada en la pantalla, pisando sin excepcion cualquier posicion movida a
+        // mano - justo lo que "Desplegar todas" no debia hacer. Grid/Columns/DockCascade si necesitan
+        // este reparto porque colocan varias notas a la vez segun su hueco disponible, algo que no se
+        // puede calcular nota a nota segun se van abriendo.
+        if (layout == NoteLayoutTemplate.Normal) return;
+
         var dock = requestingDock;
         Application.Current.Dispatcher.BeginInvoke(DispatcherPriority.Loaded, new Action(() =>
         {

@@ -10,7 +10,7 @@ Sesión de origen: 2026-09-06.
 
 ## Versión visible de la aplicación
 
-La ronda actual se identifica como **v0.10.6**. La versión se muestra en Ajustes y también en el texto
+La ronda actual se identifica como **v0.10.7**. La versión se muestra en Ajustes y también en el texto
 del icono de la bandeja. Cada actualización grande deberá incrementar este número siguiendo SemVer:
 parches para correcciones, versión menor para funcionalidades nuevas y versión mayor cuando haya
 cambios incompatibles.
@@ -935,3 +935,10 @@ cascada".
 - **La cascada seguía reapareciendo al mover una nota por la cabecera normal** (no por la asa): el aviso
   que desactiva la plantilla automática solo se disparaba desde la asa (`OnGripMouseDown`); movido a
   `OnLocationChanged`, que ve el arrastre venga de donde venga. Detalle en `docs/STATUS.md`.
+
+### Ajustes sobre la 0.10.6 (publicada como 0.10.7)
+
+- **"Desplegar todas" seguía centrando las notas en cascada** aunque la plantilla ya estuviera en
+  `Normal`: `OpenAllNotes` reordenaba TODAS las notas en diagonal centrada en pantalla para cualquier
+  plantilla, `Normal` incluida, pisando la posición recién restaurada de cada una. Ahora `Normal` no
+  reordena nada — cada nota se queda donde cayó al abrirse. Detalle en `docs/STATUS.md`.
