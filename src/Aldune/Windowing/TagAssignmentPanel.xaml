@@ -1,0 +1,44 @@
+<UserControl x:Class="Aldune.Windowing.TagAssignmentPanel"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:res="clr-namespace:Aldune.Resources">
+    <!-- El panel de etiquetas de una nota. Lo comparten el menú "⋯" de la nota, el de la pestaña del
+         dock y el gestor, que antes tenían tres copias casi iguales. Cada casilla se guarda al
+         marcarla, y abajo se puede crear una etiqueta nueva sin ir al gestor. -->
+    <StackPanel Width="240">
+        <TextBlock Text="{x:Static res:Strings.TagPanelTitle}" Foreground="#F5F0E6"
+                   FontSize="13" FontWeight="SemiBold" />
+        <TextBlock Text="{x:Static res:Strings.TagPanelHint}" Foreground="#A79E90"
+                   FontSize="11" TextWrapping="Wrap" Margin="0,3,0,12" />
+
+        <TextBlock x:Name="EmptyText" Text="{x:Static res:Strings.TagPanelEmpty}"
+                   Foreground="#A79E90" FontSize="12" TextWrapping="Wrap" Margin="0,0,0,4"
+                   Visibility="Collapsed" />
+        <ScrollViewer MaxHeight="220" VerticalScrollBarVisibility="Auto"
+                      HorizontalScrollBarVisibility="Disabled">
+            <StackPanel x:Name="Items" />
+        </ScrollViewer>
+
+        <Border Background="#3C3730" Height="1" Margin="0,8,0,12" />
+
+        <Grid>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+            <TextBox x:Name="NewTagBox" Grid.Column="0" MaxLength="40"
+                     Style="{StaticResource ColorTextBoxStyle}"
+                     AutomationProperties.Name="{x:Static res:Strings.NewTagPlaceholder}"
+                     KeyDown="OnNewTagKeyDown" TextChanged="OnNewTagTextChanged" />
+            <TextBlock x:Name="NewTagPlaceholder" Grid.Column="0" Text="{x:Static res:Strings.NewTagPlaceholder}"
+                       Foreground="#8A8175" FontSize="13" Margin="11,0,0,0" VerticalAlignment="Center"
+                       IsHitTestVisible="False" />
+            <Button x:Name="AddTagButton" Grid.Column="1" Content="&#xE710;"
+                    FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets"
+                    Margin="8,0,0,0" Padding="11,8" IsEnabled="False"
+                    ToolTip="{x:Static res:Strings.CreateTag}"
+                    AutomationProperties.Name="{x:Static res:Strings.CreateTag}"
+                    Style="{StaticResource ColorDialogButtonStyle}" Click="OnAddClick" />
+        </Grid>
+    </StackPanel>
+</UserControl>

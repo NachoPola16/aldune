@@ -361,13 +361,57 @@ public static class SyncEnvelopeCodec
         }
     }
 
-    public static SyncEnvelope CreateTombstone(SyncTombstone tombstone, string deviceId) => new()
+    /// <summary>
+    /// El aviso de borrado de una nota. Lleva cifrados con la clave del vínculo su id y su fecha: sin
+    /// eso, cualquiera que pudiera escribir en el almacén (el servidor, el NAS, la cuenta WebDAV)
+    /// fabricaba un borrado con una fecha futura y la nota desaparecía en todos los dispositivos. El
+    /// formato no cambia: una versión anterior lo lee igual, porque de un borrado solo mira la
+    /// cabecera. Ver <see cref="IsAuthenticTombstone"/>.
+    /// </summary>
+    public static SyncEnvelope CreateTombstone(SyncTombstone tombstone, byte[] key, string deviceId)
     {
-        NoteId = tombstone.NoteId,
-        Tombstone = true,
-        UpdatedAt = tombstone.DeletedAt,
-        DeviceId = deviceId,
-    };
+        var payload = JsonSerializer.SerializeToUtf8Bytes(
+            new SyncTombstonePayload { Id = tombstone.NoteId, DeletedAt = tombstone.DeletedAt }, JsonOptions);
+        using var cipher = new ContentCipher(key);
+        var encrypted = cipher.Encrypt(Convert.ToBase64String(payload));
+        return new SyncEnvelope
+        {
+            NoteId = tombstone.NoteId,
+            Tombstone = true,
+            UpdatedAt = tombstone.DeletedAt,
+            DeviceId = deviceId,
+            CipherText = Convert.ToBase64String(encrypted.CipherText),
+            Nonce = Convert.ToBase64String(encrypted.Nonce),
+            Tag = Convert.ToBase64String(encrypted.Tag),
+        };
+    }
+
+    /// <summary>
+    /// ¿Lo ha firmado alguien con la clave del vínculo? Solo si el contenido cifrado se descifra con
+    /// ella y dice el mismo id y la misma fecha que la cabecera. Un borrado sin contenido cifrado (de
+    /// una versión anterior a la 1.0) o con uno que no cuadra no es auténtico y se ignora.
+    /// </summary>
+    public static bool IsAuthenticTombstone(SyncEnvelope envelope, byte[] key)
+    {
+        if (!envelope.Tombstone || envelope.CipherText is null || envelope.Nonce is null || envelope.Tag is null)
+            return false;
+
+        try
+        {
+            using var cipher = new ContentCipher(key);
+            var plainBase64 = cipher.Decrypt(new EncryptedContent(
+                Convert.FromBase64String(envelope.CipherText),
+                Convert.FromBase64String(envelope.Nonce),
+                Convert.FromBase64String(envelope.Tag)));
+            var payload = JsonSerializer.Deserialize<SyncTombstonePayload>(
+                Convert.FromBase64String(plainBase64), JsonOptions);
+            return payload is not null && payload.Id == envelope.NoteId && payload.DeletedAt == envelope.UpdatedAt;
+        }
+        catch (Exception ex) when (ex is CryptographicException or FormatException or JsonException or ArgumentException)
+        {
+            return false;
+        }
+    }
 
     public static byte[] Serialize(SyncEnvelope envelope) => JsonSerializer.SerializeToUtf8Bytes(envelope, JsonOptions);
 
@@ -428,6 +472,12 @@ public static class SyncEnvelopeCodec
         if (!envelope.Tombstone &&
             (envelope.CipherText is null || envelope.Nonce is null || envelope.Tag is null))
             throw new FormatException("A note sync object is missing encrypted content.");
+    }
+
+    private sealed class SyncTombstonePayload
+    {
+        public Guid Id { get; set; }
+        public DateTimeOffset DeletedAt { get; set; }
     }
 
     private sealed class SyncNotePayload

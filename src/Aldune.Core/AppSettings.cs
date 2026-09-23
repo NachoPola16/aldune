@@ -92,6 +92,14 @@ public sealed class AppSettings
     public int? TargetMonitorIndex { get; set; }
 
     /// <summary>
+    /// Identificador de hardware de la pantalla elegida (<see cref="MonitorInfo.StableId"/>). Manda
+    /// sobre <see cref="TargetMonitorIndex"/>, que se conserva para ajustes antiguos: la posición en la
+    /// lista de Windows cambia al apagar y encender pantallas, y el dock se quedaba en la otra. Ver
+    /// <see cref="DockMonitorSelection"/>.
+    /// </summary>
+    public string? TargetMonitorId { get; set; }
+
+    /// <summary>
     /// Si el dock debe ocultarse automáticamente cuando una aplicación o juego pase a pantalla
     /// completa real en ese monitor. Por defecto <c>true</c>.
     /// </summary>
@@ -172,4 +180,23 @@ public sealed class AppSettings
 
     /// <summary>Etiqueta seleccionada cuando <see cref="DockView"/> es <see cref="DockViewKind.Tag"/>.</summary>
     public string? DockTagFilter { get; set; }
+
+    /// <summary>
+    /// Tema de color de las notas. Nulo = Clásico, la paleta de siempre: un settings.json anterior
+    /// a los temas carga así y nada cambia hasta que el usuario elige otro. Un id que ya no existe
+    /// también cae a Clásico (ver <see cref="NoteThemes.Resolve"/>).
+    /// </summary>
+    public string? ActiveThemeId { get; set; }
+
+    /// <summary>De qué tono nacen las notas nuevas. Por defecto claras, como siempre.</summary>
+    public NoteTone NewNoteTone { get; set; } = NoteTone.Light;
+
+    /// <summary>Cómo se elige el color de una nota nueva dentro del tema.</summary>
+    public NoteColorAssignment ColorAssignment { get; set; } = NoteColorAssignment.RotateAvoidNeighbors;
+
+    /// <summary>Color de <see cref="NoteColorAssignment.Fixed"/>. Nulo = el primero del tono pedido.</summary>
+    public string? FixedNoteColor { get; set; }
+
+    /// <summary>Temas creados por el usuario. Locales a este equipo: no se sincronizan en la 1.0.</summary>
+    public List<NoteTheme> CustomThemes { get; set; } = new();
 }

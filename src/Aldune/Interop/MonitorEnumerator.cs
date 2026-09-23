@@ -48,6 +48,40 @@ internal static class MonitorEnumerator
     [DllImport("shcore.dll")]
     private static extern int GetDpiForMonitor(IntPtr hmonitor, MonitorDpiType dpiType, out uint dpiX, out uint dpiY);
 
+    [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Unicode)]
+    private struct DISPLAY_DEVICE
+    {
+        public int cb;
+        [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 32)] public string DeviceName;
+        [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 128)] public string DeviceString;
+        public int StateFlags;
+        [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 128)] public string DeviceID;
+        [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 128)] public string DeviceKey;
+    }
+
+    [DllImport("user32.dll", CharSet = CharSet.Unicode)]
+    private static extern bool EnumDisplayDevices(string? lpDevice, uint iDevNum, ref DISPLAY_DEVICE lpDisplayDevice, uint dwFlags);
+
+    private const uint EDD_GET_DEVICE_INTERFACE_NAME = 0x1;
+    private const int DISPLAY_DEVICE_ACTIVE = 0x1;
+
+    /// <summary>
+    /// El identificador estable de la pantalla conectada a la salida <paramref name="adapterDeviceName"/>
+    /// ("\\.\DISPLAY1"): la ruta de interfaz del monitor, que no cambia al apagarlo y encenderlo,
+    /// a diferencia del propio "DISPLAYn". Null si Windows no la da.
+    /// </summary>
+    private static string? StableIdFor(string adapterDeviceName)
+    {
+        var device = new DISPLAY_DEVICE { cb = Marshal.SizeOf<DISPLAY_DEVICE>() };
+        for (uint i = 0; EnumDisplayDevices(adapterDeviceName, i, ref device, EDD_GET_DEVICE_INTERFACE_NAME); i++)
+        {
+            if ((device.StateFlags & DISPLAY_DEVICE_ACTIVE) != 0 && !string.IsNullOrEmpty(device.DeviceID))
+                return device.DeviceID;
+            device = new DISPLAY_DEVICE { cb = Marshal.SizeOf<DISPLAY_DEVICE>() };
+        }
+        return null;
+    }
+
     /// <summary>
     /// El monitor sobre el que está el cursor, o <c>null</c> si no cae en ninguno de los conectados.
     ///
@@ -110,7 +144,8 @@ internal static class MonitorEnumerator
                 info.szDevice,
                 DpiConversion.ToWorkingArea(pixelWorkArea, dpiScale),
                 dpiScale,
-                (info.dwFlags & MONITORINFOF_PRIMARY) != 0));
+                (info.dwFlags & MONITORINFOF_PRIMARY) != 0,
+                StableIdFor(info.szDevice)));
 
             return true;
         }

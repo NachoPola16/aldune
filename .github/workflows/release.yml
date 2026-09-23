@@ -7,10 +7,19 @@ on:
 
 permissions:
   contents: write
+  # La firma con SignPath lee los artefactos de este run.
+  actions: read
 
 jobs:
   package:
     runs-on: windows-latest
+
+    # La firma se activa sola cuando existen todas: las variables del repositorio
+    # SIGNPATH_ORGANIZATION_ID, SIGNPATH_PROJECT_SLUG, SIGNPATH_POLICY_SLUG y las dos de configuración
+    # de artefacto, y el secreto SIGNPATH_API_TOKEN (ver docs/RELEASING.md). Si falta alguna, el release
+    # se publica sin firmar, en vez de fallar a medias.
+    env:
+      SIGNING_ENABLED: ${{ vars.SIGNPATH_ORGANIZATION_ID != '' && vars.SIGNPATH_PROJECT_SLUG != '' && vars.SIGNPATH_POLICY_SLUG != '' && vars.SIGNPATH_EXE_CONFIGURATION_SLUG != '' && vars.SIGNPATH_SETUP_CONFIGURATION_SLUG != '' && secrets.SIGNPATH_API_TOKEN != '' }}
 
     steps:
       - name: Check out repository
@@ -24,17 +33,77 @@ jobs:
       - name: Restore
         run: dotnet restore src/Aldune/Aldune.csproj -r win-x64
 
+      - name: Test
+        run: dotnet test Aldune.slnx --configuration Release
+
       - name: Install Inno Setup
         run: choco install innosetup --no-progress -y
 
+      - name: Publish portable executable
+        shell: pwsh
+        run: |
+          dotnet publish src/Aldune/Aldune.csproj -c Release -r win-x64 --self-contained true `
+            -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true -p:PublishTrimmed=false `
+            -o publish/portable
+          Remove-Item publish/portable/*.pdb -Force -ErrorAction SilentlyContinue
+
+      # --- Firma del ejecutable (opcional) -------------------------------------------------------
+      - name: Upload executable for signing
+        if: env.SIGNING_ENABLED == 'true'
+        id: upload-exe
+        uses: actions/upload-artifact@v4
+        with:
+          name: unsigned-exe
+          path: publish/portable/aldune.exe
+
+      - name: Sign executable with SignPath
+        if: env.SIGNING_ENABLED == 'true'
+        uses: signpath/github-action-submit-signing-request@v3
+        with:
+          api-token: ${{ secrets.SIGNPATH_API_TOKEN }}
+          organization-id: ${{ vars.SIGNPATH_ORGANIZATION_ID }}
+          project-slug: ${{ vars.SIGNPATH_PROJECT_SLUG }}
+          signing-policy-slug: ${{ vars.SIGNPATH_POLICY_SLUG }}
+          artifact-configuration-slug: ${{ vars.SIGNPATH_EXE_CONFIGURATION_SLUG }}
+          github-artifact-id: ${{ steps.upload-exe.outputs.artifact-id }}
+          wait-for-completion: true
+          output-artifact-directory: publish/portable
+
+      # --- Instalador y portable, ya con el ejecutable firmado si procede --------------------------
       - name: Build installer and portable package
         shell: pwsh
-        run: ./scripts/build-installer.ps1
+        run: ./scripts/build-installer.ps1 -SkipPublish
 
+      - name: Upload installer for signing
+        if: env.SIGNING_ENABLED == 'true'
+        id: upload-setup
+        uses: actions/upload-artifact@v4
+        with:
+          name: unsigned-setup
+          path: dist/Aldune-Setup-*.exe
+
+      - name: Sign installer with SignPath
+        if: env.SIGNING_ENABLED == 'true'
+        uses: signpath/github-action-submit-signing-request@v3
+        with:
+          api-token: ${{ secrets.SIGNPATH_API_TOKEN }}
+          organization-id: ${{ vars.SIGNPATH_ORGANIZATION_ID }}
+          project-slug: ${{ vars.SIGNPATH_PROJECT_SLUG }}
+          signing-policy-slug: ${{ vars.SIGNPATH_POLICY_SLUG }}
+          artifact-configuration-slug: ${{ vars.SIGNPATH_SETUP_CONFIGURATION_SLUG }}
+          github-artifact-id: ${{ steps.upload-setup.outputs.artifact-id }}
+          wait-for-completion: true
+          output-artifact-directory: dist
+
+      # --- Publicación -----------------------------------------------------------------------------
+      # Un tag con guion (v0.99.0-rc1) se publica como pre-release: GitHub no lo ofrece como "latest"
+      # y el aviso de actualizaciones de la app (ReleaseUpdateChecker) lo ignora.
       - name: Create GitHub Release
         shell: pwsh
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          $assets = Get-ChildItem -LiteralPath dist -File | ForEach-Object { $_.FullName }
-          gh release create $env:GITHUB_REF_NAME @assets --title "Aldune $env:GITHUB_REF_NAME" --generate-notes
+          $assets = Get-ChildItem -LiteralPath dist -File -Include *.exe, *.zip -Recurse | ForEach-Object { $_.FullName }
+          $flags = @()
+          if ($env:GITHUB_REF_NAME -like '*-*') { $flags += '--prerelease' }
+          gh release create $env:GITHUB_REF_NAME @assets --title "Aldune $env:GITHUB_REF_NAME" --generate-notes @flags

@@ -19,6 +19,14 @@ dotnet run --project "C:\Users\nacho\Proyectos\aldune\tests\Aldune.Ui.SmokeTests
 
 Se carga únicamente `Application.Resources` del `App.xaml` de producción embebido por enlace; nunca se instancia `Aldune.App` ni se ejecuta su startup. No se leen settings, DB, claves DPAPI o sincronización del usuario.
 
+## Segundo escenario: el "⋯" de la nota con clics físicos
+
+Crea una nota real en (300, 200) y la pulsa con `SetCursorPos` + `mouse_event`: abrir el menú, volver a
+pulsar "⋯" (debe cerrarse, no reabrirse), reabrir y cerrar pulsando fuera. Este sí mueve el ratón y
+necesita la ventana en primer plano: no tocar el ratón mientras corre. Existe porque el fallo del
+toggle volvió tres veces: con eventos enrutados no se reproduce, solo con un clic real (ver
+`PopupToggle`).
+
 ## Límites
 
 Esta entrega se limitó por prioridad a **una** prueba de la causa concreta: cierre del selector después de cambiar etiqueta y refrescar geometría. No sustituye ni repite únicamente pruebas de `FanStateMachine`.

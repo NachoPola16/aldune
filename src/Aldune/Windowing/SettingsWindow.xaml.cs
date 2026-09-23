@@ -64,6 +64,7 @@ public partial class SettingsWindow : Window
         PopulateMonitors();
         PopulateEdges();
         PopulateLanguages();
+        RefreshThemeSection();
         PopulateDelayUnits();
         UpdateInterfaceModeUi();
         UpdateAutoHideTasksUi();
@@ -355,7 +356,8 @@ public partial class SettingsWindow : Window
             Style = (Style)FindResource("MonitorRadioStyle"),
             Tag = null,
             Content = Strings.AllScreens,
-            IsChecked = _settings.TargetMonitorIndex == null || _settings.TargetMonitorIndex >= monitors.Count
+            IsChecked = _settings.TargetMonitorId == null
+                && (_settings.TargetMonitorIndex == null || _settings.TargetMonitorIndex >= monitors.Count)
         };
         allScreensRadio.Checked += OnMonitorSelectionChanged;
         MonitorListContainer.Children.Add(allScreensRadio);
@@ -372,7 +374,10 @@ public partial class SettingsWindow : Window
                 Style = (Style)FindResource("MonitorRadioStyle"),
                 Tag = monitorIndex,
                 Content = labelText,
-                IsChecked = _settings.TargetMonitorIndex == monitorIndex
+                // Por identificador si lo hay: la posición de cada pantalla en la lista puede cambiar.
+                IsChecked = _settings.TargetMonitorId is { } id
+                    ? m.StableId == id
+                    : _settings.TargetMonitorIndex == monitorIndex
             };
             radio.Checked += OnMonitorSelectionChanged;
             MonitorListContainer.Children.Add(radio);
@@ -384,9 +389,13 @@ public partial class SettingsWindow : Window
         if (sender is RadioButton { IsChecked: true } radio)
         {
             var targetIndex = (int?)radio.Tag;
-            if (_settings.TargetMonitorIndex != targetIndex)
+            var targetId = targetIndex is { } index
+                ? DockMonitorSelection.IdForLegacyIndex(MonitorEnumerator.EnumerateMonitors(), index)
+                : null;
+            if (_settings.TargetMonitorIndex != targetIndex || _settings.TargetMonitorId != targetId)
             {
                 _settings.TargetMonitorIndex = targetIndex;
+                _settings.TargetMonitorId = targetId;
                 _settingsService.Save(_settings);
                 _coordinator?.RebuildDocks();
             }
@@ -714,6 +723,15 @@ public partial class SettingsWindow : Window
         _settings.SyncFolderPath = SyncFolderPathBox.Text.Trim();
         _settings.SyncServerUrl = SyncServerUrlBox.Text.Trim();
         _settingsService.Save(_settings);
+        UpdateInsecureUrlWarning();
+    }
+
+    private void UpdateInsecureUrlWarning()
+    {
+        bool usesUrl = SyncServerRadio.IsChecked == true || SyncWebDavRadio.IsChecked == true;
+        SyncInsecureUrlText.Visibility = usesUrl && SyncEndpointSecurity.ExposesCredentials(SyncServerUrlBox.Text.Trim())
+            ? Visibility.Visible
+            : Visibility.Collapsed;
     }
 
     private void OnSyncTokenLostFocus(object sender, RoutedEventArgs e)
@@ -890,6 +908,7 @@ public partial class SettingsWindow : Window
         SyncWebDavUsernameGrid.Visibility = webDav ? Visibility.Visible : Visibility.Collapsed;
         SyncWebDavPasswordGrid.Visibility = webDav ? Visibility.Visible : Visibility.Collapsed;
         SyncWebDavHintText.Visibility = webDav ? Visibility.Visible : Visibility.Collapsed;
+        UpdateInsecureUrlWarning();
         SyncWebDavUsernameBox.IsEnabled = enabled && webDav;
         SyncWebDavPasswordBox.IsEnabled = enabled && webDav;
         SyncCodeBox.IsEnabled = enabled;
@@ -1008,5 +1027,183 @@ public partial class SettingsWindow : Window
             // texto sin guardar— para simular un cambio en caliente sería más frágil que pedir un
             // reinicio, así que no se intenta.
         }
+    }
+
+    // --- Temas ---------------------------------------------------------------------------------
+
+    private bool _loadingThemes;
+
+    private NoteTheme ActiveTheme => NoteThemes.Resolve(_settings.ActiveThemeId, _settings.CustomThemes);
+
+    /// <summary>Rehace la sección entera a partir de los ajustes. Se llama al abrir y cuando cambia
+    /// la lista de temas (nuevo, duplicar, editar, eliminar). Los cambios de una opción no pasan por
+    /// aquí: reconstruir el radio o el desplegable que se está usando le quitaba el foco de teclado a
+    /// quien navega con las flechas.</summary>
+    internal void RefreshThemeSection()
+    {
+        _loadingThemes = true;
+        try
+        {
+            var active = ActiveTheme;
+            ThemeCombo.Items.Clear();
+            foreach (var theme in NoteThemes.All(_settings.CustomThemes))
+            {
+                ThemeCombo.Items.Add(new ComboBoxItem
+                {
+                    Content = Strings.ThemeDisplayName(theme),
+                    Tag = theme.Id,
+                    Style = (Style)FindResource("SyncProfileItemStyle"),
+                    IsSelected = theme.Id == active.Id,
+                });
+            }
+
+            RefreshActiveThemeDetails();
+
+            FillRadios(ToneListContainer, "ToneGroup", _settings.NewNoteTone,
+                (NoteTone.Light, Strings.ToneLight), (NoteTone.Dark, Strings.ToneDark), (NoteTone.Both, Strings.ToneBoth));
+            FillRadios(AssignmentListContainer, "AssignmentGroup", _settings.ColorAssignment,
+                (NoteColorAssignment.RotateAvoidNeighbors, Strings.AssignAvoidNeighbors),
+                (NoteColorAssignment.Rotate, Strings.AssignRotate),
+                (NoteColorAssignment.MostDistinct, Strings.AssignMostDistinct),
+                (NoteColorAssignment.Fixed, Strings.AssignFixed));
+        }
+        finally
+        {
+            _loadingThemes = false;
+        }
+    }
+
+    /// <summary>Lo que depende del tema activo y de la regla, sin tocar el desplegable ni los
+    /// radios: la tira del tema, los botones de editar y eliminar, las pastillas del color fijo y el
+    /// botón de aplicar.</summary>
+    private void RefreshActiveThemeDetails()
+    {
+        var active = ActiveTheme;
+        NoteSwatchPanel.Fill(ThemePreview, active, selectedColor: null, onClick: (_, _) => { });
+        ThemeEditButton.IsEnabled = ThemeDeleteButton.IsEnabled = !active.IsBuiltIn;
+        ApplyThemeButton.IsEnabled = _coordinator is { ActiveNoteCount: > 0 };
+
+        bool isFixed = _settings.ColorAssignment == NoteColorAssignment.Fixed;
+        FixedColorSwatches.Visibility = isFixed ? Visibility.Visible : Visibility.Collapsed;
+        if (isFixed)
+        {
+            var fixedColor = NoteColorAssigner.Assign(active, _settings.NewNoteTone,
+                NoteColorAssignment.Fixed, _settings.FixedNoteColor, []);
+            NoteSwatchPanel.Fill(FixedColorSwatches, active, fixedColor, OnFixedColorClick);
+        }
+    }
+
+    private void FillRadios<T>(Panel host, string group, T current, params (T Value, string Label)[] options)
+        where T : struct, Enum
+    {
+        host.Children.Clear();
+        foreach (var (value, label) in options)
+        {
+            var radio = new RadioButton
+            {
+                GroupName = group,
+                Style = (Style)FindResource("MonitorRadioStyle"),
+                Content = label,
+                Tag = value,
+                IsChecked = EqualityComparer<T>.Default.Equals(value, current),
+            };
+            radio.Checked += OnThemeRadioChecked;
+            host.Children.Add(radio);
+        }
+    }
+
+    private void OnThemeRadioChecked(object sender, RoutedEventArgs e)
+    {
+        if (_loadingThemes || sender is not RadioButton { Tag: var tag }) return;
+        if (tag is NoteTone tone) _settings.NewNoteTone = tone;
+        if (tag is NoteColorAssignment rule) _settings.ColorAssignment = rule;
+        SaveThemeSettings(rebuild: false);
+    }
+
+    private void OnThemeSelectionChanged(object sender, SelectionChangedEventArgs e)
+    {
+        if (_loadingThemes || ThemeCombo.SelectedItem is not ComboBoxItem { Tag: string id }) return;
+        _settings.ActiveThemeId = id;
+        SaveThemeSettings(rebuild: false);
+    }
+
+    private void OnFixedColorClick(object sender, MouseButtonEventArgs e)
+    {
+        _settings.FixedNoteColor = (string)((Border)sender).Tag;
+        SaveThemeSettings(rebuild: false);
+    }
+
+    private void OnThemeNewClick(object sender, RoutedEventArgs e)
+    {
+        var created = ThemeEditorWindow.Show(this, new NoteTheme
+        {
+            Id = Guid.NewGuid().ToString("N"),
+            Name = Strings.ThemeNewName,
+        }, isNew: true);
+        if (created is null) return;
+
+        _settings.CustomThemes.Add(created);
+        _settings.ActiveThemeId = created.Id;
+        SaveThemeSettings();
+    }
+
+    private void OnThemeDuplicateClick(object sender, RoutedEventArgs e)
+    {
+        var source = ActiveTheme;
+        var copy = NoteThemes.Duplicate(source, Strings.ThemeCopyName(Strings.ThemeDisplayName(source)));
+        _settings.CustomThemes.Add(copy);
+        _settings.ActiveThemeId = copy.Id;
+        SaveThemeSettings();
+    }
+
+    private void OnThemeEditClick(object sender, RoutedEventArgs e)
+    {
+        var current = ActiveTheme;
+        if (current.IsBuiltIn) return;
+
+        var edited = ThemeEditorWindow.Show(this, current, isNew: false);
+        if (edited is null) return;
+
+        int index = _settings.CustomThemes.FindIndex(theme => theme.Id == current.Id);
+        if (index >= 0) _settings.CustomThemes[index] = edited;
+        SaveThemeSettings();
+    }
+
+    private void OnThemeDeleteClick(object sender, RoutedEventArgs e)
+    {
+        var current = ActiveTheme;
+        if (current.IsBuiltIn) return;
+
+        var answer = MessageBox.Show(this, Strings.ThemeDeleteConfirm(current.Name), Strings.AppName,
+            MessageBoxButton.OKCancel, MessageBoxImage.Question);
+        if (answer != MessageBoxResult.OK) return;
+
+        _settings.CustomThemes.RemoveAll(theme => theme.Id == current.Id);
+        _settings.ActiveThemeId = null;
+        SaveThemeSettings();
+    }
+
+    private void OnApplyThemeClick(object sender, RoutedEventArgs e)
+    {
+        if (_coordinator is null) return;
+
+        int count = _coordinator.ActiveNoteCount;
+        if (count == 0) return;
+
+        var answer = MessageBox.Show(this, Strings.ApplyThemeConfirm(count),
+            Strings.ApplyThemeConfirmTitle, MessageBoxButton.OKCancel, MessageBoxImage.Question);
+        if (answer != MessageBoxResult.OK) return;
+
+        _coordinator.ApplyThemeToActiveNotes();
+    }
+
+    /// <summary>Guarda y repinta. <paramref name="rebuild"/> solo cuando cambia la lista de temas; si
+    /// no, se actualiza lo que depende de la opción sin quitar el foco al control que se usa.</summary>
+    private void SaveThemeSettings(bool rebuild = true)
+    {
+        _settingsService.Save(_settings);
+        if (rebuild) RefreshThemeSection();
+        else RefreshActiveThemeDetails();
+        _coordinator?.RefreshAll();
     }
 }

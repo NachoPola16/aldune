@@ -4,6 +4,41 @@ La sincronización no copia `notes.db`. Cada nota se serializa en un sobre JSON 
 cifra con una clave de sincronización compartida entre dispositivos. El almacén solo ve el id,
 la fecha, el dispositivo y el blob cifrado.
 
+## Modelo de seguridad
+
+Qué protege Aldune y qué no, en corto:
+
+- **Contenido cifrado de extremo a extremo.** Texto, color, etiquetas, posición en el dock y el
+  contenido de las notas protegidas con contraseña viajan cifrados con **AES-256-GCM** usando la
+  clave de sincronización, que solo tienen tus dispositivos. El almacén (carpeta, NAS, servidor o
+  WebDAV) solo ve el id de cada nota, su fecha, el id del dispositivo y el bloque cifrado.
+- **Integridad.** Cada sobre cifrado incluye el id y la fecha de su nota, y se comprueba que coincidan
+  con la cabecera: el almacén no puede cambiar el contenido de una nota por el de otra. Desde la
+  1.0 los **borrados también van firmados**: quien pueda escribir en el almacén pero no tenga la
+  clave no puede fabricar un borrado. Un borrado sin firma válida nunca borra: manda la nota a la
+  papelera (de donde se recupera), y si su fecha es imposible (en el futuro) se descarta del
+  almacén. Un objeto que no se puede descifrar se salta sin parar el resto de la sincronización;
+  solo se para si no se puede leer **ninguno**, que es lo que pasa con un código revocado.
+- **Acceso al servidor.** El servidor propio exige un token (`Authorization: Bearer`), que compara en
+  tiempo constante y admite rotación sin cortes (ver más abajo). Usa un valor largo y aleatorio, por
+  ejemplo `openssl rand -base64 32`; el servidor avisa en el registro si es de menos de 24
+  caracteres.
+- **Transporte.** El servidor habla HTTP; el HTTPS lo pone lo que tengas delante (Caddy, Nginx +
+  Cloudflare Tunnel, una VPN). Aldune avisa en Ajustes si configuras `http://` hacia un servidor
+  fuera de tu red local: las notas seguirían cifradas, pero el token viajaría en claro.
+- **En el equipo.** El texto de cada nota se guarda cifrado con AES-256-GCM en la base de datos local
+  (el color, las etiquetas y las fechas no); la clave está protegida con
+  DPAPI (ligada a tu usuario de Windows). Las notas con contraseña usan una clave derivada con
+  PBKDF2-SHA256 (600.000 iteraciones); la contraseña no se guarda.
+- **Lo que no cubre.** No hay auditoría externa ni certificación. Quien controle el almacén puede
+  borrar o no servir los ficheros (dejar de sincronizar), servir una versión antigua auténtica de una
+  nota a un dispositivo que aún no tenga una más nueva, o mandar notas a la papelera; no puede leerlas
+  ni fabricar cambios en ellas. Los metadatos (cuántas notas hay y cuándo cambian) son visibles para él.
+
+> **Al actualizar a la 1.0, actualiza todos tus dispositivos.** Un borrado hecho desde una versión
+> anterior no va firmado: en los dispositivos con la 1.0 la nota va a la papelera en vez de
+> borrarse del todo.
+
 ## Carpeta compartida
 
 En Ajustes, activa la sincronización, elige `Carpeta compartida / NAS` y selecciona una carpeta local,

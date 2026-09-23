@@ -351,23 +351,7 @@ public partial class NotesManagerWindow : Window
         }
 
         _tagEditRow = row;
-        TagChoiceItems.Children.Clear();
-        var tags = _repository.GetAllTags();
-        TagChoiceEmptyText.Visibility = tags.Count == 0 ? Visibility.Visible : Visibility.Collapsed;
-        foreach (var tag in tags)
-        {
-            TagChoiceItems.Children.Add(new CheckBox
-            {
-                Content = tag,
-                Tag = tag,
-                IsChecked = row.Note.Tags.Any(existing =>
-                    string.Equals(existing, tag, StringComparison.OrdinalIgnoreCase)),
-                Margin = new Thickness(0, 0, 0, 8),
-                Foreground = Brushes.White,
-                Background = new SolidColorBrush(Color.FromRgb(45, 41, 35)),
-                Style = (Style)FindResource("AppCheckBoxStyle")
-            });
-        }
+        ManagerTagPanel.Bind(_repository, row.Note);
 
         TagEditorPopup.PlacementTarget = button;
         _tagEditorToggle.SetTrigger(button);
@@ -376,24 +360,16 @@ public partial class NotesManagerWindow : Window
         e.Handled = true;
     }
 
-    private void OnSaveTagsClick(object sender, RoutedEventArgs e)
+    /// <summary>El panel guarda al marcar; la lista y el dock se refrescan una sola vez, al cerrarlo.</summary>
+    private void OnTagEditorClosed(object? sender, EventArgs e)
     {
-        if (_tagEditRow is not null)
+        if (ManagerTagPanel.Changed)
         {
-            var tags = TagChoiceItems.Children.OfType<CheckBox>()
-                .Where(checkBox => checkBox.IsChecked == true)
-                .Select(checkBox => checkBox.Tag as string)
-                .Where(tag => tag is not null)
-                .Cast<string>()
-                .ToArray();
-            _repository.SetTags(_tagEditRow.Note.Id, tags);
             LoadRows();
+            PopulateTagManager();
             _coordinator.RefreshAll();
         }
-
-        TagEditorPopup.IsOpen = false;
         _tagEditRow = null;
-        e.Handled = true;
     }
 
     /// <summary>

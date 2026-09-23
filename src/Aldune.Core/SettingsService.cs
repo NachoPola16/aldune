@@ -11,13 +11,25 @@ public sealed class SettingsService
         _settingsPath = settingsPath;
     }
 
+    /// <summary>
+    /// Al leer se aceptan los enums también por su nombre ("Dark", no solo 1): un settings.json
+    /// editado a mano así lanzaba JsonException y la app no arrancaba. Al escribir se siguen usando
+    /// números, que es lo único que entienden las versiones anteriores.
+    /// </summary>
+    private static readonly JsonSerializerOptions ReadOptions = new()
+    {
+        Converters = { new System.Text.Json.Serialization.JsonStringEnumConverter() },
+    };
+
     public AppSettings Load()
     {
         if (!File.Exists(_settingsPath))
             return new AppSettings();
 
         var json = File.ReadAllText(_settingsPath);
-        var settings = JsonSerializer.Deserialize<AppSettings>(json) ?? new AppSettings();
+        var settings = JsonSerializer.Deserialize<AppSettings>(json, ReadOptions) ?? new AppSettings();
+        // Un settings.json editado a mano no puede dejar temas que rompan el pintado de las notas.
+        settings.CustomThemes = NoteThemes.Sanitize(settings.CustomThemes);
         SyncProfileStore.Ensure(settings);
         return settings;
     }

@@ -37,7 +37,11 @@ que mirar antes de buscar cadenas por el repositorio:
 | `Legacy*` | `Fanote`, `fanote-profile-*` | Compatibilidad con lo anterior: **no se toca** al renombrar. |
 
 El icono vive en `src/Aldune/Assets/`: `aldune.ico` (el que usan el ejecutable y el instalador) y los
-`.svg` de origen (`aldune-logo.svg`, `aldune-logo-small.svg`).
+`.svg` de origen (`aldune-logo.svg`, `aldune-logo-small.svg`). Desde la 1.0 el logo son tres pestañas pegadas al canto
+de la pantalla, como el dock, con los colores del tema Clásico sobre una placa oscura redondeada. El
+`.ico` lleva imágenes de 16 a 256 px: las de 16-24 salen de `aldune-logo-small.svg` (sin contornos,
+alineada a píxel) y el resto de `aldune-logo.svg`. También va incrustado como recurso
+(`Aldune.aldune.ico`) para la bandeja del sistema.
 
 ## Dónde más aparece el nombre (no sale de `BrandIdentity`)
 

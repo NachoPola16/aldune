@@ -133,10 +133,16 @@ public sealed class NotesRepository
         using var transaction = connection.BeginTransaction();
         using var deleteLinks = connection.CreateCommand();
         deleteLinks.Transaction = transaction;
+        // Las notas que la llevaban cambian: se les actualiza la fecha para que la sincronización
+        // lleve el cambio al resto de dispositivos (si no, allí conservaban la etiqueta borrada).
         deleteLinks.CommandText = """
+            UPDATE Note SET UpdatedAt = $now
+            WHERE Id IN (SELECT NoteId FROM NoteTag
+                         WHERE TagId IN (SELECT Id FROM Tag WHERE Name = $name COLLATE NOCASE));
             DELETE FROM NoteTag
             WHERE TagId IN (SELECT Id FROM Tag WHERE Name = $name COLLATE NOCASE);
             """;
+        deleteLinks.Parameters.AddWithValue("$now", DateTimeOffset.UtcNow.ToString("O"));
         deleteLinks.Parameters.AddWithValue("$name", name.Trim());
         deleteLinks.ExecuteNonQuery();
 
@@ -149,7 +155,17 @@ public sealed class NotesRepository
         return deleted;
     }
 
-    public void SetTags(Guid noteId, IEnumerable<string> tags)
+    /// <summary>
+    /// Las etiquetas de una nota, cambiadas por el usuario: actualiza su fecha para que el cambio se
+    /// sincronice. Antes no lo hacía y cambiar solo las etiquetas nunca llegaba a los otros equipos.
+    /// </summary>
+    public void SetTags(Guid noteId, IEnumerable<string> tags) => SetTags(noteId, tags, touch: true);
+
+    /// <summary>
+    /// <paramref name="touch"/> es false al aplicar una nota que llega por sincronización: esa nota ya
+    /// trae su fecha, y cambiarla haría que los dispositivos se la pasaran de uno a otro sin fin.
+    /// </summary>
+    private void SetTags(Guid noteId, IEnumerable<string> tags, bool touch)
     {
         var normalized = tags
             .Select(tag => tag.Trim())
@@ -183,10 +199,18 @@ public sealed class NotesRepository
             add.ExecuteNonQuery();
         }
 
-        using var cleanup = connection.CreateCommand();
-        cleanup.Transaction = transaction;
-        cleanup.CommandText = "DELETE FROM Tag WHERE Id NOT IN (SELECT TagId FROM NoteTag);";
-        cleanup.ExecuteNonQuery();
+        if (touch)
+        {
+            using var stamp = connection.CreateCommand();
+            stamp.Transaction = transaction;
+            stamp.CommandText = "UPDATE Note SET UpdatedAt = $now WHERE Id = $noteId;";
+            stamp.Parameters.AddWithValue("$now", DateTimeOffset.UtcNow.ToString("O"));
+            stamp.Parameters.AddWithValue("$noteId", noteId.ToString());
+            stamp.ExecuteNonQuery();
+        }
+
+        // Sin limpiar las etiquetas que se quedan sin notas: se crean y se borran en el gestor, y una
+        // creada para usarla más adelante desaparecía en cuanto se guardaban las de cualquier nota.
         transaction.Commit();
     }
 
@@ -480,7 +504,7 @@ public sealed class NotesRepository
             orderCommand.ExecuteNonQuery();
         }
 
-        SetTags(note.Id, note.Tags);
+        SetTags(note.Id, note.Tags, touch: false);
     }
 
     /// <summary>Aplica una eliminación remota sin generar una segunda tombstone local.</summary>

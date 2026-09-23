@@ -118,4 +118,12 @@ public partial class SyncConflictsWindow : Window
         public string LosingTitle { get; }
         public string Details { get; }
     }
+
+    /// <summary>Esc cierra, como en el resto de diálogos de la app.</summary>
+    private void OnWindowKeyDown(object sender, System.Windows.Input.KeyEventArgs e)
+    {
+        if (e.Key != System.Windows.Input.Key.Escape) return;
+        OnCloseClick(this, new RoutedEventArgs());
+        e.Handled = true;
+    }
 }

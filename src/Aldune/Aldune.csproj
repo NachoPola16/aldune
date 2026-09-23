@@ -5,6 +5,12 @@
   </ItemGroup>
 
   <ItemGroup>
+    <!-- El mismo .ico, incrustado también como recurso: la bandeja lo abre pidiendo el tamaño pequeño
+         del sistema, y así usa la versión de 16-24 px dibujada para eso en vez de reducir la de 32. -->
+    <EmbeddedResource Include="Assets\aldune.ico" LogicalName="Aldune.aldune.ico" />
+  </ItemGroup>
+
+  <ItemGroup>
     <!-- UseWindowsForms mete System.Windows.Forms y System.Drawing en los global usings de TODO el
          proyecto, y ahi chocan con WPF: Application, Button, Point y Color existen en los dos
          mundos, asi que cada fichero empezaba a dar CS0104. Se sacan del ambito global y solo
@@ -19,9 +25,9 @@
     <!-- Metadatos de marca: son los que Windows muestra en las propiedades del .exe, en el
          Administrador de tareas y en el dialogo de Inno Setup. Sin esto, apareceria el nombre
          tecnico del ensamblado ("aldune", en minusculas) en vez del nombre del producto. -->
-    <Version>0.10.7</Version>
-    <AssemblyVersion>0.10.7.0</AssemblyVersion>
-    <FileVersion>0.10.7.0</FileVersion>
+    <Version>1.0.0</Version>
+    <AssemblyVersion>1.0.0.0</AssemblyVersion>
+    <FileVersion>1.0.0.0</FileVersion>
     <Product>Aldune</Product>
     <AssemblyTitle>Aldune</AssemblyTitle>
     <Company>Aldune</Company>

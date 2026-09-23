@@ -92,7 +92,6 @@ public partial class NoteWindow : Window
         _protectionPassword = protectionPassword;
 
         ApplyColor(note.Color);
-        PopulateColorSwatches();
 
         // Una nota que no está activa se abre desde "Gestionar notas": lo único que se le puede
         // hacer es devolverla, así que archivar y papelera no tienen sentido ahí.
@@ -583,6 +582,24 @@ public partial class NoteWindow : Window
         TextBody.CaretIndex = Math.Clamp(caret, 0, TextBody.Text.Length);
     }
 
+    /// <summary>¿La selección cruza al menos un salto de línea? Entonces Tab y Mayús+Tab sangran las
+    /// líneas enteras, como en cualquier editor, en vez de sustituir la selección por espacios.</summary>
+    private bool SelectionSpansLines() =>
+        TextBody.SelectionLength > 0 && TextBody.SelectedText.Contains('\n');
+
+    /// <summary>
+    /// Sustituye solo el tramo que cambia (las líneas sangradas) a través de <c>SelectedText</c>, no
+    /// todo el texto: así Ctrl+Z deshace el sangrado de un bloque como cualquier otra edición, y la
+    /// selección sigue cubriendo esas líneas para repetir el gesto.
+    /// </summary>
+    private void ReplaceBodyKeepingSelection(string text, int selectionStart, int selectionLength)
+    {
+        int oldLength = TextBody.Text.Length - text.Length + selectionLength;
+        TextBody.Select(selectionStart, oldLength);
+        TextBody.SelectedText = text.Substring(selectionStart, selectionLength);
+        TextBody.Select(selectionStart, selectionLength);
+    }
+
     /// <summary>El texto completo de la nota: la cabecera y el cuerpo vueltos a unir.</summary>
     private string CurrentText => NoteText.Join(TitleBox.Text, TextBody.Text);
 
@@ -657,27 +674,45 @@ public partial class NoteWindow : Window
             return;
         }
 
-        // Tab: sobre una tarea o viñeta, sube un nivel de sangría. En una línea normal deja pasar el
-        // Tab nativo (AcceptsTab="True" en el XAML), que inserta una tabulación literal — antes sacaba
-        // el foco de TextBody sin ningún beneficio real en esta ventana.
+        // Tab: sube un nivel de sangría, la misma en listas y en texto libre (ver ListIndent). En texto
+        // libre se escribe a través de SelectedText y no con ReplaceBody: así sustituye la selección,
+        // como el Tab de cualquier editor, y queda en el historial de Ctrl+Z igual que una pulsación.
         if (e.Key == Key.Tab && Keyboard.Modifiers == ModifierKeys.None)
         {
-            if (ListIndent.Indent(TextBody.Text, TextBody.CaretIndex) is { } indented)
+            if (SelectionSpansLines())
             {
-                ReplaceBody(indented.Text, indented.Caret);
-                e.Handled = true;
+                var lines = ListIndent.IndentLines(TextBody.Text, TextBody.SelectionStart, TextBody.SelectionLength);
+                ReplaceBodyKeepingSelection(lines.Text, lines.SelectionStart, lines.SelectionLength);
             }
+            else if (ListIndent.IsListLineAt(TextBody.Text, TextBody.CaretIndex))
+            {
+                var indented = ListIndent.Indent(TextBody.Text, TextBody.CaretIndex);
+                ReplaceBody(indented.Text, indented.Caret);
+            }
+            else
+            {
+                TextBody.SelectedText = ListIndent.IndentUnit;
+                TextBody.CaretIndex = TextBody.SelectionStart + TextBody.SelectionLength;
+            }
+            e.Handled = true;
         }
 
-        // Mayús+Tab: baja un nivel. En una línea normal no se toca (queda la navegación de foco hacia
-        // atrás de siempre, gesto raro mientras se escribe prosa).
+        // Mayús+Tab: baja un nivel. Siempre se consume: dentro de una nota no tiene sentido que salte
+        // el foco a otro control.
         if (e.Key == Key.Tab && Keyboard.Modifiers == ModifierKeys.Shift)
         {
-            if (ListIndent.Outdent(TextBody.Text, TextBody.CaretIndex) is { } outdented)
+            if (SelectionSpansLines())
             {
-                ReplaceBody(outdented.Text, outdented.Caret);
-                e.Handled = true;
+                var lines = ListIndent.OutdentLines(TextBody.Text, TextBody.SelectionStart, TextBody.SelectionLength);
+                if (lines.Text != TextBody.Text)
+                    ReplaceBodyKeepingSelection(lines.Text, lines.SelectionStart, lines.SelectionLength);
             }
+            else
+            {
+                var outdented = ListIndent.Outdent(TextBody.Text, TextBody.CaretIndex);
+                if (outdented.Text != TextBody.Text) ReplaceBody(outdented.Text, outdented.Caret);
+            }
+            e.Handled = true;
         }
 
         // Enter al final de una tarea o una viñeta: la lista sigue sola. Cada clase decide si toca
@@ -774,7 +809,14 @@ public partial class NoteWindow : Window
 
     private void OnBodyMouseDown(object sender, MouseButtonEventArgs e)
     {
-        var zone = FindCheckboxZoneAt(e.GetPosition(TextBody));
+        var position = e.GetPosition(TextBody);
+        if (PlaceCaretFromLeftGutter(position, e.ClickCount))
+        {
+            e.Handled = true;
+            return;
+        }
+
+        var zone = FindCheckboxZoneAt(position);
         if (zone is not { } z) return;
 
         var toggled = TaskLines.ToggleCheckboxAt(TextBody.Text, z.GlyphIndex);
@@ -789,6 +831,62 @@ public partial class NoteWindow : Window
         // sitio donde se pulsó, que no es lo que se pretendía al marcar una casilla.
         TextBody.Focus();
         e.Handled = true;
+    }
+
+    /// <summary>
+    /// Un clic en el margen izquierdo del cuerpo pone el cursor al principio de la línea visual que
+    /// tiene a su altura, que en una tarea es justo delante de la casilla. Sin esto no había forma de
+    /// llegar ahí con el ratón: sobre el glifo el clic marca la casilla, y el margen es Padding del
+    /// TextBox, donde WPF no coloca el cursor por su cuenta (solo lo hace dentro del área de texto).
+    /// Como en el margen de cualquier editor: con Mayús extiende la selección hasta ahí, y el doble
+    /// clic selecciona la línea entera. Devuelve false si el punto no cae en ese margen o no hay
+    /// texto a su altura.
+    /// </summary>
+    private bool PlaceCaretFromLeftGutter(Point position, int clickCount)
+    {
+        double textLeft = TextBody.BorderThickness.Left + TextBody.Padding.Left;
+        var text = TextBody.Text;
+        if (position.X >= textLeft || text.Length == 0) return false;
+
+        // Se pregunta por un punto justo dentro del área de texto, a la misma altura: con snapToText
+        // devuelve el primer carácter de esa línea visual, también en la segunda línea de un párrafo
+        // que se ha partido al ajustar.
+        int index = TextBody.GetCharacterIndexFromPoint(new Point(textLeft + 1, position.Y), snapToText: true);
+        if (index < 0) return false;
+
+        var lineRect = TextBody.GetRectFromCharacterIndex(index);
+        if (position.Y > lineRect.Bottom && text.EndsWith('\n'))
+        {
+            // La línea vacía del final no tiene carácter propio: snapToText cae en el salto de la
+            // anterior. Si el clic está a la altura de esa última línea, el cursor va al final.
+            var lastRect = TextBody.GetRectFromCharacterIndex(text.Length);
+            if (position.Y >= lastRect.Top && position.Y <= lastRect.Bottom)
+            {
+                index = text.Length;
+                lineRect = lastRect;
+            }
+        }
+        if (position.Y < lineRect.Top || position.Y > lineRect.Bottom) return false;
+
+        TextBody.Focus();
+        if (clickCount >= 2)
+        {
+            int lineStart = TaskLines.LineStart(text, index);
+            TextBody.Select(lineStart, TaskLines.LineContaining(text, index).Length);
+        }
+        else if ((Keyboard.Modifiers & ModifierKeys.Shift) != 0)
+        {
+            // El extremo que no se mueve: el opuesto al cursor si ya había selección.
+            int anchor = TextBody.SelectionLength > 0 && TextBody.CaretIndex == TextBody.SelectionStart
+                ? TextBody.SelectionStart + TextBody.SelectionLength
+                : TextBody.SelectionStart;
+            TextBody.Select(Math.Min(anchor, index), Math.Abs(anchor - index));
+        }
+        else
+        {
+            TextBody.Select(index, 0);
+        }
+        return true;
     }
 
     /// <summary>Resalta la casilla bajo un punto (ver <see cref="FindCheckboxZoneAt"/>) y cambia el
@@ -974,6 +1072,7 @@ public partial class NoteWindow : Window
             return;
         }
 
+        PopulateColorSwatches();
         ActionsPopup.IsOpen = true;
     }
 
@@ -1102,6 +1201,15 @@ public partial class NoteWindow : Window
         }
     }
 
+    /// <summary>El color de esta nota ha cambiado fuera de su ventana (aplicar un tema desde
+    /// Ajustes). Sin esto la ventana abierta seguiría pintada con el color viejo hasta cerrarla.</summary>
+    internal void ApplyExternalColor(string color)
+    {
+        _note.Color = color;
+        ApplyColor(color);
+        NoteSwatchPanel.MarkSelected(ColorSwatches, color);
+    }
+
     private void ApplyColor(string color)
     {
         var brush = (Brush)new BrushConverter().ConvertFromString(color)!;
@@ -1114,8 +1222,10 @@ public partial class NoteWindow : Window
         Resources["NoteInkBrush"] = ink;
         Resources["NotePlaceholderBrush"] = ink;
         // Move hover away from the foreground so text retains contrast on middle tones too.
+        // Muy clara (L ≥ 0.8) o con tinta blanca: aclarar no se vería, así que el hover oscurece.
+        // Cubre la paleta de fábrica (L 0.87) igual que antes y los claros de los temas nuevos.
         bool darkenHover = foreground == NoteColorContrast.White
-            || Array.IndexOf(NoteColorPalette.Colors, color) >= 0;
+            || (OklchColor.TryFromHex(color, out var face) && face.L >= 0.8);
         Resources["NoteHoverBrush"] = (Brush)new BrushConverter().ConvertFromString(
             darkenHover ? "#40000000" : "#40FFFFFF")!;
         Resources["NoteTaskHoverBrush"] = (Brush)new BrushConverter().ConvertFromString(
@@ -1150,53 +1260,10 @@ public partial class NoteWindow : Window
             ? new SolidColorBrush(Color.FromArgb(SelectionWashAlpha, solid.Color.R, solid.Color.G, solid.Color.B))
             : ink;
 
-    private void PopulateColorSwatches()
-    {
-        foreach (var color in NoteColorPalette.Colors)
-        {
-            var swatch = new Border
-            {
-                Background = (Brush)new BrushConverter().ConvertFromString(color)!,
-                Width = 22,
-                Height = 22,
-                Margin = new Thickness(3),
-                CornerRadius = new CornerRadius(5),
-                // Tinta, no negro puro: es el mismo anillo sobre seis pasteles que comparten
-                // claridad, y el negro absoluto sería el único valor de la ventana sin relación de
-                // hue con el resto.
-                BorderBrush = (Brush)new BrushConverter().ConvertFromString(NoteColorPalette.Ink)!,
-                Cursor = Cursors.Hand,
-                Tag = color,
-                // La marca de selección vive dentro, no en el borde. El color seleccionado es por
-                // definición el de la nota, así que su pastilla se funde con el fondo y el anillo
-                // solo dibujaba un cuadrado vacío: parecía un hueco, no la opción activa. Un tick
-                // se ve igual coincida o no el color.
-                Child = new TextBlock
-                {
-                    Text = "\u2713",
-                    FontSize = 13,
-                    FontWeight = FontWeights.Bold,
-                    HorizontalAlignment = HorizontalAlignment.Center,
-                    VerticalAlignment = VerticalAlignment.Center,
-                    Foreground = (Brush)new BrushConverter().ConvertFromString(
-                        NoteColorPalette.LabelFor(color))!,
-                    IsHitTestVisible = false
-                }
-            };
-            ApplySwatchSelection(swatch, color == _note.Color);
-            swatch.MouseLeftButtonUp += OnColorSwatchClick;
-            ColorSwatches.Children.Add(swatch);
-        }
-    }
-
-    private static void ApplySwatchSelection(Border swatch, bool selected)
-    {
-        swatch.BorderThickness = new Thickness(selected ? 2 : 0);
-        if (swatch.Child is UIElement tick)
-        {
-            tick.Visibility = selected ? Visibility.Visible : Visibility.Collapsed;
-        }
-    }
+    /// <summary>Se rellena en cada apertura del menú: si el tema cambia con la nota abierta, el menú
+    /// enseña ya los colores nuevos.</summary>
+    private void PopulateColorSwatches() =>
+        NoteSwatchPanel.Fill(ColorSwatches, _coordinator.ActiveTheme, _note.Color, OnColorSwatchClick);
 
     private void OnColorSwatchClick(object sender, MouseButtonEventArgs e)
     {
@@ -1207,10 +1274,7 @@ public partial class NoteWindow : Window
         _repository.SetColor(_note.Id, color);
         ApplyColor(color);
 
-        foreach (Border swatch in ColorSwatches.Children)
-        {
-            ApplySwatchSelection(swatch, (string)swatch.Tag == color);
-        }
+        NoteSwatchPanel.MarkSelected(ColorSwatches, color);
 
         _coordinator.RefreshAll();
         ActionsPopup.IsOpen = false;
@@ -1230,40 +1294,16 @@ public partial class NoteWindow : Window
 
     private void OnTagsClick(object sender, RoutedEventArgs e)
     {
-        NoteTagAssignmentItems.Children.Clear();
-        var tags = _repository.GetAllTags();
-        NoteTagAssignmentEmptyText.Visibility = tags.Count == 0 ? Visibility.Visible : Visibility.Collapsed;
-        foreach (var tag in tags)
-        {
-            NoteTagAssignmentItems.Children.Add(new CheckBox
-            {
-                Content = tag,
-                Tag = tag,
-                IsChecked = _note.Tags.Any(existing =>
-                    string.Equals(existing, tag, StringComparison.OrdinalIgnoreCase)),
-                Foreground = Brushes.White,
-                Background = new SolidColorBrush(Color.FromRgb(42, 38, 31)),
-                Style = (Style)FindResource("AppCheckBoxStyle")
-            });
-        }
-
+        NoteTagPanel.Bind(_repository, _note);
         ActionsPopup.IsOpen = false;
         TagsPopup.IsOpen = true;
         TagsPopup.Focus();
     }
 
-    private void OnSaveTagsClick(object sender, RoutedEventArgs e)
+    /// <summary>El panel guarda al marcar; el dock se refresca una sola vez, al cerrarlo.</summary>
+    private void OnTagsPopupClosed(object? sender, EventArgs e)
     {
-        var tags = NoteTagAssignmentItems.Children.OfType<CheckBox>()
-            .Where(checkBox => checkBox.IsChecked == true)
-            .Select(checkBox => checkBox.Tag as string)
-            .Where(tag => tag is not null)
-            .Cast<string>()
-            .ToArray();
-        _repository.SetTags(_note.Id, tags);
-        _note.Tags = tags;
-        TagsPopup.IsOpen = false;
-        _coordinator.RefreshAll();
+        if (NoteTagPanel.Changed) _coordinator.RefreshAll();
     }
 
     private void OnReminderMenuClick(object sender, RoutedEventArgs e)

@@ -1,5 +1,6 @@
 using System.Windows;
 using System.Windows.Controls.Primitives;
+using System.Windows.Data;
 using System.Windows.Input;
 using System.Windows.Media;
 using Aldune.Interop;
@@ -17,9 +18,16 @@ namespace Aldune.Windowing;
 /// disparador siempre ve <c>IsOpen=false</c> (el popup ya se ha cerrado) y vuelve a abrirlo: la
 /// comprobación de "¿está abierto?" en el propio disparador no puede funcionar nunca.
 ///
-/// La señal fiable está en el evento <see cref="Popup.Closed"/>: si al cerrarse el puntero está sobre
-/// el disparador y hay un botón del ratón pulsado, ese cierre lo ha provocado el propio disparador, y
-/// el open que llega a continuación (en el mouse-up del mismo clic) hay que consumirlo, no abrir.
+/// La señal fiable es el paso de <see cref="Popup.IsOpen"/> a false: si en ese momento el puntero está
+/// sobre el disparador y hay un botón del ratón pulsado, ese cierre lo ha provocado el propio
+/// disparador, y el open que llega a continuación (en el mouse-up del mismo clic) hay que consumirlo,
+/// no abrir.
+///
+/// No sirve el evento <see cref="Popup.Closed"/>, que es en lo que se apoyaba esto antes: con
+/// <c>AllowsTransparency</c> y animación, WPF difiere la destrucción de la ventana del popup, y si el
+/// mouse-up lo reabre antes, <c>Closed</c> no llega a dispararse nunca. Medido con clics físicos
+/// (SendInput) sobre el "⋯" de la nota: IsOpen cae a false en el mouse-down con el botón pulsado,
+/// el Click reabre en el mouse-up, y no hay ni un solo Closed entre medias.
 ///
 /// La comprobación del puntero es por coordenadas y no por <c>IsMouseOver</c> a propósito: con la
 /// captura del popup activa, WPF ya no sabe que el cursor está sobre el botón que se acaba de pulsar.
@@ -33,21 +41,24 @@ internal sealed class PopupToggle
     /// </summary>
     private static readonly TimeSpan FreshCloseWindow = TimeSpan.FromMilliseconds(700);
 
-    private readonly Popup _popup;
+    private readonly IsOpenWatcher _watcher;
     private UIElement? _trigger;
     private DateTime _closedByTriggerAt = DateTime.MinValue;
 
     internal PopupToggle(Popup popup)
     {
-        _popup = popup;
-        _popup.Closed += OnClosed;
+        // Un binding y no DependencyPropertyDescriptor.AddValueChanged: este último guarda el popup
+        // en una tabla estática y mantendría viva cada ventana de nota cerrada.
+        _watcher = new IsOpenWatcher(this);
+        BindingOperations.SetBinding(_watcher, IsOpenWatcher.IsOpenProperty,
+            new Binding(nameof(Popup.IsOpen)) { Source = popup, Mode = BindingMode.OneWay });
     }
 
     /// <summary>El disparador de este popup. Hay que fijarlo en cada apertura: el menú de una pestaña
     /// del dock tiene uno distinto según la pestaña que se haya pulsado.</summary>
     internal void SetTrigger(UIElement? trigger) => _trigger = trigger;
 
-    private void OnClosed(object? sender, EventArgs e)
+    private void OnPopupClosed()
     {
         bool buttonDown = Mouse.LeftButton == MouseButtonState.Pressed
             || Mouse.RightButton == MouseButtonState.Pressed;
@@ -84,5 +95,21 @@ internal sealed class PopupToggle
 
         return cursor.X >= topLeft.X && cursor.X < topLeft.X + width
             && cursor.Y >= topLeft.Y && cursor.Y < topLeft.Y + height;
+    }
+
+    /// <summary>Recibe por binding el IsOpen del popup y avisa al toggle cuando pasa a false, en el
+    /// mismo instante en que WPF lo cierra (dentro del mouse-down que lo descarta).</summary>
+    private sealed class IsOpenWatcher : DependencyObject
+    {
+        internal static readonly DependencyProperty IsOpenProperty = DependencyProperty.Register(
+            "IsOpen", typeof(bool), typeof(IsOpenWatcher),
+            new PropertyMetadata(false, (d, e) =>
+            {
+                if (!(bool)e.NewValue) ((IsOpenWatcher)d)._owner.OnPopupClosed();
+            }));
+
+        private readonly PopupToggle _owner;
+
+        internal IsOpenWatcher(PopupToggle owner) => _owner = owner;
     }
 }

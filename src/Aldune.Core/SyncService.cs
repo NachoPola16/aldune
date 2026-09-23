@@ -282,7 +282,17 @@ public sealed class SyncService
             try
             {
                 var transport = CreateTransport();
-                var remote = transport.ReadAll()
+                var classified = ClassifyRemote(transport.ReadAll(), key);
+                if (classified.NoReadableNotes)
+                {
+                    // Ninguna nota del almacén se descifra con este código: casi seguro que se revocó
+                    // el acceso. Se para antes de escribir nada: subir las notas de aquí con la clave
+                    // vieja dejaría al resto de dispositivos sin poder sincronizar.
+                    return new(0, 0, 0, 0,
+                        "This device's sync code can't read the notes in the store. If access was revoked, import the new code.");
+                }
+
+                var remote = classified.Readable
                     .GroupBy(item => item.Envelope.NoteId)
                     .ToDictionary(group => group.Key, group => group
                         .OrderByDescending(item => item.Envelope, Comparer<SyncEnvelope>.Create(SyncVersion.Compare))
@@ -303,6 +313,8 @@ public sealed class SyncService
                     remote = remote.Where(pair => scopedIds.Contains(pair.Key))
                         .ToDictionary(pair => pair.Key, pair => pair.Value);
 
+                HandleUnsignedTombstones(classified.UnsignedTombstones, remote, scopedIds, transport);
+
                 var deviceId = EnsureDeviceId();
                 var localNotes = _repository.GetAllForSync()
                     .Where(note => (scopedIds is null || scopedIds.Contains(note.Id)) &&
@@ -316,7 +328,7 @@ public sealed class SyncService
                 foreach (var note in localNotes.Values)
                     local[note.Id] = SyncEnvelopeCodec.CreateNote(note, key, deviceId);
                 foreach (var tombstone in localTombstones.Values)
-                    local[tombstone.NoteId] = SyncEnvelopeCodec.CreateTombstone(tombstone, deviceId);
+                    local[tombstone.NoteId] = SyncEnvelopeCodec.CreateTombstone(tombstone, key, deviceId);
 
                 int uploaded = 0;
                 int downloaded = 0;
@@ -420,7 +432,7 @@ public sealed class SyncService
             foreach (var note in localNotes.Values)
                 transport.Write(CreateRekeyedNoteEnvelope(note, nextKey, deviceId, rekeyedAt));
             foreach (var tombstone in localTombstones.Values)
-                transport.Write(RekeyEnvelope(SyncEnvelopeCodec.CreateTombstone(tombstone, deviceId), rekeyedAt));
+                transport.Write(CreateRekeyedTombstoneEnvelope(tombstone, nextKey, deviceId, rekeyedAt));
             foreach (var remoteId in remoteIds.Except(localIds))
                 transport.Delete(remoteId);
 
@@ -440,6 +452,82 @@ public sealed class SyncService
         finally
         {
             if (nextKey is not null) CryptographicOperations.ZeroMemory(nextKey);
+        }
+    }
+
+    private sealed record RemoteClassification(
+        List<SyncRemoteObject> Readable,
+        List<SyncRemoteObject> UnsignedTombstones,
+        bool NoReadableNotes);
+
+    /// <summary>
+    /// Separa lo que hay en el almacén antes de agrupar por nota, para que un fichero añadido no
+    /// pueda tapar al auténtico de la misma nota:
+    /// - notas que se descifran con la clave y borrados firmados con ella: se procesan normalmente;
+    /// - borrados sin firma válida: van aparte (ver <see cref="HandleUnsignedTombstones"/>);
+    /// - notas que no se descifran: se saltan. Un objeto dañado o ajeno ya no para la sincronización
+    ///   de todos, salvo que no se pueda leer ninguna, que es un código revocado.
+    /// </summary>
+    private static RemoteClassification ClassifyRemote(IReadOnlyList<SyncRemoteObject> objects, byte[] key)
+    {
+        var readable = new List<SyncRemoteObject>();
+        var unsigned = new List<SyncRemoteObject>();
+        int notes = 0, unreadableNotes = 0;
+
+        foreach (var item in objects)
+        {
+            if (item.Envelope.Tombstone)
+            {
+                if (SyncEnvelopeCodec.IsAuthenticTombstone(item.Envelope, key)) readable.Add(item);
+                else unsigned.Add(item);
+                continue;
+            }
+
+            notes++;
+            try
+            {
+                SyncEnvelopeCodec.DecryptNote(item.Envelope, key);
+                readable.Add(item);
+            }
+            catch (Exception ex) when (ex is CryptographicException or FormatException or System.Text.Json.JsonException)
+            {
+                unreadableNotes++;
+            }
+        }
+
+        return new(readable, unsigned, notes > 0 && unreadableNotes == notes);
+    }
+
+    /// <summary>
+    /// Borrados sin firmar con la clave del vínculo: de una versión anterior a la 1.0, o falsos. Nunca
+    /// borran una nota para siempre:
+    /// - con fecha futura son falsos seguro: se quitan del almacén, y si aquí está la nota se vuelve a
+    ///   publicar (antes el falso ganaba siempre la comparación y la nota dejaba de sincronizarse);
+    /// - si no, la nota va a la papelera, que es lo que quería quien la borró desde una versión antigua
+    ///   y se puede deshacer. La papelera la deja más reciente que el borrado, así que la siguiente
+    ///   subida lo reemplaza en el almacén.
+    /// Si hay un objeto firmado de la misma nota, manda ese y el sin firmar se ignora.
+    /// </summary>
+    private void HandleUnsignedTombstones(
+        List<SyncRemoteObject> unsignedTombstones,
+        Dictionary<Guid, SyncRemoteObject> remote,
+        HashSet<Guid>? scopedIds,
+        ISyncTransport transport)
+    {
+        var futureLimit = DateTimeOffset.UtcNow.AddDays(1);
+        foreach (var item in unsignedTombstones)
+        {
+            var id = item.Envelope.NoteId;
+            if (remote.ContainsKey(id) || (scopedIds is not null && !scopedIds.Contains(id))) continue;
+
+            if (item.Envelope.UpdatedAt > futureLimit)
+            {
+                transport.Delete(id);
+                continue;
+            }
+
+            if (_repository.GetById(id) is { State: not NoteState.Trashed })
+                _repository.SetState(id, NoteState.Trashed);
         }
     }
 
@@ -464,14 +552,22 @@ public sealed class SyncService
         downloaded++;
     }
 
-    private static SyncEnvelope RekeyEnvelope(SyncEnvelope envelope, DateTimeOffset rekeyedAt)
+    /// <summary>
+    /// El borrado firmado con la clave nueva y con una marca posterior a la rotación. La marca nueva
+    /// es necesaria para que un dispositivo que conserve el código antiguo no considere idéntico el
+    /// sobre y vuelva a publicarlo con la clave revocada. Va dentro de lo firmado, no se cambia
+    /// después en la cabecera: eso dejaba el borrado con una firma que ya no cuadraba.
+    /// </summary>
+    private static SyncEnvelope CreateRekeyedTombstoneEnvelope(
+        SyncTombstone tombstone,
+        byte[] key,
+        string deviceId,
+        DateTimeOffset rekeyedAt)
     {
-        // La marca nueva es necesaria para que un dispositivo que conserve el código antiguo no
-        // considere idéntico el sobre y vuelva a publicarlo con la clave revocada.
-        envelope.UpdatedAt = envelope.UpdatedAt >= rekeyedAt
-            ? envelope.UpdatedAt.AddTicks(1)
+        var deletedAt = tombstone.DeletedAt >= rekeyedAt
+            ? tombstone.DeletedAt.AddTicks(1)
             : rekeyedAt;
-        return envelope;
+        return SyncEnvelopeCodec.CreateTombstone(tombstone with { DeletedAt = deletedAt }, key, deviceId);
     }
 
     private static SyncEnvelope CreateRekeyedNoteEnvelope(

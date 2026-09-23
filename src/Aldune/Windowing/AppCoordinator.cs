@@ -435,9 +435,12 @@ public sealed class AppCoordinator
         var dock = DockNearCursor();
         if (dock is null) return;
 
-        var existing = _repository.GetByState(NoteState.Active).Count;
-        var color = NoteColorPalette.Colors[existing % NoteColorPalette.Colors.Length];
-        var note = _repository.Create(string.Empty, color, screenOrigin: "primary");
+        var note = _repository.Create(string.Empty, NextNoteColor(), screenOrigin: "primary");
+
+        // En la vista de una etiqueta la nota nace ya con ella, igual que con el "+" del dock: si no,
+        // desaparecería del dock nada más crearla y su color se habría calculado con otras vecinas.
+        if (_settings is { DockView: DockViewKind.Tag, DockTagFilter: { } tag } && !string.IsNullOrWhiteSpace(tag))
+            _repository.SetTags(note.Id, new[] { tag });
 
         RefreshAll();
 
@@ -732,6 +735,61 @@ public sealed class AppCoordinator
             window.Close();
         }
     }
+
+    /// <summary>El tema de color elegido en Ajustes, o Clásico si no hay ajustes o el id no existe.</summary>
+    internal NoteTheme ActiveTheme => NoteThemes.Resolve(_settings?.ActiveThemeId, _settings?.CustomThemes);
+
+    /// <summary>
+    /// El color de una nota que se va a crear. Mira la vista actual del dock y no todas las notas:
+    /// en la vista de una etiqueta, las vecinas de la nota nueva son las de esa etiqueta.
+    /// </summary>
+    internal string NextNoteColor() => NoteColorAssigner.Assign(
+        ActiveTheme,
+        _settings?.NewNoteTone ?? NoteTone.Light,
+        _settings?.ColorAssignment ?? NoteColorAssignment.RotateAvoidNeighbors,
+        _settings?.FixedNoteColor,
+        NotesForCurrentDockView().Select(note => note.Color).ToList());
+
+    /// <summary>
+    /// Vuelve a colorear todas las notas activas con el tema, el tono y la regla actuales, en el
+    /// orden del dock y como si se crearan una tras otra: así "rotar sin repetir el de al lado"
+    /// deja un dock sin dos vecinas iguales. Archivadas y papelera no se tocan. Cada cambio es un
+    /// SetColor normal, así que se sincroniza como si se hubiera hecho a mano.
+    /// </summary>
+    internal int ApplyThemeToActiveNotes()
+    {
+        var theme = ActiveTheme;
+        var tone = _settings?.NewNoteTone ?? NoteTone.Light;
+        var rule = _settings?.ColorAssignment ?? NoteColorAssignment.RotateAvoidNeighbors;
+        var assigned = new List<string>();
+        int changed = 0;
+
+        foreach (var note in _repository.GetByState(NoteState.Active))
+        {
+            var color = NoteColorAssigner.Assign(theme, tone, rule, _settings?.FixedNoteColor, assigned);
+            assigned.Add(color);
+            if (string.Equals(color, note.Color, StringComparison.OrdinalIgnoreCase)) continue;
+
+            _repository.SetColor(note.Id, color);
+            if (_openNoteWindows.TryGetValue(note.Id, out var window)) window.ApplyExternalColor(color);
+            changed++;
+        }
+
+        RefreshAll();
+        return changed;
+    }
+
+    /// <summary>
+    /// Una nota ha cambiado de color fuera de su propia ventana (menú de la pestaña del dock). Si está
+    /// abierta se repinta: si no, seguiría con la cara, el borde y la tinta viejos hasta reabrirla.
+    /// </summary>
+    internal void NotifyNoteColorChanged(Guid noteId, string color)
+    {
+        if (_openNoteWindows.TryGetValue(noteId, out var window)) window.ApplyExternalColor(color);
+    }
+
+    /// <summary>Cuántas notas activas hay, para el mensaje de confirmación de Ajustes.</summary>
+    internal int ActiveNoteCount => _repository.GetByState(NoteState.Active).Count;
 
     /// <summary>
     /// El botón "abrir todas" del dock, convertido en interruptor: si hay alguna nota abierta ahora

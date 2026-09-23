@@ -92,4 +92,77 @@ public class SettingsServiceTests : IDisposable
 
         Assert.Equal(7, sut.Load().TrashRetentionDays);
     }
+
+    [Fact]
+    public void Load_SettingsWrittenBeforeThemes_GetTheFactoryThemeDefaults()
+    {
+        Directory.CreateDirectory(_tempDir);
+        File.WriteAllText(_settingsPath, "{\"KeepDockOpen\":true}");
+
+        var settings = new SettingsService(_settingsPath).Load();
+
+        Assert.Null(settings.ActiveThemeId);
+        Assert.Equal(NoteTone.Light, settings.NewNoteTone);
+        Assert.Equal(NoteColorAssignment.RotateAvoidNeighbors, settings.ColorAssignment);
+        Assert.Null(settings.FixedNoteColor);
+        Assert.Empty(settings.CustomThemes);
+    }
+
+    [Fact]
+    public void Load_SanitizesCustomThemes()
+    {
+        Directory.CreateDirectory(_tempDir);
+        File.WriteAllText(_settingsPath,
+            "{\"CustomThemes\":[{\"Id\":\"a\",\"Name\":\"A\",\"DarkColors\":[\"bad\"],\"LightColors\":[]}]}");
+
+        var settings = new SettingsService(_settingsPath).Load();
+
+        Assert.Empty(settings.CustomThemes);
+    }
+
+    [Fact]
+    public void SaveThenLoad_RoundTripsThemeSettings()
+    {
+        var sut = new SettingsService(_settingsPath);
+        sut.Save(new AppSettings
+        {
+            ActiveThemeId = "mine",
+            NewNoteTone = NoteTone.Both,
+            ColorAssignment = NoteColorAssignment.Fixed,
+            FixedNoteColor = "#262F47",
+            CustomThemes = [new NoteTheme { Id = "mine", Name = "Mío", DarkColors = ["#262F47"] }],
+        });
+
+        var loaded = sut.Load();
+
+        Assert.Equal("mine", loaded.ActiveThemeId);
+        Assert.Equal(NoteTone.Both, loaded.NewNoteTone);
+        Assert.Equal(NoteColorAssignment.Fixed, loaded.ColorAssignment);
+        Assert.Equal("#262F47", loaded.FixedNoteColor);
+        Assert.Equal(new[] { "#262F47" }, Assert.Single(loaded.CustomThemes).DarkColors);
+    }
+
+    [Fact]
+    public void Load_EnumsWrittenAsText_AreReadInsteadOfFailingToStart()
+    {
+        // Un settings.json editado a mano con el nombre del valor en vez del número no puede impedir
+        // que la app arranque: antes lanzaba JsonException y salía la pantalla de "no se puede iniciar".
+        Directory.CreateDirectory(_tempDir);
+        File.WriteAllText(_settingsPath, "{\"NewNoteTone\":\"Dark\",\"DockEdge\":\"Left\"}");
+
+        var settings = new SettingsService(_settingsPath).Load();
+
+        Assert.Equal(NoteTone.Dark, settings.NewNoteTone);
+        Assert.Equal(EdgePosition.Left, settings.DockEdge);
+    }
+
+    [Fact]
+    public void Save_KeepsWritingEnumsAsNumbers()
+    {
+        // Una versión anterior de la app solo sabe leer números: si esta escribiera texto, volver a
+        // ella dejaría un settings.json que no arranca.
+        new SettingsService(_settingsPath).Save(new AppSettings { NewNoteTone = NoteTone.Dark });
+
+        Assert.Contains("\"NewNoteTone\":1", File.ReadAllText(_settingsPath));
+    }
 }

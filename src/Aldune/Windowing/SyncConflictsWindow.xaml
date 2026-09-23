@@ -5,7 +5,8 @@
         Title="{x:Static res:Strings.SyncConflictTitle}"
         Width="560" Height="500" MinWidth="440" MinHeight="320"
         WindowStyle="None" ResizeMode="CanResize" Background="#2A261F"
-        Topmost="True" StateChanged="OnWindowStateChanged">
+        Topmost="True" StateChanged="OnWindowStateChanged"
+        PreviewKeyDown="OnWindowKeyDown">
     <WindowChrome.WindowChrome>
         <WindowChrome CaptionHeight="34" ResizeBorderThickness="6" GlassFrameThickness="-1" CornerRadius="0" />
     </WindowChrome.WindowChrome>
@@ -66,6 +67,8 @@
                         WindowChrome.IsHitTestVisibleInChrome="True"
                         Style="{StaticResource ConflictDangerButtonStyle}" />
                 <Button Content="&#x2715;" Width="28" Height="28"
+                        ToolTip="{x:Static res:Strings.CloseTooltip}"
+                        AutomationProperties.Name="{x:Static res:Strings.CloseTooltip}"
                         Click="OnCloseClick"
                         WindowChrome.IsHitTestVisibleInChrome="True"
                         Style="{StaticResource ConflictButtonStyle}" />

@@ -1,6 +1,8 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16">
-  <rect width="16" height="16" fill="#1C1A18"/>
-  <rect x="2" y="2" width="12" height="3" rx="1" fill="#79DCE5"/>
-  <rect x="2" y="6.5" width="12" height="3" rx="1" fill="#FFC2AA"/>
-  <rect x="2" y="11" width="12" height="3" rx="1" fill="#A8E4B0"/>
+  <!-- Versión para 16-24 px: sin contornos y alineada a píxel, para que se lea en la bandeja. -->
+  <rect width="16" height="16" rx="3.5" fill="#2A261F"/>
+  <path d="M3.2 2 H13 V5 H3.2 a1.2 1.2 0 0 1 -1.2 -1.2 v-0.6 a1.2 1.2 0 0 1 1.2 -1.2 z" fill="#EBD38B"/>
+  <path d="M5.2 6.5 H13 V9.5 H5.2 a1.2 1.2 0 0 1 -1.2 -1.2 v-0.6 a1.2 1.2 0 0 1 1.2 -1.2 z" fill="#83E7F2"/>
+  <path d="M6.2 11 H13 V14 H6.2 a1.2 1.2 0 0 1 -1.2 -1.2 v-0.6 a1.2 1.2 0 0 1 1.2 -1.2 z" fill="#F9BEF2"/>
+  <rect x="12.5" y="1.5" width="1.5" height="13" fill="#F4F1EC"/>
 </svg>

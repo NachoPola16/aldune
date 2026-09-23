@@ -197,25 +197,11 @@
             <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
 
-        <Popup x:Name="TagEditorPopup" AllowsTransparency="True" Focusable="True" StaysOpen="False"
+        <Popup x:Name="TagEditorPopup" AllowsTransparency="True" Focusable="True" StaysOpen="False" Closed="OnTagEditorClosed"
                Placement="Bottom" PopupAnimation="Fade">
             <Border Background="#2D2923" BorderBrush="#5F584E" BorderThickness="1"
-                    CornerRadius="7" Padding="12">
-                <StackPanel Width="230">
-                    <TextBlock Text="{x:Static res:Strings.NoteTags}" Foreground="#F5F0E6"
-                               FontWeight="SemiBold" />
-                    <TextBlock Text="{x:Static res:Strings.NoteTagsHint}" Foreground="#A79E90"
-                               FontSize="11" Margin="0,3,0,8" />
-                    <TextBlock x:Name="TagChoiceEmptyText" Text="{x:Static res:Strings.DockViewNoTags}"
-                               Foreground="#A79E90" FontSize="11" Visibility="Collapsed" />
-                    <ScrollViewer MaxHeight="230" VerticalScrollBarVisibility="Auto"
-                                  HorizontalScrollBarVisibility="Disabled">
-                        <StackPanel x:Name="TagChoiceItems" />
-                    </ScrollViewer>
-                    <Button Content="{x:Static res:Strings.SaveTags}" Margin="0,8,0,0"
-                            HorizontalAlignment="Right" Click="OnSaveTagsClick"
-                            Style="{StaticResource ToolbarButtonStyle}" />
-                </StackPanel>
+                    CornerRadius="7" Padding="16,14">
+                <local:TagAssignmentPanel x:Name="ManagerTagPanel" />
             </Border>
         </Popup>
 

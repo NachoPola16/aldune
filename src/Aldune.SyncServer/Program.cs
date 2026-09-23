@@ -1,7 +1,12 @@
 ﻿using System.Text.Json;
 using Aldune.Core;
 
+const long MaxObjectBytes = 5_000_000;
+
 var builder = WebApplication.CreateBuilder(args);
+// El tope lo aplica Kestrel mientras recibe, no solo el código de abajo: una subida sin
+// Content-Length (por trozos) se leía entera en memoria antes de comprobar su tamaño.
+builder.WebHost.ConfigureKestrel(options => options.Limits.MaxRequestBodySize = MaxObjectBytes);
 var app = builder.Build();
 
 var dataPath = Environment.GetEnvironmentVariable(BrandIdentity.SyncDataDirEnvVar) ?? "/data";
@@ -11,6 +16,14 @@ var tokens = SyncTokenSet.Parse(
 if (tokens.Count == 0)
     throw new InvalidOperationException(
         $"{BrandIdentity.SyncTokenEnvVar} or {BrandIdentity.SyncTokensEnvVar} must be configured.");
+
+// Aviso y no rechazo: un servidor que ya funciona con un token corto no debe dejar de arrancar al
+// actualizarse. El contenido de las notas va cifrado igual, pero un token corto se puede adivinar.
+const int RecommendedTokenLength = 24;
+if (tokens.Any(token => token.Length < RecommendedTokenLength))
+    app.Logger.LogWarning(
+        "A sync token is shorter than {Length} characters. Use a long random value, for example the output of 'openssl rand -base64 32'.",
+        RecommendedTokenLength);
 
 var objectPath = Path.Combine(dataPath, "objects");
 Directory.CreateDirectory(objectPath);
@@ -73,21 +86,27 @@ app.MapGet("/api/v1/objects/{id:guid}", (Guid id) =>
 
 app.MapPut("/api/v1/objects/{id:guid}", async (Guid id, HttpRequest request) =>
 {
-    if (request.ContentLength is > 5_000_000)
+    if (request.ContentLength is > MaxObjectBytes)
         return Results.StatusCode(StatusCodes.Status413PayloadTooLarge);
 
     using var stream = new MemoryStream();
-    await request.Body.CopyToAsync(stream);
-    if (stream.Length > 5_000_000)
+    try
+    {
+        await request.Body.CopyToAsync(stream);
+    }
+    catch (BadHttpRequestException ex) when (ex.StatusCode == StatusCodes.Status413PayloadTooLarge)
+    {
         return Results.StatusCode(StatusCodes.Status413PayloadTooLarge);
+    }
 
     SyncEnvelope envelope;
     try
     {
         envelope = SyncEnvelopeCodec.Deserialize(stream.ToArray());
     }
-    catch (FormatException)
+    catch (Exception ex) when (ex is FormatException or JsonException)
     {
+        // JSON mal formado también es un 400: antes salía como 500, como si fallara el servidor.
         return Results.BadRequest("Unsupported or invalid sync object for this server version.");
     }
 
@@ -102,7 +121,7 @@ app.MapPut("/api/v1/objects/{id:guid}", async (Guid id, HttpRequest request) =>
             var current = SyncEnvelopeCodec.Deserialize(await File.ReadAllBytesAsync(finalPath));
             if (SyncVersion.Compare(envelope, current) < 0) return Results.NoContent();
         }
-        catch (FormatException)
+        catch (Exception ex) when (ex is FormatException or JsonException)
         {
             // A damaged object is recoverable by replacing it with a valid upload.
         }

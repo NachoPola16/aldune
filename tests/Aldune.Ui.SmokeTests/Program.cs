@@ -48,6 +48,7 @@ internal static class Program
             Pump(TimeSpan.FromMilliseconds(150));
             Check(Field<int>(dock, "_noteCount") == 2, "Initial repository refresh contains two notes");
             RunTagSelection(dock, settings);
+            RunNoteMenuToggle(repository, coordinator, settings);
         }
         catch (Exception exception)
         {
@@ -127,6 +128,59 @@ internal static class Program
         Console.WriteLine("PASS: dock tag selection/Closed/grace/expiry regression scenario");
     }
 
+    /// <summary>
+    /// El "⋯" de la nota con clics físicos (SendInput): abrir, volver a pulsar "⋯" para cerrar,
+    /// reabrir y cerrar pulsando fuera. Este fallo volvió tres veces porque se probaba con eventos
+    /// enrutados, que no pasan por la captura del popup; solo un clic real lo reproduce (ver
+    /// PopupToggle). Mueve el ratón: no tocarlo mientras corre.
+    /// </summary>
+    private static void RunNoteMenuToggle(NotesRepository repository, AppCoordinator coordinator, AppSettings settings)
+    {
+        var note = repository.Create("Smoke menu note", "#F7E6A3", "SMOKE");
+        var window = new NoteWindow(note, repository, coordinator, settings) { Left = 300, Top = 200 };
+        window.Show();
+        window.Activate();
+        Pump(TimeSpan.FromMilliseconds(600));
+        try
+        {
+            var button = (Button)window.FindName("MenuButton");
+            var popup = (Popup)window.FindName("ActionsPopup");
+            var center = button.PointToScreen(new Point(button.ActualWidth / 2, button.ActualHeight / 2));
+
+            ClickAt(center);
+            Check(popup.IsOpen, "Physical click on the note's menu button opens the menu");
+            ClickAt(center);
+            Check(!popup.IsOpen, "Clicking the menu button again closes the menu (does not reopen)");
+            ClickAt(center);
+            Check(popup.IsOpen, "A third click reopens the menu");
+
+            var bottomRight = window.PointToScreen(new Point(window.ActualWidth - 30, window.ActualHeight - 20));
+            ClickAt(bottomRight);
+            Check(!popup.IsOpen, "Clicking outside the menu closes it");
+        }
+        finally
+        {
+            window.Close();
+        }
+    }
+
+    [System.Runtime.InteropServices.DllImport("user32.dll")]
+    private static extern bool SetCursorPos(int x, int y);
+
+    [System.Runtime.InteropServices.DllImport("user32.dll")]
+    private static extern void mouse_event(uint flags, uint dx, uint dy, uint data, UIntPtr extraInfo);
+
+    private static void ClickAt(Point screen)
+    {
+        const uint leftDown = 0x02, leftUp = 0x04;
+        SetCursorPos((int)screen.X, (int)screen.Y);
+        Pump(TimeSpan.FromMilliseconds(120));
+        mouse_event(leftDown, 0, 0, 0, UIntPtr.Zero);
+        Pump(TimeSpan.FromMilliseconds(60));
+        mouse_event(leftUp, 0, 0, 0, UIntPtr.Zero);
+        Pump(TimeSpan.FromMilliseconds(700));
+    }
+
     private static void AssertHeld(EdgeDockWindow dock, string phase, bool quiet = false)
     {
         Check(Field<FanStateMachine>(dock, "_fanState").IsExpanded, $"Dock expanded {phase}", quiet);
@@ -166,6 +220,13 @@ internal static class Program
         var document = System.Xml.Linq.XDocument.Load(stream);
         var root = document.Root!;
         var resources = root.Element(root.Name.Namespace + "Application.Resources")!;
+        // x:Shared solo vale en diccionarios compilados y XamlReader.Parse lo rechaza. Aquí se quita:
+        // solo lo usa el glifo del autoscroll (AutoScrollOriginGlyph), que esta prueba no pinta.
+        foreach (var shared in resources.Descendants().SelectMany(element => element.Attributes())
+                     .Where(attribute => attribute.Name.LocalName == "Shared").ToList())
+        {
+            shared.Remove();
+        }
         var dictionary = new System.Xml.Linq.XElement(root.Name.Namespace + "ResourceDictionary",
             root.Attributes().Where(attribute => attribute.IsNamespaceDeclaration), resources.Elements());
         app.Resources = (ResourceDictionary)System.Windows.Markup.XamlReader.Parse(dictionary.ToString());

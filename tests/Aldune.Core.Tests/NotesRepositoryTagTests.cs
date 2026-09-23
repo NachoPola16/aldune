@@ -30,14 +30,27 @@ public sealed class NotesRepositoryTagTests : IDisposable
     }
 
     [Fact]
-    public void SetTags_EmptyRemovesUnusedTags()
+    public void SetTags_Empty_UnassignsButKeepsTheTag()
     {
+        // Las etiquetas se crean y se borran en el gestor. Quitar la última nota de una etiqueta no
+        // la borra: antes sí, de cuando las etiquetas se escribían a mano en cada nota.
         var note = _repository.Create("note", "#F5E3B3", "primary");
         _repository.SetTags(note.Id, new[] { "temporary" });
         _repository.SetTags(note.Id, Array.Empty<string>());
 
         Assert.Empty(_repository.GetByState(NoteState.Active).Single().Tags);
-        Assert.Empty(_repository.GetAllTags());
+        Assert.Equal(new[] { "temporary" }, _repository.GetAllTags());
+    }
+
+    [Fact]
+    public void SetTags_DoesNotDeleteTagsCreatedInTheManagerForLater()
+    {
+        var note = _repository.Create("note", "#F5E3B3", "primary");
+        _repository.CreateTag("Viaje");
+
+        _repository.SetTags(note.Id, new[] { "Trabajo" });
+
+        Assert.Equal(new[] { "Trabajo", "Viaje" }, _repository.GetAllTags());
     }
 
     [Fact]

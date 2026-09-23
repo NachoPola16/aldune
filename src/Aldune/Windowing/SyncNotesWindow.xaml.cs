@@ -99,4 +99,12 @@ public partial class SyncNotesWindow : Window
 
         public event PropertyChangedEventHandler? PropertyChanged;
     }
+
+    /// <summary>Esc cierra, como en el resto de diálogos de la app.</summary>
+    private void OnWindowKeyDown(object sender, System.Windows.Input.KeyEventArgs e)
+    {
+        if (e.Key != System.Windows.Input.Key.Escape) return;
+        OnCancelClick(this, new RoutedEventArgs());
+        e.Handled = true;
+    }
 }

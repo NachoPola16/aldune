@@ -3377,3 +3377,100 @@ Sin tests nuevos: `AppCoordinator`/`ArrangeOpenNotes` es lógica de ventanas WPF
 usuario, que mostraba el patrón de cascada centrada exacto que produce esa rama. Tests: 534/534
 (Aldune.Core, sin cambios). Build limpio. Publicado como **0.10.7**.
 
+
+## Cierre de la 1.0, primera tanda: menú ⋯, editor y temas de notas (sesión 2026-09-23)
+
+Plan de cierre: `docs/superpowers/plans/2026-09-23-aldune-1.0-cierre.md`. Todo va sin publicar: se junta
+hasta la 1.0.
+
+- **El menú ⋯ se reabría al volver a pulsarlo** (tercer intento, este verificado). Reproducido con clics
+  físicos (SendInput) sobre una `NoteWindow` real: `PopupToggle` se apoyaba en `Popup.Closed`, que con
+  `AllowsTransparency` y animación no se dispara si el popup se reabre en el mismo clic. Ahora observa por
+  binding el paso de `IsOpen` a false, que ocurre en el propio mouse-down. Cubre todos los desplegables que
+  usan `PopupToggle`.
+- **Cursor delante de una casilla**: el margen izquierdo del cuerpo pasa a ser `Padding` del TextBox y
+  `PlaceCaretFromLeftGutter` pone el cursor al principio de la línea visual pulsada (WPF no lo hace solo en
+  el padding).
+- **Sangría única**: Tab en texto libre inserta los 4 espacios de las listas (vía `SelectedText`, así
+  Ctrl+Z lo deshace) y Mayús+Tab quita un nivel en cualquier línea, también una tabulación antigua. Las
+  notas existentes no se tocan.
+- **Temas de notas** (spec `docs/superpowers/specs/2026-09-23-aldune-temas-design.md`, plan
+  `docs/superpowers/plans/2026-09-23-aldune-temas.md`). Core: `OklchColor` (hex ⇄ OKLCH, gamut,
+  distancia), `NoteColorDerivation` (borde y etiqueta de cualquier color; los 6 de fábrica por tabla
+  exacta), `NoteThemes` (Clásico, Sereno, Grafito; saneado de los propios al cargar), `NoteColorAssigner`
+  (tono claro/oscuro/alternando y cuatro reglas; sustituye a `existing % Colors.Length`, que repetía la
+  vecina al borrar notas). App: sección "Colores de las notas" en Ajustes (columna derecha, para equilibrar
+  alturas), editor de temas, "Aplicar a las notas existentes" (repinta también las ventanas abiertas),
+  `NoteSwatchPanel` compartido por el menú ⋯ y el de la pestaña, y pestañas oscuras con "filo superior".
+  Decisiones: Clásico sigue por defecto (actualizar no cambia nada); temas locales, no se sincronizan;
+  pastillas con contorno fino porque las oscuras no se veían sobre los menús oscuros.
+
+Verificado: 599/599 tests (65 nuevos), build Debug y Release sin avisos nuevos, sondas desechables con
+ventanas reales (clics y teclas físicos para menú y editor; capturas `RenderTargetBitmap` del dock, nota
+oscura, menú, Ajustes, editor de temas y diálogo de color). **Falta el recorrido manual del usuario.**
+
+Encontrado de paso y pendiente: el smoke test `tests/Aldune.Ui.SmokeTests` está roto (`x:Shared` en
+`App.xaml` no se puede cargar con `XamlReader.Parse`; las sondas lo esquivan quitando el atributo).
+
+## Cierre de la 1.0, segunda tanda: revisión por áreas y preparación del release (sesión 2026-09-23)
+
+Publicado todo junto como **1.0.0** (el usuario prefirió saltarse la versión previa).
+
+- **Etiquetas**: un único `TagAssignmentPanel` para la nota, el dock y el gestor (antes tres copias).
+  Guarda al marcar y crea etiquetas con Enter. **Bug encontrado**: `SetTags` borraba todas las
+  etiquetas sin notas, así que las creadas en el gestor para más adelante desaparecían; quitada la
+  limpieza (las etiquetas solo se borran desde el gestor).
+- **Editor**: Tab/Mayús+Tab con varias líneas seleccionadas (`ListIndent.IndentLines/OutdentLines`),
+  Mayús+clic y doble clic en el margen, y la última línea vacía responde al clic.
+- **Sincronización, borrados firmados**: los tombstones iban sin autenticar; quien pudiera escribir en
+  el almacén podía borrar notas en todos los dispositivos. Ahora llevan id y fecha cifrados con la
+  clave del vínculo (`SyncEnvelopeCodec.CreateTombstone/IsAuthenticTombstone`) y los que no los traen
+  se ignoran. Mismo formato 4. Al rotar la clave se re-firman con la fecha nueva dentro de lo firmado.
+- **Servidor**: tope de 5 MB en Kestrel, 400 para JSON mal formado, aviso si el token es corto.
+  **Cliente**: aviso en Ajustes para `http://` fuera de la red local (`SyncEndpointSecurity`).
+  Modelo de seguridad documentado en `docs/SYNC.md`.
+- **Datos**: copia diaria automática (`LocalBackup`, 7 días, API de copia en caliente de SQLite) y
+  recuperación de la clave desde las copias (`DatabaseKeyRecovery`): sin clave pero con notas ya no
+  se genera una clave nueva; con `settings.json` dañado se restaura la última copia que abre las notas.
+- **Instancia única** (`Interop/SingleInstance`): la segunda avisa a la primera, que abre el gestor.
+- **Ajustes**: los enums se leen también como texto (`JsonStringEnumConverter`, solo al leer); la
+  sección de temas ya no pierde el foco de teclado al cambiar una opción.
+- **Instalador**: textos con `{cm:...}`, `AppMutex`, borra la entrada de arranque al desinstalar.
+- **Accesibilidad**: nombres accesibles en las pestañas del dock y en los ✕ de las ventanas de sync,
+  que ahora también cierran con Esc.
+- **Bienvenida**: notificación en el primer arranque real con dónde está el dock y el atajo.
+- **Smoke test** arreglado (`x:Shared`) y con un escenario de clics físicos para el "⋯".
+- **Release**: `LICENSE` (GPL-3.0), README nuevo en español e inglés con captura, `docs/RELEASING.md`,
+  workflow con pre-release para tags con guion y firma SignPath preparada (se activa con variables del
+  repositorio). Versión **0.99.0**.
+
+Revisión independiente de esta tanda (1 revisor, sin críticos) y arreglos, cada uno con su prueba:
+
+- **Borrados sin firmar** (versiones anteriores o falsos): nunca borran. Con fecha futura se quitan
+  del almacén (antes un falso con fecha futura "congelaba" la nota: el almacén rechazaba toda edición
+  posterior); si no, la nota va a la papelera, que es lo que quería quien borró desde una versión
+  antigua. Se clasifica todo antes de agrupar por nota, para que un fichero añadido no tape al bueno.
+- **Un objeto ilegible ya no para la sincronización de todos**; si no se puede leer ninguno (código
+  revocado) se para antes de subir nada.
+- **Cambiar solo las etiquetas (o borrar una) no se sincronizaba**: `SetTags`/`DeleteTag` actualizan
+  la fecha de la nota; `ApplySyncNote` usa la variante que no la toca, para no rebotar notas.
+- **No se podía escribir en "Nueva etiqueta" desde el dock** (WS_EX_NOACTIVATE): se permite activar
+  el dock mientras el panel está abierto. Verificado con teclas reales.
+- Tag con guion obligatorio para pre-release (documentado) y firma solo con todas las variables.
+- Menores: aviso `http://` también para IPv6 pública; limpieza de copias a medias; copia diaria en
+  segundo plano; restauración completa de `settings.json` si falta el fichero; mensajes con qué hacer;
+  Tab de varias líneas se deshace con Ctrl+Z y no sangra líneas vacías; `AllowSetForegroundWindow`
+  para que el gestor salga delante; BOM duplicado en `rename-brand.ps1` (introducido en esta sesión).
+
+**Pantallas** (reportado por el usuario): al apagar la principal el dock pasaba a la otra y al
+encenderla no volvía. Causa: la pantalla elegida se guardaba por su posición en la lista de
+`EnumDisplayMonitors`, que no tiene orden garantizado (comprobado: en esta sesión cambió de un
+momento a otro) y al apagar la principal Windows promociona la otra. Ahora se guarda su
+identificador de hardware (`MonitorInfo.StableId`, `EnumDisplayDevices`), `DockMonitorSelection`
+elige por él, usa otra pantalla solo mientras la elegida no está, y vuelve en cuanto reaparece. Los
+ajustes antiguos se migran solos. No se ha podido reproducir apagando un monitor de verdad: falta la
+prueba del usuario en la pre-release.
+
+**Logo nuevo** (propuesta D, elegida por Claude a petición del usuario): pestañas pegadas al canto,
+colores de Clásico, placa oscura redondeada. `aldune.ico` generado a 16-256 px (versión simplificada
+para 16-24) y también incrustado como recurso, para que la bandeja use el tamaño pequeño del sistema.

@@ -6,7 +6,8 @@
         WindowStyle="None" ResizeMode="CanResize"
         Background="#2A261F" AllowsTransparency="False"
         ShowInTaskbar="False" Topmost="False"
-        UseLayoutRounding="True" SnapsToDevicePixels="True">
+        UseLayoutRounding="True" SnapsToDevicePixels="True"
+        PreviewKeyDown="OnWindowKeyDown">
     <Window.Resources>
         <Style x:Key="ActionButtonStyle" TargetType="Button">
             <Setter Property="Foreground" Value="#EDE7DC" />
@@ -53,6 +54,8 @@
             </StackPanel>
             <Button Content="✕" Width="28" Height="28" HorizontalAlignment="Right"
                     Foreground="#C9C0B2" Background="Transparent" BorderThickness="0"
+                    ToolTip="{x:Static res:Strings.CloseTooltip}"
+                    AutomationProperties.Name="{x:Static res:Strings.CloseTooltip}"
                     Click="OnCancelClick" />
         </Grid>
 

@@ -163,8 +163,29 @@ public static class Strings
     public static string DockViewAllTags => T("Choose a tag", "Elegir una etiqueta");
     public static string DockViewNoTags => T("No tags yet", "Aún no hay etiquetas");
     public static string NoteTags => T("Tags…", "Etiquetas…");
-    public static string NoteTagsHint => T("Separate tags with commas.", "Separa las etiquetas con comas.");
-    public static string SaveTags => T("Save tags", "Guardar etiquetas");
+    public static string SyncInsecureUrlWarning => T(
+        "This address uses http:// outside your local network: your notes stay encrypted, but the access token or password travels unprotected. Use https://.",
+        "Esta dirección usa http:// fuera de tu red local: las notas siguen cifradas, pero el token o la contraseña viajan sin protección. Usa https://.");
+    public static string WelcomeTitle => T("Aldune is ready", "Aldune está lista");
+    public static string WelcomeMessage(Aldune.Core.EdgePosition edge, string? hotkey)
+    {
+        var (en, es) = edge switch
+        {
+            Aldune.Core.EdgePosition.Left => ("left", "izquierdo"),
+            Aldune.Core.EdgePosition.Top => ("top", "superior"),
+            Aldune.Core.EdgePosition.Bottom => ("bottom", "inferior"),
+            _ => ("right", "derecho"),
+        };
+        return hotkey is null
+            ? T($"Your notes live on the {en} edge of the screen: move the mouse there and click + to create one.",
+                $"Tus notas viven en el borde {es} de la pantalla: lleva el ratón ahí y pulsa + para crear una.")
+            : T($"Your notes live on the {en} edge of the screen: move the mouse there, or press {hotkey} to create one.",
+                $"Tus notas viven en el borde {es} de la pantalla: lleva el ratón ahí, o pulsa {hotkey} para crear una.");
+    }
+    public static string TagPanelTitle => T("Tags", "Etiquetas");
+    public static string TagPanelHint => T("Changes are saved as you tick them.", "Se guardan al marcarlas.");
+    public static string TagPanelEmpty => T("No tags yet. Create the first one below.", "Aún no hay etiquetas. Crea la primera aquí debajo.");
+    public static string NewTagPlaceholder => T("New tag", "Nueva etiqueta");
     public static string ManageTags => T("Manage tags", "Gestionar etiquetas");
     public static string NewTag => T("New tag", "Nueva etiqueta");
     public static string CreateTag => T("Create", "Crear");
@@ -391,6 +412,60 @@ public static class Strings
     public static string LanguageSectionTitle => T("Language", "Idioma");
     public static string LanguageSectionHint => T("Restarting Aldune applies the change to every window.", "Reiniciar Aldune aplica el cambio en todas las ventanas.");
 
+    // --- Temas -----------------------------------------------------------------------------------
+
+    public static string ThemesSectionTitle => T("Note colors", "Colores de las notas");
+    public static string ThemesSectionHint => T(
+        "The theme sets the colors for new notes and the quick colors in each note's menu.",
+        "El tema decide el color de las notas nuevas y los colores rápidos del menú de cada nota.");
+    public static string ThemeNew => T("New", "Nuevo");
+    public static string ThemeDuplicate => T("Duplicate", "Duplicar");
+    public static string ThemeEdit => T("Edit", "Editar");
+    public static string ThemeDeleteButton => T("Delete", "Eliminar");
+    public static string ThemeDeleteConfirm(string name) => T(
+        $"Delete the theme \"{name}\"? Your notes keep their colors.",
+        $"¿Eliminar el tema «{name}»? Tus notas conservan sus colores.");
+    public static string ThemeCopyName(string name) => T($"{name} (copy)", $"{name} (copia)");
+    public static string ThemeNewName => T("My theme", "Mi tema");
+    public static string NewNoteToneLabel => T("New notes are", "Las notas nuevas son");
+    public static string ToneLight => T("Light", "Claras");
+    public static string ToneDark => T("Dark", "Oscuras");
+    public static string ToneBoth => T("Both, alternating", "De los dos tipos, alternando");
+    public static string ColorAssignmentLabel => T("Color of new notes", "Color de las notas nuevas");
+    public static string AssignAvoidNeighbors => T(
+        "Rotate, never the same as the one next to it (recommended)",
+        "Rotar, sin repetir el de al lado (recomendado)");
+    public static string AssignRotate => T("Rotate through the theme", "Rotar por el tema");
+    public static string AssignMostDistinct => T("The most different from the rest", "El más distinto del resto");
+    public static string AssignFixed => T("Always the same color", "Siempre el mismo color");
+    public static string ApplyThemeButton => T("Apply to existing notes…", "Aplicar a las notas existentes…");
+    public static string ApplyThemeConfirmTitle => T("Apply theme", "Aplicar tema");
+    public static string ApplyThemeConfirm(int count) => count == 1
+        ? T("The color of your active note will change, even if you picked it by hand. It will sync to your other devices.",
+            "Se cambiará el color de tu nota activa, aunque lo eligieras a mano. Se sincronizará a tus otros dispositivos.")
+        : T($"The color of your {count} active notes will change, including colors you picked by hand. It will sync to your other devices.",
+            $"Se cambiará el color de tus {count} notas activas, incluidos los que elegiste a mano. Se sincronizará a tus otros dispositivos.");
+
+    public static string ThemeEditorTitle => T("Edit theme", "Editar tema");
+    public static string ThemeEditorNewTitle => T("New theme", "Nuevo tema");
+    public static string ThemeEditorNameLabel => T("Name", "Nombre");
+    public static string ThemeDarkColors => T("Dark (light text)", "Oscuros (texto claro)");
+    public static string ThemeLightColors => T("Light (dark text)", "Claros (texto oscuro)");
+    public static string ThemeAddColor => T("Add color", "Añadir color");
+    public static string ThemeMoveLeft => T("Move left", "Mover a la izquierda");
+    public static string ThemeMoveRight => T("Move right", "Mover a la derecha");
+    public static string ThemeRemoveColor => T("Remove", "Quitar");
+    public static string ThemeEditorEmpty => T("Add at least one color.", "Añade al menos un color.");
+
+    /// <summary>Los de serie se traducen; los propios se enseñan con el nombre que les dio el usuario.</summary>
+    internal static string ThemeDisplayName(Aldune.Core.NoteTheme theme) => theme.Id switch
+    {
+        Aldune.Core.NoteThemes.ClassicId => T("Classic", "Clásico"),
+        Aldune.Core.NoteThemes.SereneId => T("Serene", "Sereno"),
+        Aldune.Core.NoteThemes.GraphiteId => T("Graphite", "Grafito"),
+        _ => theme.Name,
+    };
+
     public static string QuickHelpTitle => T("Quick help", "Ayuda rápida");
     public static string QuickHelpHover => T("• Hover over the screen edge to fan out the notes.", "• Pasa el ratón por el borde de la pantalla para desplegar las notas.");
     public static string QuickHelpDrag => T("• Click a tab to open that note; drag it yourself to move it — it will remember the spot.", "• Haz clic en una pestaña para abrir esa nota; arrástrala tú para moverla — recordará el sitio.");
@@ -408,7 +483,7 @@ public static class Strings
         "• Ctrl+Alt+H oculta el dock y lo devuelve — útil para vídeos a pantalla completa que Windows no reporta como tales. El menú de la bandeja tiene el mismo interruptor.");
     public static string QuickHelpDockMenus => T(
         "• Right-click the dock buttons for views, tags, notes from the clipboard, settings and Keep dock open.",
-        "• Clic derecho en los botones del dock para ver vistas, tags, notas desde el portapapeles, Ajustes y Mantener el dock abierto.");
+        "• Clic derecho en los botones del dock para ver vistas, etiquetas, notas desde el portapapeles, Ajustes y Mantener el dock abierto.");
     public static string QuickHelpAutoHideTasks => T(
         "• Completed tasks can disappear automatically after the delay configured in Settings.",
         "• Las tareas completadas pueden desaparecer automáticamente tras el plazo configurado en Ajustes.");
@@ -438,13 +513,32 @@ public static class Strings
     public static string KeyUnwrapFailedMessage => T(
         "The notes database can't be decrypted with the stored key.\n\n" +
         "The most likely cause is that this Windows user's password was reset, which permanently " +
-        "destroys the protected key. This cannot be recovered technically, unless a previously " +
-        "exported backup exists (that feature doesn't exist yet in this version).",
+        "destroys the protected key. The automatic backups are protected the same way, so they " +
+        "can't recover it either.",
         "No se puede descifrar la base de datos de notas con la clave almacenada.\n\n" +
         "La causa más probable es que se haya restablecido la contraseña de Windows de este " +
-        "usuario, lo que destruye de forma permanente la clave protegida. Esto no se puede " +
-        "recuperar técnicamente, salvo que exista una copia de seguridad exportada previamente " +
-        "(esa función aún no existe en esta versión).");
+        "usuario, lo que destruye de forma permanente la clave protegida. Las copias automáticas " +
+        "están protegidas igual, así que tampoco pueden recuperarla.");
+
+    public static string MissingKeyMessage(string folder) => T(
+        "The settings file that holds your notes' key is missing, and no backup has it.\n\n" +
+        "Aldune won't create a new key, because your existing notes would become unreadable. If you " +
+        $"have a copy of settings.json, put it in {folder} and open Aldune again.\n\n" +
+        $"To start from scratch instead, move notes.db out of {folder}: Aldune will create a new, empty one.",
+        "Falta el archivo de ajustes que guarda la clave de tus notas y ninguna copia la tiene.\n\n" +
+        "Aldune no creará una clave nueva, porque tus notas dejarían de poder leerse. Si tienes una " +
+        $"copia de settings.json, colócala en {folder} y vuelve a abrir Aldune.\n\n" +
+        $"Si prefieres empezar de cero, saca notes.db de {folder}: Aldune creará uno nuevo y vacío.");
+
+    public static string KeyRestoredFromBackupMessage(string day) => T(
+        $"Your notes' key was missing from the settings and has been restored from the backup of {day}.",
+        $"La clave de tus notas faltaba en los ajustes y se ha recuperado de la copia del {day}.");
+
+    public static string SettingsRestoredFromBackupMessage(string day) => T(
+        $"The settings file was damaged and the backup of {day} has been restored. Check any setting you changed after that day; if sync fails, import your sync code again.",
+        $"El archivo de ajustes estaba dañado y se ha restaurado la copia del {day}. Revisa los ajustes que cambiaras después de ese día; si la sincronización falla, vuelve a importar tu código.");
+
+    public static string DataRecoveredTitle => T("Aldune — data recovered", "Aldune — datos recuperados");
 
     public static string DatabaseUnrecoverableMessage => T(
         "The notes database couldn't be opened or recreated after an automatic recovery attempt. " +

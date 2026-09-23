@@ -24,6 +24,15 @@ public partial class App : Application
         // mensajes de error del arranque más temprano salen en el idioma que toca la mayoría de las
         // veces, en vez de siempre en inglés.
         ApplyLanguage(null);
+
+        _singleInstance = SingleInstance.TryAcquire();
+        if (_singleInstance is null)
+        {
+            // Ya hay una Aldune en marcha y se le acaba de avisar: ella abre el gestor de notas.
+            Shutdown(0);
+            return;
+        }
+
         DarkTextContextMenu.Register();
 
         // Ver el comentario de DisablePowerThrottling: Aldune vive casi siempre sin foco, y
@@ -63,12 +72,44 @@ public partial class App : Application
         AppSettings settings;
         try
         {
-            settings = settingsService.Load();
+            bool settingsExisted = File.Exists(settingsPath);
+            settings = LoadSettingsOrRestoreBackup(settingsService, settingsPath, appDataDir, databasePath);
             ApplyLanguage(settings.Language);
 
             byte[] rawKey;
-            if (settings.WrappedDatabaseKey is null)
+            if (settings.WrappedDatabaseKey is null && DatabaseKeyRecovery.DatabaseHasNotes(databasePath))
             {
+                // Sin clave pero con notas: una clave nueva las dejaría ilegibles para siempre. Solo
+                // vale la de una copia que de verdad las descifre.
+                if (DatabaseKeyRecovery.FindSettingsBackup(appDataDir, databasePath) is not { } backup)
+                {
+                    MessageBox.Show(Strings.MissingKeyMessage(appDataDir), Strings.CannotStartTitle,
+                        MessageBoxButton.OK, MessageBoxImage.Error);
+                    Shutdown(1);
+                    return;
+                }
+
+                if (settingsExisted)
+                {
+                    settings.WrappedDatabaseKey = backup.WrappedKey;
+                    settingsService.Save(settings);
+                }
+                else
+                {
+                    // Falta el fichero entero: se restaura la copia completa, no solo la clave, para
+                    // no perder también la sincronización, el atajo y el resto de ajustes.
+                    File.Copy(backup.Path, settingsPath, overwrite: true);
+                    settings = settingsService.Load();
+                    ApplyLanguage(settings.Language);
+                }
+                MessageBox.Show(Strings.KeyRestoredFromBackupMessage(backup.Day), Strings.DataRecoveredTitle,
+                    MessageBoxButton.OK, MessageBoxImage.Information);
+                rawKey = DatabaseKeyProvider.Unwrap(settings.WrappedDatabaseKey);
+            }
+            else if (settings.WrappedDatabaseKey is null)
+            {
+                // Sin clave y sin notas: es la primera vez que se abre Aldune en este usuario.
+                _firstRun = true;
                 rawKey = DatabaseKeyProvider.GenerateKey();
                 settings.WrappedDatabaseKey = DatabaseKeyProvider.Wrap(rawKey);
                 settingsService.Save(settings);
@@ -137,6 +178,10 @@ public partial class App : Application
         _coordinator = coordinator;
         _repository = repository;
         _settings = settings;
+        _settingsService = settingsService;
+        StartDailyBackups(appDataDir);
+        _singleInstance.ListenForActivation(() =>
+            Dispatcher.BeginInvoke(() => _coordinator?.OpenNotesManager()));
         try
         {
             // Barrido del ajuste opcional "borrar tareas completadas solas" (ver
@@ -234,6 +279,7 @@ public partial class App : Application
         _trayIcon = new TrayIcon(coordinator, _updateNotifier.CheckManually);
 
         _reminderScheduler = new ReminderScheduler(repository, coordinator, _trayIcon.Icon);
+        if (_firstRun) ShowWelcome(settings);
         // Catch-up: avisa ya de lo vencido con la app cerrada. Diferido con BeginInvoke en vez de
         // llamado aquí mismo, en línea: este punto de OnStartup queda FUERA del último try/catch de
         // arranque (ver el comentario de DispatcherUnhandledException más arriba — OnStartup no
@@ -257,6 +303,8 @@ public partial class App : Application
             _trayIcon?.Dispose();
             _hotkey?.Dispose();
             _dockHotkey?.Dispose();
+            _backupTimer?.Stop();
+            _singleInstance?.Dispose();
         };
     }
 
@@ -280,6 +328,68 @@ public partial class App : Application
             : System.Globalization.CultureInfo.CurrentUICulture.TwoLetterISOLanguageName == "es" ? "es" : "en";
 
         NoteTitleHelper.PlaceholderTitle = Strings.NewNotePlaceholder;
+    }
+
+    /// <summary>
+    /// Carga los ajustes. Si settings.json está dañado, restaura la copia más reciente cuya clave
+    /// descifra las notas (guardando el dañado aparte) en vez de negarse a arrancar. Si no hay copia
+    /// que sirva, deja pasar la JsonException: el arranque la convierte en el mensaje de siempre,
+    /// que no genera una clave nueva encima.
+    /// </summary>
+    private static AppSettings LoadSettingsOrRestoreBackup(
+        SettingsService settingsService, string settingsPath, string appDataDir, string databasePath)
+    {
+        try
+        {
+            return settingsService.Load();
+        }
+        catch (JsonException) when (DatabaseKeyRecovery.FindSettingsBackup(appDataDir, databasePath) is { } backup)
+        {
+            File.Copy(settingsPath, $"{settingsPath}.damaged-{DateTimeOffset.UtcNow:yyyyMMddHHmmss}", overwrite: true);
+            File.Copy(backup.Path, settingsPath, overwrite: true);
+            MessageBox.Show(Strings.SettingsRestoredFromBackupMessage(backup.Day), Strings.DataRecoveredTitle,
+                MessageBoxButton.OK, MessageBoxImage.Information);
+            return settingsService.Load();
+        }
+    }
+
+    private DispatcherTimer? _backupTimer;
+    private SettingsService? _settingsService;
+    private bool _firstRun;
+
+    /// <summary>
+    /// La primera vez, una notificación que dice dónde está el dock y cómo crear una nota: sin notas
+    /// el dock solo enseña sus botones en un borde, y es fácil no verlo. Una notificación y no una nota
+    /// de bienvenida: una nota se sincronizaría, y cada dispositivo nuevo añadiría la suya a todos.
+    /// Al pulsarla se abre el gestor (lo decide ReminderScheduler, que ya escucha los clics).
+    /// </summary>
+    private void ShowWelcome(AppSettings settings)
+    {
+        var hotkey = settings.GlobalHotkeyEnabled ? settings.Hotkey.DisplayName : null;
+        _trayIcon?.Icon.ShowBalloonTip(15000, Strings.WelcomeTitle, Strings.WelcomeMessage(settings.DockEdge, hotkey),
+            System.Windows.Forms.ToolTipIcon.Info);
+    }
+    private SingleInstance? _singleInstance;
+
+    /// <summary>
+    /// Copia diaria de notas y ajustes (ver <see cref="LocalBackup"/>): al arrancar y, como la app
+    /// puede pasar días abierta, cada pocas horas por si ha cambiado el día. Un fallo de disco aquí
+    /// no debe molestar: la próxima vuelta lo intenta otra vez.
+    /// </summary>
+    private void StartDailyBackups(string appDataDir)
+    {
+        // En un hilo aparte: con una base de datos grande, la copia congelaba la interfaz un momento.
+        // La API de copia de SQLite usa sus propias conexiones y convive con las de la app.
+        void Run() => Task.Run(() =>
+        {
+            try { LocalBackup.CreateDaily(appDataDir, DateTimeOffset.Now); }
+            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or SqliteException) { }
+        });
+
+        Run();
+        _backupTimer = new DispatcherTimer { Interval = TimeSpan.FromHours(3) };
+        _backupTimer.Tick += (_, _) => Run();
+        _backupTimer.Start();
     }
 
     private static string ResolveAppDataDirectory()
@@ -366,11 +476,16 @@ public partial class App : Application
             }
         }
 
-        if (targetIndex is { } monitorIndex
-            && monitorIndex >= 0 && monitorIndex < monitors.Count)
+        // Ajuste antiguo que solo guardaba la posición: se traduce una vez al identificador de esa
+        // pantalla, que es lo que sobrevive a apagarla y encenderla.
+        if (_settings is { TargetMonitorId: null, TargetMonitorIndex: { } legacy }
+            && DockMonitorSelection.IdForLegacyIndex(monitors, legacy) is { } migratedId)
         {
-            monitors = new[] { monitors[monitorIndex] };
+            _settings.TargetMonitorId = migratedId;
+            _settingsService?.Save(_settings);
         }
+
+        monitors = DockMonitorSelection.Select(monitors, _settings?.TargetMonitorId, targetIndex);
 
         var edge = _settings?.DockEdge ?? EdgePosition.Right;
         foreach (var monitor in monitors)

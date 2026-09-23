@@ -117,8 +117,12 @@ internal sealed class TrayIcon : IDisposable
 
     private static System.Drawing.Icon LoadIcon()
     {
-        // El icono viaja incrustado en el ejecutable (ApplicationIcon en el csproj), así que se
-        // saca de ahí en vez de depender de que exista un fichero suelto junto al .exe.
+        // Del recurso incrustado y al tamaño pequeño del sistema (16 px al 100 %, 20 al 125 %…): así
+        // Windows elige la imagen del .ico dibujada para ese tamaño, más nítida que reducir la de 32.
+        using var stream = typeof(TrayIcon).Assembly.GetManifestResourceStream("Aldune.aldune.ico");
+        if (stream is not null) return new System.Drawing.Icon(stream, SystemInformation.SmallIconSize);
+
+        // Respaldo: el icono del ejecutable (ApplicationIcon en el csproj).
         var path = Environment.ProcessPath;
         if (path is not null)
         {

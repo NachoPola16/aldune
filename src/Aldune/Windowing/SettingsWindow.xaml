@@ -282,6 +282,7 @@
                     <StackPanel x:Name="LanguageListContainer" />
                 </StackPanel>
 
+
                 <Border Background="#3C3730" Height="1" Margin="0,20,0,0" />
 
                 <StackPanel Margin="0,20,0,0">
@@ -454,6 +455,11 @@
                                  Background="#332F28" Foreground="#EDE7DC" BorderThickness="0"
                                  Padding="7,6" TextChanged="OnSyncValueChanged" />
                     </Grid>
+                    <!-- http:// hacia un servidor fuera de la red local: el token viajaría en claro.
+                         Ver SyncEndpointSecurity. -->
+                    <TextBlock x:Name="SyncInsecureUrlText" Text="{x:Static res:Strings.SyncInsecureUrlWarning}"
+                               Foreground="#E0A08A" FontSize="11" TextWrapping="Wrap" Margin="27,4,0,0"
+                               Visibility="Collapsed" />
                     <Grid x:Name="SyncServerTokenGrid" Margin="27,8,0,0">
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="Auto" />
@@ -617,6 +623,45 @@
                               Click="OnTrackpadGesturesToggled" />
                     <TextBlock x:Name="TrackpadGesturesHint"
                                Foreground="#8A8175" FontSize="11" TextWrapping="Wrap" Margin="27,6,0,0" />
+                </StackPanel>
+
+                <Border Background="#3C3730" Height="1" Margin="0,20,0,0" />
+
+                <!-- Temas: qué colores llevan las notas nuevas y los colores rápidos del menú. En esta
+                     columna y no en la izquierda para equilibrar el alto de las dos. -->
+                <StackPanel Margin="0,20,0,0">
+                    <TextBlock Text="{x:Static res:Strings.ThemesSectionTitle}"
+                               Foreground="#EDE7DC" FontSize="13" FontWeight="SemiBold" />
+                    <TextBlock Text="{x:Static res:Strings.ThemesSectionHint}"
+                               Foreground="#8A8175" FontSize="11" TextWrapping="Wrap" Margin="0,4,0,10" />
+
+                    <ComboBox x:Name="ThemeCombo" Style="{StaticResource SyncProfileComboStyle}"
+                              SelectionChanged="OnThemeSelectionChanged" />
+                    <StackPanel x:Name="ThemePreview" Margin="0,8,0,0" IsHitTestVisible="False" />
+
+                    <WrapPanel Margin="0,8,0,0">
+                        <Button Content="{x:Static res:Strings.ThemeNew}" Click="OnThemeNewClick"
+                                Padding="10,6" Margin="0,0,6,6" Style="{StaticResource RecordButtonStyle}" />
+                        <Button Content="{x:Static res:Strings.ThemeDuplicate}" Click="OnThemeDuplicateClick"
+                                Padding="10,6" Margin="0,0,6,6" Style="{StaticResource RecordButtonStyle}" />
+                        <Button x:Name="ThemeEditButton" Content="{x:Static res:Strings.ThemeEdit}" Click="OnThemeEditClick"
+                                Padding="10,6" Margin="0,0,6,6" Style="{StaticResource RecordButtonStyle}" />
+                        <Button x:Name="ThemeDeleteButton" Content="{x:Static res:Strings.ThemeDeleteButton}" Click="OnThemeDeleteClick"
+                                Padding="10,6" Margin="0,0,6,6" Style="{StaticResource RecordButtonStyle}" />
+                    </WrapPanel>
+
+                    <TextBlock Text="{x:Static res:Strings.NewNoteToneLabel}"
+                               Foreground="#EDE7DC" FontSize="13" Margin="0,12,0,6" />
+                    <StackPanel x:Name="ToneListContainer" />
+
+                    <TextBlock Text="{x:Static res:Strings.ColorAssignmentLabel}"
+                               Foreground="#EDE7DC" FontSize="13" Margin="0,12,0,6" />
+                    <StackPanel x:Name="AssignmentListContainer" />
+                    <StackPanel x:Name="FixedColorSwatches" Margin="22,4,0,0" />
+
+                    <Button x:Name="ApplyThemeButton" Content="{x:Static res:Strings.ApplyThemeButton}" Click="OnApplyThemeClick"
+                            HorizontalAlignment="Left" Padding="12,7" Margin="0,14,0,0"
+                            Style="{StaticResource RecordButtonStyle}" />
                 </StackPanel>
             </StackPanel>
         </Grid>

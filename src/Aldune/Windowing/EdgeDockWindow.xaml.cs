@@ -2037,6 +2037,27 @@ public partial class EdgeDockWindow : Window
         }
     }
 
+    /// <summary>
+    /// Pestaña de cara oscura: sin el reflejo del lomo ni el borde completo, que están pensados
+    /// para caras claras y sobre una oscura parecían plástico o un botón desactivado. En su lugar,
+    /// una línea de 1 px arriba con el filo (RimFor, más claro que la cara), como el canto de un
+    /// papel grueso. Va después de ApplyLeftEdgeTabShape/ApplyTopBottomTabShape porque pisa el
+    /// grosor del borde que fijan ellos. El hover aclara en vez de oscurecer.
+    /// </summary>
+    private static void ApplyFaceFinish(Button button)
+    {
+        if (button.DataContext is not Note note || !NoteColorDerivation.IsDark(note.Color)) return;
+
+        if (button.Template.FindName("CardBorder", button) is Border card)
+            card.BorderThickness = new Thickness(0, 1, 0, 0);
+
+        if (button.Template.FindName("SheenBorder", button) is Border sheen)
+            sheen.Visibility = Visibility.Collapsed;
+
+        if (button.Template.FindName("HoverOverlay", button) is Border hover)
+            hover.Background = (Brush)new BrushConverter().ConvertFromString("#F4F1EC")!;
+    }
+
     private void ApplyTopBottomTabShape(Button button)
     {
         button.HorizontalAlignment = HorizontalAlignment.Center;
@@ -2097,44 +2118,11 @@ public partial class EdgeDockWindow : Window
     }
 
     /// <summary>
-    /// Las seis pastillas de color del menú, con la de la nota marcada. Se reconstruyen en cada
-    /// apertura porque el menú sirve a la pestaña que se acaba de pulsar, no a una fija.
+    /// Las pastillas del tema activo, con la de la nota marcada. Se reconstruyen en cada apertura
+    /// porque el menú sirve a la pestaña que se acaba de pulsar, no a una fija.
     /// </summary>
-    private void BuildTabMenuSwatches(Note note)
-    {
-        TabMenuSwatches.Children.Clear();
-
-        foreach (var color in NoteColorPalette.Colors)
-        {
-            bool selected = color == note.Color;
-            var swatch = new Border
-            {
-                Background = (Brush)new BrushConverter().ConvertFromString(color)!,
-                Width = 22,
-                Height = 22,
-                Margin = new Thickness(3),
-                CornerRadius = new CornerRadius(5),
-                BorderBrush = (Brush)new BrushConverter().ConvertFromString(NoteColorPalette.Ink)!,
-                BorderThickness = new Thickness(selected ? 2 : 0),
-                Cursor = System.Windows.Input.Cursors.Hand,
-                Tag = color,
-                Child = new TextBlock
-                {
-                    Text = "✓",
-                    FontSize = 13,
-                    FontWeight = FontWeights.Bold,
-                    HorizontalAlignment = HorizontalAlignment.Center,
-                    VerticalAlignment = VerticalAlignment.Center,
-                    Foreground = (Brush)new BrushConverter().ConvertFromString(
-                        NoteColorPalette.LabelFor(color))!,
-                    Visibility = selected ? Visibility.Visible : Visibility.Collapsed,
-                    IsHitTestVisible = false
-                }
-            };
-            swatch.MouseLeftButtonUp += OnTabMenuColorClick;
-            TabMenuSwatches.Children.Add(swatch);
-        }
-    }
+    private void BuildTabMenuSwatches(Note note) =>
+        NoteSwatchPanel.Fill(TabMenuSwatches, _coordinator.ActiveTheme, note.Color, OnTabMenuColorClick);
 
     private void OnTabMenuColorClick(object sender, MouseButtonEventArgs e)
     {
@@ -2144,6 +2132,7 @@ public partial class EdgeDockWindow : Window
         if (color != note.Color)
         {
             _repository.SetColor(note.Id, color);
+            _coordinator.NotifyNoteColorChanged(note.Id, color);
             _coordinator.RefreshAll();
         }
         CloseTabMenu();
@@ -2158,6 +2147,7 @@ public partial class EdgeDockWindow : Window
         if (color is null) return;
 
         _repository.SetColor(note.Id, color);
+        _coordinator.NotifyNoteColorChanged(note.Id, color);
         _coordinator.RefreshAll();
         CloseTabMenu();
     }
@@ -2213,22 +2203,13 @@ public partial class EdgeDockWindow : Window
     {
         if (_tabMenuNote is not { } note) return;
 
-        DockTagAssignmentItems.Children.Clear();
-        var tags = _repository.GetAllTags();
-        DockTagAssignmentEmptyText.Visibility = tags.Count == 0 ? Visibility.Visible : Visibility.Collapsed;
-        foreach (var tag in tags)
-        {
-            DockTagAssignmentItems.Children.Add(new CheckBox
-            {
-                Content = tag,
-                Tag = tag,
-                IsChecked = note.Tags.Any(existing =>
-                    string.Equals(existing, tag, StringComparison.OrdinalIgnoreCase)),
-                Foreground = Brushes.White,
-                Background = new SolidColorBrush(Color.FromRgb(42, 38, 31)),
-                Style = (Style)FindResource("AppCheckBoxStyle")
-            });
-        }
+        DockTagPanel.Bind(_repository, note);
+
+        // El panel tiene un campo para escribir etiquetas nuevas, y el dock no se deja activar
+        // (WS_EX_NOACTIVATE, para no robar el foco al pasar el ratón): sin esto, lo que se tecleaba
+        // iba a la aplicación que estuviera delante. Se permite solo mientras el panel está abierto.
+        NativeMethods.AllowActivation(_hwnd);
+        NativeMethods.ForceActivate(this);
 
         TagEditorPopup.PlacementTarget = _tabMenuOwner;
         TagEditorPopup.Placement = PlacementMode.Bottom;
@@ -2237,21 +2218,13 @@ public partial class EdgeDockWindow : Window
         TagEditorPopup.Focus();
     }
 
-    private void OnSaveTagsClick(object sender, RoutedEventArgs e)
+    /// <summary>El panel guarda al marcar; el dock se refresca una sola vez, al cerrarlo: hacerlo con
+    /// el popup abierto regeneraba la pestaña a la que está anclado.</summary>
+    private void OnTagEditorClosed(object? sender, EventArgs e)
     {
-        if (_tabMenuNote is { } note)
-        {
-            var tags = DockTagAssignmentItems.Children.OfType<CheckBox>()
-                .Where(checkBox => checkBox.IsChecked == true)
-                .Select(checkBox => checkBox.Tag as string)
-                .Where(tag => tag is not null)
-                .Cast<string>()
-                .ToArray();
-            _repository.SetTags(note.Id, tags);
-            _coordinator.RefreshAll();
-        }
-        TagEditorPopup.IsOpen = false;
+        if (DockTagPanel.Changed) _coordinator.RefreshAll();
         _tabMenuNote = null;
+        NativeMethods.MakeNonActivating(_hwnd);
     }
 
     private void OnTabMenuTrashClick(object sender, RoutedEventArgs e)
@@ -2295,6 +2268,7 @@ public partial class EdgeDockWindow : Window
         // enteras en cada SetNotes, así que no basta con corregirlo una vez en el constructor.
         if (_edge == EdgePosition.Left) ApplyLeftEdgeTabShape(button);
         else if (IsTopBottomEdge) ApplyTopBottomTabShape(button);
+        ApplyFaceFinish(button);
 
         // La última no lleva el margen del solape. En esta disposición el margen es inferior y no
         // hace falta después de la última tarjeta porque no hay otra que solapar.
@@ -2375,9 +2349,7 @@ public partial class EdgeDockWindow : Window
     private void CreateNote(string content)
     {
         HoldHoverDuringLayout();
-        var existingCount = _repository.GetByState(NoteState.Active).Count;
-        var color = NoteColorPalette.Colors[existingCount % NoteColorPalette.Colors.Length];
-        var note = _repository.Create(content, color, screenOrigin: "primary");
+        var note = _repository.Create(content, _coordinator.NextNoteColor(), screenOrigin: "primary");
 
         // En la vista de una etiqueta la nota nace ya con ella: si no, el filtro la escondería nada
         // más crearla y habría que ir a buscarla a "todas" para etiquetarla a mano.
