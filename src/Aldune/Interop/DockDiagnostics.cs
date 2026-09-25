@@ -31,6 +31,9 @@ internal static class DockDiagnostics
     [DllImport("user32.dll")] private static extern IntPtr GetDC(IntPtr hWnd);
     [DllImport("user32.dll")] private static extern int ReleaseDC(IntPtr hWnd, IntPtr dc);
     [DllImport("gdi32.dll")] private static extern uint GetPixel(IntPtr dc, int x, int y);
+    [StructLayout(LayoutKind.Sequential)]
+    private struct RECT { public int Left, Top, Right, Bottom; }
+    [DllImport("user32.dll")] private static extern bool GetWindowRect(IntPtr hWnd, out RECT rect);
 
     internal static DiagnosticLog? Log { get; set; }
 
@@ -54,6 +57,10 @@ internal static class DockDiagnostics
             ReleaseDC(IntPtr.Zero, dc);
         }
     }
+
+    /// <summary>Dónde está la ventana de verdad, en píxeles físicos.</summary>
+    internal static (int X, int Y, int Width, int Height) WindowRect(IntPtr hwnd) =>
+        GetWindowRect(hwnd, out var r) ? (r.Left, r.Top, r.Right - r.Left, r.Bottom - r.Top) : (0, 0, 0, 0);
 
     internal static bool IsTopmost(IntPtr hwnd) => (GetWindowLong(hwnd, GWL_EXSTYLE) & WS_EX_TOPMOST) != 0;
 

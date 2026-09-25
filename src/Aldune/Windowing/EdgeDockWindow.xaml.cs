@@ -594,27 +594,40 @@ public partial class EdgeDockWindow : Window
         else if (_noteCount == 0) state = "sin notas";
         else
         {
-            var dpi = VisualTreeHelper.GetDpi(this);
-            var rest = EdgeGeometry.RestingVisibleRect(_workingArea, _edge, _noteCount);
-            int centerX = (int)Math.Round((rest.X + rest.Width / 2) * dpi.DpiScaleX);
-            int centerY = (int)Math.Round((rest.Y + rest.Height / 2) * dpi.DpiScaleY);
+            // Todo sobre la tira REAL (el elemento, en su posición de verdad en pantalla), no sobre la
+            // geometría calculada: la zona sensible de EdgeGeometry se ensancha 12 px alrededor, y el
+            // primer diagnóstico (1.0.1) medía el píxel fuera de la tira, dando falsos "no se ve".
+            var stripCenter = RestStrip.PointToScreen(new Point(RestStrip.ActualWidth / 2, RestStrip.ActualHeight / 2));
 
             bool topmost = DockDiagnostics.IsTopmost(_hwnd);
-            var above = DockDiagnostics.RootWindowAt(centerX, centerY);
+            var above = DockDiagnostics.RootWindowAt((int)stripCenter.X, (int)stripCenter.Y);
             bool ours = above == _hwnd;
             state = $"en reposo, siempre encima: {(topmost ? "sí" : "NO")}, sobre la tira: "
                 + (ours ? "el dock" : DockDiagnostics.Describe(above));
             stripHidden = !topmost || !ours;
 
-            // Leer la pantalla fuerza a DWM a componer: no en cada tick. El punto es el relleno de
-            // arriba de la tira (2 px dentro, en su eje), que es siempre su color de fondo.
+            // ¿Está la ventana donde el dock cree? El ratón se compara con la posición calculada; si la
+            // ventana está en otro sitio, la tira no se ve donde debería y el abanico sale donde está.
+            var dpi = VisualTreeHelper.GetDpi(this);
+            var expected = EdgeGeometry.WindowRect(_workingArea, _edge, _noteCount);
+            var actual = DockDiagnostics.WindowRect(_hwnd);
+            int expectedX = (int)Math.Round(expected.X * dpi.DpiScaleX), expectedY = (int)Math.Round(expected.Y * dpi.DpiScaleY);
+            if (Math.Abs(actual.X - expectedX) > 2 || Math.Abs(actual.Y - expectedY) > 2)
+            {
+                state += $", ventana en {actual.X},{actual.Y} {actual.Width}x{actual.Height} en vez de "
+                    + $"{expectedX},{expectedY} {(int)Math.Round(expected.Width * dpi.DpiScaleX)}x{(int)Math.Round(expected.Height * dpi.DpiScaleY)}";
+                stripHidden = true;
+            }
+
+            // Leer la pantalla fuerza a DWM a componer: no en cada tick. El punto va 4 px dentro del
+            // principio de la tira, en su eje: su fondo o, si no hay relleno, el primer guion.
             if (ours && _diagnosticTicks++ % 10 == 0)
             {
                 bool vertical = _edge is EdgePosition.Left or EdgePosition.Right;
-                int sampleX = vertical ? centerX : (int)Math.Round((rest.X + 2) * dpi.DpiScaleX);
-                int sampleY = vertical ? (int)Math.Round((rest.Y + 2) * dpi.DpiScaleY) : centerY;
-                var (r, g, b) = DockDiagnostics.ScreenPixel(sampleX, sampleY);
-                // Según dónde caiga el punto se ve el fondo de la tira o un guion: vale cualquiera.
+                var sample = RestStrip.PointToScreen(vertical
+                    ? new Point(RestStrip.ActualWidth / 2, 4)
+                    : new Point(4, RestStrip.ActualHeight / 2));
+                var (r, g, b) = DockDiagnostics.ScreenPixel((int)sample.X, (int)sample.Y);
                 bool Near(string hex) =>
                     System.Windows.Media.ColorConverter.ConvertFromString(hex) is Color c
                     && Math.Abs(r - c.R) <= 16 && Math.Abs(g - c.G) <= 16 && Math.Abs(b - c.B) <= 16;
