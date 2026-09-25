@@ -2167,20 +2167,14 @@ public partial class EdgeDockWindow : Window
 
         if (note.IsProtected)
         {
-            var password = PasswordPromptWindow.Show(this, Strings.RemoveProtection,
-                Strings.ProtectedNoteHint, confirm: false);
+            // Quitar la protección ocurre dentro del diálogo: con la contraseña mal se queda abierto.
+            var password = PasswordPromptWindow.Show(this, PasswordPromptMode.RemoveProtection,
+                candidate => _repository.RemoveProtection(note.Id, candidate));
             if (password is null) return;
-            if (!_repository.RemoveProtection(note.Id, password))
-            {
-                MessageBox.Show(this, Strings.WrongPassword, Strings.AppName,
-                    MessageBoxButton.OK, MessageBoxImage.Warning);
-                return;
-            }
         }
         else
         {
-            var password = PasswordPromptWindow.Show(this, Strings.ProtectNote,
-                Strings.ProtectNoteHint, confirm: true);
+            var password = PasswordPromptWindow.Show(this, PasswordPromptMode.Protect);
             if (password is null) return;
             _repository.Protect(note.Id, password);
         }

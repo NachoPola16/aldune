@@ -267,15 +267,10 @@ public sealed class AppCoordinator
         string? protectionPassword = null;
         if (note.IsProtected)
         {
-            var password = PasswordPromptWindow.Show(requestingDock, Strings.UnlockNote,
-                Strings.ProtectedNoteHint, confirm: false);
-            if (password is null) return;
-            if (!_repository.TryUnlock(note.Id, password, out var unlocked) || unlocked is null)
-            {
-                MessageBox.Show(requestingDock, Strings.WrongPassword, Strings.AppName,
-                    MessageBoxButton.OK, MessageBoxImage.Warning);
-                return;
-            }
+            Note? unlocked = null;
+            var password = PasswordPromptWindow.Show(requestingDock, PasswordPromptMode.Unlock,
+                candidate => _repository.TryUnlock(note.Id, candidate, out unlocked) && unlocked is not null);
+            if (password is null || unlocked is null) return;
 
             note = unlocked;
             protectionPassword = password;

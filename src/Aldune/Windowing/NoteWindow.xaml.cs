@@ -1165,8 +1165,7 @@ public partial class NoteWindow : Window
             return;
         }
 
-        var password = PasswordPromptWindow.Show(this, Strings.ProtectNote,
-            Strings.ProtectNoteHint, confirm: true);
+        var password = PasswordPromptWindow.Show(this, PasswordPromptMode.Protect);
         if (password is null) return;
 
         try

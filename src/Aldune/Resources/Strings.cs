@@ -154,6 +154,16 @@ public static class Strings
     public static string PasswordsDoNotMatch => T("The passwords do not match.", "Las contraseñas no coinciden.");
     public static string WrongPassword => T("That password is not correct.", "Esa contraseña no es correcta.");
     public static string Accept => T("Accept", "Aceptar");
+    public static string ProtectNoteTitle => T("Protect with a password", "Proteger con contraseña");
+    public static string ProtectAction => T("Protect", "Proteger");
+    public static string UnlockAction => T("Unlock", "Desbloquear");
+    public static string RemoveProtectionTitle => T("Remove protection", "Quitar la protección");
+    public static string RemoveProtectionHint => T("Enter this note's password. It will stay encrypted with Aldune's own key, like any other note.", "Escribe la contraseña de esta nota. Seguirá cifrada con la clave de Aldune, como el resto de notas.");
+    public static string RemoveProtectionAction => T("Remove protection", "Quitar protección");
+    public static string PasswordEmpty => T("Type the password.", "Escribe la contraseña.");
+    public static string ShowPassword => T("Show password", "Mostrar contraseña");
+    public static string HidePassword => T("Hide password", "Ocultar contraseña");
+    public static string CapsLockOn => T("Caps Lock is on.", "Bloq Mayús está activado.");
     public static string DockViewTooltip => T("Dock view", "Vista del dock");
     public static string DockViewTitle => T("Show in dock", "Mostrar en el dock");
     public static string DockViewActive => T("Active notes", "Notas activas");
