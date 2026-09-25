@@ -123,6 +123,20 @@ internal static class NativeMethods
     internal static void RaiseTopmostWindow(Window window) =>
         EnsureTopmost(new WindowInteropHelper(window).EnsureHandle());
 
+    private static readonly IntPtr HWND_TOP = IntPtr.Zero;
+
+    /// <summary>
+    /// Sube la ventana a lo más alto de su capa (la normal o la topmost, la que ya tenga) sin
+    /// activarla. Llamándola en orden sobre varias ventanas se fija su apilado exacto, sin el
+    /// parpadeo de foco que daría activarlas una a una.
+    /// </summary>
+    internal static void BringToTopWithoutActivating(Window window)
+    {
+        var hwnd = new WindowInteropHelper(window).Handle;
+        if (hwnd != IntPtr.Zero)
+            SetWindowPos(hwnd, HWND_TOP, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE);
+    }
+
     internal static void ForceActivate(Window window)
     {
         var hwnd = new WindowInteropHelper(window).EnsureHandle();

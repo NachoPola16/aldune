@@ -974,6 +974,15 @@ public sealed class AppCoordinator
             var (left, top) = NoteCascade.Position(area, edge, deckSize, window.Width, window.Height, index);
             SetWindowPosition(window, area, left, top);
         }
+
+        // El apilado también es parte de la cascada: cada nota tapa el cuerpo de la anterior y deja
+        // asomar su cabecera. Abriéndolas desde cerradas sale solo (cada una se activa al abrirse, en
+        // orden del mazo), pero si ya estaban abiertas —por ejemplo en columnas, donde se tocó alguna—
+        // conservaban el apilado de antes y la última activada tapaba las cabeceras de las demás.
+        // Se fija aquí para que la cascada sea idéntica venga de donde venga.
+        foreach (var window in windows)
+            NativeMethods.BringToTopWithoutActivating(window);
+        NativeMethods.ForceActivate(windows[^1]);
     }
 
     public void OpenSettings()
