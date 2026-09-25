@@ -3525,3 +3525,28 @@ después con la misma sonda.
 
 Tests: 684/684. Smoke test en verde. Único aviso del compilador además de los CA1416 conocidos: CS8604
 en `App.xaml.cs` (desbloqueo con copia de seguridad), que ya estaba antes de esta ronda.
+
+## 1.0.2: el dock vuelve a su sitio si Windows lo mueve (sesión 2026-09-25)
+
+Primer registro real (`logs\dock.log`) tras instalar la 1.0.1:
+
+- **Al apagar la principal con el botón**, esta vez Windows sí la quitó (en la prueba anterior no); el
+  dock se reconstruyó en la vertical, pero sobre su tira estaba Firefox aunque el dock era topmost, y
+  seguía estándolo tras pasar el ratón. El usuario lo vio "detrás de las ventanas" y con el abanico
+  abriéndose "en medio de la pantalla": la ventana no estaba donde el dock la calculó (el ratón se compara
+  con la posición calculada; el abanico sale donde está la ventana). Reproducido sin el usuario con
+  `DisplaySwitch.exe /internal` y `/extend`: al volver a extender, **Windows desplaza la ventana del dock
+  por su cuenta** (a -1440,419 en vez de 0,540). **Arreglo**: `DockPlacement` (Core, con tests) y
+  `EdgeDockWindow.KeepWindowInPlace`, en el sondeo de 500 ms y solo en reposo: si la ventana no está en
+  su rectángulo la devuelve y la sube; si lo que cambió es la pantalla, reconstruye los docks (diferido y
+  como mucho cada 5 s). Nada del dock mueve su ventana salvo `ApplyWindowRect`, así que cualquier
+  diferencia viene de fuera. Verificado con sonda: movida a mano vuelve en <0,5 s; con DisplaySwitch se
+  reconstruye.
+- **El diagnóstico de píxel de la 1.0.1 estaba mal**: medía 10 px por encima de la tira (dentro de la
+  zona ampliada 12 px para el ratón), así que sus "no se ve" eran el fondo de detrás. Ahora mide sobre el
+  elemento real (`RestStrip.PointToScreen`) y apunta también si la ventana no está donde debería.
+  Comprobado con una ventana blanca detrás durante 12 s: sin falsos positivos.
+- La tira que desaparece en el portátil sigue sin confirmar; puede ser esta misma causa (acoplar,
+  reanudar o cambiar de resolución mueven ventanas). Ver docs/DOCK_DIAGNOSTICS.md.
+
+Tests: 689/689.

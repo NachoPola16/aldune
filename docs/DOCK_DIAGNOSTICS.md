@@ -41,11 +41,29 @@ Estados del dock:
 - `sobre la tira: '<clase>' de <proceso>` — otra ventana está encima de la tira (la que Windows daría al
   hacer clic en su centro).
 - `…, pero en pantalla no se ve (color #RRGGBB)` — el dock está encima y en su sitio, pero lo que se ve en
-  ese punto no es ni el fondo de la tira ni ninguno de sus guiones. Se comprueba cada 5 s.
+  ese punto no es ni el fondo de la tira ni ninguno de sus guiones. Se comprueba cada 5 s sobre la tira
+  real. Justo después de un cambio de pantallas es normal un `#000000` suelto (el monitor aún en negro).
+  **En la 1.0.1 esta comprobación estaba mal** (medía 10 px por encima de la tira, en la zona ampliada
+  para el ratón): sus líneas de "no se ve" no significan nada.
+- `…, ventana en X,Y en vez de X,Y` — la ventana del dock no está donde el dock la calculó.
+- `Windows ha movido la ventana a X,Y: vuelve a X,Y` — (1.0.2) se ha detectado y corregido.
+- `la pantalla del dock ha cambiado sin aviso: se reconstruyen los docks` — (1.0.2) la ventana se movió
+  porque su pantalla cambió; se reconstruyen como tras un cambio de pantallas.
 - `se oculta por pantalla completa de '<clase>' de <proceso>` / `vuelve: …` — la ocultación a propósito
   ante juegos y vídeos (Ajustes → ocultar con pantalla completa).
 - `el ratón entra en la tira cuando no se veía (…)` — el momento en que "reaparece al pasar el ratón", con
   el estado que tenía justo antes.
+
+## Lo que ya se ha encontrado
+
+- **Windows mueve la ventana del dock al cambiar la disposición de las pantallas** (visto el 2026-09-25:
+  al apagar la principal con el botón el dock quedó debajo de Firefox y el abanico se abría en medio de
+  la pantalla; reproducido con `DisplaySwitch.exe /internal` y `/extend`, que desplaza la ventana a
+  -1440,419 en vez de 0,540). Desde la 1.0.2 el dock comprueba cada 500 ms, en reposo, que su ventana
+  está donde la calculó (`DockPlacement`) y la devuelve o reconstruye los docks.
+- Puede ser también la causa de la tira que desaparece en el portátil (acoplar, reanudar, cambiar de
+  resolución mueven ventanas igual). Si vuelve a pasar con la 1.0.2 y el registro no dice "Windows ha
+  movido la ventana", es otra cosa.
 
 ## Cómo leerlo (y qué arreglo toca en cada caso)
 

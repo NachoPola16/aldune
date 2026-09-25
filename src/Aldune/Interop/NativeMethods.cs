@@ -160,6 +160,16 @@ internal static class NativeMethods
     internal static void RaiseTopmostWindow(Window window) =>
         EnsureTopmost(new WindowInteropHelper(window).EnsureHandle());
 
+    [StructLayout(LayoutKind.Sequential)]
+    private struct WINDOWRECT { public int Left, Top, Right, Bottom; }
+
+    [DllImport("user32.dll", EntryPoint = "GetWindowRect")]
+    private static extern bool GetWindowRectNative(IntPtr hWnd, out WINDOWRECT rect);
+
+    /// <summary>Dónde está la ventana de verdad, en píxeles físicos.</summary>
+    internal static (int X, int Y, int Width, int Height) GetWindowRectPx(IntPtr hWnd) =>
+        GetWindowRectNative(hWnd, out var r) ? (r.Left, r.Top, r.Right - r.Left, r.Bottom - r.Top) : (0, 0, 0, 0);
+
     private static readonly IntPtr HWND_TOP = IntPtr.Zero;
 
     /// <summary>

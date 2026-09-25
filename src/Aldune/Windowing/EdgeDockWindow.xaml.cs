@@ -156,6 +156,7 @@ public partial class EdgeDockWindow : Window
         _fullscreenPollTimer.Tick += (_, _) =>
         {
             PollFullscreenApp();
+            KeepWindowInPlace();
             RecordDiagnostics();
         };
         _fullscreenPollTimer.Start();
@@ -566,6 +567,53 @@ public partial class EdgeDockWindow : Window
             _hoverReentryBlocked = true;
             _fanState.PointerLeft();
             _collapseTimer.Start();
+        }
+    }
+
+    // --- La ventana, donde tiene que estar -------------------------------------------------------
+
+    private static DateTime _lastPlacementRebuild = DateTime.MinValue;
+
+    /// <summary>
+    /// Devuelve la ventana a su sitio si Windows la ha movido. Al cambiar la disposición de las
+    /// pantallas (apagar la principal, volver a encenderla) Windows desplaza ventanas por su cuenta, y
+    /// el dock no se enteraba: la tira quedaba fuera de su canto, debajo de otras ventanas, y el
+    /// abanico se abría "en medio de la pantalla" porque el ratón se compara con la posición calculada
+    /// (reportado por el usuario y reproducido con DisplaySwitch; ver docs/DOCK_DIAGNOSTICS.md).
+    /// Solo en reposo: desplegado, el abanico vive dentro del mismo rectángulo, y nada del dock mueve
+    /// su ventana salvo <see cref="ApplyWindowRect"/>.
+    /// </summary>
+    private void KeepWindowInPlace()
+    {
+        if (_hwnd == IntPtr.Zero || !IsVisible || _hiddenByFullscreenApp || _fanState.IsExpanded || _dragging) return;
+
+        var dpi = VisualTreeHelper.GetDpi(this);
+        var expected = EdgeGeometry.WindowRect(_workingArea, _edge, _noteCount);
+        var expectedPx = new Aldune.Core.Rect(expected.X * dpi.DpiScaleX, expected.Y * dpi.DpiScaleY,
+            expected.Width * dpi.DpiScaleX, expected.Height * dpi.DpiScaleY);
+        var (x, y, width, height) = NativeMethods.GetWindowRectPx(_hwnd);
+        var actual = new Aldune.Core.Rect(x, y, width, height);
+
+        // Lo normal: en su sitio. Solo entonces se consulta la lista de pantallas, que es más cara.
+        if (DockPlacement.Check(actual, expectedPx, _workingArea, _workingArea) == DockPlacementFix.None) return;
+
+        var current = MonitorLookup.ForDeviceName(_monitorKey, MonitorEnumerator.EnumerateMonitors())?.WorkArea;
+        switch (DockPlacement.Check(actual, expectedPx, _workingArea, current))
+        {
+            case DockPlacementFix.MoveBack:
+                DockDiagnostics.Write(DiagnosticsCategory,
+                    $"Windows ha movido la ventana a {x},{y}: vuelve a {expectedPx.X:0},{expectedPx.Y:0}");
+                ApplyWindowRect();
+                NativeMethods.EnsureTopmost(_hwnd);
+                break;
+
+            case DockPlacementFix.Rebuild when DateTime.UtcNow - _lastPlacementRebuild > TimeSpan.FromSeconds(5):
+                _lastPlacementRebuild = DateTime.UtcNow;
+                DockDiagnostics.Write(DiagnosticsCategory,
+                    "la pantalla del dock ha cambiado sin aviso: se reconstruyen los docks");
+                // Fuera de este tick: reconstruir cierra este mismo dock.
+                Dispatcher.BeginInvoke(DispatcherPriority.Background, new Action(_coordinator.RebuildDocks));
+                break;
         }
     }
 
