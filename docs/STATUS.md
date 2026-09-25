@@ -3474,3 +3474,54 @@ prueba del usuario en la pre-release.
 **Logo nuevo** (propuesta D, elegida por Claude a petición del usuario): pestañas pegadas al canto,
 colores de Clásico, placa oscura redondeada. `aldune.ico` generado a 16-256 px (versión simplificada
 para 16-24) y también incrustado como recurso, para que la bandeja use el tamaño pequeño del sistema.
+
+## 1.0.1: arreglos y pulido tras la 1.0.0 (sesión 2026-09-25)
+
+Cada punto se reprodujo antes de arreglarlo (sondas de `docs/WPF_PROBES.md`, desechables) y se verificó
+después con la misma sonda.
+
+- **Cascada tras Columnas no salía igual que desde cero.** Las posiciones coincidían; lo que cambiaba era
+  el apilado. Desde cerradas cada nota se abre (y activa) en orden del mazo; ya abiertas, la cascada solo
+  las movía y la que se tocó en Columnas se quedaba encima tapando las cabeceras. Ahora
+  `CascadeOpenNotesNearDock` fija el apilado en orden del mazo (`NativeMethods.BringToTopWithoutActivating`)
+  y activa la última. Sonda: posiciones y orden Z idénticos por los dos caminos en los cuatro bordes.
+- **Destello al abrir el gestor y Ajustes.** Era el primer fotograma sin pintar de una ventana no
+  transparente (gris #3F3F3F con el tema oscuro de Windows, blanco con el claro), medido leyendo píxeles
+  de pantalla durante la apertura. `NativeMethods.CloakUntilFirstFrame` oculta la ventana con DWM hasta
+  que WPF presenta su primer fotograma; aplicado a todas las ventanas de la app. El `Opacity = 0` de
+  Ajustes no servía para esto (sin `AllowsTransparency` no se aplica a la ventana).
+- **Ventana de contraseña** rehecha en XAML con el estilo de los diálogos: comprobación dentro del
+  diálogo (`verify`; ya no cierra y suelta un MessageBox), campo en rojo y texto seleccionado al fallar,
+  mostrar contraseña, aviso de Bloq Mayús, Enter/Esc, foco también desde el dock (centrada en su
+  pantalla) y botón que dice lo que hace. Reglas en Core: `PasswordRules` (al desbloquear solo se
+  rechaza la vacía, para no dejar fuera notas protegidas con reglas anteriores).
+- **Tira del dock con temas oscuros**: los guiones de Grafito y Sereno oscuro no se veían sobre la tira.
+  Contorno fino más claro del mismo matiz (`NoteColorDerivation.RestOutlineFor`, solo caras oscuras);
+  la cara sigue siendo el color exacto de la nota y Clásico no cambia.
+- **Ventanas**: Esc cierra Ajustes y el gestor (en el gestor, antes cierra un panel de etiquetas o borra
+  la búsqueda); gestor y Ajustes se cierran con la animación de las notas (`WindowCloseAnimation`);
+  Conflictos abierto desde Ajustes le pertenece y se cierra con ella. Cerrar Ajustes no cierra el
+  gestor ni al revés (decisión del usuario). **Bugs encontrados de paso**: pulsar "Gestionar notas" o
+  "Ajustes" con la ventana abierta sumaba otra suspensión del "siempre encima" de las notas que nunca se
+  devolvía (las notas se quedaban debajo de todo hasta reiniciar); ahora `RaiseAppWindow` suspende una
+  vez por ventana y lo devuelve al cerrarse. Y `_openingSettings` no se soltaba hasta cerrar Ajustes,
+  así que pulsar "Ajustes" otra vez no la traía al frente.
+- **Avisos propios** (`ToastWindow`/`ToastCenter`, apilado en Core con `ToastStack`) para actualización,
+  recordatorios y bienvenida, en vez de la ventana con barra de Windows y los globos de la bandeja. No
+  roban el foco, se apilan abajo a la derecha de la pantalla del ratón, esperan si Windows está a
+  pantalla completa o en presentación (`SHQueryUserNotificationState`; "No molestar" no se puede leer
+  de forma fiable) y los recordatorios se quedan hasta cerrarlos. De paso desaparece el problema
+  documentado del globo antiguo que abría la nota equivocada: cada aviso sabe cuál es su nota.
+- **Tira que desaparece: sin arreglo todavía, con diagnóstico.** Que vuelva al pasar el ratón descarta
+  casi del todo la ocultación por pantalla completa (con ella el sondeo del ratón no hace nada); al entrar
+  en la tira se llama a `EnsureTopmost` y se anima, así que o estaba tapada/sin topmost o sin pintar.
+  Nada en Aldune le quita el topmost al dock. Registro local `logs\dock.log` (`DiagnosticLog` en Core,
+  `DockDiagnostics`) con estado de la tira, ventana encima, lectura de píxel, pantalla completa y eventos
+  de energía/sesión/pantallas. Qué hacer y cómo leerlo: `docs/DOCK_DIAGNOSTICS.md`.
+- **Dock y pantalla principal (2a): comprobado con el usuario, sin cambios.** Con sus dos monitores
+  (HDMI y DisplayPort), apagar la principal con el botón no la quita de la lista de Windows (sigue como
+  principal, solo cambia el `DISPLAYn`) y encenderla no dispara `DisplaySettingsChanged`; el dock no se
+  mueve en ningún momento. Otras formas (cable, Win+P) quedarán en el registro si fallan.
+
+Tests: 684/684. Smoke test en verde. Único aviso del compilador además de los CA1416 conocidos: CS8604
+en `App.xaml.cs` (desbloqueo con copia de seguridad), que ya estaba antes de esta ronda.
