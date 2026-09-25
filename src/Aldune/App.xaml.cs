@@ -244,6 +244,8 @@ public partial class App : Application
         // ya con el descifrado verificado, para no reconstruir nada si la app va a abortar.
         SystemEvents.DisplaySettingsChanged += OnDisplaySettingsChanged;
         SystemEvents.PowerModeChanged += OnPowerModeChanged;
+        // Pantallas apagadas que Windows sigue dando por conectadas, y el modo "pantalla del ratón".
+        _screenWatcher = new DockScreenWatcher(settings, () => _dockDevices, coordinator.RebuildDocks);
         SystemEvents.SessionSwitch += OnSessionSwitch;
 
         // Sin esto, apagar o reiniciar el equipo con notas abiertas podía dejarlas sin guardar: el
@@ -309,6 +311,7 @@ public partial class App : Application
             _updateNotifier?.Dispose();
             _reminderScheduler?.Dispose();
             _toastCenter?.Dispose();
+            _screenWatcher?.Dispose();
             _coordinator?.Dispose();
             _trayIcon?.Dispose();
             _hotkey?.Dispose();
@@ -458,6 +461,8 @@ public partial class App : Application
     private NotesRepository? _repository;
     private AppSettings? _settings;
     private DispatcherTimer? _rebuildDebounce;
+    private DockScreenWatcher? _screenWatcher;
+    private IReadOnlyCollection<string> _dockDevices = [];
     private int _displayRebuildAttempts;
     private DateTime _burstStartedAt;
     private string? _lastTickMonitorKey;
@@ -498,9 +503,14 @@ public partial class App : Application
         }
 
         var available = monitors;
-        monitors = DockMonitorSelection.Select(monitors, _settings?.TargetMonitorId, targetIndex);
+        monitors = _settings?.DockFollowsMouse == true
+            ? DockMonitorSelection.ForCursor(monitors, MonitorEnumerator.MonitorContainingCursor()?.DeviceName)
+            : DockMonitorSelection.Select(monitors, _settings?.TargetMonitorId, targetIndex, _screenWatcher?.PoweredOff);
+        _dockDevices = monitors.Select(monitor => monitor.DeviceName).ToList();
         DockDiagnostics.Write("pantallas",
-            $"docks: pantallas vistas [{DockDiagnostics.Describe(available)}]; elegida {_settings?.TargetMonitorId ?? "todas"}; "
+            $"docks: pantallas vistas [{DockDiagnostics.Describe(available)}]; elegida "
+            + $"{(_settings?.DockFollowsMouse == true ? "la del ratón" : _settings?.TargetMonitorId ?? "todas")}; "
+            + $"apagadas por DDC/CI [{string.Join(", ", _screenWatcher?.PoweredOff ?? [])}]; "
             + $"docks en [{string.Join(", ", monitors.Select(monitor => monitor.DeviceName))}]");
 
         var edge = _settings?.DockEdge ?? EdgePosition.Right;

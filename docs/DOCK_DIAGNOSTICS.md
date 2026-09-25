@@ -65,6 +65,11 @@ Estados del dock:
   resolución mueven ventanas igual). Si vuelve a pasar con la 1.0.2 y el registro no dice "Windows ha
   movido la ventana", es otra cosa.
 
+- **Pantallas apagadas con su botón que Windows sigue viendo** (2026-09-26): la 1.0.3 pregunta al
+  monitor por DDC/CI si está encendido y, si no, lleva el dock a otra pantalla. En el registro:
+  `<pantalla> dice estar apagada (DDC/CI)` y, al volver, `encendida`. Si un monitor no contesta, no sale
+  nada: para esos está la opción "En la pantalla donde esté el ratón" (`el ratón está en …`).
+
 ## Cómo leerlo (y qué arreglo toca en cada caso)
 
 - **`siempre encima: NO`** antes del fallo → otra aplicación le quita el topmost al dock. Arreglo: reafirmar

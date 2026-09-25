@@ -366,11 +366,24 @@ public partial class SettingsWindow : Window
             Style = (Style)FindResource("MonitorRadioStyle"),
             Tag = null,
             Content = Strings.AllScreens,
-            IsChecked = _settings.TargetMonitorId == null
+            IsChecked = !_settings.DockFollowsMouse
+                && _settings.TargetMonitorId == null
                 && (_settings.TargetMonitorIndex == null || _settings.TargetMonitorIndex >= monitors.Count)
         };
         allScreensRadio.Checked += OnMonitorSelectionChanged;
         MonitorListContainer.Children.Add(allScreensRadio);
+
+        // Para quien apaga pantallas con su botón y su monitor no dice que está apagado: el dock va
+        // con el ratón (ver DockScreenWatcher).
+        var mouseScreenRadio = new RadioButton
+        {
+            GroupName = "MonitorGroup",
+            Style = (Style)FindResource("MonitorRadioStyle"),
+            Content = Strings.MouseScreen,
+            IsChecked = _settings.DockFollowsMouse
+        };
+        mouseScreenRadio.Checked += OnMouseScreenChecked;
+        MonitorListContainer.Children.Add(mouseScreenRadio);
 
         for (int i = 0; i < monitors.Count; i++)
         {
@@ -385,9 +398,9 @@ public partial class SettingsWindow : Window
                 Tag = monitorIndex,
                 Content = labelText,
                 // Por identificador si lo hay: la posición de cada pantalla en la lista puede cambiar.
-                IsChecked = _settings.TargetMonitorId is { } id
+                IsChecked = !_settings.DockFollowsMouse && (_settings.TargetMonitorId is { } id
                     ? m.StableId == id
-                    : _settings.TargetMonitorIndex == monitorIndex
+                    : _settings.TargetMonitorIndex == monitorIndex)
             };
             radio.Checked += OnMonitorSelectionChanged;
             MonitorListContainer.Children.Add(radio);
@@ -402,14 +415,23 @@ public partial class SettingsWindow : Window
             var targetId = targetIndex is { } index
                 ? DockMonitorSelection.IdForLegacyIndex(MonitorEnumerator.EnumerateMonitors(), index)
                 : null;
-            if (_settings.TargetMonitorIndex != targetIndex || _settings.TargetMonitorId != targetId)
+            if (_settings.DockFollowsMouse || _settings.TargetMonitorIndex != targetIndex || _settings.TargetMonitorId != targetId)
             {
+                _settings.DockFollowsMouse = false;
                 _settings.TargetMonitorIndex = targetIndex;
                 _settings.TargetMonitorId = targetId;
                 _settingsService.Save(_settings);
                 _coordinator?.RebuildDocks();
             }
         }
+    }
+
+    private void OnMouseScreenChecked(object sender, RoutedEventArgs e)
+    {
+        if (_settings.DockFollowsMouse) return;
+        _settings.DockFollowsMouse = true;
+        _settingsService.Save(_settings);
+        _coordinator?.RebuildDocks();
     }
 
     private void OnHideOnFullscreenToggled(object sender, RoutedEventArgs e)

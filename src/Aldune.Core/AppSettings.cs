@@ -100,6 +100,13 @@ public sealed class AppSettings
     public string? TargetMonitorId { get; set; }
 
     /// <summary>
+    /// El dock va a la pantalla donde está el ratón, en vez de a una fija. Es el respaldo para quien
+    /// apaga pantallas con su botón y tiene monitores que no dicen por DDC/CI que están apagados (ver
+    /// <see cref="MonitorPowerTracker"/>). Falso por defecto: un ajuste antiguo carga igual.
+    /// </summary>
+    public bool DockFollowsMouse { get; set; }
+
+    /// <summary>
     /// Si el dock debe ocultarse automáticamente cuando una aplicación o juego pase a pantalla
     /// completa real en ese monitor. Por defecto <c>true</c>.
     /// </summary>

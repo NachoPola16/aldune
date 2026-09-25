@@ -69,4 +69,53 @@ public class DockMonitorSelectionTests
     {
         Assert.Empty(DockMonitorSelection.Select([], "MONITOR-MAIN", legacyIndex: 0));
     }
+
+    // --- Pantallas apagadas con su botón que Windows sigue dando por conectadas -----------------
+
+    [Fact]
+    public void AChosenScreenThatReportsItselfOff_CountsAsAbsent()
+    {
+        // Lo visto en Gigabyte por DDC/CI: apagada con el botón sigue en la lista de Windows, y
+        // como principal, pero contesta "apagada".
+        Assert.Equal(new[] { Side }, DockMonitorSelection.Select([Main, Side], "MONITOR-MAIN", legacyIndex: null,
+            poweredOff: ["MONITOR-MAIN"]));
+    }
+
+    [Fact]
+    public void TheFallback_SkipsScreensThatAreOffToo()
+    {
+        var third = new MonitorInfo(@"\\.\DISPLAY3", new WorkingArea(-1920, 0, 1920, 1080), 1, IsPrimary: false, StableId: "MONITOR-THIRD");
+
+        Assert.Equal(new[] { third }, DockMonitorSelection.Select([Main, Side, third], "MONITOR-SIDE", legacyIndex: null,
+            poweredOff: ["MONITOR-SIDE", "MONITOR-MAIN"]));
+    }
+
+    [Fact]
+    public void IfEveryScreenSaysOff_TheChosenOneStays()
+    {
+        // No hay a dónde ir: mejor quedarse donde el usuario lo quiere que saltar entre pantallas negras.
+        Assert.Equal(new[] { Main }, DockMonitorSelection.Select([Main, Side], "MONITOR-MAIN", legacyIndex: null,
+            poweredOff: ["MONITOR-MAIN", "MONITOR-SIDE"]));
+    }
+
+    [Fact]
+    public void AllScreens_ShowsOnlyTheOnesThatAreOn()
+    {
+        Assert.Equal(new[] { Side }, DockMonitorSelection.Select([Main, Side], targetMonitorId: null, legacyIndex: null,
+            poweredOff: ["MONITOR-MAIN"]));
+    }
+
+    // --- El dock va a la pantalla del ratón ------------------------------------------------------
+
+    [Fact]
+    public void FollowingTheMouse_UsesTheScreenUnderTheCursor()
+    {
+        Assert.Equal(new[] { Side }, DockMonitorSelection.ForCursor([Main, Side], Side.DeviceName));
+    }
+
+    [Fact]
+    public void FollowingTheMouse_WithoutAKnownCursorScreen_UsesThePrimary()
+    {
+        Assert.Equal(new[] { Main }, DockMonitorSelection.ForCursor([Side, Main], cursorDeviceName: null));
+    }
 }

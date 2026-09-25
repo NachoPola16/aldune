@@ -284,6 +284,7 @@ public static class Strings
     public static string MonitorSectionTitle => T("Screens where Aldune shows", "Pantallas donde mostrar Aldune");
     public static string MonitorSectionHint => T("Choose whether to show Aldune's dock on every screen or restrict it to one.", "Elige si deseas ver el dock de Aldune en todas las pantallas o restringirlo a una específica.");
     public static string AllScreens => T("On every connected screen", "En todas las pantallas conectadas");
+    public static string MouseScreen => T("On the screen with the mouse", "En la pantalla donde esté el ratón");
     public static string ScreenLabel(int number, bool isPrimary, int width, int height)
     {
         var primary = isPrimary ? T(" · Primary", " · Principal") : "";

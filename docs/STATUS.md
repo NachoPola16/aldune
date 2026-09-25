@@ -3550,3 +3550,31 @@ Primer registro real (`logs\dock.log`) tras instalar la 1.0.1:
   reanudar o cambiar de resolución mueven ventanas). Ver docs/DOCK_DIAGNOSTICS.md.
 
 Tests: 689/689.
+
+## 1.0.3: el dock deja una pantalla apagada con su botón (sesión 2026-09-26)
+
+Con la 1.0.2 el usuario apagó la principal y el dock no se movió: su registro mostraba que Windows la
+quita 4 s y la vuelve a dar por conectada (y principal) aunque sigue apagada; el monitor en reposo
+mantiene la conexión. DisplayFusion documenta el mismo límite ("no hay mucho que hacer" si Windows la
+sigue viendo). La señal que sí existe es preguntar al monitor por DDC/CI su modo de energía (VCP 0xD6):
+probado con los dos Gigabyte del usuario (HDMI y DisplayPort), la principal contesta `4` apagada y `1`
+encendida, con lecturas fallidas sueltas al arrancar.
+
+El usuario pidió que sirviera para cualquiera, así que dos capas:
+
+- **Automática**: `DockScreenWatcher` lee cada segundo, fuera del hilo de la interfaz, el modo de
+  energía de la pantalla elegida (o de todas si el dock va en todas; solo con más de una pantalla).
+  `MonitorPowerTracker` (Core) cambia de estado con dos lecturas iguales seguidas e ignora las fallidas,
+  así que un monitor sin DDC/CI se queda como antes. `DockMonitorSelection.Select` trata las apagadas
+  como ausentes (y si todas lo dicen, se queda en la elegida). Solo LEE 0xD6: escribirlo ha dejado
+  monitores colgados (PowerToys #50449, Twinkle Tray #1213). Verificado con el usuario: el dock pasa a
+  la otra pantalla en 1-2 s al apagar y vuelve al encender.
+- **Respaldo**: opción "En la pantalla donde esté el ratón" en Ajustes (`AppSettings.DockFollowsMouse`,
+  falso por defecto): si el cursor se queda 0,8 s en otra pantalla, el dock va detrás. Verificado con
+  sonda (un paso rápido no lo mueve).
+
+Queda un detalle conocido: si Windows quita la pantalla un momento y la vuelve a añadir apagada (lo que
+hace el monitor del usuario), el dock puede volver a ella un par de segundos hasta que DDC/CI confirma que
+está apagada.
+
+Tests: 707/707.
