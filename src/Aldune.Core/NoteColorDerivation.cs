@@ -53,6 +53,20 @@ public static class NoteColorDerivation
         return NoteColorContrast.IsReadable(color, label) ? label : NoteColorContrast.ForegroundFor(color);
     }
 
+    /// <summary>
+    /// Contorno del guion de una nota oscura en la tira de reposo del dock, o null si la cara ya se
+    /// ve sola. La tira es del mismo oscuro que el chrome (L≈0.27) y las caras oscuras de los temas
+    /// rondan L 0.30: sin contorno el guion desaparecía. El borde normal (L+0.07) no basta a ese
+    /// tamaño, así que aquí se sube más la claridad, con el mismo matiz y un poco más de croma: la
+    /// cara sigue siendo el color exacto de la nota y el contorno se lee como parte de ella.
+    /// </summary>
+    public static string? RestOutlineFor(string? color)
+    {
+        if (!OklchColor.TryFromHex(color, out var face) || face.L >= DarkThreshold) return null;
+
+        return new OklchColor(Math.Max(face.L + 0.2, 0.47), Math.Min(face.C * 1.3, 0.08), face.H).ToHex();
+    }
+
     private static (string Face, string Rim, string Label)? FindClassic(string? color)
     {
         foreach (var entry in Classic)

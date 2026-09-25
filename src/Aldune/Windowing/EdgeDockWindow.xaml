@@ -30,6 +30,7 @@
     <Window.Resources>
         <local:NoteTabLabelConverter x:Key="NoteTabLabelConverter" />
         <local:NoteRimConverter x:Key="NoteRimConverter" />
+        <local:NoteRestOutlineConverter x:Key="NoteRestOutlineConverter" />
         <local:NoteLabelColorConverter x:Key="NoteLabelColorConverter" />
         <local:NoteSnippetConverter x:Key="NoteSnippetConverter" />
 
@@ -39,6 +40,8 @@
 
         <DataTemplate x:Key="HorizontalRestDashTemplate">
             <Border Background="{Binding Color}"
+                    BorderBrush="{Binding Color, Converter={StaticResource NoteRestOutlineConverter}}"
+                    BorderThickness="{Binding Color, Converter={StaticResource NoteRestOutlineConverter}, ConverterParameter=Thickness}"
                     Width="26" Height="12"
                     Margin="0,0,5,0"
                     HorizontalAlignment="Center"
@@ -312,6 +315,8 @@
                 <ItemsControl.ItemTemplate>
                     <DataTemplate>
                         <Border Background="{Binding Color}"
+                                BorderBrush="{Binding Color, Converter={StaticResource NoteRestOutlineConverter}}"
+                                BorderThickness="{Binding Color, Converter={StaticResource NoteRestOutlineConverter}, ConverterParameter=Thickness}"
                                 Width="12" Height="26"
                                 Margin="0,0,0,5"
                                 HorizontalAlignment="Center"

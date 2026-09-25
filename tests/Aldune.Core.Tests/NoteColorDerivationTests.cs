@@ -85,4 +85,33 @@ public class NoteColorDerivationTests
         Assert.Equal("oops", NoteColorDerivation.RimFor("oops"));
         Assert.Equal(NoteColorContrast.Ink, NoteColorDerivation.LabelFor("oops"));
     }
+
+    // La tira de reposo del dock es del mismo oscuro que el chrome: un guion oscuro sin contorno
+    // desaparecía (Grafito, Sereno oscuro). El contorno tiene que separarse claramente del fondo.
+    [Theory]
+    [InlineData("#2F2D2C")]
+    [InlineData("#2B2E33")]
+    [InlineData("#262F36")]
+    [InlineData("#462527")]
+    [InlineData("#1D3538")]
+    public void DarkFaces_GetARestOutlineThatStandsOutFromTheDock(string face)
+    {
+        var outline = NoteColorDerivation.RestOutlineFor(face);
+        Assert.NotNull(outline);
+        Assert.True(OklchColor.TryFromHex(outline, out var o));
+        Assert.True(OklchColor.TryFromHex("#2A261F", out var ground));
+        Assert.True(OklchColor.TryFromHex(face, out var f));
+        Assert.True(o.L - ground.L >= 0.15, $"{outline} L={o.L:0.00} frente al fondo {ground.L:0.00}");
+        // Mismo matiz: sigue siendo el color de esa nota, no un gris cualquiera.
+        if (f.C > 0.02) Assert.True(Math.Abs(o.H - f.H) < 2, $"matiz {o.H:0} frente a {f.H:0}");
+    }
+
+    [Theory]
+    [InlineData("#EBD38B")]
+    [InlineData("#EBE6D9")]
+    [InlineData("#DEE8F0")]
+    public void LightFaces_KeepNoRestOutline(string face)
+    {
+        Assert.Null(NoteColorDerivation.RestOutlineFor(face));
+    }
 }
