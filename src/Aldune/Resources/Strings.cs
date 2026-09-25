@@ -27,6 +27,10 @@ public static class Strings
     // --- General / compartido entre ventanas -----------------------------------------------------
 
     public static string AppName => BrandIdentity.AppName;
+    public static string ReminderToastTitle => T("Reminder", "Recordatorio");
+    public static string ReminderOpenNote => T("Open note", "Abrir nota");
+    public static string ReminderShowNotes => T("Show notes", "Ver notas");
+    public static string WelcomeOpenManager => T("Show my notes", "Ver mis notas");
     public static string ReminderManyDue(int count) => T($"{count} reminders pending", $"{count} recordatorios pendientes");
     public static string Cut => T("Cut", "Cortar");
     public static string Copy => T("Copy", "Copiar");
@@ -89,7 +93,6 @@ public static class Strings
     public static string UpdateDownload => T("Download", "Descargar");
     public static string UpdateLater => T("Later", "Más tarde");
     public static string UpdateWindowTitle => T("Aldune update", "Actualización de Aldune");
-    public static string UpdateClose => T("Close", "Cerrar");
     public static string UpdateOpenErrorMessage => T(
         "The download page couldn't be opened.",
         "No se ha podido abrir la página de descarga.");

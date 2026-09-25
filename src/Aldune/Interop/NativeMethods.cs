@@ -57,6 +57,17 @@ internal static class NativeMethods
     }
 
     /// <summary>
+    /// Para los avisos de la app: no se activan al pulsarlos (quien escribe sigue escribiendo) y, como
+    /// ventana de herramientas, no salen en Alt+Tab.
+    /// </summary>
+    internal static void MakeToolWindowNoActivate(IntPtr hWnd)
+    {
+        const int WS_EX_TOOLWINDOW = 0x00000080;
+        int exStyle = GetWindowLong(hWnd, GWL_EXSTYLE);
+        SetWindowLong(hWnd, GWL_EXSTYLE, exStyle | WS_EX_NOACTIVATE | WS_EX_TOOLWINDOW);
+    }
+
+    /// <summary>
     /// Permite activar el dock después de una interacción explícita del usuario. Mientras solo se
     /// muestra al pasar el ratón sigue siendo no activable y no roba el foco a la aplicación que se
     /// está usando; al pulsar una flecha, en cambio, el dock necesita recibir las siguientes teclas.

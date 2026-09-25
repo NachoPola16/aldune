@@ -281,16 +281,17 @@ public partial class App : Application
             BuildDocks();
         };
 
-        _updateNotifier = new UpdateNotifier();
+        _toastCenter = new ToastCenter();
+        _updateNotifier = new UpdateNotifier(_toastCenter);
         _trayIcon = new TrayIcon(coordinator, _updateNotifier.CheckManually);
 
-        _reminderScheduler = new ReminderScheduler(repository, coordinator, _trayIcon.Icon);
-        if (_firstRun) ShowWelcome(settings);
+        _reminderScheduler = new ReminderScheduler(repository, coordinator, _toastCenter);
+        if (_firstRun) ShowWelcome(settings, coordinator);
         // Catch-up: avisa ya de lo vencido con la app cerrada. Diferido con BeginInvoke en vez de
         // llamado aquí mismo, en línea: este punto de OnStartup queda FUERA del último try/catch de
         // arranque (ver el comentario de DispatcherUnhandledException más arriba — OnStartup no
         // enruta de forma fiable sus excepciones ahí), así que un fallo aquí -por ejemplo un
-        // SqliteException por un fichero de BD bloqueado, o un error dentro de ShowBalloonTip-
+        // SqliteException por un fichero de BD bloqueado, o un error al mostrar el aviso-
         // tumbaría la app entera al arrancar sin ningún mensaje, en una app que por lo demás explica
         // cualquier fallo de arranque. Diferir la llamada la deja correr ya bajo el bucle de mensajes
         // normal, con DispatcherUnhandledException cubriéndola como a cualquier otro error en
@@ -307,6 +308,7 @@ public partial class App : Application
             SystemEvents.SessionEnding -= OnSessionEnding;
             _updateNotifier?.Dispose();
             _reminderScheduler?.Dispose();
+            _toastCenter?.Dispose();
             _coordinator?.Dispose();
             _trayIcon?.Dispose();
             _hotkey?.Dispose();
@@ -369,13 +371,14 @@ public partial class App : Application
     /// La primera vez, una notificación que dice dónde está el dock y cómo crear una nota: sin notas
     /// el dock solo enseña sus botones en un borde, y es fácil no verlo. Una notificación y no una nota
     /// de bienvenida: una nota se sincronizaría, y cada dispositivo nuevo añadiría la suya a todos.
-    /// Al pulsarla se abre el gestor (lo decide ReminderScheduler, que ya escucha los clics).
+    /// Se va sola a los 20 s; su botón abre el gestor.
     /// </summary>
-    private void ShowWelcome(AppSettings settings)
+    private void ShowWelcome(AppSettings settings, AppCoordinator coordinator)
     {
         var hotkey = settings.GlobalHotkeyEnabled ? settings.Hotkey.DisplayName : null;
-        _trayIcon?.Icon.ShowBalloonTip(15000, Strings.WelcomeTitle, Strings.WelcomeMessage(settings.DockEdge, hotkey),
-            System.Windows.Forms.ToolTipIcon.Info);
+        _toastCenter?.Show(new ToastContent(Strings.WelcomeTitle, Strings.WelcomeMessage(settings.DockEdge, hotkey),
+            [new ToastAction(Strings.WelcomeOpenManager, coordinator.OpenNotesManager, Primary: true)],
+            AutoDismiss: TimeSpan.FromSeconds(20)));
     }
     private SingleInstance? _singleInstance;
 
@@ -460,6 +463,7 @@ public partial class App : Application
     private string? _lastTickMonitorKey;
     private ReminderScheduler? _reminderScheduler;
     private UpdateNotifier? _updateNotifier;
+    private ToastCenter? _toastCenter;
 
     /// <summary>
     /// Crea un dock por cada monitor conectado ahora mismo. Se llama al arrancar y cada vez que
