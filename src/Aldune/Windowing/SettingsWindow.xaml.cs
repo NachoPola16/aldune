@@ -41,6 +41,7 @@ public partial class SettingsWindow : Window
     {
         InitializeComponent();
         NativeMethods.CloakUntilFirstFrame(this);
+        WindowCloseAnimation.Attach(this);
         // SizeToContent="Height" todavía no conoce el alto final hasta que la ventana entra en
         // el árbol visual. Mantener la ventana invisible durante ese primer layout evita que en
         // una pantalla vertical se vea un fotograma en (0,0) antes de recentrarla.
@@ -89,6 +90,14 @@ public partial class SettingsWindow : Window
         MaxHeight = SystemParameters.WorkArea.Height * 0.9;
 
         PreviewKeyDown += OnPreviewKeyDown;
+        // Esc cierra Ajustes. En KeyDown, no en Preview: mientras se graba un atajo, o con un
+        // desplegable abierto, el Esc ya lo ha consumido quien toca y no llega aquí.
+        KeyDown += (_, e) =>
+        {
+            if (e.Key != Key.Escape || e.Handled) return;
+            e.Handled = true;
+            Close();
+        };
 
         SourceInitialized += (_, _) =>
             NativeMethods.ApplyRoundedCorners(new WindowInteropHelper(this).Handle);
@@ -954,7 +963,7 @@ public partial class SettingsWindow : Window
 
     private void OnSyncConflictsClick(object sender, RoutedEventArgs e)
     {
-        _coordinator?.OpenSyncConflicts();
+        _coordinator?.OpenSyncConflicts(this);
     }
 
     private void PopulateDelayUnits()

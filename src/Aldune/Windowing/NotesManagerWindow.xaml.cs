@@ -42,6 +42,8 @@ public partial class NotesManagerWindow : Window
     {
         InitializeComponent();
         NativeMethods.CloakUntilFirstFrame(this);
+        WindowCloseAnimation.Attach(this);
+        KeyDown += OnWindowKeyDown;
         _repository = repository;
         _coordinator = coordinator;
         _tagFilter = tagFilter;
@@ -230,6 +232,22 @@ public partial class NotesManagerWindow : Window
         SearchBox.Focus();
         SearchBox.SelectAll();
         e.Handled = true;
+    }
+
+    /// <summary>
+    /// Esc deshace lo último abierto antes de cerrar la ventana: primero un panel de etiquetas, luego
+    /// la búsqueda y, sin nada de eso, cierra el gestor, como el resto de ventanas de la app. Va en
+    /// KeyDown y no en Preview: si un control ya usó el Esc (un desplegable abierto), no llega aquí.
+    /// </summary>
+    private void OnWindowKeyDown(object sender, KeyEventArgs e)
+    {
+        if (e.Key != Key.Escape || e.Handled) return;
+        e.Handled = true;
+
+        if (TagEditorPopup.IsOpen) TagEditorPopup.IsOpen = false;
+        else if (TagManagerPopup.IsOpen) TagManagerPopup.IsOpen = false;
+        else if (SearchBox.Text.Length > 0) SearchBox.Clear();
+        else Close();
     }
 
     private void OnSearchClearClick(object sender, RoutedEventArgs e)

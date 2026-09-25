@@ -36,6 +36,7 @@ public sealed class AppCoordinator
     /// se toma al entrar el primero y se restaura al salir el último.
     /// </summary>
     private int _alwaysOnTopSuspensions;
+    private readonly HashSet<Window> _windowsAboveNotes = new();
     private NotesManagerWindow? _notesManagerWindow;
     private SettingsWindow? _settingsWindow;
     private bool _openingSettings;
@@ -90,7 +91,9 @@ public sealed class AppCoordinator
         RefreshAll();
     }
 
-    public void OpenSyncConflicts()
+    /// <param name="owner">Quien lo abre como parte de su tarea (Ajustes): la ventana queda por
+    /// encima de ella y se cierra con ella, en vez de quedarse suelta al cerrar Ajustes.</param>
+    public void OpenSyncConflicts(Window? owner = null)
     {
         if (_syncService is null) return;
         if (_syncConflictsWindow is { IsVisible: true })
@@ -99,12 +102,8 @@ public sealed class AppCoordinator
             return;
         }
 
-        _syncConflictsWindow = new SyncConflictsWindow(_syncService, this);
-        _syncConflictsWindow.Closed += (_, _) =>
-        {
-            _syncConflictsWindow = null;
-            RestoreNotesAboveDockMenu();
-        };
+        _syncConflictsWindow = new SyncConflictsWindow(_syncService, this) { Owner = owner };
+        _syncConflictsWindow.Closed += (_, _) => _syncConflictsWindow = null;
         _syncConflictsWindow.Show();
 
         // Igual que el gestor de notas: los docks y las notas son Topmost, así que una ventana normal
@@ -381,7 +380,9 @@ public sealed class AppCoordinator
     /// </summary>
     public void OpenOrActivateNotesManager(EdgeDockWindow requestingDock, string? tagFilter = null)
     {
-        if (_notesManagerWindow is not null)
+        // Uno que se está cerrando (su animación dura un instante) cuenta como cerrado: pulsar otra
+        // vez justo entonces abre uno nuevo en vez de "activar" el que se va.
+        if (_notesManagerWindow is not null && !WindowCloseAnimation.IsClosing(_notesManagerWindow))
         {
             if (_notesManagerWindow.WindowState == WindowState.Minimized)
                 _notesManagerWindow.WindowState = WindowState.Normal;
@@ -396,12 +397,12 @@ public sealed class AppCoordinator
             return;
         }
 
-        _notesManagerWindow = new NotesManagerWindow(_repository, this, tagFilter);
-        requestingDock.CenterOnThisMonitor(_notesManagerWindow);
-        _notesManagerWindow.Closed += (_, _) =>
+        var manager = new NotesManagerWindow(_repository, this, tagFilter);
+        _notesManagerWindow = manager;
+        requestingDock.CenterOnThisMonitor(manager);
+        manager.Closed += (_, _) =>
         {
-            _notesManagerWindow = null;
-            RestoreNotesAboveDockMenu();
+            if (ReferenceEquals(_notesManagerWindow, manager)) _notesManagerWindow = null;
         };
         _notesManagerWindow.Show();
         _notesManagerWindow.PlayOpenAnimation();
@@ -908,14 +909,26 @@ public sealed class AppCoordinator
     /// mientras la ventana vive (mismo mecanismo que ya usaba el menú de una pestaña del dock) y se
     /// sube la ventana al frente de la capa superior.
     ///
-    /// El llamante debe emparejar esto con <see cref="RestoreNotesAboveDockMenu"/> al cerrarse.
+    /// La suspensión se toma una sola vez por ventana y se devuelve sola al cerrarse. Antes se tomaba
+    /// en cada llamada, y esto se llama también al pulsar "Gestionar notas" o "Ajustes" con la
+    /// ventana ya abierta: el contador subía dos veces, bajaba una al cerrar, y las notas se quedaban
+    /// sin "siempre encima" hasta reiniciar la app.
     /// </summary>
     internal void RaiseAppWindow(Window window)
     {
-        SuspendNotesAboveDockMenu();
+        if (_windowsAboveNotes.Add(window))
+        {
+            SuspendNotesAboveDockMenu();
+            window.Closed += (_, _) => ReleaseAppWindow(window);
+        }
         window.Activate();
         NativeMethods.RaiseTopmostWindow(window);
         NativeMethods.ForceActivate(window);
+    }
+
+    private void ReleaseAppWindow(Window window)
+    {
+        if (_windowsAboveNotes.Remove(window)) RestoreNotesAboveDockMenu();
     }
 
     /// <summary>
@@ -984,7 +997,7 @@ public sealed class AppCoordinator
     {
         if (_openingSettings) return;
 
-        if (_settingsWindow is not null)
+        if (_settingsWindow is not null && !WindowCloseAnimation.IsClosing(_settingsWindow))
         {
             RaiseAppWindow(_settingsWindow);
             return;
@@ -993,17 +1006,15 @@ public sealed class AppCoordinator
         if (SettingsWindowFactory is null) return;
 
         _openingSettings = true;
-        bool suspended = false;
         try
         {
             var settingsDock = DockNearCursor();
-            _settingsWindow = SettingsWindowFactory();
-            settingsDock?.CenterOnThisMonitor(_settingsWindow);
-            _settingsWindow.Closed += (_, _) =>
+            var created = SettingsWindowFactory();
+            _settingsWindow = created;
+            settingsDock?.CenterOnThisMonitor(created);
+            created.Closed += (_, _) =>
             {
-                _settingsWindow = null;
-                _openingSettings = false;
-                RestoreNotesAboveDockMenu();
+                if (ReferenceEquals(_settingsWindow, created)) _settingsWindow = null;
             };
             _settingsWindow.Show();
             var shownSettingsWindow = _settingsWindow;
@@ -1017,16 +1028,18 @@ public sealed class AppCoordinator
                     shownSettingsWindow.PlayOpenAnimation();
                 }
             }));
-            suspended = true;
             RaiseAppWindow(_settingsWindow);
+            // Solo protege la construcción: antes se quedaba en true mientras Ajustes estuviera
+            // abierta, y pulsar "Ajustes" otra vez no la traía al frente.
+            _openingSettings = false;
         }
         catch
         {
+            // Si llegó a subirse, la suspensión de las notas se devuelve aquí: la ventana no se va a
+            // cerrar por el camino normal. Si estalló antes, no hay nada que devolver.
+            if (_settingsWindow is not null) ReleaseAppWindow(_settingsWindow);
             _settingsWindow = null;
             _openingSettings = false;
-            // Solo si de verdad se llegó a suspender: si estalló antes, devolver una suspensión que
-            // no es nuestra descuadraría el contador del menú del dock.
-            if (suspended) RestoreNotesAboveDockMenu();
             throw;
         }
     }
