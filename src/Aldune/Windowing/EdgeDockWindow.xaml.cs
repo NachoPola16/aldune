@@ -153,7 +153,11 @@ public partial class EdgeDockWindow : Window
         // Aparte y mucho más lento: pasar a pantalla completa no hay que detectarlo en 50ms, y
         // quien tiene un juego delante agradece que no le sondeen el primer plano 20 veces/s.
         _fullscreenPollTimer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(500) };
-        _fullscreenPollTimer.Tick += (_, _) => PollFullscreenApp();
+        _fullscreenPollTimer.Tick += (_, _) =>
+        {
+            PollFullscreenApp();
+            RecordDiagnostics();
+        };
         _fullscreenPollTimer.Start();
 
         // No depende del foco de la ventana. El dock usa WS_EX_NOACTIVATE para no robar el foco a la
@@ -549,6 +553,9 @@ public partial class EdgeDockWindow : Window
 
         if (isInside && !_pointerInside)
         {
+            if (_diagnosticStripHidden)
+                DockDiagnostics.Write(DiagnosticsCategory,
+                    "el ratón entra en la tira cuando no se veía (" + _diagnosticState + "): se vuelve a subir y a pintar");
             _pointerInside = true;
             _fanState.PointerEntered();
             NativeMethods.EnsureTopmost(_hwnd);
@@ -560,6 +567,77 @@ public partial class EdgeDockWindow : Window
             _fanState.PointerLeft();
             _collapseTimer.Start();
         }
+    }
+
+    // --- Diagnóstico de la tira que deja de verse (docs/DOCK_DIAGNOSTICS.md) -----------------------
+
+    private string DiagnosticsCategory => $"dock {_edge} {_monitorKey}";
+    private string? _diagnosticState;
+    private bool _diagnosticStripHidden;
+    private int _diagnosticTicks;
+
+    /// <summary>
+    /// Apunta en el registro cada cambio de estado de la tira en reposo: si sigue "siempre encima",
+    /// qué ventana hay de verdad sobre ella y, cada 5 s, si en pantalla se ve su color. Con eso se
+    /// distingue "tapada por otra ventana" de "encima pero sin pintar", que piden arreglos distintos.
+    /// Solo escribe cuando algo cambia, y no hace nada si el registro no está activo.
+    /// </summary>
+    private void RecordDiagnostics()
+    {
+        if (!DockDiagnostics.Enabled || _hwnd == IntPtr.Zero) return;
+
+        string state;
+        bool stripHidden = false;
+        if (_hiddenByFullscreenApp) state = "oculto por pantalla completa";
+        else if (!IsVisible) state = $"no visible (Visibility={Visibility})";
+        else if (_fanState.IsExpanded) state = "desplegado";
+        else if (_noteCount == 0) state = "sin notas";
+        else
+        {
+            var dpi = VisualTreeHelper.GetDpi(this);
+            var rest = EdgeGeometry.RestingVisibleRect(_workingArea, _edge, _noteCount);
+            int centerX = (int)Math.Round((rest.X + rest.Width / 2) * dpi.DpiScaleX);
+            int centerY = (int)Math.Round((rest.Y + rest.Height / 2) * dpi.DpiScaleY);
+
+            bool topmost = DockDiagnostics.IsTopmost(_hwnd);
+            var above = DockDiagnostics.RootWindowAt(centerX, centerY);
+            bool ours = above == _hwnd;
+            state = $"en reposo, siempre encima: {(topmost ? "sí" : "NO")}, sobre la tira: "
+                + (ours ? "el dock" : DockDiagnostics.Describe(above));
+            stripHidden = !topmost || !ours;
+
+            // Leer la pantalla fuerza a DWM a componer: no en cada tick. El punto es el relleno de
+            // arriba de la tira (2 px dentro, en su eje), que es siempre su color de fondo.
+            if (ours && _diagnosticTicks++ % 10 == 0)
+            {
+                bool vertical = _edge is EdgePosition.Left or EdgePosition.Right;
+                int sampleX = vertical ? centerX : (int)Math.Round((rest.X + 2) * dpi.DpiScaleX);
+                int sampleY = vertical ? (int)Math.Round((rest.Y + 2) * dpi.DpiScaleY) : centerY;
+                var (r, g, b) = DockDiagnostics.ScreenPixel(sampleX, sampleY);
+                // Según dónde caiga el punto se ve el fondo de la tira o un guion: vale cualquiera.
+                bool Near(string hex) =>
+                    System.Windows.Media.ColorConverter.ConvertFromString(hex) is Color c
+                    && Math.Abs(r - c.R) <= 16 && Math.Abs(g - c.G) <= 16 && Math.Abs(b - c.B) <= 16;
+                bool painted = Near(NoteColorPalette.Ground)
+                    || RestList.Items.OfType<Note>().Any(note => Near(note.Color));
+                if (!painted)
+                {
+                    state += $", pero en pantalla no se ve (color #{r:X2}{g:X2}{b:X2})";
+                    stripHidden = true;
+                }
+            }
+            else if (ours && _diagnosticState?.Contains("no se ve") == true)
+            {
+                // Entre lecturas se conserva la última, para no apuntar cambios que no son.
+                state = _diagnosticState;
+                stripHidden = _diagnosticStripHidden;
+            }
+        }
+
+        if (state == _diagnosticState) return;
+        _diagnosticState = state;
+        _diagnosticStripHidden = stripHidden;
+        DockDiagnostics.Write(DiagnosticsCategory, state);
     }
 
     /// <summary>
@@ -585,6 +663,9 @@ public partial class EdgeDockWindow : Window
         bool covered = NativeMethods.IsFullscreenAppCovering(_hwnd);
         if (covered == _hiddenByFullscreenApp) return;
         _hiddenByFullscreenApp = covered;
+        DockDiagnostics.Write(DiagnosticsCategory, covered
+            ? "se oculta por pantalla completa de " + DockDiagnostics.Describe(DockDiagnostics.Foreground)
+            : "vuelve: ya no hay nada a pantalla completa");
 
         if (covered)
         {

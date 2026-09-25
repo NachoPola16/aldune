@@ -57,6 +57,10 @@ public partial class App : Application
         };
 
         var appDataDir = ResolveAppDataDirectory();
+        // Registro de diagnóstico del dock y las pantallas (docs/DOCK_DIAGNOSTICS.md): local, acotado
+        // a unos cientos de KB y sin contenido de notas.
+        DockDiagnostics.Log = new DiagnosticLog(Path.Combine(appDataDir, "logs", "dock.log"));
+        DockDiagnostics.Write("app", $"arranque, versión {AppInfo.Version}");
         var settingsPath = Path.Combine(appDataDir, "settings.json");
         var databasePath = Path.Combine(appDataDir, BrandIdentity.DatabaseFileName);
 
@@ -239,6 +243,8 @@ public partial class App : Application
         // es reconstruirlos contra la lista de monitores nueva. Se engancha al final del arranque,
         // ya con el descifrado verificado, para no reconstruir nada si la app va a abortar.
         SystemEvents.DisplaySettingsChanged += OnDisplaySettingsChanged;
+        SystemEvents.PowerModeChanged += OnPowerModeChanged;
+        SystemEvents.SessionSwitch += OnSessionSwitch;
 
         // Sin esto, apagar o reiniciar el equipo con notas abiertas podía dejarlas sin guardar: el
         // cierre normal de una nota cancela su primer intento para reproducir la animación de salida
@@ -296,6 +302,8 @@ public partial class App : Application
         Exit += (_, _) =>
         {
             SystemEvents.DisplaySettingsChanged -= OnDisplaySettingsChanged;
+            SystemEvents.PowerModeChanged -= OnPowerModeChanged;
+            SystemEvents.SessionSwitch -= OnSessionSwitch;
             SystemEvents.SessionEnding -= OnSessionEnding;
             _updateNotifier?.Dispose();
             _reminderScheduler?.Dispose();
@@ -485,7 +493,11 @@ public partial class App : Application
             _settingsService?.Save(_settings);
         }
 
+        var available = monitors;
         monitors = DockMonitorSelection.Select(monitors, _settings?.TargetMonitorId, targetIndex);
+        DockDiagnostics.Write("pantallas",
+            $"docks: pantallas vistas [{DockDiagnostics.Describe(available)}]; elegida {_settings?.TargetMonitorId ?? "todas"}; "
+            + $"docks en [{string.Join(", ", monitors.Select(monitor => monitor.DeviceName))}]");
 
         var edge = _settings?.DockEdge ?? EdgePosition.Right;
         foreach (var monitor in monitors)
@@ -508,8 +520,16 @@ public partial class App : Application
         _coordinator.RefreshAll();
     }
 
+    private static void OnPowerModeChanged(object? sender, PowerModeChangedEventArgs e) =>
+        DockDiagnostics.Write("sistema", "energía: " + e.Mode);
+
+    private static void OnSessionSwitch(object? sender, SessionSwitchEventArgs e) =>
+        DockDiagnostics.Write("sistema", "sesión: " + e.Reason);
+
     private void OnDisplaySettingsChanged(object? sender, EventArgs e)
     {
+        DockDiagnostics.Write("pantallas",
+            "DisplaySettingsChanged: " + DockDiagnostics.Describe(MonitorEnumerator.EnumerateMonitors()));
         // Con retardo y reiniciable: cambiar de pantallas dispara varios DisplaySettingsChanged
         // seguidos (Windows reconfigura en pasos), y reconstruir los docks en cada uno significa
         // crear y destruir ventanas varias veces por nada. Esperar a que pare deja una sola
