@@ -24,6 +24,7 @@ public partial class ThemeEditorWindow : Window
     private ThemeEditorWindow(NoteTheme theme)
     {
         InitializeComponent();
+        NativeMethods.CloakUntilFirstFrame(this);
         _theme = new NoteTheme
         {
             Id = theme.Id,

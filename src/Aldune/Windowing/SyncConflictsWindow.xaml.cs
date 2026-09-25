@@ -1,4 +1,4 @@
-using System.Windows;
+﻿using System.Windows;
 using System.Windows.Interop;
 using Aldune.Core;
 using Aldune.Interop;
@@ -14,6 +14,7 @@ public partial class SyncConflictsWindow : Window
     public SyncConflictsWindow(SyncService syncService, AppCoordinator coordinator)
     {
         InitializeComponent();
+        NativeMethods.CloakUntilFirstFrame(this);
         _syncService = syncService;
         _coordinator = coordinator;
         SourceInitialized += (_, _) =>

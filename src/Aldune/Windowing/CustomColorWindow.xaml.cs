@@ -21,6 +21,7 @@ public partial class CustomColorWindow : Window
     private CustomColorWindow(string initialColor)
     {
         InitializeComponent();
+        NativeMethods.CloakUntilFirstFrame(this);
         _selectedColor = NormalizeColor(initialColor) ?? _selectedColor;
         Loaded += (_, _) => UpdateFromColor(_selectedColor);
     }

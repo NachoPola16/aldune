@@ -41,6 +41,7 @@ public partial class NotesManagerWindow : Window
     public NotesManagerWindow(NotesRepository repository, AppCoordinator coordinator, string? tagFilter = null)
     {
         InitializeComponent();
+        NativeMethods.CloakUntilFirstFrame(this);
         _repository = repository;
         _coordinator = coordinator;
         _tagFilter = tagFilter;

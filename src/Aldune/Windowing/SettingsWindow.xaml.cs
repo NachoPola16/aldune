@@ -40,6 +40,7 @@ public partial class SettingsWindow : Window
         Action? checkForUpdates = null)
     {
         InitializeComponent();
+        NativeMethods.CloakUntilFirstFrame(this);
         // SizeToContent="Height" todavía no conoce el alto final hasta que la ventana entra en
         // el árbol visual. Mantener la ventana invisible durante ese primer layout evita que en
         // una pantalla vertical se vea un fotograma en (0,0) antes de recentrarla.

@@ -19,6 +19,7 @@ public partial class SyncNotesWindow : Window
         SettingsService settingsService)
     {
         InitializeComponent();
+        NativeMethods.CloakUntilFirstFrame(this);
         _settings = settings;
         _settingsService = settingsService;
         _options = repository.GetAllForSync()

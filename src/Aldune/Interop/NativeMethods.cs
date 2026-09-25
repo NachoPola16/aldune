@@ -111,6 +111,32 @@ internal static class NativeMethods
         DwmSetWindowAttribute(hWnd, DWMWA_WINDOW_CORNER_PREFERENCE, ref preference, sizeof(int));
     }
 
+    private const int DWMWA_CLOAK = 13;
+
+    /// <summary>
+    /// Mantiene la ventana invisible (pero viva: se mide, se coloca y se pinta) hasta que WPF ha
+    /// presentado su primer fotograma. Sin esto, entre que Windows muestra la ventana y WPF pinta,
+    /// DWM enseña el cliente sin pintar: blanco con el tema claro de Windows y gris con el oscuro,
+    /// un destello antes del fondo oscuro de la app. Se llama antes de Show.
+    /// </summary>
+    internal static void CloakUntilFirstFrame(Window window)
+    {
+        window.SourceInitialized += (_, _) => SetCloak(window, true);
+        window.ContentRendered += (_, _) =>
+            // ContentRendered llega cuando WPF ya ha mandado el fotograma, pero DWM lo compone en su
+            // siguiente pasada: se espera un tick del render antes de destapar.
+            window.Dispatcher.BeginInvoke(System.Windows.Threading.DispatcherPriority.Background,
+                new Action(() => SetCloak(window, false)));
+    }
+
+    private static void SetCloak(Window window, bool cloaked)
+    {
+        var hwnd = new WindowInteropHelper(window).Handle;
+        if (hwnd == IntPtr.Zero) return;
+        int value = cloaked ? 1 : 0;
+        DwmSetWindowAttribute(hwnd, DWMWA_CLOAK, ref value, sizeof(int));
+    }
+
     /// <summary>
     /// Sube la ventana a lo más alto de la capa superior sin robarle el foco a quien escribe.
     ///

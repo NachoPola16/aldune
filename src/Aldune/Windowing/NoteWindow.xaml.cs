@@ -1,4 +1,4 @@
-using System.IO;
+﻿using System.IO;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
@@ -77,6 +77,7 @@ public partial class NoteWindow : Window
         AppSettings? settings = null, string? protectionPassword = null)
     {
         InitializeComponent();
+        NativeMethods.CloakUntilFirstFrame(this);
         _initialWidth = Width;
         _initialHeight = Height;
         _autoScroll = new AutoScrollManager(BodyHost, null, TextBody);
