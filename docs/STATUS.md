@@ -3665,3 +3665,61 @@ Tests: 742/742. Smoke test en verde.
   simplificado deja lo esencial (antes no dejaba ningún ajuste). El gestor sigue aparte, con un botón
   "Gestionar notas" al pie del menú; el clic derecho en "Sincronizar" del dock abre esa página.
   Verificado con sonda en los dos modos.
+
+## Apertura y cierre del dock, medidos y rehechos (sesión 2026-09-26, sin versión todavía)
+
+Análisis de UX pedido por el usuario, primero midiendo con sondas (clics y movimientos físicos, pantalla
+de 2560 × 1440 con otra pantalla a la izquierda y la barra de tareas en autoocultar) y después aplicando
+la opción recomendada. Las sondas quedaron fuera del repositorio.
+
+### Lo que se midió
+
+- **Abría sin espera**: bastaba un sondeo (50 ms) dentro de la tira de 42 px. Se abría al ir a la barra
+  de scroll de una ventana maximizada, al recorrer el canto, al cruzar a la otra pantalla (4 de cada
+  15 cruces) y al ir a la barra de título con el dock arriba.
+- **Cerraba a los 90 ms** (60 arriba/abajo) de salir, y al cerrarse la zona para reabrirlo volvía a ser
+  la tira del canto. Pasarse 15 px hacia dentro, temblar 5 px o salir un momento lo cerraba sin
+  remedio. En los laterales 1 px fuera de la pestaña ya contaba como salir; arriba/abajo contaba la
+  ventana entera, que con 40 notas dejaba ~520 px de vacío que lo mantenían abierto.
+- **Con el dock abajo y la barra de tareas oculta**, el dock se abría y la barra **no llegaba a salir**:
+  la botonera del dock desplegado tapaba la fila del canto que la hace aparecer.
+- **Tooltips del pie a 1000 ms** (el valor de WPF) y sin decir que los cuatro botones tienen clic derecho.
+- Referencias: el Dock de macOS espera 200 ms para abrir; la barra de tareas de Windows, ~265 ms (medido).
+
+### Lo que cambió
+
+- **`DockHoverPolicy` / `DockHoverTuning` (Core, TDD)**: reglas puras con el reloj en las muestras.
+  - Abrir: al momento si el cursor empuja contra un canto físico; si no, tras 150 ms quieto en la tira
+    (250 ms si el canto linda con otra pantalla o con una barra de tareas oculta, donde empujar no
+    cuenta). Pasar por la tira a más de 1,5 DIP/ms reinicia la espera.
+  - Cerrar: a los 100 ms si no se llegó a pasar por una pestaña o un botón (una apertura sin querer se
+    va enseguida), a los 400 ms si sí. Tras un cierre "usado", volver en 400 ms a donde estaba el
+    abanico lo reabre sin ir al canto.
+  - Menús, márgenes de cortesía, arrastres y crear una nota llaman a `Hold()`: cuentan como uso, así que
+    al soltarlos se espera el cierre largo (antes, tras elegir un color en el menú, 90 ms).
+- **`DockHoverZone` (Core)**: la superficie desplegada es pestañas visibles + botonera + scroll con 24 px
+  de holgura, **igual en los cuatro bordes**; se mide también plegado (para la recuperación).
+- **Barra de tareas en autoocultar en el mismo borde** (`SHAppBarMessage(ABM_GETAUTOHIDEBAREX)`): el dock
+  se retira 3 px del canto. `_monitorWorkArea` guarda el área sin retirar para `DockPlacement`, que si
+  no vería un "cambio de pantalla" y reconstruiría los docks en bucle. Verificado: la barra sale igual
+  que sin dock.
+- **Arrastre de pestañas**: `LostMouseCapture` y Esc (por el gancho de teclado: el dock no tiene foco)
+  lo cancelan; antes `_dragging` podía quedarse activo y el dock no se plegaba.
+- **Tooltips del pie** a 500 ms (`DockHoverTuning.ButtonTooltipDelay`) con una segunda línea para el clic
+  derecho de cada botón.
+- Fuera `_collapseTimer`, `_pointerInside` y `_hoverReentryBlocked` de `EdgeDockWindow`.
+
+### Bug de los menús de clic derecho del dock (reportado por el usuario)
+
+"A veces no se cierra al clicar fuera". Causa medida con clics físicos: un `Popup` con `StaysOpen=False`
+se cierra al perder la captura del ratón, y el dock nunca toma el foco. Clicar en la aplicación que ya
+estaba activa —lo normal: la que se usaba antes de ir al dock— no cambia nada para Windows, y el menú se
+quedaba abierto (3 de 3). Con un menú abierto, clicar otra pestaña tampoco hacía nada. Arreglo: mientras
+haya un menú del dock abierto, un gancho global de ratón (`WH_MOUSE_LL`, solo observa) lo cierra si el
+clic cae fuera del menú y de su disparador. Volver a pulsar el disparador sigue siendo interruptor
+(`PopupToggle`). Verificado: se cierra al clicar en la aplicación activa, en otra inactiva, en el hueco
+junto al dock, en una nota y en otra pestaña (que además se abre).
+
+**Sin verificar**: trackpad (no hay en este equipo).
+
+Tests: 778/778 (36 nuevos). Smoke test en verde (adaptado: tras la cortesía espera el cierre largo).
