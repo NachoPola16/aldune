@@ -55,6 +55,18 @@ internal sealed class ReminderScheduler : IDisposable
                 var noteId = due[0].NoteId;
                 var note = _repository.GetById(noteId);
                 var text = note is null ? Strings.AppName : NoteTitleHelper.GetTitle(note.Text);
+                // Lo que queda por hacer, para saberlo desde el propio aviso: el recordatorio es de la
+                // nota entera (una línea no tiene identidad estable para llevar el suyo, ver la spec de
+                // recordatorios), pero así se ve qué tareas faltan. Una nota protegida llega sin texto
+                // y no enseña nada.
+                if (note is not null)
+                {
+                    var pending = TaskLists.PendingTasks(note.Text, int.MaxValue);
+                    if (pending.Count > 0)
+                    {
+                        text += "\n" + Strings.ReminderPendingTasks(pending.Count, pending.Take(3).ToList());
+                    }
+                }
                 _toasts.Show(new ToastContent(Strings.ReminderToastTitle, text,
                     [new ToastAction(Strings.ReminderOpenNote, () => _coordinator.OpenNoteById(noteId), Primary: true)]));
             }

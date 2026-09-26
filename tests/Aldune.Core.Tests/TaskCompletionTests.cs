@@ -172,4 +172,54 @@ public class TaskCompletionTests
         Assert.Equal(text, result.Text);
         Assert.Contains(oldHash, result.HashesToClear);
     }
+    [Fact]
+    public void Prune_CheckedTaskWithoutARecord_IsReportedSoItsClockStartsNow()
+    {
+        // Marcada con el ajuste apagado, pegada, escrita a mano o recuperada con Ctrl+Z: sin esto no
+        // se borraría nunca. Se empieza a contar desde que se ve, no se borra en esta pasada.
+        var text = "☒ sin registro\n☒ con registro\n☐ pendiente";
+        var completions = new Dictionary<string, DateTimeOffset>
+        {
+            [TaskCompletion.HashLine("☒ con registro")] = Now
+        };
+
+        var result = TaskCompletion.Prune(text, completions, Now, OneDay);
+
+        Assert.False(result.Changed);
+        Assert.Equal(new[] { TaskCompletion.HashLine("☒ sin registro") }, result.HashesToStart);
+    }
+
+    [Fact]
+    public void Prune_MapIndex_KeepsTheCaretOnTheSameCharacter()
+    {
+        // La línea borrada está por encima del cursor: sin mapear, el cursor saltaba tantos
+        // caracteres como tenía la línea (reproducido con una sonda, 2026-09-26).
+        var text = "☒ hecha\r\nfinal texto aqui";
+        var completions = new Dictionary<string, DateTimeOffset>
+        {
+            [TaskCompletion.HashLine("☒ hecha")] = Now - TimeSpan.FromDays(2)
+        };
+
+        var result = TaskCompletion.Prune(text, completions, Now, OneDay);
+        int mapped = result.MapIndex(text.IndexOf("texto", StringComparison.Ordinal));
+
+        Assert.Equal("final texto aqui", result.Text);
+        Assert.Equal("texto", result.Text.Substring(mapped, 5));
+    }
+
+    [Fact]
+    public void Prune_MapIndex_CaretOnTheRemovedLine_GoesToTheStartOfTheNextLine()
+    {
+        var text = "a\n☒ hecha\nb";
+        var completions = new Dictionary<string, DateTimeOffset>
+        {
+            [TaskCompletion.HashLine("☒ hecha")] = Now - TimeSpan.FromDays(2)
+        };
+
+        var result = TaskCompletion.Prune(text, completions, Now, OneDay);
+
+        Assert.Equal("a\nb", result.Text);
+        Assert.Equal(2, result.MapIndex(text.IndexOf("cha", StringComparison.Ordinal)));
+        Assert.Equal(result.Text.Length, result.MapIndex(text.Length));
+    }
 }

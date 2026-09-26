@@ -10,7 +10,7 @@ Sesión de origen: 2026-09-06.
 
 ## Versión visible de la aplicación
 
-La ronda actual se identifica como **v1.0.3**. La versión se muestra en Ajustes y también en el texto
+La ronda actual se identifica como **v1.1.0**. La versión se muestra en Ajustes y también en el texto
 del icono de la bandeja. Cada actualización grande deberá incrementar este número siguiendo SemVer:
 parches para correcciones, versión menor para funcionalidades nuevas y versión mayor cuando haya
 cambios incompatibles.
@@ -480,6 +480,16 @@ soltar — bastante más complejo que nada hecho hasta ahora y en tensión direc
 diseño. Implementado en su lugar (ver `STATUS.md`): Alt+Arriba/Alt+Abajo intercambia la línea del
 cursor con la vecina, mismo resultado sin arrastrar nada. Si el arrastre de verdad se pide otra vez
 con más insistencia, el coste de arriba sigue siendo el mismo — no ha cambiado nada que lo abarate.
+
+### Recordatorio por tarea y tipo de nota "lista de la compra" — descartados (2026-09-26)
+
+- **Recordatorio por tarea**: ya lo descartó la spec de recordatorios (una línea no tiene identidad
+  estable) y la revisión de las tareas lo confirmó (la identidad por texto fallaba en el borrado
+  automático). En su lugar, el aviso del recordatorio de la nota enseña las tareas pendientes.
+- **Tipo de nota "lista de la compra"**: sería un campo nuevo en el formato de sync, que las versiones
+  anteriores rechazan, y un segundo editor. Se cubre con funciones de lista válidas para cualquier nota:
+  Ctrl+Enter, desmarcar todas, borrar las hechas, hechas al final y la franja "Todo hecho" (ver
+  `STATUS.md`). Si se retoma, lo siguiente con sentido sería autocompletar con artículos ya usados.
 
 ### Otros descartes menores
 

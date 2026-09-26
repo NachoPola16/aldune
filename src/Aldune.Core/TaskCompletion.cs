@@ -45,17 +45,33 @@ public static class TaskCompletion
         return Convert.ToHexString(bytes)[..16]; // de sobra para no chocar entre tareas de una misma nota
     }
 
-    /// <summary>Resultado de podar un texto: el texto que queda, si cambió algo, y los hashes cuyo registro
-    /// de <c>TaskCompletion</c> ya no corresponde a ninguna tarea marcada (para que el llamante los borre).</summary>
-    public readonly record struct PruneResult(string Text, bool Changed, IReadOnlyCollection<string> HashesToClear);
+    /// <summary>
+    /// Resultado de podar un texto: el texto que queda, si cambió algo, los hashes cuyo registro de
+    /// <c>TaskCompletion</c> ya no corresponde a ninguna tarea marcada (para que el llamante los borre),
+    /// los de las tareas marcadas que aún no tienen registro (para que empiece a contar su plazo) y cómo
+    /// trasladar el cursor al texto nuevo (<see cref="MapIndex"/>).
+    /// </summary>
+    public sealed record PruneResult(
+        string Text,
+        bool Changed,
+        IReadOnlyCollection<string> HashesToClear,
+        IReadOnlyCollection<string> HashesToStart,
+        TextEdit Edit)
+    {
+        public int MapIndex(int oldIndex) => Edit.MapIndex(oldIndex);
+    }
 
     /// <summary>
     /// Quita de <paramref name="text"/> las líneas de tarea marcadas como hechas cuyo plazo ya
     /// venció según <paramref name="completedAt"/> (hash → cuándo se marcó), y calcula qué
     /// registros de <paramref name="completedAt"/> ya no corresponden a ninguna tarea marcada en el
     /// texto resultante — porque se borró, se editó (cambia el hash) o se desmarcó a mano por otro
-    /// camino distinto del toggle normal. Una tarea marcada sin registro en <paramref name="completedAt"/>
-    /// no se toca: solo se borra lo que se sabe con certeza que ha vencido.
+    /// camino distinto del toggle normal.
+    ///
+    /// Una tarea marcada sin registro no se borra en esta pasada: se devuelve en
+    /// <see cref="PruneResult.HashesToStart"/> para que su plazo empiece a contar ahora. Antes se
+    /// quedaba sin borrar para siempre (marcada con el ajuste apagado, pegada, escrita a mano,
+    /// recuperada con Ctrl+Z o gemela de otra con el mismo texto que se desmarcó).
     /// </summary>
     public static PruneResult Prune(
         string text,
@@ -63,50 +79,30 @@ public static class TaskCompletion
         DateTimeOffset now,
         TimeSpan delay)
     {
-        var lines = text.Split('\n');
-        var kept = new List<string>(lines.Length);
-        bool changed = false;
-
-        foreach (var rawLine in lines)
-        {
-            var line = rawLine.TrimEnd('\r');
-            if (TaskLines.IsTaskLine(line) && TaskLines.IsChecked(line)
-                && completedAt.TryGetValue(HashLine(line), out var completedTime)
-                && now - completedTime >= delay)
-            {
-                changed = true;
-                continue;
-            }
-            kept.Add(rawLine);
-        }
-
-        var prunedText = changed ? JoinLines(kept) : text;
-
+        var lines = TextEdit.Lines.Parse(text);
+        var removed = new HashSet<int>();
         var stillChecked = new HashSet<string>();
-        foreach (var rawLine in prunedText.Split('\n'))
+
+        for (int i = 0; i < lines.Count; i++)
         {
-            var line = rawLine.TrimEnd('\r');
-            if (TaskLines.IsTaskLine(line) && TaskLines.IsChecked(line))
+            var line = lines.Contents[i];
+            if (!TaskLines.IsTaskLine(line) || !TaskLines.IsChecked(line)) continue;
+
+            var hash = HashLine(line);
+            if (completedAt.TryGetValue(hash, out var completedTime) && now - completedTime >= delay)
             {
-                stillChecked.Add(HashLine(line));
+                removed.Add(i);
+            }
+            else
+            {
+                stillChecked.Add(hash);
             }
         }
 
+        var edit = TextEdit.RemoveLines(text, removed);
         var toClear = completedAt.Keys.Where(hash => !stillChecked.Contains(hash)).ToList();
+        var toStart = stillChecked.Where(hash => !completedAt.ContainsKey(hash)).ToList();
 
-        return new PruneResult(prunedText, changed, toClear);
-    }
-
-    /// <summary>
-    /// Reconstruye el texto a partir de los segmentos que quedan tras <c>text.Split('\n')</c>. Un
-    /// simple <c>string.Join('\n', kept)</c> no basta cuando se borra la ÚLTIMA línea de una nota en
-    /// CRLF: el `\r` de esa línea pertenece al separador de la línea *anterior*, no a la borrada, así
-    /// que se queda colgando al final sin su `\n` de pareja (p. ej. "algo\r\n☒ hecho" pierde la
-    /// última línea y, sin este arreglo, quedaría "algo\r" en vez de "algo").
-    /// </summary>
-    private static string JoinLines(IReadOnlyList<string> kept)
-    {
-        var joined = string.Join('\n', kept);
-        return joined.EndsWith('\r') ? joined[..^1] : joined;
+        return new PruneResult(edit.Text, edit.Changed, toClear, toStart, edit);
     }
 }

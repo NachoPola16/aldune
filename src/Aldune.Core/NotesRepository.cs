@@ -985,28 +985,43 @@ public sealed class NotesRepository
     }
 
     /// <summary>
-    /// Aplica el ajuste "borrar tareas completadas solas" a una nota: quita del texto las líneas
-    /// marcadas cuyo plazo haya vencido (<see cref="TaskCompletion.Prune"/>), guarda el resultado si
-    /// cambió algo, y limpia los registros de <c>TaskCompletion</c> que ya no correspondan a ninguna
-    /// tarea marcada — así una tarea editada, desmarcada o borrada a mano no deja basura atrás sin
-    /// necesidad de un barrido aparte. Devuelve si se borró alguna línea.
+    /// Aplica el ajuste "borrar tareas completadas solas" al cuerpo de una nota (nunca al título, igual
+    /// que la ventana): quita las líneas marcadas cuyo plazo haya vencido
+    /// (<see cref="TaskCompletion.Prune"/>), guarda el resultado si cambió algo, empieza el reloj de las
+    /// marcadas que no lo tenían y limpia los registros que ya no correspondan a ninguna tarea marcada.
+    /// Devuelve si se borró alguna línea.
     /// </summary>
     public bool PruneExpiredCompletedTasks(Guid noteId, string currentText, TimeSpan delay)
     {
-        var completions = GetTaskCompletions(noteId);
-        if (completions.Count == 0) return false;
+        var now = DateTimeOffset.UtcNow;
+        var (title, body) = NoteText.Split(currentText);
+        var result = TaskCompletion.Prune(body, GetTaskCompletions(noteId), now, delay);
 
-        var result = TaskCompletion.Prune(currentText, completions, DateTimeOffset.UtcNow, delay);
-        foreach (var hash in result.HashesToClear)
-        {
-            ClearTaskCompletion(noteId, hash);
-        }
+        foreach (var hash in result.HashesToClear) ClearTaskCompletion(noteId, hash);
+        foreach (var hash in result.HashesToStart) RecordTaskCompletion(noteId, hash, now);
 
         if (result.Changed)
         {
-            UpdateText(noteId, result.Text);
+            UpdateText(noteId, NoteText.Join(title, result.Text));
         }
         return result.Changed;
+    }
+
+    /// <summary>
+    /// Barrido de todas las notas activas que no estén en <paramref name="skip"/> (las abiertas, que se
+    /// podan desde su ventana: podarlas aquí dejaría la ventana con el texto viejo, que volvería a
+    /// guardarse encima). Se salta las protegidas: se leen sin texto, y podarlas con él borraría sus
+    /// relojes. Devuelve cuántas notas cambiaron.
+    /// </summary>
+    public int PruneExpiredCompletedTasksInActiveNotes(TimeSpan delay, IReadOnlySet<Guid> skip)
+    {
+        int changed = 0;
+        foreach (var note in GetByState(NoteState.Active))
+        {
+            if (note.IsProtected || skip.Contains(note.Id)) continue;
+            if (PruneExpiredCompletedTasks(note.Id, note.Text, delay)) changed++;
+        }
+        return changed;
     }
 
     private Note ReadNote(SqliteDataReader reader)

@@ -1,4 +1,4 @@
-using System.Linq;
+﻿using System.Linq;
 using System.Windows;
 using System.Windows.Threading;
 using Aldune.Core;
@@ -42,7 +42,41 @@ public sealed class AppCoordinator
     private bool _openingSettings;
     private SyncConflictsWindow? _syncConflictsWindow;
     private System.Threading.Timer? _autoSyncTimer;
+    private volatile bool _syncedSinceStart;
     private readonly Dictionary<Guid, string?> _noteMonitorsBeforeDisplayChange = new();
+
+    /// <summary>
+    /// Si ya se pueden borrar solas las tareas vencidas. Con la sync activa, no hasta la primera
+    /// sincronización correcta de esta sesión: un equipo que llevaba días apagado borraba la tarea sobre
+    /// su copia vieja, eso le ponía fecha nueva, y en la sync esa copia ganaba a lo que se había escrito
+    /// después en otro equipo (reproducido con una sonda, 2026-09-26; lo perdido quedaba solo en
+    /// Conflictos).
+    /// </summary>
+    public bool TaskPruningAllowed => _settings is not { SyncEnabled: true } || _syncedSinceStart;
+
+    /// <summary>
+    /// Barrido del ajuste "borrar tareas completadas solas" en las notas activas que no estén abiertas
+    /// (las abiertas lo hacen desde su ventana, ver NoteWindow.PruneExpiredTasks). Lo llaman el arranque
+    /// y cada sincronización correcta.
+    /// </summary>
+    public void PruneCompletedTasksInClosedNotes()
+    {
+        if (_settings is not { AutoHideCompletedTasks: true } || !TaskPruningAllowed) return;
+        var open = _openNoteWindows.Keys.ToHashSet();
+        if (_repository.PruneExpiredCompletedTasksInActiveNotes(_settings.AutoHideCompletedTasksDelay, open) > 0)
+        {
+            RefreshAll();
+        }
+    }
+
+    /// <summary>Tras una sync correcta: ya se puede podar (ver <see cref="TaskPruningAllowed"/>) y se
+    /// repintan las ventanas con lo que haya ganado el merge.</summary>
+    private void AfterSuccessfulSync()
+    {
+        _syncedSinceStart = true;
+        PruneCompletedTasksInClosedNotes();
+        RefreshAll();
+    }
 
     /// <summary>Fabrica de la ventana de ajustes, inyectada por App: el coordinador no tiene por
     /// que saber de SettingsService ni del atajo global, solo de que hay una ventana unica.</summary>
@@ -993,12 +1027,15 @@ public sealed class AppCoordinator
         NativeMethods.ForceActivate(windows[^1]);
     }
 
-    public void OpenSettings()
+    /// <summary>Abre Ajustes (o la trae al frente), en <paramref name="page"/> si se indica: por
+    /// ejemplo, el clic derecho en el botón de sincronizar del dock va directo a Sincronización.</summary>
+    public void OpenSettings(string? page = null)
     {
         if (_openingSettings) return;
 
         if (_settingsWindow is not null && !WindowCloseAnimation.IsClosing(_settingsWindow))
         {
+            if (page is not null) _settingsWindow.ShowPage(page);
             RaiseAppWindow(_settingsWindow);
             return;
         }
@@ -1010,6 +1047,7 @@ public sealed class AppCoordinator
         {
             var settingsDock = DockNearCursor();
             var created = SettingsWindowFactory();
+            if (page is not null) created.ShowPage(page);
             _settingsWindow = created;
             settingsDock?.CenterOnThisMonitor(created);
             created.Closed += (_, _) =>
@@ -1022,8 +1060,8 @@ public sealed class AppCoordinator
             {
                 if (ReferenceEquals(_settingsWindow, shownSettingsWindow) && shownSettingsWindow.IsVisible)
                 {
-                    // SizeToContent termina de medir el ScrollViewer al mostrar la ventana. Recentrar
-                    // en Loaded evita calcular Top con la altura antigua y cortar la cabecera por arriba.
+                    // El alto real (con el tope de la pantalla ya aplicado) no se conoce hasta mostrarla:
+                    // recentrar en Loaded evita calcular Top con otro alto y cortar la cabecera por arriba.
                     settingsDock?.CenterOnThisMonitor(shownSettingsWindow);
                     shownSettingsWindow.PlayOpenAnimation();
                 }
@@ -1082,8 +1120,14 @@ public sealed class AppCoordinator
         }
     }
 
-    /// <summary>Activa o desactiva el sondeo automático según los ajustes actuales.</summary>
-    public void ConfigureAutomaticSync()
+    /// <summary>
+    /// Activa o desactiva el sondeo automático según los ajustes actuales. Con
+    /// <paramref name="firstRunIn"/> (el arranque) la primera sincronización no espera al intervalo
+    /// entero: así lo que se escribió en otro equipo llega antes de ponerse a editar una copia vieja, y
+    /// el borrado automático de tareas, que espera a la primera sync (<see cref="TaskPruningAllowed"/>),
+    /// no se queda parado hasta 15 minutos o más.
+    /// </summary>
+    public void ConfigureAutomaticSync(TimeSpan? firstRunIn = null)
     {
         _autoSyncTimer?.Dispose();
         _autoSyncTimer = null;
@@ -1096,9 +1140,9 @@ public sealed class AppCoordinator
             var result = _syncService.Synchronize();
             if (result.Succeeded)
             {
-                Application.Current.Dispatcher.BeginInvoke(DispatcherPriority.Background, new Action(RefreshAll));
+                Application.Current.Dispatcher.BeginInvoke(DispatcherPriority.Background, new Action(AfterSuccessfulSync));
             }
-        }, null, TimeSpan.FromMinutes(minutes), TimeSpan.FromMinutes(minutes));
+        }, null, firstRunIn ?? TimeSpan.FromMinutes(minutes), TimeSpan.FromMinutes(minutes));
     }
 
     /// <summary>Sincroniza y repinta las ventanas abiertas con los datos que haya ganado el merge.</summary>
@@ -1108,8 +1152,8 @@ public sealed class AppCoordinator
         var result = _syncService.Synchronize();
         if (result.Succeeded)
         {
-            if (Application.Current.Dispatcher.CheckAccess()) RefreshAll();
-            else Application.Current.Dispatcher.BeginInvoke(DispatcherPriority.Background, new Action(RefreshAll));
+            if (Application.Current.Dispatcher.CheckAccess()) AfterSuccessfulSync();
+            else Application.Current.Dispatcher.BeginInvoke(DispatcherPriority.Background, new Action(AfterSuccessfulSync));
         }
         return result;
     }

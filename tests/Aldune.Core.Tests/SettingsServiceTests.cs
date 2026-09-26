@@ -38,6 +38,27 @@ public class SettingsServiceTests : IDisposable
     }
 
     [Fact]
+    public void Load_OldFileWithoutMoveCompletedTasksToEnd_KeepsTasksWhereTheyAre()
+    {
+        Directory.CreateDirectory(_tempDir);
+        File.WriteAllText(_settingsPath, "{\"AutoHideCompletedTasks\":true}");
+
+        var loaded = new SettingsService(_settingsPath).Load();
+
+        Assert.False(loaded.MoveCompletedTasksToEnd);
+        Assert.True(loaded.AutoHideCompletedTasks);
+    }
+
+    [Fact]
+    public void SaveThenLoad_MoveCompletedTasksToEnd_RoundTrips()
+    {
+        var sut = new SettingsService(_settingsPath);
+        sut.Save(new AppSettings { MoveCompletedTasksToEnd = true });
+
+        Assert.True(sut.Load().MoveCompletedTasksToEnd);
+    }
+
+    [Fact]
     public void SaveThenLoad_MonitorSettings_RoundTrips()
     {
         var sut = new SettingsService(_settingsPath);

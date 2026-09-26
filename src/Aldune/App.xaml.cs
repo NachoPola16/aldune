@@ -1,4 +1,4 @@
-using System.IO;
+﻿using System.IO;
 using System.Security.Cryptography;
 using System.Text.Json;
 using System.Windows;
@@ -186,22 +186,24 @@ public partial class App : Application
         StartDailyBackups(appDataDir);
         _singleInstance.ListenForActivation(() =>
             Dispatcher.BeginInvoke(() => _coordinator?.OpenNotesManager()));
+        // El instalador pide cerrar para sustituir el ejecutable: se guarda lo escrito, como al
+        // apagar Windows, y se sale. El propio instalador la vuelve a abrir al terminar.
+        _singleInstance.ListenForQuit(() =>
+            Dispatcher.BeginInvoke(() =>
+            {
+                _coordinator?.FlushAllOpenNotes();
+                Shutdown(0);
+            }));
         try
         {
             // Barrido del ajuste opcional "borrar tareas completadas solas" (ver
             // Aldune.Core.TaskCompletion) para toda nota activa — no solo la que esté abierta,
-            // que NoteWindow ya cubre por su cuenta al abrirse. Va dentro de este try y no fuera,
-            // ni después de BuildDocks: GetByState ya descifra, así que si la clave no encaja
-            // (caso (c) de abajo) es aquí donde puede aflorar por primera vez, y tiene que
-            // traducirse al mismo mensaje.
-            if (settings.AutoHideCompletedTasks)
-            {
-                var delay = settings.AutoHideCompletedTasksDelay;
-                foreach (var note in repository.GetByState(NoteState.Active))
-                {
-                    repository.PruneExpiredCompletedTasks(note.Id, note.Text, delay);
-                }
-            }
+            // que NoteWindow ya cubre por su cuenta al abrirse. Con la sync activa no hace nada
+            // hasta la primera sincronización (ver AppCoordinator.TaskPruningAllowed). Va dentro de
+            // este try y no fuera, ni después de BuildDocks: GetByState ya descifra, así que si la
+            // clave no encaja (caso (c) de abajo) es aquí donde puede aflorar por primera vez, y
+            // tiene que traducirse al mismo mensaje.
+            coordinator.PruneCompletedTasksInClosedNotes();
 
             // BuildDocks termina llamando a RefreshAll, que es el primer sitio donde de verdad se
             // intenta descifrar las notas existentes — aquí es donde aflora el caso (c), clave
@@ -276,7 +278,9 @@ public partial class App : Application
         coordinator.SettingsWindowFactory = () => new SettingsWindow(
             settingsService, loadedSettings, hotkey, coordinator, syncService,
             () => _updateNotifier?.CheckManually());
-        coordinator.ConfigureAutomaticSync();
+        // Unos segundos después de arrancar, no al instante: que el dock y las notas se pinten antes
+        // de salir a la red.
+        coordinator.ConfigureAutomaticSync(firstRunIn: TimeSpan.FromSeconds(5));
         coordinator.RebuildDocksAction = () =>
         {
             coordinator.CloseAllDocks();

@@ -29,14 +29,20 @@ public static class BrandIdentity
     public const string WindowMessageClassName = "AlduneHotkey";
 
     /// <summary>
-    /// Mutex de instancia única. El instalador (<c>installer/Aldune.iss</c>, <c>AppMutex</c>) usa el
-    /// mismo nombre para pedir que se cierre Aldune antes de actualizar o desinstalar: si cambia
-    /// aquí, hay que cambiarlo allí.
+    /// Mutex de instancia única. El instalador (<c>installer/Aldune.iss</c>) lo usa para saber si
+    /// Aldune está abierta al actualizar o desinstalar: si cambia aquí, hay que cambiarlo allí.
     /// </summary>
     public const string SingleInstanceMutexName = "AlduneSingleInstance";
 
     /// <summary>Evento con el que una segunda instancia avisa a la primera antes de cerrarse.</summary>
     public const string SingleInstanceActivateEventName = "AlduneActivate";
+
+    /// <summary>
+    /// Evento con el que el instalador pide a Aldune que se cierre (guardando las notas abiertas) para
+    /// poder sustituir el ejecutable sin que haya que cerrarla a mano. Mismo nombre en
+    /// <c>installer/Aldune.iss</c>.
+    /// </summary>
+    public const string SingleInstanceQuitEventName = "AlduneQuit";
 
     /// <summary>Nombre del archivo de base de datos SQLite de notas.</summary>
     public const string DatabaseFileName = "notes.db";

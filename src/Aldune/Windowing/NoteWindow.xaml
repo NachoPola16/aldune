@@ -128,6 +128,7 @@
                  AppCoordinator.IsNoteOpen). Su alto es el de la pestaña. -->
             <RowDefinition Height="40" />
             <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
 
         <!-- La cabecera **es** la primera línea de la nota, editable aquí en vez de repetida abajo.
@@ -279,6 +280,16 @@
                                 <TextBlock Text="Ctrl+Shift+L" Foreground="#8A8175" HorizontalAlignment="Right" />
                             </Grid>
                         </Button>
+                        <!-- Solo con alguna tarea hecha (se decide al abrir el menú). Pensadas para una
+                             lista que se reutiliza, como la de la compra. -->
+                        <Button x:Name="UncheckAllButton" Click="OnUncheckAllClick"
+                                Content="{x:Static res:Strings.UncheckAllTasks}"
+                                Visibility="Collapsed"
+                                Style="{StaticResource NoteMenuItemStyle}" />
+                        <Button x:Name="RemoveCheckedButton" Click="OnRemoveCheckedClick"
+                                Content="{x:Static res:Strings.RemoveCheckedTasks}"
+                                Visibility="Collapsed"
+                                Style="{StaticResource NoteMenuItemStyle}" />
                         <Border Background="#3C3730" Height="1" Margin="0,0,0,4" />
 
                         <Button x:Name="ReminderButton" Click="OnReminderMenuClick"
@@ -483,6 +494,26 @@
                         Visibility="Collapsed" />
             </Canvas>
         </Grid>
+
+        <!-- Aparece cuando todas las tareas de la nota están hechas: lo siguiente es o volver a
+             empezar la lista (la de la compra de la semana que viene) o guardarla. Fila propia y no
+             encima del texto, para no tapar la última tarea. -->
+        <StackPanel x:Name="AllDoneBar" Grid.Row="2" Orientation="Horizontal"
+                    Margin="20,-8,20,12" Visibility="Collapsed">
+            <TextBlock Text="{x:Static res:Strings.AllTasksDone}" FontSize="12"
+                       Foreground="{DynamicResource NoteInkBrush}" Opacity="0.75"
+                       VerticalAlignment="Center" Margin="0,0,10,0" />
+            <Button Click="OnUncheckAllClick" Style="{StaticResource NoteActionButtonStyle}"
+                    Padding="8,3" Margin="0,0,6,0">
+                <TextBlock Text="{x:Static res:Strings.UncheckAllTasks}" FontSize="12"
+                           Foreground="{DynamicResource NoteInkBrush}" />
+            </Button>
+            <Button x:Name="AllDoneArchiveButton" Click="OnArchiveClick" Style="{StaticResource NoteActionButtonStyle}"
+                    Padding="8,3">
+                <TextBlock Text="{x:Static res:Strings.Archive}" FontSize="12"
+                           Foreground="{DynamicResource NoteInkBrush}" />
+            </Button>
+        </StackPanel>
     </Grid>
     </Border>
 </Window>

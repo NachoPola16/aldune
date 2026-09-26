@@ -91,7 +91,7 @@ public class NotesRepositoryTaskCompletionTests : IDisposable
     public void PruneExpiredCompletedTasks_CleansUpTheCompletionRecordForTheRemovedLine()
     {
         var line = "☒ tarea vencida";
-        var text = line;
+        var text = $"título\r\n{line}";
         var note = _sut.Create(text, "#F5E3B3", "primary");
         var hash = TaskCompletion.HashLine(line);
         _sut.RecordTaskCompletion(note.Id, hash, DateTimeOffset.UtcNow - TimeSpan.FromDays(3));
@@ -105,7 +105,7 @@ public class NotesRepositoryTaskCompletionTests : IDisposable
     public void PruneExpiredCompletedTasks_WithNothingExpired_DoesNotTouchTheNote()
     {
         var line = "☒ tarea reciente";
-        var text = line;
+        var text = $"título\r\n{line}";
         var note = _sut.Create(text, "#F5E3B3", "primary");
         var hash = TaskCompletion.HashLine(line);
         _sut.RecordTaskCompletion(note.Id, hash, DateTimeOffset.UtcNow);
@@ -126,5 +126,66 @@ public class NotesRepositoryTaskCompletionTests : IDisposable
         _sut.Delete(note.Id);
 
         Assert.Empty(_sut.GetTaskCompletions(note.Id));
+    }
+    [Fact]
+    public void PruneExpiredCompletedTasks_NeverTouchesTheTitle()
+    {
+        // La ventana solo mira el cuerpo; el barrido de arranque miraba también el título y se
+        // comía "☒ llamar al banco" (y con él, el título de la nota).
+        var text = "☒ llamar al banco\r\ncuerpo";
+        var note = _sut.Create(text, "#F5E3B3", "primary");
+        _sut.RecordTaskCompletion(note.Id, TaskCompletion.HashLine("☒ llamar al banco"), DateTimeOffset.UtcNow - TimeSpan.FromDays(3));
+
+        Assert.False(_sut.PruneExpiredCompletedTasks(note.Id, text, TimeSpan.FromDays(1)));
+        Assert.Equal(text, _sut.GetById(note.Id)!.Text);
+    }
+
+    [Fact]
+    public void PruneExpiredCompletedTasks_StartsTheClockOfCheckedTasksWithoutOne()
+    {
+        var text = "título\r\n☒ marcada sin registro";
+        var note = _sut.Create(text, "#F5E3B3", "primary");
+        var before = DateTimeOffset.UtcNow;
+
+        _sut.PruneExpiredCompletedTasks(note.Id, text, TimeSpan.FromDays(1));
+
+        var started = Assert.Single(_sut.GetTaskCompletions(note.Id));
+        Assert.Equal(TaskCompletion.HashLine("☒ marcada sin registro"), started.Key);
+        Assert.True(started.Value >= before.AddSeconds(-1));
+    }
+
+    [Fact]
+    public void PruneExpiredCompletedTasksInActiveNotes_SkipsProtectedNotesAndKeepsTheirClocks()
+    {
+        // Una nota protegida se lee sin texto: podarla con ese texto vacío borraba sus relojes y sus
+        // tareas vencidas ya no se borraban nunca.
+        var note = _sut.Create("Secreta\r\n☒ tarea", "#F5E3B3", "primary");
+        _sut.Protect(note.Id, "clave-segura-1");
+        var hash = TaskCompletion.HashLine("☒ tarea");
+        _sut.RecordTaskCompletion(note.Id, hash, DateTimeOffset.UtcNow - TimeSpan.FromDays(3));
+
+        _sut.PruneExpiredCompletedTasksInActiveNotes(TimeSpan.FromDays(1), new HashSet<Guid>());
+
+        Assert.True(_sut.GetTaskCompletions(note.Id).ContainsKey(hash));
+        Assert.True(_sut.TryUnlock(note.Id, "clave-segura-1", out var unlocked));
+        Assert.Equal("Secreta\r\n☒ tarea", unlocked!.Text);
+    }
+
+    [Fact]
+    public void PruneExpiredCompletedTasksInActiveNotes_SkipsTheGivenNotes_AndPrunesTheRest()
+    {
+        // Las notas abiertas se podan desde su ventana: podarlas aquí dejaría la ventana con el
+        // texto viejo, que volvería a guardarse encima.
+        var open = _sut.Create("abierta\r\n☒ vencida", "#F5E3B3", "primary");
+        var closed = _sut.Create("cerrada\r\n☒ vencida", "#F5E3B3", "primary");
+        var hash = TaskCompletion.HashLine("☒ vencida");
+        _sut.RecordTaskCompletion(open.Id, hash, DateTimeOffset.UtcNow - TimeSpan.FromDays(3));
+        _sut.RecordTaskCompletion(closed.Id, hash, DateTimeOffset.UtcNow - TimeSpan.FromDays(3));
+
+        int pruned = _sut.PruneExpiredCompletedTasksInActiveNotes(TimeSpan.FromDays(1), new HashSet<Guid> { open.Id });
+
+        Assert.Equal(1, pruned);
+        Assert.Equal("abierta\r\n☒ vencida", _sut.GetById(open.Id)!.Text);
+        Assert.Equal("cerrada", _sut.GetById(closed.Id)!.Text);
     }
 }

@@ -31,6 +31,11 @@ public static class Strings
     public static string ReminderOpenNote => T("Open note", "Abrir nota");
     public static string ReminderShowNotes => T("Show notes", "Ver notas");
     public static string WelcomeOpenManager => T("Show my notes", "Ver mis notas");
+    public static string ReminderPendingTasks(int pending, IReadOnlyList<string> first)
+    {
+        var list = string.Join(", ", first) + (pending > first.Count ? "…" : "");
+        return T($"Still to do ({pending}): {list}", $"Falta ({pending}): {list}");
+    }
     public static string ReminderManyDue(int count) => T($"{count} reminders pending", $"{count} recordatorios pendientes");
     public static string Cut => T("Cut", "Cortar");
     public static string Copy => T("Copy", "Copiar");
@@ -56,6 +61,9 @@ public static class Strings
     public static string CloseTooltip => T("Close (Esc)", "Cerrar (Esc)");
     public static string ConvertToTask => T("Convert to task", "Convertir en tarea");
     public static string ConvertToBullet => T("Convert to list", "Convertir en lista");
+    public static string UncheckAllTasks => T("Uncheck all", "Desmarcar todas");
+    public static string RemoveCheckedTasks => T("Remove checked tasks", "Borrar las tareas hechas");
+    public static string AllTasksDone => T("✓ All done", "✓ Todo hecho");
     public static string CustomColor => T("Choose another color…", "Elegir otro color…");
     public static string CustomColorContrastError => T(
         "Enter a valid HEX color.",
@@ -306,6 +314,8 @@ public static class Strings
     public static string RememberPositionsCheckbox => T("Remember note positions", "Recordar la posición de las notas");
     public static string RememberPositionsHint => T("When you close a note, it reopens in the same spot and size on the desktop — like a real sticky note.", "Al cerrar una nota, la próxima vez se abre en el mismo sitio y con el mismo tamaño en el escritorio — como un post-it de verdad.");
 
+    public static string MoveCompletedTasksCheckbox => T("Move checked tasks to the end of the list", "Mover las tareas hechas al final de la lista");
+    public static string MoveCompletedTasksHint => T("What's left stays together at the top, like a shopping list. Unchecking one moves it back up.", "Lo pendiente queda junto arriba, como en una lista de la compra. Al desmarcar una, vuelve a subir.");
     public static string AutoHideCompletedTasksCheckbox => T("Delete completed tasks automatically", "Borrar automáticamente las tareas completadas");
     public static string AutoHideCompletedTasksHint => T("A checked task stays for a while so you can still see it, then its line is removed from the note for good.", "Una tarea marcada se queda un tiempo por si quieres verla, y después su línea se borra de la nota para siempre.");
     public static string AutoHideCompletedTasksDelayLabel => T("After:", "Después de:");
@@ -484,9 +494,23 @@ public static class Strings
     public static string QuickHelpHover => T("• Hover over the screen edge to fan out the notes.", "• Pasa el ratón por el borde de la pantalla para desplegar las notas.");
     public static string QuickHelpDrag => T("• Click a tab to open that note; drag it yourself to move it — it will remember the spot.", "• Haz clic en una pestaña para abrir esa nota; arrástrala tú para moverla — recordará el sitio.");
     public static string QuickHelpRightClick => T("• Right-click a tab: change color, archive, or send to trash without opening it.", "• Clic derecho en una pestaña: cambiar color, archivar o tirar a la papelera sin abrirla.");
-    public static string QuickHelpTask => T("• Ctrl+L turns a line into a task. Click the checkbox to check it off, and Enter\n   keeps the list going on its own.", "• Ctrl+L convierte una línea en tarea. Haz clic en la casilla para marcarla, y Enter\n   sigue la lista sola.");
+    public static string SettingsPageGeneral => T("General", "General");
+    public static string SettingsPageNotes => T("Notes and tasks", "Notas y tareas");
+    public static string SettingsPageDock => T("Dock and screens", "Dock y pantallas");
+    public static string SettingsPageColors => T("Colors", "Colores");
+    public static string SettingsPageSync => T("Sync", "Sincronización");
+    public static string SettingsPageHelp => T("Help", "Ayuda");
+    public static string SettingsPageAbout => T("About", "Acerca de");
+    public static string QuickHelpDockGroup => T("The dock", "El dock");
+    public static string QuickHelpNotesGroup => T("Notes", "Notas");
+    public static string QuickHelpTasksGroup => T("Tasks and lists", "Tareas y listas");
+    public static string QuickHelpSyncGroup => T("Sync", "Sincronización");
+    public static string QuickHelpTask => T("• Ctrl+L turns a line into a task. Click the checkbox (or press Ctrl+Enter) to check it off, and Enter keeps the list going on its own.", "• Ctrl+L convierte una línea en tarea. Haz clic en la casilla (o pulsa Ctrl+Enter) para marcarla, y Enter sigue la lista sola.");
+    public static string QuickHelpBullets => T("• Ctrl+Shift+L makes a bulleted list. Tab and Shift+Tab indent a line, for subtasks.", "• Ctrl+Shift+L hace una lista con viñetas. Tab y Mayús+Tab sangran la línea, para subtareas.");
+    public static string QuickHelpLists => T("• For a list you reuse, like the shopping list: ⋯ > Uncheck all, or Remove checked tasks. In Settings, checked tasks can move to the end. Pasting a Markdown list (- [ ]) brings its checkboxes.", "• Para una lista que se repite, como la de la compra: ⋯ > Desmarcar todas, o Borrar las tareas hechas. En Ajustes, las hechas pueden bajar al final. Pegar una lista de Markdown (- [ ]) trae sus casillas.");
+    public static string QuickHelpReminder => T("• ⋯ > Reminder notifies you at a set time, and the notice lists what's still to do.", "• ⋯ > Recordatorio te avisa a una hora, y el aviso dice qué tareas faltan.");
     public static string QuickHelpMoveLine => T("• Alt+Up/Down moves the current line up or down — handy for reordering a checklist.", "• Alt+Arriba/Abajo sube o baja la línea del cursor — útil para reordenar una lista de tareas.");
-    public static string QuickHelpMenu => T("• The ⋯ button on a note opens color, “always on top,” archive and trash.", "• El botón ⋯ de una nota abre color, «siempre encima», archivar y papelera.");
+    public static string QuickHelpMenu => T("• The ⋯ button on a note: tasks, reminder, color, “always on top,” password, tags, export, archive and trash.", "• El botón ⋯ de una nota: tareas, recordatorio, color, «siempre encima», contraseña, etiquetas, exportar, archivar y papelera.");
     public static string QuickHelpEscape => T("• Esc closes the open note without losing what you wrote (it autosaves).", "• Esc cierra la nota abierta sin perder lo escrito (se guarda solo).");
     public static string QuickHelpHotkeyOn(string combo) =>
         T($"• {combo} creates a new note from anywhere.", $"• {combo} crea una nota nueva desde cualquier sitio.");

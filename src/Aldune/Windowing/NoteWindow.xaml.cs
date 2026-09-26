@@ -18,6 +18,11 @@ public partial class NoteWindow : Window
     private static readonly TimeSpan AutosaveDelay = TimeSpan.FromMilliseconds(500);
     private static readonly TimeSpan TaskPruneInterval = TimeSpan.FromMinutes(1);
 
+    /// <summary>Tras la última tecla en el cuerpo, cuánto esperar antes de borrar solas las tareas
+    /// vencidas: quitar una línea mientras se escribe mueve el texto bajo el cursor.</summary>
+    private static readonly TimeSpan TypingGrace = TimeSpan.FromSeconds(30);
+    private DateTime _lastBodyKeyAt = DateTime.MinValue;
+
     /// <summary>El tamaño inicial real de esta ventana, capturado desde el XAML. Es el tamaño al que
     /// vuelve "Restaurar tamaño" y el mínimo al que puede encogerse el ajuste automático.</summary>
     private readonly double _initialWidth;
@@ -119,7 +124,6 @@ public partial class NoteWindow : Window
         {
             _autosaveTimer.Stop();
             Flush();
-            PruneExpiredTasks();
         };
 
         // Las tareas pueden vencer aunque la nota permanezca abierta y no se edite. El autoguardado
@@ -167,6 +171,7 @@ public partial class NoteWindow : Window
         // del arranque de la app (que solo barre todas las notas una vez, ver App.xaml.cs) — si el
         // plazo venció mientras la nota estaba cerrada, aquí es donde se nota.
         Loaded += (_, _) => PruneExpiredTasks();
+        Loaded += (_, _) => UpdateAllDoneBar();
 
         // Una nota que ya traía más o menos texto del que le corresponde a su alto guardado (escrito
         // antes de que existiera el ajuste automático, o el alto de la última sesión ya no encaja)
@@ -202,6 +207,7 @@ public partial class NoteWindow : Window
             // preguntar por rectángulos de caracteres, que si no reflejarían el texto anterior.
             TextBody.UpdateLayout();
             RefreshCheckboxHoverAfterTextChange();
+            UpdateAllDoneBar();
             FitHeightToContent();
             ClampToWorkArea();
         };
@@ -233,6 +239,7 @@ public partial class NoteWindow : Window
         };
 
         TextBody.PreviewKeyDown += OnBodyKeyDown;
+        DataObject.AddPastingHandler(TextBody, OnBodyPasting);
         TextBody.PreviewMouseLeftButtonDown += OnBodyMouseDown;
         TextBody.MouseMove += OnBodyMouseMove;
         TextBody.MouseLeave += OnBodyMouseLeave;
@@ -629,6 +636,18 @@ public partial class NoteWindow : Window
 
     private void OnBodyKeyDown(object sender, KeyEventArgs e)
     {
+        _lastBodyKeyAt = DateTime.UtcNow;
+
+        // Ctrl+Enter: marca o desmarca la tarea de la línea del cursor, para no tener que ir al ratón
+        // (hasta ahora era la única forma). En una línea que no es tarea, Enter normal.
+        if (e.Key == Key.Return && Keyboard.Modifiers == ModifierKeys.Control
+            && TaskLists.CheckboxOnLine(TextBody.Text, TextBody.CaretIndex) is { } glyph)
+        {
+            ToggleTask(glyph, fromKeyboard: true);
+            e.Handled = true;
+            return;
+        }
+
         // Alt+Arriba/Alt+Abajo: sube o baja la línea del cursor, intercambiándola con la vecina
         // (ver Aldune.Core.LineMovement para el porqué de un atajo en vez de arrastrar dentro del
         // TextBox). Va antes que el resto de gestos de Arriba/Abajo para que tenga prioridad sobre
@@ -819,19 +838,41 @@ public partial class NoteWindow : Window
 
         var zone = FindCheckboxZoneAt(position);
         if (zone is not { } z) return;
-
-        var toggled = TaskLines.ToggleCheckboxAt(TextBody.Text, z.GlyphIndex);
-        if (toggled is null) return;
-
-        RecordTaskToggle(toggled, z.GlyphIndex);
-
-        int caret = TextBody.CaretIndex;
-        ReplaceBody(toggled, caret);
+        if (!ToggleTask(z.GlyphIndex, fromKeyboard: false)) return;
 
         // Handled: el clic ya ha hecho su trabajo, y dejarlo pasar movería además el cursor al
         // sitio donde se pulsó, que no es lo que se pretendía al marcar una casilla.
         TextBody.Focus();
         e.Handled = true;
+    }
+
+    /// <summary>
+    /// Marca o desmarca la tarea de <paramref name="glyphIndex"/> (clic en la casilla o Ctrl+Enter) y,
+    /// con "hechas al final" activado, la coloca en su sitio de la lista (ver
+    /// <see cref="TaskLists.SettleToggled"/>). Con el ratón el cursor sigue en el mismo carácter; con el
+    /// teclado se queda en la misma línea de la pantalla, que ahora ocupa la tarea siguiente, para poder
+    /// ir marcando una lista seguida con Ctrl+Enter.
+    /// </summary>
+    private bool ToggleTask(int glyphIndex, bool fromKeyboard)
+    {
+        var toggled = TaskLines.ToggleCheckboxAt(TextBody.Text, glyphIndex);
+        if (toggled is null) return false;
+
+        RecordTaskToggle(toggled, glyphIndex);
+
+        int caret = TextBody.CaretIndex;
+        var settled = _settings is { MoveCompletedTasksToEnd: true }
+            ? TaskLists.SettleToggled(toggled, glyphIndex)
+            : TextEdit.Unchanged(toggled);
+
+        int newCaret = settled.MapIndex(caret);
+        if (fromKeyboard && settled.Changed)
+        {
+            int lineStart = TaskLines.LineStart(toggled, glyphIndex);
+            newCaret = lineStart + TaskLines.LineContaining(settled.Text, lineStart).Length;
+        }
+        ReplaceBody(settled.Text, newCaret);
+        return true;
     }
 
     /// <summary>
@@ -940,15 +981,15 @@ public partial class NoteWindow : Window
     }
 
     /// <summary>
-    /// Si el ajuste de borrar tareas completadas está activo, guarda o borra cuándo se marcó esta
-    /// línea concreta como hecha (ver <see cref="Aldune.Core.TaskCompletion"/>). El hash se calcula
-    /// sobre el texto sin el glifo, así que desmarcar y volver a marcar la misma tarea más tarde
-    /// reinicia el reloj en vez de arrastrar el momento en que se marcó la primera vez.
+    /// Guarda o borra cuándo se marcó esta línea concreta como hecha (ver
+    /// <see cref="Aldune.Core.TaskCompletion"/>). El hash se calcula sobre el texto sin el glifo, así que
+    /// desmarcar y volver a marcar la misma tarea más tarde reinicia el reloj en vez de arrastrar el
+    /// momento en que se marcó la primera vez. Se apunta aunque el borrado automático esté apagado: si
+    /// no, al encenderlo contaba una marca vieja de antes de apagarlo (una tarea recién vuelta a marcar
+    /// se borraba en el acto).
     /// </summary>
     private void RecordTaskToggle(string afterText, int glyphIndex)
     {
-        if (_settings is not { AutoHideCompletedTasks: true }) return;
-
         var line = TaskLines.LineContaining(afterText, glyphIndex);
         var hash = TaskCompletion.HashLine(line);
         bool nowChecked = afterText[glyphIndex] == TaskLines.Checked || afterText[glyphIndex] == TaskLines.CheckedAlternate;
@@ -961,25 +1002,38 @@ public partial class NoteWindow : Window
     /// Borra del cuerpo las tareas marcadas cuyo plazo ya venció (ver <see cref="Aldune.Core.TaskCompletion"/>).
     /// Solo opera sobre <c>TextBody</c>, no sobre el texto completo de la nota: igual que Ctrl+L o el
     /// clic en la casilla, las tareas solo importan en el cuerpo — el título casi nunca lo es.
+    ///
+    /// No borra mientras se está escribiendo (<see cref="TypingGrace"/>), ni antes de la primera sync
+    /// si está activa (<see cref="AppCoordinator.TaskPruningAllowed"/>). Al borrar, el cursor y la
+    /// selección se trasladan al texto nuevo en vez de quedarse en el mismo índice.
     /// </summary>
     private void PruneExpiredTasks()
     {
         if (_settings is not { AutoHideCompletedTasks: true } settings) return;
+        if (!_coordinator.TaskPruningAllowed) return;
+        if (TextBody.IsKeyboardFocusWithin && DateTime.UtcNow - _lastBodyKeyAt < TypingGrace) return;
 
-        var completions = _repository.GetTaskCompletions(_note.Id);
-        if (completions.Count == 0) return;
-
-        var result = TaskCompletion.Prune(TextBody.Text, completions, DateTimeOffset.UtcNow, settings.AutoHideCompletedTasksDelay);
-        foreach (var hash in result.HashesToClear)
-        {
-            _repository.ClearTaskCompletion(_note.Id, hash);
-        }
+        var now = DateTimeOffset.UtcNow;
+        var result = TaskCompletion.Prune(TextBody.Text, _repository.GetTaskCompletions(_note.Id), now, settings.AutoHideCompletedTasksDelay);
+        foreach (var hash in result.HashesToClear) _repository.ClearTaskCompletion(_note.Id, hash);
+        foreach (var hash in result.HashesToStart) _repository.RecordTaskCompletion(_note.Id, hash, now);
 
         if (result.Changed)
         {
-            ReplaceBody(result.Text, Math.Min(TextBody.CaretIndex, result.Text.Length));
-            OnEdited();
+            ApplyEdit(result.Edit);
         }
+    }
+
+    /// <summary>Sustituye el cuerpo por un cambio hecho por la app (no tecleado), llevando el cursor y la
+    /// selección al mismo texto en su nueva posición. Pasa por <c>Text</c>, que WPF guarda en el
+    /// historial: Ctrl+Z lo deshace como cualquier otra edición.</summary>
+    private void ApplyEdit(TextEdit edit)
+    {
+        if (!edit.Changed) return;
+        int start = edit.MapIndex(TextBody.SelectionStart);
+        int end = edit.MapIndex(TextBody.SelectionStart + TextBody.SelectionLength);
+        TextBody.Text = edit.Text;
+        TextBody.Select(start, Math.Max(0, end - start));
     }
 
     /// <summary>El asa de la cabecera es un elemento normal (no zona de "caption" de WindowChrome) para
@@ -1074,7 +1128,66 @@ public partial class NoteWindow : Window
         }
 
         PopulateColorSwatches();
+        var listActions = TaskLists.HasChecked(TextBody.Text) ? Visibility.Visible : Visibility.Collapsed;
+        UncheckAllButton.Visibility = listActions;
+        RemoveCheckedButton.Visibility = listActions;
         ActionsPopup.IsOpen = true;
+    }
+
+    /// <summary>Desmarca todas las tareas: volver a empezar una lista que se repite. Se puede deshacer
+    /// con Ctrl+Z, igual que cualquier edición.</summary>
+    private void OnUncheckAllClick(object sender, RoutedEventArgs e)
+    {
+        ForgetCheckedTasks();
+        ApplyEdit(TaskLists.UncheckAll(TextBody.Text));
+        ActionsPopup.IsOpen = false;
+        TextBody.Focus();
+    }
+
+    /// <summary>Quita ya las tareas hechas, sin esperar al borrado automático (o sin tenerlo activado).
+    /// Se puede deshacer con Ctrl+Z mientras la nota siga abierta.</summary>
+    private void OnRemoveCheckedClick(object sender, RoutedEventArgs e)
+    {
+        ForgetCheckedTasks();
+        ApplyEdit(TaskLists.RemoveChecked(TextBody.Text));
+        ActionsPopup.IsOpen = false;
+        TextBody.Focus();
+    }
+
+    /// <summary>Las tareas hechas van a dejar de estarlo: su reloj del borrado automático ya no vale.</summary>
+    private void ForgetCheckedTasks()
+    {
+        foreach (var raw in TextBody.Text.Split('\n'))
+        {
+            var line = raw.TrimEnd('\r');
+            if (TaskLines.IsChecked(line)) _repository.ClearTaskCompletion(_note.Id, TaskCompletion.HashLine(line));
+        }
+    }
+
+    /// <summary>La franja "Todo hecho" se ve cuando todas las tareas están hechas (no en la papelera ni
+    /// en el archivo: ahí archivar no pinta nada). Cambia el alto de la nota, así que se reajusta.</summary>
+    private void UpdateAllDoneBar()
+    {
+        var visibility = _note.State == NoteState.Active && TaskLists.IsAllDone(TextBody.Text)
+            ? Visibility.Visible
+            : Visibility.Collapsed;
+        if (AllDoneBar.Visibility == visibility) return;
+        AllDoneBar.Visibility = visibility;
+        UpdateLayout();
+        FitHeightToContent();
+    }
+
+    /// <summary>Una lista pegada con la sintaxis de tareas de Markdown (<c>- [ ]</c>, la que exporta la
+    /// propia app) entra ya con casillas.</summary>
+    private void OnBodyPasting(object sender, DataObjectPastingEventArgs e)
+    {
+        if (e.DataObject.GetData(DataFormats.UnicodeText) is not string pasted) return;
+        var converted = TaskLists.ConvertMarkdownTasks(pasted);
+        if (converted == pasted) return;
+
+        var data = new DataObject();
+        data.SetData(DataFormats.UnicodeText, converted);
+        e.DataObject = data;
     }
 
     /// <summary>Lo mismo que Ctrl+L, para quien no conoce el atajo (que es casi todo el mundo).</summary>

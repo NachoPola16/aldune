@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
@@ -1685,7 +1685,7 @@ public partial class EdgeDockWindow : Window
     private void OnSyncRightClick(object sender, MouseButtonEventArgs e)
     {
         HoldOpenForWindow();
-        _coordinator.OpenSettings();
+        _coordinator.OpenSettings("Sync");
         e.Handled = true;
     }
 

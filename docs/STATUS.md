@@ -3578,3 +3578,90 @@ hace el monitor del usuario), el dock puede volver a ella un par de segundos has
 está apagada.
 
 Tests: 707/707.
+
+## 1.1.0: tareas, listas, Ajustes por páginas e instalador sin cerrar la app (sesión 2026-09-26)
+
+Revisión pedida por el usuario del ajuste "borrar tareas completadas" (que **borra**, no oculta: ver la
+sesión del 2026-09-09) y funciones nuevas pensadas también para la lista de la compra. Todo se
+reprodujo antes con una sonda (`docs/WPF_PROBES.md`) y se verificó después con otra.
+
+### Fallos encontrados y arreglados
+
+- **Sync: una copia vieja pisaba lo escrito en otro equipo.** El barrido del arranque podaba antes de
+  sincronizar; la poda ponía fecha nueva a la copia vieja y ganaba la sync (lo del otro equipo quedaba
+  solo en Conflictos). Ahora, con la sync activa, no se poda nada —ni al arrancar ni desde las
+  ventanas— hasta la primera sincronización correcta de la sesión
+  (`AppCoordinator.TaskPruningAllowed`), y cada sync correcta lanza el barrido de las notas cerradas.
+  Contrapartida: con la sync activa y sin conexión, no se borra nada hasta que se pueda sincronizar.
+- **El cursor saltaba** al borrarse una línea por encima (se quedaba en el mismo índice) y se perdía la
+  selección; pasaba al dejar de escribir un momento, porque el autoguardado disparaba la poda. Ahora
+  `TextEdit` (Core) traslada cursor y selección, la poda ya no va en el autoguardado y la ventana no
+  poda hasta 30 s después de la última tecla en el cuerpo.
+- **La hora de marcado solo se apuntaba con el ajuste encendido**: al apagarlo y volver a encenderlo
+  contaba una marca vieja (una tarea recién vuelta a marcar se borraba en el acto). Ahora se apunta
+  siempre.
+- **Tareas marcadas sin hora no se borraban nunca** (marcadas con el ajuste apagado, pegadas, escritas a
+  mano, recuperadas con Ctrl+Z, o la gemela de otra con el mismo texto). `TaskCompletion.Prune` las
+  devuelve en `HashesToStart` y su plazo empieza a contar desde que se ven.
+- **Notas protegidas**: el barrido del arranque las leía sin texto y borraba sus relojes. Ahora se las
+  salta (`PruneExpiredCompletedTasksInActiveNotes`).
+- **El barrido del arranque miraba también el título** y podía comérselo; ahora solo el cuerpo, igual
+  que la ventana.
+- Aceptado sin cambios: acortar el plazo se aplica hacia atrás (es lo que dice el ajuste), y Ctrl+Z tras
+  un borrado automático recupera la línea.
+- La limitación de 2026-09-09 ("no cubre dejar la nota abierta sin tocarla") ya no existía: hay un
+  temporizador de un minuto por ventana.
+
+### Funciones nuevas
+
+- **Ctrl+Enter** marca o desmarca la tarea de la línea del cursor (antes solo con el ratón).
+- **"Desmarcar todas"** y **"Borrar las tareas hechas"** en el menú ⋯, solo si hay alguna hecha. Se
+  deshacen con Ctrl+Z.
+- **"Mover las tareas hechas al final de la lista"** (Ajustes, `AppSettings.MoveCompletedTasksToEnd`,
+  apagado por defecto): la recién hecha baja al final de su lista y la desmarcada vuelve encima de las
+  hechas (`TaskLists.SettleToggled`). La lista son tareas seguidas con la misma sangría; si hay
+  subtareas no se mueve nada, para no separar hijas de su madre. Con Ctrl+Enter el cursor se queda en la
+  misma línea de la pantalla, así se marca una lista seguida.
+- **Franja "✓ Todo hecho"** al pie de la nota cuando todas las tareas están hechas, con "Desmarcar todas"
+  y "Archivar".
+- **Pegar Markdown** (`- [ ]`, `- [x]`, con `*`/`+` o sin viñeta) entra ya con casillas.
+- **El aviso del recordatorio enseña lo pendiente**: "Falta (4): leche, huevos, sal…".
+
+### Decisiones
+
+- **Sin recordatorio por tarea**: se mantiene lo decidido en la spec de recordatorios (una línea no
+  tiene identidad estable). Esta revisión lo confirma: la identidad por texto ya fallaba en el borrado
+  automático.
+- **La lista de la compra no es un tipo de nota aparte**: un tipo nuevo iría en el formato de sync (las
+  versiones anteriores lo rechazan) y duplicaría el editor. Se cubre con las funciones de arriba, que
+  sirven para cualquier lista.
+
+Tests: 742/742. Smoke test en verde.
+
+### Segunda ronda (misma sesión)
+
+- **Sync al arrancar**: con la sincronización periódica activa, la primera va 5 s después de arrancar
+  (`ConfigureAutomaticSync(firstRunIn)`) en vez de esperar el intervalo entero. Así llega lo escrito
+  en otro equipo antes de editar una copia vieja, y el borrado automático de tareas no se queda parado.
+  Con la sync solo manual no se sincroniza sola.
+- **Test intermitente** (`ObjectDisposedException` en `NotesDatabase.Initialize` de otra prueba): no
+  se reprodujo en 15 pasadas, pero la traza encaja con `LocalBackupTests.Dispose`, que llamaba a
+  `ClearAllPools()` y cerraba conexiones de otras clases que corrían en paralelo. Ahora solo vacía los
+  pools de sus propias bases.
+- **Instalar sin cerrar Aldune a mano**: el instalador ya no usa `AppMutex` (se paraba hasta cerrarla,
+  y su ventana quedaba debajo de las notas y el dock, que están siempre encima). Al empezar, antes de
+  enseñar el asistente, activa el evento `AlduneQuit` (`BrandIdentity.SingleInstanceQuitEventName`):
+  Aldune guarda las notas abiertas y sale. Al terminar se vuelve a abrir (casilla del final, o sola en
+  una instalación silenciosa), y si se cancela se reabre la de antes. Las versiones 1.0.3 y anteriores
+  no conocen el evento: para ellas queda el Restart Manager (`CloseApplications=force`), que ofrece
+  cerrarla en "Preparando la instalación". Al desinstalar también se cierra sola; si es una versión
+  antigua, se pide cerrarla. **Sin probar de punta a punta**: el script compila, pero probarlo exige
+  instalar sobre la instalación real del usuario.
+- **Ayuda rápida** por temas (dock, notas, tareas y listas, sincronización) y completa: faltaban
+  Ctrl+Shift+L, Tab/Mayús+Tab, recordatorios, el menú ⋯ entero y las funciones de lista.
+- **Ajustes con menú lateral** (spec `docs/superpowers/specs/2026-09-26-aldune-ajustes-paginas-design.md`):
+  páginas General, Notas y tareas, Dock y pantallas, Colores, Sincronización, Ayuda y Acerca de, en una
+  ventana fija de 900 × 700 con tope contra la pantalla (antes 920 × 2150 con scroll). El modo
+  simplificado deja lo esencial (antes no dejaba ningún ajuste). El gestor sigue aparte, con un botón
+  "Gestionar notas" al pie del menú; el clic derecho en "Sincronizar" del dock abre esa página.
+  Verificado con sonda en los dos modos.

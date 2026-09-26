@@ -42,7 +42,7 @@ public partial class SettingsWindow : Window
         InitializeComponent();
         NativeMethods.CloakUntilFirstFrame(this);
         WindowCloseAnimation.Attach(this);
-        // SizeToContent="Height" todavía no conoce el alto final hasta que la ventana entra en
+        // El alto final (con el tope contra la pantalla) no se conoce hasta que la ventana entra en
         // el árbol visual. Mantener la ventana invisible durante ese primer layout evita que en
         // una pantalla vertical se vea un fotograma en (0,0) antes de recentrarla.
         Opacity = 0;
@@ -59,6 +59,7 @@ public partial class SettingsWindow : Window
         KeepDockOpenCheck.IsChecked = _settings.KeepDockOpen;
         RememberPositionsCheck.IsChecked = _settings.RememberNotePositions;
         PopulateTrackpadGestures();
+        MoveCompletedTasksCheck.IsChecked = _settings.MoveCompletedTasksToEnd;
         AutoHideTasksCheck.IsChecked = _settings.AutoHideCompletedTasks;
         AutoHideTasksDelayValueBox.Text = _settings.AutoHideCompletedTasksDelayValue.ToString();
         TrashRetentionValueBox.Text = _settings.TrashRetentionDays.ToString();
@@ -69,6 +70,7 @@ public partial class SettingsWindow : Window
         RefreshThemeSection();
         PopulateDelayUnits();
         UpdateInterfaceModeUi();
+        ShowPage(s_lastPage);
         UpdateAutoHideTasksUi();
         SyncProfileStore.Ensure(_settings);
         PopulateSyncProfiles();
@@ -76,9 +78,8 @@ public partial class SettingsWindow : Window
         LoadSyncProfileFields();
         _syncUiReady = true;
 
-        // Tope de alto contra la pantalla real, no un número fijo: con SizeToContent="Height" la
-        // ventana crece con su contenido, y en un portátil con escalado las últimas secciones se
-        // quedaban fuera sin scroll para alcanzarlas. El ScrollViewer del XAML se encarga del resto.
+        // Tope de alto contra la pantalla real, no solo el alto fijo del XAML: en un portátil con
+        // escalado 700 px pueden no caber. El ScrollViewer de cada página se encarga del resto.
         //
         // SystemParameters.WorkArea es SIEMPRE el área de trabajo del monitor PRIMARIO del sistema,
         // nunca la del monitor donde esta ventana vaya a mostrarse de verdad — con portátil +
@@ -157,15 +158,54 @@ public partial class SettingsWindow : Window
         UpdateInterfaceModeUi();
     }
 
+    /// <summary>
+    /// El modo simplificado deja lo esencial: arranque, atajo e idioma; en qué pantalla y borde va el
+    /// dock; y el tema de colores. Esconde las páginas de notas y tareas y de sincronización, y lo avanzado
+    /// del dock y de los colores. Antes escondía todos los ajustes, aunque su texto dijera "deja lo
+    /// esencial". Los valores por defecto de lo escondido ya valen para empezar.
+    /// </summary>
     private void UpdateInterfaceModeUi()
     {
-        AdvancedSettingsPanel.Visibility = _settings.SimplifiedMode
-            ? Visibility.Collapsed
-            : Visibility.Visible;
+        var advanced = _settings.SimplifiedMode ? Visibility.Collapsed : Visibility.Visible;
+        NavNotes.Visibility = advanced;
+        NavSync.Visibility = advanced;
+        DockAdvancedPanel.Visibility = advanced;
+        ThemeAdvancedPanel.Visibility = advanced;
         InterfaceModeButton.Content = _settings.SimplifiedMode
             ? Strings.SwitchToCompleteMode
             : Strings.SwitchToSimplifiedMode;
+
+        if (_currentPage is { } page && PageNav(page).Visibility != Visibility.Visible) ShowPage("General");
     }
+
+    /// <summary>La última página vista en esta sesión: al reabrir Ajustes se vuelve a ella.</summary>
+    private static string s_lastPage = "General";
+    private string? _currentPage;
+
+    private RadioButton PageNav(string page) => (RadioButton)FindName("Nav" + page);
+
+    /// <summary>Enseña una página del menú lateral ("General", "Notes", "Dock", "Colors", "Sync", "Help"
+    /// o "About"). Si está escondida por el modo simplificado, va a General.</summary>
+    internal void ShowPage(string page)
+    {
+        if (FindName(page + "Page") is not FrameworkElement || PageNav(page).Visibility != Visibility.Visible)
+            page = "General";
+
+        foreach (var name in new[] { "General", "Notes", "Dock", "Colors", "Sync", "Help", "About" })
+            ((FrameworkElement)FindName(name + "Page")).Visibility = name == page ? Visibility.Visible : Visibility.Collapsed;
+
+        _currentPage = page;
+        s_lastPage = page;
+        PageNav(page).IsChecked = true;
+        PageScroller.ScrollToTop();
+    }
+
+    private void OnPageChecked(object sender, RoutedEventArgs e)
+    {
+        if (sender is RadioButton { Tag: string page } && page != _currentPage) ShowPage(page);
+    }
+
+    private void OnManageNotesClick(object sender, RoutedEventArgs e) => _coordinator?.OpenNotesManager();
 
     private void OnMinimizeClick(object sender, RoutedEventArgs e) => WindowState = WindowState.Minimized;
 
@@ -177,15 +217,12 @@ public partial class SettingsWindow : Window
         if (WindowState == WindowState.Maximized)
         {
             WindowState = WindowState.Normal;
-            SizeToContent = SizeToContent.Height;
             RestoreNormalHeightLimit();
             return;
         }
 
-        // SizeToContent y MaxHeight son útiles en modo normal para no cortar Ajustes, pero ambos
-        // interfieren con el estado maximizado: WPF intenta medir el contenido y lo deja en el
-        // límite del 90% en vez de ocupar el área de trabajo completa.
-        SizeToContent = SizeToContent.Manual;
+        // MaxHeight es útil en modo normal para no cortar Ajustes, pero interfiere con el estado
+        // maximizado: lo dejaría en el límite del 90% en vez de ocupar el área de trabajo completa.
         MaxHeight = double.PositiveInfinity;
         WindowState = WindowState.Maximized;
     }
@@ -333,25 +370,43 @@ public partial class SettingsWindow : Window
             ? Strings.QuickHelpHotkeyOn(_settings.Hotkey.DisplayName)
             : Strings.QuickHelpHotkeyOff;
 
-        QuickHelpText.Text = string.Join("\n", new[]
+        // Por temas y no una lista de dieciséis líneas seguidas: quien busca cómo hacer algo con las
+        // tareas no tiene que leerse lo del dock.
+        var groups = new (string Title, string[] Lines)[]
         {
-            Strings.QuickHelpHover,
-            Strings.QuickHelpDrag,
-            Strings.QuickHelpRightClick,
-            Strings.QuickHelpTask,
-            Strings.QuickHelpMoveLine,
-            Strings.QuickHelpMenu,
-            Strings.QuickHelpEscape,
-            hotkeyLine,
-            Strings.QuickHelpTray,
-            Strings.QuickHelpHideDock,
-            Strings.QuickHelpDockMenus,
-            Strings.QuickHelpAutoHideTasks,
-            Strings.QuickHelpConflicts,
-            Strings.QuickHelpSync,
-            Strings.QuickHelpSearch,
-            Strings.QuickHelpAutoScroll
-        });
+            (Strings.QuickHelpDockGroup, new[]
+            {
+                Strings.QuickHelpHover, Strings.QuickHelpDrag, Strings.QuickHelpRightClick,
+                Strings.QuickHelpDockMenus, hotkeyLine, Strings.QuickHelpHideDock, Strings.QuickHelpTray,
+            }),
+            (Strings.QuickHelpNotesGroup, new[]
+            {
+                Strings.QuickHelpMenu, Strings.QuickHelpReminder, Strings.QuickHelpEscape,
+                Strings.QuickHelpMoveLine, Strings.QuickHelpAutoScroll, Strings.QuickHelpSearch,
+            }),
+            (Strings.QuickHelpTasksGroup, new[]
+            {
+                Strings.QuickHelpTask, Strings.QuickHelpBullets, Strings.QuickHelpLists,
+                Strings.QuickHelpAutoHideTasks,
+            }),
+            (Strings.QuickHelpSyncGroup, new[] { Strings.QuickHelpSync, Strings.QuickHelpConflicts }),
+        };
+
+        QuickHelpText.Inlines.Clear();
+        for (int i = 0; i < groups.Length; i++)
+        {
+            if (i > 0) QuickHelpText.Inlines.Add(new System.Windows.Documents.LineBreak());
+            QuickHelpText.Inlines.Add(new System.Windows.Documents.Run(groups[i].Title)
+            {
+                FontWeight = FontWeights.SemiBold,
+                Foreground = (Brush)FindResource("QuickHelpGroupBrush"),
+            });
+            foreach (var line in groups[i].Lines)
+            {
+                QuickHelpText.Inlines.Add(new System.Windows.Documents.LineBreak());
+                QuickHelpText.Inlines.Add(new System.Windows.Documents.Run(line));
+            }
+        }
     }
 
     private void PopulateMonitors()
@@ -512,6 +567,12 @@ public partial class SettingsWindow : Window
     private void OnRememberPositionsToggled(object sender, RoutedEventArgs e)
     {
         _settings.RememberNotePositions = RememberPositionsCheck.IsChecked == true;
+        _settingsService.Save(_settings);
+    }
+
+    private void OnMoveCompletedTasksToggled(object sender, RoutedEventArgs e)
+    {
+        _settings.MoveCompletedTasksToEnd = MoveCompletedTasksCheck.IsChecked == true;
         _settingsService.Save(_settings);
     }
 

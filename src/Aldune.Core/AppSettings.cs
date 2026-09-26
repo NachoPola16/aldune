@@ -157,6 +157,14 @@ public sealed class AppSettings
     /// </summary>
     public bool AutoHideCompletedTasks { get; set; }
 
+    /// <summary>
+    /// Si una tarea recién marcada baja al final de su lista (y vuelve a subir al desmarcarla), como en
+    /// una lista de la compra: lo pendiente queda arriba y junto. Es lo más parecido a "ocultar lo
+    /// hecho" que permite el texto plano, y no borra nada. Desactivado por defecto: mueve líneas del
+    /// texto, así que nadie lo sufre sin pedirlo (ver <see cref="TaskLists.SettleToggled"/>).
+    /// </summary>
+    public bool MoveCompletedTasksToEnd { get; set; }
+
     /// <summary>Cuántas unidades de <see cref="AutoHideCompletedTasksDelayUnit"/> esperar. Por defecto 1.</summary>
     public int AutoHideCompletedTasksDelayValue { get; set; } = 1;
 

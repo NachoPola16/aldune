@@ -10,19 +10,22 @@ namespace Aldune.Interop;
 ///
 /// La segunda instancia no se queda callada: avisa a la primera con un evento con nombre, y la
 /// primera responde abriendo el gestor de notas, para que quien la abrió vea que ya estaba en marcha.
-/// El mutex usa el mismo nombre que <c>AppMutex</c> en el instalador, que así pide cerrar Aldune antes
-/// de actualizar o desinstalar.
+/// El instalador mira el mutex para saber si Aldune está abierta y, si lo está, le pide que se cierre
+/// con otro evento con nombre (ver <see cref="ListenForQuit"/>).
 /// </summary>
 internal sealed class SingleInstance : IDisposable
 {
     private readonly Mutex _mutex;
     private readonly EventWaitHandle _activate;
+    private readonly EventWaitHandle _quit;
     private RegisteredWaitHandle? _registration;
+    private RegisteredWaitHandle? _quitRegistration;
 
     private SingleInstance(Mutex mutex, EventWaitHandle activate)
     {
         _mutex = mutex;
         _activate = activate;
+        _quit = new EventWaitHandle(false, EventResetMode.AutoReset, BrandIdentity.SingleInstanceQuitEventName);
     }
 
     /// <summary>La instancia, si es la primera; null si ya había otra (a la que se ha avisado).</summary>
@@ -60,6 +63,16 @@ internal sealed class SingleInstance : IDisposable
             _activate, (_, _) => onActivate(), null, Timeout.Infinite, executeOnlyOnce: false);
     }
 
+    /// <summary>Llama a <paramref name="onQuit"/> (en un hilo del pool) cuando el instalador pide que
+    /// Aldune se cierre para actualizarla o desinstalarla. Antes, con <c>AppMutex</c>, el instalador se
+    /// paraba hasta que se cerrara a mano, y su ventana quedaba debajo de las notas y el dock, que
+    /// están siempre encima.</summary>
+    internal void ListenForQuit(Action onQuit)
+    {
+        _quitRegistration = ThreadPool.RegisterWaitForSingleObject(
+            _quit, (_, _) => onQuit(), null, Timeout.Infinite, executeOnlyOnce: true);
+    }
+
     private const int AnyProcess = -1;
 
     [System.Runtime.InteropServices.DllImport("user32.dll")]
@@ -68,7 +81,9 @@ internal sealed class SingleInstance : IDisposable
     public void Dispose()
     {
         _registration?.Unregister(null);
+        _quitRegistration?.Unregister(null);
         _activate.Dispose();
+        _quit.Dispose();
         try { _mutex.ReleaseMutex(); } catch (ApplicationException) { }
         _mutex.Dispose();
     }

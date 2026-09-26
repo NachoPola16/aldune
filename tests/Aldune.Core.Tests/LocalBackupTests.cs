@@ -20,8 +20,20 @@ public sealed class LocalBackupTests : IDisposable
 
     public void Dispose()
     {
-        SqliteConnection.ClearAllPools();
-        if (Directory.Exists(_dir)) Directory.Delete(_dir, recursive: true);
+        // Solo los pools de las bases de esta prueba (la original y las copias), no ClearAllPools:
+        // xUnit corre las clases en paralelo, y vaciar todos los pools cerraba a mitad de uso la
+        // conexión que otra clase acababa de sacar (ObjectDisposedException intermitente en
+        // NotesDatabase.Initialize de otra prueba, visto el 2026-09-26).
+        if (Directory.Exists(_dir))
+        {
+            foreach (var database in Directory.EnumerateFiles(_dir, "*.db", SearchOption.AllDirectories))
+            {
+                using var connection = new SqliteConnection(
+                    new SqliteConnectionStringBuilder { DataSource = database }.ToString());
+                SqliteConnection.ClearPool(connection);
+            }
+            Directory.Delete(_dir, recursive: true);
+        }
     }
 
     private void CreateNotes(params string[] texts)
