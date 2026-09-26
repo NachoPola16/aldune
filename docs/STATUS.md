@@ -3666,7 +3666,7 @@ Tests: 742/742. Smoke test en verde.
   "Gestionar notas" al pie del menú; el clic derecho en "Sincronizar" del dock abre esa página.
   Verificado con sonda en los dos modos.
 
-## Apertura y cierre del dock, medidos y rehechos (sesión 2026-09-26, sin versión todavía)
+## 1.1.1: apertura y cierre del dock medidos y rehechos (sesión 2026-09-26)
 
 Análisis de UX pedido por el usuario, primero midiendo con sondas (clics y movimientos físicos, pantalla
 de 2560 × 1440 con otra pantalla a la izquierda y la barra de tareas en autoocultar) y después aplicando
