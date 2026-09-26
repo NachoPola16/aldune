@@ -18,7 +18,10 @@ namespace Aldune.Windowing;
 public partial class EdgeDockWindow : Window
 {
     private readonly FanStateMachine _fanState = new();
-    private readonly DispatcherTimer _collapseTimer;
+
+    /// <summary>Cuándo abrir y cerrar según el ratón (tiempos y reglas en Core, con tests).</summary>
+    private readonly DockHoverPolicy _hover;
+    private readonly System.Diagnostics.Stopwatch _hoverClock = System.Diagnostics.Stopwatch.StartNew();
     private readonly DispatcherTimer _hoverPollTimer;
     private readonly DispatcherTimer _fullscreenPollTimer;
     private readonly DispatcherTimer _arrowScrollTimer;
@@ -33,8 +36,14 @@ public partial class EdgeDockWindow : Window
     /// <summary>Si hay una sincronización en curso desde el botón del dock (ver OnSyncClick).</summary>
     private bool _syncBusy;
     private readonly NativeMethods.LowLevelKeyboardProc _keyboardHookProc;
+    private readonly NativeMethods.LowLevelMouseProc _mouseHookProc;
+    private IntPtr _mouseHook;
     private readonly EdgePosition _edge;
     private readonly WorkingArea _workingArea;
+
+    /// <summary>El área de trabajo de la pantalla tal cual: <see cref="_workingArea"/> puede dejar libre
+    /// el canto a una barra de tareas que se oculta sola, y esa diferencia no es un cambio de pantalla.</summary>
+    private readonly WorkingArea _monitorWorkArea;
     private readonly string _monitorKey;
     private readonly NotesRepository _repository;
     private readonly AppCoordinator _coordinator;
@@ -59,15 +68,13 @@ public partial class EdgeDockWindow : Window
     /// ajustes, sincronizar…). Sin él, si el cursor llegó al botón antes de que el abanico terminara
     /// de desplegarse —pulsación rápida nada más asomar el dock— la ventana abierta roba el foco y el
     /// cursor queda sobre un hueco que el sondeo interpreta como salida: el dock se pliega bajo los
-    /// pies y, con <c>_hoverReentryBlocked</c> armado, deja de responder hasta sacar el ratón lejos.
+    /// pies.
     /// </summary>
     private static readonly TimeSpan HoverOpenGrace = TimeSpan.FromSeconds(3);
 
     /// <summary>Hasta cuándo vale <see cref="HoverOpenGrace"/>; <c>MinValue</c> si no hay ninguno.</summary>
     private DateTime _hoverGraceUntil = DateTime.MinValue;
 
-    private bool _pointerInside;
-    private bool _hoverReentryBlocked;
     private bool _hoverLayoutHold;
     private double _hoverLayoutAnchorX;
     private double _hoverLayoutAnchorY;
@@ -120,26 +127,28 @@ public partial class EdgeDockWindow : Window
         InitializeComponent();
         _edge = edge;
         ApplyEdgeAlignment();
-        _workingArea = monitor.WorkArea;
+        // Una barra de tareas que se oculta sola en este mismo canto aparece al llevar el ratón a su
+        // última fila, y la botonera del dock desplegado la tapaba (medido: la barra no llegaba a
+        // salir). El dock le deja esas filas libres, y empujar contra el canto pasa a ser su gesto.
+        _monitorWorkArea = monitor.WorkArea;
+        bool sharesTaskbar = NativeMethods.HasAutoHideTaskbar(edge, monitor.WorkArea, monitor.DpiScale);
+        _workingArea = sharesTaskbar
+            ? DockHoverZone.Inset(monitor.WorkArea, edge, DockHoverZone.AutoHideTaskbarClearance)
+            : monitor.WorkArea;
+        var (beyondX, beyondY) = DockHoverZone.PointBeyondEdge(monitor.WorkArea, edge);
+        bool sharesEdge = sharesTaskbar
+            || NativeMethods.HasMonitorAt(beyondX * monitor.DpiScale, beyondY * monitor.DpiScale);
+        _hover = new DockHoverPolicy(sharesEdge ? DockHoverTuning.SharedEdge : DockHoverTuning.PhysicalEdge);
         _monitorKey = monitor.DeviceName;
         _repository = repository;
         _coordinator = coordinator;
         _settings = settings;
         _keyboardHookProc = OnGlobalKeyboardHook;
+        _mouseHookProc = OnGlobalMouseHook;
 
         TabsScroll.ScrollChanged += OnTabsScrollChanged;
         TabsScroll.SizeChanged += (_, _) => QueueScrollIndicatorUpdate();
         ScrollOverlay.SizeChanged += (_, _) => QueueScrollIndicatorUpdate();
-
-        _collapseTimer = new DispatcherTimer
-        {
-            Interval = TimeSpan.FromMilliseconds(IsTopBottomEdge ? 60 : 90)
-        };
-        _collapseTimer.Tick += (_, _) =>
-        {
-            _collapseTimer.Stop();
-            _fanState.CollapseTimerElapsed();
-        };
 
         _fanState.ExpansionChanged += (_, _) => ApplyState(animate: true);
 
@@ -211,12 +220,22 @@ public partial class EdgeDockWindow : Window
             ApplyWindowRect();
         };
 
+        foreach (var button in new[] { OpenAllButton, ManageArchiveButton, SyncButton, NewNoteButton })
+            ToolTipService.SetInitialShowDelay(button, (int)DockHoverTuning.ButtonTooltipDelay.TotalMilliseconds);
+        SyncButton.ToolTip = Strings.WithHint(Strings.SyncNowButton, Strings.SyncRightClickHint);
+
         _autoScroll = new AutoScrollManager(NotesColumn, TabsScroll, null);
         _newNoteToggle = new PopupToggle(NewNoteMenuPopup);
         _openAllToggle = new PopupToggle(OpenAllMenuPopup);
         _dockViewToggle = new PopupToggle(DockViewPopup);
         _tabMenuToggle = new PopupToggle(TabMenuPopup);
         Closed += (_, _) => _autoScroll.Stop();
+
+        foreach (var popup in DockPopups)
+        {
+            popup.Opened += (_, _) => WatchClicksOutside();
+            popup.Closed += (_, _) => { if (!DockPopups.Any(p => p.IsOpen)) StopWatchingClicksOutside(); };
+        }
 
         ApplyWindowRect();
         ApplyState(animate: false);
@@ -448,44 +467,43 @@ public partial class EdgeDockWindow : Window
 
         if (_settings?.KeepDockOpen == true)
         {
-            _pointerInside = true;
-            _hoverReentryBlocked = false;
-            _collapseTimer.Stop();
+            _hover.Hold();
             if (_noteCount > 0 && !_fanState.IsExpanded) _fanState.PointerEntered();
             return;
         }
 
         // Con el menú de una pestaña abierto, el abanico se queda como está: el menú sale fuera de
         // la zona sensible del dock, así que mover el ratón hacia él contaría como salir y lo
-        // cerraría justo cuando el usuario va a pulsarlo.
+        // cerraría justo cuando el usuario va a pulsarlo. Hold: al cerrarse el menú cuenta como uso,
+        // y el dock espera el cierre largo en vez de plegarse al instante (medido: 90 ms).
         if (TabMenuPopup.IsOpen
             || OpenAllMenuPopup.IsOpen
             || DockViewPopup.IsOpen
             || NewNoteMenuPopup.IsOpen
             || TagEditorPopup.IsOpen
             || _autoScroll is { IsActive: true })
+        {
+            _hover.Hold();
             return;
+        }
 
         // Lo mismo durante el margen de cortesía de una acción recién hecha (ver
         // HoldOpenForNextInteraction), y mientras haya una sincronización en curso (ver
-        // SetSyncBusy): ni sondeo ni plegado hasta que termine. _pointerInside se mantiene en true
-        // a propósito: al terminar, la rama de salida de más abajo es la que decide.
+        // SetSyncBusy): ni sondeo ni plegado hasta que termine.
         if (_syncBusy || DateTime.UtcNow < _interactionGraceUntil)
         {
-            _pointerInside = true;
-            _hoverReentryBlocked = false;
-            _collapseTimer.Stop();
+            _hover.Hold();
             if (_noteCount > 0 && !_fanState.IsExpanded) _fanState.PointerEntered();
             return;
         }
 
         // Lo mismo mientras se arrastra una pestaña: el gesto puede salirse de la zona sensible, y
         // colapsar el abanico a mitad de arrastre dejaría la nota en el aire.
-        if (_dragging) return;
-
-        // Ignora que el cursor pase por encima mientras se arrastra otra cosa que comparta el mismo
-        // borde de pantalla (p. ej. la barra de scroll de un navegador).
-        if (NativeMethods.IsLeftButtonDown()) return;
+        if (_dragging)
+        {
+            _hover.Hold();
+            return;
+        }
 
         // Un dock oculto no responde al ratón: el sondeo compara el cursor contra el rectángulo de la
         // ventana, y una ventana oculta conserva el suyo, así que sin esto intentaría desplegar algo
@@ -511,8 +529,7 @@ public partial class EdgeDockWindow : Window
             }
             else
             {
-                _pointerInside = true;
-                _collapseTimer.Stop();
+                _hover.Hold();
                 return;
             }
         }
@@ -522,51 +539,49 @@ public partial class EdgeDockWindow : Window
         // normal vuelve a mandar y, si el cursor sigue fuera, lo pliega como siempre.
         if (DateTime.UtcNow < _hoverGraceUntil)
         {
-            _pointerInside = true;
-            _collapseTimer.Stop();
+            _hover.Hold();
             return;
         }
-
-        var windowRect = EdgeGeometry.WindowRect(_workingArea, _edge, _noteCount);
-        var restingRect = EdgeGeometry.RestingVisibleRect(_workingArea, _edge, _noteCount);
 
         // Contra la zona realmente visible, no contra la ventana entera: casi toda es transparente,
         // y desplegarse al entrar ahí sería desplegarse por pasar el ratón sobre nada.
         // Sin notas la ventana entera es zona sensible: no hay tira que sobrevolar, y los botones
         // tienen que poder pulsarse sin desplegar nada primero.
-        bool isInside = _noteCount == 0
-            ? Contains(windowRect, cursorX, cursorY)
-            : _fanState.IsExpanded
-                ? IsInsideExpandedSurface(cursorX, cursorY)
-                : Contains(restingRect, cursorX, cursorY);
+        var windowRect = EdgeGeometry.WindowRect(_workingArea, _edge, _noteCount);
+        bool empty = _noteCount == 0;
+        bool inWindow = Contains(windowRect, cursorX, cursorY);
+        bool inRest = empty
+            ? inWindow
+            : Contains(EdgeGeometry.RestingVisibleRect(_workingArea, _edge, _noteCount), cursorX, cursorY);
 
-        // Al salir del abanico, el HWND transparente sigue cubriendo la zona donde estaban las
-        // tarjetas. Si el cursor se queda quieto ahí no debe volver a interpretarse como una nueva
-        // entrada cuando el abanico termina de ocultarse. Exigimos cruzar el límite completo de la
-        // ventana antes de armar otra entrada; así el usuario puede volver a abrirlo moviéndose fuera
-        // y regresando a la tira de reposo, sin ciclos de apertura/cierre bajo el cursor.
-        if (_hoverReentryBlocked)
-        {
-            if (Contains(windowRect, cursorX, cursorY) && !Contains(restingRect, cursorX, cursorY)) return;
+        // La superficie desplegada se mide también plegado: sus elementos siguen colocados (solo
+        // transparentes), y es donde volver al poco de cerrarse lo reabre.
+        var sample = new DockHoverSample(
+            _hoverClock.Elapsed,
+            cursorX,
+            cursorY,
+            _fanState.IsExpanded,
+            inRest,
+            empty ? inWindow : IsInsideExpandedSurface(cursorX, cursorY),
+            IsOverDockTarget(cursorX, cursorY),
+            DockHoverZone.IsAgainstEdge(_monitorWorkArea, _edge, cursorX, cursorY),
+            // Arrastrar otra cosa que comparta el borde (la barra de scroll de un navegador) no abre.
+            NativeMethods.IsLeftButtonDown());
 
-            _hoverReentryBlocked = false;
-        }
+        switch (_hover.Update(sample))
+        {
+            case DockHoverDecision.Open:
+                if (_diagnosticStripHidden)
+                    DockDiagnostics.Write(DiagnosticsCategory,
+                        "el ratón entra en la tira cuando no se veía (" + _diagnosticState + "): se vuelve a subir y a pintar");
+                _fanState.PointerEntered();
+                NativeMethods.EnsureTopmost(_hwnd);
+                break;
 
-        if (isInside && !_pointerInside)
-        {
-            if (_diagnosticStripHidden)
-                DockDiagnostics.Write(DiagnosticsCategory,
-                    "el ratón entra en la tira cuando no se veía (" + _diagnosticState + "): se vuelve a subir y a pintar");
-            _pointerInside = true;
-            _fanState.PointerEntered();
-            NativeMethods.EnsureTopmost(_hwnd);
-        }
-        else if (!isInside && _pointerInside)
-        {
-            _pointerInside = false;
-            _hoverReentryBlocked = true;
-            _fanState.PointerLeft();
-            _collapseTimer.Start();
+            case DockHoverDecision.Close:
+                _fanState.PointerLeft();
+                _fanState.CollapseTimerElapsed();
+                break;
         }
     }
 
@@ -732,8 +747,7 @@ public partial class EdgeDockWindow : Window
         {
             // Colapsar antes de esconder, y de golpe: si se escondiera desplegado volvería con el
             // abanico abierto sin el ratón encima.
-            _pointerInside = false;
-            _collapseTimer.Stop();
+            _hover.Collapsed();
             CloseDockPopups();
             _fanState.PointerLeft();
             _fanState.CollapseTimerElapsed();
@@ -985,13 +999,15 @@ public partial class EdgeDockWindow : Window
     private void UpdateTagAwareTooltips()
     {
         var tag = CurrentTagFilter;
-        NewNoteButton.ToolTip = tag is null ? Strings.NewNoteTooltip : Strings.NewNoteTaggedTooltip(tag);
-        ManageArchiveButton.ToolTip = tag is null
-            ? Strings.ManageNotesTooltip
-            : Strings.ManageNotesTaggedTooltip(tag);
-        OpenAllButton.ToolTip = tag is null
-            ? Strings.OpenAllNotesTooltip
-            : Strings.OpenAllNotesTaggedTooltip(tag);
+        NewNoteButton.ToolTip = Strings.WithHint(
+            tag is null ? Strings.NewNoteTooltip : Strings.NewNoteTaggedTooltip(tag),
+            Strings.NewNoteRightClickHint);
+        ManageArchiveButton.ToolTip = Strings.WithHint(
+            tag is null ? Strings.ManageNotesTooltip : Strings.ManageNotesTaggedTooltip(tag),
+            Strings.ManageNotesRightClickHint);
+        OpenAllButton.ToolTip = Strings.WithHint(
+            tag is null ? Strings.OpenAllNotesTooltip : Strings.OpenAllNotesTaggedTooltip(tag),
+            Strings.OpenAllRightClickHint);
     }
 
     /// <summary>
@@ -1186,9 +1202,20 @@ public partial class EdgeDockWindow : Window
 
     private IntPtr OnGlobalKeyboardHook(int code, IntPtr message, IntPtr data)
     {
+        // Esc durante un arrastre lo cancela, esté el cursor donde esté: el gesto puede haber salido
+        // del dock. Se lo come para que no llegue también a la aplicación que tiene el foco.
+        if (code >= 0 && _dragging
+            && (message == NativeMethods.WM_KEYDOWN || message == NativeMethods.WM_KEYUP)
+            && NativeMethods.GetKeyboardVirtualKey(data) == 0x1B) // VK_ESCAPE
+        {
+            if (message == NativeMethods.WM_KEYDOWN)
+                Dispatcher.BeginInvoke(DispatcherPriority.Input, new Action(CancelDrag));
+            return (IntPtr)1;
+        }
+
         if (code >= 0
             && _fanState.IsExpanded
-            && _pointerInside
+            && _hover.IsPointerInside
             && _hwnd != IntPtr.Zero
             && NativeMethods.IsCursorOverWindow(_hwnd)
             && message is { } currentMessage
@@ -1295,73 +1322,63 @@ public partial class EdgeDockWindow : Window
         x >= rect.X && x <= rect.X + rect.Width
             && y >= rect.Y && y <= rect.Y + rect.Height;
 
-    private bool IsInsideExpandedSurface(double cursorX, double cursorY)
+    /// <summary>
+    /// La superficie que mantiene el dock abierto: pestañas visibles, botonera y controles de scroll,
+    /// con <see cref="DockHoverZone.ExpandedSlop"/> de holgura, más la tira de reposo (la puerta de
+    /// entrada: volver hacia el canto con un movimiento corto no debe iniciar un cierre). Igual en los
+    /// cuatro bordes; antes arriba/abajo usaba la ventana entera, que crece con el número de notas.
+    /// </summary>
+    private bool IsInsideExpandedSurface(double cursorX, double cursorY) =>
+        Contains(EdgeGeometry.RestingVisibleRect(_workingArea, _edge, _noteCount), cursorX, cursorY)
+        || DockHoverZone.Contains(ExpandedSurfaces(), cursorX, cursorY, DockHoverZone.ExpandedSlop);
+
+    /// <summary>Encima de una pestaña o de un control del dock, sin holgura: el dock se está usando.</summary>
+    private bool IsOverDockTarget(double cursorX, double cursorY) =>
+        _fanState.IsExpanded && DockHoverZone.Contains(ExpandedSurfaces(), cursorX, cursorY, 0);
+
+    private IEnumerable<Aldune.Core.Rect> ExpandedSurfaces()
     {
-        // La entrada empieza en una tira horizontal, pero las tarjetas de arriba/abajo crecen hacia
-        // dentro y no ocupan necesariamente la misma coordenada X que el cursor. El rectángulo del
-        // HWND es el corredor natural del gesto: mantiene abierto el dock mientras el cursor recorre
-        // el espacio entre el borde y las tarjetas. _hoverReentryBlocked impide que ese mismo espacio
-        // vuelva a abrirlo después de que ya se haya ocultado.
-        // FanPanel incluye el corredor entre las notas y la botonera. Al crear una nota o al
-        // recorrer la lista, el cursor puede cruzar ese hueco sin estar sobre una tarjeta concreta;
-        // sigue siendo parte del gesto del dock y no debe iniciar el cierre.
-        if (ContainsElementSurface(FanPanel, cursorX, cursorY, padding: 0))
-            return true;
+        foreach (var element in new FrameworkElement[] { FooterBorder, ScrollArrowOverlay, ScrollOverlay })
+            if (ElementRect(element) is { } rect) yield return rect;
 
-        if (ContainsElementSurface(FooterBorder, cursorX, cursorY, padding: 5))
-            return true;
-
-        if (ScrollArrowOverlay.Visibility == Visibility.Visible
-            && ContainsElementSurface(ScrollArrowOverlay, cursorX, cursorY, padding: 5))
-            return true;
-
-        if (ScrollOverlay.Visibility == Visibility.Visible
-            && ContainsElementSurface(ScrollOverlay, cursorX, cursorY, padding: 5))
-            return true;
-
-        // La tira sigue siendo la puerta de entrada del dock. Aunque su capa visual se oculte al
-        // desplegarse, mantenerla dentro de la superficie sensible evita iniciar un cierre cuando
-        // el usuario vuelve hacia el borde con un movimiento corto.
-        if (Contains(EdgeGeometry.RestingVisibleRect(_workingArea, _edge, _noteCount), cursorX, cursorY))
-            return true;
-
-        if (!ContainsElementSurface(TabsScroll, cursorX, cursorY, padding: 0))
-            return false;
-
-        foreach (var button in _tabButtons.Values)
-        {
-            if (ContainsElementSurface(button, cursorX, cursorY, padding: 5))
-                return true;
-        }
+        // Solo la parte de cada pestaña que se ve en el viewport: las que el scroll deja fuera no
+        // están ahí para el ratón.
+        if (ElementRect(TabsScroll) is not { } viewport) yield break;
 
         // Antes de que WPF genere los primeros contenedores, el viewport sirve como reserva para
-        // que la primera apertura no se cierre durante el layout. Después solo las tarjetas reales
-        // mantienen abierto el dock.
-        return _tabButtons.Count == 0;
+        // que la primera apertura no se cierre durante el layout.
+        if (_tabButtons.Count == 0)
+        {
+            yield return viewport;
+            yield break;
+        }
+
+        foreach (var button in _tabButtons.Values)
+            if (ElementRect(button) is { } tab && Intersect(tab, viewport) is { } visible)
+                yield return visible;
     }
 
-    private bool ContainsElementSurface(UIElement element, double cursorX, double cursorY, double padding)
+    private Aldune.Core.Rect? ElementRect(FrameworkElement element)
     {
-        if (element is not FrameworkElement framework
-            || element.Visibility != Visibility.Visible
-            || framework.ActualWidth <= 0
-            || framework.ActualHeight <= 0)
-        {
-            return false;
-        }
+        if (element.Visibility != Visibility.Visible || element.ActualWidth <= 0 || element.ActualHeight <= 0)
+            return null;
 
         try
         {
             Point origin = element.TranslatePoint(new Point(0, 0), this);
-            return cursorX >= Left + origin.X - padding
-                && cursorX <= Left + origin.X + framework.ActualWidth + padding
-                && cursorY >= Top + origin.Y - padding
-                && cursorY <= Top + origin.Y + framework.ActualHeight + padding;
+            return new Aldune.Core.Rect(Left + origin.X, Top + origin.Y, element.ActualWidth, element.ActualHeight);
         }
         catch (InvalidOperationException)
         {
-            return false;
+            return null;
         }
+    }
+
+    private static Aldune.Core.Rect? Intersect(Aldune.Core.Rect a, Aldune.Core.Rect b)
+    {
+        double left = Math.Max(a.X, b.X), top = Math.Max(a.Y, b.Y);
+        double right = Math.Min(a.X + a.Width, b.X + b.Width), bottom = Math.Min(a.Y + a.Height, b.Y + b.Height);
+        return right > left && bottom > top ? new Aldune.Core.Rect(left, top, right - left, bottom - top) : null;
     }
 
     private void UpdateScrollIndicator()
@@ -1649,7 +1666,7 @@ public partial class EdgeDockWindow : Window
         SyncButtonGlyph.FontSize = 17;
         SyncButtonGlyph.ClearValue(TextBlock.FontFamilyProperty);
         SyncButtonGlyph.ClearValue(TextBlock.ForegroundProperty);
-        SyncButton.ToolTip = Strings.SyncNowButton;
+        SyncButton.ToolTip = Strings.WithHint(Strings.SyncNowButton, Strings.SyncRightClickHint);
     }
 
     private async void OnSyncClick(object sender, RoutedEventArgs e)
@@ -1947,6 +1964,7 @@ public partial class EdgeDockWindow : Window
         {
             CloseDockPopups();
             _autoScroll?.Stop();
+            _hover.Collapsed();
             if (_fanState.IsExpanded)
             {
                 _fanState.PointerLeft();
@@ -2039,6 +2057,7 @@ public partial class EdgeDockWindow : Window
     private Point _dragStart;
     private bool _dragging;
     private bool _suppressNextClick;
+    private bool _endingDrag;
 
     private void OnTabDragStart(object sender, MouseButtonEventArgs e)
     {
@@ -2106,7 +2125,9 @@ public partial class EdgeDockWindow : Window
             ? dropPosition.X - _dragStart.X
             : dropPosition.Y - _dragStart.Y;
 
+        _endingDrag = true;
         _dragButton.ReleaseMouseCapture();
+        _endingDrag = false;
         // El Click del botón llega justo después de esto: sin la bandera, soltar tras arrastrar
         // abriría además la nota.
         _suppressNextClick = true;
@@ -2132,6 +2153,23 @@ public partial class EdgeDockWindow : Window
 
         _repository.MoveNote(note.Id, target, current);
         _coordinator.RefreshAll();
+    }
+
+    /// <summary>
+    /// Perder la captura a mitad de arrastre (Alt+Tab, otra ventana que la toma, Esc) cancela el
+    /// gesto: la pestaña vuelve a su sitio y el orden no cambia. Sin esto <c>_dragging</c> se quedaba
+    /// activo sin nadie que lo terminara, y el dock no volvía a plegarse.
+    /// </summary>
+    private void OnTabLostMouseCapture(object sender, MouseEventArgs e)
+    {
+        if (!_dragging || _endingDrag) return;
+        ResetDrag();
+    }
+
+    /// <summary>Esc cancela un arrastre en curso. Lo llama el gancho de teclado: el dock nunca tiene el foco.</summary>
+    private void CancelDrag()
+    {
+        if (_dragging) _dragButton?.ReleaseMouseCapture();
     }
 
     private void ResetDrag()
@@ -2381,6 +2419,74 @@ public partial class EdgeDockWindow : Window
         _tabMenuOwner = null;
     }
 
+    private IEnumerable<Popup> DockPopups => PopupsWithTriggers().Select(p => p.Popup);
+
+    // --- Cerrar los menús al clicar fuera ---------------------------------------------------------
+    //
+    // Un Popup con StaysOpen=False se cierra cuando pierde la captura del ratón. El dock nunca toma el
+    // foco (WS_EX_NOACTIVATE), así que clicar en la aplicación que ya estaba activa —lo normal: la que
+    // se usaba antes de ir al dock— no cambia nada para Windows y el menú se quedaba abierto. Medido
+    // con clics físicos: se cerraba al clicar en Aldune o en una aplicación inactiva, y nunca en la
+    // activa. Mientras hay un menú abierto, un gancho global mira (sin comérselos) los clics y cierra
+    // los menús si el clic cae fuera de ellos.
+
+    private void WatchClicksOutside()
+    {
+        if (_mouseHook == IntPtr.Zero) _mouseHook = NativeMethods.InstallMouseHook(_mouseHookProc);
+    }
+
+    private void StopWatchingClicksOutside()
+    {
+        NativeMethods.UninstallKeyboardHook(_mouseHook);
+        _mouseHook = IntPtr.Zero;
+    }
+
+    private IntPtr OnGlobalMouseHook(int code, IntPtr message, IntPtr data)
+    {
+        if (code >= 0 && NativeMethods.IsMouseButtonDown(message))
+        {
+            var point = NativeMethods.MouseHookPoint(data);
+            Dispatcher.BeginInvoke(DispatcherPriority.Input, new Action(() => CloseDockPopupsIfOutside(point)));
+        }
+
+        return NativeMethods.ContinueKeyboardHook(_mouseHook, code, message, data);
+    }
+
+    /// <summary>
+    /// Cierra los menús si el clic cae fuera de todos ellos, también sobre el propio dock (medido: con
+    /// un menú abierto, clicar otra pestaña no hacía nada). La excepción es el disparador del menú
+    /// abierto: volver a pulsarlo lo cierra por su cuenta (<see cref="PopupToggle"/>), y cerrarlo aquí
+    /// antes cambiaría ese gesto.
+    /// </summary>
+    private void CloseDockPopupsIfOutside(Point screenPixels)
+    {
+        foreach (var (popup, trigger) in PopupsWithTriggers())
+        {
+            if (!popup.IsOpen) continue;
+            if (popup.Child is FrameworkElement child && ContainsScreenPixel(child, screenPixels)) return;
+            if (trigger is not null && ContainsScreenPixel(trigger, screenPixels)) return;
+        }
+
+        CloseDockPopups();
+    }
+
+    private IEnumerable<(Popup Popup, FrameworkElement? Trigger)> PopupsWithTriggers()
+    {
+        yield return (TabMenuPopup, _tabMenuOwner);
+        yield return (OpenAllMenuPopup, OpenAllButton);
+        yield return (DockViewPopup, ManageArchiveButton);
+        yield return (NewNoteMenuPopup, NewNoteButton);
+        yield return (TagEditorPopup, null);
+    }
+
+    private static bool ContainsScreenPixel(FrameworkElement element, Point screenPixels)
+    {
+        if (!element.IsVisible || PresentationSource.FromVisual(element) is null) return false;
+        var topLeft = element.PointToScreen(new Point(0, 0));
+        var bottomRight = element.PointToScreen(new Point(element.ActualWidth, element.ActualHeight));
+        return new System.Windows.Rect(topLeft, bottomRight).Contains(screenPixels);
+    }
+
     private void CloseDockPopups()
     {
         _openAllMenuTopmostTimer.Stop();
@@ -2510,38 +2616,31 @@ public partial class EdgeDockWindow : Window
     {
         _interactionGraceUntil = DateTime.UtcNow + InteractionGrace;
         _hoverLayoutHold = false;
-        _pointerInside = true;
-        _hoverReentryBlocked = false;
-        _collapseTimer.Stop();
+        _hover.Hold();
         if (_noteCount > 0 && !_fanState.IsExpanded) _fanState.PointerEntered();
     }
 
     /// <summary>
     /// Margen de cortesía al abrir otra ventana desde este dock. Fija el estado de hover para que el
-    /// sondeo no lo cierre bajo los pies mientras la nueva ventana roba el foco, y limpia
-    /// <c>_hoverReentryBlocked</c> para que el siguiente pase del ratón lo reabra sin exigir primero
-    /// una salida completa de la ventana.
+    /// sondeo no lo cierre bajo los pies mientras la nueva ventana roba el foco.
     /// </summary>
     private void HoldOpenForWindow()
     {
         _hoverGraceUntil = DateTime.UtcNow.Add(HoverOpenGrace);
-        _pointerInside = true;
-        _collapseTimer.Stop();
-        _hoverReentryBlocked = false;
+        _hover.Hold();
         if (_noteCount > 0 && !_fanState.IsExpanded) _fanState.PointerEntered();
     }
 
     private void HoldHoverDuringLayout()
     {
-        if (!_pointerInside && (_hwnd == IntPtr.Zero || !NativeMethods.IsCursorOverWindow(_hwnd))) return;
+        if (!_hover.IsPointerInside && (_hwnd == IntPtr.Zero || !NativeMethods.IsCursorOverWindow(_hwnd))) return;
 
         var dpi = VisualTreeHelper.GetDpi(this);
         var cursor = NativeMethods.GetCursorScreenPosition();
         _hoverLayoutAnchorX = cursor.X / dpi.DpiScaleX;
         _hoverLayoutAnchorY = cursor.Y / dpi.DpiScaleY;
         _hoverLayoutHold = true;
-        _collapseTimer.Stop();
-        _hoverReentryBlocked = false;
+        _hover.Hold();
     }
 
     /// <summary>
@@ -2553,11 +2652,11 @@ public partial class EdgeDockWindow : Window
         CloseDockPopups();
         _hoverLayoutHold = false;
         _hoverPollTimer.Stop();
-        _collapseTimer.Stop();
         _fullscreenPollTimer.Stop();
         _arrowScrollTimer.Stop();
         _syncFeedbackTimer.Stop();
         NativeMethods.UninstallKeyboardHook(_keyboardHook);
         _keyboardHook = IntPtr.Zero;
+        StopWatchingClicksOutside();
     }
 }

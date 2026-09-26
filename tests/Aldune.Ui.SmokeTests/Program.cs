@@ -1,4 +1,4 @@
-using System.IO;
+﻿using System.IO;
 using System.Reflection;
 using System.Security.Cryptography;
 using System.Windows;
@@ -121,10 +121,13 @@ internal static class Program
         }
         Check(samples >= 20, $"Observed {samples} dispatcher samples during real grace");
         AssertHeld(dock, "near expiry");
-        Pump(deadline - DateTime.UtcNow + TimeSpan.FromMilliseconds(500));
+        // Al caducar, la cortesía cuenta como uso: el cierre espera el largo (EngagedCloseDelay).
+        Pump(deadline - DateTime.UtcNow + DockHoverTuning.EngagedCloseDelay - TimeSpan.FromMilliseconds(150));
+        Check(Field<FanStateMachine>(dock, "_fanState").IsExpanded,
+            "After grace, the dock waits the engaged close delay instead of collapsing at once");
+        Pump(TimeSpan.FromMilliseconds(500));
         Check(!Field<FanStateMachine>(dock, "_fanState").IsExpanded,
-            "Real hover polling and collapse timer collapse after expiry with cursor outside");
-        Check(!Field<DispatcherTimer>(dock, "_collapseTimer").IsEnabled, "Collapse timer stops after firing");
+            "Real hover polling collapses after expiry with cursor outside");
         Console.WriteLine("PASS: dock tag selection/Closed/grace/expiry regression scenario");
     }
 
@@ -184,7 +187,7 @@ internal static class Program
     private static void AssertHeld(EdgeDockWindow dock, string phase, bool quiet = false)
     {
         Check(Field<FanStateMachine>(dock, "_fanState").IsExpanded, $"Dock expanded {phase}", quiet);
-        Check(!Field<DispatcherTimer>(dock, "_collapseTimer").IsEnabled, $"Collapse timer stopped {phase}", quiet);
+        Check(Field<DockHoverPolicy>(dock, "_hover").IsPointerInside, $"Hover policy held {phase}", quiet);
     }
 
     private static T Field<T>(object target, string name) =>

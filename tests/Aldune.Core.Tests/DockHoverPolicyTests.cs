@@ -213,5 +213,6 @@ public class DockHoverPolicyTests
         Assert.True(DockHoverTuning.PhysicalEdge.RestDwell <= TimeSpan.FromMilliseconds(200));
         Assert.True(DockHoverTuning.PhysicalEdge.EdgePressOpens);
         Assert.False(DockHoverTuning.SharedEdge.EdgePressOpens);
+        Assert.InRange(DockHoverTuning.ButtonTooltipDelay.TotalMilliseconds, 300, 700);
     }
 }

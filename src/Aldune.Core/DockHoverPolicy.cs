@@ -60,6 +60,12 @@ public sealed record DockHoverTuning(TimeSpan RestDwell, bool EdgePressOpens)
     /// empezar. 1,5 DIP/ms son 75 DIP entre dos sondeos de 50 ms.
     /// </summary>
     public const double TravelSpeed = 1.5;
+
+    /// <summary>
+    /// Espera de los tooltips de los botones del dock. Los de WPF esperan 1000 ms, y el dock no suele
+    /// estar abierto tanto rato con el ratón quieto: medido, el de "+" tardaba 905 ms.
+    /// </summary>
+    public static readonly TimeSpan ButtonTooltipDelay = TimeSpan.FromMilliseconds(500);
 }
 
 /// <summary>

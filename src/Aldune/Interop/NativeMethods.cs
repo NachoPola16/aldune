@@ -1,4 +1,4 @@
-using System.Runtime.InteropServices;
+﻿using System.Runtime.InteropServices;
 using System.Windows;
 using System.Windows.Interop;
 using Aldune.Core;
@@ -88,6 +88,31 @@ internal static class NativeMethods
 
     internal static IntPtr ContinueKeyboardHook(IntPtr hook, int code, IntPtr wParam, IntPtr lParam) =>
         CallNextHookEx(hook, code, wParam, lParam);
+
+    private const int WH_MOUSE_LL = 14;
+
+    internal delegate IntPtr LowLevelMouseProc(int nCode, IntPtr wParam, IntPtr lParam);
+
+    [DllImport("user32.dll", EntryPoint = "SetWindowsHookEx", SetLastError = true)]
+    private static extern IntPtr SetWindowsMouseHookEx(int idHook, LowLevelMouseProc callback, IntPtr hMod, uint threadId);
+
+    /// <summary>
+    /// Gancho global de ratón. Solo observa: quien lo instala tiene que devolver siempre
+    /// <see cref="ContinueKeyboardHook"/> (sirve igual para el ratón) para no comerse ningún clic.
+    /// </summary>
+    internal static IntPtr InstallMouseHook(LowLevelMouseProc callback) =>
+        SetWindowsMouseHookEx(WH_MOUSE_LL, callback, GetModuleHandle(null), 0);
+
+    /// <summary>Si el mensaje del gancho de ratón es la pulsación de un botón (izquierdo, derecho, central o lateral).</summary>
+    internal static bool IsMouseButtonDown(IntPtr message) =>
+        (long)message is 0x0201 or 0x0204 or 0x0207 or 0x020B;
+
+    /// <summary>Dónde ha ocurrido el evento del gancho de ratón, en píxeles físicos (MSLLHOOKSTRUCT.pt).</summary>
+    internal static Point MouseHookPoint(IntPtr data)
+    {
+        var point = Marshal.PtrToStructure<POINT>(data);
+        return new Point(point.X, point.Y);
+    }
 
     internal static int GetKeyboardVirtualKey(IntPtr hookData) => Marshal.ReadInt32(hookData);
 
@@ -330,6 +355,58 @@ internal static class NativeMethods
     }
 
     internal static IntPtr MonitorFromHwnd(IntPtr hWnd) => MonitorFromWindow(hWnd, MONITOR_DEFAULTTONEAREST);
+
+    private const uint MONITOR_DEFAULTTONULL = 0;
+
+    /// <summary>
+    /// Si hay alguna pantalla en ese punto (píxeles físicos). El dock lo pregunta justo al otro lado
+    /// de su canto: si hay otra pantalla, el ratón pasa de largo en vez de detenerse contra el borde.
+    /// </summary>
+    internal static bool HasMonitorAt(double x, double y) =>
+        MonitorFromPoint(new POINT { X = (int)Math.Round(x), Y = (int)Math.Round(y) }, MONITOR_DEFAULTTONULL) != IntPtr.Zero;
+
+    [StructLayout(LayoutKind.Sequential)]
+    private struct APPBARDATA
+    {
+        public int cbSize;
+        public IntPtr hWnd;
+        public uint uCallbackMessage;
+        public uint uEdge;
+        public RECT rc;
+        public IntPtr lParam;
+    }
+
+    private const uint ABM_GETAUTOHIDEBAREX = 0x0000000b;
+
+    [DllImport("shell32.dll")]
+    private static extern IntPtr SHAppBarMessage(uint dwMessage, ref APPBARDATA pData);
+
+    /// <summary>
+    /// Si una barra de tareas que se oculta sola vive en ese borde de esa pantalla (área de trabajo en
+    /// DIP y su escala). Con ella oculta, el área de trabajo llega hasta el canto y el dock la tapaba.
+    /// </summary>
+    internal static bool HasAutoHideTaskbar(EdgePosition edge, WorkingArea area, double dpiScale)
+    {
+        var data = new APPBARDATA
+        {
+            cbSize = Marshal.SizeOf<APPBARDATA>(),
+            uEdge = edge switch
+            {
+                EdgePosition.Left => 0u,
+                EdgePosition.Top => 1u,
+                EdgePosition.Right => 2u,
+                _ => 3u
+            },
+            rc = new RECT
+            {
+                Left = (int)Math.Round(area.X * dpiScale),
+                Top = (int)Math.Round(area.Y * dpiScale),
+                Right = (int)Math.Round((area.X + area.Width) * dpiScale),
+                Bottom = (int)Math.Round((area.Y + area.Height) * dpiScale)
+            }
+        };
+        return SHAppBarMessage(ABM_GETAUTOHIDEBAREX, ref data) != IntPtr.Zero;
+    }
 
     [DllImport("user32.dll")]
     private static extern bool GetMonitorInfo(IntPtr hMonitor, ref MONITORINFO lpmi);

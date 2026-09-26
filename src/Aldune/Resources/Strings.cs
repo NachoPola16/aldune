@@ -1,4 +1,4 @@
-using Aldune.Core;
+﻿using Aldune.Core;
 
 namespace Aldune.Resources;
 
@@ -141,6 +141,13 @@ public static class Strings
         "No precision trackpad detected on this PC, so it can't be turned on.",
         "No se ha detectado un trackpad de precisión en este equipo, así que no se puede activar.");
     public static string NewNoteTooltip => T("New note", "Nueva nota");
+
+    // Segunda línea de los tooltips del pie: los cuatro botones tienen clic derecho y nada lo decía.
+    public static string OpenAllRightClickHint => T("Right-click: layout and screen", "Clic derecho: disposición y pantalla");
+    public static string ManageNotesRightClickHint => T("Right-click: view and tags", "Clic derecho: vista y etiquetas");
+    public static string SyncRightClickHint => T("Right-click: sync settings", "Clic derecho: ajustes de sincronización");
+    public static string NewNoteRightClickHint => T("Right-click: from the clipboard", "Clic derecho: desde el portapapeles");
+    public static string WithHint(string tooltip, string hint) => tooltip + Environment.NewLine + hint;
     public static string NewNoteFromClipboard => T("New note from clipboard", "Nueva nota desde el portapapeles");
     public static string KeepDockOpenOn => T("✓  Keep dock open", "✓  Mantener el dock abierto");
     public static string KeepDockOpenOff => T("Keep dock open", "Mantener el dock abierto");
