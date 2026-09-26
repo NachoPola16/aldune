@@ -81,12 +81,13 @@ internal static class NativeMethods
     internal static IntPtr InstallKeyboardHook(LowLevelKeyboardProc callback) =>
         SetWindowsHookEx(WH_KEYBOARD_LL, callback, GetModuleHandle(null), 0);
 
-    internal static void UninstallKeyboardHook(IntPtr hook)
+    // Quitar y encadenar valen igual para el gancho de teclado y el de ratón: Win32 no distingue.
+    internal static void UninstallHook(IntPtr hook)
     {
         if (hook != IntPtr.Zero) UnhookWindowsHookEx(hook);
     }
 
-    internal static IntPtr ContinueKeyboardHook(IntPtr hook, int code, IntPtr wParam, IntPtr lParam) =>
+    internal static IntPtr ContinueHook(IntPtr hook, int code, IntPtr wParam, IntPtr lParam) =>
         CallNextHookEx(hook, code, wParam, lParam);
 
     private const int WH_MOUSE_LL = 14;
@@ -98,7 +99,7 @@ internal static class NativeMethods
 
     /// <summary>
     /// Gancho global de ratón. Solo observa: quien lo instala tiene que devolver siempre
-    /// <see cref="ContinueKeyboardHook"/> (sirve igual para el ratón) para no comerse ningún clic.
+    /// <see cref="ContinueHook"/> para no comerse ningún clic.
     /// </summary>
     internal static IntPtr InstallMouseHook(LowLevelMouseProc callback) =>
         SetWindowsMouseHookEx(WH_MOUSE_LL, callback, GetModuleHandle(null), 0);

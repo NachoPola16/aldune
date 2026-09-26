@@ -555,15 +555,17 @@ public partial class EdgeDockWindow : Window
             : Contains(EdgeGeometry.RestingVisibleRect(_workingArea, _edge, _noteCount), cursorX, cursorY);
 
         // La superficie desplegada se mide también plegado: sus elementos siguen colocados (solo
-        // transparentes), y es donde volver al poco de cerrarse lo reabre.
+        // transparentes), y es donde volver al poco de cerrarse lo reabre. Se calcula una vez por tick:
+        // cada pestaña cuesta un TranslatePoint, y con muchas notas se notaba hacerlo dos veces.
+        List<Aldune.Core.Rect> surfaces = empty && !_fanState.IsExpanded ? [] : ExpandedSurfaces().ToList();
         var sample = new DockHoverSample(
             _hoverClock.Elapsed,
             cursorX,
             cursorY,
             _fanState.IsExpanded,
             inRest,
-            empty ? inWindow : IsInsideExpandedSurface(cursorX, cursorY),
-            IsOverDockTarget(cursorX, cursorY),
+            empty ? inWindow : IsInsideExpandedSurface(surfaces, cursorX, cursorY),
+            IsOverDockTarget(surfaces, cursorX, cursorY),
             DockHoverZone.IsAgainstEdge(_monitorWorkArea, _edge, cursorX, cursorY),
             // Arrastrar otra cosa que comparta el borde (la barra de scroll de un navegador) no abre.
             NativeMethods.IsLeftButtonDown());
@@ -610,10 +612,13 @@ public partial class EdgeDockWindow : Window
         var actual = new Aldune.Core.Rect(x, y, width, height);
 
         // Lo normal: en su sitio. Solo entonces se consulta la lista de pantallas, que es más cara.
-        if (DockPlacement.Check(actual, expectedPx, _workingArea, _workingArea) == DockPlacementFix.None) return;
+        if (DockPlacement.Check(actual, expectedPx, _monitorWorkArea, _monitorWorkArea) == DockPlacementFix.None) return;
 
+        // Contra el área de la pantalla tal cual, no contra _workingArea: con la barra de tareas oculta
+        // esa va recortada y nunca coincidiría con la de Windows, así que todo desplazamiento parecería
+        // un cambio de pantalla y reconstruiría los docks en vez de devolver la ventana a su sitio.
         var current = MonitorLookup.ForDeviceName(_monitorKey, MonitorEnumerator.EnumerateMonitors())?.WorkArea;
-        switch (DockPlacement.Check(actual, expectedPx, _workingArea, current))
+        switch (DockPlacement.Check(actual, expectedPx, _monitorWorkArea, current))
         {
             case DockPlacementFix.MoveBack:
                 DockDiagnostics.Write(DiagnosticsCategory,
@@ -1250,7 +1255,7 @@ public partial class EdgeDockWindow : Window
             }
         }
 
-        return NativeMethods.ContinueKeyboardHook(_keyboardHook, code, message, data);
+        return NativeMethods.ContinueHook(_keyboardHook, code, message, data);
     }
 
     private void SetScrollIndicatorInset(double inset)
@@ -1328,13 +1333,13 @@ public partial class EdgeDockWindow : Window
     /// entrada: volver hacia el canto con un movimiento corto no debe iniciar un cierre). Igual en los
     /// cuatro bordes; antes arriba/abajo usaba la ventana entera, que crece con el número de notas.
     /// </summary>
-    private bool IsInsideExpandedSurface(double cursorX, double cursorY) =>
+    private bool IsInsideExpandedSurface(IReadOnlyList<Aldune.Core.Rect> surfaces, double cursorX, double cursorY) =>
         Contains(EdgeGeometry.RestingVisibleRect(_workingArea, _edge, _noteCount), cursorX, cursorY)
-        || DockHoverZone.Contains(ExpandedSurfaces(), cursorX, cursorY, DockHoverZone.ExpandedSlop);
+        || DockHoverZone.Contains(surfaces, cursorX, cursorY, DockHoverZone.ExpandedSlop);
 
     /// <summary>Encima de una pestaña o de un control del dock, sin holgura: el dock se está usando.</summary>
-    private bool IsOverDockTarget(double cursorX, double cursorY) =>
-        _fanState.IsExpanded && DockHoverZone.Contains(ExpandedSurfaces(), cursorX, cursorY, 0);
+    private bool IsOverDockTarget(IReadOnlyList<Aldune.Core.Rect> surfaces, double cursorX, double cursorY) =>
+        _fanState.IsExpanded && DockHoverZone.Contains(surfaces, cursorX, cursorY, 0);
 
     private IEnumerable<Aldune.Core.Rect> ExpandedSurfaces()
     {
@@ -2437,7 +2442,7 @@ public partial class EdgeDockWindow : Window
 
     private void StopWatchingClicksOutside()
     {
-        NativeMethods.UninstallKeyboardHook(_mouseHook);
+        NativeMethods.UninstallHook(_mouseHook);
         _mouseHook = IntPtr.Zero;
     }
 
@@ -2449,7 +2454,7 @@ public partial class EdgeDockWindow : Window
             Dispatcher.BeginInvoke(DispatcherPriority.Input, new Action(() => CloseDockPopupsIfOutside(point)));
         }
 
-        return NativeMethods.ContinueKeyboardHook(_mouseHook, code, message, data);
+        return NativeMethods.ContinueHook(_mouseHook, code, message, data);
     }
 
     /// <summary>
@@ -2655,7 +2660,7 @@ public partial class EdgeDockWindow : Window
         _fullscreenPollTimer.Stop();
         _arrowScrollTimer.Stop();
         _syncFeedbackTimer.Stop();
-        NativeMethods.UninstallKeyboardHook(_keyboardHook);
+        NativeMethods.UninstallHook(_keyboardHook);
         _keyboardHook = IntPtr.Zero;
         StopWatchingClicksOutside();
     }

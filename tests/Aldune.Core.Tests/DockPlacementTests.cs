@@ -33,6 +33,19 @@ public class DockPlacementTests
     }
 
     [Fact]
+    public void WithAnAutoHideTaskbar_TheScreenAreaIsCompared_NotTheInsetOne()
+    {
+        // El dock que comparte borde con una barra de tareas oculta se construye con el área recortada
+        // unos DIP, pero Windows devuelve el área de la pantalla sin recortar. Comparando la recortada,
+        // cada desplazamiento de Windows parecía un cambio de pantalla y reconstruía los docks.
+        var actual = new Rect(-1440, 419, 226, 360);
+        var inset = DockHoverZone.Inset(Area, EdgePosition.Right, DockHoverZone.AutoHideTaskbarClearance);
+
+        Assert.Equal(DockPlacementFix.Rebuild, DockPlacement.Check(actual, Expected, inset, Area));
+        Assert.Equal(DockPlacementFix.MoveBack, DockPlacement.Check(actual, Expected, Area, Area));
+    }
+
+    [Fact]
     public void WhenTheScreenItselfChanged_TheDocksAreRebuilt()
     {
         var actual = new Rect(900, 400, 226, 360);
