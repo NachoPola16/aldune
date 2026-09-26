@@ -108,7 +108,9 @@ public partial class App : Application
                 }
                 MessageBox.Show(Strings.KeyRestoredFromBackupMessage(backup.Day), Strings.DataRecoveredTitle,
                     MessageBoxButton.OK, MessageBoxImage.Information);
-                rawKey = DatabaseKeyProvider.Unwrap(settings.WrappedDatabaseKey);
+                // La clave de la copia, no la de los ajustes recargados: es la misma, y no depende de
+                // que el settings.json restaurado se pueda leer.
+                rawKey = DatabaseKeyProvider.Unwrap(backup.WrappedKey);
             }
             else if (settings.WrappedDatabaseKey is null)
             {
