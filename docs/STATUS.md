@@ -3896,3 +3896,22 @@ notas no se confundan: test de distancia OKLab >= 0.03 entre los colores de cada
 claros (L 0.91); Otoño y Océano claros y oscuros.
 
 Tests: 836/836 + paletas. Verificado con sondas (capturas en los cuatro aspectos y cuatro idiomas).
+
+## Estado al cerrar la sesión del 2026-09-27 (para retomar)
+
+Publicadas hoy **1.2.0, 1.3.0 y 1.4.0** (versión normal en GitHub, servidor de sync actualizado en
+cada una, smoke test en verde antes de cada una). Tests: 850/850.
+
+**Siguiente, en cuanto SignPath acepte la solicitud** (rellenada hoy; el repositorio ya cumple sus
+condiciones): paso 2 de `docs/RELEASING.md` → proyecto en SignPath conectado a GitHub como Trusted
+Build System, usuario CI y su token, configuraciones de artefacto para `aldune.exe` y para el Setup,
+los 6 valores en GitHub (Settings → Secrets and variables → Actions) y un primer tag de prueba con
+`SIGNPATH_POLICY_SLUG=test-signing` antes de firmar de verdad.
+
+Otros pendientes:
+- Revisión nativa de alemán, francés y portugués (traducidos con IA y validados solo en formato).
+- Microsoft Store (gratis, MSIX) después de SignPath; ver `ROADMAP.md` §4.
+- Quien actualice con conflictos falsos antiguos en la cola: "Descartar todo" (no se borran solos).
+- Sin probar en un equipo con trackpad: el hover del dock (desde la 1.1.1).
+- `.agent-runs/` (encargos y respuestas de agy) está excluido de git solo en local
+  (`.git/info/exclude`); no es parte del repositorio.

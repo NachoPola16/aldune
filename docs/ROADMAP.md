@@ -526,11 +526,19 @@ con más insistencia, el coste de arriba sigue siendo el mismo — no ha cambiad
 
 Por orden:
 
-1. Terminar la internacionalización (ver arriba). Sin inglés no hay mercado.
+1. ~~Terminar la internacionalización~~ — hecho: inglés, español, alemán, francés y portugués de
+   Brasil (1.4.0). Falta que un nativo revise las tres últimas.
 2. **Instalador firmado**. Un `.exe` sin firmar dispara SmartScreen y se lleva por delante buena
-   parte de las descargas. La vía barata es una cuenta de desarrollador de **Microsoft Store**
-   (~19 $ una vez): resuelve firma, actualizaciones y cobro de golpe. Un certificado propio son
-   200-400 $/año.
+   parte de las descargas. Decidido (2026-09-27): **solo vías gratuitas**, en este orden:
+   - **SignPath Foundation** (gratis para código abierto). Solicitud rellenada el 2026-09-27; el
+     repositorio ya cumple sus condiciones (sección "Code signing policy" de los README, opción de
+     no buscar actualizaciones, nombre y versión en los binarios) y el workflow firma solo en cuanto
+     existan las variables. **Siguiente paso cuando acepten**: el paso 2 de `docs/RELEASING.md`
+     (proyecto en SignPath conectado a GitHub, usuario CI y token, dos configuraciones de artefacto,
+     6 valores en GitHub) y un tag de prueba con `SIGNPATH_POLICY_SLUG=test-signing`.
+   - **Microsoft Store**, después: el registro de desarrollador es gratis desde 2025 y firma el
+     MSIX, pero empaquetar como MSIX es trabajo aparte (arranque con Windows, aviso de
+     actualizaciones, rutas de datos) y solo firma lo que se instala desde la Store.
 3. Página de presentación. Lo que hay que decir, por orden de fuerza: es lo único así **en Windows**;
    las notas están **cifradas y no salen del equipo**; **no hay cuenta ni nube**; hay **versión
    portable** que no se instala (ningún competidor la ofrece).

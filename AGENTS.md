@@ -22,7 +22,7 @@ descartó y por qué) y la especificación de `docs/superpowers/specs/` que toqu
 
 ```powershell
 dotnet build Aldune.slnx -c Debug
-dotnet test Aldune.slnx --no-build          # ~660 tests, deben pasar todos
+dotnet test Aldune.slnx --no-build          # ~850 tests, deben pasar todos
 dotnet run --project tests/Aldune.Ui.SmokeTests -c Debug   # mueve el ratón: no tocarlo
 ./scripts/build-installer.ps1               # portable + instalador en dist/ (Inno Setup 6)
 ```
