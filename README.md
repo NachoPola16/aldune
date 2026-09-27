@@ -42,11 +42,29 @@ Si Windows muestra "Windows protegió su PC", es porque el ejecutable todavía n
 Tus notas se guardan en `%LOCALAPPDATA%\Aldune`, en tu equipo. El texto de cada nota va cifrado con
 AES-256-GCM, y la clave está protegida con tu usuario de Windows. Aldune no tiene cuenta ni servidor
 propio. Lo único que sale de tu equipo es la sincronización, si la activas (y solo hacia el
-almacén que tú elijas), y una consulta diaria a GitHub para avisarte de versiones nuevas.
+almacén que tú elijas), y una consulta diaria a GitHub para avisarte de versiones nuevas (se puede
+desactivar en Ajustes → Acerca de).
 
 La sincronización cifra el contenido antes de que salga del equipo: el almacén no puede leer tus
 notas ni fabricar cambios en ellas. El detalle, incluido lo que **no** protege, está en
 [docs/SYNC.md → Modelo de seguridad](docs/SYNC.md#modelo-de-seguridad).
+
+## Política de firma de código
+
+Firma de código gratuita de [SignPath.io](https://about.signpath.io), certificado de
+[SignPath Foundation](https://signpath.org).
+
+Solo se firman el instalador y el ejecutable que compila GitHub Actions desde este repositorio público
+(`.github/workflows/release.yml`). Cada solicitud de firma se aprueba a mano.
+
+- Autores y revisores: [NachoPola16](https://github.com/NachoPola16)
+- Aprobadores: [NachoPola16](https://github.com/NachoPola16)
+
+Privacidad: este programa no envía información a otros sistemas de la red salvo que lo pida
+expresamente quien lo usa o lo instala. Las dos excepciones se activan o se pueden desactivar: la
+sincronización, que solo funciona si la configuras y solo habla con el almacén que elijas, y la
+consulta diaria de versiones nuevas, que pide a GitHub la lista de versiones, no envía nada tuyo ni
+de tus notas y se desactiva en Ajustes → Acerca de.
 
 ## Compilar desde el código
 

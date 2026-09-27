@@ -54,7 +54,11 @@ Cómo conseguirlos:
 
 1. Solicitar la firma gratuita en <https://signpath.org/apply> con el repositorio público y la licencia
    (GPL-3.0). Revisar antes sus condiciones actuales (por ejemplo, qué piden si la app se vende en
-   otro canal).
+   otro canal). Lo que exigen al repositorio ya está: la sección "Code signing policy" de los README
+   (atribución, roles y privacidad), la opción de desactivar la consulta de versiones nuevas y el
+   nombre y la versión en los metadatos del `.exe` y del instalador. Si cambian los roles (otra
+   persona con permiso de commit o de aprobar firmas), hay que actualizar esa sección. Piden
+   verificación en dos pasos en GitHub y en SignPath.
 2. Una vez aceptado, en SignPath: crear el proyecto, conectarlo al repositorio de GitHub como
    *Trusted Build System*, crear un usuario CI y su token, y las dos configuraciones de artefacto
    (un `.exe` suelto para `aldune.exe` y otro para el instalador de Inno Setup).

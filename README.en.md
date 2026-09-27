@@ -41,11 +41,29 @@ If Windows shows "Windows protected your PC", it's because the executable isn't 
 Your notes are stored in `%LOCALAPPDATA%\Aldune`, on your computer. The text of each note is
 encrypted with AES-256-GCM, and the key is protected by your Windows user. Aldune has no account and
 no server of its own. The only things that leave your computer are sync, if you turn it on (and
-only to the storage you choose), and a daily request to GitHub to tell you about new versions.
+only to the storage you choose), and a daily request to GitHub to tell you about new versions
+(you can turn it off in Settings → About).
 
 Sync encrypts the content before it leaves your computer: the storage can't read your notes or
 fabricate changes to them. The details, including what it does **not** protect, are in
 [docs/SYNC.md → Modelo de seguridad](docs/SYNC.md#modelo-de-seguridad).
+
+## Code signing policy
+
+Free code signing provided by [SignPath.io](https://about.signpath.io), certificate by
+[SignPath Foundation](https://signpath.org).
+
+Only the installer and the executable built by GitHub Actions from this public repository
+(`.github/workflows/release.yml`) are signed. Every signing request is approved by hand.
+
+- Committers and reviewers: [NachoPola16](https://github.com/NachoPola16)
+- Approvers: [NachoPola16](https://github.com/NachoPola16)
+
+Privacy: this program will not transfer any information to other networked systems unless
+specifically requested by the user or the person installing or operating it. The two exceptions
+are opt-in or can be turned off: sync, which only runs if you set it up and only talks to the
+storage you choose, and the daily check for new versions, which asks GitHub for the list of
+releases, sends nothing about you or your notes, and can be turned off in Settings → About.
 
 ## Build from source
 
