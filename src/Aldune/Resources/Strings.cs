@@ -89,6 +89,8 @@ public static class Strings
     // --- Actualizaciones ---------------------------------------------------------------------------
 
     public static string TrayCheckForUpdates => T("Check for updates…", "Buscar actualizaciones…");
+    public static string CheckForUpdatesAutomaticallyCheckbox => T("Check for new versions automatically", "Buscar versiones nuevas automáticamente");
+    public static string CheckForUpdatesAutomaticallyHint => T("Once a day Aldune asks GitHub for the list of releases. Nothing about you or your notes is sent. Turned off, it only checks when you press the button.", "Una vez al día Aldune pide a GitHub la lista de versiones publicadas. No se envía nada tuyo ni de tus notas. Si lo desactivas, solo se comprueba al pulsar el botón.");
     public static string UpdateChecking => T("Checking for updates…", "Buscando actualizaciones…");
     public static string UpdateCurrentMessage => T("Aldune is up to date.", "Aldune está actualizado.");
     public static string UpdateErrorMessage => T(
@@ -191,6 +193,13 @@ public static class Strings
     public static string DockViewAllTags => T("Choose a tag", "Elegir una etiqueta");
     public static string DockViewNoTags => T("No tags yet", "Aún no hay etiquetas");
     public static string NoteTags => T("Tags…", "Etiquetas…");
+    public static string AddTags => T("+ Tags", "+ Etiquetas");
+    public static string EditTagsTooltip => T("Edit tags", "Editar etiquetas");
+    public static string SortTooltip => T("Sort", "Ordenar");
+    public static string SortDock => T("Dock order", "Orden del mazo");
+    public static string SortNewest => T("Recent first", "Más recientes");
+    public static string SortOldest => T("Oldest first", "Más antiguas");
+    public static string SortTitle => T("Title (A–Z)", "Título (A-Z)");
     public static string SyncInsecureUrlWarning => T(
         "This address uses http:// outside your local network: your notes stay encrypted, but the access token or password travels unprotected. Use https://.",
         "Esta dirección usa http:// fuera de tu red local: las notas siguen cifradas, pero el token o la contraseña viajan sin protección. Usa https://.");

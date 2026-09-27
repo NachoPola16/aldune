@@ -165,6 +165,16 @@ public sealed class AppSettings
     /// </summary>
     public bool MoveCompletedTasksToEnd { get; set; }
 
+    /// <summary>
+    /// Consulta diaria a GitHub para avisar de versiones nuevas. Es lo único que sale del equipo sin
+    /// que el usuario lo pida, así que se puede apagar (la política de firma de SignPath exige
+    /// declararlo). Activada por defecto: un settings.json anterior sigue avisando como siempre.
+    /// </summary>
+    public bool CheckForUpdatesAutomatically { get; set; } = true;
+
+    /// <summary>Último orden elegido en "Gestionar notas". Por defecto el del mazo, el de siempre.</summary>
+    public NoteListOrder NotesManagerOrder { get; set; }
+
     /// <summary>Cuántas unidades de <see cref="AutoHideCompletedTasksDelayUnit"/> esperar. Por defecto 1.</summary>
     public int AutoHideCompletedTasksDelayValue { get; set; } = 1;
 

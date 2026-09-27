@@ -101,6 +101,15 @@ public sealed class NotesDatabase
                 DeviceId TEXT NOT NULL
             );
 
+            -- Última versión en la que este dispositivo y el almacén coincidieron, por nota. Un
+            -- conflicto real exige que los dos lados hayan cambiado desde ella; sin esta base, cada
+            -- edición normal hecha en otro dispositivo se guardaba como conflicto.
+            CREATE TABLE IF NOT EXISTS SyncBase (
+                NoteId TEXT PRIMARY KEY NOT NULL,
+                UpdatedAt TEXT NOT NULL,
+                DeviceId TEXT NOT NULL
+            );
+
             -- A conflict keeps only the losing version, encrypted with the local database key.
             -- It is a recovery queue, not a second sync source: dismissing it never changes the
             -- canonical remote version, while restoring it deliberately applies that version.
@@ -138,7 +147,11 @@ public sealed class NotesDatabase
             ["ProtectionSalt"] = "TEXT",
             ["ProtectionCipherText"] = "TEXT",
             ["ProtectionNonce"] = "TEXT",
-            ["ProtectionTag"] = "TEXT"
+            ["ProtectionTag"] = "TEXT",
+            // Dispositivo que escribió la versión actual, si llegó por sincronización (NULL si se
+            // editó aquí). Sin él, la copia local se firmaba con el id de este equipo y nunca
+            // coincidía con la del almacén: ver SyncService.CreateLocalEnvelopes.
+            ["SyncAuthorDeviceId"] = "TEXT"
         };
         foreach (var column in columns)
         {

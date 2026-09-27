@@ -49,6 +49,45 @@ public class SettingsServiceTests : IDisposable
         Assert.True(loaded.AutoHideCompletedTasks);
     }
 
+    // La consulta diaria a GitHub siempre estuvo activa: un settings.json anterior a la opción la
+    // tiene que conservar, no apagarla sin que el usuario lo sepa.
+    [Fact]
+    public void Load_OldFileWithoutCheckForUpdatesAutomatically_KeepsCheckingForUpdates()
+    {
+        Directory.CreateDirectory(_tempDir);
+        File.WriteAllText(_settingsPath, "{\"AutoHideCompletedTasks\":true}");
+
+        Assert.True(new SettingsService(_settingsPath).Load().CheckForUpdatesAutomatically);
+    }
+
+    [Fact]
+    public void SaveThenLoad_CheckForUpdatesAutomatically_RoundTrips()
+    {
+        var sut = new SettingsService(_settingsPath);
+        sut.Save(new AppSettings { CheckForUpdatesAutomatically = false });
+
+        Assert.False(sut.Load().CheckForUpdatesAutomatically);
+    }
+
+    [Fact]
+    public void Load_OldFileWithoutNotesManagerOrder_UsesTheDockOrder()
+    {
+        Directory.CreateDirectory(_tempDir);
+        File.WriteAllText(_settingsPath, "{\"AutoHideCompletedTasks\":true}");
+
+        Assert.Equal(NoteListOrder.Dock, new SettingsService(_settingsPath).Load().NotesManagerOrder);
+    }
+
+    [Fact]
+    public void SaveThenLoad_NotesManagerOrder_RoundTripsAsANumber()
+    {
+        var sut = new SettingsService(_settingsPath);
+        sut.Save(new AppSettings { NotesManagerOrder = NoteListOrder.Newest });
+
+        Assert.Equal(NoteListOrder.Newest, sut.Load().NotesManagerOrder);
+        Assert.Contains("\"NotesManagerOrder\":1", File.ReadAllText(_settingsPath));
+    }
+
     [Fact]
     public void SaveThenLoad_MoveCompletedTasksToEnd_RoundTrips()
     {

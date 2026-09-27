@@ -136,7 +136,7 @@ public sealed class NotesRepository
         // Las notas que la llevaban cambian: se les actualiza la fecha para que la sincronización
         // lleve el cambio al resto de dispositivos (si no, allí conservaban la etiqueta borrada).
         deleteLinks.CommandText = """
-            UPDATE Note SET UpdatedAt = $now
+            UPDATE Note SET UpdatedAt = $now, SyncAuthorDeviceId = NULL
             WHERE Id IN (SELECT NoteId FROM NoteTag
                          WHERE TagId IN (SELECT Id FROM Tag WHERE Name = $name COLLATE NOCASE));
             DELETE FROM NoteTag
@@ -203,7 +203,7 @@ public sealed class NotesRepository
         {
             using var stamp = connection.CreateCommand();
             stamp.Transaction = transaction;
-            stamp.CommandText = "UPDATE Note SET UpdatedAt = $now WHERE Id = $noteId;";
+            stamp.CommandText = "UPDATE Note SET UpdatedAt = $now, SyncAuthorDeviceId = NULL WHERE Id = $noteId;";
             stamp.Parameters.AddWithValue("$now", DateTimeOffset.UtcNow.ToString("O"));
             stamp.Parameters.AddWithValue("$noteId", noteId.ToString());
             stamp.ExecuteNonQuery();
@@ -252,6 +252,49 @@ public sealed class NotesRepository
                 tags.Add((string)reader["Name"]);
         }
         foreach (var note in notes) note.Tags = byId[note.Id];
+    }
+
+    /// <summary>Autor de la versión actual de las notas que llegaron por sincronización y no se han
+    /// vuelto a editar aquí. Las que faltan son de este dispositivo.</summary>
+    public IReadOnlyDictionary<Guid, string> GetSyncAuthors()
+    {
+        using var connection = _database.OpenConnection();
+        using var command = connection.CreateCommand();
+        command.CommandText = "SELECT Id, SyncAuthorDeviceId FROM Note WHERE SyncAuthorDeviceId IS NOT NULL;";
+        using var reader = command.ExecuteReader();
+        var results = new Dictionary<Guid, string>();
+        while (reader.Read()) results[Guid.Parse(reader.GetString(0))] = reader.GetString(1);
+        return results;
+    }
+
+    /// <summary>Última versión común con el almacén de cada nota (ver la tabla <c>SyncBase</c>).</summary>
+    public IReadOnlyDictionary<Guid, SyncBaseVersion> GetSyncBases()
+    {
+        using var connection = _database.OpenConnection();
+        using var command = connection.CreateCommand();
+        command.CommandText = "SELECT NoteId, UpdatedAt, DeviceId FROM SyncBase;";
+        using var reader = command.ExecuteReader();
+        var results = new Dictionary<Guid, SyncBaseVersion>();
+        while (reader.Read())
+            results[Guid.Parse(reader.GetString(0))] = new SyncBaseVersion(ParseDate(reader["UpdatedAt"]), reader.GetString(2));
+        return results;
+    }
+
+    public void SetSyncBases(IEnumerable<KeyValuePair<Guid, SyncBaseVersion>> bases)
+    {
+        using var connection = _database.OpenConnection();
+        using var transaction = connection.BeginTransaction();
+        foreach (var (noteId, version) in bases)
+        {
+            using var command = connection.CreateCommand();
+            command.Transaction = transaction;
+            command.CommandText = "INSERT OR REPLACE INTO SyncBase (NoteId, UpdatedAt, DeviceId) VALUES ($id, $updatedAt, $deviceId);";
+            command.Parameters.AddWithValue("$id", noteId.ToString());
+            command.Parameters.AddWithValue("$updatedAt", version.UpdatedAt.ToString("O"));
+            command.Parameters.AddWithValue("$deviceId", version.DeviceId);
+            command.ExecuteNonQuery();
+        }
+        transaction.Commit();
     }
 
     public IReadOnlyList<SyncTombstone> GetSyncTombstones()
@@ -378,7 +421,7 @@ public sealed class NotesRepository
         using var connection = _database.OpenConnection();
         using var command = connection.CreateCommand();
         command.CommandText = """
-            UPDATE Note SET EncryptedText = $text, Nonce = $nonce, Tag = $tag, UpdatedAt = $updatedAt
+            UPDATE Note SET EncryptedText = $text, Nonce = $nonce, Tag = $tag, UpdatedAt = $updatedAt, SyncAuthorDeviceId = NULL
             WHERE Id = $id AND IsProtected = 0;
             """;
         command.Parameters.AddWithValue("$text", encrypted.CipherText);
@@ -393,7 +436,7 @@ public sealed class NotesRepository
     {
         using var connection = _database.OpenConnection();
         using var command = connection.CreateCommand();
-        command.CommandText = "UPDATE Note SET Color = $color, UpdatedAt = $updatedAt WHERE Id = $id;";
+        command.CommandText = "UPDATE Note SET Color = $color, UpdatedAt = $updatedAt, SyncAuthorDeviceId = NULL WHERE Id = $id;";
         command.Parameters.AddWithValue("$color", color);
         command.Parameters.AddWithValue("$updatedAt", DateTimeOffset.UtcNow.ToString("O"));
         command.Parameters.AddWithValue("$id", id.ToString());
@@ -404,7 +447,7 @@ public sealed class NotesRepository
     {
         using var connection = _database.OpenConnection();
         using var command = connection.CreateCommand();
-        command.CommandText = "UPDATE Note SET State = $state, UpdatedAt = $updatedAt WHERE Id = $id;";
+        command.CommandText = "UPDATE Note SET State = $state, UpdatedAt = $updatedAt, SyncAuthorDeviceId = NULL WHERE Id = $id;";
         command.Parameters.AddWithValue("$state", state.ToString());
         command.Parameters.AddWithValue("$updatedAt", DateTimeOffset.UtcNow.ToString("O"));
         command.Parameters.AddWithValue("$id", id.ToString());
@@ -446,7 +489,10 @@ public sealed class NotesRepository
     }
 
     /// <summary>Aplica una nota remota ya resuelta por el motor de sincronización.</summary>
-    public void ApplySyncNote(Note note)
+    /// <param name="authorDeviceId">Dispositivo que escribió esta versión (el <c>DeviceId</c> del
+    /// sobre). Se guarda para volver a presentarla con el mismo autor en la siguiente
+    /// sincronización; una edición local lo borra.</param>
+    public void ApplySyncNote(Note note, string? authorDeviceId = null)
     {
         if (note.IsProtected && note.ProtectedContent is null)
             throw new FormatException("A protected note is missing its encrypted content.");
@@ -455,9 +501,10 @@ public sealed class NotesRepository
         using var command = connection.CreateCommand();
         command.CommandText = """
             INSERT INTO Note (Id, EncryptedText, Nonce, Tag, Color, CreatedAt, UpdatedAt, State, ScreenOrigin,
-                              IsProtected, ProtectionSalt, ProtectionCipherText, ProtectionNonce, ProtectionTag)
+                              IsProtected, ProtectionSalt, ProtectionCipherText, ProtectionNonce, ProtectionTag,
+                              SyncAuthorDeviceId)
             VALUES ($id, $text, $nonce, $tag, $color, $createdAt, $updatedAt, $state, $screenOrigin,
-                    $isProtected, $salt, $protectedText, $protectedNonce, $protectedTag)
+                    $isProtected, $salt, $protectedText, $protectedNonce, $protectedTag, $syncAuthorDeviceId)
             ON CONFLICT(Id) DO UPDATE SET
                 EncryptedText = excluded.EncryptedText,
                 Nonce = excluded.Nonce,
@@ -471,7 +518,8 @@ public sealed class NotesRepository
                 ProtectionSalt = excluded.ProtectionSalt,
                 ProtectionCipherText = excluded.ProtectionCipherText,
                 ProtectionNonce = excluded.ProtectionNonce,
-                ProtectionTag = excluded.ProtectionTag;
+                ProtectionTag = excluded.ProtectionTag,
+                SyncAuthorDeviceId = excluded.SyncAuthorDeviceId;
             DELETE FROM SyncTombstone WHERE NoteId = $id;
             """;
         command.Parameters.AddWithValue("$id", note.Id.ToString());
@@ -488,6 +536,7 @@ public sealed class NotesRepository
         command.Parameters.AddWithValue("$protectedText", (object?)note.ProtectedContent?.CipherText ?? DBNull.Value);
         command.Parameters.AddWithValue("$protectedNonce", (object?)note.ProtectedContent?.Nonce ?? DBNull.Value);
         command.Parameters.AddWithValue("$protectedTag", (object?)note.ProtectedContent?.Tag ?? DBNull.Value);
+        command.Parameters.AddWithValue("$syncAuthorDeviceId", (object?)authorDeviceId ?? DBNull.Value);
         command.ExecuteNonQuery();
 
         // El orden del mazo viaja dentro de la nota. Si el sobre lo trae, se aplica; si no (un sobre
@@ -556,7 +605,7 @@ public sealed class NotesRepository
         command.CommandText = """
             UPDATE Note SET EncryptedText = $text, Nonce = $nonce, Tag = $tag,
                 IsProtected = 0, ProtectionSalt = NULL, ProtectionCipherText = NULL,
-                ProtectionNonce = NULL, ProtectionTag = NULL, UpdatedAt = $updatedAt
+                ProtectionNonce = NULL, ProtectionTag = NULL, UpdatedAt = $updatedAt, SyncAuthorDeviceId = NULL
             WHERE Id = $id;
             """;
         AddEncryptedParameters(command, encrypted);
@@ -586,7 +635,7 @@ public sealed class NotesRepository
             UPDATE Note SET EncryptedText = $text, Nonce = $nonce, Tag = $tag,
                 IsProtected = 1, ProtectionSalt = $salt, ProtectionCipherText = $protectedText,
                 ProtectionNonce = $protectedNonce, ProtectionTag = $protectedTag,
-                UpdatedAt = $updatedAt
+                UpdatedAt = $updatedAt, SyncAuthorDeviceId = NULL
             WHERE Id = $id;
             """;
         AddEncryptedParameters(command, normalContent);
@@ -750,7 +799,7 @@ public sealed class NotesRepository
         {
             using var command = connection.CreateCommand();
             command.Transaction = transaction;
-            command.CommandText = "UPDATE Note SET UpdatedAt = $updatedAt WHERE Id = $id;";
+            command.CommandText = "UPDATE Note SET UpdatedAt = $updatedAt, SyncAuthorDeviceId = NULL WHERE Id = $id;";
             command.Parameters.AddWithValue("$updatedAt", now);
             command.Parameters.AddWithValue("$id", id.ToString());
             command.ExecuteNonQuery();

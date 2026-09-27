@@ -1,4 +1,4 @@
-using System.ComponentModel;
+﻿using System.ComponentModel;
 using System.Diagnostics;
 using System.Net.Http;
 using System.Windows;
@@ -22,12 +22,14 @@ internal sealed class UpdateNotifier : IDisposable
     private readonly ToastCenter _toasts;
     private ToastWindow? _toast;
     private bool _checking;
+    private readonly Func<bool> _automaticChecksEnabled;
     private bool _manualRequested;
     private bool _disposed;
 
-    internal UpdateNotifier(ToastCenter toasts)
+    internal UpdateNotifier(ToastCenter toasts, Func<bool> automaticChecksEnabled)
     {
         _toasts = toasts;
+        _automaticChecksEnabled = automaticChecksEnabled;
         _checker = new ReleaseUpdateChecker(_client);
         _timer.Tick += OnTick;
         _timer.Start();
@@ -36,6 +38,8 @@ internal sealed class UpdateNotifier : IDisposable
     private async void OnTick(object? sender, EventArgs e)
     {
         _timer.Interval = TimeSpan.FromHours(24);
+        // Se consulta en cada vuelta y no al construir: apagarlo en Ajustes vale sin reiniciar.
+        if (!_automaticChecksEnabled()) return;
         await CheckAsync(manual: false);
     }
 

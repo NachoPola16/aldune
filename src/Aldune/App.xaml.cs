@@ -290,7 +290,7 @@ public partial class App : Application
         };
 
         _toastCenter = new ToastCenter();
-        _updateNotifier = new UpdateNotifier(_toastCenter);
+        _updateNotifier = new UpdateNotifier(_toastCenter, () => settings.CheckForUpdatesAutomatically);
         _trayIcon = new TrayIcon(coordinator, _updateNotifier.CheckManually);
 
         _reminderScheduler = new ReminderScheduler(repository, coordinator, _toastCenter);

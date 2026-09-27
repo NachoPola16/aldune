@@ -11,10 +11,16 @@ namespace Aldune.Windowing;
 /// </summary>
 public sealed class NoteSnippetConverter : IValueConverter
 {
-    public object Convert(object? value, Type targetType, object? parameter, CultureInfo culture) =>
-        value is Note note && note.IsProtected
-            ? string.Empty
-            : NoteTitleHelper.GetTabPreview(value as string ?? string.Empty);
+    // Recibe la nota entera (hace falta para saber si está protegida). Desde que se añadieron las
+    // protegidas el dock le pasaba la nota pero aquí se seguía leyendo "value as string", así que la
+    // vista previa salía siempre vacía.
+    public object Convert(object? value, Type targetType, object? parameter, CultureInfo culture) => value switch
+    {
+        Note { IsProtected: true } => string.Empty,
+        Note note => NoteTitleHelper.GetTabPreview(note.Text),
+        string text => NoteTitleHelper.GetTabPreview(text),
+        _ => string.Empty
+    };
 
     public object ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture) =>
         throw new NotSupportedException();

@@ -3723,3 +3723,111 @@ junto al dock, en una nota y en otra pestaña (que además se abre).
 **Sin verificar**: trackpad (no hay en este equipo).
 
 Tests: 778/778 (36 nuevos). Smoke test en verde (adaptado: tras la cortesía espera el cierre largo).
+
+## 1.2.0: sincronización sin eco ni conflictos falsos, Gestionar notas rehecha y ventanas que no tapan (sesión 2026-09-27)
+
+### Bug: lo recibido se volvía a subir o a aplicar en cada sincronización
+
+Encontrado al probar WebDAV contra un Nextcloud real (contenedor temporal, ya borrado); pasaba igual
+con la carpeta compartida y con el servidor. Cada dispositivo firmaba **con su propio id** todas sus
+versiones, también las que había recibido de otro. Una nota recibida tenía la misma fecha que la del
+almacén pero distinto id, y `SyncVersion.Compare` desempata por id: el dispositivo de id mayor volvía
+a subir todo lo recibido (una vez) y el de id menor lo volvía a aplicar **en cada sincronización, para
+siempre**, contándolo como descargado y guardando un conflicto.
+
+Arreglo: la versión conserva a su autor. Columna nueva `Note.SyncAuthorDeviceId` (NULL = editada aquí; no confundir con `AppSettings.SyncDeviceId`, el id de este equipo):
+`ApplySyncNote` guarda el `DeviceId` del sobre y toda escritura local de `UpdatedAt` la vuelve a NULL.
+Los borrados ya guardaban su autor (`'local'` si se hicieron aquí). `SyncService.CreateLocalEnvelopes`
+firma con ese autor. El formato de sync no cambia (sigue en el 4). Tests:
+`*_IsNotEchoedBackOnLaterSyncs` y `EditReceivedByTheLowerDeviceId_IsNotReappliedOnLaterSyncs`.
+
+### WebDAV contra Nextcloud (prueba, sin cambios en el servidor)
+
+Probado con dos bases temporales: subir, bajar con etiquetas, editar en un lado y recibir en el otro,
+borrado firmado, pasadas repetidas sin cambios, contraseña mala (mensaje 401 claro). Si la carpeta
+base no existe, el error es un "409 (Conflict)" en crudo: la documentación ya pide una carpeta que
+exista, pero el mensaje debería decirlo.
+
+### Conflictos que no lo eran (el usuario llegó a tener 200)
+
+`SynchronizeCore` guardaba un conflicto siempre que las dos versiones diferían, aunque solo hubiera
+cambiado un lado: cada edición normal hecha en otro dispositivo dejaba su "versión perdedora", que no
+era más que la versión anterior de la misma nota.
+
+Arreglo: tabla `SyncBase` con la última versión (fecha + autor) en la que el dispositivo y el almacén
+coincidieron, por nota; se actualiza al final de cada sincronización. Solo es conflicto si **los dos**
+lados cambiaron desde esa base (`SyncService.IsRealConflict`). Sin base (instalación anterior o nota
+vista por primera vez en los dos lados) se guarda por prudencia, salvo que las dos versiones tengan la
+misma fecha: son la misma versión firmada por dispositivos distintos, como hacían las versiones
+anteriores con lo recibido. Consecuencia: el conflicto aparece solo en el dispositivo que ve las dos
+ediciones, que es donde se puede recuperar la perdedora. `ConflictsResolved` cuenta ya solo los reales.
+Los conflictos falsos que ya estén guardados no se borran solos: "Descartar todo" en Conflictos.
+
+### Cajas de texto
+
+Plantilla propia para `TextBox` y `PasswordBox` en `App.xaml` (estilo implícito; `ColorTextBoxStyle`
+se basa en él): el borde azul de Windows al pasar el ratón y al escribir pasa a los tonos cálidos de la
+caja de contraseña. Las cajas sin borde (Ajustes, buscador) quedan igual; las horas del recordatorio,
+que no tenían estilo y salían blancas, pasan a oscuras. Verificado con sonda (Gestionar etiquetas).
+
+### "Gestionar notas" rehecha
+
+- **Filas en dos líneas**: título y fecha de la última edición (hora si es de hoy, "27 sept" si es de
+  este año, fecha completa si es anterior; tooltip con la fecha entera; `NoteListing.DateKind` en Core,
+  por día de calendario local); debajo, el principio del texto y las **etiquetas como chips**, que son
+  también el botón para editarlas ("+ Etiquetas" si no tiene). Antes todas las filas decían
+  "Etiquetas…" y no se veía cuáles tenía cada nota.
+- **Filtros en una fila**: "Gestionar etiquetas" pasa a botón de icono junto al desplegable.
+- **Ordenar**: desplegable en la línea de "Seleccionar todo" (orden del mazo, más recientes, más
+  antiguas, título). Se recuerda en `AppSettings.NotesManagerOrder` (número; un settings.json antiguo
+  carga con el orden del mazo). Lógica en `NoteListing.Sort` (Core, con tests).
+- Se conserva el color de cada fila: es como se reconoce la nota en toda la app.
+
+### Vista previa del dock, rota desde el 13-09
+
+Al añadir las notas protegidas, el dock pasó a enlazar la nota entera con `NoteSnippetConverter`, que
+seguía leyendo `value as string`: la segunda línea de las pestañas salió vacía desde entonces. El
+conversor acepta ya la nota (y la deja vacía si está protegida). Verificado con sonda.
+
+### Firma con SignPath: preparado lo que depende del repositorio
+
+- Sección "Code signing policy" / "Política de firma de código" en los README (atribución, roles,
+  privacidad), que las condiciones de SignPath Foundation exigen.
+- Nueva opción "Buscar versiones nuevas automáticamente" (Ajustes → Acerca de; activada por defecto,
+  `AppSettings.CheckForUpdatesAutomatically`): la consulta diaria a GitHub era lo único que salía del
+  equipo sin pedirlo, y la política de privacidad de SignPath pide que se pueda evitar.
+- `Aldune.iss` fija `VersionInfoVersion/ProductName/Company` del Setup.exe (exigen nombre y versión en
+  todo lo firmado). Verificado: el Setup lleva "Aldune 1.1.1.0".
+- Pendiente del usuario: la solicitud en signpath.org/apply (ver `docs/RELEASING.md`).
+
+Tests: 799/799. Smoke test sin lanzar en esta sesión (mueve el ratón).
+
+### Ventanas propias que tapaban al instalador
+
+Al pulsar "Descargar" desde Ajustes, el selector de idioma del instalador quedaba debajo de Ajustes y
+del gestor de notas (las dos `Topmost`), y había que cerrarlas para verlo. Dos causas y dos arreglos:
+
+- **Las ventanas propias seguían encima de todo aunque se cambiara a otra aplicación.** Ahora solo
+  mientras están activas: al desactivarse dejan la capa superior y se colocan justo debajo de la
+  ventana de primer plano si es de otro proceso (`NativeMethods.PlaceBelowForegroundOfOtherApp`;
+  quitar `Topmost` solo, con `HWND_NOTOPMOST`, las dejaba encima de todas las normales). Al volver a
+  activarlas recuperan la capa superior. Verificado con sonda contra una ventana de otro proceso, y
+  sin el arreglo la misma sonda reproduce el fallo.
+- **El selector de idioma sale antes de `InitializeSetup`** (código de Inno Setup: `AskForLanguage`
+  va antes que el `InitializeSetup` del script), así que el cierre de Aldune llegaba tarde para él.
+  `ShowLanguageDialog=auto`: si Windows está en español o inglés no se pregunta.
+
+Además, `WizardStyle=modern dynamic`: el asistente sigue el tema claro u oscuro de Windows (Inno Setup
+6.6+; el CI instala la última de Chocolatey, sin versión fijada).
+
+### Revisión de código de la ronda
+
+- "El `Padding` de las cajas de texto ya no hace nada" — **falso**, medido: con la plantilla nueva y
+  con la de Windows el primer carácter empieza en el mismo sitio (TextBox y PasswordBox). WPF aplica
+  el `Padding` al contenido por dentro; enlazarlo también en el `Border` lo duplicaría.
+- Colores del borde de las cajas en pinceles compartidos (`AlduneFieldHoverBrush`,
+  `AlduneFieldFocusBrush`), también en `PasswordPromptWindow`.
+- Columna renombrada a `Note.SyncAuthorDeviceId` antes de publicarla, para no confundirla con
+  `AppSettings.SyncDeviceId`.
+- Descartado: leer el autor dentro de `GetAllForSync` (una consulta más por sincronización no se nota
+  y obligaría a meter en `Note` un dato solo de la sincronización).

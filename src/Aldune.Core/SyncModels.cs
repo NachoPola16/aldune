@@ -1,4 +1,4 @@
-using System.Text.Json;
+﻿using System.Text.Json;
 using System.Security.Cryptography;
 
 namespace Aldune.Core;
@@ -107,6 +107,15 @@ public static class SyncVersion
         int time = left.UpdatedAt.CompareTo(right.UpdatedAt);
         return time != 0 ? time : string.CompareOrdinal(left.DeviceId, right.DeviceId);
     }
+}
+
+/// <summary>Versión (fecha y autor) en la que este dispositivo y el almacén coincidieron por última vez.</summary>
+public sealed record SyncBaseVersion(DateTimeOffset UpdatedAt, string DeviceId)
+{
+    public bool Matches(SyncEnvelope envelope) =>
+        envelope.UpdatedAt == UpdatedAt && string.Equals(envelope.DeviceId, DeviceId, StringComparison.Ordinal);
+
+    public static SyncBaseVersion Of(SyncEnvelope envelope) => new(envelope.UpdatedAt, envelope.DeviceId);
 }
 
 public sealed record SyncResult(

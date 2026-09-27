@@ -60,6 +60,7 @@ public partial class SettingsWindow : Window
         RememberPositionsCheck.IsChecked = _settings.RememberNotePositions;
         PopulateTrackpadGestures();
         MoveCompletedTasksCheck.IsChecked = _settings.MoveCompletedTasksToEnd;
+        CheckForUpdatesAutomaticallyCheck.IsChecked = _settings.CheckForUpdatesAutomatically;
         AutoHideTasksCheck.IsChecked = _settings.AutoHideCompletedTasks;
         AutoHideTasksDelayValueBox.Text = _settings.AutoHideCompletedTasksDelayValue.ToString();
         TrashRetentionValueBox.Text = _settings.TrashRetentionDays.ToString();
@@ -573,6 +574,12 @@ public partial class SettingsWindow : Window
     private void OnMoveCompletedTasksToggled(object sender, RoutedEventArgs e)
     {
         _settings.MoveCompletedTasksToEnd = MoveCompletedTasksCheck.IsChecked == true;
+        _settingsService.Save(_settings);
+    }
+
+    private void OnCheckForUpdatesAutomaticallyToggled(object sender, RoutedEventArgs e)
+    {
+        _settings.CheckForUpdatesAutomatically = CheckForUpdatesAutomaticallyCheck.IsChecked == true;
         _settingsService.Save(_settings);
     }
 

@@ -1,4 +1,4 @@
-#define MyAppName "Aldune"
+﻿#define MyAppName "Aldune"
 #define MyAppPublisher "Aldune"
 #define MyAppExeName "aldune.exe"
 #define SourceDir "..\publish\portable"
@@ -9,6 +9,11 @@ AppId={{B7E4E3D1-4A6B-4F30-9A5E-7A9E2B2D0A51}
 AppName={#MyAppName}
 AppVersion={#MyAppVersion}
 AppPublisher={#MyAppPublisher}
+; Metadatos explícitos del Setup.exe: la política de SignPath exige nombre de producto y versión en
+; todo lo que se firma.
+VersionInfoVersion={#MyAppVersion}
+VersionInfoProductName={#MyAppName}
+VersionInfoCompany={#MyAppPublisher}
 DefaultDirName={localappdata}\Programs\Aldune
 DefaultGroupName={#MyAppName}
 DisableProgramGroupPage=yes
@@ -27,7 +32,12 @@ OutputDir=..\dist
 OutputBaseFilename=Aldune-Setup-{#MyAppVersion}
 Compression=lzma2/max
 SolidCompression=yes
-WizardStyle=modern
+; "dynamic": claro u oscuro según el tema de Windows, como el resto del sistema (Inno Setup 6.6+).
+WizardStyle=modern dynamic
+; Sin preguntar el idioma si el de Windows es uno de los dos del instalador: ese diálogo sale antes de
+; InitializeSetup, con Aldune todavía abierta, y quedaba tapado por sus ventanas. Con otro idioma de
+; Windows se sigue preguntando.
+ShowLanguageDialog=auto
 
 [Languages]
 Name: "english"; MessagesFile: "compiler:Default.isl"

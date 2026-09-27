@@ -129,6 +129,30 @@ internal static class NativeMethods
         }
     }
 
+    private const int WS_EX_TOPMOST = 0x00000008;
+
+    /// <summary>
+    /// Deja la ventana justo debajo de la que está en primer plano, si esa es de otra aplicación.
+    ///
+    /// Quitar <c>Topmost</c> no basta: <c>HWND_NOTOPMOST</c> coloca la ventana por encima de todas
+    /// las ventanas normales, así que seguiría tapando a la aplicación a la que el usuario acaba de
+    /// cambiar (el selector de idioma del instalador, el navegador de "Descargar"). Si la de primer
+    /// plano es de la capa superior no hace falta nada: ya está por encima de cualquier ventana normal,
+    /// y ponerse detrás de ella podría volver a meter esta en esa capa.
+    /// </summary>
+    internal static void PlaceBelowForegroundOfOtherApp(Window window)
+    {
+        var hwnd = new WindowInteropHelper(window).Handle;
+        var foreground = GetForegroundWindow();
+        if (hwnd == IntPtr.Zero || foreground == IntPtr.Zero || foreground == hwnd) return;
+
+        GetWindowThreadProcessId(foreground, out uint processId);
+        if (processId == GetCurrentProcessId()) return;
+        if ((GetWindowLong(foreground, GWL_EXSTYLE) & WS_EX_TOPMOST) != 0) return;
+
+        SetWindowPos(hwnd, foreground, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE);
+    }
+
     private const int DWMWA_WINDOW_CORNER_PREFERENCE = 33;
     private const int DWMWCP_ROUNDSMALL = 3;
 

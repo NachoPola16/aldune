@@ -116,6 +116,17 @@ public sealed class AppCoordinator
     /// valor y repinta docks y ajustes: si el usuario lo fija desde ese menú con Ajustes abierto, la
     /// casilla tiene que reflejarlo en el acto y no solo al reabrir la ventana.
     /// </summary>
+    public NoteListOrder NotesManagerOrder
+    {
+        get => _settings?.NotesManagerOrder ?? NoteListOrder.Dock;
+        set
+        {
+            if (_settings is null || _settings.NotesManagerOrder == value) return;
+            _settings.NotesManagerOrder = value;
+            _settingsService?.Save(_settings);
+        }
+    }
+
     public void SetKeepDockOpen(bool keepOpen)
     {
         if (_settings is null) return;
@@ -947,6 +958,10 @@ public sealed class AppCoordinator
     /// en cada llamada, y esto se llama también al pulsar "Gestionar notas" o "Ajustes" con la
     /// ventana ya abierta: el contador subía dos veces, bajaba una al cerrar, y las notas se quedaban
     /// sin "siempre encima" hasta reiniciar la app.
+    ///
+    /// Solo mientras está activa: al cambiar a otra aplicación deja la capa superior (ver
+    /// <see cref="OnAppWindowDeactivated"/>). Antes seguía encima de todo, y al pulsar "Descargar"
+    /// desde Ajustes el selector de idioma del instalador quedaba tapado por Ajustes y el gestor.
     /// </summary>
     internal void RaiseAppWindow(Window window)
     {
@@ -954,10 +969,31 @@ public sealed class AppCoordinator
         {
             SuspendNotesAboveDockMenu();
             window.Closed += (_, _) => ReleaseAppWindow(window);
+            window.Deactivated += OnAppWindowDeactivated;
+            window.Activated += OnAppWindowActivated;
         }
         window.Activate();
         NativeMethods.RaiseTopmostWindow(window);
         NativeMethods.ForceActivate(window);
+    }
+
+    private static void OnAppWindowDeactivated(object? sender, EventArgs e)
+    {
+        if (sender is not Window window) return;
+
+        window.Topmost = false;
+        // Al recibir Deactivated la activación aún está a medias y el primer plano puede no ser
+        // todavía la ventana nueva: se coloca cuando Windows ha terminado de cambiarlo.
+        window.Dispatcher.BeginInvoke(DispatcherPriority.Background,
+            () => { if (!window.IsActive) NativeMethods.PlaceBelowForegroundOfOtherApp(window); });
+    }
+
+    private static void OnAppWindowActivated(object? sender, EventArgs e)
+    {
+        if (sender is not Window { Topmost: false } window) return;
+
+        window.Topmost = true;
+        NativeMethods.RaiseTopmostWindow(window);
     }
 
     private void ReleaseAppWindow(Window window)

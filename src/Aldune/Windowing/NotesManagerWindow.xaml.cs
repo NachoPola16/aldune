@@ -32,6 +32,7 @@ public partial class NotesManagerWindow : Window
     private string _searchText = "";
     private string? _tagFilter;
     private bool _loadingTagFilter;
+    private NoteListOrder _order;
     private readonly PopupToggle _tagManagerToggle;
     private readonly PopupToggle _tagEditorToggle;
     private AutoScrollManager? _autoScroll;
@@ -47,6 +48,8 @@ public partial class NotesManagerWindow : Window
         _repository = repository;
         _coordinator = coordinator;
         _tagFilter = tagFilter;
+        _order = coordinator.NotesManagerOrder;
+        LoadSortOptions();
 
         SourceInitialized += (_, _) =>
         {
@@ -159,7 +162,8 @@ public partial class NotesManagerWindow : Window
                 string.Equals(tag, _tagFilter, StringComparison.OrdinalIgnoreCase)));
         }
 
-        _rows = byState.Where(r => NoteSearch.Matches(r.Note.Text, _searchText)).ToList();
+        _rows = NoteListing.Sort(byState.Where(r => NoteSearch.Matches(r.Note.Text, _searchText)), r => r.Note, _order)
+            .ToList();
         RowsList.ItemsSource = _rows;
 
         // Borrar del todo solo tiene sentido sobre lo que ya esta en la papelera.
@@ -263,6 +267,34 @@ public partial class NotesManagerWindow : Window
             : sender == FilterTrashed ? Filter.Trashed
             : Filter.Active;
 
+        ApplyFilter();
+        PlayListEntrance();
+    }
+
+    private void LoadSortOptions()
+    {
+        foreach (var (order, label) in new[]
+                 {
+                     (NoteListOrder.Dock, Strings.SortDock),
+                     (NoteListOrder.Newest, Strings.SortNewest),
+                     (NoteListOrder.Oldest, Strings.SortOldest),
+                     (NoteListOrder.Title, Strings.SortTitle)
+                 })
+        {
+            var item = new ComboBoxItem { Content = label, Tag = order };
+            SortBox.Items.Add(item);
+            if (order == _order) SortBox.SelectedItem = item;
+        }
+        SortBox.SelectedItem ??= SortBox.Items[0];
+    }
+
+    private void OnSortChanged(object sender, SelectionChangedEventArgs e)
+    {
+        // Rellenar el desplegable en el constructor ya dispara esto, antes de que haya filas.
+        if (SortBox.SelectedItem is not ComboBoxItem { Tag: NoteListOrder order } || order == _order) return;
+
+        _order = order;
+        _coordinator.NotesManagerOrder = order;
         ApplyFilter();
         PlayListEntrance();
     }

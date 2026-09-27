@@ -1,4 +1,4 @@
-using System.Security.Cryptography;
+﻿using System.Security.Cryptography;
 
 namespace Aldune.Core;
 
@@ -324,16 +324,19 @@ public sealed class SyncService
                 var localTombstones = _repository.GetSyncTombstones()
                     .Where(tombstone => scopedIds is null || scopedIds.Contains(tombstone.NoteId))
                     .ToDictionary(item => item.NoteId);
-                var local = new Dictionary<Guid, SyncEnvelope>();
-                foreach (var note in localNotes.Values)
-                    local[note.Id] = SyncEnvelopeCodec.CreateNote(note, key, deviceId);
-                foreach (var tombstone in localTombstones.Values)
-                    local[tombstone.NoteId] = SyncEnvelopeCodec.CreateTombstone(tombstone, key, deviceId);
+                var local = CreateLocalEnvelopes(localNotes.Values, localTombstones.Values, key, deviceId);
 
                 int uploaded = 0;
                 int downloaded = 0;
                 int conflicts = 0;
                 int tombstones = 0;
+                var bases = _repository.GetSyncBases();
+                var settled = new Dictionary<Guid, SyncBaseVersion>();
+                void Settle(Guid id, SyncEnvelope agreed)
+                {
+                    if (!bases.TryGetValue(id, out var known) || !known.Matches(agreed))
+                        settled[id] = SyncBaseVersion.Of(agreed);
+                }
 
                 foreach (var id in local.Keys.Union(remote.Keys).ToList())
                 {
@@ -343,6 +346,7 @@ public sealed class SyncService
                     if (!hasLocal)
                     {
                         ApplyRemote(remoteObject!, key, ref downloaded, ref tombstones);
+                        Settle(id, remoteObject!.Envelope);
                         continue;
                     }
 
@@ -350,12 +354,12 @@ public sealed class SyncService
                     {
                         transport.Write(localEnvelope!);
                         uploaded++;
+                        Settle(id, localEnvelope!);
                         continue;
                     }
 
-                    conflicts++;
                     int comparison = SyncVersion.Compare(localEnvelope!, remoteObject!.Envelope);
-                    if (comparison != 0)
+                    if (comparison != 0 && IsRealConflict(localEnvelope!, remoteObject.Envelope, bases.GetValueOrDefault(id)))
                     {
                         var localVersion = ToConflictVersion(localEnvelope!, localNotes, key);
                         var remoteVersion = ToConflictVersion(remoteObject.Envelope, null, key);
@@ -363,6 +367,7 @@ public sealed class SyncService
                         var losing = comparison > 0 ? remoteVersion : localVersion;
                         _repository.SaveSyncConflict(new SyncConflict(
                             Guid.NewGuid(), id, DateTimeOffset.UtcNow, winner, losing));
+                        conflicts++;
                     }
                     if (comparison > 0)
                     {
@@ -373,12 +378,11 @@ public sealed class SyncService
                     {
                         ApplyRemote(remoteObject, key, ref downloaded, ref tombstones);
                     }
+                    Settle(id, comparison >= 0 ? localEnvelope! : remoteObject.Envelope);
                 }
 
-                // El contador incluye pares ya iguales como "comparados", no como conflictos reales.
-                // Devolverlo así permite mostrar actividad sin afirmar que se perdió una edición.
-                var result = new SyncResult(uploaded, downloaded, Math.Max(0, conflicts - local.Keys.Intersect(remote.Keys).Count(id =>
-                    SyncVersion.Compare(local[id], remote[id].Envelope) == 0)), tombstones);
+                if (settled.Count > 0) _repository.SetSyncBases(settled);
+                var result = new SyncResult(uploaded, downloaded, conflicts, tombstones);
                 _settings.LastSyncAt = DateTimeOffset.UtcNow;
                 _settingsService.Save(_settings);
                 return result;
@@ -394,6 +398,20 @@ public sealed class SyncService
         {
             return new(0, 0, 0, 0, ex.Message);
         }
+    }
+
+    /// <summary>
+    /// Solo es conflicto si los dos lados cambiaron desde la última versión común: si uno sigue en
+    /// la base, la otra versión es una actualización normal y no se pierde nada. Sin base (nota vista
+    /// por primera vez en los dos lados, o instalación anterior a la base) se guarda el conflicto por
+    /// prudencia, salvo que las dos tengan la misma fecha: entonces son la misma versión firmada por
+    /// dispositivos distintos, como hacían las versiones anteriores con lo recibido.
+    /// </summary>
+    private static bool IsRealConflict(SyncEnvelope local, SyncEnvelope remote, SyncBaseVersion? common)
+    {
+        if (local.UpdatedAt == remote.UpdatedAt) return false;
+        if (common is null) return true;
+        return !common.Matches(local) && !common.Matches(remote);
     }
 
     private bool CompletePendingKeyRotation(out string? error)
@@ -531,6 +549,29 @@ public sealed class SyncService
         }
     }
 
+    /// <summary>
+    /// Presenta cada versión local con su autor real: lo recibido de otro dispositivo conserva el id
+    /// de quien lo escribió, y solo lo editado aquí lleva el de este equipo. Si se firmara todo con el
+    /// id local, una versión recibida nunca sería igual a la del almacén (misma fecha, distinto id) y
+    /// el desempate por id la haría resubir o volver a aplicar en cada sincronización.
+    /// </summary>
+    private Dictionary<Guid, SyncEnvelope> CreateLocalEnvelopes(
+        IEnumerable<Note> notes,
+        IEnumerable<SyncTombstone> tombstones,
+        byte[] key,
+        string deviceId)
+    {
+        var authors = _repository.GetSyncAuthors();
+        var local = new Dictionary<Guid, SyncEnvelope>();
+        foreach (var note in notes)
+            local[note.Id] = SyncEnvelopeCodec.CreateNote(note, key, authors.GetValueOrDefault(note.Id, deviceId));
+        // Los borrados hechos aquí se guardan con el marcador "local"; los recibidos, con su autor.
+        foreach (var tombstone in tombstones)
+            local[tombstone.NoteId] = SyncEnvelopeCodec.CreateTombstone(tombstone, key,
+                tombstone.DeviceId is "local" or "" ? deviceId : tombstone.DeviceId);
+        return local;
+    }
+
     private void ApplyRemote(
         SyncRemoteObject remote,
         byte[] key,
@@ -547,7 +588,7 @@ public sealed class SyncService
         }
         else
         {
-            _repository.ApplySyncNote(SyncEnvelopeCodec.DecryptNote(remote.Envelope, key));
+            _repository.ApplySyncNote(SyncEnvelopeCodec.DecryptNote(remote.Envelope, key), remote.Envelope.DeviceId);
         }
         downloaded++;
     }

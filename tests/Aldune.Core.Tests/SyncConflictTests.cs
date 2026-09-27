@@ -41,17 +41,19 @@ public sealed class SyncConflictTests : IDisposable
 
         Assert.True(uploaded.Succeeded, uploaded.Error);
         Assert.True(downloaded.Succeeded, downloaded.Error);
+        // Solo A vio las dos ediciones: el conflicto es suyo. B no había tocado nada desde la última
+        // versión común, así que recibir la de A es una actualización normal.
         Assert.Equal(1, uploaded.ConflictsResolved);
-        Assert.Equal(1, downloaded.ConflictsResolved);
+        Assert.Equal(0, downloaded.ConflictsResolved);
         Assert.Equal("edit from A", _deviceB.Repository.GetAllForSync().Single().Text);
-        Assert.Single(_deviceB.Sync.GetConflicts());
+        Assert.Empty(_deviceB.Sync.GetConflicts());
 
         // The losing version remains recoverable locally and can be promoted deliberately. The
         // restore gets a fresh timestamp so the next sync can publish the user's decision.
-        var conflict = _deviceB.Sync.GetConflicts().Single();
-        Assert.True(_deviceB.Sync.RestoreConflict(conflict.Id));
-        Assert.Equal("edit from B", _deviceB.Repository.GetAllForSync().Single().Text);
-        Assert.Empty(_deviceB.Sync.GetConflicts());
+        var conflict = _deviceA.Sync.GetConflicts().Single();
+        Assert.True(_deviceA.Sync.RestoreConflict(conflict.Id));
+        Assert.Equal("edit from B", _deviceA.Repository.GetAllForSync().Single().Text);
+        Assert.Empty(_deviceA.Sync.GetConflicts());
     }
 
     [Fact]
@@ -60,7 +62,7 @@ public sealed class SyncConflictTests : IDisposable
         var note = _deviceA.Repository.Create("original", "#EBD38B", "primary");
         ShareKeyAndSynchronizeInitialNote(note.Id);
 
-        // Two divergent edits leave one conflict on each side. Dismissing all has to empty the
+        // Two divergent edits leave a conflict on A, the side that saw both. Dismissing all has to empty the
         // queue without applying anything and without touching the notes themselves.
         _deviceB.Repository.UpdateText(note.Id, "edit from B");
         Assert.True(_deviceB.Sync.Synchronize().Succeeded);
@@ -69,16 +71,16 @@ public sealed class SyncConflictTests : IDisposable
         Assert.True(_deviceA.Sync.Synchronize().Succeeded);
         Assert.True(_deviceB.Sync.Synchronize().Succeeded);
 
-        var conflictsBefore = _deviceB.Sync.GetConflicts().Count;
+        var conflictsBefore = _deviceA.Sync.GetConflicts().Count;
         Assert.True(conflictsBefore > 0);
-        var textBefore = _deviceB.Repository.GetAllForSync().Single().Text;
+        var textBefore = _deviceA.Repository.GetAllForSync().Single().Text;
 
-        var dismissed = _deviceB.Sync.DismissAllConflicts();
+        var dismissed = _deviceA.Sync.DismissAllConflicts();
 
         Assert.Equal(conflictsBefore, dismissed);
-        Assert.Empty(_deviceB.Sync.GetConflicts());
-        Assert.Equal(textBefore, _deviceB.Repository.GetAllForSync().Single().Text);
-        Assert.Equal(0, _deviceB.Sync.DismissAllConflicts());
+        Assert.Empty(_deviceA.Sync.GetConflicts());
+        Assert.Equal(textBefore, _deviceA.Repository.GetAllForSync().Single().Text);
+        Assert.Equal(0, _deviceA.Sync.DismissAllConflicts());
     }
 
     [Fact]
@@ -98,7 +100,7 @@ public sealed class SyncConflictTests : IDisposable
         Assert.True(uploaded.Succeeded, uploaded.Error);
         Assert.True(downloaded.Succeeded, downloaded.Error);
         Assert.Equal(1, uploaded.ConflictsResolved);
-        Assert.Equal(1, downloaded.ConflictsResolved);
+        Assert.Equal(0, downloaded.ConflictsResolved);
         Assert.Empty(_deviceB.Repository.GetAllForSync());
         Assert.Equal("device-a", _deviceB.Repository.GetSyncTombstones().Single().DeviceId);
     }
@@ -379,6 +381,145 @@ public sealed class SyncConflictTests : IDisposable
         Assert.True(_deviceB.Sync.Synchronize().Succeeded);
 
         Assert.Empty(Assert.Single(_deviceB.Repository.GetAllForSync()).Tags);
+    }
+
+    // Una versión recibida se tiene que reconocer como la misma que hay en el almacén. Antes cada
+    // dispositivo firmaba con su propio id todo lo que tenía, y en el empate de fecha el id decidía:
+    // el de id mayor volvía a subir lo recibido y el de id menor lo volvía a aplicar (y a guardar
+    // como conflicto) en cada sincronización, para siempre.
+    [Fact]
+    public void NoteReceivedFromTheOtherDevice_IsNotEchoedBackOnLaterSyncs()
+    {
+        var note = _deviceA.Repository.Create("original", "#EBD38B", "primary");
+        ShareKeyAndSynchronizeInitialNote(note.Id);
+
+        AssertQuietRound();
+        Assert.Empty(_deviceA.Sync.GetConflicts());
+        Assert.Empty(_deviceB.Sync.GetConflicts());
+    }
+
+    [Fact]
+    public void EditReceivedByTheLowerDeviceId_IsNotReappliedOnLaterSyncs()
+    {
+        var note = _deviceA.Repository.Create("original", "#EBD38B", "primary");
+        ShareKeyAndSynchronizeInitialNote(note.Id);
+        Thread.Sleep(20);
+
+        _deviceB.Repository.UpdateText(note.Id, "edit from B");
+        Assert.True(_deviceB.Sync.Synchronize().Succeeded);
+        Assert.True(_deviceA.Sync.Synchronize().Succeeded);
+        Assert.Equal("edit from B", _deviceA.Repository.GetAllForSync().Single().Text);
+
+        AssertQuietRound();
+    }
+
+    [Fact]
+    public void DeletionReceivedFromTheOtherDevice_IsNotEchoedBackOnLaterSyncs()
+    {
+        var note = _deviceA.Repository.Create("original", "#EBD38B", "primary");
+        ShareKeyAndSynchronizeInitialNote(note.Id);
+        Thread.Sleep(20);
+
+        Assert.True(_deviceA.Repository.Delete(note.Id));
+        Assert.True(_deviceA.Sync.Synchronize().Succeeded);
+        var applied = _deviceB.Sync.Synchronize();
+        Assert.Equal(1, applied.TombstonesApplied);
+
+        AssertQuietRound();
+    }
+
+    // Una edición normal en otro dispositivo no es un conflicto: este no había cambiado nada desde
+    // la última versión común. Antes se guardaba uno por cada nota que llegaba cambiada, y la cola
+    // de conflictos se llenaba (un usuario llegó a tener 200) de "versiones perdedoras" que solo
+    // eran la versión anterior de la misma nota.
+    [Fact]
+    public void EditMadeOnlyOnTheOtherDevice_IsNotAConflict()
+    {
+        var note = _deviceA.Repository.Create("original", "#EBD38B", "primary");
+        ShareKeyAndSynchronizeInitialNote(note.Id);
+        Thread.Sleep(20);
+
+        _deviceA.Repository.UpdateText(note.Id, "edit from A");
+        var uploaded = _deviceA.Sync.Synchronize();
+        var downloaded = _deviceB.Sync.Synchronize();
+
+        Assert.Equal(0, uploaded.ConflictsResolved);
+        Assert.Equal(0, downloaded.ConflictsResolved);
+        Assert.Equal("edit from A", _deviceB.Repository.GetAllForSync().Single().Text);
+        Assert.Empty(_deviceA.Sync.GetConflicts());
+        Assert.Empty(_deviceB.Sync.GetConflicts());
+
+        // Y en el otro sentido, ya con la base guardada en los dos.
+        Thread.Sleep(20);
+        _deviceB.Repository.UpdateText(note.Id, "edit from B");
+        Assert.True(_deviceB.Sync.Synchronize().Succeeded);
+        Assert.True(_deviceA.Sync.Synchronize().Succeeded);
+        Assert.Equal("edit from B", _deviceA.Repository.GetAllForSync().Single().Text);
+        Assert.Empty(_deviceA.Sync.GetConflicts());
+        Assert.Empty(_deviceB.Sync.GetConflicts());
+    }
+
+    [Fact]
+    public void DeletionMadeOnlyOnTheOtherDevice_IsNotAConflict()
+    {
+        var note = _deviceA.Repository.Create("original", "#EBD38B", "primary");
+        ShareKeyAndSynchronizeInitialNote(note.Id);
+        Thread.Sleep(20);
+
+        Assert.True(_deviceA.Repository.Delete(note.Id));
+        Assert.True(_deviceA.Sync.Synchronize().Succeeded);
+        var applied = _deviceB.Sync.Synchronize();
+
+        Assert.Equal(1, applied.TombstonesApplied);
+        Assert.Equal(0, applied.ConflictsResolved);
+        Assert.Empty(_deviceB.Sync.GetConflicts());
+    }
+
+    // Tras actualizar desde una versión sin base ni autor, las notas que ya coinciden (misma fecha,
+    // aunque cada dispositivo las firmara con su id) no deben inventarse conflictos.
+    [Fact]
+    public void AfterUpgrading_NotesThatAlreadyMatch_DoNotBecomeConflicts()
+    {
+        var note = _deviceA.Repository.Create("original", "#EBD38B", "primary");
+        ShareKeyAndSynchronizeInitialNote(note.Id);
+        ForgetSyncHistory(_deviceA);
+        ForgetSyncHistory(_deviceB);
+
+        foreach (var device in new[] { _deviceA, _deviceB, _deviceA, _deviceB })
+            Assert.Equal(0, device.Sync.Synchronize().ConflictsResolved);
+        Assert.Empty(_deviceA.Sync.GetConflicts());
+        Assert.Empty(_deviceB.Sync.GetConflicts());
+        AssertQuietRound();
+        Thread.Sleep(20);
+        _deviceA.Repository.UpdateText(note.Id, "edit from A");
+        Assert.True(_deviceA.Sync.Synchronize().Succeeded);
+        Assert.Equal(0, _deviceB.Sync.Synchronize().ConflictsResolved);
+        Assert.Empty(_deviceB.Sync.GetConflicts());
+    }
+
+    private static void ForgetSyncHistory(Device device)
+    {
+        using var connection = new SqliteConnection(
+            new SqliteConnectionStringBuilder { DataSource = device.DatabasePath }.ToString());
+        connection.Open();
+        using var command = connection.CreateCommand();
+        command.CommandText = "DELETE FROM SyncBase; UPDATE Note SET SyncAuthorDeviceId = NULL;";
+        command.ExecuteNonQuery();
+    }
+
+    private void AssertQuietRound()
+    {
+        for (int round = 0; round < 2; round++)
+        {
+            foreach (var device in new[] { _deviceA, _deviceB })
+            {
+                var result = device.Sync.Synchronize();
+                Assert.True(result.Succeeded, result.Error);
+                Assert.Equal(0, result.Uploaded);
+                Assert.Equal(0, result.Downloaded);
+                Assert.Equal(0, result.ConflictsResolved);
+            }
+        }
     }
 
     private void ShareKeyAndSynchronizeInitialNote(Guid noteId)
