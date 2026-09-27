@@ -80,6 +80,10 @@ public static class Strings
     public static string CustomColorRgbLabel => T("Fine tune with RGB", "Ajuste fino con RGB");
     public static string CustomColorReadable => T("Readable text", "Texto legible");
     public static string CustomColorInvalidHex => T("Enter a color like #F5E3B3.", "Escribe un color como #F5E3B3.");
+    public static string DialogOk => T("OK", "Aceptar");
+    public static string DialogCancel => T("Cancel", "Cancelar");
+    public static string DialogYes => T("Yes", "Sí");
+    public static string DialogNo => T("No", "No");
     public static string CustomColorCancel => T("Cancel", "Cancelar");
     public static string CustomColorApply => T("Use this color", "Usar este color");
     public static string RestoreSize => T("Restore size", "Restaurar tamaño");
@@ -317,6 +321,8 @@ public static class Strings
 
     public static string HideOnFullscreenCheckbox => T("Hide dock in fullscreen", "Ocultar dock a pantalla completa");
     public static string HideOnFullscreenHint => T("Hides the dock automatically over any real fullscreen window — games, videos, presentations. Doesn't affect regular maximized windows (like a browser with tabs).", "Oculta el dock automáticamente ante cualquier ventana a pantalla completa de verdad — juegos, vídeos, presentaciones. No afecta a ventanas normales maximizadas (como el navegador con pestañas).");
+    public static string ShowNotePreviewCheckbox => T("Show a preview of the text", "Mostrar una vista previa del texto");
+    public static string ShowNotePreviewHint => T("A second line with the start of each note, in the dock tabs and in Manage notes. Turned off, only titles are shown.", "Una segunda línea con el principio de cada nota, en las pestañas del dock y en Gestionar notas. Si la desactivas, solo se ven los títulos.");
     public static string KeepDockOpenCheckbox => T("Keep dock open", "Mantener el dock abierto");
     public static string KeepDockOpenHint => T("Keeps the dock expanded until you turn this off.", "Mantiene el dock desplegado hasta que desactives esta opción.");
 

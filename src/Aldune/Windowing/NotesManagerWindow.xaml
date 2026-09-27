@@ -21,7 +21,6 @@
     </WindowChrome.WindowChrome>
     <Window.Resources>
         <local:NoteTitleConverter x:Key="NoteTitleConverter" />
-        <local:NoteStateLabelConverter x:Key="NoteStateLabelConverter" />
         <local:NoteRimConverter x:Key="NoteRimConverter" />
         <local:NoteLabelColorConverter x:Key="NoteLabelColorConverter" />
         <local:NoteSnippetConverter x:Key="NoteSnippetConverter" />
@@ -242,6 +241,17 @@
                  bandeja, y ahi no los encontro el usuario: esta es la ventana que uno abre cuando
                  busca "donde se configura esto". -->
             <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Top">
+                <!-- Crear desde aquí: quien está ordenando sus notas no tiene por qué ir al dock para
+                     añadir una. Nace con la etiqueta del filtro, si hay, para no desaparecer de la vista. -->
+                <Button x:Name="NewNoteButton"
+                        Content="&#xE710;"
+                        FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets"
+                        Width="28" Height="28" Margin="0,0,6,0" Padding="0"
+                        ToolTip="{x:Static res:Strings.NewNoteTooltip}"
+                        AutomationProperties.Name="{x:Static res:Strings.NewNoteTooltip}"
+                        Click="OnNewNoteClick"
+                        WindowChrome.IsHitTestVisibleInChrome="True"
+                        Style="{StaticResource ToolbarButtonStyle}" />
                 <Button Content="&#x2014;" Width="28" Height="28"
                         ToolTip="{x:Static res:Strings.MinimizeWindowTooltip}"
                         AutomationProperties.Name="{x:Static res:Strings.MinimizeWindowTooltip}"
@@ -442,9 +452,11 @@
                                     <Grid.ColumnDefinitions>
                                         <ColumnDefinition Width="Auto" />
                                         <ColumnDefinition Width="*" />
-                                        <ColumnDefinition Width="Auto" />
                                     </Grid.ColumnDefinitions>
 
+                                    <!-- Sin chip de estado ("Archivada", "Papelera"): la lista solo
+                                         enseña un estado a la vez (no hay vista "Todas"), así que
+                                         repetía la pestaña y descolocaba la fila. -->
                                     <CheckBox Grid.Column="0"
                                               IsChecked="{Binding IsSelected, Mode=TwoWay}"
                                               Foreground="{Binding Note.Color, Converter={StaticResource NoteLabelColorConverter}}"
@@ -483,6 +495,7 @@
                                         <Button Grid.Row="1" Grid.Column="1" Tag="{Binding}"
                                                 Click="OnEditTagsClick" Margin="10,1,-2,-2"
                                                 HorizontalAlignment="Right"
+                                                Foreground="{Binding Note.Color, Converter={StaticResource NoteLabelColorConverter}}"
                                                 ToolTip="{x:Static res:Strings.EditTagsTooltip}"
                                                 AutomationProperties.Name="{x:Static res:Strings.EditTagsTooltip}"
                                                 Style="{StaticResource TagChipsButtonStyle}">
@@ -494,11 +507,17 @@
                                                         </ItemsPanelTemplate>
                                                     </ItemsControl.ItemsPanel>
                                                     <ItemsControl.ItemTemplate>
+                                                        <!-- Fondo y texto del color de tinta de la nota
+                                                             (el fondo, muy transparente): así el chip
+                                                             se lee igual en una nota clara que en una
+                                                             oscura. Un negro translúcido fijo apenas se
+                                                             distinguía sobre los temas oscuros. -->
                                                         <DataTemplate>
-                                                            <Border Background="#24000000" CornerRadius="4"
-                                                                    Padding="6,1" Margin="0,0,4,0">
-                                                                <TextBlock Text="{Binding}" FontSize="11" />
-                                                            </Border>
+                                                            <Grid Margin="0,0,4,0">
+                                                                <Border CornerRadius="4" Opacity="0.16"
+                                                                        Background="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}" />
+                                                                <TextBlock Text="{Binding}" FontSize="11" Margin="6,1" />
+                                                            </Grid>
                                                         </DataTemplate>
                                                     </ItemsControl.ItemTemplate>
                                                 </ItemsControl>
@@ -518,27 +537,6 @@
                                         </Button>
                                     </Grid>
 
-                                    <!-- Chip de estado, en el tono oscuro del propio color de la
-                                         nota. Vacío y colapsado para las activas, así que sus
-                                         filas no crecen una línea de más. -->
-                                    <Border Grid.Column="2"
-                                            Background="#22000000"
-                                            CornerRadius="4" Padding="7,3" Margin="10,0,0,0"
-                                            VerticalAlignment="Center">
-                                        <Border.Style>
-                                            <Style TargetType="Border">
-                                                <Setter Property="Visibility" Value="Visible" />
-                                                <Style.Triggers>
-                                                    <DataTrigger Binding="{Binding Note.State}" Value="Active">
-                                                        <Setter Property="Visibility" Value="Collapsed" />
-                                                    </DataTrigger>
-                                                </Style.Triggers>
-                                            </Style>
-                                        </Border.Style>
-                                        <TextBlock Text="{Binding Note.State, Converter={StaticResource NoteStateLabelConverter}}"
-                                                   FontSize="10" FontWeight="SemiBold"
-                                                   Foreground="{Binding Note.Color, Converter={StaticResource NoteLabelColorConverter}}" />
-                                    </Border>
                                 </Grid>
                             </Border>
                         </DataTemplate>

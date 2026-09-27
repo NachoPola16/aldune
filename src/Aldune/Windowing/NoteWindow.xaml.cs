@@ -1264,7 +1264,7 @@ public partial class NoteWindow : Window
             Flush();
             if (_protectionPassword is null || !_repository.RemoveProtection(_note.Id, _protectionPassword))
             {
-                MessageBox.Show(this, Strings.WrongPassword, Strings.AppName,
+                AppDialog.Show(this, Strings.WrongPassword, Strings.AppName,
                     MessageBoxButton.OK, MessageBoxImage.Warning);
                 return;
             }
@@ -1294,7 +1294,7 @@ public partial class NoteWindow : Window
         }
         catch (Exception ex)
         {
-            MessageBox.Show(this, Strings.UnexpectedErrorMessage(ex.Message), Strings.UnexpectedErrorTitle,
+            AppDialog.Show(this, Strings.UnexpectedErrorMessage(ex.Message), Strings.UnexpectedErrorTitle,
                 MessageBoxButton.OK, MessageBoxImage.Error);
         }
     }
@@ -1492,7 +1492,7 @@ public partial class NoteWindow : Window
         }
         catch (Exception ex)
         {
-            MessageBox.Show(this, Strings.UnexpectedErrorMessage(ex.Message), Strings.UnexpectedErrorTitle,
+            AppDialog.Show(this, Strings.UnexpectedErrorMessage(ex.Message), Strings.UnexpectedErrorTitle,
                 MessageBoxButton.OK, MessageBoxImage.Error);
         }
     }

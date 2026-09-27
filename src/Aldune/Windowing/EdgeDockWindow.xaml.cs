@@ -1693,13 +1693,13 @@ public partial class EdgeDockWindow : Window
             var message = result.Error?.Contains("401", StringComparison.Ordinal) == true
                 ? Strings.SyncUnauthorizedStatus
                 : Strings.SyncErrorStatus(result.Error ?? "Unknown error");
-            MessageBox.Show(message, Strings.SyncErrorTitle, MessageBoxButton.OK, MessageBoxImage.Warning);
+            AppDialog.Show(message, Strings.SyncErrorTitle, MessageBoxButton.OK, MessageBoxImage.Warning);
         }
         catch (Exception ex)
         {
             SetSyncBusy(false);
             ShowSyncResult(ok: false, Strings.SyncErrorStatus(ex.Message));
-            MessageBox.Show(Strings.SyncErrorStatus(ex.Message), Strings.SyncErrorTitle,
+            AppDialog.Show(Strings.SyncErrorStatus(ex.Message), Strings.SyncErrorTitle,
                 MessageBoxButton.OK, MessageBoxImage.Warning);
         }
     }

@@ -60,7 +60,7 @@ public partial class SyncConflictsWindow : Window
 
         // Descartar todo tira a la vez todas las versiones perdedoras, así que se pide confirmación:
         // con unos cientos de conflictos acumulados es demasiado fácil pulsarlo sin querer.
-        var choice = MessageBox.Show(
+        var choice = AppDialog.Show(
             this,
             Strings.SyncConflictDismissAllConfirm(count),
             Strings.SyncConflictTitle,
@@ -81,7 +81,7 @@ public partial class SyncConflictsWindow : Window
 
         // Descartar todo tira a la vez todas las versiones perdedoras, así que se pide confirmación:
         // con unos cientos de conflictos acumulados es demasiado fácil pulsarlo sin querer.
-        var choice = MessageBox.Show(
+        var choice = AppDialog.Show(
             this,
             Strings.SyncConflictDismissAllConfirm(count),
             Strings.SyncConflictTitle,

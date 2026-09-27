@@ -438,6 +438,16 @@
                             <StackPanel x:Name="EdgeListContainer" />
                         </StackPanel>
                     </Grid>
+                    <Border Background="#3C3730" Height="1" Margin="0,20,0,0" />
+                    <StackPanel Margin="0,20,0,0">
+                        <CheckBox x:Name="ShowNotePreviewCheck"
+                                  Content="{x:Static res:Strings.ShowNotePreviewCheckbox}"
+                                  Foreground="#EDE7DC" Background="#2A261F" FontSize="13"
+                                  Style="{StaticResource AppCheckBoxStyle}"
+                                  Click="OnShowNotePreviewToggled" />
+                        <TextBlock Text="{x:Static res:Strings.ShowNotePreviewHint}"
+                                   Foreground="#8A8175" FontSize="11" TextWrapping="Wrap" Margin="27,6,0,0" />
+                    </StackPanel>
                     <!-- Lo que el modo simplificado esconde de esta página. -->
                     <StackPanel x:Name="DockAdvancedPanel">
                         <Border Background="#3C3730" Height="1" Margin="0,20,0,0" />

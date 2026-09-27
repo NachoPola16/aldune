@@ -57,6 +57,7 @@ public partial class SettingsWindow : Window
         HotkeyCheck.IsChecked = _settings.GlobalHotkeyEnabled;
         HideOnFullscreenCheck.IsChecked = _settings.HideOnFullscreen;
         KeepDockOpenCheck.IsChecked = _settings.KeepDockOpen;
+        ShowNotePreviewCheck.IsChecked = _settings.ShowNotePreview;
         RememberPositionsCheck.IsChecked = _settings.RememberNotePositions;
         PopulateTrackpadGestures();
         MoveCompletedTasksCheck.IsChecked = _settings.MoveCompletedTasksToEnd;
@@ -496,6 +497,14 @@ public partial class SettingsWindow : Window
         _settingsService.Save(_settings);
     }
 
+    private void OnShowNotePreviewToggled(object sender, RoutedEventArgs e)
+    {
+        _settings.ShowNotePreview = ShowNotePreviewCheck.IsChecked == true;
+        _settingsService.Save(_settings);
+        NoteSnippetConverter.Enabled = _settings.ShowNotePreview;
+        _coordinator?.RefreshAll();
+    }
+
     private void OnKeepDockOpenToggled(object sender, RoutedEventArgs e)
     {
         _settings.KeepDockOpen = KeepDockOpenCheck.IsChecked == true;
@@ -678,12 +687,12 @@ public partial class SettingsWindow : Window
         if (!_syncUiReady) return;
         if (_settings.SyncProfiles.Count <= 1)
         {
-            MessageBox.Show(this, Strings.SyncProfileLastRemaining, Strings.SyncSectionTitle,
+            AppDialog.Show(this, Strings.SyncProfileLastRemaining, Strings.SyncSectionTitle,
                 MessageBoxButton.OK, MessageBoxImage.Information);
             return;
         }
 
-        if (MessageBox.Show(this, Strings.SyncProfileDeleteConfirm, Strings.SyncSectionTitle,
+        if (AppDialog.Show(this, Strings.SyncProfileDeleteConfirm, Strings.SyncSectionTitle,
                 MessageBoxButton.YesNo, MessageBoxImage.Warning) != MessageBoxResult.Yes)
             return;
 
@@ -930,7 +939,7 @@ public partial class SettingsWindow : Window
     {
         if (_syncService is null || _settings.SyncEnabled != true) return;
 
-        var answer = MessageBox.Show(this, Strings.SyncRevokeAccessConfirm, Strings.SyncSectionTitle,
+        var answer = AppDialog.Show(this, Strings.SyncRevokeAccessConfirm, Strings.SyncSectionTitle,
             MessageBoxButton.OKCancel, MessageBoxImage.Warning, MessageBoxResult.Cancel);
         if (answer != MessageBoxResult.OK) return;
 
@@ -1274,7 +1283,7 @@ public partial class SettingsWindow : Window
         var current = ActiveTheme;
         if (current.IsBuiltIn) return;
 
-        var answer = MessageBox.Show(this, Strings.ThemeDeleteConfirm(current.Name), Strings.AppName,
+        var answer = AppDialog.Show(this, Strings.ThemeDeleteConfirm(current.Name), Strings.AppName,
             MessageBoxButton.OKCancel, MessageBoxImage.Question);
         if (answer != MessageBoxResult.OK) return;
 
@@ -1290,7 +1299,7 @@ public partial class SettingsWindow : Window
         int count = _coordinator.ActiveNoteCount;
         if (count == 0) return;
 
-        var answer = MessageBox.Show(this, Strings.ApplyThemeConfirm(count),
+        var answer = AppDialog.Show(this, Strings.ApplyThemeConfirm(count),
             Strings.ApplyThemeConfirmTitle, MessageBoxButton.OKCancel, MessageBoxImage.Question);
         if (answer != MessageBoxResult.OK) return;
 

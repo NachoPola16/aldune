@@ -180,6 +180,7 @@ public partial class App : Application
         }
 
         var syncService = new SyncService(repository, settings, settingsService);
+        NoteSnippetConverter.Enabled = settings.ShowNotePreview;
         var coordinator = new AppCoordinator(repository, settings, syncService, settingsService);
         _coordinator = coordinator;
         _repository = repository;
@@ -265,7 +266,7 @@ public partial class App : Application
         // algun sitio donde vivir, y la bandeja es el sitio convenido en Windows para eso.
         // Atajo global. Se enciende segun lo guardado, y si falla (otra app ya tiene la
         // combinacion) se refleja en los ajustes en vez de fallar en silencio.
-        _hotkey = new GlobalHotkey(coordinator.CreateAndOpenNote);
+        _hotkey = new GlobalHotkey(() => coordinator.CreateAndOpenNote());
         if (settings.GlobalHotkeyEnabled) _hotkey.Enable(settings.Hotkey);
 
         // Segundo atajo, fijo (Ctrl+Alt+H): ocultar y devolver el dock. No es configurable a

@@ -3831,3 +3831,25 @@ Además, `WizardStyle=modern dynamic`: el asistente sigue el tema claro u oscuro
   `AppSettings.SyncDeviceId`.
 - Descartado: leer el autor dentro de `GetAllForSync` (una consulta más por sincronización no se nota
   y obligaría a meter en `Note` un dato solo de la sincronización).
+
+## 1.3.0: chips legibles, vista previa opcional, avisos propios y crear desde el gestor (sesión 2026-09-27)
+
+- **Chips de etiquetas ilegibles en notas oscuras** (visto por el usuario con la 1.2.0): el botón que
+  los envuelve fija su propio `Foreground` (negro de sistema) y cortaba la herencia del color de tinta
+  de la fila; en mis capturas, con notas claras, no se notaba. Ahora el botón toma la tinta de la nota
+  y el fondo del chip es esa misma tinta al 16 %: se lee igual en notas claras y oscuras.
+- **Vista previa opcional**: `AppSettings.ShowNotePreview` (activada por defecto; un settings.json
+  antiguo la conserva), en Ajustes → Dock y pantallas. La lee `NoteSnippetConverter.Enabled`, estático
+  porque el mismo conversor sirve al dock y al gestor; cambiarla llama a `RefreshAll`.
+- **Avisos con el aspecto de la app** (`AppDialog`): misma firma que `MessageBox.Show`, sin sonido,
+  botones en el idioma de Aldune, principal a la derecha y en rojo si confirma algo destructivo (aviso
+  de advertencia con dos botones). Sustituye a los 15 avisos de uso normal. Los 10 de `App.xaml.cs`
+  (no se puede iniciar, datos recuperados, error inesperado) siguen nativos a propósito: salen cuando
+  la app puede estar rota o aún no tiene interfaz.
+- **Crear notas desde "Gestionar notas"**: botón "+" en la cabecera; usa `CreateAndOpenNote`, que
+  ahora acepta la etiqueta del filtro del gestor para que la nota no desaparezca de la vista al nacer.
+
+Tests: 801/801. Verificado con sondas (chips en notas oscuras, dock sin vista previa, tres avisos,
+"+" con filtro de etiqueta).
+- **Sin chip de estado en las filas del gestor**: repetía la pestaña (no hay vista "Todas") y, en su
+  propia columna, descolocaba la fila respecto a la fecha y las etiquetas.

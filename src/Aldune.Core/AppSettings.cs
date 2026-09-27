@@ -175,6 +175,12 @@ public sealed class AppSettings
     /// <summary>Último orden elegido en "Gestionar notas". Por defecto el del mazo, el de siempre.</summary>
     public NoteListOrder NotesManagerOrder { get; set; }
 
+    /// <summary>
+    /// Segunda línea con el principio del texto en las pestañas del dock y en "Gestionar notas".
+    /// Hay quien solo quiere ver títulos. Activada por defecto: es como se diseñaron las pestañas.
+    /// </summary>
+    public bool ShowNotePreview { get; set; } = true;
+
     /// <summary>Cuántas unidades de <see cref="AutoHideCompletedTasksDelayUnit"/> esperar. Por defecto 1.</summary>
     public int AutoHideCompletedTasksDelayValue { get; set; } = 1;
 

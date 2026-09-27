@@ -70,6 +70,24 @@ public class SettingsServiceTests : IDisposable
     }
 
     [Fact]
+    public void Load_OldFileWithoutShowNotePreview_KeepsShowingThePreview()
+    {
+        Directory.CreateDirectory(_tempDir);
+        File.WriteAllText(_settingsPath, "{\"AutoHideCompletedTasks\":true}");
+
+        Assert.True(new SettingsService(_settingsPath).Load().ShowNotePreview);
+    }
+
+    [Fact]
+    public void SaveThenLoad_ShowNotePreview_RoundTrips()
+    {
+        var sut = new SettingsService(_settingsPath);
+        sut.Save(new AppSettings { ShowNotePreview = false });
+
+        Assert.False(sut.Load().ShowNotePreview);
+    }
+
+    [Fact]
     public void Load_OldFileWithoutNotesManagerOrder_UsesTheDockOrder()
     {
         Directory.CreateDirectory(_tempDir);

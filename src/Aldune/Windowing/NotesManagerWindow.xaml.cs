@@ -584,6 +584,13 @@ public partial class NotesManagerWindow : Window
 
     private void OnSettingsClick(object sender, RoutedEventArgs e) => _coordinator.OpenSettings();
 
+    private void OnNewNoteClick(object sender, RoutedEventArgs e)
+    {
+        // Una nota nueva es activa: desde Archivadas o Papelera no se vería aparecer en la lista.
+        if (_filter != Filter.Active) FilterActive.IsChecked = true;
+        _coordinator.CreateAndOpenNote(_tagFilter);
+    }
+
 
     private void OnSelectAllClick(object sender, RoutedEventArgs e)
     {
@@ -742,7 +749,7 @@ public partial class NotesManagerWindow : Window
             ? Strings.ConfirmDeleteOne
             : Strings.ConfirmDeleteMany(selected.Count);
 
-        var answer = MessageBox.Show(this, message, Strings.DeletePermanentlyTitle,
+        var answer = AppDialog.Show(this, message, Strings.DeletePermanentlyTitle,
             MessageBoxButton.OKCancel, MessageBoxImage.Warning, MessageBoxResult.Cancel);
         if (answer != MessageBoxResult.OK) return;
 
@@ -779,7 +786,7 @@ public partial class NotesManagerWindow : Window
         if (toExport.Count == 0) toExport = _rows;
         if (toExport.Count == 0) return;
 
-        var choice = MessageBox.Show(this, Strings.ExportAsZipPrompt, Strings.ExportFormatTitle,
+        var choice = AppDialog.Show(this, Strings.ExportAsZipPrompt, Strings.ExportFormatTitle,
             MessageBoxButton.YesNoCancel, MessageBoxImage.Question, MessageBoxResult.Yes);
         if (choice == MessageBoxResult.Cancel) return;
 
@@ -838,7 +845,7 @@ public partial class NotesManagerWindow : Window
     }
 
     private void ShowExportError(Exception ex) =>
-        MessageBox.Show(this, Strings.UnexpectedErrorMessage(ex.Message), Strings.UnexpectedErrorTitle,
+        AppDialog.Show(this, Strings.UnexpectedErrorMessage(ex.Message), Strings.UnexpectedErrorTitle,
             MessageBoxButton.OK, MessageBoxImage.Error);
 
     /// <summary>

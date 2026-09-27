@@ -468,10 +468,12 @@ public sealed class AppCoordinator
     }
 
     /// <summary>
-    /// Crea una nota y la abre. Es el camino del atajo global y del menu de la bandeja: los dos
-    /// sitios donde se pide una nota sin haber pulsado el "+" de ningun dock concreto.
+    /// Crea una nota y la abre. Es el camino del atajo global, del menu de la bandeja y del "+" de
+    /// "Gestionar notas": los sitios donde se pide una nota sin haber pulsado el "+" de ningun dock.
     /// </summary>
-    public void CreateAndOpenNote()
+    /// <param name="tag">Etiqueta con la que nace (la del filtro del gestor). Sin ella, la de la vista
+    /// del dock, si está en una etiqueta.</param>
+    public void CreateAndOpenNote(string? tag = null)
     {
         var dock = DockNearCursor();
         if (dock is null) return;
@@ -480,7 +482,9 @@ public sealed class AppCoordinator
 
         // En la vista de una etiqueta la nota nace ya con ella, igual que con el "+" del dock: si no,
         // desaparecería del dock nada más crearla y su color se habría calculado con otras vecinas.
-        if (_settings is { DockView: DockViewKind.Tag, DockTagFilter: { } tag } && !string.IsNullOrWhiteSpace(tag))
+        if (string.IsNullOrWhiteSpace(tag) && _settings is { DockView: DockViewKind.Tag, DockTagFilter: { } viewTag })
+            tag = viewTag;
+        if (!string.IsNullOrWhiteSpace(tag))
             _repository.SetTags(note.Id, new[] { tag });
 
         RefreshAll();
