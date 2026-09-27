@@ -1,4 +1,4 @@
-<Window x:Class="Aldune.Windowing.NoteWindow"
+﻿<Window x:Class="Aldune.Windowing.NoteWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:res="clr-namespace:Aldune.Resources"
@@ -252,13 +252,13 @@
                      (texto incluido) a un bitmap de resolución fija, borroso en monitores con escala
                      >100%. La capa de sombra no lleva contenido; la de contenido va sin Effect. -->
                 <Grid Margin="10">
-                    <Border Background="#2A261F" CornerRadius="10">
+                    <Border Background="{DynamicResource AlduneGroundBrush}" CornerRadius="10">
                         <Border.Effect>
                             <DropShadowEffect BlurRadius="16" ShadowDepth="3" Direction="270"
                                               Color="#000000" Opacity="0.5" />
                         </Border.Effect>
                     </Border>
-                    <Border Background="#2A261F" CornerRadius="10" Padding="8">
+                    <Border Background="{DynamicResource AlduneGroundBrush}" CornerRadius="10" Padding="8">
                     <StackPanel MinWidth="230">
                         <!-- Agrupado por intención, no por orden de implementación: arriba lo que se usa
                              escribiendo (tarea y viñeta, con su atajo a la vista — es la única forma de
@@ -269,7 +269,7 @@
                                 Style="{StaticResource NoteMenuItemStyle}">
                             <Grid Width="200">
                                 <TextBlock Text="{x:Static res:Strings.ConvertToTask}" HorizontalAlignment="Left" />
-                                <TextBlock Text="Ctrl+L" Foreground="#8A8175" HorizontalAlignment="Right" />
+                                <TextBlock Text="Ctrl+L" Foreground="{DynamicResource AlduneHintBrush}" HorizontalAlignment="Right" />
                             </Grid>
                         </Button>
 
@@ -277,7 +277,7 @@
                                 Style="{StaticResource NoteMenuItemStyle}">
                             <Grid Width="200">
                                 <TextBlock Text="{x:Static res:Strings.ConvertToBullet}" HorizontalAlignment="Left" />
-                                <TextBlock Text="Ctrl+Shift+L" Foreground="#8A8175" HorizontalAlignment="Right" />
+                                <TextBlock Text="Ctrl+Shift+L" Foreground="{DynamicResource AlduneHintBrush}" HorizontalAlignment="Right" />
                             </Grid>
                         </Button>
                         <!-- Solo con alguna tarea hecha (se decide al abrir el menú). Pensadas para una
@@ -290,7 +290,7 @@
                                 Content="{x:Static res:Strings.RemoveCheckedTasks}"
                                 Visibility="Collapsed"
                                 Style="{StaticResource NoteMenuItemStyle}" />
-                        <Border Background="#3C3730" Height="1" Margin="0,0,0,4" />
+                        <Border Background="{DynamicResource AlduneRaisedBrush}" Height="1" Margin="0,0,0,4" />
 
                         <Button x:Name="ReminderButton" Click="OnReminderMenuClick"
                                 Style="{StaticResource NoteMenuItemStyle}" />
@@ -315,7 +315,7 @@
 
                             <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,0,0,8">
                                 <TextBox x:Name="ReminderHourBox" Width="34" Text="09" TextAlignment="Center" />
-                                <TextBlock Text=":" VerticalAlignment="Center" Margin="4,0" Foreground="#EDE7DC" />
+                                <TextBlock Text=":" VerticalAlignment="Center" Margin="4,0" Foreground="{DynamicResource AlduneTextBrush}" />
                                 <TextBox x:Name="ReminderMinuteBox" Width="34" Text="00" TextAlignment="Center" />
                             </StackPanel>
 
@@ -327,7 +327,7 @@
                                     Visibility="Collapsed"
                                     Style="{StaticResource NoteMenuDangerStyle}" />
                         </StackPanel>
-                        <Border Background="#3C3730" Height="1" Margin="0,0,0,4" />
+                        <Border Background="{DynamicResource AlduneRaisedBrush}" Height="1" Margin="0,0,0,4" />
 
                         <!-- Color y estado de la nota: el bloque entero vive en este tercer grupo.
                              PinHint explica en una línea qué es "fijar" — "siempre encima" a secas
@@ -339,7 +339,7 @@
                         <Button x:Name="PinButton" Click="OnPinClick"
                                 Style="{StaticResource NoteMenuItemStyle}" />
                         <TextBlock x:Name="PinHint"
-                                   Foreground="#8A8175" FontSize="11" TextWrapping="Wrap"
+                                   Foreground="{DynamicResource AlduneHintBrush}" FontSize="11" TextWrapping="Wrap"
                                    Margin="9,0,9,6" />
                         <Button x:Name="ProtectionButton" Click="OnProtectionClick"
                                 Content="{x:Static res:Strings.ProtectNote}"
@@ -347,7 +347,7 @@
                         <Button x:Name="TagsButton" Click="OnTagsClick"
                                 Content="{x:Static res:Strings.NoteTags}"
                                 Style="{StaticResource NoteMenuItemStyle}" />
-                        <Border Background="#3C3730" Height="1" Margin="0,4,0,4" />
+                        <Border Background="{DynamicResource AlduneRaisedBrush}" Height="1" Margin="0,4,0,4" />
 
                         <Button x:Name="ExportButton" Click="OnExportClick"
                                 Content="{x:Static res:Strings.ExportToMarkdown}"
@@ -355,7 +355,7 @@
                         <Button x:Name="RestoreSizeButton" Click="OnRestoreSizeClick"
                                 Content="{x:Static res:Strings.RestoreSize}"
                                 Style="{StaticResource NoteMenuItemStyle}" />
-                        <Border Background="#3C3730" Height="1" Margin="0,4,0,4" />
+                        <Border Background="{DynamicResource AlduneRaisedBrush}" Height="1" Margin="0,4,0,4" />
 
                         <Button x:Name="ArchiveButton" Click="OnArchiveClick"
                                 Content="{x:Static res:Strings.Archive}"
@@ -375,7 +375,7 @@
                  <Popup x:Name="TagsPopup" PlacementTarget="{Binding ElementName=MenuButton}" Closed="OnTagsPopupClosed"
                      Placement="Bottom" HorizontalOffset="-160" Focusable="True" StaysOpen="False"
                    AllowsTransparency="True" PopupAnimation="Fade">
-                <Border Background="#2A261F" CornerRadius="10" Padding="16,14">
+                <Border Background="{DynamicResource AlduneGroundBrush}" CornerRadius="10" Padding="16,14">
                     <local:TagAssignmentPanel x:Name="NoteTagPanel" />
                 </Border>
             </Popup>

@@ -69,6 +69,7 @@ public partial class SettingsWindow : Window
         PopulateMonitors();
         PopulateEdges();
         PopulateLanguages();
+        PopulateAppearance();
         RefreshThemeSection();
         PopulateDelayUnits();
         UpdateInterfaceModeUi();
@@ -398,11 +399,10 @@ public partial class SettingsWindow : Window
         for (int i = 0; i < groups.Length; i++)
         {
             if (i > 0) QuickHelpText.Inlines.Add(new System.Windows.Documents.LineBreak());
-            QuickHelpText.Inlines.Add(new System.Windows.Documents.Run(groups[i].Title)
-            {
-                FontWeight = FontWeights.SemiBold,
-                Foreground = (Brush)FindResource("QuickHelpGroupBrush"),
-            });
+            var groupTitle = new System.Windows.Documents.Run(groups[i].Title) { FontWeight = FontWeights.SemiBold };
+            // Por referencia, no copiado: así cambia en vivo con el modo claro u oscuro.
+            groupTitle.SetResourceReference(System.Windows.Documents.TextElement.ForegroundProperty, "AlduneTextSoftBrush");
+            QuickHelpText.Inlines.Add(groupTitle);
             foreach (var line in groups[i].Lines)
             {
                 QuickHelpText.Inlines.Add(new System.Windows.Documents.LineBreak());
@@ -1097,14 +1097,48 @@ public partial class SettingsWindow : Window
         }
     }
 
+    private void PopulateAppearance()
+    {
+        AppearanceListContainer.Children.Clear();
+        foreach (var (mode, label) in new[]
+                 {
+                     (AppearanceMode.Dark, Strings.AppearanceDark),
+                     (AppearanceMode.Light, Strings.AppearanceLight),
+                     (AppearanceMode.Pastel, Strings.AppearancePastel),
+                     (AppearanceMode.Midnight, Strings.AppearanceMidnight),
+                     (AppearanceMode.System, Strings.AppearanceSystem)
+                 })
+        {
+            var radio = new RadioButton
+            {
+                GroupName = "AppearanceGroup",
+                Style = (Style)FindResource("MonitorRadioStyle"),
+                Tag = mode,
+                Content = label,
+                IsChecked = _settings.Appearance == mode
+            };
+            radio.Checked += OnAppearanceSelectionChanged;
+            AppearanceListContainer.Children.Add(radio);
+        }
+    }
+
+    // A diferencia del idioma, se aplica en el acto: todas las ventanas usan los pinceles de la
+    // paleta por referencia (DynamicResource), así que cambian solas.
+    private void OnAppearanceSelectionChanged(object sender, RoutedEventArgs e)
+    {
+        if (sender is not RadioButton { IsChecked: true, Tag: AppearanceMode mode } || _settings.Appearance == mode) return;
+        _settings.Appearance = mode;
+        _settingsService.Save(_settings);
+        ThemeManager.Apply(Application.Current, mode);
+    }
+
     // Los nombres de los idiomas ("Español"/"English") no se traducen: un idioma se nombra a sí
     // mismo igual sea cual sea el idioma activo de la interfaz, que es la convención de cualquier
     // selector de idioma.
     private void PopulateLanguages()
     {
         LanguageListContainer.Children.Clear();
-        AddLanguageRadio("es", "Español");
-        AddLanguageRadio("en", "English");
+        foreach (var language in UiLanguages.All) AddLanguageRadio(language.Code, language.Name);
     }
 
     private void AddLanguageRadio(string code, string label)
@@ -1114,7 +1148,7 @@ public partial class SettingsWindow : Window
             GroupName = "LanguageGroup",
             Style = (Style)FindResource("MonitorRadioStyle"),
             Tag = code,
-            Content = label,
+            Content = LanguageLabel(code, label),
             // Contra Strings.Current (ya resuelto al arrancar), no contra _settings.Language: así
             // la tarjeta correcta sale marcada incluso cuando el usuario nunca ha elegido idioma
             // explícitamente y se está siguiendo el de Windows.
@@ -1122,6 +1156,23 @@ public partial class SettingsWindow : Window
         };
         radio.Checked += OnLanguageSelectionChanged;
         LanguageListContainer.Children.Add(radio);
+    }
+
+    /// <summary>"Deutsch · Alemán": el nombre del idioma en sí mismo, que es como lo busca quien lo
+    /// habla, y en gris el mismo nombre en el idioma actual, para quien no lo reconoce. El del idioma
+    /// activo va solo: repetirlo ("Español · Español") no aporta nada.</summary>
+    private static TextBlock LanguageLabel(string code, string ownName)
+    {
+        var label = new TextBlock();
+        label.Inlines.Add(new System.Windows.Documents.Run(ownName));
+        var translated = Strings.LanguageNameIn(code);
+        if (!string.Equals(translated, ownName, StringComparison.Ordinal))
+        {
+            var hint = new System.Windows.Documents.Run("  ·  " + translated);
+            hint.SetResourceReference(System.Windows.Documents.TextElement.ForegroundProperty, "AlduneHintBrush");
+            label.Inlines.Add(hint);
+        }
+        return label;
     }
 
     private void OnLanguageSelectionChanged(object sender, RoutedEventArgs e)

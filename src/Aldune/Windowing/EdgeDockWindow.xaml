@@ -178,8 +178,8 @@
             <Setter Property="Height" Value="34" />
             <Setter Property="Margin" Value="10,0,0,0" />
             <Setter Property="FocusVisualStyle" Value="{x:Null}" />
-            <Setter Property="Foreground" Value="#C9C0B2" />
-            <Setter Property="Background" Value="#3C3730" />
+            <Setter Property="Foreground" Value="{DynamicResource AlduneTextSoftBrush}" />
+            <Setter Property="Background" Value="{DynamicResource AlduneRaisedBrush}" />
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="Button">
@@ -198,10 +198,10 @@
                         </Grid>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsMouseOver" Value="True">
-                                <Setter TargetName="Bg" Property="Fill" Value="#4E4840" />
+                                <Setter TargetName="Bg" Property="Fill" Value="{DynamicResource AlduneHoverBrush}" />
                             </Trigger>
                             <Trigger Property="IsPressed" Value="True">
-                                <Setter TargetName="Bg" Property="Fill" Value="#5F584E" />
+                                <Setter TargetName="Bg" Property="Fill" Value="{DynamicResource AldunePressedBrush}" />
                             </Trigger>
                         </ControlTemplate.Triggers>
                     </ControlTemplate>
@@ -213,9 +213,9 @@
             <Setter Property="Height" Value="22" />
             <Setter Property="Padding" Value="0" />
             <Setter Property="Margin" Value="0,2" />
-            <Setter Property="Foreground" Value="#E8D8C5" />
-            <Setter Property="Background" Value="#B52A241E" />
-            <Setter Property="BorderBrush" Value="#D08F7965" />
+            <Setter Property="Foreground" Value="{DynamicResource AlduneDockArrowTextBrush}" />
+            <Setter Property="Background" Value="{DynamicResource AlduneDockBarBrush}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource AlduneDockArrowBorderBrush}" />
             <Setter Property="BorderThickness" Value="1" />
             <Setter Property="Template">
                 <Setter.Value>
@@ -229,11 +229,11 @@
                         </Border>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsMouseOver" Value="True">
-                                <Setter TargetName="ArrowBorder" Property="Background" Value="#D14A3D31" />
-                                <Setter TargetName="ArrowBorder" Property="BorderBrush" Value="#F0C7A5" />
+                                <Setter TargetName="ArrowBorder" Property="Background" Value="{DynamicResource AlduneDockArrowHoverBrush}" />
+                                <Setter TargetName="ArrowBorder" Property="BorderBrush" Value="{DynamicResource AlduneDockArrowHoverBorderBrush}" />
                             </Trigger>
                             <Trigger Property="IsPressed" Value="True">
-                                <Setter TargetName="ArrowBorder" Property="Background" Value="#E05B4939" />
+                                <Setter TargetName="ArrowBorder" Property="Background" Value="{DynamicResource AlduneDockArrowPressedBrush}" />
                             </Trigger>
                         </ControlTemplate.Triggers>
                     </ControlTemplate>
@@ -300,7 +300,7 @@
         <!-- HorizontalAlignment/Margin espejados por código para el dock a la izquierda — ver el
              comentario junto a FooterBorder más abajo, mismo bug y mismo arreglo. -->
         <Border x:Name="RestStrip"
-                Background="#2A261F"
+                Background="{DynamicResource AlduneGroundBrush}"
                 CornerRadius="10"
                 HorizontalAlignment="Right"
                 VerticalAlignment="Center"
@@ -417,16 +417,16 @@
                         HorizontalAlignment="Center"
                         VerticalAlignment="Stretch"
                         Margin="0,8"
-                        Background="#B52A241E"
+                        Background="{DynamicResource AlduneDockBarBrush}"
                         CornerRadius="4"
-                        BorderBrush="#C08B7461"
+                        BorderBrush="{DynamicResource AlduneDockRailBorderBrush}"
                         BorderThickness="1" />
                 <Canvas x:Name="ScrollRailCanvas" Margin="0,8">
                     <Border x:Name="ScrollRailThumb"
                             Width="8"
                             Height="32"
-                            Background="#E1C2A88F"
-                            BorderBrush="#F2DCC2"
+                            Background="{DynamicResource AlduneDockThumbBrush}"
+                            BorderBrush="{DynamicResource AlduneDockThumbBorderBrush}"
                             BorderThickness="1"
                             CornerRadius="4" />
                 </Canvas>
@@ -479,7 +479,7 @@
                  de la pantalla, pero este contenido seguía alineado "a la derecha" sin más — es
                  decir, contra el lado INTERIOR del dock en vez del exterior, dejando un hueco entre
                  la tira/pestañas y el borde real de la pantalla. -->
-            <Border x:Name="FooterBorder" Grid.Row="1" Background="#2A261F" CornerRadius="27"
+            <Border x:Name="FooterBorder" Grid.Row="1" Background="{DynamicResource AlduneGroundBrush}" CornerRadius="27"
                     HorizontalAlignment="Right" Margin="0,14,8,0" Padding="7">
                 <StackPanel x:Name="FooterPanel" Orientation="Horizontal">
                     <!-- "Ver todas": interruptor, no solo abrir. Si hay alguna nota abierta ahora
@@ -513,7 +513,7 @@
                     <Button x:Name="NewNoteButton" Click="OnNewNoteClick"
                             PreviewMouseRightButtonUp="OnNewNoteRightClick"
                             Width="40" Height="40"
-                            Background="#575044" Foreground="#F5F0E6"
+                            Background="{DynamicResource AlduneDockPrimaryBrush}" Foreground="{DynamicResource AlduneTextStrongBrush}"
                             Style="{StaticResource CircularIconButtonStyle}"
                             ToolTip="{x:Static res:Strings.NewNoteTooltip}"
                             AutomationProperties.Name="{x:Static res:Strings.NewNoteTooltip}">
@@ -538,13 +538,13 @@
                      (texto incluido) a un bitmap de resolución fija, borroso en monitores con escala
                      >100%. La capa de sombra no lleva contenido; la de contenido va sin Effect. -->
                 <Grid>
-                    <Border Background="#2A261F" CornerRadius="10">
+                    <Border Background="{DynamicResource AlduneGroundBrush}" CornerRadius="10">
                         <Border.Effect>
                             <DropShadowEffect BlurRadius="16" ShadowDepth="3" Direction="270"
                                               Color="#000000" Opacity="0.5" />
                         </Border.Effect>
                     </Border>
-                    <Border Background="#2A261F" CornerRadius="10" Padding="8">
+                    <Border Background="{DynamicResource AlduneGroundBrush}" CornerRadius="10" Padding="8">
                         <StackPanel MinWidth="190">
                             <Button Content="{x:Static res:Strings.NewNoteTooltip}"
                                     Click="OnNewNoteMenuCreateClick"
@@ -567,16 +567,16 @@
                    Opened="OnOpenAllMenuOpened"
                    Closed="OnOpenAllMenuClosed">
                 <Grid>
-                    <Border Background="#2A261F" CornerRadius="10">
+                    <Border Background="{DynamicResource AlduneGroundBrush}" CornerRadius="10">
                         <Border.Effect>
                             <DropShadowEffect BlurRadius="16" ShadowDepth="3" Direction="270"
                                               Color="#000000" Opacity="0.5" />
                         </Border.Effect>
                     </Border>
-                    <Border Background="#2A261F" CornerRadius="10" Padding="8">
+                    <Border Background="{DynamicResource AlduneGroundBrush}" CornerRadius="10" Padding="8">
                         <StackPanel MinWidth="190">
                             <TextBlock Text="{x:Static res:Strings.OpenAllModeTitle}"
-                                       Foreground="#C8B9A8" FontSize="11"
+                                       Foreground="{DynamicResource AlduneTextWarmBrush}" FontSize="11"
                                        FontWeight="SemiBold" Margin="8,3,8,6" />
                             <Button Content="{x:Static res:Strings.OpenAllGrid}"
                                     Click="OnOpenAllGridClick"
@@ -591,15 +591,15 @@
                                  dock (con un dock en cada monitor la elige el propio dock que se pulsa).
                                  Los botones los construye PopulateOpenAllMonitors. -->
                             <Border x:Name="OpenAllMonitorSeparator"
-                                    Background="#4A443B" Height="1" Margin="0,6,0,6"
+                                    Background="{DynamicResource AlduneTrackBrush}" Height="1" Margin="0,6,0,6"
                                     Visibility="Collapsed" />
                             <TextBlock x:Name="OpenAllMonitorTitle"
                                        Text="{x:Static res:Strings.OpenAllMonitorTitle}"
-                                       Foreground="#C8B9A8" FontSize="11"
+                                       Foreground="{DynamicResource AlduneTextWarmBrush}" FontSize="11"
                                        FontWeight="SemiBold" Margin="8,3,8,6"
                                        Visibility="Collapsed" />
                             <StackPanel x:Name="OpenAllMonitorContainer" Visibility="Collapsed" />
-                            <Border Background="#4A443B" Height="1" Margin="0,6,0,6" />
+                            <Border Background="{DynamicResource AlduneTrackBrush}" Height="1" Margin="0,6,0,6" />
                             <Button Content="{x:Static res:Strings.CloseAllNotes}"
                                     Click="OnCloseAllClick"
                                     Style="{StaticResource NoteMenuDangerStyle}" />
@@ -613,16 +613,16 @@
                    PopupAnimation="Fade" PlacementTarget="{Binding ElementName=ManageArchiveButton}"
                    Opened="OnDockViewPopupOpened" Closed="OnDockViewPopupClosed">
                 <Grid>
-                    <Border Background="#2A261F" CornerRadius="10">
+                    <Border Background="{DynamicResource AlduneGroundBrush}" CornerRadius="10">
                         <Border.Effect>
                             <DropShadowEffect BlurRadius="16" ShadowDepth="3" Direction="270"
                                               Color="#000000" Opacity="0.5" />
                         </Border.Effect>
                     </Border>
-                    <Border Background="#2A261F" CornerRadius="10" Padding="8">
+                    <Border Background="{DynamicResource AlduneGroundBrush}" CornerRadius="10" Padding="8">
                         <StackPanel MinWidth="190">
                             <TextBlock Text="{x:Static res:Strings.DockViewTitle}"
-                                       Foreground="#C8B9A8" FontSize="11" FontWeight="SemiBold"
+                                       Foreground="{DynamicResource AlduneTextWarmBrush}" FontSize="11" FontWeight="SemiBold"
                                        Margin="8,3,8,6" />
                             <Button Content="{x:Static res:Strings.DockViewActive}" Tag="Active"
                                     Click="OnDockViewChoiceClick" Style="{StaticResource NoteMenuItemStyle}" />
@@ -630,14 +630,14 @@
                                     Click="OnDockViewChoiceClick" Style="{StaticResource NoteMenuItemStyle}" />
                             <Button Content="{x:Static res:Strings.DockViewTrash}" Tag="Trashed"
                                     Click="OnDockViewChoiceClick" Style="{StaticResource NoteMenuDangerStyle}" />
-                            <Border Background="#4A443B" Height="1" Margin="0,6,0,6" />
+                            <Border Background="{DynamicResource AlduneTrackBrush}" Height="1" Margin="0,6,0,6" />
                             <TextBlock Text="{x:Static res:Strings.DockViewTags}"
-                                       Foreground="#C8B9A8" FontSize="11" Margin="8,0,8,4" />
+                                       Foreground="{DynamicResource AlduneTextWarmBrush}" FontSize="11" Margin="8,0,8,4" />
                             <StackPanel x:Name="DockTagItems" />
                             <TextBlock x:Name="DockNoTagsText" Text="{x:Static res:Strings.DockViewNoTags}"
-                                       Foreground="#81786C" FontSize="11" Margin="8,4,8,2"
+                                       Foreground="{DynamicResource AlduneHintBrush}" FontSize="11" Margin="8,4,8,2"
                                        Visibility="Collapsed" />
-                            <Border Background="#4A443B" Height="1" Margin="0,6,0,6" />
+                            <Border Background="{DynamicResource AlduneTrackBrush}" Height="1" Margin="0,6,0,6" />
                             <Button x:Name="DockViewKeepDockButton"
                                 Click="OnDockViewKeepDockToggleClick"
                                 Style="{StaticResource NoteMenuItemStyle}" />
@@ -655,19 +655,19 @@
          <Popup x:Name="TabMenuPopup" StaysOpen="False" AllowsTransparency="True"
                 PopupAnimation="Fade" Placement="MousePoint" HorizontalOffset="6" VerticalOffset="6">
             <Grid>
-                <Border Background="#2A261F" CornerRadius="10">
+                <Border Background="{DynamicResource AlduneGroundBrush}" CornerRadius="10">
                     <Border.Effect>
                         <DropShadowEffect BlurRadius="16" ShadowDepth="3" Direction="270"
                                           Color="#000000" Opacity="0.5" />
                     </Border.Effect>
                 </Border>
                 <Border x:Name="TabMenuSurface"
-                        Background="#2A261F" CornerRadius="10" Padding="8">
+                        Background="{DynamicResource AlduneGroundBrush}" CornerRadius="10" Padding="8">
                     <StackPanel MinWidth="186">
                         <StackPanel x:Name="TabMenuSwatches" Margin="6,4,6,8" />
                         <Button Content="{x:Static res:Strings.CustomColor}" Click="OnTabMenuCustomColorClick"
                                 Style="{StaticResource NoteMenuItemStyle}" />
-                        <Border Background="#3C3730" Height="1" Margin="0,0,0,4" />
+                        <Border Background="{DynamicResource AlduneRaisedBrush}" Height="1" Margin="0,0,0,4" />
                         <Button Content="{x:Static res:Strings.OpenNote}" Click="OnTabMenuOpenClick"
                                 Style="{StaticResource NoteMenuItemStyle}" />
                         <Button x:Name="TabMenuProtectionButton" Content="{x:Static res:Strings.ProtectNote}"
@@ -687,7 +687,7 @@
 
          <Popup x:Name="TagEditorPopup" AllowsTransparency="True" Focusable="True" Closed="OnTagEditorClosed"
              StaysOpen="False" PopupAnimation="Fade" Placement="MousePoint">
-            <Border Background="#2A261F" CornerRadius="10" Padding="16,14">
+            <Border Background="{DynamicResource AlduneGroundBrush}" CornerRadius="10" Padding="16,14">
                 <local:TagAssignmentPanel x:Name="DockTagPanel" />
             </Border>
         </Popup>

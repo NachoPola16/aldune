@@ -79,6 +79,8 @@ public partial class App : Application
             bool settingsExisted = File.Exists(settingsPath);
             settings = LoadSettingsOrRestoreBackup(settingsService, settingsPath, appDataDir, databasePath);
             ApplyLanguage(settings.Language);
+            // Antes de crear ninguna ventana: todas toman sus colores de estos pinceles.
+            ThemeManager.Apply(this, settings.Appearance);
 
             byte[] rawKey;
             if (settings.WrappedDatabaseKey is null && DatabaseKeyRecovery.DatabaseHasNotes(databasePath))
@@ -248,6 +250,7 @@ public partial class App : Application
         // es reconstruirlos contra la lista de monitores nueva. Se engancha al final del arranque,
         // ya con el descifrado verificado, para no reconstruir nada si la app va a abortar.
         SystemEvents.DisplaySettingsChanged += OnDisplaySettingsChanged;
+        SystemEvents.UserPreferenceChanged += OnUserPreferenceChanged;
         SystemEvents.PowerModeChanged += OnPowerModeChanged;
         // Pantallas apagadas que Windows sigue dando por conectadas, y el modo "pantalla del ratón".
         _screenWatcher = new DockScreenWatcher(settings, () => _dockDevices, coordinator.RebuildDocks);
@@ -312,6 +315,7 @@ public partial class App : Application
         Exit += (_, _) =>
         {
             SystemEvents.DisplaySettingsChanged -= OnDisplaySettingsChanged;
+            SystemEvents.UserPreferenceChanged -= OnUserPreferenceChanged;
             SystemEvents.PowerModeChanged -= OnPowerModeChanged;
             SystemEvents.SessionSwitch -= OnSessionSwitch;
             SystemEvents.SessionEnding -= OnSessionEnding;
@@ -343,9 +347,8 @@ public partial class App : Application
     /// </summary>
     private static void ApplyLanguage(string? explicitLanguage)
     {
-        Strings.Current = explicitLanguage is "es" or "en"
-            ? explicitLanguage
-            : System.Globalization.CultureInfo.CurrentUICulture.TwoLetterISOLanguageName == "es" ? "es" : "en";
+        Strings.Current = UiLanguages.Resolve(explicitLanguage,
+            System.Globalization.CultureInfo.CurrentUICulture.TwoLetterISOLanguageName);
 
         NoteTitleHelper.PlaceholderTitle = Strings.NewNotePlaceholder;
     }
@@ -539,6 +542,18 @@ public partial class App : Application
         }
 
         _coordinator.RefreshAll();
+    }
+
+    /// <summary>En "Como Windows", cambiar el modo de Windows cambia Aldune en el acto. Windows lo
+    /// avisa como preferencia general; se vuelve a leer y, si no cambió nada, reaplicar es inocuo.</summary>
+    private void OnUserPreferenceChanged(object? sender, UserPreferenceChangedEventArgs e)
+    {
+        if (e.Category != UserPreferenceCategory.General || _settings is not { Appearance: AppearanceMode.System }) return;
+        Dispatcher.BeginInvoke(() =>
+        {
+            if (ThemeManager.IsLight != ThemeManager.WindowsUsesLightTheme())
+                ThemeManager.Apply(this, AppearanceMode.System);
+        });
     }
 
     private static void OnPowerModeChanged(object? sender, PowerModeChangedEventArgs e) =>

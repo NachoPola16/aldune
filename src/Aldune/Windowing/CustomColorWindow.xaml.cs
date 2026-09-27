@@ -120,8 +120,7 @@ public partial class CustomColorWindow : Window
             ContrastHint.Text = readable
                 ? Strings.CustomColorReadable
                 : Strings.CustomColorContrastError;
-            ContrastHint.Foreground = new SolidColorBrush(
-                (Color)ColorConverter.ConvertFromString(readable ? "#A9C99A" : "#E8A0A0")!);
+            ContrastHint.SetResourceReference(ForegroundProperty, readable ? "AlduneSuccessBrush" : "AlduneDangerTextBrush");
             ApplyButton.IsEnabled = readable;
         }
         finally

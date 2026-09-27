@@ -6,11 +6,57 @@ namespace Aldune.Core.Tests;
 public class NoteThemesTests
 {
     [Fact]
-    public void BuiltIn_AreClassicSereneAndGraphite_InThatOrder()
+    public void BuiltIn_AreTheSixFactoryThemes_InThatOrder()
     {
-        Assert.Equal(new[] { "classic", "serene", "graphite" }, NoteThemes.BuiltIn.Select(t => t.Id));
+        Assert.Equal(new[] { "classic", "serene", "graphite", "pastel", "autumn", "ocean" }, NoteThemes.BuiltIn.Select(t => t.Id));
         Assert.All(NoteThemes.BuiltIn, theme => Assert.True(theme.IsBuiltIn));
     }
+
+    // La regla de los temas calculados (spec de temas): la misma claridad OKLCH en cada grupo, para
+    // que ninguna nota destaque sobre las demás por ser más clara u oscura; solo cambia el matiz.
+    [Theory]
+    [InlineData("serene")]
+    [InlineData("graphite")]
+    [InlineData("pastel")]
+    [InlineData("autumn")]
+    [InlineData("ocean")]
+    public void CalculatedThemes_KeepOneLightnessPerGroup(string id)
+    {
+        var theme = NoteThemes.Resolve(id, null);
+        Assert.Equal(id, theme.Id);
+        foreach (var group in new[] { theme.DarkColors, theme.LightColors }.Where(g => g.Count > 0))
+        {
+            var lightness = group.Select(Lightness).ToList();
+            Assert.True(lightness.Max() - lightness.Min() <= 0.02, $"{id}: {string.Join(", ", group)}");
+        }
+    }
+
+    // Y que se distingan entre sí: dos notas seguidas no pueden parecer del mismo color.
+    [Theory]
+    [InlineData("pastel")]
+    [InlineData("autumn")]
+    [InlineData("ocean")]
+    public void NewThemes_ColorsAreDistinguishable(string id)
+    {
+        var theme = NoteThemes.Resolve(id, null);
+        Assert.Equal(id, theme.Id);
+        foreach (var group in new[] { theme.DarkColors, theme.LightColors }.Where(g => g.Count > 0))
+        {
+            Assert.True(group.Count >= 4, id);
+            var colors = group.Select(Oklch).ToList();
+            for (int i = 0; i < colors.Count; i++)
+                for (int j = i + 1; j < colors.Count; j++)
+                    Assert.True(colors[i].DistanceTo(colors[j]) >= 0.03, $"{id}: {group[i]} y {group[j]} se parecen demasiado");
+        }
+    }
+
+    private static OklchColor Oklch(string hex)
+    {
+        Assert.True(OklchColor.TryFromHex(hex, out var color), hex);
+        return color;
+    }
+
+    private static double Lightness(string hex) => Oklch(hex).L;
 
     [Fact]
     public void Classic_IsTheSixFactoryColors_LightOnly()

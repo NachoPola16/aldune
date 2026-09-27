@@ -1,4 +1,4 @@
-using System.Windows;
+﻿using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
@@ -50,11 +50,11 @@ public partial class TagAssignmentPanel : UserControl
                 Tag = tag,
                 IsChecked = _note.Tags.Contains(tag, StringComparer.OrdinalIgnoreCase),
                 Margin = new Thickness(0, 0, 0, 8),
-                Foreground = (Brush)new BrushConverter().ConvertFromString("#EDE7DC")!,
-                Background = (Brush)new BrushConverter().ConvertFromString(NoteColorPalette.Ground)!,
                 FontSize = 13,
                 Style = (Style)FindResource("AppCheckBoxStyle"),
             };
+            checkBox.SetResourceReference(ForegroundProperty, "AlduneTextBrush");
+            checkBox.SetResourceReference(BackgroundProperty, "AlduneGroundBrush");
             checkBox.Click += (_, _) => Save();
             Items.Children.Add(checkBox);
         }

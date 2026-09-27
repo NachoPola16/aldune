@@ -11,7 +11,7 @@
         WindowStyle="None"
         AllowsTransparency="False"
         ResizeMode="CanResize"
-        Background="{StaticResource AlduneGroundBrush}"
+        Background="{DynamicResource AlduneGroundBrush}"
         Topmost="True"
         TextOptions.TextFormattingMode="Display"
         PreviewKeyDown="OnPreviewKeyDown"
@@ -27,8 +27,8 @@
         <local:NoteDateConverter x:Key="NoteDateConverter" />
 
         <Style x:Key="ToolbarButtonStyle" TargetType="Button">
-            <Setter Property="Foreground" Value="#EDE7DC" />
-            <Setter Property="Background" Value="#3C3730" />
+            <Setter Property="Foreground" Value="{DynamicResource AlduneTextBrush}" />
+            <Setter Property="Background" Value="{DynamicResource AlduneRaisedBrush}" />
             <Setter Property="BorderThickness" Value="0" />
             <Setter Property="FocusVisualStyle" Value="{x:Null}" />
             <Setter Property="Padding" Value="12,7" />
@@ -42,17 +42,17 @@
                         </Border>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsMouseOver" Value="True">
-                                <Setter TargetName="Bg" Property="Background" Value="#4E4840" />
+                                <Setter TargetName="Bg" Property="Background" Value="{DynamicResource AlduneHoverBrush}" />
                             </Trigger>
                             <Trigger Property="IsPressed" Value="True">
-                                <Setter TargetName="Bg" Property="Background" Value="#5F584E" />
+                                <Setter TargetName="Bg" Property="Background" Value="{DynamicResource AldunePressedBrush}" />
                             </Trigger>
                             <!-- Sin nada seleccionado estas acciones no tienen sobre qué actuar.
                                  Antes seguían pulsables y no hacían nada, que es peor que decir
                                  que no se puede: el estado deshabilitado es la respuesta. -->
                             <Trigger Property="IsEnabled" Value="False">
-                                <Setter TargetName="Bg" Property="Background" Value="#332F28" />
-                                <Setter Property="Foreground" Value="#6B6459" />
+                                <Setter TargetName="Bg" Property="Background" Value="{DynamicResource AlduneSurfaceBrush}" />
+                                <Setter Property="Foreground" Value="{DynamicResource AlduneTextFaintBrush}" />
                             </Trigger>
                         </ControlTemplate.Triggers>
                     </ControlTemplate>
@@ -61,7 +61,7 @@
         </Style>
 
         <Style x:Key="DangerToolbarButtonStyle" TargetType="Button" BasedOn="{StaticResource ToolbarButtonStyle}">
-            <Setter Property="Background" Value="#5A2A28" />
+            <Setter Property="Background" Value="{DynamicResource AlduneDangerBgBrush}" />
         </Style>
 
         <Style x:Key="LinkButtonStyle" TargetType="Button">
@@ -82,7 +82,7 @@
                                 <Setter TargetName="Label" Property="TextDecorations" Value="Underline" />
                             </Trigger>
                             <Trigger Property="IsEnabled" Value="False">
-                                <Setter TargetName="Label" Property="Foreground" Value="#5A554C" />
+                                <Setter TargetName="Label" Property="Foreground" Value="{DynamicResource AlduneTextDisabledBrush}" />
                             </Trigger>
                         </ControlTemplate.Triggers>
                     </ControlTemplate>
@@ -159,7 +159,7 @@
         <!-- Filtros como control segmentado: cuatro opciones excluyentes de un mismo eje se leen
              mejor juntas en una pastilla que como cuatro botones sueltos. -->
         <Style x:Key="FilterToggleStyle" TargetType="RadioButton">
-            <Setter Property="Foreground" Value="#A79E90" />
+            <Setter Property="Foreground" Value="{DynamicResource AlduneMutedTextBrush}" />
             <Setter Property="Padding" Value="12,6" />
             <Setter Property="FontSize" Value="12" />
             <Setter Property="FocusVisualStyle" Value="{x:Null}" />
@@ -173,11 +173,11 @@
                         </Border>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsMouseOver" Value="True">
-                                <Setter TargetName="Bg" Property="Background" Value="#3C3730" />
+                                <Setter TargetName="Bg" Property="Background" Value="{DynamicResource AlduneRaisedBrush}" />
                             </Trigger>
                             <Trigger Property="IsChecked" Value="True">
-                                <Setter TargetName="Bg" Property="Background" Value="#4E4840" />
-                                <Setter Property="Foreground" Value="#F5F0E6" />
+                                <Setter TargetName="Bg" Property="Background" Value="{DynamicResource AlduneHoverBrush}" />
+                                <Setter Property="Foreground" Value="{DynamicResource AlduneTextStrongBrush}" />
                                 <Setter Property="FontWeight" Value="SemiBold" />
                             </Trigger>
                         </ControlTemplate.Triggers>
@@ -221,7 +221,7 @@
 
         <Popup x:Name="TagEditorPopup" AllowsTransparency="True" Focusable="True" StaysOpen="False" Closed="OnTagEditorClosed"
                Placement="Bottom" PopupAnimation="Fade">
-            <Border Background="#2D2923" BorderBrush="#5F584E" BorderThickness="1"
+            <Border Background="{DynamicResource AldunePopupBrush}" BorderBrush="{DynamicResource AldunePressedBrush}" BorderThickness="1"
                     CornerRadius="7" Padding="16,14">
                 <local:TagAssignmentPanel x:Name="ManagerTagPanel" />
             </Border>
@@ -233,9 +233,9 @@
         <!-- Cabecera. CaptionHeight cubre esta franja, así que la ventana se arrastra desde aquí. -->
         <Grid Grid.Row="0" Margin="20,18,14,0">
             <StackPanel>
-                <TextBlock Text="{x:Static res:Strings.ManageNotesTitle}" Foreground="#F5F0E6"
+                <TextBlock Text="{x:Static res:Strings.ManageNotesTitle}" Foreground="{DynamicResource AlduneTextStrongBrush}"
                            FontSize="17" FontWeight="SemiBold" />
-                <TextBlock x:Name="SubtitleText" Foreground="#A79E90" FontSize="12" Margin="0,3,0,0" />
+                <TextBlock x:Name="SubtitleText" Foreground="{DynamicResource AlduneMutedTextBrush}" FontSize="12" Margin="0,3,0,0" />
             </StackPanel>
             <!-- Acceso a Ajustes tambien desde aqui. Estaban solo en el clic derecho de la
                  bandeja, y ahi no los encontro el usuario: esta es la ventana que uno abre cuando
@@ -287,7 +287,7 @@
             </StackPanel>
         </Grid>
 
-        <Border Grid.Row="1" Background="#332F28" CornerRadius="7" Margin="20,16,20,0" Padding="3">
+        <Border Grid.Row="1" Background="{DynamicResource AlduneSurfaceBrush}" CornerRadius="7" Margin="20,16,20,0" Padding="3">
                 <WrapPanel>
                 <!-- IsChecked se fija desde el code-behind tras InitializeComponent, no aquí: un
                      IsChecked="True" en XAML dispara Checked mientras el árbol se está
@@ -324,10 +324,10 @@
 
         <Popup x:Name="TagManagerPopup" AllowsTransparency="True" Focusable="True"
                StaysOpen="False" Placement="Bottom" PopupAnimation="Fade">
-            <Border Background="#2D2923" BorderBrush="#5F584E" BorderThickness="1"
+            <Border Background="{DynamicResource AldunePopupBrush}" BorderBrush="{DynamicResource AldunePressedBrush}" BorderThickness="1"
                     CornerRadius="7" Padding="12">
                 <StackPanel Width="290">
-                    <TextBlock Text="{x:Static res:Strings.ManageTags}" Foreground="#F5F0E6"
+                    <TextBlock Text="{x:Static res:Strings.ManageTags}" Foreground="{DynamicResource AlduneTextStrongBrush}"
                                FontWeight="SemiBold" />
                     <Grid Margin="0,10,0,14">
                         <Grid.ColumnDefinitions>
@@ -335,8 +335,8 @@
                             <ColumnDefinition Width="Auto" />
                         </Grid.ColumnDefinitions>
                         <TextBox x:Name="NewTagTextBox" Grid.Column="0" Height="32" Padding="9,5"
-                                 Background="#403A32" Foreground="#F5F0E6" BorderBrush="#6B6459"
-                                 CaretBrush="#F5F0E6" />
+                                 Background="{DynamicResource AlduneSurfaceBrush}" Foreground="{DynamicResource AlduneTextStrongBrush}" BorderBrush="{DynamicResource AlduneTextFaintBrush}"
+                                 CaretBrush="{DynamicResource AlduneTextStrongBrush}" />
                         <Button Grid.Column="1" Click="OnCreateTagClick"
                                 Margin="8,0,0,0" Style="{StaticResource ToolbarButtonStyle}">
                             <StackPanel Orientation="Horizontal">
@@ -346,10 +346,10 @@
                             </StackPanel>
                         </Button>
                     </Grid>
-                    <TextBlock Text="{x:Static res:Strings.AllTags}" Foreground="#A79E90"
+                    <TextBlock Text="{x:Static res:Strings.AllTags}" Foreground="{DynamicResource AlduneMutedTextBrush}"
                                FontSize="11" Margin="0,0,0,5" />
                     <TextBlock x:Name="TagManagerEmptyText" Text="{x:Static res:Strings.DockViewNoTags}"
-                               Foreground="#A79E90" FontSize="11" Visibility="Collapsed" />
+                               Foreground="{DynamicResource AlduneMutedTextBrush}" FontSize="11" Visibility="Collapsed" />
                     <ScrollViewer MaxHeight="220" VerticalScrollBarVisibility="Auto"
                                   HorizontalScrollBarVisibility="Disabled">
                         <StackPanel x:Name="TagManagerItems" />
@@ -363,19 +363,19 @@
              el borrado permanente, que solo tiene sentido en Papelera. Cambiar de pestaña conserva
              el texto, así que buscar y luego mirar en otra categoría no obliga a escribirlo dos
              veces. -->
-        <Border Grid.Row="2" Background="#332F28" CornerRadius="7" Margin="20,10,20,0">
+        <Border Grid.Row="2" Background="{DynamicResource AlduneSurfaceBrush}" CornerRadius="7" Margin="20,10,20,0">
             <Grid>
                 <TextBlock Text="&#xE721;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets"
-                           Foreground="#6B6459" FontSize="13"
+                           Foreground="{DynamicResource AlduneTextFaintBrush}" FontSize="13"
                            Margin="10,0,0,0"
                            HorizontalAlignment="Left" VerticalAlignment="Center" />
                 <TextBlock x:Name="SearchPlaceholder" Text="{x:Static res:Strings.SearchPlaceholder}"
-                           Foreground="#6B6459" FontSize="13"
+                           Foreground="{DynamicResource AlduneTextFaintBrush}" FontSize="13"
                            Margin="28,0,0,0"
                            HorizontalAlignment="Left" VerticalAlignment="Center"
                            IsHitTestVisible="False" />
                 <TextBox x:Name="SearchBox"
-                         Background="Transparent" Foreground="#EDE7DC" CaretBrush="#EDE7DC"
+                         Background="Transparent" Foreground="{DynamicResource AlduneTextBrush}" CaretBrush="{DynamicResource AlduneTextBrush}"
                          FontSize="13" BorderThickness="0"
                          Padding="0,9" Margin="28,0,28,0"
                          VerticalContentAlignment="Center"
@@ -397,7 +397,7 @@
              filas, que es donde el ojo la busca. -->
         <CheckBox Grid.Row="3" x:Name="SelectAllCheck"
                   Content="{x:Static res:Strings.SelectAll}"
-                  Foreground="#A79E90" Background="#2A261F" FontSize="12"
+                  Foreground="{DynamicResource AlduneMutedTextBrush}" Background="{DynamicResource AlduneGroundBrush}" FontSize="12"
                   IsThreeState="True"
                   Style="{StaticResource AppCheckBoxStyle}"
                   Click="OnSelectAllClick"
@@ -435,12 +435,12 @@
                                         <Setter Property="Opacity" Value="0.96" />
                                         <Style.Triggers>
                                             <DataTrigger Binding="{Binding IsSelected}" Value="True">
-                                                <Setter Property="BorderBrush" Value="#F5F0E6" />
+                                                <Setter Property="BorderBrush" Value="{DynamicResource AlduneTextStrongBrush}" />
                                                 <Setter Property="BorderThickness" Value="2" />
                                                 <Setter Property="Opacity" Value="1" />
                                             </DataTrigger>
                                             <Trigger Property="IsKeyboardFocusWithin" Value="True">
-                                                <Setter Property="BorderBrush" Value="#F5F0E6" />
+                                                <Setter Property="BorderBrush" Value="{DynamicResource AlduneTextStrongBrush}" />
                                             </Trigger>
                                             <Trigger Property="IsMouseOver" Value="True">
                                                 <Setter Property="Opacity" Value="1" />
@@ -546,7 +546,7 @@
 
             <!-- Estado vacío: dice qué pasa y por qué, en vez de dejar un hueco en blanco. -->
             <TextBlock x:Name="EmptyState"
-                       Foreground="#6B6459" FontSize="13"
+                       Foreground="{DynamicResource AlduneTextFaintBrush}" FontSize="13"
                        HorizontalAlignment="Center" VerticalAlignment="Center"
                        TextAlignment="Center" TextWrapping="Wrap"
                        MaxWidth="260"
@@ -556,7 +556,7 @@
         <!-- WrapPanel, no StackPanel: estos botones no caben en una línea al ancho mínimo, y un
              StackPanel dejaría el último saliéndose de la ventana sin recortar pero sin poder
              pulsarse (pasó exactamente eso una vez). WrapPanel baja el sobrante a otra línea. -->
-        <Border Grid.Row="4" Background="#25211B" Padding="20,12">
+        <Border Grid.Row="4" Background="{DynamicResource AlduneGroundDeepBrush}" Padding="20,12">
             <DockPanel>
                 <!-- "Eliminar" separado del resto y a la izquierda: es la unica accion sin vuelta
                      atras de toda la app, asi que no comparte vecindario con las reversibles.

@@ -17,18 +17,23 @@ public sealed class NoteDateConverter : IValueConverter
         if (value is not DateTimeOffset updatedAt) return string.Empty;
 
         // El idioma de la interfaz, no el del sistema: con Windows en inglés y Aldune en español,
-        // "27 sept" y no "Sep 27".
-        bool spanish = Strings.Current == "es";
-        var format = spanish ? new CultureInfo("es-ES") : new CultureInfo("en-US");
+        // "27 sept" y no "Sep 27". La hora, en el formato corto de cada cultura (16:48 / 4:48 PM).
+        var format = new CultureInfo(UiLanguages.CultureFor(Strings.Current));
         var local = updatedAt.ToLocalTime();
         if (parameter as string == "full")
-            return local.ToString(spanish ? "dddd, d 'de' MMMM 'de' yyyy, HH:mm" : "dddd, MMMM d, yyyy, h:mm tt", format);
+            return $"{local.ToString("D", format)}, {local.ToString("t", format)}";
 
+        var (dayMonth, dayMonthYear) = Strings.Current switch
+        {
+            "en" => ("MMM d", "MMM d, yyyy"),
+            "de" => ("d. MMM", "d. MMM yyyy"),
+            _ => ("d MMM", "d MMM yyyy")
+        };
         return NoteListing.DateKind(updatedAt, DateTimeOffset.Now) switch
         {
-            NoteDateKind.Today => local.ToString(spanish ? "HH:mm" : "h:mm tt", format),
-            NoteDateKind.ThisYear => local.ToString(spanish ? "d MMM" : "MMM d", format),
-            _ => local.ToString(spanish ? "d MMM yyyy" : "MMM d, yyyy", format)
+            NoteDateKind.Today => local.ToString("t", format),
+            NoteDateKind.ThisYear => local.ToString(dayMonth, format),
+            _ => local.ToString(dayMonthYear, format)
         };
     }
 

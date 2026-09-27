@@ -29,14 +29,16 @@ public partial class AppDialog : Window
         Title = title;
         TitleText.Text = title;
         MessageText.Text = message;
-        (IconGlyph.Text, IconGlyph.Foreground) = image switch
+        var (glyph, colorKey) = image switch
         {
-            MessageBoxImage.Error => ("", Brush("#D98C84")),
-            MessageBoxImage.Warning => ("", Brush("#E0B070")),
-            MessageBoxImage.Question => ("", Brush("#A79E90")),
-            MessageBoxImage.Information => ("", Brush("#A79E90")),
-            _ => ("", Brushes.Transparent)
+            MessageBoxImage.Error => ("", "AlduneErrorBorderBrush"),
+            MessageBoxImage.Warning => ("", "AlduneWarningBrush"),
+            MessageBoxImage.Question => ("", "AlduneMutedTextBrush"),
+            MessageBoxImage.Information => ("", "AlduneMutedTextBrush"),
+            _ => ("", "AlduneMutedTextBrush")
         };
+        IconGlyph.Text = glyph;
+        IconGlyph.SetResourceReference(ForegroundProperty, colorKey);
         if (image == MessageBoxImage.None) IconGlyph.Visibility = Visibility.Collapsed;
 
         // Principal a la derecha, como en el resto de ventanas de la app (Cancelar | Aceptar).
@@ -124,5 +126,4 @@ public partial class AppDialog : Window
         _ => Strings.DialogOk
     };
 
-    private static SolidColorBrush Brush(string hex) => (SolidColorBrush)new BrushConverter().ConvertFromString(hex)!;
 }

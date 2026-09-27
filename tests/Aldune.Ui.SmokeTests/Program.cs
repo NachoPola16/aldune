@@ -27,6 +27,8 @@ internal static class Program
         try
         {
             LoadAppResources(app);
+            // La paleta del chrome no está en App.xaml: la pone ThemeManager, como hace la app al arrancar.
+            ThemeManager.Apply(app, light: false);
             using var cipher = new ContentCipher(RandomNumberGenerator.GetBytes(32));
             var repository = new NotesRepository(new NotesDatabase(Path.Combine(directory, "smoke.db")), cipher);
             var settings = new AppSettings { KeepDockOpen = false, DockView = DockViewKind.Active };

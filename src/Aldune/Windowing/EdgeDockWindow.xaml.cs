@@ -699,7 +699,7 @@ public partial class EdgeDockWindow : Window
                 bool Near(string hex) =>
                     System.Windows.Media.ColorConverter.ConvertFromString(hex) is Color c
                     && Math.Abs(r - c.R) <= 16 && Math.Abs(g - c.G) <= 16 && Math.Abs(b - c.B) <= 16;
-                bool painted = Near(NoteColorPalette.Ground)
+                bool painted = Near(ThemeManager.Color("Ground"))
                     || RestList.Items.OfType<Note>().Any(note => Near(note.Color));
                 if (!painted)
                 {

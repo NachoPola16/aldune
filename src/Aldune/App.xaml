@@ -8,19 +8,8 @@
     <Application.Resources>
         <!-- Base visual compartida. Los colores de cada nota siguen siendo independientes, pero el
              chrome de Aldune parte de estos mismos valores en todas las ventanas. -->
-        <SolidColorBrush x:Key="AlduneGroundBrush" Color="#2A261F" />
-        <SolidColorBrush x:Key="AlduneSurfaceBrush" Color="#332F28" />
-        <SolidColorBrush x:Key="AlduneRaisedBrush" Color="#3C3730" />
-        <SolidColorBrush x:Key="AlduneHoverBrush" Color="#4E4840" />
-        <SolidColorBrush x:Key="AldunePressedBrush" Color="#5F584E" />
-        <SolidColorBrush x:Key="AlduneTextBrush" Color="#EDE7DC" />
-        <SolidColorBrush x:Key="AlduneMutedTextBrush" Color="#A79E90" />
-        <SolidColorBrush x:Key="AlduneHintBrush" Color="#8A8175" />
-        <SolidColorBrush x:Key="AlduneDividerBrush" Color="#3C3730" />
         <!-- Borde de las cajas de texto al pasar el ratón y con el foco: compartido por TextBox,
              PasswordBox y la caja de contraseña de PasswordPromptWindow para que no se separen. -->
-        <SolidColorBrush x:Key="AlduneFieldHoverBrush" Color="#8A8175" />
-        <SolidColorBrush x:Key="AlduneFieldFocusBrush" Color="#A18465" />
 
         <!-- FontFamily is an inherited property, so setting it here on the implicit Window
              style cascades to every control in EdgeDockWindow and NoteWindow that doesn't set
@@ -35,8 +24,8 @@
         </Style>
 
         <Style x:Key="DarkComboBoxItemStyle" TargetType="ComboBoxItem">
-            <Setter Property="Foreground" Value="#EDE7DC" />
-            <Setter Property="Background" Value="#2A261F" />
+            <Setter Property="Foreground" Value="{DynamicResource AlduneTextBrush}" />
+            <Setter Property="Background" Value="{DynamicResource AlduneGroundBrush}" />
             <Setter Property="Padding" Value="8,6" />
             <Setter Property="HorizontalContentAlignment" Value="Left" />
             <Setter Property="FocusVisualStyle" Value="{x:Null}" />
@@ -50,10 +39,10 @@
                         </Border>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsHighlighted" Value="True">
-                                <Setter TargetName="ItemBackground" Property="Background" Value="#403B33" />
+                                <Setter TargetName="ItemBackground" Property="Background" Value="{DynamicResource AlduneRaisedHoverBrush}" />
                             </Trigger>
                             <Trigger Property="IsSelected" Value="True">
-                                <Setter TargetName="ItemBackground" Property="Background" Value="#4E4840" />
+                                <Setter TargetName="ItemBackground" Property="Background" Value="{DynamicResource AlduneHoverBrush}" />
                             </Trigger>
                         </ControlTemplate.Triggers>
                     </ControlTemplate>
@@ -62,9 +51,9 @@
         </Style>
 
         <Style x:Key="DarkComboBoxStyle" TargetType="ComboBox">
-            <Setter Property="Foreground" Value="#EDE7DC" />
-            <Setter Property="Background" Value="#332F28" />
-            <Setter Property="BorderBrush" Value="#62594D" />
+            <Setter Property="Foreground" Value="{DynamicResource AlduneTextBrush}" />
+            <Setter Property="Background" Value="{DynamicResource AlduneSurfaceBrush}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource AlduneBorderBrush}" />
             <Setter Property="BorderThickness" Value="1" />
             <Setter Property="Padding" Value="8,5" />
             <Setter Property="FontSize" Value="12" />
@@ -92,7 +81,7 @@
                                                           TextElement.Foreground="{TemplateBinding Foreground}"
                                                           VerticalAlignment="Center" />
                                         <TextBlock Text="&#x2304;" FontSize="12"
-                                                   Foreground="#A79E90" HorizontalAlignment="Right"
+                                                   Foreground="{DynamicResource AlduneMutedTextBrush}" HorizontalAlignment="Right"
                                                    VerticalAlignment="Center" Margin="8,0,1,3" />
                                     </Grid>
                                 </Border>
@@ -100,7 +89,7 @@
                             <Popup x:Name="DropDown" Placement="Bottom" AllowsTransparency="True"
                                    Focusable="False" IsOpen="{TemplateBinding IsDropDownOpen}"
                                    PopupAnimation="Fade" PlacementTarget="{Binding ElementName=DropDownButton}">
-                                <Border Background="#2A261F" BorderBrush="#62594D" BorderThickness="1"
+                                <Border Background="{DynamicResource AlduneGroundBrush}" BorderBrush="{DynamicResource AlduneBorderBrush}" BorderThickness="1"
                                         CornerRadius="6" Padding="3" Width="{Binding ActualWidth, ElementName=DropDownButton}">
                                     <ScrollViewer MaxHeight="{TemplateBinding MaxDropDownHeight}"
                                                   CanContentScroll="True" HorizontalScrollBarVisibility="Disabled">
@@ -111,10 +100,10 @@
                         </Grid>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsMouseOver" Value="True">
-                                <Setter TargetName="Field" Property="BorderBrush" Value="#8A8175" />
+                                <Setter TargetName="Field" Property="BorderBrush" Value="{DynamicResource AlduneHintBrush}" />
                             </Trigger>
                             <Trigger Property="IsDropDownOpen" Value="True">
-                                <Setter TargetName="Field" Property="BorderBrush" Value="#B39A7E" />
+                                <Setter TargetName="Field" Property="BorderBrush" Value="{DynamicResource AlduneAccentBorderBrush}" />
                             </Trigger>
                             <Trigger Property="IsEnabled" Value="False">
                                 <Setter TargetName="Field" Property="Opacity" Value="0.45" />
@@ -176,19 +165,19 @@
                 <Setter.Value>
                     <ControlTemplate TargetType="Thumb">
                         <Border x:Name="Bar"
-                                Background="#806A55"
-                                BorderBrush="#B39A7E"
+                                Background="{DynamicResource AlduneSelectionBrush}"
+                                BorderBrush="{DynamicResource AlduneAccentBorderBrush}"
                                 BorderThickness="1"
                                 CornerRadius="4"
                                 Margin="1,2" />
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsMouseOver" Value="True">
-                                <Setter TargetName="Bar" Property="Background" Value="#A18465" />
-                                <Setter TargetName="Bar" Property="BorderBrush" Value="#D0B28E" />
+                                <Setter TargetName="Bar" Property="Background" Value="{DynamicResource AlduneAccentBrush}" />
+                                <Setter TargetName="Bar" Property="BorderBrush" Value="{DynamicResource AlduneScrollThumbBorderBrush}" />
                             </Trigger>
                             <Trigger Property="IsDragging" Value="True">
-                                <Setter TargetName="Bar" Property="Background" Value="#B79570" />
-                                <Setter TargetName="Bar" Property="BorderBrush" Value="#E0C6A4" />
+                                <Setter TargetName="Bar" Property="Background" Value="{DynamicResource AlduneAccentHoverBrush}" />
+                                <Setter TargetName="Bar" Property="BorderBrush" Value="{DynamicResource AlduneScrollThumbDragBorderBrush}" />
                             </Trigger>
                         </ControlTemplate.Triggers>
                     </ControlTemplate>
@@ -201,7 +190,7 @@
              como las filas de un menú. Aquí y no en cada ventana: son los dos sitios que abren el
              mismo panel. -->
         <Style x:Key="NoteMenuItemStyle" TargetType="Button">
-            <Setter Property="Foreground" Value="#EDE7DC" />
+            <Setter Property="Foreground" Value="{DynamicResource AlduneTextBrush}" />
             <Setter Property="FontSize" Value="13" />
             <Setter Property="Cursor" Value="Hand" />
             <Setter Property="FocusVisualStyle" Value="{x:Null}" />
@@ -216,7 +205,7 @@
                         </Border>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsMouseOver" Value="True">
-                                <Setter TargetName="Bg" Property="Background" Value="#403B33" />
+                                <Setter TargetName="Bg" Property="Background" Value="{DynamicResource AlduneRaisedHoverBrush}" />
                             </Trigger>
                         </ControlTemplate.Triggers>
                     </ControlTemplate>
@@ -225,7 +214,7 @@
         </Style>
 
         <Style x:Key="NoteMenuDangerStyle" TargetType="Button" BasedOn="{StaticResource NoteMenuItemStyle}">
-            <Setter Property="Foreground" Value="#E8A0A0" />
+            <Setter Property="Foreground" Value="{DynamicResource AlduneDangerTextBrush}" />
             <Setter Property="FocusVisualStyle" Value="{x:Null}" />
             <Setter Property="Template">
                 <Setter.Value>
@@ -236,7 +225,7 @@
                         </Border>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsMouseOver" Value="True">
-                                <Setter TargetName="Bg" Property="Background" Value="#5A2E2E" />
+                                <Setter TargetName="Bg" Property="Background" Value="{DynamicResource AlduneDangerHoverBrush}" />
                             </Trigger>
                         </ControlTemplate.Triggers>
                     </ControlTemplate>
@@ -252,7 +241,7 @@
              Mismo tratamiento que ActionsPopup (fondo Ground, esquinas redondeadas, sombra caída),
              para que se sienta parte de la misma familia visual que el resto de paneles flotantes. -->
         <Style TargetType="ToolTip">
-            <Setter Property="Foreground" Value="#EDE7DC" />
+            <Setter Property="Foreground" Value="{DynamicResource AlduneTextBrush}" />
             <Setter Property="FontSize" Value="12" />
             <Setter Property="Template">
                 <Setter.Value>
@@ -264,13 +253,13 @@
                              de sombra (sin contenido, solo el relleno) sí puede rasterizarse sin que se
                              note; la de contenido va encima, sin Effect, y sale nítida siempre. -->
                         <Grid>
-                            <Border Background="#2A261F" CornerRadius="6">
+                            <Border Background="{DynamicResource AlduneGroundBrush}" CornerRadius="6">
                                 <Border.Effect>
                                     <DropShadowEffect BlurRadius="12" ShadowDepth="2" Direction="270"
                                                       Color="#000000" Opacity="0.4" />
                                 </Border.Effect>
                             </Border>
-                            <Border Background="#2A261F" CornerRadius="6" Padding="9,6">
+                            <Border Background="{DynamicResource AlduneGroundBrush}" CornerRadius="6" Padding="9,6">
                                 <ContentPresenter />
                             </Border>
                         </Grid>
@@ -287,15 +276,15 @@
              los estados especiales (hoy, seleccionado, deshabilitado) siguen usando los colores por
              defecto de la plantilla, que ya funcionan razonablemente sobre fondo oscuro. -->
         <Style TargetType="CalendarDayButton">
-            <Setter Property="Foreground" Value="#EDE7DC" />
+            <Setter Property="Foreground" Value="{DynamicResource AlduneTextBrush}" />
         </Style>
         <Style TargetType="CalendarButton">
-            <Setter Property="Foreground" Value="#EDE7DC" />
+            <Setter Property="Foreground" Value="{DynamicResource AlduneTextBrush}" />
         </Style>
         <Style x:Key="DarkCalendarStyle" TargetType="Calendar">
-            <Setter Property="Background" Value="#2A261F" />
-            <Setter Property="BorderBrush" Value="#3C3730" />
-            <Setter Property="Foreground" Value="#EDE7DC" />
+            <Setter Property="Background" Value="{DynamicResource AlduneGroundBrush}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource AlduneRaisedBrush}" />
+            <Setter Property="Foreground" Value="{DynamicResource AlduneTextBrush}" />
         </Style>
 
         <!-- El menú nativo de un TextBox (cortar/copiar/pegar) sale con el tema claro de Windows:
@@ -305,9 +294,9 @@
              comandos siguen siendo los nativos (con su traducción del Windows del usuario), solo se
              replantilla la superficie y las filas a la familia NoteMenuItemStyle. -->
         <Style TargetType="ContextMenu">
-            <Setter Property="Background" Value="#2A261F" />
-            <Setter Property="Foreground" Value="#EDE7DC" />
-            <Setter Property="BorderBrush" Value="#5F584E" />
+            <Setter Property="Background" Value="{DynamicResource AlduneGroundBrush}" />
+            <Setter Property="Foreground" Value="{DynamicResource AlduneTextBrush}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource AldunePressedBrush}" />
             <Setter Property="BorderThickness" Value="1" />
             <Setter Property="Padding" Value="8" />
             <Setter Property="FocusVisualStyle" Value="{x:Null}" />
@@ -344,7 +333,7 @@
         </Style>
 
         <Style TargetType="MenuItem">
-            <Setter Property="Foreground" Value="#EDE7DC" />
+            <Setter Property="Foreground" Value="{DynamicResource AlduneTextBrush}" />
             <Setter Property="FontSize" Value="13" />
             <Setter Property="Padding" Value="9,7" />
             <Setter Property="FocusVisualStyle" Value="{x:Null}" />
@@ -359,10 +348,10 @@
                         </Border>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsHighlighted" Value="True">
-                                <Setter TargetName="Bg" Property="Background" Value="#403B33" />
+                                <Setter TargetName="Bg" Property="Background" Value="{DynamicResource AlduneRaisedHoverBrush}" />
                             </Trigger>
                             <Trigger Property="IsEnabled" Value="False">
-                                <Setter Property="Foreground" Value="#8A8175" />
+                                <Setter Property="Foreground" Value="{DynamicResource AlduneHintBrush}" />
                             </Trigger>
                         </ControlTemplate.Triggers>
                     </ControlTemplate>
@@ -417,8 +406,8 @@
         <!-- Botones y caja de texto de los diálogos pequeños (color personalizado, editor de
              temas). Vivían dentro de CustomColorWindow; aquí para compartirlos. -->
         <Style x:Key="ColorDialogButtonStyle" TargetType="Button">
-            <Setter Property="Foreground" Value="#EDE7DC" />
-            <Setter Property="Background" Value="#3C3730" />
+            <Setter Property="Foreground" Value="{DynamicResource AlduneTextBrush}" />
+            <Setter Property="Background" Value="{DynamicResource AlduneRaisedBrush}" />
             <Setter Property="FontSize" Value="12" />
             <Setter Property="Padding" Value="13,8" />
             <Setter Property="Cursor" Value="Hand" />
@@ -433,11 +422,11 @@
                         </Border>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsMouseOver" Value="True">
-                                <Setter TargetName="ButtonBackground" Property="Background" Value="#4E4840" />
+                                <Setter TargetName="ButtonBackground" Property="Background" Value="{DynamicResource AlduneHoverBrush}" />
                             </Trigger>
                             <Trigger Property="IsEnabled" Value="False">
-                                <Setter TargetName="ButtonBackground" Property="Background" Value="#332F28" />
-                                <Setter Property="Foreground" Value="#71695E" />
+                                <Setter TargetName="ButtonBackground" Property="Background" Value="{DynamicResource AlduneSurfaceBrush}" />
+                                <Setter Property="Foreground" Value="{DynamicResource AlduneTextDisabledBrush}" />
                                 <Setter Property="Cursor" Value="Arrow" />
                             </Trigger>
                         </ControlTemplate.Triggers>
@@ -447,8 +436,8 @@
         </Style>
         <Style x:Key="PrimaryColorDialogButtonStyle" TargetType="Button"
                BasedOn="{StaticResource ColorDialogButtonStyle}">
-            <Setter Property="Background" Value="#A18465" />
-            <Setter Property="Foreground" Value="#201B16" />
+            <Setter Property="Background" Value="{DynamicResource AlduneAccentBrush}" />
+            <Setter Property="Foreground" Value="{DynamicResource AlduneOnAccentBrush}" />
             <Setter Property="FontWeight" Value="SemiBold" />
             <Setter Property="Template">
                 <Setter.Value>
@@ -459,11 +448,11 @@
                         </Border>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsMouseOver" Value="True">
-                                <Setter TargetName="ButtonBackground" Property="Background" Value="#B79570" />
+                                <Setter TargetName="ButtonBackground" Property="Background" Value="{DynamicResource AlduneAccentHoverBrush}" />
                             </Trigger>
                             <Trigger Property="IsEnabled" Value="False">
-                                <Setter TargetName="ButtonBackground" Property="Background" Value="#4A443B" />
-                                <Setter Property="Foreground" Value="#71695E" />
+                                <Setter TargetName="ButtonBackground" Property="Background" Value="{DynamicResource AlduneTrackBrush}" />
+                                <Setter Property="Foreground" Value="{DynamicResource AlduneTextDisabledBrush}" />
                                 <Setter Property="Cursor" Value="Arrow" />
                             </Trigger>
                         </ControlTemplate.Triggers>
@@ -485,10 +474,10 @@
             </Border>
             <ControlTemplate.Triggers>
                 <Trigger Property="IsMouseOver" Value="True">
-                    <Setter TargetName="Field" Property="BorderBrush" Value="{StaticResource AlduneFieldHoverBrush}" />
+                    <Setter TargetName="Field" Property="BorderBrush" Value="{DynamicResource AlduneFieldHoverBrush}" />
                 </Trigger>
                 <Trigger Property="IsKeyboardFocused" Value="True">
-                    <Setter TargetName="Field" Property="BorderBrush" Value="{StaticResource AlduneFieldFocusBrush}" />
+                    <Setter TargetName="Field" Property="BorderBrush" Value="{DynamicResource AlduneFieldFocusBrush}" />
                 </Trigger>
                 <Trigger Property="IsEnabled" Value="False">
                     <Setter TargetName="Field" Property="Opacity" Value="0.45" />
@@ -499,12 +488,12 @@
         <!-- Implícito: cubre también las cajas sin estilo propio (las horas del recordatorio salían
              blancas con borde azul en mitad del panel oscuro). -->
         <Style TargetType="TextBox">
-            <Setter Property="Foreground" Value="#F5F0E6" />
-            <Setter Property="Background" Value="#3C3730" />
-            <Setter Property="BorderBrush" Value="#5A5146" />
+            <Setter Property="Foreground" Value="{DynamicResource AlduneTextStrongBrush}" />
+            <Setter Property="Background" Value="{DynamicResource AlduneRaisedBrush}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource AlduneBorderSubtleBrush}" />
             <Setter Property="BorderThickness" Value="1" />
-            <Setter Property="CaretBrush" Value="#F5F0E6" />
-            <Setter Property="SelectionBrush" Value="#806A55" />
+            <Setter Property="CaretBrush" Value="{DynamicResource AlduneTextStrongBrush}" />
+            <Setter Property="SelectionBrush" Value="{DynamicResource AlduneSelectionBrush}" />
             <Setter Property="VerticalContentAlignment" Value="Center" />
             <Setter Property="FocusVisualStyle" Value="{x:Null}" />
             <Setter Property="Template" Value="{StaticResource AlduneTextBoxTemplate}" />
@@ -516,12 +505,12 @@
         </Style>
 
         <Style TargetType="PasswordBox">
-            <Setter Property="Foreground" Value="#F5F0E6" />
-            <Setter Property="Background" Value="#3C3730" />
-            <Setter Property="BorderBrush" Value="#5A5146" />
+            <Setter Property="Foreground" Value="{DynamicResource AlduneTextStrongBrush}" />
+            <Setter Property="Background" Value="{DynamicResource AlduneRaisedBrush}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource AlduneBorderSubtleBrush}" />
             <Setter Property="BorderThickness" Value="1" />
-            <Setter Property="CaretBrush" Value="#F5F0E6" />
-            <Setter Property="SelectionBrush" Value="#806A55" />
+            <Setter Property="CaretBrush" Value="{DynamicResource AlduneTextStrongBrush}" />
+            <Setter Property="SelectionBrush" Value="{DynamicResource AlduneSelectionBrush}" />
             <Setter Property="VerticalContentAlignment" Value="Center" />
             <Setter Property="FocusVisualStyle" Value="{x:Null}" />
             <Setter Property="Template">
@@ -536,10 +525,10 @@
                         </Border>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsMouseOver" Value="True">
-                                <Setter TargetName="Field" Property="BorderBrush" Value="{StaticResource AlduneFieldHoverBrush}" />
+                                <Setter TargetName="Field" Property="BorderBrush" Value="{DynamicResource AlduneFieldHoverBrush}" />
                             </Trigger>
                             <Trigger Property="IsKeyboardFocused" Value="True">
-                                <Setter TargetName="Field" Property="BorderBrush" Value="{StaticResource AlduneFieldFocusBrush}" />
+                                <Setter TargetName="Field" Property="BorderBrush" Value="{DynamicResource AlduneFieldFocusBrush}" />
                             </Trigger>
                             <Trigger Property="IsEnabled" Value="False">
                                 <Setter TargetName="Field" Property="Opacity" Value="0.45" />

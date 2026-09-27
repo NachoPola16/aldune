@@ -69,6 +69,26 @@ public class SettingsServiceTests : IDisposable
         Assert.False(sut.Load().CheckForUpdatesAutomatically);
     }
 
+    // Nadie tiene que ver su app cambiar de aspecto por actualizar: sin el campo, oscuro como siempre.
+    [Fact]
+    public void Load_OldFileWithoutAppearance_StaysDark()
+    {
+        Directory.CreateDirectory(_tempDir);
+        File.WriteAllText(_settingsPath, "{\"AutoHideCompletedTasks\":true}");
+
+        Assert.Equal(AppearanceMode.Dark, new SettingsService(_settingsPath).Load().Appearance);
+    }
+
+    [Fact]
+    public void SaveThenLoad_Appearance_RoundTripsAsANumber()
+    {
+        var sut = new SettingsService(_settingsPath);
+        sut.Save(new AppSettings { Appearance = AppearanceMode.System });
+
+        Assert.Equal(AppearanceMode.System, sut.Load().Appearance);
+        Assert.Contains("\"Appearance\":2", File.ReadAllText(_settingsPath));
+    }
+
     [Fact]
     public void Load_OldFileWithoutShowNotePreview_KeepsShowingThePreview()
     {

@@ -84,8 +84,10 @@ internal sealed class TrayIcon : IDisposable
         _icon.DoubleClick += (_, _) => _coordinator.OpenNotesManager();
     }
 
-    private static readonly Color Ground = ColorTranslator.FromHtml("#2A261F");
-    private static readonly Color Ink = ColorTranslator.FromHtml("#EDE7DC");
+    // Se leen al pintar, no al construir: el menú sigue al modo claro u oscuro sin recrearse.
+    private static Color Ground => Palette("Ground");
+    private static Color Ink => Palette("Text");
+    private static Color Palette(string token) => ColorTranslator.FromHtml(ThemeManager.Color(token));
 
     /// <summary>Paleta del menu, a juego con el resto de la app.</summary>
     private sealed class DarkMenuColors : ProfessionalColorTable
@@ -95,23 +97,23 @@ internal sealed class TrayIcon : IDisposable
         // hacen que un item "encendido" parezca de otro tema) y con el mismo tono que usa el dock
         // para sus menús (#4E4840). El borde del item activo se mantiene en el mismo tono para que
         // el resalte se lea como relleno y no como una caja con borde.
-        public override Color MenuItemSelected => ColorTranslator.FromHtml("#4E4840");
-        public override Color MenuItemSelectedGradientBegin => ColorTranslator.FromHtml("#4E4840");
-        public override Color MenuItemSelectedGradientEnd => ColorTranslator.FromHtml("#4E4840");
+        public override Color MenuItemSelected => Palette("Hover");
+        public override Color MenuItemSelectedGradientBegin => Palette("Hover");
+        public override Color MenuItemSelectedGradientEnd => Palette("Hover");
         public override Color MenuItemBorder => Color.Transparent;
-        public override Color MenuBorder => ColorTranslator.FromHtml("#3C3730");
+        public override Color MenuBorder => Palette("Raised");
         public override Color ImageMarginGradientBegin => Ground;
         public override Color ImageMarginGradientMiddle => Ground;
         public override Color ImageMarginGradientEnd => Ground;
-        public override Color SeparatorDark => ColorTranslator.FromHtml("#3C3730");
-        public override Color SeparatorLight => ColorTranslator.FromHtml("#3C3730");
+        public override Color SeparatorDark => Palette("Raised");
+        public override Color SeparatorLight => Palette("Raised");
         // El hover de una fila marcada (Checked) pinta encima con estos dos: sin ellos, la marca de
         // verificación sobre "Ocultar el dock" se leía sobre el gris del tema de sistema.
-        public override Color CheckBackground => ColorTranslator.FromHtml("#4E4840");
-        public override Color CheckSelectedBackground => ColorTranslator.FromHtml("#4E4840");
-        public override Color ButtonSelectedHighlight => ColorTranslator.FromHtml("#4E4840");
-        public override Color ButtonSelectedGradientBegin => ColorTranslator.FromHtml("#4E4840");
-        public override Color ButtonSelectedGradientEnd => ColorTranslator.FromHtml("#4E4840");
+        public override Color CheckBackground => Palette("Hover");
+        public override Color CheckSelectedBackground => Palette("Hover");
+        public override Color ButtonSelectedHighlight => Palette("Hover");
+        public override Color ButtonSelectedGradientBegin => Palette("Hover");
+        public override Color ButtonSelectedGradientEnd => Palette("Hover");
         public override Color ButtonSelectedBorder => Color.Transparent;
     }
 

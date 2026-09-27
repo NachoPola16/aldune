@@ -31,8 +31,10 @@ Los 4 avisos CA1416 de `DatabaseKeyProvider` (DPAPI) son conocidos; no debe apar
 
 ## Reglas del proyecto
 
-- **Textos de interfaz siempre con `Strings.T("inglés", "español")`** en `src/Aldune/Resources/Strings.cs`.
-  Nada escrito a mano en XAML ni en código.
+- **Textos de interfaz siempre con `Strings.T(en, es, de, fr, pt)`** en `src/Aldune/Resources/Strings.cs`
+  (inglés, español, alemán, francés, portugués de Brasil; idiomas en `UiLanguages`). Nada escrito a
+  mano en XAML ni en código. Un texto nuevo lleva los cinco; si falta uno se ve en inglés. Las
+  traducciones en lote se pueden delegar (ver `STATUS.md`, idiomas) y se validan con un script.
 - **Comentarios en español**, explicando el porqué (el código ya dice el qué), con la densidad del
   código que los rodea.
 - **Lógica nueva en Core con test primero** (TDD). La UI se verifica con sondas (ver abajo).
@@ -47,6 +49,10 @@ Los 4 avisos CA1416 de `DatabaseKeyProvider` (DPAPI) son conocidos; no debe apar
   usuario. Para probar, usar una base de datos temporal (como hacen las sondas y el smoke test).
 - **Colores de nota**: por temas (`NoteThemes`, `NoteColorDerivation`), nunca hex sueltos; el borde y la
   etiqueta se derivan del color de la cara.
+- **Colores de la app (chrome)**: siempre `{DynamicResource Aldune<Clave>Brush}` de la paleta de
+  `AppPalette` (Core), nunca hex en XAML; desde código, `SetResourceReference` o `ThemeManager.Color`.
+  Así funcionan los aspectos Oscuro/Claro/Pastel/Medianoche y el cambio en vivo. Una clave nueva va
+  en Dark y en Light (Pastel y Medianoche se derivan solas); los tests fijan su contraste.
 - **Pantallas**: la elegida se identifica por `MonitorInfo.StableId`, nunca por su posición en la lista
   de Windows (cambia al apagar y encender monitores).
 - Commits sin la línea `Co-Authored-By`.

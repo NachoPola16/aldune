@@ -1,10 +1,10 @@
-<Window x:Class="Aldune.Windowing.SyncConflictsWindow"
+﻿<Window x:Class="Aldune.Windowing.SyncConflictsWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:res="clr-namespace:Aldune.Resources"
         Title="{x:Static res:Strings.SyncConflictTitle}"
         Width="560" Height="500" MinWidth="440" MinHeight="320"
-        WindowStyle="None" ResizeMode="CanResize" Background="#2A261F"
+        WindowStyle="None" ResizeMode="CanResize" Background="{DynamicResource AlduneGroundBrush}"
         Topmost="True" StateChanged="OnWindowStateChanged"
         PreviewKeyDown="OnWindowKeyDown">
     <WindowChrome.WindowChrome>
@@ -12,8 +12,8 @@
     </WindowChrome.WindowChrome>
     <Window.Resources>
         <Style x:Key="ConflictButtonStyle" TargetType="Button">
-            <Setter Property="Foreground" Value="#EDE7DC" />
-            <Setter Property="Background" Value="#3C3730" />
+            <Setter Property="Foreground" Value="{DynamicResource AlduneTextBrush}" />
+            <Setter Property="Background" Value="{DynamicResource AlduneRaisedBrush}" />
             <Setter Property="BorderThickness" Value="0" />
             <Setter Property="Padding" Value="9,6" />
             <Setter Property="Cursor" Value="Hand" />
@@ -26,10 +26,10 @@
                         </Border>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsMouseOver" Value="True">
-                                <Setter TargetName="BackgroundBorder" Property="Background" Value="#4E4840" />
+                                <Setter TargetName="BackgroundBorder" Property="Background" Value="{DynamicResource AlduneHoverBrush}" />
                             </Trigger>
                             <Trigger Property="IsPressed" Value="True">
-                                <Setter TargetName="BackgroundBorder" Property="Background" Value="#5F584E" />
+                                <Setter TargetName="BackgroundBorder" Property="Background" Value="{DynamicResource AldunePressedBrush}" />
                             </Trigger>
                         </ControlTemplate.Triggers>
                     </ControlTemplate>
@@ -37,8 +37,8 @@
             </Setter>
         </Style>
         <Style x:Key="ConflictDangerButtonStyle" TargetType="Button" BasedOn="{StaticResource ConflictButtonStyle}">
-            <Setter Property="Foreground" Value="#E8A0A0" />
-            <Setter Property="Background" Value="#5A2A28" />
+            <Setter Property="Foreground" Value="{DynamicResource AlduneDangerTextBrush}" />
+            <Setter Property="Background" Value="{DynamicResource AlduneDangerBgBrush}" />
         </Style>
     </Window.Resources>
 
@@ -52,9 +52,9 @@
             <!-- El margen derecho reserva el sitio de los botones: el aviso es largo y, sin esto, el
                  texto se dibujaba por debajo de ellos (los botones van encima y lo tapaban). -->
             <StackPanel Margin="0,0,140,0">
-                <TextBlock Text="{x:Static res:Strings.SyncConflictTitle}" Foreground="#F5F0E6"
+                <TextBlock Text="{x:Static res:Strings.SyncConflictTitle}" Foreground="{DynamicResource AlduneTextStrongBrush}"
                            FontSize="17" FontWeight="SemiBold" />
-                <TextBlock Text="{x:Static res:Strings.SyncConflictHint}" Foreground="#A79E90"
+                <TextBlock Text="{x:Static res:Strings.SyncConflictHint}" Foreground="{DynamicResource AlduneMutedTextBrush}"
                            FontSize="12" TextWrapping="Wrap" Margin="0,4,0,0" />
             </StackPanel>
             <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Top"
@@ -80,16 +80,16 @@
                 <ItemsControl x:Name="ConflictsList">
                     <ItemsControl.ItemTemplate>
                         <DataTemplate>
-                            <Border Background="#332F28" CornerRadius="8" Padding="12" Margin="0,0,0,10">
+                            <Border Background="{DynamicResource AlduneSurfaceBrush}" CornerRadius="8" Padding="12" Margin="0,0,0,10">
                                 <Grid>
                                     <Grid.RowDefinitions>
                                         <RowDefinition Height="Auto" />
                                         <RowDefinition Height="Auto" />
                                         <RowDefinition Height="Auto" />
                                     </Grid.RowDefinitions>
-                                    <TextBlock Text="{Binding LosingTitle}" Foreground="#F5F0E6"
+                                    <TextBlock Text="{Binding LosingTitle}" Foreground="{DynamicResource AlduneTextStrongBrush}"
                                                FontSize="14" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" />
-                                    <TextBlock Grid.Row="1" Text="{Binding Details}" Foreground="#A79E90"
+                                    <TextBlock Grid.Row="1" Text="{Binding Details}" Foreground="{DynamicResource AlduneMutedTextBrush}"
                                                FontSize="11" TextWrapping="Wrap" Margin="0,4,0,9" />
                                     <StackPanel Grid.Row="2" Orientation="Horizontal">
                                         <Button Content="{x:Static res:Strings.SyncConflictRestore}"
@@ -106,7 +106,7 @@
                 </ItemsControl>
             </ScrollViewer>
             <TextBlock x:Name="EmptyState" Text="{x:Static res:Strings.SyncNoConflicts}"
-                       Foreground="#6B6459" HorizontalAlignment="Center" VerticalAlignment="Center"
+                       Foreground="{DynamicResource AlduneTextFaintBrush}" HorizontalAlignment="Center" VerticalAlignment="Center"
                        Visibility="Collapsed" />
         </Grid>
     </Grid>

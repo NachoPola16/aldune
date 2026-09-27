@@ -11,13 +11,13 @@
         ShowInTaskbar="False"
         ShowActivated="False"
         Topmost="True"
-        Background="#2A261F"
+        Background="{DynamicResource AlduneGroundBrush}"
         SourceInitialized="OnSourceInitialized">
     <WindowChrome.WindowChrome>
         <WindowChrome CaptionHeight="0" ResizeBorderThickness="0" GlassFrameThickness="-1" CornerRadius="0" />
     </WindowChrome.WindowChrome>
 
-    <Border Background="#2A261F" BorderBrush="#5A5146" BorderThickness="1" Padding="16,14,12,14">
+    <Border Background="{DynamicResource AlduneGroundBrush}" BorderBrush="{DynamicResource AlduneBorderSubtleBrush}" BorderThickness="1" Padding="16,14,12,14">
         <Grid>
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="Auto" />
@@ -33,9 +33,9 @@
             <Image x:Name="Logo" Grid.RowSpan="2" Width="28" Height="28" Margin="0,1,12,0"
                    VerticalAlignment="Top" RenderOptions.BitmapScalingMode="HighQuality" />
 
-            <TextBlock x:Name="TitleText" Grid.Column="1" Foreground="#F5F0E6" FontSize="14"
+            <TextBlock x:Name="TitleText" Grid.Column="1" Foreground="{DynamicResource AlduneTextStrongBrush}" FontSize="14"
                        FontWeight="SemiBold" TextWrapping="Wrap" Margin="0,0,0,3" />
-            <TextBlock x:Name="MessageText" Grid.Column="1" Grid.Row="1" Foreground="#CFC6B8" FontSize="12.5"
+            <TextBlock x:Name="MessageText" Grid.Column="1" Grid.Row="1" Foreground="{DynamicResource AlduneTextSoftBrush}" FontSize="12.5"
                        TextWrapping="Wrap" LineHeight="18" />
 
             <Button Grid.Column="2" Content="&#x2715;" Width="24" Height="24" Margin="8,-4,0,0"

@@ -181,6 +181,9 @@ public sealed class AppSettings
     /// </summary>
     public bool ShowNotePreview { get; set; } = true;
 
+    /// <summary>Oscuro, claro o como Windows. Solo el chrome: las notas conservan su tema.</summary>
+    public AppearanceMode Appearance { get; set; }
+
     /// <summary>Cuántas unidades de <see cref="AutoHideCompletedTasksDelayUnit"/> esperar. Por defecto 1.</summary>
     public int AutoHideCompletedTasksDelayValue { get; set; } = 1;
 

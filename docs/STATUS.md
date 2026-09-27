@@ -3853,3 +3853,46 @@ Tests: 801/801. Verificado con sondas (chips en notas oscuras, dock sin vista pr
 "+" con filtro de etiqueta).
 - **Sin chip de estado en las filas del gestor**: repetía la pestaña (no hay vista "Todas") y, en su
   propia columna, descolocaba la fila respecto a la fecha y las etiquetas.
+
+## 1.4.0: aspecto de la app, tres idiomas nuevos y tres temas de nota (sesión 2026-09-27)
+
+### Aspectos: Oscuro, Claro, Pastel, Medianoche y Como Windows
+
+- **Paleta en Core** (`AppPalette`): claves semánticas (`Ground`, `Surface`, `Text`, `MutedText`,
+  `Accent`, `DangerStrong`, las del dock…), oscura y clara escritas a mano; **Pastel** y **Medianoche**
+  se derivan de ellas (misma claridad OKLCH por clave, neutros teñidos a lavanda o azul noche, acentos
+  rotados; peligro/error/aviso/éxito no se tiñen). Tests: mismas claves en todas, contraste mínimo de
+  cada texto sobre cada fondo (el listón es lo que ya cumplía el oscuro) y que las teñidas se noten.
+- **`ThemeManager`** (WPF) mete la paleta como pinceles `Aldune<Clave>Brush` en los recursos de la
+  app; ~370 colores de las XAML pasaron a `DynamicResource` (script por valor exacto y propiedad de
+  pincel; lo demás revisado a mano). Cambiar de aspecto repinta en vivo, sin reiniciar. Lo pintado
+  desde código usa `SetResourceReference` (avisos, etiquetas, contraseña, selector de color) o
+  `ThemeManager.Color` (menú de la bandeja, WinForms).
+- **No se tocan**: tintas y brillos de las notas, sombras, colores de ejemplo del selector.
+- **Ajustes → General → Aspecto** (`AppSettings.Appearance`, número; un settings.json antiguo queda en
+  Oscuro). "Como Windows" lee `AppsUseLightTheme` y sigue los cambios (`UserPreferenceChanged`).
+- El smoke test y las sondas cargan App.xaml por su cuenta: tienen que llamar a
+  `ThemeManager.Apply(app, light: false)` después.
+
+### Alemán, francés y portugués de Brasil
+
+- `Strings.T(en, es, de, fr, pt)`, los cinco en la misma línea; una traducción que falte cae al
+  inglés. `UiLanguages` (Core, con tests) resuelve el idioma (elegido o el de Windows) y da la
+  cultura para fechas. Portugués de Brasil por número de usuarios.
+- Selector: cada idioma con su nombre en sí mismo, **en orden alfabético de ese nombre** (Deutsch,
+  English, Español, Français, Português), y en gris el nombre en el idioma actual ("Deutsch · Alemán").
+- **Traducción delegada** en agy (390 textos × 3 idiomas, en tres bloques): Gemini se quedó sin cuota
+  semanal a mitad; `claude-sonnet-4-6` en agy tiene cuota aparte y terminó. Validada con un script
+  (todos los textos, mismos huecos `{…}` que el inglés); 3 volvieron con barras duplicadas y se
+  corrigieron. Capturas en alemán, francés y portugués: solo desbordaba la tarjeta de "Modo de
+  interfaz" (margen fijo pensado para el botón en español), pasada a columnas.
+- Instalador: alemán, francés y portugués de Brasil añadidos (Inno los trae), con su mensaje propio.
+- Sin revisión nativa todavía: si alguien que hable el idioma ve algo raro, se corrige en `Strings.cs`.
+
+### Temas de nota Pastel, Otoño y Océano
+
+Misma regla que Sereno y Grafito (una claridad OKLCH por grupo) y matices repartidos para que dos
+notas no se confundan: test de distancia OKLab >= 0.03 entre los colores de cada grupo. Pastel solo
+claros (L 0.91); Otoño y Océano claros y oscuros.
+
+Tests: 836/836 + paletas. Verificado con sondas (capturas en los cuatro aspectos y cuatro idiomas).

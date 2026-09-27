@@ -13,6 +13,9 @@ public static class NoteThemes
     public const string ClassicId = "classic";
     public const string SereneId = "serene";
     public const string GraphiteId = "graphite";
+    public const string PastelId = "pastel";
+    public const string AutumnId = "autumn";
+    public const string OceanId = "ocean";
 
     public static IReadOnlyList<NoteTheme> BuiltIn =>
     [
@@ -36,6 +39,29 @@ public static class NoteThemes
             DarkColors = ["#2F2D2C", "#2B2E33", "#332C29", "#262F36", "#2E2E2E"],
             // Papel, Tiza, Arena, Ceniza
             LightColors = ["#EBE7E0", "#E4E8ED", "#EFE6DD", "#E8E8E8"],
+        },
+        // Los tres siguientes, con la misma regla (una claridad por grupo) y los matices repartidos
+        // para que dos notas seguidas no se confundan (distancia OKLab >= 0.03, fijada en tests).
+        new NoteTheme
+        {
+            Id = PastelId, Name = "Pastel", IsBuiltIn = true,
+            // L 0.91, C 0.055. Solo claros: un pastel oscuro deja de serlo.
+            // Rosa, Melocotón, Mantequilla, Menta, Cielo, Lavanda
+            LightColors = ["#FFD3E6", "#FFD8C6", "#ECE2B9", "#C3EDD5", "#BDE9FF", "#E3DCFF"],
+        },
+        new NoteTheme
+        {
+            Id = AutumnId, Name = "Otoño", IsBuiltIn = true,
+            // Tierra cálida, matices 5–130 cada 30°. Vino, Teja, Ocre, Mostaza, Oliva
+            DarkColors = ["#512631", "#52281E", "#4A2F08", "#3D3605", "#2A3C15"],   // L 0.33
+            LightColors = ["#FEC6D2", "#FFC9BB", "#F4D1A9", "#E1D9A8", "#C9E1B4"],  // L 0.88
+        },
+        new NoteTheme
+        {
+            Id = OceanId, Name = "Océano", IsBuiltIn = true,
+            // Verdes y azules de mar, matices 140–280 cada 35°. Alga, Laguna, Turquesa, Cielo/Profundo, Marino
+            DarkColors = ["#1B3914", "#003A2F", "#00373F", "#093351", "#2A2B53"],   // L 0.31
+            LightColors = ["#C6EABE", "#ADEEDB", "#A7EBF8", "#C2E2FF", "#D7DBFF"],  // L 0.90
         },
     ];
 

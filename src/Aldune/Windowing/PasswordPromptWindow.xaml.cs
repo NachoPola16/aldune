@@ -20,9 +20,6 @@ internal enum PasswordPromptMode { Unlock, Protect, RemoveProtection }
 /// </summary>
 internal partial class PasswordPromptWindow : Window
 {
-    private static readonly Brush ErrorBrush = Frozen("#E8A29A");
-    private static readonly Brush NoticeBrush = Frozen("#E0CBA8");
-
     private readonly bool _confirm;
     private readonly Func<string, bool>? _verify;
     private bool _syncingText;
@@ -119,7 +116,7 @@ internal partial class PasswordPromptWindow : Window
         PasswordField.Tag = onConfirmation ? null : "Error";
         ConfirmationField.Tag = onConfirmation ? "Error" : null;
         StatusText.Text = message;
-        StatusText.Foreground = ErrorBrush;
+        StatusText.SetResourceReference(ForegroundProperty, "AlduneDangerTextBrush");
 
         // El foco vuelve al campo que hay que corregir, con el texto seleccionado: se reescribe
         // directamente, sin borrar a mano.
@@ -200,13 +197,7 @@ internal partial class PasswordPromptWindow : Window
     {
         if (PasswordField.Tag is not null || ConfirmationField.Tag is not null) return;
         StatusText.Text = Keyboard.IsKeyToggled(Key.CapsLock) ? Strings.CapsLockOn : "";
-        StatusText.Foreground = NoticeBrush;
+        StatusText.SetResourceReference(ForegroundProperty, "AlduneNoticeBrush");
     }
 
-    private static Brush Frozen(string hex)
-    {
-        var brush = (Brush)new BrushConverter().ConvertFromString(hex)!;
-        brush.Freeze();
-        return brush;
-    }
 }

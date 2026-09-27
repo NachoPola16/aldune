@@ -42,6 +42,9 @@ ShowLanguageDialog=auto
 [Languages]
 Name: "english"; MessagesFile: "compiler:Default.isl"
 Name: "spanish"; MessagesFile: "compiler:Languages\Spanish.isl"
+Name: "german"; MessagesFile: "compiler:Languages\German.isl"
+Name: "french"; MessagesFile: "compiler:Languages\French.isl"
+Name: "brazilianportuguese"; MessagesFile: "compiler:Languages\BrazilianPortuguese.isl"
 
 [Tasks]
 Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{cm:AdditionalIcons}"; Flags: unchecked
@@ -67,6 +70,9 @@ Root: HKCU; Subkey: "Software\Microsoft\Windows\CurrentVersion\Run"; ValueName: 
 [CustomMessages]
 english.CloseAldune=Aldune is still running. Close it (tray icon > Exit) and press Retry.
 spanish.CloseAldune=Aldune sigue abierta. Ciérrala (icono de la bandeja > Salir) y pulsa Reintentar.
+german.CloseAldune=Aldune läuft noch. Schließe es (Symbol im Infobereich > Beenden) und versuche es erneut.
+french.CloseAldune=Aldune est toujours ouvert. Fermez-le (icône de la zone de notification > Quitter) et réessayez.
+brazilianportuguese.CloseAldune=O Aldune ainda está aberto. Feche-o (ícone na área de notificação > Sair) e tente novamente.
 
 [Code]
 // Mismos nombres que BrandIdentity.SingleInstanceMutexName y SingleInstanceQuitEventName.

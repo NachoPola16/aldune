@@ -10,7 +10,7 @@ Sesión de origen: 2026-09-06.
 
 ## Versión visible de la aplicación
 
-La ronda actual se identifica como **v1.3.0**. La versión se muestra en Ajustes y también en el texto
+La ronda actual se identifica como **v1.4.0**. La versión se muestra en Ajustes y también en el texto
 del icono de la bandeja. Cada actualización grande deberá incrementar este número siguiendo SemVer:
 parches para correcciones, versión menor para funcionalidades nuevas y versión mayor cuando haya
 cambios incompatibles.
@@ -558,8 +558,8 @@ Pendiente, por orden de importancia:
    tres tamaños y aplicarlos.
 4. **`NotesManagerWindow`** es la ventana más cargada (452 líneas de XAML) y la que más se aleja del
    minimalismo del resto. Revisión pendiente.
-5. **Tema claro para el chrome**: hoy el dock y los paneles son siempre oscuros. Sobre un escritorio
-   claro pesan. Baja prioridad.
+5. ~~**Tema claro para el chrome**~~ — **HECHO** (2026-09-27): Oscuro, Claro, Pastel, Medianoche y
+   Como Windows, en vivo. Ver `STATUS.md`.
 6. ~~El abanico puede dejar de ser compacto con muchas notas.~~ **Hecho** — ver `STATUS.md`. La
    ventana tiene tope (`EdgeGeometry.FanBudget`), lo que sobra se scrollea, y la tira de reposo solo
    dibuja los guiones que caben.
