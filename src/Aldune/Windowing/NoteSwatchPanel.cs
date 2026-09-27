@@ -41,22 +41,17 @@ internal static class NoteSwatchPanel
             bool selected = string.Equals((string)swatch.Tag, selectedColor, StringComparison.OrdinalIgnoreCase);
             // Sin seleccionar llevan un contorno fino y claro: una pastilla oscura sobre el fondo
             // oscuro del menú, sin él, casi no se distingue. Seleccionada, el anillo de la etiqueta.
-            swatch.BorderBrush = selected ? LabelBrush((string)swatch.Tag) : Hairline;
+            // Sin seleccionar, contorno de la paleta (claro sobre fondo oscuro, oscuro sobre claro):
+            // un blanco fijo desaparecía en los aspectos claros y las muestras pálidas se perdían.
+            if (selected) swatch.BorderBrush = LabelBrush((string)swatch.Tag);
+            else swatch.SetResourceReference(Border.BorderBrushProperty, "AlduneHairlineBrush");
             swatch.BorderThickness = new Thickness(selected ? 2 : 1);
             if (swatch.Child is UIElement tick) tick.Visibility = selected ? Visibility.Visible : Visibility.Collapsed;
         }
     }
 
-    private static readonly Brush Hairline = Frozen(new SolidColorBrush(Color.FromArgb(0x40, 0xFF, 0xFF, 0xFF)));
-
     private static Brush LabelBrush(string color) =>
         (Brush)new BrushConverter().ConvertFromString(NoteColorPalette.LabelFor(color))!;
-
-    private static Brush Frozen(Brush brush)
-    {
-        brush.Freeze();
-        return brush;
-    }
 
     private static Border CreateSwatch(string color)
     {

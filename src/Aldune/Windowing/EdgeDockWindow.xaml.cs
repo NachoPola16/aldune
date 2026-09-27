@@ -1601,16 +1601,6 @@ public partial class EdgeDockWindow : Window
         }
     }
 
-    private static readonly Brush SyncOkBrush = CreateSyncBrush(0xA9, 0xC9, 0xA4);
-    private static readonly Brush SyncErrorBrush = CreateSyncBrush(0xE8, 0xA0, 0xA0);
-
-    private static Brush CreateSyncBrush(byte red, byte green, byte blue)
-    {
-        var brush = new SolidColorBrush(Color.FromRgb(red, green, blue));
-        brush.Freeze();
-        return brush;
-    }
-
     /// <summary>
     /// Feedback del botón de sincronizar: mientras corre, la flecha gira y el botón se desactiva (una
     /// segunda sincronización a la vez no aporta nada); al terminar, un ✓ verde o un aviso rojo con el
@@ -1652,7 +1642,7 @@ public partial class EdgeDockWindow : Window
         SyncButtonGlyph.Text = ok ? "\uE73E" : "\uE783";
         SyncButtonGlyph.FontFamily = new FontFamily("Segoe Fluent Icons, Segoe MDL2 Assets");
         SyncButtonGlyph.FontSize = 15;
-        SyncButtonGlyph.Foreground = ok ? SyncOkBrush : SyncErrorBrush;
+        SyncButtonGlyph.SetResourceReference(ForegroundProperty, ok ? "AlduneSuccessBrush" : "AlduneDangerTextBrush");
         SyncButton.ToolTip = tooltip;
 
         // Que el resultado se pueda leer: el dock aguanta otro margen aunque el cursor ya no esté

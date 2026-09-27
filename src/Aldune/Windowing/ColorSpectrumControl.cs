@@ -63,7 +63,7 @@ public sealed class ColorSpectrumControl : FrameworkElement
         var hueRect = new Rect(squareWidth + Gap, 0, HueStripWidth, height);
         drawingContext.DrawRoundedRectangle(hueBrush, null, hueRect, 5, 5);
 
-        var squareBorder = new Pen(new SolidColorBrush(Color.FromRgb(90, 81, 70)), 1);
+        var squareBorder = new Pen((Brush)new BrushConverter().ConvertFromString(ThemeManager.Color("BorderSubtle"))!, 1);
         drawingContext.DrawRoundedRectangle(null, squareBorder, new Rect(0, 0, squareWidth, height), 7, 7);
         drawingContext.DrawRoundedRectangle(null, squareBorder, hueRect, 5, 5);
 

@@ -3913,5 +3913,18 @@ Otros pendientes:
 - Microsoft Store (gratis, MSIX) después de SignPath; ver `ROADMAP.md` §4.
 - Quien actualice con conflictos falsos antiguos en la cola: "Descartar todo" (no se borran solos).
 - Sin probar en un equipo con trackpad: el hover del dock (desde la 1.1.1).
+- **Commit sin publicar**: colores del gestor de etiquetas y demás (ver el apartado siguiente); publicar como 1.4.1.
 - `.agent-runs/` (encargos y respuestas de agy) está excluido de git solo en local
   (`.git/info/exclude`); no es parte del repositorio.
+
+### Después de la 1.4.0: colores fijos que quedaban en código (visto por el usuario)
+
+Las filas del gestor de etiquetas no cambiaban con el aspecto: se crean en C# con
+`Color.FromRgb(64, 58, 50)` y `Brushes.White`, formas que la búsqueda de `"#RRGGBB"` de la migración
+no cubría. Revisados todos los `Color.FromRgb/FromArgb`, `Brushes.*`, `ConvertFromString` y colores
+por nombre del XAML (no había). Pasados a la paleta: esas filas, el verde/rojo del botón de
+sincronizar del dock, el marco del selector de color y el contorno de las muestras de color (clave
+nueva `Hairline`: blanco translúcido en los oscuros, negro translúcido en los claros; el blanco fijo
+desaparecía sobre fondo claro). Lo que sigue fijo en código es contenido, no chrome: el arcoíris del
+selector, el color elegido y los colores de cada nota. **Sin publicar** al cerrar la sesión: sale
+en la siguiente versión (1.4.1).

@@ -82,7 +82,7 @@ public partial class ThemeEditorWindow : Window
                 CornerRadius = new CornerRadius(6),
                 // Mismo criterio que NoteSwatchPanel: contorno fino y claro si no está seleccionado,
                 // para que un oscuro se distinga sobre el fondo oscuro de la ventana.
-                BorderBrush = selected ? label : new SolidColorBrush(Color.FromArgb(0x40, 0xFF, 0xFF, 0xFF)),
+                BorderBrush = selected ? label : (Brush)FindResource("AlduneHairlineBrush"),
                 BorderThickness = new Thickness(selected ? 2 : 1),
                 Cursor = Cursors.Hand,
                 Tag = color,

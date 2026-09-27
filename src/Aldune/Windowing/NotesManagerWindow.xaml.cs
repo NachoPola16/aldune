@@ -334,19 +334,21 @@ public partial class NotesManagerWindow : Window
         {
             var row = new Border
             {
-                Background = new SolidColorBrush(Color.FromRgb(64, 58, 50)),
                 CornerRadius = new CornerRadius(6),
                 Padding = new Thickness(9, 5, 6, 5),
                 Margin = new Thickness(0, 0, 0, 6)
             };
+            // Por referencia a la paleta: estas filas se crean en código y antes llevaban el fondo
+            // oscuro y el texto blanco fijos, iguales en cualquier aspecto.
+            row.SetResourceReference(Border.BackgroundProperty, "AlduneRaisedHoverBrush");
             var content = new DockPanel();
             var label = new TextBlock
             {
                 Text = tag,
-                Foreground = Brushes.White,
                 VerticalAlignment = VerticalAlignment.Center,
                 TextTrimming = TextTrimming.CharacterEllipsis
             };
+            label.SetResourceReference(TextBlock.ForegroundProperty, "AlduneTextBrush");
             var delete = new Button
             {
                 Content = "\uE74D",
