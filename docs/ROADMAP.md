@@ -960,3 +960,36 @@ cascada".
   `Normal`: `OpenAllNotes` reordenaba TODAS las notas en diagonal centrada en pantalla para cualquier
   plantilla, `Normal` incluida, pisando la posición recién restaurada de cada una. Ahora `Normal` no
   reordena nada — cada nota se queda donde cayó al abrirse. Detalle en `docs/STATUS.md`.
+
+---
+
+## 9. Cliente móvil y otros sistemas operativos (2026-09-28): Android decidido; macOS, Linux y web, no
+
+Se pidió estudiar el port a Android e iOS ("algo diferente: más gestionar las notas del ordenador y
+apuntar algo que imitar el dock") y revisar después qué hacer con los sistemas que faltan. Todo quedó
+**documentado y sin implementar**, para poder retomarlo en otra sesión u otra IA:
+
+- **[`MOBILE_PORT.md`](MOBILE_PORT.md) — Android e iOS** con .NET MAUI compartiendo `Aldune.Core` (los
+  850 tests y todo el formato de sync valen tal cual). Incluye qué se reutiliza y qué no se porta (dock,
+  abanico, ventanas de nota, posición por pantalla, bandeja, atajos), el producto móvil propuesto
+  (widget del mazo, captura rápida, notificaciones con acciones, biometría), los dos cambios previos
+  necesarios en Windows (emparejamiento por QR y, opcional, servidor de sync dentro del propio PC),
+  fases y costes (Apple 99 $/año, Play 25 $, **Mac obligatorio para iOS**) y la decisión pendiente de
+  **subir el formato a 5** si algún día los recordatorios tienen que viajar entre dispositivos (hoy no
+  viajan).
+- **[`DESKTOP_PORT.md`](DESKTOP_PORT.md) — macOS, Linux y web.** Conclusión: en macOS el concepto **ya
+  existe y está ocupado** (Hold My Notes, noty, SideNotes) y la mecánica del dock hay que rehacerla en
+  AppKit; en Linux, GNOME (Mutter) no soporta `wlr-layer-shell`, así que un dock al canto sería una
+  extensión del escritorio, no una aplicación. Lo que compensa de esos sistemas es el **Core**, no el
+  dock: un cliente de escritorio **sin dock** (Avalonia) el día que haya alguien que lo use. El servidor
+  de sync ya corre en Linux. La web, descartada.
+- **Los dos sistemas que sí faltan de verdad, y son baratos** (también en `DESKTOP_PORT.md` §9):
+  **Windows en ARM64** —hoy se instala y funciona emulado, porque el instalador usa `x64compatible`, que
+  incluye Windows 11 ARM; publicar `win-arm64` nativo es un RID más, sin código nuevo— y el **servidor en
+  ARM** (Raspberry Pi, NAS), que ya funciona porque la imagen de .NET es multi-arquitectura.
+
+**Decidido el 2026-09-28: Android primero, en una tableta Android, sin publicar al principio** (el usuario
+tiene iPhone y una tableta Android). Las razones y las consecuencias de diseño están en `MOBILE_PORT.md`
+§0.1: 0 € de licencias, sin Mac, dispositivo real para probar, y la tableta como referencia de diseño.
+iOS queda aparcado hasta que haya Mac o hasta que la prioridad sea capturar desde el bolsillo, y eso no
+cambia nada de lo ya decidido porque el cliente es un proyecto MAUI más dos extensiones Swift.

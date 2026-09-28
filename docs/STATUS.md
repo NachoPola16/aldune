@@ -3939,3 +3939,50 @@ descartada (solo vías gratuitas).
   privacidad" (sin firmar, cómo pasar el aviso de SmartScreen) y conserva el párrafo de privacidad.
 - El workflow no cambia: sin las variables de SignPath publica sin firmar, como hasta ahora.
 - Siguiente vía gratuita: Microsoft Store (MSIX firmado por Microsoft), ver `ROADMAP.md` §4.
+
+## 2026-09-28: cliente móvil y otros sistemas operativos — estudio, sin código
+
+Se estudió, a petición del usuario, el port a Android e iOS y después qué hacer con los sistemas que
+faltan. **No se ha implementado nada**: el resultado son dos documentos nuevos y este apunte.
+
+- **[`MOBILE_PORT.md`](MOBILE_PORT.md)**: plan del cliente móvil (Android primero, iOS después) con .NET
+  MAUI compartiendo `Aldune.Core`. Producto propuesto (capturar, gestionar, recordar: no se imita el
+  dock), qué no se porta, los "seams" previos en Core, qué necesita Windows para que el móvil sea usable
+  (QR de emparejamiento y, opcional, servidor de sync dentro del PC), fases, costes y riesgos.
+- **[`DESKTOP_PORT.md`](DESKTOP_PORT.md)**: macOS, Linux y web. Por qué no compensa portar el dock (en
+  macOS el concepto ya existe y está ocupado; en Linux sería una extensión del escritorio) y sí compartir
+  el Core.
+- **`ROADMAP.md` §9**: resumen del estudio y la decisión que se tomó ese mismo día (abajo).
+
+Lo verificado durante el estudio, para no volver a comprobarlo (todo del 2026-09-28):
+
+- El único código realmente Windows de `Core` es `DatabaseKeyProvider` (DPAPI): 17 llamadas en el código
+  de la aplicación (`SyncService` 12, `LocalBackup` 1 y `App.xaml.cs` 4), más las de los tests. El resto de Core es portable.
+- `AesGcm` funciona en iOS desde **.NET 9** (mínimo iOS 13) y en Android: `ContentCipher` es portable tal
+  cual.
+- `Microsoft.Data.Sqlite` funciona en móvil, con el riesgo conocido de AOT y recorte en iOS Release
+  (`e_sqlite3`), que hay que resolver en un spike.
+- Widgets: en Android se hacen en **C# puro**; en iOS exigen una extensión **Swift** + App Group.
+- iOS necesita **Mac con Xcode 26** (obligatorio desde el 28-abr-2026) y 99 $/año de Apple Developer;
+  Google Play exige **target API 36** desde el 31-ago-2026.
+- Segundo plano: iOS es oportunista (`BGAppRefreshTask`) y Android tiene un mínimo de 15 minutos con
+  `WorkManager` → no se puede prometer "sincroniza cada 15 minutos".
+- En Linux, GNOME (Mutter) **no** soporta `wlr-layer-shell`: el dock al canto solo sería viable como
+  extensión del escritorio.
+- **Windows en ARM64**: el publish es solo `win-x64` (`portable.pubxml`, `build-installer.ps1`,
+  `release.yml`), pero el instalador usa `x64compatible`, que **incluye Windows 11 en ARM64**: hoy se
+  instala y funciona **emulado**. Un `win-arm64` nativo es un RID más (más `arm64` en `Aldune.iss`), sin
+  código nuevo.
+- El **servidor de sync ya funciona en ARM** (Raspberry Pi, NAS): el `Dockerfile` parte de una imagen
+  multi-arquitectura y compila en destino.
+
+Tests: **850/850**, sin tocar una línea de código de la aplicación.
+
+### Decisión tomada ese mismo día: Android primero, en una tableta
+
+Con el usuario delante: tiene **iPhone y una tableta Android**, y pidió lo que mejor sea para el usuario y
+para su economía. Se decide **Android primero**, sin Mac y sin publicar al principio (un APK firmado
+instalado a mano en la tableta cuesta 0 €; Play son 25 $ solo si se publica). La **tableta pasa a ser el
+dispositivo de referencia** del diseño (dos paneles lista+nota, widget grande, teclado físico) y el
+teléfono un subconjunto. iOS queda aparcado hasta que haya Mac o hasta que la prioridad sea capturar desde
+el bolsillo. Detalle y razones: `docs/MOBILE_PORT.md` §0.1 y `ROADMAP.md` §9.

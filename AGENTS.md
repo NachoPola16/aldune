@@ -16,7 +16,11 @@ notas como ventanas propias, sincronización opcional cifrada de extremo a extre
 - `tests/Aldune.Core.Tests`: xUnit. `tests/Aldune.Ui.SmokeTests`: prueba de UI con ventanas reales.
 
 Antes de un cambio grande, leer `docs/STATUS.md` (qué hay hecho y por qué), `docs/ROADMAP.md` (qué se
-descartó y por qué) y la especificación de `docs/superpowers/specs/` que toque.
+descartó y por qué) y la especificación de `docs/superpowers/specs/` que toque. Si el cambio toca el
+cliente móvil o cualquier sistema que no sea Windows, leer además `docs/MOBILE_PORT.md` (Android e iOS) y
+`docs/DESKTOP_PORT.md` (macOS, Linux, web, y Windows en ARM64): los dos son estudios cerrados, con lo que
+se decidió **no** hacer y con qué razón, para no repetir la investigación ni volver a discutirla. La revisión
+crítica de esos dos estudios va en `docs/MOBILE_PORT_REVIEW.md`.
 
 ## Comandos
 
