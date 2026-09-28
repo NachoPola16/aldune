@@ -48,16 +48,11 @@ Sync encrypts the content before it leaves your computer: the storage can't read
 fabricate changes to them. The details, including what it does **not** protect, are in
 [docs/SYNC.md → Modelo de seguridad](docs/SYNC.md#modelo-de-seguridad).
 
-## Code signing policy
+## Signing and privacy
 
-Free code signing provided by [SignPath.io](https://about.signpath.io), certificate by
-[SignPath Foundation](https://signpath.org).
-
-Only the installer and the executable built by GitHub Actions from this public repository
-(`.github/workflows/release.yml`) are signed. Every signing request is approved by hand.
-
-- Committers and reviewers: [NachoPola16](https://github.com/NachoPola16)
-- Approvers: [NachoPola16](https://github.com/NachoPola16)
+The installer and the executable are **not signed** yet, so Windows SmartScreen may warn about an
+"unknown publisher" when you open them: click "More info" → "Run anyway". They are built by GitHub
+Actions from this public repository (`.github/workflows/release.yml`).
 
 Privacy: this program will not transfer any information to other networked systems unless
 specifically requested by the user or the person installing or operating it. The two exceptions

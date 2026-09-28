@@ -49,16 +49,11 @@ La sincronización cifra el contenido antes de que salga del equipo: el almacén
 notas ni fabricar cambios en ellas. El detalle, incluido lo que **no** protege, está en
 [docs/SYNC.md → Modelo de seguridad](docs/SYNC.md#modelo-de-seguridad).
 
-## Política de firma de código
+## Firma y privacidad
 
-Firma de código gratuita de [SignPath.io](https://about.signpath.io), certificado de
-[SignPath Foundation](https://signpath.org).
-
-Solo se firman el instalador y el ejecutable que compila GitHub Actions desde este repositorio público
-(`.github/workflows/release.yml`). Cada solicitud de firma se aprueba a mano.
-
-- Autores y revisores: [NachoPola16](https://github.com/NachoPola16)
-- Aprobadores: [NachoPola16](https://github.com/NachoPola16)
+El instalador y el ejecutable **no están firmados** todavía, así que Windows SmartScreen puede avisar
+de "editor desconocido" al abrirlos: pulsa "Más información" → "Ejecutar de todas formas". Se compilan
+en GitHub Actions desde este repositorio público (`.github/workflows/release.yml`).
 
 Privacidad: este programa no envía información a otros sistemas de la red salvo que lo pida
 expresamente quien lo usa o lo instala. Las dos excepciones se activan o se pueden desactivar: la

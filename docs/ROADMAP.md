@@ -530,13 +530,13 @@ Por orden:
    Brasil (1.4.0). Falta que un nativo revise las tres últimas.
 2. **Instalador firmado**. Un `.exe` sin firmar dispara SmartScreen y se lleva por delante buena
    parte de las descargas. Decidido (2026-09-27): **solo vías gratuitas**, en este orden:
-   - **SignPath Foundation** (gratis para código abierto). Solicitud rellenada el 2026-09-27; el
-     repositorio ya cumple sus condiciones (sección "Code signing policy" de los README, opción de
-     no buscar actualizaciones, nombre y versión en los binarios) y el workflow firma solo en cuanto
-     existan las variables. **Siguiente paso cuando acepten**: el paso 2 de `docs/RELEASING.md`
-     (proyecto en SignPath conectado a GitHub, usuario CI y token, dos configuraciones de artefacto,
-     6 valores en GitHub) y un tag de prueba con `SIGNPATH_POLICY_SLUG=test-signing`.
-   - **Microsoft Store**, después: el registro de desarrollador es gratis desde 2025 y firma el
+   - ~~**SignPath Foundation**~~ — **rechazada el 2026-09-28**: piden señales de visibilidad pública
+     (estrellas, forks, colaboradores, artículos o hilos externos, actividad sostenida) que el
+     proyecto aún no tiene. Se puede volver a pedir cuando las tenga; el workflow sigue preparado
+     (firma solo si existen las variables) y lo que exigían al repositorio está en el historial de
+     git (sección "Code signing policy" de los README, quitada al rechazarla). La suscripción de
+     pago de SignPath queda fuera por la regla de solo vías gratuitas.
+   - **Microsoft Store**, ahora la vía principal: el registro de desarrollador es gratis desde 2025 y firma el
      MSIX, pero empaquetar como MSIX es trabajo aparte (arranque con Windows, aviso de
      actualizaciones, rutas de datos) y solo firma lo que se instala desde la Store.
 3. Página de presentación. Lo que hay que decir, por orden de fuerza: es lo único así **en Windows**;

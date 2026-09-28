@@ -3927,3 +3927,15 @@ nueva `Hairline`: blanco translúcido en los oscuros, negro translúcido en los 
 desaparecía sobre fondo claro). Lo que sigue fijo en código es contenido, no chrome: el arcoíris del
 selector, el color elegido y los colores de cada nota. Publicado como 1.4.1 (sin smoke test, por
 decisión del usuario: el cambio no toca el dock ni la interacción).
+
+## 2026-09-28: SignPath Foundation rechaza la solicitud
+
+Motivo: el programa pide señales de confianza pública (estrellas, forks, colaboradores, artículos o
+discusiones externas, respaldo institucional, actividad sostenida) y Aldune aún no las tiene. Invitan a
+volver a pedirlo cuando el proyecto sea más conocido; la alternativa que ofrecen es de pago y queda
+descartada (solo vías gratuitas).
+
+- README: la sección "Code signing policy" afirmaba una firma que no existe; pasa a "Firma y
+  privacidad" (sin firmar, cómo pasar el aviso de SmartScreen) y conserva el párrafo de privacidad.
+- El workflow no cambia: sin las variables de SignPath publica sin firmar, como hasta ahora.
+- Siguiente vía gratuita: Microsoft Store (MSIX firmado por Microsoft), ver `ROADMAP.md` §4.

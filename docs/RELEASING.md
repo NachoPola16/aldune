@@ -33,6 +33,11 @@ Después de cada release hay que actualizar también el servidor de sincronizaci
 
 ## Firma del ejecutable con SignPath
 
+> **Estado (2026-09-28)**: la solicitud a SignPath Foundation fue **rechazada** por falta de
+> visibilidad pública del proyecto (estrellas, forks, referencias externas). Se puede volver a pedir
+> más adelante; hasta entonces las versiones salen sin firmar. Al volver a pedirla, restaurar la
+> sección "Code signing policy" de los README (está en el historial de git, antes del 2026-09-28).
+
 Sin firma, Windows SmartScreen avisa de "editor desconocido" al descargar el instalador. SignPath
 Foundation firma gratis proyectos de código abierto, siempre que se compilen desde el repositorio
 público en GitHub Actions (así pueden comprobar que lo firmado sale del código publicado).
