@@ -3,7 +3,7 @@
 Windows interactivo y SDK .NET 10. Sin framework de tests ni paquetes adicionales: consola STA WPF que referencia la aplicación y reutiliza sus dependencias. Exit code 0 = PASS; 1 = fallo o limpieza fallida.
 
 ```powershell
-dotnet run --project "C:\Users\nacho\Proyectos\aldune\tests\Aldune.Ui.SmokeTests\Aldune.Ui.SmokeTests.csproj" --configuration Debug
+dotnet run --project "C:\Users\nacho\Proyectos\personales\aldune\tests\Aldune.Ui.SmokeTests\Aldune.Ui.SmokeTests.csproj" --configuration Debug
 ```
 
 ## Escenario prioritario ejecutado
