@@ -13,7 +13,8 @@ Las maquetas son la referencia visual; esta spec fija qué se construye y cómo 
   **cualquier** aspecto.
 - Poder pintar **todas las notas del mismo color** (monocromo) sin cambiarlas una a una, con cualquier
   tema.
-- Un tema de notas oscuro mejor que los actuales.
+- Un tema de notas oscuro mejor que los actuales, y revisar los temas que hay.
+- Exportar e importar la configuración visual y los ajustes (la sincronización de ajustes no existe).
 - El dock rediseñado a partir del real (tira de reposo + tarjetas de 208×52 + pie), no inventado.
 
 ## Fuera de alcance
@@ -101,15 +102,36 @@ En Ajustes → Aspecto, debajo de los colores, valen con todos los aspectos (tam
 
 ### 4. Temas de notas
 
-- **Penumbra** (nuevo, oscuro): ocho colores con la misma claridad OKLCH (~0.30) y poco croma (~0.04),
-  matices repartidos por igual: `#3E2A2C #3D2E22 #37331F #283624 #1F3532 #23303F #2C2D42 #382A3B`
-  (valores de partida; los ajustan los tests de distancia OKLab ≥ 0.03 y de contraste de tinta, como a
-  los demás temas). Sirve con cualquier aspecto.
+Revisión medida (distancia OKLab mínima entre dos colores de un tema; los tests exigen ≥ 0.03):
+Clásico 0.074, Pastel 0.044, Otoño 0.033, Océano 0.030, **Sereno 0.020 (oscuros) y 0.008 (claros)**,
+**Grafito 0.004–0.006**. Decidido:
+
+- **Sereno se renueva** (mismo id `serene` y mismo nombre). Colores con la misma claridad, croma
+  justo para separarse y matices repartidos por igual:
+  - Oscuros (L 0.31, C 0.052, cada 45°): `#472525 #422A11 #36310E #1F371F #033936 #113447 #2B2D4A
+    #3E273F` (distancia mínima 0.033, contraste de la tinta ≥ 10:1).
+  - Claros (L 0.925, C 0.042, cada 60°): `#FFDDD4 #EFE7C7 #D3EFD8 #C7EFF4 #D9E7FF #F5DDF6` (0.037,
+    ≥ 13:1).
+  Sustituye a la "Penumbra" de las maquetas: dos temas apagados casi iguales sobraban. Los tests
+  existentes de distancia y contraste se extienden a todos los temas de serie (hoy no cubren Sereno ni
+  Grafito, por eso pasaban).
+- **Grafito se quita**: su papel (monocromo) lo cubre mejor "mismo color en todas las notas", que deja
+  elegir el gris. Migración: quien lo tenga activo pasa a `UniformNoteColor` con su gris (`#2E2E2E` o
+  `#E8E8E8` según `NewNoteTone`) y a Clásico como tema; sus notas no cambian (guardan su color). Un
+  `settings.json` que nombre `graphite` ya cae en Clásico (`NoteThemes.Resolve`).
+- **Recoloreo de Sereno**: una vez, al arrancar la versión nueva, cada nota cuyo color sea uno de los
+  antiguos de Sereno pasa al nuevo del mismo puesto y tono (oscuro → oscuro, claro → claro). Es un cambio
+  de color normal (`NotesRepository.SetColor`) y se sincroniza. Se marca en `settings.json`
+  (`SereneRecolored`) para no repetirlo. Riesgo: dos equipos que actualizan a la vez recolorean la misma
+  nota con el mismo resultado; la sincronización tiene que tratarlo como el mismo cambio y no como
+  conflicto. Test de integración de sync antes de dar la migración por buena; si hoy lo marcara como
+  conflicto, se arregla ahí (contenido y color idénticos = sin conflicto).
+- Clásico, Pastel, Otoño y Océano no cambian. Los aspectos Pastel y Medianoche tampoco.
 - **XP** (claro): los colores post-it de las maquetas (`#FFFFE1 #E1F0FF #E8F5D8 #FCE4D6 #EDE3F7 #FFF0C2
   #DDEFEF #F0EFEA`), mismos tests.
-- Cada aspecto **propone** un tema al elegirlo (XP claro → XP; los oscuros → Penumbra), con una pregunta
+- Cada aspecto **propone** un tema al elegirlo, con una pregunta
   "¿Usar también el tema de notas X?": no se cambia el tema del usuario sin preguntar. Aspecto y tema
-  siguen siendo independientes.
+  siguen siendo independientes. (XP claro → XP; los oscuros → Sereno.)
 - Con `Stripe` (bash), la franja necesita verse sobre el fondo oscuro aunque el color de la nota sea
   apagado: se deriva del color de la nota subiendo su claridad (L≈0.72) y con un croma mínimo, en Core
   (`NoteColorDerivation.StripeColor`), con test de contraste ≥ 3:1 contra el fondo.
@@ -130,15 +152,42 @@ Gestionar, Sincronizar y Nueva nota de 40 px). Lo que cambia por piel:
 - Pie: con esquinas rectas deja de ser píldora; los botones redondos pasan a cuadrados.
 - Telecomunicaciones: la forma de onda es un `Path` fijo por canal (cuatro geometrías en recursos).
 
+### 6. Exportar e importar la configuración
+
+Un archivo, `*.aldune-config.json`, desde Ajustes → Acerca de ("Exportar configuración…",
+"Importar configuración…"):
+
+- Al exportar se marcan las secciones: **Aspecto** (aspecto, colores personalizados de cada aspecto,
+  esquinas, señal de sync, mismo color, tema de notas activo, temas propios, tono y asignación de color
+  de las notas nuevas) y **Ajustes** (idioma, modo de interfaz, atajos, dock: borde, vista, mantener
+  abierto, vista previa, pantalla completa, trackpad; tareas: mover hechas, ocultar hechas y su plazo;
+  papelera; posiciones recordadas sí/no; consulta de versiones).
+- **Nunca** se exportan: perfiles y contraseñas de sincronización, claves, la pantalla elegida
+  (`MonitorInfo.StableId` es de cada equipo), posiciones de ventanas, arranque con Windows (es del
+  registro de cada equipo).
+- Formato: `{"format": "aldune-config", "version": 1, "app": "1.5.0", "appearance": {…}, "settings": {…}}`.
+  Una sección que falta no se toca al importar. Campos desconocidos se ignoran; colores inválidos se
+  descartan (`NoteThemes.Sanitize` para los temas propios); enums fuera de rango caen en su valor por
+  defecto. Un archivo de una versión futura (`version` > 1) se lee igualmente con lo que se entienda.
+- Al importar: vista previa con la lista de lo que cambiaría (valor actual → valor nuevo), botones
+  "Aplicar" y "Cancelar". Se aplica en vivo (aspecto y atajos sin reiniciar). Antes de aplicar se
+  guarda una copia del `settings.json` actual junto a él (como ya hace la copia diaria), para poder
+  volver atrás.
+- Lógica en Core (`ConfigExport.Build(settings, sections)` y `ConfigImport.Plan(json, current)` →
+  lista de cambios + ajustes resultantes), con tests: ida y vuelta, secciones parciales, archivo
+  corrupto, campos raros, que nunca salgan credenciales ni la pantalla.
+
 ## Orden de trabajo
 
 Tres bloques que se pueden publicar por separado, cada uno con sus tests y su sonda:
 
 1. **Opciones transversales y temas**: radios a recursos, esquinas rectas, señal de sync, mismo color,
-   Penumbra y XP. No cambia ningún aspecto existente salvo por las opciones nuevas.
+   Sereno renovado (con su recoloreo), Grafito fuera (con su migración) y XP. No cambia ningún aspecto
+   existente salvo por las opciones nuevas.
 2. **Piel**: `AppSkin`, tipografía, relieve, barra en degradado, estilos de tarjeta, adornos, prompt; las
    claves nuevas de paleta con sus valores neutros en Dark/Light.
 3. **Los seis aspectos** con sus huecos de color y la página de Ajustes → Aspecto ampliada.
+4. **Exportar e importar** la configuración (independiente de los demás; puede ir en cualquier punto).
 
 Todo antes de la 1.5.0, junto con las listas y el atajo ya hechos.
 
@@ -148,8 +197,10 @@ Todo antes de la 1.5.0, junto con las listas y el atajo ya hechos.
   (contraste de todos los textos sobre sus fondos, como los tests de paleta actuales);
   `NoteSyncSignal` en sus cuatro estados más "sin sync"; `NoteDisplayColor.Resolve` (desactivado, color
   único, color inválido en `settings.json`); `StripeColor` (contraste ≥ 3:1 con cada fondo oscuro);
-  Penumbra y XP con las reglas de distancia y contraste de los temas; carga de un `settings.json`
-  antiguo sin los campos nuevos.
+  distancia y contraste en **todos** los temas de serie (Sereno renovado y XP incluidos); recoloreo de
+  Sereno (cada color antiguo al nuevo de su puesto, una sola vez, colores ajenos intactos); migración de
+  Grafito; sync con el mismo recoloreo en dos equipos sin conflicto; exportar/importar; carga de un
+  `settings.json` antiguo sin los campos nuevos.
 - Sondas con datos temporales: capturas de nota, dock (reposo y desplegado, a la derecha y a la
   izquierda) y Ajustes en cada aspecto, con esquinas rectas y redondeadas; cambio de aspecto en vivo;
   mismo color activado y desactivado. Se comparan con las maquetas.
