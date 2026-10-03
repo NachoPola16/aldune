@@ -4033,7 +4033,8 @@ Primer bloque de la 1.5.0 (spec `docs/superpowers/specs/2026-10-03-aspectos-retr
   la acordada recoloreada (`OnlyMigrated`), así que el equipo que actualiza días después que otro, o
   frente a una edición hecha en un 1.4, no ve un conflicto por cada nota editada en el otro (lo encontró
   la revisión final; hay tests en los dos sentidos). Si la edición viene de un 1.4, la nota se queda con
-  el color antiguo: la migración corre una vez.
+  el color antiguo: la migración corre una vez. El equipo 1.4, que no conoce la marca, sí puede ver un
+  conflicto si el 1.5 publica antes su recoloreo; eso no tiene arreglo desde la 1.5.
 - **Mismo color en todas las notas** (`UniformNoteColor`, `NoteDisplayColor`): solo presentación, la
   nota conserva su color y la sync no ve cambios. Un valor inválido en `settings.json` se ignora.
 - **Señal de sincronización** (`ShowSyncSignal`, `NoteSyncSignal`): `▂▄▆█` sincronizada, `▂▄▆_`

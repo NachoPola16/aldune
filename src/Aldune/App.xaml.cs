@@ -183,13 +183,16 @@ public partial class App : Application
         }
 
         // Cambios de temas de la 1.5 (Sereno renovado, Grafito retirado) sobre los datos ya guardados.
-        // Fuera del try de arranque: un fallo aquí cerraría la app sin decir nada. Se registra y se
-        // sigue; la migración no deja la marca hasta terminar, así que se reintenta en el próximo inicio.
+        // Fuera del try de arranque: un fallo aquí cerraría la app sin decir nada. Se sigue sin migrar
+        // (y queda en el registro de diagnóstico si está activo); la migración no deja la marca hasta
+        // terminar, así que se reintenta en el próximo inicio. Leer las notas descifra y analiza cada
+        // una, de ahí las excepciones de cifrado y formato.
         try
         {
             if (ThemeMigrations.Run(settings, repository)) settingsService.Save(settings);
         }
-        catch (Exception ex) when (ex is SqliteException or IOException or UnauthorizedAccessException)
+        catch (Exception ex) when (ex is SqliteException or IOException or UnauthorizedAccessException or
+                                   CryptographicException or JsonException or FormatException)
         {
             DockDiagnostics.Write("app", $"migración de temas fallida, se reintentará: {ex.Message}");
         }
