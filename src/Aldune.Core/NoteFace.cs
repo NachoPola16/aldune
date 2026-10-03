@@ -36,8 +36,12 @@ public static class NoteFace
             case SkinCard.Tinted:
             {
                 // El color es el del canal (por puesto en el dock), no el de la nota: es lo que da
-                // sentido a CH1… Con "mismo color", el color único sustituye a todos los canales.
-                var accent = NoteDisplayColor.IsActive(uniformColor) ? color : palette[NoteChannels.PaletteKey(channel)];
+                // sentido a CH1… Con "mismo color", el color único sustituye a todos los canales, pero
+                // pasado por StripeColor: tal cual casi se confundiría con la cara tintada (que sale de él)
+                // y la franja y la onda no se verían.
+                var accent = NoteDisplayColor.IsActive(uniformColor)
+                    ? NoteColorDerivation.StripeColor(color, ground)
+                    : palette[NoteChannels.PaletteKey(channel)];
                 var face = ColorMix.Toward(accent, ground, 0.88);
                 var label = NoteColorContrast.IsReadable(face, accent) ? accent : text;
                 return new NoteFaceColors(face, text, ColorMix.Toward(accent, ground, 0.5), label, text, accent,

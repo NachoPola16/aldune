@@ -73,12 +73,26 @@ public class NoteFaceTests
         Assert.Equal(Dark["Text"], face.Ink);
     }
 
-    [Fact]
-    public void Tinted_WithUniformColor_ReplacesTheChannelColors()
+    [Theory]
+    [InlineData("#33363A")]
+    [InlineData("#F5F5F0")]
+    public void Tinted_WithUniformColor_ReplacesTheChannelColors(string uniform)
     {
-        // Solo la onda y el número de canal siguen distinguiendo las tarjetas (spec, sección 5).
-        Assert.Equal("#33363A", NoteFace.For(SkinCard.Tinted, "#EBD38B", "#33363A", 0, Dark).Accent);
-        Assert.Equal("#33363A", NoteFace.For(SkinCard.Tinted, "#C2D4FF", "#33363A", 2, Dark).Accent);
+        // Solo la onda y el número de canal siguen distinguiendo las tarjetas (spec, sección 5). El color
+        // único va como en la franja (StripeColor): si fuera el de la cara tintada, casi no se vería.
+        foreach (var palette in new[] { Dark, AppPalette.For(AppearanceMode.Light, false) })
+        {
+            var expected = NoteColorDerivation.StripeColor(uniform, palette["Ground"]);
+            var first = NoteFace.For(SkinCard.Tinted, "#EBD38B", uniform, 0, palette);
+            var second = NoteFace.For(SkinCard.Tinted, "#C2D4FF", uniform, 2, palette);
+
+            Assert.Equal(expected, first.Accent);
+            Assert.Equal(expected, second.Accent);
+            NoteColorContrast.TryGetLuminance(first.Accent, out var accentLuminance);
+            NoteColorContrast.TryGetLuminance(palette["Ground"], out var groundLuminance);
+            var ratio = (Math.Max(accentLuminance, groundLuminance) + 0.05) / (Math.Min(accentLuminance, groundLuminance) + 0.05);
+            Assert.True(ratio >= 3, $"{uniform}: {first.Accent} sobre {palette["Ground"]} = {ratio:0.00}");
+        }
     }
 
     [Theory]
@@ -95,12 +109,19 @@ public class NoteFaceTests
         }
     }
 
-    [Fact]
-    public void Tinted_WithAnUnreadableUniformColor_FallsBackToTheTextForTheTitle()
+    [Theory]
+    [InlineData("#33363A")]
+    [InlineData("#FFE000")]
+    [InlineData("#F5F5F0")]
+    public void Tinted_WithUniformColor_TitleIsReadableOnTheFace(string uniform)
     {
-        var face = NoteFace.For(SkinCard.Tinted, "#EBD38B", "#33363A", 0, Dark);
+        // El respaldo a Text sigue ahí, pero con StripeColor el acento ya se lee en las dos paletas.
+        foreach (var palette in new[] { Dark, AppPalette.For(AppearanceMode.Light, false) })
+        {
+            var face = NoteFace.For(SkinCard.Tinted, "#EBD38B", uniform, 0, palette);
 
-        Assert.Equal(Dark["Text"], face.Label);
+            Assert.True(NoteColorContrast.IsReadable(face.Face, face.Label), $"{uniform}: {face.Label} sobre {face.Face}");
+        }
     }
 
     [Theory]
