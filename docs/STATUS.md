@@ -4105,4 +4105,4 @@ propósito).
   SyncConflicts, ThemeEditor, Toast) y la fuente de las pestañas con una piel monoespaciada (el texto de
   una pestaña tintada queda en ~110 px y se abrevia antes).
 
-Tests: 975/975. Pendiente de este bloque: smoke test con el «ok» del usuario.
+Tests: 975/975. Smoke test en verde.
