@@ -4059,3 +4059,50 @@ encontró y corrigió el avance de fecha de la migración. Tests: 916/916.
 
 Pendiente: la pestaña de una nota abierta reaparece en el dock en una captura de la sonda; se atribuyó a
 cómo la sonda registra las notas abiertas, sin comprobar con la app real.
+
+## 2026-10-03: bloque 2 de aspectos (piel)
+
+Segundo bloque de la 1.5.0 (spec `docs/superpowers/specs/2026-10-03-aspectos-retro-design.md`, plan
+`docs/superpowers/plans/2026-10-03-bloque2-piel.md`). Sin publicar. **Ningún aspecto existente cambia**
+(Oscuro, Claro, Como Windows, Pastel, Medianoche): lo comprobó una sonda con diferencia de píxeles contra
+capturas de antes del bloque (dock, Ajustes y gestor: 0 píxeles; notas: solo el botón de minimizar, a
+propósito).
+
+- **Piel (`AppSkin`, Core)**: tipografía del chrome, del cuerpo y del título de la nota, bordes
+  (`Flat | Bevel`), barra de título (`Plain | GradientVertical | GradientHorizontal`: la spec decía solo
+  `Gradient`, pero XP claro la lleva vertical y XP + 95 horizontal), estilo de tarjeta
+  (`Filled | Stripe | Tinted`), adornos de título (`None | Channel | Folder | Uppercase`), línea de prompt
+  y retícula. `AppSkin.For(modo)` da la de siempre a todos los aspectos de hoy; los retro llegan en el
+  bloque 3. No se guarda en `settings.json`.
+- **Paleta**: claves nuevas `TitleBar`, `TitleBarEnd`, `OnTitleBar`, `BevelLight`, `BevelDark`,
+  `Channel1..4` y `PromptUser`/`PromptPath` (las dos últimas familias no están en la spec; los canales de
+  osciloscopio y los colores de un prompt no se tiñen en Pastel ni Medianoche). Neutras en Oscuro y Claro.
+- **`NoteFace` (Core)**: un único sitio decide cómo se pinta una nota según la piel, para que ventana y
+  dock no discrepen. `Filled` reproduce lo de hoy; `Stripe` (bash): fondo del chrome y el color en una
+  franja de 3 px (`NoteColorDerivation.StripeColor`, visible >= 3:1); `Tinted` (osciloscopio): color del
+  canal por puesto en el mazo (`NoteChannels`, cíclico de 4 en 4, con su forma de onda). Con «mismo
+  color» todas las franjas son iguales y en `Tinted` el color único sustituye a los de canal (la franja y
+  la onda salen de `StripeColor`, porque con el color tal cual casi no se veían sobre el tinte). El canal
+  de cada nota sale siempre del mazo activo, también en las vistas Archivo, Papelera y con filtro.
+- **Adornos (`NoteLabels`, Core)**: `CH2 TAREAS_UNI`, `tareas_uni/`, mayúsculas, y la línea
+  `usuario@aldune:~/notas$ cat hoy`. Solo se pintan: el texto de la nota no cambia.
+- **WPF**: `ThemeManager.ApplySkin` (fuentes y fondo de la barra como recursos), `SkinState` (lo que
+  leen las plantillas y cambia en vivo), `BevelEdge` (relieve de Windows 95), pestañas con franja y onda,
+  botones del pie cuadrados con esquinas rectas, nota con franja, prefijo de canal, prompt, retícula y
+  barra en degradado, y cabeceras de Ajustes y gestor con el fondo de la barra (transparente hoy).
+- **Pendientes del bloque 1 cerrados**: la señal de sync consulta solo su nota
+  (`HasSyncConflict`, `GetSyncBase`, sin descifrar la cola) y se repinta tras cambiar color o etiquetas;
+  el color único se elige también entre las muestras del tema activo.
+- **Minimizar de la nota**: el guion largo como texto, como en Ajustes y el gestor (antes el glifo de la
+  fuente de iconos, que se dibujaba centrado).
+- **Lo que encontró la sonda y se arregló**: con la piel por defecto, el cuerpo de la nota había cambiado
+  de fuente (usaba la del sistema, `Segoe UI`, y se le puso `Segoe UI Variable Text`): `NoteFont` vacío
+  significa «la fuente de sistema» y se resuelve con `SystemFonts.MessageFontFamily`. Con `Tinted`, la
+  onda pisaba la vista previa: el texto de la pestaña deja sitio en su lado.
+- **Para el bloque 3**: el estilo de tarjeta de Fósforo (monocromo), el brillo de los botones de XP
+  claro, las cabeceras de Ajustes y gestor como barra «de verdad» (el subtítulo «8 notas» sale naranja
+  sobre un degradado azul), los diálogos menores (AppDialog, CustomColorWindow, PasswordPrompt,
+  SyncConflicts, ThemeEditor, Toast) y la fuente de las pestañas con una piel monoespaciada (el texto de
+  una pestaña tintada queda en ~110 px y se abrevia antes).
+
+Tests: 975/975. Pendiente de este bloque: smoke test con el «ok» del usuario.
