@@ -66,6 +66,8 @@ public sealed class SyncConflictTests : IDisposable
         // The losing version remains recoverable locally and can be promoted deliberately. The
         // restore gets a fresh timestamp so the next sync can publish the user's decision.
         var conflict = _deviceA.Sync.GetConflicts().Single();
+        Assert.True(_deviceA.Repository.HasSyncConflict(note.Id));
+        Assert.False(_deviceB.Repository.HasSyncConflict(note.Id));
         Assert.True(_deviceA.Sync.RestoreConflict(conflict.Id));
         Assert.Equal("edit from B", _deviceA.Repository.GetAllForSync().Single().Text);
         Assert.Empty(_deviceA.Sync.GetConflicts());

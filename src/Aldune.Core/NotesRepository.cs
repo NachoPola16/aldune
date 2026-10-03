@@ -280,6 +280,29 @@ public sealed class NotesRepository
         return results;
     }
 
+    /// <summary>La base de una sola nota, sin leer las de todas (la señal de sincronización la pide en
+    /// cada autoguardado).</summary>
+    public SyncBaseVersion? GetSyncBase(Guid noteId)
+    {
+        using var connection = _database.OpenConnection();
+        using var command = connection.CreateCommand();
+        command.CommandText = "SELECT UpdatedAt, DeviceId FROM SyncBase WHERE NoteId = $id;";
+        command.Parameters.AddWithValue("$id", noteId.ToString());
+        using var reader = command.ExecuteReader();
+        return reader.Read() ? new SyncBaseVersion(ParseDate(reader["UpdatedAt"]), reader.GetString(1)) : null;
+    }
+
+    /// <summary>¿Está la nota en la cola de conflictos? Sin descifrar la cola: GetSyncConflicts descifra
+    /// cada versión perdedora.</summary>
+    public bool HasSyncConflict(Guid noteId)
+    {
+        using var connection = _database.OpenConnection();
+        using var command = connection.CreateCommand();
+        command.CommandText = "SELECT 1 FROM SyncConflict WHERE NoteId = $id LIMIT 1;";
+        command.Parameters.AddWithValue("$id", noteId.ToString());
+        return command.ExecuteScalar() is not null;
+    }
+
     public void SetSyncBases(IEnumerable<KeyValuePair<Guid, SyncBaseVersion>> bases)
     {
         using var connection = _database.OpenConnection();

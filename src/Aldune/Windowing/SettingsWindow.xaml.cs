@@ -278,6 +278,15 @@ public partial class SettingsWindow : Window
         UniformColorSwatch.Background = on
             ? (Brush)new BrushConverter().ConvertFromString(_settings.UniformNoteColor!)!
             : Brushes.Transparent;
+        // El color se elige entre los del tema activo (o uno libre con el botón).
+        UniformSwatches.Visibility = on ? Visibility.Visible : Visibility.Collapsed;
+        if (on) NoteSwatchPanel.Fill(UniformSwatches, ActiveTheme, _settings.UniformNoteColor, OnUniformSwatchClick);
+    }
+
+    private void OnUniformSwatchClick(object sender, MouseButtonEventArgs e)
+    {
+        _settings.UniformNoteColor = (string)((Border)sender).Tag;
+        ApplyUniformColor();
     }
 
     private void OnManageNotesClick(object sender, RoutedEventArgs e) => _coordinator?.OpenNotesManager();

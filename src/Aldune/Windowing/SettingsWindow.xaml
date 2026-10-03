@@ -387,6 +387,7 @@
                                     Click="OnPickUniformColorClick" Margin="8,0,0,0" Padding="12,7"
                                     Style="{StaticResource RecordButtonStyle}" />
                         </StackPanel>
+                        <StackPanel x:Name="UniformSwatches" Margin="27,8,0,0" />
                         <TextBlock Text="{x:Static res:Strings.AppearanceUniformColorHint}"
                                    Foreground="{DynamicResource AlduneHintBrush}" FontSize="11" TextWrapping="Wrap" Margin="27,6,0,0" />
                     </StackPanel>

@@ -1499,6 +1499,7 @@ public partial class NoteWindow : Window
         NoteSwatchPanel.MarkSelected(ColorSwatches, color);
 
         _coordinator.RefreshAll();
+        UpdateSyncSignal(); // el cambio deja la nota pendiente: la señal lo dice ya
         ActionsPopup.IsOpen = false;
     }
 
@@ -1511,6 +1512,7 @@ public partial class NoteWindow : Window
         _repository.SetColor(_note.Id, color);
         ApplyColor(color);
         _coordinator.RefreshAll();
+        UpdateSyncSignal();
         ActionsPopup.IsOpen = false;
     }
 
@@ -1525,7 +1527,9 @@ public partial class NoteWindow : Window
     /// <summary>El panel guarda al marcar; el dock se refresca una sola vez, al cerrarlo.</summary>
     private void OnTagsPopupClosed(object? sender, EventArgs e)
     {
-        if (NoteTagPanel.Changed) _coordinator.RefreshAll();
+        if (!NoteTagPanel.Changed) return;
+        _coordinator.RefreshAll();
+        UpdateSyncSignal();
     }
 
     private void OnReminderMenuClick(object sender, RoutedEventArgs e)
