@@ -57,6 +57,49 @@ public sealed class SyncConflictTests : IDisposable
     }
 
     [Fact]
+    public void SameChangeOnBothDevices_IsNotAConflict()
+    {
+        // La migración de temas recolorea la misma nota en cada equipo que actualiza: mismo
+        // resultado, fechas distintas. Antes eso contaba como conflicto (IsRealConflict solo mira
+        // fechas) y llenaba la cola con falsos conflictos.
+        var note = _deviceA.Repository.Create("original", "#EBD38B", "primary");
+        ShareKeyAndSynchronizeInitialNote(note.Id);
+
+        _deviceB.Repository.SetColor(note.Id, "#C2D4FF");
+        Assert.True(_deviceB.Sync.Synchronize().Succeeded);
+        Thread.Sleep(20);
+        _deviceA.Repository.SetColor(note.Id, "#C2D4FF");
+
+        var uploaded = _deviceA.Sync.Synchronize();
+        var downloaded = _deviceB.Sync.Synchronize();
+
+        Assert.True(uploaded.Succeeded, uploaded.Error);
+        Assert.True(downloaded.Succeeded, downloaded.Error);
+        Assert.Equal(0, uploaded.ConflictsResolved);
+        Assert.Empty(_deviceA.Sync.GetConflicts());
+        Assert.Empty(_deviceB.Sync.GetConflicts());
+        Assert.Equal("#C2D4FF", _deviceB.Repository.GetAllForSync().Single().Color);
+    }
+
+    [Fact]
+    public void RecolorOnOneDeviceAndEditOnTheOther_IsStillAConflict()
+    {
+        // La equivalencia no puede tragarse una edición real: color en B, texto en A.
+        var note = _deviceA.Repository.Create("original", "#EBD38B", "primary");
+        ShareKeyAndSynchronizeInitialNote(note.Id);
+
+        _deviceB.Repository.SetColor(note.Id, "#C2D4FF");
+        Assert.True(_deviceB.Sync.Synchronize().Succeeded);
+        Thread.Sleep(20);
+        _deviceA.Repository.UpdateText(note.Id, "edit from A");
+
+        var uploaded = _deviceA.Sync.Synchronize();
+
+        Assert.True(uploaded.Succeeded, uploaded.Error);
+        Assert.Equal(1, uploaded.ConflictsResolved);
+    }
+
+    [Fact]
     public void DismissAllConflicts_ClearsTheQueueWithoutTouchingTheNotes()
     {
         var note = _deviceA.Repository.Create("original", "#EBD38B", "primary");

@@ -363,11 +363,16 @@ public sealed class SyncService
                     {
                         var localVersion = ToConflictVersion(localEnvelope!, localNotes, key);
                         var remoteVersion = ToConflictVersion(remoteObject.Envelope, null, key);
-                        var winner = comparison > 0 ? localVersion : remoteVersion;
-                        var losing = comparison > 0 ? remoteVersion : localVersion;
-                        _repository.SaveSyncConflict(new SyncConflict(
-                            Guid.NewGuid(), id, DateTimeOffset.UtcNow, winner, losing));
-                        conflicts++;
+                        // Los dos lados cambiaron, pero al mismo contenido: no hay nada que elegir. Se
+                        // sigue el camino normal (gana la más reciente) sin dejar un falso conflicto.
+                        if (!NoteEquivalence.SameContent(localVersion.Note, remoteVersion.Note))
+                        {
+                            var winner = comparison > 0 ? localVersion : remoteVersion;
+                            var losing = comparison > 0 ? remoteVersion : localVersion;
+                            _repository.SaveSyncConflict(new SyncConflict(
+                                Guid.NewGuid(), id, DateTimeOffset.UtcNow, winner, losing));
+                            conflicts++;
+                        }
                     }
                     if (comparison > 0)
                     {
