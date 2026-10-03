@@ -420,6 +420,8 @@ public partial class EdgeDockWindow : Window
         {
             card.CornerRadius = Mirror(card.CornerRadius);
             card.BorderThickness = MirrorHorizontal(card.BorderThickness);
+            // Lo lee el XAML para espejar el hueco del texto junto a la onda (ver LabelStack).
+            card.Tag = "LeftEdge";
         }
 
         if (button.Template.FindName("SheenBorder", button) is Border sheen)

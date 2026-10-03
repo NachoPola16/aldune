@@ -189,6 +189,37 @@
                                 <Setter TargetName="Waveform" Property="Visibility" Value="Visible" />
                                 <Setter TargetName="SheenBorder" Property="Visibility" Value="Collapsed" />
                             </DataTrigger>
+                            <!-- La onda (54 de ancho + 22 de margen = hasta 76 del canto) se dibuja sobre
+                                 la vista previa: con Tinted el texto deja 80 en ese lado (4 de hueco). Con
+                                 el dock a la derecha, arriba o abajo la onda va a la derecha; con el dock
+                                 a la izquierda ApplyLeftEdgeTabShape la pasa a la izquierda y marca
+                                 CardBorder.Tag para que el hueco del texto se espeje. Van después del
+                                 disparador de vista previa vacía y en este orden: el último que casa gana. -->
+                            <DataTrigger Binding="{Binding Card, Source={x:Static local:SkinState.Current}}" Value="{x:Static core:SkinCard.Tinted}">
+                                <Setter TargetName="LabelStack" Property="Margin" Value="16,9,80,0" />
+                            </DataTrigger>
+                            <MultiDataTrigger>
+                                <MultiDataTrigger.Conditions>
+                                    <Condition Binding="{Binding Card, Source={x:Static local:SkinState.Current}}" Value="{x:Static core:SkinCard.Tinted}" />
+                                    <Condition Binding="{Binding Converter={StaticResource NoteSnippetConverter}}" Value="" />
+                                </MultiDataTrigger.Conditions>
+                                <Setter TargetName="LabelStack" Property="Margin" Value="16,0,80,0" />
+                            </MultiDataTrigger>
+                            <MultiDataTrigger>
+                                <MultiDataTrigger.Conditions>
+                                    <Condition Binding="{Binding Card, Source={x:Static local:SkinState.Current}}" Value="{x:Static core:SkinCard.Tinted}" />
+                                    <Condition Binding="{Binding Tag, ElementName=CardBorder}" Value="LeftEdge" />
+                                </MultiDataTrigger.Conditions>
+                                <Setter TargetName="LabelStack" Property="Margin" Value="80,9,20,0" />
+                            </MultiDataTrigger>
+                            <MultiDataTrigger>
+                                <MultiDataTrigger.Conditions>
+                                    <Condition Binding="{Binding Card, Source={x:Static local:SkinState.Current}}" Value="{x:Static core:SkinCard.Tinted}" />
+                                    <Condition Binding="{Binding Tag, ElementName=CardBorder}" Value="LeftEdge" />
+                                    <Condition Binding="{Binding Converter={StaticResource NoteSnippetConverter}}" Value="" />
+                                </MultiDataTrigger.Conditions>
+                                <Setter TargetName="LabelStack" Property="Margin" Value="80,0,20,0" />
+                            </MultiDataTrigger>
                             <Trigger Property="IsMouseOver" Value="True">
                                 <Setter TargetName="HoverOverlay" Property="Opacity" Value="0.07" />
                             </Trigger>
