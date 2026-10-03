@@ -993,3 +993,24 @@ tiene iPhone y una tableta Android). Las razones y las consecuencias de diseño 
 §0.1: 0 € de licencias, sin Mac, dispositivo real para probar, y la tableta como referencia de diseño.
 iOS queda aparcado hasta que haya Mac o hasta que la prioridad sea capturar desde el bolsillo, y eso no
 cambia nada de lo ya decidido porque el cliente es un proyecto MAUI más dos extensiones Swift.
+
+## 10. Sonidos personalizables (idea, 2026-10-03): sí, después de los aspectos y apagados de fábrica
+
+Hoy la app no suena en ningún sitio (los avisos de `AppDialog` son "sin sonido" a propósito) y el modo
+"Papel vintage" con sonidos sigue sin hacer. Valorado al planificar el bloque 2 de los aspectos:
+
+- **Vale la pena** porque encaja con los aspectos retro (el pitido de una terminal, el "ding" de XP) y
+  con un aviso de recordatorio que hoy solo se ve. **No entra en la 1.5.0**: es un bloque aparte y los
+  aspectos ya van cargados.
+- **Diseño que se propone**: eventos fijos (recordatorio vence, sincronización terminada o fallida, nota
+  nueva, nota archivada, error), cada uno con "sin sonido" / sonido de la app / archivo `.wav` propio
+  elegido por el usuario; volumen general; **apagado por defecto** (una app que vive en un borde de la
+  pantalla no debe sonar sin pedirlo). Cada aspecto puede *proponer* un juego de sonidos, igual que
+  propone un tema de notas (preguntando, sin cambiarlo solo).
+- **Lógica en Core con tests** (`SoundSettings`: evento → origen, validación de la ruta y del formato,
+  ruta que falta = silencio, nunca un error). Reproducción con `System.Media.SoundPlayer` o
+  `MediaPlayer`, desde la capa WPF, nunca bloqueando la interfaz; un `.wav` que no se puede leer se
+  ignora y se apunta en el diario de diagnóstico.
+- **Cosas a decidir entonces**: si los sonidos viajan en exportar/importar configuración (los de la app
+  sí; los archivos propios no, son de cada equipo, como la pantalla elegida), y si respetar "no molestar"
+  de Windows.
