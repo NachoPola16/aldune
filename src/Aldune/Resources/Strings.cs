@@ -287,6 +287,8 @@ public static class Strings
         "Rechtsklick: Synchronisierungseinstellungen",
         "Clic droit : paramètres de synchronisation",
         "Clique direito: configurações de sincronização");
+    /// <summary>Carpeta de la línea de prompt de la piel bash (<c>usuario@aldune:~/notas$</c>).</summary>
+    public static string PromptNotesFolder => T("notes", "notas", "notizen", "notes", "notas");
     public static string NewNoteRightClickHint => T("Right-click: from the clipboard", "Clic derecho: desde el portapapeles",
         "Rechtsklick: aus der Zwischenablage",
         "Clic droit : depuis le presse-papiers",
