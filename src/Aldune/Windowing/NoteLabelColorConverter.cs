@@ -16,7 +16,7 @@ public sealed class NoteLabelColorConverter : IValueConverter
         try
         {
             return (Brush)new BrushConverter().ConvertFromString(
-                NoteColorPalette.LabelFor(value as string ?? string.Empty))!;
+                NoteColorPalette.LabelFor(NoteColorDisplay.Resolve(value as string)))!;
         }
         catch (FormatException)
         {

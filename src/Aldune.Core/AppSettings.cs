@@ -244,6 +244,12 @@ public sealed class AppSettings
     /// <summary>Color de <see cref="NoteColorAssignment.Fixed"/>. Nulo = el primero del tono pedido.</summary>
     public string? FixedNoteColor { get; set; }
 
+    /// <summary>
+    /// "Mismo color en todas las notas": nulo = desactivado (cada nota con el suyo, como siempre).
+    /// Solo cambia cómo se pintan; ver <see cref="NoteDisplayColor"/>.
+    /// </summary>
+    public string? UniformNoteColor { get; set; }
+
     /// <summary>Temas creados por el usuario. Locales a este equipo: no se sincronizan en la 1.0.</summary>
     public List<NoteTheme> CustomThemes { get; set; } = new();
 }

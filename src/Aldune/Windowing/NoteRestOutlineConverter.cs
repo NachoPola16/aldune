@@ -15,7 +15,7 @@ public sealed class NoteRestOutlineConverter : IValueConverter
 {
     public object Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
     {
-        var outline = Aldune.Core.NoteColorDerivation.RestOutlineFor(value as string);
+        var outline = Aldune.Core.NoteColorDerivation.RestOutlineFor(NoteColorDisplay.Resolve(value as string));
 
         if (parameter as string == "Thickness")
             return new Thickness(outline is null ? 0 : 1);

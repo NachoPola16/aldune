@@ -972,6 +972,15 @@ public static class Strings
     public static string AppearanceMidnight => T("Midnight", "Medianoche", "Mitternacht", "Minuit", "Meia-noite");
     public static string AppearanceSystem => T("Same as Windows", "Como Windows",
         "Wie Windows", "Comme Windows", "Como Windows");
+    public static string AppearanceUniformColor => T("Same color for every note", "Mismo color en todas las notas",
+        "Gleiche Farbe für alle Notizen", "Même couleur pour toutes les notes", "Mesma cor em todas as notas");
+    public static string AppearanceUniformColorHint => T("Only changes how they look: each note keeps its own color.",
+        "Solo cambia cómo se ven: cada nota conserva su color.",
+        "Ändert nur das Aussehen: Jede Notiz behält ihre eigene Farbe.",
+        "Ne change que l'apparence : chaque note garde sa couleur.",
+        "Só muda a aparência: cada nota mantém a sua cor.");
+    public static string AppearanceUniformColorPick => T("Choose color…", "Elegir color…",
+        "Farbe wählen…", "Choisir la couleur…", "Escolher cor…");
     public static string LanguageNameIn(string code) => code switch
     {
         "de" => T("German", "Alemán", "Deutsch", "Allemand", "Alemão"),

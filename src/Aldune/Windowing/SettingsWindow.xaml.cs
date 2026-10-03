@@ -66,6 +66,7 @@ public partial class SettingsWindow : Window
         ShowNotePreviewCheck.IsChecked = _settings.ShowNotePreview;
         RememberPositionsCheck.IsChecked = _settings.RememberNotePositions;
         PopulateTrackpadGestures();
+        UpdateUniformColorUi();
         MoveCompletedTasksCheck.IsChecked = _settings.MoveCompletedTasksToEnd;
         CheckForUpdatesAutomaticallyCheck.IsChecked = _settings.CheckForUpdatesAutomatically;
         AutoHideTasksCheck.IsChecked = _settings.AutoHideCompletedTasks;
@@ -213,6 +214,50 @@ public partial class SettingsWindow : Window
     private void OnPageChecked(object sender, RoutedEventArgs e)
     {
         if (sender is RadioButton { Tag: string page } && page != _currentPage) ShowPage(page);
+    }
+
+    // Al activarlo sin color elegido, parte del primer color del tema activo en el tono de las notas
+    // nuevas: el usuario ve enseguida el efecto y lo cambia si quiere.
+    private void OnUniformColorToggled(object sender, RoutedEventArgs e)
+    {
+        if (UniformColorCheck.IsChecked == true)
+        {
+            var theme = ActiveTheme;
+            var preferred = _settings.NewNoteTone == NoteTone.Dark ? theme.DarkColors : theme.LightColors;
+            _settings.UniformNoteColor = preferred.FirstOrDefault()
+                ?? theme.LightColors.Concat(theme.DarkColors).First();
+        }
+        else
+        {
+            _settings.UniformNoteColor = null;
+        }
+        ApplyUniformColor();
+    }
+
+    private void OnPickUniformColorClick(object sender, RoutedEventArgs e)
+    {
+        var picked = CustomColorWindow.Show(this, _settings.UniformNoteColor ?? "#EBD38B");
+        if (picked is null) return;
+        _settings.UniformNoteColor = picked;
+        ApplyUniformColor();
+    }
+
+    private void ApplyUniformColor()
+    {
+        _settingsService.Save(_settings);
+        NoteColorDisplay.Uniform = _settings.UniformNoteColor;
+        _coordinator?.RefreshNoteAppearance();
+        UpdateUniformColorUi();
+    }
+
+    private void UpdateUniformColorUi()
+    {
+        bool on = _settings.UniformNoteColor is not null;
+        UniformColorCheck.IsChecked = on;
+        UniformColorButton.IsEnabled = on;
+        UniformColorSwatch.Background = on
+            ? (Brush)new BrushConverter().ConvertFromString(NoteColorDisplay.Resolve("#00000000"))!
+            : Brushes.Transparent;
     }
 
     private void OnManageNotesClick(object sender, RoutedEventArgs e) => _coordinator?.OpenNotesManager();

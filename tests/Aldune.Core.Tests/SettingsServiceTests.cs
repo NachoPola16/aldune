@@ -291,4 +291,13 @@ public class SettingsServiceTests : IDisposable
         Assert.False(loaded.RecentNoteHotkeyEnabled);
         Assert.Equal(new HotkeyBinding(HotkeyBinding.ModControl | HotkeyBinding.ModShift, 0x55), loaded.RecentNoteHotkey);
     }
+
+    [Fact]
+    public void Load_OldFileWithoutUniformNoteColor_KeepsEachNoteColor()
+    {
+        Directory.CreateDirectory(_tempDir);
+        File.WriteAllText(_settingsPath, "{\"AutoHideCompletedTasks\":true}");
+
+        Assert.Null(new SettingsService(_settingsPath).Load().UniformNoteColor);
+    }
 }

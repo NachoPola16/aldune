@@ -30,6 +30,7 @@
     <Window.Resources>
         <local:NoteTabLabelConverter x:Key="NoteTabLabelConverter" />
         <local:NoteRimConverter x:Key="NoteRimConverter" />
+        <local:NoteDisplayColorConverter x:Key="NoteDisplayColorConverter" />
         <local:NoteRestOutlineConverter x:Key="NoteRestOutlineConverter" />
         <local:NoteLabelColorConverter x:Key="NoteLabelColorConverter" />
         <local:NoteSnippetConverter x:Key="NoteSnippetConverter" />
@@ -39,7 +40,7 @@
         </ItemsPanelTemplate>
 
         <DataTemplate x:Key="HorizontalRestDashTemplate">
-            <Border Background="{Binding Color}"
+            <Border Background="{Binding Color, Converter={StaticResource NoteDisplayColorConverter}}"
                     BorderBrush="{Binding Color, Converter={StaticResource NoteRestOutlineConverter}}"
                     BorderThickness="{Binding Color, Converter={StaticResource NoteRestOutlineConverter}, ConverterParameter=Thickness}"
                     Width="26" Height="12"
@@ -314,7 +315,7 @@
             <ItemsControl x:Name="RestList">
                 <ItemsControl.ItemTemplate>
                     <DataTemplate>
-                        <Border Background="{Binding Color}"
+                        <Border Background="{Binding Color, Converter={StaticResource NoteDisplayColorConverter}}"
                                 BorderBrush="{Binding Color, Converter={StaticResource NoteRestOutlineConverter}}"
                                 BorderThickness="{Binding Color, Converter={StaticResource NoteRestOutlineConverter}, ConverterParameter=Thickness}"
                                 Width="12" Height="26"
@@ -379,7 +380,7 @@
                         <DataTemplate>
                             <Button Content="{Binding}"
                                     AutomationProperties.Name="{Binding Converter={StaticResource NoteTabLabelConverter}}"
-                                    Background="{Binding Color}"
+                                    Background="{Binding Color, Converter={StaticResource NoteDisplayColorConverter}}"
                                     Width="208"
                                     Height="52"
                                     HorizontalAlignment="Right"

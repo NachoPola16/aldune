@@ -1333,8 +1333,15 @@ public partial class NoteWindow : Window
         NoteSwatchPanel.MarkSelected(ColorSwatches, color);
     }
 
+    /// <summary>Repinta con los ajustes de aspecto actuales (color único y, desde la señal, su estado).</summary>
+    internal void ReapplyAppearance()
+    {
+        ApplyColor(_note.Color);
+    }
+
     private void ApplyColor(string color)
     {
+        color = NoteColorDisplay.Resolve(color);
         var brush = (Brush)new BrushConverter().ConvertFromString(color)!;
         var rim = (Brush)new BrushConverter().ConvertFromString(NoteColorPalette.RimFor(color))!;
 

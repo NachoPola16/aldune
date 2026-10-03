@@ -14,7 +14,7 @@ public sealed class NoteRimConverter : IValueConverter
 {
     public object Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
     {
-        var color = value as string ?? string.Empty;
+        var color = NoteColorDisplay.Resolve(value as string);
         var rim = NoteColorPalette.RimFor(color);
 
         try

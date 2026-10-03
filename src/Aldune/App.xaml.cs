@@ -183,6 +183,7 @@ public partial class App : Application
 
         var syncService = new SyncService(repository, settings, settingsService);
         NoteSnippetConverter.Enabled = settings.ShowNotePreview;
+        NoteColorDisplay.Uniform = settings.UniformNoteColor;
         var coordinator = new AppCoordinator(repository, settings, syncService, settingsService);
         _coordinator = coordinator;
         _repository = repository;

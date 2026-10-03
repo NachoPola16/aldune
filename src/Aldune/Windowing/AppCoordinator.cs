@@ -1134,6 +1134,13 @@ public sealed class AppCoordinator
         }
     }
 
+    /// <summary>Tras cambiar una opción de aspecto de las notas: notas abiertas, docks y gestor.</summary>
+    public void RefreshNoteAppearance()
+    {
+        foreach (var window in _openNoteWindows.Values) window.ReapplyAppearance();
+        RefreshAll();
+    }
+
     public void RefreshAll()
     {
         foreach (var dock in _docks) dock.Refresh();
