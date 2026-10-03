@@ -1014,3 +1014,30 @@ Hoy la app no suena en ningún sitio (los avisos de `AppDialog` son "sin sonido"
 - **Cosas a decidir entonces**: si los sonidos viajan en exportar/importar configuración (los de la app
   sí; los archivos propios no, son de cada equipo, como la pantalla elegida), y si respetar "no molestar"
   de Windows.
+
+## 11. Markdown vinculado a archivos (requisitos del usuario, 2026-10-03; entra en la fase F1)
+
+Para la spec de Markdown (fase F1 de `docs/superpowers/plans/2026-10-03-orden-de-trabajo.md`), lo que pidió
+el usuario, tal cual:
+
+- **Abrir un `.md` que ya está en cualquier carpeta del equipo** con la aplicación, y que **se quede en el
+  dock apuntando a ese sitio**: la nota *es* el archivo (se edita ahí y el archivo cambia), no una copia.
+- **Elegir por nota si entra en la sincronización o no.** Motivo: el mismo archivo puede estar en el mismo
+  sitio en el otro equipo (el portátil), por ejemplo los apuntes de una asignatura en `Z:` (volumen en
+  red), o no estarlo.
+- Lo demás de la fase F1 sigue en pie: escritura en Markdown, fotos, y archivos locales.
+
+Cuestiones que la spec tendrá que cerrar (no decididas): qué viaja por la sync cuando la nota está
+vinculada (la ruta, que difiere entre equipos, o solo el contenido, o una ruta relativa a una "raíz"
+con nombre que cada equipo asigna: `Z:\apuntes` aquí, otra letra allí); qué pasa si el archivo falta, se
+mueve o está en una unidad de red desconectada; edición simultánea del archivo por otra aplicación
+(vigilar cambios, conflicto); y cómo se ve en la papelera y en el archivo. Cambia el formato de datos
+para siempre: brainstorming a fondo antes de escribir código.
+
+## 12. Cliente móvil: después de todo lo anterior (decisión del usuario, 2026-10-03)
+
+Orden: bloques de aspectos y publicación de la 1.5.0, Markdown, MSIX y, **después**, el cliente móvil
+poco a poco, para **poder editar notas desde el móvil sin depender del ordenador**. Lo ya estudiado y
+decidido (Android primero, en la tableta, sin publicar al principio) está en `docs/MOBILE_PORT.md` y en
+el §9 de este fichero; hay que releerlo y revisarlo contra lo que haya cambiado para entonces (vinculación
+de archivos, sonidos, formato de sync).
