@@ -1184,6 +1184,7 @@ public partial class NoteWindow : Window
             : Visibility.Collapsed;
         if (AllDoneBar.Visibility == visibility) return;
         AllDoneBar.Visibility = visibility;
+        UpdateSyncSignal();
         UpdateLayout();
         FitHeightToContent();
     }
@@ -1331,7 +1332,11 @@ public partial class NoteWindow : Window
     /// alcance viven en el repositorio), aquí solo se pinta.</summary>
     private void UpdateSyncSignal()
     {
-        var state = _settings?.SyncSignalVisible == true ? _coordinator.SyncSignalFor(_note.Id) : SyncSignalState.Hidden;
+        // Comparte fila y esquina con la franja "Todo hecho": en una nota estrecha se pisarían, y esa
+        // franja es pasajera (hasta archivar o desmarcar), así que cede el sitio.
+        var state = _settings?.SyncSignalVisible == true && AllDoneBar.Visibility != Visibility.Visible
+            ? _coordinator.SyncSignalFor(_note.Id)
+            : SyncSignalState.Hidden;
         SyncSignalText.Visibility = state == SyncSignalState.Hidden ? Visibility.Collapsed : Visibility.Visible;
         SyncSignalText.Text = $"{NoteSyncSignal.Glyph(state)} {Strings.SyncSignalLabel(state)}";
     }
