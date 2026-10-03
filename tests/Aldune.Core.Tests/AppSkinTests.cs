@@ -11,7 +11,7 @@ public class AppSkinTests
         var skin = AppSkin.Default;
 
         Assert.Equal("Segoe UI Variable Text, Segoe UI", skin.ChromeFont);
-        Assert.Equal("Segoe UI Variable Text, Segoe UI", skin.NoteFont);
+        Assert.Equal("", skin.NoteFont);
         Assert.Equal("Ink Free, Segoe UI Variable Text", skin.NoteTitleFont);
         Assert.Equal(17, skin.NoteTitleFontSize);
         Assert.Equal(SkinBorder.Flat, skin.Border);

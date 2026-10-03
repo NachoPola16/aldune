@@ -61,7 +61,7 @@ public sealed record AppSkin(
     /// <summary>Lo de siempre: Segoe en el chrome y el cuerpo, título manuscrito, todo plano.</summary>
     public static AppSkin Default { get; } = new(
         ChromeFont: "Segoe UI Variable Text, Segoe UI",
-        NoteFont: "Segoe UI Variable Text, Segoe UI",
+        NoteFont: "", // vacío = la fuente de sistema, como el cuerpo de la nota ha sido siempre
         NoteTitleFont: "Ink Free, Segoe UI Variable Text",
         NoteTitleFontSize: 17,
         Border: SkinBorder.Flat,
