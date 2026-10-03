@@ -6,9 +6,10 @@ namespace Aldune.Core.Tests;
 public class NoteThemesTests
 {
     [Fact]
-    public void BuiltIn_AreTheSixFactoryThemes_InThatOrder()
+    public void BuiltIn_AreTheFactoryThemes_InThatOrder()
     {
-        Assert.Equal(new[] { "classic", "serene", "graphite", "pastel", "autumn", "ocean" }, NoteThemes.BuiltIn.Select(t => t.Id));
+        // Grafito se retiró en la 1.5: su papel (monocromo) lo cubre "mismo color en todas las notas".
+        Assert.Equal(new[] { "classic", "serene", "pastel", "autumn", "ocean", "xp" }, NoteThemes.BuiltIn.Select(t => t.Id));
         Assert.All(NoteThemes.BuiltIn, theme => Assert.True(theme.IsBuiltIn));
     }
 
@@ -16,10 +17,10 @@ public class NoteThemesTests
     // que ninguna nota destaque sobre las demás por ser más clara u oscura; solo cambia el matiz.
     [Theory]
     [InlineData("serene")]
-    [InlineData("graphite")]
     [InlineData("pastel")]
     [InlineData("autumn")]
     [InlineData("ocean")]
+    [InlineData("xp")]
     public void CalculatedThemes_KeepOneLightnessPerGroup(string id)
     {
         var theme = NoteThemes.Resolve(id, null);
@@ -31,12 +32,16 @@ public class NoteThemesTests
         }
     }
 
-    // Y que se distingan entre sí: dos notas seguidas no pueden parecer del mismo color.
+    // Que se distingan entre sí: dos notas seguidas no pueden parecer del mismo color. Todos los de
+    // serie, no solo los nuevos: Sereno pasaba sin cubrir con colores a 0.008 de distancia.
     [Theory]
+    [InlineData("classic")]
+    [InlineData("serene")]
     [InlineData("pastel")]
     [InlineData("autumn")]
     [InlineData("ocean")]
-    public void NewThemes_ColorsAreDistinguishable(string id)
+    [InlineData("xp")]
+    public void BuiltInThemes_ColorsAreDistinguishable(string id)
     {
         var theme = NoteThemes.Resolve(id, null);
         Assert.Equal(id, theme.Id);
@@ -48,6 +53,34 @@ public class NoteThemesTests
                 for (int j = i + 1; j < colors.Count; j++)
                     Assert.True(colors[i].DistanceTo(colors[j]) >= 0.03, $"{id}: {group[i]} y {group[j]} se parecen demasiado");
         }
+    }
+
+    // La tinta que la app elige para cada color se tiene que leer bien (AA, 4.5:1).
+    [Theory]
+    [InlineData("serene")]
+    [InlineData("xp")]
+    public void BuiltInThemes_InkIsReadable(string id)
+    {
+        var theme = NoteThemes.Resolve(id, null);
+        foreach (var color in theme.DarkColors.Concat(theme.LightColors))
+            Assert.True(NoteColorContrast.IsReadable(color, NoteColorContrast.ForegroundFor(color)), $"{id}: {color}");
+    }
+
+    [Fact]
+    public void Graphite_IsRetired_AndResolvesToClassic()
+    {
+        Assert.Equal(NoteThemes.ClassicId, NoteThemes.Resolve(NoteThemes.GraphiteId, null).Id);
+    }
+
+    [Fact]
+    public void SereneRecolorMap_SendsEachOldColorToTheNewOneOfItsSlotAndTone()
+    {
+        var serene = NoteThemes.Resolve(NoteThemes.SereneId, null);
+        for (int i = 0; i < NoteThemes.LegacySereneDarkColors.Count; i++)
+            Assert.Equal(serene.DarkColors[i], NoteThemes.SereneRecolorMap[NoteThemes.LegacySereneDarkColors[i]]);
+        for (int i = 0; i < NoteThemes.LegacySereneLightColors.Count; i++)
+            Assert.Equal(serene.LightColors[i], NoteThemes.SereneRecolorMap[NoteThemes.LegacySereneLightColors[i]]);
+        Assert.Equal(14, NoteThemes.SereneRecolorMap.Count);
     }
 
     private static OklchColor Oklch(string hex)

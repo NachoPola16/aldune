@@ -4,15 +4,18 @@
 /// Los temas de serie y las reglas para los propios. Los de serie se crean en cada acceso (listas
 /// nuevas): quien los recibe puede modificarlos sin tocar el original.
 ///
-/// Los colores de Sereno y Grafito se calcularon en OKLCH con la misma claridad dentro de cada grupo
-/// (oscuros L≈0.31 y 0.30, claros L≈0.925 y 0.93) y poco croma: se distinguen entre sí sin parecer
+/// Los colores de Sereno se calcularon en OKLCH con la misma claridad dentro de cada grupo
+/// (oscuros L≈0.31, claros L≈0.925) y poco croma: se distinguen entre sí sin parecer
 /// un arcoíris. Ver docs/superpowers/specs/2026-09-23-aldune-temas-design.md.
 /// </summary>
 public static class NoteThemes
 {
     public const string ClassicId = "classic";
     public const string SereneId = "serene";
+    /// <summary>Retirado en la 1.5 (lo sustituye "mismo color en todas las notas"). Se conserva el id
+    /// para migrar a quien lo tenga activo (ver ThemeMigrations) y para que Resolve caiga en Clásico.</summary>
     public const string GraphiteId = "graphite";
+    public const string XpId = "xp";
     public const string PastelId = "pastel";
     public const string AutumnId = "autumn";
     public const string OceanId = "ocean";
@@ -27,18 +30,11 @@ public static class NoteThemes
         new NoteTheme
         {
             Id = SereneId, Name = "Sereno", IsBuiltIn = true,
-            // Grafito, Pizarra, Tinta, Petróleo, Musgo, Tabaco, Burdeos, Ciruela
-            DarkColors = ["#2E3034", "#26323E", "#262F47", "#1D3538", "#283426", "#3C2D21", "#462527", "#392A3C"],
-            // Hueso, Piedra, Niebla, Salvia, Lino, Polvo
-            LightColors = ["#EBE6D9", "#EBE5E0", "#DEE8F0", "#DEEADE", "#F0E4D7", "#F2E2E1"],
-        },
-        new NoteTheme
-        {
-            Id = GraphiteId, Name = "Grafito", IsBuiltIn = true,
-            // Carbón, Grafito, Humo, Acero, Ónice
-            DarkColors = ["#2F2D2C", "#2B2E33", "#332C29", "#262F36", "#2E2E2E"],
-            // Papel, Tiza, Arena, Ceniza
-            LightColors = ["#EBE7E0", "#E4E8ED", "#EFE6DD", "#E8E8E8"],
+            // Renovado en la 1.5: los antiguos estaban a 0.020 (oscuros) y 0.008 (claros) de distancia
+            // y se confundían. Misma claridad por grupo, croma justo para separarse y matices
+            // repartidos por igual: oscuros L 0.31 C 0.052 cada 45°, claros L 0.925 C 0.042 cada 60°.
+            DarkColors = ["#472525", "#422A11", "#36310E", "#1F371F", "#033936", "#113447", "#2B2D4A", "#3E273F"],
+            LightColors = ["#FFDDD4", "#EFE7C7", "#D3EFD8", "#C7EFF4", "#D9E7FF", "#F5DDF6"],
         },
         // Los tres siguientes, con la misma regla (una claridad por grupo) y los matices repartidos
         // para que dos notas seguidas no se confundan (distancia OKLab >= 0.03, fijada en tests).
@@ -63,7 +59,36 @@ public static class NoteThemes
             DarkColors = ["#1B3914", "#003A2F", "#00373F", "#093351", "#2A2B53"],   // L 0.31
             LightColors = ["#C6EABE", "#ADEEDB", "#A7EBF8", "#C2E2FF", "#D7DBFF"],  // L 0.90
         },
+        new NoteTheme
+        {
+            Id = XpId, Name = "XP", IsBuiltIn = true,
+            // Los colores de nota de los aspectos XP: el amarillo de los avisos de Windows XP y tonos
+            // de la misma familia. Solo claros, como Pastel. Los valores de partida (#FFFFE1 y
+            // compañeros) tenían la claridad dispersa (0.93-0.99) y dos pares a 0.023 y 0.020; se
+            // recalcularon en OKLCH con L 0.95 y C 0.03-0.044, matices 100/262/150/35/322/192
+            // (distancia mínima 0.032). Amarillo, Azul, Verde, Melocotón, Lila, Turquesa.
+            LightColors = ["#F7F1D0", "#E0F1FF", "#DCF9E1", "#FFE6DD", "#FFE7FF", "#CFFAF8"],
+        },
     ];
+
+    /// <summary>Colores de Sereno hasta la 1.4: los tienen guardados las notas que se crearon con él.</summary>
+    public static IReadOnlyList<string> LegacySereneDarkColors { get; } =
+        ["#2E3034", "#26323E", "#262F47", "#1D3538", "#283426", "#3C2D21", "#462527", "#392A3C"];
+
+    public static IReadOnlyList<string> LegacySereneLightColors { get; } =
+        ["#EBE6D9", "#EBE5E0", "#DEE8F0", "#DEEADE", "#F0E4D7", "#F2E2E1"];
+
+    /// <summary>Color antiguo de Sereno → el nuevo del mismo puesto y tono. Claves en mayúsculas.</summary>
+    public static IReadOnlyDictionary<string, string> SereneRecolorMap { get; } = BuildSereneRecolorMap();
+
+    private static IReadOnlyDictionary<string, string> BuildSereneRecolorMap()
+    {
+        var serene = BuiltIn.First(theme => theme.Id == SereneId);
+        var map = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+        for (int i = 0; i < LegacySereneDarkColors.Count; i++) map[LegacySereneDarkColors[i]] = serene.DarkColors[i];
+        for (int i = 0; i < LegacySereneLightColors.Count; i++) map[LegacySereneLightColors[i]] = serene.LightColors[i];
+        return map;
+    }
 
     public static IReadOnlyList<NoteTheme> All(IEnumerable<NoteTheme>? custom) =>
         BuiltIn.Concat(custom ?? Enumerable.Empty<NoteTheme>()).ToList();

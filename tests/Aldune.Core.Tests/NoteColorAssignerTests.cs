@@ -91,11 +91,11 @@ public class NoteColorAssignerTests
     {
         // Se eligió Tinta como color fijo en Sereno y luego se cambió a un tema sin ella: seguir
         // creando notas Tinta sería un color de un tema que el usuario acaba de dejar.
-        var graphite = NoteThemes.Resolve(NoteThemes.GraphiteId, null);
+        var pastel = NoteThemes.Resolve(NoteThemes.PastelId, null);
 
-        var color = NoteColorAssigner.Assign(graphite, NoteTone.Dark, NoteColorAssignment.Fixed, "#262F47", []);
+        var color = NoteColorAssigner.Assign(pastel, NoteTone.Light, NoteColorAssignment.Fixed, "#262F47", []);
 
-        Assert.Equal("#2F2D2C", color);
+        Assert.Equal("#FFD3E6", color);
     }
 
     [Fact]

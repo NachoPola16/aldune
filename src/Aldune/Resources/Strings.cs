@@ -1084,14 +1084,13 @@ public static class Strings
             "Klassisch", "Classique", "Clássico"),
         Aldune.Core.NoteThemes.SereneId => T("Serene", "Sereno",
             "Ruhig", "Serein", "Sereno"),
-        Aldune.Core.NoteThemes.GraphiteId => T("Graphite", "Grafito",
-            "Graphit", "Graphite", "Grafite"),
         Aldune.Core.NoteThemes.PastelId => T("Pastel", "Pastel",
             "Pastell", "Pastel", "Pastel"),
         Aldune.Core.NoteThemes.AutumnId => T("Autumn", "Otoño",
             "Herbst", "Automne", "Outono"),
         Aldune.Core.NoteThemes.OceanId => T("Ocean", "Océano",
             "Ozean", "Océan", "Oceano"),
+        Aldune.Core.NoteThemes.XpId => T("XP", "XP", "XP", "XP", "XP"),
         _ => theme.Name,
     };
 
