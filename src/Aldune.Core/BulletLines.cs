@@ -22,16 +22,15 @@ public static class BulletLines
 
     /// <summary>
     /// Índice del glifo de viñeta dentro de <paramref name="line"/>, o -1 si esa línea no es una
-    /// viñeta. Mismo criterio que <see cref="TaskLines.GlyphIndex"/>: se permite sangría delante, y
-    /// no se exige un espacio detrás del glifo.
+    /// viñeta. Mismo criterio que <see cref="TaskLines.GlyphIndex"/>: se permite sangría delante y
+    /// se exige un espacio detrás del glifo.
     /// </summary>
     public static int GlyphIndex(string line)
     {
-        int i = 0;
-        while (i < line.Length && (line[i] == ' ' || line[i] == '\t')) i++;
+        int i = ListPrefix.IndentLength(line);
 
-        if (i >= line.Length) return -1;
-        if (line[i] != Glyph) return -1;
+        if (i + 1 >= line.Length) return -1;
+        if (line[i] != Glyph || line[i + 1] != ' ') return -1;
 
         return i;
     }
@@ -85,8 +84,9 @@ public static class BulletLines
             return (string.Concat(text.AsSpan(0, start), replaced, text.AsSpan(end)), start + caretInLine);
         }
 
-        int indent = 0;
-        while (indent < line.Length && (line[indent] == ' ' || line[indent] == '\t')) indent++;
+        // Reparar una viñeta antigua sin espacio, como TaskLines.ToggleTaskLineAt.
+        int indent = ListPrefix.IndentLength(line);
+        if (indent < line.Length && line[indent] == Glyph) return ListPrefix.InsertSpaceAfterGlyph(text, caret, start + indent);
 
         var prefixed = line.Insert(indent, Prefix);
         int newCaret = caret >= start + indent ? caret + Prefix.Length : caret;

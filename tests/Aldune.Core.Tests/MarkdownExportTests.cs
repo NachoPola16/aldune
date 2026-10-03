@@ -59,11 +59,11 @@ public class MarkdownExportTests
     }
 
     [Fact]
-    public void ToMarkdown_TaskGlyphGluedToText_StillConverts()
+    public void ToMarkdown_TaskGlyphGluedToText_StaysAsText()
     {
-        // TaskLines.PrefixLength reconoce esto como tarea sin espacio detrás del glifo.
+        // Sin espacio detrás del glifo ya no es tarea (ver TaskLines.GlyphIndex).
         var result = MarkdownExport.ToMarkdown("Título\r\n☐pegado");
-        Assert.Equal("# Título\r\n\r\n- [ ] pegado", result);
+        Assert.Equal("# Título\r\n\r\n☐pegado", result);
     }
 
     [Fact]
@@ -92,10 +92,10 @@ public class MarkdownExportTests
     }
 
     [Fact]
-    public void ToMarkdown_BulletGlyphGluedToText_StillConverts()
+    public void ToMarkdown_BulletGlyphGluedToText_StaysAsText()
     {
         var result = MarkdownExport.ToMarkdown("Título\r\n→pegado");
-        Assert.Equal("# Título\r\n\r\n- pegado", result);
+        Assert.Equal("# Título\r\n\r\n→pegado", result);
     }
 
     [Fact]

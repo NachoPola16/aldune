@@ -391,6 +391,18 @@ public sealed class AppCoordinator
     }
 
     /// <summary>
+    /// Atajo global "abrir la última nota": la activa editada más recientemente (ver
+    /// <see cref="NoteListing.MostRecentlyEdited"/>), o la trae al frente si ya está abierta.
+    /// </summary>
+    public void OpenMostRecentNote()
+    {
+        if (NoteListing.MostRecentlyEdited(_repository.GetByState(NoteState.Active)) is { } note)
+        {
+            OpenNoteById(note.Id);
+        }
+    }
+
+    /// <summary>
     /// Si el ajuste está activado y hay una posición guardada para <paramref name="noteId"/> en
     /// <paramref name="monitorKey"/> que siga siendo visible ahora mismo, la aplica a
     /// <paramref name="noteWindow"/> y devuelve <c>true</c>. La validez de "sigue siendo visible"

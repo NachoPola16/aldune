@@ -4,8 +4,7 @@
 /// Casillas de tarea dentro del texto de una nota.
 ///
 /// Son texto plano, no un tipo aparte: una línea que empieza (tras la sangría) por <c>☐</c>, <c>☒</c>
-/// o <c>☑</c> es una tarea — con o sin espacio detrás del glifo, ver <see cref="GlyphIndex"/> y
-/// <see cref="PrefixLength"/>. Esa decisión no es pereza — el cuerpo de la nota es un <c>TextBox</c> plano a
+/// o <c>☑</c> seguido de un espacio es una tarea, ver <see cref="GlyphIndex"/>. Esa decisión no es pereza — el cuerpo de la nota es un <c>TextBox</c> plano a
 /// propósito (la spec v1 descartó texto enriquecido, ver docs/STATUS.md), así que una casilla que
 /// fuera un control de verdad exigiría un <c>RichTextBox</c> y arrastraría con él el formato, el
 /// portapapeles con estilos y un modelo de guardado distinto. Como prefijo de texto, en cambio, la
@@ -45,19 +44,19 @@ public static class TaskLines
 
     /// <summary>
     /// Índice del glifo de casilla dentro de <paramref name="line"/>, o -1 si esa línea no es una
-    /// tarea. Se permite sangría delante (para listas indentadas). No se exige un espacio detrás
-    /// del glifo: da igual que el texto de la tarea le vaya pegado sin espacio (por ejemplo, al
-    /// borrar el espacio sin querer mientras se edita) — sigue siendo una tarea marcable mientras el
-    /// glifo sea el primer carácter no en blanco de la línea. Aldune nunca *escribe* una tarea sin
-    /// ese espacio (ver <see cref="Prefix"/>), pero sí reconoce y deja marcar una que llegue así.
+    /// tarea. Se permite sangría delante (para listas indentadas) y se exige un espacio detrás del
+    /// glifo: un <c>☐</c> suelto o pegado a una palabra es texto, no una lista que aparece sola.
+    /// Hasta la 1.4 se aceptaba pegado, porque borrar el espacio sin querer dejaba la tarea sin
+    /// marcar; desde que el retroceso quita el prefijo entero (<see cref="ListPrefix"/>) ese
+    /// accidente no pasa, y el usuario prefirió la regla estricta. Una tarea antigua sin espacio se
+    /// repara con Ctrl+L (<see cref="ToggleTaskLineAt"/>).
     /// </summary>
     public static int GlyphIndex(string line)
     {
-        int i = 0;
-        while (i < line.Length && (line[i] == ' ' || line[i] == '\t')) i++;
+        int i = ListPrefix.IndentLength(line);
 
-        if (i >= line.Length) return -1;
-        if (!IsBoxGlyph(line[i])) return -1;
+        if (i + 1 >= line.Length) return -1;
+        if (!IsBoxGlyph(line[i]) || line[i + 1] != ' ') return -1;
 
         return i;
     }
@@ -96,6 +95,14 @@ public static class TaskLines
         int start = LineStart(text, index);
         int end = LineEnd(text, index);
         return text[start..end];
+    }
+
+    /// <summary>Si la línea empieza (tras la sangría) por un glifo de casilla, con espacio o sin él.
+    /// Solo para reparar tareas antiguas escritas sin espacio, que ya no cuentan como tarea.</summary>
+    internal static bool StartsWithBoxGlyph(string line)
+    {
+        int i = ListPrefix.IndentLength(line);
+        return i < line.Length && IsBoxGlyph(line[i]);
     }
 
     public static bool IsChecked(string line)
@@ -165,10 +172,12 @@ public static class TaskLines
             return (string.Concat(text.AsSpan(0, start), replaced, text.AsSpan(end)), start + caretInLine);
         }
 
-        // Poner: detrás de la sangría que ya tuviera la línea.
-        int indent = 0;
-        while (indent < line.Length && (line[indent] == ' ' || line[indent] == '\t')) indent++;
+        // Reparar: una tarea antigua con el texto pegado al glifo ya no es tarea; se le mete el
+        // espacio en vez de apilar otra casilla delante.
+        int indent = ListPrefix.IndentLength(line);
+        if (StartsWithBoxGlyph(line)) return ListPrefix.InsertSpaceAfterGlyph(text, caret, start + indent);
 
+        // Poner: detrás de la sangría que ya tuviera la línea.
         var prefixed = line.Insert(indent, Prefix);
         int newCaret = caret >= start + indent ? caret + Prefix.Length : caret;
         return (string.Concat(text.AsSpan(0, start), prefixed, text.AsSpan(end)), newCaret);

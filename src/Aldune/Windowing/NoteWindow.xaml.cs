@@ -694,6 +694,16 @@ public partial class NoteWindow : Window
             return;
         }
 
+        // Retroceso justo detrás de "☐ " o "→ ": quita el prefijo entero (ver ListPrefix). Con
+        // selección, el retroceso nativo borra la selección, que es lo esperado.
+        if (e.Key == Key.Back && Keyboard.Modifiers == ModifierKeys.None && TextBody.SelectionLength == 0
+            && ListPrefix.RemoveOnBackspace(TextBody.Text, TextBody.CaretIndex) is { } unlisted)
+        {
+            ReplaceBody(unlisted.Text, unlisted.Caret);
+            e.Handled = true;
+            return;
+        }
+
         // Tab: sube un nivel de sangría, la misma en listas y en texto libre (ver ListIndent). En texto
         // libre se escribe a través de SelectedText y no con ReplaceBody: así sustituye la selección,
         // como el Tab de cualquier editor, y queda en el historial de Ctrl+Z igual que una pulsación.

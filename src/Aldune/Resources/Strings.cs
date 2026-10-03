@@ -592,6 +592,12 @@ public static class Strings
         "Vous pouvez aussi le supprimer depuis le Gestionnaire des tâches, dans l'onglet Démarrage.",
         "Você também pode removê-lo pelo Gerenciador de Tarefas, na guia Inicializar.");
 
+    public static string RecentNoteHotkeyCheckbox => T("Open the last edited note with a keyboard shortcut",
+        "Abrir la última nota editada con un atajo de teclado",
+        "Zuletzt bearbeitete Notiz mit Tastenkombination öffnen",
+        "Ouvrir la dernière note modifiée avec un raccourci clavier",
+        "Abrir a última nota editada com um atalho de teclado");
+
     public static string HotkeyCheckbox => T("Create a note with a keyboard shortcut", "Crear una nota con un atajo de teclado",
         "Notiz mit Tastenkombination erstellen",
         "Créer une note avec un raccourci clavier",

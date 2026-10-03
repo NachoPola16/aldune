@@ -279,11 +279,16 @@ public partial class App : Application
         _dockHotkey = new GlobalHotkey(coordinator.ToggleDocksVisible);
         _dockHotkey.Enable(HotkeyBinding.DockToggleDefault);
 
+        // Tercer atajo: abrir la última nota editada. Configurable como el de crear nota.
+        _recentHotkey = new GlobalHotkey(coordinator.OpenMostRecentNote);
+        if (settings.RecentNoteHotkeyEnabled) _recentHotkey.Enable(settings.RecentNoteHotkey);
+
         var hotkey = _hotkey;
+        var recentHotkey = _recentHotkey;
         var loadedSettings = settings;
         coordinator.SettingsWindowFactory = () => new SettingsWindow(
             settingsService, loadedSettings, hotkey, coordinator, syncService,
-            () => _updateNotifier?.CheckManually());
+            () => _updateNotifier?.CheckManually(), recentHotkey);
         // Unos segundos después de arrancar, no al instante: que el dock y las notas se pinten antes
         // de salir a la red.
         coordinator.ConfigureAutomaticSync(firstRunIn: TimeSpan.FromSeconds(5));
@@ -327,6 +332,7 @@ public partial class App : Application
             _trayIcon?.Dispose();
             _hotkey?.Dispose();
             _dockHotkey?.Dispose();
+            _recentHotkey?.Dispose();
             _backupTimer?.Stop();
             _singleInstance?.Dispose();
         };
@@ -468,6 +474,7 @@ public partial class App : Application
     private TrayIcon? _trayIcon;
     private GlobalHotkey? _hotkey;
     private GlobalHotkey? _dockHotkey;
+    private GlobalHotkey? _recentHotkey;
     private NotesRepository? _repository;
     private AppSettings? _settings;
     private DispatcherTimer? _rebuildDebounce;

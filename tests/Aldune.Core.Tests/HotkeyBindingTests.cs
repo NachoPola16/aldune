@@ -70,4 +70,11 @@ public class HotkeyBindingTests
     {
         Assert.True(HotkeyBinding.Default.IsValid);
     }
+
+    [Fact]
+    public void RecentNoteDefault_IsCtrlAltL()
+    {
+        // No Ctrl+Alt+N, por lo mismo que en Default; ni Ctrl+Shift+L, que dentro de la nota es la viñeta.
+        Assert.Equal("Ctrl + Alt + L", HotkeyBinding.RecentNoteDefault.DisplayName);
+    }
 }

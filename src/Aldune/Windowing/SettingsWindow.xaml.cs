@@ -21,10 +21,13 @@ public partial class SettingsWindow : Window
     private readonly SettingsService _settingsService;
     private readonly AppSettings _settings;
     private readonly GlobalHotkey _hotkey;
+    private readonly GlobalHotkey? _recentHotkey;
     private readonly AppCoordinator? _coordinator;
     private readonly SyncService? _syncService;
     private readonly Action? _checkForUpdates;
     private bool _recording;
+    // Qué atajo está escuchando el botón de grabar: el de crear nota o el de abrir la última.
+    private bool _recordingRecent;
     private bool _syncUiReady;
     private bool _loadingSyncProfile;
 
@@ -37,7 +40,8 @@ public partial class SettingsWindow : Window
         GlobalHotkey hotkey,
         AppCoordinator? coordinator = null,
         SyncService? syncService = null,
-        Action? checkForUpdates = null)
+        Action? checkForUpdates = null,
+        GlobalHotkey? recentHotkey = null)
     {
         InitializeComponent();
         NativeMethods.CloakUntilFirstFrame(this);
@@ -49,12 +53,14 @@ public partial class SettingsWindow : Window
         _settingsService = settingsService;
         _settings = settings;
         _hotkey = hotkey;
+        _recentHotkey = recentHotkey;
         _coordinator = coordinator;
         _syncService = syncService;
         _checkForUpdates = checkForUpdates;
 
         StartupCheck.IsChecked = StartupRegistration.IsEnabled();
         HotkeyCheck.IsChecked = _settings.GlobalHotkeyEnabled;
+        RecentHotkeyCheck.IsChecked = _settings.RecentNoteHotkeyEnabled;
         HideOnFullscreenCheck.IsChecked = _settings.HideOnFullscreen;
         KeepDockOpenCheck.IsChecked = _settings.KeepDockOpen;
         ShowNotePreviewCheck.IsChecked = _settings.ShowNotePreview;
@@ -66,6 +72,7 @@ public partial class SettingsWindow : Window
         AutoHideTasksDelayValueBox.Text = _settings.AutoHideCompletedTasksDelayValue.ToString();
         TrashRetentionValueBox.Text = _settings.TrashRetentionDays.ToString();
         UpdateHotkeyUi(); // tambien deja lista la seccion de Ayuda rapida, ver UpdateQuickHelp
+        UpdateRecentHotkeyUi();
         PopulateMonitors();
         PopulateEdges();
         PopulateLanguages();
@@ -285,6 +292,8 @@ public partial class SettingsWindow : Window
     private void OnRecordHotkeyClick(object sender, RoutedEventArgs e)
     {
         _recording = true;
+        _recordingRecent = false;
+        UpdateRecentHotkeyUi();
         HotkeyButton.Content = Strings.HotkeyRecording;
         HotkeyButton.Focus();
     }
@@ -306,6 +315,7 @@ public partial class SettingsWindow : Window
         {
             _recording = false;
             UpdateHotkeyUi();
+            UpdateRecentHotkeyUi();
             return;
         }
 
@@ -325,12 +335,64 @@ public partial class SettingsWindow : Window
         if (!candidate.IsValid)
         {
             // Sin modificador, el atajo se tragaria esa tecla en todo el sistema.
-            HotkeyHint.Text = Strings.HotkeyNeedsModifier;
+            (_recordingRecent ? RecentHotkeyHint : HotkeyHint).Text = Strings.HotkeyNeedsModifier;
             return;
         }
 
         _recording = false;
-        ApplyBinding(candidate);
+        if (_recordingRecent) ApplyRecentBinding(candidate);
+        else ApplyBinding(candidate);
+    }
+
+    private void OnRecentHotkeyToggled(object sender, RoutedEventArgs e)
+    {
+        bool wanted = RecentHotkeyCheck.IsChecked == true;
+
+        if (wanted) _recentHotkey?.Enable(_settings.RecentNoteHotkey);
+        else _recentHotkey?.Disable();
+
+        _settings.RecentNoteHotkeyEnabled = wanted;
+        _settingsService.Save(_settings);
+
+        UpdateRecentHotkeyUi();
+    }
+
+    private void OnRecordRecentHotkeyClick(object sender, RoutedEventArgs e)
+    {
+        _recording = true;
+        _recordingRecent = true;
+        UpdateHotkeyUi();
+        RecentHotkeyButton.Content = Strings.HotkeyRecording;
+        RecentHotkeyButton.Focus();
+    }
+
+    private void OnResetRecentHotkeyClick(object sender, RoutedEventArgs e)
+    {
+        _recording = false;
+        ApplyRecentBinding(HotkeyBinding.RecentNoteDefault);
+    }
+
+    private void ApplyRecentBinding(HotkeyBinding binding)
+    {
+        _settings.RecentNoteHotkeyModifiers = binding.Modifiers;
+        _settings.RecentNoteHotkeyKey = binding.Key;
+
+        if (_settings.RecentNoteHotkeyEnabled) _recentHotkey?.Enable(binding);
+        _settingsService.Save(_settings);
+
+        UpdateRecentHotkeyUi();
+    }
+
+    private void UpdateRecentHotkeyUi()
+    {
+        bool on = RecentHotkeyCheck.IsChecked == true;
+        RecentHotkeyButton.Content = _settings.RecentNoteHotkey.DisplayName;
+        RecentHotkeyButton.IsEnabled = on;
+        RecentHotkeyResetButton.IsEnabled = on;
+
+        RecentHotkeyHint.Text = !on ? Strings.HotkeyDisabled
+            : _recentHotkey?.IsRegistered == true ? Strings.HotkeyWorks
+            : Strings.HotkeyConflict(_settings.RecentNoteHotkey.DisplayName);
     }
 
     private void ApplyBinding(HotkeyBinding binding)

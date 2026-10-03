@@ -81,4 +81,27 @@ public class NoteListingTests
 
         Assert.Equal(NoteDateKind.Today, NoteListing.DateKind(updatedUtc, Now));
     }
+
+    [Fact]
+    public void MostRecentlyEdited_PicksTheLatestActiveNote()
+    {
+        var older = MakeNote("vieja", Now.AddHours(-2));
+        var newest = MakeNote("nueva", Now.AddMinutes(-5));
+        var archived = MakeNote("archivada", Now);
+        archived.State = NoteState.Archived;
+        var trashed = MakeNote("papelera", Now);
+        trashed.State = NoteState.Trashed;
+
+        Assert.Same(newest, NoteListing.MostRecentlyEdited(new[] { older, archived, newest, trashed }));
+    }
+
+    [Fact]
+    public void MostRecentlyEdited_WithNoActiveNotes_IsNull()
+    {
+        var archived = MakeNote("archivada", Now);
+        archived.State = NoteState.Archived;
+
+        Assert.Null(NoteListing.MostRecentlyEdited(new[] { archived }));
+        Assert.Null(NoteListing.MostRecentlyEdited(Array.Empty<Note>()));
+    }
 }

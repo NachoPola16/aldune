@@ -86,6 +86,19 @@ public sealed class AppSettings
             : HotkeyBinding.Default;
 
     /// <summary>
+    /// Atajo global para abrir la última nota editada. Mismo esquema que el de crear nota: activado
+    /// por defecto (un settings.json antiguo lo trae encendido) y nulos = combinación de fábrica.
+    /// </summary>
+    public bool RecentNoteHotkeyEnabled { get; set; } = true;
+    public uint? RecentNoteHotkeyModifiers { get; set; }
+    public uint? RecentNoteHotkeyKey { get; set; }
+
+    public HotkeyBinding RecentNoteHotkey =>
+        RecentNoteHotkeyModifiers is { } mods && RecentNoteHotkeyKey is { } key && new HotkeyBinding(mods, key).IsValid
+            ? new HotkeyBinding(mods, key)
+            : HotkeyBinding.RecentNoteDefault;
+
+    /// <summary>
     /// Índice 0-based del monitor al que restringir Aldune, según la enumeración de Win32.
     /// <c>null</c> significa mostrar el dock en todas las pantallas conectadas (por defecto).
     /// </summary>

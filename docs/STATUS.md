@@ -3986,3 +3986,21 @@ instalado a mano en la tableta cuesta 0 €; Play son 25 $ solo si se publica). 
 dispositivo de referencia** del diseño (dos paneles lista+nota, widget grande, teclado físico) y el
 teléfono un subconjunto. iOS queda aparcado hasta que haya Mac o hasta que la prioridad sea capturar desde
 el bolsillo. Detalle y razones: `docs/MOBILE_PORT.md` §0.1 y `ROADMAP.md` §9.
+
+## 2026-10-03: listas más firmes y atajo de la última nota
+
+- **Listas**: una tarea o viñeta exige el espacio (`☐ `, `→ `); un glifo suelto o pegado a una palabra es
+  texto. Se revierte la decisión de aceptar el glifo pegado: su motivo (borrar el espacio sin querer)
+  desaparece porque el retroceso justo detrás del prefijo, o entre el glifo y el espacio, lo quita
+  entero (`ListPrefix.RemoveOnBackspace`). Las tareas antiguas sin espacio no se migran (habría que
+  reescribir notas protegidas y marcarlas como cambiadas para la sync): Ctrl+L / Ctrl+Mayús+L las
+  reparan metiendo el espacio.
+- **Atajo global Ctrl+Alt+L**: abre la nota activa editada más recientemente
+  (`NoteListing.MostRecentlyEdited`; las archivadas no cuentan). Configurable en Ajustes → General como
+  el de crear nota (`RecentNoteHotkey*` en settings.json, nulos = de fábrica). No Ctrl+Alt+N (la
+  ocupan utilidades de fabricante) ni Ctrl+Shift+L (viñeta dentro de la nota).
+- **Flash blanco al crecer la nota con Enter en una lista**: no se reproduce en la 1.4.1. Sondas con
+  notas claras/oscuras, cortas/largas y una grabación pasiva de la pantalla con el uso real del usuario
+  (11 crecimientos): ningún fotograma con pico de blanco. Si vuelve, apuntar pantalla y nota.
+
+Verificado con sonda: retroceso tras el prefijo y Ctrl+Alt+L abriendo la última nota. Tests: 867/867.

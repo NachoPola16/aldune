@@ -333,6 +333,25 @@
                         <TextBlock x:Name="HotkeyHint"
                                    Foreground="{DynamicResource AlduneHintBrush}" FontSize="11" TextWrapping="Wrap" Margin="27,10,0,0" />
                     </StackPanel>
+                    <StackPanel Margin="0,20,0,0">
+                        <CheckBox x:Name="RecentHotkeyCheck"
+                                  Content="{x:Static res:Strings.RecentNoteHotkeyCheckbox}"
+                                  Foreground="{DynamicResource AlduneTextBrush}" Background="{DynamicResource AlduneGroundBrush}" FontSize="13"
+                                  Style="{StaticResource AppCheckBoxStyle}"
+                                  Click="OnRecentHotkeyToggled" />
+
+                        <StackPanel Orientation="Horizontal" Margin="27,10,0,0">
+                            <Button x:Name="RecentHotkeyButton" Click="OnRecordRecentHotkeyClick"
+                                    MinWidth="150" Padding="12,7"
+                                    Style="{StaticResource RecordButtonStyle}" />
+                            <Button x:Name="RecentHotkeyResetButton" Content="{x:Static res:Strings.HotkeyResetButton}" Click="OnResetRecentHotkeyClick"
+                                    Margin="8,0,0,0" Padding="12,7"
+                                    Style="{StaticResource RecordButtonStyle}" />
+                        </StackPanel>
+
+                        <TextBlock x:Name="RecentHotkeyHint"
+                                   Foreground="{DynamicResource AlduneHintBrush}" FontSize="11" TextWrapping="Wrap" Margin="27,10,0,0" />
+                    </StackPanel>
                     <Border Background="{DynamicResource AlduneRaisedBrush}" Height="1" Margin="0,20,0,0" />
                     <StackPanel Margin="0,20,0,0">
                         <TextBlock Text="{x:Static res:Strings.AppearanceSectionTitle}"

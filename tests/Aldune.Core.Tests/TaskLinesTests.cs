@@ -21,19 +21,18 @@ public class TaskLinesTests
     }
 
     [Fact]
-    public void IsTaskLine_GlyphWithTextGluedRightAfterIt_IsStillATask()
+    public void IsTaskLine_GlyphWithTextGluedRightAfterIt_IsNotATask()
     {
-        // Decisión revertida a propósito: el usuario pidió poder marcar una tarea aunque se le
-        // haya pegado el texto al glifo sin espacio (p. ej. al borrar el espacio sin querer
-        // mientras se edita) -- antes esto no contaba como tarea, ahora sí. Ver TaskLines.PrefixLength
-        // para cómo se sigue quitando el prefijo correctamente en ambos casos.
-        Assert.True(TaskLines.IsTaskLine("☐comprar"));
+        // Revertido otra vez (2026-10-03), a petición del usuario: la tarea exige el espacio. El
+        // motivo para aceptarla pegada era borrar el espacio sin querer, y eso ya no pasa: el
+        // retroceso quita el prefijo entero (ListPrefix.RemoveOnBackspace).
+        Assert.False(TaskLines.IsTaskLine("☐comprar"));
     }
 
     [Fact]
-    public void IsTaskLine_GlyphAlone_IsATask()
+    public void IsTaskLine_GlyphAlone_IsNotATask()
     {
-        Assert.True(TaskLines.IsTaskLine("☐"));
+        Assert.False(TaskLines.IsTaskLine("☐"));
     }
 
     [Fact]
@@ -113,11 +112,10 @@ public class TaskLinesTests
     }
 
     [Fact]
-    public void ToggleCheckboxAt_GlyphWithTextGluedRightAfterIt_StillToggles()
+    public void ToggleCheckboxAt_GlyphWithTextGluedRightAfterIt_IsNotACheckbox()
     {
-        // ToggleCheckboxAt solo voltea un caracter, asi que ya funcionaba sin cambios en cuanto
-        // GlyphIndex reconoce la linea -- lo que confirma este test es justo eso.
-        Assert.Equal("☒comprar", TaskLines.ToggleCheckboxAt("☐comprar", 0));
+        // Sin espacio no es tarea, así que el clic sobre ese glifo es un clic normal.
+        Assert.Null(TaskLines.ToggleCheckboxAt("☐comprar", 0));
     }
 
     // --- PrefixLength (cuánto ocupa el prefijo de casilla) --------------------------------------
@@ -205,14 +203,23 @@ public class TaskLinesTests
     }
 
     [Fact]
-    public void ToggleTaskLineAt_GlyphWithTextGluedRightAfterIt_StripsOnlyTheGlyph()
+    public void ToggleTaskLineAt_GlyphWithTextGluedRightAfterIt_RepairsItIntoATask()
     {
-        // Sin PrefixLength esto quitaria 2 caracteres a ciegas (glifo + "espacio" asumido) y se
-        // comeria la "c" de "comprar", dejando "omprar" -- justo el bug que motiva PrefixLength.
+        // Una tarea antigua escrita sin espacio ya no cuenta como tarea; Ctrl+L la repara metiendo
+        // el espacio, en vez de apilar una casilla nueva delante ("☐ ☐comprar").
         var (text, caret) = TaskLines.ToggleTaskLineAt("☐comprar pan", caret: 5);
 
-        Assert.Equal("comprar pan", text);
-        Assert.Equal(4, caret);
+        Assert.Equal("☐ comprar pan", text);
+        Assert.Equal(6, caret);
+    }
+
+    [Fact]
+    public void ToggleTaskLineAt_IndentedGluedGlyph_RepairsItKeepingTheIndent()
+    {
+        var (text, caret) = TaskLines.ToggleTaskLineAt("    ☒hecho", caret: 0);
+
+        Assert.Equal("    ☒ hecho", text);
+        Assert.Equal(0, caret);
     }
 
     // --- Continuar la lista con Enter -----------------------------------------------------------
@@ -273,24 +280,9 @@ public class TaskLinesTests
     }
 
     [Fact]
-    public void EnterContinuation_GlyphWithTextGluedRightAfterIt_StillContinuesTheList()
+    public void EnterContinuation_GlyphWithTextGluedRightAfterIt_IsAPlainEnter()
     {
-        // Sin PrefixLength, "rest" se calcularia como line[2..] y se comeria la "o" de "hecho".
-        var text = "☒hecho";
-        var result = TaskLines.EnterContinuation(text, text.Length);
-
-        Assert.Equal("☒hecho\r\n☐ ", result!.Value.Text);
-    }
-
-    [Fact]
-    public void EnterContinuation_GlyphAloneWithTextGluedAfterItRemoved_EndsTheList()
-    {
-        // Una tarea sin espacio y sin contenido de verdad (solo el glifo) tambien tiene que poder
-        // terminar la lista con Enter, igual que la version bien formada.
-        var text = "☐";
-        var result = TaskLines.EnterContinuation(text, text.Length);
-
-        Assert.Equal("", result!.Value.Text);
+        Assert.Null(TaskLines.EnterContinuation("☒hecho", "☒hecho".Length));
     }
 
     // --- Recuento -------------------------------------------------------------------------------
@@ -339,7 +331,7 @@ public class TaskLinesTests
 
     [Theory]
     [InlineData("☐ ", true)]
-    [InlineData("☐", true)]
+    [InlineData("☐", false)]
     [InlineData("☐   ", true)] // solo espacios detrás, sigue sin contenido real
     [InlineData("☐ comprar pan", false)]
     [InlineData("☐comprar", false)]

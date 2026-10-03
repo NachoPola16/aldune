@@ -34,6 +34,14 @@ public sealed record HotkeyBinding(uint Modifiers, uint Key)
     public static HotkeyBinding DockToggleDefault => new(ModControl | ModAlt, 0x48);
 
     /// <summary>
+    /// Ctrl + Alt + L: abrir la última nota editada (L de last). No Ctrl+Alt+N, por lo mismo que en
+    /// <see cref="Default"/>, ni Ctrl+Shift+L, que dentro de una nota convierte la línea en viñeta y
+    /// un atajo global se la quitaría. Con AltGr (Ctrl+Alt) la L no escribe nada en las
+    /// distribuciones de teclado de los idiomas de la app.
+    /// </summary>
+    public static HotkeyBinding RecentNoteDefault => new(ModControl | ModAlt, 0x4C);
+
+    /// <summary>
     /// Si la combinación es registrable. Sin al menos un modificador, un atajo global se tragaría
     /// esa tecla en todo el sistema, que es justo lo que no debe hacer una app de notas.
     /// </summary>

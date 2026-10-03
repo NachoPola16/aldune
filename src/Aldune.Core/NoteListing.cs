@@ -32,6 +32,14 @@ public static class NoteListing
         _ => items
     };
 
+    /// <summary>
+    /// La nota activa modificada más recientemente, para el atajo de "abrir la última nota". Las
+    /// archivadas no cuentan: archivar también cambia la fecha, y el atajo abriría justo la nota que
+    /// se acaba de quitar de en medio.
+    /// </summary>
+    public static Note? MostRecentlyEdited(IEnumerable<Note> notes) =>
+        notes.Where(note => note.State == NoteState.Active).MaxBy(note => note.UpdatedAt);
+
     /// <summary>Por día de calendario de quien mira (el desplazamiento de <paramref name="now"/>), no
     /// por horas transcurridas: una nota de las 23:30 de ayer es "de ayer" aunque haga una hora.</summary>
     public static NoteDateKind DateKind(DateTimeOffset updatedAt, DateTimeOffset now)

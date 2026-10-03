@@ -21,15 +21,25 @@ public class BulletLinesTests
     }
 
     [Fact]
-    public void IsBulletLine_GlyphWithTextGluedRightAfterIt_IsStillABullet()
+    public void IsBulletLine_GlyphWithTextGluedRightAfterIt_IsNotABullet()
     {
-        Assert.True(BulletLines.IsBulletLine("→comprar"));
+        // Mismo criterio que las tareas: la viñeta exige el espacio (ver TaskLinesTests).
+        Assert.False(BulletLines.IsBulletLine("→comprar"));
     }
 
     [Fact]
-    public void IsBulletLine_GlyphAlone_IsABullet()
+    public void IsBulletLine_GlyphAlone_IsNotABullet()
     {
-        Assert.True(BulletLines.IsBulletLine("→"));
+        Assert.False(BulletLines.IsBulletLine("→"));
+    }
+
+    [Fact]
+    public void ToggleBulletLineAt_GlyphWithTextGluedRightAfterIt_RepairsItIntoABullet()
+    {
+        var (text, caret) = BulletLines.ToggleBulletLineAt("→comprar", caret: 3);
+
+        Assert.Equal("→ comprar", text);
+        Assert.Equal(4, caret);
     }
 
     [Fact]
@@ -177,7 +187,7 @@ public class BulletLinesTests
 
     [Theory]
     [InlineData("→ ", true)]
-    [InlineData("→", true)]
+    [InlineData("→", false)]
     [InlineData("→   ", true)]
     [InlineData("→ comprar pan", false)]
     [InlineData("→comprar", false)]

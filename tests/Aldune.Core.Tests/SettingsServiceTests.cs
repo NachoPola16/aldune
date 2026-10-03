@@ -263,4 +263,32 @@ public class SettingsServiceTests : IDisposable
 
         Assert.Contains("\"NewNoteTone\":1", File.ReadAllText(_settingsPath));
     }
+
+    [Fact]
+    public void Load_OldFileWithoutRecentNoteHotkey_HasItOnWithTheDefaultBinding()
+    {
+        Directory.CreateDirectory(_tempDir);
+        File.WriteAllText(_settingsPath, "{\"AutoHideCompletedTasks\":true}");
+
+        var loaded = new SettingsService(_settingsPath).Load();
+
+        Assert.True(loaded.RecentNoteHotkeyEnabled);
+        Assert.Equal(HotkeyBinding.RecentNoteDefault, loaded.RecentNoteHotkey);
+    }
+
+    [Fact]
+    public void SaveThenLoad_RecentNoteHotkey_RoundTrips()
+    {
+        var sut = new SettingsService(_settingsPath);
+        sut.Save(new AppSettings
+        {
+            RecentNoteHotkeyEnabled = false,
+            RecentNoteHotkeyModifiers = HotkeyBinding.ModControl | HotkeyBinding.ModShift,
+            RecentNoteHotkeyKey = 0x55,
+        });
+
+        var loaded = sut.Load();
+        Assert.False(loaded.RecentNoteHotkeyEnabled);
+        Assert.Equal(new HotkeyBinding(HotkeyBinding.ModControl | HotkeyBinding.ModShift, 0x55), loaded.RecentNoteHotkey);
+    }
 }

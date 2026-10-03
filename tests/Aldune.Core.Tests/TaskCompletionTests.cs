@@ -27,15 +27,6 @@ public class TaskCompletionTests
     }
 
     [Fact]
-    public void HashLine_GlyphWithTextGluedRightAfterIt_DoesNotEatTheFirstLetter()
-    {
-        // Con un +2 fijo (en vez de TaskLines.PrefixLength) esto habria hasheado "omprar pan" en
-        // vez de "comprar pan", perdiendo la "c" -- y encima habria cambiado de hash en cada
-        // medición según si el usuario dejó o no el espacio, rompiendo el seguimiento.
-        Assert.Equal(TaskCompletion.HashLine("☐ comprar pan"), TaskCompletion.HashLine("☐comprar pan"));
-    }
-
-    [Fact]
     public void HashLine_IsStableAcrossCalls()
     {
         // No vale string.GetHashCode(): varia entre ejecuciones del proceso a proposito.
