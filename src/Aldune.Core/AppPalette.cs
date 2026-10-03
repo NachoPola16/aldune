@@ -35,7 +35,8 @@ public enum AppearanceMode
 /// </summary>
 public static class AppPalette
 {
-    private static readonly IReadOnlyDictionary<string, string> Dark = new Dictionary<string, string>
+    // internal: los usa AspectPalettes para derivar los aspectos retro.
+    internal static readonly IReadOnlyDictionary<string, string> Dark = new Dictionary<string, string>
     {
         ["Ground"] = "#2A261F",
         ["GroundDeep"] = "#25211B",
@@ -109,7 +110,7 @@ public static class AppPalette
 
     // Papel cálido, no blanco puro: el mismo tono tostado del oscuro llevado a claro, para que las
     // notas pastel no queden sobre un blanco que las apaga.
-    private static readonly IReadOnlyDictionary<string, string> Light = new Dictionary<string, string>
+    internal static readonly IReadOnlyDictionary<string, string> Light = new Dictionary<string, string>
     {
         ["Ground"] = "#F6F1E8",
         ["GroundDeep"] = "#EFE9DE",
@@ -182,10 +183,16 @@ public static class AppPalette
 
     public static IReadOnlyDictionary<string, string> For(bool light) => light ? Light : Dark;
 
-    public static IReadOnlyDictionary<string, string> For(AppearanceMode mode, bool windowsUsesLight) => mode switch
+    /// <param name="aspectColors">Colores elegidos para un aspecto retro (id de hueco → hex); los
+    /// aspectos de siempre los ignoran, y lo que falta se completa con los de fábrica.</param>
+    public static IReadOnlyDictionary<string, string> For(
+        AppearanceMode mode, bool windowsUsesLight, IReadOnlyDictionary<string, string>? aspectColors = null) => mode switch
     {
         AppearanceMode.Pastel => Pastel.Value,
         AppearanceMode.Midnight => Midnight.Value,
+        AppearanceMode.XpLight or AppearanceMode.XpDark or AppearanceMode.TelecomLight
+            or AppearanceMode.TelecomDark or AppearanceMode.Bash or AppearanceMode.Phosphor
+            => AspectPalettes.Derive(mode, AspectCatalog.Resolve(mode, aspectColors)),
         _ => For(IsLight(mode, windowsUsesLight))
     };
 
@@ -215,7 +222,7 @@ public static class AppPalette
         "Channel1", "Channel2", "Channel3", "Channel4", "PromptUser", "PromptPath",
     ];
 
-    private static IReadOnlyDictionary<string, string> Tint(
+    internal static IReadOnlyDictionary<string, string> Tint(
         IReadOnlyDictionary<string, string> source, double neutralHue, double neutralChroma, double accentHue)
     {
         var result = new Dictionary<string, string>();

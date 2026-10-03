@@ -9,7 +9,8 @@ public class NoteFaceTests
 
     public static TheoryData<AppearanceMode> Palettes => new()
     {
-        AppearanceMode.Dark, AppearanceMode.Light, AppearanceMode.Pastel, AppearanceMode.Midnight
+        AppearanceMode.Dark, AppearanceMode.Light, AppearanceMode.Pastel, AppearanceMode.Midnight,
+        AppearanceMode.TelecomLight, AppearanceMode.TelecomDark
     };
 
     [Theory]
