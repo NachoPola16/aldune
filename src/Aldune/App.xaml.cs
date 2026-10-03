@@ -181,6 +181,8 @@ public partial class App : Application
             return;
         }
 
+        // Cambios de temas de la 1.5 (Sereno renovado, Grafito retirado) sobre los datos ya guardados.
+        if (ThemeMigrations.Run(settings, repository)) settingsService.Save(settings);
         var syncService = new SyncService(repository, settings, settingsService);
         NoteSnippetConverter.Enabled = settings.ShowNotePreview;
         NoteColorDisplay.Uniform = settings.UniformNoteColor;

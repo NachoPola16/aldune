@@ -250,6 +250,9 @@ public sealed class AppSettings
     /// </summary>
     public string? UniformNoteColor { get; set; }
 
+    /// <summary>Ya se pasaron las notas del Sereno antiguo al renovado (1.5). Ver ThemeMigrations.</summary>
+    public bool SereneRecolored { get; set; }
+
     /// <summary>Temas creados por el usuario. Locales a este equipo: no se sincronizan en la 1.0.</summary>
     public List<NoteTheme> CustomThemes { get; set; } = new();
 }
