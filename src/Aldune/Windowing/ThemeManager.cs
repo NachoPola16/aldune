@@ -15,9 +15,15 @@ namespace Aldune.Windowing;
 public static class ThemeManager
 {
     private static ResourceDictionary? _current;
+    private static ResourceDictionary? _skinResources;
     private static IReadOnlyDictionary<string, string> _palette = AppPalette.For(light: false);
 
     public static bool IsLight { get; private set; }
+
+    public static AppSkin Skin { get; private set; } = AppSkin.Default;
+
+    /// <summary>Paleta activa, para quien calcula colores en Core (NoteFace).</summary>
+    public static IReadOnlyDictionary<string, string> Palette => _palette;
 
     public static event Action? Changed;
 
@@ -43,8 +49,51 @@ public static class ThemeManager
         app.Resources.MergedDictionaries.Add(dictionary);
         _current = dictionary;
         _palette = palette;
+        // El degradado de la barra sale de la paleta: se rehace con ella. También deja las fuentes
+        // puestas a quien solo llama a Apply.
+        ApplySkin(app, Skin);
         IsLight = AppPalette.IsLight(mode, windowsLight);
         Changed?.Invoke();
+    }
+
+    /// <summary>
+    /// Pone la piel en los recursos (fuentes, tamaño del título, fondo de la barra) y en
+    /// <see cref="SkinState"/>. Quien la cambie con notas abiertas llama después a
+    /// AppCoordinator.RefreshNoteAppearance: las caras de las notas y las pestañas se calculan al pintarse.
+    /// </summary>
+    public static void ApplySkin(Application app, AppSkin skin)
+    {
+        var dictionary = new ResourceDictionary
+        {
+            ["AldunePrimaryFont"] = new FontFamily(skin.ChromeFont),
+            ["AlduneNoteFont"] = new FontFamily(skin.NoteFont),
+            ["AlduneNoteTitleFont"] = new FontFamily(skin.NoteTitleFont),
+            ["AlduneNoteTitleFontSize"] = skin.NoteTitleFontSize,
+            ["AlduneTitleBarFill"] = TitleBarFill(skin.TitleBar),
+        };
+
+        if (_skinResources is not null) app.Resources.MergedDictionaries.Remove(_skinResources);
+        app.Resources.MergedDictionaries.Add(dictionary);
+        _skinResources = dictionary;
+        Skin = skin;
+        SkinState.Current.Skin = skin;
+        Changed?.Invoke();
+    }
+
+    // Plain es transparente, no el color de la barra: así las cabeceras de hoy (nota, Ajustes, gestor)
+    // siguen pintando lo que tienen debajo, sea cual sea el fondo de cada ventana.
+    private static Brush TitleBarFill(SkinTitleBar style)
+    {
+        var start = (System.Windows.Media.Color)ColorConverter.ConvertFromString(_palette["TitleBar"]);
+        var end = (System.Windows.Media.Color)ColorConverter.ConvertFromString(_palette["TitleBarEnd"]);
+        Brush brush = style switch
+        {
+            SkinTitleBar.GradientVertical => new LinearGradientBrush(start, end, 90),
+            SkinTitleBar.GradientHorizontal => new LinearGradientBrush(start, end, 0),
+            _ => Brushes.Transparent,
+        };
+        if (brush.CanFreeze) brush.Freeze();
+        return brush;
     }
 
     private static ResourceDictionary? _shape;
@@ -68,6 +117,7 @@ public static class ThemeManager
         app.Resources.MergedDictionaries.Add(dictionary);
         _shape = dictionary;
         IsSquare = square;
+        SkinState.Current.Square = square;
         NativeMethods.ReapplyCornerPreference();
         Changed?.Invoke();
     }

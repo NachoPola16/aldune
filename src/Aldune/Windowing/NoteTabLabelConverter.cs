@@ -1,5 +1,4 @@
 ﻿using System.Globalization;
-using System.Text;
 using System.Windows.Data;
 using Aldune.Core;
 using Aldune.Resources;
@@ -29,11 +28,6 @@ namespace Aldune.Windowing;
 /// </summary>
 public sealed class NoteTabLabelConverter : IValueConverter
 {
-    // Escapes explicitos y no los caracteres literales: son invisibles en el editor y ya se
-    // perdio uno una vez editando este fichero con herramientas de texto.
-    private const char HairSpace = '\u200A';
-    private const char NoBreakSpace = '\u00A0';
-
     public object Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
     {
         var note = value as Note;
@@ -43,15 +37,9 @@ public sealed class NoteTabLabelConverter : IValueConverter
             : NoteTitleHelper.GetTitle(text);
         if (string.IsNullOrWhiteSpace(title)) return string.Empty;
 
-        title = title.Trim().ToUpper(culture).Replace(' ', NoBreakSpace);
-
-        var builder = new StringBuilder(title.Length * 2);
-        for (int i = 0; i < title.Length; i++)
-        {
-            if (i > 0) builder.Append(HairSpace);
-            builder.Append(title[i]);
-        }
-        return builder.ToString();
+        // Mayúsculas espaciadas de siempre o el adorno de la piel (NoteLabels, en Core, con tests).
+        int channel = note is null ? 0 : NoteChannelDisplay.Of(note.Id);
+        return NoteLabels.Dock(title, ThemeManager.Skin.Adornment, channel, culture);
     }
 
     public object ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture)

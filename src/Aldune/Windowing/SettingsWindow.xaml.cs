@@ -1257,6 +1257,8 @@ public partial class SettingsWindow : Window
         _settings.Appearance = mode;
         _settingsService.Save(_settings);
         ThemeManager.Apply(Application.Current, mode);
+        ThemeManager.ApplySkin(Application.Current, AppSkin.For(mode));
+        _coordinator?.RefreshNoteAppearance();
     }
 
     // Los nombres de los idiomas ("Español"/"English") no se traducen: un idioma se nombra a sí

@@ -974,6 +974,11 @@ public partial class EdgeDockWindow : Window
                 _repository.GetByTag(_settings!.DockTagFilter!, NoteState.Active),
             _ => _repository.GetByState(NoteState.Active)
         };
+        // El canal (piel de osciloscopio) sale del mazo sin el filtro de etiqueta: filtrar no cambia de
+        // canal a una nota, ni hace que su ventana y su pestaña discrepen.
+        NoteChannelDisplay.Set(view == DockViewKind.Tag && !string.IsNullOrWhiteSpace(_settings?.DockTagFilter)
+            ? _repository.GetByState(NoteState.Active)
+            : notes);
         SetNotes(notes, animateArrivals: !viewChanged);
         if (viewChanged)
         {

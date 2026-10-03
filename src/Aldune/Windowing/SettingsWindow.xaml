@@ -209,33 +209,36 @@
             <RowDefinition Height="*" />
         </Grid.RowDefinitions>
 
-        <!-- CaptionHeight cubre esta franja, asi que la ventana se arrastra desde aqui. -->
-        <Grid Margin="24,18,14,0">
-            <TextBlock Text="{x:Static res:Strings.SettingsHeader}" Foreground="{DynamicResource AlduneTextStrongBrush}" FontSize="17" FontWeight="SemiBold" />
-            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Top">
-                <Button Content="&#x2014;" Width="28" Height="28"
-                        ToolTip="{x:Static res:Strings.MinimizeWindowTooltip}"
-                        AutomationProperties.Name="{x:Static res:Strings.MinimizeWindowTooltip}"
-                        Click="OnMinimizeClick"
-                        WindowChrome.IsHitTestVisibleInChrome="True"
-                        Style="{StaticResource CloseButtonStyle}" />
-                <Button x:Name="MaximizeButton" Width="28" Height="28"
-                        ToolTip="{x:Static res:Strings.MaximizeWindowTooltip}"
-                        AutomationProperties.Name="{x:Static res:Strings.MaximizeWindowTooltip}"
-                        Click="OnMaximizeClick"
-                        WindowChrome.IsHitTestVisibleInChrome="True"
-                        Style="{StaticResource CloseButtonStyle}">
-                    <TextBlock x:Name="MaximizeGlyph" Text="&#xE922;"
-                               FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" FontSize="11" />
-                </Button>
-                <Button Content="&#x2715;" Width="28" Height="28"
-                        ToolTip="{x:Static res:Strings.CloseTooltip}"
-                        AutomationProperties.Name="{x:Static res:Strings.CloseTooltip}"
-                        Click="OnCloseClick"
-                        WindowChrome.IsHitTestVisibleInChrome="True"
-                        Style="{StaticResource CloseButtonStyle}" />
-            </StackPanel>
-        </Grid>
+        <!-- CaptionHeight cubre esta franja, asi que la ventana se arrastra desde aqui. Fondo de la
+             barra de la piel: transparente en la de siempre. -->
+        <Border x:Name="TitleBarStrip" Background="{DynamicResource AlduneTitleBarFill}" Padding="24,18,14,0">
+            <Grid>
+                <TextBlock Text="{x:Static res:Strings.SettingsHeader}" Foreground="{DynamicResource AlduneOnTitleBarBrush}" FontSize="17" FontWeight="SemiBold" />
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Top">
+                    <Button Content="&#x2014;" Width="28" Height="28"
+                            ToolTip="{x:Static res:Strings.MinimizeWindowTooltip}"
+                            AutomationProperties.Name="{x:Static res:Strings.MinimizeWindowTooltip}"
+                            Click="OnMinimizeClick"
+                            WindowChrome.IsHitTestVisibleInChrome="True"
+                            Style="{StaticResource CloseButtonStyle}" />
+                    <Button x:Name="MaximizeButton" Width="28" Height="28"
+                            ToolTip="{x:Static res:Strings.MaximizeWindowTooltip}"
+                            AutomationProperties.Name="{x:Static res:Strings.MaximizeWindowTooltip}"
+                            Click="OnMaximizeClick"
+                            WindowChrome.IsHitTestVisibleInChrome="True"
+                            Style="{StaticResource CloseButtonStyle}">
+                        <TextBlock x:Name="MaximizeGlyph" Text="&#xE922;"
+                                   FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" FontSize="11" />
+                    </Button>
+                    <Button Content="&#x2715;" Width="28" Height="28"
+                            ToolTip="{x:Static res:Strings.CloseTooltip}"
+                            AutomationProperties.Name="{x:Static res:Strings.CloseTooltip}"
+                            Click="OnCloseClick"
+                            WindowChrome.IsHitTestVisibleInChrome="True"
+                            Style="{StaticResource CloseButtonStyle}" />
+                </StackPanel>
+            </Grid>
+        </Border>
 
         <Grid Grid.Row="1" Margin="0,16,0,0">
             <Grid.ColumnDefinitions>

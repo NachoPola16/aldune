@@ -167,19 +167,20 @@
 
                      Ink Free viene con Windows 10 1809+; el respaldo cubre instalaciones sin ella.
                      Va sin negrita y a 17px porque dibuja más pequeño que una sans al mismo tamaño. -->
-                <!-- Margin izquierdo de 4px: Ink Free dibuja la "T" con un solape hacia la izquierda de
+                <!-- La fuente y el tamaño salen de la piel (AppSkin): estos son los de la piel de siempre.
+                     Margin izquierdo de 4px: Ink Free dibuja la "T" con un solape hacia la izquierda de
                      su origen nominal (vuelo caligráfico), así que el caret parpadeante de TitleBox —
                      que sí se posiciona justo en ese origen — la atravesaba en vez de quedar limpio a
                      su izquierda. Verificado con un render aislado antes de fijar el número: 4px basta
                      para separarlos sin dejar un hueco que se note. -->
-                <TextBlock Text="{x:Static res:Strings.TitlePlaceholder}" FontFamily="Ink Free, Segoe UI Variable Text" FontSize="17"
+                <TextBlock Text="{x:Static res:Strings.TitlePlaceholder}" FontFamily="{DynamicResource AlduneNoteTitleFont}" FontSize="{DynamicResource AlduneNoteTitleFontSize}"
                            Style="{StaticResource TitlePlaceholderStyle}"
                            Margin="4,0,0,0"
                            VerticalAlignment="Center" />
                 <TextBox x:Name="TitleBox"
                          Style="{StaticResource NoteTextBoxStyle}"
-                         FontFamily="Ink Free, Segoe UI Variable Text"
-                         FontSize="17"
+                         FontFamily="{DynamicResource AlduneNoteTitleFont}"
+                         FontSize="{DynamicResource AlduneNoteTitleFontSize}"
                          Foreground="#1E1A14"
                          CaretBrush="#1E1A14"
                          Background="Transparent"
@@ -407,7 +408,7 @@
              izquierda de una casilla de tarea es parte del cuadro de texto, y un clic ahí pone el
              cursor delante de la casilla. Como Margin quedaba fuera del TextBox y no hacía nada. -->
         <Grid x:Name="BodyHost" Grid.Row="1" Margin="0,14,20,20">
-            <TextBlock Text="{x:Static res:Strings.BodyPlaceholder}" FontSize="14" Margin="20,0,0,0"
+            <TextBlock Text="{x:Static res:Strings.BodyPlaceholder}" FontFamily="{DynamicResource AlduneNoteFont}" FontSize="14" Margin="20,0,0,0"
                        Style="{StaticResource PlaceholderStyle}" TextWrapping="Wrap" />
             <!-- Tinta tintada hacia el cálido, nunca #000 puro: sobre un pastel, el negro
                  absoluto es el único color de la ventana que no comparte hue con nada. -->
@@ -416,6 +417,7 @@
                      AcceptsReturn="True"
                      AcceptsTab="True"
                      TextWrapping="Wrap"
+                     FontFamily="{DynamicResource AlduneNoteFont}"
                      FontSize="14"
                      Foreground="#1E1A14"
                      CaretBrush="#1E1A14"

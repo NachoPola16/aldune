@@ -81,6 +81,7 @@ public partial class App : Application
             ApplyLanguage(settings.Language);
             // Antes de crear ninguna ventana: todas toman sus colores de estos pinceles.
             ThemeManager.Apply(this, settings.Appearance);
+            ThemeManager.ApplySkin(this, AppSkin.For(settings.Appearance));
             ThemeManager.ApplyShape(this, settings.CornersSquare);
 
             byte[] rawKey;
@@ -577,7 +578,9 @@ public partial class App : Application
             if (ThemeManager.IsLight != ThemeManager.WindowsUsesLightTheme())
             {
                 ThemeManager.Apply(this, AppearanceMode.System);
+                ThemeManager.ApplySkin(this, AppSkin.For(AppearanceMode.System));
                 ThemeManager.ApplyShape(this, _settings?.CornersSquare ?? false);
+                _coordinator?.RefreshNoteAppearance();
             }
         });
     }

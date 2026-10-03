@@ -231,62 +231,65 @@
         <!-- La casilla comparte fila con la lista y se ancla arriba; la lista lleva el margen
              superior que la deja pasar. Asi la casilla no roba una fila entera de alto. -->
 
-        <!-- Cabecera. CaptionHeight cubre esta franja, así que la ventana se arrastra desde aquí. -->
-        <Grid Grid.Row="0" Margin="20,18,14,0">
-            <StackPanel>
-                <TextBlock Text="{x:Static res:Strings.ManageNotesTitle}" Foreground="{DynamicResource AlduneTextStrongBrush}"
-                           FontSize="17" FontWeight="SemiBold" />
-                <TextBlock x:Name="SubtitleText" Foreground="{DynamicResource AlduneMutedTextBrush}" FontSize="12" Margin="0,3,0,0" />
-            </StackPanel>
-            <!-- Acceso a Ajustes tambien desde aqui. Estaban solo en el clic derecho de la
-                 bandeja, y ahi no los encontro el usuario: esta es la ventana que uno abre cuando
-                 busca "donde se configura esto". -->
-            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Top">
-                <!-- Crear desde aquí: quien está ordenando sus notas no tiene por qué ir al dock para
-                     añadir una. Nace con la etiqueta del filtro, si hay, para no desaparecer de la vista. -->
-                <Button x:Name="NewNoteButton"
-                        Content="&#xE710;"
-                        FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets"
-                        Width="28" Height="28" Margin="0,0,6,0" Padding="0"
-                        ToolTip="{x:Static res:Strings.NewNoteTooltip}"
-                        AutomationProperties.Name="{x:Static res:Strings.NewNoteTooltip}"
-                        Click="OnNewNoteClick"
-                        WindowChrome.IsHitTestVisibleInChrome="True"
-                        Style="{StaticResource ToolbarButtonStyle}" />
-                <Button Content="&#x2014;" Width="28" Height="28"
-                        ToolTip="{x:Static res:Strings.MinimizeWindowTooltip}"
-                        AutomationProperties.Name="{x:Static res:Strings.MinimizeWindowTooltip}"
-                        Click="OnMinimizeClick"
-                        WindowChrome.IsHitTestVisibleInChrome="True"
-                        Style="{StaticResource CloseButtonStyle}" />
-                <Button x:Name="MaximizeButton" Width="28" Height="28"
-                        ToolTip="{x:Static res:Strings.MaximizeWindowTooltip}"
-                        AutomationProperties.Name="{x:Static res:Strings.MaximizeWindowTooltip}"
-                        Click="OnMaximizeClick"
-                        WindowChrome.IsHitTestVisibleInChrome="True"
-                        Style="{StaticResource CloseButtonStyle}">
-                    <TextBlock x:Name="MaximizeGlyph" Text="&#xE922;"
-                               FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" FontSize="11" />
-                </Button>
-                <Button x:Name="SettingsButton"
-                        Content="&#xE713;"
-                        FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets"
-                        Width="28" Height="28"
-                        ToolTip="{x:Static res:Strings.SettingsTooltip}"
-                        AutomationProperties.Name="{x:Static res:Strings.SettingsTooltip}"
-                        Click="OnSettingsClick"
-                        WindowChrome.IsHitTestVisibleInChrome="True"
-                        Style="{StaticResource CloseButtonStyle}" />
-                <Button x:Name="CloseButton"
-                        Content="&#x2715;"
-                        Width="28" Height="28"
-                        ToolTip="{x:Static res:Strings.CloseTooltip}"
-                        AutomationProperties.Name="{x:Static res:Strings.CloseTooltip}"
-                        Click="OnCloseClick"
-                        WindowChrome.IsHitTestVisibleInChrome="True"
-                        Style="{StaticResource CloseButtonStyle}" />
-            </StackPanel>
-        </Grid>
+        <!-- Cabecera. CaptionHeight cubre esta franja, así que la ventana se arrastra desde aquí. Fondo de la
+             barra de la piel: transparente en la de siempre. -->
+        <Border x:Name="TitleBarStrip" Grid.Row="0" Background="{DynamicResource AlduneTitleBarFill}" Padding="20,18,14,0">
+            <Grid>
+                <StackPanel>
+                    <TextBlock Text="{x:Static res:Strings.ManageNotesTitle}" Foreground="{DynamicResource AlduneOnTitleBarBrush}"
+                               FontSize="17" FontWeight="SemiBold" />
+                    <TextBlock x:Name="SubtitleText" Foreground="{DynamicResource AlduneMutedTextBrush}" FontSize="12" Margin="0,3,0,0" />
+                </StackPanel>
+                <!-- Acceso a Ajustes tambien desde aqui. Estaban solo en el clic derecho de la
+                     bandeja, y ahi no los encontro el usuario: esta es la ventana que uno abre cuando
+                     busca "donde se configura esto". -->
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Top">
+                    <!-- Crear desde aquí: quien está ordenando sus notas no tiene por qué ir al dock para
+                         añadir una. Nace con la etiqueta del filtro, si hay, para no desaparecer de la vista. -->
+                    <Button x:Name="NewNoteButton"
+                            Content="&#xE710;"
+                            FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets"
+                            Width="28" Height="28" Margin="0,0,6,0" Padding="0"
+                            ToolTip="{x:Static res:Strings.NewNoteTooltip}"
+                            AutomationProperties.Name="{x:Static res:Strings.NewNoteTooltip}"
+                            Click="OnNewNoteClick"
+                            WindowChrome.IsHitTestVisibleInChrome="True"
+                            Style="{StaticResource ToolbarButtonStyle}" />
+                    <Button Content="&#x2014;" Width="28" Height="28"
+                            ToolTip="{x:Static res:Strings.MinimizeWindowTooltip}"
+                            AutomationProperties.Name="{x:Static res:Strings.MinimizeWindowTooltip}"
+                            Click="OnMinimizeClick"
+                            WindowChrome.IsHitTestVisibleInChrome="True"
+                            Style="{StaticResource CloseButtonStyle}" />
+                    <Button x:Name="MaximizeButton" Width="28" Height="28"
+                            ToolTip="{x:Static res:Strings.MaximizeWindowTooltip}"
+                            AutomationProperties.Name="{x:Static res:Strings.MaximizeWindowTooltip}"
+                            Click="OnMaximizeClick"
+                            WindowChrome.IsHitTestVisibleInChrome="True"
+                            Style="{StaticResource CloseButtonStyle}">
+                        <TextBlock x:Name="MaximizeGlyph" Text="&#xE922;"
+                                   FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" FontSize="11" />
+                    </Button>
+                    <Button x:Name="SettingsButton"
+                            Content="&#xE713;"
+                            FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets"
+                            Width="28" Height="28"
+                            ToolTip="{x:Static res:Strings.SettingsTooltip}"
+                            AutomationProperties.Name="{x:Static res:Strings.SettingsTooltip}"
+                            Click="OnSettingsClick"
+                            WindowChrome.IsHitTestVisibleInChrome="True"
+                            Style="{StaticResource CloseButtonStyle}" />
+                    <Button x:Name="CloseButton"
+                            Content="&#x2715;"
+                            Width="28" Height="28"
+                            ToolTip="{x:Static res:Strings.CloseTooltip}"
+                            AutomationProperties.Name="{x:Static res:Strings.CloseTooltip}"
+                            Click="OnCloseClick"
+                            WindowChrome.IsHitTestVisibleInChrome="True"
+                            Style="{StaticResource CloseButtonStyle}" />
+                </StackPanel>
+            </Grid>
+        </Border>
 
         <Border Grid.Row="1" Background="{DynamicResource AlduneSurfaceBrush}" CornerRadius="{DynamicResource AlduneRadius7}" Margin="20,16,20,0" Padding="3">
                 <WrapPanel>
