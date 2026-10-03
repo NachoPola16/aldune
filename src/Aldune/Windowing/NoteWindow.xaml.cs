@@ -212,7 +212,14 @@ public partial class NoteWindow : Window
             FitHeightToContent();
             ClampToWorkArea();
         };
-        TitleBox.TextChanged += (_, _) => OnEdited();
+        // El prompt de la piel bash lleva el título de la nota (cat <título>). El primer refresco va aquí
+        // y no en ApplyColor: cuando esa corre en el constructor el título aún no está puesto.
+        TitleBox.TextChanged += (_, _) =>
+        {
+            OnEdited();
+            UpdatePromptLine(CurrentFace());
+        };
+        UpdatePromptLine(CurrentFace());
 
         Closing += SavePlacementOnce;
 
@@ -1357,29 +1364,35 @@ public partial class NoteWindow : Window
         UpdateSyncSignal();
     }
 
+    // La cara de la nota según la piel; ApplyColor y el refresco del prompt la comparten para no discrepar.
+    private NoteFaceColors CurrentFace(string? color = null) =>
+        NoteFace.For(ThemeManager.Skin.Card, color ?? _note.Color, NoteColorDisplay.Uniform,
+            NoteChannelDisplay.Of(_note.Id), ThemeManager.Palette);
+
     private void ApplyColor(string color)
     {
-        color = NoteColorDisplay.Resolve(color);
-        var brush = (Brush)new BrushConverter().ConvertFromString(color)!;
-        var rim = (Brush)new BrushConverter().ConvertFromString(NoteColorPalette.RimFor(color))!;
+        var skin = ThemeManager.Skin;
+        int channel = NoteChannelDisplay.Of(_note.Id);
+        var face = CurrentFace(color);
+        var brush = BrushOf(face.Face);
+        var rim = BrushOf(face.Rim);
+        var ink = BrushOf(face.Ink);
 
         Background = brush;
-        TextBody.Background = brush;
-        var foreground = NoteColorPalette.ForegroundFor(color);
-        var ink = (Brush)new BrushConverter().ConvertFromString(foreground)!;
+        // Con retícula (osciloscopio) el cuadro de texto deja ver la cuadrícula del fondo.
+        TextBody.Background = skin.NoteGrid ? Brushes.Transparent : brush;
+        BodyHost.Background = skin.NoteGrid ? GridBrush(face.Ink) : null;
         Resources["NoteInkBrush"] = ink;
         Resources["NotePlaceholderBrush"] = ink;
         // Move hover away from the foreground so text retains contrast on middle tones too.
         // Muy clara (L ≥ 0.8) o con tinta blanca: aclarar no se vería, así que el hover oscurece.
         // Cubre la paleta de fábrica (L 0.87) igual que antes y los claros de los temas nuevos.
-        bool darkenHover = foreground == NoteColorContrast.White
-            || (OklchColor.TryFromHex(color, out var face) && face.L >= 0.8);
-        Resources["NoteHoverBrush"] = (Brush)new BrushConverter().ConvertFromString(
-            darkenHover ? "#40000000" : "#40FFFFFF")!;
-        Resources["NoteTaskHoverBrush"] = (Brush)new BrushConverter().ConvertFromString(
-            darkenHover ? "#26000000" : "#26FFFFFF")!;
-        TextBody.Foreground = TitleBox.Foreground = ink;
-        TextBody.CaretBrush = TitleBox.CaretBrush = ink;
+        bool darkenHover = face.Ink == NoteColorContrast.White
+            || (OklchColor.TryFromHex(face.Face, out var faceLch) && faceLch.L >= 0.8);
+        Resources["NoteHoverBrush"] = BrushOf(darkenHover ? "#40000000" : "#40FFFFFF");
+        Resources["NoteTaskHoverBrush"] = BrushOf(darkenHover ? "#26000000" : "#26FFFFFF");
+        TextBody.Foreground = ink;
+        TextBody.CaretBrush = ink;
         // La selección NO puede ser la tinta opaca: un bloque macizo del color del texto tapa lo
         // seleccionado y se lee como un rectángulo negro (reportado por el usuario). Translúcida se
         // ve la selección, y el texto seleccionado va del color de la nota, así que el contraste se
@@ -1393,6 +1406,68 @@ public partial class NoteWindow : Window
         // El troquelado va en el tono oscuro del propio hue — igual que la pestaña del dock de la
         // que viene, que es lo que sigue diciendo que esta cabecera es esa pestaña.
         Perforation.Stroke = rim;
+
+        // Cabecera: en degradado lleva el texto de la barra y pierde el troquelado (la barra ya separa);
+        // con tinte de canal, el título va en el color del canal. Con la barra plana y cara llena es la
+        // tinta de la nota, como siempre.
+        Brush headerInk = skin.TitleBar != SkinTitleBar.Plain
+            ? (Brush)FindResource("AlduneOnTitleBarBrush")
+            : skin.Card == SkinCard.Tinted ? BrushOf(face.Label) : ink;
+        Resources["NoteHeaderInkBrush"] = headerInk;
+        TitleBox.Foreground = TitleBox.CaretBrush = headerInk;
+        Perforation.Visibility = skin.TitleBar == SkinTitleBar.Plain ? Visibility.Visible : Visibility.Collapsed;
+
+        FaceStripe.Visibility = skin.Card == SkinCard.Stripe ? Visibility.Visible : Visibility.Collapsed;
+        if (face.Accent is not null) FaceStripe.Background = BrushOf(face.Accent);
+
+        ChannelPrefix.Visibility = skin.Adornment == SkinTitleAdornment.Channel ? Visibility.Visible : Visibility.Collapsed;
+        ChannelPrefix.Text = NoteChannels.Number(channel);
+        ChannelPrefix.Foreground = headerInk;
+
+        UpdatePromptLine(face);
+    }
+
+    private static Brush BrushOf(string hex) => (Brush)new BrushConverter().ConvertFromString(hex)!;
+
+    // Retícula de osciloscopio: líneas de 1 px cada 24, de la tinta muy translúcida, para que se lea
+    // como fondo y no compita con el texto.
+    private static Brush GridBrush(string inkHex)
+    {
+        var ink = (Color)ColorConverter.ConvertFromString(inkHex);
+        var pen = new Pen(new SolidColorBrush(Color.FromArgb(0x26, ink.R, ink.G, ink.B)), 1);
+        var lines = new GeometryGroup();
+        lines.Children.Add(new LineGeometry(new Point(0, 0), new Point(24, 0)));
+        lines.Children.Add(new LineGeometry(new Point(0, 0), new Point(0, 24)));
+        var brush = new DrawingBrush(new GeometryDrawing(null, pen, lines))
+        {
+            TileMode = TileMode.Tile,
+            Viewport = new System.Windows.Rect(0, 0, 24, 24),
+            ViewportUnits = BrushMappingMode.Absolute,
+            Viewbox = new System.Windows.Rect(0, 0, 24, 24),
+            ViewboxUnits = BrushMappingMode.Absolute,
+        };
+        brush.Freeze();
+        return brush;
+    }
+
+    // Con franja (bash) la nota es la terminal, así que usuario y ruta llevan sus colores de la
+    // paleta; sobre una nota de color, la tinta de la nota (los de la paleta podrían no leerse).
+    private void UpdatePromptLine(NoteFaceColors face)
+    {
+        var skin = ThemeManager.Skin;
+        PromptLine.Visibility = skin.PromptLine ? Visibility.Visible : Visibility.Collapsed;
+        if (!skin.PromptLine) return;
+
+        var parts = NoteLabels.Prompt(Environment.UserName, Strings.PromptNotesFolder, TitleBox.Text,
+            System.Globalization.CultureInfo.CurrentCulture);
+        PromptUser.Text = parts.User;
+        PromptPath.Text = parts.Path;
+        PromptCommand.Text = parts.Command;
+        var ink = BrushOf(face.Ink);
+        bool terminal = skin.Card == SkinCard.Stripe;
+        PromptUser.Foreground = terminal ? (Brush)FindResource("AldunePromptUserBrush") : ink;
+        PromptPath.Foreground = terminal ? (Brush)FindResource("AldunePromptPathBrush") : ink;
+        PromptLine.Foreground = ink;
     }
 
     /// <summary>Opacidad del lavado de selección: ni 1.0 (tapa lo seleccionado) ni casi nada (no se ve).</summary>
