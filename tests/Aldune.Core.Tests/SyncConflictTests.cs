@@ -97,6 +97,47 @@ public sealed class SyncConflictTests : IDisposable
     }
 
     [Fact]
+    public void ThemeMigrationOnBothDevices_ConvergesWithoutConflict()
+    {
+        // El caso real: los dos equipos actualizan a la 1.5 y migran la misma nota del Sereno
+        // antiguo antes de sincronizar.
+        var note = _deviceA.Repository.Create("original", NoteThemes.LegacySereneLightColors[2], "primary");
+        ShareKeyAndSynchronizeInitialNote(note.Id);
+
+        ThemeMigrations.Run(_deviceA.Settings, _deviceA.Repository);
+        ThemeMigrations.Run(_deviceB.Settings, _deviceB.Repository);
+        foreach (var device in new[] { _deviceA, _deviceB, _deviceA })
+        {
+            var result = device.Sync.Synchronize();
+            Assert.True(result.Succeeded, result.Error);
+            Assert.Equal(0, result.ConflictsResolved);
+        }
+
+        var renewed = NoteThemes.Resolve(NoteThemes.SereneId, null).LightColors[2];
+        Assert.Equal(renewed, _deviceA.Repository.GetAllForSync().Single().Color);
+        Assert.Equal(renewed, _deviceB.Repository.GetAllForSync().Single().Color);
+        Assert.Empty(_deviceA.Sync.GetConflicts());
+        Assert.Empty(_deviceB.Sync.GetConflicts());
+    }
+
+    [Fact]
+    public void ThemeMigration_DoesNotBeatARealEditFromAnOlderVersion()
+    {
+        // B sigue en la 1.4 y edita el texto; A migra después. La edición del usuario tiene que
+        // ganar: el recoloreo conserva la fecha de la nota (+1 ms) y no puede pasar por delante.
+        var note = _deviceA.Repository.Create("original", NoteThemes.LegacySereneDarkColors[1], "primary");
+        ShareKeyAndSynchronizeInitialNote(note.Id);
+
+        Thread.Sleep(20);
+        _deviceB.Repository.UpdateText(note.Id, "edit from B");
+        Assert.True(_deviceB.Sync.Synchronize().Succeeded);
+        ThemeMigrations.Run(_deviceA.Settings, _deviceA.Repository);
+
+        Assert.True(_deviceA.Sync.Synchronize().Succeeded);
+        Assert.Equal("edit from B", _deviceA.Repository.GetAllForSync().Single().Text);
+    }
+
+    [Fact]
     public void RecolorOnOneDeviceAndEditOnTheOther_IsStillAConflict()
     {
         // La equivalencia no puede tragarse una edición real: color en B, texto en A.

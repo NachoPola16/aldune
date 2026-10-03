@@ -432,13 +432,15 @@ public sealed class NotesRepository
         command.ExecuteNonQuery();
     }
 
-    public void SetColor(Guid id, string color)
+    /// <param name="updatedAt">Fecha que queda en la nota; por defecto, ahora. Las migraciones pasan
+    /// otra para que un recoloreo automático no cuente como edición reciente (ver ThemeMigrations).</param>
+    public void SetColor(Guid id, string color, DateTimeOffset? updatedAt = null)
     {
         using var connection = _database.OpenConnection();
         using var command = connection.CreateCommand();
         command.CommandText = "UPDATE Note SET Color = $color, UpdatedAt = $updatedAt, SyncAuthorDeviceId = NULL WHERE Id = $id;";
         command.Parameters.AddWithValue("$color", color);
-        command.Parameters.AddWithValue("$updatedAt", DateTimeOffset.UtcNow.ToString("O"));
+        command.Parameters.AddWithValue("$updatedAt", (updatedAt ?? DateTimeOffset.UtcNow).ToString("O"));
         command.Parameters.AddWithValue("$id", id.ToString());
         command.ExecuteNonQuery();
     }

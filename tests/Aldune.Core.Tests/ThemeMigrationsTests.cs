@@ -44,6 +44,32 @@ public sealed class ThemeMigrationsTests : IDisposable
     }
 
     [Fact]
+    public void SereneRecolorMap_NewColorsAreNeverOldOnes()
+    {
+        // Si un color nuevo fuera también antiguo, una migración interrumpida y repetida recolorearía
+        // dos veces la misma nota.
+        Assert.Empty(NoteThemes.SereneRecolorMap.Values.Intersect(NoteThemes.SereneRecolorMap.Keys, StringComparer.OrdinalIgnoreCase));
+    }
+
+    [Fact]
+    public void Run_KeepsTheEditDateOrder()
+    {
+        // El recoloreo no es una edición del usuario: si pusiera la fecha de hoy, todas las notas
+        // del Sereno antiguo saldrían como "editadas hoy", desordenarían "Más recientes", Ctrl+Alt+L
+        // abriría una cualquiera y la papelera reiniciaría su plazo.
+        var older = _repository.Create("a", NoteThemes.LegacySereneDarkColors[0], "primary");
+        Thread.Sleep(20);
+        var newer = _repository.Create("b", "#EBD38B", "primary");
+        var before = _repository.GetAllForSync().Single(n => n.Id == older.Id).UpdatedAt;
+
+        ThemeMigrations.Run(new AppSettings(), _repository);
+
+        var notes = _repository.GetAllForSync();
+        Assert.Equal(before.AddMilliseconds(1), notes.Single(n => n.Id == older.Id).UpdatedAt);
+        Assert.Equal(newer.Id, NoteListing.MostRecentlyEdited(notes)!.Id);
+    }
+
+    [Fact]
     public void Run_Twice_DoesNothingTheSecondTime()
     {
         var note = _repository.Create("a", NoteThemes.LegacySereneDarkColors[0], "primary");
