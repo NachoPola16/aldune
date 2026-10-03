@@ -75,7 +75,8 @@ public sealed class AppCoordinator
     {
         _syncedSinceStart = true;
         PruneCompletedTasksInClosedNotes();
-        RefreshAll();
+        // Con las señales de sync de las notas abiertas incluidas: su estado acaba de cambiar.
+        RefreshNoteAppearance();
     }
 
     /// <summary>Fabrica de la ventana de ajustes, inyectada por App: el coordinador no tiene por
@@ -1132,6 +1133,14 @@ public sealed class AppCoordinator
             _openingSettings = false;
             throw;
         }
+    }
+
+    /// <summary>Estado de la señal de sincronización de una nota (ver <see cref="NoteSyncSignal"/>).</summary>
+    internal SyncSignalState SyncSignalFor(Guid noteId)
+    {
+        if (_settings is null || _repository.GetById(noteId) is not { } note) return SyncSignalState.Hidden;
+        bool hasConflict = _repository.GetSyncConflicts().Any(conflict => conflict.NoteId == noteId);
+        return NoteSyncSignal.For(note, _settings, _repository.GetSyncBases().GetValueOrDefault(noteId), hasConflict);
     }
 
     /// <summary>Tras cambiar una opción de aspecto de las notas: notas abiertas, docks y gestor.</summary>

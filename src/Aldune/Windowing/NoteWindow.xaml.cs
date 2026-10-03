@@ -172,6 +172,7 @@ public partial class NoteWindow : Window
         // plazo venció mientras la nota estaba cerrada, aquí es donde se nota.
         Loaded += (_, _) => PruneExpiredTasks();
         Loaded += (_, _) => UpdateAllDoneBar();
+        Loaded += (_, _) => UpdateSyncSignal();
 
         // Una nota que ya traía más o menos texto del que le corresponde a su alto guardado (escrito
         // antes de que existiera el ajuste automático, o el alto de la última sesión ya no encaja)
@@ -1322,6 +1323,17 @@ public partial class NoteWindow : Window
         {
             _repository.UpdateText(_note.Id, CurrentText);
         }
+        // Recién guardada, la nota ya no coincide con la base de la sync: pasa a pendiente.
+        UpdateSyncSignal();
+    }
+
+    /// <summary>La señal ▂▄▆█ del pie; el estado se calcula siempre en el coordinador (base, conflictos y
+    /// alcance viven en el repositorio), aquí solo se pinta.</summary>
+    private void UpdateSyncSignal()
+    {
+        var state = _settings?.SyncSignalVisible == true ? _coordinator.SyncSignalFor(_note.Id) : SyncSignalState.Hidden;
+        SyncSignalText.Visibility = state == SyncSignalState.Hidden ? Visibility.Collapsed : Visibility.Visible;
+        SyncSignalText.Text = $"{NoteSyncSignal.Glyph(state)} {Strings.SyncSignalLabel(state)}";
     }
 
     /// <summary>El color de esta nota ha cambiado fuera de su ventana (aplicar un tema desde
@@ -1337,6 +1349,7 @@ public partial class NoteWindow : Window
     internal void ReapplyAppearance()
     {
         ApplyColor(_note.Color);
+        UpdateSyncSignal();
     }
 
     private void ApplyColor(string color)

@@ -514,6 +514,12 @@
                            Foreground="{DynamicResource NoteInkBrush}" />
             </Button>
         </StackPanel>
+
+        <!-- Señal de sincronización (opción de Ajustes → Aspecto). En la fila de abajo, a la derecha,
+             para no tapar texto; monoespaciada para que las barras ▂▄▆█ queden alineadas. -->
+        <TextBlock x:Name="SyncSignalText" Grid.Row="2" HorizontalAlignment="Right" VerticalAlignment="Bottom"
+                   Margin="0,-8,14,10" FontFamily="Cascadia Mono, Consolas" FontSize="11"
+                   Foreground="{DynamicResource NoteInkBrush}" Opacity="0.7" Visibility="Collapsed" />
     </Grid>
     </Border>
 </Window>

@@ -361,6 +361,11 @@
                         <StackPanel x:Name="AppearanceListContainer" />
                     </StackPanel>
                     <StackPanel Margin="0,14,0,0">
+                        <CheckBox x:Name="SyncSignalCheck"
+                                  Content="{x:Static res:Strings.AppearanceSyncSignal}"
+                                  Foreground="{DynamicResource AlduneTextBrush}" Background="{DynamicResource AlduneGroundBrush}" FontSize="13"
+                                  Style="{StaticResource AppCheckBoxStyle}" Margin="0,0,0,10"
+                                  Click="OnSyncSignalToggled" />
                         <CheckBox x:Name="UniformColorCheck"
                                   Content="{x:Static res:Strings.AppearanceUniformColor}"
                                   Foreground="{DynamicResource AlduneTextBrush}" Background="{DynamicResource AlduneGroundBrush}" FontSize="13"

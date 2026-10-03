@@ -317,9 +317,7 @@ public sealed class SyncService
 
                 var deviceId = EnsureDeviceId();
                 var localNotes = _repository.GetAllForSync()
-                    .Where(note => (scopedIds is null || scopedIds.Contains(note.Id)) &&
-                        (_settings.SyncScope != SyncScopeKind.Tag || string.IsNullOrWhiteSpace(_settings.SyncTag) ||
-                         note.Tags.Any(tag => string.Equals(tag, _settings.SyncTag, StringComparison.OrdinalIgnoreCase))))
+                    .Where(note => SyncScopeFilter.Includes(note, _settings))
                     .ToDictionary(note => note.Id);
                 var localTombstones = _repository.GetSyncTombstones()
                     .Where(tombstone => scopedIds is null || scopedIds.Contains(tombstone.NoteId))
@@ -437,10 +435,7 @@ public sealed class SyncService
                 : null;
             var deviceId = EnsureDeviceId();
             var localNotes = _repository.GetAllForSync()
-                .Where(note => (scopedIds is null || scopedIds.Contains(note.Id)) &&
-                    (_settings.SyncScope != SyncScopeKind.Tag || string.IsNullOrWhiteSpace(_settings.SyncTag) ||
-                     note.Tags.Any(tag => string.Equals(tag, _settings.SyncTag, StringComparison.OrdinalIgnoreCase)))
-                )
+                .Where(note => SyncScopeFilter.Includes(note, _settings))
                 .ToDictionary(note => note.Id);
             var localTombstones = _repository.GetSyncTombstones()
                 .Where(tombstone => scopedIds is null || scopedIds.Contains(tombstone.NoteId))

@@ -52,6 +52,13 @@ public sealed class AppSettings
     /// <summary>Identificadores incluidos cuando <see cref="SyncScope"/> es selectivo.</summary>
     public List<Guid> SyncNoteIds { get; set; } = new();
 
+    /// <summary>Señal de sincronización al pie de cada nota. Nulo = lo que diga el aspecto (de momento,
+    /// apagada en todos; los aspectos retro la traerán encendida).</summary>
+    public bool? ShowSyncSignal { get; set; }
+
+    [System.Text.Json.Serialization.JsonIgnore]
+    public bool SyncSignalVisible => ShowSyncSignal ?? false;
+
     /// <summary>Etiqueta incluida cuando <see cref="SyncScope"/> es <see cref="SyncScopeKind.Tag"/>.</summary>
     public string? SyncTag { get; set; }
 

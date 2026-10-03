@@ -979,6 +979,16 @@ public static class Strings
         "Ändert nur das Aussehen: Jede Notiz behält ihre eigene Farbe.",
         "Ne change que l'apparence : chaque note garde sa couleur.",
         "Só muda a aparência: cada nota mantém a sua cor.");
+    public static string AppearanceSyncSignal => T("Show sync status on each note", "Señal de sincronización en cada nota",
+        "Synchronisierungsstatus auf jeder Notiz", "Indicateur de synchronisation sur chaque note", "Sinal de sincronização em cada nota");
+    public static string SyncSignalLabel(Aldune.Core.SyncSignalState state) => state switch
+    {
+        Aldune.Core.SyncSignalState.Synced => T("synced", "sincronizada", "synchronisiert", "synchronisée", "sincronizada"),
+        Aldune.Core.SyncSignalState.Pending => T("pending", "pendiente", "ausstehend", "en attente", "pendente"),
+        Aldune.Core.SyncSignalState.Conflict => T("conflict", "conflicto", "Konflikt", "conflit", "conflito"),
+        Aldune.Core.SyncSignalState.Excluded => T("not synced", "no se sincroniza", "wird nicht synchronisiert", "non synchronisée", "não sincronizada"),
+        _ => "",
+    };
     public static string AppearanceUniformColorPick => T("Choose color…", "Elegir color…",
         "Farbe wählen…", "Choisir la couleur…", "Escolher cor…");
     public static string LanguageNameIn(string code) => code switch

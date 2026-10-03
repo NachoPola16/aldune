@@ -24,6 +24,21 @@ public sealed class SyncConflictTests : IDisposable
     }
 
     [Fact]
+    public void Signal_IsSyncedAfterSyncing_AndPendingAfterALocalEdit()
+    {
+        var note = _deviceA.Repository.Create("original", "#EBD38B", "primary");
+        ShareKeyAndSynchronizeInitialNote(note.Id);
+
+        SyncSignalState SignalOnA() => NoteSyncSignal.For(
+            _deviceA.Repository.GetAllForSync().Single(), _deviceA.Settings,
+            _deviceA.Repository.GetSyncBases().GetValueOrDefault(note.Id), false);
+
+        Assert.Equal(SyncSignalState.Synced, SignalOnA());
+        _deviceA.Repository.UpdateText(note.Id, "editada");
+        Assert.Equal(SyncSignalState.Pending, SignalOnA());
+    }
+
+    [Fact]
     public void ConcurrentEdits_UseTheNewestVersionAndConverge()
     {
         var note = _deviceA.Repository.Create("original", "#EBD38B", "primary");

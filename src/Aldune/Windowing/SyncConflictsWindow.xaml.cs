@@ -39,7 +39,7 @@ public partial class SyncConflictsWindow : Window
         if (sender is FrameworkElement { Tag: Guid conflictId } &&
             _syncService.RestoreConflict(conflictId))
         {
-            _coordinator.RefreshAll();
+            _coordinator.RefreshNoteAppearance();
             LoadRows();
         }
     }
@@ -49,6 +49,8 @@ public partial class SyncConflictsWindow : Window
         if (sender is FrameworkElement { Tag: Guid conflictId } &&
             _syncService.DismissConflict(conflictId))
         {
+            // La nota sale de la cola de conflictos: su señal de sync deja de decir "conflicto".
+            _coordinator.RefreshNoteAppearance();
             LoadRows();
         }
     }
@@ -71,6 +73,7 @@ public partial class SyncConflictsWindow : Window
         if (choice != MessageBoxResult.Yes) return;
 
         _syncService.DismissAllConflicts();
+        _coordinator.RefreshNoteAppearance();
         LoadRows();
     }
 
@@ -92,6 +95,7 @@ public partial class SyncConflictsWindow : Window
         if (choice != MessageBoxResult.Yes) return;
 
         _syncService.DismissAllConflicts();
+        _coordinator.RefreshNoteAppearance();
         LoadRows();
     }
 

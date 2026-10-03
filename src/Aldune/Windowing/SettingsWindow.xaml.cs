@@ -67,6 +67,7 @@ public partial class SettingsWindow : Window
         RememberPositionsCheck.IsChecked = _settings.RememberNotePositions;
         PopulateTrackpadGestures();
         UpdateUniformColorUi();
+        SyncSignalCheck.IsChecked = _settings.SyncSignalVisible;
         MoveCompletedTasksCheck.IsChecked = _settings.MoveCompletedTasksToEnd;
         CheckForUpdatesAutomaticallyCheck.IsChecked = _settings.CheckForUpdatesAutomatically;
         AutoHideTasksCheck.IsChecked = _settings.AutoHideCompletedTasks;
@@ -232,6 +233,13 @@ public partial class SettingsWindow : Window
             _settings.UniformNoteColor = null;
         }
         ApplyUniformColor();
+    }
+
+    private void OnSyncSignalToggled(object sender, RoutedEventArgs e)
+    {
+        _settings.ShowSyncSignal = SyncSignalCheck.IsChecked == true;
+        _settingsService.Save(_settings);
+        _coordinator?.RefreshNoteAppearance();
     }
 
     private void OnPickUniformColorClick(object sender, RoutedEventArgs e)
