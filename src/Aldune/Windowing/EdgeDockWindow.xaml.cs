@@ -2236,7 +2236,12 @@ public partial class EdgeDockWindow : Window
     /// </summary>
     private static void ApplyFaceFinish(Button button)
     {
-        if (button.DataContext is not Note note || !NoteColorDerivation.IsDark(NoteColorDisplay.Resolve(note.Color))) return;
+        if (button.DataContext is not Note note) return;
+        // Se decide por la cara que de verdad se pinta (NoteFace.Face), no por el color guardado: con
+        // Stripe/Tinted la cara es el fondo del chrome o el tinte del canal. Con Filled coincide.
+        var face = NoteFace.For(ThemeManager.Skin.Card, note.Color, NoteColorDisplay.Uniform,
+            NoteChannelDisplay.Of(note.Id), ThemeManager.Palette);
+        if (!NoteColorDerivation.IsDark(face.Face)) return;
 
         if (button.Template.FindName("CardBorder", button) is Border card)
             card.BorderThickness = new Thickness(0, 1, 0, 0);

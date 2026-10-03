@@ -31,16 +31,27 @@ public sealed class BevelEdge : FrameworkElement
         IsHitTestVisible = false;
         // Suscripción solo mientras está en pantalla: SkinState vive toda la app y retendría cada
         // pestaña que se ha pintado alguna vez.
-        Loaded += (_, _) =>
-        {
-            SkinState.Current.PropertyChanged += OnSkinChanged;
-            ThemeManager.Changed += InvalidateVisual;
-        };
-        Unloaded += (_, _) =>
-        {
-            SkinState.Current.PropertyChanged -= OnSkinChanged;
-            ThemeManager.Changed -= InvalidateVisual;
-        };
+        Loaded += OnLoaded;
+        Unloaded += OnUnloaded;
+    }
+
+    // _subscribed: un Loaded sin su Unloaded no debe suscribir dos veces (el -= solo quita una).
+    private bool _subscribed;
+
+    private void OnLoaded(object sender, RoutedEventArgs e)
+    {
+        if (_subscribed) return;
+        _subscribed = true;
+        SkinState.Current.PropertyChanged += OnSkinChanged;
+        ThemeManager.Changed += InvalidateVisual;
+    }
+
+    private void OnUnloaded(object sender, RoutedEventArgs e)
+    {
+        if (!_subscribed) return;
+        _subscribed = false;
+        SkinState.Current.PropertyChanged -= OnSkinChanged;
+        ThemeManager.Changed -= InvalidateVisual;
     }
 
     private void OnSkinChanged(object? sender, PropertyChangedEventArgs e) => InvalidateVisual();

@@ -16,7 +16,8 @@ public sealed class NoteFaceConverter : IValueConverter
 {
     public object Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
     {
-        if (value is not Note note) return Brushes.Transparent;
+        if (value is not Note note)
+            return parameter as string == "PillRimThickness" ? new Thickness(0) : Brushes.Transparent;
         var face = NoteFace.For(ThemeManager.Skin.Card, note.Color, NoteColorDisplay.Uniform,
             NoteChannelDisplay.Of(note.Id), ThemeManager.Palette);
 
