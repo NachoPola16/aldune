@@ -114,4 +114,53 @@ public class NoteColorDerivationTests
     {
         Assert.Null(NoteColorDerivation.RestOutlineFor(face));
     }
+
+    public static TheoryData<string> DarkGrounds => new()
+    {
+        AppPalette.For(AppearanceMode.Dark, false)["Ground"],
+        AppPalette.For(AppearanceMode.Midnight, false)["Ground"],
+        "#282828", // Gruvbox
+        "#1D2021",
+    };
+
+    // La franja de bash tiene que verse sobre la terminal aunque el color de la nota sea apagado
+    // (Sereno, un gris): 3:1, el mínimo para un elemento gráfico.
+    [Theory]
+    [MemberData(nameof(DarkGrounds))]
+    public void StripeColor_StandsOutOnDarkGrounds(string ground)
+    {
+        foreach (var theme in NoteThemes.BuiltIn)
+            foreach (var color in theme.DarkColors.Concat(theme.LightColors))
+            {
+                var stripe = NoteColorDerivation.StripeColor(color, ground);
+                Assert.True(Ratio(stripe, ground) >= 3, $"{theme.Id} {color} → {stripe} sobre {ground}");
+            }
+    }
+
+    [Fact]
+    public void StripeColor_OnALightGround_IsDarkEnough()
+    {
+        var ground = AppPalette.For(AppearanceMode.Light, false)["Ground"];
+        foreach (var color in NoteThemes.Resolve(NoteThemes.ClassicId, null).LightColors)
+            Assert.True(Ratio(NoteColorDerivation.StripeColor(color, ground), ground) >= 3, color);
+    }
+
+    [Fact]
+    public void StripeColor_KeepsTheHue_AndAGreyStaysGrey()
+    {
+        Assert.True(OklchColor.TryFromHex("#472525", out var face));
+        Assert.True(OklchColor.TryFromHex(NoteColorDerivation.StripeColor("#472525", "#282828"), out var stripe));
+        Assert.True(Math.Abs(face.H - stripe.H) < 20, $"{face.H} → {stripe.H}");
+
+        // "Mismo color" en gris: una franja gris, no de un matiz inventado.
+        Assert.True(OklchColor.TryFromHex(NoteColorDerivation.StripeColor("#33363A", "#282828"), out var grey));
+        Assert.True(grey.C < 0.03, $"C {grey.C}");
+    }
+
+    private static double Ratio(string a, string b)
+    {
+        Assert.True(NoteColorContrast.TryGetLuminance(a, out var la));
+        Assert.True(NoteColorContrast.TryGetLuminance(b, out var lb));
+        return (Math.Max(la, lb) + 0.05) / (Math.Min(la, lb) + 0.05);
+    }
 }

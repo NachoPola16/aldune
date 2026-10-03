@@ -7,8 +7,10 @@
 /// </summary>
 public static class NoteDisplayColor
 {
+    /// <summary>¿Hay un color único válido? Uno inválido (settings.json editado a mano) cuenta como apagado.</summary>
+    public static bool IsActive(string? uniform) =>
+        uniform is not null && uniform.Length == 7 && OklchColor.TryFromHex(uniform, out _);
+
     public static string Resolve(string color, string? uniform) =>
-        uniform is not null && OklchColor.TryFromHex(uniform, out _) && uniform.Length == 7
-            ? uniform.ToUpperInvariant()
-            : color;
+        IsActive(uniform) ? uniform!.ToUpperInvariant() : color;
 }

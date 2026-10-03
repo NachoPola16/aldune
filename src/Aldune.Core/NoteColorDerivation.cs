@@ -67,6 +67,20 @@ public static class NoteColorDerivation
         return new OklchColor(Math.Max(face.L + 0.2, 0.47), Math.Min(face.C * 1.3, 0.08), face.H).ToHex();
     }
 
+    /// <summary>
+    /// Franja de la piel <see cref="SkinCard.Stripe"/> (bash): la nota es del fondo de la terminal y su
+    /// color va solo en 3 px a un lado, que tienen que verse aunque el color sea apagado. Mismo matiz,
+    /// claridad fija (0.72 sobre un fondo oscuro, 0.5 sobre uno claro) y un croma mínimo para que no
+    /// parezca gris; un gris de verdad (croma casi 0, el de "mismo color" monocromo) se queda gris.
+    /// </summary>
+    public static string StripeColor(string color, string ground)
+    {
+        if (!OklchColor.TryFromHex(color, out var face)) return color;
+        double lightness = IsDark(ground) ? 0.72 : 0.5;
+        double chroma = face.C < 0.02 ? face.C : Math.Max(face.C, 0.09);
+        return new OklchColor(lightness, chroma, face.H).ToHex();
+    }
+
     private static (string Face, string Rim, string Label)? FindClassic(string? color)
     {
         foreach (var entry in Classic)
