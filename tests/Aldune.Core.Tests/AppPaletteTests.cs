@@ -74,6 +74,12 @@ public class AppPaletteTests
     [InlineData(AppearanceMode.System, true, true)]
     [InlineData(AppearanceMode.Pastel, false, true)]
     [InlineData(AppearanceMode.Midnight, true, false)]
+    [InlineData(AppearanceMode.XpLight, false, true)]
+    [InlineData(AppearanceMode.TelecomLight, false, true)]
+    [InlineData(AppearanceMode.XpDark, true, false)]
+    [InlineData(AppearanceMode.TelecomDark, true, false)]
+    [InlineData(AppearanceMode.Bash, true, false)]
+    [InlineData(AppearanceMode.Phosphor, true, false)]
     public void IsLight_FollowsTheChoiceOrWindows(AppearanceMode mode, bool windowsUsesLight, bool expectedLight)
     {
         Assert.Equal(expectedLight, AppPalette.IsLight(mode, windowsUsesLight));

@@ -311,4 +311,24 @@ public class SettingsServiceTests : IDisposable
 
         Assert.Null(new SettingsService(_settingsPath).Load().UniformNoteColor);
     }
+
+    [Fact]
+    public void AspectColors_RoundTrip_AndAnOldFileHasNone()
+    {
+        Directory.CreateDirectory(_tempDir);
+        File.WriteAllText(_settingsPath, "{\"AutoHideCompletedTasks\":true}");
+        var service = new SettingsService(_settingsPath);
+        var settings = service.Load();
+        Assert.Null(settings.AspectColors);
+        Assert.Null(settings.ColorsFor(AppearanceMode.Bash));
+
+        settings.Appearance = AppearanceMode.Bash;
+        settings.AspectColors = new() { ["bash"] = new() { ["accent"] = "#458588" } };
+        service.Save(settings);
+        var loaded = service.Load();
+
+        Assert.Equal(AppearanceMode.Bash, loaded.Appearance);
+        Assert.Equal("#458588", loaded.ColorsFor(AppearanceMode.Bash)!["accent"]);
+        Assert.Contains("\"Appearance\":9", File.ReadAllText(_settingsPath).Replace(" ", ""));
+    }
 }

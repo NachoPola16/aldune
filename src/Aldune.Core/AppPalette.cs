@@ -1,7 +1,8 @@
 ﻿namespace Aldune.Core;
 
 /// <summary>Aspecto del chrome de la app (ventanas, dock, avisos). Las notas tienen sus propios temas.
-/// Se escribe como número; Dark = 0 para que un settings.json anterior siga en oscuro.</summary>
+/// Se escribe como número; Dark = 0 para que un settings.json anterior siga en oscuro. Una versión
+/// anterior que lea 5–10 (los aspectos retro) cae en Oscuro.</summary>
 public enum AppearanceMode
 {
     Dark = 0,
@@ -11,7 +12,19 @@ public enum AppearanceMode
     /// <summary>Claro teñido de lavanda, con acento rosa.</summary>
     Pastel = 3,
     /// <summary>Oscuro frío, azul noche, en vez del marrón cálido de Dark.</summary>
-    Midnight = 4
+    Midnight = 4,
+    /// <summary>Windows XP (Luna): beige, barra azul en degradado vertical, Tahoma.</summary>
+    XpLight = 5,
+    /// <summary>Windows 95 con la barra de Windows 98 y el acento de XP, en grafito oscuro.</summary>
+    XpDark = 6,
+    /// <summary>Papel de instrumento de laboratorio: tinta, líneas de 1 px, canales.</summary>
+    TelecomLight = 7,
+    /// <summary>Pantalla de osciloscopio con retícula.</summary>
+    TelecomDark = 8,
+    /// <summary>Terminal de Linux (Gruvbox por defecto).</summary>
+    Bash = 9,
+    /// <summary>Monitor de fósforo antiguo, monocromo.</summary>
+    Phosphor = 10
 }
 
 /// <summary>
@@ -178,7 +191,7 @@ public static class AppPalette
 
     public static bool IsLight(AppearanceMode mode, bool windowsUsesLight) => mode switch
     {
-        AppearanceMode.Light or AppearanceMode.Pastel => true,
+        AppearanceMode.Light or AppearanceMode.Pastel or AppearanceMode.XpLight or AppearanceMode.TelecomLight => true,
         AppearanceMode.System => windowsUsesLight,
         _ => false
     };

@@ -211,6 +211,17 @@ public sealed class AppSettings
     /// <summary>Oscuro, claro o como Windows. Solo el chrome: las notas conservan su tema.</summary>
     public AppearanceMode Appearance { get; set; }
 
+    /// <summary>
+    /// Colores elegidos para cada aspecto retro: id del aspecto → id del hueco → #RRGGBB (ver
+    /// <see cref="AspectCatalog"/>). Nulo o sin entrada = los de fábrica. Se guardan los de todos los
+    /// aspectos, no solo el activo: volver a uno ya personalizado lo encuentra como se dejó.
+    /// </summary>
+    public Dictionary<string, Dictionary<string, string>>? AspectColors { get; set; }
+
+    /// <summary>Lo elegido para <paramref name="mode"/>, o null. Sin validar: eso lo hace AspectCatalog.Resolve.</summary>
+    public IReadOnlyDictionary<string, string>? ColorsFor(AppearanceMode mode) =>
+        AspectCatalog.For(mode) is { } aspect && AspectColors?.GetValueOrDefault(aspect.Id) is { } colors ? colors : null;
+
     /// <summary>Cuántas unidades de <see cref="AutoHideCompletedTasksDelayUnit"/> esperar. Por defecto 1.</summary>
     public int AutoHideCompletedTasksDelayValue { get; set; } = 1;
 
