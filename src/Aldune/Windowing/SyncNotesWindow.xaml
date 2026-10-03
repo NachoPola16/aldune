@@ -18,7 +18,7 @@
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="Button">
-                        <Border Background="{TemplateBinding Background}" CornerRadius="6">
+                        <Border Background="{TemplateBinding Background}" CornerRadius="{DynamicResource AlduneRadius6}">
                             <ContentPresenter Margin="{TemplateBinding Padding}" />
                         </Border>
                         <ControlTemplate.Triggers>

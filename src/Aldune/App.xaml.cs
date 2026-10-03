@@ -81,6 +81,7 @@ public partial class App : Application
             ApplyLanguage(settings.Language);
             // Antes de crear ninguna ventana: todas toman sus colores de estos pinceles.
             ThemeManager.Apply(this, settings.Appearance);
+            ThemeManager.ApplyShape(this, settings.CornersSquare);
 
             byte[] rawKey;
             if (settings.WrappedDatabaseKey is null && DatabaseKeyRecovery.DatabaseHasNotes(databasePath))
@@ -562,7 +563,10 @@ public partial class App : Application
         Dispatcher.BeginInvoke(() =>
         {
             if (ThemeManager.IsLight != ThemeManager.WindowsUsesLightTheme())
+            {
                 ThemeManager.Apply(this, AppearanceMode.System);
+                ThemeManager.ApplyShape(this, _settings?.CornersSquare ?? false);
+            }
         });
     }
 

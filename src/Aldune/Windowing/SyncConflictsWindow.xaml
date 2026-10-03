@@ -21,7 +21,7 @@
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="Button">
-                        <Border x:Name="BackgroundBorder" Background="{TemplateBinding Background}" CornerRadius="6">
+                        <Border x:Name="BackgroundBorder" Background="{TemplateBinding Background}" CornerRadius="{DynamicResource AlduneRadius6}">
                             <ContentPresenter Margin="{TemplateBinding Padding}" />
                         </Border>
                         <ControlTemplate.Triggers>
@@ -80,7 +80,7 @@
                 <ItemsControl x:Name="ConflictsList">
                     <ItemsControl.ItemTemplate>
                         <DataTemplate>
-                            <Border Background="{DynamicResource AlduneSurfaceBrush}" CornerRadius="8" Padding="12" Margin="0,0,0,10">
+                            <Border Background="{DynamicResource AlduneSurfaceBrush}" CornerRadius="{DynamicResource AlduneRadius8}" Padding="12" Margin="0,0,0,10">
                                 <Grid>
                                     <Grid.RowDefinitions>
                                         <RowDefinition Height="Auto" />

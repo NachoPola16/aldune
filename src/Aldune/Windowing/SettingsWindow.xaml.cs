@@ -68,6 +68,7 @@ public partial class SettingsWindow : Window
         PopulateTrackpadGestures();
         UpdateUniformColorUi();
         SyncSignalCheck.IsChecked = _settings.SyncSignalVisible;
+        SquareCornersCheck.IsChecked = _settings.CornersSquare;
         MoveCompletedTasksCheck.IsChecked = _settings.MoveCompletedTasksToEnd;
         CheckForUpdatesAutomaticallyCheck.IsChecked = _settings.CheckForUpdatesAutomatically;
         AutoHideTasksCheck.IsChecked = _settings.AutoHideCompletedTasks;
@@ -233,6 +234,15 @@ public partial class SettingsWindow : Window
             _settings.UniformNoteColor = null;
         }
         ApplyUniformColor();
+    }
+
+    private void OnSquareCornersToggled(object sender, RoutedEventArgs e)
+    {
+        _settings.SquareCorners = SquareCornersCheck.IsChecked == true;
+        _settingsService.Save(_settings);
+        ThemeManager.ApplyShape(Application.Current, _settings.CornersSquare);
+        // Las pestañas del dock fijan su forma por código al crearse: hay que rehacerlas.
+        _coordinator?.RebuildDocks();
     }
 
     private void OnSyncSignalToggled(object sender, RoutedEventArgs e)

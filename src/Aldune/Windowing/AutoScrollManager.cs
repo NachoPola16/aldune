@@ -83,7 +83,7 @@ internal sealed class AutoScrollManager
             VerticalAlignment = VerticalAlignment.Top,
             Margin = new Thickness(_origin.X - 13, _origin.Y - 13, 0, 0),
             Background = (Brush)Application.Current.Resources["AlduneRaisedBrush"],
-            CornerRadius = new CornerRadius(13),
+            CornerRadius = ThemeManager.Radius(13),
             Opacity = 0.92,
             Child = glyph
         };

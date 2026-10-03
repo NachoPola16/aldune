@@ -51,13 +51,13 @@
             </StackPanel>
 
             <Border x:Name="PreviewPanel" Grid.Row="2" Margin="0,18,0,18"
-                    Background="#F5E3B3" CornerRadius="9" Padding="16,12">
+                    Background="#F5E3B3" CornerRadius="{DynamicResource AlduneRadius9}" Padding="16,12">
                 <Grid>
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="54" />
                         <ColumnDefinition Width="*" />
                     </Grid.ColumnDefinitions>
-                    <Border x:Name="PreviewSwatch" Width="42" Height="42" CornerRadius="8"
+                    <Border x:Name="PreviewSwatch" Width="42" Height="42" CornerRadius="{DynamicResource AlduneRadius8}"
                             BorderBrush="#1E1A14" BorderThickness="1" VerticalAlignment="Center" />
                     <StackPanel Grid.Column="1" VerticalAlignment="Center" Margin="13,0,0,0">
                         <TextBlock x:Name="PreviewLabel" Text="{x:Static res:Strings.CustomColorPreview}"

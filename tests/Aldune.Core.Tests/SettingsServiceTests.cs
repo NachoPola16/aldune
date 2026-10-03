@@ -38,6 +38,17 @@ public class SettingsServiceTests : IDisposable
     }
 
     [Fact]
+    public void Load_OldFileWithoutCornersOrSignal_KeepsTheRoundedLookAndNoSignal()
+    {
+        Directory.CreateDirectory(_tempDir);
+        File.WriteAllText(_settingsPath, "{\"AutoHideCompletedTasks\":true}");
+
+        var loaded = new SettingsService(_settingsPath).Load();
+        Assert.False(loaded.CornersSquare);
+        Assert.False(loaded.SyncSignalVisible);
+    }
+
+    [Fact]
     public void Load_OldFileWithoutMoveCompletedTasksToEnd_KeepsTasksWhereTheyAre()
     {
         Directory.CreateDirectory(_tempDir);

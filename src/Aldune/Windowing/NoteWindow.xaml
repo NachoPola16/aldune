@@ -35,7 +35,7 @@
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="Button">
-                        <Border x:Name="Bg" Background="{TemplateBinding Background}" CornerRadius="4">
+                        <Border x:Name="Bg" Background="{TemplateBinding Background}" CornerRadius="{DynamicResource AlduneRadius4}">
                             <ContentPresenter Margin="{TemplateBinding Padding}"
                                               HorizontalAlignment="Center"
                                               VerticalAlignment="Center" />
@@ -59,7 +59,7 @@
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="Button">
-                        <Border x:Name="Bg" Background="{TemplateBinding Background}" CornerRadius="4">
+                        <Border x:Name="Bg" Background="{TemplateBinding Background}" CornerRadius="{DynamicResource AlduneRadius4}">
                             <ContentPresenter Margin="{TemplateBinding Padding}"
                                               HorizontalAlignment="Center"
                                               VerticalAlignment="Center" />
@@ -252,13 +252,13 @@
                      (texto incluido) a un bitmap de resolución fija, borroso en monitores con escala
                      >100%. La capa de sombra no lleva contenido; la de contenido va sin Effect. -->
                 <Grid Margin="10">
-                    <Border Background="{DynamicResource AlduneGroundBrush}" CornerRadius="10">
+                    <Border Background="{DynamicResource AlduneGroundBrush}" CornerRadius="{DynamicResource AlduneRadius10}">
                         <Border.Effect>
                             <DropShadowEffect BlurRadius="16" ShadowDepth="3" Direction="270"
                                               Color="#000000" Opacity="0.5" />
                         </Border.Effect>
                     </Border>
-                    <Border Background="{DynamicResource AlduneGroundBrush}" CornerRadius="10" Padding="8">
+                    <Border Background="{DynamicResource AlduneGroundBrush}" CornerRadius="{DynamicResource AlduneRadius10}" Padding="8">
                     <StackPanel MinWidth="230">
                         <!-- Agrupado por intención, no por orden de implementación: arriba lo que se usa
                              escribiendo (tarea y viñeta, con su atajo a la vista — es la única forma de
@@ -375,7 +375,7 @@
                  <Popup x:Name="TagsPopup" PlacementTarget="{Binding ElementName=MenuButton}" Closed="OnTagsPopupClosed"
                      Placement="Bottom" HorizontalOffset="-160" Focusable="True" StaysOpen="False"
                    AllowsTransparency="True" PopupAnimation="Fade">
-                <Border Background="{DynamicResource AlduneGroundBrush}" CornerRadius="10" Padding="16,14">
+                <Border Background="{DynamicResource AlduneGroundBrush}" CornerRadius="{DynamicResource AlduneRadius10}" Padding="16,14">
                     <local:TagAssignmentPanel x:Name="NoteTagPanel" />
                 </Border>
             </Popup>
@@ -451,7 +451,7 @@
                                                             <Border x:Name="Bar"
                                                                     Background="{DynamicResource NoteInkBrush}"
                                                                     Opacity="0.28"
-                                                                    CornerRadius="3"
+                                                                    CornerRadius="{DynamicResource AlduneRadius3}"
                                                                     Margin="2,2" />
                                                             <ControlTemplate.Triggers>
                                                                 <Trigger Property="IsMouseOver" Value="True">
@@ -490,7 +490,7 @@
                  Mismo tono que NoteActionButtonStyle (#26000000) para el mismo lenguaje de hover
                  que ya usan los botones de la cabecera. -->
             <Canvas IsHitTestVisible="False">
-                <Border x:Name="TaskHoverHighlight" Background="{DynamicResource NoteTaskHoverBrush}" CornerRadius="3"
+                <Border x:Name="TaskHoverHighlight" Background="{DynamicResource NoteTaskHoverBrush}" CornerRadius="{DynamicResource AlduneRadius3}"
                         Visibility="Collapsed" />
             </Canvas>
         </Grid>

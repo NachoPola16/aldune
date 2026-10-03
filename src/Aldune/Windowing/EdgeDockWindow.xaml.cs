@@ -2239,7 +2239,7 @@ public partial class EdgeDockWindow : Window
 
         // Arriba y abajo usan tarjetas separadas por un hueco real. Todas conservan sus cuatro
         // esquinas curvas, en vez de tapar la inferior de una tarjeta con la siguiente.
-        var radius = new CornerRadius(10);
+        var radius = ThemeManager.Radius(10);
         var border = new Thickness(1);
 
         if (button.Template.FindName("CardBorder", button) is Border card)

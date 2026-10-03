@@ -334,7 +334,7 @@ public partial class NotesManagerWindow : Window
         {
             var row = new Border
             {
-                CornerRadius = new CornerRadius(6),
+                CornerRadius = ThemeManager.Radius(6),
                 Padding = new Thickness(9, 5, 6, 5),
                 Margin = new Thickness(0, 0, 0, 6)
             };

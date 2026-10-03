@@ -62,7 +62,7 @@ internal static class NoteSwatchPanel
             Width = SwatchSize,
             Height = SwatchSize,
             Margin = new Thickness(3),
-            CornerRadius = new CornerRadius(5),
+            CornerRadius = ThemeManager.Radius(5),
             // El tick en el color de la etiqueta de esa cara: se ve igual sobre una pastilla clara
             // que sobre una oscura, cosa que la tinta fija de antes no hacía. El borde lo pone
             // MarkSelected.

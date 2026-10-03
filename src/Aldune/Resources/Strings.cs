@@ -981,6 +981,8 @@ public static class Strings
         "Só muda a aparência: cada nota mantém a sua cor.");
     public static string AppearanceSyncSignal => T("Show sync status on each note", "Señal de sincronización en cada nota",
         "Synchronisierungsstatus auf jeder Notiz", "Indicateur de synchronisation sur chaque note", "Sinal de sincronização em cada nota");
+    public static string AppearanceSquareCorners => T("Square corners on notes, dock and windows", "Esquinas rectas en notas, dock y ventanas",
+        "Eckige Ecken bei Notizen, Dock und Fenstern", "Coins carrés pour les notes, le dock et les fenêtres", "Cantos retos nas notas, no dock e nas janelas");
     public static string SyncSignalLabel(Aldune.Core.SyncSignalState state) => state switch
     {
         Aldune.Core.SyncSignalState.Synced => T("synced", "sincronizada", "synchronisiert", "synchronisée", "sincronizada"),

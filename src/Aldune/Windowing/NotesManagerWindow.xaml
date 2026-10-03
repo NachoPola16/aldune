@@ -36,7 +36,7 @@
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="Button">
-                        <Border x:Name="Bg" Background="{TemplateBinding Background}" CornerRadius="6">
+                        <Border x:Name="Bg" Background="{TemplateBinding Background}" CornerRadius="{DynamicResource AlduneRadius6}">
                             <ContentPresenter Margin="{TemplateBinding Padding}"
                                               HorizontalAlignment="Center"
                                               VerticalAlignment="Center" />
@@ -115,7 +115,7 @@
                 <Setter.Value>
                     <ControlTemplate TargetType="CheckBox">
                         <StackPanel Orientation="Horizontal" Background="Transparent">
-                            <Border x:Name="Box" Width="17" Height="17" CornerRadius="4"
+                            <Border x:Name="Box" Width="17" Height="17" CornerRadius="{DynamicResource AlduneRadius4}"
                                     BorderBrush="{TemplateBinding Foreground}"
                                     BorderThickness="1.5"
                                     Background="Transparent"
@@ -167,7 +167,7 @@
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="RadioButton">
-                        <Border x:Name="Bg" Background="Transparent" CornerRadius="5">
+                        <Border x:Name="Bg" Background="Transparent" CornerRadius="{DynamicResource AlduneRadius5}">
                             <ContentPresenter Margin="{TemplateBinding Padding}"
                                               HorizontalAlignment="Center"
                                               VerticalAlignment="Center" />
@@ -197,7 +197,7 @@
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="Button">
-                        <Border x:Name="Bg" Background="Transparent" CornerRadius="5" Padding="2">
+                        <Border x:Name="Bg" Background="Transparent" CornerRadius="{DynamicResource AlduneRadius5}" Padding="2">
                             <ContentPresenter />
                         </Border>
                         <ControlTemplate.Triggers>
@@ -223,7 +223,7 @@
         <Popup x:Name="TagEditorPopup" AllowsTransparency="True" Focusable="True" StaysOpen="False" Closed="OnTagEditorClosed"
                Placement="Bottom" PopupAnimation="Fade">
             <Border Background="{DynamicResource AldunePopupBrush}" BorderBrush="{DynamicResource AldunePressedBrush}" BorderThickness="1"
-                    CornerRadius="7" Padding="16,14">
+                    CornerRadius="{DynamicResource AlduneRadius7}" Padding="16,14">
                 <local:TagAssignmentPanel x:Name="ManagerTagPanel" />
             </Border>
         </Popup>
@@ -288,7 +288,7 @@
             </StackPanel>
         </Grid>
 
-        <Border Grid.Row="1" Background="{DynamicResource AlduneSurfaceBrush}" CornerRadius="7" Margin="20,16,20,0" Padding="3">
+        <Border Grid.Row="1" Background="{DynamicResource AlduneSurfaceBrush}" CornerRadius="{DynamicResource AlduneRadius7}" Margin="20,16,20,0" Padding="3">
                 <WrapPanel>
                 <!-- IsChecked se fija desde el code-behind tras InitializeComponent, no aquí: un
                      IsChecked="True" en XAML dispara Checked mientras el árbol se está
@@ -326,7 +326,7 @@
         <Popup x:Name="TagManagerPopup" AllowsTransparency="True" Focusable="True"
                StaysOpen="False" Placement="Bottom" PopupAnimation="Fade">
             <Border Background="{DynamicResource AldunePopupBrush}" BorderBrush="{DynamicResource AldunePressedBrush}" BorderThickness="1"
-                    CornerRadius="7" Padding="12">
+                    CornerRadius="{DynamicResource AlduneRadius7}" Padding="12">
                 <StackPanel Width="290">
                     <TextBlock Text="{x:Static res:Strings.ManageTags}" Foreground="{DynamicResource AlduneTextStrongBrush}"
                                FontWeight="SemiBold" />
@@ -364,7 +364,7 @@
              el borrado permanente, que solo tiene sentido en Papelera. Cambiar de pestaña conserva
              el texto, así que buscar y luego mirar en otra categoría no obliga a escribirlo dos
              veces. -->
-        <Border Grid.Row="2" Background="{DynamicResource AlduneSurfaceBrush}" CornerRadius="7" Margin="20,10,20,0">
+        <Border Grid.Row="2" Background="{DynamicResource AlduneSurfaceBrush}" CornerRadius="{DynamicResource AlduneRadius7}" Margin="20,10,20,0">
             <Grid>
                 <TextBlock Text="&#xE721;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets"
                            Foreground="{DynamicResource AlduneTextFaintBrush}" FontSize="13"
@@ -421,7 +421,7 @@
                                  el árbol, que es lo que hace falta para tenir toda la fila. -->
                             <Border Background="{Binding Note.Color, Converter={StaticResource NoteDisplayColorConverter}}"
                                     TextElement.Foreground="{Binding Note.Color, Converter={StaticResource NoteLabelColorConverter}}"
-                                    CornerRadius="8" Margin="0,0,0,8" Padding="12,8"
+                                    CornerRadius="{DynamicResource AlduneRadius8}" Margin="0,0,0,8" Padding="12,8"
                                     Cursor="Hand"
                                     Focusable="True"
                                     FocusVisualStyle="{x:Null}"
@@ -515,7 +515,7 @@
                                                              distinguía sobre los temas oscuros. -->
                                                         <DataTemplate>
                                                             <Grid Margin="0,0,4,0">
-                                                                <Border CornerRadius="4" Opacity="0.16"
+                                                                <Border CornerRadius="{DynamicResource AlduneRadius4}" Opacity="0.16"
                                                                         Background="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}" />
                                                                 <TextBlock Text="{Binding}" FontSize="11" Margin="6,1" />
                                                             </Grid>

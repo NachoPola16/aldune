@@ -22,7 +22,7 @@
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="Button">
-                        <Border x:Name="ButtonBackground" Background="{TemplateBinding Background}" CornerRadius="6"
+                        <Border x:Name="ButtonBackground" Background="{TemplateBinding Background}" CornerRadius="{DynamicResource AlduneRadius6}"
                                 Padding="{TemplateBinding Padding}">
                             <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
                         </Border>

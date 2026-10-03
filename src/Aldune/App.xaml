@@ -33,7 +33,7 @@
                 <Setter.Value>
                     <ControlTemplate TargetType="ComboBoxItem">
                         <Border x:Name="ItemBackground" Background="{TemplateBinding Background}"
-                                Padding="{TemplateBinding Padding}" CornerRadius="4">
+                                Padding="{TemplateBinding Padding}" CornerRadius="{DynamicResource AlduneRadius4}">
                             <ContentPresenter TextElement.Foreground="{TemplateBinding Foreground}"
                                               HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}" />
                         </Border>
@@ -74,7 +74,7 @@
                                 <Border x:Name="Field" Background="{TemplateBinding Background}"
                                         BorderBrush="{TemplateBinding BorderBrush}"
                                         BorderThickness="{TemplateBinding BorderThickness}"
-                                        CornerRadius="6" Padding="{TemplateBinding Padding}">
+                                        CornerRadius="{DynamicResource AlduneRadius6}" Padding="{TemplateBinding Padding}">
                                     <Grid>
                                         <ContentPresenter Content="{TemplateBinding SelectionBoxItem}"
                                                           ContentTemplate="{TemplateBinding SelectionBoxItemTemplate}"
@@ -90,7 +90,7 @@
                                    Focusable="False" IsOpen="{TemplateBinding IsDropDownOpen}"
                                    PopupAnimation="Fade" PlacementTarget="{Binding ElementName=DropDownButton}">
                                 <Border Background="{DynamicResource AlduneGroundBrush}" BorderBrush="{DynamicResource AlduneBorderBrush}" BorderThickness="1"
-                                        CornerRadius="6" Padding="3" Width="{Binding ActualWidth, ElementName=DropDownButton}">
+                                        CornerRadius="{DynamicResource AlduneRadius6}" Padding="3" Width="{Binding ActualWidth, ElementName=DropDownButton}">
                                     <ScrollViewer MaxHeight="{TemplateBinding MaxDropDownHeight}"
                                                   CanContentScroll="True" HorizontalScrollBarVisibility="Disabled">
                                         <ItemsPresenter KeyboardNavigation.DirectionalNavigation="Contained" />
@@ -121,7 +121,7 @@
                 <Setter.Value>
                     <ControlTemplate TargetType="CheckBox">
                         <StackPanel Orientation="Horizontal" Background="Transparent">
-                            <Border x:Name="Box" Width="17" Height="17" CornerRadius="4"
+                            <Border x:Name="Box" Width="17" Height="17" CornerRadius="{DynamicResource AlduneRadius4}"
                                     BorderBrush="{TemplateBinding Foreground}"
                                     BorderThickness="1.5" Background="Transparent"
                                     VerticalAlignment="Center">
@@ -168,7 +168,7 @@
                                 Background="{DynamicResource AlduneSelectionBrush}"
                                 BorderBrush="{DynamicResource AlduneAccentBorderBrush}"
                                 BorderThickness="1"
-                                CornerRadius="4"
+                                CornerRadius="{DynamicResource AlduneRadius4}"
                                 Margin="1,2" />
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsMouseOver" Value="True">
@@ -199,7 +199,7 @@
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="Button">
-                        <Border x:Name="Bg" Background="Transparent" CornerRadius="6">
+                        <Border x:Name="Bg" Background="Transparent" CornerRadius="{DynamicResource AlduneRadius6}">
                             <ContentPresenter Margin="{TemplateBinding Padding}"
                                               HorizontalAlignment="Left" VerticalAlignment="Center" />
                         </Border>
@@ -219,7 +219,7 @@
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="Button">
-                        <Border x:Name="Bg" Background="Transparent" CornerRadius="6">
+                        <Border x:Name="Bg" Background="Transparent" CornerRadius="{DynamicResource AlduneRadius6}">
                             <ContentPresenter Margin="{TemplateBinding Padding}"
                                               HorizontalAlignment="Left" VerticalAlignment="Center" />
                         </Border>
@@ -253,13 +253,13 @@
                              de sombra (sin contenido, solo el relleno) sí puede rasterizarse sin que se
                              note; la de contenido va encima, sin Effect, y sale nítida siempre. -->
                         <Grid>
-                            <Border Background="{DynamicResource AlduneGroundBrush}" CornerRadius="6">
+                            <Border Background="{DynamicResource AlduneGroundBrush}" CornerRadius="{DynamicResource AlduneRadius6}">
                                 <Border.Effect>
                                     <DropShadowEffect BlurRadius="12" ShadowDepth="2" Direction="270"
                                                       Color="#000000" Opacity="0.4" />
                                 </Border.Effect>
                             </Border>
-                            <Border Background="{DynamicResource AlduneGroundBrush}" CornerRadius="6" Padding="9,6">
+                            <Border Background="{DynamicResource AlduneGroundBrush}" CornerRadius="{DynamicResource AlduneRadius6}" Padding="9,6">
                                 <ContentPresenter />
                             </Border>
                         </Grid>
@@ -314,7 +314,7 @@
                             <Border Background="{TemplateBinding Background}"
                                     BorderBrush="{TemplateBinding BorderBrush}"
                                     BorderThickness="{TemplateBinding BorderThickness}"
-                                    CornerRadius="10">
+                                    CornerRadius="{DynamicResource AlduneRadius10}">
                                 <Border.Effect>
                                     <DropShadowEffect BlurRadius="12" ShadowDepth="2" Direction="270"
                                                       Color="#000000" Opacity="0.4" />
@@ -323,7 +323,7 @@
                             <Border Background="{TemplateBinding Background}"
                                     BorderBrush="{TemplateBinding BorderBrush}"
                                     BorderThickness="{TemplateBinding BorderThickness}"
-                                    CornerRadius="10" Padding="{TemplateBinding Padding}">
+                                    CornerRadius="{DynamicResource AlduneRadius10}" Padding="{TemplateBinding Padding}">
                                 <ItemsPresenter />
                             </Border>
                         </Grid>
@@ -340,7 +340,7 @@
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="MenuItem">
-                        <Border x:Name="Bg" Background="Transparent" CornerRadius="6"
+                        <Border x:Name="Bg" Background="Transparent" CornerRadius="{DynamicResource AlduneRadius6}"
                                 Padding="{TemplateBinding Padding}">
                             <ContentPresenter ContentSource="Header"
                                               HorizontalAlignment="Left" VerticalAlignment="Center"
@@ -416,7 +416,7 @@
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="Button">
-                        <Border x:Name="ButtonBackground" Background="{TemplateBinding Background}" CornerRadius="6">
+                        <Border x:Name="ButtonBackground" Background="{TemplateBinding Background}" CornerRadius="{DynamicResource AlduneRadius6}">
                             <ContentPresenter Margin="{TemplateBinding Padding}"
                                               HorizontalAlignment="Center" VerticalAlignment="Center" />
                         </Border>
@@ -442,7 +442,7 @@
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="Button">
-                        <Border x:Name="ButtonBackground" Background="{TemplateBinding Background}" CornerRadius="6">
+                        <Border x:Name="ButtonBackground" Background="{TemplateBinding Background}" CornerRadius="{DynamicResource AlduneRadius6}">
                             <ContentPresenter Margin="{TemplateBinding Padding}"
                                               HorizontalAlignment="Center" VerticalAlignment="Center" />
                         </Border>
@@ -468,7 +468,7 @@
             <Border x:Name="Field" Background="{TemplateBinding Background}"
                     BorderBrush="{TemplateBinding BorderBrush}"
                     BorderThickness="{TemplateBinding BorderThickness}"
-                    CornerRadius="6" SnapsToDevicePixels="True">
+                    CornerRadius="{DynamicResource AlduneRadius6}" SnapsToDevicePixels="True">
                 <ScrollViewer x:Name="PART_ContentHost" Focusable="False"
                               HorizontalScrollBarVisibility="Hidden" VerticalScrollBarVisibility="Hidden" />
             </Border>
@@ -519,7 +519,7 @@
                         <Border x:Name="Field" Background="{TemplateBinding Background}"
                                 BorderBrush="{TemplateBinding BorderBrush}"
                                 BorderThickness="{TemplateBinding BorderThickness}"
-                                CornerRadius="6" SnapsToDevicePixels="True">
+                                CornerRadius="{DynamicResource AlduneRadius6}" SnapsToDevicePixels="True">
                             <ScrollViewer x:Name="PART_ContentHost" Focusable="False"
                                           HorizontalScrollBarVisibility="Hidden" VerticalScrollBarVisibility="Hidden" />
                         </Border>

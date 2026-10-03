@@ -155,6 +155,12 @@ internal static class NativeMethods
 
     private const int DWMWA_WINDOW_CORNER_PREFERENCE = 33;
     private const int DWMWCP_ROUNDSMALL = 3;
+    private const int DWMWCP_DONOTROUND = 1;
+
+    // Ventanas que pidieron esquinas propias, para poder cambiarlas en vivo con la opción de
+    // esquinas rectas. Se guardan los HWND, no las ventanas: al cerrarse, la llamada a DWM sobre un
+    // handle muerto simplemente falla y se descarta.
+    private static readonly HashSet<IntPtr> RoundedWindows = [];
 
     [DllImport("dwmapi.dll")]
     private static extern int DwmSetWindowAttribute(IntPtr hWnd, int dwAttribute, ref int pvAttribute, int cbAttribute);
@@ -168,9 +174,22 @@ internal static class NativeMethods
     /// </summary>
     internal static void ApplyRoundedCorners(IntPtr hWnd)
     {
-        int preference = DWMWCP_ROUNDSMALL;
+        RoundedWindows.Add(hWnd);
+        int preference = Aldune.Windowing.ThemeManager.IsSquare ? DWMWCP_DONOTROUND : DWMWCP_ROUNDSMALL;
         DwmSetWindowAttribute(hWnd, DWMWA_WINDOW_CORNER_PREFERENCE, ref preference, sizeof(int));
     }
+
+    internal static void ReapplyCornerPreference()
+    {
+        foreach (var hWnd in RoundedWindows.ToList())
+        {
+            if (!IsWindow(hWnd)) { RoundedWindows.Remove(hWnd); continue; }
+            ApplyRoundedCorners(hWnd);
+        }
+    }
+
+    [DllImport("user32.dll")]
+    private static extern bool IsWindow(IntPtr hWnd);
 
     private const int DWMWA_CLOAK = 13;
 

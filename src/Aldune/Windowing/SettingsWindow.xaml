@@ -25,7 +25,7 @@
                 <Setter.Value>
                     <ControlTemplate TargetType="CheckBox">
                         <StackPanel Orientation="Horizontal" Background="Transparent">
-                            <Border x:Name="Box" Width="17" Height="17" CornerRadius="4"
+                            <Border x:Name="Box" Width="17" Height="17" CornerRadius="{DynamicResource AlduneRadius4}"
                                     BorderBrush="{TemplateBinding Foreground}"
                                     BorderThickness="1.5"
                                     Background="Transparent"
@@ -59,7 +59,7 @@
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="Button">
-                        <Border x:Name="Bg" Background="{TemplateBinding Background}" CornerRadius="6">
+                        <Border x:Name="Bg" Background="{TemplateBinding Background}" CornerRadius="{DynamicResource AlduneRadius6}">
                             <ContentPresenter Margin="{TemplateBinding Padding}"
                                               HorizontalAlignment="Center" VerticalAlignment="Center" />
                         </Border>
@@ -91,7 +91,7 @@
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="Button">
-                        <Border x:Name="Bg" Background="Transparent" CornerRadius="6">
+                        <Border x:Name="Bg" Background="Transparent" CornerRadius="{DynamicResource AlduneRadius6}">
                             <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
                         </Border>
                         <ControlTemplate.Triggers>
@@ -114,7 +114,7 @@
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="RadioButton">
-                        <Border x:Name="Bg" Background="Transparent" CornerRadius="5">
+                        <Border x:Name="Bg" Background="Transparent" CornerRadius="{DynamicResource AlduneRadius5}">
                             <ContentPresenter Margin="{TemplateBinding Padding}"
                                               HorizontalAlignment="Center"
                                               VerticalAlignment="Center" />
@@ -141,13 +141,13 @@
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="RadioButton">
-                        <Border x:Name="Bg" Background="{DynamicResource AlduneSurfaceBrush}" CornerRadius="6" Padding="12,9" Margin="0,0,0,6">
+                        <Border x:Name="Bg" Background="{DynamicResource AlduneSurfaceBrush}" CornerRadius="{DynamicResource AlduneRadius6}" Padding="12,9" Margin="0,0,0,6">
                             <Grid>
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="Auto" />
                                     <ColumnDefinition Width="*" />
                                 </Grid.ColumnDefinitions>
-                                <Border x:Name="DotOuter" Width="16" Height="16" CornerRadius="8"
+                                <Border x:Name="DotOuter" Width="16" Height="16" CornerRadius="{DynamicResource AlduneRadius8}"
                                         BorderBrush="{DynamicResource AlduneTextFaintBrush}" BorderThickness="1.5"
                                         VerticalAlignment="Center" Margin="0,0,10,0">
                                     <Ellipse x:Name="DotInner" Width="8" Height="8" Fill="{DynamicResource AlduneTextBrush}"
@@ -179,7 +179,7 @@
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="RadioButton">
-                        <Border x:Name="Bg" Background="Transparent" CornerRadius="6" Padding="12,8" Margin="0,0,0,2">
+                        <Border x:Name="Bg" Background="Transparent" CornerRadius="{DynamicResource AlduneRadius6}" Padding="12,8" Margin="0,0,0,2">
                             <ContentPresenter VerticalAlignment="Center" />
                         </Border>
                         <ControlTemplate.Triggers>
@@ -281,7 +281,7 @@
                 <StackPanel x:Name="GeneralPage" Visibility="Collapsed">
                     <TextBlock Text="{x:Static res:Strings.SettingsPageGeneral}" Foreground="{DynamicResource AlduneTextStrongBrush}" FontSize="15" FontWeight="SemiBold" Margin="0,0,0,16" />
                     <Border x:Name="InterfaceModePanel" Margin="0,0,0,0"
-                            Background="{DynamicResource AlduneSurfaceBrush}" CornerRadius="8" Padding="12">
+                            Background="{DynamicResource AlduneSurfaceBrush}" CornerRadius="{DynamicResource AlduneRadius8}" Padding="12">
                         <!-- Columnas, no un margen fijo: el botón mide distinto en cada idioma
                              ("Vereinfachten Modus verwenden" tapaba el texto en alemán). -->
                         <Grid>
@@ -361,6 +361,11 @@
                         <StackPanel x:Name="AppearanceListContainer" />
                     </StackPanel>
                     <StackPanel Margin="0,14,0,0">
+                        <CheckBox x:Name="SquareCornersCheck"
+                                  Content="{x:Static res:Strings.AppearanceSquareCorners}"
+                                  Foreground="{DynamicResource AlduneTextBrush}" Background="{DynamicResource AlduneGroundBrush}" FontSize="13"
+                                  Style="{StaticResource AppCheckBoxStyle}" Margin="0,0,0,10"
+                                  Click="OnSquareCornersToggled" />
                         <CheckBox x:Name="SyncSignalCheck"
                                   Content="{x:Static res:Strings.AppearanceSyncSignal}"
                                   Foreground="{DynamicResource AlduneTextBrush}" Background="{DynamicResource AlduneGroundBrush}" FontSize="13"
@@ -425,7 +430,7 @@
                                        Foreground="{DynamicResource AlduneTextBrush}" FontSize="13" VerticalAlignment="Center" Margin="0,0,8,0" />
                             <!-- Numero + unidad, no un desplegable fijo de "1 dia/1 semana": el usuario
                                  pidio poder elegir cualquier plazo, no solo unos pocos preajustados. -->
-                            <Border Background="{DynamicResource AlduneSurfaceBrush}" CornerRadius="6" VerticalAlignment="Center">
+                            <Border Background="{DynamicResource AlduneSurfaceBrush}" CornerRadius="{DynamicResource AlduneRadius6}" VerticalAlignment="Center">
                                 <TextBox x:Name="AutoHideTasksDelayValueBox"
                                          Background="Transparent" Foreground="{DynamicResource AlduneTextBrush}" CaretBrush="{DynamicResource AlduneTextBrush}"
                                          BorderThickness="0" FontSize="13" Width="30" MaxLength="3"
@@ -433,7 +438,7 @@
                                          PreviewTextInput="OnDelayValuePreviewTextInput"
                                          TextChanged="OnDelayValueChanged" />
                             </Border>
-                            <Border Background="{DynamicResource AlduneSurfaceBrush}" CornerRadius="7" Padding="3" Margin="8,0,0,0" VerticalAlignment="Center">
+                            <Border Background="{DynamicResource AlduneSurfaceBrush}" CornerRadius="{DynamicResource AlduneRadius7}" Padding="3" Margin="8,0,0,0" VerticalAlignment="Center">
                                 <WrapPanel x:Name="DelayUnitContainer" />
                             </Border>
                         </StackPanel>
@@ -449,7 +454,7 @@
                                    Foreground="{DynamicResource AlduneHintBrush}" FontSize="11" TextWrapping="Wrap" Margin="0,4,0,10" />
 
                         <StackPanel Orientation="Horizontal">
-                            <Border Background="{DynamicResource AlduneSurfaceBrush}" CornerRadius="6" VerticalAlignment="Center">
+                            <Border Background="{DynamicResource AlduneSurfaceBrush}" CornerRadius="{DynamicResource AlduneRadius6}" VerticalAlignment="Center">
                                 <TextBox x:Name="TrashRetentionValueBox"
                                          Background="Transparent" Foreground="{DynamicResource AlduneTextBrush}" CaretBrush="{DynamicResource AlduneTextBrush}"
                                          BorderThickness="0" FontSize="13" Width="30" MaxLength="3"
@@ -586,7 +591,7 @@
                             <TextBlock Text="{x:Static res:Strings.SyncProfileLabel}" Foreground="{DynamicResource AlduneTextBrush}"
                                        VerticalAlignment="Center" Margin="0,0,8,0" />
                             <Border x:Name="SyncProfileNameDisplay" Grid.Column="1" Background="{DynamicResource AlduneSurfaceBrush}"
-                                    CornerRadius="6" Padding="7,5">
+                                    CornerRadius="{DynamicResource AlduneRadius6}" Padding="7,5">
                                 <TextBlock x:Name="SyncProfileNameDisplayText" Foreground="{DynamicResource AlduneTextBrush}"
                                            VerticalAlignment="Center" />
                             </Border>
@@ -768,7 +773,7 @@
                         <StackPanel Orientation="Horizontal" Margin="27,8,0,0">
                             <TextBlock Text="{x:Static res:Strings.SyncIntervalLabel}" Foreground="{DynamicResource AlduneTextBrush}"
                                        VerticalAlignment="Center" Margin="0,0,8,0" />
-                            <Border Background="{DynamicResource AlduneSurfaceBrush}" CornerRadius="6">
+                            <Border Background="{DynamicResource AlduneSurfaceBrush}" CornerRadius="{DynamicResource AlduneRadius6}">
                                 <TextBox x:Name="SyncIntervalValueBox" Width="38" MaxLength="4"
                                          Background="Transparent" Foreground="{DynamicResource AlduneTextBrush}" CaretBrush="{DynamicResource AlduneTextBrush}"
                                          BorderThickness="0" Padding="6,5" TextAlignment="Center"
