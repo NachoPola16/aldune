@@ -3,6 +3,7 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:local="clr-namespace:Aldune.Windowing"
         xmlns:res="clr-namespace:Aldune.Resources"
+        xmlns:core="clr-namespace:Aldune.Core;assembly=Aldune.Core"
         WindowStyle="None"
         ShowInTaskbar="False"
         ShowActivated="False"
@@ -34,19 +35,21 @@
         <local:NoteRestOutlineConverter x:Key="NoteRestOutlineConverter" />
         <local:NoteLabelColorConverter x:Key="NoteLabelColorConverter" />
         <local:NoteSnippetConverter x:Key="NoteSnippetConverter" />
+        <local:NoteFaceConverter x:Key="NoteFaceConverter" />
+        <local:NoteWaveConverter x:Key="NoteWaveConverter" />
 
         <ItemsPanelTemplate x:Key="HorizontalItemsPanelTemplate">
             <StackPanel Orientation="Horizontal" />
         </ItemsPanelTemplate>
 
         <DataTemplate x:Key="HorizontalRestDashTemplate">
-            <Border Background="{Binding Color, Converter={StaticResource NoteDisplayColorConverter}}"
-                    BorderBrush="{Binding Color, Converter={StaticResource NoteRestOutlineConverter}}"
-                    BorderThickness="{Binding Color, Converter={StaticResource NoteRestOutlineConverter}, ConverterParameter=Thickness}"
-                    Width="26" Height="12"
-                    Margin="0,0,5,0"
-                    HorizontalAlignment="Center"
-                    CornerRadius="{DynamicResource AlduneRadius6}" />
+            <Grid Width="26" Height="12" Margin="0,0,5,0" HorizontalAlignment="Center">
+                <Border Background="{Binding Converter={StaticResource NoteFaceConverter}, ConverterParameter=Pill}"
+                        BorderBrush="{Binding Converter={StaticResource NoteFaceConverter}, ConverterParameter=PillRim}"
+                        BorderThickness="{Binding Converter={StaticResource NoteFaceConverter}, ConverterParameter=PillRimThickness}"
+                        CornerRadius="{DynamicResource AlduneRadius6}" />
+                <local:BevelEdge EdgeThickness="1" />
+            </Grid>
         </DataTemplate>
 
         <!-- Hacia ARRIBA (Direction 95), no hacia abajo. Las pestañas se apilan hacia abajo y cada
@@ -111,10 +114,24 @@
                                     CornerRadius="{Binding ElementName=CardBorder, Path=CornerRadius}" />
                             <Border x:Name="CardBorder"
                                     Background="{TemplateBinding Background}"
-                                    BorderBrush="{Binding Color, Converter={StaticResource NoteRimConverter}}"
+                                    BorderBrush="{Binding Converter={StaticResource NoteFaceConverter}, ConverterParameter=Rim}"
                                     BorderThickness="1,1,0,1"
                                     CornerRadius="{DynamicResource AlduneRadiusTabRight}" />
                             <Border x:Name="SheenBorder" Background="{StaticResource TabSheen}" CornerRadius="{DynamicResource AlduneRadiusTabRight}" />
+                            <!-- Franja de la piel Stripe (bash) o del canal (Tinted), en el lado interior
+                                 de la pestaña. Espejada por código con el dock a la izquierda, arriba o
+                                 abajo (ApplyLeftEdgeTabShape / ApplyTopBottomTabShape). -->
+                            <Border x:Name="StripeBar" Width="3" HorizontalAlignment="Left"
+                                    Background="{Binding Converter={StaticResource NoteFaceConverter}, ConverterParameter=Accent}"
+                                    Visibility="Collapsed" />
+                            <!-- Forma de onda del canal, abajo: arriba está el aviso de recordatorio, y al
+                                 apilarse las pestañas solo queda a la vista la franja de arriba, que es la
+                                 del título. -->
+                            <Path x:Name="Waveform" Width="54" Height="18"
+                                  HorizontalAlignment="Right" VerticalAlignment="Bottom" Margin="0,0,22,6"
+                                  Data="{Binding Converter={StaticResource NoteWaveConverter}}"
+                                  Stroke="{Binding Converter={StaticResource NoteFaceConverter}, ConverterParameter=Accent}"
+                                  StrokeThickness="1.5" Visibility="Collapsed" />
 
                             <!-- Dos líneas, ancladas arriba. Al solaparse las pestañas solo queda
                                  visible la franja superior de cada una, así que ahí tiene que
@@ -125,14 +142,14 @@
                                  único valor de la pestaña sin relación de hue con ella. -->
                             <StackPanel x:Name="LabelStack" VerticalAlignment="Top" Margin="16,9,20,0">
                                 <TextBlock Text="{Binding Converter={StaticResource NoteTabLabelConverter}}"
-                                           Foreground="{Binding Color, Converter={StaticResource NoteLabelColorConverter}}"
+                                           Foreground="{Binding Converter={StaticResource NoteFaceConverter}, ConverterParameter=Label}"
                                            FontSize="12"
                                            FontWeight="SemiBold"
                                            TextTrimming="CharacterEllipsis"
                                            TextWrapping="NoWrap" />
                                 <TextBlock x:Name="SnippetText"
                                            Text="{Binding Converter={StaticResource NoteSnippetConverter}}"
-                                           Foreground="{Binding Color, Converter={StaticResource NoteLabelColorConverter}}"
+                                           Foreground="{Binding Converter={StaticResource NoteFaceConverter}, ConverterParameter=Snippet}"
                                            Opacity="0.62"
                                            FontSize="11"
                                            TextTrimming="CharacterEllipsis"
@@ -149,11 +166,12 @@
                             <TextBlock x:Name="ReminderBadge"
                                        Text="&#xE917;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets"
                                        FontSize="11"
-                                       Foreground="{Binding Color, Converter={StaticResource NoteLabelColorConverter}}"
+                                       Foreground="{Binding Converter={StaticResource NoteFaceConverter}, ConverterParameter=Label}"
                                        HorizontalAlignment="Right" VerticalAlignment="Top"
                                        Margin="0,8,10,0"
                                        Visibility="Collapsed" />
 
+                            <local:BevelEdge x:Name="CardBevel" />
                             <Border x:Name="HoverOverlay" Background="#1E1A14" Opacity="0" CornerRadius="{DynamicResource AlduneRadiusTabRight}" />
                         </Grid>
                         <ControlTemplate.Triggers>
@@ -161,6 +179,15 @@
                                 <Setter TargetName="SnippetText" Property="Visibility" Value="Collapsed" />
                                 <Setter TargetName="LabelStack" Property="VerticalAlignment" Value="Center" />
                                 <Setter TargetName="LabelStack" Property="Margin" Value="16,0,20,0" />
+                            </DataTrigger>
+                            <DataTrigger Binding="{Binding Card, Source={x:Static local:SkinState.Current}}" Value="{x:Static core:SkinCard.Stripe}">
+                                <Setter TargetName="StripeBar" Property="Visibility" Value="Visible" />
+                                <Setter TargetName="SheenBorder" Property="Visibility" Value="Collapsed" />
+                            </DataTrigger>
+                            <DataTrigger Binding="{Binding Card, Source={x:Static local:SkinState.Current}}" Value="{x:Static core:SkinCard.Tinted}">
+                                <Setter TargetName="StripeBar" Property="Visibility" Value="Visible" />
+                                <Setter TargetName="Waveform" Property="Visibility" Value="Visible" />
+                                <Setter TargetName="SheenBorder" Property="Visibility" Value="Collapsed" />
                             </DataTrigger>
                             <Trigger Property="IsMouseOver" Value="True">
                                 <Setter TargetName="HoverOverlay" Property="Opacity" Value="0.07" />
@@ -195,15 +222,25 @@
                             <Ellipse x:Name="Bg" Fill="{TemplateBinding Background}"
                                      Stroke="#8FA79E90" StrokeThickness="1"
                                      Effect="{StaticResource ButtonShadow}" />
+                            <Rectangle x:Name="SquareBg" Fill="{TemplateBinding Background}"
+                                       Stroke="#8FA79E90" StrokeThickness="1"
+                                       Effect="{StaticResource ButtonShadow}" Visibility="Collapsed" />
+                            <local:BevelEdge OnlyWhenSquare="True" />
                             <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
                         </Grid>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsMouseOver" Value="True">
                                 <Setter TargetName="Bg" Property="Fill" Value="{DynamicResource AlduneHoverBrush}" />
+                                <Setter TargetName="SquareBg" Property="Fill" Value="{DynamicResource AlduneHoverBrush}" />
                             </Trigger>
                             <Trigger Property="IsPressed" Value="True">
                                 <Setter TargetName="Bg" Property="Fill" Value="{DynamicResource AldunePressedBrush}" />
+                                <Setter TargetName="SquareBg" Property="Fill" Value="{DynamicResource AldunePressedBrush}" />
                             </Trigger>
+                            <DataTrigger Binding="{Binding Square, Source={x:Static local:SkinState.Current}}" Value="True">
+                                <Setter TargetName="Bg" Property="Visibility" Value="Collapsed" />
+                                <Setter TargetName="SquareBg" Property="Visibility" Value="Visible" />
+                            </DataTrigger>
                         </ControlTemplate.Triggers>
                     </ControlTemplate>
                 </Setter.Value>
@@ -312,19 +349,22 @@
             <!-- ItemsSource se fija desde SetNotes, no se ata a TabsList: en reposo solo se dibujan
                  los guiones que caben en la ventana (ver EdgeGeometry.VisibleRestDashes), porque esta
                  tira no hace scroll y los sobrantes se recortarían. -->
+            <Grid>
             <ItemsControl x:Name="RestList">
                 <ItemsControl.ItemTemplate>
                     <DataTemplate>
-                        <Border Background="{Binding Color, Converter={StaticResource NoteDisplayColorConverter}}"
-                                BorderBrush="{Binding Color, Converter={StaticResource NoteRestOutlineConverter}}"
-                                BorderThickness="{Binding Color, Converter={StaticResource NoteRestOutlineConverter}, ConverterParameter=Thickness}"
-                                Width="12" Height="26"
-                                Margin="0,0,0,5"
-                                HorizontalAlignment="Center"
-                                CornerRadius="{DynamicResource AlduneRadius6}" />
+                        <Grid Width="12" Height="26" Margin="0,0,0,5" HorizontalAlignment="Center">
+                            <Border Background="{Binding Converter={StaticResource NoteFaceConverter}, ConverterParameter=Pill}"
+                                    BorderBrush="{Binding Converter={StaticResource NoteFaceConverter}, ConverterParameter=PillRim}"
+                                    BorderThickness="{Binding Converter={StaticResource NoteFaceConverter}, ConverterParameter=PillRimThickness}"
+                                    CornerRadius="{DynamicResource AlduneRadius6}" />
+                            <local:BevelEdge EdgeThickness="1" />
+                        </Grid>
                     </DataTemplate>
                 </ItemsControl.ItemTemplate>
             </ItemsControl>
+            <local:BevelEdge Margin="0,-5,0,0" />
+            </Grid>
         </Border>
 
         <!-- Desplegado: el abanico y los botones. -->
@@ -380,7 +420,7 @@
                         <DataTemplate>
                             <Button Content="{Binding}"
                                     AutomationProperties.Name="{Binding Converter={StaticResource NoteTabLabelConverter}}"
-                                    Background="{Binding Color, Converter={StaticResource NoteDisplayColorConverter}}"
+                                    Background="{Binding Converter={StaticResource NoteFaceConverter}, ConverterParameter=Face}"
                                     Width="208"
                                     Height="52"
                                     HorizontalAlignment="Right"
@@ -482,6 +522,7 @@
                  la tira/pestañas y el borde real de la pantalla. -->
             <Border x:Name="FooterBorder" Grid.Row="1" Background="{DynamicResource AlduneGroundBrush}" CornerRadius="{DynamicResource AlduneRadius27}"
                     HorizontalAlignment="Right" Margin="0,14,8,0" Padding="7">
+                <Grid>
                 <StackPanel x:Name="FooterPanel" Orientation="Horizontal">
                     <!-- "Ver todas": interruptor, no solo abrir. Si hay alguna nota abierta ahora
                          mismo las cierra todas; si no hay ninguna, las abre todas de golpe (como
@@ -521,6 +562,8 @@
                         <TextBlock Text="&#xE710;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" FontSize="17" />
                     </Button>
                 </StackPanel>
+                <local:BevelEdge Margin="-7" />
+                </Grid>
             </Border>
 
             <!-- Popup propio en vez de ContextMenu: el ContextMenu de WPF conserva una capa de

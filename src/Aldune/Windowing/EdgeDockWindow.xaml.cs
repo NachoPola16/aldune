@@ -432,6 +432,17 @@ public partial class EdgeDockWindow : Window
         {
             hover.CornerRadius = Mirror(hover.CornerRadius);
         }
+
+        // La franja de las pieles Stripe/Tinted va en el lado interior (aquí, el derecho) y la onda
+        // del canal en el opuesto, lejos del aviso de recordatorio.
+        if (button.Template.FindName("StripeBar", button) is Border stripe)
+            stripe.HorizontalAlignment = HorizontalAlignment.Right;
+
+        if (button.Template.FindName("Waveform", button) is System.Windows.Shapes.Path wave)
+        {
+            wave.HorizontalAlignment = HorizontalAlignment.Left;
+            wave.Margin = new Thickness(22, 0, 0, 6);
+        }
     }
 
     private static CornerRadius Mirror(CornerRadius r) => new(r.TopRight, r.TopLeft, r.BottomLeft, r.BottomRight);
@@ -974,11 +985,10 @@ public partial class EdgeDockWindow : Window
                 _repository.GetByTag(_settings!.DockTagFilter!, NoteState.Active),
             _ => _repository.GetByState(NoteState.Active)
         };
-        // El canal (piel de osciloscopio) sale del mazo sin el filtro de etiqueta: filtrar no cambia de
-        // canal a una nota, ni hace que su ventana y su pestaña discrepen.
-        NoteChannelDisplay.Set(view == DockViewKind.Tag && !string.IsNullOrWhiteSpace(_settings?.DockTagFilter)
-            ? _repository.GetByState(NoteState.Active)
-            : notes);
+        // El canal (piel de osciloscopio) sale siempre del mazo ACTIVO en su orden, sea cual sea la
+        // vista o el filtro de etiqueta: archivar una nota no puede cambiarla de canal, ni filtrar
+        // hacer que su ventana y su pestaña discrepen. Con la vista Activa sin filtro ya está cargado.
+        NoteChannelDisplay.Set(view == DockViewKind.Active ? notes : _repository.GetByState(NoteState.Active));
         SetNotes(notes, animateArrivals: !viewChanged);
         if (viewChanged)
         {
@@ -2261,6 +2271,15 @@ public partial class EdgeDockWindow : Window
         if (button.Template.FindName("HoverOverlay", button) is Border hover)
         {
             hover.CornerRadius = radius;
+        }
+
+        // Franja horizontal en el lado interior: abajo con el dock arriba, arriba con el dock abajo.
+        if (button.Template.FindName("StripeBar", button) is Border stripe)
+        {
+            stripe.Width = double.NaN;
+            stripe.Height = 3;
+            stripe.HorizontalAlignment = HorizontalAlignment.Stretch;
+            stripe.VerticalAlignment = _edge == EdgePosition.Top ? VerticalAlignment.Bottom : VerticalAlignment.Top;
         }
 
         if (button.Template.FindName("CardShadowLayer", button) is Border shadowLayer)
