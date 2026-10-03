@@ -133,8 +133,56 @@ public sealed class SyncConflictTests : IDisposable
         Assert.True(_deviceB.Sync.Synchronize().Succeeded);
         ThemeMigrations.Run(_deviceA.Settings, _deviceA.Repository);
 
-        Assert.True(_deviceA.Sync.Synchronize().Succeeded);
+        var result = _deviceA.Sync.Synchronize();
+        Assert.True(result.Succeeded, result.Error);
+        Assert.Equal(0, result.ConflictsResolved);
         Assert.Equal("edit from B", _deviceA.Repository.GetAllForSync().Single().Text);
+    }
+
+    [Fact]
+    public void ThemeMigrationOnALateDevice_DoesNotConflictWithEditsMadeElsewhere()
+    {
+        // El camino normal con varios equipos: B actualiza, migra y luego se edita la nota en B;
+        // días después actualiza A. El recoloreo de A no es un cambio del usuario: no hay nada que elegir.
+        var note = _deviceA.Repository.Create("original", NoteThemes.LegacySereneDarkColors[3], "primary");
+        ShareKeyAndSynchronizeInitialNote(note.Id);
+
+        ThemeMigrations.Run(_deviceB.Settings, _deviceB.Repository);
+        Assert.True(_deviceB.Sync.Synchronize().Succeeded);
+        Thread.Sleep(20);
+        _deviceB.Repository.UpdateText(note.Id, "edit from B");
+        Assert.True(_deviceB.Sync.Synchronize().Succeeded);
+
+        ThemeMigrations.Run(_deviceA.Settings, _deviceA.Repository);
+        var result = _deviceA.Sync.Synchronize();
+
+        Assert.True(result.Succeeded, result.Error);
+        Assert.Equal(0, result.ConflictsResolved);
+        var onA = _deviceA.Repository.GetAllForSync().Single();
+        Assert.Equal("edit from B", onA.Text);
+        Assert.Equal(NoteThemes.Resolve(NoteThemes.SereneId, null).DarkColors[3], onA.Color);
+    }
+
+    [Fact]
+    public void ALocalEditAfterMigration_DoesNotConflictWithTheOtherDevicesRecolor()
+    {
+        // Al revés: B solo migró; A migró y además editó. Gana la edición de A sin dejar conflicto.
+        var note = _deviceA.Repository.Create("original", NoteThemes.LegacySereneDarkColors[4], "primary");
+        ShareKeyAndSynchronizeInitialNote(note.Id);
+
+        ThemeMigrations.Run(_deviceB.Settings, _deviceB.Repository);
+        Assert.True(_deviceB.Sync.Synchronize().Succeeded);
+        ThemeMigrations.Run(_deviceA.Settings, _deviceA.Repository);
+        Thread.Sleep(20);
+        _deviceA.Repository.UpdateText(note.Id, "edit from A");
+
+        var uploaded = _deviceA.Sync.Synchronize();
+        var downloaded = _deviceB.Sync.Synchronize();
+
+        Assert.True(uploaded.Succeeded, uploaded.Error);
+        Assert.Equal(0, uploaded.ConflictsResolved);
+        Assert.Equal(0, downloaded.ConflictsResolved);
+        Assert.Equal("edit from A", _deviceB.Repository.GetAllForSync().Single().Text);
     }
 
     [Fact]

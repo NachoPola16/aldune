@@ -147,7 +147,8 @@
                                     <ColumnDefinition Width="Auto" />
                                     <ColumnDefinition Width="*" />
                                 </Grid.ColumnDefinitions>
-                                <Border x:Name="DotOuter" Width="16" Height="16" CornerRadius="{DynamicResource AlduneRadius8}"
+                                <!-- Radio literal: con esquinas rectas un botón de opción cuadrado se leería como casilla. -->
+                                <Border x:Name="DotOuter" Width="16" Height="16" CornerRadius="8"
                                         BorderBrush="{DynamicResource AlduneTextFaintBrush}" BorderThickness="1.5"
                                         VerticalAlignment="Center" Margin="0,0,10,0">
                                     <Ellipse x:Name="DotInner" Width="8" Height="8" Fill="{DynamicResource AlduneTextBrush}"

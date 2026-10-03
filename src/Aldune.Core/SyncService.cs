@@ -414,8 +414,16 @@ public sealed class SyncService
     {
         if (local.UpdatedAt == remote.UpdatedAt) return false;
         if (common is null) return true;
-        return !common.Matches(local) && !common.Matches(remote);
+        return !common.Matches(local) && !OnlyMigrated(local, common)
+            && !common.Matches(remote) && !OnlyMigrated(remote, common);
     }
+
+    // La migración de temas de la 1.5 (ThemeMigrations) recolorea con la fecha de la nota + 1 ms. Una
+    // versión justo 1 ms posterior a la acordada es, por tanto, la acordada recoloreada sin más: si el
+    // otro lado la editó, no hay nada que elegir. Sin esto, el equipo que actualiza días después que
+    // otro vería un conflicto por cada nota del Sereno antiguo editada en el otro mientras tanto.
+    private static bool OnlyMigrated(SyncEnvelope version, SyncBaseVersion common) =>
+        version.UpdatedAt == common.UpdatedAt.AddMilliseconds(1);
 
     private bool CompletePendingKeyRotation(out string? error)
     {

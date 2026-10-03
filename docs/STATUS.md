@@ -4020,16 +4020,20 @@ Primer bloque de la 1.5.0 (spec `docs/superpowers/specs/2026-10-03-aspectos-retr
   confundían), Grafito retirado (lo cubre "mismo color") y tema XP nuevo. El test de distancia ahora cubre
   todos los temas de serie. Los colores XP de la maqueta no pasaban distancia ni claridad (`#FFFFE1` tiene
   L 0.992), así que se recalcularon: `#F7F1D0 #E0F1FF #DCF9E1 #FFE6DD #FFE7FF #CFFAF8`; el amarillo ya no
-  es el exacto de XP.
+  es el exacto de XP. La spec listaba 8 colores (con `#FFF0C2` y `#F0EFEA`); el plan y el código usan 6.
+  El test de contraste de la tinta cubre ahora todos los temas de serie.
 - **Migración al arrancar** (`ThemeMigrations`, idempotente, marca `SereneRecolored`): las notas con un
   color del Sereno antiguo pasan al del mismo puesto y tono (`SereneRecolorMap`); quien usaba Grafito
   conserva su gris con "mismo color" (`#2E2E2E` oscuro, `#E8E8E8` claro o ambos). Los temas propios no se
   tocan. **La fecha de la nota avanza solo 1 ms** (`SetColor(id, color, updatedAt)`): lo justo para
   publicarse, sin que las notas pasen a "editadas hoy" (orden del gestor, Ctrl+Alt+L, plazo de la
   papelera) y sin ganar a una edición real hecha en un equipo que aún no ha migrado. Los equipos con
-  versiones anteriores siguen viendo los colores antiguos hasta recibir el recoloreo por sync. Si un
-  equipo 1.4 edita una nota que otro recolorea, el usuario ve un conflicto que no provocó (gana su
-  edición); evitarlo exigiría fusionar campo a campo, y el formato 4 no guarda la versión común.
+  versiones anteriores siguen viendo los colores antiguos hasta recibir el recoloreo por sync. Ese
+  +1 ms es además una marca: `IsRealConflict` trata una versión justo 1 ms posterior a la acordada como
+  la acordada recoloreada (`OnlyMigrated`), así que el equipo que actualiza días después que otro, o
+  frente a una edición hecha en un 1.4, no ve un conflicto por cada nota editada en el otro (lo encontró
+  la revisión final; hay tests en los dos sentidos). Si la edición viene de un 1.4, la nota se queda con
+  el color antiguo: la migración corre una vez.
 - **Mismo color en todas las notas** (`UniformNoteColor`, `NoteDisplayColor`): solo presentación, la
   nota conserva su color y la sync no ve cambios. Un valor inválido en `settings.json` se ignora.
 - **Señal de sincronización** (`ShowSyncSignal`, `NoteSyncSignal`): `▂▄▆█` sincronizada, `▂▄▆_`
@@ -4042,9 +4046,15 @@ Primer bloque de la 1.5.0 (spec `docs/superpowers/specs/2026-10-03-aspectos-retr
 - Ajustes de aspecto nuevos con valor por defecto que reproduce lo de siempre: un `settings.json` antiguo
   carga sin migración. Formato de sync sigue en 4.
 
+Otros arreglos de la revisión final: un fallo de la migración al arrancar se registra y se reintenta en
+el siguiente inicio en vez de cerrar la app; los botones de opción de Ajustes siguen redondos con esquinas
+rectas (cuadrados parecían casillas). Quedan para el bloque 2: elegir el color único entre los del tema
+activo (hoy, el primero del tema o el selector libre) y que la señal no descifre la cola de conflictos
+entera en cada autoguardado.
+
 Verificado: sonda de capturas (esquinas rectas con el dock a derecha, izquierda y arriba, señal, color
 único; ver el solape arriba) y smoke test en verde. Revisión Opus de la sync y la migración (fase A2):
-encontró y corrigió el avance de fecha de la migración. Tests: 910/910.
+encontró y corrigió el avance de fecha de la migración. Tests: 916/916.
 
 Pendiente: la pestaña de una nota abierta reaparece en el dock en una captura de la sonda; se atribuyó a
 cómo la sonda registra las notas abiertas, sin comprobar con la app real.

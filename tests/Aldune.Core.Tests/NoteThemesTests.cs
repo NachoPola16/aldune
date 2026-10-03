@@ -57,7 +57,11 @@ public class NoteThemesTests
 
     // La tinta que la app elige para cada color se tiene que leer bien (AA, 4.5:1).
     [Theory]
+    [InlineData("classic")]
     [InlineData("serene")]
+    [InlineData("pastel")]
+    [InlineData("autumn")]
+    [InlineData("ocean")]
     [InlineData("xp")]
     public void BuiltInThemes_InkIsReadable(string id)
     {
