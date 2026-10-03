@@ -78,6 +78,20 @@ public static class AppPalette
         ["DockRailBorder"] = "#C08B7461",
         ["DockThumb"] = "#E1C2A88F",
         ["DockThumbBorder"] = "#F2DCC2",
+        // Piel (bloque 2). Barra = fondo y sin relieve visible: el oscuro de siempre no cambia. Los
+        // aspectos retro dan su propio valor a cada una. CH3 y CH4, más claros que los de las
+        // maquetas: su título va sobre su propio tinte y con los de la maqueta no llegaba a 4.5:1.
+        ["TitleBar"] = "#2A261F",
+        ["TitleBarEnd"] = "#2A261F",
+        ["OnTitleBar"] = "#F5F0E6",
+        ["BevelLight"] = "#5F584E",
+        ["BevelDark"] = "#15120E",
+        ["Channel1"] = "#F2D338",
+        ["Channel2"] = "#3FD0E0",
+        ["Channel3"] = "#EA80DD",
+        ["Channel4"] = "#7FA8FF",
+        ["PromptUser"] = "#A9C99A",
+        ["PromptPath"] = "#9FB8D0",
     };
 
     // Papel cálido, no blanco puro: el mismo tono tostado del oscuro llevado a claro, para que las
@@ -138,6 +152,19 @@ public static class AppPalette
         ["DockRailBorder"] = "#C0B5A58F",
         ["DockThumb"] = "#E0A08C74",
         ["DockThumbBorder"] = "#6A5A48",
+        // Piel (bloque 2), como en Dark. Canales oscurecidos para el papel claro: el título de una
+        // pestaña con tinte va en su color sobre ese tinte y tiene que llegar a 4.5:1.
+        ["TitleBar"] = "#F6F1E8",
+        ["TitleBarEnd"] = "#F6F1E8",
+        ["OnTitleBar"] = "#1E1A14",
+        ["BevelLight"] = "#FFFFFF",
+        ["BevelDark"] = "#978D80",
+        ["Channel1"] = "#6E5600",
+        ["Channel2"] = "#00636C",
+        ["Channel3"] = "#9C1F6E",
+        ["Channel4"] = "#1F57B5",
+        ["PromptUser"] = "#44703A",
+        ["PromptPath"] = "#2F5F86",
     };
 
     public static IReadOnlyDictionary<string, string> For(bool light) => light ? Light : Dark;
@@ -165,12 +192,14 @@ public static class AppPalette
     private static readonly Lazy<IReadOnlyDictionary<string, string>> Midnight =
         new(() => Tint(Dark, neutralHue: 255, neutralChroma: 0.03, accentHue: 235));
 
-    /// <summary>Colores con significado propio (peligro, error, aviso, éxito): no se tiñen, un
-    /// "borrar" tiene que seguir pareciendo peligroso en cualquier paleta.</summary>
+    /// <summary>Colores con significado propio (peligro, error, aviso, éxito; los canales del
+    /// osciloscopio y los del prompt): no se tiñen, un "borrar" tiene que seguir pareciendo peligroso
+    /// y CH1 tiene que seguir siendo amarillo en cualquier paleta.</summary>
     private static readonly HashSet<string> Semantic =
     [
         "DangerBg", "DangerStrong", "DangerStrongHover", "OnDanger", "DangerText", "DangerHover",
         "OnDangerBg", "ErrorText", "ErrorBorder", "Warning", "Success", "Notice", "Attention",
+        "Channel1", "Channel2", "Channel3", "Channel4", "PromptUser", "PromptPath",
     ];
 
     private static IReadOnlyDictionary<string, string> Tint(

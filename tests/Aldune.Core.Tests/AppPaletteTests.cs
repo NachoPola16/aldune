@@ -86,6 +86,41 @@ public class AppPaletteTests
         Assert.Equal(Palette(AppearanceMode.Dark), AppPalette.For(AppearanceMode.System, windowsUsesLight: false));
     }
 
+    // Las claves de la piel no cambian nada en los aspectos de hoy: la barra es el fondo y su texto
+    // el de los títulos de siempre.
+    [Theory]
+    [InlineData(AppearanceMode.Dark)]
+    [InlineData(AppearanceMode.Light)]
+    public void SkinTokens_AreNeutralInTheExistingPalettes(AppearanceMode mode)
+    {
+        var p = Palette(mode);
+        Assert.Equal(p["Ground"], p["TitleBar"]);
+        Assert.Equal(p["Ground"], p["TitleBarEnd"]);
+        Assert.Equal(p["TextStrong"], p["OnTitleBar"]);
+    }
+
+    [Theory]
+    [MemberData(nameof(Palettes))]
+    public void TitleBarAndPrompt_AreReadable(AppearanceMode mode)
+    {
+        var p = Palette(mode);
+        AssertContrast(p, "OnTitleBar", "TitleBar", 4.5);
+        AssertContrast(p, "OnTitleBar", "TitleBarEnd", 4.5);
+        AssertContrast(p, "PromptUser", "Ground", 4.5);
+        AssertContrast(p, "PromptPath", "Ground", 4.5);
+    }
+
+    // CH1 amarillo, CH2 cian, CH3 magenta y CH4 azul son los de los osciloscopios: teñirlos de lavanda
+    // o de azul noche les quitaría el sentido. El prompt, igual: es el color de una terminal.
+    [Theory]
+    [InlineData(AppearanceMode.Pastel, AppearanceMode.Light)]
+    [InlineData(AppearanceMode.Midnight, AppearanceMode.Dark)]
+    public void ChannelAndPromptColors_AreNotTinted(AppearanceMode tinted, AppearanceMode source)
+    {
+        foreach (var key in new[] { "Channel1", "Channel2", "Channel3", "Channel4", "PromptUser", "PromptPath" })
+            Assert.Equal(Palette(source)[key], Palette(tinted)[key]);
+    }
+
     private static void AssertContrast(IReadOnlyDictionary<string, string> palette, string foreground, string background, double minimum)
     {
         Assert.True(NoteColorContrast.TryGetLuminance(palette[foreground], out var fg));
