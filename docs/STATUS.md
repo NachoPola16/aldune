@@ -4004,3 +4004,47 @@ el bolsillo. Detalle y razones: `docs/MOBILE_PORT.md` §0.1 y `ROADMAP.md` §9.
   (11 crecimientos): ningún fotograma con pico de blanco. Si vuelve, apuntar pantalla y nota.
 
 Verificado con sonda: retroceso tras el prefijo y Ctrl+Alt+L abriendo la última nota. Tests: 867/867.
+
+## 2026-10-03: bloque 1 de aspectos (opciones transversales y temas)
+
+Primer bloque de la 1.5.0 (spec `docs/superpowers/specs/2026-10-03-aspectos-retro-design.md`, plan
+`docs/superpowers/plans/2026-10-03-bloque1-opciones-y-temas.md`). Sin publicar.
+
+- **Falso conflicto de sync arreglado**: dos equipos que hacen el mismo cambio en una nota (por ejemplo
+  la migración de temas, que recolorea igual en cada uno) llegaban con fechas distintas y
+  `IsRealConflict`, que solo mira fechas, los metía en la cola de conflictos. `NoteEquivalence.SameContent`
+  (texto, color sin distinguir mayúsculas, estado, posición en el mazo, etiquetas sin orden, protección
+  y su contenido cifrado; no la fecha ni el dispositivo) los trata como la misma versión. Un recoloreo en
+  un equipo y una edición de texto en otro **siguen** siendo conflicto (hay test).
+- **Temas de nota**: Sereno renovado (los colores antiguos estaban a 0.008-0.020 de distancia y se
+  confundían), Grafito retirado (lo cubre "mismo color") y tema XP nuevo. El test de distancia ahora cubre
+  todos los temas de serie. Los colores XP de la maqueta no pasaban distancia ni claridad (`#FFFFE1` tiene
+  L 0.992), así que se recalcularon: `#F7F1D0 #E0F1FF #DCF9E1 #FFE6DD #FFE7FF #CFFAF8`; el amarillo ya no
+  es el exacto de XP.
+- **Migración al arrancar** (`ThemeMigrations`, idempotente, marca `SereneRecolored`): las notas con un
+  color del Sereno antiguo pasan al del mismo puesto y tono (`SereneRecolorMap`); quien usaba Grafito
+  conserva su gris con "mismo color" (`#2E2E2E` oscuro, `#E8E8E8` claro o ambos). Los temas propios no se
+  tocan. **La fecha de la nota avanza solo 1 ms** (`SetColor(id, color, updatedAt)`): lo justo para
+  publicarse, sin que las notas pasen a "editadas hoy" (orden del gestor, Ctrl+Alt+L, plazo de la
+  papelera) y sin ganar a una edición real hecha en un equipo que aún no ha migrado. Los equipos con
+  versiones anteriores siguen viendo los colores antiguos hasta recibir el recoloreo por sync. Si un
+  equipo 1.4 edita una nota que otro recolorea, el usuario ve un conflicto que no provocó (gana su
+  edición); evitarlo exigiría fusionar campo a campo, y el formato 4 no guarda la versión común.
+- **Mismo color en todas las notas** (`UniformNoteColor`, `NoteDisplayColor`): solo presentación, la
+  nota conserva su color y la sync no ve cambios. Un valor inválido en `settings.json` se ignora.
+- **Señal de sincronización** (`ShowSyncSignal`, `NoteSyncSignal`): `▂▄▆█` sincronizada, `▂▄▆_`
+  pendiente, `▂▄!_` conflicto, `▂___` fuera del alcance. `SyncScopeFilter` es ahora el único sitio que
+  decide el alcance de la sync selectiva (la sync y la señal no pueden discrepar). Se oculta mientras se
+  ve la franja "Todo hecho" (compartían esquina y se pisaban en notas estrechas). Resolver o descartar
+  un conflicto repinta las notas abiertas.
+- **Esquinas rectas** (`SquareCorners`): los radios son recursos `AlduneRadius*` que `ThemeManager.ApplyShape`
+  pone a 0 en vivo; también las pestañas del dock (se reconstruyen con `RebuildDocks`) y las esquinas de DWM.
+- Ajustes de aspecto nuevos con valor por defecto que reproduce lo de siempre: un `settings.json` antiguo
+  carga sin migración. Formato de sync sigue en 4.
+
+Verificado: sonda de capturas (esquinas rectas con el dock a derecha, izquierda y arriba, señal, color
+único; ver el solape arriba) y smoke test en verde. Revisión Opus de la sync y la migración (fase A2):
+encontró y corrigió el avance de fecha de la migración. Tests: 910/910.
+
+Pendiente: la pestaña de una nota abierta reaparece en el dock en una captura de la sonda; se atribuyó a
+cómo la sonda registra las notas abiertas, sin comprobar con la app real.
