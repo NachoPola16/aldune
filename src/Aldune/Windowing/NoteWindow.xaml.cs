@@ -117,7 +117,6 @@ public partial class NoteWindow : Window
         TitleBox.Text = title;
         TextBody.Text = body;
         Title = NoteTitleHelper.GetTitle(note.Text); // el de la ventana: barra de tareas, Alt+Tab
-        Header.Background = Brushes.Transparent; // la cabecera comparte el fondo de la nota
 
         _autosaveTimer = new DispatcherTimer { Interval = AutosaveDelay };
         _autosaveTimer.Tick += (_, _) =>
