@@ -700,7 +700,7 @@ public partial class EdgeDockWindow : Window
                     System.Windows.Media.ColorConverter.ConvertFromString(hex) is Color c
                     && Math.Abs(r - c.R) <= 16 && Math.Abs(g - c.G) <= 16 && Math.Abs(b - c.B) <= 16;
                 bool painted = Near(ThemeManager.Color("Ground"))
-                    || RestList.Items.OfType<Note>().Any(note => Near(note.Color));
+                    || RestList.Items.OfType<Note>().Any(note => Near(NoteColorDisplay.Resolve(note.Color)));
                 if (!painted)
                 {
                     state += $", pero en pantalla no se ve (color #{r:X2}{g:X2}{b:X2})";
@@ -2221,7 +2221,7 @@ public partial class EdgeDockWindow : Window
     /// </summary>
     private static void ApplyFaceFinish(Button button)
     {
-        if (button.DataContext is not Note note || !NoteColorDerivation.IsDark(note.Color)) return;
+        if (button.DataContext is not Note note || !NoteColorDerivation.IsDark(NoteColorDisplay.Resolve(note.Color))) return;
 
         if (button.Template.FindName("CardBorder", button) is Border card)
             card.BorderThickness = new Thickness(0, 1, 0, 0);

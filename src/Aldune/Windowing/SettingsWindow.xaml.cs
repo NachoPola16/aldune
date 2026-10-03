@@ -252,11 +252,13 @@ public partial class SettingsWindow : Window
 
     private void UpdateUniformColorUi()
     {
-        bool on = _settings.UniformNoteColor is not null;
+        // Mismo criterio que NoteDisplayColor: un color inválido (settings.json a mano) no está activo.
+        bool on = _settings.UniformNoteColor is { } uniform
+            && NoteDisplayColor.Resolve(string.Empty, uniform).Length > 0;
         UniformColorCheck.IsChecked = on;
         UniformColorButton.IsEnabled = on;
         UniformColorSwatch.Background = on
-            ? (Brush)new BrushConverter().ConvertFromString(NoteColorDisplay.Resolve("#00000000"))!
+            ? (Brush)new BrushConverter().ConvertFromString(_settings.UniformNoteColor!)!
             : Brushes.Transparent;
     }
 
