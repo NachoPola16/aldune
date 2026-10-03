@@ -52,19 +52,19 @@ public sealed class AppSettings
     /// <summary>Identificadores incluidos cuando <see cref="SyncScope"/> es selectivo.</summary>
     public List<Guid> SyncNoteIds { get; set; } = new();
 
-    /// <summary>Señal de sincronización al pie de cada nota. Nulo = lo que diga el aspecto (de momento,
-    /// apagada en todos; los aspectos retro la traerán encendida).</summary>
+    /// <summary>Señal de sincronización al pie de cada nota. Nulo = lo que diga el aspecto
+    /// (<see cref="AppSkin.SyncSignal"/>: encendida en los de terminal, apagada en el resto).</summary>
     public bool? ShowSyncSignal { get; set; }
 
     [System.Text.Json.Serialization.JsonIgnore]
-    public bool SyncSignalVisible => ShowSyncSignal ?? false;
+    public bool SyncSignalVisible => ShowSyncSignal ?? AppSkin.For(Appearance).SyncSignal;
 
-    /// <summary>Esquinas rectas en notas, dock y ventanas. Nulo = lo que diga el aspecto (de momento,
-    /// redondeadas en todos; los aspectos retro las traerán rectas).</summary>
+    /// <summary>Esquinas rectas en notas, dock y ventanas. Nulo = lo que diga el aspecto
+    /// (<see cref="AppSkin.SquareCorners"/>: rectas en los de terminal y en XP + 95, redondeadas en el resto).</summary>
     public bool? SquareCorners { get; set; }
 
     [System.Text.Json.Serialization.JsonIgnore]
-    public bool CornersSquare => SquareCorners ?? false;
+    public bool CornersSquare => SquareCorners ?? AppSkin.For(Appearance).SquareCorners;
 
     /// <summary>Etiqueta incluida cuando <see cref="SyncScope"/> es <see cref="SyncScopeKind.Tag"/>.</summary>
     public string? SyncTag { get; set; }

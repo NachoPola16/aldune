@@ -26,6 +26,8 @@ public enum SkinCard
     Stripe = 1,
     /// <summary>Tinte suave del color de su canal, por puesto en el dock (osciloscopio).</summary>
     Tinted = 2,
+    /// <summary>Monitor monocromo (fósforo): sin color de nota, todo del color del fósforo.</summary>
+    Mono = 3,
 }
 
 /// <summary>Adorno de los títulos en el dock. Solo se pinta: el texto de la nota no cambia.</summary>
@@ -46,6 +48,9 @@ public enum SkinTitleAdornment
 /// título, cómo lleva cada nota su color y los adornos. Datos puros; la capa WPF los convierte en
 /// recursos y en el estado que leen las plantillas. No se guarda en settings.json: sale del aspecto.
 /// </summary>
+/// <param name="Gloss">Reflejo en los botones del pie del dock (XP claro).</param>
+/// <param name="SquareCorners">Esquinas rectas si el usuario no ha elegido (ajuste nulo).</param>
+/// <param name="SyncSignal">Señal de sincronización si el usuario no ha elegido (ajuste nulo).</param>
 public sealed record AppSkin(
     string ChromeFont,
     string NoteFont,
@@ -56,7 +61,10 @@ public sealed record AppSkin(
     SkinCard Card,
     SkinTitleAdornment Adornment,
     bool PromptLine,
-    bool NoteGrid)
+    bool NoteGrid,
+    bool Gloss,
+    bool SquareCorners,
+    bool SyncSignal)
 {
     /// <summary>Lo de siempre: Segoe en el chrome y el cuerpo, título manuscrito, todo plano.</summary>
     public static AppSkin Default { get; } = new(
@@ -69,8 +77,39 @@ public sealed record AppSkin(
         Card: SkinCard.Filled,
         Adornment: SkinTitleAdornment.None,
         PromptLine: false,
-        NoteGrid: false);
+        NoteGrid: false,
+        Gloss: false,
+        SquareCorners: false,
+        SyncSignal: false);
 
-    /// <summary>La piel de cada aspecto. Los de hoy usan la de siempre; los retro llegan en el bloque 3.</summary>
-    public static AppSkin For(AppearanceMode mode) => Default;
+    private const string Tahoma = "Tahoma, Verdana, Segoe UI";
+    private const string Mono = "Cascadia Mono, Consolas";
+
+    // Lo común a los aspectos de terminal: monoespaciada en todo, rectas y con la señal de sync. Declarada
+    // después de Default porque se construye a partir de él (los inicializadores estáticos van en orden).
+    private static readonly AppSkin Terminal = Default with
+    {
+        ChromeFont = Mono, NoteFont = Mono, NoteTitleFont = Mono, NoteTitleFontSize = 14,
+        SquareCorners = true, SyncSignal = true,
+    };
+
+    /// <summary>La piel de cada aspecto (spec, sección 2). Los de antes de la 1.5 usan la de siempre.</summary>
+    public static AppSkin For(AppearanceMode mode) => mode switch
+    {
+        AppearanceMode.XpLight => Default with
+        {
+            ChromeFont = Tahoma, NoteFont = Tahoma, NoteTitleFont = Tahoma, NoteTitleFontSize = 14,
+            TitleBar = SkinTitleBar.GradientVertical, Gloss = true,
+        },
+        AppearanceMode.XpDark => Default with
+        {
+            ChromeFont = Tahoma, NoteFont = Tahoma, NoteTitleFont = Tahoma, NoteTitleFontSize = 14,
+            Border = SkinBorder.Bevel, TitleBar = SkinTitleBar.GradientHorizontal, SquareCorners = true,
+        },
+        AppearanceMode.TelecomLight => Terminal with { Card = SkinCard.Tinted, Adornment = SkinTitleAdornment.Channel },
+        AppearanceMode.TelecomDark => Terminal with { Card = SkinCard.Tinted, Adornment = SkinTitleAdornment.Channel, NoteGrid = true },
+        AppearanceMode.Bash => Terminal with { Card = SkinCard.Stripe, Adornment = SkinTitleAdornment.Folder, PromptLine = true },
+        AppearanceMode.Phosphor => Terminal with { Card = SkinCard.Mono, Adornment = SkinTitleAdornment.Uppercase },
+        _ => Default,
+    };
 }

@@ -41,4 +41,54 @@ public class AppSkinTests
         Assert.Equal(AppSkin.Default, AppSkin.Default with { });
         Assert.NotEqual(AppSkin.Default, AppSkin.Default with { Card = SkinCard.Stripe });
     }
+
+    [Fact]
+    public void RetroSkins_FollowTheSpec()
+    {
+        var xpLight = AppSkin.For(AppearanceMode.XpLight);
+        Assert.StartsWith("Tahoma", xpLight.ChromeFont);
+        Assert.Equal(SkinTitleBar.GradientVertical, xpLight.TitleBar);
+        Assert.True(xpLight.Gloss);
+        Assert.False(xpLight.SquareCorners);
+
+        var xpDark = AppSkin.For(AppearanceMode.XpDark);
+        Assert.Equal(SkinBorder.Bevel, xpDark.Border);
+        Assert.Equal(SkinTitleBar.GradientHorizontal, xpDark.TitleBar);
+        Assert.True(xpDark.SquareCorners);
+
+        foreach (var mode in new[] { AppearanceMode.TelecomLight, AppearanceMode.TelecomDark })
+        {
+            var telecom = AppSkin.For(mode);
+            Assert.StartsWith("Cascadia Mono", telecom.ChromeFont);
+            Assert.Equal(SkinCard.Tinted, telecom.Card);
+            Assert.Equal(SkinTitleAdornment.Channel, telecom.Adornment);
+        }
+        Assert.True(AppSkin.For(AppearanceMode.TelecomDark).NoteGrid);
+        Assert.False(AppSkin.For(AppearanceMode.TelecomLight).NoteGrid);
+
+        var bash = AppSkin.For(AppearanceMode.Bash);
+        Assert.Equal(SkinCard.Stripe, bash.Card);
+        Assert.Equal(SkinTitleAdornment.Folder, bash.Adornment);
+        Assert.True(bash.PromptLine);
+
+        var phosphor = AppSkin.For(AppearanceMode.Phosphor);
+        Assert.Equal(SkinCard.Mono, phosphor.Card);
+        Assert.Equal(SkinTitleAdornment.Uppercase, phosphor.Adornment);
+
+        // Rectas en bash, telecomunicaciones, fósforo y XP + 95; señal encendida donde la llevan las maquetas.
+        foreach (var mode in new[] { AppearanceMode.TelecomLight, AppearanceMode.TelecomDark, AppearanceMode.Bash, AppearanceMode.Phosphor })
+        {
+            Assert.True(AppSkin.For(mode).SquareCorners, mode.ToString());
+            Assert.True(AppSkin.For(mode).SyncSignal, mode.ToString());
+        }
+        Assert.False(AppSkin.For(AppearanceMode.XpLight).SyncSignal);
+    }
+
+    [Fact]
+    public void Default_HasNoGloss_RoundCorners_AndNoSignal()
+    {
+        Assert.False(AppSkin.Default.Gloss);
+        Assert.False(AppSkin.Default.SquareCorners);
+        Assert.False(AppSkin.Default.SyncSignal);
+    }
 }

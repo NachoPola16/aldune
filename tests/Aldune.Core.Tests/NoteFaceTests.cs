@@ -152,4 +152,19 @@ public class NoteFaceTests
         Assert.Equal("#808080", ColorMix.Toward("#000000", "#FFFFFF", 0.5));
         Assert.Equal("#000000", ColorMix.Toward("#000000", "rojo", 0.5));
     }
+
+    [Fact]
+    public void Mono_ShowsNoNoteColor_NotEvenTheUniformOne()
+    {
+        // Un monitor monocromo no enseña colores: fondo y texto del fósforo, cápsula apagada.
+        var palette = AppPalette.For(AppearanceMode.Phosphor, false);
+        var a = NoteFace.For(SkinCard.Mono, "#EBD38B", null, 0, palette);
+        var b = NoteFace.For(SkinCard.Mono, "#472525", "#33363A", 2, palette);
+
+        Assert.Equal(a, b);
+        Assert.Equal(palette["Ground"], a.Face);
+        Assert.Equal(palette["Text"], a.Ink);
+        Assert.Null(a.Accent);
+        Assert.True(NoteColorContrast.IsReadable(a.Face, a.Ink));
+    }
 }

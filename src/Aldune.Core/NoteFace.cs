@@ -47,6 +47,12 @@ public static class NoteFace
                 return new NoteFaceColors(face, text, ColorMix.Toward(accent, ground, 0.5), label, text, accent,
                     ColorMix.Toward(accent, ground, 0.55), accent);
             }
+            case SkinCard.Mono:
+            {
+                // Monitor monocromo: no enseña colores, ni el de la nota ni el único.
+                var border = palette["Border"];
+                return new NoteFaceColors(ground, text, border, text, text, null, palette["Raised"], border);
+            }
             default:
             {
                 var label = NoteColorDerivation.LabelFor(color);
