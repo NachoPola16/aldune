@@ -358,6 +358,11 @@
                              PinHint explica en una línea qué es "fijar" — "siempre encima" a secas
                              no dice nada a quien no conoce el concepto. -->
                         <StackPanel x:Name="ColorSwatches" Margin="6,4,6,8" />
+                        <!-- Aviso cuando la piel activa no va a enseñar el color elegido tal cual (franja gris, sin
+                             colores, color del canal). Se decide al abrir el menú. -->
+                        <TextBlock x:Name="ColorNotice" Visibility="Collapsed"
+                                   Foreground="{DynamicResource AlduneHintBrush}" FontSize="11" TextWrapping="Wrap"
+                                   MaxWidth="230" Margin="9,0,9,8" />
                         <Button x:Name="CustomColorButton" Click="OnCustomColorClick"
                                 Content="{x:Static res:Strings.CustomColor}"
                                 Style="{StaticResource NoteMenuItemStyle}" />

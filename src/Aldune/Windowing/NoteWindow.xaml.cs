@@ -1161,6 +1161,7 @@ public partial class NoteWindow : Window
         }
 
         PopulateColorSwatches();
+        UpdateColorNotice();
         var listActions = TaskLists.HasChecked(TextBody.Text) ? Visibility.Visible : Visibility.Collapsed;
         UncheckAllButton.Visibility = listActions;
         RemoveCheckedButton.Visibility = listActions;
@@ -1655,6 +1656,13 @@ public partial class NoteWindow : Window
     /// enseña ya los colores nuevos.</summary>
     private void PopulateColorSwatches() =>
         NoteSwatchPanel.Fill(ColorSwatches, _coordinator.ActiveTheme, _note.Color, OnColorSwatchClick);
+
+    private void UpdateColorNotice()
+    {
+        var kind = SkinColorNotice.For(ThemeManager.Skin.Card, _note.Color, _settings?.UniformNoteColor);
+        ColorNotice.Text = Strings.SkinColorNotice(kind);
+        ColorNotice.Visibility = kind == SkinColorNoticeKind.None ? Visibility.Collapsed : Visibility.Visible;
+    }
 
     private void OnColorSwatchClick(object sender, MouseButtonEventArgs e)
     {

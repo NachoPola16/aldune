@@ -46,6 +46,28 @@ public static class Strings
         "Die Erinnerung gilt immer für die ganze Notiz. Das entscheidet nur, ob die Benachrichtigung die ersten offenen Aufgaben auflistet.",
         "Le rappel concerne toujours toute la note. Cela décide seulement si la notification liste les premières tâches restantes.",
         "O lembrete é sempre da nota inteira. Isto só decide se o aviso lista as primeiras tarefas que faltam.");
+    public static string SkinColorNotice(SkinColorNoticeKind kind) => kind switch
+    {
+        SkinColorNoticeKind.GrayStripe => T(
+            "With this look, black, white and grey show as the same light grey stripe.",
+            "Con este aspecto, el negro, el blanco y los grises se ven como la misma franja gris clara.",
+            "Mit diesem Aussehen erscheinen Schwarz, Weiß und Grau als derselbe hellgraue Streifen.",
+            "Avec cet aspect, le noir, le blanc et les gris apparaissent comme la même bande gris clair.",
+            "Com este visual, preto, branco e cinzas aparecem como a mesma faixa cinza-clara."),
+        SkinColorNoticeKind.ColorsNotShown => T(
+            "This look doesn't show note colors.",
+            "Este aspecto no muestra los colores de las notas.",
+            "Dieses Aussehen zeigt keine Notizfarben.",
+            "Cet aspect n'affiche pas les couleurs des notes.",
+            "Este visual não mostra as cores das notas."),
+        SkinColorNoticeKind.ChannelColors => T(
+            "With this look each note takes the color of its channel; to use one color, turn on \"same color for every note\".",
+            "Con este aspecto cada nota toma el color de su canal; para usar un color, activa \"mismo color en todas las notas\".",
+            "Mit diesem Aussehen übernimmt jede Notiz die Farbe ihres Kanals; für eine einheitliche Farbe \"gleiche Farbe für alle Notizen\" aktivieren.",
+            "Avec cet aspect, chaque note prend la couleur de son canal ; pour une seule couleur, activez « même couleur pour toutes les notes ».",
+            "Com este visual cada nota usa a cor do seu canal; para usar uma cor, ative \"mesma cor em todas as notas\"."),
+        _ => "",
+    };
     public static string ReminderSnooze10 => T("Snooze 10 min", "Posponer 10 min", "10 Min. später", "Reporter de 10 min", "Adiar 10 min");
     public static string ReminderSnooze60 => T("Snooze 1 h", "Posponer 1 h", "1 Std. später", "Reporter d'1 h", "Adiar 1 h");
     public static string ReminderOpenNote => T("Open note", "Abrir nota",
