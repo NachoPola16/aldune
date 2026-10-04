@@ -41,6 +41,13 @@ public sealed class AppCoordinator
 
     public bool IsLinked(Guid noteId) => LinkedNoteDisplay.IsLinked(noteId);
 
+    // Dónde estaba el cursor al cerrar cada nota, para volver ahí al reabrirla en la misma sesión.
+    private readonly Dictionary<Guid, int> _lastCaret = new();
+
+    internal void RememberCaret(Guid noteId, int caret) => _lastCaret[noteId] = caret;
+
+    internal int? RecallCaret(Guid noteId) => _lastCaret.TryGetValue(noteId, out var caret) ? caret : null;
+
     /// <summary>Lo llama App tras crear el coordinador, ya con el Dispatcher en marcha.</summary>
     public void StartLinkedFiles(Dispatcher dispatcher)
     {

@@ -152,6 +152,16 @@ public partial class NoteWindow : Window
             // una línea en blanco esperando texto — igual que pedía el usuario: si se dejó una
             // casilla puesta y sin rellenar, el cursor tiene que ir justo detrás de ella, no una
             // línea más abajo, que sería un hueco de más antes de poder escribir la tarea.
+            // Reabierta en la misma sesión: el cursor vuelve donde se dejó, no al final (con secciones, lo que
+            // se estaba editando suele estar en medio). La primera vez, o tras reiniciar, sigue lo de abajo.
+            if (_coordinator.RecallCaret(note.Id) is { } remembered)
+            {
+                TextBody.Focus();
+                TextBody.CaretIndex = Math.Clamp(remembered, 0, TextBody.Text.Length);
+                TextBody.ScrollToLine(TextBody.GetLineIndexFromCharacterIndex(TextBody.CaretIndex));
+                return;
+            }
+
             var lastLine = TaskLines.LineContaining(TextBody.Text, TextBody.Text.Length);
 
             // La línea en blanco es solo de trabajo, para que el cursor tenga dónde ir: si se
@@ -231,6 +241,7 @@ public partial class NoteWindow : Window
         // Antes del handler de abajo: si este cancela, el guardado del otro corre igual en la
         // segunda pasada, y Flush es idempotente.
         Closing += OnClosingWithAnimation;
+        Closed += (_, _) => _coordinator.RememberCaret(note.Id, TextBody.CaretIndex);
 
         Closing += (_, _) =>
         {
