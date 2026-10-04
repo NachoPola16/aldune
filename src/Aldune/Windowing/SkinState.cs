@@ -33,6 +33,7 @@ public sealed class SkinState : INotifyPropertyChanged
     public bool Bevel => _skin.Border == SkinBorder.Bevel;
     public bool GradientTitleBar => _skin.TitleBar != SkinTitleBar.Plain;
     public bool PromptLine => _skin.PromptLine;
+    public bool Gloss => _skin.Gloss;
 
     public event PropertyChangedEventHandler? PropertyChanged;
 

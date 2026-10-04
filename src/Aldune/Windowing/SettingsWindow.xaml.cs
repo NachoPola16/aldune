@@ -1265,7 +1265,7 @@ public partial class SettingsWindow : Window
         if (sender is not RadioButton { IsChecked: true, Tag: AppearanceMode mode } || _settings.Appearance == mode) return;
         _settings.Appearance = mode;
         _settingsService.Save(_settings);
-        ThemeManager.Apply(Application.Current, mode);
+        ThemeManager.Apply(Application.Current, mode, _settings.ColorsFor(mode));
         ThemeManager.ApplySkin(Application.Current, AppSkin.For(mode));
         _coordinator?.RefreshNoteAppearance();
     }

@@ -80,7 +80,7 @@ public partial class App : Application
             settings = LoadSettingsOrRestoreBackup(settingsService, settingsPath, appDataDir, databasePath);
             ApplyLanguage(settings.Language);
             // Antes de crear ninguna ventana: todas toman sus colores de estos pinceles.
-            ThemeManager.Apply(this, settings.Appearance);
+            ThemeManager.Apply(this, settings.Appearance, settings.ColorsFor(settings.Appearance));
             ThemeManager.ApplySkin(this, AppSkin.For(settings.Appearance));
             ThemeManager.ApplyShape(this, settings.CornersSquare);
 

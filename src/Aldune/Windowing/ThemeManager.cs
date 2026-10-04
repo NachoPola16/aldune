@@ -33,10 +33,10 @@ public static class ThemeManager
     public static void Apply(Application app, bool light) =>
         Apply(app, light ? AppearanceMode.Light : AppearanceMode.Dark);
 
-    public static void Apply(Application app, AppearanceMode mode)
+    public static void Apply(Application app, AppearanceMode mode, IReadOnlyDictionary<string, string>? aspectColors = null)
     {
         bool windowsLight = WindowsUsesLightTheme();
-        var palette = AppPalette.For(mode, windowsLight);
+        var palette = AppPalette.For(mode, windowsLight, aspectColors);
         var dictionary = new ResourceDictionary();
         foreach (var (token, hex) in palette)
         {

@@ -36,11 +36,15 @@
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="Button">
-                        <Border x:Name="Bg" Background="{TemplateBinding Background}" CornerRadius="{DynamicResource AlduneRadius6}">
-                            <ContentPresenter Margin="{TemplateBinding Padding}"
-                                              HorizontalAlignment="Center"
-                                              VerticalAlignment="Center" />
-                        </Border>
+                        <Grid>
+                            <Border x:Name="Bg" Background="{TemplateBinding Background}" CornerRadius="{DynamicResource AlduneRadius6}">
+                                <ContentPresenter Margin="{TemplateBinding Padding}"
+                                                  HorizontalAlignment="Center"
+                                                  VerticalAlignment="Center" />
+                            </Border>
+                            <!-- Relieve de la piel Bevel; con las demás no dibuja nada. -->
+                            <local:BevelEdge />
+                        </Grid>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsMouseOver" Value="True">
                                 <Setter TargetName="Bg" Property="Background" Value="{DynamicResource AlduneHoverBrush}" />
@@ -95,6 +99,16 @@
             <Setter Property="Background" Value="Transparent" />
             <Setter Property="FontSize" Value="13" />
             <Setter Property="Padding" Value="0" />
+        </Style>
+
+        <!-- Botones de la cabecera: sobre la barra en degradado (XP) llevan el texto de la barra. El
+             borrado de la búsqueda comparte CloseButtonStyle pero va sobre un campo claro, así que no. -->
+        <Style x:Key="TitleBarButtonStyle" TargetType="Button" BasedOn="{StaticResource CloseButtonStyle}">
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding GradientTitleBar, Source={x:Static local:SkinState.Current}}" Value="True">
+                    <Setter Property="Foreground" Value="{DynamicResource AlduneOnTitleBarBrush}" />
+                </DataTrigger>
+            </Style.Triggers>
         </Style>
 
         <!-- Barra de scroll fina y a juego con el fondo oscuro. La del sistema es clara y ancha, y
@@ -233,12 +247,47 @@
 
         <!-- Cabecera. CaptionHeight cubre esta franja, así que la ventana se arrastra desde aquí. Fondo de la
              barra de la piel: transparente en la de siempre. -->
-        <Border x:Name="TitleBarStrip" Grid.Row="0" Background="{DynamicResource AlduneTitleBarFill}" Padding="20,18,14,0">
+        <Border x:Name="TitleBarStrip" Grid.Row="0" Background="{DynamicResource AlduneTitleBarFill}">
+            <Border.Style>
+                <Style TargetType="Border">
+                    <Setter Property="Padding" Value="20,18,14,0" />
+                    <Style.Triggers>
+                        <!-- Con barra en degradado (XP) la cabecera es una barra de título de verdad:
+                             compacta, de borde a borde y con el texto de la barra. -->
+                        <DataTrigger Binding="{Binding GradientTitleBar, Source={x:Static local:SkinState.Current}}" Value="True">
+                            <Setter Property="Padding" Value="12,6,8,6" />
+                        </DataTrigger>
+                    </Style.Triggers>
+                </Style>
+            </Border.Style>
             <Grid>
                 <StackPanel>
-                    <TextBlock Text="{x:Static res:Strings.ManageNotesTitle}" Foreground="{DynamicResource AlduneOnTitleBarBrush}"
-                               FontSize="17" FontWeight="SemiBold" />
-                    <TextBlock x:Name="SubtitleText" Foreground="{DynamicResource AlduneMutedTextBrush}" FontSize="12" Margin="0,3,0,0" />
+                    <TextBlock Text="{x:Static res:Strings.ManageNotesTitle}" Foreground="{DynamicResource AlduneOnTitleBarBrush}">
+                        <TextBlock.Style>
+                            <Style TargetType="TextBlock">
+                                <Setter Property="FontSize" Value="17" />
+                                <Setter Property="FontWeight" Value="SemiBold" />
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding GradientTitleBar, Source={x:Static local:SkinState.Current}}" Value="True">
+                                        <Setter Property="FontSize" Value="13" />
+                                        <Setter Property="FontWeight" Value="Bold" />
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </TextBlock.Style>
+                    </TextBlock>
+                    <TextBlock x:Name="SubtitleText" FontSize="12" Margin="0,3,0,0">
+                        <TextBlock.Style>
+                            <Style TargetType="TextBlock">
+                                <Setter Property="Foreground" Value="{DynamicResource AlduneMutedTextBrush}" />
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding GradientTitleBar, Source={x:Static local:SkinState.Current}}" Value="True">
+                                        <Setter Property="Foreground" Value="{DynamicResource AlduneOnTitleBarBrush}" />
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </TextBlock.Style>
+                    </TextBlock>
                 </StackPanel>
                 <!-- Acceso a Ajustes tambien desde aqui. Estaban solo en el clic derecho de la
                      bandeja, y ahi no los encontro el usuario: esta es la ventana que uno abre cuando
@@ -260,13 +309,13 @@
                             AutomationProperties.Name="{x:Static res:Strings.MinimizeWindowTooltip}"
                             Click="OnMinimizeClick"
                             WindowChrome.IsHitTestVisibleInChrome="True"
-                            Style="{StaticResource CloseButtonStyle}" />
+                            Style="{StaticResource TitleBarButtonStyle}" />
                     <Button x:Name="MaximizeButton" Width="28" Height="28"
                             ToolTip="{x:Static res:Strings.MaximizeWindowTooltip}"
                             AutomationProperties.Name="{x:Static res:Strings.MaximizeWindowTooltip}"
                             Click="OnMaximizeClick"
                             WindowChrome.IsHitTestVisibleInChrome="True"
-                            Style="{StaticResource CloseButtonStyle}">
+                            Style="{StaticResource TitleBarButtonStyle}">
                         <TextBlock x:Name="MaximizeGlyph" Text="&#xE922;"
                                    FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" FontSize="11" />
                     </Button>
@@ -278,7 +327,7 @@
                             AutomationProperties.Name="{x:Static res:Strings.SettingsTooltip}"
                             Click="OnSettingsClick"
                             WindowChrome.IsHitTestVisibleInChrome="True"
-                            Style="{StaticResource CloseButtonStyle}" />
+                            Style="{StaticResource TitleBarButtonStyle}" />
                     <Button x:Name="CloseButton"
                             Content="&#x2715;"
                             Width="28" Height="28"
@@ -286,7 +335,7 @@
                             AutomationProperties.Name="{x:Static res:Strings.CloseTooltip}"
                             Click="OnCloseClick"
                             WindowChrome.IsHitTestVisibleInChrome="True"
-                            Style="{StaticResource CloseButtonStyle}" />
+                            Style="{StaticResource TitleBarButtonStyle}" />
                 </StackPanel>
             </Grid>
         </Border>

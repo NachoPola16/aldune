@@ -59,10 +59,14 @@
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="Button">
-                        <Border x:Name="Bg" Background="{TemplateBinding Background}" CornerRadius="{DynamicResource AlduneRadius6}">
-                            <ContentPresenter Margin="{TemplateBinding Padding}"
-                                              HorizontalAlignment="Center" VerticalAlignment="Center" />
-                        </Border>
+                        <Grid>
+                            <Border x:Name="Bg" Background="{TemplateBinding Background}" CornerRadius="{DynamicResource AlduneRadius6}">
+                                <ContentPresenter Margin="{TemplateBinding Padding}"
+                                                  HorizontalAlignment="Center" VerticalAlignment="Center" />
+                            </Border>
+                            <!-- Relieve de la piel Bevel; con las demás no dibuja nada. -->
+                            <local:BevelEdge />
+                        </Grid>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsMouseOver" Value="True">
                                 <Setter TargetName="Bg" Property="Background" Value="{DynamicResource AlduneHoverBrush}" />
@@ -102,6 +106,12 @@
                     </ControlTemplate>
                 </Setter.Value>
             </Setter>
+            <Style.Triggers>
+                <!-- Sobre la barra en degradado (XP) los botones llevan el texto de la barra. -->
+                <DataTrigger Binding="{Binding GradientTitleBar, Source={x:Static local:SkinState.Current}}" Value="True">
+                    <Setter Property="Foreground" Value="{DynamicResource AlduneOnTitleBarBrush}" />
+                </DataTrigger>
+            </Style.Triggers>
         </Style>
         <!-- Chip compacto para el plazo (minutos/horas/dias/semanas): las tarjetas de
              MonitorRadioStyle son demasiado altas para cuatro opciones de una sola palabra en fila.
@@ -211,9 +221,34 @@
 
         <!-- CaptionHeight cubre esta franja, asi que la ventana se arrastra desde aqui. Fondo de la
              barra de la piel: transparente en la de siempre. -->
-        <Border x:Name="TitleBarStrip" Background="{DynamicResource AlduneTitleBarFill}" Padding="24,18,14,0">
+        <Border x:Name="TitleBarStrip" Background="{DynamicResource AlduneTitleBarFill}">
+            <Border.Style>
+                <Style TargetType="Border">
+                    <Setter Property="Padding" Value="24,18,14,0" />
+                    <Style.Triggers>
+                        <!-- Con barra en degradado (XP) la cabecera es una barra de título de verdad:
+                             compacta, de borde a borde y con el texto de la barra. -->
+                        <DataTrigger Binding="{Binding GradientTitleBar, Source={x:Static local:SkinState.Current}}" Value="True">
+                            <Setter Property="Padding" Value="12,6,8,6" />
+                        </DataTrigger>
+                    </Style.Triggers>
+                </Style>
+            </Border.Style>
             <Grid>
-                <TextBlock Text="{x:Static res:Strings.SettingsHeader}" Foreground="{DynamicResource AlduneOnTitleBarBrush}" FontSize="17" FontWeight="SemiBold" />
+                <TextBlock Text="{x:Static res:Strings.SettingsHeader}" Foreground="{DynamicResource AlduneOnTitleBarBrush}">
+                    <TextBlock.Style>
+                        <Style TargetType="TextBlock">
+                            <Setter Property="FontSize" Value="17" />
+                            <Setter Property="FontWeight" Value="SemiBold" />
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding GradientTitleBar, Source={x:Static local:SkinState.Current}}" Value="True">
+                                    <Setter Property="FontSize" Value="13" />
+                                    <Setter Property="FontWeight" Value="Bold" />
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </TextBlock.Style>
+                </TextBlock>
                 <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Top">
                     <Button Content="&#x2014;" Width="28" Height="28"
                             ToolTip="{x:Static res:Strings.MinimizeWindowTooltip}"

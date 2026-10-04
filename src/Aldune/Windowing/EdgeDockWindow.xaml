@@ -189,6 +189,9 @@
                                 <Setter TargetName="Waveform" Property="Visibility" Value="Visible" />
                                 <Setter TargetName="SheenBorder" Property="Visibility" Value="Collapsed" />
                             </DataTrigger>
+                            <DataTrigger Binding="{Binding Card, Source={x:Static local:SkinState.Current}}" Value="{x:Static core:SkinCard.Mono}">
+                                <Setter TargetName="SheenBorder" Property="Visibility" Value="Collapsed" />
+                            </DataTrigger>
                             <!-- La onda (54 de ancho + 22 de margen = hasta 76 del canto) se dibuja sobre
                                  la vista previa: con Tinted el texto deja 80 en ese lado (4 de hueco). Con
                                  el dock a la derecha, arriba o abajo la onda va a la derecha; con el dock
@@ -256,6 +259,18 @@
                             <Rectangle x:Name="SquareBg" Fill="{TemplateBinding Background}"
                                        Stroke="#8FA79E90" StrokeThickness="1"
                                        Effect="{StaticResource ButtonShadow}" Visibility="Collapsed" />
+                            <!-- Brillo de los botones de XP: reflejo blanco en la mitad de arriba. -->
+                            <Ellipse x:Name="GlossRound" IsHitTestVisible="False" Visibility="Collapsed">
+                                <Ellipse.Fill>
+                                    <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
+                                        <GradientStop Offset="0" Color="#66FFFFFF" />
+                                        <GradientStop Offset="0.5" Color="#14FFFFFF" />
+                                        <GradientStop Offset="0.51" Color="#00FFFFFF" />
+                                    </LinearGradientBrush>
+                                </Ellipse.Fill>
+                            </Ellipse>
+                            <Rectangle x:Name="GlossSquare" IsHitTestVisible="False" Visibility="Collapsed"
+                                       Fill="{Binding Fill, ElementName=GlossRound}" />
                             <local:BevelEdge OnlyWhenSquare="True" />
                             <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
                         </Grid>
@@ -272,6 +287,17 @@
                                 <Setter TargetName="Bg" Property="Visibility" Value="Collapsed" />
                                 <Setter TargetName="SquareBg" Property="Visibility" Value="Visible" />
                             </DataTrigger>
+                            <DataTrigger Binding="{Binding Gloss, Source={x:Static local:SkinState.Current}}" Value="True">
+                                <Setter TargetName="GlossRound" Property="Visibility" Value="Visible" />
+                            </DataTrigger>
+                            <MultiDataTrigger>
+                                <MultiDataTrigger.Conditions>
+                                    <Condition Binding="{Binding Gloss, Source={x:Static local:SkinState.Current}}" Value="True" />
+                                    <Condition Binding="{Binding Square, Source={x:Static local:SkinState.Current}}" Value="True" />
+                                </MultiDataTrigger.Conditions>
+                                <Setter TargetName="GlossRound" Property="Visibility" Value="Collapsed" />
+                                <Setter TargetName="GlossSquare" Property="Visibility" Value="Visible" />
+                            </MultiDataTrigger>
                         </ControlTemplate.Triggers>
                     </ControlTemplate>
                 </Setter.Value>
