@@ -1,4 +1,6 @@
 ﻿using System.Diagnostics;
+using System.IO;
+using System.Text;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
@@ -1637,5 +1639,212 @@ public partial class SettingsWindow : Window
         if (rebuild) RefreshThemeSection();
         else RefreshActiveThemeDetails();
         _coordinator?.RefreshAll();
+    }
+
+    // --- Exportar e importar la configuración ----------------------------------------------------
+    //
+    // Los manejadores de los botones solo abren los diálogos de archivo; todo lo demás va en métodos
+    // internos que reciben la ruta o el plan, para ejercitarlos sin diálogos modales.
+
+    private const string ConfigFileFilter = "Aldune (*.aldune-config.json)|*.aldune-config.json";
+    private const string ConfigFileExtension = ".aldune-config.json";
+
+    private void OnExportConfigClick(object sender, RoutedEventArgs e)
+    {
+        if (ConfigExportWindow.Show(this) is not { } sections) return;
+
+        var dialog = new Microsoft.Win32.SaveFileDialog
+        {
+            Filter = ConfigFileFilter,
+            FileName = "aldune" + ConfigFileExtension,
+            DefaultExt = ConfigFileExtension,
+            AddExtension = true,
+            OverwritePrompt = true,
+        };
+        if (dialog.ShowDialog(this) != true) return;
+        ExportConfiguration(sections, dialog.FileName);
+    }
+
+    /// <summary>Escribe la configuración de las secciones dadas. Devuelve false (tras avisar) si no se pudo escribir.</summary>
+    internal bool ExportConfiguration(ConfigSections sections, string path)
+    {
+        try
+        {
+            // Sin BOM: es JSON, y algunos lectores lo rechazan con él.
+            File.WriteAllText(path, ConfigExport.Build(_settings, sections, AppInfo.Version), new UTF8Encoding(false));
+            return true;
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+        {
+            AppDialog.Show(this, Strings.ConfigExportFailed, Strings.ConfigExportTitle,
+                MessageBoxButton.OK, MessageBoxImage.Error);
+            return false;
+        }
+    }
+
+    private void OnImportConfigClick(object sender, RoutedEventArgs e)
+    {
+        var dialog = new Microsoft.Win32.OpenFileDialog
+        {
+            Filter = ConfigFileFilter,
+            DefaultExt = ConfigFileExtension,
+            CheckFileExists = true,
+        };
+        if (dialog.ShowDialog(this) != true) return;
+
+        var plan = PlanConfigurationImport(dialog.FileName, out var error);
+        if (plan is null)
+        {
+            AppDialog.Show(this, error!, Strings.ConfigImportTitle, MessageBoxButton.OK, MessageBoxImage.Error);
+            return;
+        }
+
+        // Cancelar la vista previa no toca nada: ni copia, ni guardado.
+        if (!ConfigImportWindow.Show(this, plan)) return;
+
+        if (!ApplyConfigurationImport(plan)) return;
+        var done = plan.ChangesLanguage
+            ? Strings.ConfigImportDone + "\n" + Strings.ConfigImportRestartForLanguage
+            : Strings.ConfigImportDone;
+        AppDialog.Show(this, done, Strings.ConfigImportTitle, MessageBoxButton.OK, MessageBoxImage.Information);
+    }
+
+    /// <summary>Lee el archivo y calcula qué cambiaría, sin tocar nada. Con un archivo ilegible o que no
+    /// es de Aldune devuelve null y en <paramref name="error"/> un texto ya traducido (el detalle de Core
+    /// va en español fijo y no se enseña).</summary>
+    internal ConfigImportPlan? PlanConfigurationImport(string path, out string? error)
+    {
+        string text;
+        try
+        {
+            text = File.ReadAllText(path);
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+        {
+            error = Strings.ConfigImportUnreadable;
+            return null;
+        }
+
+        var plan = ConfigImport.Plan(text, _settings);
+        error = plan.IsValid ? null : Strings.ConfigImportInvalidFile;
+        return plan.IsValid ? plan : null;
+    }
+
+    /// <summary>
+    /// Aplica un plan ya confirmado: copia previa (si falla, no se aplica nada), cambios, guardado y
+    /// aplicación en vivo. Devuelve false, tras avisar, si no se pudo hacer la copia o guardar.
+    /// </summary>
+    internal bool ApplyConfigurationImport(ConfigImportPlan plan)
+    {
+        try
+        {
+            ConfigBackup.Create(_settingsService.SettingsPath, DateTimeOffset.Now);
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+        {
+            AppDialog.Show(this, Strings.ConfigImportBackupFailed, Strings.ConfigImportTitle,
+                MessageBoxButton.OK, MessageBoxImage.Error);
+            return false;
+        }
+
+        var dockViewBefore = (_settings.DockView, _settings.DockTagFilter);
+        plan.ApplyTo(_settings);
+
+        bool saved = true;
+        try
+        {
+            _settingsService.Save(_settings);
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+        {
+            saved = false;
+        }
+
+        // Lo que ya está en memoria se aplica igual: dejar la app a medias entre lo viejo y lo nuevo
+        // sería peor que avisar de que no se pudo guardar.
+        ApplyImportedSettingsLive(plan, dockViewChanged: dockViewBefore != (_settings.DockView, _settings.DockTagFilter));
+
+        if (saved) return true;
+        AppDialog.Show(this, Strings.ConfigImportSaveFailed, Strings.ConfigImportTitle,
+            MessageBoxButton.OK, MessageBoxImage.Warning);
+        return false;
+    }
+
+    /// <summary>
+    /// Lleva lo importado a la app en marcha reutilizando los caminos de cuando cada ajuste se cambia a
+    /// mano. El idioma no: se aplica al reiniciar, como al elegirlo en Ajustes.
+    /// </summary>
+    private void ApplyImportedSettingsLive(ConfigImportPlan plan, bool dockViewChanged)
+    {
+        var changed = plan.Changes.Select(change => change.FieldId).ToHashSet();
+        bool Changed(params string[] ids) => ids.Any(changed.Contains);
+
+        // Estado estático que leen los convertidores de XAML (no se enteran solos de un cambio).
+        NoteSnippetConverter.Enabled = _settings.ShowNotePreview;
+        NoteColorDisplay.Uniform = _settings.UniformNoteColor;
+
+        // Atajos globales: volver a registrar lo que haya ahora, como al editarlos en Ajustes.
+        if (Changed("hotkeyEnabled", "hotkeyModifiers", "hotkeyKey"))
+        {
+            if (_settings.GlobalHotkeyEnabled) _hotkey.Enable(_settings.Hotkey);
+            else _hotkey.Disable();
+        }
+        if (Changed("recentHotkeyEnabled", "recentHotkeyModifiers", "recentHotkeyKey"))
+        {
+            if (_settings.RecentNoteHotkeyEnabled) _recentHotkey?.Enable(_settings.RecentNoteHotkey);
+            else _recentHotkey?.Disable();
+        }
+
+        // Otra vista del dock es otra mesa de trabajo: SetDockView cierra las notas que ya no pertenecen
+        // a ella, igual que al cambiarla desde el dock. Va antes de rehacer los docks.
+        if (dockViewChanged) _coordinator?.SetDockView(_settings.DockView, _settings.DockTagFilter);
+
+        if (Changed("appearance", "aspectColors", "squareCorners", "syncSignal"))
+        {
+            SaveAndApplyAppearance();   // aplica tema, piel y esquinas, rehace docks y repinta las notas
+        }
+        else
+        {
+            if (Changed("dockEdge")) _coordinator?.RebuildDocks();
+            _coordinator?.RefreshNoteAppearance();   // temas, colores, vista previa y «mantener abierto»
+        }
+
+        RefreshControlsFromSettings(languageChanged: changed.Contains("language"));
+    }
+
+    /// <summary>Pone al día los controles de Ajustes con lo que hay ahora en los ajustes. Las casillas
+    /// usan Click y los radios se rehacen con su estado ya puesto, así que nada de esto guarda de nuevo.</summary>
+    private void RefreshControlsFromSettings(bool languageChanged)
+    {
+        HotkeyCheck.IsChecked = _settings.GlobalHotkeyEnabled;
+        RecentHotkeyCheck.IsChecked = _settings.RecentNoteHotkeyEnabled;
+        HideOnFullscreenCheck.IsChecked = _settings.HideOnFullscreen;
+        KeepDockOpenCheck.IsChecked = _settings.KeepDockOpen;
+        ShowNotePreviewCheck.IsChecked = _settings.ShowNotePreview;
+        RememberPositionsCheck.IsChecked = _settings.RememberNotePositions;
+        PopulateTrackpadGestures();
+        UpdateUniformColorUi();
+        SyncSignalCheck.IsChecked = _settings.SyncSignalVisible;
+        SquareCornersCheck.IsChecked = _settings.CornersSquare;
+        MoveCompletedTasksCheck.IsChecked = _settings.MoveCompletedTasksToEnd;
+        CheckForUpdatesAutomaticallyCheck.IsChecked = _settings.CheckForUpdatesAutomatically;
+        AutoHideTasksCheck.IsChecked = _settings.AutoHideCompletedTasks;
+        AutoHideTasksDelayValueBox.Text = _settings.AutoHideCompletedTasksDelayValue.ToString();
+        TrashRetentionValueBox.Text = _settings.TrashRetentionDays.ToString();
+        UpdateHotkeyUi();
+        UpdateRecentHotkeyUi();
+        PopulateEdges();
+        PopulateAppearance();
+        RefreshThemeSection();
+        PopulateDelayUnits();
+        UpdateAutoHideTasksUi();
+        UpdateInterfaceModeUi();
+
+        // El radio de idioma se marca contra lo elegido, no contra el idioma en marcha: aún no cambia.
+        if (languageChanged)
+        {
+            foreach (var radio in LanguageListContainer.Children.OfType<RadioButton>())
+                radio.IsChecked = radio.Tag is string code && code == _settings.Language;
+        }
     }
 }

@@ -165,6 +165,152 @@ public static class Strings
         "Einmal täglich fragt Aldune bei GitHub nach der Liste veröffentlichter Versionen. Es werden keine Daten über dich oder deine Notizen gesendet. Wenn deaktiviert, wird nur geprüft, wenn du auf die Schaltfläche klickst.",
         "Une fois par jour, Aldune demande à GitHub la liste des versions publiées. Rien sur vous ou vos notes n'est envoyé. Si désactivé, la vérification ne se fait que lorsque vous appuyez sur le bouton.",
         "Uma vez por dia o Aldune consulta o GitHub para obter a lista de versões. Nada sobre você ou suas notas é enviado. Quando desativado, só verifica ao clicar no botão.");
+    // --- Exportar e importar la configuración (Ajustes, Acerca de) -----------------------------------
+
+    public static string ConfigSectionTitle => T("Configuration", "Configuración",
+        "Konfiguration", "Configuration", "Configuração");
+    public static string ConfigAboutHint => T(
+        "Save your appearance and settings to a file, or load them from one: to use them on another computer or to come back to them later.",
+        "Guarda tu aspecto y tus ajustes en un archivo, o cárgalos desde uno: para usarlos en otro equipo o volver a ellos más adelante.",
+        "Speichere Erscheinungsbild und Einstellungen in einer Datei oder lade sie aus einer Datei: für einen anderen Computer oder um später darauf zurückzukommen.",
+        "Enregistrez votre apparence et vos paramètres dans un fichier, ou chargez-les depuis un fichier : pour les utiliser sur un autre ordinateur ou y revenir plus tard.",
+        "Salve sua aparência e suas configurações em um arquivo, ou carregue-as de um arquivo: para usá-las em outro computador ou voltar a elas mais tarde.");
+    public static string ConfigExportButton => T("Export settings…", "Exportar configuración…",
+        "Einstellungen exportieren…", "Exporter la configuration…", "Exportar configuração…");
+    public static string ConfigImportButton => T("Import settings…", "Importar configuración…",
+        "Einstellungen importieren…", "Importer la configuration…", "Importar configuração…");
+    public static string ConfigExportTitle => T("Export settings", "Exportar configuración",
+        "Einstellungen exportieren", "Exporter la configuration", "Exportar configuração");
+    public static string ConfigExportHint => T(
+        "Saves your choices to a file you can import on another computer. Sync settings, keys and passwords, the chosen screen and note positions are never included.",
+        "Guarda tus preferencias en un archivo que puedes importar en otro equipo. La sincronización, las claves y contraseñas, la pantalla elegida y las posiciones de las notas nunca se incluyen.",
+        "Speichert deine Einstellungen in einer Datei, die du auf einem anderen Computer importieren kannst. Synchronisierung, Schlüssel und Passwörter, der gewählte Bildschirm und die Notizpositionen werden nie exportiert.",
+        "Enregistre vos préférences dans un fichier que vous pouvez importer sur un autre ordinateur. La synchronisation, les clés et mots de passe, l'écran choisi et la position des notes ne sont jamais inclus.",
+        "Salva suas preferências em um arquivo que você pode importar em outro computador. A sincronização, as chaves e senhas, a tela escolhida e as posições das notas nunca são incluídas.");
+    public static string ConfigSectionAppearance => T("Appearance", "Aspecto",
+        "Erscheinungsbild", "Apparence", "Aparência");
+    public static string ConfigSectionAppearanceHint => T(
+        "Look, colors, corners, sync signal, note theme and your own themes.",
+        "Aspecto, colores, esquinas, señal de sincronización, tema de notas y temas propios.",
+        "Aussehen, Farben, Ecken, Sync-Signal, Notizthema und eigene Themen.",
+        "Apparence, couleurs, coins, signal de synchronisation, thème des notes et thèmes personnalisés.",
+        "Aparência, cores, cantos, sinal de sincronização, tema das notas e temas próprios.");
+    public static string ConfigSectionSettings => T("Settings", "Ajustes",
+        "Einstellungen", "Paramètres", "Configurações");
+    public static string ConfigSectionSettingsHint => T(
+        "Language, shortcuts, dock, tasks, trash and more.",
+        "Idioma, atajos, dock, tareas, papelera y más.",
+        "Sprache, Tastenkürzel, Dock, Aufgaben, Papierkorb und mehr.",
+        "Langue, raccourcis, dock, tâches, corbeille et plus.",
+        "Idioma, atalhos, dock, tarefas, lixeira e mais.");
+    public static string ConfigExportSave => T("Export", "Exportar",
+        "Exportieren", "Exporter", "Exportar");
+    public static string ConfigExportFailed => T(
+        "Couldn't save the file. Check that the location can be written to.",
+        "No se pudo guardar el archivo. Comprueba que se puede escribir en esa ubicación.",
+        "Die Datei konnte nicht gespeichert werden. Prüfe, ob an diesem Ort geschrieben werden darf.",
+        "Impossible d'enregistrer le fichier. Vérifiez que l'on peut écrire à cet emplacement.",
+        "Não foi possível salvar o arquivo. Verifique se é possível gravar nesse local.");
+    public static string ConfigImportTitle => T("Import settings", "Importar configuración",
+        "Einstellungen importieren", "Importer la configuration", "Importar configuração");
+    public static string ConfigImportNoChanges => T(
+        "The file has nothing different from your current settings.",
+        "El archivo no trae nada distinto de tu configuración actual.",
+        "Die Datei enthält nichts, was von deinen aktuellen Einstellungen abweicht.",
+        "Le fichier ne contient rien de différent de votre configuration actuelle.",
+        "O arquivo não traz nada diferente da sua configuração atual.");
+    public static string ConfigImportSummary(int count) => count == 1
+        ? T("This file changes 1 setting:", "Este archivo cambia 1 ajuste:",
+            "Diese Datei ändert 1 Einstellung:", "Ce fichier modifie 1 paramètre :", "Este arquivo altera 1 configuração:")
+        : T($"This file changes {count} settings:", $"Este archivo cambia {count} ajustes:",
+            $"Diese Datei ändert {count} Einstellungen:", $"Ce fichier modifie {count} paramètres :",
+            $"Este arquivo altera {count} configurações:");
+    public static string ConfigImportApply => T("Apply", "Aplicar",
+        "Anwenden", "Appliquer", "Aplicar");
+    public static string ConfigImportClose => T("Close", "Cerrar",
+        "Schließen", "Fermer", "Fechar");
+    public static string ConfigImportRestartForLanguage => T(
+        "The language changes when you restart Aldune.",
+        "El idioma cambia al reiniciar Aldune.",
+        "Die Sprache ändert sich beim Neustart von Aldune.",
+        "La langue change au redémarrage d'Aldune.",
+        "O idioma muda ao reiniciar o Aldune.");
+    public static string ConfigImportBackupNote => T(
+        "A copy of your current settings is saved first.",
+        "Antes se guarda una copia de tu configuración actual.",
+        "Vorher wird eine Kopie deiner aktuellen Einstellungen gespeichert.",
+        "Une copie de votre configuration actuelle est d'abord enregistrée.",
+        "Antes, uma cópia da sua configuração atual é salva.");
+    public static string ConfigImportFromVersion(string app) => T(
+        $"File from Aldune {app}", $"Archivo de Aldune {app}",
+        $"Datei aus Aldune {app}", $"Fichier d'Aldune {app}", $"Arquivo do Aldune {app}");
+    // Genérico a propósito: el detalle que da Core va en español fijo y no es para enseñarlo.
+    public static string ConfigImportInvalidFile => T(
+        "Couldn't read the file: it isn't a valid Aldune settings file.",
+        "No se pudo leer el archivo: no es un archivo de configuración de Aldune válido.",
+        "Die Datei konnte nicht gelesen werden: Es ist keine gültige Aldune-Konfigurationsdatei.",
+        "Impossible de lire le fichier : ce n'est pas un fichier de configuration Aldune valide.",
+        "Não foi possível ler o arquivo: não é um arquivo de configuração do Aldune válido.");
+    public static string ConfigImportUnreadable => T(
+        "Couldn't open the file. Check that it exists and that you have permission to read it.",
+        "No se pudo abrir el archivo. Comprueba que existe y que tienes permiso para leerlo.",
+        "Die Datei konnte nicht geöffnet werden. Prüfe, ob sie existiert und du sie lesen darfst.",
+        "Impossible d'ouvrir le fichier. Vérifiez qu'il existe et que vous avez le droit de le lire.",
+        "Não foi possível abrir o arquivo. Verifique se ele existe e se você tem permissão para lê-lo.");
+    public static string ConfigImportBackupFailed => T(
+        "Couldn't save a copy of your current settings, so nothing was imported.",
+        "No se pudo guardar una copia de tu configuración actual, así que no se ha importado nada.",
+        "Es konnte keine Kopie deiner aktuellen Einstellungen gespeichert werden, daher wurde nichts importiert.",
+        "Impossible d'enregistrer une copie de votre configuration actuelle : rien n'a été importé.",
+        "Não foi possível salvar uma cópia da sua configuração atual, então nada foi importado.");
+    public static string ConfigImportSaveFailed => T(
+        "The settings were applied but couldn't be saved, so they will be lost when Aldune closes.",
+        "Los ajustes se aplicaron pero no se pudieron guardar, así que se perderán al cerrar Aldune.",
+        "Die Einstellungen wurden angewendet, konnten aber nicht gespeichert werden und gehen beim Beenden von Aldune verloren.",
+        "Les paramètres ont été appliqués mais n'ont pas pu être enregistrés : ils seront perdus à la fermeture d'Aldune.",
+        "As configurações foram aplicadas, mas não puderam ser salvas, então serão perdidas ao fechar o Aldune.");
+    public static string ConfigImportDone => T("Settings imported.", "Configuración importada.",
+        "Einstellungen importiert.", "Configuration importée.", "Configuração importada.");
+
+    /// <summary>Nombre visible de cada campo del archivo de configuración (el id es la clave del JSON,
+    /// ver ConfigFields). Un id desconocido se devuelve tal cual. Los de atajo llevan además la parte
+    /// (modificadores / tecla) para que dos filas seguidas no se llamen igual.</summary>
+    public static string ConfigFieldName(string id) => id switch
+    {
+        "appearance" => T("Appearance", "Aspecto", "Erscheinungsbild", "Apparence", "Aparência"),
+        "aspectColors" => T("Aspect colors", "Colores del aspecto", "Farben des Erscheinungsbilds", "Couleurs de l'apparence", "Cores da aparência"),
+        "squareCorners" => T("Square corners", "Esquinas rectas", "Eckige Ecken", "Coins carrés", "Cantos retos"),
+        "syncSignal" => T("Sync signal", "Señal de sincronización", "Sync-Signal", "Signal de synchronisation", "Sinal de sincronização"),
+        "uniformNoteColor" => T("Same color for every note", "Mismo color para todas las notas", "Gleiche Farbe für alle Notizen", "Même couleur pour toutes les notes", "Mesma cor para todas as notas"),
+        "noteTheme" => T("Note theme", "Tema de notas", "Notizthema", "Thème des notes", "Tema das notas"),
+        "customThemes" => T("Custom themes", "Temas propios", "Eigene Themen", "Thèmes personnalisés", "Temas próprios"),
+        "newNoteTone" => T("New note tone", "Tono de las notas nuevas", "Farbton neuer Notizen", "Ton des nouvelles notes", "Tom das notas novas"),
+        "colorAssignment" => T("Color for new notes", "Color de las notas nuevas", "Farbe neuer Notizen", "Couleur des nouvelles notes", "Cor das notas novas"),
+        "fixedNoteColor" => T("Fixed note color", "Color fijo de las notas", "Feste Notizfarbe", "Couleur fixe des notes", "Cor fixa das notas"),
+        "language" => T("Language", "Idioma", "Sprache", "Langue", "Idioma"),
+        "simplifiedMode" => T("Simple interface", "Interfaz simple", "Einfache Oberfläche", "Interface simple", "Interface simples"),
+        "hotkeyEnabled" => T("New note shortcut", "Atajo de nota nueva", "Tastenkürzel für neue Notiz", "Raccourci de nouvelle note", "Atalho de nova nota"),
+        "hotkeyModifiers" => T("New note shortcut (modifier keys)", "Atajo de nota nueva (modificadores)", "Tastenkürzel für neue Notiz (Zusatztasten)", "Raccourci de nouvelle note (touches modificatrices)", "Atalho de nova nota (teclas modificadoras)"),
+        "hotkeyKey" => T("New note shortcut (key)", "Atajo de nota nueva (tecla)", "Tastenkürzel für neue Notiz (Taste)", "Raccourci de nouvelle note (touche)", "Atalho de nova nota (tecla)"),
+        "recentHotkeyEnabled" => T("Last note shortcut", "Atajo de la última nota", "Tastenkürzel für letzte Notiz", "Raccourci de la dernière note", "Atalho da última nota"),
+        "recentHotkeyModifiers" => T("Last note shortcut (modifier keys)", "Atajo de la última nota (modificadores)", "Tastenkürzel für letzte Notiz (Zusatztasten)", "Raccourci de la dernière note (touches modificatrices)", "Atalho da última nota (teclas modificadoras)"),
+        "recentHotkeyKey" => T("Last note shortcut (key)", "Atajo de la última nota (tecla)", "Tastenkürzel für letzte Notiz (Taste)", "Raccourci de la dernière note (touche)", "Atalho da última nota (tecla)"),
+        "dockEdge" => T("Dock edge", "Borde del dock", "Dock-Rand", "Bord du dock", "Borda do dock"),
+        "dockView" => T("Dock view", "Vista del dock", "Dock-Ansicht", "Vue du dock", "Visualização do dock"),
+        "keepDockOpen" => T("Keep dock open", "Mantener el dock abierto", "Dock geöffnet lassen", "Garder le dock ouvert", "Manter o dock aberto"),
+        "showNotePreview" => T("Note preview", "Vista previa de notas", "Notizvorschau", "Aperçu des notes", "Pré-visualização das notas"),
+        "hideOnFullscreen" => T("Hide in fullscreen", "Ocultar a pantalla completa", "Im Vollbild ausblenden", "Masquer en plein écran", "Ocultar em tela cheia"),
+        "trackpadGestures" => T("Trackpad gestures", "Gestos del trackpad", "Trackpad-Gesten", "Gestes du pavé tactile", "Gestos do trackpad"),
+        "moveCompletedTasksToEnd" => T("Move completed tasks to the end", "Mover las tareas completadas al final", "Erledigte Aufgaben ans Ende verschieben", "Déplacer les tâches terminées à la fin", "Mover as tarefas concluídas para o fim"),
+        "autoHideCompletedTasks" => T("Hide completed tasks automatically", "Ocultar tareas completadas automáticamente", "Erledigte Aufgaben automatisch ausblenden", "Masquer automatiquement les tâches terminées", "Ocultar tarefas concluídas automaticamente"),
+        "autoHideDelayValue" => T("Hide completed tasks after (amount)", "Ocultar completadas tras (cantidad)", "Erledigte nach (Anzahl) ausblenden", "Masquer les terminées après (quantité)", "Ocultar concluídas após (quantidade)"),
+        "autoHideDelayUnit" => T("Hide completed tasks after (unit)", "Ocultar completadas tras (unidad)", "Erledigte nach (Einheit) ausblenden", "Masquer les terminées après (unité)", "Ocultar concluídas após (unidade)"),
+        "trashRetentionDays" => T("Days in the trash", "Días en la papelera", "Tage im Papierkorb", "Jours dans la corbeille", "Dias na lixeira"),
+        "rememberNotePositions" => T("Remember note positions", "Recordar la posición de las notas", "Notizpositionen merken", "Mémoriser la position des notes", "Lembrar a posição das notas"),
+        "checkForUpdates" => T("Check for updates automatically", "Buscar actualizaciones automáticamente", "Automatisch nach Updates suchen", "Rechercher les mises à jour automatiquement", "Verificar atualizações automaticamente"),
+        _ => id,
+    };
+
     public static string UpdateChecking => T("Checking for updates…", "Buscando actualizaciones…",
         "Nach Updates wird gesucht…", "Recherche de mises à jour…", "Verificando atualizações…");
     public static string UpdateCurrentMessage => T("Aldune is up to date.", "Aldune está actualizado.",

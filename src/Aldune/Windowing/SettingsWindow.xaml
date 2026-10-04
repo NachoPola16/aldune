@@ -874,6 +874,21 @@
                         <TextBlock Text="{x:Static res:Strings.CheckForUpdatesAutomaticallyHint}"
                                    Foreground="{DynamicResource AlduneHintBrush}" FontSize="11" TextWrapping="Wrap" Margin="27,6,0,0" />
                     </StackPanel>
+                    <Border Background="{DynamicResource AlduneRaisedBrush}" Height="1" Margin="0,20,0,0" />
+                    <StackPanel Margin="0,20,0,0">
+                        <TextBlock Text="{x:Static res:Strings.ConfigSectionTitle}"
+                                   Foreground="{DynamicResource AlduneTextBrush}" FontSize="13" FontWeight="SemiBold" />
+                        <TextBlock Text="{x:Static res:Strings.ConfigAboutHint}"
+                                   Foreground="{DynamicResource AlduneHintBrush}" FontSize="11" TextWrapping="Wrap" Margin="0,6,0,0" />
+                        <StackPanel Orientation="Horizontal" Margin="0,10,0,0">
+                            <Button x:Name="ExportConfigButton" Content="{x:Static res:Strings.ConfigExportButton}"
+                                    Padding="12,7" Click="OnExportConfigClick"
+                                    Style="{StaticResource RecordButtonStyle}" />
+                            <Button x:Name="ImportConfigButton" Content="{x:Static res:Strings.ConfigImportButton}"
+                                    Margin="8,0,0,0" Padding="12,7" Click="OnImportConfigClick"
+                                    Style="{StaticResource RecordButtonStyle}" />
+                        </StackPanel>
+                    </StackPanel>
                 </StackPanel>
                 </Grid>
             </ScrollViewer>

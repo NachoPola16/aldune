@@ -11,6 +11,9 @@ public sealed class SettingsService
         _settingsPath = settingsPath;
     }
 
+    /// <summary>Ruta de <c>settings.json</c>: la necesita la copia previa a importar una configuración.</summary>
+    public string SettingsPath => _settingsPath;
+
     /// <summary>
     /// Al leer se aceptan los enums también por su nombre ("Dark", no solo 1): un settings.json
     /// editado a mano así lanzaba JsonException y la app no arrancaba. Al escribir se siguen usando
