@@ -126,6 +126,19 @@ public sealed class NotesDatabase
                 NoteNonce BLOB,
                 NoteTag BLOB
             );
+
+            -- Notas vinculadas a un archivo del disco (spec 2026-10-04). Local: nunca viaja por la sync. La
+            -- ruta va cifrada como el texto de las notas.
+            CREATE TABLE IF NOT EXISTS NoteFileLink (
+                NoteId TEXT PRIMARY KEY NOT NULL,
+                EncryptedPath BLOB NOT NULL,
+                PathNonce BLOB NOT NULL,
+                PathTag BLOB NOT NULL,
+                SyncEnabled INTEGER NOT NULL DEFAULT 0,
+                KnownHash TEXT,
+                KnownWriteTime TEXT,
+                KnownTextHash TEXT
+            );
             """;
         command.ExecuteNonQuery();
         EnsureNoteProtectionColumns(connection);

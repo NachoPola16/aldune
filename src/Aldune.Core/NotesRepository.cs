@@ -433,6 +433,87 @@ public sealed class NotesRepository
         return command.ExecuteNonQuery();
     }
 
+    public void SaveFileLink(NoteFileLink link)
+    {
+        var path = _cipher.Encrypt(link.Path);
+        using var connection = _database.OpenConnection();
+        using var command = connection.CreateCommand();
+        command.CommandText = """
+            INSERT OR REPLACE INTO NoteFileLink
+                (NoteId, EncryptedPath, PathNonce, PathTag, SyncEnabled, KnownHash, KnownWriteTime, KnownTextHash)
+            VALUES ($id, $path, $nonce, $tag, $sync, $hash, $writeTime, $textHash);
+            """;
+        command.Parameters.AddWithValue("$id", link.NoteId.ToString());
+        command.Parameters.AddWithValue("$path", path.CipherText);
+        command.Parameters.AddWithValue("$nonce", path.Nonce);
+        command.Parameters.AddWithValue("$tag", path.Tag);
+        command.Parameters.AddWithValue("$sync", link.SyncEnabled ? 1 : 0);
+        command.Parameters.AddWithValue("$hash", (object?)link.KnownHash ?? DBNull.Value);
+        command.Parameters.AddWithValue("$writeTime", (object?)link.KnownWriteTime?.ToString("O") ?? DBNull.Value);
+        command.Parameters.AddWithValue("$textHash", (object?)link.KnownTextHash ?? DBNull.Value);
+        command.ExecuteNonQuery();
+    }
+
+    public NoteFileLink? GetFileLink(Guid noteId) => ReadFileLinks(noteId).FirstOrDefault();
+
+    public IReadOnlyList<NoteFileLink> GetFileLinks() => ReadFileLinks(null);
+
+    public void DeleteFileLink(Guid noteId)
+    {
+        using var connection = _database.OpenConnection();
+        using var command = connection.CreateCommand();
+        command.CommandText = "DELETE FROM NoteFileLink WHERE NoteId = $id;";
+        command.Parameters.AddWithValue("$id", noteId.ToString());
+        command.ExecuteNonQuery();
+    }
+
+    /// <summary>La nota vinculada a <paramref name="path"/>, comparando la ruta completa sin distinguir
+    /// mayúsculas (Windows no las distingue). Recorre los vínculos porque las rutas van cifradas.</summary>
+    public Guid? FindNoteByLinkedPath(string path)
+    {
+        var wanted = System.IO.Path.GetFullPath(path);
+        return GetFileLinks().FirstOrDefault(link =>
+            string.Equals(System.IO.Path.GetFullPath(link.Path), wanted, StringComparison.OrdinalIgnoreCase))?.NoteId;
+    }
+
+    /// <summary>Notas vinculadas que no entran en la sync. Sin descifrar nada: la sync lo pide en cada pasada.</summary>
+    public IReadOnlySet<Guid> GetUnsyncedLinkedNoteIds()
+    {
+        using var connection = _database.OpenConnection();
+        using var command = connection.CreateCommand();
+        command.CommandText = "SELECT NoteId FROM NoteFileLink WHERE SyncEnabled = 0;";
+        using var reader = command.ExecuteReader();
+        var ids = new HashSet<Guid>();
+        while (reader.Read()) ids.Add(Guid.Parse(reader.GetString(0)));
+        return ids;
+    }
+
+    private List<NoteFileLink> ReadFileLinks(Guid? noteId)
+    {
+        using var connection = _database.OpenConnection();
+        using var command = connection.CreateCommand();
+        command.CommandText = """
+            SELECT NoteId, EncryptedPath, PathNonce, PathTag, SyncEnabled, KnownHash, KnownWriteTime, KnownTextHash
+            FROM NoteFileLink
+            """ + (noteId is null ? ";" : " WHERE NoteId = $id;");
+        if (noteId is not null) command.Parameters.AddWithValue("$id", noteId.Value.ToString());
+        using var reader = command.ExecuteReader();
+        var links = new List<NoteFileLink>();
+        while (reader.Read())
+        {
+            var path = _cipher.Decrypt(new EncryptedContent(
+                (byte[])reader["EncryptedPath"], (byte[])reader["PathNonce"], (byte[])reader["PathTag"]));
+            links.Add(new NoteFileLink(
+                Guid.Parse(reader.GetString(0)),
+                path,
+                reader.GetInt64(4) != 0,
+                reader.IsDBNull(5) ? null : reader.GetString(5),
+                reader.IsDBNull(6) ? null : ParseDate(reader["KnownWriteTime"]),
+                reader.IsDBNull(7) ? null : reader.GetString(7)));
+        }
+        return links;
+    }
+
     private static DateTimeOffset ParseDate(object value) => DateTimeOffset.Parse(
         (string)value,
         System.Globalization.CultureInfo.InvariantCulture,
@@ -501,6 +582,7 @@ public sealed class NotesRepository
         command.CommandText = """
             INSERT OR REPLACE INTO SyncTombstone (NoteId, DeletedAt, DeviceId)
             VALUES ($id, $deletedAt, 'local');
+            DELETE FROM NoteFileLink WHERE NoteId = $id;
             DELETE FROM Note WHERE Id = $id;
             DELETE FROM NotePlacement WHERE NoteId = $id;
             DELETE FROM TaskCompletion WHERE NoteId = $id;
@@ -587,6 +669,7 @@ public sealed class NotesRepository
         using var connection = _database.OpenConnection();
         using var command = connection.CreateCommand();
         command.CommandText = """
+            DELETE FROM NoteFileLink WHERE NoteId = $id;
             DELETE FROM Note WHERE Id = $id;
             DELETE FROM NotePlacement WHERE NoteId = $id;
             DELETE FROM NoteOrder WHERE NoteId = $id;
@@ -606,6 +689,9 @@ public sealed class NotesRepository
     {
         var note = GetById(id) ?? throw new InvalidOperationException("The note no longer exists.");
         if (note.IsProtected) throw new InvalidOperationException("The note is already protected.");
+        // Una nota vinculada es su archivo, y el archivo está en claro: protegerla solo dentro de Aldune
+        // sería una falsa seguridad (spec, decisión 7). La interfaz ya no lo ofrece; esto es la red.
+        if (GetFileLink(id) is not null) throw new InvalidOperationException("A linked note cannot be protected.");
         var protectedContent = ProtectedNoteContent.Protect(note.Text, password);
         UpdateProtectionColumns(id, protectedContent, _cipher.Encrypt(string.Empty));
         return protectedContent;
@@ -705,6 +791,7 @@ public sealed class NotesRepository
             DELETE FROM NotePlacement WHERE NoteId IN (SELECT Id FROM Note WHERE State = $state AND UpdatedAt < $cutoff);
             DELETE FROM NoteReminder WHERE NoteId IN (SELECT Id FROM Note WHERE State = $state AND UpdatedAt < $cutoff);
             DELETE FROM NoteTag WHERE NoteId IN (SELECT Id FROM Note WHERE State = $state AND UpdatedAt < $cutoff);
+            DELETE FROM NoteFileLink WHERE NoteId IN (SELECT Id FROM Note WHERE State = $state AND UpdatedAt < $cutoff);
             DELETE FROM Note WHERE State = $state AND UpdatedAt < $cutoff;
             """;
         command.Parameters.AddWithValue("$state", NoteState.Trashed.ToString());
