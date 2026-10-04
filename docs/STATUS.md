@@ -4303,7 +4303,7 @@ Publicado como **1.6.1** con todo lo de esta sección.
   por Ajustes, Gestionar notas y los diálogos. Los 12 pasaron a 11 (pistas) o 13 (etiquetas), el 12,5 del aviso a 11, el 14 de
   títulos de aviso/conflictos a 13 y el 19 a 17. Quedan fuera las notas, el dock y los glifos de icono (9, 10, 12, 14, 20).
 
-## Pulido tras la 1.7.1 (2026-10-04, sin publicar)
+## 1.7.2 — Pulido de la nota (2026-10-04)
 
 - **Parpadeo al pulsar Enter** (visto en el portátil): al insertar el salto había una pasada de layout en la que el texto medía
   una línea más que la ventana (18 px de desbordamiento medidos con una sonda); el cuadro se desplazaba y la ventana crecía
