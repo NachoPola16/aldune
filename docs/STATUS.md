@@ -4200,3 +4200,27 @@ Sin publicar.
 
 Tests: 1212/1212. Verificado con sonda (179 comprobaciones: forma del archivo, ninguna fuga, cancelar,
 copia previa, aplicación en vivo, 13 casos de error, 31 nombres en cinco idiomas) y smoke test en verde.
+
+## Notas vinculadas a archivos, tanda 1 (2026-10-04, fase F1)
+
+Rama `notas-vinculadas`. Spec: `docs/superpowers/specs/2026-10-04-notas-vinculadas-archivos-design.md`;
+plan: `docs/superpowers/plans/2026-10-04-notas-vinculadas-archivos.md`. Core (tareas 1 a 6) hecho en la nube
+con TDD; la parte WPF (7 a 10) aquí.
+
+- **Hecho**: título de la nota sin los `#` de Markdown (`NoteTitleHelper`), textos en cinco idiomas, vigilancia en
+  segundo plano (`LinkedFileCoordinator`: un `FileSystemWatcher` por carpeta + sondeo de fecha cada 3 s con la nota
+  abierta y cada 30 s sin abrir; cola en serie en un hilo de fondo), guardado al archivo desde el autoguardado de la
+  ventana, recarga (la ventana se actualiza sin marcarse editada), conflicto (nota "⚠ Conflicto" + aviso), archivo no
+  disponible (franja con Reintentar / Buscar… / Convertir en nota normal, solo lectura, vuelve sola), renombrado en la
+  misma carpeta, Proteger desactivado, "Abrir archivo…" en el "+" y en la bandeja, arrastrar al dock, marca en
+  la pestaña y en el gestor.
+- **Decisiones al implementar**: el aviso de conflicto sale por `AppCoordinator.ToastSink` (lo inyecta `App`, que
+  es quien tiene el `ToastCenter`); la franja de "no disponible" comparte la fila 1 de la nota con el prompt de la
+  piel bash (van en un `StackPanel`); `ReloadFromRepository` solo actúa si la ventana no tiene cambios sin guardar.
+- **Verificación**: sonda sin ratón (24 comprobaciones: abrir dos archivos, escribir y comprobar que el resto del
+  archivo queda byte a byte, recarga en ≤ 5 s, conflicto con el archivo intacto, carpeta renombrada y devuelta,
+  renombrado de archivo, archivar y restaurar, "ocultar tareas hechas" que poda una nota normal y no la vinculada,
+  Proteger desactivado) en verde. Pendiente de pasar con el usuario: sonda de arrastrar (mueve el ratón) y smoke test.
+- **Pendiente (menores)**: el tooltip de Proteger desactivado en el menú de la pestaña del dock no está
+  comprobado con sonda; la marca de la pestaña se superpone con títulos muy largos (el título se recorta con
+  elipsis y puede pasar bajo el icono).
