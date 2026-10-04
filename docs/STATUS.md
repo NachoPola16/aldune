@@ -4291,3 +4291,14 @@ Publicado como **1.6.1** con todo lo de esta sección.
   de Windows siguen el de Windows) **ni evento "error"**; los sonidos no viajan en exportar/importar (rutas de este equipo).
 - **Windows ARM64**: el release añade `aldune-portable-win-arm64.zip` (sin instalador, sin firmar, `continue-on-error`).
   Compila y publica; no se ha podido ejecutar en un equipo ARM.
+
+## Unificación de Ajustes y escala tipográfica (2026-10-04, sin publicar)
+
+- **Interruptores en Ajustes**: los sí/no (arranque, atajos, sonidos, posiciones, tareas, vista previa, pantalla completa,
+  gestos, sync, actualizaciones…) son interruptores a la derecha, estilo Configuración de Windows 11
+  (`SettingsSwitchStyle`, sigue siendo un `CheckBox`: el código de detrás no cambió). Regla: **interruptor para sí/no,
+  tarjeta para elegir una opción entre varias** (monitor, borde, aspecto, idioma). Se quitó la sangría de 27 px bajo cada
+  casilla y las pistas dejan 56 px a la derecha para no pasar por debajo del interruptor.
+- **Escala tipográfica del chrome**: cuatro claves en `App.xaml` (`AlduneTextSmall` 11, `Body` 13, `Title` 15, `Heading` 17) usadas
+  por Ajustes, Gestionar notas y los diálogos. Los 12 pasaron a 11 (pistas) o 13 (etiquetas), el 12,5 del aviso a 11, el 14 de
+  títulos de aviso/conflictos a 13 y el 19 a 17. Quedan fuera las notas, el dock y los glifos de icono (9, 10, 12, 14, 20).

@@ -19,11 +19,11 @@
     <Border BorderBrush="{DynamicResource AlduneBorderSubtleBrush}" BorderThickness="1" Padding="20,18,20,16">
         <StackPanel>
             <TextBlock Text="{x:Static res:Strings.ConfigImportTitle}"
-                       Foreground="{DynamicResource AlduneTextStrongBrush}" FontSize="15" FontWeight="SemiBold" />
+                       Foreground="{DynamicResource AlduneTextStrongBrush}" FontSize="{StaticResource AlduneTextTitle}" FontWeight="SemiBold" />
             <TextBlock x:Name="FromVersionText"
-                       Foreground="{DynamicResource AlduneHintBrush}" FontSize="11" Margin="0,4,0,0" />
+                       Foreground="{DynamicResource AlduneHintBrush}" FontSize="{StaticResource AlduneTextSmall}" Margin="0,4,0,0" />
             <TextBlock x:Name="SummaryText"
-                       Foreground="{DynamicResource AlduneTextSoftBrush}" FontSize="12" TextWrapping="Wrap"
+                       Foreground="{DynamicResource AlduneTextSoftBrush}" FontSize="{StaticResource AlduneTextSmall}" TextWrapping="Wrap"
                        LineHeight="18" Margin="0,12,0,0" />
 
             <!-- Una fila por cambio, con tope de alto: un archivo con todos los ajustes cambiados no
@@ -34,10 +34,10 @@
             </ScrollViewer>
 
             <TextBlock x:Name="RestartText" Text="{x:Static res:Strings.ConfigImportRestartForLanguage}"
-                       Foreground="{DynamicResource AlduneAttentionBrush}" FontSize="11" TextWrapping="Wrap"
+                       Foreground="{DynamicResource AlduneAttentionBrush}" FontSize="{StaticResource AlduneTextSmall}" TextWrapping="Wrap"
                        Margin="0,12,0,0" Visibility="Collapsed" />
             <TextBlock x:Name="BackupText" Text="{x:Static res:Strings.ConfigImportBackupNote}"
-                       Foreground="{DynamicResource AlduneHintBrush}" FontSize="11" TextWrapping="Wrap"
+                       Foreground="{DynamicResource AlduneHintBrush}" FontSize="{StaticResource AlduneTextSmall}" TextWrapping="Wrap"
                        Margin="0,8,0,0" />
 
             <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,18,0,0">

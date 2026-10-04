@@ -60,7 +60,7 @@ public partial class ConfigImportWindow : Window
     {
         var name = new TextBlock
         {
-            Text = change.Name, FontSize = 12, FontWeight = FontWeights.SemiBold,
+            Text = change.Name, FontSize = 13, FontWeight = FontWeights.SemiBold,
         };
         name.SetResourceReference(TextBlock.ForegroundProperty, "AlduneTextBrush");
 

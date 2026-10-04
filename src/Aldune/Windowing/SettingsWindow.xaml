@@ -17,33 +17,42 @@
         <WindowChrome CaptionHeight="34" ResizeBorderThickness="6" GlassFrameThickness="-1" CornerRadius="0" />
     </WindowChrome.WindowChrome>
     <Window.Resources>
-        <!-- Misma casilla que el gestor: hereda Foreground, asi que una sola plantilla vale para
-             fondo oscuro y para filas de color. -->
-        <Style x:Key="AppCheckBoxStyle" TargetType="CheckBox">
+        <!-- Interruptor al estilo de Configuración de Windows 11: la etiqueta a la izquierda y el
+             interruptor a la derecha, para los sí/no. Las tarjetas se quedan para elegir una opción
+             entre varias (monitor, borde, aspecto, idioma). Sigue siendo un CheckBox: el código de
+             detrás lee IsChecked y Click igual que antes. Foreground pinta el interruptor encendido y
+             Background el pomo, como hacía la casilla. -->
+        <Style x:Key="SettingsSwitchStyle" TargetType="CheckBox">
             <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="FocusVisualStyle" Value="{x:Null}" />
+            <Setter Property="HorizontalAlignment" Value="Stretch" />
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="CheckBox">
-                        <StackPanel Orientation="Horizontal" Background="Transparent">
-                            <Border x:Name="Box" Width="17" Height="17" CornerRadius="{DynamicResource AlduneRadius4}"
-                                    BorderBrush="{TemplateBinding Foreground}"
-                                    BorderThickness="1.5"
-                                    Background="Transparent"
-                                    VerticalAlignment="Center">
-                                <TextBlock x:Name="Tick" Text="&#x2713;" FontSize="12" FontWeight="Bold"
-                                           Foreground="{TemplateBinding Background}"
-                                           HorizontalAlignment="Center" VerticalAlignment="Center"
-                                           Visibility="Collapsed" />
+                        <Grid Background="Transparent">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+                            <ContentPresenter VerticalAlignment="Center" Margin="0,0,16,0" />
+                            <Border x:Name="Track" Grid.Column="1" Width="38" Height="20" CornerRadius="10"
+                                    BorderBrush="{TemplateBinding Foreground}" BorderThickness="1.5"
+                                    Background="Transparent" VerticalAlignment="Center">
+                                <Ellipse x:Name="Knob" Width="10" Height="10" Margin="4,0"
+                                         Fill="{TemplateBinding Foreground}" HorizontalAlignment="Left" />
                             </Border>
-                            <ContentPresenter Margin="10,0,0,0" VerticalAlignment="Center" />
-                        </StackPanel>
+                        </Grid>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsChecked" Value="True">
-                                <Setter TargetName="Box" Property="Background" Value="{Binding Foreground, RelativeSource={RelativeSource TemplatedParent}}" />
-                                <Setter TargetName="Tick" Property="Visibility" Value="Visible" />
+                                <Setter TargetName="Track" Property="Background" Value="{Binding Foreground, RelativeSource={RelativeSource TemplatedParent}}" />
+                                <Setter TargetName="Knob" Property="Fill" Value="{Binding Background, RelativeSource={RelativeSource TemplatedParent}}" />
+                                <Setter TargetName="Knob" Property="HorizontalAlignment" Value="Right" />
                             </Trigger>
                             <Trigger Property="IsMouseOver" Value="True">
-                                <Setter TargetName="Box" Property="BorderThickness" Value="2" />
+                                <Setter TargetName="Track" Property="BorderThickness" Value="2" />
+                            </Trigger>
+                            <Trigger Property="IsEnabled" Value="False">
+                                <Setter Property="Opacity" Value="0.45" />
                             </Trigger>
                         </ControlTemplate.Triggers>
                     </ControlTemplate>
@@ -263,7 +272,7 @@
                             WindowChrome.IsHitTestVisibleInChrome="True"
                             Style="{StaticResource CloseButtonStyle}">
                         <TextBlock x:Name="MaximizeGlyph" Text="&#xE922;"
-                                   FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" FontSize="11" />
+                                   FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" FontSize="{StaticResource AlduneTextSmall}" />
                     </Button>
                     <Button Content="&#x2715;" Width="28" Height="28"
                             ToolTip="{x:Static res:Strings.CloseTooltip}"
@@ -318,7 +327,7 @@
                           VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
                 <Grid Margin="28,0,28,24">
                 <StackPanel x:Name="GeneralPage" Visibility="Collapsed">
-                    <TextBlock Text="{x:Static res:Strings.SettingsPageGeneral}" Foreground="{DynamicResource AlduneTextStrongBrush}" FontSize="15" FontWeight="SemiBold" Margin="0,0,0,16" />
+                    <TextBlock Text="{x:Static res:Strings.SettingsPageGeneral}" Foreground="{DynamicResource AlduneTextStrongBrush}" FontSize="{StaticResource AlduneTextTitle}" FontWeight="SemiBold" Margin="0,0,0,16" />
                     <Border x:Name="InterfaceModePanel" Margin="0,0,0,0"
                             Background="{DynamicResource AlduneSurfaceBrush}" CornerRadius="{DynamicResource AlduneRadius8}" Padding="12">
                         <!-- Columnas, no un margen fijo: el botón mide distinto en cada idioma
@@ -330,9 +339,9 @@
                             </Grid.ColumnDefinitions>
                             <StackPanel Margin="0,0,12,0">
                                 <TextBlock Text="{x:Static res:Strings.InterfaceModeSectionTitle}"
-                                           Foreground="{DynamicResource AlduneTextBrush}" FontSize="13" FontWeight="SemiBold" />
+                                           Foreground="{DynamicResource AlduneTextBrush}" FontSize="{StaticResource AlduneTextBody}" FontWeight="SemiBold" />
                                 <TextBlock Text="{x:Static res:Strings.InterfaceModeHint}"
-                                           Foreground="{DynamicResource AlduneMutedTextBrush}" FontSize="11" TextWrapping="Wrap" Margin="0,4,0,0" />
+                                           Foreground="{DynamicResource AlduneMutedTextBrush}" FontSize="{StaticResource AlduneTextSmall}" TextWrapping="Wrap" Margin="0,4,0,0" />
                             </StackPanel>
                             <Button x:Name="InterfaceModeButton" Grid.Column="1"
                                     HorizontalAlignment="Right" VerticalAlignment="Center"
@@ -343,21 +352,21 @@
                     <StackPanel Margin="0,20,0,0">
                         <CheckBox x:Name="StartupCheck"
                                   Content="{x:Static res:Strings.StartupCheckbox}"
-                                  Foreground="{DynamicResource AlduneTextBrush}" Background="{DynamicResource AlduneGroundBrush}" FontSize="13"
-                                  Style="{StaticResource AppCheckBoxStyle}"
+                                  Foreground="{DynamicResource AlduneTextBrush}" Background="{DynamicResource AlduneGroundBrush}" FontSize="{StaticResource AlduneTextBody}"
+                                  Style="{StaticResource SettingsSwitchStyle}"
                                   Click="OnStartupToggled" />
                         <TextBlock Text="{x:Static res:Strings.StartupHint}"
-                                   Foreground="{DynamicResource AlduneHintBrush}" FontSize="11" TextWrapping="Wrap" Margin="27,6,0,0" />
+                                   Foreground="{DynamicResource AlduneHintBrush}" FontSize="{StaticResource AlduneTextSmall}" TextWrapping="Wrap" Margin="0,6,56,0" />
                     </StackPanel>
                     <Border Background="{DynamicResource AlduneRaisedBrush}" Height="1" Margin="0,20,0,0" />
                     <StackPanel Margin="0,20,0,0">
                         <CheckBox x:Name="HotkeyCheck"
                                   Content="{x:Static res:Strings.HotkeyCheckbox}"
-                                  Foreground="{DynamicResource AlduneTextBrush}" Background="{DynamicResource AlduneGroundBrush}" FontSize="13"
-                                  Style="{StaticResource AppCheckBoxStyle}"
+                                  Foreground="{DynamicResource AlduneTextBrush}" Background="{DynamicResource AlduneGroundBrush}" FontSize="{StaticResource AlduneTextBody}"
+                                  Style="{StaticResource SettingsSwitchStyle}"
                                   Click="OnHotkeyToggled" />
 
-                        <StackPanel Orientation="Horizontal" Margin="27,10,0,0">
+                        <StackPanel Orientation="Horizontal" Margin="0,10,0,0">
                             <!-- Un boton que captura la siguiente combinacion, no una lista de teclas:
                                  escoger modificador y tecla en dos desplegables obliga a traducir
                                  mentalmente lo que uno ya sabe pulsar. -->
@@ -370,16 +379,16 @@
                         </StackPanel>
 
                         <TextBlock x:Name="HotkeyHint"
-                                   Foreground="{DynamicResource AlduneHintBrush}" FontSize="11" TextWrapping="Wrap" Margin="27,10,0,0" />
+                                   Foreground="{DynamicResource AlduneHintBrush}" FontSize="{StaticResource AlduneTextSmall}" TextWrapping="Wrap" Margin="0,10,56,0" />
                     </StackPanel>
                     <StackPanel Margin="0,20,0,0">
                         <CheckBox x:Name="RecentHotkeyCheck"
                                   Content="{x:Static res:Strings.RecentNoteHotkeyCheckbox}"
-                                  Foreground="{DynamicResource AlduneTextBrush}" Background="{DynamicResource AlduneGroundBrush}" FontSize="13"
-                                  Style="{StaticResource AppCheckBoxStyle}"
+                                  Foreground="{DynamicResource AlduneTextBrush}" Background="{DynamicResource AlduneGroundBrush}" FontSize="{StaticResource AlduneTextBody}"
+                                  Style="{StaticResource SettingsSwitchStyle}"
                                   Click="OnRecentHotkeyToggled" />
 
-                        <StackPanel Orientation="Horizontal" Margin="27,10,0,0">
+                        <StackPanel Orientation="Horizontal" Margin="0,10,0,0">
                             <Button x:Name="RecentHotkeyButton" Click="OnRecordRecentHotkeyClick"
                                     MinWidth="150" Padding="12,7"
                                     Style="{StaticResource RecordButtonStyle}" />
@@ -389,52 +398,52 @@
                         </StackPanel>
 
                         <TextBlock x:Name="RecentHotkeyHint"
-                                   Foreground="{DynamicResource AlduneHintBrush}" FontSize="11" TextWrapping="Wrap" Margin="27,10,0,0" />
+                                   Foreground="{DynamicResource AlduneHintBrush}" FontSize="{StaticResource AlduneTextSmall}" TextWrapping="Wrap" Margin="0,10,56,0" />
                     </StackPanel>
                     <Border Background="{DynamicResource AlduneRaisedBrush}" Height="1" Margin="0,20,0,0" />
                     <StackPanel Margin="0,20,0,0">
                         <TextBlock Text="{x:Static res:Strings.AppearanceSectionTitle}"
-                                   Foreground="{DynamicResource AlduneTextBrush}" FontSize="13" FontWeight="SemiBold" />
+                                   Foreground="{DynamicResource AlduneTextBrush}" FontSize="{StaticResource AlduneTextBody}" FontWeight="SemiBold" />
                         <TextBlock Text="{x:Static res:Strings.AppearanceSectionHint}"
-                                   Foreground="{DynamicResource AlduneHintBrush}" FontSize="11" TextWrapping="Wrap" Margin="0,4,0,10" />
+                                   Foreground="{DynamicResource AlduneHintBrush}" FontSize="{StaticResource AlduneTextSmall}" TextWrapping="Wrap" Margin="0,4,0,10" />
                         <StackPanel x:Name="AppearanceListContainer" />
                         <!-- Colores del aspecto elegido (solo los retro tienen): cada hueco con su muestra,
                              su valor, muestras de un clic y "Elegir color…"; paletas de bash; restablecer. -->
-                        <StackPanel x:Name="AspectColorsContainer" Margin="27,8,0,0" />
+                        <StackPanel x:Name="AspectColorsContainer" Margin="0,8,0,0" />
                     </StackPanel>
                     <StackPanel Margin="0,14,0,0">
                         <CheckBox x:Name="SquareCornersCheck"
                                   Content="{x:Static res:Strings.AppearanceSquareCorners}"
-                                  Foreground="{DynamicResource AlduneTextBrush}" Background="{DynamicResource AlduneGroundBrush}" FontSize="13"
-                                  Style="{StaticResource AppCheckBoxStyle}" Margin="0,0,0,10"
+                                  Foreground="{DynamicResource AlduneTextBrush}" Background="{DynamicResource AlduneGroundBrush}" FontSize="{StaticResource AlduneTextBody}"
+                                  Style="{StaticResource SettingsSwitchStyle}" Margin="0,0,0,10"
                                   Click="OnSquareCornersToggled" />
                         <CheckBox x:Name="SyncSignalCheck"
                                   Content="{x:Static res:Strings.AppearanceSyncSignal}"
-                                  Foreground="{DynamicResource AlduneTextBrush}" Background="{DynamicResource AlduneGroundBrush}" FontSize="13"
-                                  Style="{StaticResource AppCheckBoxStyle}" Margin="0,0,0,10"
+                                  Foreground="{DynamicResource AlduneTextBrush}" Background="{DynamicResource AlduneGroundBrush}" FontSize="{StaticResource AlduneTextBody}"
+                                  Style="{StaticResource SettingsSwitchStyle}" Margin="0,0,0,10"
                                   Click="OnSyncSignalToggled" />
                         <CheckBox x:Name="UniformColorCheck"
                                   Content="{x:Static res:Strings.AppearanceUniformColor}"
-                                  Foreground="{DynamicResource AlduneTextBrush}" Background="{DynamicResource AlduneGroundBrush}" FontSize="13"
-                                  Style="{StaticResource AppCheckBoxStyle}"
+                                  Foreground="{DynamicResource AlduneTextBrush}" Background="{DynamicResource AlduneGroundBrush}" FontSize="{StaticResource AlduneTextBody}"
+                                  Style="{StaticResource SettingsSwitchStyle}"
                                   Click="OnUniformColorToggled" />
-                        <StackPanel Orientation="Horizontal" Margin="27,8,0,0">
+                        <StackPanel Orientation="Horizontal" Margin="0,8,0,0">
                             <Border x:Name="UniformColorSwatch" Width="22" Height="16" VerticalAlignment="Center"
                                     BorderBrush="{DynamicResource AlduneBorderBrush}" BorderThickness="1" />
                             <Button x:Name="UniformColorButton" Content="{x:Static res:Strings.AppearanceUniformColorPick}"
                                     Click="OnPickUniformColorClick" Margin="8,0,0,0" Padding="12,7"
                                     Style="{StaticResource RecordButtonStyle}" />
                         </StackPanel>
-                        <StackPanel x:Name="UniformSwatches" Margin="27,8,0,0" />
+                        <StackPanel x:Name="UniformSwatches" Margin="0,8,0,0" />
                         <TextBlock Text="{x:Static res:Strings.AppearanceUniformColorHint}"
-                                   Foreground="{DynamicResource AlduneHintBrush}" FontSize="11" TextWrapping="Wrap" Margin="27,6,0,0" />
+                                   Foreground="{DynamicResource AlduneHintBrush}" FontSize="{StaticResource AlduneTextSmall}" TextWrapping="Wrap" Margin="0,6,56,0" />
                     </StackPanel>
                     <Border Background="{DynamicResource AlduneRaisedBrush}" Height="1" Margin="0,20,0,0" />
                     <StackPanel Margin="0,20,0,0">
                         <TextBlock Text="{x:Static res:Strings.LanguageSectionTitle}"
-                                   Foreground="{DynamicResource AlduneTextBrush}" FontSize="13" FontWeight="SemiBold" />
+                                   Foreground="{DynamicResource AlduneTextBrush}" FontSize="{StaticResource AlduneTextBody}" FontWeight="SemiBold" />
                         <TextBlock Text="{x:Static res:Strings.LanguageSectionHint}"
-                                   Foreground="{DynamicResource AlduneHintBrush}" FontSize="11" TextWrapping="Wrap" Margin="0,4,0,10" />
+                                   Foreground="{DynamicResource AlduneHintBrush}" FontSize="{StaticResource AlduneTextSmall}" TextWrapping="Wrap" Margin="0,4,0,10" />
 
                         <StackPanel x:Name="LanguageListContainer" />
                     </StackPanel>
@@ -442,53 +451,53 @@
                     <StackPanel Margin="0,20,0,0">
                         <CheckBox x:Name="SoundsEnabledCheck"
                                   Content="{x:Static res:Strings.SoundsEnabledCheckbox}"
-                                  Foreground="{DynamicResource AlduneTextBrush}" Background="{DynamicResource AlduneGroundBrush}" FontSize="13"
-                                  Style="{StaticResource AppCheckBoxStyle}"
+                                  Foreground="{DynamicResource AlduneTextBrush}" Background="{DynamicResource AlduneGroundBrush}" FontSize="{StaticResource AlduneTextBody}"
+                                  Style="{StaticResource SettingsSwitchStyle}"
                                   Click="OnSoundsEnabledToggled" />
                         <TextBlock Text="{x:Static res:Strings.SoundsHint}"
-                                   Foreground="{DynamicResource AlduneHintBrush}" FontSize="11" TextWrapping="Wrap" Margin="27,6,0,0" />
+                                   Foreground="{DynamicResource AlduneHintBrush}" FontSize="{StaticResource AlduneTextSmall}" TextWrapping="Wrap" Margin="0,6,56,0" />
                         <!-- Una fila por evento (la rellena BuildSoundRows): sonido propio o ninguno, con "Probar". -->
-                        <StackPanel x:Name="SoundRowsPanel" Margin="27,12,0,0" />
+                        <StackPanel x:Name="SoundRowsPanel" Margin="0,12,0,0" />
                     </StackPanel>
                 </StackPanel>
                 <StackPanel x:Name="NotesPage" Visibility="Collapsed">
-                    <TextBlock Text="{x:Static res:Strings.SettingsPageNotes}" Foreground="{DynamicResource AlduneTextStrongBrush}" FontSize="15" FontWeight="SemiBold" Margin="0,0,0,16" />
+                    <TextBlock Text="{x:Static res:Strings.SettingsPageNotes}" Foreground="{DynamicResource AlduneTextStrongBrush}" FontSize="{StaticResource AlduneTextTitle}" FontWeight="SemiBold" Margin="0,0,0,16" />
                     <StackPanel>
                         <CheckBox x:Name="RememberPositionsCheck"
                                   Content="{x:Static res:Strings.RememberPositionsCheckbox}"
-                                  Foreground="{DynamicResource AlduneTextBrush}" Background="{DynamicResource AlduneGroundBrush}" FontSize="13"
-                                  Style="{StaticResource AppCheckBoxStyle}"
+                                  Foreground="{DynamicResource AlduneTextBrush}" Background="{DynamicResource AlduneGroundBrush}" FontSize="{StaticResource AlduneTextBody}"
+                                  Style="{StaticResource SettingsSwitchStyle}"
                                   Click="OnRememberPositionsToggled" />
                         <TextBlock Text="{x:Static res:Strings.RememberPositionsHint}"
-                                   Foreground="{DynamicResource AlduneHintBrush}" FontSize="11" TextWrapping="Wrap" Margin="27,6,0,0" />
+                                   Foreground="{DynamicResource AlduneHintBrush}" FontSize="{StaticResource AlduneTextSmall}" TextWrapping="Wrap" Margin="0,6,56,0" />
                     </StackPanel>
                     <Border Background="{DynamicResource AlduneRaisedBrush}" Height="1" Margin="0,20,0,0" />
                     <StackPanel Margin="0,20,0,0">
                         <CheckBox x:Name="MoveCompletedTasksCheck"
                                   Content="{x:Static res:Strings.MoveCompletedTasksCheckbox}"
-                                  Foreground="{DynamicResource AlduneTextBrush}" Background="{DynamicResource AlduneGroundBrush}" FontSize="13"
-                                  Style="{StaticResource AppCheckBoxStyle}"
+                                  Foreground="{DynamicResource AlduneTextBrush}" Background="{DynamicResource AlduneGroundBrush}" FontSize="{StaticResource AlduneTextBody}"
+                                  Style="{StaticResource SettingsSwitchStyle}"
                                   Click="OnMoveCompletedTasksToggled" />
                         <TextBlock Text="{x:Static res:Strings.MoveCompletedTasksHint}"
-                                   Foreground="{DynamicResource AlduneHintBrush}" FontSize="11" TextWrapping="Wrap" Margin="27,6,0,16" />
+                                   Foreground="{DynamicResource AlduneHintBrush}" FontSize="{StaticResource AlduneTextSmall}" TextWrapping="Wrap" Margin="0,6,56,16" />
 
                         <CheckBox x:Name="AutoHideTasksCheck"
                                   Content="{x:Static res:Strings.AutoHideCompletedTasksCheckbox}"
-                                  Foreground="{DynamicResource AlduneTextBrush}" Background="{DynamicResource AlduneGroundBrush}" FontSize="13"
-                                  Style="{StaticResource AppCheckBoxStyle}"
+                                  Foreground="{DynamicResource AlduneTextBrush}" Background="{DynamicResource AlduneGroundBrush}" FontSize="{StaticResource AlduneTextBody}"
+                                  Style="{StaticResource SettingsSwitchStyle}"
                                   Click="OnAutoHideTasksToggled" />
                         <TextBlock Text="{x:Static res:Strings.AutoHideCompletedTasksHint}"
-                                   Foreground="{DynamicResource AlduneHintBrush}" FontSize="11" TextWrapping="Wrap" Margin="27,6,0,0" />
+                                   Foreground="{DynamicResource AlduneHintBrush}" FontSize="{StaticResource AlduneTextSmall}" TextWrapping="Wrap" Margin="0,6,56,0" />
 
-                        <StackPanel x:Name="AutoHideTasksDelayPanel" Orientation="Horizontal" Margin="27,10,0,0">
+                        <StackPanel x:Name="AutoHideTasksDelayPanel" Orientation="Horizontal" Margin="0,10,0,0">
                             <TextBlock Text="{x:Static res:Strings.AutoHideCompletedTasksDelayLabel}"
-                                       Foreground="{DynamicResource AlduneTextBrush}" FontSize="13" VerticalAlignment="Center" Margin="0,0,8,0" />
+                                       Foreground="{DynamicResource AlduneTextBrush}" FontSize="{StaticResource AlduneTextBody}" VerticalAlignment="Center" Margin="0,0,8,0" />
                             <!-- Numero + unidad, no un desplegable fijo de "1 dia/1 semana": el usuario
                                  pidio poder elegir cualquier plazo, no solo unos pocos preajustados. -->
                             <Border Background="{DynamicResource AlduneSurfaceBrush}" CornerRadius="{DynamicResource AlduneRadius6}" VerticalAlignment="Center">
                                 <TextBox x:Name="AutoHideTasksDelayValueBox"
                                          Background="Transparent" Foreground="{DynamicResource AlduneTextBrush}" CaretBrush="{DynamicResource AlduneTextBrush}"
-                                         BorderThickness="0" FontSize="13" Width="30" MaxLength="3"
+                                         BorderThickness="0" FontSize="{StaticResource AlduneTextBody}" Width="30" MaxLength="3"
                                          TextAlignment="Center" Padding="6,6"
                                          PreviewTextInput="OnDelayValuePreviewTextInput"
                                          TextChanged="OnDelayValueChanged" />
@@ -504,26 +513,26 @@
                          así que pasa a ser elegible aquí, igual que el plazo de arriba. -->
                     <StackPanel Margin="0,20,0,0">
                         <TextBlock Text="{x:Static res:Strings.TrashRetentionTitle}"
-                                   Foreground="{DynamicResource AlduneTextBrush}" FontSize="13" FontWeight="SemiBold" />
+                                   Foreground="{DynamicResource AlduneTextBrush}" FontSize="{StaticResource AlduneTextBody}" FontWeight="SemiBold" />
                         <TextBlock Text="{x:Static res:Strings.TrashRetentionHint}"
-                                   Foreground="{DynamicResource AlduneHintBrush}" FontSize="11" TextWrapping="Wrap" Margin="0,4,0,10" />
+                                   Foreground="{DynamicResource AlduneHintBrush}" FontSize="{StaticResource AlduneTextSmall}" TextWrapping="Wrap" Margin="0,4,0,10" />
 
                         <StackPanel Orientation="Horizontal">
                             <Border Background="{DynamicResource AlduneSurfaceBrush}" CornerRadius="{DynamicResource AlduneRadius6}" VerticalAlignment="Center">
                                 <TextBox x:Name="TrashRetentionValueBox"
                                          Background="Transparent" Foreground="{DynamicResource AlduneTextBrush}" CaretBrush="{DynamicResource AlduneTextBrush}"
-                                         BorderThickness="0" FontSize="13" Width="30" MaxLength="3"
+                                         BorderThickness="0" FontSize="{StaticResource AlduneTextBody}" Width="30" MaxLength="3"
                                          TextAlignment="Center" Padding="6,6"
                                          PreviewTextInput="OnTrashRetentionPreviewTextInput"
                                          TextChanged="OnTrashRetentionChanged" />
                             </Border>
                             <TextBlock Text="{x:Static res:Strings.TrashRetentionDaysUnit}"
-                                       Foreground="{DynamicResource AlduneTextBrush}" FontSize="13" VerticalAlignment="Center" Margin="8,0,0,0" />
+                                       Foreground="{DynamicResource AlduneTextBrush}" FontSize="{StaticResource AlduneTextBody}" VerticalAlignment="Center" Margin="8,0,0,0" />
                         </StackPanel>
                     </StackPanel>
                 </StackPanel>
                 <StackPanel x:Name="DockPage" Visibility="Collapsed">
-                    <TextBlock Text="{x:Static res:Strings.SettingsPageDock}" Foreground="{DynamicResource AlduneTextStrongBrush}" FontSize="15" FontWeight="SemiBold" Margin="0,0,0,16" />
+                    <TextBlock Text="{x:Static res:Strings.SettingsPageDock}" Foreground="{DynamicResource AlduneTextStrongBrush}" FontSize="{StaticResource AlduneTextTitle}" FontWeight="SemiBold" Margin="0,0,0,16" />
                     <!-- Pantalla y borde lado a lado: son dos listas cortas de tarjetas y una encima de
                          otra obligaban a desplazarse para llegar al resto de la página. -->
                     <Grid>
@@ -534,17 +543,17 @@
                         </Grid.ColumnDefinitions>
                         <StackPanel>
                             <TextBlock Text="{x:Static res:Strings.MonitorSectionTitle}"
-                                       Foreground="{DynamicResource AlduneTextBrush}" FontSize="13" FontWeight="SemiBold" />
+                                       Foreground="{DynamicResource AlduneTextBrush}" FontSize="{StaticResource AlduneTextBody}" FontWeight="SemiBold" />
                             <TextBlock Text="{x:Static res:Strings.MonitorSectionHint}"
-                                       Foreground="{DynamicResource AlduneHintBrush}" FontSize="11" TextWrapping="Wrap" Margin="0,4,0,10" />
+                                       Foreground="{DynamicResource AlduneHintBrush}" FontSize="{StaticResource AlduneTextSmall}" TextWrapping="Wrap" Margin="0,4,0,10" />
 
                             <StackPanel x:Name="MonitorListContainer" />
                         </StackPanel>
                         <StackPanel Grid.Column="2">
                             <TextBlock Text="{x:Static res:Strings.EdgeSectionTitle}"
-                                       Foreground="{DynamicResource AlduneTextBrush}" FontSize="13" FontWeight="SemiBold" />
+                                       Foreground="{DynamicResource AlduneTextBrush}" FontSize="{StaticResource AlduneTextBody}" FontWeight="SemiBold" />
                             <TextBlock Text="{x:Static res:Strings.EdgeSectionHint}"
-                                       Foreground="{DynamicResource AlduneHintBrush}" FontSize="11" TextWrapping="Wrap" Margin="0,4,0,10" />
+                                       Foreground="{DynamicResource AlduneHintBrush}" FontSize="{StaticResource AlduneTextSmall}" TextWrapping="Wrap" Margin="0,4,0,10" />
 
                             <StackPanel x:Name="EdgeListContainer" />
                         </StackPanel>
@@ -553,20 +562,20 @@
                     <StackPanel Margin="0,20,0,0">
                         <CheckBox x:Name="ShowNotePreviewCheck"
                                   Content="{x:Static res:Strings.ShowNotePreviewCheckbox}"
-                                  Foreground="{DynamicResource AlduneTextBrush}" Background="{DynamicResource AlduneGroundBrush}" FontSize="13"
-                                  Style="{StaticResource AppCheckBoxStyle}"
+                                  Foreground="{DynamicResource AlduneTextBrush}" Background="{DynamicResource AlduneGroundBrush}" FontSize="{StaticResource AlduneTextBody}"
+                                  Style="{StaticResource SettingsSwitchStyle}"
                                   Click="OnShowNotePreviewToggled" />
                         <TextBlock Text="{x:Static res:Strings.ShowNotePreviewHint}"
-                                   Foreground="{DynamicResource AlduneHintBrush}" FontSize="11" TextWrapping="Wrap" Margin="27,6,0,0" />
+                                   Foreground="{DynamicResource AlduneHintBrush}" FontSize="{StaticResource AlduneTextSmall}" TextWrapping="Wrap" Margin="0,6,56,0" />
                     </StackPanel>
                     <StackPanel Margin="0,16,0,0">
                         <CheckBox x:Name="ReminderIncludesTasksCheck"
                                   Content="{x:Static res:Strings.ReminderIncludeTasksCheckbox}"
-                                  Foreground="{DynamicResource AlduneTextBrush}" Background="{DynamicResource AlduneGroundBrush}" FontSize="13"
-                                  Style="{StaticResource AppCheckBoxStyle}"
+                                  Foreground="{DynamicResource AlduneTextBrush}" Background="{DynamicResource AlduneGroundBrush}" FontSize="{StaticResource AlduneTextBody}"
+                                  Style="{StaticResource SettingsSwitchStyle}"
                                   Click="OnReminderIncludesTasksToggled" />
                         <TextBlock Text="{x:Static res:Strings.ReminderIncludeTasksHint}"
-                                   Foreground="{DynamicResource AlduneHintBrush}" FontSize="11" TextWrapping="Wrap" Margin="27,6,0,0" />
+                                   Foreground="{DynamicResource AlduneHintBrush}" FontSize="{StaticResource AlduneTextSmall}" TextWrapping="Wrap" Margin="0,6,56,0" />
                     </StackPanel>
                     <!-- Lo que el modo simplificado esconde de esta página. -->
                     <StackPanel x:Name="DockAdvancedPanel">
@@ -574,40 +583,40 @@
                         <StackPanel Margin="0,20,0,0">
                             <CheckBox x:Name="HideOnFullscreenCheck"
                                       Content="{x:Static res:Strings.HideOnFullscreenCheckbox}"
-                                      Foreground="{DynamicResource AlduneTextBrush}" Background="{DynamicResource AlduneGroundBrush}" FontSize="13"
-                                      Style="{StaticResource AppCheckBoxStyle}"
+                                      Foreground="{DynamicResource AlduneTextBrush}" Background="{DynamicResource AlduneGroundBrush}" FontSize="{StaticResource AlduneTextBody}"
+                                      Style="{StaticResource SettingsSwitchStyle}"
                                       Click="OnHideOnFullscreenToggled" />
                             <TextBlock Text="{x:Static res:Strings.HideOnFullscreenHint}"
-                                       Foreground="{DynamicResource AlduneHintBrush}" FontSize="11" TextWrapping="Wrap" Margin="27,6,0,0" />
+                                       Foreground="{DynamicResource AlduneHintBrush}" FontSize="{StaticResource AlduneTextSmall}" TextWrapping="Wrap" Margin="0,6,56,0" />
                         </StackPanel>
                         <Border Background="{DynamicResource AlduneRaisedBrush}" Height="1" Margin="0,20,0,0" />
                         <StackPanel Margin="0,20,0,0">
                             <CheckBox x:Name="KeepDockOpenCheck"
                                       Content="{x:Static res:Strings.KeepDockOpenCheckbox}"
-                                      Foreground="{DynamicResource AlduneTextBrush}" Background="{DynamicResource AlduneGroundBrush}" FontSize="13"
-                                      Style="{StaticResource AppCheckBoxStyle}"
+                                      Foreground="{DynamicResource AlduneTextBrush}" Background="{DynamicResource AlduneGroundBrush}" FontSize="{StaticResource AlduneTextBody}"
+                                      Style="{StaticResource SettingsSwitchStyle}"
                                       Click="OnKeepDockOpenToggled" />
                             <TextBlock Text="{x:Static res:Strings.KeepDockOpenHint}"
-                                       Foreground="{DynamicResource AlduneHintBrush}" FontSize="11" TextWrapping="Wrap" Margin="27,6,0,0" />
+                                       Foreground="{DynamicResource AlduneHintBrush}" FontSize="{StaticResource AlduneTextSmall}" TextWrapping="Wrap" Margin="0,6,56,0" />
                         </StackPanel>
                         <StackPanel Margin="0,20,0,0">
                             <CheckBox x:Name="TrackpadGesturesCheck"
                                       Content="{x:Static res:Strings.TrackpadGesturesCheckbox}"
-                                      Foreground="{DynamicResource AlduneTextBrush}" Background="{DynamicResource AlduneGroundBrush}" FontSize="13"
-                                      Style="{StaticResource AppCheckBoxStyle}"
+                                      Foreground="{DynamicResource AlduneTextBrush}" Background="{DynamicResource AlduneGroundBrush}" FontSize="{StaticResource AlduneTextBody}"
+                                      Style="{StaticResource SettingsSwitchStyle}"
                                       Click="OnTrackpadGesturesToggled" />
                             <TextBlock x:Name="TrackpadGesturesHint"
-                                       Foreground="{DynamicResource AlduneHintBrush}" FontSize="11" TextWrapping="Wrap" Margin="27,6,0,0" />
+                                       Foreground="{DynamicResource AlduneHintBrush}" FontSize="{StaticResource AlduneTextSmall}" TextWrapping="Wrap" Margin="0,6,56,0" />
                         </StackPanel>
                     </StackPanel>
                 </StackPanel>
                 <StackPanel x:Name="ColorsPage" Visibility="Collapsed">
-                    <TextBlock Text="{x:Static res:Strings.SettingsPageColors}" Foreground="{DynamicResource AlduneTextStrongBrush}" FontSize="15" FontWeight="SemiBold" Margin="0,0,0,16" />
+                    <TextBlock Text="{x:Static res:Strings.SettingsPageColors}" Foreground="{DynamicResource AlduneTextStrongBrush}" FontSize="{StaticResource AlduneTextTitle}" FontWeight="SemiBold" Margin="0,0,0,16" />
                     <StackPanel>
                         <TextBlock Text="{x:Static res:Strings.ThemesSectionTitle}"
-                                   Foreground="{DynamicResource AlduneTextBrush}" FontSize="13" FontWeight="SemiBold" />
+                                   Foreground="{DynamicResource AlduneTextBrush}" FontSize="{StaticResource AlduneTextBody}" FontWeight="SemiBold" />
                         <TextBlock Text="{x:Static res:Strings.ThemesSectionHint}"
-                                   Foreground="{DynamicResource AlduneHintBrush}" FontSize="11" TextWrapping="Wrap" Margin="0,4,0,10" />
+                                   Foreground="{DynamicResource AlduneHintBrush}" FontSize="{StaticResource AlduneTextSmall}" TextWrapping="Wrap" Margin="0,4,0,10" />
 
                         <ComboBox x:Name="ThemeCombo" Style="{StaticResource SyncProfileComboStyle}"
                                   SelectionChanged="OnThemeSelectionChanged" />
@@ -626,11 +635,11 @@
                         </WrapPanel>
 
                         <TextBlock Text="{x:Static res:Strings.NewNoteToneLabel}"
-                                   Foreground="{DynamicResource AlduneTextBrush}" FontSize="13" Margin="0,12,0,6" />
+                                   Foreground="{DynamicResource AlduneTextBrush}" FontSize="{StaticResource AlduneTextBody}" Margin="0,12,0,6" />
                         <StackPanel x:Name="ToneListContainer" />
 
                         <TextBlock Text="{x:Static res:Strings.ColorAssignmentLabel}"
-                                   Foreground="{DynamicResource AlduneTextBrush}" FontSize="13" Margin="0,12,0,6" />
+                                   Foreground="{DynamicResource AlduneTextBrush}" FontSize="{StaticResource AlduneTextBody}" Margin="0,12,0,6" />
                         <StackPanel x:Name="AssignmentListContainer" />
                         <StackPanel x:Name="FixedColorSwatches" Margin="22,4,0,0" />
 
@@ -641,10 +650,10 @@
                     </StackPanel>
                 </StackPanel>
                 <StackPanel x:Name="SyncPage" Visibility="Collapsed">
-                    <TextBlock Text="{x:Static res:Strings.SettingsPageSync}" Foreground="{DynamicResource AlduneTextStrongBrush}" FontSize="15" FontWeight="SemiBold" Margin="0,0,0,16" />
+                    <TextBlock Text="{x:Static res:Strings.SettingsPageSync}" Foreground="{DynamicResource AlduneTextStrongBrush}" FontSize="{StaticResource AlduneTextTitle}" FontWeight="SemiBold" Margin="0,0,0,16" />
                     <StackPanel>
                         <TextBlock Text="{x:Static res:Strings.SyncSectionHint}"
-                                   Foreground="{DynamicResource AlduneHintBrush}" FontSize="11" TextWrapping="Wrap" Margin="0,4,0,10" />
+                                   Foreground="{DynamicResource AlduneHintBrush}" FontSize="{StaticResource AlduneTextSmall}" TextWrapping="Wrap" Margin="0,4,0,10" />
                         <Grid Margin="0,0,0,8">
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="Auto" />
@@ -683,12 +692,12 @@
                         </Grid>
                         <CheckBox x:Name="SyncEnabledCheck"
                                   Content="{x:Static res:Strings.SyncEnabledCheckbox}"
-                                  Foreground="{DynamicResource AlduneTextBrush}" Background="{DynamicResource AlduneGroundBrush}" FontSize="13"
-                                  Style="{StaticResource AppCheckBoxStyle}"
+                                  Foreground="{DynamicResource AlduneTextBrush}" Background="{DynamicResource AlduneGroundBrush}" FontSize="{StaticResource AlduneTextBody}"
+                                  Style="{StaticResource SettingsSwitchStyle}"
                                   Click="OnSyncEnabledToggled" />
                         <TextBlock Text="{x:Static res:Strings.SyncScopeHint}" Foreground="{DynamicResource AlduneHintBrush}"
-                                   FontSize="11" TextWrapping="Wrap" Margin="27,8,0,0" />
-                        <StackPanel Orientation="Horizontal" Margin="27,7,0,0">
+                                   FontSize="{StaticResource AlduneTextSmall}" TextWrapping="Wrap" Margin="0,8,56,0" />
+                        <StackPanel Orientation="Horizontal" Margin="0,7,0,0">
                             <RadioButton x:Name="SyncAllNotesRadio" Content="{x:Static res:Strings.SyncScopeAll}"
                                          GroupName="SyncScope" Tag="AllNotes"
                                          Style="{StaticResource DelayUnitToggleStyle}"
@@ -702,18 +711,18 @@
                                          Style="{StaticResource DelayUnitToggleStyle}"
                                          Checked="OnSyncScopeChanged" />
                         </StackPanel>
-                        <StackPanel Orientation="Horizontal" Margin="27,7,0,0">
+                        <StackPanel Orientation="Horizontal" Margin="0,7,0,0">
                             <Button x:Name="SyncChooseNotesButton" Content="{x:Static res:Strings.SyncChooseNotes}"
                                     Click="OnSyncChooseNotesClick" Padding="10,6"
                                     Style="{StaticResource RecordButtonStyle}" />
                             <TextBlock x:Name="SyncSelectionSummary" Foreground="{DynamicResource AlduneHintBrush}"
-                                       FontSize="11" VerticalAlignment="Center" Margin="10,0,0,0" />
+                                       FontSize="{StaticResource AlduneTextSmall}" VerticalAlignment="Center" Margin="10,0,0,0" />
                             <ComboBox x:Name="SyncTagBox" Width="150" Height="30" Margin="10,0,0,0"
                                       Style="{StaticResource SyncProfileComboStyle}"
                                       SelectionChanged="OnSyncTagChanged" />
                         </StackPanel>
 
-                        <StackPanel Orientation="Horizontal" Margin="27,8,0,0">
+                        <StackPanel Orientation="Horizontal" Margin="0,8,0,0">
                             <RadioButton x:Name="SyncFolderRadio" Content="{x:Static res:Strings.SyncFolderOption}"
                                          GroupName="SyncProvider" Tag="Folder"
                                          Style="{StaticResource DelayUnitToggleStyle}"
@@ -728,7 +737,7 @@
                                          Checked="OnSyncProviderChanged" />
                         </StackPanel>
 
-                        <Grid Margin="27,10,0,0">
+                        <Grid Margin="0,10,0,0">
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="Auto" />
                                 <ColumnDefinition Width="*" />
@@ -744,7 +753,7 @@
                                     Margin="8,0,0,0" Padding="10,6" Style="{StaticResource RecordButtonStyle}" />
                         </Grid>
 
-                        <Grid Margin="27,8,0,0">
+                        <Grid Margin="0,8,0,0">
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="Auto" />
                                 <ColumnDefinition Width="*" />
@@ -758,9 +767,9 @@
                         <!-- http:// hacia un servidor fuera de la red local: el token viajaría en claro.
                              Ver SyncEndpointSecurity. -->
                         <TextBlock x:Name="SyncInsecureUrlText" Text="{x:Static res:Strings.SyncInsecureUrlWarning}"
-                                   Foreground="{DynamicResource AlduneErrorTextBrush}" FontSize="11" TextWrapping="Wrap" Margin="27,4,0,0"
+                                   Foreground="{DynamicResource AlduneErrorTextBrush}" FontSize="{StaticResource AlduneTextSmall}" TextWrapping="Wrap" Margin="0,4,56,0"
                                    Visibility="Collapsed" />
-                        <Grid x:Name="SyncServerTokenGrid" Margin="27,8,0,0">
+                        <Grid x:Name="SyncServerTokenGrid" Margin="0,8,0,0">
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="Auto" />
                                 <ColumnDefinition Width="*" />
@@ -772,7 +781,7 @@
                                      Padding="7,6" LostFocus="OnSyncTokenLostFocus" />
                         </Grid>
 
-                        <Grid x:Name="SyncWebDavUsernameGrid" Margin="27,8,0,0" Visibility="Collapsed">
+                        <Grid x:Name="SyncWebDavUsernameGrid" Margin="0,8,0,0" Visibility="Collapsed">
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="Auto" />
                                 <ColumnDefinition Width="*" />
@@ -783,7 +792,7 @@
                                      Background="{DynamicResource AlduneSurfaceBrush}" Foreground="{DynamicResource AlduneTextBrush}" BorderThickness="0"
                                      Padding="7,6" LostFocus="OnSyncWebDavUsernameLostFocus" />
                         </Grid>
-                        <Grid x:Name="SyncWebDavPasswordGrid" Margin="27,8,0,0" Visibility="Collapsed">
+                        <Grid x:Name="SyncWebDavPasswordGrid" Margin="0,8,0,0" Visibility="Collapsed">
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="Auto" />
                                 <ColumnDefinition Width="*" />
@@ -795,18 +804,18 @@
                                          Padding="7,6" LostFocus="OnSyncWebDavPasswordLostFocus" />
                         </Grid>
                         <TextBlock x:Name="SyncWebDavHintText" Text="{x:Static res:Strings.SyncWebDavHint}" Foreground="{DynamicResource AlduneHintBrush}"
-                                   FontSize="11" TextWrapping="Wrap" Margin="27,4,0,0" />
+                                   FontSize="{StaticResource AlduneTextSmall}" TextWrapping="Wrap" Margin="0,4,56,0" />
 
                         <TextBlock Text="{x:Static res:Strings.SyncCodeLabel}" Foreground="{DynamicResource AlduneTextBrush}"
-                                   Margin="27,12,0,0" />
-                        <TextBox x:Name="SyncCodeBox" Margin="27,6,0,0"
+                                   Margin="0,12,0,0" />
+                        <TextBox x:Name="SyncCodeBox" Margin="0,6,0,0"
                                  Background="{DynamicResource AlduneSurfaceBrush}" Foreground="{DynamicResource AlduneTextBrush}" BorderThickness="0"
                                  Padding="7,6" />
                         <TextBlock Text="{x:Static res:Strings.SyncCodeHint}" Foreground="{DynamicResource AlduneHintBrush}"
-                                   FontSize="11" TextWrapping="Wrap" Margin="27,5,0,0" />
+                                   FontSize="{StaticResource AlduneTextSmall}" TextWrapping="Wrap" Margin="0,5,56,0" />
                         <TextBlock Text="{x:Static res:Strings.SyncShareCodeHint}" Foreground="{DynamicResource AlduneHintBrush}"
-                                   FontSize="11" TextWrapping="Wrap" Margin="27,3,0,0" />
-                        <WrapPanel Margin="27,8,0,0">
+                                   FontSize="{StaticResource AlduneTextSmall}" TextWrapping="Wrap" Margin="0,3,56,0" />
+                        <WrapPanel Margin="0,8,0,0">
                             <Button x:Name="SyncGenerateCodeButton" Content="{x:Static res:Strings.SyncGenerateCodeButton}"
                                     Click="OnSyncGenerateCodeClick" Margin="0,0,7,6" Padding="10,6"
                                     Style="{StaticResource RecordButtonStyle}" />
@@ -824,17 +833,17 @@
                                     Style="{StaticResource RecordButtonStyle}" />
                         </WrapPanel>
                         <TextBlock Text="{x:Static res:Strings.SyncRevokeAccessHint}" Foreground="{DynamicResource AlduneHintBrush}"
-                                   FontSize="11" TextWrapping="Wrap" Margin="27,5,0,0" />
-                        <TextBlock x:Name="SyncStatusText" Foreground="{DynamicResource AlduneHintBrush}" FontSize="11"
-                                   TextWrapping="Wrap" Margin="27,8,0,0" />
+                                   FontSize="{StaticResource AlduneTextSmall}" TextWrapping="Wrap" Margin="0,5,56,0" />
+                        <TextBlock x:Name="SyncStatusText" Foreground="{DynamicResource AlduneHintBrush}" FontSize="{StaticResource AlduneTextSmall}"
+                                   TextWrapping="Wrap" Margin="0,8,56,0" />
                         <CheckBox x:Name="SyncAutomaticCheck"
                                   Content="{x:Static res:Strings.SyncAutomaticCheckbox}"
-                                  Foreground="{DynamicResource AlduneTextBrush}" Background="{DynamicResource AlduneGroundBrush}" FontSize="13"
-                                  Style="{StaticResource AppCheckBoxStyle}"
+                                  Foreground="{DynamicResource AlduneTextBrush}" Background="{DynamicResource AlduneGroundBrush}" FontSize="{StaticResource AlduneTextBody}"
+                                  Style="{StaticResource SettingsSwitchStyle}"
                                   Margin="0,12,0,0" Click="OnSyncAutomaticToggled" />
                         <TextBlock Text="{x:Static res:Strings.SyncAutomaticHint}" Foreground="{DynamicResource AlduneHintBrush}"
-                                   FontSize="11" TextWrapping="Wrap" Margin="27,5,0,0" />
-                        <StackPanel Orientation="Horizontal" Margin="27,8,0,0">
+                                   FontSize="{StaticResource AlduneTextSmall}" TextWrapping="Wrap" Margin="0,5,56,0" />
+                        <StackPanel Orientation="Horizontal" Margin="0,8,0,0">
                             <TextBlock Text="{x:Static res:Strings.SyncIntervalLabel}" Foreground="{DynamicResource AlduneTextBrush}"
                                        VerticalAlignment="Center" Margin="0,0,8,0" />
                             <Border Background="{DynamicResource AlduneSurfaceBrush}" CornerRadius="{DynamicResource AlduneRadius6}">
@@ -845,10 +854,10 @@
                                          LostFocus="OnSyncIntervalLostFocus" />
                             </Border>
                         </StackPanel>
-                        <TextBlock x:Name="SyncLastSyncText" Foreground="{DynamicResource AlduneHintBrush}" FontSize="11"
-                                   Margin="27,7,0,0" />
-                        <StackPanel Orientation="Horizontal" Margin="27,8,0,0">
-                            <TextBlock x:Name="SyncConflictsText" Foreground="{DynamicResource AlduneAttentionBrush}" FontSize="11"
+                        <TextBlock x:Name="SyncLastSyncText" Foreground="{DynamicResource AlduneHintBrush}" FontSize="{StaticResource AlduneTextSmall}"
+                                   Margin="0,7,0,0" />
+                        <StackPanel Orientation="Horizontal" Margin="0,8,0,0">
+                            <TextBlock x:Name="SyncConflictsText" Foreground="{DynamicResource AlduneAttentionBrush}" FontSize="{StaticResource AlduneTextSmall}"
                                        VerticalAlignment="Center" />
                             <Button x:Name="SyncConflictsButton"
                                     Content="{x:Static res:Strings.SyncConflictsButton}"
@@ -858,16 +867,16 @@
                     </StackPanel>
                 </StackPanel>
                 <StackPanel x:Name="HelpPage" Visibility="Collapsed">
-                    <TextBlock Text="{x:Static res:Strings.SettingsPageHelp}" Foreground="{DynamicResource AlduneTextStrongBrush}" FontSize="15" FontWeight="SemiBold" Margin="0,0,0,16" />
+                    <TextBlock Text="{x:Static res:Strings.SettingsPageHelp}" Foreground="{DynamicResource AlduneTextStrongBrush}" FontSize="{StaticResource AlduneTextTitle}" FontWeight="SemiBold" Margin="0,0,0,16" />
                     <TextBlock x:Name="QuickHelpText"
-                               Foreground="{DynamicResource AlduneHintBrush}" FontSize="11" TextWrapping="Wrap" Margin="0,8,0,0" LineHeight="18" />
+                               Foreground="{DynamicResource AlduneHintBrush}" FontSize="{StaticResource AlduneTextSmall}" TextWrapping="Wrap" Margin="0,8,0,0" LineHeight="18" />
                 </StackPanel>
                 <StackPanel x:Name="AboutPage" Visibility="Collapsed">
-                    <TextBlock Text="{x:Static res:Strings.SettingsPageAbout}" Foreground="{DynamicResource AlduneTextStrongBrush}" FontSize="15" FontWeight="SemiBold" Margin="0,0,0,16" />
+                    <TextBlock Text="{x:Static res:Strings.SettingsPageAbout}" Foreground="{DynamicResource AlduneTextStrongBrush}" FontSize="{StaticResource AlduneTextTitle}" FontWeight="SemiBold" Margin="0,0,0,16" />
                     <Grid>
                         <StackPanel>
                             <TextBlock Text="{x:Static app:AppInfo.DisplayVersion}"
-                                       Foreground="{DynamicResource AlduneHintBrush}" FontSize="11" Margin="0,5,0,0" />
+                                       Foreground="{DynamicResource AlduneHintBrush}" FontSize="{StaticResource AlduneTextSmall}" Margin="0,5,0,0" />
                         </StackPanel>
                         <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center">
                             <Button Content="{x:Static res:Strings.TrayCheckForUpdates}"
@@ -889,18 +898,18 @@
                     <StackPanel Margin="0,20,0,0">
                         <CheckBox x:Name="CheckForUpdatesAutomaticallyCheck"
                                   Content="{x:Static res:Strings.CheckForUpdatesAutomaticallyCheckbox}"
-                                  Foreground="{DynamicResource AlduneTextBrush}" Background="{DynamicResource AlduneGroundBrush}" FontSize="13"
-                                  Style="{StaticResource AppCheckBoxStyle}"
+                                  Foreground="{DynamicResource AlduneTextBrush}" Background="{DynamicResource AlduneGroundBrush}" FontSize="{StaticResource AlduneTextBody}"
+                                  Style="{StaticResource SettingsSwitchStyle}"
                                   Click="OnCheckForUpdatesAutomaticallyToggled" />
                         <TextBlock Text="{x:Static res:Strings.CheckForUpdatesAutomaticallyHint}"
-                                   Foreground="{DynamicResource AlduneHintBrush}" FontSize="11" TextWrapping="Wrap" Margin="27,6,0,0" />
+                                   Foreground="{DynamicResource AlduneHintBrush}" FontSize="{StaticResource AlduneTextSmall}" TextWrapping="Wrap" Margin="0,6,56,0" />
                     </StackPanel>
                     <Border Background="{DynamicResource AlduneRaisedBrush}" Height="1" Margin="0,20,0,0" />
                     <StackPanel Margin="0,20,0,0">
                         <TextBlock Text="{x:Static res:Strings.ConfigSectionTitle}"
-                                   Foreground="{DynamicResource AlduneTextBrush}" FontSize="13" FontWeight="SemiBold" />
+                                   Foreground="{DynamicResource AlduneTextBrush}" FontSize="{StaticResource AlduneTextBody}" FontWeight="SemiBold" />
                         <TextBlock Text="{x:Static res:Strings.ConfigAboutHint}"
-                                   Foreground="{DynamicResource AlduneHintBrush}" FontSize="11" TextWrapping="Wrap" Margin="0,6,0,0" />
+                                   Foreground="{DynamicResource AlduneHintBrush}" FontSize="{StaticResource AlduneTextSmall}" TextWrapping="Wrap" Margin="0,6,0,0" />
                         <StackPanel Orientation="Horizontal" Margin="0,10,0,0">
                             <Button x:Name="ExportConfigButton" Content="{x:Static res:Strings.ConfigExportButton}"
                                     Padding="12,7" Click="OnExportConfigClick"

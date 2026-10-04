@@ -33,9 +33,9 @@
             <Grid Grid.Row="0">
                 <StackPanel>
                     <TextBlock Text="{x:Static res:Strings.CustomColorWindowTitle}"
-                               Foreground="{DynamicResource AlduneTextStrongBrush}" FontSize="17" FontWeight="SemiBold" />
+                               Foreground="{DynamicResource AlduneTextStrongBrush}" FontSize="{StaticResource AlduneTextHeading}" FontWeight="SemiBold" />
                     <TextBlock Text="{x:Static res:Strings.CustomColorWindowHint}"
-                               Foreground="{DynamicResource AlduneMutedTextBrush}" FontSize="12" Margin="0,4,0,0" />
+                               Foreground="{DynamicResource AlduneMutedTextBrush}" FontSize="{StaticResource AlduneTextSmall}" Margin="0,4,0,0" />
                 </StackPanel>
                 <Button Content="&#x2715;" Width="27" Height="27" HorizontalAlignment="Right"
                         Style="{StaticResource ColorDialogButtonStyle}" Padding="0"
@@ -45,7 +45,7 @@
 
             <StackPanel Grid.Row="1" Margin="0,16,0,0">
                 <TextBlock Text="{x:Static res:Strings.CustomColorSpectrumHint}"
-                           Foreground="{DynamicResource AlduneMutedTextBrush}" FontSize="11" Margin="0,0,0,7" />
+                           Foreground="{DynamicResource AlduneMutedTextBrush}" FontSize="{StaticResource AlduneTextSmall}" Margin="0,0,0,7" />
                 <local:ColorSpectrumControl x:Name="Spectrum" Height="150"
                                              ColorChanged="OnSpectrumChanged" />
             </StackPanel>
@@ -61,9 +61,9 @@
                             BorderBrush="#1E1A14" BorderThickness="1" VerticalAlignment="Center" />
                     <StackPanel Grid.Column="1" VerticalAlignment="Center" Margin="13,0,0,0">
                         <TextBlock x:Name="PreviewLabel" Text="{x:Static res:Strings.CustomColorPreview}"
-                                   Foreground="{DynamicResource AlduneBorderSubtleBrush}" FontSize="11" />
+                                   Foreground="{DynamicResource AlduneBorderSubtleBrush}" FontSize="{StaticResource AlduneTextSmall}" />
                         <TextBlock x:Name="PreviewHex" Foreground="#1E1A14"
-                                   FontSize="19" FontWeight="SemiBold" Margin="0,3,0,0" />
+                                   FontSize="{StaticResource AlduneTextHeading}" FontWeight="SemiBold" Margin="0,3,0,0" />
                     </StackPanel>
                 </Grid>
             </Border>
@@ -74,17 +74,17 @@
                     <ColumnDefinition Width="132" />
                 </Grid.ColumnDefinitions>
                 <TextBlock Text="{x:Static res:Strings.CustomColorHexLabel}"
-                           Foreground="{DynamicResource AlduneTextBrush}" FontSize="12" VerticalAlignment="Center" />
+                           Foreground="{DynamicResource AlduneTextBrush}" FontSize="{StaticResource AlduneTextBody}" VerticalAlignment="Center" />
                 <TextBox x:Name="HexBox" Grid.Column="1" Text="#F5E3B3"
                          Style="{StaticResource ColorTextBoxStyle}"
                          MaxLength="7" CharacterCasing="Upper"
                          TextChanged="OnHexChanged" />
             </Grid>
-            <TextBlock x:Name="HexHint" Grid.Row="4" Foreground="{DynamicResource AlduneMutedTextBrush}" FontSize="11"
+            <TextBlock x:Name="HexHint" Grid.Row="4" Foreground="{DynamicResource AlduneMutedTextBrush}" FontSize="{StaticResource AlduneTextSmall}"
                        Margin="0,5,0,12" />
 
             <TextBlock Grid.Row="5" Text="{x:Static res:Strings.CustomColorRgbLabel}"
-                       Foreground="{DynamicResource AlduneMutedTextBrush}" FontSize="11" Margin="0,0,0,5" />
+                       Foreground="{DynamicResource AlduneMutedTextBrush}" FontSize="{StaticResource AlduneTextSmall}" Margin="0,0,0,5" />
             <Grid Grid.Row="6">
                 <Grid.RowDefinitions>
                     <RowDefinition Height="27" />
@@ -117,7 +117,7 @@
             </Grid>
 
             <Grid Grid.Row="7" Margin="0,16,0,0">
-                <TextBlock x:Name="ContrastHint" Foreground="{DynamicResource AlduneMutedTextBrush}" FontSize="11"
+                <TextBlock x:Name="ContrastHint" Foreground="{DynamicResource AlduneMutedTextBrush}" FontSize="{StaticResource AlduneTextSmall}"
                            VerticalAlignment="Center" />
                 <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
                     <Button Content="{x:Static res:Strings.CustomColorCancel}"

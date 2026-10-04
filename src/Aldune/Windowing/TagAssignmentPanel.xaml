@@ -7,12 +7,12 @@
          marcarla, y abajo se puede crear una etiqueta nueva sin ir al gestor. -->
     <StackPanel Width="240">
         <TextBlock Text="{x:Static res:Strings.TagPanelTitle}" Foreground="{DynamicResource AlduneTextStrongBrush}"
-                   FontSize="13" FontWeight="SemiBold" />
+                   FontSize="{StaticResource AlduneTextBody}" FontWeight="SemiBold" />
         <TextBlock Text="{x:Static res:Strings.TagPanelHint}" Foreground="{DynamicResource AlduneMutedTextBrush}"
-                   FontSize="11" TextWrapping="Wrap" Margin="0,3,0,12" />
+                   FontSize="{StaticResource AlduneTextSmall}" TextWrapping="Wrap" Margin="0,3,0,12" />
 
         <TextBlock x:Name="EmptyText" Text="{x:Static res:Strings.TagPanelEmpty}"
-                   Foreground="{DynamicResource AlduneMutedTextBrush}" FontSize="12" TextWrapping="Wrap" Margin="0,0,0,4"
+                   Foreground="{DynamicResource AlduneMutedTextBrush}" FontSize="{StaticResource AlduneTextSmall}" TextWrapping="Wrap" Margin="0,0,0,4"
                    Visibility="Collapsed" />
         <ScrollViewer MaxHeight="220" VerticalScrollBarVisibility="Auto"
                       HorizontalScrollBarVisibility="Disabled">
@@ -31,7 +31,7 @@
                      AutomationProperties.Name="{x:Static res:Strings.NewTagPlaceholder}"
                      KeyDown="OnNewTagKeyDown" TextChanged="OnNewTagTextChanged" />
             <TextBlock x:Name="NewTagPlaceholder" Grid.Column="0" Text="{x:Static res:Strings.NewTagPlaceholder}"
-                       Foreground="{DynamicResource AlduneHintBrush}" FontSize="13" Margin="11,0,0,0" VerticalAlignment="Center"
+                       Foreground="{DynamicResource AlduneHintBrush}" FontSize="{StaticResource AlduneTextBody}" Margin="11,0,0,0" VerticalAlignment="Center"
                        IsHitTestVisible="False" />
             <Button x:Name="AddTagButton" Grid.Column="1" Content="&#xE710;"
                     FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets"

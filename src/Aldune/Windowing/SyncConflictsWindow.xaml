@@ -53,9 +53,9 @@
                  texto se dibujaba por debajo de ellos (los botones van encima y lo tapaban). -->
             <StackPanel Margin="0,0,140,0">
                 <TextBlock Text="{x:Static res:Strings.SyncConflictTitle}" Foreground="{DynamicResource AlduneTextStrongBrush}"
-                           FontSize="17" FontWeight="SemiBold" />
+                           FontSize="{StaticResource AlduneTextHeading}" FontWeight="SemiBold" />
                 <TextBlock Text="{x:Static res:Strings.SyncConflictHint}" Foreground="{DynamicResource AlduneMutedTextBrush}"
-                           FontSize="12" TextWrapping="Wrap" Margin="0,4,0,0" />
+                           FontSize="{StaticResource AlduneTextBody}" TextWrapping="Wrap" Margin="0,4,0,0" />
             </StackPanel>
             <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Top"
                         WindowChrome.IsHitTestVisibleInChrome="True">
@@ -88,9 +88,9 @@
                                         <RowDefinition Height="Auto" />
                                     </Grid.RowDefinitions>
                                     <TextBlock Text="{Binding LosingTitle}" Foreground="{DynamicResource AlduneTextStrongBrush}"
-                                               FontSize="14" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" />
+                                               FontSize="{StaticResource AlduneTextBody}" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" />
                                     <TextBlock Grid.Row="1" Text="{Binding Details}" Foreground="{DynamicResource AlduneMutedTextBrush}"
-                                               FontSize="11" TextWrapping="Wrap" Margin="0,4,0,9" />
+                                               FontSize="{StaticResource AlduneTextSmall}" TextWrapping="Wrap" Margin="0,4,0,9" />
                                     <StackPanel Grid.Row="2" Orientation="Horizontal">
                                         <Button Content="{x:Static res:Strings.SyncConflictRestore}"
                                                 Tag="{Binding Conflict.Id}" Click="OnRestoreClick"

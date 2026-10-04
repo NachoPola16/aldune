@@ -17,7 +17,7 @@
         <StackPanel>
             <Grid>
                 <TextBlock x:Name="TitleText" Text="{x:Static res:Strings.ThemeEditorTitle}"
-                           Foreground="{DynamicResource AlduneTextStrongBrush}" FontSize="17" FontWeight="SemiBold" />
+                           Foreground="{DynamicResource AlduneTextStrongBrush}" FontSize="{StaticResource AlduneTextHeading}" FontWeight="SemiBold" />
                 <Button Content="&#x2715;" Width="27" Height="27" HorizontalAlignment="Right" Padding="0"
                         Style="{StaticResource ColorDialogButtonStyle}" Click="OnCancelClick"
                         WindowChrome.IsHitTestVisibleInChrome="True"
@@ -26,15 +26,15 @@
             </Grid>
 
             <TextBlock Text="{x:Static res:Strings.ThemeEditorNameLabel}"
-                       Foreground="{DynamicResource AlduneMutedTextBrush}" FontSize="11" Margin="0,16,0,6" />
+                       Foreground="{DynamicResource AlduneMutedTextBrush}" FontSize="{StaticResource AlduneTextSmall}" Margin="0,16,0,6" />
             <TextBox x:Name="NameBox" Style="{StaticResource ColorTextBoxStyle}" MaxLength="40" />
 
             <TextBlock Text="{x:Static res:Strings.ThemeDarkColors}"
-                       Foreground="{DynamicResource AlduneMutedTextBrush}" FontSize="11" Margin="0,16,0,6" />
+                       Foreground="{DynamicResource AlduneMutedTextBrush}" FontSize="{StaticResource AlduneTextSmall}" Margin="0,16,0,6" />
             <WrapPanel x:Name="DarkRow" />
 
             <TextBlock Text="{x:Static res:Strings.ThemeLightColors}"
-                       Foreground="{DynamicResource AlduneMutedTextBrush}" FontSize="11" Margin="0,12,0,6" />
+                       Foreground="{DynamicResource AlduneMutedTextBrush}" FontSize="{StaticResource AlduneTextSmall}" Margin="0,12,0,6" />
             <WrapPanel x:Name="LightRow" />
 
             <WrapPanel Margin="0,14,0,0">
@@ -52,7 +52,7 @@
                         Margin="0,0,6,6" Style="{StaticResource ColorDialogButtonStyle}" />
             </WrapPanel>
 
-            <TextBlock x:Name="ErrorText" Foreground="{DynamicResource AlduneErrorTextBrush}" FontSize="11" Margin="0,6,0,0"
+            <TextBlock x:Name="ErrorText" Foreground="{DynamicResource AlduneErrorTextBrush}" FontSize="{StaticResource AlduneTextSmall}" Margin="0,6,0,0"
                        Visibility="Collapsed" Text="{x:Static res:Strings.ThemeEditorEmpty}" />
 
             <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,16,0,0">

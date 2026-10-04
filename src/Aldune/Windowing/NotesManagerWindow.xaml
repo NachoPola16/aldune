@@ -277,7 +277,7 @@
                             </Style>
                         </TextBlock.Style>
                     </TextBlock>
-                    <TextBlock x:Name="SubtitleText" FontSize="12" Margin="0,3,0,0">
+                    <TextBlock x:Name="SubtitleText" FontSize="{StaticResource AlduneTextSmall}" Margin="0,3,0,0">
                         <TextBlock.Style>
                             <Style TargetType="TextBlock">
                                 <Setter Property="Foreground" Value="{DynamicResource AlduneMutedTextBrush}" />
@@ -318,7 +318,7 @@
                             WindowChrome.IsHitTestVisibleInChrome="True"
                             Style="{StaticResource TitleBarButtonStyle}">
                         <TextBlock x:Name="MaximizeGlyph" Text="&#xE922;"
-                                   FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" FontSize="11" />
+                                   FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" FontSize="{StaticResource AlduneTextSmall}" />
                     </Button>
                     <Button x:Name="SettingsButton"
                             Content="&#xE713;"
@@ -371,7 +371,7 @@
                         ToolTip="{x:Static res:Strings.ManageTags}"
                         AutomationProperties.Name="{x:Static res:Strings.ManageTags}"
                         Style="{StaticResource ToolbarButtonStyle}">
-                    <TextBlock Text="&#xE8EC;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" FontSize="13" />
+                    <TextBlock Text="&#xE8EC;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" FontSize="{StaticResource AlduneTextBody}" />
                 </Button>
                 </WrapPanel>
         </Border>
@@ -401,9 +401,9 @@
                         </Button>
                     </Grid>
                     <TextBlock Text="{x:Static res:Strings.AllTags}" Foreground="{DynamicResource AlduneMutedTextBrush}"
-                               FontSize="11" Margin="0,0,0,5" />
+                               FontSize="{StaticResource AlduneTextSmall}" Margin="0,0,0,5" />
                     <TextBlock x:Name="TagManagerEmptyText" Text="{x:Static res:Strings.DockViewNoTags}"
-                               Foreground="{DynamicResource AlduneMutedTextBrush}" FontSize="11" Visibility="Collapsed" />
+                               Foreground="{DynamicResource AlduneMutedTextBrush}" FontSize="{StaticResource AlduneTextSmall}" Visibility="Collapsed" />
                     <ScrollViewer MaxHeight="220" VerticalScrollBarVisibility="Auto"
                                   HorizontalScrollBarVisibility="Disabled">
                         <StackPanel x:Name="TagManagerItems" />
@@ -420,17 +420,17 @@
         <Border Grid.Row="2" Background="{DynamicResource AlduneSurfaceBrush}" CornerRadius="{DynamicResource AlduneRadius7}" Margin="20,10,20,0">
             <Grid>
                 <TextBlock Text="&#xE721;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets"
-                           Foreground="{DynamicResource AlduneTextFaintBrush}" FontSize="13"
+                           Foreground="{DynamicResource AlduneTextFaintBrush}" FontSize="{StaticResource AlduneTextBody}"
                            Margin="10,0,0,0"
                            HorizontalAlignment="Left" VerticalAlignment="Center" />
                 <TextBlock x:Name="SearchPlaceholder" Text="{x:Static res:Strings.SearchPlaceholder}"
-                           Foreground="{DynamicResource AlduneTextFaintBrush}" FontSize="13"
+                           Foreground="{DynamicResource AlduneTextFaintBrush}" FontSize="{StaticResource AlduneTextBody}"
                            Margin="28,0,0,0"
                            HorizontalAlignment="Left" VerticalAlignment="Center"
                            IsHitTestVisible="False" />
                 <TextBox x:Name="SearchBox"
                          Background="Transparent" Foreground="{DynamicResource AlduneTextBrush}" CaretBrush="{DynamicResource AlduneTextBrush}"
-                         FontSize="13" BorderThickness="0"
+                         FontSize="{StaticResource AlduneTextBody}" BorderThickness="0"
                          Padding="0,9" Margin="28,0,28,0"
                          VerticalContentAlignment="Center"
                          TextChanged="OnSearchTextChanged" />
@@ -451,7 +451,7 @@
              filas, que es donde el ojo la busca. -->
         <CheckBox Grid.Row="3" x:Name="SelectAllCheck"
                   Content="{x:Static res:Strings.SelectAll}"
-                  Foreground="{DynamicResource AlduneMutedTextBrush}" Background="{DynamicResource AlduneGroundBrush}" FontSize="12"
+                  Foreground="{DynamicResource AlduneMutedTextBrush}" Background="{DynamicResource AlduneGroundBrush}" FontSize="{StaticResource AlduneTextSmall}"
                   IsThreeState="True"
                   Style="{StaticResource AppCheckBoxStyle}"
                   Click="OnSelectAllClick"
@@ -534,23 +534,23 @@
                                         <DockPanel Grid.Column="0" LastChildFill="True">
                                             <!-- Nota vinculada a un archivo: misma página que en la pestaña, con la ruta. -->
                                             <TextBlock DockPanel.Dock="Left" Text="&#xE7C3;"
-                                                       FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" FontSize="11"
+                                                       FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" FontSize="{StaticResource AlduneTextSmall}"
                                                        VerticalAlignment="Center" Margin="0,0,5,0" Opacity="0.75"
                                                        Visibility="{Binding Note, Converter={StaticResource NoteLinkedConverter}}"
                                                        ToolTip="{Binding Note, Converter={StaticResource NoteLinkedConverter}, ConverterParameter=Path}" />
                                             <TextBlock Text="{Binding Note, Converter={StaticResource NoteTitleConverter}}"
-                                                       FontWeight="SemiBold" FontSize="13"
+                                                       FontWeight="SemiBold" FontSize="{StaticResource AlduneTextBody}"
                                                        VerticalAlignment="Center"
                                                        TextTrimming="CharacterEllipsis" />
                                         </DockPanel>
                                         <TextBlock Grid.Column="1"
                                                    Text="{Binding Note.UpdatedAt, Converter={StaticResource NoteDateConverter}}"
                                                    ToolTip="{Binding Note.UpdatedAt, Converter={StaticResource NoteDateConverter}, ConverterParameter=full}"
-                                                   FontSize="11" Opacity="0.7" Margin="10,0,0,0"
+                                                   FontSize="{StaticResource AlduneTextSmall}" Opacity="0.7" Margin="10,0,0,0"
                                                    HorizontalAlignment="Right" VerticalAlignment="Center" />
                                         <TextBlock Grid.Row="1" Grid.Column="0"
                                                    Text="{Binding Note, Converter={StaticResource NoteSnippetConverter}}"
-                                                   FontSize="12" Opacity="0.72" Margin="0,2,0,0"
+                                                   FontSize="{StaticResource AlduneTextBody}" Opacity="0.72" Margin="0,2,0,0"
                                                    VerticalAlignment="Center"
                                                    TextTrimming="CharacterEllipsis" />
                                         <Button Grid.Row="1" Grid.Column="1" Tag="{Binding}"
@@ -577,12 +577,12 @@
                                                             <Grid Margin="0,0,4,0">
                                                                 <Border CornerRadius="{DynamicResource AlduneRadius4}" Opacity="0.16"
                                                                         Background="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}" />
-                                                                <TextBlock Text="{Binding}" FontSize="11" Margin="6,1" />
+                                                                <TextBlock Text="{Binding}" FontSize="{StaticResource AlduneTextSmall}" Margin="6,1" />
                                                             </Grid>
                                                         </DataTemplate>
                                                     </ItemsControl.ItemTemplate>
                                                 </ItemsControl>
-                                                <TextBlock Text="{x:Static res:Strings.AddTags}" FontSize="11" Opacity="0.6">
+                                                <TextBlock Text="{x:Static res:Strings.AddTags}" FontSize="{StaticResource AlduneTextSmall}" Opacity="0.6">
                                                     <TextBlock.Style>
                                                         <Style TargetType="TextBlock">
                                                             <Setter Property="Visibility" Value="Collapsed" />
@@ -607,7 +607,7 @@
 
             <!-- Estado vacío: dice qué pasa y por qué, en vez de dejar un hueco en blanco. -->
             <TextBlock x:Name="EmptyState"
-                       Foreground="{DynamicResource AlduneTextFaintBrush}" FontSize="13"
+                       Foreground="{DynamicResource AlduneTextFaintBrush}" FontSize="{StaticResource AlduneTextBody}"
                        HorizontalAlignment="Center" VerticalAlignment="Center"
                        TextAlignment="Center" TextWrapping="Wrap"
                        MaxWidth="260"

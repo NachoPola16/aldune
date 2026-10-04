@@ -562,10 +562,10 @@ Pendiente, por orden de importancia:
    fondo no era la falta de scroll, sino demasiada altura. Se rediseñó a dos columnas (760px de
    ancho), verificado con maqueta antes de implementar: la altura baja a la mitad. El
    `MaxHeight`/`ScrollViewer` se mantienen como red de seguridad para pantallas muy pequeñas.
-2. **Dos lenguajes de control mezclados en Ajustes**: tarjetas con radio (monitor, borde) conviven
+2. ~~**Dos lenguajes de control mezclados en Ajustes**~~ **Hecho** (2026-10-04, ver `STATUS.md`): tarjetas con radio (monitor, borde) conviven
    con casillas sueltas (arranque, atajo, pantalla completa, posiciones). Unificar: o todo tarjetas,
    o las casillas a interruptores alineados a la derecha, estilo Configuración de Windows 11.
-3. **Escala tipográfica**: hay 11/12/13/14/15/17 px repartidos a ojo por las cuatro ventanas. Fijar
+3. ~~**Escala tipográfica**~~ **Hecho** (2026-10-04): había 11/12/13/14/15/17 px repartidos a ojo por las cuatro ventanas. Fijar
    tres tamaños y aplicarlos.
 4. **`NotesManagerWindow`** es la ventana más cargada (452 líneas de XAML) y la que más se aleja del
    minimalismo del resto. Revisión pendiente.

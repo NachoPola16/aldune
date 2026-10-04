@@ -19,24 +19,24 @@
     <Border BorderBrush="{DynamicResource AlduneBorderSubtleBrush}" BorderThickness="1" Padding="20,18,20,16">
         <StackPanel>
             <TextBlock Text="{x:Static res:Strings.ConfigExportTitle}"
-                       Foreground="{DynamicResource AlduneTextStrongBrush}" FontSize="15" FontWeight="SemiBold" />
+                       Foreground="{DynamicResource AlduneTextStrongBrush}" FontSize="{StaticResource AlduneTextTitle}" FontWeight="SemiBold" />
             <TextBlock Text="{x:Static res:Strings.ConfigExportHint}"
-                       Foreground="{DynamicResource AlduneTextSoftBrush}" FontSize="12" TextWrapping="Wrap"
+                       Foreground="{DynamicResource AlduneTextSoftBrush}" FontSize="{StaticResource AlduneTextSmall}" TextWrapping="Wrap"
                        LineHeight="18" Margin="0,8,0,0" />
 
             <CheckBox x:Name="AppearanceCheck" IsChecked="True" Margin="0,18,0,0"
                       Content="{x:Static res:Strings.ConfigSectionAppearance}"
-                      Foreground="{DynamicResource AlduneTextBrush}" Background="{DynamicResource AlduneGroundBrush}" FontSize="13"
+                      Foreground="{DynamicResource AlduneTextBrush}" Background="{DynamicResource AlduneGroundBrush}" FontSize="{StaticResource AlduneTextBody}"
                       Style="{StaticResource AppCheckBoxStyle}" Click="OnSectionToggled" />
             <TextBlock Text="{x:Static res:Strings.ConfigSectionAppearanceHint}"
-                       Foreground="{DynamicResource AlduneHintBrush}" FontSize="11" TextWrapping="Wrap" Margin="27,4,0,0" />
+                       Foreground="{DynamicResource AlduneHintBrush}" FontSize="{StaticResource AlduneTextSmall}" TextWrapping="Wrap" Margin="27,4,0,0" />
 
             <CheckBox x:Name="SettingsCheck" IsChecked="True" Margin="0,14,0,0"
                       Content="{x:Static res:Strings.ConfigSectionSettings}"
-                      Foreground="{DynamicResource AlduneTextBrush}" Background="{DynamicResource AlduneGroundBrush}" FontSize="13"
+                      Foreground="{DynamicResource AlduneTextBrush}" Background="{DynamicResource AlduneGroundBrush}" FontSize="{StaticResource AlduneTextBody}"
                       Style="{StaticResource AppCheckBoxStyle}" Click="OnSectionToggled" />
             <TextBlock Text="{x:Static res:Strings.ConfigSectionSettingsHint}"
-                       Foreground="{DynamicResource AlduneHintBrush}" FontSize="11" TextWrapping="Wrap" Margin="27,4,0,0" />
+                       Foreground="{DynamicResource AlduneHintBrush}" FontSize="{StaticResource AlduneTextSmall}" TextWrapping="Wrap" Margin="27,4,0,0" />
 
             <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,20,0,0">
                 <Button Content="{x:Static res:Strings.DialogCancel}"

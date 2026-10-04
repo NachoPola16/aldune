@@ -2,11 +2,19 @@
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:local="clr-namespace:Aldune.Windowing"
+             xmlns:sys="clr-namespace:System;assembly=System.Runtime"
              ShutdownMode="OnExplicitShutdown">
     <!-- OnExplicitShutdown y no OnLastWindowClose: desde que hay icono de bandeja, cerrar la
          ultima nota no debe cerrar la app. Se sale por "Salir" del menu de la bandeja, o por los
          Shutdown(1) explicitos de los fallos de arranque. -->
     <Application.Resources>
+        <!-- Escala tipográfica del chrome (ventanas, diálogos, avisos): cuatro tamaños y nada más. Los
+             textos usan estas claves, no números sueltos. Quedan fuera las notas (su cuerpo y sus
+             controles tienen medidas propias, ligadas a la piel) y los glifos de icono. -->
+        <sys:Double x:Key="AlduneTextSmall">11</sys:Double>   <!-- pistas, subtítulos, estados -->
+        <sys:Double x:Key="AlduneTextBody">13</sys:Double>    <!-- el texto normal y las etiquetas -->
+        <sys:Double x:Key="AlduneTextTitle">15</sys:Double>   <!-- título de una página o sección -->
+        <sys:Double x:Key="AlduneTextHeading">17</sys:Double> <!-- título de una ventana o diálogo -->
         <!-- Base visual compartida. Los colores de cada nota siguen siendo independientes, pero el
              chrome de Aldune parte de estos mismos valores en todas las ventanas. -->
         <!-- Borde de las cajas de texto al pasar el ratón y con el foco: compartido por TextBox,
@@ -16,7 +24,7 @@
              el tipo exacto Window, no con NoteWindow/EdgeDockWindow/... (ver App.OnStartup, donde un
              manejador de clase la aplica a todas las ventanas). -->
         <Style TargetType="Window">
-            <Setter Property="FontSize" Value="13" />
+            <Setter Property="FontSize" Value="{StaticResource AlduneTextBody}" />
             <Setter Property="UseLayoutRounding" Value="True" />
             <Setter Property="SnapsToDevicePixels" Value="True" />
             <Setter Property="TextOptions.TextFormattingMode" Value="Display" />

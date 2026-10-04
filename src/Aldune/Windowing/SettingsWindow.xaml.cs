@@ -1423,7 +1423,7 @@ public partial class SettingsWindow : Window
         {
             var label = new TextBlock
             {
-                Text = text, Width = 110, VerticalAlignment = VerticalAlignment.Center, FontSize = 12,
+                Text = text, Width = 110, VerticalAlignment = VerticalAlignment.Center, FontSize = 13,
             };
             label.SetResourceReference(TextBlock.ForegroundProperty, "AlduneTextBrush");
             return label;

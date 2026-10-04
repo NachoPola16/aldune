@@ -48,9 +48,9 @@
         <Grid Grid.Row="0" Margin="20,17,14,0" MouseLeftButtonDown="OnHeaderMouseLeftButtonDown">
             <StackPanel>
                 <TextBlock Text="{x:Static res:Strings.SyncNotesWindowTitle}"
-                           Foreground="{DynamicResource AlduneTextStrongBrush}" FontSize="17" FontWeight="SemiBold" />
+                           Foreground="{DynamicResource AlduneTextStrongBrush}" FontSize="{StaticResource AlduneTextHeading}" FontWeight="SemiBold" />
                 <TextBlock Text="{x:Static res:Strings.SyncNotesWindowHint}"
-                           Foreground="{DynamicResource AlduneMutedTextBrush}" FontSize="12" TextWrapping="Wrap" Margin="0,4,28,0" />
+                           Foreground="{DynamicResource AlduneMutedTextBrush}" FontSize="{StaticResource AlduneTextSmall}" TextWrapping="Wrap" Margin="0,4,28,0" />
             </StackPanel>
             <Button Content="✕" Width="28" Height="28" HorizontalAlignment="Right"
                     Foreground="{DynamicResource AlduneTextSoftBrush}" Background="Transparent" BorderThickness="0"
@@ -76,7 +76,7 @@
         </ScrollViewer>
 
         <TextBlock x:Name="EmptyText" Grid.Row="2" Text="{x:Static res:Strings.SyncNotesEmpty}"
-                   Foreground="{DynamicResource AlduneTextFaintBrush}" FontSize="13" TextAlignment="Center"
+                   Foreground="{DynamicResource AlduneTextFaintBrush}" FontSize="{StaticResource AlduneTextBody}" TextAlignment="Center"
                    HorizontalAlignment="Center" VerticalAlignment="Center"
                    Visibility="Collapsed" />
 
