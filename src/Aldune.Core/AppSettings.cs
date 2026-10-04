@@ -203,6 +203,13 @@ public sealed class AppSettings
     /// siempre de la nota entera; esto solo decide si el aviso las enseña.</summary>
     public bool ReminderIncludesTasks { get; set; } = true;
 
+    /// <summary>Interruptor general de los sonidos de la app. Apagado de fábrica (ver <see cref="SoundPlan"/>).</summary>
+    public bool SoundsEnabled { get; set; }
+
+    /// <summary>Elección de sonido por evento, por la clave de <see cref="SoundPlan.Id"/>. Lo que falta toma la
+    /// elección de partida. No viaja en exportar/importar: las rutas de los .wav son de cada equipo.</summary>
+    public Dictionary<string, SoundSetting> Sounds { get; set; } = new();
+
     /// <summary>Último orden elegido en "Gestionar notas". Por defecto el del mazo, el de siempre.</summary>
     public NoteListOrder NotesManagerOrder { get; set; }
 

@@ -405,6 +405,8 @@ public class ConfigExportImportTests
         ["DefaultNoteLayout"] = "distribución de 'abrir todas': preferencia fuera de la lista documentada",
         ["NotesManagerOrder"] = "último orden elegido en Gestionar notas: estado de uso, no ajuste",
         ["SereneRecolored"] = "marca interna de una migración de datos de este equipo",
+        ["SoundsEnabled"] = "sonidos: dependen de los archivos .wav y del volumen de cada equipo",
+        ["Sounds"] = "sonidos: llevan rutas de archivos de este equipo",
     };
 
     [Fact]
