@@ -4258,3 +4258,13 @@ con TDD; la parte WPF (7 a 10) aquí.
 - **Franja del dock con la piel bash**: cualquier color casi sin matiz (negro, blanco, grises) sale como la misma franja
   gris clara (L 0.72) para que se vea sobre el fondo oscuro. Es la regla de `StripeColor`; pendiente de decidir si un
   negro debe distinguirse de un blanco.
+- **Parpadeo del dock en el portátil** (log `dock.log` de la 1.4.1/1.6.0): el dock se ocultaba ~0,5 s cuando explorer
+  mostraba `XamlExplorerHostIslandWindow` (vista de tareas / Alt+Tab), que cubre el monitor y se tomaba por pantalla
+  completa. `FullscreenDetection.IsShellWindowClass` lista las clases del shell que nunca cuentan. Sigue pendiente un
+  caso del 2026-10-04 13:17: "sobre la tira: el dock, pero en pantalla no se ve (color #161410)"; se recupera solo al
+  pasar el ratón y no se ha reproducido.
+- **Recordatorios**: opción "Mostrar las tareas pendientes en el recordatorio" (`ReminderIncludesTasks`, viaja en la
+  configuración exportada, ahora 32 campos), botones "Posponer 10 min / 1 h" en el aviso, el aviso se muestra antes de
+  borrar el recordatorio (si falla, queda pendiente) y un fallo ya no detiene el sondeo para siempre.
+- **Aviso de color**: el menú de la nota avisa cuando la piel activa no enseña el color elegido tal cual (franja gris para
+  negro/blanco/grises en bash, piel sin colores, color del canal en osciloscopio). `SkinColorNotice` en Core.
