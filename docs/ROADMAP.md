@@ -444,10 +444,13 @@ motivos, el segundo descubierto al renderizar:
 Si algún día se añade algo, que sea **tamaño de texto** (pequeño / normal / grande) aplicado a todas
 las notas: es lo que se pide, no rompe la alineación y es barato.
 
-### Captura rápida sin robar el foco — aplazado
+### Captura rápida sin robar el foco — descartada (2026-10-04)
 
-Una barra mínima que aparece con el atajo, escribes y desaparece. Valor medio, esfuerzo medio. Por
-detrás de recordatorios y exportar.
+Una barra mínima que aparece con el atajo, escribes y desaparece. **Descartada porque ya está cubierta**: el
+atajo global de "nota nueva" (`CreateAndOpenNote`) crea la nota y deja el cursor listo para escribir, y otro
+atajo abre la última nota editada. Una barra aparte sería una ventana más que mantener (foco, pantallas,
+temas) para ganar un gesto que ya existe. Si alguna vez se quiere de verdad "sin ventana de nota", se
+retoma con un caso de uso concreto.
 
 ### Persistir el "siempre encima" por nota — HECHO en la 1.7.0 (tabla `NoteUnpinned`, solo las notas que se sueltan)
 
