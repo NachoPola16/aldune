@@ -972,6 +972,41 @@ public static class Strings
         "Hell", "Clair", "Claro");
     public static string AppearancePastel => T("Pastel", "Pastel", "Pastell", "Pastel", "Pastel");
     public static string AppearanceMidnight => T("Midnight", "Medianoche", "Mitternacht", "Minuit", "Meia-noite");
+    public static string AppearanceXpLight => T("XP Light", "XP claro", "XP hell", "XP clair", "XP claro");
+    public static string AppearanceXpDark => T("XP + 95 Dark", "XP + 95 oscuro", "XP + 95 dunkel", "XP + 95 sombre", "XP + 95 escuro");
+    public static string AppearanceTelecomLight => T("Telecom Light (lab)", "Telecomunicaciones claro (laboratorio)",
+        "Telekom hell (Labor)", "Télécom clair (labo)", "Telecom claro (laboratório)");
+    public static string AppearanceTelecomDark => T("Telecom Dark (oscilloscope)", "Telecomunicaciones oscuro (osciloscopio)",
+        "Telekom dunkel (Oszilloskop)", "Télécom sombre (oscilloscope)", "Telecom escuro (osciloscópio)");
+    public static string AppearanceBash => T("Bash", "Bash", "Bash", "Bash", "Bash");
+    public static string AppearancePhosphor => T("Phosphor (old monitor)", "Fósforo (monitor antiguo)",
+        "Phosphor (alter Monitor)", "Phosphore (vieux moniteur)", "Fósforo (monitor antigo)");
+
+    /// <summary>Nombre visible de cada hueco de color de un aspecto (el id viene de AspectCatalog).</summary>
+    public static string AspectSlotName(string slot) => slot switch
+    {
+        "titleBar" => T("Title bar", "Barra de título", "Titelleiste", "Barre de titre", "Barra de título"),
+        "accent" => T("Accent", "Acento", "Akzent", "Accent", "Destaque"),
+        "ink" => T("Ink", "Tinta", "Tinte", "Encre", "Tinta"),
+        "panel" => T("Panel", "Panel", "Bedienfeld", "Panneau", "Painel"),
+        "trace" => T("Trace (CH1)", "Traza (CH1)", "Spur (CH1)", "Trace (CH1)", "Traço (CH1)"),
+        "background" => T("Terminal", "Terminal", "Terminal", "Terminal", "Terminal"),
+        "user" => T("User", "Usuario", "Benutzer", "Utilisateur", "Usuário"),
+        "path" => T("Path", "Ruta", "Pfad", "Chemin", "Caminho"),
+        "phosphor" => T("Phosphor", "Fósforo", "Phosphor", "Phosphore", "Fósforo"),
+        "details" => T("Details", "Detalles", "Details", "Détails", "Detalhes"),
+        _ => slot,
+    };
+
+    public static string AspectPalettePresets => T("Palette", "Paleta", "Palette", "Palette", "Paleta");
+    public static string AspectResetColors => T("Reset colors", "Restablecer colores", "Farben zurücksetzen",
+        "Réinitialiser les couleurs", "Redefinir cores");
+    public static string AspectSuggestTheme(string theme) => T(
+        $"Also use the “{theme}” note theme?",
+        $"¿Usar también el tema de notas «{theme}»?",
+        $"Auch das Notizthema „{theme}“ verwenden?",
+        $"Utiliser aussi le thème de notes « {theme} » ?",
+        $"Usar também o tema de notas “{theme}”?");
     public static string AppearanceSystem => T("Same as Windows", "Como Windows",
         "Wie Windows", "Comme Windows", "Como Windows");
     public static string AppearanceUniformColor => T("Same color for every note", "Mismo color en todas las notas",

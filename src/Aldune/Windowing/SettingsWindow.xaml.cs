@@ -1242,7 +1242,13 @@ public partial class SettingsWindow : Window
                      (AppearanceMode.Light, Strings.AppearanceLight),
                      (AppearanceMode.Pastel, Strings.AppearancePastel),
                      (AppearanceMode.Midnight, Strings.AppearanceMidnight),
-                     (AppearanceMode.System, Strings.AppearanceSystem)
+                     (AppearanceMode.System, Strings.AppearanceSystem),
+                     (AppearanceMode.XpLight, Strings.AppearanceXpLight),
+                     (AppearanceMode.XpDark, Strings.AppearanceXpDark),
+                     (AppearanceMode.TelecomLight, Strings.AppearanceTelecomLight),
+                     (AppearanceMode.TelecomDark, Strings.AppearanceTelecomDark),
+                     (AppearanceMode.Bash, Strings.AppearanceBash),
+                     (AppearanceMode.Phosphor, Strings.AppearancePhosphor)
                  })
         {
             var radio = new RadioButton
@@ -1256,6 +1262,106 @@ public partial class SettingsWindow : Window
             radio.Checked += OnAppearanceSelectionChanged;
             AppearanceListContainer.Children.Add(radio);
         }
+        PopulateAspectColors();
+    }
+
+    /// <summary>Los huecos de color del aspecto elegido (solo los retro tienen): cada uno con su muestra,
+    /// su valor, muestras de un clic y «Elegir color…»; las paletas predefinidas y restablecer.</summary>
+    private void PopulateAspectColors()
+    {
+        AspectColorsContainer.Children.Clear();
+        if (AspectCatalog.For(_settings.Appearance) is not { } aspect) return;
+        var colors = AspectCatalog.Resolve(aspect.Mode, _settings.ColorsFor(aspect.Mode));
+
+        if (aspect.Presets.Count > 0)
+        {
+            var presets = new WrapPanel { Margin = new Thickness(0, 0, 0, 8) };
+            presets.Children.Add(Label(Strings.AspectPalettePresets));
+            foreach (var preset in aspect.Presets)
+            {
+                var button = AspectButton(preset.Name);
+                button.Click += (_, _) => SetAspectColors(aspect, preset.Colors);
+                presets.Children.Add(button);
+            }
+            AspectColorsContainer.Children.Add(presets);
+        }
+
+        foreach (var slot in aspect.Slots)
+        {
+            var row = new WrapPanel { Margin = new Thickness(0, 0, 0, 6) };
+            row.Children.Add(Label(Strings.AspectSlotName(slot.Id)));
+            row.Children.Add(Swatch(colors[slot.Id], selected: true));
+            var value = new TextBlock
+            {
+                Text = colors[slot.Id], FontFamily = new FontFamily("Cascadia Mono, Consolas"), FontSize = 11,
+                VerticalAlignment = VerticalAlignment.Center, Margin = new Thickness(8, 0, 8, 0),
+            };
+            value.SetResourceReference(TextBlock.ForegroundProperty, "AlduneTextBrush");
+            row.Children.Add(value);
+            foreach (var suggestion in slot.Suggestions)
+            {
+                var swatch = Swatch(suggestion, selected: false);
+                swatch.Cursor = Cursors.Hand;
+                swatch.ToolTip = suggestion;
+                swatch.MouseLeftButtonUp += (_, _) => SetAspectColors(aspect, new Dictionary<string, string> { [slot.Id] = suggestion });
+                row.Children.Add(swatch);
+            }
+            var pick = AspectButton(Strings.AppearanceUniformColorPick);
+            pick.Click += (_, _) =>
+            {
+                var picked = CustomColorWindow.Show(this, colors[slot.Id]);
+                if (picked is not null) SetAspectColors(aspect, new Dictionary<string, string> { [slot.Id] = picked });
+            };
+            row.Children.Add(pick);
+            AspectColorsContainer.Children.Add(row);
+        }
+
+        var reset = AspectButton(Strings.AspectResetColors);
+        reset.HorizontalAlignment = HorizontalAlignment.Left;
+        reset.Click += (_, _) =>
+        {
+            _settings.AspectColors?.Remove(aspect.Id);
+            SaveAndApplyAppearance();
+        };
+        AspectColorsContainer.Children.Add(reset);
+
+        TextBlock Label(string text)
+        {
+            var label = new TextBlock
+            {
+                Text = text, Width = 110, VerticalAlignment = VerticalAlignment.Center, FontSize = 12,
+            };
+            label.SetResourceReference(TextBlock.ForegroundProperty, "AlduneTextBrush");
+            return label;
+        }
+    }
+
+    // La muestra pinta el color del hueco del aspecto (eso es dato, no chrome); solo el borde sale de la paleta.
+    private static Border Swatch(string color, bool selected)
+    {
+        var swatch = new Border
+        {
+            Width = 22, Height = 16, Margin = new Thickness(0, 0, 4, 0),
+            BorderThickness = new Thickness(selected ? 2 : 1),
+            Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString(color)),
+        };
+        swatch.SetResourceReference(Border.BorderBrushProperty, "AlduneBorderBrush");
+        return swatch;
+    }
+
+    private Button AspectButton(string text) => new()
+    {
+        Content = text, Style = (Style)FindResource("RecordButtonStyle"),
+        Padding = new Thickness(10, 4, 10, 4), Margin = new Thickness(0, 0, 6, 0),
+    };
+
+    private void SetAspectColors(AspectDefinition aspect, IReadOnlyDictionary<string, string> changes)
+    {
+        _settings.AspectColors ??= [];
+        if (!_settings.AspectColors.TryGetValue(aspect.Id, out var colors))
+            _settings.AspectColors[aspect.Id] = colors = [];
+        foreach (var (slot, value) in changes) colors[slot] = value;
+        SaveAndApplyAppearance();
     }
 
     // A diferencia del idioma, se aplica en el acto: todas las ventanas usan los pinceles de la
@@ -1263,11 +1369,32 @@ public partial class SettingsWindow : Window
     private void OnAppearanceSelectionChanged(object sender, RoutedEventArgs e)
     {
         if (sender is not RadioButton { IsChecked: true, Tag: AppearanceMode mode } || _settings.Appearance == mode) return;
-        _settings.Appearance = mode;
+        var suggestedTheme = AppearanceChoice.Select(_settings, mode);
+        SaveAndApplyAppearance();
+
+        // Cada aspecto propone su tema de notas, pero nunca lo cambia sin preguntar.
+        if (suggestedTheme is not null &&
+            AppDialog.Show(this, Strings.AspectSuggestTheme(Strings.ThemeDisplayName(NoteThemes.Resolve(suggestedTheme, _settings.CustomThemes))),
+                Strings.AppearanceSectionTitle, MessageBoxButton.YesNo) == MessageBoxResult.Yes)
+        {
+            ActivateTheme(suggestedTheme, rebuild: true);
+        }
+    }
+
+    private void SaveAndApplyAppearance()
+    {
         _settingsService.Save(_settings);
+        var mode = _settings.Appearance;
         ThemeManager.Apply(Application.Current, mode, _settings.ColorsFor(mode));
         ThemeManager.ApplySkin(Application.Current, AppSkin.For(mode));
+        ThemeManager.ApplyShape(Application.Current, _settings.CornersSquare);
+        // Las casillas usan Click, no Checked: fijarlas desde código no dispara sus manejadores.
+        SquareCornersCheck.IsChecked = _settings.CornersSquare;
+        SyncSignalCheck.IsChecked = _settings.SyncSignalVisible;
+        // Esquinas y pestañas espejadas se fijan al crear cada pestaña: hay que rehacer el dock.
+        _coordinator?.RebuildDocks();
         _coordinator?.RefreshNoteAppearance();
+        PopulateAspectColors();
     }
 
     // Los nombres de los idiomas ("Español"/"English") no se traducen: un idioma se nombra a sí
@@ -1421,8 +1548,15 @@ public partial class SettingsWindow : Window
     private void OnThemeSelectionChanged(object sender, SelectionChangedEventArgs e)
     {
         if (_loadingThemes || ThemeCombo.SelectedItem is not ComboBoxItem { Tag: string id }) return;
+        ActivateTheme(id);
+    }
+
+    /// <summary>Activa un tema de notas. <paramref name="rebuild"/> cuando el desplegable no es quien lo
+    /// ha elegido (p. ej. la pregunta del aspecto): hay que rehacer la sección para que lo muestre.</summary>
+    private void ActivateTheme(string id, bool rebuild = false)
+    {
         _settings.ActiveThemeId = id;
-        SaveThemeSettings(rebuild: false);
+        SaveThemeSettings(rebuild);
     }
 
     private void OnFixedColorClick(object sender, MouseButtonEventArgs e)

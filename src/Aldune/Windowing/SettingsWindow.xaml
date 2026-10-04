@@ -398,6 +398,9 @@
                         <TextBlock Text="{x:Static res:Strings.AppearanceSectionHint}"
                                    Foreground="{DynamicResource AlduneHintBrush}" FontSize="11" TextWrapping="Wrap" Margin="0,4,0,10" />
                         <StackPanel x:Name="AppearanceListContainer" />
+                        <!-- Colores del aspecto elegido (solo los retro tienen): cada hueco con su muestra,
+                             su valor, muestras de un clic y "Elegir color…"; paletas de bash; restablecer. -->
+                        <StackPanel x:Name="AspectColorsContainer" Margin="27,8,0,0" />
                     </StackPanel>
                     <StackPanel Margin="0,14,0,0">
                         <CheckBox x:Name="SquareCornersCheck"
