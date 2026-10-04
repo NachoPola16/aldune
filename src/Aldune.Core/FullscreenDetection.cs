@@ -28,4 +28,16 @@ public static class FullscreenDetection
             && window.X + window.Width >= monitor.X + monitor.Width
             && window.Y + window.Height >= monitor.Y + monitor.Height;
     }
+
+    private static readonly HashSet<string> ShellClasses = new(StringComparer.Ordinal)
+    {
+        "Progman", "WorkerW", "Shell_TrayWnd", "Shell_SecondaryTrayWnd",
+        // Windows 11: vista de tareas, Alt+Tab y ajuste de ventanas pasan un instante por una ventana de
+        // explorer que cubre el monitor. No es una aplicación a pantalla completa: el dock no debe apartarse.
+        "XamlExplorerHostIslandWindow", "MultitaskingViewFrame", "ForegroundStaging", "TaskSwitcherWnd",
+    };
+
+    /// <summary>Si la clase de ventana es del propio shell de Windows (escritorio, barra de tareas, vista de
+    /// tareas…) y por tanto nunca cuenta como "algo a pantalla completa".</summary>
+    public static bool IsShellWindowClass(string className) => ShellClasses.Contains(className);
 }

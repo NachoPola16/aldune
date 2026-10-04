@@ -78,4 +78,27 @@ public class FullscreenDetectionTests
         // Si GetMonitorInfo fallara y devolviera ceros, no se debe esconder el dock por eso.
         Assert.False(FullscreenDetection.CoversMonitor(Monitor, new Rect(0, 0, 0, 0)));
     }
+
+    // Ventanas del propio Windows que tapan el monitor un instante (vista de tareas, Alt+Tab, ajuste de
+    // ventanas) y no son una aplicación a pantalla completa: ocultar el dock por ellas era el parpadeo que se
+    // veía en el portátil (log: 'XamlExplorerHostIslandWindow' de explorer, medio segundo).
+    [Theory]
+    [InlineData("Progman")]
+    [InlineData("WorkerW")]
+    [InlineData("Shell_TrayWnd")]
+    [InlineData("Shell_SecondaryTrayWnd")]
+    [InlineData("XamlExplorerHostIslandWindow")]
+    [InlineData("MultitaskingViewFrame")]
+    [InlineData("ForegroundStaging")]
+    [InlineData("TaskSwitcherWnd")]
+    public void ShellWindowClasses_AreNeverAFullscreenApp(string className) =>
+        Assert.True(FullscreenDetection.IsShellWindowClass(className));
+
+    [Theory]
+    [InlineData("Qt672QWindowIcon")]
+    [InlineData("SDL_app")]
+    [InlineData("MozillaWindowClass")]
+    [InlineData("")]
+    public void ApplicationWindowClasses_AreNotShellWindows(string className) =>
+        Assert.False(FullscreenDetection.IsShellWindowClass(className));
 }

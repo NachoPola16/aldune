@@ -499,13 +499,7 @@ internal static class NativeMethods
 
         var className = new System.Text.StringBuilder(64);
         GetClassName(foreground, className, className.Capacity);
-        switch (className.ToString())
-        {
-            case "Progman":
-            case "WorkerW":
-            case "Shell_TrayWnd":
-                return false;
-        }
+        if (Aldune.Core.FullscreenDetection.IsShellWindowClass(className.ToString())) return false;
 
         // Si la ventana está maximizada por el SO o tiene barra de título (WS_CAPTION), es una ventana
         // de aplicación con pestañas / controles normales (p. ej. Chrome maximizado), no un videojuego
