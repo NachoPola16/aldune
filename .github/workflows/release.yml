@@ -74,6 +74,17 @@ jobs:
         shell: pwsh
         run: ./scripts/build-installer.ps1 -SkipPublish
 
+      # Portable nativo para Windows en ARM64 (sin instalador: el de x64 también instala en ARM, emulado). Va sin
+      # firmar y, si falla, el release sale igual con lo de x64 (continue-on-error). Ver docs/DESKTOP_PORT.md.
+      - name: Build ARM64 portable package
+        continue-on-error: true
+        shell: pwsh
+        run: |
+          dotnet publish src/Aldune/Aldune.csproj -c Release -r win-arm64 --self-contained true `
+            -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true -p:PublishTrimmed=false `
+            -o publish/arm64
+          Compress-Archive -Path publish/arm64/aldune.exe -DestinationPath dist/aldune-portable-win-arm64.zip -Force
+
       - name: Upload installer for signing
         if: env.SIGNING_ENABLED == 'true'
         id: upload-setup
