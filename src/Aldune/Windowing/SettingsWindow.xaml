@@ -568,7 +568,7 @@
                         <TextBlock Text="{x:Static res:Strings.ShowNotePreviewHint}"
                                    Foreground="{DynamicResource AlduneHintBrush}" FontSize="{StaticResource AlduneTextSmall}" TextWrapping="Wrap" Margin="0,6,56,0" />
                     </StackPanel>
-                    <StackPanel Margin="0,16,0,0">
+                    <StackPanel Margin="0,20,0,0">
                         <CheckBox x:Name="ReminderIncludesTasksCheck"
                                   Content="{x:Static res:Strings.ReminderIncludeTasksCheckbox}"
                                   Foreground="{DynamicResource AlduneTextBrush}" Background="{DynamicResource AlduneGroundBrush}" FontSize="{StaticResource AlduneTextBody}"
@@ -599,6 +599,7 @@
                             <TextBlock Text="{x:Static res:Strings.KeepDockOpenHint}"
                                        Foreground="{DynamicResource AlduneHintBrush}" FontSize="{StaticResource AlduneTextSmall}" TextWrapping="Wrap" Margin="0,6,56,0" />
                         </StackPanel>
+                        <Border Background="{DynamicResource AlduneRaisedBrush}" Height="1" Margin="0,20,0,0" />
                         <StackPanel Margin="0,20,0,0">
                             <CheckBox x:Name="TrackpadGesturesCheck"
                                       Content="{x:Static res:Strings.TrackpadGesturesCheckbox}"
