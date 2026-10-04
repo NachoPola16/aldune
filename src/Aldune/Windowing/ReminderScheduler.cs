@@ -52,6 +52,7 @@ internal sealed class ReminderScheduler : IDisposable
             if (due.Count == 0) return;
 
             // Primero se avisa y después se borra el recordatorio: si el aviso falla, sigue pendiente.
+            _coordinator.PlaySound(SoundEvent.Reminder);
             if (due.Count == 1)
             {
                 ShowSingle(due[0].NoteId);

@@ -41,6 +41,12 @@ public sealed class AppCoordinator
 
     public bool IsLinked(Guid noteId) => LinkedNoteDisplay.IsLinked(noteId);
 
+    /// <summary>Hace sonar un evento si el usuario lo tiene activado (apagado de fábrica, ver SoundPlan).</summary>
+    internal void PlaySound(SoundEvent soundEvent)
+    {
+        if (_settings is not null) AppSounds.Play(SoundPlan.Resolve(_settings, soundEvent));
+    }
+
     // Dónde estaba el cursor al cerrar cada nota, para volver ahí al reabrirla en la misma sesión.
     private readonly Dictionary<Guid, int> _lastCaret = new();
 
@@ -257,6 +263,7 @@ public sealed class AppCoordinator
     private void AfterSuccessfulSync()
     {
         _syncedSinceStart = true;
+        PlaySound(SoundEvent.SyncDone);
         PruneCompletedTasksInClosedNotes();
         // Lo que llegó por la sync a una nota vinculada es un cambio pendiente que hay que escribir en el archivo.
         foreach (var link in _repository.GetFileLinks().Where(link => link.SyncEnabled)) RequestLinkedCheck(link.NoteId);
@@ -680,6 +687,7 @@ public sealed class AppCoordinator
         if (dock is null) return;
 
         var note = _repository.Create(string.Empty, NextNoteColor(), screenOrigin: "primary");
+        PlaySound(SoundEvent.NoteCreated);
 
         // En la vista de una etiqueta la nota nace ya con ella, igual que con el "+" del dock: si no,
         // desaparecería del dock nada más crearla y su color se habría calculado con otras vecinas.
@@ -1405,6 +1413,10 @@ public sealed class AppCoordinator
             {
                 Application.Current.Dispatcher.BeginInvoke(DispatcherPriority.Background, new Action(AfterSuccessfulSync));
             }
+            else
+            {
+                Application.Current.Dispatcher.BeginInvoke(DispatcherPriority.Background, () => PlaySound(SoundEvent.SyncFailed));
+            }
         }, null, firstRunIn ?? TimeSpan.FromMinutes(minutes), TimeSpan.FromMinutes(minutes));
     }
 
@@ -1417,6 +1429,10 @@ public sealed class AppCoordinator
         {
             if (Application.Current.Dispatcher.CheckAccess()) AfterSuccessfulSync();
             else Application.Current.Dispatcher.BeginInvoke(DispatcherPriority.Background, new Action(AfterSuccessfulSync));
+        }
+        else
+        {
+            PlaySound(SoundEvent.SyncFailed);
         }
         return result;
     }

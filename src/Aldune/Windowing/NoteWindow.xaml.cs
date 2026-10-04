@@ -1790,6 +1790,7 @@ public partial class NoteWindow : Window
     {
         Flush();
         _repository.SetState(_note.Id, NoteState.Archived);
+        _coordinator.PlaySound(SoundEvent.NoteArchived);
         _coordinator.RefreshAll();
         Close();
     }

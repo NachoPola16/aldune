@@ -623,6 +623,109 @@ public partial class SettingsWindow : Window
         _coordinator?.RefreshAll();
     }
 
+    // --- Sonidos -------------------------------------------------------------------------------------
+
+    private bool _buildingSounds;
+
+    /// <summary>Rehace las filas de sonidos con lo guardado. Una fila por evento: etiqueta, elección y "Probar".</summary>
+    private void BuildSoundRows()
+    {
+        _buildingSounds = true;
+        SoundRowsPanel.Children.Clear();
+        foreach (var soundEvent in SoundPlan.All)
+        {
+            var setting = SoundPlan.SettingFor(_settings, soundEvent);
+            var row = new Grid { Margin = new Thickness(0, 0, 0, 8) };
+            row.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(150) });
+            row.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
+            row.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
+
+            var label = new TextBlock { Text = Strings.SoundEventName(soundEvent), VerticalAlignment = VerticalAlignment.Center, FontSize = 13 };
+            label.SetResourceReference(TextBlock.ForegroundProperty, "AlduneTextBrush");
+
+            var combo = new ComboBox
+            {
+                Style = (Style)FindResource("SyncProfileComboStyle"),
+                ItemContainerStyle = (Style)FindResource("SyncProfileItemStyle"),
+                Margin = new Thickness(0, 0, 8, 0),
+                Tag = soundEvent,
+            };
+            foreach (var choice in Enum.GetValues<SoundChoice>())
+            {
+                combo.Items.Add(choice == SoundChoice.File && setting.Choice == SoundChoice.File && !string.IsNullOrEmpty(setting.FilePath)
+                    ? Strings.SoundFileChoiceName(Path.GetFileName(setting.FilePath))
+                    : Strings.SoundChoiceName(choice));
+            }
+            combo.SelectedIndex = (int)setting.Choice;
+            combo.SelectionChanged += OnSoundChoiceChanged;
+
+            var test = new Button
+            {
+                Content = Strings.SoundTest,
+                Padding = new Thickness(10, 5, 10, 5),
+                Style = (Style)FindResource("RecordButtonStyle"),
+                Tag = soundEvent,
+            };
+            test.Click += OnSoundTestClick;
+
+            Grid.SetColumn(combo, 1);
+            Grid.SetColumn(test, 2);
+            row.Children.Add(label);
+            row.Children.Add(combo);
+            row.Children.Add(test);
+            SoundRowsPanel.Children.Add(row);
+        }
+        _buildingSounds = false;
+        SoundRowsPanel.IsEnabled = _settings.SoundsEnabled;
+        SoundRowsPanel.Opacity = _settings.SoundsEnabled ? 1 : 0.5;
+    }
+
+    private void OnSoundsEnabledToggled(object sender, RoutedEventArgs e)
+    {
+        _settings.SoundsEnabled = SoundsEnabledCheck.IsChecked == true;
+        _settingsService.Save(_settings);
+        SoundRowsPanel.IsEnabled = _settings.SoundsEnabled;
+        SoundRowsPanel.Opacity = _settings.SoundsEnabled ? 1 : 0.5;
+    }
+
+    private void OnSoundChoiceChanged(object sender, SelectionChangedEventArgs e)
+    {
+        if (_buildingSounds || sender is not ComboBox { Tag: SoundEvent soundEvent } combo || combo.SelectedIndex < 0) return;
+
+        var choice = (SoundChoice)combo.SelectedIndex;
+        var setting = new SoundSetting { Choice = choice };
+        if (choice == SoundChoice.File)
+        {
+            var dialog = new Microsoft.Win32.OpenFileDialog { Filter = Strings.SoundFileFilter, CheckFileExists = true };
+            if (dialog.ShowDialog(this) != true)
+            {
+                Dispatcher.BeginInvoke(BuildSoundRows);   // sin archivo, vuelve a lo que había
+                return;
+            }
+            if (!SoundPlan.IsUsableFile(dialog.FileName))
+            {
+                AppDialog.Show(this, Strings.SoundFileRejected, Strings.SoundChoiceName(SoundChoice.File),
+                    MessageBoxButton.OK, MessageBoxImage.Warning);
+                Dispatcher.BeginInvoke(BuildSoundRows);
+                return;
+            }
+            setting.FilePath = dialog.FileName;
+        }
+
+        _settings.Sounds[SoundPlan.Id(soundEvent)] = setting;
+        _settingsService.Save(_settings);
+        // Escuchar lo elegido nada más elegirlo, aunque sea el interruptor general el que lo silencie luego.
+        AppSounds.Play(SoundPlan.Resolve(new AppSettings { SoundsEnabled = true, Sounds = _settings.Sounds }, soundEvent));
+        if (choice == SoundChoice.File) Dispatcher.BeginInvoke(BuildSoundRows);   // para ver el nombre del archivo
+    }
+
+    private void OnSoundTestClick(object sender, RoutedEventArgs e)
+    {
+        if (sender is not Button { Tag: SoundEvent soundEvent }) return;
+        // "Probar" suena aunque el interruptor general esté apagado: es la forma de oír qué hay elegido.
+        AppSounds.Play(SoundPlan.Resolve(new AppSettings { SoundsEnabled = true, Sounds = _settings.Sounds }, soundEvent));
+    }
+
     private void OnReminderIncludesTasksToggled(object sender, RoutedEventArgs e)
     {
         _settings.ReminderIncludesTasks = ReminderIncludesTasksCheck.IsChecked == true;
@@ -1833,6 +1936,8 @@ public partial class SettingsWindow : Window
         KeepDockOpenCheck.IsChecked = _settings.KeepDockOpen;
         ShowNotePreviewCheck.IsChecked = _settings.ShowNotePreview;
         ReminderIncludesTasksCheck.IsChecked = _settings.ReminderIncludesTasks;
+        SoundsEnabledCheck.IsChecked = _settings.SoundsEnabled;
+        BuildSoundRows();
         RememberPositionsCheck.IsChecked = _settings.RememberNotePositions;
         PopulateTrackpadGestures();
         UpdateUniformColorUi();

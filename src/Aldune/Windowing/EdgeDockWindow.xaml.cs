@@ -2437,6 +2437,7 @@ public partial class EdgeDockWindow : Window
         {
             _repository.SetState(note.Id,
                 note.State == NoteState.Active ? NoteState.Archived : NoteState.Active);
+            if (note.State == NoteState.Active) _coordinator.PlaySound(SoundEvent.NoteArchived);
             _coordinator.RefreshAll();
         }
         CloseTabMenu();
@@ -2661,6 +2662,7 @@ public partial class EdgeDockWindow : Window
     {
         HoldHoverDuringLayout();
         var note = _repository.Create(content, _coordinator.NextNoteColor(), screenOrigin: "primary");
+        _coordinator.PlaySound(SoundEvent.NoteCreated);
 
         // En la vista de una etiqueta la nota nace ya con ella: si no, el filtro la escondería nada
         // más crearla y habría que ir a buscarla a "todas" para etiquetarla a mano.

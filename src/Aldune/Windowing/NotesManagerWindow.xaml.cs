@@ -719,6 +719,7 @@ public partial class NotesManagerWindow : Window
             {
                 _repository.SetState(row.Note.Id, NoteState.Archived);
             }
+            _coordinator.PlaySound(SoundEvent.NoteArchived);   // una vez, aunque sean varias notas
             LoadRows();
             _coordinator.RefreshAll();
         });

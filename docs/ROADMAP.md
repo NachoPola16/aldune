@@ -10,7 +10,7 @@ Sesión de origen: 2026-09-06.
 
 ## Versión visible de la aplicación
 
-La ronda actual se identifica como **v1.6.1**. La versión se muestra en Ajustes y también en el texto
+La ronda actual se identifica como **v1.7.0**. La versión se muestra en Ajustes y también en el texto
 del icono de la bandeja. Cada actualización grande deberá incrementar este número siguiendo SemVer:
 parches para correcciones, versión menor para funcionalidades nuevas y versión mayor cuando haya
 cambios incompatibles.
@@ -449,7 +449,7 @@ las notas: es lo que se pide, no rompe la alineación y es barato.
 Una barra mínima que aparece con el atajo, escribes y desaparece. Valor medio, esfuerzo medio. Por
 detrás de recordatorios y exportar.
 
-### Persistir el "siempre encima" por nota — aplazado
+### Persistir el "siempre encima" por nota — HECHO en la 1.7.0 (tabla `NoteUnpinned`, solo las notas que se sueltan)
 
 El interruptor ya existe (menú "⋯" de la nota) pero es por sesión: al reabrir la nota vuelve a estar
 fijada. Persistirlo exigiría una columna nueva en la tabla `Note`, que es la que tiene datos reales
@@ -994,7 +994,7 @@ tiene iPhone y una tableta Android). Las razones y las consecuencias de diseño 
 iOS queda aparcado hasta que haya Mac o hasta que la prioridad sea capturar desde el bolsillo, y eso no
 cambia nada de lo ya decidido porque el cliente es un proyecto MAUI más dos extensiones Swift.
 
-## 10. Sonidos personalizables (idea, 2026-10-03): sí, después de los aspectos y apagados de fábrica
+## 10. Sonidos personalizables — HECHO en la 1.7.0 (sin volumen propio ni evento "error"; apagados de fábrica)
 
 Hoy la app no suena en ningún sitio (los avisos de `AppDialog` son "sin sonido" a propósito) y el modo
 "Papel vintage" con sonidos sigue sin hacer. Valorado al planificar el bloque 2 de los aspectos:

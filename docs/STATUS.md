@@ -4274,3 +4274,20 @@ con TDD; la parte WPF (7 a 10) aquí.
   la pantalla (ocurrió 16 s antes de una suspensión).
 
 Publicado como **1.6.1** con todo lo de esta sección.
+
+## 1.7.0 (2026-10-04)
+
+- **Flecha y casilla, interruptores independientes**: `Ctrl+L` sobre `→ x` añade la casilla (`→ ☐ x`) y la quita sin tocar
+  la flecha; `Ctrl+Shift+L` hace lo mismo con la flecha. `→ ☐` cuenta como tarea (marcar, contador, recordatorios,
+  retroceso, Enter). En un archivo vinculado, `→ ☐ x` es `- ☐ x` (el glifo de hecho sigue al que use el archivo, ☑ o ☒) y
+  la casilla suelta `☐ x` sigue siendo `- [ ] x`. Esto sustituye al "intercambio" de antes y a la lectura de `- ☐` como
+  casilla suelta de la 1.6.1.
+- **"Siempre encima" por nota se recuerda** (tabla `NoteUnpinned`: solo están las notas que se sueltan; la fila se borra con
+  la nota; no toca `Note` ni entra en la sync).
+- **Sonidos** (roadmap §10, versión reducida): interruptor general apagado de fábrica y una elección por evento (nota
+  nueva, nota archivada, recordatorio, sync terminada y fallida): sin sonido, un sonido de Windows o un `.wav` de hasta
+  5 MB; "Probar" suena aunque el interruptor esté apagado. Con el interruptor encendido solo traen sonido de partida el
+  recordatorio y el fallo de sync. `SoundPlan` en Core (con tests) y `AppSounds` en WPF. **No hay volumen propio** (los
+  de Windows siguen el de Windows) **ni evento "error"**; los sonidos no viajan en exportar/importar (rutas de este equipo).
+- **Windows ARM64**: el release añade `aldune-portable-win-arm64.zip` (sin instalador, sin firmar, `continue-on-error`).
+  Compila y publica; no se ha podido ejecutar en un equipo ARM.

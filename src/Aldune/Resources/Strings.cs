@@ -68,6 +68,43 @@ public static class Strings
             "Com este visual cada nota usa a cor do seu canal; para usar uma cor, ative \"mesma cor em todas as notas\"."),
         _ => "",
     };
+    // --- Sonidos ---
+    public static string SoundsEnabledCheckbox => T("Play sounds", "Activar sonidos", "Töne abspielen", "Activer les sons", "Ativar sons");
+    public static string SoundsHint => T(
+        "Off by default. Each event has its own sound, or none: turn the switch off to mute everything at once.",
+        "Apagado de fábrica. Cada evento tiene su propio sonido, o ninguno: apaga el interruptor para silenciar todo de golpe.",
+        "Standardmäßig aus. Jedes Ereignis hat seinen eigenen Ton oder keinen: Schalter ausschalten, um alles stummzuschalten.",
+        "Désactivé par défaut. Chaque événement a son propre son, ou aucun : désactivez l'interrupteur pour tout couper d'un coup.",
+        "Desligado por padrão. Cada evento tem seu próprio som, ou nenhum: desligue o interruptor para silenciar tudo de uma vez.");
+    public static string SoundEventName(SoundEvent soundEvent) => soundEvent switch
+    {
+        SoundEvent.Reminder => T("Reminder", "Recordatorio", "Erinnerung", "Rappel", "Lembrete"),
+        SoundEvent.SyncDone => T("Sync finished", "Sincronización terminada", "Synchronisierung abgeschlossen", "Synchronisation terminée", "Sincronização concluída"),
+        SoundEvent.SyncFailed => T("Sync failed", "Sincronización fallida", "Synchronisierung fehlgeschlagen", "Échec de la synchronisation", "Falha na sincronização"),
+        SoundEvent.NoteCreated => T("New note", "Nota nueva", "Neue Notiz", "Nouvelle note", "Nova nota"),
+        SoundEvent.NoteArchived => T("Note archived", "Nota archivada", "Notiz archiviert", "Note archivée", "Nota arquivada"),
+        _ => "",
+    };
+    public static string SoundChoiceName(SoundChoice choice) => choice switch
+    {
+        SoundChoice.None => T("No sound", "Sin sonido", "Kein Ton", "Aucun son", "Sem som"),
+        SoundChoice.Asterisk => T("Windows: information", "Windows: información", "Windows: Information", "Windows : information", "Windows: informação"),
+        SoundChoice.Exclamation => T("Windows: warning", "Windows: aviso", "Windows: Warnung", "Windows : avertissement", "Windows: aviso"),
+        SoundChoice.Beep => T("Windows: beep", "Windows: pitido", "Windows: Signalton", "Windows : bip", "Windows: bipe"),
+        SoundChoice.Hand => T("Windows: error", "Windows: error", "Windows: Fehler", "Windows : erreur", "Windows: erro"),
+        SoundChoice.Question => T("Windows: question", "Windows: pregunta", "Windows: Frage", "Windows : question", "Windows: pergunta"),
+        SoundChoice.File => T("A .wav file…", "Un archivo .wav…", "Eine .wav-Datei…", "Un fichier .wav…", "Um arquivo .wav…"),
+        _ => "",
+    };
+    public static string SoundFileChoiceName(string name) => T($"File: {name}", $"Archivo: {name}", $"Datei: {name}", $"Fichier : {name}", $"Arquivo: {name}");
+    public static string SoundTest => T("Test", "Probar", "Testen", "Tester", "Testar");
+    public static string SoundFileFilter => T("WAV sound", "Sonido WAV", "WAV-Ton", "Son WAV", "Som WAV") + " (*.wav)|*.wav";
+    public static string SoundFileRejected => T(
+        "Only .wav files up to 5 MB can be used as a sound.",
+        "Solo se pueden usar como sonido archivos .wav de hasta 5 MB.",
+        "Als Ton sind nur .wav-Dateien bis 5 MB möglich.",
+        "Seuls les fichiers .wav jusqu'à 5 Mo peuvent servir de son.",
+        "Só arquivos .wav de até 5 MB podem ser usados como som.");
     public static string ReminderSnooze10 => T("Snooze 10 min", "Posponer 10 min", "10 Min. später", "Reporter de 10 min", "Adiar 10 min");
     public static string ReminderSnooze60 => T("Snooze 1 h", "Posponer 1 h", "1 Std. später", "Reporter d'1 h", "Adiar 1 h");
     public static string ReminderOpenNote => T("Open note", "Abrir nota",
