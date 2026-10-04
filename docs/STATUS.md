@@ -4292,7 +4292,7 @@ Publicado como **1.6.1** con todo lo de esta sección.
 - **Windows ARM64**: el release añade `aldune-portable-win-arm64.zip` (sin instalador, sin firmar, `continue-on-error`).
   Compila y publica; no se ha podido ejecutar en un equipo ARM.
 
-## Unificación de Ajustes y escala tipográfica (2026-10-04, sin publicar)
+## 1.7.1 — Unificación de Ajustes y escala tipográfica (2026-10-04)
 
 - **Interruptores en Ajustes**: los sí/no (arranque, atajos, sonidos, posiciones, tareas, vista previa, pantalla completa,
   gestos, sync, actualizaciones…) son interruptores a la derecha, estilo Configuración de Windows 11
