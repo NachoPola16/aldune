@@ -129,6 +129,33 @@ public sealed class AppCoordinator
         RequestLinkedCheck(noteId);
     }
 
+    public void SaveNoteAsLinkedFile(Guid noteId, Window owner)
+    {
+        if (_repository.GetById(noteId) is not { IsProtected: false } note) return;
+        if (_openNoteWindows.TryGetValue(noteId, out var window)) window.FlushPending();
+        var dialog = new Microsoft.Win32.SaveFileDialog
+        {
+            Filter = Strings.LinkedFileFilter,
+            FileName = MarkdownExport.SuggestedFileName(note.Text),
+            DefaultExt = ".md",
+            OverwritePrompt = false,   // Aldune no reemplaza archivos: si existe, se avisa abajo
+        };
+        if (dialog.ShowDialog(owner) != true) return;
+        if (System.IO.File.Exists(dialog.FileName))
+        {
+            AppDialog.Show(owner, Strings.LinkedSaveAsExists(System.IO.Path.GetFileName(dialog.FileName)),
+                Strings.LinkedSaveAs, MessageBoxButton.OK, MessageBoxImage.Warning);
+            return;
+        }
+        if (LinkMessage(LinkedFiles.SaveAs(noteId, dialog.FileName), dialog.FileName) is { } error)
+        {
+            AppDialog.Show(owner, error, Strings.LinkedSaveAs, MessageBoxButton.OK, MessageBoxImage.Warning);
+            return;
+        }
+        LinkedNoteDisplay.Set(_repository.GetFileLinks());
+        RefreshAll();
+    }
+
     public void ConvertLinkedToNormal(Guid noteId, Window owner)
     {
         if (LinkedNoteDisplay.PathOf(noteId) is not { } path) return;

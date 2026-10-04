@@ -72,6 +72,33 @@ public sealed partial class LinkedFileService
     /// <summary>"Convertir en nota normal": la nota se queda con su texto; el archivo, donde estaba.</summary>
     public void Unlink(Guid noteId) => _repository.DeleteFileLink(noteId);
 
+    /// <summary>"Guardar como archivo vinculado…": crea el archivo (UTF-8 sin BOM, CRLF) y vincula la nota.
+    /// Nunca sobre un archivo que ya existe: eso sería reemplazar algo del usuario con una nota.</summary>
+    public LinkResult SaveAs(Guid noteId, string path)
+    {
+        if (!LinkedFileFormat.IsSupportedExtension(path)) return new LinkResult(LinkOutcome.UnsupportedExtension);
+        if (_repository.GetById(noteId) is not { IsProtected: false } note) return new LinkResult(LinkOutcome.Unreadable);
+        try
+        {
+            var full = Path.GetFullPath(path);
+            var bytes = LinkedFileFormat.Encode(MarkdownLink.ToFileText(note.Text, ""), LinkedEncoding.Utf8);
+            using (var stream = new FileStream(full, FileMode.CreateNew, FileAccess.Write))
+                stream.Write(bytes);
+            _repository.SaveFileLink(new NoteFileLink(noteId, full, SyncEnabled: false,
+                LinkedFileFormat.Hash(bytes), WriteTime(full), LinkedFileFormat.HashText(note.Text)));
+            return new LinkResult(LinkOutcome.Linked, noteId);
+        }
+        catch (Exception ex) when (IsFileError(ex))
+        {
+            return new LinkResult(LinkOutcome.Unreadable);
+        }
+    }
+
+    public void SetSync(Guid noteId, bool enabled)
+    {
+        if (_repository.GetFileLink(noteId) is { } link) _repository.SaveFileLink(link with { SyncEnabled = enabled });
+    }
+
     public ReconcileResult Reconcile(Guid noteId)
     {
         var link = _repository.GetFileLink(noteId);

@@ -1579,6 +1579,20 @@ public static class Strings
         $"{title} wurde in einem anderen Programm geändert, während du es hier bearbeitet hast. Deine Version steht in einer neuen Notiz.",
         $"{title} a été modifié dans un autre programme pendant que vous l'éditiez ici. Votre version est dans une nouvelle note.",
         $"{title} mudou em outro programa enquanto você o editava aqui. Sua versão está em uma nota nova.");
+    public static string LinkedSyncThisNote => T("Sync this note", "Sincronizar esta nota",
+        "Diese Notiz synchronisieren", "Synchroniser cette note", "Sincronizar esta nota");
+    public static string LinkedOpenInEditor => T("Open in its editor", "Abrir en su editor",
+        "Im zugehörigen Editor öffnen", "Ouvrir dans son éditeur", "Abrir no editor padrão");
+    public static string LinkedShowInExplorer => T("Show in File Explorer", "Mostrar en el Explorador",
+        "Im Explorer anzeigen", "Afficher dans l'Explorateur", "Mostrar no Explorador");
+    public static string LinkedSaveAs => T("Save as linked file…", "Guardar como archivo vinculado…",
+        "Als verknüpfte Datei speichern…", "Enregistrer comme fichier lié…", "Salvar como arquivo vinculado…");
+    public static string LinkedSaveAsExists(string name) => T(
+        $"{name} already exists. Aldune doesn't replace files: choose another name.",
+        $"{name} ya existe. Aldune no reemplaza archivos: elige otro nombre.",
+        $"{name} existiert bereits. Aldune ersetzt keine Dateien: Wähle einen anderen Namen.",
+        $"{name} existe déjà. Aldune ne remplace pas de fichiers : choisissez un autre nom.",
+        $"{name} já existe. O Aldune não substitui arquivos: escolha outro nome.");
     public static string LinkedProtectDisabled => T(
         "A linked note is the file itself, and the file is plain text. Convert it to a normal note to protect it.",
         "Una nota vinculada es el propio archivo, y el archivo está en claro. Conviértela en nota normal para protegerla.",

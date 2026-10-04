@@ -216,4 +216,35 @@ public class LinkedFileServiceTests : IDisposable
 
         Assert.True(LinkedFileService.LooksChanged(_repository.GetFileLink(id)!));
     }
+
+    [Fact]
+    public void SaveAs_WritesTheFileAndLinksTheNote()
+    {
+        var note = _repository.Create("Título\r\n☐ a\r\n→ b", "#EBD38B", "primary");
+        var path = Path.Combine(_dir, "nueva.md");
+
+        var result = _sut.SaveAs(note.Id, path);
+
+        Assert.Equal(new LinkResult(LinkOutcome.Linked, note.Id), result);
+        Assert.Equal("Título\r\n- [ ] a\r\n- b", File.ReadAllText(path));
+        Assert.Equal(ReconcileOutcome.Unchanged, _sut.Reconcile(note.Id).Outcome);
+    }
+
+    [Fact]
+    public void SaveAs_NeverOverwritesAnExistingFile()
+    {
+        var note = _repository.Create("x", "#EBD38B", "primary");
+        var path = WriteFile("existe.md", "del usuario");
+
+        Assert.Equal(LinkOutcome.Unreadable, _sut.SaveAs(note.Id, path).Outcome);
+        Assert.Equal("del usuario", File.ReadAllText(path));
+    }
+
+    [Fact]
+    public void SetSync_TogglesTheFlag()
+    {
+        var id = OpenLinked(WriteFile("tema.md", "x"));
+        _sut.SetSync(id, true);
+        Assert.True(_repository.GetFileLink(id)!.SyncEnabled);
+    }
 }

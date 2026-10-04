@@ -1153,7 +1153,69 @@ public partial class NoteWindow : Window
         var listActions = TaskLists.HasChecked(TextBody.Text) ? Visibility.Visible : Visibility.Collapsed;
         UncheckAllButton.Visibility = listActions;
         RemoveCheckedButton.Visibility = listActions;
+        UpdateLinkedMenu();
         ActionsPopup.IsOpen = true;
+    }
+
+    // Las entradas de nota vinculada solo existen para ella; "Guardar como archivo vinculado…" solo para una
+    // normal sin proteger (una protegida no se vincula: el archivo estaría en claro, spec decisión 7).
+    private void UpdateLinkedMenu()
+    {
+        bool linked = IsLinked;
+        var visible = linked ? Visibility.Visible : Visibility.Collapsed;
+        LinkedSyncButton.Visibility = OpenInEditorButton.Visibility = ShowInExplorerButton.Visibility =
+            ConvertToNormalButton.Visibility = visible;
+        bool canSaveAs = !linked && !_note.IsProtected;
+        SaveAsLinkedButton.Visibility = canSaveAs ? Visibility.Visible : Visibility.Collapsed;
+        LinkedSeparator.Visibility = linked || canSaveAs ? Visibility.Visible : Visibility.Collapsed;
+        if (linked) UpdateLinkedSyncButton();
+    }
+
+    private void UpdateLinkedSyncButton()
+    {
+        bool on = _repository.GetFileLink(_note.Id)?.SyncEnabled == true;
+        LinkedSyncButton.Content = (on ? "✓ " : "    ") + Strings.LinkedSyncThisNote;
+    }
+
+    private void OnLinkedSyncClick(object sender, RoutedEventArgs e)
+    {
+        bool enabled = _repository.GetFileLink(_note.Id)?.SyncEnabled != true;
+        _coordinator.LinkedFiles.SetSync(_note.Id, enabled);
+        UpdateLinkedSyncButton();
+        UpdateSyncSignal();
+    }
+
+    private void OnOpenInEditorClick(object sender, RoutedEventArgs e)
+    {
+        ActionsPopup.IsOpen = false;
+        if (LinkedNoteDisplay.PathOf(_note.Id) is not { } path) return;
+        try
+        {
+            System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo(path) { UseShellExecute = true });
+        }
+        catch (System.ComponentModel.Win32Exception)
+        {
+            // Sin programa asociado a la extensión: Windows ya lo explica en su propio diálogo.
+        }
+    }
+
+    private void OnShowInExplorerClick(object sender, RoutedEventArgs e)
+    {
+        ActionsPopup.IsOpen = false;
+        if (LinkedNoteDisplay.PathOf(_note.Id) is { } path)
+            System.Diagnostics.Process.Start("explorer.exe", $"/select,\"{path}\"");
+    }
+
+    private void OnConvertToNormalClick(object sender, RoutedEventArgs e)
+    {
+        ActionsPopup.IsOpen = false;
+        _coordinator.ConvertLinkedToNormal(_note.Id, this);
+    }
+
+    private void OnSaveAsLinkedClick(object sender, RoutedEventArgs e)
+    {
+        ActionsPopup.IsOpen = false;
+        _coordinator.SaveNoteAsLinkedFile(_note.Id, this);
     }
 
     /// <summary>Desmarca todas las tareas: volver a empezar una lista que se repite. Se puede deshacer

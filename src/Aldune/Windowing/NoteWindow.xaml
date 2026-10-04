@@ -363,6 +363,25 @@
                                 Style="{StaticResource NoteMenuItemStyle}" />
                         <Border Background="{DynamicResource AlduneRaisedBrush}" Height="1" Margin="0,4,0,4" />
 
+                        <!-- Solo en una nota vinculada a un archivo (las cuatro primeras) o en una normal sin
+                             proteger (la última); NoteWindow.OnMenuClick decide cuáles se ven. -->
+                        <Button x:Name="LinkedSyncButton" Click="OnLinkedSyncClick" Visibility="Collapsed"
+                                Style="{StaticResource NoteMenuItemStyle}" />
+                        <Button x:Name="OpenInEditorButton" Click="OnOpenInEditorClick" Visibility="Collapsed"
+                                Content="{x:Static res:Strings.LinkedOpenInEditor}"
+                                Style="{StaticResource NoteMenuItemStyle}" />
+                        <Button x:Name="ShowInExplorerButton" Click="OnShowInExplorerClick" Visibility="Collapsed"
+                                Content="{x:Static res:Strings.LinkedShowInExplorer}"
+                                Style="{StaticResource NoteMenuItemStyle}" />
+                        <Button x:Name="ConvertToNormalButton" Click="OnConvertToNormalClick" Visibility="Collapsed"
+                                Content="{x:Static res:Strings.LinkedConvert}"
+                                Style="{StaticResource NoteMenuItemStyle}" />
+                        <Button x:Name="SaveAsLinkedButton" Click="OnSaveAsLinkedClick" Visibility="Collapsed"
+                                Content="{x:Static res:Strings.LinkedSaveAs}"
+                                Style="{StaticResource NoteMenuItemStyle}" />
+                        <Border x:Name="LinkedSeparator" Background="{DynamicResource AlduneRaisedBrush}" Height="1"
+                                Margin="0,4,0,4" Visibility="Collapsed" />
+
                         <Button x:Name="ExportButton" Click="OnExportClick"
                                 Content="{x:Static res:Strings.ExportToMarkdown}"
                                 Style="{StaticResource NoteMenuItemStyle}" />
