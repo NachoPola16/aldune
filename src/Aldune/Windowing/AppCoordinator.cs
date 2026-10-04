@@ -192,6 +192,8 @@ public sealed class AppCoordinator
                 break;
             case ReconcileOutcome.Written:
                 window?.ReapplyAppearance();   // la señal de sync pasa a pendiente si la nota se sincroniza
+                // Fecha de escritura nueva: sin refrescar, el sondeo creería cada 3 s que el archivo cambió.
+                _linkedWatch?.Refresh();
                 break;
             default:
                 if (changedState) RefreshAll();

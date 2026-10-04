@@ -10,7 +10,8 @@ namespace Aldune.Windowing;
 internal static class LinkedNoteDisplay
 {
     private static Dictionary<Guid, string> _paths = [];
-    private static readonly HashSet<Guid> Unavailable = [];
+    // Lo lee el temporizador del sondeo (otro hilo) y lo escribe la interfaz: un HashSet se corrompería.
+    private static readonly System.Collections.Concurrent.ConcurrentDictionary<Guid, byte> Unavailable = new();
 
     public static void Set(IEnumerable<NoteFileLink> links) =>
         _paths = links.ToDictionary(link => link.NoteId, link => link.Path);
@@ -19,12 +20,12 @@ internal static class LinkedNoteDisplay
 
     public static string? PathOf(Guid noteId) => _paths.GetValueOrDefault(noteId);
 
-    public static bool IsUnavailable(Guid noteId) => Unavailable.Contains(noteId);
+    public static bool IsUnavailable(Guid noteId) => Unavailable.ContainsKey(noteId);
 
     public static void SetUnavailable(Guid noteId, bool unavailable)
     {
-        if (unavailable) Unavailable.Add(noteId);
-        else Unavailable.Remove(noteId);
+        if (unavailable) Unavailable[noteId] = 0;
+        else Unavailable.TryRemove(noteId, out _);
     }
 
     /// <summary>El título de siempre; si la primera línea está vacía y la nota es un archivo, su nombre.</summary>

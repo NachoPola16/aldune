@@ -1398,7 +1398,21 @@ public partial class NoteWindow : Window
     /// como editada, con el cursor en la misma línea si existe.</summary>
     internal void ReloadFromRepository()
     {
-        if (_hasPendingEdit || _repository.GetById(_note.Id) is not { } fresh) return;
+        if (_hasPendingEdit)
+        {
+            // Se tecleó sobre el texto viejo mientras llegaba la recarga. Ni se descarta lo tecleado ni se deja
+            // que luego se escriba encima del archivo nuevo: se guarda y se olvida lo que se sabía del archivo,
+            // de modo que la siguiente comprobación lo vea como cambiado con cambios pendientes y dé conflicto
+            // (la versión de la ventana a "⚠ Conflicto", el archivo intacto).
+            _autosaveTimer.Stop();
+            _hasPendingEdit = false;
+            var known = _repository.GetFileLink(_note.Id);
+            _repository.UpdateFileLinkKnownState(_note.Id, null, null, known?.KnownTextHash);
+            _repository.UpdateText(_note.Id, CurrentText);
+            _coordinator.RequestLinkedCheck(_note.Id);
+            return;
+        }
+        if (_repository.GetById(_note.Id) is not { } fresh) return;
         int line = TextBody.GetLineIndexFromCharacterIndex(TextBody.CaretIndex);
         var (title, body) = NoteText.Split(fresh.Text);
         TitleBox.Text = title;

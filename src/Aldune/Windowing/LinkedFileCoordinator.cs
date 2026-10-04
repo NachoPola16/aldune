@@ -3,6 +3,7 @@ using System.IO;
 using System.Threading.Channels;
 using System.Windows.Threading;
 using Aldune.Core;
+using Aldune.Interop;
 
 namespace Aldune.Windowing;
 
@@ -30,6 +31,13 @@ internal sealed class LinkedFileCoordinator : IDisposable
     private HashSet<Guid> _activeIds = [];
     private Timer? _pollTimer;
     private int _pollTick;
+    private int _polling;
+    // Carpetas cuyo vigilante se está creando o falló (unidad de red desconectada): se reintentan espaciadas.
+    private readonly Dictionary<string, DateTime> _watcherRetryAt = new(StringComparer.OrdinalIgnoreCase);
+    private readonly HashSet<string> _watcherCreating = new(StringComparer.OrdinalIgnoreCase);
+    private readonly ConcurrentDictionary<Guid, DateTime> _unavailableRetryAt = new();
+    private static readonly TimeSpan WatcherRetry = TimeSpan.FromMinutes(1);
+    private static readonly TimeSpan UnavailableRetry = TimeSpan.FromSeconds(15);
 
     public LinkedFileCoordinator(LinkedFileService service, NotesRepository repository, Dispatcher dispatcher,
         Func<Guid, bool> isOpen, Action<Guid> flushOpenWindow, Action<Guid, ReconcileResult> onResult)
@@ -71,34 +79,65 @@ internal sealed class LinkedFileCoordinator : IDisposable
         _activeIds = links.Select(link => link.NoteId).ToHashSet();
 
         var folders = links.Select(link => Path.GetDirectoryName(link.Path)!).ToHashSet(StringComparer.OrdinalIgnoreCase);
-        foreach (var gone in _watchers.Keys.Except(folders, StringComparer.OrdinalIgnoreCase).ToList())
+        lock (_watchers)
         {
-            _watchers[gone].Dispose();
-            _watchers.Remove(gone);
+            foreach (var gone in _watchers.Keys.Except(folders, StringComparer.OrdinalIgnoreCase).ToList())
+            {
+                _watchers[gone].Dispose();
+                _watchers.Remove(gone);
+            }
         }
-        foreach (var folder in folders.Where(folder => !_watchers.ContainsKey(folder)))
+        // El constructor de FileSystemWatcher consulta la carpeta y, en una unidad de red desconectada, puede
+        // bloquear segundos: nunca en el hilo de la interfaz (se llama en cada refresco) ni sin espaciar los
+        // reintentos (revisión final, I3). El sondeo cubre mientras tanto.
+        var now = DateTime.UtcNow;
+        foreach (var folder in folders)
         {
-            try
+            lock (_watchers)
             {
-                var watcher = new FileSystemWatcher(folder)
-                {
-                    NotifyFilter = NotifyFilters.LastWrite | NotifyFilters.FileName | NotifyFilters.Size,
-                    IncludeSubdirectories = false,
-                };
-                watcher.Changed += (_, e) => OnFileEvent(e.FullPath);
-                watcher.Created += (_, e) => OnFileEvent(e.FullPath);
-                watcher.Deleted += (_, e) => OnFileEvent(e.FullPath);
-                watcher.Renamed += (_, e) => OnRenamed(e.OldFullPath, e.FullPath);
-                watcher.EnableRaisingEvents = true;
-                _watchers[folder] = watcher;
+                if (_watchers.ContainsKey(folder) || _watcherCreating.Contains(folder)) continue;
+                if (_watcherRetryAt.TryGetValue(folder, out var retryAt) && retryAt > now) continue;
+                _watcherCreating.Add(folder);
             }
-            catch (Exception ex) when (ex is ArgumentException or IOException or UnauthorizedAccessException)
-            {
-                // Carpeta que no existe o unidad desconectada: el sondeo lo cubre.
-            }
+            var target = folder;
+            _ = Task.Run(() => CreateWatcher(target));
         }
 
         foreach (var id in newlyActive) RequestCheck(id);
+    }
+
+    private void CreateWatcher(string folder)
+    {
+        FileSystemWatcher? watcher = null;
+        try
+        {
+            watcher = new FileSystemWatcher(folder)
+            {
+                NotifyFilter = NotifyFilters.LastWrite | NotifyFilters.FileName | NotifyFilters.Size,
+                IncludeSubdirectories = false,
+            };
+            watcher.Changed += (_, e) => OnFileEvent(e.FullPath);
+            watcher.Created += (_, e) => OnFileEvent(e.FullPath);
+            watcher.Deleted += (_, e) => OnFileEvent(e.FullPath);
+            watcher.Renamed += (_, e) => OnRenamed(e.OldFullPath, e.FullPath);
+            watcher.EnableRaisingEvents = true;
+            lock (_watchers)
+            {
+                _watcherCreating.Remove(folder);
+                _watcherRetryAt.Remove(folder);
+                _watchers[folder] = watcher;
+            }
+        }
+        catch (Exception ex) when (ex is ArgumentException or IOException or UnauthorizedAccessException)
+        {
+            // Carpeta que no existe o unidad desconectada: el sondeo lo cubre y se reintenta más tarde.
+            watcher?.Dispose();
+            lock (_watchers)
+            {
+                _watcherCreating.Remove(folder);
+                _watcherRetryAt[folder] = DateTime.UtcNow + WatcherRetry;
+            }
+        }
     }
 
     private void OnFileEvent(string path)
@@ -117,7 +156,8 @@ internal sealed class LinkedFileCoordinator : IDisposable
             if (!LinkedFileFormat.IsSupportedExtension(newPath)) continue;
             _dispatcher.BeginInvoke(() =>
             {
-                _repository.SaveFileLink(link with { Path = newPath });
+                // Solo la ruta, sobre la fila actual: `link` es una foto que puede ser vieja (revisión final, I2).
+                _repository.UpdateFileLinkPath(link.NoteId, newPath);
                 LinkedNoteDisplay.Set(_repository.GetFileLinks());
                 Refresh();
                 RequestCheck(link.NoteId);
@@ -128,12 +168,38 @@ internal sealed class LinkedFileCoordinator : IDisposable
     // En el hilo del temporizador: solo mira fechas (puede tardar en una unidad de red) y pide comprobar.
     private void Poll()
     {
-        bool all = Interlocked.Increment(ref _pollTick) % ClosedNotePollEvery == 0;
-        foreach (var link in _activeLinks)
+        // Una llamada bloqueada en una unidad de red no debe acumular otras detrás (el temporizador sigue disparando).
+        if (Interlocked.Exchange(ref _polling, 1) == 1) return;
+        try
         {
-            if (!all && !_isOpen(link.NoteId)) continue;
-            if (LinkedFileService.LooksChanged(link) || LinkedNoteDisplay.IsUnavailable(link.NoteId))
-                _dispatcher.BeginInvoke(() => RequestCheck(link.NoteId));
+            bool all = Interlocked.Increment(ref _pollTick) % ClosedNotePollEvery == 0;
+            var now = DateTime.UtcNow;
+            foreach (var link in _activeLinks)
+            {
+                if (!all && !_isOpen(link.NoteId)) continue;
+                if (LinkedNoteDisplay.IsUnavailable(link.NoteId))
+                {
+                    // Reintento espaciado: cada comprobación de una ruta inalcanzable ocupa la cola única.
+                    if (_unavailableRetryAt.TryGetValue(link.NoteId, out var last) && now - last < UnavailableRetry) continue;
+                    _unavailableRetryAt[link.NoteId] = now;
+                }
+                else
+                {
+                    _unavailableRetryAt.TryRemove(link.NoteId, out _);
+                    if (!LinkedFileService.LooksChanged(link)) continue;
+                }
+                var id = link.NoteId;
+                _dispatcher.BeginInvoke(() => RequestCheck(id));
+            }
+        }
+        catch (Exception ex)
+        {
+            // En el hilo del temporizador una excepción sin atrapar tumba el proceso.
+            DockDiagnostics.Write("linked", $"sondeo fallido: {ex.Message}");
+        }
+        finally
+        {
+            Volatile.Write(ref _polling, 0);
         }
     }
 
@@ -147,9 +213,16 @@ internal sealed class LinkedFileCoordinator : IDisposable
             {
                 result = _service.Reconcile(noteId);
             }
-            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or Microsoft.Data.Sqlite.SqliteException)
+            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
             {
                 result = new ReconcileResult(ReconcileOutcome.Unavailable);
+            }
+            catch (Exception ex)
+            {
+                // Cualquier otro fallo (base de datos, descifrado…) no puede matar al consumidor: no se volvería
+                // a escribir ningún archivo en toda la sesión. Se anota y se sigue con la siguiente.
+                DockDiagnostics.Write("linked", $"comprobación fallida: {ex.GetType().Name}: {ex.Message}");
+                continue;
             }
             await _dispatcher.BeginInvoke(() => _onResult(noteId, result));
         }
@@ -159,7 +232,10 @@ internal sealed class LinkedFileCoordinator : IDisposable
     {
         _pollTimer?.Dispose();
         _queue.Writer.TryComplete();
-        foreach (var watcher in _watchers.Values) watcher.Dispose();
-        _watchers.Clear();
+        lock (_watchers)
+        {
+            foreach (var watcher in _watchers.Values) watcher.Dispose();
+            _watchers.Clear();
+        }
     }
 }
