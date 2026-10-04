@@ -14,6 +14,7 @@
         UseLayoutRounding="True"
         SnapsToDevicePixels="True"
         TextOptions.TextFormattingMode="Display"
+        AllowDrop="True" DragOver="OnDockDragOver" Drop="OnDockDrop"
         PreviewKeyDown="OnDockPreviewKeyDown">
     <!-- AllowsTransparency, a diferencia del resto de la app. Antes la forma del dock la recortaba
          SetWindowRgn, y una región es una máscara de 1 BIT: un píxel está dentro o fuera, sin
@@ -43,6 +44,7 @@
             </Style.Triggers>
         </Style>
         <local:NoteTabLabelConverter x:Key="NoteTabLabelConverter" />
+        <local:NoteLinkedConverter x:Key="NoteLinkedConverter" />
         <local:NoteRimConverter x:Key="NoteRimConverter" />
         <local:NoteDisplayColorConverter x:Key="NoteDisplayColorConverter" />
         <local:NoteRestOutlineConverter x:Key="NoteRestOutlineConverter" />
@@ -183,6 +185,14 @@
                                        HorizontalAlignment="Right" VerticalAlignment="Top"
                                        Margin="0,8,10,0"
                                        Visibility="Collapsed" />
+
+                            <!-- Nota vinculada a un archivo: página pequeña junto al hueco del recordatorio, con la
+                                 ruta en el tooltip (spec, decisión 6). Hereda el color de la etiqueta. -->
+                            <TextBlock Text="&#xE7C3;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" FontSize="10"
+                                       Foreground="{Binding Converter={StaticResource NoteFaceConverter}, ConverterParameter=Label}"
+                                       HorizontalAlignment="Right" VerticalAlignment="Top" Margin="0,9,28,0" Opacity="0.75"
+                                       Visibility="{Binding Converter={StaticResource NoteLinkedConverter}}"
+                                       ToolTip="{Binding Converter={StaticResource NoteLinkedConverter}, ConverterParameter=Path}" />
 
                             <local:BevelEdge x:Name="CardBevel" />
                             <Border x:Name="HoverOverlay" Background="#1E1A14" Opacity="0" CornerRadius="{DynamicResource AlduneRadiusTabRight}" />
@@ -665,6 +675,8 @@
                                     Style="{StaticResource NoteMenuItemStyle}" />
                             <Button x:Name="NewNoteMenuClipboardButton"
                                     Click="OnNewNoteMenuClipboardClick"
+                                    Style="{StaticResource NoteMenuItemStyle}" />
+                            <Button Content="{x:Static res:Strings.LinkedOpenFile}" Click="OnNewNoteMenuOpenFileClick"
                                     Style="{StaticResource NoteMenuItemStyle}" />
                         </StackPanel>
                     </Border>

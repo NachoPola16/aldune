@@ -1765,6 +1765,27 @@ public partial class EdgeDockWindow : Window
         CreateNoteFromMenu(text);
     }
 
+    private void OnNewNoteMenuOpenFileClick(object sender, RoutedEventArgs e)
+    {
+        NewNoteMenuPopup.IsOpen = false;
+        HoldOpenForWindow();
+        _coordinator.ShowOpenLinkedFileDialog(this);
+    }
+
+    // Arrastrar archivos desde el Explorador abre cada uno como nota vinculada (spec, decisión 6).
+    private void OnDockDragOver(object sender, DragEventArgs e)
+    {
+        e.Effects = e.Data.GetDataPresent(DataFormats.FileDrop) ? DragDropEffects.Link : DragDropEffects.None;
+        e.Handled = true;
+    }
+
+    private void OnDockDrop(object sender, DragEventArgs e)
+    {
+        if (e.Data.GetData(DataFormats.FileDrop) is not string[] files || files.Length == 0) return;
+        e.Handled = true;
+        _coordinator.OpenLinkedFiles(files, this);
+    }
+
     private void RaiseNewNoteMenu()
     {
         if (!NewNoteMenuPopup.IsOpen

@@ -44,6 +44,7 @@ internal sealed class TrayIcon : IDisposable
             ForeColor = Ink
         };
         menu.Items.Add(new ToolStripMenuItem(Strings.TrayNewNote, null, (_, _) => _coordinator.CreateAndOpenNote()));
+        menu.Items.Add(new ToolStripMenuItem(Strings.LinkedOpenFile, null, (_, _) => _coordinator.ShowOpenLinkedFileDialog(null)));
         menu.Items.Add(new ToolStripMenuItem(Strings.TrayManageNotes, null, (_, _) => _coordinator.OpenNotesManager()));
         menu.Items.Add(new ToolStripSeparator());
 

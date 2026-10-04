@@ -21,6 +21,7 @@
     </WindowChrome.WindowChrome>
     <Window.Resources>
         <local:NoteTitleConverter x:Key="NoteTitleConverter" />
+        <local:NoteLinkedConverter x:Key="NoteLinkedConverter" />
         <local:NoteRimConverter x:Key="NoteRimConverter" />
         <local:NoteDisplayColorConverter x:Key="NoteDisplayColorConverter" />
         <local:NoteLabelColorConverter x:Key="NoteLabelColorConverter" />
@@ -530,11 +531,18 @@
                                             <ColumnDefinition Width="*" />
                                             <ColumnDefinition Width="Auto" />
                                         </Grid.ColumnDefinitions>
-                                        <TextBlock Grid.Column="0"
-                                                   Text="{Binding Note, Converter={StaticResource NoteTitleConverter}}"
-                                                   FontWeight="SemiBold" FontSize="13"
-                                                   VerticalAlignment="Center"
-                                                   TextTrimming="CharacterEllipsis" />
+                                        <DockPanel Grid.Column="0" LastChildFill="True">
+                                            <!-- Nota vinculada a un archivo: misma página que en la pestaña, con la ruta. -->
+                                            <TextBlock DockPanel.Dock="Left" Text="&#xE7C3;"
+                                                       FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" FontSize="11"
+                                                       VerticalAlignment="Center" Margin="0,0,5,0" Opacity="0.75"
+                                                       Visibility="{Binding Note, Converter={StaticResource NoteLinkedConverter}}"
+                                                       ToolTip="{Binding Note, Converter={StaticResource NoteLinkedConverter}, ConverterParameter=Path}" />
+                                            <TextBlock Text="{Binding Note, Converter={StaticResource NoteTitleConverter}}"
+                                                       FontWeight="SemiBold" FontSize="13"
+                                                       VerticalAlignment="Center"
+                                                       TextTrimming="CharacterEllipsis" />
+                                        </DockPanel>
                                         <TextBlock Grid.Column="1"
                                                    Text="{Binding Note.UpdatedAt, Converter={StaticResource NoteDateConverter}}"
                                                    ToolTip="{Binding Note.UpdatedAt, Converter={StaticResource NoteDateConverter}, ConverterParameter=full}"

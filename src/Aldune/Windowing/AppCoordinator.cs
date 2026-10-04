@@ -54,6 +54,45 @@ public sealed class AppCoordinator
 
     public void RequestLinkedCheck(Guid noteId) => _linkedWatch?.RequestCheck(noteId);
 
+    public void ShowOpenLinkedFileDialog(Window? owner)
+    {
+        var dialog = new Microsoft.Win32.OpenFileDialog { Filter = Strings.LinkedFileFilter, Multiselect = true, CheckFileExists = true };
+        if (dialog.ShowDialog(owner) != true) return;
+        OpenLinkedFiles(dialog.FileNames, owner);
+    }
+
+    /// <summary>
+    /// Abre como notas vinculadas los archivos dados (diálogo, arrastrar, "Abrir con"). Uno ya vinculado
+    /// muestra su nota; uno nuevo entra al final del mazo, con la etiqueta de la vista si la hay, y se abre
+    /// el último. Los rechazados se explican juntos al final.
+    /// </summary>
+    public void OpenLinkedFiles(IEnumerable<string> paths, Window? owner)
+    {
+        Guid? last = null;
+        var errors = new List<string>();
+        foreach (var path in paths)
+        {
+            var result = LinkedFiles.Open(path);
+            if (result.NoteId is { } id)
+            {
+                last = id;
+                if (result.Outcome == LinkOutcome.Linked &&
+                    _settings is { DockView: DockViewKind.Tag, DockTagFilter: { } viewTag })
+                    _repository.SetTags(id, [viewTag]);
+            }
+            else if (LinkMessage(result, path) is { } error)
+            {
+                errors.Add(error);
+            }
+        }
+
+        LinkedNoteDisplay.Set(_repository.GetFileLinks());
+        RefreshAll();
+        if (last is { } open) OpenNoteById(open);
+        if (errors.Count > 0)
+            AppDialog.Show(owner, string.Join("\n", errors), Strings.LinkedOpenFile, MessageBoxButton.OK, MessageBoxImage.Warning);
+    }
+
     /// <summary>El texto de un vínculo rechazado, o null si salió bien.</summary>
     internal static string? LinkMessage(LinkResult result, string path)
     {
