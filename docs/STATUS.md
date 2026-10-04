@@ -4189,5 +4189,4 @@ Sin publicar.
   limpiarse; el filtro de importar no deja ver archivos sin la extensión `.json`.
 
 Tests: 1212/1212. Verificado con sonda (179 comprobaciones: forma del archivo, ninguna fuga, cancelar,
-copia previa, aplicación en vivo, 13 casos de error, 31 nombres en cinco idiomas). Pendiente de este bloque:
-smoke test con el "ok" del usuario.
+copia previa, aplicación en vivo, 13 casos de error, 31 nombres en cinco idiomas) y smoke test en verde.
