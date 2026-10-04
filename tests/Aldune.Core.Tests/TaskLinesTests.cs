@@ -185,21 +185,61 @@ public class TaskLinesTests
     }
 
     [Fact]
-    public void ToggleTaskLineAt_ABulletLine_ConvertsItToATaskInstead()
+    public void ToggleTaskLineAt_ABulletLine_AddsTheBoxAfterTheArrow()
     {
-        // Pulsar el atajo de tarea sobre una viñea ya existente la convierte, no la apila -- mismo
-        // criterio simétrico que BulletLines.ToggleBulletLineAt con una tarea.
+        // Flecha y casilla son dos interruptores independientes: el atajo de tarea sobre una viñeta añade la
+        // casilla detrás de la flecha ("→ ☐ x"), no la sustituye.
         var (text, caret) = TaskLines.ToggleTaskLineAt("→ comprar pan", caret: 9);
 
-        Assert.Equal("☐ comprar pan", text);
+        Assert.Equal("→ ☐ comprar pan", text);
+        Assert.Equal(11, caret);
+    }
+
+    [Fact]
+    public void ToggleTaskLineAt_ArrowAndBox_RemovesOnlyTheBox()
+    {
+        var (text, caret) = TaskLines.ToggleTaskLineAt("→ ☐ comprar pan", caret: 11);
+
+        Assert.Equal("→ comprar pan", text);
         Assert.Equal(9, caret);
     }
 
     [Fact]
-    public void ToggleTaskLineAt_ABulletLineWithIndent_KeepsTheIndentAfterConverting()
+    public void ArrowFollowedByABox_IsATask()
+    {
+        Assert.True(TaskLines.IsTaskLine("→ ☐ a"));
+        Assert.False(TaskLines.IsChecked("→ ☐ a"));
+        Assert.True(TaskLines.IsChecked("  → ☒ a"));
+        Assert.Equal((1, 2), TaskLines.Count("→ ☒ a\n→ ☐ b\n→ c"));
+    }
+
+    [Fact]
+    public void ToggleCheckboxAt_ArrowAndBox_FlipsTheBox()
+    {
+        Assert.Equal("→ ☒ a", TaskLines.ToggleCheckboxAt("→ ☐ a", 2));
+        Assert.Null(TaskLines.ToggleCheckboxAt("→ ☐ a", 0));
+    }
+
+    [Fact]
+    public void EnterContinuation_ArrowAndBox_ContinuesWithBoth()
+    {
+        var (text, _) = TaskLines.EnterContinuation("→ ☐ a", caret: 5, newLine: "\n")!.Value;
+        Assert.Equal("→ ☐ a\n→ ☐ ", text);
+    }
+
+    [Fact]
+    public void EnterContinuation_AnEmptyArrowAndBox_EndsTheList()
+    {
+        var (text, caret) = TaskLines.EnterContinuation("x\n→ ☐ ", caret: 6, newLine: "\n")!.Value;
+        Assert.Equal("x\n", text);
+        Assert.Equal(2, caret);
+    }
+
+    [Fact]
+    public void ToggleTaskLineAt_ABulletLineWithIndent_KeepsTheIndentAndTheArrow()
     {
         var (text, _) = TaskLines.ToggleTaskLineAt("    → sub-punto", caret: 0);
-        Assert.Equal("    ☐ sub-punto", text);
+        Assert.Equal("    → ☐ sub-punto", text);
     }
 
     [Fact]

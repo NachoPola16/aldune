@@ -18,7 +18,8 @@ public static partial class MarkdownLink
     private readonly record struct Line(string Content, string Terminator);
 
     // Marcador seguido de espacio (así "**negrita**" y "---" no cuentan) y, opcional, la casilla: "[ ]" de
-    // Markdown o el glifo tal cual ("- ☐ tarea", como en PENDIENTES.md): ambas son tareas, no "→ ☐".
+    // Markdown (una tarea: "☐ x") o el glifo tal cual ("- ☐ x", como en PENDIENTES.md: un elemento de lista con
+    // casilla, o sea flecha y casilla, "→ ☐ x").
     [GeneratedRegex(@"^(?<indent>[ \t]*)(?<marker>[-*+]) (?:\[(?<mark>[ xX])\](?: |$)|(?<glyph>[☐☑☒])(?: |$))?")]
     private static partial Regex ListItem();
 
@@ -53,7 +54,7 @@ public static partial class MarkdownLink
 
         string newLine = DominantNewLine(original);
         char marker = DominantBulletMarker(original);
-        bool glyphTasks = UsesGlyphTasks(original);
+        char doneGlyph = DominantDoneGlyph(original);
         var builder = new StringBuilder(noteText.Length + 64);
         for (int j = 0; j < edited.Count; j++)
         {
@@ -62,7 +63,7 @@ public static partial class MarkdownLink
 
             builder.Append(i >= 0 ? original[i].Content
                 : literal[j] ? editedContents[j]
-                : ToFileLine(editedContents[j], marker, glyphTasks));
+                : ToFileLine(editedContents[j], marker, doneGlyph));
 
             if (edited[j].Terminator.Length == 0) continue;
             builder.Append(i >= 0 && original[i].Terminator.Length > 0 ? original[i].Terminator : newLine);
@@ -125,18 +126,24 @@ public static partial class MarkdownLink
         if (!match.Success) return line;
         var indent = match.Groups["indent"].Value;
         var rest = line[match.Length..];
-        if (match.Groups["glyph"].Success) return indent + match.Groups["glyph"].Value + " " + rest;
+        if (match.Groups["glyph"].Success) return indent + BulletLines.Prefix + match.Groups["glyph"].Value + " " + rest;
         if (!match.Groups["mark"].Success) return indent + BulletLines.Prefix + rest;
         return indent + (match.Groups["mark"].Value == " " ? TaskLines.Unchecked : TaskLines.Checked) + " " + rest;
     }
 
-    private static string ToFileLine(string line, char bulletMarker, bool glyphTasks)
+    private static string ToFileLine(string line, char bulletMarker, char doneGlyph)
     {
         int task = TaskLines.GlyphIndex(line);
-        if (task >= 0 && glyphTasks) return line[..task] + "- " + line[task..];
+        int bullet = BulletLines.GlyphIndex(line);
+        if (task >= 0 && bullet >= 0 && bullet < task)
+        {
+            // Flecha + casilla: un elemento de lista con el glifo, "- ☐ x". El hecho se escribe con el que usa el
+            // archivo (☑ o ☒), para no mezclar dos en el mismo documento.
+            var glyph = TaskLines.IsChecked(line) ? doneGlyph : TaskLines.Unchecked;
+            return line[..bullet] + bulletMarker + " " + glyph + line[(task + 1)..];
+        }
         if (task >= 0)
             return line[..task] + (TaskLines.IsChecked(line) ? "- [x] " : "- [ ] ") + line[(task + TaskLines.PrefixLength(line, task))..];
-        int bullet = BulletLines.GlyphIndex(line);
         if (bullet >= 0)
             return line[..bullet] + bulletMarker + " " + line[(bullet + BulletLines.PrefixLength(line, bullet))..];
         return line;
@@ -150,20 +157,21 @@ public static partial class MarkdownLink
         return lf > crlf ? "\n" : "\r\n";
     }
 
-    // Un archivo que escribe sus tareas con el glifo ("- ☐") recibe las nuevas igual; si mezcla, gana la
-    // forma más usada y, en empate, la de Markdown ("- [ ]"), que es lo que lee cualquier otro programa.
-    private static bool UsesGlyphTasks(List<Line> lines)
+    // Glifo de "hecho" que usa el archivo en sus elementos "- ☑ x" / "- ☒ x": el más usado; sin ninguno, el de Aldune.
+    private static char DominantDoneGlyph(List<Line> lines)
     {
         var literal = LiteralLines(lines.Select(line => line.Content).ToList());
-        int glyph = 0, brackets = 0;
+        int alternate = 0, own = 0;
         for (int i = 0; i < lines.Count; i++)
         {
             if (literal[i]) continue;
             var match = ListItem().Match(lines[i].Content);
-            if (match.Groups["glyph"].Success) glyph++;
-            else if (match.Groups["mark"].Success) brackets++;
+            if (!match.Groups["glyph"].Success) continue;
+            var glyph = match.Groups["glyph"].Value[0];
+            if (glyph == TaskLines.CheckedAlternate) alternate++;
+            else if (glyph == TaskLines.Checked) own++;
         }
-        return glyph > brackets;
+        return alternate > own ? TaskLines.CheckedAlternate : TaskLines.Checked;
     }
 
     private static char DominantBulletMarker(List<Line> lines)

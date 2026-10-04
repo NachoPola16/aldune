@@ -137,4 +137,11 @@ public class MarkdownExportTests
         Assert.True(fileName.Length <= 84, $"Esperaba un nombre corto, salió de {fileName.Length} caracteres.");
         Assert.EndsWith(".md", fileName);
     }
+
+    [Fact]
+    public void ArrowAndBox_ExportsAsAMarkdownTask_WithoutTheArrow()
+    {
+        var result = MarkdownExport.ToMarkdown("Título\r\n→ ☐ comprar pan\r\n  → ☒ hecho");
+        Assert.Equal("# Título\r\n\r\n- [ ] comprar pan\r\n  - [x] hecho", result);
+    }
 }

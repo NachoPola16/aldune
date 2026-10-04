@@ -40,7 +40,7 @@ public static class MarkdownExport
         if (taskGlyph >= 0)
         {
             int prefixLength = TaskLines.PrefixLength(line, taskGlyph);
-            var indent = line[..taskGlyph];
+            var indent = line[..ListPrefix.IndentLength(line)];   // sin la flecha, si la hay: la lista ya es "- "
             var content = line[(taskGlyph + prefixLength)..];
             var marker = TaskLines.IsChecked(line) ? "[x]" : "[ ]";
             return $"{indent}- {marker} {content}";

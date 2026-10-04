@@ -40,4 +40,22 @@ public class ListPrefixTests
     {
         Assert.Null(ListPrefix.RemoveOnBackspace(text, caret));
     }
+
+    // Con "→ ☐ x" el retroceso quita lo que tiene justo delante: la casilla si el cursor va tras ella, la flecha si
+    // está entre la flecha y la casilla.
+    [Fact]
+    public void RemoveOnBackspace_ArrowAndBox_RemovesTheBoxWhenTheCaretIsAfterIt()
+    {
+        var (text, caret) = ListPrefix.RemoveOnBackspace("→ ☐ x", caret: 4)!.Value;
+        Assert.Equal("→ x", text);
+        Assert.Equal(2, caret);
+    }
+
+    [Fact]
+    public void RemoveOnBackspace_ArrowAndBox_RemovesTheArrowWhenTheCaretIsBetweenThem()
+    {
+        var (text, caret) = ListPrefix.RemoveOnBackspace("→ ☐ x", caret: 2)!.Value;
+        Assert.Equal("☐ x", text);
+        Assert.Equal(0, caret);
+    }
 }

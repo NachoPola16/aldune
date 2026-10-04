@@ -20,14 +20,19 @@ public static class ListPrefix
         int start = LineText.Start(text, caret);
         var line = text[start..LineText.End(text, caret)];
 
-        int glyph = TaskLines.GlyphIndex(line);
-        if (glyph < 0) glyph = BulletLines.GlyphIndex(line);
-        if (glyph < 0) return null;
-
         int caretInLine = caret - start;
-        if (caretInLine != glyph + 1 && caretInLine != glyph + 2) return null;
 
-        return (text.Remove(start + glyph, 2), start + glyph);
+        // Con "→ ☐ x" el retroceso quita lo que tiene justo delante: la casilla si el cursor está tras ella, la
+        // flecha si está entre la flecha y la casilla.
+        int glyph = TaskLines.GlyphIndex(line);
+        if (glyph >= 0 && (caretInLine == glyph + 1 || caretInLine == glyph + 2))
+            return (text.Remove(start + glyph, 2), start + glyph);
+
+        glyph = BulletLines.GlyphIndex(line);
+        if (glyph >= 0 && (caretInLine == glyph + 1 || caretInLine == glyph + 2))
+            return (text.Remove(start + glyph, 2), start + glyph);
+
+        return null;
     }
 
     /// <summary>Cuántos espacios o tabuladores hay al principio de <paramref name="line"/>.</summary>

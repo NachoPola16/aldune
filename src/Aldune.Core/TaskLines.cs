@@ -55,6 +55,10 @@ public static class TaskLines
     {
         int i = ListPrefix.IndentLength(line);
 
+        // Una flecha delante no impide que sea tarea: "→ ☐ x" es una viñeta con casilla (flecha y casilla son dos
+        // interruptores independientes). El índice que se devuelve es el de la casilla, no el de la flecha.
+        if (i + 1 < line.Length && line[i] == BulletLines.Glyph && line[i + 1] == ' ') i += 2;
+
         if (i + 1 >= line.Length) return -1;
         if (!IsBoxGlyph(line[i]) || line[i + 1] != ' ') return -1;
 
@@ -138,10 +142,9 @@ public static class TaskLines
 
     /// <summary>
     /// Convierte en tarea la línea donde está el cursor, o le quita el prefijo si ya lo era. Si la
-    /// línea ya era una lista con viñeta (<see cref="BulletLines"/>), la convierte en tarea en vez de
-    /// apilar los dos prefijos — mismo criterio simétrico que
-    /// <see cref="BulletLines.ToggleBulletLineAt"/> con una tarea. El cursor se desplaza con el texto
-    /// para que siga señalando la misma palabra.
+    /// línea ya era una lista con viñeta (<see cref="BulletLines"/>), añade la casilla detrás de la flecha
+    /// ("→ x" pasa a "→ ☐ x") en vez de sustituirla; quitar la casilla deja la flecha. El cursor se desplaza
+    /// con el texto para que siga señalando la misma palabra.
     /// </summary>
     public static (string Text, int Caret) ToggleTaskLineAt(string text, int caret)
     {
@@ -163,13 +166,11 @@ public static class TaskLines
         int bulletGlyph = BulletLines.GlyphIndex(line);
         if (bulletGlyph >= 0)
         {
-            // Convertir: fuera el prefijo de viñeta, dentro el de tarea, en el mismo sitio.
-            int bulletPrefixLength = BulletLines.PrefixLength(line, bulletGlyph);
-            var replaced = line.Remove(bulletGlyph, bulletPrefixLength).Insert(bulletGlyph, Prefix);
-            int caretInLine = caret - start >= bulletGlyph + bulletPrefixLength
-                ? caret - start - bulletPrefixLength + Prefix.Length
-                : caret - start;
-            return (string.Concat(text.AsSpan(0, start), replaced, text.AsSpan(end)), start + caretInLine);
+            // Añadir la casilla detrás de la flecha, sin quitarla: "→ x" pasa a "→ ☐ x".
+            int afterArrow = bulletGlyph + BulletLines.PrefixLength(line, bulletGlyph);
+            var withBox = line.Insert(afterArrow, Prefix);
+            int caretInLine = caret - start >= afterArrow ? caret - start + Prefix.Length : caret - start;
+            return (string.Concat(text.AsSpan(0, start), withBox, text.AsSpan(end)), start + caretInLine);
         }
 
         // Reparar: una tarea antigua con el texto pegado al glifo ya no es tarea; se le mete el
@@ -208,7 +209,8 @@ public static class TaskLines
 
         if (IsEmptyTaskLine(line))
         {
-            var cleared = line[..glyph].TrimEnd();
+            // Solo la sangría: con "→ ☐ " vacío la lista termina quitando también la flecha.
+            var cleared = line[..ListPrefix.IndentLength(line)].TrimEnd();
             return (string.Concat(text.AsSpan(0, start), cleared, text.AsSpan(end)), start + cleared.Length);
         }
 

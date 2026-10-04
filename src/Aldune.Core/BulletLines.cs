@@ -53,9 +53,10 @@ public static class BulletLines
 
     /// <summary>
     /// Convierte en viñeta la línea donde está el cursor, o le quita el prefijo si ya lo era. Si la
-    /// línea ya era una tarea (<see cref="TaskLines"/>), la convierte en viñeta en vez de apilar los
-    /// dos prefijos — mismo criterio simétrico que <see cref="TaskLines.ToggleTaskLineAt"/> con una
-    /// viñeta. El cursor se desplaza con el texto para que siga señalando la misma palabra.
+    /// línea ya era una tarea (<see cref="TaskLines"/>), le pone la flecha delante ("☐ x" pasa a "→ ☐ x") en
+    /// vez de sustituir la casilla; quitar la flecha deja la casilla. Simétrico de
+    /// <see cref="TaskLines.ToggleTaskLineAt"/>. El cursor se desplaza con el texto para que siga señalando la
+    /// misma palabra.
     /// </summary>
     public static (string Text, int Caret) ToggleBulletLineAt(string text, int caret)
     {
@@ -76,12 +77,10 @@ public static class BulletLines
         int taskGlyph = TaskLines.GlyphIndex(line);
         if (taskGlyph >= 0)
         {
-            int taskPrefixLength = TaskLines.PrefixLength(line, taskGlyph);
-            var replaced = line.Remove(taskGlyph, taskPrefixLength).Insert(taskGlyph, Prefix);
-            int caretInLine = caret - start >= taskGlyph + taskPrefixLength
-                ? caret - start - taskPrefixLength + Prefix.Length
-                : caret - start;
-            return (string.Concat(text.AsSpan(0, start), replaced, text.AsSpan(end)), start + caretInLine);
+            // Añadir la flecha delante de la casilla, sin quitarla: "☐ x" pasa a "→ ☐ x".
+            var withArrow = line.Insert(taskGlyph, Prefix);
+            int caretInLine = caret - start >= taskGlyph ? caret - start + Prefix.Length : caret - start;
+            return (string.Concat(text.AsSpan(0, start), withArrow, text.AsSpan(end)), start + caretInLine);
         }
 
         // Reparar una viñeta antigua sin espacio, como TaskLines.ToggleTaskLineAt.

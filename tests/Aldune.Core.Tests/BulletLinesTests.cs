@@ -115,27 +115,36 @@ public class BulletLinesTests
     }
 
     [Fact]
-    public void ToggleBulletLineAt_ATaskLine_ConvertsItToABulletInstead()
+    public void ToggleBulletLineAt_ATaskLine_AddsTheArrowBeforeTheBox()
     {
-        // Pulsar el atajo de viñeta sobre una tarea ya existente la convierte, no la apila.
+        // Flecha y casilla son interruptores independientes: la flecha se añade delante de la casilla.
         var (text, caret) = BulletLines.ToggleBulletLineAt("☐ comprar pan", caret: 9);
 
-        Assert.Equal("→ comprar pan", text);
+        Assert.Equal("→ ☐ comprar pan", text);
+        Assert.Equal(11, caret);
+    }
+
+    [Fact]
+    public void ToggleBulletLineAt_ArrowAndBox_RemovesOnlyTheArrow()
+    {
+        var (text, caret) = BulletLines.ToggleBulletLineAt("→ ☐ comprar pan", caret: 11);
+
+        Assert.Equal("☐ comprar pan", text);
         Assert.Equal(9, caret);
     }
 
     [Fact]
-    public void ToggleBulletLineAt_ACheckedTaskLine_ConvertsItToABulletToo()
+    public void ToggleBulletLineAt_ACheckedTaskLine_KeepsTheCheckAndAddsTheArrow()
     {
         var (text, _) = BulletLines.ToggleBulletLineAt("☒ hecho", caret: 0);
-        Assert.Equal("→ hecho", text);
+        Assert.Equal("→ ☒ hecho", text);
     }
 
     [Fact]
-    public void ToggleBulletLineAt_ATaskLineWithIndent_KeepsTheIndentAfterConverting()
+    public void ToggleBulletLineAt_ATaskLineWithIndent_PutsTheArrowAfterTheIndent()
     {
         var (text, _) = BulletLines.ToggleBulletLineAt("    ☐ sub-tarea", caret: 0);
-        Assert.Equal("    → sub-tarea", text);
+        Assert.Equal("    → ☐ sub-tarea", text);
     }
 
     // --- Continuar la lista con Enter -------------------------------------------------------------

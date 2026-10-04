@@ -100,12 +100,12 @@ public class MarkdownLinkTests
         Assert.Equal("```\nx\n☐ literal\n```\n", MarkdownLink.ToFileText(edited, file));
     }
 
-    // Archivos que ya escriben las casillas con el glifo ("- ☐ tarea", "- ☑ hecha", como PENDIENTES.md):
-    // son tareas y no "→ ☐"; el guion se quita y el glifo se queda.
+    // Archivos que escriben las casillas con el glifo ("- ☐ tarea", "- ☑ hecha", como PENDIENTES.md): son un
+    // elemento de lista con casilla, o sea flecha + casilla ("→ ☐"), y vuelven igual al archivo.
     [Fact]
-    public void DashFollowedByABoxGlyph_IsATask()
+    public void DashFollowedByABoxGlyph_IsAnArrowAndABox()
     {
-        Assert.Equal("☐ a\n☑ b\n  ☒ c\n→ d\n", MarkdownLink.ToNoteText("- ☐ a\n- ☑ b\n  - ☒ c\n- d\n"));
+        Assert.Equal("→ ☐ a\n→ ☑ b\n  → ☒ c\n→ d\n", MarkdownLink.ToNoteText("- ☐ a\n- ☑ b\n  - ☒ c\n- d\n"));
     }
 
     [Fact]
@@ -116,19 +116,26 @@ public class MarkdownLinkTests
     }
 
     [Fact]
-    public void GlyphStyleFile_WritesNewAndEditedTasksInTheSameStyle()
+    public void ArrowAndBox_IsWrittenAsADashAndTheGlyph_AndAPlainTaskAsMarkdown()
     {
         var file = "- ☐ a\n- ☐ b\n";
-        var edited = "☑ a\n☐ b\n☐ nueva\n";   // marcar la primera y añadir una
+        var edited = "→ ☒ a\n→ ☐ b\n→ ☐ nueva\n☐ suelta\n";
 
-        Assert.Equal("- ☑ a\n- ☐ b\n- ☐ nueva\n", MarkdownLink.ToFileText(edited, file));
+        Assert.Equal("- ☒ a\n- ☐ b\n- ☐ nueva\n- [ ] suelta\n", MarkdownLink.ToFileText(edited, file));
     }
 
     [Fact]
-    public void BracketStyleFile_StillWritesBrackets()
+    public void ADoneGlyph_FollowsTheOneTheFileUses()
     {
-        var file = "- [ ] a\n- [ ] b\n- ☐ rara\n";
-        Assert.Equal("- [x] a\n- [ ] b\n- ☐ rara\n- [ ] nueva\n", MarkdownLink.ToFileText("☒ a\n☐ b\n☐ rara\n☐ nueva\n", file));
+        var file = "- ☑ a\n- ☐ b\n";
+        Assert.Equal("- ☑ a\n- ☑ b\n", MarkdownLink.ToFileText("→ ☑ a\n→ ☒ b\n", file));
+    }
+
+    [Fact]
+    public void BracketTasks_StayBracketTasks()
+    {
+        var file = "- [ ] a\n- [ ] b\n";
+        Assert.Equal("- [x] a\n- [ ] b\n- [ ] nueva\n", MarkdownLink.ToFileText("☒ a\n☐ b\n☐ nueva\n", file));
     }
 
     [Fact]
