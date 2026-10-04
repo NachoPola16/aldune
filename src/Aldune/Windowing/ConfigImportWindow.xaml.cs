@@ -15,7 +15,7 @@ namespace Aldune.Windowing;
 /// </summary>
 public partial class ConfigImportWindow : Window
 {
-    private ConfigImportWindow(ConfigImportPlan plan)
+    private ConfigImportWindow(ConfigImportPlan plan, AppSettings current)
     {
         InitializeComponent();
         NativeMethods.CloakUntilFirstFrame(this);
@@ -27,7 +27,10 @@ public partial class ConfigImportWindow : Window
         else
             FromVersionText.Visibility = Visibility.Collapsed;
 
-        if (plan.Changes.Count == 0)
+        // Filas ya presentables (atajos juntos, valores traducidos). Vacías aunque el plan traiga cambios si
+        // solo difieren en cómo se escriben (p. ej. un atajo explícito que ya era el de fábrica).
+        var rows = ConfigPreview.Rows(plan, current);
+        if (rows.Count == 0)
         {
             // Sin cambios no hay nada que aplicar ni que copiar: solo se puede cerrar.
             SummaryText.Text = Strings.ConfigImportNoChanges;
@@ -39,37 +42,37 @@ public partial class ConfigImportWindow : Window
             return;
         }
 
-        SummaryText.Text = Strings.ConfigImportSummary(plan.Changes.Count);
-        foreach (var change in plan.Changes) ChangesPanel.Children.Add(Row(change));
+        SummaryText.Text = Strings.ConfigImportSummary(rows.Count);
+        foreach (var row in rows) ChangesPanel.Children.Add(Row(row));
         if (plan.ChangesLanguage) RestartText.Visibility = Visibility.Visible;
     }
 
     /// <summary>True solo con «Aplicar». Cancelar, cerrar con Esc o con el botón de un archivo sin cambios dan false.</summary>
-    public static bool Show(Window owner, ConfigImportPlan plan)
+    internal static bool Show(Window owner, ConfigImportPlan plan, AppSettings current)
     {
-        var dialog = new ConfigImportWindow(plan) { Owner = owner, Topmost = owner.Topmost };
+        var dialog = new ConfigImportWindow(plan, current) { Owner = owner, Topmost = owner.Topmost };
         return dialog.ShowDialog() == true;
     }
 
     // Nombre en negrita y debajo «antes → ahora» en monoespaciada pequeña, a una línea con elipsis: los
     // valores largos (temas propios, colores por aspecto) se leen enteros en el tooltip.
-    private static StackPanel Row(ConfigChange change)
+    private static StackPanel Row(ConfigPreviewRow change)
     {
         var name = new TextBlock
         {
-            Text = Strings.ConfigFieldName(change.FieldId), FontSize = 12, FontWeight = FontWeights.SemiBold,
+            Text = change.Name, FontSize = 12, FontWeight = FontWeights.SemiBold,
         };
         name.SetResourceReference(TextBlock.ForegroundProperty, "AlduneTextBrush");
 
         var values = new TextBlock
         {
-            Text = $"{change.OldValue} → {change.NewValue}",
+            Text = $"{change.Old} → {change.New}",
             FontFamily = new FontFamily("Cascadia Mono, Consolas"), FontSize = 11,
             TextTrimming = TextTrimming.CharacterEllipsis, TextWrapping = TextWrapping.NoWrap,
             Margin = new Thickness(0, 2, 0, 0),
             ToolTip = new TextBlock
             {
-                Text = $"{change.OldValue}\n→ {change.NewValue}", TextWrapping = TextWrapping.Wrap, MaxWidth = 460,
+                Text = $"{change.Old}\n→ {change.New}", TextWrapping = TextWrapping.Wrap, MaxWidth = 460,
                 FontFamily = new FontFamily("Cascadia Mono, Consolas"), FontSize = 11,
             },
         };

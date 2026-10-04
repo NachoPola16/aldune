@@ -1647,6 +1647,10 @@ public partial class SettingsWindow : Window
     // internos que reciben la ruta o el plan, para ejercitarlos sin diálogos modales.
 
     private const string ConfigFileFilter = "Aldune (*.aldune-config.json)|*.aldune-config.json";
+    // Al importar también se ofrece cualquier .json: quien renombró el archivo o lo recibió sin la doble extensión.
+    private const string ConfigImportFileFilter = ConfigFileFilter + "|JSON (*.json)|*.json";
+    // Un archivo de configuración son unos pocos KB; más de 1 MB no es uno y no se lee entero a memoria.
+    private const long ConfigFileMaxBytes = 1_048_576;
     private const string ConfigFileExtension = ".aldune-config.json";
 
     private void OnExportConfigClick(object sender, RoutedEventArgs e)
@@ -1686,7 +1690,7 @@ public partial class SettingsWindow : Window
     {
         var dialog = new Microsoft.Win32.OpenFileDialog
         {
-            Filter = ConfigFileFilter,
+            Filter = ConfigImportFileFilter,
             DefaultExt = ConfigFileExtension,
             CheckFileExists = true,
         };
@@ -1700,7 +1704,7 @@ public partial class SettingsWindow : Window
         }
 
         // Cancelar la vista previa no toca nada: ni copia, ni guardado.
-        if (!ConfigImportWindow.Show(this, plan)) return;
+        if (!ConfigImportWindow.Show(this, plan, _settings)) return;
 
         if (!ApplyConfigurationImport(plan)) return;
         var done = plan.ChangesLanguage
@@ -1717,11 +1721,22 @@ public partial class SettingsWindow : Window
         string text;
         try
         {
+            if (new FileInfo(path).Length > ConfigFileMaxBytes)
+            {
+                error = Strings.ConfigImportInvalidFile;
+                return null;
+            }
             text = File.ReadAllText(path);
         }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
         {
             error = Strings.ConfigImportUnreadable;
+            return null;
+        }
+        catch (OutOfMemoryException)
+        {
+            // Por si el tamaño cambia entre medir y leer: un archivo así tampoco es una configuración.
+            error = Strings.ConfigImportInvalidFile;
             return null;
         }
 
@@ -1761,8 +1776,16 @@ public partial class SettingsWindow : Window
         }
 
         // Lo que ya está en memoria se aplica igual: dejar la app a medias entre lo viejo y lo nuevo
-        // sería peor que avisar de que no se pudo guardar.
-        ApplyImportedSettingsLive(plan, dockViewChanged: dockViewBefore != (_settings.DockView, _settings.DockTagFilter));
+        // sería peor que avisar de que no se pudo guardar. Algún camino de aplicar también guarda (p. ej. el
+        // de los gestos de trackpad): un fallo de disco ahí cuenta como no guardado, no como excepción suelta.
+        try
+        {
+            ApplyImportedSettingsLive(plan, dockViewChanged: dockViewBefore != (_settings.DockView, _settings.DockTagFilter));
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+        {
+            saved = false;
+        }
 
         if (saved) return true;
         AppDialog.Show(this, Strings.ConfigImportSaveFailed, Strings.ConfigImportTitle,
@@ -1840,11 +1863,13 @@ public partial class SettingsWindow : Window
         UpdateAutoHideTasksUi();
         UpdateInterfaceModeUi();
 
-        // El radio de idioma se marca contra lo elegido, no contra el idioma en marcha: aún no cambia.
+        // El radio de idioma se marca contra lo elegido (aún no cambia el idioma en marcha); con un idioma
+        // sin elegir, contra el efectivo, como PopulateLanguages.
         if (languageChanged)
         {
+            var shown = _settings.Language ?? Strings.Current;
             foreach (var radio in LanguageListContainer.Children.OfType<RadioButton>())
-                radio.IsChecked = radio.Tag is string code && code == _settings.Language;
+                radio.IsChecked = radio.Tag is string code && code == shown;
         }
     }
 }

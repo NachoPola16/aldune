@@ -269,6 +269,13 @@ public static class Strings
         "Die Einstellungen wurden angewendet, konnten aber nicht gespeichert werden und gehen beim Beenden von Aldune verloren.",
         "Les paramètres ont été appliqués mais n'ont pas pu être enregistrés : ils seront perdus à la fermeture d'Aldune.",
         "As configurações foram aplicadas, mas não puderam ser salvas, então serão perdidas ao fechar o Aldune.");
+    public static string ConfigValueOn => T("On", "Activado", "Ein", "Activé", "Ativado");
+    public static string ConfigValueOff => T("Off", "Desactivado", "Aus", "Désactivé", "Desativado");
+    // Una sola fila por atajo en la vista previa (modificadores y tecla juntos).
+    public static string ConfigFieldHotkeyCombo => T("New note shortcut (combination)", "Atajo de nota nueva (combinación)",
+        "Tastenkürzel für neue Notiz (Kombination)", "Raccourci de nouvelle note (combinaison)", "Atalho de nova nota (combinação)");
+    public static string ConfigFieldRecentHotkeyCombo => T("Last note shortcut (combination)", "Atajo de la última nota (combinación)",
+        "Tastenkürzel für letzte Notiz (Kombination)", "Raccourci de la dernière note (combinaison)", "Atalho da última nota (combinação)");
     public static string ConfigImportDone => T("Settings imported.", "Configuración importada.",
         "Einstellungen importiert.", "Configuration importée.", "Configuração importada.");
 
