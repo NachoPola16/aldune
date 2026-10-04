@@ -1499,6 +1499,10 @@ public partial class NoteWindow : Window
     {
         ApplyColor(_note.Color);
         UpdateSyncSignal();
+        // Otra piel cambia las fuentes y el prompt (nacho@aldune:~/notes$) y con ello cuánto sitio ocupa el
+        // texto; sin reajustar, el cuerpo se pasaba unos píxeles de la ventana y la rueda lo desplazaba
+        // (con la barra oculta no se ve por qué). Tras el layout, que es cuando se conocen las medidas nuevas.
+        Dispatcher.BeginInvoke(DispatcherPriority.Loaded, FitHeightToContent);
     }
 
     // Canal con el que se pintó la ventana por última vez (ver RefreshChannel).
