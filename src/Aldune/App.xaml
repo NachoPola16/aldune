@@ -12,12 +12,10 @@
         <!-- Borde de las cajas de texto al pasar el ratón y con el foco: compartido por TextBox,
              PasswordBox y la caja de contraseña de PasswordPromptWindow para que no se separen. -->
 
-        <!-- FontFamily is an inherited property, so setting it here on the implicit Window
-             style cascades to every control in EdgeDockWindow and NoteWindow that doesn't set
-             its own — Segoe UI Variable Text is Windows 11's own default UI font anyway, so
-             this brings the app's chrome in line with the system look instead of away from it. -->
+        <!-- La fuente del chrome (AldunePrimaryFont) NO se pone aqui: un estilo implicito solo casa con
+             el tipo exacto Window, no con NoteWindow/EdgeDockWindow/... (ver App.OnStartup, donde un
+             manejador de clase la aplica a todas las ventanas). -->
         <Style TargetType="Window">
-            <Setter Property="FontFamily" Value="{DynamicResource AldunePrimaryFont}" />
             <Setter Property="FontSize" Value="13" />
             <Setter Property="UseLayoutRounding" Value="True" />
             <Setter Property="SnapsToDevicePixels" Value="True" />

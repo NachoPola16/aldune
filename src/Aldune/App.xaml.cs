@@ -19,6 +19,17 @@ public partial class App : Application
     {
         base.OnStartup(e);
 
+        // La fuente de la piel llega a TODAS las ventanas: un Style implicito de Window (App.xaml) solo
+        // casa con el tipo exacto, no con NoteWindow/EdgeDockWindow/... Cambiar el estilo por defecto
+        // de la propiedad Style para el tipo Window si lo heredan las subclases. Es DynamicResource, asi
+        // que cambia en vivo con el aspecto; los controles que fijan su propia fuente (iconos, titulos)
+        // no se ven afectados. Ninguna ventana declara un Style propio en su raiz.
+        var windowStyle = new Style(typeof(Window));
+        windowStyle.Setters.Add(new Setter(System.Windows.Controls.Control.FontFamilyProperty,
+            new DynamicResourceExtension("AldunePrimaryFont")));
+        windowStyle.Seal();
+        FrameworkElement.StyleProperty.OverrideMetadata(typeof(Window), new FrameworkPropertyMetadata(windowStyle));
+
         // Adivinado por el idioma de Windows hasta que se lea AppSettings.Language más abajo (o
         // para siempre, si nunca se llega a leer — p. ej. settings.json corrupto). Así incluso los
         // mensajes de error del arranque más temprano salen en el idioma que toca la mayoría de las

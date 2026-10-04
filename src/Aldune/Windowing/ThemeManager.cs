@@ -65,7 +65,8 @@ public static class ThemeManager
     {
         var dictionary = new ResourceDictionary
         {
-            ["AldunePrimaryFont"] = new FontFamily(skin.ChromeFont),
+            ["AldunePrimaryFont"] = // Vacío = la fuente de sistema, igual que la de la nota.
+            string.IsNullOrEmpty(skin.ChromeFont) ? SystemFonts.MessageFontFamily : new FontFamily(skin.ChromeFont),
             ["AlduneNoteFont"] = // Vacío = la fuente de sistema (no un nombre fijo): así vale también fuera de Windows 11.
             string.IsNullOrEmpty(skin.NoteFont) ? SystemFonts.MessageFontFamily : new FontFamily(skin.NoteFont),
             ["AlduneNoteTitleFont"] = new FontFamily(skin.NoteTitleFont),
