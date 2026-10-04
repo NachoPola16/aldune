@@ -68,4 +68,35 @@ public sealed class ConfigBackupTests : IDisposable
         Assert.Equal("uno", File.ReadAllText(first!));
         Assert.Equal("dos", File.ReadAllText(second!));
     }
+
+    [Fact]
+    public void Create_KeepsOnlyTheMostRecentCopies()
+    {
+        var path = Path.Combine(_dir, "settings.json");
+        File.WriteAllText(path, "x");
+        var start = new DateTimeOffset(2026, 10, 4, 9, 30, 0, TimeSpan.Zero);
+        var copies = new List<string>();
+        for (int i = 0; i < ConfigBackup.MaxCopies + 2; i++)
+            copies.Add(ConfigBackup.Create(path, start.AddMinutes(i))!);
+
+        var left = Directory.GetFiles(_dir, "settings.json.antes-de-importar-*").Order().ToList();
+
+        Assert.Equal(copies.TakeLast(ConfigBackup.MaxCopies).Order().ToList(), left);
+        Assert.True(File.Exists(path));
+    }
+
+    [Fact]
+    public void Create_SameSecondSuffixes_AreOrderedByNumberNotByText()
+    {
+        var path = Path.Combine(_dir, "settings.json");
+        File.WriteAllText(path, "x");
+        var now = new DateTimeOffset(2026, 10, 4, 9, 30, 15, TimeSpan.Zero);
+        // Con más de nueve en el mismo segundo, «-10» va detrás de «-9» aunque como texto vaya antes.
+        string? last = null;
+        for (int i = 0; i < 10; i++) last = ConfigBackup.Create(path, now);
+
+        Assert.EndsWith("-10", last);
+        Assert.True(File.Exists(last));
+        Assert.Equal(ConfigBackup.MaxCopies, Directory.GetFiles(_dir, "settings.json.antes-de-importar-*").Length);
+    }
 }

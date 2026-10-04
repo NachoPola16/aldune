@@ -1159,12 +1159,14 @@ public sealed class AppCoordinator
         _notesManagerWindow?.Refresh();
     }
 
-    public void SetDockView(DockViewKind view, string? tag = null)
+    /// <param name="save">False cuando quien llama ya ha guardado los ajustes (importar configuración):
+    /// un segundo guardado que fallase dejaría las notas sin cerrar ni repintar.</param>
+    public void SetDockView(DockViewKind view, string? tag = null, bool save = true)
     {
         if (_settings is null) return;
         _settings.DockView = view;
         _settings.DockTagFilter = view == DockViewKind.Tag ? tag : null;
-        _settingsService?.Save(_settings);
+        if (save) _settingsService?.Save(_settings);
 
         CloseNotesOutsideCurrentView();
         RefreshAll();

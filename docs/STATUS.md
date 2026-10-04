@@ -4153,6 +4153,11 @@ píxel a píxel contra capturas de antes del bloque (0 diferencias; solo cambia 
   legibilidad), y a los tests de contraste les faltan casos con huecos distintos entre sí y grises
   cerca de luminancia 0.18 (razonados a mano, no fallan). El canal desfasado de la ventana abierta
   frente a su pestaña sí se arregló (`NoteWindow.RefreshChannel` desde `RefreshAll`).
+- **Ultrareview del bloque 4 (fase E)**: arreglados la aplicación en vivo tras importar (ya no vuelve a
+  guardar: un fallo de disco a mitad dejaba notas sin cerrar ni repintar), el constructor de Ajustes
+  (usa `RefreshControlsFromSettings`, el mismo camino que tras importar) y las copias previas (se
+  guardan las 5 más recientes, numeradas por encima del sufijo más alto). Pendiente: la vista previa
+  no usa `FileVersion` para avisar de un archivo de una versión más nueva.
 
 Tests: 1170/1170. Smoke test en verde.
 

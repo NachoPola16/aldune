@@ -61,32 +61,12 @@ public partial class SettingsWindow : Window
         _checkForUpdates = checkForUpdates;
 
         StartupCheck.IsChecked = StartupRegistration.IsEnabled();
-        HotkeyCheck.IsChecked = _settings.GlobalHotkeyEnabled;
-        RecentHotkeyCheck.IsChecked = _settings.RecentNoteHotkeyEnabled;
-        HideOnFullscreenCheck.IsChecked = _settings.HideOnFullscreen;
-        KeepDockOpenCheck.IsChecked = _settings.KeepDockOpen;
-        ShowNotePreviewCheck.IsChecked = _settings.ShowNotePreview;
-        RememberPositionsCheck.IsChecked = _settings.RememberNotePositions;
-        PopulateTrackpadGestures();
-        UpdateUniformColorUi();
-        SyncSignalCheck.IsChecked = _settings.SyncSignalVisible;
-        SquareCornersCheck.IsChecked = _settings.CornersSquare;
-        MoveCompletedTasksCheck.IsChecked = _settings.MoveCompletedTasksToEnd;
-        CheckForUpdatesAutomaticallyCheck.IsChecked = _settings.CheckForUpdatesAutomatically;
-        AutoHideTasksCheck.IsChecked = _settings.AutoHideCompletedTasks;
-        AutoHideTasksDelayValueBox.Text = _settings.AutoHideCompletedTasksDelayValue.ToString();
-        TrashRetentionValueBox.Text = _settings.TrashRetentionDays.ToString();
-        UpdateHotkeyUi(); // tambien deja lista la seccion de Ayuda rapida, ver UpdateQuickHelp
-        UpdateRecentHotkeyUi();
+        // El mismo camino que tras importar una configuración: un ajuste nuevo con control propio se
+        // añade allí una vez y sale bien en los dos casos.
+        RefreshControlsFromSettings(languageChanged: false);
         PopulateMonitors();
-        PopulateEdges();
         PopulateLanguages();
-        PopulateAppearance();
-        RefreshThemeSection();
-        PopulateDelayUnits();
-        UpdateInterfaceModeUi();
         ShowPage(s_lastPage);
-        UpdateAutoHideTasksUi();
         SyncProfileStore.Ensure(_settings);
         PopulateSyncProfiles();
         PopulateSyncTags();
@@ -664,7 +644,10 @@ public partial class SettingsWindow : Window
         if (!hasTouchpad && _settings.TrackpadGestures)
         {
             _settings.TrackpadGestures = false;
-            _settingsService.Save(_settings);
+            // Es una corrección sin más: si el disco falla, se vuelve a intentar la próxima vez que se
+            // abra Ajustes, y no tiene por qué dejar sin poner al día el resto de controles.
+            try { _settingsService.Save(_settings); }
+            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException) { }
         }
 
         TrackpadGesturesCheck.IsChecked = hasTouchpad && _settings.TrackpadGestures;
@@ -1386,6 +1369,11 @@ public partial class SettingsWindow : Window
     private void SaveAndApplyAppearance()
     {
         _settingsService.Save(_settings);
+        ApplyAppearance();
+    }
+
+    private void ApplyAppearance()
+    {
         var mode = _settings.Appearance;
         ThemeManager.Apply(Application.Current, mode, _settings.ColorsFor(mode));
         ThemeManager.ApplySkin(Application.Current, AppSkin.For(mode));
@@ -1776,16 +1764,9 @@ public partial class SettingsWindow : Window
         }
 
         // Lo que ya está en memoria se aplica igual: dejar la app a medias entre lo viejo y lo nuevo
-        // sería peor que avisar de que no se pudo guardar. Algún camino de aplicar también guarda (p. ej. el
-        // de los gestos de trackpad): un fallo de disco ahí cuenta como no guardado, no como excepción suelta.
-        try
-        {
-            ApplyImportedSettingsLive(plan, dockViewChanged: dockViewBefore != (_settings.DockView, _settings.DockTagFilter));
-        }
-        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
-        {
-            saved = false;
-        }
+        // sería peor que avisar de que no se pudo guardar. Por eso aplicar no vuelve a guardar: un fallo
+        // de disco a mitad cortaría los pasos que quedan.
+        ApplyImportedSettingsLive(plan, dockViewChanged: dockViewBefore != (_settings.DockView, _settings.DockTagFilter));
 
         if (saved) return true;
         AppDialog.Show(this, Strings.ConfigImportSaveFailed, Strings.ConfigImportTitle,
@@ -1820,11 +1801,11 @@ public partial class SettingsWindow : Window
 
         // Otra vista del dock es otra mesa de trabajo: SetDockView cierra las notas que ya no pertenecen
         // a ella, igual que al cambiarla desde el dock. Va antes de rehacer los docks.
-        if (dockViewChanged) _coordinator?.SetDockView(_settings.DockView, _settings.DockTagFilter);
+        if (dockViewChanged) _coordinator?.SetDockView(_settings.DockView, _settings.DockTagFilter, save: false);
 
         if (Changed("appearance", "aspectColors", "squareCorners", "syncSignal"))
         {
-            SaveAndApplyAppearance();   // aplica tema, piel y esquinas, rehace docks y repinta las notas
+            ApplyAppearance();   // aplica tema, piel y esquinas, rehace docks y repinta las notas
         }
         else
         {
@@ -1835,8 +1816,9 @@ public partial class SettingsWindow : Window
         RefreshControlsFromSettings(languageChanged: changed.Contains("language"));
     }
 
-    /// <summary>Pone al día los controles de Ajustes con lo que hay ahora en los ajustes. Las casillas
-    /// usan Click y los radios se rehacen con su estado ya puesto, así que nada de esto guarda de nuevo.</summary>
+    /// <summary>Pone al día los controles de Ajustes con lo que hay ahora en los ajustes, al abrir la ventana
+    /// y tras importar. Las casillas usan Click y los radios se rehacen con su estado ya puesto, así que
+    /// nada de esto guarda de nuevo. La lista de pantallas y la de idiomas van aparte: no se importan.</summary>
     private void RefreshControlsFromSettings(bool languageChanged)
     {
         HotkeyCheck.IsChecked = _settings.GlobalHotkeyEnabled;
@@ -1854,7 +1836,7 @@ public partial class SettingsWindow : Window
         AutoHideTasksCheck.IsChecked = _settings.AutoHideCompletedTasks;
         AutoHideTasksDelayValueBox.Text = _settings.AutoHideCompletedTasksDelayValue.ToString();
         TrashRetentionValueBox.Text = _settings.TrashRetentionDays.ToString();
-        UpdateHotkeyUi();
+        UpdateHotkeyUi(); // tambien deja lista la seccion de Ayuda rapida, ver UpdateQuickHelp
         UpdateRecentHotkeyUi();
         PopulateEdges();
         PopulateAppearance();
