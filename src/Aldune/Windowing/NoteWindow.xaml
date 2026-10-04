@@ -355,7 +355,7 @@
                         <TextBlock x:Name="PinHint"
                                    Foreground="{DynamicResource AlduneHintBrush}" FontSize="11" TextWrapping="Wrap"
                                    Margin="9,0,9,6" />
-                        <Button x:Name="ProtectionButton" Click="OnProtectionClick"
+                        <Button x:Name="ProtectionButton" Click="OnProtectionClick" ToolTipService.ShowOnDisabled="True"
                                 Content="{x:Static res:Strings.ProtectNote}"
                                 Style="{StaticResource NoteMenuItemStyle}" />
                         <Button x:Name="TagsButton" Click="OnTagsClick"
@@ -415,7 +415,25 @@
              "cat <titulo>" que se parte hasta en 3 lineas (un titulo largo en una sola se perdia con la
              elipsis). Fila propia y no dentro del cuadro de texto: no es texto de la nota y no se puede
              editar ni seleccionar con el. LineHeight fijo para que MaxHeight sean exactamente 3 lineas. -->
-        <StackPanel x:Name="PromptPanel" Grid.Row="1" Margin="20,10,20,0" Visibility="Collapsed">
+        <StackPanel Grid.Row="1">
+            <!-- Archivo vinculado no disponible (Z: desconectado, borrado…): la nota pasa a solo lectura y
+                 ofrece reintentar, buscar el archivo o quedarse como nota normal (spec, decisión 5). -->
+            <Border x:Name="UnavailableBar" Visibility="Collapsed" Padding="10,6" Margin="14,10,20,0"
+                    Background="{DynamicResource AlduneDangerBgBrush}" CornerRadius="{DynamicResource AlduneRadius4}">
+                <StackPanel>
+                    <TextBlock x:Name="UnavailableText" TextWrapping="Wrap" FontSize="12"
+                               Foreground="{DynamicResource AlduneOnDangerBrush}" />
+                    <WrapPanel Margin="0,6,0,0">
+                        <Button x:Name="UnavailableRetryButton" Click="OnUnavailableRetryClick" Margin="0,0,6,0"
+                                Style="{StaticResource NoteMenuItemStyle}" />
+                        <Button x:Name="UnavailableLocateButton" Click="OnUnavailableLocateClick" Margin="0,0,6,0"
+                                Style="{StaticResource NoteMenuItemStyle}" />
+                        <Button x:Name="UnavailableConvertButton" Click="OnUnavailableConvertClick"
+                                Style="{StaticResource NoteMenuItemStyle}" />
+                    </WrapPanel>
+                </StackPanel>
+            </Border>
+        <StackPanel x:Name="PromptPanel" Margin="20,10,20,0" Visibility="Collapsed">
             <TextBlock x:Name="PromptLine" FontSize="14" LineHeight="20"
                        FontFamily="{DynamicResource AlduneNoteFont}" TextTrimming="CharacterEllipsis">
                 <Run x:Name="PromptUser" FontWeight="Bold" /><Run Text=":" /><Run x:Name="PromptPath" FontWeight="Bold" /><Run Text="$" />
@@ -423,6 +441,7 @@
             <TextBlock x:Name="PromptCommandLine" FontSize="14" LineHeight="20" MaxHeight="60"
                        FontFamily="{DynamicResource AlduneNoteFont}" TextWrapping="Wrap"
                        TextTrimming="CharacterEllipsis" Visibility="Collapsed" />
+        </StackPanel>
         </StackPanel>
 
         <!-- Solo texto. Todo lo demás (color, fijar, archivar, papelera) vive en el panel del "⋯"

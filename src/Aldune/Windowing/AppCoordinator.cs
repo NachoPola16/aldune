@@ -54,6 +54,55 @@ public sealed class AppCoordinator
 
     public void RequestLinkedCheck(Guid noteId) => _linkedWatch?.RequestCheck(noteId);
 
+    /// <summary>El texto de un vínculo rechazado, o null si salió bien.</summary>
+    internal static string? LinkMessage(LinkResult result, string path)
+    {
+        var name = System.IO.Path.GetFileName(path);
+        return result.Outcome switch
+        {
+            LinkOutcome.UnsupportedExtension => Strings.LinkedUnsupported(name),
+            LinkOutcome.TooLarge => Strings.LinkedTooLarge(name),
+            LinkOutcome.UnsupportedEncoding => Strings.LinkedBadEncoding(name),
+            LinkOutcome.Unreadable => Strings.LinkedUnreadable(name),
+            _ => null,
+        };
+    }
+
+    public void LocateLinkedFile(Guid noteId, Window owner)
+    {
+        var dialog = new Microsoft.Win32.OpenFileDialog { Filter = Strings.LinkedFileFilter, CheckFileExists = true };
+        if (dialog.ShowDialog(owner) != true) return;
+
+        var result = LinkedFiles.Relink(noteId, dialog.FileName);
+        if (result.Outcome == LinkOutcome.AlreadyLinked)
+        {
+            AppDialog.Show(owner, Strings.LinkedAlreadyLinkedElsewhere(System.IO.Path.GetFileName(dialog.FileName)),
+                Strings.LinkedLocate, MessageBoxButton.OK, MessageBoxImage.Warning);
+            return;
+        }
+        if (LinkMessage(result, dialog.FileName) is { } error)
+        {
+            AppDialog.Show(owner, error, Strings.LinkedLocate, MessageBoxButton.OK, MessageBoxImage.Warning);
+            return;
+        }
+        LinkedNoteDisplay.Set(_repository.GetFileLinks());
+        RefreshAll();
+        RequestLinkedCheck(noteId);
+    }
+
+    public void ConvertLinkedToNormal(Guid noteId, Window owner)
+    {
+        if (LinkedNoteDisplay.PathOf(noteId) is not { } path) return;
+        if (AppDialog.Show(owner, Strings.LinkedConvertWarning(path), Strings.LinkedConvert,
+                MessageBoxButton.OKCancel, MessageBoxImage.Information) != MessageBoxResult.OK) return;
+
+        LinkedFiles.Unlink(noteId);
+        LinkedNoteDisplay.Set(_repository.GetFileLinks());
+        LinkedNoteDisplay.SetUnavailable(noteId, false);
+        if (_openNoteWindows.TryGetValue(noteId, out var window)) window.SetFileUnavailable(null);
+        RefreshAll();
+    }
+
     private void OnLinkedFileResult(Guid noteId, ReconcileResult result)
     {
         _openNoteWindows.TryGetValue(noteId, out var window);

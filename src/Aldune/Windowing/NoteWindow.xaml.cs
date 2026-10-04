@@ -98,6 +98,7 @@ public partial class NoteWindow : Window
         _protectionPassword = protectionPassword;
 
         ApplyColor(note.Color);
+        if (LinkedNoteDisplay.IsUnavailable(note.Id)) SetFileUnavailable(LinkedNoteDisplay.PathOf(note.Id));
 
         // Una nota que no está activa se abre desde "Gestionar notas": lo único que se le puede
         // hacer es devolverla, así que archivar y papelera no tienen sentido ahí.
@@ -111,6 +112,9 @@ public partial class NoteWindow : Window
         UpdatePinButton();
         UpdateReminderButton();
         ProtectionButton.Content = note.IsProtected ? Strings.RemoveProtection : Strings.ProtectNote;
+        // Una nota vinculada es el archivo en claro: no se protege (spec, decisión 7).
+        ProtectionButton.IsEnabled = !IsLinked;
+        ProtectionButton.ToolTip = IsLinked ? Strings.LinkedProtectDisabled : null;
 
         // La nota es un solo texto; la cabecera edita su primera línea y el cuerpo el resto.
         var (title, body) = NoteText.Split(note.Text);
@@ -1347,8 +1351,30 @@ public partial class NoteWindow : Window
     /// <summary>Con <paramref name="path"/>: archivo no disponible, solo lectura. Con null: normal.</summary>
     internal void SetFileUnavailable(string? path)
     {
-        TextBody.IsReadOnly = TitleBox.IsReadOnly = path is not null;
+        bool unavailable = path is not null;
+        TextBody.IsReadOnly = TitleBox.IsReadOnly = unavailable;
+        // También al convertir en nota normal: el vínculo acaba de desaparecer y Proteger vuelve a valer.
+        ProtectionButton.IsEnabled = !IsLinked;
+        ProtectionButton.ToolTip = IsLinked ? Strings.LinkedProtectDisabled : null;
+        bool wasVisible = UnavailableBar.Visibility == Visibility.Visible;
+        UnavailableBar.Visibility = unavailable ? Visibility.Visible : Visibility.Collapsed;
+        if (!unavailable)
+        {
+            if (wasVisible) FitHeightToContent();
+            return;
+        }
+        UnavailableText.Text = Strings.LinkedUnavailable(path!);
+        UnavailableRetryButton.Content = Strings.LinkedRetry;
+        UnavailableLocateButton.Content = Strings.LinkedLocate;
+        UnavailableConvertButton.Content = Strings.LinkedConvert;
+        FitHeightToContent();
     }
+
+    private void OnUnavailableRetryClick(object sender, RoutedEventArgs e) => _coordinator.RequestLinkedCheck(_note.Id);
+
+    private void OnUnavailableLocateClick(object sender, RoutedEventArgs e) => _coordinator.LocateLinkedFile(_note.Id, this);
+
+    private void OnUnavailableConvertClick(object sender, RoutedEventArgs e) => _coordinator.ConvertLinkedToNormal(_note.Id, this);
 
     private void Flush()
     {

@@ -2318,6 +2318,10 @@ public partial class EdgeDockWindow : Window
         TabMenuArchiveButton.Content = note.State == NoteState.Active ? Strings.Archive : Strings.Restore;
         TabMenuTrashButton.Content = note.State == NoteState.Trashed ? Strings.Restore : Strings.MoveToTrash;
         TabMenuProtectionButton.Content = note.IsProtected ? Strings.RemoveProtection : Strings.ProtectNote;
+        // Una nota vinculada es el archivo en claro: no se protege (spec, decisión 7).
+        bool linked = LinkedNoteDisplay.IsLinked(note.Id);
+        TabMenuProtectionButton.IsEnabled = !linked;
+        TabMenuProtectionButton.ToolTip = linked ? Strings.LinkedProtectDisabled : null;
         BuildTabMenuSwatches(note);
         _tabMenuToggle.SetTrigger(_tabMenuOwner);
         TabMenuPopup.IsOpen = true;

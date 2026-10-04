@@ -784,7 +784,7 @@
                         <Border Background="{DynamicResource AlduneRaisedBrush}" Height="1" Margin="0,0,0,4" />
                         <Button Content="{x:Static res:Strings.OpenNote}" Click="OnTabMenuOpenClick"
                                 Style="{StaticResource NoteMenuItemStyle}" />
-                        <Button x:Name="TabMenuProtectionButton" Content="{x:Static res:Strings.ProtectNote}"
+                        <Button x:Name="TabMenuProtectionButton" ToolTipService.ShowOnDisabled="True" Content="{x:Static res:Strings.ProtectNote}"
                                 Click="OnTabMenuProtectionClick" Style="{StaticResource NoteMenuItemStyle}" />
                         <Button x:Name="TabMenuArchiveButton" Content="{x:Static res:Strings.Archive}"
                                 Click="OnTabMenuArchiveClick"
