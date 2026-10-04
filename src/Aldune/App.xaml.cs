@@ -36,6 +36,12 @@ public partial class App : Application
         // veces, en vez de siempre en inglés.
         ApplyLanguage(null);
 
+        // "Abrir con → Aldune" o `aldune.exe "<ruta>"`: archivos que abrir como notas vinculadas. Se dejan
+        // en el buzón antes de avisar a la instancia en marcha; si esta es la primera, se vacía más abajo.
+        var filesToOpen = e.Args.Where(arg => !arg.StartsWith('-') && File.Exists(arg)).ToList();
+        var inbox = Path.Combine(ResolveAppDataDirectory(), "inbox");
+        if (filesToOpen.Count > 0) OpenRequestInbox.Post(inbox, filesToOpen);
+
         _singleInstance = SingleInstance.TryAcquire();
         if (_singleInstance is null)
         {
@@ -218,8 +224,14 @@ public partial class App : Application
         _settings = settings;
         _settingsService = settingsService;
         StartDailyBackups(appDataDir);
-        _singleInstance.ListenForActivation(() =>
-            Dispatcher.BeginInvoke(() => _coordinator?.OpenNotesManager()));
+        _singleInstance.ListenForActivation(() => Dispatcher.BeginInvoke(() =>
+        {
+            var pending = OpenRequestInbox.Drain(inbox);
+            if (pending.Count > 0) _coordinator?.OpenLinkedFiles(pending, null);
+            else _coordinator?.OpenNotesManager();
+        }));
+        var startupFiles = OpenRequestInbox.Drain(inbox);
+        if (startupFiles.Count > 0) Dispatcher.BeginInvoke(() => coordinator.OpenLinkedFiles(startupFiles, null));
         // El instalador pide cerrar para sustituir el ejecutable: se guarda lo escrito, como al
         // apagar Windows, y se sale. El propio instalador la vuelve a abrir al terminar.
         _singleInstance.ListenForQuit(() =>

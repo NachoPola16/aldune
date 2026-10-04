@@ -5,6 +5,7 @@
 #define MyAppVersion GetVersionNumbersString(SourceDir + "\" + MyAppExeName)
 
 [Setup]
+ChangesAssociations=yes
 AppId={{B7E4E3D1-4A6B-4F30-9A5E-7A9E2B2D0A51}
 AppName={#MyAppName}
 AppVersion={#MyAppVersion}
@@ -66,6 +67,14 @@ Filename: "{app}\{#MyAppExeName}"; Flags: nowait skipifnotsilent; Check: WasRunn
 ; la entrada se quedaba al desinstalar, apuntando a un ejecutable que ya no existe. Las notas en
 ; %LOCALAPPDATA%\Aldune no se tocan: desinstalar no debe borrar datos del usuario.
 Root: HKCU; Subkey: "Software\Microsoft\Windows\CurrentVersion\Run"; ValueName: "Aldune"; ValueType: none; Flags: uninsdeletevalue dontcreatekey
+; "Abrir con → Aldune" para .md, .markdown y .txt, sin hacerse el programa predeterminado (spec de notas
+; vinculadas, decisión 6). Solo se añade a OpenWithProgids: lo que el usuario tenga elegido no cambia.
+Root: HKCU; Subkey: "Software\Classes\Aldune.LinkedNote"; ValueType: string; ValueName: ""; ValueData: "Aldune"; Flags: uninsdeletekey
+Root: HKCU; Subkey: "Software\Classes\Aldune.LinkedNote\DefaultIcon"; ValueType: string; ValueName: ""; ValueData: "{app}\{#MyAppExeName},0"
+Root: HKCU; Subkey: "Software\Classes\Aldune.LinkedNote\shell\open\command"; ValueType: string; ValueName: ""; ValueData: """{app}\{#MyAppExeName}"" ""%1"""
+Root: HKCU; Subkey: "Software\Classes\.md\OpenWithProgids"; ValueType: string; ValueName: "Aldune.LinkedNote"; ValueData: ""; Flags: uninsdeletevalue
+Root: HKCU; Subkey: "Software\Classes\.markdown\OpenWithProgids"; ValueType: string; ValueName: "Aldune.LinkedNote"; ValueData: ""; Flags: uninsdeletevalue
+Root: HKCU; Subkey: "Software\Classes\.txt\OpenWithProgids"; ValueType: string; ValueName: "Aldune.LinkedNote"; ValueData: ""; Flags: uninsdeletevalue
 
 [CustomMessages]
 english.CloseAldune=Aldune is still running. Close it (tray icon > Exit) and press Retry.
