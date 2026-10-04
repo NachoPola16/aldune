@@ -4150,3 +4150,44 @@ píxel a píxel contra capturas de antes del bloque (0 diferencias; solo cambia 
   seis nuevos en la lista; bash con blanco en todos los huecos pierde la distinción usuario/ruta.
 
 Tests: 1170/1170. Smoke test en verde.
+
+## 2026-10-04: bloque 4 de aspectos (exportar e importar la configuración)
+
+Cuarto y último bloque de la 1.5.0 (plan `docs/superpowers/plans/2026-10-04-bloque4-exportar-importar.md`).
+Sin publicar.
+
+- **Qué es**: un archivo `*.aldune-config.json` con la configuración visual y los ajustes, desde Ajustes →
+  Acerca de ("Exportar configuración…" / "Importar configuración…"). Formato
+  `{"format":"aldune-config","version":1,"app":"1.5.0","appearance":{…},"settings":{…}}`, enums como número,
+  UTF-8 sin BOM.
+- **Qué viaja** (31 campos en una lista cerrada, `ConfigFields.All`; lo que no está en la lista no puede
+  salir ni entrar):
+  - *Aspecto*: aspecto, colores de cada aspecto, esquinas, señal de sync, mismo color, tema de notas activo,
+    temas propios, tono y asignación de color de las notas nuevas, color fijo.
+  - *Ajustes*: idioma, modo de interfaz, los dos atajos, dock (borde, vista, mantener abierto, vista previa,
+    pantalla completa, trackpad), tareas (mover las hechas al final, ocultar hechas y su plazo), papelera,
+    recordar posiciones, consulta de versiones.
+  - **Nunca**: nada de sincronización (perfiles, contraseñas, claves, servidor, carpeta, dispositivo, última
+    sincronización), la pantalla elegida, la etiqueta filtrada en el dock, la distribución por defecto, el
+    orden del gestor, la marca de la migración de Sereno, el arranque con Windows ni las posiciones de
+    ventanas. Un test de reflexión obliga a clasificar cada propiedad nueva de `AppSettings` (en la lista o
+    en una lista de excluidas con su motivo), y otro comprueba el archivo exportado con todos esos campos
+    rellenos.
+- **Importar con tolerancia** (`ConfigImport.Plan`): campo o sección que falta = no se toca; campos
+  desconocidos = se ignoran; color inválido o tipo equivocado = ese campo se descarta; enum fuera de rango =
+  su valor por defecto; versión futura = se lee lo que se entienda; archivo roto o que no es de Aldune = error
+  (también el de más de 1 MB, el que trae un escape suelto inválido o el que empieza por BOM). Crear el plan
+  no toca nada; importar dos veces el mismo archivo no cambia nada la segunda.
+- **Flujo**: vista previa con la lista `valor actual → valor nuevo` (atajos juntos con el nombre de las teclas,
+  Activado/Desactivado, enums traducidos), "Aplicar" / "Cancelar". Cancelar no cambia ni guarda nada. Al
+  aplicar: copia previa de `settings.json` (`settings.json.antes-de-importar-aaaammdd-hhmmss`, sin pisar otras
+  copias), cambios, guardado y aplicación en vivo (aspecto, colores, atajos, dock, vista previa…). **El idioma
+  solo se aplica al reiniciar** y la vista previa lo avisa. La papelera se aplica en la próxima purga.
+- **Pendiente (menores)**: la vista previa muestra tal cual el id del tema de notas, el código del idioma y
+  los nombres de los huecos de color en inglés, y un valor automático como "—"; `HotkeyBinding.DisplayName`
+  da nombres de teclas especiales fijos en español (anterior al bloque); las copias previas se acumulan sin
+  limpiarse; el filtro de importar no deja ver archivos sin la extensión `.json`.
+
+Tests: 1212/1212. Verificado con sonda (179 comprobaciones: forma del archivo, ninguna fuga, cancelar,
+copia previa, aplicación en vivo, 13 casos de error, 31 nombres en cinco idiomas). Pendiente de este bloque:
+smoke test con el "ok" del usuario.
