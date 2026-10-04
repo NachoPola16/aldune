@@ -991,6 +991,7 @@ public partial class EdgeDockWindow : Window
         // vista o el filtro de etiqueta: archivar una nota no puede cambiarla de canal, ni filtrar
         // hacer que su ventana y su pestaña discrepen. Con la vista Activa sin filtro ya está cargado.
         NoteChannelDisplay.Set(view == DockViewKind.Active ? notes : _repository.GetByState(NoteState.Active));
+        LinkedNoteDisplay.Set(_repository.GetFileLinks());
         SetNotes(notes, animateArrivals: !viewChanged);
         if (viewChanged)
         {

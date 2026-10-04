@@ -213,6 +213,7 @@ public partial class App : Application
         NoteColorDisplay.Uniform = settings.UniformNoteColor;
         var coordinator = new AppCoordinator(repository, settings, syncService, settingsService);
         _coordinator = coordinator;
+        coordinator.StartLinkedFiles(Dispatcher);
         _repository = repository;
         _settings = settings;
         _settingsService = settingsService;
@@ -327,6 +328,7 @@ public partial class App : Application
         };
 
         _toastCenter = new ToastCenter();
+        coordinator.ToastSink = content => _toastCenter?.Show(content);
         _updateNotifier = new UpdateNotifier(_toastCenter, () => settings.CheckForUpdatesAutomatically);
         _trayIcon = new TrayIcon(coordinator, _updateNotifier.CheckManually);
 

@@ -1,4 +1,5 @@
-﻿using System.Linq;
+﻿using System.Collections.Concurrent;
+using System.Linq;
 using System.Windows;
 using System.Windows.Threading;
 using Aldune.Core;
@@ -27,6 +28,61 @@ public sealed class AppCoordinator
     private readonly Dictionary<Guid, NoteWindow> _openNoteWindows = new();
     private readonly List<EdgeDockWindow> _docks = new();
     private Dictionary<Guid, bool>? _noteTopmostBeforeSuspension;
+
+    // Ids de las notas con ventana abierta, legibles desde el hilo del sondeo de archivos (el diccionario
+    // de ventanas es solo del hilo de la interfaz).
+    private readonly ConcurrentDictionary<Guid, byte> _openNoteIds = new();
+    private LinkedFileCoordinator? _linkedWatch;
+
+    public LinkedFileService LinkedFiles { get; }
+
+    /// <summary>Enseña un aviso con texto; lo inyecta App (el coordinador no conoce el centro de avisos).</summary>
+    internal Action<ToastContent>? ToastSink { get; set; }
+
+    public bool IsLinked(Guid noteId) => LinkedNoteDisplay.IsLinked(noteId);
+
+    /// <summary>Lo llama App tras crear el coordinador, ya con el Dispatcher en marcha.</summary>
+    public void StartLinkedFiles(Dispatcher dispatcher)
+    {
+        LinkedNoteDisplay.Set(_repository.GetFileLinks());
+        _linkedWatch = new LinkedFileCoordinator(LinkedFiles, _repository, dispatcher,
+            id => _openNoteIds.ContainsKey(id),
+            id => { if (_openNoteWindows.TryGetValue(id, out var window)) window.FlushPending(); },
+            OnLinkedFileResult);
+        _linkedWatch.Start();
+    }
+
+    public void RequestLinkedCheck(Guid noteId) => _linkedWatch?.RequestCheck(noteId);
+
+    private void OnLinkedFileResult(Guid noteId, ReconcileResult result)
+    {
+        _openNoteWindows.TryGetValue(noteId, out var window);
+        bool unavailable = result.Outcome == ReconcileOutcome.Unavailable;
+        bool changedState = LinkedNoteDisplay.IsUnavailable(noteId) != unavailable;
+        LinkedNoteDisplay.SetUnavailable(noteId, unavailable);
+        window?.SetFileUnavailable(unavailable ? LinkedNoteDisplay.PathOf(noteId) : null);
+
+        switch (result.Outcome)
+        {
+            case ReconcileOutcome.Reloaded:
+                window?.ReloadFromRepository();
+                RefreshAll();
+                break;
+            case ReconcileOutcome.Conflict:
+                window?.ReloadFromRepository();
+                RefreshAll();
+                if (_repository.GetById(noteId) is { } note)
+                    ToastSink?.Invoke(new ToastContent(Strings.AppName, Strings.LinkedConflictToast(LinkedNoteDisplay.Title(note)),
+                        AutoDismiss: TimeSpan.FromSeconds(15)));
+                break;
+            case ReconcileOutcome.Written:
+                window?.ReapplyAppearance();   // la señal de sync pasa a pendiente si la nota se sincroniza
+                break;
+            default:
+                if (changedState) RefreshAll();
+                break;
+        }
+    }
 
     /// <summary>
     /// Cuántas ventanas han pedido a la vez que las notas dejen de estar "siempre encima". Es un
@@ -63,6 +119,9 @@ public sealed class AppCoordinator
     {
         if (_settings is not { AutoHideCompletedTasks: true } || !TaskPruningAllowed) return;
         var open = _openNoteWindows.Keys.ToHashSet();
+        // En una nota vinculada no se reescriben líneas solas: borrarían líneas del archivo sin que el usuario
+        // haga nada (spec, decisión 4).
+        open.UnionWith(_repository.GetFileLinks().Select(link => link.NoteId));
         if (_repository.PruneExpiredCompletedTasksInActiveNotes(_settings.AutoHideCompletedTasksDelay, open) > 0)
         {
             RefreshAll();
@@ -75,6 +134,8 @@ public sealed class AppCoordinator
     {
         _syncedSinceStart = true;
         PruneCompletedTasksInClosedNotes();
+        // Lo que llegó por la sync a una nota vinculada es un cambio pendiente que hay que escribir en el archivo.
+        foreach (var link in _repository.GetFileLinks().Where(link => link.SyncEnabled)) RequestLinkedCheck(link.NoteId);
         // Con las señales de sync de las notas abiertas incluidas: su estado acaba de cambiar.
         RefreshNoteAppearance();
     }
@@ -101,6 +162,7 @@ public sealed class AppCoordinator
         _settings = settings;
         _syncService = syncService;
         _settingsService = settingsService;
+        LinkedFiles = new LinkedFileService(repository, NextNoteColor, () => Strings.LinkedConflictPrefix);
     }
 
     public int OpenNoteWindowCount => _openNoteWindows.Count;
@@ -341,9 +403,11 @@ public sealed class AppCoordinator
         }
 
         _openNoteWindows[note.Id] = noteWindow;
+        _openNoteIds[note.Id] = 0;
         noteWindow.Closed += (_, _) =>
         {
             _openNoteWindows.Remove(note.Id);
+            _openNoteIds.TryRemove(note.Id, out _);
             // Devuelve la pestaña a su hueco en el mazo. Va aquí y no en el Closing de NoteWindow
             // porque Closing se dispara *antes* de que esta entrada se quite del diccionario, así
             // que un refresco desde allí seguiría viendo la nota como abierta.
@@ -1158,6 +1222,7 @@ public sealed class AppCoordinator
         // que mostrar el mismo que su pestaña.
         foreach (var window in _openNoteWindows.Values) window.RefreshChannel();
         _notesManagerWindow?.Refresh();
+        _linkedWatch?.Refresh();
     }
 
     /// <param name="save">False cuando quien llama ya ha guardado los ajustes (importar configuración):
@@ -1236,5 +1301,7 @@ public sealed class AppCoordinator
     {
         _autoSyncTimer?.Dispose();
         _autoSyncTimer = null;
+        _linkedWatch?.Dispose();
+        _linkedWatch = null;
     }
 }

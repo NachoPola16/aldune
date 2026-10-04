@@ -34,7 +34,7 @@ public sealed class NoteTabLabelConverter : IValueConverter
         var text = note?.Text ?? value as string ?? string.Empty;
         var title = note is { IsProtected: true }
             ? Strings.ProtectedNote
-            : NoteTitleHelper.GetTitle(text);
+            : note is not null ? LinkedNoteDisplay.Title(note) : NoteTitleHelper.GetTitle(text);
         if (string.IsNullOrWhiteSpace(title)) return string.Empty;
 
         // Mayúsculas espaciadas de siempre o el adorno de la piel (NoteLabels, en Core, con tests).

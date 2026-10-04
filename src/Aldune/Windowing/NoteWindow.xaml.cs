@@ -116,7 +116,7 @@ public partial class NoteWindow : Window
         var (title, body) = NoteText.Split(note.Text);
         TitleBox.Text = title;
         TextBody.Text = body;
-        Title = NoteTitleHelper.GetTitle(note.Text); // el de la ventana: barra de tareas, Alt+Tab
+        Title = LinkedNoteDisplay.Title(note); // el de la ventana: barra de tareas, Alt+Tab
 
         _autosaveTimer = new DispatcherTimer { Interval = AutosaveDelay };
         _autosaveTimer.Tick += (_, _) =>
@@ -620,7 +620,7 @@ public partial class NoteWindow : Window
 
     private void OnEdited()
     {
-        Title = NoteTitleHelper.GetTitle(CurrentText);
+        Title = LinkedNoteDisplay.Title(_note.Id, CurrentText);
         _hasPendingEdit = true;
         _autosaveTimer.Stop();
         _autosaveTimer.Start();
@@ -878,7 +878,7 @@ public partial class NoteWindow : Window
         RecordTaskToggle(toggled, glyphIndex);
 
         int caret = TextBody.CaretIndex;
-        var settled = _settings is { MoveCompletedTasksToEnd: true }
+        var settled = _settings is { MoveCompletedTasksToEnd: true } && !IsLinked
             ? TaskLists.SettleToggled(toggled, glyphIndex)
             : TextEdit.Unchanged(toggled);
 
@@ -1026,6 +1026,7 @@ public partial class NoteWindow : Window
     /// </summary>
     private void PruneExpiredTasks()
     {
+        if (IsLinked) return;   // no se borran líneas del archivo solas (spec, decisión 4)
         if (_settings is not { AutoHideCompletedTasks: true } settings) return;
         if (!_coordinator.TaskPruningAllowed) return;
         if (TextBody.IsKeyboardFocusWithin && DateTime.UtcNow - _lastBodyKeyAt < TypingGrace) return;
@@ -1317,6 +1318,38 @@ public partial class NoteWindow : Window
         }
     }
 
+    private bool IsLinked => _coordinator.IsLinked(_note.Id);
+
+    /// <summary>Guarda ya lo tecleado. Antes de mirar el archivo: así lo escrito cuenta como pendiente y un
+    /// cambio externo da conflicto en vez de pisarlo.</summary>
+    internal void FlushPending()
+    {
+        _autosaveTimer.Stop();
+        Flush();
+    }
+
+    /// <summary>El archivo cambió por fuera y la nota ya tiene su texto: se pone en la ventana sin marcarla
+    /// como editada, con el cursor en la misma línea si existe.</summary>
+    internal void ReloadFromRepository()
+    {
+        if (_hasPendingEdit || _repository.GetById(_note.Id) is not { } fresh) return;
+        int line = TextBody.GetLineIndexFromCharacterIndex(TextBody.CaretIndex);
+        var (title, body) = NoteText.Split(fresh.Text);
+        TitleBox.Text = title;
+        TextBody.Text = body;
+        _note.Text = fresh.Text;
+        // Los TextChanged de arriba marcan "hay cambios": no los hay, lo que se ve es lo guardado.
+        _hasPendingEdit = false;
+        _autosaveTimer.Stop();
+        if (line >= 0 && line < TextBody.LineCount) TextBody.CaretIndex = TextBody.GetCharacterIndexFromLineIndex(line);
+    }
+
+    /// <summary>Con <paramref name="path"/>: archivo no disponible, solo lectura. Con null: normal.</summary>
+    internal void SetFileUnavailable(string? path)
+    {
+        TextBody.IsReadOnly = TitleBox.IsReadOnly = path is not null;
+    }
+
     private void Flush()
     {
         if (!_hasPendingEdit) return;
@@ -1329,6 +1362,9 @@ public partial class NoteWindow : Window
         else
         {
             _repository.UpdateText(_note.Id, CurrentText);
+            // La nota vinculada se guarda primero en la base de datos (a salvo aunque el disco falle) y luego
+            // se pide escribir el archivo, en segundo plano.
+            if (IsLinked) _coordinator.RequestLinkedCheck(_note.Id);
         }
         // Recién guardada, la nota ya no coincide con la base de la sync: pasa a pendiente.
         UpdateSyncSignal();
