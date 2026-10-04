@@ -313,11 +313,19 @@ public sealed class SyncService
                     remote = remote.Where(pair => scopedIds.Contains(pair.Key))
                         .ToDictionary(pair => pair.Key, pair => pair.Value);
 
+                // Una nota vinculada sin sync es solo de este equipo: lo que llegue de fuera con su id (una
+                // copia de cuando sí se sincronizaba, o su borrado) no puede pisarla ni borrarla. Sin esto,
+                // al no estar en el lado local se aplicaría lo remoto tal cual.
+                var localOnly = _repository.GetUnsyncedLinkedNoteIds();
+                if (localOnly.Count > 0)
+                    remote = remote.Where(pair => !localOnly.Contains(pair.Key))
+                        .ToDictionary(pair => pair.Key, pair => pair.Value);
+
                 HandleUnsignedTombstones(classified.UnsignedTombstones, remote, scopedIds, transport);
 
                 var deviceId = EnsureDeviceId();
                 var localNotes = _repository.GetAllForSync()
-                    .Where(note => SyncScopeFilter.Includes(note, _settings))
+                    .Where(note => SyncScopeFilter.Includes(note, _settings, localOnly))
                     .ToDictionary(note => note.Id);
                 var localTombstones = _repository.GetSyncTombstones()
                     .Where(tombstone => scopedIds is null || scopedIds.Contains(tombstone.NoteId))
@@ -442,8 +450,9 @@ public sealed class SyncService
                 ? _settings.SyncNoteIds.ToHashSet()
                 : null;
             var deviceId = EnsureDeviceId();
+            var localOnly = _repository.GetUnsyncedLinkedNoteIds();
             var localNotes = _repository.GetAllForSync()
-                .Where(note => SyncScopeFilter.Includes(note, _settings))
+                .Where(note => SyncScopeFilter.Includes(note, _settings, localOnly))
                 .ToDictionary(note => note.Id);
             var localTombstones = _repository.GetSyncTombstones()
                 .Where(tombstone => scopedIds is null || scopedIds.Contains(tombstone.NoteId))

@@ -16,10 +16,11 @@ public enum SyncSignalState
 /// </summary>
 public static class NoteSyncSignal
 {
-    public static SyncSignalState For(Note note, AppSettings settings, SyncBaseVersion? baseVersion, bool hasConflict)
+    public static SyncSignalState For(Note note, AppSettings settings, SyncBaseVersion? baseVersion, bool hasConflict,
+        IReadOnlySet<Guid>? localOnly = null)
     {
         if (!settings.SyncEnabled) return SyncSignalState.Hidden;
-        if (!SyncScopeFilter.Includes(note, settings)) return SyncSignalState.Excluded;
+        if (!SyncScopeFilter.Includes(note, settings, localOnly)) return SyncSignalState.Excluded;
         if (hasConflict) return SyncSignalState.Conflict;
         return baseVersion is not null && baseVersion.UpdatedAt == note.UpdatedAt
             ? SyncSignalState.Synced

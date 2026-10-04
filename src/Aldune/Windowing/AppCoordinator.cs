@@ -1140,7 +1140,8 @@ public sealed class AppCoordinator
     {
         if (_settings is null || _repository.GetById(noteId) is not { } note) return SyncSignalState.Hidden;
         bool hasConflict = _repository.HasSyncConflict(noteId);
-        return NoteSyncSignal.For(note, _settings, _repository.GetSyncBase(noteId), hasConflict);
+        return NoteSyncSignal.For(note, _settings, _repository.GetSyncBase(noteId), hasConflict,
+            _repository.GetUnsyncedLinkedNoteIds());
     }
 
     /// <summary>Tras cambiar una opción de aspecto de las notas: notas abiertas, docks y gestor.</summary>

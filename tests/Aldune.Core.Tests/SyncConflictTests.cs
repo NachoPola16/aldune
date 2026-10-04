@@ -708,6 +708,64 @@ public sealed class SyncConflictTests : IDisposable
         Assert.NotNull(_deviceB.Repository.GetById(second.Id)!.DockPosition);
     }
 
+    [Fact]
+    public void LinkedNoteWithoutSync_IsNeitherOverwrittenNorPublished()
+    {
+        var note = _deviceA.Repository.Create("original", "#EBD38B", "primary");
+        ShareKeyAndSynchronizeInitialNote(note.Id);
+
+        _deviceB.Repository.UpdateText(note.Id, "edit from B");
+        Assert.True(_deviceB.Sync.Synchronize().Succeeded);
+
+        // A la vincula a un archivo sin sync y la edita: lo de B no debe pisarla, ni lo de A salir.
+        _deviceA.Repository.SaveFileLink(new NoteFileLink(note.Id, @"C:\apuntes\tema.md", false, null, null, null));
+        _deviceA.Repository.UpdateText(note.Id, "local de A");
+        var result = _deviceA.Sync.Synchronize();
+
+        Assert.True(result.Succeeded, result.Error);
+        Assert.Equal("local de A", _deviceA.Repository.GetById(note.Id)!.Text);
+        Assert.Empty(_deviceA.Sync.GetConflicts());
+        Assert.True(_deviceB.Sync.Synchronize().Succeeded);
+        Assert.Equal("edit from B", _deviceB.Repository.GetById(note.Id)!.Text);
+    }
+
+    [Fact]
+    public void LinkedNoteWithoutSync_SurvivesARemoteDeletion()
+    {
+        var note = _deviceA.Repository.Create("original", "#EBD38B", "primary");
+        ShareKeyAndSynchronizeInitialNote(note.Id);
+
+        _deviceA.Repository.SaveFileLink(new NoteFileLink(note.Id, @"C:\apuntes\tema.md", false, null, null, null));
+        Assert.True(_deviceB.Repository.Delete(note.Id));
+        Assert.True(_deviceB.Sync.Synchronize().Succeeded);
+
+        Assert.True(_deviceA.Sync.Synchronize().Succeeded);
+        Assert.NotNull(_deviceA.Repository.GetById(note.Id));
+        Assert.NotNull(_deviceA.Repository.GetFileLink(note.Id));
+    }
+
+    [Fact]
+    public void LinkedNoteWithSync_TravelsLikeANormalNote()
+    {
+        var note = _deviceA.Repository.Create("original", "#EBD38B", "primary");
+        _deviceA.Repository.SaveFileLink(new NoteFileLink(note.Id, @"C:\apuntes\tema.md", true, null, null, null));
+        ShareKeyAndSynchronizeInitialNote(note.Id);
+
+        Assert.Null(_deviceB.Repository.GetFileLink(note.Id));
+        Assert.Equal("original", _deviceB.Repository.GetById(note.Id)!.Text);
+    }
+
+    [Fact]
+    public void Signal_SaysExcludedForALinkedNoteWithoutSync()
+    {
+        var note = _deviceA.Repository.Create("x", "#EBD38B", "primary");
+        _deviceA.Repository.SaveFileLink(new NoteFileLink(note.Id, @"C:\a.md", false, null, null, null));
+
+        var state = NoteSyncSignal.For(note, _deviceA.Settings, null, false, _deviceA.Repository.GetUnsyncedLinkedNoteIds());
+
+        Assert.Equal(SyncSignalState.Excluded, state);
+    }
+
     private Device CreateDevice(string deviceId)
     {
         var deviceRoot = Path.Combine(_root, deviceId);

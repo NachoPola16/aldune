@@ -4,11 +4,17 @@
 /// y para la señal de cada nota, que tienen que estar de acuerdo.</summary>
 public static class SyncScopeFilter
 {
-    public static bool Includes(Note note, AppSettings settings) => settings.SyncScope switch
+    /// <param name="localOnly">Notas vinculadas a un archivo sin "Sincronizar esta nota": fuera siempre,
+    /// sea cual sea el alcance (spec de notas vinculadas, decisión 2).</param>
+    public static bool Includes(Note note, AppSettings settings, IReadOnlySet<Guid>? localOnly = null)
     {
-        SyncScopeKind.SelectedNotes => settings.SyncNoteIds.Contains(note.Id),
-        SyncScopeKind.Tag => string.IsNullOrWhiteSpace(settings.SyncTag) ||
-            note.Tags.Any(tag => string.Equals(tag, settings.SyncTag, StringComparison.OrdinalIgnoreCase)),
-        _ => true,
-    };
+        if (localOnly is not null && localOnly.Contains(note.Id)) return false;
+        return settings.SyncScope switch
+        {
+            SyncScopeKind.SelectedNotes => settings.SyncNoteIds.Contains(note.Id),
+            SyncScopeKind.Tag => string.IsNullOrWhiteSpace(settings.SyncTag) ||
+                note.Tags.Any(tag => string.Equals(tag, settings.SyncTag, StringComparison.OrdinalIgnoreCase)),
+            _ => true,
+        };
+    }
 }
