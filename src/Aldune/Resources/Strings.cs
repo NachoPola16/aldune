@@ -39,6 +39,15 @@ public static class Strings
     public static string AppName => BrandIdentity.AppName;
     public static string ReminderToastTitle => T("Reminder", "Recordatorio",
         "Erinnerung", "Rappel", "Lembrete");
+    public static string ReminderIncludeTasksCheckbox => T("Show pending tasks in the reminder", "Mostrar las tareas pendientes en el recordatorio",
+        "Offene Aufgaben in der Erinnerung anzeigen", "Afficher les tâches en attente dans le rappel", "Mostrar as tarefas pendentes no lembrete");
+    public static string ReminderIncludeTasksHint => T("The reminder is always for the whole note. This only decides whether its notification lists the first tasks left to do.",
+        "El recordatorio es siempre de la nota entera. Esto solo decide si el aviso enseña las primeras tareas que quedan por hacer.",
+        "Die Erinnerung gilt immer für die ganze Notiz. Das entscheidet nur, ob die Benachrichtigung die ersten offenen Aufgaben auflistet.",
+        "Le rappel concerne toujours toute la note. Cela décide seulement si la notification liste les premières tâches restantes.",
+        "O lembrete é sempre da nota inteira. Isto só decide se o aviso lista as primeiras tarefas que faltam.");
+    public static string ReminderSnooze10 => T("Snooze 10 min", "Posponer 10 min", "10 Min. später", "Reporter de 10 min", "Adiar 10 min");
+    public static string ReminderSnooze60 => T("Snooze 1 h", "Posponer 1 h", "1 Std. später", "Reporter d'1 h", "Adiar 1 h");
     public static string ReminderOpenNote => T("Open note", "Abrir nota",
         "Notiz öffnen", "Ouvrir la note", "Abrir nota");
     public static string ReminderShowNotes => T("Show notes", "Ver notas",
@@ -315,6 +324,7 @@ public static class Strings
         "trashRetentionDays" => T("Days in the trash", "Días en la papelera", "Tage im Papierkorb", "Jours dans la corbeille", "Dias na lixeira"),
         "rememberNotePositions" => T("Remember note positions", "Recordar la posición de las notas", "Notizpositionen merken", "Mémoriser la position des notes", "Lembrar a posição das notas"),
         "checkForUpdates" => T("Check for updates automatically", "Buscar actualizaciones automáticamente", "Automatisch nach Updates suchen", "Rechercher les mises à jour automatiquement", "Verificar atualizações automaticamente"),
+        "reminderIncludesTasks" => T("Pending tasks in reminders", "Tareas pendientes en los recordatorios", "Offene Aufgaben in Erinnerungen", "Tâches en attente dans les rappels", "Tarefas pendentes nos lembretes"),
         _ => id,
     };
 

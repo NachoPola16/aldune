@@ -199,6 +199,10 @@ public sealed class AppSettings
     /// </summary>
     public bool CheckForUpdatesAutomatically { get; set; } = true;
 
+    /// <summary>Si el aviso de un recordatorio lista las primeras tareas pendientes de la nota. El recordatorio es
+    /// siempre de la nota entera; esto solo decide si el aviso las enseña.</summary>
+    public bool ReminderIncludesTasks { get; set; } = true;
+
     /// <summary>Último orden elegido en "Gestionar notas". Por defecto el del mazo, el de siempre.</summary>
     public NoteListOrder NotesManagerOrder { get; set; }
 

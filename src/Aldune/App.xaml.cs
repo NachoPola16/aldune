@@ -344,7 +344,7 @@ public partial class App : Application
         _updateNotifier = new UpdateNotifier(_toastCenter, () => settings.CheckForUpdatesAutomatically);
         _trayIcon = new TrayIcon(coordinator, _updateNotifier.CheckManually);
 
-        _reminderScheduler = new ReminderScheduler(repository, coordinator, _toastCenter);
+        _reminderScheduler = new ReminderScheduler(repository, coordinator, _toastCenter, settings);
         if (_firstRun) ShowWelcome(settings, coordinator);
         // Catch-up: avisa ya de lo vencido con la app cerrada. Diferido con BeginInvoke en vez de
         // llamado aquí mismo, en línea: este punto de OnStartup queda FUERA del último try/catch de

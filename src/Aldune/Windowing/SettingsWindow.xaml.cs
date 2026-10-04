@@ -623,6 +623,12 @@ public partial class SettingsWindow : Window
         _coordinator?.RefreshAll();
     }
 
+    private void OnReminderIncludesTasksToggled(object sender, RoutedEventArgs e)
+    {
+        _settings.ReminderIncludesTasks = ReminderIncludesTasksCheck.IsChecked == true;
+        _settingsService.Save(_settings);
+    }
+
     private void OnKeepDockOpenToggled(object sender, RoutedEventArgs e)
     {
         _settings.KeepDockOpen = KeepDockOpenCheck.IsChecked == true;
@@ -1826,6 +1832,7 @@ public partial class SettingsWindow : Window
         HideOnFullscreenCheck.IsChecked = _settings.HideOnFullscreen;
         KeepDockOpenCheck.IsChecked = _settings.KeepDockOpen;
         ShowNotePreviewCheck.IsChecked = _settings.ShowNotePreview;
+        ReminderIncludesTasksCheck.IsChecked = _settings.ReminderIncludesTasks;
         RememberPositionsCheck.IsChecked = _settings.RememberNotePositions;
         PopulateTrackpadGestures();
         UpdateUniformColorUi();

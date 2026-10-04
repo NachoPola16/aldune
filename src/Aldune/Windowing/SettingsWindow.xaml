@@ -547,6 +547,15 @@
                         <TextBlock Text="{x:Static res:Strings.ShowNotePreviewHint}"
                                    Foreground="{DynamicResource AlduneHintBrush}" FontSize="11" TextWrapping="Wrap" Margin="27,6,0,0" />
                     </StackPanel>
+                    <StackPanel Margin="0,16,0,0">
+                        <CheckBox x:Name="ReminderIncludesTasksCheck"
+                                  Content="{x:Static res:Strings.ReminderIncludeTasksCheckbox}"
+                                  Foreground="{DynamicResource AlduneTextBrush}" Background="{DynamicResource AlduneGroundBrush}" FontSize="13"
+                                  Style="{StaticResource AppCheckBoxStyle}"
+                                  Click="OnReminderIncludesTasksToggled" />
+                        <TextBlock Text="{x:Static res:Strings.ReminderIncludeTasksHint}"
+                                   Foreground="{DynamicResource AlduneHintBrush}" FontSize="11" TextWrapping="Wrap" Margin="27,6,0,0" />
+                    </StackPanel>
                     <!-- Lo que el modo simplificado esconde de esta página. -->
                     <StackPanel x:Name="DockAdvancedPanel">
                         <Border Background="{DynamicResource AlduneRaisedBrush}" Height="1" Margin="0,20,0,0" />

@@ -87,6 +87,7 @@ public static class ConfigFields
         Int("trashRetentionDays", nameof(AppSettings.TrashRetentionDays), ConfigSections.Settings, 1, MaxTrashRetentionDays, s => s.TrashRetentionDays, (s, v) => s.TrashRetentionDays = v),
         Bool("rememberNotePositions", nameof(AppSettings.RememberNotePositions), ConfigSections.Settings, s => s.RememberNotePositions, (s, v) => s.RememberNotePositions = v),
         Bool("checkForUpdates", nameof(AppSettings.CheckForUpdatesAutomatically), ConfigSections.Settings, s => s.CheckForUpdatesAutomatically, (s, v) => s.CheckForUpdatesAutomatically = v),
+        Bool("reminderIncludesTasks", nameof(AppSettings.ReminderIncludesTasks), ConfigSections.Settings, s => s.ReminderIncludesTasks, (s, v) => s.ReminderIncludesTasks = v),
     ];
 
     private static ConfigField Custom(string id, string property, ConfigSections section, Func<AppSettings, object?> get,

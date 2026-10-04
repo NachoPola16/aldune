@@ -1,5 +1,6 @@
 ﻿using System.Windows.Threading;
 using Aldune.Core;
+using Aldune.Interop;
 using Aldune.Resources;
 
 namespace Aldune.Windowing;
@@ -23,10 +24,12 @@ internal sealed class ReminderScheduler : IDisposable
     private readonly NotesRepository _repository;
     private readonly AppCoordinator _coordinator;
     private readonly ToastCenter _toasts;
+    private readonly AppSettings _settings;
     private readonly DispatcherTimer _timer;
 
-    internal ReminderScheduler(NotesRepository repository, AppCoordinator coordinator, ToastCenter toasts)
+    internal ReminderScheduler(NotesRepository repository, AppCoordinator coordinator, ToastCenter toasts, AppSettings settings)
     {
+        _settings = settings;
         _repository = repository;
         _coordinator = coordinator;
         _toasts = toasts;
@@ -40,35 +43,18 @@ internal sealed class ReminderScheduler : IDisposable
     /// la llama una vez explícitamente al arrancar, además del sondeo periódico normal.</summary>
     internal void CheckDueReminders()
     {
+        // Un fallo (base de datos ocupada, aviso que no se puede mostrar) no puede parar el sondeo para siempre:
+        // antes se frenaba el temporizador y no volvía a avisarse nada hasta reiniciar. Se apunta y se reintenta
+        // en el siguiente sondeo. Tampoco se lanza: una excepción por tick abriría un MessageBox cada 30 s.
         try
         {
             var due = _repository.GetDueReminders(DateTimeOffset.UtcNow);
             if (due.Count == 0) return;
 
-            foreach (var (noteId, _) in due)
-            {
-                _repository.ClearReminder(noteId);
-            }
-
+            // Primero se avisa y después se borra el recordatorio: si el aviso falla, sigue pendiente.
             if (due.Count == 1)
             {
-                var noteId = due[0].NoteId;
-                var note = _repository.GetById(noteId);
-                var text = note is null ? Strings.AppName : NoteTitleHelper.GetTitle(note.Text);
-                // Lo que queda por hacer, para saberlo desde el propio aviso: el recordatorio es de la
-                // nota entera (una línea no tiene identidad estable para llevar el suyo, ver la spec de
-                // recordatorios), pero así se ve qué tareas faltan. Una nota protegida llega sin texto
-                // y no enseña nada.
-                if (note is not null)
-                {
-                    var pending = TaskLists.PendingTasks(note.Text, int.MaxValue);
-                    if (pending.Count > 0)
-                    {
-                        text += "\n" + Strings.ReminderPendingTasks(pending.Count, pending.Take(3).ToList());
-                    }
-                }
-                _toasts.Show(new ToastContent(Strings.ReminderToastTitle, text,
-                    [new ToastAction(Strings.ReminderOpenNote, () => _coordinator.OpenNoteById(noteId), Primary: true)]));
+                ShowSingle(due[0].NoteId);
             }
             else
             {
@@ -76,21 +62,41 @@ internal sealed class ReminderScheduler : IDisposable
                     [new ToastAction(Strings.ReminderShowNotes, _coordinator.OpenNotesManager, Primary: true)]));
             }
 
+            foreach (var (noteId, _) in due) _repository.ClearReminder(noteId);
             _coordinator.RefreshAll();
         }
-        catch
+        catch (Exception ex)
         {
-            // Un fallo persistente (BD inaccesible, NotifyIcon ya no válido, etc.) no debe repetirse
-            // cada 30s para siempre — el timer seguiría disparando el mismo error sin parar y, como
-            // las excepciones del tick sí llegan al DispatcherUnhandledException global (a diferencia
-            // de esta misma llamada durante el arranque), eso significa un MessageBox modal nuevo
-            // cada 30 segundos sin forma de pararlo salvo matar el proceso. Frenar el timer aquí deja
-            // como mucho un único aviso en vez de un bucle infinito. La excepción se deja subir (no
-            // se traga) para que quien llame — el handler global en steady-state, o el catch-up
-            // diferido de App.OnStartup — se entere de que algo falló.
-            _timer.Stop();
-            throw;
+            DockDiagnostics.Write("recordatorios", $"comprobación fallida, se reintenta: {ex.GetType().Name}: {ex.Message}");
         }
+    }
+
+    private void ShowSingle(Guid noteId)
+    {
+        var note = _repository.GetById(noteId);
+        var text = note is null ? Strings.AppName : NoteTitleHelper.GetTitle(note.Text);
+        // Lo que queda por hacer, si el usuario lo quiere en el aviso: el recordatorio es de la nota entera (una
+        // línea no tiene identidad estable para llevar el suyo, ver la spec de recordatorios), pero así se ve qué
+        // tareas faltan. Una nota protegida llega sin texto y no enseña nada.
+        if (note is not null && _settings.ReminderIncludesTasks)
+        {
+            var pending = TaskLists.PendingTasks(note.Text, int.MaxValue);
+            if (pending.Count > 0)
+                text += "\n" + Strings.ReminderPendingTasks(pending.Count, pending.Take(3).ToList());
+        }
+        _toasts.Show(new ToastContent(Strings.ReminderToastTitle, text,
+        [
+            new ToastAction(Strings.ReminderOpenNote, () => _coordinator.OpenNoteById(noteId), Primary: true),
+            new ToastAction(Strings.ReminderSnooze10, () => Snooze(noteId, TimeSpan.FromMinutes(10))),
+            new ToastAction(Strings.ReminderSnooze60, () => Snooze(noteId, TimeSpan.FromHours(1))),
+        ]));
+    }
+
+    // Pospone: el recordatorio vuelve a quedar fijado más adelante, como si se hubiera puesto de nuevo.
+    private void Snooze(Guid noteId, TimeSpan by)
+    {
+        _repository.SetReminder(noteId, DateTimeOffset.UtcNow + by);
+        _coordinator.RefreshAll();
     }
 
     public void Dispose()
