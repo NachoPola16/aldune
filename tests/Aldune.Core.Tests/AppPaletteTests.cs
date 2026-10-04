@@ -75,6 +75,30 @@ public class AppPaletteTests
         AssertContrast(p, "Text", "Hover", 4.5);
     }
 
+    // El botón "+" del dock lleva TextStrong sobre DockPrimary.
+    [Theory]
+    [MemberData(nameof(Palettes))]
+    public void DockPlusButton_IsReadable(string mode)
+    {
+        AssertContrast(Palette(mode), "TextStrong", "DockPrimary", 4.5);
+    }
+
+    // En los aspectos retro el botón "+" va del color del acento (como en las maquetas), no gris.
+    [Theory]
+    [InlineData(AppearanceMode.XpLight, "accent")]
+    [InlineData(AppearanceMode.XpDark, "accent")]
+    [InlineData(AppearanceMode.TelecomLight, "accent")]
+    [InlineData(AppearanceMode.TelecomDark, "trace")]
+    [InlineData(AppearanceMode.Bash, "accent")]
+    [InlineData(AppearanceMode.Phosphor, "details")]
+    public void DockPlusButton_FollowsTheAccent(AppearanceMode mode, string slot)
+    {
+        var p = AppPalette.For(mode, false, new Dictionary<string, string> { [slot] = "#D03020" });
+        Assert.True(OklchColor.TryFromHex("#D03020", out var chosen));
+        Assert.True(OklchColor.TryFromHex(p["DockPrimary"], out var dock));
+        Assert.True(dock.C > 0.05 && Math.Abs(chosen.H - dock.H) < 15, $"{chosen.H} -> {dock.H} (C {dock.C})");
+    }
+
     // Pastel y Medianoche tienen que notarse: fondo teñido hacia su matiz, no un gris con otro nombre.
     [Theory]
     [InlineData(AppearanceMode.Pastel, 300)]

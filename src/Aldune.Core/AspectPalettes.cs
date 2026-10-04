@@ -107,12 +107,15 @@ internal static class AspectPalettes
         return p;
     }
 
-    // El acento y sus acompañantes, con el texto del botón (OnAccent) legible encima.
+    // El acento y sus acompañantes, con el texto del botón (OnAccent) legible encima. También el botón "+"
+    // del dock, que en las maquetas va del color del acento: su glifo es TextStrong, así que se llama
+    // después de fijar TextStrong.
     private static void SetAccent(Dictionary<string, string> p, string accent)
     {
         var onAccent = p["OnAccent"];
         var fitted = ColorFit.Background(accent, onAccent, 4.5);
         bool darkText = ColorFit.Ratio(onAccent, "#000000") < ColorFit.Ratio(onAccent, White);
+        p["DockPrimary"] = ColorFit.Background(accent, p["TextStrong"], 4.5);
         p["Accent"] = p["AccentBorder"] = p["FieldFocus"] = fitted;
         // Al pasar el ratón, un paso más lejos del texto: más claro bajo texto oscuro, más oscuro bajo claro.
         p["AccentHover"] = ColorFit.Background(darkText ? ColorFit.Lighter(fitted, 0.05) : ColorFit.Darker(fitted, 0.05), onAccent, 4.5);
