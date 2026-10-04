@@ -4220,7 +4220,7 @@ con TDD; la parte WPF (7 a 10) aquí.
 - **Verificación**: sonda sin ratón (24 comprobaciones: abrir dos archivos, escribir y comprobar que el resto del
   archivo queda byte a byte, recarga en ≤ 5 s, conflicto con el archivo intacto, carpeta renombrada y devuelta,
   renombrado de archivo, archivar y restaurar, "ocultar tareas hechas" que poda una nota normal y no la vinculada,
-  Proteger desactivado) en verde. Pendiente de pasar con el usuario: sonda de arrastrar (mueve el ratón) y smoke test.
+  Proteger desactivado) en verde. Sonda de arrastrar (arrastre OLE real hasta el borde del dock, 2 archivos) y smoke test (26 PASS, 0 FAIL) en verde con el ok del usuario.
 - **Pendiente (menores)**: el tooltip de Proteger desactivado en el menú de la pestaña del dock no está
   comprobado con sonda; la marca de la pestaña se superpone con títulos muy largos (el título se recorta con
   elipsis y puede pasar bajo el icono).
@@ -4242,4 +4242,4 @@ con TDD; la parte WPF (7 a 10) aquí.
   de datos antes de `TryAcquire` y no normaliza rutas relativas; `Open` no es atómico (Create + guardar vínculo);
   temporal sin atributo oculto; título del conflicto con `# `; residual de unos ms entre releer la nota y `UpdateText`
   en la recarga.
-- **Sin verificar con el usuario**: sonda de arrastrar al dock y smoke test (mueven el ratón).
+- **Verificado con el usuario**: sonda de arrastrar al dock y smoke test (26 PASS, 0 FAIL).
