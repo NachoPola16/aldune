@@ -742,7 +742,7 @@ public class NotesRepositoryFileLinkTests : IDisposable
         _sut.SaveFileLink(link);
 
         Assert.Equal(link, _sut.GetFileLink(note.Id));
-        Assert.Equal([link], _sut.GetFileLinks());
+        Assert.Equal(new[] { link }, _sut.GetFileLinks());
     }
 
     [Fact]
@@ -788,7 +788,7 @@ public class NotesRepositoryFileLinkTests : IDisposable
         _sut.SaveFileLink(LinkFor(local.Id, @"C:\a.md"));
         _sut.SaveFileLink(LinkFor(synced.Id, @"C:\b.md", sync: true));
 
-        Assert.Equal([local.Id], _sut.GetUnsyncedLinkedNoteIds());
+        Assert.Equal(new[] { local.Id }, _sut.GetUnsyncedLinkedNoteIds());
     }
 
     [Fact]
@@ -1746,7 +1746,7 @@ Textos nuevos en `Strings.cs` (sección propia "Notas vinculadas"):
         $"{name} is larger than 2 MB and can't be opened as a note.", $"{name} ocupa más de 2 MB y no se puede abrir como nota.",
         $"{name} ist größer als 2 MB und kann nicht als Notiz geöffnet werden.", $"{name} dépasse 2 Mo et ne peut pas être ouvert comme note.",
         $"{name} tem mais de 2 MB e não pode ser aberto como nota.");
-    public static string LinkedEncoding(string name) => T(
+    public static string LinkedBadEncoding(string name) => T(
         $"{name} isn't UTF-8 or UTF-16 text. Aldune won't open it so as not to damage its accents.",
         $"{name} no está en UTF-8 ni en UTF-16. Aldune no lo abre para no estropear sus tildes.",
         $"{name} ist kein UTF-8- oder UTF-16-Text. Aldune öffnet die Datei nicht, um Sonderzeichen nicht zu beschädigen.",
@@ -2284,7 +2284,7 @@ explicación se vea con el botón desactivado.
         {
             LinkOutcome.UnsupportedExtension => Strings.LinkedUnsupported(name),
             LinkOutcome.TooLarge => Strings.LinkedTooLarge(name),
-            LinkOutcome.UnsupportedEncoding => Strings.LinkedEncoding(name),
+            LinkOutcome.UnsupportedEncoding => Strings.LinkedBadEncoding(name),
             LinkOutcome.Unreadable => Strings.LinkedUnreadable(name),
             _ => null,
         };
@@ -2570,7 +2570,7 @@ public class OpenRequestInboxTests : IDisposable
         OpenRequestInbox.Post(_dir, [@"C:\a.md", @"Z:\apuntes\b.txt"]);
         OpenRequestInbox.Post(_dir, [@"C:\c.md"]);
 
-        Assert.Equal([@"C:\a.md", @"Z:\apuntes\b.txt", @"C:\c.md"], OpenRequestInbox.Drain(_dir));
+        Assert.Equal(new[] { @"C:\a.md", @"Z:\apuntes\b.txt", @"C:\c.md" }, OpenRequestInbox.Drain(_dir));
         Assert.Empty(OpenRequestInbox.Drain(_dir));
     }
 
@@ -2582,7 +2582,7 @@ public class OpenRequestInboxTests : IDisposable
     {
         Directory.CreateDirectory(_dir);
         File.WriteAllText(Path.Combine(_dir, "x.txt"), "\r\nC:\\a.md\r\n\r\n");
-        Assert.Equal([@"C:\a.md"], OpenRequestInbox.Drain(_dir));
+        Assert.Equal(new[] { @"C:\a.md" }, OpenRequestInbox.Drain(_dir));
     }
 }
 ```
@@ -2728,9 +2728,9 @@ git commit -m "Abrir con Aldune: argumentos, buzon entre instancias y OpenWithPr
     }
 ```
 
-(El diálogo de guardar de Windows ya pregunta antes de sobrescribir; `SaveAs` no sobrescribe de todos modos: si
-el usuario confirma, la interfaz borra… **no**: la interfaz usa `OverwritePrompt = false` y, si el archivo
-existe, avisa y no hace nada. Aldune no reemplaza archivos del usuario con una nota.)
+(La interfaz abre el diálogo de guardar con `OverwritePrompt = false` y, si el archivo elegido ya existe,
+avisa y no hace nada: Aldune no reemplaza archivos del usuario con una nota. `SaveAs` tampoco sobrescribe,
+por si se llama desde otro sitio: usa `FileMode.CreateNew`.)
 
 - [ ] **Step 2: Run** → no compila.
 - [ ] **Step 3: Implement** (en `LinkedFileService`)
