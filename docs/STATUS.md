@@ -4149,4 +4149,4 @@ píxel a píxel contra capturas de antes del bloque (0 diferencias; solo cambia 
   traza cian da CH1 = CH2 del mismo cian (consecuencia de la elección); "Como Windows" queda antes de los
   seis nuevos en la lista; bash con blanco en todos los huecos pierde la distinción usuario/ruta.
 
-Tests: 1170/1170. Pendiente de este bloque: smoke test con el "ok" del usuario.
+Tests: 1170/1170. Smoke test en verde.
