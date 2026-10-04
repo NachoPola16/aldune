@@ -770,7 +770,7 @@ cubrirla paso a paso. **Una sola release al final de la ronda.**
 8. **Casilla de tarea vacía: clicar al lado marca en vez de escribir.** **Hecho:** el clic se acepta
    solo dentro de la misma caja que se resalta al pasar el ratón (`visualRect.Contains`), en vez de
    valer cualquier punto desde el inicio de línea hasta el fin del prefijo.
-9. **Asignador de etiquetas del dock distinto del del gestor**: son dos implementaciones
+9. ~~**Asignador de etiquetas del dock distinto del del gestor**~~ **Hecho** (ya los tres usan `TagAssignmentPanel`): eran dos implementaciones
    (`OnTabMenuTagsClick` + `DockTagAssignmentItems` frente a `TagChoiceItems` + `OnSaveTagsClick`);
    se unifican en la del gestor. **Pendiente.**
 10. **Las plantillas reparten en orden de apertura**, no en el orden del mazo, así que la nota que cae
