@@ -10,6 +10,7 @@
         AllowsTransparency="False"
         ResizeMode="CanResize"
         StateChanged="OnWindowStateChanged"
+        TextOptions.TextFormattingMode="Ideal" UseLayoutRounding="False" SnapsToDevicePixels="False"
         Topmost="True">
     <WindowChrome.WindowChrome>
         <!-- No visible title bar: the top CaptionHeight strip is just the note's own tinted

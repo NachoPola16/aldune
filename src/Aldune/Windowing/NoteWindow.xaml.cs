@@ -262,6 +262,12 @@ public partial class NoteWindow : Window
         };
 
         TextBody.PreviewKeyDown += OnBodyKeyDown;
+        // Con la barra oculta el texto cabe entero por construcción (FitHeightToContent), así que la rueda no
+        // tiene nada que desplazar; sin esto movía las letras la fracción de píxel que sobraba.
+        TextBody.PreviewMouseWheel += (_, e) =>
+        {
+            if (TextBody.VerticalScrollBarVisibility == ScrollBarVisibility.Hidden) e.Handled = true;
+        };
         DataObject.AddPastingHandler(TextBody, OnBodyPasting);
         TextBody.PreviewMouseLeftButtonDown += OnBodyMouseDown;
         TextBody.MouseMove += OnBodyMouseMove;
@@ -454,24 +460,56 @@ public partial class NoteWindow : Window
 
         double chromeHeight = Height - TextBody.ViewportHeight;
         double neededHeight = TextBody.ExtentHeight + chromeHeight;
-        double autoFitMaxHeight = Math.Max(MinHeight, Math.Min(
-            MaxAutoFitHeight,
-            MonitorLookup.MonitorAt(Left, Top, Width, Height, MonitorEnumerator.EnumerateMonitors())
-                ?.WorkArea.Height * 0.9 ?? MaxAutoFitHeight));
-        double desired = Math.Clamp(neededHeight, _initialHeight, autoFitMaxHeight);
+        double autoFitMaxHeight = AutoFitMaxHeight();
+        // Al píxel entero por arriba: con un alto fraccionario WPF redondea el área visible hacia abajo y
+        // el texto quedaba 0,3 px más alto que ella, justo lo bastante para que la rueda lo moviera.
+        double desired = Math.Clamp(Math.Ceiling(neededHeight), _initialHeight, autoFitMaxHeight);
 
         TextBody.VerticalScrollBarVisibility = neededHeight > autoFitMaxHeight + 0.5
             ? ScrollBarVisibility.Auto
             : ScrollBarVisibility.Hidden;
 
-        if (Math.Abs(desired - Height) < 0.5) return;
+        if (Math.Abs(desired - Height) >= 0.5)
+        {
+            _isAutoResizing = true;
+            Height = desired;
+            _isAutoResizing = false;
+
+            TextBody.UpdateLayout();
+            ClampToWorkArea();
+        }
+
+        // Si todo cabe no hay nada que desplazar: cualquier resto (el cuadro se mueve solo para que se vea
+        // el cursor mientras la ventana todavía no ha crecido) se devuelve a cero.
+        if (TextBody.VerticalScrollBarVisibility == ScrollBarVisibility.Hidden && TextBody.VerticalOffset != 0)
+            TextBody.ScrollToVerticalOffset(0);
+    }
+
+    /// <summary>Alto máximo del ajuste automático: el tope fijo o el 90% del área de trabajo, el menor.</summary>
+    private double AutoFitMaxHeight() => Math.Max(MinHeight, Math.Min(
+        MaxAutoFitHeight,
+        MonitorLookup.MonitorAt(Left, Top, Width, Height, MonitorEnumerator.EnumerateMonitors())
+            ?.WorkArea.Height * 0.9 ?? MaxAutoFitHeight));
+
+    /// <summary>
+    /// Crece la ventana una línea ANTES de que Enter inserte el salto. Si se espera al TextChanged, hay
+    /// una pasada de layout en la que el texto ya mide una línea más que la ventana: el cuadro se
+    /// desplaza para enseñar el cursor y la ventana crece después, lo que se ve como un parpadeo
+    /// (sobre todo a 60 Hz, donde ese fotograma no pasa desapercibido). Con el alto ya puesto no hay
+    /// desbordamiento; el ajuste normal del TextChanged solo confirma el alto, o lo corrige un píxel.
+    /// </summary>
+    private void PreGrowForNewLine()
+    {
+        if (_hasManualSize || TextBody.LineCount < 1) return;
+        double lineHeight = TextBody.ExtentHeight / TextBody.LineCount;
+        double chromeHeight = Height - TextBody.ViewportHeight;
+        double target = Math.Clamp(
+            Math.Ceiling(TextBody.ExtentHeight + lineHeight + chromeHeight), _initialHeight, AutoFitMaxHeight());
+        if (target <= Height + 0.5) return;
 
         _isAutoResizing = true;
-        Height = desired;
+        Height = target;
         _isAutoResizing = false;
-
-        TextBody.UpdateLayout();
-        ClampToWorkArea();
     }
 
     /// <summary>
@@ -670,6 +708,9 @@ public partial class NoteWindow : Window
             e.Handled = true;
             return;
         }
+
+        // Cualquier otro Enter inserta un salto de línea (también el que continúa una lista).
+        if (e.Key == Key.Return) PreGrowForNewLine();
 
         // Alt+Arriba/Alt+Abajo: sube o baja la línea del cursor, intercambiándola con la vecina
         // (ver Aldune.Core.LineMovement para el porqué de un atajo en vez de arrastrar dentro del

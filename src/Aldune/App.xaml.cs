@@ -27,6 +27,15 @@ public partial class App : Application
         var windowStyle = new Style(typeof(Window));
         windowStyle.Setters.Add(new Setter(System.Windows.Controls.Control.FontFamilyProperty,
             new DynamicResourceExtension("AldunePrimaryFont")));
+        // Lo mismo vale para la nitidez: el Style de App.xaml con estas tres propiedades solo casa con el tipo
+        // exacto Window, así que Ajustes y los diálogos se dibujaban con el texto "ideal" de WPF, que con una
+        // escala fraccionaria (125% o 150%, lo normal en un portátil) sale borroso. Display ajusta los glifos
+        // a la rejilla de píxeles. NoteWindow lo desactiva en su XAML: la medición de sus casillas está
+        // calibrada con el modo anterior.
+        windowStyle.Setters.Add(new Setter(UIElement.SnapsToDevicePixelsProperty, true));
+        windowStyle.Setters.Add(new Setter(FrameworkElement.UseLayoutRoundingProperty, true));
+        windowStyle.Setters.Add(new Setter(System.Windows.Media.TextOptions.TextFormattingModeProperty,
+            System.Windows.Media.TextFormattingMode.Display));
         windowStyle.Seal();
         FrameworkElement.StyleProperty.OverrideMetadata(typeof(Window), new FrameworkPropertyMetadata(windowStyle));
 
