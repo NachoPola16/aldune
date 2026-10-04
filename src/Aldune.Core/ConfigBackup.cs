@@ -1,4 +1,6 @@
-﻿namespace Aldune.Core;
+﻿using System.Globalization;
+
+namespace Aldune.Core;
 
 /// <summary>Copia de <c>settings.json</c> antes de aplicar una importación, para poder volver atrás.</summary>
 public static class ConfigBackup
@@ -7,7 +9,7 @@ public static class ConfigBackup
     {
         if (!File.Exists(settingsPath)) return null;
 
-        var baseName = $"{settingsPath}.antes-de-importar-{now:yyyyMMdd-HHmmss}";
+        var baseName = $"{settingsPath}.antes-de-importar-{now.ToString("yyyyMMdd-HHmmss", CultureInfo.InvariantCulture)}";
         var target = baseName;
         // Dos importaciones en el mismo segundo no pisan la primera copia.
         for (int i = 2; File.Exists(target); i++) target = $"{baseName}-{i}";

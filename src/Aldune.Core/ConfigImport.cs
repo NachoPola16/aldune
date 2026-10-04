@@ -48,47 +48,62 @@ public static class ConfigImport
         JsonDocument document;
         try
         {
-            document = JsonDocument.Parse(json);
+            // Un BOM delante (ReadAllText lo quita, pero un texto leído de otra forma lo conserva) no es un error.
+            document = JsonDocument.Parse(json.TrimStart((char)0xFEFF));
         }
-        catch (JsonException)
+        catch (Exception ex) when (ex is JsonException or ArgumentException)
         {
             return Fail("El archivo no es un JSON válido.");
         }
 
         using (document)
         {
-            var root = document.RootElement;
-            // El ValueKind se mira antes de GetString: con "format": 5 GetString lanzaría en vez de decir "no es de Aldune".
-            if (root.ValueKind != JsonValueKind.Object ||
-                !root.TryGetProperty("format", out var format) ||
-                format.ValueKind != JsonValueKind.String || format.GetString() != ConfigFormat.Name)
-                return Fail("No es un archivo de configuración de Aldune.");
-
-            int version = root.TryGetProperty("version", out var v) && v.ValueKind == JsonValueKind.Number && v.TryGetInt32(out var n) ? n : 1;
-            string? app = root.TryGetProperty("app", out var a) && a.ValueKind == JsonValueKind.String ? a.GetString() : null;
-
-            var sections = ConfigSections.None;
-            var changes = new List<(ConfigField, object?, ConfigChange)>();
-            foreach (var (name, section) in new[] { ("appearance", ConfigSections.Appearance), ("settings", ConfigSections.Settings) })
+            // Parse no lee los textos, solo los acepta: un escape de sustituto suelto ("\ud800") salta después, al leer
+            // el valor (GetString), como InvalidOperationException. Un archivo así es corrupto o hecho a propósito:
+            // error, no excepción. El plan se arma al final, así que no queda nada a medias.
+            try
             {
-                if (!root.TryGetProperty(name, out var node) || node.ValueKind != JsonValueKind.Object) continue;
-                sections |= section;
-                foreach (var field in ConfigFields.All.Where(f => f.Section == section))
-                {
-                    if (!node.TryGetProperty(field.Id, out var element)) continue;
-                    var (ok, value) = field.Read(element);
-                    if (!ok) continue;
-
-                    string before = field.Show(field.Get(current)), after = field.Show(value);
-                    if (before == after) continue;
-                    changes.Add((field, value, new ConfigChange(field.Id, section, before, after)));
-                }
+                return Read(document.RootElement, current);
             }
-
-            var plan = new ConfigImportPlan { IsValid = true, FileVersion = version, FileApp = app, SectionsInFile = sections };
-            foreach (var (field, value, change) in changes) plan.Add(field, value, change);
-            return plan;
+            catch (Exception ex) when (ex is InvalidOperationException or ArgumentException or FormatException or JsonException)
+            {
+                return Fail("El archivo no es un JSON válido.");
+            }
         }
+    }
+
+    private static ConfigImportPlan Read(JsonElement root, AppSettings current)
+    {
+        // El ValueKind se mira antes de GetString: con "format": 5 GetString lanzaría en vez de decir "no es de Aldune".
+        if (root.ValueKind != JsonValueKind.Object ||
+            !root.TryGetProperty("format", out var format) ||
+            format.ValueKind != JsonValueKind.String || format.GetString() != ConfigFormat.Name)
+            return Fail("No es un archivo de configuración de Aldune.");
+
+        int version = root.TryGetProperty("version", out var v) && v.ValueKind == JsonValueKind.Number && v.TryGetInt32(out var n) ? n : 1;
+        string? app = root.TryGetProperty("app", out var a) && a.ValueKind == JsonValueKind.String ? a.GetString() : null;
+
+        var sections = ConfigSections.None;
+        var changes = new List<(ConfigField, object?, ConfigChange)>();
+        foreach (var (name, section) in new[] { ("appearance", ConfigSections.Appearance), ("settings", ConfigSections.Settings) })
+        {
+            if (!root.TryGetProperty(name, out var node) || node.ValueKind != JsonValueKind.Object) continue;
+            sections |= section;
+            foreach (var field in ConfigFields.All.Where(f => f.Section == section))
+            {
+                if (!node.TryGetProperty(field.Id, out var element)) continue;
+                var (ok, value) = field.Read(element);
+                if (!ok) continue;
+
+                string before = field.Show(field.Get(current)), after = field.Show(value);
+                if (before == after) continue;
+                changes.Add((field, value, new ConfigChange(field.Id, section, before, after)));
+            }
+        }
+
+        var plan = new ConfigImportPlan { IsValid = true, FileVersion = version, FileApp = app, SectionsInFile = sections };
+        foreach (var (field, value, change) in changes) plan.Add(field, value, change);
+        return plan;
     }
 
     private static ConfigImportPlan Fail(string error) => new() { IsValid = false, Error = error };

@@ -57,6 +57,9 @@ public class ConfigExportImportTests
         s.SyncScope = SyncScopeKind.Tag;
         s.SyncTag = "etiqueta-sync";
         s.SyncNoteIds = [Guid.Parse("11111111-2222-3333-4444-555555555555")];
+        s.DefaultNoteLayout = NoteLayoutTemplate.Grid;
+        s.NotesManagerOrder = NoteListOrder.Title;
+        s.SereneRecolored = true;
         s.ActiveSyncProfileId = "perfil-activo";
         s.SyncProfiles = [new SyncProfileSettings { Id = "perfil-activo", Name = "perfil-secreto", SyncFolderPath = @"Y:\otro\secreto" }];
         return s;
@@ -331,5 +334,235 @@ public class ConfigExportImportTests
         Assert.Equal(AppearanceMode.Phosphor, target.Appearance);
         Assert.Equal("de", target.Language);          // la sección Ajustes no venía
         Assert.Equal(5u, target.HotkeyModifiers);
+    }
+
+    [Fact]
+    public void Import_NeverTouchesLocalStateThatIsNotInTheFieldList()
+    {
+        // DefaultNoteLayout, NotesManagerOrder y SereneRecolored están rellenos en WithSecrets: si salieran
+        // al exportar, al importar en una instalación limpia dejarían de tener su valor por defecto.
+        var json = ConfigExport.Build(WithSecrets(), ConfigSections.All, "1.5.0");
+        var fresh = new AppSettings();
+
+        ConfigImport.Plan(json, fresh).ApplyTo(fresh);
+
+        var defaults = new AppSettings();
+        Assert.Equal(defaults.DefaultNoteLayout, fresh.DefaultNoteLayout);
+        Assert.Equal(defaults.NotesManagerOrder, fresh.NotesManagerOrder);
+        Assert.Equal(defaults.SereneRecolored, fresh.SereneRecolored);
+        // Y los tres de verdad llevaban un valor distinto del de fábrica.
+        Assert.NotEqual(defaults.DefaultNoteLayout, WithSecrets().DefaultNoteLayout);
+        Assert.NotEqual(defaults.NotesManagerOrder, WithSecrets().NotesManagerOrder);
+        Assert.NotEqual(defaults.SereneRecolored, WithSecrets().SereneRecolored);
+    }
+
+    [Fact]
+    public void Fields_AreExactlyTheDocumentedList_InOrder()
+    {
+        // Golden: cambiar, quitar o añadir un campo obliga a tocar esta lista a conciencia.
+        string[] expected =
+        [
+            "appearance", "aspectColors", "squareCorners", "syncSignal", "uniformNoteColor", "noteTheme",
+            "customThemes", "newNoteTone", "colorAssignment", "fixedNoteColor",
+            "language", "simplifiedMode", "hotkeyEnabled", "hotkeyModifiers", "hotkeyKey",
+            "recentHotkeyEnabled", "recentHotkeyModifiers", "recentHotkeyKey", "dockEdge", "dockView",
+            "keepDockOpen", "showNotePreview", "hideOnFullscreen", "trackpadGestures", "moveCompletedTasksToEnd",
+            "autoHideCompletedTasks", "autoHideDelayValue", "autoHideDelayUnit", "trashRetentionDays",
+            "rememberNotePositions", "checkForUpdates",
+        ];
+
+        Assert.Equal(31, expected.Length);
+        Assert.Equal(expected, ConfigFields.All.Select(f => f.Id).ToArray());
+    }
+
+    // Propiedades de AppSettings que NUNCA viajan por el archivo de configuración, cada una con su razón.
+    private static readonly Dictionary<string, string> NotExported = new()
+    {
+        ["WrappedDatabaseKey"] = "clave de la base de datos, protegida por DPAPI en este equipo",
+        ["SyncEnabled"] = "sincronización: es de este equipo y de su perfil",
+        ["SyncTransport"] = "sincronización: transporte del perfil",
+        ["SyncFolderPath"] = "sincronización: ruta local del equipo",
+        ["SyncServerUrl"] = "sincronización: dirección del servidor",
+        ["WrappedSyncServerToken"] = "credencial del servidor",
+        ["SyncWebDavUsername"] = "credencial WebDAV",
+        ["WrappedSyncWebDavPassword"] = "credencial WebDAV",
+        ["SyncAutomatically"] = "sincronización: del perfil",
+        ["SyncIntervalMinutes"] = "sincronización: del perfil",
+        ["LastSyncAt"] = "estado de sincronización de este equipo",
+        ["SyncDeviceId"] = "identidad de esta instalación",
+        ["WrappedSyncKey"] = "clave de cifrado de la sincronización",
+        ["WrappedPendingSyncKey"] = "clave de cifrado pendiente de rotación",
+        ["SyncKeyRotationPending"] = "estado de una rotación de clave en curso",
+        ["SyncScope"] = "sincronización: del perfil",
+        ["SyncNoteIds"] = "identificadores de notas de este equipo",
+        ["SyncTag"] = "sincronización: del perfil",
+        ["SyncProfiles"] = "perfiles de sincronización con sus credenciales",
+        ["ActiveSyncProfileId"] = "perfil de sincronización activo en este equipo",
+        ["TargetMonitorIndex"] = "pantalla elegida: depende del hardware de este equipo",
+        ["TargetMonitorId"] = "pantalla elegida: depende del hardware de este equipo",
+        ["DockFollowsMouse"] = "pantalla elegida: respaldo para los monitores de este equipo",
+        ["DockTagFilter"] = "estado de la vista del dock, ligado a etiquetas locales",
+        ["DefaultNoteLayout"] = "distribución de 'abrir todas': preferencia fuera de la lista documentada",
+        ["NotesManagerOrder"] = "último orden elegido en Gestionar notas: estado de uso, no ajuste",
+        ["SereneRecolored"] = "marca interna de una migración de datos de este equipo",
+    };
+
+    [Fact]
+    public void EveryPublicSettableAppSettingsProperty_IsMappedByExactlyOneFieldOrExplicitlyExcluded()
+    {
+        var properties = typeof(AppSettings).GetProperties()
+            .Where(p => p.SetMethod is { IsPublic: true })
+            .Select(p => p.Name)
+            .ToList();
+
+        foreach (var name in properties)
+        {
+            var mapped = ConfigFields.All.Count(f => f.Property == name);
+            var excluded = NotExported.ContainsKey(name);
+            Assert.True(mapped + (excluded ? 1 : 0) == 1,
+                $"AppSettings.{name}: hay que mapearla con un ConfigField o añadirla, con su razón, a NotExported (mapeada {mapped} veces, excluida: {excluded}).");
+        }
+
+        // Y al revés: nada apunta a una propiedad que no existe, y cada campo tiene la suya.
+        Assert.All(ConfigFields.All, f => Assert.Contains(f.Property, properties));
+        Assert.All(NotExported.Keys, key => Assert.Contains(key, properties));
+        Assert.Equal(ConfigFields.All.Count, ConfigFields.All.Select(f => f.Property).Distinct().Count());
+    }
+
+    [Theory]
+    [InlineData("{\"format\":\"aldune-config\",\"settings\":{\"language\":\"\\ud800\"}}")] // sustituto suelto en un escape
+    [InlineData("{\"format\":5}")]
+    public void Plan_HostileJson_IsAnErrorAndNeverThrows(string json)
+    {
+        var plan = ConfigImport.Plan(json, new AppSettings());
+
+        Assert.False(plan.IsValid);
+        Assert.False(string.IsNullOrWhiteSpace(plan.Error));
+        Assert.Empty(plan.Changes);
+    }
+
+    [Fact]
+    public void Plan_AFileWithAUtf8Bom_IsRead()
+    {
+        var json = "\uFEFF" + ConfigExport.Build(new AppSettings { Language = "fr" }, ConfigSections.Settings, "1.5.0");
+        var target = new AppSettings();
+
+        var plan = ConfigImport.Plan(json, target);
+        plan.ApplyTo(target);
+
+        Assert.True(plan.IsValid, plan.Error);
+        Assert.Equal("fr", target.Language);
+    }
+
+    [Fact]
+    public void Plan_ThemesWithTheSameNameAndCountButDifferentColors_AreAChange()
+    {
+        var target = new AppSettings { CustomThemes = [new NoteTheme { Id = "mio", Name = "Mio", DarkColors = ["#112233"] }] };
+        var other = new AppSettings { CustomThemes = [new NoteTheme { Id = "mio", Name = "Mio", DarkColors = ["#445566"] }] };
+        var json = ConfigExport.Build(other, ConfigSections.Appearance, "1.5.0");
+
+        var plan = ConfigImport.Plan(json, target);
+        plan.ApplyTo(target);
+
+        var change = Assert.Single(plan.Changes);
+        Assert.Equal("customThemes", change.FieldId);
+        Assert.NotEqual(change.OldValue, change.NewValue);
+        Assert.Equal("#445566", target.CustomThemes.Single().DarkColors.Single());
+    }
+
+    [Fact]
+    public void Plan_ThemesWithTheSameColorsButADifferentId_AreAChange()
+    {
+        var target = new AppSettings { CustomThemes = [new NoteTheme { Id = "uno", Name = "Mio", LightColors = ["#112233"] }] };
+        var other = new AppSettings { CustomThemes = [new NoteTheme { Id = "dos", Name = "Mio", LightColors = ["#112233"] }] };
+
+        var plan = ConfigImport.Plan(ConfigExport.Build(other, ConfigSections.Appearance, "1.5.0"), target);
+
+        Assert.Single(plan.Changes);
+    }
+
+    [Theory]
+    [InlineData(0)]
+    [InlineData(1000)]
+    [InlineData(3650)]
+    public void Plan_TrashRetentionDaysOutsideTheSettingsRange_FallsToTheDefault(int days)
+    {
+        var json = "{\"format\":\"aldune-config\",\"settings\":{\"trashRetentionDays\":" + days + "}}";
+        var target = new AppSettings { TrashRetentionDays = 45 };
+
+        ConfigImport.Plan(json, target).ApplyTo(target);
+
+        Assert.Equal(NotesRepository.DefaultTrashRetentionDays, target.TrashRetentionDays);
+    }
+
+    [Theory]
+    [InlineData(1)]
+    [InlineData(999)]
+    public void Plan_TrashRetentionDays_AcceptsTheWholeSettingsRange(int days)
+    {
+        var json = "{\"format\":\"aldune-config\",\"settings\":{\"trashRetentionDays\":" + days + "}}";
+        var target = new AppSettings();
+
+        ConfigImport.Plan(json, target).ApplyTo(target);
+
+        Assert.Equal(days, target.TrashRetentionDays);
+    }
+
+    [Fact]
+    public void Plan_AspectColorsWithEntriesButNoneValid_KeepTheUsersColors()
+    {
+        var target = new AppSettings { AspectColors = new() { ["bash"] = new() { ["accent"] = "#458588" } } };
+        var json = "{\"format\":\"aldune-config\",\"appearance\":{\"aspectColors\":{\"bash\":{\"accent\":\"rojo\"},\"noExiste\":{\"accent\":\"#FFFFFF\"}}}}";
+
+        var plan = ConfigImport.Plan(json, target);
+        plan.ApplyTo(target);
+
+        Assert.Empty(plan.Changes);
+        Assert.Equal("#458588", target.ColorsFor(AppearanceMode.Bash)!["accent"]);
+    }
+
+    [Theory]
+    [InlineData("{}")]
+    [InlineData("null")]
+    public void Plan_AnEmptyOrNullAspectColors_StillClearsThem(string value)
+    {
+        var target = new AppSettings { AspectColors = new() { ["bash"] = new() { ["accent"] = "#458588" } } };
+        var json = "{\"format\":\"aldune-config\",\"appearance\":{\"aspectColors\":" + value + "}}";
+
+        ConfigImport.Plan(json, target).ApplyTo(target);
+
+        Assert.Null(target.AspectColors);
+    }
+
+    [Fact]
+    public void Plan_ALowercaseStoredColor_IsNotASpuriousChange()
+    {
+        var target = new AppSettings { UniformNoteColor = "#33363a" };
+        var json = ConfigExport.Build(new AppSettings { UniformNoteColor = "#33363A" }, ConfigSections.Appearance, "1.5.0");
+
+        var plan = ConfigImport.Plan(json, target);
+
+        Assert.DoesNotContain(plan.Changes, c => c.FieldId == "uniformNoteColor");
+    }
+
+    [Fact]
+    public void ApplyTo_TwoTargets_DoNotShareTheirCollectionsWithThePlanOrEachOther()
+    {
+        var json = ConfigExport.Build(Customized(), ConfigSections.Appearance, "1.5.0");
+        var a = new AppSettings();
+        var b = new AppSettings();
+        var plan = ConfigImport.Plan(json, a);
+
+        plan.ApplyTo(a);
+        plan.ApplyTo(b);
+        a.AspectColors!["bash"]["accent"] = "#000000";
+        a.AspectColors["otro"] = new() { ["x"] = "#111111" };
+        a.CustomThemes[0].LightColors.Add("#222222");
+        a.CustomThemes.Add(new NoteTheme { Id = "extra" });
+
+        Assert.Equal("#458588", b.AspectColors!["bash"]["accent"]);
+        Assert.False(b.AspectColors.ContainsKey("otro"));
+        Assert.Single(b.CustomThemes);
+        Assert.Equal(2, b.CustomThemes.Single().LightColors.Count);
     }
 }

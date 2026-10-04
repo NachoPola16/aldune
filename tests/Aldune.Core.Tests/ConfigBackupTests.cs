@@ -28,6 +28,26 @@ public sealed class ConfigBackupTests : IDisposable
     }
 
     [Fact]
+    public void Create_TimestampIsCultureIndependent()
+    {
+        var path = Path.Combine(_dir, "settings.json");
+        File.WriteAllText(path, "x");
+        var previous = System.Globalization.CultureInfo.CurrentCulture;
+        try
+        {
+            // Calendario y dígitos distintos de los occidentales: el nombre no puede depender de ellos.
+            System.Globalization.CultureInfo.CurrentCulture = new System.Globalization.CultureInfo("ar-SA");
+            var copy = ConfigBackup.Create(path, new DateTimeOffset(2026, 10, 4, 9, 30, 15, TimeSpan.Zero));
+
+            Assert.Equal(Path.Combine(_dir, "settings.json.antes-de-importar-20261004-093015"), copy);
+        }
+        finally
+        {
+            System.Globalization.CultureInfo.CurrentCulture = previous;
+        }
+    }
+
+    [Fact]
     public void Create_WithoutASettingsFile_ReturnsNull()
     {
         Assert.Null(ConfigBackup.Create(Path.Combine(_dir, "no-existe.json"), DateTimeOffset.UtcNow));
