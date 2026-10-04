@@ -1454,19 +1454,21 @@ public partial class NoteWindow : Window
     private void UpdatePromptLine(NoteFaceColors face)
     {
         var skin = ThemeManager.Skin;
-        PromptLine.Visibility = skin.PromptLine ? Visibility.Visible : Visibility.Collapsed;
+        PromptPanel.Visibility = skin.PromptLine ? Visibility.Visible : Visibility.Collapsed;
         if (!skin.PromptLine) return;
 
         var parts = NoteLabels.Prompt(Environment.UserName, Strings.PromptNotesFolder, TitleBox.Text,
             System.Globalization.CultureInfo.CurrentCulture);
         PromptUser.Text = parts.User;
         PromptPath.Text = parts.Path;
-        PromptCommand.Text = parts.Command;
+        PromptCommandLine.Text = parts.Command;
+        PromptCommandLine.Visibility = parts.Command.Length == 0 ? Visibility.Collapsed : Visibility.Visible;
         var ink = BrushOf(face.Ink);
         bool terminal = skin.Card == SkinCard.Stripe;
         PromptUser.Foreground = terminal ? (Brush)FindResource("AldunePromptUserBrush") : ink;
         PromptPath.Foreground = terminal ? (Brush)FindResource("AldunePromptPathBrush") : ink;
         PromptLine.Foreground = ink;
+        PromptCommandLine.Foreground = ink;
     }
 
     /// <summary>Opacidad del lavado de selección: ni 1.0 (tapa lo seleccionado) ni casi nada (no se ve).</summary>

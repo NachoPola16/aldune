@@ -411,13 +411,19 @@
             </Path>
         </Grid>
 
-        <!-- Línea de prompt de la piel bash (usuario@aldune:~/notas$ cat hoy). Fila propia y no dentro
-             del cuadro de texto: no es texto de la nota y no se puede editar ni seleccionar con él. -->
-        <TextBlock x:Name="PromptLine" Grid.Row="1" Margin="20,10,20,0" FontSize="14"
-                   FontFamily="{DynamicResource AlduneNoteFont}" TextTrimming="CharacterEllipsis"
-                   Visibility="Collapsed">
-            <Run x:Name="PromptUser" FontWeight="Bold" /><Run Text=":" /><Run x:Name="PromptPath" FontWeight="Bold" /><Run x:Name="PromptCommand" />
-        </TextBlock>
+        <!-- Prompt de la piel bash, en dos lineas: usuario@aldune:~/notas$ siempre entero, y debajo
+             "cat <titulo>" que se parte hasta en 3 lineas (un titulo largo en una sola se perdia con la
+             elipsis). Fila propia y no dentro del cuadro de texto: no es texto de la nota y no se puede
+             editar ni seleccionar con el. LineHeight fijo para que MaxHeight sean exactamente 3 lineas. -->
+        <StackPanel x:Name="PromptPanel" Grid.Row="1" Margin="20,10,20,0" Visibility="Collapsed">
+            <TextBlock x:Name="PromptLine" FontSize="14" LineHeight="20"
+                       FontFamily="{DynamicResource AlduneNoteFont}" TextTrimming="CharacterEllipsis">
+                <Run x:Name="PromptUser" FontWeight="Bold" /><Run Text=":" /><Run x:Name="PromptPath" FontWeight="Bold" /><Run Text="$" />
+            </TextBlock>
+            <TextBlock x:Name="PromptCommandLine" FontSize="14" LineHeight="20" MaxHeight="60"
+                       FontFamily="{DynamicResource AlduneNoteFont}" TextWrapping="Wrap"
+                       TextTrimming="CharacterEllipsis" Visibility="Collapsed" />
+        </StackPanel>
 
         <!-- Solo texto. Todo lo demás (color, fijar, archivar, papelera) vive en el panel del "⋯"
              de la cabecera: una nota de 300x320 no puede permitirse un tercio de su alto en botones

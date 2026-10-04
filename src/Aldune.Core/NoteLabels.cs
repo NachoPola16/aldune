@@ -37,12 +37,16 @@ public static class NoteLabels
     public static string Folder(string title, CultureInfo culture) =>
         Whitespace.Replace(title.Trim().ToLower(culture), "_");
 
+    /// <summary>
+    /// Las partes del prompt. <c>Command</c> es solo el comando (<c>cat hoy</c>, vacío sin título): va en su
+    /// propia línea, para que un título largo pueda partirse sin perder el usuario y la ruta.
+    /// </summary>
     public static PromptParts Prompt(string userName, string notesFolder, string title, CultureInfo culture)
     {
         var user = Whitespace.Replace(userName.Trim().ToLower(culture), "_");
         if (user.Length == 0) user = "user";
         var folder = Folder(title, culture);
-        return new PromptParts($"{user}@aldune", $"~/{notesFolder}", folder.Length == 0 ? "$ " : $"$ cat {folder}");
+        return new PromptParts($"{user}@aldune", $"~/{notesFolder}", folder.Length == 0 ? "" : $"cat {folder}");
     }
 
     // Mayúsculas espaciadas de la pestaña de siempre (antes en NoteTabLabelConverter).

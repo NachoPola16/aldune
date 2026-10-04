@@ -48,7 +48,7 @@ public class NoteLabelsTests
 
         Assert.Equal("nacho_pola@aldune", prompt.User);
         Assert.Equal("~/notas", prompt.Path);
-        Assert.Equal("$ cat hoy", prompt.Command);
+        Assert.Equal("cat hoy", prompt.Command);
     }
 
     [Fact]
@@ -57,6 +57,6 @@ public class NoteLabelsTests
         var prompt = NoteLabels.Prompt("  ", "notas", "", Es);
 
         Assert.Equal("user@aldune", prompt.User);
-        Assert.Equal("$ ", prompt.Command);
+        Assert.Equal("", prompt.Command);
     }
 }
