@@ -41,4 +41,16 @@ public class NoteTitleHelperTests
     {
         Assert.Equal("Office", NoteTitleHelper.GetTitle("  Office  \nbody"));
     }
+
+    [Theory]
+    [InlineData("# Tema 3", "Tema 3")]
+    [InlineData("### Sub  ", "Sub")]
+    [InlineData("#hashtag", "#hashtag")]
+    [InlineData("####### siete", "####### siete")]
+    public void GetTitle_StripsMarkdownHeadingMarks(string firstLine, string expected) =>
+        Assert.Equal(expected, NoteTitleHelper.GetTitle(firstLine + "\nresto"));
+
+    [Fact]
+    public void GetTitle_HeadingWithoutText_IsThePlaceholder() =>
+        Assert.Equal(NoteTitleHelper.PlaceholderTitle, NoteTitleHelper.GetTitle("#   \nresto"));
 }

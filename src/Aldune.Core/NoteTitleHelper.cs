@@ -1,6 +1,6 @@
 ﻿namespace Aldune.Core;
 
-public static class NoteTitleHelper
+public static partial class NoteTitleHelper
 {
     /// <summary>
     /// El título de una nota sin texto todavía. Mutable y no <c>const</c> a propósito: Core no
@@ -10,9 +10,15 @@ public static class NoteTitleHelper
     /// </summary>
     public static string PlaceholderTitle { get; set; } = "New note";
 
+    // "# Tema 3" en la pestaña es "Tema 3": los # son marcas de Markdown, no parte del nombre (spec de notas
+    // vinculadas, decisión 6). Solo de 1 a 6 almohadillas seguidas de espacio, como en Markdown: "#hashtag" no.
+    [System.Text.RegularExpressions.GeneratedRegex(@"^#{1,6}(?:[ \t]+|$)")]
+    private static partial System.Text.RegularExpressions.Regex HeadingMarks();
+
     public static string GetTitle(string text)
     {
         var firstLine = text.Split('\n')[0].TrimEnd('\r').Trim();
+        firstLine = HeadingMarks().Replace(firstLine, "", 1).Trim();
         return string.IsNullOrEmpty(firstLine) ? PlaceholderTitle : firstLine;
     }
 

@@ -1532,4 +1532,57 @@ public static class Strings
         "Die vorhandene Notizdatei war beschädigt. Eine Kopie wurde in einer Datei \".corrupt-<Datum>\" neben dem Original aufbewahrt, und eine neue, leere Datenbank wurde erstellt.",
         "Le fichier de notes existant était endommagé. Une copie a été conservée dans un fichier \".corrupt-<date>\" à côté de l'original, et une nouvelle base de données vide a été créée.",
         "O arquivo de notas existente estava danificado. Uma cópia foi mantida em um arquivo \".corrupt-<data>\" ao lado do original, e um novo banco de dados vazio foi criado.");
+
+    // --- Notas vinculadas a archivos ---
+    public static string LinkedOpenFile => T("Open file…", "Abrir archivo…", "Datei öffnen…", "Ouvrir un fichier…", "Abrir arquivo…");
+    public static string LinkedFileFilter => T("Text and Markdown files", "Archivos de texto y Markdown",
+        "Text- und Markdown-Dateien", "Fichiers texte et Markdown", "Arquivos de texto e Markdown")
+        + " (*.md;*.markdown;*.txt)|*.md;*.markdown;*.txt";
+    public static string LinkedUnsupported(string name) => T(
+        $"{name} isn't a .md, .markdown or .txt file.", $"{name} no es un archivo .md, .markdown ni .txt.",
+        $"{name} ist keine .md-, .markdown- oder .txt-Datei.", $"{name} n'est pas un fichier .md, .markdown ou .txt.",
+        $"{name} não é um arquivo .md, .markdown nem .txt.");
+    public static string LinkedTooLarge(string name) => T(
+        $"{name} is larger than 2 MB and can't be opened as a note.", $"{name} ocupa más de 2 MB y no se puede abrir como nota.",
+        $"{name} ist größer als 2 MB und kann nicht als Notiz geöffnet werden.", $"{name} dépasse 2 Mo et ne peut pas être ouvert comme note.",
+        $"{name} tem mais de 2 MB e não pode ser aberto como nota.");
+    public static string LinkedBadEncoding(string name) => T(
+        $"{name} isn't UTF-8 or UTF-16 text. Aldune won't open it so as not to damage its accents.",
+        $"{name} no está en UTF-8 ni en UTF-16. Aldune no lo abre para no estropear sus tildes.",
+        $"{name} ist kein UTF-8- oder UTF-16-Text. Aldune öffnet die Datei nicht, um Sonderzeichen nicht zu beschädigen.",
+        $"{name} n'est pas en UTF-8 ni en UTF-16. Aldune ne l'ouvre pas pour ne pas abîmer ses accents.",
+        $"{name} não está em UTF-8 nem em UTF-16. O Aldune não o abre para não estragar os acentos.");
+    public static string LinkedUnreadable(string name) => T(
+        $"{name} couldn't be read.", $"No se pudo leer {name}.", $"{name} konnte nicht gelesen werden.",
+        $"Impossible de lire {name}.", $"Não foi possível ler {name}.");
+    public static string LinkedAlreadyLinkedElsewhere(string name) => T(
+        $"{name} is already open in another note.", $"{name} ya está abierto en otra nota.",
+        $"{name} ist bereits in einer anderen Notiz geöffnet.", $"{name} est déjà ouvert dans une autre note.",
+        $"{name} já está aberto em outra nota.");
+    public static string LinkedUnavailable(string path) => T(
+        $"File not available: {path}", $"Archivo no disponible: {path}", $"Datei nicht verfügbar: {path}",
+        $"Fichier indisponible : {path}", $"Arquivo indisponível: {path}");
+    public static string LinkedRetry => T("Retry", "Reintentar", "Erneut versuchen", "Réessayer", "Tentar de novo");
+    public static string LinkedLocate => T("Find…", "Buscar…", "Suchen…", "Rechercher…", "Procurar…");
+    public static string LinkedConvert => T("Convert to normal note", "Convertir en nota normal",
+        "In normale Notiz umwandeln", "Convertir en note normale", "Converter em nota normal");
+    public static string LinkedConvertWarning(string path) => T(
+        $"The note keeps its text and stops following the file. The file stays on disk, as plain text:\n{path}",
+        $"La nota conserva su texto y deja de seguir al archivo. El archivo sigue en el disco, en claro:\n{path}",
+        $"Die Notiz behält ihren Text und folgt der Datei nicht mehr. Die Datei bleibt unverschlüsselt auf dem Datenträger:\n{path}",
+        $"La note garde son texte et ne suit plus le fichier. Le fichier reste sur le disque, en clair :\n{path}",
+        $"A nota mantém o texto e deixa de acompanhar o arquivo. O arquivo continua no disco, sem criptografia:\n{path}");
+    public static string LinkedConflictPrefix => T("⚠ Conflict: ", "⚠ Conflicto: ", "⚠ Konflikt: ", "⚠ Conflit : ", "⚠ Conflito: ");
+    public static string LinkedConflictToast(string title) => T(
+        $"{title} changed in another program while you were editing it here. Your version is in a new note.",
+        $"{title} cambió en otro programa mientras lo editabas aquí. Tu versión está en una nota nueva.",
+        $"{title} wurde in einem anderen Programm geändert, während du es hier bearbeitet hast. Deine Version steht in einer neuen Notiz.",
+        $"{title} a été modifié dans un autre programme pendant que vous l'éditiez ici. Votre version est dans une nouvelle note.",
+        $"{title} mudou em outro programa enquanto você o editava aqui. Sua versão está em uma nota nova.");
+    public static string LinkedProtectDisabled => T(
+        "A linked note is the file itself, and the file is plain text. Convert it to a normal note to protect it.",
+        "Una nota vinculada es el propio archivo, y el archivo está en claro. Conviértela en nota normal para protegerla.",
+        "Eine verknüpfte Notiz ist die Datei selbst, und die Datei ist unverschlüsselt. Wandle sie in eine normale Notiz um, um sie zu schützen.",
+        "Une note liée est le fichier lui-même, et le fichier est en clair. Convertissez-la en note normale pour la protéger.",
+        "Uma nota vinculada é o próprio arquivo, e o arquivo está sem criptografia. Converta-a em nota normal para protegê-la.");
 }
