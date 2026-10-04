@@ -4302,3 +4302,23 @@ Publicado como **1.6.1** con todo lo de esta sección.
 - **Escala tipográfica del chrome**: cuatro claves en `App.xaml` (`AlduneTextSmall` 11, `Body` 13, `Title` 15, `Heading` 17) usadas
   por Ajustes, Gestionar notas y los diálogos. Los 12 pasaron a 11 (pistas) o 13 (etiquetas), el 12,5 del aviso a 11, el 14 de
   títulos de aviso/conflictos a 13 y el 19 a 17. Quedan fuera las notas, el dock y los glifos de icono (9, 10, 12, 14, 20).
+
+## Pulido tras la 1.7.1 (2026-10-04, sin publicar)
+
+- **Parpadeo al pulsar Enter** (visto en el portátil): al insertar el salto había una pasada de layout en la que el texto medía
+  una línea más que la ventana (18 px de desbordamiento medidos con una sonda); el cuadro se desplazaba y la ventana crecía
+  después. Ahora `PreGrowForNewLine` crece la ventana una línea antes de que Enter inserte el salto (si no hay tamaño manual).
+  Con la sonda: 0 px de desbordamiento en cualquier pasada.
+- **Letras que se movían con la rueda** aunque no hubiera nada que desplazar: con alto fraccionario el área visible quedaba
+  0,3 px más baja que el texto. `FitHeightToContent` redondea el alto hacia arriba al píxel, devuelve el desplazamiento a 0 si
+  todo cabe, y la rueda no hace nada con la barra oculta.
+- **Texto borroso en Ajustes y diálogos** con escala fraccionaria: el estilo de `App.xaml` (UseLayoutRounding, SnapsToDevicePixels
+  y TextFormattingMode=Display) solo casa con el tipo exacto `Window`, así que las subclases no lo recibían. Ahora lo pone el
+  estilo por defecto de `App.OnStartup`, junto a la fuente. `NoteWindow` lo desactiva en su XAML (la medición de sus casillas está
+  calibrada con el modo anterior). No se ha podido probar en un monitor con escala real: lo comprobado es que las ventanas
+  nacen con Display y redondeo activos.
+- **"Volver junto al dock"** en el menú "⋯" de la nota: la deja donde le tocaría en la "Cascada junto al dock" (su turno en el
+  mazo, en la pantalla donde está), sin recolocar las demás. `AppCoordinator.ReturnNoteToDock`.
+- **Interlineado por aspecto** (`AppSkin.NoteLineHeight`, px; 0 = el natural): 21 en los de terminal (Cascadia Mono a 14 px
+  daba 16,3 px por línea), 19 en XP (Tahoma, 16,9) y el natural en el resto (Segoe, 18,6). La zona de clic de las casillas
+  sigue ajustada a su glifo.

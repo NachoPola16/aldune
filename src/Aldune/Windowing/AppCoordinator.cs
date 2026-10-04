@@ -1243,6 +1243,32 @@ public sealed class AppCoordinator
     }
 
     /// <summary>
+    /// Devuelve UNA nota al sitio que le toca en la "Cascada junto al dock" (el de su turno en el mazo),
+    /// en la pantalla donde está ahora. Es la versión de una sola nota de esa plantilla: quien movió una
+    /// nota lejos y la quiere de vuelta no tiene por qué recolocar todas las demás. Va por
+    /// <see cref="SetWindowPosition"/>, así que es un movimiento del coordinador (animado, sin guardar
+    /// posiciones a mitad de camino).
+    /// </summary>
+    internal void ReturnNoteToDock(NoteWindow window, Guid noteId)
+    {
+        var monitors = MonitorEnumerator.EnumerateMonitors();
+        // La pantalla donde está la nota; si ya no hay ninguna que la contenga, la de algún dock.
+        var found = MonitorLookup.MonitorAt(window.Left, window.Top, window.Width, window.Height, monitors)
+            ?? _docks.Select(d => MonitorLookup.TargetOrFallback(null, d.MonitorKey, monitors)).FirstOrDefault(m => m is not null);
+        if (found is not { } monitor) return;
+
+        var deck = NotesForCurrentDockView();
+        int index = Math.Max(0, deck.Select((note, i) => (Id: note.Id, i: i)).FirstOrDefault(x => x.Id == noteId, (Id: Guid.Empty, i: -1)).i);
+
+        if (window.WindowState != WindowState.Normal) window.WindowState = WindowState.Normal;
+        var (left, top) = NoteCascade.Position(
+            monitor.WorkArea, _settings?.DockEdge ?? EdgePosition.Right, Math.Max(1, deck.Count),
+            window.Width, window.Height, index);
+        SetWindowPosition(window, monitor.WorkArea, left, top);
+        NativeMethods.ForceActivate(window);
+    }
+
+    /// <summary>
     /// Cascada junto al dock que indica <paramref name="edge"/>, dejando libre el hueco donde se
     /// despliega su abanico (ver <see cref="NoteCascade"/>). Cada ventana deja asomar la cabecera de la
     /// anterior (el paso es menor que la ventana), así que es fácil coger cualquiera sin adivinar qué

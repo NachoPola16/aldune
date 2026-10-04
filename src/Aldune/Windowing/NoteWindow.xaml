@@ -402,6 +402,9 @@
                         <Button x:Name="ExportButton" Click="OnExportClick"
                                 Content="{x:Static res:Strings.ExportToMarkdown}"
                                 Style="{StaticResource NoteMenuItemStyle}" />
+                        <Button x:Name="ReturnToDockButton" Click="OnReturnToDockClick"
+                                Content="{x:Static res:Strings.ReturnToDock}"
+                                Style="{StaticResource NoteMenuItemStyle}" />
                         <Button x:Name="RestoreSizeButton" Click="OnRestoreSizeClick"
                                 Content="{x:Static res:Strings.RestoreSize}"
                                 Style="{StaticResource NoteMenuItemStyle}" />
@@ -499,6 +502,8 @@
                      TextWrapping="Wrap"
                      FontFamily="{DynamicResource AlduneNoteFont}"
                      FontSize="14"
+                     TextBlock.LineHeight="{DynamicResource AlduneNoteLineHeight}"
+                     TextBlock.LineStackingStrategy="BlockLineHeight"
                      Foreground="#1E1A14"
                      CaretBrush="#1E1A14"
                      SelectionBrush="#40000000"

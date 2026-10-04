@@ -216,6 +216,8 @@ public static class Strings
         "Diese Farbe verwenden", "Utiliser cette couleur", "Usar esta cor");
     public static string RestoreSize => T("Restore size", "Restaurar tamaño",
         "Größe wiederherstellen", "Restaurer la taille", "Restaurar tamanho");
+    public static string ReturnToDock => T("Return next to the dock", "Volver junto al dock",
+        "Zurück neben das Dock", "Remettre près du dock", "Voltar para junto do dock");
     public static string ExportToMarkdown => T("Export to Markdown", "Exportar a Markdown",
         "Nach Markdown exportieren", "Exporter vers Markdown", "Exportar para Markdown");
     public static string MarkdownFileFilter => T("Markdown file (*.md)|*.md", "Archivo Markdown (*.md)|*.md",

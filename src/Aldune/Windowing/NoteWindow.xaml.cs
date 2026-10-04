@@ -1347,6 +1347,14 @@ public partial class NoteWindow : Window
         TextBody.Focus();
     }
 
+    /// <summary>Devuelve la nota a su sitio junto al dock, el mismo que le tocaría en la "Cascada junto al
+    /// dock": para recogerla después de haberla arrastrado lejos, sin tocar las demás.</summary>
+    private void OnReturnToDockClick(object sender, RoutedEventArgs e)
+    {
+        ActionsPopup.IsOpen = false;
+        _coordinator.ReturnNoteToDock(this, _note.Id);
+    }
+
     /// <summary>Devuelve la ventana al tamaño inicial con el que se creó, sin autoagrandarla en ese
     /// mismo clic. El ajuste automático queda reactivado para los siguientes cambios de texto.</summary>
     private void OnRestoreSizeClick(object sender, RoutedEventArgs e)

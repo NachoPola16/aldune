@@ -71,6 +71,8 @@ public static class ThemeManager
             string.IsNullOrEmpty(skin.NoteFont) ? SystemFonts.MessageFontFamily : new FontFamily(skin.NoteFont),
             ["AlduneNoteTitleFont"] = new FontFamily(skin.NoteTitleFont),
             ["AlduneNoteTitleFontSize"] = skin.NoteTitleFontSize,
+            // NaN = el interlineado natural de la fuente (lo de siempre).
+            ["AlduneNoteLineHeight"] = skin.NoteLineHeight > 0 ? skin.NoteLineHeight : double.NaN,
             ["AlduneTitleBarFill"] = TitleBarFill(skin.TitleBar),
         };
 

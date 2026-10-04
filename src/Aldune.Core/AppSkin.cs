@@ -48,6 +48,7 @@ public enum SkinTitleAdornment
 /// título, cómo lleva cada nota su color y los adornos. Datos puros; la capa WPF los convierte en
 /// recursos y en el estado que leen las plantillas. No se guarda en settings.json: sale del aspecto.
 /// </summary>
+/// <param name="NoteLineHeight">Interlineado del cuerpo de la nota en px; 0 = el natural de la fuente.</param>
 /// <param name="Gloss">Reflejo en los botones del pie del dock (XP claro).</param>
 /// <param name="SquareCorners">Esquinas rectas si el usuario no ha elegido (ajuste nulo).</param>
 /// <param name="SyncSignal">Señal de sincronización si el usuario no ha elegido (ajuste nulo).</param>
@@ -56,6 +57,7 @@ public sealed record AppSkin(
     string NoteFont,
     string NoteTitleFont,
     double NoteTitleFontSize,
+    double NoteLineHeight,
     SkinBorder Border,
     SkinTitleBar TitleBar,
     SkinCard Card,
@@ -72,6 +74,7 @@ public sealed record AppSkin(
         NoteFont: "", // vacío = la fuente de sistema, como el cuerpo de la nota ha sido siempre
         NoteTitleFont: "Ink Free, Segoe UI Variable Text",
         NoteTitleFontSize: 17,
+        NoteLineHeight: 0,
         Border: SkinBorder.Flat,
         TitleBar: SkinTitleBar.Plain,
         Card: SkinCard.Filled,
@@ -90,6 +93,8 @@ public sealed record AppSkin(
     private static readonly AppSkin Terminal = Default with
     {
         ChromeFont = Mono, NoteFont = Mono, NoteTitleFont = Mono, NoteTitleFontSize = 14,
+        // 1,5 veces el cuerpo (14 px): la monoespaciada apila las líneas más densas que Segoe y la lista se lee apretada.
+        NoteLineHeight = 21,
         SquareCorners = true, SyncSignal = true,
     };
 
@@ -99,11 +104,13 @@ public sealed record AppSkin(
         AppearanceMode.XpLight => Default with
         {
             ChromeFont = Tahoma, NoteFont = Tahoma, NoteTitleFont = Tahoma, NoteTitleFontSize = 14,
+            NoteLineHeight = 19, // Tahoma a 14 px da 16,9 px por línea (Segoe, 18,6): se queda apretada
             TitleBar = SkinTitleBar.GradientVertical, Gloss = true,
         },
         AppearanceMode.XpDark => Default with
         {
             ChromeFont = Tahoma, NoteFont = Tahoma, NoteTitleFont = Tahoma, NoteTitleFontSize = 14,
+            NoteLineHeight = 19, // Tahoma a 14 px da 16,9 px por línea (Segoe, 18,6): se queda apretada
             Border = SkinBorder.Bevel, TitleBar = SkinTitleBar.GradientHorizontal, SquareCorners = true,
         },
         AppearanceMode.TelecomLight => Terminal with { Card = SkinCard.Tinted, Adornment = SkinTitleAdornment.Channel },

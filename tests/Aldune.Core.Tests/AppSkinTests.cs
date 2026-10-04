@@ -91,4 +91,16 @@ public class AppSkinTests
         Assert.False(AppSkin.Default.SquareCorners);
         Assert.False(AppSkin.Default.SyncSignal);
     }
+
+    [Fact]
+    public void Terminal_skins_leave_more_air_between_note_lines_than_the_default()
+    {
+        // La monoespaciada a 14 px apila las líneas más densas que Segoe: los aspectos de terminal piden
+        // un interlineado propio, y Tahoma (XP) otro menor (px; 0 = el natural de la fuente); Segoe se queda como siempre.
+        Assert.Equal(0, AppSkin.Default.NoteLineHeight);
+        foreach (var mode in new[] { AppearanceMode.XpLight, AppearanceMode.XpDark })
+            Assert.InRange(AppSkin.For(mode).NoteLineHeight, 18, 20);
+        foreach (var mode in new[] { AppearanceMode.TelecomLight, AppearanceMode.TelecomDark, AppearanceMode.Bash, AppearanceMode.Phosphor })
+            Assert.InRange(AppSkin.For(mode).NoteLineHeight, 20, 24);
+    }
 }
