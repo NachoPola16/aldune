@@ -15,6 +15,7 @@ public static class NoteThemes
     /// <summary>Retirado en la 1.5 (lo sustituye "mismo color en todas las notas"). Se conserva el id
     /// para migrar a quien lo tenga activo (ver ThemeMigrations) y para que Resolve caiga en Clásico.</summary>
     public const string GraphiteId = "graphite";
+    public const string GrayId = "gray";
     public const string XpId = "xp";
     public const string PastelId = "pastel";
     public const string AutumnId = "autumn";
@@ -35,6 +36,15 @@ public static class NoteThemes
             // repartidos por igual: oscuros L 0.31 C 0.052 cada 45°, claros L 0.925 C 0.042 cada 60°.
             DarkColors = ["#472525", "#422A11", "#36310E", "#1F371F", "#033936", "#113447", "#2B2D4A", "#3E273F"],
             LightColors = ["#FFDDD4", "#EFE7C7", "#D3EFD8", "#C7EFF4", "#D9E7FF", "#F5DDF6"],
+        },
+        new NoteTheme
+        {
+            Id = GrayId, Name = "Grafito", IsBuiltIn = true,
+            // Grises neutros (croma 0.006, apenas fríos) para quien quiere notas oscuras a juego con el aspecto
+            // oscuro. Excepción a "una claridad por grupo": entre grises sin matiz solo se distinguen por la
+            // claridad, así que son una escalera de cuatro pasos (L 0.22–0.37 y 0.845–0.965).
+            DarkColors = ["#191B1D", "#252729", "#313336", "#3E4043"],
+            LightColors = ["#F1F4F8", "#E4E6EA", "#D7D9DD", "#CACCD0"],
         },
         // Los tres siguientes, con la misma regla (una claridad por grupo) y los matices repartidos
         // para que dos notas seguidas no se confundan (distancia OKLab >= 0.03, fijada en tests).

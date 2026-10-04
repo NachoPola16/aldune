@@ -9,10 +9,12 @@ public class NoteThemesTests
     public void BuiltIn_AreTheFactoryThemes_InThatOrder()
     {
         // Grafito se retiró en la 1.5: su papel (monocromo) lo cubre "mismo color en todas las notas".
-        Assert.Equal(new[] { "classic", "serene", "pastel", "autumn", "ocean", "xp" }, NoteThemes.BuiltIn.Select(t => t.Id));
+        Assert.Equal(new[] { "classic", "serene", "gray", "pastel", "autumn", "ocean", "xp" }, NoteThemes.BuiltIn.Select(t => t.Id));
         Assert.All(NoteThemes.BuiltIn, theme => Assert.True(theme.IsBuiltIn));
     }
 
+    // Grafito (id "gray") es la excepción a propósito: son grises neutros, y sin variar la claridad no habría
+    // forma de distinguir una nota de otra; la escalera de claridad es lo que los separa.
     // La regla de los temas calculados (spec de temas): la misma claridad OKLCH en cada grupo, para
     // que ninguna nota destaque sobre las demás por ser más clara u oscura; solo cambia el matiz.
     [Theory]
@@ -37,6 +39,7 @@ public class NoteThemesTests
     [Theory]
     [InlineData("classic")]
     [InlineData("serene")]
+    [InlineData("gray")]
     [InlineData("pastel")]
     [InlineData("autumn")]
     [InlineData("ocean")]
@@ -59,6 +62,7 @@ public class NoteThemesTests
     [Theory]
     [InlineData("classic")]
     [InlineData("serene")]
+    [InlineData("gray")]
     [InlineData("pastel")]
     [InlineData("autumn")]
     [InlineData("ocean")]
