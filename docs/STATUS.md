@@ -4268,3 +4268,9 @@ con TDD; la parte WPF (7 a 10) aquí.
   borrar el recordatorio (si falla, queda pendiente) y un fallo ya no detiene el sondeo para siempre.
 - **Aviso de color**: el menú de la nota avisa cuando la piel activa no enseña el color elegido tal cual (franja gris para
   negro/blanco/grises en bash, piel sin colores, color del canal en osciloscopio). `SkinColorNotice` en Core.
+- **Dock sin pintar (caso del 2026-10-04 13:17)**: no se ha podido reproducir. Ahora, si dos lecturas seguidas (10 s) ven
+  la tira sin pintar, se repinta sola (`EnsureTopmost` + `InvalidateVisual`) y lo apunta en el registro; la lectura
+  siguiente dice si funcionó. Hipótesis sin confirmar: la ventana con transparencia pierde su superficie tras apagarse
+  la pantalla (ocurrió 16 s antes de una suspensión).
+
+Publicado como **1.6.1** con todo lo de esta sección.

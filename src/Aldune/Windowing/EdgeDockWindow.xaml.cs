@@ -663,6 +663,8 @@ public partial class EdgeDockWindow : Window
     /// distingue "tapada por otra ventana" de "encima pero sin pintar", que piden arreglos distintos.
     /// Solo escribe cuando algo cambia, y no hace nada si el registro no está activo.
     /// </summary>
+    private int _unpaintedReadings;
+
     private void RecordDiagnostics()
     {
         if (!DockDiagnostics.Enabled || _hwnd == IntPtr.Zero) return;
@@ -718,6 +720,21 @@ public partial class EdgeDockWindow : Window
                 {
                     state += $", pero en pantalla no se ve (color #{r:X2}{g:X2}{b:X2})";
                     stripHidden = true;
+                    // Dos lecturas seguidas (10 s) sin pintar: no es un cambio de aspecto a medias. Hasta ahora solo
+                    // se arreglaba al pasar el ratón por la tira; así se repinta sola, y el registro dice si
+                    // funcionó (la lectura siguiente vuelve a "el dock" o sigue en "no se ve").
+                    if (++_unpaintedReadings >= 2)
+                    {
+                        _unpaintedReadings = 0;
+                        NativeMethods.EnsureTopmost(_hwnd);
+                        InvalidateVisual();
+                        UpdateLayout();
+                        DockDiagnostics.Write(DiagnosticsCategory, "la tira no se pinta desde hace dos lecturas: se repinta sola");
+                    }
+                }
+                else
+                {
+                    _unpaintedReadings = 0;
                 }
             }
             else if (ours && _diagnosticState?.Contains("no se ve") == true)
