@@ -321,7 +321,7 @@ public sealed class SyncService
                     remote = remote.Where(pair => !localOnly.Contains(pair.Key))
                         .ToDictionary(pair => pair.Key, pair => pair.Value);
 
-                HandleUnsignedTombstones(classified.UnsignedTombstones, remote, scopedIds, transport);
+                HandleUnsignedTombstones(classified.UnsignedTombstones, remote, scopedIds, localOnly, transport);
 
                 var deviceId = EnsureDeviceId();
                 var localNotes = _repository.GetAllForSync()
@@ -547,12 +547,16 @@ public sealed class SyncService
         List<SyncRemoteObject> unsignedTombstones,
         Dictionary<Guid, SyncRemoteObject> remote,
         HashSet<Guid>? scopedIds,
+        IReadOnlySet<Guid> localOnly,
         ISyncTransport transport)
     {
         var futureLimit = DateTimeOffset.UtcNow.AddDays(1);
         foreach (var item in unsignedTombstones)
         {
             var id = item.Envelope.NoteId;
+            // Una vinculada sin sync no sale de `remote` por existir allí una copia, sino porque se filtró: un
+            // borrado sin firma tampoco puede mandarla a la papelera (revisión final, I1).
+            if (localOnly.Contains(id)) continue;
             if (remote.ContainsKey(id) || (scopedIds is not null && !scopedIds.Contains(id))) continue;
 
             if (item.Envelope.UpdatedAt > futureLimit)

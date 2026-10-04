@@ -454,6 +454,49 @@ public sealed class NotesRepository
         command.ExecuteNonQuery();
     }
 
+    // Actualizaciones parciales del vínculo para el hilo de fondo: un UPDATE solo de lo suyo y sobre una fila que
+    // exista. Guardar el registro entero (SaveFileLink) desde una foto vieja pisaba "Sincronizar esta nota",
+    // resucitaba un vínculo recién quitado o devolvía la ruta antigua (revisión final, I2).
+    public void UpdateFileLinkKnownState(Guid noteId, string? hash, DateTimeOffset? writeTime, string? textHash)
+    {
+        using var connection = _database.OpenConnection();
+        using var command = connection.CreateCommand();
+        command.CommandText = """
+            UPDATE NoteFileLink SET KnownHash = $hash, KnownWriteTime = $writeTime, KnownTextHash = $textHash
+            WHERE NoteId = $id;
+            """;
+        command.Parameters.AddWithValue("$id", noteId.ToString());
+        command.Parameters.AddWithValue("$hash", (object?)hash ?? DBNull.Value);
+        command.Parameters.AddWithValue("$writeTime", (object?)writeTime?.ToString("O") ?? DBNull.Value);
+        command.Parameters.AddWithValue("$textHash", (object?)textHash ?? DBNull.Value);
+        command.ExecuteNonQuery();
+    }
+
+    public void UpdateFileLinkKnownTextHash(Guid noteId, string? textHash)
+    {
+        using var connection = _database.OpenConnection();
+        using var command = connection.CreateCommand();
+        command.CommandText = "UPDATE NoteFileLink SET KnownTextHash = $textHash WHERE NoteId = $id;";
+        command.Parameters.AddWithValue("$id", noteId.ToString());
+        command.Parameters.AddWithValue("$textHash", (object?)textHash ?? DBNull.Value);
+        command.ExecuteNonQuery();
+    }
+
+    public void UpdateFileLinkPath(Guid noteId, string path)
+    {
+        var encrypted = _cipher.Encrypt(path);
+        using var connection = _database.OpenConnection();
+        using var command = connection.CreateCommand();
+        command.CommandText = """
+            UPDATE NoteFileLink SET EncryptedPath = $path, PathNonce = $nonce, PathTag = $tag WHERE NoteId = $id;
+            """;
+        command.Parameters.AddWithValue("$id", noteId.ToString());
+        command.Parameters.AddWithValue("$path", encrypted.CipherText);
+        command.Parameters.AddWithValue("$nonce", encrypted.Nonce);
+        command.Parameters.AddWithValue("$tag", encrypted.Tag);
+        command.ExecuteNonQuery();
+    }
+
     public NoteFileLink? GetFileLink(Guid noteId) => ReadFileLinks(noteId).FirstOrDefault();
 
     public IReadOnlyList<NoteFileLink> GetFileLinks() => ReadFileLinks(null);

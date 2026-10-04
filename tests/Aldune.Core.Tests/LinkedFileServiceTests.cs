@@ -240,6 +240,52 @@ public class LinkedFileServiceTests : IDisposable
         Assert.Equal("del usuario", File.ReadAllText(path));
     }
 
+    // Revisión final, C1: lo que pasa en la ventana mientras Reconcile espera a que el archivo se asiente
+    // (300 ms o más) cuenta como cambio pendiente. Antes se decidía con la nota leída antes de esa espera y
+    // Reload pisaba lo tecleado sin avisar.
+    [Fact]
+    public void EditDuringTheStableRead_IsAConflictNotAnOverwrite()
+    {
+        var path = WriteFile("tema.md", "uno\n");
+        var id = OpenLinked(path);
+        var typing = new LinkedFileService(_repository, () => "#EBD38B", () => "⚠ Conflicto: ",
+            sleep: _ => _repository.UpdateText(id, "uno tecleado\n"));
+        File.WriteAllText(path, "uno desde fuera\n", new UTF8Encoding(false));
+
+        var result = typing.Reconcile(id);
+
+        Assert.Equal(ReconcileOutcome.Conflict, result.Outcome);
+        Assert.Contains("tecleado", _repository.GetById(result.ConflictNoteId!.Value)!.Text);
+        Assert.Equal("uno desde fuera\n", File.ReadAllText(path));
+    }
+
+    // Revisión final, I2: Reconcile no debe pisar con una foto vieja lo que otro cambió mientras tanto.
+    [Fact]
+    public void SyncToggledDuringAWrite_IsKept()
+    {
+        var path = WriteFile("tema.md", "uno\n");
+        var id = OpenLinked(path);
+        _repository.UpdateText(id, "uno editado\n");
+        var toggling = new LinkedFileService(_repository, () => "#EBD38B", () => "⚠ Conflicto: ",
+            sleep: _ => _sut.SetSync(id, true));
+
+        Assert.Equal(ReconcileOutcome.Written, toggling.Reconcile(id).Outcome);
+
+        Assert.True(_repository.GetFileLink(id)!.SyncEnabled);
+    }
+
+    [Fact]
+    public void UpdatingTheKnownStateOfARemovedLink_DoesNotResurrectIt()
+    {
+        var id = OpenLinked(WriteFile("tema.md", "x"));
+        _sut.Unlink(id);
+
+        _repository.UpdateFileLinkKnownState(id, "h", DateTimeOffset.UtcNow, "t");
+        _repository.UpdateFileLinkPath(id, @"C:\otra.md");
+
+        Assert.Null(_repository.GetFileLink(id));
+    }
+
     [Fact]
     public void SetSync_TogglesTheFlag()
     {

@@ -101,11 +101,15 @@ public sealed partial class LinkedFileService
 
     public ReconcileResult Reconcile(Guid noteId)
     {
+        if (_repository.GetFileLink(noteId) is not { } first) return new ReconcileResult(ReconcileOutcome.NotLinked);
+
+        var bytes = TryReadStable(first.Path);
+        // Vínculo y nota se leen DESPUÉS de la espera a que el archivo se asiente (≥ 300 ms, más en red): lo que
+        // se tecleó o se cambió en ese tiempo cuenta como pendiente. Decidir con una foto anterior hacía que
+        // Reload pisara lo tecleado, o que lo recargado se sobrescribiera después (revisión final, C1).
         var link = _repository.GetFileLink(noteId);
         var note = _repository.GetById(noteId);
         if (link is null || note is null) return new ReconcileResult(ReconcileOutcome.NotLinked);
-
-        var bytes = TryReadStable(link.Path);
         // Un archivo que pasa a ser ilegible (otra codificación, demasiado grande) se trata como no disponible:
         // escribir encima lo estropearía y recargarlo no se puede.
         var content = bytes is null ? null : LinkedFileFormat.Decode(bytes).Content;
@@ -157,7 +161,7 @@ public sealed partial class LinkedFileService
         // que cambiaría su fecha y despertaría a otros programas que lo vigilan.
         if (bytes.AsSpan().SequenceEqual(current))
         {
-            _repository.SaveFileLink(link with { KnownTextHash = textHash });
+            _repository.UpdateFileLinkKnownTextHash(note.Id, textHash);
             return new ReconcileResult(ReconcileOutcome.Unchanged);
         }
 
@@ -175,10 +179,7 @@ public sealed partial class LinkedFileService
             return new ReconcileResult(ReconcileOutcome.Unavailable);
         }
 
-        _repository.SaveFileLink(link with
-        {
-            KnownHash = LinkedFileFormat.Hash(bytes), KnownWriteTime = WriteTime(link.Path), KnownTextHash = textHash,
-        });
+        _repository.UpdateFileLinkKnownState(note.Id, LinkedFileFormat.Hash(bytes), WriteTime(link.Path), textHash);
         return new ReconcileResult(ReconcileOutcome.Written);
     }
 
@@ -186,11 +187,8 @@ public sealed partial class LinkedFileService
     {
         var text = MarkdownLink.ToNoteText(content.Text);
         if (text != note.Text) _repository.UpdateText(note.Id, text);
-        _repository.SaveFileLink(link with
-        {
-            KnownHash = LinkedFileFormat.Hash(bytes), KnownWriteTime = WriteTime(link.Path),
-            KnownTextHash = LinkedFileFormat.HashText(text),
-        });
+        _repository.UpdateFileLinkKnownState(note.Id, LinkedFileFormat.Hash(bytes), WriteTime(link.Path),
+            LinkedFileFormat.HashText(text));
     }
 
     private static ((string Path, byte[] Bytes, LinkedFileContent Content)? Value, LinkOutcome Rejection) Validate(string path)

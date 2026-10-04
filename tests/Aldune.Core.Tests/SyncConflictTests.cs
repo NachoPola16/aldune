@@ -745,6 +745,25 @@ public sealed class SyncConflictTests : IDisposable
     }
 
     [Fact]
+    public void LinkedNoteWithoutSync_SurvivesAnUnsignedRemoteDeletion()
+    {
+        var note = _deviceA.Repository.Create("original", "#EBD38B", "primary");
+        ShareKeyAndSynchronizeInitialNote(note.Id);
+        _deviceA.Repository.SaveFileLink(new NoteFileLink(note.Id, @"C:\apuntes\tema.md", false, null, null, null));
+        new FolderSyncTransport(_sharedFolder).Write(new SyncEnvelope
+        {
+            NoteId = note.Id,
+            Tombstone = true,
+            UpdatedAt = DateTimeOffset.UtcNow,
+            DeviceId = "old-device",
+        });
+
+        Assert.True(_deviceA.Sync.Synchronize().Succeeded);
+
+        Assert.Equal(NoteState.Active, _deviceA.Repository.GetById(note.Id)!.State);
+    }
+
+    [Fact]
     public void LinkedNoteWithSync_TravelsLikeANormalNote()
     {
         var note = _deviceA.Repository.Create("original", "#EBD38B", "primary");
