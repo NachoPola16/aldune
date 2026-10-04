@@ -1363,6 +1363,19 @@ public partial class NoteWindow : Window
         UpdateSyncSignal();
     }
 
+    // Canal con el que se pintó la ventana por última vez (ver RefreshChannel).
+    private int _appliedChannel = -1;
+
+    /// <summary>
+    /// Repinta si el canal de la nota cambió desde que se pintó. El canal sale del puesto en el mazo, que
+    /// cambia al reordenar, archivar o sincronizar; los docks lo recalculan al refrescarse, y sin esto la
+    /// ventana abierta seguiría con el canal viejo mientras su pestaña ya muestra el nuevo.
+    /// </summary>
+    internal void RefreshChannel()
+    {
+        if (NoteChannelDisplay.Of(_note.Id) != _appliedChannel) ApplyColor(_note.Color);
+    }
+
     // La cara de la nota según la piel; ApplyColor y el refresco del prompt la comparten para no discrepar.
     private NoteFaceColors CurrentFace(string? color = null) =>
         NoteFace.For(ThemeManager.Skin.Card, color ?? _note.Color, NoteColorDisplay.Uniform,
@@ -1372,6 +1385,7 @@ public partial class NoteWindow : Window
     {
         var skin = ThemeManager.Skin;
         int channel = NoteChannelDisplay.Of(_note.Id);
+        _appliedChannel = channel;
         var face = CurrentFace(color);
         var brush = BrushOf(face.Face);
         var rim = BrushOf(face.Rim);
