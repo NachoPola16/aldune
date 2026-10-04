@@ -567,8 +567,10 @@ Pendiente, por orden de importancia:
    o las casillas a interruptores alineados a la derecha, estilo Configuración de Windows 11.
 3. ~~**Escala tipográfica**~~ **Hecho** (2026-10-04): había 11/12/13/14/15/17 px repartidos a ojo por las cuatro ventanas. Fijar
    tres tamaños y aplicarlos.
-4. **`NotesManagerWindow`** es la ventana más cargada (452 líneas de XAML) y la que más se aleja del
-   minimalismo del resto. Revisión pendiente.
+4. ~~**`NotesManagerWindow`** es la ventana más cargada (452 líneas de XAML) y la que más se aleja del
+   minimalismo del resto.~~ **Revisada** (2026-10-04, con captura de la ventana con 4 notas): ya no es cierto. Las 681 líneas
+   de XAML son plantillas de estilo; a la vista es una cabecera, una búsqueda, un orden y filas de nota, igual de sobria que
+   el resto. Sin cambios; la escala tipográfica ya se le aplicó.
 5. ~~**Tema claro para el chrome**~~ — **HECHO** (2026-09-27): Oscuro, Claro, Pastel, Medianoche y
    Como Windows, en vivo. Ver `STATUS.md`.
 6. ~~El abanico puede dejar de ser compacto con muchas notas.~~ **Hecho** — ver `STATUS.md`. La
