@@ -4243,3 +4243,18 @@ con TDD; la parte WPF (7 a 10) aquí.
   temporal sin atributo oculto; título del conflicto con `# `; residual de unos ms entre releer la nota y `UpdateText`
   en la recarga.
 - **Verificado con el usuario**: sonda de arrastrar al dock y smoke test (26 PASS, 0 FAIL).
+
+## Pulido tras la 1.6.0 (2026-10-04, sin publicar)
+
+- **Tema de notas Grafito** (`gray`) recuperado con grises neutros: es una escalera de claridad (4 oscuros L 0.22-0.37 y
+  4 claros L 0.845-0.965), la excepción a "una claridad por grupo" porque entre grises sin matiz solo se distinguen así.
+  El Grafito antiguo (`graphite`) sigue retirado y migrado a "mismo color".
+- **`- ☐` y `- ☑` son tareas** al abrir un archivo (antes salía "→ ☐"); las líneas nuevas o editadas se escriben con el
+  estilo dominante del archivo (glifo o `[ ]`). Visto con `PENDIENTES.md`, que escribe las casillas con el glifo.
+- **Piel bash con la nota abierta**: al cambiar de piel el texto quedaba hasta 10 px más alto que la ventana (barra
+  oculta, la rueda lo desplazaba y parecía que temblaban letras). Ahora se reajusta el alto tras repintar.
+- **Menú de la nota**: etiqueta y atajo de "Convertir en lista" ya no se pisan (columnas medidas con el texto).
+- **Cursor**: al reabrir una nota en la misma sesión vuelve donde estaba (en memoria; tras reiniciar sigue al final).
+- **Franja del dock con la piel bash**: cualquier color casi sin matiz (negro, blanco, grises) sale como la misma franja
+  gris clara (L 0.72) para que se vea sobre el fondo oscuro. Es la regla de `StripeColor`; pendiente de decidir si un
+  negro debe distinguirse de un blanco.
