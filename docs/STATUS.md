@@ -4148,6 +4148,11 @@ píxel a píxel contra capturas de antes del bloque (0 diferencias; solo cambia 
   bash con título largo `cat` queda solo en la primera línea de comando; telecomunicaciones oscuro con la
   traza cian da CH1 = CH2 del mismo cian (consecuencia de la elección); "Como Windows" queda antes de los
   seis nuevos en la lista; bash con blanco en todos los huecos pierde la distinción usuario/ruta.
+  De la revisión en la nube de los bloques 2 y 3 (fase E): `AspectPalettes.MoveBackgrounds` desplaza
+  los fondos pero no bordes, selección ni `TextFaint`/`TextDisabled` (cambia el escalonado, no la
+  legibilidad), y a los tests de contraste les faltan casos con huecos distintos entre sí y grises
+  cerca de luminancia 0.18 (razonados a mano, no fallan). El canal desfasado de la ventana abierta
+  frente a su pestaña sí se arregló (`NoteWindow.RefreshChannel` desde `RefreshAll`).
 
 Tests: 1170/1170. Smoke test en verde.
 

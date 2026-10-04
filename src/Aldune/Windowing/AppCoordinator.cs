@@ -1153,6 +1153,9 @@ public sealed class AppCoordinator
     public void RefreshAll()
     {
         foreach (var dock in _docks) dock.Refresh();
+        // Después de los docks: su Refresh recalcula el canal de cada nota, y la ventana abierta tiene
+        // que mostrar el mismo que su pestaña.
+        foreach (var window in _openNoteWindows.Values) window.RefreshChannel();
         _notesManagerWindow?.Refresh();
     }
 
