@@ -29,6 +29,19 @@
          CompositionTarget.Rendering, el recorte al viewport y el clip por pestaña. La forma la
          dibuja WPF, con antialiasing, y encima el dock puede tener sombra de verdad. -->
     <Window.Resources>
+        <!-- Tira de reposo y pie del dock: en XP claro (la unica piel con Gloss) van con el degradado de
+             la barra de titulo y un borde oscuro, como en la maqueta; con las demas, el fondo de siempre.
+             Estilo y no atributo Background: un valor local anularia el DataTrigger. -->
+        <Style x:Key="XpBarBorderStyle" TargetType="Border">
+            <Setter Property="Background" Value="{DynamicResource AlduneGroundBrush}" />
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding Gloss, Source={x:Static local:SkinState.Current}}" Value="True">
+                    <Setter Property="Background" Value="{DynamicResource AlduneTitleBarFill}" />
+                    <Setter Property="BorderBrush" Value="{DynamicResource AlduneBevelDarkBrush}" />
+                    <Setter Property="BorderThickness" Value="1" />
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
         <local:NoteTabLabelConverter x:Key="NoteTabLabelConverter" />
         <local:NoteRimConverter x:Key="NoteRimConverter" />
         <local:NoteDisplayColorConverter x:Key="NoteDisplayColorConverter" />
@@ -395,7 +408,7 @@
         <!-- HorizontalAlignment/Margin espejados por código para el dock a la izquierda — ver el
              comentario junto a FooterBorder más abajo, mismo bug y mismo arreglo. -->
         <Border x:Name="RestStrip"
-                Background="{DynamicResource AlduneGroundBrush}"
+                Style="{StaticResource XpBarBorderStyle}"
                 CornerRadius="{DynamicResource AlduneRadius10}"
                 HorizontalAlignment="Right"
                 VerticalAlignment="Center"
@@ -577,7 +590,7 @@
                  de la pantalla, pero este contenido seguía alineado "a la derecha" sin más — es
                  decir, contra el lado INTERIOR del dock en vez del exterior, dejando un hueco entre
                  la tira/pestañas y el borde real de la pantalla. -->
-            <Border x:Name="FooterBorder" Grid.Row="1" Background="{DynamicResource AlduneGroundBrush}" CornerRadius="{DynamicResource AlduneRadius27}"
+            <Border x:Name="FooterBorder" Grid.Row="1" Style="{StaticResource XpBarBorderStyle}" CornerRadius="{DynamicResource AlduneRadius27}"
                     HorizontalAlignment="Right" Margin="0,14,8,0" Padding="7">
                 <Grid>
                 <StackPanel x:Name="FooterPanel" Orientation="Horizontal">
