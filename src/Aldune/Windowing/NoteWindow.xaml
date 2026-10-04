@@ -273,7 +273,7 @@
                         </Border.Effect>
                     </Border>
                     <Border Background="{DynamicResource AlduneGroundBrush}" CornerRadius="{DynamicResource AlduneRadius10}" Padding="8">
-                    <StackPanel MinWidth="230">
+                    <StackPanel MinWidth="230" Grid.IsSharedSizeScope="True">
                         <!-- Agrupado por intención, no por orden de implementación: arriba lo que se usa
                              escribiendo (tarea y viñeta, con su atajo a la vista — es la única forma de
                              descubrir que Ctrl+L existe sin ir a Ajustes), luego el recordatorio, luego
@@ -281,17 +281,28 @@
                              guarda fuera o destruye. Cuatro bloques, no once opciones seguidas. -->
                         <Button x:Name="TaskButton" Click="OnTaskClick"
                                 Style="{StaticResource NoteMenuItemStyle}">
-                            <Grid Width="200">
-                                <TextBlock Text="{x:Static res:Strings.ConvertToTask}" HorizontalAlignment="Left" />
-                                <TextBlock Text="Ctrl+L" Foreground="{DynamicResource AlduneHintBrush}" HorizontalAlignment="Right" />
+                            <!-- Dos columnas que se miden con el texto (y compartidas entre las dos filas para que
+                                 los atajos queden alineados): con un ancho fijo, la fuente monoespaciada de la
+                                 piel bash hacía que etiqueta y atajo se pisaran. -->
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto" SharedSizeGroup="MenuLabel" />
+                                    <ColumnDefinition Width="Auto" SharedSizeGroup="MenuHint" />
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Text="{x:Static res:Strings.ConvertToTask}" />
+                                <TextBlock Grid.Column="1" Margin="24,0,0,0" Text="Ctrl+L" Foreground="{DynamicResource AlduneHintBrush}" HorizontalAlignment="Right" />
                             </Grid>
                         </Button>
 
                         <Button x:Name="BulletButton" Click="OnBulletClick"
                                 Style="{StaticResource NoteMenuItemStyle}">
-                            <Grid Width="200">
-                                <TextBlock Text="{x:Static res:Strings.ConvertToBullet}" HorizontalAlignment="Left" />
-                                <TextBlock Text="Ctrl+Shift+L" Foreground="{DynamicResource AlduneHintBrush}" HorizontalAlignment="Right" />
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto" SharedSizeGroup="MenuLabel" />
+                                    <ColumnDefinition Width="Auto" SharedSizeGroup="MenuHint" />
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Text="{x:Static res:Strings.ConvertToBullet}" />
+                                <TextBlock Grid.Column="1" Margin="24,0,0,0" Text="Ctrl+Shift+L" Foreground="{DynamicResource AlduneHintBrush}" HorizontalAlignment="Right" />
                             </Grid>
                         </Button>
                         <!-- Solo con alguna tarea hecha (se decide al abrir el menú). Pensadas para una
