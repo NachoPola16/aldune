@@ -109,6 +109,7 @@ public partial class NoteWindow : Window
             RestoreButton.Visibility = Visibility.Visible;
         }
 
+        Topmost = !_repository.IsUnpinned(note.Id);
         UpdatePinButton();
         UpdateReminderButton();
         ProtectionButton.Content = note.IsProtected ? Strings.RemoveProtection : Strings.ProtectNote;
@@ -1329,16 +1330,14 @@ public partial class NoteWindow : Window
     /// <summary>
     /// Quita o devuelve el "siempre encima" de esta nota.
     ///
-    /// Es por ventana y no se guarda: al volver a abrirla vuelve a estar fijada, que es el
-    /// comportamiento de siempre y lo que se espera de un post-it. El interruptor existe para el
-    /// caso concreto de dejar una nota abierta mientras trabajas en otra cosa, donde tenerla encima
-    /// de todo estorba. Persistirlo exigiría una columna nueva en la tabla Note — la que sí tiene
-    /// datos de verdad del usuario — y no compensa hasta saber si alguien lo usa así (ver
-    /// docs/ROADMAP.md).
+    /// Toda nota nace fijada, que es lo que se espera de un post-it. Lo que el usuario suelta se recuerda por
+    /// nota (tabla NoteUnpinned, local y aparte de Note: no viaja por la sync ni cuenta como edición), así que
+    /// al reabrirla o reiniciar sigue como la dejó.
     /// </summary>
     private void OnPinClick(object sender, RoutedEventArgs e)
     {
         Topmost = !Topmost;
+        _repository.SetUnpinned(_note.Id, !Topmost);
         UpdatePinButton();
         ActionsPopup.IsOpen = false;
     }

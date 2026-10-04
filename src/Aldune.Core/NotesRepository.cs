@@ -497,6 +497,29 @@ public sealed class NotesRepository
         command.ExecuteNonQuery();
     }
 
+    /// <summary>Si el usuario soltó el "siempre encima" de esta nota. Por defecto, no: toda nota va fijada.</summary>
+    public bool IsUnpinned(Guid noteId)
+    {
+        using var connection = _database.OpenConnection();
+        using var command = connection.CreateCommand();
+        command.CommandText = "SELECT 1 FROM NoteUnpinned WHERE NoteId = $id;";
+        command.Parameters.AddWithValue("$id", noteId.ToString());
+        return command.ExecuteScalar() is not null;
+    }
+
+    /// <summary>Recuerda (o olvida) que esta nota no va "siempre encima". No toca la nota ni su fecha, así que
+    /// no cuenta como edición ni entra en la sync.</summary>
+    public void SetUnpinned(Guid noteId, bool unpinned)
+    {
+        using var connection = _database.OpenConnection();
+        using var command = connection.CreateCommand();
+        command.CommandText = unpinned
+            ? "INSERT OR IGNORE INTO NoteUnpinned (NoteId) VALUES ($id);"
+            : "DELETE FROM NoteUnpinned WHERE NoteId = $id;";
+        command.Parameters.AddWithValue("$id", noteId.ToString());
+        command.ExecuteNonQuery();
+    }
+
     public NoteFileLink? GetFileLink(Guid noteId) => ReadFileLinks(noteId).FirstOrDefault();
 
     public IReadOnlyList<NoteFileLink> GetFileLinks() => ReadFileLinks(null);
@@ -626,6 +649,7 @@ public sealed class NotesRepository
             INSERT OR REPLACE INTO SyncTombstone (NoteId, DeletedAt, DeviceId)
             VALUES ($id, $deletedAt, 'local');
             DELETE FROM NoteFileLink WHERE NoteId = $id;
+            DELETE FROM NoteUnpinned WHERE NoteId = $id;
             DELETE FROM Note WHERE Id = $id;
             DELETE FROM NotePlacement WHERE NoteId = $id;
             DELETE FROM TaskCompletion WHERE NoteId = $id;
@@ -713,6 +737,7 @@ public sealed class NotesRepository
         using var command = connection.CreateCommand();
         command.CommandText = """
             DELETE FROM NoteFileLink WHERE NoteId = $id;
+            DELETE FROM NoteUnpinned WHERE NoteId = $id;
             DELETE FROM Note WHERE Id = $id;
             DELETE FROM NotePlacement WHERE NoteId = $id;
             DELETE FROM NoteOrder WHERE NoteId = $id;
@@ -835,6 +860,7 @@ public sealed class NotesRepository
             DELETE FROM NoteReminder WHERE NoteId IN (SELECT Id FROM Note WHERE State = $state AND UpdatedAt < $cutoff);
             DELETE FROM NoteTag WHERE NoteId IN (SELECT Id FROM Note WHERE State = $state AND UpdatedAt < $cutoff);
             DELETE FROM NoteFileLink WHERE NoteId IN (SELECT Id FROM Note WHERE State = $state AND UpdatedAt < $cutoff);
+            DELETE FROM NoteUnpinned WHERE NoteId IN (SELECT Id FROM Note WHERE State = $state AND UpdatedAt < $cutoff);
             DELETE FROM Note WHERE State = $state AND UpdatedAt < $cutoff;
             """;
         command.Parameters.AddWithValue("$state", NoteState.Trashed.ToString());

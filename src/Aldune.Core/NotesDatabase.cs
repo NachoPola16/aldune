@@ -139,6 +139,12 @@ public sealed class NotesDatabase
                 KnownWriteTime TEXT,
                 KnownTextHash TEXT
             );
+
+            -- "Siempre encima" por nota: toda nota va fijada por defecto y aquí solo están las que se soltaron.
+            -- Local, no viaja por la sync, y aparte de Note (que tiene datos reales y no se migra).
+            CREATE TABLE IF NOT EXISTS NoteUnpinned (
+                NoteId TEXT PRIMARY KEY NOT NULL
+            );
             """;
         command.ExecuteNonQuery();
         EnsureNoteProtectionColumns(connection);
