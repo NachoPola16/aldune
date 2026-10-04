@@ -17,8 +17,9 @@ public static partial class MarkdownLink
 
     private readonly record struct Line(string Content, string Terminator);
 
-    // Marcador seguido de espacio (así "**negrita**" y "---" no cuentan) y, opcional, la casilla.
-    [GeneratedRegex(@"^(?<indent>[ \t]*)(?<marker>[-*+]) (?:\[(?<mark>[ xX])\](?: |$))?")]
+    // Marcador seguido de espacio (así "**negrita**" y "---" no cuentan) y, opcional, la casilla: "[ ]" de
+    // Markdown o el glifo tal cual ("- ☐ tarea", como en PENDIENTES.md): ambas son tareas, no "→ ☐".
+    [GeneratedRegex(@"^(?<indent>[ \t]*)(?<marker>[-*+]) (?:\[(?<mark>[ xX])\](?: |$)|(?<glyph>[☐☑☒])(?: |$))?")]
     private static partial Regex ListItem();
 
     public static string ToNoteText(string fileText)
@@ -52,6 +53,7 @@ public static partial class MarkdownLink
 
         string newLine = DominantNewLine(original);
         char marker = DominantBulletMarker(original);
+        bool glyphTasks = UsesGlyphTasks(original);
         var builder = new StringBuilder(noteText.Length + 64);
         for (int j = 0; j < edited.Count; j++)
         {
@@ -60,7 +62,7 @@ public static partial class MarkdownLink
 
             builder.Append(i >= 0 ? original[i].Content
                 : literal[j] ? editedContents[j]
-                : ToFileLine(editedContents[j], marker));
+                : ToFileLine(editedContents[j], marker, glyphTasks));
 
             if (edited[j].Terminator.Length == 0) continue;
             builder.Append(i >= 0 && original[i].Terminator.Length > 0 ? original[i].Terminator : newLine);
@@ -123,13 +125,15 @@ public static partial class MarkdownLink
         if (!match.Success) return line;
         var indent = match.Groups["indent"].Value;
         var rest = line[match.Length..];
+        if (match.Groups["glyph"].Success) return indent + match.Groups["glyph"].Value + " " + rest;
         if (!match.Groups["mark"].Success) return indent + BulletLines.Prefix + rest;
         return indent + (match.Groups["mark"].Value == " " ? TaskLines.Unchecked : TaskLines.Checked) + " " + rest;
     }
 
-    private static string ToFileLine(string line, char bulletMarker)
+    private static string ToFileLine(string line, char bulletMarker, bool glyphTasks)
     {
         int task = TaskLines.GlyphIndex(line);
+        if (task >= 0 && glyphTasks) return line[..task] + "- " + line[task..];
         if (task >= 0)
             return line[..task] + (TaskLines.IsChecked(line) ? "- [x] " : "- [ ] ") + line[(task + TaskLines.PrefixLength(line, task))..];
         int bullet = BulletLines.GlyphIndex(line);
@@ -146,6 +150,22 @@ public static partial class MarkdownLink
         return lf > crlf ? "\n" : "\r\n";
     }
 
+    // Un archivo que escribe sus tareas con el glifo ("- ☐") recibe las nuevas igual; si mezcla, gana la
+    // forma más usada y, en empate, la de Markdown ("- [ ]"), que es lo que lee cualquier otro programa.
+    private static bool UsesGlyphTasks(List<Line> lines)
+    {
+        var literal = LiteralLines(lines.Select(line => line.Content).ToList());
+        int glyph = 0, brackets = 0;
+        for (int i = 0; i < lines.Count; i++)
+        {
+            if (literal[i]) continue;
+            var match = ListItem().Match(lines[i].Content);
+            if (match.Groups["glyph"].Success) glyph++;
+            else if (match.Groups["mark"].Success) brackets++;
+        }
+        return glyph > brackets;
+    }
+
     private static char DominantBulletMarker(List<Line> lines)
     {
         var literal = LiteralLines(lines.Select(line => line.Content).ToList());
@@ -154,7 +174,7 @@ public static partial class MarkdownLink
         {
             if (literal[i]) continue;
             var match = ListItem().Match(lines[i].Content);
-            if (match.Success && !match.Groups["mark"].Success) counts[match.Groups["marker"].Value[0]]++;
+            if (match.Success && !match.Groups["mark"].Success && !match.Groups["glyph"].Success) counts[match.Groups["marker"].Value[0]]++;
         }
         // Empate o ninguno: el guion, que es lo que escribe Aldune al exportar.
         return counts.OrderByDescending(pair => pair.Value).ThenBy(pair => "-*+".IndexOf(pair.Key)).First().Key;

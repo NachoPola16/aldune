@@ -100,6 +100,37 @@ public class MarkdownLinkTests
         Assert.Equal("```\nx\n☐ literal\n```\n", MarkdownLink.ToFileText(edited, file));
     }
 
+    // Archivos que ya escriben las casillas con el glifo ("- ☐ tarea", "- ☑ hecha", como PENDIENTES.md):
+    // son tareas y no "→ ☐"; el guion se quita y el glifo se queda.
+    [Fact]
+    public void DashFollowedByABoxGlyph_IsATask()
+    {
+        Assert.Equal("☐ a\n☑ b\n  ☒ c\n→ d\n", MarkdownLink.ToNoteText("- ☐ a\n- ☑ b\n  - ☒ c\n- d\n"));
+    }
+
+    [Fact]
+    public void GlyphStyleFile_RoundTripsUnchanged()
+    {
+        var file = "# T\n- ☐ a\n- ☑ b\n* ☐ c\n";
+        Assert.Equal(file, MarkdownLink.ToFileText(MarkdownLink.ToNoteText(file), file));
+    }
+
+    [Fact]
+    public void GlyphStyleFile_WritesNewAndEditedTasksInTheSameStyle()
+    {
+        var file = "- ☐ a\n- ☐ b\n";
+        var edited = "☑ a\n☐ b\n☐ nueva\n";   // marcar la primera y añadir una
+
+        Assert.Equal("- ☑ a\n- ☐ b\n- ☐ nueva\n", MarkdownLink.ToFileText(edited, file));
+    }
+
+    [Fact]
+    public void BracketStyleFile_StillWritesBrackets()
+    {
+        var file = "- [ ] a\n- [ ] b\n- ☐ rara\n";
+        Assert.Equal("- [x] a\n- [ ] b\n- ☐ rara\n- [ ] nueva\n", MarkdownLink.ToFileText("☒ a\n☐ b\n☐ rara\n☐ nueva\n", file));
+    }
+
     [Fact]
     public void NewFile_UsesCrLfAndDashes()
     {
