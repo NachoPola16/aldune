@@ -4106,3 +4106,47 @@ propósito).
   una pestaña tintada queda en ~110 px y se abrevia antes).
 
 Tests: 975/975. Smoke test en verde.
+
+## 2026-10-04: bloque 3 de aspectos (los seis aspectos)
+
+Tercer bloque de la 1.5.0 (plan `docs/superpowers/plans/2026-10-03-bloque3-aspectos.md`). Sin publicar.
+Los aspectos de siempre (Oscuro, Claro, Como Windows, Pastel, Medianoche) no cambian: la sonda compara
+píxel a píxel contra capturas de antes del bloque (0 diferencias; solo cambia Ajustes por los radios nuevos).
+
+- **Seis aspectos nuevos** (`AppearanceMode` 5 a 10, escritos como número; una versión anterior que los lea
+  cae en Oscuro): XP claro, XP + 95 oscuro, telecomunicaciones claro (laboratorio) y oscuro
+  (osciloscopio), bash y fósforo. Cada uno con su piel (`AppSkin.For`): tipografía (Tahoma o Cascadia
+  Mono), relieve, barra en degradado, estilo de tarjeta (llena, franja, tinte de canal, monocroma),
+  adornos de título, brillo de XP y esquinas rectas y señal de sync por defecto cuando el usuario no ha
+  elegido.
+- **Colores personalizables** (`AspectCatalog`, `AppSettings.AspectColors`): cada aspecto declara sus huecos
+  (barra y acento en XP, tinta y acento, panel y traza, terminal/usuario/ruta/acento en bash, fósforo y
+  detalles), con valores de las maquetas y muestras de un clic; bash trae los preajustes Gruvbox, Ubuntu
+  y Tango. Se guardan por aspecto en `settings.json`; lo inválido o desconocido se ignora.
+- **Paletas derivadas** (`AspectPalettes`, `ColorFit`): se derivan de Oscuro o Claro como Pastel y
+  Medianoche y encima van los colores del usuario, ajustando la claridad (conservando el matiz) para que
+  todo texto se lea. Los tests de contraste corren sobre cada aspecto con sus colores de fábrica y con
+  blanco, negro y amarillo puro en todos los huecos; un color sin matiz (gris, fósforo blanco) da una
+  paleta gris.
+- **Ajustes → Aspecto**: los seis aspectos, los colores del elegido con muestras, "Elegir color…", paletas
+  de bash y "Restablecer colores". Al elegir un aspecto, esquinas y señal vuelven a lo que diga el
+  aspecto; la pregunta "¿Usar también el tema de notas X?" (XP claro → XP; los oscuros → Sereno;
+  telecomunicaciones claro, ninguno) nunca cambia el tema sin preguntar.
+- **Fósforo, estilo de tarjeta propio `Mono`**: un monitor monocromo no enseña colores; las notas llevan
+  el fondo y el texto del fósforo y no se ve el color de cada nota (ni el "mismo color").
+- **Bash**: el prompt de la nota son dos líneas: `usuario@aldune:~/notas$` siempre entero y debajo
+  `cat <título>` partido hasta en tres líneas (antes una sola línea que recortaba el título).
+- **Lo que encontró la sonda y se arregló**: la fuente del aspecto no llegaba a ninguna ventana (el estilo
+  implícito de `Window` no vale para las subclases; ya era así antes del bloque): ahora es el estilo por
+  defecto de `Window` sobrescrito al arrancar, y `ChromeFont` por defecto es la fuente de sistema (lo que
+  las ventanas pintan hoy); el botón "+" del dock lleva el acento; el pie y la tira de reposo de XP claro
+  llevan el degradado de la barra.
+- **Pendiente (menores, para un pulido)**: el gestor de notas mantiene el color pastel de cada nota en
+  todos los aspectos (choca con Fósforo); XP + 95: Ajustes y gestor sin borde con relieve; el acento
+  no llega a las casillas ni a los títulos de Ajustes; los botones del pie de XP claro son crema y la
+  maqueta los lleva azules con aro blanco; el "+" se ve apagado en los aspectos oscuros; en un prompt de
+  bash con título largo `cat` queda solo en la primera línea de comando; telecomunicaciones oscuro con la
+  traza cian da CH1 = CH2 del mismo cian (consecuencia de la elección); "Como Windows" queda antes de los
+  seis nuevos en la lista; bash con blanco en todos los huecos pierde la distinción usuario/ruta.
+
+Tests: 1170/1170. Pendiente de este bloque: smoke test con el "ok" del usuario.
