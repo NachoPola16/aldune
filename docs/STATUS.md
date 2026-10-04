@@ -4224,3 +4224,22 @@ con TDD; la parte WPF (7 a 10) aquí.
 - **Pendiente (menores)**: el tooltip de Proteger desactivado en el menú de la pestaña del dock no está
   comprobado con sonda; la marca de la pestaña se superpone con títulos muy largos (el título se recorta con
   elipsis y puede pasar bajo el icono).
+
+## Notas vinculadas a archivos, tanda 2 y revisión final (2026-10-04, v1.6.0 pendiente de publicar)
+
+- **Tanda 2 hecha**: "Abrir con → Aldune" (instalador: `OpenWithProgids` de `.md`/`.markdown`/`.txt` sin hacerse
+  predeterminado; `aldune.exe "<ruta>"`; la segunda instancia deja las rutas en un buzón `%LOCALAPPDATA%\Aldune\inbox`
+  y avisa con el evento de `SingleInstance`), menú de la nota vinculada ("Sincronizar esta nota", "Abrir en su editor",
+  "Mostrar en el Explorador", "Convertir en nota normal") y "Guardar como archivo vinculado…" (nunca sobre un archivo
+  existente). El instalador compila; **la asociación en el registro real no se ha probado**.
+- **Revisión final** (Opus, rama completa): arreglados con test que falló antes (C1: Reconcile decidía con la nota leída
+  antes de la espera de ≥ 300 ms; I1: un borrado sin firma mandaba a la papelera una vinculada sin sync; I2:
+  actualizaciones parciales del vínculo en vez de reescribir la fila desde una foto vieja) y sin test automático por ser
+  WPF (I3: vigilantes creados fuera del hilo de la interfaz y reintentos espaciados con una unidad de red desconectada;
+  sondeo sin solapes; excepciones del temporizador y del consumidor atrapadas; recarga con texto tecleado → conflicto).
+- **Pendiente (menores)**: "solo lectura" incompleta (casilla, Alt+↑/↓, Desmarcar todas siguen editando con la franja
+  visible); se pierde el salto final de un archivo de una sola línea al editar el título; el arranque resuelve la carpeta
+  de datos antes de `TryAcquire` y no normaliza rutas relativas; `Open` no es atómico (Create + guardar vínculo);
+  temporal sin atributo oculto; título del conflicto con `# `; residual de unos ms entre releer la nota y `UpdateText`
+  en la recarga.
+- **Sin verificar con el usuario**: sonda de arrastrar al dock y smoke test (mueven el ratón).

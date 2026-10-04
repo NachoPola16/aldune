@@ -47,6 +47,8 @@ Los 4 avisos CA1416 de `DatabaseKeyProvider` (DPAPI) son conocidos; no debe apar
 - **Compatibilidad de datos**: un `settings.json` antiguo tiene que cargar sin migración (valores por
   defecto que funcionen cuando falta un campo; los enums se escriben como número). El formato de sync
   es el **4**: no subirlo sin necesidad, porque las versiones anteriores rechazan lo que no entienden.
+- **Archivos vinculados**: Aldune nunca borra un archivo vinculado y nunca escribe sobre uno cuya huella no es la
+  conocida. Ver la spec de notas vinculadas (`docs/superpowers/specs/2026-10-04-notas-vinculadas-archivos-design.md`).
 - **Seguridad de la sync**: todo lo que viaja va cifrado con AES-GCM, incluidos los borrados (firmados).
   Un borrado sin firma nunca borra (manda a la papelera). Ver `docs/SYNC.md` → "Modelo de seguridad".
 - **Nunca ejecutar la app de desarrollo contra `%LOCALAPPDATA%\Aldune`**: son las notas reales del

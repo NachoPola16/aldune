@@ -10,7 +10,7 @@ Sesión de origen: 2026-09-06.
 
 ## Versión visible de la aplicación
 
-La ronda actual se identifica como **v1.5.0**. La versión se muestra en Ajustes y también en el texto
+La ronda actual se identifica como **v1.6.0**. La versión se muestra en Ajustes y también en el texto
 del icono de la bandeja. Cada actualización grande deberá incrementar este número siguiendo SemVer:
 parches para correcciones, versión menor para funcionalidades nuevas y versión mayor cuando haya
 cambios incompatibles.
@@ -1015,7 +1015,7 @@ Hoy la app no suena en ningún sitio (los avisos de `AppDialog` son "sin sonido"
   sí; los archivos propios no, son de cada equipo, como la pantalla elegida), y si respetar "no molestar"
   de Windows.
 
-## 11. Markdown vinculado a archivos (requisitos del usuario, 2026-10-03; entra en la fase F1)
+## 11. Markdown vinculado a archivos (requisitos del usuario, 2026-10-03; HECHO en la 1.6.0, fase F1)
 
 Para la spec de Markdown (fase F1 de `docs/superpowers/plans/2026-10-03-orden-de-trabajo.md`), lo que pidió
 el usuario, tal cual:
