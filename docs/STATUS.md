@@ -4351,3 +4351,15 @@ Publicado como **1.6.1** con todo lo de esta sección.
   izquierdo pulsado), y además el alto se reajusta solo cuando cambia el tamaño del texto o del área visible (`ScrollChanged`,
   diferido). Comprobado con la sonda: tras un encogimiento brusco sin ratón vuelve al alto que toca y no queda como manual. La
   causa exacta en el equipo del usuario no se ha podido confirmar (no se reproducía sin el cambio de DPI).
+
+## 1.7.5 — Destello al crecer la nota (2026-10-05)
+
+- **Destello al pulsar Enter y al agrandar la nota (portátil)**: causa confirmada con el smoke test. `WindowChrome` con
+  `GlassFrameThickness="-1"` deja `HwndSource.CompositionTarget.BackgroundColor` en `#00FFFFFF` (transparente) para que se vea el
+  cristal; al crecer la ventana, la franja recién expuesta se componía transparente hasta que WPF pintaba el fotograma nuevo. En
+  el PC de 240 Hz el hueco era demasiado corto para capturarlo (de ahí que las sondas de la 1.7.2 no lo vieran); en un portátil,
+  pintar tarda más. `NativeMethods.KeepBackdropColor` fija ese fondo al color de la cara (y lo reaplica en `ApplyColor` y tras
+  `WM_DWMCOMPOSITIONCHANGED`, que es cuando el WindowChrome lo vuelve a dejar transparente). El smoke test
+  (`RunNoteBackdrop`) falla sin el arreglo (`#00FFFFFF`) y pasa con él. **Pendiente de confirmar en el portátil del usuario.**
+- El smoke test ya fallaba antes de este cambio en `RunNoteMenuToggle` (`XamlParseException`: `BevelEdge` desconocido al cargar una
+  plantilla de `App.xaml`); no se ha tocado.

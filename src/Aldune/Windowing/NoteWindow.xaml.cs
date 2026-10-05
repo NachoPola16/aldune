@@ -83,6 +83,7 @@ public partial class NoteWindow : Window
     {
         InitializeComponent();
         NativeMethods.CloakUntilFirstFrame(this);
+        NativeMethods.KeepBackdropColor(this, () => (Background as System.Windows.Media.SolidColorBrush)?.Color ?? System.Windows.Media.Colors.Black);
         _initialWidth = Width;
         _initialHeight = Height;
         _autoScroll = new AutoScrollManager(BodyHost, null, TextBody);
@@ -1600,6 +1601,8 @@ public partial class NoteWindow : Window
         var ink = BrushOf(face.Ink);
 
         Background = brush;
+        // El fondo del HWND sigue a la cara: ver KeepBackdropColor.
+        if (Background is System.Windows.Media.SolidColorBrush solid) NativeMethods.SetBackdropColor(this, solid.Color);
         // Con retícula (osciloscopio) el cuadro de texto deja ver la cuadrícula del fondo.
         TextBody.Background = skin.NoteGrid ? Brushes.Transparent : brush;
         BodyHost.Background = skin.NoteGrid ? GridBrush(face.Ink) : null;

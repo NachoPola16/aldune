@@ -50,6 +50,7 @@ internal static class Program
             Pump(TimeSpan.FromMilliseconds(150));
             Check(Field<int>(dock, "_noteCount") == 2, "Initial repository refresh contains two notes");
             RunTagSelection(dock, settings);
+            RunNoteBackdrop(repository, coordinator, settings);
             RunNoteMenuToggle(repository, coordinator, settings);
         }
         catch (Exception exception)
@@ -162,6 +163,30 @@ internal static class Program
             var bottomRight = window.PointToScreen(new Point(window.ActualWidth - 30, window.ActualHeight - 20));
             ClickAt(bottomRight);
             Check(!popup.IsOpen, "Clicking outside the menu closes it");
+        }
+        finally
+        {
+            window.Close();
+        }
+    }
+
+    /// <summary>
+    /// El fondo del HWND de la nota tiene que ser el color de su cara y opaco. WindowChrome con
+    /// GlassFrameThickness=-1 lo deja Transparent, y al crecer la ventana (Enter, arrastrar el borde)
+    /// la franja recién expuesta se ve transparente hasta que WPF pinta: el destello en portátiles.
+    /// </summary>
+    private static void RunNoteBackdrop(NotesRepository repository, AppCoordinator coordinator, AppSettings settings)
+    {
+        var note = repository.Create("Smoke backdrop note", "#F7E6A3", "SMOKE");
+        var window = new NoteWindow(note, repository, coordinator, settings) { Left = 300, Top = 200 };
+        window.Show();
+        Pump(TimeSpan.FromMilliseconds(600));
+        try
+        {
+            var source = System.Windows.Interop.HwndSource.FromHwnd(new System.Windows.Interop.WindowInteropHelper(window).Handle);
+            var expected = ((System.Windows.Media.SolidColorBrush)window.Background).Color;
+            Check(source.CompositionTarget.BackgroundColor == expected,
+                $"Note HWND backdrop is the face colour (was {source.CompositionTarget.BackgroundColor}, want {expected})");
         }
         finally
         {

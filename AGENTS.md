@@ -7,7 +7,7 @@ lo que hay que saber antes de tocar nada.
 
 App de notas adhesivas para Windows (WPF, .NET 10): un dock de pestañas en un borde de la pantalla,
 notas como ventanas propias, sincronización opcional cifrada de extremo a extremo. Versión publicada:
-**1.7.4** (la versión vive en `src/Aldune/Aldune.csproj`).
+**1.7.5** (la versión vive en `src/Aldune/Aldune.csproj`).
 
 - `src/Aldune.Core`: lógica pura sin WPF (modelo, repositorio SQLite, cifrado, sync, temas, texto).
   Todo lo que se pueda probar va aquí.
