@@ -4324,7 +4324,7 @@ Publicado como **1.6.1** con todo lo de esta sección.
   daba 16,3 px por línea), 19 en XP (Tahoma, 16,9) y el natural en el resto (Segoe, 18,6). La zona de clic de las casillas
   sigue ajustada a su glifo.
 
-## Tras la 1.7.2 (2026-10-05, sin publicar)
+## 1.7.3 — Ajustes de la nota (2026-10-05)
 
 - **Posición y tamaño recordados por separado**: `AppSettings.RememberNoteSizes` (nulo = sigue a `RememberNotePositions`, así un
   `settings.json` antiguo no cambia de comportamiento; `NoteSizesRemembered` es el valor efectivo) y un interruptor nuevo en
