@@ -368,10 +368,10 @@ public class ConfigExportImportTests
             "recentHotkeyEnabled", "recentHotkeyModifiers", "recentHotkeyKey", "dockEdge", "dockView",
             "keepDockOpen", "showNotePreview", "hideOnFullscreen", "trackpadGestures", "moveCompletedTasksToEnd",
             "autoHideCompletedTasks", "autoHideDelayValue", "autoHideDelayUnit", "trashRetentionDays",
-            "rememberNotePositions", "checkForUpdates", "reminderIncludesTasks",
+            "rememberNotePositions", "rememberNoteSizes", "checkForUpdates", "reminderIncludesTasks",
         ];
 
-        Assert.Equal(32, expected.Length);
+        Assert.Equal(33, expected.Length);
         Assert.Equal(expected, ConfigFields.All.Select(f => f.Id).ToArray());
     }
 

@@ -259,12 +259,16 @@
                     </TextBlock.Style>
                 </TextBlock>
                 <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Top">
-                    <Button Content="&#x2014;" Width="28" Height="28"
+                    <Button Width="28" Height="28"
                             ToolTip="{x:Static res:Strings.MinimizeWindowTooltip}"
                             AutomationProperties.Name="{x:Static res:Strings.MinimizeWindowTooltip}"
                             Click="OnMinimizeClick"
                             WindowChrome.IsHitTestVisibleInChrome="True"
-                            Style="{StaticResource CloseButtonStyle}" />
+                            Style="{StaticResource CloseButtonStyle}">
+                        <Border Width="10" Height="1" VerticalAlignment="Center" Margin="0,8,0,0"
+                            UseLayoutRounding="True" SnapsToDevicePixels="True"
+                            Background="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}" />
+                    </Button>
                     <Button x:Name="MaximizeButton" Width="28" Height="28"
                             ToolTip="{x:Static res:Strings.MaximizeWindowTooltip}"
                             AutomationProperties.Name="{x:Static res:Strings.MaximizeWindowTooltip}"
@@ -469,6 +473,13 @@
                                   Style="{StaticResource SettingsSwitchStyle}"
                                   Click="OnRememberPositionsToggled" />
                         <TextBlock Text="{x:Static res:Strings.RememberPositionsHint}"
+                                   Foreground="{DynamicResource AlduneHintBrush}" FontSize="{StaticResource AlduneTextSmall}" TextWrapping="Wrap" Margin="0,6,56,0" />
+                        <CheckBox x:Name="RememberSizesCheck" Margin="0,16,0,0"
+                                  Content="{x:Static res:Strings.RememberSizesCheckbox}"
+                                  Foreground="{DynamicResource AlduneTextBrush}" Background="{DynamicResource AlduneGroundBrush}" FontSize="{StaticResource AlduneTextBody}"
+                                  Style="{StaticResource SettingsSwitchStyle}"
+                                  Click="OnRememberSizesToggled" />
+                        <TextBlock Text="{x:Static res:Strings.RememberSizesHint}"
                                    Foreground="{DynamicResource AlduneHintBrush}" FontSize="{StaticResource AlduneTextSmall}" TextWrapping="Wrap" Margin="0,6,56,0" />
                     </StackPanel>
                     <Border Background="{DynamicResource AlduneRaisedBrush}" Height="1" Margin="0,20,0,0" />

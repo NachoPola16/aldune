@@ -216,17 +216,20 @@
             <StackPanel Orientation="Horizontal"
                         HorizontalAlignment="Right" VerticalAlignment="Center"
                         Margin="0,0,10,0">
-                <!-- El guion largo como texto, igual que el de Ajustes y el gestor: se asienta abajo, como
-                     el de una ventana de Windows. El glifo E921 de la fuente de iconos se dibujaba en el
-                     centro del botón. -->
+                <!-- La raya se dibuja, no se escribe: como texto (un guion largo) su altura dependía de la fuente
+                     del aspecto y en las monoespaciadas quedaba arriba. Asentada por debajo del centro, como la
+                     de una ventana de Windows. -->
                 <Button x:Name="MinimizeButton"
-                        Content="&#x2014;"
                         Width="26" Height="26"
                         ToolTip="{x:Static res:Strings.MinimizeWindowTooltip}"
                         AutomationProperties.Name="{x:Static res:Strings.MinimizeWindowTooltip}"
                         Click="OnMinimizeClick"
                         WindowChrome.IsHitTestVisibleInChrome="True"
-                        Style="{StaticResource CloseButtonStyle}" />
+                        Style="{StaticResource CloseButtonStyle}">
+                    <Border Width="10" Height="1" VerticalAlignment="Center" Margin="0,8,0,0"
+                                UseLayoutRounding="True" SnapsToDevicePixels="True"
+                                Background="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}" />
+                </Button>
                 <Button x:Name="MaximizeButton"
                         Width="26" Height="26"
                         ToolTip="{x:Static res:Strings.MaximizeWindowTooltip}"

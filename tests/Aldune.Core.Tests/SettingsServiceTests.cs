@@ -37,6 +37,22 @@ public class SettingsServiceTests : IDisposable
         Assert.Equal(key, loaded.WrappedDatabaseKey);
     }
 
+    [Theory]
+    [InlineData("{}", true)]
+    [InlineData("{\"RememberNotePositions\":false}", false)]
+    [InlineData("{\"RememberNotePositions\":false,\"RememberNoteSizes\":true}", true)]
+    [InlineData("{\"RememberNotePositions\":true,\"RememberNoteSizes\":false}", false)]
+    public void Load_NoteSizesFollowPositions_UntilTheyAreChosenApart(string json, bool expected)
+    {
+        // Un settings.json de antes de separar "recordar posición" y "recordar tamaño" no trae el segundo:
+        // sigue al primero, así que nadie ve cambiar el comportamiento que ya tenía.
+        Directory.CreateDirectory(_tempDir);
+        File.WriteAllText(_settingsPath, json);
+
+        var loaded = new SettingsService(_settingsPath).Load();
+        Assert.Equal(expected, loaded.NoteSizesRemembered);
+    }
+
     [Fact]
     public void Load_OldFileWithoutCornersOrSignal_KeepsTheRoundedLookAndNoSignal()
     {

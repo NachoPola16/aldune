@@ -86,6 +86,7 @@ public static class ConfigFields
         Enum<TaskDelayUnit>("autoHideDelayUnit", nameof(AppSettings.AutoHideCompletedTasksDelayUnit), ConfigSections.Settings, s => s.AutoHideCompletedTasksDelayUnit, (s, v) => s.AutoHideCompletedTasksDelayUnit = v),
         Int("trashRetentionDays", nameof(AppSettings.TrashRetentionDays), ConfigSections.Settings, 1, MaxTrashRetentionDays, s => s.TrashRetentionDays, (s, v) => s.TrashRetentionDays = v),
         Bool("rememberNotePositions", nameof(AppSettings.RememberNotePositions), ConfigSections.Settings, s => s.RememberNotePositions, (s, v) => s.RememberNotePositions = v),
+        NullableBool("rememberNoteSizes", nameof(AppSettings.RememberNoteSizes), ConfigSections.Settings, s => s.RememberNoteSizes, (s, v) => s.RememberNoteSizes = v),
         Bool("checkForUpdates", nameof(AppSettings.CheckForUpdatesAutomatically), ConfigSections.Settings, s => s.CheckForUpdatesAutomatically, (s, v) => s.CheckForUpdatesAutomatically = v),
         Bool("reminderIncludesTasks", nameof(AppSettings.ReminderIncludesTasks), ConfigSections.Settings, s => s.ReminderIncludesTasks, (s, v) => s.ReminderIncludesTasks = v),
     ];

@@ -911,11 +911,16 @@ public static class Strings
 
     public static string RememberPositionsCheckbox => T("Remember note positions", "Recordar la posición de las notas",
         "Notizpositionen merken", "Mémoriser les positions des notes", "Lembrar a posição das notas");
-    public static string RememberPositionsHint => T("When you close a note, it reopens in the same spot and size on the desktop — like a real sticky note.", "Al cerrar una nota, la próxima vez se abre en el mismo sitio y con el mismo tamaño en el escritorio — como un post-it de verdad.",
-        "Wenn du eine Notiz schließt, öffnet sie sich beim nächsten Mal an derselben Stelle und in derselben Größe auf dem Desktop — wie ein echtes Haftnotizzettel.",
-        "Lorsque vous fermez une note, elle se rouvre au même endroit et dans la même taille sur le bureau — comme un véritable Post-it.",
-        "Ao fechar uma nota, ela reabre no mesmo lugar e tamanho na área de trabalho — como um post-it de verdade.");
-
+    public static string RememberPositionsHint => T("A note reopens where you left it on the desktop, like a real sticky note. Off, it opens next to the dock.", "Una nota se abre donde la dejaste en el escritorio, como un post-it de verdad. Apagado, se abre junto al dock.",
+        "Eine Notiz öffnet sich dort, wo du sie auf dem Desktop gelassen hast, wie ein echter Haftzettel. Ausgeschaltet öffnet sie sich neben dem Dock.",
+        "Une note se rouvre là où vous l'avez laissée sur le bureau, comme un vrai Post-it. Désactivé, elle s'ouvre près du dock.",
+        "A nota reabre onde você a deixou na área de trabalho, como um post-it de verdade. Desligado, ela abre junto ao dock.");
+    public static string RememberSizesCheckbox => T("Remember note sizes", "Recordar el tamaño de las notas",
+        "Notizgrößen merken", "Mémoriser la taille des notes", "Lembrar o tamanho das notas");
+    public static string RememberSizesHint => T("A note reopens with the size you gave it. Off, it opens at the standard size and grows with its text.", "Una nota se abre con el tamaño que le diste. Apagado, se abre con el tamaño estándar y crece con su texto.",
+        "Eine Notiz öffnet sich in der Größe, die du ihr gegeben hast. Ausgeschaltet öffnet sie sich in der Standardgröße und wächst mit ihrem Text.",
+        "Une note se rouvre à la taille que vous lui avez donnée. Désactivé, elle s'ouvre à la taille standard et grandit avec son texte.",
+        "A nota reabre com o tamanho que você deu. Desligado, ela abre no tamanho padrão e cresce com o texto.");
     public static string MoveCompletedTasksCheckbox => T("Move checked tasks to the end of the list", "Mover las tareas hechas al final de la lista",
         "Erledigte Aufgaben ans Ende der Liste verschieben",
         "Déplacer les tâches cochées en bas de la liste",

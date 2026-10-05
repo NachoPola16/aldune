@@ -810,6 +810,12 @@ public partial class SettingsWindow : Window
         _settingsService.Save(_settings);
     }
 
+    private void OnRememberSizesToggled(object sender, RoutedEventArgs e)
+    {
+        _settings.RememberNoteSizes = RememberSizesCheck.IsChecked == true;
+        _settingsService.Save(_settings);
+    }
+
     private void OnMoveCompletedTasksToggled(object sender, RoutedEventArgs e)
     {
         _settings.MoveCompletedTasksToEnd = MoveCompletedTasksCheck.IsChecked == true;
@@ -1939,6 +1945,7 @@ public partial class SettingsWindow : Window
         SoundsEnabledCheck.IsChecked = _settings.SoundsEnabled;
         BuildSoundRows();
         RememberPositionsCheck.IsChecked = _settings.RememberNotePositions;
+        RememberSizesCheck.IsChecked = _settings.NoteSizesRemembered;
         PopulateTrackpadGestures();
         UpdateUniformColorUi();
         SyncSignalCheck.IsChecked = _settings.SyncSignalVisible;

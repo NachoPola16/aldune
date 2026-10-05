@@ -157,10 +157,19 @@ public sealed class AppSettings
     public EdgePosition DockEdge { get; set; } = EdgePosition.Right;
 
     /// <summary>
-    /// Si las notas deben recordar su última posición y tamaño en el escritorio cuando el usuario las mueve
-    /// (comportamiento libre tipo post-it). Por defecto <c>true</c>.
+    /// Si las notas deben recordar su última posición en el escritorio cuando el usuario las mueve
+    /// (comportamiento libre tipo post-it). Por defecto <c>true</c>. El tamaño es otro ajuste
+    /// (<see cref="RememberNoteSizes"/>).
     /// </summary>
     public bool RememberNotePositions { get; set; } = true;
+
+    /// <summary>Si las notas recuerdan el tamaño al que se dejaron. Nulo = lo mismo que
+    /// <see cref="RememberNotePositions"/>: antes eran un solo ajuste, y un settings.json de entonces no trae
+    /// este campo, así que cada uno conserva lo que ya tenía.</summary>
+    public bool? RememberNoteSizes { get; set; }
+
+    [System.Text.Json.Serialization.JsonIgnore]
+    public bool NoteSizesRemembered => RememberNoteSizes ?? RememberNotePositions;
 
     /// <summary>Distribución que usa el botón de abrir todas por defecto.</summary>
     public NoteLayoutTemplate DefaultNoteLayout { get; set; } = NoteLayoutTemplate.Normal;

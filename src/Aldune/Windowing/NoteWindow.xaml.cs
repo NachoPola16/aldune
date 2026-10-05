@@ -352,13 +352,25 @@ public partial class NoteWindow : Window
 
     private void SavePlacementForCurrentMonitor()
     {
-        if (_settings is not { RememberNotePositions: true }) return;
+        // Se guarda todo si se recuerda algo: qué parte se aplica al reabrir lo decide
+        // AppCoordinator.TryRestorePlacement según cada ajuste.
+        if (_settings is not { } settings || !(settings.RememberNotePositions || settings.NoteSizesRemembered)) return;
 
         var monitorKey = GetCurrentMonitorKey();
         if (monitorKey is null) return;
 
         _repository.SavePlacement(_note.Id, monitorKey, Left, Top, Width, Height);
         _placementMonitorKey = monitorKey;
+    }
+
+    /// <summary>Pone solo el tamaño recordado, dejando la posición para quien coloque la nota (el dock o la
+    /// cascada). Marcado como automático por la misma razón que <see cref="ApplyPlacement"/>.</summary>
+    internal void ApplySize(double width, double height)
+    {
+        _isAutoResizing = true;
+        Width = width;
+        Height = height;
+        _isAutoResizing = false;
     }
 
     /// <summary>
@@ -490,27 +502,6 @@ public partial class NoteWindow : Window
         MaxAutoFitHeight,
         MonitorLookup.MonitorAt(Left, Top, Width, Height, MonitorEnumerator.EnumerateMonitors())
             ?.WorkArea.Height * 0.9 ?? MaxAutoFitHeight));
-
-    /// <summary>
-    /// Crece la ventana una línea ANTES de que Enter inserte el salto. Si se espera al TextChanged, hay
-    /// una pasada de layout en la que el texto ya mide una línea más que la ventana: el cuadro se
-    /// desplaza para enseñar el cursor y la ventana crece después, lo que se ve como un parpadeo
-    /// (sobre todo a 60 Hz, donde ese fotograma no pasa desapercibido). Con el alto ya puesto no hay
-    /// desbordamiento; el ajuste normal del TextChanged solo confirma el alto, o lo corrige un píxel.
-    /// </summary>
-    private void PreGrowForNewLine()
-    {
-        if (_hasManualSize || TextBody.LineCount < 1) return;
-        double lineHeight = TextBody.ExtentHeight / TextBody.LineCount;
-        double chromeHeight = Height - TextBody.ViewportHeight;
-        double target = Math.Clamp(
-            Math.Ceiling(TextBody.ExtentHeight + lineHeight + chromeHeight), _initialHeight, AutoFitMaxHeight());
-        if (target <= Height + 0.5) return;
-
-        _isAutoResizing = true;
-        Height = target;
-        _isAutoResizing = false;
-    }
 
     /// <summary>
     /// Guarda el texto pendiente y la posición de esta nota YA, sin pasar por el ciclo normal de
@@ -708,9 +699,6 @@ public partial class NoteWindow : Window
             e.Handled = true;
             return;
         }
-
-        // Cualquier otro Enter inserta un salto de línea (también el que continúa una lista).
-        if (e.Key == Key.Return) PreGrowForNewLine();
 
         // Alt+Arriba/Alt+Abajo: sube o baja la línea del cursor, intercambiándola con la vecina
         // (ver Aldune.Core.LineMovement para el porqué de un atajo en vez de arrastrar dentro del

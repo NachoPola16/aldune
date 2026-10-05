@@ -4305,10 +4305,11 @@ Publicado como **1.6.1** con todo lo de esta sección.
 
 ## 1.7.2 — Pulido de la nota (2026-10-04)
 
-- **Parpadeo al pulsar Enter** (visto en el portátil): al insertar el salto había una pasada de layout en la que el texto medía
-  una línea más que la ventana (18 px de desbordamiento medidos con una sonda); el cuadro se desplazaba y la ventana crecía
-  después. Ahora `PreGrowForNewLine` crece la ventana una línea antes de que Enter inserte el salto (si no hay tamaño manual).
-  Con la sonda: 0 px de desbordamiento en cualquier pasada.
+- **Parpadeo al pulsar Enter**: se midió con una sonda (una hebra captura la pantalla a 240 fps sobre la nota mientras se
+  pulsan 8 Enter reales) y NO se pudo reproducir en el PC de 240 Hz: ningún fotograma con blanco o negro en el cuerpo, el texto
+  no se desplaza, la cabecera y los bordes no cambian. Sí se midió una pasada de layout interna con 18 px de desbordamiento; la
+  1.7.2 intentó evitarla creciendo la ventana antes de insertar el salto, pero no mejoraba nada medible y el usuario vio MÁS
+  parpadeo, así que se quitó (`PreGrowForNewLine`). Queda abierto: hace falta saber qué parpadea exactamente (una grabación).
 - **Letras que se movían con la rueda** aunque no hubiera nada que desplazar: con alto fraccionario el área visible quedaba
   0,3 px más baja que el texto. `FitHeightToContent` redondea el alto hacia arriba al píxel, devuelve el desplazamiento a 0 si
   todo cabe, y la rueda no hace nada con la barra oculta.
@@ -4322,3 +4323,21 @@ Publicado como **1.6.1** con todo lo de esta sección.
 - **Interlineado por aspecto** (`AppSkin.NoteLineHeight`, px; 0 = el natural): 21 en los de terminal (Cascadia Mono a 14 px
   daba 16,3 px por línea), 19 en XP (Tahoma, 16,9) y el natural en el resto (Segoe, 18,6). La zona de clic de las casillas
   sigue ajustada a su glifo.
+
+## Tras la 1.7.2 (2026-10-05, sin publicar)
+
+- **Posición y tamaño recordados por separado**: `AppSettings.RememberNoteSizes` (nulo = sigue a `RememberNotePositions`, así un
+  `settings.json` antiguo no cambia de comportamiento; `NoteSizesRemembered` es el valor efectivo) y un interruptor nuevo en
+  Ajustes → Notas. Se guarda todo si se recuerda algo; `AppCoordinator.TryRestorePlacement` aplica cada parte según su ajuste
+  (comprobado con las cuatro combinaciones). El campo viaja en exportar/importar (`rememberNoteSizes`, 33 campos).
+- **Dónde se abre una nota sin posición recordada**: la primera sale siempre en el mismo sitio, junto al dock y centrada en la
+  pantalla (nivel 0 de `NoteCascade`); con otras ya abiertas, cada una ocupa el siguiente escalón de la misma cascada. Antes
+  salía alineada con la altura de su pestaña y con un paso que dependía de cuántas había abiertas. Con "recordar posición"
+  activado, una nota que se abre sola sigue yendo a donde se dejó.
+- **"Volver junto al dock"** usa ese mismo criterio: su turno entre las notas abiertas, en el orden del mazo. Sola, es el sitio
+  donde se abre una nota suelta.
+- **Botón de minimizar**: la raya se dibuja (un `Border` de 10x1 por debajo del centro) en vez de escribirse como un guion largo,
+  cuya altura dependía de la fuente del aspecto. En las notas, Ajustes y Gestionar notas. Medido: queda en la base del cuadrado
+  de maximizar.
+- **Sin cambio**: el parpadeo al pulsar Enter (no reproducible, ver arriba; se retiró el crecimiento anticipado de la 1.7.2) y el
+  texto "detrás del `cat`" en notas viejas con el aspecto bash (no reproducido con tamaño guardado pequeño ni con títulos largos).

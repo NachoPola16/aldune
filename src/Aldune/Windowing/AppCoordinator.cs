@@ -529,7 +529,7 @@ public sealed class AppCoordinator
             // pulsó, pero eso solo vale si la nota sale en la pantalla de ESE dock. Si se pidió otra,
             // el reparto exacto lo hace ArrangeOpenNotes un momento después: aquí basta con que nazca
             // dentro de la pantalla elegida, en vez de asomar por la del dock.
-            if (placementKey == requestingDock.MonitorKey) requestingDock.PositionNoteWindow(noteWindow, originRect);
+            if (placementKey == requestingDock.MonitorKey) requestingDock.PositionNoteWindow(noteWindow);
             else PositionNearMonitorEdge(noteWindow, placementKey);
         }
 
@@ -608,19 +608,32 @@ public sealed class AppCoordinator
     /// </summary>
     private bool TryRestorePlacement(NoteWindow noteWindow, Guid noteId, string monitorKey)
     {
-        if (_settings is not { RememberNotePositions: true }) return false;
+        if (_settings is null) return false;
+        bool positions = _settings.RememberNotePositions;
+        bool sizes = _settings.NoteSizesRemembered;
+        if (!positions && !sizes) return false;
 
         var placement = _repository.GetPlacement(noteId, monitorKey);
         if (placement is null) return false;
 
+        // Posición y tamaño son ajustes separados: lo que no se recuerda se queda como lo deja la ventana
+        // recién creada (el tamaño estándar) o como lo coloca quien la abre (el dock).
+        double width = sizes ? placement.Width : noteWindow.Width;
+        double height = sizes ? placement.Height : noteWindow.Height;
+
+        if (!positions)
+        {
+            noteWindow.ApplySize(width, height);
+            return false;
+        }
+
         var monitors = MonitorEnumerator.EnumerateMonitors();
-        if (!PlacementValidation.IsVisibleOnMonitors(
-                placement.Left, placement.Top, placement.Width, placement.Height, monitors))
+        if (!PlacementValidation.IsVisibleOnMonitors(placement.Left, placement.Top, width, height, monitors))
         {
             return false;
         }
 
-        noteWindow.ApplyPlacement(placement.Left, placement.Top, placement.Width, placement.Height);
+        noteWindow.ApplyPlacement(placement.Left, placement.Top, width, height);
         return true;
     }
 
@@ -1258,7 +1271,9 @@ public sealed class AppCoordinator
         if (found is not { } monitor) return;
 
         var deck = NotesForCurrentDockView();
-        int index = Math.Max(0, deck.Select((note, i) => (Id: note.Id, i: i)).FirstOrDefault(x => x.Id == noteId, (Id: Guid.Empty, i: -1)).i);
+        // El turno entre las notas ABIERTAS, en el orden del mazo: sola es la primera (el mismo sitio donde se
+        // abre una nota suelta), y con otras abiertas ocupa su escalón de la cascada.
+        int index = Math.Max(0, OpenWindowsInDeckOrder().IndexOf(window));
 
         if (window.WindowState != WindowState.Normal) window.WindowState = WindowState.Normal;
         var (left, top) = NoteCascade.Position(

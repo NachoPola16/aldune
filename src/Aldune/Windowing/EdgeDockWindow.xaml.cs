@@ -107,16 +107,6 @@ public partial class EdgeDockWindow : Window
 
     private bool IsTopBottomEdge => _edge is EdgePosition.Top or EdgePosition.Bottom;
 
-    private const double NoteWindowCascadeStep = 26;
-    private const int NoteWindowMaxCascadeSteps = 6;
-
-    // Antes esta distancia era cero a propósito: la nota tenía que arrancar pegada a su pestaña
-    // para venderse como "deslizarse hacia fuera de ahí". Sin esa animación (ver
-    // NoteWindow.PlayOpenAnimation), quedarse pegada al canto del dock ya no vende nada — solo se
-    // ve encimada con el panel desplegado. 24px de aire, igual que el margen que ya usa el resto
-    // de la ventana de la nota.
-    private const double NoteWindowGapFromDock = 24;
-
     public EdgeDockWindow(
         EdgePosition edge,
         MonitorInfo monitor,
@@ -2597,48 +2587,22 @@ public partial class EdgeDockWindow : Window
     }
 
     /// <summary>
-    /// Coloca la ventana de una nota recién abierta, alineada con la altura de su propia pestaña.
-    /// Se usa solo cuando la nota no tiene una posición recordada para este monitor (ver
-    /// <see cref="AppCoordinator.TryRestorePlacement"/>) — con ella, la animación de apertura ya no
-    /// depende de dónde caiga esta posición inicial (ver <see cref="NoteWindow.PlayOpenAnimation"/>).
+    /// Coloca la ventana de una nota recién abierta que no tiene posición recordada (ver
+    /// <see cref="AppCoordinator.TryRestorePlacement"/>): la primera sale siempre en el mismo sitio, junto al
+    /// dock y centrada en la pantalla, y cada nota que se abre con otras ya abiertas ocupa el siguiente escalón
+    /// de la misma cascada que "Cascada junto al dock" (<see cref="NoteCascade"/>). Antes salía alineada con su
+    /// pestaña, así que el sitio dependía de qué pestaña se pulsara.
     /// </summary>
-    internal void PositionNoteWindow(NoteWindow noteWindow, System.Windows.Rect? tabRect = null)
+    internal void PositionNoteWindow(NoteWindow noteWindow)
     {
-        int step = _coordinator.OpenNoteWindowCount % NoteWindowMaxCascadeSteps;
+        var (left, top) = NoteCascade.Position(
+            _workingArea, _edge, Math.Max(1, _noteCount), noteWindow.Width, noteWindow.Height,
+            _coordinator.OpenNoteWindowCount);
 
-        if (_edge is EdgePosition.Top or EdgePosition.Bottom)
-        {
-            double horizontalLeft = tabRect?.X ?? Left;
-            double maxHorizontalLeft = Math.Max(_workingArea.X, _workingArea.X + _workingArea.Width - noteWindow.Width);
-            noteWindow.Left = Math.Clamp(horizontalLeft, _workingArea.X, maxHorizontalLeft);
-
-            double horizontalTop = _edge == EdgePosition.Top
-                ? Top + EdgeGeometry.WindowThickness + NoteWindowGapFromDock
-                    + step * NoteWindowCascadeStep
-                : Top - NoteWindowGapFromDock - noteWindow.Height
-                    - step * NoteWindowCascadeStep;
-            double maxHorizontalTop = Math.Max(_workingArea.Y, _workingArea.Y + _workingArea.Height - noteWindow.Height);
-            noteWindow.Top = Math.Clamp(horizontalTop, _workingArea.Y, maxHorizontalTop);
-            return;
-        }
-
-        // Con el dock a la derecha la nota cae a la izquierda del canto interior de la pestaña; con
-        // el dock a la izquierda es al revés: a la derecha de SU canto interior, que en ese lado es
-        // Left(dock) + TabWidth (ver EdgeGeometry: ShadowMargin vive siempre en el lado interior de
-        // la pestaña, opuesto al canto físico de la pantalla que esa pestaña toca). En los dos casos
-        // se aparta NoteWindowGapFromDock más, para no quedar pegada al dock.
-        double left = _edge == EdgePosition.Left
-            ? Left + EdgeGeometry.TabWidth + NoteWindowGapFromDock + step * NoteWindowCascadeStep
-            : Left + EdgeGeometry.ShadowMargin - NoteWindowGapFromDock - noteWindow.Width - step * NoteWindowCascadeStep;
-        var top = tabRect?.Y ?? Top;
-
-        noteWindow.Left = _edge == EdgePosition.Left
-            ? Math.Min(left, _workingArea.X + _workingArea.Width - noteWindow.Width)
-            : Math.Max(left, _workingArea.X);
+        noteWindow.Left = Math.Clamp(
+            left, _workingArea.X, Math.Max(_workingArea.X, _workingArea.X + _workingArea.Width - noteWindow.Width));
         noteWindow.Top = Math.Clamp(
-            top,
-            _workingArea.Y,
-            Math.Max(_workingArea.Y, _workingArea.Y + _workingArea.Height - noteWindow.Height));
+            top, _workingArea.Y, Math.Max(_workingArea.Y, _workingArea.Y + _workingArea.Height - noteWindow.Height));
     }
 
     private void OnNewNoteClick(object sender, RoutedEventArgs e)
