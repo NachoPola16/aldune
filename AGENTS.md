@@ -61,7 +61,11 @@ Los 4 avisos CA1416 de `DatabaseKeyProvider` (DPAPI) son conocidos; no debe apar
   en Dark y en Light (Pastel y Medianoche se derivan solas); los tests fijan su contraste.
 - **Pantallas**: la elegida se identifica por `MonitorInfo.StableId`, nunca por su posición en la lista
   de Windows (cambia al apagar y encender monitores).
-- Commits sin la línea `Co-Authored-By`.
+- **Claude nunca figura como autor ni contribuidor**: commits sin la línea `Co-Authored-By` y con autor y committer
+  `NachoPola16 <nachopolac@gmail.com>`, nunca `Claude <noreply@anthropic.com>`. Quien trabaje en la nube o con un
+  subagente debe fijar `git config user.name/user.email` antes del primer commit y comprobar
+  `git log --format='%an <%ae> | %cn <%ce>' origin/main..HEAD` antes de subir. (En la 1.6.0 se coló una tanda de 6 commits de
+  la nube con autor Claude; quitarla costó reescribir el historial y mover los tags.)
 
 ## Verificar la interfaz: sondas
 
