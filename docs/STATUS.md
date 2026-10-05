@@ -4342,7 +4342,7 @@ Publicado como **1.6.1** con todo lo de esta sección.
 - **Sin cambio**: el parpadeo al pulsar Enter (no reproducible, ver arriba; se retiró el crecimiento anticipado de la 1.7.2) y el
   texto "detrás del `cat`" en notas viejas con el aspecto bash (no reproducido con tamaño guardado pequeño ni con títulos largos).
 
-## Tras la 1.7.3 (2026-10-05, sin publicar)
+## 1.7.4 — Alto de la nota (2026-10-05)
 
 - **Texto cortado por arriba, pegado al prompt `cat`, en notas viejas** (captura del usuario con el aspecto bash): la ventana se
   quedaba con el alto por defecto y el texto sobraba unas tres líneas, así que el cuadro se desplazaba y asomaba media línea. El
