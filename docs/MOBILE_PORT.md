@@ -396,7 +396,7 @@ Los tests de Core (850) valen tal cual, porque **el Core es el mismo ensamblado*
    los ocho puntos que hay que atacar y el prompt listo para pegar.
 4. Escribir la spec de producto de la fase 0 y hacer los cuatro spikes. Sin el resultado del spike A
    (SQLite + AES-GCM en un dispositivo real) y del D (widget iOS), no escribir producto.
-5. Antes de tocar `src/Aldune.Core`, comprobar que siguen los **850 tests en verde** y que existe el
+5. Antes de tocar `src/Aldune.Core`, comprobar que siguen **todos los tests en verde** (850 cuando se escribió esto; hoy ~1350) y que existe el
    golden file del sobre (formato 4).
 6. Plataforma: **ya decidida** el 2026-09-28 (§0.1): Android primero, en la tableta, sin publicar. Lo que
    queda por elegir es el arranque fino: fase 0 (spec + spikes) o MVP de Android directo.

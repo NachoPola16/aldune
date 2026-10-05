@@ -149,3 +149,21 @@ mouse_event(0x02, 0, 0, 0, UIntPtr.Zero); Pump(60); mouse_event(0x04, 0, 0, 0, U
 - **`GetRectFromCharacterIndex` devuelve el rectángulo del cursor (ancho 0)**: el ancho de un carácter
   es la diferencia con el siguiente.
 - **Ver la sonda fallar sin el arreglo** (quitándolo un momento) antes de dar el arreglo por bueno.
+
+## Lo aprendido el 2026-10-05 (parpadeo, nitidez y tamaños)
+
+- **Medir un parpadeo con capturas**: una hebra aparte hace `Graphics.CopyFromScreen` en bucle sobre la ventana (a 240 Hz da
+  ~240 fps con una región pequeña) mientras el hilo de la interfaz pulsa teclas con `keybd_event`. Por fotograma se miden la
+  fracción de píxeles del color de la cara, píxeles blancos o negros puros, la fila del primer trazo de tinta (el texto se
+  desplaza) y la luminancia media de la cabecera y de los bordes. Con eso se descartó un parpadeo en la nota en este PC. Hace
+  falta `AllowUnsafeBlocks` si se recorren los píxeles con punteros. **Cuenta las líneas antes y después**: a veces las teclas
+  no llegan a la ventana (foco) y la prueba parece buena sin haber probado nada.
+- **`VisualTreeHelper.SetRootDpi` no simula una escala distinta**: las medidas salen idénticas. Para la nitidez a 125% o 150% hay
+  que verla en un monitor real; lo que sí se puede comprobar es que la ventana nace con `TextFormattingMode=Display` y
+  `UseLayoutRounding`.
+- **Un estilo implícito de `Window` en `App.xaml` solo casa con el tipo exacto**, no con las subclases (Ajustes, diálogos...). Las
+  propiedades que deban llegar a todas las ventanas van en el estilo por defecto de `App.OnStartup` (ver el comentario allí).
+- **Probar la restauración de posición y tamaño**: `AppCoordinator.TryRestorePlacement` es privado pero se llama por reflexión con
+  una nota real y una base temporal; basta `repo.SavePlacement` antes y mirar `Left/Top/Width/Height`.
+- **`GetRectFromCharacterIndex` con `LineStackingStrategy=BlockLineHeight`** devuelve la altura del glifo, no la de la línea de
+  21 px; la zona de clic de las casillas sigue ajustada a su glifo y se comprobó con una captura del resaltado.
