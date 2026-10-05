@@ -205,11 +205,29 @@ public partial class NoteWindow : Window
             // fija el tamaño para el resto de esta apertura hasta "Restaurar tamaño".
             SizeChanged += (_, _) =>
             {
-                if (!_isAutoResizing && !_isConstrainingToMonitor) _hasManualSize = true;
+                // Solo cuenta como tamaño manual si hay un arrastre del borde (botón izquierdo pulsado). Un
+                // SizeChanged sin ratón —el cambio de escala al abrir la nota en un monitor con otro DPI, el
+                // sistema recolocando la ventana— no es una decisión del usuario; si se tomaba por una, la
+                // nota se quedaba sin ajuste de alto y el texto sobraba por abajo hasta cerrarla.
+                if (!_isAutoResizing && !_isConstrainingToMonitor && NativeMethods.IsLeftButtonDown())
+                    _hasManualSize = true;
             };
         };
 
         LocationChanged += (_, _) => OnLocationChanged();
+
+        // Red de seguridad: si el texto deja de caber por cualquier otra causa (la línea del prompt cambia de alto,
+        // otra fuente, otro ancho, un texto que llega tarde), el alto se reajusta aunque no haya habido
+        // TextChanged. Va diferido para no medir dentro del propio layout que lo avisa, y converge: con el
+        // alto ya ajustado no vuelve a cambiar nada.
+        TextBody.AddHandler(ScrollViewer.ScrollChangedEvent, new ScrollChangedEventHandler((_, e) =>
+        {
+            if ((e.ExtentHeightChange == 0 && e.ViewportHeightChange == 0) || _hasManualSize || !IsLoaded) return;
+            Dispatcher.BeginInvoke(DispatcherPriority.Background, new Action(() =>
+            {
+                if (!_hasManualSize && IsLoaded) FitHeightToContent();
+            }));
+        }));
 
         TextBody.TextChanged += (_, _) =>
         {

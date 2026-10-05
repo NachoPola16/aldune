@@ -4341,3 +4341,13 @@ Publicado como **1.6.1** con todo lo de esta sección.
   de maximizar.
 - **Sin cambio**: el parpadeo al pulsar Enter (no reproducible, ver arriba; se retiró el crecimiento anticipado de la 1.7.2) y el
   texto "detrás del `cat`" en notas viejas con el aspecto bash (no reproducido con tamaño guardado pequeño ni con títulos largos).
+
+## Tras la 1.7.3 (2026-10-05, sin publicar)
+
+- **Texto cortado por arriba, pegado al prompt `cat`, en notas viejas** (captura del usuario con el aspecto bash): la ventana se
+  quedaba con el alto por defecto y el texto sobraba unas tres líneas, así que el cuadro se desplazaba y asomaba media línea. El
+  autoajuste de alto se apaga con `_hasManualSize`, y ese indicador se activaba con CUALQUIER `SizeChanged` posterior a la apertura:
+  basta un cambio de escala al abrir la nota en un monitor con otro DPI. Ahora solo cuenta un arrastre real del borde (botón
+  izquierdo pulsado), y además el alto se reajusta solo cuando cambia el tamaño del texto o del área visible (`ScrollChanged`,
+  diferido). Comprobado con la sonda: tras un encogimiento brusco sin ratón vuelve al alto que toca y no queda como manual. La
+  causa exacta en el equipo del usuario no se ha podido confirmar (no se reproducía sin el cambio de DPI).
