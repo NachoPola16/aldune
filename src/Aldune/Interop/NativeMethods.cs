@@ -191,59 +191,24 @@ internal static class NativeMethods
     [DllImport("user32.dll")]
     private static extern bool IsWindow(IntPtr hWnd);
 
+    private const int DWMWA_CAPTION_COLOR = 35;
+
     /// <summary>
-    /// Mantiene el fondo del HWND de una ventana con WindowChrome (GlassFrameThickness=-1) del color de
-    /// su cara. El WindowChrome lo deja Transparent para que se vea el cristal, y entonces, al crecer
-    /// la ventana (Enter en la nota, arrastrar el borde), la franja recién expuesta se ve transparente
-    /// -- un destello del escritorio o negro -- hasta que WPF pinta el fotograma nuevo. Se nota más en
-    /// portátiles, donde pintar tarda más que componer. Opaco de verdad: la cara cubre toda la ventana, así que
-    /// el cristal no se ve en ningún sitio. WindowChrome lo vuelve a poner transparente cada vez que
-    /// reextiende el marco (WM_DWMCOMPOSITIONCHANGED), de ahí el gancho.
+    /// Pone el color del marco de DWM (título) al de la cara de la ventana. Al crecer una ventana, la zona
+    /// nueva se compone con el color del marco hasta que WPF pinta el fotograma siguiente, y por defecto
+    /// ese color es blanco con el tema claro de Windows: una franja blanca que parpadea al pulsar Enter o
+    /// al arrastrar el borde. Se nota más en portátiles, donde pintar tarda más. Medido con capturas a
+    /// 240 fps: de ~170 fotogramas blancos en 600 a ninguno. No sirve cambiar el fondo del HWND de WPF
+    /// (HwndTarget.BackgroundColor), la clase de ventana ni WM_ERASEBKGND: ya se probó y la franja seguía.
+    /// No-op sin efecto en Windows anteriores al 11 (22000), que ignoran el atributo.
     /// </summary>
-    internal static void KeepBackdropColor(Window window, Func<System.Windows.Media.Color> color)
-    {
-        void Apply()
-        {
-            var handle = new WindowInteropHelper(window).Handle;
-            if (handle == IntPtr.Zero) return;
-            if (HwndSource.FromHwnd(handle)?.CompositionTarget is { } target)
-            {
-                var c = color();
-                target.BackgroundColor = System.Windows.Media.Color.FromRgb(c.R, c.G, c.B);
-            }
-        }
-
-        void Hook()
-        {
-            var source = HwndSource.FromHwnd(new WindowInteropHelper(window).Handle);
-            if (source is null) return;
-            source.AddHook((IntPtr hwnd, int msg, IntPtr wParam, IntPtr lParam, ref bool handled) =>
-            {
-                // El WindowChrome corre su propio gancho antes que este (se añadió antes), así que cuando
-                // llega aquí ya ha dejado el fondo transparente y este lo pisa.
-                if (msg == WM_DWMCOMPOSITIONCHANGED) Apply();
-                return IntPtr.Zero;
-            });
-            Apply();
-        }
-
-        if (new WindowInteropHelper(window).Handle != IntPtr.Zero) Hook();
-        else window.SourceInitialized += (_, _) => Hook();
-        // El WindowChrome fija el fondo transparente en su propio SourceInitialized, que puede ir
-        // detrás del nuestro: se repite cuando la ventana ya está cargada.
-        window.Loaded += (_, _) => Apply();
-    }
-
-    /// <summary>Reaplica el color de fondo (por ejemplo al cambiar el color de la nota).</summary>
-    internal static void SetBackdropColor(Window window, System.Windows.Media.Color color)
+    internal static void SetFrameColor(Window window, System.Windows.Media.Color color)
     {
         var handle = new WindowInteropHelper(window).Handle;
         if (handle == IntPtr.Zero) return;
-        if (HwndSource.FromHwnd(handle)?.CompositionTarget is { } target)
-            target.BackgroundColor = System.Windows.Media.Color.FromRgb(color.R, color.G, color.B);
+        int colorRef = color.R | (color.G << 8) | (color.B << 16);
+        DwmSetWindowAttribute(handle, DWMWA_CAPTION_COLOR, ref colorRef, sizeof(int));
     }
-
-    private const int WM_DWMCOMPOSITIONCHANGED = 0x031E;
 
     private const int DWMWA_CLOAK = 13;
 

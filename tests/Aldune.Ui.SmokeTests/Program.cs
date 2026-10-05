@@ -50,7 +50,7 @@ internal static class Program
             Pump(TimeSpan.FromMilliseconds(150));
             Check(Field<int>(dock, "_noteCount") == 2, "Initial repository refresh contains two notes");
             RunTagSelection(dock, settings);
-            RunNoteBackdrop(repository, coordinator, settings);
+            RunNoteGrowFlash(repository, coordinator, settings);
             RunNoteMenuToggle(repository, coordinator, settings);
         }
         catch (Exception exception)
@@ -171,26 +171,63 @@ internal static class Program
     }
 
     /// <summary>
-    /// El fondo del HWND de la nota tiene que ser el color de su cara y opaco. WindowChrome con
-    /// GlassFrameThickness=-1 lo deja Transparent, y al crecer la ventana (Enter, arrastrar el borde)
-    /// la franja recién expuesta se ve transparente hasta que WPF pinta: el destello en portátiles.
+    /// Al crecer la nota (Enter, arrastrar el borde) la zona nueva no puede salir blanca. DWM la compone
+    /// con el color del marco hasta que WPF pinta, y por defecto es blanco con el tema claro: era el
+    /// destello en portátiles. Se mide como en la sonda de 2026-10-05: una hebra captura la pantalla
+    /// mientras la nota crece y encoge sobre un fondo negro, y se cuentan los fotogramas con blanco
+    /// (sin el arreglo, ~25 % de ellos). Mueve nada con el ratón, pero necesita la pantalla visible.
     /// </summary>
-    private static void RunNoteBackdrop(NotesRepository repository, AppCoordinator coordinator, AppSettings settings)
+    private static void RunNoteGrowFlash(NotesRepository repository, AppCoordinator coordinator, AppSettings settings)
     {
-        var note = repository.Create("Smoke backdrop note", "#F7E6A3", "SMOKE");
+        var back = new Window { WindowStyle = WindowStyle.None, ResizeMode = ResizeMode.NoResize, Background = System.Windows.Media.Brushes.Black,
+            Left = 200, Top = 100, Width = 700, Height = 800, ShowInTaskbar = false };
+        back.Show();
+        var note = repository.Create("Smoke grow note", "#F7E6A3", "SMOKE");
         var window = new NoteWindow(note, repository, coordinator, settings) { Left = 300, Top = 200 };
         window.Show();
-        Pump(TimeSpan.FromMilliseconds(600));
+        Pump(TimeSpan.FromMilliseconds(800));
         try
         {
-            var source = System.Windows.Interop.HwndSource.FromHwnd(new System.Windows.Interop.WindowInteropHelper(window).Handle);
-            var expected = ((System.Windows.Media.SolidColorBrush)window.Background).Color;
-            Check(source.CompositionTarget.BackgroundColor == expected,
-                $"Note HWND backdrop is the face colour (was {source.CompositionTarget.BackgroundColor}, want {expected})");
+            // Sin autoajuste: que el alto lo mande esta prueba y no el contenido (vacío, volvería a 320).
+            typeof(NoteWindow).GetField("_hasManualSize", BindingFlags.Instance | BindingFlags.NonPublic)!.SetValue(window, true);
+            double scale = System.Windows.PresentationSource.FromVisual(window).CompositionTarget.TransformToDevice.M11;
+            int x0 = (int)((window.Left + 14) * scale), w = (int)((window.Width - 28) * scale);
+            int y0 = (int)((window.Top + 330) * scale), h = (int)(170 * scale);
+            int frames = 0, whiteFrames = 0;
+            bool stop = false;
+            var capture = new System.Threading.Thread(() =>
+            {
+                using var bitmap = new System.Drawing.Bitmap(w, h);
+                using var graphics = System.Drawing.Graphics.FromImage(bitmap);
+                while (!stop)
+                {
+                    graphics.CopyFromScreen(x0, y0, 0, 0, bitmap.Size);
+                    int white = 0;
+                    for (int y = 4; y < h; y += 12)
+                        for (int x = 4; x < w; x += 12)
+                        {
+                            var c = bitmap.GetPixel(x, y);
+                            if (c.R > 235 && c.G > 235 && c.B > 235) white++;
+                        }
+                    frames++;
+                    if (white > 3) whiteFrames++;
+                }
+            });
+            capture.Start();
+            for (int i = 0; i < 120; i++)
+            {
+                window.Height = i % 2 == 0 ? 520 : 320;
+                Pump(TimeSpan.FromMilliseconds(12));
+            }
+            stop = true;
+            capture.Join();
+            Check(frames > 50, $"Grow probe captured enough frames ({frames})");
+            Check(whiteFrames == 0, $"No white strip while the note grows ({whiteFrames} of {frames} frames had white)");
         }
         finally
         {
             window.Close();
+            back.Close();
         }
     }
 

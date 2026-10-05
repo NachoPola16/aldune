@@ -167,3 +167,8 @@ mouse_event(0x02, 0, 0, 0, UIntPtr.Zero); Pump(60); mouse_event(0x04, 0, 0, 0, U
   una nota real y una base temporal; basta `repo.SavePlacement` antes y mirar `Left/Top/Width/Height`.
 - **`GetRectFromCharacterIndex` con `LineStackingStrategy=BlockLineHeight`** devuelve la altura del glifo, no la de la línea de
   21 px; la zona de clic de las casillas sigue ajustada a su glifo y se comprobó con una captura del resaltado.
+- **Una franja blanca al redimensionar** se mide con un fondo negro detrás (otra `Window` negra) y la nota alternando entre dos
+  alturas cada 12 ms mientras una hebra captura la pantalla: cada fotograma con píxeles blancos es la franja. Con
+  `_hasManualSize = true` por reflexión, para que el autoajuste no devuelva la nota a su alto. Guarda el fotograma
+  malo en un PNG y míralo: ahí se vio que la zona nueva era blanca y no del color de la cara. El color de la zona sin pintar
+  lo manda `DWMWA_CAPTION_COLOR`; `DwmGetWindowAttribute` no lo puede leer (E_INVALIDARG), así que solo se prueba con capturas.

@@ -4352,14 +4352,22 @@ Publicado como **1.6.1** con todo lo de esta sección.
   diferido). Comprobado con la sonda: tras un encogimiento brusco sin ratón vuelve al alto que toca y no queda como manual. La
   causa exacta en el equipo del usuario no se ha podido confirmar (no se reproducía sin el cambio de DPI).
 
-## 1.7.5 — Destello al crecer la nota (2026-10-05)
+## 1.7.5 — Intento fallido contra el destello (2026-10-05)
 
-- **Destello al pulsar Enter y al agrandar la nota (portátil)**: causa confirmada con el smoke test. `WindowChrome` con
-  `GlassFrameThickness="-1"` deja `HwndSource.CompositionTarget.BackgroundColor` en `#00FFFFFF` (transparente) para que se vea el
-  cristal; al crecer la ventana, la franja recién expuesta se componía transparente hasta que WPF pintaba el fotograma nuevo. En
-  el PC de 240 Hz el hueco era demasiado corto para capturarlo (de ahí que las sondas de la 1.7.2 no lo vieran); en un portátil,
-  pintar tarda más. `NativeMethods.KeepBackdropColor` fija ese fondo al color de la cara (y lo reaplica en `ApplyColor` y tras
-  `WM_DWMCOMPOSITIONCHANGED`, que es cuando el WindowChrome lo vuelve a dejar transparente). El smoke test
-  (`RunNoteBackdrop`) falla sin el arreglo (`#00FFFFFF`) y pasa con él. **Pendiente de confirmar en el portátil del usuario.**
-- El smoke test ya fallaba antes de este cambio en `RunNoteMenuToggle` (`XamlParseException`: `BevelEdge` desconocido al cargar una
-  plantilla de `App.xaml`); no se ha tocado.
+- Se fijó el fondo del HWND de la nota (`HwndTarget.BackgroundColor`) al color de la cara, creyendo que `WindowChrome` lo dejaba
+  transparente y que eso era la franja. **No era la causa**: el usuario siguió viendo la franja blanca en el portátil. Medido
+  después con la sonda, ese valor no influye. Se retiró en la 1.7.6.
+
+## 1.7.6 — Franja blanca al crecer la nota (2026-10-05)
+
+- **Franja blanca al pulsar Enter y al agrandar la nota** (portátil, escala 125%): DWM compone la zona recién expuesta con el
+  color del marco hasta que WPF pinta el fotograma siguiente, y por defecto es blanco con el tema claro de Windows.
+  `NativeMethods.SetFrameColor` pone `DWMWA_CAPTION_COLOR` al color de la cara (al abrir y en `ApplyColor`). **Se reproduce en
+  este PC** si la sonda redimensiona la nota entre 320 y 520 sobre un fondo negro capturando a >60 fps: ~170 de ~600 fotogramas
+  blancos antes, 0 después. Se descartó probando uno por uno: fondo del HWND de WPF, `GlassFrameThickness` (-1 o 0,0,0,1),
+  brocha de la clase de ventana, `WM_ERASEBKGND` y render por software; ninguno quitaba la franja. Un `Window` de WPF sin
+  `WindowChrome` también la tiene. Smoke test `RunNoteGrowFlash` (falla sin el arreglo: 74 de 241; pasa con él: 0 de 246).
+  Requiere Windows 11 (22000+); en Windows 10 el atributo se ignora y la franja puede seguir.
+- **Por qué no se veía antes**: las sondas de la 1.7.2 capturaban la nota con el crecimiento real de una sola línea y con el
+  fondo claro del escritorio detrás; la franja dura 1-2 fotogramas y solo se ve con tema claro. Provocar el redimensionado
+  repetido sobre negro la hace evidente.
