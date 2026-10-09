@@ -706,6 +706,19 @@ public static class Strings
         "Papierkorb", "Corbeille", "Lixeira");
     public static string SearchPlaceholder => T("Search your notes…", "Buscar en tus notas…",
         "Notizen durchsuchen…", "Rechercher dans vos notes…", "Pesquisar nas suas notas…");
+    // --- Buscar dentro de una nota (Ctrl+F) ---------------------------------------------------------
+
+    public static string FindInNotePlaceholder => T("Find in note…", "Buscar en la nota…",
+        "In der Notiz suchen…", "Rechercher dans la note…", "Buscar na nota…");
+    public static string FindPreviousTooltip => T("Previous (Shift+Enter)", "Anterior (Mayús+Intro)",
+        "Vorheriger (Umschalt+Eingabe)", "Précédent (Maj+Entrée)", "Anterior (Shift+Enter)");
+    public static string FindNextTooltip => T("Next (Enter)", "Siguiente (Intro)",
+        "Nächster (Eingabe)", "Suivant (Entrée)", "Próximo (Enter)");
+    public static string FindCloseTooltip => T("Close (Esc)", "Cerrar (Esc)",
+        "Schließen (Esc)", "Fermer (Échap)", "Fechar (Esc)");
+    public static string FindNoResults => T("No results", "Sin resultados",
+        "Keine Treffer", "Aucun résultat", "Sem resultados");
+
     public static string ClearSearchTooltip => T("Clear search", "Borrar búsqueda",
         "Suche löschen", "Effacer la recherche", "Limpar pesquisa");
     public static string SelectAll => T("Select all", "Seleccionar todo",

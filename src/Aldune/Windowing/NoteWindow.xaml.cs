@@ -86,6 +86,7 @@ public partial class NoteWindow : Window
         _initialWidth = Width;
         _initialHeight = Height;
         _autoScroll = new AutoScrollManager(BodyHost, null, TextBody);
+        TextBody.AddHandler(ScrollViewer.ScrollChangedEvent, new ScrollChangedEventHandler(OnBodyScrollChanged));
         _menuToggle = new PopupToggle(ActionsPopup);
         // Sin disparador el toggle no puede saber que el cierre lo provocó el propio "⋯" y el clic
         // siempre reabría el menú: PopupToggle solo consume el open si el puntero está sobre él.
@@ -737,6 +738,13 @@ public partial class NoteWindow : Window
     {
         _lastBodyKeyAt = DateTime.UtcNow;
 
+        if (e.Key == Key.F && Keyboard.Modifiers == ModifierKeys.Control)
+        {
+            OpenFindBar();
+            e.Handled = true;
+            return;
+        }
+
         // Ctrl+Enter: marca o desmarca la tarea de la línea del cursor, para no tener que ir al ratón
         // (hasta ahora era la única forma). En una línea que no es tarea, Enter normal.
         if (e.Key == Key.Return && Keyboard.Modifiers == ModifierKeys.Control
@@ -860,6 +868,121 @@ public partial class NoteWindow : Window
             }
         }
     }
+
+    // --- Buscar en la nota (Ctrl+F) -----------------------------------------------------------------
+    //
+    // La coincidencia actual es además la selección del cuerpo (al cerrar la barra el cursor queda ahí) y
+    // se resalta con FindHighlight. Todo el cálculo vive en Core.TextFinder.
+
+    private IReadOnlyList<int> _findMatches = [];
+    private int _findCurrent = -1;
+
+    private void OpenFindBar()
+    {
+        FindBar.Visibility = Visibility.Visible;
+        // Con texto seleccionado en el cuerpo (de una sola línea), se busca eso, como en cualquier editor.
+        if (TextBody.SelectionLength > 0 && !TextBody.SelectedText.Contains('\n')) FindBox.Text = TextBody.SelectedText;
+        FindBox.Focus();
+        FindBox.SelectAll();
+        RunFind();
+    }
+
+    private void CloseFindBar()
+    {
+        FindBar.Visibility = Visibility.Collapsed;
+        FindHighlight.Visibility = Visibility.Collapsed;
+        _findMatches = [];
+        _findCurrent = -1;
+        // El cursor se queda en la última coincidencia: seguir escribiendo desde ahí.
+        TextBody.Focus();
+    }
+
+    private void OnFindTextChanged(object sender, TextChangedEventArgs e) => RunFind();
+
+    private void OnBodyScrollChanged(object sender, ScrollChangedEventArgs e)
+    {
+        if (FindBar.Visibility == Visibility.Visible) PositionFindHighlight();
+    }
+
+    private void RunFind()
+    {
+        _findMatches = TextFinder.FindAll(TextBody.Text, FindBox.Text);
+        if (_findMatches.Count == 0) { ShowNoMatch(); return; }
+        _findCurrent = TextFinder.NextIndex(_findMatches, TextBody.SelectionStart, forward: true);
+        ShowFindMatch();
+    }
+
+    private void StepFind(bool forward)
+    {
+        // El texto pudo cambiar desde la última búsqueda (se edita con la barra abierta).
+        _findMatches = TextFinder.FindAll(TextBody.Text, FindBox.Text);
+        if (_findMatches.Count == 0) { ShowNoMatch(); return; }
+        int from = forward ? TextBody.SelectionStart + Math.Max(TextBody.SelectionLength, 1) : TextBody.SelectionStart;
+        _findCurrent = TextFinder.NextIndex(_findMatches, from, forward);
+        ShowFindMatch();
+    }
+
+    private void ShowNoMatch()
+    {
+        _findCurrent = -1;
+        FindHighlight.Visibility = Visibility.Collapsed;
+        FindCount.Text = FindBox.Text.Length == 0 ? "" : Strings.FindNoResults;
+    }
+
+    private void ShowFindMatch()
+    {
+        int start = _findMatches[_findCurrent];
+        TextBody.Select(start, FindBox.Text.Length);
+        TextBody.ScrollToLine(TextBody.GetLineIndexFromCharacterIndex(start));
+        FindCount.Text = $"{_findCurrent + 1}/{_findMatches.Count}";
+        // El scroll hasta la línea llega con el diseño siguiente: se coloca después de él.
+        Dispatcher.BeginInvoke(DispatcherPriority.Loaded, new Action(PositionFindHighlight));
+    }
+
+    /// <summary>Pone el resaltado sobre la coincidencia actual. Una que se parte en dos líneas se deja
+    /// sin resaltar (queda seleccionada igualmente).</summary>
+    private void PositionFindHighlight()
+    {
+        if (_findCurrent < 0 || _findCurrent >= _findMatches.Count || FindBar.Visibility != Visibility.Visible)
+        {
+            FindHighlight.Visibility = Visibility.Collapsed;
+            return;
+        }
+        int start = _findMatches[_findCurrent];
+        var from = TextBody.GetRectFromCharacterIndex(start);
+        var to = TextBody.GetRectFromCharacterIndex(start + FindBox.Text.Length);
+        bool visible = !from.IsEmpty && !to.IsEmpty && Math.Abs(from.Top - to.Top) < 1 && to.Left > from.Left
+            && from.Top >= 0 && from.Bottom <= BodyHost.ActualHeight;
+        FindHighlight.Visibility = visible ? Visibility.Visible : Visibility.Collapsed;
+        if (!visible) return;
+        FindHighlight.Width = to.Left - from.Left;
+        FindHighlight.Height = from.Height;
+        Canvas.SetLeft(FindHighlight, from.Left);
+        Canvas.SetTop(FindHighlight, from.Top);
+    }
+
+    private void OnFindKeyDown(object sender, KeyEventArgs e)
+    {
+        if (e.Key == Key.Escape)
+        {
+            CloseFindBar();
+            e.Handled = true;
+        }
+        else if (e.Key == Key.Enter)
+        {
+            StepFind(forward: Keyboard.Modifiers != ModifierKeys.Shift);
+            e.Handled = true;
+        }
+        else if (e.Key == Key.F && Keyboard.Modifiers == ModifierKeys.Control)
+        {
+            FindBox.SelectAll();
+            e.Handled = true;
+        }
+    }
+
+    private void OnFindPreviousClick(object sender, RoutedEventArgs e) => StepFind(forward: false);
+    private void OnFindNextClick(object sender, RoutedEventArgs e) => StepFind(forward: true);
+    private void OnFindCloseClick(object sender, RoutedEventArgs e) => CloseFindBar();
 
     /// <summary>Una casilla de tarea localizada por un punto del ratón: dónde está el glifo (para
     /// marcarla) y el rectángulo que hay que resaltar (para el hover).</summary>
