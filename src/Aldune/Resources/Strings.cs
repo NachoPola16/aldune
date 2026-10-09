@@ -1189,6 +1189,25 @@ public static class Strings
         $"Alle {count} Konflikte verwerfen? Die unterlegenen Versionen werden dauerhaft gelöscht.",
         $"Ignorer les {count} conflits ? Les versions perdantes seront définitivement supprimées.",
         $"Descartar os {count} conflitos? As versões perdedoras serão descartadas definitivamente.");
+    public static string SyncConflictDismissConfirm(string title) => T(
+        $"Dismiss the conflict of \"{title}\"? The other version will be discarded permanently.",
+        $"¿Descartar el conflicto de «{title}»? La otra versión se descartará definitivamente.",
+        $"Den Konflikt von „{title}“ verwerfen? Die andere Version wird dauerhaft gelöscht.",
+        $"Ignorer le conflit de « {title} » ? L'autre version sera définitivement supprimée.",
+        $"Descartar o conflito de \"{title}\"? A outra versão será descartada definitivamente.");
+    public static string SyncConflictDiffAt(int line, string losing, string winner, int others) => T(
+        $"Line {line}: this version \"{losing}\" · active \"{winner}\"{OthersEn(others)}",
+        $"Línea {line}: esta versión «{losing}» · activa «{winner}»{OthersEs(others)}",
+        $"Zeile {line}: diese Version „{losing}“ · aktiv „{winner}“{OthersDe(others)}",
+        $"Ligne {line} : cette version « {losing} » · active « {winner} »{OthersFr(others)}",
+        $"Linha {line}: esta versão \"{losing}\" · ativa \"{winner}\"{OthersPt(others)}");
+    private static string OthersEn(int n) => n > 1 ? $" (+{n - 1} more differing lines)" : "";
+    private static string OthersEs(int n) => n > 1 ? $" (+{n - 1} líneas más distintas)" : "";
+    private static string OthersDe(int n) => n > 1 ? $" (+{n - 1} weitere abweichende Zeilen)" : "";
+    private static string OthersFr(int n) => n > 1 ? $" (+{n - 1} autres lignes différentes)" : "";
+    private static string OthersPt(int n) => n > 1 ? $" (+{n - 1} linhas diferentes a mais)" : "";
+    public static string SyncConflictWinnerDeleted => T("The active version is a deletion.", "La versión activa es un borrado.",
+        "Die aktive Version ist eine Löschung.", "La version active est une suppression.", "A versão ativa é uma exclusão.");
     public static string SyncConflictDeleted => T("Deleted version", "Versión eliminada",
         "Gelöschte Version", "Version supprimée", "Versão excluída");
     public static string SyncErrorTitle => T("Aldune sync", "Sincronización de Aldune",

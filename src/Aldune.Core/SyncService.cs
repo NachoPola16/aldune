@@ -187,6 +187,10 @@ public sealed class SyncService
 
     public IReadOnlyList<SyncConflict> GetConflicts() => _repository.GetSyncConflicts();
 
+    /// <summary>La nota tal como está ahora: la versión "ganadora" de un conflicto no se guarda con él (solo la
+    /// perdedora), porque la ganadora es la nota viva. Null si ya no existe.</summary>
+    public Note? GetActiveNote(Guid noteId) => _repository.GetById(noteId);
+
     public bool DismissConflict(Guid conflictId)
     {
         if (!_repository.GetSyncConflicts().Any(conflict => conflict.Id == conflictId)) return false;

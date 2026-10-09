@@ -86,12 +86,16 @@
                                         <RowDefinition Height="Auto" />
                                         <RowDefinition Height="Auto" />
                                         <RowDefinition Height="Auto" />
+                                        <RowDefinition Height="Auto" />
                                     </Grid.RowDefinitions>
                                     <TextBlock Text="{Binding LosingTitle}" Foreground="{DynamicResource AlduneTextStrongBrush}"
                                                FontSize="{StaticResource AlduneTextBody}" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" />
                                     <TextBlock Grid.Row="1" Text="{Binding Details}" Foreground="{DynamicResource AlduneMutedTextBrush}"
                                                FontSize="{StaticResource AlduneTextSmall}" TextWrapping="Wrap" Margin="0,4,0,9" />
-                                    <StackPanel Grid.Row="2" Orientation="Horizontal">
+                                    <TextBlock Grid.Row="2" Text="{Binding Difference}" Foreground="{DynamicResource AlduneTextSoftBrush}"
+                                               FontSize="{StaticResource AlduneTextSmall}" TextWrapping="Wrap" Margin="0,0,0,9"
+                                               Visibility="{Binding DifferenceVisibility}" />
+                                    <StackPanel Grid.Row="3" Orientation="Horizontal">
                                         <Button Content="{x:Static res:Strings.SyncConflictRestore}"
                                                 Tag="{Binding Conflict.Id}" Click="OnRestoreClick"
                                                 Style="{StaticResource ConflictButtonStyle}" />

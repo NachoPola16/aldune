@@ -28,7 +28,7 @@ public partial class SyncConflictsWindow : Window
     private void LoadRows()
     {
         var rows = _syncService.GetConflicts()
-            .Select(conflict => new ConflictRow(conflict))
+            .Select(conflict => new ConflictRow(conflict, _syncService.GetActiveNote(conflict.NoteId)))
             .ToList();
         ConflictsList.ItemsSource = rows;
         EmptyState.Visibility = rows.Count == 0 ? Visibility.Visible : Visibility.Collapsed;
@@ -46,8 +46,15 @@ public partial class SyncConflictsWindow : Window
 
     private void OnDismissClick(object sender, RoutedEventArgs e)
     {
-        if (sender is FrameworkElement { Tag: Guid conflictId } &&
-            _syncService.DismissConflict(conflictId))
+        if (sender is not FrameworkElement { Tag: Guid conflictId }) return;
+
+        // Igual que "Descartar todo": la versión perdedora se tira para siempre.
+        var row = ((IEnumerable<ConflictRow>)ConflictsList.ItemsSource).FirstOrDefault(r => r.Conflict.Id == conflictId);
+        var choice = AppDialog.Show(this, Strings.SyncConflictDismissConfirm(row?.LosingTitle ?? ""), Strings.SyncConflictTitle,
+            MessageBoxButton.YesNo, MessageBoxImage.Warning, MessageBoxResult.No);
+        if (choice != MessageBoxResult.Yes) return;
+
+        if (_syncService.DismissConflict(conflictId))
         {
             // La nota sale de la cola de conflictos: su señal de sync deja de decir "conflicto".
             _coordinator.RefreshNoteAppearance();
@@ -56,28 +63,6 @@ public partial class SyncConflictsWindow : Window
     }
 
     private void OnDismissAllClick(object sender, RoutedEventArgs e)
-    {
-        var count = _syncService.GetConflicts().Count;
-        if (count == 0) return;
-
-        // Descartar todo tira a la vez todas las versiones perdedoras, así que se pide confirmación:
-        // con unos cientos de conflictos acumulados es demasiado fácil pulsarlo sin querer.
-        var choice = AppDialog.Show(
-            this,
-            Strings.SyncConflictDismissAllConfirm(count),
-            Strings.SyncConflictTitle,
-            MessageBoxButton.YesNo,
-            MessageBoxImage.Warning,
-            MessageBoxResult.No);
-
-        if (choice != MessageBoxResult.Yes) return;
-
-        _syncService.DismissAllConflicts();
-        _coordinator.RefreshNoteAppearance();
-        LoadRows();
-    }
-
-    public void DismissAll()
     {
         var count = _syncService.GetConflicts().Count;
         if (count == 0) return;
@@ -109,7 +94,7 @@ public partial class SyncConflictsWindow : Window
 
     private sealed class ConflictRow
     {
-        public ConflictRow(SyncConflict conflict)
+        public ConflictRow(SyncConflict conflict, Note? active)
         {
             Conflict = conflict;
             LosingTitle = conflict.Losing.Note is { } note
@@ -117,9 +102,19 @@ public partial class SyncConflictsWindow : Window
                 : Strings.SyncConflictDeleted;
             Details = $"{conflict.Losing.DeviceId} · {conflict.Losing.UpdatedAt.ToLocalTime():g}  →  " +
                       $"{conflict.Winner.DeviceId} · {conflict.Winner.UpdatedAt.ToLocalTime():g}";
+            // La ganadora es la nota viva; si ya no está (o está en la papelera) la versión activa es un borrado.
+            Difference = active is null || active.State == NoteState.Trashed
+                ? Strings.SyncConflictWinnerDeleted
+                : conflict.Losing.Note is { } losing && ConflictDiff.Summarize(active.Text, losing.Text) is { } diff
+                    ? Strings.SyncConflictDiffAt(diff.Line, ConflictDiff.Clip(diff.LosingLine, 40), ConflictDiff.Clip(diff.WinnerLine, 40), diff.DifferingLines)
+                    : "";
         }
 
         public SyncConflict Conflict { get; }
+
+        /// <summary>Dónde cambia la versión perdedora respecto a la activa (vacío si no se puede comparar).</summary>
+        public string Difference { get; }
+        public Visibility DifferenceVisibility => Difference.Length == 0 ? Visibility.Collapsed : Visibility.Visible;
         public string LosingTitle { get; }
         public string Details { get; }
     }
