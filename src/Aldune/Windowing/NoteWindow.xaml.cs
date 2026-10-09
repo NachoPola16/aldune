@@ -55,6 +55,9 @@ public partial class NoteWindow : Window
     /// esquema; distinguirlo solo dentro de esta sesión es lo que de verdad importa en la práctica).</summary>
     private bool _hasManualSize;
 
+    /// <summary>Si el tamaño actual viene de la sesión anterior (<see cref="ApplySize"/> / <see cref="ApplyPlacement"/>).</summary>
+    private bool _sizeRestored;
+
     /// <summary>Evita que el propio cambio de tamaño de <see cref="FitHeightToContent"/> o
     /// <see cref="OnRestoreSizeClick"/> se malinterprete como un arrastre manual en el
     /// <c>SizeChanged</c> de más abajo.</summary>
@@ -391,6 +394,7 @@ public partial class NoteWindow : Window
         Width = width;
         Height = height;
         _isAutoResizing = false;
+        _sizeRestored = true;
     }
 
     /// <summary>
@@ -410,6 +414,7 @@ public partial class NoteWindow : Window
         Width = width;
         Height = height;
         _isAutoResizing = false;
+        _sizeRestored = true;
     }
 
     /// <summary>
@@ -484,6 +489,17 @@ public partial class NoteWindow : Window
     /// </summary>
     private void FitHeightToContent()
     {
+        // El ajuste automático solo deja la nota del alto del texto (nunca más alta), así que un alto
+        // restaurado MAYOR que el que pide el contenido solo puede ser un tamaño elegido a mano. Sin esto
+        // se recortaba al abrir y el alto se perdía en cada reinicio (solo se conservaba el ancho). Se
+        // decide en la primera pasada con medidas válidas, venga de donde venga (Loaded, cambio de piel...).
+        if (_sizeRestored && IsLoaded && TextBody.ViewportHeight > 0)
+        {
+            _sizeRestored = false;
+            double needed = Math.Ceiling(TextBody.ExtentHeight + (Height - TextBody.ViewportHeight));
+            if (Height > needed + 2 && Height > _initialHeight + 2) _hasManualSize = true;
+        }
+
         if (_hasManualSize)
         {
             TextBody.VerticalScrollBarVisibility = ScrollBarVisibility.Auto;
