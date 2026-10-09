@@ -4391,7 +4391,7 @@ Publicado como **1.6.1** con todo lo de esta sección.
   en vertical aunque el dock esté en un extremo (la cascada baja; abrirla en el extremo la sacaría de pantalla).
 - Descartados en el ROADMAP: sangría francesa y editor de markdown renderizado.
 
-## Tras la 1.7.7 (sin publicar, 2026-10-10)
+## 1.7.8 (2026-10-10)
 
 - **Ctrl+F superpuesto**: la barra ya no es una fila (no empuja el texto); va arriba a la derecha y baja al pie si la coincidencia
   actual queda justo debajo (`PositionFindBar`). La coincidencia actual lleva relleno fuerte y borde con la tinta de la nota
