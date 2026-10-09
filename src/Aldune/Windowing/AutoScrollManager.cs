@@ -1,9 +1,11 @@
-﻿using System.Windows;
+﻿using System.Diagnostics;
+using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Threading;
+using Aldune.Core;
 using Aldune.Interop;
 
 namespace Aldune.Windowing;
@@ -25,16 +27,6 @@ namespace Aldune.Windowing;
 /// </summary>
 internal sealed class AutoScrollManager
 {
-    /// <summary>Zona muerta alrededor del origen, en DIPs: dentro de ella no hay desplazamiento.</summary>
-    private const double DeadZone = 10;
-
-    /// <summary>Distancia en DIPs a partir de la cual la velocidad alcanza el tope.</summary>
-    private const double FullSpeedDistance = 140;
-
-    /// <summary>Desplazamiento máximo por tick, en DIPs. ~60fps × 26 px ≈ 1560 px/s: ágil pero no
-    /// instantáneo.</summary>
-    private const double MaxStepPerTick = 26;
-
     private readonly DispatcherTimer _timer = new() { Interval = TimeSpan.FromMilliseconds(16) };
     private readonly Panel _host;
     private readonly ScrollViewer? _scrollViewer;
@@ -42,6 +34,11 @@ internal sealed class AutoScrollManager
     private Border? _originMarker;
     private Point _origin;
     private bool _buttonsWereDown = true;
+
+    // El desplazamiento se calcula con el reloj, no con los ticks: un DispatcherTimer de 16 ms no llega a
+    // intervalos regulares y con un paso fijo por tick la velocidad iba a tirones (ver AutoScrollMath).
+    private readonly Stopwatch _clock = new();
+    private TimeSpan _lastTick;
 
     internal AutoScrollManager(Panel host, ScrollViewer? scrollViewer, TextBox? textBox)
     {
@@ -56,6 +53,10 @@ internal sealed class AutoScrollManager
         host.PreviewMouseDown += OnHostPreviewMouseDown;
         host.PreviewKeyDown += OnHostPreviewKeyDown;
         host.MouseWheel += OnHostMouseWheel;
+        // Si la superficie se cierra o se oculta con el modo encendido, el temporizador seguiría corriendo
+        // (y el próximo clic en cualquier sitio apagaría algo que ya no se ve).
+        host.Unloaded += (_, _) => Stop();
+        host.IsVisibleChanged += (_, e) => { if (e.NewValue is false) Stop(); };
     }
 
     internal bool IsActive => _originMarker is not null;
@@ -73,7 +74,9 @@ internal sealed class AutoScrollManager
         var glyph = (FrameworkElement?)Application.Current.TryFindResource("AutoScrollOriginGlyph");
         if (glyph is null) return;
 
-        _origin = Mouse.GetPosition(_host);
+        // Misma fuente que los ticks (Win32): Mouse.GetPosition de WPF es la última posición que vio la ventana
+        // y puede no ser la real, y con orígenes de dos fuentes el modo arrancaba ya desplazando.
+        _origin = CursorPositionInHost();
         _originMarker = new Border
         {
             Width = 26,
@@ -97,6 +100,8 @@ internal sealed class AutoScrollManager
         }
 
         _buttonsWereDown = true;
+        _clock.Restart();
+        _lastTick = TimeSpan.Zero;
         _timer.Start();
     }
 
@@ -132,15 +137,23 @@ internal sealed class AutoScrollManager
     }
     private void OnTick(object? sender, EventArgs e)
     {
-        // El primer botón que se suelte tras arrancar ya no cuenta (es el clic central que encendió el
-        // modo). El siguiente que se pulse — sea donde sea en la pantalla — lo apaga.
+        // El primer botón que se suelte tras arrancar es el clic central que encendió el modo: si fue un clic
+        // corto no cuenta y el modo sigue; si se mantuvo (mantener, arrastrar y soltar, como en Chrome), soltar
+        // lo apaga. Después, el siguiente que se pulse — sea donde sea en la pantalla — lo apaga.
         bool anyDown = NativeMethods.IsAnyMouseButtonDown();
-        if (_buttonsWereDown && !anyDown) _buttonsWereDown = false;
+        var now = _clock.Elapsed;
+        if (_buttonsWereDown && !anyDown)
+        {
+            _buttonsWereDown = false;
+            if (AutoScrollMath.StopsOnRelease(now)) { Stop(); return; }
+        }
         else if (!_buttonsWereDown && anyDown) { Stop(); return; }
 
+        var elapsed = now - _lastTick;
+        _lastTick = now;
         var cursor = CursorPositionInHost();
-        double stepX = ScrollStepFor(cursor.X - _origin.X);
-        double stepY = ScrollStepFor(cursor.Y - _origin.Y);
+        double stepX = AutoScrollMath.Distance(AutoScrollMath.Velocity(cursor.X - _origin.X), elapsed);
+        double stepY = AutoScrollMath.Distance(AutoScrollMath.Velocity(cursor.Y - _origin.Y), elapsed);
         if (stepX == 0 && stepY == 0) return;
 
         ScrollBy(stepX, stepY);
@@ -153,14 +166,6 @@ internal sealed class AutoScrollManager
         var source = PresentationSource.FromVisual(_host);
         double scale = source?.CompositionTarget?.TransformToDevice.M11 ?? 1.0;
         return _host.PointFromScreen(new Point(screen.X / scale, screen.Y / scale));
-    }
-
-    private static double ScrollStepFor(double offset)
-    {
-        double beyond = Math.Abs(offset) - DeadZone;
-        if (beyond <= 0) return 0;
-
-        return Math.Sign(offset) * Math.Min(beyond / FullSpeedDistance, 1) * MaxStepPerTick;
     }
 
     private bool CanScroll()
