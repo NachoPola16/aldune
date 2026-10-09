@@ -99,6 +99,11 @@
                                         <Button Content="{x:Static res:Strings.SyncConflictRestore}"
                                                 Tag="{Binding Conflict.Id}" Click="OnRestoreClick"
                                                 Style="{StaticResource ConflictButtonStyle}" />
+                                        <Button Content="{x:Static res:Strings.SyncConflictMerge}"
+                                                ToolTip="{x:Static res:Strings.SyncConflictMergeTooltip}"
+                                                Tag="{Binding Conflict.Id}" Click="OnMergeClick" Margin="8,0,0,0"
+                                                Visibility="{Binding MergeVisibility}"
+                                                Style="{StaticResource ConflictButtonStyle}" />
                                         <Button Content="{x:Static res:Strings.SyncConflictDismiss}"
                                                 Tag="{Binding Conflict.Id}" Click="OnDismissClick" Margin="8,0,0,0"
                                                 Style="{StaticResource ConflictDangerButtonStyle}" />

@@ -1179,6 +1179,14 @@ public static class Strings
         "Aldune manteve a versão vencedora ativa. Você pode restaurar a outra versão ou descartar este registro.");
     public static string SyncConflictRestore => T("Restore this version", "Restaurar esta versión",
         "Diese Version wiederherstellen", "Restaurer cette version", "Restaurar esta versão");
+    public static string SyncConflictMerge => T("Merge both", "Combinar las dos",
+        "Beide zusammenführen", "Fusionner les deux", "Combinar as duas");
+    public static string SyncConflictMergeTooltip => T(
+        "Keeps the active version and adds the lines only the other one has. Nothing is lost; you remove what is left over.",
+        "Mantiene la versión activa y añade las líneas que solo tiene la otra. No se pierde nada; tú quitas lo que sobre.",
+        "Behält die aktive Version und fügt die Zeilen hinzu, die nur die andere hat. Nichts geht verloren; Überflüssiges entfernst du selbst.",
+        "Conserve la version active et ajoute les lignes que seule l'autre possède. Rien n'est perdu ; vous supprimez ce qui est en trop.",
+        "Mantém a versão ativa e adiciona as linhas que só a outra tem. Nada se perde; você remove o que sobrar.");
     public static string SyncConflictDismiss => T("Dismiss", "Descartar",
         "Verwerfen", "Ignorer", "Descartar");
     public static string SyncConflictDismissAll => T("Dismiss all", "Descartar todo",

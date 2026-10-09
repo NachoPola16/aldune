@@ -44,6 +44,15 @@ public partial class SyncConflictsWindow : Window
         }
     }
 
+    private void OnMergeClick(object sender, RoutedEventArgs e)
+    {
+        if (sender is FrameworkElement { Tag: Guid conflictId } && _syncService.MergeConflict(conflictId))
+        {
+            _coordinator.RefreshNoteAppearance();
+            LoadRows();
+        }
+    }
+
     private void OnDismissClick(object sender, RoutedEventArgs e)
     {
         if (sender is not FrameworkElement { Tag: Guid conflictId }) return;
@@ -103,6 +112,9 @@ public partial class SyncConflictsWindow : Window
             Details = $"{conflict.Losing.DeviceId} · {conflict.Losing.UpdatedAt.ToLocalTime():g}  →  " +
                       $"{conflict.Winner.DeviceId} · {conflict.Winner.UpdatedAt.ToLocalTime():g}";
             // La ganadora es la nota viva; si ya no está (o está en la papelera) la versión activa es un borrado.
+            MergeVisibility = active is { State: not NoteState.Trashed } && conflict.Losing.Note is { } other
+                              && ConflictDiff.Summarize(active.Text, other.Text) is not null
+                ? Visibility.Visible : Visibility.Collapsed;
             Difference = active is null || active.State == NoteState.Trashed
                 ? Strings.SyncConflictWinnerDeleted
                 : conflict.Losing.Note is { } losing && ConflictDiff.Summarize(active.Text, losing.Text) is { } diff
@@ -114,6 +126,8 @@ public partial class SyncConflictsWindow : Window
 
         /// <summary>Dónde cambia la versión perdedora respecto a la activa (vacío si no se puede comparar).</summary>
         public string Difference { get; }
+        /// <summary>Combinar solo tiene sentido con las dos versiones en texto y distintas.</summary>
+        public Visibility MergeVisibility { get; }
         public Visibility DifferenceVisibility => Difference.Length == 0 ? Visibility.Collapsed : Visibility.Visible;
         public string LosingTitle { get; }
         public string Details { get; }

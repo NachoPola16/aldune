@@ -74,6 +74,26 @@ public sealed class SyncConflictTests : IDisposable
     }
 
     [Fact]
+    public void MergeConflict_KeepsLinesFromBothVersionsAndClosesTheConflict()
+    {
+        var note = _deviceA.Repository.Create("compra\npan", "#EBD38B", "primary");
+        ShareKeyAndSynchronizeInitialNote(note.Id);
+
+        _deviceB.Repository.UpdateText(note.Id, "compra\npan\nleche");
+        Assert.True(_deviceB.Sync.Synchronize().Succeeded);
+        Thread.Sleep(20);
+        _deviceA.Repository.UpdateText(note.Id, "compra\npan\nhuevos");
+        Assert.True(_deviceA.Sync.Synchronize().Succeeded);
+
+        var conflict = _deviceA.Sync.GetConflicts().Single();
+        Assert.True(_deviceA.Sync.MergeConflict(conflict.Id));
+
+        Assert.Equal("compra\npan\nleche\nhuevos", _deviceA.Repository.GetAllForSync().Single().Text);
+        Assert.Empty(_deviceA.Sync.GetConflicts());
+        Assert.False(_deviceA.Sync.MergeConflict(conflict.Id)); // ya no existe
+    }
+
+    [Fact]
     public void SameChangeOnBothDevices_IsNotAConflict()
     {
         // La migración de temas recolorea la misma nota en cada equipo que actualiza: mismo

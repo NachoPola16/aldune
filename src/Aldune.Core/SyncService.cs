@@ -203,6 +203,24 @@ public sealed class SyncService
     /// que <see cref="DismissConflict"/> hace con una sola.</summary>
     public int DismissAllConflicts() => _repository.DeleteAllSyncConflicts();
 
+    /// <summary>
+    /// Combina la versión perdedora con la nota activa (ver <see cref="ConflictMerge"/>) y descarta el conflicto.
+    /// Con fecha nueva, como <see cref="RestoreConflict"/>, para que la próxima sync publique la decisión.
+    /// False si no se puede combinar: no hay nota activa, está en la papelera, o la perdedora es un borrado.
+    /// </summary>
+    public bool MergeConflict(Guid conflictId)
+    {
+        var conflict = _repository.GetSyncConflicts().FirstOrDefault(item => item.Id == conflictId);
+        if (conflict is null || conflict.Losing.Tombstone || conflict.Losing.Note is not { } losing) return false;
+        if (_repository.GetById(conflict.NoteId) is not { State: not NoteState.Trashed } active) return false;
+
+        active.Text = ConflictMerge.Combine(active.Text, losing.Text);
+        active.UpdatedAt = DateTimeOffset.UtcNow;
+        _repository.ApplySyncNote(active);
+        _repository.DeleteSyncConflict(conflictId);
+        return true;
+    }
+
     public bool RestoreConflict(Guid conflictId)
     {
         var conflict = _repository.GetSyncConflicts().FirstOrDefault(item => item.Id == conflictId);
