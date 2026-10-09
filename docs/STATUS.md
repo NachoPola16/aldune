@@ -4372,7 +4372,7 @@ Publicado como **1.6.1** con todo lo de esta sección.
   fondo claro del escritorio detrás; la franja dura 1-2 fotogramas y solo se ve con tema claro. Provocar el redimensionado
   repetido sobre negro la hace evidente.
 
-## Tras la 1.7.6 (sin publicar, 2026-10-09)
+## 1.7.7 (2026-10-09)
 
 - **Diálogo sin fotograma transparente** (`AppDialog`): `CloakUntilFirstFrame` + `SetFrameColor`. Salía vacío y transparente al
   abrirlo justo después de repintar la app (cambio de aspecto), con el borde cortando los círculos de los radios.
