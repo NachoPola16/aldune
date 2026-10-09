@@ -652,12 +652,40 @@ public partial class NoteWindow : Window
     // Enter continúa la lista. Todo el cálculo vive en TaskLines, que es puro y está probado.
 
     /// <summary>
-    /// Aplica un texto nuevo conservando la posición del cursor. Asignar <c>Text</c> lo manda al
-    /// principio, y en un editor eso se nota como un salto: hay que reponerlo a mano.
+    /// Aplica un texto nuevo conservando la posición del cursor. Asignar <c>Text</c> manda el cursor y
+    /// el scroll al principio durante un fotograma (el destello al pulsar Enter en una lista, con el
+    /// alto de la nota fijo) y borra el historial de Ctrl+Z. Por eso solo se sustituye el tramo que
+    /// cambia, a través de <c>SelectedText</c> y dentro de un único <c>BeginChange</c>: un solo paso
+    /// de deshacer, un solo diseño y nada que repintar fuera de ese tramo.
     /// </summary>
     private void ReplaceBody(string text, int caret)
     {
-        TextBody.Text = text;
+        var old = TextBody.Text;
+        int prefix = 0;
+        int max = Math.Min(old.Length, text.Length);
+        while (prefix < max && old[prefix] == text[prefix]) prefix++;
+        int suffix = 0;
+        while (suffix < max - prefix && old[old.Length - 1 - suffix] == text[text.Length - 1 - suffix]) suffix++;
+        // Sin partir un par sustituto (emoji): el tramo cambiado tiene que empezar y acabar en caracteres enteros.
+        if (prefix > 0 && char.IsHighSurrogate(old[prefix - 1])) prefix--;
+        if (suffix > 0 && char.IsLowSurrogate(old[old.Length - suffix])) suffix--;
+
+        if (prefix + suffix == old.Length && old.Length == text.Length)
+        {
+            TextBody.CaretIndex = Math.Clamp(caret, 0, old.Length);
+            return;
+        }
+
+        TextBody.BeginChange();
+        try
+        {
+            TextBody.Select(prefix, old.Length - prefix - suffix);
+            TextBody.SelectedText = text.Substring(prefix, text.Length - prefix - suffix);
+        }
+        finally
+        {
+            TextBody.EndChange();
+        }
         TextBody.CaretIndex = Math.Clamp(caret, 0, TextBody.Text.Length);
     }
 
