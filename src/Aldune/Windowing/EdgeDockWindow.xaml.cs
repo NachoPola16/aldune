@@ -156,6 +156,7 @@ public partial class EdgeDockWindow : Window
         {
             PollFullscreenApp();
             KeepWindowInPlace();
+            KeepStripOnTop();
             RecordDiagnostics();
         };
         _fullscreenPollTimer.Start();
@@ -638,6 +639,30 @@ public partial class EdgeDockWindow : Window
                 Dispatcher.BeginInvoke(DispatcherPriority.Background, new Action(_coordinator.RebuildDocks));
                 break;
         }
+    }
+
+    private DateTime _lastOnTopFix = DateTime.MinValue;
+
+    /// <summary>
+    /// Si sobre la tira en reposo hay una ventana que NO es de la capa superior (Firefox, Code,
+    /// WhatsApp... en los registros del portátil y del PC), el dock ha perdido su sitio entre las
+    /// siempre-encima sin que nadie se lo quitara a propósito: se vuelve a subir sin esperar a que el
+    /// ratón entre. Las que sí son de la capa superior (menú Inicio, recortes) se respetan: tapar a
+    /// esas sería peor. Antes esto solo se arreglaba al pasar el ratón por la tira.
+    /// </summary>
+    private void KeepStripOnTop()
+    {
+        if (_hwnd == IntPtr.Zero || !IsVisible || _hiddenByFullscreenApp || _fanState.IsExpanded || _dragging || _noteCount == 0) return;
+        if (DateTime.UtcNow - _lastOnTopFix < TimeSpan.FromSeconds(3)) return;
+
+        var center = RestStrip.PointToScreen(new Point(RestStrip.ActualWidth / 2, RestStrip.ActualHeight / 2));
+        var above = DockDiagnostics.RootWindowAt((int)center.X, (int)center.Y);
+        if (above == IntPtr.Zero || above == _hwnd || DockDiagnostics.IsTopmost(above)) return;
+
+        _lastOnTopFix = DateTime.UtcNow;
+        DockDiagnostics.Write(DiagnosticsCategory,
+            "una ventana normal tapa la tira (" + DockDiagnostics.Describe(above) + "): se vuelve a subir");
+        NativeMethods.EnsureTopmost(_hwnd);
     }
 
     // --- Diagnóstico de la tira que deja de verse (docs/DOCK_DIAGNOSTICS.md) -----------------------

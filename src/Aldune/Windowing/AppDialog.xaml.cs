@@ -26,6 +26,9 @@ public partial class AppDialog : Window
         MessageBoxResult defaultResult)
     {
         InitializeComponent();
+        // Sin esto, al abrirlo justo después de repintar toda la app (cambio de aspecto) se ve el cristal
+        // del WindowChrome sin pintar: el cuadro transparente y sin texto de un fotograma.
+        NativeMethods.CloakUntilFirstFrame(this);
         Title = title;
         TitleText.Text = title;
         MessageText.Text = message;
@@ -115,8 +118,11 @@ public partial class AppDialog : Window
         e.Handled = true;
     }
 
-    private void OnSourceInitialized(object? sender, EventArgs e) =>
+    private void OnSourceInitialized(object? sender, EventArgs e)
+    {
         NativeMethods.ApplyRoundedCorners(new WindowInteropHelper(this).Handle);
+        NativeMethods.SetFrameColor(this, (System.Windows.Media.Color)System.Windows.Media.ColorConverter.ConvertFromString(ThemeManager.Color("Ground")));
+    }
 
     private static string Label(MessageBoxResult choice) => choice switch
     {
