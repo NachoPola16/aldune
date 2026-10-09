@@ -421,6 +421,23 @@ multiplataforma reutilizando el formato común de sincronización.
 
 Que no se vuelva a proponer sin leer esto primero.
 
+### Sangría francesa en listas y editor de markdown renderizado — descartados (2026-10-09)
+
+Dos ideas que piden lo mismo: sustituir el `TextBox` plano por un editor con formato.
+
+- **Sangría francesa** (que la segunda línea visual de una tarea larga y sangrada quede bajo el texto y
+  no en el margen izquierdo). Un `TextBox` de WPF no sangra por párrafo. Ya funcionan Tab (sangra la
+  línea entera, glifo y texto) y que el Enter siguiente herede la sangría; no hay listas numeradas.
+  Aproximarlo metiendo saltos de línea reales ensuciaría el texto de la nota, y un editor propio
+  arriesga Ctrl+Z, las casillas clicables y el reajuste de alto.
+- **Notas vinculadas a `.md`: editar en crudo, no renderizado.** Un editor con el markdown ya compilado
+  tiene que convertirlo de vuelta a texto al guardar, y esa ida y vuelta puede reescribir el archivo
+  del usuario (espacios, `*` frente a `-`, saltos). Aldune nunca escribe sobre un archivo vinculado de
+  forma que no controla (ver la spec de notas vinculadas). Si algún día se quiere ver el resultado:
+  una vista previa de solo lectura aparte, sin tocar el editor.
+
+Se reabre solo si aparece una forma de hacerlo sin sustituir el editor.
+
 ### Notas por escritorio virtual de Windows — descartado
 
 Idea atractiva (sería algo propio de Windows que ninguna app de Mac puede copiar), pero la API de
