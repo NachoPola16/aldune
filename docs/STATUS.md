@@ -4390,3 +4390,11 @@ Publicado como **1.6.1** con todo lo de esta sección.
   `dockAlignment` en exportar/importar, ahora 34). Un `settings.json` antiguo carga como centro. Las notas se abren centradas
   en vertical aunque el dock esté en un extremo (la cascada baja; abrirla en el extremo la sacaría de pantalla).
 - Descartados en el ROADMAP: sangría francesa y editor de markdown renderizado.
+
+## Tras la 1.7.7 (sin publicar, 2026-10-10)
+
+- **Ctrl+F superpuesto**: la barra ya no es una fila (no empuja el texto); va arriba a la derecha y baja al pie si la coincidencia
+  actual queda justo debajo (`PositionFindBar`). La coincidencia actual lleva relleno fuerte y borde con la tinta de la nota
+  (se distingue en caras claras y oscuras) y las demás visibles, un relleno suave (`FindLayer`, máx. 120).
+- **Esc**: con la búsqueda abierta el primer Esc solo la cierra; el siguiente cierra la nota.
+- **Marcar una casilla con el ratón no mueve la vista ni el cursor**: se repone el scroll tras reasignar el texto y dar el foco.

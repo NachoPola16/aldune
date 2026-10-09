@@ -280,7 +280,11 @@ public partial class NoteWindow : Window
 
         PreviewKeyDown += (_, e) =>
         {
-            if (e.Key == Key.Escape) Close();
+            if (e.Key != Key.Escape) return;
+            // Con la búsqueda abierta, el primer Esc solo la cierra; otro Esc cierra la nota.
+            if (FindBar.Visibility == Visibility.Visible) CloseFindBar();
+            else Close();
+            e.Handled = true;
         };
 
         TextBody.PreviewKeyDown += OnBodyKeyDown;
@@ -955,26 +959,80 @@ public partial class NoteWindow : Window
         Dispatcher.BeginInvoke(DispatcherPriority.Loaded, new Action(PositionFindHighlight));
     }
 
-    /// <summary>Pone el resaltado sobre la coincidencia actual. Una que se parte en dos líneas se deja
-    /// sin resaltar (queda seleccionada igualmente).</summary>
+    /// <summary>Coincidencias que no son la actual, resaltadas más suave mientras estén a la vista.</summary>
+    private readonly List<Border> _findOthers = [];
+    private const int MaxFindOthers = 120;
+
+    private Brush FindInkBrush(double opacity)
+    {
+        var ink = Resources["NoteInkBrush"] as SolidColorBrush ?? Brushes.Black;
+        var brush = new SolidColorBrush(ink.Color) { Opacity = opacity };
+        brush.Freeze();
+        return brush;
+    }
+
+    /// <summary>
+    /// Pinta la coincidencia actual (relleno fuerte y borde de la tinta de la nota: se distingue sobre cualquier
+    /// cara, clara u oscura) y, más suave, las demás que estén a la vista. Una que se parte en dos líneas se
+    /// deja sin resaltar (queda seleccionada igualmente).
+    /// </summary>
     private void PositionFindHighlight()
     {
+        foreach (var other in _findOthers) FindLayer.Children.Remove(other);
+        _findOthers.Clear();
+
         if (_findCurrent < 0 || _findCurrent >= _findMatches.Count || FindBar.Visibility != Visibility.Visible)
         {
             FindHighlight.Visibility = Visibility.Collapsed;
             return;
         }
-        int start = _findMatches[_findCurrent];
-        var from = TextBody.GetRectFromCharacterIndex(start);
-        var to = TextBody.GetRectFromCharacterIndex(start + FindBox.Text.Length);
-        bool visible = !from.IsEmpty && !to.IsEmpty && Math.Abs(from.Top - to.Top) < 1 && to.Left > from.Left
-            && from.Top >= 0 && from.Bottom <= BodyHost.ActualHeight;
+
+        int length = FindBox.Text.Length;
+        bool TryRect(int start, out System.Windows.Rect rect)
+        {
+            var from = TextBody.GetRectFromCharacterIndex(start);
+            var to = TextBody.GetRectFromCharacterIndex(start + length);
+            rect = new System.Windows.Rect(from.Left, from.Top, Math.Max(0, to.Left - from.Left), from.Height);
+            return !from.IsEmpty && !to.IsEmpty && Math.Abs(from.Top - to.Top) < 1 && to.Left > from.Left
+                && from.Top >= 0 && from.Bottom <= BodyHost.ActualHeight;
+        }
+
+        var soft = FindInkBrush(0.18);
+        int added = 0;
+        for (int i = 0; i < _findMatches.Count && added < MaxFindOthers; i++)
+        {
+            if (i == _findCurrent || !TryRect(_findMatches[i], out var r)) continue;
+            var border = new Border
+            {
+                Background = soft, Width = r.Width, Height = r.Height,
+                CornerRadius = ThemeManager.Radius(3), IsHitTestVisible = false
+            };
+            Canvas.SetLeft(border, r.Left);
+            Canvas.SetTop(border, r.Top);
+            FindLayer.Children.Add(border);
+            _findOthers.Add(border);
+            added++;
+        }
+
+        bool visible = TryRect(_findMatches[_findCurrent], out var current);
         FindHighlight.Visibility = visible ? Visibility.Visible : Visibility.Collapsed;
         if (!visible) return;
-        FindHighlight.Width = to.Left - from.Left;
-        FindHighlight.Height = from.Height;
-        Canvas.SetLeft(FindHighlight, from.Left);
-        Canvas.SetTop(FindHighlight, from.Top);
+
+        FindHighlight.Background = FindInkBrush(0.38);
+        FindHighlight.BorderBrush = FindInkBrush(1);
+        FindHighlight.Width = current.Width;
+        FindHighlight.Height = current.Height;
+        Canvas.SetLeft(FindHighlight, current.Left);
+        Canvas.SetTop(FindHighlight, current.Top);
+        PositionFindBar(current);
+    }
+
+    /// <summary>La barra va arriba; si la coincidencia actual queda justo debajo de ella, baja al pie para no tapar
+    /// lo que se busca.</summary>
+    private void PositionFindBar(System.Windows.Rect match)
+    {
+        double barBottom = FindBar.ActualHeight + FindBar.Margin.Top - BodyHost.Margin.Top + 4;
+        FindBar.VerticalAlignment = match.Top < barBottom ? VerticalAlignment.Bottom : VerticalAlignment.Top;
     }
 
     private void OnFindKeyDown(object sender, KeyEventArgs e)
@@ -1086,11 +1144,18 @@ public partial class NoteWindow : Window
 
         var zone = FindCheckboxZoneAt(position);
         if (zone is not { } z) return;
+
+        // Marcar una casilla no mueve la vista: con el cursor abajo en una nota larga, WPF lo traía a la
+        // vista al reasignar el texto y al dar el foco. Se anota dónde estaba el scroll y se repone.
+        double offset = TextBody.VerticalOffset;
         if (!ToggleTask(z.GlyphIndex, fromKeyboard: false)) return;
 
         // Handled: el clic ya ha hecho su trabajo, y dejarlo pasar movería además el cursor al
         // sitio donde se pulsó, que no es lo que se pretendía al marcar una casilla.
         TextBody.Focus();
+        TextBody.ScrollToVerticalOffset(offset);
+        // El foco y el cambio de texto reajustan la vista tras el diseño: se repone otra vez al terminar.
+        Dispatcher.BeginInvoke(DispatcherPriority.Loaded, new Action(() => TextBody.ScrollToVerticalOffset(offset)));
         e.Handled = true;
     }
 
