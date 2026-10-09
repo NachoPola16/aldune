@@ -4371,3 +4371,22 @@ Publicado como **1.6.1** con todo lo de esta sección.
 - **Por qué no se veía antes**: las sondas de la 1.7.2 capturaban la nota con el crecimiento real de una sola línea y con el
   fondo claro del escritorio detrás; la franja dura 1-2 fotogramas y solo se ve con tema claro. Provocar el redimensionado
   repetido sobre negro la hace evidente.
+
+## Tras la 1.7.6 (sin publicar, 2026-10-09)
+
+- **Diálogo sin fotograma transparente** (`AppDialog`): `CloakUntilFirstFrame` + `SetFrameColor`. Salía vacío y transparente al
+  abrirlo justo después de repintar la app (cambio de aspecto), con el borde cortando los círculos de los radios.
+- **El dock se sube solo** (`KeepStripOnTop`, cada 500 ms) si una ventana que NO es de la capa superior tapa la tira
+  (Firefox, Code, WhatsApp en los logs). Las `Topmost` (Inicio, Recortes) se respetan. Se anota en el registro.
+- **`ReplaceBody`** sustituye solo el tramo cambiado (BeginChange + SelectedText): sin el destello al pulsar Enter en listas
+  con el alto fijo y sin perder Ctrl+Z. Sin verificar a 240 fps.
+- **Ctrl+F dentro de la nota** (`TextFinder` en Core, barra en la fila Auto sobre el cuerpo, resaltado propio en el lienzo).
+- **El alto elegido a mano se conserva al reabrir** (`FitHeightToContent` lo recortaba al alto del texto).
+- **Conflictos de sync**: `ConflictDiff` (primera línea distinta), confirmación al descartar uno, y **Combinar**
+  (`ConflictMerge` + `SyncService.MergeConflict`): unión de líneas sin pérdida. No hay versión base guardada, así que no cabe
+  una fusión de tres vías; la ganadora no se guarda con el conflicto (es la nota viva).
+- **Autoscroll del botón central**: `AutoScrollMath` (velocidad por reloj, curva t^1,5, soltar tras mantener lo apaga).
+- **Alineación del dock** (`DockAlignment`: centro / inicio / final a lo largo del borde; `AppSettings.DockAlignment`, campo
+  `dockAlignment` en exportar/importar, ahora 34). Un `settings.json` antiguo carga como centro. Las notas se abren centradas
+  en vertical aunque el dock esté en un extremo (la cascada baja; abrirla en el extremo la sacaría de pantalla).
+- Descartados en el ROADMAP: sangría francesa y editor de markdown renderizado.

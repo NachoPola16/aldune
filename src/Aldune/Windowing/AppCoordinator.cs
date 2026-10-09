@@ -1278,7 +1278,7 @@ public sealed class AppCoordinator
         if (window.WindowState != WindowState.Normal) window.WindowState = WindowState.Normal;
         var (left, top) = NoteCascade.Position(
             monitor.WorkArea, _settings?.DockEdge ?? EdgePosition.Right, Math.Max(1, deck.Count),
-            window.Width, window.Height, index);
+            window.Width, window.Height, index, _settings?.DockAlignment ?? DockAlignment.Center);
         SetWindowPosition(window, monitor.WorkArea, left, top);
         NativeMethods.ForceActivate(window);
     }
@@ -1303,7 +1303,8 @@ public sealed class AppCoordinator
             var window = windows[index];
             if (window.WindowState != WindowState.Normal) window.WindowState = WindowState.Normal;
 
-            var (left, top) = NoteCascade.Position(area, edge, deckSize, window.Width, window.Height, index);
+            var (left, top) = NoteCascade.Position(area, edge, deckSize, window.Width, window.Height, index,
+                _settings?.DockAlignment ?? DockAlignment.Center);
             SetWindowPosition(window, area, left, top);
         }
 

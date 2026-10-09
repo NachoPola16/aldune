@@ -1,4 +1,4 @@
-namespace Aldune.Core;
+﻿namespace Aldune.Core;
 
 /// <summary>
 /// Posición de cada nota en la disposición "Cascada junto al dock", para los cuatro cantos.
@@ -37,9 +37,12 @@ public static class NoteCascade
     /// </summary>
     public static (double Left, double Top) Position(
         WorkingArea area, EdgePosition edge, int noteCount,
-        double noteWidth, double noteHeight, int level)
+        double noteWidth, double noteHeight, int level, DockAlignment alignment = DockAlignment.Center)
     {
-        var dock = EdgeGeometry.WindowRect(area, edge, noteCount);
+        // La alineación solo mueve el dock en su borde: arriba y abajo las notas siguen su X, y en los
+        // laterales se abren centradas en vertical igual que antes (con el dock arriba o abajo del borde,
+        // abrir ahí empujaría la cascada, que baja, fuera de la pantalla).
+        var dock = EdgeGeometry.WindowRect(area, edge, noteCount, alignment);
         double centeredTop = area.Y + (area.Height - noteHeight) / 2;
         double step = StepFor(area, edge, noteCount, dock, noteWidth, noteHeight);
         double offset = level * step;

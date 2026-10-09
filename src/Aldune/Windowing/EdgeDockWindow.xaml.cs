@@ -448,7 +448,7 @@ public partial class EdgeDockWindow : Window
     /// </summary>
     private void ApplyWindowRect()
     {
-        var rect = EdgeGeometry.WindowRect(_workingArea, _edge, _noteCount);
+        var rect = EdgeGeometry.WindowRect(_workingArea, _edge, _noteCount, Alignment);
         Left = rect.X;
         Top = rect.Y;
         Width = rect.Width;
@@ -551,12 +551,12 @@ public partial class EdgeDockWindow : Window
         // y desplegarse al entrar ahí sería desplegarse por pasar el ratón sobre nada.
         // Sin notas la ventana entera es zona sensible: no hay tira que sobrevolar, y los botones
         // tienen que poder pulsarse sin desplegar nada primero.
-        var windowRect = EdgeGeometry.WindowRect(_workingArea, _edge, _noteCount);
+        var windowRect = EdgeGeometry.WindowRect(_workingArea, _edge, _noteCount, Alignment);
         bool empty = _noteCount == 0;
         bool inWindow = Contains(windowRect, cursorX, cursorY);
         bool inRest = empty
             ? inWindow
-            : Contains(EdgeGeometry.RestingVisibleRect(_workingArea, _edge, _noteCount), cursorX, cursorY);
+            : Contains(EdgeGeometry.RestingVisibleRect(_workingArea, _edge, _noteCount, Alignment), cursorX, cursorY);
 
         // La superficie desplegada se mide también plegado: sus elementos siguen colocados (solo
         // transparentes), y es donde volver al poco de cerrarse lo reabre. Se calcula una vez por tick:
@@ -609,7 +609,7 @@ public partial class EdgeDockWindow : Window
         if (_hwnd == IntPtr.Zero || !IsVisible || _hiddenByFullscreenApp || _fanState.IsExpanded || _dragging) return;
 
         var dpi = VisualTreeHelper.GetDpi(this);
-        var expected = EdgeGeometry.WindowRect(_workingArea, _edge, _noteCount);
+        var expected = EdgeGeometry.WindowRect(_workingArea, _edge, _noteCount, Alignment);
         var expectedPx = new Aldune.Core.Rect(expected.X * dpi.DpiScaleX, expected.Y * dpi.DpiScaleY,
             expected.Width * dpi.DpiScaleX, expected.Height * dpi.DpiScaleY);
         var (x, y, width, height) = NativeMethods.GetWindowRectPx(_hwnd);
@@ -667,6 +667,9 @@ public partial class EdgeDockWindow : Window
 
     // --- Diagnóstico de la tira que deja de verse (docs/DOCK_DIAGNOSTICS.md) -----------------------
 
+    /// <summary>Dónde va el dock a lo largo de su borde (Ajustes). Se lee cada vez: el dock se reconstruye al cambiarla.</summary>
+    private DockAlignment Alignment => _settings?.DockAlignment ?? DockAlignment.Center;
+
     private string DiagnosticsCategory => $"dock {_edge} {_monitorKey}";
     private string? _diagnosticState;
     private bool _diagnosticStripHidden;
@@ -707,7 +710,7 @@ public partial class EdgeDockWindow : Window
             // ¿Está la ventana donde el dock cree? El ratón se compara con la posición calculada; si la
             // ventana está en otro sitio, la tira no se ve donde debería y el abanico sale donde está.
             var dpi = VisualTreeHelper.GetDpi(this);
-            var expected = EdgeGeometry.WindowRect(_workingArea, _edge, _noteCount);
+            var expected = EdgeGeometry.WindowRect(_workingArea, _edge, _noteCount, Alignment);
             var actual = DockDiagnostics.WindowRect(_hwnd);
             int expectedX = (int)Math.Round(expected.X * dpi.DpiScaleX), expectedY = (int)Math.Round(expected.Y * dpi.DpiScaleY);
             if (Math.Abs(actual.X - expectedX) > 2 || Math.Abs(actual.Y - expectedY) > 2)
@@ -1384,7 +1387,7 @@ public partial class EdgeDockWindow : Window
     /// cuatro bordes; antes arriba/abajo usaba la ventana entera, que crece con el número de notas.
     /// </summary>
     private bool IsInsideExpandedSurface(IReadOnlyList<Aldune.Core.Rect> surfaces, double cursorX, double cursorY) =>
-        Contains(EdgeGeometry.RestingVisibleRect(_workingArea, _edge, _noteCount), cursorX, cursorY)
+        Contains(EdgeGeometry.RestingVisibleRect(_workingArea, _edge, _noteCount, Alignment), cursorX, cursorY)
         || DockHoverZone.Contains(surfaces, cursorX, cursorY, DockHoverZone.ExpandedSlop);
 
     /// <summary>Encima de una pestaña o de un control del dock, sin holgura: el dock se está usando.</summary>
@@ -2622,7 +2625,7 @@ public partial class EdgeDockWindow : Window
     {
         var (left, top) = NoteCascade.Position(
             _workingArea, _edge, Math.Max(1, _noteCount), noteWindow.Width, noteWindow.Height,
-            _coordinator.OpenNoteWindowCount);
+            _coordinator.OpenNoteWindowCount, Alignment);
 
         noteWindow.Left = Math.Clamp(
             left, _workingArea.X, Math.Max(_workingArea.X, _workingArea.X + _workingArea.Width - noteWindow.Width));

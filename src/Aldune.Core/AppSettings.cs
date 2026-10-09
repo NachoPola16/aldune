@@ -156,6 +156,10 @@ public sealed class AppSettings
     /// </summary>
     public EdgePosition DockEdge { get; set; } = EdgePosition.Right;
 
+    /// <summary>Dónde va el dock a lo largo de su borde (centro, inicio o final). Un ajuste antiguo sin el
+    /// campo carga como centro, la colocación de siempre.</summary>
+    public DockAlignment DockAlignment { get; set; } = DockAlignment.Center;
+
     /// <summary>
     /// Si las notas deben recordar su última posición en el escritorio cuando el usuario las mueve
     /// (comportamiento libre tipo post-it). Por defecto <c>true</c>. El tamaño es otro ajuste

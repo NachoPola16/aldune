@@ -778,6 +778,42 @@ public partial class SettingsWindow : Window
         AddEdgeRadio(EdgePosition.Left, Strings.EdgeLeft);
         AddEdgeRadio(EdgePosition.Top, Strings.EdgeTop);
         AddEdgeRadio(EdgePosition.Bottom, Strings.EdgeBottom);
+        PopulateAlignment();
+    }
+
+    /// <summary>Dónde va el dock a lo largo de su borde. Los extremos se llaman según el borde: en los
+    /// laterales Arriba/Abajo, y en los de arriba y abajo Izquierda/Derecha.</summary>
+    private void PopulateAlignment()
+    {
+        AlignListContainer.Children.Clear();
+        bool side = _settings.DockEdge is EdgePosition.Left or EdgePosition.Right;
+        AddAlignRadio(DockAlignment.Start, side ? Strings.EdgeTop : Strings.EdgeLeft);
+        AddAlignRadio(DockAlignment.Center, Strings.AlignCenter);
+        AddAlignRadio(DockAlignment.End, side ? Strings.EdgeBottom : Strings.EdgeRight);
+    }
+
+    private void AddAlignRadio(DockAlignment alignment, string label)
+    {
+        var radio = new RadioButton
+        {
+            GroupName = "AlignGroup",
+            Style = (Style)FindResource("MonitorRadioStyle"),
+            Tag = alignment,
+            Content = label,
+            IsChecked = _settings.DockAlignment == alignment
+        };
+        radio.Checked += OnAlignSelectionChanged;
+        AlignListContainer.Children.Add(radio);
+    }
+
+    private void OnAlignSelectionChanged(object sender, RoutedEventArgs e)
+    {
+        if (sender is RadioButton { IsChecked: true, Tag: DockAlignment alignment } && _settings.DockAlignment != alignment)
+        {
+            _settings.DockAlignment = alignment;
+            _settingsService.Save(_settings);
+            _coordinator?.RebuildDocks();
+        }
     }
 
     private void AddEdgeRadio(EdgePosition edge, string label)
@@ -801,6 +837,7 @@ public partial class SettingsWindow : Window
             _settings.DockEdge = edge;
             _settingsService.Save(_settings);
             _coordinator?.RebuildDocks();
+            PopulateAlignment(); // los extremos se llaman distinto según el borde
         }
     }
 

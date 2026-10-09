@@ -1,4 +1,4 @@
-namespace Aldune.Core;
+﻿namespace Aldune.Core;
 
 /// <summary>
 /// Geometría del dock.
@@ -256,23 +256,32 @@ public static class EdgeGeometry
         Math.Max(VisibleStripLength(area, edge, noteCount), MinContentLength)
         + TabShadowHeadroom + FooterLength + ShadowMargin * 2;
 
-    /// <summary>El rectángulo de la ventana, idéntico en reposo y desplegado.</summary>
-    public static Rect WindowRect(WorkingArea area, EdgePosition edge, int noteCount)
+    /// <summary>El rectángulo de la ventana, idéntico en reposo y desplegado. <paramref name="alignment"/>
+    /// la coloca a lo largo de su borde: centrada (lo de siempre), al inicio o al final.</summary>
+    public static Rect WindowRect(WorkingArea area, EdgePosition edge, int noteCount,
+        DockAlignment alignment = DockAlignment.Center)
     {
         double length = WindowLength(area, edge, noteCount);
+        double width = HorizontalWindowWidth(area, edge, noteCount);
+
+        // Posición de una ventana de `size` dentro de [origin, origin + available] según la alineación.
+        static double Along(double origin, double available, double size, DockAlignment alignment) => alignment switch
+        {
+            DockAlignment.Start => origin + EdgeMargin,
+            DockAlignment.End => origin + available - size - EdgeMargin,
+            _ => origin + (available - size) / 2
+        };
+
         return edge switch
         {
             EdgePosition.Top => new Rect(
-                area.X + (area.Width - HorizontalWindowWidth(area, edge, noteCount)) / 2,
-                area.Y + EdgeMargin, HorizontalWindowWidth(area, edge, noteCount), length),
+                Along(area.X, area.Width, width, alignment), area.Y + EdgeMargin, width, length),
             EdgePosition.Bottom => new Rect(
-                area.X + (area.Width - HorizontalWindowWidth(area, edge, noteCount)) / 2,
-                area.Y + area.Height - length - EdgeMargin,
-                HorizontalWindowWidth(area, edge, noteCount), length),
+                Along(area.X, area.Width, width, alignment), area.Y + area.Height - length - EdgeMargin, width, length),
             EdgePosition.Left => new Rect(
-                area.X + EdgeMargin, area.Y + (area.Height - length) / 2, WindowThickness, length),
+                area.X + EdgeMargin, Along(area.Y, area.Height, length, alignment), WindowThickness, length),
             EdgePosition.Right => new Rect(
-                area.X + area.Width - WindowThickness - EdgeMargin, area.Y + (area.Height - length) / 2, WindowThickness, length),
+                area.X + area.Width - WindowThickness - EdgeMargin, Along(area.Y, area.Height, length, alignment), WindowThickness, length),
             _ => throw new ArgumentOutOfRangeException(nameof(edge))
         };
     }
@@ -293,9 +302,10 @@ public static class EdgeGeometry
     /// px en cada dirección, sin salirse de la ventana: sigue sin cubrir el hueco transparente, pero
     /// perdona la puntería.
     /// </summary>
-    public static Rect RestingVisibleRect(WorkingArea area, EdgePosition edge, int noteCount)
+    public static Rect RestingVisibleRect(WorkingArea area, EdgePosition edge, int noteCount,
+        DockAlignment alignment = DockAlignment.Center)
     {
-        var window = WindowRect(area, edge, noteCount);
+        var window = WindowRect(area, edge, noteCount, alignment);
         double windowLength = WindowLength(area, edge, noteCount);
 
         // Contra los guiones que se dibujan de verdad, no contra el número de notas: si hay más

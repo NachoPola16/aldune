@@ -365,13 +365,13 @@ public class ConfigExportImportTests
             "appearance", "aspectColors", "squareCorners", "syncSignal", "uniformNoteColor", "noteTheme",
             "customThemes", "newNoteTone", "colorAssignment", "fixedNoteColor",
             "language", "simplifiedMode", "hotkeyEnabled", "hotkeyModifiers", "hotkeyKey",
-            "recentHotkeyEnabled", "recentHotkeyModifiers", "recentHotkeyKey", "dockEdge", "dockView",
+            "recentHotkeyEnabled", "recentHotkeyModifiers", "recentHotkeyKey", "dockEdge", "dockAlignment", "dockView",
             "keepDockOpen", "showNotePreview", "hideOnFullscreen", "trackpadGestures", "moveCompletedTasksToEnd",
             "autoHideCompletedTasks", "autoHideDelayValue", "autoHideDelayUnit", "trashRetentionDays",
             "rememberNotePositions", "rememberNoteSizes", "checkForUpdates", "reminderIncludesTasks",
         ];
 
-        Assert.Equal(33, expected.Length);
+        Assert.Equal(34, expected.Length);
         Assert.Equal(expected, ConfigFields.All.Select(f => f.Id).ToArray());
     }
 

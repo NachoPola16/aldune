@@ -913,6 +913,10 @@ public static class Strings
         "An welchem Rand das Aldune-Dock positioniert ist.",
         "Sur quel bord se trouve le dock Aldune.",
         "Em qual borda o dock do Aldune fica posicionado.");
+    public static string AlignSectionTitle => T("Position along the edge", "Posición a lo largo del borde",
+        "Position entlang des Rands", "Position le long du bord", "Posição ao longo da borda");
+    public static string AlignCenter => T("Centered", "Centrado",
+        "Zentriert", "Centré", "Centralizado");
     public static string EdgeRight => T("Right", "Derecha",
         "Rechts", "Droite", "Direita");
     public static string EdgeLeft => T("Left", "Izquierda",
