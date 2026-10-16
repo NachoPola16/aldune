@@ -4440,7 +4440,7 @@ Publicado como **1.6.1** con todo lo de esta sección.
     llevaba el cursor hasta donde estaba el glifo. Ahora se queda, como al ponerlas (`TaskLines`, `BulletLines`).
   - `tests/Aldune.SyncServer.Tests` (nuevo) y timeout de los transportes configurable: ver la ronda 1.
 
-## Sin versión aún (2026-10-17)
+## 1.7.10 (2026-10-17)
 
 - **Ctrl+F: la coincidencia no se veía en una nota larga** (1.7.8/1.7.9; avisado por el usuario con captura: la barra decía
   1/14, la vista estaba unas 18 líneas por encima de la palabra y no había resaltado). `ScrollToLine` se quedaba corto.
