@@ -159,7 +159,9 @@ public static class TaskLines
             // Quitar: fuera el glifo y, si lo tiene, el espacio que lo sigue (ver PrefixLength).
             int prefixLength = PrefixLength(line, glyph);
             var stripped = line.Remove(glyph, prefixLength);
-            int caretInLine = Math.Max(caret - start - prefixLength, glyph);
+            // Un cursor delante de la casilla (en la sangría o antes de la flecha) se queda donde estaba, como al
+            // ponerla; solo lo que va detrás se desplaza con el texto.
+            int caretInLine = caret - start <= glyph ? caret - start : Math.Max(caret - start - prefixLength, glyph);
             return (string.Concat(text.AsSpan(0, start), stripped, text.AsSpan(end)), start + caretInLine);
         }
 

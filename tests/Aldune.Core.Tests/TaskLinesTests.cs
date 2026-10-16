@@ -204,6 +204,32 @@ public class TaskLinesTests
         Assert.Equal(9, caret);
     }
 
+    [Theory]
+    // Cursor en la sangría o delante de la flecha: quitar la casilla no lo mueve (antes saltaba hasta el glifo).
+    [InlineData("    ☐ x", 1, "    x", 1)]
+    [InlineData("→ ☐ x", 0, "→ x", 0)]
+    [InlineData("→ ☐ x", 1, "→ x", 1)]
+    // Dentro del prefijo: va a donde empezaba la casilla.
+    [InlineData("☐ x", 1, "x", 0)]
+    public void ToggleTaskLineAt_RemovingTheBox_DoesNotPushACaretThatWasBeforeIt(
+        string line, int caret, string expectedText, int expectedCaret)
+    {
+        var (text, newCaret) = TaskLines.ToggleTaskLineAt(line, caret);
+
+        Assert.Equal(expectedText, text);
+        Assert.Equal(expectedCaret, newCaret);
+    }
+
+    [Fact]
+    public void ToggleTaskLineAt_PutThenRemove_LeavesACaretInTheIndentWhereItWas()
+    {
+        var (added, caretAfterAdding) = TaskLines.ToggleTaskLineAt("    x", caret: 2);
+        var (removed, caretAfterRemoving) = TaskLines.ToggleTaskLineAt(added, caretAfterAdding);
+
+        Assert.Equal("    x", removed);
+        Assert.Equal(2, caretAfterRemoving);
+    }
+
     [Fact]
     public void ArrowFollowedByABox_IsATask()
     {
