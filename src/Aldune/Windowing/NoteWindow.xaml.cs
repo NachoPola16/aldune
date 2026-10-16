@@ -383,22 +383,28 @@ public partial class NoteWindow : Window
         // AppCoordinator.TryRestorePlacement según cada ajuste.
         if (_settings is not { } settings || !(settings.RememberNotePositions || settings.NoteSizesRemembered)) return;
 
-        var monitorKey = GetCurrentMonitorKey();
-        if (monitorKey is null) return;
+        var monitor = MonitorLookup.MonitorAt(Left, Top, Width, Height, MonitorEnumerator.EnumerateMonitors());
+        if (monitor is not { } m) return;
 
-        _repository.SavePlacement(_note.Id, monitorKey, Left, Top, Width, Height);
-        _placementMonitorKey = monitorKey;
+        // En disco va la clave estable de la pantalla (ver PlacementKeys); la fila con el nombre
+        // antiguo, si la había, se borra para que otra pantalla que acabe llamándose igual no la herede.
+        _repository.SavePlacement(_note.Id, PlacementKeys.StorageKey(m), Left, Top, Width, Height, _hasManualSize);
+        if (PlacementKeys.LegacyKey(m) is { } legacy) _repository.DeletePlacement(_note.Id, legacy);
+        _placementMonitorKey = m.DeviceName;
     }
 
     /// <summary>Pone solo el tamaño recordado, dejando la posición para quien coloque la nota (el dock o la
     /// cascada). Marcado como automático por la misma razón que <see cref="ApplyPlacement"/>.</summary>
-    internal void ApplySize(double width, double height)
+    internal void ApplySize(double width, double height, bool manualHeight = false)
     {
         _isAutoResizing = true;
         Width = width;
         Height = height;
         _isAutoResizing = false;
         _sizeRestored = true;
+        // Un alto fijado a mano se respeta aunque sea menor que el texto (con scroll); solo el alto
+        // mayor que el texto se deducía antes, y encoger la nota se perdía al reabrirla.
+        if (manualHeight) _hasManualSize = true;
     }
 
     /// <summary>
@@ -410,7 +416,7 @@ public partial class NoteWindow : Window
     /// lo lea como un arrastre del usuario y congele el ajuste de alto para el resto de la sesión: ese
     /// tamaño es el de la sesión anterior, no una decisión de ahora.
     /// </summary>
-    internal void ApplyPlacement(double left, double top, double width, double height)
+    internal void ApplyPlacement(double left, double top, double width, double height, bool manualHeight = false)
     {
         _isAutoResizing = true;
         Left = left;
@@ -419,6 +425,7 @@ public partial class NoteWindow : Window
         Height = height;
         _isAutoResizing = false;
         _sizeRestored = true;
+        if (manualHeight) _hasManualSize = true;
     }
 
     /// <summary>

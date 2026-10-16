@@ -876,13 +876,13 @@ public sealed class NotesRepository
     /// sola): una nota puede recordar una posición distinta por cada pantalla en la que se ha
     /// dejado alguna vez.
     /// </summary>
-    public void SavePlacement(Guid noteId, string monitorKey, double left, double top, double width, double height)
+    public void SavePlacement(Guid noteId, string monitorKey, double left, double top, double width, double height, bool manualHeight = false)
     {
         using var connection = _database.OpenConnection();
         using var command = connection.CreateCommand();
         command.CommandText = """
-            INSERT OR REPLACE INTO NotePlacement (NoteId, MonitorKey, Left, Top, Width, Height)
-            VALUES ($noteId, $monitorKey, $left, $top, $width, $height);
+            INSERT OR REPLACE INTO NotePlacement (NoteId, MonitorKey, Left, Top, Width, Height, ManualHeight)
+            VALUES ($noteId, $monitorKey, $left, $top, $width, $height, $manualHeight);
             """;
         command.Parameters.AddWithValue("$noteId", noteId.ToString());
         command.Parameters.AddWithValue("$monitorKey", monitorKey);
@@ -890,6 +890,18 @@ public sealed class NotesRepository
         command.Parameters.AddWithValue("$top", top);
         command.Parameters.AddWithValue("$width", width);
         command.Parameters.AddWithValue("$height", height);
+        command.Parameters.AddWithValue("$manualHeight", manualHeight ? 1 : 0);
+        command.ExecuteNonQuery();
+    }
+
+    /// <summary>Borra lo guardado de una nota en una pantalla (la fila con la clave antigua, al migrarla).</summary>
+    public void DeletePlacement(Guid noteId, string monitorKey)
+    {
+        using var connection = _database.OpenConnection();
+        using var command = connection.CreateCommand();
+        command.CommandText = "DELETE FROM NotePlacement WHERE NoteId = $noteId AND MonitorKey = $monitorKey;";
+        command.Parameters.AddWithValue("$noteId", noteId.ToString());
+        command.Parameters.AddWithValue("$monitorKey", monitorKey);
         command.ExecuteNonQuery();
     }
 
@@ -898,7 +910,7 @@ public sealed class NotesRepository
         using var connection = _database.OpenConnection();
         using var command = connection.CreateCommand();
         command.CommandText = """
-            SELECT NoteId, MonitorKey, Left, Top, Width, Height FROM NotePlacement
+            SELECT NoteId, MonitorKey, Left, Top, Width, Height, ManualHeight FROM NotePlacement
             WHERE NoteId = $noteId AND MonitorKey = $monitorKey;
             """;
         command.Parameters.AddWithValue("$noteId", noteId.ToString());
@@ -913,7 +925,8 @@ public sealed class NotesRepository
                 reader.GetDouble(reader.GetOrdinal("Left")),
                 reader.GetDouble(reader.GetOrdinal("Top")),
                 reader.GetDouble(reader.GetOrdinal("Width")),
-                reader.GetDouble(reader.GetOrdinal("Height"))
+                reader.GetDouble(reader.GetOrdinal("Height")),
+                reader.GetInt64(reader.GetOrdinal("ManualHeight")) != 0
             );
         }
 

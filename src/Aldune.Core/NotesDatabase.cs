@@ -23,6 +23,7 @@ public sealed class NotesDatabase
     {
         using var connection = OpenConnection();
         DropOutdatedNotePlacementTable(connection);
+        AddManualHeightColumn(connection);
 
         using var command = connection.CreateCommand();
         command.CommandText = """
@@ -50,6 +51,7 @@ public sealed class NotesDatabase
                 Top REAL NOT NULL,
                 Width REAL NOT NULL,
                 Height REAL NOT NULL,
+                ManualHeight INTEGER NOT NULL DEFAULT 0,
                 PRIMARY KEY (NoteId, MonitorKey)
             );
 
@@ -204,5 +206,25 @@ public sealed class NotesDatabase
         using var drop = connection.CreateCommand();
         drop.CommandText = "DROP TABLE IF EXISTS NotePlacement;";
         drop.ExecuteNonQuery();
+    }
+
+    /// <summary>
+    /// <c>ManualHeight</c> llegó después (1.7.9). Se añade con ALTER en vez de recrear la tabla: aquí sí
+    /// merece conservar las posiciones y tamaños ya guardados. Lo ya guardado queda como alto automático,
+    /// que es lo que se hacía hasta ahora.
+    /// </summary>
+    private static void AddManualHeightColumn(SqliteConnection connection)
+    {
+        using var check = connection.CreateCommand();
+        check.CommandText = "SELECT COUNT(*) FROM pragma_table_info('NotePlacement') WHERE name = 'ManualHeight';";
+        // Si la tabla aún no existe no hay nada que añadir: CREATE TABLE la crea ya con la columna.
+        using var exists = connection.CreateCommand();
+        exists.CommandText = "SELECT COUNT(*) FROM sqlite_master WHERE type = 'table' AND name = 'NotePlacement';";
+        if (Convert.ToInt64(exists.ExecuteScalar()!) == 0) return;
+        if (Convert.ToInt64(check.ExecuteScalar()!) > 0) return;
+
+        using var alter = connection.CreateCommand();
+        alter.CommandText = "ALTER TABLE NotePlacement ADD COLUMN ManualHeight INTEGER NOT NULL DEFAULT 0;";
+        alter.ExecuteNonQuery();
     }
 }

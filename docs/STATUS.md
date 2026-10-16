@@ -3693,8 +3693,8 @@ la opción recomendada. Las sondas quedaron fuera del repositorio.
     (250 ms si el canto linda con otra pantalla o con una barra de tareas oculta, donde empujar no
     cuenta). Pasar por la tira a más de 1,5 DIP/ms reinicia la espera.
   - Cerrar: a los 100 ms si no se llegó a pasar por una pestaña o un botón (una apertura sin querer se
-    va enseguida), a los 400 ms si sí. Tras un cierre "usado", volver en 400 ms a donde estaba el
-    abanico lo reabre sin ir al canto.
+    va enseguida), a los 400 ms si sí. (La «ventana de recuperación» —volver en 400 ms a donde estaba el
+    abanico lo reabría sin ir al canto— se quitó después: reabría el dock sobre un hueco vacío.)
   - Menús, márgenes de cortesía, arrastres y crear una nota llaman a `Hold()`: cuentan como uso, así que
     al soltarlos se espera el cierre largo (antes, tras elegir un color en el menú, 90 ms).
 - **`DockHoverZone` (Core)**: la superficie desplegada es pestañas visibles + botonera + scroll con 24 px
@@ -4398,3 +4398,17 @@ Publicado como **1.6.1** con todo lo de esta sección.
   (se distingue en caras claras y oscuras) y las demás visibles, un relleno suave (`FindLayer`, máx. 120).
 - **Esc**: con la búsqueda abierta el primer Esc solo la cierra; el siguiente cierra la nota.
 - **Marcar una casilla con el ratón no mueve la vista ni el cursor**: se repone el scroll tras reasignar el texto y dar el foco.
+
+## Sin versión aún (2026-10-16)
+
+- **El dock ya no se reabre al volver a donde estaba el abanico** tras plegarse: se quitó la «ventana de
+  recuperación» de 400 ms de `DockHoverPolicy`. Para abrirlo hay que volver a la tira del canto.
+- **Una nota encogida a mano por debajo de su texto conserva el alto al reabrirla.** Antes solo se
+  conservaba un alto mayor que el texto; el menor volvía al alto del texto (medido con sonda: 200 → 700).
+  `NotePlacement` gana `ManualHeight` (columna añadida con `ALTER`, sin perder lo guardado; lo antiguo
+  cuenta como automático). «Restaurar tamaño» lo desmarca.
+- **Posición y tamaño de la nota por pantalla estable.** Se guardaban por `DeviceName` (`\.\DISPLAYn`), que
+  Windows renumera al apagar y encender pantallas; ahora la clave en disco es `MonitorInfo.StableId`
+  (`PlacementKeys`, con el nombre de respaldo si no hay id). Lo guardado antes se sigue encontrando por
+  nombre y, al cerrar la nota, pasa a la clave estable y se borra la antigua. El resto de la app localiza
+  monitores por `DeviceName` como antes. Verificado con sonda en el monitor real.

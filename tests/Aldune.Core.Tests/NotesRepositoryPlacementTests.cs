@@ -43,6 +43,79 @@ public class NotesRepositoryPlacementTests : IDisposable
     }
 
     [Fact]
+    public void SavePlacement_WithoutTheFlag_IsNotAManualHeight()
+    {
+        var note = _sut.Create("hola", "#F5E3B3", "primary");
+        _sut.SavePlacement(note.Id, "\\\\.\\DISPLAY1", 120, 80, 300, 320);
+
+        Assert.False(_sut.GetPlacement(note.Id, "\\\\.\\DISPLAY1")!.ManualHeight);
+    }
+
+    [Fact]
+    public void SavePlacement_RemembersWhetherTheHeightWasSetByHand()
+    {
+        // Una nota encogida a mano por debajo de su texto no se distingue por el alto solo de una
+        // que el ajuste automático dejó así: hace falta la marca para no devolverla al alto del texto.
+        var note = _sut.Create("hola", "#F5E3B3", "primary");
+        _sut.SavePlacement(note.Id, "\\\\.\\DISPLAY1", 120, 80, 300, 200, manualHeight: true);
+
+        Assert.True(_sut.GetPlacement(note.Id, "\\\\.\\DISPLAY1")!.ManualHeight);
+
+        _sut.SavePlacement(note.Id, "\\\\.\\DISPLAY1", 120, 80, 300, 200, manualHeight: false);
+        Assert.False(_sut.GetPlacement(note.Id, "\\\\.\\DISPLAY1")!.ManualHeight);
+    }
+
+    [Fact]
+    public void OpeningADatabaseWithoutTheColumn_KeepsThePlacements()
+    {
+        // Una base de datos de la 1.7.8 no tiene ManualHeight: se añade sin tirar lo guardado.
+        var path = Path.Combine(Path.GetTempPath(), $"aldune-placement-old-{Guid.NewGuid()}.db");
+        var id = Guid.NewGuid();
+        try
+        {
+            var cs = new SqliteConnectionStringBuilder { DataSource = path }.ToString();
+            using (var old = new SqliteConnection(cs))
+            {
+                old.Open();
+                using var create = old.CreateCommand();
+                create.CommandText = """
+                    CREATE TABLE NotePlacement (
+                        NoteId TEXT NOT NULL, MonitorKey TEXT NOT NULL,
+                        Left REAL NOT NULL, Top REAL NOT NULL, Width REAL NOT NULL, Height REAL NOT NULL,
+                        PRIMARY KEY (NoteId, MonitorKey));
+                    INSERT INTO NotePlacement VALUES ('%ID%', 'D1', 10, 20, 300, 400);
+                    """.Replace("%ID%", id.ToString());
+                create.ExecuteNonQuery();
+            }
+
+            var repo = new NotesRepository(new NotesDatabase(path), new ContentCipher(new byte[32]));
+            var placement = repo.GetPlacement(id, "D1");
+
+            Assert.NotNull(placement);
+            Assert.Equal(400, placement!.Height);
+            Assert.False(placement.ManualHeight);
+        }
+        finally
+        {
+            SqliteConnection.ClearAllPools();
+            if (File.Exists(path)) File.Delete(path);
+        }
+    }
+
+    [Fact]
+    public void DeletePlacement_RemovesOnlyThatMonitorsRow()
+    {
+        var note = _sut.Create("hola", "#F5E3B3", "primary");
+        _sut.SavePlacement(note.Id, "A", 1, 2, 300, 320);
+        _sut.SavePlacement(note.Id, "B", 3, 4, 300, 320);
+
+        _sut.DeletePlacement(note.Id, "A");
+
+        Assert.Null(_sut.GetPlacement(note.Id, "A"));
+        Assert.NotNull(_sut.GetPlacement(note.Id, "B"));
+    }
+
+    [Fact]
     public void GetPlacement_ForADifferentMonitor_ReturnsNull()
     {
         var note = _sut.Create("hola", "#F5E3B3", "primary");

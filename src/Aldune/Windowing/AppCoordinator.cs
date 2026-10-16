@@ -613,7 +613,16 @@ public sealed class AppCoordinator
         bool sizes = _settings.NoteSizesRemembered;
         if (!positions && !sizes) return false;
 
-        var placement = _repository.GetPlacement(noteId, monitorKey);
+        // monitorKey es el nombre de la pantalla (así circula por la app); en disco la clave es la
+        // estable, con el nombre como respaldo para lo guardado antes de usarla.
+        var targetMonitor = MonitorLookup.ForDeviceName(monitorKey, MonitorEnumerator.EnumerateMonitors());
+        IReadOnlyList<string> keys = targetMonitor is { } tm ? PlacementKeys.LookupKeys(tm) : [monitorKey];
+        NotePlacement? placement = null;
+        foreach (var key in keys)
+        {
+            placement = _repository.GetPlacement(noteId, key);
+            if (placement is not null) break;
+        }
         if (placement is null) return false;
 
         // Posición y tamaño son ajustes separados: lo que no se recuerda se queda como lo deja la ventana
@@ -623,7 +632,7 @@ public sealed class AppCoordinator
 
         if (!positions)
         {
-            noteWindow.ApplySize(width, height);
+            noteWindow.ApplySize(width, height, sizes && placement.ManualHeight);
             return false;
         }
 
@@ -633,7 +642,7 @@ public sealed class AppCoordinator
             return false;
         }
 
-        noteWindow.ApplyPlacement(placement.Left, placement.Top, width, height);
+        noteWindow.ApplyPlacement(placement.Left, placement.Top, width, height, sizes && placement.ManualHeight);
         return true;
     }
 
