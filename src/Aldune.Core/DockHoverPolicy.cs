@@ -52,9 +52,6 @@ public sealed record DockHoverTuning(TimeSpan RestDwell, bool EdgePressOpens)
     /// <summary>Cierre tras haber pasado por una pestaña o un botón: perdona pasarse y temblores.</summary>
     public static readonly TimeSpan EngagedCloseDelay = TimeSpan.FromMilliseconds(400);
 
-    /// <summary>Tras cerrarse en uso, volver a donde estaba el abanico lo reabre sin ir al canto.</summary>
-    public static readonly TimeSpan RecoverWindow = TimeSpan.FromMilliseconds(400);
-
     /// <summary>
     /// Por encima de esta velocidad (DIP/ms) el cursor va de paso: la espera en la tira vuelve a
     /// empezar. 1,5 DIP/ms son 75 DIP entre dos sondeos de 50 ms.
@@ -83,7 +80,6 @@ public sealed class DockHoverPolicy
     private TimeSpan? _dwellStart;
     private TimeSpan? _outsideSince;
     private bool _engaged;
-    private TimeSpan? _recoverUntil;
     private bool _pressedInside;
 
     public DockHoverPolicy(DockHoverTuning tuning) => _tuning = tuning;
@@ -112,7 +108,6 @@ public sealed class DockHoverPolicy
         _engaged = true;
         _outsideSince = null;
         _dwellStart = null;
-        _recoverUntil = null;
         _last = null;
         IsPointerInside = true;
     }
@@ -123,7 +118,6 @@ public sealed class DockHoverPolicy
         _engaged = false;
         _outsideSince = null;
         _dwellStart = null;
-        _recoverUntil = null;
         IsPointerInside = false;
     }
 
@@ -145,7 +139,6 @@ public sealed class DockHoverPolicy
         var delay = _engaged ? DockHoverTuning.EngagedCloseDelay : DockHoverTuning.QuickCloseDelay;
         if (sample.Time - _outsideSince < delay) return DockHoverDecision.None;
 
-        _recoverUntil = _engaged ? sample.Time + DockHoverTuning.RecoverWindow : null;
         _engaged = false;
         _outsideSince = null;
         return DockHoverDecision.Close;
@@ -156,18 +149,10 @@ public sealed class DockHoverPolicy
         _outsideSince = null;
         IsPointerInside = false;
 
-        if (_recoverUntil is { } until && sample.Time > until) _recoverUntil = null;
-
         if (sample.ButtonDown)
         {
             _dwellStart = null;
             return DockHoverDecision.None;
-        }
-
-        if (_recoverUntil is not null && sample.InExpandedZone)
-        {
-            _recoverUntil = null;
-            return Open(engaged: true);
         }
 
         if (!sample.InRestZone)

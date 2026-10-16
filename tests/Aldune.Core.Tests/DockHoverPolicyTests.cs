@@ -140,26 +140,18 @@ public class DockHoverPolicyTests
     }
 
     [Fact]
-    public void ComingBackShortlyAfterClosing_ReopensWithoutGoingBackToTheEdge()
+    public void ComingBackAfterClosing_NeedsTheStripAgain()
     {
+        // Donde estaba el abanico ya no hay nada una vez plegado: volver ahí no puede reabrirlo,
+        // ni al instante ni "al poco" (antes había una ventana de 400 ms que lo hacía).
         var policy = Opened(DockHoverTuning.PhysicalEdge, engaged: true);
         var (_, closedAt) = Run(policy, 100, 2000, t => Sample(t, true));
-        var reopen = policy.Update(Sample(closedAt + 300, false, zone: true));
-        Assert.Equal(DockHoverDecision.Open, reopen);
+        foreach (int after in new[] { Tick, 100, 300, 400, 800 })
+            Assert.Equal(DockHoverDecision.None, policy.Update(Sample(closedAt + after, false, zone: true)));
     }
 
     [Fact]
-    public void ComingBackLongAfterClosing_NeedsTheStripAgain()
-    {
-        var policy = Opened(DockHoverTuning.PhysicalEdge, engaged: true);
-        var (_, closedAt) = Run(policy, 100, 2000, t => Sample(t, true));
-        int late = closedAt + (int)DockHoverTuning.RecoverWindow.TotalMilliseconds + Tick;
-        Assert.Equal(DockHoverDecision.None, policy.Update(Sample(late, false, zone: true)));
-        Assert.Equal(DockHoverDecision.None, policy.Update(Sample(late + Tick, false, zone: true)));
-    }
-
-    [Fact]
-    public void AnAccidentalOpening_IsNotRecoverable()
+    public void AnAccidentalOpening_DoesNotReopenEither()
     {
         var policy = Opened(DockHoverTuning.PhysicalEdge, engaged: false);
         var (_, closedAt) = Run(policy, 100, 2000, t => Sample(t, true));
@@ -197,7 +189,7 @@ public class DockHoverPolicyTests
     }
 
     [Fact]
-    public void ExternallyCollapsed_ForgetsUseAndRecovery()
+    public void ExternallyCollapsed_ForgetsUse()
     {
         var policy = Opened(DockHoverTuning.PhysicalEdge, engaged: true);
         policy.Collapsed();

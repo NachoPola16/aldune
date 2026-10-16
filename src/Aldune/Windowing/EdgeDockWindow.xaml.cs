@@ -558,8 +558,8 @@ public partial class EdgeDockWindow : Window
             ? inWindow
             : Contains(EdgeGeometry.RestingVisibleRect(_workingArea, _edge, _noteCount, Alignment), cursorX, cursorY);
 
-        // La superficie desplegada se mide también plegado: sus elementos siguen colocados (solo
-        // transparentes), y es donde volver al poco de cerrarse lo reabre. Se calcula una vez por tick:
+        // La superficie desplegada se mide también plegado (sus elementos siguen colocados, solo
+        // transparentes), aunque plegado ya no abre nada: la política exige volver a la tira. Se calcula una vez por tick:
         // cada pestaña cuesta un TranslatePoint, y con muchas notas se notaba hacerlo dos veces.
         List<Aldune.Core.Rect> surfaces = empty && !_fanState.IsExpanded ? [] : ExpandedSurfaces().ToList();
         var sample = new DockHoverSample(
