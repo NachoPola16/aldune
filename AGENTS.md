@@ -13,7 +13,8 @@ notas como ventanas propias, sincronización opcional cifrada de extremo a extre
   Todo lo que se pueda probar va aquí.
 - `src/Aldune`: la app WPF (`Windowing/`, `Interop/` para Win32, `Resources/Strings.cs`).
 - `src/Aldune.SyncServer`: servidor de sync (ASP.NET Core minimal API, Docker).
-- `tests/Aldune.Core.Tests`: xUnit. `tests/Aldune.Ui.SmokeTests`: prueba de UI con ventanas reales.
+- `tests/Aldune.Core.Tests`: xUnit. `tests/Aldune.SyncServer.Tests`: el servidor de sync con WebApplicationFactory.
+  `tests/Aldune.Ui.SmokeTests`: prueba de UI con ventanas reales.
 
 Antes de un cambio grande, leer `docs/STATUS.md` (qué hay hecho y por qué), `docs/ROADMAP.md` (qué se
 descartó y por qué) y la especificación de `docs/superpowers/specs/` que toque. Si el cambio toca el

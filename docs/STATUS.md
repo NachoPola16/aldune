@@ -4421,7 +4421,8 @@ Publicado como **1.6.1** con todo lo de esta sección.
     Reproducido con un test (`SyncServiceFailureTests`, servidor local que responde HTML). El timeout no tiene
     test propio: esperaría los 20 s del cliente.
   - **Servidor de sync:** el `PUT` comprobaba la versión y escribía sin exclusión, y dos dispositivos subiendo la
-    misma nota a la vez podían dejar la versión vieja encima de la nueva. Ahora van en serie (`putGate`). Sin test
-    automático (una carrera no se prueba de forma fiable).
+    misma nota a la vez podían dejar la versión vieja encima de la nueva. Ahora van en serie (`putGate`).
+    Cubierto por `tests/Aldune.SyncServer.Tests` (WebApplicationFactory): 40 rondas de 12 PUT simultáneos; sin el
+    semáforo falla en cada ejecución. El mismo proyecto prueba el 401, el 413, el 400 por id y la versión vieja.
   - Revisados sin hallazgos: archivos vinculados (`LinkedFileService`), comparación de tokens (tiempo constante),
     los demás hilos de fondo (vinculados, copias, pantallas).
