@@ -70,7 +70,8 @@ public static class BulletLines
         {
             int prefixLength = PrefixLength(line, glyph);
             var stripped = line.Remove(glyph, prefixLength);
-            int caretInLine = Math.Max(caret - start - prefixLength, glyph);
+            // Un cursor en la sangría se queda donde estaba, como al poner la flecha (mismo arreglo que en TaskLines).
+            int caretInLine = caret - start <= glyph ? caret - start : Math.Max(caret - start - prefixLength, glyph);
             return (string.Concat(text.AsSpan(0, start), stripped, text.AsSpan(end)), start + caretInLine);
         }
 

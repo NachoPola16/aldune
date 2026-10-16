@@ -206,4 +206,18 @@ public class BulletLinesTests
     {
         Assert.Equal(expected, BulletLines.IsEmptyBulletLine(line));
     }
+
+    [Theory]
+    // Cursor en la sangría: quitar la flecha no lo mueve (antes saltaba hasta el glifo), igual que al ponerla.
+    [InlineData("    → x", 1, "    x", 1)]
+    [InlineData("  → ☐ x", 0, "  ☐ x", 0)]
+    [InlineData("→ x", 1, "x", 0)]
+    public void ToggleBulletLineAt_RemovingTheArrow_DoesNotPushACaretThatWasBeforeIt(
+        string line, int caret, string expectedText, int expectedCaret)
+    {
+        var (text, newCaret) = BulletLines.ToggleBulletLineAt(line, caret);
+
+        Assert.Equal(expectedText, text);
+        Assert.Equal(expectedCaret, newCaret);
+    }
 }
