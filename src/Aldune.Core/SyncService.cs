@@ -354,9 +354,17 @@ public sealed class SyncService
                 HandleUnsignedTombstones(classified.UnsignedTombstones, remote, scopedIds, localOnly, transport);
 
                 var deviceId = EnsureDeviceId();
-                var localNotes = _repository.GetAllForSync()
+                var allNotes = _repository.GetAllForSync();
+                var localNotes = allNotes
                     .Where(note => SyncScopeFilter.Includes(note, _settings, localOnly))
                     .ToDictionary(note => note.Id);
+                // Con alcance por etiqueta, una nota que perdió aquí la etiqueta sale del lado local, pero su versión
+                // anterior (aún etiquetada) sigue en el almacén y sí entra en el remoto. Sin esto se tomaba por una
+                // nota que falta y se aplicaba encima, deshaciendo lo editado aquí después.
+                var leftTheTag = _settings.SyncScope == SyncScopeKind.Tag
+                    ? allNotes.Where(note => !localOnly.Contains(note.Id) && !localNotes.ContainsKey(note.Id))
+                        .ToDictionary(note => note.Id, note => note.UpdatedAt)
+                    : new Dictionary<Guid, DateTimeOffset>();
                 var localTombstones = _repository.GetSyncTombstones()
                     .Where(tombstone => scopedIds is null || scopedIds.Contains(tombstone.NoteId))
                     .ToDictionary(item => item.NoteId);
@@ -381,6 +389,9 @@ public sealed class SyncService
 
                     if (!hasLocal)
                     {
+                        // Lo remoto solo gana si es más reciente: así sigue llegando que otro equipo la etiquete después.
+                        if (leftTheTag.TryGetValue(id, out var editedHere) && editedHere > remoteObject!.Envelope.UpdatedAt)
+                            continue;
                         ApplyRemote(remoteObject!, key, ref downloaded, ref tombstones);
                         Settle(id, remoteObject!.Envelope);
                         continue;

@@ -667,6 +667,68 @@ public sealed class SyncConflictTests : IDisposable
     }
 
     [Fact]
+    public void TagScope_RemovingTheTagHere_DoesNotRevertTheNoteToTheStoreVersion()
+    {
+        // Con alcance por etiqueta, la nota que pierde la etiqueta sale del lado local pero su versión vieja
+        // (aún etiquetada) sigue en el almacén y sí entra en el lado remoto: la sync la tomaba por una nota
+        // nueva y la aplicaba encima, deshaciendo la edición y devolviéndole la etiqueta.
+        UseTagScope("Trabajo");
+        var note = _deviceA.Repository.Create("original", "#EBD38B", "primary");
+        _deviceA.Repository.SetTags(note.Id, new[] { "Trabajo" });
+        ShareKeyAndSynchronizeInitialNote(note.Id);
+        Thread.Sleep(20);
+
+        _deviceB.Repository.UpdateText(note.Id, "editada en B");
+        _deviceB.Repository.SetTags(note.Id, Array.Empty<string>());
+        var result = _deviceB.Sync.Synchronize();
+
+        Assert.True(result.Succeeded, result.Error);
+        var kept = _deviceB.Repository.GetById(note.Id)!;
+        Assert.Equal("editada en B", kept.Text);
+        Assert.Empty(kept.Tags);
+    }
+
+    [Fact]
+    public void TagScope_AnOlderRemoteDeletion_DoesNotDeleteANoteThatLeftTheTagLater()
+    {
+        UseTagScope("Trabajo");
+        var note = _deviceA.Repository.Create("original", "#EBD38B", "primary");
+        _deviceA.Repository.SetTags(note.Id, new[] { "Trabajo" });
+        ShareKeyAndSynchronizeInitialNote(note.Id);
+
+        Assert.True(_deviceA.Repository.Delete(note.Id));
+        Assert.True(_deviceA.Sync.Synchronize().Succeeded);
+        Thread.Sleep(20);
+        _deviceB.Repository.UpdateText(note.Id, "editada en B");
+        _deviceB.Repository.SetTags(note.Id, Array.Empty<string>());
+        var result = _deviceB.Sync.Synchronize();
+
+        Assert.True(result.Succeeded, result.Error);
+        Assert.Equal("editada en B", _deviceB.Repository.GetById(note.Id)?.Text);
+    }
+
+    [Fact]
+    public void TagScope_ANewerRemoteVersionWithTheTag_StillReachesANoteThatDoesNotHaveIt()
+    {
+        // El arreglo de arriba no puede cerrar la puerta a lo nuevo: si otro equipo etiqueta después una nota
+        // que aquí no lo está, esa versión más reciente tiene que llegar.
+        var note = _deviceA.Repository.Create("original", "#EBD38B", "primary");
+        ShareKeyAndSynchronizeInitialNote(note.Id);
+        UseTagScope("Trabajo");
+        Thread.Sleep(20);
+
+        _deviceA.Repository.UpdateText(note.Id, "etiquetada en A");
+        _deviceA.Repository.SetTags(note.Id, new[] { "Trabajo" });
+        Assert.True(_deviceA.Sync.Synchronize().Succeeded);
+        var result = _deviceB.Sync.Synchronize();
+
+        Assert.True(result.Succeeded, result.Error);
+        var received = _deviceB.Repository.GetById(note.Id)!;
+        Assert.Equal("etiquetada en A", received.Text);
+        Assert.Equal(new[] { "Trabajo" }, received.Tags);
+    }
+
+    [Fact]
     public void RevokingSharedAccess_KeepsTheDockOrderInTheRekeyedNotes()
     {
         // La rotación vuelve a cifrar cada nota con fecha nueva; si el sobre nuevo no lleva la posición del mazo,
@@ -684,6 +746,15 @@ public sealed class SyncConflictTests : IDisposable
         Assert.True(result.Succeeded, result.Error);
         Assert.NotNull(_deviceB.Repository.GetById(second.Id)!.DockPosition);
         Assert.Equal("second", _deviceB.Repository.GetByState(NoteState.Active).First().Text);
+    }
+
+    private void UseTagScope(string tag)
+    {
+        foreach (var device in new[] { _deviceA, _deviceB })
+        {
+            device.Settings.SyncScope = SyncScopeKind.Tag;
+            device.Settings.SyncTag = tag;
+        }
     }
 
     private static void ForgetSyncHistory(Device device)
