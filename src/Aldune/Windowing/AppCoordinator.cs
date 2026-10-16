@@ -1459,14 +1459,26 @@ public sealed class AppCoordinator
         int minutes = Math.Clamp(_settings.SyncIntervalMinutes, 1, 1440);
         _autoSyncTimer = new System.Threading.Timer(_ =>
         {
-            var result = _syncService.Synchronize();
-            if (result.Succeeded)
+            // Este callback corre en un hilo del pool: una excepción que se escape aquí cierra la aplicación
+            // entera, y una sincronización en segundo plano nunca debe poder hacerlo. Synchronize ya devuelve los
+            // fallos esperados como resultado; esto cubre lo que no se haya previsto. Si la aplicación se está
+            // cerrando, no hay a quién avisar.
+            try
             {
-                Application.Current.Dispatcher.BeginInvoke(DispatcherPriority.Background, new Action(AfterSuccessfulSync));
+                var result = _syncService.Synchronize();
+                if (Application.Current?.Dispatcher is not { } dispatcher) return;
+                if (result.Succeeded)
+                {
+                    dispatcher.BeginInvoke(DispatcherPriority.Background, new Action(AfterSuccessfulSync));
+                }
+                else
+                {
+                    dispatcher.BeginInvoke(DispatcherPriority.Background, () => PlaySound(SoundEvent.SyncFailed));
+                }
             }
-            else
+            catch (Exception ex)
             {
-                Application.Current.Dispatcher.BeginInvoke(DispatcherPriority.Background, () => PlaySound(SoundEvent.SyncFailed));
+                DockDiagnostics.Write("sync", "la sincronización automática falló sin controlar: " + ex.GetType().Name + ": " + ex.Message);
             }
         }, null, firstRunIn ?? TimeSpan.FromMinutes(minutes), TimeSpan.FromMinutes(minutes));
     }

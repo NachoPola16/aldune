@@ -425,9 +425,7 @@ public sealed class SyncService
                 CryptographicOperations.ZeroMemory(key);
             }
         }
-        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or HttpRequestException or
-                                   UriFormatException or FormatException or InvalidOperationException or
-                                   CryptographicException)
+        catch (Exception ex) when (IsExpectedSyncFailure(ex))
         {
             return new(0, 0, 0, 0, ex.Message);
         }
@@ -454,6 +452,19 @@ public sealed class SyncService
     // otro vería un conflicto por cada nota del Sereno antiguo editada en el otro mientras tanto.
     private static bool OnlyMigrated(SyncEnvelope version, SyncBaseVersion common) =>
         version.UpdatedAt == common.UpdatedAt.AddMilliseconds(1);
+
+    /// <summary>
+    /// Lo que cuenta como un fallo normal de sincronización y se devuelve en el <see cref="SyncResult"/>. La sync
+    /// automática corre en un hilo del pool sin ningún try/catch: lo que se escape de aquí tumba la aplicación.
+    /// Por eso entran el timeout de HttpClient (<see cref="OperationCanceledException"/>: salir de casa sin VPN),
+    /// una respuesta que no es JSON (portal cautivo, página de un proxy), una URL o un token sin configurar
+    /// (<see cref="ArgumentException"/>, de <c>CreateTransport</c>) y un fallo de la base de datos.
+    /// </summary>
+    private static bool IsExpectedSyncFailure(Exception ex) =>
+        ex is IOException or UnauthorizedAccessException or HttpRequestException or UriFormatException
+            or FormatException or InvalidOperationException or CryptographicException
+            or OperationCanceledException or ArgumentException or System.Text.Json.JsonException
+            or Microsoft.Data.Sqlite.SqliteException;
 
     private bool CompletePendingKeyRotation(out string? error)
     {
@@ -499,9 +510,7 @@ public sealed class SyncService
             _settingsService.Save(_settings);
             return true;
         }
-        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or HttpRequestException or
-                                   UriFormatException or FormatException or InvalidOperationException or
-                                   CryptographicException)
+        catch (Exception ex) when (IsExpectedSyncFailure(ex))
         {
             error = ex.Message;
             return false;

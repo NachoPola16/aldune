@@ -26,6 +26,7 @@ if (tokens.Any(token => token.Length < RecommendedTokenLength))
         RecommendedTokenLength);
 
 var objectPath = Path.Combine(dataPath, "objects");
+var putGate = new SemaphoreSlim(1, 1);
 Directory.CreateDirectory(objectPath);
 
 app.Use(async (context, next) =>
@@ -114,27 +115,38 @@ app.MapPut("/api/v1/objects/{id:guid}", async (Guid id, HttpRequest request) =>
         return Results.BadRequest("The object id does not match the URL.");
 
     var finalPath = ObjectFile(objectPath, id);
-    if (File.Exists(finalPath))
-    {
-        try
-        {
-            var current = SyncEnvelopeCodec.Deserialize(await File.ReadAllBytesAsync(finalPath));
-            if (SyncVersion.Compare(envelope, current) < 0) return Results.NoContent();
-        }
-        catch (Exception ex) when (ex is FormatException or JsonException)
-        {
-            // A damaged object is recoverable by replacing it with a valid upload.
-        }
-    }
-    var tempPath = Path.Combine(objectPath, $".{id:N}.{Guid.NewGuid():N}.tmp");
+    // Comprobar la versión y escribir va junto: sin esto, dos dispositivos subiendo la misma nota a la vez
+    // pasaban los dos la comprobación contra la misma versión y la vieja podía acabar pisando a la nueva.
+    await putGate.WaitAsync();
     try
     {
-        await File.WriteAllBytesAsync(tempPath, stream.ToArray());
-        File.Move(tempPath, finalPath, overwrite: true);
+        if (File.Exists(finalPath))
+        {
+            try
+            {
+                var current = SyncEnvelopeCodec.Deserialize(await File.ReadAllBytesAsync(finalPath));
+                if (SyncVersion.Compare(envelope, current) < 0) return Results.NoContent();
+            }
+            catch (Exception ex) when (ex is FormatException or JsonException)
+            {
+                // A damaged object is recoverable by replacing it with a valid upload.
+            }
+        }
+
+        var tempPath = Path.Combine(objectPath, $".{id:N}.{Guid.NewGuid():N}.tmp");
+        try
+        {
+            await File.WriteAllBytesAsync(tempPath, stream.ToArray());
+            File.Move(tempPath, finalPath, overwrite: true);
+        }
+        finally
+        {
+            if (File.Exists(tempPath)) File.Delete(tempPath);
+        }
     }
     finally
     {
-        if (File.Exists(tempPath)) File.Delete(tempPath);
+        putGate.Release();
     }
 
     return Results.NoContent();

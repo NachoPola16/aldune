@@ -4412,3 +4412,16 @@ Publicado como **1.6.1** con todo lo de esta sección.
   (`PlacementKeys`, con el nombre de respaldo si no hay id). Lo guardado antes se sigue encontrando por
   nombre y, al cerrar la nota, pasa a la clave estable y se borra la antigua. El resto de la app localiza
   monitores por `DeviceName` como antes. Verificado con sonda en el monitor real.
+- **Revisión de bugs, ronda 1 (sync):**
+  - **Cierre de la app por la sync automática.** `SynchronizeCore` no capturaba el timeout de `HttpClient`
+    (`OperationCanceledException`: salir de casa sin VPN), una respuesta que no es JSON (portal cautivo, página de
+    un proxy → `JsonException`), una URL o un token sin configurar (`ArgumentException`) ni los fallos de SQLite, y
+    el temporizador de la sync automática (hilo del pool) no tenía `try/catch`: la excepción cerraba Aldune. Ahora
+    son un fallo normal en el `SyncResult` (`IsExpectedSyncFailure`) y el temporizador además lo anota y sigue.
+    Reproducido con un test (`SyncServiceFailureTests`, servidor local que responde HTML). El timeout no tiene
+    test propio: esperaría los 20 s del cliente.
+  - **Servidor de sync:** el `PUT` comprobaba la versión y escribía sin exclusión, y dos dispositivos subiendo la
+    misma nota a la vez podían dejar la versión vieja encima de la nueva. Ahora van en serie (`putGate`). Sin test
+    automático (una carrera no se prueba de forma fiable).
+  - Revisados sin hallazgos: archivos vinculados (`LinkedFileService`), comparación de tokens (tiempo constante),
+    los demás hilos de fondo (vinculados, copias, pantallas).
