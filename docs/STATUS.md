@@ -4399,7 +4399,7 @@ Publicado como **1.6.1** con todo lo de esta sección.
 - **Esc**: con la búsqueda abierta el primer Esc solo la cierra; el siguiente cierra la nota.
 - **Marcar una casilla con el ratón no mueve la vista ni el cursor**: se repone el scroll tras reasignar el texto y dar el foco.
 
-## Sin versión aún (2026-10-16)
+## 1.7.9 (2026-10-17)
 
 - **El dock ya no se reabre al volver a donde estaba el abanico** tras plegarse: se quitó la «ventana de
   recuperación» de 400 ms de `DockHoverPolicy`. Para abrirlo hay que volver a la tira del canto.
