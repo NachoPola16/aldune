@@ -667,7 +667,7 @@ public sealed class SyncService
         return SyncEnvelopeCodec.CreateTombstone(tombstone with { DeletedAt = deletedAt }, key, deviceId);
     }
 
-    private static SyncEnvelope CreateRekeyedNoteEnvelope(
+    internal static SyncEnvelope CreateRekeyedNoteEnvelope(
         Note note,
         byte[] key,
         string deviceId,
@@ -687,7 +687,10 @@ public sealed class SyncService
             ScreenOrigin = note.ScreenOrigin,
             Tags = note.Tags.ToArray(),
             IsProtected = note.IsProtected,
-            ProtectedContent = note.ProtectedContent
+            ProtectedContent = note.ProtectedContent,
+            // Sin esto el sobre re-cifrado salía sin posición en el mazo, y un equipo que se une con el código
+            // nuevo recibía las notas sin el orden (formato 4).
+            DockPosition = note.DockPosition
         };
         return SyncEnvelopeCodec.CreateNote(copy, key, deviceId);
     }

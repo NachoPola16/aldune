@@ -666,6 +666,26 @@ public sealed class SyncConflictTests : IDisposable
         Assert.Empty(_deviceB.Sync.GetConflicts());
     }
 
+    [Fact]
+    public void RevokingSharedAccess_KeepsTheDockOrderInTheRekeyedNotes()
+    {
+        // La rotación vuelve a cifrar cada nota con fecha nueva; si el sobre nuevo no lleva la posición del mazo,
+        // un equipo que se une con el código nuevo recibe las notas sin orden.
+        var first = _deviceA.Repository.Create("first", "#EBD38B", "primary");
+        var second = _deviceA.Repository.Create("second", "#EBD38B", "primary");
+        _deviceA.Repository.MoveNote(second.Id, 0, new[] { first.Id, second.Id });
+        _deviceA.Sync.GetOrCreateSyncCode();
+        Assert.True(_deviceA.Sync.Synchronize().Succeeded);
+
+        Assert.True(_deviceA.Sync.RevokeSharedAccess(out var error), error);
+        _deviceB.Sync.ImportSyncCode(_deviceA.Sync.GetOrCreateSyncCode());
+        var result = _deviceB.Sync.Synchronize();
+
+        Assert.True(result.Succeeded, result.Error);
+        Assert.NotNull(_deviceB.Repository.GetById(second.Id)!.DockPosition);
+        Assert.Equal("second", _deviceB.Repository.GetByState(NoteState.Active).First().Text);
+    }
+
     private static void ForgetSyncHistory(Device device)
     {
         using var connection = new SqliteConnection(
