@@ -210,13 +210,17 @@ public sealed class SyncService
     /// <summary>
     /// Combina la versión perdedora con la nota activa (ver <see cref="ConflictMerge"/>) y descarta el conflicto.
     /// Con fecha nueva, como <see cref="RestoreConflict"/>, para que la próxima sync publique la decisión.
-    /// False si no se puede combinar: no hay nota activa, está en la papelera, o la perdedora es un borrado.
+    /// False si no se puede combinar: no hay nota activa, está en la papelera, la perdedora es un borrado o alguna de
+    /// las dos está protegida.
     /// </summary>
     public bool MergeConflict(Guid conflictId)
     {
         var conflict = _repository.GetSyncConflicts().FirstOrDefault(item => item.Id == conflictId);
         if (conflict is null || conflict.Losing.Tombstone || conflict.Losing.Note is not { } losing) return false;
         if (_repository.GetById(conflict.NoteId) is not { State: not NoteState.Trashed } active) return false;
+        // El texto de una protegida se lee vacío (va cifrado con su contraseña): combinar no juntaba nada y el
+        // conflicto se borraba, con la versión perdedora dentro.
+        if (active.IsProtected || losing.IsProtected) return false;
 
         active.Text = ConflictMerge.Combine(active.Text, losing.Text);
         active.UpdatedAt = DateTimeOffset.UtcNow;
