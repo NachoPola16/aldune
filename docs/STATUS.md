@@ -4439,3 +4439,14 @@ Publicado como **1.6.1** con todo lo de esta sección.
   - **Ctrl+L / Ctrl+Shift+L con el cursor en la sangría** (o antes de la flecha): quitar la casilla o la flecha
     llevaba el cursor hasta donde estaba el glifo. Ahora se queda, como al ponerlas (`TaskLines`, `BulletLines`).
   - `tests/Aldune.SyncServer.Tests` (nuevo) y timeout de los transportes configurable: ver la ronda 1.
+
+## Sin versión aún (2026-10-17)
+
+- **Ctrl+F: la coincidencia no se veía en una nota larga** (1.7.8/1.7.9; avisado por el usuario con captura: la barra decía
+  1/14, la vista estaba unas 18 líneas por encima de la palabra y no había resaltado). `ScrollToLine` se quedaba corto.
+  No se pudo reproducir con sondas (texto real de 38.000 caracteres, líneas largas y cortes duros, CRLF, anchos y alturas
+  distintos, escribir letra a letra y con teclas físicas: siempre llegaba bien), así que el arreglo es el mecanismo, no la
+  causa: `EnsureFindMatchVisible` comprueba con la posición real del carácter y, si no está a la vista, desplaza hasta ella y
+  repite tras el siguiente diseño (hasta 3 veces). Verificado forzando el desplazamiento a posiciones equivocadas (56/56
+  corregidas) y sin cambio en el caso normal. Cada corrección se anota en `dock.log` (categoría `find`) para poder ver la
+  causa si vuelve a pasar.

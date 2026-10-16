@@ -963,8 +963,40 @@ public partial class NoteWindow : Window
         TextBody.ScrollToLine(TextBody.GetLineIndexFromCharacterIndex(start));
         FindCount.Text = $"{_findCurrent + 1}/{_findMatches.Count}";
         // El scroll hasta la línea llega con el diseño siguiente: se coloca después de él.
-        Dispatcher.BeginInvoke(DispatcherPriority.Loaded, new Action(PositionFindHighlight));
+        Dispatcher.BeginInvoke(DispatcherPriority.Loaded, new Action(() => EnsureFindMatchVisible(0)));
     }
+
+    /// <summary>
+    /// ScrollToLine calcula el desplazamiento por número de línea visual, y en una nota larga con el diseño a medias
+    /// (otro ancho, texto aún sin medir) puede quedarse corto: la barra decía 1/14 y la palabra no se veía. Aquí se
+    /// comprueba con la posición real del carácter y, si no está a la vista, se desplaza hasta ella (con el tercio
+    /// superior de aire) y se vuelve a comprobar tras el siguiente diseño, hasta <see cref="MaxFindScrollRetries"/> veces.
+    /// </summary>
+    private void EnsureFindMatchVisible(int attempt)
+    {
+        if (_findCurrent < 0 || _findCurrent >= _findMatches.Count || FindBar.Visibility != Visibility.Visible)
+        {
+            PositionFindHighlight();
+            return;
+        }
+
+        var rect = TextBody.GetRectFromCharacterIndex(_findMatches[_findCurrent]);
+        double viewport = TextBody.ViewportHeight;
+        bool visible = !rect.IsEmpty && rect.Top >= 0 && rect.Bottom <= viewport;
+        if (visible || rect.IsEmpty || viewport <= 0 || attempt >= MaxFindScrollRetries)
+        {
+            PositionFindHighlight();
+            return;
+        }
+
+        DockDiagnostics.Write("find",
+            $"la coincidencia {_findCurrent + 1}/{_findMatches.Count} no quedó a la vista tras ScrollToLine " +
+            $"(intento {attempt + 1}, arriba={rect.Top:0}, alto visible={viewport:0}, desplazamiento={TextBody.VerticalOffset:0}); se corrige");
+        TextBody.ScrollToVerticalOffset(Math.Max(0, TextBody.VerticalOffset + rect.Top - viewport / 3));
+        Dispatcher.BeginInvoke(DispatcherPriority.Loaded, new Action(() => EnsureFindMatchVisible(attempt + 1)));
+    }
+
+    private const int MaxFindScrollRetries = 3;
 
     /// <summary>Coincidencias que no son la actual, resaltadas más suave mientras estén a la vista.</summary>
     private readonly List<Border> _findOthers = [];
