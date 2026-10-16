@@ -4427,3 +4427,15 @@ Publicado como **1.6.1** con todo lo de esta sección.
     semáforo falla en cada ejecución. El mismo proyecto prueba el 401, el 413, el 400 por id y la versión vieja.
   - Revisados sin hallazgos: archivos vinculados (`LinkedFileService`), comparación de tokens (tiempo constante),
     los demás hilos de fondo (vinculados, copias, pantallas).
+- **Revisión de bugs, ronda 2 (Core):** cada arreglo con un test que fallaba antes.
+  - **Alcance por etiqueta:** quitar la etiqueta a una nota hacía que la siguiente sync la devolviera a la versión
+    del almacén (aún etiquetada), deshaciendo lo editado; con un borrado más viejo en el almacén, la borraba. Ahora lo
+    remoto solo se aplica a esa nota si es más reciente (`SyncService`, tests `TagScope_*`).
+  - **Rotación de clave:** el sobre re-cifrado de cada nota salía sin `DockPosition`; un equipo que se une con el
+    código nuevo recibía las notas sin orden (`CreateRekeyedNoteEnvelope`, `SyncRekeyEnvelopeTests`).
+  - **Combinar con una nota protegida:** su texto se lee vacío, así que no se combinaba nada y el conflicto (con la
+    versión perdedora) se borraba. `MergeConflict` devuelve false; la ventana todavía ofrece el botón en ese caso
+    (WPF sin tocar: al pulsarlo no pasa nada).
+  - **Ctrl+L / Ctrl+Shift+L con el cursor en la sangría** (o antes de la flecha): quitar la casilla o la flecha
+    llevaba el cursor hasta donde estaba el glifo. Ahora se queda, como al ponerlas (`TaskLines`, `BulletLines`).
+  - `tests/Aldune.SyncServer.Tests` (nuevo) y timeout de los transportes configurable: ver la ronda 1.
