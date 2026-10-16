@@ -4418,8 +4418,9 @@ Publicado como **1.6.1** con todo lo de esta sección.
     un proxy → `JsonException`), una URL o un token sin configurar (`ArgumentException`) ni los fallos de SQLite, y
     el temporizador de la sync automática (hilo del pool) no tenía `try/catch`: la excepción cerraba Aldune. Ahora
     son un fallo normal en el `SyncResult` (`IsExpectedSyncFailure`) y el temporizador además lo anota y sigue.
-    Reproducido con un test (`SyncServiceFailureTests`, servidor local que responde HTML). El timeout no tiene
-    test propio: esperaría los 20 s del cliente.
+    Reproducido con un test (`SyncServiceFailureTests`, servidor local que responde HTML). El timeout de los
+    transportes es configurable por constructor (20 s por defecto, también en `SyncService`) y
+    `SyncTransportTimeoutTests` lo prueba con 300 ms contra un servidor que acepta la conexión y no contesta.
   - **Servidor de sync:** el `PUT` comprobaba la versión y escribía sin exclusión, y dos dispositivos subiendo la
     misma nota a la vez podían dejar la versión vieja encima de la nueva. Ahora van en serie (`putGate`).
     Cubierto por `tests/Aldune.SyncServer.Tests` (WebApplicationFactory): 40 rondas de 12 PUT simultáneos; sin el

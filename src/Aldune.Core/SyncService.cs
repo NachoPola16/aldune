@@ -12,13 +12,17 @@ public sealed class SyncService
     private readonly NotesRepository _repository;
     private readonly AppSettings _settings;
     private readonly SettingsService _settingsService;
+    private readonly TimeSpan? _httpTimeout;
     private readonly object _syncGate = new();
 
-    public SyncService(NotesRepository repository, AppSettings settings, SettingsService settingsService)
+    /// <param name="httpTimeout">Espera máxima del servidor o WebDAV; null deja la de los transportes (20 s).</param>
+    public SyncService(NotesRepository repository, AppSettings settings, SettingsService settingsService,
+        TimeSpan? httpTimeout = null)
     {
         _repository = repository;
         _settings = settings;
         _settingsService = settingsService;
+        _httpTimeout = httpTimeout;
     }
 
     public string GetOrCreateSyncCode()
@@ -706,11 +710,13 @@ public sealed class SyncService
     private ISyncTransport CreateTransport() => _settings.SyncTransport switch
     {
         SyncTransportKind.Folder => new FolderSyncTransport(_settings.SyncFolderPath ?? string.Empty),
-        SyncTransportKind.Server => new HttpSyncTransport(_settings.SyncServerUrl ?? string.Empty, GetServerToken()),
+        SyncTransportKind.Server => new HttpSyncTransport(
+            _settings.SyncServerUrl ?? string.Empty, GetServerToken(), _httpTimeout),
         SyncTransportKind.WebDav => new WebDavSyncTransport(
             _settings.SyncServerUrl ?? string.Empty,
             _settings.SyncWebDavUsername ?? string.Empty,
-            GetWebDavPassword()),
+            GetWebDavPassword(),
+            _httpTimeout),
         _ => throw new InvalidOperationException("Unknown sync transport.")
     };
 

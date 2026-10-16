@@ -9,19 +9,25 @@ namespace Aldune.Core;
 /// </summary>
 public sealed class HttpSyncTransport : ISyncTransport
 {
+    /// <summary>Lo que se espera a un servidor que no contesta, aquí y en WebDAV: corto para no dejar la sync
+    /// colgada al salir de casa sin VPN, largo para una subida lenta.</summary>
+    public static readonly TimeSpan DefaultTimeout = TimeSpan.FromSeconds(20);
+
     private readonly HttpClient _client;
     private readonly Uri _baseUri;
 
-    public HttpSyncTransport(string serverUrl, string token)
+    public HttpSyncTransport(string serverUrl, string token, TimeSpan? timeout = null)
     {
         if (!System.Uri.TryCreate(serverUrl, UriKind.Absolute, out _baseUri!) ||
             (_baseUri.Scheme is not "http" and not "https"))
             throw new ArgumentException("The sync server URL must be an absolute HTTP(S) URL.", nameof(serverUrl));
         if (string.IsNullOrWhiteSpace(token)) throw new ArgumentException("A sync server token is required.", nameof(token));
 
-        _client = new HttpClient { Timeout = TimeSpan.FromSeconds(20) };
+        _client = new HttpClient { Timeout = timeout ?? DefaultTimeout };
         _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
     }
+
+    internal TimeSpan Timeout => _client.Timeout;
 
     public IReadOnlyList<SyncRemoteObject> ReadAll()
     {
