@@ -2,6 +2,9 @@
 
 > **Estado: plan decidido el 2026-09-28 —Android primero, en tableta, ver §0.1— y sin una sola línea de
 > código de móvil en el repositorio.**
+> **Revisión del 2026-10-17 (§13): .NET MAUI no sirve si se quiere F-Droid; la recomendación pasa a ser Android nativo
+> (Kotlin + Compose) con el formato de sync fijado por vectores generados desde `Aldune.Core`. Pendiente de decisión del
+> usuario. Lo que dice el resto del documento sobre MAUI (§4, §6, §7) es anterior a esa revisión.**
 > Sesión del 2026-09-28. Este documento existe para que el port se pueda retomar en otra sesión, con
 > otra IA o dentro de meses, sin repetir la investigación que ya está hecha. Si algo de aquí se
 > implementa, manda lo implementado: hay que actualizar `STATUS.md` (lo hecho y por qué) y
@@ -418,3 +421,71 @@ Los tests de Core (850) valen tal cual, porque **el Core es el mismo ensamblado*
   [Alarmas en Android](https://developer.android.com/develop/background-work/services/alarms/schedule) ·
   [Segundo plano en iOS, 2026](https://vburojevic.dev/blog/ios-background-tasks-2026/)
 - [Avalonia](https://avaloniaui.net/) (comparación de opciones)
+
+## 13. Revisión del 2026-10-17: móvil + tableta, F-Droid, y qué se corrige del plan
+
+Pedido del usuario (2026-10-17): versión de **móvil además de tableta** (su móvil ahora es Android, un Pixel 10a),
+**publicar también en F-Droid**, y revisar si el plan de Android es correcto. Qué se comprobó y qué cambia:
+
+### 13.1 Hallazgos (con fuente)
+
+1. **F-Droid y .NET MAUI: hoy no hay camino en el repositorio principal.** En el foro de F-Droid
+   ([«Why isn't C# .NET MAUI supported?»](https://forum.f-droid.org/t/why-isnt-c-net-maui-supported/24842),
+   [pág. 2](https://forum.f-droid.org/t/why-isnt-c-net-maui-supported/24842?page=2)) un mantenedor dijo en marzo de 2024 que
+   **no hay ninguna app .NET en F-Droid**; el obstáculo en marzo de 2026 es el workload **`maui-android`**, que no se compila
+   desde el código fuente (F-Droid exige que todo se construya desde fuente, con las excepciones ya listadas), y la última
+   entrada visible (27-sep-2026) sigue **sin respuesta oficial**. Bitwarden, que sí es FOSS, acabó reescribiendo en Kotlin.
+   *No hay una política publicada a favor ni en contra: lo cierto es que nadie lo ha conseguido.* Antes de decidir,
+   conviene volver a mirar el hilo y [la política de inclusión](https://f-droid.org/docs/FAQ_-_App_Developers/).
+2. **La licencia no es el problema:** Aldune es **GPL-3.0** (`LICENSE`), que F-Droid y IzzyOnDroid aceptan.
+3. **Alternativas de distribución sin F-Droid principal**, válidas con MAUI: APK firmado en las *releases* de GitHub, un
+   **repositorio F-Droid propio** (F-Droid lo permite para lo que no puede construir) e
+   [IzzyOnDroid](https://izzyondroid.org/docs/general/AppInclusionPolicy/) (acepta APK ya firmados por el desarrollador,
+   código abierto, metadatos con Fastlane; no consta que haya reglas especiales para .NET).
+4. **Entorno de este PC (comprobado el 2026-10-17):** .NET 10.0.400, **sin** workloads de MAUI, **sin** Android SDK, **sin**
+   Visual Studio. La frase de §0.1 («el SDK y el JDK los instala Visual Studio») no se cumple aquí; con MAUI habría que
+   instalar el workload y el SDK por línea de comandos (varios GB).
+5. **Móvil y tableta no son dos apps:** Compose lo resuelve con **una sola app adaptativa**
+   ([ListDetailPaneScaffold y clases de tamaño de ventana](https://developer.android.com/develop/ui/compose/layouts/adaptive/list-detail)):
+   en pantalla grande lista y nota van lado a lado; en pequeña, una a la vez.
+6. **Lo que hay que portar, medido:** el núcleo de sync y cifrado son **~1.900 líneas** de C# (`SyncModels` 513,
+   `SyncService` 765, `ContentCipher`, `ProtectedNoteContent`, códigos de invitación, transportes HTTP y WebDAV,
+   `ConflictMerge`…), más ~900 de formato de texto (`TaskLines`, `TaskLists`, `BulletLines`, `ListIndent`, `TextEdit`…) y
+   ~450 de color (`NoteThemes`, `OklchColor`…). Toda la criptografía es estándar (AES-256-GCM, PBKDF2-SHA256, HMAC si procede),
+   y Android la trae en `javax.crypto`; SQLite viene con el sistema.
+
+### 13.2 Qué se corrige del plan
+
+| Punto del plan original | Corrección |
+|---|---|
+| §4: **MAUI recomendada** | Solo si se renuncia a F-Droid principal. Con F-Droid como objetivo, **Android nativo (Kotlin + Jetpack Compose)**. |
+| §11: «Reescribir Core en Kotlin: descartado» | La razón era el riesgo de **divergencia silenciosa** del formato cifrado. Se mitiga con **vectores de compatibilidad**: `Aldune.Core` (la fuente de verdad) genera ficheros JSON con sobres, claves y resultados esperados, y los tests del cliente Kotlin los consumen; y al revés (lo que escribe Kotlin lo lee C#). Con eso el coste de la divergencia es un test en rojo, no datos ilegibles. |
+| §5: **seams en Core** (`ISecretProtector`, `async`, `JsonSerializerContext`) | **Dejan de ser requisito del móvil**: Kotlin no usa Core. Siguen valiendo para Windows (y `ISecretProtector` arregla los 46 tests que fallan en Linux), pero ya no bloquean nada. Lo que sí hace falta es el **golden file del sobre (formato 4)** y los vectores. |
+| §7: «6 sesiones el MVP de Android» | Se vuelve a contar: núcleo Kotlin con vectores **≈ 6-8**, UI Compose adaptativa **≈ 6-8**, widget/notificaciones/atajos **≈ 3-4**. Total **≈ 15-20 sesiones**, no 23-26 con iOS, pero sin iOS. (Orden de magnitud: el propio brief de revisión decía que si reescribir sale por menos de 5 sesiones el plan está mal; sale por más, pero a cambio no hay seams ni toolchain MAUI.) |
+| §0.1: **tableta como dispositivo de referencia** | Ahora hay **dos** dispositivos reales: el Pixel 10a (teléfono) y la tableta. El **teléfono es el de referencia para la captura** y la **tableta para la gestión**; el diseño es adaptativo (ver 13.3). |
+| iOS | Sin cambios: fuera hasta que haya Mac. Con Kotlin, iOS sería un cliente Swift aparte que consume los mismos vectores (o Kotlin Multiplatform para el núcleo si se escribe pensando en ello desde el principio; no hace falta decidirlo ahora). |
+
+### 13.3 Móvil y tableta: una app, mismo motor, distinta cara
+
+Misma sincronización, mismo formato de texto, mismos datos y mismos ajustes. Cambia **la pantalla de entrada y la disposición**,
+no el producto:
+
+| | Teléfono (caso de uso: apuntar al vuelo) | Tableta (caso de uso: gestionar y editar) |
+|---|---|---|
+| Pantalla de inicio | **Captura primero**: «nota nueva» a un toque, lista debajo | Lista y nota **lado a lado** |
+| Entradas rápidas | Widget, mosaico de Ajustes rápidos, notificación con «+», compartir hacia la app | Lo mismo, y además atajos de teclado y ratón |
+| Edición | Pantalla completa | Panel derecho, varias notas recientes |
+| Mazo (orden del dock) | Reordenar con pulsación larga | Reordenar con arrastre o teclado |
+| Widget | Pequeño (tira de colores / títulos) | Grande (cuadrícula del mazo) |
+
+Lo que **no** se hace en ninguno (igual que antes): dock, abanico, ventanas flotantes, posición por pantalla.
+
+### 13.4 Pendiente de decidir por el usuario
+
+1. **¿Kotlin nativo (F-Droid principal, ~15-20 sesiones, sin tocar Core) o MAUI (reutiliza Core, F-Droid solo por repositorio propio o IzzyOnDroid)?**
+   Recomendación: **Kotlin**, porque F-Droid es un objetivo declarado y hoy MAUI no tiene camino allí.
+2. **Versión mínima de Android** (la del Pixel 10a es Android 16; la de la tableta, por mirar) y `minSdk`.
+3. **Nombre de paquete** (`applicationId`) y comprobar que «Aldune» está libre en F-Droid/IzzyOnDroid.
+4. Antes de escribir producto: **una revisión del plan por otra IA con ojos frescos** (`MOBILE_PORT_REVIEW.md` §7), ahora con
+   la pregunta añadida de si Kotlin con vectores es de verdad más barato que MAUI.
+
