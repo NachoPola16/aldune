@@ -112,7 +112,10 @@ public partial class SyncConflictsWindow : Window
             Details = $"{conflict.Losing.DeviceId} · {conflict.Losing.UpdatedAt.ToLocalTime():g}  →  " +
                       $"{conflict.Winner.DeviceId} · {conflict.Winner.UpdatedAt.ToLocalTime():g}";
             // La ganadora es la nota viva; si ya no está (o está en la papelera) la versión activa es un borrado.
-            MergeVisibility = active is { State: not NoteState.Trashed } && conflict.Losing.Note is { } other
+            // Una protegida no se puede combinar (su texto va cifrado con su contraseña y se lee vacío): sin botón,
+            // porque SyncService.MergeConflict se niega y al pulsarlo no pasaría nada.
+            MergeVisibility = active is { State: not NoteState.Trashed, IsProtected: false }
+                              && conflict.Losing.Note is { IsProtected: false } other
                               && ConflictDiff.Summarize(active.Text, other.Text) is not null
                 ? Visibility.Visible : Visibility.Collapsed;
             Difference = active is null || active.State == NoteState.Trashed

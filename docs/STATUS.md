@@ -4434,8 +4434,8 @@ Publicado como **1.6.1** con todo lo de esta sección.
   - **Rotación de clave:** el sobre re-cifrado de cada nota salía sin `DockPosition`; un equipo que se une con el
     código nuevo recibía las notas sin orden (`CreateRekeyedNoteEnvelope`, `SyncRekeyEnvelopeTests`).
   - **Combinar con una nota protegida:** su texto se lee vacío, así que no se combinaba nada y el conflicto (con la
-    versión perdedora) se borraba. `MergeConflict` devuelve false; la ventana todavía ofrece el botón en ese caso
-    (WPF sin tocar: al pulsarlo no pasa nada).
+    versión perdedora) se borraba. `MergeConflict` devuelve false y la ventana de conflictos ya no
+    ofrece el botón Combinar si alguna de las dos está protegida.
   - **Ctrl+L / Ctrl+Shift+L con el cursor en la sangría** (o antes de la flecha): quitar la casilla o la flecha
     llevaba el cursor hasta donde estaba el glifo. Ahora se queda, como al ponerlas (`TaskLines`, `BulletLines`).
   - `tests/Aldune.SyncServer.Tests` (nuevo) y timeout de los transportes configurable: ver la ronda 1.
