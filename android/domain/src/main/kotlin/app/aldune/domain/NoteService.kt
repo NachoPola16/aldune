@@ -8,6 +8,7 @@ import app.aldune.text.NoteThemes
 import app.aldune.text.NoteTheme
 import app.aldune.text.NoteTone
 import java.time.Duration
+import java.time.Instant
 
 /**
  * Cómo se colorea una nota nueva: los ajustes de Windows (`ActiveThemeId`, `NewNoteTone`, `ColorAssignment`, `FixedNoteColor`) ya resueltos.
@@ -39,6 +40,9 @@ class NoteService(
     // Todas las operaciones leen, derivan y escriben dentro del mismo cerrojo: dos hilos que cambian cosas distintas de una nota
     // (el texto y el color, p. ej.) nunca se pisan, porque cada uno parte de lo último guardado y no de una copia vieja.
     private val lock = Any()
+
+    /** Última hora de edición de texto aceptada por nota (ver [edit]). */
+    private val lastTextEdit = HashMap<String, Instant>()
 
     /**
      * Crea la nota. Solo se llama en la primera edición con texto (spec Android §2.7): abrir una nota nueva y cerrarla sin escribir
@@ -75,9 +79,24 @@ class NoteService(
     /**
      * Guarda el texto que devuelve el editor. `\r\n` → `\n` solo para trabajar; la nota conserva el salto de línea con el que llegó.
      * Si el texto no cambia no se toca nada: abrir y cerrar una nota no genera versión.
+     *
+     * **Escrituras desordenadas.** [editedAt] es el momento en que el usuario produjo ese texto (la hora de la pulsación, no la de la
+     * escritura). Regla: para una misma nota, una escritura de texto con `editedAt` anterior al de otra ya aceptada se descarta con
+     * [NoteError.StaleWrite]; con igual hora gana la última en llegar; sin `editedAt` no se comprueba nada (gana la última, como en Core).
+     * La regla compara solo contra otras *escrituras de texto*: un cambio de color, etiquetas o estado posterior no hace «vieja» a una edición
+     * de texto, porque se aplica sobre lo último guardado y ninguno pisa al otro. Ojo: la comparación es entre horas del mismo reloj del
+     * editor; no debe usarse con la `updatedAt` de una versión llegada por sync, cuyo reloj es el de otro equipo.
+     * El registro de la última escritura vive en memoria: tras reiniciar la app no hay nada con qué comparar y la primera escritura gana.
      */
-    fun edit(id: String, newText: String): NoteResult<Note> = synchronized(lock) {
+    fun edit(id: String, newText: String, editedAt: Instant? = null): NoteResult<Note> = synchronized(lock) {
         val note = store.get(id) ?: return NoteResult.Err(NoteError.NotFound(id))
+
+        if (editedAt != null) {
+            val last = lastTextEdit[id]
+            if (last != null && editedAt < last) return NoteResult.Err(NoteError.StaleWrite(id))
+            lastTextEdit[id] = editedAt
+        }
+
         val text = LineEnding.normalize(newText)
         if (text == note.text) return NoteResult.Ok(note)
 
@@ -108,6 +127,16 @@ class NoteService(
     /** Saca la nota del archivo o de la papelera. */
     fun restore(id: String): NoteResult<Note> = setState(id, NoteState.ACTIVE)
 
+    /**
+     * Como [archive]/[trash]/[restore] pero con el código numérico del estado (0, 1, 2), que es como llega de la base o de sync.
+     * Un código que no existe es un error, no se redondea a ningún estado.
+     */
+    fun changeState(id: String, stateCode: Int): NoteResult<Note> {
+        val state = NoteState.fromCode(stateCode)
+            ?: return NoteResult.Err(NoteError.InvalidArgument("Estado desconocido: $stateCode"))
+        return setState(id, state)
+    }
+
     private fun setState(id: String, state: NoteState): NoteResult<Note> = synchronized(lock) {
         change(id) { if (it.state == state) it else it.copy(state = state) }
     }
@@ -120,6 +149,7 @@ class NoteService(
         val note = store.get(id) ?: return NoteResult.Err(NoteError.NotFound(id))
         if (note.state != NoteState.TRASHED) return NoteResult.Err(NoteError.NotInTrash(id, note.state))
         store.delete(id, clock.now())
+        lastTextEdit.remove(id)
         NoteResult.Ok(Unit)
     }
 
@@ -129,7 +159,7 @@ class NoteService(
         val now = clock.now()
         val cutoff = now.minus(Duration.ofDays(days.toLong()))
         val expired = store.all().filter { it.state == NoteState.TRASHED && it.updatedAt < cutoff }
-        expired.forEach { store.delete(it.id, now) }
+        expired.forEach { store.delete(it.id, now); lastTextEdit.remove(it.id) }
         NoteResult.Ok(expired.size)
     }
 
