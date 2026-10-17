@@ -1,5 +1,7 @@
 # Aldune — Estado del proyecto
 
+> **Nota (2026-10-17):** los planes de implementación paso a paso de `docs/superpowers/plans/` (fases 1-3, 1.0, 1.5 y notas vinculadas; todo ya publicado) se eliminaron del árbol por residuales; las referencias de este documento a ellos siguen siendo válidas en el historial: `git log --diff-filter=D --name-only -- docs/superpowers/plans/`. Las specs de `specs/` se conservan.
+
 Documento de continuidad: si retomas este proyecto en otra sesión, otro chat, u
 otra IA, empieza por aquí. Todo lo importante vive en el repositorio (specs,
 planes, commits), no solo en una conversación concreta.
