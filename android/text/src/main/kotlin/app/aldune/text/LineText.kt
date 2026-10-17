@@ -6,7 +6,9 @@ package app.aldune.text
  */
 internal object LineText {
     fun start(text: String, index: Int): Int {
-        for (i in minOf(index, text.length) - 1 downTo 0) {
+        // Core hace `Math.Min(index, len) - 1` directamente; con int.MinValue eso desborda a int.MaxValue y se sale del texto.
+        // Recortar antes da el mismo resultado en todo lo demás (un índice negativo ya devolvía 0) y no lanza.
+        for (i in index.coerceIn(0, text.length) - 1 downTo 0) {
             if (text[i] == '\n') return i + 1
         }
         return 0
