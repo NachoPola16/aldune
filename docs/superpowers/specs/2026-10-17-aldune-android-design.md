@@ -323,6 +323,6 @@ registrar en la verificación de desarrolladores de Google (2027 en todo el mund
    `ApplySyncNote` no mira el vínculo y guarda el texto vacío; después `LinkedFileService.Reconcile` (:102-126) ve texto pendiente
    (`""` ≠ huella conocida), no comprueba `IsProtected` y **escribe el archivo vacío**. No hace falta Android: basta otro PC con Windows
    que proteja esa nota (allí no está vinculada). Arreglarlo en Windows con test primero (p. ej. que `Reconcile` no escriba nunca desde
-   una nota protegida y que la protección remota desvincule o se rechace) **antes de publicar el cliente Android**. Mientras tanto,
-   Android no ofrece «proteger» en notas que no se crearon en él.
+   una nota protegida y que la protección remota desvincule o se rechace) **antes de publicar el cliente Android**. **Arreglado (2026-10-17):** `LinkedFileService.Reconcile` no hace nada con una nota protegida (ni escribe ni recarga el archivo; el vínculo se conserva), con
+   dos tests en `LinkedFileServiceTests`. Android puede ofrecer «proteger» sin esa restricción.
 4. Etiquetas: SQLite `NOCASE` solo pliega ASCII, `OrdinalIgnoreCase` pliega más: «Ñ»/«ñ» pueden contar como dos etiquetas en un lado y una en otro.

@@ -110,6 +110,11 @@ public sealed partial class LinkedFileService
         var link = _repository.GetFileLink(noteId);
         var note = _repository.GetById(noteId);
         if (link is null || note is null) return new ReconcileResult(ReconcileOutcome.NotLinked);
+        // Una nota protegida guarda su texto cifrado aparte y aquí se lee vacío. Si la protección llegó por sync desde otro
+        // equipo (donde la nota no está vinculada), ese vacío parecería «texto pendiente» y se escribiría un archivo vacío:
+        // pérdida de datos del usuario. El archivo no se toca mientras la nota esté protegida; el vínculo se conserva y, al
+        // quitar la protección, el texto vuelve y la conciliación sigue como siempre.
+        if (note.IsProtected) return new ReconcileResult(ReconcileOutcome.Unchanged);
         // Un archivo que pasa a ser ilegible (otra codificación, demasiado grande) se trata como no disponible:
         // escribir encima lo estropearía y recargarlo no se puede.
         var content = bytes is null ? null : LinkedFileFormat.Decode(bytes).Content;

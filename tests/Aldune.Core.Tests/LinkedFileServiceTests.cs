@@ -40,6 +40,49 @@ public class LinkedFileServiceTests : IDisposable
         return result.NoteId!.Value;
     }
 
+    // Spec de Android §9.3: otro equipo protege una nota que aquí está vinculada y la protección llega por sync
+    // (ApplySyncNote guarda el texto vacío). Reconcile veía texto pendiente y escribía el archivo vacío.
+    [Fact]
+    public void Reconcile_ProtectedBySync_NeverWritesTheFileAndKeepsTheLink()
+    {
+        var path = WriteFile("secreto.md", "contenido del usuario");
+        var id = OpenLinked(path);
+        var before = File.ReadAllBytes(path);
+        var note = _repository.GetById(id)!;
+        var secret = ProtectedNoteContent.Protect("lo que sea", "clave-de-prueba");
+        _repository.ApplySyncNote(new Note
+        {
+            Id = id, Text = string.Empty, Color = note.Color, CreatedAt = note.CreatedAt, UpdatedAt = note.UpdatedAt.AddMinutes(5),
+            State = note.State, ScreenOrigin = note.ScreenOrigin, Tags = [], IsProtected = true, ProtectedContent = secret
+        }, "otro-equipo");
+
+        var result = _sut.Reconcile(id);
+
+        Assert.Equal(before, File.ReadAllBytes(path));
+        Assert.Equal(ReconcileOutcome.Unchanged, result.Outcome);
+        Assert.NotNull(_repository.GetFileLink(id));
+    }
+
+    [Fact]
+    public void Reconcile_ProtectedNote_DoesNotReloadTheFileIntoThePlainText()
+    {
+        var path = WriteFile("secreto.md", "contenido del usuario");
+        var id = OpenLinked(path);
+        var note = _repository.GetById(id)!;
+        _repository.ApplySyncNote(new Note
+        {
+            Id = id, Text = string.Empty, Color = note.Color, CreatedAt = note.CreatedAt, UpdatedAt = note.UpdatedAt.AddMinutes(5),
+            State = note.State, ScreenOrigin = note.ScreenOrigin, Tags = [], IsProtected = true,
+            ProtectedContent = ProtectedNoteContent.Protect("lo que sea", "clave-de-prueba")
+        }, "otro-equipo");
+        File.WriteAllText(path, "cambiado fuera", new UTF8Encoding(false));
+
+        _sut.Reconcile(id);
+
+        Assert.Equal(string.Empty, _repository.GetById(id)!.Text);
+        Assert.Equal("cambiado fuera", File.ReadAllText(path));
+    }
+
     [Fact]
     public void Open_CreatesATranslatedNoteWithoutSync()
     {
