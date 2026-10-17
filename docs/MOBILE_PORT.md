@@ -484,12 +484,23 @@ no el producto:
 
 Lo que **no** se hace en ninguno (igual que antes): dock, abanico, ventanas flotantes, posición por pantalla.
 
-### 13.4 Pendiente de decidir por el usuario
+### 13.4 Decisiones (2026-10-17)
 
-1. **¿Kotlin nativo (F-Droid principal, ~15-20 sesiones, sin tocar Core) o MAUI (reutiliza Core, F-Droid solo por repositorio propio o IzzyOnDroid)?**
-   Recomendación: **Kotlin**, porque F-Droid es un objetivo declarado y hoy MAUI no tiene camino allí.
-2. **Versión mínima de Android** (la del Pixel 10a es Android 16; la de la tableta, por mirar) y `minSdk`.
-3. **Nombre de paquete** (`applicationId`) y comprobar que «Aldune» está libre en F-Droid/IzzyOnDroid.
-4. Antes de escribir producto: **una revisión del plan por otra IA con ojos frescos** (`MOBILE_PORT_REVIEW.md` §7), ahora con
-   la pregunta añadida de si Kotlin con vectores es de verdad más barato que MAUI.
-
+1. **Kotlin nativo en vez de MAUI: decidido por el usuario el 2026-10-17.**
+2. **Dispositivos de prueba:** Google Pixel 10a (Android 16, API 36) y **Lenovo Tab P11**. Según la tabla de ciclo de vida de Lenovo
+   ([PSREF](https://psref.lenovo.com/WDProduct/Lenovo_Tablets/Tab_P11)) el TB-J606F salió con Android 10 y tiene prevista la
+   actualización a Android 11; **no consta Android 12**. Es decir, la tableta es probablemente un Android 10 u 11 (API 29-30).
+   *Comprobar en Ajustes → Acerca de la tableta* (modelo exacto y versión).
+3. **`minSdk` 26 (Android 8.0), `targetSdk`/`compileSdk` 36.** Razones:
+   - Cubre la tableta (API 29-30), el Pixel (API 36) y los móviles antiguos que suelen usar los usuarios de F-Droid
+     (LineageOS 15 en adelante).
+   - **`PBKDF2WithHmacSHA256` solo existe desde la API 26** (en la 25 y anteriores solo hay `PBKDF2WithHmacSHA1`;
+     [referencia de `SecretKeyFactory`](https://developer.android.com/reference/javax/crypto/SecretKeyFactory)). Las notas protegidas
+     del formato usan PBKDF2-SHA256 con 600.000 iteraciones, así que por debajo habría que reimplementarlo a mano sobre HMAC,
+     más lento y con más riesgo, para ganar una fracción mínima de dispositivos.
+   - `java.time` (fechas ISO 8601 del sobre) viene en el sistema desde la API 26, sin *desugaring*.
+   - Compose exige API 21 como mínimo, así que 26 no lo limita.
+   Bajar de 26 solo compensaría si aparece un usuario real con Android 5-7; hasta entonces no.
+4. **Pendiente:** `applicationId` y nombre (comprobar que «Aldune» está libre en F-Droid e IzzyOnDroid), y la versión exacta de Android de la tableta.
+5. Antes de escribir producto: **una revisión del plan por otra IA con ojos frescos** (`MOBILE_PORT_REVIEW.md` §7), con la pregunta
+   añadida de si Kotlin con vectores es de verdad más barato que MAUI.
