@@ -129,5 +129,8 @@ al terminar una lista vacía (tarea o viñeta) la línea queda vacía: se pierde
 `SettleToggled` no mueve nada si alguna tarea de la lista tiene subtareas; `Outdent` cuenta una tabulación como un nivel; `LineMovement` intercambia contenidos, no saltos;
 `Between` devuelve `null` cuando las vecinas ya no admiten un número entre ellas.
 
-**Fuera de estos vectores** (cubierto aparte): `NoteSearch` (Android pliega acentos y Core no, así que tests escritos a mano en Kotlin), `ColorFit`, `ColorMix`,
-`AppPalette` y `AspectPalettes` (paleta de la app: pendiente de decidir si F3b o F4).
+**Fuera de estos vectores** (cubierto aparte): `NoteSearch` (Android pliega acentos y Core no, así que tests escritos a mano en Kotlin), `ColorFit` y `ColorMix`.
+
+**Paleta de la app (F3b, `text-color.json`)**: `AppPalette.For` (modo 0 oscuro, 1 claro, 2 sistema, 3 pastel, 4 medianoche, y `windowsUsesLight`) devuelve el diccionario completo de claves→color
+(`#RRGGBB` o `#AARRGGBB`, **alfa primero**, como `Color.parseColor` de Android); `AppPalette.IsLight` para los modos 0-10. Los aspectos retro (5-10: XP, Telecom, Bash, Phosphor) son de
+Windows y no tienen vectores de paleta: en Android no se ofrecen.

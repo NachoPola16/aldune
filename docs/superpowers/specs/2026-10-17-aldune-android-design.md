@@ -6,7 +6,7 @@
 
 ## 0. En una frase
 
-Una sola app **Kotlin + Jetpack Compose**, adaptativa (Pixel 10a con Android 16 y Lenovo Tab P11 con Android 14), `minSdk` 26,
+Una sola app **Kotlin + Jetpack Compose**, adaptativa (Pixel 10a con Android 17 (API 37; corregido el 17-10-2026, antes decía 16) y Lenovo Tab P11 con Android 14), `minSdk` 26,
 `targetSdk` 36, GPL-3.0, publicable en F-Droid, que hace tres cosas: **capturar en dos segundos, consultar y gestionar las notas del
 PC, y recordar**. Habla el formato de sync 4 sin cambiarlo. Móvil y tableta tienen **las mismas funciones**; cambia la disposición.
 

@@ -167,6 +167,10 @@ public sealed class TextVectorsTests
         "NoteColorAssigner.Assign" => NoteColorAssigner.Assign(ThemeOf(a), (NoteTone)I(a, "tone"), (NoteColorAssignment)I(a, "rule"),
             NS(a, "fixedColor"), Strings(a, "dockColors")),
 
+        "AppPalette.For" => new JsonObject(AppPalette.For((AppearanceMode)I(a, "mode"), a["windowsUsesLight"]!.GetValue<bool>())
+            .OrderBy(p => p.Key, StringComparer.Ordinal).Select(p => KeyValuePair.Create(p.Key, (JsonNode?)p.Value))),
+        "AppPalette.IsLight" => AppPalette.IsLight((AppearanceMode)I(a, "mode"), a["windowsUsesLight"]!.GetValue<bool>()),
+
         "NoteOrdering.Between" => NoteOrdering.Between(ND(a, "before"), ND(a, "after")),
         "NoteOrdering.Spaced" => NoteOrdering.Spaced(I(a, "count")),
         "NoteOrdering.SlotShift" => NoteOrdering.SlotShift(D(a, "delta"), D(a, "pitch"), a["hysteresis"] is null ? NoteOrdering.SlotHysteresis : D(a, "hysteresis")),
@@ -462,6 +466,16 @@ public sealed class TextVectorsTests
         }
         yield return Case("OklchColor.DistanceTo", ("l", 0.5), ("c", 0.1), ("h", 10.0), ("l2", 0.5), ("c2", 0.1), ("h2", 10.0));
         yield return Case("OklchColor.DistanceTo", ("l", 0.5), ("c", 0.1), ("h", 350.0), ("l2", 0.5), ("c2", 0.1), ("h2", 10.0));
+
+        // Paleta de la app (chrome). Solo los aspectos de siempre: Oscuro, Claro, Sistema, Pastel y Medianoche. Los retro (XP, Telecom,
+        // Bash, Phosphor) son de Windows y no se llevan a Android; aun así IsLight se fija para todos los valores, porque settings.json
+        // compartido (o un futuro import) puede traer cualquiera.
+        foreach (var mode in new[] { 0, 1, 2, 3, 4 })
+            foreach (var light in new[] { false, true })
+                yield return Case("AppPalette.For", ("mode", mode), ("windowsUsesLight", light));
+        for (int mode = 0; mode <= 10; mode++)
+            foreach (var light in new[] { false, true })
+                yield return Case("AppPalette.IsLight", ("mode", mode), ("windowsUsesLight", light));
 
         // Temas.
         yield return Case("NoteThemes.BuiltIn");
