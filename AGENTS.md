@@ -13,9 +13,13 @@ notas como ventanas propias, sincronización opcional cifrada de extremo a extre
   Todo lo que se pueda probar va aquí.
 - `src/Aldune`: la app WPF (`Windowing/`, `Interop/` para Win32, `Resources/Strings.cs`).
 - `src/Aldune.SyncServer`: servidor de sync (ASP.NET Core minimal API, Docker).
-- `android/core`: núcleo del futuro cliente Android en **Kotlin/JVM puro** (formato de sync, cifrado, notas protegidas, códigos de perfil).
-  Es un port del formato de `Aldune.Core`, no código compartido: su contrato son los vectores de `tests/vectors/` (ver su `README.md`).
-  Se prueba con `cd android/core && gradle test` (JDK 21; Gradle 8.14 no admite Java 26, que es el de este PC). En este PC: JDK 21 en `C:\Program Files\Eclipse Adoptium\jdk-21.0.12.101-hotspot` y Gradle 8.14.3 en `C:\Tools\gradle-8.14.3` (fuera del PATH: exportar `JAVA_HOME` y `PATH` en el momento). `android/sync` igual (`gradle test`).
+- `android/`: cliente Android nativo (**Kotlin**, no MAUI), con una **raíz Gradle común** (`android/settings.gradle.kts`, wrapper con Gradle 9.6.0 fijado por hash, AGP 9.4.1,
+  Kotlin 2.4.21; versiones en `android/gradle/libs.versions.toml`). Módulos: `core` (formato de sync, cifrado, notas protegidas, códigos de perfil), `sync` (motor y transportes
+  HTTP/WebDAV), `text` (formato de texto, color, orden, búsqueda, paleta de la app), `domain` (reglas de las notas), todos **Kotlin/JVM puro**, y `app` (Compose; en F4).
+  Son un port del formato de `Aldune.Core`, no código compartido: su contrato son los vectores de `tests/vectors/` (ver su `README.md`).
+  Se prueba desde `android/` con `./gradlew test` (JDK 21; el Gradle del sistema, 8.14, ya no vale: el wrapper baja el 9.6). En este PC: JDK 21 en
+  `C:\Program Files\Eclipse Adoptium\jdk-21.0.12.101-hotspot` (exportar `JAVA_HOME`) y SDK en `%LOCALAPPDATA%\Android\Sdk` (`ANDROID_HOME`; `android/local.properties` lo apunta y no se versiona).
+  Compilar e instalar la app: `./gradlew :app:assembleDebug` y `adb install -r app/build/outputs/apk/debug/app-debug.apk`. `compileSdk` 37, `targetSdk` 36, `minSdk` 26.
 - `tests/Aldune.Core.Tests`: xUnit. `tests/Aldune.SyncServer.Tests`: el servidor de sync con WebApplicationFactory.
   `tests/Aldune.Ui.SmokeTests`: prueba de UI con ventanas reales.
 

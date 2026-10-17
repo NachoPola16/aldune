@@ -30,4 +30,4 @@ dependencyResolutionManagement {
 }
 
 // Los módulos puros (core, sync, text) se prueban sin Android; app solo pega piezas y pinta (spec de Android, §3).
-include(":core", ":sync", ":text", ":app")
+include(":core", ":sync", ":text", ":domain", ":app")

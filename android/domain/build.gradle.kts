@@ -1,5 +1,5 @@
 plugins {
-    kotlin("jvm") version "2.1.10"
+    alias(libs.plugins.kotlin.jvm)
 }
 
 group = "app.aldune"
@@ -8,12 +8,12 @@ version = "0.1.0"
 dependencies {
     // Las reglas de texto, color, orden y búsqueda salen de :text; aquí no se reimplementan.
     // `api` porque la interfaz pública de domain expone sus tipos (NoteTheme, NoteTone…).
-    api("app.aldune:aldune-text")
+    api(project(":text"))
 
     testImplementation(kotlin("test"))
-    testImplementation(platform("org.junit:junit-bom:5.11.4"))
-    testImplementation("org.junit.jupiter:junit-jupiter")
-    testRuntimeOnly("org.junit.platform:junit-platform-launcher")
+    testImplementation(platform(libs.junit.bom))
+    testImplementation(libs.junit.jupiter)
+    testRuntimeOnly(libs.junit.platform.launcher)
 }
 
 // Igual que android/core, sync y text: se compila para Java 11 aunque corra en un JDK más nuevo, porque en
