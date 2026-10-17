@@ -321,6 +321,9 @@ private fun SwipeableRow(
             value != SwipeToDismissBoxValue.Settled
         },
     )
+    // El estado del deslizamiento se guarda por id de nota (rememberSaveable): una nota que acaba de archivarse o ir a la papelera volvía a
+    // aparecer en su nueva pestaña ya «descartada», fuera de la pantalla. Al entrar en la composición se repone.
+    LaunchedEffect(item.state) { dismiss.snapTo(SwipeToDismissBoxValue.Settled) }
     SwipeToDismissBox(
         state = dismiss,
         modifier = modifier.padding(horizontal = 16.dp),

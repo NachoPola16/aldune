@@ -41,6 +41,8 @@ fun AldunaTheme(appearance: Int = APPEARANCE_SYSTEM, content: @Composable () -> 
             error = c("DangerStrong"), onError = c("OnDanger"),
             errorContainer = c("DangerBg"), onErrorContainer = c("OnDangerBg"),
             outline = c("Border"), outlineVariant = c("BorderSubtle"),
+            // Los avisos (Snackbar) usan el esquema «inverso»; sin esto salían con el morado por defecto de Material.
+            inverseSurface = c("RaisedHover"), inverseOnSurface = c("Text"), inversePrimary = c("Accent"),
         )
     }
     MaterialTheme(colorScheme = scheme, content = content)
