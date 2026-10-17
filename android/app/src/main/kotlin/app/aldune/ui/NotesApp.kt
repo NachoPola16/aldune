@@ -25,6 +25,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -41,6 +42,7 @@ private const val NEW_NOTE = ""
 @Composable
 fun NotesApp(viewModel: NotesViewModel) {
     val state by viewModel.state.collectAsStateWithLifecycle()
+    var showSettings by rememberSaveable { mutableStateOf(false) }
     viewModel.setPlaceholder(stringResource(R.string.new_note_title))
     Surface(Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {
         when (val s = state) {
@@ -48,14 +50,16 @@ fun NotesApp(viewModel: NotesViewModel) {
                 CircularProgressIndicator()
             }
             is UiState.KeyLost -> KeyLostScreen(onStartOver = viewModel::startOver)
-            is UiState.Ready -> NotesScaffold(s, viewModel)
+            is UiState.Ready ->
+                if (showSettings) SettingsScreen(viewModel, onClose = { showSettings = false })
+                else NotesScaffold(s, viewModel, onOpenSettings = { showSettings = true })
         }
     }
 }
 
 @OptIn(ExperimentalMaterial3AdaptiveApi::class, ExperimentalMaterial3Api::class)
 @Composable
-private fun NotesScaffold(state: UiState.Ready, viewModel: NotesViewModel) {
+private fun NotesScaffold(state: UiState.Ready, viewModel: NotesViewModel, onOpenSettings: () -> Unit) {
     val navigator = rememberListDetailPaneScaffoldNavigator<String>()
     val scope = rememberCoroutineScope()
     val openNote: (String) -> Unit = { id -> scope.launch { navigator.navigateTo(ListDetailPaneScaffoldRole.Detail, id) } }
@@ -72,7 +76,7 @@ private fun NotesScaffold(state: UiState.Ready, viewModel: NotesViewModel) {
                 NoteListPane(
                     state = state, viewModel = viewModel,
                     selectedId = navigator.currentDestination?.contentKey,
-                    onOpen = openNote, onNew = { openNote(NEW_NOTE) },
+                    onOpen = openNote, onNew = { openNote(NEW_NOTE) }, onOpenSettings = onOpenSettings,
                 )
             }
         },

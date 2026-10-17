@@ -51,10 +51,12 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.TextLayoutResult
 import androidx.compose.ui.text.TextRange
+import androidx.compose.ui.text.coerceIn
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LifecycleEventEffect
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import app.aldune.R
 import app.aldune.text.BulletLines
 import app.aldune.text.LineDirection
@@ -116,10 +118,26 @@ fun NoteEditorPane(key: String, viewModel: NotesViewModel, onBack: () -> Unit, s
 
     val slack = with(LocalDensity.current) { 12.dp.toPx() }
 
+    val reorderOnCheck by viewModel.settings.collectAsStateWithLifecycle()
+    val settleChecked = reorderOnCheck.reorderOnCheck
+
+    /**
+     * Marca o desmarca la casilla de [glyph] y, con el ajuste «mover abajo las tareas hechas», la recoloca en su lista. Al tocar, el cursor
+     * sigue a su línea; con Ctrl+Enter se queda en el mismo sitio de la pantalla, como en Windows, para poder marcar una lista seguida.
+     */
+    fun toggleTask(glyph: Int, keepCaretPosition: Boolean) {
+        val toggled = TaskLines.toggleCheckboxAt(value.text, glyph) ?: return
+        val sel = value.selection
+        if (!settleChecked) return commit(TextFieldValue(toggled, sel))
+        val edit = TaskLists.settleToggled(toggled, glyph)
+        val moved = if (keepCaretPosition) sel else TextRange(edit.mapIndex(sel.start), edit.mapIndex(sel.end))
+        commit(TextFieldValue(edit.text, moved.coerceIn(0, edit.text.length)))
+    }
+
     LaunchedEffect(tap) {
         val position = tap ?: return@LaunchedEffect
         withFrameNanos { }
-        toggleCheckboxAtTap(value.text, layout, position, slack)?.let { commit(TextFieldValue(it, value.selection)) }
+        toggleCheckboxAtTap(value.text, layout, position, slack)?.let { toggleTask(it, keepCaretPosition = false) }
         tap = null
     }
 
@@ -175,9 +193,8 @@ fun NoteEditorPane(key: String, viewModel: NotesViewModel, onBack: () -> Unit, s
                         // Ctrl+Enter marca la tarea de la línea; en una línea que no lo es, Enter normal.
                         event.isCtrlPressed && (event.key == Key.Enter || event.key == Key.NumPadEnter) -> {
                             val glyph = TaskLists.checkboxOnLine(value.text, caret())
-                            val toggled = glyph?.let { TaskLines.toggleCheckboxAt(value.text, it) }
-                            if (toggled != null) commit(TextFieldValue(toggled, value.selection))
-                            toggled != null
+                            if (glyph != null) toggleTask(glyph, keepCaretPosition = true)
+                            glyph != null
                         }
                         else -> false
                     }
@@ -204,19 +221,19 @@ fun NoteEditorPane(key: String, viewModel: NotesViewModel, onBack: () -> Unit, s
 }
 
 /**
- * El texto con la casilla tocada cambiada, o `null` si el toque no cayó sobre una. `getOffsetForPosition` da el límite de carácter más
+ * La posición de la casilla tocada, o `null` si el toque no cayó sobre una. `getOffsetForPosition` da el límite de carácter más
  * cercano, así que se prueban el carácter anterior y el siguiente; y se exige que el toque esté a menos de [slack] del glifo, para que
  * tocar el texto de la tarea no la marque.
  */
-private fun toggleCheckboxAtTap(text: String, layout: TextLayoutResult?, position: Offset, slack: Float): String? {
+private fun toggleCheckboxAtTap(text: String, layout: TextLayoutResult?, position: Offset, slack: Float): Int? {
     layout ?: return null
     if (text.isEmpty()) return null
     val offset = layout.getOffsetForPosition(position)
     for (candidate in intArrayOf(offset, offset - 1)) {
         if (candidate !in text.indices) continue
-        val toggled = TaskLines.toggleCheckboxAt(text, candidate) ?: continue
+        if (TaskLines.toggleCheckboxAt(text, candidate) == null) continue
         val box = layout.getBoundingBox(candidate)
-        if (position.y in box.top..box.bottom && position.x in (box.left - slack)..(box.right + slack)) return toggled
+        if (position.y in box.top..box.bottom && position.x in (box.left - slack)..(box.right + slack)) return candidate
     }
     return null
 }

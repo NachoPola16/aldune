@@ -126,6 +126,13 @@ desde Core y se porta **antes de la tarea de tema** (F3b, §4 tarea 5); hasta en
   en el Pixel con toques reales. **Pendiente de la tarea 6:** reordenar por arrastre (hace falta decidir si se añade una librería; mientras, el orden es el del dominio),
   menú de color y etiquetas por nota, y comprobar la disposición ancha (tableta o emulador). Detalle aprendido: el buscador es el primer campo de texto y Android
   le daba el foco y el teclado al arrancar; se resolvió con un elemento invisible que recibe el foco tras el de la ventana (`NoteListPane`).
+- **Tarea 7 (2026-10-17):** editor con casillas, viñetas y sangría. Enter y Retroceso del teclado virtual se deducen por diferencia en `ListKeys` (`:text`, 11 pruebas en la
+  JVM); probado con Gboard real en el Pixel, y los atajos físicos con eventos de tecla por adb. Sigue pendiente un teclado de terceros, uno físico real y la tableta. La técnica
+  y lo aprendido están en [`docs/ANDROID_PROBES.md`](../../ANDROID_PROBES.md).
+- **Tarea 8 (2026-10-18):** `android/strings.tsv` (clave + en/es/de/fr/pt-BR) y `android/scripts/gen_strings.py`, que genera los cinco `values*/strings.xml` y falla si falta un
+  idioma. Ajustes (`SettingsScreen`, `SettingsStore` en SharedPreferences): aspecto (Sistema/Oscuro/Claro/Pastel/Medianoche), idioma (se aplica en `attachBaseContext` y recrea la
+  actividad; sin AppCompat ni selector del sistema), tono de las notas nuevas, días de papelera y «mover abajo las tareas hechas» (**apagado por defecto**, decidido el 18-10, como
+  Windows; con Ctrl+Enter el cursor se queda en su sitio, al tocar sigue a su línea). Falta el color por tema de las notas nuevas (los nombres de tema de Core están en español).
 
 ## 3. Verificación (puertas)
 

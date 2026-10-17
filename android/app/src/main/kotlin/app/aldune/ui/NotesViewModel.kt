@@ -4,11 +4,15 @@ import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import app.aldune.AppContainer
+import app.aldune.data.AppSettings
+import app.aldune.data.SettingsStore
 import app.aldune.domain.LostReason
+import app.aldune.domain.NewNoteColorSettings
 import app.aldune.domain.NoteListItem
 import app.aldune.domain.NoteResult
 import app.aldune.domain.NoteService
 import app.aldune.domain.NoteState
+import app.aldune.text.NoteTone
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.NonCancellable
@@ -48,11 +52,21 @@ private const val AUTOSAVE_MS = 600L
 class NotesViewModel(application: Application) : AndroidViewModel(application) {
     private val container = AppContainer(application)
     private val io = Mutex()
+    private val settingsStore = SettingsStore(application)
     private var service: NoteService? = null
     private var placeholder: String = "New note"
 
     private val _state = MutableStateFlow<UiState>(UiState.Loading)
     val state: StateFlow<UiState> = _state.asStateFlow()
+
+    private val _settings = MutableStateFlow(settingsStore.load())
+    val settings: StateFlow<AppSettings> = _settings.asStateFlow()
+
+    fun updateSettings(transform: (AppSettings) -> AppSettings) {
+        val next = transform(_settings.value)
+        _settings.value = next
+        settingsStore.save(next)
+    }
 
     init {
         launchIo {
@@ -72,8 +86,8 @@ class NotesViewModel(application: Application) : AndroidViewModel(application) {
 
     private fun start(notes: NoteService) {
         service = notes
-        // Como Windows: la papelera se purga al abrir (30 días por defecto).
-        notes.purgeTrashed()
+        // Como Windows: la papelera se purga al abrir, con los días de los ajustes (30 por defecto).
+        notes.purgeTrashed(_settings.value.trashDays)
         _state.value = UiState.Ready()
         refresh()
     }
@@ -129,7 +143,7 @@ class NotesViewModel(application: Application) : AndroidViewModel(application) {
             if (text == draft.lastSaved) return@withLock
             val id = draft.noteId
             if (id == null) {
-                if (text.isNotEmpty()) (service?.create(text) as? NoteResult.Ok)?.let { draft.noteId = it.value.id; draft.lastSaved = text }
+                if (text.isNotEmpty()) (service?.create(text, settings = newNoteColors()) as? NoteResult.Ok)?.let { draft.noteId = it.value.id; draft.lastSaved = text }
             } else if (service?.edit(id, text) is NoteResult.Ok) {
                 draft.lastSaved = text
             }
@@ -144,6 +158,8 @@ class NotesViewModel(application: Application) : AndroidViewModel(application) {
     fun restore(id: String) = change { it.restore(id) }
 
     fun deleteForever(id: String) = change { it.deleteForever(id) }
+
+    private fun newNoteColors() = NewNoteColorSettings(tone = if (_settings.value.darkNotes) NoteTone.Dark else NoteTone.Light)
 
     private fun change(op: (NoteService) -> Any?) = launchIo {
         service?.let(op)
