@@ -1,8 +1,24 @@
 package app.aldune.domain
 
+import app.aldune.text.NoteColorAssigner
+import app.aldune.text.NoteColorAssignment
 import app.aldune.text.NoteOrdering
 import app.aldune.text.NoteSearch
+import app.aldune.text.NoteThemes
+import app.aldune.text.NoteTheme
+import app.aldune.text.NoteTone
 import java.time.Duration
+
+/**
+ * Cómo se colorea una nota nueva: los ajustes de Windows (`ActiveThemeId`, `NewNoteTone`, `ColorAssignment`, `FixedNoteColor`) ya resueltos.
+ * Los valores por defecto son los de Core cuando no hay ajustes (`AppCoordinator.NextNoteColor`).
+ */
+data class NewNoteColorSettings(
+    val theme: NoteTheme = NoteThemes.builtIn[0],
+    val tone: NoteTone = NoteTone.Light,
+    val rule: NoteColorAssignment = NoteColorAssignment.RotateAvoidNeighbors,
+    val fixedColor: String? = null,
+)
 
 /**
  * Las reglas de «qué pasa cuando el usuario toca una nota». Sin Android ni Room: el almacén, el reloj, el id del
@@ -27,18 +43,33 @@ class NoteService(
     /**
      * Crea la nota. Solo se llama en la primera edición con texto (spec Android §2.7): abrir una nota nueva y cerrarla sin escribir
      * no deja nada. Una nota creada aquí lleva siempre `LF`.
+     *
+     * Con [color] `null` se elige como en Windows (`AppCoordinator.NextNoteColor`): [NoteColorAssigner] mirando los colores de las
+     * notas activas en el orden del mazo. [viewTag] es la etiqueta de la vista actual: con ella, las vecinas de la nota nueva son
+     * solo las de esa etiqueta.
      */
-    fun create(text: String, color: String, screenOrigin: String = ""): NoteResult<Note> = synchronized(lock) {
+    fun create(
+        text: String,
+        color: String? = null,
+        settings: NewNoteColorSettings = NewNoteColorSettings(),
+        screenOrigin: String = "",
+        viewTag: String? = null,
+    ): NoteResult<Note> = synchronized(lock) {
         val normalized = LineEnding.normalize(text)
         if (normalized.isEmpty()) return NoteResult.Err(NoteError.EmptyText)
 
         val now = clock.now()
         val note = Note(
-            id = idFactory.newId(), text = normalized, lineEnding = LineEnding.LF, color = color,
+            id = idFactory.newId(), text = normalized, lineEnding = LineEnding.LF, color = color ?: nextColor(settings, viewTag),
             createdAt = now, updatedAt = now, state = NoteState.ACTIVE, screenOrigin = screenOrigin,
         )
         store.put(note)
         NoteResult.Ok(note)
+    }
+
+    private fun nextColor(settings: NewNoteColorSettings, viewTag: String?): String {
+        val dockColors = list(NoteState.ACTIVE, tag = viewTag).map { it.color }
+        return NoteColorAssigner.assign(settings.theme, settings.tone, settings.rule, settings.fixedColor, dockColors)
     }
 
     /**
