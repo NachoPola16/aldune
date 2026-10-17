@@ -81,7 +81,8 @@ class AndroidKeystoreKeyWrapper(private val alias: String = DEFAULT_ALIAS) : Key
             .setEncryptionPaddings(KeyProperties.ENCRYPTION_PADDING_NONE)
             .setKeySize(256)
             .setUserAuthenticationRequired(false)
-            .apply { if (strongBox) setIsStrongBoxBacked(true) }
+            // StrongBox existe desde la API 28; con minSdk 26 el llamador ya no la pide por debajo (y la guarda calma a lint).
+            .apply { if (strongBox && Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) setIsStrongBoxBacked(true) }
             .build()
         KeyGenerator.getInstance(KeyProperties.KEY_ALGORITHM_AES, PROVIDER).run {
             init(spec)
