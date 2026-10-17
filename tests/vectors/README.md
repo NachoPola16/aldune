@@ -98,3 +98,36 @@ el reparto entre varias versiones del mismo id (HTTP/WebDAV) y la rotación de c
 
 Los de formato (`sync-format4.json`) solo fijan los datos. El **algoritmo** lo fijan los de escenario de arriba, pero no cubren los
 transportes reales ni la rotación de clave: eso se prueba aparte, contra un servidor real.
+
+## Vectores de texto, color y orden (`text-lines.json`, `text-color.json`, `text-order.json`)
+
+Los genera y verifica `tests/Aldune.Core.Tests/TextVectorsTests.cs` (F3 de la spec de Android) con las funciones reales de Core, sin tocarlas.
+Regenerar solo a propósito: `ALDUNE_REGEN_VECTORS=1 dotnet test tests/Aldune.Core.Tests --filter "FullyQualifiedName~RegenerateTextVectors"`.
+La salida es determinista (regenerar sin cambiar Core no cambia los ficheros).
+
+Cada caso es `{"op", "args", "expected"}`, uno por línea. `op` es `Clase.Método` de Core; `args` son sus parámetros por nombre; `expected` es lo que
+devolvió Core, ya pasado por JSON. Convenciones de la traducción a JSON:
+
+- **Posiciones y cursores**: unidades UTF-16 (`string.Length`), las mismas que `String` de Kotlin. Hay cursores fuera de rango (`-1`, `len+5`) para fijar el recorte.
+  Los cursores que parten un par sustituto (emoji) no se prueban.
+- **`(string Text, int Caret)`** → `{"text", "caret"}`; si la función devuelve `null` (`EnterContinuation`, `RemoveOnBackspace`, `Move`, `ToggleCheckboxAt`,
+  `CheckboxOnLine`, `RestOutlineFor`, `OklchColor.FromHex`, `Luminance`, `Between`), `expected` es `null`.
+- `Count` → `{"done", "total"}`; `NoteText.Split` → `{"title", "body"}`; `IndentLines`/`OutdentLines` → `{"text", "selectionStart", "selectionLength"}`.
+- **`TextEdit`** (`UncheckAll`, `RemoveChecked`, `SettleToggled`) → `{"text", "changed", "map"}`, con `map[i] = MapIndex(i)` para cada `i` de 0 a la longitud del texto original.
+- **Enums como número**: `LineMovement.Move.direction` 0 arriba / 1 abajo; `NoteColorAssigner` `tone` 0 claro / 1 oscuro / 2 ambos, `rule` 0 rotar evitando vecinas / 1 rotar /
+  2 más distinto / 3 fijo (en el enum de Core el orden es ese: `RotateAvoidNeighbors`, `Rotate`, `MostDistinct`, `Fixed`).
+- **Saltos de línea**: los textos llevan LF, CRLF y mezclas; `EnterContinuation` recibe `newLine` (los dos). Core no normaliza nada: el port tampoco.
+- **`NoteTitleHelper`** usa el texto de relleno por defecto de Core, `"New note"` (en la app lo fija el idioma). En Kotlin es un parámetro.
+- **Números reales** (OKLCH, distancias, luminancia, `Between`): se escriben con el formato más corto que recupera el mismo `double`. Compáralos con una tolerancia
+  pequeña (1e-9 relativa); los `#RRGGBB` se comparan **exactos**. Si algún hex difiere en una unidad de un canal por la diferencia entre `Math.Cbrt`/`Math.Pow` de .NET y
+  de la JVM, **no ensanches la tolerancia en silencio**: es un hallazgo para apuntar en el informe.
+- `NoteColorAssigner.Assign`: `themeId` (de serie) o `theme` en línea (`{id, name, dark, light}`); `dockColors` son los colores del mazo en orden.
+  `NoteThemes.Resolve`/`Sanitize` reciben `custom` (lista de temas propios) cuando hace falta.
+
+Rarezas de Core que estos vectores fijan tal cual (no son errores del port): `EnterContinuation` solo continúa o termina una lista con el cursor al **final** de la línea;
+al terminar una lista vacía (tarea o viñeta) la línea queda vacía: se pierde también la sangría (`TrimEnd`); `TaskLines.PrefixLength` vale 1 si no hay espacio detrás del glifo;
+`SettleToggled` no mueve nada si alguna tarea de la lista tiene subtareas; `Outdent` cuenta una tabulación como un nivel; `LineMovement` intercambia contenidos, no saltos;
+`Between` devuelve `null` cuando las vecinas ya no admiten un número entre ellas.
+
+**Fuera de estos vectores** (cubierto aparte): `NoteSearch` (Android pliega acentos y Core no, así que tests escritos a mano en Kotlin), `ColorFit`, `ColorMix`,
+`AppPalette` y `AspectPalettes` (paleta de la app: pendiente de decidir si F3b o F4).
