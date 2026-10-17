@@ -4,6 +4,7 @@ Rama: `claude/upbeat-archimedes-br02lb` (el prompt pedía `nube/android-sync`; l
 Módulo: `android/sync` (Kotlin/JVM puro, Gradle KTS, JUnit 5, `includeBuild("../core")`).
 
 ## Entorno
+- Dependencias de runtime de `android/sync`: `aldune-core`, kotlinx-serialization-json 1.8.0 y OkHttp 4.12.0; de test, JUnit 5.11.4 y MockWebServer 4.12.0.
 - JDK 21, Gradle 8.14.3 del sistema; sin wrapper ni binarios en el repo: `cd android/sync && gradle test`.
 - `jvmTarget` 11 y `--release 11`, igual que `android/core`.
 - Maven Central devolvió 429 (límite de peticiones del egreso compartido) en las primeras resoluciones; reintentando con pausas se descargó todo
@@ -26,10 +27,18 @@ Módulo: `android/sync` (Kotlin/JVM puro, Gradle KTS, JUnit 5, `includeBuild("..
     escenarios (`PlanScenarioTest` tiene un grupo por tarea). Por eso hay dos commits para 2-6 y no uno por tarea.
 - [x] 6. `execute` (`SyncExecutor.kt`) + comprobación de `localAfter`, `localTombstonesAfter`, `remoteAfter`, `basesAfter` y conflictos con los dobles.
   **Los 34 escenarios verdes** (en `planSync` solo y de punta a punta). Test extra de idempotencia: una segunda pasada tras la primera no hace nada.
-- [ ] 7. `HttpSyncTransport` con OkHttp: **no hecho** (era opcional, «solo si sobra margen»; es la fase F2 de la spec).
+- [x] 7. `HttpSyncTransport` (`HttpSyncTransport.kt`, OkHttp 4.12.0; MockWebServer 4.12.0 solo en test): 11 tests verdes contra un MockWebServer.
+  Rutas y códigos copiados de `HttpSyncTransport.cs` y `Program.cs`: `GET api/v1/objects` + `GET api/v1/objects/{id sin guiones}`, `PUT`/`DELETE` del mismo
+  camino, `Authorization: Bearer`. 401 → `IllegalStateException` con el mensaje de Core; otros códigos (404, 413, 5xx) → `IOException`; sin respuesta → timeout
+  (`callTimeout`, 20 s por defecto); respuesta que no es JSON → `IOException`; un objeto de formato 5 → `SyncFormatException` y **aborta la lectura entera**
+  (HTTP no salta, la carpeta sí). Incluye un test de dos dispositivos sincronizándose a través de un servidor simulado con la regla «un PUT más
+  antiguo no pisa lo guardado».
+  - **No probado contra `Aldune.SyncServer` real** (puerta de F2) ni con el 413 de 5 MB real: el mock solo devuelve el código.
+  - No se aplica ningún límite de tamaño al leer; Core tampoco.
+  - Se sigue la resolución RFC 3986 de la URL base como `new Uri(base, relative)` de .NET: sin barra final se pierde el último segmento de la ruta.
 
 ## Estado final
-- `cd android/sync && gradle test` → **82 tests, 0 fallos** (1 de andamiaje, 34 de plan, 35 de punta a punta, 12 propios).
+- `cd android/sync && gradle test` → **93 tests, 0 fallos** (1 de andamiaje, 34 de plan, 35 de punta a punta, 12 propios, 11 del transporte HTTP).
 - `cd android/core && gradle test` → 82 tests, 0 fallos, sin tocar (`tests/vectors/kotlin-output.json` restaurado tras ejecutarlo).
 - No se ha tocado `src/`, `tests/Aldune.*` ni `android/core`.
 
@@ -52,7 +61,7 @@ Módulo: `android/sync` (Kotlin/JVM puro, Gradle KTS, JUnit 5, `includeBuild("..
 7. Sin diferencias entre `SyncService.cs` y los vectores: ningún vector contradijo la lectura del código.
 
 ## Sin hacer
-- `HttpSyncTransport` (tarea 7) y WebDAV: F2.
+- WebDAV (otra sesión) y la prueba del transporte HTTP contra el servidor real (F2).
 - Rotación de clave (`CompletePendingKeyRotation`): fuera de la v1 (Android no la inicia).
 - `LocalStore`/`SyncTransport` reales (Room, OkHttp): solo hay dobles en memoria.
 - No se ha ejecutado contra un `Aldune.SyncServer` real (la puerta de F2).
