@@ -86,6 +86,12 @@ object Operations {
             )
         )
 
+        "NoteOrdering.Between" -> NoteOrdering.between(a.nd("before"), a.nd("after")).let { if (it == null) JsonNull else num(it) }
+        "NoteOrdering.Spaced" -> JsonArray(NoteOrdering.spaced(a.i("count")).map { JsonPrimitive(it) })
+        "NoteOrdering.SlotShift" ->
+            num(NoteOrdering.slotShift(a.d("delta"), a.d("pitch"), a.nd("hysteresis") ?: NoteOrdering.SLOT_HYSTERESIS))
+        "NoteOrdering.TargetIndex" -> num(NoteOrdering.targetIndex(a.i("originalIndex"), a.d("delta"), a.d("pitch"), a.i("count")))
+
         else -> throw NotImplementedError("Operación sin implementar: $op")
     }
 

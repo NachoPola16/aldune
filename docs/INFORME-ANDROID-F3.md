@@ -13,7 +13,7 @@ Rama: `claude/sweet-meitner-coa4zr`. Módulo: `android/text` (Kotlin/JVM puro, p
 - [x] 1. Lector de vectores, `LineText` (interno), `TaskLines`, `BulletLines`, `ListPrefix`, `ListIndent`, `LineMovement` (24 operaciones de `text-lines.json` en verde).
 - [x] 2. `TextEdit` (con `mapIndex`), `TaskLists`, `NoteTitleHelper` (relleno como parámetro `placeholder`), `NoteText`: las 13 operaciones restantes de `text-lines.json` en verde.
 - [x] 3. Color: `OklchColor`, `NoteColorContrast`, `NoteColorDerivation`, `NoteThemes` (`builtIn`, legacy, `resolve`, `sanitize`), `NoteTheme`, `NoteDisplayColor`, `NoteColorAssigner`. Las 18 operaciones de `text-color.json` en verde; **todos los `#RRGGBB` coinciden exactos** (ver hallazgo 1).
-- [ ] 4. Orden.
+- [x] 4. `NoteOrdering` (`between`, `spaced`, `slotShift`, `targetIndex`): las 4 operaciones de `text-order.json` en verde (438 casos, incluidos los extremos de `double` como 5E-324).
 - [ ] 5. Búsqueda.
 - [ ] 6. Pruebas propias.
 
