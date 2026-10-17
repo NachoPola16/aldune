@@ -61,5 +61,6 @@ fun JsonObject.s(key: String): String = getValue(key).str()
 fun JsonObject.i(key: String): Int = getValue(key).str().toInt()
 fun JsonObject.d(key: String): Double = getValue(key).str().toDouble()
 fun JsonObject.ns(key: String): String? = (this[key] as? JsonPrimitive)?.takeIf { it !is JsonNull }?.contentOrNull
+fun JsonObject.b(key: String): Boolean = getValue(key).str().toBooleanStrict()
 fun JsonObject.nd(key: String): Double? = ns(key)?.toDouble()
 fun JsonObject.strings(key: String): List<String> = getValue(key).jsonArray.map { it.str() }

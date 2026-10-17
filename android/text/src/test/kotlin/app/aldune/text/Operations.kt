@@ -71,6 +71,8 @@ object Operations {
         "NoteColorDerivation.RestOutlineFor" -> strOrNull(NoteColorDerivation.restOutlineFor(a.ns("color")))
         "NoteColorDerivation.StripeColor" -> str(NoteColorDerivation.stripeColor(a.s("color"), a.s("ground")))
         "NoteColorDerivation.ClassicColors" -> strings(NoteColorDerivation.classicColors)
+        "AppPalette.For" -> JsonObject(AppPalette.forMode(a.i("mode"), a.b("windowsUsesLight")).toSortedMap().mapValues { JsonPrimitive(it.value) })
+        "AppPalette.IsLight" -> bool(AppPalette.isLight(a.i("mode"), a.b("windowsUsesLight")))
         "NoteDisplayColor.Resolve" -> str(NoteDisplayColor.resolve(a.s("color"), a.ns("uniform")))
         "NoteThemes.BuiltIn" -> JsonArray(NoteThemes.builtIn.map { theme(it) })
         "NoteThemes.Legacy" -> obj(
