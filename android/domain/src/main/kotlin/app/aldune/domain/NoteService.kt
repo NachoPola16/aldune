@@ -163,6 +163,9 @@ class NoteService(
         NoteResult.Ok(expired.size)
     }
 
+    /** La nota con ese id, o `null`. Es lo que lee el editor al abrir una nota. */
+    fun get(id: String): Note? = synchronized(lock) { store.get(id) }
+
     /**
      * Las notas de un estado en el orden del mazo, filtradas por etiqueta (sin distinguir mayúsculas) y por búsqueda en texto y etiquetas.
      * Una etiqueta `null` o una búsqueda vacía no filtran.

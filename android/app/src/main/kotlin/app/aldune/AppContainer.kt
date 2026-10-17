@@ -39,11 +39,15 @@ class AppContainer(context: Context) {
     fun startOver(): Opened.Ready = ready(keys.startOver(deleteData = { appContext.deleteDatabase(AldunaDatabase.FILE_NAME) }).key)
 
     private fun ready(key: ByteArray): Opened.Ready {
-        val cipher = AesGcmNoteCipher(key)
-        key.fill(0) // el cifrador ya tiene su copia
-        val database = AldunaDatabase.open(appContext)
-        val store = RoomNoteStore(database, cipher)
-        return Opened.Ready(database, NoteService(store, SystemClock, deviceId = "", idFactory = RandomIdFactory))
+        try {
+            val cipher = AesGcmNoteCipher(key)
+            val database = AldunaDatabase.open(appContext)
+            val store = RoomNoteStore(database, cipher)
+            return Opened.Ready(database, NoteService(store, SystemClock, deviceId = "", idFactory = RandomIdFactory))
+        } finally {
+            // El cifrador ya tiene su copia; la nuestra se borra pase lo que pase (revisión de agy, 17-10-2026).
+            key.fill(0)
+        }
     }
 
     private fun databaseFile(): File = appContext.getDatabasePath(AldunaDatabase.FILE_NAME)

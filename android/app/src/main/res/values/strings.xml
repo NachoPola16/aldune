@@ -1,4 +1,36 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">Aldune</string>
+    <string name="new_note_title">New note</string>
+    <string name="tab_active">Notes</string>
+    <string name="tab_archived">Archived</string>
+    <string name="tab_trash">Trash</string>
+    <string name="search_hint">Search notes</string>
+    <string name="clear_search">Clear search</string>
+    <string name="new_note">New note</string>
+    <string name="back">Back</string>
+    <string name="undo">Undo</string>
+    <string name="note_archived">Note archived</string>
+    <string name="note_trashed">Note moved to trash</string>
+    <string name="note_restored">Note restored</string>
+    <string name="restore">Restore</string>
+    <string name="archive">Archive</string>
+    <string name="move_to_trash">Move to trash</string>
+    <string name="delete_forever">Delete forever</string>
+    <string name="delete_forever_title">Delete this note forever?</string>
+    <string name="delete_forever_body">It cannot be recovered on this device.</string>
+    <string name="cancel">Cancel</string>
+    <string name="empty_active">No notes yet. Tap + to write the first one.</string>
+    <string name="empty_archived">Nothing archived.</string>
+    <string name="empty_trash">The trash is empty.</string>
+    <string name="empty_search">No note matches your search.</string>
+    <string name="select_a_note">Select a note, or tap + to write one.</string>
+    <string name="tasks_progress">%1$d/%2$d</string>
+    <string name="loading">Loading…</string>
+    <string name="key_lost_title">The notes on this device cannot be read</string>
+    <string name="key_lost_body">The key that protects them is gone (it can happen after restoring a backup or resetting the lock screen). Nothing has been deleted. If you use sync, starting over and syncing again will bring your notes back.</string>
+    <string name="start_over">Start over</string>
+    <string name="start_over_title">Delete everything on this device?</string>
+    <string name="start_over_body">The unreadable notes will be erased and the app will start empty. This cannot be undone.</string>
+    <string name="start_over_confirm">Yes, delete and start over</string>
 </resources>

@@ -120,6 +120,12 @@ desde Core y se porta **antes de la tarea de tema** (F3b, §4 tarea 5); hasta en
   (StrongBox si existe; en el Pixel, clave en hardware seguro y 29 ms para desenvolver) y `AppContainer.open()` → `Ready` o `KeyLost`. Regla: sin clave
   recuperable **nunca** se genera otra ni se borra nada; solo «empezar de cero» (borra datos → fichero → clave del Keystore, en ese orden). El fichero de la
   clave vive en `noBackupFilesDir`. Falta la pantalla del aviso (tarea 6-8).
+- **Tarea 6 (2026-10-17):** lista adaptativa (`NavigableListDetailPaneScaffold`), pestañas Notas/Archivadas/Papelera con contador, búsqueda, chips de etiqueta, «+»,
+  deslizar para archivar/papelera/restaurar con «Deshacer», borrado definitivo con confirmación, tema de Aldune (`AppPalette`), pantalla de clave perdida y un editor
+  de texto plano con guardado automático **en el `ViewModel`** (borradores que sobreviven al panel; una nota nueva no existe hasta el primer carácter). Probado a mano
+  en el Pixel con toques reales. **Pendiente de la tarea 6:** reordenar por arrastre (hace falta decidir si se añade una librería; mientras, el orden es el del dominio),
+  menú de color y etiquetas por nota, y comprobar la disposición ancha (tableta o emulador). Detalle aprendido: el buscador es el primer campo de texto y Android
+  le daba el foco y el teclado al arrancar; se resolvió con un elemento invisible que recibe el foco tras el de la ventana (`NoteListPane`).
 
 ## 3. Verificación (puertas)
 

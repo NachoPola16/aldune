@@ -8,6 +8,13 @@ import kotlin.test.assertNull
 import kotlin.test.assertTrue
 
 class NoteServiceEditTest {
+    @Test fun `get devuelve la nota guardada o null si no existe`() {
+        val f = Fixture()
+        val note = f.create("hola")
+        assertEquals(note, f.service.get(note.id))
+        assertNull(f.service.get("no-existe"))
+    }
+
     @Test fun `una nota nueva lleva LF, estado activo y las fechas del reloj`() {
         val f = Fixture()
         val note = f.create("hola")
