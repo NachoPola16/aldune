@@ -7,6 +7,7 @@ import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.imePadding
@@ -16,6 +17,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.HorizontalDivider
@@ -29,8 +31,10 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.withFrameNanos
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.SolidColor
@@ -67,6 +71,7 @@ import app.aldune.text.TaskLines
 import app.aldune.text.TaskLists
 import app.aldune.text.TextAndCaret
 import app.aldune.text.TextSelection
+import kotlinx.coroutines.launch
 
 /**
  * Editor de una nota: texto con ayudas de lista (casillas, viñetas, sangría) y guardado automático (lo hace el `ViewModel`, ver
@@ -76,6 +81,8 @@ import app.aldune.text.TextSelection
 fun NoteEditorPane(key: String, viewModel: NotesViewModel, onBack: () -> Unit, showBack: Boolean) {
     var value by remember(key) { mutableStateOf(TextFieldValue("")) }
     var loaded by remember(key) { mutableStateOf(false) }
+    var options by remember(key) { mutableStateOf<NotesViewModel.NoteOptions?>(null) }
+    val scope = rememberCoroutineScope()
     var layout by remember(key) { mutableStateOf<TextLayoutResult?>(null) }
     // Toque pendiente sobre el texto. No se aplica en el mismo evento: el campo, al recibir ese mismo toque, emite el texto
     // anterior con el cursor nuevo y pisaría el cambio; se espera al siguiente fotograma (ver LaunchedEffect de abajo).
@@ -145,11 +152,16 @@ fun NoteEditorPane(key: String, viewModel: NotesViewModel, onBack: () -> Unit, s
     val longPress = LocalViewConfiguration.current.longPressTimeoutMillis
 
     Column(Modifier.fillMaxSize().safeDrawingPadding().imePadding()) {
-        if (showBack) {
-            Row(Modifier.fillMaxWidth()) {
+        Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+            if (showBack) {
                 IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.back)) }
             }
+            Spacer(Modifier.weight(1f))
+            IconButton(onClick = { scope.launch { options = viewModel.noteOptions(key) } }, enabled = loaded) {
+                Icon(Icons.Default.MoreVert, contentDescription = stringResource(R.string.note_options))
+            }
         }
+        options?.let { current -> NoteOptionsDialog(current, viewModel, onClose = { options = null }) }
         BasicTextField(
             value = value,
             onValueChange = { typed ->

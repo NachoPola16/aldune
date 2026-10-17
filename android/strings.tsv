@@ -59,3 +59,10 @@ trash_days_value	%1$d days	%1$d días	%1$d Tage	%1$d jours	%1$d dias
 reorder_on_check	Move checked tasks down	Mover abajo las tareas hechas	Erledigte Aufgaben nach unten	Descendre les tâches faites	Mover tarefas concluídas para baixo
 reorder_on_check_hint	Off: a task stays where it is when you check it.	Apagado: una tarea se queda donde está al marcarla.	Aus: Eine Aufgabe bleibt beim Abhaken an ihrem Platz.	Désactivé : une tâche reste en place quand on la coche.	Desligado: a tarefa fica onde está ao marcá-la.
 about_version	Version %1$s	Versión %1$s	Version %1$s	Version %1$s	Versão %1$s
+note_options	Color and tags	Color y etiquetas	Farbe und Tags	Couleur et étiquettes	Cor e etiquetas
+note_color	Color	Color	Farbe	Couleur	Cor
+note_tags	Tags	Etiquetas	Tags	Étiquettes	Etiquetas
+tag_hint	New tag	Nueva etiqueta	Neuer Tag	Nouvelle étiquette	Nova etiqueta
+add_tag	Add	Añadir	Hinzufügen	Ajouter	Adicionar
+remove_tag	Remove tag %1$s	Quitar la etiqueta %1$s	Tag %1$s entfernen	Retirer l’étiquette %1$s	Remover a etiqueta %1$s
+done	Done	Hecho	Fertig	Terminé	Concluir

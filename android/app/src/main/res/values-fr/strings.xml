@@ -60,4 +60,11 @@
     <string name="reorder_on_check">Descendre les tâches faites</string>
     <string name="reorder_on_check_hint">Désactivé : une tâche reste en place quand on la coche.</string>
     <string name="about_version">Version %1$s</string>
+    <string name="note_options">Couleur et étiquettes</string>
+    <string name="note_color">Couleur</string>
+    <string name="note_tags">Étiquettes</string>
+    <string name="tag_hint">Nouvelle étiquette</string>
+    <string name="add_tag">Ajouter</string>
+    <string name="remove_tag">Retirer l’étiquette %1$s</string>
+    <string name="done">Terminé</string>
 </resources>

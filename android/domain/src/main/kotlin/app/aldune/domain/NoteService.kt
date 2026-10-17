@@ -263,7 +263,7 @@ class NoteService(
         /** El `1e18` de Core para las notas sin posición. */
         private const val UNPOSITIONED = 1e18
 
-        internal fun normalizeTags(tags: List<String>): List<String> {
+        fun normalizeTags(tags: List<String>): List<String> {
             val seen = HashSet<String>()
             val result = ArrayList<String>()
             for (raw in tags) {

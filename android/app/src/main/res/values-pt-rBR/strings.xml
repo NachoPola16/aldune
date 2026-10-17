@@ -60,4 +60,11 @@
     <string name="reorder_on_check">Mover tarefas concluídas para baixo</string>
     <string name="reorder_on_check_hint">Desligado: a tarefa fica onde está ao marcá-la.</string>
     <string name="about_version">Versão %1$s</string>
+    <string name="note_options">Cor e etiquetas</string>
+    <string name="note_color">Cor</string>
+    <string name="note_tags">Etiquetas</string>
+    <string name="tag_hint">Nova etiqueta</string>
+    <string name="add_tag">Adicionar</string>
+    <string name="remove_tag">Remover a etiqueta %1$s</string>
+    <string name="done">Concluir</string>
 </resources>

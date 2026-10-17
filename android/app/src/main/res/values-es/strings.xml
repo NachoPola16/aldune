@@ -60,4 +60,11 @@
     <string name="reorder_on_check">Mover abajo las tareas hechas</string>
     <string name="reorder_on_check_hint">Apagado: una tarea se queda donde está al marcarla.</string>
     <string name="about_version">Versión %1$s</string>
+    <string name="note_options">Color y etiquetas</string>
+    <string name="note_color">Color</string>
+    <string name="note_tags">Etiquetas</string>
+    <string name="tag_hint">Nueva etiqueta</string>
+    <string name="add_tag">Añadir</string>
+    <string name="remove_tag">Quitar la etiqueta %1$s</string>
+    <string name="done">Hecho</string>
 </resources>

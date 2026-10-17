@@ -151,6 +151,28 @@ class NotesViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
+    /** Color y etiquetas de una nota, para su menú. */
+    class NoteOptions(val noteId: String, val color: String, val tags: List<String>)
+
+    /**
+     * Las opciones de la nota que se edita en [key], o `null` si todavía no existe (una nota nueva sin texto). Antes se guarda lo escrito,
+     * para que una nota recién empezada ya tenga id al abrir el menú.
+     */
+    suspend fun noteOptions(key: String): NoteOptions? = withContext(Dispatchers.IO) {
+        drafts[key]?.let { draft ->
+            draft.pending?.cancel()
+            persist(draft)
+        }
+        io.withLock {
+            val id = drafts[key]?.noteId ?: return@withLock null
+            service?.get(id)?.let { NoteOptions(id, it.color, it.tags) }
+        }
+    }
+
+    fun setNoteColor(noteId: String, color: String) = change { it.setColor(noteId, color) }
+
+    fun setNoteTags(noteId: String, tags: List<String>) = change { it.setTags(noteId, tags) }
+
     fun archive(id: String) = change { it.archive(id) }
 
     fun trash(id: String) = change { it.trash(id) }

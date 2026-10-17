@@ -60,4 +60,11 @@
     <string name="reorder_on_check">Erledigte Aufgaben nach unten</string>
     <string name="reorder_on_check_hint">Aus: Eine Aufgabe bleibt beim Abhaken an ihrem Platz.</string>
     <string name="about_version">Version %1$s</string>
+    <string name="note_options">Farbe und Tags</string>
+    <string name="note_color">Farbe</string>
+    <string name="note_tags">Tags</string>
+    <string name="tag_hint">Neuer Tag</string>
+    <string name="add_tag">Hinzufügen</string>
+    <string name="remove_tag">Tag %1$s entfernen</string>
+    <string name="done">Fertig</string>
 </resources>
