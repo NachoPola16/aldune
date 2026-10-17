@@ -1,5 +1,7 @@
 package app.aldune.domain
 
+import app.aldune.text.NoteOrdering
+import app.aldune.text.NoteSearch
 import java.time.Duration
 
 /**
@@ -101,6 +103,82 @@ class NoteService(
     }
 
     /**
+     * Las notas de un estado en el orden del mazo, filtradas por etiqueta (sin distinguir mayúsculas) y por búsqueda en texto y etiquetas.
+     * Una etiqueta `null` o una búsqueda vacía no filtran.
+     */
+    fun list(filter: NoteState, query: String = "", tag: String? = null): List<Note> = synchronized(lock) {
+        dockOrdered(store.all().filter { it.state == filter })
+            .filter { note -> tag == null || note.tags.any { it.equals(tag, ignoreCase = true) } }
+            .filter { NoteSearch.matchesNote(it.text, it.tags, query) }
+    }
+
+    /**
+     * Pone la nota [id] justo después de [beforeId] y antes de [afterId], que son sus vecinas en la lista que el usuario está viendo
+     * (`null` de un lado = extremo de esa lista). Port de `MoveNote` de Core: escribe **una sola fila** si el mazo ya está numerado y
+     * cabe un número entre las vecinas; si alguna nota del estado no tiene posición (primer arrastre) o el hueco se agotó, numera todo el
+     * estado con [NoteOrdering.spaced] y toca todas, porque la posición viaja dentro de cada nota y una no tocada no se volvería a subir.
+     * Soltarla donde ya está no escribe nada (Core la reescribiría con el punto medio: una versión de sync sin ningún cambio visible).
+     */
+    fun move(id: String, beforeId: String?, afterId: String?): NoteResult<Note> = synchronized(lock) {
+        val note = store.get(id) ?: return NoteResult.Err(NoteError.NotFound(id))
+        val before = beforeId?.let { neighbour(it, note) ?: return neighbourError(it, note) }
+        val after = afterId?.let { neighbour(it, note) ?: return neighbourError(it, note) }
+
+        val current = dockOrdered(store.all().filter { it.state == note.state })
+        val others = current.filter { it.id != id }
+        if (before == null && after == null) {
+            if (others.isEmpty()) return NoteResult.Ok(note)
+            return NoteResult.Err(NoteError.InvalidArgument("Hace falta al menos una nota vecina para colocar $id"))
+        }
+
+        val beforePosition = before?.dockPosition
+        val afterPosition = after?.dockPosition
+        if (beforePosition != null && afterPosition != null && beforePosition > afterPosition) {
+            return NoteResult.Err(NoteError.InvalidArgument("Las vecinas de $id están en orden inverso"))
+        }
+
+        val insertAt = if (before != null) others.indexOfFirst { it.id == before.id } + 1 else others.indexOfFirst { it.id == after!!.id }
+        val reordered = others.toMutableList().apply { add(insertAt, note) }
+        if (reordered.map { it.id } == current.map { it.id }) return NoteResult.Ok(note)
+
+        val now = clock.now()
+        // Igual que Core: basta una nota sin posición en el estado para numerarlo entero (es la primera vez que se arrastra).
+        val target = if (others.all { it.dockPosition != null }) NoteOrdering.between(beforePosition, afterPosition) else null
+        if (target != null) {
+            val moved = note.copy(dockPosition = target, updatedAt = now, syncAuthorDeviceId = null)
+            store.put(moved)
+            return NoteResult.Ok(moved)
+        }
+
+        val positions = NoteOrdering.spaced(reordered.size)
+        var moved = note
+        reordered.forEachIndexed { index, item ->
+            val renumbered = item.copy(dockPosition = positions[index], updatedAt = now, syncAuthorDeviceId = null)
+            store.put(renumbered)
+            if (item.id == id) moved = renumbered
+        }
+        NoteResult.Ok(moved)
+    }
+
+    /** La vecina si existe, es de otra nota y está en el mismo estado (el orden del mazo es por estado). */
+    private fun neighbour(neighbourId: String, moved: Note): Note? =
+        store.get(neighbourId)?.takeIf { it.id != moved.id && it.state == moved.state }
+
+    private fun neighbourError(neighbourId: String, moved: Note): NoteResult.Err {
+        val found = store.get(neighbourId) ?: return NoteResult.Err(NoteError.NotFound(neighbourId))
+        val reason = if (found.id == moved.id) "Una nota no puede ser vecina de sí misma" else "La vecina $neighbourId está en ${found.state}, no en ${moved.state}"
+        return NoteResult.Err(NoteError.InvalidArgument(reason))
+    }
+
+    /**
+     * El orden del mazo de `NotesRepository.GetByState`: `ORDER BY COALESCE(Position, 1e18), CreatedAt`. Las que no tienen posición van
+     * detrás de todas las numeradas (salvo una posición mayor que 1e18, que Core también deja detrás: se copia tal cual). Core no define
+     * el desempate de un empate de fecha; aquí se añade el id para que el resultado no cambie entre llamadas.
+     */
+    private fun dockOrdered(notes: List<Note>): List<Note> =
+        notes.sortedWith(compareBy<Note> { it.dockPosition ?: UNPOSITIONED }.thenBy { it.createdAt }.thenBy { it.id })
+
+    /**
      * Aplica un cambio local a una nota. Si [transform] devuelve la misma nota, no hay cambio y no se escribe; si devuelve otra,
      * se sella como edición de este equipo (`UpdatedAt` y autor), que es lo que hace cada `Set*` de `NotesRepository`.
      */
@@ -117,6 +195,9 @@ class NoteService(
     companion object {
         const val DEFAULT_TRASH_RETENTION_DAYS = 30
         const val MAX_TAGS = 20
+
+        /** El `1e18` de Core para las notas sin posición. */
+        private const val UNPOSITIONED = 1e18
 
         internal fun normalizeTags(tags: List<String>): List<String> {
             val seen = HashSet<String>()
