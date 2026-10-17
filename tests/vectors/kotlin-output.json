@@ -1,0 +1,184 @@
+{
+    "format": 4,
+    "notes": "Producido por android/core (Kotlin) con la clave de sync-format4.json. Nonces y sales aleatorios: cambia en cada ejecución. Lo escribe KotlinOutputTest.",
+    "generator": "android/core (Kotlin)",
+    "syncKeyHex": "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f",
+    "syncKeyEncoded": "AAECAwQFBgcICQoLDA0ODxAREhMUFRYXGBkaGxwdHh8",
+    "envelopes": [
+        {
+            "name": "kotlin: nota simple",
+            "deviceId": "device-kotlin",
+            "envelopeJson": "{\"format\":4,\"noteId\":\"a1b2c3d4-0001-4000-8000-000000000001\",\"tombstone\":false,\"updatedAt\":\"2026-10-17T10:30:15.5+00:00\",\"deviceId\":\"device-kotlin\",\"cipherText\":\"Hc889nCIunjlQBVQ4SEIhwrOVNLAgol9DNuTXqkdaRvOBRZj4QMjg3UXyrWscsGKguJRgpah08ZF+25NCaVVX0La1/w7Es3/DADfxnlY5n++rE20jO9jQRt0jURfXLXn/RrFOc3pIub/dX8k5euU0AfNgo7aMAgOCeXKyCbQPDS16kZaZ/kOhh1DInWhVzLAs2QRs7AO8ZLMC6m1gKnrGDXQRA9D+QNFdEIw1VNo5isnfCrPXjnREpXEYI3hWpxbp9fY9S4fWimckzXzh6xk9n5Pb7HfiHgQ2OMY84BOjuyhJo2n3giw6p/AHxRHMffPDvsBt/w/qqJ5jf1TbuO3RJ31FXyqrcD4Nv8TKK19As929tLH3M2fG6i7/dsLibNIWM49ByQJHNsKsS+ytmnibvDzDLvNDb5nVJfZndwcYDUrU//hlKdXad/ZU3u/HetyHI1V9GX/ZmZwRS1uKSC6roNfcqois/syzoWhL+VgKQCP7K8vjYWif9DDE/EBp2Xl\",\"nonce\":\"a6ZNMkQqE8QsTJuI\",\"tag\":\"RFlNFvurJpKhpozgXrj4wQ==\"}",
+            "payloadJson": "{\"id\":\"a1b2c3d4-0001-4000-8000-000000000001\",\"text\":\"Título\\ncuerpo\",\"color\":\"#EBD38B\",\"createdAt\":\"2026-10-01T08:00:00.1234567+00:00\",\"updatedAt\":\"2026-10-17T10:30:15.5+00:00\",\"state\":0,\"screenOrigin\":\"primary\",\"tags\":[],\"isProtected\":false,\"protectedContent\":null,\"dockPosition\":null}",
+            "expected": {
+                "id": "a1b2c3d4-0001-4000-8000-000000000001",
+                "text": "Título\ncuerpo",
+                "color": "#EBD38B",
+                "createdAt": "2026-10-01T08:00:00.1234567+00:00",
+                "updatedAt": "2026-10-17T10:30:15.5+00:00",
+                "state": 0,
+                "screenOrigin": "primary",
+                "tags": [],
+                "isProtected": false,
+                "dockPosition": null
+            }
+        },
+        {
+            "name": "kotlin: unicode, casillas y etiquetas",
+            "deviceId": "device-kotlin",
+            "envelopeJson": "{\"format\":4,\"noteId\":\"a1b2c3d4-0002-4000-8000-000000000002\",\"tombstone\":false,\"updatedAt\":\"2026-10-17T10:30:15.5+00:00\",\"deviceId\":\"device-kotlin\",\"cipherText\":\"zlteCtrOdID05V6PptpHIVahVHStJYBv9W4C/Z9Rd4XQXbJ7rnMD+LRi/HLVhS8gBztkbkVnU0TZxnOJ9b/bql2Wn5dOkygJIbpzfRb7vsRWe3ADiSWRDWjz5shK2fonVWiHhSv1Qi7gDMMLoRfkQnIFJciFn5lZECwZvCZsfWOqJENjW02uOt0ZJoTGu4OOQkHS3KA4CTZqmRmpSOop/dhNs1uP8WtleF7u9lfWbWcNomS60vOePZE5F/7kni9jy6d11E/Nz7CI4DLFmBPNeSQsWCvl8CsC/4fta8iHFdz93Mv12SZpq6Fv5MHeFwOHAEXblP3ZyfyHC0XZpFNOrlmepBgExlc1HE9v7Hwd4U8tJZPb0D9G0+U7XB0CYYTmjCpcqQRnpFAtLD/KvyFm+IxfDSfRON4VIS5KEB/JhkqnimG6ztvH7MMSDms2yMse4iT7oOzCEuxE4VlsleEe+9feekRg0UbdCbEyspFde2R5+Blt17t7zG2x3axf8F+iyP3GqUjhrxHG7g5XkENP6+yFjwN2xWFa140ZE8EjtIXGXq/6DZbMONNoAGDmVWiCdID1LD34SN8cF0RnbNNQEpIEsRyeVR6C0ks3LtD0lzE7XkWsQp1d9rECTJys1XreUsac+TVQYqY=\",\"nonce\":\"y21Q2oR2NTtZot74\",\"tag\":\"0/oRhkWZa7NGm/m6GzuZ5A==\"}",
+            "payloadJson": "{\"id\":\"a1b2c3d4-0002-4000-8000-000000000002\",\"text\":\"Compra 🛒\\n☐ pan\\n☒ leche\\n→ viñeta con acentos: áéíóú ñ ü ß\",\"color\":\"#EBD38B\",\"createdAt\":\"2026-10-01T08:00:00.1234567+00:00\",\"updatedAt\":\"2026-10-17T10:30:15.5+00:00\",\"state\":1,\"screenOrigin\":\"primary\",\"tags\":[\"casa\",\"urgente\"],\"isProtected\":false,\"protectedContent\":null,\"dockPosition\":2.5}",
+            "expected": {
+                "id": "a1b2c3d4-0002-4000-8000-000000000002",
+                "text": "Compra 🛒\n☐ pan\n☒ leche\n→ viñeta con acentos: áéíóú ñ ü ß",
+                "color": "#EBD38B",
+                "createdAt": "2026-10-01T08:00:00.1234567+00:00",
+                "updatedAt": "2026-10-17T10:30:15.5+00:00",
+                "state": 1,
+                "screenOrigin": "primary",
+                "tags": [
+                    "casa",
+                    "urgente"
+                ],
+                "isProtected": false,
+                "dockPosition": 2.5
+            }
+        },
+        {
+            "name": "kotlin: papelera con posición negativa",
+            "deviceId": "device-kotlin",
+            "envelopeJson": "{\"format\":4,\"noteId\":\"a1b2c3d4-0003-4000-8000-000000000003\",\"tombstone\":false,\"updatedAt\":\"2026-10-17T10:30:15.5+00:00\",\"deviceId\":\"device-kotlin\",\"cipherText\":\"YIGyKBppC7mV5wkRGO4qFBZzIa+Ynno8KOoDP0O0fmoHPBiTipPhOBpDf+ON7O7bZImDv3y57zYeJ+iZ9fhcs9124XXu/zuVS4Qy9fBfsN8mk9Emw5x6hjHETlRHZmCdZ2Pfi8BLd+lsrA128V8TNGsuNM1e3S1ShadKp8NgBVFqj7cDKNdhjqwmwRBxaO3vqJzKtNRsYExT6avMFSLOtw6VI9jmTo2aKEJP7yHJJ4aRHXqrgUfj/J8Vr783XCgHDKb/vjHGkJbKqXrKS5xi/kWf9n0r7ifkguRNSZZLiEZE1a3a1YtiygvtvMEM+G5uOI49Lq9mRmN1gJX3STIEDtNDJWb7dRVzlN/ICZ8qCKyh0fzysWBZHNuNQKh99jLOUoalLeashxxfRS6wtKfgMW9HmBjfqlePnIobrWfKJ8CClh3zawZJCtUFEoyp1IYHbpQBmuYp7rDaSv3PwM+iksHUvGxRUiliMUlu4g==\",\"nonce\":\"xTbFNwnVP5OyRrmY\",\"tag\":\"QfU0jQwcxxJsrhNKTwyRIw==\"}",
+            "payloadJson": "{\"id\":\"a1b2c3d4-0003-4000-8000-000000000003\",\"text\":\"\",\"color\":\"#EBD38B\",\"createdAt\":\"2026-10-01T08:00:00.1234567+00:00\",\"updatedAt\":\"2026-10-17T10:30:15.5+00:00\",\"state\":2,\"screenOrigin\":\"primary\",\"tags\":[],\"isProtected\":false,\"protectedContent\":null,\"dockPosition\":-3.25}",
+            "expected": {
+                "id": "a1b2c3d4-0003-4000-8000-000000000003",
+                "text": "",
+                "color": "#EBD38B",
+                "createdAt": "2026-10-01T08:00:00.1234567+00:00",
+                "updatedAt": "2026-10-17T10:30:15.5+00:00",
+                "state": 2,
+                "screenOrigin": "primary",
+                "tags": [],
+                "isProtected": false,
+                "dockPosition": -3.25
+            }
+        },
+        {
+            "name": "kotlin: desfase +02:00 y 7 decimales",
+            "deviceId": "device-kotlin",
+            "envelopeJson": "{\"format\":4,\"noteId\":\"a1b2c3d4-0004-4000-8000-000000000004\",\"tombstone\":false,\"updatedAt\":\"2026-10-17T12:30:15.1234567+02:00\",\"deviceId\":\"device-kotlin\",\"cipherText\":\"UvR7n96D0qihH9oMooKerz/nMk4gYeCJ4KgQHwABAyJYRhyLVKitNymH27T8Q3/p0D7KuqzbLnIGElNplfwDlYD3M21DhXPGRqJ9Lqwh27BIQgavB6RL29MJnBiCDaXVrcLPMqscnpAUZjxEs7GEpFECuYRHhzbCVuz6oJf398P5wXhVijsH1Encf6a67OsHzMRRgc/F16/gB7EknHeuwabd0SkJelJD9yKCS9TZqSn7S9I6ceiNTjk9GpkkLP/GGfcS5TDvjShh4uEUbD2Ljuc7hLLo8Q1fgTKatWJIo7zaiqzkpsIk/e7pZryIAewI8FmhmgSHaYjjXegjKviT18kZOZntWCDmOFNOPdPXluK8OFVWm+ZHlkOUQTLYUBM4W96K1SSJeD1iWZvkuqfFZEvVDSK8v0lDe0mLfg+7pQ8FjOXq6Vtg7hjHG173i4ySV4PRwQcUSG1dpsnbAAia1W7TwZ8LX2bPI47potMLIMbjQns9s5Z0xA==\",\"nonce\":\"qrB4P6VvHNk84Uqr\",\"tag\":\"GTGlBF0PTMw83ru85gc+Bw==\"}",
+            "payloadJson": "{\"id\":\"a1b2c3d4-0004-4000-8000-000000000004\",\"text\":\"hora local\",\"color\":\"#EBD38B\",\"createdAt\":\"2026-10-01T10:00:00+02:00\",\"updatedAt\":\"2026-10-17T12:30:15.1234567+02:00\",\"state\":0,\"screenOrigin\":\"primary\",\"tags\":[],\"isProtected\":false,\"protectedContent\":null,\"dockPosition\":null}",
+            "expected": {
+                "id": "a1b2c3d4-0004-4000-8000-000000000004",
+                "text": "hora local",
+                "color": "#EBD38B",
+                "createdAt": "2026-10-01T10:00:00+02:00",
+                "updatedAt": "2026-10-17T12:30:15.1234567+02:00",
+                "state": 0,
+                "screenOrigin": "primary",
+                "tags": [],
+                "isProtected": false,
+                "dockPosition": null
+            }
+        },
+        {
+            "name": "kotlin: protegida",
+            "deviceId": "device-kotlin",
+            "envelopeJson": "{\"format\":4,\"noteId\":\"a1b2c3d4-0005-4000-8000-000000000005\",\"tombstone\":false,\"updatedAt\":\"2026-10-17T10:30:15.5+00:00\",\"deviceId\":\"device-kotlin\",\"cipherText\":\"SrCLis17esgxwHypFIIcX8zUbMnMUZCBHhAAK7d0IZYuYey7w/kr+pymquR/3wd/ZNsu1XdV+88LruWT316p9m4yJgZImv4W9kyWAimtWguomxhtQnEf/34QFfXLo4irIIOAmxOtQde9Yu/Iz/8it19vB1Yl6i2kKihXSXrmJDmyNKmCXXXOe/YDZ0tB8QSVaCPPxIm7H6Uil2u4aku0aG/WU5vhboTVe9b+1Z+SRbM8WjWRjihuJijvvc3Js7VgTa9+zVg9jzGmgCv+nG0k5ybr+R5pEANUuOYsNkhy4NV2Pn8Y0P2VvRaZOeK+YhO8dobs4fk4aXpOC0QbwZ93a7REWITZrXuykmzzKv3S7VM7xmAYhJoS0rkUWNZ6aP1rLkx+zuUj2mZXJknUGKxHZZCE6Foy5c051gl3crXN/CN1wTKuJgIJq+cVgPhBde0VAN+nLN5E08g2lSYgKo782rwN5qC82lfpgHCqHyj4DwDTcnY3lp4hF2ebKLQv1DU30/cMa4Zi9wYYvOD/aklc4qU8Go/ss1vufXeBLcKON07yd22bEFdxUUcIV+ilX8iCPtH0WLCXYGVD9OCQfkXBqKCystr2AosOW+thaslWeOe3YI4buCdMYyxWnGkbDvoyT3g5ugCbfMw74FXy1jNTMVBOGTyTNX8YF8CSrh5yBfDbLPyFAnOgh5PQCopfmRsB33AJlzsx0mzgsq9M3uqFNJ+p2BqKsOpIf281gONBbmzAwyE2cZIoOPiJnllrzVu9vV6lk5s+qPtNKh9wleQ/tIOyHzfxiHFW\",\"nonce\":\"cz+5izpr9rFh2GcF\",\"tag\":\"oFkm4sL/gmEmPw+DENfXAg==\"}",
+            "payloadJson": "{\"id\":\"a1b2c3d4-0005-4000-8000-000000000005\",\"text\":\"\",\"color\":\"#EBD38B\",\"createdAt\":\"2026-10-01T08:00:00.1234567+00:00\",\"updatedAt\":\"2026-10-17T10:30:15.5+00:00\",\"state\":0,\"screenOrigin\":\"primary\",\"tags\":[],\"isProtected\":true,\"protectedContent\":{\"version\":1,\"salt\":\"HgdeWapZPhXbSm5wpSRDQg==\",\"cipherText\":\"VrH/TgXTG+s8Gn+1dgmZkCp4/nHWrZAVN0fRFKUbp7JJ7vp5DipYlDkkL7Ac\",\"nonce\":\"1WG3+DTpdOLcNzUg\",\"tag\":\"UCr2yXssM/sDo1Lkgr5+nA==\"},\"dockPosition\":null}",
+            "expected": {
+                "id": "a1b2c3d4-0005-4000-8000-000000000005",
+                "text": "",
+                "color": "#EBD38B",
+                "createdAt": "2026-10-01T08:00:00.1234567+00:00",
+                "updatedAt": "2026-10-17T10:30:15.5+00:00",
+                "state": 0,
+                "screenOrigin": "primary",
+                "tags": [],
+                "isProtected": true,
+                "dockPosition": null
+            },
+            "protectedPassword": "contraseña-kotlin-ñ",
+            "protectedPlaintext": "secreto de Kotlin: línea 1\nlínea 2 ☐ 🛒"
+        }
+    ],
+    "tombstones": [
+        {
+            "name": "kotlin: borrado firmado",
+            "envelopeJson": "{\"format\":4,\"noteId\":\"a1b2c3d4-0006-4000-8000-000000000006\",\"tombstone\":true,\"updatedAt\":\"2026-10-17T11:00:00+00:00\",\"deviceId\":\"device-kotlin\",\"cipherText\":\"8rdqlptY5Emy2Q4NyagHf0171ARHOnrT7ne2YwhvbVlh5bTbPIWhrsh+GwcxDfOyv3wlNbQYHjJbRKZTmvT28EmRUdc5nNPKiIeQRgIpA7D42hELxk5TctNN92ql+icjcO91gsIjLsbFP3vXhxiv/99qN6g=\",\"nonce\":\"NT5gbXxoOAV1R4PZ\",\"tag\":\"CKrvjT9QzvDV3cqGKhN/Mg==\"}",
+            "authentic": true
+        },
+        {
+            "name": "kotlin: borrado con fecha falsificada",
+            "envelopeJson": "{\"format\":4,\"noteId\":\"a1b2c3d4-0006-4000-8000-000000000006\",\"tombstone\":true,\"updatedAt\":\"2026-11-16T11:00:00+00:00\",\"deviceId\":\"device-kotlin\",\"cipherText\":\"8rdqlptY5Emy2Q4NyagHf0171ARHOnrT7ne2YwhvbVlh5bTbPIWhrsh+GwcxDfOyv3wlNbQYHjJbRKZTmvT28EmRUdc5nNPKiIeQRgIpA7D42hELxk5TctNN92ql+icjcO91gsIjLsbFP3vXhxiv/99qN6g=\",\"nonce\":\"NT5gbXxoOAV1R4PZ\",\"tag\":\"CKrvjT9QzvDV3cqGKhN/Mg==\"}",
+            "authentic": false
+        },
+        {
+            "name": "kotlin: borrado firmado con otra clave",
+            "envelopeJson": "{\"format\":4,\"noteId\":\"a1b2c3d4-0006-4000-8000-000000000006\",\"tombstone\":true,\"updatedAt\":\"2026-10-17T11:00:00+00:00\",\"deviceId\":\"device-kotlin\",\"cipherText\":\"E7Zs7PEHZEcw6gew67kyHO8idFt2Y9lIMVozebYX/o1pOyTnvvTQMWqHtVVpkK4PDe6zSfETOtZEGSgYPBErLAF1dIolhGYhafn7Tj+5ZRZzW0t6PHgv/RrDtPdIW/WG7iPQh73wZBYoeR/bGWh0aqvO+TQ=\",\"nonce\":\"uSFRm4OxUYxo31cU\",\"tag\":\"EHY/awtfZ/hYg+Q1s9mckA==\"}",
+            "authentic": false
+        }
+    ],
+    "protectedNotes": [
+        {
+            "password": "contraseña-kotlin-ñ",
+            "plaintext": "línea única",
+            "pbkdf2Iterations": 600000,
+            "content": {
+                "version": 1,
+                "salt": "tUdpUD9JF2TX3XzJ2yyVpw==",
+                "cipherText": "2161ewIxgCVSYzSSvg==",
+                "nonce": "Af0liiREBqLJZT5O",
+                "tag": "LSp1bsBXSAs/QP71Ci65tQ=="
+            }
+        },
+        {
+            "password": "contraseña-kotlin-ñ",
+            "plaintext": "secreto de Kotlin: línea 1\nlínea 2 ☐ 🛒",
+            "pbkdf2Iterations": 600000,
+            "content": {
+                "version": 1,
+                "salt": "UtFbQGMmynAsafKDL7nMlw==",
+                "cipherText": "G7b66Gim3eQWLVXUP4F+jLG5WlDZd3EWcnqIuNaboEG6U9/mTeqr13e/OlXY",
+                "nonce": "EP6Md0q3FeNvhHUs",
+                "tag": "ctkscLW08F46lmV58p0QaQ=="
+            }
+        }
+    ],
+    "shareCodes": [
+        {
+            "code": "aldune-profile-v2:eyJWZXJzaW9uIjoyLCJLZXkiOiJBQUVDQXdRRkJnY0lDUW9MREEwT0R4QVJFaE1VRlJZWEdCa2FHeHdkSGg4IiwiU2NvcGUiOjAsIk5vdGVJZHMiOltdLCJUYWciOm51bGwsIlByb2ZpbGVOYW1lIjoiQ2FzYSBLb3RsaW4iLCJUcmFuc3BvcnQiOjEsIlNlcnZlclVybCI6Imh0dHBzOi8vc3luYy5leGFtcGxlLmNvbS8ifQ",
+            "expected": {
+                "scope": 0,
+                "noteIds": [],
+                "profileName": "Casa Kotlin",
+                "transport": 1,
+                "serverUrl": "https://sync.example.com/",
+                "tag": null
+            }
+        },
+        {
+            "code": "aldune-profile-v2:eyJWZXJzaW9uIjoyLCJLZXkiOiJBQUVDQXdRRkJnY0lDUW9MREEwT0R4QVJFaE1VRlJZWEdCa2FHeHdkSGg4IiwiU2NvcGUiOjEsIk5vdGVJZHMiOlsiYTFiMmMzZDQtMDAwNy00MDAwLTgwMDAtMDAwMDAwMDAwMDA3Il0sIlRhZyI6bnVsbCwiUHJvZmlsZU5hbWUiOm51bGwsIlRyYW5zcG9ydCI6MiwiU2VydmVyVXJsIjoiaHR0cHM6Ly9jbG91ZC5leGFtcGxlLmNvbS9yZW1vdGUucGhwL2Rhdi9maWxlcy9hbmEvYWxkdW5lLyJ9",
+            "expected": {
+                "scope": 1,
+                "noteIds": [
+                    "a1b2c3d4-0007-4000-8000-000000000007"
+                ],
+                "profileName": null,
+                "transport": 2,
+                "serverUrl": "https://cloud.example.com/remote.php/dav/files/ana/aldune/",
+                "tag": null
+            }
+        },
+        {
+            "code": "aldune-profile-v2:eyJWZXJzaW9uIjoyLCJLZXkiOiJBQUVDQXdRRkJnY0lDUW9MREEwT0R4QVJFaE1VRlJZWEdCa2FHeHdkSGg4IiwiU2NvcGUiOjIsIk5vdGVJZHMiOltdLCJUYWciOiJ0cmFiYWpvIiwiUHJvZmlsZU5hbWUiOiJUcmFiYWpvIMOxIiwiVHJhbnNwb3J0IjpudWxsLCJTZXJ2ZXJVcmwiOm51bGx9",
+            "expected": {
+                "scope": 2,
+                "noteIds": [],
+                "profileName": "Trabajo ñ",
+                "transport": null,
+                "serverUrl": null,
+                "tag": "trabajo"
+            }
+        }
+    ]
+}
