@@ -454,6 +454,10 @@ Pedido del usuario (2026-10-17): versión de **móvil además de tableta** (su m
    ~450 de color (`NoteThemes`, `OklchColor`…). Toda la criptografía es estándar (AES-256-GCM, PBKDF2-SHA256, HMAC si procede),
    y Android la trae en `javax.crypto`; SQLite viene con el sistema.
 
+Los **vectores de compatibilidad del formato 4** ya existen (`tests/vectors/`, ver su `README.md`) y los verifica `SyncVectorsTests`: son el
+contrato que cualquier cliente que no use `Aldune.Core` tiene que cumplir. Faltan los de **escenario** del motor de sync (estado local + estado del
+almacén → acciones), que hay que generar antes de dar un cliente Kotlin por compatible.
+
 ### 13.2 Qué se corrige del plan
 
 | Punto del plan original | Corrección |
