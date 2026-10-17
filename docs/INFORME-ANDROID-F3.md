@@ -41,6 +41,6 @@ Rama: `claude/sweet-meitner-coa4zr`. Módulo: `android/text` (Kotlin/JVM puro, p
 - `Locale.ROOT` y `Normalizer` no se han probado con el `Locale` real de un móvil más allá del caso turco.
 
 ## Estado final
-- `cd android/text && gradle test` → **87 tests, 0 fallos, 0 saltados**: 59 grupos de vectores (12 823 casos: `text-lines` 7 787  `text-color` 4 598  `text-order` 438), 13 de `NoteSearch` y 15 de comportamiento compuesto.
+- `cd android/text && gradle test` → **87 tests, 0 fallos, 0 saltados**: 59 grupos de vectores (12 823 casos: `text-lines` 7 787, `text-color` 4 598, `text-order` 438), 13 de `NoteSearch` y 15 de comportamiento compuesto.
 - Sin avisos del compilador.
 - No se ha tocado `src/`, `tests/`, `android/core`, `android/sync` ni `tests/vectors/*.json`.
