@@ -24,6 +24,10 @@ $A shell am start -n io.github.nachopola16.aldune.debug/app.aldune.MainActivity
   `onValueChange` como lo hace el teclado real, que es justo lo que se quiere probar (Enter y Retroceso por diferencia de texto).
 - Teclado físico: `input keyevent KEYCODE_TAB`, y con modificadores `input keycombination SHIFT_LEFT TAB`, `ALT_LEFT DPAD_UP`,
   `CTRL_LEFT ENTER`.
+- Arrastrar tras mantener pulsado (reordenar notas): `$A shell input draganddrop X1 Y1 X2 Y2 1500`. Un `swipe` no vale: empieza a moverse antes de que
+  se cumpla la pulsación larga.
+- En Git Bash, `adb shell ... /sdcard/...` convierte la ruta: exportar `MSYS_NO_PATHCONV=1`. `uiautomator dump` + `cat` da el árbol de vistas (qué campo tiene el foco).
+- `dumpsys input_method | grep mInputShown` dice si el teclado está abierto sin hacer captura.
 - El estado persiste entre pruebas (borradores y notas): los toques a coordenadas fijas fallan si la lista ya tiene notas. Mirar una
   captura antes de fiarse de un guion; `force-stop` no borra datos.
 
@@ -57,3 +61,6 @@ No probado aún: un teclado de terceros, un teclado físico real, la tableta, ro
   estado, no se puede poner ese estado a `null` al empezar: la nueva clave cancela el efecto; se limpia al final.
 - Abrir el menú ⋯ le quita el foco al campo y oculta el teclado. Es aceptable; el cursor se conserva.
 - Un registro temporal (`Log.d` + `adb logcat -d -s TAG`) es la forma más rápida de saber si un gesto llegó; quitarlo antes de commitear.
+- **El teclado al arrancar es una carrera.** Compose enfoca el primer elemento enfocable (el buscador) y pide el teclado; ocultarlo después con
+  `keyboard.hide()` a veces se pierde. La solución estable es que el buscador no pueda tomar el foco hasta que se toca (`focusProperties`).
+  Comprobarlo arrancando 4 veces seguidas (`force-stop` + `am start`) y mirando `mInputShown`.

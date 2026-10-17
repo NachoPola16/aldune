@@ -169,6 +169,8 @@ class NotesViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
+    fun moveNote(id: String, before: String?, after: String?) = change { it.move(id, before, after) }
+
     fun setNoteColor(noteId: String, color: String) = change { it.setColor(noteId, color) }
 
     fun setNoteTags(noteId: String, tags: List<String>) = change { it.setTags(noteId, tags) }

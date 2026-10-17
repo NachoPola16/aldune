@@ -5,7 +5,21 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.gestures.awaitEachGesture
+import androidx.compose.foundation.gestures.awaitFirstDown
+import androidx.compose.foundation.gestures.detectDragGesturesAfterLongPress
+import androidx.compose.ui.focus.focusProperties
+import androidx.compose.ui.input.pointer.PointerEventPass
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.zIndex
+import app.aldune.domain.ReorderPlan
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -114,7 +128,20 @@ fun NoteListPane(
             // (tapando el «+»). Este elemento invisible va primero para quedárselo; el buscador solo toma el foco si se toca.
             Box(Modifier.size(0.dp).focusRequester(rest).focusable())
             Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-                SearchField(state.query, viewModel::setQuery, Modifier.weight(1f))
+                // El buscador no puede tomar el foco hasta que se toca: si lo toma al arrancar (primer elemento enfocable), Android abre el
+                // teclado, y ocultarlo después es una carrera que a veces se pierde. El toque lo habilita antes de que el campo pida el foco.
+                var searchTouched by remember { mutableStateOf(false) }
+                SearchField(
+                    state.query, viewModel::setQuery,
+                    Modifier.weight(1f)
+                        .focusProperties { canFocus = searchTouched }
+                        .pointerInput(Unit) {
+                            awaitEachGesture {
+                                awaitFirstDown(requireUnconsumed = false, pass = PointerEventPass.Initial)
+                                searchTouched = true
+                            }
+                        },
+                )
                 IconButton(onClick = onOpenSettings) { Icon(Icons.Default.Settings, contentDescription = stringResource(R.string.settings)) }
             }
             StateTabs(state, viewModel::setFilter)
@@ -123,9 +150,66 @@ fun NoteListPane(
             if (state.items.isEmpty()) {
                 EmptyMessage(state)
             } else {
-                LazyColumn(Modifier.fillMaxSize(), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    items(state.items, key = { it.id }) { item ->
+                // Reordenar: mantener pulsada una nota y arrastrarla. Solo con la lista completa (sin búsqueda ni etiqueta): con un filtro,
+                // las vecinas que se ven no son las vecinas reales y el orden no se puede decidir.
+                val reorderable = state.query.isBlank() && state.tag == null && state.items.size > 1
+                val listState = rememberLazyListState()
+                val haptic = LocalHapticFeedback.current
+                var order by remember { mutableStateOf(state.items) }
+                var draggedId by remember { mutableStateOf<String?>(null) }
+                var dragDelta by remember { mutableFloatStateOf(0f) }
+                var dragStartIds by remember { mutableStateOf<List<String>>(emptyList()) }
+                // Mientras se arrastra manda el orden local; fuera del arrastre, el de la base.
+                LaunchedEffect(state.items) { if (draggedId == null) order = state.items }
+
+                fun dragStart(id: String) {
+                    haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                    draggedId = id
+                    dragDelta = 0f
+                    dragStartIds = order.map { it.id }
+                }
+
+                fun dragBy(dy: Float) {
+                    val id = draggedId ?: return
+                    dragDelta += dy
+                    val visible = listState.layoutInfo.visibleItemsInfo
+                    // Tras un intercambio, la pantalla tarda un fotograma en recolocarse: sin esperar, el mismo gesto intercambiaría dos veces.
+                    val shown = visible.sortedBy { it.offset }.map { it.key }
+                    if (shown != order.map { it.id }.filter { it in shown }) return
+                    val me = visible.firstOrNull { it.key == id } ?: return
+                    val center = me.offset + me.size / 2f + dragDelta
+                    val target = visible.firstOrNull { it.key != id && center >= it.offset && center <= it.offset + it.size } ?: return
+                    val from = order.indexOfFirst { it.id == id }
+                    val to = order.indexOfFirst { it.id == target.key }
+                    if (from < 0 || to < 0) return
+                    order = order.toMutableList().apply { add(to, removeAt(from)) }
+                    // La nota arrastrada cambia de sitio en la lista: su desplazamiento se compensa para que siga bajo el dedo.
+                    val newOffset = if (to < from) target.offset else target.offset + target.size - me.size
+                    dragDelta -= (newOffset - me.offset)
+                }
+
+                fun dragEnd() {
+                    val id = draggedId ?: return
+                    val plan = ReorderPlan.neighbours(dragStartIds, dragStartIds.indexOf(id), order.indexOfFirst { it.id == id })
+                    draggedId = null
+                    dragDelta = 0f
+                    if (plan != null) viewModel.moveNote(id, plan.before, plan.after) else order = state.items
+                }
+
+                LazyColumn(Modifier.fillMaxSize(), state = listState, verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    items(order, key = { it.id }) { item ->
+                        val dragging = draggedId == item.id
                         SwipeableRow(
+                            modifier = (if (dragging) Modifier.zIndex(1f).graphicsLayer { translationY = dragDelta } else Modifier.animateItem())
+                                .then(
+                                    if (reorderable) Modifier.pointerInput(item.id) {
+                                        detectDragGesturesAfterLongPress(
+                                            onDragStart = { dragStart(item.id) },
+                                            onDrag = { change, amount -> change.consume(); dragBy(amount.y) },
+                                            onDragEnd = ::dragEnd, onDragCancel = ::dragEnd,
+                                        )
+                                    } else Modifier
+                                ),
                             item = item, selected = item.id == selectedId, onOpen = { onOpen(item.id) },
                             onArchive = { viewModel.archive(item.id); announce(archivedMsg) { viewModel.restore(item.id) } },
                             onTrash = { viewModel.trash(item.id); announce(trashedMsg) { viewModel.restore(item.id) } },
@@ -216,6 +300,7 @@ private fun EmptyMessage(state: UiState.Ready) {
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun SwipeableRow(
+    modifier: Modifier,
     item: NoteListItem, selected: Boolean, onOpen: () -> Unit,
     onArchive: () -> Unit, onTrash: () -> Unit, onRestore: () -> Unit, onDelete: () -> Unit,
 ) {
@@ -238,7 +323,7 @@ private fun SwipeableRow(
     )
     SwipeToDismissBox(
         state = dismiss,
-        modifier = Modifier.padding(horizontal = 16.dp),
+        modifier = modifier.padding(horizontal = 16.dp),
         backgroundContent = {
             Box(
                 Modifier.fillMaxSize().background(MaterialTheme.colorScheme.surfaceVariant, RoundedCornerShape(12.dp)).padding(horizontal = 20.dp),
