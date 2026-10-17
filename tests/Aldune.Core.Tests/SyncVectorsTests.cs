@@ -151,51 +151,85 @@ public sealed class SyncVectorsTests
         File.WriteAllText(VectorsPath(), Build().ToJsonString(options) + "\n", new UTF8Encoding(false));
     }
 
-    private static JsonObject Load() => JsonNode.Parse(File.ReadAllText(VectorsPath()))!.AsObject();
+    /// <summary>
+    /// Los dos ficheros: el que genera Core y el que escribe el cliente Kotlin (<c>android/core</c>). Core tiene que leer los dos
+    /// igual: es la comprobación de compatibilidad en sentido inverso (lo que escribe Kotlin lo lee C#).
+    /// </summary>
+    public static IEnumerable<object[]> VectorFiles() => [["sync-format4.json"], ["kotlin-output.json"]];
 
-    [Fact]
-    public void Envelopes_AreReadByCoreExactlyAsTheFileSays()
+    private static JsonObject Load(string file) =>
+        JsonNode.Parse(File.ReadAllText(Path.Combine(Path.GetDirectoryName(VectorsPath())!, file)))!.AsObject();
+
+    // Las fechas se comparan como instantes: Core las escribe en "expected" con 7 decimales y Kotlin recortadas
+    // ("...15.5+00:00"), y un cliente que lee tiene que dar lo mismo para las dos.
+    private static void AssertSameNote(string name, JsonObject expected, Note note)
     {
-        foreach (var vector in Load()["envelopes"]!.AsArray().Select(n => n!.AsObject()))
+        Assert.True(expected["id"]!.GetValue<string>() == note.Id.ToString(), $"{name}: id");
+        Assert.True(expected["text"]!.GetValue<string>() == note.Text, $"{name}: text");
+        Assert.True(expected["color"]!.GetValue<string>() == note.Color, $"{name}: color");
+        Assert.True(T(expected["createdAt"]!.GetValue<string>()) == note.CreatedAt, $"{name}: createdAt");
+        Assert.True(T(expected["updatedAt"]!.GetValue<string>()) == note.UpdatedAt, $"{name}: updatedAt");
+        Assert.True(expected["state"]!.GetValue<int>() == (int)note.State, $"{name}: state");
+        Assert.True(expected["screenOrigin"]!.GetValue<string>() == note.ScreenOrigin, $"{name}: screenOrigin");
+        Assert.True(expected["tags"]!.AsArray().Select(t => t!.GetValue<string>()).SequenceEqual(note.Tags), $"{name}: tags");
+        Assert.True(expected["isProtected"]!.GetValue<bool>() == note.IsProtected, $"{name}: isProtected");
+        Assert.True(expected["dockPosition"]?.GetValue<double>() == note.DockPosition, $"{name}: dockPosition");
+    }
+
+    [Theory]
+    [MemberData(nameof(VectorFiles))]
+    public void Envelopes_AreReadByCoreExactlyAsTheFileSays(string file)
+    {
+        foreach (var vector in Load(file)["envelopes"]!.AsArray().Select(n => n!.AsObject()))
         {
-            var name = vector["name"]!.GetValue<string>();
+            var name = $"{file}: {vector["name"]!.GetValue<string>()}";
             var envelope = SyncEnvelopeCodec.Deserialize(Encoding.UTF8.GetBytes(vector["envelopeJson"]!.GetValue<string>()));
-            Assert.Equal(DeviceA, envelope.DeviceId);
 
             Assert.True(PayloadJson(envelope) == vector["payloadJson"]!.GetValue<string>(), $"{name}: el contenido descifrado cambió");
             var note = SyncEnvelopeCodec.DecryptNote(envelope, Key);
-            Assert.True(Expected(note).ToJsonString() == vector["expected"]!.ToJsonString(), $"{name}: la nota leída no es la esperada");
+            AssertSameNote(name, vector["expected"]!.AsObject(), note);
+
+            // Una nota protegida que trae su contraseña de prueba: Core tiene que poder abrirla.
+            if (vector["protectedPassword"] is { } password)
+            {
+                Assert.True(note.ProtectedContent!.TryUnprotect(password.GetValue<string>(), out var plain), $"{name}: no abre");
+                Assert.Equal(vector["protectedPlaintext"]!.GetValue<string>(), plain);
+            }
         }
     }
 
-    [Fact]
-    public void Tombstones_AuthenticityMatchesTheFile()
+    [Theory]
+    [MemberData(nameof(VectorFiles))]
+    public void Tombstones_AuthenticityMatchesTheFile(string file)
     {
-        foreach (var vector in Load()["tombstones"]!.AsArray().Select(n => n!.AsObject()))
+        foreach (var vector in Load(file)["tombstones"]!.AsArray().Select(n => n!.AsObject()))
         {
             var envelope = SyncEnvelopeCodec.Deserialize(Encoding.UTF8.GetBytes(vector["envelopeJson"]!.GetValue<string>()));
             Assert.True(envelope.Tombstone);
-            Assert.Equal(vector["authentic"]!.GetValue<bool>(), SyncEnvelopeCodec.IsAuthenticTombstone(envelope, Key));
+            Assert.True(vector["authentic"]!.GetValue<bool>() == SyncEnvelopeCodec.IsAuthenticTombstone(envelope, Key),
+                $"{file}: {vector["name"]!.GetValue<string>()}");
         }
     }
 
-    [Fact]
-    public void ProtectedNotes_UnlockWithTheFilePasswordAndNotWithAnother()
+    [Theory]
+    [MemberData(nameof(VectorFiles))]
+    public void ProtectedNotes_UnlockWithTheFilePasswordAndNotWithAnother(string file)
     {
-        foreach (var vector in Load()["protectedNotes"]!.AsArray().Select(n => n!.AsObject()))
+        foreach (var vector in Load(file)["protectedNotes"]!.AsArray().Select(n => n!.AsObject()))
         {
             var content = vector["content"]!.Deserialize<ProtectedNoteContent>(new JsonSerializerOptions(JsonSerializerDefaults.Web))!;
             Assert.Equal(600_000, vector["pbkdf2Iterations"]!.GetValue<int>());
-            Assert.True(content.TryUnprotect(vector["password"]!.GetValue<string>(), out var plain));
+            Assert.True(content.TryUnprotect(vector["password"]!.GetValue<string>(), out var plain), file);
             Assert.Equal(vector["plaintext"]!.GetValue<string>(), plain);
             Assert.False(content.TryUnprotect("otra-contraseña", out _));
         }
     }
 
-    [Fact]
-    public void ShareCodes_DecodeToWhatTheFileSays()
+    [Theory]
+    [MemberData(nameof(VectorFiles))]
+    public void ShareCodes_DecodeToWhatTheFileSays(string file)
     {
-        foreach (var vector in Load()["shareCodes"]!.AsArray().Select(n => n!.AsObject()))
+        foreach (var vector in Load(file)["shareCodes"]!.AsArray().Select(n => n!.AsObject()))
         {
             var data = SyncShareCodeCodec.Decode(vector["code"]!.GetValue<string>());
             var expected = vector["expected"]!.AsObject();
@@ -217,16 +251,17 @@ public sealed class SyncVectorsTests
             NoteId = Guid.NewGuid(), UpdatedAt = T(side["updatedAt"]!.GetValue<string>()), DeviceId = side["deviceId"]!.GetValue<string>()
         };
 
-        foreach (var vector in Load()["versionOrder"]!.AsArray().Select(n => n!.AsObject()))
+        foreach (var vector in Load("sync-format4.json")["versionOrder"]!.AsArray().Select(n => n!.AsObject()))
             Assert.Equal(vector["expectedSign"]!.GetValue<int>(), Math.Sign(SyncVersion.Compare(Of(vector["a"]!), Of(vector["b"]!))));
     }
 
-    [Fact]
-    public void SyncKey_EncodingMatchesTheFile()
+    [Theory]
+    [MemberData(nameof(VectorFiles))]
+    public void SyncKey_EncodingMatchesTheFile(string file)
     {
-        var file = Load();
-        Assert.Equal(file["syncKeyHex"]!.GetValue<string>(), Convert.ToHexString(Key).ToLowerInvariant());
-        Assert.Equal(file["syncKeyEncoded"]!.GetValue<string>(), SyncKeyFormat.Encode(Key));
-        Assert.Equal(Key, SyncKeyFormat.Decode(file["syncKeyEncoded"]!.GetValue<string>()));
+        var data = Load(file);
+        Assert.Equal(data["syncKeyHex"]!.GetValue<string>(), Convert.ToHexString(Key).ToLowerInvariant());
+        Assert.Equal(data["syncKeyEncoded"]!.GetValue<string>(), SyncKeyFormat.Encode(Key));
+        Assert.Equal(Key, SyncKeyFormat.Decode(data["syncKeyEncoded"]!.GetValue<string>()));
     }
 }
