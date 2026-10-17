@@ -26,3 +26,7 @@ Rama: `nube/android-core` (desde `main` 74e89e0). Módulo: `android/core` (Kotli
 - [x] 4. Borrados (`createTombstone`, `isAuthenticTombstone`): 7 tests verdes. "borrado firmado" → auténtico; "borrado con fecha falsificada" → no auténtico.
   - Con el nonce del vector, Kotlin reproduce byte a byte el cifrado del borrado firmado, lo que confirma que el contenido es exactamente `{"id":<noteId>,"deletedAt":<updatedAt>}` (texto base64 del JSON).
   - Cualquier fallo al verificar (sin contenido, base64 roto, etiqueta, JSON raro, `tombstone=false`) devuelve `false`, nunca lanza: igual que Core.
+- [x] 5. Nota protegida (`ProtectedNotes`): 8 tests verdes; descifra el vector con `contraseña-de-prueba` (con ñ) → PBKDF2-HMAC-SHA256 600.000 it., sal 16, AES-GCM directo sobre UTF-8.
+  - Contraseña mínima de 4 caracteres (UTF-16) y no en blanco, como `ValidatePassword` de Core.
+  - Android: `PBKDF2WithHmacSHA256` existe desde API 26 (minSdk) y codifica la contraseña en UTF-8, igual que Core. **No verificado en un dispositivo real**, solo en JDK 21.
+  - Rendimiento: 600.000 iteraciones en móvil pueden tardar ~0,3–1 s; llamar siempre fuera del hilo de UI (estimación, sin medir).
