@@ -10,3 +10,5 @@ Rama: `nube/android-core` (desde `main` 74e89e0). Módulo: `android/core` (Kotli
 
 ## Tareas
 - [x] 0. Andamiaje Gradle.
+- [x] 1. Clave de sync (`SyncKeyFormat`): 6 tests verdes. Sin diferencias con el README.
+  - Nota: Core acepta también el alfabeto estándar mezclado (normaliza `-`/`_` y decodifica); Kotlin hace lo mismo.
