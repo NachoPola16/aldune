@@ -3,6 +3,7 @@ package app.aldune.sync
 import app.aldune.core.NoteState
 import app.aldune.core.SyncEnvelope
 import app.aldune.core.SyncNote
+import app.aldune.core.SyncVersion
 import java.time.OffsetDateTime
 import java.util.UUID
 
@@ -67,7 +68,13 @@ class InMemorySyncTransport(
 
     override fun readAll(): List<SyncEnvelope> = store.values.toList()
 
+    /**
+     * Como `FolderSyncTransport.Write`: un sobre más antiguo que el que ya hay no lo pisa (la subida cuenta
+     * igualmente en el motor; E12c lo fija: un borrado sin firma más reciente que la nota en la papelera).
+     */
     override fun write(envelope: SyncEnvelope) {
+        val current = store[envelope.noteId]
+        if (current != null && SyncVersion.compare(SyncVersion.of(envelope), SyncVersion.of(current)) < 0) return
         store[envelope.noteId] = envelope
         written += envelope.noteId
     }
