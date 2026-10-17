@@ -4463,3 +4463,22 @@ Sin versión nueva de Windows. Se decidió el rumbo del cliente móvil y se hizo
 - **`android/core`**: núcleo Kotlin/JVM puro del formato (82 tests). Hecho por una sesión de nube. Gradle no corre en este PC (Java 26).
 - Resto de la sesión: 1.7.9 y 1.7.10 publicadas, repo de GitHub recreado (solo existe la release 1.7.x vigente), tests del servidor de sync.
 
+
+## Cliente Android: diseño (2026-10-17, tarde)
+
+Sin código. Spec de producto, arquitectura y fases en `docs/superpowers/specs/2026-10-17-aldune-android-design.md`; revisión de
+`MOBILE_PORT.md` §13 con internet (nueva §13.6); prompt de nube del motor de sync en `docs/superpowers/plans/`.
+
+- **Decisiones de producto del usuario:** lista + botón «+» al abrir en el móvil; servidor + WebDAV (sin carpeta); paleta de Aldune (sin
+  Material You); emparejar pegando código + token (QR más adelante); widget con títulos y texto opcional; protegidas con contraseña
+  (biometría después); notificación «+» opcional y desactivada; sin bloqueo de la app; conflictos con aviso + restaurar/descartar; los
+  cinco idiomas; recordatorios locales, exactos si el usuario da el permiso.
+- **Lo nuevo de la revisión:** la verificación de desarrolladores de Google (30-sep-2026 en cuatro países, 2027 en todo el mundo) obliga a
+  pensar la firma desde el principio: build reproducible para que F-Droid publique el APK firmado por el desarrollador.
+- **Hallazgos en Core** (apuntados en la spec §9, sin tocar): `NoteSearch` dice ignorar acentos y no lo hace; los borrados locales no se
+  filtran por etiqueta; y **probable pérdida de datos ya hoy**: si otro equipo protege una nota que en este PC está vinculada a un archivo,
+  `LinkedFileService.Reconcile` no comprueba `IsProtected` y escribiría el archivo vacío (leído en el código por la revisión de agy y
+  comprobado aquí; falta el test que lo reproduzca). Arreglar en Windows, con test primero, antes de publicar Android.
+- **F0 hecho:** `tests/vectors/sync-scenarios.json` + `SyncScenarioVectorsTests` (34 escenarios con el motor real; no se tocó Core; 1450 tests en
+  verde). Fijan un comportamiento curioso: un borrado remoto sin firma deja la nota en la papelera y la vuelve a subir pisándolo.
+- **Siguiente:** commitear F0 y lanzar F1 en la nube (prompt en `docs/superpowers/plans/`).

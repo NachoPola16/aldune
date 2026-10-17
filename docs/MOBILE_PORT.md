@@ -3,8 +3,9 @@
 > **Estado: plan decidido el 2026-09-28 —Android primero, en tableta, ver §0.1— y sin una sola línea de
 > código de móvil en el repositorio.**
 > **Revisión del 2026-10-17 (§13): .NET MAUI no sirve si se quiere F-Droid; la recomendación pasa a ser Android nativo
-> (Kotlin + Compose) con el formato de sync fijado por vectores generados desde `Aldune.Core`. Pendiente de decisión del
-> usuario. Lo que dice el resto del documento sobre MAUI (§4, §6, §7) es anterior a esa revisión.**
+> (Kotlin + Compose) con el formato de sync fijado por vectores generados desde `Aldune.Core`. Decidido por el usuario el
+> mismo día. Lo que dice el resto del documento sobre MAUI (§3, §4, §6, §7) es anterior a esa revisión; el producto y las fases
+> vigentes están en [`superpowers/specs/2026-10-17-aldune-android-design.md`](superpowers/specs/2026-10-17-aldune-android-design.md).**
 > Sesión del 2026-09-28. Este documento existe para que el port se pueda retomar en otra sesión, con
 > otra IA o dentro de meses, sin repetir la investigación que ya está hecha. Si algo de aquí se
 > implementa, manda lo implementado: hay que actualizar `STATUS.md` (lo hecho y por qué) y
@@ -490,7 +491,7 @@ Lo que **no** se hace en ninguno (igual que antes): dock, abanico, ventanas flot
 2. **Dispositivos de prueba:** Google Pixel 10a (Android 16, API 36) y **Lenovo Tab P11**. Según la tabla de ciclo de vida de Lenovo
    ([PSREF](https://psref.lenovo.com/WDProduct/Lenovo_Tablets/Tab_P11)) el TB-J606F salió con Android 10 y tiene prevista la
    actualización a Android 11; **no consta Android 12**. Es decir, la tableta es probablemente un Android 10 u 11 (API 29-30).
-   *Comprobar en Ajustes → Acerca de la tableta* (modelo exacto y versión).
+   **Corregido el 2026-10-17: el usuario comprobó que la tableta tiene Android 14 (API 34)**, así que no es el TB-J606F de la tabla de arriba (modelo exacto sin anotar). `minSdk` 26 se mantiene por los usuarios de F-Droid, no por la tableta.
 3. **`minSdk` 26 (Android 8.0), `targetSdk`/`compileSdk` 36.** Razones:
    - Cubre la tableta (API 29-30), el Pixel (API 36) y los móviles antiguos que suelen usar los usuarios de F-Droid
      (LineageOS 15 en adelante).
@@ -507,6 +508,10 @@ Lo que **no** se hace en ninguno (igual que antes): dock, abanico, ventanas flot
 
 ### 13.5 Estado (2026-10-17)
 
+- **Hecho (sesión de diseño, tarde):** spec de producto, arquitectura, almacenamiento y fases en
+  [`superpowers/specs/2026-10-17-aldune-android-design.md`](superpowers/specs/2026-10-17-aldune-android-design.md), con las decisiones
+  de producto del usuario; revisión de §13 con internet (§13.6); prompt de nube para el motor de sync en
+  [`superpowers/plans/2026-10-17-android-motor-sync-nube.md`](superpowers/plans/2026-10-17-android-motor-sync-nube.md).
 - **Hecho:** vectores de compatibilidad (`tests/vectors/`, verificados por `SyncVectorsTests`) y el **núcleo Kotlin** `android/core`
   (clave, sobres, borrados, notas protegidas, códigos de perfil, orden de versiones; 82 tests contra los vectores; informe en
   [`INFORME-ANDROID-CORE.md`](INFORME-ANDROID-CORE.md)). Con el nonce de cada vector Kotlin reproduce byte a byte el cifrado de C#, y Core
@@ -514,7 +519,56 @@ Lo que **no** se hace en ninguno (igual que antes): dock, abanico, ventanas flot
 - **No hecho:** motor de sync en Kotlin (`SyncService`: conflictos, bases, alcance, borrados), transportes (HTTP, WebDAV, carpeta no),
   base de datos, interfaz, widget, notificaciones, nombre de paquete. Nada probado aún en un Android real (el cifrado PBKDF2 de 600.000
   iteraciones solo está verificado en JDK 21).
-- **Siguiente:** (1) chat de diseño: spec de producto y plan de fases (ver el prompt de arranque en el historial del proyecto);
-  (2) **vectores de escenario** del motor de sync generados desde `Aldune.Core`; (3) motor de sync en Kotlin contra esos vectores
-  (encaja en una sesión de nube); (4) app Compose adaptativa.
+- **Cambios al plan en la sesión de diseño:** el widget de Android no necesita instantánea en claro (§13.6.8); rotación de clave,
+  combinar conflictos, biometría, QR y carpeta compartida fuera de la v1; transportes servidor + WebDAV; el motor Kotlin separa
+  decisión (`planSync`, pura) y efectos; nuevo riesgo de distribución: verificación de desarrolladores de Google (§13.6.3), que hace
+  del build reproducible un requisito desde el primer día. La revisión independiente de la spec (agy, Gemini 3.8 Flash; 14 hallazgos,
+  13 confirmados en el código) añadió escenarios, reglas de construcción de sobres (`ScreenOrigin`, autor, protegidas con texto vacío) y un
+  **bug probable de Windows**: una protección llegada por sync vacía el archivo de una nota vinculada (spec §9.3).
+- **F0 hecho (2026-10-17):** `tests/vectors/sync-scenarios.json` (34 escenarios del motor real, `SyncScenarioVectorsTests`), documentado en
+  `tests/vectors/README.md`; sin tocar Core; 1450 tests de Core en verde.
+- **Siguiente:** (1) commitear F0; (2) **F1 en la nube** con el prompt de `superpowers/plans/` (motor contra esos vectores, ~10-12 $); (3) F2-F3
+  (transportes, texto); (4) app Compose (F4+), que necesita Android Studio o el SDK + JDK 21 en este PC.
+- **Decidido por el usuario (2026-10-17):** `applicationId` `io.github.nachopola16.aldune`, nombre «Aldune», una clave de firma,
+  GitHub + IzzyOnDroid primero, Android Studio antes de F4; la tableta tiene Android 14. Detalle en la spec §8.1.
+
+### 13.6 Segunda revisión con internet (2026-10-17, tarde)
+
+Revisión pedida por el usuario «con ojos frescos». Lo que se confirma, lo que se corrige y lo que es nuevo:
+
+1. **F-Droid y .NET: se confirma.** En el [hilo del foro](https://forum.f-droid.org/t/why-isnt-c-net-maui-supported/24842?page=2)
+   la última entrada (27-sep-2026) pregunta si valdría un SDK de .NET compilado desde fuente y **sigue sin respuesta de F-Droid**; no se
+   menciona ninguna app .NET aceptada. La [política de inclusión](https://f-droid.org/docs/Inclusion_Policy/) (consultada el 2026-10-17)
+   exige una cadena de compilación «100 % FLOSS» y solo admite binarios precompilados de una lista cerrada (Debian, Maven Central y Google
+   Maven si son libres, SDK de Android, Flutter, Hermes, PyPI, Rust, Go, Node): **.NET/NuGet no está**. Kotlin sigue siendo la única vía
+   al repositorio principal.
+2. **Kotlin frente a MAUI, con lo ya hecho: se confirma.** El formato, el cifrado, las protegidas y los códigos de perfil ya están
+   portados (82 tests). Queda el motor (`SyncService`, ~765 líneas de referencia) y los transportes. MAUI exigiría además instalar los
+   workloads y el SDK en este PC y renunciar a F-Droid.
+3. **Nuevo: verificación de desarrolladores de Google.** Según [la página oficial](https://developer.android.com/developer-verification)
+   (sin fecha; contenido de junio de 2026 o posterior): desde el **30-sep-2026** en Brasil, Indonesia, Singapur y Tailandia, en
+   dispositivos certificados con Android 7+, solo se instalan apps de desarrolladores verificados, **también fuera de Play**; en **2027**
+   se extiende a todo el mundo. Hay cuentas de «distribución limitada» (estudiantes y aficionados, **hasta 20 dispositivos**, sin
+   documento ni cuota) y un «flujo avanzado» para usuarios expertos (previsto en agosto de 2026, en vista previa). F-Droid lo considera
+   una [amenaza existencial](https://thenewstack.io/f-droid-says-googles-android-developer-verification-plan-is-an-existential-threat-to-alternative-app-stores/)
+   porque firma con su propia clave. La página no dice nada de `adb install` ni de cómo se tratarán las apps firmadas por una tienda:
+   **no consta**. Consecuencias para Aldune: para uso propio en España no cambia nada hasta 2027 (y una cuenta limitada cubre los dos
+   dispositivos); para publicar, registrar el `applicationId` y la clave antes de la extensión global, y **build reproducible desde el
+   primer día** para que F-Droid sirva el APK firmado por el desarrollador (una sola clave registrada para GitHub, IzzyOnDroid y F-Droid).
+4. **Builds reproducibles** ([documentación](https://f-droid.org/docs/Reproducible_Builds/)): F-Droid recompila, copia la firma del APK del
+   desarrollador y lo publica solo si coincide byte a byte. Trampas conocidas: marcas de tiempo, `baseline.prof` no determinista
+   (desactivar las tareas ArtProfile), `vcsInfo` de AGP 8.3+ (árbol limpio en el tag o desactivarlo), número de núcleos (R8 8.6.33+),
+   mismas versiones de JDK y AGP, y firmar con `apksigner` de build-tools 34 (el de la 35 no lo verifica `apksigcopier`).
+5. **Metadatos** ([documentación](https://f-droid.org/docs/All_About_Descriptions_Graphics_and_Screenshots/)):
+   `fastlane/metadata/android/<locale>/` con `title.txt` (≤50), `short_description.txt` (≤80), `full_description.txt` (≤4000),
+   `images/icon.png`, `images/phoneScreenshots/`, `changelogs/<versionCode>.txt` (≤500). `en-US` es el idioma de respaldo.
+6. **Dependencias**: AndroidX, Compose, M3 Adaptive, Room, WorkManager, Glance y OkHttp están en Google Maven / Maven Central y son libres:
+   admitidas. Prohibidos Google Play Services, Firebase, ML Kit y SDK de analítica o anuncios (un QR futuro, con ZXing).
+7. **Compose Material 3 Adaptive** ([notas de versión](https://developer.android.com/jetpack/androidx/releases/compose-material3-adaptive),
+   consultadas el 2026-10-17): estable **1.3.0** (12-ago-2026); la 1.2.0 es estable desde el 22-oct-2025; en alfa la 1.4.0-alpha03
+   (7-oct-2026). Usar la estable con `NavigableListDetailPaneScaffold` (gestiona el «atrás»).
+8. **Corrección de §3.3 para Android:** el widget (Glance) se pinta desde el proceso de la app, que puede descifrar con la clave del
+   Keystore; **no hace falta escribir una instantánea en claro**. (La pregunta de `MOBILE_PORT_REVIEW.md` §3.4 queda contestada para Android.)
+9. **No se ha vuelto a comprobar** en esta revisión: la política de IzzyOnDroid y la lista de anti-features (Aldune no debería llevar
+   ninguna: sin rastreo, servidor propio libre). Sigue valiendo lo de §13.1.
 

@@ -1,0 +1,3555 @@
+{
+  "notes": "Vectores de escenario del motor de sync. Ver tests/vectors/README.md. Clave = bytes 0x00..0x1f; «other» = bytes 0xa0..0xbf. Fechas: comparar como instantes.",
+  "syncKeyHex": "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f",
+  "otherKeyHex": "a0a1a2a3a4a5a6a7a8a9aaabacadaeafb0b1b2b3b4b5b6b7b8b9babbbcbdbebf",
+  "localDeviceId": "android-pc-a",
+  "scenarios": [
+    {
+      "name": "E01 solo local: se sube",
+      "covers": "SyncService.cs:402-404",
+      "settings": {
+        "deviceId": "android-pc-a",
+        "scope": 0,
+        "tag": null,
+        "noteIds": []
+      },
+      "local": {
+        "notes": [
+          {
+            "id": "00000001-0000-4000-8000-000000000000",
+            "text": "local",
+            "color": "#EBD38B",
+            "createdAt": "2024-05-01T09:00:00.0000000+00:00",
+            "updatedAt": "2024-05-01T10:10:00.0000000+00:00",
+            "state": 0,
+            "screenOrigin": "primary",
+            "tags": [],
+            "isProtected": false,
+            "protectedContent": null,
+            "dockPosition": null,
+            "authorDeviceId": null
+          }
+        ],
+        "bases": [],
+        "tombstones": []
+      },
+      "remote": [],
+      "expected": {
+        "error": null,
+        "uploaded": 1,
+        "downloaded": 0,
+        "conflictsResolved": 0,
+        "tombstonesApplied": 0,
+        "remoteAfter": [
+          {
+            "noteId": "00000001-0000-4000-8000-000000000000",
+            "tombstone": false,
+            "updatedAt": "2024-05-01T10:10:00.0000000+00:00",
+            "deviceId": "android-pc-a",
+            "rewritten": true,
+            "note": {
+              "id": "00000001-0000-4000-8000-000000000000",
+              "text": "local",
+              "color": "#EBD38B",
+              "createdAt": "2024-05-01T09:00:00.0000000+00:00",
+              "updatedAt": "2024-05-01T10:10:00.0000000+00:00",
+              "state": 0,
+              "screenOrigin": "primary",
+              "tags": [],
+              "isProtected": false,
+              "protectedContent": null,
+              "dockPosition": null
+            }
+          }
+        ],
+        "localAfter": [
+          {
+            "id": "00000001-0000-4000-8000-000000000000",
+            "text": "local",
+            "color": "#EBD38B",
+            "createdAt": "2024-05-01T09:00:00.0000000+00:00",
+            "updatedAt": "2024-05-01T10:10:00.0000000+00:00",
+            "state": 0,
+            "screenOrigin": "primary",
+            "tags": [],
+            "isProtected": false,
+            "protectedContent": null,
+            "dockPosition": null,
+            "authorDeviceId": null
+          }
+        ],
+        "localTombstonesAfter": [],
+        "basesAfter": [
+          {
+            "noteId": "00000001-0000-4000-8000-000000000000",
+            "updatedAt": "2024-05-01T10:10:00.0000000+00:00",
+            "deviceId": "android-pc-a"
+          }
+        ],
+        "conflicts": []
+      }
+    },
+    {
+      "name": "E02 solo remoto: se aplica",
+      "covers": "SyncService.cs:395",
+      "settings": {
+        "deviceId": "android-pc-a",
+        "scope": 0,
+        "tag": null,
+        "noteIds": []
+      },
+      "local": {
+        "notes": [],
+        "bases": [],
+        "tombstones": []
+      },
+      "remote": [
+        {
+          "noteId": "00000001-0000-4000-8000-000000000000",
+          "kind": "note",
+          "key": "vectors",
+          "envelopeJson": "{\"format\":4,\"noteId\":\"00000001-0000-4000-8000-000000000000\",\"tombstone\":false,\"updatedAt\":\"2024-05-01T10:10:00+00:00\",\"deviceId\":\"device-b\",\"cipherText\":\"RhgspHLISIQ5mfQrNPBuDVN6dFqf\\u002BfXKFz/YOEJseG2n0rW5J2fQ8sJJVtgaavL6Sb9h7WsCv23\\u002B8lAJpy3AeKwDOCZc3pTzkW5UgS3KrtU6n7EV9SXiK8L3dtqgG4PMlVQh3Z3AgQYmRuH2XwFeKOajCKZJcQWE0vJ6tuY2jGF6gBqXqe53eS6e5DRcqeA8LwvWbd9IUAD2XGXx0xu54FdF9zUQBJ89YN\\u002BqvoeXIGixXTPHqQ8GEGSk0yhMuxIQYQJx8Y8ltL1323K2eO8rrWr5Wmpi9gF5E30ZcQw0nOTL3iR5expXBKJ1YU4Vvju2JP7fKFmAD7O1QZpmRLf4j9yh89bnM0/Mp1e0fccwRc8xHngi0G1p0ZSBbFRNaMO1/qmGQH/jLNTGQ96MvBcr46bqgWQUcLfAZkCuRNR0t2cVIWcECG2qpHlKP3xKUs1mhsVf313QOWVbi/e6GQPqP0\\u002BbEJWZqkua\",\"nonce\":\"mcVwy7Jq7DJrSpAO\",\"tag\":\"MGkyNIWMGvvPqykkC2JfDg==\"}",
+          "plain": {
+            "id": "00000001-0000-4000-8000-000000000000",
+            "text": "remoto",
+            "color": "#EBD38B",
+            "createdAt": "2024-05-01T09:00:00.0000000+00:00",
+            "updatedAt": "2024-05-01T10:10:00.0000000+00:00",
+            "state": 0,
+            "screenOrigin": "primary",
+            "tags": [],
+            "isProtected": false,
+            "protectedContent": null,
+            "dockPosition": null
+          }
+        }
+      ],
+      "expected": {
+        "error": null,
+        "uploaded": 0,
+        "downloaded": 1,
+        "conflictsResolved": 0,
+        "tombstonesApplied": 0,
+        "remoteAfter": [
+          {
+            "noteId": "00000001-0000-4000-8000-000000000000",
+            "tombstone": false,
+            "updatedAt": "2024-05-01T10:10:00.0000000+00:00",
+            "deviceId": "device-b",
+            "rewritten": false,
+            "note": {
+              "id": "00000001-0000-4000-8000-000000000000",
+              "text": "remoto",
+              "color": "#EBD38B",
+              "createdAt": "2024-05-01T09:00:00.0000000+00:00",
+              "updatedAt": "2024-05-01T10:10:00.0000000+00:00",
+              "state": 0,
+              "screenOrigin": "primary",
+              "tags": [],
+              "isProtected": false,
+              "protectedContent": null,
+              "dockPosition": null
+            }
+          }
+        ],
+        "localAfter": [
+          {
+            "id": "00000001-0000-4000-8000-000000000000",
+            "text": "remoto",
+            "color": "#EBD38B",
+            "createdAt": "2024-05-01T09:00:00.0000000+00:00",
+            "updatedAt": "2024-05-01T10:10:00.0000000+00:00",
+            "state": 0,
+            "screenOrigin": "primary",
+            "tags": [],
+            "isProtected": false,
+            "protectedContent": null,
+            "dockPosition": null,
+            "authorDeviceId": "device-b"
+          }
+        ],
+        "localTombstonesAfter": [],
+        "basesAfter": [
+          {
+            "noteId": "00000001-0000-4000-8000-000000000000",
+            "updatedAt": "2024-05-01T10:10:00.0000000+00:00",
+            "deviceId": "device-b"
+          }
+        ],
+        "conflicts": []
+      }
+    },
+    {
+      "name": "E03 iguales: no se hace nada",
+      "covers": "SyncService.cs:408-434",
+      "settings": {
+        "deviceId": "android-pc-a",
+        "scope": 0,
+        "tag": null,
+        "noteIds": []
+      },
+      "local": {
+        "notes": [
+          {
+            "id": "00000001-0000-4000-8000-000000000000",
+            "text": "igual",
+            "color": "#EBD38B",
+            "createdAt": "2024-05-01T09:00:00.0000000+00:00",
+            "updatedAt": "2024-05-01T10:10:00.0000000+00:00",
+            "state": 0,
+            "screenOrigin": "primary",
+            "tags": [],
+            "isProtected": false,
+            "protectedContent": null,
+            "dockPosition": null,
+            "authorDeviceId": "device-b"
+          }
+        ],
+        "bases": [
+          {
+            "noteId": "00000001-0000-4000-8000-000000000000",
+            "updatedAt": "2024-05-01T10:10:00.0000000+00:00",
+            "deviceId": "device-b"
+          }
+        ],
+        "tombstones": []
+      },
+      "remote": [
+        {
+          "noteId": "00000001-0000-4000-8000-000000000000",
+          "kind": "note",
+          "key": "vectors",
+          "envelopeJson": "{\"format\":4,\"noteId\":\"00000001-0000-4000-8000-000000000000\",\"tombstone\":false,\"updatedAt\":\"2024-05-01T10:10:00+00:00\",\"deviceId\":\"device-b\",\"cipherText\":\"KMV2P5KfcrcOAiCZsoyqpyWx6JhbeC8YL9f/\\u002Bxaabz/NcfrE2p7Pgzds6z2SYTxN5y8QwwIWKL4UnVzOfEp0qO7ZnYqVw1WhvPZIst332fMtb/DUxN9mRVSzuSzWB/XL5alFdEqV4rd9jltagZXGp\\u002BpDjsaj\\u002BrFkQ9VdymKSj5tfX7KnG\\u002BDDySucFNgk30AUZ1v6JZgxbKhu/RobyxHRZHBjKeTIUbyAhRgZHiJVDZ\\u002BzW6DH5sJupMws1XzHSuLnzwe2gXrSYGIn/iPBkoBVJypMaINwv\\u002BISczoxi7ElwwKD2FdpVUQvNY/vPvi54ApKOvlkDFyrssZzS9/EGbInlfZSCS8YG79L/eeI2JT1fJ6ZDzI7\\u002B9MiGa6zTtjx\\u002B4IjYFCdTB6ANSgGtJ648mxQOhg7jE2GhqMhkv2Ws3YqhTbGIE0ljOMNjxaA7Fu8zEzJ8IVrVaIBnqBauxnQqtCNvKZpMmw=\",\"nonce\":\"njfvzeaPqWU145k4\",\"tag\":\"VKByNwygj6LhhiEwz6jcLA==\"}",
+          "plain": {
+            "id": "00000001-0000-4000-8000-000000000000",
+            "text": "igual",
+            "color": "#EBD38B",
+            "createdAt": "2024-05-01T09:00:00.0000000+00:00",
+            "updatedAt": "2024-05-01T10:10:00.0000000+00:00",
+            "state": 0,
+            "screenOrigin": "primary",
+            "tags": [],
+            "isProtected": false,
+            "protectedContent": null,
+            "dockPosition": null
+          }
+        }
+      ],
+      "expected": {
+        "error": null,
+        "uploaded": 0,
+        "downloaded": 0,
+        "conflictsResolved": 0,
+        "tombstonesApplied": 0,
+        "remoteAfter": [
+          {
+            "noteId": "00000001-0000-4000-8000-000000000000",
+            "tombstone": false,
+            "updatedAt": "2024-05-01T10:10:00.0000000+00:00",
+            "deviceId": "device-b",
+            "rewritten": false,
+            "note": {
+              "id": "00000001-0000-4000-8000-000000000000",
+              "text": "igual",
+              "color": "#EBD38B",
+              "createdAt": "2024-05-01T09:00:00.0000000+00:00",
+              "updatedAt": "2024-05-01T10:10:00.0000000+00:00",
+              "state": 0,
+              "screenOrigin": "primary",
+              "tags": [],
+              "isProtected": false,
+              "protectedContent": null,
+              "dockPosition": null
+            }
+          }
+        ],
+        "localAfter": [
+          {
+            "id": "00000001-0000-4000-8000-000000000000",
+            "text": "igual",
+            "color": "#EBD38B",
+            "createdAt": "2024-05-01T09:00:00.0000000+00:00",
+            "updatedAt": "2024-05-01T10:10:00.0000000+00:00",
+            "state": 0,
+            "screenOrigin": "primary",
+            "tags": [],
+            "isProtected": false,
+            "protectedContent": null,
+            "dockPosition": null,
+            "authorDeviceId": "device-b"
+          }
+        ],
+        "localTombstonesAfter": [],
+        "basesAfter": [
+          {
+            "noteId": "00000001-0000-4000-8000-000000000000",
+            "updatedAt": "2024-05-01T10:10:00.0000000+00:00",
+            "deviceId": "device-b"
+          }
+        ],
+        "conflicts": []
+      }
+    },
+    {
+      "name": "E04 cambió lo local, lo remoto es la base: se sube sin conflicto",
+      "covers": "SyncService.cs:408,424-428",
+      "settings": {
+        "deviceId": "android-pc-a",
+        "scope": 0,
+        "tag": null,
+        "noteIds": []
+      },
+      "local": {
+        "notes": [
+          {
+            "id": "00000001-0000-4000-8000-000000000000",
+            "text": "nuevo",
+            "color": "#EBD38B",
+            "createdAt": "2024-05-01T09:00:00.0000000+00:00",
+            "updatedAt": "2024-05-01T10:20:00.0000000+00:00",
+            "state": 0,
+            "screenOrigin": "primary",
+            "tags": [],
+            "isProtected": false,
+            "protectedContent": null,
+            "dockPosition": null,
+            "authorDeviceId": null
+          }
+        ],
+        "bases": [
+          {
+            "noteId": "00000001-0000-4000-8000-000000000000",
+            "updatedAt": "2024-05-01T10:10:00.0000000+00:00",
+            "deviceId": "device-b"
+          }
+        ],
+        "tombstones": []
+      },
+      "remote": [
+        {
+          "noteId": "00000001-0000-4000-8000-000000000000",
+          "kind": "note",
+          "key": "vectors",
+          "envelopeJson": "{\"format\":4,\"noteId\":\"00000001-0000-4000-8000-000000000000\",\"tombstone\":false,\"updatedAt\":\"2024-05-01T10:10:00+00:00\",\"deviceId\":\"device-b\",\"cipherText\":\"GNI/NIXiJVPnOV2R4Xt03EKX1ThHr2\\u002BPNvibGcn9tFa/KF7ghVR8gZAPzKjMC\\u002BYShejvpREt455i/fnnwApm6fQ\\u002B8PvDRLaGmInOX2k9l24Mv7ro\\u002Bszq02DYVOcf/\\u002BvGtATkoA1wzhZZ/lJZ9NJ7fc8E/F/xslKSJFF1py7agutAGL0kzbPJ4LHYxlD4ExFqBKpwJCXE3xH0OxvmuqDbAyBXKWreCW/Sewh8\\u002BRDUP3AOtu3e6VIOwlDif1ekgACyJjm\\u002BrlEHCTJP/bzk0JS676zCRDPa34cb2D/ikuvZDyQr9oBzqyM0YQAXk7MaUICPigD467zgrKD6RRt6tAhtkuf6pLL1yfYyx7a2Y3lT/AcPEuSapIGd7fqPbJQ0ooCXWnTsRc06xMgvpmbWT\\u002BNjktmucO1c6VEKLj5fOYrWRwDTZ4Bz1i80CL5RFj/g1d3Ugr5HqhKpolICIXc3L8IA3lp5OdY=\",\"nonce\":\"NJIvmfO/BovGtQTQ\",\"tag\":\"Cvp0\\u002BOLyitQT5oE98Fo6jg==\"}",
+          "plain": {
+            "id": "00000001-0000-4000-8000-000000000000",
+            "text": "viejo",
+            "color": "#EBD38B",
+            "createdAt": "2024-05-01T09:00:00.0000000+00:00",
+            "updatedAt": "2024-05-01T10:10:00.0000000+00:00",
+            "state": 0,
+            "screenOrigin": "primary",
+            "tags": [],
+            "isProtected": false,
+            "protectedContent": null,
+            "dockPosition": null
+          }
+        }
+      ],
+      "expected": {
+        "error": null,
+        "uploaded": 1,
+        "downloaded": 0,
+        "conflictsResolved": 0,
+        "tombstonesApplied": 0,
+        "remoteAfter": [
+          {
+            "noteId": "00000001-0000-4000-8000-000000000000",
+            "tombstone": false,
+            "updatedAt": "2024-05-01T10:20:00.0000000+00:00",
+            "deviceId": "android-pc-a",
+            "rewritten": true,
+            "note": {
+              "id": "00000001-0000-4000-8000-000000000000",
+              "text": "nuevo",
+              "color": "#EBD38B",
+              "createdAt": "2024-05-01T09:00:00.0000000+00:00",
+              "updatedAt": "2024-05-01T10:20:00.0000000+00:00",
+              "state": 0,
+              "screenOrigin": "primary",
+              "tags": [],
+              "isProtected": false,
+              "protectedContent": null,
+              "dockPosition": null
+            }
+          }
+        ],
+        "localAfter": [
+          {
+            "id": "00000001-0000-4000-8000-000000000000",
+            "text": "nuevo",
+            "color": "#EBD38B",
+            "createdAt": "2024-05-01T09:00:00.0000000+00:00",
+            "updatedAt": "2024-05-01T10:20:00.0000000+00:00",
+            "state": 0,
+            "screenOrigin": "primary",
+            "tags": [],
+            "isProtected": false,
+            "protectedContent": null,
+            "dockPosition": null,
+            "authorDeviceId": null
+          }
+        ],
+        "localTombstonesAfter": [],
+        "basesAfter": [
+          {
+            "noteId": "00000001-0000-4000-8000-000000000000",
+            "updatedAt": "2024-05-01T10:20:00.0000000+00:00",
+            "deviceId": "android-pc-a"
+          }
+        ],
+        "conflicts": []
+      }
+    },
+    {
+      "name": "E05 cambió lo remoto, lo local es la base: se aplica sin conflicto",
+      "covers": "SyncService.cs:408,429-432",
+      "settings": {
+        "deviceId": "android-pc-a",
+        "scope": 0,
+        "tag": null,
+        "noteIds": []
+      },
+      "local": {
+        "notes": [
+          {
+            "id": "00000001-0000-4000-8000-000000000000",
+            "text": "viejo",
+            "color": "#EBD38B",
+            "createdAt": "2024-05-01T09:00:00.0000000+00:00",
+            "updatedAt": "2024-05-01T10:10:00.0000000+00:00",
+            "state": 0,
+            "screenOrigin": "primary",
+            "tags": [],
+            "isProtected": false,
+            "protectedContent": null,
+            "dockPosition": null,
+            "authorDeviceId": "device-b"
+          }
+        ],
+        "bases": [
+          {
+            "noteId": "00000001-0000-4000-8000-000000000000",
+            "updatedAt": "2024-05-01T10:10:00.0000000+00:00",
+            "deviceId": "device-b"
+          }
+        ],
+        "tombstones": []
+      },
+      "remote": [
+        {
+          "noteId": "00000001-0000-4000-8000-000000000000",
+          "kind": "note",
+          "key": "vectors",
+          "envelopeJson": "{\"format\":4,\"noteId\":\"00000001-0000-4000-8000-000000000000\",\"tombstone\":false,\"updatedAt\":\"2024-05-01T10:20:00+00:00\",\"deviceId\":\"device-b\",\"cipherText\":\"hTRwA9w5A7CaErjDdJYmwoLSU1sWnR7rblWZ4ALbiUKihu9zywJ4XsmtUyLYH8AvEP/ocLe8EIOvq4a\\u002BhatROQduz5yOBM0Aa6axrMxMpZlTJMowkHK3m7jy9I1r2\\u002BgGFQ80XVrUOPuVvI2h4INECj/7l03NSRyjcYO4EPtGEFNqBRzF0c7dia5k\\u002BFVWytzH0IRI3zjQr7/fToz\\u002B3RUljNytRr/kNNHp8fUFyfeO3T/pG2hgEpi3R0RHmhaHTNNyLiCVYf7BEgx8GPdL9rVFqh3ud5lggi3DawF86vDQJwOKYu2/nT6nw2tojfUJO37fya2QzgqGpcQUEweTITyejY9re5550j0h1MjXcxSuSS1zVo9O6N548eb0/bzhQhqulybjQQz8ihwXm8bGe6YRVk0BjohMLUfWzSBa6ulW1ZkurLJLDb8ueoyZ4gGLNyFqiWOQTSuiuxhu2WCMBJf2tyycYMw=\",\"nonce\":\"O2qiXQiH/PrtjlAA\",\"tag\":\"Kqb19WVRw4G4V/yq2t2ONA==\"}",
+          "plain": {
+            "id": "00000001-0000-4000-8000-000000000000",
+            "text": "nuevo",
+            "color": "#EBD38B",
+            "createdAt": "2024-05-01T09:00:00.0000000+00:00",
+            "updatedAt": "2024-05-01T10:20:00.0000000+00:00",
+            "state": 0,
+            "screenOrigin": "primary",
+            "tags": [],
+            "isProtected": false,
+            "protectedContent": null,
+            "dockPosition": null
+          }
+        }
+      ],
+      "expected": {
+        "error": null,
+        "uploaded": 0,
+        "downloaded": 1,
+        "conflictsResolved": 0,
+        "tombstonesApplied": 0,
+        "remoteAfter": [
+          {
+            "noteId": "00000001-0000-4000-8000-000000000000",
+            "tombstone": false,
+            "updatedAt": "2024-05-01T10:20:00.0000000+00:00",
+            "deviceId": "device-b",
+            "rewritten": false,
+            "note": {
+              "id": "00000001-0000-4000-8000-000000000000",
+              "text": "nuevo",
+              "color": "#EBD38B",
+              "createdAt": "2024-05-01T09:00:00.0000000+00:00",
+              "updatedAt": "2024-05-01T10:20:00.0000000+00:00",
+              "state": 0,
+              "screenOrigin": "primary",
+              "tags": [],
+              "isProtected": false,
+              "protectedContent": null,
+              "dockPosition": null
+            }
+          }
+        ],
+        "localAfter": [
+          {
+            "id": "00000001-0000-4000-8000-000000000000",
+            "text": "nuevo",
+            "color": "#EBD38B",
+            "createdAt": "2024-05-01T09:00:00.0000000+00:00",
+            "updatedAt": "2024-05-01T10:20:00.0000000+00:00",
+            "state": 0,
+            "screenOrigin": "primary",
+            "tags": [],
+            "isProtected": false,
+            "protectedContent": null,
+            "dockPosition": null,
+            "authorDeviceId": "device-b"
+          }
+        ],
+        "localTombstonesAfter": [],
+        "basesAfter": [
+          {
+            "noteId": "00000001-0000-4000-8000-000000000000",
+            "updatedAt": "2024-05-01T10:20:00.0000000+00:00",
+            "deviceId": "device-b"
+          }
+        ],
+        "conflicts": []
+      }
+    },
+    {
+      "name": "E06a los dos cambiaron: conflicto, gana lo remoto (más reciente)",
+      "covers": "SyncService.cs:415-420",
+      "settings": {
+        "deviceId": "android-pc-a",
+        "scope": 0,
+        "tag": null,
+        "noteIds": []
+      },
+      "local": {
+        "notes": [
+          {
+            "id": "00000001-0000-4000-8000-000000000000",
+            "text": "local",
+            "color": "#EBD38B",
+            "createdAt": "2024-05-01T09:00:00.0000000+00:00",
+            "updatedAt": "2024-05-01T10:20:00.0000000+00:00",
+            "state": 0,
+            "screenOrigin": "primary",
+            "tags": [],
+            "isProtected": false,
+            "protectedContent": null,
+            "dockPosition": null,
+            "authorDeviceId": null
+          }
+        ],
+        "bases": [
+          {
+            "noteId": "00000001-0000-4000-8000-000000000000",
+            "updatedAt": "2024-05-01T10:10:00.0000000+00:00",
+            "deviceId": "device-b"
+          }
+        ],
+        "tombstones": []
+      },
+      "remote": [
+        {
+          "noteId": "00000001-0000-4000-8000-000000000000",
+          "kind": "note",
+          "key": "vectors",
+          "envelopeJson": "{\"format\":4,\"noteId\":\"00000001-0000-4000-8000-000000000000\",\"tombstone\":false,\"updatedAt\":\"2024-05-01T10:30:00+00:00\",\"deviceId\":\"device-b\",\"cipherText\":\"wxtL8LnhlbgH5wpQxDobpxYHWudpxDwN5Lwjf1gEksyuq1ftk49J1Lwdd8pL3qNKqwHvddUhjAM21udKDBEK3SqZdG8zFu\\u002BaU\\u002Bwsj9LrB6SsJh3Y51aAazmgcRPSBLD78y5td8oRlceOrMfTDad85V6\\u002B3uLRdxktxL\\u002B6rEBEJvRAIrBgxG7ce/aYh4\\u002B7sJVlH/qeAZvlQ1mejqTb\\u002B2FwrN3T4BN66lz1hdeaR4vG\\u002BP/7Y5fwrqvS5zv\\u002BrURPrKpM039NrCDvIjX\\u002BE4DsGpxA4Ki4Qx5MZESkmLLjQlmzrA9NtHOQ0xFROO8hKhwND8WrDH2tzapIQ8Rd5y78evV2rBuj7/dcZky137ED7eFm9FgBJXhrxuZwK69ueB0MMsQkGWD9wjRFXJNB3go3NNPB/0uJLJzodwmCrcuvZnARDOfJNbZUm\\u002BBtreBpod\\u002BCSTDFa2\\u002BkuCVQXnCb9w1H2rjSmlwgY0JoEJWR\",\"nonce\":\"ge2ovHT5M8vQr5s/\",\"tag\":\"p\\u002B30D1DBblUAmSGUIXl/2w==\"}",
+          "plain": {
+            "id": "00000001-0000-4000-8000-000000000000",
+            "text": "remoto",
+            "color": "#EBD38B",
+            "createdAt": "2024-05-01T09:00:00.0000000+00:00",
+            "updatedAt": "2024-05-01T10:30:00.0000000+00:00",
+            "state": 0,
+            "screenOrigin": "primary",
+            "tags": [],
+            "isProtected": false,
+            "protectedContent": null,
+            "dockPosition": null
+          }
+        }
+      ],
+      "expected": {
+        "error": null,
+        "uploaded": 0,
+        "downloaded": 1,
+        "conflictsResolved": 1,
+        "tombstonesApplied": 0,
+        "remoteAfter": [
+          {
+            "noteId": "00000001-0000-4000-8000-000000000000",
+            "tombstone": false,
+            "updatedAt": "2024-05-01T10:30:00.0000000+00:00",
+            "deviceId": "device-b",
+            "rewritten": false,
+            "note": {
+              "id": "00000001-0000-4000-8000-000000000000",
+              "text": "remoto",
+              "color": "#EBD38B",
+              "createdAt": "2024-05-01T09:00:00.0000000+00:00",
+              "updatedAt": "2024-05-01T10:30:00.0000000+00:00",
+              "state": 0,
+              "screenOrigin": "primary",
+              "tags": [],
+              "isProtected": false,
+              "protectedContent": null,
+              "dockPosition": null
+            }
+          }
+        ],
+        "localAfter": [
+          {
+            "id": "00000001-0000-4000-8000-000000000000",
+            "text": "remoto",
+            "color": "#EBD38B",
+            "createdAt": "2024-05-01T09:00:00.0000000+00:00",
+            "updatedAt": "2024-05-01T10:30:00.0000000+00:00",
+            "state": 0,
+            "screenOrigin": "primary",
+            "tags": [],
+            "isProtected": false,
+            "protectedContent": null,
+            "dockPosition": null,
+            "authorDeviceId": "device-b"
+          }
+        ],
+        "localTombstonesAfter": [],
+        "basesAfter": [
+          {
+            "noteId": "00000001-0000-4000-8000-000000000000",
+            "updatedAt": "2024-05-01T10:30:00.0000000+00:00",
+            "deviceId": "device-b"
+          }
+        ],
+        "conflicts": [
+          {
+            "noteId": "00000001-0000-4000-8000-000000000000",
+            "winner": {
+              "updatedAt": "2024-05-01T10:30:00.0000000+00:00",
+              "deviceId": "device-b",
+              "tombstone": false,
+              "text": null
+            },
+            "losing": {
+              "updatedAt": "2024-05-01T10:20:00.0000000+00:00",
+              "deviceId": "android-pc-a",
+              "tombstone": false,
+              "text": "local"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "E06b los dos cambiaron: conflicto, gana lo local (más reciente)",
+      "covers": "SyncService.cs:415-420",
+      "settings": {
+        "deviceId": "android-pc-a",
+        "scope": 0,
+        "tag": null,
+        "noteIds": []
+      },
+      "local": {
+        "notes": [
+          {
+            "id": "00000001-0000-4000-8000-000000000000",
+            "text": "local",
+            "color": "#EBD38B",
+            "createdAt": "2024-05-01T09:00:00.0000000+00:00",
+            "updatedAt": "2024-05-01T10:30:00.0000000+00:00",
+            "state": 0,
+            "screenOrigin": "primary",
+            "tags": [],
+            "isProtected": false,
+            "protectedContent": null,
+            "dockPosition": null,
+            "authorDeviceId": null
+          }
+        ],
+        "bases": [
+          {
+            "noteId": "00000001-0000-4000-8000-000000000000",
+            "updatedAt": "2024-05-01T10:10:00.0000000+00:00",
+            "deviceId": "device-b"
+          }
+        ],
+        "tombstones": []
+      },
+      "remote": [
+        {
+          "noteId": "00000001-0000-4000-8000-000000000000",
+          "kind": "note",
+          "key": "vectors",
+          "envelopeJson": "{\"format\":4,\"noteId\":\"00000001-0000-4000-8000-000000000000\",\"tombstone\":false,\"updatedAt\":\"2024-05-01T10:20:00+00:00\",\"deviceId\":\"device-b\",\"cipherText\":\"cwLzfzQsrQC5W5KauO/YeQTl19g6IqKKKy1ha3c6KrYK3Cyg6bKxLpymFvYhQ5Kp8wZuxPUvtcF2WzU8RanSO8Qpn8rgxTI/yJ0Ph5Vwoq9\\u002BnzVEYcAymv589pzB2QmbBsKE/ZZVBCE7BmvoUkY2yfSYj0Lmaa3Pq8QHQKW2kHNGRXNsTnEDfUheiQFjRO8llJXaAC/S8z1UX4uMkKcuThuNGXhBp\\u002BJYutDfGoFDMkeNkGAVyWYQR0FvepxEjenFAwBSJw7gDhRRLrCQJ9WeF1rscg8bmDaP62EE8q5vJqpT/c\\u002B/SSSoqnk6QuAr2DzeIo\\u002BIHH77STIMtIkZPR8J\\u002BbYmICvgqRyAGJEKawjvG3jZ9ybBp\\u002BprZO0fuxcNXt7Fgnh2ZiMNYpIf\\u002B8ejVkugb3cIGvNGz14H8q1Ehbl/Kg4jWz/RcTQFUUKKipmch62HpGmvoR2BzUK\\u002BK37Q1g4LWv2PD5PpAYb8\",\"nonce\":\"nmRbWDb\\u002BHAZnJxi8\",\"tag\":\"9mLTF1vy3\\u002Bwu4sllVnJhgA==\"}",
+          "plain": {
+            "id": "00000001-0000-4000-8000-000000000000",
+            "text": "remoto",
+            "color": "#EBD38B",
+            "createdAt": "2024-05-01T09:00:00.0000000+00:00",
+            "updatedAt": "2024-05-01T10:20:00.0000000+00:00",
+            "state": 0,
+            "screenOrigin": "primary",
+            "tags": [],
+            "isProtected": false,
+            "protectedContent": null,
+            "dockPosition": null
+          }
+        }
+      ],
+      "expected": {
+        "error": null,
+        "uploaded": 1,
+        "downloaded": 0,
+        "conflictsResolved": 1,
+        "tombstonesApplied": 0,
+        "remoteAfter": [
+          {
+            "noteId": "00000001-0000-4000-8000-000000000000",
+            "tombstone": false,
+            "updatedAt": "2024-05-01T10:30:00.0000000+00:00",
+            "deviceId": "android-pc-a",
+            "rewritten": true,
+            "note": {
+              "id": "00000001-0000-4000-8000-000000000000",
+              "text": "local",
+              "color": "#EBD38B",
+              "createdAt": "2024-05-01T09:00:00.0000000+00:00",
+              "updatedAt": "2024-05-01T10:30:00.0000000+00:00",
+              "state": 0,
+              "screenOrigin": "primary",
+              "tags": [],
+              "isProtected": false,
+              "protectedContent": null,
+              "dockPosition": null
+            }
+          }
+        ],
+        "localAfter": [
+          {
+            "id": "00000001-0000-4000-8000-000000000000",
+            "text": "local",
+            "color": "#EBD38B",
+            "createdAt": "2024-05-01T09:00:00.0000000+00:00",
+            "updatedAt": "2024-05-01T10:30:00.0000000+00:00",
+            "state": 0,
+            "screenOrigin": "primary",
+            "tags": [],
+            "isProtected": false,
+            "protectedContent": null,
+            "dockPosition": null,
+            "authorDeviceId": null
+          }
+        ],
+        "localTombstonesAfter": [],
+        "basesAfter": [
+          {
+            "noteId": "00000001-0000-4000-8000-000000000000",
+            "updatedAt": "2024-05-01T10:30:00.0000000+00:00",
+            "deviceId": "android-pc-a"
+          }
+        ],
+        "conflicts": [
+          {
+            "noteId": "00000001-0000-4000-8000-000000000000",
+            "winner": {
+              "updatedAt": "2024-05-01T10:30:00.0000000+00:00",
+              "deviceId": "android-pc-a",
+              "tombstone": false,
+              "text": null
+            },
+            "losing": {
+              "updatedAt": "2024-05-01T10:20:00.0000000+00:00",
+              "deviceId": "device-b",
+              "tombstone": false,
+              "text": "remoto"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "E07 los dos cambiaron al mismo contenido: sin conflicto",
+      "covers": "SyncService.cs:415 NoteEquivalence.SameContent",
+      "settings": {
+        "deviceId": "android-pc-a",
+        "scope": 0,
+        "tag": null,
+        "noteIds": []
+      },
+      "local": {
+        "notes": [
+          {
+            "id": "00000001-0000-4000-8000-000000000000",
+            "text": "igual",
+            "color": "#EBD38B",
+            "createdAt": "2024-05-01T09:00:00.0000000+00:00",
+            "updatedAt": "2024-05-01T10:20:00.0000000+00:00",
+            "state": 0,
+            "screenOrigin": "primary",
+            "tags": [],
+            "isProtected": false,
+            "protectedContent": null,
+            "dockPosition": null,
+            "authorDeviceId": null
+          }
+        ],
+        "bases": [
+          {
+            "noteId": "00000001-0000-4000-8000-000000000000",
+            "updatedAt": "2024-05-01T10:10:00.0000000+00:00",
+            "deviceId": "device-b"
+          }
+        ],
+        "tombstones": []
+      },
+      "remote": [
+        {
+          "noteId": "00000001-0000-4000-8000-000000000000",
+          "kind": "note",
+          "key": "vectors",
+          "envelopeJson": "{\"format\":4,\"noteId\":\"00000001-0000-4000-8000-000000000000\",\"tombstone\":false,\"updatedAt\":\"2024-05-01T10:30:00+00:00\",\"deviceId\":\"device-b\",\"cipherText\":\"JkJyWb92rlsuZSxay7phPKdB6\\u002BBd8pKugqxGz/5VPaz4RxK7Qm1TGaoC/nW\\u002Bvmgn\\u002B5ihRnFRTondBqk5hygeftLYG5cOPM2dSOQ6GhSWcN/rlbPEEzMYKxSpN35hTnAUAoYxZHUMLWuT63OtNQwlhIAaK0ApsgI6WL1gOHu18dWWdzkV7uRSzymvr60z3vH3iSFqWOFd97D8stZGgMTwPTDV/aaX4ry4rmZNGOop/XEF/uIhGb\\u002Becqs\\u002BlOQI6Nc9IRnVHSe5SROlGliOKCKlGO6SvkBLi7y/bGW5qm9n7KOvlh/1oeI065nJb4EbCwQ5OaRKvIUmbJfyVMiKUMX7vAkGlAefRcd9wBNMJq0X0yLzW\\u002Bnx3Mv1tqgliYiPtrtoZ3Zf8F4XWBuhv4TS64Pd2gaFnKd1LSMhvZ/ITvqgq0fmXEKtGEZrS/Q/SfUtF2YB8IXyZCIjCOb8arBF/871ax0YJHk=\",\"nonce\":\"JinRIx28\\u002BYFYLtHf\",\"tag\":\"kx/\\u002BhOcT\\u002Be9DULoW6rMBbA==\"}",
+          "plain": {
+            "id": "00000001-0000-4000-8000-000000000000",
+            "text": "igual",
+            "color": "#EBD38B",
+            "createdAt": "2024-05-01T09:00:00.0000000+00:00",
+            "updatedAt": "2024-05-01T10:30:00.0000000+00:00",
+            "state": 0,
+            "screenOrigin": "primary",
+            "tags": [],
+            "isProtected": false,
+            "protectedContent": null,
+            "dockPosition": null
+          }
+        }
+      ],
+      "expected": {
+        "error": null,
+        "uploaded": 0,
+        "downloaded": 1,
+        "conflictsResolved": 0,
+        "tombstonesApplied": 0,
+        "remoteAfter": [
+          {
+            "noteId": "00000001-0000-4000-8000-000000000000",
+            "tombstone": false,
+            "updatedAt": "2024-05-01T10:30:00.0000000+00:00",
+            "deviceId": "device-b",
+            "rewritten": false,
+            "note": {
+              "id": "00000001-0000-4000-8000-000000000000",
+              "text": "igual",
+              "color": "#EBD38B",
+              "createdAt": "2024-05-01T09:00:00.0000000+00:00",
+              "updatedAt": "2024-05-01T10:30:00.0000000+00:00",
+              "state": 0,
+              "screenOrigin": "primary",
+              "tags": [],
+              "isProtected": false,
+              "protectedContent": null,
+              "dockPosition": null
+            }
+          }
+        ],
+        "localAfter": [
+          {
+            "id": "00000001-0000-4000-8000-000000000000",
+            "text": "igual",
+            "color": "#EBD38B",
+            "createdAt": "2024-05-01T09:00:00.0000000+00:00",
+            "updatedAt": "2024-05-01T10:30:00.0000000+00:00",
+            "state": 0,
+            "screenOrigin": "primary",
+            "tags": [],
+            "isProtected": false,
+            "protectedContent": null,
+            "dockPosition": null,
+            "authorDeviceId": "device-b"
+          }
+        ],
+        "localTombstonesAfter": [],
+        "basesAfter": [
+          {
+            "noteId": "00000001-0000-4000-8000-000000000000",
+            "updatedAt": "2024-05-01T10:30:00.0000000+00:00",
+            "deviceId": "device-b"
+          }
+        ],
+        "conflicts": []
+      }
+    },
+    {
+      "name": "E08 sin base y distintos: conflicto por prudencia",
+      "covers": "SyncService.cs:460-466",
+      "settings": {
+        "deviceId": "android-pc-a",
+        "scope": 0,
+        "tag": null,
+        "noteIds": []
+      },
+      "local": {
+        "notes": [
+          {
+            "id": "00000001-0000-4000-8000-000000000000",
+            "text": "local",
+            "color": "#EBD38B",
+            "createdAt": "2024-05-01T09:00:00.0000000+00:00",
+            "updatedAt": "2024-05-01T10:20:00.0000000+00:00",
+            "state": 0,
+            "screenOrigin": "primary",
+            "tags": [],
+            "isProtected": false,
+            "protectedContent": null,
+            "dockPosition": null,
+            "authorDeviceId": null
+          }
+        ],
+        "bases": [],
+        "tombstones": []
+      },
+      "remote": [
+        {
+          "noteId": "00000001-0000-4000-8000-000000000000",
+          "kind": "note",
+          "key": "vectors",
+          "envelopeJson": "{\"format\":4,\"noteId\":\"00000001-0000-4000-8000-000000000000\",\"tombstone\":false,\"updatedAt\":\"2024-05-01T10:30:00+00:00\",\"deviceId\":\"device-b\",\"cipherText\":\"LX2E1fsBXC5utEjfZKbc15nzlhLfqxQv6xFEE5FHyV2Q3wsj86pxYyjT65q\\u002BKj6t79CeqwwJIr\\u002BpT5TQQ/YW6C4z4eF4IsoTw\\u002BLUS6RXhnsXlBjzlV\\u002B/mngyQFuHThSFuCpVTRFjddX4yIwpfpQ1\\u002Bud1uxV99F8YUE9wTB/osqugEtV/YpxIaXwVtl4x2TglbvSTUY33GguaiDSxEJi0KTg4dx8U85pT4KUgFkO5K7SCucTCbIudBuZJ\\u002BjPw0iyX1XV1zhExh42HEnfcc0dHmvXkcVfBCuolECqv\\u002BJVaAkc8zy7Kq0FHi5nD6fyRKjjJTmwp7WNhloeHcHD8nv/VyHceKMKwLaedGo8C0IYQpbvBrHKyjfzegPHbcAXCIBmqAwr\\u002Bi1nOC4v/qQ3\\u002BKsgFaiXxICxLCyp5uABp0kp1HADVPK81uV3KHeOqVjE4IcVjJHrD8gO5vdHV2ZGa\\u002BQ/i2/vqt1deA3g9\",\"nonce\":\"5NEdDVtT8Ts3ORpP\",\"tag\":\"s5MP3ATsBIRmrupRS4XumQ==\"}",
+          "plain": {
+            "id": "00000001-0000-4000-8000-000000000000",
+            "text": "remoto",
+            "color": "#EBD38B",
+            "createdAt": "2024-05-01T09:00:00.0000000+00:00",
+            "updatedAt": "2024-05-01T10:30:00.0000000+00:00",
+            "state": 0,
+            "screenOrigin": "primary",
+            "tags": [],
+            "isProtected": false,
+            "protectedContent": null,
+            "dockPosition": null
+          }
+        }
+      ],
+      "expected": {
+        "error": null,
+        "uploaded": 0,
+        "downloaded": 1,
+        "conflictsResolved": 1,
+        "tombstonesApplied": 0,
+        "remoteAfter": [
+          {
+            "noteId": "00000001-0000-4000-8000-000000000000",
+            "tombstone": false,
+            "updatedAt": "2024-05-01T10:30:00.0000000+00:00",
+            "deviceId": "device-b",
+            "rewritten": false,
+            "note": {
+              "id": "00000001-0000-4000-8000-000000000000",
+              "text": "remoto",
+              "color": "#EBD38B",
+              "createdAt": "2024-05-01T09:00:00.0000000+00:00",
+              "updatedAt": "2024-05-01T10:30:00.0000000+00:00",
+              "state": 0,
+              "screenOrigin": "primary",
+              "tags": [],
+              "isProtected": false,
+              "protectedContent": null,
+              "dockPosition": null
+            }
+          }
+        ],
+        "localAfter": [
+          {
+            "id": "00000001-0000-4000-8000-000000000000",
+            "text": "remoto",
+            "color": "#EBD38B",
+            "createdAt": "2024-05-01T09:00:00.0000000+00:00",
+            "updatedAt": "2024-05-01T10:30:00.0000000+00:00",
+            "state": 0,
+            "screenOrigin": "primary",
+            "tags": [],
+            "isProtected": false,
+            "protectedContent": null,
+            "dockPosition": null,
+            "authorDeviceId": "device-b"
+          }
+        ],
+        "localTombstonesAfter": [],
+        "basesAfter": [
+          {
+            "noteId": "00000001-0000-4000-8000-000000000000",
+            "updatedAt": "2024-05-01T10:30:00.0000000+00:00",
+            "deviceId": "device-b"
+          }
+        ],
+        "conflicts": [
+          {
+            "noteId": "00000001-0000-4000-8000-000000000000",
+            "winner": {
+              "updatedAt": "2024-05-01T10:30:00.0000000+00:00",
+              "deviceId": "device-b",
+              "tombstone": false,
+              "text": null
+            },
+            "losing": {
+              "updatedAt": "2024-05-01T10:20:00.0000000+00:00",
+              "deviceId": "android-pc-a",
+              "tombstone": false,
+              "text": "local"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "E09a misma fecha, contenido distinto: gana el deviceId mayor (remoto), sin conflicto",
+      "covers": "SyncService.cs:462",
+      "settings": {
+        "deviceId": "android-pc-a",
+        "scope": 0,
+        "tag": null,
+        "noteIds": []
+      },
+      "local": {
+        "notes": [
+          {
+            "id": "00000001-0000-4000-8000-000000000000",
+            "text": "local",
+            "color": "#EBD38B",
+            "createdAt": "2024-05-01T09:00:00.0000000+00:00",
+            "updatedAt": "2024-05-01T10:20:00.0000000+00:00",
+            "state": 0,
+            "screenOrigin": "primary",
+            "tags": [],
+            "isProtected": false,
+            "protectedContent": null,
+            "dockPosition": null,
+            "authorDeviceId": null
+          }
+        ],
+        "bases": [
+          {
+            "noteId": "00000001-0000-4000-8000-000000000000",
+            "updatedAt": "2024-05-01T10:10:00.0000000+00:00",
+            "deviceId": "device-b"
+          }
+        ],
+        "tombstones": []
+      },
+      "remote": [
+        {
+          "noteId": "00000001-0000-4000-8000-000000000000",
+          "kind": "note",
+          "key": "vectors",
+          "envelopeJson": "{\"format\":4,\"noteId\":\"00000001-0000-4000-8000-000000000000\",\"tombstone\":false,\"updatedAt\":\"2024-05-01T10:20:00+00:00\",\"deviceId\":\"device-b\",\"cipherText\":\"pJTBOJmGymKxbxPGm9l74SrJQb/z7RfywpJBk4iOU5LqVomPXjx0a/6h6AcHszbm6M604TLxcxpB6s12UYNCGGOa1x/uMTvu3Iew9QtUS/SFsZ5b/tmX8oh3UYYT3GKwxFto\\u002BwJlqWCzl6gQtAQkzFgN0WF0aO2psz1WLyVcVbbRXBPIRbsknOsRqpi7H/7acqOdc36Bemm7yqjbLhcu5dC5JAm\\u002B\\u002B/YXcBoVTtf3MGkRmNA68ESnOKZGxJFZPEFSl2jcOMGkhzqMYL2EAjdtre1lg2sWTYGiYNdwZhfCI3G9X79rWDutcBjqYiipcHmnNjEKiGXht5vZU1RU5PRZSM1szybx/AD\\u002BY87O\\u002BusOLUuZy7cClTdpvEDO6Vwzqr\\u002Bx2gL6WQi1px139V6ql9Zx8uE2Hkf2fwypqPIArqFCTCYMDI7pt8cFbbUWUa4NjvEM\\u002BiUuXiON2\\u002BJ\\u002BDUe5SQqDmN2YedyRRSn6\",\"nonce\":\"5j5YKDPYBNBXgzzw\",\"tag\":\"gaFhJe88jzDFVwlKFCwioA==\"}",
+          "plain": {
+            "id": "00000001-0000-4000-8000-000000000000",
+            "text": "remoto",
+            "color": "#EBD38B",
+            "createdAt": "2024-05-01T09:00:00.0000000+00:00",
+            "updatedAt": "2024-05-01T10:20:00.0000000+00:00",
+            "state": 0,
+            "screenOrigin": "primary",
+            "tags": [],
+            "isProtected": false,
+            "protectedContent": null,
+            "dockPosition": null
+          }
+        }
+      ],
+      "expected": {
+        "error": null,
+        "uploaded": 0,
+        "downloaded": 1,
+        "conflictsResolved": 0,
+        "tombstonesApplied": 0,
+        "remoteAfter": [
+          {
+            "noteId": "00000001-0000-4000-8000-000000000000",
+            "tombstone": false,
+            "updatedAt": "2024-05-01T10:20:00.0000000+00:00",
+            "deviceId": "device-b",
+            "rewritten": false,
+            "note": {
+              "id": "00000001-0000-4000-8000-000000000000",
+              "text": "remoto",
+              "color": "#EBD38B",
+              "createdAt": "2024-05-01T09:00:00.0000000+00:00",
+              "updatedAt": "2024-05-01T10:20:00.0000000+00:00",
+              "state": 0,
+              "screenOrigin": "primary",
+              "tags": [],
+              "isProtected": false,
+              "protectedContent": null,
+              "dockPosition": null
+            }
+          }
+        ],
+        "localAfter": [
+          {
+            "id": "00000001-0000-4000-8000-000000000000",
+            "text": "remoto",
+            "color": "#EBD38B",
+            "createdAt": "2024-05-01T09:00:00.0000000+00:00",
+            "updatedAt": "2024-05-01T10:20:00.0000000+00:00",
+            "state": 0,
+            "screenOrigin": "primary",
+            "tags": [],
+            "isProtected": false,
+            "protectedContent": null,
+            "dockPosition": null,
+            "authorDeviceId": "device-b"
+          }
+        ],
+        "localTombstonesAfter": [],
+        "basesAfter": [
+          {
+            "noteId": "00000001-0000-4000-8000-000000000000",
+            "updatedAt": "2024-05-01T10:20:00.0000000+00:00",
+            "deviceId": "device-b"
+          }
+        ],
+        "conflicts": []
+      }
+    },
+    {
+      "name": "E09b misma fecha, contenido distinto: gana el deviceId mayor (local), sin conflicto",
+      "covers": "SyncService.cs:462",
+      "settings": {
+        "deviceId": "android-pc-a",
+        "scope": 0,
+        "tag": null,
+        "noteIds": []
+      },
+      "local": {
+        "notes": [
+          {
+            "id": "00000001-0000-4000-8000-000000000000",
+            "text": "local",
+            "color": "#EBD38B",
+            "createdAt": "2024-05-01T09:00:00.0000000+00:00",
+            "updatedAt": "2024-05-01T10:20:00.0000000+00:00",
+            "state": 0,
+            "screenOrigin": "primary",
+            "tags": [],
+            "isProtected": false,
+            "protectedContent": null,
+            "dockPosition": null,
+            "authorDeviceId": null
+          }
+        ],
+        "bases": [
+          {
+            "noteId": "00000001-0000-4000-8000-000000000000",
+            "updatedAt": "2024-05-01T10:10:00.0000000+00:00",
+            "deviceId": "device-b"
+          }
+        ],
+        "tombstones": []
+      },
+      "remote": [
+        {
+          "noteId": "00000001-0000-4000-8000-000000000000",
+          "kind": "note",
+          "key": "vectors",
+          "envelopeJson": "{\"format\":4,\"noteId\":\"00000001-0000-4000-8000-000000000000\",\"tombstone\":false,\"updatedAt\":\"2024-05-01T10:20:00+00:00\",\"deviceId\":\"aaa-device\",\"cipherText\":\"OfMfUTNdYc3GCdFB8AhWuaUnEZVz0Y2rL7w2OFkMPI94wNrRazeI/SSVs3ScniOesuhN6cig3lVb8NVWA9x4ZWKGtJqRs5Wd97jKw/L14R8Sp3XuxBSJ102ZHcGtpukkZc\\u002BpUFGLo84HAMJnQCy5uBnamF2EUyAqE7IGJz8Z\\u002BZE3T6aNEUfgXVhpIsz3A5a3jk74jdRLPIGExjrSct6wwdzyY0HEklzlKR2Dvfk7Asccp3qIjy\\u002B7sZ\\u002B3aeeOIzgfjHP\\u002Boo/4NnTKj9Gm81qyz7nQfgjOa0b9w\\u002BUWmD6ygtz/kRr7sMwVCJwU0x8lDjKUDR2mET3K5OGMoeziqziXUYODKDQ2818elzrPD1EON267/3LevUiMLsCSW97z4KeOI/jij8HV54uAAwMi1eseZdCmlRpMuBRijnwRJF1w3UelHZ0s9Us4sposg/GvzJcQ47RPJPFGolsDH9gHz\\u002BU\\u002B4V4gJqQFutbZ\",\"nonce\":\"9SGeMI68xYLIVJxQ\",\"tag\":\"tgE2fOwRYmzKbDy8KXPgWg==\"}",
+          "plain": {
+            "id": "00000001-0000-4000-8000-000000000000",
+            "text": "remoto",
+            "color": "#EBD38B",
+            "createdAt": "2024-05-01T09:00:00.0000000+00:00",
+            "updatedAt": "2024-05-01T10:20:00.0000000+00:00",
+            "state": 0,
+            "screenOrigin": "primary",
+            "tags": [],
+            "isProtected": false,
+            "protectedContent": null,
+            "dockPosition": null
+          }
+        }
+      ],
+      "expected": {
+        "error": null,
+        "uploaded": 1,
+        "downloaded": 0,
+        "conflictsResolved": 0,
+        "tombstonesApplied": 0,
+        "remoteAfter": [
+          {
+            "noteId": "00000001-0000-4000-8000-000000000000",
+            "tombstone": false,
+            "updatedAt": "2024-05-01T10:20:00.0000000+00:00",
+            "deviceId": "android-pc-a",
+            "rewritten": true,
+            "note": {
+              "id": "00000001-0000-4000-8000-000000000000",
+              "text": "local",
+              "color": "#EBD38B",
+              "createdAt": "2024-05-01T09:00:00.0000000+00:00",
+              "updatedAt": "2024-05-01T10:20:00.0000000+00:00",
+              "state": 0,
+              "screenOrigin": "primary",
+              "tags": [],
+              "isProtected": false,
+              "protectedContent": null,
+              "dockPosition": null
+            }
+          }
+        ],
+        "localAfter": [
+          {
+            "id": "00000001-0000-4000-8000-000000000000",
+            "text": "local",
+            "color": "#EBD38B",
+            "createdAt": "2024-05-01T09:00:00.0000000+00:00",
+            "updatedAt": "2024-05-01T10:20:00.0000000+00:00",
+            "state": 0,
+            "screenOrigin": "primary",
+            "tags": [],
+            "isProtected": false,
+            "protectedContent": null,
+            "dockPosition": null,
+            "authorDeviceId": null
+          }
+        ],
+        "localTombstonesAfter": [],
+        "basesAfter": [
+          {
+            "noteId": "00000001-0000-4000-8000-000000000000",
+            "updatedAt": "2024-05-01T10:20:00.0000000+00:00",
+            "deviceId": "android-pc-a"
+          }
+        ],
+        "conflicts": []
+      }
+    },
+    {
+      "name": "E10 versión = base + 1 ms (migración de temas): sin conflicto",
+      "covers": "SyncService.cs:472-473",
+      "settings": {
+        "deviceId": "android-pc-a",
+        "scope": 0,
+        "tag": null,
+        "noteIds": []
+      },
+      "local": {
+        "notes": [
+          {
+            "id": "00000001-0000-4000-8000-000000000000",
+            "text": "local",
+            "color": "#EBD38B",
+            "createdAt": "2024-05-01T09:00:00.0000000+00:00",
+            "updatedAt": "2024-05-01T10:10:00.0010000+00:00",
+            "state": 0,
+            "screenOrigin": "primary",
+            "tags": [],
+            "isProtected": false,
+            "protectedContent": null,
+            "dockPosition": null,
+            "authorDeviceId": null
+          }
+        ],
+        "bases": [
+          {
+            "noteId": "00000001-0000-4000-8000-000000000000",
+            "updatedAt": "2024-05-01T10:10:00.0000000+00:00",
+            "deviceId": "device-b"
+          }
+        ],
+        "tombstones": []
+      },
+      "remote": [
+        {
+          "noteId": "00000001-0000-4000-8000-000000000000",
+          "kind": "note",
+          "key": "vectors",
+          "envelopeJson": "{\"format\":4,\"noteId\":\"00000001-0000-4000-8000-000000000000\",\"tombstone\":false,\"updatedAt\":\"2024-05-01T10:30:00+00:00\",\"deviceId\":\"device-b\",\"cipherText\":\"RlH7nlfsGZi4bVOmiEUrHStemFuP4/X3nm8QVEMwE3PqDpoGdKgoYaqgerAsQOK8kXtT3qPNFfXv9rXjJIghBgaz/aW3YfcxGNodB/D7Ts9rIwj90jDysqFJCWImkNhkccYuSCPhhTclndGMc4M3tByunjWY\\u002BRbS4uINv7vxDkh2eflDfjfYTaX9Uj1Ls2JNi4AiKR7LHo91AToS8PN5HVH4\\u002BQjVqgKHjDRuRAF4NV5i1tF8/L\\u002BqYVaOF1CVpdka06kRp9JI1H2IhbMBPAzoIySIyiAQSNFBQuZE5PRSTofLrhjMBxM/ncL5ERNMO5AABVm7lMpU7nd9htYjS7NKQlkezzV/Of/l8Z\\u002Buti8rDdF7JtLGgsmiacARmbB0V\\u002BSy3ghUgzFnMW\\u002BlKZ/ZTpqB3HLxsaAIFG8XmoAiABvAqwFEZ25WUJlPWxJtjuQxULX5xo00vFKeCKsfaKPhv5ByeFVvk2dk4I4e\",\"nonce\":\"xc95eS/qD/frG4OZ\",\"tag\":\"vB7yi7RN4hLcbJxO7r9gbA==\"}",
+          "plain": {
+            "id": "00000001-0000-4000-8000-000000000000",
+            "text": "remoto",
+            "color": "#EBD38B",
+            "createdAt": "2024-05-01T09:00:00.0000000+00:00",
+            "updatedAt": "2024-05-01T10:30:00.0000000+00:00",
+            "state": 0,
+            "screenOrigin": "primary",
+            "tags": [],
+            "isProtected": false,
+            "protectedContent": null,
+            "dockPosition": null
+          }
+        }
+      ],
+      "expected": {
+        "error": null,
+        "uploaded": 0,
+        "downloaded": 1,
+        "conflictsResolved": 0,
+        "tombstonesApplied": 0,
+        "remoteAfter": [
+          {
+            "noteId": "00000001-0000-4000-8000-000000000000",
+            "tombstone": false,
+            "updatedAt": "2024-05-01T10:30:00.0000000+00:00",
+            "deviceId": "device-b",
+            "rewritten": false,
+            "note": {
+              "id": "00000001-0000-4000-8000-000000000000",
+              "text": "remoto",
+              "color": "#EBD38B",
+              "createdAt": "2024-05-01T09:00:00.0000000+00:00",
+              "updatedAt": "2024-05-01T10:30:00.0000000+00:00",
+              "state": 0,
+              "screenOrigin": "primary",
+              "tags": [],
+              "isProtected": false,
+              "protectedContent": null,
+              "dockPosition": null
+            }
+          }
+        ],
+        "localAfter": [
+          {
+            "id": "00000001-0000-4000-8000-000000000000",
+            "text": "remoto",
+            "color": "#EBD38B",
+            "createdAt": "2024-05-01T09:00:00.0000000+00:00",
+            "updatedAt": "2024-05-01T10:30:00.0000000+00:00",
+            "state": 0,
+            "screenOrigin": "primary",
+            "tags": [],
+            "isProtected": false,
+            "protectedContent": null,
+            "dockPosition": null,
+            "authorDeviceId": "device-b"
+          }
+        ],
+        "localTombstonesAfter": [],
+        "basesAfter": [
+          {
+            "noteId": "00000001-0000-4000-8000-000000000000",
+            "updatedAt": "2024-05-01T10:30:00.0000000+00:00",
+            "deviceId": "device-b"
+          }
+        ],
+        "conflicts": []
+      }
+    },
+    {
+      "name": "E11 borrado remoto firmado: se aplica",
+      "covers": "SyncService.cs:429-432; NotesRepository.cs:734",
+      "settings": {
+        "deviceId": "android-pc-a",
+        "scope": 0,
+        "tag": null,
+        "noteIds": []
+      },
+      "local": {
+        "notes": [
+          {
+            "id": "00000001-0000-4000-8000-000000000000",
+            "text": "x",
+            "color": "#EBD38B",
+            "createdAt": "2024-05-01T09:00:00.0000000+00:00",
+            "updatedAt": "2024-05-01T10:10:00.0000000+00:00",
+            "state": 0,
+            "screenOrigin": "primary",
+            "tags": [],
+            "isProtected": false,
+            "protectedContent": null,
+            "dockPosition": null,
+            "authorDeviceId": "device-b"
+          }
+        ],
+        "bases": [
+          {
+            "noteId": "00000001-0000-4000-8000-000000000000",
+            "updatedAt": "2024-05-01T10:10:00.0000000+00:00",
+            "deviceId": "device-b"
+          }
+        ],
+        "tombstones": []
+      },
+      "remote": [
+        {
+          "noteId": "00000001-0000-4000-8000-000000000000",
+          "kind": "tombstone",
+          "key": "vectors",
+          "envelopeJson": "{\"format\":4,\"noteId\":\"00000001-0000-4000-8000-000000000000\",\"tombstone\":true,\"updatedAt\":\"2024-05-01T10:20:00+00:00\",\"deviceId\":\"device-b\",\"cipherText\":\"QklB7JewzFGdNIpbuAlqSYQf3\\u002BvXogerN1qlgo9uCszxGm6vvJmY1hmlEa9BuQaKiqFbw/CRp8ETrzUDMHDz2ASJW5i7TpbKuAC2UQP7w3gM8uBCx8JXL9A4oKfUYIKLWOLJyWaWTiEI/rcCg1wCCnzv/7c=\",\"nonce\":\"rwgqmQWEC\\u002BWcexzg\",\"tag\":\"E4htmaHZj7TU\\u002Bb7EvyeOcw==\"}",
+          "plain": null
+        }
+      ],
+      "expected": {
+        "error": null,
+        "uploaded": 0,
+        "downloaded": 1,
+        "conflictsResolved": 0,
+        "tombstonesApplied": 1,
+        "remoteAfter": [
+          {
+            "noteId": "00000001-0000-4000-8000-000000000000",
+            "tombstone": true,
+            "updatedAt": "2024-05-01T10:20:00.0000000+00:00",
+            "deviceId": "device-b",
+            "rewritten": false,
+            "authentic": true
+          }
+        ],
+        "localAfter": [],
+        "localTombstonesAfter": [
+          {
+            "noteId": "00000001-0000-4000-8000-000000000000",
+            "deletedAt": "2024-05-01T10:20:00.0000000+00:00",
+            "deviceId": "device-b"
+          }
+        ],
+        "basesAfter": [
+          {
+            "noteId": "00000001-0000-4000-8000-000000000000",
+            "updatedAt": "2024-05-01T10:20:00.0000000+00:00",
+            "deviceId": "device-b"
+          }
+        ],
+        "conflicts": []
+      }
+    },
+    {
+      "name": "E12a borrado remoto sin firma: la nota va a la papelera",
+      "covers": "SyncService.cs:596-621",
+      "settings": {
+        "deviceId": "android-pc-a",
+        "scope": 0,
+        "tag": null,
+        "noteIds": []
+      },
+      "local": {
+        "notes": [
+          {
+            "id": "00000001-0000-4000-8000-000000000000",
+            "text": "x",
+            "color": "#EBD38B",
+            "createdAt": "2024-05-01T09:00:00.0000000+00:00",
+            "updatedAt": "2024-05-01T10:10:00.0000000+00:00",
+            "state": 0,
+            "screenOrigin": "primary",
+            "tags": [],
+            "isProtected": false,
+            "protectedContent": null,
+            "dockPosition": null,
+            "authorDeviceId": "device-b"
+          }
+        ],
+        "bases": [
+          {
+            "noteId": "00000001-0000-4000-8000-000000000000",
+            "updatedAt": "2024-05-01T10:10:00.0000000+00:00",
+            "deviceId": "device-b"
+          }
+        ],
+        "tombstones": []
+      },
+      "remote": [
+        {
+          "noteId": "00000001-0000-4000-8000-000000000000",
+          "kind": "tombstone",
+          "key": "other",
+          "envelopeJson": "{\"format\":4,\"noteId\":\"00000001-0000-4000-8000-000000000000\",\"tombstone\":true,\"updatedAt\":\"2024-05-01T10:20:00+00:00\",\"deviceId\":\"device-b\",\"cipherText\":\"JkVNPk2jsTZLB1WHBLCKHb93CO9V1dmInlZPsi\\u002Bute40kuajTqiFtvNhFVfF58VTa7wTlxcf8FJfIWnjyRQcizW4U6cgjYMswamhJuOGEXbUbAl9utZ9XgPZrlebeKMrSFBM4nKyY62EaeCCFzVv8Cw9hOU=\",\"nonce\":\"jmz12PPJ/H/4MYfp\",\"tag\":\"iJfWGpTiAmdstFc2fFRQFw==\"}",
+          "plain": null
+        }
+      ],
+      "expected": {
+        "error": null,
+        "uploaded": 1,
+        "downloaded": 0,
+        "conflictsResolved": 0,
+        "tombstonesApplied": 0,
+        "remoteAfter": [
+          {
+            "noteId": "00000001-0000-4000-8000-000000000000",
+            "tombstone": false,
+            "updatedAt": "<now>",
+            "deviceId": "android-pc-a",
+            "rewritten": true,
+            "note": {
+              "id": "00000001-0000-4000-8000-000000000000",
+              "text": "x",
+              "color": "#EBD38B",
+              "createdAt": "2024-05-01T09:00:00.0000000+00:00",
+              "updatedAt": "<now>",
+              "state": 2,
+              "screenOrigin": "primary",
+              "tags": [],
+              "isProtected": false,
+              "protectedContent": null,
+              "dockPosition": null
+            }
+          }
+        ],
+        "localAfter": [
+          {
+            "id": "00000001-0000-4000-8000-000000000000",
+            "text": "x",
+            "color": "#EBD38B",
+            "createdAt": "2024-05-01T09:00:00.0000000+00:00",
+            "updatedAt": "<now>",
+            "state": 2,
+            "screenOrigin": "primary",
+            "tags": [],
+            "isProtected": false,
+            "protectedContent": null,
+            "dockPosition": null,
+            "authorDeviceId": null
+          }
+        ],
+        "localTombstonesAfter": [],
+        "basesAfter": [
+          {
+            "noteId": "00000001-0000-4000-8000-000000000000",
+            "updatedAt": "<now>",
+            "deviceId": "android-pc-a"
+          }
+        ],
+        "conflicts": []
+      }
+    },
+    {
+      "name": "E12b borrado sin firma de una nota que no existe aquí: nada",
+      "covers": "SyncService.cs:618-620",
+      "settings": {
+        "deviceId": "android-pc-a",
+        "scope": 0,
+        "tag": null,
+        "noteIds": []
+      },
+      "local": {
+        "notes": [],
+        "bases": [],
+        "tombstones": []
+      },
+      "remote": [
+        {
+          "noteId": "00000001-0000-4000-8000-000000000000",
+          "kind": "tombstone",
+          "key": "other",
+          "envelopeJson": "{\"format\":4,\"noteId\":\"00000001-0000-4000-8000-000000000000\",\"tombstone\":true,\"updatedAt\":\"2024-05-01T10:20:00+00:00\",\"deviceId\":\"device-b\",\"cipherText\":\"h7jVVyC2D9xkIzgP2Ru3m7qn1d0VUzC0U834trdFu5z0CIff66zBNCvuK6ogUdzibsiGyTuOB1YxC51BRrfK05KTdFcSdoOfQFS0EG5yjBXTLe481WE9cwJ3JTfyOAWWG7i4DVXA852bn1JM578murINcds=\",\"nonce\":\"kQ1/HTLxoJORe8kF\",\"tag\":\"pA7oAHlJBMRnPXT7uIcbBQ==\"}",
+          "plain": null
+        }
+      ],
+      "expected": {
+        "error": null,
+        "uploaded": 0,
+        "downloaded": 0,
+        "conflictsResolved": 0,
+        "tombstonesApplied": 0,
+        "remoteAfter": [
+          {
+            "noteId": "00000001-0000-4000-8000-000000000000",
+            "tombstone": true,
+            "updatedAt": "2024-05-01T10:20:00.0000000+00:00",
+            "deviceId": "device-b",
+            "rewritten": false,
+            "authentic": false
+          }
+        ],
+        "localAfter": [],
+        "localTombstonesAfter": [],
+        "basesAfter": [],
+        "conflicts": []
+      }
+    },
+    {
+      "name": "E12c borrado sin firma de una nota ya en la papelera: no toca UpdatedAt",
+      "covers": "SyncService.cs:618-620",
+      "settings": {
+        "deviceId": "android-pc-a",
+        "scope": 0,
+        "tag": null,
+        "noteIds": []
+      },
+      "local": {
+        "notes": [
+          {
+            "id": "00000001-0000-4000-8000-000000000000",
+            "text": "x",
+            "color": "#EBD38B",
+            "createdAt": "2024-05-01T09:00:00.0000000+00:00",
+            "updatedAt": "2024-05-01T10:10:00.0000000+00:00",
+            "state": 2,
+            "screenOrigin": "primary",
+            "tags": [],
+            "isProtected": false,
+            "protectedContent": null,
+            "dockPosition": null,
+            "authorDeviceId": "device-b"
+          }
+        ],
+        "bases": [
+          {
+            "noteId": "00000001-0000-4000-8000-000000000000",
+            "updatedAt": "2024-05-01T10:10:00.0000000+00:00",
+            "deviceId": "device-b"
+          }
+        ],
+        "tombstones": []
+      },
+      "remote": [
+        {
+          "noteId": "00000001-0000-4000-8000-000000000000",
+          "kind": "tombstone",
+          "key": "other",
+          "envelopeJson": "{\"format\":4,\"noteId\":\"00000001-0000-4000-8000-000000000000\",\"tombstone\":true,\"updatedAt\":\"2024-05-01T10:20:00+00:00\",\"deviceId\":\"device-b\",\"cipherText\":\"EyJtqLyUHia2n/Fk2XAA7HAyStv3bSw\\u002Bd5MMGRTHphzd6v9PnUOPkzCsKKHH7lgoOxRwtGxNptrysqbzme/dfDELDTOCY31XJ\\u002BxhgbD0iqyC6tnhEzwW7uQlLonv4mDwm\\u002BW7x4bGjmssteP6Vbz87ozPZAY=\",\"nonce\":\"vlZ/Igqv9IylW70S\",\"tag\":\"BteVikRLstVNhwjN9HVJgg==\"}",
+          "plain": null
+        }
+      ],
+      "expected": {
+        "error": null,
+        "uploaded": 1,
+        "downloaded": 0,
+        "conflictsResolved": 0,
+        "tombstonesApplied": 0,
+        "remoteAfter": [
+          {
+            "noteId": "00000001-0000-4000-8000-000000000000",
+            "tombstone": true,
+            "updatedAt": "2024-05-01T10:20:00.0000000+00:00",
+            "deviceId": "device-b",
+            "rewritten": false,
+            "authentic": false
+          }
+        ],
+        "localAfter": [
+          {
+            "id": "00000001-0000-4000-8000-000000000000",
+            "text": "x",
+            "color": "#EBD38B",
+            "createdAt": "2024-05-01T09:00:00.0000000+00:00",
+            "updatedAt": "2024-05-01T10:10:00.0000000+00:00",
+            "state": 2,
+            "screenOrigin": "primary",
+            "tags": [],
+            "isProtected": false,
+            "protectedContent": null,
+            "dockPosition": null,
+            "authorDeviceId": "device-b"
+          }
+        ],
+        "localTombstonesAfter": [],
+        "basesAfter": [
+          {
+            "noteId": "00000001-0000-4000-8000-000000000000",
+            "updatedAt": "2024-05-01T10:10:00.0000000+00:00",
+            "deviceId": "device-b"
+          }
+        ],
+        "conflicts": []
+      }
+    },
+    {
+      "name": "E13 borrado sin firma con fecha futura: se borra del almacén",
+      "covers": "SyncService.cs:612-616",
+      "settings": {
+        "deviceId": "android-pc-a",
+        "scope": 0,
+        "tag": null,
+        "noteIds": []
+      },
+      "local": {
+        "notes": [
+          {
+            "id": "00000001-0000-4000-8000-000000000000",
+            "text": "x",
+            "color": "#EBD38B",
+            "createdAt": "2024-05-01T09:00:00.0000000+00:00",
+            "updatedAt": "2024-05-01T10:10:00.0000000+00:00",
+            "state": 0,
+            "screenOrigin": "primary",
+            "tags": [],
+            "isProtected": false,
+            "protectedContent": null,
+            "dockPosition": null,
+            "authorDeviceId": "device-b"
+          }
+        ],
+        "bases": [
+          {
+            "noteId": "00000001-0000-4000-8000-000000000000",
+            "updatedAt": "2024-05-01T10:10:00.0000000+00:00",
+            "deviceId": "device-b"
+          }
+        ],
+        "tombstones": []
+      },
+      "remote": [
+        {
+          "noteId": "00000001-0000-4000-8000-000000000000",
+          "kind": "tombstone",
+          "key": "other",
+          "envelopeJson": "{\"format\":4,\"noteId\":\"00000001-0000-4000-8000-000000000000\",\"tombstone\":true,\"updatedAt\":\"2099-01-01T00:00:00+00:00\",\"deviceId\":\"device-b\",\"cipherText\":\"7cwAJDqarBcxbeXsEmdoDoaUeypdAKwImJuTxM5lr2GSxsvwrCRTPe45emvSkDdwnlvD1tNIjJikNYnLDMzNMLOU3rgNmcFYL\\u002BQux\\u002Bsnp8hbDRenrY8MJJpmgblEULXok1\\u002B4wNJPhXXJM0kg2z56fbieFj4=\",\"nonce\":\"VnBqI7r/n9P0fZ7Q\",\"tag\":\"F\\u002BNs77TvK/ZRKGGzSQdYog==\"}",
+          "plain": null
+        }
+      ],
+      "expected": {
+        "error": null,
+        "uploaded": 1,
+        "downloaded": 0,
+        "conflictsResolved": 0,
+        "tombstonesApplied": 0,
+        "remoteAfter": [
+          {
+            "noteId": "00000001-0000-4000-8000-000000000000",
+            "tombstone": false,
+            "updatedAt": "2024-05-01T10:10:00.0000000+00:00",
+            "deviceId": "device-b",
+            "rewritten": true,
+            "note": {
+              "id": "00000001-0000-4000-8000-000000000000",
+              "text": "x",
+              "color": "#EBD38B",
+              "createdAt": "2024-05-01T09:00:00.0000000+00:00",
+              "updatedAt": "2024-05-01T10:10:00.0000000+00:00",
+              "state": 0,
+              "screenOrigin": "primary",
+              "tags": [],
+              "isProtected": false,
+              "protectedContent": null,
+              "dockPosition": null
+            }
+          }
+        ],
+        "localAfter": [
+          {
+            "id": "00000001-0000-4000-8000-000000000000",
+            "text": "x",
+            "color": "#EBD38B",
+            "createdAt": "2024-05-01T09:00:00.0000000+00:00",
+            "updatedAt": "2024-05-01T10:10:00.0000000+00:00",
+            "state": 0,
+            "screenOrigin": "primary",
+            "tags": [],
+            "isProtected": false,
+            "protectedContent": null,
+            "dockPosition": null,
+            "authorDeviceId": "device-b"
+          }
+        ],
+        "localTombstonesAfter": [],
+        "basesAfter": [
+          {
+            "noteId": "00000001-0000-4000-8000-000000000000",
+            "updatedAt": "2024-05-01T10:10:00.0000000+00:00",
+            "deviceId": "device-b"
+          }
+        ],
+        "conflicts": []
+      }
+    },
+    {
+      "name": "E15 borrado local: se sube un borrado firmado",
+      "covers": "SyncService.cs:641-642",
+      "settings": {
+        "deviceId": "android-pc-a",
+        "scope": 0,
+        "tag": null,
+        "noteIds": []
+      },
+      "local": {
+        "notes": [],
+        "bases": [
+          {
+            "noteId": "00000001-0000-4000-8000-000000000000",
+            "updatedAt": "2024-05-01T10:10:00.0000000+00:00",
+            "deviceId": "device-b"
+          }
+        ],
+        "tombstones": [
+          {
+            "noteId": "00000001-0000-4000-8000-000000000000",
+            "deletedAt": "2024-05-01T10:20:00.0000000+00:00",
+            "deviceId": "local"
+          }
+        ]
+      },
+      "remote": [
+        {
+          "noteId": "00000001-0000-4000-8000-000000000000",
+          "kind": "note",
+          "key": "vectors",
+          "envelopeJson": "{\"format\":4,\"noteId\":\"00000001-0000-4000-8000-000000000000\",\"tombstone\":false,\"updatedAt\":\"2024-05-01T10:10:00+00:00\",\"deviceId\":\"device-b\",\"cipherText\":\"HNrihd3a9dmqYN8S5YnmMSh9XB56NzsMivoMMuaStWn8wJyv99qVVBkhZQ\\u002B4EJ4LkigpVySHnPG1f3OdU6XV9jMsLnLc1xhDijok9gHKE7IYcz3OxdSBLZpGUNWHxyW5BjMnCs/oWp6uiOX4m3wYyVvDfyvQTGbGXbVa/q0efl61u/lQwoJlQqw3A891wsqWOHE5ztIi10d0bBgx4TdsiwX5WQuM3kheTvTPlVX2f0Ep/BbqcIzYmeYWsxjjQ\\u002Bak5P\\u002BHPDcYfLbY1Bez3Zwi2GURRKGCyCA8lefPrHoKeV2\\u002BOA0Q/fijLYp/296U/W1lfcDYs8IjuE68Y1y2gHpc6CkX\\u002BpPFHSXpYcCf7r1WOirZmK34Cx8EJyPiKbc8NR51lmB1lVSx9XESvozXJBOWRz/t/6lzNE/I1SURf43n6d98amc1bzBbPRWpUUJajRq70Z3w0Lo/oPd1nxOXJGmnJg==\",\"nonce\":\"enQsaFVt56Y8Nqh1\",\"tag\":\"4LikEyMwCRAiQXcVQBXkMA==\"}",
+          "plain": {
+            "id": "00000001-0000-4000-8000-000000000000",
+            "text": "x",
+            "color": "#EBD38B",
+            "createdAt": "2024-05-01T09:00:00.0000000+00:00",
+            "updatedAt": "2024-05-01T10:10:00.0000000+00:00",
+            "state": 0,
+            "screenOrigin": "primary",
+            "tags": [],
+            "isProtected": false,
+            "protectedContent": null,
+            "dockPosition": null
+          }
+        }
+      ],
+      "expected": {
+        "error": null,
+        "uploaded": 1,
+        "downloaded": 0,
+        "conflictsResolved": 0,
+        "tombstonesApplied": 0,
+        "remoteAfter": [
+          {
+            "noteId": "00000001-0000-4000-8000-000000000000",
+            "tombstone": true,
+            "updatedAt": "2024-05-01T10:20:00.0000000+00:00",
+            "deviceId": "android-pc-a",
+            "rewritten": true,
+            "authentic": true
+          }
+        ],
+        "localAfter": [],
+        "localTombstonesAfter": [
+          {
+            "noteId": "00000001-0000-4000-8000-000000000000",
+            "deletedAt": "2024-05-01T10:20:00.0000000+00:00",
+            "deviceId": "local"
+          }
+        ],
+        "basesAfter": [
+          {
+            "noteId": "00000001-0000-4000-8000-000000000000",
+            "updatedAt": "2024-05-01T10:20:00.0000000+00:00",
+            "deviceId": "android-pc-a"
+          }
+        ],
+        "conflicts": []
+      }
+    },
+    {
+      "name": "E16 la papelera viaja como estado",
+      "covers": "NotesRepository.cs:87-88",
+      "settings": {
+        "deviceId": "android-pc-a",
+        "scope": 0,
+        "tag": null,
+        "noteIds": []
+      },
+      "local": {
+        "notes": [
+          {
+            "id": "00000002-0000-4000-8000-000000000000",
+            "text": "en papelera",
+            "color": "#EBD38B",
+            "createdAt": "2024-05-01T09:00:00.0000000+00:00",
+            "updatedAt": "2024-05-01T10:20:00.0000000+00:00",
+            "state": 2,
+            "screenOrigin": "primary",
+            "tags": [],
+            "isProtected": false,
+            "protectedContent": null,
+            "dockPosition": null,
+            "authorDeviceId": null
+          }
+        ],
+        "bases": [],
+        "tombstones": []
+      },
+      "remote": [],
+      "expected": {
+        "error": null,
+        "uploaded": 1,
+        "downloaded": 0,
+        "conflictsResolved": 0,
+        "tombstonesApplied": 0,
+        "remoteAfter": [
+          {
+            "noteId": "00000002-0000-4000-8000-000000000000",
+            "tombstone": false,
+            "updatedAt": "2024-05-01T10:20:00.0000000+00:00",
+            "deviceId": "android-pc-a",
+            "rewritten": true,
+            "note": {
+              "id": "00000002-0000-4000-8000-000000000000",
+              "text": "en papelera",
+              "color": "#EBD38B",
+              "createdAt": "2024-05-01T09:00:00.0000000+00:00",
+              "updatedAt": "2024-05-01T10:20:00.0000000+00:00",
+              "state": 2,
+              "screenOrigin": "primary",
+              "tags": [],
+              "isProtected": false,
+              "protectedContent": null,
+              "dockPosition": null
+            }
+          }
+        ],
+        "localAfter": [
+          {
+            "id": "00000002-0000-4000-8000-000000000000",
+            "text": "en papelera",
+            "color": "#EBD38B",
+            "createdAt": "2024-05-01T09:00:00.0000000+00:00",
+            "updatedAt": "2024-05-01T10:20:00.0000000+00:00",
+            "state": 2,
+            "screenOrigin": "primary",
+            "tags": [],
+            "isProtected": false,
+            "protectedContent": null,
+            "dockPosition": null,
+            "authorDeviceId": null
+          }
+        ],
+        "localTombstonesAfter": [],
+        "basesAfter": [
+          {
+            "noteId": "00000002-0000-4000-8000-000000000000",
+            "updatedAt": "2024-05-01T10:20:00.0000000+00:00",
+            "deviceId": "android-pc-a"
+          }
+        ],
+        "conflicts": []
+      }
+    },
+    {
+      "name": "E17 alcance por etiqueta: solo suben las etiquetadas",
+      "covers": "SyncScopeFilter.cs:15-16",
+      "settings": {
+        "deviceId": "android-pc-a",
+        "scope": 2,
+        "tag": "Work",
+        "noteIds": []
+      },
+      "local": {
+        "notes": [
+          {
+            "id": "00000001-0000-4000-8000-000000000000",
+            "text": "sin etiqueta",
+            "color": "#EBD38B",
+            "createdAt": "2024-05-01T09:00:00.0000000+00:00",
+            "updatedAt": "2024-05-01T10:10:00.0000000+00:00",
+            "state": 0,
+            "screenOrigin": "primary",
+            "tags": [],
+            "isProtected": false,
+            "protectedContent": null,
+            "dockPosition": null,
+            "authorDeviceId": null
+          },
+          {
+            "id": "00000002-0000-4000-8000-000000000000",
+            "text": "con etiqueta",
+            "color": "#EBD38B",
+            "createdAt": "2024-05-01T09:00:00.0000000+00:00",
+            "updatedAt": "2024-05-01T10:10:00.0000000+00:00",
+            "state": 0,
+            "screenOrigin": "primary",
+            "tags": [
+              "work"
+            ],
+            "isProtected": false,
+            "protectedContent": null,
+            "dockPosition": null,
+            "authorDeviceId": null
+          }
+        ],
+        "bases": [],
+        "tombstones": []
+      },
+      "remote": [],
+      "expected": {
+        "error": null,
+        "uploaded": 1,
+        "downloaded": 0,
+        "conflictsResolved": 0,
+        "tombstonesApplied": 0,
+        "remoteAfter": [
+          {
+            "noteId": "00000002-0000-4000-8000-000000000000",
+            "tombstone": false,
+            "updatedAt": "2024-05-01T10:10:00.0000000+00:00",
+            "deviceId": "android-pc-a",
+            "rewritten": true,
+            "note": {
+              "id": "00000002-0000-4000-8000-000000000000",
+              "text": "con etiqueta",
+              "color": "#EBD38B",
+              "createdAt": "2024-05-01T09:00:00.0000000+00:00",
+              "updatedAt": "2024-05-01T10:10:00.0000000+00:00",
+              "state": 0,
+              "screenOrigin": "primary",
+              "tags": [
+                "work"
+              ],
+              "isProtected": false,
+              "protectedContent": null,
+              "dockPosition": null
+            }
+          }
+        ],
+        "localAfter": [
+          {
+            "id": "00000001-0000-4000-8000-000000000000",
+            "text": "sin etiqueta",
+            "color": "#EBD38B",
+            "createdAt": "2024-05-01T09:00:00.0000000+00:00",
+            "updatedAt": "2024-05-01T10:10:00.0000000+00:00",
+            "state": 0,
+            "screenOrigin": "primary",
+            "tags": [],
+            "isProtected": false,
+            "protectedContent": null,
+            "dockPosition": null,
+            "authorDeviceId": null
+          },
+          {
+            "id": "00000002-0000-4000-8000-000000000000",
+            "text": "con etiqueta",
+            "color": "#EBD38B",
+            "createdAt": "2024-05-01T09:00:00.0000000+00:00",
+            "updatedAt": "2024-05-01T10:10:00.0000000+00:00",
+            "state": 0,
+            "screenOrigin": "primary",
+            "tags": [
+              "work"
+            ],
+            "isProtected": false,
+            "protectedContent": null,
+            "dockPosition": null,
+            "authorDeviceId": null
+          }
+        ],
+        "localTombstonesAfter": [],
+        "basesAfter": [
+          {
+            "noteId": "00000002-0000-4000-8000-000000000000",
+            "updatedAt": "2024-05-01T10:10:00.0000000+00:00",
+            "deviceId": "android-pc-a"
+          }
+        ],
+        "conflicts": []
+      }
+    },
+    {
+      "name": "E18a salió de la etiqueta aquí y es más reciente: no se aplica la remota",
+      "covers": "SyncService.cs:364-367,393",
+      "settings": {
+        "deviceId": "android-pc-a",
+        "scope": 2,
+        "tag": "work",
+        "noteIds": []
+      },
+      "local": {
+        "notes": [
+          {
+            "id": "00000001-0000-4000-8000-000000000000",
+            "text": "ya sin etiqueta",
+            "color": "#EBD38B",
+            "createdAt": "2024-05-01T09:00:00.0000000+00:00",
+            "updatedAt": "2024-05-01T10:30:00.0000000+00:00",
+            "state": 0,
+            "screenOrigin": "primary",
+            "tags": [],
+            "isProtected": false,
+            "protectedContent": null,
+            "dockPosition": null,
+            "authorDeviceId": null
+          }
+        ],
+        "bases": [
+          {
+            "noteId": "00000001-0000-4000-8000-000000000000",
+            "updatedAt": "2024-05-01T10:10:00.0000000+00:00",
+            "deviceId": "device-b"
+          }
+        ],
+        "tombstones": []
+      },
+      "remote": [
+        {
+          "noteId": "00000001-0000-4000-8000-000000000000",
+          "kind": "note",
+          "key": "vectors",
+          "envelopeJson": "{\"format\":4,\"noteId\":\"00000001-0000-4000-8000-000000000000\",\"tombstone\":false,\"updatedAt\":\"2024-05-01T10:20:00+00:00\",\"deviceId\":\"device-b\",\"cipherText\":\"EQ9ILlWGKIIcryimYoPDN5erH0mDpD8LulGamxHl/CbrvNx7IciGA7E/\\u002BFzUV9g13EmzuCwcjV\\u002B3snSZlzhraQdHdqwg\\u002BNf3Ei2qBIuYN4EJcjNfdFPdsoVqoaOHyohpo5wQbnTz/82dAJ9ea5qFMJ3x\\u002BLkj\\u002BjAAY4xRO9809c4W46M5dF3\\u002B3BcTqacSBRbderoYrvagNIyWmBtEQATsIEXHxPaK\\u002Byil14mcMwLJfhSxqG\\u002BDhXi3AhdVTEb/drtXpdGlAhcjK9i1ObtdPbYSQYOiXc1Haou13LrGJ\\u002BLvw/eroLIBE2jdMaNrrgfPfrLZkFN8uY7tFnJ1M3dL8x8MV9\\u002B2V\\u002B2xattXWVxF8Lqia2YydlVVK1EQGsHza9vurJQ7OwHnGuAk6inG77k3lyLZea/Gv25cEpGtJvcUBx2NhI4mZft1RTrFSMOM6rKcgi6v5r7PhUVsnckdVsHWQyXYqN7Btd6pe8W/OkZTbCs\\u002Br6qPmL6Jt1Voow==\",\"nonce\":\"M8m0inQwZ1UUdX8m\",\"tag\":\"Sl8vjn015/a6SXSRHhXvdg==\"}",
+          "plain": {
+            "id": "00000001-0000-4000-8000-000000000000",
+            "text": "con etiqueta",
+            "color": "#EBD38B",
+            "createdAt": "2024-05-01T09:00:00.0000000+00:00",
+            "updatedAt": "2024-05-01T10:20:00.0000000+00:00",
+            "state": 0,
+            "screenOrigin": "primary",
+            "tags": [
+              "work"
+            ],
+            "isProtected": false,
+            "protectedContent": null,
+            "dockPosition": null
+          }
+        }
+      ],
+      "expected": {
+        "error": null,
+        "uploaded": 0,
+        "downloaded": 0,
+        "conflictsResolved": 0,
+        "tombstonesApplied": 0,
+        "remoteAfter": [
+          {
+            "noteId": "00000001-0000-4000-8000-000000000000",
+            "tombstone": false,
+            "updatedAt": "2024-05-01T10:20:00.0000000+00:00",
+            "deviceId": "device-b",
+            "rewritten": false,
+            "note": {
+              "id": "00000001-0000-4000-8000-000000000000",
+              "text": "con etiqueta",
+              "color": "#EBD38B",
+              "createdAt": "2024-05-01T09:00:00.0000000+00:00",
+              "updatedAt": "2024-05-01T10:20:00.0000000+00:00",
+              "state": 0,
+              "screenOrigin": "primary",
+              "tags": [
+                "work"
+              ],
+              "isProtected": false,
+              "protectedContent": null,
+              "dockPosition": null
+            }
+          }
+        ],
+        "localAfter": [
+          {
+            "id": "00000001-0000-4000-8000-000000000000",
+            "text": "ya sin etiqueta",
+            "color": "#EBD38B",
+            "createdAt": "2024-05-01T09:00:00.0000000+00:00",
+            "updatedAt": "2024-05-01T10:30:00.0000000+00:00",
+            "state": 0,
+            "screenOrigin": "primary",
+            "tags": [],
+            "isProtected": false,
+            "protectedContent": null,
+            "dockPosition": null,
+            "authorDeviceId": null
+          }
+        ],
+        "localTombstonesAfter": [],
+        "basesAfter": [
+          {
+            "noteId": "00000001-0000-4000-8000-000000000000",
+            "updatedAt": "2024-05-01T10:10:00.0000000+00:00",
+            "deviceId": "device-b"
+          }
+        ],
+        "conflicts": []
+      }
+    },
+    {
+      "name": "E18b salió de la etiqueta aquí pero la remota es más reciente: se aplica",
+      "covers": "SyncService.cs:393-395",
+      "settings": {
+        "deviceId": "android-pc-a",
+        "scope": 2,
+        "tag": "work",
+        "noteIds": []
+      },
+      "local": {
+        "notes": [
+          {
+            "id": "00000001-0000-4000-8000-000000000000",
+            "text": "ya sin etiqueta",
+            "color": "#EBD38B",
+            "createdAt": "2024-05-01T09:00:00.0000000+00:00",
+            "updatedAt": "2024-05-01T10:20:00.0000000+00:00",
+            "state": 0,
+            "screenOrigin": "primary",
+            "tags": [],
+            "isProtected": false,
+            "protectedContent": null,
+            "dockPosition": null,
+            "authorDeviceId": null
+          }
+        ],
+        "bases": [
+          {
+            "noteId": "00000001-0000-4000-8000-000000000000",
+            "updatedAt": "2024-05-01T10:10:00.0000000+00:00",
+            "deviceId": "device-b"
+          }
+        ],
+        "tombstones": []
+      },
+      "remote": [
+        {
+          "noteId": "00000001-0000-4000-8000-000000000000",
+          "kind": "note",
+          "key": "vectors",
+          "envelopeJson": "{\"format\":4,\"noteId\":\"00000001-0000-4000-8000-000000000000\",\"tombstone\":false,\"updatedAt\":\"2024-05-01T10:30:00+00:00\",\"deviceId\":\"device-b\",\"cipherText\":\"7YnyW3nW6GhmHdm21SsfLR4Icp5/wyILpiG3QIPcW4IApszDseO2mfFZfBQ9XcSSqB3z0KNqsvamalPbTZ7FiotXewkbwjuVpH/S0hb\\u002BpzOlaodRJRE8IrZfXjH3aRc49vnM/ekVqqnNc5qdhJ1n4lDrhiiYnegVqMIEDbSDdBUR1jWYHgvuQ8qVTte0q6kZ\\u002B\\u002BO/wPJqLialYsS7VZNH5ooxodQxybBpjnjw0ti/9yRBEETEqjkQjQDsKjf/SJ1hcRnYeTXamhYjmX6Nh3jy\\u002By2fqkr\\u002BEsP2WCFGkhGQ31BtngMMWojd/PWm/uTOXeUaFpKW7XfzUbe1XbG7g4v4Zk2fmvShbpWe8El1ei4n9FM\\u002ByodhVqVYA8Xxqi2zsfRbC2\\u002BXrWu25OO8vxS74kUgmizFFBDDfnTtjZia\\u002B36y7OhTQmxxXNkiINLBfZfaf\\u002B6kDjWWVPJzgKtGTfBOBTCjUtG18wXsuMfmSqlCba11a/44Ko6wMWaVHw==\",\"nonce\":\"M8i2b6XpZxoN/KnM\",\"tag\":\"wPerTfLMhoxyNIdMSMqRXg==\"}",
+          "plain": {
+            "id": "00000001-0000-4000-8000-000000000000",
+            "text": "con etiqueta",
+            "color": "#EBD38B",
+            "createdAt": "2024-05-01T09:00:00.0000000+00:00",
+            "updatedAt": "2024-05-01T10:30:00.0000000+00:00",
+            "state": 0,
+            "screenOrigin": "primary",
+            "tags": [
+              "work"
+            ],
+            "isProtected": false,
+            "protectedContent": null,
+            "dockPosition": null
+          }
+        }
+      ],
+      "expected": {
+        "error": null,
+        "uploaded": 0,
+        "downloaded": 1,
+        "conflictsResolved": 0,
+        "tombstonesApplied": 0,
+        "remoteAfter": [
+          {
+            "noteId": "00000001-0000-4000-8000-000000000000",
+            "tombstone": false,
+            "updatedAt": "2024-05-01T10:30:00.0000000+00:00",
+            "deviceId": "device-b",
+            "rewritten": false,
+            "note": {
+              "id": "00000001-0000-4000-8000-000000000000",
+              "text": "con etiqueta",
+              "color": "#EBD38B",
+              "createdAt": "2024-05-01T09:00:00.0000000+00:00",
+              "updatedAt": "2024-05-01T10:30:00.0000000+00:00",
+              "state": 0,
+              "screenOrigin": "primary",
+              "tags": [
+                "work"
+              ],
+              "isProtected": false,
+              "protectedContent": null,
+              "dockPosition": null
+            }
+          }
+        ],
+        "localAfter": [
+          {
+            "id": "00000001-0000-4000-8000-000000000000",
+            "text": "con etiqueta",
+            "color": "#EBD38B",
+            "createdAt": "2024-05-01T09:00:00.0000000+00:00",
+            "updatedAt": "2024-05-01T10:30:00.0000000+00:00",
+            "state": 0,
+            "screenOrigin": "primary",
+            "tags": [
+              "work"
+            ],
+            "isProtected": false,
+            "protectedContent": null,
+            "dockPosition": null,
+            "authorDeviceId": "device-b"
+          }
+        ],
+        "localTombstonesAfter": [],
+        "basesAfter": [
+          {
+            "noteId": "00000001-0000-4000-8000-000000000000",
+            "updatedAt": "2024-05-01T10:30:00.0000000+00:00",
+            "deviceId": "device-b"
+          }
+        ],
+        "conflicts": []
+      }
+    },
+    {
+      "name": "E19 con etiqueta, un borrado remoto pasa igual",
+      "covers": "SyncService.cs:337-339",
+      "settings": {
+        "deviceId": "android-pc-a",
+        "scope": 2,
+        "tag": "work",
+        "noteIds": []
+      },
+      "local": {
+        "notes": [
+          {
+            "id": "00000001-0000-4000-8000-000000000000",
+            "text": "x",
+            "color": "#EBD38B",
+            "createdAt": "2024-05-01T09:00:00.0000000+00:00",
+            "updatedAt": "2024-05-01T10:10:00.0000000+00:00",
+            "state": 0,
+            "screenOrigin": "primary",
+            "tags": [
+              "work"
+            ],
+            "isProtected": false,
+            "protectedContent": null,
+            "dockPosition": null,
+            "authorDeviceId": "device-b"
+          }
+        ],
+        "bases": [
+          {
+            "noteId": "00000001-0000-4000-8000-000000000000",
+            "updatedAt": "2024-05-01T10:10:00.0000000+00:00",
+            "deviceId": "device-b"
+          }
+        ],
+        "tombstones": []
+      },
+      "remote": [
+        {
+          "noteId": "00000001-0000-4000-8000-000000000000",
+          "kind": "tombstone",
+          "key": "vectors",
+          "envelopeJson": "{\"format\":4,\"noteId\":\"00000001-0000-4000-8000-000000000000\",\"tombstone\":true,\"updatedAt\":\"2024-05-01T10:20:00+00:00\",\"deviceId\":\"device-b\",\"cipherText\":\"DDPOA5eblqfleyQzUS/7jB96XYe\\u002BN77J0Wu2HfK2mZMoTTTsMKlmPMdd964H3MnYfpZRRDztDa9w6YufbMDql20CqFnCUZojUvXYpxvoFDBaWnnE3QSxhXZuvf9aCQi97DT\\u002BEbxpjJ/zfUMJO0cDTdS0dNI=\",\"nonce\":\"si9reIiExMG9imzp\",\"tag\":\"zB8rkMXWHWRx5eLUZoSyOA==\"}",
+          "plain": null
+        }
+      ],
+      "expected": {
+        "error": null,
+        "uploaded": 0,
+        "downloaded": 1,
+        "conflictsResolved": 0,
+        "tombstonesApplied": 1,
+        "remoteAfter": [
+          {
+            "noteId": "00000001-0000-4000-8000-000000000000",
+            "tombstone": true,
+            "updatedAt": "2024-05-01T10:20:00.0000000+00:00",
+            "deviceId": "device-b",
+            "rewritten": false,
+            "authentic": true
+          }
+        ],
+        "localAfter": [],
+        "localTombstonesAfter": [
+          {
+            "noteId": "00000001-0000-4000-8000-000000000000",
+            "deletedAt": "2024-05-01T10:20:00.0000000+00:00",
+            "deviceId": "device-b"
+          }
+        ],
+        "basesAfter": [
+          {
+            "noteId": "00000001-0000-4000-8000-000000000000",
+            "updatedAt": "2024-05-01T10:20:00.0000000+00:00",
+            "deviceId": "device-b"
+          }
+        ],
+        "conflicts": []
+      }
+    },
+    {
+      "name": "E20 alcance «notas elegidas»",
+      "covers": "SyncService.cs:342-344",
+      "settings": {
+        "deviceId": "android-pc-a",
+        "scope": 1,
+        "tag": null,
+        "noteIds": [
+          "00000001-0000-4000-8000-000000000000"
+        ]
+      },
+      "local": {
+        "notes": [
+          {
+            "id": "00000001-0000-4000-8000-000000000000",
+            "text": "elegida",
+            "color": "#EBD38B",
+            "createdAt": "2024-05-01T09:00:00.0000000+00:00",
+            "updatedAt": "2024-05-01T10:10:00.0000000+00:00",
+            "state": 0,
+            "screenOrigin": "primary",
+            "tags": [],
+            "isProtected": false,
+            "protectedContent": null,
+            "dockPosition": null,
+            "authorDeviceId": null
+          },
+          {
+            "id": "00000002-0000-4000-8000-000000000000",
+            "text": "no elegida",
+            "color": "#EBD38B",
+            "createdAt": "2024-05-01T09:00:00.0000000+00:00",
+            "updatedAt": "2024-05-01T10:10:00.0000000+00:00",
+            "state": 0,
+            "screenOrigin": "primary",
+            "tags": [],
+            "isProtected": false,
+            "protectedContent": null,
+            "dockPosition": null,
+            "authorDeviceId": null
+          }
+        ],
+        "bases": [],
+        "tombstones": []
+      },
+      "remote": [
+        {
+          "noteId": "00000003-0000-4000-8000-000000000000",
+          "kind": "note",
+          "key": "vectors",
+          "envelopeJson": "{\"format\":4,\"noteId\":\"00000003-0000-4000-8000-000000000000\",\"tombstone\":false,\"updatedAt\":\"2024-05-01T10:10:00+00:00\",\"deviceId\":\"device-b\",\"cipherText\":\"9KWRCZhfhGmLkcfhYJ2\\u002Bi0WPU0QR/koaPyR2Jk0F/ZPoezibXucIqwdrZ432f7JIgIGElQnX5YAPB4dk/FSrMxAfLljgA5axSkCHNwcOltpUApqAeyhhANh3SBPRCVuXsVzcik9Ov1FOc1D1U67aEX55d9SW0OKDcKHMr\\u002B/mxg2vTPOMNLVReFU9KLcwNu5DyVawqJjQnyMkPbuyFLVnYkrU3L6AQGjf7yK0wU9fKbVH1W/9fEVDdtOXWxjGIfxCwY6W/rlRTfZVR8lpVE4R7cBN0NreYY1xhvxzLBGFYfWcRYunGff/UaTk5JCDO4/1MSILH1KyhyJaiU2PummIarwdD8TM0c\\u002B2TdCsihF9YejpCTCwJxmmjEjG6utzlJMKl8SUeFyTxpU0z8selsklawMwJN89vGQxL\\u002BHACQ4fNo8npkrSV1av0knq0No5inNSCYSP/40lG6qZPWB0hjaZ2J6SGoOJj1f1gN55dLUXa\\u002BdSh2rF\",\"nonce\":\"gIdTiKKXJx2ZP1Do\",\"tag\":\"vgpO1TkEFKLx3qwgTPhMAA==\"}",
+          "plain": {
+            "id": "00000003-0000-4000-8000-000000000000",
+            "text": "remota no elegida",
+            "color": "#EBD38B",
+            "createdAt": "2024-05-01T09:00:00.0000000+00:00",
+            "updatedAt": "2024-05-01T10:10:00.0000000+00:00",
+            "state": 0,
+            "screenOrigin": "primary",
+            "tags": [],
+            "isProtected": false,
+            "protectedContent": null,
+            "dockPosition": null
+          }
+        }
+      ],
+      "expected": {
+        "error": null,
+        "uploaded": 1,
+        "downloaded": 0,
+        "conflictsResolved": 0,
+        "tombstonesApplied": 0,
+        "remoteAfter": [
+          {
+            "noteId": "00000001-0000-4000-8000-000000000000",
+            "tombstone": false,
+            "updatedAt": "2024-05-01T10:10:00.0000000+00:00",
+            "deviceId": "android-pc-a",
+            "rewritten": true,
+            "note": {
+              "id": "00000001-0000-4000-8000-000000000000",
+              "text": "elegida",
+              "color": "#EBD38B",
+              "createdAt": "2024-05-01T09:00:00.0000000+00:00",
+              "updatedAt": "2024-05-01T10:10:00.0000000+00:00",
+              "state": 0,
+              "screenOrigin": "primary",
+              "tags": [],
+              "isProtected": false,
+              "protectedContent": null,
+              "dockPosition": null
+            }
+          },
+          {
+            "noteId": "00000003-0000-4000-8000-000000000000",
+            "tombstone": false,
+            "updatedAt": "2024-05-01T10:10:00.0000000+00:00",
+            "deviceId": "device-b",
+            "rewritten": false,
+            "note": {
+              "id": "00000003-0000-4000-8000-000000000000",
+              "text": "remota no elegida",
+              "color": "#EBD38B",
+              "createdAt": "2024-05-01T09:00:00.0000000+00:00",
+              "updatedAt": "2024-05-01T10:10:00.0000000+00:00",
+              "state": 0,
+              "screenOrigin": "primary",
+              "tags": [],
+              "isProtected": false,
+              "protectedContent": null,
+              "dockPosition": null
+            }
+          }
+        ],
+        "localAfter": [
+          {
+            "id": "00000001-0000-4000-8000-000000000000",
+            "text": "elegida",
+            "color": "#EBD38B",
+            "createdAt": "2024-05-01T09:00:00.0000000+00:00",
+            "updatedAt": "2024-05-01T10:10:00.0000000+00:00",
+            "state": 0,
+            "screenOrigin": "primary",
+            "tags": [],
+            "isProtected": false,
+            "protectedContent": null,
+            "dockPosition": null,
+            "authorDeviceId": null
+          },
+          {
+            "id": "00000002-0000-4000-8000-000000000000",
+            "text": "no elegida",
+            "color": "#EBD38B",
+            "createdAt": "2024-05-01T09:00:00.0000000+00:00",
+            "updatedAt": "2024-05-01T10:10:00.0000000+00:00",
+            "state": 0,
+            "screenOrigin": "primary",
+            "tags": [],
+            "isProtected": false,
+            "protectedContent": null,
+            "dockPosition": null,
+            "authorDeviceId": null
+          }
+        ],
+        "localTombstonesAfter": [],
+        "basesAfter": [
+          {
+            "noteId": "00000001-0000-4000-8000-000000000000",
+            "updatedAt": "2024-05-01T10:10:00.0000000+00:00",
+            "deviceId": "android-pc-a"
+          }
+        ],
+        "conflicts": []
+      }
+    },
+    {
+      "name": "E22a nota protegida: sube con su contenido protegido",
+      "covers": "SyncModels.cs:452-453",
+      "settings": {
+        "deviceId": "android-pc-a",
+        "scope": 0,
+        "tag": null,
+        "noteIds": []
+      },
+      "local": {
+        "notes": [
+          {
+            "id": "00000001-0000-4000-8000-000000000000",
+            "text": "",
+            "color": "#EBD38B",
+            "createdAt": "2024-05-01T09:00:00.0000000+00:00",
+            "updatedAt": "2024-05-01T10:20:00.0000000+00:00",
+            "state": 0,
+            "screenOrigin": "primary",
+            "tags": [],
+            "isProtected": true,
+            "protectedContent": {
+              "version": 1,
+              "salt": "FLbchD4jP0LNizd77wgwtg==",
+              "cipherText": "oB/6mwZ7ujxdjgE=",
+              "nonce": "SCQokN1NQ2oekdkf",
+              "tag": "YAfL9bjfIVXBxekyrT6Nrg=="
+            },
+            "dockPosition": null,
+            "authorDeviceId": null
+          }
+        ],
+        "bases": [],
+        "tombstones": []
+      },
+      "remote": [],
+      "expected": {
+        "error": null,
+        "uploaded": 1,
+        "downloaded": 0,
+        "conflictsResolved": 0,
+        "tombstonesApplied": 0,
+        "remoteAfter": [
+          {
+            "noteId": "00000001-0000-4000-8000-000000000000",
+            "tombstone": false,
+            "updatedAt": "2024-05-01T10:20:00.0000000+00:00",
+            "deviceId": "android-pc-a",
+            "rewritten": true,
+            "note": {
+              "id": "00000001-0000-4000-8000-000000000000",
+              "text": "",
+              "color": "#EBD38B",
+              "createdAt": "2024-05-01T09:00:00.0000000+00:00",
+              "updatedAt": "2024-05-01T10:20:00.0000000+00:00",
+              "state": 0,
+              "screenOrigin": "primary",
+              "tags": [],
+              "isProtected": true,
+              "protectedContent": {
+                "version": 1,
+                "salt": "FLbchD4jP0LNizd77wgwtg==",
+                "cipherText": "oB/6mwZ7ujxdjgE=",
+                "nonce": "SCQokN1NQ2oekdkf",
+                "tag": "YAfL9bjfIVXBxekyrT6Nrg=="
+              },
+              "dockPosition": null
+            }
+          }
+        ],
+        "localAfter": [
+          {
+            "id": "00000001-0000-4000-8000-000000000000",
+            "text": "",
+            "color": "#EBD38B",
+            "createdAt": "2024-05-01T09:00:00.0000000+00:00",
+            "updatedAt": "2024-05-01T10:20:00.0000000+00:00",
+            "state": 0,
+            "screenOrigin": "primary",
+            "tags": [],
+            "isProtected": true,
+            "protectedContent": {
+              "version": 1,
+              "salt": "FLbchD4jP0LNizd77wgwtg==",
+              "cipherText": "oB/6mwZ7ujxdjgE=",
+              "nonce": "SCQokN1NQ2oekdkf",
+              "tag": "YAfL9bjfIVXBxekyrT6Nrg=="
+            },
+            "dockPosition": null,
+            "authorDeviceId": null
+          }
+        ],
+        "localTombstonesAfter": [],
+        "basesAfter": [
+          {
+            "noteId": "00000001-0000-4000-8000-000000000000",
+            "updatedAt": "2024-05-01T10:20:00.0000000+00:00",
+            "deviceId": "android-pc-a"
+          }
+        ],
+        "conflicts": []
+      }
+    },
+    {
+      "name": "E22b la misma protegida en los dos lados: sin conflicto",
+      "covers": "NoteEquivalence.cs:30-33",
+      "settings": {
+        "deviceId": "android-pc-a",
+        "scope": 0,
+        "tag": null,
+        "noteIds": []
+      },
+      "local": {
+        "notes": [
+          {
+            "id": "00000001-0000-4000-8000-000000000000",
+            "text": "",
+            "color": "#EBD38B",
+            "createdAt": "2024-05-01T09:00:00.0000000+00:00",
+            "updatedAt": "2024-05-01T10:20:00.0000000+00:00",
+            "state": 0,
+            "screenOrigin": "primary",
+            "tags": [],
+            "isProtected": true,
+            "protectedContent": {
+              "version": 1,
+              "salt": "FLbchD4jP0LNizd77wgwtg==",
+              "cipherText": "oB/6mwZ7ujxdjgE=",
+              "nonce": "SCQokN1NQ2oekdkf",
+              "tag": "YAfL9bjfIVXBxekyrT6Nrg=="
+            },
+            "dockPosition": null,
+            "authorDeviceId": null
+          }
+        ],
+        "bases": [
+          {
+            "noteId": "00000001-0000-4000-8000-000000000000",
+            "updatedAt": "2024-05-01T10:10:00.0000000+00:00",
+            "deviceId": "device-b"
+          }
+        ],
+        "tombstones": []
+      },
+      "remote": [
+        {
+          "noteId": "00000001-0000-4000-8000-000000000000",
+          "kind": "note",
+          "key": "vectors",
+          "envelopeJson": "{\"format\":4,\"noteId\":\"00000001-0000-4000-8000-000000000000\",\"tombstone\":false,\"updatedAt\":\"2024-05-01T10:30:00+00:00\",\"deviceId\":\"device-b\",\"cipherText\":\"0MFJ3lLfgugp13DlIPipFg3JU06MSaeEuUgud2/4TKRdXkZsoXAwcGIwgfW3H7oVmWC1ubexUV8wwLE\\u002BTxKEqFCpOugIUAW/iXERz1G/MpAnGZeitok95OajHRGfGVOkpMeegEf5PDHcyXg7ub94ZnbeikJED5DwPw4TavJhGlbCt\\u002BvWNDbUkRbu9iKzYfPDaXUXwq/rwIGBvKRKpEGSWTWXj74rWZzOAmkapWONwC2cZnkKZfWzHh4pg/vHM3setEaHOVWbXDQgqeeYW2ffeXw9KrI/1ZPvF55V\\u002BzkjYdR/TdyBh9x4YTlmUW72Sg0K947NhHitKNGcyIy6OrGoMSUZeOrITxM2IyRf0I5hHDU95WAN4vW6gA8x6xJMXQ8hZlj9Cy/afTTB5/NzuEcR\\u002BiPYwuNWxmLWQdloqs\\u002BEfizWY2ZPT7K8nDYFTKwgm6Jn45NoeVH8i2ycy1iSHC8vS26zoPnzIoF1YLqX6Uxa6wXXfnxya10pAo8uEbexT\\u002Bog\\u002B1B/HxurSmGDSKvqkU7w3iq0aTfVSWoBaosk9dvfTsnVaQ5HBW9EPKtLHBbs4uUcmp3e\\u002B2Oee6YrL4MBdSasyOJlydfxzqEZjzgnicHmdek3tUOslC5kTi4P4p5VbXwUKlHzAeyRje6AEUxhWP5lyR7kUl4f5UcGovk6swClewffTn7B49hwaRQAuX6CtJUg\",\"nonce\":\"ZB1d1wQ0DsOVm4tQ\",\"tag\":\"qyAga80QGUxCF\\u002Bl8XzFZfg==\"}",
+          "plain": {
+            "id": "00000001-0000-4000-8000-000000000000",
+            "text": "",
+            "color": "#EBD38B",
+            "createdAt": "2024-05-01T09:00:00.0000000+00:00",
+            "updatedAt": "2024-05-01T10:30:00.0000000+00:00",
+            "state": 0,
+            "screenOrigin": "primary",
+            "tags": [],
+            "isProtected": true,
+            "protectedContent": {
+              "version": 1,
+              "salt": "FLbchD4jP0LNizd77wgwtg==",
+              "cipherText": "oB/6mwZ7ujxdjgE=",
+              "nonce": "SCQokN1NQ2oekdkf",
+              "tag": "YAfL9bjfIVXBxekyrT6Nrg=="
+            },
+            "dockPosition": null
+          }
+        }
+      ],
+      "expected": {
+        "error": null,
+        "uploaded": 0,
+        "downloaded": 1,
+        "conflictsResolved": 0,
+        "tombstonesApplied": 0,
+        "remoteAfter": [
+          {
+            "noteId": "00000001-0000-4000-8000-000000000000",
+            "tombstone": false,
+            "updatedAt": "2024-05-01T10:30:00.0000000+00:00",
+            "deviceId": "device-b",
+            "rewritten": false,
+            "note": {
+              "id": "00000001-0000-4000-8000-000000000000",
+              "text": "",
+              "color": "#EBD38B",
+              "createdAt": "2024-05-01T09:00:00.0000000+00:00",
+              "updatedAt": "2024-05-01T10:30:00.0000000+00:00",
+              "state": 0,
+              "screenOrigin": "primary",
+              "tags": [],
+              "isProtected": true,
+              "protectedContent": {
+                "version": 1,
+                "salt": "FLbchD4jP0LNizd77wgwtg==",
+                "cipherText": "oB/6mwZ7ujxdjgE=",
+                "nonce": "SCQokN1NQ2oekdkf",
+                "tag": "YAfL9bjfIVXBxekyrT6Nrg=="
+              },
+              "dockPosition": null
+            }
+          }
+        ],
+        "localAfter": [
+          {
+            "id": "00000001-0000-4000-8000-000000000000",
+            "text": "",
+            "color": "#EBD38B",
+            "createdAt": "2024-05-01T09:00:00.0000000+00:00",
+            "updatedAt": "2024-05-01T10:30:00.0000000+00:00",
+            "state": 0,
+            "screenOrigin": "primary",
+            "tags": [],
+            "isProtected": true,
+            "protectedContent": {
+              "version": 1,
+              "salt": "FLbchD4jP0LNizd77wgwtg==",
+              "cipherText": "oB/6mwZ7ujxdjgE=",
+              "nonce": "SCQokN1NQ2oekdkf",
+              "tag": "YAfL9bjfIVXBxekyrT6Nrg=="
+            },
+            "dockPosition": null,
+            "authorDeviceId": "device-b"
+          }
+        ],
+        "localTombstonesAfter": [],
+        "basesAfter": [
+          {
+            "noteId": "00000001-0000-4000-8000-000000000000",
+            "updatedAt": "2024-05-01T10:30:00.0000000+00:00",
+            "deviceId": "device-b"
+          }
+        ],
+        "conflicts": []
+      }
+    },
+    {
+      "name": "E23a ninguna nota descifra (otra clave): error y cero escrituras",
+      "covers": "SyncService.cs:316-323",
+      "settings": {
+        "deviceId": "android-pc-a",
+        "scope": 0,
+        "tag": null,
+        "noteIds": []
+      },
+      "local": {
+        "notes": [
+          {
+            "id": "00000002-0000-4000-8000-000000000000",
+            "text": "local",
+            "color": "#EBD38B",
+            "createdAt": "2024-05-01T09:00:00.0000000+00:00",
+            "updatedAt": "2024-05-01T10:10:00.0000000+00:00",
+            "state": 0,
+            "screenOrigin": "primary",
+            "tags": [],
+            "isProtected": false,
+            "protectedContent": null,
+            "dockPosition": null,
+            "authorDeviceId": null
+          }
+        ],
+        "bases": [],
+        "tombstones": []
+      },
+      "remote": [
+        {
+          "noteId": "00000001-0000-4000-8000-000000000000",
+          "kind": "note",
+          "key": "other",
+          "envelopeJson": "{\"format\":4,\"noteId\":\"00000001-0000-4000-8000-000000000000\",\"tombstone\":false,\"updatedAt\":\"2024-05-01T10:10:00+00:00\",\"deviceId\":\"device-b\",\"cipherText\":\"RRnryCs1xgjf/cuSX/GDnrQ8rMNzSgaGmIr5d9eJly3oAlo0aKBbTEedUtA1iClnID2HEXN0tsqE\\u002BAh8zyAVMTzwQn6UZu7RlBzlv6yV4WqDWt1CE8sHPiDo/Tp4r/Jh0HfcoFnuwYE5cbByCaSIFhb5XP8gYh8P/df9dOpQETO1QloSZMjLIxoAgejP215Ut0xJXJ/CPnFgehsXgvnmeBaPW2GqhfpoVCYNUGtyJ6N4PNZc64F34n66Xu3OHawIwN45guXMTL7PCI2//p8YEWsXLbTTcmCYhESTIBD15IXVaJjuJi\\u002BkYy1iC\\u002Bt3Q6Iax2El6eLjpE9V5OnM91pIXXyASz0WlJ8NVoqk5PN03CA5AfwvwPhy9sTYObe61XT3\\u002BdWI2gmsgHYFhNuGdxunrtDFIyLbv95EMB/aapjCC\\u002BaCfu\\u002BLrBCYBs7xAFmWg/Wt\\u002BO4aMbPnsuOW5yhuRhvSgbeIjLk=\",\"nonce\":\"PUwpZ8c3NVS97F8h\",\"tag\":\"HqLHbYEo3kQ6Ug74W9SJmw==\"}",
+          "plain": {
+            "id": "00000001-0000-4000-8000-000000000000",
+            "text": "ajena",
+            "color": "#EBD38B",
+            "createdAt": "2024-05-01T09:00:00.0000000+00:00",
+            "updatedAt": "2024-05-01T10:10:00.0000000+00:00",
+            "state": 0,
+            "screenOrigin": "primary",
+            "tags": [],
+            "isProtected": false,
+            "protectedContent": null,
+            "dockPosition": null
+          }
+        }
+      ],
+      "expected": {
+        "error": "This device's sync code can't read the notes in the store. If access was revoked, import the new code.",
+        "uploaded": 0,
+        "downloaded": 0,
+        "conflictsResolved": 0,
+        "tombstonesApplied": 0,
+        "remoteAfter": [
+          {
+            "noteId": "00000001-0000-4000-8000-000000000000",
+            "tombstone": false,
+            "updatedAt": "2024-05-01T10:10:00.0000000+00:00",
+            "deviceId": "device-b",
+            "rewritten": false,
+            "note": null
+          }
+        ],
+        "localAfter": [
+          {
+            "id": "00000002-0000-4000-8000-000000000000",
+            "text": "local",
+            "color": "#EBD38B",
+            "createdAt": "2024-05-01T09:00:00.0000000+00:00",
+            "updatedAt": "2024-05-01T10:10:00.0000000+00:00",
+            "state": 0,
+            "screenOrigin": "primary",
+            "tags": [],
+            "isProtected": false,
+            "protectedContent": null,
+            "dockPosition": null,
+            "authorDeviceId": null
+          }
+        ],
+        "localTombstonesAfter": [],
+        "basesAfter": [],
+        "conflicts": []
+      }
+    },
+    {
+      "name": "E23b el almacén solo tiene borrados de otra clave: no aborta",
+      "covers": "SyncService.cs:560-584",
+      "settings": {
+        "deviceId": "android-pc-a",
+        "scope": 0,
+        "tag": null,
+        "noteIds": []
+      },
+      "local": {
+        "notes": [
+          {
+            "id": "00000001-0000-4000-8000-000000000000",
+            "text": "x",
+            "color": "#EBD38B",
+            "createdAt": "2024-05-01T09:00:00.0000000+00:00",
+            "updatedAt": "2024-05-01T10:10:00.0000000+00:00",
+            "state": 0,
+            "screenOrigin": "primary",
+            "tags": [],
+            "isProtected": false,
+            "protectedContent": null,
+            "dockPosition": null,
+            "authorDeviceId": "device-b"
+          }
+        ],
+        "bases": [
+          {
+            "noteId": "00000001-0000-4000-8000-000000000000",
+            "updatedAt": "2024-05-01T10:10:00.0000000+00:00",
+            "deviceId": "device-b"
+          }
+        ],
+        "tombstones": []
+      },
+      "remote": [
+        {
+          "noteId": "00000001-0000-4000-8000-000000000000",
+          "kind": "tombstone",
+          "key": "other",
+          "envelopeJson": "{\"format\":4,\"noteId\":\"00000001-0000-4000-8000-000000000000\",\"tombstone\":true,\"updatedAt\":\"2024-05-01T10:20:00+00:00\",\"deviceId\":\"device-b\",\"cipherText\":\"tzfibFFzAOl5NCBVcK\\u002BYxiBxLJRTCWwsSKyriYRFjYnvdGUGz/86Ag7JZG9I1sgjwVCmpa2LZUwFv0FURb/wxa5EQykaLHDrMgI1TxK6ehA\\u002BetLUbQ4y6F31OR98xYZYMHaGfS2iGwzYA4MihUBVzZO7CwQ=\",\"nonce\":\"GcLK6iBOi2rvbyRm\",\"tag\":\"JsoOBVbvJRjzJ0tXsL0aoA==\"}",
+          "plain": null
+        }
+      ],
+      "expected": {
+        "error": null,
+        "uploaded": 1,
+        "downloaded": 0,
+        "conflictsResolved": 0,
+        "tombstonesApplied": 0,
+        "remoteAfter": [
+          {
+            "noteId": "00000001-0000-4000-8000-000000000000",
+            "tombstone": false,
+            "updatedAt": "<now>",
+            "deviceId": "android-pc-a",
+            "rewritten": true,
+            "note": {
+              "id": "00000001-0000-4000-8000-000000000000",
+              "text": "x",
+              "color": "#EBD38B",
+              "createdAt": "2024-05-01T09:00:00.0000000+00:00",
+              "updatedAt": "<now>",
+              "state": 2,
+              "screenOrigin": "primary",
+              "tags": [],
+              "isProtected": false,
+              "protectedContent": null,
+              "dockPosition": null
+            }
+          }
+        ],
+        "localAfter": [
+          {
+            "id": "00000001-0000-4000-8000-000000000000",
+            "text": "x",
+            "color": "#EBD38B",
+            "createdAt": "2024-05-01T09:00:00.0000000+00:00",
+            "updatedAt": "<now>",
+            "state": 2,
+            "screenOrigin": "primary",
+            "tags": [],
+            "isProtected": false,
+            "protectedContent": null,
+            "dockPosition": null,
+            "authorDeviceId": null
+          }
+        ],
+        "localTombstonesAfter": [],
+        "basesAfter": [
+          {
+            "noteId": "00000001-0000-4000-8000-000000000000",
+            "updatedAt": "<now>",
+            "deviceId": "android-pc-a"
+          }
+        ],
+        "conflicts": []
+      }
+    },
+    {
+      "name": "E24 objeto con format 5: la carpeta lo salta",
+      "covers": "FolderSyncTransport.cs:27-35",
+      "settings": {
+        "deviceId": "android-pc-a",
+        "scope": 0,
+        "tag": null,
+        "noteIds": []
+      },
+      "local": {
+        "notes": [
+          {
+            "id": "00000002-0000-4000-8000-000000000000",
+            "text": "local",
+            "color": "#EBD38B",
+            "createdAt": "2024-05-01T09:00:00.0000000+00:00",
+            "updatedAt": "2024-05-01T10:10:00.0000000+00:00",
+            "state": 0,
+            "screenOrigin": "primary",
+            "tags": [],
+            "isProtected": false,
+            "protectedContent": null,
+            "dockPosition": null,
+            "authorDeviceId": null
+          }
+        ],
+        "bases": [],
+        "tombstones": []
+      },
+      "remote": [
+        {
+          "noteId": "00000001-0000-4000-8000-000000000000",
+          "kind": "note",
+          "key": "vectors",
+          "envelopeJson": "{\"format\":5,\"noteId\":\"00000001-0000-4000-8000-000000000000\",\"tombstone\":false,\"updatedAt\":\"2024-05-01T10:10:00+00:00\",\"deviceId\":\"device-b\",\"cipherText\":\"MU9GV05h1pZFUrI\\u002B7QN4HL1ZyIxSadzGX7XI9PPhdO//8NM6gS6LVdxSsGHEqHW1hHb7sv1YorYwZNlwZwKxQf3vXijtOwPcAU/V45Lvu1QKBZfqpV6cF3LPdVOjjwy/jmVv\\u002BDqLl2FYy5MlOsCfFjdr4\\u002BQ4X64oIIDbW0Ssr\\u002BSVJFsFvRFgva9IpMxyHRQTOMnH2spdRoQBkCpVK0DDT9iWTc3/WzYKwejsXOZB0JT7qOX2F5tk90hN2U6QNA1XrEiX53N2fgYLYqKnNf9LBp1lOdeuvHPfnLXxyXADk6Uf\\u002BjJRqAMWmD\\u002BfkYBaOoNsic8pFdxpSNX9v2PaSwQu8ASB\\u002BMN9nsal2XjzOE6BF2dHUkVyvPwa1SNtrPtYAYxC\\u002BzW0UV9hAdr4ccRUip\\u002BEQOEgA0eynoBrectRz9uSXNuvoi\\u002BjIMxrNcoZNilgr0CXeXNd9wKCfaT9AGOc0Cv9bpYw3R/Gs12q\",\"nonce\":\"l6NNsbV5W/4UDDN0\",\"tag\":\"ykqgjPDeVuAr/8N4HOStlg==\"}",
+          "plain": {
+            "id": "00000001-0000-4000-8000-000000000000",
+            "text": "futura",
+            "color": "#EBD38B",
+            "createdAt": "2024-05-01T09:00:00.0000000+00:00",
+            "updatedAt": "2024-05-01T10:10:00.0000000+00:00",
+            "state": 0,
+            "screenOrigin": "primary",
+            "tags": [],
+            "isProtected": false,
+            "protectedContent": null,
+            "dockPosition": null
+          }
+        }
+      ],
+      "expected": {
+        "error": null,
+        "uploaded": 1,
+        "downloaded": 0,
+        "conflictsResolved": 0,
+        "tombstonesApplied": 0,
+        "remoteAfter": [
+          {
+            "file": "00000001000040008000000000000000.json",
+            "unreadable": true,
+            "rewritten": false
+          },
+          {
+            "noteId": "00000002-0000-4000-8000-000000000000",
+            "tombstone": false,
+            "updatedAt": "2024-05-01T10:10:00.0000000+00:00",
+            "deviceId": "android-pc-a",
+            "rewritten": true,
+            "note": {
+              "id": "00000002-0000-4000-8000-000000000000",
+              "text": "local",
+              "color": "#EBD38B",
+              "createdAt": "2024-05-01T09:00:00.0000000+00:00",
+              "updatedAt": "2024-05-01T10:10:00.0000000+00:00",
+              "state": 0,
+              "screenOrigin": "primary",
+              "tags": [],
+              "isProtected": false,
+              "protectedContent": null,
+              "dockPosition": null
+            }
+          }
+        ],
+        "localAfter": [
+          {
+            "id": "00000002-0000-4000-8000-000000000000",
+            "text": "local",
+            "color": "#EBD38B",
+            "createdAt": "2024-05-01T09:00:00.0000000+00:00",
+            "updatedAt": "2024-05-01T10:10:00.0000000+00:00",
+            "state": 0,
+            "screenOrigin": "primary",
+            "tags": [],
+            "isProtected": false,
+            "protectedContent": null,
+            "dockPosition": null,
+            "authorDeviceId": null
+          }
+        ],
+        "localTombstonesAfter": [],
+        "basesAfter": [
+          {
+            "noteId": "00000002-0000-4000-8000-000000000000",
+            "updatedAt": "2024-05-01T10:10:00.0000000+00:00",
+            "deviceId": "android-pc-a"
+          }
+        ],
+        "conflicts": []
+      }
+    },
+    {
+      "name": "E25 solo cambia dockPosition: se sube",
+      "covers": "SyncModels.cs:335-350",
+      "settings": {
+        "deviceId": "android-pc-a",
+        "scope": 0,
+        "tag": null,
+        "noteIds": []
+      },
+      "local": {
+        "notes": [
+          {
+            "id": "00000001-0000-4000-8000-000000000000",
+            "text": "igual",
+            "color": "#EBD38B",
+            "createdAt": "2024-05-01T09:00:00.0000000+00:00",
+            "updatedAt": "2024-05-01T10:20:00.0000000+00:00",
+            "state": 0,
+            "screenOrigin": "primary",
+            "tags": [],
+            "isProtected": false,
+            "protectedContent": null,
+            "dockPosition": 3,
+            "authorDeviceId": null
+          }
+        ],
+        "bases": [
+          {
+            "noteId": "00000001-0000-4000-8000-000000000000",
+            "updatedAt": "2024-05-01T10:10:00.0000000+00:00",
+            "deviceId": "device-b"
+          }
+        ],
+        "tombstones": []
+      },
+      "remote": [
+        {
+          "noteId": "00000001-0000-4000-8000-000000000000",
+          "kind": "note",
+          "key": "vectors",
+          "envelopeJson": "{\"format\":4,\"noteId\":\"00000001-0000-4000-8000-000000000000\",\"tombstone\":false,\"updatedAt\":\"2024-05-01T10:10:00+00:00\",\"deviceId\":\"device-b\",\"cipherText\":\"5O4AK5lmxSKj8TayNcSrCjUwFsgUoWmqaIsUVovSjfx/F2e2TTgNkWugzVw9A0d6I/UqAMICxH7bgF80C5i0s7dMW6Lwd0xfIOmGOxavWE0J2GqlFI2E7tvwfTmB8sDk\\u002BZ0JJjV0ixpjEgihx6LirWdDdJxNUsZSP57OlqpqvKKFNudMpOOVZtp4bfkYW1TaIxtzodAu14RIUp1svSnOQVtvmgY8U2z5bBertTbjEucbylQG8VzEMk0AciikhhbcGPlKhyQ0feB66ph8x7p0HkrSMt6UegGW\\u002B8XtZIMs9NXVQYL7NhdmVlqsESM29B4XOhUdcpxq5VwmffoXRvhcQAsSR9FcZ41qt4KOJ\\u002Bpbw2m4ZE/MFq3Zbt6Mzr3XwBqQgtVtrJAWNxtu7xVQa0LjjvgfjD8qR0cJkmrnx5ENFwmMugXzyDzraijgPpaIX6DVgxeLLqvwuFG7mVtwoMn6aQ==\",\"nonce\":\"OD31JZo1WJxKLWWH\",\"tag\":\"myUlULCsKUGNVLW14a0irQ==\"}",
+          "plain": {
+            "id": "00000001-0000-4000-8000-000000000000",
+            "text": "igual",
+            "color": "#EBD38B",
+            "createdAt": "2024-05-01T09:00:00.0000000+00:00",
+            "updatedAt": "2024-05-01T10:10:00.0000000+00:00",
+            "state": 0,
+            "screenOrigin": "primary",
+            "tags": [],
+            "isProtected": false,
+            "protectedContent": null,
+            "dockPosition": 1
+          }
+        }
+      ],
+      "expected": {
+        "error": null,
+        "uploaded": 1,
+        "downloaded": 0,
+        "conflictsResolved": 0,
+        "tombstonesApplied": 0,
+        "remoteAfter": [
+          {
+            "noteId": "00000001-0000-4000-8000-000000000000",
+            "tombstone": false,
+            "updatedAt": "2024-05-01T10:20:00.0000000+00:00",
+            "deviceId": "android-pc-a",
+            "rewritten": true,
+            "note": {
+              "id": "00000001-0000-4000-8000-000000000000",
+              "text": "igual",
+              "color": "#EBD38B",
+              "createdAt": "2024-05-01T09:00:00.0000000+00:00",
+              "updatedAt": "2024-05-01T10:20:00.0000000+00:00",
+              "state": 0,
+              "screenOrigin": "primary",
+              "tags": [],
+              "isProtected": false,
+              "protectedContent": null,
+              "dockPosition": 3
+            }
+          }
+        ],
+        "localAfter": [
+          {
+            "id": "00000001-0000-4000-8000-000000000000",
+            "text": "igual",
+            "color": "#EBD38B",
+            "createdAt": "2024-05-01T09:00:00.0000000+00:00",
+            "updatedAt": "2024-05-01T10:20:00.0000000+00:00",
+            "state": 0,
+            "screenOrigin": "primary",
+            "tags": [],
+            "isProtected": false,
+            "protectedContent": null,
+            "dockPosition": 3,
+            "authorDeviceId": null
+          }
+        ],
+        "localTombstonesAfter": [],
+        "basesAfter": [
+          {
+            "noteId": "00000001-0000-4000-8000-000000000000",
+            "updatedAt": "2024-05-01T10:20:00.0000000+00:00",
+            "deviceId": "android-pc-a"
+          }
+        ],
+        "conflicts": []
+      }
+    },
+    {
+      "name": "E26 borrado local con alcance por etiqueta: asimetría actual",
+      "covers": "SyncService.cs:368-370",
+      "settings": {
+        "deviceId": "android-pc-a",
+        "scope": 2,
+        "tag": "work",
+        "noteIds": []
+      },
+      "local": {
+        "notes": [],
+        "bases": [
+          {
+            "noteId": "00000001-0000-4000-8000-000000000000",
+            "updatedAt": "2024-05-01T10:10:00.0000000+00:00",
+            "deviceId": "device-b"
+          }
+        ],
+        "tombstones": [
+          {
+            "noteId": "00000001-0000-4000-8000-000000000000",
+            "deletedAt": "2024-05-01T10:20:00.0000000+00:00",
+            "deviceId": "local"
+          }
+        ]
+      },
+      "remote": [
+        {
+          "noteId": "00000001-0000-4000-8000-000000000000",
+          "kind": "note",
+          "key": "vectors",
+          "envelopeJson": "{\"format\":4,\"noteId\":\"00000001-0000-4000-8000-000000000000\",\"tombstone\":false,\"updatedAt\":\"2024-05-01T10:10:00+00:00\",\"deviceId\":\"device-b\",\"cipherText\":\"WeyxroZhxFHtKuIXhbe0uTwKAoJVVTusnbCGjD8be4CIJWgKvkHZc78H9bZ7MeM61GbjQsDQ13xVgfJhRHmPtQZ04yxh4pB5DjcpvYbHCH7muziPYZzxEicofr3eUktXxA\\u002BXJxoMg/aDyeafeEvXz4kfr1XH95S/XRidafpoCvJxEFqficgcmfSPX6ax6CP8H20A1gLu9Al/0j6M7aWS\\u002Bqz1fA9eoK5hguUdIq694HhTHtNNitwnCnLdZJ2si6rnnVujTmHZ4py/CWRm4pkSXmKAtHiOHjUd35Ehms659la6M8/gnlxUfmfJzPQhABSyHWDa6KcPF61XTNGX4kVALuuRCzJ6EOwjoQO7yuBk2ZNKUdkeWQIrffg5dwWMbI7HUeiaN4D99N2nxsneKF1lNz1Ty/EsKbbAiO56a0VWZjaxOawvyjt/U4pUAAHOK29uei6fmBvcNFWghId9TJJ\\u002BXtHTcGU\\u002BvDLU\",\"nonce\":\"RoqkNR\\u002BXUQ\\u002B8wzAr\",\"tag\":\"yhk8Kkb0QbyM8zDxJWHlFQ==\"}",
+          "plain": {
+            "id": "00000001-0000-4000-8000-000000000000",
+            "text": "x",
+            "color": "#EBD38B",
+            "createdAt": "2024-05-01T09:00:00.0000000+00:00",
+            "updatedAt": "2024-05-01T10:10:00.0000000+00:00",
+            "state": 0,
+            "screenOrigin": "primary",
+            "tags": [
+              "work"
+            ],
+            "isProtected": false,
+            "protectedContent": null,
+            "dockPosition": null
+          }
+        }
+      ],
+      "expected": {
+        "error": null,
+        "uploaded": 1,
+        "downloaded": 0,
+        "conflictsResolved": 0,
+        "tombstonesApplied": 0,
+        "remoteAfter": [
+          {
+            "noteId": "00000001-0000-4000-8000-000000000000",
+            "tombstone": true,
+            "updatedAt": "2024-05-01T10:20:00.0000000+00:00",
+            "deviceId": "android-pc-a",
+            "rewritten": true,
+            "authentic": true
+          }
+        ],
+        "localAfter": [],
+        "localTombstonesAfter": [
+          {
+            "noteId": "00000001-0000-4000-8000-000000000000",
+            "deletedAt": "2024-05-01T10:20:00.0000000+00:00",
+            "deviceId": "local"
+          }
+        ],
+        "basesAfter": [
+          {
+            "noteId": "00000001-0000-4000-8000-000000000000",
+            "updatedAt": "2024-05-01T10:20:00.0000000+00:00",
+            "deviceId": "android-pc-a"
+          }
+        ],
+        "conflicts": []
+      }
+    },
+    {
+      "name": "E27a edición local frente a borrado remoto más reciente: gana el borrado y queda el conflicto",
+      "covers": "SyncService.cs:409-432",
+      "settings": {
+        "deviceId": "android-pc-a",
+        "scope": 0,
+        "tag": null,
+        "noteIds": []
+      },
+      "local": {
+        "notes": [
+          {
+            "id": "00000001-0000-4000-8000-000000000000",
+            "text": "editada aquí",
+            "color": "#EBD38B",
+            "createdAt": "2024-05-01T09:00:00.0000000+00:00",
+            "updatedAt": "2024-05-01T10:20:00.0000000+00:00",
+            "state": 0,
+            "screenOrigin": "primary",
+            "tags": [],
+            "isProtected": false,
+            "protectedContent": null,
+            "dockPosition": null,
+            "authorDeviceId": null
+          }
+        ],
+        "bases": [
+          {
+            "noteId": "00000001-0000-4000-8000-000000000000",
+            "updatedAt": "2024-05-01T10:10:00.0000000+00:00",
+            "deviceId": "device-b"
+          }
+        ],
+        "tombstones": []
+      },
+      "remote": [
+        {
+          "noteId": "00000001-0000-4000-8000-000000000000",
+          "kind": "tombstone",
+          "key": "vectors",
+          "envelopeJson": "{\"format\":4,\"noteId\":\"00000001-0000-4000-8000-000000000000\",\"tombstone\":true,\"updatedAt\":\"2024-05-01T10:30:00+00:00\",\"deviceId\":\"device-b\",\"cipherText\":\"3DQs/wj9kbkQknI2cYfMwVvlpIuw/vHxspgXQpgD2rZR4\\u002BwfV9E\\u002BPjykg8\\u002BogtwOgFkrm2MjplxI4PYngTlkEeXeJH7KCiZ5GT2Vt7iWk\\u002BmhwdBrvp1PZh4BSDpuOoY2mn1kRlayNkcc9XANAF/xMY/9a5Y=\",\"nonce\":\"MrJ7BSQM3r1j5qCp\",\"tag\":\"xz0Xh10y\\u002BH2vvRzxKAFzHA==\"}",
+          "plain": null
+        }
+      ],
+      "expected": {
+        "error": null,
+        "uploaded": 0,
+        "downloaded": 1,
+        "conflictsResolved": 1,
+        "tombstonesApplied": 1,
+        "remoteAfter": [
+          {
+            "noteId": "00000001-0000-4000-8000-000000000000",
+            "tombstone": true,
+            "updatedAt": "2024-05-01T10:30:00.0000000+00:00",
+            "deviceId": "device-b",
+            "rewritten": false,
+            "authentic": true
+          }
+        ],
+        "localAfter": [],
+        "localTombstonesAfter": [
+          {
+            "noteId": "00000001-0000-4000-8000-000000000000",
+            "deletedAt": "2024-05-01T10:30:00.0000000+00:00",
+            "deviceId": "device-b"
+          }
+        ],
+        "basesAfter": [
+          {
+            "noteId": "00000001-0000-4000-8000-000000000000",
+            "updatedAt": "2024-05-01T10:30:00.0000000+00:00",
+            "deviceId": "device-b"
+          }
+        ],
+        "conflicts": [
+          {
+            "noteId": "00000001-0000-4000-8000-000000000000",
+            "winner": {
+              "updatedAt": "2024-05-01T10:30:00.0000000+00:00",
+              "deviceId": "device-b",
+              "tombstone": false,
+              "text": null
+            },
+            "losing": {
+              "updatedAt": "2024-05-01T10:20:00.0000000+00:00",
+              "deviceId": "android-pc-a",
+              "tombstone": false,
+              "text": "editada aquí"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "E27b edición local más reciente que el borrado remoto: gana la edición",
+      "covers": "SyncService.cs:409-428",
+      "settings": {
+        "deviceId": "android-pc-a",
+        "scope": 0,
+        "tag": null,
+        "noteIds": []
+      },
+      "local": {
+        "notes": [
+          {
+            "id": "00000001-0000-4000-8000-000000000000",
+            "text": "editada aquí",
+            "color": "#EBD38B",
+            "createdAt": "2024-05-01T09:00:00.0000000+00:00",
+            "updatedAt": "2024-05-01T10:30:00.0000000+00:00",
+            "state": 0,
+            "screenOrigin": "primary",
+            "tags": [],
+            "isProtected": false,
+            "protectedContent": null,
+            "dockPosition": null,
+            "authorDeviceId": null
+          }
+        ],
+        "bases": [
+          {
+            "noteId": "00000001-0000-4000-8000-000000000000",
+            "updatedAt": "2024-05-01T10:10:00.0000000+00:00",
+            "deviceId": "device-b"
+          }
+        ],
+        "tombstones": []
+      },
+      "remote": [
+        {
+          "noteId": "00000001-0000-4000-8000-000000000000",
+          "kind": "tombstone",
+          "key": "vectors",
+          "envelopeJson": "{\"format\":4,\"noteId\":\"00000001-0000-4000-8000-000000000000\",\"tombstone\":true,\"updatedAt\":\"2024-05-01T10:20:00+00:00\",\"deviceId\":\"device-b\",\"cipherText\":\"tBxdF1/T\\u002BkDyepMNVLEhe\\u002BKPqeKNuZVgQgs\\u002BDizLA3K8CwL5EHrDpkSaT2fz\\u002B2X8vZHLFBK/tl8vKltATTdd7qZn45uCy4MCsurvRh36YrfDKOWy6wbJcC/bLz4UHPDxntErgQ/fl3AFzqg\\u002BAUeds3DR9RM=\",\"nonce\":\"elkVbR/vadyaGGb3\",\"tag\":\"sG5amQ24PhQwUeMmde436w==\"}",
+          "plain": null
+        }
+      ],
+      "expected": {
+        "error": null,
+        "uploaded": 1,
+        "downloaded": 0,
+        "conflictsResolved": 1,
+        "tombstonesApplied": 0,
+        "remoteAfter": [
+          {
+            "noteId": "00000001-0000-4000-8000-000000000000",
+            "tombstone": false,
+            "updatedAt": "2024-05-01T10:30:00.0000000+00:00",
+            "deviceId": "android-pc-a",
+            "rewritten": true,
+            "note": {
+              "id": "00000001-0000-4000-8000-000000000000",
+              "text": "editada aquí",
+              "color": "#EBD38B",
+              "createdAt": "2024-05-01T09:00:00.0000000+00:00",
+              "updatedAt": "2024-05-01T10:30:00.0000000+00:00",
+              "state": 0,
+              "screenOrigin": "primary",
+              "tags": [],
+              "isProtected": false,
+              "protectedContent": null,
+              "dockPosition": null
+            }
+          }
+        ],
+        "localAfter": [
+          {
+            "id": "00000001-0000-4000-8000-000000000000",
+            "text": "editada aquí",
+            "color": "#EBD38B",
+            "createdAt": "2024-05-01T09:00:00.0000000+00:00",
+            "updatedAt": "2024-05-01T10:30:00.0000000+00:00",
+            "state": 0,
+            "screenOrigin": "primary",
+            "tags": [],
+            "isProtected": false,
+            "protectedContent": null,
+            "dockPosition": null,
+            "authorDeviceId": null
+          }
+        ],
+        "localTombstonesAfter": [],
+        "basesAfter": [
+          {
+            "noteId": "00000001-0000-4000-8000-000000000000",
+            "updatedAt": "2024-05-01T10:30:00.0000000+00:00",
+            "deviceId": "android-pc-a"
+          }
+        ],
+        "conflicts": [
+          {
+            "noteId": "00000001-0000-4000-8000-000000000000",
+            "winner": {
+              "updatedAt": "2024-05-01T10:30:00.0000000+00:00",
+              "deviceId": "android-pc-a",
+              "tombstone": false,
+              "text": null
+            },
+            "losing": {
+              "updatedAt": "2024-05-01T10:20:00.0000000+00:00",
+              "deviceId": "device-b",
+              "tombstone": true,
+              "text": null
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "E28 ScreenOrigin y etiquetas con mayúsculas distintas viajan sin cambios",
+      "covers": "NoteEquivalence.cs:13-24",
+      "settings": {
+        "deviceId": "android-pc-a",
+        "scope": 0,
+        "tag": null,
+        "noteIds": []
+      },
+      "local": {
+        "notes": [
+          {
+            "id": "00000001-0000-4000-8000-000000000000",
+            "text": "igual",
+            "color": "#EBD38B",
+            "createdAt": "2024-05-01T09:00:00.0000000+00:00",
+            "updatedAt": "2024-05-01T10:10:00.0000000+00:00",
+            "state": 0,
+            "screenOrigin": "secondary",
+            "tags": [
+              "Zeta",
+              "alpha"
+            ],
+            "isProtected": false,
+            "protectedContent": null,
+            "dockPosition": null,
+            "authorDeviceId": "device-b"
+          }
+        ],
+        "bases": [
+          {
+            "noteId": "00000001-0000-4000-8000-000000000000",
+            "updatedAt": "2024-05-01T10:10:00.0000000+00:00",
+            "deviceId": "device-b"
+          }
+        ],
+        "tombstones": []
+      },
+      "remote": [
+        {
+          "noteId": "00000001-0000-4000-8000-000000000000",
+          "kind": "note",
+          "key": "vectors",
+          "envelopeJson": "{\"format\":4,\"noteId\":\"00000001-0000-4000-8000-000000000000\",\"tombstone\":false,\"updatedAt\":\"2024-05-01T10:10:00+00:00\",\"deviceId\":\"device-b\",\"cipherText\":\"02x1iT2fYqm/nB9Ie3DXOV8qs2P/Yjgk7Yh3UHWE4hJUbcZT4VYCtALWRP0/qizlKwIjeKumuVAQzyDxOPI3KsifGEtH5IezB9KeJeXmHTkZET5A1jAhLd\\u002BJZVP3O1y7gMKRX01jBJwdahM\\u002BcUu7n6vf17E5YmUebei5y5vMGc01LqYIfpdXPcU2BAUMIp3QEzOzaUm\\u002BghuQ/aoplUj2G5y/Knk9oWgXds4Sd\\u002B8bUgDOLSDXPGtflw3G\\u002B3jrGmVwobzvuP9fUlSv9aAja0Sw6OgUTDmS23y/tW1F8diwUY4drTxGwvK\\u002Bx5m9UwKaxU0wRrcywG0Tndm7wWW\\u002B3mhXctLfIauR4EGLD0\\u002Bg/XXFgx8E8CVMN\\u002B9eiewR\\u002BTos2\\u002B29v2\\u002BMDrslJ27INJD5FcMJEw\\u002BvarvQ/Upg0XNrPWnrhKgXcK1fHFlDP3ffZPI3DU06/4dUZnGL7IX9GdA3G6cXRbjSd2nThy3Cg/H9CYMwgONyhpo0x3Zty8c2TYA=\",\"nonce\":\"xUxBR7mNPR1yaB42\",\"tag\":\"y\\u002Bz0zK3/Lf6r9th635dMng==\"}",
+          "plain": {
+            "id": "00000001-0000-4000-8000-000000000000",
+            "text": "igual",
+            "color": "#EBD38B",
+            "createdAt": "2024-05-01T09:00:00.0000000+00:00",
+            "updatedAt": "2024-05-01T10:10:00.0000000+00:00",
+            "state": 0,
+            "screenOrigin": "secondary",
+            "tags": [
+              "Zeta",
+              "alpha"
+            ],
+            "isProtected": false,
+            "protectedContent": null,
+            "dockPosition": null
+          }
+        }
+      ],
+      "expected": {
+        "error": null,
+        "uploaded": 0,
+        "downloaded": 0,
+        "conflictsResolved": 0,
+        "tombstonesApplied": 0,
+        "remoteAfter": [
+          {
+            "noteId": "00000001-0000-4000-8000-000000000000",
+            "tombstone": false,
+            "updatedAt": "2024-05-01T10:10:00.0000000+00:00",
+            "deviceId": "device-b",
+            "rewritten": false,
+            "note": {
+              "id": "00000001-0000-4000-8000-000000000000",
+              "text": "igual",
+              "color": "#EBD38B",
+              "createdAt": "2024-05-01T09:00:00.0000000+00:00",
+              "updatedAt": "2024-05-01T10:10:00.0000000+00:00",
+              "state": 0,
+              "screenOrigin": "secondary",
+              "tags": [
+                "Zeta",
+                "alpha"
+              ],
+              "isProtected": false,
+              "protectedContent": null,
+              "dockPosition": null
+            }
+          }
+        ],
+        "localAfter": [
+          {
+            "id": "00000001-0000-4000-8000-000000000000",
+            "text": "igual",
+            "color": "#EBD38B",
+            "createdAt": "2024-05-01T09:00:00.0000000+00:00",
+            "updatedAt": "2024-05-01T10:10:00.0000000+00:00",
+            "state": 0,
+            "screenOrigin": "secondary",
+            "tags": [
+              "Zeta",
+              "alpha"
+            ],
+            "isProtected": false,
+            "protectedContent": null,
+            "dockPosition": null,
+            "authorDeviceId": "device-b"
+          }
+        ],
+        "localTombstonesAfter": [],
+        "basesAfter": [
+          {
+            "noteId": "00000001-0000-4000-8000-000000000000",
+            "updatedAt": "2024-05-01T10:10:00.0000000+00:00",
+            "deviceId": "device-b"
+          }
+        ],
+        "conflicts": []
+      }
+    }
+  ]
+}

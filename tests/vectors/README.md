@@ -67,10 +67,34 @@ Los códigos antiguos (`fanote-profile-v1:` / `-v2:`) se siguen aceptando al imp
 - **Dos clientes, un contrato:** `kotlin-output.json` lo escribe `android/core` y lo lee Core (`SyncVectorsTests`). Cambia en cada ejecución del
   test de Kotlin (nonces y sales aleatorios): pendiente de escribirlo solo con una variable de entorno, como hace Core con el suyo.
 
+## Vectores de escenario del motor (`sync-scenarios.json`)
+
+Los genera y verifica `tests/Aldune.Core.Tests/SyncScenarioVectorsTests.cs` con el `SyncService` real (carpeta temporal como almacén).
+Regenerar solo a propósito: `ALDUNE_REGEN_VECTORS=1 dotnet test tests/Aldune.Core.Tests --filter "FullyQualifiedName~RegenerateScenarioVectors"`.
+Hay que hacerlo en Windows (el motor usa DPAPI). Spec: `docs/superpowers/specs/2026-10-17-aldune-android-design.md` §6.
+
+Cada escenario (`scenarios[]`): `name` (E01…), `covers` (dónde está en `SyncService.cs`), `settings` (`deviceId` local, `scope` 0/1/2, `tag`,
+`noteIds`), `local` (`notes` con `authorDeviceId` —null = versión de este equipo—, `bases`, `tombstones`), `remote` (`envelopeJson` tal cual
+estaba en el almacén, ya cifrado, con `kind`, `key` y `plain`) y `expected`:
+
+- `error` (null o texto), `uploaded`, `downloaded`, `conflictsResolved`, `tombstonesApplied`: los contadores de `SyncResult`.
+- `remoteAfter`: cada objeto que queda en el almacén (ordenado por `noteId`): cabecera, `rewritten` (¿lo escribió esta pasada?), y la nota
+  **descifrada** (`note`; null si no descifra con la clave) o `authentic` si es un borrado. Un objeto de formato desconocido sale como
+  `unreadable` y debe quedar intacto. Un objeto que desaparece del almacén es que la pasada lo borró.
+- `localAfter` (notas con su autor), `localTombstonesAfter`, `basesAfter`, `conflicts` (ganador y perdedora: fecha, dispositivo, `tombstone`, texto).
+
+Reglas para quien las consuma: las claves son la de los vectores (`syncKeyHex`) y «other» (`otherKeyHex`); las fechas se comparan como
+**instantes**; `"<now>"` es una fecha puesta por el reloj (comprobar solo que es reciente); no se comparan los bytes de un sobre ni el
+`id` ni la fecha del conflicto (dependen del reloj). El mapa de escenarios es el de la spec §6.7.
+
+Hallazgos que fijan estos vectores (comportamiento de Core hoy, no necesariamente deseable): un borrado remoto **sin firma** no queda en el
+almacén visible para el motor, así que la nota local se manda a la papelera **y se sube de nuevo** pisándolo (E12a); con alcance por etiqueta
+el borrado local se sube aunque la nota ya no tuviera la etiqueta (E26); edición frente a borrado deja un conflicto aunque gane el borrado (E27).
+
+Pendiente de añadir: E14 (no se puede montar con carpeta: un solo fichero por id), E21 (nota vinculada sin sync, necesita montar `NoteFileLink`),
+el reparto entre varias versiones del mismo id (HTTP/WebDAV) y la rotación de clave.
+
 ## Lo que estos vectores NO cubren (y hay que cubrir antes de dar el motor por compatible)
 
-El **algoritmo** de `SyncService.Synchronize` (qué se sube, qué se baja, cuándo hay conflicto, las «bases» por nota, el alcance
-por etiqueta/notas elegidas, los borrados, la rotación de clave) no está en estos vectores: son solo el formato de los datos.
-El comportamiento de referencia es `src/Aldune.Core/SyncService.cs` y sus tests (`SyncConflictTests`, etc.). Antes de
-publicar un cliente nuevo hay que añadir **vectores de escenario** (estado local + estado del almacén → acciones esperadas) generados
-desde ese motor, y probar contra un servidor real.
+Los de formato (`sync-format4.json`) solo fijan los datos. El **algoritmo** lo fijan los de escenario de arriba, pero no cubren los
+transportes reales ni la rotación de clave: eso se prueba aparte, contra un servidor real.
