@@ -56,7 +56,9 @@ La tableta (Lenovo TB350FU «Tab P11», Android 14, 1200×2000) se probó el 18-
 | Ajustes en pantalla ancha | ok tras limitarlos a una columna centrada (antes se estiraban a todo el ancho) |
 | Rotar con una nota recién creada | **fallaba** (hallazgo 7); ok tras el arreglo |
 
-No se ha probado un teclado físico real (Bluetooth o de la funda): solo las teclas de Gboard de tableta y los eventos de tecla inyectados.
+**Teclado físico real** (Bluetooth 3.0 Keyboard, con la tableta en modo PC de Lenovo): el usuario comprobó a mano Tab, Alt+↓, Ctrl+Enter, Mayús+Tab y Enter en una lista de tareas, y funcionó todo.
+
+En modo PC la app va maximizada con barra de tareas y mantiene los dos paneles (ventana de 1333 dp de ancho). Una vez, justo tras el cambio de modo, se vio un solo panel de lista a todo el ancho; tras relanzar la app no volvió a pasar y no se reprodujo. Redimensionar la ventana (`am task resize`) no funciona con la app maximizada, así que el cambio de tamaño en vivo no se ha probado.
 
 ## Hallazgos (todos corregidos salvo los marcados)
 
@@ -76,8 +78,8 @@ No se ha probado un teclado físico real (Bluetooth o de la funda): solo las tec
 
 ## Sin resolver o por decidir
 
-- **Un deslizamiento en la pestaña Papelera abrió la nota en vez de pedir confirmación** una vez (con un gesto de 250 ms). Repetido a 500 ms funcionó. Parece
-  una cuestión del gesto inyectado, no se ha reproducido; conviene probarlo con un dedo real.
+- Un deslizamiento en la pestaña Papelera abrió la nota en vez de pedir confirmación una vez en el Pixel (gesto inyectado de 250 ms). En la tableta, 6 gestos de 100 ms a
+  1 s dieron siempre el diálogo de borrado: no reproducido, tratado como artefacto del gesto inyectado.
 - **Una nota de la papelera se puede abrir y editar.** Falta decidir si debe ser de solo lectura hasta restaurarla (qué hace Windows: mirar antes de cambiarlo).
 - En pantalla ancha, la fila de la nota recién creada con «+» no se marca como seleccionada en la lista (el panel sigue con la clave vacía). Es cosmético.
 - Los contadores de las pestañas (Notas 2, Archivadas 2…) ignoran la búsqueda; es coherente, pero conviene confirmarlo.
@@ -86,7 +88,7 @@ No se ha probado un teclado físico real (Bluetooth o de la funda): solo las tec
 
 ## Pendiente (en este orden)
 
-1. Probar a mano: un teclado físico real, la pantalla dividida real y el deslizamiento de la papelera con el dedo.
+1. Probar a mano la pantalla dividida real (y el cambio de tamaño de ventana en modo PC).
 2. Ejecutar `assembleRelease` firmado en un móvil de pruebas sin instalación real de Aldune (y revisar con R8 que Room y Compose funcionan).
 3. Delegar en una sesión de Claude Code en la web lo que compile en Linux (los créditos caducan el 5-11-2026). `/code-review ultra` es aparte: cuota propia, no gasta esos créditos.
 4. Siguiente fase: F5, el motor de sync dentro de la app.
