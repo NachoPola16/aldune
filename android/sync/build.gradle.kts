@@ -37,5 +37,9 @@ tasks.test {
     useJUnitPlatform()
     // Los vectores son el contrato y viven fuera del módulo, compartidos con C#.
     systemProperty("aldune.vectors.dir", rootDir.resolve("../../tests/vectors").canonicalPath)
+    // La prueba contra Aldune.SyncServer real (ServerIntegrationTest) solo corre si se le dice dónde está:
+    //   gradle test -Daldune.server.url=http://127.0.0.1:5099/ -Daldune.server.token=...
+    // El JVM de los tests no hereda los -D de Gradle, así que se reenvían aquí.
+    for (name in listOf("aldune.server.url", "aldune.server.token")) System.getProperty(name)?.let { systemProperty(name, it) }
     testLogging { events("passed", "failed", "skipped"); showStandardStreams = false }
 }
