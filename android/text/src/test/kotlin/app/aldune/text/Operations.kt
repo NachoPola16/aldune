@@ -40,6 +40,22 @@ object Operations {
 
         "LineMovement.Move" -> caret(LineMovement.move(a.s("text"), a.i("caret"), LineDirection.entries[a.i("direction")]))
 
+        "TaskLists.CheckboxOnLine" -> TaskLists.checkboxOnLine(a.s("text"), a.i("caret")).let { if (it == null) JsonNull else num(it) }
+        "TaskLists.HasChecked" -> bool(TaskLists.hasChecked(a.s("text")))
+        "TaskLists.IsAllDone" -> bool(TaskLists.isAllDone(a.s("text")))
+        "TaskLists.UncheckAll" -> edit(TaskLists.uncheckAll(a.s("text")), a.s("text"))
+        "TaskLists.RemoveChecked" -> edit(TaskLists.removeChecked(a.s("text")), a.s("text"))
+        "TaskLists.SettleToggled" -> edit(TaskLists.settleToggled(a.s("text"), a.i("glyphIndex")), a.s("text"))
+        "TaskLists.ConvertMarkdownTasks" -> str(TaskLists.convertMarkdownTasks(a.s("text")))
+        "TaskLists.PendingTasks" -> strings(TaskLists.pendingTasks(a.s("text"), a.i("max")))
+
+        // Los vectores usan el relleno por defecto de Core, "New note".
+        "NoteTitleHelper.GetTitle" -> str(NoteTitleHelper.getTitle(a.s("text"), "New note"))
+        "NoteTitleHelper.GetPreview" -> str(NoteTitleHelper.getPreview(a.s("text")))
+        "NoteTitleHelper.GetTabPreview" -> str(NoteTitleHelper.getTabPreview(a.s("text")))
+        "NoteText.Split" -> NoteText.split(a.s("text")).let { obj("title" to str(it.title), "body" to str(it.body)) }
+        "NoteText.Join" -> str(NoteText.join(a.s("title"), a.s("body")))
+
         else -> throw NotImplementedError("Operación sin implementar: $op")
     }
 
@@ -54,6 +70,11 @@ object Operations {
         if (v == null) JsonNull else obj("text" to str(v.text), "caret" to num(v.caret))
     fun selection(v: SelectionEdit): JsonElement = obj(
         "text" to str(v.text), "selectionStart" to num(v.selectionStart), "selectionLength" to num(v.selectionLength)
+    )
+    /** `{text, changed, map}` con `map[i] = mapIndex(i)` para cada `i` de 0 a la longitud del texto original. */
+    fun edit(e: TextEdit, original: String): JsonElement = obj(
+        "text" to str(e.text), "changed" to bool(e.changed),
+        "map" to JsonArray((0..original.length).map { JsonPrimitive(e.mapIndex(it)) })
     )
     fun strings(v: List<String>): JsonElement = JsonArray(v.map { JsonPrimitive(it) })
 }

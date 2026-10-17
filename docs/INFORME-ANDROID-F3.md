@@ -11,7 +11,7 @@ Rama: `claude/sweet-meitner-coa4zr`. Módulo: `android/text` (Kotlin/JVM puro, p
 
 ## Tareas
 - [x] 1. Lector de vectores, `LineText` (interno), `TaskLines`, `BulletLines`, `ListPrefix`, `ListIndent`, `LineMovement` (24 operaciones de `text-lines.json` en verde).
-- [ ] 2. `TextEdit`, `TaskLists`, `NoteTitleHelper`, `NoteText`.
+- [x] 2. `TextEdit` (con `mapIndex`), `TaskLists`, `NoteTitleHelper` (relleno como parámetro `placeholder`), `NoteText`: las 13 operaciones restantes de `text-lines.json` en verde.
 - [ ] 3. Color.
 - [ ] 4. Orden.
 - [ ] 5. Búsqueda.
