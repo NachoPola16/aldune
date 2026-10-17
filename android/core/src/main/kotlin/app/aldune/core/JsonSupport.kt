@@ -6,7 +6,10 @@ import kotlinx.serialization.json.JsonNull
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 import java.time.OffsetDateTime
+import java.time.format.DateTimeFormatter
+import java.time.format.DateTimeFormatterBuilder
 import java.time.format.DateTimeParseException
+import java.time.temporal.ChronoUnit
 
 /** Utilidades de lectura tolerante del JSON de Core (System.Text.Json con perfil Web: claves sin distinguir mayúsculas). */
 internal object JsonSupport {
@@ -43,5 +46,16 @@ internal object JsonSupport {
         OffsetDateTime.parse(value.trim())
     } catch (e: DateTimeParseException) {
         throw SyncFormatException("The date \"$value\" is not a valid ISO 8601 date with offset.", e)
+    }
+
+    // Como System.Text.Json: "2026-10-17T10:30:15.5+00:00" (desfase con dos puntos, nunca "Z",
+    // fracción sin ceros finales y con un máximo de 7 dígitos, que es la precisión de .NET).
+    private val WRITE_FORMAT: DateTimeFormatter = DateTimeFormatterBuilder()
+        .append(DateTimeFormatter.ISO_LOCAL_DATE_TIME)
+        .appendOffset("+HH:MM", "+00:00")
+        .toFormatter()
+
+    fun formatDate(value: OffsetDateTime): String = value.truncatedTo(ChronoUnit.NANOS).let {
+        it.withNano(it.nano / 100 * 100).format(WRITE_FORMAT)
     }
 }

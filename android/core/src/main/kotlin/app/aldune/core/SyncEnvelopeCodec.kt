@@ -8,6 +8,7 @@ import app.aldune.core.JsonSupport.parseDate
 import app.aldune.core.JsonSupport.parseObject
 import app.aldune.core.JsonSupport.string
 import kotlinx.serialization.json.JsonArray
+import kotlinx.serialization.json.JsonNull
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 import java.time.Instant
@@ -44,6 +45,64 @@ object SyncEnvelopeCodec {
     }
 
     fun deserialize(bytes: ByteArray): SyncEnvelope = deserialize(String(bytes, Charsets.UTF_8))
+
+    /**
+     * Cifra una nota en un sobre nuevo, con nonce aleatorio. Lo que se cifra es el texto base64 del
+     * JSON de la nota (no el JSON), igual que `SyncEnvelopeCodec.CreateNote` de Core.
+     */
+    fun createNote(note: SyncNote, key: ByteArray, deviceId: String): SyncEnvelope {
+        require(!note.isProtected || note.protectedContent != null) {
+            "A protected note needs its protected content."
+        }
+        require(deviceId.isNotBlank()) { "The device id cannot be blank." }
+        val encrypted = ContentCipher.encrypt(key, base64Text(noteToJson(note)))
+        return SyncEnvelope(
+            noteId = note.id,
+            tombstone = false,
+            updatedAt = note.updatedAt,
+            deviceId = deviceId,
+            cipherText = Base64.getEncoder().encodeToString(encrypted.cipherText),
+            nonce = Base64.getEncoder().encodeToString(encrypted.nonce),
+            tag = Base64.getEncoder().encodeToString(encrypted.tag),
+        )
+    }
+
+    /** JSON del sobre (sin sangría, claves en camelCase, como lo escribe Core). */
+    fun serialize(envelope: SyncEnvelope): String = JsonObject(linkedMapOf(
+        "format" to JsonPrimitive(envelope.format),
+        "noteId" to JsonPrimitive(envelope.noteId.toString()),
+        "tombstone" to JsonPrimitive(envelope.tombstone),
+        "updatedAt" to JsonPrimitive(JsonSupport.formatDate(envelope.updatedAt)),
+        "deviceId" to JsonPrimitive(envelope.deviceId),
+        "cipherText" to (envelope.cipherText?.let(::JsonPrimitive) ?: JsonNull),
+        "nonce" to (envelope.nonce?.let(::JsonPrimitive) ?: JsonNull),
+        "tag" to (envelope.tag?.let(::JsonPrimitive) ?: JsonNull),
+    )).toString()
+
+    /** El JSON de la nota que se cifra: mismas claves y orden que `SyncNotePayload` de Core. */
+    fun noteToJson(note: SyncNote): String = JsonObject(linkedMapOf(
+        "id" to JsonPrimitive(note.id.toString()),
+        "text" to JsonPrimitive(note.text),
+        "color" to JsonPrimitive(note.color),
+        "createdAt" to JsonPrimitive(JsonSupport.formatDate(note.createdAt)),
+        "updatedAt" to JsonPrimitive(JsonSupport.formatDate(note.updatedAt)),
+        "state" to JsonPrimitive(note.state),
+        "screenOrigin" to JsonPrimitive(note.screenOrigin),
+        "tags" to JsonArray(note.tags.map(::JsonPrimitive)),
+        "isProtected" to JsonPrimitive(note.isProtected),
+        "protectedContent" to (note.protectedContent?.let(::protectedContentToJson) ?: JsonNull),
+        "dockPosition" to (note.dockPosition?.let(::JsonPrimitive) ?: JsonNull),
+    )).toString()
+
+    internal fun base64Text(json: String): String = Base64.getEncoder().encodeToString(json.toByteArray(Charsets.UTF_8))
+
+    internal fun protectedContentToJson(c: ProtectedNoteContent) = JsonObject(linkedMapOf(
+        "version" to JsonPrimitive(c.version),
+        "salt" to JsonPrimitive(c.salt),
+        "cipherText" to JsonPrimitive(c.cipherText),
+        "nonce" to JsonPrimitive(c.nonce),
+        "tag" to JsonPrimitive(c.tag),
+    ))
 
     /** Descifra una nota y comprueba que `id` y `updatedAt` del contenido coinciden con la cabecera. */
     fun decryptNote(envelope: SyncEnvelope, key: ByteArray): SyncNote {

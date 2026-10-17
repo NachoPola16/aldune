@@ -1,5 +1,6 @@
 package app.aldune.core
 
+import java.security.SecureRandom
 import java.util.Arrays
 import javax.crypto.Cipher
 import javax.crypto.spec.GCMParameterSpec
@@ -22,6 +23,28 @@ object ContentCipher {
     const val KEY_SIZE = 32
     const val NONCE_SIZE = 12
     const val TAG_SIZE = 16
+
+    private val random = SecureRandom()
+
+    /**
+     * Cifra el texto (UTF-8) con nonce aleatorio nuevo. El parámetro [nonce] existe para los tests
+     * con vectores (AES-GCM es determinista con nonce fijo); en producción no se pasa nunca, porque
+     * repetir un nonce con la misma clave rompe GCM.
+     */
+    fun encrypt(key: ByteArray, plainText: String, nonce: ByteArray = ByteArray(NONCE_SIZE).also(random::nextBytes)): EncryptedContent {
+        require(key.size == KEY_SIZE) { "Key must be $KEY_SIZE bytes (AES-256)." }
+        require(nonce.size == NONCE_SIZE) { "The nonce must be $NONCE_SIZE bytes." }
+        val plain = plainText.toByteArray(Charsets.UTF_8)
+        try {
+            val cipher = Cipher.getInstance("AES/GCM/NoPadding")
+            cipher.init(Cipher.ENCRYPT_MODE, SecretKeySpec(key, "AES"), GCMParameterSpec(TAG_SIZE * 8, nonce))
+            val joined = cipher.doFinal(plain)
+            val split = joined.size - TAG_SIZE
+            return EncryptedContent(joined.copyOfRange(0, split), nonce.copyOf(), joined.copyOfRange(split, joined.size))
+        } finally {
+            Arrays.fill(plain, 0)
+        }
+    }
 
     /** @throws java.security.GeneralSecurityException (AEADBadTagException) si la clave o los datos no son los que cifraron. */
     fun decrypt(key: ByteArray, encrypted: EncryptedContent): String {
