@@ -33,4 +33,13 @@
     <string name="start_over_title">¿Borrar todo en este dispositivo?</string>
     <string name="start_over_body">Las notas ilegibles se borrarán y la app empezará vacía. No se puede deshacer.</string>
     <string name="start_over_confirm">Sí, borrar y empezar de cero</string>
+    <string name="edit_checkbox">Casilla</string>
+    <string name="edit_bullet">Viñeta</string>
+    <string name="edit_outdent">Reducir sangría</string>
+    <string name="edit_indent">Aumentar sangría</string>
+    <string name="edit_move_up">Subir línea</string>
+    <string name="edit_move_down">Bajar línea</string>
+    <string name="edit_more">Más</string>
+    <string name="edit_uncheck_all">Desmarcar todo</string>
+    <string name="edit_remove_checked">Quitar hechas</string>
 </resources>

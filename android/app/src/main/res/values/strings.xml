@@ -33,4 +33,13 @@
     <string name="start_over_title">Delete everything on this device?</string>
     <string name="start_over_body">The unreadable notes will be erased and the app will start empty. This cannot be undone.</string>
     <string name="start_over_confirm">Yes, delete and start over</string>
+    <string name="edit_checkbox">Checkbox</string>
+    <string name="edit_bullet">Bullet</string>
+    <string name="edit_outdent">Decrease indent</string>
+    <string name="edit_indent">Increase indent</string>
+    <string name="edit_move_up">Move line up</string>
+    <string name="edit_move_down">Move line down</string>
+    <string name="edit_more">More</string>
+    <string name="edit_uncheck_all">Uncheck all</string>
+    <string name="edit_remove_checked">Remove checked</string>
 </resources>
