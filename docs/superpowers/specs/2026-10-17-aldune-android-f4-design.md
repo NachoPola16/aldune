@@ -93,7 +93,7 @@ búsqueda, color y etiquetas desde el menú de la nota, reordenar por arrastre, 
 
 **El editor es la parte difícil** y se diseña aquí porque `BasicTextField` de Compose no da gancho de teclado de bajo nivel como `TextBox` de WPF:
 - Estado: `TextFieldValue` (texto + selección). Toda operación de `:text` recibe `(text, caret)` y devuelve `(text, caret)`; se aplica con la selección colapsada en el caret.
-- **Enter y Retroceso del teclado virtual**: no llegan como eventos de tecla fiables. Se detectan **comparando el valor anterior con el nuevo** en `onValueChange`: una inserción
+- **Enter y Retroceso del teclado virtual**: no llegan como eventos de tecla fiables. Se detectan **comparando el valor anterior con el nuevo** (hecho con `TextFieldState` + `InputTransformation`, no con `onValueChange`: ver tarea 7 y `ANDROID_PROBES.md`): una inserción
   de exactamente `\n` en el caret equivale a Enter (se deshace y se aplica `EnterContinuation` si la línea es de lista y el caret estaba al final de la línea); un borrado de exactamente
   un carácter justo detrás de un prefijo de lista equivale a Retroceso (se aplica `RemoveOnBackspace`). Con teclado físico (tableta) se usan además `onPreviewKeyEvent` para Tab, Mayús+Tab,
   Alt+↑/↓ y Ctrl+Enter. **Esto se valida en el Pixel y en la tableta con teclados reales** (Gboard, y uno de terceros) antes de dar la tarea por buena: es el mayor riesgo técnico de F4.
@@ -129,6 +129,9 @@ desde Core y se porta **antes de la tarea de tema** (F3b, §4 tarea 5); hasta en
 - **Tarea 7 (2026-10-17):** editor con casillas, viñetas y sangría. Enter y Retroceso del teclado virtual se deducen por diferencia en `ListKeys` (`:text`, 11 pruebas en la
   JVM); probado con Gboard real en el Pixel, y los atajos físicos con eventos de tecla por adb. Sigue pendiente un teclado de terceros, uno físico real y la tableta. La técnica
   y lo aprendido están en [`docs/ANDROID_PROBES.md`](../../ANDROID_PROBES.md).
+  **Corrección posterior (2026-10-18):** con AnySoftKeyboard (teclado de terceros) la primera versión, basada en `onValueChange`/`TextFieldValue`, escribía otra vez la palabra a
+  medias tras Enter (la región de composición del teclado no coincidía con el texto reescrito). Pasó a `TextFieldState` con un `InputTransformation`, que corrige dentro de la edición del
+  teclado; verificado con Gboard y AnySoftKeyboard en el Pixel. Pendiente solo un teclado físico real.
 - **Tarea 8 (2026-10-18):** `android/strings.tsv` (clave + en/es/de/fr/pt-BR) y `android/scripts/gen_strings.py`, que genera los cinco `values*/strings.xml` y falla si falta un
   idioma. Ajustes (`SettingsScreen`, `SettingsStore` en SharedPreferences): aspecto (Sistema/Oscuro/Claro/Pastel/Medianoche), idioma (se aplica en `attachBaseContext` y recrea la
   actividad; sin AppCompat ni selector del sistema), tono de las notas nuevas, días de papelera y «mover abajo las tareas hechas» (**apagado por defecto**, decidido el 18-10, como

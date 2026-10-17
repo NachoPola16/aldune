@@ -15,6 +15,9 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawingPadding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.BasicTextField
+import androidx.compose.foundation.text.input.InputTransformation
+import androidx.compose.foundation.text.input.TextFieldState
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.MoreVert
@@ -56,7 +59,6 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.TextLayoutResult
 import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.coerceIn
-import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LifecycleEventEffect
@@ -77,42 +79,66 @@ import kotlinx.coroutines.launch
  * Editor de una nota: texto con ayudas de lista (casillas, viñetas, sangría) y guardado automático (lo hace el `ViewModel`, ver
  * `openDraft`). [key] es el id de la nota, o "" para una nota nueva.
  */
+/**
+ * Enter y Retroceso del teclado virtual. Se corrigen dentro de la propia edición del teclado (no después, en `onValueChange`): así la región
+ * de composición de teclados como AnySoftKeyboard queda coherente con el texto que reescribimos, y no vuelve a escribir la palabra a medias.
+ * Las ediciones hechas por código (barra, atajos) no pasan por aquí.
+ */
+private val ListKeysTransformation = InputTransformation {
+    val old = TextSelection(originalText.toString(), originalSelection.min, originalSelection.max)
+    val typed = TextAndCaret(asCharSequence().toString(), selection.start)
+    if (old.text == typed.text) return@InputTransformation
+    val fixed = ListKeys.resolve(old, typed) ?: return@InputTransformation
+    replace(0, length, fixed.text)
+    selection = TextRange(fixed.caret)
+}
+
 @Composable
 fun NoteEditorPane(key: String, viewModel: NotesViewModel, onBack: () -> Unit, showBack: Boolean) {
-    var value by remember(key) { mutableStateOf(TextFieldValue("")) }
+    val state = remember(key) { TextFieldState() }
     var loaded by remember(key) { mutableStateOf(false) }
     var options by remember(key) { mutableStateOf<NotesViewModel.NoteOptions?>(null) }
     val scope = rememberCoroutineScope()
-    var layout by remember(key) { mutableStateOf<TextLayoutResult?>(null) }
+    var layout by remember(key) { mutableStateOf<(() -> TextLayoutResult?)?>(null) }
     // Toque pendiente sobre el texto. No se aplica en el mismo evento: el campo, al recibir ese mismo toque, emite el texto
     // anterior con el cursor nuevo y pisaría el cambio; se espera al siguiente fotograma (ver LaunchedEffect de abajo).
     var tap by remember(key) { mutableStateOf<Offset?>(null) }
 
     LaunchedEffect(key) {
-        value = TextFieldValue(viewModel.openDraft(key))
+        val text = viewModel.openDraft(key)
+        state.edit {
+            replace(0, length, text)
+            selection = TextRange(0)
+        }
         loaded = true
+    }
+    // Único punto por el que el texto llega al guardado: así ningún camino (teclado, barra, atajo, toque) se lo salta.
+    LaunchedEffect(key) {
+        snapshotFlow { state.text.toString() }.collect { if (loaded) viewModel.updateDraft(key, it) }
     }
     // Al salir de la nota (otra nota, atrás, el panel se destruye) y al pasar la app a segundo plano.
     DisposableEffect(key) { onDispose { viewModel.flushDraft(key) } }
     LifecycleEventEffect(Lifecycle.Event.ON_STOP) { viewModel.flushAll() }
 
-    /** Único punto por el que cambia el valor: así ningún camino (teclado, barra, atajo, toque) se salta el guardado. */
-    fun commit(next: TextFieldValue) {
-        val changed = next.text != value.text
-        value = next
-        if (loaded && changed) viewModel.updateDraft(key, next.text)
+    fun text() = state.text.toString()
+
+    fun commit(text: String, selection: TextRange) {
+        state.edit {
+            replace(0, length, text)
+            this.selection = selection.coerceIn(0, text.length)
+        }
     }
 
-    fun commit(edit: TextAndCaret) = commit(TextFieldValue(edit.text, TextRange(edit.caret)))
+    fun commit(edit: TextAndCaret) = commit(edit.text, TextRange(edit.caret))
 
-    fun caret() = value.selection.min
+    fun caret() = state.selection.min
 
     // Con una selección, la sangría afecta a todas las líneas que toca y la selección se conserva.
     fun shift(lines: (String, Int, Int) -> app.aldune.text.SelectionEdit, single: (String, Int) -> TextAndCaret) {
-        val s = value.selection
-        if (s.collapsed) return commit(single(value.text, s.start))
-        val e = lines(value.text, s.min, s.length)
-        commit(TextFieldValue(e.text, TextRange(e.selectionStart, e.selectionStart + e.selectionLength)))
+        val s = state.selection
+        if (s.collapsed) return commit(single(text(), s.start))
+        val e = lines(text(), s.min, s.length)
+        commit(e.text, TextRange(e.selectionStart, e.selectionStart + e.selectionLength))
     }
 
     fun indent() = shift(ListIndent::indentLines, ListIndent::indent)
@@ -120,31 +146,31 @@ fun NoteEditorPane(key: String, viewModel: NotesViewModel, onBack: () -> Unit, s
     fun outdent() = shift(ListIndent::outdentLines, ListIndent::outdent)
 
     fun move(direction: LineDirection) {
-        LineMovement.move(value.text, caret(), direction)?.let { commit(it) }
+        LineMovement.move(text(), caret(), direction)?.let { commit(it) }
     }
 
     val slack = with(LocalDensity.current) { 12.dp.toPx() }
 
-    val reorderOnCheck by viewModel.settings.collectAsStateWithLifecycle()
-    val settleChecked = reorderOnCheck.reorderOnCheck
+    val settings by viewModel.settings.collectAsStateWithLifecycle()
+    val settleChecked = settings.reorderOnCheck
 
     /**
      * Marca o desmarca la casilla de [glyph] y, con el ajuste «mover abajo las tareas hechas», la recoloca en su lista. Al tocar, el cursor
      * sigue a su línea; con Ctrl+Enter se queda en el mismo sitio de la pantalla, como en Windows, para poder marcar una lista seguida.
      */
     fun toggleTask(glyph: Int, keepCaretPosition: Boolean) {
-        val toggled = TaskLines.toggleCheckboxAt(value.text, glyph) ?: return
-        val sel = value.selection
-        if (!settleChecked) return commit(TextFieldValue(toggled, sel))
+        val toggled = TaskLines.toggleCheckboxAt(text(), glyph) ?: return
+        val sel = state.selection
+        if (!settleChecked) return commit(toggled, sel)
         val edit = TaskLists.settleToggled(toggled, glyph)
         val moved = if (keepCaretPosition) sel else TextRange(edit.mapIndex(sel.start), edit.mapIndex(sel.end))
-        commit(TextFieldValue(edit.text, moved.coerceIn(0, edit.text.length)))
+        commit(edit.text, moved)
     }
 
     LaunchedEffect(tap) {
         val position = tap ?: return@LaunchedEffect
         withFrameNanos { }
-        toggleCheckboxAtTap(value.text, layout, position, slack)?.let { toggleTask(it, keepCaretPosition = false) }
+        toggleCheckboxAtTap(text(), layout?.invoke(), position, slack)?.let { toggleTask(it, keepCaretPosition = false) }
         tap = null
     }
 
@@ -163,19 +189,9 @@ fun NoteEditorPane(key: String, viewModel: NotesViewModel, onBack: () -> Unit, s
         }
         options?.let { current -> NoteOptionsDialog(current, viewModel, onClose = { options = null }) }
         BasicTextField(
-            value = value,
-            onValueChange = { typed ->
-                // Enter y Retroceso del teclado virtual llegan como texto, no como tecla: se deducen por diferencia.
-                val old = value
-                val fixed = if (typed.text != old.text) {
-                    ListKeys.resolve(
-                        TextSelection(old.text, old.selection.min, old.selection.max),
-                        TextAndCaret(typed.text, typed.selection.start),
-                    )
-                } else null
-                if (fixed != null) commit(fixed) else commit(typed)
-            },
-            onTextLayout = { layout = it },
+            state = state,
+            inputTransformation = ListKeysTransformation,
+            onTextLayout = { getResult -> layout = getResult },
             modifier = Modifier
                 .weight(1f)
                 .fillMaxWidth()
@@ -204,7 +220,7 @@ fun NoteEditorPane(key: String, viewModel: NotesViewModel, onBack: () -> Unit, s
                         }
                         // Ctrl+Enter marca la tarea de la línea; en una línea que no lo es, Enter normal.
                         event.isCtrlPressed && (event.key == Key.Enter || event.key == Key.NumPadEnter) -> {
-                            val glyph = TaskLists.checkboxOnLine(value.text, caret())
+                            val glyph = TaskLists.checkboxOnLine(text(), caret())
                             if (glyph != null) toggleTask(glyph, keepCaretPosition = true)
                             glyph != null
                         }
@@ -216,17 +232,17 @@ fun NoteEditorPane(key: String, viewModel: NotesViewModel, onBack: () -> Unit, s
         )
         HorizontalDivider()
         EditBar(
-            text = value.text,
-            onCheckbox = { commit(TaskLines.toggleTaskLineAt(value.text, caret())) },
-            onBullet = { commit(BulletLines.toggleBulletLineAt(value.text, caret())) },
+            text = state.text.toString(),
+            onCheckbox = { commit(TaskLines.toggleTaskLineAt(text(), caret())) },
+            onBullet = { commit(BulletLines.toggleBulletLineAt(text(), caret())) },
             onOutdent = ::outdent,
             onIndent = ::indent,
             onMoveUp = { move(LineDirection.Up) },
             onMoveDown = { move(LineDirection.Down) },
-            onUncheckAll = { commit(TextFieldValue(TaskLists.uncheckAll(value.text).text, value.selection)) },
+            onUncheckAll = { commit(TaskLists.uncheckAll(text()).text, state.selection) },
             onRemoveChecked = {
-                val edit = TaskLists.removeChecked(value.text)
-                commit(TextFieldValue(edit.text, TextRange(edit.mapIndex(value.selection.start), edit.mapIndex(value.selection.end))))
+                val edit = TaskLists.removeChecked(text())
+                commit(edit.text, TextRange(edit.mapIndex(state.selection.start), edit.mapIndex(state.selection.end)))
             },
         )
     }

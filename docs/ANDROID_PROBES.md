@@ -52,7 +52,8 @@ Resultado el 2026-10-17, Pixel 10a, Android 17, Gboard en español:
 | Alt+↑ | sube la línea | ok |
 | Ctrl+Enter | marca la tarea de la línea | ok |
 
-No probado aún: un teclado de terceros, un teclado físico real, la tableta, rotar y pantalla dividida.
+Teclado de terceros: AnySoftKeyboard 1.13 (F-Droid; `adb install`, `ime enable`/`ime set`; al acabar `ime set` con Gboard y `adb uninstall`) también pasa Enter,
+Enter en vacío y Retroceso. No probado aún: un teclado físico real, la tableta, rotar y pantalla dividida.
 
 ## Aprendido
 
@@ -64,3 +65,6 @@ No probado aún: un teclado de terceros, un teclado físico real, la tableta, ro
 - **El teclado al arrancar es una carrera.** Compose enfoca el primer elemento enfocable (el buscador) y pide el teclado; ocultarlo después con
   `keyboard.hide()` a veces se pierde. La solución estable es que el buscador no pueda tomar el foco hasta que se toca (`focusProperties`).
   Comprobarlo arrancando 4 veces seguidas (`force-stop` + `am start`) y mirando `mInputShown`.
+- **Un teclado de terceros puede mantener una región de composición.** Corregir Enter/Retroceso en `onValueChange` (con `TextFieldValue`) dejaba al teclado
+  re-escribiendo la palabra a medias en la línea nueva. Con `TextFieldState` y un `InputTransformation` la corrección va dentro de la propia edición del
+  teclado y no hay desajuste. Probar siempre con Gboard **y** un teclado de terceros; Gboard solo no lo habría descubierto.
