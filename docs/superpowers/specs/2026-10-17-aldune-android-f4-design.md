@@ -109,6 +109,18 @@ búsqueda, color y etiquetas desde el menú de la nota, reordenar por arrastre, 
 Los colores de nota: `NoteThemes` + `NoteColorDerivation` de `:text` (ya hechos y verificados). **La paleta de la app (chrome)** necesita `AppPalette`/`AspectPalettes`: se genera sus vectores
 desde Core y se porta **antes de la tarea de tema** (F3b, §4 tarea 5); hasta entonces la app usa Material 3 sencillo para no bloquear las demás tareas. No Material You (decisión del usuario).
 
+### 2.4 Hecho (2026-10-17): tareas 1, 3 y 4
+
+- **Tarea 1:** raíz Gradle común (wrapper con Gradle 9.6.0 fijado por hash, AGP 9.4.1, Kotlin 2.4.21, catálogo de versiones), módulo `app` que arranca en el
+  Pixel 10a (Android 17). La variante de depuración lleva `applicationIdSuffix ".debug"`: las pruebas instrumentadas desinstalan su app al acabar y así nunca
+  tocan una instalación con notas reales.
+- **Tarea 3:** Room v1 con `note`, `tombstone`, `sync_base`, `reminder`; **`sync_conflict` se deja para F5** (su forma depende del motor; entrará con la migración
+  1→2). Fechas como texto ISO (los instantes de sync llevan hasta 100 ns). `RoomNoteStore` + 8 pruebas en el dispositivo y la prueba de migración.
+- **Tarea 4:** `AesGcmNoteCipher` y `DataKeyManager` en `:domain` (JVM, probados con un doble del Keystore); `AndroidKeystoreKeyWrapper` en `app`
+  (StrongBox si existe; en el Pixel, clave en hardware seguro y 29 ms para desenvolver) y `AppContainer.open()` → `Ready` o `KeyLost`. Regla: sin clave
+  recuperable **nunca** se genera otra ni se borra nada; solo «empezar de cero» (borra datos → fichero → clave del Keystore, en ese orden). El fichero de la
+  clave vive en `noBackupFilesDir`. Falta la pantalla del aviso (tarea 6-8).
+
 ## 3. Verificación (puertas)
 
 1. `gradle test` verde en todos los módulos JVM, **incluidos los actuales sin perder ninguno**.
