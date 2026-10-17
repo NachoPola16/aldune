@@ -15,7 +15,7 @@ notas como ventanas propias, sincronización opcional cifrada de extremo a extre
 - `src/Aldune.SyncServer`: servidor de sync (ASP.NET Core minimal API, Docker).
 - `android/core`: núcleo del futuro cliente Android en **Kotlin/JVM puro** (formato de sync, cifrado, notas protegidas, códigos de perfil).
   Es un port del formato de `Aldune.Core`, no código compartido: su contrato son los vectores de `tests/vectors/` (ver su `README.md`).
-  Se prueba con `cd android/core && gradle test` (JDK 21; Gradle 8.14 no admite Java 26, que es el de este PC).
+  Se prueba con `cd android/core && gradle test` (JDK 21; Gradle 8.14 no admite Java 26, que es el de este PC). En este PC: JDK 21 en `C:\Program Files\Eclipse Adoptium\jdk-21.0.12.101-hotspot` y Gradle 8.14.3 en `C:\Tools\gradle-8.14.3` (fuera del PATH: exportar `JAVA_HOME` y `PATH` en el momento). `android/sync` igual (`gradle test`).
 - `tests/Aldune.Core.Tests`: xUnit. `tests/Aldune.SyncServer.Tests`: el servidor de sync con WebApplicationFactory.
   `tests/Aldune.Ui.SmokeTests`: prueba de UI con ventanas reales.
 
