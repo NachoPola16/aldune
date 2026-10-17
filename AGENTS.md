@@ -13,6 +13,9 @@ notas como ventanas propias, sincronización opcional cifrada de extremo a extre
   Todo lo que se pueda probar va aquí.
 - `src/Aldune`: la app WPF (`Windowing/`, `Interop/` para Win32, `Resources/Strings.cs`).
 - `src/Aldune.SyncServer`: servidor de sync (ASP.NET Core minimal API, Docker).
+- `android/core`: núcleo del futuro cliente Android en **Kotlin/JVM puro** (formato de sync, cifrado, notas protegidas, códigos de perfil).
+  Es un port del formato de `Aldune.Core`, no código compartido: su contrato son los vectores de `tests/vectors/` (ver su `README.md`).
+  Se prueba con `cd android/core && gradle test` (JDK 21; Gradle 8.14 no admite Java 26, que es el de este PC).
 - `tests/Aldune.Core.Tests`: xUnit. `tests/Aldune.SyncServer.Tests`: el servidor de sync con WebApplicationFactory.
   `tests/Aldune.Ui.SmokeTests`: prueba de UI con ventanas reales.
 
@@ -45,6 +48,9 @@ Los 4 avisos CA1416 de `DatabaseKeyProvider` (DPAPI) son conocidos; no debe apar
 - **Lógica nueva en Core con test primero** (TDD). La UI se verifica con sondas (ver abajo).
 - **Codificación**: los `.cs`/`.xaml` llevan BOM UTF-8; la documentación, no. `.gitattributes` normaliza
   los saltos de línea a LF: no hace falta convertirlos a mano, pero no hay que mezclar dos BOM.
+- **Móvil (Android)**: Kotlin nativo, no MAUI (F-Droid no construye .NET hoy; ver `docs/MOBILE_PORT.md` §13). `minSdk` 26, `targetSdk` 36.
+  El formato de sync se fija con `tests/vectors/` y lo comprueban **los dos lados** (`SyncVectorsTests` en C#, `android/core` en Kotlin): no
+  se cambia el formato ni se regeneran los vectores sin pensar en las versiones instaladas. `android/core` no depende de Android.
 - **Compatibilidad de datos**: un `settings.json` antiguo tiene que cargar sin migración (valores por
   defecto que funcionen cuando falta un campo; los enums se escriben como número). El formato de sync
   es el **4**: no subirlo sin necesidad, porque las versiones anteriores rechazan lo que no entienden.

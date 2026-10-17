@@ -52,6 +52,21 @@ Los códigos antiguos (`fanote-profile-v1:` / `-v2:`) se siguen aceptando al imp
 **Orden de versiones (`versionOrder`).** Se compara primero `updatedAt` (el instante, sin importar el desfase) y, en empate,
 `deviceId` por orden ordinal (unidades UTF-16 una a una, como `String.CompareOrdinal`; no cultural, y no por punto de código). El signo esperado de `Compare(a, b)` va en `expectedSign`.
 
+## Detalles que salieron al portar a Kotlin (2026-10-17)
+
+- **`expected` y `envelopeJson`/`payloadJson` escriben las fechas distinto:** `expected` lleva siempre 7 decimales
+  (`...15.5000000+00:00`) y lo cifrado las recorta (`...15.5+00:00`). Compárense **como instantes**, no como texto.
+- **El código de perfil se lee distinguiendo mayúsculas** (`Version`, `Key`…; uno en camelCase se rechaza), a diferencia del sobre, que
+  se lee sin distinguirlas.
+- **Si el sobre no trae `format`, vale 4** (es el valor por defecto de la propiedad en Core).
+- **Contraseña de nota protegida:** mínimo 4 caracteres y no en blanco; se codifica en UTF-8 antes de PBKDF2.
+- **URL del código de perfil:** Core la normaliza con `Uri.ToString()` (esquema y host en minúsculas, ruta vacía → `/`, puerto por defecto fuera).
+- **Orden por `deviceId`:** ningún vector distingue unidades UTF-16 de puntos de código; el cliente Kotlin lo cubre con un test propio
+  (emoji frente a U+FF5E). Tampoco hay vectores de los prefijos `fanote-profile-v1/v2:` ni del contenido descifrado de un borrado
+  (`{"id": noteId, "deletedAt": updatedAt}`; confirmado reproduciendo byte a byte el cifrado).
+- **Dos clientes, un contrato:** `kotlin-output.json` lo escribe `android/core` y lo lee Core (`SyncVectorsTests`). Cambia en cada ejecución del
+  test de Kotlin (nonces y sales aleatorios): pendiente de escribirlo solo con una variable de entorno, como hace Core con el suyo.
+
 ## Lo que estos vectores NO cubren (y hay que cubrir antes de dar el motor por compatible)
 
 El **algoritmo** de `SyncService.Synchronize` (qué se sube, qué se baja, cuándo hay conflicto, las «bases» por nota, el alcance

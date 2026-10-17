@@ -4450,3 +4450,16 @@ Publicado como **1.6.1** con todo lo de esta sección.
   repite tras el siguiente diseño (hasta 3 veces). Verificado forzando el desplazamiento a posiciones equivocadas (56/56
   corregidas) y sin cambio en el caso normal. Cada corrección se anota en `dock.log` (categoría `find`) para poder ver la
   causa si vuelve a pasar.
+
+## Cliente Android: arranque (2026-10-17)
+
+Sin versión nueva de Windows. Se decidió el rumbo del cliente móvil y se hizo la primera pieza (ver `docs/MOBILE_PORT.md` §13):
+
+- **Kotlin nativo en vez de MAUI**, para poder publicar en F-Droid (el foro de F-Droid no tiene ninguna app .NET aceptada y el workload
+  `maui-android` no se compila desde fuente). `minSdk` 26 (por `PBKDF2WithHmacSHA256`, que Android trae desde la API 26), `targetSdk` 36.
+  Dispositivos: Pixel 10a y Lenovo Tab P11. Una sola app adaptativa para móvil y tableta.
+- **`tests/vectors/`**: vectores del formato de sync 4 generados por Core y verificados en cada ejecución (`SyncVectorsTests`), más el fichero que
+  escribe el cliente Kotlin. Core lee los dos.
+- **`android/core`**: núcleo Kotlin/JVM puro del formato (82 tests). Hecho por una sesión de nube. Gradle no corre en este PC (Java 26).
+- Resto de la sesión: 1.7.9 y 1.7.10 publicadas, repo de GitHub recreado (solo existe la release 1.7.x vigente), tests del servidor de sync.
+

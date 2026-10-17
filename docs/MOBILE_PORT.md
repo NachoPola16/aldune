@@ -504,3 +504,17 @@ Lo que **no** se hace en ninguno (igual que antes): dock, abanico, ventanas flot
 4. **Pendiente:** `applicationId` y nombre (comprobar que «Aldune» está libre en F-Droid e IzzyOnDroid), y la versión exacta de Android de la tableta.
 5. Antes de escribir producto: **una revisión del plan por otra IA con ojos frescos** (`MOBILE_PORT_REVIEW.md` §7), con la pregunta
    añadida de si Kotlin con vectores es de verdad más barato que MAUI.
+
+### 13.5 Estado (2026-10-17)
+
+- **Hecho:** vectores de compatibilidad (`tests/vectors/`, verificados por `SyncVectorsTests`) y el **núcleo Kotlin** `android/core`
+  (clave, sobres, borrados, notas protegidas, códigos de perfil, orden de versiones; 82 tests contra los vectores; informe en
+  [`INFORME-ANDROID-CORE.md`](INFORME-ANDROID-CORE.md)). Con el nonce de cada vector Kotlin reproduce byte a byte el cifrado de C#, y Core
+  lee lo que escribe Kotlin. Hecho por una sesión de nube (Sonnet) y revisado y fusionado aquí.
+- **No hecho:** motor de sync en Kotlin (`SyncService`: conflictos, bases, alcance, borrados), transportes (HTTP, WebDAV, carpeta no),
+  base de datos, interfaz, widget, notificaciones, nombre de paquete. Nada probado aún en un Android real (el cifrado PBKDF2 de 600.000
+  iteraciones solo está verificado en JDK 21).
+- **Siguiente:** (1) chat de diseño: spec de producto y plan de fases (ver el prompt de arranque en el historial del proyecto);
+  (2) **vectores de escenario** del motor de sync generados desde `Aldune.Core`; (3) motor de sync en Kotlin contra esos vectores
+  (encaja en una sesión de nube); (4) app Compose adaptativa.
+
