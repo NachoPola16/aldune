@@ -1,0 +1,61 @@
+key	en	es	de	fr	pt-BR
+app_name	Aldune	Aldune	Aldune	Aldune	Aldune
+new_note_title	New note	Nota nueva	Neue Notiz	Nouvelle note	Nova nota
+tab_active	Notes	Notas	Notizen	Notes	Notas
+tab_archived	Archived	Archivadas	Archiviert	Archivées	Arquivadas
+tab_trash	Trash	Papelera	Papierkorb	Corbeille	Lixeira
+search_hint	Search notes	Buscar notas	Notizen durchsuchen	Rechercher des notes	Pesquisar notas
+clear_search	Clear search	Borrar búsqueda	Suche löschen	Effacer la recherche	Limpar pesquisa
+new_note	New note	Nota nueva	Neue Notiz	Nouvelle note	Nova nota
+back	Back	Atrás	Zurück	Retour	Voltar
+undo	Undo	Deshacer	Rückgängig	Annuler	Desfazer
+note_archived	Note archived	Nota archivada	Notiz archiviert	Note archivée	Nota arquivada
+note_trashed	Note moved to trash	Nota enviada a la papelera	Notiz in den Papierkorb verschoben	Note déplacée dans la corbeille	Nota movida para a lixeira
+note_restored	Note restored	Nota restaurada	Notiz wiederhergestellt	Note restaurée	Nota restaurada
+restore	Restore	Restaurar	Wiederherstellen	Restaurer	Restaurar
+archive	Archive	Archivar	Archivieren	Archiver	Arquivar
+move_to_trash	Move to trash	Mover a la papelera	In den Papierkorb	Mettre à la corbeille	Mover para a lixeira
+delete_forever	Delete forever	Borrar para siempre	Endgültig löschen	Supprimer définitivement	Excluir definitivamente
+delete_forever_title	Delete this note forever?	¿Borrar esta nota para siempre?	Diese Notiz endgültig löschen?	Supprimer cette note définitivement ?	Excluir esta nota definitivamente?
+delete_forever_body	It cannot be recovered on this device.	No se podrá recuperar en este dispositivo.	Sie kann auf diesem Gerät nicht wiederhergestellt werden.	Elle ne pourra pas être récupérée sur cet appareil.	Ela não poderá ser recuperada neste dispositivo.
+cancel	Cancel	Cancelar	Abbrechen	Annuler	Cancelar
+empty_active	No notes yet. Tap + to write the first one.	Aún no hay notas. Toca + para escribir la primera.	Noch keine Notizen. Tippe auf +, um die erste zu schreiben.	Aucune note pour l’instant. Touchez + pour écrire la première.	Ainda não há notas. Toque em + para escrever a primeira.
+empty_archived	Nothing archived.	No hay nada archivado.	Nichts archiviert.	Rien d’archivé.	Nada arquivado.
+empty_trash	The trash is empty.	La papelera está vacía.	Der Papierkorb ist leer.	La corbeille est vide.	A lixeira está vazia.
+empty_search	No note matches your search.	Ninguna nota coincide con la búsqueda.	Keine Notiz entspricht deiner Suche.	Aucune note ne correspond à votre recherche.	Nenhuma nota corresponde à pesquisa.
+select_a_note	Select a note, or tap + to write one.	Elige una nota, o toca + para escribir una.	Wähle eine Notiz aus oder tippe auf +, um eine zu schreiben.	Choisissez une note ou touchez + pour en écrire une.	Escolha uma nota ou toque em + para escrever uma.
+tasks_progress	%1$d/%2$d	%1$d/%2$d	%1$d/%2$d	%1$d/%2$d	%1$d/%2$d
+loading	Loading…	Cargando…	Wird geladen …	Chargement…	Carregando…
+key_lost_title	The notes on this device cannot be read	No se pueden leer las notas de este dispositivo	Die Notizen auf diesem Gerät können nicht gelesen werden	Les notes de cet appareil sont illisibles	Não é possível ler as notas deste dispositivo
+key_lost_body	The key that protects them is gone (it can happen after restoring a backup or resetting the lock screen). Nothing has been deleted. If you use sync, starting over and syncing again will bring your notes back.	La clave que las protege ya no está (puede pasar al restaurar una copia o al cambiar el bloqueo de pantalla). No se ha borrado nada. Si usas la sincronización, empezar de cero y sincronizar otra vez recuperará tus notas.	Der Schlüssel, der sie schützt, ist weg (das kann nach dem Wiederherstellen einer Sicherung oder dem Zurücksetzen der Displaysperre passieren). Es wurde nichts gelöscht. Wenn du die Synchronisierung nutzt, bringt dich ein Neustart mit erneuter Synchronisierung deine Notizen zurück.	La clé qui les protège a disparu (cela peut arriver après la restauration d’une sauvegarde ou la réinitialisation du verrouillage de l’écran). Rien n’a été supprimé. Si vous utilisez la synchronisation, repartir de zéro puis synchroniser à nouveau récupérera vos notes.	A chave que as protege sumiu (pode acontecer ao restaurar um backup ou redefinir o bloqueio de tela). Nada foi excluído. Se você usa a sincronização, recomeçar do zero e sincronizar de novo trará suas notas de volta.
+start_over	Start over	Empezar de cero	Neu beginnen	Repartir de zéro	Recomeçar do zero
+start_over_title	Delete everything on this device?	¿Borrar todo en este dispositivo?	Alles auf diesem Gerät löschen?	Tout supprimer sur cet appareil ?	Excluir tudo neste dispositivo?
+start_over_body	The unreadable notes will be erased and the app will start empty. This cannot be undone.	Las notas ilegibles se borrarán y la app empezará vacía. No se puede deshacer.	Die unlesbaren Notizen werden gelöscht und die App startet leer. Das lässt sich nicht rückgängig machen.	Les notes illisibles seront effacées et l’application repartira vide. Cette action est irréversible.	As notas ilegíveis serão apagadas e o app começará vazio. Isso não pode ser desfeito.
+start_over_confirm	Yes, delete and start over	Sí, borrar y empezar de cero	Ja, löschen und neu beginnen	Oui, supprimer et repartir de zéro	Sim, excluir e recomeçar
+edit_checkbox	Checkbox	Casilla	Kontrollkästchen	Case à cocher	Caixa de seleção
+edit_bullet	Bullet	Viñeta	Aufzählungszeichen	Puce	Marcador
+edit_outdent	Decrease indent	Reducir sangría	Einzug verkleinern	Réduire le retrait	Diminuir recuo
+edit_indent	Increase indent	Aumentar sangría	Einzug vergrößern	Augmenter le retrait	Aumentar recuo
+edit_move_up	Move line up	Subir línea	Zeile nach oben	Monter la ligne	Mover linha para cima
+edit_move_down	Move line down	Bajar línea	Zeile nach unten	Descendre la ligne	Mover linha para baixo
+edit_more	More	Más	Mehr	Plus	Mais
+edit_uncheck_all	Uncheck all	Desmarcar todo	Alle abwählen	Tout décocher	Desmarcar tudo
+edit_remove_checked	Remove checked	Quitar hechas	Erledigte entfernen	Supprimer les tâches faites	Remover concluídas
+settings	Settings	Ajustes	Einstellungen	Réglages	Configurações
+settings_appearance	Appearance	Aspecto	Erscheinungsbild	Apparence	Aparência
+appearance_dark	Dark	Oscuro	Dunkel	Sombre	Escuro
+appearance_light	Light	Claro	Hell	Clair	Claro
+appearance_system	Follow the system	Según el sistema	Wie das System	Selon le système	Seguir o sistema
+appearance_pastel	Pastel	Pastel	Pastell	Pastel	Pastel
+appearance_midnight	Midnight	Medianoche	Mitternacht	Minuit	Meia-noite
+settings_language	Language	Idioma	Sprache	Langue	Idioma
+language_system	System default	Idioma del sistema	Systemsprache	Langue du système	Idioma do sistema
+settings_notes	Notes	Notas	Notizen	Notes	Notas
+new_note_tone	Color of new notes	Color de las notas nuevas	Farbe neuer Notizen	Couleur des nouvelles notes	Cor das notas novas
+tone_light	Light colors	Colores claros	Helle Farben	Couleurs claires	Cores claras
+tone_dark	Dark colors	Colores oscuros	Dunkle Farben	Couleurs sombres	Cores escuras
+trash_days	Days in the trash	Días en la papelera	Tage im Papierkorb	Jours dans la corbeille	Dias na lixeira
+trash_days_value	%1$d days	%1$d días	%1$d Tage	%1$d jours	%1$d dias
+reorder_on_check	Move checked tasks down	Mover abajo las tareas hechas	Erledigte Aufgaben nach unten	Descendre les tâches faites	Mover tarefas concluídas para baixo
+reorder_on_check_hint	Off: a task stays where it is when you check it.	Apagado: una tarea se queda donde está al marcarla.	Aus: Eine Aufgabe bleibt beim Abhaken an ihrem Platz.	Désactivé : une tâche reste en place quand on la coche.	Desligado: a tarefa fica onde está ao marcá-la.
+about_version	Version %1$s	Versión %1$s	Version %1$s	Version %1$s	Versão %1$s

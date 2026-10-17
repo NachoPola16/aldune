@@ -42,4 +42,22 @@
     <string name="edit_more">Más</string>
     <string name="edit_uncheck_all">Desmarcar todo</string>
     <string name="edit_remove_checked">Quitar hechas</string>
+    <string name="settings">Ajustes</string>
+    <string name="settings_appearance">Aspecto</string>
+    <string name="appearance_dark">Oscuro</string>
+    <string name="appearance_light">Claro</string>
+    <string name="appearance_system">Según el sistema</string>
+    <string name="appearance_pastel">Pastel</string>
+    <string name="appearance_midnight">Medianoche</string>
+    <string name="settings_language">Idioma</string>
+    <string name="language_system">Idioma del sistema</string>
+    <string name="settings_notes">Notas</string>
+    <string name="new_note_tone">Color de las notas nuevas</string>
+    <string name="tone_light">Colores claros</string>
+    <string name="tone_dark">Colores oscuros</string>
+    <string name="trash_days">Días en la papelera</string>
+    <string name="trash_days_value">%1$d días</string>
+    <string name="reorder_on_check">Mover abajo las tareas hechas</string>
+    <string name="reorder_on_check_hint">Apagado: una tarea se queda donde está al marcarla.</string>
+    <string name="about_version">Versión %1$s</string>
 </resources>

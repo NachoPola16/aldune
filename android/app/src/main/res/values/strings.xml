@@ -42,4 +42,22 @@
     <string name="edit_more">More</string>
     <string name="edit_uncheck_all">Uncheck all</string>
     <string name="edit_remove_checked">Remove checked</string>
+    <string name="settings">Settings</string>
+    <string name="settings_appearance">Appearance</string>
+    <string name="appearance_dark">Dark</string>
+    <string name="appearance_light">Light</string>
+    <string name="appearance_system">Follow the system</string>
+    <string name="appearance_pastel">Pastel</string>
+    <string name="appearance_midnight">Midnight</string>
+    <string name="settings_language">Language</string>
+    <string name="language_system">System default</string>
+    <string name="settings_notes">Notes</string>
+    <string name="new_note_tone">Color of new notes</string>
+    <string name="tone_light">Light colors</string>
+    <string name="tone_dark">Dark colors</string>
+    <string name="trash_days">Days in the trash</string>
+    <string name="trash_days_value">%1$d days</string>
+    <string name="reorder_on_check">Move checked tasks down</string>
+    <string name="reorder_on_check_hint">Off: a task stays where it is when you check it.</string>
+    <string name="about_version">Version %1$s</string>
 </resources>
