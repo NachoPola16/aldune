@@ -23,3 +23,6 @@ Rama: `nube/android-core` (desde `main` 74e89e0). Módulo: `android/core` (Kotli
   - El JSON de la nota que escribe Kotlin es igual (mismas claves, mismo orden) que `payloadJson` de los vectores.
   - Fechas: formato `2026-10-17T10:30:15.5+00:00` (desfase con `+00:00`, nunca `Z`, fracción recortada y máx. 7 dígitos). Java 11 no tiene nada que cambie esto en Android.
   - Los `double` se escriben con `Double.toString` de Java: un `2.0` sale como `2.0` (C# escribe `2`). Es JSON válido y Core lo lee igual.
+- [x] 4. Borrados (`createTombstone`, `isAuthenticTombstone`): 7 tests verdes. "borrado firmado" → auténtico; "borrado con fecha falsificada" → no auténtico.
+  - Con el nonce del vector, Kotlin reproduce byte a byte el cifrado del borrado firmado, lo que confirma que el contenido es exactamente `{"id":<noteId>,"deletedAt":<updatedAt>}` (texto base64 del JSON).
+  - Cualquier fallo al verificar (sin contenido, base64 roto, etiqueta, JSON raro, `tombstone=false`) devuelve `false`, nunca lanza: igual que Core.

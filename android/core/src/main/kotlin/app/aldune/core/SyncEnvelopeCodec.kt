@@ -67,6 +67,53 @@ object SyncEnvelopeCodec {
         )
     }
 
+    /**
+     * Aviso de borrado firmado: lleva cifrado con la clave `{"id": ..., "deletedAt": ...}` (texto base64
+     * del JSON, como las notas). Sin esa firma, quien pueda escribir en el almacén fabricaría borrados.
+     */
+    fun createTombstone(noteId: UUID, deletedAt: OffsetDateTime, key: ByteArray, deviceId: String): SyncEnvelope {
+        require(deviceId.isNotBlank()) { "The device id cannot be blank." }
+        val payload = JsonObject(linkedMapOf(
+            "id" to JsonPrimitive(noteId.toString()),
+            "deletedAt" to JsonPrimitive(JsonSupport.formatDate(deletedAt)),
+        )).toString()
+        val encrypted = ContentCipher.encrypt(key, base64Text(payload))
+        return SyncEnvelope(
+            noteId = noteId,
+            tombstone = true,
+            updatedAt = deletedAt,
+            deviceId = deviceId,
+            cipherText = Base64.getEncoder().encodeToString(encrypted.cipherText),
+            nonce = Base64.getEncoder().encodeToString(encrypted.nonce),
+            tag = Base64.getEncoder().encodeToString(encrypted.tag),
+        )
+    }
+
+    /**
+     * ¿Lo firmó alguien con la clave del vínculo? Solo si el contenido descifra con ella y su `id` y
+     * `deletedAt` coinciden con la cabecera. Un borrado que no lo sea nunca borra (ver docs/SYNC.md).
+     * Cualquier fallo (sin contenido, base64 roto, etiqueta que no cuadra, JSON raro) es "no auténtico".
+     */
+    fun isAuthenticTombstone(envelope: SyncEnvelope, key: ByteArray): Boolean {
+        val cipherText = envelope.cipherText
+        val nonce = envelope.nonce
+        val tag = envelope.tag
+        if (!envelope.tombstone || cipherText == null || nonce == null || tag == null) return false
+        return try {
+            val plainBase64 = ContentCipher.decrypt(key, decodeEncrypted(cipherText, nonce, tag))
+            val payload = parseObject(decodeBase64Text(plainBase64), "tombstone")
+            val id = payload.string("id")?.let(::parseUuid) ?: NIL_UUID
+            val deletedAt = payload.string("deletedAt")?.let(::parseDate) ?: return false
+            id == envelope.noteId && deletedAt.toInstant() == envelope.updatedAt.toInstant()
+        } catch (e: java.security.GeneralSecurityException) {
+            false
+        } catch (e: IllegalArgumentException) {
+            false
+        } catch (e: SyncFormatException) {
+            false
+        }
+    }
+
     /** JSON del sobre (sin sangría, claves en camelCase, como lo escribe Core). */
     fun serialize(envelope: SyncEnvelope): String = JsonObject(linkedMapOf(
         "format" to JsonPrimitive(envelope.format),
