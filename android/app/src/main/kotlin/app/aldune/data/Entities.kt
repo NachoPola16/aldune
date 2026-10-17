@@ -1,0 +1,55 @@
+package app.aldune.data
+
+import androidx.room.ColumnInfo
+import androidx.room.Entity
+import androidx.room.PrimaryKey
+
+/**
+ * Una fila de `note`. El texto va cifrado (AES-GCM, ver `AesGcmNoteCipher`) en tres columnas, como en Windows. Las fechas van como texto
+ * ISO-8601 (`Instant.toString()`), porque la sync maneja instantes con hasta 100 ns y un entero en milisegundos los redondearía y
+ * fabricaría versiones «distintas» sin que nadie edite. Las columnas de nota protegida existen ya (F7) para no migrar enseguida.
+ */
+@Entity(tableName = "note")
+class NoteEntity(
+    @PrimaryKey val id: String,
+    @ColumnInfo(typeAffinity = ColumnInfo.BLOB) val textCipher: ByteArray,
+    @ColumnInfo(typeAffinity = ColumnInfo.BLOB) val nonce: ByteArray,
+    @ColumnInfo(typeAffinity = ColumnInfo.BLOB) val tag: ByteArray,
+    val color: String,
+    val createdAt: String,
+    val updatedAt: String,
+    /** Código de `NoteState` (0 activa, 1 archivada, 2 papelera): el mismo número que viaja en sync. */
+    val state: Int,
+    /** 0 = LF, 1 = CRLF. */
+    val lineEnding: Int,
+    /** Lista JSON de etiquetas, tal como llegaron (se conserva la grafía). */
+    val tags: String,
+    val dockPosition: Double?,
+    val screenOrigin: String,
+    val syncAuthorDeviceId: String?,
+    val isProtected: Boolean = false,
+    val protectedContent: String? = null,
+)
+
+/** Borrado definitivo pendiente de firmar por la sync. */
+@Entity(tableName = "tombstone")
+class TombstoneEntity(
+    @PrimaryKey val noteId: String,
+    val deletedAt: String,
+    val deviceId: String,
+)
+
+/** Última versión que se sabe igual en los dos lados, para distinguir conflicto real de cambio de un solo lado (F5). */
+@Entity(tableName = "sync_base")
+class SyncBaseEntity(
+    @PrimaryKey val noteId: String,
+    val updatedAt: String,
+    val deviceId: String,
+)
+
+/** Un recordatorio por nota, local al dispositivo (F7). */
+@Entity(tableName = "reminder")
+class ReminderEntity(
+    @PrimaryKey val noteId: String,
+    val dueAtEpochMillis: Long,
+)
