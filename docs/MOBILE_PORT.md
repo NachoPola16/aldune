@@ -528,6 +528,7 @@ Lo que **no** se hace en ninguno (igual que antes): dock, abanico, ventanas flot
 - **F0 hecho (2026-10-17):** `tests/vectors/sync-scenarios.json` (34 escenarios del motor real, `SyncScenarioVectorsTests`), documentado en
   `tests/vectors/README.md`; sin tocar Core; 1450 tests de Core en verde.
 - **F1 hecho (2026-10-17):** `android/sync` (planSync + execute + transporte HTTP con OkHttp, 93 tests; los 34 escenarios pasan en el plan y de punta a punta). Informe: [`INFORME-ANDROID-SYNC.md`](INFORME-ANDROID-SYNC.md). Revisado aquí leyendo el planificador contra `SyncService.cs` (sin diferencias); **Gradle no se ha ejecutado en este PC** (Java 26), los 93 verdes son los del informe de la nube.
+- **F2 hecho a medias (2026-10-17):** `WebDavSyncTransport` en `android/sync` (21 tests con MockWebServer) y `ServerIntegrationTest` (5 tests contra el `Aldune.SyncServer` real) escritos pero **sin ejecutar**: la nube no pudo instalar .NET 10 y aquí no corre Gradle. Informe: [`INFORME-ANDROID-F2.md`](INFORME-ANDROID-F2.md). Pendiente: ejecutarlos (cabecera del test) en cuanto haya Android Studio/JDK 21; hasta entonces F2 no está cerrada.
 - **Siguiente (ya hecho F0 y F1; lo de abajo es el plan original):** (1) commitear F0; (2) **F1 en la nube** con el prompt de `superpowers/plans/` (motor contra esos vectores, ~10-12 $); (3) F2-F3
   (transportes, texto); (4) app Compose (F4+), que necesita Android Studio o el SDK + JDK 21 en este PC.
 - **Decidido por el usuario (2026-10-17):** `applicationId` `io.github.nachopola16.aldune`, nombre «Aldune», una clave de firma,

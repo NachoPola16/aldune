@@ -4485,4 +4485,5 @@ Sin código. Spec de producto, arquitectura y fases en `docs/superpowers/specs/2
   verde). Fijan un comportamiento curioso: un borrado remoto sin firma deja la nota en la papelera y la vuelve a subir pisándolo.
 - **F1 hecho:** `android/sync` (motor `planSync`/`execute` + transporte HTTP; 93 tests según el informe de la nube; ver
   `docs/INFORME-ANDROID-SYNC.md`). Revisado y fusionado aquí (la rama de la nube se llamó `claude/upbeat-archimedes-br02lb`).
-- **Siguiente:** WebDAV y prueba contra `Aldune.SyncServer` real (F2), luego texto/color (F3) y la app (F4).
+- **F2 a medias:** WebDAV hecho (21 tests con mock, según la nube); la prueba contra `Aldune.SyncServer` real está escrita y sin ejecutar (informe `docs/INFORME-ANDROID-F2.md`).
+- **Siguiente:** instalar Android Studio y ejecutar esa prueba; luego texto/color (F3, antes vectores desde Core) y la app (F4).

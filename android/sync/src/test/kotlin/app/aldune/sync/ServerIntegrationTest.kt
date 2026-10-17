@@ -18,7 +18,7 @@ import java.util.UUID
  * HttpSyncTransport + planSync + execute contra un `Aldune.SyncServer` **real**, arrancado a mano por quien lo lanza
  * (nunca contra datos ni servidores reales de nadie). Se salta entero si falta `aldune.server.url`:
  *
- *     ALDUNE_SYNC_TOKEN=token-de-prueba-largo ALDUNE_SYNC_DATA_DIR=$(mktemp -d) \
+ *     ALDUNE_SYNC_TOKEN=token-de-prueba-largo ALDUNE_DATA_DIR=$(mktemp -d) \
  *       ASPNETCORE_URLS=http://127.0.0.1:5099 dotnet run --project src/Aldune.SyncServer
  *     cd android/sync && gradle test --tests '*ServerIntegration*' \
  *       -Daldune.server.url=http://127.0.0.1:5099/ -Daldune.server.token=token-de-prueba-largo
