@@ -4483,4 +4483,6 @@ Sin código. Spec de producto, arquitectura y fases en `docs/superpowers/specs/2
   comprobado aquí; falta el test que lo reproduzca). Arreglar en Windows, con test primero, antes de publicar Android.
 - **F0 hecho:** `tests/vectors/sync-scenarios.json` + `SyncScenarioVectorsTests` (34 escenarios con el motor real; no se tocó Core; 1450 tests en
   verde). Fijan un comportamiento curioso: un borrado remoto sin firma deja la nota en la papelera y la vuelve a subir pisándolo.
-- **Siguiente:** commitear F0 y lanzar F1 en la nube (prompt en `docs/superpowers/plans/`).
+- **F1 hecho:** `android/sync` (motor `planSync`/`execute` + transporte HTTP; 93 tests según el informe de la nube; ver
+  `docs/INFORME-ANDROID-SYNC.md`). Revisado y fusionado aquí (la rama de la nube se llamó `claude/upbeat-archimedes-br02lb`).
+- **Siguiente:** WebDAV y prueba contra `Aldune.SyncServer` real (F2), luego texto/color (F3) y la app (F4).

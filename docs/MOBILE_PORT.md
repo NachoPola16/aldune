@@ -527,7 +527,8 @@ Lo que **no** se hace en ninguno (igual que antes): dock, abanico, ventanas flot
   **bug probable de Windows**: una protección llegada por sync vacía el archivo de una nota vinculada (spec §9.3).
 - **F0 hecho (2026-10-17):** `tests/vectors/sync-scenarios.json` (34 escenarios del motor real, `SyncScenarioVectorsTests`), documentado en
   `tests/vectors/README.md`; sin tocar Core; 1450 tests de Core en verde.
-- **Siguiente:** (1) commitear F0; (2) **F1 en la nube** con el prompt de `superpowers/plans/` (motor contra esos vectores, ~10-12 $); (3) F2-F3
+- **F1 hecho (2026-10-17):** `android/sync` (planSync + execute + transporte HTTP con OkHttp, 93 tests; los 34 escenarios pasan en el plan y de punta a punta). Informe: [`INFORME-ANDROID-SYNC.md`](INFORME-ANDROID-SYNC.md). Revisado aquí leyendo el planificador contra `SyncService.cs` (sin diferencias); **Gradle no se ha ejecutado en este PC** (Java 26), los 93 verdes son los del informe de la nube.
+- **Siguiente (ya hecho F0 y F1; lo de abajo es el plan original):** (1) commitear F0; (2) **F1 en la nube** con el prompt de `superpowers/plans/` (motor contra esos vectores, ~10-12 $); (3) F2-F3
   (transportes, texto); (4) app Compose (F4+), que necesita Android Studio o el SDK + JDK 21 en este PC.
 - **Decidido por el usuario (2026-10-17):** `applicationId` `io.github.nachopola16.aldune`, nombre «Aldune», una clave de firma,
   GitHub + IzzyOnDroid primero, Android Studio antes de F4; la tableta tiene Android 14. Detalle en la spec §8.1.
