@@ -76,7 +76,7 @@ private fun NotesScaffold(state: UiState.Ready, viewModel: NotesViewModel, onOpe
                 NoteListPane(
                     state = state, viewModel = viewModel,
                     selectedId = navigator.currentDestination?.contentKey,
-                    onOpen = openNote, onNew = { openNote(NEW_NOTE) }, onOpenSettings = onOpenSettings,
+                    onOpen = openNote, onNew = { viewModel.startNewNote(); openNote(NEW_NOTE) }, onOpenSettings = onOpenSettings,
                 )
             }
         },

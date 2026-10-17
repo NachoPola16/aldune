@@ -111,10 +111,19 @@ class NotesViewModel(application: Application) : AndroidViewModel(application) {
     /** Abre el borrador de [key] (el id de una nota, o "" para una nota nueva) y devuelve su texto actual. */
     suspend fun openDraft(key: String): String = withContext(Dispatchers.IO) {
         io.withLock {
+            // Al rotar, el panel de una nota nueva se recrea con la misma clave vacía: se sigue con el borrador que ya hay (con su id, si ya se
+            // creó la nota) en vez de abrir uno en blanco. Para empezar otra nota nueva de verdad está [startNewNote].
+            if (key.isEmpty()) drafts[key]?.let { return@withLock it.latest }
             val text = if (key.isEmpty()) "" else service?.get(key)?.text ?: ""
             drafts[key] = Draft(key.ifEmpty { null }, text, text)
             text
         }
+    }
+
+    /** Se pidió una nota nueva (el «+»): se guarda lo que hubiera y se olvida el borrador anterior de nota nueva. */
+    fun startNewNote() {
+        flushDraft("")
+        drafts.remove("")
     }
 
     /** El texto cambió: se guarda tras una pausa en la escritura. */

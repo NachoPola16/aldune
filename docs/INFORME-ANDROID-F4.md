@@ -2,7 +2,7 @@
 
 Cierra la fase F4 de [`2026-10-17-aldune-android-f4-design.md`](superpowers/specs/2026-10-17-aldune-android-f4-design.md). Todo se ha probado en el Pixel 10a
 (Android 17) por USB con la app de depuración `io.github.nachopola16.aldune.debug`. La técnica de pruebas está en [`ANDROID_PROBES.md`](ANDROID_PROBES.md).
-**La tableta (Lenovo Tab P11, Android 14) no se ha probado todavía.**
+La tableta (Lenovo TB350FU «Tab P11», Android 14, 1200×2000) se probó el 18-10 (ver más abajo).
 
 ## Estado
 
@@ -16,7 +16,7 @@ Cierra la fase F4 de [`2026-10-17-aldune-android-f4-design.md`](superpowers/spec
 | 6 | Lista adaptativa, filtros, búsqueda, reordenar, color y etiquetas por nota | hecha |
 | 7 | Editor con listas, barra, atajos, `ANDROID_PROBES.md` | hecha |
 | 8 | Ajustes, cinco idiomas | hecha (falta el color por tema de las notas nuevas) |
-| 9 | Sondas completas e informe | hecha en el Pixel; **falta la tableta** |
+| 9 | Sondas completas e informe | hecha (Pixel y tableta) |
 
 ## Verificación
 
@@ -45,6 +45,19 @@ Cierra la fase F4 de [`2026-10-17-aldune-android-f4-design.md`](superpowers/spec
 | Pantalla dividida | **simulada** con una ventana de media altura (`wm size`): usable, el editor deja ver ~1,5 líneas con el teclado abierto. No se ha probado el modo dividido real |
 | Clave perdida | probada en la tarea 4 (instrumentada y a mano), no repetida con la interfaz final |
 
+## Sondas en la tableta (Lenovo TB350FU, Android 14, Gboard de tableta)
+
+| Sonda | Resultado |
+|---|---|
+| Disposición en apaisado y en vertical | ok: lista a la izquierda y editor a la derecha en las dos orientaciones (en el hueco del editor, la barra queda sobre el teclado, que ocupa todo el ancho) |
+| Crear nota, tarea, Enter que continúa, Enter en vacío, Retroceso que quita el prefijo | ok |
+| Tab (la tecla Tab del teclado de tableta llega como tecla real) | ok: sangra la línea |
+| Arrastrar para reordenar | ok |
+| Ajustes en pantalla ancha | ok tras limitarlos a una columna centrada (antes se estiraban a todo el ancho) |
+| Rotar con una nota recién creada | **fallaba** (hallazgo 7); ok tras el arreglo |
+
+No se ha probado un teclado físico real (Bluetooth o de la funda): solo las teclas de Gboard de tableta y los eventos de tecla inyectados.
+
 ## Hallazgos (todos corregidos salvo los marcados)
 
 1. **El teclado se abría al arrancar** y tapaba el «+». Compose daba el foco inicial al buscador y ocultar el teclado después era una carrera. El buscador
@@ -57,20 +70,23 @@ Cierra la fase F4 de [`2026-10-17-aldune-android-f4-design.md`](superpowers/spec
    `SwipeToDismissBox` guarda su estado por id (`rememberSaveable`) y lo restauraba. Se repone al entrar en la composición.
 5. Los avisos («Nota archivada… Deshacer») salían con el morado por defecto de Material: ahora usan la paleta de Aldune.
 6. `lintDebug` fallaba por `setIsStrongBoxBacked` (API 28 con `minSdk` 26): ahora hay una guarda.
+7. **Al rotar con una nota recién creada con «+», el editor quedaba en blanco.** El panel se recrea con la clave de «nota nueva» (vacía), que ya no apunta a la nota;
+   si se escribía, se creaba una segunda nota. Ahora el borrador de la nota nueva sobrevive a la recreación (`startNewNote` lo reinicia al pulsar «+»).
+8. Los ajustes se estiraban a todo el ancho en la tableta: ahora, una columna centrada de 640 dp como máximo.
 
 ## Sin resolver o por decidir
 
 - **Un deslizamiento en la pestaña Papelera abrió la nota en vez de pedir confirmación** una vez (con un gesto de 250 ms). Repetido a 500 ms funcionó. Parece
   una cuestión del gesto inyectado, no se ha reproducido; conviene probarlo con un dedo real.
 - **Una nota de la papelera se puede abrir y editar.** Falta decidir si debe ser de solo lectura hasta restaurarla (qué hace Windows: mirar antes de cambiarlo).
+- En pantalla ancha, la fila de la nota recién creada con «+» no se marca como seleccionada en la lista (el panel sigue con la clave vacía). Es cosmético.
 - Los contadores de las pestañas (Notas 2, Archivadas 2…) ignoran la búsqueda; es coherente, pero conviene confirmarlo.
 - El alemán, el francés y el portugués los escribió Claude sin revisión de una persona; solo se ha visto el alemán en pantalla.
 - Color por tema de las notas nuevas: los nombres de los temas de Core están en español.
 
 ## Pendiente (en este orden)
 
-1. **Tableta (Lenovo Tab P11, Android 14):** disposición ancha real, teclado físico real, y repetir las sondas de editor.
-2. Probar a mano en el Pixel: teclado físico, pantalla dividida real, y el deslizamiento de la papelera con el dedo.
-3. Ejecutar `assembleRelease` firmado en un móvil de pruebas sin instalación real de Aldune (y revisar con R8 que Room y Compose funcionan).
-4. `/code-review ultra` de la rama (créditos de la nube hasta el 5-11-2026); solo lo puede lanzar el usuario.
-5. Siguiente fase: F5, el motor de sync dentro de la app.
+1. Probar a mano: un teclado físico real, la pantalla dividida real y el deslizamiento de la papelera con el dedo.
+2. Ejecutar `assembleRelease` firmado en un móvil de pruebas sin instalación real de Aldune (y revisar con R8 que Room y Compose funcionan).
+3. Delegar en una sesión de Claude Code en la web lo que compile en Linux (los créditos caducan el 5-11-2026). `/code-review ultra` es aparte: cuota propia, no gasta esos créditos.
+4. Siguiente fase: F5, el motor de sync dentro de la app.

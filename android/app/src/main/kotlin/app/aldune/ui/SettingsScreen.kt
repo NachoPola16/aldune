@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.layout.safeDrawingPadding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.selection.selectable
@@ -45,45 +46,48 @@ fun SettingsScreen(viewModel: NotesViewModel, onClose: () -> Unit) {
     val activity = LocalActivity.current
     BackHandler(onBack = onClose)
 
-    Column(Modifier.fillMaxSize().safeDrawingPadding()) {
-        Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-            IconButton(onClick = onClose) { Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.back)) }
-            Text(stringResource(R.string.settings), style = MaterialTheme.typography.titleLarge)
-        }
-        Column(Modifier.verticalScroll(rememberScrollState()).padding(bottom = 24.dp)) {
-            Section(R.string.settings_appearance)
-            val appearances = listOf(
-                AppPalette.SYSTEM to R.string.appearance_system, AppPalette.DARK to R.string.appearance_dark,
-                AppPalette.LIGHT to R.string.appearance_light, AppPalette.PASTEL to R.string.appearance_pastel,
-                AppPalette.MIDNIGHT to R.string.appearance_midnight,
-            )
-            for ((mode, label) in appearances) {
-                Choice(stringResource(label), settings.appearance == mode) { viewModel.updateSettings { it.copy(appearance = mode) } }
+    // En una pantalla ancha (tableta) los ajustes van en una columna centrada, no estirados a todo el ancho.
+    Column(Modifier.fillMaxSize().safeDrawingPadding(), horizontalAlignment = Alignment.CenterHorizontally) {
+        Column(Modifier.widthIn(max = 640.dp).fillMaxWidth()) {
+            Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                IconButton(onClick = onClose) { Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.back)) }
+                Text(stringResource(R.string.settings), style = MaterialTheme.typography.titleLarge)
             }
+            Column(Modifier.verticalScroll(rememberScrollState()).padding(bottom = 24.dp)) {
+                Section(R.string.settings_appearance)
+                val appearances = listOf(
+                    AppPalette.SYSTEM to R.string.appearance_system, AppPalette.DARK to R.string.appearance_dark,
+                    AppPalette.LIGHT to R.string.appearance_light, AppPalette.PASTEL to R.string.appearance_pastel,
+                    AppPalette.MIDNIGHT to R.string.appearance_midnight,
+                )
+                for ((mode, label) in appearances) {
+                    Choice(stringResource(label), settings.appearance == mode) { viewModel.updateSettings { it.copy(appearance = mode) } }
+                }
 
-            Section(R.string.settings_language)
-            Choice(stringResource(R.string.language_system), settings.language.isEmpty()) { changeLanguage(viewModel, activity, "") }
-            for ((tag, name) in Languages.all) {
-                Choice(name, settings.language == tag) { changeLanguage(viewModel, activity, tag) }
-            }
+                Section(R.string.settings_language)
+                Choice(stringResource(R.string.language_system), settings.language.isEmpty()) { changeLanguage(viewModel, activity, "") }
+                for ((tag, name) in Languages.all) {
+                    Choice(name, settings.language == tag) { changeLanguage(viewModel, activity, tag) }
+                }
 
-            Section(R.string.settings_notes)
-            Text(stringResource(R.string.new_note_tone), Modifier.padding(horizontal = 16.dp), style = MaterialTheme.typography.labelLarge)
-            Choice(stringResource(R.string.tone_light), !settings.darkNotes) { viewModel.updateSettings { it.copy(darkNotes = false) } }
-            Choice(stringResource(R.string.tone_dark), settings.darkNotes) { viewModel.updateSettings { it.copy(darkNotes = true) } }
-            Text(stringResource(R.string.trash_days), Modifier.padding(start = 16.dp, end = 16.dp, top = 8.dp), style = MaterialTheme.typography.labelLarge)
-            for (days in TRASH_OPTIONS) {
-                Choice(stringResource(R.string.trash_days_value, days), settings.trashDays == days) { viewModel.updateSettings { it.copy(trashDays = days) } }
+                Section(R.string.settings_notes)
+                Text(stringResource(R.string.new_note_tone), Modifier.padding(horizontal = 16.dp), style = MaterialTheme.typography.labelLarge)
+                Choice(stringResource(R.string.tone_light), !settings.darkNotes) { viewModel.updateSettings { it.copy(darkNotes = false) } }
+                Choice(stringResource(R.string.tone_dark), settings.darkNotes) { viewModel.updateSettings { it.copy(darkNotes = true) } }
+                Text(stringResource(R.string.trash_days), Modifier.padding(start = 16.dp, end = 16.dp, top = 8.dp), style = MaterialTheme.typography.labelLarge)
+                for (days in TRASH_OPTIONS) {
+                    Choice(stringResource(R.string.trash_days_value, days), settings.trashDays == days) { viewModel.updateSettings { it.copy(trashDays = days) } }
+                }
+                HorizontalDivider(Modifier.padding(vertical = 8.dp))
+                SwitchRow(stringResource(R.string.reorder_on_check), stringResource(R.string.reorder_on_check_hint), settings.reorderOnCheck) { on ->
+                    viewModel.updateSettings { it.copy(reorderOnCheck = on) }
+                }
+                HorizontalDivider(Modifier.padding(vertical = 8.dp))
+                Text(
+                    stringResource(R.string.about_version, versionName(activity)), Modifier.padding(16.dp),
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
             }
-            HorizontalDivider(Modifier.padding(vertical = 8.dp))
-            SwitchRow(stringResource(R.string.reorder_on_check), stringResource(R.string.reorder_on_check_hint), settings.reorderOnCheck) { on ->
-                viewModel.updateSettings { it.copy(reorderOnCheck = on) }
-            }
-            HorizontalDivider(Modifier.padding(vertical = 8.dp))
-            Text(
-                stringResource(R.string.about_version, versionName(activity)), Modifier.padding(16.dp),
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
         }
     }
 }
