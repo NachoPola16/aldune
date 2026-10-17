@@ -11,6 +11,9 @@ Módulo: `android/sync` (Kotlin/JVM puro, Gradle KTS, JUnit 5, `includeBuild("..
 
 ## Tareas
 - [x] 0. Andamiaje Gradle + test que carga `sync-scenarios.json` y cuenta los escenarios (34). Verde.
+- [x] 1. Tipos (`SyncTypes.kt`: `SyncInput`, `SyncPlan`, `SyncAction`, `LocalStore`, `SyncTransport`) y dobles (`InMemoryDoubles.kt`). Compila; sin lógica.
+  - Decisión de diseño: el reloj entra como `SyncInput.now` (no en `execute`). El plan lleva ya la nota mandada a la papelera con su fecha nueva
+    y la sube en la misma pasada (E12a), así que el plan necesita la hora; leerla una vez fuera mantiene `planSync` puro.
 
 ## Diferencias encontradas (SyncService.cs / README / vectores / prompt)
 _(se rellena al avanzar)_
