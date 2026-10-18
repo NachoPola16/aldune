@@ -166,4 +166,18 @@
     <string name="password_remove_action">Entfernen</string>
     <string name="password_working">Passwort wird geprüft …</string>
     <string name="protection_stale">Diese Notiz wurde auf einem anderen Gerät geändert. Sie wurde wieder gesperrt: Entsperre sie, um die neue Version zu sehen.</string>
+    <string name="conflict_strip_title">Diese Notiz wurde an zwei Stellen gleichzeitig geändert</string>
+    <string name="conflict_strip_deleted">Diese Notiz wurde auf einem anderen Gerät gelöscht</string>
+    <string name="conflict_other_version">Die andere Version</string>
+    <string name="conflict_keep">Diese behalten</string>
+    <string name="conflict_use_other">Die andere verwenden</string>
+    <string name="conflict_delete_it">Löschen</string>
+    <string name="conflict_protected_version">Geschützte Version</string>
+    <string name="conflict_unlock_version">Entsperren, um sie zu sehen</string>
+    <string name="conflict_failed">Diese Auswahl konnte nicht angewendet werden. Versuche es erneut.</string>
+    <string name="conflicts_banner">Zu prüfende Konflikte: %1$d</string>
+    <string name="conflicts_title">Konflikte</string>
+    <string name="conflicts_orphan_hint">Diese Notizen wurden auf einem anderen Gerät gelöscht, nachdem du sie hier bearbeitet hast.</string>
+    <string name="conflict_recover">Notiz wiederherstellen</string>
+    <string name="conflict_discard">Verwerfen</string>
 </resources>

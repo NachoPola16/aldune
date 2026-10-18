@@ -8,6 +8,7 @@ import app.aldune.AppContainer
 import app.aldune.capture.CaptureRequest
 import app.aldune.data.AppSettings
 import app.aldune.data.SettingsStore
+import app.aldune.core.ProtectedNotes
 import app.aldune.core.UnlockedProtectedNote
 import app.aldune.domain.LineEnding
 import app.aldune.domain.LostReason
@@ -19,11 +20,15 @@ import app.aldune.domain.NoteService
 import app.aldune.domain.SharedNote
 import app.aldune.domain.SharedNoteText
 import app.aldune.domain.NoteState
+import app.aldune.syncclient.ConflictKind
 import app.aldune.syncclient.ProtectionError
 import app.aldune.syncclient.ProtectionResult
 import app.aldune.syncclient.ProtectionService
 import app.aldune.syncclient.SyncEvent
 import app.aldune.syncing.SyncController
+import app.aldune.text.ConflictDiff
+import app.aldune.text.DiffLine
+import app.aldune.text.NoteTitleHelper
 import app.aldune.text.NoteTone
 import app.aldune.widget.WidgetUpdater
 import kotlinx.coroutines.Dispatchers
@@ -41,6 +46,9 @@ import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 
+/** Una nota que ganó un borrado de otro equipo mientras se editaba aquí: ya no existe y su versión editada se puede recuperar. */
+data class OrphanConflict(val noteId: String, val title: String, val isProtected: Boolean)
+
 sealed interface UiState {
     data object Loading : UiState
 
@@ -55,6 +63,8 @@ sealed interface UiState {
         val allTags: List<String> = emptyList(),
         /** Cuántas notas hay en cada estado, para las pestañas. */
         val counts: Map<NoteState, Int> = emptyMap(),
+        /** Los conflictos sin nota (ganó un borrado): la lista «N conflictos». */
+        val orphans: List<OrphanConflict> = emptyList(),
     ) : UiState
 }
 
@@ -71,6 +81,7 @@ class NotesViewModel(application: Application) : AndroidViewModel(application) {
     private val settingsStore = SettingsStore(application)
     private var service: NoteService? = null
     private var protection: ProtectionService? = null
+    private var ready: AppContainer.Opened.Ready? = null
     private var placeholder: String = "New note"
     private var protectedTitle: String = "Protected note"
 
@@ -203,6 +214,7 @@ class NotesViewModel(application: Application) : AndroidViewModel(application) {
     private fun start(notes: NoteService, opened: AppContainer.Opened.Ready) {
         service = notes
         protection = opened.protection
+        ready = opened
         _sync.value = opened.sync.also { it.onNotesChanged = { launchIo { reconcileDrafts(); refreshLocked(); widgetChanged() } } }
         // Como Windows: la papelera se purga al abrir, con los días de los ajustes (30 por defecto).
         notes.purgeTrashed(_settings.value.trashDays)
@@ -485,6 +497,73 @@ class NotesViewModel(application: Application) : AndroidViewModel(application) {
         result
     }
 
+    // ───────────── Conflictos (F7) ─────────────
+
+    /** Lo que se enseña de la otra versión de un conflicto. */
+    sealed interface OtherVersion {
+        /** La otra versión es un borrado hecho en otro equipo. */
+        data object Deleted : OtherVersion
+
+        /** La otra versión está protegida (con su propia contraseña, que puede ser otra): se ve al desbloquearla. */
+        data object Protected : OtherVersion
+
+        data class Text(val lines: List<DiffLine>) : OtherVersion
+    }
+
+    class ConflictView(val noteId: String, val kind: ConflictKind, val other: OtherVersion)
+
+    /** Las líneas de la otra versión; marcadas las que cambian si se conoce el texto de aquí (una protegida bloqueada no lo da). */
+    private fun diffLines(here: String?, other: String): List<DiffLine> =
+        if (here != null) ConflictDiff.lineDiff(here, other) else other.split('\n').mapIndexed { i, line -> DiffLine(i + 1, line, false) }
+
+    /** El conflicto de la nota [noteId] tal como lo enseña el editor, o `null` si no hay. */
+    suspend fun conflictFor(noteId: String): ConflictView? = withContext(Dispatchers.IO) {
+        io.withLock {
+            val current = ready ?: return@withLock null
+            val conflict = current.conflictStore.get(noteId) ?: return@withLock null
+            val losing = conflict.losing
+            val note = losing.note
+            val other = when {
+                losing.tombstone -> OtherVersion.Deleted
+                note == null -> return@withLock null
+                note.isProtected -> OtherVersion.Protected
+                else -> OtherVersion.Text(diffLines(service?.get(noteId)?.takeUnless { it.isProtected }?.text, LineEnding.normalize(note.text)))
+            }
+            ConflictView(noteId, current.conflicts.kind(conflict), other)
+        }
+    }
+
+    /** Abre la otra versión de un conflicto si está protegida. `null` si la contraseña no es la suya. Deriva la clave: fuera del cerrojo. */
+    suspend fun unlockOtherVersion(noteId: String, password: String): List<DiffLine>? = withContext(Dispatchers.Default) {
+        val (conflict, here) = io.withLock {
+            Pair(ready?.conflictStore?.get(noteId), service?.get(noteId)?.takeUnless { it.isProtected }?.text)
+        }
+        val content = conflict?.losing?.note?.protectedContent ?: return@withContext null
+        val plain = ProtectedNotes.tryUnprotect(content, password) ?: return@withContext null
+        diffLines(here, LineEnding.normalize(plain))
+    }
+
+    /**
+     * Resuelve el conflicto de [noteId]: [useOther] aplica la otra versión (como `RestoreConflict` de Windows); si no, se descarta el conflicto y
+     * se queda lo de aquí. `false` si ya no existía o no se pudo aplicar (no se escribe nada).
+     */
+    suspend fun resolveConflict(noteId: String, useOther: Boolean): Boolean = withContext(Dispatchers.IO + NonCancellable) {
+        io.withLock {
+            val current = ready ?: return@withLock false
+            // La nota, la lápida, el conflicto y el recordatorio cambian juntos o no cambian.
+            val result = if (useOther) {
+                current.database.runInTransaction<NoteResult<Unit>> { current.conflicts.useOther(noteId) }
+            } else {
+                current.conflicts.keepCurrent(noteId)
+            }
+            refreshLocked()
+            current.sync.refreshConflicts()
+            syncEvent(SyncEvent.LocalChange)
+            widgetChanged()
+            result is NoteResult.Ok
+        }
+    }
+
     /** Color y etiquetas de una nota, para su menú. */
     class NoteOptions(val noteId: String, val color: String, val tags: List<String>, val isProtected: Boolean)
 
@@ -543,6 +622,11 @@ class NotesViewModel(application: Application) : AndroidViewModel(application) {
         val items = notes.list(current.filter, current.query, current.tag).map { NoteListItem.from(it, placeholder, protectedTitle) }
         val counts = NoteState.entries.associateWith { notes.list(it).size }
         val tags = notes.list(current.filter).flatMap { it.tags }.distinctBy { it.lowercase() }.sortedBy { it.lowercase() }
-        _state.update { (it as? UiState.Ready)?.copy(items = items, allTags = tags, counts = counts) ?: it }
+        val orphans = ready?.conflicts?.orphans().orEmpty().mapNotNull { conflict ->
+            val note = conflict.losing.note ?: return@mapNotNull null
+            val title = if (note.isProtected) protectedTitle else NoteTitleHelper.getTitle(LineEnding.normalize(note.text), placeholder)
+            OrphanConflict(conflict.noteId.toString(), title, note.isProtected)
+        }
+        _state.update { (it as? UiState.Ready)?.copy(items = items, allTags = tags, counts = counts, orphans = orphans) ?: it }
     }
 }

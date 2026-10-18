@@ -166,4 +166,18 @@
     <string name="password_remove_action">Remover</string>
     <string name="password_working">Verificando a senha…</string>
     <string name="protection_stale">Esta nota mudou em outro dispositivo. Ela foi bloqueada de novo: desbloqueie-a para ver a nova versão.</string>
+    <string name="conflict_strip_title">Esta nota mudou em dois lugares ao mesmo tempo</string>
+    <string name="conflict_strip_deleted">Esta nota foi excluída em outro dispositivo</string>
+    <string name="conflict_other_version">A outra versão</string>
+    <string name="conflict_keep">Ficar com esta</string>
+    <string name="conflict_use_other">Usar a outra</string>
+    <string name="conflict_delete_it">Excluir</string>
+    <string name="conflict_protected_version">Versão protegida</string>
+    <string name="conflict_unlock_version">Desbloquear para ver</string>
+    <string name="conflict_failed">Não foi possível aplicar essa escolha. Tente novamente.</string>
+    <string name="conflicts_banner">Conflitos para revisar: %1$d</string>
+    <string name="conflicts_title">Conflitos</string>
+    <string name="conflicts_orphan_hint">Estas notas foram excluídas em outro dispositivo depois que você as editou aqui.</string>
+    <string name="conflict_recover">Recuperar a nota</string>
+    <string name="conflict_discard">Descartar</string>
 </resources>

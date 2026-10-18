@@ -165,3 +165,17 @@ password_unlock_action	Unlock	Desbloquear	Entsperren	Déverrouiller	Desbloquear
 password_remove_action	Remove	Quitar	Entfernen	Retirer	Remover
 password_working	Checking the password…	Comprobando la contraseña…	Passwort wird geprüft …	Vérification du mot de passe…	Verificando a senha…
 protection_stale	This note changed on another device. It was locked again: unlock it to see the new version.	Esta nota cambió en otro dispositivo. Se ha vuelto a bloquear: desbloquéala para ver la nueva versión.	Diese Notiz wurde auf einem anderen Gerät geändert. Sie wurde wieder gesperrt: Entsperre sie, um die neue Version zu sehen.	Cette note a changé sur un autre appareil. Elle a été reverrouillée : déverrouille-la pour voir la nouvelle version.	Esta nota mudou em outro dispositivo. Ela foi bloqueada de novo: desbloqueie-a para ver a nova versão.
+conflict_strip_title	This note changed in two places at once	Esta nota cambió en dos sitios a la vez	Diese Notiz wurde an zwei Stellen gleichzeitig geändert	Cette note a changé à deux endroits en même temps	Esta nota mudou em dois lugares ao mesmo tempo
+conflict_strip_deleted	This note was deleted on another device	Esta nota se borró en otro dispositivo	Diese Notiz wurde auf einem anderen Gerät gelöscht	Cette note a été supprimée sur un autre appareil	Esta nota foi excluída em outro dispositivo
+conflict_other_version	The other version	La otra versión	Die andere Version	L'autre version	A outra versão
+conflict_keep	Keep this one	Quedarme con esta	Diese behalten	Garder celle-ci	Ficar com esta
+conflict_use_other	Use the other	Usar la otra	Die andere verwenden	Utiliser l'autre	Usar a outra
+conflict_delete_it	Delete it	Borrarla	Löschen	La supprimer	Excluir
+conflict_protected_version	Protected version	Versión protegida	Geschützte Version	Version protégée	Versão protegida
+conflict_unlock_version	Unlock to see it	Desbloquear para verla	Entsperren, um sie zu sehen	Déverrouiller pour la voir	Desbloquear para ver
+conflict_failed	Couldn't apply that choice. Try again.	No se pudo aplicar esa elección. Inténtalo de nuevo.	Diese Auswahl konnte nicht angewendet werden. Versuche es erneut.	Impossible d'appliquer ce choix. Réessaie.	Não foi possível aplicar essa escolha. Tente novamente.
+conflicts_banner	Conflicts to review: %1$d	Conflictos por revisar: %1$d	Zu prüfende Konflikte: %1$d	Conflits à examiner : %1$d	Conflitos para revisar: %1$d
+conflicts_title	Conflicts	Conflictos	Konflikte	Conflits	Conflitos
+conflicts_orphan_hint	These notes were deleted on another device after you edited them here.	Estas notas se borraron en otro dispositivo después de que las editaras aquí.	Diese Notizen wurden auf einem anderen Gerät gelöscht, nachdem du sie hier bearbeitet hast.	Ces notes ont été supprimées sur un autre appareil après que tu les as modifiées ici.	Estas notas foram excluídas em outro dispositivo depois que você as editou aqui.
+conflict_recover	Recover the note	Recuperar la nota	Notiz wiederherstellen	Récupérer la note	Recuperar a nota
+conflict_discard	Discard	Descartar	Verwerfen	Ignorer	Descartar

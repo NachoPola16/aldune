@@ -77,6 +77,7 @@ import app.aldune.R
 import app.aldune.core.PasswordProblem
 import app.aldune.syncclient.ProtectionError
 import app.aldune.syncclient.ProtectionResult
+import app.aldune.text.DiffLine
 import app.aldune.text.BulletLines
 import app.aldune.text.LineDirection
 import app.aldune.text.LineMovement
@@ -127,7 +128,9 @@ fun NoteEditorPane(key: String, viewModel: NotesViewModel, onBack: () -> Unit, s
     // anterior con el cursor nuevo y pisaría el cambio; se espera al siguiente fotograma (ver LaunchedEffect de abajo).
     var tap by remember(key) { mutableStateOf<Offset?>(null) }
 
-    LaunchedEffect(key) {
+    // Carga la nota (otra vez, tras resolver un conflicto que le cambió el texto o la protección). Mientras dura, el texto no se guarda.
+    suspend fun load() {
+        loaded = false
         val text = viewModel.openDraft(key)
         protectedNote = viewModel.isProtected(key)
         if (!protectedNote) {
@@ -150,6 +153,7 @@ fun NoteEditorPane(key: String, viewModel: NotesViewModel, onBack: () -> Unit, s
         }
         loaded = true
     }
+    LaunchedEffect(key) { load() }
     // Una pasada de sync cambió el texto de esta nota mientras estaba abierta (y no se había tocado): se recarga, o la siguiente tecla guardaría
     // el texto viejo encima del recién llegado.
     LaunchedEffect(key) {
@@ -166,6 +170,41 @@ fun NoteEditorPane(key: String, viewModel: NotesViewModel, onBack: () -> Unit, s
     LaunchedEffect(key) {
         viewModel.deletedNotes.collect { gone -> if (gone == key) onBack() }
     }
+    // Conflicto de sync de esta nota: la franja con la otra versión. Se vuelve a leer al cargar y cuando la sync lo añade o lo quita.
+    var conflict by remember(key) { mutableStateOf<NotesViewModel.ConflictView?>(null) }
+    var otherLines by remember(key) { mutableStateOf<List<DiffLine>?>(null) }
+    var unlockOther by remember(key) { mutableStateOf(false) }
+    val syncController by viewModel.sync.collectAsStateWithLifecycle()
+    val conflictedIds = syncController?.conflicted?.collectAsStateWithLifecycle()?.value ?: emptySet()
+    val hasConflict = key in conflictedIds
+    LaunchedEffect(key, loaded, hasConflict) {
+        if (!loaded) return@LaunchedEffect
+        conflict = if (hasConflict) viewModel.conflictFor(key) else null
+        otherLines = null
+    }
+
+    fun resolveConflict(useOther: Boolean) {
+        val current = conflict ?: return
+        scope.launch {
+            if (!viewModel.resolveConflict(key, useOther)) {
+                Toast.makeText(context, R.string.conflict_failed, Toast.LENGTH_LONG).show()
+                return@launch
+            }
+            conflict = null
+            if (!useOther) return@launch
+            // Era un borrado: la nota ya no existe.
+            if (current.other is NotesViewModel.OtherVersion.Deleted) {
+                onBack()
+                return@launch
+            }
+            // La nota cambió de texto (y quizá de protección): se suelta la sesión vieja y se vuelve a cargar. `unlocked` baja antes, o el cierre
+            // de la sesión se leería como un bloqueo y se pediría una contraseña que ya no hace falta.
+            unlocked = false
+            viewModel.dropProtected(key)
+            load()
+        }
+    }
+
     // Único punto por el que el texto llega al guardado: así ningún camino (teclado, barra, atajo, toque) se lo salta.
     LaunchedEffect(key) {
         snapshotFlow { state.text.toString() }.collect {
@@ -351,6 +390,23 @@ fun NoteEditorPane(key: String, viewModel: NotesViewModel, onBack: () -> Unit, s
                             else -> PasswordFailure.Changed
                         }
                     }
+                }
+            }
+        }
+        conflict?.let { view ->
+            ConflictStrip(
+                view, otherLines,
+                onKeep = { resolveConflict(false) }, onUseOther = { resolveConflict(true) }, onUnlockOther = { unlockOther = true },
+            )
+        }
+        if (unlockOther) {
+            PasswordDialog(PasswordMode.Unlock, onDismiss = { unlockOther = false }) { password, _ ->
+                val lines = viewModel.unlockOtherVersion(key, password)
+                if (lines == null) {
+                    PasswordFailure.Wrong
+                } else {
+                    otherLines = lines
+                    null
                 }
             }
         }

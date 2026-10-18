@@ -166,4 +166,18 @@
     <string name="password_remove_action">Retirer</string>
     <string name="password_working">Vérification du mot de passe…</string>
     <string name="protection_stale">Cette note a changé sur un autre appareil. Elle a été reverrouillée : déverrouille-la pour voir la nouvelle version.</string>
+    <string name="conflict_strip_title">Cette note a changé à deux endroits en même temps</string>
+    <string name="conflict_strip_deleted">Cette note a été supprimée sur un autre appareil</string>
+    <string name="conflict_other_version">L\'autre version</string>
+    <string name="conflict_keep">Garder celle-ci</string>
+    <string name="conflict_use_other">Utiliser l\'autre</string>
+    <string name="conflict_delete_it">La supprimer</string>
+    <string name="conflict_protected_version">Version protégée</string>
+    <string name="conflict_unlock_version">Déverrouiller pour la voir</string>
+    <string name="conflict_failed">Impossible d\'appliquer ce choix. Réessaie.</string>
+    <string name="conflicts_banner">Conflits à examiner : %1$d</string>
+    <string name="conflicts_title">Conflits</string>
+    <string name="conflicts_orphan_hint">Ces notes ont été supprimées sur un autre appareil après que tu les as modifiées ici.</string>
+    <string name="conflict_recover">Récupérer la note</string>
+    <string name="conflict_discard">Ignorer</string>
 </resources>

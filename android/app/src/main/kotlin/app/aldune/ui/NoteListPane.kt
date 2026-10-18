@@ -119,6 +119,7 @@ fun NoteListPane(
     val status = controller?.status?.collectAsStateWithLifecycle()?.value
     val conflicted = controller?.conflicted?.collectAsStateWithLifecycle()?.value ?: emptySet()
     var showSyncDetail by remember { mutableStateOf(false) }
+    var showOrphans by remember { mutableStateOf(false) }
 
     val archivedMsg = stringResource(R.string.note_archived)
     val trashedMsg = stringResource(R.string.note_trashed)
@@ -166,6 +167,7 @@ fun NoteListPane(
             }
             StateTabs(state, viewModel::setFilter)
             if (state.allTags.isNotEmpty()) TagRow(state, viewModel::setTag)
+            if (state.orphans.isNotEmpty()) OrphanConflictsBanner(state.orphans.size) { showOrphans = true }
 
             // Tirar hacia abajo sincroniza (spec madre §2.1). Sin perfil no hace nada: la política no lanza pasadas sin perfil.
             PullToRefreshBox(
@@ -275,6 +277,24 @@ fun NoteListPane(
             },
             dismissButton = { TextButton(onClick = { showSyncDetail = false }) { Text(stringResource(R.string.back)) } },
         )
+    }
+
+    if (showOrphans) {
+        if (state.orphans.isEmpty()) {
+            showOrphans = false
+        } else {
+            val context = androidx.compose.ui.platform.LocalContext.current
+            fun resolve(id: String, useOther: Boolean) {
+                scope.launch {
+                    if (!viewModel.resolveConflict(id, useOther)) {
+                        android.widget.Toast.makeText(context, R.string.conflict_failed, android.widget.Toast.LENGTH_LONG).show()
+                    }
+                }
+            }
+            OrphanConflictsDialog(
+                state.orphans, onRecover = { resolve(it, true) }, onDiscard = { resolve(it, false) }, onClose = { showOrphans = false },
+            )
+        }
     }
 
     deleting?.let { item ->

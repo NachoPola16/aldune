@@ -166,4 +166,18 @@
     <string name="password_remove_action">Remove</string>
     <string name="password_working">Checking the password…</string>
     <string name="protection_stale">This note changed on another device. It was locked again: unlock it to see the new version.</string>
+    <string name="conflict_strip_title">This note changed in two places at once</string>
+    <string name="conflict_strip_deleted">This note was deleted on another device</string>
+    <string name="conflict_other_version">The other version</string>
+    <string name="conflict_keep">Keep this one</string>
+    <string name="conflict_use_other">Use the other</string>
+    <string name="conflict_delete_it">Delete it</string>
+    <string name="conflict_protected_version">Protected version</string>
+    <string name="conflict_unlock_version">Unlock to see it</string>
+    <string name="conflict_failed">Couldn\'t apply that choice. Try again.</string>
+    <string name="conflicts_banner">Conflicts to review: %1$d</string>
+    <string name="conflicts_title">Conflicts</string>
+    <string name="conflicts_orphan_hint">These notes were deleted on another device after you edited them here.</string>
+    <string name="conflict_recover">Recover the note</string>
+    <string name="conflict_discard">Discard</string>
 </resources>

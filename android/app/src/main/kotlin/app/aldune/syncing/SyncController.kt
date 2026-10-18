@@ -165,7 +165,8 @@ class SyncController(
         if (!status.running) profiles.saveStatus(status)
     }
 
-    private fun refreshConflicts() {
+    /** Vuelve a leer qué notas tienen conflicto. La interfaz lo llama tras resolver uno (la sync lo hace sola al terminar una pasada). */
+    fun refreshConflicts() {
         _conflicted.value = store.conflictedNoteIds()
     }
 
