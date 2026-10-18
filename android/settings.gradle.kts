@@ -40,4 +40,10 @@ val hasAndroidSdk: Boolean = run {
     val fromFile = localProperties.takeIf { it.isFile }?.readLines()?.any { it.trim().startsWith("sdk.dir=") } == true
     !fromEnv.isNullOrBlank() || fromFile
 }
-if (hasAndroidSdk) include(":app") else rootProject.buildFileName = "build.jvm.gradle.kts"
+if (hasAndroidSdk) {
+    include(":app")
+} else {
+    rootProject.buildFileName = "build.jvm.gradle.kts"
+    // Que no pase desapercibido en un PC donde sí debería haber SDK (ANDROID_HOME o sdk.dir en local.properties sin definir).
+    logger.lifecycle("Aldune Android: sin SDK de Android (ANDROID_HOME / local.properties); se configuran solo los módulos JVM puros, sin :app.")
+}
