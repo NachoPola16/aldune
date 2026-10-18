@@ -20,6 +20,8 @@ data class AppSettings(
     val darkNotes: Boolean = false,
     /** La notificación fija «Nota nueva» (spec de F6 §2.2). Apagada por defecto. */
     val captureNotification: Boolean = false,
+    /** El widget enseña también una vista previa del texto, no solo el título (spec de F6 §2.3). Apagado: el texto llega al lanzador. */
+    val widgetPreview: Boolean = false,
 )
 
 object Languages {
@@ -51,6 +53,7 @@ class SettingsStore(context: Context) {
             reorderOnCheck = prefs.getBoolean(REORDER_ON_CHECK, d.reorderOnCheck),
             darkNotes = prefs.getBoolean(DARK_NOTES, d.darkNotes),
             captureNotification = prefs.getBoolean(CAPTURE_NOTIFICATION, d.captureNotification),
+            widgetPreview = prefs.getBoolean(WIDGET_PREVIEW, d.widgetPreview),
         )
     }
 
@@ -62,6 +65,7 @@ class SettingsStore(context: Context) {
             .putBoolean(REORDER_ON_CHECK, settings.reorderOnCheck)
             .putBoolean(DARK_NOTES, settings.darkNotes)
             .putBoolean(CAPTURE_NOTIFICATION, settings.captureNotification)
+            .putBoolean(WIDGET_PREVIEW, settings.widgetPreview)
             .apply() // apply ya deja el valor visible en este proceso: el `recreate()` del cambio de idioma lo lee al instante.
     }
 
@@ -73,5 +77,6 @@ class SettingsStore(context: Context) {
         const val REORDER_ON_CHECK = "reorderOnCheck"
         const val DARK_NOTES = "darkNotes"
         const val CAPTURE_NOTIFICATION = "captureNotification"
+        const val WIDGET_PREVIEW = "widgetPreview"
     }
 }

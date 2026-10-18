@@ -3,6 +3,7 @@ package app.aldune.ui
 import android.Manifest
 import android.app.Activity
 import android.app.StatusBarManager
+import android.appwidget.AppWidgetManager
 import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
@@ -20,6 +21,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.LocalContext
 import app.aldune.capture.CaptureNotification
 import app.aldune.capture.NewNoteTileService
+import app.aldune.widget.DockWidgetReceiver
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -157,6 +159,23 @@ private fun CaptureSection(viewModel: NotesViewModel, notificationOn: Boolean) {
             },
             Modifier.padding(horizontal = 8.dp),
         ) { Text(stringResource(R.string.open_system_settings)) }
+    }
+
+    val widgetPreview by viewModel.settings.collectAsStateWithLifecycle()
+    SwitchRow(stringResource(R.string.widget_preview), stringResource(R.string.widget_preview_hint), widgetPreview.widgetPreview) { on ->
+        viewModel.updateSettings { it.copy(widgetPreview = on) }
+    }
+
+    // Poner el widget sin ir al selector del lanzador: el sistema enseña su diálogo y el lanzador lo coloca. Si no lo admite, no se ofrece.
+    val widgets = remember { AppWidgetManager.getInstance(context) }
+    if (widgets.isRequestPinAppWidgetSupported) {
+        Column(
+            Modifier.fillMaxWidth().clickable { widgets.requestPinAppWidget(ComponentName(context, DockWidgetReceiver::class.java), null, null) }
+                .padding(horizontal = 16.dp, vertical = 10.dp),
+        ) {
+            Text(stringResource(R.string.add_widget))
+            Text(stringResource(R.string.add_widget_hint), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        }
     }
 
     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {

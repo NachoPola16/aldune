@@ -138,4 +138,14 @@
     <string name="add_tile_manual">To add it, edit the Quick Settings panel and drag “New note” in.</string>
     <string name="share_empty">There is no text to save</string>
     <string name="share_too_long">The text is too long for a note</string>
+    <string name="widget_label">Note deck</string>
+    <string name="widget_description">Your notes, one tap away</string>
+    <string name="widget_empty">No notes</string>
+    <string name="widget_more">More notes: %1$d</string>
+    <string name="widget_unavailable">Open Aldune</string>
+    <string name="widget_preview">Show more text in the widget</string>
+    <string name="widget_preview_hint">It will be visible on the home screen</string>
+    <string name="note_gone">That note is no longer in the deck</string>
+    <string name="add_widget">Add the widget to the home screen</string>
+    <string name="add_widget_hint">Your notes as colored strips; tap one to open it</string>
 </resources>

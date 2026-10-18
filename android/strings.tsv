@@ -137,3 +137,13 @@ add_tile_hint	Starts a new note from the quick settings panel	Empieza una nota n
 add_tile_manual	To add it, edit the Quick Settings panel and drag “New note” in.	Para añadirlo, edita el panel de ajustes rápidos y arrastra «Nota nueva».	Zum Hinzufügen die Schnelleinstellungen bearbeiten und „Neue Notiz“ hineinziehen.	Pour l'ajouter, modifiez les réglages rapides et faites glisser « Nouvelle note ».	Para adicionar, edite as configurações rápidas e arraste “Nova nota”.
 share_empty	There is no text to save	No hay texto que guardar	Es gibt keinen Text zum Speichern	Il n'y a pas de texte à enregistrer	Não há texto para salvar
 share_too_long	The text is too long for a note	El texto es demasiado largo para una nota	Der Text ist für eine Notiz zu lang	Le texte est trop long pour une note	O texto é longo demais para uma nota
+widget_label	Note deck	Mazo de notas	Notizstapel	Pile de notes	Pilha de notas
+widget_description	Your notes, one tap away	Tus notas, a un toque	Deine Notizen, einen Tipp entfernt	Vos notes, à portée de main	Suas notas, a um toque
+widget_empty	No notes	No hay notas	Keine Notizen	Aucune note	Nenhuma nota
+widget_more	More notes: %1$d	Más notas: %1$d	Weitere Notizen: %1$d	Autres notes : %1$d	Mais notas: %1$d
+widget_unavailable	Open Aldune	Abre Aldune	Aldune öffnen	Ouvrez Aldune	Abra o Aldune
+widget_preview	Show more text in the widget	Mostrar más texto en el widget	Mehr Text im Widget anzeigen	Afficher plus de texte dans le widget	Mostrar mais texto no widget
+widget_preview_hint	It will be visible on the home screen	Se verá en la pantalla de inicio	Er ist auf dem Startbildschirm sichtbar	Il sera visible sur l'écran d'accueil	Ficará visível na tela inicial
+note_gone	That note is no longer in the deck	Esa nota ya no está en el mazo	Diese Notiz ist nicht mehr im Stapel	Cette note n'est plus dans la pile	Essa nota não está mais na pilha
+add_widget	Add the widget to the home screen	Añadir el widget a la pantalla de inicio	Widget zum Startbildschirm hinzufügen	Ajouter le widget à l'écran d'accueil	Adicionar o widget à tela inicial
+add_widget_hint	Your notes as colored strips; tap one to open it	Tus notas como tiras de color; toca una para abrirla	Deine Notizen als farbige Streifen; tippe auf einen, um ihn zu öffnen	Vos notes en bandes de couleur ; touchez-en une pour l'ouvrir	Suas notas em tiras coloridas; toque em uma para abri-la

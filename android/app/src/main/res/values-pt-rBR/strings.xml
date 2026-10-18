@@ -138,4 +138,14 @@
     <string name="add_tile_manual">Para adicionar, edite as configurações rápidas e arraste “Nova nota”.</string>
     <string name="share_empty">Não há texto para salvar</string>
     <string name="share_too_long">O texto é longo demais para uma nota</string>
+    <string name="widget_label">Pilha de notas</string>
+    <string name="widget_description">Suas notas, a um toque</string>
+    <string name="widget_empty">Nenhuma nota</string>
+    <string name="widget_more">Mais notas: %1$d</string>
+    <string name="widget_unavailable">Abra o Aldune</string>
+    <string name="widget_preview">Mostrar mais texto no widget</string>
+    <string name="widget_preview_hint">Ficará visível na tela inicial</string>
+    <string name="note_gone">Essa nota não está mais na pilha</string>
+    <string name="add_widget">Adicionar o widget à tela inicial</string>
+    <string name="add_widget_hint">Suas notas em tiras coloridas; toque em uma para abri-la</string>
 </resources>

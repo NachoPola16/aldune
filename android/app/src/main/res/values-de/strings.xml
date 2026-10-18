@@ -138,4 +138,14 @@
     <string name="add_tile_manual">Zum Hinzufügen die Schnelleinstellungen bearbeiten und „Neue Notiz“ hineinziehen.</string>
     <string name="share_empty">Es gibt keinen Text zum Speichern</string>
     <string name="share_too_long">Der Text ist für eine Notiz zu lang</string>
+    <string name="widget_label">Notizstapel</string>
+    <string name="widget_description">Deine Notizen, einen Tipp entfernt</string>
+    <string name="widget_empty">Keine Notizen</string>
+    <string name="widget_more">Weitere Notizen: %1$d</string>
+    <string name="widget_unavailable">Aldune öffnen</string>
+    <string name="widget_preview">Mehr Text im Widget anzeigen</string>
+    <string name="widget_preview_hint">Er ist auf dem Startbildschirm sichtbar</string>
+    <string name="note_gone">Diese Notiz ist nicht mehr im Stapel</string>
+    <string name="add_widget">Widget zum Startbildschirm hinzufügen</string>
+    <string name="add_widget_hint">Deine Notizen als farbige Streifen; tippe auf einen, um ihn zu öffnen</string>
 </resources>

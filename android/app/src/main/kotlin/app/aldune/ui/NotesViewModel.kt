@@ -19,6 +19,7 @@ import app.aldune.domain.NoteState
 import app.aldune.syncclient.SyncEvent
 import app.aldune.syncing.SyncController
 import app.aldune.text.NoteTone
+import app.aldune.widget.WidgetUpdater
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.NonCancellable
@@ -56,6 +57,7 @@ sealed interface UiState {
  * dominio ya son atómicas, pero el orden en que se aplican y se refresca la lista tiene que ser el que pidió el usuario.
  */
 private const val AUTOSAVE_MS = 600L
+private const val HIGHLIGHT_MS = 3_000L
 
 class NotesViewModel(application: Application) : AndroidViewModel(application) {
     private val container = (application as AldunaApp).container
@@ -93,6 +95,39 @@ class NotesViewModel(application: Application) : AndroidViewModel(application) {
         _capture.value = null
     }
 
+    /** Pide repintar el widget (agrupado: ver [WidgetUpdater]). Se llama tras todo lo que cambia notas o ajustes que el widget pinta. */
+    private fun widgetChanged() = WidgetUpdater.request(getApplication())
+
+    /** Qué hacer al tocar una tira del widget. */
+    enum class OpenOutcome { OPEN, LOCKED, GONE }
+
+    /** La nota puede haber cambiado desde que el widget se pintó: ya no existe, o ya no está activa (GONE), o es protegida (LOCKED: F7). */
+    suspend fun resolveOpen(id: String): OpenOutcome = withContext(Dispatchers.IO) {
+        io.withLock {
+            val note = service?.get(id)
+            when {
+                note == null || note.state != NoteState.ACTIVE -> OpenOutcome.GONE
+                note.isProtected -> OpenOutcome.LOCKED
+                else -> OpenOutcome.OPEN
+            }
+        }
+    }
+
+    private val _highlight = MutableStateFlow<String?>(null)
+
+    /** La fila que la lista señala un momento (tocar una protegida en el widget: abrirla es de F7, aquí solo se ve dónde está). */
+    val highlight: StateFlow<String?> = _highlight.asStateFlow()
+
+    fun highlightNote(id: String) {
+        // Con una búsqueda o una etiqueta puesta la fila podría no verse.
+        update { it.copy(filter = NoteState.ACTIVE, query = "", tag = null) }
+        _highlight.value = id
+        viewModelScope.launch {
+            delay(HIGHLIGHT_MS)
+            if (_highlight.value == id) _highlight.value = null
+        }
+    }
+
     /** Qué pasó al guardar un texto compartido. */
     sealed interface SharedOutcome {
         /** Se creó la nota [id]: hay que abrirla en el editor. */
@@ -113,6 +148,7 @@ class NotesViewModel(application: Application) : AndroidViewModel(application) {
                 val created = service?.create(composed.value, settings = newNoteColors()) as? NoteResult.Ok
                 refreshLocked()
                 syncEvent(SyncEvent.LocalChange)
+                widgetChanged()
                 created?.let { SharedOutcome.Created(it.value.id) } ?: SharedOutcome.Empty
             }
         }
@@ -128,6 +164,8 @@ class NotesViewModel(application: Application) : AndroidViewModel(application) {
         val next = transform(_settings.value)
         _settings.value = next
         settingsStore.save(next)
+        // El aspecto, el idioma y la vista previa cambian lo que pinta el widget.
+        widgetChanged()
     }
 
     init {
@@ -158,11 +196,12 @@ class NotesViewModel(application: Application) : AndroidViewModel(application) {
 
     private fun start(notes: NoteService, opened: AppContainer.Opened.Ready) {
         service = notes
-        _sync.value = opened.sync.also { it.onNotesChanged = { launchIo { reconcileDrafts(); refreshLocked() } } }
+        _sync.value = opened.sync.also { it.onNotesChanged = { launchIo { reconcileDrafts(); refreshLocked(); widgetChanged() } } }
         // Como Windows: la papelera se purga al abrir, con los días de los ajustes (30 por defecto).
         notes.purgeTrashed(_settings.value.trashDays)
         _state.value = UiState.Ready()
         refresh()
+        widgetChanged()
         started = true
         syncEvent(SyncEvent.AppOpened)
     }
@@ -274,6 +313,7 @@ class NotesViewModel(application: Application) : AndroidViewModel(application) {
             }
             refreshLocked()
             syncEvent(SyncEvent.LocalChange)
+            widgetChanged()
         }
     }
 
@@ -315,6 +355,7 @@ class NotesViewModel(application: Application) : AndroidViewModel(application) {
         service?.let(op)
         refresh()
         syncEvent(SyncEvent.LocalChange)
+        widgetChanged()
     }
 
     private fun update(transform: (UiState.Ready) -> UiState.Ready) {

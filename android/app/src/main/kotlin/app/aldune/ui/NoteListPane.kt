@@ -187,6 +187,12 @@ fun NoteListPane(
                 var dragStartIds by remember { mutableStateOf<List<String>>(emptyList()) }
                 // Mientras se arrastra manda el orden local; fuera del arrastre, el de la base.
                 LaunchedEffect(state.items) { if (draggedId == null) order = state.items }
+                // La fila que señala el widget (una protegida): se lleva a la vista.
+                val highlight by viewModel.highlight.collectAsStateWithLifecycle()
+                LaunchedEffect(highlight, order) {
+                    val index = order.indexOfFirst { it.id == highlight }
+                    if (highlight != null && index >= 0) listState.animateScrollToItem(index)
+                }
 
                 fun dragStart(id: String) {
                     haptic.performHapticFeedback(HapticFeedbackType.LongPress)
@@ -236,7 +242,7 @@ fun NoteListPane(
                                         )
                                     } else Modifier
                                 ),
-                            item = item, selected = item.id == selectedId, conflicted = item.id in conflicted, onOpen = { onOpen(item.id) },
+                            item = item, selected = item.id == selectedId || item.id == highlight, conflicted = item.id in conflicted, onOpen = { onOpen(item.id) },
                             onArchive = { viewModel.archive(item.id); announce(archivedMsg) { viewModel.restore(item.id) } },
                             onTrash = { viewModel.trash(item.id); announce(trashedMsg) { viewModel.restore(item.id) } },
                             onRestore = { viewModel.restore(item.id); announce(restoredMsg) { viewModel.trash(item.id) } },
