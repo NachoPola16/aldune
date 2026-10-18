@@ -19,6 +19,8 @@ abstract class AldunaDatabase : RoomDatabase() {
 
     abstract fun sync(): SyncDao
 
+    abstract fun reminders(): ReminderDao
+
     companion object {
         const val FILE_NAME = "aldune.db"
 

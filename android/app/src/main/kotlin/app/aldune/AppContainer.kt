@@ -4,7 +4,9 @@ import android.content.Context
 import app.aldune.data.AldunaDatabase
 import app.aldune.data.AndroidKeystoreKeyWrapper
 import app.aldune.data.RoomLocalSyncStore
+import app.aldune.data.RoomConflictStore
 import app.aldune.data.RoomNoteStore
+import app.aldune.data.RoomReminderStore
 import app.aldune.data.SyncProfileStore
 import app.aldune.domain.AesGcmNoteCipher
 import app.aldune.domain.DataKeyManager
@@ -12,8 +14,13 @@ import app.aldune.domain.DataKeyState
 import app.aldune.domain.LostReason
 import app.aldune.domain.NoteService
 import app.aldune.domain.RandomIdFactory
+import app.aldune.domain.ReminderStore
 import app.aldune.domain.SystemClock
+import app.aldune.syncclient.ConflictResolver
+import app.aldune.syncclient.ConflictStore
+import app.aldune.syncclient.ProtectionService
 import app.aldune.syncclient.SecretVault
+import app.aldune.syncclient.TombstoneEraser
 import app.aldune.syncing.SyncController
 import app.aldune.syncing.SyncWork
 import java.io.File
@@ -34,7 +41,15 @@ class AppContainer(context: Context) {
 
     sealed class Opened {
         /** [sync] es única por proceso: la interfaz y el trabajador periódico comparten la misma, así nunca hay dos pasadas a la vez. */
-        class Ready(val database: AldunaDatabase, val notes: NoteService, val sync: SyncController) : Opened()
+        class Ready(
+            val database: AldunaDatabase,
+            val notes: NoteService,
+            val sync: SyncController,
+            val protection: ProtectionService,
+            val conflictStore: ConflictStore,
+            val conflicts: ConflictResolver,
+            val reminders: ReminderStore,
+        ) : Opened()
 
         /** La base existe pero su clave no se puede recuperar. La interfaz lo explica y ofrece [startOver]; nada se ha borrado. */
         data class KeyLost(val reason: LostReason) : Opened()
@@ -73,7 +88,19 @@ class AppContainer(context: Context) {
             // Los secretos de la sync tienen su propia clave de envoltura (otro alias): empezar de cero con las notas no los toca.
             val vault = SecretVault(File(appContext.noBackupFilesDir, VAULT_FILE), AndroidKeystoreKeyWrapper(VAULT_ALIAS))
             val sync = SyncController(SyncProfileStore(appContext), vault, RoomLocalSyncStore(database, store, cipher), SystemClock, scope, SyncWork(appContext))
-            return Opened.Ready(database, NoteService(store, SystemClock, deviceId = "", idFactory = RandomIdFactory), sync).also { cached = it }
+            val reminders = RoomReminderStore(database)
+            val conflictStore = RoomConflictStore(database, cipher)
+            // Recuperar una nota con «Usar la otra» tiene que quitar su lápida local, o la sync seguiría firmando el borrado (informe de F7).
+            val eraser = TombstoneEraser { database.notes().deleteTombstone(it) }
+            return Opened.Ready(
+                database,
+                NoteService(store, SystemClock, deviceId = "", idFactory = RandomIdFactory),
+                sync,
+                ProtectionService(store, SystemClock),
+                conflictStore,
+                ConflictResolver(store, conflictStore, reminders, SystemClock, deviceId = "", tombstones = eraser),
+                reminders,
+            ).also { cached = it }
         } finally {
             // El cifrador ya tiene su copia; la nuestra se borra pase lo que pase (revisión de agy, 17-10-2026).
             key.fill(0)

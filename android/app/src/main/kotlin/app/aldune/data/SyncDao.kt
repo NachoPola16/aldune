@@ -20,6 +20,12 @@ interface SyncDao {
     @Query("SELECT * FROM sync_conflict")
     fun conflicts(): List<SyncConflictEntity>
 
+    @Query("SELECT * FROM sync_conflict WHERE noteId = :id")
+    fun conflict(id: String): SyncConflictEntity?
+
+    @Query("DELETE FROM sync_conflict WHERE noteId = :id")
+    fun deleteConflict(id: String)
+
     @Query("SELECT noteId FROM sync_conflict")
     fun conflictedIds(): List<String>
 
