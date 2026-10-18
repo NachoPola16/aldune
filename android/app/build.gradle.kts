@@ -26,8 +26,11 @@ android {
             // Las pruebas instrumentadas desinstalan la app al acabar. Con un id propio para depuración, nunca tocan una instalación
             // «de verdad» con notas reales en el mismo móvil.
             applicationIdSuffix = ".debug"
+            // El acceso directo (res/xml/shortcuts.xml) necesita el paquete en un recurso: las variables del manifiesto no llegan a los XML.
+            resValue("string", "shortcut_package", "io.github.nachopola16.aldune.debug")
         }
         release {
+            resValue("string", "shortcut_package", "io.github.nachopola16.aldune")
             isMinifyEnabled = true
             isShrinkResources = true
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
@@ -39,7 +42,10 @@ android {
         targetCompatibility = JavaVersion.VERSION_11
     }
 
-    buildFeatures { compose = true }
+    buildFeatures {
+        compose = true
+        resValues = true
+    }
 }
 
 // El esquema de Room se exporta y se versiona: cada versión lleva su migración probada (spec de Android §4.1).

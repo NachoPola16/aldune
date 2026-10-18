@@ -1,7 +1,25 @@
 package app.aldune.ui
 
+import android.Manifest
 import android.app.Activity
+import android.app.StatusBarManager
+import android.content.ComponentName
+import android.content.Context
+import android.content.Intent
+import android.graphics.drawable.Icon
+import android.os.Build
+import android.provider.Settings
 import androidx.activity.compose.BackHandler
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.annotation.RequiresApi
+import androidx.compose.material3.TextButton
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.platform.LocalContext
+import app.aldune.capture.CaptureNotification
+import app.aldune.capture.NewNoteTileService
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -55,6 +73,7 @@ fun SettingsScreen(viewModel: NotesViewModel, onClose: () -> Unit) {
             }
             Column(Modifier.verticalScroll(rememberScrollState()).padding(bottom = 24.dp)) {
                 SyncSection(viewModel)
+                CaptureSection(viewModel, settings.captureNotification)
 
                 Section(R.string.settings_appearance)
                 val appearances = listOf(
@@ -91,6 +110,79 @@ fun SettingsScreen(viewModel: NotesViewModel, onClose: () -> Unit) {
                 )
             }
         }
+    }
+}
+
+/**
+ * Captura rápida (spec de F6 §2.2): la notificación fija y el mosaico. Activar la notificación en Android 13+ pide el permiso; si se deniega
+ * (o las notificaciones de la app están bloqueadas) el interruptor se queda apagado y se explica, con un botón a los ajustes del sistema.
+ */
+@Composable
+private fun CaptureSection(viewModel: NotesViewModel, notificationOn: Boolean) {
+    val context = LocalContext.current
+    var blocked by remember { mutableStateOf(false) }
+    fun turnOn() {
+        blocked = false
+        viewModel.updateSettings { it.copy(captureNotification = true) }
+        CaptureNotification.sync(context, true)
+    }
+    val permission = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
+        if (granted && CaptureNotification.canPost(context)) turnOn() else blocked = true
+    }
+
+    Section(R.string.capture_section)
+    SwitchRow(stringResource(R.string.capture_notification), stringResource(R.string.capture_notification_hint), notificationOn) { on ->
+        when {
+            !on -> {
+                blocked = false
+                viewModel.updateSettings { it.copy(captureNotification = false) }
+                CaptureNotification.sync(context, false)
+            }
+            CaptureNotification.canPost(context) -> turnOn()
+            // Sin permiso se pregunta; con el permiso pero las notificaciones bloqueadas en el sistema, solo se puede explicar.
+            !CaptureNotification.hasPermission(context) -> permission.launch(Manifest.permission.POST_NOTIFICATIONS)
+            else -> blocked = true
+        }
+    }
+    if (blocked && !notificationOn) {
+        Text(
+            stringResource(R.string.capture_notification_denied), Modifier.padding(horizontal = 16.dp),
+            style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.error,
+        )
+        TextButton(
+            onClick = {
+                context.startActivity(
+                    Intent(Settings.ACTION_APP_NOTIFICATION_SETTINGS).putExtra(Settings.EXTRA_APP_PACKAGE, context.packageName),
+                )
+            },
+            Modifier.padding(horizontal = 8.dp),
+        ) { Text(stringResource(R.string.open_system_settings)) }
+    }
+
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+        TileRow(context)
+    } else {
+        Text(
+            stringResource(R.string.add_tile_manual), Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
+            style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+    }
+}
+
+/** «Añadir el mosaico»: desde la 13 el sistema enseña su propio diálogo de confirmación; no hace falta ningún permiso. */
+@RequiresApi(Build.VERSION_CODES.TIRAMISU)
+@Composable
+private fun TileRow(context: Context) {
+    Column(
+        Modifier.fillMaxWidth().clickable {
+            context.getSystemService(StatusBarManager::class.java).requestAddTileService(
+                ComponentName(context, NewNoteTileService::class.java), context.getString(R.string.new_note),
+                Icon.createWithResource(context, R.drawable.ic_new_note), context.mainExecutor,
+            ) { }
+        }.padding(horizontal = 16.dp, vertical = 10.dp),
+    ) {
+        Text(stringResource(R.string.add_tile))
+        Text(stringResource(R.string.add_tile_hint), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
     }
 }
 

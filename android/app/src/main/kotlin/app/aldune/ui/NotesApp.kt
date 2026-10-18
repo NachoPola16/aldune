@@ -22,6 +22,7 @@ import androidx.compose.material3.adaptive.layout.PaneAdaptedValue
 import androidx.compose.material3.adaptive.navigation.NavigableListDetailPaneScaffold
 import androidx.compose.material3.adaptive.navigation.rememberListDetailPaneScaffoldNavigator
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -34,6 +35,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import app.aldune.R
+import app.aldune.capture.CaptureRequest
 import kotlinx.coroutines.launch
 
 /** Marca del panel de detalle para «nota nueva, todavía sin texto»: la nota no existe hasta que se escribe el primer carácter. */
@@ -43,6 +45,9 @@ private const val NEW_NOTE = ""
 fun NotesApp(viewModel: NotesViewModel) {
     val state by viewModel.state.collectAsStateWithLifecycle()
     var showSettings by rememberSaveable { mutableStateOf(false) }
+    // Una petición de captura saca de Ajustes: el editor está en la pantalla de notas. (No se atiende aquí: lo hace el andamio.)
+    val capture by viewModel.capture.collectAsStateWithLifecycle()
+    LaunchedEffect(capture) { if (capture != null) showSettings = false }
     viewModel.setPlaceholder(stringResource(R.string.new_note_title))
     viewModel.setProtectedTitle(stringResource(R.string.protected_note_title))
     Surface(Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {
@@ -66,6 +71,20 @@ private fun NotesScaffold(state: UiState.Ready, viewModel: NotesViewModel, onOpe
     val openNote: (String) -> Unit = { id -> scope.launch { navigator.navigateTo(ListDetailPaneScaffoldRole.Detail, id) } }
     val detailVisible = navigator.scaffoldValue[ListDetailPaneScaffoldRole.Detail] == PaneAdaptedValue.Expanded
     val listVisible = navigator.scaffoldValue[ListDetailPaneScaffoldRole.List] == PaneAdaptedValue.Expanded
+
+    // Acceso directo, mosaico, notificación: abren el editor con una nota nueva. Si ya se está en una nota nueva no se hace nada: reabrirla
+    // tiraría su borrador y lo que se estuviera escribiendo no se guardaría.
+    val capture by viewModel.capture.collectAsStateWithLifecycle()
+    LaunchedEffect(capture) {
+        when (capture) {
+            CaptureRequest.NewNote -> if (navigator.currentDestination?.contentKey != NEW_NOTE) {
+                viewModel.startNewNote()
+                navigator.navigateTo(ListDetailPaneScaffoldRole.Detail, NEW_NOTE)
+            }
+            null -> return@LaunchedEffect
+        }
+        viewModel.captureHandled()
+    }
 
     // En pantalla compacta, atrás desde el editor vuelve a la lista; en ancha no hay a dónde volver.
     BackHandler(enabled = detailVisible && !listVisible) { scope.launch { navigator.navigateBack() } }

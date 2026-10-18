@@ -4,6 +4,9 @@
     <!-- Red para la sync (F5). Las notificaciones y las alarmas llegan con sus fases. -->
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <!-- Captura rápida (F6): la notificación fija «Nota nueva» (Android 13+ pide el permiso) y volver a ponerla al arrancar el móvil. -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
 
     <!-- usesCleartextTraffic: el servidor de casa suele ir por http en la red local (Windows lo admite). La pantalla de sync avisa cuando la
          dirección no es https; las notas viajan cifradas de extremo a extremo igualmente, lo único expuesto es el token. -->
@@ -20,11 +23,31 @@
         <activity
             android:name=".MainActivity"
             android:exported="true"
+            android:launchMode="singleTop"
             android:windowSoftInputMode="stateHidden|adjustResize">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
+            <meta-data android:name="android.app.shortcuts" android:resource="@xml/shortcuts" />
         </activity>
+
+        <service
+            android:name=".capture.NewNoteTileService"
+            android:exported="true"
+            android:icon="@drawable/ic_new_note"
+            android:label="@string/new_note"
+            android:permission="android.permission.BIND_QUICK_SETTINGS_TILE">
+            <intent-filter>
+                <action android:name="android.service.quicksettings.action.QS_TILE" />
+            </intent-filter>
+        </service>
+
+        <receiver android:name=".capture.BootReceiver" android:exported="false">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+                <action android:name="android.intent.action.MY_PACKAGE_REPLACED" />
+            </intent-filter>
+        </receiver>
     </application>
 </manifest>

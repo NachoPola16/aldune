@@ -126,4 +126,14 @@
     <string name="conflict_flag_cd">Diese Notiz wurde an zwei Orten gleichzeitig geändert</string>
     <string name="first_connect_discard_title">Die Notizen auf diesem Gerät verwerfen?</string>
     <string name="first_connect_discard_body">Notizen, die von diesem Gerät gelöscht werden: %1$d. Sie lassen sich nicht wiederherstellen. Du erhältst die Notizen des Profils.</string>
+    <string name="capture_section">Schnellerfassung</string>
+    <string name="capture_notification">Benachrichtigung zum Erstellen von Notizen</string>
+    <string name="capture_notification_hint">Eine stille Benachrichtigung mit Schaltfläche für eine neue Notiz</string>
+    <string name="capture_notification_denied">Benachrichtigungen sind für Aldune blockiert. Erlaube sie in den Systemeinstellungen, um dies zu nutzen.</string>
+    <string name="open_system_settings">Systemeinstellungen</string>
+    <string name="capture_channel_description">Hält eine Schaltfläche zum Starten einer Notiz bereit</string>
+    <string name="capture_notification_text">Tippen, um eine Notiz zu schreiben</string>
+    <string name="add_tile">Kachel für die Schnelleinstellungen hinzufügen</string>
+    <string name="add_tile_hint">Startet eine neue Notiz aus den Schnelleinstellungen</string>
+    <string name="add_tile_manual">Zum Hinzufügen die Schnelleinstellungen bearbeiten und „Neue Notiz“ hineinziehen.</string>
 </resources>

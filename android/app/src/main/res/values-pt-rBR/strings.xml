@@ -126,4 +126,14 @@
     <string name="conflict_flag_cd">Esta nota mudou em dois lugares ao mesmo tempo</string>
     <string name="first_connect_discard_title">Descartar as notas deste dispositivo?</string>
     <string name="first_connect_discard_body">Notas que serão apagadas deste dispositivo: %1$d. Não poderão ser recuperadas. Você receberá as notas do perfil.</string>
+    <string name="capture_section">Captura rápida</string>
+    <string name="capture_notification">Notificação para criar notas</string>
+    <string name="capture_notification_hint">Uma notificação silenciosa com um botão para começar uma nota</string>
+    <string name="capture_notification_denied">As notificações estão bloqueadas para o Aldune. Permita-as nas configurações do sistema para usar isto.</string>
+    <string name="open_system_settings">Configurações do sistema</string>
+    <string name="capture_channel_description">Mantém um botão para começar uma nota</string>
+    <string name="capture_notification_text">Toque para escrever uma nota</string>
+    <string name="add_tile">Adicionar o bloco das Configurações rápidas</string>
+    <string name="add_tile_hint">Começa uma nova nota a partir das configurações rápidas</string>
+    <string name="add_tile_manual">Para adicionar, edite as configurações rápidas e arraste “Nova nota”.</string>
 </resources>

@@ -5,6 +5,7 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import app.aldune.AldunaApp
 import app.aldune.AppContainer
+import app.aldune.capture.CaptureRequest
 import app.aldune.data.AppSettings
 import app.aldune.data.SettingsStore
 import app.aldune.domain.LostReason
@@ -76,6 +77,19 @@ class NotesViewModel(application: Application) : AndroidViewModel(application) {
     /** La sync borró (por un borrado firmado) la nota abierta en el editor de la clave dada: el editor tiene que cerrarse. */
     val deletedNotes: SharedFlow<String> = _deletedNotes
     private var started = false
+
+    private val _capture = MutableStateFlow<CaptureRequest?>(null)
+
+    /** Lo que pidió una puerta de captura y la interfaz aún no ha atendido. Se queda ahí hasta que haya pantalla (la base tarda en abrirse). */
+    val capture: StateFlow<CaptureRequest?> = _capture.asStateFlow()
+
+    fun requestCapture(request: CaptureRequest) {
+        _capture.value = request
+    }
+
+    fun captureHandled() {
+        _capture.value = null
+    }
 
     private val _state = MutableStateFlow<UiState>(UiState.Loading)
     val state: StateFlow<UiState> = _state.asStateFlow()

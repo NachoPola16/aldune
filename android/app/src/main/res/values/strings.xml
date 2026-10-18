@@ -126,4 +126,14 @@
     <string name="conflict_flag_cd">This note changed in two places at once</string>
     <string name="first_connect_discard_title">Discard the notes on this device?</string>
     <string name="first_connect_discard_body">Notes to delete from this device: %1$d. They can\'t be recovered. You\'ll get the notes the profile has.</string>
+    <string name="capture_section">Quick capture</string>
+    <string name="capture_notification">Notification to create notes</string>
+    <string name="capture_notification_hint">A silent notification with a button to start a note</string>
+    <string name="capture_notification_denied">Notifications are blocked for Aldune. Allow them in the system settings to use this.</string>
+    <string name="open_system_settings">System settings</string>
+    <string name="capture_channel_description">Keeps a button to start a note</string>
+    <string name="capture_notification_text">Tap to write a note</string>
+    <string name="add_tile">Add the Quick Settings tile</string>
+    <string name="add_tile_hint">Starts a new note from the quick settings panel</string>
+    <string name="add_tile_manual">To add it, edit the Quick Settings panel and drag “New note” in.</string>
 </resources>

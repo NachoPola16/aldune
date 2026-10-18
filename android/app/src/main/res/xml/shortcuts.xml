@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<shortcuts xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Pulsación larga en el icono: nota nueva. El paquete cambia entre depuración y versión final: lo pone el build (resValue). -->
+    <shortcut
+        android:shortcutId="new_note"
+        android:enabled="true"
+        android:icon="@drawable/ic_shortcut_new_note"
+        android:shortcutShortLabel="@string/new_note"
+        android:shortcutLongLabel="@string/new_note">
+        <intent
+            android:action="app.aldune.action.NEW_NOTE"
+            android:targetPackage="@string/shortcut_package"
+            android:targetClass="app.aldune.MainActivity" />
+    </shortcut>
+</shortcuts>

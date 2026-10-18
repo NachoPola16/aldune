@@ -51,6 +51,9 @@ import androidx.compose.ui.input.key.onPreviewKeyEvent
 import androidx.compose.ui.input.key.type
 import androidx.compose.ui.input.pointer.PointerEventPass
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalViewConfiguration
 import androidx.compose.ui.res.stringResource
@@ -73,7 +76,11 @@ import app.aldune.text.TaskLines
 import app.aldune.text.TaskLists
 import app.aldune.text.TextAndCaret
 import app.aldune.text.TextSelection
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+
+/** Espera antes de pedir el teclado en una nota nueva (ver el efecto de foco de [NoteEditorPane]). */
+private const val KEYBOARD_DELAY_MS = 250L
 
 /**
  * Editor de una nota: texto con ayudas de lista (casillas, viñetas, sangría) y guardado automático (lo hace el `ViewModel`, ver
@@ -186,6 +193,21 @@ fun NoteEditorPane(key: String, viewModel: NotesViewModel, onBack: () -> Unit, s
         commit(edit.text, moved)
     }
 
+    // Una nota nueva (el «+», el acceso directo, el mosaico, la notificación) es para escribir ya: se pide el foco y el teclado. Sin esto,
+    // el teclado salía o no según una carrera con el foco de la ventana (en frío no, con la app ya abierta sí). Una nota existente no lo abre:
+    // al leerla no hay que tapar la mitad del texto.
+    val focus = remember { FocusRequester() }
+    val keyboard = LocalSoftwareKeyboardController.current
+    LaunchedEffect(key, loaded, protectedNote) {
+        if (key.isEmpty() && loaded && !protectedNote) {
+            focus.requestFocus()
+            // `stateHidden` de la ventana oculta el teclado al arrancar y se come un show() demasiado temprano: se espera a que la ventana se
+            // asiente. (Con la app ya abierta no hace falta, pero no estorba.)
+            delay(KEYBOARD_DELAY_MS)
+            keyboard?.show()
+        }
+    }
+
     LaunchedEffect(tap) {
         val position = tap ?: return@LaunchedEffect
         withFrameNanos { }
@@ -221,6 +243,7 @@ fun NoteEditorPane(key: String, viewModel: NotesViewModel, onBack: () -> Unit, s
                 .weight(1f)
                 .fillMaxWidth()
                 .padding(horizontal = 16.dp, vertical = 8.dp)
+                .focusRequester(focus)
                 // Tocar una casilla la marca. Se mira en la pasada Initial y sin consumir nada: el campo sigue recibiendo
                 // el toque (cursor, teclado) como siempre.
                 .pointerInput(key) {

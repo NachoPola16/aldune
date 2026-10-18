@@ -18,6 +18,8 @@ data class AppSettings(
     val reorderOnCheck: Boolean = false,
     /** Tono de las notas nuevas: claros (por defecto, como Windows) u oscuros. */
     val darkNotes: Boolean = false,
+    /** La notificación fija «Nota nueva» (spec de F6 §2.2). Apagada por defecto. */
+    val captureNotification: Boolean = false,
 )
 
 object Languages {
@@ -48,6 +50,7 @@ class SettingsStore(context: Context) {
             trashDays = prefs.getInt(TRASH_DAYS, d.trashDays).coerceIn(1, 365),
             reorderOnCheck = prefs.getBoolean(REORDER_ON_CHECK, d.reorderOnCheck),
             darkNotes = prefs.getBoolean(DARK_NOTES, d.darkNotes),
+            captureNotification = prefs.getBoolean(CAPTURE_NOTIFICATION, d.captureNotification),
         )
     }
 
@@ -58,6 +61,7 @@ class SettingsStore(context: Context) {
             .putInt(TRASH_DAYS, settings.trashDays)
             .putBoolean(REORDER_ON_CHECK, settings.reorderOnCheck)
             .putBoolean(DARK_NOTES, settings.darkNotes)
+            .putBoolean(CAPTURE_NOTIFICATION, settings.captureNotification)
             .apply() // apply ya deja el valor visible en este proceso: el `recreate()` del cambio de idioma lo lee al instante.
     }
 
@@ -68,5 +72,6 @@ class SettingsStore(context: Context) {
         const val TRASH_DAYS = "trashDays"
         const val REORDER_ON_CHECK = "reorderOnCheck"
         const val DARK_NOTES = "darkNotes"
+        const val CAPTURE_NOTIFICATION = "captureNotification"
     }
 }

@@ -1,0 +1,30 @@
+package app.aldune.capture
+
+import android.content.Context
+import android.content.Intent
+import app.aldune.MainActivity
+
+/** Lo que una puerta de captura (acceso directo, mosaico, notificación, widget) le pide a la interfaz. */
+sealed interface CaptureRequest {
+    /** Abrir el editor con una nota nueva, todavía sin texto: no existe hasta el primer carácter. */
+    data object NewNote : CaptureRequest
+}
+
+object CaptureIntents {
+    const val ACTION_NEW_NOTE = "app.aldune.action.NEW_NOTE"
+
+    /**
+     * El intent de «nota nueva» para quien no es una actividad (mosaico, notificación). `CLEAR_TOP` con `singleTop` entrega el intent a la
+     * instancia que ya existe en vez de apilar otra copia de la app; `NEW_TASK` es obligatorio desde fuera de una actividad.
+     */
+    fun newNote(context: Context): Intent =
+        Intent(context, MainActivity::class.java)
+            .setAction(ACTION_NEW_NOTE)
+            .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP)
+
+    /** Qué pide un intent que llegó a la actividad, o `null` si no es de captura. */
+    fun requestOf(intent: Intent?): CaptureRequest? = when (intent?.action) {
+        ACTION_NEW_NOTE -> CaptureRequest.NewNote
+        else -> null
+    }
+}
