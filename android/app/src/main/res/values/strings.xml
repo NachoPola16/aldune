@@ -136,4 +136,6 @@
     <string name="add_tile">Add the Quick Settings tile</string>
     <string name="add_tile_hint">Starts a new note from the quick settings panel</string>
     <string name="add_tile_manual">To add it, edit the Quick Settings panel and drag “New note” in.</string>
+    <string name="share_empty">There is no text to save</string>
+    <string name="share_too_long">The text is too long for a note</string>
 </resources>

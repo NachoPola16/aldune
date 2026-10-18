@@ -8,6 +8,9 @@ import app.aldune.MainActivity
 sealed interface CaptureRequest {
     /** Abrir el editor con una nota nueva, todavía sin texto: no existe hasta el primer carácter. */
     data object NewNote : CaptureRequest
+
+    /** Lo que otra app compartió con Aldune (`ACTION_SEND` de texto): `EXTRA_TEXT` y, si trae, `EXTRA_SUBJECT`. */
+    data class SharedText(val text: String?, val subject: String?) : CaptureRequest
 }
 
 object CaptureIntents {
@@ -25,6 +28,14 @@ object CaptureIntents {
     /** Qué pide un intent que llegó a la actividad, o `null` si no es de captura. */
     fun requestOf(intent: Intent?): CaptureRequest? = when (intent?.action) {
         ACTION_NEW_NOTE -> CaptureRequest.NewNote
+        Intent.ACTION_SEND ->
+            if (intent.type?.startsWith("text/") == true) {
+                CaptureRequest.SharedText(
+                    intent.getCharSequenceExtra(Intent.EXTRA_TEXT)?.toString(), intent.getCharSequenceExtra(Intent.EXTRA_SUBJECT)?.toString(),
+                )
+            } else {
+                null
+            }
         else -> null
     }
 }

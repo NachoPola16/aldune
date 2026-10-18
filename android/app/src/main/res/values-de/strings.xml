@@ -136,4 +136,6 @@
     <string name="add_tile">Kachel für die Schnelleinstellungen hinzufügen</string>
     <string name="add_tile_hint">Startet eine neue Notiz aus den Schnelleinstellungen</string>
     <string name="add_tile_manual">Zum Hinzufügen die Schnelleinstellungen bearbeiten und „Neue Notiz“ hineinziehen.</string>
+    <string name="share_empty">Es gibt keinen Text zum Speichern</string>
+    <string name="share_too_long">Der Text ist für eine Notiz zu lang</string>
 </resources>

@@ -22,6 +22,7 @@ import androidx.compose.material3.adaptive.layout.PaneAdaptedValue
 import androidx.compose.material3.adaptive.navigation.NavigableListDetailPaneScaffold
 import androidx.compose.material3.adaptive.navigation.rememberListDetailPaneScaffoldNavigator
 import androidx.compose.runtime.Composable
+import android.widget.Toast
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -31,6 +32,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -75,11 +77,26 @@ private fun NotesScaffold(state: UiState.Ready, viewModel: NotesViewModel, onOpe
     // Acceso directo, mosaico, notificación: abren el editor con una nota nueva. Si ya se está en una nota nueva no se hace nada: reabrirla
     // tiraría su borrador y lo que se estuviera escribiendo no se guardaría.
     val capture by viewModel.capture.collectAsStateWithLifecycle()
+    val context = LocalContext.current
     LaunchedEffect(capture) {
         when (capture) {
             CaptureRequest.NewNote -> if (navigator.currentDestination?.contentKey != NEW_NOTE) {
                 viewModel.startNewNote()
                 navigator.navigateTo(ListDetailPaneScaffoldRole.Detail, NEW_NOTE)
+            }
+            is CaptureRequest.SharedText -> {
+                // Se marca atendida antes de guardar: si la actividad se recrea a mitad, no se crea una segunda nota. Pero eso cambia la
+                // clave de este efecto y lo cancela, así que el trabajo va en `scope` (no depende de la clave): guardar y abrir la nota.
+                val shared = capture as CaptureRequest.SharedText
+                viewModel.captureHandled()
+                scope.launch {
+                    when (val outcome = viewModel.createShared(shared.text, shared.subject)) {
+                        is NotesViewModel.SharedOutcome.Created -> navigator.navigateTo(ListDetailPaneScaffoldRole.Detail, outcome.id)
+                        NotesViewModel.SharedOutcome.Empty -> Toast.makeText(context, R.string.share_empty, Toast.LENGTH_SHORT).show()
+                        NotesViewModel.SharedOutcome.TooLong -> Toast.makeText(context, R.string.share_too_long, Toast.LENGTH_LONG).show()
+                    }
+                }
+                return@LaunchedEffect
             }
             null -> return@LaunchedEffect
         }

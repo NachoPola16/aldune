@@ -13,6 +13,8 @@ import app.aldune.domain.NewNoteColorSettings
 import app.aldune.domain.NoteListItem
 import app.aldune.domain.NoteResult
 import app.aldune.domain.NoteService
+import app.aldune.domain.SharedNote
+import app.aldune.domain.SharedNoteText
 import app.aldune.domain.NoteState
 import app.aldune.syncclient.SyncEvent
 import app.aldune.syncing.SyncController
@@ -89,6 +91,31 @@ class NotesViewModel(application: Application) : AndroidViewModel(application) {
 
     fun captureHandled() {
         _capture.value = null
+    }
+
+    /** Qué pasó al guardar un texto compartido. */
+    sealed interface SharedOutcome {
+        /** Se creó la nota [id]: hay que abrirla en el editor. */
+        data class Created(val id: String) : SharedOutcome
+        data object Empty : SharedOutcome
+        data object TooLong : SharedOutcome
+    }
+
+    /**
+     * Guarda lo que otra app compartió. La nota se crea ya, sin esperar al editor: el texto no lo ha escrito el usuario aquí, y si no se
+     * crea ahora, un cierre antes de tocar nada lo perdería. (Una nota nueva vacía no existe hasta el primer carácter; esta ya tiene texto.)
+     */
+    suspend fun createShared(text: String?, subject: String?): SharedOutcome = withContext(Dispatchers.IO + NonCancellable) {
+        when (val composed = SharedNoteText.compose(text, subject)) {
+            SharedNote.Empty -> SharedOutcome.Empty
+            SharedNote.TooLong -> SharedOutcome.TooLong
+            is SharedNote.Text -> io.withLock {
+                val created = service?.create(composed.value, settings = newNoteColors()) as? NoteResult.Ok
+                refreshLocked()
+                syncEvent(SyncEvent.LocalChange)
+                created?.let { SharedOutcome.Created(it.value.id) } ?: SharedOutcome.Empty
+            }
+        }
     }
 
     private val _state = MutableStateFlow<UiState>(UiState.Loading)

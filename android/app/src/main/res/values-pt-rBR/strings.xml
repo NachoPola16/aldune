@@ -136,4 +136,6 @@
     <string name="add_tile">Adicionar o bloco das Configurações rápidas</string>
     <string name="add_tile_hint">Começa uma nova nota a partir das configurações rápidas</string>
     <string name="add_tile_manual">Para adicionar, edite as configurações rápidas e arraste “Nova nota”.</string>
+    <string name="share_empty">Não há texto para salvar</string>
+    <string name="share_too_long">O texto é longo demais para uma nota</string>
 </resources>

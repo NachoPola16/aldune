@@ -136,4 +136,6 @@
     <string name="add_tile">Ajouter la tuile des réglages rapides</string>
     <string name="add_tile_hint">Commence une nouvelle note depuis les réglages rapides</string>
     <string name="add_tile_manual">Pour l\'ajouter, modifiez les réglages rapides et faites glisser « Nouvelle note ».</string>
+    <string name="share_empty">Il n\'y a pas de texte à enregistrer</string>
+    <string name="share_too_long">Le texte est trop long pour une note</string>
 </resources>

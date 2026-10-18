@@ -136,4 +136,6 @@
     <string name="add_tile">Añadir el mosaico de Ajustes rápidos</string>
     <string name="add_tile_hint">Empieza una nota nueva desde el panel de ajustes rápidos</string>
     <string name="add_tile_manual">Para añadirlo, edita el panel de ajustes rápidos y arrastra «Nota nueva».</string>
+    <string name="share_empty">No hay texto que guardar</string>
+    <string name="share_too_long">El texto es demasiado largo para una nota</string>
 </resources>
