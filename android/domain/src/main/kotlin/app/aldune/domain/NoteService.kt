@@ -237,13 +237,8 @@ class NoteService(
         return NoteResult.Err(NoteError.InvalidArgument(reason))
     }
 
-    /**
-     * El orden del mazo de `NotesRepository.GetByState`: `ORDER BY COALESCE(Position, 1e18), CreatedAt`. Las que no tienen posición van
-     * detrás de todas las numeradas (salvo una posición mayor que 1e18, que Core también deja detrás: se copia tal cual). Core no define
-     * el desempate de un empate de fecha; aquí se añade el id para que el resultado no cambie entre llamadas.
-     */
-    private fun dockOrdered(notes: List<Note>): List<Note> =
-        notes.sortedWith(compareBy<Note> { it.dockPosition ?: UNPOSITIONED }.thenBy { it.createdAt }.thenBy { it.id })
+    /** El orden del mazo de `NotesRepository.GetByState` (`ORDER BY COALESCE(Position, 1e18), CreatedAt`); la regla vive en [DockOrder]. */
+    private fun dockOrdered(notes: List<Note>): List<Note> = DockOrder.sort(notes)
 
     /**
      * Aplica un cambio local a una nota. Si [transform] devuelve la misma nota, no hay cambio y no se escribe; si devuelve otra,
@@ -262,9 +257,6 @@ class NoteService(
     companion object {
         const val DEFAULT_TRASH_RETENTION_DAYS = 30
         const val MAX_TAGS = 20
-
-        /** El `1e18` de Core para las notas sin posición. */
-        private const val UNPOSITIONED = 1e18
 
         fun normalizeTags(tags: List<String>): List<String> {
             val seen = HashSet<String>()
