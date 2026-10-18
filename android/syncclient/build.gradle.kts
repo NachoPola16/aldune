@@ -14,9 +14,14 @@ dependencies {
 
     // La batería del contrato la hereda `app` en sus pruebas; necesita JUnit y los tipos de domain en la API de los fixtures.
     testFixturesApi(project(":domain"))
+    testFixturesApi(kotlin("test"))
     testFixturesApi(platform(libs.junit.bom))
     testFixturesApi(libs.junit.jupiter)
 
+    // Solo para leer y escribir el JSON del contenido protegido con el mismo formato que core (ver SyncMapping.kt).
+    implementation(libs.kotlinx.serialization.json)
+
+    testImplementation(kotlin("test"))
     testImplementation(libs.okhttp.mockwebserver)
     testImplementation(platform(libs.junit.bom))
     testImplementation(libs.junit.jupiter)
