@@ -2,7 +2,7 @@
 
 Cierra las tareas 3, 4 y 5 de [`2026-10-18-aldune-android-f5-design.md`](superpowers/specs/2026-10-18-aldune-android-f5-design.md) §7; las tareas 1 y 2 las hizo la
 sesión de nube ([`INFORME-NUBE-F5.md`](INFORME-NUBE-F5.md)). Probado en la tableta (Lenovo TB350FU, Android 14) por USB, con un servidor de sync de pruebas en este PC
-y un «PC» simulado ([`ANDROID_PROBES.md`](ANDROID_PROBES.md), «Sonda de la sync»). **El Pixel no estaba conectado**: falta repetir las sondas allí.
+y un «PC» simulado ([`ANDROID_PROBES.md`](ANDROID_PROBES.md), «Sonda de la sync»). Después se repitió en el Pixel y contra el servidor desplegado en el CT 103 (ver «Sondas en el Pixel y en el CT 103»).
 
 ## Estado
 
@@ -13,7 +13,7 @@ y un «PC» simulado ([`ANDROID_PROBES.md`](ANDROID_PROBES.md), «Sonda de la sy
 | 3 | Room v2, `RoomLocalSyncStore`, batería del contrato en el dispositivo | hecha |
 | 4 | Secretos, perfil, Ajustes → Sincronización, primera conexión | hecha |
 | 5 | Icono de estado, tirar para sincronizar, candado y conflicto en la fila, disparadores, WorkManager | hecha |
-| 6 | Sondas | hecha en la tableta; **falta el servidor del CT 103** y el Pixel |
+| 6 | Sondas | hecha en la tableta, en el Pixel y contra el servidor del CT 103 |
 
 ## Verificación
 
@@ -56,6 +56,34 @@ y un «PC» simulado ([`ANDROID_PROBES.md`](ANDROID_PROBES.md), «Sonda de la sy
 | Trabajo periódico de WorkManager | registrado (`RUNNABLE`) al conectar y **cancelado** al desconectar |
 | Desconectar | ok: se borra `syncsecrets.bin`, se cancela el trabajo, las notas se quedan |
 
+## Sondas en el Pixel y en el CT 103
+
+**Pixel 10a (Android 17)**, 1080x2424, con el modo «No molestar» activado (una notificación de WhatsApp tapó la pantalla en la primera tentativa y se paró hasta activarlo).
+Primero contra el servidor local por `adb reverse`, después contra el **servidor desplegado en el CT 103** por WiFi (`http://192.168.1.73:8098`).
+
+El servidor del CT 103 se probó con un **contenedor desechable** (misma imagen que el servidor real, puerto 8098, sin volumen, `--rm`, token aleatorio), no con el servidor
+real ni con el perfil real del usuario. Se borró al terminar; el servidor real (`aldune-sync`, puerto 8097) siguió arriba y `/health` contestó `ok` antes y después.
+
+| Sonda | Pixel + servidor local | Pixel + CT 103 |
+|---|---|---|
+| Conectar con el móvil **vacío** (sin diálogo) y recibir las notas del almacén, con la protegida con candado y la papelera | ok | n/a |
+| Conectar con notas locales → diálogo («Notas en este dispositivo: 3»); el texto nuevo ya no tiene el plural | n/a | ok |
+| «Descartarlas»: el móvil queda vacío y **no se sube nada** (sin lápidas) | n/a | ok |
+| Nota creada en el Pixel → sube sola a los pocos segundos y la **descifra la sonda externa** | n/a | ok |
+| Edición del «PC» + tirar de la lista | ok | n/a |
+| Conflicto (el «PC» y el Pixel editan la misma nota): gana la más reciente (Pixel), sube, icono ⚠ legible | ok | n/a |
+| Borrado **firmado** del «PC» → la nota desaparece del Pixel | n/a | ok |
+| Aviso de HTTP legible (antes casi invisible) | ok | ok |
+| Desconectar y volver a conectar con otro perfil | ok | ok |
+
+Hallazgos nuevos:
+
+1. **Bitwarden ofrece guardar el token** al conectar (el campo es de contraseña y el gestor lo toma por una). No es un fallo, pero conviene decidir si se marca el campo para que
+   el autorrelleno lo ignore (`importantForAutofill`) o se deja, porque un gestor de contraseñas es un buen sitio para un token.
+2. En un teléfono el diálogo de primera conexión apila «Subirlas» arriba y «Cancelar / Descartarlas» abajo. Se entiende, pero «Descartarlas» queda pegado a «Cancelar».
+   Es una acción que no se deshace: revisar el orden y quizá pedir confirmación.
+3. El contador del diálogo cuenta también las notas de la papelera («Notas en este dispositivo: 3» con 2 activas y 1 en la papelera). Es lo que dice la spec (§4.8: cualquier estado).
+
 ## Hallazgos de la sonda (corregidos)
 
 1. **«unexpected end of stream» se clasificaba como error desconocido.** Un proxy, un túnel o un servidor que corta a mitad de la respuesta cierran el socket y OkHttp lanza un
@@ -68,8 +96,8 @@ y un «PC» simulado ([`ANDROID_PROBES.md`](ANDROID_PROBES.md), «Sonda de la sy
 
 ## Sin resolver o por decidir
 
-- **Falta el servidor real del CT 103 y el Pixel.** Todo se probó contra un servidor de pruebas en este PC (por `adb reverse`) y solo en la tableta. Falta una sonda con el perfil de prueba
-  del CT 103 (spec §6.4) y la misma en el Pixel.
+- El servidor real del usuario no se ha tocado: se probó un contenedor desechable con la misma imagen. Falta, si se quiere, una sonda con el perfil real, que solo
+  debería hacer el usuario (sincroniza sus notas de verdad).
 - **Edición simultánea con el editor**: si el usuario **está escribiendo** en una nota y la sync trae una versión nueva de esa misma nota, gana lo que escribe el usuario (se guarda como una
   edición más reciente) y la versión que llegó se pierde sin dejar conflicto. Evitarlo del todo exige un editor con fusión; es un caso raro (misma nota, a la vez, en dos sitios).
 - Una nota protegida que llega **no se puede abrir** (F7); sí se puede archivar, mandar a la papelera, colorear y mover.
