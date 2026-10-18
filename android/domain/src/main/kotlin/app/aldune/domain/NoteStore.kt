@@ -48,4 +48,29 @@ class InMemoryNoteStore : NoteStore {
     }
 
     @Synchronized override fun tombstones(): List<Tombstone> = deleted.values.toList()
+
+    // --- Lo que la sync necesita y el NoteStore normal no ofrece. Room lo hará con SQL; aquí, para el almacén de pruebas. ---
+
+    /** Guarda una lápida tal cual (la de un borrado recibido lleva el `deviceId` de su autor, no el marcador `local`). */
+    @Synchronized fun putTombstone(tombstone: Tombstone) {
+        deleted[tombstone.noteId] = tombstone
+        writeCount++
+    }
+
+    /** Quita la lápida de [id]; no hace nada si no había. Es lo que pasa cuando una nota borrada vuelve por sync. */
+    @Synchronized fun removeTombstone(id: String) {
+        if (deleted.remove(id) != null) writeCount++
+    }
+
+    /** Quita la nota **sin** dejar lápida: un borrado recibido deja la suya, con el autor remoto. */
+    @Synchronized fun removeWithoutTombstone(id: String) {
+        if (notes.remove(id) != null) writeCount++
+    }
+
+    /** Vacía notas y lápidas sin dejar rastro (primera conexión → «descartar»). */
+    @Synchronized fun clear() {
+        if (notes.isNotEmpty() || deleted.isNotEmpty()) writeCount++
+        notes.clear()
+        deleted.clear()
+    }
 }
