@@ -37,4 +37,21 @@ class NoteListItemTest {
     fun `una nota sin texto usa el titulo de relleno que se le pase`() {
         assertEquals("Nueva nota", NoteListItem.from(note("  \n  "), "Nueva nota").title)
     }
+
+    @Test
+    fun `una nota protegida sale con el titulo de relleno, sin vista previa ni tareas`() {
+        val protected = note("", listOf("casa")).copy(isProtected = true, protectedContentJson = "{}")
+        val item = NoteListItem.from(protected, "Nota nueva", protectedTitle = "Nota protegida")
+
+        assertTrue(item.isProtected)
+        assertEquals("Nota protegida", item.title)
+        assertEquals("", item.preview)
+        assertFalse(item.hasTasks)
+        assertEquals(listOf("casa"), item.tags)
+    }
+
+    @Test
+    fun `una nota normal no es protegida`() {
+        assertFalse(NoteListItem.from(note("hola"), "Nota nueva", protectedTitle = "Nota protegida").isProtected)
+    }
 }

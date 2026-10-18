@@ -75,8 +75,9 @@ fun classifyFailure(cause: Throwable): SyncFailure {
     if (MALFORMED_ANSWERS.any { message.contains(it) }) return SyncFailure(SyncFailureKind.SERVER_ERROR, detail)
 
     // UnknownHostException, ConnectException, NoRouteToHostException, SocketTimeoutException y «Connection reset» son SocketException o
-    // InterruptedIOException (el callTimeout de OkHttp lanza esta última sin ser un SocketTimeoutException).
-    if (chain.any { it is SocketException || it is InterruptedIOException || it is java.net.UnknownHostException }) {
+    // InterruptedIOException (el callTimeout de OkHttp lanza esta última sin ser un SocketTimeoutException). EOFException es la conexión que
+    // se cierra sin contestar (un proxy, un túnel o un servidor que se cae a mitad): OkHttp la envuelve en «unexpected end of stream».
+    if (chain.any { it is SocketException || it is InterruptedIOException || it is java.net.UnknownHostException || it is java.io.EOFException }) {
         return SyncFailure(SyncFailureKind.OFFLINE, detail)
     }
     return SyncFailure(SyncFailureKind.UNKNOWN, detail)

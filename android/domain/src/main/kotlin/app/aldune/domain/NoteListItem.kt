@@ -16,12 +16,20 @@ data class NoteListItem(
     val tasksTotal: Int,
     val tags: List<String>,
     val state: NoteState,
+    /** Una protegida no enseña su texto (no se conoce sin contraseña): título de relleno, sin vista previa ni tareas. */
+    val isProtected: Boolean = false,
 ) {
     val hasTasks: Boolean get() = tasksTotal > 0
 
     companion object {
-        /** [placeholder] es el título de una nota sin texto, en el idioma de la interfaz. */
-        fun from(note: Note, placeholder: String): NoteListItem {
+        /** [placeholder] es el título de una nota sin texto y [protectedTitle] el de una protegida, en el idioma de la interfaz. */
+        fun from(note: Note, placeholder: String, protectedTitle: String = placeholder): NoteListItem {
+            if (note.isProtected) {
+                return NoteListItem(
+                    id = note.id, title = protectedTitle, preview = "", color = note.color, tasksDone = 0, tasksTotal = 0,
+                    tags = note.tags, state = note.state, isProtected = true,
+                )
+            }
             val count = TaskLines.count(note.text)
             return NoteListItem(
                 id = note.id, title = NoteTitleHelper.getTitle(note.text, placeholder), preview = NoteTitleHelper.getPreview(note.text),

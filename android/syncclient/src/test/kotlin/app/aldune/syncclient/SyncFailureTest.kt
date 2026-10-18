@@ -126,6 +126,14 @@ class SyncFailureTest {
         assertEquals(SyncFailureKind.OFFLINE, readFailure(http(timeout = Duration.ofMillis(300))).kind)
     }
 
+    @Test fun `una conexion cortada sin respuesta es sin conexion`() {
+        // Un proxy, un túnel o un servidor que se cae a mitad cierran el socket sin contestar: OkHttp lo cuenta como «unexpected end of stream».
+        server.enqueue(MockResponse().setSocketPolicy(SocketPolicy.DISCONNECT_AFTER_REQUEST))
+        val failure = readFailure(http())
+        assertEquals(SyncFailureKind.OFFLINE, failure.kind)
+        assertNull(failure.httpStatus)
+    }
+
     @Test fun `un nombre que no resuelve es sin conexion`() {
         val failure = readFailure(HttpSyncTransport("http://no-existe.invalid/", "token", Duration.ofSeconds(5)))
         assertEquals(SyncFailureKind.OFFLINE, failure.kind)
