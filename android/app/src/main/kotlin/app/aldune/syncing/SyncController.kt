@@ -79,6 +79,15 @@ class SyncController(
     @Volatile
     var onNotesChanged: (() -> Unit)? = null
 
+    /** Lo mismo para el contenedor (reconciliar los recordatorios): vale también sin interfaz, en una pasada del trabajador de segundo plano. */
+    @Volatile
+    var afterNotesChanged: (() -> Unit)? = null
+
+    private fun notesChanged() {
+        afterNotesChanged?.invoke()
+        onNotesChanged?.invoke()
+    }
+
     private val _profile = MutableStateFlow(profiles.load())
     val profile: StateFlow<SyncProfile?> = _profile.asStateFlow()
 
@@ -156,7 +165,7 @@ class SyncController(
             is SyncOutcome.Failure -> setStatus(_status.value.copy(running = false, lastFailure = outcome.failure))
         }
         refreshConflicts()
-        if (outcome is SyncOutcome.Success && outcome.received + outcome.tombstonesApplied + outcome.trashed + outcome.conflicts > 0) onNotesChanged?.invoke()
+        if (outcome is SyncOutcome.Success && outcome.received + outcome.tombstonesApplied + outcome.trashed + outcome.conflicts > 0) notesChanged()
         return outcome
     }
 
@@ -207,7 +216,7 @@ class SyncController(
             policyLock.withLock { policy.setProfileConfigured(true) }
             refreshConflicts()
             schedule.ensure()
-            onNotesChanged?.invoke()
+            notesChanged()
             ConnectResult.Connected
         }.also { if (it == ConnectResult.Connected) request(SyncEvent.ManualSync) }
     }

@@ -14,13 +14,13 @@ import app.aldune.domain.DataKeyState
 import app.aldune.domain.LostReason
 import app.aldune.domain.NoteService
 import app.aldune.domain.RandomIdFactory
-import app.aldune.domain.ReminderStore
 import app.aldune.domain.SystemClock
 import app.aldune.syncclient.ConflictResolver
 import app.aldune.syncclient.ConflictStore
 import app.aldune.syncclient.ProtectionService
 import app.aldune.syncclient.SecretVault
 import app.aldune.syncclient.TombstoneEraser
+import app.aldune.reminders.Reminders
 import app.aldune.syncing.SyncController
 import app.aldune.syncing.SyncWork
 import java.io.File
@@ -48,7 +48,7 @@ class AppContainer(context: Context) {
             val protection: ProtectionService,
             val conflictStore: ConflictStore,
             val conflicts: ConflictResolver,
-            val reminders: ReminderStore,
+            val reminders: Reminders,
         ) : Opened()
 
         /** La base existe pero su clave no se puede recuperar. La interfaz lo explica y ofrece [startOver]; nada se ha borrado. */
@@ -88,7 +88,10 @@ class AppContainer(context: Context) {
             // Los secretos de la sync tienen su propia clave de envoltura (otro alias): empezar de cero con las notas no los toca.
             val vault = SecretVault(File(appContext.noBackupFilesDir, VAULT_FILE), AndroidKeystoreKeyWrapper(VAULT_ALIAS))
             val sync = SyncController(SyncProfileStore(appContext), vault, RoomLocalSyncStore(database, store, cipher), SystemClock, scope, SyncWork(appContext))
-            val reminders = RoomReminderStore(database)
+            val reminderStore = RoomReminderStore(database)
+            val reminders = Reminders(appContext, store, reminderStore, SystemClock)
+            // Una pasada que trae notas archivadas o borradas deja recordatorios sin nota: se reconcilian también sin interfaz.
+            sync.afterNotesChanged = reminders::reconcile
             val conflictStore = RoomConflictStore(database, cipher)
             // Recuperar una nota con «Usar la otra» tiene que quitar su lápida local, o la sync seguiría firmando el borrado (informe de F7).
             val eraser = TombstoneEraser { database.notes().deleteTombstone(it) }
@@ -98,7 +101,7 @@ class AppContainer(context: Context) {
                 sync,
                 ProtectionService(store, SystemClock),
                 conflictStore,
-                ConflictResolver(store, conflictStore, reminders, SystemClock, deviceId = "", tombstones = eraser),
+                ConflictResolver(store, conflictStore, reminderStore, SystemClock, deviceId = "", tombstones = eraser),
                 reminders,
             ).also { cached = it }
         } finally {

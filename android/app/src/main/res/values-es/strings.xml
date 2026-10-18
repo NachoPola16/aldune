@@ -180,4 +180,9 @@
     <string name="conflicts_orphan_hint">Estas notas se borraron en otro dispositivo después de que las editaras aquí.</string>
     <string name="conflict_recover">Recuperar la nota</string>
     <string name="conflict_discard">Descartar</string>
+    <string name="reminders_channel">Recordatorios</string>
+    <string name="reminders_channel_description">Los recordatorios de las notas en este dispositivo</string>
+    <string name="reminder_done">Hecho</string>
+    <string name="reminder_snooze_hour">+1 h</string>
+    <string name="reminder_snooze_morning">Mañana 9:00</string>
 </resources>

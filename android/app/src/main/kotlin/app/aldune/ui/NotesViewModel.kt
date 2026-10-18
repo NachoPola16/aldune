@@ -45,6 +45,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
+import java.time.Instant
 
 /** Una nota que ganó un borrado de otro equipo mientras se editaba aquí: ya no existe y su versión editada se puede recuperar. */
 data class OrphanConflict(val noteId: String, val title: String, val isProtected: Boolean)
@@ -65,6 +66,8 @@ sealed interface UiState {
         val counts: Map<NoteState, Int> = emptyMap(),
         /** Los conflictos sin nota (ganó un borrado): la lista «N conflictos». */
         val orphans: List<OrphanConflict> = emptyList(),
+        /** La hora de los recordatorios puestos, por id de nota: la campana de la fila. */
+        val reminders: Map<String, Instant> = emptyMap(),
     ) : UiState
 }
 
@@ -218,6 +221,10 @@ class NotesViewModel(application: Application) : AndroidViewModel(application) {
         _sync.value = opened.sync.also { it.onNotesChanged = { launchIo { reconcileDrafts(); refreshLocked(); widgetChanged() } } }
         // Como Windows: la papelera se purga al abrir, con los días de los ajustes (30 por defecto).
         notes.purgeTrashed(_settings.value.trashDays)
+        // Al abrir: avisa de los vencidos con la app muerta, limpia los de notas que ya no están y programa los demás.
+        opened.reminders.reconcile()
+        // Un receptor (la alarma, los botones de la notificación) puede cambiar recordatorios con la lista abierta: la campana se repinta.
+        viewModelScope.launch { opened.reminders.changes.collect { launchIo { refreshLocked() } } }
         _state.value = UiState.Ready()
         refresh()
         widgetChanged()
@@ -556,6 +563,7 @@ class NotesViewModel(application: Application) : AndroidViewModel(application) {
             } else {
                 current.conflicts.keepCurrent(noteId)
             }
+            current.reminders.reconcile()
             refreshLocked()
             current.sync.refreshConflicts()
             syncEvent(SyncEvent.LocalChange)
@@ -598,8 +606,19 @@ class NotesViewModel(application: Application) : AndroidViewModel(application) {
 
     private fun newNoteColors() = NewNoteColorSettings(tone = if (_settings.value.darkNotes) NoteTone.Dark else NoteTone.Light)
 
+    // ───────────── Recordatorios (F7) ─────────────
+
+    /** El recordatorio de la nota, o `null`. */
+    suspend fun reminderFor(noteId: String): Instant? = withContext(Dispatchers.IO) { ready?.reminders?.get(noteId)?.dueAt }
+
+    fun setReminder(noteId: String, dueAt: Instant) = launchIo { ready?.reminders?.set(noteId, dueAt) }
+
+    fun clearReminder(noteId: String) = launchIo { ready?.reminders?.clear(noteId) }
+
+    // Archivar, la papelera, borrar o restaurar cambian qué notas avisan: se reconcilian las alarmas (no en cada autoguardado: el texto no cuenta).
     private fun change(op: (NoteService) -> Any?) = launchIo {
         service?.let(op)
+        ready?.reminders?.reconcile()
         refresh()
         syncEvent(SyncEvent.LocalChange)
         widgetChanged()
@@ -627,6 +646,7 @@ class NotesViewModel(application: Application) : AndroidViewModel(application) {
             val title = if (note.isProtected) protectedTitle else NoteTitleHelper.getTitle(LineEnding.normalize(note.text), placeholder)
             OrphanConflict(conflict.noteId.toString(), title, note.isProtected)
         }
-        _state.update { (it as? UiState.Ready)?.copy(items = items, allTags = tags, counts = counts, orphans = orphans) ?: it }
+        val reminders = ready?.reminders?.all().orEmpty().associate { it.noteId to it.dueAt }
+        _state.update { (it as? UiState.Ready)?.copy(items = items, allTags = tags, counts = counts, orphans = orphans, reminders = reminders) ?: it }
     }
 }

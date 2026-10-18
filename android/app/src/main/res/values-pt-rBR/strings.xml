@@ -180,4 +180,9 @@
     <string name="conflicts_orphan_hint">Estas notas foram excluídas em outro dispositivo depois que você as editou aqui.</string>
     <string name="conflict_recover">Recuperar a nota</string>
     <string name="conflict_discard">Descartar</string>
+    <string name="reminders_channel">Lembretes</string>
+    <string name="reminders_channel_description">Os lembretes das notas neste dispositivo</string>
+    <string name="reminder_done">Feito</string>
+    <string name="reminder_snooze_hour">+1 h</string>
+    <string name="reminder_snooze_morning">Amanhã 9:00</string>
 </resources>

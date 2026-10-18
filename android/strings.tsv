@@ -179,3 +179,8 @@ conflicts_title	Conflicts	Conflictos	Konflikte	Conflits	Conflitos
 conflicts_orphan_hint	These notes were deleted on another device after you edited them here.	Estas notas se borraron en otro dispositivo después de que las editaras aquí.	Diese Notizen wurden auf einem anderen Gerät gelöscht, nachdem du sie hier bearbeitet hast.	Ces notes ont été supprimées sur un autre appareil après que tu les as modifiées ici.	Estas notas foram excluídas em outro dispositivo depois que você as editou aqui.
 conflict_recover	Recover the note	Recuperar la nota	Notiz wiederherstellen	Récupérer la note	Recuperar a nota
 conflict_discard	Discard	Descartar	Verwerfen	Ignorer	Descartar
+reminders_channel	Reminders	Recordatorios	Erinnerungen	Rappels	Lembretes
+reminders_channel_description	Note reminders on this device	Los recordatorios de las notas en este dispositivo	Erinnerungen an Notizen auf diesem Gerät	Les rappels des notes sur cet appareil	Os lembretes das notas neste dispositivo
+reminder_done	Done	Hecho	Erledigt	Terminé	Feito
+reminder_snooze_hour	+1 h	+1 h	+1 Std.	+1 h	+1 h
+reminder_snooze_morning	Tomorrow 9:00	Mañana 9:00	Morgen 9:00	Demain 9:00	Amanhã 9:00

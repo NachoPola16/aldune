@@ -180,4 +180,9 @@
     <string name="conflicts_orphan_hint">These notes were deleted on another device after you edited them here.</string>
     <string name="conflict_recover">Recover the note</string>
     <string name="conflict_discard">Discard</string>
+    <string name="reminders_channel">Reminders</string>
+    <string name="reminders_channel_description">Note reminders on this device</string>
+    <string name="reminder_done">Done</string>
+    <string name="reminder_snooze_hour">+1 h</string>
+    <string name="reminder_snooze_morning">Tomorrow 9:00</string>
 </resources>

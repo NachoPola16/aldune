@@ -180,4 +180,9 @@
     <string name="conflicts_orphan_hint">Ces notes ont été supprimées sur un autre appareil après que tu les as modifiées ici.</string>
     <string name="conflict_recover">Récupérer la note</string>
     <string name="conflict_discard">Ignorer</string>
+    <string name="reminders_channel">Rappels</string>
+    <string name="reminders_channel_description">Les rappels des notes sur cet appareil</string>
+    <string name="reminder_done">Terminé</string>
+    <string name="reminder_snooze_hour">+1 h</string>
+    <string name="reminder_snooze_morning">Demain 9:00</string>
 </resources>

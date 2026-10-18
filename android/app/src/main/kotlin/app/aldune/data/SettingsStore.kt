@@ -22,6 +22,8 @@ data class AppSettings(
     val captureNotification: Boolean = false,
     /** El widget enseña también una vista previa del texto, no solo el título (spec de F6 §2.3). Apagado: el texto llega al lanzador. */
     val widgetPreview: Boolean = false,
+    /** Recordatorios a la hora exacta, si el sistema concede el permiso (spec madre §2.9). Apagado: alarma no exacta. */
+    val exactReminders: Boolean = false,
 )
 
 object Languages {
@@ -54,6 +56,7 @@ class SettingsStore(context: Context) {
             darkNotes = prefs.getBoolean(DARK_NOTES, d.darkNotes),
             captureNotification = prefs.getBoolean(CAPTURE_NOTIFICATION, d.captureNotification),
             widgetPreview = prefs.getBoolean(WIDGET_PREVIEW, d.widgetPreview),
+            exactReminders = prefs.getBoolean(EXACT_REMINDERS, d.exactReminders),
         )
     }
 
@@ -66,6 +69,7 @@ class SettingsStore(context: Context) {
             .putBoolean(DARK_NOTES, settings.darkNotes)
             .putBoolean(CAPTURE_NOTIFICATION, settings.captureNotification)
             .putBoolean(WIDGET_PREVIEW, settings.widgetPreview)
+            .putBoolean(EXACT_REMINDERS, settings.exactReminders)
             .apply() // apply ya deja el valor visible en este proceso: el `recreate()` del cambio de idioma lo lee al instante.
     }
 
@@ -78,5 +82,6 @@ class SettingsStore(context: Context) {
         const val DARK_NOTES = "darkNotes"
         const val CAPTURE_NOTIFICATION = "captureNotification"
         const val WIDGET_PREVIEW = "widgetPreview"
+        const val EXACT_REMINDERS = "exactReminders"
     }
 }

@@ -7,6 +7,9 @@
     <!-- Captura rápida (F6): la notificación fija «Nota nueva» (Android 13+ pide el permiso) y volver a ponerla al arrancar el móvil. -->
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+    <!-- Recordatorios (F7): alarma exacta solo si el usuario la concede en Ajustes del sistema (spec madre §2.9). No USE_EXACT_ALARM: Play la
+         reserva a relojes y calendarios. -->
+    <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" />
 
     <!-- usesCleartextTraffic: el servidor de casa suele ir por http en la red local (Windows lo admite). La pantalla de sync avisa cuando la
          dirección no es https; las notas viajan cifradas de extremo a extremo igualmente, lo único expuesto es el token. -->
@@ -60,7 +63,13 @@
             <intent-filter>
                 <action android:name="android.intent.action.BOOT_COMPLETED" />
                 <action android:name="android.intent.action.MY_PACKAGE_REPLACED" />
+                <action android:name="android.intent.action.TIME_SET" />
+                <action android:name="android.intent.action.TIMEZONE_CHANGED" />
+                <action android:name="android.app.action.SCHEDULE_EXACT_ALARM_PERMISSION_STATE_CHANGED" />
             </intent-filter>
         </receiver>
+
+        <!-- La alarma de un recordatorio y los botones de su notificación: solo los lanza la propia app (PendingIntent). -->
+        <receiver android:name=".reminders.ReminderReceiver" android:exported="false" />
     </application>
 </manifest>

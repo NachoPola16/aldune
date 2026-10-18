@@ -180,4 +180,9 @@
     <string name="conflicts_orphan_hint">Diese Notizen wurden auf einem anderen Gerät gelöscht, nachdem du sie hier bearbeitet hast.</string>
     <string name="conflict_recover">Notiz wiederherstellen</string>
     <string name="conflict_discard">Verwerfen</string>
+    <string name="reminders_channel">Erinnerungen</string>
+    <string name="reminders_channel_description">Erinnerungen an Notizen auf diesem Gerät</string>
+    <string name="reminder_done">Erledigt</string>
+    <string name="reminder_snooze_hour">+1 Std.</string>
+    <string name="reminder_snooze_morning">Morgen 9:00</string>
 </resources>
