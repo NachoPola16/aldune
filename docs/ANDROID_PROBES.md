@@ -92,3 +92,24 @@ La app habla con un servidor de sync **de pruebas** (nunca el real) y un «PC» 
 7. Tirar para sincronizar: `adb shell input swipe 250 450 250 1000 500` sobre la lista. Con la lista vacía exige que el mensaje de «sin notas» sea desplazable.
 8. Comprobar lo que queda en el dispositivo: `adb shell run-as io.github.nachopola16.aldune.debug ls no_backup` (el fichero `syncsecrets.bin` existe conectado y no
    existe desconectado) y `adb shell dumpsys jobscheduler | grep aldune` (el trabajo periódico de WorkManager).
+
+## Sonda de la captura y el widget (F6)
+
+Resultados y hallazgos en [`INFORME-ANDROID-F6.md`](INFORME-ANDROID-F6.md). Técnica:
+
+1. **Mandar intents a mano.** Acción propia: `am start -a app.aldune.action.NEW_NOTE -n io.github.nachopola16.aldune.debug/app.aldune.MainActivity`. Compartir:
+   `am start -f 0x10008000 -a android.intent.action.SEND -t text/plain -n .../app.aldune.MainActivity --es android.intent.extra.TEXT '...' --es android.intent.extra.SUBJECT '...'`.
+   **El `-f 0x10008000` (NEW_TASK + CLEAR_TASK) es obligatorio al repetir:** tras una reinstalación o una prueba anterior, el sistema ve un intent «igual» al de la raíz de la
+   tarea (los extras no cuentan para eso) y solo trae la tarea al frente: «Activity not started, its current task has been brought to the front». La nota no se crea y parece un fallo de la app.
+2. **Poner el widget sin el selector del lanzador**: Ajustes → Captura rápida → «Añadir el widget». Para el mosaico, «Añadir el mosaico» (cae en la segunda página del panel: deslizar).
+   Redimensionar: pulsación larga sobre el widget (`input swipe x y x y 900`) y `input draganddrop` sobre el tirador del borde. El widget del selector del sistema vive en la
+   pantalla de inicio **real** del móvil: quitarlo al acabar.
+3. **Fijar una nota como protegida para ver el widget** (las protegidas solo llegan por sync): parar la app, copiar `databases/aldune.db*` con `adb exec-out run-as <pkg> cat ...`
+   (la salida binaria sí llega bien así), abrir la copia con `sqlite3` de Python (`PRAGMA wal_checkpoint(TRUNCATE)`; `UPDATE note SET isProtected = 1 WHERE rowid = ...`) y
+   **devolverla con `adb push` a `/data/local/tmp` + `run-as cp`**, y borrar antes `-wal` y `-shm`. Pasar el binario por una tubería de Git Bash (`cat f | adb shell run-as ...`) lo estropea.
+   Solo con la base de la app de depuración.
+4. Mirar la notificación: `cmd statusbar expand-notifications`; el panel de mosaicos: `cmd statusbar expand-settings`; tema: `cmd uimode night no|yes`.
+5. **Qué mirar al probar un widget**: la hora a la que se pinta con el proceso vivo y en frío (Glance reutiliza la sesión: ver informe, hallazgo 4); con 53 notas, el tope y la fila final; con la
+   vista previa activa, que ninguna tira quede recortada; y, con una protegida, que su título no salga en ningún sitio (`uiautomator dump` no ve dentro del widget: mirar la captura).
+6. **El teclado de una nota nueva**: arrancar 4 veces seguidas con `force-stop` + `am start` y `dumpsys input_method | grep mInputShown`, como en la sonda del editor.
+7. `logcat -d | grep AppWidgetHostView` dice por qué un widget no se infla (una clase no admitida en `RemoteViews`, p. ej. un `<View>`).
