@@ -17,7 +17,10 @@ class UnlockedProtectedNote internal constructor(
 ) : AutoCloseable {
     private var plainText: String? = text
 
-    /** El texto descifrado. Tras [close] lanza: el texto en claro tampoco debe sobrevivir a la sesión. */
+    /**
+     * El texto tal como se descifró al abrir; [reprotect] no lo cambia (quien edita tiene su propio texto, y así quien guarda puede
+     * saber con qué saltos de línea llegó). Tras [close] lanza: el texto en claro tampoco debe sobrevivir a la sesión.
+     */
     val text: String
         @Synchronized get() = plainText ?: throw closed()
 
@@ -26,7 +29,6 @@ class UnlockedProtectedNote internal constructor(
     fun reprotect(newText: String): ProtectedNoteContent {
         val current = key ?: throw closed()
         val encrypted = ContentCipher.encrypt(current, newText)
-        plainText = newText
         val encoder = Base64.getEncoder()
         return ProtectedNoteContent(
             salt = encoder.encodeToString(salt),

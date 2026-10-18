@@ -155,3 +155,12 @@ class UnlockedProtectedNoteTest {
         assertNull(ProtectedNotes.unlock(c.copy(nonce = "AAAA"), password))
     }
 }
+
+class UnlockedProtectedNoteTextTest {
+    @Test
+    fun `text sigue siendo el de al abrir despues de reprotect`() {
+        val unlocked = ProtectedNotes.unlock(ProtectedNotes.protect("original", "clave-1234"), "clave-1234")!!
+        unlocked.reprotect("otro")
+        assertEquals("original", unlocked.text)
+    }
+}
