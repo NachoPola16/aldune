@@ -146,7 +146,7 @@ internal fun protectedContentToJson(content: ProtectedNoteContent): String {
 }
 
 /** Lee el JSON guardado; las claves no distinguen mayúsculas, como en core. Si no se entiende, es un fallo de programa (lo escribió esta app). */
-private fun parseProtectedContent(json: String, noteId: String): ProtectedNoteContent {
+internal fun parseProtectedContent(json: String, noteId: String): ProtectedNoteContent {
     val obj = try {
         Json.parseToJsonElement(json) as? JsonObject
     } catch (e: Exception) {

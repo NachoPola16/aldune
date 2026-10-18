@@ -84,3 +84,83 @@ class ProtectedNoteTest {
         assertThrows(IllegalArgumentException::class.java) { ProtectedNotes.protect("x", "    ") }
     }
 }
+
+class UnlockedProtectedNoteTest {
+    private val password = "contraseña-de-prueba"
+
+    @Test
+    fun `unlock devuelve el texto y null con otra contrasena`() {
+        val content = ProtectedNotes.protect("hola ☐ ñ", password)
+        assertNull(ProtectedNotes.unlock(content, "otra-contraseña"))
+        assertNull(ProtectedNotes.unlock(content, ""))
+        val unlocked = ProtectedNotes.unlock(content, password)!!
+        assertEquals("hola ☐ ñ", unlocked.text)
+    }
+
+    @Test
+    fun `ida y vuelta protect unlock reprotect y tryUnprotect con la contrasena original`() {
+        val content = ProtectedNotes.protect("texto viejo", password)
+        val unlocked = ProtectedNotes.unlock(content, password)!!
+        val again = unlocked.reprotect("texto nuevo")
+        assertEquals("texto nuevo", ProtectedNotes.tryUnprotect(again, password))
+        assertNull(ProtectedNotes.tryUnprotect(again, "otra-contraseña"))
+    }
+
+    @Test
+    fun `reprotect conserva la sal y estrena nonce cada vez`() {
+        val content = ProtectedNotes.protect("a", password)
+        val unlocked = ProtectedNotes.unlock(content, password)!!
+        val first = unlocked.reprotect("b")
+        val second = unlocked.reprotect("b")
+        assertEquals(content.salt, first.salt)
+        assertEquals(content.salt, second.salt)
+        assertNotEquals(content.nonce, first.nonce)
+        assertNotEquals(first.nonce, second.nonce)
+    }
+
+    @Test
+    fun `reprotect no deriva la clave otra vez`() {
+        val unlocked = ProtectedNotes.unlock(ProtectedNotes.protect("a", password), password)!!
+        // Con 600.000 iteraciones una derivación son decenas de ms como mínimo; cien reprotect sin derivar caben de sobra.
+        val started = System.nanoTime()
+        repeat(100) { unlocked.reprotect("texto $it") }
+        val ms = (System.nanoTime() - started) / 1_000_000
+        assertTrue(ms < 2_000, "100 reprotect tardaron $ms ms: parece que derivan la clave")
+    }
+
+    @Test
+    fun `unlock descifra el contenido de los vectores y su reprotect se abre con la contrasena`() {
+        val vector = Vectors.objects("protectedNotes").first()
+        val content = SyncEnvelopeCodec.readProtectedContent(vector.getValue("content").jsonObject)
+        val unlocked = ProtectedNotes.unlock(content, vector.str("password"))!!
+        assertEquals(vector.str("plaintext"), unlocked.text)
+        assertEquals("nuevo", ProtectedNotes.tryUnprotect(unlocked.reprotect("nuevo"), vector.str("password")))
+    }
+
+    @Test
+    fun `tras close usarla lanza y la clave queda a cero`() {
+        val unlocked = ProtectedNotes.unlock(ProtectedNotes.protect("a", password), password)!!
+        unlocked.close()
+        assertThrows(IllegalStateException::class.java) { unlocked.reprotect("b") }
+        // El texto en memoria también se considera cerrado: es lo que la sesión debe soltar al salir de la nota.
+        assertThrows(IllegalStateException::class.java) { unlocked.text }
+        unlocked.close() // idempotente
+    }
+
+    @Test
+    fun `unlock rechaza una version desconocida o datos mal formados`() {
+        val c = ProtectedNotes.protect("a", password)
+        assertNull(ProtectedNotes.unlock(c.copy(version = 2), password))
+        assertNull(ProtectedNotes.unlock(c.copy(salt = "AAAA"), password))
+        assertNull(ProtectedNotes.unlock(c.copy(nonce = "AAAA"), password))
+    }
+}
+
+class UnlockedProtectedNoteTextTest {
+    @Test
+    fun `text sigue siendo el de al abrir despues de reprotect`() {
+        val unlocked = ProtectedNotes.unlock(ProtectedNotes.protect("original", "clave-1234"), "clave-1234")!!
+        unlocked.reprotect("otro")
+        assertEquals("original", unlocked.text)
+    }
+}

@@ -56,7 +56,7 @@ object WidgetContentBuilder {
     }
 
     /** Como mucho [max] unidades UTF-16 contando los puntos suspensivos, sin dejar a medias un par sustituto. */
-    private fun truncate(text: String, max: Int): String {
+    internal fun truncate(text: String, max: Int): String {
         if (text.length <= max) return text
         var end = max - ELLIPSIS.length
         if (end > 0 && text[end - 1].isHighSurrogate()) end--

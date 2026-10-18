@@ -59,6 +59,31 @@ object ProtectedNotes {
         }
     }
 
+    /**
+     * Abre la nota y conserva la clave derivada para editarla sin derivar otra vez. `null` en los mismos casos que [tryUnprotect]
+     * (contraseña que no es, vacía, versión desconocida, datos dañados).
+     */
+    fun unlock(content: ProtectedNoteContent, password: String): UnlockedProtectedNote? {
+        if (content.version != ProtectedNoteContent.CURRENT_VERSION || password.isBlank()) return null
+        return try {
+            val decoder = Base64.getDecoder()
+            val salt = decoder.decode(content.salt)
+            val encrypted = EncryptedContent(decoder.decode(content.cipherText), decoder.decode(content.nonce), decoder.decode(content.tag))
+            if (salt.size != SALT_SIZE || encrypted.nonce.size != ContentCipher.NONCE_SIZE ||
+                encrypted.tag.size != ContentCipher.TAG_SIZE) return null
+            val key = deriveKey(password, salt)
+            try {
+                UnlockedProtectedNote(key, salt, ContentCipher.decrypt(key, encrypted))
+            } catch (e: GeneralSecurityException) {
+                // Contraseña equivocada: la clave no sirve y no debe quedarse en memoria.
+                Arrays.fill(key, 0)
+                null
+            }
+        } catch (e: IllegalArgumentException) {
+            null
+        }
+    }
+
     private fun encrypt(plainText: String, password: String, salt: ByteArray): ProtectedNoteContent {
         val key = deriveKey(password, salt)
         try {
