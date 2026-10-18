@@ -38,6 +38,9 @@ enum class LineEnding(val sequence: String) {
  * @property color hex tal cual llega, sin normalizar mayúsculas: la sync lo compara sin distinguirlas pero lo devuelve igual.
  * @property screenOrigin Android no lo usa; se conserva y se devuelve intacto para que el PC no pierda en qué pantalla va la nota.
  * @property syncAuthorDeviceId autor de la versión actual si llegó por sync; `null` = la versión es de este equipo.
+ * @property isProtected nota protegida con contraseña en otro equipo. Su `text` es `""`: el texto vive cifrado en [protectedContentJson].
+ * @property protectedContentJson el JSON de `ProtectedNoteContent` tal como llegó, opaco para este módulo (que no depende de `core`).
+ * Se conserva entero en cualquier cambio local para que la nota vuelva a subir idéntica; abrirla y cambiarle el texto es cosa de F7.
  */
 data class Note(
     val id: String,
@@ -51,6 +54,8 @@ data class Note(
     val dockPosition: Double? = null,
     val screenOrigin: String = "",
     val syncAuthorDeviceId: String? = null,
+    val isProtected: Boolean = false,
+    val protectedContentJson: String? = null,
 ) {
     init {
         // Es un fallo de programa, no de usuario: quien construye la nota desde un fichero o desde sync debe normalizar antes.

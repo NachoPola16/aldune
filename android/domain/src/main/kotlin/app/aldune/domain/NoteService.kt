@@ -90,6 +90,8 @@ class NoteService(
      */
     fun edit(id: String, newText: String, editedAt: Instant? = null): NoteResult<Note> = synchronized(lock) {
         val note = store.get(id) ?: return NoteResult.Err(NoteError.NotFound(id))
+        // Antes de mirar editedAt: una escritura rechazada no debe quedar anotada como «última edición de texto».
+        if (note.isProtected) return NoteResult.Err(NoteError.Protected(id))
 
         if (editedAt != null) {
             val last = lastTextEdit[id]
@@ -168,12 +170,13 @@ class NoteService(
 
     /**
      * Las notas de un estado en el orden del mazo, filtradas por etiqueta (sin distinguir mayúsculas) y por búsqueda en texto y etiquetas.
-     * Una etiqueta `null` o una búsqueda vacía no filtran.
+     * Una etiqueta `null` o una búsqueda vacía no filtran. Con una búsqueda no vacía las protegidas nunca salen: su texto es
+     * desconocido y buscar por sus etiquetas daría pistas de una nota que el usuario ha cerrado con contraseña.
      */
     fun list(filter: NoteState, query: String = "", tag: String? = null): List<Note> = synchronized(lock) {
         dockOrdered(store.all().filter { it.state == filter })
             .filter { note -> tag == null || note.tags.any { it.equals(tag, ignoreCase = true) } }
-            .filter { NoteSearch.matchesNote(it.text, it.tags, query) }
+            .filter { if (it.isProtected) query.trimDotNet().isEmpty() else NoteSearch.matchesNote(it.text, it.tags, query) }
     }
 
     /**

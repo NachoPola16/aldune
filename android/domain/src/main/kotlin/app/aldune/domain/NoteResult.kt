@@ -12,6 +12,9 @@ sealed class NoteError(val message: String) {
 
     data class InvalidArgument(val reason: String) : NoteError(reason)
 
+    /** El texto de una protegida no se edita desde aquí: está cifrado y desbloquearla llega en F7. */
+    data class Protected(val id: String) : NoteError("La nota $id está protegida: su texto no se puede editar")
+
     /** Una escritura más vieja que otra ya aceptada para la misma nota; se descarta para no pisar la nueva. */
     data class StaleWrite(val id: String) : NoteError("La escritura sobre $id es más antigua que otra ya guardada")
 }
