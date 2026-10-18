@@ -60,7 +60,7 @@
     <string name="reorder_on_check">Move checked tasks down</string>
     <string name="reorder_on_check_hint">Off: a task stays where it is when you check it.</string>
     <string name="about_version">Version %1$s</string>
-    <string name="note_options">Color and tags</string>
+    <string name="note_options">Note options</string>
     <string name="note_color">Color</string>
     <string name="note_tags">Tags</string>
     <string name="tag_hint">New tag</string>
@@ -122,7 +122,7 @@
     <string name="first_connect_discard">Discard them</string>
     <string name="sync_status_cd">Sync status</string>
     <string name="protected_note_title">Protected note</string>
-    <string name="protected_note_body">This note is protected. It will be possible to open it in a future version.</string>
+    <string name="protected_note_body">This note is locked. Enter its password to read and edit it.</string>
     <string name="conflict_flag_cd">This note changed in two places at once</string>
     <string name="first_connect_discard_title">Discard the notes on this device?</string>
     <string name="first_connect_discard_body">Notes to delete from this device: %1$d. They can\'t be recovered. You\'ll get the notes the profile has.</string>
@@ -148,4 +148,22 @@
     <string name="note_gone">That note is no longer in the deck</string>
     <string name="add_widget">Add the widget to the home screen</string>
     <string name="add_widget_hint">Your notes as colored strips; tap one to open it</string>
+    <string name="protect_note">Protect with password</string>
+    <string name="remove_protection">Remove protection</string>
+    <string name="password_title_protect">Protect this note</string>
+    <string name="password_title_unlock">Enter the password</string>
+    <string name="password_label">Password</string>
+    <string name="password_repeat">Repeat the password</string>
+    <string name="password_protect_hint">At least 4 characters. If you forget it, the note can\'t be recovered.</string>
+    <string name="password_wrong">Wrong password</string>
+    <string name="password_empty">Write a password</string>
+    <string name="password_too_short">At least 4 characters</string>
+    <string name="password_mismatch">The passwords don\'t match</string>
+    <string name="password_unreadable">This note\'s protected content is damaged and can\'t be opened.</string>
+    <string name="password_changed">The note changed in the meantime. Try again.</string>
+    <string name="password_protect_action">Protect</string>
+    <string name="password_unlock_action">Unlock</string>
+    <string name="password_remove_action">Remove</string>
+    <string name="password_working">Checking the password…</string>
+    <string name="protection_stale">This note changed on another device. It was locked again: unlock it to see the new version.</string>
 </resources>

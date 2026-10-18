@@ -1,9 +1,14 @@
 package app.aldune.ui
 
+import android.app.Activity
+import android.content.Context
+import android.content.ContextWrapper
+import android.widget.Toast
 import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.foundation.gestures.waitForUpOrCancellation
 import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -21,6 +26,7 @@ import androidx.compose.runtime.snapshotFlow
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material3.Button
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.HorizontalDivider
@@ -53,6 +59,7 @@ import androidx.compose.ui.input.pointer.PointerEventPass
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalViewConfiguration
@@ -67,6 +74,9 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LifecycleEventEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import app.aldune.R
+import app.aldune.core.PasswordProblem
+import app.aldune.syncclient.ProtectionError
+import app.aldune.syncclient.ProtectionResult
 import app.aldune.text.BulletLines
 import app.aldune.text.LineDirection
 import app.aldune.text.LineMovement
@@ -104,8 +114,12 @@ private val ListKeysTransformation = InputTransformation {
 fun NoteEditorPane(key: String, viewModel: NotesViewModel, onBack: () -> Unit, showBack: Boolean) {
     val state = remember(key) { TextFieldState() }
     var loaded by remember(key) { mutableStateOf(false) }
-    // Una nota protegida que llegó por sync no se puede abrir todavía (F7): su texto no se conoce sin la contraseña. Se ve el aviso, no el editor.
+    // Una protegida solo se lee y se edita con su contraseña: hasta entonces se ve un aviso con el botón de abrirla. `unlocked` dice que hay una
+    // sesión abierta en el ViewModel; el texto en claro está solo en este campo y en esa sesión (nunca en un borrador ni en estado guardado).
     var protectedNote by remember(key) { mutableStateOf(false) }
+    var unlocked by remember(key) { mutableStateOf(false) }
+    var passwordMode by remember(key) { mutableStateOf<PasswordMode?>(null) }
+    val context = LocalContext.current
     var options by remember(key) { mutableStateOf<NotesViewModel.NoteOptions?>(null) }
     val scope = rememberCoroutineScope()
     var layout by remember(key) { mutableStateOf<(() -> TextLayoutResult?)?>(null) }
@@ -115,11 +129,25 @@ fun NoteEditorPane(key: String, viewModel: NotesViewModel, onBack: () -> Unit, s
 
     LaunchedEffect(key) {
         val text = viewModel.openDraft(key)
-        state.edit {
-            replace(0, length, text)
-            selection = TextRange(0)
-        }
         protectedNote = viewModel.isProtected(key)
+        if (!protectedNote) {
+            state.edit {
+                replace(0, length, text)
+                selection = TextRange(0)
+            }
+        } else {
+            // Al rotar, la sesión sigue abierta en el ViewModel: se recarga sin volver a pedir la contraseña.
+            val plain = viewModel.protectedText(key)
+            if (plain != null) {
+                state.edit {
+                    replace(0, length, plain)
+                    selection = TextRange(0)
+                }
+                unlocked = true
+            } else {
+                passwordMode = PasswordMode.Unlock
+            }
+        }
         loaded = true
     }
     // Una pasada de sync cambió el texto de esta nota mientras estaba abierta (y no se había tocado): se recarga, o la siguiente tecla guardaría
@@ -140,10 +168,36 @@ fun NoteEditorPane(key: String, viewModel: NotesViewModel, onBack: () -> Unit, s
     }
     // Único punto por el que el texto llega al guardado: así ningún camino (teclado, barra, atajo, toque) se lo salta.
     LaunchedEffect(key) {
-        snapshotFlow { state.text.toString() }.collect { if (loaded) viewModel.updateDraft(key, it) }
+        snapshotFlow { state.text.toString() }.collect {
+            if (!loaded) return@collect
+            // El texto de una protegida abierta no pasa por los borradores: va a su sesión. Bloqueada, no se guarda nada.
+            if (!protectedNote) viewModel.updateDraft(key, it) else if (unlocked) viewModel.updateProtectedText(key, it)
+        }
     }
-    // Al salir de la nota (otra nota, atrás, el panel se destruye) y al pasar la app a segundo plano.
-    DisposableEffect(key) { onDispose { viewModel.flushDraft(key) } }
+    // La sesión se cerró (segundo plano, o no se pudo guardar): el texto en claro se borra del campo ya, y se vuelve a pedir la contraseña.
+    // `unlocked` se baja antes de vaciar el campo, o ese vaciado se guardaría como el texto de la nota.
+    LaunchedEffect(key) {
+        viewModel.unlockedIds.collect { ids ->
+            if (protectedNote && unlocked && key !in ids) {
+                unlocked = false
+                state.edit { replace(0, length, "") }
+                passwordMode = PasswordMode.Unlock
+            }
+        }
+    }
+    LaunchedEffect(key) {
+        viewModel.protectionLost.collect { lost ->
+            if (lost == key) Toast.makeText(context, R.string.protection_stale, Toast.LENGTH_LONG).show()
+        }
+    }
+    // Al salir de la nota (otra nota, atrás, el panel se destruye) y al pasar la app a segundo plano. Rotar no es salir: la sesión sigue
+    // en el ViewModel y el editor nuevo la recoge.
+    DisposableEffect(key) {
+        onDispose {
+            viewModel.flushDraft(key)
+            if (context.findActivity()?.isChangingConfigurations != true) viewModel.lockProtected(key)
+        }
+    }
     LifecycleEventEffect(Lifecycle.Event.ON_STOP) { viewModel.flushAll() }
 
     fun text() = state.text.toString()
@@ -228,10 +282,87 @@ fun NoteEditorPane(key: String, viewModel: NotesViewModel, onBack: () -> Unit, s
                 Icon(Icons.Default.MoreVert, contentDescription = stringResource(R.string.note_options))
             }
         }
-        options?.let { current -> NoteOptionsDialog(current, viewModel, onClose = { options = null }) }
-        if (protectedNote) {
-            Box(Modifier.weight(1f).fillMaxWidth().padding(24.dp), Alignment.Center) {
+        options?.let { current ->
+            NoteOptionsDialog(
+                current, viewModel, onClose = { options = null },
+                onProtection = {
+                    options = null
+                    passwordMode = if (current.isProtected) PasswordMode.Remove else PasswordMode.Protect
+                },
+            )
+        }
+        passwordMode?.let { mode ->
+            PasswordDialog(mode, onDismiss = { passwordMode = null }) { password, confirmation ->
+                when (mode) {
+                    PasswordMode.Unlock -> when (val outcome = viewModel.unlockProtected(key, password)) {
+                        is NotesViewModel.UnlockOutcome.Opened -> {
+                            state.edit {
+                                replace(0, length, outcome.text)
+                                selection = TextRange(0)
+                            }
+                            unlocked = true
+                            null
+                        }
+                        NotesViewModel.UnlockOutcome.WrongPassword -> PasswordFailure.Wrong
+                        NotesViewModel.UnlockOutcome.Unreadable -> PasswordFailure.Unreadable
+                        NotesViewModel.UnlockOutcome.Gone -> PasswordFailure.Changed
+                    }
+                    PasswordMode.Protect -> when (val result = viewModel.protectNote(key, password, confirmation)) {
+                        is ProtectionResult.Ok -> {
+                            // Queda abierta, como en Windows: se abre la sesión con la misma contraseña (derivar otra vez).
+                            when (val outcome = viewModel.unlockProtected(key, password)) {
+                                is NotesViewModel.UnlockOutcome.Opened -> {
+                                    state.edit {
+                                        replace(0, length, outcome.text)
+                                        selection = TextRange(0)
+                                    }
+                                    unlocked = true
+                                    protectedNote = true
+                                }
+                                else -> protectedNote = true
+                            }
+                            null
+                        }
+                        is ProtectionResult.Err -> when (val error = result.error) {
+                            is ProtectionError.InvalidPassword -> when (error.problem) {
+                                PasswordProblem.Empty -> PasswordFailure.Empty
+                                PasswordProblem.TooShort -> PasswordFailure.TooShort
+                                PasswordProblem.Mismatch -> PasswordFailure.Mismatch
+                                PasswordProblem.None -> PasswordFailure.Changed
+                            }
+                            else -> PasswordFailure.Changed
+                        }
+                    }
+                    PasswordMode.Remove -> when (val result = viewModel.removeProtection(key, password)) {
+                        is ProtectionResult.Ok -> {
+                            // El texto vuelve a ser el normal: pasa a ser una nota corriente con su borrador, y la sesión se suelta.
+                            protectedNote = false
+                            val plain = viewModel.openDraft(key)
+                            state.edit {
+                                replace(0, length, plain)
+                                selection = TextRange(0)
+                            }
+                            viewModel.dropProtected(key)
+                            null
+                        }
+                        is ProtectionResult.Err -> when (result.error) {
+                            ProtectionError.WrongPassword -> PasswordFailure.Wrong
+                            is ProtectionError.UnreadableContent -> PasswordFailure.Unreadable
+                            else -> PasswordFailure.Changed
+                        }
+                    }
+                }
+            }
+        }
+        if (protectedNote && !unlocked) {
+            Column(
+                Modifier.weight(1f).fillMaxWidth().padding(24.dp),
+                verticalArrangement = Arrangement.Center, horizontalAlignment = Alignment.CenterHorizontally,
+            ) {
                 Text(stringResource(R.string.protected_note_body), color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Button(onClick = { passwordMode = PasswordMode.Unlock }, Modifier.padding(top = 16.dp)) {
+                    Text(stringResource(R.string.password_unlock_action))
+                }
             }
             return@Column
         }
@@ -294,6 +425,12 @@ fun NoteEditorPane(key: String, viewModel: NotesViewModel, onBack: () -> Unit, s
             },
         )
     }
+}
+
+private tailrec fun Context.findActivity(): Activity? = when (this) {
+    is Activity -> this
+    is ContextWrapper -> baseContext.findActivity()
+    else -> null
 }
 
 /**

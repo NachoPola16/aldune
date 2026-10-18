@@ -46,7 +46,7 @@ import app.aldune.text.NoteThemes
  */
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
-fun NoteOptionsDialog(initial: NotesViewModel.NoteOptions, viewModel: NotesViewModel, onClose: () -> Unit) {
+fun NoteOptionsDialog(initial: NotesViewModel.NoteOptions, viewModel: NotesViewModel, onClose: () -> Unit, onProtection: () -> Unit) {
     var color by remember { mutableStateOf(initial.color) }
     var tags by remember { mutableStateOf(initial.tags) }
     var draft by remember { mutableStateOf("") }
@@ -97,6 +97,9 @@ fun NoteOptionsDialog(initial: NotesViewModel.NoteOptions, viewModel: NotesViewM
                         keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done), keyboardActions = KeyboardActions(onDone = { addTag() }),
                     )
                     TextButton(onClick = ::addTag, enabled = draft.isNotBlank()) { Text(stringResource(R.string.add_tag)) }
+                }
+                TextButton(onClick = onProtection, Modifier.padding(top = 8.dp)) {
+                    Text(stringResource(if (initial.isProtected) R.string.remove_protection else R.string.protect_note))
                 }
             }
         },

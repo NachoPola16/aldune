@@ -60,7 +60,7 @@
     <string name="reorder_on_check">Mover tarefas concluídas para baixo</string>
     <string name="reorder_on_check_hint">Desligado: a tarefa fica onde está ao marcá-la.</string>
     <string name="about_version">Versão %1$s</string>
-    <string name="note_options">Cor e etiquetas</string>
+    <string name="note_options">Opções da nota</string>
     <string name="note_color">Cor</string>
     <string name="note_tags">Etiquetas</string>
     <string name="tag_hint">Nova etiqueta</string>
@@ -122,7 +122,7 @@
     <string name="first_connect_discard">Descartá-las</string>
     <string name="sync_status_cd">Estado da sincronização</string>
     <string name="protected_note_title">Nota protegida</string>
-    <string name="protected_note_body">Esta nota está protegida. Será possível abri-la em uma próxima versão.</string>
+    <string name="protected_note_body">Esta nota está bloqueada. Digite a senha para lê-la e editá-la.</string>
     <string name="conflict_flag_cd">Esta nota mudou em dois lugares ao mesmo tempo</string>
     <string name="first_connect_discard_title">Descartar as notas deste dispositivo?</string>
     <string name="first_connect_discard_body">Notas que serão apagadas deste dispositivo: %1$d. Não poderão ser recuperadas. Você receberá as notas do perfil.</string>
@@ -148,4 +148,22 @@
     <string name="note_gone">Essa nota não está mais na pilha</string>
     <string name="add_widget">Adicionar o widget à tela inicial</string>
     <string name="add_widget_hint">Suas notas em tiras coloridas; toque em uma para abri-la</string>
+    <string name="protect_note">Proteger com senha</string>
+    <string name="remove_protection">Remover a proteção</string>
+    <string name="password_title_protect">Proteger esta nota</string>
+    <string name="password_title_unlock">Digite a senha</string>
+    <string name="password_label">Senha</string>
+    <string name="password_repeat">Repita a senha</string>
+    <string name="password_protect_hint">Mínimo de 4 caracteres. Se você esquecer, a nota não poderá ser recuperada.</string>
+    <string name="password_wrong">Senha incorreta</string>
+    <string name="password_empty">Digite uma senha</string>
+    <string name="password_too_short">Mínimo de 4 caracteres</string>
+    <string name="password_mismatch">As senhas não coincidem</string>
+    <string name="password_unreadable">O conteúdo protegido desta nota está danificado e não pode ser aberto.</string>
+    <string name="password_changed">A nota mudou nesse meio-tempo. Tente novamente.</string>
+    <string name="password_protect_action">Proteger</string>
+    <string name="password_unlock_action">Desbloquear</string>
+    <string name="password_remove_action">Remover</string>
+    <string name="password_working">Verificando a senha…</string>
+    <string name="protection_stale">Esta nota mudou em outro dispositivo. Ela foi bloqueada de novo: desbloqueie-a para ver a nova versão.</string>
 </resources>

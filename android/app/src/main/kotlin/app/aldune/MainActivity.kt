@@ -2,13 +2,16 @@ package app.aldune
 
 import android.content.Context
 import android.content.Intent
+import android.os.Build
 import android.os.Bundle
+import android.view.WindowManager
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
 import androidx.compose.runtime.getValue
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.lifecycleScope
 import app.aldune.capture.CaptureIntents
 import app.aldune.capture.CaptureNotification
 import app.aldune.data.Languages
@@ -16,6 +19,7 @@ import app.aldune.data.SettingsStore
 import app.aldune.ui.AldunaTheme
 import app.aldune.ui.NotesApp
 import app.aldune.ui.NotesViewModel
+import kotlinx.coroutines.launch
 
 class MainActivity : ComponentActivity() {
     private val viewModel: NotesViewModel by viewModels()
@@ -33,6 +37,12 @@ class MainActivity : ComponentActivity() {
         CaptureNotification.sync(this, viewModel.settings.value.captureNotification)
     }
 
+    // Las protegidas se vuelven a bloquear al pasar a segundo plano. Rotar también pasa por aquí, pero no es salir de la app.
+    override fun onStop() {
+        super.onStop()
+        if (!isChangingConfigurations) viewModel.lockAllProtected()
+    }
+
     // El acceso directo, el mosaico y la notificación llegan aquí cuando la app ya está abierta (singleTop).
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
@@ -47,10 +57,25 @@ class MainActivity : ComponentActivity() {
         CaptureIntents.requestOf(intent)?.let(viewModel::requestCapture)
     }
 
+    // `setRecentsScreenshotEnabled` existe desde Android 13; antes, FLAG_SECURE (que además impide las capturas de pantalla mientras dura).
+    private fun hideFromRecents(hide: Boolean) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            setRecentsScreenshotEnabled(!hide)
+        } else if (hide) {
+            window.addFlags(WindowManager.LayoutParams.FLAG_SECURE)
+        } else {
+            window.clearFlags(WindowManager.LayoutParams.FLAG_SECURE)
+        }
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         if (savedInstanceState == null) routeCapture(intent)
+        // Con una protegida abierta, la captura de Recientes no puede llevar su texto (el sistema la guarda en disco).
+        lifecycleScope.launch {
+            viewModel.unlockedIds.collect { ids -> hideFromRecents(ids.isNotEmpty()) }
+        }
         setContent {
             val settings by viewModel.settings.collectAsStateWithLifecycle()
             AldunaTheme(settings.appearance) {

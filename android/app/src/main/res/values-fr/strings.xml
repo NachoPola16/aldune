@@ -60,7 +60,7 @@
     <string name="reorder_on_check">Descendre les tâches faites</string>
     <string name="reorder_on_check_hint">Désactivé : une tâche reste en place quand on la coche.</string>
     <string name="about_version">Version %1$s</string>
-    <string name="note_options">Couleur et étiquettes</string>
+    <string name="note_options">Options de la note</string>
     <string name="note_color">Couleur</string>
     <string name="note_tags">Étiquettes</string>
     <string name="tag_hint">Nouvelle étiquette</string>
@@ -122,7 +122,7 @@
     <string name="first_connect_discard">Les supprimer</string>
     <string name="sync_status_cd">État de la synchronisation</string>
     <string name="protected_note_title">Note protégée</string>
-    <string name="protected_note_body">Cette note est protégée. Elle pourra être ouverte dans une prochaine version.</string>
+    <string name="protected_note_body">Cette note est verrouillée. Saisis son mot de passe pour la lire et la modifier.</string>
     <string name="conflict_flag_cd">Cette note a changé à deux endroits à la fois</string>
     <string name="first_connect_discard_title">Supprimer les notes de cet appareil ?</string>
     <string name="first_connect_discard_body">Notes qui seront supprimées de cet appareil : %1$d. Elles seront irrécupérables. Tu recevras les notes du profil.</string>
@@ -148,4 +148,22 @@
     <string name="note_gone">Cette note n\'est plus dans la pile</string>
     <string name="add_widget">Ajouter le widget à l\'écran d\'accueil</string>
     <string name="add_widget_hint">Vos notes en bandes de couleur ; touchez-en une pour l\'ouvrir</string>
+    <string name="protect_note">Protéger par mot de passe</string>
+    <string name="remove_protection">Retirer la protection</string>
+    <string name="password_title_protect">Protéger cette note</string>
+    <string name="password_title_unlock">Saisis le mot de passe</string>
+    <string name="password_label">Mot de passe</string>
+    <string name="password_repeat">Répète le mot de passe</string>
+    <string name="password_protect_hint">Au moins 4 caractères. Si tu l\'oublies, la note est irrécupérable.</string>
+    <string name="password_wrong">Mot de passe incorrect</string>
+    <string name="password_empty">Saisis un mot de passe</string>
+    <string name="password_too_short">Au moins 4 caractères</string>
+    <string name="password_mismatch">Les mots de passe ne correspondent pas</string>
+    <string name="password_unreadable">Le contenu protégé de cette note est endommagé et ne peut pas être ouvert.</string>
+    <string name="password_changed">La note a changé entre-temps. Réessaie.</string>
+    <string name="password_protect_action">Protéger</string>
+    <string name="password_unlock_action">Déverrouiller</string>
+    <string name="password_remove_action">Retirer</string>
+    <string name="password_working">Vérification du mot de passe…</string>
+    <string name="protection_stale">Cette note a changé sur un autre appareil. Elle a été reverrouillée : déverrouille-la pour voir la nouvelle version.</string>
 </resources>

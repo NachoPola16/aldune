@@ -59,7 +59,7 @@ trash_days_value	%1$d days	%1$d días	%1$d Tage	%1$d jours	%1$d dias
 reorder_on_check	Move checked tasks down	Mover abajo las tareas hechas	Erledigte Aufgaben nach unten	Descendre les tâches faites	Mover tarefas concluídas para baixo
 reorder_on_check_hint	Off: a task stays where it is when you check it.	Apagado: una tarea se queda donde está al marcarla.	Aus: Eine Aufgabe bleibt beim Abhaken an ihrem Platz.	Désactivé : une tâche reste en place quand on la coche.	Desligado: a tarefa fica onde está ao marcá-la.
 about_version	Version %1$s	Versión %1$s	Version %1$s	Version %1$s	Versão %1$s
-note_options	Color and tags	Color y etiquetas	Farbe und Tags	Couleur et étiquettes	Cor e etiquetas
+note_options	Note options	Opciones de la nota	Notizoptionen	Options de la note	Opções da nota
 note_color	Color	Color	Farbe	Couleur	Cor
 note_tags	Tags	Etiquetas	Tags	Étiquettes	Etiquetas
 tag_hint	New tag	Nueva etiqueta	Neuer Tag	Nouvelle étiquette	Nova etiqueta
@@ -121,7 +121,7 @@ first_connect_upload	Upload them	Subirlas	Hochladen	Les envoyer	Enviá-las
 first_connect_discard	Discard them	Descartarlas	Verwerfen	Les supprimer	Descartá-las
 sync_status_cd	Sync status	Estado de la sincronización	Synchronisierungsstatus	État de la synchronisation	Estado da sincronização
 protected_note_title	Protected note	Nota protegida	Geschützte Notiz	Note protégée	Nota protegida
-protected_note_body	This note is protected. It will be possible to open it in a future version.	Esta nota está protegida. Se podrá abrir en una próxima versión.	Diese Notiz ist geschützt. Sie lässt sich in einer künftigen Version öffnen.	Cette note est protégée. Elle pourra être ouverte dans une prochaine version.	Esta nota está protegida. Será possível abri-la em uma próxima versão.
+protected_note_body	This note is locked. Enter its password to read and edit it.	Esta nota está bloqueada. Escribe su contraseña para leerla y editarla.	Diese Notiz ist gesperrt. Gib ihr Passwort ein, um sie zu lesen und zu bearbeiten.	Cette note est verrouillée. Saisis son mot de passe pour la lire et la modifier.	Esta nota está bloqueada. Digite a senha para lê-la e editá-la.
 conflict_flag_cd	This note changed in two places at once	Esta nota cambió en dos sitios a la vez	Diese Notiz wurde an zwei Orten gleichzeitig geändert	Cette note a changé à deux endroits à la fois	Esta nota mudou em dois lugares ao mesmo tempo
 first_connect_discard_title	Discard the notes on this device?	¿Descartar las notas de este dispositivo?	Die Notizen auf diesem Gerät verwerfen?	Supprimer les notes de cet appareil ?	Descartar as notas deste dispositivo?
 first_connect_discard_body	Notes to delete from this device: %1$d. They can't be recovered. You'll get the notes the profile has.	Notas que se borrarán de este dispositivo: %1$d. No se podrán recuperar. Recibirás las notas que tenga el perfil.	Notizen, die von diesem Gerät gelöscht werden: %1$d. Sie lassen sich nicht wiederherstellen. Du erhältst die Notizen des Profils.	Notes qui seront supprimées de cet appareil : %1$d. Elles seront irrécupérables. Tu recevras les notes du profil.	Notas que serão apagadas deste dispositivo: %1$d. Não poderão ser recuperadas. Você receberá as notas do perfil.
@@ -147,3 +147,21 @@ widget_preview_hint	It will be visible on the home screen	Se verá en la pantall
 note_gone	That note is no longer in the deck	Esa nota ya no está en el mazo	Diese Notiz ist nicht mehr im Stapel	Cette note n'est plus dans la pile	Essa nota não está mais na pilha
 add_widget	Add the widget to the home screen	Añadir el widget a la pantalla de inicio	Widget zum Startbildschirm hinzufügen	Ajouter le widget à l'écran d'accueil	Adicionar o widget à tela inicial
 add_widget_hint	Your notes as colored strips; tap one to open it	Tus notas como tiras de color; toca una para abrirla	Deine Notizen als farbige Streifen; tippe auf einen, um ihn zu öffnen	Vos notes en bandes de couleur ; touchez-en une pour l'ouvrir	Suas notas em tiras coloridas; toque em uma para abri-la
+protect_note	Protect with password	Proteger con contraseña	Mit Passwort schützen	Protéger par mot de passe	Proteger com senha
+remove_protection	Remove protection	Quitar la protección	Schutz entfernen	Retirer la protection	Remover a proteção
+password_title_protect	Protect this note	Proteger esta nota	Diese Notiz schützen	Protéger cette note	Proteger esta nota
+password_title_unlock	Enter the password	Escribe la contraseña	Passwort eingeben	Saisis le mot de passe	Digite a senha
+password_label	Password	Contraseña	Passwort	Mot de passe	Senha
+password_repeat	Repeat the password	Repite la contraseña	Passwort wiederholen	Répète le mot de passe	Repita a senha
+password_protect_hint	At least 4 characters. If you forget it, the note can't be recovered.	Mínimo 4 caracteres. Si la olvidas, la nota no se puede recuperar.	Mindestens 4 Zeichen. Wenn du es vergisst, lässt sich die Notiz nicht wiederherstellen.	Au moins 4 caractères. Si tu l'oublies, la note est irrécupérable.	Mínimo de 4 caracteres. Se você esquecer, a nota não poderá ser recuperada.
+password_wrong	Wrong password	Contraseña incorrecta	Falsches Passwort	Mot de passe incorrect	Senha incorreta
+password_empty	Write a password	Escribe una contraseña	Gib ein Passwort ein	Saisis un mot de passe	Digite uma senha
+password_too_short	At least 4 characters	Mínimo 4 caracteres	Mindestens 4 Zeichen	Au moins 4 caractères	Mínimo de 4 caracteres
+password_mismatch	The passwords don't match	Las contraseñas no coinciden	Die Passwörter stimmen nicht überein	Les mots de passe ne correspondent pas	As senhas não coincidem
+password_unreadable	This note's protected content is damaged and can't be opened.	El contenido protegido de esta nota está dañado y no se puede abrir.	Der geschützte Inhalt dieser Notiz ist beschädigt und lässt sich nicht öffnen.	Le contenu protégé de cette note est endommagé et ne peut pas être ouvert.	O conteúdo protegido desta nota está danificado e não pode ser aberto.
+password_changed	The note changed in the meantime. Try again.	La nota cambió mientras tanto. Inténtalo de nuevo.	Die Notiz wurde inzwischen geändert. Versuche es erneut.	La note a changé entre-temps. Réessaie.	A nota mudou nesse meio-tempo. Tente novamente.
+password_protect_action	Protect	Proteger	Schützen	Protéger	Proteger
+password_unlock_action	Unlock	Desbloquear	Entsperren	Déverrouiller	Desbloquear
+password_remove_action	Remove	Quitar	Entfernen	Retirer	Remover
+password_working	Checking the password…	Comprobando la contraseña…	Passwort wird geprüft …	Vérification du mot de passe…	Verificando a senha…
+protection_stale	This note changed on another device. It was locked again: unlock it to see the new version.	Esta nota cambió en otro dispositivo. Se ha vuelto a bloquear: desbloquéala para ver la nueva versión.	Diese Notiz wurde auf einem anderen Gerät geändert. Sie wurde wieder gesperrt: Entsperre sie, um die neue Version zu sehen.	Cette note a changé sur un autre appareil. Elle a été reverrouillée : déverrouille-la pour voir la nouvelle version.	Esta nota mudou em outro dispositivo. Ela foi bloqueada de novo: desbloqueie-a para ver a nova versão.

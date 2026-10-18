@@ -60,7 +60,7 @@
     <string name="reorder_on_check">Mover abajo las tareas hechas</string>
     <string name="reorder_on_check_hint">Apagado: una tarea se queda donde está al marcarla.</string>
     <string name="about_version">Versión %1$s</string>
-    <string name="note_options">Color y etiquetas</string>
+    <string name="note_options">Opciones de la nota</string>
     <string name="note_color">Color</string>
     <string name="note_tags">Etiquetas</string>
     <string name="tag_hint">Nueva etiqueta</string>
@@ -122,7 +122,7 @@
     <string name="first_connect_discard">Descartarlas</string>
     <string name="sync_status_cd">Estado de la sincronización</string>
     <string name="protected_note_title">Nota protegida</string>
-    <string name="protected_note_body">Esta nota está protegida. Se podrá abrir en una próxima versión.</string>
+    <string name="protected_note_body">Esta nota está bloqueada. Escribe su contraseña para leerla y editarla.</string>
     <string name="conflict_flag_cd">Esta nota cambió en dos sitios a la vez</string>
     <string name="first_connect_discard_title">¿Descartar las notas de este dispositivo?</string>
     <string name="first_connect_discard_body">Notas que se borrarán de este dispositivo: %1$d. No se podrán recuperar. Recibirás las notas que tenga el perfil.</string>
@@ -148,4 +148,22 @@
     <string name="note_gone">Esa nota ya no está en el mazo</string>
     <string name="add_widget">Añadir el widget a la pantalla de inicio</string>
     <string name="add_widget_hint">Tus notas como tiras de color; toca una para abrirla</string>
+    <string name="protect_note">Proteger con contraseña</string>
+    <string name="remove_protection">Quitar la protección</string>
+    <string name="password_title_protect">Proteger esta nota</string>
+    <string name="password_title_unlock">Escribe la contraseña</string>
+    <string name="password_label">Contraseña</string>
+    <string name="password_repeat">Repite la contraseña</string>
+    <string name="password_protect_hint">Mínimo 4 caracteres. Si la olvidas, la nota no se puede recuperar.</string>
+    <string name="password_wrong">Contraseña incorrecta</string>
+    <string name="password_empty">Escribe una contraseña</string>
+    <string name="password_too_short">Mínimo 4 caracteres</string>
+    <string name="password_mismatch">Las contraseñas no coinciden</string>
+    <string name="password_unreadable">El contenido protegido de esta nota está dañado y no se puede abrir.</string>
+    <string name="password_changed">La nota cambió mientras tanto. Inténtalo de nuevo.</string>
+    <string name="password_protect_action">Proteger</string>
+    <string name="password_unlock_action">Desbloquear</string>
+    <string name="password_remove_action">Quitar</string>
+    <string name="password_working">Comprobando la contraseña…</string>
+    <string name="protection_stale">Esta nota cambió en otro dispositivo. Se ha vuelto a bloquear: desbloquéala para ver la nueva versión.</string>
 </resources>

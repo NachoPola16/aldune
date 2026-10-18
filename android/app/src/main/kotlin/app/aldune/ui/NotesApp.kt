@@ -103,12 +103,8 @@ private fun NotesScaffold(state: UiState.Ready, viewModel: NotesViewModel, onOpe
                 viewModel.captureHandled()
                 scope.launch {
                     when (viewModel.resolveOpen(open.id)) {
+                        // Una protegida también se abre: el editor pide su contraseña.
                         NotesViewModel.OpenOutcome.OPEN -> navigator.navigateTo(ListDetailPaneScaffoldRole.Detail, open.id)
-                        // Una protegida no se abre hasta F7: se enseña la lista con su fila señalada.
-                        NotesViewModel.OpenOutcome.LOCKED -> {
-                            navigator.navigateTo(ListDetailPaneScaffoldRole.List)
-                            viewModel.highlightNote(open.id)
-                        }
                         NotesViewModel.OpenOutcome.GONE -> {
                             navigator.navigateTo(ListDetailPaneScaffoldRole.List)
                             Toast.makeText(context, R.string.note_gone, Toast.LENGTH_SHORT).show()
