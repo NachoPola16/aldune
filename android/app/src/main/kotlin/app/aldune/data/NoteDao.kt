@@ -24,4 +24,13 @@ interface NoteDao {
 
     @Query("SELECT * FROM tombstone")
     fun tombstones(): List<TombstoneEntity>
+
+    @Query("DELETE FROM tombstone WHERE noteId = :id")
+    fun deleteTombstone(id: String)
+
+    @Query("DELETE FROM note")
+    fun clearNotes()
+
+    @Query("DELETE FROM tombstone")
+    fun clearTombstones()
 }

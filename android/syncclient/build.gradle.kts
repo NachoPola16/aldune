@@ -15,8 +15,7 @@ dependencies {
     // La batería del contrato la hereda `app` en sus pruebas; necesita JUnit y los tipos de domain en la API de los fixtures.
     testFixturesApi(project(":domain"))
     testFixturesApi(kotlin("test"))
-    testFixturesApi(platform(libs.junit.bom))
-    testFixturesApi(libs.junit.jupiter)
+    testFixturesApi(libs.junit4)
 
     // Solo para leer y escribir el JSON del contenido protegido con el mismo formato que core (ver SyncMapping.kt).
     implementation(libs.kotlinx.serialization.json)
@@ -26,6 +25,8 @@ dependencies {
     testImplementation(platform(libs.junit.bom))
     testImplementation(libs.junit.jupiter)
     testRuntimeOnly(libs.junit.platform.launcher)
+    // La batería del contrato es JUnit 4 (para que `app` la herede en el dispositivo); la JVM la ejecuta con este motor.
+    testRuntimeOnly(libs.junit.vintage.engine)
 }
 
 // Igual que android/core, sync, text y domain: se compila para Java 11 aunque corra en un JDK más nuevo, porque en

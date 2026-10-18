@@ -18,8 +18,8 @@ import java.time.Instant
 import java.time.OffsetDateTime
 import java.time.ZoneOffset
 import java.util.UUID
-import org.junit.jupiter.api.BeforeEach
-import org.junit.jupiter.api.Test
+import org.junit.Before
+import org.junit.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 import kotlin.test.assertNull
@@ -51,8 +51,9 @@ abstract class LocalSyncStoreContract {
     private lateinit var clock: MutableClock
     private lateinit var service: NoteService
 
-    // JUnit 5 directo: las anotaciones de kotlin-test las resuelve el plugin de Kotlin solo en el source set `test`, no en testFixtures.
-    @BeforeEach fun setUp() {
+    // Los nombres de los tests van en camelCase y sin espacios: el DEX de minSdk 26 no admite espacios en un nombre de método.
+    // JUnit 4 a propósito: es lo que ejecuta AndroidJUnit4 en el dispositivo, y en la JVM lo corre el motor vintage de JUnit 5.
+    @Before fun setUp() {
         h = newHarness()
         clock = MutableClock(t0.plus(Duration.ofHours(1)))
         service = NoteService(h.notes, clock, "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", IdFactory { UUID.randomUUID().toString() })
@@ -80,13 +81,13 @@ abstract class LocalSyncStoreContract {
 
     // --- foto ---
 
-    @Test fun `un almacen nuevo esta vacio`() {
+    @Test fun unAlmacenNuevoEstaVacio() {
         val snapshot = h.sync.snapshot()
         assertTrue(snapshot.notes.isEmpty() && snapshot.tombstones.isEmpty() && snapshot.bases.isEmpty())
         assertTrue(h.sync.conflictedNoteIds().isEmpty())
     }
 
-    @Test fun `la foto trae las notas, las lapidas locales y las bases`() {
+    @Test fun laFotoTraeLasNotasLasLapidasLocalesYLasBases() {
         h.notes.put(note(id1))
         h.notes.put(note(id2))
         h.notes.delete(id2, t0)
@@ -100,7 +101,7 @@ abstract class LocalSyncStoreContract {
 
     // --- acciones locales ---
 
-    @Test fun `ApplyNote inserta la nota con el autor remoto`() {
+    @Test fun applynoteInsertaLaNotaConElAutorRemoto() {
         val remote = note(id1, "del pc", author = "pc01")
         val report = h.sync.commit(commitOf(LocalAction.ApplyNote(remote)))
         assertEquals(remote, h.notes.get(id1))
@@ -108,14 +109,14 @@ abstract class LocalSyncStoreContract {
         assertTrue(report.skippedConcurrent.isEmpty())
     }
 
-    @Test fun `ApplyNote reemplaza la nota existente`() {
+    @Test fun applynoteReemplazaLaNotaExistente() {
         h.notes.put(note(id1, "vieja"))
         h.sync.commit(commitOf(LocalAction.ApplyNote(note(id1, "nueva", author = "pc01", updatedAt = t0.plusSeconds(9)))))
         assertEquals("nueva", h.notes.get(id1)!!.text)
         assertEquals("pc01", h.notes.get(id1)!!.syncAuthorDeviceId)
     }
 
-    @Test fun `ApplyNote quita la lapida local de ese id`() {
+    @Test fun applynoteQuitaLaLapidaLocalDeEseId() {
         h.notes.put(note(id1))
         h.notes.delete(id1, t0)
         assertEquals(1, h.notes.tombstones().size)
@@ -124,27 +125,27 @@ abstract class LocalSyncStoreContract {
         assertEquals(id1, h.notes.get(id1)!!.id)
     }
 
-    @Test fun `ApplyNote conserva una nota protegida entera`() {
+    @Test fun applynoteConservaUnaNotaProtegidaEntera() {
         val json = """{"version":1,"salt":"s","cipherText":"c","nonce":"n","tag":"t"}"""
         val protected = note(id1, "", author = "pc01").copy(isProtected = true, protectedContentJson = json)
         h.sync.commit(commitOf(LocalAction.ApplyNote(protected)))
         assertEquals(protected, h.notes.get(id1))
     }
 
-    @Test fun `ApplyTombstone borra la nota y guarda la lapida con el autor remoto`() {
+    @Test fun applytombstoneBorraLaNotaYGuardaLaLapidaConElAutorRemoto() {
         h.notes.put(note(id1))
         h.sync.commit(commitOf(LocalAction.ApplyTombstone(id1, t0.plusSeconds(5), "pc01")))
         assertNull(h.notes.get(id1))
         assertEquals(listOf(Tombstone(id1, t0.plusSeconds(5), "pc01")), h.notes.tombstones())
     }
 
-    @Test fun `ApplyTombstone de una nota que no estaba tambien deja la lapida`() {
+    @Test fun applytombstoneDeUnaNotaQueNoEstabaTambienDejaLaLapida() {
         val report = h.sync.commit(commitOf(LocalAction.ApplyTombstone(id1, t0, "pc01")))
         assertEquals(listOf(Tombstone(id1, t0, "pc01")), h.notes.tombstones())
         assertEquals(1, report.appliedTombstones)
     }
 
-    @Test fun `TrashNote manda la nota a la papelera con la fecha dada y autor de este equipo`() {
+    @Test fun trashnoteMandaLaNotaALaPapeleraConLaFechaDadaYAutorDeEsteEquipo() {
         h.notes.put(note(id1, author = "pc01"))
         val report = h.sync.commit(commitOf(LocalAction.TrashNote(id1, t0.plusSeconds(30))))
         val trashed = h.notes.get(id1)!!
@@ -155,13 +156,13 @@ abstract class LocalSyncStoreContract {
         assertEquals(1, report.trashed)
     }
 
-    @Test fun `TrashNote de una nota que no existe no hace nada`() {
+    @Test fun trashnoteDeUnaNotaQueNoExisteNoHaceNada() {
         val report = h.sync.commit(commitOf(LocalAction.TrashNote(id1, t0)))
         assertNull(h.notes.get(id1))
         assertEquals(0, report.trashed)
     }
 
-    @Test fun `SaveConflict guarda la version perdedora y un segundo conflicto de la misma nota reemplaza al primero`() {
+    @Test fun saveconflictGuardaLaVersionPerdedoraYUnSegundoConflictoDeLaMismaNotaReemplazaAlPrimero() {
         h.notes.put(note(id1))
         h.sync.commit(commitOf(LocalAction.SaveConflict(conflict(id1, "primera"))))
         assertEquals(setOf(id1), h.sync.conflictedNoteIds())
@@ -170,7 +171,7 @@ abstract class LocalSyncStoreContract {
         assertEquals(1, h.sync.commit(commitOf(LocalAction.SaveConflict(conflict(id1)))).conflictsSaved)
     }
 
-    @Test fun `las acciones se aplican en el orden del plan`() {
+    @Test fun lasAccionesSeAplicanEnElOrdenDelPlan() {
         h.notes.put(note(id1))
         h.sync.commit(commitOf(
             LocalAction.ApplyNote(note(id1, "a", author = "pc01")),
@@ -182,13 +183,13 @@ abstract class LocalSyncStoreContract {
 
     // --- bases ---
 
-    @Test fun `las bases se fijan y una base nueva reemplaza a la anterior`() {
+    @Test fun lasBasesSeFijanYUnaBaseNuevaReemplazaALaAnterior() {
         h.sync.commit(LocalCommit(emptyList(), mapOf(id1 to base("pc01")), emptyMap()))
         h.sync.commit(LocalCommit(emptyList(), mapOf(id1 to base("pc02"), id2 to base("pc01")), emptyMap()))
         assertEquals(mapOf(id1 to base("pc02"), id2 to base("pc01")), h.sync.snapshot().bases)
     }
 
-    @Test fun `las bases de notas sin acciones locales se fijan siempre, aunque la nota haya cambiado`() {
+    @Test fun lasBasesDeNotasSinAccionesLocalesSeFijanSiempreAunqueLaNotaHayaCambiado() {
         h.notes.put(note(id1))
         val snapshot = h.sync.snapshot()
         service.edit(id1, "editada mientras tanto")
@@ -199,14 +200,14 @@ abstract class LocalSyncStoreContract {
         assertEquals(1, snapshot.notes.size)
     }
 
-    @Test fun `un commit vacio no cambia nada`() {
+    @Test fun unCommitVacioNoCambiaNada() {
         h.notes.put(note(id1))
         val before = h.sync.snapshot()
         assertEquals(CommitReport(), h.sync.commit(LocalCommit(emptyList(), emptyMap(), emptyMap())))
         assertEquals(before, h.sync.snapshot())
     }
 
-    @Test fun `un commit con una accion sin version esperada es un fallo de programa`() {
+    @Test fun unCommitConUnaAccionSinVersionEsperadaEsUnFalloDePrograma() {
         assertFailsWith<IllegalArgumentException> {
             LocalCommit(listOf(LocalAction.TrashNote(id1, t0)), emptyMap(), emptyMap())
         }
@@ -214,7 +215,7 @@ abstract class LocalSyncStoreContract {
 
     // --- concurrencia optimista ---
 
-    @Test fun `una edicion de texto entre la foto y el commit salta la accion y no fija la base`() {
+    @Test fun unaEdicionDeTextoEntreLaFotoYElCommitSaltaLaAccionYNoFijaLaBase() {
         h.notes.put(note(id1, "original"))
         val snapshot = h.sync.snapshot()
         service.edit(id1, "lo que el usuario escribio mientras tanto")
@@ -230,7 +231,7 @@ abstract class LocalSyncStoreContract {
         assertNull(h.sync.snapshot().bases[id1])
     }
 
-    @Test fun `un cambio de color o de estado tambien cuenta como edicion concurrente`() {
+    @Test fun unCambioDeColorODeEstadoTambienCuentaComoEdicionConcurrente() {
         h.notes.put(note(id1))
         h.notes.put(note(id2))
         val snapshot = h.sync.snapshot()
@@ -245,7 +246,7 @@ abstract class LocalSyncStoreContract {
         assertEquals(NoteState.ARCHIVED, h.notes.get(id2)!!.state)
     }
 
-    @Test fun `solo se salta la nota tocada y las demas del mismo commit se aplican`() {
+    @Test fun soloSeSaltaLaNotaTocadaYLasDemasDelMismoCommitSeAplican() {
         h.notes.put(note(id1))
         h.notes.put(note(id2))
         val snapshot = h.sync.snapshot()
@@ -264,7 +265,7 @@ abstract class LocalSyncStoreContract {
         assertEquals(setOf(id2, id3), h.sync.snapshot().bases.keys)
     }
 
-    @Test fun `un conflicto de una nota editada mientras tanto tampoco se guarda`() {
+    @Test fun unConflictoDeUnaNotaEditadaMientrasTantoTampocoSeGuarda() {
         h.notes.put(note(id1))
         val snapshot = h.sync.snapshot()
         service.edit(id1, "mientras tanto")
@@ -273,7 +274,7 @@ abstract class LocalSyncStoreContract {
         assertEquals(setOf(id1), report.skippedConcurrent)
     }
 
-    @Test fun `borrar la nota para siempre entre la foto y el commit salta su accion`() {
+    @Test fun borrarLaNotaParaSiempreEntreLaFotoYElCommitSaltaSuAccion() {
         h.notes.put(note(id1, state = NoteState.TRASHED))
         val snapshot = h.sync.snapshot()
         service.deleteForever(id1)
@@ -282,7 +283,7 @@ abstract class LocalSyncStoreContract {
         assertEquals(setOf(id1), report.skippedConcurrent)
     }
 
-    @Test fun `una nota creada entre la foto y el commit con el mismo id salta la accion`() {
+    @Test fun unaNotaCreadaEntreLaFotoYElCommitConElMismoIdSaltaLaAccion() {
         val snapshot = h.sync.snapshot()
         h.notes.put(note(id1, "creada mientras tanto"))
         val report = h.sync.commit(commitOf(LocalAction.ApplyNote(note(id1, "del pc", author = "pc01")), snapshot = snapshot))
@@ -290,14 +291,14 @@ abstract class LocalSyncStoreContract {
         assertEquals(setOf(id1), report.skippedConcurrent)
     }
 
-    @Test fun `una nota sin cambios desde la foto no se salta aunque tenga autor remoto`() {
+    @Test fun unaNotaSinCambiosDesdeLaFotoNoSeSaltaAunqueTengaAutorRemoto() {
         h.notes.put(note(id1, author = "pc01"))
         val report = h.sync.commit(commitOf(LocalAction.ApplyNote(note(id1, "nueva", author = "pc02", updatedAt = t0.plusSeconds(3)))))
         assertTrue(report.skippedConcurrent.isEmpty())
         assertEquals("pc02", h.notes.get(id1)!!.syncAuthorDeviceId)
     }
 
-    @Test fun `una nota cuya foto tenia lapida y ahora la tiene otra se aplica, pero si se quito se salta`() {
+    @Test fun unaNotaCuyaFotoTeniaLapidaYAhoraLaTieneOtraSeAplicaPeroSiSeQuitoSeSalta() {
         h.notes.put(note(id1))
         h.notes.delete(id1, t0)
         val snapshot = h.sync.snapshot()
@@ -311,7 +312,7 @@ abstract class LocalSyncStoreContract {
 
     // --- primera conexión y desconexión ---
 
-    @Test fun `descartar lo local borra todo sin crear lapidas`() {
+    @Test fun descartarLoLocalBorraTodoSinCrearLapidas() {
         h.notes.put(note(id1))
         h.notes.put(note(id2))
         h.notes.delete(id2, t0)
@@ -326,7 +327,7 @@ abstract class LocalSyncStoreContract {
         assertTrue(h.sync.conflictedNoteIds().isEmpty())
     }
 
-    @Test fun `olvidar el estado de sync borra bases y conflictos y deja notas y lapidas`() {
+    @Test fun olvidarElEstadoDeSyncBorraBasesYConflictosYDejaNotasYLapidas() {
         h.notes.put(note(id1))
         h.notes.put(note(id2))
         h.notes.delete(id2, t0)

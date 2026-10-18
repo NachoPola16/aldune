@@ -45,7 +45,7 @@ class RoomNoteStore(private val database: AldunaDatabase, private val cipher: No
             color = note.color, createdAt = note.createdAt.toString(), updatedAt = note.updatedAt.toString(),
             state = note.state.code, lineEnding = if (note.lineEnding == LineEnding.CRLF) 1 else 0,
             tags = JSONArray(note.tags).toString(), dockPosition = note.dockPosition, screenOrigin = note.screenOrigin,
-            syncAuthorDeviceId = note.syncAuthorDeviceId,
+            syncAuthorDeviceId = note.syncAuthorDeviceId, isProtected = note.isProtected, protectedContent = note.protectedContentJson,
         )
     }
 
@@ -58,6 +58,7 @@ class RoomNoteStore(private val database: AldunaDatabase, private val cipher: No
             // Un código desconocido no se adivina: una base de una versión futura no debe leerse como «activa» en silencio.
             state = NoteState.fromCode(row.state) ?: error("Estado de nota desconocido: ${row.state}"),
             tags = tags, dockPosition = row.dockPosition, screenOrigin = row.screenOrigin, syncAuthorDeviceId = row.syncAuthorDeviceId,
+            isProtected = row.isProtected, protectedContentJson = row.protectedContent,
         )
     }
 }

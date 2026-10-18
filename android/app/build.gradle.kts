@@ -50,6 +50,7 @@ room {
 dependencies {
     implementation(project(":text"))
     implementation(project(":domain"))
+    implementation(project(":syncclient"))
     implementation(libs.androidx.room.runtime)
     ksp(libs.androidx.room.compiler)
 
@@ -77,4 +78,6 @@ dependencies {
     // donde lifecycle fija el 1.7.3 y da AbstractMethodError. Solo en debug: la versión de producción no lo lleva.
     debugImplementation(libs.kotlinx.serialization.json)
     androidTestImplementation(libs.junit4)
+    // La batería del contrato de LocalSyncStore: la misma que pasa el almacén en memoria, aquí con Room (F5).
+    androidTestImplementation(testFixtures(project(":syncclient")))
 }

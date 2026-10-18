@@ -47,6 +47,19 @@ class SyncBaseEntity(
     val deviceId: String,
 )
 
+/**
+ * Conflicto guardado por la sync (F5): la versión que perdió, para poder recuperarla (F7). Las dos versiones van en un JSON cifrado con el
+ * mismo cifrador que el texto de las notas (contiene texto de notas), en tres columnas como `note`.
+ */
+@Entity(tableName = "sync_conflict")
+class SyncConflictEntity(
+    @PrimaryKey val noteId: String,
+    val detectedAt: String,
+    @ColumnInfo(typeAffinity = ColumnInfo.BLOB) val payloadCipher: ByteArray,
+    @ColumnInfo(typeAffinity = ColumnInfo.BLOB) val nonce: ByteArray,
+    @ColumnInfo(typeAffinity = ColumnInfo.BLOB) val tag: ByteArray,
+)
+
 /** Un recordatorio por nota, local al dispositivo (F7). */
 @Entity(tableName = "reminder")
 class ReminderEntity(
