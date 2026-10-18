@@ -39,7 +39,7 @@ import app.aldune.text.AppPalette
 
 private val TRASH_OPTIONS = listOf(7, 14, 30, 60, 90)
 
-/** Ajustes de F4 (spec §2.6): aspecto, idioma y notas. Sync, captura y recordatorios llegan con sus fases. */
+/** Ajustes (spec §2.6): sincronización, aspecto, idioma y notas. Captura y recordatorios llegan con sus fases. */
 @Composable
 fun SettingsScreen(viewModel: NotesViewModel, onClose: () -> Unit) {
     val settings by viewModel.settings.collectAsStateWithLifecycle()
@@ -54,6 +54,8 @@ fun SettingsScreen(viewModel: NotesViewModel, onClose: () -> Unit) {
                 Text(stringResource(R.string.settings), style = MaterialTheme.typography.titleLarge)
             }
             Column(Modifier.verticalScroll(rememberScrollState()).padding(bottom = 24.dp)) {
+                SyncSection(viewModel)
+
                 Section(R.string.settings_appearance)
                 val appearances = listOf(
                     AppPalette.SYSTEM to R.string.appearance_system, AppPalette.DARK to R.string.appearance_dark,
@@ -102,7 +104,7 @@ private fun versionName(activity: Activity?): String =
     runCatching { activity?.packageManager?.getPackageInfo(activity.packageName, 0)?.versionName }.getOrNull() ?: ""
 
 @Composable
-private fun Section(title: Int) {
+internal fun Section(title: Int) {
     Text(
         stringResource(title), Modifier.padding(start = 16.dp, end = 16.dp, top = 20.dp, bottom = 4.dp),
         style = MaterialTheme.typography.titleSmall, color = MaterialTheme.colorScheme.primary,

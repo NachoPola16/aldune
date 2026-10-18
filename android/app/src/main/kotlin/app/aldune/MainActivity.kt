@@ -22,6 +22,12 @@ class MainActivity : ComponentActivity() {
         super.attachBaseContext(Languages.wrap(newBase, SettingsStore(newBase).load().language))
     }
 
+    // Volver a primer plano pide una sync (la política decide si toca: no antes de 30 s desde la última).
+    override fun onStart() {
+        super.onStart()
+        viewModel.onForeground()
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()

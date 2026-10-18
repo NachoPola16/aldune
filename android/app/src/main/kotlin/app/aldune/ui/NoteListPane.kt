@@ -31,12 +31,17 @@ import androidx.compose.foundation.focusable
 import androidx.compose.ui.focus.focusRequester
 import kotlinx.coroutines.flow.first
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.Lock
+import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Settings
@@ -45,7 +50,13 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.FloatingActionButton
+import androidx.compose.material3.pulltorefresh.PullToRefreshBox
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import app.aldune.syncclient.StatusIcon
+import app.aldune.syncclient.SyncEvent
+import app.aldune.syncclient.formatStatus
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -103,6 +114,11 @@ fun NoteListPane(
         keyboard?.hide()
     }
     var deleting by remember { mutableStateOf<NoteListItem?>(null) }
+    val controller by viewModel.sync.collectAsStateWithLifecycle()
+    val profile = controller?.profile?.collectAsStateWithLifecycle()?.value
+    val status = controller?.status?.collectAsStateWithLifecycle()?.value
+    val conflicted = controller?.conflicted?.collectAsStateWithLifecycle()?.value ?: emptySet()
+    var showSyncDetail by remember { mutableStateOf(false) }
 
     val archivedMsg = stringResource(R.string.note_archived)
     val trashedMsg = stringResource(R.string.note_trashed)
@@ -142,11 +158,21 @@ fun NoteListPane(
                             }
                         },
                 )
+                if (profile != null && status != null) {
+                    val line = formatStatus(status, rememberNow())
+                    IconButton(onClick = { showSyncDetail = true }) { SyncIcon(line.icon, stringResource(R.string.sync_status_cd)) }
+                }
                 IconButton(onClick = onOpenSettings) { Icon(Icons.Default.Settings, contentDescription = stringResource(R.string.settings)) }
             }
             StateTabs(state, viewModel::setFilter)
             if (state.allTags.isNotEmpty()) TagRow(state, viewModel::setTag)
 
+            // Tirar hacia abajo sincroniza (spec madre §2.1). Sin perfil no hace nada: la política no lanza pasadas sin perfil.
+            PullToRefreshBox(
+                isRefreshing = status?.running == true,
+                onRefresh = { viewModel.syncEvent(SyncEvent.PullToRefresh) },
+                modifier = Modifier.fillMaxSize(),
+            ) {
             if (state.items.isEmpty()) {
                 EmptyMessage(state)
             } else {
@@ -210,7 +236,7 @@ fun NoteListPane(
                                         )
                                     } else Modifier
                                 ),
-                            item = item, selected = item.id == selectedId, onOpen = { onOpen(item.id) },
+                            item = item, selected = item.id == selectedId, conflicted = item.id in conflicted, onOpen = { onOpen(item.id) },
                             onArchive = { viewModel.archive(item.id); announce(archivedMsg) { viewModel.restore(item.id) } },
                             onTrash = { viewModel.trash(item.id); announce(trashedMsg) { viewModel.restore(item.id) } },
                             onRestore = { viewModel.restore(item.id); announce(restoredMsg) { viewModel.trash(item.id) } },
@@ -219,7 +245,30 @@ fun NoteListPane(
                     }
                 }
             }
+            }
         }
+    }
+
+    if (showSyncDetail && controller != null && status != null) {
+        val line = formatStatus(status, rememberNow())
+        AlertDialog(
+            onDismissRequest = { showSyncDetail = false },
+            title = { Text(stringResource(R.string.sync_title)) },
+            text = {
+                Column {
+                    Text(statusText(line))
+                    line.failure?.detail?.let {
+                        Text(it, Modifier.padding(top = 8.dp), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    }
+                }
+            },
+            confirmButton = {
+                TextButton(enabled = !status.running, onClick = { controller?.request(SyncEvent.ManualSync); showSyncDetail = false }) {
+                    Text(stringResource(R.string.sync_now))
+                }
+            },
+            dismissButton = { TextButton(onClick = { showSyncDetail = false }) { Text(stringResource(R.string.back)) } },
+        )
     }
 
     deleting?.let { item ->
@@ -288,7 +337,8 @@ private fun EmptyMessage(state: UiState.Ready) {
         state.filter == NoteState.ARCHIVED -> R.string.empty_archived
         else -> R.string.empty_trash
     }
-    Box(Modifier.fillMaxSize().padding(32.dp), Alignment.Center) {
+    // Desplazable aunque no haya nada que desplazar: sin eso, «tirar para sincronizar» no engancha en una lista vacía.
+    Box(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(32.dp), Alignment.Center) {
         Text(stringResource(text), color = MaterialTheme.colorScheme.onSurfaceVariant)
     }
 }
@@ -301,7 +351,7 @@ private fun EmptyMessage(state: UiState.Ready) {
 @Composable
 private fun SwipeableRow(
     modifier: Modifier,
-    item: NoteListItem, selected: Boolean, onOpen: () -> Unit,
+    item: NoteListItem, selected: Boolean, conflicted: Boolean, onOpen: () -> Unit,
     onArchive: () -> Unit, onTrash: () -> Unit, onRestore: () -> Unit, onDelete: () -> Unit,
 ) {
     val dismiss = rememberSwipeToDismissBoxState(
@@ -344,12 +394,12 @@ private fun SwipeableRow(
             }
         },
     ) {
-        NoteRow(item, selected, onOpen)
+        NoteRow(item, selected, conflicted, onOpen)
     }
 }
 
 @Composable
-private fun NoteRow(item: NoteListItem, selected: Boolean, onOpen: () -> Unit) {
+private fun NoteRow(item: NoteListItem, selected: Boolean, conflicted: Boolean, onOpen: () -> Unit) {
     val face = noteFace(item.color)
     Card(
         onClick = onOpen,
@@ -370,6 +420,14 @@ private fun NoteRow(item: NoteListItem, selected: Boolean, onOpen: () -> Unit) {
                     )
                 }
             }
+            Row(Modifier.align(Alignment.CenterVertically).padding(end = 10.dp), verticalAlignment = Alignment.CenterVertically) {
+                if (item.isProtected) {
+                    Icon(Icons.Default.Lock, contentDescription = stringResource(R.string.protected_note_title), Modifier.size(18.dp), tint = MaterialTheme.colorScheme.onSurfaceVariant)
+                }
+                if (conflicted) {
+                    Icon(Icons.Default.Warning, contentDescription = stringResource(R.string.conflict_flag_cd), Modifier.padding(start = 6.dp).size(18.dp), tint = MaterialTheme.colorScheme.error)
+                }
+            }
             if (item.hasTasks) {
                 Text(
                     stringResource(R.string.tasks_progress, item.tasksDone, item.tasksTotal),
@@ -386,3 +444,15 @@ internal fun noteFace(hex: String): Color = runCatching { paletteColor(hex) }.ge
 
 /** La tinta que se lee sobre ese color (la misma regla de contraste que en Windows). */
 internal fun noteInk(hex: String): Color = runCatching { paletteColor(NoteColorContrast.foregroundFor(hex)) }.getOrDefault(Color.Black)
+
+/** El icono discreto del estado de la sync. Sin conexión no es un error (no es culpa del usuario): se pinta apagado, no en rojo. */
+@Composable
+private fun SyncIcon(icon: StatusIcon, description: String) {
+    when (icon) {
+        StatusIcon.NONE -> Unit
+        StatusIcon.OK -> Icon(Icons.Default.Check, description, tint = MaterialTheme.colorScheme.primary)
+        StatusIcon.SYNCING -> CircularProgressIndicator(Modifier.size(20.dp), strokeWidth = 2.dp)
+        StatusIcon.OFFLINE -> Icon(Icons.Default.Warning, description, tint = MaterialTheme.colorScheme.onSurfaceVariant)
+        StatusIcon.ERROR -> Icon(Icons.Default.Warning, description, tint = MaterialTheme.colorScheme.error)
+    }
+}

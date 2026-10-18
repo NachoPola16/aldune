@@ -44,6 +44,7 @@ fun NotesApp(viewModel: NotesViewModel) {
     val state by viewModel.state.collectAsStateWithLifecycle()
     var showSettings by rememberSaveable { mutableStateOf(false) }
     viewModel.setPlaceholder(stringResource(R.string.new_note_title))
+    viewModel.setProtectedTitle(stringResource(R.string.protected_note_title))
     Surface(Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {
         when (val s = state) {
             UiState.Loading -> Box(Modifier.fillMaxSize(), Alignment.Center) {

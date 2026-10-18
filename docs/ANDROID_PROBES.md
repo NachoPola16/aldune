@@ -68,3 +68,27 @@ Enter en vacío y Retroceso. No probado aún: un teclado físico real, la tablet
 - **Un teclado de terceros puede mantener una región de composición.** Corregir Enter/Retroceso en `onValueChange` (con `TextFieldValue`) dejaba al teclado
   re-escribiendo la palabra a medias en la línea nueva. Con `TextFieldState` y un `InputTransformation` la corrección va dentro de la propia edición del
   teclado y no hay desajuste. Probar siempre con Gboard **y** un teclado de terceros; Gboard solo no lo habría descubierto.
+
+## Sonda de la sync (F5)
+
+La app habla con un servidor de sync **de pruebas** (nunca el real) y un «PC» simulado hace de la otra mitad. Todo con datos temporales.
+
+1. **Servidor local con datos temporales**: `ALDUNE_SYNC_TOKEN=probe-token-123 ALDUNE_DATA_DIR=<carpeta temporal> dotnet run --project src/Aldune.SyncServer --urls http://127.0.0.1:5077`.
+   La carpeta de datos se pasa con **`ALDUNE_DATA_DIR`** (sin ella el servidor usa `/data`, que en Windows es `C:\data`). Al dispositivo le llega con
+   `adb reverse tcp:5077 tcp:5077` (la URL del perfil es `http://127.0.0.1:5077/`); al acabar, `adb reverse --remove tcp:5077`.
+2. **El «PC»**: `ProbePcSimulator` (en `android/syncclient/src/test`, se salta si no hay `ALDUNE_PROBE`). Se invoca con
+   `./gradlew :syncclient:test --tests app.aldune.syncclient.ProbePcSimulator --rerun-tasks` y las variables `ALDUNE_PROBE` (`code`, `list`, `put`, `protected`,
+   `delete`, `unsigned`), `ALDUNE_PROBE_URL`, `ALDUNE_PROBE_TOKEN`, `ALDUNE_PROBE_KEYFILE` (la clave de la sonda; se crea sola), `ALDUNE_PROBE_OUT` (donde escribe el
+   resultado) y `ALDUNE_PROBE_ID` / `_TEXT` / `_STATE`. `code` imprime el código de perfil; `list` enseña el almacén **descifrado con la clave del perfil**, que es
+   lo que comprueba que lo subido por la app es legible desde fuera; `unsigned` escribe un borrado con la firma de otra clave. Cada llamada tarda unos 20 s (Gradle).
+3. **Escribir el código de perfil por adb**: `adb shell input text` pierde caracteres con cadenas largas; se manda en trozos de 30 con `sleep 0.4`. Un código mal
+   escrito sale como «dañado», lo cual también prueba ese mensaje.
+4. **No usar Atrás en la tableta en modo PC**: cierra la app y lo escrito sin guardar se pierde. Y para escribir en el editor hay que tocarlo antes (el teclado
+   solo se abre con el foco).
+5. **Un conflicto se provoca** así: el «PC» escribe la nota, y **antes** de que la tableta sincronice (la política espera 5 s tras dejar de editar) se escribe en la
+   tableta. La pasada ve los dos lados cambiados desde la base: gana la versión más reciente y la otra queda guardada como conflicto (icono en la fila).
+6. **Servidor caído con `adb reverse`**: el túnel acepta la conexión y la corta, así que no sale «conexión rechazada» sino «unexpected end of stream».
+   Es un corte de conexión como cualquier otro y se clasifica «Sin conexión».
+7. Tirar para sincronizar: `adb shell input swipe 250 450 250 1000 500` sobre la lista. Con la lista vacía exige que el mensaje de «sin notas» sea desplazable.
+8. Comprobar lo que queda en el dispositivo: `adb shell run-as io.github.nachopola16.aldune.debug ls no_backup` (el fichero `syncsecrets.bin` existe conectado y no
+   existe desconectado) y `adb shell dumpsys jobscheduler | grep aldune` (el trabajo periódico de WorkManager).

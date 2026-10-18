@@ -1,14 +1,21 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
-    <!-- Sin permisos en F4: la app no usa red ni notificaciones todavía (llegan con la sync y los recordatorios). -->
+    <!-- Red para la sync (F5). Las notificaciones y las alarmas llegan con sus fases. -->
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+
+    <!-- usesCleartextTraffic: el servidor de casa suele ir por http en la red local (Windows lo admite). La pantalla de sync avisa cuando la
+         dirección no es https; las notas viajan cifradas de extremo a extremo igualmente, lo único expuesto es el token. -->
     <application
+        android:name=".AldunaApp"
         android:allowBackup="false"
         android:dataExtractionRules="@xml/data_extraction_rules"
         android:fullBackupContent="@xml/backup_rules"
         android:icon="@android:drawable/sym_def_app_icon"
         android:label="@string/app_name"
         android:supportsRtl="true"
+        android:usesCleartextTraffic="true"
         android:theme="@android:style/Theme.Material.NoActionBar">
         <activity
             android:name=".MainActivity"

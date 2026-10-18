@@ -38,7 +38,8 @@ fun AldunaTheme(appearance: Int = APPEARANCE_SYSTEM, content: @Composable () -> 
             surfaceVariant = c("Raised"), onSurfaceVariant = c("MutedText"),
             surfaceContainerLowest = c("GroundDeep"), surfaceContainerLow = c("Ground"), surfaceContainer = c("Surface"),
             surfaceContainerHigh = c("Raised"), surfaceContainerHighest = c("RaisedHover"),
-            error = c("DangerStrong"), onError = c("OnDanger"),
+            // ErrorText y no DangerStrong: Material usa «error» para texto, iconos y bordes, y DangerStrong es un relleno que se apaga en el tema oscuro.
+            error = c("ErrorText"), onError = c("OnDanger"),
             errorContainer = c("DangerBg"), onErrorContainer = c("OnDangerBg"),
             outline = c("Border"), outlineVariant = c("BorderSubtle"),
             // Los avisos (Snackbar) usan el esquema «inverso»; sin esto salían con el morado por defecto de Material.

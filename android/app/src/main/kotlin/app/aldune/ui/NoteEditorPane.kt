@@ -97,6 +97,8 @@ private val ListKeysTransformation = InputTransformation {
 fun NoteEditorPane(key: String, viewModel: NotesViewModel, onBack: () -> Unit, showBack: Boolean) {
     val state = remember(key) { TextFieldState() }
     var loaded by remember(key) { mutableStateOf(false) }
+    // Una nota protegida que llegó por sync no se puede abrir todavía (F7): su texto no se conoce sin la contraseña. Se ve el aviso, no el editor.
+    var protectedNote by remember(key) { mutableStateOf(false) }
     var options by remember(key) { mutableStateOf<NotesViewModel.NoteOptions?>(null) }
     val scope = rememberCoroutineScope()
     var layout by remember(key) { mutableStateOf<(() -> TextLayoutResult?)?>(null) }
@@ -110,7 +112,24 @@ fun NoteEditorPane(key: String, viewModel: NotesViewModel, onBack: () -> Unit, s
             replace(0, length, text)
             selection = TextRange(0)
         }
+        protectedNote = viewModel.isProtected(key)
         loaded = true
+    }
+    // Una pasada de sync cambió el texto de esta nota mientras estaba abierta (y no se había tocado): se recarga, o la siguiente tecla guardaría
+    // el texto viejo encima del recién llegado.
+    LaunchedEffect(key) {
+        viewModel.externalEdits.collect { changed ->
+            if (changed != key) return@collect
+            val fresh = viewModel.draftText(key)
+            if (fresh == state.text.toString()) return@collect
+            state.edit {
+                replace(0, length, fresh)
+                selection = TextRange(selection.min.coerceAtMost(fresh.length))
+            }
+        }
+    }
+    LaunchedEffect(key) {
+        viewModel.deletedNotes.collect { gone -> if (gone == key) onBack() }
     }
     // Único punto por el que el texto llega al guardado: así ningún camino (teclado, barra, atajo, toque) se lo salta.
     LaunchedEffect(key) {
@@ -188,6 +207,12 @@ fun NoteEditorPane(key: String, viewModel: NotesViewModel, onBack: () -> Unit, s
             }
         }
         options?.let { current -> NoteOptionsDialog(current, viewModel, onClose = { options = null }) }
+        if (protectedNote) {
+            Box(Modifier.weight(1f).fillMaxWidth().padding(24.dp), Alignment.Center) {
+                Text(stringResource(R.string.protected_note_body), color = MaterialTheme.colorScheme.onSurfaceVariant)
+            }
+            return@Column
+        }
         BasicTextField(
             state = state,
             inputTransformation = ListKeysTransformation,

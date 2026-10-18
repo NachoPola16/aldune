@@ -51,6 +51,9 @@ dependencies {
     implementation(project(":text"))
     implementation(project(":domain"))
     implementation(project(":syncclient"))
+    // HttpSyncTransport y WebDavSyncTransport exponen OkHttpClient en sus constructores.
+    implementation(libs.okhttp)
+    implementation(libs.androidx.work.runtime)
     implementation(libs.androidx.room.runtime)
     ksp(libs.androidx.room.compiler)
 

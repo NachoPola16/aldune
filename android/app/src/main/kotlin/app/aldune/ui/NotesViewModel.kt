@@ -3,6 +3,7 @@ package app.aldune.ui
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
+import app.aldune.AldunaApp
 import app.aldune.AppContainer
 import app.aldune.data.AppSettings
 import app.aldune.data.SettingsStore
@@ -12,12 +13,16 @@ import app.aldune.domain.NoteListItem
 import app.aldune.domain.NoteResult
 import app.aldune.domain.NoteService
 import app.aldune.domain.NoteState
+import app.aldune.syncclient.SyncEvent
+import app.aldune.syncing.SyncController
 import app.aldune.text.NoteTone
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
@@ -50,11 +55,27 @@ sealed interface UiState {
 private const val AUTOSAVE_MS = 600L
 
 class NotesViewModel(application: Application) : AndroidViewModel(application) {
-    private val container = AppContainer(application)
+    private val container = (application as AldunaApp).container
     private val io = Mutex()
     private val settingsStore = SettingsStore(application)
     private var service: NoteService? = null
     private var placeholder: String = "New note"
+    private var protectedTitle: String = "Protected note"
+
+    private val _sync = MutableStateFlow<SyncController?>(null)
+
+    /** La sync, cuando la base ya está abierta (hasta entonces `null`). La pantalla de Ajustes y la lista leen su estado de aquí. */
+    val sync: StateFlow<SyncController?> = _sync.asStateFlow()
+
+    private val _externalEdits = MutableSharedFlow<String>(extraBufferCapacity = 16)
+
+    /** La sync cambió el texto de una nota abierta en el editor (clave del borrador): el editor tiene que recargarlo, o lo pisaría al escribir. */
+    val externalEdits: SharedFlow<String> = _externalEdits
+    private val _deletedNotes = MutableSharedFlow<String>(extraBufferCapacity = 16)
+
+    /** La sync borró (por un borrado firmado) la nota abierta en el editor de la clave dada: el editor tiene que cerrarse. */
+    val deletedNotes: SharedFlow<String> = _deletedNotes
+    private var started = false
 
     private val _state = MutableStateFlow<UiState>(UiState.Loading)
     val state: StateFlow<UiState> = _state.asStateFlow()
@@ -72,7 +93,7 @@ class NotesViewModel(application: Application) : AndroidViewModel(application) {
         launchIo {
             when (val opened = container.open()) {
                 is AppContainer.Opened.KeyLost -> _state.value = UiState.KeyLost(opened.reason)
-                is AppContainer.Opened.Ready -> start(opened.notes)
+                is AppContainer.Opened.Ready -> start(opened.notes, opened)
             }
         }
     }
@@ -82,15 +103,69 @@ class NotesViewModel(application: Application) : AndroidViewModel(application) {
         placeholder = text
     }
 
-    fun startOver() = launchIo { start(container.startOver().notes) }
+    /** El título de una nota protegida en la lista, en el idioma de la interfaz. */
+    fun setProtectedTitle(text: String) {
+        protectedTitle = text
+    }
 
-    private fun start(notes: NoteService) {
+    fun startOver() = launchIo { container.startOver().let { start(it.notes, it) } }
+
+    override fun onCleared() {
+        // La sync sigue viva (es del proceso); solo se suelta la referencia a este ViewModel, que ya no existe.
+        _sync.value?.onNotesChanged = null
+    }
+
+    private fun start(notes: NoteService, opened: AppContainer.Opened.Ready) {
         service = notes
+        _sync.value = opened.sync.also { it.onNotesChanged = { launchIo { reconcileDrafts(); refreshLocked() } } }
         // Como Windows: la papelera se purga al abrir, con los días de los ajustes (30 por defecto).
         notes.purgeTrashed(_settings.value.trashDays)
         _state.value = UiState.Ready()
         refresh()
+        started = true
+        syncEvent(SyncEvent.AppOpened)
     }
+
+    /** Volvió a primer plano (la actividad pasó por `onStart`). Antes de que la base esté abierta no hace nada: ya vendrá `AppOpened`. */
+    fun onForeground() {
+        if (started) syncEvent(SyncEvent.Foreground)
+    }
+
+    fun syncEvent(event: SyncEvent) {
+        _sync.value?.request(event)
+    }
+
+    /**
+     * Tras una pasada que cambió notas: si una nota abierta cambió de texto en la base y el usuario no ha escrito nada nuevo, el editor se
+     * recarga. Si no, su siguiente tecla guardaría el texto viejo encima del que acaba de llegar y esa edición se perdería sin conflicto.
+     * (Si el usuario había escrito a la vez, gana lo suyo: sube como una edición más reciente.)
+     */
+    private fun reconcileDrafts() {
+        val notes = service ?: return
+        for ((key, draft) in drafts.entries.toList()) {
+            val id = draft.noteId ?: continue
+            val note = notes.get(id)
+            if (note == null) {
+                drafts.remove(key)
+                _deletedNotes.tryEmit(key)
+                continue
+            }
+            val stored = note.text
+            if (stored != draft.lastSaved && draft.latest == draft.lastSaved) {
+                draft.lastSaved = stored
+                draft.latest = stored
+                _externalEdits.tryEmit(key)
+            }
+        }
+    }
+
+    /** ¿La nota de [key] es protegida? (Una nota nueva, "", no lo es.) */
+    suspend fun isProtected(key: String): Boolean = withContext(Dispatchers.IO) {
+        io.withLock { key.isNotEmpty() && service?.get(key)?.isProtected == true }
+    }
+
+    /** El texto que tiene ahora el borrador de [key] (para recargar el editor tras [externalEdits]). */
+    fun draftText(key: String): String = drafts[key]?.latest ?: ""
 
     fun setFilter(filter: NoteState) = update { it.copy(filter = filter, tag = null) }
 
@@ -157,6 +232,7 @@ class NotesViewModel(application: Application) : AndroidViewModel(application) {
                 draft.lastSaved = text
             }
             refreshLocked()
+            syncEvent(SyncEvent.LocalChange)
         }
     }
 
@@ -197,6 +273,7 @@ class NotesViewModel(application: Application) : AndroidViewModel(application) {
     private fun change(op: (NoteService) -> Any?) = launchIo {
         service?.let(op)
         refresh()
+        syncEvent(SyncEvent.LocalChange)
     }
 
     private fun update(transform: (UiState.Ready) -> UiState.Ready) {
@@ -213,7 +290,7 @@ class NotesViewModel(application: Application) : AndroidViewModel(application) {
     private fun refreshLocked() {
         val notes = service ?: return
         val current = _state.value as? UiState.Ready ?: return
-        val items = notes.list(current.filter, current.query, current.tag).map { NoteListItem.from(it, placeholder) }
+        val items = notes.list(current.filter, current.query, current.tag).map { NoteListItem.from(it, placeholder, protectedTitle) }
         val counts = NoteState.entries.associateWith { notes.list(it).size }
         val tags = notes.list(current.filter).flatMap { it.tags }.distinctBy { it.lowercase() }.sortedBy { it.lowercase() }
         _state.update { (it as? UiState.Ready)?.copy(items = items, allTags = tags, counts = counts) ?: it }
