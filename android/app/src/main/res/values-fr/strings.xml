@@ -124,4 +124,6 @@
     <string name="protected_note_title">Note protégée</string>
     <string name="protected_note_body">Cette note est protégée. Elle pourra être ouverte dans une prochaine version.</string>
     <string name="conflict_flag_cd">Cette note a changé à deux endroits à la fois</string>
+    <string name="first_connect_discard_title">Supprimer les notes de cet appareil ?</string>
+    <string name="first_connect_discard_body">Notes qui seront supprimées de cet appareil : %1$d. Elles seront irrécupérables. Tu recevras les notes du profil.</string>
 </resources>

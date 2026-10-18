@@ -124,4 +124,6 @@
     <string name="protected_note_title">Nota protegida</string>
     <string name="protected_note_body">Esta nota está protegida. Será possível abri-la em uma próxima versão.</string>
     <string name="conflict_flag_cd">Esta nota mudou em dois lugares ao mesmo tempo</string>
+    <string name="first_connect_discard_title">Descartar as notas deste dispositivo?</string>
+    <string name="first_connect_discard_body">Notas que serão apagadas deste dispositivo: %1$d. Não poderão ser recuperadas. Você receberá as notas do perfil.</string>
 </resources>

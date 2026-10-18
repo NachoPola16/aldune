@@ -145,6 +145,7 @@ private fun ConnectForm(controller: SyncController) {
     var busy by remember { mutableStateOf(false) }
     var pending by remember { mutableStateOf<ConnectRequest?>(null) }
     var pendingNotes by remember { mutableStateOf(0) }
+    var discardRequest by remember { mutableStateOf<ConnectRequest?>(null) }
 
     fun reset() {
         code = ""; parsed = null; url = ""; token = ""; username = ""; password = ""; errorText = null; failureKind = null; pending = null
@@ -238,17 +239,35 @@ private fun ConnectForm(controller: SyncController) {
     }
 
     pending?.let { request ->
+        // Subir es lo seguro y lo que ocupa el botón principal. Descartar no se deshace: va aparte, en rojo, y pide una segunda confirmación
+        // (en un teléfono estrecho los botones se apilaban y «Descartarlas» quedaba pegado a «Cancelar»).
         AlertDialog(
             onDismissRequest = { pending = null },
             title = { Text(stringResource(R.string.first_connect_title)) },
-            text = { Text(stringResource(R.string.first_connect_body, pendingNotes)) },
-            confirmButton = { TextButton(onClick = { pending = null; connect(request, FirstConnectChoice.UPLOAD) }) { Text(stringResource(R.string.first_connect_upload)) } },
-            dismissButton = {
-                Row {
-                    TextButton(onClick = { pending = null }) { Text(stringResource(R.string.cancel)) }
-                    TextButton(onClick = { pending = null; connect(request, FirstConnectChoice.DISCARD) }) { Text(stringResource(R.string.first_connect_discard)) }
+            text = {
+                Column {
+                    Text(stringResource(R.string.first_connect_body, pendingNotes))
+                    TextButton(onClick = { discardRequest = request; pending = null }, modifier = Modifier.padding(top = 8.dp)) {
+                        Text(stringResource(R.string.first_connect_discard), color = MaterialTheme.colorScheme.error)
+                    }
                 }
             },
+            confirmButton = { TextButton(onClick = { pending = null; connect(request, FirstConnectChoice.UPLOAD) }) { Text(stringResource(R.string.first_connect_upload)) } },
+            dismissButton = { TextButton(onClick = { pending = null }) { Text(stringResource(R.string.cancel)) } },
+        )
+    }
+
+    discardRequest?.let { request ->
+        AlertDialog(
+            onDismissRequest = { discardRequest = null },
+            title = { Text(stringResource(R.string.first_connect_discard_title)) },
+            text = { Text(stringResource(R.string.first_connect_discard_body, pendingNotes)) },
+            confirmButton = {
+                TextButton(onClick = { discardRequest = null; connect(request, FirstConnectChoice.DISCARD) }) {
+                    Text(stringResource(R.string.first_connect_discard), color = MaterialTheme.colorScheme.error)
+                }
+            },
+            dismissButton = { TextButton(onClick = { discardRequest = null }) { Text(stringResource(R.string.cancel)) } },
         )
     }
 }

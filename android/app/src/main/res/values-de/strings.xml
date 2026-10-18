@@ -124,4 +124,6 @@
     <string name="protected_note_title">Geschützte Notiz</string>
     <string name="protected_note_body">Diese Notiz ist geschützt. Sie lässt sich in einer künftigen Version öffnen.</string>
     <string name="conflict_flag_cd">Diese Notiz wurde an zwei Orten gleichzeitig geändert</string>
+    <string name="first_connect_discard_title">Die Notizen auf diesem Gerät verwerfen?</string>
+    <string name="first_connect_discard_body">Notizen, die von diesem Gerät gelöscht werden: %1$d. Sie lassen sich nicht wiederherstellen. Du erhältst die Notizen des Profils.</string>
 </resources>
