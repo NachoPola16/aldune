@@ -185,4 +185,18 @@
     <string name="reminder_done">Erledigt</string>
     <string name="reminder_snooze_hour">+1 Std.</string>
     <string name="reminder_snooze_morning">Morgen 9:00</string>
+    <string name="reminder_title">Erinnerung</string>
+    <string name="reminder_in_one_hour">In 1 Stunde</string>
+    <string name="reminder_tonight">Heute Abend 20:00</string>
+    <string name="reminder_pick">Datum und Uhrzeit wählen</string>
+    <string name="reminder_remove">Erinnerung entfernen</string>
+    <string name="reminder_device_only">Diese Erinnerung gilt nur auf diesem Gerät</string>
+    <string name="reminder_today">Heute %1$s</string>
+    <string name="reminder_tomorrow">Morgen %1$s</string>
+    <string name="reminder_overdue">Überfällig</string>
+    <string name="reminder_date_time">%1$s, %2$s</string>
+    <string name="reminder_ok">OK</string>
+    <string name="reminders_section">Erinnerungen</string>
+    <string name="reminder_exact">Genaue Uhrzeit</string>
+    <string name="reminder_exact_hint">Meldet sich auf die Minute genau. Braucht etwas mehr Akku; Android fragt eventuell nach der Erlaubnis.</string>
 </resources>

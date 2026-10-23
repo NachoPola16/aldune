@@ -41,6 +41,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Lock
+import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Search
@@ -85,6 +86,7 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import app.aldune.R
+import app.aldune.domain.ReminderLabel
 import app.aldune.domain.NoteListItem
 import app.aldune.domain.NoteState
 import app.aldune.text.NoteColorContrast
@@ -244,7 +246,7 @@ fun NoteListPane(
                                         )
                                     } else Modifier
                                 ),
-                            item = item, selected = item.id == selectedId || item.id == highlight, conflicted = item.id in conflicted, onOpen = { onOpen(item.id) },
+                            item = item, selected = item.id == selectedId || item.id == highlight, conflicted = item.id in conflicted, reminder = state.reminders[item.id], onOpen = { onOpen(item.id) },
                             onArchive = { viewModel.archive(item.id); announce(archivedMsg) { viewModel.restore(item.id) } },
                             onTrash = { viewModel.trash(item.id); announce(trashedMsg) { viewModel.restore(item.id) } },
                             onRestore = { viewModel.restore(item.id); announce(restoredMsg) { viewModel.trash(item.id) } },
@@ -377,7 +379,7 @@ private fun EmptyMessage(state: UiState.Ready) {
 @Composable
 private fun SwipeableRow(
     modifier: Modifier,
-    item: NoteListItem, selected: Boolean, conflicted: Boolean, onOpen: () -> Unit,
+    item: NoteListItem, selected: Boolean, conflicted: Boolean, reminder: java.time.Instant?, onOpen: () -> Unit,
     onArchive: () -> Unit, onTrash: () -> Unit, onRestore: () -> Unit, onDelete: () -> Unit,
 ) {
     val dismiss = rememberSwipeToDismissBoxState(
@@ -420,12 +422,12 @@ private fun SwipeableRow(
             }
         },
     ) {
-        NoteRow(item, selected, conflicted, onOpen)
+        NoteRow(item, selected, conflicted, reminder, onOpen)
     }
 }
 
 @Composable
-private fun NoteRow(item: NoteListItem, selected: Boolean, conflicted: Boolean, onOpen: () -> Unit) {
+private fun NoteRow(item: NoteListItem, selected: Boolean, conflicted: Boolean, reminder: java.time.Instant?, onOpen: () -> Unit) {
     val face = noteFace(item.color)
     Card(
         onClick = onOpen,
@@ -444,6 +446,14 @@ private fun NoteRow(item: NoteListItem, selected: Boolean, conflicted: Boolean, 
                         item.preview, style = MaterialTheme.typography.bodyMedium, maxLines = 1, overflow = TextOverflow.Ellipsis,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
+                }
+                if (reminder != null) {
+                    val label = ReminderLabel.of(reminder, java.time.Instant.now(), java.time.ZoneId.systemDefault())
+                    val tint = if (label == ReminderLabel.Overdue) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary
+                    Row(Modifier.padding(top = 2.dp), verticalAlignment = Alignment.CenterVertically) {
+                        Icon(Icons.Default.Notifications, contentDescription = stringResource(R.string.reminder_title), Modifier.size(14.dp), tint = tint)
+                        Text(reminderText(label), Modifier.padding(start = 4.dp), style = MaterialTheme.typography.labelMedium, color = tint, maxLines = 1)
+                    }
                 }
             }
             Row(Modifier.align(Alignment.CenterVertically).padding(end = 10.dp), verticalAlignment = Alignment.CenterVertically) {

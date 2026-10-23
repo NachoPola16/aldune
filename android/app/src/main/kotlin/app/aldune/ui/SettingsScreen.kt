@@ -53,6 +53,10 @@ import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import app.aldune.R
+import android.net.Uri
+import app.aldune.reminders.ReminderScheduler
+import androidx.lifecycle.compose.LifecycleEventEffect
+import androidx.lifecycle.Lifecycle
 import app.aldune.data.AppSettings
 import app.aldune.data.Languages
 import app.aldune.text.AppPalette
@@ -76,6 +80,7 @@ fun SettingsScreen(viewModel: NotesViewModel, onClose: () -> Unit) {
             Column(Modifier.verticalScroll(rememberScrollState()).padding(bottom = 24.dp)) {
                 SyncSection(viewModel)
                 CaptureSection(viewModel, settings.captureNotification)
+                RemindersSection(viewModel, settings.exactReminders)
 
                 Section(R.string.settings_appearance)
                 val appearances = listOf(
@@ -185,6 +190,38 @@ private fun CaptureSection(viewModel: NotesViewModel, notificationOn: Boolean) {
             stringResource(R.string.add_tile_manual), Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
             style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
+    }
+}
+
+/**
+ * Recordatorios: «Hora exacta». Sin el permiso de alarmas exactas (API 31+) se manda al usuario a la pantalla del sistema y, al volver, se
+ * activa si lo concedió; así el interruptor nunca queda encendido sin que la alarma pueda ser exacta.
+ */
+@Composable
+private fun RemindersSection(viewModel: NotesViewModel, exactOn: Boolean) {
+    val context = LocalContext.current
+    var waiting by remember { mutableStateOf(false) }
+    fun apply(on: Boolean) {
+        viewModel.updateSettings { it.copy(exactReminders = on) }
+        viewModel.reconcileReminders()
+    }
+    LifecycleEventEffect(Lifecycle.Event.ON_RESUME) {
+        if (waiting) {
+            waiting = false
+            if (ReminderScheduler.canScheduleExact(context)) apply(true)
+        }
+    }
+
+    Section(R.string.reminders_section)
+    SwitchRow(stringResource(R.string.reminder_exact), stringResource(R.string.reminder_exact_hint), exactOn && ReminderScheduler.canScheduleExact(context)) { on ->
+        when {
+            !on -> apply(false)
+            ReminderScheduler.canScheduleExact(context) -> apply(true)
+            else -> {
+                waiting = true
+                context.startActivity(Intent(Settings.ACTION_REQUEST_SCHEDULE_EXACT_ALARM, Uri.parse("package:${context.packageName}")))
+            }
+        }
     }
 }
 

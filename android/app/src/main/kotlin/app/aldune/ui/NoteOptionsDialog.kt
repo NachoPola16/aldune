@@ -10,6 +10,8 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
@@ -67,7 +69,7 @@ fun NoteOptionsDialog(initial: NotesViewModel.NoteOptions, viewModel: NotesViewM
         onDismissRequest = onClose,
         title = { Text(stringResource(R.string.note_options)) },
         text = {
-            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            Column(Modifier.verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 Text(stringResource(R.string.note_color), style = MaterialTheme.typography.labelLarge)
                 FlowRow(horizontalArrangement = Arrangement.spacedBy(10.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
                     for (hex in palette) {
@@ -98,6 +100,7 @@ fun NoteOptionsDialog(initial: NotesViewModel.NoteOptions, viewModel: NotesViewM
                     )
                     TextButton(onClick = ::addTag, enabled = draft.isNotBlank()) { Text(stringResource(R.string.add_tag)) }
                 }
+                ReminderSection(initial.noteId, viewModel)
                 TextButton(onClick = onProtection, Modifier.padding(top = 8.dp)) {
                     Text(stringResource(if (initial.isProtected) R.string.remove_protection else R.string.protect_note))
                 }

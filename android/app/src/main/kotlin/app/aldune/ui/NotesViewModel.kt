@@ -615,6 +615,9 @@ class NotesViewModel(application: Application) : AndroidViewModel(application) {
 
     fun clearReminder(noteId: String) = launchIo { ready?.reminders?.clear(noteId) }
 
+    /** Rehace las alarmas (por ejemplo, al cambiar «Hora exacta»). */
+    fun reconcileReminders() = launchIo { ready?.reminders?.reconcile() }
+
     // Archivar, la papelera, borrar o restaurar cambian qué notas avisan: se reconcilian las alarmas (no en cada autoguardado: el texto no cuenta).
     private fun change(op: (NoteService) -> Any?) = launchIo {
         service?.let(op)

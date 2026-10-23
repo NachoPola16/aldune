@@ -185,4 +185,18 @@
     <string name="reminder_done">Feito</string>
     <string name="reminder_snooze_hour">+1 h</string>
     <string name="reminder_snooze_morning">Amanhã 9:00</string>
+    <string name="reminder_title">Lembrete</string>
+    <string name="reminder_in_one_hour">Em 1 hora</string>
+    <string name="reminder_tonight">Hoje à noite 20:00</string>
+    <string name="reminder_pick">Escolher data e hora</string>
+    <string name="reminder_remove">Remover o lembrete</string>
+    <string name="reminder_device_only">Este lembrete só avisa neste dispositivo</string>
+    <string name="reminder_today">Hoje %1$s</string>
+    <string name="reminder_tomorrow">Amanhã %1$s</string>
+    <string name="reminder_overdue">Vencido</string>
+    <string name="reminder_date_time">%1$s, %2$s</string>
+    <string name="reminder_ok">OK</string>
+    <string name="reminders_section">Lembretes</string>
+    <string name="reminder_exact">Hora exata</string>
+    <string name="reminder_exact_hint">Avisa no minuto exato. Gasta um pouco mais de bateria; o Android pode pedir permissão.</string>
 </resources>

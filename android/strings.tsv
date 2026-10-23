@@ -184,3 +184,17 @@ reminders_channel_description	Note reminders on this device	Los recordatorios de
 reminder_done	Done	Hecho	Erledigt	Terminé	Feito
 reminder_snooze_hour	+1 h	+1 h	+1 Std.	+1 h	+1 h
 reminder_snooze_morning	Tomorrow 9:00	Mañana 9:00	Morgen 9:00	Demain 9:00	Amanhã 9:00
+reminder_title	Reminder	Recordatorio	Erinnerung	Rappel	Lembrete
+reminder_in_one_hour	In 1 hour	Dentro de 1 hora	In 1 Stunde	Dans 1 heure	Em 1 hora
+reminder_tonight	Tonight 20:00	Esta noche 20:00	Heute Abend 20:00	Ce soir 20:00	Hoje à noite 20:00
+reminder_pick	Pick date and time	Elegir fecha y hora	Datum und Uhrzeit wählen	Choisir la date et l’heure	Escolher data e hora
+reminder_remove	Remove reminder	Quitar el recordatorio	Erinnerung entfernen	Supprimer le rappel	Remover o lembrete
+reminder_device_only	This reminder only alerts on this device	Este recordatorio solo avisa en este dispositivo	Diese Erinnerung gilt nur auf diesem Gerät	Ce rappel ne sonne que sur cet appareil	Este lembrete só avisa neste dispositivo
+reminder_today	Today %1$s	Hoy %1$s	Heute %1$s	Aujourd’hui %1$s	Hoje %1$s
+reminder_tomorrow	Tomorrow %1$s	Mañana %1$s	Morgen %1$s	Demain %1$s	Amanhã %1$s
+reminder_overdue	Overdue	Vencido	Überfällig	En retard	Vencido
+reminder_date_time	%1$s, %2$s	%1$s, %2$s	%1$s, %2$s	%1$s, %2$s	%1$s, %2$s
+reminder_ok	OK	Aceptar	OK	OK	OK
+reminders_section	Reminders	Recordatorios	Erinnerungen	Rappels	Lembretes
+reminder_exact	Exact time	Hora exacta	Genaue Uhrzeit	Heure exacte	Hora exata
+reminder_exact_hint	Alerts at the exact minute. Uses a bit more battery; Android may ask you to allow it.	Avisa en el minuto exacto. Gasta algo más de batería; Android puede pedirte que lo permitas.	Meldet sich auf die Minute genau. Braucht etwas mehr Akku; Android fragt eventuell nach der Erlaubnis.	Sonne à la minute exacte. Consomme un peu plus de batterie ; Android peut demander l’autorisation.	Avisa no minuto exato. Gasta um pouco mais de bateria; o Android pode pedir permissão.

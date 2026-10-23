@@ -185,4 +185,18 @@
     <string name="reminder_done">Done</string>
     <string name="reminder_snooze_hour">+1 h</string>
     <string name="reminder_snooze_morning">Tomorrow 9:00</string>
+    <string name="reminder_title">Reminder</string>
+    <string name="reminder_in_one_hour">In 1 hour</string>
+    <string name="reminder_tonight">Tonight 20:00</string>
+    <string name="reminder_pick">Pick date and time</string>
+    <string name="reminder_remove">Remove reminder</string>
+    <string name="reminder_device_only">This reminder only alerts on this device</string>
+    <string name="reminder_today">Today %1$s</string>
+    <string name="reminder_tomorrow">Tomorrow %1$s</string>
+    <string name="reminder_overdue">Overdue</string>
+    <string name="reminder_date_time">%1$s, %2$s</string>
+    <string name="reminder_ok">OK</string>
+    <string name="reminders_section">Reminders</string>
+    <string name="reminder_exact">Exact time</string>
+    <string name="reminder_exact_hint">Alerts at the exact minute. Uses a bit more battery; Android may ask you to allow it.</string>
 </resources>
