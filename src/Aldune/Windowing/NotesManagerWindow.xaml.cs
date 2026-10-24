@@ -7,6 +7,7 @@ using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Animation;
+using System.Windows.Threading;
 using System.Windows.Interop;
 using Aldune.Core;
 using Aldune.Interop;
@@ -226,7 +227,26 @@ public partial class NotesManagerWindow : Window
         _searchText = SearchBox.Text;
         SearchPlaceholder.Visibility = _searchText.Length == 0 ? Visibility.Visible : Visibility.Collapsed;
         SearchClearButton.Visibility = _searchText.Length == 0 ? Visibility.Collapsed : Visibility.Visible;
-        ApplyFilter();
+        // Con muchas notas, filtrar tras cada tecla congela el cuadro mientras se escribe: se espera a que se deje de teclear.
+        // Al vaciar el cuadro se aplica al instante.
+        _searchDebounce.Stop();
+        if (_searchText.Length == 0) ApplyFilter();
+        else _searchDebounce.Start();
+    }
+
+    private DispatcherTimer? _searchDebounceTimer;
+
+    private DispatcherTimer _searchDebounce => _searchDebounceTimer ??= CreateSearchDebounce();
+
+    private DispatcherTimer CreateSearchDebounce()
+    {
+        var timer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(250) };
+        timer.Tick += (_, _) =>
+        {
+            timer.Stop();
+            ApplyFilter();
+        };
+        return timer;
     }
 
     private void OnPreviewKeyDown(object sender, KeyEventArgs e)

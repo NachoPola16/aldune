@@ -134,6 +134,9 @@ public partial class NoteWindow : Window
             Flush();
         };
 
+        _findDebounce = new DispatcherTimer { Interval = FindDelay };
+        _findDebounce.Tick += (_, _) => RunFind();
+
         // Las tareas pueden vencer aunque la nota permanezca abierta y no se edite. El autoguardado
         // solo se dispara tras cambios, así que hace falta una comprobación independiente para que
         // el plazo de Ajustes no dependa de cerrar y volver a abrir la nota.
@@ -901,6 +904,8 @@ public partial class NoteWindow : Window
     // La coincidencia actual es además la selección del cuerpo (al cerrar la barra el cursor queda ahí) y
     // se resalta con FindHighlight. Todo el cálculo vive en Core.TextFinder.
 
+    private static readonly TimeSpan FindDelay = TimeSpan.FromMilliseconds(250);
+    private readonly DispatcherTimer _findDebounce;
     private IReadOnlyList<int> _findMatches = [];
     private int _findCurrent = -1;
 
@@ -916,6 +921,7 @@ public partial class NoteWindow : Window
 
     private void CloseFindBar()
     {
+        _findDebounce.Stop();
         FindBar.Visibility = Visibility.Collapsed;
         FindHighlight.Visibility = Visibility.Collapsed;
         _findMatches = [];
@@ -924,7 +930,14 @@ public partial class NoteWindow : Window
         TextBody.Focus();
     }
 
-    private void OnFindTextChanged(object sender, TextChangedEventArgs e) => RunFind();
+    // Con una nota larga, buscar tras cada tecla ("a" y luego "al", "ald"...) recorre el texto entero cada vez y la ventana se queda
+    // congelada mientras se escribe. Se espera a que se deje de teclear un momento; borrar el cuadro limpia al instante (no cuesta nada).
+    private void OnFindTextChanged(object sender, TextChangedEventArgs e)
+    {
+        _findDebounce.Stop();
+        if (FindBox.Text.Length == 0) RunFind();
+        else _findDebounce.Start();
+    }
 
     private void OnBodyScrollChanged(object sender, ScrollChangedEventArgs e)
     {
@@ -933,6 +946,7 @@ public partial class NoteWindow : Window
 
     private void RunFind()
     {
+        _findDebounce.Stop();
         _findMatches = TextFinder.FindAll(TextBody.Text, FindBox.Text);
         if (_findMatches.Count == 0) { ShowNoMatch(); return; }
         _findCurrent = TextFinder.NextIndex(_findMatches, TextBody.SelectionStart, forward: true);
@@ -941,6 +955,8 @@ public partial class NoteWindow : Window
 
     private void StepFind(bool forward)
     {
+        // Intro con una búsqueda pendiente: se cuenta como el resultado de lo escrito, no se repite luego.
+        _findDebounce.Stop();
         // El texto pudo cambiar desde la última búsqueda (se edita con la barra abierta).
         _findMatches = TextFinder.FindAll(TextBody.Text, FindBox.Text);
         if (_findMatches.Count == 0) { ShowNoMatch(); return; }
