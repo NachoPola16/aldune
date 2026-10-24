@@ -476,20 +476,7 @@ public partial class App : Application
     private static string ResolveAppDataDirectory()
     {
         var localAppData = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
-        var current = Path.Combine(localAppData, BrandIdentity.AppDataDirectoryName);
-        var legacy = Path.Combine(localAppData, BrandIdentity.LegacyAppDataDirectoryName);
-
-        // El nombre visible cambió a Aldune, pero las instalaciones anteriores guardaban aquí sus
-        // notas. Se migra una sola vez antes de abrir settings.json o notes.db; si Windows no deja
-        // mover la carpeta, se conserva la ruta antigua para no dejar la app aparentemente vacía.
-        if (!Directory.Exists(current) && Directory.Exists(legacy))
-        {
-            try { Directory.Move(legacy, current); }
-            catch (IOException) { return legacy; }
-            catch (UnauthorizedAccessException) { return legacy; }
-        }
-
-        return current;
+        return Path.Combine(localAppData, BrandIdentity.AppDataDirectoryName);
     }
 
     /// <summary>

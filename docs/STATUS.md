@@ -6,13 +6,6 @@ Documento de continuidad: si retomas este proyecto en otra sesión, otro chat, u
 otra IA, empieza por aquí. Todo lo importante vive en el repositorio (specs,
 planes, commits), no solo en una conversación concreta.
 
-> **Nota de nombres.** El proyecto se llamó **Fanote** hasta el 2026-09-15. Las entradas anteriores de
-> este documento describen el proyecto tal y como estaba entonces, así que conservan ese nombre y los
-> identificadores de aquella época. Los que siguen apareciendo hoy son compatibilidad deliberada, no
-> restos de renombrado: `%LOCALAPPDATA%\Fanote` (migración de datos), los prefijos de los códigos de
-> perfil `fanote-profile-v1:` y `fanote-profile-v2:` y el volumen `fanote-sync-data` de un servidor
-> que ya sincronizaba. El mapa completo está en `docs/BRANDING.md`.
-
 ## Qué es Aldune
 
 App de notas para Windows (WPF/.NET 10), inspirada en Hold My Notes / Noty /
@@ -1530,7 +1523,7 @@ tropezado dos veces con `HoldEnd`— y se arregló, **pero no era la causa**: el
 seguía pasando.
 
 **Cómo se resolvió**: instrumentación temporal en `SetNotes`, `OnTabLoaded`, `ApplyState` y
-`ReplayTabEntrance` volcando a `%LOCALAPPDATA%\Fanote\dock-debug.log`, y el usuario reproduciendo.
+`ReplayTabEntrance` volcando a `%LOCALAPPDATA%\Aldune\dock-debug.log`, y el usuario reproduciendo.
 El registro dio la respuesta en dos líneas comparadas:
 
 ```
@@ -2517,7 +2510,7 @@ Segundo punto de `docs/ROADMAP.md` §2 implementado — "el mayor hueco funciona
 competencia de Windows" según la investigación de mercado. Spec y plan escritos con
 `superpowers:brainstorming`/`writing-plans` (`docs/superpowers/specs/2026-09-11-aldune-reminders-design.md`,
 `docs/superpowers/plans/2026-09-11-aldune-reminders.md`), ejecutados con
-`superpowers:subagent-driven-development` en un worktree aparte (`fanote-reminders`), 5 tareas + una
+`superpowers:subagent-driven-development` en un worktree aparte (`reminders`), 5 tareas + una
 ronda de arreglos tras la revisión final de toda la rama.
 
 ### Qué hay
@@ -2940,14 +2933,14 @@ Build correcto. Tests: 403/403.
 
 Se añadió `docker-compose.sync.https.yml` junto con `Caddyfile`. Caddy publica únicamente los
 puertos 80/443, obtiene y renueva el certificado del dominio configurado y reenvía al servicio
-`fanote-sync` por la red interna de Docker. El puerto HTTP directo no se publica en esta variante.
+`aldune-sync` por la red interna de Docker. El puerto HTTP directo no se publica en esta variante.
 
 La composición se validó con `docker compose config`. Falta la prueba de despliegue real, porque
 requiere un dominio/DNS y acceso al servidor del usuario.
 
 ## Rotación de tokens del servidor (sesión 2026-09-12)
 
-El servidor mantiene compatibilidad con `FANOTE_SYNC_TOKEN` y añade `FANOTE_SYNC_TOKENS`, una lista
+El servidor acepta `ALDUNE_SYNC_TOKEN` y añade `ALDUNE_SYNC_TOKENS`, una lista
 separada por comas con prioridad sobre el valor antiguo. La ventana de solapamiento permite migrar
 los clientes uno a uno; al eliminar el token viejo de la lista queda revocado. La comparación usa
 bytes en tiempo constante y no se añadió ningún endpoint de administración.

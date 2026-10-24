@@ -77,21 +77,17 @@ class ProfileCodeTest {
     private fun ids0() = UUID.fromString("5c1d2e3f-4a5b-4c6d-8e7f-9a0b1c2d3e4f")
 
     @Test
-    fun `acepta los prefijos antiguos fanote v1 y v2 y no distingue mayusculas en el prefijo`() {
+    fun `no distingue mayusculas en el prefijo`() {
         val vector = Vectors.objects("shareCodes").first().str("code").removePrefix("aldune-profile-v2:")
-        val v2 = fromBase64Url(vector)
-        val asV1 = v2.replace("\"Version\":2", "\"Version\":1")
-        fun enc(s: String) = Base64.getUrlEncoder().withoutPadding().encodeToString(s.toByteArray(Charsets.UTF_8))
-
-        for (code in listOf("fanote-profile-v2:" + enc(v2), "fanote-profile-v1:" + enc(asV1), "ALDUNE-PROFILE-V2:" + enc(v2))) {
-            assertTrue(ProfileCodes.isShareCode(code))
-            val d = ProfileCodes.decode(code)
-            assertEquals("Casa", d.profileName)
-            assertArrayEquals(key, d.key)
-        }
-        // El prefijo antiguo y la versión del documento tienen que cuadrar.
-        assertThrows(SyncFormatException::class.java) { ProfileCodes.decode("fanote-profile-v1:" + enc(v2)) }
-        assertThrows(SyncFormatException::class.java) { ProfileCodes.decode("aldune-profile-v2:" + enc(asV1)) }
+        val code = "ALDUNE-PROFILE-V2:" + vector
+        assertTrue(ProfileCodes.isShareCode(code))
+        val d = ProfileCodes.decode(code)
+        assertEquals("Casa", d.profileName)
+        assertArrayEquals(key, d.key)
+        // La versión del documento tiene que cuadrar con el prefijo.
+        val asV1 = fromBase64Url(vector).replace("\"Version\":2", "\"Version\":1")
+        val enc = Base64.getUrlEncoder().withoutPadding().encodeToString(asV1.toByteArray(Charsets.UTF_8))
+        assertThrows(SyncFormatException::class.java) { ProfileCodes.decode("aldune-profile-v2:" + enc) }
     }
 
     @Test

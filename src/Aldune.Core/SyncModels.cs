@@ -175,9 +175,7 @@ public sealed record SyncShareCodeData(
 /// </summary>
 public static class SyncShareCodeCodec
 {
-    // El prefijo vigente lo declara BrandIdentity: así el nombre de marca vive en un único sitio
-    // y rebautizar la aplicación no obliga a tocar este códec (solo hay que añadir el prefijo
-    // antiguo a BrandIdentity.LegacySyncProfileCodePrefixes).
+    // El prefijo vigente lo declara BrandIdentity: así el nombre de marca vive en un único sitio.
     private const string Prefix = BrandIdentity.SyncProfileCodePrefix;
 
     /// <summary>Versión del documento que emite <see cref="Encode"/> (sufijo del prefijo vigente).</summary>
@@ -189,11 +187,7 @@ public static class SyncShareCodeCodec
 
     public static bool IsShareCode(string value) => TrySplitPrefix(value.Trim(), out _, out _);
 
-    /// <summary>
-    /// Separa un código de perfil en el prefijo (marca + versión del documento) y el resto.
-    /// Acepta el prefijo vigente y los heredados: los códigos generados antes del cambio de marca
-    /// tienen que seguir importándose.
-    /// </summary>
+    /// <summary>Separa un código de perfil en el prefijo (marca + versión del documento) y el resto.</summary>
     private static bool TrySplitPrefix(string value, out string payload, out int documentVersion)
     {
         payload = string.Empty;
@@ -203,16 +197,6 @@ public static class SyncShareCodeCodec
         {
             payload = value[Prefix.Length..];
             documentVersion = CurrentDocumentVersion;
-            return true;
-        }
-
-        foreach (var legacyPrefix in BrandIdentity.LegacySyncProfileCodePrefixes)
-        {
-            if (!value.StartsWith(legacyPrefix, StringComparison.OrdinalIgnoreCase)) continue;
-            payload = value[legacyPrefix.Length..];
-            // El propio prefijo heredado lleva la versión del formato ("…-v1:" / "…-v2:"), así que
-            // no hace falta mantener aparte la correspondencia prefijo → versión.
-            documentVersion = legacyPrefix.EndsWith("-v1:", StringComparison.Ordinal) ? 1 : CurrentDocumentVersion;
             return true;
         }
 

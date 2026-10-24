@@ -16,7 +16,6 @@ internal static class StartupRegistration
 {
     private const string RunKey = @"Software\Microsoft\Windows\CurrentVersion\Run";
     private const string ValueName = BrandIdentity.StartupRegistryKey;
-    private const string LegacyValueName = BrandIdentity.LegacyStartupRegistryKey;
 
     /// <summary>
     /// Ruta del ejecutable, entrecomillada.
@@ -40,20 +39,7 @@ internal static class StartupRegistration
             using var key = Registry.CurrentUser.OpenSubKey(RunKey);
             if (key is null) return false;
 
-            if (key.GetValue(ValueName) is null && key.GetValue(LegacyValueName) is not null &&
-                string.Equals(System.IO.Path.GetFileName(Environment.ProcessPath), BrandIdentity.ExecutableName, StringComparison.OrdinalIgnoreCase))
-            {
-                key.Close();
-                using var writableKey = Registry.CurrentUser.OpenSubKey(RunKey, writable: true);
-                if (writableKey is not null)
-                {
-                    writableKey.SetValue(ValueName, CommandLine()!);
-                    writableKey.DeleteValue(LegacyValueName, throwOnMissingValue: false);
-                }
-            }
-
-            using var currentKey = Registry.CurrentUser.OpenSubKey(RunKey);
-            return currentKey?.GetValue(ValueName) is not null || currentKey?.GetValue(LegacyValueName) is not null;
+            return key.GetValue(ValueName) is not null;
         }
         catch (Exception)
         {
@@ -77,12 +63,10 @@ internal static class StartupRegistration
             if (enabled)
             {
                 key.SetValue(ValueName, command!);
-                key.DeleteValue(LegacyValueName, throwOnMissingValue: false);
             }
             else
             {
                 key.DeleteValue(ValueName, throwOnMissingValue: false);
-                key.DeleteValue(LegacyValueName, throwOnMissingValue: false);
             }
         }
         catch (Exception)

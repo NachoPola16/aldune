@@ -13,17 +13,11 @@ public static class BrandIdentity
     /// <summary>Nombre de la carpeta de datos en %LOCALAPPDATA%.</summary>
     public const string AppDataDirectoryName = "Aldune";
 
-    /// <summary>Nombre de la carpeta de datos heredada para migración automática.</summary>
-    public const string LegacyAppDataDirectoryName = "Fanote";
-
     /// <summary>Nombre del ejecutable principal publicado.</summary>
     public const string ExecutableName = "aldune.exe";
 
     /// <summary>Nombre del valor en HKCU\...\Run para el arranque automático.</summary>
     public const string StartupRegistryKey = "Aldune";
-
-    /// <summary>Nombre del valor de registro heredado para migración en el arranque.</summary>
-    public const string LegacyStartupRegistryKey = "Fanote";
 
     /// <summary>Clase de mensaje Win32 para registro de hotkeys globales.</summary>
     public const string WindowMessageClassName = "AlduneHotkey";
@@ -49,13 +43,6 @@ public static class BrandIdentity
 
     /// <summary>Prefijo para códigos de compartición de perfiles de sincronización.</summary>
     public const string SyncProfileCodePrefix = "aldune-profile-v2:";
-
-    /// <summary>
-    /// Prefijos heredados que se siguen aceptando al importar un código de compartición. Los
-    /// códigos ya emitidos con un nombre anterior (Fanote) tienen que seguir funcionando, así que
-    /// al rebautizar la aplicación se añade el prefijo vigente a esta lista, no se sustituye.
-    /// </summary>
-    public static readonly string[] LegacySyncProfileCodePrefixes = ["fanote-profile-v2:", "fanote-profile-v1:"];
 
     /// <summary>
     /// Nombres de las variables de entorno de sincronización, que son los mismos que esperan

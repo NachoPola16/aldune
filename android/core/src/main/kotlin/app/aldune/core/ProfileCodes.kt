@@ -33,7 +33,7 @@ data class SyncShareCodeData(
 /**
  * Código opcional para compartir un perfil (SyncShareCodeCodec de Core): prefijo `aldune-profile-v2:`
  * y base64url sin relleno de un JSON UTF-8 con claves en **PascalCase**. Nunca lleva el token ni
- * el contenido de las notas. Se siguen aceptando los prefijos `fanote-profile-v1:` / `-v2:`.
+ * el contenido de las notas.
  */
 object ProfileCodes {
     // SyncScopeKind
@@ -47,7 +47,6 @@ object ProfileCodes {
     const val TRANSPORT_WEBDAV = 2
 
     private const val PREFIX = "aldune-profile-v2:"
-    private val LEGACY_PREFIXES = listOf("fanote-profile-v2:", "fanote-profile-v1:")
     private const val CURRENT_DOCUMENT_VERSION = 2
     private const val MAX_NOTE_IDS = 10_000
     private const val MAX_PROFILE_NAME_LENGTH = 120
@@ -55,13 +54,9 @@ object ProfileCodes {
 
     fun isShareCode(value: String): Boolean = splitPrefix(value.trim()) != null
 
-    /** Separa prefijo y resto; el prefijo antiguo lleva la versión del documento ("-v1:" / "-v2:"). */
+    /** Separa prefijo y resto. */
     private fun splitPrefix(value: String): Pair<String, Int>? {
         if (value.startsWith(PREFIX, ignoreCase = true)) return value.substring(PREFIX.length) to CURRENT_DOCUMENT_VERSION
-        for (legacy in LEGACY_PREFIXES) {
-            if (!value.startsWith(legacy, ignoreCase = true)) continue
-            return value.substring(legacy.length) to (if (legacy.endsWith("-v1:")) 1 else CURRENT_DOCUMENT_VERSION)
-        }
         return null
     }
 

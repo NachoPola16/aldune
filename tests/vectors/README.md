@@ -47,7 +47,6 @@ compatibilidad.
 **Código de perfil (`shareCodes`).** Prefijo `aldune-profile-v2:` seguido de base64url sin relleno de un JSON UTF-8 **con
 claves en PascalCase** (`Version` (2), `Key`, `Scope`, `NoteIds`, `Tag`, `ProfileName`, `Transport`, `ServerUrl`).
 `Scope`: 0 todas, 1 elegidas, 2 etiqueta. `Transport`: 0 carpeta, 1 servidor, 2 WebDAV (o `null`). Nunca lleva el token.
-Los códigos antiguos (`fanote-profile-v1:` / `-v2:`) se siguen aceptando al importar.
 
 **Orden de versiones (`versionOrder`).** Se compara primero `updatedAt` (el instante, sin importar el desfase) y, en empate,
 `deviceId` por orden ordinal (unidades UTF-16 una a una, como `String.CompareOrdinal`; no cultural, y no por punto de código). El signo esperado de `Compare(a, b)` va en `expectedSign`.
@@ -62,7 +61,7 @@ Los códigos antiguos (`fanote-profile-v1:` / `-v2:`) se siguen aceptando al imp
 - **Contraseña de nota protegida:** mínimo 4 caracteres y no en blanco; se codifica en UTF-8 antes de PBKDF2.
 - **URL del código de perfil:** Core la normaliza con `Uri.ToString()` (esquema y host en minúsculas, ruta vacía → `/`, puerto por defecto fuera).
 - **Orden por `deviceId`:** ningún vector distingue unidades UTF-16 de puntos de código; el cliente Kotlin lo cubre con un test propio
-  (emoji frente a U+FF5E). Tampoco hay vectores de los prefijos `fanote-profile-v1/v2:` ni del contenido descifrado de un borrado
+  (emoji frente a U+FF5E). Tampoco hay vectores del contenido descifrado de un borrado
   (`{"id": noteId, "deletedAt": updatedAt}`; confirmado reproduciendo byte a byte el cifrado).
 - **Dos clientes, un contrato:** `kotlin-output.json` lo escribe `android/core` y lo lee Core (`SyncVectorsTests`). Cambia en cada ejecución del
   test de Kotlin (nonces y sales aleatorios): pendiente de escribirlo solo con una variable de entorno, como hace Core con el suyo.

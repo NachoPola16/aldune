@@ -47,26 +47,6 @@ public sealed class SyncShareCodeTests
     }
 
     [Fact]
-    public void LegacyProfileCodeStillImports()
-    {
-        var key = RandomNumberGenerator.GetBytes(32);
-        var document = JsonSerializer.SerializeToUtf8Bytes(new
-        {
-            Version = 1,
-            Key = SyncKeyFormat.Encode(key),
-            Scope = SyncScopeKind.AllNotes,
-            NoteIds = Array.Empty<Guid>()
-        });
-        var payload = Convert.ToBase64String(document).TrimEnd('=').Replace('+', '-').Replace('/', '_');
-
-        var decoded = SyncShareCodeCodec.Decode("fanote-profile-v1:" + payload);
-
-        Assert.Equal(key, decoded.Key);
-        Assert.Null(decoded.Transport);
-        Assert.Null(decoded.ServerUrl);
-    }
-
-    [Fact]
     public void WebDavProfileCodeCarriesTheConnectionUrlWithoutCredentials()
     {
         var key = RandomNumberGenerator.GetBytes(32);
@@ -110,9 +90,7 @@ public sealed class SyncShareCodeTests
         // El código que se emite ahora lleva el prefijo de la marca vigente
         Assert.StartsWith(BrandIdentity.SyncProfileCodePrefix, code, StringComparison.Ordinal);
 
-        // y el mismo código con el prefijo anterior (Fanote) tiene que seguir importandose
-        var legacyCode = "fanote-profile-v2:" + code[BrandIdentity.SyncProfileCodePrefix.Length..];
-        var decoded = SyncShareCodeCodec.Decode(legacyCode);
+        var decoded = SyncShareCodeCodec.Decode(code);
 
         Assert.Equal(key, decoded.Key);
         Assert.Equal(SyncScopeKind.AllNotes, decoded.Scope);
@@ -124,6 +102,6 @@ public sealed class SyncShareCodeTests
     [Fact]
     public void InvalidProfileCodeIsRejected()
     {
-        Assert.Throws<FormatException>(() => SyncShareCodeCodec.Decode("fanote-profile-v1:not-base64"));
+        Assert.Throws<FormatException>(() => SyncShareCodeCodec.Decode(BrandIdentity.SyncProfileCodePrefix + "not-base64"));
     }
 }

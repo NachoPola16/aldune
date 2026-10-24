@@ -662,16 +662,9 @@ correcto y se mantiene: dibuja literalmente el producto y usa la paleta real.
 
 Se adopta **Aldune** como nombre de la aplicación en todos los niveles: nombre visible, proyectos y
 namespaces (`src/Aldune`, `src/Aldune.Core`, `src/Aldune.SyncServer`), datos locales, ejecutable,
-instalador, documentación y despliegue de sincronización. El rebranding empezó el 2026-09-13 con el
-nombre visible y se terminó el 2026-09-15 con el interno; el mapa de dónde vive el nombre, qué es
-compatibilidad y el procedimiento para el próximo cambio están en `BRANDING.md` y `RENAME_GUIDE.md`.
+instalador, documentación y despliegue de sincronización.
 
-Se conservan a propósito, porque renombrarlos rompería instalaciones ya existentes: la carpeta
-`%LOCALAPPDATA%\Fanote` y la clave antigua del registro de arranque (solo para migrarlas una vez) y
-los prefijos de los códigos de perfil `fanote-profile-v1:` y `fanote-profile-v2:` (se siguen
-importando). Las variables de entorno `FANOTE_*` ya no se aceptan — hubo que renombrarlas en los
-`.env` — y el nombre físico del volumen Docker es configurable con `ALDUNE_SYNC_VOLUME`, cuyo valor
-para un servidor que ya tuviera datos sincronizados sigue siendo el nombre antiguo (ver `SYNC.md`).
+El nombre físico del volumen Docker del servidor es configurable con `ALDUNE_SYNC_VOLUME` (ver `SYNC.md`).
 
 El icono actual también se mantiene: las tres tarjetas escalonadas representan directamente el dock y
 conectan con la paleta real de las notas. No se hará un rediseño completo antes de validar el producto
@@ -686,12 +679,6 @@ El problema es de tamaño pequeño: a 16 px — bandeja, barra de tareas, Alt+Ta
 — tres barras finas con huecos se empastan y acaban leyéndose como un icono genérico de lista. La
 solución es la estándar en diseño de iconos: **una variante propia para 16 y 32 px**, con menos
 barras y más gruesas, en vez de reescalar la de 256.
-
-## Ruta de datos tras el cambio de marca
-
-Aldune guarda los datos nuevos en `%LOCALAPPDATA%\\Aldune`. Al actualizar desde una instalación
-anterior, la primera ejecución intenta mover `%LOCALAPPDATA%\\Fanote` a la nueva ruta; si Windows lo
-impide, continúa usando la ruta antigua para no ocultar ni perder las notas.
 
 ## 7. Pulido visual de lanzamiento
 

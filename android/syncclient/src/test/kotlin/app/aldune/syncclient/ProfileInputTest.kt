@@ -108,11 +108,6 @@ class ProfileInputTest {
         }
     }
 
-    @Test fun `se acepta el prefijo antiguo`() {
-        val legacy = code().replaceFirst("aldune-profile-v2:", "fanote-profile-v2:")
-        assertIs<ProfileParse.Server>(parseProfileInput(legacy))
-    }
-
     @Test fun `el resultado no deja la clave en su texto`() {
         val shown = parseProfileInput(code()).toString()
         val hex = key.joinToString("") { "%02x".format(it) }

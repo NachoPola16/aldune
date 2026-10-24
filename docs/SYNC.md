@@ -63,10 +63,7 @@ debe ser solo el valor de la derecha de `ALDUNE_SYNC_TOKEN=`. El botón `Sincron
 disponible en Ajustes y en el dock; también puedes activar la sincronización periódica y elegir el
 intervalo. Ajustes muestra la última sincronización correcta.
 
-Los nombres de las variables de entorno son los de `ALDUNE_*`. Hasta el 2026-09-15 se llamaban
-`FANOTE_*` y ya no se aceptan: si tu `.env` todavía usa `FANOTE_SYNC_TOKEN`, `FANOTE_SYNC_TOKENS`,
-`FANOTE_SYNC_PORT` o `FANOTE_SYNC_DOMAIN`, renómbralos. Sin token el servidor se niega a arrancar,
-así que el fallo es inmediato y visible, no silencioso.
+Sin token el servidor se niega a arrancar, así que el fallo es inmediato y visible, no silencioso.
 
 En Ajustes también puedes elegir entre `Todas las notas`, `Notas seleccionadas` o `Notas con una
 etiqueta`. En el segundo modo, solo las notas marcadas en `Elegir notas…` se publican o se descargan
@@ -78,23 +75,6 @@ El servidor es un almacén de blobs y no necesita SQLite. El volumen lógico `al
 los objetos y sobrevive a actualizaciones del contenedor. Su nombre físico se configura con
 `ALDUNE_SYNC_VOLUME` (por defecto `aldune-sync-data`).
 
-### Migrar un servidor que ya sincronizaba
-
-Hasta el 2026-09-15 la aplicación se llamaba Fanote: el servidor guardaba sus objetos en un volumen
-Docker llamado `fanote-sync-data` y leía variables de entorno `FANOTE_*`.
-
-- **Volumen**: si tu servidor ya tiene objetos sincronizados en ese volumen, añade a `.env`
-  `ALDUNE_SYNC_VOLUME=fanote-sync-data` para que el contenedor siga montando el mismo volumen.
-- **Variables de entorno**: renombra las `FANOTE_*` a `ALDUNE_*`.
-
-Si no lo haces, el contenedor arranca con un volumen vacío. No se pierde nada: los objetos antiguos
-siguen en el disco (el volumen anterior no se borra) y cada dispositivo vuelve a subir sus notas al
-sincronizar. Lo que sí se pierde es el historial de conflictos y las marcas de borrado del almacén,
-así que una nota que se hubiera borrado en un dispositivo podría reaparecer desde otro.
-
-La versión HTTP está pensada para una red privada o detrás de una VPN. No se debe publicar el puerto
-HTTP directamente en Internet: para acceso externo hay que poner HTTPS delante (proxy inverso, VPN o
-túnel seguro). La rotación de tokens ya está implementada; la terminación TLS corresponde al proxy.
 
 ## WebDAV, Nextcloud y ownCloud
 
@@ -198,8 +178,8 @@ servidor existente, por ejemplo:
 ```dotenv
 ALDUNE_SYNC_TOKEN=un-secreto-largo-y-aleatorio
 ALDUNE_SYNC_PORT=8087
-# Si el servidor ya usaba el almacén antiguo:
-# ALDUNE_SYNC_VOLUME=fanote-sync-data
+# Nombre del volumen Docker (por defecto aldune-sync-data):
+# ALDUNE_SYNC_VOLUME=aldune-sync-data
 ```
 
 Para la variante recomendada con Nginx y Cloudflare Tunnel, ejecuta la primera actualización así:
@@ -300,9 +280,8 @@ En el perfil de origen, crea o selecciona un perfil, marca `Notas seleccionadas`
 `Compartir perfil` copia una invitación que contiene la clave, los identificadores de esa selección,
 el nombre del perfil y, si usa un servidor propio, su URL. En el otro dispositivo, crea el perfil,
 pega el código y pulsa `Importar código`; el transporte y la URL del servidor se rellenan solos,
-pero el token siempre debe introducirse aparte. El token nunca viaja dentro del código. Las
-invitaciones antiguas (`fanote-profile-v1` y `fanote-profile-v2`) siguen siendo compatibles; los
-nuevos se generan con el prefijo de la marca vigente (`aldune-profile-v2`).
+pero el token siempre debe introducirse aparte. El token nunca viaja dentro del código. Los
+códigos se generan con el prefijo `aldune-profile-v2`.
 
 ## Compatibilidad futura
 

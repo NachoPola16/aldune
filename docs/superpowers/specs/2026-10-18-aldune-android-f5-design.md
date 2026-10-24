@@ -40,8 +40,7 @@ android/
 **Por qué un módulo y no `domain`:** `domain` se queda sin OkHttp ni formato de sync, y el trabajo de la nube va a una carpeta nueva sin riesgo para los 414
 tests actuales. Paquete `app.aldune.syncclient`. Mismas opciones de compilación que los otros módulos puros (Java 11, JUnit 5).
 
-**Dónde se hace:** todo `syncclient` y el cambio de `domain` en una **sesión de nube** con TDD (prompt en
-[`../plans/2026-10-18-android-f5-nube.md`](../plans/2026-10-18-android-f5-nube.md)). `app` se hace luego aquí, en local, con los dispositivos (§7).
+**Dónde se hace:** todo `syncclient` y el cambio de `domain` en una **sesión de nube** con TDD (resultado en [`INFORME-NUBE-F5.md`](../../INFORME-NUBE-F5.md)). `app` se hace luego aquí, en local, con los dispositivos (§7).
 
 ## 3. Cambios en `domain`
 
