@@ -297,6 +297,7 @@ class NotesViewModel(application: Application) : AndroidViewModel(application) {
             if (key.isEmpty()) drafts[key]?.let { return@withLock it.latest }
             val text = if (key.isEmpty()) "" else service?.get(key)?.text ?: ""
             drafts[key] = Draft(key.ifEmpty { null }, text, text)
+            aliases.remove(key)
             text
         }
     }
@@ -305,6 +306,7 @@ class NotesViewModel(application: Application) : AndroidViewModel(application) {
     fun startNewNote() {
         flushDraft("")
         drafts.remove("")
+        aliases.remove("")
     }
 
     /** El texto cambió: se guarda tras una pausa en la escritura. */
@@ -380,9 +382,19 @@ class NotesViewModel(application: Application) : AndroidViewModel(application) {
     val protectionLost: SharedFlow<String> = _protectionLost
 
     /** El texto de la sesión de [id] (para recargar el editor tras rotar), o `null` si no está abierta. */
-    fun protectedText(id: String): String? = synchronized(sessions) { sessions[id]?.latest }
+    /**
+     * El id real de la nota que edita el editor con la clave [key]: una nota creada en esta sesión del editor tiene clave "" hasta que se
+     * reabre, pero ya tiene id (el de su borrador). Sin esto, proteger una nota recién escrita buscaba la nota "" y fallaba siempre.
+     */
+    private fun idOf(key: String): String = drafts[key]?.noteId ?: aliases[key] ?: key
 
-    suspend fun unlockProtected(id: String, password: String): UnlockOutcome = withContext(Dispatchers.Default) {
+    /** Clave del editor → id, para una nota nueva que se protegió sin salir del editor (su borrador ya se olvidó). Se vacía al empezar otra nueva. */
+    private val aliases = HashMap<String, String>()
+
+    fun protectedText(key: String): String? = synchronized(sessions) { sessions[idOf(key)]?.latest }
+
+    suspend fun unlockProtected(key: String, password: String): UnlockOutcome = withContext(Dispatchers.Default) {
+        val id = idOf(key)
         val service = protection ?: return@withContext UnlockOutcome.Gone
         when (val result = service.unlock(id, password)) {
             is ProtectionResult.Ok -> {
@@ -402,7 +414,8 @@ class NotesViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     /** El texto del editor de una protegida abierta cambió: se guarda tras una pausa, reutilizando la clave de la sesión. */
-    fun updateProtectedText(id: String, text: String) {
+    fun updateProtectedText(key: String, text: String) {
+        val id = idOf(key)
         val session = synchronized(sessions) { sessions[id] } ?: return
         session.latest = text
         session.pending?.cancel()
@@ -449,7 +462,8 @@ class NotesViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     /** Guarda lo pendiente y cierra la sesión de [id] (salir de la nota). */
-    fun lockProtected(id: String) {
+    fun lockProtected(key: String) {
+        val id = idOf(key)
         val session = synchronized(sessions) { sessions[id] } ?: return
         session.pending?.cancel()
         viewModelScope.launch(Dispatchers.IO) {
@@ -462,7 +476,8 @@ class NotesViewModel(application: Application) : AndroidViewModel(application) {
     fun lockAllProtected() = synchronized(sessions) { sessions.keys.toList() }.forEach(::lockProtected)
 
     /** Quita de la memoria la sesión de [id] sin guardar nada (tras quitar la protección: el texto ya está en la nota). */
-    fun dropProtected(id: String) {
+    fun dropProtected(key: String) {
+        val id = idOf(key)
         val session = synchronized(sessions) { sessions[id] } ?: return
         closeSession(id, session)
     }
@@ -471,12 +486,14 @@ class NotesViewModel(application: Application) : AndroidViewModel(application) {
      * Protege la nota con la contraseña. Antes se guarda lo escrito (el texto que se cifra es el último guardado) y se olvida su borrador:
      * a partir de aquí el texto no pasa por los borradores.
      */
-    suspend fun protectNote(id: String, password: String, confirmation: String): ProtectionResult<Note> = withContext(Dispatchers.Default) {
+    suspend fun protectNote(key: String, password: String, confirmation: String): ProtectionResult<Note> = withContext(Dispatchers.Default) {
+        val id = idOf(key)
         val service = protection ?: return@withContext ProtectionResult.Err(ProtectionError.NotFound(id))
-        drafts[id]?.let { it.pending?.cancel(); persist(it) }
+        drafts[key]?.let { it.pending?.cancel(); persist(it) }
         val result = service.protect(id, password, confirmation)
         if (result is ProtectionResult.Ok) {
-            drafts.remove(id)
+            drafts.remove(key)
+            if (key != id) aliases[key] = id
             io.withLock {
                 refreshLocked()
                 syncEvent(SyncEvent.LocalChange)
@@ -490,7 +507,8 @@ class NotesViewModel(application: Application) : AndroidViewModel(application) {
      * Quita la protección. La sesión abierta (si la hay) se guarda antes y **no se cierra aquí**: si la contraseña es la equivocada el editor sigue
      * abierto. Tras un éxito, quien llama recarga el texto con [openDraft] y suelta la sesión con [dropProtected].
      */
-    suspend fun removeProtection(id: String, password: String): ProtectionResult<Note> = withContext(Dispatchers.Default) {
+    suspend fun removeProtection(key: String, password: String): ProtectionResult<Note> = withContext(Dispatchers.Default) {
+        val id = idOf(key)
         val service = protection ?: return@withContext ProtectionResult.Err(ProtectionError.NotFound(id))
         synchronized(sessions) { sessions[id] }?.let { it.pending?.cancel(); persistProtected(id, it) }
         val result = service.removeProtection(id, password)
