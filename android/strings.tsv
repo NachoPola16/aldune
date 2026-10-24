@@ -48,6 +48,29 @@ appearance_light	Light	Claro	Hell	Clair	Claro
 appearance_system	Follow the system	Según el sistema	Wie das System	Selon le système	Seguir o sistema
 appearance_pastel	Pastel	Pastel	Pastell	Pastel	Pastel
 appearance_midnight	Midnight	Medianoche	Mitternacht	Minuit	Meia-noite
+appearance_xp_light	XP Light	XP claro	XP hell	XP clair	XP claro
+appearance_xp_dark	XP + 95 Dark	XP + 95 oscuro	XP + 95 dunkel	XP + 95 sombre	XP + 95 escuro
+appearance_telecom_light	Telecom Light (lab)	Telecomunicaciones claro (laboratorio)	Telekom hell (Labor)	Télécom clair (labo)	Telecom claro (laboratório)
+appearance_telecom_dark	Telecom Dark (oscilloscope)	Telecomunicaciones oscuro (osciloscopio)	Telekom dunkel (Oszilloskop)	Télécom sombre (oscilloscope)	Telecom escuro (osciloscópio)
+appearance_bash	Bash	Bash	Bash	Bash	Bash
+appearance_phosphor	Phosphor (old monitor)	Fósforo (monitor antiguo)	Phosphor (alter Monitor)	Phosphore (vieux moniteur)	Fósforo (monitor antigo)
+aspect_colors	Aspect colors	Colores del aspecto	Farben des Erscheinungsbilds	Couleurs de l’apparence	Cores da aparência
+aspect_color_change	Change	Cambiar	Ändern	Modifier	Alterar
+aspect_colors_reset	Reset colors	Restablecer colores	Farben zurücksetzen	Réinitialiser les couleurs	Redefinir cores
+aspect_presets	Palette	Paleta	Palette	Palette	Paleta
+aspect_slot_title_bar	Title bar	Barra de título	Titelleiste	Barre de titre	Barra de título
+aspect_slot_accent	Accent	Acento	Akzent	Accent	Destaque
+aspect_slot_ink	Ink	Tinta	Tinte	Encre	Tinta
+aspect_slot_panel	Panel	Panel	Bedienfeld	Panneau	Painel
+aspect_slot_trace	Trace (CH1)	Traza (CH1)	Spur (CH1)	Trace (CH1)	Traço (CH1)
+aspect_slot_terminal	Terminal	Terminal	Terminal	Terminal	Terminal
+aspect_slot_user	User	Usuario	Benutzer	Utilisateur	Usuário
+aspect_slot_path	Path	Ruta	Pfad	Chemin	Caminho
+aspect_slot_phosphor	Phosphor	Fósforo	Phosphor	Phosphore	Fósforo
+aspect_slot_details	Details	Detalles	Details	Détails	Detalhes
+aspect_suggest_body	Also use the “%1$s” note theme?	¿Usar también el tema de notas «%1$s»?	Auch das Notizthema „%1$s“ verwenden?	Utiliser aussi le thème de notes « %1$s » ?	Usar também o tema de notas “%1$s”?
+aspect_suggest_apply	Use it	Usarlo	Verwenden	L’utiliser	Usar
+aspect_suggest_keep	Keep current	Mantener el actual	Aktuelles behalten	Garder l’actuel	Manter o atual
 settings_language	Language	Idioma	Sprache	Langue	Idioma
 language_system	System default	Idioma del sistema	Systemsprache	Langue du système	Idioma do sistema
 settings_notes	Notes	Notas	Notizen	Notes	Notas

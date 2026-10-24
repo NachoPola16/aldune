@@ -14,6 +14,7 @@ import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.RequiresApi
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -60,6 +61,7 @@ import androidx.lifecycle.Lifecycle
 import app.aldune.data.AppSettings
 import app.aldune.data.Languages
 import app.aldune.text.AppPalette
+import app.aldune.text.AspectCatalog
 import app.aldune.text.NoteThemes
 
 private val TRASH_OPTIONS = listOf(7, 14, 30, 60, 90)
@@ -88,9 +90,33 @@ fun SettingsScreen(viewModel: NotesViewModel, onClose: () -> Unit) {
                     AppPalette.SYSTEM to R.string.appearance_system, AppPalette.DARK to R.string.appearance_dark,
                     AppPalette.LIGHT to R.string.appearance_light, AppPalette.PASTEL to R.string.appearance_pastel,
                     AppPalette.MIDNIGHT to R.string.appearance_midnight,
+                    AppPalette.XP_LIGHT to R.string.appearance_xp_light, AppPalette.XP_DARK to R.string.appearance_xp_dark,
+                    AppPalette.TELECOM_LIGHT to R.string.appearance_telecom_light, AppPalette.TELECOM_DARK to R.string.appearance_telecom_dark,
+                    AppPalette.BASH to R.string.appearance_bash, AppPalette.PHOSPHOR to R.string.appearance_phosphor,
                 )
+                // Los aspectos retro proponen un tema de notas; se pregunta, no se impone (como en Windows).
+                var suggestedTheme by remember { mutableStateOf<String?>(null) }
                 for ((mode, label) in appearances) {
-                    Choice(stringResource(label), settings.appearance == mode) { viewModel.updateSettings { it.copy(appearance = mode) } }
+                    Choice(stringResource(label), settings.appearance == mode) {
+                        viewModel.updateSettings { it.copy(appearance = mode) }
+                        AspectCatalog.forMode(mode)?.suggestedThemeId?.takeIf { it != settings.noteThemeId }?.let { suggestedTheme = it }
+                    }
+                }
+                AspectSection(settings, onChange = viewModel::updateSettings)
+                suggestedTheme?.let { themeId ->
+                    val themeName = themeNameRes(themeId)?.let { stringResource(it) } ?: themeId
+                    AlertDialog(
+                        onDismissRequest = { suggestedTheme = null },
+                        title = { Text(stringResource(R.string.note_theme)) },
+                        text = { Text(stringResource(R.string.aspect_suggest_body, themeName)) },
+                        confirmButton = {
+                            TextButton(onClick = {
+                                viewModel.updateSettings { it.copy(noteThemeId = themeId) }
+                                suggestedTheme = null
+                            }) { Text(stringResource(R.string.aspect_suggest_apply)) }
+                        },
+                        dismissButton = { TextButton(onClick = { suggestedTheme = null }) { Text(stringResource(R.string.aspect_suggest_keep)) } },
+                    )
                 }
 
                 Section(R.string.settings_language)
