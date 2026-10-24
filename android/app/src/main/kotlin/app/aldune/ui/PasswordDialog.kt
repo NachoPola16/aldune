@@ -34,7 +34,7 @@ import kotlinx.coroutines.launch
 enum class PasswordMode { Protect, Unlock, Remove }
 
 /** Por qué se rechazó lo escrito; el diálogo lo traduce al texto de la interfaz. */
-enum class PasswordFailure { Wrong, Empty, TooShort, Mismatch, Unreadable, Changed }
+enum class PasswordFailure { Wrong, Empty, TooShort, Mismatch, Unreadable, Unsupported, Changed }
 
 /**
  * Pide una contraseña. [onSubmit] hace el trabajo (derivar la clave tarda: un indicador y nada que tocar mientras dura) y devuelve `null` si
@@ -129,5 +129,6 @@ private fun PasswordFailure.message(): Int = when (this) {
     PasswordFailure.TooShort -> R.string.password_too_short
     PasswordFailure.Mismatch -> R.string.password_mismatch
     PasswordFailure.Unreadable -> R.string.password_unreadable
+    PasswordFailure.Unsupported -> R.string.password_unsupported
     PasswordFailure.Changed -> R.string.password_changed
 }

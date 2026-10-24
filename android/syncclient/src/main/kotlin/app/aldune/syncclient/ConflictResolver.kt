@@ -46,8 +46,8 @@ class ConflictResolver(
     private val clock: Clock,
     @Suppress("unused") private val deviceId: String,
     private val tombstones: TombstoneEraser,
+    private val lock: Any = Any(),
 ) {
-    private val lock = Any()
 
     fun kind(conflict: SyncConflict): ConflictKind = when {
         notes.get(conflict.noteId.toString()) == null -> ConflictKind.Orphan

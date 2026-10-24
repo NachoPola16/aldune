@@ -160,6 +160,7 @@
     <string name="password_too_short">Mínimo de 4 caracteres</string>
     <string name="password_mismatch">As senhas não coincidem</string>
     <string name="password_unreadable">O conteúdo protegido desta nota está danificado e não pode ser aberto.</string>
+    <string name="password_unsupported">Esta nota foi protegida por uma versão mais nova do Aldune. Atualize o app para abri-la.</string>
     <string name="password_changed">A nota mudou nesse meio-tempo. Tente novamente.</string>
     <string name="password_protect_action">Proteger</string>
     <string name="password_unlock_action">Desbloquear</string>

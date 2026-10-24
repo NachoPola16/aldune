@@ -62,8 +62,8 @@ Arreglados con test primero (`ProtectionService.save`):
 - Un autoguardado tardío con la sesión ya cerrada lanzaba `IllegalStateException`: ahora es `StaleWrite` y no escribe.
 
 Anotados, sin arreglar (no son pérdida de datos en el uso normal):
-- `NoteService`, `ProtectionService` y `ConflictResolver` leen-modifican-escriben el mismo `NoteStore` con cerrojos propios que no se excluyen entre sí: un cambio de color justo durante un autoguardado de una protegida podría perderse. Solucionar con un cerrojo compartido desde `AppContainer`.
-- Una protegida con una versión de contenido desconocida (de un cliente más nuevo) se muestra como «contraseña incorrecta»; necesita un error propio.
+- ~~Cerrojos separados~~ **Arreglado (25-10-2026):** `NoteService`, `ProtectionService` y `ConflictResolver` reciben el mismo cerrojo desde `AppContainer`.
+- ~~Versión de contenido desconocida como «contraseña incorrecta»~~ **Arreglado (25-10-2026):** `ProtectionError.UnsupportedVersion` y el texto `password_unsupported` (5 idiomas).
 - `ProtectedNotes.unlock` no pone a cero la clave si `decrypt` lanza una excepción distinta de `GeneralSecurityException`.
 - `ConflictResolver.useOther` ignora el resultado de `notes.delete` y devuelve `Ok` aunque la nota ya no exista.
 - Limpieza: `ConflictDiff.clip` parte pares sustitutos (emojis); el parámetro `deviceId` de `ConflictResolver` no se usa; `ReminderRules.snooze(OneHour)` duplica `ReminderPresets.inOneHour`; `unlock` y `tryUnprotect` repiten la validación.

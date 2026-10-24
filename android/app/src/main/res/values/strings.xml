@@ -160,6 +160,7 @@
     <string name="password_too_short">At least 4 characters</string>
     <string name="password_mismatch">The passwords don\'t match</string>
     <string name="password_unreadable">This note\'s protected content is damaged and can\'t be opened.</string>
+    <string name="password_unsupported">This note was protected by a newer version of Aldune. Update the app to open it.</string>
     <string name="password_changed">The note changed in the meantime. Try again.</string>
     <string name="password_protect_action">Protect</string>
     <string name="password_unlock_action">Unlock</string>

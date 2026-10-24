@@ -36,11 +36,11 @@ class NoteService(
     private val clock: Clock,
     @Suppress("unused") private val deviceId: String,
     private val idFactory: IdFactory,
+    // Compartido con ProtectionService y ConflictResolver (AppContainer): los tres leen-modifican-escriben el mismo NoteStore.
+    private val lock: Any = Any(),
 ) {
     // Todas las operaciones leen, derivan y escriben dentro del mismo cerrojo: dos hilos que cambian cosas distintas de una nota
     // (el texto y el color, p. ej.) nunca se pisan, porque cada uno parte de lo último guardado y no de una copia vieja.
-    private val lock = Any()
-
     /** Última hora de edición de texto aceptada por nota (ver [edit]). */
     private val lastTextEdit = HashMap<String, Instant>()
 

@@ -344,6 +344,7 @@ fun NoteEditorPane(key: String, viewModel: NotesViewModel, onBack: () -> Unit, s
                         }
                         NotesViewModel.UnlockOutcome.WrongPassword -> PasswordFailure.Wrong
                         NotesViewModel.UnlockOutcome.Unreadable -> PasswordFailure.Unreadable
+                        NotesViewModel.UnlockOutcome.Unsupported -> PasswordFailure.Unsupported
                         NotesViewModel.UnlockOutcome.Gone -> PasswordFailure.Changed
                     }
                     PasswordMode.Protect -> when (val result = viewModel.protectNote(key, password, confirmation)) {
@@ -387,6 +388,7 @@ fun NoteEditorPane(key: String, viewModel: NotesViewModel, onBack: () -> Unit, s
                         is ProtectionResult.Err -> when (result.error) {
                             ProtectionError.WrongPassword -> PasswordFailure.Wrong
                             is ProtectionError.UnreadableContent -> PasswordFailure.Unreadable
+                            is ProtectionError.UnsupportedVersion -> PasswordFailure.Unsupported
                             else -> PasswordFailure.Changed
                         }
                     }

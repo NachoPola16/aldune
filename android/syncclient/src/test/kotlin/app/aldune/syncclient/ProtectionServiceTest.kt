@@ -3,6 +3,7 @@ package app.aldune.syncclient
 import app.aldune.core.PasswordProblem
 import app.aldune.core.ProtectedNotes
 import app.aldune.core.UnlockedProtectedNote
+import app.aldune.domain.IdFactory
 import app.aldune.domain.InMemoryNoteStore
 import app.aldune.domain.LineEnding
 import app.aldune.domain.Note
@@ -241,7 +242,7 @@ class ProtectionServiceTest {
 
     @Test fun `NoteService edit sigue rechazando una protegida`() {
         protectedNote()
-        val notes = NoteService(store, clock, DEVICE) { "id" }
+        val notes = NoteService(store, clock, DEVICE, IdFactory { "id" })
         assertEquals(NoteError.Protected(ID1), notes.edit(ID1, "x").errorOrNull())
     }
 
@@ -374,5 +375,33 @@ class ProtectionServiceTest {
         val racing = ProtectionService(ChangingStore(store, ID1) { it.copy(protectedContentJson = protectedContentToJson(other)) }, clock)
         assertEquals(ProtectionError.StaleWrite(ID1), err(racing.removeProtection(ID1, password)))
         assertTrue(store.get(ID1)!!.isProtected)
+    }
+    @Test fun `unlock con una version de contenido desconocida es UnsupportedVersion, no WrongPassword`() {
+        val stored = protectedNote()
+        val newer = parseProtectedContent(stored.protectedContentJson!!, ID1).copy(version = 99)
+        store.put(stored.copy(protectedContentJson = protectedContentToJson(newer)))
+        assertEquals(ProtectionError.UnsupportedVersion(ID1), err(service.unlock(ID1, password)))
+    }
+
+    @Test fun `removeProtection con una version de contenido desconocida es UnsupportedVersion`() {
+        val stored = protectedNote()
+        val newer = parseProtectedContent(stored.protectedContentJson!!, ID1).copy(version = 99)
+        store.put(stored.copy(protectedContentJson = protectedContentToJson(newer)))
+        assertEquals(ProtectionError.UnsupportedVersion(ID1), err(service.removeProtection(ID1, password)))
+    }
+
+    @Test fun `servicios que comparten cerrojo se excluyen entre si`() {
+        val shared = Any()
+        val a = ProtectionService(store, clock, shared)
+        val notes = NoteService(store, clock, DEVICE, IdFactory { "id" }, shared)
+        put(note())
+        val done = java.util.concurrent.CountDownLatch(1)
+        synchronized(shared) {
+            Thread { notes.setColor(ID1, "#123456"); done.countDown() }.start()
+            assertTrue(!done.await(300, java.util.concurrent.TimeUnit.MILLISECONDS), "setColor no debe entrar con el cerrojo ajeno cogido")
+        }
+        assertTrue(done.await(5, java.util.concurrent.TimeUnit.SECONDS))
+        assertEquals("#123456", store.get(ID1)!!.color)
+        a.hashCode()
     }
 }

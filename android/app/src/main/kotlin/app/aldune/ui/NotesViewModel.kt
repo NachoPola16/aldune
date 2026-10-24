@@ -361,6 +361,9 @@ class NotesViewModel(application: Application) : AndroidViewModel(application) {
         /** El contenido cifrado está dañado. */
         data object Unreadable : UnlockOutcome
 
+        /** Lo protegió una versión más nueva de Aldune. */
+        data object Unsupported : UnlockOutcome
+
         /** La nota ya no existe o ya no es protegida. */
         data object Gone : UnlockOutcome
     }
@@ -408,6 +411,7 @@ class NotesViewModel(application: Application) : AndroidViewModel(application) {
             is ProtectionResult.Err -> when (result.error) {
                 ProtectionError.WrongPassword -> UnlockOutcome.WrongPassword
                 is ProtectionError.UnreadableContent -> UnlockOutcome.Unreadable
+                is ProtectionError.UnsupportedVersion -> UnlockOutcome.Unsupported
                 else -> UnlockOutcome.Gone
             }
         }

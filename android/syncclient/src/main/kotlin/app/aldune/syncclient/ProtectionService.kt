@@ -2,6 +2,7 @@ package app.aldune.syncclient
 
 import app.aldune.core.PasswordProblem
 import app.aldune.core.PasswordRules
+import app.aldune.core.ProtectedNoteContent
 import app.aldune.core.ProtectedNotes
 import app.aldune.core.UnlockedProtectedNote
 import app.aldune.domain.Clock
@@ -22,6 +23,9 @@ sealed class ProtectionError {
     data class InvalidPassword(val problem: PasswordProblem) : ProtectionError()
 
     data object WrongPassword : ProtectionError()
+
+    /** El contenido protegido lo escribió un cliente más nuevo (versión que esta app no entiende): no es una contraseña mala. */
+    data class UnsupportedVersion(val id: String) : ProtectionError()
 
     /** El contenido protegido guardado no se puede leer (dato dañado). La nota se deja como está. */
     data class UnreadableContent(val id: String) : ProtectionError()
@@ -49,8 +53,7 @@ sealed class ProtectionResult<out T> {
  *
  * No recuerda ninguna contraseña: [unlock] devuelve una sesión ([UnlockedProtectedNote]) con la clave ya derivada y quien la abre la cierra.
  */
-class ProtectionService(private val store: NoteStore, private val clock: Clock) {
-    private val lock = Any()
+class ProtectionService(private val store: NoteStore, private val clock: Clock, private val lock: Any = Any()) {
 
     /** Última hora de edición aceptada por nota (ver [save]); en memoria, como en `NoteService`. */
     private val lastEdit = HashMap<String, Instant>()
@@ -91,6 +94,7 @@ class ProtectionService(private val store: NoteStore, private val clock: Clock) 
         val note = store.get(id) ?: return err(ProtectionError.NotFound(id))
         if (!note.isProtected) return err(ProtectionError.NotProtected(id))
         val content = readContent(note) ?: return err(ProtectionError.UnreadableContent(id))
+        if (content.version != ProtectedNoteContent.CURRENT_VERSION) return err(ProtectionError.UnsupportedVersion(id))
         val unlocked = ProtectedNotes.unlock(content, password) ?: return err(ProtectionError.WrongPassword)
         synchronized(lock) { known[id] = note.protectedContentJson }
         return ok(unlocked)
@@ -138,6 +142,7 @@ class ProtectionService(private val store: NoteStore, private val clock: Clock) 
         val note = store.get(id) ?: return err(ProtectionError.NotFound(id))
         if (!note.isProtected) return err(ProtectionError.NotProtected(id))
         val content = readContent(note) ?: return err(ProtectionError.UnreadableContent(id))
+        if (content.version != ProtectedNoteContent.CURRENT_VERSION) return err(ProtectionError.UnsupportedVersion(id))
         val plain = ProtectedNotes.tryUnprotect(content, password) ?: return err(ProtectionError.WrongPassword)
 
         return synchronized(lock) {

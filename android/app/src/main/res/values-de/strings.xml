@@ -160,6 +160,7 @@
     <string name="password_too_short">Mindestens 4 Zeichen</string>
     <string name="password_mismatch">Die Passwörter stimmen nicht überein</string>
     <string name="password_unreadable">Der geschützte Inhalt dieser Notiz ist beschädigt und lässt sich nicht öffnen.</string>
+    <string name="password_unsupported">Diese Notiz wurde mit einer neueren Version von Aldune geschützt. Aktualisiere die App, um sie zu öffnen.</string>
     <string name="password_changed">Die Notiz wurde inzwischen geändert. Versuche es erneut.</string>
     <string name="password_protect_action">Schützen</string>
     <string name="password_unlock_action">Entsperren</string>

@@ -95,13 +95,15 @@ class AppContainer(context: Context) {
             val conflictStore = RoomConflictStore(database, cipher)
             // Recuperar una nota con «Usar la otra» tiene que quitar su lápida local, o la sync seguiría firmando el borrado (informe de F7).
             val eraser = TombstoneEraser { database.notes().deleteTombstone(it) }
+            // Un solo cerrojo para los tres servicios que leen-modifican-escriben el mismo almacén (revisión de F7).
+            val storeLock = Any()
             return Opened.Ready(
                 database,
-                NoteService(store, SystemClock, deviceId = "", idFactory = RandomIdFactory),
+                NoteService(store, SystemClock, deviceId = "", idFactory = RandomIdFactory, lock = storeLock),
                 sync,
-                ProtectionService(store, SystemClock),
+                ProtectionService(store, SystemClock, storeLock),
                 conflictStore,
-                ConflictResolver(store, conflictStore, reminderStore, SystemClock, deviceId = "", tombstones = eraser),
+                ConflictResolver(store, conflictStore, reminderStore, SystemClock, deviceId = "", tombstones = eraser, lock = storeLock),
                 reminders,
             ).also { cached = it }
         } finally {
