@@ -7,8 +7,8 @@ group = "app.aldune"
 version = "0.1.0"
 
 dependencies {
-    // Solo para leer los vectores en los tests: el módulo en sí no depende de nada (ni de Android).
-    testImplementation(libs.kotlinx.serialization.json)
+    // Para leer y escribir `aspectColors` (AspectColorsJson) y, en los tests, los vectores; no depende de Android.
+    implementation(libs.kotlinx.serialization.json)
 
     testImplementation(platform(libs.junit.bom))
     testImplementation(libs.junit.jupiter)

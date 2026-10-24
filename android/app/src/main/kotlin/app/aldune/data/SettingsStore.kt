@@ -3,6 +3,7 @@ package app.aldune.data
 import android.content.Context
 import android.content.res.Configuration
 import app.aldune.text.AppPalette
+import app.aldune.text.AspectColorsJson
 import app.aldune.text.NoteThemes
 import java.util.Locale
 
@@ -11,8 +12,10 @@ import java.util.Locale
  * cuando existe el equivalente (papelera 30 días, «reordenar al marcar» apagado).
  */
 data class AppSettings(
-    /** Los números de `AppearanceMode`: Oscuro 0, Claro 1, Sistema 2, Pastel 3, Medianoche 4. */
+    /** Los números de `AppearanceMode`: Oscuro 0, Claro 1, Sistema 2, Pastel 3, Medianoche 4, XP claro 5, XP oscuro 6, Telecom claro 7, Telecom oscuro 8, Bash 9, Fósforo 10. */
     val appearance: Int = AppPalette.SYSTEM,
+    /** Los colores que el usuario eligió para cada aspecto retro (id de aspecto → id de hueco → `#RRGGBB`); vacío = los de fábrica. */
+    val aspectColors: Map<String, Map<String, String>> = emptyMap(),
     /** Etiqueta de idioma (`en`, `es`, `de`, `fr`, `pt-BR`); vacío = el del sistema. */
     val language: String = "",
     val trashDays: Int = 30,
@@ -52,7 +55,8 @@ class SettingsStore(context: Context) {
     fun load(): AppSettings {
         val d = AppSettings()
         return AppSettings(
-            appearance = prefs.getInt(APPEARANCE, d.appearance).takeIf { it in AppPalette.DARK..AppPalette.MIDNIGHT } ?: d.appearance,
+            appearance = prefs.getInt(APPEARANCE, d.appearance).takeIf { it in AppPalette.DARK..AppPalette.PHOSPHOR } ?: d.appearance,
+            aspectColors = AspectColorsJson.parse(prefs.getString(ASPECT_COLORS, null)),
             language = prefs.getString(LANGUAGE, d.language).takeIf { tag -> tag == "" || Languages.all.any { it.first == tag } } ?: d.language,
             trashDays = prefs.getInt(TRASH_DAYS, d.trashDays).coerceIn(1, 365),
             reorderOnCheck = prefs.getBoolean(REORDER_ON_CHECK, d.reorderOnCheck),
@@ -67,6 +71,7 @@ class SettingsStore(context: Context) {
     fun save(settings: AppSettings) {
         prefs.edit()
             .putInt(APPEARANCE, settings.appearance)
+            .putString(ASPECT_COLORS, AspectColorsJson.write(settings.aspectColors))
             .putString(LANGUAGE, settings.language)
             .putInt(TRASH_DAYS, settings.trashDays)
             .putBoolean(REORDER_ON_CHECK, settings.reorderOnCheck)
@@ -81,6 +86,7 @@ class SettingsStore(context: Context) {
     private companion object {
         const val FILE = "settings"
         const val APPEARANCE = "appearance"
+        const val ASPECT_COLORS = "aspectColors"
         const val LANGUAGE = "language"
         const val TRASH_DAYS = "trashDays"
         const val REORDER_ON_CHECK = "reorderOnCheck"
