@@ -1,0 +1,1 @@
+First version: notes, checklists, tags, protected notes, reminders, widget, quick capture and end-to-end encrypted sync.

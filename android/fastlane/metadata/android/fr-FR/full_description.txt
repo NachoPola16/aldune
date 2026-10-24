@@ -1,0 +1,20 @@
+Aldune est une application de notes adhésives qui garde vos notes à portée de main et vos données chez vous. Sans compte, sans publicité, sans traceurs.
+
+NOTES
+• Éditeur rapide avec listes de tâches, puces et retraits ; touchez une case pour la cocher.
+• Couleurs, étiquettes, recherche, archives et corbeille.
+• Protégez n’importe quelle note par un mot de passe : elle est chiffrée avec une clé issue de ce mot de passe, qui n’est jamais enregistré.
+• Rappels par note : choisissez une heure ou repoussez-le depuis la notification (Terminé, +1 h, Demain 9:00). Un mode d’heure exacte est disponible en option.
+
+CAPTURE RAPIDE
+• Widget pour l’écran d’accueil avec vos notes sous forme de bandes colorées.
+• Notification permanente et tuile des réglages rapides, en option, pour commencer une note d’un seul geste.
+• Partagez du texte depuis n’importe quelle application directement vers une nouvelle note.
+
+SYNCHRONISATION (EN OPTION)
+• Synchronisez avec votre propre serveur ou via WebDAV / Nextcloud.
+• Tout ce qui quitte votre téléphone est chiffré de bout en bout (AES-GCM), suppressions comprises. Le serveur ne voit que des données chiffrées.
+• Fonctionne avec l’application Aldune pour Windows et gère les conflits quand une même note change sur deux appareils.
+• Sans synchronisation, vos notes ne quittent jamais l’appareil.
+
+Logiciel libre sous licence GPL-3.0. Code source : https://github.com/NachoPola16/aldune

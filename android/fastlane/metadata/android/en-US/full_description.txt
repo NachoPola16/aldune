@@ -1,0 +1,20 @@
+Aldune is a sticky-notes app that keeps your notes close and your data yours. No account, no ads, no trackers.
+
+NOTES
+• Fast editor with checklists, bullets and indentation; tap a checkbox to tick it.
+• Colors, tags, search, archive and trash.
+• Protect any note with a password: it is encrypted with a key derived from that password, which is never stored.
+• Reminders on a single note: pick a time, or snooze from the notification (Done, +1 h, Tomorrow 9:00). An optional exact-time mode is available.
+
+QUICK CAPTURE
+• Home-screen widget with your notes as colored strips.
+• Optional persistent notification and Quick Settings tile to start a note in one tap.
+• Share text from any app straight into a new note.
+
+SYNC (OPTIONAL)
+• Sync with your own server, or with WebDAV / Nextcloud.
+• Everything that leaves your phone is encrypted end to end (AES-GCM), deletions included. The server only ever sees encrypted data.
+• Works with the Aldune app for Windows, with conflict handling when the same note changes on two devices.
+• Without sync, your notes never leave the device.
+
+Free software under the GPL-3.0. Source code: https://github.com/NachoPola16/aldune

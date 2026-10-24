@@ -1,0 +1,1 @@
+Erste Version: Notizen, Checklisten, Tags, geschützte Notizen, Erinnerungen, Widget, schnelles Erfassen und Ende-zu-Ende-verschlüsselter Sync.

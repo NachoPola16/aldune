@@ -1,0 +1,1 @@
+Primera versión: notas, listas de tareas, etiquetas, notas protegidas, recordatorios, widget, captura rápida y sincronización cifrada de extremo a extremo.
