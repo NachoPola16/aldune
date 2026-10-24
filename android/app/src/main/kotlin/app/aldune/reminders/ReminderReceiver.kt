@@ -43,6 +43,8 @@ class ReminderReceiver : BroadcastReceiver() {
             CoroutineScope(Dispatchers.IO).launch {
                 try {
                     (container.open() as? AppContainer.Opened.Ready)?.let { block(it.reminders) }
+                } catch (_: Exception) {
+                    // Una base bloqueada o un Keystore caído no deben tumbar el proceso desde un receptor: la alarma se rehace al abrir la app (reconcile).
                 } finally {
                     pending.finish()
                 }
