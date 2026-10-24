@@ -603,7 +603,7 @@ class NotesViewModel(application: Application) : AndroidViewModel(application) {
             persist(draft)
         }
         io.withLock {
-            val id = drafts[key]?.noteId ?: return@withLock null
+            val id = idOf(key).ifEmpty { return@withLock null }
             service?.get(id)?.let { NoteOptions(id, it.color, it.tags, it.isProtected) }
         }
     }

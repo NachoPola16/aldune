@@ -72,3 +72,9 @@ Anotados, sin arreglar (no son pérdida de datos en el uso normal):
 
 - **Proteger una nota recién creada en el editor fallaba siempre con «La nota cambió mientras tanto. Inténtalo de nuevo.»** Causa: el editor de una nota nueva usa la clave `""` hasta que se reabre, y `protectNote`/`unlockProtected`/`removeProtection` buscaban la nota `""` (no encontrada, que la interfaz muestra con ese mismo texto). Salir y volver a abrirla funcionaba porque ya tenía su id. Arreglado en la rc3 con `NotesViewModel.idOf(key)` (id del borrador, o un alias que sobrevive a que `protectNote` olvide el borrador). Verificado en el Pixel: escribir, proteger y seguir editando sin salir. Sin test automático: vive en el `ViewModel` de `app`, que no tiene pruebas instrumentadas.
 - Las sondas de «protegida con aviso» y «vencido con el móvil apagado» no se pudieron cerrar por `adb` (los diálogos del móvil no se encuentran de forma fiable): quedan para probarlas a mano.
+
+## Sondas cerradas (24-10-2026, Pixel, versión de depuración con notas inventadas)
+
+- **Protegida con recordatorio:** el aviso salta a su hora con la app matada y la pantalla apagada; la notificación se titula «Protected note», sin texto (`android.text=null`) y no contiene ni rastro del contenido.
+- Al preparar la sonda salió un segundo fallo de la misma familia que el de proteger una nota nueva: después de protegerla, el menú «⋯» de esa nota ya no se abría hasta reabrirla (`noteOptions` buscaba el id por la clave vacía). Arreglado con `idOf` (se publicará en la siguiente versión; la rc3 ya trae el arreglo de proteger).
+- **Aviso vencido con el móvil apagado:** no se pudo probar con `adb`. Un reinicio real exige desbloquear el móvil con el PIN para que Android entregue `BOOT_COMPLETED`, y el PIN no lo manejo yo. Queda para probarlo a mano: poner un recordatorio a 5 minutos, reiniciar el móvil, desbloquear tras la hora y comprobar que sale el aviso (una notificación por nota).
