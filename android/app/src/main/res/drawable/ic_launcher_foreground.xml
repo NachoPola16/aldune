@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Las tres pestañas del logo de Windows (aldune-logo.svg, viewBox 256) reducidas a la zona segura de 66 dp del icono adaptativo de 108 dp. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp" android:height="108dp" android:viewportWidth="108" android:viewportHeight="108">
+    <group android:scaleX="0.34" android:scaleY="0.34" android:translateX="8.1" android:translateY="9.5">
+        <path android:fillColor="#EBD38B" android:strokeColor="#B7A059" android:strokeWidth="5"
+            android:pathData="M68 40 H214 V94 H68 a22 22 0 0 1 -22 -22 v-10 a22 22 0 0 1 22 -22 z" />
+        <path android:fillColor="#83E7F2" android:strokeColor="#4CB3BE" android:strokeWidth="5"
+            android:pathData="M96 104 H214 V158 H96 a22 22 0 0 1 -22 -22 v-10 a22 22 0 0 1 22 -22 z" />
+        <path android:fillColor="#F9BEF2" android:strokeColor="#C38CBE" android:strokeWidth="5"
+            android:pathData="M114 168 H214 V222 H114 a22 22 0 0 1 -22 -22 v-10 a22 22 0 0 1 22 -22 z" />
+        <path android:fillColor="#F4F1EC" android:pathData="M206 37 a9 9 0 0 1 18 0 V219 a9 9 0 0 1 -18 0 z" />
+    </group>
+</vector>
