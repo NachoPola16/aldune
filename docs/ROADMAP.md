@@ -1050,3 +1050,16 @@ poco a poco, para **poder editar notas desde el móvil sin depender del ordenado
 decidido (Android primero, en la tableta, sin publicar al principio) está en `docs/MOBILE_PORT.md` y en
 el §9 de este fichero; hay que releerlo y revisarlo contra lo que haya cambiado para entonces (vinculación
 de archivos, sonidos, formato de sync).
+
+## 13. Qué podría hacer que alguien pague (2026-10-25)
+
+Revisión de mercado repetida el 25-10-2026 (misma conclusión que el §1: sigue sin haber en Windows nada con notas ancladas al borde y en abanico). Rivales cercanos por otros lados: Notezilla (de pago, Android, sync cifrada en su nube), Sticki.ly (multiplataforma, E2E) y Stickene (gratis, sync E2E, sin Android aún). Lo que Aldune junta y ellos no: dock en abanico + sync cifrada con servidor propio + Android nativo + código abierto (GPL-3.0). Eso es un buen mensaje, todavía no un motivo de pago.
+
+Decisión previa (sin cambios): seguir GPL-3.0 y **validar con 3-5 personas antes de vender**. Ideas, de más a menos clara:
+
+1. **Emparejamiento fácil (elegida por el usuario para implementar, 25-10-2026).** Hoy se pega `aldune-profile-v2:…` y se teclea el token aparte (`SYNC.md`). Un QR del código de perfil lo reduce a escanear. Esto revisa la decisión del 21-10 («QR después de F8»): el usuario prefiere hacerlo ahora. **Restricción que no cambia:** el token nunca viaja en el QR (ese código también sirve para compartir una nota y regalaría escritura sobre todo el almacén). Diseño pendiente: cómo llega el token (introducirlo a mano, o un segundo paso corto), cámara en Android (CameraX + ZXing) y generación en Windows (QRCoder). Sin cambiar el formato de sync (4) ni los prefijos `aldune-profile-*`.
+2. **Sync alojada por el autor.** App gratis y GPL; se paga por no montar el servidor. Es lo más coherente con la licencia y lo único recurrente. Exige operar un servicio (coste, soporte, privacidad: al ser E2E el servidor no lee notas).
+3. **Importar Markdown y copia de seguridad con un clic.** Barato; quita fricción de entrada (ver `PENDIENTES.md`).
+4. **Microsoft Store (MSIX).** La firma y el no pasar por SmartScreen pesan más que cualquier función; SignPath ya rechazó el proyecto. Pospuesto hasta cerrar Android; para vender es probablemente lo más necesario.
+
+Precio de referencia: pago único de 7-15 $ (§1), o gratis con desbloqueo de pago único; la opción 2 sería la excepción por ser un servicio.
