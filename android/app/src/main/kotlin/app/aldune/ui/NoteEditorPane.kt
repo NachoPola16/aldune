@@ -324,6 +324,8 @@ fun NoteEditorPane(key: String, viewModel: NotesViewModel, onBack: () -> Unit, s
         options?.let { current ->
             NoteOptionsDialog(
                 current, viewModel, onClose = { options = null },
+                // Lo que se ve ahora en el editor (como en Windows). Una protegida cerrada no tiene texto que exportar.
+                exportText = if (!current.isProtected || unlocked) text() else null,
                 onProtection = {
                     options = null
                     passwordMode = if (current.isProtected) PasswordMode.Remove else PasswordMode.Protect

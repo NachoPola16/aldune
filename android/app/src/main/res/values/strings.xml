@@ -72,6 +72,8 @@
     <string name="custom_color_readable">Readable text</string>
     <string name="custom_color_invalid">Enter a color like #F5E3B3.</string>
     <string name="custom_color_apply">Use this color</string>
+    <string name="export_markdown">Export to Markdown</string>
+    <string name="export_failed">The note could not be saved.</string>
     <string name="trash_days">Days in the trash</string>
     <string name="trash_days_value">%1$d days</string>
     <string name="reorder_on_check">Move checked tasks down</string>

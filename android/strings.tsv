@@ -71,6 +71,8 @@ custom_color_rgb	Fine tune with RGB	Ajuste fino con RGB	Feinabstimmung mit RGB	A
 custom_color_readable	Readable text	Texto legible	Lesbarer Text	Texte lisible	Texto legível
 custom_color_invalid	Enter a color like #F5E3B3.	Escribe un color como #F5E3B3.	Gib eine Farbe wie #F5E3B3 ein.	Entrez une couleur comme #F5E3B3.	Digite uma cor como #F5E3B3.
 custom_color_apply	Use this color	Usar este color	Diese Farbe verwenden	Utiliser cette couleur	Usar esta cor
+export_markdown	Export to Markdown	Exportar a Markdown	Nach Markdown exportieren	Exporter vers Markdown	Exportar para Markdown
+export_failed	The note could not be saved.	No se pudo guardar la nota.	Die Notiz konnte nicht gespeichert werden.	La note n’a pas pu être enregistrée.	Não foi possível salvar a nota.
 trash_days	Days in the trash	Días en la papelera	Tage im Papierkorb	Jours dans la corbeille	Dias na lixeira
 trash_days_value	%1$d days	%1$d días	%1$d Tage	%1$d jours	%1$d dias
 reorder_on_check	Move checked tasks down	Mover abajo las tareas hechas	Erledigte Aufgaben nach unten	Descendre les tâches faites	Mover tarefas concluídas para baixo

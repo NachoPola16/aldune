@@ -72,6 +72,8 @@
     <string name="custom_color_readable">Lesbarer Text</string>
     <string name="custom_color_invalid">Gib eine Farbe wie #F5E3B3 ein.</string>
     <string name="custom_color_apply">Diese Farbe verwenden</string>
+    <string name="export_markdown">Nach Markdown exportieren</string>
+    <string name="export_failed">Die Notiz konnte nicht gespeichert werden.</string>
     <string name="trash_days">Tage im Papierkorb</string>
     <string name="trash_days_value">%1$d Tage</string>
     <string name="reorder_on_check">Erledigte Aufgaben nach unten</string>

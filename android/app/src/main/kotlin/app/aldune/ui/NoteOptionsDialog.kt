@@ -1,5 +1,8 @@
 package app.aldune.ui
 
+import android.widget.Toast
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -38,9 +41,11 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import app.aldune.R
 import app.aldune.domain.NoteService
+import app.aldune.text.MarkdownExport
 import app.aldune.text.NoteThemes
 
 /**
@@ -50,7 +55,10 @@ import app.aldune.text.NoteThemes
  */
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
-fun NoteOptionsDialog(initial: NotesViewModel.NoteOptions, viewModel: NotesViewModel, onClose: () -> Unit, onProtection: () -> Unit) {
+fun NoteOptionsDialog(
+    initial: NotesViewModel.NoteOptions, viewModel: NotesViewModel, onClose: () -> Unit, onProtection: () -> Unit,
+    exportText: String? = null,
+) {
     var color by remember { mutableStateOf(initial.color) }
     var tags by remember { mutableStateOf(initial.tags) }
     var draft by remember { mutableStateOf("") }
@@ -58,6 +66,19 @@ fun NoteOptionsDialog(initial: NotesViewModel.NoteOptions, viewModel: NotesViewM
     val settings by viewModel.settings.collectAsState()
     val theme = NoteThemes.resolve(settings.noteThemeId, null)
     var customOpen by remember { mutableStateOf(false) }
+
+    // «Exportar a Markdown» guarda un .md con el selector de ficheros del sistema (el «Guardar como» de Windows).
+    val context = LocalContext.current
+    val newNote = stringResource(R.string.new_note_title)
+    val exportFailed = stringResource(R.string.export_failed)
+    val exporter = rememberLauncherForActivityResult(ActivityResultContracts.CreateDocument("text/markdown")) { uri ->
+        if (uri != null && exportText != null) {
+            val ok = runCatching {
+                context.contentResolver.openOutputStream(uri, "wt")!!.use { it.write(MarkdownExport.toMarkdown(exportText, newNote).toByteArray(Charsets.UTF_8)) }
+            }.isSuccess
+            if (!ok) Toast.makeText(context, exportFailed, Toast.LENGTH_LONG).show()
+        }
+    }
     val palette = (theme.lightColors + theme.darkColors).let { if (color in it) it else listOf(color) + it }
 
     fun addTag() {
@@ -106,6 +127,11 @@ fun NoteOptionsDialog(initial: NotesViewModel.NoteOptions, viewModel: NotesViewM
                     TextButton(onClick = ::addTag, enabled = draft.isNotBlank()) { Text(stringResource(R.string.add_tag)) }
                 }
                 ReminderSection(initial.noteId, viewModel)
+                if (exportText != null) {
+                    TextButton(onClick = { exporter.launch(MarkdownExport.suggestedFileName(exportText, newNote)) }) {
+                        Text(stringResource(R.string.export_markdown))
+                    }
+                }
                 TextButton(onClick = onProtection, Modifier.padding(top = 8.dp)) {
                     Text(stringResource(if (initial.isProtected) R.string.remove_protection else R.string.protect_note))
                 }

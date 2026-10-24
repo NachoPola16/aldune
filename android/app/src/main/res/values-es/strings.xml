@@ -72,6 +72,8 @@
     <string name="custom_color_readable">Texto legible</string>
     <string name="custom_color_invalid">Escribe un color como #F5E3B3.</string>
     <string name="custom_color_apply">Usar este color</string>
+    <string name="export_markdown">Exportar a Markdown</string>
+    <string name="export_failed">No se pudo guardar la nota.</string>
     <string name="trash_days">Días en la papelera</string>
     <string name="trash_days_value">%1$d días</string>
     <string name="reorder_on_check">Mover abajo las tareas hechas</string>
