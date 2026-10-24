@@ -16,6 +16,14 @@ object AppPalette {
     const val PASTEL = 3
     const val MIDNIGHT = 4
 
+    /** Los aspectos retro de Windows (XP, Telecomunicaciones, Bash, Fósforo): su paleta se deriva en `AspectPalettes`. */
+    const val XP_LIGHT = 5
+    const val XP_DARK = 6
+    const val TELECOM_LIGHT = 7
+    const val TELECOM_DARK = 8
+    const val BASH = 9
+    const val PHOSPHOR = 10
+
     val dark: Map<String, String> = linkedMapOf(
         "Ground" to "#2A261F",
         "GroundDeep" to "#25211B",
