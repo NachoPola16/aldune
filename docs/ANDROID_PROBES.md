@@ -113,3 +113,22 @@ Resultados y hallazgos en [`INFORME-ANDROID-F6.md`](INFORME-ANDROID-F6.md). Téc
    vista previa activa, que ninguna tira quede recortada; y, con una protegida, que su título no salga en ningún sitio (`uiautomator dump` no ve dentro del widget: mirar la captura).
 6. **El teclado de una nota nueva**: arrancar 4 veces seguidas con `force-stop` + `am start` y `dumpsys input_method | grep mInputShown`, como en la sonda del editor.
 7. `logcat -d | grep AppWidgetHostView` dice por qué un widget no se infla (una clase no admitida en `RemoteViews`, p. ej. un `<View>`).
+
+## Sonda de los recordatorios (F7)
+
+Resultados en [`INFORME-ANDROID-F7.md`](INFORME-ANDROID-F7.md). Técnica:
+
+1. **Git Bash estropea las rutas de `adb`**: `export MSYS_NO_PATHCONV=1` o `adb shell cat /sdcard/u.xml` falla. Para leer la pantalla, `uiautomator dump /sdcard/u.xml` y buscar
+   `bounds` con `grep`; una función que calcule el centro del rectángulo (`ctr`) evita tocar coordenadas a mano. La tableta y el Pixel tienen pantallas distintas: nunca reusar coordenadas.
+2. **Poner un recordatorio a unos minutos**: menú «⋯» → «Elegir fecha y hora» → Aceptar (hoy) → el selector arranca en la próxima hora en punto; tocar la hora y los minutos
+   (`content-desc="N minutes"`, solo múltiplos de 5) → Aceptar. Con «Hora exacta» activada la alarma tiene `window=0` en `dumpsys alarm | grep -A3 "REMINDER_FIRE$"`.
+3. **Matar sin cancelar alarmas**: `input keyevent KEYCODE_HOME` y `am kill <pkg>` (**nunca `am force-stop`**). Esperar el aviso con un bucle sobre
+   `dumpsys notification --noredact | grep -c "pkg=<pkg>.*id="` y anotar `adb shell date`. **Limpiar antes los avisos anteriores** (el bucle sale al primero que ve).
+4. **Reposo profundo**: `dumpsys battery unplug` → `dumpsys deviceidle force-idle`; al acabar `dumpsys deviceidle unforce` y `dumpsys battery reset`.
+5. **Botones del aviso**: `cmd statusbar expand-notifications`; si hay varios, se agrupan y hay que expandir cada uno (en el Pixel, `input swipe` hacia abajo sobre el aviso). La
+   tableta: pulsar el chevron del aviso.
+6. **Cambiar la zona**: `settings put global auto_time_zone 0` + `service call alarm 3 s16 Europe/Lisbon`; restaurar con `Europe/Madrid` y `auto_time_zone 1`.
+7. **Permiso de alarmas exactas**: el interruptor «Hora exacta» abre `Settings$AlarmsAndRemindersAppActivity`; tocar la fila y volver; comprobar con
+   `cmd appops get <pkg> SCHEDULE_EXACT_ALARM`.
+8. **Deslizar para archivar no funciona con `adb input swipe`** (ni `touchscreen swipe`): probarlo a mano.
+9. En el móvil del usuario hay notas reales: crear una nota propia de prueba y no tocar las existentes; borrarla al acabar.
