@@ -71,7 +71,31 @@ object Operations {
         "NoteColorDerivation.RestOutlineFor" -> strOrNull(NoteColorDerivation.restOutlineFor(a.ns("color")))
         "NoteColorDerivation.StripeColor" -> str(NoteColorDerivation.stripeColor(a.s("color"), a.s("ground")))
         "NoteColorDerivation.ClassicColors" -> strings(NoteColorDerivation.classicColors)
-        "AppPalette.For" -> JsonObject(AppPalette.forMode(a.i("mode"), a.b("windowsUsesLight")).toSortedMap().mapValues { JsonPrimitive(it.value) })
+        "ColorFit.Ratio" -> num(ColorFit.ratio(a.s("a"), a.s("b")))
+        "ColorFit.Background" -> str(ColorFit.background(a.s("background"), a.s("text"), a.d("minimum")))
+        "ColorFit.Foreground" -> str(ColorFit.foreground(a.s("foreground"), a.s("background"), a.d("minimum")))
+        "ColorFit.Lighter" -> str(ColorFit.lighter(a.s("color"), a.d("amount")))
+        "ColorFit.Darker" -> str(ColorFit.darker(a.s("color"), a.d("amount")))
+        "ColorMix.Toward" -> str(ColorMix.toward(a.s("from"), a.s("to"), a.d("amount")))
+        "AppPalette.For" -> JsonObject(
+            AppPalette.forMode(a.i("mode"), a.b("windowsUsesLight"), aspectColors(a)).toSortedMap().mapValues { JsonPrimitive(it.value) },
+        )
+        "AspectCatalog.Resolve" -> JsonObject(
+            AspectCatalog.resolve(a.i("mode"), aspectColors(a)).toSortedMap().mapValues { JsonPrimitive(it.value) },
+        )
+        "AspectCatalog.Retro" -> JsonArray(
+            AspectCatalog.retro.map { aspect ->
+                obj(
+                    "mode" to num(aspect.mode), "id" to str(aspect.id), "suggestedThemeId" to strOrNull(aspect.suggestedThemeId),
+                    "slots" to JsonArray(aspect.slots.map { s -> obj("id" to str(s.id), "default" to str(s.default), "suggestions" to strings(s.suggestions)) }),
+                    "presets" to JsonArray(
+                        aspect.presets.map { p ->
+                            obj("id" to str(p.id), "name" to str(p.name), "colors" to JsonObject(p.colors.toSortedMap().mapValues { JsonPrimitive(it.value) }))
+                        },
+                    ),
+                )
+            },
+        )
         "AppPalette.IsLight" -> bool(AppPalette.isLight(a.i("mode"), a.b("windowsUsesLight")))
         "NoteDisplayColor.Resolve" -> str(NoteDisplayColor.resolve(a.s("color"), a.ns("uniform")))
         "NoteThemes.BuiltIn" -> JsonArray(NoteThemes.builtIn.map { theme(it) })
@@ -122,6 +146,10 @@ object Operations {
     private fun themeFrom(o: JsonObject) = NoteTheme(
         id = o.s("id"), name = o.ns("name") ?: "", darkColors = o.strings("dark"), lightColors = o.strings("light")
     )
+
+    /** El argumento opcional `aspectColors` (id de hueco → hex), o `null` si no viene. */
+    private fun aspectColors(a: JsonObject): Map<String, String>? =
+        (a["aspectColors"] as? JsonObject)?.mapValues { (it.value as JsonPrimitive).content }
 
     private fun customThemes(a: JsonObject): List<NoteTheme>? =
         (a["custom"] as? JsonArray)?.map { themeFrom(it as JsonObject) }

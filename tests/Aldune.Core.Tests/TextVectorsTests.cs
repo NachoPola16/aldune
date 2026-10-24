@@ -167,8 +167,30 @@ public sealed class TextVectorsTests
         "NoteColorAssigner.Assign" => NoteColorAssigner.Assign(ThemeOf(a), (NoteTone)I(a, "tone"), (NoteColorAssignment)I(a, "rule"),
             NS(a, "fixedColor"), Strings(a, "dockColors")),
 
-        "AppPalette.For" => new JsonObject(AppPalette.For((AppearanceMode)I(a, "mode"), a["windowsUsesLight"]!.GetValue<bool>())
+        "ColorFit.Ratio" => ColorFit.Ratio(S(a, "a"), S(a, "b")),
+        "ColorFit.Background" => ColorFit.Background(S(a, "background"), S(a, "text"), D(a, "minimum")),
+        "ColorFit.Foreground" => ColorFit.Foreground(S(a, "foreground"), S(a, "background"), D(a, "minimum")),
+        "ColorFit.Lighter" => ColorFit.Lighter(S(a, "color"), D(a, "amount")),
+        "ColorFit.Darker" => ColorFit.Darker(S(a, "color"), D(a, "amount")),
+        "ColorMix.Toward" => ColorMix.Toward(S(a, "from"), S(a, "to"), D(a, "amount")),
+
+        "AppPalette.For" => new JsonObject(AppPalette.For((AppearanceMode)I(a, "mode"), a["windowsUsesLight"]!.GetValue<bool>(), AspectColors(a))
             .OrderBy(p => p.Key, StringComparer.Ordinal).Select(p => KeyValuePair.Create(p.Key, (JsonNode?)p.Value))),
+        "AspectCatalog.Resolve" => new JsonObject(AspectCatalog.Resolve((AppearanceMode)I(a, "mode"), AspectColors(a))
+            .OrderBy(p => p.Key, StringComparer.Ordinal).Select(p => KeyValuePair.Create(p.Key, (JsonNode?)p.Value))),
+        "AspectCatalog.Retro" => new JsonArray(AspectCatalog.Retro.Select(aspect => (JsonNode?)new JsonObject
+        {
+            ["mode"] = (int)aspect.Mode,
+            ["id"] = aspect.Id,
+            ["suggestedThemeId"] = aspect.SuggestedThemeId,
+            ["slots"] = new JsonArray(aspect.Slots.Select(s => (JsonNode?)new JsonObject
+                { ["id"] = s.Id, ["default"] = s.Default, ["suggestions"] = Array(s.Suggestions) }).ToArray()),
+            ["presets"] = new JsonArray(aspect.Presets.Select(p => (JsonNode?)new JsonObject
+            {
+                ["id"] = p.Id, ["name"] = p.Name,
+                ["colors"] = new JsonObject(p.Colors.OrderBy(c => c.Key, StringComparer.Ordinal).Select(c => KeyValuePair.Create(c.Key, (JsonNode?)c.Value))),
+            }).ToArray()),
+        }).ToArray()),
         "AppPalette.IsLight" => AppPalette.IsLight((AppearanceMode)I(a, "mode"), a["windowsUsesLight"]!.GetValue<bool>()),
 
         "NoteOrdering.Between" => NoteOrdering.Between(ND(a, "before"), ND(a, "after")),
@@ -191,6 +213,10 @@ public sealed class TextVectorsTests
         DarkColors = o["dark"]!.AsArray().Select(x => x!.GetValue<string>()).ToList(),
         LightColors = o["light"]!.AsArray().Select(x => x!.GetValue<string>()).ToList()
     };
+
+    /// <summary>El argumento opcional <c>aspectColors</c> (id de hueco → hex), o null si no viene.</summary>
+    private static Dictionary<string, string>? AspectColors(JsonObject a) =>
+        a["aspectColors"] is JsonObject o ? o.ToDictionary(p => p.Key, p => p.Value!.GetValue<string>()) : null;
 
     private static List<NoteTheme>? CustomThemes(JsonObject a) =>
         a["custom"]?.AsArray().Select(x => ThemeFrom(x!.AsObject())).ToList();
@@ -467,15 +493,56 @@ public sealed class TextVectorsTests
         yield return Case("OklchColor.DistanceTo", ("l", 0.5), ("c", 0.1), ("h", 10.0), ("l2", 0.5), ("c2", 0.1), ("h2", 10.0));
         yield return Case("OklchColor.DistanceTo", ("l", 0.5), ("c", 0.1), ("h", 350.0), ("l2", 0.5), ("c2", 0.1), ("h2", 10.0));
 
-        // Paleta de la app (chrome). Solo los aspectos de siempre: Oscuro, Claro, Sistema, Pastel y Medianoche. Los retro (XP, Telecom,
-        // Bash, Phosphor) son de Windows y no se llevan a Android; aun así IsLight se fija para todos los valores, porque settings.json
-        // compartido (o un futuro import) puede traer cualquiera.
+        // Paleta de la app (chrome): los aspectos de siempre (Oscuro, Claro, Sistema, Pastel y Medianoche) y IsLight para todos los valores.
         foreach (var mode in new[] { 0, 1, 2, 3, 4 })
             foreach (var light in new[] { false, true })
                 yield return Case("AppPalette.For", ("mode", mode), ("windowsUsesLight", light));
         for (int mode = 0; mode <= 10; mode++)
             foreach (var light in new[] { false, true })
                 yield return Case("AppPalette.IsLight", ("mode", mode), ("windowsUsesLight", light));
+
+        // Los aspectos retro (XP, Telecom, Bash, Phosphor): paleta con los colores de fábrica y con un color extremo en todos los huecos
+        // (blanco, negro, amarillo puro), igual que los tests de contraste de Core. Android las deriva con su propio port y estos casos
+        // fijan que salgan idénticas.
+        foreach (var aspect in AspectCatalog.Retro)
+        {
+            yield return Case("AppPalette.For", ("mode", (int)aspect.Mode), ("windowsUsesLight", false));
+            foreach (var extreme in new[] { "#FFFFFF", "#000000", "#FFFF00" })
+            {
+                var chosen = new JsonObject();
+                foreach (var slot in aspect.Slots) chosen[slot.Id] = extreme;
+                yield return Case("AppPalette.For", ("mode", (int)aspect.Mode), ("windowsUsesLight", false), ("aspectColors", chosen));
+            }
+        }
+        // Un solo hueco elegido, en minúsculas, y un valor que no es un color: el resto cae en el de fábrica.
+        yield return Case("AppPalette.For", ("mode", 9), ("windowsUsesLight", false), ("aspectColors", new JsonObject { ["user"] = "#8ae234", ["path"] = "rojo" }));
+        yield return Case("AspectCatalog.Retro");
+        foreach (var aspect in AspectCatalog.Retro)
+        {
+            yield return Case("AspectCatalog.Resolve", ("mode", (int)aspect.Mode));
+            yield return Case("AspectCatalog.Resolve", ("mode", (int)aspect.Mode),
+                ("aspectColors", new JsonObject { [aspect.Slots[0].Id] = "#5a7a2e", [aspect.Slots[^1].Id] = "rojo", ["otro"] = "#123456" }));
+        }
+        yield return Case("AspectCatalog.Resolve", ("mode", 0), ("aspectColors", new JsonObject { ["accent"] = "#FF0000" }));
+
+        // ColorFit y ColorMix: entradas ordinarias, en el límite y no válidas.
+        foreach (var (first, second) in new[] { ("#FFFFFF", "#000000"), ("#0055E5", "#FFFFFF"), ("#FFFF00", "#FFFFFF"), ("rojo", "#000000"), ("#282828", "#B8BB26") })
+            yield return Case("ColorFit.Ratio", ("a", first), ("b", second));
+        foreach (var (sample, other) in new[] { ("#FFFF00", "#FFFFFF"), ("#0055E5", "#FFFFFF"), ("#FFFFFF", "#FFFFFF"), ("#101010", "#202020"), ("rojo", "#FFFFFF"), ("#e8e8e8", "#171C21") })
+        {
+            yield return Case("ColorFit.Background", ("background", sample), ("text", other), ("minimum", 4.5));
+            yield return Case("ColorFit.Foreground", ("foreground", sample), ("background", other), ("minimum", 4.5));
+            yield return Case("ColorFit.Foreground", ("foreground", sample), ("background", other), ("minimum", 3.5));
+        }
+        foreach (var sample in new[] { "#0055E5", "#FFFFFF", "#000000", "#A8452A", "nope" })
+        {
+            yield return Case("ColorFit.Lighter", ("color", sample), ("amount", 0.08));
+            yield return Case("ColorFit.Darker", ("color", sample), ("amount", 0.12));
+        }
+        foreach (var amount in new[] { 0.0, 0.15, 0.5, 0.9, 1.0, -1.0, 2.0 })
+            yield return Case("ColorMix.Toward", ("from", "#A8E6B4"), ("to", "#000000"), ("amount", amount));
+        yield return Case("ColorMix.Toward", ("from", "nope"), ("to", "#000000"), ("amount", 0.5));
+        yield return Case("ColorMix.Toward", ("from", "#000000"), ("to", "#FFFFFF"), ("amount", 0.5));
 
         // Temas.
         yield return Case("NoteThemes.BuiltIn");

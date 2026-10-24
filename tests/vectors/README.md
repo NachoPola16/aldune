@@ -131,5 +131,5 @@ al terminar una lista vacía (tarea o viñeta) la línea queda vacía: se pierde
 **Fuera de estos vectores** (cubierto aparte): `NoteSearch` (Android pliega acentos y Core no, así que tests escritos a mano en Kotlin), `ColorFit` y `ColorMix`.
 
 **Paleta de la app (F3b, `text-color.json`)**: `AppPalette.For` (modo 0 oscuro, 1 claro, 2 sistema, 3 pastel, 4 medianoche, y `windowsUsesLight`) devuelve el diccionario completo de claves→color
-(`#RRGGBB` o `#AARRGGBB`, **alfa primero**, como `Color.parseColor` de Android); `AppPalette.IsLight` para los modos 0-10. Los aspectos retro (5-10: XP, Telecom, Bash, Phosphor) son de
-Windows y no tienen vectores de paleta: en Android no se ofrecen.
+(`#RRGGBB` o `#AARRGGBB`, **alfa primero**, como `Color.parseColor` de Android); `AppPalette.IsLight` para los modos 0-10. `AppPalette.For` acepta además `aspectColors` (id de hueco → hex) y los modos 5-10 (aspectos retro: XP, Telecom, Bash, Fósforo);
+`AspectCatalog.Retro` y `AspectCatalog.Resolve` fijan el catálogo (huecos, muestras, paletas de Bash, tema sugerido); `ColorFit.*` y `ColorMix.Toward` fijan el ajuste de contraste y la mezcla.
