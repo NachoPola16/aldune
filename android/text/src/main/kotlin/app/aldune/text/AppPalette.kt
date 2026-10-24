@@ -2,7 +2,7 @@ package app.aldune.text
 
 /**
  * Paleta del «chrome» de la app (fondos, textos, acentos), port de `AppPalette` de Core para los aspectos de siempre: Oscuro, Claro,
- * Sistema, Pastel y Medianoche. Los aspectos retro de Windows (XP, Telecom, Bash, Phosphor) no se llevan a Android.
+ * Sistema, Pastel y Medianoche, y de los aspectos retro de Windows (XP, Telecom, Bash, Fósforo), que se derivan en `AspectPalettes`.
  *
  * Los valores son `#RRGGBB` o `#AARRGGBB` (alfa PRIMERO, como `Color.parseColor` de Android). Las tablas de Oscuro y Claro están copiadas
  * de Core; Pastel y Medianoche se derivan de ellas igual que allí (se conserva la claridad OKLCH y solo se tiñe), y los vectores de
@@ -172,17 +172,19 @@ object AppPalette {
     )
 
     /**
-     * La paleta de [mode]. Los modos retro de Core (5-10) no existen en Android: caen en Claro u Oscuro según [isLight], para que un
-     * `settings.json` compartido con Windows nunca deje la app sin paleta.
+     * La paleta de [mode]. Los modos retro (5-10) se derivan en [AspectPalettes] con los colores que haya elegido el usuario ([aspectColors]:
+     * id de hueco → hex; lo que falta o no es válido cae en los de fábrica). Un modo desconocido cae en Claro u Oscuro según [isLight], para
+     * que un valor guardado por una versión más nueva nunca deje la app sin paleta.
      */
-    fun forMode(mode: Int, systemUsesLight: Boolean): Map<String, String> = when (mode) {
+    fun forMode(mode: Int, systemUsesLight: Boolean, aspectColors: Map<String, String>? = null): Map<String, String> = when (mode) {
         PASTEL -> pastel
         MIDNIGHT -> midnight
+        in XP_LIGHT..PHOSPHOR -> AspectPalettes.derive(mode, AspectCatalog.resolve(mode, aspectColors))
         else -> if (isLight(mode, systemUsesLight)) light else dark
     }
 
     fun isLight(mode: Int, systemUsesLight: Boolean): Boolean = when (mode) {
-        LIGHT, PASTEL, 5, 7 -> true // Claro, Pastel y los retro claros (XP claro, Telecom claro)
+        LIGHT, PASTEL, XP_LIGHT, TELECOM_LIGHT -> true
         SYSTEM -> systemUsesLight
         else -> false
     }
