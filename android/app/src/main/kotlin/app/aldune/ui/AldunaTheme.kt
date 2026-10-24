@@ -9,8 +9,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.graphics.Color
 import app.aldune.text.AppPalette
+import app.aldune.text.AspectCatalog
 
-/** Cómo se elige el aspecto: los números son los de `AppearanceMode` de Core (Oscuro 0, Claro 1, Sistema 2, Pastel 3, Medianoche 4). */
+/** Cómo se elige el aspecto: los números son los de `AppearanceMode` de Core (Oscuro 0, Claro 1, Sistema 2, Pastel 3, Medianoche 4, XP claro 5, XP oscuro 6, Telecom claro 7, Telecom oscuro 8, Bash 9, Fósforo 10). */
 const val APPEARANCE_SYSTEM = AppPalette.SYSTEM
 
 /** `#RRGGBB` o `#AARRGGBB` (alfa primero) de la paleta → color de Compose. */
@@ -21,10 +22,11 @@ fun paletteColor(hex: String): Color = Color(AndroidColor.parseColor(hex))
  * Material You (decisión del usuario): los colores son los de la app, no los del fondo de pantalla.
  */
 @Composable
-fun AldunaTheme(appearance: Int = APPEARANCE_SYSTEM, content: @Composable () -> Unit) {
+fun AldunaTheme(appearance: Int = APPEARANCE_SYSTEM, aspectColors: Map<String, Map<String, String>> = emptyMap(), content: @Composable () -> Unit) {
     val systemLight = !isSystemInDarkTheme()
-    val scheme = remember(appearance, systemLight) {
-        val palette = AppPalette.forMode(appearance, systemLight)
+    val chosen = AspectCatalog.forMode(appearance)?.let { aspectColors[it.id] }
+    val scheme = remember(appearance, systemLight, chosen) {
+        val palette = AppPalette.forMode(appearance, systemLight, chosen)
         fun c(key: String) = paletteColor(palette.getValue(key))
         val base = if (AppPalette.isLight(appearance, systemLight)) lightColorScheme() else darkColorScheme()
         base.copy(
@@ -46,5 +48,5 @@ fun AldunaTheme(appearance: Int = APPEARANCE_SYSTEM, content: @Composable () -> 
             inverseSurface = c("RaisedHover"), inverseOnSurface = c("Text"), inversePrimary = c("Accent"),
         )
     }
-    MaterialTheme(colorScheme = scheme, content = content)
+    MaterialTheme(colorScheme = scheme, typography = typographyFor(appearance), content = content)
 }

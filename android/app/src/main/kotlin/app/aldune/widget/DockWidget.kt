@@ -58,6 +58,7 @@ import app.aldune.domain.WidgetContentBuilder
 import app.aldune.domain.WidgetOptions
 import app.aldune.domain.WidgetStrip
 import app.aldune.text.AppPalette
+import app.aldune.text.AspectCatalog
 import app.aldune.ui.noteFace
 import app.aldune.ui.noteInk
 import app.aldune.ui.paletteColor
@@ -120,16 +121,16 @@ class DockWidget : GlanceAppWidget() {
                 )
             }
         }
-        return WidgetData(content, texts, colors(settings.appearance), settings.widgetPreview)
+        return WidgetData(content, texts, colors(settings.appearance, settings.aspectColors), settings.widgetPreview)
     }
 
     /** Con «seguir el sistema» el widget cambia solo de claro a oscuro; con un aspecto elegido se queda en ese. */
-    private fun colors(appearance: Int): WidgetColors {
+    private fun colors(appearance: Int, aspectColors: Map<String, Map<String, String>>): WidgetColors {
         fun pick(key: String): ColorProvider =
             if (appearance == AppPalette.SYSTEM) {
                 DayNightColorProvider(day = paletteColor(AppPalette.light.getValue(key)), night = paletteColor(AppPalette.dark.getValue(key)))
             } else {
-                ColorProvider(paletteColor(AppPalette.forMode(appearance, systemUsesLight = false).getValue(key)))
+                ColorProvider(paletteColor(AppPalette.forMode(appearance, systemUsesLight = false, AspectCatalog.forMode(appearance)?.let { aspectColors[it.id] }).getValue(key)))
             }
         return WidgetColors(ground = pick("Ground"), text = pick("Text"), muted = pick("MutedText"), surface = pick("Surface"))
     }

@@ -78,7 +78,7 @@ class MainActivity : ComponentActivity() {
         }
         setContent {
             val settings by viewModel.settings.collectAsStateWithLifecycle()
-            AldunaTheme(settings.appearance) {
+            AldunaTheme(settings.appearance, settings.aspectColors) {
                 NotesApp(viewModel)
             }
         }
