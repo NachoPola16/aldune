@@ -72,12 +72,14 @@ object ProtectedNotes {
             if (salt.size != SALT_SIZE || encrypted.nonce.size != ContentCipher.NONCE_SIZE ||
                 encrypted.tag.size != ContentCipher.TAG_SIZE) return null
             val key = deriveKey(password, salt)
+            var opened = false
             try {
-                UnlockedProtectedNote(key, salt, ContentCipher.decrypt(key, encrypted))
+                UnlockedProtectedNote(key, salt, ContentCipher.decrypt(key, encrypted)).also { opened = true }
             } catch (e: GeneralSecurityException) {
-                // Contraseña equivocada: la clave no sirve y no debe quedarse en memoria.
-                Arrays.fill(key, 0)
                 null
+            } finally {
+                // Contraseña equivocada (o cualquier otro fallo al descifrar): la clave no sirve y no debe quedarse en memoria.
+                if (!opened) Arrays.fill(key, 0)
             }
         } catch (e: IllegalArgumentException) {
             null
