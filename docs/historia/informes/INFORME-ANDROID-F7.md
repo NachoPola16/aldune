@@ -71,7 +71,7 @@ Anotados, sin arreglar (no son pérdida de datos en el uso normal):
 ## Hallazgo posterior (24-10-2026, Pixel)
 
 - **Proteger una nota recién creada en el editor fallaba siempre con «La nota cambió mientras tanto. Inténtalo de nuevo.»** Causa: el editor de una nota nueva usa la clave `""` hasta que se reabre, y `protectNote`/`unlockProtected`/`removeProtection` buscaban la nota `""` (no encontrada, que la interfaz muestra con ese mismo texto). Salir y volver a abrirla funcionaba porque ya tenía su id. Arreglado en la rc3 con `NotesViewModel.idOf(key)` (id del borrador, o un alias que sobrevive a que `protectNote` olvide el borrador). Verificado en el Pixel: escribir, proteger y seguir editando sin salir. Sin test automático: vive en el `ViewModel` de `app`, que no tiene pruebas instrumentadas.
-- Las sondas de «protegida con aviso» y «vencido con el móvil apagado» no se pudieron cerrar por `adb` (los diálogos del móvil no se encuentran de forma fiable): quedan para probarlas a mano.
+- Las sondas de «protegida con aviso» y «vencido con el móvil apagado» no se pudieron cerrar por `adb` (los diálogos del móvil no se encuentran de forma fiable): se probaron a mano el 25-10-2026: la protegida no enseña su texto en el aviso y el recordatorio vencido con el móvil apagado avisa al encender. **Sondas de F7 cerradas.**
 
 ## Sondas cerradas (24-10-2026, Pixel, versión de depuración con notas inventadas)
 
