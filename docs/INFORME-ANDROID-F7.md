@@ -54,3 +54,16 @@ Archivos nuevos o tocados: `ui/ReminderSection.kt` (hoja, selector de fecha y ho
 - **Nota protegida** (el aviso no muestra su texto).
 - Pendientes de F7 de otras partes: editor protegido con teclado de terceros, conflicto con versión protegida real, rotar con la sesión abierta, protegida creada en
   Android y abierta en Windows; y la decisión menor de evitar la segunda derivación al proteger.
+
+## Revisión de código (24-10-2026, `/code-review high` sobre `4280adc..HEAD`)
+
+Arreglados con test primero (`ProtectionService.save`):
+- Una edición llegada por sync que **conserva la sal** (el `Reprotect` de Windows) se podía pisar con un autoguardado: ahora se recuerda el contenido cifrado leído o escrito por última vez y, si cambió, `StaleWrite`.
+- Un autoguardado tardío con la sesión ya cerrada lanzaba `IllegalStateException`: ahora es `StaleWrite` y no escribe.
+
+Anotados, sin arreglar (no son pérdida de datos en el uso normal):
+- `NoteService`, `ProtectionService` y `ConflictResolver` leen-modifican-escriben el mismo `NoteStore` con cerrojos propios que no se excluyen entre sí: un cambio de color justo durante un autoguardado de una protegida podría perderse. Solucionar con un cerrojo compartido desde `AppContainer`.
+- Una protegida con una versión de contenido desconocida (de un cliente más nuevo) se muestra como «contraseña incorrecta»; necesita un error propio.
+- `ProtectedNotes.unlock` no pone a cero la clave si `decrypt` lanza una excepción distinta de `GeneralSecurityException`.
+- `ConflictResolver.useOther` ignora el resultado de `notes.delete` y devuelve `Ok` aunque la nota ya no exista.
+- Limpieza: `ConflictDiff.clip` parte pares sustitutos (emojis); el parámetro `deviceId` de `ConflictResolver` no se usa; `ReminderRules.snooze(OneHour)` duplica `ReminderPresets.inOneHour`; `unlock` y `tryUnprotect` repiten la validación.

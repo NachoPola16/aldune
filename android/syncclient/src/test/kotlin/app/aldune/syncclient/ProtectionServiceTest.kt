@@ -210,6 +210,35 @@ class ProtectionServiceTest {
         assertEquals(writes, store.writeCount)
     }
 
+    @Test fun `save con la misma sal pero otro texto llegado por sync (Reprotect de Windows) es StaleWrite y no pisa`() {
+        protectedNote()
+        val unlocked = service.unlockOrThrow(ID1, password)
+        // Windows conserva la sal al reproteger: cambian el nonce y el texto cifrado, no la sal.
+        val remote = service.unlockOrThrow(ID1, password).reprotect("editado en Windows")
+        store.put(store.get(ID1)!!.copy(protectedContentJson = protectedContentToJson(remote)))
+        val writes = store.writeCount
+
+        assertEquals(ProtectionError.StaleWrite(ID1), err(service.save(ID1, unlocked, "mio")))
+        assertEquals(writes, store.writeCount)
+    }
+
+    @Test fun `save con la sesion ya cerrada no lanza y es StaleWrite y no escribe`() {
+        protectedNote()
+        val unlocked = service.unlockOrThrow(ID1, password)
+        unlocked.close()
+        val writes = store.writeCount
+
+        assertEquals(ProtectionError.StaleWrite(ID1), err(service.save(ID1, unlocked, "tarde")))
+        assertEquals(writes, store.writeCount)
+    }
+
+    @Test fun `dos autoguardados seguidos de la misma sesion siguen funcionando`() {
+        protectedNote()
+        val unlocked = service.unlockOrThrow(ID1, password)
+        ok(service.save(ID1, unlocked, "uno"))
+        ok(service.save(ID1, unlocked, "dos"))
+    }
+
     @Test fun `NoteService edit sigue rechazando una protegida`() {
         protectedNote()
         val notes = NoteService(store, clock, DEVICE) { "id" }

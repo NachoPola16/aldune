@@ -56,6 +56,12 @@ class ProtectionService(private val store: NoteStore, private val clock: Clock) 
     private val lastEdit = HashMap<String, Instant>()
 
     /**
+     * El contenido cifrado de cada nota tal como lo leyó [unlock] o lo escribió [save] por última vez. Si al guardar ya es otro (llegó una
+     * edición por sync que **conserva la sal**, como el `Reprotect` de Windows) se rechaza: sólo comparar la sal dejaba pisar esa edición.
+     */
+    private val known = HashMap<String, String?>()
+
+    /**
      * Cifra el texto de la nota con la contraseña. Se cifra con los saltos de línea originales de la nota (`wireText`): es lo que ve
      * Windows al abrirla.
      */
@@ -86,6 +92,7 @@ class ProtectionService(private val store: NoteStore, private val clock: Clock) 
         if (!note.isProtected) return err(ProtectionError.NotProtected(id))
         val content = readContent(note) ?: return err(ProtectionError.UnreadableContent(id))
         val unlocked = ProtectedNotes.unlock(content, password) ?: return err(ProtectionError.WrongPassword)
+        synchronized(lock) { known[id] = note.protectedContentJson }
         return ok(unlocked)
     }
 
@@ -101,11 +108,18 @@ class ProtectionService(private val store: NoteStore, private val clock: Clock) 
             if (!note.isProtected) return err(ProtectionError.NotProtected(id))
             val stored = readContent(note) ?: return err(ProtectionError.UnreadableContent(id))
 
-            val plain = LineEnding.normalize(newText).let {
-                if (LineEnding.detect(unlocked.text) == LineEnding.CRLF) it.replace("\n", "\r\n") else it
+            // Una sesión ya cerrada (se salió de la nota, o la app pasó a segundo plano y llega un autoguardado tardío) lanza
+            // IllegalStateException: no hay clave con la que cifrar, así que no se escribe nada y se avisa como una escritura rechazada.
+            val content = try {
+                val plain = LineEnding.normalize(newText).let {
+                    if (LineEnding.detect(unlocked.text) == LineEnding.CRLF) it.replace("\n", "\r\n") else it
+                }
+                unlocked.reprotect(plain)
+            } catch (e: IllegalStateException) {
+                return err(ProtectionError.StaleWrite(id))
             }
-            val content = unlocked.reprotect(plain)
             if (content.salt != stored.salt) return err(ProtectionError.StaleWrite(id))
+            if (known.containsKey(id) && known[id] != note.protectedContentJson) return err(ProtectionError.StaleWrite(id))
 
             // Después de las comprobaciones que pueden rechazar: una escritura rechazada no debe quedar anotada como «última edición».
             if (editedAt != null) {
@@ -113,7 +127,10 @@ class ProtectionService(private val store: NoteStore, private val clock: Clock) 
                 if (last != null && editedAt < last) return err(ProtectionError.StaleWrite(id))
                 lastEdit[id] = editedAt
             }
-            ok(write(note, protectedContentToJson(content)))
+            val json = protectedContentToJson(content)
+            val saved = write(note, json)
+            known[id] = saved.protectedContentJson
+            ok(saved)
         }
 
     /** Quita la protección: el texto vuelve a ser el normal y desaparece el contenido cifrado. Con la contraseña equivocada no cambia nada. */
