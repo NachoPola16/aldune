@@ -21,6 +21,26 @@ android {
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
+    // La clave de firma nunca está en el repositorio: se pasa por variables de entorno (almacén y contraseñas en KeePass). Sin ellas la versión
+    // release sale sin firmar, que es lo que F-Droid y las compilaciones de comprobación necesitan.
+    val keystorePath = System.getenv("ALDUNE_KEYSTORE")
+    signingConfigs {
+        if (keystorePath != null) {
+            create("release") {
+                storeFile = file(keystorePath)
+                storePassword = System.getenv("ALDUNE_KEYSTORE_PASSWORD")
+                keyAlias = System.getenv("ALDUNE_KEY_ALIAS") ?: "aldune"
+                keyPassword = System.getenv("ALDUNE_KEY_PASSWORD") ?: System.getenv("ALDUNE_KEYSTORE_PASSWORD")
+            }
+        }
+    }
+
+    // Los metadatos de dependencias que AGP mete en el APK están cifrados con una clave de Google y rompen el build reproducible.
+    dependenciesInfo {
+        includeInApk = false
+        includeInBundle = false
+    }
+
     buildTypes {
         debug {
             // Las pruebas instrumentadas desinstalan la app al acabar. Con un id propio para depuración, nunca tocan una instalación
@@ -34,6 +54,7 @@ android {
             isMinifyEnabled = true
             isShrinkResources = true
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
+            if (keystorePath != null) signingConfig = signingConfigs.getByName("release")
         }
     }
 

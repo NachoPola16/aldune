@@ -4,3 +4,7 @@ build/
 .idea/
 local.properties
 *.iml
+
+# Claves de firma: nunca al repositorio
+*.jks
+*.keystore
