@@ -67,3 +67,8 @@ Anotados, sin arreglar (no son pérdida de datos en el uso normal):
 - `ProtectedNotes.unlock` no pone a cero la clave si `decrypt` lanza una excepción distinta de `GeneralSecurityException`.
 - `ConflictResolver.useOther` ignora el resultado de `notes.delete` y devuelve `Ok` aunque la nota ya no exista.
 - Limpieza: `ConflictDiff.clip` parte pares sustitutos (emojis); el parámetro `deviceId` de `ConflictResolver` no se usa; `ReminderRules.snooze(OneHour)` duplica `ReminderPresets.inOneHour`; `unlock` y `tryUnprotect` repiten la validación.
+
+## Hallazgo posterior (24-10-2026, Pixel)
+
+- **Proteger justo después de escribir falla con «La nota cambió mientras tanto. Inténtalo de nuevo.»** y repetir sin salir del editor sigue fallando. Salir de la nota, volver a abrirla y proteger funciona. Es el mismo choque de escritura que tapa `ProtectionService.protect` (`StaleWrite`), pero aquí el borrador del editor sigue pendiente. Candidato a la rc3: persistir el borrador antes de proteger, o reintentar una vez.
+- Las sondas de «protegida con aviso» y «vencido con el móvil apagado» no se pudieron cerrar por `adb` (los diálogos del móvil no se encuentran de forma fiable): quedan para probarlas a mano.
