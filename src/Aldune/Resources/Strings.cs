@@ -1415,6 +1415,8 @@ public static class Strings
             "Klassisch", "Classique", "Clássico"),
         Aldune.Core.NoteThemes.SereneId => T("Serene", "Sereno",
             "Ruhig", "Serein", "Sereno"),
+        Aldune.Core.NoteThemes.GrayId => T("Graphite", "Grafito",
+            "Graphit", "Graphite", "Grafite"),
         Aldune.Core.NoteThemes.PastelId => T("Pastel", "Pastel",
             "Pastell", "Pastel", "Pastel"),
         Aldune.Core.NoteThemes.AutumnId => T("Autumn", "Otoño",

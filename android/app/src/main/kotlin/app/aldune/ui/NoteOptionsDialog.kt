@@ -25,6 +25,7 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -43,8 +44,9 @@ import app.aldune.domain.NoteService
 import app.aldune.text.NoteThemes
 
 /**
- * Color y etiquetas de una nota. Los colores son los del tema clásico, claros y oscuros: nunca un hex suelto (regla del proyecto); el de la
- * nota se añade si no es de esa paleta (por ejemplo, uno de un tema propio de Windows que llegó por sync).
+ * Color y etiquetas de una nota. Los colores son los del tema activo, claros y oscuros: nunca un hex suelto (regla del proyecto) salvo el que
+ * el usuario elige con «Elegir otro color…»; el de la nota se añade si no es de esa paleta (un tema propio de Windows que llegó por sync, o
+ * un color libre).
  */
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
@@ -53,7 +55,9 @@ fun NoteOptionsDialog(initial: NotesViewModel.NoteOptions, viewModel: NotesViewM
     var tags by remember { mutableStateOf(initial.tags) }
     var draft by remember { mutableStateOf("") }
 
-    val theme = NoteThemes.builtIn[0]
+    val settings by viewModel.settings.collectAsState()
+    val theme = NoteThemes.resolve(settings.noteThemeId, null)
+    var customOpen by remember { mutableStateOf(false) }
     val palette = (theme.lightColors + theme.darkColors).let { if (color in it) it else listOf(color) + it }
 
     fun addTag() {
@@ -79,6 +83,7 @@ fun NoteOptionsDialog(initial: NotesViewModel.NoteOptions, viewModel: NotesViewM
                         }
                     }
                 }
+                TextButton(onClick = { customOpen = true }) { Text(stringResource(R.string.custom_color)) }
                 Text(stringResource(R.string.note_tags), Modifier.padding(top = 8.dp), style = MaterialTheme.typography.labelLarge)
                 FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     for (tag in tags) {
@@ -108,6 +113,18 @@ fun NoteOptionsDialog(initial: NotesViewModel.NoteOptions, viewModel: NotesViewM
         },
         confirmButton = { TextButton(onClick = onClose) { Text(stringResource(R.string.done)) } },
     )
+
+    if (customOpen) {
+        CustomColorDialog(
+            initial = color,
+            onDismiss = { customOpen = false },
+            onApply = { hex ->
+                color = hex
+                viewModel.setNoteColor(initial.noteId, hex)
+                customOpen = false
+            },
+        )
+    }
 }
 
 @Composable

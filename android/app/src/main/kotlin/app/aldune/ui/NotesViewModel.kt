@@ -28,6 +28,7 @@ import app.aldune.syncclient.SyncEvent
 import app.aldune.syncing.SyncController
 import app.aldune.text.ConflictDiff
 import app.aldune.text.DiffLine
+import app.aldune.text.NoteThemes
 import app.aldune.text.NoteTitleHelper
 import app.aldune.text.NoteTone
 import app.aldune.widget.WidgetUpdater
@@ -626,7 +627,10 @@ class NotesViewModel(application: Application) : AndroidViewModel(application) {
 
     fun deleteForever(id: String) = change { it.deleteForever(id) }
 
-    private fun newNoteColors() = NewNoteColorSettings(tone = if (_settings.value.darkNotes) NoteTone.Dark else NoteTone.Light)
+    private fun newNoteColors() = NewNoteColorSettings(
+        theme = NoteThemes.resolve(_settings.value.noteThemeId, null),
+        tone = if (_settings.value.darkNotes) NoteTone.Dark else NoteTone.Light,
+    )
 
     // ───────────── Recordatorios (F7) ─────────────
 

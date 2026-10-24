@@ -60,6 +60,7 @@ import androidx.lifecycle.Lifecycle
 import app.aldune.data.AppSettings
 import app.aldune.data.Languages
 import app.aldune.text.AppPalette
+import app.aldune.text.NoteThemes
 
 private val TRASH_OPTIONS = listOf(7, 14, 30, 60, 90)
 
@@ -99,6 +100,11 @@ fun SettingsScreen(viewModel: NotesViewModel, onClose: () -> Unit) {
                 }
 
                 Section(R.string.settings_notes)
+                Text(stringResource(R.string.note_theme), Modifier.padding(horizontal = 16.dp), style = MaterialTheme.typography.labelLarge)
+                for (theme in NoteThemes.builtIn) {
+                    val name = themeNameRes(theme.id)?.let { stringResource(it) } ?: theme.name
+                    Choice(name, settings.noteThemeId == theme.id) { viewModel.updateSettings { it.copy(noteThemeId = theme.id) } }
+                }
                 Text(stringResource(R.string.new_note_tone), Modifier.padding(horizontal = 16.dp), style = MaterialTheme.typography.labelLarge)
                 Choice(stringResource(R.string.tone_light), !settings.darkNotes) { viewModel.updateSettings { it.copy(darkNotes = false) } }
                 Choice(stringResource(R.string.tone_dark), settings.darkNotes) { viewModel.updateSettings { it.copy(darkNotes = true) } }

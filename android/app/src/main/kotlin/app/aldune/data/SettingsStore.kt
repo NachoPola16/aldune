@@ -3,6 +3,7 @@ package app.aldune.data
 import android.content.Context
 import android.content.res.Configuration
 import app.aldune.text.AppPalette
+import app.aldune.text.NoteThemes
 import java.util.Locale
 
 /**
@@ -18,6 +19,8 @@ data class AppSettings(
     val reorderOnCheck: Boolean = false,
     /** Tono de las notas nuevas: claros (por defecto, como Windows) u oscuros. */
     val darkNotes: Boolean = false,
+    /** Tema de las notas nuevas y de la hoja de color (`ActiveThemeId` de Windows). Un id que no existe se resuelve a Clásico. */
+    val noteThemeId: String = NoteThemes.CLASSIC_ID,
     /** La notificación fija «Nota nueva» (spec de F6 §2.2). Apagada por defecto. */
     val captureNotification: Boolean = false,
     /** El widget enseña también una vista previa del texto, no solo el título (spec de F6 §2.3). Apagado: el texto llega al lanzador. */
@@ -54,6 +57,7 @@ class SettingsStore(context: Context) {
             trashDays = prefs.getInt(TRASH_DAYS, d.trashDays).coerceIn(1, 365),
             reorderOnCheck = prefs.getBoolean(REORDER_ON_CHECK, d.reorderOnCheck),
             darkNotes = prefs.getBoolean(DARK_NOTES, d.darkNotes),
+            noteThemeId = prefs.getString(NOTE_THEME_ID, d.noteThemeId) ?: d.noteThemeId,
             captureNotification = prefs.getBoolean(CAPTURE_NOTIFICATION, d.captureNotification),
             widgetPreview = prefs.getBoolean(WIDGET_PREVIEW, d.widgetPreview),
             exactReminders = prefs.getBoolean(EXACT_REMINDERS, d.exactReminders),
@@ -67,6 +71,7 @@ class SettingsStore(context: Context) {
             .putInt(TRASH_DAYS, settings.trashDays)
             .putBoolean(REORDER_ON_CHECK, settings.reorderOnCheck)
             .putBoolean(DARK_NOTES, settings.darkNotes)
+            .putString(NOTE_THEME_ID, settings.noteThemeId)
             .putBoolean(CAPTURE_NOTIFICATION, settings.captureNotification)
             .putBoolean(WIDGET_PREVIEW, settings.widgetPreview)
             .putBoolean(EXACT_REMINDERS, settings.exactReminders)
@@ -80,6 +85,7 @@ class SettingsStore(context: Context) {
         const val TRASH_DAYS = "trashDays"
         const val REORDER_ON_CHECK = "reorderOnCheck"
         const val DARK_NOTES = "darkNotes"
+        const val NOTE_THEME_ID = "noteThemeId"
         const val CAPTURE_NOTIFICATION = "captureNotification"
         const val WIDGET_PREVIEW = "widgetPreview"
         const val EXACT_REMINDERS = "exactReminders"
