@@ -36,6 +36,23 @@ Requirements: 64-bit Windows 10 or 11. You don't need to install .NET.
 If Windows shows "Windows protected your PC", it's because the executable isn't signed yet: click
 "More info" and "Run anyway".
 
+## Android
+
+There is an Android client (native Kotlin, Android 8 or later) in [`android/`](android/): notes with task lists, tags,
+password-protected notes, reminders, a widget and quick capture, and the same end-to-end encrypted sync as on Windows.
+To install it, download the signed APK from [Releases](https://github.com/NachoPola16/aldune/releases) (once one is
+published) and open it on your phone.
+
+To sync your phone with your PC and your server:
+
+1. In Aldune for Windows: Settings → Sync between devices → **Share profile**, and copy the code (`aldune-profile-v2:…`).
+2. Send it to your phone (a message to yourself, for example).
+3. In the Android app: Settings → Sync, paste the code and tap **Continue**.
+4. Type your server's **token**. It is deliberately not inside the code.
+
+The code contains the encryption key of your notes: treat it like a password and do not share it in public places.
+More detail in [docs/SYNC.md](docs/SYNC.md).
+
 ## Privacy and security
 
 Your notes are stored in `%LOCALAPPDATA%\Aldune`, on your computer. The text of each note is

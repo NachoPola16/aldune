@@ -37,6 +37,24 @@ Requisitos: Windows 10 u 11 de 64 bits. No hace falta instalar .NET.
 Si Windows muestra "Windows protegió su PC", es porque el ejecutable todavía no está firmado: pulsa
 "Más información" y "Ejecutar de todas formas".
 
+## Android
+
+Hay un cliente para Android (Kotlin nativo, Android 8 o superior) en la carpeta [`android/`](android/): notas con
+listas de tareas, etiquetas, notas protegidas con contraseña, recordatorios, widget y captura rápida, y la misma
+sincronización cifrada de extremo a extremo que en Windows. Instalar: descarga el APK firmado de
+[Releases](https://github.com/NachoPola16/aldune/releases) (cuando haya uno publicado) y ábrelo en el móvil.
+
+Para sincronizar el móvil con el PC y tu servidor:
+
+1. En Aldune para Windows: Ajustes → Sincronización entre dispositivos → **Compartir perfil**, y copia el código
+   (`aldune-profile-v2:…`).
+2. Pásalo al móvil (un mensaje a ti mismo, por ejemplo).
+3. En la app de Android: Ajustes → Sincronización, pega el código y pulsa **Continuar**.
+4. Escribe el **token** de tu servidor: no va dentro del código, a propósito.
+
+El código contiene la clave de cifrado de tus notas: trátalo como una contraseña y no lo compartas en sitios públicos.
+Más detalle en [docs/SYNC.md](docs/SYNC.md).
+
 ## Privacidad y seguridad
 
 Tus notas se guardan en `%LOCALAPPDATA%\Aldune`, en tu equipo. El texto de cada nota va cifrado con

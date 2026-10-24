@@ -199,4 +199,5 @@
     <string name="reminders_section">Erinnerungen</string>
     <string name="reminder_exact">Genaue Uhrzeit</string>
     <string name="reminder_exact_hint">Meldet sich auf die Minute genau. Braucht etwas mehr Akku; Android fragt eventuell nach der Erlaubnis.</string>
+    <string name="sync_howto">In Aldune für Windows: Einstellungen → Geräteübergreifende Synchronisierung → Profil teilen und den Code kopieren. Das Token steckt nicht im Code: Du gibst es im nächsten Schritt ein.</string>
 </resources>

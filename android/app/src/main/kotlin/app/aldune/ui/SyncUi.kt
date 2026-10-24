@@ -169,6 +169,7 @@ private fun ConnectForm(controller: SyncController) {
         val step = parsed
         if (step == null) {
             Text(stringResource(R.string.sync_intro), color = MaterialTheme.colorScheme.onSurfaceVariant)
+            Text(stringResource(R.string.sync_howto), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
             OutlinedTextField(
                 value = code, onValueChange = { code = it; errorText = null }, modifier = Modifier.fillMaxWidth(),
                 label = { Text(stringResource(R.string.sync_code_label)) }, minLines = 2, maxLines = 4,

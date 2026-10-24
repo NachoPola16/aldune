@@ -199,4 +199,5 @@
     <string name="reminders_section">Rappels</string>
     <string name="reminder_exact">Heure exacte</string>
     <string name="reminder_exact_hint">Sonne à la minute exacte. Consomme un peu plus de batterie ; Android peut demander l’autorisation.</string>
+    <string name="sync_howto">Dans Aldune pour Windows : Paramètres → Synchronisation entre appareils → Partager le profil, puis copie le code. Le jeton n’est pas dans le code : tu le saisis à l’étape suivante.</string>
 </resources>

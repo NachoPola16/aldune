@@ -199,4 +199,5 @@
     <string name="reminders_section">Reminders</string>
     <string name="reminder_exact">Exact time</string>
     <string name="reminder_exact_hint">Alerts at the exact minute. Uses a bit more battery; Android may ask you to allow it.</string>
+    <string name="sync_howto">On Aldune for Windows: Settings → Sync between devices → Share profile, and copy the code. The token is not inside the code: you type it in the next step.</string>
 </resources>
