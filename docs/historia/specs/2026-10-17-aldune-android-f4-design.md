@@ -1,6 +1,6 @@
 # Aldune para Android — F4: esqueleto de la app (sin sync)
 
-> 2026-10-17. Detalla la fila F4 de [`2026-10-17-aldune-android-design.md`](2026-10-17-aldune-android-design.md) §5. Manda esa spec en todo lo que
+> 2026-10-17. Detalla la fila F4 de [`2026-10-17-aldune-android-design.md`](../../superpowers/specs/2026-10-17-aldune-android-design.md) §5. Manda esa spec en todo lo que
 > no se diga aquí. Estado de partida: F0-F3 hechas (`android/core`, `android/sync`, `android/text`), Android Studio Rabbit 1 instalado,
 > SDK con plataforma 37 (falta la 36), sin dispositivo conectado todavía.
 

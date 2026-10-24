@@ -1,7 +1,7 @@
 # Informe — F4 (app Android: notas locales, sin sync)
 
-Cierra la fase F4 de [`2026-10-17-aldune-android-f4-design.md`](superpowers/specs/2026-10-17-aldune-android-f4-design.md). Todo se ha probado en el Pixel 10a
-(Android 17) por USB con la app de depuración `io.github.nachopola16.aldune.debug`. La técnica de pruebas está en [`ANDROID_PROBES.md`](ANDROID_PROBES.md).
+Cierra la fase F4 de [`2026-10-17-aldune-android-f4-design.md`](../specs/2026-10-17-aldune-android-f4-design.md). Todo se ha probado en el Pixel 10a
+(Android 17) por USB con la app de depuración `io.github.nachopola16.aldune.debug`. La técnica de pruebas está en [`ANDROID_PROBES.md`](../../ANDROID_PROBES.md).
 La tableta (Lenovo TB350FU «Tab P11», Android 14, 1200×2000) se probó el 18-10 (ver más abajo).
 
 ## Estado

@@ -95,7 +95,7 @@ La app habla con un servidor de sync **de pruebas** (nunca el real) y un «PC» 
 
 ## Sonda de la captura y el widget (F6)
 
-Resultados y hallazgos en [`INFORME-ANDROID-F6.md`](INFORME-ANDROID-F6.md). Técnica:
+Resultados y hallazgos en [`INFORME-ANDROID-F6.md`](historia/informes/INFORME-ANDROID-F6.md). Técnica:
 
 1. **Mandar intents a mano.** Acción propia: `am start -a app.aldune.action.NEW_NOTE -n io.github.nachopola16.aldune.debug/app.aldune.MainActivity`. Compartir:
    `am start -f 0x10008000 -a android.intent.action.SEND -t text/plain -n .../app.aldune.MainActivity --es android.intent.extra.TEXT '...' --es android.intent.extra.SUBJECT '...'`.
@@ -116,7 +116,7 @@ Resultados y hallazgos en [`INFORME-ANDROID-F6.md`](INFORME-ANDROID-F6.md). Téc
 
 ## Sonda de los recordatorios (F7)
 
-Resultados en [`INFORME-ANDROID-F7.md`](INFORME-ANDROID-F7.md). Técnica:
+Resultados en [`INFORME-ANDROID-F7.md`](historia/informes/INFORME-ANDROID-F7.md). Técnica:
 
 1. **Git Bash estropea las rutas de `adb`**: `export MSYS_NO_PATHCONV=1` o `adb shell cat /sdcard/u.xml` falla. Para leer la pantalla, `uiautomator dump /sdcard/u.xml` y buscar
    `bounds` con `grep`; una función que calcule el centro del rectángulo (`ctr`) evita tocar coordenadas a mano. La tableta y el Pixel tienen pantallas distintas: nunca reusar coordenadas.

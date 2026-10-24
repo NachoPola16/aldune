@@ -1,6 +1,6 @@
 # Informe de la sesión de nube — F5 (parte Kotlin/JVM pura)
 
-> 2026-10-18. Especificación: [`2026-10-18-aldune-android-f5-design.md`](superpowers/specs/2026-10-18-aldune-android-f5-design.md) §3 y §4 enteros, más el
+> 2026-10-18. Especificación: [`2026-10-18-aldune-android-f5-design.md`](../../superpowers/specs/2026-10-18-aldune-android-f5-design.md) §3 y §4 enteros, más el
 > extremo a extremo de §6.2. Nada de §5 (`app`). **Los 10 pasos están hechos**; `core`, `text` y `tests/vectors/` intactos, y `android/sync` sin tocar
 > (la excepción tipada de §4.6 no hizo falta).
 

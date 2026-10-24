@@ -10,7 +10,7 @@ namespace Aldune.Windowing;
 /// mientras la app corre (<see cref="PollInterval"/>) y hace una pasada de catch-up al arrancar
 /// (<see cref="CheckDueReminders"/>, llamada explícitamente desde App.OnStartup) para que un
 /// recordatorio vencido con la app cerrada avise igual, en vez de perderse en silencio — ver
-/// docs/superpowers/specs/2026-09-11-aldune-reminders-design.md.
+/// docs/historia/specs/2026-09-11-aldune-reminders-design.md.
 ///
 /// El aviso es propio (<see cref="ToastCenter"/>), no un toast de Windows: estos exigen un acceso
 /// directo con ruta fija, que rompería el uso portable (ver la spec). Hasta la 1.0.0 era un globo de

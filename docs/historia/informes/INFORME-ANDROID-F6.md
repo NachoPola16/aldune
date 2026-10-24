@@ -1,6 +1,6 @@
 # Informe — F6 (captura rápida y widget)
 
-Cierra la parte Android de [`2026-10-18-aldune-android-f6-design.md`](superpowers/specs/2026-10-18-aldune-android-f6-design.md) §4; la parte JVM la hizo la sesión de nube
+Cierra la parte Android de [`2026-10-18-aldune-android-f6-design.md`](../../superpowers/specs/2026-10-18-aldune-android-f6-design.md) §4; la parte JVM la hizo la sesión de nube
 ([`INFORME-NUBE-F6.md`](INFORME-NUBE-F6.md): `DockOrder`, `WidgetContentBuilder`, `SharedNoteText`, 45 pruebas nuevas en `domain`). Probado en el **Pixel 10a** (Android 17)
 por USB, con «No molestar» activado. **La tableta no estaba conectada**: ver «Sin probar».
 

@@ -6,7 +6,7 @@
 ///
 /// Los colores de Sereno se calcularon en OKLCH con la misma claridad dentro de cada grupo
 /// (oscuros L≈0.31, claros L≈0.925) y poco croma: se distinguen entre sí sin parecer
-/// un arcoíris. Ver docs/superpowers/specs/2026-09-23-aldune-temas-design.md.
+/// un arcoíris. Ver docs/historia/specs/2026-09-23-aldune-temas-design.md.
 /// </summary>
 public static class NoteThemes
 {

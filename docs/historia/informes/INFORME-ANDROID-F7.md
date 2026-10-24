@@ -1,6 +1,6 @@
 # Informe — F7 (recordatorios en Android: interfaz y sondas)
 
-Cierra la parte de recordatorios de [`2026-10-18-aldune-android-f7-design.md`](superpowers/specs/2026-10-18-aldune-android-f7-design.md) §4-§5. El núcleo (alarma por nota,
+Cierra la parte de recordatorios de [`2026-10-18-aldune-android-f7-design.md`](../../superpowers/specs/2026-10-18-aldune-android-f7-design.md) §4-§5. El núcleo (alarma por nota,
 aviso, reconciliar) está en `e5466c2`; la interfaz, en `e243e29`. La parte JVM la hizo la nube ([`INFORME-NUBE-F7.md`](INFORME-NUBE-F7.md): `ReminderPresets`, `ReminderLabel`,
 `ReminderRules`). Probado el 24-10-2026 en la **tableta Lenovo TB350FU** y en el **Pixel 10a**, con «No molestar» en el Pixel.
 

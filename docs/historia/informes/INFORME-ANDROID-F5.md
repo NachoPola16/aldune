@@ -1,8 +1,8 @@
 # Informe — F5 (la sync dentro de la app Android)
 
-Cierra las tareas 3, 4 y 5 de [`2026-10-18-aldune-android-f5-design.md`](superpowers/specs/2026-10-18-aldune-android-f5-design.md) §7; las tareas 1 y 2 las hizo la
+Cierra las tareas 3, 4 y 5 de [`2026-10-18-aldune-android-f5-design.md`](../../superpowers/specs/2026-10-18-aldune-android-f5-design.md) §7; las tareas 1 y 2 las hizo la
 sesión de nube ([`INFORME-NUBE-F5.md`](INFORME-NUBE-F5.md)). Probado en la tableta (Lenovo TB350FU, Android 14) por USB, con un servidor de sync de pruebas en este PC
-y un «PC» simulado ([`ANDROID_PROBES.md`](ANDROID_PROBES.md), «Sonda de la sync»). Después se repitió en el Pixel y contra el servidor desplegado en el CT 103 (ver «Sondas en el Pixel y en el CT 103»).
+y un «PC» simulado ([`ANDROID_PROBES.md`](../../ANDROID_PROBES.md), «Sonda de la sync»). Después se repitió en el Pixel y contra el servidor desplegado en el CT 103 (ver «Sondas en el Pixel y en el CT 103»).
 
 ## Estado
 

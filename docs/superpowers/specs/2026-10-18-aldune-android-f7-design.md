@@ -97,7 +97,7 @@ Port de `ConflictDiff.cs`:
 ### 3.5 Criterio de hecho de la parte JVM
 
 Línea base **650** pruebas (core 82, sync 119, text 100, domain 168, syncclient 181): siguen todas, más las nuevas (≈80-110). Ningún cambio de comportamiento en lo que ya
-existe. Informe `docs/INFORME-NUBE-F7.md`.
+existe. Informe `docs/historia/informes/INFORME-NUBE-F7.md`.
 
 ## 4. Parte Android (aquí, con sondas en el Pixel y la tableta)
 
