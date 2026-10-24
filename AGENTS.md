@@ -78,6 +78,12 @@ Los 4 avisos CA1416 de `DatabaseKeyProvider` (DPAPI) son conocidos; no debe apar
   `git log --format='%an <%ae> | %cn <%ce>' origin/main..HEAD` antes de subir. (En la 1.6.0 se coló una tanda de 6 commits de
   la nube con autor Claude; quitarla costó reescribir el historial y mover los tags.)
 
+## Subagentes
+
+Cada subagente arranca sin el contexto de la conversación: delegar solo lo acotado y que devuelva un resumen. Al cerrar lógica nueva en Core (o un fix de un bug)
+lanzar el agente `tests`; antes de una release o al tocar sync, cifrado o el servidor, el agente `seguridad`. Para localizar código en muchos ficheros, `Explore`.
+Es una pauta, no un automatismo: no hay forma documentada de forzarla salvo con hooks.
+
 ## Verificar la interfaz: sondas
 
 Los tests de Core no cubren WPF. Para comprobar un cambio de interfaz se escribe una **sonda
