@@ -143,7 +143,7 @@ clave, alcance, nombre del perfil, transporte y URL del servidor, **nunca el tok
 | Gestor de notas (buscar, ordenar, filtrar) | Es la pantalla principal |
 | Tema de color de nota | Igual (misma paleta: la nota se ve del mismo color en el PC y en el teléfono) |
 | Notas protegidas con contraseña | Igual, más desbloqueo **biométrico** (la clave derivada se guarda en Keychain/Keystore) |
-| Aspecto Oscuro/Claro/Pastel/Medianoche | Oscuro/Claro/según el sistema (Pastel y Medianoche se derivan solos, como en Windows) |
+| Aspecto Oscuro/Claro/Pastel/Medianoche | Oscuro/Claro/según el sistema (Pastel y Medianoche se derivan solos, como en Windows). **Hecho en Android (25-10-2026, rc5-rc7):** también los aspectos retro (XP, Telecomunicaciones, Bash, Fósforo) con sus colores y la fuente monoespaciada, sin la «piel» de Windows (ver `ROADMAP.md` §13) |
 | Copia local diaria (`LocalBackup`) | Lo cubre la copia del sistema; decidir qué se excluye (ver riesgos) |
 
 ### 3.2 Qué NO se porta, ni se imita

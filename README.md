@@ -40,7 +40,7 @@ Si Windows muestra "Windows protegió su PC", es porque el ejecutable todavía n
 ## Android
 
 Hay un cliente para Android (Kotlin nativo, Android 8 o superior) en la carpeta [`android/`](android/): notas con
-listas de tareas, etiquetas, notas protegidas con contraseña, recordatorios, widget y captura rápida, y la misma
+listas de tareas, etiquetas, notas protegidas con contraseña, recordatorios, widget y captura rápida, los mismos aspectos que en Windows (también los retro: XP, Telecomunicaciones, Bash y Fósforo) y la misma
 sincronización cifrada de extremo a extremo que en Windows. Instalar: descarga el APK firmado de
 [Releases](https://github.com/NachoPola16/aldune/releases) (cuando haya uno publicado) y ábrelo en el móvil.
 
