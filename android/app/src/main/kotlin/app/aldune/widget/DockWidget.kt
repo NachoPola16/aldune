@@ -42,6 +42,7 @@ import androidx.glance.layout.fillMaxWidth
 import androidx.glance.layout.height
 import androidx.glance.layout.padding
 import androidx.glance.layout.size
+import androidx.glance.text.FontFamily
 import androidx.glance.text.FontWeight
 import androidx.glance.text.Text
 import androidx.glance.text.TextStyle
@@ -60,6 +61,7 @@ import app.aldune.domain.WidgetStrip
 import app.aldune.text.AppPalette
 import app.aldune.text.AspectCatalog
 import app.aldune.text.ColorFit
+import app.aldune.ui.isMonospaceAspect
 import app.aldune.ui.noteFace
 import app.aldune.ui.noteInk
 import app.aldune.ui.paletteColor
@@ -75,6 +77,8 @@ private class WidgetColors(
     val ground: ColorProvider, val text: ColorProvider, val muted: ColorProvider, val surface: ColorProvider,
     /** El título y el «+»: el acento en los aspectos retro (si no, Bash y Oscuro se verían casi iguales), y los de siempre en el resto. */
     val title: ColorProvider, val plus: ColorProvider,
+    /** Monoespaciada en Bash, Telecomunicaciones y Fósforo, como en la app; `null` es la de siempre. */
+    val font: FontFamily?,
 )
 
 /** Qué se pinta: el contenido, o nada si la base no se pudo abrir (clave perdida). */
@@ -144,6 +148,7 @@ class DockWidget : GlanceAppWidget() {
         return WidgetColors(
             ground = pick("Ground"), text = pick("Text"), muted = pick("MutedText"), surface = pick("Surface"),
             title = accent ?: pick("MutedText"), plus = accent ?: pick("Text"),
+            font = if (isMonospaceAspect(appearance)) FontFamily.Monospace else null,
         )
     }
 
@@ -160,7 +165,7 @@ class DockWidget : GlanceAppWidget() {
             Row(GlanceModifier.fillMaxWidth().padding(start = 6.dp, end = 2.dp, bottom = 6.dp), verticalAlignment = Alignment.CenterVertically) {
                 Text(
                     data.texts.appName, GlanceModifier.defaultWeight().clickable(openApp),
-                    style = TextStyle(color = data.colors.title, fontSize = 13.sp, fontWeight = FontWeight.Medium),
+                    style = TextStyle(color = data.colors.title, fontSize = 13.sp, fontWeight = FontWeight.Medium, fontFamily = data.colors.font),
                 )
                 Image(
                     provider = ImageProvider(R.drawable.ic_new_note), contentDescription = data.texts.newNote,
@@ -188,14 +193,14 @@ class DockWidget : GlanceAppWidget() {
     @Composable
     private fun More(hidden: Int, data: WidgetData, openApp: androidx.glance.action.Action) {
         Box(GlanceModifier.fillMaxWidth().padding(6.dp).clickable(openApp)) {
-            Text(String.format(data.texts.moreFormat, hidden), style = TextStyle(color = data.colors.muted, fontSize = 12.sp))
+            Text(String.format(data.texts.moreFormat, hidden), style = TextStyle(color = data.colors.muted, fontSize = 12.sp, fontFamily = data.colors.font))
         }
     }
 
     @Composable
     private fun Message(text: String, colors: WidgetColors, action: androidx.glance.action.Action?) {
         Box(GlanceModifier.fillMaxSize().let { if (action != null) it.clickable(action) else it }, contentAlignment = Alignment.Center) {
-            Text(text, style = TextStyle(color = colors.muted, fontSize = 14.sp))
+            Text(text, style = TextStyle(color = colors.muted, fontSize = 14.sp, fontFamily = colors.font))
         }
     }
 
@@ -216,12 +221,12 @@ class DockWidget : GlanceAppWidget() {
                 when (strip) {
                     // Una protegida solo enseña el candado y el texto fijo: `Locked` no tiene ningún texto suyo que pintar.
                     is WidgetStrip.Locked -> Text(
-                        "🔒  " + data.texts.protectedTitle, style = TextStyle(color = ColorProvider(ink), fontSize = 14.sp), maxLines = 1,
+                        "🔒  " + data.texts.protectedTitle, style = TextStyle(color = ColorProvider(ink), fontSize = 14.sp, fontFamily = data.colors.font), maxLines = 1,
                     )
                     is WidgetStrip.Open -> {
-                        Text(strip.title, style = TextStyle(color = ColorProvider(ink), fontSize = 14.sp, fontWeight = FontWeight.Medium), maxLines = 1)
+                        Text(strip.title, style = TextStyle(color = ColorProvider(ink), fontSize = 14.sp, fontWeight = FontWeight.Medium, fontFamily = data.colors.font), maxLines = 1)
                         strip.preview?.let {
-                            Text(it, style = TextStyle(color = ColorProvider(ink.copy(alpha = 0.75f)), fontSize = 12.sp), maxLines = 2)
+                            Text(it, style = TextStyle(color = ColorProvider(ink.copy(alpha = 0.75f)), fontSize = 12.sp, fontFamily = data.colors.font), maxLines = 2)
                         }
                     }
                 }
