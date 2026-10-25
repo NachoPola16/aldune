@@ -132,3 +132,9 @@ Resultados en [`INFORME-ANDROID-F7.md`](historia/informes/INFORME-ANDROID-F7.md)
    `cmd appops get <pkg> SCHEDULE_EXACT_ALARM`.
 8. **Deslizar para archivar no funciona con `adb input swipe`** (ni `touchscreen swipe`): probarlo a mano.
 9. En el móvil del usuario hay notas reales: crear una nota propia de prueba y no tocar las existentes; borrarla al acabar.
+
+## Sonda de los aspectos retro
+
+25-10-2026, Pixel 10a con la versión de depuración y notas de prueba. Técnica: elegir el aspecto en Ajustes → Aspecto y mirar el bloque «Colores del aspecto»; para recorrer muchos aspectos con colores extremos sin tocar la pantalla, escribir `shared_prefs/settings.xml` de la app de depuración (`appearance` 0-10 y `aspectColors` como JSON con `&quot;`) con `adb push` + `run-as <pkg> cp`, `am force-stop` (solo la de depuración) y relanzar.
+
+Resultado: los 11 aspectos salen con su nombre; Bash cambia lista, editor y diálogos a la paleta de terminal, con texto monoespaciado, y propone el tema Sereno (Usarlo lo aplica); las muestras, «Cambiar», la paleta Ubuntu y «Restablecer colores» (vuelve a Gruvbox) funcionan; Telecom claro con tinta blanca y Fósforo con fósforo blanco se siguen leyendo (el texto se ajusta solo); XP usa la fuente de siempre. Sin textos ilegibles ni desbordes. No comprobado a mano: el widget con un aspecto retro y la barra de estado.

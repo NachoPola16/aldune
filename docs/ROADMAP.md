@@ -1065,3 +1065,5 @@ Decisión previa (sin cambios): seguir GPL-3.0 y **validar con 3-5 personas ante
 4. **Microsoft Store (MSIX).** La firma y el no pasar por SmartScreen pesan más que cualquier función; SignPath ya rechazó el proyecto. Pospuesto hasta cerrar Android; para vender es probablemente lo más necesario.
 
 Precio de referencia: pago único de 7-15 $ (§1), o gratis con desbloqueo de pago único; la opción 2 sería la excepción por ser un servicio.
+
+**Paridad móvil, aspectos retro en Android — HECHO (2026-10-25).** XP claro y oscuro, Telecomunicaciones claro y oscuro, Bash y Fósforo, con sus colores personalizables, las paletas de Bash, el tema de notas sugerido y fuente monoespaciada donde toca; sin la «piel» de Windows. Paletas idénticas a las del PC, fijadas por vectores (`tests/vectors/text-color.json`). Probado en el Pixel con la versión de depuración. Spec: `docs/superpowers/specs/2026-10-25-aldune-android-aspectos-retro-design.md`.
