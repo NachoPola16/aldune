@@ -101,6 +101,10 @@ class SyncController(
     private val _conflicted = MutableStateFlow<Set<String>>(emptySet())
     val conflicted: StateFlow<Set<String>> = _conflicted.asStateFlow()
 
+    /** La última versión acordada con el almacén de cada nota (la «base» de la sync): con ella la fila distingue sincronizada de pendiente. */
+    private val _bases = MutableStateFlow<Map<String, java.time.Instant>>(emptyMap())
+    val bases: StateFlow<Map<String, java.time.Instant>> = _bases.asStateFlow()
+
     private val policy = SyncTriggerPolicy(clock, profileConfigured = _profile.value != null)
     private val policyLock = Mutex()
     private val passLock = Mutex()
@@ -177,6 +181,7 @@ class SyncController(
     /** Vuelve a leer qué notas tienen conflicto. La interfaz lo llama tras resolver uno (la sync lo hace sola al terminar una pasada). */
     fun refreshConflicts() {
         _conflicted.value = store.conflictedNoteIds()
+        _bases.value = store.snapshot().bases.mapValues { it.value.updatedAt.toInstant() }
     }
 
     // ───────────── Conectar y desconectar ─────────────

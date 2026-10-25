@@ -2,12 +2,18 @@ package app.aldune.ui
 
 import android.graphics.Color as AndroidColor
 import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Shapes
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.RectangleShape
+import androidx.compose.ui.unit.dp
 import app.aldune.text.AppPalette
 import app.aldune.text.AspectCatalog
 
@@ -17,12 +23,20 @@ const val APPEARANCE_SYSTEM = AppPalette.SYSTEM
 /** `#RRGGBB` o `#AARRGGBB` (alfa primero) de la paleta → color de Compose. */
 fun paletteColor(hex: String): Color = Color(AndroidColor.parseColor(hex))
 
+/** Cómo se pintan las notas según los ajustes: color único, esquinas y señal de sync (ya resueltos contra el aspecto). */
+data class NoteLook(val uniformColor: String? = null, val squareCorners: Boolean = false, val syncSignal: Boolean = false) {
+    /** El radio de una tarjeta de nota (12 dp de siempre, recto con «esquinas rectas»). */
+    val cardShape get() = if (squareCorners) RectangleShape else RoundedCornerShape(12.dp)
+}
+
+val LocalNoteLook = staticCompositionLocalOf { NoteLook() }
+
 /**
  * El aspecto de Aldune: la paleta de Core (`AppPalette`, ya portada y fijada por vectores) traducida al esquema de Material 3. Nada de
  * Material You (decisión del usuario): los colores son los de la app, no los del fondo de pantalla.
  */
 @Composable
-fun AldunaTheme(appearance: Int = APPEARANCE_SYSTEM, aspectColors: Map<String, Map<String, String>> = emptyMap(), content: @Composable () -> Unit) {
+fun AldunaTheme(appearance: Int = APPEARANCE_SYSTEM, aspectColors: Map<String, Map<String, String>> = emptyMap(), look: NoteLook = NoteLook(), content: @Composable () -> Unit) {
     val systemLight = !isSystemInDarkTheme()
     val chosen = AspectCatalog.forMode(appearance)?.let { aspectColors[it.id] }
     val scheme = remember(appearance, systemLight, chosen) {
@@ -48,5 +62,9 @@ fun AldunaTheme(appearance: Int = APPEARANCE_SYSTEM, aspectColors: Map<String, M
             inverseSurface = c("RaisedHover"), inverseOnSurface = c("Text"), inversePrimary = c("Accent"),
         )
     }
-    MaterialTheme(colorScheme = scheme, typography = remember(appearance) { typographyFor(appearance) }, content = content)
+    // Esquinas rectas: todas las formas de Material (tarjetas, diálogos, botones, campos) a cero, no solo las de las notas.
+    val shapes = if (look.squareCorners) RoundedCornerShape(0.dp).let { Shapes(it, it, it, it, it) } else MaterialTheme.shapes
+    CompositionLocalProvider(LocalNoteLook provides look) {
+        MaterialTheme(colorScheme = scheme, typography = remember(appearance) { typographyFor(appearance) }, shapes = shapes, content = content)
+    }
 }

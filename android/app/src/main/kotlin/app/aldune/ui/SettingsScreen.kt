@@ -102,11 +102,13 @@ fun SettingsScreen(viewModel: NotesViewModel, onClose: () -> Unit) {
                     Choice(stringResource(label), settings.appearance == mode) {
                         // Volver a pulsar el aspecto activo no repite la pregunta.
                         val changed = settings.appearance != mode
-                        viewModel.updateSettings { it.copy(appearance = mode) }
+                        // Elegir un aspecto vuelve a sus esquinas y su señal (como Windows): lo ajustado a mano no se arrastra al siguiente.
+                        viewModel.updateSettings { it.copy(appearance = mode, squareCorners = null, showSyncSignal = null) }
                         if (changed) AspectCatalog.forMode(mode)?.suggestedThemeId?.takeIf { it != settings.noteThemeId }?.let { suggestedTheme = it }
                     }
                 }
                 AspectSection(settings, onChange = viewModel::updateSettings)
+                NoteLookSection(settings, onChange = viewModel::updateSettings)
                 suggestedTheme?.let { themeId ->
                     val themeName = themeNameRes(themeId)?.let { stringResource(it) } ?: themeId
                     AlertDialog(
@@ -307,7 +309,7 @@ private fun Choice(label: String, selected: Boolean, onClick: () -> Unit) {
 }
 
 @Composable
-private fun SwitchRow(label: String, hint: String, checked: Boolean, onChange: (Boolean) -> Unit) {
+internal fun SwitchRow(label: String, hint: String, checked: Boolean, onChange: (Boolean) -> Unit) {
     Row(
         Modifier.fillMaxWidth().toggleable(value = checked, role = Role.Switch, onValueChange = onChange).padding(horizontal = 16.dp, vertical = 8.dp),
         verticalAlignment = Alignment.CenterVertically,

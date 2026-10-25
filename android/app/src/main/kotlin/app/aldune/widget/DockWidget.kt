@@ -53,6 +53,7 @@ import app.aldune.R
 import app.aldune.capture.CaptureIntents
 import app.aldune.data.Languages
 import app.aldune.data.SettingsStore
+import app.aldune.text.NoteDisplayColor
 import app.aldune.domain.NoteState
 import app.aldune.domain.WidgetContent
 import app.aldune.domain.WidgetContentBuilder
@@ -82,7 +83,9 @@ private class WidgetColors(
 )
 
 /** Qué se pinta: el contenido, o nada si la base no se pudo abrir (clave perdida). */
-private class WidgetData(val content: WidgetContent?, val texts: WidgetTexts, val colors: WidgetColors, val showPreview: Boolean)
+private class WidgetData(val content: WidgetContent?, val texts: WidgetTexts, val colors: WidgetColors, val showPreview: Boolean,
+    val uniformColor: String? = null, val squareCorners: Boolean = false,
+)
 
 /**
  * El widget del mazo (spec de F6 §2.3): las notas activas en el orden del mazo, como tiras de color con su título, y un «+» para nota nueva.
@@ -128,7 +131,8 @@ class DockWidget : GlanceAppWidget() {
                 )
             }
         }
-        return WidgetData(content, texts, colors(settings.appearance, settings.aspectColors), settings.widgetPreview)
+        return WidgetData(content, texts, colors(settings.appearance, settings.aspectColors), settings.widgetPreview,
+            settings.uniformNoteColor, settings.cornersSquare)
     }
 
     /** Con «seguir el sistema» el widget cambia solo de claro a oscuro; con un aspecto elegido se queda en ese. */
@@ -161,7 +165,7 @@ class DockWidget : GlanceAppWidget() {
             else -> 1
         }
         val openApp = actionStartActivity(Intent(context, app.aldune.MainActivity::class.java).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
-        Column(GlanceModifier.fillMaxSize().background(data.colors.ground).cornerRadius(20.dp).padding(8.dp)) {
+        Column(GlanceModifier.fillMaxSize().background(data.colors.ground).cornerRadius(if (data.squareCorners) 0.dp else 20.dp).padding(8.dp)) {
             Row(GlanceModifier.fillMaxWidth().padding(start = 6.dp, end = 2.dp, bottom = 6.dp), verticalAlignment = Alignment.CenterVertically) {
                 Text(
                     data.texts.appName, GlanceModifier.defaultWeight().clickable(openApp),
@@ -208,14 +212,16 @@ class DockWidget : GlanceAppWidget() {
     private fun Strip(strip: WidgetStrip, data: WidgetData) {
         val context = LocalContext.current
         val open = actionStartActivity(CaptureIntents.openNote(context, strip.id))
-        val face = noteFace(strip.color)
-        val ink = noteInk(strip.color)
+        // «Mismo color en todas las notas» también en el widget: solo cambia la presentación, la nota conserva el suyo.
+        val shown = NoteDisplayColor.resolve(strip.color, data.uniformColor)
+        val face = noteFace(shown)
+        val ink = noteInk(shown)
         Box(GlanceModifier.fillMaxWidth().padding(2.dp)) {
             // Altura fija y la misma para todas: el GridView de un widget dimensiona todas las filas con la primera, y una tira con vista previa
             // quedaría recortada. Con el ajuste de vista previa las tiras son más altas, tengan o no segunda línea.
             val height = if (data.showPreview) STRIP_HEIGHT_PREVIEW else STRIP_HEIGHT
             Column(
-                GlanceModifier.fillMaxWidth().height(height).background(face).cornerRadius(12.dp).padding(horizontal = 10.dp, vertical = 8.dp).clickable(open),
+                GlanceModifier.fillMaxWidth().height(height).background(face).cornerRadius(if (data.squareCorners) 0.dp else 12.dp).padding(horizontal = 10.dp, vertical = 8.dp).clickable(open),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 when (strip) {

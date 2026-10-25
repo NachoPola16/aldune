@@ -4,6 +4,8 @@ import android.content.Context
 import android.content.res.Configuration
 import app.aldune.text.AppPalette
 import app.aldune.text.AspectColorsJson
+import app.aldune.text.AspectSkin
+import app.aldune.text.NoteDisplayColor
 import app.aldune.text.NoteThemes
 import java.util.Locale
 
@@ -30,7 +32,16 @@ data class AppSettings(
     val widgetPreview: Boolean = false,
     /** Recordatorios a la hora exacta, si el sistema concede el permiso (spec madre §2.9). Apagado: alarma no exacta. */
     val exactReminders: Boolean = false,
-)
+    /** «Mismo color en todas las notas»: `#RRGGBB` o `null` (apagado). Solo cambia cómo se ven; cada nota conserva el suyo. */
+    val uniformNoteColor: String? = null,
+    /** Esquinas rectas; `null` = lo que decida el aspecto (`AspectSkin`). Se vuelve a `null` al cambiar de aspecto, como en Windows. */
+    val squareCorners: Boolean? = null,
+    /** Señal de sincronización en cada nota; `null` = lo que decida el aspecto. */
+    val showSyncSignal: Boolean? = null,
+) {
+    val cornersSquare: Boolean get() = squareCorners ?: AspectSkin.squareCorners(appearance)
+    val syncSignalVisible: Boolean get() = showSyncSignal ?: AspectSkin.syncSignal(appearance)
+}
 
 object Languages {
     /** Idiomas de la interfaz y cómo se llama cada uno en su propio idioma (no se traduce: así se reconoce en cualquier idioma). */
@@ -65,8 +76,13 @@ class SettingsStore(context: Context) {
             captureNotification = prefs.getBoolean(CAPTURE_NOTIFICATION, d.captureNotification),
             widgetPreview = prefs.getBoolean(WIDGET_PREVIEW, d.widgetPreview),
             exactReminders = prefs.getBoolean(EXACT_REMINDERS, d.exactReminders),
+            uniformNoteColor = prefs.getString(UNIFORM_NOTE_COLOR, null)?.takeIf { NoteDisplayColor.isActive(it) },
+            squareCorners = nullableBoolean(SQUARE_CORNERS),
+            showSyncSignal = nullableBoolean(SHOW_SYNC_SIGNAL),
         )
     }
+
+    private fun nullableBoolean(key: String): Boolean? = if (prefs.contains(key)) prefs.getBoolean(key, false) else null
 
     fun save(settings: AppSettings) {
         prefs.edit()
@@ -80,8 +96,15 @@ class SettingsStore(context: Context) {
             .putBoolean(CAPTURE_NOTIFICATION, settings.captureNotification)
             .putBoolean(WIDGET_PREVIEW, settings.widgetPreview)
             .putBoolean(EXACT_REMINDERS, settings.exactReminders)
+            .putOrRemove(UNIFORM_NOTE_COLOR, settings.uniformNoteColor)
+            .putOrRemove(SQUARE_CORNERS, settings.squareCorners)
+            .putOrRemove(SHOW_SYNC_SIGNAL, settings.showSyncSignal)
             .apply() // apply ya deja el valor visible en este proceso: el `recreate()` del cambio de idioma lo lee al instante.
     }
+
+    private fun android.content.SharedPreferences.Editor.putOrRemove(key: String, value: String?) = if (value == null) remove(key) else putString(key, value)
+
+    private fun android.content.SharedPreferences.Editor.putOrRemove(key: String, value: Boolean?) = if (value == null) remove(key) else putBoolean(key, value)
 
     private companion object {
         const val FILE = "settings"
@@ -95,5 +118,8 @@ class SettingsStore(context: Context) {
         const val CAPTURE_NOTIFICATION = "captureNotification"
         const val WIDGET_PREVIEW = "widgetPreview"
         const val EXACT_REMINDERS = "exactReminders"
+        const val UNIFORM_NOTE_COLOR = "uniformNoteColor"
+        const val SQUARE_CORNERS = "squareCorners"
+        const val SHOW_SYNC_SIGNAL = "showSyncSignal"
     }
 }

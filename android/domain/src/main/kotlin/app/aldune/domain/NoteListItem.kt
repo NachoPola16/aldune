@@ -18,6 +18,8 @@ data class NoteListItem(
     val state: NoteState,
     /** Una protegida no enseña su texto (no se conoce sin contraseña): título de relleno, sin vista previa ni tareas. */
     val isProtected: Boolean = false,
+    /** Para la señal de sincronización de la fila (se compara con la última versión acordada con el almacén). */
+    val updatedAt: java.time.Instant = java.time.Instant.EPOCH,
 ) {
     val hasTasks: Boolean get() = tasksTotal > 0
 
@@ -27,13 +29,13 @@ data class NoteListItem(
             if (note.isProtected) {
                 return NoteListItem(
                     id = note.id, title = protectedTitle, preview = "", color = note.color, tasksDone = 0, tasksTotal = 0,
-                    tags = note.tags, state = note.state, isProtected = true,
+                    tags = note.tags, state = note.state, isProtected = true, updatedAt = note.updatedAt,
                 )
             }
             val count = TaskLines.count(note.text)
             return NoteListItem(
                 id = note.id, title = NoteTitleHelper.getTitle(note.text, placeholder), preview = NoteTitleHelper.getPreview(note.text),
-                color = note.color, tasksDone = count.done, tasksTotal = count.total, tags = note.tags, state = note.state,
+                color = note.color, tasksDone = count.done, tasksTotal = count.total, tags = note.tags, state = note.state, updatedAt = note.updatedAt,
             )
         }
     }

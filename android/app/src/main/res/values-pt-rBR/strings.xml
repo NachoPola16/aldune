@@ -243,4 +243,14 @@
     <string name="reminder_exact">Hora exata</string>
     <string name="reminder_exact_hint">Avisa no minuto exato. Gasta um pouco mais de bateria; o Android pode pedir permissão.</string>
     <string name="sync_howto">No Aldune para Windows: Configurações → Sincronização entre dispositivos → Compartilhar perfil, e copie o código. O token não vai dentro do código: você o digita na etapa seguinte.</string>
+    <string name="uniform_color">Mesma cor em todas as notas</string>
+    <string name="uniform_color_hint">Só muda como aparecem; cada nota mantém a sua cor.</string>
+    <string name="square_corners">Cantos retos</string>
+    <string name="square_corners_hint">Notas, listas, diálogos e widget sem cantos arredondados.</string>
+    <string name="sync_signal">Sinal de sincronização em cada nota</string>
+    <string name="sync_signal_hint">Mostra sob o título o estado de sincronização de cada nota. Requer a sincronização ativada.</string>
+    <string name="sync_signal_format">%1$s %2$s</string>
+    <string name="sync_signal_synced">sincronizada</string>
+    <string name="sync_signal_pending">pendente</string>
+    <string name="sync_signal_conflict">conflito</string>
 </resources>

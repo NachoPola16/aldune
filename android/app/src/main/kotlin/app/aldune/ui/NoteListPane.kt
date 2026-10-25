@@ -90,6 +90,10 @@ import app.aldune.domain.ReminderLabel
 import app.aldune.domain.NoteListItem
 import app.aldune.domain.NoteState
 import app.aldune.text.NoteColorContrast
+import app.aldune.text.NoteDisplayColor
+import app.aldune.text.NoteSyncSignal
+import androidx.compose.ui.graphics.RectangleShape
+import androidx.compose.ui.text.font.FontFamily
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -120,6 +124,8 @@ fun NoteListPane(
     val profile = controller?.profile?.collectAsStateWithLifecycle()?.value
     val status = controller?.status?.collectAsStateWithLifecycle()?.value
     val conflicted = controller?.conflicted?.collectAsStateWithLifecycle()?.value ?: emptySet()
+    val bases = controller?.bases?.collectAsStateWithLifecycle()?.value ?: emptyMap()
+    val look = LocalNoteLook.current
     var showSyncDetail by remember { mutableStateOf(false) }
     var showOrphans by remember { mutableStateOf(false) }
 
@@ -247,6 +253,7 @@ fun NoteListPane(
                                     } else Modifier
                                 ),
                             item = item, selected = item.id == selectedId || item.id == highlight, conflicted = item.id in conflicted, reminder = state.reminders[item.id], onOpen = { onOpen(item.id) },
+                            signal = if (look.syncSignal) NoteSyncSignal.of(profile != null, item.id in conflicted, bases[item.id], item.updatedAt) else NoteSyncSignal.State.HIDDEN,
                             onArchive = { viewModel.archive(item.id); announce(archivedMsg) { viewModel.restore(item.id) } },
                             onTrash = { viewModel.trash(item.id); announce(trashedMsg) { viewModel.restore(item.id) } },
                             onRestore = { viewModel.restore(item.id); announce(restoredMsg) { viewModel.trash(item.id) } },
@@ -325,7 +332,7 @@ private fun SearchField(query: String, onChange: (String) -> Unit, modifier: Mod
             }
         },
         keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
-        shape = RoundedCornerShape(28.dp),
+        shape = if (LocalNoteLook.current.squareCorners) RectangleShape else RoundedCornerShape(28.dp),
     )
 }
 
@@ -379,7 +386,7 @@ private fun EmptyMessage(state: UiState.Ready) {
 @Composable
 private fun SwipeableRow(
     modifier: Modifier,
-    item: NoteListItem, selected: Boolean, conflicted: Boolean, reminder: java.time.Instant?, onOpen: () -> Unit,
+    item: NoteListItem, selected: Boolean, conflicted: Boolean, reminder: java.time.Instant?, onOpen: () -> Unit, signal: NoteSyncSignal.State,
     onArchive: () -> Unit, onTrash: () -> Unit, onRestore: () -> Unit, onDelete: () -> Unit,
 ) {
     val dismiss = rememberSwipeToDismissBoxState(
@@ -407,7 +414,7 @@ private fun SwipeableRow(
         modifier = modifier.padding(horizontal = 16.dp),
         backgroundContent = {
             Box(
-                Modifier.fillMaxSize().background(MaterialTheme.colorScheme.surfaceVariant, RoundedCornerShape(12.dp)).padding(horizontal = 20.dp),
+                Modifier.fillMaxSize().background(MaterialTheme.colorScheme.surfaceVariant, LocalNoteLook.current.cardShape).padding(horizontal = 20.dp),
                 contentAlignment = if (dismiss.dismissDirection == SwipeToDismissBoxValue.StartToEnd) Alignment.CenterStart else Alignment.CenterEnd,
             ) {
                 val label = when (dismiss.dismissDirection) {
@@ -422,16 +429,18 @@ private fun SwipeableRow(
             }
         },
     ) {
-        NoteRow(item, selected, conflicted, reminder, onOpen)
+        NoteRow(item, selected, conflicted, reminder, signal, onOpen)
     }
 }
 
 @Composable
-private fun NoteRow(item: NoteListItem, selected: Boolean, conflicted: Boolean, reminder: java.time.Instant?, onOpen: () -> Unit) {
-    val face = noteFace(item.color)
+private fun NoteRow(item: NoteListItem, selected: Boolean, conflicted: Boolean, reminder: java.time.Instant?, signal: NoteSyncSignal.State, onOpen: () -> Unit) {
+    val look = LocalNoteLook.current
+    // «Mismo color en todas las notas»: solo cambia lo que se ve, la nota conserva el suyo.
+    val face = noteFace(NoteDisplayColor.resolve(item.color, look.uniformColor))
     Card(
         onClick = onOpen,
-        shape = RoundedCornerShape(12.dp),
+        shape = look.cardShape,
         colors = CardDefaults.cardColors(
             containerColor = if (selected) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceContainerHigh,
         ),
@@ -445,6 +454,13 @@ private fun NoteRow(item: NoteListItem, selected: Boolean, conflicted: Boolean, 
                     Text(
                         item.preview, style = MaterialTheme.typography.bodyMedium, maxLines = 1, overflow = TextOverflow.Ellipsis,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
+                if (signal != NoteSyncSignal.State.HIDDEN) {
+                    val text = stringResource(R.string.sync_signal_format, NoteSyncSignal.glyph(signal), stringResource(syncSignalLabel(signal)))
+                    Text(
+                        text, Modifier.padding(top = 2.dp), style = MaterialTheme.typography.labelSmall, fontFamily = FontFamily.Monospace, maxLines = 1,
+                        color = if (signal == NoteSyncSignal.State.CONFLICT) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                 }
                 if (reminder != null) {
@@ -473,6 +489,12 @@ private fun NoteRow(item: NoteListItem, selected: Boolean, conflicted: Boolean, 
             }
         }
     }
+}
+
+private fun syncSignalLabel(state: NoteSyncSignal.State): Int = when (state) {
+    NoteSyncSignal.State.SYNCED -> R.string.sync_signal_synced
+    NoteSyncSignal.State.PENDING -> R.string.sync_signal_pending
+    else -> R.string.sync_signal_conflict
 }
 
 /** El color de la nota tal cual (también un hex de un tema propio de Windows); uno ilegible cae en un gris, nunca rompe la lista. */

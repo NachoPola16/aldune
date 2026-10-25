@@ -22,6 +22,7 @@ import app.aldune.data.Languages
 import app.aldune.data.SettingsStore
 import app.aldune.text.AppPalette
 import app.aldune.ui.AldunaTheme
+import app.aldune.ui.NoteLook
 import app.aldune.ui.NotesApp
 import app.aldune.ui.NotesViewModel
 import kotlinx.coroutines.launch
@@ -91,7 +92,7 @@ class MainActivity : ComponentActivity() {
                 enableEdgeToEdge(statusBarStyle = bars, navigationBarStyle = bars)
                 onDispose {}
             }
-            AldunaTheme(settings.appearance, settings.aspectColors) {
+            AldunaTheme(settings.appearance, settings.aspectColors, NoteLook(settings.uniformNoteColor, settings.cornersSquare, settings.syncSignalVisible)) {
                 NotesApp(viewModel)
             }
         }
