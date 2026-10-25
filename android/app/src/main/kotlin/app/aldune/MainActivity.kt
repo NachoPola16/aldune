@@ -2,13 +2,17 @@ package app.aldune
 
 import android.content.Context
 import android.content.Intent
+import android.graphics.Color
 import android.os.Build
 import android.os.Bundle
 import android.view.WindowManager
 import androidx.activity.ComponentActivity
+import androidx.activity.SystemBarStyle
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
+import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.lifecycleScope
@@ -16,6 +20,7 @@ import app.aldune.capture.CaptureIntents
 import app.aldune.capture.CaptureNotification
 import app.aldune.data.Languages
 import app.aldune.data.SettingsStore
+import app.aldune.text.AppPalette
 import app.aldune.ui.AldunaTheme
 import app.aldune.ui.NotesApp
 import app.aldune.ui.NotesViewModel
@@ -78,6 +83,14 @@ class MainActivity : ComponentActivity() {
         }
         setContent {
             val settings by viewModel.settings.collectAsStateWithLifecycle()
+            // Los iconos de la barra de estado y de navegación siguen la claridad del aspecto elegido, no la del sistema: XP claro con el
+            // móvil en oscuro (o Bash con el móvil en claro) los dejaría blancos sobre beige, o negros sobre negro.
+            val light = AppPalette.isLight(settings.appearance, !isSystemInDarkTheme())
+            DisposableEffect(light) {
+                val bars = if (light) SystemBarStyle.light(Color.TRANSPARENT, Color.TRANSPARENT) else SystemBarStyle.dark(Color.TRANSPARENT)
+                enableEdgeToEdge(statusBarStyle = bars, navigationBarStyle = bars)
+                onDispose {}
+            }
             AldunaTheme(settings.appearance, settings.aspectColors) {
                 NotesApp(viewModel)
             }
