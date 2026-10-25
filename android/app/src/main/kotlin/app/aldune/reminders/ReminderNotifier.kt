@@ -47,7 +47,7 @@ class ReminderNotifier(context: Context) {
                 builder.setContentTitle(res.getString(R.string.protected_note_title)).setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
             is ReminderNotificationContent.Open -> {
                 builder.setContentTitle(content.title).setVisibility(NotificationCompat.VISIBILITY_PRIVATE)
-                if (content.pendingTasks.isNotEmpty()) {
+                if (content.pendingTasks.isNotEmpty() && SettingsStore(context).load().reminderIncludesTasks) {
                     builder.setContentText(content.pendingTasks.first())
                     builder.setStyle(NotificationCompat.InboxStyle().also { style -> content.pendingTasks.forEach { style.addLine("☐ $it") } })
                 }

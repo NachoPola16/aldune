@@ -118,6 +118,11 @@ class SyncController(
         }
     }
 
+    /** El ajuste «sincronizar en segundo plano» cambió: programa o cancela el trabajo periódico (`SyncWork.ensure` lee el ajuste). */
+    fun refreshSchedule() {
+        scope.launch(Dispatchers.IO) { if (_profile.value != null) schedule.ensure() }
+    }
+
     fun request(event: SyncEvent) {
         scope.launch(Dispatchers.IO) { run(event) }
     }

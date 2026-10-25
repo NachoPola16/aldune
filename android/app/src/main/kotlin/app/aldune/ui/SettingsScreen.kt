@@ -137,6 +137,7 @@ fun SettingsScreen(viewModel: NotesViewModel, onClose: () -> Unit) {
                     val name = themeNameRes(theme.id)?.let { stringResource(it) } ?: theme.name
                     Choice(name, settings.noteThemeId == theme.id) { viewModel.updateSettings { it.copy(noteThemeId = theme.id) } }
                 }
+                NoteBehaviourSettings(settings, onChange = viewModel::updateSettings)
                 Text(stringResource(R.string.new_note_tone), Modifier.padding(horizontal = 16.dp), style = MaterialTheme.typography.labelLarge)
                 Choice(stringResource(R.string.tone_light), !settings.darkNotes) { viewModel.updateSettings { it.copy(darkNotes = false) } }
                 Choice(stringResource(R.string.tone_dark), settings.darkNotes) { viewModel.updateSettings { it.copy(darkNotes = true) } }
@@ -251,6 +252,10 @@ private fun RemindersSection(viewModel: NotesViewModel, exactOn: Boolean) {
     }
 
     Section(R.string.reminders_section)
+    val withTasks by viewModel.settings.collectAsStateWithLifecycle()
+    SwitchRow(stringResource(R.string.reminder_includes_tasks), stringResource(R.string.reminder_includes_tasks_hint), withTasks.reminderIncludesTasks) { on ->
+        viewModel.updateSettings { it.copy(reminderIncludesTasks = on) }
+    }
     SwitchRow(stringResource(R.string.reminder_exact), stringResource(R.string.reminder_exact_hint), exactOn && ReminderScheduler.canScheduleExact(context)) { on ->
         when {
             !on -> apply(false)
@@ -298,7 +303,7 @@ internal fun Section(title: Int) {
 }
 
 @Composable
-private fun Choice(label: String, selected: Boolean, onClick: () -> Unit) {
+internal fun Choice(label: String, selected: Boolean, onClick: () -> Unit) {
     Row(
         Modifier.fillMaxWidth().selectable(selected = selected, role = Role.RadioButton, onClick = onClick).padding(horizontal = 16.dp, vertical = 2.dp),
         verticalAlignment = Alignment.CenterVertically,

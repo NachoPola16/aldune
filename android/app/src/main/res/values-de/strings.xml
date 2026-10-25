@@ -253,4 +253,19 @@
     <string name="sync_signal_synced">synchronisiert</string>
     <string name="sync_signal_pending">ausstehend</string>
     <string name="sync_signal_conflict">Konflikt</string>
+    <string name="list_order">Reihenfolge der Liste</string>
+    <string name="order_dock">Wie im Dock (per Ziehen sortieren)</string>
+    <string name="order_newest">Zuletzt bearbeitet zuerst</string>
+    <string name="order_oldest">Älteste zuerst</string>
+    <string name="order_title">Nach Titel</string>
+    <string name="order_no_drag">Mit dieser Reihenfolge lassen sich Notizen nicht ziehen; wähle die Dock-Reihenfolge zum Umsortieren.</string>
+    <string name="color_rule">Farbe jeder neuen Notiz</string>
+    <string name="rule_avoid_neighbors">Reihum, ohne die Farben der Nachbarn</string>
+    <string name="rule_rotate">Reihum im Thema</string>
+    <string name="rule_most_distinct">Die am meisten abweichende</string>
+    <string name="rule_fixed">Immer dieselbe Farbe</string>
+    <string name="reminder_includes_tasks">Offene Aufgaben in der Erinnerung zeigen</string>
+    <string name="reminder_includes_tasks_hint">Die Benachrichtigung listet die noch offenen Aufgaben (bis zu 3).</string>
+    <string name="sync_in_background">Im Hintergrund synchronisieren</string>
+    <string name="sync_in_background_hint">Etwa alle 15 Minuten, wenn Android es erlaubt. Aus: Es wird nur beim Öffnen, Bearbeiten oder von Hand synchronisiert.</string>
 </resources>

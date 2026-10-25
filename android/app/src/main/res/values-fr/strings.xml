@@ -253,4 +253,19 @@
     <string name="sync_signal_synced">synchronisée</string>
     <string name="sync_signal_pending">en attente</string>
     <string name="sync_signal_conflict">conflit</string>
+    <string name="list_order">Ordre de la liste</string>
+    <string name="order_dock">Comme dans le dock (glisser pour réordonner)</string>
+    <string name="order_newest">Les plus récentes d’abord</string>
+    <string name="order_oldest">Les plus anciennes d’abord</string>
+    <string name="order_title">Par titre</string>
+    <string name="order_no_drag">Avec cet ordre on ne peut pas faire glisser les notes ; choisissez celui du dock pour les réordonner.</string>
+    <string name="color_rule">Couleur de chaque nouvelle note</string>
+    <string name="rule_avoid_neighbors">Alterner, en évitant les couleurs voisines</string>
+    <string name="rule_rotate">Alterner dans le thème</string>
+    <string name="rule_most_distinct">La plus différente des autres</string>
+    <string name="rule_fixed">Toujours la même couleur</string>
+    <string name="reminder_includes_tasks">Afficher les tâches en attente dans le rappel</string>
+    <string name="reminder_includes_tasks_hint">La notification liste les tâches non cochées (jusqu’à 3).</string>
+    <string name="sync_in_background">Synchroniser en arrière-plan</string>
+    <string name="sync_in_background_hint">Environ toutes les 15 minutes, si Android le permet. Désactivé : synchronisation uniquement à l’ouverture, à l’édition ou à la main.</string>
 </resources>

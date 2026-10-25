@@ -15,6 +15,9 @@ import app.aldune.domain.LostReason
 import app.aldune.domain.Note
 import app.aldune.domain.NewNoteColorSettings
 import app.aldune.domain.NoteListItem
+import app.aldune.domain.NoteListOrder
+import app.aldune.domain.NoteListing
+import app.aldune.text.NoteColorAssignment
 import app.aldune.domain.NoteResult
 import app.aldune.domain.NoteService
 import app.aldune.domain.SharedNote
@@ -182,9 +185,13 @@ class NotesViewModel(application: Application) : AndroidViewModel(application) {
     val settings: StateFlow<AppSettings> = _settings.asStateFlow()
 
     fun updateSettings(transform: (AppSettings) -> AppSettings) {
-        val next = transform(_settings.value)
+        val previous = _settings.value
+        val next = transform(previous)
         _settings.value = next
         settingsStore.save(next)
+        // El orden de la lista y el trabajo de segundo plano dependen de estos ajustes: se aplican al momento.
+        if (next.listOrder != previous.listOrder) launchIo { refreshLocked() }
+        if (next.syncInBackground != previous.syncInBackground) _sync.value?.refreshSchedule()
         // El aspecto, el idioma y la vista previa cambian lo que pinta el widget.
         widgetChanged()
     }
@@ -630,6 +637,8 @@ class NotesViewModel(application: Application) : AndroidViewModel(application) {
     private fun newNoteColors() = NewNoteColorSettings(
         theme = NoteThemes.resolve(_settings.value.noteThemeId, null),
         tone = if (_settings.value.darkNotes) NoteTone.Dark else NoteTone.Light,
+        rule = NoteColorAssignment.entries[_settings.value.colorRule],
+        fixedColor = _settings.value.fixedNoteColor,
     )
 
     // ───────────── Recordatorios (F7) ─────────────
@@ -667,7 +676,8 @@ class NotesViewModel(application: Application) : AndroidViewModel(application) {
     private fun refreshLocked() {
         val notes = service ?: return
         val current = _state.value as? UiState.Ready ?: return
-        val items = notes.list(current.filter, current.query, current.tag).map { NoteListItem.from(it, placeholder, protectedTitle) }
+        val order = NoteListOrder.fromCode(_settings.value.listOrder)
+        val items = NoteListing.sort(notes.list(current.filter, current.query, current.tag), order).map { NoteListItem.from(it, placeholder, protectedTitle) }
         val counts = NoteState.entries.associateWith { notes.list(it).size }
         val tags = notes.list(current.filter).flatMap { it.tags }.distinctBy { it.lowercase() }.sortedBy { it.lowercase() }
         val orphans = ready?.conflicts?.orphans().orEmpty().mapNotNull { conflict ->

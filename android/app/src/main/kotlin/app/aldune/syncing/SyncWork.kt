@@ -11,6 +11,7 @@ import androidx.work.WorkerParameters
 import app.aldune.AldunaApp
 import app.aldune.AppContainer
 import app.aldune.syncclient.SyncEvent
+import app.aldune.data.SettingsStore
 import java.util.concurrent.TimeUnit
 
 /**
@@ -19,6 +20,8 @@ import java.util.concurrent.TimeUnit
  */
 class SyncWork(private val context: Context) : SyncSchedule {
     override fun ensure() {
+        // Apagado en Ajustes: nada de trabajo periódico (seguirá sincronizando al abrir, al editar y a mano).
+        if (!SettingsStore(context).load().syncInBackground) return cancel()
         val request = PeriodicWorkRequestBuilder<SyncWorker>(15, TimeUnit.MINUTES)
             .setConstraints(Constraints.Builder().setRequiredNetworkType(NetworkType.CONNECTED).build())
             .build()

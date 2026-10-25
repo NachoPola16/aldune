@@ -38,6 +38,16 @@ data class AppSettings(
     val squareCorners: Boolean? = null,
     /** Señal de sincronización en cada nota; `null` = lo que decida el aspecto. */
     val showSyncSignal: Boolean? = null,
+    /** Orden de la lista: los números de `NoteListOrder` (mazo 0, recientes 1, antiguas 2, título 3). Solo en el mazo se puede arrastrar. */
+    val listOrder: Int = 0,
+    /** Regla de color de las notas nuevas: los números de `NoteColorAssignment` (rotar evitando vecinas 0, rotar 1, más distinto 2, fijo 3). */
+    val colorRule: Int = 0,
+    /** Color de la regla «fijo»; `null` = el primero del tono pedido. */
+    val fixedNoteColor: String? = null,
+    /** El aviso de un recordatorio enseña las tareas que faltan (Windows: `ReminderIncludesTasks`, por defecto sí). */
+    val reminderIncludesTasks: Boolean = true,
+    /** Sincronizar también en segundo plano (el trabajo periódico de WorkManager). Apagado: solo al abrir, al editar y a mano. */
+    val syncInBackground: Boolean = true,
 ) {
     val cornersSquare: Boolean get() = squareCorners ?: AspectSkin.squareCorners(appearance)
     val syncSignalVisible: Boolean get() = showSyncSignal ?: AspectSkin.syncSignal(appearance)
@@ -79,6 +89,11 @@ class SettingsStore(context: Context) {
             uniformNoteColor = prefs.getString(UNIFORM_NOTE_COLOR, null)?.takeIf { NoteDisplayColor.isActive(it) },
             squareCorners = nullableBoolean(SQUARE_CORNERS),
             showSyncSignal = nullableBoolean(SHOW_SYNC_SIGNAL),
+            listOrder = prefs.getInt(LIST_ORDER, d.listOrder).takeIf { it in 0..3 } ?: d.listOrder,
+            colorRule = prefs.getInt(COLOR_RULE, d.colorRule).takeIf { it in 0..3 } ?: d.colorRule,
+            fixedNoteColor = prefs.getString(FIXED_NOTE_COLOR, null)?.takeIf { NoteDisplayColor.isActive(it) },
+            reminderIncludesTasks = prefs.getBoolean(REMINDER_INCLUDES_TASKS, d.reminderIncludesTasks),
+            syncInBackground = prefs.getBoolean(SYNC_IN_BACKGROUND, d.syncInBackground),
         )
     }
 
@@ -99,6 +114,11 @@ class SettingsStore(context: Context) {
             .putOrRemove(UNIFORM_NOTE_COLOR, settings.uniformNoteColor)
             .putOrRemove(SQUARE_CORNERS, settings.squareCorners)
             .putOrRemove(SHOW_SYNC_SIGNAL, settings.showSyncSignal)
+            .putInt(LIST_ORDER, settings.listOrder)
+            .putInt(COLOR_RULE, settings.colorRule)
+            .putOrRemove(FIXED_NOTE_COLOR, settings.fixedNoteColor)
+            .putBoolean(REMINDER_INCLUDES_TASKS, settings.reminderIncludesTasks)
+            .putBoolean(SYNC_IN_BACKGROUND, settings.syncInBackground)
             .apply() // apply ya deja el valor visible en este proceso: el `recreate()` del cambio de idioma lo lee al instante.
     }
 
@@ -121,5 +141,10 @@ class SettingsStore(context: Context) {
         const val UNIFORM_NOTE_COLOR = "uniformNoteColor"
         const val SQUARE_CORNERS = "squareCorners"
         const val SHOW_SYNC_SIGNAL = "showSyncSignal"
+        const val LIST_ORDER = "listOrder"
+        const val COLOR_RULE = "colorRule"
+        const val FIXED_NOTE_COLOR = "fixedNoteColor"
+        const val REMINDER_INCLUDES_TASKS = "reminderIncludesTasks"
+        const val SYNC_IN_BACKGROUND = "syncInBackground"
     }
 }

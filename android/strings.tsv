@@ -252,3 +252,18 @@ sync_signal_format	%1$s %2$s	%1$s %2$s	%1$s %2$s	%1$s %2$s	%1$s %2$s
 sync_signal_synced	synced	sincronizada	synchronisiert	synchronisée	sincronizada
 sync_signal_pending	pending	pendiente	ausstehend	en attente	pendente
 sync_signal_conflict	conflict	conflicto	Konflikt	conflit	conflito
+list_order	Order of the list	Orden de la lista	Reihenfolge der Liste	Ordre de la liste	Ordem da lista
+order_dock	As in the dock (drag to reorder)	Como en el mazo (se puede arrastrar)	Wie im Dock (per Ziehen sortieren)	Comme dans le dock (glisser pour réordonner)	Como no dock (arraste para reordenar)
+order_newest	Most recently edited first	Más recientes primero	Zuletzt bearbeitet zuerst	Les plus récentes d’abord	Mais recentes primeiro
+order_oldest	Oldest first	Más antiguas primero	Älteste zuerst	Les plus anciennes d’abord	Mais antigas primeiro
+order_title	By title	Por título	Nach Titel	Par titre	Por título
+order_no_drag	With this order you can’t drag notes; choose the dock order to reorder them.	Con este orden no se pueden arrastrar las notas; elige el del mazo para reordenarlas.	Mit dieser Reihenfolge lassen sich Notizen nicht ziehen; wähle die Dock-Reihenfolge zum Umsortieren.	Avec cet ordre on ne peut pas faire glisser les notes ; choisissez celui du dock pour les réordonner.	Com esta ordem não dá para arrastar as notas; escolha a do dock para reordená-las.
+color_rule	Color of each new note	Color de cada nota nueva	Farbe jeder neuen Notiz	Couleur de chaque nouvelle note	Cor de cada nova nota
+rule_avoid_neighbors	Rotate, skipping the neighbors’ colors	Rotar, evitando los colores de las vecinas	Reihum, ohne die Farben der Nachbarn	Alterner, en évitant les couleurs voisines	Alternar, evitando as cores das vizinhas
+rule_rotate	Rotate through the theme	Rotar por el tema	Reihum im Thema	Alterner dans le thème	Alternar pelo tema
+rule_most_distinct	The most different from the others	La más distinta de las demás	Die am meisten abweichende	La plus différente des autres	A mais diferente das demais
+rule_fixed	Always the same color	Siempre el mismo color	Immer dieselbe Farbe	Toujours la même couleur	Sempre a mesma cor
+reminder_includes_tasks	Show pending tasks in the reminder	Enseñar las tareas pendientes en el aviso	Offene Aufgaben in der Erinnerung zeigen	Afficher les tâches en attente dans le rappel	Mostrar as tarefas pendentes no lembrete
+reminder_includes_tasks_hint	The notification lists the tasks still unchecked (up to 3).	La notificación lista las tareas sin marcar (hasta 3).	Die Benachrichtigung listet die noch offenen Aufgaben (bis zu 3).	La notification liste les tâches non cochées (jusqu’à 3).	A notificação lista as tarefas não marcadas (até 3).
+sync_in_background	Sync in the background	Sincronizar en segundo plano	Im Hintergrund synchronisieren	Synchroniser en arrière-plan	Sincronizar em segundo plano
+sync_in_background_hint	Roughly every 15 minutes, when Android allows. Off: it only syncs when you open the app, edit or sync by hand.	Cada unos 15 minutos, cuando Android lo permita. Apagado: solo sincroniza al abrir la app, al editar o a mano.	Etwa alle 15 Minuten, wenn Android es erlaubt. Aus: Es wird nur beim Öffnen, Bearbeiten oder von Hand synchronisiert.	Environ toutes les 15 minutes, si Android le permet. Désactivé : synchronisation uniquement à l’ouverture, à l’édition ou à la main.	A cada uns 15 minutos, quando o Android permitir. Desligado: só sincroniza ao abrir o app, ao editar ou manualmente.

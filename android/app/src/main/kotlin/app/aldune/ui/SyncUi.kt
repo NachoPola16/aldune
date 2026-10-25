@@ -127,6 +127,12 @@ fun SyncSection(viewModel: NotesViewModel) {
     Section(R.string.sync_title)
     val current = profile
     if (current == null) ConnectForm(c) else ConnectedPanel(c, current)
+    if (current != null) {
+        val settings by viewModel.settings.collectAsStateWithLifecycle()
+        SwitchRow(stringResource(R.string.sync_in_background), stringResource(R.string.sync_in_background_hint), settings.syncInBackground) { on ->
+            viewModel.updateSettings { it.copy(syncInBackground = on) }
+        }
+    }
 }
 
 @Composable

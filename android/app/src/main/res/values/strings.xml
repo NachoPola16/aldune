@@ -253,4 +253,19 @@
     <string name="sync_signal_synced">synced</string>
     <string name="sync_signal_pending">pending</string>
     <string name="sync_signal_conflict">conflict</string>
+    <string name="list_order">Order of the list</string>
+    <string name="order_dock">As in the dock (drag to reorder)</string>
+    <string name="order_newest">Most recently edited first</string>
+    <string name="order_oldest">Oldest first</string>
+    <string name="order_title">By title</string>
+    <string name="order_no_drag">With this order you can’t drag notes; choose the dock order to reorder them.</string>
+    <string name="color_rule">Color of each new note</string>
+    <string name="rule_avoid_neighbors">Rotate, skipping the neighbors’ colors</string>
+    <string name="rule_rotate">Rotate through the theme</string>
+    <string name="rule_most_distinct">The most different from the others</string>
+    <string name="rule_fixed">Always the same color</string>
+    <string name="reminder_includes_tasks">Show pending tasks in the reminder</string>
+    <string name="reminder_includes_tasks_hint">The notification lists the tasks still unchecked (up to 3).</string>
+    <string name="sync_in_background">Sync in the background</string>
+    <string name="sync_in_background_hint">Roughly every 15 minutes, when Android allows. Off: it only syncs when you open the app, edit or sync by hand.</string>
 </resources>

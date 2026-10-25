@@ -126,6 +126,7 @@ fun NoteListPane(
     val conflicted = controller?.conflicted?.collectAsStateWithLifecycle()?.value ?: emptySet()
     val bases = controller?.bases?.collectAsStateWithLifecycle()?.value ?: emptyMap()
     val look = LocalNoteLook.current
+    val settingsNow by viewModel.settings.collectAsStateWithLifecycle()
     var showSyncDetail by remember { mutableStateOf(false) }
     var showOrphans by remember { mutableStateOf(false) }
 
@@ -188,7 +189,7 @@ fun NoteListPane(
             } else {
                 // Reordenar: mantener pulsada una nota y arrastrarla. Solo con la lista completa (sin búsqueda ni etiqueta): con un filtro,
                 // las vecinas que se ven no son las vecinas reales y el orden no se puede decidir.
-                val reorderable = state.query.isBlank() && state.tag == null && state.items.size > 1
+                val reorderable = state.query.isBlank() && state.tag == null && state.items.size > 1 && settingsNow.listOrder == 0
                 val listState = rememberLazyListState()
                 val haptic = LocalHapticFeedback.current
                 var order by remember { mutableStateOf(state.items) }
