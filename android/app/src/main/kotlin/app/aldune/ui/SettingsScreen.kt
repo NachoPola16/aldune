@@ -18,6 +18,7 @@ import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.LocalContext
 import app.aldune.capture.CaptureNotification
@@ -95,11 +96,14 @@ fun SettingsScreen(viewModel: NotesViewModel, onClose: () -> Unit) {
                     AppPalette.BASH to R.string.appearance_bash, AppPalette.PHOSPHOR to R.string.appearance_phosphor,
                 )
                 // Los aspectos retro proponen un tema de notas; se pregunta, no se impone (como en Windows).
-                var suggestedTheme by remember { mutableStateOf<String?>(null) }
+                // rememberSaveable: girar la pantalla no debe cerrar la pregunta sin avisar.
+                var suggestedTheme by rememberSaveable { mutableStateOf<String?>(null) }
                 for ((mode, label) in appearances) {
                     Choice(stringResource(label), settings.appearance == mode) {
+                        // Volver a pulsar el aspecto activo no repite la pregunta.
+                        val changed = settings.appearance != mode
                         viewModel.updateSettings { it.copy(appearance = mode) }
-                        AspectCatalog.forMode(mode)?.suggestedThemeId?.takeIf { it != settings.noteThemeId }?.let { suggestedTheme = it }
+                        if (changed) AspectCatalog.forMode(mode)?.suggestedThemeId?.takeIf { it != settings.noteThemeId }?.let { suggestedTheme = it }
                     }
                 }
                 AspectSection(settings, onChange = viewModel::updateSettings)

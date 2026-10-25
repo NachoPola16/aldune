@@ -6,6 +6,8 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -53,6 +55,7 @@ private fun slotNameRes(slotId: String): Int? = when (slotId) {
  * Los colores del aspecto retro elegido (equivalente de «Colores del aspecto» de Windows): un renglón por hueco con su muestra, «Cambiar»
  * (color libre) y muestras de un toque; las paletas de Bash; y «Restablecer colores». Con un aspecto de siempre no pinta nada.
  */
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun AspectSection(settings: AppSettings, onChange: ((AppSettings) -> AppSettings) -> Unit) {
     val aspect = AspectCatalog.forMode(settings.appearance) ?: return
@@ -91,7 +94,8 @@ fun AspectSection(settings: AppSettings, onChange: ((AppSettings) -> AppSettings
             stringResource(R.string.aspect_presets), Modifier.padding(start = 16.dp, end = 16.dp, top = 12.dp),
             style = MaterialTheme.typography.labelLarge,
         )
-        Row(Modifier.padding(horizontal = 8.dp), horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+        // FlowRow: con fuente grande o pantalla estrecha los botones pasan a otra línea en vez de salirse.
+        FlowRow(Modifier.padding(horizontal = 8.dp), horizontalArrangement = Arrangement.spacedBy(4.dp)) {
             for (preset in aspect.presets) {
                 // Una paleta sustituye todos los huecos del aspecto de una vez.
                 TextButton(onClick = { onChange { it.copy(aspectColors = it.aspectColors + (aspect.id to preset.colors)) } }) { Text(preset.name) }

@@ -48,5 +48,5 @@ fun AldunaTheme(appearance: Int = APPEARANCE_SYSTEM, aspectColors: Map<String, M
             inverseSurface = c("RaisedHover"), inverseOnSurface = c("Text"), inversePrimary = c("Accent"),
         )
     }
-    MaterialTheme(colorScheme = scheme, typography = typographyFor(appearance), content = content)
+    MaterialTheme(colorScheme = scheme, typography = remember(appearance) { typographyFor(appearance) }, content = content)
 }
