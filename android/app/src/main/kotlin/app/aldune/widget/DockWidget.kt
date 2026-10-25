@@ -59,6 +59,7 @@ import app.aldune.domain.WidgetOptions
 import app.aldune.domain.WidgetStrip
 import app.aldune.text.AppPalette
 import app.aldune.text.AspectCatalog
+import app.aldune.text.ColorFit
 import app.aldune.ui.noteFace
 import app.aldune.ui.noteInk
 import app.aldune.ui.paletteColor
@@ -72,6 +73,8 @@ private class WidgetTexts(
 
 private class WidgetColors(
     val ground: ColorProvider, val text: ColorProvider, val muted: ColorProvider, val surface: ColorProvider,
+    /** El título y el «+»: el acento en los aspectos retro (si no, Bash y Oscuro se verían casi iguales), y los de siempre en el resto. */
+    val title: ColorProvider, val plus: ColorProvider,
 )
 
 /** Qué se pinta: el contenido, o nada si la base no se pudo abrir (clave perdida). */
@@ -132,7 +135,16 @@ class DockWidget : GlanceAppWidget() {
             } else {
                 ColorProvider(paletteColor(AppPalette.forMode(appearance, systemUsesLight = false, AspectCatalog.forMode(appearance)?.let { aspectColors[it.id] }).getValue(key)))
             }
-        return WidgetColors(ground = pick("Ground"), text = pick("Text"), muted = pick("MutedText"), surface = pick("Surface"))
+        val retro = AspectCatalog.forMode(appearance) != null
+        // El acento no está calculado contra el fondo (lo está contra el texto del botón): se acerca al fondo lo justo para leerse como texto.
+        val accent = if (retro) {
+            val palette = AppPalette.forMode(appearance, systemUsesLight = false, AspectCatalog.forMode(appearance)?.let { aspectColors[it.id] })
+            ColorProvider(paletteColor(ColorFit.foreground(palette.getValue("Accent"), palette.getValue("Ground"), 4.5)))
+        } else null
+        return WidgetColors(
+            ground = pick("Ground"), text = pick("Text"), muted = pick("MutedText"), surface = pick("Surface"),
+            title = accent ?: pick("MutedText"), plus = accent ?: pick("Text"),
+        )
     }
 
     @Composable
@@ -148,11 +160,11 @@ class DockWidget : GlanceAppWidget() {
             Row(GlanceModifier.fillMaxWidth().padding(start = 6.dp, end = 2.dp, bottom = 6.dp), verticalAlignment = Alignment.CenterVertically) {
                 Text(
                     data.texts.appName, GlanceModifier.defaultWeight().clickable(openApp),
-                    style = TextStyle(color = data.colors.muted, fontSize = 13.sp, fontWeight = FontWeight.Medium),
+                    style = TextStyle(color = data.colors.title, fontSize = 13.sp, fontWeight = FontWeight.Medium),
                 )
                 Image(
                     provider = ImageProvider(R.drawable.ic_new_note), contentDescription = data.texts.newNote,
-                    colorFilter = ColorFilter.tint(data.colors.text),
+                    colorFilter = ColorFilter.tint(data.colors.plus),
                     modifier = GlanceModifier.size(28.dp).clickable(actionStartActivity(CaptureIntents.newNote(context))),
                 )
             }
