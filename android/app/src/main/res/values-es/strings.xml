@@ -289,4 +289,9 @@
     <string name="sync_add_profile">Añadir otro perfil</string>
     <string name="sync_add_intro">Pega un código de perfil para unirte. Tus otros perfiles siguen sincronizando igual.</string>
     <string name="sync_already_connected">Ya estás conectado a «%1$s».</string>
+    <string name="welcome_title">Aldune está lista</string>
+    <string name="welcome_add">Toca + para escribir una nota. Se guarda sola mientras escribes.</string>
+    <string name="welcome_lists">Para una lista, usa el botón ☐ de la barra del editor. Toca una casilla para marcarla y arrastra el asa de la derecha para reordenar las tareas.</string>
+    <string name="welcome_sync">Para compartir tus notas con el PC, abre Ajustes (la rueda) y pega tu código de perfil en Sincronización.</string>
+    <string name="welcome_ok">Entendido</string>
 </resources>

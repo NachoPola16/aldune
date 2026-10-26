@@ -289,4 +289,9 @@
     <string name="sync_add_profile">Add another profile</string>
     <string name="sync_add_intro">Paste a profile code to join it. Your other profiles keep syncing as before.</string>
     <string name="sync_already_connected">You\'re already connected to “%1$s”.</string>
+    <string name="welcome_title">Aldune is ready</string>
+    <string name="welcome_add">Tap + to write a note. It saves as you type.</string>
+    <string name="welcome_lists">For a list, use the ☐ button in the editor bar. Tap a box to tick it and drag the handle on the right to reorder tasks.</string>
+    <string name="welcome_sync">To share notes with your PC, open Settings (the gear) and paste your profile code under Sync.</string>
+    <string name="welcome_ok">Got it</string>
 </resources>

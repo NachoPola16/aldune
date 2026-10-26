@@ -52,6 +52,8 @@ data class AppSettings(
     val hideDoneTasks: Boolean = false,
     /** Horas que una tarea hecha sigue a la vista antes de esconderse. */
     val hideDoneAfterHours: Int = 24,
+    /** La bienvenida de la primera vez ya se enseñó (o no hacía falta: ya había notas). */
+    val welcomeSeen: Boolean = false,
 ) {
     val cornersSquare: Boolean get() = squareCorners ?: AspectSkin.squareCorners(appearance)
     val syncSignalVisible: Boolean get() = showSyncSignal ?: AspectSkin.syncSignal(appearance)
@@ -100,6 +102,7 @@ class SettingsStore(context: Context) {
             syncInBackground = prefs.getBoolean(SYNC_IN_BACKGROUND, d.syncInBackground),
             hideDoneTasks = prefs.getBoolean(HIDE_DONE_TASKS, d.hideDoneTasks),
             hideDoneAfterHours = prefs.getInt(HIDE_DONE_AFTER_HOURS, d.hideDoneAfterHours).coerceIn(1, 24 * 365),
+            welcomeSeen = prefs.getBoolean(WELCOME_SEEN, d.welcomeSeen),
         )
     }
 
@@ -127,6 +130,7 @@ class SettingsStore(context: Context) {
             .putBoolean(SYNC_IN_BACKGROUND, settings.syncInBackground)
             .putBoolean(HIDE_DONE_TASKS, settings.hideDoneTasks)
             .putInt(HIDE_DONE_AFTER_HOURS, settings.hideDoneAfterHours)
+            .putBoolean(WELCOME_SEEN, settings.welcomeSeen)
             .apply() // apply ya deja el valor visible en este proceso: el `recreate()` del cambio de idioma lo lee al instante.
     }
 
@@ -136,6 +140,7 @@ class SettingsStore(context: Context) {
 
     private companion object {
         const val FILE = "settings"
+        const val WELCOME_SEEN = "welcomeSeen"
         const val APPEARANCE = "appearance"
         const val ASPECT_COLORS = "aspectColors"
         const val LANGUAGE = "language"

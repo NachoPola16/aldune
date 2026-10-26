@@ -50,6 +50,7 @@ fun NotesApp(viewModel: NotesViewModel) {
     // Una petición de captura saca de Ajustes: el editor está en la pantalla de notas. (No se atiende aquí: lo hace el andamio.)
     val capture by viewModel.capture.collectAsStateWithLifecycle()
     LaunchedEffect(capture) { if (capture != null) showSettings = false }
+    val settings by viewModel.settings.collectAsStateWithLifecycle()
     viewModel.setPlaceholder(stringResource(R.string.new_note_title))
     viewModel.setProtectedTitle(stringResource(R.string.protected_note_title))
     Surface(Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {
@@ -58,9 +59,16 @@ fun NotesApp(viewModel: NotesViewModel) {
                 CircularProgressIndicator()
             }
             is UiState.KeyLost -> KeyLostScreen(onStartOver = viewModel::startOver)
-            is UiState.Ready ->
+            is UiState.Ready -> {
                 if (showSettings) SettingsScreen(viewModel, onClose = { showSettings = false })
                 else NotesScaffold(s, viewModel, onOpenSettings = { showSettings = true })
+                // Bienvenida solo en una instalación nueva: quien ya tiene notas (una actualización, o un perfil ya sincronizado) no la necesita.
+                val firstRun = !settings.welcomeSeen && s.counts.values.sum() == 0
+                LaunchedEffect(settings.welcomeSeen, firstRun) {
+                    if (!settings.welcomeSeen && !firstRun) viewModel.updateSettings { it.copy(welcomeSeen = true) }
+                }
+                if (firstRun && !showSettings) WelcomeDialog(onDismiss = { viewModel.updateSettings { it.copy(welcomeSeen = true) } })
+            }
         }
     }
 }
@@ -148,6 +156,23 @@ private fun NotesScaffold(state: UiState.Ready, viewModel: NotesViewModel, onOpe
                 }
             }
         },
+    )
+}
+
+/** Tres cosas, no un recorrido: crear una nota, hacer una lista y sincronizar. */
+@Composable
+private fun WelcomeDialog(onDismiss: () -> Unit) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(stringResource(R.string.welcome_title)) },
+        text = {
+            Column(verticalArrangement = androidx.compose.foundation.layout.Arrangement.spacedBy(12.dp)) {
+                Text(stringResource(R.string.welcome_add))
+                Text(stringResource(R.string.welcome_lists))
+                Text(stringResource(R.string.welcome_sync))
+            }
+        },
+        confirmButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.welcome_ok)) } },
     )
 }
 
