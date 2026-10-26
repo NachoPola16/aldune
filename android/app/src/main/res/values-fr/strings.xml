@@ -297,4 +297,10 @@
     <string name="large_checkboxes">Cases de tâche plus grandes</string>
     <string name="large_checkboxes_hint">Agrandit les cases pour les toucher plus facilement.</string>
     <string name="sync_paste">Coller</string>
+    <string name="bg_never">La synchro en arrière-plan n\'a pas encore eu lieu.</string>
+    <string name="bg_ok">Dernière synchro en arrière-plan %1$s</string>
+    <string name="bg_offline">La dernière tentative en arrière-plan n\'avait pas de connexion (%1$s)</string>
+    <string name="bg_failed">La dernière synchro en arrière-plan a échoué (%1$s) : %2$s</string>
+    <string name="bg_restricted">Android limite Aldune en arrière-plan : elle ne synchronise que quand tu l\'ouvres.</string>
+    <string name="bg_battery_settings">Réglages de batterie de l\'app</string>
 </resources>

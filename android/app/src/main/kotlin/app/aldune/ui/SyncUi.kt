@@ -34,7 +34,17 @@ import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
+import android.content.Context
+import android.content.Intent
+import android.net.Uri
+import android.os.Build
+import android.provider.Settings
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.compose.LifecycleEventEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import app.aldune.data.BackgroundRunStore
+import app.aldune.syncclient.BackgroundMessage
+import app.aldune.syncclient.formatBackground
 import app.aldune.R
 import app.aldune.capture.CaptureRequest
 import app.aldune.core.ProfileCodes
@@ -137,14 +147,14 @@ fun SyncSection(viewModel: NotesViewModel) {
         (capture as? CaptureRequest.ProfileCode)?.let { sharedCode = it.code; adding = true; viewModel.captureHandled() }
     }
     if (profiles.isEmpty()) {
-        ConnectForm(c, additional = false, initialCode = sharedCode, onDone = {})
+        ConnectForm(c, additional = false, initialCode = sharedCode, onCodeTaken = { sharedCode = null }, onDone = { adding = false; sharedCode = null })
     } else {
         profiles.forEach { ConnectedPanel(c, it) }
         Column(Modifier.padding(horizontal = 16.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
             // «Sincronizar ahora» es de toda la sync, no de un perfil: una pasada recorre todos.
             Button(enabled = !status.running, onClick = { c.request(app.aldune.syncclient.SyncEvent.ManualSync) }) { Text(stringResource(R.string.sync_now)) }
             Text(stringResource(R.string.sync_backup_note), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(top = 8.dp))
-            if (adding) ConnectForm(c, additional = true, initialCode = sharedCode, onDone = { adding = false })
+            if (adding) ConnectForm(c, additional = true, initialCode = sharedCode, onCodeTaken = { sharedCode = null }, onDone = { adding = false; sharedCode = null })
             else OutlinedButton(onClick = { adding = true }) { Text(stringResource(R.string.sync_add_profile)) }
             HorizontalDivider(Modifier.padding(top = 8.dp))
         }
@@ -152,16 +162,56 @@ fun SyncSection(viewModel: NotesViewModel) {
         SwitchRow(stringResource(R.string.sync_in_background), stringResource(R.string.sync_in_background_hint), settings.syncInBackground) { on ->
             viewModel.updateSettings { it.copy(syncInBackground = on) }
         }
+        if (settings.syncInBackground) BackgroundInfo()
     }
 }
 
+/** Lo que Ajustes cuenta del segundo plano: la última pasada, que Android decide cuándo corre y si la tiene restringida. */
 @Composable
-private fun ConnectForm(controller: SyncController, additional: Boolean, initialCode: String? = null, onDone: () -> Unit) {
+private fun BackgroundInfo() {
+    val context = LocalContext.current
+    val store = remember { BackgroundRunStore(context) }
+    var last by remember { mutableStateOf(store.load()) }
+    var restricted by remember { mutableStateOf(isBackgroundRestricted(context)) }
+    LifecycleEventEffect(Lifecycle.Event.ON_RESUME) { last = store.load(); restricted = isBackgroundRestricted(context) }
+    val now = rememberNow()
+    val line = formatBackground(enabled = true, last = last, restricted = restricted, now = now)
+    val since = line.relative?.let { relativeText(it) }.orEmpty()
+    Column(Modifier.padding(horizontal = 16.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+        when (line.message) {
+            BackgroundMessage.NEVER_RAN -> Text(stringResource(R.string.bg_never), style = MaterialTheme.typography.bodyMedium)
+            BackgroundMessage.OK -> Text(stringResource(R.string.bg_ok, since), style = MaterialTheme.typography.bodyMedium)
+            BackgroundMessage.OFFLINE -> Text(stringResource(R.string.bg_offline, since), style = MaterialTheme.typography.bodyMedium)
+            BackgroundMessage.FAILED -> Text(
+                stringResource(R.string.bg_failed, since, line.failure?.let { failureText(it) }.orEmpty()),
+                style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.error,
+            )
+            BackgroundMessage.DISABLED -> Unit
+        }
+        if (line.restricted) {
+            Text(stringResource(R.string.bg_restricted), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.error)
+            OutlinedButton(onClick = {
+                context.startActivity(
+                    Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS, Uri.fromParts("package", context.packageName, null)).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK),
+                )
+            }) { Text(stringResource(R.string.bg_battery_settings)) }
+        }
+    }
+}
+
+/** El usuario (o el sistema) puso la app en modo restringido: no corre nada en segundo plano. Antes de la API 28 no existe. */
+private fun isBackgroundRestricted(context: Context): Boolean =
+    Build.VERSION.SDK_INT >= Build.VERSION_CODES.P &&
+        (context.getSystemService(Context.ACTIVITY_SERVICE) as android.app.ActivityManager).isBackgroundRestricted
+
+@Composable
+private fun ConnectForm(controller: SyncController, additional: Boolean, initialCode: String? = null, onCodeTaken: () -> Unit = {}, onDone: () -> Unit) {
     val scope = rememberCoroutineScope()
     val clipboard = LocalClipboard.current
     // Nada de esto es rememberSaveable a propósito: el código lleva la clave y el token es un secreto; no deben pasar por el estado guardado.
     var code by remember { mutableStateOf(initialCode.orEmpty()) }
-    LaunchedEffect(initialCode) { if (initialCode != null) code = initialCode }
+    // El código compartido se recoge una vez: si no, tras conectar el formulario reaparecería con el código viejo.
+    LaunchedEffect(initialCode) { if (initialCode != null) { code = initialCode; onCodeTaken() } }
     var parsed by remember { mutableStateOf<ProfileParse.Parsed?>(null) }
     var transport by remember { mutableStateOf(SyncTransportKind.SERVER) }
     var url by remember { mutableStateOf("") }

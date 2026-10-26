@@ -297,4 +297,10 @@
     <string name="large_checkboxes">Larger task checkboxes</string>
     <string name="large_checkboxes_hint">Makes the boxes bigger, so they are easier to tap.</string>
     <string name="sync_paste">Paste</string>
+    <string name="bg_never">Background sync hasn\'t run yet.</string>
+    <string name="bg_ok">Last background sync %1$s</string>
+    <string name="bg_offline">Last background attempt had no connection (%1$s)</string>
+    <string name="bg_failed">Last background sync failed (%1$s): %2$s</string>
+    <string name="bg_restricted">Android is restricting Aldune in the background: it only syncs when you open it.</string>
+    <string name="bg_battery_settings">App battery settings</string>
 </resources>

@@ -297,4 +297,10 @@
     <string name="large_checkboxes">Größere Aufgabenkästchen</string>
     <string name="large_checkboxes_hint">Vergrößert die Kästchen, damit sie leichter zu treffen sind.</string>
     <string name="sync_paste">Einfügen</string>
+    <string name="bg_never">Die Synchronisierung im Hintergrund lief noch nicht.</string>
+    <string name="bg_ok">Zuletzt im Hintergrund synchronisiert %1$s</string>
+    <string name="bg_offline">Der letzte Hintergrundversuch hatte keine Verbindung (%1$s)</string>
+    <string name="bg_failed">Die letzte Hintergrundsynchronisierung ist fehlgeschlagen (%1$s): %2$s</string>
+    <string name="bg_restricted">Android schränkt Aldune im Hintergrund ein: es synchronisiert nur, wenn du es öffnest.</string>
+    <string name="bg_battery_settings">Akkueinstellungen der App</string>
 </resources>

@@ -297,4 +297,10 @@
     <string name="large_checkboxes">Casillas de tarea más grandes</string>
     <string name="large_checkboxes_hint">Agranda las casillas para acertarlas con más facilidad.</string>
     <string name="sync_paste">Pegar</string>
+    <string name="bg_never">La sync en segundo plano todavía no ha corrido.</string>
+    <string name="bg_ok">Última sync en segundo plano %1$s</string>
+    <string name="bg_offline">El último intento en segundo plano no tuvo conexión (%1$s)</string>
+    <string name="bg_failed">La última sync en segundo plano falló (%1$s): %2$s</string>
+    <string name="bg_restricted">Android limita Aldune en segundo plano: solo sincroniza cuando la abres.</string>
+    <string name="bg_battery_settings">Ajustes de batería de la app</string>
 </resources>
