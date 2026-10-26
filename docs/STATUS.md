@@ -111,7 +111,7 @@ Tests: 506/506 pasando (`dotnet test tests/Aldune.Core.Tests --no-restore`).
   `docs/superpowers/`. Probado en el emulador (migración desde un perfil, segundo perfil, duplicado, desconectar uno); sin probar en el Pixel.
 
 - **Modo simplificado en Android y ajustes predeterminados (2026-10-27):** Ajustes tiene un botón «Usar modo simplificado» que deja a la vista solo sincronización, aspecto, idioma y la versión (la regla vive en `SettingsSections`, `android/domain`, con test; los ajustes escondidos no cambian). Las casillas de tarea grandes vienen activadas en instalaciones **nuevas** de Android (quien ya tenía la app conserva lo que tenía). En Windows se movió «Mostrar tareas pendientes en el recordatorio» de la página Dock a «Notas y tareas»; el resto de valores por defecto se revisó y se deja igual (ver `docs/DECISIONES-2026-10-27.md`). Temas propios sigue siendo solo de Windows.
-- **Versiones (2026-10-27):** Windows 1.7.16 y Android 0.1.0 (la primera estable, `versionCode` 12, sin `-rc`; se publica con `--latest=false`, ver `RELEASING.md`).
+- **Versiones (2026-10-27):** Windows 1.7.17 y Android 0.1.0 (la primera estable, `versionCode` 12, sin `-rc`; se publica con `--latest=false`, ver `RELEASING.md`).
 - **QR de emparejamiento** (2026-10-27, spec `superpowers/specs/2026-10-27-qr-emparejamiento-design.md`): Windows muestra el código de
   perfil como QR (`ShareQr` en Core con QRCoder 1.8.1; `ShareQrWindow` con aviso y cierre a los 120 s) y Android lo escanea
   (`QrScanActivity` con CameraX 1.6.2 + `QrDecoder` sobre ZXing core 3.5.4, sin Play Services). Se decidió no dividir el QR en varios
