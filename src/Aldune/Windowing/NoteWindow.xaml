@@ -506,7 +506,7 @@
                      AcceptsReturn="True"
                      AcceptsTab="True"
                      TextWrapping="Wrap"
-                     FontFamily="{DynamicResource AlduneNoteFont}"
+                     FontFamily="{DynamicResource AlduneNoteBodyFont}"
                      FontSize="14"
                      TextBlock.LineHeight="{DynamicResource AlduneNoteLineHeight}"
                      TextBlock.LineStackingStrategy="BlockLineHeight"

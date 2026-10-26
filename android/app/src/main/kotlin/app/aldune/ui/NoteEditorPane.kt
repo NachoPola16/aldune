@@ -80,9 +80,12 @@ import androidx.compose.ui.platform.LocalViewConfiguration
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.TextLayoutResult
 import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.coerceIn
+import androidx.compose.ui.text.font.Font
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LifecycleEventEffect
@@ -107,6 +110,7 @@ import kotlinx.coroutines.launch
 
 /** Espera antes de pedir el teclado en una nota nueva (ver el efecto de foco de [NoteEditorPane]). */
 private const val KEYBOARD_DELAY_MS = 250L
+private val CheckboxSpan = SpanStyle(fontFamily = FontFamily(Font(R.font.aldune_check)))
 
 /**
  * Editor de una nota: texto con ayudas de lista (casillas, viñetas, sangría) y guardado automático (lo hace el `ViewModel`, ver
@@ -316,10 +320,17 @@ fun NoteEditorPane(key: String, viewModel: NotesViewModel, onBack: () -> Unit, s
     val now = System.currentTimeMillis()
     val hiddenCandidates = if (hideActive) HiddenTasks.hiddenSpans(state.text.toString(), completed, now, hideDelayMs) else emptyList()
     val hiddenSpans = if (showDone) emptyList() else hiddenCandidates
+    // Las casillas se dibujan con AlduneCheck (☒ con tick, sin cambiar lo guardado); el resto del texto no cambia de fuente.
     val hideTransformation = remember(hideActive, showDone, completed, hideDelayMs) {
-        if (!hideActive || showDone) null else OutputTransformation {
-            val spans = HiddenTasks.hiddenSpans(asCharSequence().toString(), completed, System.currentTimeMillis(), hideDelayMs)
-            for (span in spans.asReversed()) delete(span.start, span.end)
+        OutputTransformation {
+            if (hideActive && !showDone) {
+                val spans = HiddenTasks.hiddenSpans(asCharSequence().toString(), completed, System.currentTimeMillis(), hideDelayMs)
+                for (span in spans.asReversed()) delete(span.start, span.end)
+            }
+            for (i in 0 until length) {
+                val c = asCharSequence()[i]
+                if (c == TaskLines.UNCHECKED || c == TaskLines.CHECKED || c == TaskLines.CHECKED_ALTERNATE) addStyle(CheckboxSpan, i, i + 1)
+            }
         }
     }
 

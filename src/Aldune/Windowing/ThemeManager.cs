@@ -63,12 +63,16 @@ public static class ThemeManager
     /// </summary>
     public static void ApplySkin(Application app, AppSkin skin)
     {
+        var noteFont = string.IsNullOrEmpty(skin.NoteFont) ? SystemFonts.MessageFontFamily : new FontFamily(skin.NoteFont);
         var dictionary = new ResourceDictionary
         {
             ["AldunePrimaryFont"] = // Vacío = la fuente de sistema, igual que la de la nota.
             string.IsNullOrEmpty(skin.ChromeFont) ? SystemFonts.MessageFontFamily : new FontFamily(skin.ChromeFont),
             ["AlduneNoteFont"] = // Vacío = la fuente de sistema (no un nombre fijo): así vale también fuera de Windows 11.
-            string.IsNullOrEmpty(skin.NoteFont) ? SystemFonts.MessageFontFamily : new FontFamily(skin.NoteFont),
+            noteFont,
+            // El cuerpo de la nota: la fuente de la nota y, de respaldo, AlduneCheck, que solo trae ☐ y ☒ (con el
+            // tick). Va DETRÁS para que el interlineado lo marque la fuente de la nota, no ella.
+            ["AlduneNoteBodyFont"] = new FontFamily(new Uri("pack://application:,,,/aldune;component/"), $"{noteFont.Source}, ./Assets/#AlduneCheck"),
             ["AlduneNoteTitleFont"] = new FontFamily(skin.NoteTitleFont),
             ["AlduneNoteTitleFontSize"] = skin.NoteTitleFontSize,
             // NaN = el interlineado natural de la fuente (lo de siempre).

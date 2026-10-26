@@ -28,6 +28,10 @@ public static class TaskLines
     /// ancho (el texto de la tarea se desplazaba al marcarla) y el único negro puro de una ventana
     /// que evita el negro absoluto a propósito. ☒ sale de la misma fuente que ☐: mismo peso, misma
     /// anchura, misma caja.
+    ///
+    /// Lo que se GUARDA sigue siendo ☐ y ☒. Cómo se dibujan lo decide la fuente propia AlduneCheck (☐ igual, ☒ con un
+    /// tick en vez de aspa; scripts/branding/generar-fuente-check.py), con la caja y el avance de Segoe, así que la
+    /// zona de clic de NoteWindow no cambia.
     /// </summary>
     public const char Checked = '☒';
 
