@@ -15,50 +15,12 @@ del icono de la bandeja. Cada actualización grande deberá incrementar este nú
 parches para correcciones, versión menor para funcionalidades nuevas y versión mayor cuando haya
 cambios incompatibles.
 
-## 1. Investigación de mercado (2026-09-06)
+## 1. Inspiración
 
-Se buscó si el concepto de Aldune ya existe y si hay hueco. Resumen de lo encontrado, con fuentes.
-
-### El hallazgo principal
-
-**El concepto de Aldune no existe en Windows.** Las dos apps que inspiran el diseño son ambas solo
-macOS, y no hay equivalente nativo en Windows:
-
-| App | Plataforma | Modelo | Precio |
-|---|---|---|---|
-| [Hold My Notes](https://holdmynotes.app/) | **solo macOS** | Pestañas ancladas al borde que se despliegan en abanico. Cifrado local, sin cuenta, sync opcional por iCloud | 6,99 $ oferta (14,99 $ normal), pago único, 3 Macs |
-| [noty](https://github.com/aimen08/noty) | **solo macOS** | El mismo concepto, open source. AES-GCM, solo local, sin cuenta | Gratis (381 ★) |
-| [SideNotes](https://www.apptorium.com/sidenotes) | solo macOS/iOS | Panel lateral, no abanico | 19,99 $ pago único |
-
-Los jugadores de **Windows** (Notezilla, Simple Sticky Notes, 7 Sticky Notes, Stickies de Zhorn,
-Microsoft Sticky Notes) son **todos** del modelo clásico "notas sueltas por el escritorio". Ninguno
-usa el modelo de mazo anclado al canto.
-
-**Conclusión**: si Aldune sale al público, no entra en un mercado saturado — ocupa un hueco vacío.
-
-### Qué critican de la competencia
-
-- **Notezilla** (29,95 $ pago único o 19,95 $/año): lo más alabado son los **recordatorios** y la
-  sincronización. Lo más criticado: *"colocar las notas exactamente donde quieres es molesto"* — que
-  es justo lo que Aldune ya resuelve con la posición recordada por pantalla — y el precio.
-- **Microsoft Sticky Notes**: sin etiquetas, sin listas separadas, sin ordenar arrastrando, retrasos
-  de sync con OneDrive, cuatro años sin actualizaciones importantes.
-- Existe una categoría entera de apps de notas **solo-local + cifradas + sin cuenta** con demanda
-  real (Secure Local Notes, LocalNotes, y adyacentes como Obsidian/Joplin/Logseq). Aldune ya cumple
-  eso de fábrica y conviene decirlo explícitamente en cualquier página de presentación.
-
-### Precio, si algún día se vende
-
-El mercado se ha movido hacia el **pago único** para utilidades pequeñas (del 6,4 % al 10,3 % de
-cuota entre 2023 y 2025), y encaja con la promesa de "sin cuenta, sin nube": pedir un login para
-cobrar una suscripción la contradice. Rango de referencia: **7-15 $ pago único**.
-
-Fuentes: [Hold My Notes](https://holdmynotes.app/) ·
-[noty](https://github.com/aimen08/noty) ·
-[BetterStickies — comparativa 2026](https://betterstickies.com/blog/best-sticky-notes-apps-2026) ·
-[Notezilla en Capterra](https://www.capterra.com/p/147902/Notezilla/reviews/) ·
-[Quejas de Microsoft Sticky Notes](https://techcommunity.microsoft.com/discussions/windowsinsiderprogram/sticky-notes-app-missing-features-adding-tags-creating-separate-notes-list-sorti/774946) ·
-[Pago único vs suscripción](https://www.strayspark.studio/blog/one-time-purchase-vs-subscriptions-indie-studios)
+Aldune nació para llevar a Windows un concepto que existe en macOS: notas ancladas al borde de la pantalla que se despliegan en
+abanico. Lo inspiraron [Hold My Notes](https://holdmynotes.app/) y [noty](https://github.com/aimen08/noty) (código abierto). En
+Windows no había nada con ese modelo de mazo anclado al canto, y de ahí salió el diseño de Aldune. Se mantiene como principio que
+la app funcione **sin cuenta y con el contenido cifrado**, y que cualquier nube sea opcional.
 
 ---
 
@@ -297,7 +259,7 @@ Una nota a la vez desde `NoteWindow`, o en bloque desde `NotesManagerWindow`.
 
 ### ~~Recordatorios con notificación de Windows~~ — HECHO (ver `STATUS.md`)
 
-**El mayor hueco funcional frente a la competencia de Windows** y lo más alabado de Notezilla. Un solo
+**Un hueco funcional importante frente a otras apps de notas de Windows** y una de las funciones más pedidas. Un solo
 recordatorio puntual por nota (En 1 hora / Esta noche / Mañana 9:00, o calendario + hora manual),
 aviso nativo de Windows vía el icono de bandeja ya existente, e insignia en la pestaña del dock.
 Detalle completo, incluidos los 5 huecos de integración que encontró la revisión final de toda la
@@ -332,7 +294,7 @@ Lo que ya se decidió en el brainstorming de esta sesión, para no volver a disc
      problema que la clave de cifrado — ver `DatabaseKeyProvider` en `STATUS.md`), registrar la app
      en Google Cloud y, si Aldune se publica algún día, pasar su proceso de verificación de apps
      OAuth (si no, sale un aviso de "app no verificada"). Y contradice, para quien la use, el propio
-     diferenciador que la investigación de mercado de más arriba señaló ("sin cuenta, nunca") — por
+     principio del proyecto ("sin cuenta, nunca", §1) — por
      eso tiene que ser una vía **opcional**, nunca la única, con la vía 1 siempre disponible por
      defecto.
 - **Aviso técnico que sigue vigente para la vía 1** (ya estaba anotado antes de que esto se decidiera):
@@ -452,7 +414,7 @@ sistema y el título pasa a Ink Free (ver `STATUS.md`). Un **selector de familia
 motivos, el segundo descubierto al renderizar:
 
 1. Según la búsqueda de mercado, en apps de notas de Windows lo que la gente pide es **tamaño de
-   letra** (legibilidad, accesibilidad), no elegir familia. Notezilla lo vende por eso.
+   letra** (legibilidad, accesibilidad), no elegir familia.
 2. Las fuentes manuscritas **no tienen los glifos `☐`/`☒`**. Windows los sustituye por otra fuente y
    quedan desalineados con el texto — exactamente el problema que se arregló eligiendo `☒` por sus
    métricas. Dejar elegir familia libremente lo reintroduce, y encima de forma intermitente según la
@@ -516,7 +478,7 @@ con más insistencia, el coste de arriba sigue siendo el mismo — no ha cambiad
 - **Etiquetas y carpetas**: es la queja nº1 de Microsoft Sticky Notes, pero choca con el minimalismo
   de Aldune (el mazo son notas activas, punto). Si crece la lista de notas, la respuesta correcta
   probablemente sea mejorar el gestor y la búsqueda, no añadir jerarquía.
-- **Adjuntar imágenes / capturas** (lo tienen MS Sticky Notes y BetterStickies): rompería el modelo
+- **Adjuntar imágenes / capturas** (otras apps de notas lo tienen): rompería el modelo
   de texto plano, que es lo que hace posible el cifrado simple, la búsqueda y la exportación. No sin
   una razón muy buena.
 - **Título duplicado en la nota** — **resuelto**: se quitó el texto de la cabecera. El título es la
@@ -561,8 +523,7 @@ Por orden:
      actualizaciones, rutas de datos) y solo firma lo que se instala desde la Store.
 3. Página de presentación. Lo que hay que decir, por orden de fuerza: es lo único así **en Windows**;
    las notas están **cifradas y no salen del equipo**; **no hay cuenta ni nube**; hay **versión
-   portable** que no se instala (ningún competidor la ofrece).
-4. Precio: pago único en el rango 7-15 $, o gratis con desbloqueo de pago único.
+   portable** que no se instala.
 
 ---
 
@@ -987,7 +948,7 @@ apuntar algo que imitar el dock") y revisar después qué hacer con los sistemas
   **subir el formato a 5** si algún día los recordatorios tienen que viajar entre dispositivos (hoy no
   viajan).
 - **[`DESKTOP_PORT.md`](DESKTOP_PORT.md) — macOS, Linux y web.** Conclusión: en macOS el concepto **ya
-  existe y está ocupado** (Hold My Notes, noty, SideNotes) y la mecánica del dock hay que rehacerla en
+  existe y está ocupado** (las apps que inspiraron Aldune) y la mecánica del dock hay que rehacerla en
   AppKit; en Linux, GNOME (Mutter) no soporta `wlr-layer-shell`, así que un dock al canto sería una
   extensión del escritorio, no una aplicación. Lo que compensa de esos sistemas es el **Core**, no el
   dock: un cliente de escritorio **sin dock** (Avalonia) el día que haya alguien que lo use. El servidor
@@ -1053,17 +1014,14 @@ de archivos, sonidos, formato de sync).
 
 ## 13. Qué podría hacer que alguien pague (2026-10-25)
 
-Revisión de mercado repetida el 25-10-2026 (misma conclusión que el §1: sigue sin haber en Windows nada con notas ancladas al borde y en abanico). Rivales cercanos por otros lados: Notezilla (de pago, Android, sync cifrada en su nube), Sticki.ly (multiplataforma, E2E) y Stickene (gratis, sync E2E, sin Android aún). Lo que Aldune junta y ellos no: dock en abanico + sync cifrada con servidor propio + Android nativo + código abierto (GPL-3.0). Eso es un buen mensaje, todavía no un motivo de pago.
 
 Decisión previa (sin cambios): seguir GPL-3.0 y **validar con 3-5 personas antes de vender**. Ideas, de más a menos clara:
 
 1. **Emparejamiento fácil (elegida por el usuario para implementar, 25-10-2026).** Hoy se pega `aldune-profile-v2:…` y se teclea el token aparte (`SYNC.md`). Un QR del código de perfil lo reduce a escanear. Esto revisa la decisión del 21-10 («QR después de F8»): el usuario prefiere hacerlo ahora. **Restricción que no cambia:** el token nunca viaja en el QR (ese código también sirve para compartir una nota y regalaría escritura sobre todo el almacén). Diseño pendiente: cómo llega el token (introducirlo a mano, o un segundo paso corto), cámara en Android (CameraX + ZXing) y generación en Windows (QRCoder). Sin cambiar el formato de sync (4) ni los prefijos `aldune-profile-*`.
 
    **Decidido el 25-10-2026 (falta spec y plan; pendiente, no empezado):** el token se sigue tecleando aparte (sin cambios en servidor ni formato). Windows y Android muestran el QR del código de perfil; Android lo escanea. Propuesta: CameraX + ZXing (libre, compatible con F-Droid; el escáner de ML Kit necesita Play Services) en Android y QRCoder (MIT) en Windows. Si el perfil lleva notas concretas y el código no cabe en un QR, la pantalla lo avisa y ofrece copiar el código como hoy. Siguiente paso: escribir la spec en `docs/superpowers/specs/` y, con su visto bueno, el plan con tests primero.
-2. **Sync alojada por el autor.** App gratis y GPL; se paga por no montar el servidor. Es lo más coherente con la licencia y lo único recurrente. Exige operar un servicio (coste, soporte, privacidad: al ser E2E el servidor no lee notas).
-3. **Importar Markdown y copia de seguridad con un clic.** Barato; quita fricción de entrada (ver `PENDIENTES.md`).
-4. **Microsoft Store (MSIX).** La firma y el no pasar por SmartScreen pesan más que cualquier función; SignPath ya rechazó el proyecto. Pospuesto hasta cerrar Android; para vender es probablemente lo más necesario.
+2. **Importar Markdown y copia de seguridad con un clic.** Barato; quita fricción de entrada (ver `PENDIENTES.md`).
+3. **Microsoft Store (MSIX).** La firma y el no pasar por SmartScreen pesan más que cualquier función; SignPath ya rechazó el proyecto. Pospuesto hasta cerrar Android; para vender es probablemente lo más necesario.
 
-Precio de referencia: pago único de 7-15 $ (§1), o gratis con desbloqueo de pago único; la opción 2 sería la excepción por ser un servicio.
 
 **Paridad móvil, aspectos retro en Android — HECHO (2026-10-25).** XP claro y oscuro, Telecomunicaciones claro y oscuro, Bash y Fósforo, con sus colores personalizables, las paletas de Bash, el tema de notas sugerido y fuente monoespaciada donde toca; sin la «piel» de Windows. Paletas idénticas a las del PC, fijadas por vectores (`tests/vectors/text-color.json`). Probado en el Pixel con la versión de depuración. El widget también (acento en el título y el «+», y fuente monoespaciada en Bash, Telecomunicaciones y Fósforo). Publicado en `android-v0.1.0-rc5`, `rc6` (acento del widget) y `rc7` (fuente del widget); instaladas en Pixel y tableta. Spec: `docs/historia/specs/2026-10-25-aldune-android-aspectos-retro-design.md`.

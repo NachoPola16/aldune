@@ -18,7 +18,7 @@
 | **Servidor en ARM** (Raspberry Pi, NAS) | Ya funciona | El `Dockerfile` parte de una imagen multi-arquitectura y compila en destino: §9.2 |
 | **Android** | **Sí, primero: decidido el 2026-09-28** | Es donde el port tiene sentido y se reutiliza Core entero (ver `MOBILE_PORT.md` §0.1: sin Mac, sin licencias, tableta como referencia) |
 | **iOS** | Sí, después de Android | Mismo código, otro toolchain y una extensión en Swift |
-| **macOS** | **No, por ahora** | Es el único sistema donde **el concepto ya existe y está ocupado** (Hold My Notes, noty, SideNotes) y encima es donde la mecánica de Aldune (ventanas recortadas al canto) hay que rehacerla de otra manera |
+| **macOS** | **No, por ahora** | Es el único sistema donde **el concepto ya existe y está ocupado** (las apps que inspiraron Aldune) y encima es donde la mecánica de Aldune (ventanas recortadas al canto) hay que rehacerla de otra manera |
 | **Linux** | **No como app**; sí como servidor | El dock al canto no es portable a Wayland sin ser una extensión del escritorio (GNOME no soporta `wlr-layer-shell`); y el `SyncServer` ya corre en Linux, que es lo que un usuario de Linux necesita para sincronizar |
 | **Web / WASM** | **No** | Sin widgets, sin notificaciones fiables, y el texto acabaría en el navegador. Ya descartado en `MOBILE_PORT.md` §11 |
 | **ChromeOS** | Cubierto por Android | ChromeOS ejecuta aplicaciones de Play Store, así que el cliente Android (§`MOBILE_PORT.md`) vale; y su Linux (Crostini) es el caso de Linux de §3 |
@@ -45,11 +45,8 @@ este documento va de cuánto cuesta ponerle cuerpo a macOS, Linux o web, y de si
 
 ### 2.1 El problema no es técnico, es de mercado
 
-Lo dice la investigación del propio proyecto (`ROADMAP.md` §1, 2026-09-06): el concepto de Aldune nació
-en macOS y allí sigue: **Hold My Notes** (6,99-14,99 $ pago único, cifrado local, sync opcional por
-iCloud), **noty** (open source, AES-GCM, gratis) y **SideNotes** (19,99 $). Aldune se hizo precisamente
-para llevar ese concepto a Windows, donde no existía ("si Aldune sale al público, no entra en un mercado
-saturado — ocupa un hueco vacío").
+El concepto de Aldune nació en macOS y allí sigue (`ROADMAP.md` §1): las apps que lo inspiraron ya lo cubren. Aldune se hizo
+precisamente para llevarlo a Windows, donde no existía.
 
 Portar Aldune a macOS invierte ese argumento: entraría como **cuarto** en un mercado con tres jugadores,
 uno de ellos gratis y con el código a la vista, y con la app que inspiró el diseño. En Windows el hueco
@@ -197,8 +194,7 @@ duplicar los textos (`Strings.cs` se enlaza, no se copia) y portar el editor de 
 Antes de trabajar en esto, **revalidar**: la tabla de Wayland (§3.2, los compositores cambian cada
 versión), el estado de XPF y los requisitos de Apple. Todo lo de este documento es del **2026-09-28**.
 
-- Mercado de macOS y concepto original: `ROADMAP.md` §1 (investigación del 2026-09-06), con las fuentes
-  de Hold My Notes, noty y SideNotes.
+- Concepto original e inspiración: `ROADMAP.md` §1.
 - [Soporte de `wlr-layer-shell` por compositor](https://wayland.app/protocols/wlr-layer-shell-unstable-v1)
 - [Notarización de software para macOS](https://developer.apple.com/documentation/security/notarizing-macos-software-before-distribution)
 - [Requisitos próximos de Apple](https://developer.apple.com/news/upcoming-requirements/)

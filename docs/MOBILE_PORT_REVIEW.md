@@ -38,7 +38,7 @@ coste), **menor** (matiz, redacción, referencia). Para cada punto de la secció
 2. `docs/STATUS.md` — última entrada: el estudio y la decisión del 2026-09-28.
 3. `docs/MOBILE_PORT.md` — **el plan a revisar**.
 4. `docs/DESKTOP_PORT.md` — macOS, Linux, web, Windows ARM64, servidor ARM.
-5. `docs/ROADMAP.md` §9 y §1 (investigación de mercado: el concepto ya existe en macOS).
+5. `docs/ROADMAP.md` §9 y §1 (inspiración: el concepto ya existe en macOS).
 6. Como referencia técnica: `docs/SYNC.md` (modelo de seguridad y compatibilidad),
    `docs/PROTECTED_NOTES.md`, `docs/WPF_PROBES.md` (cultura de verificación) y las specs de
    `docs/superpowers/specs/`.

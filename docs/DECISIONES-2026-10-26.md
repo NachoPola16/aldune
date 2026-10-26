@@ -60,7 +60,6 @@ aparte) funciona. Se retoma solo si la validación con 3-5 personas demuestra qu
 - No se vende todavía: primero validar con 3-5 personas reales.
 - **Se retoman IzzyOnDroid y F-Droid** (compatibles con GPL, visibilidad gratis para esa validación). Sustituye la
   pausa del 24-10.
-- La sync alojada de pago queda anotada (`ROADMAP.md`, ideas de negocio) sin actuar hasta tener esas personas.
 
 ## Sin cambios
 
