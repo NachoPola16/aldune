@@ -1,0 +1,97 @@
+<!doctype html>
+<html lang="es"><head><meta charset="utf-8"><title>Aldune - variantes de logo</title>
+<style>
+body{margin:0;padding:24px;background:#d9d4c8;font:14px/1.3 "Segoe UI",sans-serif;color:#2A261F;width:1640px}
+h1{margin:0 0 16px;font-size:20px}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+.card{background:#fbf9f4;border-radius:12px;padding:16px}
+.card h2{margin:0 0 2px;font-size:16px}.card p{margin:0 0 12px;color:#6b6456;font-size:12px}
+.row{display:flex;align-items:flex-end;gap:14px;margin-bottom:12px}
+.lab{font-size:10px;color:#6b6456;text-align:center;margin-top:3px}
+.surf{padding:10px;border-radius:10px;display:flex;gap:10px;align-items:center}
+svg{display:block}
+</style></head><body>
+<h1>Aldune - candidatos a símbolo (mismo código de render para todos los tamaños y máscaras)</h1>
+<div class="grid" id="g"></div>
+<script>
+const BG='#2A261F',Y='#EBD38B',C='#83E7F2',P='#F9BEF2',W='#F4F1EC';
+// Cada forma: [svg-tag-attrs, colorKey, gapEnColor]
+const V={
+ A:{name:'A · Pestañas (concepto actual resuelto)',desc:'Tres pestañas escalonadas contra el canto. Contenido dentro de la zona segura; barra más corta y redondeada.',
+  shapes:[
+   ['path','M41 29H70V43H41a7 7 0 0 1-7-7a7 7 0 0 1 7-7z',Y],
+   ['path','M47 47H70V61H47a7 7 0 0 1-7-7a7 7 0 0 1 7-7z',C],
+   ['path','M53 65H70V79H53a7 7 0 0 1-7-7a7 7 0 0 1 7-7z',P],
+   ['rect','x="72" y="30" width="6" height="48" rx="3"',W]]},
+ B:{name:'B · Nota con índices',desc:'Nota de papel con esquina doblada y tres lengüetas de color en el borde. Mezcla papel + dock.',
+  shapes:[
+   ['path','M30 37a5 5 0 0 1 5-5H70V64L58 76H35a5 5 0 0 1-5-5z',W],
+   ['path','M58 76V67a3 3 0 0 1 3-3H70z','#CFC6B4'],
+   ['rect','x="70" y="35" width="9" height="10" rx="3"',Y],
+   ['rect','x="70" y="48" width="9" height="10" rx="3"',C],
+   ['rect','x="70" y="61" width="9" height="10" rx="3"',P]]},
+ C:{name:'C · Notas apiladas',desc:'Tres notas superpuestas en diagonal. La más simple y la que más "dice" nota adhesiva.',
+  shapes:[
+   ['rect','x="31" y="31" width="30" height="30" rx="6"',P,1],
+   ['rect','x="39" y="39" width="30" height="30" rx="6"',C,1],
+   ['rect','x="47" y="47" width="30" height="30" rx="6"',Y,1]]},
+ E:{name:'E · Abanico de notas',k:.9,desc:'Tres notas abiertas en abanico desde una esquina; más movimiento y calidez que C.',
+  shapes:[
+   ['rect','x="39" y="38" width="30" height="34" rx="6" transform="rotate(-18 54 76)"',P,1],
+   ['rect','x="39" y="38" width="30" height="34" rx="6"',C,1],
+   ['rect','x="39" y="38" width="30" height="34" rx="6" transform="rotate(18 54 76)"',Y,1]]},
+ F:{name:'F · Pestañas gruesas',desc:'A simplificada: tres pastillas gruesas escalonadas, sin barra. Más masa para que aguante a 16 px.',
+  shapes:[
+   ['rect','x="32" y="29" width="44" height="14" rx="7"',Y],
+   ['rect','x="38" y="47" width="38" height="14" rx="7"',C],
+   ['rect','x="44" y="65" width="32" height="14" rx="7"',P]]},
+ G:{name:'G · «A» de tres notas',k:.92,desc:'Monograma: dos patas inclinadas y un travesaño, cada uno de un color de nota. Dice Aldune sin texto.',
+  shapes:[
+   ['rect','x="38.5" y="26" width="13" height="56" rx="6.5" transform="rotate(22.4 45 54)"',Y,1],
+   ['rect','x="57" y="26" width="13" height="56" rx="6.5" transform="rotate(-22.4 63.5 54)"',C,1],
+   ['rect','x="40" y="60" width="28" height="10" rx="5"',P,1]]},
+ H:{name:'H · Pila vista de frente',k:.94,desc:'Tres notas apiladas asomando por arriba, como un taco de notas visto de frente.',
+  shapes:[
+   ['rect','x="40" y="30" width="28" height="22" rx="6"',P,1],
+   ['rect','x="35" y="38" width="38" height="26" rx="7"',C,1],
+   ['rect','x="30" y="46" width="48" height="32" rx="8"',Y,1]]},
+ D:{name:'D · Nota con cinta y esquina',desc:'Una sola nota amarilla con esquina doblada en cian y cinta rosa. Pocas formas, silueta casi cuadrada.',
+  shapes:[
+   ['path','M32 38a6 6 0 0 1 6-6H70a6 6 0 0 1 6 6V60L60 76H38a6 6 0 0 1-6-6z',Y],
+   ['path','M60 76V66a6 6 0 0 1 6-6H76z',C],
+   ['rect','x="43" y="27" width="22" height="8" rx="4"',P,1]]}
+};
+let uid=0;
+function icon(k,o){
+ const v=V[k],{shape='square',size=48,scale:s0=1,mono=null,bg=BG}=o;const scale=s0*(v.k||1);
+ const id='c'+(uid++);
+ let clip='',bgEl='';
+ if(shape==='circle'){clip=`<clipPath id="${id}"><circle cx="54" cy="54" r="54"/></clipPath>`}
+ else if(shape==='squircle'){clip=`<clipPath id="${id}"><rect width="108" height="108" rx="38"/></clipPath>`}
+ else if(shape==='tile'){clip=`<clipPath id="${id}"><rect width="108" height="108" rx="24"/></clipPath>`}
+ else clip=`<clipPath id="${id}"><rect width="108" height="108"/></clipPath>`;
+ const bgc=mono?mono.bg:bg;
+ const sh=v.shapes.map(([t,a,col,gap])=>{
+   const fill=mono?mono.fg:col;
+   const stroke=(mono||gap)?` stroke="${bgc}" stroke-width="2.4" paint-order="stroke"`:'';
+   const attrs=t==='path'?`d="${a}"`:a;
+   return `<${t} ${attrs} fill="${fill}"${stroke}/>`}).join('');
+ return `<svg width="${size}" height="${size}" viewBox="0 0 108 108">${clip}<g clip-path="url(#${id})"><rect width="108" height="108" fill="${bgc}"/><g transform="translate(54 54) scale(${scale}) translate(-54 -54)">${sh}</g></g></svg>`;
+}
+const L=(h,t)=>`<div>${h}<div class="lab">${t}</div></div>`;
+let out='';
+for(const k of ['A','C','E','F','G','H']){
+ const v=V[k];
+ let r1=[16,24,48,108].map(s=>L(icon(k,{shape:'tile',size:s,scale:1.35}),s+' px')).join('')+L(icon(k,{shape:'tile',size:160,scale:1.35}),'512 px (a 160)');
+ const masks=['circle','squircle','square'];
+ const surf=(bgS,extra)=>`<div class="surf" style="background:${bgS}">`+masks.map(m=>L(icon(k,{shape:m,size:72}),m)).join('')+extra+`</div>`;
+ const monoL=L(icon(k,{shape:'circle',size:72,mono:{bg:'#DDE3EA',fg:'#2B3340'}}),'mono claro');
+ const monoD=L(icon(k,{shape:'circle',size:72,mono:{bg:'#3A4250',fg:'#D6E3FF'}}),'mono oscuro');
+ out+=`<div class="card"><h2>${v.name}</h2><p>${v.desc}</p>
+  <div class="row">${r1}</div>
+  <div class="row"><div class="surf" style="background:#EFEAE0">${masks.map(m=>L(icon(k,{shape:m,size:72}),m)).join('')}</div>
+  <div class="surf" style="background:#121212">${masks.map(m=>L(icon(k,{shape:m,size:72}),m)).join('')}</div>
+  <div class="surf" style="background:#EFEAE0">${monoL}</div><div class="surf" style="background:#121212">${monoD}</div></div></div>`;
+}
+document.getElementById('g').innerHTML=out;
+</script></body></html>

@@ -47,7 +47,7 @@ object CaptureNotification {
             context, 0, CaptureIntents.newNote(context), PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT,
         )
         val notification = NotificationCompat.Builder(context, CHANNEL_ID)
-            .setSmallIcon(R.drawable.ic_new_note)
+            .setSmallIcon(R.drawable.ic_stat_aldune)
             .setContentTitle(context.getString(R.string.new_note))
             .setContentText(context.getString(R.string.capture_notification_text))
             .setContentIntent(open)

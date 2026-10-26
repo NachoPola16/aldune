@@ -1,3 +1,5 @@
+<p align="center"><img src="docs/branding/aldune-logo-128.png" alt="Aldune" width="96"></p>
+
 # Aldune
 
 **Notas al borde de tu pantalla.** Aldune es una app de notas adhesivas para Windows: tus notas

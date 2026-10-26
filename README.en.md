@@ -1,3 +1,5 @@
+<p align="center"><img src="docs/branding/aldune-logo-128.png" alt="Aldune" width="96"></p>
+
 # Aldune
 
 **Notes on the edge of your screen.** Aldune is a sticky-notes app for Windows: your notes live as a

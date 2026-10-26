@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 108 108">
+  <!-- Alternativa C (descartada, guardada por si acaso): tres notas apiladas en diagonal. Ver docs/BRANDING.md. Los huecos son un trazo
+       del color del fondo (#2A261F), así que NO vale tal cual para el icono monocromo de Android. -->
+  <g transform="translate(54 54) scale(1) translate(-54 -54)" stroke="#2A261F" stroke-width="2.4" paint-order="stroke">
+    <rect x="31" y="31" width="30" height="30" rx="6" fill="#F9BEF2"/>
+    <rect x="39" y="39" width="30" height="30" rx="6" fill="#83E7F2"/>
+    <rect x="47" y="47" width="30" height="30" rx="6" fill="#EBD38B"/>
+  </g>
+</svg>

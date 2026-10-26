@@ -16,8 +16,10 @@ investigarlo salvo que cambie la razón.
 
 ## Logo
 
-Se queda el de la rc8 (más grande, sin borde fino). Si en el móvil sigue viéndose pixelado, se hace el cambio general
-(opción B/C desde `src/Aldune/Assets/aldune-logo.svg`) antes de las capturas.
+**Cerrado el 26-10:** el símbolo definitivo es **la «A» de tres notas** (candidato G), un único dibujo del que salen todos los
+formatos (`scripts/branding/generar-iconos.py`). Sustituye a las tres pestañas con barra, que en una máscara circular parecían
+un rectángulo metido en un círculo. Se guarda el candidato C (notas apiladas) como alternativa. Detalle, colores, reglas de
+uso y lo descartado: [`BRANDING.md`](BRANDING.md).
 
 ## Windows 1.7.12 (release pequeña)
 
