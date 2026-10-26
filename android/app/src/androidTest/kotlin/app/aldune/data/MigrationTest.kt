@@ -41,4 +41,25 @@ class MigrationTest {
             db.execSQL("INSERT INTO sync_conflict (noteId, detectedAt, payloadCipher, nonce, tag) VALUES ('x', 't', x'00', x'00', x'00')")
         }
     }
+
+    @Test fun migration2To3MovesRowsToTheLegacyProfile() {
+        helper.createDatabase("migration-23", 2).use { db ->
+            db.execSQL("INSERT INTO sync_base (noteId, updatedAt, deviceId) VALUES ('x', '2026-10-17T10:00:00Z', 'pc')")
+            db.execSQL("INSERT INTO sync_conflict (noteId, detectedAt, payloadCipher, nonce, tag) VALUES ('x', 't', x'01', x'02', x'03')")
+        }
+        helper.runMigrationsAndValidate("migration-23", 3, true, MIGRATION_2_3).use { db ->
+            db.query("SELECT profileId, deviceId FROM sync_base WHERE noteId = 'x'").use { c ->
+                assertTrue(c.moveToFirst())
+                assertEquals("default", c.getString(0))
+                assertEquals("pc", c.getString(1))
+            }
+            db.query("SELECT profileId, detectedAt FROM sync_conflict WHERE noteId = 'x'").use { c ->
+                assertTrue(c.moveToFirst())
+                assertEquals("default", c.getString(0))
+                assertEquals("t", c.getString(1))
+            }
+            // La misma nota ya puede tener base en otro perfil.
+            db.execSQL("INSERT INTO sync_base (profileId, noteId, updatedAt, deviceId) VALUES ('otro', 'x', 't', 'pc')")
+        }
+    }
 }

@@ -1,6 +1,5 @@
 package app.aldune.data
 
-import app.aldune.domain.EncryptedText
 import app.aldune.domain.NoteCipher
 import app.aldune.domain.NoteState
 import app.aldune.sync.SyncBase
@@ -22,6 +21,8 @@ class RoomLocalSyncStore(
     private val database: AldunaDatabase,
     private val notes: RoomNoteStore,
     private val cipher: NoteCipher,
+    /** El perfil de esta vista: bases y conflictos son suyos. Notas y lápidas son de todos. */
+    private val profileId: String,
 ) : LocalSyncStore {
     private val noteDao = database.notes()
     private val syncDao = database.sync()
@@ -30,7 +31,7 @@ class RoomLocalSyncStore(
         LocalSnapshot(
             notes.all(),
             notes.tombstones(),
-            syncDao.bases().associate { it.noteId to SyncBase(OffsetDateTime.parse(it.updatedAt), it.deviceId) },
+            syncDao.bases(profileId).associate { it.noteId to SyncBase(OffsetDateTime.parse(it.updatedAt), it.deviceId) },
         )
     }
 
@@ -70,26 +71,24 @@ class RoomLocalSyncStore(
             }
         }
         val bases = commit.newBases.filterKeys { it !in skipped }
-        for ((id, base) in bases) syncDao.putBase(SyncBaseEntity(id, base.updatedAt.toString(), base.deviceId))
+        for ((id, base) in bases) syncDao.putBase(SyncBaseEntity(profileId, id, base.updatedAt.toString(), base.deviceId))
         CommitReport(appliedNotes, appliedTombstones, trashed, conflictsSaved, bases.size, skipped)
     }
 
-    override fun conflictedNoteIds(): Set<String> = syncDao.conflictedIds().toSet()
-
-    /** Para F7 (resolver conflictos): las versiones guardadas, ya descifradas. */
-    fun conflicts(): List<SyncConflict> = syncDao.conflicts().map(::toConflict)
+    override fun conflictedNoteIds(): Set<String> = syncDao.conflictedIds(profileId).toSet()
 
     override fun discardAllLocal() = database.runInTransaction {
         noteDao.clearNotes()
         noteDao.clearTombstones()
-        syncDao.clearBases()
-        syncDao.clearConflicts()
+        // Solo lo llama el primer perfil (ver firstConnectDecision): borra las bases y conflictos de todos, que ya no tienen notas a las que referirse.
+        syncDao.clearAllBases()
+        syncDao.clearAllConflicts()
         Unit
     }
 
     override fun forgetSyncState() = database.runInTransaction {
-        syncDao.clearBases()
-        syncDao.clearConflicts()
+        syncDao.clearBases(profileId)
+        syncDao.clearConflicts(profileId)
         Unit
     }
 
@@ -106,11 +105,6 @@ class RoomLocalSyncStore(
         val id = conflict.noteId.toString()
         // El id va como dato asociado, con un prefijo: así una fila de conflicto no descifra como si fuera el texto de la nota.
         val encrypted = cipher.encrypt("conflict:$id", ConflictPayload.write(conflict))
-        return SyncConflictEntity(id, conflict.detectedAt.toString(), encrypted.cipherText, encrypted.nonce, encrypted.tag)
+        return SyncConflictEntity(profileId, id, conflict.detectedAt.toString(), encrypted.cipherText, encrypted.nonce, encrypted.tag)
     }
-
-    private fun toConflict(row: SyncConflictEntity): SyncConflict = ConflictPayload.read(
-        row.noteId, row.detectedAt,
-        cipher.decrypt("conflict:${row.noteId}", EncryptedText(row.payloadCipher, row.nonce, row.tag)),
-    )
 }

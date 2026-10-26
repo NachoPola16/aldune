@@ -39,21 +39,26 @@ class TombstoneEntity(
     val deviceId: String,
 )
 
-/** Última versión que se sabe igual en los dos lados, para distinguir conflicto real de cambio de un solo lado (F5). */
-@Entity(tableName = "sync_base")
+/**
+ * Última versión que se sabe igual en los dos lados, para distinguir conflicto real de cambio de un solo lado (F5). Una por (perfil, nota):
+ * la misma nota puede estar en el alcance de dos perfiles y cada almacén remoto tiene su propia versión acordada.
+ */
+@Entity(tableName = "sync_base", primaryKeys = ["profileId", "noteId"])
 class SyncBaseEntity(
-    @PrimaryKey val noteId: String,
+    val profileId: String,
+    val noteId: String,
     val updatedAt: String,
     val deviceId: String,
 )
 
 /**
  * Conflicto guardado por la sync (F5): la versión que perdió, para poder recuperarla (F7). Las dos versiones van en un JSON cifrado con el
- * mismo cifrador que el texto de las notas (contiene texto de notas), en tres columnas como `note`.
+ * mismo cifrador que el texto de las notas (contiene texto de notas), en tres columnas como `note`. Uno por (perfil, nota).
  */
-@Entity(tableName = "sync_conflict")
+@Entity(tableName = "sync_conflict", primaryKeys = ["profileId", "noteId"])
 class SyncConflictEntity(
-    @PrimaryKey val noteId: String,
+    val profileId: String,
+    val noteId: String,
     val detectedAt: String,
     @ColumnInfo(typeAffinity = ColumnInfo.BLOB) val payloadCipher: ByteArray,
     @ColumnInfo(typeAffinity = ColumnInfo.BLOB) val nonce: ByteArray,

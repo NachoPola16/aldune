@@ -27,7 +27,7 @@ class RoomLocalSyncStoreTest : LocalSyncStoreContract() {
         db = database
         val cipher = AesGcmNoteCipher(ByteArray(32) { it.toByte() })
         val noteStore = RoomNoteStore(database, cipher)
-        val syncStore = RoomLocalSyncStore(database, noteStore, cipher)
+        val syncStore = RoomLocalSyncStore(database, noteStore, cipher, "default")
         return object : StoreHarness {
             override val sync: LocalSyncStore = syncStore
             override val notes: NoteStore = noteStore
