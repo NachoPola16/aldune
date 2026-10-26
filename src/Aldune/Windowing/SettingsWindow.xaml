@@ -526,6 +526,15 @@
                             </Border>
                         </StackPanel>
                     </StackPanel>
+                    <StackPanel Margin="0,20,0,0">
+                        <CheckBox x:Name="ReminderIncludesTasksCheck"
+                                  Content="{x:Static res:Strings.ReminderIncludeTasksCheckbox}"
+                                  Foreground="{DynamicResource AlduneTextBrush}" Background="{DynamicResource AlduneGroundBrush}" FontSize="{StaticResource AlduneTextBody}"
+                                  Style="{StaticResource SettingsSwitchStyle}"
+                                  Click="OnReminderIncludesTasksToggled" />
+                        <TextBlock Text="{x:Static res:Strings.ReminderIncludeTasksHint}"
+                                   Foreground="{DynamicResource AlduneHintBrush}" FontSize="{StaticResource AlduneTextSmall}" TextWrapping="Wrap" Margin="0,6,56,0" />
+                    </StackPanel>
                     <Border Background="{DynamicResource AlduneRaisedBrush}" Height="1" Margin="0,20,0,0" />
                     <!-- Antes una constante fija en el código (NotesRepository.DefaultTrashRetentionDays);
                          no hay ningún motivo para que 30 sea mejor que otro número para todo el mundo,
@@ -588,15 +597,6 @@
                                   Style="{StaticResource SettingsSwitchStyle}"
                                   Click="OnShowNotePreviewToggled" />
                         <TextBlock Text="{x:Static res:Strings.ShowNotePreviewHint}"
-                                   Foreground="{DynamicResource AlduneHintBrush}" FontSize="{StaticResource AlduneTextSmall}" TextWrapping="Wrap" Margin="0,6,56,0" />
-                    </StackPanel>
-                    <StackPanel Margin="0,20,0,0">
-                        <CheckBox x:Name="ReminderIncludesTasksCheck"
-                                  Content="{x:Static res:Strings.ReminderIncludeTasksCheckbox}"
-                                  Foreground="{DynamicResource AlduneTextBrush}" Background="{DynamicResource AlduneGroundBrush}" FontSize="{StaticResource AlduneTextBody}"
-                                  Style="{StaticResource SettingsSwitchStyle}"
-                                  Click="OnReminderIncludesTasksToggled" />
-                        <TextBlock Text="{x:Static res:Strings.ReminderIncludeTasksHint}"
                                    Foreground="{DynamicResource AlduneHintBrush}" FontSize="{StaticResource AlduneTextSmall}" TextWrapping="Wrap" Margin="0,6,56,0" />
                     </StackPanel>
                     <!-- Lo que el modo simplificado esconde de esta página. -->
