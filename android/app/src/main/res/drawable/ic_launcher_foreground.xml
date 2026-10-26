@@ -1,14 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Las tres pestañas del logo de Windows (aldune-logo.svg, viewBox 256) ampliadas al máximo que cabe en la zona segura de 66 dp, sin borde (a 48 dp un trazo de 1,6 dp se ve borroso) del icono adaptativo de 108 dp. -->
+<!-- Las tres pestañas del logo de Windows (aldune-logo.svg, viewBox 256), sin borde (a 48 dp un trazo de 1,6 dp se ve borroso) del icono adaptativo de 108 dp. El conjunto se escala para que sus esquinas queden dentro del círculo de 66 dp de la zona segura con margen: a escala 0,28 las esquinas (y la barra, más alta que las pestañas) tocaban el borde de una máscara circular y parecía un rectángulo metido en un círculo. La barra mide lo mismo que las pestañas. -->
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
     android:width="108dp" android:height="108dp" android:viewportWidth="108" android:viewportHeight="108">
-    <group android:scaleX="0.28" android:scaleY="0.28" android:translateX="16.2" android:translateY="18.16">
+    <group android:scaleX="0.25" android:scaleY="0.25" android:translateX="20" android:translateY="21.25">
         <path android:fillColor="#EBD38B"
             android:pathData="M68 40 H214 V94 H68 a22 22 0 0 1 -22 -22 v-10 a22 22 0 0 1 22 -22 z" />
         <path android:fillColor="#83E7F2"
             android:pathData="M96 104 H214 V158 H96 a22 22 0 0 1 -22 -22 v-10 a22 22 0 0 1 22 -22 z" />
         <path android:fillColor="#F9BEF2"
             android:pathData="M114 168 H214 V222 H114 a22 22 0 0 1 -22 -22 v-10 a22 22 0 0 1 22 -22 z" />
-        <path android:fillColor="#F4F1EC" android:pathData="M204 39 a11 11 0 0 1 22 0 V217 a11 11 0 0 1 -22 0 z" />
+        <path android:fillColor="#F4F1EC" android:pathData="M204 51 a11 11 0 0 1 22 0 V211 a11 11 0 0 1 -22 0 z" />
     </group>
 </vector>
