@@ -23,6 +23,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.ui.platform.LocalClipboard
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -35,6 +36,8 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import app.aldune.R
+import app.aldune.capture.CaptureRequest
+import app.aldune.core.ProfileCodes
 import app.aldune.data.SyncProfile
 import app.aldune.data.SyncTransportKind
 import app.aldune.sync.SyncScope
@@ -127,15 +130,21 @@ fun SyncSection(viewModel: NotesViewModel) {
     val status by c.status.collectAsStateWithLifecycle()
     Section(R.string.sync_title)
     var adding by remember { mutableStateOf(false) }
+    // Un código compartido desde otra app (WhatsApp, correo…) llega aquí: se abre el formulario con el código puesto.
+    val capture by viewModel.capture.collectAsStateWithLifecycle()
+    var sharedCode by remember { mutableStateOf<String?>(null) }
+    LaunchedEffect(capture) {
+        (capture as? CaptureRequest.ProfileCode)?.let { sharedCode = it.code; adding = true; viewModel.captureHandled() }
+    }
     if (profiles.isEmpty()) {
-        ConnectForm(c, additional = false, onDone = {})
+        ConnectForm(c, additional = false, initialCode = sharedCode, onDone = {})
     } else {
         profiles.forEach { ConnectedPanel(c, it) }
         Column(Modifier.padding(horizontal = 16.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
             // «Sincronizar ahora» es de toda la sync, no de un perfil: una pasada recorre todos.
             Button(enabled = !status.running, onClick = { c.request(app.aldune.syncclient.SyncEvent.ManualSync) }) { Text(stringResource(R.string.sync_now)) }
             Text(stringResource(R.string.sync_backup_note), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(top = 8.dp))
-            if (adding) ConnectForm(c, additional = true, onDone = { adding = false })
+            if (adding) ConnectForm(c, additional = true, initialCode = sharedCode, onDone = { adding = false })
             else OutlinedButton(onClick = { adding = true }) { Text(stringResource(R.string.sync_add_profile)) }
             HorizontalDivider(Modifier.padding(top = 8.dp))
         }
@@ -147,10 +156,12 @@ fun SyncSection(viewModel: NotesViewModel) {
 }
 
 @Composable
-private fun ConnectForm(controller: SyncController, additional: Boolean, onDone: () -> Unit) {
+private fun ConnectForm(controller: SyncController, additional: Boolean, initialCode: String? = null, onDone: () -> Unit) {
     val scope = rememberCoroutineScope()
+    val clipboard = LocalClipboard.current
     // Nada de esto es rememberSaveable a propósito: el código lleva la clave y el token es un secreto; no deben pasar por el estado guardado.
-    var code by remember { mutableStateOf("") }
+    var code by remember { mutableStateOf(initialCode.orEmpty()) }
+    LaunchedEffect(initialCode) { if (initialCode != null) code = initialCode }
     var parsed by remember { mutableStateOf<ProfileParse.Parsed?>(null) }
     var transport by remember { mutableStateOf(SyncTransportKind.SERVER) }
     var url by remember { mutableStateOf("") }
@@ -196,6 +207,13 @@ private fun ConnectForm(controller: SyncController, additional: Boolean, onDone:
                 keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.None, autoCorrectEnabled = false, keyboardType = KeyboardType.Ascii),
                 isError = errorText != null, supportingText = errorText?.let { { Text(stringResource(it)) } },
             )
+            // Pegar solo cuando se pulsa: Aldune no lee el portapapeles por su cuenta.
+            OutlinedButton(onClick = {
+                scope.launch {
+                    val pasted = clipboard.getClipEntry()?.clipData?.takeIf { it.itemCount > 0 }?.getItemAt(0)?.text?.toString()
+                    if (!pasted.isNullOrBlank()) { code = ProfileCodes.findShareCode(pasted) ?: pasted.trim(); errorText = null }
+                }
+            }) { Text(stringResource(R.string.sync_paste)) }
             Button(onClick = {
                 when (val result = parseProfileInput(code)) {
                     is ProfileParse.Rejected -> errorText = parseErrorText(result.error)

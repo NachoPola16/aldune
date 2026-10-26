@@ -49,7 +49,8 @@ fun NotesApp(viewModel: NotesViewModel) {
     var showSettings by rememberSaveable { mutableStateOf(false) }
     // Una petición de captura saca de Ajustes: el editor está en la pantalla de notas. (No se atiende aquí: lo hace el andamio.)
     val capture by viewModel.capture.collectAsStateWithLifecycle()
-    LaunchedEffect(capture) { if (capture != null) showSettings = false }
+    // Un código de perfil compartido lleva a Ajustes (a «Añadir perfil», que lo recoge); el resto de peticiones salen de Ajustes al editor.
+    LaunchedEffect(capture) { if (capture != null) showSettings = capture is CaptureRequest.ProfileCode }
     val settings by viewModel.settings.collectAsStateWithLifecycle()
     viewModel.setPlaceholder(stringResource(R.string.new_note_title))
     viewModel.setProtectedTitle(stringResource(R.string.protected_note_title))
@@ -121,7 +122,8 @@ private fun NotesScaffold(state: UiState.Ready, viewModel: NotesViewModel, onOpe
                 }
                 return@LaunchedEffect
             }
-            null -> return@LaunchedEffect
+            // Lo recoge SyncSection en Ajustes y lo da por atendido.
+            is CaptureRequest.ProfileCode, null -> return@LaunchedEffect
         }
         viewModel.captureHandled()
     }

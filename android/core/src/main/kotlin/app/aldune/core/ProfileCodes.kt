@@ -54,6 +54,14 @@ object ProfileCodes {
 
     fun isShareCode(value: String): Boolean = splitPrefix(value.trim()) != null
 
+    private val SHARE_CODE_IN_TEXT = Regex(Regex.escape(PREFIX) + "[A-Za-z0-9_-]+", RegexOption.IGNORE_CASE)
+
+    /**
+     * El código de perfil que lleva un texto (lo normal es que llegue solo, pero un mensaje de chat trae más), o `null` si no hay ninguno.
+     * Solo reconoce la forma; si el contenido no vale, lo dirá `decode` al continuar.
+     */
+    fun findShareCode(text: String?): String? = text?.let { SHARE_CODE_IN_TEXT.find(it)?.value }
+
     /** Separa prefijo y resto. */
     private fun splitPrefix(value: String): Pair<String, Int>? {
         if (value.startsWith(PREFIX, ignoreCase = true)) return value.substring(PREFIX.length) to CURRENT_DOCUMENT_VERSION

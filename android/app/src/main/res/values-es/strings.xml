@@ -296,4 +296,5 @@
     <string name="welcome_ok">Entendido</string>
     <string name="large_checkboxes">Casillas de tarea más grandes</string>
     <string name="large_checkboxes_hint">Agranda las casillas para acertarlas con más facilidad.</string>
+    <string name="sync_paste">Pegar</string>
 </resources>

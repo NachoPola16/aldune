@@ -296,4 +296,5 @@
     <string name="welcome_ok">Verstanden</string>
     <string name="large_checkboxes">Größere Aufgabenkästchen</string>
     <string name="large_checkboxes_hint">Vergrößert die Kästchen, damit sie leichter zu treffen sind.</string>
+    <string name="sync_paste">Einfügen</string>
 </resources>

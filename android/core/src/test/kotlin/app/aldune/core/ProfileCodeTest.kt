@@ -97,6 +97,24 @@ class ProfileCodeTest {
     }
 
     @Test
+    fun `findShareCode saca el codigo de un mensaje con mas texto`() {
+        val code = Vectors.objects("shareCodes").first().str("code")
+        assertEquals(code, ProfileCodes.findShareCode(code))
+        assertEquals(code, ProfileCodes.findShareCode("  $code \n"))
+        assertEquals(code, ProfileCodes.findShareCode("Mira, este es el codigo: $code gracias!"))
+        assertEquals(code.replaceFirst("aldune-profile-v2:", "ALDUNE-PROFILE-V2:"), ProfileCodes.findShareCode(code.replaceFirst("aldune-profile-v2:", "ALDUNE-PROFILE-V2:")))
+    }
+
+    @Test
+    fun `findShareCode no confunde un texto normal con un codigo`() {
+        assertNull(ProfileCodes.findShareCode(null))
+        assertNull(ProfileCodes.findShareCode(""))
+        assertNull(ProfileCodes.findShareCode("comprar leche"))
+        assertNull(ProfileCodes.findShareCode("aldune-profile-v2:"))
+        assertNull(ProfileCodes.findShareCode("el prefijo aldune-profile-v2: a secas no vale"))
+    }
+
+    @Test
     fun `lo que no es un codigo de perfil se rechaza`() {
         assertFalse(ProfileCodes.isShareCode("AAECAwQFBgcICQoLDA0ODxAREhMUFRYXGBkaGxwdHh8"))
         assertThrows(SyncFormatException::class.java) { ProfileCodes.decode("otra-cosa:abc") }

@@ -3,6 +3,7 @@ package app.aldune.capture
 import android.content.Context
 import android.content.Intent
 import app.aldune.MainActivity
+import app.aldune.core.ProfileCodes
 
 /** Lo que una puerta de captura (acceso directo, mosaico, notificación, widget) le pide a la interfaz. */
 sealed interface CaptureRequest {
@@ -11,6 +12,9 @@ sealed interface CaptureRequest {
 
     /** Lo que otra app compartió con Aldune (`ACTION_SEND` de texto): `EXTRA_TEXT` y, si trae, `EXTRA_SUBJECT`. */
     data class SharedText(val text: String?, val subject: String?) : CaptureRequest
+
+    /** Un código de perfil de sync (`aldune-profile-v2:…`) que llegó compartido: no es una nota, abre «Añadir perfil» con el código puesto. */
+    data class ProfileCode(val code: String) : CaptureRequest
 
     /** Tocar una tira del widget: abrir la nota [id]. */
     data class OpenNote(val id: String) : CaptureRequest
@@ -43,9 +47,9 @@ object CaptureIntents {
         ACTION_OPEN_NOTE -> intent.getStringExtra(EXTRA_NOTE_ID)?.let(CaptureRequest::OpenNote)
         Intent.ACTION_SEND ->
             if (intent.type?.startsWith("text/") == true) {
-                CaptureRequest.SharedText(
-                    intent.getCharSequenceExtra(Intent.EXTRA_TEXT)?.toString(), intent.getCharSequenceExtra(Intent.EXTRA_SUBJECT)?.toString(),
-                )
+                val text = intent.getCharSequenceExtra(Intent.EXTRA_TEXT)?.toString()
+                ProfileCodes.findShareCode(text)?.let(CaptureRequest::ProfileCode)
+                    ?: CaptureRequest.SharedText(text, intent.getCharSequenceExtra(Intent.EXTRA_SUBJECT)?.toString())
             } else {
                 null
             }

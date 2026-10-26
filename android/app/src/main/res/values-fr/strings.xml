@@ -296,4 +296,5 @@
     <string name="welcome_ok">Compris</string>
     <string name="large_checkboxes">Cases de tâche plus grandes</string>
     <string name="large_checkboxes_hint">Agrandit les cases pour les toucher plus facilement.</string>
+    <string name="sync_paste">Coller</string>
 </resources>

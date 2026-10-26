@@ -296,4 +296,5 @@
     <string name="welcome_ok">Got it</string>
     <string name="large_checkboxes">Larger task checkboxes</string>
     <string name="large_checkboxes_hint">Makes the boxes bigger, so they are easier to tap.</string>
+    <string name="sync_paste">Paste</string>
 </resources>
