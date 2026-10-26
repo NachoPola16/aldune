@@ -19,6 +19,8 @@ dependencies {
 
     // Solo para leer y escribir el JSON del contenido protegido con el mismo formato que core (ver SyncMapping.kt).
     implementation(libs.kotlinx.serialization.json)
+    // Decodificador de QR de Java puro (sin Play Services ni nativo, para que F-Droid lo construya); lo usa QrDecoder.
+    implementation(libs.zxing.core)
 
     testImplementation(kotlin("test"))
     testImplementation(libs.okhttp.mockwebserver)

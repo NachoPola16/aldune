@@ -17,6 +17,8 @@ lifecycle = "2.11.0"
 iconsCore = "1.7.8"
 work = "2.10.1"
 glance = "1.2.0"
+camerax = "1.6.2"
+zxing = "3.5.4"
 
 [libraries]
 kotlinx-serialization-json = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "serialization" }
@@ -44,6 +46,10 @@ androidx-adaptive-navigation = { module = "androidx.compose.material3.adaptive:a
 androidx-lifecycle-viewmodel-compose = { module = "androidx.lifecycle:lifecycle-viewmodel-compose", version.ref = "lifecycle" }
 androidx-lifecycle-runtime-compose = { module = "androidx.lifecycle:lifecycle-runtime-compose", version.ref = "lifecycle" }
 androidx-compose-icons-core = { module = "androidx.compose.material:material-icons-core", version.ref = "iconsCore" }
+zxing-core = { module = "com.google.zxing:core", version.ref = "zxing" }
+androidx-camera-camera2 = { module = "androidx.camera:camera-camera2", version.ref = "camerax" }
+androidx-camera-lifecycle = { module = "androidx.camera:camera-lifecycle", version.ref = "camerax" }
+androidx-camera-view = { module = "androidx.camera:camera-view", version.ref = "camerax" }
 junit4 = { module = "junit:junit", version.ref = "junit4" }
 
 [plugins]
