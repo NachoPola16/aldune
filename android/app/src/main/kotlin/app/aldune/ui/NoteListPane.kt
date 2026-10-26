@@ -121,7 +121,7 @@ fun NoteListPane(
     }
     var deleting by remember { mutableStateOf<NoteListItem?>(null) }
     val controller by viewModel.sync.collectAsStateWithLifecycle()
-    val profile = controller?.profile?.collectAsStateWithLifecycle()?.value
+    val hasProfile = controller?.profiles?.collectAsStateWithLifecycle()?.value?.isNotEmpty() == true
     val status = controller?.status?.collectAsStateWithLifecycle()?.value
     val conflicted = controller?.conflicted?.collectAsStateWithLifecycle()?.value ?: emptySet()
     val bases = controller?.bases?.collectAsStateWithLifecycle()?.value ?: emptyMap()
@@ -168,7 +168,7 @@ fun NoteListPane(
                             }
                         },
                 )
-                if (profile != null && status != null) {
+                if (hasProfile && status != null) {
                     val line = formatStatus(status, rememberNow())
                     IconButton(onClick = { showSyncDetail = true }) { SyncIcon(line.icon, stringResource(R.string.sync_status_cd)) }
                 }
@@ -258,7 +258,7 @@ fun NoteListPane(
                                     } else Modifier
                                 ),
                             item = item, selected = item.id == selectedId || item.id == highlight, conflicted = item.id in conflicted, reminder = state.reminders[item.id], onOpen = { onOpen(item.id) },
-                            signal = if (look.syncSignal) NoteSyncSignal.of(profile != null, item.id in conflicted, bases[item.id], item.updatedAt) else NoteSyncSignal.State.HIDDEN,
+                            signal = if (look.syncSignal) NoteSyncSignal.of(hasProfile, item.id in conflicted, bases[item.id], item.updatedAt) else NoteSyncSignal.State.HIDDEN,
                             onArchive = { viewModel.archive(item.id); announce(archivedMsg) { viewModel.restore(item.id) } },
                             onTrash = { viewModel.trash(item.id); announce(trashedMsg) { viewModel.restore(item.id) } },
                             onRestore = { viewModel.restore(item.id); announce(restoredMsg) { viewModel.trash(item.id) } },

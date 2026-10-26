@@ -286,4 +286,7 @@
     <string name="edit_undo">Annuler</string>
     <string name="edit_redo">Rétablir</string>
     <string name="tasks_progress_cd">%1$d tâches faites sur %2$d</string>
+    <string name="sync_add_profile">Ajouter un autre profil</string>
+    <string name="sync_add_intro">Colle un code de profil pour le rejoindre. Tes autres profils continuent de se synchroniser comme avant.</string>
+    <string name="sync_already_connected">Tu es déjà connecté à « %1$s ».</string>
 </resources>

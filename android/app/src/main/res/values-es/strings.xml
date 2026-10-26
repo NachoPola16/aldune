@@ -286,4 +286,7 @@
     <string name="edit_undo">Deshacer</string>
     <string name="edit_redo">Rehacer</string>
     <string name="tasks_progress_cd">%1$d de %2$d tareas hechas</string>
+    <string name="sync_add_profile">Añadir otro perfil</string>
+    <string name="sync_add_intro">Pega un código de perfil para unirte. Tus otros perfiles siguen sincronizando igual.</string>
+    <string name="sync_already_connected">Ya estás conectado a «%1$s».</string>
 </resources>

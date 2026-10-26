@@ -118,16 +118,27 @@ private fun failureText(kind: SyncFailureKind): String = stringResource(
     },
 )
 
-/** Ajustes → Sincronización (spec F5 §5.3): pegar el código y conectar, o el estado del perfil conectado. */
+/** Ajustes → Sincronización: la lista de perfiles conectados, «Añadir otro perfil» y el interruptor del segundo plano. */
 @Composable
 fun SyncSection(viewModel: NotesViewModel) {
     val controller by viewModel.sync.collectAsStateWithLifecycle()
     val c = controller ?: return
-    val profile by c.profile.collectAsStateWithLifecycle()
+    val profiles by c.profiles.collectAsStateWithLifecycle()
+    val status by c.status.collectAsStateWithLifecycle()
     Section(R.string.sync_title)
-    val current = profile
-    if (current == null) ConnectForm(c) else ConnectedPanel(c, current)
-    if (current != null) {
+    var adding by remember { mutableStateOf(false) }
+    if (profiles.isEmpty()) {
+        ConnectForm(c, additional = false, onDone = {})
+    } else {
+        profiles.forEach { ConnectedPanel(c, it) }
+        Column(Modifier.padding(horizontal = 16.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+            // «Sincronizar ahora» es de toda la sync, no de un perfil: una pasada recorre todos.
+            Button(enabled = !status.running, onClick = { c.request(app.aldune.syncclient.SyncEvent.ManualSync) }) { Text(stringResource(R.string.sync_now)) }
+            Text(stringResource(R.string.sync_backup_note), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(top = 8.dp))
+            if (adding) ConnectForm(c, additional = true, onDone = { adding = false })
+            else OutlinedButton(onClick = { adding = true }) { Text(stringResource(R.string.sync_add_profile)) }
+            HorizontalDivider(Modifier.padding(top = 8.dp))
+        }
         val settings by viewModel.settings.collectAsStateWithLifecycle()
         SwitchRow(stringResource(R.string.sync_in_background), stringResource(R.string.sync_in_background_hint), settings.syncInBackground) { on ->
             viewModel.updateSettings { it.copy(syncInBackground = on) }
@@ -136,7 +147,7 @@ fun SyncSection(viewModel: NotesViewModel) {
 }
 
 @Composable
-private fun ConnectForm(controller: SyncController) {
+private fun ConnectForm(controller: SyncController, additional: Boolean, onDone: () -> Unit) {
     val scope = rememberCoroutineScope()
     // Nada de esto es rememberSaveable a propósito: el código lleva la clave y el token es un secreto; no deben pasar por el estado guardado.
     var code by remember { mutableStateOf("") }
@@ -152,19 +163,22 @@ private fun ConnectForm(controller: SyncController) {
     var pending by remember { mutableStateOf<ConnectRequest?>(null) }
     var pendingNotes by remember { mutableStateOf(0) }
     var discardRequest by remember { mutableStateOf<ConnectRequest?>(null) }
+    var alreadyName by remember { mutableStateOf<String?>(null) }
 
     fun reset() {
-        code = ""; parsed = null; url = ""; token = ""; username = ""; password = ""; errorText = null; failureKind = null; pending = null
+        code = ""; parsed = null; url = ""; token = ""; username = ""; password = ""; errorText = null; failureKind = null; pending = null; alreadyName = null
     }
 
     fun connect(request: ConnectRequest, choice: FirstConnectChoice?) {
         busy = true
         errorText = null
         failureKind = null
+        alreadyName = null
         scope.launch {
             when (val result = controller.connect(request, choice)) {
-                ConnectResult.Connected -> reset()
+                ConnectResult.Connected -> { reset(); onDone() }
                 is ConnectResult.NeedsChoice -> { pending = request; pendingNotes = result.noteCount }
+                is ConnectResult.AlreadyConnected -> alreadyName = result.name
                 is ConnectResult.Failed -> failureKind = result.failure.kind
             }
             busy = false
@@ -174,8 +188,8 @@ private fun ConnectForm(controller: SyncController) {
     Column(Modifier.padding(horizontal = 16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
         val step = parsed
         if (step == null) {
-            Text(stringResource(R.string.sync_intro), color = MaterialTheme.colorScheme.onSurfaceVariant)
-            Text(stringResource(R.string.sync_howto), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            Text(stringResource(if (additional) R.string.sync_add_intro else R.string.sync_intro), color = MaterialTheme.colorScheme.onSurfaceVariant)
+            if (!additional) Text(stringResource(R.string.sync_howto), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
             OutlinedTextField(
                 value = code, onValueChange = { code = it; errorText = null }, modifier = Modifier.fillMaxWidth(),
                 label = { Text(stringResource(R.string.sync_code_label)) }, minLines = 2, maxLines = 4,
@@ -231,6 +245,7 @@ private fun ConnectForm(controller: SyncController) {
                 )
             }
             errorText?.let { Text(stringResource(it), color = MaterialTheme.colorScheme.error) }
+            alreadyName?.let { Text(stringResource(R.string.sync_already_connected, it), color = MaterialTheme.colorScheme.error) }
             failureKind?.let { Text(failureText(it), color = MaterialTheme.colorScheme.error) }
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
                 Button(enabled = !busy, onClick = {
@@ -240,7 +255,7 @@ private fun ConnectForm(controller: SyncController) {
                         is CredentialsCheck.Valid -> connect(ConnectRequest(step.profile, transport, check.url, check.credentials), null)
                     }
                 }) { Text(stringResource(if (busy) R.string.sync_connecting else R.string.sync_connect)) }
-                TextButton(enabled = !busy, onClick = { reset() }) { Text(stringResource(R.string.cancel)) }
+                TextButton(enabled = !busy, onClick = { reset(); if (additional) onDone() }) { Text(stringResource(R.string.cancel)) }
             }
         }
     }
@@ -298,8 +313,8 @@ private fun credentialErrorText(errors: Set<CredentialsError>): Int = when {
 @Composable
 private fun ConnectedPanel(controller: SyncController, profile: SyncProfile) {
     val scope = rememberCoroutineScope()
-    val status: SyncStatus by controller.status.collectAsStateWithLifecycle()
-    val unreadable by controller.secretsUnreadable.collectAsStateWithLifecycle()
+    val status: SyncStatus = controller.statuses.collectAsStateWithLifecycle().value[profile.id] ?: SyncStatus()
+    val unreadable = profile.id in controller.unreadable.collectAsStateWithLifecycle().value
     val now = rememberNow()
     val line = formatStatus(status, now)
     var confirming by remember { mutableStateOf(false) }
@@ -319,15 +334,7 @@ private fun ConnectedPanel(controller: SyncController, profile: SyncProfile) {
                 )
             }
         }
-        Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.padding(top = 4.dp)) {
-            if (!unreadable) {
-                Button(enabled = !status.running, onClick = { controller.request(app.aldune.syncclient.SyncEvent.ManualSync) }) {
-                    Text(stringResource(R.string.sync_now))
-                }
-            }
-            OutlinedButton(onClick = { confirming = true }) { Text(stringResource(R.string.sync_disconnect)) }
-        }
-        Text(stringResource(R.string.sync_backup_note), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(top = 8.dp))
+        OutlinedButton(onClick = { confirming = true }, modifier = Modifier.padding(top = 4.dp)) { Text(stringResource(R.string.sync_disconnect)) }
         HorizontalDivider(Modifier.padding(top = 8.dp))
     }
 
@@ -336,7 +343,7 @@ private fun ConnectedPanel(controller: SyncController, profile: SyncProfile) {
             onDismissRequest = { confirming = false },
             title = { Text(stringResource(R.string.sync_disconnect_title)) },
             text = { Text(stringResource(R.string.sync_disconnect_body)) },
-            confirmButton = { TextButton(onClick = { confirming = false; scope.launch { controller.disconnect() } }) { Text(stringResource(R.string.sync_disconnect)) } },
+            confirmButton = { TextButton(onClick = { confirming = false; scope.launch { controller.disconnect(profile.id) } }) { Text(stringResource(R.string.sync_disconnect)) } },
             dismissButton = { TextButton(onClick = { confirming = false }) { Text(stringResource(R.string.cancel)) } },
         )
     }

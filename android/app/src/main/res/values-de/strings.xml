@@ -286,4 +286,7 @@
     <string name="edit_undo">Rückgängig</string>
     <string name="edit_redo">Wiederholen</string>
     <string name="tasks_progress_cd">%1$d von %2$d Aufgaben erledigt</string>
+    <string name="sync_add_profile">Weiteres Profil hinzufügen</string>
+    <string name="sync_add_intro">Füge einen Profilcode ein, um beizutreten. Deine anderen Profile werden weiter wie bisher synchronisiert.</string>
+    <string name="sync_already_connected">Du bist bereits mit „%1$s“ verbunden.</string>
 </resources>

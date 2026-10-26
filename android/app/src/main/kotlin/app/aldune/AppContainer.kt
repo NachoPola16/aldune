@@ -20,6 +20,7 @@ import app.aldune.syncclient.ConflictStore
 import app.aldune.syncclient.ProtectionService
 import app.aldune.syncclient.SecretVault
 import app.aldune.syncclient.TombstoneEraser
+import app.aldune.syncclient.vaultFileName
 import app.aldune.reminders.Reminders
 import app.aldune.syncing.SyncController
 import app.aldune.syncing.SyncWork
@@ -85,9 +86,11 @@ class AppContainer(context: Context) {
             val cipher = AesGcmNoteCipher(key)
             val database = AldunaDatabase.open(appContext)
             val store = RoomNoteStore(database, cipher)
-            // Los secretos de la sync tienen su propia clave de envoltura (otro alias): empezar de cero con las notas no los toca.
-            val vault = SecretVault(File(appContext.noBackupFilesDir, VAULT_FILE), AndroidKeystoreKeyWrapper(VAULT_ALIAS))
-            val sync = SyncController(SyncProfileStore(appContext), vault, RoomLocalSyncStore(database, store, cipher), SystemClock, scope, SyncWork(appContext))
+            // Los secretos de la sync tienen su propia clave de envoltura (otro alias): empezar de cero con las notas no los toca. Un fichero por
+            // perfil; el perfil heredado conserva el de siempre (`vaultFileName`).
+            val vaultFor = { profileId: String -> SecretVault(File(appContext.noBackupFilesDir, vaultFileName(profileId)), AndroidKeystoreKeyWrapper(VAULT_ALIAS)) }
+            val storeFor = { profileId: String -> RoomLocalSyncStore(database, store, cipher, profileId) }
+            val sync = SyncController(SyncProfileStore(appContext), vaultFor, storeFor, SystemClock, scope, SyncWork(appContext))
             val reminderStore = RoomReminderStore(database)
             val reminders = Reminders(appContext, store, reminderStore, SystemClock)
             // Una pasada que trae notas archivadas o borradas deja recordatorios sin nota: se reconcilian también sin interfaz.
@@ -116,7 +119,6 @@ class AppContainer(context: Context) {
 
     private companion object {
         const val KEY_FILE = "datakey.bin"
-        const val VAULT_FILE = "syncsecrets.bin"
         const val VAULT_ALIAS = "aldune.syncsecrets.wrap.v1"
     }
 }

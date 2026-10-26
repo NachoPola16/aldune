@@ -285,3 +285,6 @@ hidden_tasks_hide	Hide done tasks	Ocultar tareas hechas	Erledigte Aufgaben ausbl
 edit_undo	Undo	Deshacer	Rückgängig	Annuler	Desfazer
 edit_redo	Redo	Rehacer	Wiederholen	Rétablir	Refazer
 tasks_progress_cd	%1$d of %2$d tasks done	%1$d de %2$d tareas hechas	%1$d von %2$d Aufgaben erledigt	%1$d tâches faites sur %2$d	%1$d de %2$d tarefas concluídas
+sync_add_profile	Add another profile	Añadir otro perfil	Weiteres Profil hinzufügen	Ajouter un autre profil	Adicionar outro perfil
+sync_add_intro	Paste a profile code to join it. Your other profiles keep syncing as before.	Pega un código de perfil para unirte. Tus otros perfiles siguen sincronizando igual.	Füge einen Profilcode ein, um beizutreten. Deine anderen Profile werden weiter wie bisher synchronisiert.	Colle un code de profil pour le rejoindre. Tes autres profils continuent de se synchroniser comme avant.	Cole um código de perfil para entrar. Seus outros perfis continuam sincronizando como antes.
+sync_already_connected	You're already connected to “%1$s”.	Ya estás conectado a «%1$s».	Du bist bereits mit „%1$s“ verbunden.	Tu es déjà connecté à « %1$s ».	Você já está conectado a “%1$s”.
