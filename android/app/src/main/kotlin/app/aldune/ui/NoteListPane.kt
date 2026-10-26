@@ -2,6 +2,7 @@ package app.aldune.ui
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -343,7 +344,8 @@ private fun SearchField(query: String, onChange: (String) -> Unit, modifier: Mod
 
 @Composable
 private fun StateTabs(state: UiState.Ready, onSelect: (NoteState) -> Unit) {
-    Row(Modifier.padding(horizontal = 16.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+    // Con scroll: en una ventana muy estrecha (burbuja, multiventana) la última pestaña se comprimía hasta quedar en una tira de letras apiladas.
+    Row(Modifier.horizontalScroll(rememberScrollState()).padding(horizontal = 16.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
         for ((filter, label) in listOf(
             NoteState.ACTIVE to R.string.tab_active, NoteState.ARCHIVED to R.string.tab_archived, NoteState.TRASHED to R.string.tab_trash,
         )) {
