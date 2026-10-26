@@ -91,6 +91,13 @@ Tests: 506/506 pasando (`dotnet test tests/Aldune.Core.Tests --no-restore`).
   color con el que se abrió (el negro de un aspecto retro) y avisa cuando «mismo color en todas las notas» lo oculta.
 - **Sincronización**: [`SYNC.md`](SYNC.md) empieza con una comparativa de los tres tipos (carpeta compartida, servidor propio, WebDAV),
   qué admite cada plataforma, un paso a paso para cada uno y los errores más habituales. Android solo admite servidor propio y WebDAV.
+- **Android, varios perfiles de sync (2026-10-26, rama `android-varios-perfiles`, sin publicar)**: el móvil puede unirse a más de un perfil
+  a la vez (p. ej. «todas mis notas» + la nota compartida de la familia). Cada perfil tiene su id, su fichero de secretos, su estado, y
+  `sync_base`/`sync_conflict` por (perfil, nota) (Room v3, con migración); notas y lápidas siguen siendo del dispositivo. Una pasada recorre
+  los perfiles de uno en uno y el fallo de uno no frena a los demás; un perfil adicional nunca ofrece «descartar». El perfil único de las
+  versiones anteriores migra solo (id `default`). Crear y compartir perfiles sigue siendo cosa de Windows. Pendiente de la ampliación de la
+  sync: QR y pegar/compartir el código, transparencia de la sync en segundo plano, pasada de errores y conflictos. Spec y plan en
+  `docs/superpowers/`. Probado en el emulador (migración desde un perfil, segundo perfil, duplicado, desconectar uno); sin probar en el Pixel.
 
 ## Cómo se ha trabajado (para mantener el mismo estilo)
 

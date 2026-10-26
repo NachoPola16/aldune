@@ -58,6 +58,21 @@ cada dispositivo. Trata el código como una contraseña, porque contiene la clav
 5. **En Android:** Ajustes → Sincronización → pega el código → **Continuar** → elige «WebDAV» → dirección (si es una carpeta,
    termínala en `/`), usuario y contraseña de aplicación → **Conectar**.
 
+#### D. Una nota compartida con la familia (varios perfiles)
+
+Para compartir **solo una nota** (la lista de la compra, por ejemplo) sin mezclar el resto de tus notas:
+
+1. En Windows, crea un perfil aparte con *Notas seleccionadas* y marca solo esa nota. Alguien tiene que alojar el almacén: tu servidor
+   con otro token, o un WebDAV.
+2. Pulsa **Compartir perfil** y manda el código a cada persona. El token se da aparte, nunca dentro del código.
+3. En el móvil de cada uno: Ajustes → Sincronización → **Añadir otro perfil** → pega el código → elige el tipo → escribe el token →
+   **Conectar**. Android admite varios perfiles a la vez, así que tu sincronización personal sigue como estaba.
+4. Un perfil adicional **no pregunta** si subir o descartar tus notas: solo sincroniza lo que su alcance incluye. Si la nota compartida
+   también entra en tu perfil «todas», se sube a los dos almacenes.
+5. Desconectar un perfil no toca los demás ni borra ninguna nota.
+
+Crear y compartir perfiles desde Android todavía no se puede; se hace en Windows.
+
 ### Qué hacer si algo falla
 
 | Lo que ves | Qué pasa | Qué hacer |

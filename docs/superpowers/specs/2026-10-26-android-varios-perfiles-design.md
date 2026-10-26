@@ -1,6 +1,6 @@
 # Android: varios perfiles de sincronización
 
-Fecha: 26-10-2026. Estado: pendiente de revisión. Primer bloque de la ampliación de la sync (los siguientes: emparejamiento por QR y
+Fecha: 26-10-2026. Estado: implementada en la rama `android-varios-perfiles` (sin publicar). Primer bloque de la ampliación de la sync (los siguientes: emparejamiento por QR y
 pegado/compartir de códigos; transparencia de la sync en segundo plano; pasada de huecos en errores y conflictos).
 
 ## Objetivo
@@ -26,7 +26,7 @@ persona. Windows ya lo permite; Android hoy guarda un único perfil (`SyncContro
 
 ### 1. Datos
 
-- Cada perfil tiene un `profileId` (UUID, generado al conectar). `SyncProfile` pasa a llevarlo. Transporte, URL, alcance y nombre se
+- Cada perfil tiene un `profileId` (UUID, generado al conectar; el perfil heredado usa el id fijo `default`, `LEGACY_PROFILE_ID`). `SyncProfile` pasa a llevarlo. Transporte, URL, alcance y nombre se
   guardan por perfil.
 - **Secretos:** un fichero por perfil (`SecretVault`, con el `profileId` en el nombre), con el mismo envoltorio del Keystore y la misma
   escritura atómica. El formato del fichero no cambia.
@@ -38,7 +38,7 @@ persona. Windows ya lo permite; Android hoy guarda un único perfil (`SyncContro
 
 ### 2. Migración de lo existente
 
-El perfil único actual se convierte en el primero: recibe un `profileId` nuevo y se mueven a él sus preferencias, su fichero de
+El perfil único actual se convierte en el primero con el id fijo `default` (la migración de Room es SQL y no puede inventar un UUID; el fichero de secretos de siempre `syncsecrets.bin` no se mueve) y se mueven a él sus preferencias, su fichero de
 secretos, sus bases y sus conflictos. Sin pasos manuales. Una instalación sin perfil sigue sin perfil. Si el fichero de secretos no se
 abre (`VaultState.Unreadable`), el perfil migrado queda con ese mismo estado y se vuelve a resolver pegando el código, como hoy.
 
@@ -50,7 +50,7 @@ abre (`VaultState.Unreadable`), el perfil migrado queda con ese mismo estado y s
   planner no cambian: siguen trabajando con un solo almacén.
 - Una sola `SyncTriggerPolicy` para toda la app. Cada disparo (abrir, primer plano, cambio local, manual, periódico) hace una pasada que
   recorre todos los perfiles. El trabajador de segundo plano no cambia de programación.
-- `SyncStatus` y `secretsUnreadable` pasan a ser por perfil.
+- `SyncStatus` y `secretsUnreadable` pasan a ser por perfil; la cabecera de la lista usa un estado agregado (`aggregateStatus`) y la señal de cada nota, la base más antigua entre los perfiles que la tienen.
 
 ### 4. Primera conexión de un perfil adicional
 
@@ -79,9 +79,11 @@ Se desconecta un perfil sin tocar los demás: borra sus secretos, bases y confli
 
 ### 7. Conflictos
 
-La clave de un conflicto guardado es `(profileId, noteId)`. Si una nota tiene conflicto en dos perfiles, la interfaz actual de
-conflictos (por nota) enseña el más reciente y, al resolverlo, se limpian los de esa nota en los dos perfiles; la siguiente pasada
-vuelve a sincronizar el resultado en ambos. Es la parte con más incertidumbre: se confirma con un test antes de implementarla.
+La clave de un conflicto guardado es `(profileId, noteId)`. Si una nota tiene conflicto en dos perfiles, la interfaz actual (por nota)
+enseña el más reciente, y **resolverlo limpia solo ese**: el de la nota en el otro perfil sigue marcado y aparece a continuación.
+Decisión del 26-10 (delegada por el usuario): las versiones perdedoras de dos almacenes pueden ser distintas, y limpiar las dos de una vez
+perdería una en silencio. Cuesta como mucho una resolución más, y la siguiente pasada sincroniza el resultado en ambos perfiles. Un test
+fija este comportamiento antes de implementarlo.
 
 ## Pruebas
 
