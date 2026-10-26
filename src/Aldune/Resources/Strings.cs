@@ -565,8 +565,8 @@ public static class Strings
         "Passwort", "Mot de passe", "Senha");
     public static string ConfirmPasswordLabel => T("Repeat password", "Repite la contraseña",
         "Passwort wiederholen", "Répétez le mot de passe", "Repita a senha");
-    public static string PasswordTooShort => T("Use at least 4 characters.", "Usa al menos 4 caracteres.",
-        "Verwende mindestens 4 Zeichen.", "Utilisez au moins 4 caractères.", "Use pelo menos 4 caracteres.");
+    public static string PasswordTooShort => T("Use at least 8 characters.", "Usa al menos 8 caracteres.",
+        "Verwende mindestens 8 Zeichen.", "Utilisez au moins 8 caractères.", "Use pelo menos 8 caracteres.");
     public static string PasswordsDoNotMatch => T("The passwords do not match.", "Las contraseñas no coinciden.",
         "Die Passwörter stimmen nicht überein.",
         "Les mots de passe ne correspondent pas.",

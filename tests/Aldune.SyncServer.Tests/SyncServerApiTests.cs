@@ -89,6 +89,19 @@ public sealed class SyncServerApiTests : IDisposable
     }
 
     [Fact]
+    public async Task AnObjectDatedMoreThanADayAhead_IsRejectedWith400AndNotStored()
+    {
+        var id = Guid.NewGuid();
+        var envelope = Envelope(id, 1);
+        envelope.UpdatedAt = DateTimeOffset.UtcNow.AddDays(30);
+
+        using var response = await _client.PutAsync($"/api/v1/objects/{id}", Json(envelope));
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+        Assert.Null(await ReadVersion(id));
+    }
+
+    [Fact]
     public async Task MalformedJson_IsA400NotA500()
     {
         using var content = new StringContent("{ not json", System.Text.Encoding.UTF8, "application/json");

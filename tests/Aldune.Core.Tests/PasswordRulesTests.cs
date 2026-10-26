@@ -17,15 +17,15 @@ public class PasswordRulesTests
     public void ANewPassword_NeedsTheMinimumLength()
     {
         Assert.Equal(PasswordProblem.Empty, PasswordRules.Check("", confirmation: ""));
-        Assert.Equal(PasswordProblem.TooShort, PasswordRules.Check("abc", confirmation: "abc"));
-        Assert.Equal(PasswordProblem.None, PasswordRules.Check("abcd", confirmation: "abcd"));
+        Assert.Equal(PasswordProblem.TooShort, PasswordRules.Check("abcdefg", confirmation: "abcdefg"));
+        Assert.Equal(PasswordProblem.None, PasswordRules.Check("abcdefgh", confirmation: "abcdefgh"));
     }
 
     [Fact]
     public void ANewPassword_MustMatchItsConfirmation()
     {
-        Assert.Equal(PasswordProblem.Mismatch, PasswordRules.Check("abcd", confirmation: "abce"));
-        Assert.Equal(PasswordProblem.Mismatch, PasswordRules.Check("abcd", confirmation: ""));
+        Assert.Equal(PasswordProblem.Mismatch, PasswordRules.Check("abcdefgh", confirmation: "abcdefgi"));
+        Assert.Equal(PasswordProblem.Mismatch, PasswordRules.Check("abcdefgh", confirmation: ""));
     }
 
     [Fact]
@@ -39,7 +39,7 @@ public class PasswordRulesTests
     [Fact]
     public void SpacesCount_AndAreNotTrimmed()
     {
-        Assert.Equal(PasswordProblem.None, PasswordRules.Check("    ", confirmation: "    "));
-        Assert.Equal(PasswordProblem.Mismatch, PasswordRules.Check("abcd ", confirmation: "abcd"));
+        Assert.Equal(PasswordProblem.None, PasswordRules.Check("        ", confirmation: "        "));
+        Assert.Equal(PasswordProblem.Mismatch, PasswordRules.Check("abcdefgh ", confirmation: "abcdefgh"));
     }
 }

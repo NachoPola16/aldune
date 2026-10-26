@@ -216,17 +216,27 @@ public sealed partial class LinkedFileService
         }
     }
 
+    // Como mucho un byte más que el tope: basta para que Decode lo rechace como demasiado grande, sin cargar en memoria un
+    // archivo que creció sin límite desde que se vinculó.
+    private static byte[] ReadCapped(string path)
+    {
+        using var stream = File.OpenRead(path);
+        var buffer = new byte[(int)Math.Min(stream.Length, LinkedFileFormat.MaxBytes + 1L)];
+        stream.ReadExactly(buffer);
+        return buffer;
+    }
+
     // Los editores guardan en varios pasos (vaciar, escribir, renombrar): se lee hasta que dos lecturas
     // seguidas coinciden, para no decidir sobre un archivo a medio guardar.
     private byte[]? TryReadStable(string path)
     {
         try
         {
-            var previous = File.ReadAllBytes(path);
+            var previous = ReadCapped(path);
             for (int attempt = 1; attempt < StableReadAttempts; attempt++)
             {
                 _sleep(StableReadDelay);
-                var next = File.ReadAllBytes(path);
+                var next = ReadCapped(path);
                 if (next.AsSpan().SequenceEqual(previous)) return next;
                 previous = next;
             }

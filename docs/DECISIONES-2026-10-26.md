@@ -81,3 +81,19 @@ aparte) funciona. Se retoma solo si la validación con 3-5 personas demuestra qu
 
 - Móvil: sombra/elevación en la nota arrastrada; buscador que se esconde al bajar; acciones en lote (seleccionar varias).
 - Del móvil al PC: contador «hechas/total» en la nota; «ver tareas hechas» como ocultar sin borrar en Windows (hoy borra la línea).
+
+## Auditoría de seguridad de Windows y servidor (26-10) y 1.7.13
+
+Pasada de solo lectura con el agente `seguridad`: nada crítico ni alto. Corregido en la 1.7.13:
+
+- **WebDAV (media):** un `href` del listado que apuntase a otro host recibía el usuario y la contraseña. Ahora solo se usa su ruta contra el servidor configurado y lo que caiga en otro host se descarta (`WebDavSyncTransport.ResolveHref`, con tests). Android ya lo hacía bien.
+- **Contraseña de nota protegida (media-baja):** mínimo de 4 a 8 caracteres para las nuevas; desbloquear las existentes sigue sin mínimo.
+- **Servidor de sync (baja-media):** rechaza con 400 lo fechado más de un día en el futuro (antes bloqueaba la nota para siempre).
+- **Archivos vinculados:** lectura con tope (MaxBytes + 1) en vez de cargar el archivo entero, y «Abrir en su editor» solo con extensiones de texto.
+- **Workflows:** acciones fijadas por SHA de commit (con el tag en comentario) y `no-new-privileges` en los tres compose del servidor.
+
+Aplazado a propósito (anotado en PENDIENTES):
+
+- Contenedor del servidor como usuario `app` en vez de root: hace falta migrar los permisos del volumen `/data` ya creado; no se toca sin probarlo en el CT 103.
+- Puerto publicado en `0.0.0.0` por defecto: el despliegue real depende de ello (NPM en otro equipo); ya está documentado y la app avisa. No se cambia el valor por defecto.
+- Sin límite de intentos fallidos de token, `GET /objects` lee todos los objetos en cada llamada, sin tope de tamaño en las respuestas del servidor al cliente, sin cuota de objetos, `release.yml` con `contents: write` en todo el job, sin lockfile de NuGet.

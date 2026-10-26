@@ -114,6 +114,11 @@ app.MapPut("/api/v1/objects/{id:guid}", async (Guid id, HttpRequest request) =>
     if (envelope.NoteId != id)
         return Results.BadRequest("The object id does not match the URL.");
 
+    // Una fecha muy futura gana a cualquier subida legítima posterior y dejaría la nota sin sincronizar para siempre.
+    // Los clientes ya descartan lo fechado más de un día por delante; el servidor también lo rechaza.
+    if (envelope.UpdatedAt > DateTimeOffset.UtcNow.AddDays(1))
+        return Results.BadRequest("The object is dated too far in the future.");
+
     var finalPath = ObjectFile(objectPath, id);
     // Comprobar la versión y escribir va junto: sin esto, dos dispositivos subiendo la misma nota a la vez
     // pasaban los dos la comprobación contra la misma versión y la vieja podía acabar pisando a la nueva.

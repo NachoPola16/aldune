@@ -10,6 +10,8 @@ internal static class LinkedFileActions
 {
     public static void OpenInEditor(string path)
     {
+        // La ruta sale de la base de datos y se validó al vincular; se vuelve a comprobar para no lanzar nunca un .exe o un .lnk.
+        if (!Aldune.Core.LinkedFileFormat.IsSupportedExtension(path)) return;
         try
         {
             System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo(path) { UseShellExecute = true });

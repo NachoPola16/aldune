@@ -66,7 +66,8 @@ public sealed class WebDavSyncTransport : ISyncTransport
             var href = resource.Element(Dav + "href")?.Value;
             if (string.IsNullOrWhiteSpace(href) || resource.Descendants(Dav + "collection").Any()) continue;
 
-            var fileUri = ResolveHref(href);
+            // Un href que apunte a otro servidor no se sigue: la petición lleva el usuario y la contraseña.
+            if (ResolveHref(_objectsUri, href) is not { } fileUri) continue;
             if (!fileUri.AbsolutePath.EndsWith(".json", StringComparison.OrdinalIgnoreCase)) continue;
 
             try
@@ -119,10 +120,20 @@ public sealed class WebDavSyncTransport : ISyncTransport
         _collectionReady = true;
     }
 
-    private Uri ResolveHref(string href)
+    /// <summary>
+    /// La dirección de un archivo del listado, siempre en el servidor configurado: de un href absoluto solo se usa la ruta
+    /// (un servidor tras un proxy puede devolver su dirección interna, con otro host o puerto) y, si aun así el resultado
+    /// cae en otro host o esquema (un href «//otro/x»), se descarta. Devuelve null cuando no hay que seguirlo.
+    /// </summary>
+    internal static Uri? ResolveHref(Uri objectsUri, string href)
     {
-        if (Uri.TryCreate(href, UriKind.Absolute, out var absolute)) return absolute;
-        return new Uri(_objectsUri, href);
+        var target = Uri.TryCreate(href, UriKind.Absolute, out var absolute) && absolute.Scheme is "http" or "https"
+            ? absolute.PathAndQuery
+            : href;
+        if (!Uri.TryCreate(objectsUri, target, out var resolved)) return null;
+        var sameServer = resolved.Scheme == objectsUri.Scheme && string.Equals(resolved.Host, objectsUri.Host, StringComparison.OrdinalIgnoreCase)
+            && resolved.Port == objectsUri.Port;
+        return sameServer ? resolved : null;
     }
 
     private static string NormalizeBaseUrl(string value)

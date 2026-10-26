@@ -5,6 +5,9 @@ services:
       dockerfile: src/Aldune.SyncServer/Dockerfile
     container_name: aldune-sync
     restart: unless-stopped
+    # El proceso no puede ganar privilegios nuevos (setuid y similares) aunque lo comprometan.
+    security_opt:
+      - no-new-privileges:true
     environment:
       # Nombres de las variables: BrandIdentity.SyncTokenEnvVar / SyncTokensEnvVar (Aldune.Core).
       ALDUNE_SYNC_TOKEN: ${ALDUNE_SYNC_TOKEN:-}

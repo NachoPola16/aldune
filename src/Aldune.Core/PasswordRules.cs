@@ -9,7 +9,7 @@ public enum PasswordProblem { None, Empty, TooShort, Mismatch }
 /// </summary>
 public static class PasswordRules
 {
-    public const int MinLength = 4;
+    public const int MinLength = 8;
 
     /// <param name="confirmation">La repetición, o null si se está desbloqueando.</param>
     public static PasswordProblem Check(string password, string? confirmation)
