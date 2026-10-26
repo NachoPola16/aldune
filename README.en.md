@@ -45,6 +45,12 @@ password-protected notes, reminders, a widget and quick capture, and the same en
 To install it, download the signed APK from [Releases](https://github.com/NachoPola16/aldune/releases) (once one is
 published) and open it on your phone.
 
+**Something like the dock on Android.** A phone has no screen edge to stick tabs to as on Windows, but there are two ways to keep
+your notes within reach: the **widgets** (the deck at 4×2, 2×2 or 4×4, and a 1×1 new-note button) and, since **Android 17**, the
+**bubble**: long-press the Aldune icon in your launcher and choose the bubble option. The app floats over any other app, folds
+into an icon you can drag to a screen edge, and opens with one tap without leaving what you were doing. It is a system feature
+(Aldune needs to do nothing); the exact name of the option depends on the launcher.
+
 To sync your phone with your PC and your server:
 
 1. In Aldune for Windows: Settings → Sync between devices → **Share profile**, and copy the code (`aldune-profile-v2:…`).
