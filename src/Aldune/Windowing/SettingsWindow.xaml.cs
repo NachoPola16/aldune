@@ -853,6 +853,15 @@ public partial class SettingsWindow : Window
         _settingsService.Save(_settings);
     }
 
+    private void OnLargeCheckboxesToggled(object sender, RoutedEventArgs e)
+    {
+        _settings.LargeCheckboxes = LargeCheckboxesCheck.IsChecked == true;
+        _settingsService.Save(_settings);
+        // Las notas abiertas toman la fuente nueva solas: su cuerpo usa DynamicResource.
+        ThemeManager.LargeCheckboxes = _settings.LargeCheckboxes;
+        ThemeManager.ApplySkin(Application.Current, ThemeManager.Skin);
+    }
+
     private void OnMoveCompletedTasksToggled(object sender, RoutedEventArgs e)
     {
         _settings.MoveCompletedTasksToEnd = MoveCompletedTasksCheck.IsChecked == true;
@@ -1988,6 +1997,7 @@ public partial class SettingsWindow : Window
         SyncSignalCheck.IsChecked = _settings.SyncSignalVisible;
         SquareCornersCheck.IsChecked = _settings.CornersSquare;
         MoveCompletedTasksCheck.IsChecked = _settings.MoveCompletedTasksToEnd;
+        LargeCheckboxesCheck.IsChecked = _settings.LargeCheckboxes;
         CheckForUpdatesAutomaticallyCheck.IsChecked = _settings.CheckForUpdatesAutomatically;
         AutoHideTasksCheck.IsChecked = _settings.AutoHideCompletedTasks;
         AutoHideTasksDelayValueBox.Text = _settings.AutoHideCompletedTasksDelayValue.ToString();

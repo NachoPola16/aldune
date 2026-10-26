@@ -13,6 +13,7 @@
   <ItemGroup>
     <!-- AlduneCheck: la fuente de las casillas ☐/☒ (scripts/branding/generar-fuente-check.py). -->
     <Resource Include="Assets\AlduneCheck.ttf" />
+    <Resource Include="Assets\AlduneCheckLarge.ttf" />
   </ItemGroup>
 
   <ItemGroup>

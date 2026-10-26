@@ -111,6 +111,7 @@ import kotlinx.coroutines.launch
 /** Espera antes de pedir el teclado en una nota nueva (ver el efecto de foco de [NoteEditorPane]). */
 private const val KEYBOARD_DELAY_MS = 250L
 private val CheckboxSpan = SpanStyle(fontFamily = FontFamily(Font(R.font.aldune_check)))
+private val LargeCheckboxSpan = SpanStyle(fontFamily = FontFamily(Font(R.font.aldune_check_large)))
 
 /**
  * Editor de una nota: texto con ayudas de lista (casillas, viñetas, sangría) y guardado automático (lo hace el `ViewModel`, ver
@@ -321,7 +322,8 @@ fun NoteEditorPane(key: String, viewModel: NotesViewModel, onBack: () -> Unit, s
     val hiddenCandidates = if (hideActive) HiddenTasks.hiddenSpans(state.text.toString(), completed, now, hideDelayMs) else emptyList()
     val hiddenSpans = if (showDone) emptyList() else hiddenCandidates
     // Las casillas se dibujan con AlduneCheck (☒ con tick, sin cambiar lo guardado); el resto del texto no cambia de fuente.
-    val hideTransformation = remember(hideActive, showDone, completed, hideDelayMs) {
+    val checkboxSpan = if (settings.largeCheckboxes) LargeCheckboxSpan else CheckboxSpan
+    val hideTransformation = remember(hideActive, showDone, completed, hideDelayMs, checkboxSpan) {
         OutputTransformation {
             if (hideActive && !showDone) {
                 val spans = HiddenTasks.hiddenSpans(asCharSequence().toString(), completed, System.currentTimeMillis(), hideDelayMs)
@@ -329,7 +331,7 @@ fun NoteEditorPane(key: String, viewModel: NotesViewModel, onBack: () -> Unit, s
             }
             for (i in 0 until length) {
                 val c = asCharSequence()[i]
-                if (c == TaskLines.UNCHECKED || c == TaskLines.CHECKED || c == TaskLines.CHECKED_ALTERNATE) addStyle(CheckboxSpan, i, i + 1)
+                if (c == TaskLines.UNCHECKED || c == TaskLines.CHECKED || c == TaskLines.CHECKED_ALTERNATE) addStyle(checkboxSpan, i, i + 1)
             }
         }
     }
@@ -567,6 +569,17 @@ fun NoteEditorPane(key: String, viewModel: NotesViewModel, onBack: () -> Unit, s
             AssistChip(
                 onClick = { showDone = !showDone },
                 label = { Text(if (showDone) stringResource(R.string.hidden_tasks_hide) else stringResource(R.string.hidden_tasks_show, count)) },
+                modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp),
+            )
+        }
+        // Quitar las marcadas, a mano: la lista de la compra se vacía al volver de la tienda. Deshacer (↶) lo recupera.
+        if (!protectedNote && TaskLists.hasChecked(text())) {
+            AssistChip(
+                onClick = {
+                    val edit = TaskLists.removeChecked(text())
+                    commit(edit.text, TextRange(edit.mapIndex(state.selection.start), edit.mapIndex(state.selection.end)))
+                },
+                label = { Text(stringResource(R.string.edit_remove_checked)) },
                 modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp),
             )
         }

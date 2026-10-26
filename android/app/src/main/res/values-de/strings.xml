@@ -294,4 +294,6 @@
     <string name="welcome_lists">Für eine Liste nutze die Schaltfläche ☐ in der Editorleiste. Tippe auf ein Kästchen, um es abzuhaken, und ziehe den Griff rechts, um Aufgaben umzusortieren.</string>
     <string name="welcome_sync">Um Notizen mit deinem PC zu teilen, öffne die Einstellungen (das Zahnrad) und füge unter Synchronisierung deinen Profilcode ein.</string>
     <string name="welcome_ok">Verstanden</string>
+    <string name="large_checkboxes">Größere Aufgabenkästchen</string>
+    <string name="large_checkboxes_hint">Vergrößert die Kästchen, damit sie leichter zu treffen sind.</string>
 </resources>

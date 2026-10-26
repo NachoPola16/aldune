@@ -154,6 +154,15 @@ public class SettingsServiceTests : IDisposable
     }
 
     [Fact]
+    public void SaveThenLoad_LargeCheckboxes_RoundTrips()
+    {
+        var sut = new SettingsService(_settingsPath);
+        sut.Save(new AppSettings { LargeCheckboxes = true });
+
+        Assert.True(sut.Load().LargeCheckboxes);
+    }
+
+    [Fact]
     public void SaveThenLoad_MoveCompletedTasksToEnd_RoundTrips()
     {
         var sut = new SettingsService(_settingsPath);

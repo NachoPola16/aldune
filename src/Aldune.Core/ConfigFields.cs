@@ -81,6 +81,7 @@ public static class ConfigFields
         Bool("showNotePreview", nameof(AppSettings.ShowNotePreview), ConfigSections.Settings, s => s.ShowNotePreview, (s, v) => s.ShowNotePreview = v),
         Bool("hideOnFullscreen", nameof(AppSettings.HideOnFullscreen), ConfigSections.Settings, s => s.HideOnFullscreen, (s, v) => s.HideOnFullscreen = v),
         Bool("trackpadGestures", nameof(AppSettings.TrackpadGestures), ConfigSections.Settings, s => s.TrackpadGestures, (s, v) => s.TrackpadGestures = v),
+        Bool("largeCheckboxes", nameof(AppSettings.LargeCheckboxes), ConfigSections.Settings, s => s.LargeCheckboxes, (s, v) => s.LargeCheckboxes = v),
         Bool("moveCompletedTasksToEnd", nameof(AppSettings.MoveCompletedTasksToEnd), ConfigSections.Settings, s => s.MoveCompletedTasksToEnd, (s, v) => s.MoveCompletedTasksToEnd = v),
         Bool("autoHideCompletedTasks", nameof(AppSettings.AutoHideCompletedTasks), ConfigSections.Settings, s => s.AutoHideCompletedTasks, (s, v) => s.AutoHideCompletedTasks = v),
         Int("autoHideDelayValue", nameof(AppSettings.AutoHideCompletedTasksDelayValue), ConfigSections.Settings, 1, 999, s => s.AutoHideCompletedTasksDelayValue, (s, v) => s.AutoHideCompletedTasksDelayValue = v),

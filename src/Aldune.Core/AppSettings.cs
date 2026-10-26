@@ -206,6 +206,12 @@ public sealed class AppSettings
     public bool MoveCompletedTasksToEnd { get; set; }
 
     /// <summary>
+    /// Casillas de tarea un 25 % mayores (y su zona de clic), para acertarlas con más facilidad. Es solo cómo se
+    /// dibujan: el texto guardado no cambia. Desactivado por defecto.
+    /// </summary>
+    public bool LargeCheckboxes { get; set; }
+
+    /// <summary>
     /// Consulta diaria a GitHub para avisar de versiones nuevas. Es lo único que sale del equipo sin
     /// que el usuario lo pida, así que se puede apagar (la política de firma de SignPath exige
     /// declararlo). Activada por defecto: un settings.json anterior sigue avisando como siempre.

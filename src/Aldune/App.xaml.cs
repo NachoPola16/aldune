@@ -107,6 +107,7 @@ public partial class App : Application
             ApplyLanguage(settings.Language);
             // Antes de crear ninguna ventana: todas toman sus colores de estos pinceles.
             ThemeManager.Apply(this, settings.Appearance, settings.ColorsFor(settings.Appearance));
+            ThemeManager.LargeCheckboxes = settings.LargeCheckboxes;
             ThemeManager.ApplySkin(this, AppSkin.For(settings.Appearance));
             ThemeManager.ApplyShape(this, settings.CornersSquare);
 

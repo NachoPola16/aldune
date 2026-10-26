@@ -294,4 +294,6 @@
     <string name="welcome_lists">Pour une liste, utilise le bouton ☐ de la barre de l\'éditeur. Touche une case pour la cocher et fais glisser la poignée à droite pour réordonner les tâches.</string>
     <string name="welcome_sync">Pour partager tes notes avec ton PC, ouvre les Réglages (la roue) et colle ton code de profil dans Synchronisation.</string>
     <string name="welcome_ok">Compris</string>
+    <string name="large_checkboxes">Cases de tâche plus grandes</string>
+    <string name="large_checkboxes_hint">Agrandit les cases pour les toucher plus facilement.</string>
 </resources>

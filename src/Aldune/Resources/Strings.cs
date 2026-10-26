@@ -960,6 +960,14 @@ public static class Strings
         "Eine Notiz öffnet sich in der Größe, die du ihr gegeben hast. Ausgeschaltet öffnet sie sich in der Standardgröße und wächst mit ihrem Text.",
         "Une note se rouvre à la taille que vous lui avez donnée. Désactivé, elle s'ouvre à la taille standard et grandit avec son texte.",
         "A nota reabre com o tamanho que você deu. Desligado, ela abre no tamanho padrão e cresce com o texto.");
+    public static string LargeCheckboxesCheckbox => T("Larger task checkboxes", "Casillas de tarea más grandes",
+        "Größere Aufgabenkästchen",
+        "Cases de tâche plus grandes",
+        "Caixas de tarefa maiores");
+    public static string LargeCheckboxesHint => T("Makes the boxes and their click area bigger, so they are easier to hit.", "Agranda las casillas y su zona de clic para acertarlas con más facilidad.",
+        "Vergrößert die Kästchen und ihren Klickbereich, damit sie leichter zu treffen sind.",
+        "Agrandit les cases et leur zone de clic pour les atteindre plus facilement.",
+        "Aumenta as caixas e a área de clique, para acertá-las com mais facilidade.");
     public static string MoveCompletedTasksCheckbox => T("Move checked tasks to the end of the list", "Mover las tareas hechas al final de la lista",
         "Erledigte Aufgaben ans Ende der Liste verschieben",
         "Déplacer les tâches cochées en bas de la liste",

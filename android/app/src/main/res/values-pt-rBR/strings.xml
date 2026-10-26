@@ -294,4 +294,6 @@
     <string name="welcome_lists">Para uma lista, use o botão ☐ da barra do editor. Toque em uma caixa para marcá-la e arraste a alça à direita para reordenar as tarefas.</string>
     <string name="welcome_sync">Para compartilhar suas notas com o PC, abra as Configurações (a engrenagem) e cole seu código de perfil em Sincronização.</string>
     <string name="welcome_ok">Entendi</string>
+    <string name="large_checkboxes">Caixas de tarefa maiores</string>
+    <string name="large_checkboxes_hint">Aumenta as caixas para acertá-las com mais facilidade.</string>
 </resources>

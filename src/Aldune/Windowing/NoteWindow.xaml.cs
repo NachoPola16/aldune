@@ -1178,8 +1178,11 @@ public partial class NoteWindow : Window
         const double padding = 3;
         double tightLeft = glyphRect.Left + caretWidth * 0.093;
         double tightWidth = caretWidth * 0.82;
-        double tightTop = glyphRect.Top + glyphRect.Height * 0.282;
-        double tightHeight = glyphRect.Height * 0.53;
+        // «Casillas grandes»: la caja es un 25 % mayor y sube por encima de donde llegaba (mismas medidas, vueltas a tomar sobre
+        // AlduneCheckLarge: 0,151 y 0,661 del alto de línea en lugar de 0,282 y 0,53; el ancho sigue siendo proporcional al avance).
+        bool large = ThemeManager.LargeCheckboxes;
+        double tightTop = glyphRect.Top + glyphRect.Height * (large ? 0.151 : 0.282);
+        double tightHeight = glyphRect.Height * (large ? 0.661 : 0.53);
 
         var visualRect = new System.Windows.Rect(
             tightLeft - padding / 2, tightTop - padding / 2,

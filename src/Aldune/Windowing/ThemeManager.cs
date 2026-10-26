@@ -22,6 +22,9 @@ public static class ThemeManager
 
     public static AppSkin Skin { get; private set; } = AppSkin.Default;
 
+    /// <summary>Ajuste «Casillas grandes»: elige la fuente de las casillas y la zona de clic de NoteWindow.</summary>
+    public static bool LargeCheckboxes { get; set; }
+
     /// <summary>Paleta activa, para quien calcula colores en Core (NoteFace).</summary>
     public static IReadOnlyDictionary<string, string> Palette => _palette;
 
@@ -72,7 +75,7 @@ public static class ThemeManager
             noteFont,
             // El cuerpo de la nota: la fuente de la nota y, de respaldo, AlduneCheck, que solo trae ☐ y ☒ (con el
             // tick). Va DETRÁS para que el interlineado lo marque la fuente de la nota, no ella.
-            ["AlduneNoteBodyFont"] = new FontFamily(new Uri("pack://application:,,,/aldune;component/"), $"{noteFont.Source}, ./Assets/#AlduneCheck"),
+            ["AlduneNoteBodyFont"] = new FontFamily(new Uri("pack://application:,,,/aldune;component/"), $"{noteFont.Source}, ./Assets/#{(LargeCheckboxes ? "AlduneCheckLarge" : "AlduneCheck")}"),
             ["AlduneNoteTitleFont"] = new FontFamily(skin.NoteTitleFont),
             ["AlduneNoteTitleFontSize"] = skin.NoteTitleFontSize,
             // NaN = el interlineado natural de la fuente (lo de siempre).

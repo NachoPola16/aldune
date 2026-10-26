@@ -9,21 +9,30 @@ cuadrado negro, ver TaskLines.cs). Esta fuente solo cambia cómo se DIBUJAN: ☒
 una aspa. Tiene la caja de Segoe UI Symbol (la fuente de la que Windows sacaba ☐ y ☒) y las métricas de línea de la
 fuente de cada plataforma, de modo que ni el interlineado ni la zona de clic de NoteWindow.FindCheckboxZoneAt se mueven.
 Dibujada a mano (no derivada de Segoe, que no se puede redistribuir). Se escribe en dos sitios: como
-recurso de WPF y como recurso de fuente de Android.
+recurso de WPF y como recurso de fuente de Android, cada uno en tamaño normal y grande.
 """
+import os
 from pathlib import Path
+
+# Fecha fija en la cabecera de la fuente: así regenerar no cambia los bytes si el dibujo no cambia.
+os.environ.setdefault("SOURCE_DATE_EPOCH", "1793000000")
 
 from fontTools.fontBuilder import FontBuilder
 from fontTools.pens.ttGlyphPen import TTGlyphPen
+from shapely import affinity
 from shapely.geometry import LineString, box
 from shapely.geometry.polygon import orient
 
 RAIZ = Path(__file__).resolve().parents[2]
 # (destino, ascendente, descendente): cada plataforma lleva las métricas de línea de la fuente con la que convive,
 # porque si la de la casilla fuera más alta, las líneas con casilla saldrían más altas que las demás.
+# Cada destino se escribe también en versión «grande» (ajuste «Casillas grandes»): la misma caja un 25 % mayor, con su avance.
+GRANDE = 1.25
 DESTINOS = [
-    (RAIZ / "src" / "Aldune" / "Assets" / "AlduneCheck.ttf", 2210, 514),  # Segoe UI Symbol / Variable
-    (RAIZ / "android" / "app" / "src" / "main" / "res" / "font" / "aldune_check.ttf", 1900, 500),  # Roboto
+    (RAIZ / "src" / "Aldune" / "Assets" / "AlduneCheck.ttf", "AlduneCheck", 1.0, 2210, 514),  # Segoe UI Symbol / Variable
+    (RAIZ / "src" / "Aldune" / "Assets" / "AlduneCheckLarge.ttf", "AlduneCheckLarge", GRANDE, 2210, 514),
+    (RAIZ / "android" / "app" / "src" / "main" / "res" / "font" / "aldune_check.ttf", "AlduneCheck", 1.0, 1900, 500),  # Roboto
+    (RAIZ / "android" / "app" / "src" / "main" / "res" / "font" / "aldune_check_large.ttf", "AlduneCheckLarge", GRANDE, 1900, 500),
 ]
 
 EM = 2048
@@ -54,6 +63,7 @@ def caja_vacia():
     return box(X0, Y0, X1, Y1).difference(box(X0 + GROSOR, Y0 + GROSOR, X1 - GROSOR, Y1 - GROSOR))
 
 
+
 def caja_con_tick():
     """La misma caja fina que ☐ con un tick dentro, del mismo grosor de trazo: una caja rellena pesaba
     mucho más que ☐ (el defecto que se descartó con ☑)."""
@@ -63,25 +73,29 @@ def caja_con_tick():
     return caja_vacia().union(tick)
 
 
-def fuente(asc, desc):
+def escalar(forma, escala):
+    return affinity.scale(forma, escala, escala, origin=(0, 0))
+
+
+def fuente(nombre, escala, asc, desc):
     nombres = [".notdef", "uni2610", "uni2612"]
     fb = FontBuilder(EM, isTTF=True)
     fb.setupGlyphOrder(nombres)
     fb.setupCharacterMap({0x2610: "uni2610", 0x2611: "uni2612", 0x2612: "uni2612"})
     vacio = TTGlyphPen(None).glyph()
-    fb.setupGlyf({".notdef": vacio, "uni2610": _dibuja(caja_vacia()), "uni2612": _dibuja(caja_con_tick())})
-    fb.setupHorizontalMetrics({n: (AVANCE, X0) if n != ".notdef" else (AVANCE, 0) for n in nombres})
+    fb.setupGlyf({".notdef": vacio, "uni2610": _dibuja(escalar(caja_vacia(), escala)), "uni2612": _dibuja(escalar(caja_con_tick(), escala))})
+    fb.setupHorizontalMetrics({n: (round(AVANCE * escala), round(X0 * escala)) if n != ".notdef" else (round(AVANCE * escala), 0) for n in nombres})
     fb.setupHorizontalHeader(ascent=asc, descent=-desc)
-    fb.setupNameTable({"familyName": "AlduneCheck", "styleName": "Regular"})
+    fb.setupNameTable({"familyName": nombre, "styleName": "Regular"})
     fb.setupOS2(sTypoAscender=asc, sTypoDescender=-desc, sTypoLineGap=0, usWinAscent=asc, usWinDescent=desc)
     fb.setupPost()
     return fb
 
 
 def main():
-    for destino, asc, desc in DESTINOS:
+    for destino, nombre, escala, asc, desc in DESTINOS:
         destino.parent.mkdir(parents=True, exist_ok=True)
-        fuente(asc, desc).save(destino)
+        fuente(nombre, escala, asc, desc).save(destino)
         print("escrito", destino.relative_to(RAIZ))
 
 

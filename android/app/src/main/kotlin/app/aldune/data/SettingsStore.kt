@@ -22,6 +22,8 @@ data class AppSettings(
     val language: String = "",
     val trashDays: Int = 30,
     val reorderOnCheck: Boolean = false,
+    /** Casillas de tarea un 25 % mayores (fuente AlduneCheckLarge). Solo cambia cómo se dibujan. */
+    val largeCheckboxes: Boolean = false,
     /** Tono de las notas nuevas: claros (por defecto, como Windows) u oscuros. */
     val darkNotes: Boolean = false,
     /** Tema de las notas nuevas y de la hoja de color (`ActiveThemeId` de Windows). Un id que no existe se resuelve a Clásico. */
@@ -87,6 +89,7 @@ class SettingsStore(context: Context) {
             language = prefs.getString(LANGUAGE, d.language).takeIf { tag -> tag == "" || Languages.all.any { it.first == tag } } ?: d.language,
             trashDays = prefs.getInt(TRASH_DAYS, d.trashDays).coerceIn(1, 365),
             reorderOnCheck = prefs.getBoolean(REORDER_ON_CHECK, d.reorderOnCheck),
+            largeCheckboxes = prefs.getBoolean(LARGE_CHECKBOXES, d.largeCheckboxes),
             darkNotes = prefs.getBoolean(DARK_NOTES, d.darkNotes),
             noteThemeId = prefs.getString(NOTE_THEME_ID, d.noteThemeId) ?: d.noteThemeId,
             captureNotification = prefs.getBoolean(CAPTURE_NOTIFICATION, d.captureNotification),
@@ -115,6 +118,7 @@ class SettingsStore(context: Context) {
             .putString(LANGUAGE, settings.language)
             .putInt(TRASH_DAYS, settings.trashDays)
             .putBoolean(REORDER_ON_CHECK, settings.reorderOnCheck)
+            .putBoolean(LARGE_CHECKBOXES, settings.largeCheckboxes)
             .putBoolean(DARK_NOTES, settings.darkNotes)
             .putString(NOTE_THEME_ID, settings.noteThemeId)
             .putBoolean(CAPTURE_NOTIFICATION, settings.captureNotification)
@@ -146,6 +150,7 @@ class SettingsStore(context: Context) {
         const val LANGUAGE = "language"
         const val TRASH_DAYS = "trashDays"
         const val REORDER_ON_CHECK = "reorderOnCheck"
+        const val LARGE_CHECKBOXES = "largeCheckboxes"
         const val DARK_NOTES = "darkNotes"
         const val NOTE_THEME_ID = "noteThemeId"
         const val CAPTURE_NOTIFICATION = "captureNotification"

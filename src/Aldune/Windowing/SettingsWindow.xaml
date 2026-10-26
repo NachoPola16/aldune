@@ -484,6 +484,14 @@
                     </StackPanel>
                     <Border Background="{DynamicResource AlduneRaisedBrush}" Height="1" Margin="0,20,0,0" />
                     <StackPanel Margin="0,20,0,0">
+                        <CheckBox x:Name="LargeCheckboxesCheck"
+                                  Content="{x:Static res:Strings.LargeCheckboxesCheckbox}"
+                                  Foreground="{DynamicResource AlduneTextBrush}" Background="{DynamicResource AlduneGroundBrush}" FontSize="{StaticResource AlduneTextBody}"
+                                  Style="{StaticResource SettingsSwitchStyle}"
+                                  Click="OnLargeCheckboxesToggled" />
+                        <TextBlock Text="{x:Static res:Strings.LargeCheckboxesHint}"
+                                   Foreground="{DynamicResource AlduneHintBrush}" FontSize="{StaticResource AlduneTextSmall}" TextWrapping="Wrap" Margin="0,6,56,16" />
+
                         <CheckBox x:Name="MoveCompletedTasksCheck"
                                   Content="{x:Static res:Strings.MoveCompletedTasksCheckbox}"
                                   Foreground="{DynamicResource AlduneTextBrush}" Background="{DynamicResource AlduneGroundBrush}" FontSize="{StaticResource AlduneTextBody}"

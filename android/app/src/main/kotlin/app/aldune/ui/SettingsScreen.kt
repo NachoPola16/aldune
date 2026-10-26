@@ -147,6 +147,9 @@ fun SettingsScreen(viewModel: NotesViewModel, onClose: () -> Unit) {
                     Choice(stringResource(R.string.trash_days_value, days), settings.trashDays == days) { viewModel.updateSettings { it.copy(trashDays = days) } }
                 }
                 HorizontalDivider(Modifier.padding(vertical = 8.dp))
+                SwitchRow(stringResource(R.string.large_checkboxes), stringResource(R.string.large_checkboxes_hint), settings.largeCheckboxes) { on ->
+                    viewModel.updateSettings { it.copy(largeCheckboxes = on) }
+                }
                 SwitchRow(stringResource(R.string.reorder_on_check), stringResource(R.string.reorder_on_check_hint), settings.reorderOnCheck) { on ->
                     viewModel.updateSettings { it.copy(reorderOnCheck = on) }
                 }
