@@ -13,6 +13,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
@@ -123,7 +124,8 @@ internal fun TaskDragOverlay(
 ) {
     val grip = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.38f)
     val accent = MaterialTheme.colorScheme.primary
-    Canvas(modifier) {
+    // clipToBounds: una tarea a medio ver en el borde dibujaba su asa (las tres rayas) por fuera del campo, encima de la barra de abajo.
+    Canvas(modifier.clipToBounds()) {
         val textLayout = layout() ?: return@Canvas
         val text = shown()
         val top = padTop.toPx()
