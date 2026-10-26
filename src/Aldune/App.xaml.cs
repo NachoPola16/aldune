@@ -447,7 +447,10 @@ public partial class App : Application
     {
         var hotkey = settings.GlobalHotkeyEnabled ? settings.Hotkey.DisplayName : null;
         _toastCenter?.Show(new ToastContent(Strings.WelcomeTitle, Strings.WelcomeMessage(settings.DockEdge, hotkey),
-            [new ToastAction(Strings.WelcomeOpenManager, coordinator.OpenNotesManager, Primary: true)],
+            [
+                new ToastAction(Strings.WelcomeOpenManager, coordinator.OpenNotesManager, Primary: true),
+                new ToastAction(Strings.HowToUseButton, () => coordinator.ShowHowToUse(null)),
+            ],
             AutoDismiss: TimeSpan.FromSeconds(20)));
     }
     private SingleInstance? _singleInstance;

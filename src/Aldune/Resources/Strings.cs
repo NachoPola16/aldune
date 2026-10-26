@@ -637,6 +637,28 @@ public static class Strings
         "Diese Adresse verwendet http:// außerhalb deines lokalen Netzwerks: Die Notizen bleiben verschlüsselt, aber das Zugriffstoken oder Passwort wird ungeschützt übertragen. Verwende https://.",
         "Cette adresse utilise http:// en dehors de ton réseau local : vos notes restent chiffrées, mais le jeton d'accès ou le mot de passe circule sans protection. Utilisez https://.",
         "Este endereço usa http:// fora da sua rede local: suas notas permanecem criptografadas, mas o token de acesso ou a senha trafegam sem proteção. Use https://.");
+    public static string HowToUseButton => T("How it works", "Cómo se usa", "So funktioniert's", "Comment ça marche", "Como usar");
+    public static string HowToUseBody => T(
+        "• The dock: move the mouse to the edge of the screen and click + to create a note.\n" +
+        "• Tasks: start a line with ☐ and press Ctrl+Enter to check it off.\n" +
+        "• Files: drag a .md or .txt file onto the dock to edit it as a linked note, or import it as a normal note from the + menu.\n" +
+        "• Several devices: in Settings you can sync your notes, always end-to-end encrypted.",
+        "• El dock: lleva el ratón al borde de la pantalla y pulsa + para crear una nota.\n" +
+        "• Tareas: empieza una línea con ☐ y pulsa Ctrl+Enter para marcarla.\n" +
+        "• Archivos: arrastra un .md o .txt sobre el dock para editarlo como nota vinculada, o impórtalo como nota normal desde el menú del +.\n" +
+        "• Varios dispositivos: en Ajustes puedes sincronizar tus notas, siempre cifradas de extremo a extremo.",
+        "• Der Dock: Bewege die Maus an den Bildschirmrand und klicke auf +, um eine Notiz zu erstellen.\n" +
+        "• Aufgaben: Beginne eine Zeile mit ☐ und drücke Strg+Eingabe, um sie abzuhaken.\n" +
+        "• Dateien: Ziehe eine .md- oder .txt-Datei auf den Dock, um sie als verknüpfte Notiz zu bearbeiten, oder importiere sie über das +-Menü als normale Notiz.\n" +
+        "• Mehrere Geräte: In den Einstellungen kannst du deine Notizen synchronisieren, stets Ende-zu-Ende-verschlüsselt.",
+        "• Le dock : déplacez la souris au bord de l'écran et cliquez sur + pour créer une note.\n" +
+        "• Tâches : commencez une ligne par ☐ et appuyez sur Ctrl+Entrée pour la cocher.\n" +
+        "• Fichiers : glissez un fichier .md ou .txt sur le dock pour le modifier comme note liée, ou importez-le comme note normale depuis le menu +.\n" +
+        "• Plusieurs appareils : dans les paramètres, vous pouvez synchroniser vos notes, toujours chiffrées de bout en bout.",
+        "• O dock: mova o mouse até a borda da tela e clique em + para criar uma nota.\n" +
+        "• Tarefas: comece uma linha com ☐ e pressione Ctrl+Enter para marcá-la.\n" +
+        "• Arquivos: arraste um arquivo .md ou .txt para o dock para editá-lo como nota vinculada, ou importe-o como nota normal pelo menu +.\n" +
+        "• Vários dispositivos: em Configurações você pode sincronizar suas notas, sempre com criptografia de ponta a ponta.");
     public static string WelcomeTitle => T("Aldune is ready", "Aldune está lista",
         "Aldune ist bereit", "Aldune est prêt", "Aldune está pronto");
     public static string WelcomeMessage(Aldune.Core.EdgePosition edge, string? hotkey)

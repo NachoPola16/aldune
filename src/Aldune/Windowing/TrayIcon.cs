@@ -46,6 +46,7 @@ internal sealed class TrayIcon : IDisposable
         menu.Items.Add(new ToolStripMenuItem(Strings.TrayNewNote, null, (_, _) => _coordinator.CreateAndOpenNote()));
         menu.Items.Add(new ToolStripMenuItem(Strings.LinkedOpenFile, null, (_, _) => _coordinator.ShowOpenLinkedFileDialog(null)));
         menu.Items.Add(new ToolStripMenuItem(Strings.TrayManageNotes, null, (_, _) => _coordinator.OpenNotesManager()));
+        menu.Items.Add(new ToolStripMenuItem(Strings.HowToUseButton, null, (_, _) => _coordinator.ShowHowToUse(null)));
         menu.Items.Add(new ToolStripSeparator());
 
         // Ocultar el dock. Es la salida para las pantallas completas que Windows no reporta como

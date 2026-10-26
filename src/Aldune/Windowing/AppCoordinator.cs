@@ -106,6 +106,10 @@ public sealed class AppCoordinator
             AppDialog.Show(owner, string.Join("\n", errors), Strings.LinkedOpenFile, MessageBoxButton.OK, MessageBoxImage.Warning);
     }
 
+    /// <summary>Las cuatro ideas básicas en un cuadro; sale desde el aviso de bienvenida y desde la bandeja.</summary>
+    public void ShowHowToUse(Window? owner) =>
+        AppDialog.Show(owner, Strings.HowToUseBody, Strings.HowToUseButton, MessageBoxButton.OK, MessageBoxImage.Information);
+
     public void ShowImportMarkdownDialog(Window? owner, string? tag)
     {
         var dialog = new Microsoft.Win32.OpenFileDialog { Filter = Strings.LinkedFileFilter, Multiselect = true, CheckFileExists = true };
