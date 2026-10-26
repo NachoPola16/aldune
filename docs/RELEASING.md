@@ -74,6 +74,14 @@ Android **no tiene workflow**: el APK se compila y se firma en local y se sube a
    gh release create android-v0.1.0-rcN .\aldune-0.1.0-rcN.apk --target main --prerelease --title "Aldune para Android 0.1.0-rcN" --notes-file notas.md
    ```
 
+**Versión estable de Android (`0.1.0`, sin `-rcN`).** Se publica igual, pero con tag `android-v0.1.0`, **sin** `--prerelease` y con
+`--latest=false`, y **después** de la de Windows que toque: así «la última» (`releases/latest`) sigue siendo la de Windows y los
+Windows siguen avisando. Comprobar al acabar con `gh release list` que la fila «Latest» es la `v1.7.x` y no la de Android:
+
+```powershell
+gh release create android-v0.1.0 .ldune-0.1.0.apk --target main --latest=false --title "Aldune para Android 0.1.0" --notes-file notas.md
+```
+
 **Por qué la de Android sale como pre-release.** La app de Windows busca actualizaciones en `releases/latest`
 (`ReleaseUpdateChecker`), que devuelve la última versión que **no** es pre-release. Si un release de Android (tag
 `android-v…`) lo fuera, pasaría a ser «la última» y los Windows dejarían de avisar de las versiones nuevas hasta el siguiente
