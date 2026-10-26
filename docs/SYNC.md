@@ -74,6 +74,14 @@ Para compartir **solo una nota** (la lista de la compra, por ejemplo) sin mezcla
    también entra en tu perfil «todas», se sube a los dos almacenes.
 5. Desconectar un perfil no toca los demás ni borra ninguna nota.
 
+**Que cada uno decida qué comparte: alcance por etiqueta.** Con *Notas seleccionadas* la lista de notas queda fija en el código y desde Android
+nadie puede añadir más. Si quieres que cualquiera del grupo elija qué va a la familia, crea el perfil con *Notas con una etiqueta* (por
+ejemplo `familia`) y comparte ese código: toda nota que lleve esa etiqueta, la cree quien la cree, se sincroniza con el grupo, y las que no
+la lleven se quedan solo en su dispositivo. Las etiquetas viajan dentro del contenido cifrado de la nota (todas las de esa nota, no solo la
+del grupo). Quitar la etiqueta a una nota la deja de sincronizar desde ese dispositivo, pero no la borra de los demás: para retirarla de
+todos hay que borrarla. Cambiar el alcance de un perfil ya creado no cambia su clave ni su token, pero el alcance viaja en el código: los
+móviles que ya se unieron con el código anterior tienen que desconectar el perfil y volver a unirse con el código nuevo.
+
 Crear y compartir perfiles desde Android todavía no se puede; se hace en Windows.
 
 **QR de emparejamiento.** En Windows, Ajustes → Sincronización → **Mostrar QR** enseña el código de perfil como QR durante 2 minutos (negro sobre blanco, con aviso: lleva la clave de cifrado; no va al portapapeles ni a disco). En Android, **Escanear QR** (junto a «Pegar») rellena el campo del código; el token sigue escribiéndose aparte y nunca viaja en el QR. Si el perfil es demasiado grande para un QR (más de ~2.300 bytes), Windows lo dice y se copia el código como siempre.
