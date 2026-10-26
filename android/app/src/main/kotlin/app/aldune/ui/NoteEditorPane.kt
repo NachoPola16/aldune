@@ -24,7 +24,12 @@ import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.input.InputTransformation
 import androidx.compose.foundation.text.input.OutputTransformation
 import androidx.compose.foundation.text.input.delete
-import androidx.compose.material3.TextButton
+import androidx.compose.material3.AssistChip
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.width
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
 import app.aldune.data.CompletedTasksStore
 import app.aldune.text.HiddenTasks
 import androidx.compose.foundation.text.input.TextFieldState
@@ -524,9 +529,12 @@ fun NoteEditorPane(key: String, viewModel: NotesViewModel, onBack: () -> Unit, s
         )
         if (hiddenCandidates.isNotEmpty()) {
             val count = HiddenTasks.hiddenCount(text(), completed, now, hideDelayMs)
-            TextButton(onClick = { showDone = !showDone }, Modifier.padding(horizontal = 8.dp)) {
-                Text(if (showDone) stringResource(R.string.hidden_tasks_hide) else stringResource(R.string.hidden_tasks_show, count))
-            }
+            // Un chip y no un botón de texto: tiene contorno, se lee como algo que se puede tocar y mide 48 dp de alto.
+            AssistChip(
+                onClick = { showDone = !showDone },
+                label = { Text(if (showDone) stringResource(R.string.hidden_tasks_hide) else stringResource(R.string.hidden_tasks_show, count)) },
+                modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp),
+            )
         }
         HorizontalDivider()
         EditBar(
@@ -590,7 +598,9 @@ private fun EditBar(
     onRedo: () -> Unit,
 ) {
     var menuOpen by remember { mutableStateOf(false) }
-    Row(Modifier.fillMaxWidth().horizontalScroll(rememberScrollState())) {
+    val scroll = rememberScrollState()
+    Box {
+    Row(Modifier.fillMaxWidth().horizontalScroll(scroll)) {
         BarButton("↶", stringResource(R.string.edit_undo), onUndo, canUndo)
         BarButton("↷", stringResource(R.string.edit_redo), onRedo, canRedo)
         BarButton("☐", stringResource(R.string.edit_checkbox), onCheckbox)
@@ -614,6 +624,14 @@ private fun EditBar(
                 )
             }
         }
+    }
+    // Hay más botones a la derecha: un degradado en el borde lo dice, en vez de dejar el último cortado sin explicación.
+    if (scroll.canScrollForward) {
+        Box(
+            Modifier.align(Alignment.CenterEnd).width(36.dp).height(48.dp)
+                .background(Brush.horizontalGradient(listOf(Color.Transparent, MaterialTheme.colorScheme.background))),
+        )
+    }
     }
 }
 
