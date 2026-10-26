@@ -42,7 +42,7 @@ cada dispositivo. Trata el código como una contraseña, porque contiene la clav
 2. En el primer PC: Ajustes → Sincronización entre dispositivos → `Servidor propio`; URL (`http://IP-DEL-SERVIDOR:8087/`) y el
    token. Pulsa **Compartir perfil** y copia el código.
 3. En cada PC más: crea un perfil, pega el código, `Importar código` y escribe el token (el transporte y la URL se rellenan solos).
-4. **En Android:** Ajustes → Sincronización → pega el código → **Continuar** → elige «Aldune server» → comprueba la dirección y
+4. **En Android:** Ajustes → Sincronización → pega el código (o pulsa **Escanear QR** mientras el PC enseña **Mostrar QR**) → **Continuar** → elige «Aldune server» → comprueba la dirección y
    escribe el token → **Conectar**.
 5. Fuera de casa usa HTTPS (ver [Nginx + Cloudflare Tunnel](#nginx--cloudflare-tunnel) y [HTTPS con Caddy](#https-con-caddy)): con
    `http://` el token viaja sin proteger por la red (las notas siguen cifradas), y Android lo avisa.
@@ -55,7 +55,7 @@ cada dispositivo. Trata el código como una contraseña, porque contiene la clav
 3. En el primer PC: Ajustes → Sincronización entre dispositivos → `WebDAV / Nextcloud`; URL, usuario y contraseña de aplicación.
    Pulsa **Compartir perfil** y copia el código.
 4. En cada PC más: crea un perfil, pega el código, `Importar código` y escribe tu usuario y contraseña de aplicación.
-5. **En Android:** Ajustes → Sincronización → pega el código → **Continuar** → elige «WebDAV» → dirección (si es una carpeta,
+5. **En Android:** Ajustes → Sincronización → pega el código (o **Escanear QR**, como arriba) → **Continuar** → elige «WebDAV» → dirección (si es una carpeta,
    termínala en `/`), usuario y contraseña de aplicación → **Conectar**.
 
 #### D. Una nota compartida con la familia (varios perfiles)
@@ -72,6 +72,8 @@ Para compartir **solo una nota** (la lista de la compra, por ejemplo) sin mezcla
 5. Desconectar un perfil no toca los demás ni borra ninguna nota.
 
 Crear y compartir perfiles desde Android todavía no se puede; se hace en Windows.
+
+**QR de emparejamiento.** En Windows, Ajustes → Sincronización → **Mostrar QR** enseña el código de perfil como QR durante 2 minutos (negro sobre blanco, con aviso: lleva la clave de cifrado; no va al portapapeles ni a disco). En Android, **Escanear QR** (junto a «Pegar») rellena el campo del código; el token sigue escribiéndose aparte y nunca viaja en el QR. Si el perfil es demasiado grande para un QR (más de ~2.300 bytes), Windows lo dice y se copia el código como siempre.
 
 ### Qué hacer si algo falla
 

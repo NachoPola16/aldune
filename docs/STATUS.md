@@ -110,6 +110,11 @@ Tests: 506/506 pasando (`dotnet test tests/Aldune.Core.Tests --no-restore`).
   sync: QR y pegar/compartir el código, transparencia de la sync en segundo plano, pasada de errores y conflictos. Spec y plan en
   `docs/superpowers/`. Probado en el emulador (migración desde un perfil, segundo perfil, duplicado, desconectar uno); sin probar en el Pixel.
 
+- **QR de emparejamiento** (2026-10-27, spec `superpowers/specs/2026-10-27-qr-emparejamiento-design.md`): Windows muestra el código de
+  perfil como QR (`ShareQr` en Core con QRCoder 1.8.1; `ShareQrWindow` con aviso y cierre a los 120 s) y Android lo escanea
+  (`QrScanActivity` con CameraX 1.6.2 + `QrDecoder` sobre ZXing core 3.5.4, sin Play Services). Se decidió no dividir el QR en varios
+  y que el token no viaje nunca. Cero cambios en el formato de sync.
+
 ## Cómo se ha trabajado (para mantener el mismo estilo)
 
 - **Diseño**: skill `superpowers:brainstorming` → spec escrita y comprometida
