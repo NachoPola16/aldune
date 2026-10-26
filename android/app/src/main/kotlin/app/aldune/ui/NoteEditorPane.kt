@@ -28,6 +28,7 @@ import androidx.compose.material3.AssistChip
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import app.aldune.data.CompletedTasksStore
@@ -96,6 +97,7 @@ import app.aldune.text.LineDirection
 import app.aldune.text.LineMovement
 import app.aldune.text.ListIndent
 import app.aldune.text.ListKeys
+import app.aldune.text.TaskDrag
 import app.aldune.text.TaskLines
 import app.aldune.text.TaskLists
 import app.aldune.text.TextAndCaret
@@ -141,6 +143,9 @@ fun NoteEditorPane(key: String, viewModel: NotesViewModel, onBack: () -> Unit, s
     // Toque pendiente sobre el texto. No se aplica en el mismo evento: el campo, al recibir ese mismo toque, emite el texto
     // anterior con el cursor nuevo y pisaría el cambio; se espera al siguiente fotograma (ver LaunchedEffect de abajo).
     var tap by remember(key) { mutableStateOf<Offset?>(null) }
+    // Arrastrar tareas con el dedo (ver TaskDragUi): el campo comparte su scroll con el dibujo del asa.
+    val fieldScroll = rememberScrollState()
+    val drag = remember(key) { TaskDragState() }
 
     // Carga la nota (otra vez, tras resolver un conflicto que le cambió el texto o la protección). Mientras dura, el texto no se guarda.
     suspend fun load() {
@@ -483,15 +488,31 @@ fun NoteEditorPane(key: String, viewModel: NotesViewModel, onBack: () -> Unit, s
             }
             return@Column
         }
+        // El texto que se ve (sin las tareas hechas ocultas): el diseño del campo es de este texto, no del real.
+        fun shownText(): String = StringBuilder(text()).also { sb -> for (span in hiddenSpans.asReversed()) sb.delete(span.start, span.end) }.toString()
+        // Con tareas, se deja sitio a la derecha para el asa de arrastre.
+        val hasTasks = TaskLines.count(state.text.toString()).total > 0 && !protectedNote
+        Box(Modifier.weight(1f).fillMaxWidth()) {
         BasicTextField(
             state = state,
+            scrollState = fieldScroll,
             inputTransformation = ListKeysTransformation,
             outputTransformation = hideTransformation,
             onTextLayout = { getResult -> layout = getResult },
             modifier = Modifier
-                .weight(1f)
-                .fillMaxWidth()
-                .padding(horizontal = 16.dp, vertical = 8.dp)
+                .fillMaxSize()
+                .taskDrag(
+                    key, drag, layout = { layout?.invoke() }, scroll = fieldScroll, shown = ::shownText,
+                    onStart = { haptic.performHapticFeedback(HapticFeedbackType.LongPress) },
+                    onDrop = { fromShown, toShown ->
+                        val raw = text()
+                        val shown = shownText()
+                        val from = TaskDrag.rawLine(shown, hiddenSpans, raw, fromShown)
+                        val to = TaskDrag.rawLine(shown, hiddenSpans, raw, toShown)
+                        LineMovement.moveTo(raw, from, to)?.let { commit(it) }
+                    },
+                )
+                .padding(start = 16.dp, end = if (hasTasks) TASK_DRAG_ZONE else 16.dp, top = TASK_DRAG_PAD_TOP, bottom = 8.dp)
                 .focusRequester(focus)
                 // Tocar una casilla la marca. Se mira en la pasada Initial y sin consumir nada: el campo sigue recibiendo
                 // el toque (cursor, teclado) como siempre.
@@ -527,6 +548,8 @@ fun NoteEditorPane(key: String, viewModel: NotesViewModel, onBack: () -> Unit, s
             textStyle = MaterialTheme.typography.bodyLarge.copy(color = MaterialTheme.colorScheme.onBackground),
             cursorBrush = SolidColor(MaterialTheme.colorScheme.primary),
         )
+        if (hasTasks) TaskDragOverlay(drag, layout = { layout?.invoke() }, scroll = fieldScroll, shown = ::shownText, modifier = Modifier.matchParentSize())
+        }
         if (hiddenCandidates.isNotEmpty()) {
             val count = HiddenTasks.hiddenCount(text(), completed, now, hideDelayMs)
             // Un chip y no un botón de texto: tiene contorno, se lee como algo que se puede tocar y mide 48 dp de alto.
@@ -580,7 +603,11 @@ private fun toggleCheckboxAtTap(text: String, layout: TextLayoutResult?, positio
     return null
 }
 
-/** Barra sobre el teclado: casilla, viñeta, sangría, mover línea y el menú «⋯» de la lista de tareas. */
+/**
+ * Barra sobre el teclado: deshacer, rehacer, casilla, viñeta, sangría y el menú «⋯» (subir y bajar la línea, y las acciones de la lista de
+ * tareas). Los siete botones se reparten el ancho, sin desplazar: caben en 360 dp. En pantallas anchas la barra no pasa de [BAR_MAX_WIDTH].
+ * Subir y bajar viven en el menú porque con el dedo se arrastra la tarea, pero TalkBack no puede arrastrar.
+ */
 @Composable
 private fun EditBar(
     text: String,
@@ -598,20 +625,18 @@ private fun EditBar(
     onRedo: () -> Unit,
 ) {
     var menuOpen by remember { mutableStateOf(false) }
-    val scroll = rememberScrollState()
-    Box {
-    Row(Modifier.fillMaxWidth().horizontalScroll(scroll)) {
+    Row(Modifier.widthIn(max = BAR_MAX_WIDTH).fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly) {
         BarButton("↶", stringResource(R.string.edit_undo), onUndo, canUndo)
         BarButton("↷", stringResource(R.string.edit_redo), onRedo, canRedo)
         BarButton("☐", stringResource(R.string.edit_checkbox), onCheckbox)
         BarButton("→", stringResource(R.string.edit_bullet), onBullet)
         BarButton("⇤", stringResource(R.string.edit_outdent), onOutdent)
         BarButton("⇥", stringResource(R.string.edit_indent), onIndent)
-        BarButton("↑", stringResource(R.string.edit_move_up), onMoveUp)
-        BarButton("↓", stringResource(R.string.edit_move_down), onMoveDown)
         Box {
             BarButton("⋯", stringResource(R.string.edit_more), { menuOpen = true })
             DropdownMenu(expanded = menuOpen, onDismissRequest = { menuOpen = false }) {
+                DropdownMenuItem(text = { Text("↑  " + stringResource(R.string.edit_move_up)) }, onClick = { menuOpen = false; onMoveUp() })
+                DropdownMenuItem(text = { Text("↓  " + stringResource(R.string.edit_move_down)) }, onClick = { menuOpen = false; onMoveDown() })
                 DropdownMenuItem(
                     text = { Text(stringResource(R.string.edit_uncheck_all)) },
                     enabled = TaskLists.hasChecked(text),
@@ -625,15 +650,9 @@ private fun EditBar(
             }
         }
     }
-    // Hay más botones a la derecha: un degradado en el borde lo dice, en vez de dejar el último cortado sin explicación.
-    if (scroll.canScrollForward) {
-        Box(
-            Modifier.align(Alignment.CenterEnd).width(36.dp).height(48.dp)
-                .background(Brush.horizontalGradient(listOf(Color.Transparent, MaterialTheme.colorScheme.background))),
-        )
-    }
-    }
 }
+
+private val BAR_MAX_WIDTH = 480.dp
 
 @Composable
 private fun BarButton(label: String, description: String, onClick: () -> Unit, enabled: Boolean = true) {
