@@ -845,6 +845,9 @@
                             <Button x:Name="SyncShareProfileButton" Content="{x:Static res:Strings.SyncShareProfileButton}"
                                     Click="OnSyncShareProfileClick" Margin="0,0,7,6" Padding="10,6"
                                     Style="{StaticResource RecordButtonStyle}" />
+                            <Button x:Name="SyncShowQrButton" Content="{x:Static res:Strings.SyncShowQrButton}"
+                                    Click="OnSyncShowQrClick" Margin="0,0,7,6" Padding="10,6"
+                                    Style="{StaticResource RecordButtonStyle}" />
                             <Button x:Name="SyncRevokeAccessButton" Content="{x:Static res:Strings.SyncRevokeAccessButton}"
                                     Click="OnSyncRevokeAccessClick" Margin="0,0,7,6" Padding="10,6"
                                     Style="{StaticResource DangerRecordButtonStyle}" />

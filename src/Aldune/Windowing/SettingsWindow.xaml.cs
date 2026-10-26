@@ -1217,6 +1217,26 @@ public partial class SettingsWindow : Window
         }
     }
 
+    private void OnSyncShowQrClick(object sender, RoutedEventArgs e)
+    {
+        if (_syncService is null) return;
+        try
+        {
+            // El código no se copia al portapapeles ni se deja en el cuadro de texto: el QR es solo para enseñarlo un momento.
+            var qr = ShareQr.Build(_syncService.GetOrCreateShareCode());
+            if (qr.TooLarge)
+            {
+                SyncStatusText.Text = Strings.QrTooLargeStatus;
+                return;
+            }
+            new ShareQrWindow(this, qr).ShowDialog();
+        }
+        catch (Exception ex)
+        {
+            SyncStatusText.Text = Strings.SyncErrorStatus(ex.Message);
+        }
+    }
+
     private void OnSyncRevokeAccessClick(object sender, RoutedEventArgs e)
     {
         if (_syncService is null || _settings.SyncEnabled != true) return;

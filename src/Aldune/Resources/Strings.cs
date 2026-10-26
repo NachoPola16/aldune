@@ -1046,6 +1046,26 @@ public static class Strings
         "Generieren / kopieren", "Générer / copier", "Gerar / copiar");
     public static string SyncShareProfileButton => T("Share profile", "Compartir perfil",
         "Profil teilen", "Partager le profil", "Compartilhar perfil");
+    public static string SyncShowQrButton => T("Show QR", "Mostrar QR", "QR anzeigen", "Afficher le QR", "Mostrar QR");
+    public static string QrWindowTitle => T("Profile QR", "QR del perfil", "Profil-QR", "QR du profil", "QR do perfil");
+    public static string QrWindowHint => T("On your phone: Aldune → Settings → Sync → Add profile → Scan QR.",
+        "En el móvil: Aldune → Ajustes → Sincronización → Añadir perfil → Escanear QR.",
+        "Auf dem Handy: Aldune → Einstellungen → Synchronisierung → Profil hinzufügen → QR scannen.",
+        "Sur le téléphone : Aldune → Réglages → Synchronisation → Ajouter un profil → Scanner le QR.",
+        "No celular: Aldune → Configurações → Sincronização → Adicionar perfil → Escanear QR.");
+    public static string QrWindowWarning => T("This QR contains the key to your notes. Show it only to your own devices.",
+        "Este QR lleva la clave de tus notas. Enséñalo solo a tus propios dispositivos.",
+        "Dieser QR enthält den Schlüssel zu deinen Notizen. Zeige ihn nur deinen eigenen Geräten.",
+        "Ce QR contient la clé de tes notes. Ne le montre qu'à tes propres appareils.",
+        "Este QR contém a chave das suas notas. Mostre-o apenas aos seus próprios dispositivos.");
+    public static string QrWindowCountdown(int seconds) => T($"Closes in {seconds} s", $"Se cierra en {seconds} s",
+        $"Schließt in {seconds} s", $"Se ferme dans {seconds} s", $"Fecha em {seconds} s");
+    public static string QrWindowClose => T("Close", "Cerrar", "Schließen", "Fermer", "Fechar");
+    public static string QrTooLargeStatus => T("This profile is too large for a QR. Copy the code instead.",
+        "Este perfil es demasiado grande para un QR. Copia el código.",
+        "Dieses Profil ist zu groß für einen QR. Kopiere stattdessen den Code.",
+        "Ce profil est trop grand pour un QR. Copie plutôt le code.",
+        "Este perfil é grande demais para um QR. Copie o código.");
     public static string SyncRevokeAccessButton => T("Revoke old codes", "Revocar códigos anteriores",
         "Alte Codes widerrufen", "Révoquer les anciens codes", "Revogar códigos antigos");
     public static string SyncRevokeAccessHint => T(
