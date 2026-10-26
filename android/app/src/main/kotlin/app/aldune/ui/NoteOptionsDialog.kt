@@ -109,6 +109,11 @@ fun NoteOptionsDialog(
                         }
                     }
                 }
+                // Con «mismo color en todas las notas» el color de cada nota se guarda y se sincroniza, pero no se ve: sin este aviso
+                // parecería que el selector no hace nada (Windows avisa igual con SkinColorNotice).
+                if (settings.uniformNoteColor != null) {
+                    Text(stringResource(R.string.color_uniform_notice), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                }
                 TextButton(onClick = { customOpen = true }) { Text(stringResource(R.string.custom_color)) }
                 Text(stringResource(R.string.note_tags), Modifier.padding(top = 8.dp), style = MaterialTheme.typography.labelLarge)
                 FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
