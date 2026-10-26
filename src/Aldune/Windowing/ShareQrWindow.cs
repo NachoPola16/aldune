@@ -1,5 +1,7 @@
-﻿using System.Windows;
+﻿using System.Runtime.InteropServices;
+using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Interop;
 using System.Windows.Media;
 using System.Windows.Threading;
 using Aldune.Core;
@@ -15,6 +17,10 @@ internal sealed class ShareQrWindow : Window
 {
     private const int LifetimeSeconds = 120;
     private const int TargetPixels = 340;
+    private const uint WdaExcludeFromCapture = 0x11;
+
+    [DllImport("user32.dll")]
+    private static extern bool SetWindowDisplayAffinity(IntPtr hwnd, uint affinity);
 
     private readonly DispatcherTimer _timer = new() { Interval = TimeSpan.FromSeconds(1) };
     private readonly TextBlock _countdown = new();
@@ -65,6 +71,12 @@ internal sealed class ShareQrWindow : Window
             _remaining--;
             if (_remaining <= 0) { Close(); return; }
             UpdateCountdown();
+        };
+        // El QR lleva la clave de cifrado: que no salga en capturas, grabaciones ni pantallas compartidas (el equivalente al FLAG_SECURE de
+        // Android). Si el sistema no lo admite (Windows anterior a 10 2004) la ventana se ve igual, y el aviso y los 2 minutos siguen valiendo.
+        SourceInitialized += (_, _) =>
+        {
+            try { SetWindowDisplayAffinity(new WindowInteropHelper(this).Handle, WdaExcludeFromCapture); } catch { }
         };
         Loaded += (_, _) => _timer.Start();
         Closed += (_, _) => _timer.Stop();
