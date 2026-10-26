@@ -151,10 +151,18 @@ sealed interface FirstConnectDecision {
 
 enum class FirstConnectChoice { UPLOAD, DISCARD }
 
-/** Pregunta si hay **alguna nota** local, activa, archivada o en la papelera. Las bases y los conflictos no cuentan: son de un perfil anterior. */
-fun firstConnectDecision(snapshot: LocalSnapshot): FirstConnectDecision =
-    if (snapshot.notes.isNotEmpty()) FirstConnectDecision.AskUser(snapshot.notes.size)
-    else FirstConnectDecision.Proceed(dropLocalTombstones = snapshot.tombstones.isNotEmpty())
+/**
+ * Pregunta si hay **alguna nota** local, activa, archivada o en la papelera. Las bases y los conflictos no cuentan: son de un perfil anterior.
+ *
+ * Un perfil **adicional** ([isFirstProfile] falso) nunca pregunta ni descarta: «descartar» borraría las notas de los demás perfiles. Solo
+ * se sube lo que su alcance incluye y se baja lo que haya en su almacén. Tampoco descarta lápidas: son borrados que otros perfiles aún
+ * pueden tener que firmar.
+ */
+fun firstConnectDecision(snapshot: LocalSnapshot, isFirstProfile: Boolean = true): FirstConnectDecision = when {
+    !isFirstProfile -> FirstConnectDecision.Proceed(dropLocalTombstones = false)
+    snapshot.notes.isNotEmpty() -> FirstConnectDecision.AskUser(snapshot.notes.size)
+    else -> FirstConnectDecision.Proceed(dropLocalTombstones = snapshot.tombstones.isNotEmpty())
+}
 
 /**
  * Deja el almacén listo para la primera pasada. Las bases son de un perfil concreto y no valen para otro, así que siempre se olvidan.
