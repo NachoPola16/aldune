@@ -1,6 +1,7 @@
 package app.aldune.ui
 
 import android.text.format.DateUtils
+import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -219,6 +220,10 @@ private fun ConnectForm(controller: SyncController, additional: Boolean, initial
     var username by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var errorText by remember { mutableStateOf<Int?>(null) }
+    val scanner = rememberLauncherForActivityResult(ScanQrContract()) { scanned ->
+        // Igual que «Pegar»: solo rellena el campo; validar y continuar sigue siendo de «Continuar».
+        if (!scanned.isNullOrBlank()) { code = scanned; errorText = null }
+    }
     var failureKind by remember { mutableStateOf<SyncFailureKind?>(null) }
     var busy by remember { mutableStateOf(false) }
     var pending by remember { mutableStateOf<ConnectRequest?>(null) }
@@ -258,12 +263,15 @@ private fun ConnectForm(controller: SyncController, additional: Boolean, initial
                 isError = errorText != null, supportingText = errorText?.let { { Text(stringResource(it)) } },
             )
             // Pegar solo cuando se pulsa: Aldune no lee el portapapeles por su cuenta.
-            OutlinedButton(onClick = {
-                scope.launch {
-                    val pasted = clipboard.getClipEntry()?.clipData?.takeIf { it.itemCount > 0 }?.getItemAt(0)?.text?.toString()
-                    if (!pasted.isNullOrBlank()) { code = ProfileCodes.findShareCode(pasted) ?: pasted.trim(); errorText = null }
-                }
-            }) { Text(stringResource(R.string.sync_paste)) }
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                OutlinedButton(onClick = {
+                    scope.launch {
+                        val pasted = clipboard.getClipEntry()?.clipData?.takeIf { it.itemCount > 0 }?.getItemAt(0)?.text?.toString()
+                        if (!pasted.isNullOrBlank()) { code = ProfileCodes.findShareCode(pasted) ?: pasted.trim(); errorText = null }
+                    }
+                }) { Text(stringResource(R.string.sync_paste)) }
+                OutlinedButton(onClick = { scanner.launch(Unit) }) { Text(stringResource(R.string.scan_qr)) }
+            }
             Button(onClick = {
                 when (val result = parseProfileInput(code)) {
                     is ProfileParse.Rejected -> errorText = parseErrorText(result.error)
