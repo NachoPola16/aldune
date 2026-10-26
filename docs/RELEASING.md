@@ -31,6 +31,60 @@ gh run watch
 Después de cada release hay que actualizar también el servidor de sincronización propio (ver
 `scripts/update-sync-server.sh` y `docs/SYNC.md`, "Actualizar el servidor desde Git").
 
+## Android: APK firmado
+
+Android **no tiene workflow**: el APK se compila y se firma en local y se sube a mano a un GitHub Release. El tag es
+`android-v0.1.0-rcN` (con guion: sale como pre-release) y no dispara el workflow de Windows, que solo mira `v*`.
+
+1. Versión en `android/app/build.gradle.kts`: sube `versionCode` en 1 y cambia `versionName` (`0.1.0-rc10`). Commit y push
+   a `main` (el APK sale de ese árbol: no compiles con cambios sin subir).
+2. Tests: `./gradlew test` desde `android/` (JDK 21; ver `AGENTS.md`).
+3. Compilar y firmar, en PowerShell, desde `android/`. El almacén de claves (`.jks`) **no está en el repositorio** y su
+   contraseña tampoco: van en tu gestor de contraseñas. La contraseña se pide con `Read-Host`, así no queda escrita en ningún
+   fichero ni en el historial:
+
+   ```powershell
+   cd <repo>\android
+   $env:JAVA_HOME = "C:\Program Files\Eclipse Adoptium\jdk-21.0.12.101-hotspot"
+   $env:ALDUNE_KEYSTORE = "<ruta real del almacén>.jks"      # no es el debug.keystore de ~\.android
+   $pw = Read-Host "Contraseña de firma de Aldune" -AsSecureString
+   $env:ALDUNE_KEYSTORE_PASSWORD = [Runtime.InteropServices.Marshal]::PtrToStringAuto([Runtime.InteropServices.Marshal]::SecureStringToBSTR($pw))
+   # Solo si no son los de siempre: $env:ALDUNE_KEY_ALIAS (por defecto «aldune») y $env:ALDUNE_KEY_PASSWORD (por defecto, la del almacén)
+   ./gradlew :app:assembleRelease
+   Copy-Item app\build\outputs\apk\release\app-release.apk .\aldune-0.1.0-rcN.apk
+   Remove-Item Env:ALDUNE_KEYSTORE_PASSWORD, Env:ALDUNE_KEYSTORE
+   ```
+
+   Sin esas variables el build sale **sin firmar** (`app-release-unsigned.apk`): es lo que necesitan F-Droid y las
+   compilaciones de comprobación, y no se puede instalar.
+4. Verificar antes de publicar:
+
+   ```powershell
+   (Get-FileHash .\aldune-0.1.0-rcN.apk -Algorithm SHA256).Hash.ToLower()
+   & "$env:LOCALAPPDATA\Android\Sdk\build-tools\36.0.0\apksigner.bat" verify --verbose --print-certs .\aldune-0.1.0-rcN.apk
+   ```
+
+   Tiene que decir `Verifies`, un solo firmante y la **huella SHA-256 del certificado de siempre**
+   (`a10d33e76b3e3bc82333f44815824d54e6f99f6e7b2183cacae212c9dd348d37`). Si es otra, se firmó con otra clave y Android no
+   instalará el APK encima de la versión anterior. `aapt2 dump badging` confirma `versionCode` y `versionName`.
+5. Publicar (es una acción hacia fuera: confirmarla): tag y pre-release con el APK adjunto y, en las notas, el SHA-256 del APK y
+   la huella del certificado, para que quien lo descargue pueda comprobarlos:
+
+   ```powershell
+   gh release create android-v0.1.0-rcN .\aldune-0.1.0-rcN.apk --target main --prerelease --title "Aldune para Android 0.1.0-rcN" --notes-file notas.md
+   ```
+
+**Por qué la de Android sale como pre-release.** La app de Windows busca actualizaciones en `releases/latest`
+(`ReleaseUpdateChecker`), que devuelve la última versión que **no** es pre-release. Si un release de Android (tag
+`android-v…`) lo fuera, pasaría a ser «la última» y los Windows dejarían de avisar de las versiones nuevas hasta el siguiente
+release de Windows. Mientras la versión sea `0.1.0-rcN`, además, «pre-release» es lo honesto. Cuando Android pase a una versión
+estable hay dos salidas: publicarla con `gh release create … --latest=false` (no se marca como última) o hacer que el
+comprobador mire la lista de releases y solo los tags `v*` (eso exige una versión de Windows).
+
+Trampas: la ruta del almacén tiene que ser la real (un `C:\RUTA\...` de ejemplo falla en `validateSigningRelease`); el APK se
+deja fuera de git (`.gitignore` ignora `android/*.apk`); y una versión de solo Android no necesita actualizar el servidor de
+sincronización, que solo cambia con las de Windows y el servidor.
+
 ## Firma del ejecutable con SignPath
 
 > **Estado (2026-09-28)**: la solicitud a SignPath Foundation fue **rechazada** por falta de
