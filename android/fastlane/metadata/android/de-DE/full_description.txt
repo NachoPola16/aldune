@@ -15,6 +15,7 @@ SYNC (OPTIONAL)
 • Synchronisiere mit deinem eigenen Server oder per WebDAV / Nextcloud.
 • Alles, was dein Handy verlässt, ist Ende-zu-Ende verschlüsselt (AES-GCM), auch Löschungen. Der Server sieht nur verschlüsselte Daten.
 • Funktioniert mit der Aldune-App für Windows und löst Konflikte, wenn dieselbe Notiz auf zwei Geräten geändert wurde.
+• Ein neues Handy koppelst du per QR-Code, den Aldune für Windows anzeigt, oder durch Einfügen des Profilcodes. Das Zugriffstoken steckt nie im QR.
 • Ohne Sync verlassen deine Notizen das Gerät nie.
 
 Freie Software unter der GPL-3.0. Quellcode: https://github.com/NachoPola16/aldune

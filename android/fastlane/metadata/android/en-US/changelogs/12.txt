@@ -1,0 +1,1 @@
+Pair with your PC by scanning a QR code (Settings > Sync > Scan QR). Quick list: add items to a checklist from the capture notification. New simplified mode in Settings, larger task checkboxes on by default on new installs, and several fixes for narrow windows and the task drag handle.

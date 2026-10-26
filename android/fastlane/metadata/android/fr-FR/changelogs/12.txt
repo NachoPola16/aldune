@@ -1,0 +1,1 @@
+Associez votre téléphone à votre PC en scannant un QR (Réglages > Synchronisation > Scanner le QR). Liste rapide : ajoutez des éléments depuis la notification de capture. Nouveau mode simplifié dans les réglages, grandes cases de tâche activées sur les nouvelles installations, et corrections pour les fenêtres étroites et la poignée de déplacement des tâches.

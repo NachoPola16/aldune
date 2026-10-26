@@ -1,0 +1,1 @@
+Pareie com o PC escaneando um QR (Configurações > Sincronização > Escanear QR). Lista rápida: adicione itens a uma lista pela notificação de captura. Novo modo simplificado nas configurações, caixas de tarefa maiores ativadas em instalações novas e correções para janelas estreitas e a alça de arrastar tarefas.

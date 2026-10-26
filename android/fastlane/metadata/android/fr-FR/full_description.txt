@@ -15,6 +15,7 @@ SYNCHRONISATION (EN OPTION)
 • Synchronisez avec votre propre serveur ou via WebDAV / Nextcloud.
 • Tout ce qui quitte votre téléphone est chiffré de bout en bout (AES-GCM), suppressions comprises. Le serveur ne voit que des données chiffrées.
 • Fonctionne avec l’application Aldune pour Windows et gère les conflits quand une même note change sur deux appareils.
+• Associez un nouveau téléphone en scannant le QR affiché par Aldune pour Windows, ou en collant le code du profil. Le jeton d’accès n’est jamais dans le QR.
 • Sans synchronisation, vos notes ne quittent jamais l’appareil.
 
 Logiciel libre sous licence GPL-3.0. Code source : https://github.com/NachoPola16/aldune

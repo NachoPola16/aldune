@@ -15,6 +15,7 @@ SINCRONIZAÇÃO (OPCIONAL)
 • Sincronize com o seu próprio servidor ou com WebDAV / Nextcloud.
 • Tudo o que sai do seu celular vai criptografado de ponta a ponta (AES-GCM), inclusive as exclusões. O servidor só vê dados criptografados.
 • Funciona com o app Aldune para Windows e trata conflitos quando a mesma nota muda em dois dispositivos.
+• Pareie um celular novo escaneando o QR mostrado pelo Aldune para Windows, ou colando o código do perfil. O token de acesso nunca vai dentro do QR.
 • Sem sincronização, suas notas nunca saem do dispositivo.
 
 Software livre sob a GPL-3.0. Código-fonte: https://github.com/NachoPola16/aldune

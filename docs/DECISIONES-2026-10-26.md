@@ -9,7 +9,7 @@ investigarlo salvo que cambie la razón.
 | Ajuste | Decisión | Razón |
 |---|---|---|
 | 5. Ocultar tareas hechas (`AutoHideCompletedTasks`) | **Hacer**, como *ocultar*, no borrar: las tareas siguen en la nota y un interruptor «mostrar hechas» las enseña | Así deja de ser destructivo y no hace falta un diseño largo |
-| 7. Modo simplificado (`SimplifiedMode`) | **Descartado por ahora** | Nadie lo ha pedido en el móvil; habría que revisar primero qué hace en Windows |
+| 7. Modo simplificado (`SimplifiedMode`) | **Hecho el 27-10** (ver `DECISIONES-2026-10-27.md`) | Se pidió después de revisar qué hace en Windows: es un interruptor de la ventana de Ajustes, no otra app |
 | 8. Sonidos por evento | **Descartado** | En Android el sonido lo gestiona el canal de notificación del sistema |
 | 9. Vista previa en la lista | **Descartado** | El móvil ya la enseña siempre |
 | 11. Temas propios (`CustomThemes`) | **Aplazado** | Bastan los temas de serie y el color libre; se retoma si alguien lo pide |

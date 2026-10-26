@@ -24,7 +24,7 @@ ratón y se abren como ventanas propias. Sin cuenta, sin nube obligatoria, y con
   servidor (Docker) o por WebDAV / Nextcloud, cifrada de extremo a extremo. Ver
   [docs/SYNC.md](docs/SYNC.md).
 - **Copias de seguridad automáticas**: una al día, se guardan las 7 más recientes.
-- En **español** e **inglés**.
+- En **español**, **inglés**, **alemán**, **francés** y **portugués de Brasil**.
 
 ## Instalar
 
@@ -50,7 +50,8 @@ Si Windows muestra "Windows protegió su PC", es porque el ejecutable todavía n
 Hay un cliente para Android (Kotlin nativo, Android 8 o superior) en la carpeta [`android/`](android/): notas con
 listas de tareas, etiquetas, notas protegidas con contraseña, recordatorios, widget y captura rápida, los mismos aspectos que en Windows (también los retro: XP, Telecomunicaciones, Bash y Fósforo) y la misma
 sincronización cifrada de extremo a extremo que en Windows. Instalar: descarga el APK firmado de
-[Releases](https://github.com/NachoPola16/aldune/releases) (las versiones `android-v…`, por ahora pre-releases) y ábrelo en el móvil.
+[Releases](https://github.com/NachoPola16/aldune/releases) (las versiones `android-v…`; la `0.1.0` es la primera estable) y ábrelo en el móvil.
+Tiene un **modo simplificado** (Ajustes → «Usar modo simplificado») que deja a la vista solo la sincronización, el aspecto y el idioma, y una **lista rápida**: elige una nota como lista y añade artículos desde la notificación de captura sin abrir la app.
 
 **Algo parecido al dock en Android.** El móvil no tiene un borde de pantalla donde pegar pestañas como en Windows, pero hay dos
 formas de tener tus notas siempre a mano: los **widgets** (el mazo en 4×2, 2×2 o 4×4, y un botón 1×1 de nota nueva) y, desde
@@ -64,9 +65,11 @@ Para sincronizar el móvil con el PC y tu servidor:
    (`aldune-profile-v2:…`).
 2. Pásalo al móvil (un mensaje a ti mismo, por ejemplo).
 3. En la app de Android: Ajustes → Sincronización, pega el código y pulsa **Continuar**.
-4. Escribe el **token** de tu servidor: no va dentro del código, a propósito.
+   **Con QR, sin pasar el código:** en Windows pulsa **Mostrar QR** (junto a «Compartir perfil»; se cierra solo a los 2 minutos y no sale
+   en capturas) y en Android pulsa **Escanear QR**. La cámara solo se abre al pulsar el botón y no se guarda nada de lo que ve.
+4. Escribe el **token** de tu servidor: no va dentro del código ni del QR, a propósito.
 
-El código contiene la clave de cifrado de tus notas: trátalo como una contraseña y no lo compartas en sitios públicos.
+El código (y el QR) contiene la clave de cifrado de tus notas: trátalo como una contraseña y no lo compartas en sitios públicos.
 Más detalle en [docs/SYNC.md](docs/SYNC.md).
 
 ## Privacidad y seguridad

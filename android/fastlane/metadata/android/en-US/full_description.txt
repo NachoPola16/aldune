@@ -15,6 +15,7 @@ SYNC (OPTIONAL)
 • Sync with your own server, or with WebDAV / Nextcloud.
 • Everything that leaves your phone is encrypted end to end (AES-GCM), deletions included. The server only ever sees encrypted data.
 • Works with the Aldune app for Windows, with conflict handling when the same note changes on two devices.
+• Pair a new phone by scanning a QR code shown by Aldune for Windows, or by pasting the profile code. The access token is never inside the QR.
 • Without sync, your notes never leave the device.
 
 Free software under the GPL-3.0. Source code: https://github.com/NachoPola16/aldune

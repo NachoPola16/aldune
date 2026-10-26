@@ -1,0 +1,1 @@
+Mit dem PC per QR-Code koppeln (Einstellungen > Synchronisierung > QR scannen). Schnelle Liste: Einträge direkt aus der Erfassungsbenachrichtigung hinzufügen. Neuer vereinfachter Modus in den Einstellungen, größere Aufgabenkästchen bei Neuinstallationen und Korrekturen für schmale Fenster und den Ziehgriff der Aufgaben.
