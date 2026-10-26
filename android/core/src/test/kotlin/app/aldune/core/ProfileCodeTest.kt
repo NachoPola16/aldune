@@ -115,6 +115,17 @@ class ProfileCodeTest {
     }
 
     @Test
+    fun `findShareCode con dos codigos devuelve el primero y corta en la puntuacion`() {
+        val codes = Vectors.objects("shareCodes").map { it.str("code") }
+        val first = codes.first()
+        assertEquals(first, ProfileCodes.findShareCode("$first. Y luego $first"))
+        assertEquals(first, ProfileCodes.findShareCode("(codigo: $first)"))
+        assertEquals(first, ProfileCodes.findShareCode("hola\r\n$first\r\nadios"))
+        // Lo que saca tiene que ser decodificable tal cual: es lo que se pasa a decode al continuar.
+        ProfileCodes.decode(ProfileCodes.findShareCode("Mira: $first gracias")!!)
+    }
+
+    @Test
     fun `lo que no es un codigo de perfil se rechaza`() {
         assertFalse(ProfileCodes.isShareCode("AAECAwQFBgcICQoLDA0ODxAREhMUFRYXGBkaGxwdHh8"))
         assertThrows(SyncFormatException::class.java) { ProfileCodes.decode("otra-cosa:abc") }

@@ -37,4 +37,20 @@ class AppendTaskTest {
     @Test fun `la ultima tarea con sangria no cambia donde va el articulo`() {
         assertEquals("☐ a\n  ☐ a1\n☐ sal", TaskLists.appendTask("☐ a\n  ☐ a1", "sal"))
     }
+
+    @Test fun `una nota que acaba en salto CRLF sin tareas no deja linea en blanco de mas`() {
+        assertEquals("Compra\r\n☐ sal", TaskLists.appendTask("Compra\r\n", "sal"))
+    }
+
+    @Test fun `con CRLF y texto despues de la ultima tarea el resto queda intacto`() {
+        assertEquals("☐ pan\r\n☐ sal\r\nfin\r\n", TaskLists.appendTask("☐ pan\r\nfin\r\n", "sal"))
+    }
+
+    @Test fun `un articulo solo con tabuladores y saltos es vacio`() {
+        assertEquals("☐ pan", TaskLists.appendTask("☐ pan", "\t\n \r\n"))
+    }
+
+    @Test fun `un articulo con emojis se conserva`() {
+        assertEquals("☐ pan\n☐ 🥛 leche", TaskLists.appendTask("☐ pan", "🥛  leche"))
+    }
 }
