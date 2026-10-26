@@ -14,7 +14,7 @@ import app.aldune.R
 
 /**
  * La notificación fija «Nota nueva» (spec de F6 §2.2). No es un servicio en primer plano: no hay trabajo detrás, solo un botón, y no
- * lleva nada de ninguna nota, así que puede verse en la pantalla de bloqueo.
+ * lleva nada de ninguna nota (salvo con la lista rápida, que en la pantalla de bloqueo se oculta), así que puede verse en la pantalla de bloqueo.
  */
 object CaptureNotification {
     private const val CHANNEL_ID = "capture"
@@ -47,17 +47,26 @@ object CaptureNotification {
         val open = PendingIntent.getActivity(
             context, 0, CaptureIntents.newNote(context), PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT,
         )
-        val notification = NotificationCompat.Builder(context, CHANNEL_ID)
+        fun base() = NotificationCompat.Builder(context, CHANNEL_ID)
             .setSmallIcon(R.drawable.ic_stat_aldune)
             .setContentTitle(context.getString(R.string.new_note))
-            .setContentText(feedback ?: context.getString(R.string.capture_notification_text))
             .setContentIntent(open)
             .addAction(R.drawable.ic_new_note, context.getString(R.string.new_note), open)
-            .apply { if (quickList != null) addAction(QuickAdd.action(context, quickList)) }
             .setOngoing(true)
             .setOnlyAlertOnce(true)
             .setShowWhen(false)
-            .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
+        // Con la lista rápida (su título) o lo recién añadido, el texto sale de una nota: en la pantalla de bloqueo solo se ve la versión
+        // genérica, y la acción de responder pide desbloquear. Sin eso no lleva nada de ninguna nota y puede verse entera.
+        val showsNoteText = quickList != null || feedback != null
+        val notification = base()
+            .setContentText(feedback ?: context.getString(R.string.capture_notification_text))
+            .apply { if (quickList != null) addAction(QuickAdd.action(context, quickList)) }
+            .setVisibility(if (showsNoteText) NotificationCompat.VISIBILITY_PRIVATE else NotificationCompat.VISIBILITY_PUBLIC)
+            .apply {
+                if (showsNoteText) {
+                    setPublicVersion(base().setContentText(context.getString(R.string.capture_notification_text)).setVisibility(NotificationCompat.VISIBILITY_PUBLIC).build())
+                }
+            }
             .build()
         manager.notify(NOTIFICATION_ID, notification)
     }

@@ -74,7 +74,7 @@ class QuickAddReceiver : BroadcastReceiver() {
         }
         CaptureNotification.sync(
             context, settings.captureNotification, settings.quickList,
-            feedback = if (item.isBlank()) null else context.getString(R.string.quick_list_added, item.trim()),
+            feedback = if (item.isBlank()) null else context.getString(R.string.quick_list_added, item.trim().let { if (it.length > 60) it.take(60) + "…" else it }),
         )
     }
 }
