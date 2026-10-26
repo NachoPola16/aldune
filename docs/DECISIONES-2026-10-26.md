@@ -97,3 +97,11 @@ Aplazado a propósito (anotado en PENDIENTES):
 - Contenedor del servidor como usuario `app` en vez de root: hace falta migrar los permisos del volumen `/data` ya creado; no se toca sin probarlo en el CT 103.
 - Puerto publicado en `0.0.0.0` por defecto: el despliegue real depende de ello (NPM en otro equipo); ya está documentado y la app avisa. No se cambia el valor por defecto.
 - Sin límite de intentos fallidos de token, `GET /objects` lee todos los objetos en cada llamada, sin tope de tamaño en las respuestas del servidor al cliente, sin cuota de objetos, `release.yml` con `contents: write` en todo el job, sin lockfile de NuGet.
+
+## Resultado de la prueba en el Pixel 10a (26-10, app debug, ya desinstalada)
+
+Comprobado en pantalla: contador «hechas/total» en la cabecera (3/5 → 4/5 al marcar), ocultar tareas hechas (con 2 de 3 caducadas se esconden y aparece «Show 2 done tasks»; el botón las enseña y vuelve a ocultarlas), tocar una casilla con líneas ocultas encima marca la tarea correcta, deshacer y rehacer (desactivados al abrir la nota, deshacer devuelve la casilla, rehacer se activa), margen bajo la lista (con 13 notas la última queda por encima del «+»), letra del sistema al 160 % (sin cortes; la barra del editor sigue desplazable).
+
+Sin comprobar: la vibración al marcar (no se ve en capturas), TalkBack, teclados de terceros, y el plazo real de 1 h/1 día/1 semana (se probó adelantando los tiempos guardados).
+
+Pendiente de mirar: el botón «Ver N tareas hechas» queda a la izquierda y poco destacado; la barra del editor se corta por la derecha («⋯» a medias) aunque se desplaza, quizá un degradado o menos botones visibles.
