@@ -16,8 +16,8 @@ android {
         minSdk = 26
         // 36 a propósito aunque el móvil tenga la 37: subirlo activa cambios de comportamiento que no hace falta absorber ahora.
         targetSdk = 36
-        versionCode = 9
-        versionName = "0.1.0-rc9"
+        versionCode = 10
+        versionName = "0.1.0-rc10"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
