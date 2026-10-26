@@ -96,6 +96,10 @@ dependencies {
     implementation(libs.androidx.lifecycle.viewmodel.compose)
     implementation(libs.androidx.lifecycle.runtime.compose)
     implementation(libs.androidx.compose.icons.core)
+    // Escáner del QR de «Añadir perfil» (CameraX; el decodificador ZXing va en :syncclient).
+    implementation(libs.androidx.camera.camera2)
+    implementation(libs.androidx.camera.lifecycle)
+    implementation(libs.androidx.camera.view)
 }
 
 // Las pruebas instrumentadas comparten el esquema exportado para probar migraciones.

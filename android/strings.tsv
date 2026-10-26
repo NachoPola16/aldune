@@ -311,3 +311,8 @@ quick_list_action	Add to “%1$s”	Añadir a «%1$s»	Zu „%1$s“ hinzufügen
 quick_list_input	New item for “%1$s”	Nuevo artículo para «%1$s»	Neuer Eintrag für „%1$s“	Nouvel article pour « %1$s »	Novo item para “%1$s”
 quick_list_added	Added: %1$s	Añadido: %1$s	Hinzugefügt: %1$s	Ajouté : %1$s	Adicionado: %1$s
 quick_list_gone	The quick list is no longer available	La lista rápida ya no está disponible	Die schnelle Liste ist nicht mehr verfügbar	La liste rapide n'est plus disponible	A lista rápida não está mais disponível
+scan_qr	Scan QR	Escanear QR	QR scannen	Scanner le QR	Escanear QR
+scan_qr_title	Point the camera at the QR shown in Aldune on your PC.	Apunta la cámara al QR que enseña Aldune en tu PC.	Richte die Kamera auf den QR, den Aldune an deinem PC anzeigt.	Pointe la caméra vers le QR affiché par Aldune sur ton PC.	Aponte a câmera para o QR que o Aldune mostra no seu PC.
+scan_qr_not_aldune	That QR is not an Aldune profile code.	Ese QR no es un código de perfil de Aldune.	Dieser QR ist kein Aldune-Profilcode.	Ce QR n'est pas un code de profil Aldune.	Esse QR não é um código de perfil do Aldune.
+scan_qr_denied	Aldune needs the camera only to read this QR. You can allow it in the system settings, or paste the code instead.	Aldune solo necesita la cámara para leer este QR. Puedes permitirla en los ajustes del sistema, o pegar el código.	Aldune braucht die Kamera nur, um diesen QR zu lesen. Du kannst sie in den Systemeinstellungen erlauben oder stattdessen den Code einfügen.	Aldune n'utilise la caméra que pour lire ce QR. Tu peux l'autoriser dans les réglages du système, ou coller le code.	O Aldune só precisa da câmera para ler este QR. Você pode permiti-la nas configurações do sistema ou colar o código.
+scan_qr_back	Back	Volver	Zurück	Retour	Voltar

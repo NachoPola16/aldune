@@ -312,4 +312,9 @@
     <string name="quick_list_input">Neuer Eintrag für „%1$s“</string>
     <string name="quick_list_added">Hinzugefügt: %1$s</string>
     <string name="quick_list_gone">Die schnelle Liste ist nicht mehr verfügbar</string>
+    <string name="scan_qr">QR scannen</string>
+    <string name="scan_qr_title">Richte die Kamera auf den QR, den Aldune an deinem PC anzeigt.</string>
+    <string name="scan_qr_not_aldune">Dieser QR ist kein Aldune-Profilcode.</string>
+    <string name="scan_qr_denied">Aldune braucht die Kamera nur, um diesen QR zu lesen. Du kannst sie in den Systemeinstellungen erlauben oder stattdessen den Code einfügen.</string>
+    <string name="scan_qr_back">Zurück</string>
 </resources>

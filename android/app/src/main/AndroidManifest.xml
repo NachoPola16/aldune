@@ -10,6 +10,9 @@
     <!-- Recordatorios (F7): alarma exacta solo si el usuario la concede en Ajustes del sistema (spec madre §2.9). No USE_EXACT_ALARM: Play la
          reserva a relojes y calendarios. -->
     <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" />
+    <uses-permission android:name="android.permission.CAMERA" />
+    <!-- La cámara solo sirve para escanear el QR de «Añadir perfil»: sin ella la app funciona igual (se pega el código). -->
+    <uses-feature android:name="android.hardware.camera" android:required="false" />
 
     <!-- usesCleartextTraffic: el servidor de casa suele ir por http en la red local (Windows lo admite). La pantalla de sync avisa cuando la
          dirección no es https; las notas viajan cifradas de extremo a extremo igualmente, lo único expuesto es el token. -->
@@ -41,6 +44,8 @@
             </intent-filter>
             <meta-data android:name="android.app.shortcuts" android:resource="@xml/shortcuts" />
         </activity>
+
+        <activity android:name=".ui.QrScanActivity" android:exported="false" android:screenOrientation="portrait" />
 
         <service
             android:name=".capture.NewNoteTileService"
