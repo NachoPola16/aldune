@@ -393,6 +393,9 @@
                         <Button x:Name="ShowInExplorerButton" Click="OnShowInExplorerClick" Visibility="Collapsed"
                                 Content="{x:Static res:Strings.LinkedShowInExplorer}"
                                 Style="{StaticResource NoteMenuItemStyle}" />
+                        <Button x:Name="CopyPathButton" Click="OnCopyPathClick" Visibility="Collapsed"
+                                Content="{x:Static res:Strings.LinkedCopyPath}"
+                                Style="{StaticResource NoteMenuItemStyle}" />
                         <Button x:Name="ConvertToNormalButton" Click="OnConvertToNormalClick" Visibility="Collapsed"
                                 Content="{x:Static res:Strings.LinkedConvert}"
                                 Style="{StaticResource NoteMenuItemStyle}" />

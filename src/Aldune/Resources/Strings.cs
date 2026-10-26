@@ -1707,6 +1707,10 @@ public static class Strings
         "Im zugehörigen Editor öffnen", "Ouvrir dans son éditeur", "Abrir no editor padrão");
     public static string LinkedShowInExplorer => T("Show in File Explorer", "Mostrar en el Explorador",
         "Im Explorer anzeigen", "Afficher dans l'Explorateur", "Mostrar no Explorador");
+    public static string LinkedCopyPath => T("Copy file path", "Copiar la ruta del archivo",
+        "Dateipfad kopieren", "Copier le chemin du fichier", "Copiar o caminho do arquivo");
+    public static string ImportMarkdown => T("Import Markdown as a note…", "Importar Markdown como nota…",
+        "Markdown als Notiz importieren…", "Importer du Markdown comme note…", "Importar Markdown como nota…");
     public static string LinkedSaveAs => T("Save as linked file…", "Guardar como archivo vinculado…",
         "Als verknüpfte Datei speichern…", "Enregistrer comme fichier lié…", "Salvar como arquivo vinculado…");
     public static string LinkedSaveAsExists(string name) => T(

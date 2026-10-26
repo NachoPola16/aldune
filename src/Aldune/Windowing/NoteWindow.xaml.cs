@@ -1512,7 +1512,7 @@ public partial class NoteWindow : Window
         bool linked = IsLinked;
         var visible = linked ? Visibility.Visible : Visibility.Collapsed;
         LinkedSyncButton.Visibility = OpenInEditorButton.Visibility = ShowInExplorerButton.Visibility =
-            ConvertToNormalButton.Visibility = visible;
+            CopyPathButton.Visibility = ConvertToNormalButton.Visibility = visible;
         bool canSaveAs = !linked && !_note.IsProtected;
         SaveAsLinkedButton.Visibility = canSaveAs ? Visibility.Visible : Visibility.Collapsed;
         LinkedSeparator.Visibility = linked || canSaveAs ? Visibility.Visible : Visibility.Collapsed;
@@ -1536,22 +1536,19 @@ public partial class NoteWindow : Window
     private void OnOpenInEditorClick(object sender, RoutedEventArgs e)
     {
         ActionsPopup.IsOpen = false;
-        if (LinkedNoteDisplay.PathOf(_note.Id) is not { } path) return;
-        try
-        {
-            System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo(path) { UseShellExecute = true });
-        }
-        catch (System.ComponentModel.Win32Exception)
-        {
-            // Sin programa asociado a la extensión: Windows ya lo explica en su propio diálogo.
-        }
+        if (LinkedNoteDisplay.PathOf(_note.Id) is { } path) LinkedFileActions.OpenInEditor(path);
+    }
+
+    private void OnCopyPathClick(object sender, RoutedEventArgs e)
+    {
+        ActionsPopup.IsOpen = false;
+        if (LinkedNoteDisplay.PathOf(_note.Id) is { } path) LinkedFileActions.CopyPath(path);
     }
 
     private void OnShowInExplorerClick(object sender, RoutedEventArgs e)
     {
         ActionsPopup.IsOpen = false;
-        if (LinkedNoteDisplay.PathOf(_note.Id) is { } path)
-            System.Diagnostics.Process.Start("explorer.exe", $"/select,\"{path}\"");
+        if (LinkedNoteDisplay.PathOf(_note.Id) is { } path) LinkedFileActions.ShowInExplorer(path);
     }
 
     private void OnConvertToNormalClick(object sender, RoutedEventArgs e)

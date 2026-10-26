@@ -106,6 +106,60 @@ public sealed class AppCoordinator
             AppDialog.Show(owner, string.Join("\n", errors), Strings.LinkedOpenFile, MessageBoxButton.OK, MessageBoxImage.Warning);
     }
 
+    public void ShowImportMarkdownDialog(Window? owner, string? tag)
+    {
+        var dialog = new Microsoft.Win32.OpenFileDialog { Filter = Strings.LinkedFileFilter, Multiselect = true, CheckFileExists = true };
+        if (dialog.ShowDialog(owner) != true) return;
+        ImportMarkdownFiles(dialog.FileNames, owner, tag);
+    }
+
+    /// <summary>
+    /// Importa archivos Markdown como notas normales: el texto se copia y la nota ya no sabe del archivo
+    /// (a diferencia de <see cref="OpenLinkedFiles"/>). Con una etiqueta de vista activa, las notas nacen con ella.
+    /// </summary>
+    public void ImportMarkdownFiles(IEnumerable<string> paths, Window? owner, string? tag)
+    {
+        Guid? last = null;
+        int imported = 0;
+        var errors = new List<string>();
+        foreach (var path in paths)
+        {
+            var name = System.IO.Path.GetFileName(path);
+            if (!LinkedFileFormat.IsSupportedExtension(path)) { errors.Add(Strings.LinkedUnsupported(name)); continue; }
+            byte[] bytes;
+            try
+            {
+                if (new System.IO.FileInfo(path).Length > LinkedFileFormat.MaxBytes) { errors.Add(Strings.LinkedTooLarge(name)); continue; }
+                bytes = System.IO.File.ReadAllBytes(path);
+            }
+            catch (Exception ex) when (ex is System.IO.IOException or UnauthorizedAccessException)
+            {
+                errors.Add(Strings.LinkedUnreadable(name));
+                continue;
+            }
+
+            var (text, rejection) = MarkdownImport.Read(bytes);
+            if (text is null)
+            {
+                errors.Add(rejection == LinkedFileRejection.TooLarge ? Strings.LinkedTooLarge(name) : Strings.LinkedBadEncoding(name));
+                continue;
+            }
+            var note = _repository.Create(text, NextNoteColor(), screenOrigin: "primary");
+            if (tag is not null) _repository.SetTags(note.Id, [tag]);
+            last = note.Id;
+            imported++;
+        }
+
+        if (imported > 0)
+        {
+            PlaySound(SoundEvent.NoteCreated);
+            RefreshAll();
+            if (last is { } open) OpenNoteById(open);
+        }
+        if (errors.Count > 0)
+            AppDialog.Show(owner, string.Join("\n", errors), Strings.ImportMarkdown, MessageBoxButton.OK, MessageBoxImage.Warning);
+    }
+
     /// <summary>El texto de un vínculo rechazado, o null si salió bien.</summary>
     internal static string? LinkMessage(LinkResult result, string path)
     {

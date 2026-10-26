@@ -1807,6 +1807,13 @@ public partial class EdgeDockWindow : Window
         _coordinator.ShowOpenLinkedFileDialog(this);
     }
 
+    private void OnNewNoteMenuImportMarkdownClick(object sender, RoutedEventArgs e)
+    {
+        NewNoteMenuPopup.IsOpen = false;
+        HoldOpenForWindow();
+        _coordinator.ShowImportMarkdownDialog(this, CurrentTagFilter);
+    }
+
     // Arrastrar archivos desde el Explorador abre cada uno como nota vinculada (spec, decisión 6).
     private void OnDockDragOver(object sender, DragEventArgs e)
     {
@@ -2378,6 +2385,9 @@ public partial class EdgeDockWindow : Window
         bool linked = LinkedNoteDisplay.IsLinked(note.Id);
         TabMenuProtectionButton.IsEnabled = !linked;
         TabMenuProtectionButton.ToolTip = linked ? Strings.LinkedProtectDisabled : null;
+        // El archivo de una nota vinculada, a un clic desde la pestaña (sin abrir la nota).
+        TabMenuCopyPathButton.Visibility = TabMenuShowInExplorerButton.Visibility = TabMenuOpenInEditorButton.Visibility =
+            linked ? Visibility.Visible : Visibility.Collapsed;
         BuildTabMenuSwatches(note);
         _tabMenuToggle.SetTrigger(_tabMenuOwner);
         TabMenuPopup.IsOpen = true;
@@ -2417,6 +2427,19 @@ public partial class EdgeDockWindow : Window
         _coordinator.NotifyNoteColorChanged(note.Id, color);
         _coordinator.RefreshAll();
         CloseTabMenu();
+    }
+
+    private void OnTabMenuCopyPathClick(object sender, RoutedEventArgs e) => LinkedFileFromTabMenu(LinkedFileActions.CopyPath);
+
+    private void OnTabMenuShowInExplorerClick(object sender, RoutedEventArgs e) => LinkedFileFromTabMenu(LinkedFileActions.ShowInExplorer);
+
+    private void OnTabMenuOpenInEditorClick(object sender, RoutedEventArgs e) => LinkedFileFromTabMenu(LinkedFileActions.OpenInEditor);
+
+    private void LinkedFileFromTabMenu(Action<string> action)
+    {
+        var path = _tabMenuNote is { } note ? LinkedNoteDisplay.PathOf(note.Id) : null;
+        CloseTabMenu();
+        if (path is not null) action(path);
     }
 
     private void OnTabMenuOpenClick(object sender, RoutedEventArgs e)
