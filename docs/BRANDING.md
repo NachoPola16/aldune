@@ -48,6 +48,7 @@ El maestro es `docs/branding/aldune-symbol.svg` (sin fondo, lienzo de 108).
 | Ficha de tiendas | `android/fastlane/metadata/android/en-US/images/icon.png` (512 px, cuadrado completo) | generador |
 | README | `docs/branding/aldune-logo-128.png` (y `-512.png`) | generador |
 | Favicon | `docs/branding/favicon.ico` y `favicon.svg` | generador |
+| Imagen al compartir el repo | `docs/branding/social-preview-1280x640.png` | símbolo + nombre y lema en Segoe UI (el texto va aparte del símbolo); se sube a mano en GitHub → Settings → Social preview, no se regenera con el script |
 
 Para regenerar todo: `pip install shapely pillow` y `python scripts/branding/generar-iconos.py`. El script comprueba antes
 que el símbolo cabe en la zona segura y falla si no.

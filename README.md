@@ -41,10 +41,16 @@ Si Windows muestra "Windows protegió su PC", es porque el ejecutable todavía n
 
 ## Android
 
+<p align="center">
+  <img src="android/fastlane/metadata/android/en-US/images/phoneScreenshots/1_notes.png" alt="Aldune en Android: la lista de notas" width="200">
+  <img src="android/fastlane/metadata/android/en-US/images/phoneScreenshots/2_checklist.png" alt="Aldune en Android: una lista de tareas" width="200">
+  <img src="android/fastlane/metadata/android/en-US/images/phoneScreenshots/3_reminder.png" alt="Aldune en Android: opciones y recordatorio de una nota" width="200">
+</p>
+
 Hay un cliente para Android (Kotlin nativo, Android 8 o superior) en la carpeta [`android/`](android/): notas con
 listas de tareas, etiquetas, notas protegidas con contraseña, recordatorios, widget y captura rápida, los mismos aspectos que en Windows (también los retro: XP, Telecomunicaciones, Bash y Fósforo) y la misma
 sincronización cifrada de extremo a extremo que en Windows. Instalar: descarga el APK firmado de
-[Releases](https://github.com/NachoPola16/aldune/releases) (cuando haya uno publicado) y ábrelo en el móvil.
+[Releases](https://github.com/NachoPola16/aldune/releases) (las versiones `android-v…`, por ahora pre-releases) y ábrelo en el móvil.
 
 **Algo parecido al dock en Android.** El móvil no tiene un borde de pantalla donde pegar pestañas como en Windows, pero hay dos
 formas de tener tus notas siempre a mano: los **widgets** (el mazo en 4×2, 2×2 o 4×4, y un botón 1×1 de nota nueva) y, desde

@@ -40,10 +40,15 @@ If Windows shows "Windows protected your PC", it's because the executable isn't 
 
 ## Android
 
+<p align="center">
+  <img src="android/fastlane/metadata/android/en-US/images/phoneScreenshots/1_notes.png" alt="Aldune en Android: la lista de notas" width="200">
+  <img src="android/fastlane/metadata/android/en-US/images/phoneScreenshots/2_checklist.png" alt="Aldune en Android: una lista de tareas" width="200">
+  <img src="android/fastlane/metadata/android/en-US/images/phoneScreenshots/3_reminder.png" alt="Aldune en Android: opciones y recordatorio de una nota" width="200">
+</p>
+
 There is an Android client (native Kotlin, Android 8 or later) in [`android/`](android/): notes with task lists, tags,
 password-protected notes, reminders, a widget and quick capture, and the same end-to-end encrypted sync as on Windows.
-To install it, download the signed APK from [Releases](https://github.com/NachoPola16/aldune/releases) (once one is
-published) and open it on your phone.
+To install it, download the signed APK from [Releases](https://github.com/NachoPola16/aldune/releases) (the `android-v…` ones, pre-releases for now) and open it on your phone.
 
 **Something like the dock on Android.** A phone has no screen edge to stick tabs to as on Windows, but there are two ways to keep
 your notes within reach: the **widgets** (the deck at 4×2, 2×2 or 4×4, and a 1×1 new-note button) and, since **Android 17**, the
