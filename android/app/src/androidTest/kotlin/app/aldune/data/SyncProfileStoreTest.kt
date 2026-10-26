@@ -87,4 +87,11 @@ class SyncProfileStoreTest {
         // Idempotente: otra carga no cambia nada.
         assertEquals(listOf("default"), SyncProfileStore(context).loadAll().map { it.id })
     }
+
+    @Test fun unaUrlAntiguaSinTransporteEntendibleNoSeTira() {
+        prefs.edit().putString("url", "https://x.example.com/").putString("transport", "FTP").putLong("status.ok", 5000L).commit()
+
+        assertTrue(SyncProfileStore(context).loadAll().isEmpty())
+        assertTrue("las claves que no se entienden se conservan", prefs.contains("url") && prefs.contains("status.ok"))
+    }
 }

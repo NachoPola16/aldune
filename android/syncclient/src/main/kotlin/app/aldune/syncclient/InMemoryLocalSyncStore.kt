@@ -71,6 +71,12 @@ class InMemoryLocalSyncStore(val notes: InMemoryNoteStore = InMemoryNoteStore())
         conflictMap.clear()
     }
 
+    override fun discardTombstones() = synchronized(notes) {
+        notes.clearTombstones()
+        baseMap.clear()
+        conflictMap.clear()
+    }
+
     override fun forgetSyncState() = synchronized(notes) {
         baseMap.clear()
         conflictMap.clear()

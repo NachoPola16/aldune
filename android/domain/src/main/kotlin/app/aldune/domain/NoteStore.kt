@@ -67,6 +67,12 @@ class InMemoryNoteStore : NoteStore {
         if (notes.remove(id) != null) writeCount++
     }
 
+    /** Vacía solo las lápidas (primera conexión sin notas): las notas, aunque sean de después de la foto, se quedan. */
+    @Synchronized fun clearTombstones() {
+        if (deleted.isNotEmpty()) writeCount++
+        deleted.clear()
+    }
+
     /** Vacía notas y lápidas sin dejar rastro (primera conexión → «descartar»). */
     @Synchronized fun clear() {
         if (notes.isNotEmpty() || deleted.isNotEmpty()) writeCount++

@@ -105,25 +105,24 @@ class SyncProfileStore(context: Context) {
     private fun migrateLegacy() {
         if (prefs.contains(PROFILES)) return
         val url = prefs.getString(URL, null) ?: return
-        val transport = prefs.getString(TRANSPORT, null)?.let { name -> SyncTransportKind.entries.firstOrNull { it.name == name } }
+        // Sin un transporte que entendamos no se puede reconstruir el perfil: se dejan las claves como están (no se tira lo que no se entiende).
+        val transport = prefs.getString(TRANSPORT, null)?.let { name -> SyncTransportKind.entries.firstOrNull { it.name == name } } ?: return
         val editor = prefs.edit()
-        if (transport != null) {
-            val scope = when (prefs.getInt(SCOPE, ProfileCodes.SCOPE_ALL)) {
-                ProfileCodes.SCOPE_CHOSEN -> SyncScope.SelectedNotes(
-                    prefs.getString(NOTE_IDS, "").orEmpty().split(',').filter { it.isNotBlank() }.map(UUID::fromString).toSet(),
-                )
-                ProfileCodes.SCOPE_TAG -> SyncScope.Tag(prefs.getString(TAG, null))
-                else -> SyncScope.All
-            }
-            val array = JSONArray().put(toJson(SyncProfile(LEGACY_PROFILE_ID, transport, url, scope, prefs.getString(NAME, null), "")))
-            editor.putString(PROFILES, array.toString())
-            for (suffix in STATUS_SUFFIXES) {
-                val old = LEGACY_STATUS_PREFIX + suffix
-                when (val value = prefs.all[old]) {
-                    is Long -> editor.putLong(statusKey(LEGACY_PROFILE_ID, suffix), value)
-                    is Int -> editor.putInt(statusKey(LEGACY_PROFILE_ID, suffix), value)
-                    is String -> editor.putString(statusKey(LEGACY_PROFILE_ID, suffix), value)
-                }
+        val scope = when (prefs.getInt(SCOPE, ProfileCodes.SCOPE_ALL)) {
+            ProfileCodes.SCOPE_CHOSEN -> SyncScope.SelectedNotes(
+                prefs.getString(NOTE_IDS, "").orEmpty().split(',').filter { it.isNotBlank() }.map(UUID::fromString).toSet(),
+            )
+            ProfileCodes.SCOPE_TAG -> SyncScope.Tag(prefs.getString(TAG, null))
+            else -> SyncScope.All
+        }
+        val array = JSONArray().put(toJson(SyncProfile(LEGACY_PROFILE_ID, transport, url, scope, prefs.getString(NAME, null), "")))
+        editor.putString(PROFILES, array.toString())
+        for (suffix in STATUS_SUFFIXES) {
+            val old = LEGACY_STATUS_PREFIX + suffix
+            when (val value = prefs.all[old]) {
+                is Long -> editor.putLong(statusKey(LEGACY_PROFILE_ID, suffix), value)
+                is Int -> editor.putInt(statusKey(LEGACY_PROFILE_ID, suffix), value)
+                is String -> editor.putString(statusKey(LEGACY_PROFILE_ID, suffix), value)
             }
         }
         editor.remove(TRANSPORT).remove(URL).remove(NAME).remove(SCOPE).remove(NOTE_IDS).remove(TAG)

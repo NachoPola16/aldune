@@ -189,6 +189,20 @@ class ProfileInputTest {
         assertTrue(store.snapshot().tombstones.isEmpty())
     }
 
+    @Test fun `una nota creada entre la foto y el final de la conexion no se pierde al descartar lapidas`() {
+        store.notes.putTombstone(Tombstone(ID1, T0, Tombstone.LOCAL_DEVICE))
+        val decision = firstConnectDecision(store.snapshot())
+        assertEquals(FirstConnectDecision.Proceed(dropLocalTombstones = true), decision)
+
+        // El usuario escribe una nota mientras se guardaban los secretos del perfil.
+        store.notes.put(note(ID2))
+        completeFirstConnect(store, decision)
+
+        val snapshot = store.snapshot()
+        assertEquals(listOf(ID2), snapshot.notes.map { it.id })
+        assertTrue(snapshot.tombstones.isEmpty())
+    }
+
     @Test fun `subir conserva las notas y olvida las bases de un perfil anterior`() {
         store.notes.put(note(ID1))
         store.commit(LocalCommit(emptyList(), mapOf(ID1 to app.aldune.sync.SyncBase(T0.toWire(), "viejo")), emptyMap()))

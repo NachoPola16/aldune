@@ -34,6 +34,7 @@ import java.util.UUID
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -256,14 +257,21 @@ class SyncController(
             val decision = firstConnectDecision(store.snapshot(), isFirstProfile = existing.isEmpty())
             if (decision is FirstConnectDecision.AskUser && choice == null) return@withLock ConnectResult.NeedsChoice(decision.noteCount)
 
-            vaultFor(id).save(SyncSecrets(req.share.key, req.credentials))
             val profile = SyncProfile(
                 id, req.transport, req.url,
                 SyncClientSettings.scopeOf(req.share.scope, req.share.noteIds, req.share.tag),
                 req.share.profileName, profileStore.deviceId(),
             )
-            profileStore.save(profile)
-            completeFirstConnect(store, decision, choice)
+            try {
+                vaultFor(id).save(SyncSecrets(req.share.key, req.credentials))
+                profileStore.save(profile)
+                completeFirstConnect(store, decision, choice)
+            } catch (e: Exception) {
+                // No dejar un fichero de secretos ni un perfil a medias que nadie vería en la lista.
+                vaultFor(id).clear()
+                profileStore.remove(id)
+                throw e
+            }
             _unreadable.update { it - id }
             _profiles.value = existing + profile
             setStatus(id, SyncStatus())
@@ -288,7 +296,9 @@ class SyncController(
      * Desconecta un perfil sin tocar los demás: olvida su clave, su credencial, sus bases y sus conflictos. Las notas y las lápidas se quedan.
      * Al desconectar el último, la sync vuelve a estar apagada del todo.
      */
-    suspend fun disconnect(profileId: String) = withContext(Dispatchers.IO) {
+    suspend fun disconnect(profileId: String) = withContext(Dispatchers.IO + NonCancellable) {
+        // NonCancellable: se lanza desde el panel del perfil, que sale de la composición (y cancela su scope) en cuanto el perfil desaparece de
+        // la lista; sin esto, un cancelado a medias podría dejar la política y el trabajo periódico activos sin ningún perfil.
         passLock.withLock {
             vaultFor(profileId).clear()
             profileStore.remove(profileId)

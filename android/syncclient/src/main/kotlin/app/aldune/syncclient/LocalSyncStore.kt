@@ -25,6 +25,12 @@ interface LocalSyncStore {
     /** Primera conexión → «descartar»: borra notas, lápidas, bases y conflictos SIN crear lápidas (si se crearan, subirían borrados firmados). */
     fun discardAllLocal()
 
+    /**
+     * Primera conexión sin notas pero con lápidas: borra las lápidas y las bases y conflictos, y **deja las notas**. Si se usara
+     * [discardAllLocal], una nota escrita mientras se guardaba el perfil (entre la foto y este paso) se perdería.
+     */
+    fun discardTombstones()
+
     /** Desconectar: borra bases y conflictos (son de ese perfil); las notas y las lápidas se quedan. */
     fun forgetSyncState()
 }

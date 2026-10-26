@@ -86,6 +86,13 @@ class RoomLocalSyncStore(
         Unit
     }
 
+    override fun discardTombstones() = database.runInTransaction {
+        noteDao.clearTombstones()
+        syncDao.clearAllBases()
+        syncDao.clearAllConflicts()
+        Unit
+    }
+
     override fun forgetSyncState() = database.runInTransaction {
         syncDao.clearBases(profileId)
         syncDao.clearConflicts(profileId)

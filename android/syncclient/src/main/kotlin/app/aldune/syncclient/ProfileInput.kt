@@ -167,13 +167,14 @@ fun firstConnectDecision(snapshot: LocalSnapshot, isFirstProfile: Boolean = true
 /**
  * Deja el almacén listo para la primera pasada. Las bases son de un perfil concreto y no valen para otro, así que siempre se olvidan.
  * - «Subir»: se conservan las notas; la pasada normal sube lo local sin base (el almacén no tiene esos ids, no hay conflicto).
- * - «Descartar» (y el caso sin notas con lápidas): `discardAllLocal`, **sin** crear lápidas, o subirían borrados firmados al perfil.
+ * - «Descartar»: `discardAllLocal`, **sin** crear lápidas, o subirían borrados firmados al perfil. El caso sin notas pero con lápidas usa
+ *   `discardTombstones`: no toca las notas, por si el usuario escribió una mientras se guardaba el perfil.
  *
  * Con [FirstConnectDecision.AskUser] hace falta la elección; es un fallo de programa no pasarla.
  */
 fun completeFirstConnect(store: LocalSyncStore, decision: FirstConnectDecision, choice: FirstConnectChoice? = null) {
     when (decision) {
-        is FirstConnectDecision.Proceed -> if (decision.dropLocalTombstones) store.discardAllLocal() else store.forgetSyncState()
+        is FirstConnectDecision.Proceed -> if (decision.dropLocalTombstones) store.discardTombstones() else store.forgetSyncState()
         is FirstConnectDecision.AskUser -> when (requireNotNull(choice) { "Hay notas locales: hace falta la elección del usuario" }) {
             FirstConnectChoice.UPLOAD -> store.forgetSyncState()
             FirstConnectChoice.DISCARD -> store.discardAllLocal()

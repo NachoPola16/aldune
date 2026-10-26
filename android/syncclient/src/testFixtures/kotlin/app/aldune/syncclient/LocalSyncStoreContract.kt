@@ -327,6 +327,22 @@ abstract class LocalSyncStoreContract {
         assertTrue(h.sync.conflictedNoteIds().isEmpty())
     }
 
+    @Test fun descartarSoloLasLapidasConservaLasNotas() {
+        // La nota nació después de la foto de la primera conexión: no debe caer con las lápidas.
+        h.notes.put(note(id1))
+        h.notes.put(note(id2))
+        h.notes.delete(id2, t0)
+        h.sync.commit(commitOf(LocalAction.SaveConflict(conflict(id1)), bases = mapOf(id1 to base())))
+
+        h.sync.discardTombstones()
+
+        val snapshot = h.sync.snapshot()
+        assertEquals(listOf(id1), snapshot.notes.map { it.id })
+        assertTrue(snapshot.tombstones.isEmpty())
+        assertTrue(snapshot.bases.isEmpty())
+        assertTrue(h.sync.conflictedNoteIds().isEmpty())
+    }
+
     @Test fun olvidarElEstadoDeSyncBorraBasesYConflictosYDejaNotasYLapidas() {
         h.notes.put(note(id1))
         h.notes.put(note(id2))
