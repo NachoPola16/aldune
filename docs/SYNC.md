@@ -62,8 +62,11 @@ cada dispositivo. Trata el código como una contraseña, porque contiene la clav
 
 Para compartir **solo una nota** (la lista de la compra, por ejemplo) sin mezclar el resto de tus notas:
 
-1. En Windows, crea un perfil aparte con *Notas seleccionadas* y marca solo esa nota. Alguien tiene que alojar el almacén: tu servidor
-   con otro token, o un WebDAV.
+1. En Windows, crea un perfil aparte con *Notas seleccionadas* y marca solo esa nota. Alguien tiene que alojar su almacén, y **tiene que ser
+   uno distinto del de tu perfil personal**: un segundo servicio de Aldune (otro puerto, otro volumen y otro token; en `docker-compose.sync.yml`
+   basta con otro nombre de proyecto, de contenedor y de volumen) o un WebDAV. No vale el mismo almacén con otro token: ese perfil tiene otra
+   clave y no puede leer ninguna de las notas que ya hay allí, y Aldune se niega a escribir con «This device's sync code can't read the notes
+   in the store».
 2. Pulsa **Compartir perfil** y manda el código a cada persona. El token se da aparte, nunca dentro del código.
 3. En el móvil de cada uno: Ajustes → Sincronización → **Añadir otro perfil** → pega el código → elige el tipo → escribe el token →
    **Conectar**. Android admite varios perfiles a la vez, así que tu sincronización personal sigue como estaba.
