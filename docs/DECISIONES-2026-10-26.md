@@ -60,3 +60,24 @@ aparte) funciona. Se retoma solo si la validación con 3-5 personas demuestra qu
 1. Ocultar tareas hechas en Android (decisión 5), con test primero en `android/domain`.
 2. Windows 1.7.12: dock + importar `.md`, con tests en Core.
 3. Confirmar logo en el móvil → capturas → IzzyOnDroid/F-Droid.
+
+## Hecho el 26-10 en Android (commits locales, sin push)
+
+- Ocultar tareas hechas (ajuste + botón «Ver N tareas hechas» en el editor; solo visual, el texto no cambia).
+- Margen inferior de la lista para que el «+» no tape la última nota.
+- Deshacer y rehacer en la barra del editor (el historial se limpia al cargar la nota, para que el primer «deshacer» no la vacíe).
+- Contador «hechas/total» en la cabecera del editor, con descripción para lectores de pantalla.
+- Vibración corta al marcar o desmarcar una casilla.
+
+## Probar con el móvil conectado (nada de esto está visto en pantalla)
+
+1. Ocultar tareas hechas: que desaparezcan pasado el plazo, tocar casillas con líneas ocultas encima, escribir junto a una línea oculta, el botón de mostrarlas.
+2. Que el «+» no tape la última nota y que el margen no se vea raro con pocas notas.
+3. Deshacer/rehacer con el teclado de Samsung/Gboard y con uno de terceros; que tras abrir una nota «deshacer» esté desactivado.
+4. Contador y vibración: que no molesten; TalkBack leyendo el contador.
+5. Con la misma pasada, mirar accesibilidad (tamaño de letra grande, TalkBack, zonas de toque de 48 dp) y qué se siente copiado del PC.
+
+## Ideas para mirar (sin decidir)
+
+- Móvil: sombra/elevación en la nota arrastrada; buscador que se esconde al bajar; acciones en lote (seleccionar varias).
+- Del móvil al PC: contador «hechas/total» en la nota; «ver tareas hechas» como ocultar sin borrar en Windows (hoy borra la línea).

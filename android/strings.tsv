@@ -275,3 +275,6 @@ hide_after_day	1 day	1 día	1 Tag	1 jour	1 dia
 hide_after_week	1 week	1 semana	1 Woche	1 semaine	1 semana
 hidden_tasks_show	Show %1$d done tasks	Ver %1$d tareas hechas	%1$d erledigte Aufgaben anzeigen	Afficher %1$d tâches faites	Mostrar %1$d tarefas concluídas
 hidden_tasks_hide	Hide done tasks	Ocultar tareas hechas	Erledigte Aufgaben ausblenden	Masquer les tâches faites	Ocultar tarefas concluídas
+edit_undo	Undo	Deshacer	Rückgängig	Annuler	Desfazer
+edit_redo	Redo	Rehacer	Wiederholen	Rétablir	Refazer
+tasks_progress_cd	%1$d of %2$d tasks done	%1$d de %2$d tareas hechas	%1$d von %2$d Aufgaben erledigt	%1$d tâches faites sur %2$d	%1$d de %2$d tarefas concluídas

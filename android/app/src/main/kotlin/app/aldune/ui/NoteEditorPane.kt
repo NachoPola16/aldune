@@ -4,6 +4,7 @@ import android.app.Activity
 import android.content.Context
 import android.content.ContextWrapper
 import android.widget.Toast
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.foundation.gestures.waitForUpOrCancellation
@@ -64,7 +65,9 @@ import androidx.compose.ui.input.pointer.PointerEventPass
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalViewConfiguration
@@ -116,6 +119,7 @@ private val ListKeysTransformation = InputTransformation {
     selection = TextRange(fixed.caret)
 }
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun NoteEditorPane(key: String, viewModel: NotesViewModel, onBack: () -> Unit, showBack: Boolean) {
     val state = remember(key) { TextFieldState() }
@@ -156,6 +160,8 @@ fun NoteEditorPane(key: String, viewModel: NotesViewModel, onBack: () -> Unit, s
                 passwordMode = PasswordMode.Unlock
             }
         }
+        // Lo recién cargado no se puede deshacer: el primer «deshacer» dejaría la nota vacía.
+        state.undoState.clearHistory()
         loaded = true
     }
     LaunchedEffect(key) { load() }
@@ -170,6 +176,7 @@ fun NoteEditorPane(key: String, viewModel: NotesViewModel, onBack: () -> Unit, s
                 replace(0, length, fresh)
                 selection = TextRange(selection.min.coerceAtMost(fresh.length))
             }
+            state.undoState.clearHistory()
         }
     }
     LaunchedEffect(key) {
@@ -225,6 +232,7 @@ fun NoteEditorPane(key: String, viewModel: NotesViewModel, onBack: () -> Unit, s
             if (protectedNote && unlocked && key !in ids) {
                 unlocked = false
                 state.edit { replace(0, length, "") }
+                state.undoState.clearHistory()
                 passwordMode = PasswordMode.Unlock
             }
         }
@@ -275,6 +283,7 @@ fun NoteEditorPane(key: String, viewModel: NotesViewModel, onBack: () -> Unit, s
 
     val slack = with(LocalDensity.current) { 12.dp.toPx() }
 
+    val haptic = LocalHapticFeedback.current
     val settings by viewModel.settings.collectAsStateWithLifecycle()
     val settleChecked = settings.reorderOnCheck
 
@@ -310,6 +319,7 @@ fun NoteEditorPane(key: String, viewModel: NotesViewModel, onBack: () -> Unit, s
      */
     fun toggleTask(glyph: Int, keepCaretPosition: Boolean) {
         val toggled = TaskLines.toggleCheckboxAt(text(), glyph) ?: return
+        haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
         val sel = state.selection
         if (!settleChecked) return commit(toggled, sel)
         val edit = TaskLists.settleToggled(toggled, glyph)
@@ -350,6 +360,15 @@ fun NoteEditorPane(key: String, viewModel: NotesViewModel, onBack: () -> Unit, s
                 IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.back)) }
             }
             Spacer(Modifier.weight(1f))
+            // Cuántas tareas van hechas: se ve sin recorrer la lista. Solo si la nota tiene tareas.
+            val progress = TaskLines.count(state.text.toString())
+            if (progress.total > 0 && !protectedNote) {
+                val label = stringResource(R.string.tasks_progress_cd, progress.done, progress.total)
+                Text(
+                    "${progress.done}/${progress.total}", Modifier.semantics { contentDescription = label },
+                    style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
             IconButton(onClick = { scope.launch { options = viewModel.noteOptions(key) } }, enabled = loaded) {
                 Icon(Icons.Default.MoreVert, contentDescription = stringResource(R.string.note_options))
             }
@@ -519,6 +538,8 @@ fun NoteEditorPane(key: String, viewModel: NotesViewModel, onBack: () -> Unit, s
             onMoveUp = { move(LineDirection.Up) },
             onMoveDown = { move(LineDirection.Down) },
             onUncheckAll = { commit(TaskLists.uncheckAll(text()).text, state.selection) },
+            canUndo = state.undoState.canUndo, canRedo = state.undoState.canRedo,
+            onUndo = { state.undoState.undo() }, onRedo = { state.undoState.redo() },
             onRemoveChecked = {
                 val edit = TaskLists.removeChecked(text())
                 commit(edit.text, TextRange(edit.mapIndex(state.selection.start), edit.mapIndex(state.selection.end)))
@@ -563,9 +584,15 @@ private fun EditBar(
     onMoveDown: () -> Unit,
     onUncheckAll: () -> Unit,
     onRemoveChecked: () -> Unit,
+    canUndo: Boolean,
+    canRedo: Boolean,
+    onUndo: () -> Unit,
+    onRedo: () -> Unit,
 ) {
     var menuOpen by remember { mutableStateOf(false) }
     Row(Modifier.fillMaxWidth().horizontalScroll(rememberScrollState())) {
+        BarButton("↶", stringResource(R.string.edit_undo), onUndo, canUndo)
+        BarButton("↷", stringResource(R.string.edit_redo), onRedo, canRedo)
         BarButton("☐", stringResource(R.string.edit_checkbox), onCheckbox)
         BarButton("→", stringResource(R.string.edit_bullet), onBullet)
         BarButton("⇤", stringResource(R.string.edit_outdent), onOutdent)
@@ -573,7 +600,7 @@ private fun EditBar(
         BarButton("↑", stringResource(R.string.edit_move_up), onMoveUp)
         BarButton("↓", stringResource(R.string.edit_move_down), onMoveDown)
         Box {
-            BarButton("⋯", stringResource(R.string.edit_more)) { menuOpen = true }
+            BarButton("⋯", stringResource(R.string.edit_more), { menuOpen = true })
             DropdownMenu(expanded = menuOpen, onDismissRequest = { menuOpen = false }) {
                 DropdownMenuItem(
                     text = { Text(stringResource(R.string.edit_uncheck_all)) },
@@ -591,8 +618,8 @@ private fun EditBar(
 }
 
 @Composable
-private fun BarButton(label: String, description: String, onClick: () -> Unit) {
-    IconButton(onClick = onClick, modifier = Modifier.semantics { contentDescription = description }) {
-        Text(label, style = MaterialTheme.typography.titleLarge, color = MaterialTheme.colorScheme.onBackground)
+private fun BarButton(label: String, description: String, onClick: () -> Unit, enabled: Boolean = true) {
+    IconButton(onClick = onClick, enabled = enabled, modifier = Modifier.semantics { contentDescription = description }) {
+        Text(label, style = MaterialTheme.typography.titleLarge, color = MaterialTheme.colorScheme.onBackground.copy(alpha = if (enabled) 1f else 0.38f))
     }
 }

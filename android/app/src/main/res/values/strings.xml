@@ -276,4 +276,7 @@
     <string name="hide_after_week">1 week</string>
     <string name="hidden_tasks_show">Show %1$d done tasks</string>
     <string name="hidden_tasks_hide">Hide done tasks</string>
+    <string name="edit_undo">Undo</string>
+    <string name="edit_redo">Redo</string>
+    <string name="tasks_progress_cd">%1$d of %2$d tasks done</string>
 </resources>

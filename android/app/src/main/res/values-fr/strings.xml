@@ -276,4 +276,7 @@
     <string name="hide_after_week">1 semaine</string>
     <string name="hidden_tasks_show">Afficher %1$d tâches faites</string>
     <string name="hidden_tasks_hide">Masquer les tâches faites</string>
+    <string name="edit_undo">Annuler</string>
+    <string name="edit_redo">Rétablir</string>
+    <string name="tasks_progress_cd">%1$d tâches faites sur %2$d</string>
 </resources>

@@ -239,7 +239,11 @@ fun NoteListPane(
                     if (plan != null) viewModel.moveNote(id, plan.before, plan.after) else order = state.items
                 }
 
-                LazyColumn(Modifier.fillMaxSize(), state = listState, verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                // El margen de abajo deja la última nota por encima del «+» al llegar al final de la lista.
+                LazyColumn(
+                    Modifier.fillMaxSize(), state = listState, verticalArrangement = Arrangement.spacedBy(8.dp),
+                    contentPadding = androidx.compose.foundation.layout.PaddingValues(bottom = 88.dp),
+                ) {
                     items(order, key = { it.id }) { item ->
                         val dragging = draggedId == item.id
                         SwipeableRow(

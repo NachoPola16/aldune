@@ -276,4 +276,7 @@
     <string name="hide_after_week">1 Woche</string>
     <string name="hidden_tasks_show">%1$d erledigte Aufgaben anzeigen</string>
     <string name="hidden_tasks_hide">Erledigte Aufgaben ausblenden</string>
+    <string name="edit_undo">Rückgängig</string>
+    <string name="edit_redo">Wiederholen</string>
+    <string name="tasks_progress_cd">%1$d von %2$d Aufgaben erledigt</string>
 </resources>
