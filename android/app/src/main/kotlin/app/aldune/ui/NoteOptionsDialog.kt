@@ -30,6 +30,7 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -46,6 +47,7 @@ import androidx.compose.ui.unit.dp
 import app.aldune.R
 import app.aldune.domain.NoteService
 import app.aldune.text.MarkdownExport
+import app.aldune.text.NoteColorChoices
 import app.aldune.text.NoteThemes
 
 /**
@@ -79,7 +81,10 @@ fun NoteOptionsDialog(
             if (!ok) Toast.makeText(context, exportFailed, Toast.LENGTH_LONG).show()
         }
     }
-    val palette = (theme.lightColors + theme.darkColors).let { if (color in it) it else listOf(color) + it }
+    // El color con el que se abrió y los que se vayan eligiendo se quedan en la paleta aunque no sean del tema (ver NoteColorChoices).
+    val seenColors = remember { mutableStateListOf(initial.color) }
+    if (color !in seenColors) seenColors += color
+    val palette = NoteColorChoices.palette(theme.lightColors + theme.darkColors, seenColors)
 
     fun addTag() {
         val next = NoteService.normalizeTags(tags + draft)
