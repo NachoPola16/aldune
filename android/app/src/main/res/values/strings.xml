@@ -268,4 +268,12 @@
     <string name="reminder_includes_tasks_hint">The notification lists the tasks still unchecked (up to 3).</string>
     <string name="sync_in_background">Sync in the background</string>
     <string name="sync_in_background_hint">Roughly every 15 minutes, when Android allows. Off: it only syncs when you open the app, edit or sync by hand.</string>
+    <string name="hide_done_tasks">Hide completed tasks</string>
+    <string name="hide_done_tasks_hint">The text does not change: they are only hidden while you edit, and you can show them again from the note.</string>
+    <string name="hide_done_after">Hide after</string>
+    <string name="hide_after_hour">1 hour</string>
+    <string name="hide_after_day">1 day</string>
+    <string name="hide_after_week">1 week</string>
+    <string name="hidden_tasks_show">Show %1$d done tasks</string>
+    <string name="hidden_tasks_hide">Hide done tasks</string>
 </resources>

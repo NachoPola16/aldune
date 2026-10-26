@@ -48,6 +48,10 @@ data class AppSettings(
     val reminderIncludesTasks: Boolean = true,
     /** Sincronizar también en segundo plano (el trabajo periódico de WorkManager). Apagado: solo al abrir, al editar y a mano. */
     val syncInBackground: Boolean = true,
+    /** Esconder en el editor las tareas hechas pasado un plazo (`HiddenTasks`). El texto no cambia: se pueden volver a enseñar. */
+    val hideDoneTasks: Boolean = false,
+    /** Horas que una tarea hecha sigue a la vista antes de esconderse. */
+    val hideDoneAfterHours: Int = 24,
 ) {
     val cornersSquare: Boolean get() = squareCorners ?: AspectSkin.squareCorners(appearance)
     val syncSignalVisible: Boolean get() = showSyncSignal ?: AspectSkin.syncSignal(appearance)
@@ -94,6 +98,8 @@ class SettingsStore(context: Context) {
             fixedNoteColor = prefs.getString(FIXED_NOTE_COLOR, null)?.takeIf { NoteDisplayColor.isActive(it) },
             reminderIncludesTasks = prefs.getBoolean(REMINDER_INCLUDES_TASKS, d.reminderIncludesTasks),
             syncInBackground = prefs.getBoolean(SYNC_IN_BACKGROUND, d.syncInBackground),
+            hideDoneTasks = prefs.getBoolean(HIDE_DONE_TASKS, d.hideDoneTasks),
+            hideDoneAfterHours = prefs.getInt(HIDE_DONE_AFTER_HOURS, d.hideDoneAfterHours).coerceIn(1, 24 * 365),
         )
     }
 
@@ -119,6 +125,8 @@ class SettingsStore(context: Context) {
             .putOrRemove(FIXED_NOTE_COLOR, settings.fixedNoteColor)
             .putBoolean(REMINDER_INCLUDES_TASKS, settings.reminderIncludesTasks)
             .putBoolean(SYNC_IN_BACKGROUND, settings.syncInBackground)
+            .putBoolean(HIDE_DONE_TASKS, settings.hideDoneTasks)
+            .putInt(HIDE_DONE_AFTER_HOURS, settings.hideDoneAfterHours)
             .apply() // apply ya deja el valor visible en este proceso: el `recreate()` del cambio de idioma lo lee al instante.
     }
 
@@ -146,5 +154,7 @@ class SettingsStore(context: Context) {
         const val FIXED_NOTE_COLOR = "fixedNoteColor"
         const val REMINDER_INCLUDES_TASKS = "reminderIncludesTasks"
         const val SYNC_IN_BACKGROUND = "syncInBackground"
+        const val HIDE_DONE_TASKS = "hideDoneTasks"
+        const val HIDE_DONE_AFTER_HOURS = "hideDoneAfterHours"
     }
 }

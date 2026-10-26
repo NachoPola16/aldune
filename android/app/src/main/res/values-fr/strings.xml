@@ -268,4 +268,12 @@
     <string name="reminder_includes_tasks_hint">La notification liste les tâches non cochées (jusqu’à 3).</string>
     <string name="sync_in_background">Synchroniser en arrière-plan</string>
     <string name="sync_in_background_hint">Environ toutes les 15 minutes, si Android le permet. Désactivé : synchronisation uniquement à l’ouverture, à l’édition ou à la main.</string>
+    <string name="hide_done_tasks">Masquer les tâches faites</string>
+    <string name="hide_done_tasks_hint">Le texte ne change pas : elles sont seulement masquées pendant l\'édition et on peut les réafficher depuis la note.</string>
+    <string name="hide_done_after">Masquer après</string>
+    <string name="hide_after_hour">1 heure</string>
+    <string name="hide_after_day">1 jour</string>
+    <string name="hide_after_week">1 semaine</string>
+    <string name="hidden_tasks_show">Afficher %1$d tâches faites</string>
+    <string name="hidden_tasks_hide">Masquer les tâches faites</string>
 </resources>

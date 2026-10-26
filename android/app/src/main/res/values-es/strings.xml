@@ -268,4 +268,12 @@
     <string name="reminder_includes_tasks_hint">La notificación lista las tareas sin marcar (hasta 3).</string>
     <string name="sync_in_background">Sincronizar en segundo plano</string>
     <string name="sync_in_background_hint">Cada unos 15 minutos, cuando Android lo permita. Apagado: solo sincroniza al abrir la app, al editar o a mano.</string>
+    <string name="hide_done_tasks">Ocultar las tareas hechas</string>
+    <string name="hide_done_tasks_hint">El texto no cambia: solo se esconden al editar y puedes volver a verlas desde la nota.</string>
+    <string name="hide_done_after">Ocultar después de</string>
+    <string name="hide_after_hour">1 hora</string>
+    <string name="hide_after_day">1 día</string>
+    <string name="hide_after_week">1 semana</string>
+    <string name="hidden_tasks_show">Ver %1$d tareas hechas</string>
+    <string name="hidden_tasks_hide">Ocultar tareas hechas</string>
 </resources>

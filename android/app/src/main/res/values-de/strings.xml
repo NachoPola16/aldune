@@ -268,4 +268,12 @@
     <string name="reminder_includes_tasks_hint">Die Benachrichtigung listet die noch offenen Aufgaben (bis zu 3).</string>
     <string name="sync_in_background">Im Hintergrund synchronisieren</string>
     <string name="sync_in_background_hint">Etwa alle 15 Minuten, wenn Android es erlaubt. Aus: Es wird nur beim Öffnen, Bearbeiten oder von Hand synchronisiert.</string>
+    <string name="hide_done_tasks">Erledigte Aufgaben ausblenden</string>
+    <string name="hide_done_tasks_hint">Der Text ändert sich nicht: Sie werden nur beim Bearbeiten ausgeblendet und lassen sich in der Notiz wieder einblenden.</string>
+    <string name="hide_done_after">Ausblenden nach</string>
+    <string name="hide_after_hour">1 Stunde</string>
+    <string name="hide_after_day">1 Tag</string>
+    <string name="hide_after_week">1 Woche</string>
+    <string name="hidden_tasks_show">%1$d erledigte Aufgaben anzeigen</string>
+    <string name="hidden_tasks_hide">Erledigte Aufgaben ausblenden</string>
 </resources>

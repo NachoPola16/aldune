@@ -66,6 +66,7 @@ import app.aldune.text.AspectCatalog
 import app.aldune.text.NoteThemes
 
 private val TRASH_OPTIONS = listOf(7, 14, 30, 60, 90)
+private val HIDE_AFTER_OPTIONS = listOf(1 to R.string.hide_after_hour, 24 to R.string.hide_after_day, 24 * 7 to R.string.hide_after_week)
 
 /** Ajustes (spec §2.6): sincronización, aspecto, idioma y notas. Captura y recordatorios llegan con sus fases. */
 @Composable
@@ -148,6 +149,15 @@ fun SettingsScreen(viewModel: NotesViewModel, onClose: () -> Unit) {
                 HorizontalDivider(Modifier.padding(vertical = 8.dp))
                 SwitchRow(stringResource(R.string.reorder_on_check), stringResource(R.string.reorder_on_check_hint), settings.reorderOnCheck) { on ->
                     viewModel.updateSettings { it.copy(reorderOnCheck = on) }
+                }
+                SwitchRow(stringResource(R.string.hide_done_tasks), stringResource(R.string.hide_done_tasks_hint), settings.hideDoneTasks) { on ->
+                    viewModel.updateSettings { it.copy(hideDoneTasks = on) }
+                }
+                if (settings.hideDoneTasks) {
+                    Text(stringResource(R.string.hide_done_after), Modifier.padding(horizontal = 16.dp), style = MaterialTheme.typography.labelLarge)
+                    for ((hours, label) in HIDE_AFTER_OPTIONS) {
+                        Choice(stringResource(label), settings.hideDoneAfterHours == hours) { viewModel.updateSettings { it.copy(hideDoneAfterHours = hours) } }
+                    }
                 }
                 HorizontalDivider(Modifier.padding(vertical = 8.dp))
                 Text(

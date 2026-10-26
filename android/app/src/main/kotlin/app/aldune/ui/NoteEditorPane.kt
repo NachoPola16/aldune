@@ -21,6 +21,11 @@ import androidx.compose.foundation.layout.safeDrawingPadding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.input.InputTransformation
+import androidx.compose.foundation.text.input.OutputTransformation
+import androidx.compose.foundation.text.input.delete
+import androidx.compose.material3.TextButton
+import app.aldune.data.CompletedTasksStore
+import app.aldune.text.HiddenTasks
 import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.material.icons.Icons
@@ -273,6 +278,32 @@ fun NoteEditorPane(key: String, viewModel: NotesViewModel, onBack: () -> Unit, s
     val settings by viewModel.settings.collectAsStateWithLifecycle()
     val settleChecked = settings.reorderOnCheck
 
+    // «Ocultar tareas hechas»: el texto real no cambia; el campo dibuja el texto sin esas líneas (OutputTransformation) y los toques se
+    // traducen de vuelta al texto real. Una protegida no apunta nada: no se guarda ni un rastro de su contenido fuera de ella.
+    val hideActive = settings.hideDoneTasks && !protectedNote
+    val hideDelayMs = settings.hideDoneAfterHours * 3_600_000L
+    val completedStore = remember { CompletedTasksStore(context) }
+    var completed by remember(key) { mutableStateOf<Map<String, Long>>(emptyMap()) }
+    var showDone by remember(key) { mutableStateOf(false) }
+    LaunchedEffect(key, hideActive, loaded) {
+        if (!hideActive || !loaded) return@LaunchedEffect
+        snapshotFlow { state.text.toString() }.collect { current ->
+            val stored = completedStore.load(key)
+            val tracked = HiddenTasks.track(current, stored, System.currentTimeMillis())
+            if (tracked != stored) completedStore.save(key, tracked)
+            if (tracked != completed) completed = tracked
+        }
+    }
+    val now = System.currentTimeMillis()
+    val hiddenCandidates = if (hideActive) HiddenTasks.hiddenSpans(state.text.toString(), completed, now, hideDelayMs) else emptyList()
+    val hiddenSpans = if (showDone) emptyList() else hiddenCandidates
+    val hideTransformation = remember(hideActive, showDone, completed, hideDelayMs) {
+        if (!hideActive || showDone) null else OutputTransformation {
+            val spans = HiddenTasks.hiddenSpans(asCharSequence().toString(), completed, System.currentTimeMillis(), hideDelayMs)
+            for (span in spans.asReversed()) delete(span.start, span.end)
+        }
+    }
+
     /**
      * Marca o desmarca la casilla de [glyph] y, con el ajuste «mover abajo las tareas hechas», la recoloca en su lista. Al tocar, el cursor
      * sigue a su línea; con Ctrl+Enter se queda en el mismo sitio de la pantalla, como en Windows, para poder marcar una lista seguida.
@@ -304,7 +335,9 @@ fun NoteEditorPane(key: String, viewModel: NotesViewModel, onBack: () -> Unit, s
     LaunchedEffect(tap) {
         val position = tap ?: return@LaunchedEffect
         withFrameNanos { }
-        toggleCheckboxAtTap(text(), layout?.invoke(), position, slack)?.let { toggleTask(it, keepCaretPosition = false) }
+        // El diseño es del texto que se ve; con tareas ocultas hay que buscar la casilla ahí y luego pasar su posición al texto real.
+        val shown = StringBuilder(text()).also { sb -> for (span in hiddenSpans.asReversed()) sb.delete(span.start, span.end) }.toString()
+        toggleCheckboxAtTap(shown, layout?.invoke(), position, slack)?.let { toggleTask(HiddenTasks.toRaw(it, hiddenSpans), keepCaretPosition = false) }
         tap = null
     }
 
@@ -429,6 +462,7 @@ fun NoteEditorPane(key: String, viewModel: NotesViewModel, onBack: () -> Unit, s
         BasicTextField(
             state = state,
             inputTransformation = ListKeysTransformation,
+            outputTransformation = hideTransformation,
             onTextLayout = { getResult -> layout = getResult },
             modifier = Modifier
                 .weight(1f)
@@ -469,6 +503,12 @@ fun NoteEditorPane(key: String, viewModel: NotesViewModel, onBack: () -> Unit, s
             textStyle = MaterialTheme.typography.bodyLarge.copy(color = MaterialTheme.colorScheme.onBackground),
             cursorBrush = SolidColor(MaterialTheme.colorScheme.primary),
         )
+        if (hiddenCandidates.isNotEmpty()) {
+            val count = HiddenTasks.hiddenCount(text(), completed, now, hideDelayMs)
+            TextButton(onClick = { showDone = !showDone }, Modifier.padding(horizontal = 8.dp)) {
+                Text(if (showDone) stringResource(R.string.hidden_tasks_hide) else stringResource(R.string.hidden_tasks_show, count))
+            }
+        }
         HorizontalDivider()
         EditBar(
             text = state.text.toString(),
