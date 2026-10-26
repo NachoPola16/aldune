@@ -1026,10 +1026,14 @@ public partial class NoteWindow : Window
         return brush;
     }
 
+    /// <summary>Aire del recuadro de búsqueda alrededor de la palabra, en px.</summary>
+    private const double FindPadX = 3;
+    private const double FindPadY = 1;
+
     /// <summary>
-    /// Pinta la coincidencia actual (relleno fuerte y borde de la tinta de la nota: se distingue sobre cualquier
-    /// cara, clara u oscura) y, más suave, las demás que estén a la vista. Una que se parte en dos líneas se
-    /// deja sin resaltar (queda seleccionada igualmente).
+    /// Pinta todas las coincidencias que estén a la vista con el mismo resaltado (relleno y borde de la tinta de la
+    /// nota: se distingue sobre cualquier cara, clara u oscura). Una que se parte en dos líneas se deja sin
+    /// resaltar (queda seleccionada igualmente si es la actual).
     /// </summary>
     private void PositionFindHighlight()
     {
@@ -1047,20 +1051,22 @@ public partial class NoteWindow : Window
         {
             var from = TextBody.GetRectFromCharacterIndex(start);
             var to = TextBody.GetRectFromCharacterIndex(start + length);
-            rect = new System.Windows.Rect(from.Left, from.Top, Math.Max(0, to.Left - from.Left), from.Height);
+            // Un poco de aire alrededor de la palabra: ajustado a la tinta, el recuadro mordía las letras de los extremos.
+            rect = new System.Windows.Rect(from.Left - FindPadX, from.Top - FindPadY, Math.Max(0, to.Left - from.Left) + 2 * FindPadX, from.Height + 2 * FindPadY);
             return !from.IsEmpty && !to.IsEmpty && Math.Abs(from.Top - to.Top) < 1 && to.Left > from.Left
                 && from.Top >= 0 && from.Bottom <= BodyHost.ActualHeight;
         }
 
-        var soft = FindInkBrush(0.18);
+        // Todas las coincidencias a la vista se pintan igual (relleno y borde): antes la actual salía fuerte y las demás suaves, y con
+        // una sola palabra en pantalla parecía otro resaltado distinto. Cuál es la actual lo dice el contador «2/5» y la selección.
         int added = 0;
         for (int i = 0; i < _findMatches.Count && added < MaxFindOthers; i++)
         {
             if (i == _findCurrent || !TryRect(_findMatches[i], out var r)) continue;
             var border = new Border
             {
-                Background = soft, Width = r.Width, Height = r.Height,
-                CornerRadius = ThemeManager.Radius(3), IsHitTestVisible = false
+                Background = FindInkBrush(0.38), BorderBrush = FindInkBrush(1), BorderThickness = new Thickness(1.5),
+                Width = r.Width, Height = r.Height, CornerRadius = ThemeManager.Radius(3), IsHitTestVisible = false
             };
             Canvas.SetLeft(border, r.Left);
             Canvas.SetTop(border, r.Top);
