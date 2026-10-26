@@ -42,6 +42,28 @@ object LineMovement {
         return TextAndCaret(builder.toString(), newCaret)
     }
 
+    /**
+     * Arrastrar una línea con el dedo: lleva el contenido de la línea [fromLine] a la posición [toLine] y desplaza las intermedias un lugar.
+     * Como en [move], solo viajan los CONTENIDOS (la sangría y la casilla van dentro de ellos); cada posición conserva su terminador. El
+     * cursor queda al final de la línea movida. `null` si no cambia nada o alguna de las dos líneas no existe.
+     */
+    fun moveTo(text: String, fromLine: Int, toLine: Int): TextAndCaret? {
+        val (contents, terminators) = splitLines(text)
+        if (fromLine == toLine || fromLine !in contents.indices || toLine !in contents.indices) return null
+
+        val moved = contents.removeAt(fromLine)
+        contents.add(toLine, moved)
+
+        val builder = StringBuilder()
+        var caret = 0
+        for (i in contents.indices) {
+            builder.append(contents[i])
+            if (i == toLine) caret = builder.length
+            builder.append(terminators[i])
+        }
+        return TextAndCaret(builder.toString(), caret)
+    }
+
     private fun splitLines(text: String): Pair<MutableList<String>, MutableList<String>> {
         val contents = mutableListOf<String>()
         val terminators = mutableListOf<String>()
