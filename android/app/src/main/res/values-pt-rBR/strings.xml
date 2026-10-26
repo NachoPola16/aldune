@@ -182,6 +182,12 @@
     <string name="share_too_long">O texto é longo demais para uma nota</string>
     <string name="widget_label">Pilha de notas</string>
     <string name="widget_description">Suas notas, a um toque</string>
+    <string name="widget_label_small">Pilha de notas · compacta</string>
+    <string name="widget_description_small">A pilha em 2×2: suas primeiras notas</string>
+    <string name="widget_label_large">Pilha de notas · grande</string>
+    <string name="widget_description_large">A pilha em 4×4: muitas notas num relance</string>
+    <string name="widget_label_new_note">Nova nota</string>
+    <string name="widget_description_new_note">Um toque para escrever uma nota</string>
     <string name="widget_empty">Nenhuma nota</string>
     <string name="widget_more">Mais notas: %1$d</string>
     <string name="widget_unavailable">Abra o Aldune</string>

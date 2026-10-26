@@ -182,6 +182,12 @@
     <string name="share_too_long">Der Text ist für eine Notiz zu lang</string>
     <string name="widget_label">Notizstapel</string>
     <string name="widget_description">Deine Notizen, einen Tipp entfernt</string>
+    <string name="widget_label_small">Notizstapel · kompakt</string>
+    <string name="widget_description_small">Der Stapel in 2×2: deine ersten Notizen</string>
+    <string name="widget_label_large">Notizstapel · groß</string>
+    <string name="widget_description_large">Der Stapel in 4×4: viele Notizen auf einen Blick</string>
+    <string name="widget_label_new_note">Neue Notiz</string>
+    <string name="widget_description_new_note">Ein Tipp, um eine Notiz zu schreiben</string>
     <string name="widget_empty">Keine Notizen</string>
     <string name="widget_more">Weitere Notizen: %1$d</string>
     <string name="widget_unavailable">Aldune öffnen</string>

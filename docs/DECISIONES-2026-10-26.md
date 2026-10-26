@@ -21,6 +21,18 @@ formatos (`scripts/branding/generar-iconos.py`). Sustituye a las tres pestañas 
 un rectángulo metido en un círculo. Se guarda el candidato C (notas apiladas) como alternativa. Detalle, colores, reglas de
 uso y lo descartado: [`BRANDING.md`](BRANDING.md).
 
+## Widgets y burbujas (Android, 26-10)
+
+- **Más widgets en el selector:** además del mazo 4×2, ahora hay el mazo **2×2** (compacto), el mazo **4×4** (grande) y un botón
+  **1×1** de «Nota nueva» (el símbolo; un toque abre el editor). Los tres del mazo reutilizan `DockWidget`, que ya se adapta al
+  tamaño y se repinta junto (Glance guarda el conjunto de receptores de cada clase). Todos se pueden redimensionar salvo el 1×1.
+  **Descartado el 4×1:** entre cabecera y relleno no cabe una tira útil.
+- **Burbuja:** **no hay nada que construir.** Android 17 permite convertir cualquier app en burbuja con una pulsación larga en su
+  icono (blog oficial de Android 17); en el Pixel funciona con la rc9 tal cual: ventana multiventana, la actividad es
+  redimensionable por defecto (`targetSdk` 36) y `adjustResize` ya está. Una burbuja propia desde la notificación de captura
+  (`BubbleMetadata`) se descarta: el sistema ya cubre el caso y nos obligaría a mantener otra actividad incrustada.
+  Sin probar todavía: la app en una ventana de burbuja muy pequeña (tableta o plegable).
+
 ## Windows 1.7.12 (release pequeña)
 
 - Copiar la ruta y abrir la nota original también desde el dock, en las notas abiertas desde un directorio

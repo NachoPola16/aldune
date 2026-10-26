@@ -182,6 +182,12 @@
     <string name="share_too_long">El texto es demasiado largo para una nota</string>
     <string name="widget_label">Mazo de notas</string>
     <string name="widget_description">Tus notas, a un toque</string>
+    <string name="widget_label_small">Mazo de notas · compacto</string>
+    <string name="widget_description_small">El mazo en 2×2: tus primeras notas</string>
+    <string name="widget_label_large">Mazo de notas · grande</string>
+    <string name="widget_description_large">El mazo en 4×4: muchas notas de un vistazo</string>
+    <string name="widget_label_new_note">Nota nueva</string>
+    <string name="widget_description_new_note">Un toque para escribir una nota</string>
     <string name="widget_empty">No hay notas</string>
     <string name="widget_more">Más notas: %1$d</string>
     <string name="widget_unavailable">Abre Aldune</string>

@@ -182,6 +182,12 @@
     <string name="share_too_long">The text is too long for a note</string>
     <string name="widget_label">Note deck</string>
     <string name="widget_description">Your notes, one tap away</string>
+    <string name="widget_label_small">Note deck · compact</string>
+    <string name="widget_description_small">The deck in 2×2: your first notes</string>
+    <string name="widget_label_large">Note deck · large</string>
+    <string name="widget_description_large">The deck in 4×4: many notes at a glance</string>
+    <string name="widget_label_new_note">New note</string>
+    <string name="widget_description_new_note">One tap to write a note</string>
     <string name="widget_empty">No notes</string>
     <string name="widget_more">More notes: %1$d</string>
     <string name="widget_unavailable">Open Aldune</string>

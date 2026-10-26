@@ -182,6 +182,12 @@
     <string name="share_too_long">Le texte est trop long pour une note</string>
     <string name="widget_label">Pile de notes</string>
     <string name="widget_description">Vos notes, à portée de main</string>
+    <string name="widget_label_small">Pile de notes · compacte</string>
+    <string name="widget_description_small">La pile en 2×2 : vos premières notes</string>
+    <string name="widget_label_large">Pile de notes · grande</string>
+    <string name="widget_description_large">La pile en 4×4 : beaucoup de notes d’un coup d’œil</string>
+    <string name="widget_label_new_note">Nouvelle note</string>
+    <string name="widget_description_new_note">Un geste pour écrire une note</string>
     <string name="widget_empty">Aucune note</string>
     <string name="widget_more">Autres notes : %1$d</string>
     <string name="widget_unavailable">Ouvrez Aldune</string>
