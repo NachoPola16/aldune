@@ -81,6 +81,17 @@ Tests: 506/506 pasando (`dotnet test tests/Aldune.Core.Tests --no-restore`).
   Manage Notes usa texto adaptativo para que también sea legible sobre notas oscuras. Sync admite
   limitar un vínculo a una etiqueta y conserva ese filtro en perfiles compartidos.
 
+- **Logo definitivo (2026-10-26)**: la «A» de tres notas sustituye a las tres pestañas con barra; un solo dibujo del que salen
+  todos los formatos (`scripts/branding/generar-iconos.py`: `.ico`, ficha de tiendas, icono adaptativo y monocromo de Android,
+  icono de estado, acceso directo, widget, favicon, README). Sale en la 1.7.14 de Windows y la rc10 de Android. Colores, reglas de
+  uso y lo descartado (la alternativa C, notas apiladas, queda guardada): [`BRANDING.md`](BRANDING.md).
+- **Android, widgets y burbuja (2026-10-26)**: el selector de widgets ofrece el mazo en 4×2, 2×2 y 4×4 y un botón 1×1 de nota nueva
+  (los tres mazos comparten `DockWidget`). La burbuja la da el sistema desde Android 17 (pulsación larga en el icono): no hay nada
+  que construir; decisión y lo que queda sin probar en `DECISIONES-2026-10-26.md`. El selector de color de la nota ya no pierde el
+  color con el que se abrió (el negro de un aspecto retro) y avisa cuando «mismo color en todas las notas» lo oculta.
+- **Sincronización**: [`SYNC.md`](SYNC.md) empieza con una comparativa de los tres tipos (carpeta compartida, servidor propio, WebDAV),
+  qué admite cada plataforma, un paso a paso para cada uno y los errores más habituales. Android solo admite servidor propio y WebDAV.
+
 ## Cómo se ha trabajado (para mantener el mismo estilo)
 
 - **Diseño**: skill `superpowers:brainstorming` → spec escrita y comprometida

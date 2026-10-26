@@ -43,6 +43,10 @@ Los 4 avisos CA1416 de `DatabaseKeyProvider` (DPAPI) son conocidos; no debe apar
 
 ## Reglas del proyecto
 
+- **Logo e iconos**: nunca se retocan a mano. El símbolo (la «A» de tres notas) y todos sus formatos salen de
+  `scripts/branding/generar-iconos.py` (`pip install shapely pillow`); colores, reglas de uso y lo descartado en
+  [`docs/BRANDING.md`](docs/BRANDING.md). Las cadenas de Android viven en `android/strings.tsv`: se editan ahí y se
+  regeneran los XML con `python android/scripts/gen_strings.py` (`--check` comprueba que coinciden).
 - **Textos de interfaz siempre con `Strings.T(en, es, de, fr, pt)`** en `src/Aldune/Resources/Strings.cs`
   (inglés, español, alemán, francés, portugués de Brasil; idiomas en `UiLanguages`). Nada escrito a
   mano en XAML ni en código. Un texto nuevo lleva los cinco; si falta uno se ve en inglés. Las

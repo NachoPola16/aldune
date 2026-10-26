@@ -4,6 +4,75 @@ La sincronización no copia `notes.db`. Cada nota se serializa en un sobre JSON 
 cifra con una clave de sincronización compartida entre dispositivos. El almacén solo ve el id,
 la fecha, el dispositivo y el blob cifrado.
 
+## Elegir cómo sincronizar
+
+Hay tres tipos de almacén. Las notas viajan cifradas en los tres (ver el modelo de seguridad más abajo): lo que cambia es
+**dónde se guardan** y **qué dispositivos pueden usarlo**.
+
+| Tipo | Qué necesitas | Windows | Android | Cuándo elegirlo |
+|---|---|---|---|---|
+| **Carpeta compartida / NAS** | Una carpeta que vean todos tus PC (red local, NAS, o una carpeta que ya sincronice Syncthing, OneDrive, Dropbox o Nextcloud) | Sí | **No** | Solo usas PC y ya tienes una carpeta compartida |
+| **Servidor propio** (Docker) | Una máquina siempre encendida con Docker (un servidor casero, un NAS, un VPS) | Sí | Sí | Quieres controlar tus datos y usar también el móvil |
+| **WebDAV / Nextcloud / ownCloud** | Una cuenta WebDAV que ya tengas, y una contraseña de aplicación | Sí | Sí | Ya usas Nextcloud u otro WebDAV y no quieres montar nada |
+
+**Regla corta:** si vas a usar el móvil, elige *Servidor propio* o *WebDAV*. Un código de «carpeta compartida» no sirve en
+Android: la app lo rechaza con «This code is for a shared folder. On the phone use a server or WebDAV».
+
+Todos los tipos funcionan igual al principio: configuras el primer dispositivo, **compartes el perfil** (un código que lleva la
+clave de cifrado) y lo importas en los demás. **El token o la contraseña nunca viajan dentro del código**: se escriben aparte en
+cada dispositivo. Trata el código como una contraseña, porque contiene la clave de tus notas.
+
+### Paso a paso
+
+#### A. Carpeta compartida (solo Windows)
+
+1. Prepara una carpeta que todos tus PC puedan abrir: local, de red (`\\servidor\aldune`) o una que ya sincronice otra herramienta.
+2. En el primer PC: Ajustes → Sincronización entre dispositivos → activa la sincronización, elige `Carpeta compartida / NAS` y
+   selecciona la carpeta.
+3. Pulsa **Compartir perfil** y copia el código.
+4. En cada PC más: Ajustes → crea un perfil, pega el código, pulsa `Importar código` y elige la carpeta (puede tener otra ruta
+   que en el primer PC, pero tiene que ser la misma carpeta).
+5. `Sincronizar ahora` (en Ajustes y en el dock), o activa la sincronización periódica.
+
+#### B. Servidor propio
+
+1. En el servidor, con el repositorio clonado: `cp .env.example .env`, pon en `.env` un `ALDUNE_SYNC_TOKEN` largo y aleatorio y
+   arranca con `docker compose -f docker-compose.sync.yml up -d --build`. Comprueba que responde:
+   `curl http://IP-DEL-SERVIDOR:8087/health` debe devolver `{"status":"ok",...}`.
+2. En el primer PC: Ajustes → Sincronización entre dispositivos → `Servidor propio`; URL (`http://IP-DEL-SERVIDOR:8087/`) y el
+   token. Pulsa **Compartir perfil** y copia el código.
+3. En cada PC más: crea un perfil, pega el código, `Importar código` y escribe el token (el transporte y la URL se rellenan solos).
+4. **En Android:** Ajustes → Sincronización → pega el código → **Continuar** → elige «Aldune server» → comprueba la dirección y
+   escribe el token → **Conectar**.
+5. Fuera de casa usa HTTPS (ver [Nginx + Cloudflare Tunnel](#nginx--cloudflare-tunnel) y [HTTPS con Caddy](#https-con-caddy)): con
+   `http://` el token viaja sin proteger por la red (las notas siguen cifradas), y Android lo avisa.
+
+#### C. WebDAV, Nextcloud u ownCloud
+
+1. En tu servicio, crea una carpeta para Aldune (por ejemplo `Aldune`) y una **contraseña de aplicación**. En Nextcloud: Ajustes
+   personales → Seguridad → Dispositivos y sesiones → crear nueva contraseña de aplicación. No uses tu contraseña principal.
+2. La URL de esa carpeta suele ser `https://cloud.example.com/remote.php/dav/files/USUARIO/Aldune/`.
+3. En el primer PC: Ajustes → Sincronización entre dispositivos → `WebDAV / Nextcloud`; URL, usuario y contraseña de aplicación.
+   Pulsa **Compartir perfil** y copia el código.
+4. En cada PC más: crea un perfil, pega el código, `Importar código` y escribe tu usuario y contraseña de aplicación.
+5. **En Android:** Ajustes → Sincronización → pega el código → **Continuar** → elige «WebDAV» → dirección (si es una carpeta,
+   termínala en `/`), usuario y contraseña de aplicación → **Conectar**.
+
+### Qué hacer si algo falla
+
+| Lo que ves | Qué pasa | Qué hacer |
+|---|---|---|
+| «The server rejected the credentials» | El token, o el usuario o la contraseña de WebDAV, no coinciden | Revisa el token (solo el valor, sin `ALDUNE_SYNC_TOKEN=`) o la contraseña de aplicación |
+| «This profile's key changed: paste the new code» | Se creó un perfil nuevo con otra clave en otro dispositivo | Copia el código nuevo y pégalo otra vez |
+| «No connection» | El servidor no responde o no hay red | Comprueba la URL, el puerto y que el servidor está encendido |
+| «The profile code is damaged or from a newer version» | El código se copió incompleto, o es de una versión más nueva | Cópialo entero otra vez; actualiza la app si hace falta |
+| «This code is for a shared folder» | El código es de una carpeta compartida | En el móvil, crea el perfil con *Servidor propio* o *WebDAV* |
+| «The address must start with http:// or https://» | Falta el protocolo en la dirección | Escríbela completa, con `http://` o `https://` |
+| Móvil nuevo y has perdido la sincronización | La copia de seguridad de Android **no** incluye las notas ni la clave | Pega otra vez el código del perfil: las notas bajan del almacén |
+
+Más abajo está el detalle de cada parte: modelo de seguridad, servidor con Nginx, HTTPS, rotación de tokens, perfiles y selección
+de notas.
+
 ## Modelo de seguridad
 
 Qué protege Aldune y qué no, en corto:
