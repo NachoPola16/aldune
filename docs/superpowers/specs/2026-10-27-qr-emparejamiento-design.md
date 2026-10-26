@@ -1,6 +1,6 @@
 # Emparejar por QR (Windows lo muestra, Android lo escanea)
 
-Fecha: 27-10-2026. Estado: **pendiente de revisión** (aún sin código). Sustituye la decisión «No se hace por ahora» de
+Fecha: 27-10-2026. Estado: **aprobada el 27-10; plan en `docs/superpowers/plans/2026-10-27-qr-emparejamiento.md`** (aún sin código). Sustituye la decisión «No se hace por ahora» de
 `docs/DECISIONES-2026-10-26.md`, que se aplazó por la densidad del código; con lo medido abajo no hace falta dividirlo.
 
 ## Para qué
@@ -50,7 +50,7 @@ copiar el código como hoy. No se divide en varios QR.
 - `QrScanScreen` (Compose + `PreviewView`): `ImageAnalysis` con `STRATEGY_KEEP_ONLY_LATEST`, decodifica el plano de luminancia con
   `MultiFormatReader` restringido a QR, y al primer código válido devuelve el texto y cierra.
 - Botón «Escanear QR» junto a «Pegar» en «Añadir perfil»; su resultado va por el mismo camino que «Pegar» (`ProfileCodes.findShareCode`).
-- Lógica pura y con test en JVM: `QrPayload.accept(text)` (acepta solo códigos de perfil; recorta; devuelve el código o `null`).
+- Lógica pura y con test en JVM: `QrDecoder.decodeText(luma, rowStride, width, height)` (ZXing core; QR normal, invertido y con stride de CameraX). El filtro de «solo códigos de perfil» ya existe: `ProfileCodes.findShareCode`.
 
 ## Fuera de alcance
 
