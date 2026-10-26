@@ -46,6 +46,7 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
@@ -64,6 +65,8 @@ import app.aldune.reminders.ReminderScheduler
 import androidx.lifecycle.compose.LifecycleEventEffect
 import androidx.lifecycle.Lifecycle
 import app.aldune.data.AppSettings
+import app.aldune.domain.SettingsSection
+import app.aldune.domain.SettingsSections
 import app.aldune.data.Languages
 import app.aldune.text.AppPalette
 import app.aldune.text.AspectCatalog
@@ -78,6 +81,8 @@ fun SettingsScreen(viewModel: NotesViewModel, onClose: () -> Unit) {
     val settings by viewModel.settings.collectAsStateWithLifecycle()
     val activity = LocalActivity.current
     BackHandler(onBack = onClose)
+    // Qué bloques se enseñan: la regla vive en `SettingsSections` (domain) para poder probarla; aquí solo se pregunta.
+    fun show(section: SettingsSection) = SettingsSections.isVisible(section, settings.simplifiedMode)
 
     // En una pantalla ancha (tableta) los ajustes van en una columna centrada, no estirados a todo el ancho.
     Column(Modifier.fillMaxSize().safeDrawingPadding(), horizontalAlignment = Alignment.CenterHorizontally) {
@@ -87,9 +92,9 @@ fun SettingsScreen(viewModel: NotesViewModel, onClose: () -> Unit) {
                 Text(stringResource(R.string.settings), style = MaterialTheme.typography.titleLarge)
             }
             Column(Modifier.verticalScroll(rememberScrollState()).padding(bottom = 24.dp)) {
-                SyncSection(viewModel)
-                CaptureSection(viewModel, settings.captureNotification)
-                RemindersSection(viewModel, settings.exactReminders)
+                if (show(SettingsSection.SYNC)) SyncSection(viewModel)
+                if (show(SettingsSection.CAPTURE)) CaptureSection(viewModel, settings.captureNotification)
+                if (show(SettingsSection.REMINDERS)) RemindersSection(viewModel, settings.exactReminders)
 
                 Section(R.string.settings_appearance)
                 val appearances = listOf(
@@ -112,8 +117,10 @@ fun SettingsScreen(viewModel: NotesViewModel, onClose: () -> Unit) {
                         if (changed) AspectCatalog.forMode(mode)?.suggestedThemeId?.takeIf { it != settings.noteThemeId }?.let { suggestedTheme = it }
                     }
                 }
-                AspectSection(settings, onChange = viewModel::updateSettings)
-                NoteLookSection(settings, onChange = viewModel::updateSettings)
+                if (show(SettingsSection.APPEARANCE_ADVANCED)) {
+                    AspectSection(settings, onChange = viewModel::updateSettings)
+                    NoteLookSection(settings, onChange = viewModel::updateSettings)
+                }
                 suggestedTheme?.let { themeId ->
                     val themeName = themeNameRes(themeId)?.let { stringResource(it) } ?: themeId
                     AlertDialog(
@@ -136,41 +143,53 @@ fun SettingsScreen(viewModel: NotesViewModel, onClose: () -> Unit) {
                     Choice(name, settings.language == tag) { changeLanguage(viewModel, activity, tag) }
                 }
 
-                Section(R.string.settings_notes)
-                Text(stringResource(R.string.note_theme), Modifier.padding(horizontal = 16.dp), style = MaterialTheme.typography.labelLarge)
-                for (theme in NoteThemes.builtIn) {
-                    val name = themeNameRes(theme.id)?.let { stringResource(it) } ?: theme.name
-                    Choice(name, settings.noteThemeId == theme.id) { viewModel.updateSettings { it.copy(noteThemeId = theme.id) } }
-                }
-                NoteBehaviourSettings(settings, onChange = viewModel::updateSettings)
-                Text(stringResource(R.string.new_note_tone), Modifier.padding(horizontal = 16.dp), style = MaterialTheme.typography.labelLarge)
-                Choice(stringResource(R.string.tone_light), !settings.darkNotes) { viewModel.updateSettings { it.copy(darkNotes = false) } }
-                Choice(stringResource(R.string.tone_dark), settings.darkNotes) { viewModel.updateSettings { it.copy(darkNotes = true) } }
-                Text(stringResource(R.string.trash_days), Modifier.padding(start = 16.dp, end = 16.dp, top = 8.dp), style = MaterialTheme.typography.labelLarge)
-                for (days in TRASH_OPTIONS) {
-                    Choice(stringResource(R.string.trash_days_value, days), settings.trashDays == days) { viewModel.updateSettings { it.copy(trashDays = days) } }
-                }
-                HorizontalDivider(Modifier.padding(vertical = 8.dp))
-                SwitchRow(stringResource(R.string.large_checkboxes), stringResource(R.string.large_checkboxes_hint), settings.largeCheckboxes) { on ->
-                    viewModel.updateSettings { it.copy(largeCheckboxes = on) }
-                }
-                SwitchRow(stringResource(R.string.reorder_on_check), stringResource(R.string.reorder_on_check_hint), settings.reorderOnCheck) { on ->
-                    viewModel.updateSettings { it.copy(reorderOnCheck = on) }
-                }
-                SwitchRow(stringResource(R.string.hide_done_tasks), stringResource(R.string.hide_done_tasks_hint), settings.hideDoneTasks) { on ->
-                    viewModel.updateSettings { it.copy(hideDoneTasks = on) }
-                }
-                if (settings.hideDoneTasks) {
-                    Text(stringResource(R.string.hide_done_after), Modifier.padding(horizontal = 16.dp), style = MaterialTheme.typography.labelLarge)
-                    for ((hours, label) in HIDE_AFTER_OPTIONS) {
-                        Choice(stringResource(label), settings.hideDoneAfterHours == hours) { viewModel.updateSettings { it.copy(hideDoneAfterHours = hours) } }
+                if (show(SettingsSection.NOTES)) {
+                    Section(R.string.settings_notes)
+                    Text(stringResource(R.string.note_theme), Modifier.padding(horizontal = 16.dp), style = MaterialTheme.typography.labelLarge)
+                    for (theme in NoteThemes.builtIn) {
+                        val name = themeNameRes(theme.id)?.let { stringResource(it) } ?: theme.name
+                        Choice(name, settings.noteThemeId == theme.id) { viewModel.updateSettings { it.copy(noteThemeId = theme.id) } }
+                    }
+                    NoteBehaviourSettings(settings, onChange = viewModel::updateSettings)
+                    Text(stringResource(R.string.new_note_tone), Modifier.padding(horizontal = 16.dp), style = MaterialTheme.typography.labelLarge)
+                    Choice(stringResource(R.string.tone_light), !settings.darkNotes) { viewModel.updateSettings { it.copy(darkNotes = false) } }
+                    Choice(stringResource(R.string.tone_dark), settings.darkNotes) { viewModel.updateSettings { it.copy(darkNotes = true) } }
+                    Text(stringResource(R.string.trash_days), Modifier.padding(start = 16.dp, end = 16.dp, top = 8.dp), style = MaterialTheme.typography.labelLarge)
+                    for (days in TRASH_OPTIONS) {
+                        Choice(stringResource(R.string.trash_days_value, days), settings.trashDays == days) { viewModel.updateSettings { it.copy(trashDays = days) } }
+                    }
+                    HorizontalDivider(Modifier.padding(vertical = 8.dp))
+                    SwitchRow(stringResource(R.string.large_checkboxes), stringResource(R.string.large_checkboxes_hint), settings.largeCheckboxes) { on ->
+                        viewModel.updateSettings { it.copy(largeCheckboxes = on) }
+                    }
+                    SwitchRow(stringResource(R.string.reorder_on_check), stringResource(R.string.reorder_on_check_hint), settings.reorderOnCheck) { on ->
+                        viewModel.updateSettings { it.copy(reorderOnCheck = on) }
+                    }
+                    SwitchRow(stringResource(R.string.hide_done_tasks), stringResource(R.string.hide_done_tasks_hint), settings.hideDoneTasks) { on ->
+                        viewModel.updateSettings { it.copy(hideDoneTasks = on) }
+                    }
+                    if (settings.hideDoneTasks) {
+                        Text(stringResource(R.string.hide_done_after), Modifier.padding(horizontal = 16.dp), style = MaterialTheme.typography.labelLarge)
+                        for ((hours, label) in HIDE_AFTER_OPTIONS) {
+                            Choice(stringResource(label), settings.hideDoneAfterHours == hours) { viewModel.updateSettings { it.copy(hideDoneAfterHours = hours) } }
+                        }
                     }
                 }
                 HorizontalDivider(Modifier.padding(vertical = 8.dp))
+                // El botón de modo no se esconde nunca: sin él no habría forma de volver al modo completo. Aplica al instante y no toca otros ajustes.
                 Text(
-                    stringResource(R.string.about_version, versionName(activity)), Modifier.padding(16.dp),
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    stringResource(if (settings.simplifiedMode) R.string.interface_mode_hint_simple else R.string.interface_mode_hint_full),
+                    Modifier.padding(horizontal = 16.dp), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
+                OutlinedButton(onClick = { viewModel.updateSettings { it.copy(simplifiedMode = !it.simplifiedMode) } }, Modifier.padding(horizontal = 16.dp, vertical = 8.dp)) {
+                    Text(stringResource(if (settings.simplifiedMode) R.string.interface_mode_full else R.string.interface_mode_simplify))
+                }
+                if (show(SettingsSection.ABOUT)) {
+                    Text(
+                        stringResource(R.string.about_version, versionName(activity)), Modifier.padding(16.dp),
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
             }
         }
     }

@@ -23,7 +23,7 @@ data class AppSettings(
     val language: String = "",
     val trashDays: Int = 30,
     val reorderOnCheck: Boolean = false,
-    /** Casillas de tarea un 25 % mayores (fuente AlduneCheckLarge). Solo cambia cómo se dibujan. */
+    /** Casillas de tarea un 25 % mayores (fuente AlduneCheckLarge). Solo cambia cómo se dibujan. En una instalación nueva viene activado (ver `load`). */
     val largeCheckboxes: Boolean = false,
     /** Tono de las notas nuevas: claros (por defecto, como Windows) u oscuros. */
     val darkNotes: Boolean = false,
@@ -61,6 +61,8 @@ data class AppSettings(
     val quickListId: String? = null,
     /** El título que tenía esa nota la última vez que se vio: es lo que enseña la notificación sin abrir la base. */
     val quickListTitle: String = "",
+    /** Modo simplificado: Ajustes enseña solo lo esencial (ver `SettingsSections`). Los demás ajustes no cambian al activarlo. */
+    val simplifiedMode: Boolean = false,
 ) {
     val quickList: QuickList? get() = quickListId?.let { QuickList(it, quickListTitle) }
     val cornersSquare: Boolean get() = squareCorners ?: AspectSkin.squareCorners(appearance)
@@ -95,7 +97,9 @@ class SettingsStore(context: Context) {
             language = prefs.getString(LANGUAGE, d.language).takeIf { tag -> tag == "" || Languages.all.any { it.first == tag } } ?: d.language,
             trashDays = prefs.getInt(TRASH_DAYS, d.trashDays).coerceIn(1, 365),
             reorderOnCheck = prefs.getBoolean(REORDER_ON_CHECK, d.reorderOnCheck),
-            largeCheckboxes = prefs.getBoolean(LARGE_CHECKBOXES, d.largeCheckboxes),
+            // En un móvil táctil las casillas grandes son lo cómodo: una instalación nueva (sin ningún ajuste guardado) las trae activadas. Quien ya
+            // tenía la app sin ese ajuste conserva lo que veía (apagado); `save` escribe el valor y, desde entonces, manda lo guardado.
+            largeCheckboxes = if (prefs.contains(LARGE_CHECKBOXES)) prefs.getBoolean(LARGE_CHECKBOXES, false) else prefs.all.isEmpty(),
             darkNotes = prefs.getBoolean(DARK_NOTES, d.darkNotes),
             noteThemeId = prefs.getString(NOTE_THEME_ID, d.noteThemeId) ?: d.noteThemeId,
             captureNotification = prefs.getBoolean(CAPTURE_NOTIFICATION, d.captureNotification),
@@ -114,6 +118,7 @@ class SettingsStore(context: Context) {
             welcomeSeen = prefs.getBoolean(WELCOME_SEEN, d.welcomeSeen),
             quickListId = prefs.getString(QUICK_LIST_ID, null),
             quickListTitle = prefs.getString(QUICK_LIST_TITLE, d.quickListTitle) ?: d.quickListTitle,
+            simplifiedMode = prefs.getBoolean(SIMPLIFIED_MODE, d.simplifiedMode),
         )
     }
 
@@ -145,6 +150,7 @@ class SettingsStore(context: Context) {
             .putBoolean(WELCOME_SEEN, settings.welcomeSeen)
             .putOrRemove(QUICK_LIST_ID, settings.quickListId)
             .putString(QUICK_LIST_TITLE, settings.quickListTitle)
+            .putBoolean(SIMPLIFIED_MODE, settings.simplifiedMode)
             .apply() // apply ya deja el valor visible en este proceso: el `recreate()` del cambio de idioma lo lee al instante.
     }
 
@@ -157,6 +163,7 @@ class SettingsStore(context: Context) {
         const val WELCOME_SEEN = "welcomeSeen"
         const val QUICK_LIST_ID = "quickListId"
         const val QUICK_LIST_TITLE = "quickListTitle"
+        const val SIMPLIFIED_MODE = "simplifiedMode"
         const val APPEARANCE = "appearance"
         const val ASPECT_COLORS = "aspectColors"
         const val LANGUAGE = "language"

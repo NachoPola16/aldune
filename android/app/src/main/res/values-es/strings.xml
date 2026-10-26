@@ -317,4 +317,8 @@
     <string name="scan_qr_not_aldune">Ese QR no es un código de perfil de Aldune.</string>
     <string name="scan_qr_denied">Aldune solo necesita la cámara para leer este QR. Puedes permitirla en los ajustes del sistema, o pegar el código.</string>
     <string name="scan_qr_back">Volver</string>
+    <string name="interface_mode_simplify">Usar modo simplificado</string>
+    <string name="interface_mode_full">Usar modo completo</string>
+    <string name="interface_mode_hint_simple">Enseña solo lo esencial: sincronización, aspecto e idioma. Tus demás ajustes se conservan y siguen aplicándose.</string>
+    <string name="interface_mode_hint_full">Estás viendo todos los ajustes. El modo simplificado esconde los avanzados sin cambiarlos.</string>
 </resources>
