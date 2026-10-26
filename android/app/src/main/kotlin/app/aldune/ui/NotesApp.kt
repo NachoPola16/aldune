@@ -1,5 +1,7 @@
 package app.aldune.ui
 
+import app.aldune.capture.QuickList
+import app.aldune.capture.CaptureNotification
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -67,6 +69,16 @@ fun NotesApp(viewModel: NotesViewModel) {
                 val firstRun = !settings.welcomeSeen && s.counts.values.sum() == 0
                 LaunchedEffect(settings.welcomeSeen, firstRun) {
                     if (!settings.welcomeSeen && !firstRun) viewModel.updateSettings { it.copy(welcomeSeen = true) }
+                }
+                // El título de la lista rápida va guardado para la notificación: se actualiza si la nota se renombró.
+                val context = LocalContext.current
+                LaunchedEffect(s.items, settings.quickListId) {
+                    val id = settings.quickListId ?: return@LaunchedEffect
+                    val title = s.items.firstOrNull { it.id == id }?.title ?: return@LaunchedEffect
+                    if (title != settings.quickListTitle) {
+                        viewModel.updateSettings { it.copy(quickListTitle = title) }
+                        CaptureNotification.sync(context, settings.captureNotification, QuickList(id, title))
+                    }
                 }
                 if (firstRun && !showSettings) WelcomeDialog(onDismiss = { viewModel.updateSettings { it.copy(welcomeSeen = true) } })
             }

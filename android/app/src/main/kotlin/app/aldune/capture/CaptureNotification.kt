@@ -31,11 +31,12 @@ object CaptureNotification {
      * Deja la notificación como pide el ajuste: puesta si está activo y se puede, quitada en cualquier otro caso. Se llama al abrir la app, al
      * arrancar el móvil y al actualizar la app; si el usuario la descartó, no se repone hasta una de esas ocasiones.
      */
-    fun sync(context: Context, enabled: Boolean) {
-        if (enabled && canPost(context)) show(context) else cancel(context)
+    fun sync(context: Context, enabled: Boolean, quickList: QuickList? = null, feedback: String? = null) {
+        if (enabled && canPost(context)) show(context, quickList, feedback) else cancel(context)
     }
 
-    private fun show(context: Context) {
+    /** [quickList] añade la acción de responder para añadir un artículo; [feedback] cambia el texto un momento (lo que se acaba de añadir). */
+    private fun show(context: Context, quickList: QuickList?, feedback: String?) {
         val manager = context.getSystemService(NotificationManager::class.java)
         manager.createNotificationChannel(
             NotificationChannel(CHANNEL_ID, context.getString(R.string.capture_section), NotificationManager.IMPORTANCE_LOW).apply {
@@ -49,9 +50,10 @@ object CaptureNotification {
         val notification = NotificationCompat.Builder(context, CHANNEL_ID)
             .setSmallIcon(R.drawable.ic_stat_aldune)
             .setContentTitle(context.getString(R.string.new_note))
-            .setContentText(context.getString(R.string.capture_notification_text))
+            .setContentText(feedback ?: context.getString(R.string.capture_notification_text))
             .setContentIntent(open)
             .addAction(R.drawable.ic_new_note, context.getString(R.string.new_note), open)
+            .apply { if (quickList != null) addAction(QuickAdd.action(context, quickList)) }
             .setOngoing(true)
             .setOnlyAlertOnce(true)
             .setShowWhen(false)

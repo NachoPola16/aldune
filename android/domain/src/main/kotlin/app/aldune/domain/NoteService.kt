@@ -1,5 +1,6 @@
 package app.aldune.domain
 
+import app.aldune.text.TaskLists
 import app.aldune.text.NoteColorAssigner
 import app.aldune.text.NoteColorAssignment
 import app.aldune.text.NoteOrdering
@@ -105,6 +106,17 @@ class NoteService(
         val edited = note.copy(text = text, updatedAt = clock.now(), syncAuthorDeviceId = null)
         store.put(edited)
         NoteResult.Ok(edited)
+    }
+
+    /**
+     * Añade `item` como tarea al final de la lista de la nota (la lista rápida de la notificación). Solo una nota activa y sin proteger la
+     * recibe; un artículo vacío es un no-op (no escribe ni cambia la hora). Es una edición normal: sube por sync como cualquier otra.
+     */
+    fun appendTask(id: String, item: String): NoteResult<Note> = synchronized(lock) {
+        val note = store.get(id) ?: return NoteResult.Err(NoteError.NotFound(id))
+        if (note.isProtected) return NoteResult.Err(NoteError.Protected(id))
+        if (note.state != NoteState.ACTIVE) return NoteResult.Err(NoteError.InvalidArgument("La nota $id no está activa"))
+        edit(id, TaskLists.appendTask(note.text, item))
     }
 
     fun setColor(id: String, color: String): NoteResult<Note> = synchronized(lock) {

@@ -303,4 +303,13 @@
     <string name="bg_failed">La última sync en segundo plano falló (%1$s): %2$s</string>
     <string name="bg_restricted">Android limita Aldune en segundo plano: solo sincroniza cuando la abres.</string>
     <string name="bg_battery_settings">Ajustes de batería de la app</string>
+    <string name="quick_list">Lista rápida</string>
+    <string name="quick_list_none">Ninguna</string>
+    <string name="quick_list_hint">Responde desde la notificación para añadir un artículo a esta nota sin abrir Aldune.</string>
+    <string name="quick_list_needs_notification">Activa antes la notificación para crear notas</string>
+    <string name="quick_list_pick">Elige la lista rápida</string>
+    <string name="quick_list_action">Añadir a «%1$s»</string>
+    <string name="quick_list_input">Nuevo artículo para «%1$s»</string>
+    <string name="quick_list_added">Añadido: %1$s</string>
+    <string name="quick_list_gone">La lista rápida ya no está disponible</string>
 </resources>

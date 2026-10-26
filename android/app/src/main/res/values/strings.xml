@@ -303,4 +303,13 @@
     <string name="bg_failed">Last background sync failed (%1$s): %2$s</string>
     <string name="bg_restricted">Android is restricting Aldune in the background: it only syncs when you open it.</string>
     <string name="bg_battery_settings">App battery settings</string>
+    <string name="quick_list">Quick list</string>
+    <string name="quick_list_none">None</string>
+    <string name="quick_list_hint">Reply from the notification to add an item to this note without opening Aldune.</string>
+    <string name="quick_list_needs_notification">Turn on the notification to create notes first</string>
+    <string name="quick_list_pick">Choose the quick list</string>
+    <string name="quick_list_action">Add to “%1$s”</string>
+    <string name="quick_list_input">New item for “%1$s”</string>
+    <string name="quick_list_added">Added: %1$s</string>
+    <string name="quick_list_gone">The quick list is no longer available</string>
 </resources>

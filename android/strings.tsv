@@ -302,3 +302,12 @@ bg_offline	Last background attempt had no connection (%1$s)	El último intento e
 bg_failed	Last background sync failed (%1$s): %2$s	La última sync en segundo plano falló (%1$s): %2$s	Die letzte Hintergrundsynchronisierung ist fehlgeschlagen (%1$s): %2$s	La dernière synchro en arrière-plan a échoué (%1$s) : %2$s	A última sincronização em segundo plano falhou (%1$s): %2$s
 bg_restricted	Android is restricting Aldune in the background: it only syncs when you open it.	Android limita Aldune en segundo plano: solo sincroniza cuando la abres.	Android schränkt Aldune im Hintergrund ein: es synchronisiert nur, wenn du es öffnest.	Android limite Aldune en arrière-plan : elle ne synchronise que quand tu l'ouvres.	O Android limita o Aldune em segundo plano: ele só sincroniza quando você o abre.
 bg_battery_settings	App battery settings	Ajustes de batería de la app	Akkueinstellungen der App	Réglages de batterie de l'app	Configurações de bateria do app
+quick_list	Quick list	Lista rápida	Schnelle Liste	Liste rapide	Lista rápida
+quick_list_none	None	Ninguna	Keine	Aucune	Nenhuma
+quick_list_hint	Reply from the notification to add an item to this note without opening Aldune.	Responde desde la notificación para añadir un artículo a esta nota sin abrir Aldune.	Antworte in der Benachrichtigung, um einen Eintrag zu dieser Notiz hinzuzufügen, ohne Aldune zu öffnen.	Réponds depuis la notification pour ajouter un article à cette note sans ouvrir Aldune.	Responda pela notificação para adicionar um item a esta nota sem abrir o Aldune.
+quick_list_needs_notification	Turn on the notification to create notes first	Activa antes la notificación para crear notas	Aktiviere zuerst die Benachrichtigung zum Erstellen von Notizen	Active d'abord la notification pour créer des notes	Ative primeiro a notificação para criar notas
+quick_list_pick	Choose the quick list	Elige la lista rápida	Schnelle Liste wählen	Choisis la liste rapide	Escolha a lista rápida
+quick_list_action	Add to “%1$s”	Añadir a «%1$s»	Zu „%1$s“ hinzufügen	Ajouter à « %1$s »	Adicionar a “%1$s”
+quick_list_input	New item for “%1$s”	Nuevo artículo para «%1$s»	Neuer Eintrag für „%1$s“	Nouvel article pour « %1$s »	Novo item para “%1$s”
+quick_list_added	Added: %1$s	Añadido: %1$s	Hinzugefügt: %1$s	Ajouté : %1$s	Adicionado: %1$s
+quick_list_gone	The quick list is no longer available	La lista rápida ya no está disponible	Die schnelle Liste ist nicht mehr verfügbar	La liste rapide n'est plus disponible	A lista rápida não está mais disponível

@@ -16,7 +16,7 @@ class BootReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent) {
         when (intent.action) {
             Intent.ACTION_BOOT_COMPLETED, Intent.ACTION_MY_PACKAGE_REPLACED -> {
-                CaptureNotification.sync(context, SettingsStore(context).load().captureNotification)
+                SettingsStore(context).load().let { CaptureNotification.sync(context, it.captureNotification, it.quickList) }
                 withReminders(context) { it.reconcile() }
             }
             Intent.ACTION_TIME_CHANGED, Intent.ACTION_TIMEZONE_CHANGED, AlarmManager.ACTION_SCHEDULE_EXACT_ALARM_PERMISSION_STATE_CHANGED ->

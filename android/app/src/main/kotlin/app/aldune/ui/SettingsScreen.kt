@@ -1,5 +1,9 @@
 package app.aldune.ui
 
+import androidx.compose.ui.draw.alpha
+import app.aldune.domain.NoteState
+import app.aldune.domain.NoteListItem
+import app.aldune.capture.QuickList
 import android.Manifest
 import android.app.Activity
 import android.app.StatusBarManager
@@ -218,6 +222,8 @@ private fun CaptureSection(viewModel: NotesViewModel, notificationOn: Boolean) {
         ) { Text(stringResource(R.string.open_system_settings)) }
     }
 
+    QuickListRow(viewModel, notificationOn)
+
     val widgetPreview by viewModel.settings.collectAsStateWithLifecycle()
     SwitchRow(stringResource(R.string.widget_preview), stringResource(R.string.widget_preview_hint), widgetPreview.widgetPreview) { on ->
         viewModel.updateSettings { it.copy(widgetPreview = on) }
@@ -283,6 +289,53 @@ private fun RemindersSection(viewModel: NotesViewModel, exactOn: Boolean) {
 
 /** «Añadir el mosaico»: desde la 13 el sistema enseña su propio diálogo de confirmación; no hace falta ningún permiso. */
 @RequiresApi(Build.VERSION_CODES.TIRAMISU)
+/**
+ * La lista rápida: una nota a la que la notificación de captura añade artículos sin abrir la app. Hace falta la notificación activada
+ * (es ahí donde vive el campo de respuesta). Solo se ofrecen notas activas y sin proteger.
+ */
+@Composable
+private fun QuickListRow(viewModel: NotesViewModel, notificationOn: Boolean) {
+    val context = LocalContext.current
+    val settings by viewModel.settings.collectAsStateWithLifecycle()
+    val state by viewModel.state.collectAsStateWithLifecycle()
+    var picking by remember { mutableStateOf(false) }
+    val candidates = (state as? UiState.Ready)?.items.orEmpty().filter { it.state == NoteState.ACTIVE && !it.isProtected }
+    fun choose(item: NoteListItem?) {
+        picking = false
+        viewModel.updateSettings { it.copy(quickListId = item?.id, quickListTitle = item?.title.orEmpty()) }
+        CaptureNotification.sync(context, notificationOn, item?.let { QuickList(it.id, it.title) })
+    }
+    Column(
+        Modifier.fillMaxWidth().clickable(enabled = notificationOn) { picking = true }
+            .padding(horizontal = 16.dp, vertical = 10.dp).alpha(if (notificationOn) 1f else 0.5f),
+    ) {
+        Text(stringResource(R.string.quick_list))
+        val current = if (settings.quickListId == null) stringResource(R.string.quick_list_none) else settings.quickListTitle
+        Text(if (notificationOn) current else stringResource(R.string.quick_list_needs_notification), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.primary)
+        Text(stringResource(R.string.quick_list_hint), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+    }
+    if (picking) {
+        AlertDialog(
+            onDismissRequest = { picking = false },
+            title = { Text(stringResource(R.string.quick_list_pick)) },
+            text = {
+                Column(Modifier.verticalScroll(rememberScrollState())) {
+                    for ((item, label) in listOf<Pair<NoteListItem?, String>>(null to stringResource(R.string.quick_list_none)) + candidates.map { it to it.title }) {
+                        Row(
+                            Modifier.fillMaxWidth().selectable(selected = settings.quickListId == item?.id, role = Role.RadioButton, onClick = { choose(item) }),
+                            verticalAlignment = Alignment.CenterVertically,
+                        ) {
+                            RadioButton(selected = settings.quickListId == item?.id, onClick = null)
+                            Text(label, Modifier.padding(start = 12.dp, top = 10.dp, bottom = 10.dp), maxLines = 1)
+                        }
+                    }
+                }
+            },
+            confirmButton = { TextButton(onClick = { picking = false }) { Text(stringResource(R.string.cancel)) } },
+        )
+    }
+}
+
 @Composable
 private fun TileRow(context: Context) {
     Column(

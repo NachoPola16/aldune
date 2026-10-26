@@ -17,6 +17,31 @@ object TaskLists {
         return total > 0 && done == total
     }
 
+    /**
+     * Añade `item` como tarea nueva (`☐ item`) justo detrás de la última tarea de la nota, o al final si no hay ninguna. Es lo que hace
+     * la lista rápida de la notificación: el artículo se une a la lista y no cae debajo de las notas sueltas que haya después.
+     * Un artículo vacío no cambia nada; los espacios y saltos del artículo se reducen a un espacio. Usa el salto de línea de la nota
+     * (CRLF si lo lleva, LF si no).
+     */
+    fun appendTask(text: String, item: String): String {
+        val clean = item.trim().replace(Regex("\\s+"), " ")
+        if (clean.isEmpty()) return text
+        val task = TaskLines.PREFIX + clean
+        val newLine = if (text.contains("\r\n")) "\r\n" else "\n"
+
+        val lines = TextEdit.Lines.parse(text)
+        val lastTask = (0 until lines.count).lastOrNull { TaskLines.isTaskLine(lines.contents[it]) }
+        if (lastTask != null) {
+            val end = lines.starts[lastTask] + lines.contents[lastTask].length
+            return text.substring(0, end) + newLine + task + text.substring(end)
+        }
+        return when {
+            text.isEmpty() -> task
+            text.endsWith("\n") -> text + task
+            else -> text + newLine + task
+        }
+    }
+
     /** Desmarca todas las tareas hechas, sin mover nada (el texto mide lo mismo). */
     fun uncheckAll(text: String): TextEdit {
         val lines = TextEdit.Lines.parse(text)

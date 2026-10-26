@@ -303,4 +303,13 @@
     <string name="bg_failed">Die letzte Hintergrundsynchronisierung ist fehlgeschlagen (%1$s): %2$s</string>
     <string name="bg_restricted">Android schränkt Aldune im Hintergrund ein: es synchronisiert nur, wenn du es öffnest.</string>
     <string name="bg_battery_settings">Akkueinstellungen der App</string>
+    <string name="quick_list">Schnelle Liste</string>
+    <string name="quick_list_none">Keine</string>
+    <string name="quick_list_hint">Antworte in der Benachrichtigung, um einen Eintrag zu dieser Notiz hinzuzufügen, ohne Aldune zu öffnen.</string>
+    <string name="quick_list_needs_notification">Aktiviere zuerst die Benachrichtigung zum Erstellen von Notizen</string>
+    <string name="quick_list_pick">Schnelle Liste wählen</string>
+    <string name="quick_list_action">Zu „%1$s“ hinzufügen</string>
+    <string name="quick_list_input">Neuer Eintrag für „%1$s“</string>
+    <string name="quick_list_added">Hinzugefügt: %1$s</string>
+    <string name="quick_list_gone">Die schnelle Liste ist nicht mehr verfügbar</string>
 </resources>

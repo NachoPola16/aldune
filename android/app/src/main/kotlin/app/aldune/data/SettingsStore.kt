@@ -2,6 +2,7 @@ package app.aldune.data
 
 import android.content.Context
 import android.content.res.Configuration
+import app.aldune.capture.QuickList
 import app.aldune.text.AppPalette
 import app.aldune.text.AspectColorsJson
 import app.aldune.text.AspectSkin
@@ -56,7 +57,12 @@ data class AppSettings(
     val hideDoneAfterHours: Int = 24,
     /** La bienvenida de la primera vez ya se enseñó (o no hacía falta: ya había notas). */
     val welcomeSeen: Boolean = false,
+    /** La nota elegida como lista rápida (se le añaden artículos desde la notificación de captura); `null` = ninguna. */
+    val quickListId: String? = null,
+    /** El título que tenía esa nota la última vez que se vio: es lo que enseña la notificación sin abrir la base. */
+    val quickListTitle: String = "",
 ) {
+    val quickList: QuickList? get() = quickListId?.let { QuickList(it, quickListTitle) }
     val cornersSquare: Boolean get() = squareCorners ?: AspectSkin.squareCorners(appearance)
     val syncSignalVisible: Boolean get() = showSyncSignal ?: AspectSkin.syncSignal(appearance)
 }
@@ -106,6 +112,8 @@ class SettingsStore(context: Context) {
             hideDoneTasks = prefs.getBoolean(HIDE_DONE_TASKS, d.hideDoneTasks),
             hideDoneAfterHours = prefs.getInt(HIDE_DONE_AFTER_HOURS, d.hideDoneAfterHours).coerceIn(1, 24 * 365),
             welcomeSeen = prefs.getBoolean(WELCOME_SEEN, d.welcomeSeen),
+            quickListId = prefs.getString(QUICK_LIST_ID, null),
+            quickListTitle = prefs.getString(QUICK_LIST_TITLE, d.quickListTitle) ?: d.quickListTitle,
         )
     }
 
@@ -135,6 +143,8 @@ class SettingsStore(context: Context) {
             .putBoolean(HIDE_DONE_TASKS, settings.hideDoneTasks)
             .putInt(HIDE_DONE_AFTER_HOURS, settings.hideDoneAfterHours)
             .putBoolean(WELCOME_SEEN, settings.welcomeSeen)
+            .putOrRemove(QUICK_LIST_ID, settings.quickListId)
+            .putString(QUICK_LIST_TITLE, settings.quickListTitle)
             .apply() // apply ya deja el valor visible en este proceso: el `recreate()` del cambio de idioma lo lee al instante.
     }
 
@@ -145,6 +155,8 @@ class SettingsStore(context: Context) {
     private companion object {
         const val FILE = "settings"
         const val WELCOME_SEEN = "welcomeSeen"
+        const val QUICK_LIST_ID = "quickListId"
+        const val QUICK_LIST_TITLE = "quickListTitle"
         const val APPEARANCE = "appearance"
         const val ASPECT_COLORS = "aspectColors"
         const val LANGUAGE = "language"

@@ -40,7 +40,7 @@ class MainActivity : ComponentActivity() {
         super.onStart()
         viewModel.onForeground()
         // Abrir la app repone la notificación de captura si el ajuste está activo (o la quita si el permiso ya no está).
-        CaptureNotification.sync(this, viewModel.settings.value.captureNotification)
+        viewModel.settings.value.let { CaptureNotification.sync(this, it.captureNotification, it.quickList) }
     }
 
     // Las protegidas se vuelven a bloquear al pasar a segundo plano. Rotar también pasa por aquí, pero no es salir de la app.
