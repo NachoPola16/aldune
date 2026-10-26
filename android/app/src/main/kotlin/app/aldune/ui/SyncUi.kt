@@ -267,7 +267,13 @@ private fun ConnectForm(controller: SyncController, additional: Boolean, initial
                 OutlinedButton(onClick = {
                     scope.launch {
                         val pasted = clipboard.getClipEntry()?.clipData?.takeIf { it.itemCount > 0 }?.getItemAt(0)?.text?.toString()
-                        if (!pasted.isNullOrBlank()) { code = ProfileCodes.findShareCode(pasted) ?: pasted.trim(); errorText = null }
+                        if (!pasted.isNullOrBlank()) {
+                            val share = ProfileCodes.findShareCode(pasted)
+                            code = share ?: pasted.trim(); errorText = null
+                            // El código lleva la clave del perfil: ya está en el campo, no hace falta que siga en el portapapeles (donde lo ven
+                            // los gestores de portapapeles y otras apps con acceso). Solo se vacía si lo pegado era un código de perfil.
+                            if (share != null) clipboard.setClipEntry(null)
+                        }
                     }
                 }) { Text(stringResource(R.string.sync_paste)) }
                 OutlinedButton(onClick = { scanner.launch(Unit) }) { Text(stringResource(R.string.scan_qr)) }
