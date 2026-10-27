@@ -28,6 +28,11 @@ git push origin v1.0.0
 gh run watch
 ```
 
+La release de Windows lleva cuatro ficheros: el instalador, el portable x64, el portable ARM64 y `SHA256SUMS.txt` (lo genera el paso
+`Generate checksums` del workflow, después de firmar si la firma está activa, con el SHA-256 de los otros tres). Si cambia el nombre o el
+número de ficheros de la release, hay que actualizar la lista de «Instalar» de `README.md` y `README.en.md`. Un tag de Windows con guion
+(`-rc`) también los publica: borrarlo después con `gh release delete <tag> --cleanup-tag`.
+
 Después de cada release hay que actualizar también el servidor de sincronización propio (ver
 `scripts/update-sync-server.sh` y `docs/SYNC.md`, "Actualizar el servidor desde Git").
 

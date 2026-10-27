@@ -33,8 +33,20 @@ Descarga la última versión desde [Releases](https://github.com/NachoPola16/ald
 - **Instalador** (`Aldune-Setup-x.y.z.exe`): accesos directos y desinstalador. No necesita permisos
   de administrador. Desinstalar no borra tus notas.
 - **Portable** (`aldune-portable-win-x64.zip`): un solo `aldune.exe`, sin instalar nada.
+- **Portable para ARM** (`aldune-portable-win-arm64.zip`): lo mismo para Windows en ARM64 (Surface Pro X, portátiles Snapdragon). Los x64 también
+  funcionan ahí, emulados; este va nativo.
+- **`SHA256SUMS.txt`**: la huella (SHA-256) de cada fichero de esa versión, para comprobar que lo descargado es exactamente lo publicado.
 
 Requisitos: Windows 10 u 11 de 64 bits. No hace falta instalar .NET.
+
+**Comprobar la descarga** (opcional, en PowerShell). El resultado tiene que ser igual a la línea de ese fichero en `SHA256SUMS.txt`:
+
+```powershell
+(Get-FileHash .\Aldune-Setup-1.7.18.0.exe -Algorithm SHA256).Hash.ToLower()
+```
+
+Sirve para detectar una descarga corrupta o cambiada por el camino. No sustituye a una firma de código (ver «Firma y privacidad»): quien pudiera
+cambiar el fichero en GitHub también podría cambiar su huella.
 
 Si Windows muestra "Windows protegió su PC", es porque el ejecutable todavía no está firmado: pulsa
 "Más información" y "Ejecutar de todas formas".
@@ -50,7 +62,7 @@ Si Windows muestra "Windows protegió su PC", es porque el ejecutable todavía n
 Hay un cliente para Android (Kotlin nativo, Android 8 o superior) en la carpeta [`android/`](android/): notas con
 listas de tareas, etiquetas, notas protegidas con contraseña, recordatorios, widget y captura rápida, los mismos aspectos que en Windows (también los retro: XP, Telecomunicaciones, Bash y Fósforo) y la misma
 sincronización cifrada de extremo a extremo que en Windows. Instalar: descarga el APK firmado de
-[Releases](https://github.com/NachoPola16/aldune/releases) (las versiones `android-v…`; la `0.1.0` es la primera estable) y ábrelo en el móvil.
+[Releases](https://github.com/NachoPola16/aldune/releases) (las versiones `android-v…`; en las notas de cada una van el SHA-256 del APK y la huella del certificado de firma) y ábrelo en el móvil.
 Tiene un **modo simplificado** (Ajustes → «Usar modo simplificado») que deja a la vista solo la sincronización, el aspecto y el idioma, y una **lista rápida**: elige una nota como lista y añade artículos desde la notificación de captura sin abrir la app.
 
 **Algo parecido al dock en Android.** El móvil no tiene un borde de pantalla donde pegar pestañas como en Windows, pero hay dos

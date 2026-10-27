@@ -32,8 +32,20 @@ Download the latest version from [Releases](https://github.com/NachoPola16/aldun
 - **Installer** (`Aldune-Setup-x.y.z.exe`): shortcuts and an uninstaller. No administrator rights
   needed. Uninstalling does not delete your notes.
 - **Portable** (`aldune-portable-win-x64.zip`): a single `aldune.exe`, nothing to install.
+- **Portable for ARM** (`aldune-portable-win-arm64.zip`): the same for Windows on ARM64 (Surface Pro X, Snapdragon laptops). The x64 builds also
+  run there, emulated; this one is native.
+- **`SHA256SUMS.txt`**: the SHA-256 hash of every file in that release, to check that what you downloaded is exactly what was published.
 
 Requirements: 64-bit Windows 10 or 11. You don't need to install .NET.
+
+**Check your download** (optional, in PowerShell). The result must equal that file's line in `SHA256SUMS.txt`:
+
+```powershell
+(Get-FileHash .\Aldune-Setup-1.7.18.0.exe -Algorithm SHA256).Hash.ToLower()
+```
+
+It catches a corrupted download or one altered on the way. It is not a substitute for code signing (see "Signing and privacy"): anyone who could
+change the file on GitHub could change its hash too.
 
 If Windows shows "Windows protected your PC", it's because the executable isn't signed yet: click
 "More info" and "Run anyway".
@@ -48,7 +60,7 @@ If Windows shows "Windows protected your PC", it's because the executable isn't 
 
 There is an Android client (native Kotlin, Android 8 or later) in [`android/`](android/): notes with task lists, tags,
 password-protected notes, reminders, a widget and quick capture, and the same end-to-end encrypted sync as on Windows.
-To install it, download the signed APK from [Releases](https://github.com/NachoPola16/aldune/releases) (the `android-v…` ones, pre-releases for now) and open it on your phone.
+To install it, download the signed APK from [Releases](https://github.com/NachoPola16/aldune/releases) (the `android-v…` ones; each release's notes carry the APK's SHA-256 and the signing certificate's fingerprint) and open it on your phone.
 
 **Something like the dock on Android.** A phone has no screen edge to stick tabs to as on Windows, but there are two ways to keep
 your notes within reach: the **widgets** (the deck at 4×2, 2×2 or 4×4, and a 1×1 new-note button) and, since **Android 17**, the
