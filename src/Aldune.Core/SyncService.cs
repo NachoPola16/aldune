@@ -310,13 +310,7 @@ public sealed class SyncService
     }
 
     /// <summary>Clave con la que el perfil en curso guarda sus bases y conflictos (ver <see cref="SyncProfileSettings.BaseKey"/>).</summary>
-    private string CurrentBaseKey()
-    {
-        var profiles = _settings.SyncProfiles;
-        int index = profiles.FindIndex(profile => profile.Id == _settings.ActiveSyncProfileId);
-        if (index < 0) return "";
-        return profiles[index].BaseKey.Length > 0 || index == 0 ? profiles[index].BaseKey : profiles[index].Id;
-    }
+    private string CurrentBaseKey() => SyncProfileStore.BaseKeyOfActive(_settings);
 
     /// <summary>
     /// Cambia la clave del vínculo para invalidar los códigos que ya se compartieron. La operación

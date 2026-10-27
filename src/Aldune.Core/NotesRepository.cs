@@ -418,6 +418,25 @@ public sealed class NotesRepository
         command.ExecuteNonQuery();
     }
 
+    /// <summary>
+    /// Olvida lo que un perfil de sync borrado dejó (sus bases y sus conflictos). Sin esto, <see cref="GetSyncBase"/> seguía tomando su
+    /// base antigua como «la más atrasada» y la señal de sync de esas notas se quedaba en pendiente para siempre.
+    /// </summary>
+    public void DeleteSyncProfile(string profileKey)
+    {
+        using var connection = _database.OpenConnection();
+        using var transaction = connection.BeginTransaction();
+        foreach (var table in new[] { "SyncBase", "SyncConflict" })
+        {
+            using var command = connection.CreateCommand();
+            command.Transaction = transaction;
+            command.CommandText = $"DELETE FROM {table} WHERE ProfileKey = $profile;";
+            command.Parameters.AddWithValue("$profile", profileKey);
+            command.ExecuteNonQuery();
+        }
+        transaction.Commit();
+    }
+
     public void DeleteSyncConflict(Guid conflictId)
     {
         using var connection = _database.OpenConnection();

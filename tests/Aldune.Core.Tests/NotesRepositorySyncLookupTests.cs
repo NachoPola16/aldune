@@ -37,6 +37,24 @@ public sealed class NotesRepositorySyncLookupTests : IDisposable
     }
 
     [Fact]
+    public void DeleteSyncProfile_RemovesOnlyThatProfilesBases_SoTheSignalNoLongerStaysPending()
+    {
+        var id = Guid.NewGuid();
+        var old = new DateTimeOffset(2026, 10, 3, 9, 0, 0, TimeSpan.Zero);
+        var recent = old.AddDays(2);
+        _repository.SetSyncBases([new(id, new SyncBaseVersion(old, "pc"))], "perfil-borrado");
+        _repository.SetSyncBases([new(id, new SyncBaseVersion(recent, "pc"))], "perfil-vivo");
+        // Con las dos filas vale la más antigua, la del perfil que ya no existe.
+        Assert.Equal(old, _repository.GetSyncBase(id)!.UpdatedAt);
+
+        _repository.DeleteSyncProfile("perfil-borrado");
+
+        Assert.Equal(recent, _repository.GetSyncBase(id)!.UpdatedAt);
+        Assert.Single(_repository.GetSyncBases("perfil-vivo"));
+        Assert.Empty(_repository.GetSyncBases("perfil-borrado"));
+    }
+
+    [Fact]
     public void HasSyncConflict_IsFalseWithoutConflicts()
     {
         Assert.False(_repository.HasSyncConflict(Guid.NewGuid()));

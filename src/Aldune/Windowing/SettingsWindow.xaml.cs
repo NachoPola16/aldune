@@ -1002,7 +1002,8 @@ public partial class SettingsWindow : Window
             return;
 
         _settingsService.Save(_settings);
-        SyncProfileStore.DeleteActive(_settings);
+        var removedKey = SyncProfileStore.BaseKeyOfActive(_settings);
+        if (SyncProfileStore.DeleteActive(_settings)) _coordinator?.ForgetSyncProfile(removedKey);
         _settingsService.Save(_settings);
         ReloadSyncProfileUi();
         _coordinator?.ConfigureAutomaticSync();

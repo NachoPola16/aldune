@@ -1586,6 +1586,9 @@ public sealed class AppCoordinator
     /// Al abrir una nota se trae antes lo escrito en otro equipo (ver <see cref="NoteOpenSync"/>). En segundo plano y sin sonido: no se
     /// bloquea la edición, y si llega algo y no se ha tocado, las ventanas se repintan al terminar.
     /// </summary>
+    /// <summary>Al borrar un perfil de sync se olvidan sus bases y conflictos (si no, la señal de sync de sus notas se queda en pendiente).</summary>
+    public void ForgetSyncProfile(string baseKey) => _repository.DeleteSyncProfile(baseKey);
+
     public void SyncForOpenedNote()
     {
         if (_syncService is null || _settings is null) return;

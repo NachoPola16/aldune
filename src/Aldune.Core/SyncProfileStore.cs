@@ -56,6 +56,15 @@ public static class SyncProfileStore
         }
     }
 
+    /// <summary>Clave con la que el perfil activo guarda sus bases y conflictos: la suya, o su id si no es el primero y no tiene.</summary>
+    public static string BaseKeyOfActive(AppSettings settings)
+    {
+        var profiles = settings.SyncProfiles;
+        int index = profiles.FindIndex(profile => profile.Id == settings.ActiveSyncProfileId);
+        if (index < 0) return "";
+        return profiles[index].BaseKey.Length > 0 || index == 0 ? profiles[index].BaseKey : profiles[index].Id;
+    }
+
     public static bool DeleteActive(AppSettings settings)
     {
         Ensure(settings);
