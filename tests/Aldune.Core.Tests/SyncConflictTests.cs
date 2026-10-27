@@ -253,6 +253,26 @@ public sealed class SyncConflictTests : IDisposable
     }
 
     [Fact]
+    public void NewerEdit_BeatsAnOlderLocalDeleteAndReachesTheDeletingDevice()
+    {
+        // A borra (lápida local) sin sincronizar; B edita después y sube. En la pasada de A la versión remota es más reciente que
+        // su lápida: se aplica. La foto local solo guarda notas vivas, así que "no está en la foto" no puede contar como "cambió aquí".
+        var note = _deviceA.Repository.Create("original", "#AAE6B1", "primary");
+        ShareKeyAndSynchronizeInitialNote(note.Id);
+
+        Assert.True(_deviceA.Repository.Delete(note.Id));
+        Thread.Sleep(20);
+        _deviceB.Repository.UpdateText(note.Id, "edit after the delete");
+        Assert.True(_deviceB.Sync.Synchronize().Succeeded);
+
+        var result = _deviceA.Sync.Synchronize();
+
+        Assert.True(result.Succeeded, result.Error);
+        Assert.Equal("edit after the delete", _deviceA.Repository.GetAllForSync().Single().Text);
+        Assert.Equal(1, result.Downloaded);
+    }
+
+    [Fact]
     public void NewerDelete_BeatsAnOlderEditAndDoesNotResurrect()
     {
         var note = _deviceA.Repository.Create("original", "#AAE6B1", "primary");

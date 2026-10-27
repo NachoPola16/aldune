@@ -260,6 +260,18 @@ class WebDavSyncTransportTest {
     }
 
     @Test
+    fun `un objeto por encima del tope se salta y no impide el resto`() {
+        val ok = envelope("ok", 10)
+        val hugeId = "00000000000000000000000000000009"
+        val huge = "x".repeat((MAX_RESPONSE_BYTES + 1024).toInt())
+        serve(
+            multistatus(fileEntry("/dav/objects/$hugeId.json"), fileEntry("/dav/objects/$idN.json")),
+            mapOf("/dav/objects/$hugeId.json" to huge, "/dav/objects/$idN.json" to SyncEnvelopeCodec.serialize(ok)),
+        )
+        assertEquals(listOf(ok.noteId), transport().readAll().map { it.noteId })
+    }
+
+    @Test
     fun `MKCOL crea la carpeta si falta y solo una vez`() {
         val requests = mutableListOf<String>()
         server.dispatcher = object : Dispatcher() {

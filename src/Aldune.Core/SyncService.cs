@@ -494,7 +494,7 @@ public sealed class SyncService
                     {
                         // La foto local se tomó antes de la red: si mientras tanto se editó o borró aquí, aplicar lo
                         // remoto pisaría esa edición. Se deja para la siguiente pasada, que la verá ya.
-                        if (ChangedSinceSnapshot(id, localNotes)) continue;
+                        if (ChangedSinceSnapshot(id, localNotes, localEnvelope!.Tombstone)) continue;
                         ApplyRemote(remoteObject, key, ref downloaded, ref tombstones);
                     }
                     Settle(id, comparison >= 0 ? localEnvelope! : remoteObject.Envelope);
@@ -711,8 +711,12 @@ public sealed class SyncService
         return local;
     }
 
-    /// <summary>Si la nota desapareció o cambió de fecha desde que se tomó la foto local de esta pasada.</summary>
-    private bool ChangedSinceSnapshot(Guid id, IReadOnlyDictionary<Guid, Note> snapshot) =>
+    /// <summary>
+    /// Si la nota desapareció o cambió de fecha desde que se tomó la foto local de esta pasada. La foto solo tiene notas vivas: si lo
+    /// local era una lápida, que la nota no esté en ella es lo normal, y solo cuenta como cambio que haya reaparecido aquí.
+    /// </summary>
+    private bool ChangedSinceSnapshot(Guid id, IReadOnlyDictionary<Guid, Note> snapshot, bool localWasTombstone) =>
+        localWasTombstone ? _repository.GetById(id) is not null :
         !snapshot.TryGetValue(id, out var before) ||
         _repository.GetById(id) is not { } current ||
         current.UpdatedAt != before.UpdatedAt;

@@ -17,10 +17,22 @@ internal static class ParallelDownload
         where TResult : class
     {
         using var gate = new SemaphoreSlim(MaxConcurrent);
+        // Tras el primer fallo (un 401, un portal cautivo, un timeout) las que siguen en cola no empiezan: si no, un almacén de
+        // cientos de notas seguía golpeando al servidor antes de devolver el error.
+        var failed = false;
         var tasks = items.Select(async item =>
         {
             await gate.WaitAsync().ConfigureAwait(false);
-            try { return await fetch(item).ConfigureAwait(false); }
+            try
+            {
+                if (Volatile.Read(ref failed)) return null;
+                return await fetch(item).ConfigureAwait(false);
+            }
+            catch
+            {
+                Volatile.Write(ref failed, true);
+                throw;
+            }
             finally { gate.Release(); }
         }).ToList();
         var results = Task.WhenAll(tasks).GetAwaiter().GetResult();

@@ -83,7 +83,12 @@ class WebDavSyncTransport(
             fileUrls.add(fileUrl)
         }
         return parallelMap(fileUrls) { fileUrl ->
-            val bytes = execute(request(fileUrl).get().build()) { it }
+            val bytes = try {
+                execute(request(fileUrl).get().build()) { it }
+            } catch (_: ResponseTooLargeException) {
+                // Un objeto enorme (WebDAV no tiene el límite del servidor propio) no debe bloquear la sync de todos.
+                return@parallelMap null
+            }
             try {
                 SyncEnvelopeCodec.deserialize(bytes)
             } catch (_: SyncFormatException) {

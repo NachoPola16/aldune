@@ -81,9 +81,12 @@ public sealed class WebDavSyncTransport : ISyncTransport
         {
             try
             {
-                using var fileResponse = await _client.GetAsync(fileUri).ConfigureAwait(false);
+                // Cabeceras primero y lectura propia con tope: el tope del HttpClient hacía fallar la pasada entera con un solo objeto
+                // enorme, y en WebDAV (sin el límite del servidor propio) cualquiera con escritura podía bloquear la sync de todos.
+                using var fileResponse = await _client.GetAsync(fileUri, HttpCompletionOption.ResponseHeadersRead).ConfigureAwait(false);
                 EnsureSuccess(fileResponse);
-                var bytes = await fileResponse.Content.ReadAsByteArrayAsync().ConfigureAwait(false);
+                var bytes = await ReadCappedAsync(fileResponse.Content).ConfigureAwait(false);
+                if (bytes is null) return null;
                 return new SyncRemoteObject(SyncEnvelopeCodec.Deserialize(bytes), bytes);
             }
             catch (FormatException)
@@ -97,6 +100,21 @@ public sealed class WebDavSyncTransport : ISyncTransport
                 return null;
             }
         });
+    }
+
+    /// <summary>El contenido entero, o null si pasa del tope de respuesta (se lee por trozos: no hace falta que venga Content-Length).</summary>
+    private static async Task<byte[]?> ReadCappedAsync(HttpContent content)
+    {
+        await using var stream = await content.ReadAsStreamAsync().ConfigureAwait(false);
+        using var buffer = new MemoryStream();
+        var chunk = new byte[81920];
+        int read;
+        while ((read = await stream.ReadAsync(chunk).ConfigureAwait(false)) > 0)
+        {
+            if (buffer.Length + read > HttpSyncTransport.MaxResponseBytes) return null;
+            buffer.Write(chunk, 0, read);
+        }
+        return buffer.ToArray();
     }
 
     public void Write(SyncEnvelope envelope)
