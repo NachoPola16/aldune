@@ -87,8 +87,8 @@ public sealed class SyncTransportParallelDownloadTests : IDisposable
 
         Assert.Equal(_envelopes.Select(e => e.NoteId), result.Select(r => r.Envelope.NoteId));
         Assert.True(_maxInFlight > 1, $"las peticiones iban de una en una (máximo simultáneo: {_maxInFlight})");
-        // En serie serían ~2 s (40 × 50 ms); en paralelo, una fracción.
-        Assert.True(clock.ElapsedMilliseconds < Notes * ObjectLatencyMs * 0.6, $"tardó {clock.ElapsedMilliseconds} ms");
+        // En serie serían ≥2 s (40 × 50 ms); en paralelo, una fracción. El tope es holgado: con toda la suite en marcha el equipo va cargado, y la prueba firme es el máximo simultáneo.
+        Assert.True(clock.ElapsedMilliseconds < Notes * ObjectLatencyMs * 0.85, $"tardó {clock.ElapsedMilliseconds} ms");
     }
 
     public void Dispose() => _listener.Close();

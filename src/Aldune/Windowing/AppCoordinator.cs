@@ -318,10 +318,11 @@ public sealed class AppCoordinator
 
     /// <summary>Tras una sync correcta: ya se puede podar (ver <see cref="TaskPruningAllowed"/>) y se
     /// repintan las ventanas con lo que haya ganado el merge.</summary>
-    private void AfterSuccessfulSync()
+    private void AfterSuccessfulSync(bool silent = false)
     {
         _syncedSinceStart = true;
-        PlaySound(SoundEvent.SyncDone);
+        // La pasada de abrir una nota es de fondo: no suena cada vez que se abre una.
+        if (!silent) PlaySound(SoundEvent.SyncDone);
         PruneCompletedTasksInClosedNotes();
         // Lo que llegó por la sync a una nota vinculada es un cambio pendiente que hay que escribir en el archivo.
         foreach (var link in _repository.GetFileLinks().Where(link => link.SyncEnabled)) RequestLinkedCheck(link.NoteId);
@@ -573,6 +574,7 @@ public sealed class AppCoordinator
         }
 
         var noteWindow = new NoteWindow(note, _repository, this, _settings, protectionPassword);
+        SyncForOpenedNote();
 
         // Si la nota tiene una posición guardada PARA ESA PANTALLA y sigue a la vista, reaparece ahí
         // directamente — sensación de post-it real, no de "otra ventana que se abre desde el dock".
@@ -1530,11 +1532,11 @@ public sealed class AppCoordinator
             // cerrando, no hay a quién avisar.
             try
             {
-                var result = _syncService.Synchronize();
+                var result = RunSyncTracked();
                 if (Application.Current?.Dispatcher is not { } dispatcher) return;
                 if (result.Succeeded)
                 {
-                    dispatcher.BeginInvoke(DispatcherPriority.Background, new Action(AfterSuccessfulSync));
+                    dispatcher.BeginInvoke(DispatcherPriority.Background, new Action(() => AfterSuccessfulSync()));
                 }
                 else
                 {
@@ -1548,15 +1550,71 @@ public sealed class AppCoordinator
         }, null, firstRunIn ?? TimeSpan.FromMinutes(minutes), TimeSpan.FromMinutes(minutes));
     }
 
+    private int _syncRuns;
+    private DateTimeOffset? _lastSyncAttemptAt;
+
+    /// <summary>Hay una pasada de sync en curso (la de cualquier origen). Las ventanas de nota lo enseñan como «Sincronizando…».</summary>
+    public bool SyncInProgress => Volatile.Read(ref _syncRuns) > 0;
+
+    /// <summary>Una pasada empieza o termina. Se avisa en el hilo de la interfaz.</summary>
+    public event Action? SyncProgressChanged;
+
+    private void RaiseSyncProgressChanged()
+    {
+        if (Application.Current?.Dispatcher is { } dispatcher)
+            dispatcher.BeginInvoke(DispatcherPriority.Background, new Action(() => SyncProgressChanged?.Invoke()));
+    }
+
+    /// <summary>Toda pasada pasa por aquí para que se sepa que hay una en curso y desde cuándo.</summary>
+    private SyncResult RunSyncTracked()
+    {
+        Interlocked.Increment(ref _syncRuns);
+        _lastSyncAttemptAt = DateTimeOffset.UtcNow;
+        RaiseSyncProgressChanged();
+        try
+        {
+            return _syncService!.Synchronize();
+        }
+        finally
+        {
+            Interlocked.Decrement(ref _syncRuns);
+            RaiseSyncProgressChanged();
+        }
+    }
+
+    /// <summary>
+    /// Al abrir una nota se trae antes lo escrito en otro equipo (ver <see cref="NoteOpenSync"/>). En segundo plano y sin sonido: no se
+    /// bloquea la edición, y si llega algo y no se ha tocado, las ventanas se repintan al terminar.
+    /// </summary>
+    public void SyncForOpenedNote()
+    {
+        if (_syncService is null || _settings is null) return;
+        bool configured = _settings.SyncEnabled || _settings.SyncProfiles.Any(profile => profile.SyncEnabled);
+        if (!NoteOpenSync.ShouldRun(configured, _lastSyncAttemptAt, DateTimeOffset.UtcNow, SyncInProgress)) return;
+        Task.Run(() =>
+        {
+            try
+            {
+                var result = RunSyncTracked();
+                if (result.Succeeded && Application.Current?.Dispatcher is { } dispatcher)
+                    dispatcher.BeginInvoke(DispatcherPriority.Background, new Action(() => AfterSuccessfulSync(silent: true)));
+            }
+            catch (Exception ex)
+            {
+                DockDiagnostics.Write("sync", "la sync al abrir una nota falló sin controlar: " + ex.GetType().Name + ": " + ex.Message);
+            }
+        });
+    }
+
     /// <summary>Sincroniza y repinta las ventanas abiertas con los datos que haya ganado el merge.</summary>
     public SyncResult Synchronize()
     {
         if (_syncService is null) return new(0, 0, 0, 0, "Sync is not available.");
-        var result = _syncService.Synchronize();
+        var result = RunSyncTracked();
         if (result.Succeeded)
         {
             if (Application.Current.Dispatcher.CheckAccess()) AfterSuccessfulSync();
-            else Application.Current.Dispatcher.BeginInvoke(DispatcherPriority.Background, new Action(AfterSuccessfulSync));
+            else Application.Current.Dispatcher.BeginInvoke(DispatcherPriority.Background, new Action(() => AfterSuccessfulSync()));
         }
         else
         {

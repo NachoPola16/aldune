@@ -100,6 +100,9 @@ public partial class NoteWindow : Window
         _coordinator = coordinator;
         _settings = settings;
         _protectionPassword = protectionPassword;
+        coordinator.SyncProgressChanged += UpdateSyncingText;
+        Closed += (_, _) => coordinator.SyncProgressChanged -= UpdateSyncingText;
+        UpdateSyncingText();
 
         ApplyColor(note.Color);
         if (LinkedNoteDisplay.IsUnavailable(note.Id)) SetFileUnavailable(LinkedNoteDisplay.PathOf(note.Id));
@@ -1943,6 +1946,10 @@ public partial class NoteWindow : Window
 
         UpdatePromptLine(face);
     }
+
+    // «Sincronizando…» mientras corre una pasada: la nota sigue editable (sin red no se podría escribir) y, si llega algo, se repinta al acabar.
+    private void UpdateSyncingText() =>
+        SyncingText.Visibility = _coordinator.SyncInProgress ? Visibility.Visible : Visibility.Collapsed;
 
     private static Brush BrushOf(string hex) => (Brush)new BrushConverter().ConvertFromString(hex)!;
 

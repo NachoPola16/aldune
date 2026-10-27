@@ -614,6 +614,11 @@
             </Button>
         </StackPanel>
 
+        <!-- «Sincronizando…» mientras corre una pasada de sync (ver UpdateSyncingText). Abajo a la izquierda, frente a la señal. -->
+        <TextBlock x:Name="SyncingText" Grid.Row="3" HorizontalAlignment="Left" VerticalAlignment="Bottom"
+                   Margin="14,-8,0,10" FontSize="11" Text="{x:Static res:Strings.SyncInProgressStatus}"
+                   Foreground="{DynamicResource NoteInkBrush}" Opacity="0.7" IsHitTestVisible="False" Visibility="Collapsed" />
+
         <!-- Señal de sincronización (opción de Ajustes → Aspecto). En la fila de abajo, a la derecha,
              para no tapar texto; monoespaciada para que las barras ▂▄▆█ queden alineadas. -->
         <TextBlock x:Name="SyncSignalText" Grid.Row="3" HorizontalAlignment="Right" VerticalAlignment="Bottom"

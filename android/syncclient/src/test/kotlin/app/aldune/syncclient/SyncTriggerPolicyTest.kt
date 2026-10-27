@@ -27,7 +27,7 @@ class SyncTriggerPolicyTest {
 
     @Test fun `sin perfil configurado nunca hace nada`() {
         val none = SyncTriggerPolicy(clock)
-        for (event in listOf(SyncEvent.AppOpened, SyncEvent.Foreground, SyncEvent.LocalChange, SyncEvent.PullToRefresh, SyncEvent.ManualSync, SyncEvent.Periodic, SyncEvent.TimerFired)) {
+        for (event in listOf(SyncEvent.AppOpened, SyncEvent.Foreground, SyncEvent.NoteOpened, SyncEvent.LocalChange, SyncEvent.PullToRefresh, SyncEvent.ManualSync, SyncEvent.Periodic, SyncEvent.TimerFired)) {
             assertEquals(SyncDecision.Nothing, none.onEvent(event), event.toString())
         }
     }
@@ -61,6 +61,17 @@ class SyncTriggerPolicyTest {
         assertEquals(SyncDecision.Nothing, send(SyncEvent.Foreground), "30 s justos todavía no")
         clock.advanceSeconds(1)
         assertEquals(SyncDecision.RunNow, send(SyncEvent.Foreground))
+    }
+
+    @Test fun `abrir una nota sincroniza si nunca se intento`() = assertEquals(SyncDecision.RunNow, send(SyncEvent.NoteOpened))
+
+    @Test fun `abrir una nota sigue la misma regla de 30 s que volver a primer plano`() {
+        assertEquals(SyncDecision.RunNow, send(SyncEvent.AppOpened))
+        send(SyncEvent.SyncFinished(ok))
+        clock.advanceSeconds(30)
+        assertEquals(SyncDecision.Nothing, send(SyncEvent.NoteOpened), "30 s justos todavía no")
+        clock.advanceSeconds(1)
+        assertEquals(SyncDecision.RunNow, send(SyncEvent.NoteOpened))
     }
 
     @Test fun `la ultima pasada intentada cuenta aunque haya fallado`() {

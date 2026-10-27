@@ -107,6 +107,10 @@ Tests: 506/506 pasando (`dotnet test tests/Aldune.Core.Tests --no-restore`).
   nota como **fondo de toda la tarjeta** (como en Windows) por defecto, con interruptor en Ajustes → Aspecto; los aspectos de terminal (Bash, Telecom, Fósforo)
   van en franja por defecto y elegir aspecto reinicia el ajuste, igual que esquinas y señal. (3) Windows: ajuste `NoteColorAsStripe` («color solo como franja»,
   reutiliza la tarjeta Stripe de Bash en los aspectos de cara llena); en Bash/Telecom/Fósforo la casilla queda apagada con aviso. Probado en el emulador de
+  Después, el mismo día: la sync baja las notas de 8 en 8 (antes una a una: con servidor propio o WebDAV la latencia se multiplicaba por el nº de notas),
+  en Windows y Android; y **abrir una nota sincroniza antes** (regla de 30 s, `NoteOpenSync` / `SyncEvent.NoteOpened`) con un «Sincronizando…» mientras
+  corre la pasada, sin bloquear la edición (decisión: sin red no se podría escribir, y los conflictos ya se guardan). Android: el editor recorre una copia en
+  String al estilizar las casillas (borrar mantenido en notas largas). El aviso se probó con una sonda WPF en Windows; en Android no se ha visto (el emulador no tiene perfil de sync).
   Android (lista, interruptor, aspectos, casillas de tareas) y con una sonda WPF en Windows (ventana de nota en Oscuro, Pastel y Medianoche, con y sin
   franja: la franja solo aparece con el ajuste, el fondo es el de la app y el texto se lee). Sin probar con ratón (casillas) ni el dock.
 - **Android, varios perfiles de sync (2026-10-26, rama `android-varios-perfiles`, sin publicar)**: el móvil puede unirse a más de un perfil

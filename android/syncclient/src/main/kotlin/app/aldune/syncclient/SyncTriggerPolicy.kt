@@ -12,6 +12,9 @@ sealed interface SyncEvent {
     /** Volvió a primer plano. */
     data object Foreground : SyncEvent
 
+    /** Se abrió una nota: trae lo que se haya escrito en otro dispositivo antes de editarla. Misma regla que [Foreground]. */
+    data object NoteOpened : SyncEvent
+
     /** Un guardado del editor o un cambio de estado, color u orden. */
     data object LocalChange : SyncEvent
 
@@ -77,7 +80,7 @@ class SyncTriggerPolicy(private val clock: Clock, profileConfigured: Boolean = f
         return when (event) {
             SyncEvent.ManualSync, SyncEvent.PullToRefresh -> manual()
             SyncEvent.AppOpened, SyncEvent.Periodic -> automatic(now)
-            SyncEvent.Foreground -> {
+            SyncEvent.Foreground, SyncEvent.NoteOpened -> {
                 val last = lastAttemptAt
                 // «Hace más de 30 s»: a los 30 s justos todavía no.
                 if (last != null && Duration.between(last, now) <= FOREGROUND_MIN_GAP) SyncDecision.Nothing else automatic(now)

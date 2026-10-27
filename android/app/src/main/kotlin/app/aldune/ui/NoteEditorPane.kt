@@ -90,6 +90,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LifecycleEventEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import app.aldune.syncclient.SyncEvent
 import app.aldune.R
 import app.aldune.core.PasswordProblem
 import app.aldune.syncclient.ProtectionError
@@ -180,6 +181,9 @@ fun NoteEditorPane(key: String, viewModel: NotesViewModel, onBack: () -> Unit, s
         loaded = true
     }
     LaunchedEffect(key) { load() }
+    // Abrir una nota trae antes lo que se haya escrito en otro dispositivo (la política limita a una pasada cada 30 s): si llega algo y no se
+    // ha tocado, `externalEdits` recarga el texto. No se bloquea la edición: sin red no se podría escribir, y los conflictos ya se guardan.
+    LaunchedEffect(key, loaded) { if (loaded && key.isNotEmpty()) viewModel.syncEvent(SyncEvent.NoteOpened) }
     // Una pasada de sync cambió el texto de esta nota mientras estaba abierta (y no se había tocado): se recarga, o la siguiente tecla guardaría
     // el texto viejo encima del recién llegado.
     LaunchedEffect(key) {
@@ -202,6 +206,7 @@ fun NoteEditorPane(key: String, viewModel: NotesViewModel, onBack: () -> Unit, s
     var otherLines by remember(key) { mutableStateOf<List<DiffLine>?>(null) }
     var unlockOther by remember(key) { mutableStateOf(false) }
     val syncController by viewModel.sync.collectAsStateWithLifecycle()
+    val syncing = syncController?.status?.collectAsStateWithLifecycle()?.value?.running == true
     val conflictedIds = syncController?.conflicted?.collectAsStateWithLifecycle()?.value ?: emptySet()
     val hasConflict = key in conflictedIds
     LaunchedEffect(key, loaded, hasConflict) {
@@ -386,6 +391,12 @@ fun NoteEditorPane(key: String, viewModel: NotesViewModel, onBack: () -> Unit, s
                 IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.back)) }
             }
             Spacer(Modifier.weight(1f))
+            if (syncing) {
+                Text(
+                    stringResource(R.string.sync_status_syncing), Modifier.padding(end = 12.dp),
+                    style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
             // Cuántas tareas van hechas: se ve sin recorrer la lista. Solo si la nota tiene tareas.
             val progress = TaskLines.count(state.text.toString())
             if (progress.total > 0 && !protectedNote) {
