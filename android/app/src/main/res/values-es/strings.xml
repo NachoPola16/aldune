@@ -129,6 +129,7 @@
     <string name="sync_parse_invalid">El código de perfil está dañado o es de una versión más nueva. Cópialo de nuevo.</string>
     <string name="sync_parse_folder">Este código es de una carpeta compartida. En el móvil usa servidor o WebDAV.</string>
     <string name="sync_cred_url_empty">Escribe la dirección.</string>
+    <string name="sync_http_public_confirm">Entiendo que este servidor está fuera de mi red local y que el token viaja sin protección</string>
     <string name="sync_cred_url_invalid">La dirección debe empezar por http:// o https://</string>
     <string name="sync_cred_token_empty">Escribe el token.</string>
     <string name="sync_cred_username_empty">Escribe el usuario.</string>

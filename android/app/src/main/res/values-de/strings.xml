@@ -129,6 +129,7 @@
     <string name="sync_parse_invalid">Der Profilcode ist beschädigt oder stammt aus einer neueren Version. Kopiere ihn erneut.</string>
     <string name="sync_parse_folder">Dieser Code gilt für einen freigegebenen Ordner. Auf dem Handy nutze Server oder WebDAV.</string>
     <string name="sync_cred_url_empty">Gib die Adresse ein.</string>
+    <string name="sync_http_public_confirm">Ich verstehe, dass dieser Server außerhalb meines Heimnetzes liegt und das Token ungeschützt übertragen wird</string>
     <string name="sync_cred_url_invalid">Die Adresse muss mit http:// oder https:// beginnen</string>
     <string name="sync_cred_token_empty">Gib das Token ein.</string>
     <string name="sync_cred_username_empty">Gib den Benutzer ein.</string>

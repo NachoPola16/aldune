@@ -129,6 +129,7 @@
     <string name="sync_parse_invalid">The profile code is damaged or from a newer version. Copy it again.</string>
     <string name="sync_parse_folder">This code is for a shared folder. On the phone use a server or WebDAV.</string>
     <string name="sync_cred_url_empty">Enter the address.</string>
+    <string name="sync_http_public_confirm">I understand this server is outside my home network and the token travels unprotected</string>
     <string name="sync_cred_url_invalid">The address must start with http:// or https://</string>
     <string name="sync_cred_token_empty">Enter the token.</string>
     <string name="sync_cred_username_empty">Enter the user.</string>

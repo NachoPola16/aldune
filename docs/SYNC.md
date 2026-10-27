@@ -258,6 +258,16 @@ por lo que basta con mantener un checkout del repositorio y reconstruir la image
 sincronizados permanecen en el volumen Docker y el `.env` debe vivir fuera del checkout para que los
 secretos nunca entren en Git.
 
+**Desde la versión que corre el contenedor como usuario no root** (UID 1654, `app`): un volumen ya existente lo creó root y el
+servidor no podría escribir en él. Antes de reconstruir hay que pasárselo una vez (el nombre del volumen es `aldune-sync-data` salvo
+que uses `ALDUNE_SYNC_VOLUME`):
+
+```bash
+docker run --rm -v aldune-sync-data:/data alpine chown -R 1654:1654 /data
+```
+
+Un volumen nuevo no necesita nada: hereda el dueño de `/data` de la imagen.
+
 Configuración inicial recomendada en un servidor Linux:
 
 ```bash

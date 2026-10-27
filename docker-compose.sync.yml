@@ -8,6 +8,9 @@ services:
     # El proceso no puede ganar privilegios nuevos (setuid y similares) aunque lo comprometan.
     security_opt:
       - no-new-privileges:true
+    # Sin capacidades de Linux: un servidor de blobs no necesita ninguna (corre como usuario no root).
+    cap_drop:
+      - ALL
     environment:
       # Nombres de las variables: BrandIdentity.SyncTokenEnvVar / SyncTokensEnvVar (Aldune.Core).
       ALDUNE_SYNC_TOKEN: ${ALDUNE_SYNC_TOKEN:-}

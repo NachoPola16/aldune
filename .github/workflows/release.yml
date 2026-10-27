@@ -37,7 +37,8 @@ jobs:
         run: dotnet test Aldune.slnx --configuration Release
 
       - name: Install Inno Setup
-        run: choco install innosetup --no-progress -y
+        # Versión fija: Inno Setup genera el instalador que firma SignPath, y "latest" lo cambiaría sin que nadie lo vea.
+        run: choco install innosetup --version=6.7.1 --no-progress -y
 
       - name: Publish portable executable
         shell: pwsh

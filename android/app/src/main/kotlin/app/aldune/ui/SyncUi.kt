@@ -1,6 +1,7 @@
 package app.aldune.ui
 
 import android.text.format.DateUtils
+import android.view.WindowManager
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -8,15 +9,18 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.selection.selectable
+import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
+import androidx.compose.material3.Checkbox
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Text
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -53,6 +57,7 @@ import app.aldune.core.ProfileCodes
 import app.aldune.data.SyncProfile
 import app.aldune.data.SyncTransportKind
 import app.aldune.sync.SyncScope
+import app.aldune.syncclient.isCleartextOutsideLan
 import app.aldune.syncclient.CredentialsCheck
 import app.aldune.syncclient.CredentialsError
 import app.aldune.syncclient.FirstConnectChoice
@@ -231,9 +236,23 @@ private fun ConnectForm(controller: SyncController, additional: Boolean, initial
     var pendingNotes by remember { mutableStateOf(0) }
     var discardRequest by remember { mutableStateOf<ConnectRequest?>(null) }
     var alreadyName by remember { mutableStateOf<String?>(null) }
+    var publicHttpAccepted by remember { mutableStateOf(false) }
+
+    // Mientras el campo del código está a la vista (lleva la clave del perfil): ni capturas ni miniatura en Recientes. Solo en la app de
+    // producción (en la de depuración se hacen capturas), y sin tocar el flag si ya lo puso otra pantalla (notas protegidas).
+    val activity = LocalContext.current as? android.app.Activity
+    val showingCodeField = parsed == null
+    DisposableEffect(showingCodeField) {
+        val window = activity?.window
+        val debuggable = activity != null && activity.applicationInfo.flags and android.content.pm.ApplicationInfo.FLAG_DEBUGGABLE != 0
+        val added = showingCodeField && !debuggable && window != null &&
+            window.attributes.flags and WindowManager.LayoutParams.FLAG_SECURE == 0
+        if (added) window!!.addFlags(WindowManager.LayoutParams.FLAG_SECURE)
+        onDispose { if (added) window!!.clearFlags(WindowManager.LayoutParams.FLAG_SECURE) }
+    }
 
     fun reset() {
-        code = ""; parsed = null; url = ""; token = ""; username = ""; password = ""; errorText = null; failureKind = null; pending = null; alreadyName = null
+        code = ""; parsed = null; url = ""; token = ""; username = ""; password = ""; errorText = null; failureKind = null; pending = null; alreadyName = null; publicHttpAccepted = false
     }
 
     fun connect(request: ConnectRequest, choice: FirstConnectChoice?) {
@@ -316,6 +335,17 @@ private fun ConnectForm(controller: SyncController, additional: Boolean, initial
             }
             if (transport == SyncTransportKind.WEBDAV) Text(stringResource(R.string.sync_webdav_slash_hint), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
             if (url.trim().startsWith("http://", ignoreCase = true)) Text(stringResource(R.string.sync_http_warning), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.error)
+            // http fuera de la red local: el aviso no basta, se pide confirmar (en casa por la LAN se sigue admitiendo sin esto).
+            val needsHttpConfirm = isCleartextOutsideLan(url)
+            if (needsHttpConfirm) {
+                Row(
+                    Modifier.fillMaxWidth().toggleable(value = publicHttpAccepted, role = Role.Checkbox, onValueChange = { publicHttpAccepted = it }),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Checkbox(checked = publicHttpAccepted, onCheckedChange = null)
+                    Text(stringResource(R.string.sync_http_public_confirm), Modifier.padding(start = 12.dp, top = 8.dp, bottom = 8.dp), style = MaterialTheme.typography.bodySmall)
+                }
+            }
             if (transport == SyncTransportKind.SERVER) {
                 OutlinedTextField(
                     value = token, onValueChange = { token = it }, modifier = Modifier.fillMaxWidth(), singleLine = true,
@@ -337,7 +367,7 @@ private fun ConnectForm(controller: SyncController, additional: Boolean, initial
             alreadyName?.let { Text(stringResource(R.string.sync_already_connected, it), color = MaterialTheme.colorScheme.error) }
             failureKind?.let { Text(failureText(it), color = MaterialTheme.colorScheme.error) }
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
-                Button(enabled = !busy, onClick = {
+                Button(enabled = !busy && (!needsHttpConfirm || publicHttpAccepted), onClick = {
                     val credentials = if (transport == SyncTransportKind.SERVER) ProfileCredentials.Token(token) else ProfileCredentials.Basic(username, password)
                     when (val check = validateCredentials(url, credentials)) {
                         is CredentialsCheck.Invalid -> errorText = credentialErrorText(check.errors)

@@ -129,6 +129,7 @@
     <string name="sync_parse_invalid">Le code de profil est endommagé ou provient d\'une version plus récente. Copie-le à nouveau.</string>
     <string name="sync_parse_folder">Ce code est pour un dossier partagé. Sur le téléphone, utilise un serveur ou WebDAV.</string>
     <string name="sync_cred_url_empty">Saisis l\'adresse.</string>
+    <string name="sync_http_public_confirm">Je comprends que ce serveur est hors de mon réseau local et que le jeton circule sans protection</string>
     <string name="sync_cred_url_invalid">L\'adresse doit commencer par http:// ou https://</string>
     <string name="sync_cred_token_empty">Saisis le jeton.</string>
     <string name="sync_cred_username_empty">Saisis l\'utilisateur.</string>

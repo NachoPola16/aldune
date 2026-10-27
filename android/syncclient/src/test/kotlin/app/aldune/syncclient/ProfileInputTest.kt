@@ -130,6 +130,15 @@ class ProfileInputTest {
         assertTrue(hex !in shown && app.aldune.core.SyncKeyFormat.encode(key) !in shown)
     }
 
+    @Test
+    fun `http solo es de riesgo fuera de la red local`() {
+        for (safe in listOf("https://notas.example.com/", "http://192.168.1.73:8100/", "http://10.0.0.5/", "http://172.16.0.1/", "http://172.31.255.1/",
+            "http://localhost:8087/", "http://127.0.0.1/", "http://nas.local/", "http://nas/", "http://169.254.1.1/", "http://[::1]/"))
+            assertTrue(!isCleartextOutsideLan(safe), safe)
+        for (risky in listOf("http://notas.example.com/", "http://8.8.8.8/", "http://172.32.0.1/", "http://192.169.1.1/", "http://localhost.evil.com/"))
+            assertTrue(isCleartextOutsideLan(risky), risky)
+    }
+
     // --- validateCredentials ---
 
     private fun valid(check: CredentialsCheck) = assertIs<CredentialsCheck.Valid>(check)

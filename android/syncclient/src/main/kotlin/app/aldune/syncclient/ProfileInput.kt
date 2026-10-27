@@ -131,6 +131,20 @@ fun validateCredentials(url: String, credentials: ProfileCredentials): Credentia
     return if (errors.isEmpty()) CredentialsCheck.Valid(cleanUrl, cleaned) else CredentialsCheck.Invalid(errors)
 }
 
+/**
+ * `http` hacia algo que no es la red local (ni bucle local, ni `.local`, ni un nombre sin puntos como `nas`): ahí el token viaja en claro por
+ * Internet o por una wifi ajena. Por la LAN de casa (192.168.x, 10.x, 172.16-31.x) se sigue admitiendo sin más que el aviso de siempre.
+ */
+fun isCleartextOutsideLan(url: String): Boolean {
+    val uri = try { java.net.URI(url.trim()) } catch (e: java.net.URISyntaxException) { return false }
+    if (!uri.scheme.equals("http", ignoreCase = true)) return false
+    val host = uri.host?.lowercase(java.util.Locale.ROOT)?.removeSurrounding("[", "]") ?: return false
+    if (host == "localhost" || host == "::1" || host.endsWith(".local") || !host.contains('.') && !host.contains(':')) return false
+    val octets = host.split('.').mapNotNull { it.toIntOrNull() }.takeIf { it.size == 4 && host.split('.').size == 4 } ?: return true
+    val (a, b) = octets
+    return !(a == 10 || a == 127 || (a == 192 && b == 168) || (a == 172 && b in 16..31) || (a == 169 && b == 254))
+}
+
 private fun isAbsoluteHttpUrl(value: String): Boolean {
     val uri = try {
         URI(value)
