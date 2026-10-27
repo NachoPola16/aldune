@@ -64,9 +64,9 @@ class ProtectionServiceTest {
         val writes = store.writeCount
         assertEquals(ProtectionError.InvalidPassword(PasswordProblem.Empty), err(service.protect(ID1, "", "")))
         assertEquals(ProtectionError.InvalidPassword(PasswordProblem.TooShort), err(service.protect(ID1, "abc", "abc")))
-        assertEquals(ProtectionError.InvalidPassword(PasswordProblem.Mismatch), err(service.protect(ID1, "abcd", "abce")))
-        // Cuatro espacios pasan PasswordRules pero core no los acepta como contraseña: se trata como vacía.
-        assertEquals(ProtectionError.InvalidPassword(PasswordProblem.Empty), err(service.protect(ID1, "    ", "    ")))
+        assertEquals(ProtectionError.InvalidPassword(PasswordProblem.Mismatch), err(service.protect(ID1, "abcdefgh", "abcdefgi")))
+        // Ocho espacios pasan PasswordRules pero core no los acepta como contraseña: se trata como vacía.
+        assertEquals(ProtectionError.InvalidPassword(PasswordProblem.Empty), err(service.protect(ID1, "        ", "        ")))
         assertEquals(writes, store.writeCount)
         assertFalse(store.get(ID1)!!.isProtected)
     }

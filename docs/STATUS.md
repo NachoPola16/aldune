@@ -130,6 +130,13 @@ Tests: 506/506 pasando (`dotnet test tests/Aldune.Core.Tests --no-restore`).
   (`aldune-sync-familia`, puerto 8100, `aldune-familia.polacabezon.com`): un perfil con otra clave no puede compartir almacén con el personal
   porque Aldune se niega a escribir si no puede leer ninguna nota (`SyncService`, «sync code can't read the notes in the store»). Ver `SYNC.md` apartado D
   y `servidor-config/docs/actualizar-contenedores.md`.
+- **Auditoría de seguridad de la sync (2026-10-27, en `main`, sin release):** hecho: WebDAV en Android descarta un `href` que cambie de host (antes enviaba
+  `Authorization` fuera); un borrado remoto no alcanza a una nota que aquí está fuera del alcance por etiqueta (Core y Android); `ApplySyncTombstone` en una
+  transacción; no se aplica lo remoto a una nota que cambió durante la pasada; tope de 8 MB por respuesta en los transportes (Core y Android); el servidor
+  rechaza el token de ejemplo de `.env.example`; la contraseña de una nota protegida en Android pide 8 (como Windows; desbloquear sigue aceptando desde 4).
+  **Abierto:** M2 (un borrado sin firma manda la nota a la papelera y la purga a los 30 días la borra: haría falta marcar esas notas y no purgarlas; al revocar un
+  código conviene rotar también el token), descartar sobres auténticos fechados a más de un día, `AppSettings` compartido entre el hilo de sync y la UI, `USER` no
+  root en el Dockerfile del servidor (hay que mirar permisos del volumen en el CT 103), límite de intentos de token, lockfiles y `dotnet list package --vulnerable`.
 - **Versiones (2026-10-27):** Windows 1.7.17 y Android 0.1.0 (la primera estable, `versionCode` 12, sin `-rc`; se publica con `--latest=false`, ver `RELEASING.md`).
 - **QR de emparejamiento** (2026-10-27, spec `superpowers/specs/2026-10-27-qr-emparejamiento-design.md`): Windows muestra el código de
   perfil como QR (`ShareQr` en Core con QRCoder 1.8.1; `ShareQrWindow` con aviso y cierre a los 120 s) y Android lo escanea

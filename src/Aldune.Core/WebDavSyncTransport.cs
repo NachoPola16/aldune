@@ -29,12 +29,18 @@ public sealed class WebDavSyncTransport : ISyncTransport
             throw new ArgumentException("A WebDAV password is required.", nameof(password));
 
         _objectsUri = new Uri(baseUri, "objects/");
-        _client = new HttpClient { Timeout = timeout ?? HttpSyncTransport.DefaultTimeout };
+        _client = new HttpClient
+        {
+            Timeout = timeout ?? HttpSyncTransport.DefaultTimeout,
+            MaxResponseContentBufferSize = HttpSyncTransport.MaxResponseBytes
+        };
         var credentials = Convert.ToBase64String(Encoding.UTF8.GetBytes($"{username}:{password}"));
         _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Basic", credentials);
     }
 
     internal TimeSpan Timeout => _client.Timeout;
+
+    internal long MaxResponseBufferSize => _client.MaxResponseContentBufferSize;
 
     public IReadOnlyList<SyncRemoteObject> ReadAll()
     {

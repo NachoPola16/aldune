@@ -194,3 +194,20 @@ public sealed class SyncServerApiTests : IDisposable
         if (Directory.Exists(_dataDir)) Directory.Delete(_dataDir, recursive: true);
     }
 }
+
+[Collection(nameof(SyncServerCollection))]
+public sealed class SyncServerExampleTokenTests
+{
+    [Fact]
+    public void TheExampleTokenFromEnvExample_IsRefusedAtStartup()
+    {
+        Environment.SetEnvironmentVariable(BrandIdentity.SyncDataDirEnvVar, Path.Combine(Path.GetTempPath(), $"aldune-server-{Guid.NewGuid():N}"));
+        Environment.SetEnvironmentVariable(BrandIdentity.SyncTokensEnvVar, null);
+        Environment.SetEnvironmentVariable(BrandIdentity.SyncTokenEnvVar, "replace-with-a-long-random-token");
+        using var factory = new WebApplicationFactory<Program>();
+
+        var error = Assert.ThrowsAny<Exception>(() => factory.CreateClient());
+
+        Assert.Contains("placeholder", error.ToString());
+    }
+}

@@ -202,10 +202,10 @@
     <string name="password_title_unlock">Enter the password</string>
     <string name="password_label">Password</string>
     <string name="password_repeat">Repeat the password</string>
-    <string name="password_protect_hint">At least 4 characters. If you forget it, the note can\'t be recovered.</string>
+    <string name="password_protect_hint">At least 8 characters. If you forget it, the note can\'t be recovered.</string>
     <string name="password_wrong">Wrong password</string>
     <string name="password_empty">Write a password</string>
-    <string name="password_too_short">At least 4 characters</string>
+    <string name="password_too_short">At least 8 characters</string>
     <string name="password_mismatch">The passwords don\'t match</string>
     <string name="password_unreadable">This note\'s protected content is damaged and can\'t be opened.</string>
     <string name="password_unsupported">This note was protected by a newer version of Aldune. Update the app to open it.</string>

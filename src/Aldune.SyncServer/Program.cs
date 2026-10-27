@@ -17,6 +17,13 @@ if (tokens.Count == 0)
     throw new InvalidOperationException(
         $"{BrandIdentity.SyncTokenEnvVar} or {BrandIdentity.SyncTokensEnvVar} must be configured.");
 
+// El token de ejemplo de .env.example es público: quien copia el fichero sin editarlo tendría un servidor abierto.
+// Es un valor literal que nadie usa a propósito, así que aquí sí se rechaza (a diferencia de un token corto).
+const string ExampleToken = "replace-with-a-long-random-token";
+if (tokens.Contains(ExampleToken))
+    throw new InvalidOperationException(
+        $"{BrandIdentity.SyncTokenEnvVar} still has the placeholder from .env.example. Set a long random value, for example the output of 'openssl rand -base64 32'.");
+
 // Aviso y no rechazo: un servidor que ya funciona con un token corto no debe dejar de arrancar al
 // actualizarse. El contenido de las notas va cifrado igual, pero un token corto se puede adivinar.
 const int RecommendedTokenLength = 24;

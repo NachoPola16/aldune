@@ -202,10 +202,10 @@
     <string name="password_title_unlock">Passwort eingeben</string>
     <string name="password_label">Passwort</string>
     <string name="password_repeat">Passwort wiederholen</string>
-    <string name="password_protect_hint">Mindestens 4 Zeichen. Wenn du es vergisst, lässt sich die Notiz nicht wiederherstellen.</string>
+    <string name="password_protect_hint">Mindestens 8 Zeichen. Wenn du es vergisst, lässt sich die Notiz nicht wiederherstellen.</string>
     <string name="password_wrong">Falsches Passwort</string>
     <string name="password_empty">Gib ein Passwort ein</string>
-    <string name="password_too_short">Mindestens 4 Zeichen</string>
+    <string name="password_too_short">Mindestens 8 Zeichen</string>
     <string name="password_mismatch">Die Passwörter stimmen nicht überein</string>
     <string name="password_unreadable">Der geschützte Inhalt dieser Notiz ist beschädigt und lässt sich nicht öffnen.</string>
     <string name="password_unsupported">Diese Notiz wurde mit einer neueren Version von Aldune geschützt. Aktualisiere die App, um sie zu öffnen.</string>

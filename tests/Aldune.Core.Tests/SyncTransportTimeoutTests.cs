@@ -48,6 +48,14 @@ public sealed class SyncTransportTimeoutTests : IDisposable
     }
 
     [Fact]
+    public void Transports_CapHowMuchTheyBufferFromOneResponse()
+    {
+        Assert.Equal(HttpSyncTransport.MaxResponseBytes, new HttpSyncTransport(_url, "token").MaxResponseBufferSize);
+        Assert.Equal(HttpSyncTransport.MaxResponseBytes, new WebDavSyncTransport(_url, "user", "password").MaxResponseBufferSize);
+        Assert.True(HttpSyncTransport.MaxResponseBytes < int.MaxValue);
+    }
+
+    [Fact]
     public void HttpTransport_GivesUpAfterTheConfiguredTimeout()
     {
         var transport = new HttpSyncTransport(_url, "token", ShortTimeout);

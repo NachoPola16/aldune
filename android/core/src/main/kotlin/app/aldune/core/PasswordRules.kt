@@ -8,7 +8,8 @@ enum class PasswordProblem { None, Empty, TooShort, Mismatch }
  * aquí dejaría fuera una nota protegida con reglas anteriores.
  */
 object PasswordRules {
-    const val MIN_LENGTH = 4
+    // Igual que Core (8): ProtectedNotes aún acepta desde 4 para no dejar fuera una nota protegida con reglas anteriores.
+    const val MIN_LENGTH = 8
 
     /** @param confirmation la repetición, o `null` si se está desbloqueando. */
     fun check(password: String, confirmation: String?): PasswordProblem {

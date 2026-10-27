@@ -739,7 +739,10 @@ public sealed class NotesRepository
     public void ApplySyncTombstone(SyncTombstone tombstone)
     {
         using var connection = _database.OpenConnection();
+        // Una sola transacción: un cierre a medias no puede dejar la nota medio borrada.
+        using var transaction = connection.BeginTransaction();
         using var command = connection.CreateCommand();
+        command.Transaction = transaction;
         command.CommandText = """
             DELETE FROM NoteFileLink WHERE NoteId = $id;
             DELETE FROM NoteUnpinned WHERE NoteId = $id;
@@ -756,6 +759,7 @@ public sealed class NotesRepository
         command.Parameters.AddWithValue("$deletedAt", tombstone.DeletedAt.ToString("O"));
         command.Parameters.AddWithValue("$deviceId", tombstone.DeviceId);
         command.ExecuteNonQuery();
+        transaction.Commit();
     }
 
     public ProtectedNoteContent Protect(Guid id, string password)

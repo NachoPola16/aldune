@@ -144,7 +144,7 @@ class WebDavSyncTransport(
     private fun <T> execute(request: Request, read: (String) -> T): T =
         client.newCall(request).execute().use { response ->
             ensureSuccess(response)
-            read(response.body?.string().orEmpty())
+            read(response.readLimitedString())
         }
 
     private fun ensureSuccess(response: Response) {

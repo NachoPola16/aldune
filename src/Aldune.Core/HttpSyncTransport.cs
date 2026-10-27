@@ -23,11 +23,17 @@ public sealed class HttpSyncTransport : ISyncTransport
             throw new ArgumentException("The sync server URL must be an absolute HTTP(S) URL.", nameof(serverUrl));
         if (string.IsNullOrWhiteSpace(token)) throw new ArgumentException("A sync server token is required.", nameof(token));
 
-        _client = new HttpClient { Timeout = timeout ?? DefaultTimeout };
+        _client = new HttpClient { Timeout = timeout ?? DefaultTimeout, MaxResponseContentBufferSize = MaxResponseBytes };
         _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
     }
 
+    /// <summary>Tope de lo que se lee de una respuesta: el servidor propio ya rechaza objetos de más de 5 MB, y un
+    /// servidor ajeno (WebDAV) no puede agotar la memoria con ocho descargas a la vez.</summary>
+    internal const long MaxResponseBytes = 8 * 1024 * 1024;
+
     internal TimeSpan Timeout => _client.Timeout;
+
+    internal long MaxResponseBufferSize => _client.MaxResponseContentBufferSize;
 
     public IReadOnlyList<SyncRemoteObject> ReadAll()
     {

@@ -155,6 +155,13 @@ class WebDavSyncTransportTest {
     }
 
     @Test
+    fun `una respuesta mas grande que el tope se rechaza en vez de cargarla entera`() {
+        serve("x".repeat(9 * 1024 * 1024))
+        val error = assertThrows(IOException::class.java) { transport().readAll() }
+        assertTrue(error.message!!.contains("larger than"), error.message)
+    }
+
+    @Test
     fun `respuestas con otros prefijos o sin prefijo`() {
         val a = envelope("x", 10)
         val file = "/dav/objects/$idN.json"

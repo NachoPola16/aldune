@@ -1,6 +1,7 @@
 package app.aldune.core
 
 import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 
 class PasswordRulesTest {
@@ -19,15 +20,15 @@ class PasswordRulesTest {
 
     @Test
     fun `al elegir una nueva exige el minimo`() {
-        assertEquals(PasswordProblem.TooShort, PasswordRules.check("abc", "abc"))
+        assertEquals(PasswordProblem.TooShort, PasswordRules.check("abcdefg", "abcdefg"))
         assertEquals(PasswordProblem.None, PasswordRules.check("a".repeat(PasswordRules.MIN_LENGTH), "a".repeat(PasswordRules.MIN_LENGTH)))
     }
 
     @Test
     fun `al elegir una nueva exige que coincidan`() {
-        assertEquals(PasswordProblem.Mismatch, PasswordRules.check("abcd", "abce"))
-        assertEquals(PasswordProblem.Mismatch, PasswordRules.check("abcd", ""))
-        assertEquals(PasswordProblem.None, PasswordRules.check("abcd", "abcd"))
+        assertEquals(PasswordProblem.Mismatch, PasswordRules.check("abcdefgh", "abcdefgi"))
+        assertEquals(PasswordProblem.Mismatch, PasswordRules.check("abcdefgh", ""))
+        assertEquals(PasswordProblem.None, PasswordRules.check("abcdefgh", "abcdefgh"))
     }
 
     @Test
@@ -36,7 +37,8 @@ class PasswordRulesTest {
     }
 
     @Test
-    fun `el minimo coincide con el de ProtectedNotes`() {
-        assertEquals(ProtectedNotes.MIN_PASSWORD_LENGTH, PasswordRules.MIN_LENGTH)
+    fun `el minimo al elegir es el de Core y no baja del suelo de ProtectedNotes`() {
+        assertEquals(8, PasswordRules.MIN_LENGTH)
+        assertTrue(PasswordRules.MIN_LENGTH >= ProtectedNotes.MIN_PASSWORD_LENGTH)
     }
 }
