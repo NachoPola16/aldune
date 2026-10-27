@@ -329,8 +329,11 @@ fun NoteEditorPane(key: String, viewModel: NotesViewModel, onBack: () -> Unit, s
                 val spans = HiddenTasks.hiddenSpans(asCharSequence().toString(), completed, System.currentTimeMillis(), hideDelayMs)
                 for (span in spans.asReversed()) delete(span.start, span.end)
             }
-            for (i in 0 until length) {
-                val c = asCharSequence()[i]
+            // Se recorre una copia en String, no el buffer del campo: indexar `asCharSequence()` carácter a carácter es lo que más pesaba en una
+            // nota larga con una tecla repetida (borrar mantenido), porque esto corre entero en cada cambio de texto.
+            val shown = asCharSequence().toString()
+            for (i in shown.indices) {
+                val c = shown[i]
                 if (c == TaskLines.UNCHECKED || c == TaskLines.CHECKED || c == TaskLines.CHECKED_ALTERNATE) addStyle(checkboxSpan, i, i + 1)
             }
         }

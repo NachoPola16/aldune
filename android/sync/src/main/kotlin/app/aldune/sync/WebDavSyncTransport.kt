@@ -70,7 +70,7 @@ class WebDavSyncTransport(
             throw IOException("The WebDAV server answered an invalid XML listing.", e)
         }
 
-        val result = ArrayList<SyncEnvelope>()
+        val fileUrls = ArrayList<okhttp3.HttpUrl>()
         for (resource in document.getElementsByTagNameNS(DAV, "response").elements()) {
             val href = resource.child("href")?.textContent?.trim()
             if (href.isNullOrEmpty() || resource.hasDescendant("collection")) continue
@@ -80,18 +80,23 @@ class WebDavSyncTransport(
             val fileUrl = resolveHref(href) ?: continue
             if (!fileUrl.pathSegments.last().endsWith(".json", ignoreCase = true)) continue
 
+            fileUrls.add(fileUrl)
+        }
+        return parallelMap(fileUrls) { fileUrl ->
             val bytes = execute(request(fileUrl).get().build()) { it }
             try {
-                result.add(SyncEnvelopeCodec.deserialize(bytes))
+                SyncEnvelopeCodec.deserialize(bytes)
             } catch (_: SyncFormatException) {
                 // Un archivo incompleto o de otra versión no debe impedir el resto de la sincronización.
+                null
             } catch (_: IllegalArgumentException) {
                 // Igual que arriba: JSON dañado o con campos que no son lo que dicen (un guid roto, un número que no lo es).
+                null
             } catch (_: kotlinx.serialization.SerializationException) {
                 // Una escritura interrumpida no invalida todo el almacén.
+                null
             }
         }
-        return result
     }
 
     override fun write(envelope: SyncEnvelope) {

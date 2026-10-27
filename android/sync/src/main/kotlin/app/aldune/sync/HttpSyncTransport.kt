@@ -57,7 +57,7 @@ class HttpSyncTransport(
             }
             parsed as? JsonArray ?: throw IOException("The sync server answered with something that is not a list.")
         }
-        return descriptors.map { descriptor ->
+        return parallelMap(descriptors) { descriptor ->
             val id = ((descriptor as? JsonObject)?.entries?.firstOrNull { it.key.equals("noteId", ignoreCase = true) }?.value as? JsonPrimitive)
                 ?.content?.let { runCatching { UUID.fromString(it) }.getOrNull() }
                 ?: throw IOException("The sync server listed an object without a valid noteId.")
