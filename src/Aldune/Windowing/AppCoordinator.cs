@@ -1589,7 +1589,8 @@ public sealed class AppCoordinator
     public void SyncForOpenedNote()
     {
         if (_syncService is null || _settings is null) return;
-        bool configured = _settings.SyncEnabled || _settings.SyncProfiles.Any(profile => profile.SyncEnabled);
+        // Solo con algún perfil activado Y automático: quien eligió sincronizar a mano no quiere que cada apertura de nota llame al servidor.
+        bool configured = _settings.SyncProfiles.Any(profile => profile is { SyncEnabled: true, SyncAutomatically: true });
         if (!NoteOpenSync.ShouldRun(configured, _lastSyncAttemptAt, DateTimeOffset.UtcNow, SyncInProgress)) return;
         Task.Run(() =>
         {
