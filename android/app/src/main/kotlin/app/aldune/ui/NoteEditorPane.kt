@@ -53,6 +53,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.withFrameNanos
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -521,6 +522,9 @@ fun NoteEditorPane(key: String, viewModel: NotesViewModel, onBack: () -> Unit, s
         // La posición (en el texto real) de la casilla bajo [position], o null si no cae sobre ninguna.
         fun checkboxAt(position: Offset): Int? =
             toggleCheckboxAtTap(shownText(), layout?.invoke(), position, slack)?.let { HiddenTasks.toRaw(it, hiddenSpans) }
+        // `pointerInput(key)` conserva su primera lambda mientras `key` no cambie: sin esto leería los `hiddenSpans` de la primera composición,
+        // y al ocultarse una tarea hecha el texto que se ve ya no coincidiría con el diseño (tocar mal una casilla, o un índice fuera de rango).
+        val currentCheckboxAt = rememberUpdatedState<(Offset) -> Int?> { checkboxAt(it) }
         // Con tareas, se deja sitio a la derecha para el asa de arrastre.
         val hasTasks = TaskLines.count(state.text.toString()).total > 0 && !protectedNote
         Box(Modifier.weight(1f).fillMaxWidth()) {
@@ -551,7 +555,7 @@ fun NoteEditorPane(key: String, viewModel: NotesViewModel, onBack: () -> Unit, s
                 .pointerInput(key) {
                     awaitEachGesture {
                         val down = awaitFirstDown(requireUnconsumed = false, pass = PointerEventPass.Initial)
-                        val onCheckbox = checkboxAt(down.position) != null
+                        val onCheckbox = currentCheckboxAt.value(down.position) != null
                         if (onCheckbox) down.consume()
                         val up = waitForUpOrCancellation(PointerEventPass.Initial) ?: return@awaitEachGesture
                         if ((up.position - down.position).getDistance() > touchSlop) return@awaitEachGesture
