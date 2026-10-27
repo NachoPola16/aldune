@@ -35,6 +35,7 @@ if (tokens.Any(token => token.Length < RecommendedTokenLength))
 var objectPath = Path.Combine(dataPath, "objects");
 var putGate = new SemaphoreSlim(1, 1);
 Directory.CreateDirectory(objectPath);
+Aldune.SyncServer.DataDirectoryCheck.EnsureWritable(objectPath);
 
 app.Use(async (context, next) =>
 {
