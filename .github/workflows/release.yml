@@ -69,6 +69,15 @@ jobs:
           wait-for-completion: true
           output-artifact-directory: publish/portable
 
+      # Si la firma está activa, lo que se va a empaquetar tiene que llevar una firma válida: así un fallo silencioso de
+      # SignPath no acaba publicado como si estuviera firmado.
+      - name: Verify executable signature
+        if: env.SIGNING_ENABLED == 'true'
+        shell: pwsh
+        run: |
+          $sig = Get-AuthenticodeSignature publish/portable/aldune.exe
+          if ($sig.Status -ne 'Valid') { throw "aldune.exe no lleva una firma válida: $($sig.Status)" }
+
       # --- Instalador y portable, ya con el ejecutable firmado si procede --------------------------
       - name: Build installer and portable package
         shell: pwsh
@@ -106,6 +115,23 @@ jobs:
           wait-for-completion: true
           output-artifact-directory: dist
 
+      - name: Verify installer signature
+        if: env.SIGNING_ENABLED == 'true'
+        shell: pwsh
+        run: |
+          foreach ($f in Get-ChildItem dist/Aldune-Setup-*.exe) {
+            $sig = Get-AuthenticodeSignature $f.FullName
+            if ($sig.Status -ne 'Valid') { throw "$($f.Name) no lleva una firma válida: $($sig.Status)" }
+          }
+
+      # Quien descarga sin firma (o quiere comprobar lo que le llegó) tiene así el SHA-256 de cada fichero.
+      - name: Generate checksums
+        shell: pwsh
+        run: |
+          Get-ChildItem -LiteralPath dist -File -Include *.exe, *.zip -Recurse |
+            ForEach-Object { '{0}  {1}' -f (Get-FileHash $_.FullName -Algorithm SHA256).Hash.ToLower(), $_.Name } |
+            Set-Content -Path dist/SHA256SUMS.txt -Encoding ascii
+
       # --- Publicación -----------------------------------------------------------------------------
       # Un tag con guion (v0.99.0-rc1) se publica como pre-release: GitHub no lo ofrece como "latest"
       # y el aviso de actualizaciones de la app (ReleaseUpdateChecker) lo ignora.
@@ -114,7 +140,7 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          $assets = Get-ChildItem -LiteralPath dist -File -Include *.exe, *.zip -Recurse | ForEach-Object { $_.FullName }
+          $assets = Get-ChildItem -LiteralPath dist -File -Include *.exe, *.zip, SHA256SUMS.txt -Recurse | ForEach-Object { $_.FullName }
           $flags = @()
           if ($env:GITHUB_REF_NAME -like '*-*') { $flags += '--prerelease' }
           gh release create $env:GITHUB_REF_NAME @assets --title "Aldune $env:GITHUB_REF_NAME" --generate-notes @flags

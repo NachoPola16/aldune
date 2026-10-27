@@ -22,9 +22,10 @@ if (-not $SkipPublish) {
 
     # El publish arrastra tambien el .pdb de las dependencias (Aldune.Core.pdb), que a quien descarga
     # el portable o el instalador no le sirve de nada: los dos reparten solo aldune.exe.
-    Remove-Item -Path (Join-Path $portableDir "*.pdb") -Force -ErrorAction SilentlyContinue
-
+    # Se comprueba antes del Remove-Item: si no, su resultado enmascararia el fallo de dotnet publish.
     if ($LASTEXITCODE -ne 0) { throw "dotnet publish terminó con código $LASTEXITCODE." }
+
+    Remove-Item -Path (Join-Path $portableDir "*.pdb") -Force -ErrorAction SilentlyContinue
 }
 
 $iscc = Get-Command ISCC.exe -ErrorAction SilentlyContinue
