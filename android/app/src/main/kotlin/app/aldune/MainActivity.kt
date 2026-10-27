@@ -92,7 +92,7 @@ class MainActivity : ComponentActivity() {
                 enableEdgeToEdge(statusBarStyle = bars, navigationBarStyle = bars)
                 onDispose {}
             }
-            AldunaTheme(settings.appearance, settings.aspectColors, NoteLook(settings.uniformNoteColor, settings.cornersSquare, settings.syncSignalVisible)) {
+            AldunaTheme(settings.appearance, settings.aspectColors, NoteLook(settings.uniformNoteColor, settings.cornersSquare, settings.syncSignalVisible, settings.colorFill)) {
                 NotesApp(viewModel)
             }
         }

@@ -52,6 +52,9 @@ fun NoteLookSection(settings: AppSettings, onChange: ((AppSettings) -> AppSettin
             )
         }
     }
+    SwitchRow(stringResource(R.string.fill_note_color), stringResource(R.string.fill_note_color_hint), settings.colorFill) { on ->
+        onChange { it.copy(fillNoteColor = on) }
+    }
     SwitchRow(stringResource(R.string.square_corners), stringResource(R.string.square_corners_hint), settings.cornersSquare) { on ->
         onChange { it.copy(squareCorners = on) }
     }

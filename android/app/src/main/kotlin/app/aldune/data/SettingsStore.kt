@@ -37,6 +37,8 @@ data class AppSettings(
     val exactReminders: Boolean = false,
     /** «Mismo color en todas las notas»: `#RRGGBB` o `null` (apagado). Solo cambia cómo se ven; cada nota conserva el suyo. */
     val uniformNoteColor: String? = null,
+    /** Color de la nota como fondo de toda la tarjeta (como en Windows) o solo como tira lateral; `null` = fondo completo. */
+    val fillNoteColor: Boolean? = null,
     /** Esquinas rectas; `null` = lo que decida el aspecto (`AspectSkin`). Se vuelve a `null` al cambiar de aspecto, como en Windows. */
     val squareCorners: Boolean? = null,
     /** Señal de sincronización en cada nota; `null` = lo que decida el aspecto. */
@@ -65,6 +67,7 @@ data class AppSettings(
     val simplifiedMode: Boolean = false,
 ) {
     val quickList: QuickList? get() = quickListId?.let { QuickList(it, quickListTitle) }
+    val colorFill: Boolean get() = fillNoteColor ?: true
     val cornersSquare: Boolean get() = squareCorners ?: AspectSkin.squareCorners(appearance)
     val syncSignalVisible: Boolean get() = showSyncSignal ?: AspectSkin.syncSignal(appearance)
 }
@@ -106,6 +109,7 @@ class SettingsStore(context: Context) {
             widgetPreview = prefs.getBoolean(WIDGET_PREVIEW, d.widgetPreview),
             exactReminders = prefs.getBoolean(EXACT_REMINDERS, d.exactReminders),
             uniformNoteColor = prefs.getString(UNIFORM_NOTE_COLOR, null)?.takeIf { NoteDisplayColor.isActive(it) },
+            fillNoteColor = nullableBoolean(FILL_NOTE_COLOR),
             squareCorners = nullableBoolean(SQUARE_CORNERS),
             showSyncSignal = nullableBoolean(SHOW_SYNC_SIGNAL),
             listOrder = prefs.getInt(LIST_ORDER, d.listOrder).takeIf { it in 0..3 } ?: d.listOrder,
@@ -138,6 +142,7 @@ class SettingsStore(context: Context) {
             .putBoolean(WIDGET_PREVIEW, settings.widgetPreview)
             .putBoolean(EXACT_REMINDERS, settings.exactReminders)
             .putOrRemove(UNIFORM_NOTE_COLOR, settings.uniformNoteColor)
+            .putOrRemove(FILL_NOTE_COLOR, settings.fillNoteColor)
             .putOrRemove(SQUARE_CORNERS, settings.squareCorners)
             .putOrRemove(SHOW_SYNC_SIGNAL, settings.showSyncSignal)
             .putInt(LIST_ORDER, settings.listOrder)
@@ -176,6 +181,7 @@ class SettingsStore(context: Context) {
         const val WIDGET_PREVIEW = "widgetPreview"
         const val EXACT_REMINDERS = "exactReminders"
         const val UNIFORM_NOTE_COLOR = "uniformNoteColor"
+        const val FILL_NOTE_COLOR = "fillNoteColor"
         const val SQUARE_CORNERS = "squareCorners"
         const val SHOW_SYNC_SIGNAL = "showSyncSignal"
         const val LIST_ORDER = "listOrder"

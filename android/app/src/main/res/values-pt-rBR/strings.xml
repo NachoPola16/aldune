@@ -252,6 +252,8 @@
     <string name="uniform_color">Mesma cor em todas as notas</string>
     <string name="uniform_color_hint">Só muda como aparecem; cada nota mantém a sua cor.</string>
     <string name="color_uniform_notice">“Mesma cor em todas as notas” está ativado: você pode escolher uma cor, mas ela só aparece depois de desativá-lo.</string>
+    <string name="fill_note_color">Cor da nota como fundo</string>
+    <string name="fill_note_color_hint">O cartão inteiro assume a cor da nota, como no Windows. Desligado: só uma faixa à esquerda.</string>
     <string name="square_corners">Cantos retos</string>
     <string name="square_corners_hint">Notas, listas, diálogos e widget sem cantos arredondados.</string>
     <string name="sync_signal">Sinal de sincronização em cada nota</string>

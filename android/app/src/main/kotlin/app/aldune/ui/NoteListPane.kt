@@ -1,5 +1,6 @@
 package app.aldune.ui
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
@@ -444,23 +445,34 @@ private fun SwipeableRow(
 private fun NoteRow(item: NoteListItem, selected: Boolean, conflicted: Boolean, reminder: java.time.Instant?, signal: NoteSyncSignal.State, onOpen: () -> Unit) {
     val look = LocalNoteLook.current
     // «Mismo color en todas las notas»: solo cambia lo que se ve, la nota conserva el suyo.
-    val face = noteFace(NoteDisplayColor.resolve(item.color, look.uniformColor))
+    val hex = NoteDisplayColor.resolve(item.color, look.uniformColor)
+    val face = noteFace(hex)
+    // Con el color de fondo la tinta sale del contraste con ese color (la misma regla que en Windows); la selección se marca con un borde.
+    val fill = look.fillColor
+    val ink = if (fill) noteInk(hex) else MaterialTheme.colorScheme.onSurface
+    val muted = if (fill) ink.copy(alpha = 0.75f) else MaterialTheme.colorScheme.onSurfaceVariant
     Card(
         onClick = onOpen,
         shape = look.cardShape,
         colors = CardDefaults.cardColors(
-            containerColor = if (selected) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceContainerHigh,
+            containerColor = when {
+                fill -> face
+                selected -> MaterialTheme.colorScheme.primaryContainer
+                else -> MaterialTheme.colorScheme.surfaceContainerHigh
+            },
+            contentColor = ink,
         ),
+        border = if (fill && selected) BorderStroke(3.dp, MaterialTheme.colorScheme.primary) else null,
     ) {
         Row(Modifier.fillMaxWidth().height(androidx.compose.foundation.layout.IntrinsicSize.Min)) {
             // La tira de color de la nota: es lo que reconoce una nota de un vistazo.
-            Box(Modifier.width(8.dp).fillMaxHeight().background(face))
+            if (!fill) Box(Modifier.width(8.dp).fillMaxHeight().background(face))
             Column(Modifier.weight(1f).padding(horizontal = 14.dp, vertical = 10.dp)) {
                 Text(item.title, style = MaterialTheme.typography.titleMedium, maxLines = 1, overflow = TextOverflow.Ellipsis)
                 if (item.preview.isNotEmpty()) {
                     Text(
                         item.preview, style = MaterialTheme.typography.bodyMedium, maxLines = 1, overflow = TextOverflow.Ellipsis,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        color = muted,
                     )
                 }
                 if (signal != NoteSyncSignal.State.HIDDEN) {
@@ -472,7 +484,7 @@ private fun NoteRow(item: NoteListItem, selected: Boolean, conflicted: Boolean, 
                 }
                 if (reminder != null) {
                     val label = ReminderLabel.of(reminder, java.time.Instant.now(), java.time.ZoneId.systemDefault())
-                    val tint = if (label == ReminderLabel.Overdue) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary
+                    val tint = if (label == ReminderLabel.Overdue && !fill) MaterialTheme.colorScheme.error else if (fill) ink else MaterialTheme.colorScheme.primary
                     Row(Modifier.padding(top = 2.dp), verticalAlignment = Alignment.CenterVertically) {
                         Icon(Icons.Default.Notifications, contentDescription = stringResource(R.string.reminder_title), Modifier.size(14.dp), tint = tint)
                         Text(reminderText(label), Modifier.padding(start = 4.dp), style = MaterialTheme.typography.labelMedium, color = tint, maxLines = 1)
@@ -481,7 +493,7 @@ private fun NoteRow(item: NoteListItem, selected: Boolean, conflicted: Boolean, 
             }
             Row(Modifier.align(Alignment.CenterVertically).padding(end = 10.dp), verticalAlignment = Alignment.CenterVertically) {
                 if (item.isProtected) {
-                    Icon(Icons.Default.Lock, contentDescription = stringResource(R.string.protected_note_title), Modifier.size(18.dp), tint = MaterialTheme.colorScheme.onSurfaceVariant)
+                    Icon(Icons.Default.Lock, contentDescription = stringResource(R.string.protected_note_title), Modifier.size(18.dp), tint = muted)
                 }
                 if (conflicted) {
                     Icon(Icons.Default.Warning, contentDescription = stringResource(R.string.conflict_flag_cd), Modifier.padding(start = 6.dp).size(18.dp), tint = MaterialTheme.colorScheme.error)
@@ -491,7 +503,7 @@ private fun NoteRow(item: NoteListItem, selected: Boolean, conflicted: Boolean, 
                 Text(
                     stringResource(R.string.tasks_progress, item.tasksDone, item.tasksTotal),
                     Modifier.padding(end = 14.dp).align(Alignment.CenterVertically),
-                    style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    style = MaterialTheme.typography.labelLarge, color = muted,
                 )
             }
         }

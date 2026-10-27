@@ -24,7 +24,7 @@ const val APPEARANCE_SYSTEM = AppPalette.SYSTEM
 fun paletteColor(hex: String): Color = Color(AndroidColor.parseColor(hex))
 
 /** Cómo se pintan las notas según los ajustes: color único, esquinas y señal de sync (ya resueltos contra el aspecto). */
-data class NoteLook(val uniformColor: String? = null, val squareCorners: Boolean = false, val syncSignal: Boolean = false) {
+data class NoteLook(val uniformColor: String? = null, val squareCorners: Boolean = false, val syncSignal: Boolean = false, val fillColor: Boolean = true) {
     /** El radio de una tarjeta de nota (12 dp de siempre, recto con «esquinas rectas»). */
     val cardShape get() = if (squareCorners) RectangleShape else RoundedCornerShape(12.dp)
 }

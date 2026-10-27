@@ -252,6 +252,8 @@
     <string name="uniform_color">Same color on all notes</string>
     <string name="uniform_color_hint">Only changes how they look; each note keeps its own color.</string>
     <string name="color_uniform_notice">“Same color on all notes” is on: you can pick a color, but it won\'t show until you turn that off.</string>
+    <string name="fill_note_color">Color as the note background</string>
+    <string name="fill_note_color_hint">The whole card takes the note color, like on Windows. Off: only a strip on the left.</string>
     <string name="square_corners">Square corners</string>
     <string name="square_corners_hint">Notes, lists, dialogs and the widget without rounded corners.</string>
     <string name="sync_signal">Sync status on each note</string>

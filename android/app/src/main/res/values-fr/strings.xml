@@ -252,6 +252,8 @@
     <string name="uniform_color">Même couleur pour toutes les notes</string>
     <string name="uniform_color_hint">Ne change que l’affichage ; chaque note garde sa couleur.</string>
     <string name="color_uniform_notice">« Même couleur pour toutes les notes » est activé : vous pouvez choisir une couleur, mais elle ne s’affichera qu’une fois l’option désactivée.</string>
+    <string name="fill_note_color">Couleur de la note en arrière-plan</string>
+    <string name="fill_note_color_hint">Toute la carte prend la couleur de la note, comme sous Windows. Désactivé : seulement une bande à gauche.</string>
     <string name="square_corners">Coins droits</string>
     <string name="square_corners_hint">Notes, listes, boîtes de dialogue et widget sans coins arrondis.</string>
     <string name="sync_signal">Signal de synchronisation sur chaque note</string>
