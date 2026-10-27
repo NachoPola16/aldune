@@ -23,6 +23,14 @@ jobs:
       - name: Restore
         run: dotnet restore Aldune.slnx
 
+      # Falla si alguna dependencia (directa o transitiva) tiene una vulnerabilidad conocida.
+      - name: Check vulnerable packages
+        shell: pwsh
+        run: |
+          $out = dotnet list Aldune.slnx package --vulnerable --include-transitive 2>&1 | Out-String
+          Write-Host $out
+          if ($out -match 'has the following vulnerable packages') { throw 'Hay paquetes con vulnerabilidades conocidas.' }
+
       - name: Build
         run: dotnet build Aldune.slnx --configuration Release --no-restore
 

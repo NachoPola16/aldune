@@ -2,6 +2,7 @@ package app.aldune.ui
 
 import android.text.format.DateUtils
 import android.view.WindowManager
+import androidx.activity.compose.LocalActivity
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -240,7 +241,7 @@ private fun ConnectForm(controller: SyncController, additional: Boolean, initial
 
     // Mientras el campo del código está a la vista (lleva la clave del perfil): ni capturas ni miniatura en Recientes. Solo en la app de
     // producción (en la de depuración se hacen capturas), y sin tocar el flag si ya lo puso otra pantalla (notas protegidas).
-    val activity = LocalContext.current as? android.app.Activity
+    val activity = LocalActivity.current
     val showingCodeField = parsed == null
     DisposableEffect(showingCodeField) {
         val window = activity?.window

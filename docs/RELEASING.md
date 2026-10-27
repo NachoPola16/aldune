@@ -93,6 +93,20 @@ Trampas: la ruta del almacén tiene que ser la real (un `C:\RUTA\...` de ejemplo
 deja fuera de git (`.gitignore` ignora `android/*.apk`); y una versión de solo Android no necesita actualizar el servidor de
 sincronización, que solo cambia con las de Windows y el servidor.
 
+### Verificación de dependencias (Android)
+
+`android/gradle/verification-metadata.xml` fija el SHA-256 de cada dependencia de Gradle: si un artefacto cambia en origen, la compilación
+falla en vez de meterlo en el APK. Al **añadir o subir una dependencia** (o el plugin de Android/Kotlin) hay que regenerarlo desde `android/`:
+
+```powershell
+./gradlew --write-verification-metadata sha256 test :app:assembleDebug :app:assembleRelease :app:lintDebug
+git checkout ../tests/vectors/kotlin-output.json   # el test regenera los nonces
+```
+
+Y revisar el diff del XML (solo deben aparecer los componentes nuevos). En .NET no hay equivalente fiable: CI falla si alguna dependencia
+tiene una vulnerabilidad conocida (`dotnet list package --vulnerable --include-transitive`); los lockfiles de NuGet se probaron y no
+se cumplían en modo bloqueado.
+
 ## Firma del ejecutable con SignPath
 
 > **Estado (2026-09-28)**: la solicitud a SignPath Foundation fue **rechazada** por falta de

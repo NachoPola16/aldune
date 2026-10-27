@@ -306,8 +306,6 @@ private fun RemindersSection(viewModel: NotesViewModel, exactOn: Boolean) {
     }
 }
 
-/** «Añadir el mosaico»: desde la 13 el sistema enseña su propio diálogo de confirmación; no hace falta ningún permiso. */
-@RequiresApi(Build.VERSION_CODES.TIRAMISU)
 /**
  * La lista rápida: una nota a la que la notificación de captura añade artículos sin abrir la app. Hace falta la notificación activada
  * (es ahí donde vive el campo de respuesta). Solo se ofrecen notas activas y sin proteger.
@@ -355,6 +353,8 @@ private fun QuickListRow(viewModel: NotesViewModel, notificationOn: Boolean) {
     }
 }
 
+/** «Añadir el mosaico»: desde la 13 el sistema enseña su propio diálogo de confirmación; no hace falta ningún permiso. */
+@RequiresApi(Build.VERSION_CODES.TIRAMISU)
 @Composable
 private fun TileRow(context: Context) {
     Column(
