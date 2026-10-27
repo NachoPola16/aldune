@@ -59,8 +59,7 @@ public sealed class WebDavSyncTransport : ISyncTransport
         {
             throw new InvalidOperationException("El servidor WebDAV devolvió un listado XML no válido.", ex);
         }
-        var result = new List<SyncRemoteObject>();
-
+        var fileUris = new List<Uri>();
         foreach (var resource in document.Descendants(Dav + "response"))
         {
             var href = resource.Element(Dav + "href")?.Value;
@@ -69,25 +68,29 @@ public sealed class WebDavSyncTransport : ISyncTransport
             // Un href que apunte a otro servidor no se sigue: la petición lleva el usuario y la contraseña.
             if (ResolveHref(_objectsUri, href) is not { } fileUri) continue;
             if (!fileUri.AbsolutePath.EndsWith(".json", StringComparison.OrdinalIgnoreCase)) continue;
+            fileUris.Add(fileUri);
+        }
 
+        return ParallelDownload.Run(fileUris, async fileUri =>
+        {
             try
             {
-                using var fileResponse = _client.GetAsync(fileUri).GetAwaiter().GetResult();
+                using var fileResponse = await _client.GetAsync(fileUri).ConfigureAwait(false);
                 EnsureSuccess(fileResponse);
-                var bytes = fileResponse.Content.ReadAsByteArrayAsync().GetAwaiter().GetResult();
-                result.Add(new SyncRemoteObject(SyncEnvelopeCodec.Deserialize(bytes), bytes));
+                var bytes = await fileResponse.Content.ReadAsByteArrayAsync().ConfigureAwait(false);
+                return new SyncRemoteObject(SyncEnvelopeCodec.Deserialize(bytes), bytes);
             }
             catch (FormatException)
             {
                 // Un archivo incompleto o de otra versión no debe impedir el resto de la sincronización.
+                return null;
             }
             catch (JsonException)
             {
                 // Igual que arriba: una escritura interrumpida no invalida todo el almacén.
+                return null;
             }
-        }
-
-        return result;
+        });
     }
 
     public void Write(SyncEnvelope envelope)

@@ -36,15 +36,13 @@ public sealed class HttpSyncTransport : ISyncTransport
         var descriptors = listResponse.Content.ReadFromJsonAsync<List<SyncObjectDescriptor>>()
             .GetAwaiter().GetResult() ?? new List<SyncObjectDescriptor>();
 
-        var result = new List<SyncRemoteObject>(descriptors.Count);
-        foreach (var descriptor in descriptors)
+        return ParallelDownload.Run(descriptors, async descriptor =>
         {
-            using var response = _client.GetAsync(BuildUri($"api/v1/objects/{descriptor.NoteId:N}")).GetAwaiter().GetResult();
+            using var response = await _client.GetAsync(BuildUri($"api/v1/objects/{descriptor.NoteId:N}")).ConfigureAwait(false);
             EnsureSuccess(response);
-            var bytes = response.Content.ReadAsByteArrayAsync().GetAwaiter().GetResult();
-            result.Add(new SyncRemoteObject(SyncEnvelopeCodec.Deserialize(bytes), bytes));
-        }
-        return result;
+            var bytes = await response.Content.ReadAsByteArrayAsync().ConfigureAwait(false);
+            return new SyncRemoteObject(SyncEnvelopeCodec.Deserialize(bytes), bytes);
+        });
     }
 
     public void Write(SyncEnvelope envelope)
