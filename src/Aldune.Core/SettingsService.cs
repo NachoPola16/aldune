@@ -37,7 +37,16 @@ public sealed class SettingsService
         return settings;
     }
 
+    // La sync en segundo plano y la interfaz guardan a la vez: sin esto compartían el mismo .tmp y se pisaban.
+    private readonly object _saveLock = new();
+
     public void Save(AppSettings settings)
+    {
+        lock (_saveLock)
+            SaveCore(settings);
+    }
+
+    private void SaveCore(AppSettings settings)
     {
         SyncProfileStore.SaveActiveFromLegacy(settings);
         var directory = Path.GetDirectoryName(_settingsPath);
@@ -53,7 +62,13 @@ public sealed class SettingsService
         var tmpPath = _settingsPath + ".tmp";
         try
         {
-            File.WriteAllText(tmpPath, json);
+            // Flush(true) fuerza el volcado a disco: sin él, un corte de luz tras el Move puede dejar el fichero vacío.
+            using (var stream = new FileStream(tmpPath, FileMode.Create, FileAccess.Write, FileShare.None))
+            {
+                var bytes = new System.Text.UTF8Encoding(encoderShouldEmitUTF8Identifier: false).GetBytes(json);
+                stream.Write(bytes);
+                stream.Flush(flushToDisk: true);
+            }
             File.Move(tmpPath, _settingsPath, overwrite: true);
         }
         finally

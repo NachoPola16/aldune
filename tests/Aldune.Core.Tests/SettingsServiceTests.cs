@@ -19,6 +19,23 @@ public class SettingsServiceTests : IDisposable
     }
 
     [Fact]
+    public void Save_FromSeveralThreadsAtOnce_NeverFailsAndLeavesAValidFileWithoutTemporaries()
+    {
+        // La sync en segundo plano y la interfaz guardan a la vez: antes compartían el mismo .tmp y uno pisaba al otro.
+        var sut = new SettingsService(_settingsPath);
+        var errors = new System.Collections.Concurrent.ConcurrentBag<Exception>();
+        Parallel.For(0, 200, new ParallelOptions { MaxDegreeOfParallelism = 16 }, _ =>
+        {
+            try { sut.Save(new AppSettings()); }
+            catch (Exception e) { errors.Add(e); }
+        });
+
+        Assert.Empty(errors);
+        Assert.NotNull(sut.Load());
+        Assert.Equal(new[] { _settingsPath }, Directory.GetFiles(_tempDir));
+    }
+
+    [Fact]
     public void Load_WhenFileDoesNotExist_ReturnsFreshSettings()
     {
         var sut = new SettingsService(_settingsPath);
