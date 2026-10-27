@@ -1410,7 +1410,7 @@
       }
     },
     {
-      "name": "E12a borrado remoto sin firma: la nota va a la papelera",
+      "name": "E12a borrado remoto sin firma: se ignora y la nota se vuelve a publicar",
       "covers": "SyncService.cs:596-621",
       "settings": {
         "deviceId": "android-pc-a",
@@ -1449,7 +1449,7 @@
           "noteId": "00000001-0000-4000-8000-000000000000",
           "kind": "tombstone",
           "key": "other",
-          "envelopeJson": "{\"format\":4,\"noteId\":\"00000001-0000-4000-8000-000000000000\",\"tombstone\":true,\"updatedAt\":\"2024-05-01T10:20:00+00:00\",\"deviceId\":\"device-b\",\"cipherText\":\"JkVNPk2jsTZLB1WHBLCKHb93CO9V1dmInlZPsi\\u002Bute40kuajTqiFtvNhFVfF58VTa7wTlxcf8FJfIWnjyRQcizW4U6cgjYMswamhJuOGEXbUbAl9utZ9XgPZrlebeKMrSFBM4nKyY62EaeCCFzVv8Cw9hOU=\",\"nonce\":\"jmz12PPJ/H/4MYfp\",\"tag\":\"iJfWGpTiAmdstFc2fFRQFw==\"}",
+          "envelopeJson": "{\"format\":4,\"noteId\":\"00000001-0000-4000-8000-000000000000\",\"tombstone\":true,\"updatedAt\":\"2024-05-01T10:20:00+00:00\",\"deviceId\":\"device-b\",\"cipherText\":\"7oppuDkY0BPSIw6FO/\\u002BWOlPwP11pgLs29eSGZYCJwtI8mcVGLbXWCklfkXMtQ8q5p1AuwqoQ0s/AoMNS7RNE00nTVbSdAiC54E/F\\u002BDdWC12WgNTKVTuiVPn5evqUHeSOf6K0pcuRZ36Uc51x5KvkRiC93q8=\",\"nonce\":\"UVTxWRT7TWz4taYI\",\"tag\":\"b/5bc05ytm3Va4LIlcEH9w==\"}",
           "plain": null
         }
       ],
@@ -1463,16 +1463,16 @@
           {
             "noteId": "00000001-0000-4000-8000-000000000000",
             "tombstone": false,
-            "updatedAt": "<now>",
-            "deviceId": "android-pc-a",
+            "updatedAt": "2024-05-01T10:10:00.0000000+00:00",
+            "deviceId": "device-b",
             "rewritten": true,
             "note": {
               "id": "00000001-0000-4000-8000-000000000000",
               "text": "x",
               "color": "#EBD38B",
               "createdAt": "2024-05-01T09:00:00.0000000+00:00",
-              "updatedAt": "<now>",
-              "state": 2,
+              "updatedAt": "2024-05-01T10:10:00.0000000+00:00",
+              "state": 0,
               "screenOrigin": "primary",
               "tags": [],
               "isProtected": false,
@@ -1487,22 +1487,22 @@
             "text": "x",
             "color": "#EBD38B",
             "createdAt": "2024-05-01T09:00:00.0000000+00:00",
-            "updatedAt": "<now>",
-            "state": 2,
+            "updatedAt": "2024-05-01T10:10:00.0000000+00:00",
+            "state": 0,
             "screenOrigin": "primary",
             "tags": [],
             "isProtected": false,
             "protectedContent": null,
             "dockPosition": null,
-            "authorDeviceId": null
+            "authorDeviceId": "device-b"
           }
         ],
         "localTombstonesAfter": [],
         "basesAfter": [
           {
             "noteId": "00000001-0000-4000-8000-000000000000",
-            "updatedAt": "<now>",
-            "deviceId": "android-pc-a"
+            "updatedAt": "2024-05-01T10:10:00.0000000+00:00",
+            "deviceId": "device-b"
           }
         ],
         "conflicts": []
@@ -1593,7 +1593,7 @@
           "noteId": "00000001-0000-4000-8000-000000000000",
           "kind": "tombstone",
           "key": "other",
-          "envelopeJson": "{\"format\":4,\"noteId\":\"00000001-0000-4000-8000-000000000000\",\"tombstone\":true,\"updatedAt\":\"2024-05-01T10:20:00+00:00\",\"deviceId\":\"device-b\",\"cipherText\":\"EyJtqLyUHia2n/Fk2XAA7HAyStv3bSw\\u002Bd5MMGRTHphzd6v9PnUOPkzCsKKHH7lgoOxRwtGxNptrysqbzme/dfDELDTOCY31XJ\\u002BxhgbD0iqyC6tnhEzwW7uQlLonv4mDwm\\u002BW7x4bGjmssteP6Vbz87ozPZAY=\",\"nonce\":\"vlZ/Igqv9IylW70S\",\"tag\":\"BteVikRLstVNhwjN9HVJgg==\"}",
+          "envelopeJson": "{\"format\":4,\"noteId\":\"00000001-0000-4000-8000-000000000000\",\"tombstone\":true,\"updatedAt\":\"2024-05-01T10:20:00+00:00\",\"deviceId\":\"device-b\",\"cipherText\":\"g4br\\u002BLkrw4Jj5k/d3dAV\\u002BNSCOSZHj0CQTeQinPKwKzzDqGamIlAGItHsci\\u002B8wSEUi9xzpirj2h/eeOmHyIRJ8FpOIpGmtYw9J5WUuOMos\\u002BUCzFdqfRcszd71tapWlWIA3T95lRSsI/4H526fTGCGYX\\u002BZ6Yk=\",\"nonce\":\"27vZ/bDB4clG9GWy\",\"tag\":\"3t5hROvGEk8ujfQu85HHwg==\"}",
           "plain": null
         }
       ],
@@ -1606,11 +1606,23 @@
         "remoteAfter": [
           {
             "noteId": "00000001-0000-4000-8000-000000000000",
-            "tombstone": true,
-            "updatedAt": "2024-05-01T10:20:00.0000000+00:00",
+            "tombstone": false,
+            "updatedAt": "2024-05-01T10:10:00.0000000+00:00",
             "deviceId": "device-b",
-            "rewritten": false,
-            "authentic": false
+            "rewritten": true,
+            "note": {
+              "id": "00000001-0000-4000-8000-000000000000",
+              "text": "x",
+              "color": "#EBD38B",
+              "createdAt": "2024-05-01T09:00:00.0000000+00:00",
+              "updatedAt": "2024-05-01T10:10:00.0000000+00:00",
+              "state": 2,
+              "screenOrigin": "primary",
+              "tags": [],
+              "isProtected": false,
+              "protectedContent": null,
+              "dockPosition": null
+            }
           }
         ],
         "localAfter": [
@@ -2856,7 +2868,7 @@
           "noteId": "00000001-0000-4000-8000-000000000000",
           "kind": "tombstone",
           "key": "other",
-          "envelopeJson": "{\"format\":4,\"noteId\":\"00000001-0000-4000-8000-000000000000\",\"tombstone\":true,\"updatedAt\":\"2024-05-01T10:20:00+00:00\",\"deviceId\":\"device-b\",\"cipherText\":\"tzfibFFzAOl5NCBVcK\\u002BYxiBxLJRTCWwsSKyriYRFjYnvdGUGz/86Ag7JZG9I1sgjwVCmpa2LZUwFv0FURb/wxa5EQykaLHDrMgI1TxK6ehA\\u002BetLUbQ4y6F31OR98xYZYMHaGfS2iGwzYA4MihUBVzZO7CwQ=\",\"nonce\":\"GcLK6iBOi2rvbyRm\",\"tag\":\"JsoOBVbvJRjzJ0tXsL0aoA==\"}",
+          "envelopeJson": "{\"format\":4,\"noteId\":\"00000001-0000-4000-8000-000000000000\",\"tombstone\":true,\"updatedAt\":\"2024-05-01T10:20:00+00:00\",\"deviceId\":\"device-b\",\"cipherText\":\"IMye9cLlW38RuDrzE7rRB4WJTJzCG6yQfiLr8gJwXv27qMmQDpM1ytWCAl6QawBM5PnWVmaSHhPax2FBB1ri0WQVqHpqukUlEd\\u002BSqF5C6qWWkhpM1bE9Ns2fEPf6xcZ4QYIp7SsPnSANq521aNUwFYBoO78=\",\"nonce\":\"Z7HEkqSRm/QoTxuk\",\"tag\":\"Sie5UnZr1ZqnnIPnvcmA\\u002Bw==\"}",
           "plain": null
         }
       ],
@@ -2870,16 +2882,16 @@
           {
             "noteId": "00000001-0000-4000-8000-000000000000",
             "tombstone": false,
-            "updatedAt": "<now>",
-            "deviceId": "android-pc-a",
+            "updatedAt": "2024-05-01T10:10:00.0000000+00:00",
+            "deviceId": "device-b",
             "rewritten": true,
             "note": {
               "id": "00000001-0000-4000-8000-000000000000",
               "text": "x",
               "color": "#EBD38B",
               "createdAt": "2024-05-01T09:00:00.0000000+00:00",
-              "updatedAt": "<now>",
-              "state": 2,
+              "updatedAt": "2024-05-01T10:10:00.0000000+00:00",
+              "state": 0,
               "screenOrigin": "primary",
               "tags": [],
               "isProtected": false,
@@ -2894,22 +2906,22 @@
             "text": "x",
             "color": "#EBD38B",
             "createdAt": "2024-05-01T09:00:00.0000000+00:00",
-            "updatedAt": "<now>",
-            "state": 2,
+            "updatedAt": "2024-05-01T10:10:00.0000000+00:00",
+            "state": 0,
             "screenOrigin": "primary",
             "tags": [],
             "isProtected": false,
             "protectedContent": null,
             "dockPosition": null,
-            "authorDeviceId": null
+            "authorDeviceId": "device-b"
           }
         ],
         "localTombstonesAfter": [],
         "basesAfter": [
           {
             "noteId": "00000001-0000-4000-8000-000000000000",
-            "updatedAt": "<now>",
-            "deviceId": "android-pc-a"
+            "updatedAt": "2024-05-01T10:10:00.0000000+00:00",
+            "deviceId": "device-b"
           }
         ],
         "conflicts": []

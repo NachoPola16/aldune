@@ -20,6 +20,7 @@ import java.time.ZoneOffset
 import java.util.UUID
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFalse
 import kotlin.test.assertFailsWith
 import kotlin.test.assertIs
 import kotlin.test.assertNull
@@ -179,7 +180,7 @@ class SyncRunnerTest {
         assertTrue(ID3 in store.bases)
     }
 
-    @Test fun `un borrado sin firma manda a la papelera, nunca borra, y la nota resubida lleva fecha nueva`() {
+    @Test fun `un borrado sin firma se ignora, la nota sigue activa y el almacen vuelve a tenerla`() {
         localNote(ID1, "importante")
         val unsigned = SyncEnvelopeCodec.createTombstone(UUID.fromString(ID1), OffsetDateTime.ofInstant(T0.plusSeconds(60), ZoneOffset.UTC),
             ByteArray(32) { 7 }, OTHER_DEVICE)
@@ -188,12 +189,11 @@ class SyncRunnerTest {
 
         val result = success(run())
 
-        assertEquals(1, result.trashed)
-        val trashed = noteStore.get(ID1)!!
-        assertEquals(NoteState.TRASHED, trashed.state)
-        assertEquals("importante", trashed.text)
-        assertNull(trashed.syncAuthorDeviceId)
-        assertEquals(trashed.updatedAt, store.bases.getValue(ID1).updatedAt.toInstant())
+        assertEquals(0, result.trashed)
+        val kept = noteStore.get(ID1)!!
+        assertEquals(NoteState.ACTIVE, kept.state)
+        assertEquals("importante", kept.text)
+        assertFalse(remote.store.getValue(UUID.fromString(ID1)).tombstone)
     }
 
     @Test fun `un borrado firmado borra la nota y deja la lapida con el autor remoto`() {

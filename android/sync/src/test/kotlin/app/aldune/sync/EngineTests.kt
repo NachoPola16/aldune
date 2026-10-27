@@ -151,14 +151,13 @@ class EngineTests {
     }
 
     @Test
-    fun `un reloj con mas precision que NET no estropea la nota mandada a la papelera`() {
-        val precise = now.withNano(123_456_789)
+    fun `un borrado sin firma no manda a la papelera, se quita del almacen y la nota se vuelve a subir`() {
         val local = listOf(LocalNote(note("x", 10), "device-b"))
-        val plan = planSync(input(local = local, remote = listOf(tombstone(20, "device-evil", otherKey)), at = precise), key)
+        val plan = planSync(input(local = local, remote = listOf(tombstone(20, "device-evil", otherKey))), key)
+        assertTrue(plan.actions.none { it is SyncAction.TrashNote }, "no debe haber papelera: ${plan.actions}")
+        assertEquals(listOf(id), plan.actions.filterIsInstance<SyncAction.DeleteRemote>().map { it.noteId })
         val upload = plan.actions.filterIsInstance<SyncAction.Upload>().single().envelope
-        // Si la fecha de la cabecera y la del contenido difirieran, esto lanzaría SyncFormatException.
         assertEquals("x", SyncEnvelopeCodec.decryptNote(upload, key).text)
-        assertEquals(123_456_700, upload.updatedAt.nano)
     }
 
     @Test

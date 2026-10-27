@@ -112,9 +112,9 @@ Qué protege Aldune y qué no, en corto:
 - **Integridad.** Cada sobre cifrado incluye el id y la fecha de su nota, y se comprueba que coincidan
   con la cabecera: el almacén no puede cambiar el contenido de una nota por el de otra. Desde la
   1.0 los **borrados también van firmados**: quien pueda escribir en el almacén pero no tenga la
-  clave no puede fabricar un borrado. Un borrado sin firma válida nunca borra: manda la nota a la
-  papelera (de donde se recupera), y si su fecha es imposible (en el futuro) se descarta del
-  almacén. Un objeto que no se puede descifrar se salta sin parar el resto de la sincronización;
+  clave no puede fabricar un borrado. Un borrado sin firma válida se ignora: ni borra ni manda la nota
+  a la papelera (antes sí, y quien tuviera el token sin la clave podía vaciar las notas), y se quita del
+  almacén para que la nota se vuelva a publicar. Un objeto que no se puede descifrar se salta sin parar el resto de la sincronización;
   solo se para si no se puede leer **ninguno**, que es lo que pasa con un código revocado.
 - **Acceso al servidor.** El servidor propio exige un token (`Authorization: Bearer`), que compara en
   tiempo constante y admite rotación sin cortes (ver más abajo). Usa un valor largo y aleatorio, por
@@ -129,12 +129,10 @@ Qué protege Aldune y qué no, en corto:
   PBKDF2-SHA256 (600.000 iteraciones); la contraseña no se guarda.
 - **Lo que no cubre.** No hay auditoría externa ni certificación. Quien controle el almacén puede
   borrar o no servir los ficheros (dejar de sincronizar), servir una versión antigua auténtica de una
-  nota a un dispositivo que aún no tenga una más nueva, o mandar notas a la papelera; no puede leerlas
-  ni fabricar cambios en ellas. Los metadatos (cuántas notas hay y cuándo cambian) son visibles para él.
+  nota a un dispositivo que aún no tenga una más nueva, ; no puede leerlas ni fabricar cambios en ellas. Los metadatos (cuántas notas hay y cuándo cambian) son visibles para él.
 
 > **Al actualizar a la 1.0, actualiza todos tus dispositivos.** Un borrado hecho desde una versión
-> anterior no va firmado: en los dispositivos con la 1.0 la nota va a la papelera en vez de
-> borrarse del todo.
+> anterior no va firmado: los dispositivos con la 1.0 lo ignoran y la nota se queda donde está.
 
 ## Carpeta compartida
 

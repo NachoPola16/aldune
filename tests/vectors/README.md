@@ -87,7 +87,7 @@ Reglas para quien las consuma: las claves son la de los vectores (`syncKeyHex`) 
 `id` ni la fecha del conflicto (dependen del reloj). El mapa de escenarios es el de la spec §6.7.
 
 Hallazgos que fijan estos vectores (comportamiento de Core hoy, no necesariamente deseable): un borrado remoto **sin firma** no queda en el
-almacén visible para el motor, así que la nota local se manda a la papelera **y se sube de nuevo** pisándolo (E12a); con alcance por etiqueta
+almacén visible para el motor: se ignora, se quita del almacén si la nota existe aquí y la nota se **sube de nuevo** (E12a); con alcance por etiqueta
 el borrado local se sube aunque la nota ya no tuviera la etiqueta (E26); edición frente a borrado deja un conflicto aunque gane el borrado (E27).
 
 Pendiente de añadir: E14 (no se puede montar con carpeta: un solo fichero por id), E21 (nota vinculada sin sync, necesita montar `NoteFileLink`),

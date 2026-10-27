@@ -651,14 +651,12 @@ public sealed class SyncService
     }
 
     /// <summary>
-    /// Borrados sin firmar con la clave del vínculo: de una versión anterior a la 1.0, o falsos. Nunca
-    /// borran una nota para siempre:
+    /// Borrados sin firmar con la clave del vínculo: de una versión anterior a la 1.0, o falsos. No borran
+    /// ni mandan a la papelera:
     /// - con fecha futura son falsos seguro: se quitan del almacén, y si aquí está la nota se vuelve a
     ///   publicar (antes el falso ganaba siempre la comparación y la nota dejaba de sincronizarse);
-    /// - si no, la nota va a la papelera, que es lo que quería quien la borró desde una versión antigua
-    ///   y se puede deshacer. La papelera la deja más reciente que el borrado, así que la siguiente
-    ///   subida lo reemplaza en el almacén.
-    /// Si hay un objeto firmado de la misma nota, manda ese y el sin firmar se ignora.
+    /// - si no, se ignoran y, si la nota existe aquí, se quitan del almacén para que la subida normal la republique.
+    /// Antes iban a la papelera, pero quien tuviera el token sin la clave podía vaciar las notas con ellos.
     /// </summary>
     private void HandleUnsignedTombstones(
         List<SyncRemoteObject> unsignedTombstones,
@@ -682,8 +680,11 @@ public sealed class SyncService
                 continue;
             }
 
-            if (_repository.GetById(id) is { State: not NoteState.Trashed })
-                _repository.SetState(id, NoteState.Trashed);
+            // Ya no se manda a la papelera: quien tiene el token pero no la clave podía vaciar las notas con
+            // borrados sin firma, y la purga a los 30 días los hacía definitivos. Solo los escribían versiones
+            // anteriores a la 1.0, que ya no circulan. Si la nota existe aquí se quita el objeto del almacén, porque
+            // con una fecha más nueva que la de la nota impediría que se vuelva a publicar.
+            if (_repository.GetById(id) is not null) transport.Delete(id);
         }
     }
 

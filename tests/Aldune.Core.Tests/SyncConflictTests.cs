@@ -454,12 +454,12 @@ public sealed class SyncConflictTests : IDisposable
     }
 
     [Fact]
-    public void UnsignedTombstone_FromAnOlderVersion_MovesTheNoteToTheTrash()
+    public void UnsignedTombstone_IsIgnored_TheNoteStaysActiveAndIsPublishedAgain()
     {
-        // Un borrado hecho desde una versión anterior a la 1.0 no va firmado. No se aplica como
-        // borrado definitivo (podría ser falso), pero tampoco se ignora: la nota va a la papelera,
-        // que es lo que el usuario quería y se puede deshacer.
-        var note = _deviceA.Repository.Create("borrada en un equipo antiguo", "#EBD38B", "primary");
+        // Un borrado sin firma ya no manda la nota a la papelera: quien tuviera el token sin la clave podía
+        // vaciar las notas con ellos (la purga a los 30 días los hacía definitivos). Se ignora, y como su fecha
+        // es más nueva que la de la nota se quita del almacén para que la nota vuelva a publicarse.
+        var note = _deviceA.Repository.Create("borrada por quien no tiene la clave", "#EBD38B", "primary");
         ShareKeyAndSynchronizeInitialNote(note.Id);
         new FolderSyncTransport(_sharedFolder).Write(new SyncEnvelope
         {
@@ -472,12 +472,13 @@ public sealed class SyncConflictTests : IDisposable
         var result = _deviceB.Sync.Synchronize();
 
         Assert.True(result.Succeeded, result.Error);
-        Assert.Equal(NoteState.Trashed, Assert.Single(_deviceB.Repository.GetAllForSync()).State);
+        Assert.Equal(NoteState.Active, Assert.Single(_deviceB.Repository.GetAllForSync()).State);
         Assert.Empty(_deviceB.Repository.GetSyncTombstones());
 
-        // Y la papelera llega al resto: la nota en papelera es más reciente que el borrado sin firmar.
+        // La nota sigue activa en el otro equipo y el almacén vuelve a tener su versión firmada.
         Assert.True(_deviceA.Sync.Synchronize().Succeeded);
-        Assert.Equal(NoteState.Trashed, Assert.Single(_deviceA.Repository.GetAllForSync()).State);
+        Assert.Equal(NoteState.Active, Assert.Single(_deviceA.Repository.GetAllForSync()).State);
+        Assert.False(new FolderSyncTransport(_sharedFolder).ReadAll().Single(o => o.Envelope.NoteId == note.Id).Envelope.Tombstone);
     }
 
     [Fact]

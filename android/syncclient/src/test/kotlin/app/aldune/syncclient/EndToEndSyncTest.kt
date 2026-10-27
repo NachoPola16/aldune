@@ -193,7 +193,7 @@ class EndToEndSyncTest {
         }
     }
 
-    @Test fun `un borrado sin firma manda a la papelera y nunca borra`() {
+    @Test fun `un borrado sin firma se ignora, sin papelera ni borrado, y la nota se vuelve a subir`() {
         phone.notes.put(note(ID1, "importante", updatedAt = T0))
         putPc(fromPc(ID2, "para que haya algo legible", T0))
         // Un borrado firmado con OTRA clave: sin firma válida.
@@ -202,13 +202,13 @@ class EndToEndSyncTest {
 
         val result = phone.syncOk()
 
-        assertEquals(1, result.trashed)
+        assertEquals(0, result.trashed)
         val kept = assertNotNull(phone.notes.get(ID1), "una nota nunca se borra por un borrado sin firma")
-        assertEquals(NoteState.TRASHED, kept.state)
+        assertEquals(NoteState.ACTIVE, kept.state)
         assertEquals("importante", kept.text)
         assertTrue(phone.notes.tombstones().none { it.noteId == ID1 })
-        // Y lo que sube es la nota en la papelera, no un borrado.
-        assertEquals(WireState.TRASH, remoteNote(ID1).state)
+        // Y lo que hay en el almacén vuelve a ser la nota, no el borrado.
+        assertEquals(WireState.ACTIVE, remoteNote(ID1).state)
     }
 
     private fun putPcUnsignedDelete(id: String, at: Instant) {

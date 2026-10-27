@@ -51,7 +51,7 @@ fun planSync(input: SyncInput, key: ByteArray): SyncPlan {
     if (input.excludedIds.isNotEmpty()) remote = remote.filterKeys { it !in input.excludedIds }
 
     val actions = mutableListOf<SyncAction>()
-    var allNotes = input.localNotes
+    val allNotes = input.localNotes
     val future = now.plusDays(1)
     for (item in classified.unsignedTombstones) {
         val id = item.envelope.noteId
@@ -63,14 +63,9 @@ fun planSync(input: SyncInput, key: ByteArray): SyncPlan {
             continue
         }
 
-        val existing = allNotes.firstOrNull { it.note.id == id }
-        if (existing != null && existing.note.state != NoteState.TRASH) {
-            actions += SyncAction.TrashNote(id, now)
-            // La papelera deja la nota con fecha nueva y como «editada aquí»: así la ve el resto de la pasada.
-            allNotes = allNotes.map {
-                if (it.note.id == id) LocalNote(it.note.copy(state = NoteState.TRASH, updatedAt = now), null) else it
-            }
-        }
+        // Ya no se manda a la papelera (igual que en Core): quien tiene el token pero no la clave podía vaciar las notas
+        // con borrados sin firma. Si la nota existe aquí se quita el objeto, que con fecha más nueva impediría republicarla.
+        if (allNotes.any { it.note.id == id }) actions += SyncAction.DeleteRemote(id)
     }
 
     val localNotes = allNotes.filter { includes(it.note, scope, input.excludedIds) }.associateBy { it.note.id }

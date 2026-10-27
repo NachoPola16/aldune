@@ -365,7 +365,7 @@ public sealed class SyncScenarioVectorsTests
             .Has(N(1, "local", 10.0 + 1.0 / 60000)).Base(1, 10).Store(N(1, "remoto", 30));
         Add("E11 borrado remoto firmado: se aplica", "SyncService.cs:429-432; NotesRepository.cs:734")
             .Has(N(1, "x", 10), Peer).Base(1, 10).StoreGone(1, 20);
-        Add("E12a borrado remoto sin firma: la nota va a la papelera", "SyncService.cs:596-621")
+        Add("E12a borrado remoto sin firma: se ignora y la nota se vuelve a publicar", "SyncService.cs:596-621")
             .Has(N(1, "x", 10), Peer).Base(1, 10).StoreGone(1, 20, signed: false);
         Add("E12b borrado sin firma de una nota que no existe aquí: nada", "SyncService.cs:618-620")
             .StoreGone(1, 20, signed: false);
