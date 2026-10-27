@@ -393,6 +393,7 @@ public class ConfigExportImportTests
         ["WrappedSyncKey"] = "clave de cifrado de la sincronización",
         ["WrappedPendingSyncKey"] = "clave de cifrado pendiente de rotación",
         ["SyncKeyRotationPending"] = "estado de una rotación de clave en curso",
+        ["SyncBasesKeyed"] = "marca de una migración local de las bases de sync",
         ["SyncScope"] = "sincronización: del perfil",
         ["SyncNoteIds"] = "identificadores de notas de este equipo",
         ["SyncTag"] = "sincronización: del perfil",
