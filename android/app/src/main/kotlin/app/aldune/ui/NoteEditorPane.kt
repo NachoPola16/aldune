@@ -518,6 +518,9 @@ fun NoteEditorPane(key: String, viewModel: NotesViewModel, onBack: () -> Unit, s
         }
         // El texto que se ve (sin las tareas hechas ocultas): el diseño del campo es de este texto, no del real.
         fun shownText(): String = StringBuilder(text()).also { sb -> for (span in hiddenSpans.asReversed()) sb.delete(span.start, span.end) }.toString()
+        // La posición (en el texto real) de la casilla bajo [position], o null si no cae sobre ninguna.
+        fun checkboxAt(position: Offset): Int? =
+            toggleCheckboxAtTap(shownText(), layout?.invoke(), position, slack)?.let { HiddenTasks.toRaw(it, hiddenSpans) }
         // Con tareas, se deja sitio a la derecha para el asa de arrastre.
         val hasTasks = TaskLines.count(state.text.toString()).total > 0 && !protectedNote
         Box(Modifier.weight(1f).fillMaxWidth()) {
@@ -542,15 +545,19 @@ fun NoteEditorPane(key: String, viewModel: NotesViewModel, onBack: () -> Unit, s
                 )
                 .padding(start = 16.dp, end = if (hasTasks) TASK_DRAG_ZONE else 16.dp, top = TASK_DRAG_PAD_TOP, bottom = 8.dp)
                 .focusRequester(focus)
-                // Tocar una casilla la marca. Se mira en la pasada Initial y sin consumir nada: el campo sigue recibiendo
-                // el toque (cursor, teclado) como siempre.
+                // Tocar una casilla la marca. Se mira en la pasada Initial. Si el toque cae sobre una casilla se consume el «down» para que el
+                // campo no ponga ahí el cursor ni abra el teclado (marcar una lista no debe taparla); el desplazamiento sigue funcionando
+                // porque el scroll no exige un down sin consumir. Fuera de una casilla no se consume nada.
                 .pointerInput(key) {
                     awaitEachGesture {
                         val down = awaitFirstDown(requireUnconsumed = false, pass = PointerEventPass.Initial)
+                        val onCheckbox = checkboxAt(down.position) != null
+                        if (onCheckbox) down.consume()
                         val up = waitForUpOrCancellation(PointerEventPass.Initial) ?: return@awaitEachGesture
                         if ((up.position - down.position).getDistance() > touchSlop) return@awaitEachGesture
                         if (up.uptimeMillis - down.uptimeMillis >= longPress) return@awaitEachGesture
                         tap = up.position
+                        if (onCheckbox) up.consume()
                     }
                 }
                 .onPreviewKeyEvent { event ->
