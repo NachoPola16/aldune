@@ -708,6 +708,27 @@ public sealed class SyncConflictTests : IDisposable
     }
 
     [Fact]
+    public void TagScope_ANewerRemoteDeletion_DoesNotDeleteANoteThatIsOutsideTheScope()
+    {
+        // Quien comparte el código de un perfil por etiqueta no puede borrar notas que este equipo tiene fuera
+        // del alcance: el borrado remoto, aunque esté firmado y sea más reciente, no se aplica a lo no etiquetado.
+        UseTagScope("Trabajo");
+        var note = _deviceA.Repository.Create("original", "#EBD38B", "primary");
+        _deviceA.Repository.SetTags(note.Id, new[] { "Trabajo" });
+        ShareKeyAndSynchronizeInitialNote(note.Id);
+        _deviceB.Repository.SetTags(note.Id, Array.Empty<string>());
+        Thread.Sleep(20);
+
+        Assert.True(_deviceA.Repository.Delete(note.Id));
+        Assert.True(_deviceA.Sync.Synchronize().Succeeded);
+        var result = _deviceB.Sync.Synchronize();
+
+        Assert.True(result.Succeeded, result.Error);
+        Assert.NotNull(_deviceB.Repository.GetById(note.Id));
+        Assert.Equal(0, result.TombstonesApplied);
+    }
+
+    [Fact]
     public void TagScope_ANewerRemoteVersionWithTheTag_StillReachesANoteThatDoesNotHaveIt()
     {
         // El arreglo de arriba no puede cerrar la puerta a lo nuevo: si otro equipo etiqueta después una nota

@@ -134,7 +134,11 @@ class WebDavSyncTransport(
      */
     private fun resolveHref(href: String): HttpUrl? {
         val absolute = href.toHttpUrlOrNull()
-        return objectsUrl.resolve(absolute?.encodedPath ?: href)
+        val resolved = objectsUrl.resolve(absolute?.encodedPath ?: href) ?: return null
+        // Un href relativo al esquema (`//otro-host/x.json`) cambia de host al resolverse: se descarta, igual
+        // que en Windows, para que la cabecera Authorization no salga hacia un servidor ajeno.
+        if (resolved.scheme != objectsUrl.scheme || resolved.host != objectsUrl.host || resolved.port != objectsUrl.port) return null
+        return resolved
     }
 
     private fun <T> execute(request: Request, read: (String) -> T): T =

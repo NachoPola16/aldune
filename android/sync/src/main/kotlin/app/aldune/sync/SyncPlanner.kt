@@ -116,6 +116,8 @@ fun planSync(input: SyncInput, key: ByteArray): SyncPlan {
             // Lo remoto solo gana si es más reciente: así sigue llegando que otro equipo la etiquete después.
             val editedHere = leftTheTag[id]
             if (editedHere != null && editedHere.toInstant().isAfter(remoteEnvelope.updatedAt.toInstant())) continue
+            // Un borrado remoto no alcanza a una nota que aquí está fuera del alcance (igual que en Core).
+            if (editedHere != null && remoteEnvelope.tombstone) continue
             applyRemote(remoteItem)
             settle(id, remoteEnvelope)
             continue

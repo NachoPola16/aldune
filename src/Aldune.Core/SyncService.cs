@@ -452,6 +452,10 @@ public sealed class SyncService
                         // Lo remoto solo gana si es más reciente: así sigue llegando que otro equipo la etiquete después.
                         if (leftTheTag.TryGetValue(id, out var editedHere) && editedHere > remoteObject!.Envelope.UpdatedAt)
                             continue;
+                        // Un borrado remoto no alcanza a una nota que aquí está fuera del alcance: quien tiene el
+                        // código del perfil solo puede tocar lo etiquetado, aunque conozca el id de otra nota.
+                        if (leftTheTag.ContainsKey(id) && remoteObject!.Envelope.Tombstone)
+                            continue;
                         ApplyRemote(remoteObject!, key, ref downloaded, ref tombstones);
                         Settle(id, remoteObject!.Envelope);
                         continue;

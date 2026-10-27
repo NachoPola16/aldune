@@ -65,6 +65,16 @@ class EngineTests {
     }
 
     @Test
+    fun `con alcance por etiqueta, un borrado firmado no alcanza a una nota fuera del alcance`() {
+        // La nota local no lleva la etiqueta: quien tenga el código del perfil no puede borrarla aunque el borrado sea auténtico.
+        val local = listOf(LocalNote(note("sin etiqueta", 20), null))
+        val deletion = tombstone(30, "device-b", key)
+        val scoped = SyncInput(me, SyncScope.Tag("work"), local, emptyList(), emptyMap(), emptySet(), listOf(deletion), now)
+        val plan = planSync(scoped, key)
+        assertTrue(plan.actions.none { it is SyncAction.ApplyTombstone }, "no debe borrar: ${plan.actions}")
+    }
+
+    @Test
     fun `E14 un borrado sin firma junto a uno firmado del mismo id se ignora`() {
         val signedNote = envelope(note("firmada", 10), "device-b")
         val fake = tombstone(20, "device-evil", otherKey)

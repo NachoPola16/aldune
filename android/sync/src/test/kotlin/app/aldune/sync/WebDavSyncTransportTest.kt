@@ -147,6 +147,14 @@ class WebDavSyncTransportTest {
     }
 
     @Test
+    fun `un href relativo al esquema que apunta a otro host no recibe las credenciales`() {
+        // `//otro-host/x.json` se resuelve contra la URL base como un host distinto: seguirlo enviaría
+        // la cabecera Authorization al servidor de un atacante. Se ignora en vez de pedirlo.
+        serve(multistatus(folderEntry("/dav/objects/"), fileEntry("//evil.invalid/dav/objects/$idN.json")))
+        assertEquals(emptyList<UUID>(), transport().readAll().map { it.noteId })
+    }
+
+    @Test
     fun `respuestas con otros prefijos o sin prefijo`() {
         val a = envelope("x", 10)
         val file = "/dav/objects/$idN.json"
