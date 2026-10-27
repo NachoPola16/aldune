@@ -121,6 +121,7 @@
     <string name="sync_password_label">Senha de aplicativo</string>
     <string name="sync_connect">Conectar</string>
     <string name="sync_connecting">Conectando…</string>
+    <string name="sync_code_host_warning">Este código aponta para %1$s. Continue só se for o seu servidor: o token ou a senha que você digitar será enviado para lá.</string>
     <string name="sync_http_warning">Este endereço não usa HTTPS: o token trafega sem proteção na rede. Suas notas continuam criptografadas.</string>
     <string name="sync_webdav_slash_hint">Se o endereço for uma pasta, termine-o com /</string>
     <string name="sync_parse_empty">Cole primeiro o código de perfil.</string>

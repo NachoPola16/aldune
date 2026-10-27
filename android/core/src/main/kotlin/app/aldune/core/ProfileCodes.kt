@@ -171,14 +171,14 @@ object ProfileCodes {
             throw SyncFormatException("The profile code contains an invalid server URL.", e)
         }
         val scheme = uri.scheme?.lowercase(Locale.ROOT)
-        if ((scheme != "http" && scheme != "https") || uri.host.isNullOrEmpty())
+        // Con usuario@ delante del host se disfraza el servidor real (https://host-bueno.com@atacante.tld/): nunca viaja en un código legítimo.
+        if ((scheme != "http" && scheme != "https") || uri.host.isNullOrEmpty() || uri.rawUserInfo != null)
             throw SyncFormatException("The profile code contains an invalid server URL.")
         val defaultPort = if (scheme == "https") 443 else 80
         val port = if (uri.port == defaultPort) -1 else uri.port
         val path = uri.rawPath.takeUnless { it.isNullOrEmpty() } ?: "/"
         return buildString {
             append(scheme).append("://")
-            uri.rawUserInfo?.let { append(it).append('@') }
             append(uri.host.lowercase(Locale.ROOT))
             if (port != -1) append(':').append(port)
             append(path)

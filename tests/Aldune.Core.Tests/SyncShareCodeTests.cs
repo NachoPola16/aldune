@@ -99,6 +99,17 @@ public sealed class SyncShareCodeTests
         Assert.Equal("https://sync.example.test:8443/", decoded.ServerUrl);
     }
 
+    [Theory]
+    [InlineData("https://host-bueno.com@atacante.test/")]
+    [InlineData("https://usuario:clave@nube.example.test/dav/")]
+    public void ProfileCodeWithUserInfoInTheServerUrlIsRejected(string url)
+    {
+        // El usuario@ disfraza el host real: nunca viaja en un código legítimo.
+        Assert.Throws<FormatException>(() => SyncShareCodeCodec.Encode(
+            RandomNumberGenerator.GetBytes(32), SyncScopeKind.AllNotes, Array.Empty<Guid>(),
+            "x", SyncTransportKind.Server, url));
+    }
+
     [Fact]
     public void InvalidProfileCodeIsRejected()
     {

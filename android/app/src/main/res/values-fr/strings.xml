@@ -121,6 +121,7 @@
     <string name="sync_password_label">Mot de passe d\'application</string>
     <string name="sync_connect">Connecter</string>
     <string name="sync_connecting">Connexion…</string>
+    <string name="sync_code_host_warning">Ce code pointe vers %1$s. Continue seulement si c\'est ton serveur : le jeton ou le mot de passe saisi y sera envoyé.</string>
     <string name="sync_http_warning">Cette adresse n\'utilise pas HTTPS : le jeton circule sans protection sur le réseau. Tes notes restent chiffrées.</string>
     <string name="sync_webdav_slash_hint">Si l\'adresse est un dossier, termine-la par /</string>
     <string name="sync_parse_empty">Colle d\'abord le code de profil.</string>

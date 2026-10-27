@@ -157,6 +157,9 @@ class ProfileCodeTest {
         assertThrows(SyncFormatException::class.java) { ProfileCodes.decode(doc("Transport" to "1")) }
         assertThrows(SyncFormatException::class.java) { ProfileCodes.decode(doc("Transport" to "2", "ServerUrl" to "\"ftp://x.com/\"")) }
         assertThrows(SyncFormatException::class.java) { ProfileCodes.decode(doc("ServerUrl" to "\"no es una url\"")) }
+        // Un usuario:clave@ en la URL disfraza el host real (https://host-bueno.com@atacante.tld/): se rechaza.
+        assertThrows(SyncFormatException::class.java) { ProfileCodes.decode(doc("Transport" to "1", "ServerUrl" to "\"https://host-bueno.com@atacante.tld/\"")) }
+        assertThrows(SyncFormatException::class.java) { ProfileCodes.decode(doc("Transport" to "2", "ServerUrl" to "\"https://u:p@nube.example/dav/\"")) }
         // Carpeta (0) no necesita URL.
         assertNull(ProfileCodes.decode(doc("Transport" to "0")).serverUrl)
         assertThrows(SyncFormatException::class.java) { ProfileCodes.decode(doc("ProfileName" to "\"${"x".repeat(121)}\"")) }

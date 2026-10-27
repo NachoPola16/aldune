@@ -121,6 +121,7 @@
     <string name="sync_password_label">App-Passwort</string>
     <string name="sync_connect">Verbinden</string>
     <string name="sync_connecting">Verbinde…</string>
+    <string name="sync_code_host_warning">Dieser Code verweist auf %1$s. Fahre nur fort, wenn das dein Server ist: Das eingegebene Token oder Passwort wird dorthin gesendet.</string>
     <string name="sync_http_warning">Diese Adresse verwendet kein HTTPS: Das Token wird ungeschützt übertragen. Deine Notizen bleiben verschlüsselt.</string>
     <string name="sync_webdav_slash_hint">Wenn die Adresse ein Ordner ist, ende sie mit /</string>
     <string name="sync_parse_empty">Füge zuerst den Profilcode ein.</string>

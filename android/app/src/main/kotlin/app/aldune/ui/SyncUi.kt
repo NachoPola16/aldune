@@ -31,6 +31,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
@@ -307,6 +308,12 @@ private fun ConnectForm(controller: SyncController, additional: Boolean, initial
                 value = url, onValueChange = { url = it }, modifier = Modifier.fillMaxWidth(), singleLine = true,
                 label = { Text(stringResource(R.string.sync_url_label)) }, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Uri),
             )
+            // La URL venía en el código: si es de otro (QR pegado por ahí), lo que se escriba abajo se le enviaría. Se destaca el host real.
+            val fromCode = (step as? ProfileParse.Server)?.url ?: (step as? ProfileParse.WebDav)?.url
+            if (fromCode != null) {
+                val host = runCatching { java.net.URI(fromCode).host }.getOrNull()
+                if (!host.isNullOrEmpty()) Text(stringResource(R.string.sync_code_host_warning, host), color = MaterialTheme.colorScheme.error, fontWeight = FontWeight.Bold)
+            }
             if (transport == SyncTransportKind.WEBDAV) Text(stringResource(R.string.sync_webdav_slash_hint), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
             if (url.trim().startsWith("http://", ignoreCase = true)) Text(stringResource(R.string.sync_http_warning), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.error)
             if (transport == SyncTransportKind.SERVER) {

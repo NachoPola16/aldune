@@ -22,6 +22,22 @@ class ProfileInputTest {
         name: String? = "Casa", tag: String? = null, ids: List<UUID> = emptyList(),
     ) = ProfileCodes.encode(key, scope, ids, name, transport, url, tag)
 
+    @Test
+    fun `un codigo con usuario@ en la url se rechaza como invalido`() {
+        // ProfileCodes.encode ya lo rechaza, así que se fabrica el documento a mano como lo haría un atacante.
+        fun b64(t: String) = Base64.getUrlEncoder().withoutPadding().encodeToString(t.toByteArray(Charsets.UTF_8))
+        val doc = """{"Version":2,"Key":"${app.aldune.core.SyncKeyFormat.encode(key)}","Scope":0,"NoteIds":[],"Tag":null,""" +
+            """"ProfileName":null,"Transport":1,"ServerUrl":"https://host-bueno.com@atacante.tld/"}"""
+        assertEquals(ProfileParseError.INVALID, rejected("aldune-profile-v2:" + b64(doc)))
+    }
+
+    @Test
+    fun `las credenciales no se imprimen en toString`() {
+        assertEquals("Token(***)", ProfileCredentials.Token("secreto-123").toString())
+        val basic = ProfileCredentials.Basic("nacho", "clave-123").toString()
+        assertTrue("clave-123" !in basic && "nacho" in basic, basic)
+    }
+
     private fun rejected(text: String) = assertIs<ProfileParse.Rejected>(parseProfileInput(text)).error
 
     // --- parseProfileInput ---

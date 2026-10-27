@@ -292,7 +292,9 @@ public static class SyncShareCodeCodec
         if (string.IsNullOrWhiteSpace(normalized)) return null;
         if (normalized.Length > MaxServerUrlLength ||
             !Uri.TryCreate(normalized, UriKind.Absolute, out var uri) ||
-            (uri.Scheme is not "http" and not "https"))
+            (uri.Scheme is not "http" and not "https") ||
+            // usuario@ delante del host lo disfraza (https://host-bueno.com@atacante.test/); un código legítimo nunca lo lleva.
+            uri.UserInfo.Length > 0)
             throw new FormatException("The profile code contains an invalid server URL.");
         return uri.ToString();
     }

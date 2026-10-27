@@ -76,10 +76,15 @@ fun parseProfileInput(pasted: String): ProfileParse {
 
 sealed interface ProfileCredentials {
     /** Servidor de Aldune. */
-    data class Token(val token: String) : ProfileCredentials
+    data class Token(val token: String) : ProfileCredentials {
+        // Un volcado de crash o un log con la petición no debe filtrar el secreto.
+        override fun toString() = "Token(***)"
+    }
 
     /** WebDAV: usuario y contraseña de aplicación. */
-    data class Basic(val username: String, val password: String) : ProfileCredentials
+    data class Basic(val username: String, val password: String) : ProfileCredentials {
+        override fun toString() = "Basic($username, ***)"
+    }
 }
 
 enum class CredentialsError { URL_EMPTY, URL_INVALID, TOKEN_EMPTY, USERNAME_EMPTY, PASSWORD_EMPTY }
