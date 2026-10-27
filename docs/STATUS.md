@@ -138,6 +138,19 @@ Tests: 506/506 pasando (`dotnet test tests/Aldune.Core.Tests --no-restore`).
   una marca local no servía porque el estado «papelera» viaja como nota normal): se ignora y se quita del almacén, y la nota se vuelve a publicar (Core y Android,
   escenarios E12a/E12c/E23b actualizados). **Abierto:** descartar sobres auténticos fechados a más de un día, `AppSettings` compartido entre el hilo de sync y la UI, `USER` no
   root en el Dockerfile del servidor (hay que mirar permisos del volumen en el CT 103), límite de intentos de token, lockfiles y `dotnet list package --vulnerable`.
+- **Segunda pasada de seguridad (2026-10-27, en `main`, sin release):** revisadas la UI WPF, `SecretVault`, `syncclient`, `QrScanActivity`, DPAPI/`SettingsService`,
+  el instalador y los workflows: nada alto. Hecho: un código de perfil con `usuario@` en la URL se rechaza (Core y Android; antes `https://host-bueno.com@atacante.tld/`
+  parecía de confianza) y al conectar desde un código se muestra el host real en negrita con un aviso; `http` fuera de la red local pide marcar una casilla antes de
+  conectar (`isCleartextOutsideLan`); `FLAG_SECURE` en el campo del código solo en producción; las credenciales no se imprimen en `toString()`; `SettingsService.Save`
+  serializado (lock, temporal propio y volcado a disco); el release de Windows comprueba la firma antes de empaquetar y publica `SHA256SUMS.txt`; Inno Setup fijado
+  en 6.7.1; el servidor de sync corre como usuario no root y sin capacidades (**un volumen ya existente necesita `chown -R 1654:1654`**, ver `SYNC.md`); verificación de
+  dependencias de Gradle (`android/gradle/verification-metadata.xml`, ver `RELEASING.md`); CI falla con paquetes NuGet vulnerables; lint de Android limpio (el
+  `@RequiresApi` estaba en `QuickListRow` en vez de en `TileRow`). **Descartado, con razón:** entropía en DPAPI (cualquier proceso del usuario la lee del binario y la migración
+  podría dejar sin acceso a las notas), rechazar rutas UNC y reparse points en notas vinculadas (rompe un NAS o OneDrive), lockfiles de NuGet (en modo bloqueado no se
+  cumplían al probarlos), descartar en el cliente sobres con fecha antigua (rompería a un dispositivo apagado varios días: una nota sin cambios conserva su fecha), límite
+  de intentos de token (el token se compara en tiempo constante y los tras NPM comparten IP; basta con un token largo, el servidor avisa si es corto). El arrastre de
+  tareas en Android sí tiene alternativa accesible: los botones «mover arriba/abajo» de la barra del editor. Sin probar: Docker (daemon apagado), el workflow de release
+  (solo corre con un tag) y la interfaz nueva en pantalla.
 - **Versiones (2026-10-27):** Windows 1.7.17 y Android 0.1.0 (la primera estable, `versionCode` 12, sin `-rc`; se publica con `--latest=false`, ver `RELEASING.md`).
 - **QR de emparejamiento** (2026-10-27, spec `superpowers/specs/2026-10-27-qr-emparejamiento-design.md`): Windows muestra el código de
   perfil como QR (`ShareQr` en Core con QRCoder 1.8.1; `ShareQrWindow` con aviso y cierre a los 120 s) y Android lo escanea
