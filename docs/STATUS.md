@@ -181,7 +181,7 @@ Tests: 506/506 pasando (`dotnet test tests/Aldune.Core.Tests --no-restore`).
   **formato que este cliente no entiende (`FormatException`) se sigue sustituyendo al subir** en los cuatro transportes: es el diseño documentado en `FolderSyncTransport.Write` («sustituir un
   archivo inválido es la forma de recuperarlo») y ya existía; cambiarlo (dejar en paz lo ilegible) toca todos los transportes y Android y hay que decidirlo con calma por si un objeto
   roto se queda atascado para siempre. **La `v1.7.18-rc1` publicada es anterior a todos estos arreglos.**
-- **Versiones (2026-10-27):** Windows 1.7.17 y Android 0.1.0 (la primera estable, `versionCode` 12, sin `-rc`; se publica con `--latest=false`, ver `RELEASING.md`).
+- **Versiones (2026-10-27 noche):** Windows **1.7.18** publicada y Android **0.1.1** (`versionCode` 13) preparada, pendiente de firmar y publicar (recoge los arreglos de seguridad de la sync, la casilla sin cursor, el aviso del host y el plazo de WebDAV). Antes: Windows 1.7.17 y Android 0.1.0 (la primera estable, `versionCode` 12, sin `-rc`; se publica con `--latest=false`, ver `RELEASING.md`).
 - **QR de emparejamiento** (2026-10-27, spec `superpowers/specs/2026-10-27-qr-emparejamiento-design.md`): Windows muestra el código de
   perfil como QR (`ShareQr` en Core con QRCoder 1.8.1; `ShareQrWindow` con aviso y cierre a los 120 s) y Android lo escanea
   (`QrScanActivity` con CameraX 1.6.2 + `QrDecoder` sobre ZXing core 3.5.4, sin Play Services). Se decidió no dividir el QR en varios
