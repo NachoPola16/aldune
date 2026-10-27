@@ -29,4 +29,7 @@ object AspectSkin {
     fun squareCorners(mode: Int): Boolean = mode == AppPalette.XP_DARK || mode in terminal
 
     fun syncSignal(mode: Int): Boolean = mode in terminal
+
+    /** Color de la nota como fondo de toda la tarjeta: los aspectos de terminal ya deciden cómo llevarlo (franja, canal, sin color), así que van sin él. */
+    fun colorFill(mode: Int): Boolean = mode !in terminal
 }

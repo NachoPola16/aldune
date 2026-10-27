@@ -46,4 +46,13 @@ class NoteSyncSignalTest {
         assertFalse(AspectSkin.syncSignal(AppPalette.XP_DARK))
         for (m in listOf(AppPalette.TELECOM_LIGHT, AppPalette.TELECOM_DARK, AppPalette.BASH, AppPalette.PHOSPHOR)) assertTrue(AspectSkin.syncSignal(m), "señal $m")
     }
+
+    @Test
+    fun `los aspectos de terminal no tiñen la nota entera por defecto`() {
+        // Bash lleva el color solo en una franja, Telecom en un tinte de canal y Fósforo no enseña colores: el fondo completo les choca.
+        for (m in listOf(AppPalette.TELECOM_LIGHT, AppPalette.TELECOM_DARK, AppPalette.BASH, AppPalette.PHOSPHOR)) assertFalse(AspectSkin.colorFill(m), "fondo $m")
+        for (m in listOf(AppPalette.DARK, AppPalette.LIGHT, AppPalette.SYSTEM, AppPalette.PASTEL, AppPalette.MIDNIGHT, AppPalette.XP_LIGHT, AppPalette.XP_DARK)) {
+            assertTrue(AspectSkin.colorFill(m), "fondo $m")
+        }
+    }
 }
