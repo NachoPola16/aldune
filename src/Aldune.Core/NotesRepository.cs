@@ -268,11 +268,12 @@ public sealed class NotesRepository
     }
 
     /// <summary>Última versión común con el almacén de cada nota (ver la tabla <c>SyncBase</c>).</summary>
-    public IReadOnlyDictionary<Guid, SyncBaseVersion> GetSyncBases()
+    public IReadOnlyDictionary<Guid, SyncBaseVersion> GetSyncBases(string profileKey = "")
     {
         using var connection = _database.OpenConnection();
         using var command = connection.CreateCommand();
-        command.CommandText = "SELECT NoteId, UpdatedAt, DeviceId FROM SyncBase;";
+        command.CommandText = "SELECT NoteId, UpdatedAt, DeviceId FROM SyncBase WHERE ProfileKey = $profile;";
+        command.Parameters.AddWithValue("$profile", profileKey);
         using var reader = command.ExecuteReader();
         var results = new Dictionary<Guid, SyncBaseVersion>();
         while (reader.Read())
@@ -281,12 +282,13 @@ public sealed class NotesRepository
     }
 
     /// <summary>La base de una sola nota, sin leer las de todas (la señal de sincronización la pide en
-    /// cada autoguardado).</summary>
+    /// cada autoguardado). Con varios perfiles que la tienen vale la más antigua: si alguno va por detrás, la nota
+    /// no se da por sincronizada.</summary>
     public SyncBaseVersion? GetSyncBase(Guid noteId)
     {
         using var connection = _database.OpenConnection();
         using var command = connection.CreateCommand();
-        command.CommandText = "SELECT UpdatedAt, DeviceId FROM SyncBase WHERE NoteId = $id;";
+        command.CommandText = "SELECT UpdatedAt, DeviceId FROM SyncBase WHERE NoteId = $id ORDER BY UpdatedAt LIMIT 1;";
         command.Parameters.AddWithValue("$id", noteId.ToString());
         using var reader = command.ExecuteReader();
         return reader.Read() ? new SyncBaseVersion(ParseDate(reader["UpdatedAt"]), reader.GetString(1)) : null;
@@ -303,7 +305,7 @@ public sealed class NotesRepository
         return command.ExecuteScalar() is not null;
     }
 
-    public void SetSyncBases(IEnumerable<KeyValuePair<Guid, SyncBaseVersion>> bases)
+    public void SetSyncBases(IEnumerable<KeyValuePair<Guid, SyncBaseVersion>> bases, string profileKey = "")
     {
         using var connection = _database.OpenConnection();
         using var transaction = connection.BeginTransaction();
@@ -311,7 +313,8 @@ public sealed class NotesRepository
         {
             using var command = connection.CreateCommand();
             command.Transaction = transaction;
-            command.CommandText = "INSERT OR REPLACE INTO SyncBase (NoteId, UpdatedAt, DeviceId) VALUES ($id, $updatedAt, $deviceId);";
+            command.CommandText = "INSERT OR REPLACE INTO SyncBase (ProfileKey, NoteId, UpdatedAt, DeviceId) VALUES ($profile, $id, $updatedAt, $deviceId);";
+            command.Parameters.AddWithValue("$profile", profileKey);
             command.Parameters.AddWithValue("$id", noteId.ToString());
             command.Parameters.AddWithValue("$updatedAt", version.UpdatedAt.ToString("O"));
             command.Parameters.AddWithValue("$deviceId", version.DeviceId);
@@ -347,7 +350,7 @@ public sealed class NotesRepository
         command.CommandText = """
             SELECT Id, NoteId, OccurredAt, WinnerUpdatedAt, WinnerDeviceId,
                    LosingUpdatedAt, LosingDeviceId, LosingTombstone,
-                   EncryptedNote, NoteNonce, NoteTag
+                   EncryptedNote, NoteNonce, NoteTag, ProfileKey
             FROM SyncConflict ORDER BY OccurredAt DESC;
             """;
 
@@ -372,7 +375,8 @@ public sealed class NotesRepository
                     (string)reader["WinnerDeviceId"], false, null),
                 new SyncConflictVersion(ParseDate(reader["LosingUpdatedAt"]),
                     (string)reader["LosingDeviceId"], Convert.ToInt32(reader["LosingTombstone"]) != 0,
-                    losingNote)));
+                    losingNote),
+                (string)reader["ProfileKey"]));
         }
 
         return results;
@@ -390,15 +394,16 @@ public sealed class NotesRepository
         using var connection = _database.OpenConnection();
         using var command = connection.CreateCommand();
         command.CommandText = """
-            DELETE FROM SyncConflict WHERE NoteId = $noteId;
+            DELETE FROM SyncConflict WHERE NoteId = $noteId AND ProfileKey = $profile;
             INSERT OR REPLACE INTO SyncConflict
                 (Id, NoteId, OccurredAt, WinnerUpdatedAt, WinnerDeviceId,
                  LosingUpdatedAt, LosingDeviceId, LosingTombstone,
-                 EncryptedNote, NoteNonce, NoteTag)
+                 EncryptedNote, NoteNonce, NoteTag, ProfileKey)
             VALUES ($id, $noteId, $occurredAt, $winnerUpdatedAt, $winnerDeviceId,
                     $losingUpdatedAt, $losingDeviceId, $losingTombstone,
-                    $encryptedNote, $noteNonce, $noteTag);
+                    $encryptedNote, $noteNonce, $noteTag, $profile);
             """;
+        command.Parameters.AddWithValue("$profile", conflict.ProfileKey);
         command.Parameters.AddWithValue("$id", conflict.Id.ToString());
         command.Parameters.AddWithValue("$noteId", conflict.NoteId.ToString());
         command.Parameters.AddWithValue("$occurredAt", conflict.OccurredAt.ToString("O"));

@@ -139,7 +139,8 @@ public sealed record SyncConflict(
     Guid NoteId,
     DateTimeOffset OccurredAt,
     SyncConflictVersion Winner,
-    SyncConflictVersion Losing);
+    SyncConflictVersion Losing,
+    string ProfileKey = "");
 
 public static class SyncKeyFormat
 {

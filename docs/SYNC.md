@@ -371,6 +371,15 @@ configuración antigua se migra al perfil `Mis dispositivos` al abrirla por prim
 compartir una nota con otra persona, crea otro perfil, selecciona solo esa nota y comparte el
 código de ese perfil; el flujo futuro de invitación y revocación de perfiles queda pendiente.
 
+**Todos los perfiles activados se sincronizan a la vez** (27-10-2026), aunque no sea el elegido en el desplegable: ese
+desplegable solo decide cuál se edita. «Sincronizar ahora» y el sondeo automático recorren los perfiles con
+«Sincronizar este perfil» marcado, el elegido primero; el fallo de uno no detiene a los demás (el error nombra el perfil) y el
+intervalo automático es el más corto de los perfiles automáticos. Cada perfil guarda sus **bases de conflicto** por separado
+(`SyncBase` y `SyncConflict` llevan `ProfileKey`): sin eso, lo acordado con un almacén taparía un conflicto real en otro. El
+primer perfil conserva la clave vacía, así que las bases que ya había siguen siendo suyas; los demás usan su id
+(`SyncProfileSettings.BaseKey`). Una versión anterior que abra la base de datos sigue funcionando. Al borrar un perfil sus
+bases quedan huérfanas en la base de datos (inofensivo: el id no se reutiliza).
+
 ### Compartir una selección de notas
 
 En el perfil de origen, crea o selecciona un perfil, marca `Notas seleccionadas` y elige las notas.

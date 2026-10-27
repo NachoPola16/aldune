@@ -26,4 +26,11 @@ public sealed class SyncProfileSettings
     public SyncScopeKind SyncScope { get; set; } = SyncScopeKind.AllNotes;
     public List<Guid> SyncNoteIds { get; set; } = new();
     public string? SyncTag { get; set; }
+
+    /// <summary>
+    /// Con qué clave guarda este perfil sus bases de conflicto en la base de datos (ver <c>SyncBase</c>). El
+    /// primer perfil conserva la vacía, que es la de siempre, para no perder lo ya acordado con su almacén; los
+    /// demás usan su propio id. Va aparte de <see cref="Id"/> por esa herencia, y no cambia aunque se borre otro perfil.
+    /// </summary>
+    public string BaseKey { get; set; } = "";
 }

@@ -1512,9 +1512,16 @@ public sealed class AppCoordinator
         _autoSyncTimer?.Dispose();
         _autoSyncTimer = null;
 
-        if (_syncService is null || _settings is not { SyncEnabled: true, SyncAutomatically: true }) return;
+        if (_syncService is null || _settings is null) return;
 
-        int minutes = Math.Clamp(_settings.SyncIntervalMinutes, 1, 1440);
+        // El sondeo cubre todos los perfiles activados (SyncService.Synchronize los recorre), no solo el elegido en
+        // Ajustes. Los campos sueltos de _settings son los del elegido y los demás se leen de la lista, así que se
+        // vuelca primero el elegido. El intervalo es el más corto de los perfiles automáticos.
+        SyncProfileStore.SaveActiveFromLegacy(_settings);
+        var automatic = _settings.SyncProfiles.Where(profile => profile is { SyncEnabled: true, SyncAutomatically: true }).ToList();
+        if (automatic.Count == 0) return;
+
+        int minutes = Math.Clamp(automatic.Min(profile => profile.SyncIntervalMinutes), 1, 1440);
         _autoSyncTimer = new System.Threading.Timer(_ =>
         {
             // Este callback corre en un hilo del pool: una excepción que se escape aquí cierra la aplicación

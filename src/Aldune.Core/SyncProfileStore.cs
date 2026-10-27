@@ -19,6 +19,8 @@ public static class SyncProfileStore
             settings.SyncProfiles.Add(CreateFromLegacy(settings, "Mis dispositivos"));
         }
 
+        AssignBaseKeys(settings);
+
         var active = settings.SyncProfiles.FirstOrDefault(profile => profile.Id == settings.ActiveSyncProfileId)
                      ?? settings.SyncProfiles[0];
         settings.ActiveSyncProfileId = active.Id;
@@ -34,10 +36,24 @@ public static class SyncProfileStore
             Name = string.IsNullOrWhiteSpace(name) ? $"Vínculo {settings.SyncProfiles.Count + 1}" : name.Trim(),
             SyncIntervalMinutes = 15,
         };
+        profile.BaseKey = profile.Id;
         settings.SyncProfiles.Add(profile);
         settings.ActiveSyncProfileId = profile.Id;
         LoadActiveToLegacy(settings);
         return profile;
+    }
+
+    /// <summary>
+    /// Todo perfil salvo el primero necesita su propia clave de bases. Los settings.json anteriores a la sync de
+    /// varios perfiles no la traen: sus perfiles adicionales la reciben aquí, y el primero sigue con la vacía.
+    /// </summary>
+    private static void AssignBaseKeys(AppSettings settings)
+    {
+        for (int i = 1; i < settings.SyncProfiles.Count; i++)
+        {
+            var profile = settings.SyncProfiles[i];
+            if (profile.BaseKey.Length == 0) profile.BaseKey = profile.Id;
+        }
     }
 
     public static bool DeleteActive(AppSettings settings)

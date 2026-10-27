@@ -11,17 +11,23 @@ public sealed class SyncService
 {
     private readonly NotesRepository _repository;
     private readonly AppSettings _settings;
-    private readonly SettingsService _settingsService;
+    private readonly Action<AppSettings> _persist;
     private readonly TimeSpan? _httpTimeout;
     private readonly object _syncGate = new();
 
     /// <param name="httpTimeout">Espera máxima del servidor o WebDAV; null deja la de los transportes (20 s).</param>
     public SyncService(NotesRepository repository, AppSettings settings, SettingsService settingsService,
         TimeSpan? httpTimeout = null)
+        : this(repository, settings, settingsService.Save, httpTimeout)
+    {
+    }
+
+    private SyncService(NotesRepository repository, AppSettings settings, Action<AppSettings> persist,
+        TimeSpan? httpTimeout)
     {
         _repository = repository;
         _settings = settings;
-        _settingsService = settingsService;
+        _persist = persist;
         _httpTimeout = httpTimeout;
     }
 
@@ -74,7 +80,7 @@ public sealed class SyncService
             _settings.WrappedPendingSyncKey = null;
             _settings.SyncKeyRotationPending = false;
             EnsureDeviceId();
-            _settingsService.Save(_settings);
+            _persist(_settings);
         }
         finally
         {
@@ -100,7 +106,7 @@ public sealed class SyncService
                     _settings.SyncServerUrl = share.ServerUrl;
             }
             EnsureDeviceId();
-            _settingsService.Save(_settings);
+            _persist(_settings);
         }
         finally
         {
@@ -134,7 +140,7 @@ public sealed class SyncService
             _settings.WrappedSyncServerToken = string.IsNullOrEmpty(token)
                 ? null
                 : DatabaseKeyProvider.Wrap(bytes);
-            _settingsService.Save(_settings);
+            _persist(_settings);
         }
         finally
         {
@@ -165,7 +171,7 @@ public sealed class SyncService
             _settings.WrappedSyncWebDavPassword = string.IsNullOrEmpty(password)
                 ? null
                 : DatabaseKeyProvider.Wrap(bytes);
-            _settingsService.Save(_settings);
+            _persist(_settings);
         }
         finally
         {
@@ -254,9 +260,62 @@ public sealed class SyncService
         return true;
     }
 
+    /// <summary>
+    /// Sincroniza todos los perfiles activados, no solo el elegido en Ajustes: ese desplegable decide qué se edita,
+    /// no qué se sincroniza. El elegido va primero y el fallo de un perfil no detiene a los demás.
+    /// </summary>
     public SyncResult Synchronize()
     {
-        lock (_syncGate) return SynchronizeCore();
+        lock (_syncGate)
+        {
+            // Lo que haya en los campos del perfil elegido pasa a su perfil: los demás se leen de la lista.
+            SyncProfileStore.SaveActiveFromLegacy(_settings);
+            var others = _settings.SyncProfiles
+                .Where(profile => profile.SyncEnabled && profile.Id != _settings.ActiveSyncProfileId)
+                .ToList();
+            if (others.Count == 0) return SynchronizeCore();
+
+            var ran = new List<(string Name, SyncResult Result)>();
+            if (_settings.SyncEnabled)
+                ran.Add((SyncProfileStore.GetActive(_settings).Name, SynchronizeCore()));
+            foreach (var profile in others)
+                ran.Add((profile.Name, SynchronizeProfile(profile)));
+
+            var failures = ran.Where(item => !item.Result.Succeeded)
+                .Select(item => $"{item.Name}: {item.Result.Error}").ToList();
+            return new SyncResult(
+                ran.Sum(item => item.Result.Uploaded),
+                ran.Sum(item => item.Result.Downloaded),
+                ran.Sum(item => item.Result.ConflictsResolved),
+                ran.Sum(item => item.Result.TombstonesApplied),
+                failures.Count == 0 ? null : string.Join(" · ", failures));
+        }
+    }
+
+    /// <summary>
+    /// Sincroniza un perfil que no es el elegido sobre unos ajustes de trabajo propios, sin tocar los campos que la
+    /// ventana de Ajustes está editando. Lo que cambia (última sync, id de dispositivo, token) se copia de vuelta al
+    /// perfil y se guarda con el resto de los ajustes.
+    /// </summary>
+    private SyncResult SynchronizeProfile(SyncProfileSettings profile)
+    {
+        var scratch = new AppSettings { SyncProfiles = [profile], ActiveSyncProfileId = profile.Id };
+        SyncProfileStore.LoadActiveToLegacy(scratch);
+        var worker = new SyncService(_repository, scratch, _ =>
+        {
+            SyncProfileStore.SaveActiveFromLegacy(scratch);
+            _persist(_settings);
+        }, _httpTimeout);
+        return worker.SynchronizeCore();
+    }
+
+    /// <summary>Clave con la que el perfil en curso guarda sus bases y conflictos (ver <see cref="SyncProfileSettings.BaseKey"/>).</summary>
+    private string CurrentBaseKey()
+    {
+        var profiles = _settings.SyncProfiles;
+        int index = profiles.FindIndex(profile => profile.Id == _settings.ActiveSyncProfileId);
+        if (index < 0) return "";
+        return profiles[index].BaseKey.Length > 0 || index == 0 ? profiles[index].BaseKey : profiles[index].Id;
     }
 
     /// <summary>
@@ -286,7 +345,7 @@ public sealed class SyncService
             {
                 _settings.WrappedPendingSyncKey = DatabaseKeyProvider.Wrap(nextKey);
                 _settings.SyncKeyRotationPending = true;
-                _settingsService.Save(_settings);
+                _persist(_settings);
             }
             finally
             {
@@ -374,7 +433,8 @@ public sealed class SyncService
                 int downloaded = 0;
                 int conflicts = 0;
                 int tombstones = 0;
-                var bases = _repository.GetSyncBases();
+                var baseKey = CurrentBaseKey();
+                var bases = _repository.GetSyncBases(baseKey);
                 var settled = new Dictionary<Guid, SyncBaseVersion>();
                 void Settle(Guid id, SyncEnvelope agreed)
                 {
@@ -417,7 +477,7 @@ public sealed class SyncService
                             var winner = comparison > 0 ? localVersion : remoteVersion;
                             var losing = comparison > 0 ? remoteVersion : localVersion;
                             _repository.SaveSyncConflict(new SyncConflict(
-                                Guid.NewGuid(), id, DateTimeOffset.UtcNow, winner, losing));
+                                Guid.NewGuid(), id, DateTimeOffset.UtcNow, winner, losing, baseKey));
                             conflicts++;
                         }
                     }
@@ -433,10 +493,10 @@ public sealed class SyncService
                     Settle(id, comparison >= 0 ? localEnvelope! : remoteObject.Envelope);
                 }
 
-                if (settled.Count > 0) _repository.SetSyncBases(settled);
+                if (settled.Count > 0) _repository.SetSyncBases(settled, baseKey);
                 var result = new SyncResult(uploaded, downloaded, conflicts, tombstones);
                 _settings.LastSyncAt = DateTimeOffset.UtcNow;
-                _settingsService.Save(_settings);
+                _persist(_settings);
                 return result;
             }
             finally
@@ -526,7 +586,7 @@ public sealed class SyncService
             _settings.WrappedSyncKey = _settings.WrappedPendingSyncKey;
             _settings.WrappedPendingSyncKey = null;
             _settings.SyncKeyRotationPending = false;
-            _settingsService.Save(_settings);
+            _persist(_settings);
             return true;
         }
         catch (Exception ex) when (IsExpectedSyncFailure(ex))
@@ -746,7 +806,7 @@ public sealed class SyncService
         var key = DatabaseKeyProvider.GenerateKey();
         _settings.WrappedSyncKey = DatabaseKeyProvider.Wrap(key);
         EnsureDeviceId();
-        _settingsService.Save(_settings);
+        _persist(_settings);
         return key;
     }
 
@@ -758,7 +818,7 @@ public sealed class SyncService
     {
         if (!string.IsNullOrWhiteSpace(_settings.SyncDeviceId)) return _settings.SyncDeviceId;
         _settings.SyncDeviceId = Guid.NewGuid().ToString("N");
-        _settingsService.Save(_settings);
+        _persist(_settings);
         return _settings.SyncDeviceId;
     }
 

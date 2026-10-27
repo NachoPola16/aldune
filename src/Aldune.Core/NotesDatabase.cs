@@ -24,6 +24,7 @@ public sealed class NotesDatabase
         using var connection = OpenConnection();
         DropOutdatedNotePlacementTable(connection);
         AddManualHeightColumn(connection);
+        MigrateSyncBaseTable(connection);
 
         using var command = connection.CreateCommand();
         command.CommandText = """
@@ -106,10 +107,14 @@ public sealed class NotesDatabase
             -- Última versión en la que este dispositivo y el almacén coincidieron, por nota. Un
             -- conflicto real exige que los dos lados hayan cambiado desde ella; sin esta base, cada
             -- edición normal hecha en otro dispositivo se guardaba como conflicto.
+            -- ProfileKey separa los almacenes: con varios perfiles sincronizando a la vez, la versión acordada con
+            -- uno no vale para otro (ver SyncProfileSettings.BaseKey). La vacía es la del primer perfil.
             CREATE TABLE IF NOT EXISTS SyncBase (
-                NoteId TEXT PRIMARY KEY NOT NULL,
+                ProfileKey TEXT NOT NULL DEFAULT '',
+                NoteId TEXT NOT NULL,
                 UpdatedAt TEXT NOT NULL,
-                DeviceId TEXT NOT NULL
+                DeviceId TEXT NOT NULL,
+                PRIMARY KEY (ProfileKey, NoteId)
             );
 
             -- A conflict keeps only the losing version, encrypted with the local database key.
@@ -150,6 +155,57 @@ public sealed class NotesDatabase
             """;
         command.ExecuteNonQuery();
         EnsureNoteProtectionColumns(connection);
+        EnsureSyncConflictProfileKey(connection);
+    }
+
+    /// <summary>
+    /// <c>SyncBase</c> pasó a clave (ProfileKey, NoteId). Aquí sí se conservan las filas (pasan a la clave vacía, la del
+    /// primer perfil): perder las bases no pierde notas, pero una base que falta guarda como conflicto lo que era una
+    /// edición normal, y con la sync de todos los perfiles eso saldría una vez por cada nota.
+    /// Una versión anterior que abra esta base sigue funcionando: ProfileKey tiene valor por defecto.
+    /// </summary>
+    private static void MigrateSyncBaseTable(SqliteConnection connection)
+    {
+        using var check = connection.CreateCommand();
+        check.CommandText = "SELECT " +
+            "(SELECT COUNT(*) FROM pragma_table_info('SyncBase')), " +
+            "(SELECT COUNT(*) FROM pragma_table_info('SyncBase') WHERE name = 'ProfileKey');";
+        using (var reader = check.ExecuteReader())
+        {
+            reader.Read();
+            if (reader.GetInt64(0) == 0 || reader.GetInt64(1) > 0) return;
+        }
+
+        using var transaction = connection.BeginTransaction();
+        using var migrate = connection.CreateCommand();
+        migrate.Transaction = transaction;
+        migrate.CommandText = """
+            ALTER TABLE SyncBase RENAME TO SyncBaseOld;
+            CREATE TABLE SyncBase (
+                ProfileKey TEXT NOT NULL DEFAULT '',
+                NoteId TEXT NOT NULL,
+                UpdatedAt TEXT NOT NULL,
+                DeviceId TEXT NOT NULL,
+                PRIMARY KEY (ProfileKey, NoteId)
+            );
+            INSERT INTO SyncBase (ProfileKey, NoteId, UpdatedAt, DeviceId)
+                SELECT '', NoteId, UpdatedAt, DeviceId FROM SyncBaseOld;
+            DROP TABLE SyncBaseOld;
+            """;
+        migrate.ExecuteNonQuery();
+        transaction.Commit();
+    }
+
+    /// <summary>Los conflictos guardados antes de la sync de varios perfiles quedan en la clave vacía (primer perfil).</summary>
+    private static void EnsureSyncConflictProfileKey(SqliteConnection connection)
+    {
+        using var check = connection.CreateCommand();
+        check.CommandText = "SELECT COUNT(*) FROM pragma_table_info('SyncConflict') WHERE name = 'ProfileKey';";
+        if (Convert.ToInt64(check.ExecuteScalar()!) > 0) return;
+
+        using var alter = connection.CreateCommand();
+        alter.CommandText = "ALTER TABLE SyncConflict ADD COLUMN ProfileKey TEXT NOT NULL DEFAULT '';";
+        alter.ExecuteNonQuery();
     }
 
     private static void EnsureNoteProtectionColumns(SqliteConnection connection)

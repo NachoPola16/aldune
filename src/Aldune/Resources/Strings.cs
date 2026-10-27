@@ -1014,8 +1014,10 @@ public static class Strings
         "Notizen bleiben verschlüsselt. Verwende einen freigegebenen Ordner, deinen eigenen Aldune-Server oder WebDAV.",
         "Les notes restent chiffrées. Utilisez un dossier partagé, votre propre serveur Aldune ou WebDAV.",
         "As notas permanecem criptografadas. Use uma pasta compartilhada, seu próprio servidor Aldune ou WebDAV.");
-    public static string SyncEnabledCheckbox => T("Enable sync", "Activar sincronización",
-        "Synchronisierung aktivieren", "Activer la synchronisation", "Ativar sincronização");
+    public static string SyncEnabledCheckbox => T("Sync this profile (all enabled profiles sync together)", "Sincronizar este perfil (todos los activados se sincronizan a la vez)",
+        "Dieses Profil synchronisieren (alle aktivierten Profile werden gemeinsam synchronisiert)",
+        "Synchroniser ce profil (tous les profils activés se synchronisent ensemble)",
+        "Sincronizar este perfil (todos os ativados sincronizam juntos)");
     public static string SyncFolderOption => T("Shared folder / NAS", "Carpeta compartida / NAS",
         "Freigegebener Ordner / NAS", "Dossier partagé / NAS", "Pasta compartilhada / NAS");
     public static string SyncServerOption => T("Self-hosted server", "Servidor propio",
