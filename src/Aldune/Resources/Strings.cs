@@ -1343,6 +1343,18 @@ public static class Strings
         "Só muda a aparência: cada nota mantém a sua cor.");
     public static string AppearanceSyncSignal => T("Show sync status on each note", "Señal de sincronización en cada nota",
         "Synchronisierungsstatus auf jeder Notiz", "Indicateur de synchronisation sur chaque note", "Sinal de sincronização em cada nota");
+    public static string AppearanceNoteColorStripe => T(
+        "Note color as a side strip (not the whole note)",
+        "Color de la nota solo como franja lateral (no la nota entera)",
+        "Notizfarbe nur als Seitenstreifen (nicht die ganze Notiz)",
+        "Couleur de la note en bande latérale (pas toute la note)",
+        "Cor da nota só como faixa lateral (não a nota inteira)");
+    public static string AppearanceNoteColorStripeLocked => T(
+        "This look already decides how the note color is shown.",
+        "Este aspecto ya decide cómo se muestra el color de la nota.",
+        "Dieses Design bestimmt bereits, wie die Notizfarbe angezeigt wird.",
+        "Cet aspect décide déjà comment la couleur de la note s'affiche.",
+        "Este visual já decide como a cor da nota é exibida.");
     public static string AppearanceSquareCorners => T("Square corners on notes, dock and windows", "Esquinas rectas en notas, dock y ventanas",
         "Eckige Ecken bei Notizen, Dock und Fenstern", "Coins carrés pour les notes, le dock et les fenêtres", "Cantos retos nas notas, no dock e nas janelas");
     public static string SyncSignalLabel(Aldune.Core.SyncSignalState state) => state switch

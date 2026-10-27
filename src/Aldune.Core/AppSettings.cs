@@ -212,6 +212,12 @@ public sealed class AppSettings
     public bool LargeCheckboxes { get; set; }
 
     /// <summary>
+    /// El color de la nota como una franja lateral sobre el fondo de la app, en vez de teñir la nota entera. Solo afecta a
+    /// los aspectos de cara llena (ver <see cref="AppSkin.For(AppearanceMode, bool)"/>). Apagado: la nota entera de su color, como siempre.
+    /// </summary>
+    public bool NoteColorAsStripe { get; set; }
+
+    /// <summary>
     /// Consulta diaria a GitHub para avisar de versiones nuevas. Es lo único que sale del equipo sin
     /// que el usuario lo pida, así que se puede apagar (la política de firma de SignPath exige
     /// declararlo). Activada por defecto: un settings.json anterior sigue avisando como siempre.

@@ -421,6 +421,11 @@
                                   Foreground="{DynamicResource AlduneTextBrush}" Background="{DynamicResource AlduneGroundBrush}" FontSize="{StaticResource AlduneTextBody}"
                                   Style="{StaticResource SettingsSwitchStyle}" Margin="0,0,0,10"
                                   Click="OnSquareCornersToggled" />
+                        <CheckBox x:Name="NoteColorStripeCheck"
+                                  Content="{x:Static res:Strings.AppearanceNoteColorStripe}"
+                                  Foreground="{DynamicResource AlduneTextBrush}" Background="{DynamicResource AlduneGroundBrush}" FontSize="{StaticResource AlduneTextBody}"
+                                  Style="{StaticResource SettingsSwitchStyle}" Margin="0,0,0,10"
+                                  Click="OnNoteColorStripeToggled" />
                         <CheckBox x:Name="SyncSignalCheck"
                                   Content="{x:Static res:Strings.AppearanceSyncSignal}"
                                   Foreground="{DynamicResource AlduneTextBrush}" Background="{DynamicResource AlduneGroundBrush}" FontSize="{StaticResource AlduneTextBody}"

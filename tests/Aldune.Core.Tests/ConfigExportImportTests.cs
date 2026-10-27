@@ -362,7 +362,7 @@ public class ConfigExportImportTests
         // Golden: cambiar, quitar o añadir un campo obliga a tocar esta lista a conciencia.
         string[] expected =
         [
-            "appearance", "aspectColors", "squareCorners", "syncSignal", "uniformNoteColor", "noteTheme",
+            "appearance", "aspectColors", "squareCorners", "noteColorAsStripe", "syncSignal", "uniformNoteColor", "noteTheme",
             "customThemes", "newNoteTone", "colorAssignment", "fixedNoteColor",
             "language", "simplifiedMode", "hotkeyEnabled", "hotkeyModifiers", "hotkeyKey",
             "recentHotkeyEnabled", "recentHotkeyModifiers", "recentHotkeyKey", "dockEdge", "dockAlignment", "dockView",
@@ -371,7 +371,7 @@ public class ConfigExportImportTests
             "rememberNotePositions", "rememberNoteSizes", "checkForUpdates", "reminderIncludesTasks",
         ];
 
-        Assert.Equal(35, expected.Length);
+        Assert.Equal(36, expected.Length);
         Assert.Equal(expected, ConfigFields.All.Select(f => f.Id).ToArray());
     }
 

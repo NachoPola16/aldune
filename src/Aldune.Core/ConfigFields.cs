@@ -57,6 +57,7 @@ public static class ConfigFields
         Enum<AppearanceMode>("appearance", nameof(AppSettings.Appearance), ConfigSections.Appearance, s => s.Appearance, (s, v) => s.Appearance = v),
         Custom("aspectColors", nameof(AppSettings.AspectColors), ConfigSections.Appearance, s => s.AspectColors, ReadAspectColors, (s, v) => s.AspectColors = CloneAspectColors((Dictionary<string, Dictionary<string, string>>?)v), ShowAspectColors),
         NullableBool("squareCorners", nameof(AppSettings.SquareCorners), ConfigSections.Appearance, s => s.SquareCorners, (s, v) => s.SquareCorners = v),
+        Bool("noteColorAsStripe", nameof(AppSettings.NoteColorAsStripe), ConfigSections.Appearance, s => s.NoteColorAsStripe, (s, v) => s.NoteColorAsStripe = v),
         NullableBool("syncSignal", nameof(AppSettings.ShowSyncSignal), ConfigSections.Appearance, s => s.ShowSyncSignal, (s, v) => s.ShowSyncSignal = v),
         Color("uniformNoteColor", nameof(AppSettings.UniformNoteColor), ConfigSections.Appearance, s => s.UniformNoteColor, (s, v) => s.UniformNoteColor = v),
         Text("noteTheme", nameof(AppSettings.ActiveThemeId), ConfigSections.Appearance, s => s.ActiveThemeId, (s, v) => s.ActiveThemeId = v, valid: _ => true),

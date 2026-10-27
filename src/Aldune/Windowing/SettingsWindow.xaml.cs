@@ -227,6 +227,29 @@ public partial class SettingsWindow : Window
         _coordinator?.RebuildDocks();
     }
 
+    /// <summary>
+    /// Los aspectos que ya deciden cómo llevan el color (Bash: franja; Telecom: tinte de canal; Fósforo: sin color) ignoran
+    /// el interruptor. En vez de dejar una casilla que no hace nada, se apaga y enseña lo que ese aspecto hace.
+    /// </summary>
+    private void UpdateNoteColorStripeUi()
+    {
+        var own = AppSkin.For(_settings.Appearance).Card;
+        bool decidedBySkin = own != SkinCard.Filled;
+        NoteColorStripeCheck.IsEnabled = !decidedBySkin;
+        NoteColorStripeCheck.IsChecked = decidedBySkin ? own == SkinCard.Stripe : _settings.NoteColorAsStripe;
+        NoteColorStripeCheck.ToolTip = decidedBySkin ? Strings.AppearanceNoteColorStripeLocked : null;
+    }
+
+    private void OnNoteColorStripeToggled(object sender, RoutedEventArgs e)
+    {
+        _settings.NoteColorAsStripe = NoteColorStripeCheck.IsChecked == true;
+        _settingsService.Save(_settings);
+        ThemeManager.ApplySkin(Application.Current, AppSkin.For(_settings.Appearance, _settings.NoteColorAsStripe));
+        // Las ventanas de nota se repintan con RefreshNoteAppearance; las pestañas del dock, al rehacerlas.
+        _coordinator?.RefreshNoteAppearance();
+        _coordinator?.RebuildDocks();
+    }
+
     private void OnSyncSignalToggled(object sender, RoutedEventArgs e)
     {
         _settings.ShowSyncSignal = SyncSignalCheck.IsChecked == true;
@@ -1557,10 +1580,11 @@ public partial class SettingsWindow : Window
     {
         var mode = _settings.Appearance;
         ThemeManager.Apply(Application.Current, mode, _settings.ColorsFor(mode));
-        ThemeManager.ApplySkin(Application.Current, AppSkin.For(mode));
+        ThemeManager.ApplySkin(Application.Current, AppSkin.For(mode, _settings.NoteColorAsStripe));
         ThemeManager.ApplyShape(Application.Current, _settings.CornersSquare);
         // Las casillas usan Click, no Checked: fijarlas desde código no dispara sus manejadores.
         SquareCornersCheck.IsChecked = _settings.CornersSquare;
+        UpdateNoteColorStripeUi();
         SyncSignalCheck.IsChecked = _settings.SyncSignalVisible;
         // Esquinas y pestañas espejadas se fijan al crear cada pestaña: hay que rehacer el dock.
         _coordinator?.RebuildDocks();
@@ -2016,6 +2040,7 @@ public partial class SettingsWindow : Window
         UpdateUniformColorUi();
         SyncSignalCheck.IsChecked = _settings.SyncSignalVisible;
         SquareCornersCheck.IsChecked = _settings.CornersSquare;
+        UpdateNoteColorStripeUi();
         MoveCompletedTasksCheck.IsChecked = _settings.MoveCompletedTasksToEnd;
         LargeCheckboxesCheck.IsChecked = _settings.LargeCheckboxes;
         CheckForUpdatesAutomaticallyCheck.IsChecked = _settings.CheckForUpdatesAutomatically;

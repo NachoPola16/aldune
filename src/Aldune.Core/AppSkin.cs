@@ -98,6 +98,16 @@ public sealed record AppSkin(
         SquareCorners = true, SyncSignal = true,
     };
 
+    /// <summary>
+    /// La piel con el ajuste «color de la nota solo como franja»: solo cambia la de cara llena (los aspectos de siempre).
+    /// Los que ya eligen cómo llevan el color (terminal, osciloscopio, fósforo) quedan como están.
+    /// </summary>
+    public static AppSkin For(AppearanceMode mode, bool colorAsStripe)
+    {
+        var skin = For(mode);
+        return colorAsStripe && skin.Card == SkinCard.Filled ? skin with { Card = SkinCard.Stripe } : skin;
+    }
+
     /// <summary>La piel de cada aspecto (spec, sección 2). Los de antes de la 1.5 usan la de siempre.</summary>
     public static AppSkin For(AppearanceMode mode) => mode switch
     {
