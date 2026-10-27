@@ -31,7 +31,7 @@ internal static class AppSounds
         }
         catch (Exception ex)
         {
-            DockDiagnostics.Write("sonidos", $"no se pudo reproducir: {ex.GetType().Name}: {ex.Message}");
+            AppLog.Write("sonidos", $"no se pudo reproducir: {ex.GetType().Name}: {ex.Message}");
         }
     }
 

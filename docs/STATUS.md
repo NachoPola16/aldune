@@ -209,23 +209,13 @@ cuando toque la fase correspondiente:
   `AuthenticationTagMismatchException` no se confunde con el caso DPAPI en
   `App.xaml.cs`, deduplicación de patrón `SqliteConnection.ClearPool()` en
   tests, etc.) — sin impacto funcional, solo mantenibilidad.
-- **La tira de reposo del dock a veces desaparece del todo, sola, sin nada a
-  pantalla completa** (reportado por el usuario, 2026-09-09; ya le había
-  pasado antes de esta sesión, no es nuevo). Vuelve a verse en cuanto se pasa
-  el ratón por encima. Hipótesis, sin confirmar todavía: es el riesgo que ya
-  se dejó anotado sin verificar al pasar el dock a `AllowsTransparency="True"`
-  (ver la sección "Rediseño de movimiento y forma del dock" más abajo) — una
-  ventana WPF "layered" que deja de recomponerse tras algún evento del
-  sistema (¿reanudar tras suspender? ¿reconectar un monitor? ¿aleatorio en
-  uso continuado?) hasta que algo fuerza un repintado, que es justo lo que
-  hace la animación de opacidad al pasar el ratón (`EdgeDockWindow.ApplyState`/
-  `Fade`, tocar `Opacity` obliga a WPF a recomponer de verdad). **No se ha
-  implementado ningún arreglo todavía** — hace falta primero confirmar el
-  disparador real (preguntado al usuario, respuesta pendiente) antes de
-  enganchar un repintado forzado al evento correcto en vez de un parche
-  genérico. Si se confirma que es tras reanudar del sueño, el sitio natural
-  es `SystemEvents.PowerModeChanged` en `App.xaml.cs`, mismo patrón que ya
-  usa `OnDisplaySettingsChanged` para los cambios de monitor.
+- ~~**La tira de reposo del dock a veces desaparece del todo, sola, sin nada a pantalla completa**~~ — **RESUELTO (2026-10-27, confirmado por el usuario: ya no pasa).**
+  Reportado el 2026-09-09. La causa era una ventana «layered» (`AllowsTransparency`) que dejaba de recomponerse tras cambios de pantallas (Windows mueve las
+  ventanas al apagar o encender monitores). Lo que lo arregló, y **se conserva**: `KeepWindowInPlace` (500 ms, devuelve la ventana a su sitio o reconstruye los
+  docks), `KeepStripOnTop`, la lectura del color de la tira cada 5 s con repintado tras dos lecturas sin pintar (`RepaintStripIfUnpainted`) y la detección de
+  monitores apagados por DDC/CI. Se **retiró el registro de diagnóstico del dock** (`logs\dock.log`: estados del dock, pantallas, energía y sesión); quedó solo
+  `logs\errores.log` (`AppLog`) con los errores inesperados de las tareas en segundo plano (sync, recordatorios, archivos vinculados, sonidos). Historial en
+  `docs/DOCK_DIAGNOSTICS.md`. Si el fallo volviera, hay que reponer el registro desde el historial de git (`git log -S RecordDiagnostics`).
 
 ## Prerrequisitos para la Fase 3, resto por hacer (sub-entregas 2+)
 

@@ -68,7 +68,7 @@ internal sealed class ReminderScheduler : IDisposable
         }
         catch (Exception ex)
         {
-            DockDiagnostics.Write("recordatorios", $"comprobación fallida, se reintenta: {ex.GetType().Name}: {ex.Message}");
+            AppLog.Write("recordatorios", $"comprobación fallida, se reintenta: {ex.GetType().Name}: {ex.Message}");
         }
     }
 

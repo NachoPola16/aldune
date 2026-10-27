@@ -1545,7 +1545,7 @@ public sealed class AppCoordinator
             }
             catch (Exception ex)
             {
-                DockDiagnostics.Write("sync", "la sincronización automática falló sin controlar: " + ex.GetType().Name + ": " + ex.Message);
+                AppLog.Write("sync", "la sincronización automática falló sin controlar: " + ex.GetType().Name + ": " + ex.Message);
             }
         }, null, firstRunIn ?? TimeSpan.FromMinutes(minutes), TimeSpan.FromMinutes(minutes));
     }
@@ -1605,7 +1605,7 @@ public sealed class AppCoordinator
             }
             catch (Exception ex)
             {
-                DockDiagnostics.Write("sync", "la sync al abrir una nota falló sin controlar: " + ex.GetType().Name + ": " + ex.Message);
+                AppLog.Write("sync", "la sync al abrir una nota falló sin controlar: " + ex.GetType().Name + ": " + ex.Message);
             }
         });
     }

@@ -73,8 +73,6 @@ internal sealed class DockScreenWatcher : IDisposable
             {
                 if (!watched.TryGetValue(device, out var id) || !_power.Report(id, reading)) continue;
                 changed = true;
-                DockDiagnostics.Write("pantallas",
-                    $"{device} dice estar {(_power.IsOff(id) ? "apagada" : "encendida")} (DDC/CI): se recolocan los docks");
             }
             if (changed) _rebuild();
         }, TaskScheduler.FromCurrentSynchronizationContext());
@@ -106,7 +104,6 @@ internal sealed class DockScreenWatcher : IDisposable
         if (DateTime.UtcNow - _cursorSince < CursorSettle) return;
 
         _cursorCandidate = null;
-        DockDiagnostics.Write("pantallas", $"el ratón está en {monitor.Value.DeviceName}: el dock va detrás");
         _rebuild();
     }
 

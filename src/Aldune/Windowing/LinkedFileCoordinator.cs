@@ -195,7 +195,7 @@ internal sealed class LinkedFileCoordinator : IDisposable
         catch (Exception ex)
         {
             // En el hilo del temporizador una excepción sin atrapar tumba el proceso.
-            DockDiagnostics.Write("linked", $"sondeo fallido: {ex.Message}");
+            AppLog.Write("linked", $"sondeo fallido: {ex.Message}");
         }
         finally
         {
@@ -221,7 +221,7 @@ internal sealed class LinkedFileCoordinator : IDisposable
             {
                 // Cualquier otro fallo (base de datos, descifrado…) no puede matar al consumidor: no se volvería
                 // a escribir ningún archivo en toda la sesión. Se anota y se sigue con la siguiente.
-                DockDiagnostics.Write("linked", $"comprobación fallida: {ex.GetType().Name}: {ex.Message}");
+                AppLog.Write("linked", $"comprobación fallida: {ex.GetType().Name}: {ex.Message}");
                 continue;
             }
             await _dispatcher.BeginInvoke(() => _onResult(noteId, result));

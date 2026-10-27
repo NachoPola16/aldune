@@ -1008,7 +1008,7 @@ public partial class NoteWindow : Window
             return;
         }
 
-        DockDiagnostics.Write("find",
+        AppLog.Write("find",
             $"la coincidencia {_findCurrent + 1}/{_findMatches.Count} no quedó a la vista tras ScrollToLine " +
             $"(intento {attempt + 1}, arriba={rect.Top:0}, alto visible={viewport:0}, desplazamiento={TextBody.VerticalOffset:0}); se corrige");
         TextBody.ScrollToVerticalOffset(Math.Max(0, TextBody.VerticalOffset + rect.Top - viewport / 3));
