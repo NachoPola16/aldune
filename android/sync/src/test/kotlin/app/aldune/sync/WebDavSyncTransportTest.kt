@@ -268,7 +268,10 @@ class WebDavSyncTransportTest {
             multistatus(fileEntry("/dav/objects/$hugeId.json"), fileEntry("/dav/objects/$idN.json")),
             mapOf("/dav/objects/$hugeId.json" to huge, "/dav/objects/$idN.json" to SyncEnvelopeCodec.serialize(ok)),
         )
-        assertEquals(listOf(ok.noteId), transport().readAll().map { it.noteId })
+        val t = transport()
+        assertEquals(listOf(ok.noteId), t.readAll().map { it.noteId })
+        // Existe en el almacén aunque no se leyó: se anota su id para que la sync no lo dé por inexistente.
+        assertEquals(setOf(UUID.fromString("00000000-0000-0000-0000-000000000009")), t.unreadableIds)
     }
 
     @Test

@@ -13,6 +13,8 @@ public sealed class WebDavOversizeTests : IDisposable
     private readonly string _url;
     private readonly byte[] _key = new byte[32];
     private readonly SyncEnvelope _good;
+    private volatile bool _stallBody;
+    private readonly Guid _hugeId = Guid.NewGuid();
 
     public WebDavOversizeTests()
     {
@@ -57,12 +59,22 @@ public sealed class WebDavOversizeTests : IDisposable
             response.StatusCode = 207;
             var xml = "<?xml version=\"1.0\"?><d:multistatus xmlns:d=\"DAV:\">" +
                       "<d:response><d:href>/dav/objects/</d:href><d:propstat><d:prop><d:resourcetype><d:collection/></d:resourcetype></d:prop></d:propstat></d:response>" +
-                      "<d:response><d:href>/dav/objects/enorme.json</d:href><d:propstat><d:prop><d:resourcetype/></d:prop></d:propstat></d:response>" +
+                      $"<d:response><d:href>/dav/objects/{_hugeId:N}.json</d:href><d:propstat><d:prop><d:resourcetype/></d:prop></d:propstat></d:response>" +
+                      (_stallBody ? "<d:response><d:href>/dav/objects/parado.json</d:href><d:propstat><d:prop><d:resourcetype/></d:prop></d:propstat></d:response>" : "") +
                       $"<d:response><d:href>/dav/objects/{_good.NoteId:N}.json</d:href><d:propstat><d:prop><d:resourcetype/></d:prop></d:propstat></d:response>" +
                       "</d:multistatus>";
             body = Encoding.UTF8.GetBytes(xml);
         }
-        else if (request.Url!.AbsolutePath.EndsWith("enorme.json", StringComparison.Ordinal))
+        else if (request.Url!.AbsolutePath.EndsWith("parado.json", StringComparison.Ordinal))
+        {
+            // Cabeceras y un trozo del cuerpo, y luego nada (la wifi cae sin cerrar la conexión, el NAS se duerme).
+            response.SendChunked = true;
+            await response.OutputStream.WriteAsync(new byte[] { (byte)'{' });
+            await response.OutputStream.FlushAsync();
+            await Task.Delay(TimeSpan.FromSeconds(15));
+            return;
+        }
+        else if (request.Url!.AbsolutePath.EndsWith($"{_hugeId:N}.json", StringComparison.Ordinal))
         {
             // Sin Content-Length (por trozos): el tope tiene que saltar leyendo, no solo mirando la cabecera.
             response.SendChunked = true;
@@ -84,10 +96,26 @@ public sealed class WebDavOversizeTests : IDisposable
     }
 
     [Fact]
+    public void ReadAll_GivesUpWhenTheBodyStallsAfterTheHeaders_InsteadOfHangingForever()
+    {
+        // Con ResponseHeadersRead el tiempo del HttpClient solo cubre hasta las cabeceras: leer el cuerpo tiene que estar acotado por su cuenta,
+        // o una pasada colgada retiene el cerrojo de la sync y congela «Sincronizar ahora».
+        _stallBody = true;
+        var transport = new WebDavSyncTransport(_url, "user", "password", TimeSpan.FromMilliseconds(800));
+
+        var task = Task.Run(() => transport.ReadAll());
+
+        Assert.True(((IAsyncResult)task).AsyncWaitHandle.WaitOne(TimeSpan.FromSeconds(6)), "la lectura se quedó colgada");
+        Assert.True(task.IsFaulted);
+    }
+
+    [Fact]
     public void ReadAll_SkipsAnObjectOverTheCap_AndKeepsTheRest()
     {
         var transport = new WebDavSyncTransport(_url, "user", "password");
         var objects = transport.ReadAll();
         Assert.Equal(new[] { _good.NoteId }, objects.Select(o => o.Envelope.NoteId));
+        // El objeto enorme existe en el almacén aunque no se leyó: se avisa para que nadie lo trate como inexistente.
+        Assert.Equal(new[] { _hugeId }, transport.UnreadableIds);
     }
 }

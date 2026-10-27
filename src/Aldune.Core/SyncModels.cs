@@ -501,6 +501,13 @@ public static class SyncEnvelopeCodec
 public interface ISyncTransport
 {
     IReadOnlyList<SyncRemoteObject> ReadAll();
+
+    /// <summary>
+    /// Ids de objetos que SÍ existen en el almacén pero que la última <see cref="ReadAll"/> no pudo leer (p. ej. WebDAV por encima del tope de
+    /// respuesta). Quien sincroniza los deja en paz: tratarlos como «no existe» subiría encima la copia local y pisaría lo de otro dispositivo.
+    /// </summary>
+    IReadOnlyCollection<Guid> UnreadableIds => Array.Empty<Guid>();
+
     void Write(SyncEnvelope envelope);
     void Delete(Guid noteId);
 }

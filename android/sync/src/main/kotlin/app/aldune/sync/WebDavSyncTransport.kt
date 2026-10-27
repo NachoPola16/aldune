@@ -59,8 +59,14 @@ class WebDavSyncTransport(
         this.client = client.newBuilder().callTimeout(timeout).build()
     }
 
+    @Volatile
+    private var unreadable: Set<UUID> = emptySet()
+
+    override val unreadableIds: Set<UUID> get() = unreadable
+
     override fun readAll(): List<SyncEnvelope> {
         ensureCollection()
+        val skipped = java.util.concurrent.ConcurrentHashMap.newKeySet<UUID>()
         val propfind = PROPFIND_BODY.toRequestBody(XML)
         val request = request(objectsUrl).method("PROPFIND", propfind).header("Depth", "1").build()
         val listing = execute(request) { it }
@@ -82,11 +88,13 @@ class WebDavSyncTransport(
 
             fileUrls.add(fileUrl)
         }
-        return parallelMap(fileUrls) { fileUrl ->
+        val objects = parallelMap(fileUrls) { fileUrl ->
             val bytes = try {
                 execute(request(fileUrl).get().build()) { it }
             } catch (_: ResponseTooLargeException) {
-                // Un objeto enorme (WebDAV no tiene el límite del servidor propio) no debe bloquear la sync de todos.
+                // Un objeto enorme (WebDAV no tiene el límite del servidor propio) no debe bloquear la sync de todos, pero existe: se
+                // anota su id para que no se dé por inexistente y se suba encima la copia local.
+                noteIdOf(fileUrl)?.let { skipped += it }
                 return@parallelMap null
             }
             try {
@@ -102,6 +110,17 @@ class WebDavSyncTransport(
                 null
             }
         }
+        unreadable = skipped.toSet()
+        return objects
+    }
+
+    /** El id de la nota que nombra un archivo `<id sin guiones>.json` del almacén, o null si no tiene esa forma. */
+    private fun noteIdOf(url: okhttp3.HttpUrl): UUID? {
+        val name = url.pathSegments.last().removeSuffix(".json")
+        if (name.length != 32) return null
+        return runCatching {
+            UUID.fromString("${name.substring(0, 8)}-${name.substring(8, 12)}-${name.substring(12, 16)}-${name.substring(16, 20)}-${name.substring(20)}")
+        }.getOrNull()
     }
 
     override fun write(envelope: SyncEnvelope) {

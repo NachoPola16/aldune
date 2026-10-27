@@ -49,6 +49,24 @@ class SyncRunnerTest {
     private fun localNote(id: String, text: String = "hola", updatedAt: Instant = T0) =
         noteStore.put(note(id, text, updatedAt = updatedAt))
 
+    @Test
+    fun `un objeto remoto que no se pudo leer no se sube encima ni se da por acordado`() {
+        localNote(ID1, "hola")
+        val unreadable = UUID.fromString(ID1)
+        val writes = ArrayList<UUID>()
+        val transport = object : SyncTransport {
+            override val unreadableIds: Set<UUID> = setOf(unreadable)
+            override fun readAll(): List<SyncEnvelope> = emptyList()
+            override fun write(envelope: SyncEnvelope) { writes += envelope.noteId }
+            override fun delete(noteId: UUID) = Unit
+        }
+
+        success(run(transport))
+
+        assertTrue(writes.isEmpty(), "se subió $writes")
+        assertTrue(store.snapshot().bases.isEmpty())
+    }
+
     /** Un transporte que falla en la operación pedida (la n-ésima escritura, o la lectura). */
     private class FlakyTransport(val inner: SyncTransport, val failOnRead: Throwable? = null, val failOnWriteNumber: Int? = null,
                                  val beforeWrite: (() -> Unit)? = null) : SyncTransport {

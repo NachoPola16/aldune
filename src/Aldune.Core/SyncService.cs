@@ -372,6 +372,7 @@ public sealed class SyncService
                 var baseKey = CurrentBaseKey();
                 var transport = CreateTransport();
                 var classified = ClassifyRemote(transport.ReadAll(), key);
+                var unreadable = transport.UnreadableIds.ToHashSet();
                 if (classified.NoReadableNotes)
                 {
                     // Ninguna nota del almacén se descifra con este código: casi seguro que se revocó
@@ -443,6 +444,9 @@ public sealed class SyncService
 
                 foreach (var id in local.Keys.Union(remote.Keys).ToList())
                 {
+                    // Existe en el almacén pero no se pudo leer: ni subirla encima ni darla por acordada.
+                    if (unreadable.Contains(id)) continue;
+
                     bool hasLocal = local.TryGetValue(id, out var localEnvelope);
                     bool hasRemote = remote.TryGetValue(id, out var remoteObject);
 
@@ -802,7 +806,10 @@ public sealed class SyncService
         return new SyncConflictVersion(envelope.UpdatedAt, envelope.DeviceId, envelope.Tombstone, note);
     }
 
-    private ISyncTransport CreateTransport() => _settings.SyncTransport switch
+    /// <summary>Solo para pruebas: un transporte falso en lugar del real.</summary>
+    internal Func<ISyncTransport>? TransportFactoryOverride { get; set; }
+
+    private ISyncTransport CreateTransport() => TransportFactoryOverride?.Invoke() ?? _settings.SyncTransport switch
     {
         SyncTransportKind.Folder => new FolderSyncTransport(_settings.SyncFolderPath ?? string.Empty),
         SyncTransportKind.Server => new HttpSyncTransport(

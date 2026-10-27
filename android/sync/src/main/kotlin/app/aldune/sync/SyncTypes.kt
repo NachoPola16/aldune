@@ -134,6 +134,12 @@ interface SyncTransport {
     /** Los objetos legibles; los de formato desconocido los trata el transporte, no el motor. */
     fun readAll(): List<SyncEnvelope>
 
+    /**
+     * Ids de objetos que SÍ existen en el almacén pero que la última [readAll] no pudo leer (WebDAV por encima del tope de respuesta).
+     * Se tratan como excluidos: darlos por inexistentes subiría encima la copia local y pisaría lo de otro dispositivo.
+     */
+    val unreadableIds: Set<UUID> get() = emptySet()
+
     fun write(envelope: SyncEnvelope)
 
     fun delete(noteId: UUID)

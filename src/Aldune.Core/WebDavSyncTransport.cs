@@ -42,9 +42,16 @@ public sealed class WebDavSyncTransport : ISyncTransport
 
     internal long MaxResponseBufferSize => _client.MaxResponseContentBufferSize;
 
+    private System.Collections.Concurrent.ConcurrentBag<Guid> _unreadable = new();
+
+    /// <inheritdoc />
+    public IReadOnlyCollection<Guid> UnreadableIds => _unreadable.ToArray();
+
     public IReadOnlyList<SyncRemoteObject> ReadAll()
     {
         EnsureCollection();
+        _unreadable = new System.Collections.Concurrent.ConcurrentBag<Guid>();
+        var unreadable = _unreadable;
         using var request = new HttpRequestMessage(new HttpMethod("PROPFIND"), _objectsUri)
         {
             Content = new StringContent(
@@ -83,10 +90,18 @@ public sealed class WebDavSyncTransport : ISyncTransport
             {
                 // Cabeceras primero y lectura propia con tope: el tope del HttpClient hacía fallar la pasada entera con un solo objeto
                 // enorme, y en WebDAV (sin el límite del servidor propio) cualquiera con escritura podía bloquear la sync de todos.
-                using var fileResponse = await _client.GetAsync(fileUri, HttpCompletionOption.ResponseHeadersRead).ConfigureAwait(false);
+                // El tiempo del HttpClient solo llega hasta las cabeceras con ResponseHeadersRead: la petición entera, cuerpo incluido, se acota
+                // con el mismo plazo, o un servidor que se para a mitad (wifi caída sin cerrar, NAS dormido) colgaría la sync para siempre.
+                using var deadline = new CancellationTokenSource(_client.Timeout);
+                using var fileResponse = await _client.GetAsync(fileUri, HttpCompletionOption.ResponseHeadersRead, deadline.Token).ConfigureAwait(false);
                 EnsureSuccess(fileResponse);
-                var bytes = await ReadCappedAsync(fileResponse.Content).ConfigureAwait(false);
-                if (bytes is null) return null;
+                var bytes = await ReadCappedAsync(fileResponse.Content, deadline.Token).ConfigureAwait(false);
+                if (bytes is null)
+                {
+                    // Existe pero pasa del tope: se salta, y se avisa de su id para que la sync no lo dé por inexistente y suba encima.
+                    if (Guid.TryParse(Path.GetFileNameWithoutExtension(fileUri.AbsolutePath), out var id)) unreadable.Add(id);
+                    return null;
+                }
                 return new SyncRemoteObject(SyncEnvelopeCodec.Deserialize(bytes), bytes);
             }
             catch (FormatException)
@@ -103,13 +118,13 @@ public sealed class WebDavSyncTransport : ISyncTransport
     }
 
     /// <summary>El contenido entero, o null si pasa del tope de respuesta (se lee por trozos: no hace falta que venga Content-Length).</summary>
-    private static async Task<byte[]?> ReadCappedAsync(HttpContent content)
+    private static async Task<byte[]?> ReadCappedAsync(HttpContent content, CancellationToken cancellation)
     {
-        await using var stream = await content.ReadAsStreamAsync().ConfigureAwait(false);
+        await using var stream = await content.ReadAsStreamAsync(cancellation).ConfigureAwait(false);
         using var buffer = new MemoryStream();
         var chunk = new byte[81920];
         int read;
-        while ((read = await stream.ReadAsync(chunk).ConfigureAwait(false)) > 0)
+        while ((read = await stream.ReadAsync(chunk, cancellation).ConfigureAwait(false)) > 0)
         {
             if (buffer.Length + read > HttpSyncTransport.MaxResponseBytes) return null;
             buffer.Write(chunk, 0, read);

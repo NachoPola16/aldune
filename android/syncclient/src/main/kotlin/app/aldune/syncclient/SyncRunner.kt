@@ -58,7 +58,7 @@ fun runSync(
         return SyncOutcome.Failure(classifyFailure(e))
     }
 
-    val plan = planSync(input.copy(remote = remote), key)
+    val plan = planSync(input.copy(remote = remote, excludedIds = input.excludedIds + transport.unreadableIds), key)
     plan.error?.let { return SyncOutcome.Failure(classifyPlanError(it)) }
 
     // FASE 1: lo que va al almacén remoto, en el orden del plan.
