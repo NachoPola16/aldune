@@ -107,7 +107,8 @@ Tests: 506/506 pasando (`dotnet test tests/Aldune.Core.Tests --no-restore`).
   nota como **fondo de toda la tarjeta** (como en Windows) por defecto, con interruptor en Ajustes → Aspecto; los aspectos de terminal (Bash, Telecom, Fósforo)
   van en franja por defecto y elegir aspecto reinicia el ajuste, igual que esquinas y señal. (3) Windows: ajuste `NoteColorAsStripe` («color solo como franja»,
   reutiliza la tarjeta Stripe de Bash en los aspectos de cara llena); en Bash/Telecom/Fósforo la casilla queda apagada con aviso. Probado en el emulador de
-  Android (lista, interruptor, aspectos, casillas de tareas); **sin probar con ventanas reales en Windows** (sonda WPF pendiente).
+  Android (lista, interruptor, aspectos, casillas de tareas) y con una sonda WPF en Windows (ventana de nota en Oscuro, Pastel y Medianoche, con y sin
+  franja: la franja solo aparece con el ajuste, el fondo es el de la app y el texto se lee). Sin probar con ratón (casillas) ni el dock.
 - **Android, varios perfiles de sync (2026-10-26, rama `android-varios-perfiles`, sin publicar)**: el móvil puede unirse a más de un perfil
   a la vez (p. ej. «todas mis notas» + la nota compartida de la familia). Cada perfil tiene su id, su fichero de secretos, su estado, y
   `sync_base`/`sync_conflict` por (perfil, nota) (Room v3, con migración); notas y lápidas siguen siendo del dispositivo. Una pasada recorre
