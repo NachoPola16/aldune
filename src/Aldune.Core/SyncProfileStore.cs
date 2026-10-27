@@ -65,6 +65,32 @@ public static class SyncProfileStore
         return profiles[index].BaseKey.Length > 0 || index == 0 ? profiles[index].BaseKey : profiles[index].Id;
     }
 
+    /// <summary>
+    /// Las claves de base de los perfiles que cuentan para la señal de sync de una nota: los activados cuyo alcance la incluye. Un perfil
+    /// apagado, o cuya etiqueta ya no abarca la nota, no refresca su base y no debe tirar la señal a «pendiente». El elegido en Ajustes se
+    /// lee de los campos sueltos (lo que se está editando) y los demás de la lista.
+    /// </summary>
+    public static IReadOnlyCollection<string> BaseKeysCovering(AppSettings settings, Note note, IReadOnlySet<Guid>? localOnly)
+    {
+        var profiles = settings.SyncProfiles;
+        var keys = new List<string>();
+        for (int index = 0; index < profiles.Count; index++)
+        {
+            var profile = profiles[index];
+            var source = profile.Id == settings.ActiveSyncProfileId ? settings : ScratchFor(profile);
+            if (!source.SyncEnabled || !SyncScopeFilter.Includes(note, source, localOnly)) continue;
+            keys.Add(profile.BaseKey.Length > 0 || index == 0 ? profile.BaseKey : profile.Id);
+        }
+        return keys;
+    }
+
+    private static AppSettings ScratchFor(SyncProfileSettings profile)
+    {
+        var scratch = new AppSettings { SyncProfiles = [profile], ActiveSyncProfileId = profile.Id };
+        LoadActiveToLegacy(scratch);
+        return scratch;
+    }
+
     public static bool DeleteActive(AppSettings settings)
     {
         Ensure(settings);

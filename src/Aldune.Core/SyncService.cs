@@ -263,20 +263,23 @@ public sealed class SyncService
     /// <summary>
     /// Sincroniza todos los perfiles activados, no solo el elegido en Ajustes: ese desplegable decide qué se edita,
     /// no qué se sincroniza. El elegido va primero y el fallo de un perfil no detiene a los demás.
+    /// Con <paramref name="automaticOnly"/> (el temporizador y abrir una nota) solo van los perfiles marcados como automáticos:
+    /// quien dejó uno en manual (un servidor con datos de pago, uno del trabajo) no quiere que se le llame solo. «Sincronizar ahora» los recorre todos.
     /// </summary>
-    public SyncResult Synchronize()
+    public SyncResult Synchronize(bool automaticOnly = false)
     {
         lock (_syncGate)
         {
             // Lo que haya en los campos del perfil elegido pasa a su perfil: los demás se leen de la lista.
             SyncProfileStore.SaveActiveFromLegacy(_settings);
             var others = _settings.SyncProfiles
-                .Where(profile => profile.SyncEnabled && profile.Id != _settings.ActiveSyncProfileId)
+                .Where(profile => profile.SyncEnabled && profile.Id != _settings.ActiveSyncProfileId && (!automaticOnly || profile.SyncAutomatically))
                 .ToList();
-            if (others.Count == 0) return SynchronizeCore();
+            bool runActive = _settings.SyncEnabled && (!automaticOnly || _settings.SyncAutomatically);
+            if (others.Count == 0) return runActive ? SynchronizeCore() : new SyncResult(0, 0, 0, 0);
 
             var ran = new List<(string Name, SyncResult Result)>();
-            if (_settings.SyncEnabled)
+            if (runActive)
                 ran.Add((SyncProfileStore.GetActive(_settings).Name, SynchronizeCore()));
             foreach (var profile in others)
                 ran.Add((profile.Name, SynchronizeProfile(profile)));
@@ -364,6 +367,9 @@ public sealed class SyncService
 
             try
             {
+                // La clave de las bases se fija ahora y no tras la red: si se cambia de perfil en Ajustes mientras la pasada lee el almacén,
+                // las versiones acordadas con este almacén acabarían guardadas (y los conflictos anotados) bajo el otro perfil.
+                var baseKey = CurrentBaseKey();
                 var transport = CreateTransport();
                 var classified = ClassifyRemote(transport.ReadAll(), key);
                 if (classified.NoReadableNotes)
@@ -427,7 +433,6 @@ public sealed class SyncService
                 int downloaded = 0;
                 int conflicts = 0;
                 int tombstones = 0;
-                var baseKey = CurrentBaseKey();
                 var bases = _repository.GetSyncBases(baseKey);
                 var settled = new Dictionary<Guid, SyncBaseVersion>();
                 void Settle(Guid id, SyncEnvelope agreed)

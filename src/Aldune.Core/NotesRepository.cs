@@ -284,11 +284,20 @@ public sealed class NotesRepository
     /// <summary>La base de una sola nota, sin leer las de todas (la señal de sincronización la pide en
     /// cada autoguardado). Con varios perfiles que la tienen vale la más antigua: si alguno va por detrás, la nota
     /// no se da por sincronizada.</summary>
-    public SyncBaseVersion? GetSyncBase(Guid noteId)
+    public SyncBaseVersion? GetSyncBase(Guid noteId, IReadOnlyCollection<string>? profileKeys = null)
     {
         using var connection = _database.OpenConnection();
         using var command = connection.CreateCommand();
-        command.CommandText = "SELECT UpdatedAt, DeviceId FROM SyncBase WHERE NoteId = $id ORDER BY UpdatedAt LIMIT 1;";
+        // Con claves, solo cuentan las bases de esos perfiles (los activados que abarcan la nota): las de uno apagado no se refrescan y
+        // dejarían la señal en pendiente para siempre.
+        string filter = "";
+        if (profileKeys is not null)
+        {
+            if (profileKeys.Count == 0) return null;
+            var names = profileKeys.Select((key, i) => { command.Parameters.AddWithValue($"$k{i}", key); return $"$k{i}"; });
+            filter = $" AND ProfileKey IN ({string.Join(",", names)})";
+        }
+        command.CommandText = $"SELECT UpdatedAt, DeviceId FROM SyncBase WHERE NoteId = $id{filter} ORDER BY UpdatedAt LIMIT 1;";
         command.Parameters.AddWithValue("$id", noteId.ToString());
         using var reader = command.ExecuteReader();
         return reader.Read() ? new SyncBaseVersion(ParseDate(reader["UpdatedAt"]), reader.GetString(1)) : null;
@@ -419,10 +428,21 @@ public sealed class NotesRepository
     }
 
     /// <summary>
-    /// Olvida lo que un perfil de sync borrado dejó (sus bases y sus conflictos). Sin esto, <see cref="GetSyncBase"/> seguía tomando su
-    /// base antigua como «la más atrasada» y la señal de sync de esas notas se quedaba en pendiente para siempre.
+    /// Olvida las bases de un perfil de sync borrado. Sin esto, <see cref="GetSyncBase"/> seguía tomando su base antigua como «la más
+    /// atrasada» y la señal de sync de esas notas se quedaba en pendiente para siempre. Los conflictos NO se tocan: cada uno guarda la
+    /// única copia de la versión que perdió, y borrarlos sin que el usuario los haya visto destruiría ese texto.
     /// </summary>
     public void DeleteSyncProfile(string profileKey)
+    {
+        using var connection = _database.OpenConnection();
+        using var command = connection.CreateCommand();
+        command.CommandText = "DELETE FROM SyncBase WHERE ProfileKey = $profile;";
+        command.Parameters.AddWithValue("$profile", profileKey);
+        command.ExecuteNonQuery();
+    }
+
+    /// <summary>Pasa las bases y los conflictos de una clave de perfil a otra (ver <see cref="SyncBaseMigration"/>).</summary>
+    public void MoveSyncBases(string fromKey, string toKey)
     {
         using var connection = _database.OpenConnection();
         using var transaction = connection.BeginTransaction();
@@ -430,8 +450,9 @@ public sealed class NotesRepository
         {
             using var command = connection.CreateCommand();
             command.Transaction = transaction;
-            command.CommandText = $"DELETE FROM {table} WHERE ProfileKey = $profile;";
-            command.Parameters.AddWithValue("$profile", profileKey);
+            command.CommandText = $"UPDATE OR IGNORE {table} SET ProfileKey = $to WHERE ProfileKey = $from;";
+            command.Parameters.AddWithValue("$from", fromKey);
+            command.Parameters.AddWithValue("$to", toKey);
             command.ExecuteNonQuery();
         }
         transaction.Commit();

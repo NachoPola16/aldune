@@ -1447,8 +1447,9 @@ public sealed class AppCoordinator
     {
         if (_settings is null || _repository.GetById(noteId) is not { } note) return SyncSignalState.Hidden;
         bool hasConflict = _repository.HasSyncConflict(noteId);
-        return NoteSyncSignal.For(note, _settings, _repository.GetSyncBase(noteId), hasConflict,
-            _repository.GetUnsyncedLinkedNoteIds());
+        var localOnly = _repository.GetUnsyncedLinkedNoteIds();
+        var keys = SyncProfileStore.BaseKeysCovering(_settings, note, localOnly);
+        return NoteSyncSignal.For(note, _settings, _repository.GetSyncBase(noteId, keys), hasConflict, localOnly);
     }
 
     /// <summary>Tras cambiar una opción de aspecto de las notas: notas abiertas, docks y gestor.</summary>
@@ -1532,16 +1533,13 @@ public sealed class AppCoordinator
             // cerrando, no hay a quién avisar.
             try
             {
-                var result = RunSyncTracked();
+                var result = RunSyncTracked(automaticOnly: true);
                 if (Application.Current?.Dispatcher is not { } dispatcher) return;
-                if (result.Succeeded)
-                {
+                // Con varios perfiles un fallo (otro sin red) no quita que los demás hayan traído cambios: hay que repintar igual.
+                if (result.Succeeded || result.AppliedChanges)
                     dispatcher.BeginInvoke(DispatcherPriority.Background, new Action(() => AfterSuccessfulSync()));
-                }
-                else
-                {
+                if (!result.Succeeded)
                     dispatcher.BeginInvoke(DispatcherPriority.Background, () => PlaySound(SoundEvent.SyncFailed));
-                }
             }
             catch (Exception ex)
             {
@@ -1566,14 +1564,14 @@ public sealed class AppCoordinator
     }
 
     /// <summary>Toda pasada pasa por aquí para que se sepa que hay una en curso y desde cuándo.</summary>
-    private SyncResult RunSyncTracked()
+    private SyncResult RunSyncTracked(bool automaticOnly = false)
     {
         Interlocked.Increment(ref _syncRuns);
         _lastSyncAttemptAt = DateTimeOffset.UtcNow;
         RaiseSyncProgressChanged();
         try
         {
-            return _syncService!.Synchronize();
+            return _syncService!.Synchronize(automaticOnly);
         }
         finally
         {
@@ -1599,8 +1597,8 @@ public sealed class AppCoordinator
         {
             try
             {
-                var result = RunSyncTracked();
-                if (result.Succeeded && Application.Current?.Dispatcher is { } dispatcher)
+                var result = RunSyncTracked(automaticOnly: true);
+                if ((result.Succeeded || result.AppliedChanges) && Application.Current?.Dispatcher is { } dispatcher)
                     dispatcher.BeginInvoke(DispatcherPriority.Background, new Action(() => AfterSuccessfulSync(silent: true)));
             }
             catch (Exception ex)
@@ -1615,12 +1613,12 @@ public sealed class AppCoordinator
     {
         if (_syncService is null) return new(0, 0, 0, 0, "Sync is not available.");
         var result = RunSyncTracked();
-        if (result.Succeeded)
+        if (result.Succeeded || result.AppliedChanges)
         {
             if (Application.Current.Dispatcher.CheckAccess()) AfterSuccessfulSync();
             else Application.Current.Dispatcher.BeginInvoke(DispatcherPriority.Background, new Action(() => AfterSuccessfulSync()));
         }
-        else
+        if (!result.Succeeded)
         {
             PlaySound(SoundEvent.SyncFailed);
         }

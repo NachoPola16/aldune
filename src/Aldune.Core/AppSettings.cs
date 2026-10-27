@@ -25,6 +25,9 @@ public sealed class AppSettings
     /// <summary>Contraseña o contraseña de aplicación WebDAV protegida localmente por DPAPI.</summary>
     public byte[]? WrappedSyncWebDavPassword { get; set; }
 
+    /// <summary>Ya se asignaron las bases de sync antiguas al perfil que las usaba (ver <see cref="SyncBaseMigration"/>). Un settings.json antiguo carga en falso.</summary>
+    public bool SyncBasesKeyed { get; set; }
+
     /// <summary>Si se debe intentar sincronizar automáticamente de forma periódica.</summary>
     public bool SyncAutomatically { get; set; }
 

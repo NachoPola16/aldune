@@ -160,6 +160,11 @@ public partial class App : Application
             CryptographicOperations.ZeroMemory(rawKey);
 
             repository = BootstrapDatabase(databasePath, cipher, allowRetry: true);
+            if (!settings.SyncBasesKeyed)
+            {
+                SyncBaseMigration.Run(settings, repository);
+                settingsService.Save(settings);
+            }
         }
         catch (Exception ex) when (ex is CryptographicException or JsonException)
         {

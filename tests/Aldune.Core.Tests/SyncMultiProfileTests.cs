@@ -55,6 +55,24 @@ public sealed class SyncMultiProfileTests : IDisposable
     }
 
     [Fact]
+    public void AutomaticPass_SkipsTheProfilesSetToManual_WhileSyncNowStillRunsAll()
+    {
+        // La personal es automática y la de la familia, manual: el temporizador y la apertura de una nota solo tocan la primera.
+        _settings.SyncAutomatically = true;
+
+        var automatic = _sync.Synchronize(automaticOnly: true);
+
+        Assert.True(automatic.Succeeded, automatic.Error);
+        Assert.NotEmpty(Directory.GetFiles(Path.Combine(_folderAll, "objects")));
+        Assert.False(Directory.Exists(Path.Combine(_folderShared, "objects")) && Directory.GetFiles(Path.Combine(_folderShared, "objects")).Length > 0);
+
+        // «Sincronizar ahora» es una petición explícita: recorre todos.
+        var manual = _sync.Synchronize();
+        Assert.True(manual.Succeeded, manual.Error);
+        Assert.NotEmpty(Directory.GetFiles(Path.Combine(_folderShared, "objects")));
+    }
+
+    [Fact]
     public void Synchronize_UploadsToEveryEnabledProfile_NotOnlyTheSelectedOne()
     {
         var result = _sync.Synchronize();

@@ -126,6 +126,12 @@ public sealed record SyncResult(
     string? Error = null)
 {
     public bool Succeeded => Error is null;
+
+    /// <summary>
+    /// Algo llegó del almacén y se aplicó aquí. Con varios perfiles el resultado puede traer un fallo (otro perfil sin red) y aun así
+    /// haber cambiado notas: quien repinta las ventanas o sincroniza los archivos vinculados debe mirar esto, no solo <see cref="Succeeded"/>.
+    /// </summary>
+    public bool AppliedChanges => Downloaded > 0 || TombstonesApplied > 0;
 }
 
 public sealed record SyncConflictVersion(
