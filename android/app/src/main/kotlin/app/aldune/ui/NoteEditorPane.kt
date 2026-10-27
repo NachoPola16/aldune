@@ -78,6 +78,7 @@ import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalViewConfiguration
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.SpanStyle
@@ -695,6 +696,10 @@ private val BAR_MAX_WIDTH = 480.dp
 @Composable
 private fun BarButton(label: String, description: String, onClick: () -> Unit, enabled: Boolean = true) {
     IconButton(onClick = onClick, enabled = enabled, modifier = Modifier.semantics { contentDescription = description }) {
-        Text(label, style = MaterialTheme.typography.titleLarge, color = MaterialTheme.colorScheme.onBackground.copy(alpha = if (enabled) 1f else 0.38f))
+        // El símbolo (↶, ⇥…) es solo dibujo: el nombre accesible es [description], y sin esto TalkBack lo leería también ("deshacer, flecha…").
+        Text(
+            label, Modifier.clearAndSetSemantics { }, style = MaterialTheme.typography.titleLarge,
+            color = MaterialTheme.colorScheme.onBackground.copy(alpha = if (enabled) 1f else 0.38f),
+        )
     }
 }

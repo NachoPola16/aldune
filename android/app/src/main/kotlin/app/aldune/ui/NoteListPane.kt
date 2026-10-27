@@ -83,6 +83,9 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.semantics.CustomAccessibilityAction
+import androidx.compose.ui.semantics.customActions
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextOverflow
@@ -417,9 +420,28 @@ private fun SwipeableRow(
     // El estado del deslizamiento se guarda por id de nota (rememberSaveable): una nota que acaba de archivarse o ir a la papelera volvía a
     // aparecer en su nueva pestaña ya «descartada», fuera de la pantalla. Al entrar en la composición se repone.
     LaunchedEffect(item.state) { dismiss.snapTo(SwipeToDismissBoxValue.Settled) }
+    // Deslizar no es posible con TalkBack ni con un interruptor: las mismas salidas del deslizamiento, como acciones del menú de la nota.
+    val archiveLabel = stringResource(R.string.archive)
+    val trashLabel = stringResource(R.string.move_to_trash)
+    val restoreLabel = stringResource(R.string.restore)
+    val deleteLabel = stringResource(R.string.delete_forever)
+    val actions = when (item.state) {
+        NoteState.ACTIVE -> listOf(
+            CustomAccessibilityAction(archiveLabel) { onArchive(); true },
+            CustomAccessibilityAction(trashLabel) { onTrash(); true },
+        )
+        NoteState.ARCHIVED -> listOf(
+            CustomAccessibilityAction(restoreLabel) { onRestore(); true },
+            CustomAccessibilityAction(trashLabel) { onTrash(); true },
+        )
+        NoteState.TRASHED -> listOf(
+            CustomAccessibilityAction(restoreLabel) { onRestore(); true },
+            CustomAccessibilityAction(deleteLabel) { onDelete(); true },
+        )
+    }
     SwipeToDismissBox(
         state = dismiss,
-        modifier = modifier.padding(horizontal = 16.dp),
+        modifier = modifier.padding(horizontal = 16.dp).semantics { customActions = actions },
         backgroundContent = {
             Box(
                 Modifier.fillMaxSize().background(MaterialTheme.colorScheme.surfaceVariant, LocalNoteLook.current.cardShape).padding(horizontal = 20.dp),

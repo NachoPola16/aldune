@@ -111,6 +111,10 @@ Tests: 506/506 pasando (`dotnet test tests/Aldune.Core.Tests --no-restore`).
   en Windows y Android; y **abrir una nota sincroniza antes** (regla de 30 s, `NoteOpenSync` / `SyncEvent.NoteOpened`) con un «Sincronizando…» mientras
   corre la pasada, sin bloquear la edición (decisión: sin red no se podría escribir, y los conflictos ya se guardan). Android: el editor recorre una copia en
   String al estilizar las casillas (borrar mantenido en notas largas). El aviso se probó con una sonda WPF en Windows; en Android no se ha visto (el emulador no tiene perfil de sync).
+  Accesibilidad de Android (27-10, emulador con letra al 200 % y volcado del árbol de accesibilidad): la lista, el editor y Ajustes salen con todos los controles
+  con nombre y de al menos 48 dp, y a 200 % nada se rompe (las pestañas se desplazan). Cambios: el símbolo de los botones de la barra del editor (↶, ⇥…) ya no se
+  lee junto al nombre, y cada nota de la lista lleva acciones de accesibilidad (archivar, papelera, restaurar, borrar) como alternativa a deslizar. **No probado con
+  TalkBack real**; arrastrar tareas con el asa sigue sin alternativa accesible (el texto es un único campo).
   Android (lista, interruptor, aspectos, casillas de tareas) y con una sonda WPF en Windows (ventana de nota en Oscuro, Pastel y Medianoche, con y sin
   franja: la franja solo aparece con el ajuste, el fondo es el de la app y el texto se lee). Sin probar con ratón (casillas) ni el dock.
 - **Android, varios perfiles de sync (2026-10-26, rama `android-varios-perfiles`, sin publicar)**: el móvil puede unirse a más de un perfil
