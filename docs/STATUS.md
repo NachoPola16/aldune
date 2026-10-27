@@ -151,6 +151,14 @@ Tests: 506/506 pasando (`dotnet test tests/Aldune.Core.Tests --no-restore`).
   de intentos de token (el token se compara en tiempo constante y los tras NPM comparten IP; basta con un token largo, el servidor avisa si es corto). El arrastre de
   tareas en Android sí tiene alternativa accesible: los botones «mover arriba/abajo» de la barra del editor. Sin probar: Docker (daemon apagado), el workflow de release
   (solo corre con un tag) y la interfaz nueva en pantalla.
+- **Revisión de código sobre lo cambiado desde la 1.7.17 (2026-10-27, `/code-review` high; en `main`, sin release):** arreglado con test (rojo antes): una edición remota más
+  nueva que una **lápida local** no se aplicaba nunca (regresión del cambio «no pisar una nota editada durante la pasada»: la foto local solo tiene notas vivas; en Android
+  no pasa, `ExpectedVersion.Tombstoned`); un objeto WebDAV por encima de 8 MB tumbaba la pasada entera (ahora se salta, Core y Android); un fallo de descarga seguía
+  bajando todo el almacén (ahora corta lo que está en cola); abrir una nota sincronizaba aunque el perfil fuera solo manual. **Abierto, a propósito:** `GetSyncBase` toma la
+  base más antigua entre todos los perfiles, así que restos de un perfil borrado o fuera de alcance por etiqueta dejan la señal de sync de esa nota en «pendiente» (solo
+  cosmético; arreglarlo pide purgar `SyncBase` al borrar el perfil y filtrar por alcance); el temporizador sincroniza también los perfiles manuales cuando hay otro
+  automático (decisión del sync multiperfil); `SyncService` copia los campos sueltos a `AppSettings` desde su hilo mientras Ajustes puede estar editándolos (el lock solo
+  ordena los guardados). Descartado por falso: un borrado sin firma no puede tocar notas fuera de alcance (solo quita su propio objeto, y solo si no hay nota viva con ese id).
 - **Versiones (2026-10-27):** Windows 1.7.17 y Android 0.1.0 (la primera estable, `versionCode` 12, sin `-rc`; se publica con `--latest=false`, ver `RELEASING.md`).
 - **QR de emparejamiento** (2026-10-27, spec `superpowers/specs/2026-10-27-qr-emparejamiento-design.md`): Windows muestra el código de
   perfil como QR (`ShareQr` en Core con QRCoder 1.8.1; `ShareQrWindow` con aviso y cierre a los 120 s) y Android lo escanea
