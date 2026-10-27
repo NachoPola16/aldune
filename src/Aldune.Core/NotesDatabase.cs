@@ -24,7 +24,7 @@ public sealed class NotesDatabase
         using var connection = OpenConnection();
         DropOutdatedNotePlacementTable(connection);
         AddManualHeightColumn(connection);
-        MigrateSyncBaseTable(connection);
+        LegacySyncBasesMigrated = MigrateSyncBaseTable(connection);
 
         using var command = connection.CreateCommand();
         command.CommandText = """
@@ -164,7 +164,10 @@ public sealed class NotesDatabase
     /// edición normal, y con la sync de todos los perfiles eso saldría una vez por cada nota.
     /// Una versión anterior que abra esta base sigue funcionando: ProfileKey tiene valor por defecto.
     /// </summary>
-    private static void MigrateSyncBaseTable(SqliteConnection connection)
+    /// <summary>Esta apertura migró la tabla SyncBase de antes de los perfiles (ver <see cref="SyncBaseMigration"/>): solo entonces sus filas son del perfil que sincronizaba.</summary>
+    public bool LegacySyncBasesMigrated { get; private set; }
+
+    private static bool MigrateSyncBaseTable(SqliteConnection connection)
     {
         using var check = connection.CreateCommand();
         check.CommandText = "SELECT " +
@@ -173,7 +176,7 @@ public sealed class NotesDatabase
         using (var reader = check.ExecuteReader())
         {
             reader.Read();
-            if (reader.GetInt64(0) == 0 || reader.GetInt64(1) > 0) return;
+            if (reader.GetInt64(0) == 0 || reader.GetInt64(1) > 0) return false;
         }
 
         using var transaction = connection.BeginTransaction();
@@ -194,6 +197,7 @@ public sealed class NotesDatabase
             """;
         migrate.ExecuteNonQuery();
         transaction.Commit();
+        return true;
     }
 
     /// <summary>Los conflictos guardados antes de la sync de varios perfiles quedan en la clave vacía (primer perfil).</summary>

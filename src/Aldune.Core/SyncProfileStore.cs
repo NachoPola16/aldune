@@ -73,22 +73,20 @@ public static class SyncProfileStore
     public static IReadOnlyCollection<string> BaseKeysCovering(AppSettings settings, Note note, IReadOnlySet<Guid>? localOnly)
     {
         var profiles = settings.SyncProfiles;
+        // Ajustes antiguos sin lista de perfiles: un solo almacén, con la clave vacía.
+        if (profiles is null || profiles.Count == 0) return settings.SyncEnabled ? [""] : [];
+
         var keys = new List<string>();
         for (int index = 0; index < profiles.Count; index++)
         {
             var profile = profiles[index];
-            var source = profile.Id == settings.ActiveSyncProfileId ? settings : ScratchFor(profile);
-            if (!source.SyncEnabled || !SyncScopeFilter.Includes(note, source, localOnly)) continue;
-            keys.Add(profile.BaseKey.Length > 0 || index == 0 ? profile.BaseKey : profile.Id);
+            // Se llama en cada refresco de la señal de cada nota abierta: el alcance se lee directo del perfil, sin crear unos ajustes por cada uno.
+            bool covers = profile.Id == settings.ActiveSyncProfileId
+                ? settings.SyncEnabled && SyncScopeFilter.Includes(note, settings, localOnly)
+                : profile.SyncEnabled && SyncScopeFilter.Includes(note, profile, localOnly);
+            if (covers) keys.Add(profile.BaseKey.Length > 0 || index == 0 ? profile.BaseKey : profile.Id);
         }
         return keys;
-    }
-
-    private static AppSettings ScratchFor(SyncProfileSettings profile)
-    {
-        var scratch = new AppSettings { SyncProfiles = [profile], ActiveSyncProfileId = profile.Id };
-        LoadActiveToLegacy(scratch);
-        return scratch;
     }
 
     public static bool DeleteActive(AppSettings settings)

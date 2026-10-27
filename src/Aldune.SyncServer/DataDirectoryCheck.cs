@@ -1,4 +1,4 @@
-namespace Aldune.SyncServer;
+﻿namespace Aldune.SyncServer;
 
 public static class DataDirectoryCheck
 {

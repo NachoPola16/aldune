@@ -1,4 +1,4 @@
-namespace Aldune.Core.Tests;
+﻿namespace Aldune.Core.Tests;
 
 /// <summary>Qué perfiles cuentan para la señal de sync de una nota: solo los activados cuyo alcance la incluye.</summary>
 public class SyncProfileBaseKeysTests
@@ -29,6 +29,15 @@ public class SyncProfileBaseKeysTests
         var keys = SyncProfileStore.BaseKeysCovering(settings, NoteWithTags(), null);
 
         Assert.Equal(new[] { "", second.BaseKey.Length > 0 ? second.BaseKey : second.Id }.OrderBy(k => k), keys.OrderBy(k => k));
+    }
+
+    [Fact]
+    public void LegacySettingsWithoutAProfileList_FallBackToTheSingleEmptyKey()
+    {
+        var settings = new AppSettings { SyncEnabled = true, SyncProfiles = [] };
+
+        Assert.Equal(new[] { "" }, SyncProfileStore.BaseKeysCovering(settings, NoteWithTags(), null));
+        Assert.Empty(SyncProfileStore.BaseKeysCovering(new AppSettings { SyncEnabled = false, SyncProfiles = [] }, NoteWithTags(), null));
     }
 
     [Fact]

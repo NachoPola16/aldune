@@ -1,4 +1,4 @@
-namespace Aldune.SyncServer.Tests;
+﻿namespace Aldune.SyncServer.Tests;
 
 public sealed class DataDirectoryCheckTests : IDisposable
 {

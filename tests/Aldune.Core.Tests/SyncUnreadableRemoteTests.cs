@@ -1,4 +1,4 @@
-using System.Security.Cryptography;
+﻿using System.Security.Cryptography;
 using Microsoft.Data.Sqlite;
 
 namespace Aldune.Core.Tests;

@@ -160,10 +160,18 @@ public partial class App : Application
             CryptographicOperations.ZeroMemory(rawKey);
 
             repository = BootstrapDatabase(databasePath, cipher, allowRetry: true);
+            // Una migración secundaria: si falla, no debe impedir el arranque (se reintenta en el siguiente).
             if (!settings.SyncBasesKeyed)
             {
-                SyncBaseMigration.Run(settings, repository);
-                settingsService.Save(settings);
+                try
+                {
+                    SyncBaseMigration.Run(settings, repository);
+                    settingsService.Save(settings);
+                }
+                catch (Exception ex) when (ex is SqliteException or IOException)
+                {
+                    AppLog.Write("app", $"migración de las bases de sync fallida, se reintentará: {ex.Message}");
+                }
             }
         }
         catch (Exception ex) when (ex is CryptographicException or JsonException)

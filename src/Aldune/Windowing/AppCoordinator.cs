@@ -316,13 +316,16 @@ public sealed class AppCoordinator
         }
     }
 
-    /// <summary>Tras una sync correcta: ya se puede podar (ver <see cref="TaskPruningAllowed"/>) y se
-    /// repintan las ventanas con lo que haya ganado el merge.</summary>
-    private void AfterSuccessfulSync(bool silent = false)
+    /// <summary>
+    /// Tras una pasada que trajo cambios o salió bien: se repintan las ventanas con lo que haya ganado el merge. Solo con un éxito COMPLETO
+    /// (<paramref name="fullySucceeded"/>) se habilita la poda (ver <see cref="TaskPruningAllowed"/>) y suena «hecho»: con varios perfiles, uno
+    /// sin red puede fallar mientras otro trae cambios, y entonces no debe sonar «hecho» a la vez que «fallo» ni darse por sincronizado.
+    /// </summary>
+    private void AfterSync(bool fullySucceeded, bool silent = false)
     {
-        _syncedSinceStart = true;
+        if (fullySucceeded) _syncedSinceStart = true;
         // La pasada de abrir una nota es de fondo: no suena cada vez que se abre una.
-        if (!silent) PlaySound(SoundEvent.SyncDone);
+        if (fullySucceeded && !silent) PlaySound(SoundEvent.SyncDone);
         PruneCompletedTasksInClosedNotes();
         // Lo que llegó por la sync a una nota vinculada es un cambio pendiente que hay que escribir en el archivo.
         foreach (var link in _repository.GetFileLinks().Where(link => link.SyncEnabled)) RequestLinkedCheck(link.NoteId);
@@ -1537,7 +1540,7 @@ public sealed class AppCoordinator
                 if (Application.Current?.Dispatcher is not { } dispatcher) return;
                 // Con varios perfiles un fallo (otro sin red) no quita que los demás hayan traído cambios: hay que repintar igual.
                 if (result.Succeeded || result.AppliedChanges)
-                    dispatcher.BeginInvoke(DispatcherPriority.Background, new Action(() => AfterSuccessfulSync()));
+                    dispatcher.BeginInvoke(DispatcherPriority.Background, new Action(() => AfterSync(result.Succeeded)));
                 if (!result.Succeeded)
                     dispatcher.BeginInvoke(DispatcherPriority.Background, () => PlaySound(SoundEvent.SyncFailed));
             }
@@ -1599,7 +1602,7 @@ public sealed class AppCoordinator
             {
                 var result = RunSyncTracked(automaticOnly: true);
                 if ((result.Succeeded || result.AppliedChanges) && Application.Current?.Dispatcher is { } dispatcher)
-                    dispatcher.BeginInvoke(DispatcherPriority.Background, new Action(() => AfterSuccessfulSync(silent: true)));
+                    dispatcher.BeginInvoke(DispatcherPriority.Background, new Action(() => AfterSync(result.Succeeded, silent: true)));
             }
             catch (Exception ex)
             {
@@ -1615,8 +1618,8 @@ public sealed class AppCoordinator
         var result = RunSyncTracked();
         if (result.Succeeded || result.AppliedChanges)
         {
-            if (Application.Current.Dispatcher.CheckAccess()) AfterSuccessfulSync();
-            else Application.Current.Dispatcher.BeginInvoke(DispatcherPriority.Background, new Action(() => AfterSuccessfulSync()));
+            if (Application.Current.Dispatcher.CheckAccess()) AfterSync(result.Succeeded);
+            else Application.Current.Dispatcher.BeginInvoke(DispatcherPriority.Background, new Action(() => AfterSync(result.Succeeded)));
         }
         if (!result.Succeeded)
         {

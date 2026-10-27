@@ -1,4 +1,4 @@
-namespace Aldune.Core.Tests;
+﻿namespace Aldune.Core.Tests;
 
 public class ParallelDownloadFailFastTests
 {

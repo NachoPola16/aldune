@@ -171,6 +171,16 @@ Tests: 506/506 pasando (`dotnet test tests/Aldune.Core.Tests --no-restore`).
   arrancaba «sano» y devolvía 500 a todos: ahora **falla al arrancar con el `chown` en el mensaje** (probado en Docker); (9) en Android la casilla leía `hiddenSpans` de la primera
   composición (regresión mía): `rememberUpdatedState`; (10) la clave de bases se leía tras la red y un cambio de perfil en Ajustes a mitad de pasada la contaminaba: se fija al empezar.
   El de la lápida local y el del tiempo de la prueba de descarga ya estaban arreglados antes.
+- **Segunda revisión local (`/code-review` high sobre los arreglos del ultra, 2026-10-27; 9 hallazgos, 6 arreglados):** (1) `Synchronize()` devolvía un falso éxito con la sync
+  apagada y nada que hacer (sonaba «hecho» y habilitaba la poda): ahora el error solo se silencia en la pasada automática; (2) con un perfil parcialmente fallido sonaban «hecho» y
+  «fallo» a la vez y se marcaba `_syncedSinceStart`: `AfterSync(fullySucceeded, …)`; (3) **la migración de bases movía las del primer perfil al elegido en instalaciones de la
+  1.7.18-rc1** (que ya usaba claves por perfil): ahora solo mueve si ESA apertura migró la tabla antigua (`LegacySyncBasesMigratedOnOpen`) y un fallo no impide arrancar; (4) un perfil
+  que abarca la nota y nunca la sincronizó no cuenta como al día (`GetSyncBase` exige base de cada perfil que abarca); (5) ajustes antiguos sin lista de perfiles daban «pendiente»
+  siempre; (6) BOM en los ficheros nuevos; y el alcance se lee directo del perfil, sin crear unos ajustes por cada refresco de la señal. **Descartados, con razón:** conflictos que
+  quedan tras borrar un perfil (es lo buscado: siguen en la lista de conflictos y se resuelven desde ahí); `TransportFactoryOverride` (interno, solo para pruebas); y un objeto con
+  **formato que este cliente no entiende (`FormatException`) se sigue sustituyendo al subir** en los cuatro transportes: es el diseño documentado en `FolderSyncTransport.Write` («sustituir un
+  archivo inválido es la forma de recuperarlo») y ya existía; cambiarlo (dejar en paz lo ilegible) toca todos los transportes y Android y hay que decidirlo con calma por si un objeto
+  roto se queda atascado para siempre. **La `v1.7.18-rc1` publicada es anterior a todos estos arreglos.**
 - **Versiones (2026-10-27):** Windows 1.7.17 y Android 0.1.0 (la primera estable, `versionCode` 12, sin `-rc`; se publica con `--latest=false`, ver `RELEASING.md`).
 - **QR de emparejamiento** (2026-10-27, spec `superpowers/specs/2026-10-27-qr-emparejamiento-design.md`): Windows muestra el código de
   perfil como QR (`ShareQr` en Core con QRCoder 1.8.1; `ShareQrWindow` con aviso y cierre a los 120 s) y Android lo escanea

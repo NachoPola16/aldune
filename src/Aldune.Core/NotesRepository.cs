@@ -291,16 +291,28 @@ public sealed class NotesRepository
         // Con claves, solo cuentan las bases de esos perfiles (los activados que abarcan la nota): las de uno apagado no se refrescan y
         // dejarían la señal en pendiente para siempre.
         string filter = "";
+        int expected = 0;
         if (profileKeys is not null)
         {
-            if (profileKeys.Count == 0) return null;
-            var names = profileKeys.Select((key, i) => { command.Parameters.AddWithValue($"$k{i}", key); return $"$k{i}"; });
+            var distinct = profileKeys.Distinct().ToList();
+            if (distinct.Count == 0) return null;
+            expected = distinct.Count;
+            var names = distinct.Select((key, i) => { command.Parameters.AddWithValue($"$k{i}", key); return $"$k{i}"; });
             filter = $" AND ProfileKey IN ({string.Join(",", names)})";
         }
-        command.CommandText = $"SELECT UpdatedAt, DeviceId FROM SyncBase WHERE NoteId = $id{filter} ORDER BY UpdatedAt LIMIT 1;";
+        // Sin límite: con claves hay que saber cuántos perfiles tienen base, para que uno que abarca la nota y nunca la sincronizó cuente como atrasado.
+        command.CommandText = $"SELECT UpdatedAt, DeviceId FROM SyncBase WHERE NoteId = $id{filter} ORDER BY UpdatedAt;";
         command.Parameters.AddWithValue("$id", noteId.ToString());
         using var reader = command.ExecuteReader();
-        return reader.Read() ? new SyncBaseVersion(ParseDate(reader["UpdatedAt"]), reader.GetString(1)) : null;
+        SyncBaseVersion? oldest = null;
+        int rows = 0;
+        while (reader.Read())
+        {
+            rows++;
+            oldest ??= new SyncBaseVersion(ParseDate(reader["UpdatedAt"]), reader.GetString(1));
+        }
+        // Un perfil que abarca la nota y no tiene base la nunca sincronizó: va por detrás de los demás, así que la nota no está al día.
+        return profileKeys is not null && rows < expected ? null : oldest;
     }
 
     /// <summary>¿Está la nota en la cola de conflictos? Sin descifrar la cola: GetSyncConflicts descifra
@@ -440,6 +452,9 @@ public sealed class NotesRepository
         command.Parameters.AddWithValue("$profile", profileKey);
         command.ExecuteNonQuery();
     }
+
+    /// <summary>La base de datos migró en esta apertura la tabla SyncBase de antes de los perfiles (ver <see cref="SyncBaseMigration"/>).</summary>
+    public bool LegacySyncBasesMigratedOnOpen => _database.LegacySyncBasesMigrated;
 
     /// <summary>Pasa las bases y los conflictos de una clave de perfil a otra (ver <see cref="SyncBaseMigration"/>).</summary>
     public void MoveSyncBases(string fromKey, string toKey)

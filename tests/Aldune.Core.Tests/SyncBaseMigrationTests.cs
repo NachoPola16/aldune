@@ -1,4 +1,4 @@
-using System.Security.Cryptography;
+﻿using System.Security.Cryptography;
 using Microsoft.Data.Sqlite;
 
 namespace Aldune.Core.Tests;
@@ -19,6 +19,21 @@ public sealed class SyncBaseMigrationTests : IDisposable
         _repository = new NotesRepository(new NotesDatabase(Path.Combine(_dir, "notes.db")), _cipher);
     }
 
+    /// <summary>Una base de datos con la tabla SyncBase de antes de los perfiles (sin ProfileKey), que se migra al abrirla.</summary>
+    private NotesRepository LegacyRepository(Guid noteId)
+    {
+        var path = Path.Combine(_dir, "legacy.db");
+        using (var connection = new SqliteConnection($"Data Source={path}"))
+        {
+            connection.Open();
+            using var command = connection.CreateCommand();
+            command.CommandText = "CREATE TABLE SyncBase (NoteId TEXT PRIMARY KEY, UpdatedAt TEXT NOT NULL, DeviceId TEXT NOT NULL); " +
+                $"INSERT INTO SyncBase VALUES ('{noteId}', '2026-10-03T09:00:00.0000000+00:00', 'pc');";
+            command.ExecuteNonQuery();
+        }
+        return new NotesRepository(new NotesDatabase(path), _cipher);
+    }
+
     public void Dispose()
     {
         _cipher.Dispose();
@@ -37,24 +52,39 @@ public sealed class SyncBaseMigrationTests : IDisposable
     }
 
     [Fact]
-    public void WhenTheActiveProfileIsNotTheFirst_TheOldBasesMoveToIt()
+    public void FromAPreProfilesDatabase_WhenTheActiveProfileIsNotTheFirst_TheOldBasesMoveToIt()
     {
-        var settings = TwoProfilesWithTheSecondActive(out var second);
-        var id = Guid.NewGuid();
-        _repository.SetSyncBases([new(id, new SyncBaseVersion(DateTimeOffset.UtcNow, "pc"))], "");
+        var settings = TwoProfilesWithTheSecondActive(out _);
+        var legacy = LegacyRepository(Guid.NewGuid());
+        Assert.True(legacy.LegacySyncBasesMigratedOnOpen);
+        Assert.Single(legacy.GetSyncBases(""));
 
-        SyncBaseMigration.Run(settings, _repository);
+        SyncBaseMigration.Run(settings, legacy);
 
-        Assert.Empty(_repository.GetSyncBases(""));
-        Assert.Single(_repository.GetSyncBases(SyncProfileStore.BaseKeyOfActive(settings)));
+        Assert.Empty(legacy.GetSyncBases(""));
+        Assert.Single(legacy.GetSyncBases(SyncProfileStore.BaseKeyOfActive(settings)));
         Assert.True(settings.SyncBasesKeyed);
     }
 
     [Fact]
-    public void WhenTheActiveProfileIsTheFirst_NothingMoves_ButItIsMarkedDone()
+    public void FromAPreProfilesDatabase_WhenTheActiveProfileIsTheFirst_NothingMoves_ButItIsMarkedDone()
     {
         var settings = new AppSettings { SyncEnabled = true };
         SyncProfileStore.Ensure(settings);
+        var legacy = LegacyRepository(Guid.NewGuid());
+
+        SyncBaseMigration.Run(settings, legacy);
+
+        Assert.Single(legacy.GetSyncBases(""));
+        Assert.True(settings.SyncBasesKeyed);
+    }
+
+    [Fact]
+    public void AnAlreadyKeyedDatabase_IsNeverTouched_BecauseItsEmptyKeyBelongsToTheFirstProfile()
+    {
+        // La 1.7.18-rc1 ya guardaba las bases por perfil: lo que hay bajo la clave vacía es del primero, aunque el elegido sea otro.
+        var settings = TwoProfilesWithTheSecondActive(out _);
+        Assert.False(_repository.LegacySyncBasesMigratedOnOpen);
         _repository.SetSyncBases([new(Guid.NewGuid(), new SyncBaseVersion(DateTimeOffset.UtcNow, "pc"))], "");
 
         SyncBaseMigration.Run(settings, _repository);
@@ -64,15 +94,15 @@ public sealed class SyncBaseMigrationTests : IDisposable
     }
 
     [Fact]
-    public void ItRunsOnlyOnce_SoLaterBasesOfTheFirstProfileAreNotStolen()
+    public void ItRunsOnlyOnce()
     {
         var settings = TwoProfilesWithTheSecondActive(out _);
-        SyncBaseMigration.Run(settings, _repository);
+        var legacy = LegacyRepository(Guid.NewGuid());
+        SyncBaseMigration.Run(settings, legacy);
 
-        // Después de la migración, la clave vacía vuelve a ser la del primer perfil.
-        _repository.SetSyncBases([new(Guid.NewGuid(), new SyncBaseVersion(DateTimeOffset.UtcNow, "pc"))], "");
-        SyncBaseMigration.Run(settings, _repository);
+        legacy.SetSyncBases([new(Guid.NewGuid(), new SyncBaseVersion(DateTimeOffset.UtcNow, "pc"))], "");
+        SyncBaseMigration.Run(settings, legacy);
 
-        Assert.Single(_repository.GetSyncBases(""));
+        Assert.Single(legacy.GetSyncBases(""));
     }
 }

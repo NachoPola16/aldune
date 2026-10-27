@@ -69,6 +69,18 @@ public sealed class NotesRepositorySyncLookupTests : IDisposable
     }
 
     [Fact]
+    public void GetSyncBase_WithProfileKeys_IsPendingWhenAnyCoveringProfileHasNotSyncedTheNote()
+    {
+        var id = Guid.NewGuid();
+        var at = new DateTimeOffset(2026, 10, 3, 9, 0, 0, TimeSpan.Zero);
+        _repository.SetSyncBases([new(id, new SyncBaseVersion(at, "pc"))], "perfil-a");
+
+        // El perfil B abarca la nota pero nunca la ha sincronizado: no puede darse por al día con la base de A.
+        Assert.Null(_repository.GetSyncBase(id, ["perfil-a", "perfil-b"]));
+        Assert.Equal(at, _repository.GetSyncBase(id, ["perfil-a"])!.UpdatedAt);
+    }
+
+    [Fact]
     public void DeleteSyncProfile_KeepsItsUnresolvedConflicts_BecauseTheyHoldTheOnlyCopyOfTheLosingVersion()
     {
         var at = new DateTimeOffset(2026, 10, 3, 9, 0, 0, TimeSpan.Zero);

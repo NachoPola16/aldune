@@ -276,7 +276,8 @@ public sealed class SyncService
                 .Where(profile => profile.SyncEnabled && profile.Id != _settings.ActiveSyncProfileId && (!automaticOnly || profile.SyncAutomatically))
                 .ToList();
             bool runActive = _settings.SyncEnabled && (!automaticOnly || _settings.SyncAutomatically);
-            if (others.Count == 0) return runActive ? SynchronizeCore() : new SyncResult(0, 0, 0, 0);
+            // Una pasada automática sin nada que hacer es un no-op silencioso; la manual con la sync apagada tiene que decirlo (SynchronizeCore da el error).
+            if (others.Count == 0) return runActive || !automaticOnly ? SynchronizeCore() : new SyncResult(0, 0, 0, 0);
 
             var ran = new List<(string Name, SyncResult Result)>();
             if (runActive)
