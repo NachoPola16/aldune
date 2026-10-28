@@ -127,6 +127,12 @@ Cómo se publica una versión y cómo se firma: [docs/RELEASING.md](docs/RELEASI
 - [`docs/ROADMAP.md`](docs/ROADMAP.md): lo previsto y lo descartado, con sus razones.
 - [`docs/superpowers/`](docs/superpowers/): especificaciones y planes de trabajo.
 
+## Probar y dar tu opinión
+
+Si la estás probando: Windows [v1.7.18](https://github.com/NachoPola16/aldune/releases/tag/v1.7.18), Android [0.1.1](https://github.com/NachoPola16/aldune/releases/tag/android-v0.1.1).
+Un fallo, una duda o una idea van a [Issues](https://github.com/NachoPola16/aldune/issues/new): di qué versión usas, qué hiciste y qué esperabas.
+No pegues códigos de perfil, tokens ni el contenido de tus notas en un issue público.
+
 ## Licencia
 
 [GPL-3.0](LICENSE). Puedes usar, estudiar, modificar y compartir Aldune; si distribuyes una versión

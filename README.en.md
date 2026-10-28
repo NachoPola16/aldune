@@ -53,9 +53,9 @@ If Windows shows "Windows protected your PC", it's because the executable isn't 
 ## Android
 
 <p align="center">
-  <img src="android/fastlane/metadata/android/en-US/images/phoneScreenshots/1_notes.png" alt="Aldune en Android: la lista de notas" width="200">
-  <img src="android/fastlane/metadata/android/en-US/images/phoneScreenshots/2_checklist.png" alt="Aldune en Android: una lista de tareas" width="200">
-  <img src="android/fastlane/metadata/android/en-US/images/phoneScreenshots/3_reminder.png" alt="Aldune en Android: opciones y recordatorio de una nota" width="200">
+  <img src="android/fastlane/metadata/android/en-US/images/phoneScreenshots/1_notes.png" alt="Aldune on Android: the note list" width="200">
+  <img src="android/fastlane/metadata/android/en-US/images/phoneScreenshots/2_checklist.png" alt="Aldune on Android: a task list" width="200">
+  <img src="android/fastlane/metadata/android/en-US/images/phoneScreenshots/3_reminder.png" alt="Aldune on Android: a note's options and reminder" width="200">
 </p>
 
 There is an Android client (native Kotlin, Android 8 or later) in [`android/`](android/): notes with task lists, tags,
@@ -113,6 +113,12 @@ dotnet test Aldune.slnx -c Release
 ```
 
 How a version is released and signed: [docs/RELEASING.md](docs/RELEASING.md).
+
+## Try it and give feedback
+
+If you are testing it: Windows [v1.7.18](https://github.com/NachoPola16/aldune/releases/tag/v1.7.18), Android [0.1.1](https://github.com/NachoPola16/aldune/releases/tag/android-v0.1.1).
+A bug, a question or an idea goes to [Issues](https://github.com/NachoPola16/aldune/issues/new): say which version you use, what you did and what you expected.
+Do not paste profile codes, tokens or the contents of your notes in a public issue.
 
 ## License
 
