@@ -25,12 +25,16 @@ public static class NoteListing
     {
         NoteListOrder.Newest => items.OrderByDescending(item => noteOf(item).UpdatedAt),
         NoteListOrder.Oldest => items.OrderBy(item => noteOf(item).UpdatedAt),
-        // Las protegidas no enseñan su título: al final, en vez de ordenarlas por un texto que no se ve.
+        // Las protegidas sin nombre visible no enseñan título: al final, en vez de ordenarlas por un texto que no se ve.
+        // Con nombre visible se ordenan por él, como cualquier otra.
         NoteListOrder.Title => items
-            .OrderBy(item => noteOf(item).IsProtected)
-            .ThenBy(item => NoteTitleHelper.GetTitle(noteOf(item).Text), StringComparer.CurrentCultureIgnoreCase),
+            .OrderBy(item => noteOf(item).IsProtected && ProtectedTitleRules.Visible(noteOf(item)) is null)
+            .ThenBy(item => DisplayTitle(noteOf(item)), StringComparer.CurrentCultureIgnoreCase),
         _ => items
     };
+
+    private static string DisplayTitle(Note note) =>
+        ProtectedTitleRules.Visible(note) ?? NoteTitleHelper.GetTitle(note.Text);
 
     /// <summary>
     /// La nota activa modificada más recientemente, para el atajo de "abrir la última nota". Las

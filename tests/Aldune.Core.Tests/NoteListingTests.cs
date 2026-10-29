@@ -39,6 +39,19 @@ public class NoteListingTests
     // Por el título que se ve (la primera línea), sin distinguir mayúsculas ni tildes de orden; las
     // protegidas no enseñan su título, así que van al final en vez de ordenarse por un texto oculto.
     [Fact]
+    public void Title_SortsAProtectedNoteWithAVisibleNameByThatName()
+    {
+        var apple = MakeNote("Apple", Now);
+        var named = MakeNote(string.Empty, Now, isProtected: true);
+        named.ProtectedTitle = "Banco";
+        var hidden = MakeNote(string.Empty, Now, isProtected: true);
+        var cherry = MakeNote("Cherry", Now);
+
+        Assert.Equal(new[] { apple, named, cherry, hidden },
+            NoteListing.Sort(new[] { hidden, cherry, named, apple }, n => n, NoteListOrder.Title));
+    }
+
+    [Fact]
     public void Title_SortsByTheVisibleTitleAndLeavesProtectedNotesLast()
     {
         var zebra = MakeNote("zebra\nbody", Now);

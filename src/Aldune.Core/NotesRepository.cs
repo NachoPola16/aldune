@@ -66,7 +66,7 @@ public sealed class NotesRepository
         using var command = connection.CreateCommand();
         command.CommandText = """
             SELECT n.Id, n.EncryptedText, n.Nonce, n.Tag, n.Color, n.CreatedAt, n.UpdatedAt, n.State, n.ScreenOrigin
-            , n.IsProtected, n.ProtectionSalt, n.ProtectionCipherText, n.ProtectionNonce, n.ProtectionTag
+            , n.IsProtected, n.ProtectionSalt, n.ProtectionCipherText, n.ProtectionNonce, n.ProtectionTag, n.ProtectedTitle
             , o.Position AS DockPosition
             FROM Note n LEFT JOIN NoteOrder o ON o.NoteId = n.Id
             WHERE n.State = $state
@@ -91,7 +91,7 @@ public sealed class NotesRepository
         using var command = connection.CreateCommand();
         command.CommandText = """
             SELECT n.Id, n.EncryptedText, n.Nonce, n.Tag, n.Color, n.CreatedAt, n.UpdatedAt, n.State, n.ScreenOrigin
-            , n.IsProtected, n.ProtectionSalt, n.ProtectionCipherText, n.ProtectionNonce, n.ProtectionTag
+            , n.IsProtected, n.ProtectionSalt, n.ProtectionCipherText, n.ProtectionNonce, n.ProtectionTag, n.ProtectedTitle
             , o.Position AS DockPosition
             FROM Note n LEFT JOIN NoteOrder o ON o.NoteId = n.Id ORDER BY n.CreatedAt;
             """;
@@ -221,7 +221,7 @@ public sealed class NotesRepository
         using var command = connection.CreateCommand();
         command.CommandText = """
             SELECT n.Id, n.EncryptedText, n.Nonce, n.Tag, n.Color, n.CreatedAt, n.UpdatedAt, n.State, n.ScreenOrigin
-            , n.IsProtected, n.ProtectionSalt, n.ProtectionCipherText, n.ProtectionNonce, n.ProtectionTag
+            , n.IsProtected, n.ProtectionSalt, n.ProtectionCipherText, n.ProtectionNonce, n.ProtectionTag, n.ProtectedTitle
             , o.Position AS DockPosition
             FROM Note n
             JOIN NoteTag nt ON nt.NoteId = n.Id
@@ -736,9 +736,9 @@ public sealed class NotesRepository
         command.CommandText = """
             INSERT INTO Note (Id, EncryptedText, Nonce, Tag, Color, CreatedAt, UpdatedAt, State, ScreenOrigin,
                               IsProtected, ProtectionSalt, ProtectionCipherText, ProtectionNonce, ProtectionTag,
-                              SyncAuthorDeviceId)
+                              ProtectedTitle, SyncAuthorDeviceId)
             VALUES ($id, $text, $nonce, $tag, $color, $createdAt, $updatedAt, $state, $screenOrigin,
-                    $isProtected, $salt, $protectedText, $protectedNonce, $protectedTag, $syncAuthorDeviceId)
+                    $isProtected, $salt, $protectedText, $protectedNonce, $protectedTag, $protectedTitle, $syncAuthorDeviceId)
             ON CONFLICT(Id) DO UPDATE SET
                 EncryptedText = excluded.EncryptedText,
                 Nonce = excluded.Nonce,
@@ -753,6 +753,7 @@ public sealed class NotesRepository
                 ProtectionCipherText = excluded.ProtectionCipherText,
                 ProtectionNonce = excluded.ProtectionNonce,
                 ProtectionTag = excluded.ProtectionTag,
+                ProtectedTitle = excluded.ProtectedTitle,
                 SyncAuthorDeviceId = excluded.SyncAuthorDeviceId;
             DELETE FROM SyncTombstone WHERE NoteId = $id;
             """;
@@ -770,6 +771,7 @@ public sealed class NotesRepository
         command.Parameters.AddWithValue("$protectedText", (object?)note.ProtectedContent?.CipherText ?? DBNull.Value);
         command.Parameters.AddWithValue("$protectedNonce", (object?)note.ProtectedContent?.Nonce ?? DBNull.Value);
         command.Parameters.AddWithValue("$protectedTag", (object?)note.ProtectedContent?.Tag ?? DBNull.Value);
+        command.Parameters.AddWithValue("$protectedTitle", (object?)ProtectedTitleRules.Visible(note) ?? DBNull.Value);
         command.Parameters.AddWithValue("$syncAuthorDeviceId", (object?)authorDeviceId ?? DBNull.Value);
         command.ExecuteNonQuery();
 
@@ -848,7 +850,7 @@ public sealed class NotesRepository
         command.CommandText = """
             UPDATE Note SET EncryptedText = $text, Nonce = $nonce, Tag = $tag,
                 IsProtected = 0, ProtectionSalt = NULL, ProtectionCipherText = NULL,
-                ProtectionNonce = NULL, ProtectionTag = NULL, UpdatedAt = $updatedAt, SyncAuthorDeviceId = NULL
+                ProtectionNonce = NULL, ProtectionTag = NULL, ProtectedTitle = NULL, UpdatedAt = $updatedAt, SyncAuthorDeviceId = NULL
             WHERE Id = $id;
             """;
         AddEncryptedParameters(command, encrypted);
@@ -856,6 +858,21 @@ public sealed class NotesRepository
         command.Parameters.AddWithValue("$id", id.ToString());
         command.ExecuteNonQuery();
         return true;
+    }
+
+    /// <summary>Pone (o quita, si queda vacío) el nombre visible de una nota protegida. No pide la contraseña: el nombre es
+    /// público por diseño. Cuenta como edición para que viaje por la sincronización.</summary>
+    public void SetProtectedTitle(Guid id, string? title)
+    {
+        var note = GetById(id) ?? throw new InvalidOperationException("The note no longer exists.");
+        if (!note.IsProtected) throw new InvalidOperationException("Only a protected note has a visible name.");
+        using var connection = _database.OpenConnection();
+        using var command = connection.CreateCommand();
+        command.CommandText = "UPDATE Note SET ProtectedTitle = $title, UpdatedAt = $updatedAt, SyncAuthorDeviceId = NULL WHERE Id = $id;";
+        command.Parameters.AddWithValue("$title", (object?)ProtectedTitleRules.Normalize(title) ?? DBNull.Value);
+        command.Parameters.AddWithValue("$updatedAt", DateTimeOffset.UtcNow.ToString("O"));
+        command.Parameters.AddWithValue("$id", id.ToString());
+        command.ExecuteNonQuery();
     }
 
     public void UpdateProtectedText(Guid id, string newText, string password)
@@ -1230,7 +1247,7 @@ public sealed class NotesRepository
         using var command = connection.CreateCommand();
         command.CommandText = """
             SELECT n.Id, n.EncryptedText, n.Nonce, n.Tag, n.Color, n.CreatedAt, n.UpdatedAt, n.State, n.ScreenOrigin
-            , n.IsProtected, n.ProtectionSalt, n.ProtectionCipherText, n.ProtectionNonce, n.ProtectionTag
+            , n.IsProtected, n.ProtectionSalt, n.ProtectionCipherText, n.ProtectionNonce, n.ProtectionTag, n.ProtectedTitle
             , o.Position AS DockPosition
             FROM Note n LEFT JOIN NoteOrder o ON o.NoteId = n.Id WHERE n.Id = $id;
             """;
@@ -1364,6 +1381,7 @@ public sealed class NotesRepository
             DockPosition = ReadDockPosition(reader),
             IsProtected = isProtected,
             ProtectedContent = protectedContent,
+            ProtectedTitle = isProtected && reader["ProtectedTitle"] is string title ? title : null,
             IsUnlocked = !isProtected
         };
     }

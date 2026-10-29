@@ -339,6 +339,7 @@ public static class SyncEnvelopeCodec
             Tags = note.Tags.ToArray(),
             IsProtected = note.IsProtected,
             ProtectedContent = note.ProtectedContent,
+            ProtectedTitle = ProtectedTitleRules.Visible(note),
             DockPosition = note.DockPosition
         }, JsonOptions);
 
@@ -457,6 +458,7 @@ public static class SyncEnvelopeCodec
             Tags = payload.Tags ?? Array.Empty<string>(),
             IsProtected = payload.IsProtected,
             ProtectedContent = payload.ProtectedContent,
+            ProtectedTitle = payload.IsProtected ? ProtectedTitleRules.Normalize(payload.ProtectedTitle) : null,
             DockPosition = payload.DockPosition,
             IsUnlocked = !payload.IsProtected
         };
@@ -494,6 +496,7 @@ public static class SyncEnvelopeCodec
         public string[]? Tags { get; set; }
         public bool IsProtected { get; set; }
         public ProtectedNoteContent? ProtectedContent { get; set; }
+        public string? ProtectedTitle { get; set; }
         public double? DockPosition { get; set; }
     }
 }

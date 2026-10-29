@@ -28,7 +28,7 @@ JSON ya decodificado.
 
 **JSON de la nota (`payloadJson`).** Claves en camelCase: `id`, `text`, `color`, `createdAt`, `updatedAt`, `state`
 (**número**: 0 activa, 1 archivada, 2 papelera), `screenOrigin`, `tags` (lista, puede faltar), `isProtected`,
-`protectedContent` (objeto o `null`), `dockPosition` (número o `null`). .NET escribe los caracteres no ASCII como `\uXXXX`
+`protectedContent` (objeto o `null`), `protectedTitle` (texto en claro o `null`/ausente: el nombre visible de una nota protegida, ≤ 60 caracteres, una línea; se ignora si la nota no está protegida), `dockPosition` (número o `null`). .NET escribe los caracteres no ASCII como `\uXXXX`
 (también los pares sustitutos de emoji): al leer, cualquier JSON válido sirve. **Tras descifrar hay que comprobar** que `id` y
 `updatedAt` del contenido coinciden con `noteId` y `updatedAt` de la cabecera (si no, la nota se rechaza) y que una nota
 protegida trae `protectedContent`.

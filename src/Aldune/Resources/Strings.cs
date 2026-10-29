@@ -547,6 +547,19 @@ public static class Strings
         "Öffnen", "Ouvrir", "Abrir");
     public static string ProtectNote => T("Protect with password…", "Proteger con contraseña…",
         "Mit Passwort schützen…", "Protéger par mot de passe…", "Proteger com senha…");
+    public static string VisibleNameMenu => T("Visible name…", "Nombre visible…",
+        "Sichtbarer Name…", "Nom visible…", "Nome visível…");
+    public static string VisibleNameTitle => T("Visible name", "Nombre visible",
+        "Sichtbarer Name", "Nom visible", "Nome visível");
+    public static string VisibleNameHint => T(
+        "Shown in the dock and in Manage notes instead of \"Protected note\", even while the note is locked. Anyone who sees your screen will see it. Leave it empty to hide it.",
+        "Se muestra en el dock y en Gestionar notas en lugar de «Nota protegida», aunque la nota esté bloqueada. Cualquiera que vea tu pantalla lo verá. Déjalo vacío para ocultarlo.",
+        "Wird im Dock und unter „Notizen verwalten“ statt „Geschützte Notiz“ angezeigt, auch wenn die Notiz gesperrt ist. Wer auf deinen Bildschirm schaut, sieht ihn. Leer lassen, um ihn auszublenden.",
+        "S'affiche dans le dock et dans Gérer les notes à la place de « Note protégée », même verrouillée. Quiconque voit votre écran le verra. Laissez vide pour le masquer.",
+        "Aparece no dock e em Gerenciar notas no lugar de \"Nota protegida\", mesmo com a nota bloqueada. Qualquer pessoa que veja sua tela o verá. Deixe vazio para ocultá-lo.");
+    public static string VisibleNameLabel => T("Visible name (optional)", "Nombre visible (opcional)",
+        "Sichtbarer Name (optional)", "Nom visible (facultatif)", "Nome visível (opcional)");
+    public static string VisibleNameAction => T("Save", "Guardar", "Speichern", "Enregistrer", "Salvar");
     public static string RemoveProtection => T("Remove password protection", "Quitar protección con contraseña",
         "Passwortschutz aufheben", "Supprimer la protection par mot de passe", "Remover proteção por senha");
     public static string UnlockNote => T("Unlock note", "Desbloquear nota",

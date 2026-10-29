@@ -2312,6 +2312,7 @@ public partial class EdgeDockWindow : Window
         TabMenuArchiveButton.Content = note.State == NoteState.Active ? Strings.Archive : Strings.Restore;
         TabMenuTrashButton.Content = note.State == NoteState.Trashed ? Strings.Restore : Strings.MoveToTrash;
         TabMenuProtectionButton.Content = note.IsProtected ? Strings.RemoveProtection : Strings.ProtectNote;
+        TabMenuVisibleNameButton.Visibility = note.IsProtected ? Visibility.Visible : Visibility.Collapsed;
         // Una nota vinculada es el archivo en claro: no se protege (spec, decisión 7).
         bool linked = LinkedNoteDisplay.IsLinked(note.Id);
         TabMenuProtectionButton.IsEnabled = !linked;
@@ -2395,11 +2396,23 @@ public partial class EdgeDockWindow : Window
         }
         else
         {
-            var password = PasswordPromptWindow.Show(this, PasswordPromptMode.Protect);
+            var password = PasswordPromptWindow.ShowProtect(this, out var visibleName);
             if (password is null) return;
             _repository.Protect(note.Id, password);
+            if (visibleName is not null) _repository.SetProtectedTitle(note.Id, visibleName);
         }
 
+        _coordinator.RefreshAll();
+    }
+
+    private void OnTabMenuVisibleNameClick(object sender, RoutedEventArgs e)
+    {
+        if (_tabMenuNote is not { } note) return;
+        CloseTabMenu();
+        HoldOpenForWindow();
+
+        if (!PasswordPromptWindow.ShowVisibleName(this, note.ProtectedTitle, out var visibleName)) return;
+        _repository.SetProtectedTitle(note.Id, visibleName);
         _coordinator.RefreshAll();
     }
 

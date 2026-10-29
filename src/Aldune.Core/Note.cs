@@ -26,6 +26,8 @@ public sealed class Note
 
     public bool IsProtected { get; set; }
     public ProtectedNoteContent? ProtectedContent { get; set; }
+    /// <summary>Nombre en claro que se enseña en lugar de «Nota protegida» (ver <see cref="ProtectedTitleRules"/>). Null = oculto.</summary>
+    public string? ProtectedTitle { get; set; }
 
     [System.Text.Json.Serialization.JsonIgnore]
     public bool IsUnlocked { get; set; }

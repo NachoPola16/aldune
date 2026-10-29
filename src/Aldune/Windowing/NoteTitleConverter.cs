@@ -10,7 +10,7 @@ public sealed class NoteTitleConverter : IValueConverter
     public object Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
     {
         return value is Note note && note.IsProtected
-            ? Strings.ProtectedNote
+            ? ProtectedTitleRules.Visible(note) ?? Strings.ProtectedNote
             : value is Note unprotectedNote ? LinkedNoteDisplay.Title(unprotectedNote) : NoteTitleHelper.GetTitle(string.Empty);
     }
 

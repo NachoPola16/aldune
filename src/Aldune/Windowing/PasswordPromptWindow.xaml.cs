@@ -10,7 +10,7 @@ using Aldune.Resources;
 
 namespace Aldune.Windowing;
 
-internal enum PasswordPromptMode { Unlock, Protect, RemoveProtection }
+internal enum PasswordPromptMode { Unlock, Protect, RemoveProtection, VisibleName }
 
 /// <summary>
 /// Pide la contraseña de una nota protegida: para abrirla, para protegerla (con confirmación) o para
@@ -23,12 +23,14 @@ internal partial class PasswordPromptWindow : Window
     private readonly bool _confirm;
     private readonly Func<string, bool>? _verify;
     private bool _syncingText;
+    private readonly bool _nameOnly;
 
     private PasswordPromptWindow(PasswordPromptMode mode, Func<string, bool>? verify)
     {
         InitializeComponent();
         NativeMethods.CloakUntilFirstFrame(this);
         _confirm = mode == PasswordPromptMode.Protect;
+        _nameOnly = mode == PasswordPromptMode.VisibleName;
         _verify = verify;
 
         (string title, string hint, string action) = mode switch
@@ -36,6 +38,7 @@ internal partial class PasswordPromptWindow : Window
             PasswordPromptMode.Protect => (Strings.ProtectNoteTitle, Strings.ProtectNoteHint, Strings.ProtectAction),
             PasswordPromptMode.RemoveProtection =>
                 (Strings.RemoveProtectionTitle, Strings.RemoveProtectionHint, Strings.RemoveProtectionAction),
+            PasswordPromptMode.VisibleName => (Strings.VisibleNameTitle, Strings.VisibleNameHint, Strings.VisibleNameAction),
             _ => (Strings.UnlockNote, Strings.ProtectedNoteHint, Strings.UnlockAction),
         };
         Title = title;
@@ -43,13 +46,16 @@ internal partial class PasswordPromptWindow : Window
         HintText.Text = hint;
         AcceptButton.Content = action;
         ConfirmationPanel.Visibility = _confirm ? Visibility.Visible : Visibility.Collapsed;
+        // Al proteger, el nombre visible es un campo más (opcional); para cambiarlo después, el diálogo solo tiene ese campo.
+        NamePanel.Visibility = _confirm || _nameOnly ? Visibility.Visible : Visibility.Collapsed;
+        if (_nameOnly) PasswordLabel.Visibility = PasswordField.Visibility = Visibility.Collapsed;
 
         Loaded += (_, _) =>
         {
             // El dueño suele ser el dock (WS_EX_NOACTIVATE): sin forzar el primer plano, lo que se
             // teclease iría a la aplicación que estuviera delante.
             NativeMethods.ForceActivate(this);
-            PasswordInput.Focus();
+            if (_nameOnly) { NameInput.Focus(); NameInput.SelectAll(); } else PasswordInput.Focus();
             UpdateStatus();
         };
         // Bloq Mayús cambia de estado al soltar la tecla; también puede cambiar con la ventana en
@@ -65,6 +71,33 @@ internal partial class PasswordPromptWindow : Window
     /// </summary>
     public static string? Show(Window owner, PasswordPromptMode mode, Func<string, bool>? verify = null)
     {
+        var dialog = Create(owner, mode, verify);
+        return dialog.ShowDialog() == true ? dialog.PasswordInput.Password : null;
+    }
+
+    /// <summary>Pide la contraseña para proteger una nota y, de paso, su nombre visible opcional (null = «Nota protegida»).</summary>
+    public static string? ShowProtect(Window owner, out string? visibleName)
+    {
+        var dialog = Create(owner, PasswordPromptMode.Protect, null);
+        visibleName = null;
+        if (dialog.ShowDialog() != true) return null;
+        visibleName = ProtectedTitleRules.Normalize(dialog.NameInput.Text);
+        return dialog.PasswordInput.Password;
+    }
+
+    /// <summary>Edita el nombre visible de una nota ya protegida. Devuelve false si se cancela; el nombre sale normalizado (null = ocultar).</summary>
+    public static bool ShowVisibleName(Window owner, string? current, out string? visibleName)
+    {
+        var dialog = Create(owner, PasswordPromptMode.VisibleName, null);
+        dialog.NameInput.Text = current ?? string.Empty;
+        visibleName = null;
+        if (dialog.ShowDialog() != true) return false;
+        visibleName = ProtectedTitleRules.Normalize(dialog.NameInput.Text);
+        return true;
+    }
+
+    private static PasswordPromptWindow Create(Window owner, PasswordPromptMode mode, Func<string, bool>? verify)
+    {
         var dialog = new PasswordPromptWindow(mode, verify) { Owner = owner };
         if (owner is EdgeDockWindow dock)
         {
@@ -78,7 +111,7 @@ internal partial class PasswordPromptWindow : Window
         {
             dialog.WindowStartupLocation = WindowStartupLocation.CenterOwner;
         }
-        return dialog.ShowDialog() == true ? dialog.PasswordInput.Password : null;
+        return dialog;
     }
 
     private void OnSourceInitialized(object? sender, EventArgs e) =>
@@ -86,6 +119,7 @@ internal partial class PasswordPromptWindow : Window
 
     private void OnAcceptClick(object sender, RoutedEventArgs e)
     {
+        if (_nameOnly) { DialogResult = true; return; }
         string password = PasswordInput.Password;
         var problem = PasswordRules.Check(password, _confirm ? ConfirmationInput.Password : null);
         if (problem != PasswordProblem.None)

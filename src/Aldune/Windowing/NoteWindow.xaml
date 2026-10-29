@@ -378,6 +378,9 @@
                         <Button x:Name="ProtectionButton" Click="OnProtectionClick" ToolTipService.ShowOnDisabled="True"
                                 Content="{x:Static res:Strings.ProtectNote}"
                                 Style="{StaticResource NoteMenuItemStyle}" />
+                        <Button x:Name="VisibleNameButton" Click="OnVisibleNameClick"
+                                Content="{x:Static res:Strings.VisibleNameMenu}"
+                                Style="{StaticResource NoteMenuItemStyle}" />
                         <Button x:Name="TagsButton" Click="OnTagsClick"
                                 Content="{x:Static res:Strings.NoteTags}"
                                 Style="{StaticResource NoteMenuItemStyle}" />

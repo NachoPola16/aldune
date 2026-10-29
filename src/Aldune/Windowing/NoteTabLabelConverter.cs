@@ -33,7 +33,7 @@ public sealed class NoteTabLabelConverter : IValueConverter
         var note = value as Note;
         var text = note?.Text ?? value as string ?? string.Empty;
         var title = note is { IsProtected: true }
-            ? Strings.ProtectedNote
+            ? ProtectedTitleRules.Visible(note!) ?? Strings.ProtectedNote
             : note is not null ? LinkedNoteDisplay.Title(note) : NoteTitleHelper.GetTitle(text);
         if (string.IsNullOrWhiteSpace(title)) return string.Empty;
 

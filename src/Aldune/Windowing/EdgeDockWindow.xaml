@@ -806,6 +806,8 @@
                                 Click="OnTabMenuOpenInEditorClick" Style="{StaticResource NoteMenuItemStyle}" />
                         <Button x:Name="TabMenuProtectionButton" ToolTipService.ShowOnDisabled="True" Content="{x:Static res:Strings.ProtectNote}"
                                 Click="OnTabMenuProtectionClick" Style="{StaticResource NoteMenuItemStyle}" />
+                        <Button x:Name="TabMenuVisibleNameButton" Content="{x:Static res:Strings.VisibleNameMenu}"
+                                Click="OnTabMenuVisibleNameClick" Style="{StaticResource NoteMenuItemStyle}" />
                         <Button x:Name="TabMenuArchiveButton" Content="{x:Static res:Strings.Archive}"
                                 Click="OnTabMenuArchiveClick"
                                 Style="{StaticResource NoteMenuItemStyle}" />

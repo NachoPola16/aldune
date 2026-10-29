@@ -120,6 +120,7 @@ public partial class NoteWindow : Window
         UpdatePinButton();
         UpdateReminderButton();
         ProtectionButton.Content = note.IsProtected ? Strings.RemoveProtection : Strings.ProtectNote;
+        VisibleNameButton.Visibility = note.IsProtected ? Visibility.Visible : Visibility.Collapsed;
         // Una nota vinculada es el archivo en claro: no se protege (spec, decisión 7).
         ProtectionButton.IsEnabled = !IsLinked;
         ProtectionButton.ToolTip = IsLinked ? Strings.LinkedProtectDisabled : null;
@@ -1719,6 +1720,8 @@ public partial class NoteWindow : Window
 
             _note.IsProtected = false;
             _note.ProtectedContent = null;
+            _note.ProtectedTitle = null;
+            VisibleNameButton.Visibility = Visibility.Collapsed;
             _note.IsUnlocked = true;
             _protectionPassword = null;
             ProtectionButton.Content = Strings.ProtectNote;
@@ -1726,14 +1729,17 @@ public partial class NoteWindow : Window
             return;
         }
 
-        var password = PasswordPromptWindow.Show(this, PasswordPromptMode.Protect);
+        var password = PasswordPromptWindow.ShowProtect(this, out var visibleName);
         if (password is null) return;
 
         try
         {
             Flush();
             _note.ProtectedContent = _repository.Protect(_note.Id, password);
+            if (visibleName is not null) _repository.SetProtectedTitle(_note.Id, visibleName);
+            _note.ProtectedTitle = visibleName;
             _note.IsProtected = true;
+            VisibleNameButton.Visibility = Visibility.Visible;
             _note.IsUnlocked = true;
             _protectionPassword = password;
             ProtectionButton.Content = Strings.RemoveProtection;
@@ -1745,6 +1751,16 @@ public partial class NoteWindow : Window
             AppDialog.Show(this, Strings.UnexpectedErrorMessage(ex.Message), Strings.UnexpectedErrorTitle,
                 MessageBoxButton.OK, MessageBoxImage.Error);
         }
+    }
+
+    private void OnVisibleNameClick(object sender, RoutedEventArgs e)
+    {
+        if (!_note.IsProtected) return;
+        ActionsPopup.IsOpen = false;
+        if (!PasswordPromptWindow.ShowVisibleName(this, _note.ProtectedTitle, out var visibleName)) return;
+        _repository.SetProtectedTitle(_note.Id, visibleName);
+        _note.ProtectedTitle = visibleName;
+        _coordinator.RefreshAll();
     }
 
     private bool IsLinked => _coordinator.IsLinked(_note.Id);

@@ -19,6 +19,7 @@ public static class NoteEquivalence
             && a.State == b.State
             && a.DockPosition == b.DockPosition
             && a.IsProtected == b.IsProtected
+            && ProtectedTitleRules.Visible(a) == ProtectedTitleRules.Visible(b)
             && a.Tags.OrderBy(tag => tag, StringComparer.Ordinal)
                 .SequenceEqual(b.Tags.OrderBy(tag => tag, StringComparer.Ordinal), StringComparer.Ordinal)
             && SameProtectedContent(a.ProtectedContent, b.ProtectedContent);
