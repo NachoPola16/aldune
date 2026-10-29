@@ -381,9 +381,10 @@ fun NoteEditorPane(key: String, viewModel: NotesViewModel, onBack: () -> Unit, s
             // asiente. (Con la app ya abierta no hace falta, pero no estorba.)
             delay(KEYBOARD_DELAY_MS)
             keyboard?.show()
-        } else if (loaded && key.isEmpty() && !protectedNote) {
-            // «Nunca»: una nota nueva se abre con el campo enfocado por el propio sistema y, con él, el teclado. Se quita el foco y se esconde,
-            // pasada la misma pausa que el show() de arriba (si no, el sistema lo vuelve a poner). Tocar el texto lo abre cuando se quiera.
+        } else if (loaded && !protectedNote) {
+            // Cuando no toca abrirlo (por defecto, «nunca»; o «solo nuevas» en una existente) el campo se abre igualmente enfocado por el propio
+            // sistema, nueva o no, y con el foco sale el teclado. Se quita el foco y se esconde, pasada la misma pausa que el show() de arriba
+            // (si no, el sistema lo vuelve a poner). Tocar el texto lo abre cuando se quiera.
             delay(KEYBOARD_DELAY_MS)
             focusManager.clearFocus()
             keyboard?.hide()
