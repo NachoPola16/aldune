@@ -19,7 +19,7 @@ their own. No account, no required cloud, and the content is encrypted.
 - **Reminders**, **tags**, **archive** and **trash**, plus a manager to search and organize.
 - **Color themes**: Classic, Serene and Graphite, with light, dark or alternating notes, or your own.
 - **A global shortcut** to create a note from anywhere (`Ctrl+Shift+N` by default).
-- **Password-protected notes**, encrypted with a key derived from the password (which is not stored).
+- **Password-protected notes**, encrypted with a key derived from the password (which is not stored), with an optional visible name to recognize them without opening them.
 - **Optional sync** between devices through a shared folder or NAS, your own server (Docker) or
   WebDAV / Nextcloud, end-to-end encrypted. See [docs/SYNC.md](docs/SYNC.md) (in Spanish).
 - **Automatic backups**: one a day, the 7 most recent are kept.
@@ -44,7 +44,7 @@ Requirements: 64-bit Windows 10 or 11. You don't need to install .NET.
 **Check your download** (optional, in PowerShell). The result must equal that file's line in `SHA256SUMS.txt`:
 
 ```powershell
-(Get-FileHash .\Aldune-Setup-1.7.18.0.exe -Algorithm SHA256).Hash.ToLower()
+(Get-FileHash .\Aldune-Setup-2.0.0.0.exe -Algorithm SHA256).Hash.ToLower()
 ```
 
 It catches a corrupted download or one altered on the way. It is not a substitute for code signing (see "Signing and privacy"): anyone who could
@@ -119,7 +119,7 @@ How a version is released and signed: [docs/RELEASING.md](docs/RELEASING.md).
 
 ## Try it and give feedback
 
-If you are testing it: Windows [v1.7.18](https://github.com/NachoPola16/aldune/releases/tag/v1.7.18), Android [0.1.1](https://github.com/NachoPola16/aldune/releases/tag/android-v0.1.1).
+If you are testing it: Windows [v2.0.0](https://github.com/NachoPola16/aldune/releases/tag/v2.0.0), Android [1.0.0](https://github.com/NachoPola16/aldune/releases/tag/android-v1.0.0).
 A bug, a question or an idea goes to [Issues](https://github.com/NachoPola16/aldune/issues/new): say which version you use, what you did and what you expected.
 Do not paste profile codes, tokens or the contents of your notes in a public issue.
 

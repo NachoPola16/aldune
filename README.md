@@ -19,7 +19,7 @@ ratón y se abren como ventanas propias. Sin cuenta, sin nube obligatoria, y con
 - **Recordatorios**, **etiquetas**, **archivo** y **papelera**, y un gestor para buscar y ordenar.
 - **Temas de color**: Clásico, Sereno y Grafito, con notas claras, oscuras o alternando, o los tuyos.
 - **Atajo global** para crear una nota desde cualquier sitio (por defecto `Ctrl+Mayús+N`).
-- **Notas con contraseña**, cifradas con una clave que sale de la contraseña (que no se guarda).
+- **Notas con contraseña**, cifradas con una clave que sale de la contraseña (que no se guarda), con un nombre visible opcional para reconocerlas sin abrirlas.
 - **Sincronización opcional** entre dispositivos por carpeta compartida o NAS, por tu propio
   servidor (Docker) o por WebDAV / Nextcloud, cifrada de extremo a extremo. Ver
   [docs/SYNC.md](docs/SYNC.md).
@@ -45,7 +45,7 @@ Requisitos: Windows 10 u 11 de 64 bits. No hace falta instalar .NET.
 **Comprobar la descarga** (opcional, en PowerShell). El resultado tiene que ser igual a la línea de ese fichero en `SHA256SUMS.txt`:
 
 ```powershell
-(Get-FileHash .\Aldune-Setup-1.7.18.0.exe -Algorithm SHA256).Hash.ToLower()
+(Get-FileHash .\Aldune-Setup-2.0.0.0.exe -Algorithm SHA256).Hash.ToLower()
 ```
 
 Sirve para detectar una descarga corrupta o cambiada por el camino. No sustituye a una firma de código (ver «Firma y privacidad»): quien pudiera
@@ -132,7 +132,7 @@ Cómo se publica una versión y cómo se firma: [docs/RELEASING.md](docs/RELEASI
 
 ## Probar y dar tu opinión
 
-Si la estás probando: Windows [v1.7.18](https://github.com/NachoPola16/aldune/releases/tag/v1.7.18), Android [0.1.1](https://github.com/NachoPola16/aldune/releases/tag/android-v0.1.1).
+Si la estás probando: Windows [v2.0.0](https://github.com/NachoPola16/aldune/releases/tag/v2.0.0), Android [1.0.0](https://github.com/NachoPola16/aldune/releases/tag/android-v1.0.0).
 Un fallo, una duda o una idea van a [Issues](https://github.com/NachoPola16/aldune/issues/new): di qué versión usas, qué hiciste y qué esperabas.
 No pegues códigos de perfil, tokens ni el contenido de tus notas en un issue público.
 
