@@ -14,7 +14,10 @@ class SettingsSectionsTest {
     fun `el modo simplificado deja sincronizacion, aspecto, idioma, la version y el interruptor de modo`() {
         val visible = SettingsSection.entries.filter { SettingsSections.isVisible(it, simplified = true) }.toSet()
         assertEquals(
-            setOf(SettingsSection.SYNC, SettingsSection.APPEARANCE, SettingsSection.LANGUAGE, SettingsSection.ABOUT, SettingsSection.INTERFACE_MODE),
+            setOf(
+                SettingsSection.SYNC, SettingsSection.BACKUP, SettingsSection.APPEARANCE, SettingsSection.LANGUAGE, SettingsSection.ABOUT,
+                SettingsSection.INTERFACE_MODE,
+            ),
             visible,
         )
     }

@@ -332,4 +332,19 @@
     <string name="visible_name_action">Guardar</string>
     <string name="note_actions_open">Abrir</string>
     <string name="note_actions_more">Más opciones</string>
+    <string name="note_move_up">Subir</string>
+    <string name="note_move_down">Bajar</string>
+    <string name="note_moved">Movida a la posición %1$d de %2$d</string>
+    <string name="backup_section">Copia de seguridad</string>
+    <string name="export_all">Exportar todas las notas</string>
+    <string name="export_all_hint">Un .zip con un fichero Markdown por nota (activas y archivadas). Las notas con contraseña se dejan fuera: solo se pueden leer con su contraseña.</string>
+    <string name="export_all_done">Exportadas %1$d notas.</string>
+    <string name="export_all_done_skipped">Exportadas %1$d notas. %2$d protegidas se dejaron fuera.</string>
+    <string name="export_all_empty">No hay notas que exportar.</string>
+    <string name="export_all_failed">No se pudo escribir el fichero.</string>
+    <string name="export_all_omitted_file">%1$d notas protegidas con contraseña no se exportaron: su contenido solo se puede leer con la contraseña.</string>
+    <string name="export_file_name">aldune-notas</string>
+    <string name="no_backup_notice">Sin perfil de sincronización: tus notas solo están en este móvil. Configura la sincronización o expórtalas desde Ajustes para tener una copia.</string>
+    <string name="no_backup_dismiss">No volver a mostrar</string>
+    <string name="note_open_in_editor">Abierta en el editor</string>
 </resources>

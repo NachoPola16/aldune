@@ -59,6 +59,8 @@ data class AppSettings(
     val hideDoneAfterHours: Int = 24,
     /** La bienvenida de la primera vez ya se enseñó (o no hacía falta: ya había notas). */
     val welcomeSeen: Boolean = false,
+    /** El aviso de «sin sincronización no hay copia» de la lista se descartó (no vuelve a salir). */
+    val backupNoticeDismissed: Boolean = false,
     /** La nota elegida como lista rápida (se le añaden artículos desde la notificación de captura); `null` = ninguna. */
     val quickListId: String? = null,
     /** El título que tenía esa nota la última vez que se vio: es lo que enseña la notificación sin abrir la base. */
@@ -120,6 +122,7 @@ class SettingsStore(context: Context) {
             hideDoneTasks = prefs.getBoolean(HIDE_DONE_TASKS, d.hideDoneTasks),
             hideDoneAfterHours = prefs.getInt(HIDE_DONE_AFTER_HOURS, d.hideDoneAfterHours).coerceIn(1, 24 * 365),
             welcomeSeen = prefs.getBoolean(WELCOME_SEEN, d.welcomeSeen),
+            backupNoticeDismissed = prefs.getBoolean(BACKUP_NOTICE_DISMISSED, d.backupNoticeDismissed),
             quickListId = prefs.getString(QUICK_LIST_ID, null),
             quickListTitle = prefs.getString(QUICK_LIST_TITLE, d.quickListTitle) ?: d.quickListTitle,
             simplifiedMode = prefs.getBoolean(SIMPLIFIED_MODE, d.simplifiedMode),
@@ -153,6 +156,7 @@ class SettingsStore(context: Context) {
             .putBoolean(HIDE_DONE_TASKS, settings.hideDoneTasks)
             .putInt(HIDE_DONE_AFTER_HOURS, settings.hideDoneAfterHours)
             .putBoolean(WELCOME_SEEN, settings.welcomeSeen)
+            .putBoolean(BACKUP_NOTICE_DISMISSED, settings.backupNoticeDismissed)
             .putOrRemove(QUICK_LIST_ID, settings.quickListId)
             .putString(QUICK_LIST_TITLE, settings.quickListTitle)
             .putBoolean(SIMPLIFIED_MODE, settings.simplifiedMode)
@@ -166,6 +170,7 @@ class SettingsStore(context: Context) {
     private companion object {
         const val FILE = "settings"
         const val WELCOME_SEEN = "welcomeSeen"
+        const val BACKUP_NOTICE_DISMISSED = "backupNoticeDismissed"
         const val QUICK_LIST_ID = "quickListId"
         const val QUICK_LIST_TITLE = "quickListTitle"
         const val SIMPLIFIED_MODE = "simplifiedMode"

@@ -634,6 +634,16 @@ class NotesViewModel(application: Application) : AndroidViewModel(application) {
 
     fun moveNote(id: String, before: String?, after: String?) = change { it.move(id, before, after) }
 
+    /**
+     * Escribe en [out] el zip con todas las notas activas y archivadas (ver `NotesExport`). Las protegidas no salen: su texto no está aquí en
+     * claro. `null` si la base aún no está lista.
+     */
+    suspend fun exportAll(out: java.io.OutputStream, placeholder: String, omittedNote: (Int) -> String): app.aldune.domain.NotesExport.Result? =
+        withContext(Dispatchers.IO) {
+            val notes = io.withLock { service?.let { it.list(NoteState.ACTIVE) + it.list(NoteState.ARCHIVED) } } ?: return@withContext null
+            app.aldune.domain.NotesExport.write(out, notes, placeholder, omittedNote)
+        }
+
     fun setNoteColor(noteId: String, color: String) = change { it.setColor(noteId, color) }
 
     fun setNoteTags(noteId: String, tags: List<String>) = change { it.setTags(noteId, tags) }

@@ -332,4 +332,19 @@
     <string name="visible_name_action">Speichern</string>
     <string name="note_actions_open">Öffnen</string>
     <string name="note_actions_more">Weitere Optionen</string>
+    <string name="note_move_up">Nach oben</string>
+    <string name="note_move_down">Nach unten</string>
+    <string name="note_moved">Verschoben auf Position %1$d von %2$d</string>
+    <string name="backup_section">Sicherung</string>
+    <string name="export_all">Alle Notizen exportieren</string>
+    <string name="export_all_hint">Eine .zip-Datei mit je einer Markdown-Datei pro Notiz (aktive und archivierte). Passwortgeschützte Notizen bleiben draußen: Sie sind nur mit ihrem Passwort lesbar.</string>
+    <string name="export_all_done">%1$d Notizen exportiert.</string>
+    <string name="export_all_done_skipped">%1$d Notizen exportiert. %2$d geschützte wurden ausgelassen.</string>
+    <string name="export_all_empty">Es gibt keine Notizen zum Exportieren.</string>
+    <string name="export_all_failed">Die Datei konnte nicht geschrieben werden.</string>
+    <string name="export_all_omitted_file">%1$d passwortgeschützte Notizen wurden nicht exportiert: Ihr Inhalt ist nur mit dem Passwort lesbar.</string>
+    <string name="export_file_name">aldune-notizen</string>
+    <string name="no_backup_notice">Kein Sync-Profil: Deine Notizen liegen nur auf diesem Handy. Richte die Synchronisierung ein oder exportiere sie in den Einstellungen, um eine Kopie zu haben.</string>
+    <string name="no_backup_dismiss">Nicht mehr anzeigen</string>
+    <string name="note_open_in_editor">Im Editor geöffnet</string>
 </resources>

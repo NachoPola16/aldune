@@ -22,6 +22,7 @@ import androidx.compose.ui.unit.dp
 import app.aldune.R
 import app.aldune.core.PasswordProblem
 import app.aldune.domain.NoteListItem
+import app.aldune.domain.ReorderPlan
 import app.aldune.syncclient.ProtectionError
 import app.aldune.syncclient.ProtectionResult
 import kotlinx.coroutines.launch
@@ -36,6 +37,7 @@ import kotlinx.coroutines.launch
 @Composable
 fun NoteActionsDialog(
     item: NoteListItem, openInEditor: Boolean, viewModel: NotesViewModel, onOpen: () -> Unit, onClose: () -> Unit,
+    moves: Set<ReorderPlan.Direction> = emptySet(), onMove: (Int) -> Unit = {},
 ) {
     var options by remember { mutableStateOf<NotesViewModel.NoteOptions?>(null) }
     var naming by remember { mutableStateOf(false) }
@@ -53,6 +55,9 @@ fun NoteActionsDialog(
             text = {
                 Column {
                     Action(stringResource(R.string.note_actions_open)) { onClose(); onOpen() }
+                    // Subir/Bajar: lo mismo que arrastrar, sin arrastrar. Solo con la lista completa (con un filtro no se ofrecen).
+                    if (ReorderPlan.Direction.UP in moves) Action(stringResource(R.string.note_move_up)) { onClose(); onMove(-1) }
+                    if (ReorderPlan.Direction.DOWN in moves) Action(stringResource(R.string.note_move_down)) { onClose(); onMove(+1) }
                     Action(stringResource(R.string.note_options)) {
                         scope.launch { viewModel.noteOptions(item.id)?.let { options = it } ?: onClose() }
                     }

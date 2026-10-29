@@ -85,7 +85,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.semantics.CustomAccessibilityAction
+import androidx.compose.ui.semantics.LiveRegionMode
 import androidx.compose.ui.semantics.customActions
+import androidx.compose.ui.semantics.liveRegion
+import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
@@ -138,6 +141,22 @@ fun NoteListPane(
     // La nota cuyo menú (mantener pulsada) está abierto.
     var menuFor by remember { mutableStateOf<NoteListItem?>(null) }
 
+    // Reordenar (arrastrando o con Subir/Bajar) solo con la lista completa (sin búsqueda ni etiqueta): con un filtro, las vecinas que se ven no
+    // son las vecinas reales y el orden no se puede decidir.
+    val reorderable = state.query.isBlank() && state.tag == null && state.items.size > 1 && settingsNow.listOrder == 0
+    val context = androidx.compose.ui.platform.LocalContext.current
+
+    /** Sube o baja la nota una posición (la alternativa al arrastre) y lo anuncia: «Movida a la posición N de M». */
+    fun moveBy(id: String, delta: Int) {
+        val ids = state.items.map { it.id }
+        val step = ReorderPlan.step(ids, id, delta) ?: return
+        viewModel.moveNote(id, step.neighbours.before, step.neighbours.after)
+        scope.launch {
+            snackbar.currentSnackbarData?.dismiss()
+            snackbar.showSnackbar(context.getString(R.string.note_moved, step.position, ids.size), duration = SnackbarDuration.Short)
+        }
+    }
+
     val archivedMsg = stringResource(R.string.note_archived)
     val trashedMsg = stringResource(R.string.note_trashed)
     val restoredMsg = stringResource(R.string.note_restored)
@@ -178,13 +197,17 @@ fun NoteListPane(
                 )
                 if (hasProfile && status != null) {
                     val line = formatStatus(status, rememberNow())
-                    IconButton(onClick = { showSyncDetail = true }) { SyncIcon(line.icon, stringResource(R.string.sync_status_cd)) }
+                    IconButton(onClick = { showSyncDetail = true }, modifier = Modifier.semantics { liveRegion = LiveRegionMode.Polite }) { SyncIcon(line.icon, stringResource(R.string.sync_status_cd)) }
                 }
                 IconButton(onClick = onOpenSettings) { Icon(Icons.Default.Settings, contentDescription = stringResource(R.string.settings)) }
             }
             StateTabs(state, viewModel::setFilter)
             if (state.allTags.isNotEmpty()) TagRow(state, viewModel::setTag)
             if (state.orphans.isNotEmpty()) OrphanConflictsBanner(state.orphans.size) { showOrphans = true }
+            // Sin perfil de sync, las notas solo viven en el móvil: se avisa una vez que haya alguna (en la bienvenida ya se habla de la sync).
+            if (!hasProfile && !settingsNow.backupNoticeDismissed && state.counts.values.sum() > 0) {
+                NoBackupNotice(onSettings = onOpenSettings, onDismiss = { viewModel.updateSettings { it.copy(backupNoticeDismissed = true) } })
+            }
 
             // Tirar hacia abajo sincroniza (spec madre §2.1). Sin perfil no hace nada: la política no lanza pasadas sin perfil.
             PullToRefreshBox(
@@ -195,9 +218,7 @@ fun NoteListPane(
             if (state.items.isEmpty()) {
                 EmptyMessage(state)
             } else {
-                // Reordenar: mantener pulsada una nota y arrastrarla. Solo con la lista completa (sin búsqueda ni etiqueta): con un filtro,
-                // las vecinas que se ven no son las vecinas reales y el orden no se puede decidir.
-                val reorderable = state.query.isBlank() && state.tag == null && state.items.size > 1 && settingsNow.listOrder == 0
+                // Reordenar: mantener pulsada una nota y arrastrarla (o Subir/Bajar, para quien no puede arrastrar); `reorderable` arriba.
                 val listState = rememberLazyListState()
                 val haptic = LocalHapticFeedback.current
                 var order by remember { mutableStateOf(state.items) }
@@ -301,6 +322,7 @@ fun NoteListPane(
                                 ),
                             item = item, selected = item.id == selectedId || item.id == highlight, conflicted = item.id in conflicted, reminder = state.reminders[item.id],
                             onOpen = { if (!hold.active) onOpen(item.id) }, onMenu = { menuFor = item },
+                            moves = ReorderPlan.available(order.map { it.id }, item.id, reorderable), onMove = { delta -> moveBy(item.id, delta) },
                             signal = if (look.syncSignal) NoteSyncSignal.of(hasProfile, item.id in conflicted, bases[item.id], item.updatedAt) else NoteSyncSignal.State.HIDDEN,
                             onArchive = { viewModel.archive(item.id); announce(archivedMsg) { viewModel.restore(item.id) } },
                             onTrash = { viewModel.trash(item.id); announce(trashedMsg) { viewModel.restore(item.id) } },
@@ -355,7 +377,10 @@ fun NoteListPane(
     }
 
     menuFor?.let { item ->
-        NoteActionsDialog(item, openInEditor = item.id == selectedId, viewModel = viewModel, onOpen = { onOpen(item.id) }, onClose = { menuFor = null })
+        NoteActionsDialog(
+            item, openInEditor = item.id == selectedId, viewModel = viewModel, onOpen = { onOpen(item.id) }, onClose = { menuFor = null },
+            moves = ReorderPlan.available(state.items.map { it.id }, item.id, reorderable), onMove = { delta -> moveBy(item.id, delta) },
+        )
     }
 
     deleting?.let { item ->
@@ -440,7 +465,7 @@ private fun EmptyMessage(state: UiState.Ready) {
 private fun SwipeableRow(
     modifier: Modifier,
     item: NoteListItem, selected: Boolean, conflicted: Boolean, reminder: java.time.Instant?, onOpen: () -> Unit, signal: NoteSyncSignal.State,
-    onMenu: () -> Unit,
+    onMenu: () -> Unit, moves: Set<ReorderPlan.Direction>, onMove: (Int) -> Unit,
     onArchive: () -> Unit, onTrash: () -> Unit, onRestore: () -> Unit, onDelete: () -> Unit,
 ) {
     val dismiss = rememberSwipeToDismissBoxState(
@@ -469,7 +494,15 @@ private fun SwipeableRow(
     val restoreLabel = stringResource(R.string.restore)
     val deleteLabel = stringResource(R.string.delete_forever)
     val moreLabel = stringResource(R.string.note_actions_more)
-    val actions = when (item.state) {
+    val upLabel = stringResource(R.string.note_move_up)
+    val downLabel = stringResource(R.string.note_move_down)
+    val openLabel = stringResource(R.string.note_open_in_editor)
+    // Subir/Bajar: la alternativa al arrastre (WCAG 2.5.7) para quien usa TalkBack, un interruptor o no puede arrastrar.
+    val moveActions = buildList {
+        if (ReorderPlan.Direction.UP in moves) add(CustomAccessibilityAction(upLabel) { onMove(-1); true })
+        if (ReorderPlan.Direction.DOWN in moves) add(CustomAccessibilityAction(downLabel) { onMove(+1); true })
+    }
+    val actions = moveActions + when (item.state) {
         NoteState.ACTIVE -> listOf(
             CustomAccessibilityAction(archiveLabel) { onArchive(); true },
             CustomAccessibilityAction(trashLabel) { onTrash(); true },
@@ -488,7 +521,7 @@ private fun SwipeableRow(
     }
     SwipeToDismissBox(
         state = dismiss,
-        modifier = modifier.padding(horizontal = 16.dp).semantics { customActions = actions },
+        modifier = modifier.padding(horizontal = 16.dp).semantics { customActions = actions; if (selected) stateDescription = openLabel },
         backgroundContent = {
             Box(
                 Modifier.fillMaxSize().background(MaterialTheme.colorScheme.surfaceVariant, LocalNoteLook.current.cardShape).padding(horizontal = 20.dp),
@@ -607,4 +640,21 @@ private fun SyncIcon(icon: StatusIcon, description: String) {
 private class PressHold {
     var active = false
     var travelled = 0f
+}
+
+/** El aviso de que, sin sincronización, no hay copia de las notas: lleva a Ajustes (sincronizar o exportar) y se puede descartar. */
+@Composable
+private fun NoBackupNotice(onSettings: () -> Unit, onDismiss: () -> Unit) {
+    androidx.compose.material3.Surface(
+        Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 4.dp),
+        shape = MaterialTheme.shapes.medium, color = MaterialTheme.colorScheme.surfaceVariant,
+    ) {
+        Column(Modifier.padding(horizontal = 12.dp, vertical = 8.dp)) {
+            Text(stringResource(R.string.no_backup_notice), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
+                TextButton(onClick = onDismiss) { Text(stringResource(R.string.no_backup_dismiss)) }
+                TextButton(onClick = onSettings) { Text(stringResource(R.string.settings)) }
+            }
+        }
+    }
 }

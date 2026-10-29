@@ -57,7 +57,11 @@ import androidx.compose.ui.Modifier
 import androidx.activity.compose.LocalActivity
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.semantics.liveRegion
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
+import kotlinx.coroutines.launch
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import app.aldune.R
 import android.net.Uri
@@ -93,6 +97,7 @@ fun SettingsScreen(viewModel: NotesViewModel, onClose: () -> Unit) {
             }
             Column(Modifier.verticalScroll(rememberScrollState()).padding(bottom = 24.dp)) {
                 if (show(SettingsSection.SYNC)) SyncSection(viewModel)
+                if (show(SettingsSection.BACKUP)) BackupSection(viewModel)
                 if (show(SettingsSection.CAPTURE)) CaptureSection(viewModel, settings.captureNotification)
                 if (show(SettingsSection.REMINDERS)) RemindersSection(viewModel, settings.exactReminders)
 
@@ -192,6 +197,50 @@ fun SettingsScreen(viewModel: NotesViewModel, onClose: () -> Unit) {
                 }
             }
         }
+    }
+}
+
+/**
+ * La copia local: un .zip con una nota Markdown por nota (activas y archivadas), por el selector de documentos del sistema (sin permisos
+ * nuevos: el usuario elige dónde se guarda). Las protegidas se dejan fuera y el resultado dice cuántas.
+ */
+@Composable
+private fun BackupSection(viewModel: NotesViewModel) {
+    val context = LocalContext.current
+    val scope = androidx.compose.runtime.rememberCoroutineScope()
+    var message by rememberSaveable { mutableStateOf<String?>(null) }
+    val placeholder = stringResource(R.string.new_note_title)
+    val launcher = rememberLauncherForActivityResult(ActivityResultContracts.CreateDocument("application/zip")) { uri ->
+        if (uri == null) return@rememberLauncherForActivityResult
+        scope.launch {
+            val result = runCatching {
+                context.contentResolver.openOutputStream(uri)?.use { out ->
+                    viewModel.exportAll(out, placeholder) { count -> context.getString(R.string.export_all_omitted_file, count) }
+                }
+            }.getOrNull()
+            message = when {
+                result == null -> context.getString(R.string.export_all_failed)
+                result.exported == 0 && result.omittedProtected == 0 -> context.getString(R.string.export_all_empty)
+                result.omittedProtected > 0 -> context.getString(R.string.export_all_done_skipped, result.exported, result.omittedProtected)
+                else -> context.getString(R.string.export_all_done, result.exported)
+            }
+        }
+    }
+    Section(R.string.backup_section)
+    Text(
+        stringResource(R.string.export_all_hint), Modifier.padding(horizontal = 16.dp),
+        style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant,
+    )
+    OutlinedButton(
+        onClick = { launcher.launch(context.getString(R.string.export_file_name) + ".zip") },
+        Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
+    ) { Text(stringResource(R.string.export_all)) }
+    // El resultado se anuncia solo (región viva): el selector de documentos se cierra y quien usa TalkBack no ve otra señal.
+    message?.let {
+        Text(
+            it, Modifier.padding(horizontal = 16.dp).semantics { liveRegion = androidx.compose.ui.semantics.LiveRegionMode.Polite },
+            style = MaterialTheme.typography.bodyMedium,
+        )
     }
 }
 
@@ -381,8 +430,9 @@ private fun versionName(activity: Activity?): String =
 
 @Composable
 internal fun Section(title: Int) {
+    // heading(): TalkBack salta de bloque en bloque por las cabeceras en vez de recorrer los ajustes uno a uno.
     Text(
-        stringResource(title), Modifier.padding(start = 16.dp, end = 16.dp, top = 20.dp, bottom = 4.dp),
+        stringResource(title), Modifier.padding(start = 16.dp, end = 16.dp, top = 20.dp, bottom = 4.dp).semantics { heading() },
         style = MaterialTheme.typography.titleSmall, color = MaterialTheme.colorScheme.primary,
     )
 }

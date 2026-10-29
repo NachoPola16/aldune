@@ -332,4 +332,19 @@
     <string name="visible_name_action">Enregistrer</string>
     <string name="note_actions_open">Ouvrir</string>
     <string name="note_actions_more">Plus d\'options</string>
+    <string name="note_move_up">Monter</string>
+    <string name="note_move_down">Descendre</string>
+    <string name="note_moved">Déplacée à la position %1$d sur %2$d</string>
+    <string name="backup_section">Sauvegarde</string>
+    <string name="export_all">Exporter toutes les notes</string>
+    <string name="export_all_hint">Un .zip avec un fichier Markdown par note (actives et archivées). Les notes protégées par mot de passe sont exclues : elles ne se lisent qu\'avec leur mot de passe.</string>
+    <string name="export_all_done">%1$d notes exportées.</string>
+    <string name="export_all_done_skipped">%1$d notes exportées. %2$d notes protégées exclues.</string>
+    <string name="export_all_empty">Il n\'y a aucune note à exporter.</string>
+    <string name="export_all_failed">Impossible d\'écrire le fichier.</string>
+    <string name="export_all_omitted_file">%1$d notes protégées par mot de passe n\'ont pas été exportées : leur contenu ne se lit qu\'avec le mot de passe.</string>
+    <string name="export_file_name">aldune-notes</string>
+    <string name="no_backup_notice">Aucun profil de synchronisation : vos notes ne sont que sur ce téléphone. Configurez la synchronisation ou exportez-les depuis les Réglages pour en garder une copie.</string>
+    <string name="no_backup_dismiss">Ne plus afficher</string>
+    <string name="note_open_in_editor">Ouverte dans l\'éditeur</string>
 </resources>

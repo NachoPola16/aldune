@@ -332,4 +332,19 @@
     <string name="visible_name_action">Save</string>
     <string name="note_actions_open">Open</string>
     <string name="note_actions_more">More options</string>
+    <string name="note_move_up">Move up</string>
+    <string name="note_move_down">Move down</string>
+    <string name="note_moved">Moved to position %1$d of %2$d</string>
+    <string name="backup_section">Backup</string>
+    <string name="export_all">Export all notes</string>
+    <string name="export_all_hint">A .zip with one Markdown file per note (active and archived). Password-protected notes are left out: they can only be read with their password.</string>
+    <string name="export_all_done">Exported %1$d notes.</string>
+    <string name="export_all_done_skipped">Exported %1$d notes. %2$d protected notes were left out.</string>
+    <string name="export_all_empty">There are no notes to export.</string>
+    <string name="export_all_failed">Couldn\'t write the file.</string>
+    <string name="export_all_omitted_file">%1$d password-protected notes were not exported: their content can only be read with the password.</string>
+    <string name="export_file_name">aldune-notes</string>
+    <string name="no_backup_notice">No sync profile: your notes only live on this phone. Set up sync or export them from Settings to keep a copy.</string>
+    <string name="no_backup_dismiss">Don\'t show again</string>
+    <string name="note_open_in_editor">Open in the editor</string>
 </resources>
