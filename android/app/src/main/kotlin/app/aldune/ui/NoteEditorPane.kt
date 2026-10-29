@@ -79,6 +79,7 @@ import androidx.compose.ui.input.key.type
 import androidx.compose.ui.input.pointer.PointerEventPass
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusProperties
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalContext
@@ -121,6 +122,9 @@ import kotlinx.coroutines.launch
 
 /** Espera antes de pedir el teclado en una nota nueva (ver el efecto de foco de [NoteEditorPane]). */
 private const val KEYBOARD_DELAY_MS = 250L
+
+/** Lo que el campo no puede enfocarse al abrir una nota que no abre el teclado: lo que tarda Android en repartir el foco inicial. */
+private const val FOCUS_SETTLE_MS = 700L
 private val CheckboxSpan = SpanStyle(fontFamily = FontFamily(Font(R.font.aldune_check)))
 private val LargeCheckboxSpan = SpanStyle(fontFamily = FontFamily(Font(R.font.aldune_check_large)))
 
@@ -373,7 +377,14 @@ fun NoteEditorPane(key: String, viewModel: NotesViewModel, onBack: () -> Unit, s
     // al leerla no hay que tapar la mitad del texto. Ajustes → Notas → «Teclado al abrir una nota» lo cambia (siempre o nunca).
     val focus = remember { FocusRequester() }
     val keyboard = LocalSoftwareKeyboardController.current
-    val focusManager = androidx.compose.ui.platform.LocalFocusManager.current
+    // Cuando no toca abrir el teclado (por defecto, «nunca»), el campo no puede recibir el foco mientras la nota arranca: Android se lo da solo
+    // al aparecer, y con el foco sale el teclado. Quitárselo después lo dejaba asomar y esconderse. Pasado un instante, o en cuanto se toca el
+    // texto, ya puede enfocarse (TalkBack y el teclado físico no se quedan sin poder entrar).
+    val wantsKeyboard = KeyboardOnOpen.shouldShow(settings.keyboardOnOpen, isNewNote = key.isEmpty(), isProtected = protectedNote)
+    var touched by remember(key) { mutableStateOf(false) }
+    var settling by remember(key) { mutableStateOf(true) }
+    LaunchedEffect(key) { delay(FOCUS_SETTLE_MS); settling = false }
+    val canFocus = wantsKeyboard || touched || !settling
     LaunchedEffect(key, loaded, protectedNote) {
         if (loaded && KeyboardOnOpen.shouldShow(settings.keyboardOnOpen, isNewNote = key.isEmpty(), isProtected = protectedNote)) {
             focus.requestFocus()
@@ -381,13 +392,6 @@ fun NoteEditorPane(key: String, viewModel: NotesViewModel, onBack: () -> Unit, s
             // asiente. (Con la app ya abierta no hace falta, pero no estorba.)
             delay(KEYBOARD_DELAY_MS)
             keyboard?.show()
-        } else if (loaded && !protectedNote) {
-            // Cuando no toca abrirlo (por defecto, «nunca»; o «solo nuevas» en una existente) el campo se abre igualmente enfocado por el propio
-            // sistema, nueva o no, y con el foco sale el teclado. Se quita el foco y se esconde, pasada la misma pausa que el show() de arriba
-            // (si no, el sistema lo vuelve a poner). Tocar el texto lo abre cuando se quiera.
-            delay(KEYBOARD_DELAY_MS)
-            focusManager.clearFocus()
-            keyboard?.hide()
         }
     }
 
@@ -584,6 +588,7 @@ fun NoteEditorPane(key: String, viewModel: NotesViewModel, onBack: () -> Unit, s
                     },
                 )
                 .padding(start = 16.dp, end = if (hasTasks) TASK_DRAG_ZONE else 16.dp, top = TASK_DRAG_PAD_TOP, bottom = 8.dp)
+                .focusProperties { this.canFocus = canFocus }
                 .focusRequester(focus)
                 // Tocar una casilla la marca. Se mira en la pasada Initial. Si el toque cae sobre una casilla se consume el «down» para que el
                 // campo no ponga ahí el cursor ni abra el teclado (marcar una lista no debe taparla); el desplazamiento sigue funcionando
@@ -591,6 +596,7 @@ fun NoteEditorPane(key: String, viewModel: NotesViewModel, onBack: () -> Unit, s
                 .pointerInput(key) {
                     awaitEachGesture {
                         val down = awaitFirstDown(requireUnconsumed = false, pass = PointerEventPass.Initial)
+                        touched = true
                         val onCheckbox = currentCheckboxAt.value(down.position) != null
                         if (onCheckbox) down.consume()
                         val up = waitForUpOrCancellation(PointerEventPass.Initial) ?: return@awaitEachGesture
