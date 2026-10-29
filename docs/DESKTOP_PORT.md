@@ -255,3 +255,30 @@ Lo único que **no** está hecho es **publicar una imagen ya construida** para l
 (`docker buildx build --platform linux/amd64,linux/arm64`). Solo importa si algún día se reparte la imagen
 en vez del código (por ejemplo, para quien no quiera compilar). Es una decisión de distribución, no de
 compatibilidad.
+## 10. Linux, otra vez (2026-10-29): qué dock es posible según el escritorio
+
+Revisión corta, solo de si existe **alguna** forma de un dock al canto en Linux. Conclusión: depende del escritorio, y
+la prueba barata es una ventana tipo dock con Avalonia sobre `Aldune.Core`.
+
+| Escritorio | ¿Dock al canto? | Cómo |
+|---|---|---|
+| **X11** (también GNOME o KDE sobre X11) | Sí | Ventana sin marco con `_NET_WM_WINDOW_TYPE_DOCK` y `_NET_WM_STRUT_PARTIAL` (reserva el borde); siempre encima con `_NET_WM_STATE_ABOVE`. |
+| **KDE Plasma, Sway, Hyprland, COSMIC** (Wayland) | Sí | Protocolo `wlr-layer-shell`: la ventana es una *superficie de capa* anclada a un borde. Lo implementan los compositores wlroots, KWin y COSMIC. |
+| **GNOME** (Wayland, el predeterminado de Ubuntu y Fedora) | No | Mutter no implementa `wlr-layer-shell` y Wayland no deja que una ventana normal se ponga siempre encima ni se pegue a un borde. Solo cabe una ventana normal o un icono de bandeja con lista de notas. |
+
+**Lo que no sé y habría que comprobar con una prueba de un día:** si Avalonia expone `wlr-layer-shell` (no lo encontré;
+existen `gtk-layer-shell` y `qt-layer-shell` para GTK y Qt, no uno para .NET) o si habría que hacerlo con P/Invoke a
+`libwayland`/`gtk-layer-shell`. En X11 Avalonia ya permite ventanas sin marco y siempre encima; los *struts* hay que
+fijarlos por P/Invoke a Xlib.
+
+**Forma realista de entregarlo:** un cliente Avalonia con dos modos. *Modo dock* donde se pueda (X11, KDE, Sway,
+Hyprland) y *modo lista* (ventana normal más bandeja) en GNOME-Wayland. `Aldune.Core` y el formato de sync se reutilizan
+tal cual; el trabajo está en la capa de ventanas y en el empaquetado (AppImage, Flatpak, .deb). La cifra de la clave de
+base de datos hay que cambiarla: hoy usa DPAPI (solo Windows), y en Linux iría al llavero (libsecret).
+
+**Recomendación sin cambios:** no entra en la 1.8.0. Si se hace, empezar por la prueba de la ventana tipo dock en X11 y
+KDE antes de comprometerse.
+
+Fuentes: [Avalonia, soporte de Wayland](https://avaloniaui.net/blog/bringing-wayland-support-to-avalonia) (varios
+backends por escritorio, sin confirmar layer-shell), [gtk-layer-shell](https://github.com/wmww/gtk-layer-shell) (no
+funciona en GNOME-Wayland), [propuesta de «siempre encima» en Wayland](https://gitlab.freedesktop.org/wayland/wayland/-/issues/305).
