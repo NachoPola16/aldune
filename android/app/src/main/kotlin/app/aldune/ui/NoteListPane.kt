@@ -268,13 +268,20 @@ fun NoteListPane(
                                                 hold.travelled += kotlin.math.abs(amount.x) + kotlin.math.abs(amount.y)
                                                 dragBy(amount.y)
                                             },
+                                            // Un dedo del todo quieto no genera ningún movimiento y Compose lo da por «cancelado», no por terminado:
+                                            // sin movimiento, las dos salidas abren el menú.
                                             onDragEnd = {
                                                 val moved = hold.travelled > viewConfiguration.touchSlop
                                                 dragEnd()
                                                 if (!moved) menuFor = item
                                                 hold.active = false
                                             },
-                                            onDragCancel = { dragEnd(); hold.active = false },
+                                            onDragCancel = {
+                                                val moved = hold.travelled > viewConfiguration.touchSlop
+                                                dragEnd()
+                                                if (!moved) menuFor = item
+                                                hold.active = false
+                                            },
                                         )
                                     } else Modifier.pointerInput(item.id) {
                                         // Con un filtro no se puede reordenar: mantener pulsada abre el menú directamente, al cumplirse el tiempo.
