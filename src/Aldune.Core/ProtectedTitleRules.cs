@@ -1,4 +1,4 @@
-namespace Aldune.Core;
+﻿namespace Aldune.Core;
 
 /// <summary>
 /// El «nombre visible» de una nota protegida: un texto en claro y opcional que sustituye a «Nota protegida» en el dock y en
@@ -14,7 +14,12 @@ public static class ProtectedTitleRules
         if (string.IsNullOrWhiteSpace(raw)) return null;
         var oneLine = string.Join(' ', raw.Split(new[] { '\r', '\n', '\t' }, StringSplitOptions.RemoveEmptyEntries)
             .Select(part => part.Trim()).Where(part => part.Length > 0));
-        if (oneLine.Length > MaxLength) oneLine = oneLine[..MaxLength].TrimEnd();
+        if (oneLine.Length > MaxLength)
+        {
+            // Sin partir un par sustituto (un emoji): un sustituto suelto no se puede serializar y Android corta igual.
+            int cut = char.IsLowSurrogate(oneLine[MaxLength]) ? MaxLength - 1 : MaxLength;
+            oneLine = oneLine[..cut].TrimEnd();
+        }
         return oneLine.Length == 0 ? null : oneLine;
     }
 

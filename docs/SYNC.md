@@ -124,7 +124,7 @@ Qué protege Aldune y qué no, en corto:
   Cloudflare Tunnel, una VPN). Aldune avisa en Ajustes si configuras `http://` hacia un servidor
   fuera de tu red local: las notas seguirían cifradas, pero el token viajaría en claro.
 - **En el equipo.** El texto de cada nota se guarda cifrado con AES-256-GCM en la base de datos local
-  (el color, las etiquetas y las fechas no); la clave está protegida con
+  (el color, las etiquetas, las fechas y el nombre visible opcional de una nota protegida no); la clave está protegida con
   DPAPI (ligada a tu usuario de Windows). Las notas con contraseña usan una clave derivada con
   PBKDF2-SHA256 (600.000 iteraciones); la contraseña no se guarda.
 - **Lo que no cubre.** No hay auditoría externa ni certificación. Quien controle el almacén puede

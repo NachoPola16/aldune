@@ -1,4 +1,4 @@
-using System.Security.Cryptography;
+﻿using System.Security.Cryptography;
 using Aldune.Core;
 using Microsoft.Data.Sqlite;
 
@@ -33,6 +33,25 @@ public sealed class ProtectedTitleTests : IDisposable
     {
         var result = ProtectedTitleRules.Normalize(new string('a', 200));
         Assert.Equal(ProtectedTitleRules.MaxLength, result!.Length);
+    }
+
+    [Fact]
+    public void Normalize_DoesNotSplitAnEmojiAtTheLimit()
+    {
+        var raw = new string('a', ProtectedTitleRules.MaxLength - 1) + "😀" + "zzz";
+        var result = ProtectedTitleRules.Normalize(raw)!;
+
+        Assert.Equal(ProtectedTitleRules.MaxLength - 1, result.Length);
+        Assert.All(result, c => Assert.False(char.IsSurrogate(c)));
+        // Y tiene que poder viajar por el sobre de sync.
+        var key = System.Security.Cryptography.RandomNumberGenerator.GetBytes(32);
+        var note = new Note
+        {
+            Id = Guid.NewGuid(), Text = string.Empty, Color = "mint", CreatedAt = DateTimeOffset.UtcNow, UpdatedAt = DateTimeOffset.UtcNow,
+            State = NoteState.Active, ScreenOrigin = "p", IsProtected = true,
+            ProtectedContent = ProtectedNoteContent.Protect("x", "clave"), ProtectedTitle = result
+        };
+        Assert.Equal(result, SyncEnvelopeCodec.DecryptNote(SyncEnvelopeCodec.CreateNote(note, key, "d"), key).ProtectedTitle);
     }
 
     [Fact]
