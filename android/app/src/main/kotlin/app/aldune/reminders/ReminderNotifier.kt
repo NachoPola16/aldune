@@ -43,8 +43,10 @@ class ReminderNotifier(context: Context) {
             .addAction(0, res.getString(R.string.reminder_snooze_hour), actionIntent(note.id, ReminderReceiver.ACTION_SNOOZE_HOUR))
             .addAction(0, res.getString(R.string.reminder_snooze_morning), actionIntent(note.id, ReminderReceiver.ACTION_SNOOZE_MORNING))
         when (val content = ReminderNotificationContent.of(note, res.getString(R.string.new_note_title))) {
+            // Con nombre visible el aviso pasa a privado: en la pantalla de bloqueo no se enseña (el sistema pone «contenido oculto»).
             is ReminderNotificationContent.Locked ->
-                builder.setContentTitle(res.getString(R.string.protected_note_title)).setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
+                builder.setContentTitle(content.title ?: res.getString(R.string.protected_note_title))
+                    .setVisibility(if (content.title != null) NotificationCompat.VISIBILITY_PRIVATE else NotificationCompat.VISIBILITY_PUBLIC)
             is ReminderNotificationContent.Open -> {
                 builder.setContentTitle(content.title).setVisibility(NotificationCompat.VISIBILITY_PRIVATE)
                 if (content.pendingTasks.isNotEmpty() && SettingsStore(context).load().reminderIncludesTasks) {

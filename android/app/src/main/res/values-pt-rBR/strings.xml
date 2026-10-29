@@ -325,4 +325,11 @@
     <string name="interface_mode_full">Usar modo completo</string>
     <string name="interface_mode_hint_simple">Mostra só o essencial: sincronização, aparência e idioma. Seus outros ajustes são mantidos e continuam valendo.</string>
     <string name="interface_mode_hint_full">Você está vendo todos os ajustes. O modo simplificado esconde os avançados sem alterá-los.</string>
+    <string name="visible_name_menu">Nome visível…</string>
+    <string name="visible_name_title">Nome visível</string>
+    <string name="visible_name_hint">Aparece na lista e no widget no lugar de «Nota protegida», mesmo com a nota bloqueada. Qualquer pessoa que veja sua tela o verá. Deixe vazio para ocultá-lo.</string>
+    <string name="visible_name_label">Nome visível (opcional)</string>
+    <string name="visible_name_action">Salvar</string>
+    <string name="note_actions_open">Abrir</string>
+    <string name="note_actions_more">Mais opções</string>
 </resources>

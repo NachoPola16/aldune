@@ -8,10 +8,11 @@ import androidx.room.RoomDatabase
 /**
  * La base de Aldune. `exportSchema = true` y el esquema se versiona en `app/schemas/`: cada cambio lleva su migración probada.
  * v2 (F5) añade `sync_conflict`, que no estaba en la v1 porque su forma dependía del motor de sync. v3 pone bases y conflictos por perfil.
+ * v4 añade el nombre visible de las notas protegidas.
  */
 @Database(
     entities = [NoteEntity::class, TombstoneEntity::class, SyncBaseEntity::class, SyncConflictEntity::class, ReminderEntity::class],
-    version = 3,
+    version = 4,
     exportSchema = true,
 )
 abstract class AldunaDatabase : RoomDatabase() {
@@ -26,7 +27,7 @@ abstract class AldunaDatabase : RoomDatabase() {
 
         fun open(context: Context): AldunaDatabase =
             Room.databaseBuilder(context.applicationContext, AldunaDatabase::class.java, FILE_NAME)
-                .addMigrations(MIGRATION_1_2, MIGRATION_2_3)
+                .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4)
                 .build()
     }
 }

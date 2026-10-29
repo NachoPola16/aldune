@@ -325,4 +325,11 @@
     <string name="interface_mode_full">Use full mode</string>
     <string name="interface_mode_hint_simple">Shows only the essentials: sync, appearance and language. Your other settings are kept and still apply.</string>
     <string name="interface_mode_hint_full">You are seeing all the settings. The simplified mode hides the advanced ones without changing them.</string>
+    <string name="visible_name_menu">Visible name…</string>
+    <string name="visible_name_title">Visible name</string>
+    <string name="visible_name_hint">Shown in the list and the widget instead of «Protected note», even while the note is locked. Anyone who sees your screen will see it. Leave it empty to hide it.</string>
+    <string name="visible_name_label">Visible name (optional)</string>
+    <string name="visible_name_action">Save</string>
+    <string name="note_actions_open">Open</string>
+    <string name="note_actions_more">More options</string>
 </resources>

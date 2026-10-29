@@ -28,6 +28,7 @@ import androidx.compose.ui.unit.dp
 import app.aldune.R
 import app.aldune.core.PasswordProblem
 import app.aldune.core.PasswordRules
+import app.aldune.text.ProtectedTitleRules
 import kotlinx.coroutines.launch
 
 /** Para qué se pide la contraseña: elegir una (dos veces), abrir una nota o quitarle la protección. */
@@ -39,12 +40,17 @@ enum class PasswordFailure { Wrong, Empty, TooShort, Mismatch, Unreadable, Unsup
 /**
  * Pide una contraseña. [onSubmit] hace el trabajo (derivar la clave tarda: un indicador y nada que tocar mientras dura) y devuelve `null` si
  * salió bien (el diálogo se cierra) o el motivo del rechazo. La contraseña vive solo en este estado de Compose: nunca se guarda con
- * `rememberSaveable`, así que no entra en el estado de la actividad.
+ * `rememberSaveable`, así que no entra en el estado de la actividad. Al proteger también se pide el nombre visible (opcional, en claro: se pasa
+ * como tercer argumento, vacío si no se escribe).
  */
 @Composable
-fun PasswordDialog(mode: PasswordMode, onDismiss: () -> Unit, onSubmit: suspend (password: String, confirmation: String) -> PasswordFailure?) {
+fun PasswordDialog(
+    mode: PasswordMode, onDismiss: () -> Unit,
+    onSubmit: suspend (password: String, confirmation: String, visibleName: String) -> PasswordFailure?,
+) {
     var password by remember { mutableStateOf("") }
     var confirmation by remember { mutableStateOf("") }
+    var visibleName by remember { mutableStateOf("") }
     var failure by remember { mutableStateOf<PasswordFailure?>(null) }
     var busy by remember { mutableStateOf(false) }
     val scope = rememberCoroutineScope()
@@ -65,7 +71,7 @@ fun PasswordDialog(mode: PasswordMode, onDismiss: () -> Unit, onSubmit: suspend 
         failure = null
         busy = true
         scope.launch {
-            val result = onSubmit(password, confirmation)
+            val result = onSubmit(password, confirmation, visibleName)
             busy = false
             if (result == null) onDismiss() else failure = result
         }
@@ -105,7 +111,14 @@ fun PasswordDialog(mode: PasswordMode, onDismiss: () -> Unit, onSubmit: suspend 
                         value = confirmation, onValueChange = { confirmation = it; failure = null }, singleLine = true, enabled = !busy,
                         label = { Text(stringResource(R.string.password_repeat)) },
                         visualTransformation = PasswordVisualTransformation(),
-                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password, imeAction = ImeAction.Done),
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password, imeAction = ImeAction.Next),
+                        keyboardActions = KeyboardActions(onDone = { submit() }),
+                    )
+                    OutlinedTextField(
+                        value = visibleName, onValueChange = { visibleName = it.take(ProtectedTitleRules.MAX_LENGTH) }, singleLine = true, enabled = !busy,
+                        label = { Text(stringResource(R.string.visible_name_label)) },
+                        supportingText = { Text(stringResource(R.string.visible_name_hint)) },
+                        keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
                         keyboardActions = KeyboardActions(onDone = { submit() }),
                     )
                 }
@@ -131,4 +144,31 @@ private fun PasswordFailure.message(): Int = when (this) {
     PasswordFailure.Unreadable -> R.string.password_unreadable
     PasswordFailure.Unsupported -> R.string.password_unsupported
     PasswordFailure.Changed -> R.string.password_changed
+}
+
+/**
+ * Pone o cambia el nombre visible de una nota protegida. Va aparte del diálogo de contraseña porque no la necesita: el nombre es público por
+ * diseño y el aviso lo dice. Vacío lo oculta (la nota vuelve a salir como «Nota protegida»).
+ */
+@Composable
+fun VisibleNameDialog(initial: String?, onDismiss: () -> Unit, onSave: (String?) -> Unit) {
+    var name by remember { mutableStateOf(initial.orEmpty()) }
+    fun save() {
+        onSave(ProtectedTitleRules.normalize(name))
+        onDismiss()
+    }
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(stringResource(R.string.visible_name_title)) },
+        text = {
+            OutlinedTextField(
+                value = name, onValueChange = { name = it.take(ProtectedTitleRules.MAX_LENGTH) }, singleLine = true,
+                label = { Text(stringResource(R.string.visible_name_label)) },
+                supportingText = { Text(stringResource(R.string.visible_name_hint)) },
+                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done), keyboardActions = KeyboardActions(onDone = { save() }),
+            )
+        },
+        confirmButton = { TextButton(onClick = ::save) { Text(stringResource(R.string.visible_name_action)) } },
+        dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.cancel)) } },
+    )
 }

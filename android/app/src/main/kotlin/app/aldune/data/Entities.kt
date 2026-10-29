@@ -29,6 +29,8 @@ class NoteEntity(
     val syncAuthorDeviceId: String?,
     val isProtected: Boolean = false,
     val protectedContent: String? = null,
+    /** Nombre visible, en claro, de una nota protegida (v4). */
+    val protectedTitle: String? = null,
 )
 
 /** Borrado definitivo pendiente de firmar por la sync. */

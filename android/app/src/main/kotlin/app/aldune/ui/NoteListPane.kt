@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.gestures.awaitFirstDown
+import androidx.compose.foundation.gestures.awaitLongPressOrCancellation
 import androidx.compose.foundation.gestures.detectDragGesturesAfterLongPress
 import androidx.compose.ui.focus.focusProperties
 import androidx.compose.ui.input.pointer.PointerEventPass
@@ -134,6 +135,8 @@ fun NoteListPane(
     val settingsNow by viewModel.settings.collectAsStateWithLifecycle()
     var showSyncDetail by remember { mutableStateOf(false) }
     var showOrphans by remember { mutableStateOf(false) }
+    // La nota cuyo menú (mantener pulsada) está abierto.
+    var menuFor by remember { mutableStateOf<NoteListItem?>(null) }
 
     val archivedMsg = stringResource(R.string.note_archived)
     val trashedMsg = stringResource(R.string.note_trashed)
@@ -251,18 +254,46 @@ fun NoteListPane(
                 ) {
                     items(order, key = { it.id }) { item ->
                         val dragging = draggedId == item.id
+                        // Mantener pulsada una nota: arrastrar la reordena y soltar sin mover abre su menú. En los dos casos el «soltar» no debe
+                        // abrir la nota, que es lo que haría el toque de la fila al levantar el dedo.
+                        val hold = remember(item.id) { PressHold() }
                         SwipeableRow(
                             modifier = (if (dragging) Modifier.zIndex(1f).graphicsLayer { translationY = dragDelta } else Modifier.animateItem())
                                 .then(
                                     if (reorderable) Modifier.pointerInput(item.id) {
                                         detectDragGesturesAfterLongPress(
-                                            onDragStart = { dragStart(item.id) },
-                                            onDrag = { change, amount -> change.consume(); dragBy(amount.y) },
-                                            onDragEnd = ::dragEnd, onDragCancel = ::dragEnd,
+                                            onDragStart = { hold.active = true; hold.travelled = 0f; dragStart(item.id) },
+                                            onDrag = { change, amount ->
+                                                change.consume()
+                                                hold.travelled += kotlin.math.abs(amount.x) + kotlin.math.abs(amount.y)
+                                                dragBy(amount.y)
+                                            },
+                                            onDragEnd = {
+                                                val moved = hold.travelled > viewConfiguration.touchSlop
+                                                dragEnd()
+                                                if (!moved) menuFor = item
+                                                hold.active = false
+                                            },
+                                            onDragCancel = { dragEnd(); hold.active = false },
                                         )
-                                    } else Modifier
+                                    } else Modifier.pointerInput(item.id) {
+                                        // Con un filtro no se puede reordenar: mantener pulsada abre el menú directamente, al cumplirse el tiempo.
+                                        awaitEachGesture {
+                                            val down = awaitFirstDown(requireUnconsumed = false)
+                                            if (awaitLongPressOrCancellation(down.id) != null) {
+                                                hold.active = true
+                                                haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                                                menuFor = item
+                                                do {
+                                                    val event = awaitPointerEvent()
+                                                } while (event.changes.any { it.pressed })
+                                                hold.active = false
+                                            }
+                                        }
+                                    }
                                 ),
-                            item = item, selected = item.id == selectedId || item.id == highlight, conflicted = item.id in conflicted, reminder = state.reminders[item.id], onOpen = { onOpen(item.id) },
+                            item = item, selected = item.id == selectedId || item.id == highlight, conflicted = item.id in conflicted, reminder = state.reminders[item.id],
+                            onOpen = { if (!hold.active) onOpen(item.id) }, onMenu = { menuFor = item },
                             signal = if (look.syncSignal) NoteSyncSignal.of(hasProfile, item.id in conflicted, bases[item.id], item.updatedAt) else NoteSyncSignal.State.HIDDEN,
                             onArchive = { viewModel.archive(item.id); announce(archivedMsg) { viewModel.restore(item.id) } },
                             onTrash = { viewModel.trash(item.id); announce(trashedMsg) { viewModel.restore(item.id) } },
@@ -314,6 +345,10 @@ fun NoteListPane(
                 state.orphans, onRecover = { resolve(it, true) }, onDiscard = { resolve(it, false) }, onClose = { showOrphans = false },
             )
         }
+    }
+
+    menuFor?.let { item ->
+        NoteActionsDialog(item, openInEditor = item.id == selectedId, viewModel = viewModel, onOpen = { onOpen(item.id) }, onClose = { menuFor = null })
     }
 
     deleting?.let { item ->
@@ -398,6 +433,7 @@ private fun EmptyMessage(state: UiState.Ready) {
 private fun SwipeableRow(
     modifier: Modifier,
     item: NoteListItem, selected: Boolean, conflicted: Boolean, reminder: java.time.Instant?, onOpen: () -> Unit, signal: NoteSyncSignal.State,
+    onMenu: () -> Unit,
     onArchive: () -> Unit, onTrash: () -> Unit, onRestore: () -> Unit, onDelete: () -> Unit,
 ) {
     val dismiss = rememberSwipeToDismissBoxState(
@@ -425,18 +461,22 @@ private fun SwipeableRow(
     val trashLabel = stringResource(R.string.move_to_trash)
     val restoreLabel = stringResource(R.string.restore)
     val deleteLabel = stringResource(R.string.delete_forever)
+    val moreLabel = stringResource(R.string.note_actions_more)
     val actions = when (item.state) {
         NoteState.ACTIVE -> listOf(
             CustomAccessibilityAction(archiveLabel) { onArchive(); true },
             CustomAccessibilityAction(trashLabel) { onTrash(); true },
+            CustomAccessibilityAction(moreLabel) { onMenu(); true },
         )
         NoteState.ARCHIVED -> listOf(
             CustomAccessibilityAction(restoreLabel) { onRestore(); true },
             CustomAccessibilityAction(trashLabel) { onTrash(); true },
+            CustomAccessibilityAction(moreLabel) { onMenu(); true },
         )
         NoteState.TRASHED -> listOf(
             CustomAccessibilityAction(restoreLabel) { onRestore(); true },
             CustomAccessibilityAction(deleteLabel) { onDelete(); true },
+            CustomAccessibilityAction(moreLabel) { onMenu(); true },
         )
     }
     SwipeToDismissBox(
@@ -554,4 +594,10 @@ private fun SyncIcon(icon: StatusIcon, description: String) {
         StatusIcon.OFFLINE -> Icon(Icons.Default.Warning, description, tint = MaterialTheme.colorScheme.onSurfaceVariant)
         StatusIcon.ERROR -> Icon(Icons.Default.Warning, description, tint = MaterialTheme.colorScheme.error)
     }
+}
+
+/** Un dedo que mantiene pulsada una fila: si ya abrió el menú o empezó a arrastrar, al levantarlo no se debe abrir la nota. */
+private class PressHold {
+    var active = false
+    var travelled = 0f
 }

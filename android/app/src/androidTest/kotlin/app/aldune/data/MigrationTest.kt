@@ -62,4 +62,22 @@ class MigrationTest {
             db.execSQL("INSERT INTO sync_base (profileId, noteId, updatedAt, deviceId) VALUES ('otro', 'x', 't', 'pc')")
         }
     }
+
+    @Test fun migration3To4AddsTheVisibleNameAndKeepsRows() {
+        helper.createDatabase("migration-34", 3).use { db ->
+            db.execSQL(
+                "INSERT INTO note (id, textCipher, nonce, tag, color, createdAt, updatedAt, state, lineEnding, tags, dockPosition, " +
+                    "screenOrigin, syncAuthorDeviceId, isProtected, protectedContent) VALUES ('x', x'00', x'00', x'00', '#EBD38B', 't', 't', 0, 0, '[]', " +
+                    "NULL, '', NULL, 1, '{}')",
+            )
+        }
+        helper.runMigrationsAndValidate("migration-34", 4, true, MIGRATION_3_4).use { db ->
+            db.query("SELECT isProtected, protectedTitle FROM note WHERE id = 'x'").use { c ->
+                assertTrue(c.moveToFirst())
+                assertEquals(1, c.getInt(0))
+                assertTrue(c.isNull(1))
+            }
+            db.execSQL("UPDATE note SET protectedTitle = 'Banco' WHERE id = 'x'")
+        }
+    }
 }

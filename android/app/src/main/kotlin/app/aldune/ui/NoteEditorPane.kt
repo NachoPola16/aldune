@@ -424,7 +424,7 @@ fun NoteEditorPane(key: String, viewModel: NotesViewModel, onBack: () -> Unit, s
             )
         }
         passwordMode?.let { mode ->
-            PasswordDialog(mode, onDismiss = { passwordMode = null }) { password, confirmation ->
+            PasswordDialog(mode, onDismiss = { passwordMode = null }) { password, confirmation, visibleName ->
                 when (mode) {
                     PasswordMode.Unlock -> when (val outcome = viewModel.unlockProtected(key, password)) {
                         is NotesViewModel.UnlockOutcome.Opened -> {
@@ -440,7 +440,7 @@ fun NoteEditorPane(key: String, viewModel: NotesViewModel, onBack: () -> Unit, s
                         NotesViewModel.UnlockOutcome.Unsupported -> PasswordFailure.Unsupported
                         NotesViewModel.UnlockOutcome.Gone -> PasswordFailure.Changed
                     }
-                    PasswordMode.Protect -> when (val result = viewModel.protectNote(key, password, confirmation)) {
+                    PasswordMode.Protect -> when (val result = viewModel.protectNote(key, password, confirmation, visibleName)) {
                         is ProtectionResult.Ok -> {
                             // Queda abierta, como en Windows: se abre la sesión con la misma contraseña (derivar otra vez).
                             when (val outcome = viewModel.unlockProtected(key, password)) {
@@ -495,7 +495,7 @@ fun NoteEditorPane(key: String, viewModel: NotesViewModel, onBack: () -> Unit, s
             )
         }
         if (unlockOther) {
-            PasswordDialog(PasswordMode.Unlock, onDismiss = { unlockOther = false }) { password, _ ->
+            PasswordDialog(PasswordMode.Unlock, onDismiss = { unlockOther = false }) { password, _, _ ->
                 val lines = viewModel.unlockOtherVersion(key, password)
                 if (lines == null) {
                     PasswordFailure.Wrong

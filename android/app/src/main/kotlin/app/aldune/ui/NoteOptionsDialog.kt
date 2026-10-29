@@ -59,7 +59,7 @@ import app.aldune.text.NoteThemes
 @Composable
 fun NoteOptionsDialog(
     initial: NotesViewModel.NoteOptions, viewModel: NotesViewModel, onClose: () -> Unit, onProtection: () -> Unit,
-    exportText: String? = null,
+    exportText: String? = null, showProtection: Boolean = true,
 ) {
     var color by remember { mutableStateOf(initial.color) }
     var tags by remember { mutableStateOf(initial.tags) }
@@ -68,6 +68,8 @@ fun NoteOptionsDialog(
     val settings by viewModel.settings.collectAsState()
     val theme = NoteThemes.resolve(settings.noteThemeId, null)
     var customOpen by remember { mutableStateOf(false) }
+    var nameOpen by remember { mutableStateOf(false) }
+    var visibleName by remember { mutableStateOf(initial.protectedTitle) }
 
     // «Exportar a Markdown» guarda un .md con el selector de ficheros del sistema (el «Guardar como» de Windows).
     val context = LocalContext.current
@@ -142,13 +144,27 @@ fun NoteOptionsDialog(
                         Text(stringResource(R.string.export_markdown))
                     }
                 }
-                TextButton(onClick = onProtection, Modifier.padding(top = 8.dp)) {
-                    Text(stringResource(if (initial.isProtected) R.string.remove_protection else R.string.protect_note))
+                if (initial.isProtected) {
+                    TextButton(onClick = { nameOpen = true }, Modifier.padding(top = 8.dp)) { Text(stringResource(R.string.visible_name_menu)) }
+                }
+                // Desde la lista, con la nota abierta al lado, proteger o quitar la protección dejaría el editor con el estado viejo: ahí se hace
+                // desde el propio editor.
+                if (showProtection) {
+                    TextButton(onClick = onProtection, Modifier.padding(top = 8.dp)) {
+                        Text(stringResource(if (initial.isProtected) R.string.remove_protection else R.string.protect_note))
+                    }
                 }
             }
         },
         confirmButton = { TextButton(onClick = onClose) { Text(stringResource(R.string.done)) } },
     )
+
+    if (nameOpen) {
+        VisibleNameDialog(visibleName, onDismiss = { nameOpen = false }) { name ->
+            visibleName = name
+            viewModel.setVisibleName(initial.noteId, name)
+        }
+    }
 
     if (customOpen) {
         CustomColorDialog(

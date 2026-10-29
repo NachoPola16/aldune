@@ -25,6 +25,7 @@ import app.aldune.domain.SharedNoteText
 import app.aldune.domain.NoteState
 import app.aldune.syncclient.ConflictKind
 import app.aldune.syncclient.ProtectionError
+import app.aldune.text.ProtectedTitleRules
 import app.aldune.syncclient.ProtectionResult
 import app.aldune.syncclient.ProtectionService
 import app.aldune.syncclient.SyncEvent
@@ -498,11 +499,11 @@ class NotesViewModel(application: Application) : AndroidViewModel(application) {
      * Protege la nota con la contraseña. Antes se guarda lo escrito (el texto que se cifra es el último guardado) y se olvida su borrador:
      * a partir de aquí el texto no pasa por los borradores.
      */
-    suspend fun protectNote(key: String, password: String, confirmation: String): ProtectionResult<Note> = withContext(Dispatchers.Default) {
+    suspend fun protectNote(key: String, password: String, confirmation: String, visibleName: String? = null): ProtectionResult<Note> = withContext(Dispatchers.Default) {
         val id = idOf(key)
         val service = protection ?: return@withContext ProtectionResult.Err(ProtectionError.NotFound(id))
         drafts[key]?.let { it.pending?.cancel(); persist(it) }
-        val result = service.protect(id, password, confirmation)
+        val result = service.protect(id, password, confirmation, visibleName)
         if (result is ProtectionResult.Ok) {
             drafts.remove(key)
             if (key != id) aliases[key] = id
@@ -603,7 +604,7 @@ class NotesViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     /** Color y etiquetas de una nota, para su menú. */
-    class NoteOptions(val noteId: String, val color: String, val tags: List<String>, val isProtected: Boolean)
+    class NoteOptions(val noteId: String, val color: String, val tags: List<String>, val isProtected: Boolean, val protectedTitle: String? = null)
 
     /**
      * Las opciones de la nota que se edita en [key], o `null` si todavía no existe (una nota nueva sin texto). Antes se guarda lo escrito,
@@ -616,8 +617,19 @@ class NotesViewModel(application: Application) : AndroidViewModel(application) {
         }
         io.withLock {
             val id = idOf(key).ifEmpty { return@withLock null }
-            service?.get(id)?.let { NoteOptions(id, it.color, it.tags, it.isProtected) }
+            service?.get(id)?.let { NoteOptions(id, it.color, it.tags, it.isProtected, it.protectedTitle) }
         }
+    }
+
+    /**
+     * Pone (o quita, si queda vacío) el nombre visible de una nota protegida: se ve en la lista y el widget aunque la nota esté cerrada.
+     * No pide contraseña (es público por diseño) y cuenta como edición, así que viaja por la sync.
+     */
+    fun setVisibleName(id: String, title: String?) = launchIo {
+        protection?.setProtectedTitle(id, title)
+        refresh()
+        syncEvent(SyncEvent.LocalChange)
+        widgetChanged()
     }
 
     fun moveNote(id: String, before: String?, after: String?) = change { it.move(id, before, after) }
@@ -682,7 +694,7 @@ class NotesViewModel(application: Application) : AndroidViewModel(application) {
         val tags = notes.list(current.filter).flatMap { it.tags }.distinctBy { it.lowercase() }.sortedBy { it.lowercase() }
         val orphans = ready?.conflicts?.orphans().orEmpty().mapNotNull { conflict ->
             val note = conflict.losing.note ?: return@mapNotNull null
-            val title = if (note.isProtected) protectedTitle else NoteTitleHelper.getTitle(LineEnding.normalize(note.text), placeholder)
+            val title = if (note.isProtected) ProtectedTitleRules.visible(true, note.protectedTitle) ?: protectedTitle else NoteTitleHelper.getTitle(LineEnding.normalize(note.text), placeholder)
             OrphanConflict(conflict.noteId.toString(), title, note.isProtected)
         }
         val reminders = ready?.reminders?.all().orEmpty().associate { it.noteId to it.dueAt }

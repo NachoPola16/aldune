@@ -325,4 +325,11 @@
     <string name="interface_mode_full">Vollständigen Modus verwenden</string>
     <string name="interface_mode_hint_simple">Zeigt nur das Wesentliche: Synchronisierung, Aussehen und Sprache. Deine übrigen Einstellungen bleiben erhalten und gelten weiter.</string>
     <string name="interface_mode_hint_full">Du siehst alle Einstellungen. Der vereinfachte Modus blendet die erweiterten aus, ohne sie zu ändern.</string>
+    <string name="visible_name_menu">Sichtbarer Name…</string>
+    <string name="visible_name_title">Sichtbarer Name</string>
+    <string name="visible_name_hint">Wird in der Liste und im Widget statt „Geschützte Notiz“ angezeigt, auch wenn die Notiz gesperrt ist. Wer auf deinen Bildschirm schaut, sieht ihn. Leer lassen, um ihn auszublenden.</string>
+    <string name="visible_name_label">Sichtbarer Name (optional)</string>
+    <string name="visible_name_action">Speichern</string>
+    <string name="note_actions_open">Öffnen</string>
+    <string name="note_actions_more">Weitere Optionen</string>
 </resources>

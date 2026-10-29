@@ -225,9 +225,9 @@ class DockWidget : GlanceAppWidget() {
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 when (strip) {
-                    // Una protegida solo enseña el candado y el texto fijo: `Locked` no tiene ningún texto suyo que pintar.
+                    // Una protegida solo enseña el candado y el texto fijo, o el nombre visible que el usuario le puso: `Locked` no tiene nada del contenido.
                     is WidgetStrip.Locked -> Text(
-                        "🔒  " + data.texts.protectedTitle, style = TextStyle(color = ColorProvider(ink), fontSize = 14.sp, fontFamily = data.colors.font), maxLines = 1,
+                        "🔒  " + (strip.title ?: data.texts.protectedTitle), style = TextStyle(color = ColorProvider(ink), fontSize = 14.sp, fontFamily = data.colors.font), maxLines = 1,
                     )
                     is WidgetStrip.Open -> {
                         Text(strip.title, style = TextStyle(color = ColorProvider(ink), fontSize = 14.sp, fontWeight = FontWeight.Medium, fontFamily = data.colors.font), maxLines = 1)
