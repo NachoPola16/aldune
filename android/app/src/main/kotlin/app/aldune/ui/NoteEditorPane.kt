@@ -32,6 +32,7 @@ import androidx.compose.foundation.layout.widthIn
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import app.aldune.data.CompletedTasksStore
+import app.aldune.domain.KeyboardOnOpen
 import app.aldune.text.HiddenTasks
 import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.runtime.snapshotFlow
@@ -362,16 +363,23 @@ fun NoteEditorPane(key: String, viewModel: NotesViewModel, onBack: () -> Unit, s
 
     // Una nota nueva (el «+», el acceso directo, el mosaico, la notificación) es para escribir ya: se pide el foco y el teclado. Sin esto,
     // el teclado salía o no según una carrera con el foco de la ventana (en frío no, con la app ya abierta sí). Una nota existente no lo abre:
-    // al leerla no hay que tapar la mitad del texto.
+    // al leerla no hay que tapar la mitad del texto. Ajustes → Notas → «Teclado al abrir una nota» lo cambia (siempre o nunca).
     val focus = remember { FocusRequester() }
     val keyboard = LocalSoftwareKeyboardController.current
+    val focusManager = androidx.compose.ui.platform.LocalFocusManager.current
     LaunchedEffect(key, loaded, protectedNote) {
-        if (key.isEmpty() && loaded && !protectedNote) {
+        if (loaded && KeyboardOnOpen.shouldShow(settings.keyboardOnOpen, isNewNote = key.isEmpty(), isProtected = protectedNote)) {
             focus.requestFocus()
             // `stateHidden` de la ventana oculta el teclado al arrancar y se come un show() demasiado temprano: se espera a que la ventana se
             // asiente. (Con la app ya abierta no hace falta, pero no estorba.)
             delay(KEYBOARD_DELAY_MS)
             keyboard?.show()
+        } else if (loaded && key.isEmpty() && !protectedNote) {
+            // «Nunca»: una nota nueva se abre con el campo enfocado por el propio sistema y, con él, el teclado. Se quita el foco y se esconde,
+            // pasada la misma pausa que el show() de arriba (si no, el sistema lo vuelve a poner). Tocar el texto lo abre cuando se quiera.
+            delay(KEYBOARD_DELAY_MS)
+            focusManager.clearFocus()
+            keyboard?.hide()
         }
     }
 

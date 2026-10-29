@@ -166,7 +166,7 @@ fun SyncSection(viewModel: NotesViewModel) {
             Text(stringResource(R.string.sync_backup_note), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(top = 8.dp))
             if (adding) ConnectForm(c, additional = true, initialCode = sharedCode, onCodeTaken = { sharedCode = null }, onDone = { adding = false; sharedCode = null })
             else OutlinedButton(onClick = { adding = true }) { Text(stringResource(R.string.sync_add_profile)) }
-            HorizontalDivider(Modifier.padding(top = 8.dp))
+            HorizontalDivider(Modifier.padding(vertical = 12.dp))
         }
         val settings by viewModel.settings.collectAsStateWithLifecycle()
         SwitchRow(stringResource(R.string.sync_in_background), stringResource(R.string.sync_in_background_hint), settings.syncInBackground) { on ->
@@ -457,7 +457,7 @@ private fun ConnectedPanel(controller: SyncController, profile: SyncProfile) {
             }
         }
         OutlinedButton(onClick = { confirming = true }, modifier = Modifier.padding(top = 4.dp)) { Text(stringResource(R.string.sync_disconnect)) }
-        HorizontalDivider(Modifier.padding(top = 8.dp))
+        HorizontalDivider(Modifier.padding(vertical = 12.dp))
     }
 
     if (confirming) {

@@ -35,7 +35,7 @@ private const val DEFAULT_FIXED = "#EBD38B"
  */
 @Composable
 fun NoteBehaviourSettings(settings: AppSettings, onChange: ((AppSettings) -> AppSettings) -> Unit) {
-    Text(stringResource(R.string.list_order), Modifier.padding(horizontal = 16.dp), style = MaterialTheme.typography.labelLarge)
+    GroupLabel(stringResource(R.string.list_order))
     val orders = listOf(
         NoteListOrder.DOCK to R.string.order_dock, NoteListOrder.NEWEST to R.string.order_newest,
         NoteListOrder.OLDEST to R.string.order_oldest, NoteListOrder.TITLE to R.string.order_title,
@@ -45,7 +45,7 @@ fun NoteBehaviourSettings(settings: AppSettings, onChange: ((AppSettings) -> App
         Text(stringResource(R.string.order_no_drag), Modifier.padding(horizontal = 16.dp), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
     }
 
-    Text(stringResource(R.string.color_rule), Modifier.padding(start = 16.dp, end = 16.dp, top = 8.dp), style = MaterialTheme.typography.labelLarge)
+    GroupLabel(stringResource(R.string.color_rule))
     val rules = listOf(0 to R.string.rule_avoid_neighbors, 1 to R.string.rule_rotate, 2 to R.string.rule_most_distinct, 3 to R.string.rule_fixed)
     for ((rule, label) in rules) Choice(stringResource(label), settings.colorRule == rule) { onChange { it.copy(colorRule = rule) } }
     if (settings.colorRule == 3) {

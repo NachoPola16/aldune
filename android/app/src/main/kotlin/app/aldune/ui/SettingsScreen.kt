@@ -20,6 +20,7 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.RequiresApi
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.TextButton
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -48,7 +49,9 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.RadioButton
+import androidx.compose.material3.ScrollableTabRow
 import androidx.compose.material3.Switch
+import androidx.compose.material3.Tab
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -69,6 +72,7 @@ import app.aldune.reminders.ReminderScheduler
 import androidx.lifecycle.compose.LifecycleEventEffect
 import androidx.lifecycle.Lifecycle
 import app.aldune.data.AppSettings
+import app.aldune.domain.KeyboardOnOpen
 import app.aldune.domain.SettingsSection
 import app.aldune.domain.SettingsSections
 import app.aldune.data.Languages
@@ -87,6 +91,11 @@ fun SettingsScreen(viewModel: NotesViewModel, onClose: () -> Unit) {
     BackHandler(onBack = onClose)
     // Qué bloques se enseñan: la regla vive en `SettingsSections` (domain) para poder probarla; aquí solo se pregunta.
     fun show(section: SettingsSection) = SettingsSections.isVisible(section, settings.simplifiedMode)
+    // Con todo a la vista Ajustes ocupa varias pantallas: se reparte en pestañas (General, Aspecto, Notas, Avisos). El modo simplificado es corto y
+    // sigue siendo una sola pantalla. rememberSaveable: girar el móvil no vuelve a la primera pestaña.
+    val tabs = !settings.simplifiedMode
+    var tab by rememberSaveable { mutableIntStateOf(0) }
+    fun inTab(index: Int) = !tabs || tab == index
 
     // En una pantalla ancha (tableta) los ajustes van en una columna centrada, no estirados a todo el ancho.
     Column(Modifier.fillMaxSize().safeDrawingPadding(), horizontalAlignment = Alignment.CenterHorizontally) {
@@ -95,12 +104,21 @@ fun SettingsScreen(viewModel: NotesViewModel, onClose: () -> Unit) {
                 IconButton(onClick = onClose) { Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.back)) }
                 Text(stringResource(R.string.settings), style = MaterialTheme.typography.titleLarge)
             }
+            if (tabs) {
+                val labels = listOf(R.string.settings_tab_general, R.string.settings_tab_appearance, R.string.settings_tab_notes, R.string.settings_tab_alerts)
+                ScrollableTabRow(selectedTabIndex = tab, edgePadding = 8.dp) {
+                    labels.forEachIndexed { index, label ->
+                        Tab(selected = tab == index, onClick = { tab = index }, text = { Text(stringResource(label)) })
+                    }
+                }
+            }
             Column(Modifier.verticalScroll(rememberScrollState()).padding(bottom = 24.dp)) {
-                if (show(SettingsSection.SYNC)) SyncSection(viewModel)
-                if (show(SettingsSection.BACKUP)) BackupSection(viewModel)
-                if (show(SettingsSection.CAPTURE)) CaptureSection(viewModel, settings.captureNotification)
-                if (show(SettingsSection.REMINDERS)) RemindersSection(viewModel, settings.exactReminders)
+                if (show(SettingsSection.SYNC) && inTab(0)) SyncSection(viewModel)
+                if (show(SettingsSection.BACKUP) && inTab(0)) BackupSection(viewModel)
+                if (show(SettingsSection.CAPTURE) && inTab(3)) CaptureSection(viewModel, settings.captureNotification)
+                if (show(SettingsSection.REMINDERS) && inTab(3)) RemindersSection(viewModel, settings.exactReminders)
 
+                if (inTab(1)) {
                 Section(R.string.settings_appearance)
                 val appearances = listOf(
                     AppPalette.SYSTEM to R.string.appearance_system, AppPalette.DARK to R.string.appearance_dark,
@@ -147,23 +165,29 @@ fun SettingsScreen(viewModel: NotesViewModel, onClose: () -> Unit) {
                 for ((tag, name) in Languages.all) {
                     Choice(name, settings.language == tag) { changeLanguage(viewModel, activity, tag) }
                 }
+                }
 
-                if (show(SettingsSection.NOTES)) {
+                if (show(SettingsSection.NOTES) && inTab(2)) {
                     Section(R.string.settings_notes)
-                    Text(stringResource(R.string.note_theme), Modifier.padding(horizontal = 16.dp), style = MaterialTheme.typography.labelLarge)
+                    GroupLabel(stringResource(R.string.note_theme))
                     for (theme in NoteThemes.builtIn) {
                         val name = themeNameRes(theme.id)?.let { stringResource(it) } ?: theme.name
                         Choice(name, settings.noteThemeId == theme.id) { viewModel.updateSettings { it.copy(noteThemeId = theme.id) } }
                     }
                     NoteBehaviourSettings(settings, onChange = viewModel::updateSettings)
-                    Text(stringResource(R.string.new_note_tone), Modifier.padding(horizontal = 16.dp), style = MaterialTheme.typography.labelLarge)
+                    GroupLabel(stringResource(R.string.new_note_tone))
                     Choice(stringResource(R.string.tone_light), !settings.darkNotes) { viewModel.updateSettings { it.copy(darkNotes = false) } }
                     Choice(stringResource(R.string.tone_dark), settings.darkNotes) { viewModel.updateSettings { it.copy(darkNotes = true) } }
-                    Text(stringResource(R.string.trash_days), Modifier.padding(start = 16.dp, end = 16.dp, top = 8.dp), style = MaterialTheme.typography.labelLarge)
+                    GroupLabel(stringResource(R.string.trash_days))
                     for (days in TRASH_OPTIONS) {
                         Choice(stringResource(R.string.trash_days_value, days), settings.trashDays == days) { viewModel.updateSettings { it.copy(trashDays = days) } }
                     }
-                    HorizontalDivider(Modifier.padding(vertical = 8.dp))
+                    HorizontalDivider(Modifier.padding(vertical = 12.dp))
+                    GroupLabel(stringResource(R.string.keyboard_on_open))
+                    Choice(stringResource(R.string.keyboard_new_only), settings.keyboardOnOpen == KeyboardOnOpen.NEW_NOTES) { viewModel.updateSettings { it.copy(keyboardOnOpen = KeyboardOnOpen.NEW_NOTES) } }
+                    Choice(stringResource(R.string.keyboard_always), settings.keyboardOnOpen == KeyboardOnOpen.ALWAYS) { viewModel.updateSettings { it.copy(keyboardOnOpen = KeyboardOnOpen.ALWAYS) } }
+                    Choice(stringResource(R.string.keyboard_never), settings.keyboardOnOpen == KeyboardOnOpen.NEVER) { viewModel.updateSettings { it.copy(keyboardOnOpen = KeyboardOnOpen.NEVER) } }
+                    HorizontalDivider(Modifier.padding(vertical = 12.dp))
                     SwitchRow(stringResource(R.string.large_checkboxes), stringResource(R.string.large_checkboxes_hint), settings.largeCheckboxes) { on ->
                         viewModel.updateSettings { it.copy(largeCheckboxes = on) }
                     }
@@ -174,13 +198,14 @@ fun SettingsScreen(viewModel: NotesViewModel, onClose: () -> Unit) {
                         viewModel.updateSettings { it.copy(hideDoneTasks = on) }
                     }
                     if (settings.hideDoneTasks) {
-                        Text(stringResource(R.string.hide_done_after), Modifier.padding(horizontal = 16.dp), style = MaterialTheme.typography.labelLarge)
+                        GroupLabel(stringResource(R.string.hide_done_after))
                         for ((hours, label) in HIDE_AFTER_OPTIONS) {
                             Choice(stringResource(label), settings.hideDoneAfterHours == hours) { viewModel.updateSettings { it.copy(hideDoneAfterHours = hours) } }
                         }
                     }
                 }
-                HorizontalDivider(Modifier.padding(vertical = 8.dp))
+                if (inTab(0)) {
+                HorizontalDivider(Modifier.padding(vertical = 12.dp))
                 // El botón de modo no se esconde nunca: sin él no habría forma de volver al modo completo. Aplica al instante y no toca otros ajustes.
                 Text(
                     stringResource(if (settings.simplifiedMode) R.string.interface_mode_hint_simple else R.string.interface_mode_hint_full),
@@ -194,6 +219,7 @@ fun SettingsScreen(viewModel: NotesViewModel, onClose: () -> Unit) {
                         stringResource(R.string.about_version, versionName(activity)), Modifier.padding(16.dp),
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
+                }
                 }
             }
         }
@@ -427,6 +453,12 @@ private fun changeLanguage(viewModel: NotesViewModel, activity: Activity?, tag: 
 
 private fun versionName(activity: Activity?): String =
     runCatching { activity?.packageManager?.getPackageInfo(activity.packageName, 0)?.versionName }.getOrNull() ?: ""
+
+/** Rótulo de un grupo de opciones dentro de una sección (p. ej. «Orden de la lista»): con aire por encima para que no quede pegado a la opción de arriba. */
+@Composable
+internal fun GroupLabel(text: String) {
+    Text(text, Modifier.padding(start = 16.dp, end = 16.dp, top = 16.dp, bottom = 2.dp), style = MaterialTheme.typography.labelLarge)
+}
 
 @Composable
 internal fun Section(title: Int) {

@@ -279,6 +279,14 @@
     <string name="reminder_includes_tasks_hint">La notificación lista las tareas sin marcar (hasta 3).</string>
     <string name="sync_in_background">Sincronizar en segundo plano</string>
     <string name="sync_in_background_hint">Cada unos 15 minutos, cuando Android lo permita. Apagado: solo sincroniza al abrir la app, al editar o a mano.</string>
+    <string name="keyboard_on_open">Teclado al abrir una nota</string>
+    <string name="keyboard_new_only">Solo en las notas nuevas</string>
+    <string name="keyboard_always">En todas las notas</string>
+    <string name="keyboard_never">Nunca</string>
+    <string name="settings_tab_general">General</string>
+    <string name="settings_tab_appearance">Aspecto</string>
+    <string name="settings_tab_notes">Notas</string>
+    <string name="settings_tab_alerts">Avisos</string>
     <string name="hide_done_tasks">Ocultar las tareas hechas</string>
     <string name="hide_done_tasks_hint">El texto no cambia: solo se esconden al editar y puedes volver a verlas desde la nota.</string>
     <string name="hide_done_after">Ocultar después de</string>

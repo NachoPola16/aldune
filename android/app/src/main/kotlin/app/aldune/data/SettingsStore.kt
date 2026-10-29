@@ -55,6 +55,8 @@ data class AppSettings(
     val syncInBackground: Boolean = true,
     /** Esconder en el editor las tareas hechas pasado un plazo (`HiddenTasks`). El texto no cambia: se pueden volver a enseñar. */
     val hideDoneTasks: Boolean = false,
+    /** Cuándo se abre el teclado solo al abrir una nota (`KeyboardOnOpen`): 0 nunca, 1 solo en las nuevas (por defecto), 2 siempre. */
+    val keyboardOnOpen: Int = 1,
     /** Horas que una tarea hecha sigue a la vista antes de esconderse. */
     val hideDoneAfterHours: Int = 24,
     /** La bienvenida de la primera vez ya se enseñó (o no hacía falta: ya había notas). */
@@ -120,6 +122,7 @@ class SettingsStore(context: Context) {
             reminderIncludesTasks = prefs.getBoolean(REMINDER_INCLUDES_TASKS, d.reminderIncludesTasks),
             syncInBackground = prefs.getBoolean(SYNC_IN_BACKGROUND, d.syncInBackground),
             hideDoneTasks = prefs.getBoolean(HIDE_DONE_TASKS, d.hideDoneTasks),
+            keyboardOnOpen = prefs.getInt(KEYBOARD_ON_OPEN, d.keyboardOnOpen).takeIf { it in 0..2 } ?: d.keyboardOnOpen,
             hideDoneAfterHours = prefs.getInt(HIDE_DONE_AFTER_HOURS, d.hideDoneAfterHours).coerceIn(1, 24 * 365),
             welcomeSeen = prefs.getBoolean(WELCOME_SEEN, d.welcomeSeen),
             backupNoticeDismissed = prefs.getBoolean(BACKUP_NOTICE_DISMISSED, d.backupNoticeDismissed),
@@ -154,6 +157,7 @@ class SettingsStore(context: Context) {
             .putBoolean(REMINDER_INCLUDES_TASKS, settings.reminderIncludesTasks)
             .putBoolean(SYNC_IN_BACKGROUND, settings.syncInBackground)
             .putBoolean(HIDE_DONE_TASKS, settings.hideDoneTasks)
+            .putInt(KEYBOARD_ON_OPEN, settings.keyboardOnOpen)
             .putInt(HIDE_DONE_AFTER_HOURS, settings.hideDoneAfterHours)
             .putBoolean(WELCOME_SEEN, settings.welcomeSeen)
             .putBoolean(BACKUP_NOTICE_DISMISSED, settings.backupNoticeDismissed)
@@ -195,6 +199,7 @@ class SettingsStore(context: Context) {
         const val REMINDER_INCLUDES_TASKS = "reminderIncludesTasks"
         const val SYNC_IN_BACKGROUND = "syncInBackground"
         const val HIDE_DONE_TASKS = "hideDoneTasks"
+        const val KEYBOARD_ON_OPEN = "keyboardOnOpen"
         const val HIDE_DONE_AFTER_HOURS = "hideDoneAfterHours"
     }
 }
