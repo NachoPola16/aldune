@@ -55,8 +55,8 @@ data class AppSettings(
     val syncInBackground: Boolean = true,
     /** Esconder en el editor las tareas hechas pasado un plazo (`HiddenTasks`). El texto no cambia: se pueden volver a enseñar. */
     val hideDoneTasks: Boolean = false,
-    /** Cuándo se abre el teclado solo al abrir una nota (`KeyboardOnOpen`): 0 nunca, 1 solo en las nuevas (por defecto), 2 siempre. */
-    val keyboardOnOpen: Int = 1,
+    /** Cuándo se abre el teclado solo al abrir una nota (`KeyboardOnOpen`): 0 nunca (por defecto), 1 solo en las nuevas, 2 siempre. */
+    val keyboardOnOpen: Int = 0,
     /** Horas que una tarea hecha sigue a la vista antes de esconderse. */
     val hideDoneAfterHours: Int = 24,
     /** La bienvenida de la primera vez ya se enseñó (o no hacía falta: ya había notas). */

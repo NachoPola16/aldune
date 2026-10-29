@@ -184,9 +184,9 @@ fun SettingsScreen(viewModel: NotesViewModel, onClose: () -> Unit) {
                     }
                     HorizontalDivider(Modifier.padding(vertical = 12.dp))
                     GroupLabel(stringResource(R.string.keyboard_on_open))
+                    Choice(stringResource(R.string.keyboard_never), settings.keyboardOnOpen == KeyboardOnOpen.NEVER) { viewModel.updateSettings { it.copy(keyboardOnOpen = KeyboardOnOpen.NEVER) } }
                     Choice(stringResource(R.string.keyboard_new_only), settings.keyboardOnOpen == KeyboardOnOpen.NEW_NOTES) { viewModel.updateSettings { it.copy(keyboardOnOpen = KeyboardOnOpen.NEW_NOTES) } }
                     Choice(stringResource(R.string.keyboard_always), settings.keyboardOnOpen == KeyboardOnOpen.ALWAYS) { viewModel.updateSettings { it.copy(keyboardOnOpen = KeyboardOnOpen.ALWAYS) } }
-                    Choice(stringResource(R.string.keyboard_never), settings.keyboardOnOpen == KeyboardOnOpen.NEVER) { viewModel.updateSettings { it.copy(keyboardOnOpen = KeyboardOnOpen.NEVER) } }
                     HorizontalDivider(Modifier.padding(vertical = 12.dp))
                     SwitchRow(stringResource(R.string.large_checkboxes), stringResource(R.string.large_checkboxes_hint), settings.largeCheckboxes) { on ->
                         viewModel.updateSettings { it.copy(largeCheckboxes = on) }
