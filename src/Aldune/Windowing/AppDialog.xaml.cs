@@ -26,6 +26,8 @@ public partial class AppDialog : Window
         MessageBoxResult defaultResult)
     {
         InitializeComponent();
+        // Con «Tamaño del texto» al 130 o 150 % la ventana crece con él (ver ThemeManager.ScaleWindowToText).
+        ThemeManager.ScaleWindowToText(this);
         // Sin esto, al abrirlo justo después de repintar toda la app (cambio de aspecto) se ve el cristal
         // del WindowChrome sin pintar: el cuadro transparente y sin texto de un fotograma.
         NativeMethods.CloakUntilFirstFrame(this);

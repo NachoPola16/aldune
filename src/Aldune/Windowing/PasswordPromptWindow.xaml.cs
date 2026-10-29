@@ -28,6 +28,8 @@ internal partial class PasswordPromptWindow : Window
     private PasswordPromptWindow(PasswordPromptMode mode, Func<string, bool>? verify)
     {
         InitializeComponent();
+        // Con «Tamaño del texto» al 130 o 150 % la ventana crece con él (ver ThemeManager.ScaleWindowToText).
+        ThemeManager.ScaleWindowToText(this);
         NativeMethods.CloakUntilFirstFrame(this);
         _confirm = mode == PasswordPromptMode.Protect;
         _nameOnly = mode == PasswordPromptMode.VisibleName;

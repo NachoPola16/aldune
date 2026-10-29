@@ -75,6 +75,9 @@ public static class ConfigFields
         Bool("recentHotkeyEnabled", nameof(AppSettings.RecentNoteHotkeyEnabled), ConfigSections.Settings, s => s.RecentNoteHotkeyEnabled, (s, v) => s.RecentNoteHotkeyEnabled = v),
         NullableUInt("recentHotkeyModifiers", nameof(AppSettings.RecentNoteHotkeyModifiers), ConfigSections.Settings, s => s.RecentNoteHotkeyModifiers, (s, v) => s.RecentNoteHotkeyModifiers = v),
         NullableUInt("recentHotkeyKey", nameof(AppSettings.RecentNoteHotkeyKey), ConfigSections.Settings, s => s.RecentNoteHotkeyKey, (s, v) => s.RecentNoteHotkeyKey = v),
+        Bool("managerHotkeyEnabled", nameof(AppSettings.ManagerHotkeyEnabled), ConfigSections.Settings, s => s.ManagerHotkeyEnabled, (s, v) => s.ManagerHotkeyEnabled = v),
+        NullableUInt("managerHotkeyModifiers", nameof(AppSettings.ManagerHotkeyModifiers), ConfigSections.Settings, s => s.ManagerHotkeyModifiers, (s, v) => s.ManagerHotkeyModifiers = v),
+        NullableUInt("managerHotkeyKey", nameof(AppSettings.ManagerHotkeyKey), ConfigSections.Settings, s => s.ManagerHotkeyKey, (s, v) => s.ManagerHotkeyKey = v),
         Enum<EdgePosition>("dockEdge", nameof(AppSettings.DockEdge), ConfigSections.Settings, s => s.DockEdge, (s, v) => s.DockEdge = v),
         Enum<DockAlignment>("dockAlignment", nameof(AppSettings.DockAlignment), ConfigSections.Settings, s => s.DockAlignment, (s, v) => s.DockAlignment = v),
         Enum<DockViewKind>("dockView", nameof(AppSettings.DockView), ConfigSections.Settings, s => s.DockView, (s, v) => s.DockView = v),
@@ -92,6 +95,7 @@ public static class ConfigFields
         NullableBool("rememberNoteSizes", nameof(AppSettings.RememberNoteSizes), ConfigSections.Settings, s => s.RememberNoteSizes, (s, v) => s.RememberNoteSizes = v),
         Bool("checkForUpdates", nameof(AppSettings.CheckForUpdatesAutomatically), ConfigSections.Settings, s => s.CheckForUpdatesAutomatically, (s, v) => s.CheckForUpdatesAutomatically = v),
         Bool("reminderIncludesTasks", nameof(AppSettings.ReminderIncludesTasks), ConfigSections.Settings, s => s.ReminderIncludesTasks, (s, v) => s.ReminderIncludesTasks = v),
+        Int("textScale", nameof(AppSettings.TextScalePercent), ConfigSections.Settings, 50, 200, s => s.TextScalePercent, (s, v) => s.TextScalePercent = TextScale.Normalize(v)),
     ];
 
     private static ConfigField Custom(string id, string property, ConfigSections section, Func<AppSettings, object?> get,

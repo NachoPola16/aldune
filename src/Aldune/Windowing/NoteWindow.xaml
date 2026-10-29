@@ -33,7 +33,20 @@
         <SolidColorBrush x:Key="NotePlaceholderBrush" Color="#1E1A14" />
         <SolidColorBrush x:Key="NoteHoverBrush" Color="#40000000" />
         <SolidColorBrush x:Key="NoteTaskHoverBrush" Color="#26000000" />
+        <!-- Foco de teclado de los botones de la nota: del color de la tinta de ESTA cara, porque el anillo de la paleta
+             del chrome no tiene por qué verse sobre un amarillo o un verde pastel. -->
+        <Style x:Key="NoteFocusVisual">
+            <Setter Property="Control.Template">
+                <Setter.Value>
+                    <ControlTemplate>
+                        <Border Margin="-2" BorderThickness="2" IsHitTestVisible="False" SnapsToDevicePixels="True"
+                                BorderBrush="{DynamicResource NoteInkBrush}" CornerRadius="{DynamicResource AlduneRadius4}" />
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
         <Style x:Key="NoteActionButtonStyle" TargetType="Button">
+            <Setter Property="FocusVisualStyle" Value="{StaticResource NoteFocusVisual}" />
             <Setter Property="Background" Value="#26000000" />
             <Setter Property="BorderThickness" Value="0" />
             <Setter Property="Template">
@@ -500,7 +513,7 @@
              izquierda de una casilla de tarea es parte del cuadro de texto, y un clic ahí pone el
              cursor delante de la casilla. Como Margin quedaba fuera del TextBox y no hacía nada. -->
         <Grid x:Name="BodyHost" Grid.Row="2" Margin="0,14,20,20">
-            <TextBlock Text="{x:Static res:Strings.BodyPlaceholder}" FontFamily="{DynamicResource AlduneNoteFont}" FontSize="14" Margin="20,0,0,0"
+            <TextBlock x:Name="BodyPlaceholder" Text="{x:Static res:Strings.BodyPlaceholder}" FontFamily="{DynamicResource AlduneNoteFont}" FontSize="{DynamicResource AlduneNoteBodySize}" Margin="20,0,0,0"
                        Style="{StaticResource PlaceholderStyle}" TextWrapping="Wrap" />
             <!-- Tinta tintada hacia el cálido, nunca #000 puro: sobre un pastel, el negro
                  absoluto es el único color de la ventana que no comparte hue con nada. -->
@@ -510,7 +523,7 @@
                      AcceptsTab="True"
                      TextWrapping="Wrap"
                      FontFamily="{DynamicResource AlduneNoteBodyFont}"
-                     FontSize="14"
+                     FontSize="{DynamicResource AlduneNoteBodySize}"
                      TextBlock.LineHeight="{DynamicResource AlduneNoteLineHeight}"
                      TextBlock.LineStackingStrategy="BlockLineHeight"
                      Foreground="#1E1A14"
@@ -658,15 +671,18 @@
                 </Grid>
                 <TextBlock x:Name="FindCount" FontSize="11" Margin="6,0,6,0" VerticalAlignment="Center"
                            Foreground="{DynamicResource NoteInkBrush}" Opacity="0.7" />
-                <Button Content="&#xE70E;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" FontSize="11" Width="22" Height="22"
+                <Button Content="&#xE70E;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" FontSize="11" Width="24" Height="24"
                         Style="{StaticResource NoteActionButtonStyle}" Foreground="{DynamicResource NoteInkBrush}"
-                        ToolTip="{x:Static res:Strings.FindPreviousTooltip}" Click="OnFindPreviousClick" Focusable="False" />
-                <Button Content="&#xE70D;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" FontSize="11" Width="22" Height="22" Margin="2,0,0,0"
+                        ToolTip="{x:Static res:Strings.FindPreviousTooltip}" Click="OnFindPreviousClick" 
+                        AutomationProperties.Name="{x:Static res:Strings.FindPreviousTooltip}" />
+                <Button Content="&#xE70D;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" FontSize="11" Width="24" Height="24" Margin="2,0,0,0"
                         Style="{StaticResource NoteActionButtonStyle}" Foreground="{DynamicResource NoteInkBrush}"
-                        ToolTip="{x:Static res:Strings.FindNextTooltip}" Click="OnFindNextClick" Focusable="False" />
-                <Button Content="&#xE711;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" FontSize="11" Width="22" Height="22" Margin="2,0,0,0"
+                        ToolTip="{x:Static res:Strings.FindNextTooltip}" Click="OnFindNextClick" 
+                        AutomationProperties.Name="{x:Static res:Strings.FindNextTooltip}" />
+                <Button Content="&#xE711;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" FontSize="11" Width="24" Height="24" Margin="2,0,0,0"
                         Style="{StaticResource NoteActionButtonStyle}" Foreground="{DynamicResource NoteInkBrush}"
-                        ToolTip="{x:Static res:Strings.FindCloseTooltip}" Click="OnFindCloseClick" Focusable="False" />
+                        ToolTip="{x:Static res:Strings.FindCloseTooltip}" Click="OnFindCloseClick" 
+                        AutomationProperties.Name="{x:Static res:Strings.FindCloseTooltip}" />
             </StackPanel>
         </Border>
         <Border x:Name="FaceStripe" Grid.Row="1" Grid.RowSpan="3" Width="3" HorizontalAlignment="Left"

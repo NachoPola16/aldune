@@ -42,6 +42,12 @@ public sealed record HotkeyBinding(uint Modifiers, uint Key)
     public static HotkeyBinding RecentNoteDefault => new(ModControl | ModAlt, 0x4C);
 
     /// <summary>
+    /// Ctrl + Alt + M: abrir el gestor de notas (M de manage). Opcional y apagado de fábrica. Mismo criterio que
+    /// <see cref="RecentNoteDefault"/>: Ctrl+Alt, sin Win, y una letra que Windows no usa para nada.
+    /// </summary>
+    public static HotkeyBinding ManagerDefault => new(ModControl | ModAlt, 0x4D);
+
+    /// <summary>
     /// Si la combinación es registrable. Sin al menos un modificador, un atajo global se tragaría
     /// esa tecla en todo el sistema, que es justo lo que no debe hacer una app de notas.
     /// </summary>

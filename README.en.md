@@ -23,7 +23,10 @@ their own. No account, no required cloud, and the content is encrypted.
 - **Optional sync** between devices through a shared folder or NAS, your own server (Docker) or
   WebDAV / Nextcloud, end-to-end encrypted. See [docs/SYNC.md](docs/SYNC.md) (in Spanish).
 - **Automatic backups**: one a day, the 7 most recent are kept.
-- In **English** and **Spanish**.
+- **Accessible**: a visible focus ring when navigating with Tab, note colors chosen with the arrow keys, “Text size” (100–150 %) and per-note zoom with
+  `Ctrl` + mouse wheel, and Windows high contrast. The dock opens with the mouse; without one, the optional `Ctrl+Alt+M` shortcut (Settings → General)
+  opens the notes list (Enter opens a note, Space selects it). More in “Quick help” in Settings.
+- In **English**, **Spanish**, **German**, **French** and **Brazilian Portuguese**.
 
 ## Install
 

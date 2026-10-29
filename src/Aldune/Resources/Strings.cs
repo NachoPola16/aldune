@@ -346,6 +346,8 @@ public static class Strings
         "Tastenkürzel für neue Notiz (Kombination)", "Raccourci de nouvelle note (combinaison)", "Atalho de nova nota (combinação)");
     public static string ConfigFieldRecentHotkeyCombo => T("Last note shortcut (combination)", "Atajo de la última nota (combinación)",
         "Tastenkürzel für letzte Notiz (Kombination)", "Raccourci de la dernière note (combinaison)", "Atalho da última nota (combinação)");
+    public static string ConfigFieldManagerHotkeyCombo => T("Open notes shortcut (combination)", "Atajo de abrir las notas (combinación)",
+        "Tastenkürzel zum Öffnen der Notizen (Kombination)", "Raccourci d'ouverture des notes (combinaison)", "Atalho para abrir as notas (combinação)");
     public static string ConfigImportDone => T("Settings imported.", "Configuración importada.",
         "Einstellungen importiert.", "Configuration importée.", "Configuração importada.");
 
@@ -372,6 +374,10 @@ public static class Strings
         "recentHotkeyEnabled" => T("Last note shortcut", "Atajo de la última nota", "Tastenkürzel für letzte Notiz", "Raccourci de la dernière note", "Atalho da última nota"),
         "recentHotkeyModifiers" => T("Last note shortcut (modifier keys)", "Atajo de la última nota (modificadores)", "Tastenkürzel für letzte Notiz (Zusatztasten)", "Raccourci de la dernière note (touches modificatrices)", "Atalho da última nota (teclas modificadoras)"),
         "recentHotkeyKey" => T("Last note shortcut (key)", "Atajo de la última nota (tecla)", "Tastenkürzel für letzte Notiz (Taste)", "Raccourci de la dernière note (touche)", "Atalho da última nota (tecla)"),
+        "managerHotkeyEnabled" => T("Open notes shortcut", "Atajo de abrir las notas", "Tastenkürzel zum Öffnen der Notizen", "Raccourci d'ouverture des notes", "Atalho para abrir as notas"),
+        "managerHotkeyModifiers" => T("Open notes shortcut (modifier keys)", "Atajo de abrir las notas (modificadores)", "Tastenkürzel zum Öffnen der Notizen (Zusatztasten)", "Raccourci d'ouverture des notes (touches modificatrices)", "Atalho para abrir as notas (teclas modificadoras)"),
+        "managerHotkeyKey" => T("Open notes shortcut (key)", "Atajo de abrir las notas (tecla)", "Tastenkürzel zum Öffnen der Notizen (Taste)", "Raccourci d'ouverture des notes (touche)", "Atalho para abrir as notas (tecla)"),
+        "textScale" => T("Text size", "Tamaño del texto", "Textgröße", "Taille du texte", "Tamanho do texto"),
         "dockEdge" => T("Dock edge", "Borde del dock", "Dock-Rand", "Bord du dock", "Borda do dock"),
         "dockView" => T("Dock view", "Vista del dock", "Dock-Ansicht", "Vue du dock", "Visualização do dock"),
         "keepDockOpen" => T("Keep dock open", "Mantener el dock abierto", "Dock geöffnet lassen", "Garder le dock ouvert", "Manter o dock aberto"),
@@ -866,11 +872,24 @@ public static class Strings
         "Vous pouvez aussi le supprimer depuis le Gestionnaire des tâches, dans l'onglet Démarrage.",
         "Você também pode removê-lo pelo Gerenciador de Tarefas, na guia Inicializar.");
 
+    public static string TextScaleTitle => T("Text size", "Tamaño del texto", "Textgröße", "Taille du texte", "Tamanho do texto");
+    public static string TextScaleHint => T(
+        "Makes the text of the app and of your notes larger. In a note, Ctrl + mouse wheel (or Ctrl + plus / minus, Ctrl + 0 to reset) zooms just that note.",
+        "Agranda el texto de la aplicación y de tus notas. En una nota, Ctrl + rueda del ratón (o Ctrl + más / menos, Ctrl + 0 para volver) amplía solo esa nota.",
+        "Vergrößert den Text der App und deiner Notizen. In einer Notiz zoomt Strg + Mausrad (oder Strg + Plus / Minus, Strg + 0 zum Zurücksetzen) nur diese Notiz.",
+        "Agrandit le texte de l'application et de vos notes. Dans une note, Ctrl + molette (ou Ctrl + plus / moins, Ctrl + 0 pour revenir) n'agrandit que cette note.",
+        "Aumenta o texto do aplicativo e das suas notas. Em uma nota, Ctrl + roda do mouse (ou Ctrl + mais / menos, Ctrl + 0 para voltar) amplia só essa nota.");
     public static string RecentNoteHotkeyCheckbox => T("Open the last edited note with a keyboard shortcut",
         "Abrir la última nota editada con un atajo de teclado",
         "Zuletzt bearbeitete Notiz mit Tastenkombination öffnen",
         "Ouvrir la dernière note modifiée avec un raccourci clavier",
         "Abrir a última nota editada com um atalho de teclado");
+
+    public static string ManagerHotkeyCheckbox => T("Open the notes list with a keyboard shortcut",
+        "Abrir la lista de notas con un atajo de teclado",
+        "Notizenliste mit Tastenkombination öffnen",
+        "Ouvrir la liste des notes avec un raccourci clavier",
+        "Abrir a lista de notas com um atalho de teclado");
 
     public static string HotkeyCheckbox => T("Create a note with a keyboard shortcut", "Crear una nota con un atajo de teclado",
         "Notiz mit Tastenkombination erstellen",
@@ -1532,6 +1551,31 @@ public static class Strings
         "Hilfe", "Aide", "Ajuda");
     public static string SettingsPageAbout => T("About", "Acerca de",
         "Info", "À propos", "Sobre");
+    public static string QuickHelpKeyboardGroup => T("Without the mouse", "Sin ratón", "Ohne Maus", "Sans souris", "Sem mouse");
+    public static string QuickHelpKeyboardManagerOn(string combo) =>
+        T($"• {combo} opens the list of notes: Tab or the arrow keys move between notes, Enter opens one, Space selects it.",
+          $"• {combo} abre la lista de notas: Tab o las flechas se mueven entre notas, Intro abre una y Espacio la marca.",
+          $"• {combo} öffnet die Notizenliste: Tab oder die Pfeiltasten wechseln zwischen Notizen, Eingabe öffnet eine, Leertaste markiert sie.",
+          $"• {combo} ouvre la liste des notes : Tab ou les flèches passent d'une note à l'autre, Entrée en ouvre une, Espace la sélectionne.",
+          $"• {combo} abre a lista de notas: Tab ou as setas se movem entre notas, Enter abre uma e Espaço a seleciona.");
+    public static string QuickHelpKeyboardManagerOff => T(
+        "• The dock opens with the mouse. To reach a note with the keyboard, turn on “Open the notes list with a keyboard shortcut” above, or use the tray icon.",
+        "• El dock se abre con el ratón. Para llegar a una nota con el teclado, activa arriba «Abrir la lista de notas con un atajo de teclado» o usa el icono de la bandeja.",
+        "• Das Dock öffnet sich mit der Maus. Um eine Notiz per Tastatur zu erreichen, aktiviere oben „Notizenliste mit Tastenkombination öffnen“ oder nutze das Taskleistensymbol.",
+        "• Le dock s'ouvre à la souris. Pour atteindre une note au clavier, activez plus haut « Ouvrir la liste des notes avec un raccourci clavier » ou utilisez l'icône de la barre d'état.",
+        "• O dock abre com o mouse. Para chegar a uma nota pelo teclado, ative acima «Abrir a lista de notas com um atalho de teclado» ou use o ícone da bandeja.");
+    public static string QuickHelpKeyboardZoom => T(
+        "• In a note, Ctrl + mouse wheel (or Ctrl + plus / minus, Ctrl + 0 to reset) zooms its text. In Settings, “Text size” enlarges the whole app.",
+        "• En una nota, Ctrl + rueda del ratón (o Ctrl + más / menos, Ctrl + 0 para volver) amplía su texto. En Ajustes, «Tamaño del texto» agranda toda la aplicación.",
+        "• In einer Notiz zoomt Strg + Mausrad (oder Strg + Plus / Minus, Strg + 0 zum Zurücksetzen) den Text. In den Einstellungen vergrößert „Textgröße“ die ganze App.",
+        "• Dans une note, Ctrl + molette (ou Ctrl + plus / moins, Ctrl + 0 pour revenir) agrandit son texte. Dans les paramètres, « Taille du texte » agrandit toute l'application.",
+        "• Em uma nota, Ctrl + roda do mouse (ou Ctrl + mais / menos, Ctrl + 0 para voltar) amplia o texto. Em Ajustes, «Tamanho do texto» aumenta todo o aplicativo.");
+    public static string QuickHelpKeyboardFocus => T(
+        "• Tab moves between buttons and a ring shows where you are; Space or Enter presses. Colors are chosen with the arrow keys and Space. With a Windows high-contrast theme, Aldune uses its colors.",
+        "• Tab pasa de un botón a otro y un anillo marca dónde estás; Espacio o Intro pulsa. Los colores se eligen con las flechas y Espacio. Con un tema de alto contraste de Windows, Aldune usa sus colores.",
+        "• Tab wechselt zwischen Schaltflächen, ein Ring zeigt, wo du bist; Leertaste oder Eingabe drückt. Farben wählst du mit den Pfeiltasten und der Leertaste. Mit einem Windows-Kontrastdesign nutzt Aldune dessen Farben.",
+        "• Tab passe d'un bouton à l'autre et un anneau montre où vous êtes ; Espace ou Entrée appuie. Les couleurs se choisissent avec les flèches et Espace. Avec un thème à contraste élevé de Windows, Aldune utilise ses couleurs.",
+        "• Tab passa de um botão a outro e um anel mostra onde você está; Espaço ou Enter aciona. As cores se escolhem com as setas e Espaço. Com um tema de alto contraste do Windows, o Aldune usa as cores dele.");
     public static string QuickHelpDockGroup => T("The dock", "El dock",
         "Das Dock", "Le dock", "O dock");
     public static string QuickHelpNotesGroup => T("Notes", "Notas",

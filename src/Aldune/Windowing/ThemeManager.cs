@@ -20,6 +20,19 @@ public static class ThemeManager
 
     public static bool IsLight { get; private set; }
 
+    /// <summary>Hay un tema de alto contraste de Windows activo y la paleta sale de sus colores de sistema.</summary>
+    public static bool IsHighContrast { get; private set; }
+
+    /// <summary>
+    /// El aspecto con el que se pide la piel (fuentes, esquinas, bordes): en alto contraste los aspectos retro no valen, ni sus
+    /// degradados ni sus biseles, y se usa la piel lisa de Oscuro o Claro según el fondo del sistema.
+    /// </summary>
+    public static AppearanceMode SkinMode(AppearanceMode mode) =>
+        !SystemParameters.HighContrast ? mode
+        : AppPalette.IsLightHighContrast(Hex(SystemColors.WindowColor)) ? AppearanceMode.Light : AppearanceMode.Dark;
+
+    private static string Hex(System.Windows.Media.Color color) => $"#{color.R:X2}{color.G:X2}{color.B:X2}";
+
     public static AppSkin Skin { get; private set; } = AppSkin.Default;
 
     /// <summary>Ajuste «Casillas grandes»: elige la fuente de las casillas y la zona de clic de NoteWindow.</summary>
@@ -30,6 +43,48 @@ public static class ThemeManager
 
     public static event Action? Changed;
 
+    // Tamaños base de la escala tipográfica del chrome (los de App.xaml) y del cuerpo de la nota.
+    private static readonly (string Key, double Size)[] TextSizes =
+    [
+        ("AlduneTextSmall", 11), ("AlduneTextCaption", 12), ("AlduneTextBody", 13), ("AlduneTextLarge", 14),
+        ("AlduneTextTitle", 15), ("AlduneTextHeading", 17),
+    ];
+
+    private const double NoteBodyBaseSize = 14;
+
+    /// <summary>«Tamaño del texto» activo, como multiplicador (1 = el de siempre).</summary>
+    public static double TextFactor { get; private set; } = 1;
+
+    /// <summary>
+    /// Pone el tamaño del texto de Ajustes: reescribe los cuatro tamaños de la escala (que las ventanas leen con
+    /// <c>DynamicResource</c>, así que se ven al instante) y los de la nota (cuerpo, título e interlineado, vía la piel).
+    /// Redondea a píxeles enteros: el texto se renderiza en modo Display y un tamaño con fracción sale borroso.
+    /// </summary>
+    /// <summary>
+    /// Agranda una ventana de tamaño fijo (Ajustes, gestor, diálogos) en la misma proporción que el texto, al crearla: un diálogo de
+    /// 380 px con letra al 150 % partiría cada frase en tres. Sin pasarse de la pantalla. Las notas (que el usuario dimensiona), el dock
+    /// (que calcula su geometría) y los avisos (que se ajustan solos) no pasan por aquí.
+    /// </summary>
+    internal static void ScaleWindowToText(Window window)
+    {
+        if (TextFactor <= 1.001) return;
+        var work = SystemParameters.WorkArea;
+        double Grow(double value, double limit) => double.IsNaN(value) || value <= 0 ? value : Math.Min(Math.Round(value * TextFactor), limit);
+        window.Width = Grow(window.Width, work.Width * 0.9);
+        window.MinWidth = Grow(window.MinWidth, work.Width * 0.9);
+        // Con SizeToContent=Height el alto lo da el contenido: tocarlo aquí lo fijaría.
+        if (window.SizeToContent is not (SizeToContent.Height or SizeToContent.WidthAndHeight))
+            window.Height = Grow(window.Height, work.Height * 0.9);
+        window.MinHeight = Grow(window.MinHeight, work.Height * 0.9);
+    }
+
+    public static void ApplyTextScale(Application app, int percent)
+    {
+        TextFactor = TextScale.Factor(percent);
+        foreach (var (key, size) in TextSizes) app.Resources[key] = Math.Round(size * TextFactor);
+        ApplySkin(app, Skin);
+    }
+
     /// <summary>Valor actual de una clave de la paleta, para quien pinta fuera de WPF.</summary>
     public static string Color(string token) => _palette[token];
 
@@ -39,7 +94,12 @@ public static class ThemeManager
     public static void Apply(Application app, AppearanceMode mode, IReadOnlyDictionary<string, string>? aspectColors = null)
     {
         bool windowsLight = WindowsUsesLightTheme();
-        var palette = AppPalette.For(mode, windowsLight, aspectColors);
+        bool highContrast = SystemParameters.HighContrast;
+        // Con un tema de alto contraste, los colores son los del sistema (fondo, texto, resaltado...), elija lo que elija Ajustes.
+        var palette = highContrast
+            ? AppPalette.HighContrast(Hex(SystemColors.WindowColor), Hex(SystemColors.WindowTextColor), Hex(SystemColors.HighlightColor),
+                Hex(SystemColors.HighlightTextColor), Hex(SystemColors.GrayTextColor), Hex(SystemColors.HotTrackColor))
+            : AppPalette.For(mode, windowsLight, aspectColors);
         var dictionary = new ResourceDictionary();
         foreach (var (token, hex) in palette)
         {
@@ -48,6 +108,11 @@ public static class ThemeManager
             dictionary[$"Aldune{token}Brush"] = brush;
         }
 
+        // El anillo del foco se calcula de la paleta (no es una de sus claves): ver AppPalette.FocusRing.
+        var ring = new SolidColorBrush((System.Windows.Media.Color)ColorConverter.ConvertFromString(AppPalette.FocusRing(palette)));
+        ring.Freeze();
+        dictionary["AlduneFocusRingBrush"] = ring;
+
         if (_current is not null) app.Resources.MergedDictionaries.Remove(_current);
         app.Resources.MergedDictionaries.Add(dictionary);
         _current = dictionary;
@@ -55,7 +120,8 @@ public static class ThemeManager
         // El degradado de la barra sale de la paleta: se rehace con ella. También deja las fuentes
         // puestas a quien solo llama a Apply.
         ApplySkin(app, Skin);
-        IsLight = AppPalette.IsLight(mode, windowsLight);
+        IsHighContrast = highContrast;
+        IsLight = highContrast ? AppPalette.IsLightHighContrast(Hex(SystemColors.WindowColor)) : AppPalette.IsLight(mode, windowsLight);
         Changed?.Invoke();
     }
 
@@ -77,9 +143,10 @@ public static class ThemeManager
             // tick). Va DETRÁS para que el interlineado lo marque la fuente de la nota, no ella.
             ["AlduneNoteBodyFont"] = new FontFamily(new Uri("pack://application:,,,/aldune;component/"), $"{noteFont.Source}, ./Assets/#{(LargeCheckboxes ? "AlduneCheckLarge" : "AlduneCheck")}"),
             ["AlduneNoteTitleFont"] = new FontFamily(skin.NoteTitleFont),
-            ["AlduneNoteTitleFontSize"] = skin.NoteTitleFontSize,
+            ["AlduneNoteTitleFontSize"] = Math.Round(skin.NoteTitleFontSize * TextFactor),
+            ["AlduneNoteBodySize"] = Math.Round(NoteBodyBaseSize * TextFactor),
             // NaN = el interlineado natural de la fuente (lo de siempre).
-            ["AlduneNoteLineHeight"] = skin.NoteLineHeight > 0 ? skin.NoteLineHeight : double.NaN,
+            ["AlduneNoteLineHeight"] = skin.NoteLineHeight > 0 ? Math.Round(skin.NoteLineHeight * TextFactor) : double.NaN,
             ["AlduneTitleBarFill"] = TitleBarFill(skin.TitleBar),
         };
 

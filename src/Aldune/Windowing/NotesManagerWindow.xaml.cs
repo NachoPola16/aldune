@@ -43,6 +43,8 @@ public partial class NotesManagerWindow : Window
     public NotesManagerWindow(NotesRepository repository, AppCoordinator coordinator, string? tagFilter = null)
     {
         InitializeComponent();
+        // Con «Tamaño del texto» al 130 o 150 % la ventana crece con él (ver ThemeManager.ScaleWindowToText).
+        ThemeManager.ScaleWindowToText(this);
         NativeMethods.CloakUntilFirstFrame(this);
         WindowCloseAnimation.Attach(this);
         KeyDown += OnWindowKeyDown;
@@ -650,6 +652,34 @@ public partial class NotesManagerWindow : Window
         }
 
         SelectFromRow(row, Keyboard.Modifiers);
+        e.Handled = true;
+    }
+
+    /// <summary>
+    /// Lo que el ratón hace con una fila, con teclado: Intro abre la nota, Espacio la marca (con Mayús, el intervalo) y las flechas
+    /// pasan a la fila de arriba o de abajo. Sin esto una fila recibía el foco con Tab pero no hacía nada, y el gestor, la ruta
+    /// por teclado a cualquier nota, no servía sin ratón.
+    /// </summary>
+    private void OnRowKeyDown(object sender, KeyEventArgs e)
+    {
+        if (sender is not FrameworkElement { DataContext: NoteRow row } rowElement) return;
+        // Las teclas de la casilla de dentro (Espacio) son suyas.
+        if (FindVisualAncestor<CheckBox>(e.OriginalSource as DependencyObject) is not null && e.Key == Key.Space) return;
+
+        switch (e.Key)
+        {
+            case Key.Enter:
+                _coordinator.OpenNoteById(row.Note.Id);
+                break;
+            case Key.Space:
+                SelectFromRow(row, Keyboard.Modifiers);
+                break;
+            case Key.Down or Key.Up:
+                rowElement.MoveFocus(new TraversalRequest(e.Key == Key.Down ? FocusNavigationDirection.Down : FocusNavigationDirection.Up));
+                break;
+            default:
+                return;
+        }
         e.Handled = true;
     }
 

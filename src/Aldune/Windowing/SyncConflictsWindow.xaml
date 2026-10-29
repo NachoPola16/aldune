@@ -17,7 +17,7 @@
             <Setter Property="BorderThickness" Value="0" />
             <Setter Property="Padding" Value="9,6" />
             <Setter Property="Cursor" Value="Hand" />
-            <Setter Property="FocusVisualStyle" Value="{x:Null}" />
+            <Setter Property="FocusVisualStyle" Value="{StaticResource AlduneFocusVisual}" />
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="Button">
@@ -53,9 +53,9 @@
                  texto se dibujaba por debajo de ellos (los botones van encima y lo tapaban). -->
             <StackPanel Margin="0,0,140,0">
                 <TextBlock Text="{x:Static res:Strings.SyncConflictTitle}" Foreground="{DynamicResource AlduneTextStrongBrush}"
-                           FontSize="{StaticResource AlduneTextHeading}" FontWeight="SemiBold" />
+                           FontSize="{DynamicResource AlduneTextHeading}" FontWeight="SemiBold" />
                 <TextBlock Text="{x:Static res:Strings.SyncConflictHint}" Foreground="{DynamicResource AlduneMutedTextBrush}"
-                           FontSize="{StaticResource AlduneTextBody}" TextWrapping="Wrap" Margin="0,4,0,0" />
+                           FontSize="{DynamicResource AlduneTextBody}" TextWrapping="Wrap" Margin="0,4,0,0" />
             </StackPanel>
             <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Top"
                         WindowChrome.IsHitTestVisibleInChrome="True">
@@ -89,11 +89,11 @@
                                         <RowDefinition Height="Auto" />
                                     </Grid.RowDefinitions>
                                     <TextBlock Text="{Binding LosingTitle}" Foreground="{DynamicResource AlduneTextStrongBrush}"
-                                               FontSize="{StaticResource AlduneTextBody}" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" />
+                                               FontSize="{DynamicResource AlduneTextBody}" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" />
                                     <TextBlock Grid.Row="1" Text="{Binding Details}" Foreground="{DynamicResource AlduneMutedTextBrush}"
-                                               FontSize="{StaticResource AlduneTextSmall}" TextWrapping="Wrap" Margin="0,4,0,9" />
+                                               FontSize="{DynamicResource AlduneTextSmall}" TextWrapping="Wrap" Margin="0,4,0,9" />
                                     <TextBlock Grid.Row="2" Text="{Binding Difference}" Foreground="{DynamicResource AlduneTextSoftBrush}"
-                                               FontSize="{StaticResource AlduneTextSmall}" TextWrapping="Wrap" Margin="0,0,0,9"
+                                               FontSize="{DynamicResource AlduneTextSmall}" TextWrapping="Wrap" Margin="0,0,0,9"
                                                Visibility="{Binding DifferenceVisibility}" />
                                     <StackPanel Grid.Row="3" Orientation="Horizontal">
                                         <Button Content="{x:Static res:Strings.SyncConflictRestore}"

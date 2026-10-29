@@ -2333,11 +2333,11 @@ public partial class EdgeDockWindow : Window
     private void BuildTabMenuSwatches(Note note) =>
         NoteSwatchPanel.Fill(TabMenuSwatches, _coordinator.ActiveTheme, note.Color, OnTabMenuColorClick);
 
-    private void OnTabMenuColorClick(object sender, MouseButtonEventArgs e)
+    private void OnTabMenuColorClick(object sender, RoutedEventArgs e)
     {
         if (_tabMenuNote is not { } note) return;
 
-        var color = (string)((Border)sender).Tag;
+        var color = (string)((FrameworkElement)sender).Tag;
         if (color != note.Color)
         {
             _repository.SetColor(note.Id, color);

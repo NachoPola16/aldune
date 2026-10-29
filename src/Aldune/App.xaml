@@ -12,7 +12,9 @@
              textos usan estas claves, no números sueltos. Quedan fuera las notas (su cuerpo y sus
              controles tienen medidas propias, ligadas a la piel) y los glifos de icono. -->
         <sys:Double x:Key="AlduneTextSmall">11</sys:Double>   <!-- pistas, subtítulos, estados -->
+        <sys:Double x:Key="AlduneTextCaption">12</sys:Double> <!-- botones, filas y controles compactos -->
         <sys:Double x:Key="AlduneTextBody">13</sys:Double>    <!-- el texto normal y las etiquetas -->
+        <sys:Double x:Key="AlduneTextLarge">14</sys:Double>   <!-- texto destacado -->
         <sys:Double x:Key="AlduneTextTitle">15</sys:Double>   <!-- título de una página o sección -->
         <sys:Double x:Key="AlduneTextHeading">17</sys:Double> <!-- título de una ventana o diálogo -->
         <!-- Base visual compartida. Los colores de cada nota siguen siendo independientes, pero el
@@ -24,10 +26,42 @@
              el tipo exacto Window, no con NoteWindow/EdgeDockWindow/... (ver App.OnStartup, donde un
              manejador de clase la aplica a todas las ventanas). -->
         <Style TargetType="Window">
-            <Setter Property="FontSize" Value="{StaticResource AlduneTextBody}" />
+            <Setter Property="FontSize" Value="{DynamicResource AlduneTextBody}" />
             <Setter Property="UseLayoutRounding" Value="True" />
             <Setter Property="SnapsToDevicePixels" Value="True" />
             <Setter Property="TextOptions.TextFormattingMode" Value="Display" />
+        </Style>
+
+        <!-- Anillo del foco de teclado: se ve solo al navegar con Tab o flechas (no al hacer clic). Vale para los
+             controles con plantilla propia, que tenían el foco visual apagado y dejaban a quien usa teclado sin saber
+             dónde está. Fuera del control (margen negativo) para no tapar su contenido; sigue el radio de las esquinas. -->
+        <Style x:Key="AlduneFocusVisual">
+            <Setter Property="Control.Template">
+                <Setter.Value>
+                    <ControlTemplate>
+                        <Border Margin="-3" BorderThickness="2" IsHitTestVisible="False" SnapsToDevicePixels="True"
+                                BorderBrush="{DynamicResource AlduneFocusRingBrush}"
+                                CornerRadius="{DynamicResource AlduneRadius6}" />
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- Pastilla de color de una nota: un control de verdad (ToggleButton) para que se alcance con Tab y flechas, se pulse con
+             Espacio o Intro y el lector de pantalla diga su nombre y si está elegida. El borde y el tick los pone NoteSwatchPanel. -->
+        <Style x:Key="NoteSwatchStyle" TargetType="ToggleButton">
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="FocusVisualStyle" Value="{StaticResource AlduneFocusVisual}" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ToggleButton">
+                        <Border Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="{TemplateBinding BorderThickness}" CornerRadius="{DynamicResource AlduneRadius5}">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
+                        </Border>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
         </Style>
 
         <Style x:Key="DarkComboBoxItemStyle" TargetType="ComboBoxItem">
@@ -63,7 +97,7 @@
             <Setter Property="BorderBrush" Value="{DynamicResource AlduneBorderBrush}" />
             <Setter Property="BorderThickness" Value="1" />
             <Setter Property="Padding" Value="8,5" />
-            <Setter Property="FontSize" Value="12" />
+            <Setter Property="FontSize" Value="{DynamicResource AlduneTextCaption}" />
             <Setter Property="FocusVisualStyle" Value="{x:Null}" />
             <Setter Property="ItemContainerStyle" Value="{StaticResource DarkComboBoxItemStyle}" />
             <Setter Property="Template">
@@ -123,7 +157,7 @@
 
         <Style x:Key="AppCheckBoxStyle" TargetType="CheckBox">
             <Setter Property="Cursor" Value="Hand" />
-            <Setter Property="FocusVisualStyle" Value="{x:Null}" />
+            <Setter Property="FocusVisualStyle" Value="{StaticResource AlduneFocusVisual}" />
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="CheckBox">
@@ -198,9 +232,9 @@
              mismo panel. -->
         <Style x:Key="NoteMenuItemStyle" TargetType="Button">
             <Setter Property="Foreground" Value="{DynamicResource AlduneTextBrush}" />
-            <Setter Property="FontSize" Value="13" />
+            <Setter Property="FontSize" Value="{DynamicResource AlduneTextBody}" />
             <Setter Property="Cursor" Value="Hand" />
-            <Setter Property="FocusVisualStyle" Value="{x:Null}" />
+            <Setter Property="FocusVisualStyle" Value="{StaticResource AlduneFocusVisual}" />
             <Setter Property="HorizontalContentAlignment" Value="Left" />
             <Setter Property="Padding" Value="9,7" />
             <Setter Property="Template">
@@ -222,7 +256,7 @@
 
         <Style x:Key="NoteMenuDangerStyle" TargetType="Button" BasedOn="{StaticResource NoteMenuItemStyle}">
             <Setter Property="Foreground" Value="{DynamicResource AlduneDangerTextBrush}" />
-            <Setter Property="FocusVisualStyle" Value="{x:Null}" />
+            <Setter Property="FocusVisualStyle" Value="{StaticResource AlduneFocusVisual}" />
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="Button">
@@ -249,7 +283,7 @@
              para que se sienta parte de la misma familia visual que el resto de paneles flotantes. -->
         <Style TargetType="ToolTip">
             <Setter Property="Foreground" Value="{DynamicResource AlduneTextBrush}" />
-            <Setter Property="FontSize" Value="12" />
+            <Setter Property="FontSize" Value="{DynamicResource AlduneTextCaption}" />
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="ToolTip">
@@ -341,7 +375,7 @@
 
         <Style TargetType="MenuItem">
             <Setter Property="Foreground" Value="{DynamicResource AlduneTextBrush}" />
-            <Setter Property="FontSize" Value="13" />
+            <Setter Property="FontSize" Value="{DynamicResource AlduneTextBody}" />
             <Setter Property="Padding" Value="9,7" />
             <Setter Property="FocusVisualStyle" Value="{x:Null}" />
             <Setter Property="Template">
@@ -415,11 +449,11 @@
         <Style x:Key="ColorDialogButtonStyle" TargetType="Button">
             <Setter Property="Foreground" Value="{DynamicResource AlduneTextBrush}" />
             <Setter Property="Background" Value="{DynamicResource AlduneRaisedBrush}" />
-            <Setter Property="FontSize" Value="12" />
+            <Setter Property="FontSize" Value="{DynamicResource AlduneTextCaption}" />
             <Setter Property="Padding" Value="13,8" />
             <Setter Property="Cursor" Value="Hand" />
             <Setter Property="BorderThickness" Value="0" />
-            <Setter Property="FocusVisualStyle" Value="{x:Null}" />
+            <Setter Property="FocusVisualStyle" Value="{StaticResource AlduneFocusVisual}" />
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="Button">
@@ -516,7 +550,7 @@
 
         <Style x:Key="ColorTextBoxStyle" TargetType="TextBox" BasedOn="{StaticResource {x:Type TextBox}}">
             <Setter Property="Padding" Value="9,6" />
-            <Setter Property="FontSize" Value="13" />
+            <Setter Property="FontSize" Value="{DynamicResource AlduneTextBody}" />
         </Style>
 
         <Style TargetType="PasswordBox">

@@ -183,6 +183,89 @@ public static class AppPalette
 
     public static IReadOnlyDictionary<string, string> For(bool light) => light ? Light : Dark;
 
+    // Fondos sobre los que puede caer el anillo del foco: la ventana, los paneles y el fondo de un botón en cada estado.
+    private static readonly string[] FocusBackgrounds =
+        ["Ground", "GroundDeep", "Surface", "Popup", "Raised", "RaisedHover", "Hover", "Selected", "Pressed"];
+
+    /// <summary>Contraste mínimo del anillo del foco con cada fondo (WCAG 1.4.11, componentes de interfaz).</summary>
+    public const double FocusRingContrast = 3.0;
+
+    /// <summary>
+    /// Color del anillo del foco de teclado para una paleta. No es una clave de la paleta (esa lista es el contrato compartido con la
+    /// versión de Android, que no tiene foco de teclado): se calcula de ella. Empieza por el borde del acento, el color de la casa, y
+    /// lo aleja de cada fondo lo justo; si los fondos de una paleta se reparten a los dos lados de la claridad y ninguno sirve, usa el
+    /// texto fuerte, que ya contrasta con todos.
+    /// </summary>
+    public static string FocusRing(IReadOnlyDictionary<string, string> palette)
+    {
+        string Fit(string start)
+        {
+            foreach (var key in FocusBackgrounds)
+                start = ColorFit.Foreground(Opaque(start), Opaque(palette[key]), FocusRingContrast);
+            return start;
+        }
+
+        bool Works(string ring) => FocusBackgrounds.All(key => ColorFit.Ratio(ring, Opaque(palette[key])) >= FocusRingContrast);
+        var ring = Fit(palette["AccentBorder"]);
+        return Works(ring) ? ring : Fit(palette["TextStrong"]);
+    }
+
+    /// <summary>Si el fondo de un tema de alto contraste es claro (decide qué paleta hace de base para las claves que el sistema no da).</summary>
+    public static bool IsLightHighContrast(string window) =>
+        NoteColorContrast.TryGetLuminance(window, out var luminance) && luminance > 0.18;
+
+    // Claves de fondo (se pintan con el color de ventana) y de línea (con el de texto): en alto contraste todo se delimita con
+    // bordes y no con rellenos.
+    private static readonly string[] HcBackgrounds =
+    [
+        "Ground", "GroundDeep", "Surface", "Popup", "Raised", "RaisedHover", "Hover", "Selected", "Pressed", "Track",
+        "DangerBg", "DangerHover", "TitleBar", "TitleBarEnd", "DockPrimary", "BevelDark",
+    ];
+
+    private static readonly string[] HcInk =
+    [
+        "Text", "TextStrong", "TextSoft", "TextWarm", "MutedText", "Hint", "TextFaint", "OnTitleBar", "Divider", "BorderSubtle", "Border",
+        "FieldHover", "ScrollThumbBorder", "ScrollThumbDragBorder", "DockArrowText", "DockArrowBorder", "DockRailBorder",
+        "DockThumbBorder", "DockArrowHoverBorder", "OnDangerBg", "DangerText", "ErrorText", "ErrorBorder", "BevelLight", "Hairline",
+        "DangerStrong", "DangerStrongHover",
+    ];
+
+    /// <summary>
+    /// Paleta para un tema de alto contraste de Windows, a partir de sus colores de sistema (<c>Window</c>, <c>WindowText</c>,
+    /// <c>Highlight</c>, <c>HighlightText</c>, <c>GrayText</c>, <c>HotTrack</c>). Parte de Oscuro o Claro según el fondo para
+    /// tener todas las claves, pone los fondos en el color de ventana y el texto y los bordes en el de texto (se delimita con
+    /// líneas, no con rellenos), el acento en el resaltado y lo que no se ve en el color de ventana. Los textos tienen que
+    /// llegar a 7:1 (nivel AAA, lo que pide el propio modo) sobre cualquier fondo; los tests lo fijan con los temas de Windows.
+    /// </summary>
+    public static IReadOnlyDictionary<string, string> HighContrast(
+        string window, string windowText, string highlight, string highlightText, string grayText, string hotlight)
+    {
+        var p = new Dictionary<string, string>(For(light: IsLightHighContrast(window)));
+        foreach (var key in HcBackgrounds) p[key] = window;
+        foreach (var key in HcInk) p[key] = windowText;
+        // Sin un relleno que los distinga, los botones y las filas se confundirían con las etiquetas: un tono apenas distinto del fondo,
+        // acercado al texto lo justo y nunca por debajo de 7:1 con él.
+        foreach (var (key, amount) in new[] { ("Raised", 0.14), ("RaisedHover", 0.20), ("Hover", 0.24), ("Selected", 0.24), ("Pressed", 0.30), ("Track", 0.20) })
+            p[key] = ColorFit.Background(ColorMix.Toward(window, windowText, amount), windowText, 7.0);
+        // Un botón de peligro se pinta con el color de texto y su rótulo va con el de ventana.
+        p["OnDanger"] = window;
+        p["TextDisabled"] = ColorFit.Ratio(grayText, window) >= 4.5 ? grayText : windowText;
+        // Acento: el color de resaltado del sistema con su texto; es el único relleno con color que queda.
+        // Se ajusta lo justo si el par que da el sistema no llega a 7:1 (Aquatic: 6,2:1).
+        var fitted = ColorFit.Background(highlight, highlightText, 7.0);
+        p["Accent"] = p["AccentHover"] = p["AccentBorder"] = p["FieldFocus"] = fitted;
+        p["OnAccent"] = highlightText;
+        p["Selection"] = fitted;
+        string accent = ColorFit.Ratio(hotlight, window) >= 7.0 ? hotlight : windowText;
+        foreach (var key in new[] { "Warning", "Success", "Notice", "Attention", "Channel1", "Channel2", "Channel3", "Channel4", "PromptUser", "PromptPath" })
+            p[key] = accent;
+        // Superposiciones con alfa del dock: opacas y del color de ventana, para que no dejen ver lo de detrás.
+        p["DockBar"] = p["DockArrowHover"] = p["DockArrowPressed"] = p["DockThumb"] = window;
+        return p;
+    }
+
+    private static string Opaque(string hex) => hex.Length == 9 ? "#" + hex.Substring(3) : hex;
+
     /// <param name="aspectColors">Colores elegidos para un aspecto retro (id de hueco → hex); los
     /// aspectos de siempre los ignoran, y lo que falta se completa con los de fábrica.</param>
     public static IReadOnlyDictionary<string, string> For(

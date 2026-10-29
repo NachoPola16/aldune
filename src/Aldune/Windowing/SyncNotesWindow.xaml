@@ -14,7 +14,7 @@
             <Setter Property="Background" Value="{DynamicResource AlduneRaisedBrush}" />
             <Setter Property="BorderThickness" Value="0" />
             <Setter Property="Padding" Value="12,7" />
-            <Setter Property="FocusVisualStyle" Value="{x:Null}" />
+            <Setter Property="FocusVisualStyle" Value="{StaticResource AlduneFocusVisual}" />
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="Button">
@@ -33,7 +33,7 @@
         <Style x:Key="SyncCheckStyle" TargetType="CheckBox">
             <Setter Property="Foreground" Value="{DynamicResource AlduneTextBrush}" />
             <Setter Property="Background" Value="{DynamicResource AlduneGroundBrush}" />
-            <Setter Property="FontSize" Value="13" />
+            <Setter Property="FontSize" Value="{DynamicResource AlduneTextBody}" />
             <Setter Property="Margin" Value="0,0,0,8" />
         </Style>
     </Window.Resources>
@@ -48,9 +48,9 @@
         <Grid Grid.Row="0" Margin="20,17,14,0" MouseLeftButtonDown="OnHeaderMouseLeftButtonDown">
             <StackPanel>
                 <TextBlock Text="{x:Static res:Strings.SyncNotesWindowTitle}"
-                           Foreground="{DynamicResource AlduneTextStrongBrush}" FontSize="{StaticResource AlduneTextHeading}" FontWeight="SemiBold" />
+                           Foreground="{DynamicResource AlduneTextStrongBrush}" FontSize="{DynamicResource AlduneTextHeading}" FontWeight="SemiBold" />
                 <TextBlock Text="{x:Static res:Strings.SyncNotesWindowHint}"
-                           Foreground="{DynamicResource AlduneMutedTextBrush}" FontSize="{StaticResource AlduneTextSmall}" TextWrapping="Wrap" Margin="0,4,28,0" />
+                           Foreground="{DynamicResource AlduneMutedTextBrush}" FontSize="{DynamicResource AlduneTextSmall}" TextWrapping="Wrap" Margin="0,4,28,0" />
             </StackPanel>
             <Button Content="✕" Width="28" Height="28" HorizontalAlignment="Right"
                     Foreground="{DynamicResource AlduneTextSoftBrush}" Background="Transparent" BorderThickness="0"
@@ -76,7 +76,7 @@
         </ScrollViewer>
 
         <TextBlock x:Name="EmptyText" Grid.Row="2" Text="{x:Static res:Strings.SyncNotesEmpty}"
-                   Foreground="{DynamicResource AlduneTextFaintBrush}" FontSize="{StaticResource AlduneTextBody}" TextAlignment="Center"
+                   Foreground="{DynamicResource AlduneTextFaintBrush}" FontSize="{DynamicResource AlduneTextBody}" TextAlignment="Center"
                    HorizontalAlignment="Center" VerticalAlignment="Center"
                    Visibility="Collapsed" />
 

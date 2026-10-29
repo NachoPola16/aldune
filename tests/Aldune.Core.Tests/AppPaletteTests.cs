@@ -217,6 +217,18 @@ public class AppPaletteTests
     }
 
 
+    // El anillo del foco de teclado se ve sobre la ventana, los paneles y el fondo de un botón en cada estado
+    // (WCAG 1.4.11: 3:1), también en los aspectos retro con colores extremos.
+    [Theory]
+    [MemberData(nameof(Palettes))]
+    public void FocusRing_IsVisibleOnEveryBackground(string mode)
+    {
+        var p = Palette(mode);
+        var withRing = new Dictionary<string, string>(p) { ["FocusRing"] = AppPalette.FocusRing(p) };
+        foreach (var ground in new[] { "Ground", "GroundDeep", "Surface", "Popup", "Raised", "RaisedHover", "Hover", "Selected", "Pressed" })
+            AssertContrast(withRing, "FocusRing", ground, AppPalette.FocusRingContrast);
+    }
+
     private static void AssertContrast(IReadOnlyDictionary<string, string> palette, string foreground, string background, double minimum)
     {
         Assert.True(NoteColorContrast.TryGetLuminance(palette[foreground], out var fg));

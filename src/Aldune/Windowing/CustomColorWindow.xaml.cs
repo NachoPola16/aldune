@@ -21,6 +21,8 @@ public partial class CustomColorWindow : Window
     private CustomColorWindow(string initialColor)
     {
         InitializeComponent();
+        // Con «Tamaño del texto» al 130 o 150 % la ventana crece con él (ver ThemeManager.ScaleWindowToText).
+        ThemeManager.ScaleWindowToText(this);
         NativeMethods.CloakUntilFirstFrame(this);
         _selectedColor = NormalizeColor(initialColor) ?? _selectedColor;
         Loaded += (_, _) => UpdateFromColor(_selectedColor);

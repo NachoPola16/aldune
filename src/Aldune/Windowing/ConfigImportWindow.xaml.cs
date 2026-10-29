@@ -18,6 +18,8 @@ public partial class ConfigImportWindow : Window
     private ConfigImportWindow(ConfigImportPlan plan, AppSettings current)
     {
         InitializeComponent();
+        // Con «Tamaño del texto» al 130 o 150 % la ventana crece con él (ver ThemeManager.ScaleWindowToText).
+        ThemeManager.ScaleWindowToText(this);
         NativeMethods.CloakUntilFirstFrame(this);
         // El foco empieza en el botón principal, como en AppDialog: Enter hace lo esperado.
         Loaded += (_, _) => (ApplyButton.Visibility == Visibility.Visible ? ApplyButton : CancelButton).Focus();

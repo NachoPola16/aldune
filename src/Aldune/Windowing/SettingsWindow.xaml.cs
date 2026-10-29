@@ -24,12 +24,15 @@ public partial class SettingsWindow : Window
     private readonly AppSettings _settings;
     private readonly GlobalHotkey _hotkey;
     private readonly GlobalHotkey? _recentHotkey;
+    private readonly GlobalHotkey? _managerHotkey;
     private readonly AppCoordinator? _coordinator;
     private readonly SyncService? _syncService;
     private readonly Action? _checkForUpdates;
     private bool _recording;
     // Qué atajo está escuchando el botón de grabar: el de crear nota o el de abrir la última.
     private bool _recordingRecent;
+    // Y el tercero: abrir la lista de notas.
+    private bool _recordingManager;
     private bool _syncUiReady;
     private bool _loadingSyncProfile;
 
@@ -43,9 +46,12 @@ public partial class SettingsWindow : Window
         AppCoordinator? coordinator = null,
         SyncService? syncService = null,
         Action? checkForUpdates = null,
-        GlobalHotkey? recentHotkey = null)
+        GlobalHotkey? recentHotkey = null,
+        GlobalHotkey? managerHotkey = null)
     {
         InitializeComponent();
+        // Con «Tamaño del texto» al 130 o 150 % la ventana crece con él (ver ThemeManager.ScaleWindowToText).
+        ThemeManager.ScaleWindowToText(this);
         NativeMethods.CloakUntilFirstFrame(this);
         WindowCloseAnimation.Attach(this);
         // El alto final (con el tope contra la pantalla) no se conoce hasta que la ventana entra en
@@ -56,6 +62,7 @@ public partial class SettingsWindow : Window
         _settings = settings;
         _hotkey = hotkey;
         _recentHotkey = recentHotkey;
+        _managerHotkey = managerHotkey;
         _coordinator = coordinator;
         _syncService = syncService;
         _checkForUpdates = checkForUpdates;
@@ -288,9 +295,9 @@ public partial class SettingsWindow : Window
         if (on) NoteSwatchPanel.Fill(UniformSwatches, ActiveTheme, _settings.UniformNoteColor, OnUniformSwatchClick);
     }
 
-    private void OnUniformSwatchClick(object sender, MouseButtonEventArgs e)
+    private void OnUniformSwatchClick(object sender, RoutedEventArgs e)
     {
-        _settings.UniformNoteColor = (string)((Border)sender).Tag;
+        _settings.UniformNoteColor = (string)((FrameworkElement)sender).Tag;
         ApplyUniformColor();
     }
 
@@ -372,7 +379,9 @@ public partial class SettingsWindow : Window
     {
         _recording = true;
         _recordingRecent = false;
+        _recordingManager = false;
         UpdateRecentHotkeyUi();
+        UpdateManagerHotkeyUi();
         HotkeyButton.Content = Strings.HotkeyRecording;
         HotkeyButton.Focus();
     }
@@ -395,6 +404,7 @@ public partial class SettingsWindow : Window
             _recording = false;
             UpdateHotkeyUi();
             UpdateRecentHotkeyUi();
+            UpdateManagerHotkeyUi();
             return;
         }
 
@@ -414,12 +424,13 @@ public partial class SettingsWindow : Window
         if (!candidate.IsValid)
         {
             // Sin modificador, el atajo se tragaria esa tecla en todo el sistema.
-            (_recordingRecent ? RecentHotkeyHint : HotkeyHint).Text = Strings.HotkeyNeedsModifier;
+            (_recordingManager ? ManagerHotkeyHint : _recordingRecent ? RecentHotkeyHint : HotkeyHint).Text = Strings.HotkeyNeedsModifier;
             return;
         }
 
         _recording = false;
-        if (_recordingRecent) ApplyRecentBinding(candidate);
+        if (_recordingManager) ApplyManagerBinding(candidate);
+        else if (_recordingRecent) ApplyRecentBinding(candidate);
         else ApplyBinding(candidate);
     }
 
@@ -440,7 +451,9 @@ public partial class SettingsWindow : Window
     {
         _recording = true;
         _recordingRecent = true;
+        _recordingManager = false;
         UpdateHotkeyUi();
+        UpdateManagerHotkeyUi();
         RecentHotkeyButton.Content = Strings.HotkeyRecording;
         RecentHotkeyButton.Focus();
     }
@@ -472,6 +485,60 @@ public partial class SettingsWindow : Window
         RecentHotkeyHint.Text = !on ? Strings.HotkeyDisabled
             : _recentHotkey?.IsRegistered == true ? Strings.HotkeyWorks
             : Strings.HotkeyConflict(_settings.RecentNoteHotkey.DisplayName);
+    }
+
+    private void OnManagerHotkeyToggled(object sender, RoutedEventArgs e)
+    {
+        bool wanted = ManagerHotkeyCheck.IsChecked == true;
+
+        if (wanted) _managerHotkey?.Enable(_settings.ManagerHotkey);
+        else _managerHotkey?.Disable();
+
+        _settings.ManagerHotkeyEnabled = wanted;
+        _settingsService.Save(_settings);
+
+        UpdateManagerHotkeyUi();
+    }
+
+    private void OnRecordManagerHotkeyClick(object sender, RoutedEventArgs e)
+    {
+        _recording = true;
+        _recordingRecent = false;
+        _recordingManager = true;
+        UpdateHotkeyUi();
+        UpdateRecentHotkeyUi();
+        ManagerHotkeyButton.Content = Strings.HotkeyRecording;
+        ManagerHotkeyButton.Focus();
+    }
+
+    private void OnResetManagerHotkeyClick(object sender, RoutedEventArgs e)
+    {
+        _recording = false;
+        ApplyManagerBinding(HotkeyBinding.ManagerDefault);
+    }
+
+    private void ApplyManagerBinding(HotkeyBinding binding)
+    {
+        _settings.ManagerHotkeyModifiers = binding.Modifiers;
+        _settings.ManagerHotkeyKey = binding.Key;
+
+        if (_settings.ManagerHotkeyEnabled) _managerHotkey?.Enable(binding);
+        _settingsService.Save(_settings);
+
+        UpdateManagerHotkeyUi();
+    }
+
+    private void UpdateManagerHotkeyUi()
+    {
+        bool on = ManagerHotkeyCheck.IsChecked == true;
+        ManagerHotkeyButton.Content = _settings.ManagerHotkey.DisplayName;
+        ManagerHotkeyButton.IsEnabled = on;
+        ManagerHotkeyResetButton.IsEnabled = on;
+
+        ManagerHotkeyHint.Text = !on ? Strings.HotkeyDisabled
+            : _managerHotkey?.IsRegistered == true ? Strings.HotkeyWorks
+            : Strings.HotkeyConflict(_settings.ManagerHotkey.DisplayName);
+        UpdateQuickHelp();
     }
 
     private void ApplyBinding(HotkeyBinding binding)
@@ -534,6 +601,11 @@ public partial class SettingsWindow : Window
                 Strings.QuickHelpAutoHideTasks,
             }),
             (Strings.QuickHelpSyncGroup, new[] { Strings.QuickHelpSync, Strings.QuickHelpConflicts }),
+            (Strings.QuickHelpKeyboardGroup, new[]
+            {
+                _settings.ManagerHotkeyEnabled ? Strings.QuickHelpKeyboardManagerOn(_settings.ManagerHotkey.DisplayName) : Strings.QuickHelpKeyboardManagerOff,
+                Strings.QuickHelpKeyboardZoom, Strings.QuickHelpKeyboardFocus,
+            }),
         };
 
         QuickHelpText.Inlines.Clear();
@@ -792,6 +864,36 @@ public partial class SettingsWindow : Window
     {
         _settings.TrackpadGestures = TrackpadGesturesCheck.IsChecked == true;
         _settingsService.Save(_settings);
+    }
+
+    /// <summary>«Tamaño del texto»: un botón de opción por paso (100, 115, 130, 150 %).</summary>
+    private void PopulateTextScale()
+    {
+        TextScaleContainer.Children.Clear();
+        int current = TextScale.Normalize(_settings.TextScalePercent);
+        foreach (int step in TextScale.Steps)
+        {
+            var radio = new RadioButton
+            {
+                GroupName = "TextScaleGroup",
+                Style = (Style)FindResource("MonitorRadioStyle"),
+                Tag = step,
+                Content = step + " %",
+                Margin = new Thickness(0, 0, 14, 0),
+                IsChecked = step == current
+            };
+            radio.Checked += OnTextScaleChanged;
+            TextScaleContainer.Children.Add(radio);
+        }
+    }
+
+    private void OnTextScaleChanged(object sender, RoutedEventArgs e)
+    {
+        if (sender is not RadioButton { IsChecked: true, Tag: int percent } || _settings.TextScalePercent == percent) return;
+        _settings.TextScalePercent = percent;
+        _settingsService.Save(_settings);
+        ThemeManager.ApplyTextScale(Application.Current, percent);
+        _coordinator?.RefreshNoteAppearance();
     }
 
     private void PopulateEdges()
@@ -1581,7 +1683,7 @@ public partial class SettingsWindow : Window
     {
         var mode = _settings.Appearance;
         ThemeManager.Apply(Application.Current, mode, _settings.ColorsFor(mode));
-        ThemeManager.ApplySkin(Application.Current, AppSkin.For(mode, _settings.NoteColorAsStripe));
+        ThemeManager.ApplySkin(Application.Current, AppSkin.For(ThemeManager.SkinMode(mode), _settings.NoteColorAsStripe));
         ThemeManager.ApplyShape(Application.Current, _settings.CornersSquare);
         // Las casillas usan Click, no Checked: fijarlas desde código no dispara sus manejadores.
         SquareCornersCheck.IsChecked = _settings.CornersSquare;
@@ -1700,7 +1802,7 @@ public partial class SettingsWindow : Window
     private void RefreshActiveThemeDetails()
     {
         var active = ActiveTheme;
-        NoteSwatchPanel.Fill(ThemePreview, active, selectedColor: null, onClick: (_, _) => { });
+        NoteSwatchPanel.Fill(ThemePreview, active, selectedColor: null, onClick: null);
         ThemeEditButton.IsEnabled = ThemeDeleteButton.IsEnabled = !active.IsBuiltIn;
         ApplyThemeButton.IsEnabled = _coordinator is { ActiveNoteCount: > 0 };
 
@@ -1755,9 +1857,9 @@ public partial class SettingsWindow : Window
         SaveThemeSettings(rebuild);
     }
 
-    private void OnFixedColorClick(object sender, MouseButtonEventArgs e)
+    private void OnFixedColorClick(object sender, RoutedEventArgs e)
     {
-        _settings.FixedNoteColor = (string)((Border)sender).Tag;
+        _settings.FixedNoteColor = (string)((FrameworkElement)sender).Tag;
         SaveThemeSettings(rebuild: false);
     }
 
@@ -2004,10 +2106,17 @@ public partial class SettingsWindow : Window
             if (_settings.RecentNoteHotkeyEnabled) _recentHotkey?.Enable(_settings.RecentNoteHotkey);
             else _recentHotkey?.Disable();
         }
+        if (Changed("managerHotkeyEnabled", "managerHotkeyModifiers", "managerHotkeyKey"))
+        {
+            if (_settings.ManagerHotkeyEnabled) _managerHotkey?.Enable(_settings.ManagerHotkey);
+            else _managerHotkey?.Disable();
+        }
 
         // Otra vista del dock es otra mesa de trabajo: SetDockView cierra las notas que ya no pertenecen
         // a ella, igual que al cambiarla desde el dock. Va antes de rehacer los docks.
         if (dockViewChanged) _coordinator?.SetDockView(_settings.DockView, _settings.DockTagFilter, save: false);
+
+        if (Changed("textScale")) ThemeManager.ApplyTextScale(Application.Current, _settings.TextScalePercent);
 
         if (Changed("appearance", "aspectColors", "squareCorners", "syncSignal"))
         {
@@ -2029,6 +2138,7 @@ public partial class SettingsWindow : Window
     {
         HotkeyCheck.IsChecked = _settings.GlobalHotkeyEnabled;
         RecentHotkeyCheck.IsChecked = _settings.RecentNoteHotkeyEnabled;
+        ManagerHotkeyCheck.IsChecked = _settings.ManagerHotkeyEnabled;
         HideOnFullscreenCheck.IsChecked = _settings.HideOnFullscreen;
         KeepDockOpenCheck.IsChecked = _settings.KeepDockOpen;
         ShowNotePreviewCheck.IsChecked = _settings.ShowNotePreview;
@@ -2050,6 +2160,8 @@ public partial class SettingsWindow : Window
         TrashRetentionValueBox.Text = _settings.TrashRetentionDays.ToString();
         UpdateHotkeyUi(); // tambien deja lista la seccion de Ayuda rapida, ver UpdateQuickHelp
         UpdateRecentHotkeyUi();
+        UpdateManagerHotkeyUi();
+        PopulateTextScale();
         PopulateEdges();
         PopulateAppearance();
         RefreshThemeSection();

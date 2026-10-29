@@ -19,6 +19,18 @@ public partial class App : Application
     {
         base.OnStartup(e);
 
+        // Los botones sin estilo propio traen el foco visual de WPF (un punteado negro que no se ve sobre fondos oscuros): se
+        // sustituye por el anillo de la paleta. Va aquí y no en cada XAML para que ningún control nuevo se quede sin él.
+        try
+        {
+            System.Windows.Controls.Control.FocusVisualStyleProperty.OverrideMetadata(typeof(System.Windows.Controls.Control),
+                new FrameworkPropertyMetadata((Style)FindResource("AlduneFocusVisual")));
+        }
+        catch (ArgumentException)
+        {
+            // Si WPF no deja cambiar el valor por defecto, quedan los estilos que ya lo traen: no es motivo para no arrancar.
+        }
+
         // La fuente de la piel llega a TODAS las ventanas: un Style implicito de Window (App.xaml) solo
         // casa con el tipo exacto, no con NoteWindow/EdgeDockWindow/... Cambiar el estilo por defecto
         // de la propiedad Style para el tipo Window si lo heredan las subclases. Es DynamicResource, asi
@@ -106,7 +118,8 @@ public partial class App : Application
             // Antes de crear ninguna ventana: todas toman sus colores de estos pinceles.
             ThemeManager.Apply(this, settings.Appearance, settings.ColorsFor(settings.Appearance));
             ThemeManager.LargeCheckboxes = settings.LargeCheckboxes;
-            ThemeManager.ApplySkin(this, AppSkin.For(settings.Appearance, settings.NoteColorAsStripe));
+            ThemeManager.ApplyTextScale(this, settings.TextScalePercent);
+            ThemeManager.ApplySkin(this, AppSkin.For(ThemeManager.SkinMode(settings.Appearance), settings.NoteColorAsStripe));
             ThemeManager.ApplyShape(this, settings.CornersSquare);
 
             byte[] rawKey;
@@ -343,12 +356,18 @@ public partial class App : Application
         _recentHotkey = new GlobalHotkey(coordinator.OpenMostRecentNote);
         if (settings.RecentNoteHotkeyEnabled) _recentHotkey.Enable(settings.RecentNoteHotkey);
 
+        // Cuarto atajo, opcional y apagado de fábrica: abrir la lista de notas. Es la ruta por teclado a cualquier nota,
+        // porque el dock se abre con el ratón y no se puede alcanzar con Tab.
+        _managerHotkey = new GlobalHotkey(coordinator.OpenNotesManager);
+        if (settings.ManagerHotkeyEnabled) _managerHotkey.Enable(settings.ManagerHotkey);
+
         var hotkey = _hotkey;
         var recentHotkey = _recentHotkey;
+        var managerHotkey = _managerHotkey;
         var loadedSettings = settings;
         coordinator.SettingsWindowFactory = () => new SettingsWindow(
             settingsService, loadedSettings, hotkey, coordinator, syncService,
-            () => _updateNotifier?.CheckManually(), recentHotkey);
+            () => _updateNotifier?.CheckManually(), recentHotkey, managerHotkey);
         // Unos segundos después de arrancar, no al instante: que el dock y las notas se pinten antes
         // de salir a la red.
         coordinator.ConfigureAutomaticSync(firstRunIn: TimeSpan.FromSeconds(5));
@@ -392,6 +411,7 @@ public partial class App : Application
             _hotkey?.Dispose();
             _dockHotkey?.Dispose();
             _recentHotkey?.Dispose();
+            _managerHotkey?.Dispose();
             _backupTimer?.Stop();
             _singleInstance?.Dispose();
         };
@@ -524,6 +544,7 @@ public partial class App : Application
     private GlobalHotkey? _hotkey;
     private GlobalHotkey? _dockHotkey;
     private GlobalHotkey? _recentHotkey;
+    private GlobalHotkey? _managerHotkey;
     private NotesRepository? _repository;
     private AppSettings? _settings;
     private DispatcherTimer? _rebuildDebounce;
@@ -598,13 +619,21 @@ public partial class App : Application
     /// avisa como preferencia general; se vuelve a leer y, si no cambió nada, reaplicar es inocuo.</summary>
     private void OnUserPreferenceChanged(object? sender, UserPreferenceChangedEventArgs e)
     {
-        if (e.Category != UserPreferenceCategory.General || _settings is not { Appearance: AppearanceMode.System }) return;
+        // Cambiar el tema de alto contraste de Windows (o activarlo con Alt izq + Mayús izq + Impr Pant) llega como preferencia de
+        // accesibilidad o general: se vuelve a leer y la app lo sigue en el acto, sea cual sea el aspecto elegido.
+        if (e.Category is not (UserPreferenceCategory.General or UserPreferenceCategory.Accessibility) || _settings is null) return;
         Dispatcher.BeginInvoke(() =>
         {
-            if (ThemeManager.IsLight != ThemeManager.WindowsUsesLightTheme())
+            if (_settings is null) return;
+            bool highContrastChanged = ThemeManager.IsHighContrast != SystemParameters.HighContrast
+                || (SystemParameters.HighContrast && ThemeManager.IsLight != AppPalette.IsLightHighContrast(
+                    $"#{SystemColors.WindowColor.R:X2}{SystemColors.WindowColor.G:X2}{SystemColors.WindowColor.B:X2}"));
+            bool systemModeChanged = _settings.Appearance == AppearanceMode.System && !SystemParameters.HighContrast
+                && ThemeManager.IsLight != ThemeManager.WindowsUsesLightTheme();
+            if (highContrastChanged || systemModeChanged)
             {
-                ThemeManager.Apply(this, AppearanceMode.System);
-                ThemeManager.ApplySkin(this, AppSkin.For(AppearanceMode.System, _settings?.NoteColorAsStripe ?? false));
+                ThemeManager.Apply(this, _settings.Appearance, _settings.ColorsFor(_settings.Appearance));
+                ThemeManager.ApplySkin(this, AppSkin.For(ThemeManager.SkinMode(_settings.Appearance), _settings.NoteColorAsStripe));
                 ThemeManager.ApplyShape(this, _settings?.CornersSquare ?? false);
                 _coordinator?.RefreshNoteAppearance();
             }

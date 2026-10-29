@@ -116,6 +116,23 @@ public sealed class AppSettings
             : HotkeyBinding.RecentNoteDefault;
 
     /// <summary>
+    /// Atajo global para abrir el gestor de notas: la ruta por teclado a cualquier nota sin pasar por el dock (que se abre con el
+    /// ratón). Apagado de fábrica: un atajo global se lo quita a otra aplicación que ya lo use. Nulos = combinación de fábrica.
+    /// </summary>
+    public bool ManagerHotkeyEnabled { get; set; }
+    public uint? ManagerHotkeyModifiers { get; set; }
+    public uint? ManagerHotkeyKey { get; set; }
+
+    public HotkeyBinding ManagerHotkey =>
+        ManagerHotkeyModifiers is { } mods && ManagerHotkeyKey is { } key && new HotkeyBinding(mods, key).IsValid
+            ? new HotkeyBinding(mods, key)
+            : HotkeyBinding.ManagerDefault;
+
+    /// <summary>«Tamaño del texto» en porcentaje (<see cref="TextScale.Steps"/>); 100 = el de siempre. Un settings.json anterior no lo
+    /// trae y carga como 100.</summary>
+    public int TextScalePercent { get; set; } = TextScale.Default;
+
+    /// <summary>
     /// Índice 0-based del monitor al que restringir Aldune, según la enumeración de Win32.
     /// <c>null</c> significa mostrar el dock en todas las pantallas conectadas (por defecto).
     /// </summary>

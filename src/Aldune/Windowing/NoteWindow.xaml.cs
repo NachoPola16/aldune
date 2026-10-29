@@ -295,6 +295,8 @@ public partial class NoteWindow : Window
         };
 
         TextBody.PreviewKeyDown += OnBodyKeyDown;
+        // Zoom del texto de esta nota: Ctrl + rueda (antes que el manejador de la rueda de abajo, que se come el gesto).
+        TextBody.PreviewMouseWheel += OnBodyZoomWheel;
         // Con la barra oculta el texto cabe entero por construcción (FitHeightToContent), así que la rueda no
         // tiene nada que desplazar; sin esto movía las letras la fracción de píxel que sobraba.
         TextBody.PreviewMouseWheel += (_, e) =>
@@ -768,9 +770,59 @@ public partial class NoteWindow : Window
         }
     }
 
+    // Zoom de ESTA nota sobre el «Tamaño del texto» de Ajustes (en %, pasos de TextScale). Solo dura mientras la ventana está
+    // abierta: es para leer una nota concreta, no un ajuste.
+    private int _zoomPercent = TextScale.Default;
+
+    private void OnBodyZoomWheel(object sender, MouseWheelEventArgs e)
+    {
+        if (Keyboard.Modifiers != ModifierKeys.Control) return;
+        ChangeZoom(TextScale.Step(_zoomPercent, e.Delta > 0 ? 1 : -1));
+        e.Handled = true;
+    }
+
+    private void ChangeZoom(int percent)
+    {
+        if (percent == _zoomPercent) return;
+        _zoomPercent = percent;
+        ApplyTextZoom();
+        // El texto ocupa otro sitio: sin reajustar, la nota queda corta o con barra de más. Tras el layout.
+        Dispatcher.BeginInvoke(DispatcherPriority.Loaded, FitHeightToContent);
+    }
+
+    /// <summary>Pone el tamaño del cuerpo de la nota: el de Ajustes y, encima, el zoom de la ventana. Con zoom 100 % vuelve a seguir
+    /// los recursos (así cambian en vivo con la piel y con el ajuste); con otro, valores propios.</summary>
+    private void ApplyTextZoom()
+    {
+        if (_zoomPercent == TextScale.Default)
+        {
+            TextBody.SetResourceReference(System.Windows.Controls.Control.FontSizeProperty, "AlduneNoteBodySize");
+            TextBody.SetResourceReference(System.Windows.Documents.TextElement.FontSizeProperty, "AlduneNoteBodySize");
+            TextBody.SetResourceReference(System.Windows.Controls.TextBlock.LineHeightProperty, "AlduneNoteLineHeight");
+            BodyPlaceholder.SetResourceReference(System.Windows.Controls.TextBlock.FontSizeProperty, "AlduneNoteBodySize");
+            return;
+        }
+
+        double zoom = _zoomPercent / 100.0;
+        double size = Math.Round((double)FindResource("AlduneNoteBodySize") * zoom);
+        double line = (double)FindResource("AlduneNoteLineHeight");
+        TextBody.FontSize = size;
+        BodyPlaceholder.FontSize = size;
+        System.Windows.Controls.TextBlock.SetLineHeight(TextBody, double.IsNaN(line) ? double.NaN : Math.Round(line * zoom));
+    }
+
     private void OnBodyKeyDown(object sender, KeyEventArgs e)
     {
         _lastBodyKeyAt = DateTime.UtcNow;
+
+        // Ctrl + más / menos / 0: el mismo zoom con teclado (el + y el − de la fila de letras y los del teclado numérico).
+        if (Keyboard.Modifiers == ModifierKeys.Control && e.Key is Key.OemPlus or Key.Add or Key.OemMinus or Key.Subtract or Key.D0 or Key.NumPad0)
+        {
+            ChangeZoom(e.Key is Key.D0 or Key.NumPad0 ? TextScale.Default
+                : TextScale.Step(_zoomPercent, e.Key is Key.OemPlus or Key.Add ? 1 : -1));
+            e.Handled = true;
+            return;
+        }
 
         if (e.Key == Key.F && Keyboard.Modifiers == ModifierKeys.Control)
         {
@@ -1877,6 +1929,7 @@ public partial class NoteWindow : Window
     internal void ReapplyAppearance()
     {
         ApplyColor(_note.Color);
+        ApplyTextZoom();
         UpdateSyncSignal();
         // Otra piel cambia las fuentes y el prompt (nacho@aldune:~/notes$) y con ello cuánto sitio ocupa el
         // texto; sin reajustar, el cuerpo se pasaba unos píxeles de la ventana y la rueda lo desplazaba
@@ -2037,9 +2090,9 @@ public partial class NoteWindow : Window
         ColorNotice.Visibility = kind == SkinColorNoticeKind.None ? Visibility.Collapsed : Visibility.Visible;
     }
 
-    private void OnColorSwatchClick(object sender, MouseButtonEventArgs e)
+    private void OnColorSwatchClick(object sender, RoutedEventArgs e)
     {
-        var color = (string)((Border)sender).Tag;
+        var color = (string)((FrameworkElement)sender).Tag;
         if (color == _note.Color) return;
 
         _note.Color = color;

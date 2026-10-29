@@ -24,6 +24,9 @@ ratón y se abren como ventanas propias. Sin cuenta, sin nube obligatoria, y con
   servidor (Docker) o por WebDAV / Nextcloud, cifrada de extremo a extremo. Ver
   [docs/SYNC.md](docs/SYNC.md).
 - **Copias de seguridad automáticas**: una al día, se guardan las 7 más recientes.
+- **Accesible**: anillo de foco visible al navegar con Tab, colores de nota que se eligen con las flechas, «Tamaño del texto» (100–150 %) y zoom de una
+  nota con `Ctrl` + rueda, y alto contraste de Windows. El dock se abre con el ratón; sin ratón, el atajo opcional `Ctrl+Alt+M` (Ajustes → General)
+  abre la lista de notas (Intro abre una, Espacio la marca). Más en «Ayuda rápida» de Ajustes.
 - En **español**, **inglés**, **alemán**, **francés** y **portugués de Brasil**.
 
 ## Instalar

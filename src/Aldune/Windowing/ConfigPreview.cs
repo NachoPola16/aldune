@@ -15,7 +15,7 @@ internal static class ConfigPreview
     public static IReadOnlyList<ConfigPreviewRow> Rows(ConfigImportPlan plan, AppSettings current)
     {
         var rows = new List<ConfigPreviewRow>();
-        bool hotkeyDone = false, recentDone = false;
+        bool hotkeyDone = false, recentDone = false, managerDone = false;
 
         foreach (var change in plan.Changes)
         {
@@ -36,6 +36,13 @@ internal static class ConfigPreview
                     AddCombination(rows, plan, Strings.ConfigFieldRecentHotkeyCombo, "recentHotkeyModifiers", "recentHotkeyKey",
                         current.RecentNoteHotkeyModifiers, current.RecentNoteHotkeyKey, current.RecentNoteHotkey,
                         HotkeyBinding.RecentNoteDefault);
+                    break;
+                case "managerHotkeyModifiers" or "managerHotkeyKey":
+                    if (managerDone) break;
+                    managerDone = true;
+                    AddCombination(rows, plan, Strings.ConfigFieldManagerHotkeyCombo, "managerHotkeyModifiers", "managerHotkeyKey",
+                        current.ManagerHotkeyModifiers, current.ManagerHotkeyKey, current.ManagerHotkey,
+                        HotkeyBinding.ManagerDefault);
                     break;
                 default:
                     rows.Add(new(Strings.ConfigFieldName(change.FieldId),
