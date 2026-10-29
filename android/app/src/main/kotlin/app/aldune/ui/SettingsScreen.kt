@@ -174,7 +174,7 @@ fun SettingsScreen(viewModel: NotesViewModel, onClose: () -> Unit) {
                         val name = themeNameRes(theme.id)?.let { stringResource(it) } ?: theme.name
                         Choice(name, settings.noteThemeId == theme.id) { viewModel.updateSettings { it.copy(noteThemeId = theme.id) } }
                     }
-                    NoteBehaviourSettings(settings, onChange = viewModel::updateSettings)
+                    NoteBehaviourSettings(settings, onChange = viewModel::updateSettings, onApplyToExisting = viewModel::applyColorRuleToActive)
                     GroupLabel(stringResource(R.string.new_note_tone))
                     Choice(stringResource(R.string.tone_light), !settings.darkNotes) { viewModel.updateSettings { it.copy(darkNotes = false) } }
                     Choice(stringResource(R.string.tone_dark), settings.darkNotes) { viewModel.updateSettings { it.copy(darkNotes = true) } }

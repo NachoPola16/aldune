@@ -3,7 +3,18 @@ package app.aldune.ui
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import android.widget.Toast
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.material3.AlertDialog
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.semantics.semantics
+import app.aldune.text.NoteThemes
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
@@ -33,8 +44,9 @@ private const val DEFAULT_FIXED = "#EBD38B"
  * Orden de la lista y regla de color de las notas nuevas (`NotesManagerOrder`, `ColorAssignment` y `FixedNoteColor` de Windows).
  * Con un orden que no es el del mazo no se puede arrastrar: el arrastre cambia el mazo, y una lista ordenada por fecha no lo enseña.
  */
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
-fun NoteBehaviourSettings(settings: AppSettings, onChange: ((AppSettings) -> AppSettings) -> Unit) {
+fun NoteBehaviourSettings(settings: AppSettings, onChange: ((AppSettings) -> AppSettings) -> Unit, onApplyToExisting: () -> Unit) {
     GroupLabel(stringResource(R.string.list_order))
     val orders = listOf(
         NoteListOrder.DOCK to R.string.order_dock, NoteListOrder.NEWEST to R.string.order_newest,
@@ -48,16 +60,40 @@ fun NoteBehaviourSettings(settings: AppSettings, onChange: ((AppSettings) -> App
     GroupLabel(stringResource(R.string.color_rule))
     val rules = listOf(0 to R.string.rule_avoid_neighbors, 1 to R.string.rule_rotate, 2 to R.string.rule_most_distinct, 3 to R.string.rule_fixed)
     for ((rule, label) in rules) Choice(stringResource(label), settings.colorRule == rule) { onChange { it.copy(colorRule = rule) } }
+    val theme = NoteThemes.resolve(settings.noteThemeId, null)
+    val themeColors = theme.lightColors + theme.darkColors
     if (settings.colorRule == 3) {
-        var picking by rememberSaveable { mutableStateOf(false) }
-        val hex = settings.fixedNoteColor ?: DEFAULT_FIXED
-        Row(Modifier.fillMaxWidth().padding(horizontal = 16.dp), verticalAlignment = Alignment.CenterVertically) {
-            Box(Modifier.padding(end = 12.dp).size(28.dp).clip(CircleShape).background(noteFace(hex)).border(BorderStroke(1.dp, MaterialTheme.colorScheme.outline), CircleShape))
-            Text(hex, Modifier.weight(1f), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-            TextButton(onClick = { picking = true }) { Text(stringResource(R.string.aspect_color_change)) }
+        // Solo colores del tema: `NoteColorAssigner` ignora un fijo que no lo sea y usa el primero del tema, así que un color libre aquí
+        // parecería que no hace nada.
+        val chosen = settings.fixedNoteColor ?: DEFAULT_FIXED
+        FlowRow(Modifier.fillMaxWidth().padding(horizontal = 16.dp), horizontalArrangement = Arrangement.spacedBy(10.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+            for (hex in themeColors) {
+                val selected = hex.equals(chosen, ignoreCase = true)
+                Box(
+                    Modifier.size(40.dp).clip(CircleShape).background(noteFace(hex))
+                        .border(BorderStroke(if (selected) 3.dp else 1.dp, if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outline), CircleShape)
+                        .clickable { onChange { it.copy(fixedNoteColor = hex) } }.semantics { contentDescription = hex },
+                )
+            }
         }
-        if (picking) {
-            CustomColorDialog(initial = hex, onDismiss = { picking = false }, onApply = { picked -> onChange { it.copy(fixedNoteColor = picked) }; picking = false })
+        if (themeColors.none { it.equals(chosen, ignoreCase = true) }) {
+            Text(stringResource(R.string.fixed_color_not_in_theme), Modifier.padding(horizontal = 16.dp, vertical = 4.dp), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.error)
         }
+    }
+
+    var confirming by rememberSaveable { mutableStateOf(false) }
+    TextButton(onClick = { confirming = true }, Modifier.padding(horizontal = 8.dp)) { Text(stringResource(R.string.apply_colors_button)) }
+    if (confirming) {
+        val context = LocalContext.current
+        val done = stringResource(R.string.apply_colors_done)
+        AlertDialog(
+            onDismissRequest = { confirming = false },
+            title = { Text(stringResource(R.string.apply_colors_title), Modifier.semantics { heading() }) },
+            text = { Text(stringResource(R.string.apply_colors_body)) },
+            confirmButton = {
+                TextButton(onClick = { confirming = false; onApplyToExisting(); Toast.makeText(context, done, Toast.LENGTH_SHORT).show() }) { Text(stringResource(R.string.apply_colors_confirm)) }
+            },
+            dismissButton = { TextButton(onClick = { confirming = false }) { Text(stringResource(R.string.cancel)) } },
+        )
     }
 }

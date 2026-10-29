@@ -91,7 +91,10 @@
     <string name="custom_color_hint">Text color adapts to keep your note readable.</string>
     <string name="custom_color_preview">Preview</string>
     <string name="custom_color_hex">HEX color</string>
-    <string name="custom_color_rgb">Fine tune with RGB</string>
+    <string name="custom_color_rgb">Fine tune</string>
+    <string name="custom_color_pick">Tap a color</string>
+    <string name="custom_color_area_cd">Shade and brightness</string>
+    <string name="custom_color_hue_cd">Hue</string>
     <string name="custom_color_readable">Readable text</string>
     <string name="custom_color_invalid">Enter a color like #F5E3B3.</string>
     <string name="custom_color_apply">Use this color</string>
@@ -220,8 +223,8 @@
     <string name="conflict_strip_title">This note changed in two places at once</string>
     <string name="conflict_strip_deleted">This note was deleted on another device</string>
     <string name="conflict_other_version">The other version</string>
-    <string name="conflict_keep">Keep this one</string>
-    <string name="conflict_use_other">Use the other</string>
+    <string name="conflict_keep">Keep the note below</string>
+    <string name="conflict_use_other">Use the version above</string>
     <string name="conflict_delete_it">Delete it</string>
     <string name="conflict_protected_version">Protected version</string>
     <string name="conflict_unlock_version">Unlock to see it</string>
@@ -258,6 +261,10 @@
     <string name="fill_note_color_hint">The whole card takes the note color, like on Windows. Off: only a strip on the left.</string>
     <string name="square_corners">Square corners</string>
     <string name="square_corners_hint">Notes, lists, dialogs and the widget without rounded corners.</string>
+    <string name="new_button_shape">Shape of the new-note button (+)</string>
+    <string name="new_button_follow">Like the corners of the notes</string>
+    <string name="new_button_rounded">Rounded</string>
+    <string name="new_button_square">Square</string>
     <string name="sync_signal">Sync status on each note</string>
     <string name="sync_signal_hint">Shows how synced each note is under its title. Needs sync turned on.</string>
     <string name="sync_signal_format">%1$s %2$s</string>
@@ -275,6 +282,12 @@
     <string name="rule_rotate">Rotate through the theme</string>
     <string name="rule_most_distinct">The most different from the others</string>
     <string name="rule_fixed">Always the same color</string>
+    <string name="apply_colors_button">Apply to existing notes…</string>
+    <string name="apply_colors_title">Recolor your notes</string>
+    <string name="apply_colors_body">The color of all your active notes will change to follow the chosen theme, tone and rule, even colors you picked by hand. It will sync to your other devices. Archived and trashed notes are not touched.</string>
+    <string name="apply_colors_confirm">Recolor</string>
+    <string name="apply_colors_done">Notes recolored.</string>
+    <string name="fixed_color_not_in_theme">This color is not in the current theme, so new notes use the theme\'s first color instead. Pick one from the theme below.</string>
     <string name="reminder_includes_tasks">Show pending tasks in the reminder</string>
     <string name="reminder_includes_tasks_hint">The notification lists the tasks still unchecked (up to 3).</string>
     <string name="sync_in_background">Sync in the background</string>

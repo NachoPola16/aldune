@@ -58,6 +58,9 @@ fun NoteLookSection(settings: AppSettings, onChange: ((AppSettings) -> AppSettin
     SwitchRow(stringResource(R.string.square_corners), stringResource(R.string.square_corners_hint), settings.cornersSquare) { on ->
         onChange { it.copy(squareCorners = on) }
     }
+    GroupLabel(stringResource(R.string.new_button_shape))
+    val shapes = listOf(0 to R.string.new_button_follow, 1 to R.string.new_button_rounded, 2 to R.string.new_button_square)
+    for ((shape, label) in shapes) Choice(stringResource(label), settings.newButtonShape == shape) { onChange { it.copy(newButtonShape = shape) } }
     SwitchRow(stringResource(R.string.sync_signal), stringResource(R.string.sync_signal_hint), settings.syncSignalVisible) { on ->
         onChange { it.copy(showSyncSignal = on) }
     }

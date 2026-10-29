@@ -91,7 +91,10 @@
     <string name="custom_color_hint">Die Textfarbe passt sich an, damit deine Notiz lesbar bleibt.</string>
     <string name="custom_color_preview">Vorschau</string>
     <string name="custom_color_hex">HEX-Farbe</string>
-    <string name="custom_color_rgb">Feinabstimmung mit RGB</string>
+    <string name="custom_color_rgb">Feinabstimmung</string>
+    <string name="custom_color_pick">Farbe antippen</string>
+    <string name="custom_color_area_cd">Sättigung und Helligkeit</string>
+    <string name="custom_color_hue_cd">Farbton</string>
     <string name="custom_color_readable">Lesbarer Text</string>
     <string name="custom_color_invalid">Gib eine Farbe wie #F5E3B3 ein.</string>
     <string name="custom_color_apply">Diese Farbe verwenden</string>
@@ -220,8 +223,8 @@
     <string name="conflict_strip_title">Diese Notiz wurde an zwei Stellen gleichzeitig geändert</string>
     <string name="conflict_strip_deleted">Diese Notiz wurde auf einem anderen Gerät gelöscht</string>
     <string name="conflict_other_version">Die andere Version</string>
-    <string name="conflict_keep">Diese behalten</string>
-    <string name="conflict_use_other">Die andere verwenden</string>
+    <string name="conflict_keep">Die Notiz unten behalten</string>
+    <string name="conflict_use_other">Die obere Version verwenden</string>
     <string name="conflict_delete_it">Löschen</string>
     <string name="conflict_protected_version">Geschützte Version</string>
     <string name="conflict_unlock_version">Entsperren, um sie zu sehen</string>
@@ -258,6 +261,10 @@
     <string name="fill_note_color_hint">Die ganze Karte übernimmt die Notizfarbe, wie unter Windows. Aus: nur ein Streifen links.</string>
     <string name="square_corners">Eckige Ecken</string>
     <string name="square_corners_hint">Notizen, Listen, Dialoge und Widget ohne abgerundete Ecken.</string>
+    <string name="new_button_shape">Form der Schaltfläche für neue Notizen (+)</string>
+    <string name="new_button_follow">Wie die Ecken der Notizen</string>
+    <string name="new_button_rounded">Abgerundet</string>
+    <string name="new_button_square">Eckig</string>
     <string name="sync_signal">Sync-Status bei jeder Notiz</string>
     <string name="sync_signal_hint">Zeigt unter dem Titel den Sync-Stand jeder Notiz. Die Synchronisierung muss aktiv sein.</string>
     <string name="sync_signal_format">%1$s %2$s</string>
@@ -275,6 +282,12 @@
     <string name="rule_rotate">Reihum im Thema</string>
     <string name="rule_most_distinct">Die am meisten abweichende</string>
     <string name="rule_fixed">Immer dieselbe Farbe</string>
+    <string name="apply_colors_button">Auf vorhandene Notizen anwenden…</string>
+    <string name="apply_colors_title">Notizen neu einfärben</string>
+    <string name="apply_colors_body">Die Farbe aller aktiven Notizen wird nach gewähltem Thema, Ton und Regel geändert, auch selbst gewählte Farben. Sie wird auf deine anderen Geräte synchronisiert. Archivierte und gelöschte Notizen bleiben unverändert.</string>
+    <string name="apply_colors_confirm">Neu einfärben</string>
+    <string name="apply_colors_done">Notizen neu eingefärbt.</string>
+    <string name="fixed_color_not_in_theme">Diese Farbe gehört nicht zum aktuellen Thema, daher verwenden neue Notizen die erste Farbe des Themas. Wähle eine Farbe aus dem Thema.</string>
     <string name="reminder_includes_tasks">Offene Aufgaben in der Erinnerung zeigen</string>
     <string name="reminder_includes_tasks_hint">Die Benachrichtigung listet die noch offenen Aufgaben (bis zu 3).</string>
     <string name="sync_in_background">Im Hintergrund synchronisieren</string>

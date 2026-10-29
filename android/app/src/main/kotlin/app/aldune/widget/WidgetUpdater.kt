@@ -56,6 +56,7 @@ object WidgetUpdater {
                 versionFlow.update { it + 1 }
                 // Con la sesión del widget viva basta la versión; sin ella (proceso nuevo, sesión caducada), updateAll arranca una.
                 runCatching { DockWidget().updateAll(app) }.onFailure { Log.w("WidgetUpdater", "no se pudo repintar el widget", it) }
+                runCatching { NewNoteWidget().updateAll(app) }.onFailure { Log.w("WidgetUpdater", "no se pudo repintar el botón", it) }
             }
         }
     }

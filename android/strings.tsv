@@ -90,7 +90,10 @@ custom_color_title	Custom note color	Color personalizado de la nota	Benutzerdefi
 custom_color_hint	Text color adapts to keep your note readable.	El color del texto se adapta para que la nota siga siendo legible.	Die Textfarbe passt sich an, damit deine Notiz lesbar bleibt.	La couleur du texte s'adapte pour que votre note reste lisible.	A cor do texto se adapta para manter sua nota legível.
 custom_color_preview	Preview	Vista previa	Vorschau	Aperçu	Visualização
 custom_color_hex	HEX color	Color HEX	HEX-Farbe	Couleur HEX	Cor HEX
-custom_color_rgb	Fine tune with RGB	Ajuste fino con RGB	Feinabstimmung mit RGB	Affiner avec RVB	Ajuste fino com RGB
+custom_color_rgb	Fine tune	Ajuste fino	Feinabstimmung	Ajustement précis	Ajuste fino
+custom_color_pick	Tap a color	Toca un color	Farbe antippen	Touchez une couleur	Toque numa cor
+custom_color_area_cd	Shade and brightness	Intensidad y brillo	Sättigung und Helligkeit	Saturation et luminosité	Saturação e brilho
+custom_color_hue_cd	Hue	Tono	Farbton	Teinte	Matiz
 custom_color_readable	Readable text	Texto legible	Lesbarer Text	Texte lisible	Texto legível
 custom_color_invalid	Enter a color like #F5E3B3.	Escribe un color como #F5E3B3.	Gib eine Farbe wie #F5E3B3 ein.	Entrez une couleur comme #F5E3B3.	Digite uma cor como #F5E3B3.
 custom_color_apply	Use this color	Usar este color	Diese Farbe verwenden	Utiliser cette couleur	Usar esta cor
@@ -219,8 +222,8 @@ protection_stale	This note changed on another device. It was locked again: unloc
 conflict_strip_title	This note changed in two places at once	Esta nota cambió en dos sitios a la vez	Diese Notiz wurde an zwei Stellen gleichzeitig geändert	Cette note a changé à deux endroits en même temps	Esta nota mudou em dois lugares ao mesmo tempo
 conflict_strip_deleted	This note was deleted on another device	Esta nota se borró en otro dispositivo	Diese Notiz wurde auf einem anderen Gerät gelöscht	Cette note a été supprimée sur un autre appareil	Esta nota foi excluída em outro dispositivo
 conflict_other_version	The other version	La otra versión	Die andere Version	L'autre version	A outra versão
-conflict_keep	Keep this one	Quedarme con esta	Diese behalten	Garder celle-ci	Ficar com esta
-conflict_use_other	Use the other	Usar la otra	Die andere verwenden	Utiliser l'autre	Usar a outra
+conflict_keep	Keep the note below	Quedarme con la nota de abajo	Die Notiz unten behalten	Garder la note du dessous	Ficar com a nota de baixo
+conflict_use_other	Use the version above	Usar la versión de arriba	Die obere Version verwenden	Utiliser la version du dessus	Usar a versão de cima
 conflict_delete_it	Delete it	Borrarla	Löschen	La supprimer	Excluir
 conflict_protected_version	Protected version	Versión protegida	Geschützte Version	Version protégée	Versão protegida
 conflict_unlock_version	Unlock to see it	Desbloquear para verla	Entsperren, um sie zu sehen	Déverrouiller pour la voir	Desbloquear para ver
@@ -257,6 +260,10 @@ fill_note_color	Color as the note background	Color de la nota como fondo	Notizfa
 fill_note_color_hint	The whole card takes the note color, like on Windows. Off: only a strip on the left.	Toda la tarjeta toma el color de la nota, como en Windows. Apagado: solo una tira a la izquierda.	Die ganze Karte übernimmt die Notizfarbe, wie unter Windows. Aus: nur ein Streifen links.	Toute la carte prend la couleur de la note, comme sous Windows. Désactivé : seulement une bande à gauche.	O cartão inteiro assume a cor da nota, como no Windows. Desligado: só uma faixa à esquerda.
 square_corners	Square corners	Esquinas rectas	Eckige Ecken	Coins droits	Cantos retos
 square_corners_hint	Notes, lists, dialogs and the widget without rounded corners.	Notas, listas, diálogos y widget sin esquinas redondeadas.	Notizen, Listen, Dialoge und Widget ohne abgerundete Ecken.	Notes, listes, boîtes de dialogue et widget sans coins arrondis.	Notas, listas, diálogos e widget sem cantos arredondados.
+new_button_shape	Shape of the new-note button (+)	Forma del botón de nota nueva (+)	Form der Schaltfläche für neue Notizen (+)	Forme du bouton de nouvelle note (+)	Formato do botão de nova nota (+)
+new_button_follow	Like the corners of the notes	Como las esquinas de las notas	Wie die Ecken der Notizen	Comme les coins des notes	Como os cantos das notas
+new_button_rounded	Rounded	Redondeado	Abgerundet	Arrondi	Arredondado
+new_button_square	Square	Recto	Eckig	Carré	Reto
 sync_signal	Sync status on each note	Señal de sincronización en cada nota	Sync-Status bei jeder Notiz	Signal de synchronisation sur chaque note	Sinal de sincronização em cada nota
 sync_signal_hint	Shows how synced each note is under its title. Needs sync turned on.	Enseña bajo el título cómo va la sincronización de cada nota. Necesita la sincronización activada.	Zeigt unter dem Titel den Sync-Stand jeder Notiz. Die Synchronisierung muss aktiv sein.	Affiche sous le titre l’état de synchronisation de chaque note. Nécessite la synchronisation activée.	Mostra sob o título o estado de sincronização de cada nota. Requer a sincronização ativada.
 sync_signal_format	%1$s %2$s	%1$s %2$s	%1$s %2$s	%1$s %2$s	%1$s %2$s
@@ -274,6 +281,12 @@ rule_avoid_neighbors	Rotate, skipping the neighbors’ colors	Rotar, evitando lo
 rule_rotate	Rotate through the theme	Rotar por el tema	Reihum im Thema	Alterner dans le thème	Alternar pelo tema
 rule_most_distinct	The most different from the others	La más distinta de las demás	Die am meisten abweichende	La plus différente des autres	A mais diferente das demais
 rule_fixed	Always the same color	Siempre el mismo color	Immer dieselbe Farbe	Toujours la même couleur	Sempre a mesma cor
+apply_colors_button	Apply to existing notes…	Aplicar a las notas existentes…	Auf vorhandene Notizen anwenden…	Appliquer aux notes existantes…	Aplicar às notas existentes…
+apply_colors_title	Recolor your notes	Recolorear las notas	Notizen neu einfärben	Recolorer les notes	Recolorir as notas
+apply_colors_body	The color of all your active notes will change to follow the chosen theme, tone and rule, even colors you picked by hand. It will sync to your other devices. Archived and trashed notes are not touched.	Se cambiará el color de todas tus notas activas según el tema, el tono y la regla elegidos, aunque lo eligieras a mano. Se sincronizará a tus otros dispositivos. Las archivadas y la papelera no se tocan.	Die Farbe aller aktiven Notizen wird nach gewähltem Thema, Ton und Regel geändert, auch selbst gewählte Farben. Sie wird auf deine anderen Geräte synchronisiert. Archivierte und gelöschte Notizen bleiben unverändert.	La couleur de toutes vos notes actives changera selon le thème, le ton et la règle choisis, même les couleurs choisies à la main. Elle sera synchronisée sur vos autres appareils. Les notes archivées et la corbeille ne sont pas touchées.	A cor de todas as suas notas ativas mudará conforme o tema, o tom e a regra escolhidos, mesmo as escolhidas à mão. Ela será sincronizada com seus outros dispositivos. As arquivadas e a lixeira não são alteradas.
+apply_colors_confirm	Recolor	Recolorear	Neu einfärben	Recolorer	Recolorir
+apply_colors_done	Notes recolored.	Notas recoloreadas.	Notizen neu eingefärbt.	Notes recolorées.	Notas recoloridas.
+fixed_color_not_in_theme	This color is not in the current theme, so new notes use the theme's first color instead. Pick one from the theme below.	Este color no es del tema actual, así que las notas nuevas usan el primer color del tema. Elige uno de los del tema.	Diese Farbe gehört nicht zum aktuellen Thema, daher verwenden neue Notizen die erste Farbe des Themas. Wähle eine Farbe aus dem Thema.	Cette couleur n'est pas dans le thème actuel : les nouvelles notes utilisent donc la première couleur du thème. Choisissez-en une du thème.	Essa cor não é do tema atual, então as notas novas usam a primeira cor do tema. Escolha uma do tema.
 reminder_includes_tasks	Show pending tasks in the reminder	Enseñar las tareas pendientes en el aviso	Offene Aufgaben in der Erinnerung zeigen	Afficher les tâches en attente dans le rappel	Mostrar as tarefas pendentes no lembrete
 reminder_includes_tasks_hint	The notification lists the tasks still unchecked (up to 3).	La notificación lista las tareas sin marcar (hasta 3).	Die Benachrichtigung listet die noch offenen Aufgaben (bis zu 3).	La notification liste les tâches non cochées (jusqu’à 3).	A notificação lista as tarefas não marcadas (até 3).
 sync_in_background	Sync in the background	Sincronizar en segundo plano	Im Hintergrund synchronisieren	Synchroniser en arrière-plan	Sincronizar em segundo plano

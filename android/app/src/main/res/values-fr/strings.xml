@@ -91,7 +91,10 @@
     <string name="custom_color_hint">La couleur du texte s\'adapte pour que votre note reste lisible.</string>
     <string name="custom_color_preview">Aperçu</string>
     <string name="custom_color_hex">Couleur HEX</string>
-    <string name="custom_color_rgb">Affiner avec RVB</string>
+    <string name="custom_color_rgb">Ajustement précis</string>
+    <string name="custom_color_pick">Touchez une couleur</string>
+    <string name="custom_color_area_cd">Saturation et luminosité</string>
+    <string name="custom_color_hue_cd">Teinte</string>
     <string name="custom_color_readable">Texte lisible</string>
     <string name="custom_color_invalid">Entrez une couleur comme #F5E3B3.</string>
     <string name="custom_color_apply">Utiliser cette couleur</string>
@@ -220,8 +223,8 @@
     <string name="conflict_strip_title">Cette note a changé à deux endroits en même temps</string>
     <string name="conflict_strip_deleted">Cette note a été supprimée sur un autre appareil</string>
     <string name="conflict_other_version">L\'autre version</string>
-    <string name="conflict_keep">Garder celle-ci</string>
-    <string name="conflict_use_other">Utiliser l\'autre</string>
+    <string name="conflict_keep">Garder la note du dessous</string>
+    <string name="conflict_use_other">Utiliser la version du dessus</string>
     <string name="conflict_delete_it">La supprimer</string>
     <string name="conflict_protected_version">Version protégée</string>
     <string name="conflict_unlock_version">Déverrouiller pour la voir</string>
@@ -258,6 +261,10 @@
     <string name="fill_note_color_hint">Toute la carte prend la couleur de la note, comme sous Windows. Désactivé : seulement une bande à gauche.</string>
     <string name="square_corners">Coins droits</string>
     <string name="square_corners_hint">Notes, listes, boîtes de dialogue et widget sans coins arrondis.</string>
+    <string name="new_button_shape">Forme du bouton de nouvelle note (+)</string>
+    <string name="new_button_follow">Comme les coins des notes</string>
+    <string name="new_button_rounded">Arrondi</string>
+    <string name="new_button_square">Carré</string>
     <string name="sync_signal">Signal de synchronisation sur chaque note</string>
     <string name="sync_signal_hint">Affiche sous le titre l’état de synchronisation de chaque note. Nécessite la synchronisation activée.</string>
     <string name="sync_signal_format">%1$s %2$s</string>
@@ -275,6 +282,12 @@
     <string name="rule_rotate">Alterner dans le thème</string>
     <string name="rule_most_distinct">La plus différente des autres</string>
     <string name="rule_fixed">Toujours la même couleur</string>
+    <string name="apply_colors_button">Appliquer aux notes existantes…</string>
+    <string name="apply_colors_title">Recolorer les notes</string>
+    <string name="apply_colors_body">La couleur de toutes vos notes actives changera selon le thème, le ton et la règle choisis, même les couleurs choisies à la main. Elle sera synchronisée sur vos autres appareils. Les notes archivées et la corbeille ne sont pas touchées.</string>
+    <string name="apply_colors_confirm">Recolorer</string>
+    <string name="apply_colors_done">Notes recolorées.</string>
+    <string name="fixed_color_not_in_theme">Cette couleur n\'est pas dans le thème actuel : les nouvelles notes utilisent donc la première couleur du thème. Choisissez-en une du thème.</string>
     <string name="reminder_includes_tasks">Afficher les tâches en attente dans le rappel</string>
     <string name="reminder_includes_tasks_hint">La notification liste les tâches non cochées (jusqu’à 3).</string>
     <string name="sync_in_background">Synchroniser en arrière-plan</string>

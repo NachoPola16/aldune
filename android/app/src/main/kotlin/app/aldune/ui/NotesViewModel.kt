@@ -17,6 +17,7 @@ import app.aldune.domain.NewNoteColorSettings
 import app.aldune.domain.NoteListItem
 import app.aldune.domain.NoteListOrder
 import app.aldune.domain.NoteListing
+import app.aldune.text.NoteColorAssigner
 import app.aldune.text.NoteColorAssignment
 import app.aldune.domain.NoteResult
 import app.aldune.domain.NoteService
@@ -645,6 +646,21 @@ class NotesViewModel(application: Application) : AndroidViewModel(application) {
         }
 
     fun setNoteColor(noteId: String, color: String) = change { it.setColor(noteId, color) }
+
+    /**
+     * Vuelve a colorear todas las notas activas con el tema, el tono y la regla actuales, en el orden del mazo y como si se crearan una tras
+     * otra (`ApplyThemeToActiveNotes` de Windows): así «rotar sin repetir el vecino» no deja dos vecinas iguales. Archivadas y papelera no se
+     * tocan. Cada cambio es un `setColor` normal y se sincroniza.
+     */
+    fun applyColorRuleToActive() = change { service ->
+        val colors = newNoteColors()
+        val assigned = ArrayList<String>()
+        for (note in service.list(NoteState.ACTIVE)) {
+            val color = NoteColorAssigner.assign(colors.theme, colors.tone, colors.rule, colors.fixedColor, assigned)
+            assigned += color
+            if (!color.equals(note.color, ignoreCase = true)) service.setColor(note.id, color)
+        }
+    }
 
     fun setNoteTags(noteId: String, tags: List<String>) = change { it.setTags(noteId, tags) }
 

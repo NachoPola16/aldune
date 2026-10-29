@@ -32,6 +32,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.focusable
 import androidx.compose.ui.focus.focusRequester
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.first
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.rememberScrollState
@@ -99,7 +100,14 @@ import app.aldune.R
 import app.aldune.domain.ReminderLabel
 import app.aldune.domain.NoteListItem
 import app.aldune.domain.NoteState
+import app.aldune.text.NoteChannels
 import app.aldune.text.NoteColorContrast
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.StrokeJoin
+import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.drawscope.scale
+import androidx.compose.ui.semantics.clearAndSetSemantics
 import app.aldune.text.NoteDisplayColor
 import app.aldune.text.NoteSyncSignal
 import androidx.compose.ui.graphics.RectangleShape
@@ -174,7 +182,7 @@ fun NoteListPane(
         containerColor = MaterialTheme.colorScheme.background,
         snackbarHost = { SnackbarHost(snackbar) },
         floatingActionButton = {
-            FloatingActionButton(onClick = onNew) { Icon(Icons.Default.Add, contentDescription = stringResource(R.string.new_note)) }
+            FloatingActionButton(onClick = onNew, shape = if (look.squareNewButton) RectangleShape else RoundedCornerShape(16.dp)) { Icon(Icons.Default.Add, contentDescription = stringResource(R.string.new_note)) }
         },
     ) { padding ->
         Column(Modifier.padding(padding).fillMaxSize()) {
@@ -284,24 +292,35 @@ fun NoteListPane(
                                 .then(
                                     if (reorderable) Modifier.pointerInput(item.id) {
                                         detectDragGesturesAfterLongPress(
-                                            onDragStart = { hold.active = true; hold.travelled = 0f; dragStart(item.id) },
+                                            onDragStart = {
+                                                hold.active = true; hold.travelled = 0f; hold.menuShown = false; dragStart(item.id)
+                                                // Si el dedo sigue quieto un momento tras la pulsación larga no se quiere recolocar la nota: el menú se
+                                                // abre sin esperar a levantarlo. Si se mueve antes, es un arrastre y el menú no sale.
+                                                scope.launch {
+                                                    delay(MENU_HOLD_MS)
+                                                    if (hold.active && !hold.menuShown && hold.travelled <= viewConfiguration.touchSlop) {
+                                                        hold.menuShown = true
+                                                        menuFor = item
+                                                    }
+                                                }
+                                            },
                                             onDrag = { change, amount ->
                                                 change.consume()
                                                 hold.travelled += kotlin.math.abs(amount.x) + kotlin.math.abs(amount.y)
-                                                dragBy(amount.y)
+                                                if (!hold.menuShown) dragBy(amount.y)
                                             },
                                             // Un dedo del todo quieto no genera ningún movimiento y Compose lo da por «cancelado», no por terminado:
                                             // sin movimiento, las dos salidas abren el menú.
                                             onDragEnd = {
                                                 val moved = hold.travelled > viewConfiguration.touchSlop
                                                 dragEnd()
-                                                if (!moved) menuFor = item
+                                                if (!moved && !hold.menuShown) menuFor = item
                                                 hold.active = false
                                             },
                                             onDragCancel = {
                                                 val moved = hold.travelled > viewConfiguration.touchSlop
                                                 dragEnd()
-                                                if (!moved) menuFor = item
+                                                if (!moved && !hold.menuShown) menuFor = item
                                                 hold.active = false
                                             },
                                         )
@@ -324,6 +343,7 @@ fun NoteListPane(
                             item = item, selected = item.id == selectedId || item.id == highlight, conflicted = item.id in conflicted, reminder = state.reminders[item.id],
                             onOpen = { if (!hold.active) onOpen(item.id) }, onMenu = { menuFor = item },
                             moves = ReorderPlan.available(order.map { it.id }, item.id, reorderable), onMove = { delta -> moveBy(item.id, delta) },
+                            channel = order.indexOfFirst { it.id == item.id },
                             signal = if (look.syncSignal) NoteSyncSignal.of(hasProfile, item.id in conflicted, bases[item.id], item.updatedAt) else NoteSyncSignal.State.HIDDEN,
                             onArchive = { viewModel.archive(item.id); announce(archivedMsg) { viewModel.restore(item.id) } },
                             onTrash = { viewModel.trash(item.id); announce(trashedMsg) { viewModel.restore(item.id) } },
@@ -465,7 +485,7 @@ private fun EmptyMessage(state: UiState.Ready) {
 @Composable
 private fun SwipeableRow(
     modifier: Modifier,
-    item: NoteListItem, selected: Boolean, conflicted: Boolean, reminder: java.time.Instant?, onOpen: () -> Unit, signal: NoteSyncSignal.State,
+    item: NoteListItem, selected: Boolean, conflicted: Boolean, reminder: java.time.Instant?, onOpen: () -> Unit, signal: NoteSyncSignal.State, channel: Int,
     onMenu: () -> Unit, moves: Set<ReorderPlan.Direction>, onMove: (Int) -> Unit,
     onArchive: () -> Unit, onTrash: () -> Unit, onRestore: () -> Unit, onDelete: () -> Unit,
 ) {
@@ -540,16 +560,19 @@ private fun SwipeableRow(
             }
         },
     ) {
-        NoteRow(item, selected, conflicted, reminder, signal, onOpen)
+        NoteRow(item, selected, conflicted, reminder, signal, channel, onOpen)
     }
 }
 
 @Composable
-private fun NoteRow(item: NoteListItem, selected: Boolean, conflicted: Boolean, reminder: java.time.Instant?, signal: NoteSyncSignal.State, onOpen: () -> Unit) {
+private fun NoteRow(item: NoteListItem, selected: Boolean, conflicted: Boolean, reminder: java.time.Instant?, signal: NoteSyncSignal.State, channel: Int, onOpen: () -> Unit) {
     val look = LocalNoteLook.current
     // «Mismo color en todas las notas»: solo cambia lo que se ve, la nota conserva el suyo.
     val hex = NoteDisplayColor.resolve(item.color, look.uniformColor)
     val face = noteFace(hex)
+    // Aspectos Telecom: cada nota es un canal del osciloscopio (CH1…CH4, con su onda y su color) y no lleva su propio color, salvo que el
+    // usuario active «color de la nota como fondo» a mano, que manda.
+    val tint = look.telecom?.takeIf { !look.fillColor }?.let { NoteChannels.tint(channel, it, look.uniformColor) }
     // Con el color de fondo la tinta sale del contraste con ese color (la misma regla que en Windows); la selección se marca con un borde.
     val fill = look.fillColor
     val ink = if (fill) noteInk(hex) else MaterialTheme.colorScheme.onSurface
@@ -559,19 +582,29 @@ private fun NoteRow(item: NoteListItem, selected: Boolean, conflicted: Boolean, 
         shape = look.cardShape,
         colors = CardDefaults.cardColors(
             containerColor = when {
+                tint != null -> noteFace(tint.face)
                 fill -> face
                 selected -> MaterialTheme.colorScheme.primaryContainer
                 else -> MaterialTheme.colorScheme.surfaceContainerHigh
             },
             contentColor = ink,
         ),
-        border = if (fill && selected) BorderStroke(3.dp, MaterialTheme.colorScheme.primary) else null,
+        border = if ((fill || tint != null) && selected) BorderStroke(3.dp, MaterialTheme.colorScheme.primary) else null,
     ) {
         Row(Modifier.fillMaxWidth().height(androidx.compose.foundation.layout.IntrinsicSize.Min)) {
             // La tira de color de la nota: es lo que reconoce una nota de un vistazo.
-            if (!fill) Box(Modifier.width(8.dp).fillMaxHeight().background(face))
+            if (!fill) Box(Modifier.width(8.dp).fillMaxHeight().background(if (tint != null) noteFace(tint.accent) else face))
             Column(Modifier.weight(1f).padding(horizontal = 14.dp, vertical = 10.dp)) {
-                Text(item.title, style = MaterialTheme.typography.titleMedium, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                if (tint != null) {
+                    val titleColor = noteFace(tint.title)
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Text(NoteChannels.number(channel), Modifier.padding(end = 8.dp), style = MaterialTheme.typography.titleMedium, fontWeight = androidx.compose.ui.text.font.FontWeight.Bold, color = titleColor)
+                        Text(item.title, Modifier.weight(1f), style = MaterialTheme.typography.titleMedium, maxLines = 1, overflow = TextOverflow.Ellipsis, color = titleColor)
+                        ChannelWave(channel, noteFace(tint.accent), Modifier.padding(start = 8.dp))
+                    }
+                } else {
+                    Text(item.title, style = MaterialTheme.typography.titleMedium, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                }
                 if (item.preview.isNotEmpty()) {
                     Text(
                         item.preview, style = MaterialTheme.typography.bodyMedium, maxLines = 1, overflow = TextOverflow.Ellipsis,
@@ -615,6 +648,17 @@ private fun NoteRow(item: NoteListItem, selected: Boolean, conflicted: Boolean, 
     }
 }
 
+/** La onda del canal (senoidal, cuadrada, triangular o diente de sierra), en el color del canal. */
+@Composable
+private fun ChannelWave(channel: Int, color: Color, modifier: Modifier = Modifier) {
+    val path = remember(channel) { androidx.compose.ui.graphics.vector.PathParser().parsePathString(NoteChannels.wavePath(channel)).toPath() }
+    androidx.compose.foundation.Canvas(modifier.size(width = 40.dp, height = 14.dp).clearAndSetSemantics {}) {
+        scale(size.width / NoteChannels.WAVE_WIDTH, size.height / NoteChannels.WAVE_HEIGHT, pivot = Offset.Zero) {
+            drawPath(path, color, style = Stroke(width = 1.6.dp.toPx() * NoteChannels.WAVE_WIDTH / size.width, cap = StrokeCap.Round, join = StrokeJoin.Round))
+        }
+    }
+}
+
 private fun syncSignalLabel(state: NoteSyncSignal.State): Int = when (state) {
     NoteSyncSignal.State.SYNCED -> R.string.sync_signal_synced
     NoteSyncSignal.State.PENDING -> R.string.sync_signal_pending
@@ -640,9 +684,14 @@ private fun SyncIcon(icon: StatusIcon, description: String) {
 }
 
 /** Un dedo que mantiene pulsada una fila: si ya abrió el menú o empezó a arrastrar, al levantarlo no se debe abrir la nota. */
+/** Cuánto aguanta el dedo quieto, tras la pulsación larga, para abrir el menú sin soltar. */
+private const val MENU_HOLD_MS = 350L
+
 private class PressHold {
     var active = false
     var travelled = 0f
+    /** El menú ya se abrió con el dedo todavía puesto: al levantarlo no hay que abrirlo otra vez. */
+    var menuShown = false
 }
 
 /** El aviso de que, sin sincronización, no hay copia de las notas: lleva a Ajustes (sincronizar o exportar) y se puede descartar. */

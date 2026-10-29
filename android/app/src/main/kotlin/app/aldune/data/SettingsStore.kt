@@ -3,6 +3,7 @@ package app.aldune.data
 import android.content.Context
 import android.content.res.Configuration
 import app.aldune.capture.QuickList
+import app.aldune.domain.KeyboardOnOpen
 import app.aldune.text.AppPalette
 import app.aldune.text.AspectColorsJson
 import app.aldune.text.AspectSkin
@@ -43,6 +44,8 @@ data class AppSettings(
     val squareCorners: Boolean? = null,
     /** Señal de sincronización en cada nota; `null` = lo que decida el aspecto. */
     val showSyncSignal: Boolean? = null,
+    /** Forma del botón de nota nueva (el «+» de la app y los widgets): 0 como las esquinas de las notas (por defecto), 1 redondeado, 2 recto. */
+    val newButtonShape: Int = 0,
     /** Orden de la lista: los números de `NoteListOrder` (mazo 0, recientes 1, antiguas 2, título 3). Solo en el mazo se puede arrastrar. */
     val listOrder: Int = 0,
     /** Regla de color de las notas nuevas: los números de `NoteColorAssignment` (rotar evitando vecinas 0, rotar 1, más distinto 2, fijo 3). */
@@ -74,6 +77,7 @@ data class AppSettings(
     val colorFill: Boolean get() = fillNoteColor ?: AspectSkin.colorFill(appearance)
     val cornersSquare: Boolean get() = squareCorners ?: AspectSkin.squareCorners(appearance)
     val syncSignalVisible: Boolean get() = showSyncSignal ?: AspectSkin.syncSignal(appearance)
+    val newButtonSquare: Boolean get() = when (newButtonShape) { 1 -> false; 2 -> true; else -> cornersSquare }
 }
 
 object Languages {
@@ -116,13 +120,14 @@ class SettingsStore(context: Context) {
             fillNoteColor = nullableBoolean(FILL_NOTE_COLOR),
             squareCorners = nullableBoolean(SQUARE_CORNERS),
             showSyncSignal = nullableBoolean(SHOW_SYNC_SIGNAL),
+            newButtonShape = prefs.getInt(NEW_BUTTON_SHAPE, d.newButtonShape).takeIf { it in 0..2 } ?: d.newButtonShape,
             listOrder = prefs.getInt(LIST_ORDER, d.listOrder).takeIf { it in 0..3 } ?: d.listOrder,
             colorRule = prefs.getInt(COLOR_RULE, d.colorRule).takeIf { it in 0..3 } ?: d.colorRule,
             fixedNoteColor = prefs.getString(FIXED_NOTE_COLOR, null)?.takeIf { NoteDisplayColor.isActive(it) },
             reminderIncludesTasks = prefs.getBoolean(REMINDER_INCLUDES_TASKS, d.reminderIncludesTasks),
             syncInBackground = prefs.getBoolean(SYNC_IN_BACKGROUND, d.syncInBackground),
             hideDoneTasks = prefs.getBoolean(HIDE_DONE_TASKS, d.hideDoneTasks),
-            keyboardOnOpen = prefs.getInt(KEYBOARD_ON_OPEN, d.keyboardOnOpen).takeIf { it in 0..2 } ?: d.keyboardOnOpen,
+            keyboardOnOpen = KeyboardOnOpen.migrate(prefs.getInt(KEYBOARD_ON_OPEN, d.keyboardOnOpen), prefs.getBoolean(KEYBOARD_MIGRATED, false)),
             hideDoneAfterHours = prefs.getInt(HIDE_DONE_AFTER_HOURS, d.hideDoneAfterHours).coerceIn(1, 24 * 365),
             welcomeSeen = prefs.getBoolean(WELCOME_SEEN, d.welcomeSeen),
             backupNoticeDismissed = prefs.getBoolean(BACKUP_NOTICE_DISMISSED, d.backupNoticeDismissed),
@@ -151,6 +156,7 @@ class SettingsStore(context: Context) {
             .putOrRemove(FILL_NOTE_COLOR, settings.fillNoteColor)
             .putOrRemove(SQUARE_CORNERS, settings.squareCorners)
             .putOrRemove(SHOW_SYNC_SIGNAL, settings.showSyncSignal)
+            .putInt(NEW_BUTTON_SHAPE, settings.newButtonShape)
             .putInt(LIST_ORDER, settings.listOrder)
             .putInt(COLOR_RULE, settings.colorRule)
             .putOrRemove(FIXED_NOTE_COLOR, settings.fixedNoteColor)
@@ -158,6 +164,7 @@ class SettingsStore(context: Context) {
             .putBoolean(SYNC_IN_BACKGROUND, settings.syncInBackground)
             .putBoolean(HIDE_DONE_TASKS, settings.hideDoneTasks)
             .putInt(KEYBOARD_ON_OPEN, settings.keyboardOnOpen)
+            .putBoolean(KEYBOARD_MIGRATED, true)
             .putInt(HIDE_DONE_AFTER_HOURS, settings.hideDoneAfterHours)
             .putBoolean(WELCOME_SEEN, settings.welcomeSeen)
             .putBoolean(BACKUP_NOTICE_DISMISSED, settings.backupNoticeDismissed)
@@ -193,6 +200,7 @@ class SettingsStore(context: Context) {
         const val FILL_NOTE_COLOR = "fillNoteColor"
         const val SQUARE_CORNERS = "squareCorners"
         const val SHOW_SYNC_SIGNAL = "showSyncSignal"
+        const val NEW_BUTTON_SHAPE = "newButtonShape"
         const val LIST_ORDER = "listOrder"
         const val COLOR_RULE = "colorRule"
         const val FIXED_NOTE_COLOR = "fixedNoteColor"
@@ -200,6 +208,7 @@ class SettingsStore(context: Context) {
         const val SYNC_IN_BACKGROUND = "syncInBackground"
         const val HIDE_DONE_TASKS = "hideDoneTasks"
         const val KEYBOARD_ON_OPEN = "keyboardOnOpen"
+        const val KEYBOARD_MIGRATED = "keyboardOnOpenMigrated"
         const val HIDE_DONE_AFTER_HOURS = "hideDoneAfterHours"
     }
 }

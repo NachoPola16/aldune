@@ -24,7 +24,10 @@ const val APPEARANCE_SYSTEM = AppPalette.SYSTEM
 fun paletteColor(hex: String): Color = Color(AndroidColor.parseColor(hex))
 
 /** Cómo se pintan las notas según los ajustes: color único, esquinas y señal de sync (ya resueltos contra el aspecto). */
-data class NoteLook(val uniformColor: String? = null, val squareCorners: Boolean = false, val syncSignal: Boolean = false, val fillColor: Boolean = true) {
+data class NoteLook(val uniformColor: String? = null, val squareCorners: Boolean = false, val syncSignal: Boolean = false, val fillColor: Boolean = true, val squareNewButton: Boolean = false,
+    /** Paleta del aspecto Telecom (canales CH1–CH4); `null` en los demás aspectos. La rellena [AldunaTheme]. */
+    val telecom: Map<String, String>? = null,
+) {
     /** El radio de una tarjeta de nota (12 dp de siempre, recto con «esquinas rectas»). */
     val cardShape get() = if (squareCorners) RectangleShape else RoundedCornerShape(12.dp)
 }
@@ -64,7 +67,10 @@ fun AldunaTheme(appearance: Int = APPEARANCE_SYSTEM, aspectColors: Map<String, M
     }
     // Esquinas rectas: todas las formas de Material (tarjetas, diálogos, botones, campos) a cero, no solo las de las notas.
     val shapes = if (look.squareCorners) RoundedCornerShape(0.dp).let { Shapes(it, it, it, it, it) } else MaterialTheme.shapes
-    CompositionLocalProvider(LocalNoteLook provides look) {
+    val telecom = if (appearance == AppPalette.TELECOM_LIGHT || appearance == AppPalette.TELECOM_DARK) {
+        remember(appearance, chosen) { AppPalette.forMode(appearance, systemLight, chosen) }
+    } else null
+    CompositionLocalProvider(LocalNoteLook provides look.copy(telecom = telecom)) {
         MaterialTheme(colorScheme = scheme, typography = remember(appearance) { typographyFor(appearance) }, shapes = shapes, content = content)
     }
 }

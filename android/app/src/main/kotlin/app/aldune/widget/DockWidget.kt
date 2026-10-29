@@ -84,7 +84,7 @@ private class WidgetColors(
 
 /** Qué se pinta: el contenido, o nada si la base no se pudo abrir (clave perdida). */
 private class WidgetData(val content: WidgetContent?, val texts: WidgetTexts, val colors: WidgetColors, val showPreview: Boolean,
-    val uniformColor: String? = null, val squareCorners: Boolean = false,
+    val uniformColor: String? = null, val squareCorners: Boolean = false, val squareNewButton: Boolean = false,
 )
 
 /**
@@ -132,7 +132,7 @@ class DockWidget : GlanceAppWidget() {
             }
         }
         return WidgetData(content, texts, colors(settings.appearance, settings.aspectColors), settings.widgetPreview,
-            settings.uniformNoteColor, settings.cornersSquare)
+            settings.uniformNoteColor, settings.cornersSquare, settings.newButtonSquare)
     }
 
     /** Con «seguir el sistema» el widget cambia solo de claro a oscuro; con un aspecto elegido se queda en ese. */
@@ -174,7 +174,9 @@ class DockWidget : GlanceAppWidget() {
                 Image(
                     provider = ImageProvider(R.drawable.ic_new_note), contentDescription = data.texts.newNote,
                     colorFilter = ColorFilter.tint(data.colors.plus),
-                    modifier = GlanceModifier.size(28.dp).clickable(actionStartActivity(CaptureIntents.newNote(context))),
+                    // Un botón relleno con la forma de las notas (o la elegida en Ajustes), no un «+» suelto.
+                    modifier = GlanceModifier.size(28.dp).background(data.colors.surface).cornerRadius(if (data.squareNewButton) 0.dp else 8.dp).padding(4.dp)
+                        .clickable(actionStartActivity(CaptureIntents.newNote(context))),
                 )
             }
             val content = data.content

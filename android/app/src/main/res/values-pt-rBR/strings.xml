@@ -91,7 +91,10 @@
     <string name="custom_color_hint">A cor do texto se adapta para manter sua nota legível.</string>
     <string name="custom_color_preview">Visualização</string>
     <string name="custom_color_hex">Cor HEX</string>
-    <string name="custom_color_rgb">Ajuste fino com RGB</string>
+    <string name="custom_color_rgb">Ajuste fino</string>
+    <string name="custom_color_pick">Toque numa cor</string>
+    <string name="custom_color_area_cd">Saturação e brilho</string>
+    <string name="custom_color_hue_cd">Matiz</string>
     <string name="custom_color_readable">Texto legível</string>
     <string name="custom_color_invalid">Digite uma cor como #F5E3B3.</string>
     <string name="custom_color_apply">Usar esta cor</string>
@@ -220,8 +223,8 @@
     <string name="conflict_strip_title">Esta nota mudou em dois lugares ao mesmo tempo</string>
     <string name="conflict_strip_deleted">Esta nota foi excluída em outro dispositivo</string>
     <string name="conflict_other_version">A outra versão</string>
-    <string name="conflict_keep">Ficar com esta</string>
-    <string name="conflict_use_other">Usar a outra</string>
+    <string name="conflict_keep">Ficar com a nota de baixo</string>
+    <string name="conflict_use_other">Usar a versão de cima</string>
     <string name="conflict_delete_it">Excluir</string>
     <string name="conflict_protected_version">Versão protegida</string>
     <string name="conflict_unlock_version">Desbloquear para ver</string>
@@ -258,6 +261,10 @@
     <string name="fill_note_color_hint">O cartão inteiro assume a cor da nota, como no Windows. Desligado: só uma faixa à esquerda.</string>
     <string name="square_corners">Cantos retos</string>
     <string name="square_corners_hint">Notas, listas, diálogos e widget sem cantos arredondados.</string>
+    <string name="new_button_shape">Formato do botão de nova nota (+)</string>
+    <string name="new_button_follow">Como os cantos das notas</string>
+    <string name="new_button_rounded">Arredondado</string>
+    <string name="new_button_square">Reto</string>
     <string name="sync_signal">Sinal de sincronização em cada nota</string>
     <string name="sync_signal_hint">Mostra sob o título o estado de sincronização de cada nota. Requer a sincronização ativada.</string>
     <string name="sync_signal_format">%1$s %2$s</string>
@@ -275,6 +282,12 @@
     <string name="rule_rotate">Alternar pelo tema</string>
     <string name="rule_most_distinct">A mais diferente das demais</string>
     <string name="rule_fixed">Sempre a mesma cor</string>
+    <string name="apply_colors_button">Aplicar às notas existentes…</string>
+    <string name="apply_colors_title">Recolorir as notas</string>
+    <string name="apply_colors_body">A cor de todas as suas notas ativas mudará conforme o tema, o tom e a regra escolhidos, mesmo as escolhidas à mão. Ela será sincronizada com seus outros dispositivos. As arquivadas e a lixeira não são alteradas.</string>
+    <string name="apply_colors_confirm">Recolorir</string>
+    <string name="apply_colors_done">Notas recoloridas.</string>
+    <string name="fixed_color_not_in_theme">Essa cor não é do tema atual, então as notas novas usam a primeira cor do tema. Escolha uma do tema.</string>
     <string name="reminder_includes_tasks">Mostrar as tarefas pendentes no lembrete</string>
     <string name="reminder_includes_tasks_hint">A notificação lista as tarefas não marcadas (até 3).</string>
     <string name="sync_in_background">Sincronizar em segundo plano</string>
