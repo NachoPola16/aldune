@@ -24,6 +24,13 @@ class NoteListingTest {
 
     @Test fun `por titulo sin distinguir mayusculas y con las protegidas al final`() = assertEquals(listOf("b", "a", "c", "p"), ids(NoteListOrder.TITLE))
 
+    @Test fun `una protegida con nombre visible ordena por ese nombre y sin nombre sigue al final`() {
+        val named = note("n", "", "2026-01-05T00:00:00Z", protected = true).copy(protectedTitle = "Banco")
+        val sorted = NoteListing.sort(listOf(a, locked, c, named, b), NoteListOrder.TITLE).map { it.id }
+        // apple, Banana, Banco, Cherry, y la protegida sin nombre al final.
+        assertEquals(listOf("b", "a", "n", "c", "p"), sorted)
+    }
+
     @Test fun `los codigos son los de Windows`() {
         assertEquals(listOf(0, 1, 2, 3), NoteListOrder.entries.map { it.code })
         assertEquals(NoteListOrder.DOCK, NoteListOrder.fromCode(99))

@@ -6,6 +6,7 @@ import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonNull
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
+import kotlinx.serialization.json.contentOrNull
 import kotlinx.serialization.json.jsonArray
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
@@ -37,11 +38,13 @@ class KotlinOutputTest {
         tags: List<String> = emptyList(),
         protectedContent: ProtectedNoteContent? = null,
         dockPosition: Double? = null,
+        protectedTitle: String? = null,
     ) = SyncNote(
         id = UUID.fromString(id), text = text, color = "#EBD38B",
         createdAt = OffsetDateTime.parse(createdAt), updatedAt = OffsetDateTime.parse(updatedAt),
         state = state, screenOrigin = "primary", tags = tags,
         isProtected = protectedContent != null, protectedContent = protectedContent, dockPosition = dockPosition,
+        protectedTitle = protectedTitle,
     )
 
     private fun str(v: String?): JsonElement = if (v == null) JsonNull else JsonPrimitive(v)
@@ -57,6 +60,7 @@ class KotlinOutputTest {
         "tags" to JsonArray(n.tags.map(::JsonPrimitive)),
         "isProtected" to JsonPrimitive(n.isProtected),
         "dockPosition" to (n.dockPosition?.let(::JsonPrimitive) ?: JsonNull),
+        "protectedTitle" to str(n.protectedTitle),
     ))
 
     private fun envelopeEntry(name: String, n: SyncNote, extra: Map<String, JsonElement> = emptyMap()): JsonObject {
@@ -95,6 +99,10 @@ class KotlinOutputTest {
                 updatedAt = "2026-10-17T12:30:15.1234567+02:00", createdAt = "2026-10-01T10:00:00+02:00")),
             envelopeEntry("kotlin: protegida", note(
                 "a1b2c3d4-0005-4000-8000-000000000005", "", protectedContent = protectedContent),
+                extra = mapOf("protectedPassword" to JsonPrimitive(protectedPassword),
+                    "protectedPlaintext" to JsonPrimitive(protectedPlaintext))),
+            envelopeEntry("kotlin: protegida con nombre visible", note(
+                "a1b2c3d4-0008-4000-8000-000000000008", "", protectedContent = protectedContent, protectedTitle = "Banco ñ ☐"),
                 extra = mapOf("protectedPassword" to JsonPrimitive(protectedPassword),
                     "protectedPlaintext" to JsonPrimitive(protectedPlaintext))),
         )
@@ -169,6 +177,7 @@ class KotlinOutputTest {
             val note = SyncEnvelopeCodec.decryptNote(envelope, key)
             assertEquals(v.getValue("expected").jsonObject.str("id"), note.id.toString())
             assertEquals(v.getValue("expected").jsonObject.str("text"), note.text)
+            assertEquals(v.getValue("expected").jsonObject["protectedTitle"]?.jsonPrimitive?.contentOrNull, note.protectedTitle)
             val password = v["protectedPassword"]?.jsonPrimitive?.content
             if (password != null)
                 assertEquals(v.str("protectedPlaintext"), ProtectedNotes.tryUnprotect(note.protectedContent!!, password))

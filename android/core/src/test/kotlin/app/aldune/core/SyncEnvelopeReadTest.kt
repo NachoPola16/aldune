@@ -1,5 +1,6 @@
 package app.aldune.core
 
+import kotlinx.serialization.json.contentOrNull
 import kotlinx.serialization.json.jsonArray
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
@@ -45,6 +46,8 @@ class SyncEnvelopeReadTest {
             assertEquals(expected.str("screenOrigin"), note.screenOrigin)
             assertEquals(expected.getValue("tags").jsonArray.map { it.jsonPrimitive.content }, note.tags)
             assertEquals(expected.getValue("isProtected").jsonPrimitive.content.toBoolean(), note.isProtected)
+            // Un fichero de vectores anterior al nombre visible no trae la clave: es «sin nombre».
+            assertEquals(expected["protectedTitle"]?.jsonPrimitive?.contentOrNull, note.protectedTitle)
             val dock = expected.getValue("dockPosition").jsonPrimitive
             if (dock.content == "null") assertNull(note.dockPosition) else assertEquals(dock.content.toDouble(), note.dockPosition)
         }
@@ -59,6 +62,17 @@ class SyncEnvelopeReadTest {
         val plain = SyncEnvelopeCodec.decryptNote(
             SyncEnvelopeCodec.deserialize(byName.getValue("nota simple").str("envelopeJson")), key)
         assertNull(plain.protectedContent)
+    }
+
+    @Test
+    fun `el vector con nombre visible lo trae y los demas no`() {
+        val byName = Vectors.objects("envelopes").associateBy { it.str("name") }
+        val named = SyncEnvelopeCodec.decryptNote(
+            SyncEnvelopeCodec.deserialize(byName.getValue("protegida con nombre visible").str("envelopeJson")), key)
+        assertEquals("Banco ☐", named.protectedTitle)
+        val plain = SyncEnvelopeCodec.decryptNote(
+            SyncEnvelopeCodec.deserialize(byName.getValue("protegida").str("envelopeJson")), key)
+        assertNull(plain.protectedTitle)
     }
 
     @Test

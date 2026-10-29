@@ -138,6 +138,7 @@ object SyncEnvelopeCodec {
         "tags" to JsonArray(note.tags.map(::JsonPrimitive)),
         "isProtected" to JsonPrimitive(note.isProtected),
         "protectedContent" to (note.protectedContent?.let(::protectedContentToJson) ?: JsonNull),
+        "protectedTitle" to (normalizeTitle(note.protectedTitle?.takeIf { note.isProtected })?.let(::JsonPrimitive) ?: JsonNull),
         "dockPosition" to (note.dockPosition?.let(::JsonPrimitive) ?: JsonNull),
     )).toString()
 
@@ -201,6 +202,7 @@ object SyncEnvelopeCodec {
 
     private fun readNote(o: JsonObject): SyncNote {
         val default = OffsetDateTime.ofInstant(DEFAULT_INSTANT, java.time.ZoneOffset.UTC)
+        val isProtected = o.boolean("isProtected") ?: false
         val tags = (o.field("tags") as? JsonArray)?.mapNotNull { (it as? JsonPrimitive)?.takeIf { p -> p.isString }?.content }
         return SyncNote(
             id = o.string("id")?.let(::parseUuid) ?: NIL_UUID,
@@ -211,11 +213,30 @@ object SyncEnvelopeCodec {
             state = o.int("state") ?: NoteState.ACTIVE,
             screenOrigin = o.string("screenOrigin") ?: "",
             tags = tags ?: emptyList(),
-            isProtected = o.boolean("isProtected") ?: false,
+            isProtected = isProtected,
             protectedContent = (o.field("protectedContent") as? JsonObject)?.let(::readProtectedContent),
             dockPosition = o.double("dockPosition"),
+            // Falta en lo que escribieron las versiones anteriores, y en una nota sin proteger no significa nada.
+            protectedTitle = normalizeTitle(o.string("protectedTitle")?.takeIf { isProtected }),
         )
     }
+
+    /**
+     * Misma regla que `ProtectedTitleRules.Normalize` de Core (una línea, recortada, máximo 60; vacío = sin nombre). Aquí también, y no
+     * solo en la app, para que el motor compare lo mismo a los dos lados: un nombre sin normalizar en el almacén parecería un cambio.
+     */
+    private fun normalizeTitle(raw: String?): String? {
+        if (raw.isNullOrBlank()) return null
+        var oneLine = raw.split('\r', '\n', '\t').map { it.trim() }.filter { it.isNotEmpty() }.joinToString(" ")
+        if (oneLine.length > MAX_PROTECTED_TITLE) {
+            var end = MAX_PROTECTED_TITLE
+            if (oneLine[end - 1].isHighSurrogate()) end--
+            oneLine = oneLine.substring(0, end).trimEnd()
+        }
+        return oneLine.ifEmpty { null }
+    }
+
+    private const val MAX_PROTECTED_TITLE = 60
 
     internal fun readProtectedContent(o: JsonObject) = ProtectedNoteContent(
         version = o.int("version") ?: ProtectedNoteContent.CURRENT_VERSION,

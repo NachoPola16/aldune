@@ -48,6 +48,15 @@ class WidgetContentTest {
 
     // Regla 3
     @Test
+    fun `una protegida con nombre visible lo lleva en Locked, cortado al maximo`() {
+        val named = note("p", isProtected = true, protectedJson = "{}").copy(protectedTitle = "Banco")
+        assertEquals(WidgetStrip.Locked("p", "#EBD38B", "Banco"), build(listOf(named)).strips.single())
+        // Sin proteger, el campo no cuenta aunque venga relleno.
+        val plain = note("q").copy(protectedTitle = "Banco")
+        open(build(listOf(plain)).strips.single())
+    }
+
+    @Test
     fun `una protegida es Locked con su color, con o sin vista previa, aunque tenga texto`() {
         val n = note("p", text = "texto en memoria\nsegunda", color = "#112233", isProtected = true)
         for (preview in listOf(false, true)) {

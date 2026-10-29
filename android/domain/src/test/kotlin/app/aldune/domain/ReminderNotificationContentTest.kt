@@ -65,6 +65,12 @@ class ReminderNotificationContentTest {
     }
 
     @Test
+    fun `una protegida con nombre visible lo lleva en Locked`() {
+        val named = note("secreto", isProtected = true).copy(protectedTitle = "Banco")
+        assertEquals(ReminderNotificationContent.Locked("n1", "Banco"), build(named))
+    }
+
+    @Test
     fun `una protegida es Locked y solo lleva el id`() {
         assertEquals(ReminderNotificationContent.Locked("n1"), build(note("secreto", isProtected = true)))
     }

@@ -41,6 +41,7 @@ enum class LineEnding(val sequence: String) {
  * @property isProtected nota protegida con contraseña en otro equipo. Su `text` es `""`: el texto vive cifrado en [protectedContentJson].
  * @property protectedContentJson el JSON de `ProtectedNoteContent` tal como llegó, opaco para este módulo (que no depende de `core`).
  * Se conserva entero en cualquier cambio local para que la nota vuelva a subir idéntica; abrirla y cambiarle el texto es cosa de F7.
+ * @property protectedTitle nombre visible, en claro, de una nota protegida (`null` = «Nota protegida»). Es público por diseño: ver `ProtectedTitleRules`.
  */
 data class Note(
     val id: String,
@@ -56,6 +57,7 @@ data class Note(
     val syncAuthorDeviceId: String? = null,
     val isProtected: Boolean = false,
     val protectedContentJson: String? = null,
+    val protectedTitle: String? = null,
 ) {
     init {
         // Es un fallo de programa, no de usuario: quien construye la nota desde un fichero o desde sync debe normalizar antes.

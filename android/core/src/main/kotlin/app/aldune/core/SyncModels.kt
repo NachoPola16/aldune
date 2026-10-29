@@ -63,4 +63,6 @@ data class SyncNote(
     val isProtected: Boolean,
     val protectedContent: ProtectedNoteContent?,
     val dockPosition: Double?,
+    /** Nombre visible, en claro, de una nota protegida (null = «Nota protegida»). Solo se conserva si la nota está protegida. */
+    val protectedTitle: String? = null,
 )

@@ -9,6 +9,7 @@ import app.aldune.domain.Clock
 import app.aldune.domain.LineEnding
 import app.aldune.domain.Note
 import app.aldune.domain.NoteStore
+import app.aldune.text.ProtectedTitleRules
 import java.time.Instant
 
 /** Por qué no se pudo proteger, abrir, guardar o desproteger una nota. Cada caso lleva lo que la interfaz necesita; sin textos. */
@@ -66,9 +67,9 @@ class ProtectionService(private val store: NoteStore, private val clock: Clock, 
 
     /**
      * Cifra el texto de la nota con la contraseña. Se cifra con los saltos de línea originales de la nota (`wireText`): es lo que ve
-     * Windows al abrirla.
+     * Windows al abrirla. [visibleName] es el nombre visible opcional (en claro: ver [ProtectedTitleRules]); se guarda en la misma escritura.
      */
-    fun protect(id: String, password: String, confirmation: String): ProtectionResult<Note> {
+    fun protect(id: String, password: String, confirmation: String, visibleName: String? = null): ProtectionResult<Note> {
         val problem = PasswordRules.check(password, confirmation)
         if (problem != PasswordProblem.None) return err(ProtectionError.InvalidPassword(problem))
         // Pasa las reglas pero core no acepta una contraseña de sólo espacios: para el usuario es como no haber escrito ninguna.
@@ -82,7 +83,7 @@ class ProtectionService(private val store: NoteStore, private val clock: Clock, 
             val current = store.get(id) ?: return@synchronized err(ProtectionError.NotFound(id))
             if (current.isProtected) return@synchronized err(ProtectionError.AlreadyProtected(id))
             if (current.wireText != note.wireText) return@synchronized err(ProtectionError.StaleWrite(id))
-            ok(write(current, protectedContentToJson(content)))
+            ok(write(current, protectedContentToJson(content), ProtectedTitleRules.normalize(visibleName)))
         }
     }
 
@@ -152,7 +153,7 @@ class ProtectionService(private val store: NoteStore, private val clock: Clock, 
 
             val restored = current.copy(
                 text = LineEnding.normalize(plain), lineEnding = LineEnding.detect(plain),
-                isProtected = false, protectedContentJson = null,
+                isProtected = false, protectedContentJson = null, protectedTitle = null,
                 updatedAt = clock.now(), syncAuthorDeviceId = null,
             )
             store.put(restored)
@@ -161,10 +162,24 @@ class ProtectionService(private val store: NoteStore, private val clock: Clock, 
         }
     }
 
+    /**
+     * Pone (o quita, si queda vacío) el nombre visible de una protegida. No pide contraseña: el nombre es público por diseño. Cuenta
+     * como edición (fecha nueva, autor este equipo) para que viaje por la sync; repetir el mismo nombre no escribe nada.
+     */
+    fun setProtectedTitle(id: String, title: String?): ProtectionResult<Note> = synchronized(lock) {
+        val note = store.get(id) ?: return err(ProtectionError.NotFound(id))
+        if (!note.isProtected) return err(ProtectionError.NotProtected(id))
+        val name = ProtectedTitleRules.normalize(title)
+        if (name == ProtectedTitleRules.normalize(note.protectedTitle)) return ok(note)
+        val written = note.copy(protectedTitle = name, updatedAt = clock.now(), syncAuthorDeviceId = null)
+        store.put(written)
+        ok(written)
+    }
+
     // El texto normal de una protegida va siempre vacío: si no, viajaría en claro por la sync.
-    private fun write(note: Note, protectedJson: String): Note {
+    private fun write(note: Note, protectedJson: String, visibleName: String? = note.protectedTitle): Note {
         val written = note.copy(
-            text = "", isProtected = true, protectedContentJson = protectedJson,
+            text = "", isProtected = true, protectedContentJson = protectedJson, protectedTitle = visibleName,
             updatedAt = clock.now(), syncAuthorDeviceId = null,
         )
         store.put(written)

@@ -13,6 +13,7 @@ import app.aldune.sync.LocalTombstone
 import app.aldune.sync.SyncBase
 import app.aldune.sync.SyncInput
 import app.aldune.sync.SyncScope
+import app.aldune.text.ProtectedTitleRules
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
@@ -88,6 +89,8 @@ fun toDomainNote(note: SyncNote, authorDeviceId: String): Note? {
         syncAuthorDeviceId = authorDeviceId,
         isProtected = note.isProtected,
         protectedContentJson = note.protectedContent?.let(::protectedContentToJson),
+        // Se normaliza al entrar, como en Windows: un nombre con saltos de línea o enorme no llega a la lista.
+        protectedTitle = ProtectedTitleRules.visible(note.isProtected, note.protectedTitle),
     )
 }
 
@@ -111,6 +114,7 @@ private fun Note.toSyncNote(): SyncNote {
         isProtected = isProtected,
         protectedContent = content,
         dockPosition = dockPosition,
+        protectedTitle = ProtectedTitleRules.visible(isProtected, protectedTitle),
     )
 }
 
@@ -139,7 +143,7 @@ internal fun protectedContentToJson(content: ProtectedNoteContent): String {
     val epoch = OffsetDateTime.ofInstant(Instant.EPOCH, ZoneOffset.UTC)
     val carrier = SyncNote(
         id = UUID(0, 1), text = "", color = "", createdAt = epoch, updatedAt = epoch, state = 0, screenOrigin = "",
-        tags = emptyList(), isProtected = true, protectedContent = content, dockPosition = null,
+        tags = emptyList(), isProtected = true, protectedContent = content, dockPosition = null, protectedTitle = null,
     )
     val document = Json.parseToJsonElement(SyncEnvelopeCodec.noteToJson(carrier)) as JsonObject
     return document.getValue("protectedContent").toString()

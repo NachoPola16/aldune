@@ -7,6 +7,22 @@ import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 
 class NoteListItemTest {
+    @Test
+    fun `una protegida con nombre visible lo enseña en lugar del relleno`() {
+        val named = note("", listOf("casa")).copy(isProtected = true, protectedContentJson = "{}", protectedTitle = " Banco ")
+        val item = NoteListItem.from(named, "Nota nueva", protectedTitle = "Nota protegida")
+
+        assertEquals("Banco", item.title)
+        assertEquals("", item.preview)
+        assertTrue(item.isProtected)
+    }
+
+    @Test
+    fun `una nota sin proteger ignora el nombre visible que arrastre`() {
+        val item = NoteListItem.from(note("hola").copy(protectedTitle = "Banco"), "Nota nueva", protectedTitle = "Nota protegida")
+        assertEquals("hola", item.title)
+    }
+
     private fun note(text: String, tags: List<String> = emptyList()) = Note(
         id = "n1", text = text, lineEnding = LineEnding.LF, color = "#EBD38B", createdAt = Instant.EPOCH, updatedAt = Instant.EPOCH,
         state = NoteState.ACTIVE, tags = tags,

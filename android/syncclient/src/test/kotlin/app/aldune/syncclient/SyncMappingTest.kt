@@ -167,6 +167,13 @@ class SyncMappingTest {
         assertNull(wire.protectedContent)
     }
 
+    @Test fun `el nombre visible de una protegida sube normalizado y el de una normal no sube`() {
+        val named = note(isProtected = true, protectedJson = PROTECTED_JSON, protectedTitle = "  Banco\nprincipal ")
+        assertEquals("Banco principal", build(snapshot(listOf(named))).localNotes.single().note.protectedTitle)
+        val plain = note(isProtected = false, protectedTitle = "Banco")
+        assertNull(build(snapshot(listOf(plain))).localNotes.single().note.protectedTitle)
+    }
+
     // --- SyncNote -> Note ---
 
     private fun wireNote(
@@ -174,14 +181,24 @@ class SyncMappingTest {
         state: Int = WireState.ACTIVE,
         isProtected: Boolean = false,
         content: ProtectedNoteContent? = null,
+        protectedTitle: String? = null,
     ) = SyncNote(
         id = UUID.fromString(ID1), text = text, color = "#AaBbCc", createdAt = T0.toWire(), updatedAt = T0.plusSeconds(5).toWire(),
         state = state, screenOrigin = "pantalla", tags = listOf("A", "a"), isProtected = isProtected, protectedContent = content, dockPosition = 1.5,
+        protectedTitle = protectedTitle,
     )
 
     @Test fun `una nota recibida se convierte con todos sus campos y su autor`() {
         val n = toDomainNote(wireNote(), "pc01")!!
         assertEquals(note(ID1, "hola", LineEnding.LF, "#AaBbCc", T0, T0.plusSeconds(5), NoteState.ACTIVE, listOf("A", "a"), 1.5, "pantalla", "pc01"), n)
+    }
+
+    @Test fun `el nombre visible recibido se guarda normalizado y solo en una protegida`() {
+        val content = ProtectedNoteContent(1, "s", "c", "n", "t")
+        val named = toDomainNote(wireNote(isProtected = true, content = content, protectedTitle = " Banco  \n"), "pc01")!!
+        assertEquals("Banco", named.protectedTitle)
+        assertNull(toDomainNote(wireNote(isProtected = true, content = content), "pc01")!!.protectedTitle)
+        assertNull(toDomainNote(wireNote(protectedTitle = "Banco"), "pc01")!!.protectedTitle)
     }
 
     @Test fun `el CRLF se detecta y el texto de dominio va en LF`() {

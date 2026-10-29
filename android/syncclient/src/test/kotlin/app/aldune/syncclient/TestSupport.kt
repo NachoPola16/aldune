@@ -29,7 +29,8 @@ fun note(
     author: String? = null,
     isProtected: Boolean = false,
     protectedJson: String? = null,
-) = Note(id, text, ending, color, createdAt, updatedAt, state, tags, position, origin, author, isProtected, protectedJson)
+    protectedTitle: String? = null,
+) = Note(id, text, ending, color, createdAt, updatedAt, state, tags, position, origin, author, isProtected, protectedJson, protectedTitle)
 
 /** Reloj de prueba: no avanza solo. */
 class TestClock(var current: Instant = T0) : app.aldune.domain.Clock {

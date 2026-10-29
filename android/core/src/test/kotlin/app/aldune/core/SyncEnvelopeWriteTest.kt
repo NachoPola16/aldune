@@ -27,6 +27,30 @@ class SyncEnvelopeWriteTest {
         Triple(v.str("name"), envelope, SyncEnvelopeCodec.decryptNote(envelope, key))
     }
 
+    @Test
+    fun `el nombre visible viaja en claro dentro del contenido y solo en notas protegidas`() {
+        val named = vectorNotes().first { it.first == "protegida con nombre visible" }.third
+        val json = Json.parseToJsonElement(SyncEnvelopeCodec.noteToJson(named)).jsonObject
+        assertEquals("Banco ☐", json.getValue("protectedTitle").jsonPrimitive.content)
+
+        val plain = vectorNotes().first { it.first == "nota simple" }.third
+        // Aunque alguien lo ponga a mano, una nota sin proteger no lo escribe.
+        val leaked = Json.parseToJsonElement(SyncEnvelopeCodec.noteToJson(plain.copy(protectedTitle = "x"))).jsonObject
+        assertEquals(JsonNull, leaked.getValue("protectedTitle"))
+    }
+
+    @Test
+    fun `el nombre visible se normaliza al escribir y al leer`() {
+        val base = vectorNotes().first { it.first == "protegida con nombre visible" }.third
+        val messy = base.copy(protectedTitle = "  Banco\r\nprincipal  ")
+        val reread = SyncEnvelopeCodec.decryptNote(SyncEnvelopeCodec.createNote(messy, key, "device-k"), key)
+        assertEquals("Banco principal", reread.protectedTitle)
+        val blank = SyncEnvelopeCodec.decryptNote(SyncEnvelopeCodec.createNote(base.copy(protectedTitle = "   "), key, "device-k"), key)
+        assertNull(blank.protectedTitle)
+        val long = SyncEnvelopeCodec.decryptNote(SyncEnvelopeCodec.createNote(base.copy(protectedTitle = "a".repeat(200)), key, "device-k"), key)
+        assertEquals(60, long.protectedTitle!!.length)
+    }
+
     @TestFactory
     fun `ida y vuelta de cada nota de los vectores`() = vectorNotes().map { (name, original, note) ->
         DynamicTest.dynamicTest(name) {

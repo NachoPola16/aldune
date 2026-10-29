@@ -23,6 +23,16 @@ class NoteServiceProtectedTest {
         return note
     }
 
+    @Test fun `una busqueda no encuentra el contenido de una protegida pero si su nombre visible`() {
+        val f = Fixture()
+        f.store.put(protectedFromPc(f).copy(protectedTitle = "Banco", tags = listOf("casa")))
+        assertEquals(listOf("p1"), f.service.list(NoteState.ACTIVE, query = "banc").map { it.id })
+        // Las etiquetas de una protegida siguen sin dar pistas.
+        assertTrue(f.service.list(NoteState.ACTIVE, query = "casa").isEmpty())
+        assertTrue(f.service.list(NoteState.ACTIVE, query = "zzz").isEmpty())
+        assertEquals(1, f.service.list(NoteState.ACTIVE).size)
+    }
+
     @Test fun `una nota normal no es protegida y no lleva contenido`() {
         val note = Fixture().create()
         assertFalse(note.isProtected)

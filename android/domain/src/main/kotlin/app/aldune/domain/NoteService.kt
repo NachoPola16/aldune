@@ -5,6 +5,7 @@ import app.aldune.text.NoteColorAssigner
 import app.aldune.text.NoteColorAssignment
 import app.aldune.text.NoteOrdering
 import app.aldune.text.NoteSearch
+import app.aldune.text.ProtectedTitleRules
 import app.aldune.text.NoteThemes
 import app.aldune.text.NoteTheme
 import app.aldune.text.NoteTone
@@ -177,18 +178,26 @@ class NoteService(
         NoteResult.Ok(expired.size)
     }
 
+    private fun searchable(note: Note, query: String): Boolean {
+        if (!note.isProtected) return NoteSearch.matchesNote(note.text, note.tags, query)
+        if (query.trimDotNet().isEmpty()) return true
+        val name = ProtectedTitleRules.visible(true, note.protectedTitle) ?: return false
+        return NoteSearch.matchesNote(name, emptyList(), query)
+    }
+
     /** La nota con ese id, o `null`. Es lo que lee el editor al abrir una nota. */
     fun get(id: String): Note? = synchronized(lock) { store.get(id) }
 
     /**
      * Las notas de un estado en el orden del mazo, filtradas por etiqueta (sin distinguir mayúsculas) y por búsqueda en texto y etiquetas.
-     * Una etiqueta `null` o una búsqueda vacía no filtran. Con una búsqueda no vacía las protegidas nunca salen: su texto es
-     * desconocido y buscar por sus etiquetas daría pistas de una nota que el usuario ha cerrado con contraseña.
+     * Una etiqueta `null` o una búsqueda vacía no filtran. Con una búsqueda no vacía las protegidas solo salen si coincide su nombre
+     * visible (que ya se ve en la lista): su texto es desconocido y buscar por sus etiquetas daría pistas de una nota que el usuario ha
+     * cerrado con contraseña.
      */
     fun list(filter: NoteState, query: String = "", tag: String? = null): List<Note> = synchronized(lock) {
         dockOrdered(store.all().filter { it.state == filter })
             .filter { note -> tag == null || note.tags.any { it.equals(tag, ignoreCase = true) } }
-            .filter { if (it.isProtected) query.trimDotNet().isEmpty() else NoteSearch.matchesNote(it.text, it.tags, query) }
+            .filter { searchable(it, query) }
     }
 
     /**

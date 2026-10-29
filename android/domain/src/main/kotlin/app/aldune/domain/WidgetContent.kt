@@ -1,6 +1,7 @@
 package app.aldune.domain
 
 import app.aldune.text.NoteTitleHelper
+import app.aldune.text.ProtectedTitleRules
 
 /**
  * Una tira del widget. Sellada a propósito: [Locked] no tiene ningún campo de texto, así que "una protegida nunca enseña nada
@@ -15,8 +16,8 @@ sealed interface WidgetStrip {
     /** [preview] es `null` si el ajuste está apagado o la nota no tiene más líneas que enseñar. */
     data class Open(override val id: String, override val color: String, val title: String, val preview: String?) : WidgetStrip
 
-    /** Nota protegida: sitio y color, nada más. */
-    data class Locked(override val id: String, override val color: String) : WidgetStrip
+    /** Nota protegida: sitio y color, y su nombre visible solo si el usuario se lo puso (es público por diseño). Nunca nada del contenido. */
+    data class Locked(override val id: String, override val color: String, val title: String? = null) : WidgetStrip
 }
 
 /** Lo que pinta el widget: las tiras que caben y cuántas notas activas se quedaron fuera (la fila «Más notas: N»). */
@@ -43,8 +44,10 @@ object WidgetContentBuilder {
     }
 
     private fun strip(note: Note, options: WidgetOptions): WidgetStrip {
-        // Antes de mirar nada más: de una protegida solo se usan el id y el color, aunque tenga texto en memoria (nota desbloqueada).
-        if (note.isProtected) return WidgetStrip.Locked(note.id, note.color)
+        // Antes de mirar nada más: de una protegida solo se usan el id, el color y el nombre visible, aunque tenga texto en memoria (nota desbloqueada).
+        if (note.isProtected) {
+            return WidgetStrip.Locked(note.id, note.color, ProtectedTitleRules.visible(true, note.protectedTitle)?.let { truncate(it, MAX_TITLE_LENGTH) })
+        }
 
         val title = truncate(NoteTitleHelper.getTitle(note.text, options.placeholder), MAX_TITLE_LENGTH)
         val preview = if (options.showPreview) {

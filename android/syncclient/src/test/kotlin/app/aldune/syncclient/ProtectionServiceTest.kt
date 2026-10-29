@@ -246,6 +246,63 @@ class ProtectionServiceTest {
         assertEquals(NoteError.Protected(ID1), notes.edit(ID1, "x").errorOrNull())
     }
 
+    // --- nombre visible ---
+
+    @Test fun `protect con nombre visible lo guarda normalizado en la misma escritura`() {
+        put(note(text = "hola"))
+        val writes = store.writeCount
+        val result = ok(service.protect(ID1, password, password, visibleName = "  Banco "))
+        assertEquals("Banco", result.protectedTitle)
+        assertEquals(writes + 1, store.writeCount)
+        assertNull(ok(service.removeProtection(ID1, password)).protectedTitle)
+    }
+
+    @Test fun `protect sin nombre visible no lo pone`() {
+        put(note(text = "hola"))
+        put(note(id = ID2, text = "otra"))
+        assertNull(ok(service.protect(ID1, password, password)).protectedTitle)
+        assertNull(ok(service.protect(ID2, password, password, visibleName = "   ")).protectedTitle)
+    }
+
+    @Test fun `setProtectedTitle cuenta como edicion y no pide contrasena`() {
+        protectedNote("secreto")
+        clock.advanceSeconds(30)
+        val before = store.get(ID1)!!
+
+        val named = ok(service.setProtectedTitle(ID1, " Banco "))
+
+        assertEquals("Banco", named.protectedTitle)
+        assertEquals(clock.current, named.updatedAt)
+        assertNull(named.syncAuthorDeviceId)
+        assertEquals(before.protectedContentJson, named.protectedContentJson)
+        assertEquals("", named.text)
+        assertEquals(named, store.get(ID1))
+    }
+
+    @Test fun `setProtectedTitle vacio oculta el nombre y repetir el mismo no escribe`() {
+        protectedNote("secreto")
+        ok(service.setProtectedTitle(ID1, "Banco"))
+        val writes = store.writeCount
+        ok(service.setProtectedTitle(ID1, "Banco"))
+        assertEquals(writes, store.writeCount)
+
+        clock.advanceSeconds(5)
+        assertNull(ok(service.setProtectedTitle(ID1, "  ")).protectedTitle)
+    }
+
+    @Test fun `setProtectedTitle de una nota normal o inexistente es un error`() {
+        put(note())
+        assertEquals(ProtectionError.NotProtected(ID1), err(service.setProtectedTitle(ID1, "x")))
+        assertEquals(ProtectionError.NotFound(ID2), err(service.setProtectedTitle(ID2, "x")))
+    }
+
+    @Test fun `guardar el texto de una protegida conserva su nombre visible`() {
+        protectedNote("secreto")
+        ok(service.setProtectedTitle(ID1, "Banco"))
+        val session = service.unlockOrThrow(ID1, password)
+        assertEquals("Banco", ok(service.save(ID1, session, "otro")).protectedTitle)
+    }
+
     // --- removeProtection ---
 
     @Test fun `removeProtection restaura el texto normal y quita la proteccion`() {

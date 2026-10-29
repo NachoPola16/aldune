@@ -1,6 +1,7 @@
 package app.aldune.domain
 
 import app.aldune.text.NoteTitleHelper
+import app.aldune.text.ProtectedTitleRules
 import app.aldune.text.TaskLines
 
 /**
@@ -16,7 +17,7 @@ data class NoteListItem(
     val tasksTotal: Int,
     val tags: List<String>,
     val state: NoteState,
-    /** Una protegida no enseña su texto (no se conoce sin contraseña): título de relleno, sin vista previa ni tareas. */
+    /** Una protegida no enseña su texto (no se conoce sin contraseña): su nombre visible o el título de relleno, sin vista previa ni tareas. */
     val isProtected: Boolean = false,
     /** Para la señal de sincronización de la fila (se compara con la última versión acordada con el almacén). */
     val updatedAt: java.time.Instant = java.time.Instant.EPOCH,
@@ -28,7 +29,7 @@ data class NoteListItem(
         fun from(note: Note, placeholder: String, protectedTitle: String = placeholder): NoteListItem {
             if (note.isProtected) {
                 return NoteListItem(
-                    id = note.id, title = protectedTitle, preview = "", color = note.color, tasksDone = 0, tasksTotal = 0,
+                    id = note.id, title = ProtectedTitleRules.visible(true, note.protectedTitle) ?: protectedTitle, preview = "", color = note.color, tasksDone = 0, tasksTotal = 0,
                     tags = note.tags, state = note.state, isProtected = true, updatedAt = note.updatedAt,
                 )
             }
