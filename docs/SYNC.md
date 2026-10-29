@@ -370,7 +370,7 @@ Las demás direcciones no se ven afectadas y `/health` nunca se limita. Un token
 
 Sin `ALDUNE_SYNC_TRUST_PROXY`, la cabecera se ignora, así que nadie puede librarse del límite falsificándola. Pero detrás de un proxy **todas**
 las conexiones llegan desde la dirección del proxy: un solo cliente con el token mal puesto bloquearía a todos. Por eso `docker-compose.sync.https.yml`
-(Caddy, que fija `X-Forwarded-For`) la activa por defecto; en la variante de Nginx o Cloudflare Tunnel, actívala solo si ese proxy escribe la cabecera
+(Caddy, que fija `X-Forwarded-For`) la activa por defecto; en la variante de Nginx (`docker-compose.sync.nginx.yml`) el límite viene **apagado** (`0`) y, para activarlo, pon `ALDUNE_SYNC_TRUST_PROXY=1` y `ALDUNE_SYNC_MAX_AUTH_FAILURES_PER_MINUTE=10` solo si ese proxy escribe la cabecera
 (`proxy_set_header X-Forwarded-For $remote_addr;` en Nginx, para no reenviar lo que mande el cliente) y no hay otra forma de llegar al puerto del servidor.
 Si tras cambiar un token ves 429, es que algún dispositivo sigue con el viejo: corrígelo y espera un minuto.
 

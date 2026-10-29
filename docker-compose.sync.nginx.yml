@@ -14,7 +14,9 @@ services:
       ALDUNE_SYNC_TOKENS: ${ALDUNE_SYNC_TOKENS:-}
       ALDUNE_DATA_DIR: /data
       # Límite de intentos fallidos de token por dirección (docs/SYNC.md → «Límite de intentos»).
-      ALDUNE_SYNC_MAX_AUTH_FAILURES_PER_MINUTE: ${ALDUNE_SYNC_MAX_AUTH_FAILURES_PER_MINUTE:-}
+      # Apagado por defecto en esta variante: detrás de Nginx o de Cloudflare Tunnel todas las conexiones llegan desde la dirección del proxy y, sin
+      # ALDUNE_SYNC_TRUST_PROXY, los bots de internet que prueban tokens bloquearían también a tus dispositivos. Actívalo junto con TRUST_PROXY (docs/SYNC.md).
+      ALDUNE_SYNC_MAX_AUTH_FAILURES_PER_MINUTE: ${ALDUNE_SYNC_MAX_AUTH_FAILURES_PER_MINUTE:-0}
       ALDUNE_SYNC_TRUST_PROXY: ${ALDUNE_SYNC_TRUST_PROXY:-}
       ASPNETCORE_URLS: http://+:8080
     # Esta variante escucha en todas las interfaces y permite acceso directo desde la red. Si quieres
