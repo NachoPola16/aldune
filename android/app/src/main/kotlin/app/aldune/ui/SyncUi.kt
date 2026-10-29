@@ -40,6 +40,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import android.content.Context
 import android.content.Intent
@@ -385,7 +387,7 @@ private fun ConnectForm(controller: SyncController, additional: Boolean, initial
         // (en un teléfono estrecho los botones se apilaban y «Descartarlas» quedaba pegado a «Cancelar»).
         AlertDialog(
             onDismissRequest = { pending = null },
-            title = { Text(stringResource(R.string.first_connect_title)) },
+            title = { Text(stringResource(R.string.first_connect_title), Modifier.semantics { heading() }) },
             text = {
                 Column {
                     Text(stringResource(R.string.first_connect_body, pendingNotes))
@@ -402,7 +404,7 @@ private fun ConnectForm(controller: SyncController, additional: Boolean, initial
     discardRequest?.let { request ->
         AlertDialog(
             onDismissRequest = { discardRequest = null },
-            title = { Text(stringResource(R.string.first_connect_discard_title)) },
+            title = { Text(stringResource(R.string.first_connect_discard_title), Modifier.semantics { heading() }) },
             text = { Text(stringResource(R.string.first_connect_discard_body, pendingNotes)) },
             confirmButton = {
                 TextButton(onClick = { discardRequest = null; connect(request, FirstConnectChoice.DISCARD) }) {
@@ -461,7 +463,7 @@ private fun ConnectedPanel(controller: SyncController, profile: SyncProfile) {
     if (confirming) {
         AlertDialog(
             onDismissRequest = { confirming = false },
-            title = { Text(stringResource(R.string.sync_disconnect_title)) },
+            title = { Text(stringResource(R.string.sync_disconnect_title), Modifier.semantics { heading() }) },
             text = { Text(stringResource(R.string.sync_disconnect_body)) },
             confirmButton = { TextButton(onClick = { confirming = false; scope.launch { controller.disconnect(profile.id) } }) { Text(stringResource(R.string.sync_disconnect)) } },
             dismissButton = { TextButton(onClick = { confirming = false }) { Text(stringResource(R.string.cancel)) } },

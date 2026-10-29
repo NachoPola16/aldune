@@ -93,6 +93,7 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.unit.dp
 import app.aldune.R
 import app.aldune.domain.ReminderLabel
@@ -340,7 +341,7 @@ fun NoteListPane(
         val line = formatStatus(status, rememberNow())
         AlertDialog(
             onDismissRequest = { showSyncDetail = false },
-            title = { Text(stringResource(R.string.sync_title)) },
+            title = { Text(stringResource(R.string.sync_title), Modifier.semantics { heading() }) },
             text = {
                 Column {
                     Text(statusText(line))
@@ -386,7 +387,7 @@ fun NoteListPane(
     deleting?.let { item ->
         AlertDialog(
             onDismissRequest = { deleting = null },
-            title = { Text(stringResource(R.string.delete_forever_title)) },
+            title = { Text(stringResource(R.string.delete_forever_title), Modifier.semantics { heading() }) },
             text = { Text(item.title + "\n\n" + stringResource(R.string.delete_forever_body)) },
             confirmButton = {
                 TextButton(onClick = { viewModel.deleteForever(item.id); deleting = null }) { Text(stringResource(R.string.delete_forever)) }
@@ -595,7 +596,9 @@ private fun NoteRow(item: NoteListItem, selected: Boolean, conflicted: Boolean, 
             }
             Row(Modifier.align(Alignment.CenterVertically).padding(end = 10.dp), verticalAlignment = Alignment.CenterVertically) {
                 if (item.isProtected) {
-                    Icon(Icons.Default.Lock, contentDescription = stringResource(R.string.protected_note_title), Modifier.size(18.dp), tint = muted)
+                    // Con el título genérico («Nota protegida») el candado no repite lo mismo: TalkBack leería «Nota protegida, Nota protegida».
+                    val protectedLabel = stringResource(R.string.protected_note_title)
+                    Icon(Icons.Default.Lock, contentDescription = protectedLabel.takeUnless { it == item.title }, Modifier.size(18.dp), tint = muted)
                 }
                 if (conflicted) {
                     Icon(Icons.Default.Warning, contentDescription = stringResource(R.string.conflict_flag_cd), Modifier.padding(start = 6.dp).size(18.dp), tint = MaterialTheme.colorScheme.error)

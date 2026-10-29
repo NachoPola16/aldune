@@ -26,6 +26,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import app.aldune.R
 import app.aldune.text.DiffLine
@@ -114,7 +116,7 @@ fun OrphanConflictsDialog(
 ) {
     AlertDialog(
         onDismissRequest = onClose,
-        title = { Text(stringResource(R.string.conflicts_title)) },
+        title = { Text(stringResource(R.string.conflicts_title), Modifier.semantics { heading() }) },
         text = {
             Column(Modifier.verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(4.dp)) {
                 Text(stringResource(R.string.conflicts_orphan_hint), style = MaterialTheme.typography.bodySmall)

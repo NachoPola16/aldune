@@ -15,7 +15,9 @@
     <uses-feature android:name="android.hardware.camera" android:required="false" />
 
     <!-- usesCleartextTraffic: el servidor de casa suele ir por http en la red local (Windows lo admite). La pantalla de sync avisa cuando la
-         dirección no es https; las notas viajan cifradas de extremo a extremo igualmente, lo único expuesto es el token. -->
+         dirección no es https y pide confirmación fuera de la red local; las notas viajan cifradas de extremo a extremo igualmente, lo único
+         expuesto es el token. No se acota con un network_security_config: sus `domain-config` solo casan nombres o una IP exacta, no rangos
+         (192.168.0.0/16 no existe ahí), así que permitir «solo la LAN» rompería los servidores por IP, que es el caso normal. -->
     <application
         android:name=".AldunaApp"
         android:allowBackup="false"
@@ -45,7 +47,7 @@
             <meta-data android:name="android.app.shortcuts" android:resource="@xml/shortcuts" />
         </activity>
 
-        <activity android:name=".ui.QrScanActivity" android:exported="false" android:screenOrientation="portrait" />
+        <activity android:name=".ui.QrScanActivity" android:exported="false" />
 
         <service
             android:name=".capture.NewNoteTileService"

@@ -18,6 +18,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import app.aldune.R
 import app.aldune.core.PasswordProblem
@@ -51,7 +53,7 @@ fun NoteActionsDialog(
     if (options == null && !naming && password == null) {
         AlertDialog(
             onDismissRequest = onClose,
-            title = { Text(item.title, maxLines = 1, overflow = TextOverflow.Ellipsis) },
+            title = { Text(item.title, Modifier.semantics { heading() }, maxLines = 1, overflow = TextOverflow.Ellipsis) },
             text = {
                 Column {
                     Action(stringResource(R.string.note_actions_open)) { onClose(); onOpen() }

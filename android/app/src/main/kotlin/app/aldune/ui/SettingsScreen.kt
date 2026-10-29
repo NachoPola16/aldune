@@ -130,7 +130,7 @@ fun SettingsScreen(viewModel: NotesViewModel, onClose: () -> Unit) {
                     val themeName = themeNameRes(themeId)?.let { stringResource(it) } ?: themeId
                     AlertDialog(
                         onDismissRequest = { suggestedTheme = null },
-                        title = { Text(stringResource(R.string.note_theme)) },
+                        title = { Text(stringResource(R.string.note_theme), Modifier.semantics { heading() }) },
                         text = { Text(stringResource(R.string.aspect_suggest_body, themeName)) },
                         confirmButton = {
                             TextButton(onClick = {
@@ -383,7 +383,7 @@ private fun QuickListRow(viewModel: NotesViewModel, notificationOn: Boolean) {
     if (picking) {
         AlertDialog(
             onDismissRequest = { picking = false },
-            title = { Text(stringResource(R.string.quick_list_pick)) },
+            title = { Text(stringResource(R.string.quick_list_pick), Modifier.semantics { heading() }) },
             text = {
                 Column(Modifier.verticalScroll(rememberScrollState())) {
                     for ((item, label) in listOf<Pair<NoteListItem?, String>>(null to stringResource(R.string.quick_list_none)) + candidates.map { it to it.title }) {

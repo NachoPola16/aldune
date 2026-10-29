@@ -36,6 +36,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import app.aldune.R
@@ -178,7 +180,7 @@ private fun NotesScaffold(state: UiState.Ready, viewModel: NotesViewModel, onOpe
 private fun WelcomeDialog(onDismiss: () -> Unit) {
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text(stringResource(R.string.welcome_title)) },
+        title = { Text(stringResource(R.string.welcome_title), Modifier.semantics { heading() }) },
         text = {
             Column(verticalArrangement = androidx.compose.foundation.layout.Arrangement.spacedBy(12.dp)) {
                 Text(stringResource(R.string.welcome_add))
@@ -203,7 +205,7 @@ private fun KeyLostScreen(onStartOver: () -> Unit) {
     if (confirming) {
         AlertDialog(
             onDismissRequest = { confirming = false },
-            title = { Text(stringResource(R.string.start_over_title)) },
+            title = { Text(stringResource(R.string.start_over_title), Modifier.semantics { heading() }) },
             text = { Text(stringResource(R.string.start_over_body)) },
             confirmButton = {
                 TextButton(onClick = { confirming = false; onStartOver() }) { Text(stringResource(R.string.start_over_confirm)) }

@@ -24,6 +24,8 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import app.aldune.R
 import app.aldune.core.PasswordProblem
@@ -90,7 +92,7 @@ fun PasswordDialog(
     AlertDialog(
         // Mientras se deriva la clave no se puede cerrar: el resultado llegaría a un diálogo que ya no está.
         onDismissRequest = { if (!busy) onDismiss() },
-        title = { Text(stringResource(title)) },
+        title = { Text(stringResource(title), Modifier.semantics { heading() }) },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 if (mode == PasswordMode.Protect) {
@@ -159,7 +161,7 @@ fun VisibleNameDialog(initial: String?, onDismiss: () -> Unit, onSave: (String?)
     }
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text(stringResource(R.string.visible_name_title)) },
+        title = { Text(stringResource(R.string.visible_name_title), Modifier.semantics { heading() }) },
         text = {
             OutlinedTextField(
                 value = name, onValueChange = { name = it.take(ProtectedTitleRules.MAX_LENGTH) }, singleLine = true,

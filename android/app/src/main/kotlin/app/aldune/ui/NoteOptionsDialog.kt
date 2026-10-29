@@ -43,6 +43,7 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.unit.dp
 import app.aldune.R
 import app.aldune.domain.NoteService
@@ -99,7 +100,7 @@ fun NoteOptionsDialog(
 
     AlertDialog(
         onDismissRequest = onClose,
-        title = { Text(stringResource(R.string.note_options)) },
+        title = { Text(stringResource(R.string.note_options), Modifier.semantics { heading() }) },
         text = {
             Column(Modifier.verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 Text(stringResource(R.string.note_color), style = MaterialTheme.typography.labelLarge)
