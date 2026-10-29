@@ -1,0 +1,1 @@
+O teclado não abre mais sozinho nas notas (em instalações existentes ainda abria). Novo seletor de cores visual, botão para recolorir todas as notas com a regra escolhida e ajuste do formato do botão + (app e widgets). Os temas Telecom mostram canais CH1-CH4 com suas ondas. Botões de conflito mais claros. O menu de toque longo abre se o dedo ficar parado.

@@ -1,0 +1,1 @@
+The keyboard no longer opens by itself on notes (it was still doing it for existing installs). New visual color picker, a button to recolor all existing notes with the chosen rule, and a setting for the shape of the + button (app and widgets). Telecom themes now show channels CH1-CH4 with their waves. Clearer conflict buttons. Long-press menu opens if you hold still.

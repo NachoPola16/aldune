@@ -1,0 +1,1 @@
+El teclado ya no se abre solo en las notas (en instalaciones existentes seguía haciéndolo). Selector de color visual, botón para recolorear todas las notas con la regla elegida y ajuste de la forma del botón + (app y widgets). Los aspectos Telecom muestran canales CH1-CH4 con sus ondas. Botones de conflicto más claros. El menú al mantener pulsado se abre si no mueves el dedo.
