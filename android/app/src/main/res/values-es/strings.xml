@@ -367,5 +367,10 @@
     <string name="export_file_name">aldune-notas</string>
     <string name="no_backup_notice">Sin perfil de sincronización: tus notas solo están en este móvil. Configura la sincronización o expórtalas desde Ajustes para tener una copia.</string>
     <string name="no_backup_dismiss">No volver a mostrar</string>
+    <string name="update_available">Ya está disponible Aldune %1$s</string>
+    <string name="update_open">Ver la actualización</string>
+    <string name="update_dismiss">Ahora no</string>
+    <string name="check_updates">Avisar de versiones nuevas</string>
+    <string name="check_updates_hint">Una vez al día mira la lista pública de versiones en GitHub. No se envía nada de tus notas ni se descarga nada.</string>
     <string name="note_open_in_editor">Abierta en el editor</string>
 </resources>

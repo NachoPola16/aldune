@@ -27,6 +27,8 @@ fun paletteColor(hex: String): Color = Color(AndroidColor.parseColor(hex))
 data class NoteLook(val uniformColor: String? = null, val squareCorners: Boolean = false, val syncSignal: Boolean = false, val fillColor: Boolean = true, val squareNewButton: Boolean = false,
     /** Paleta del aspecto Telecom (canales CH1–CH4); `null` en los demás aspectos. La rellena [AldunaTheme]. */
     val telecom: Map<String, String>? = null,
+    /** La retícula de osciloscopio de fondo (solo Telecom oscuro). */
+    val telecomGrid: Boolean = false,
 ) {
     /** El radio de una tarjeta de nota (12 dp de siempre, recto con «esquinas rectas»). */
     val cardShape get() = if (squareCorners) RectangleShape else RoundedCornerShape(12.dp)
@@ -70,7 +72,7 @@ fun AldunaTheme(appearance: Int = APPEARANCE_SYSTEM, aspectColors: Map<String, M
     val telecom = if (appearance == AppPalette.TELECOM_LIGHT || appearance == AppPalette.TELECOM_DARK) {
         remember(appearance, chosen) { AppPalette.forMode(appearance, systemLight, chosen) }
     } else null
-    CompositionLocalProvider(LocalNoteLook provides look.copy(telecom = telecom)) {
+    CompositionLocalProvider(LocalNoteLook provides look.copy(telecom = telecom, telecomGrid = appearance == AppPalette.TELECOM_DARK)) {
         MaterialTheme(colorScheme = scheme, typography = remember(appearance) { typographyFor(appearance) }, shapes = shapes, content = content)
     }
 }

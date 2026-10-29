@@ -25,6 +25,13 @@ import androidx.compose.foundation.text.input.InputTransformation
 import androidx.compose.foundation.text.input.OutputTransformation
 import androidx.compose.foundation.text.input.delete
 import androidx.compose.material3.AssistChip
+import androidx.compose.material3.AssistChipDefaults
+import androidx.compose.material3.LocalContentColor
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.graphics.drawscope.DrawScope
+import app.aldune.text.NoteChannels
+import app.aldune.text.NoteDisplayColor
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.width
@@ -395,7 +402,27 @@ fun NoteEditorPane(key: String, viewModel: NotesViewModel, onBack: () -> Unit, s
     val touchSlop = LocalViewConfiguration.current.touchSlop
     val longPress = LocalViewConfiguration.current.longPressTimeoutMillis
 
-    Column(Modifier.fillMaxSize().safeDrawingPadding().imePadding()) {
+    // Igual que la lista: con «color como fondo» la nota se ve del color de la nota; en Telecom, del de su canal (con la retícula en el oscuro).
+    // Los colores van por la tinta y no por un tema local: así los diálogos, que llevan su propia superficie, no se desajustan.
+    val look = LocalNoteLook.current
+    val listState by viewModel.state.collectAsStateWithLifecycle()
+    val shownItems = (listState as? UiState.Ready)?.items.orEmpty()
+    val shownItem = shownItems.firstOrNull { it.id == key }
+    val tint = look.telecom?.takeIf { !look.fillColor && shownItem != null }
+        ?.let { NoteChannels.tint(shownItems.indexOf(shownItem), it, look.uniformColor) }
+    val faceHex = tint?.face ?: shownItem?.takeIf { look.fillColor }?.let { NoteDisplayColor.resolve(it.color, look.uniformColor) }
+    val themeInk = MaterialTheme.colorScheme.onBackground
+    val ink = if (faceHex == null || tint != null) themeInk else noteInk(faceHex)
+    val muted = if (faceHex == null) MaterialTheme.colorScheme.onSurfaceVariant else ink.copy(alpha = 0.75f)
+    val gridInk = ink.copy(alpha = 0.15f)
+
+    CompositionLocalProvider(LocalContentColor provides ink) {
+    Column(
+        Modifier.fillMaxSize()
+            .then(if (faceHex != null) Modifier.background(noteFace(faceHex)) else Modifier)
+            .then(if (tint != null && look.telecomGrid) Modifier.drawBehind { drawTelecomGrid(gridInk) } else Modifier)
+            .safeDrawingPadding().imePadding(),
+    ) {
         Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
             if (showBack) {
                 IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.back)) }
@@ -404,7 +431,7 @@ fun NoteEditorPane(key: String, viewModel: NotesViewModel, onBack: () -> Unit, s
             if (syncing) {
                 Text(
                     stringResource(R.string.sync_status_syncing), Modifier.padding(end = 12.dp),
-                    style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    style = MaterialTheme.typography.labelMedium, color = muted,
                 )
             }
             // Cuántas tareas van hechas: se ve sin recorrer la lista. Solo si la nota tiene tareas.
@@ -413,7 +440,7 @@ fun NoteEditorPane(key: String, viewModel: NotesViewModel, onBack: () -> Unit, s
                 val label = stringResource(R.string.tasks_progress_cd, progress.done, progress.total)
                 Text(
                     "${progress.done}/${progress.total}", Modifier.semantics { contentDescription = label },
-                    style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    style = MaterialTheme.typography.labelLarge, color = muted,
                 )
             }
             IconButton(onClick = { scope.launch { options = viewModel.noteOptions(key) } }, enabled = loaded) {
@@ -518,7 +545,7 @@ fun NoteEditorPane(key: String, viewModel: NotesViewModel, onBack: () -> Unit, s
                 Modifier.weight(1f).fillMaxWidth().padding(24.dp),
                 verticalArrangement = Arrangement.Center, horizontalAlignment = Alignment.CenterHorizontally,
             ) {
-                Text(stringResource(R.string.protected_note_body), color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Text(stringResource(R.string.protected_note_body), color = muted)
                 Button(onClick = { passwordMode = PasswordMode.Unlock }, Modifier.padding(top = 16.dp)) {
                     Text(stringResource(R.string.password_unlock_action))
                 }
@@ -592,7 +619,7 @@ fun NoteEditorPane(key: String, viewModel: NotesViewModel, onBack: () -> Unit, s
                         else -> false
                     }
                 },
-            textStyle = MaterialTheme.typography.bodyLarge.copy(color = MaterialTheme.colorScheme.onBackground),
+            textStyle = MaterialTheme.typography.bodyLarge.copy(color = ink),
             cursorBrush = SolidColor(MaterialTheme.colorScheme.primary),
         )
         if (hasTasks) TaskDragOverlay(drag, layout = { layout?.invoke() }, scroll = fieldScroll, shown = ::shownText, modifier = Modifier.matchParentSize())
@@ -604,6 +631,8 @@ fun NoteEditorPane(key: String, viewModel: NotesViewModel, onBack: () -> Unit, s
                 onClick = { showDone = !showDone },
                 label = { Text(if (showDone) stringResource(R.string.hidden_tasks_hide) else stringResource(R.string.hidden_tasks_show, count)) },
                 modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp),
+                colors = AssistChipDefaults.assistChipColors(labelColor = ink),
+                border = AssistChipDefaults.assistChipBorder(true, borderColor = ink.copy(alpha = 0.4f)),
             )
         }
         // Quitar las marcadas, a mano: la lista de la compra se vacía al volver de la tienda. Deshacer (↶) lo recupera.
@@ -615,6 +644,8 @@ fun NoteEditorPane(key: String, viewModel: NotesViewModel, onBack: () -> Unit, s
                 },
                 label = { Text(stringResource(R.string.edit_remove_checked)) },
                 modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp),
+                colors = AssistChipDefaults.assistChipColors(labelColor = ink),
+                border = AssistChipDefaults.assistChipBorder(true, borderColor = ink.copy(alpha = 0.4f)),
             )
         }
         HorizontalDivider()
@@ -635,6 +666,16 @@ fun NoteEditorPane(key: String, viewModel: NotesViewModel, onBack: () -> Unit, s
             },
         )
     }
+    }
+}
+
+/** La retícula de osciloscopio: líneas de 1 px cada 24 dp, muy translúcidas, para que se lea como fondo y no compita con el texto. */
+private fun DrawScope.drawTelecomGrid(color: Color) {
+    val step = 24.dp.toPx()
+    var x = 0f
+    while (x <= size.width) { drawLine(color, Offset(x, 0f), Offset(x, size.height), strokeWidth = 1f); x += step }
+    var y = 0f
+    while (y <= size.height) { drawLine(color, Offset(0f, y), Offset(size.width, y), strokeWidth = 1f); y += step }
 }
 
 private tailrec fun Context.findActivity(): Activity? = when (this) {
@@ -718,7 +759,7 @@ private fun BarButton(label: String, description: String, onClick: () -> Unit, e
         // El símbolo (↶, ⇥…) es solo dibujo: el nombre accesible es [description], y sin esto TalkBack lo leería también ("deshacer, flecha…").
         Text(
             label, Modifier.clearAndSetSemantics { }, style = MaterialTheme.typography.titleLarge,
-            color = MaterialTheme.colorScheme.onBackground.copy(alpha = if (enabled) 1f else 0.38f),
+            color = LocalContentColor.current.copy(alpha = if (enabled) 1f else 0.38f),
         )
     }
 }

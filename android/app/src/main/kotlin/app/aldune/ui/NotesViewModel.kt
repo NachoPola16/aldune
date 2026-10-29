@@ -17,6 +17,7 @@ import app.aldune.domain.NewNoteColorSettings
 import app.aldune.domain.NoteListItem
 import app.aldune.domain.NoteListOrder
 import app.aldune.domain.NoteListing
+import app.aldune.text.AndroidReleaseUpdate
 import app.aldune.text.NoteColorAssigner
 import app.aldune.text.NoteColorAssignment
 import app.aldune.domain.NoteResult
@@ -83,6 +84,7 @@ sealed interface UiState {
  */
 private const val AUTOSAVE_MS = 600L
 private const val HIGHLIGHT_MS = 3_000L
+private const val UPDATE_CHECK_INTERVAL_MS = 24 * 60 * 60 * 1000L
 
 class NotesViewModel(application: Application) : AndroidViewModel(application) {
     private val container = (application as AldunaApp).container
@@ -660,6 +662,50 @@ class NotesViewModel(application: Application) : AndroidViewModel(application) {
             assigned += color
             if (!color.equals(note.color, ignoreCase = true)) service.setColor(note.id, color)
         }
+    }
+
+    private val _update = MutableStateFlow<AndroidReleaseUpdate.Update?>(null)
+
+    /** La versión nueva de Android de la que avisar (`null` si no hay o ya se descartó). */
+    val update: StateFlow<AndroidReleaseUpdate.Update?> = _update.asStateFlow()
+
+    /**
+     * Mira en GitHub si hay una versión nueva, como mucho una vez cada 24 h y solo si el ajuste lo permite. Un fallo de red no es un error:
+     * simplemente no se avisa. Solo se lee la lista pública de releases; nunca se descarga ni se instala nada desde aquí.
+     */
+    fun checkForUpdates(currentVersion: String, now: Long = System.currentTimeMillis()) {
+        val s = _settings.value
+        if (!s.checkUpdates || currentVersion.isBlank()) { _update.value = null; return }
+        launchIo {
+            if (now - s.lastUpdateCheck >= UPDATE_CHECK_INTERVAL_MS) {
+                val json = runCatching { fetchReleases() }.getOrNull()
+                if (json != null) {
+                    val found = AndroidReleaseUpdate.latest(json, currentVersion)
+                    updateSettings { it.copy(lastUpdateCheck = now, knownUpdate = found?.tag) }
+                }
+            }
+            val shown = AndroidReleaseUpdate.fromTag(_settings.value.knownUpdate, currentVersion)
+            _update.value = shown?.takeIf { it.version != _settings.value.dismissedUpdate }
+        }
+    }
+
+    private fun fetchReleases(): String {
+        val connection = java.net.URL(AndroidReleaseUpdate.API).openConnection() as java.net.HttpURLConnection
+        try {
+            connection.connectTimeout = 8000
+            connection.readTimeout = 8000
+            connection.setRequestProperty("Accept", "application/vnd.github+json")
+            connection.setRequestProperty("User-Agent", "Aldune-Android")
+            check(connection.responseCode == 200) { "HTTP ${connection.responseCode}" }
+            return connection.inputStream.bufferedReader().use { it.readText() }
+        } finally {
+            connection.disconnect()
+        }
+    }
+
+    fun dismissUpdate(version: String) {
+        updateSettings { it.copy(dismissedUpdate = version) }
+        _update.value = null
     }
 
     fun setNoteTags(noteId: String, tags: List<String>) = change { it.setTags(noteId, tags) }

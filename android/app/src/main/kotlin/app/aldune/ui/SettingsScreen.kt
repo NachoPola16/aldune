@@ -206,6 +206,10 @@ fun SettingsScreen(viewModel: NotesViewModel, onClose: () -> Unit) {
                 }
                 if (inTab(0)) {
                 HorizontalDivider(Modifier.padding(vertical = 12.dp))
+                SwitchRow(stringResource(R.string.check_updates), stringResource(R.string.check_updates_hint), settings.checkUpdates) { on ->
+                    viewModel.updateSettings { it.copy(checkUpdates = on, dismissedUpdate = null) }
+                    if (on) viewModel.checkForUpdates(versionName(activity))
+                }
                 // El botón de modo no se esconde nunca: sin él no habría forma de volver al modo completo. Aplica al instante y no toca otros ajustes.
                 Text(
                     stringResource(if (settings.simplifiedMode) R.string.interface_mode_hint_simple else R.string.interface_mode_hint_full),

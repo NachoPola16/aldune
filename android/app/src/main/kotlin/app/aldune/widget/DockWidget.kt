@@ -37,11 +37,13 @@ import androidx.glance.layout.Alignment
 import androidx.glance.layout.Box
 import androidx.glance.layout.Column
 import androidx.glance.layout.Row
+import androidx.glance.layout.fillMaxHeight
 import androidx.glance.layout.fillMaxSize
 import androidx.glance.layout.fillMaxWidth
 import androidx.glance.layout.height
 import androidx.glance.layout.padding
 import androidx.glance.layout.size
+import androidx.glance.layout.width
 import androidx.glance.text.FontFamily
 import androidx.glance.text.FontWeight
 import androidx.glance.text.Text
@@ -85,6 +87,7 @@ private class WidgetColors(
 /** Qué se pinta: el contenido, o nada si la base no se pudo abrir (clave perdida). */
 private class WidgetData(val content: WidgetContent?, val texts: WidgetTexts, val colors: WidgetColors, val showPreview: Boolean,
     val uniformColor: String? = null, val squareCorners: Boolean = false, val squareNewButton: Boolean = false,
+    val colorFill: Boolean = true,
 )
 
 /**
@@ -132,7 +135,7 @@ class DockWidget : GlanceAppWidget() {
             }
         }
         return WidgetData(content, texts, colors(settings.appearance, settings.aspectColors), settings.widgetPreview,
-            settings.uniformNoteColor, settings.cornersSquare, settings.newButtonSquare)
+            settings.uniformNoteColor, settings.cornersSquare, settings.newButtonSquare, settings.colorFill)
     }
 
     /** Con «seguir el sistema» el widget cambia solo de claro a oscuro; con un aspecto elegido se queda en ese. */
@@ -217,27 +220,35 @@ class DockWidget : GlanceAppWidget() {
         // «Mismo color en todas las notas» también en el widget: solo cambia la presentación, la nota conserva el suyo.
         val shown = NoteDisplayColor.resolve(strip.color, data.uniformColor)
         val face = noteFace(shown)
-        val ink = noteInk(shown)
+        // Con «color como fondo» apagado (lo de serie en los aspectos de terminal) la tira es de la superficie del aspecto y el color va en una franja.
+        val fill = data.colorFill
+        val ink = if (fill) ColorProvider(noteInk(shown)) else data.colors.text
+        val muted = if (fill) ColorProvider(noteInk(shown).copy(alpha = 0.75f)) else data.colors.muted
         Box(GlanceModifier.fillMaxWidth().padding(2.dp)) {
             // Altura fija y la misma para todas: el GridView de un widget dimensiona todas las filas con la primera, y una tira con vista previa
             // quedaría recortada. Con el ajuste de vista previa las tiras son más altas, tengan o no segunda línea.
             val height = if (data.showPreview) STRIP_HEIGHT_PREVIEW else STRIP_HEIGHT
+            Row(
+                GlanceModifier.fillMaxWidth().height(height).background(if (fill) ColorProvider(face) else data.colors.surface).cornerRadius(if (data.squareCorners) 0.dp else 12.dp).clickable(open),
+            ) {
+            if (!fill) Box(GlanceModifier.width(6.dp).fillMaxHeight().background(face)) {}
             Column(
-                GlanceModifier.fillMaxWidth().height(height).background(face).cornerRadius(if (data.squareCorners) 0.dp else 12.dp).padding(horizontal = 10.dp, vertical = 8.dp).clickable(open),
+                GlanceModifier.defaultWeight().fillMaxHeight().padding(horizontal = 10.dp, vertical = 8.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 when (strip) {
                     // Una protegida solo enseña el candado y el texto fijo, o el nombre visible que el usuario le puso: `Locked` no tiene nada del contenido.
                     is WidgetStrip.Locked -> Text(
-                        "🔒  " + (strip.title ?: data.texts.protectedTitle), style = TextStyle(color = ColorProvider(ink), fontSize = 14.sp, fontFamily = data.colors.font), maxLines = 1,
+                        "🔒  " + (strip.title ?: data.texts.protectedTitle), style = TextStyle(color = ink, fontSize = 14.sp, fontFamily = data.colors.font), maxLines = 1,
                     )
                     is WidgetStrip.Open -> {
-                        Text(strip.title, style = TextStyle(color = ColorProvider(ink), fontSize = 14.sp, fontWeight = FontWeight.Medium, fontFamily = data.colors.font), maxLines = 1)
+                        Text(strip.title, style = TextStyle(color = ink, fontSize = 14.sp, fontWeight = FontWeight.Medium, fontFamily = data.colors.font), maxLines = 1)
                         strip.preview?.let {
-                            Text(it, style = TextStyle(color = ColorProvider(ink.copy(alpha = 0.75f)), fontSize = 12.sp, fontFamily = data.colors.font), maxLines = 2)
+                            Text(it, style = TextStyle(color = muted, fontSize = 12.sp, fontFamily = data.colors.font), maxLines = 2)
                         }
                     }
                 }
+            }
             }
         }
     }

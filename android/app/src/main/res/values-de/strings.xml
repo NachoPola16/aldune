@@ -367,5 +367,10 @@
     <string name="export_file_name">aldune-notizen</string>
     <string name="no_backup_notice">Kein Sync-Profil: Deine Notizen liegen nur auf diesem Handy. Richte die Synchronisierung ein oder exportiere sie in den Einstellungen, um eine Kopie zu haben.</string>
     <string name="no_backup_dismiss">Nicht mehr anzeigen</string>
+    <string name="update_available">Aldune %1$s ist verfügbar</string>
+    <string name="update_open">Update ansehen</string>
+    <string name="update_dismiss">Nicht jetzt</string>
+    <string name="check_updates">Über neue Versionen informieren</string>
+    <string name="check_updates_hint">Einmal am Tag wird die öffentliche Versionsliste auf GitHub abgefragt. Von deinen Notizen wird nichts gesendet und nichts heruntergeladen.</string>
     <string name="note_open_in_editor">Im Editor geöffnet</string>
 </resources>

@@ -46,6 +46,13 @@ data class AppSettings(
     val showSyncSignal: Boolean? = null,
     /** Forma del botón de nota nueva (el «+» de la app y los widgets): 0 como las esquinas de las notas (por defecto), 1 redondeado, 2 recto. */
     val newButtonShape: Int = 0,
+    /** Mirar en GitHub, como mucho una vez al día, si hay una versión nueva de Android y avisarlo en la lista. */
+    val checkUpdates: Boolean = true,
+    /** Cuándo fue la última consulta (ms desde 1970) y la versión de la que el usuario ya descartó el aviso. */
+    val lastUpdateCheck: Long = 0L,
+    val dismissedUpdate: String? = null,
+    /** El tag de la versión más nueva vista en la última consulta (así el aviso sobrevive entre arranques sin volver a consultar). */
+    val knownUpdate: String? = null,
     /** Orden de la lista: los números de `NoteListOrder` (mazo 0, recientes 1, antiguas 2, título 3). Solo en el mazo se puede arrastrar. */
     val listOrder: Int = 0,
     /** Regla de color de las notas nuevas: los números de `NoteColorAssignment` (rotar evitando vecinas 0, rotar 1, más distinto 2, fijo 3). */
@@ -121,6 +128,10 @@ class SettingsStore(context: Context) {
             squareCorners = nullableBoolean(SQUARE_CORNERS),
             showSyncSignal = nullableBoolean(SHOW_SYNC_SIGNAL),
             newButtonShape = prefs.getInt(NEW_BUTTON_SHAPE, d.newButtonShape).takeIf { it in 0..2 } ?: d.newButtonShape,
+            checkUpdates = prefs.getBoolean(CHECK_UPDATES, d.checkUpdates),
+            lastUpdateCheck = prefs.getLong(LAST_UPDATE_CHECK, d.lastUpdateCheck),
+            dismissedUpdate = prefs.getString(DISMISSED_UPDATE, null),
+            knownUpdate = prefs.getString(KNOWN_UPDATE, null),
             listOrder = prefs.getInt(LIST_ORDER, d.listOrder).takeIf { it in 0..3 } ?: d.listOrder,
             colorRule = prefs.getInt(COLOR_RULE, d.colorRule).takeIf { it in 0..3 } ?: d.colorRule,
             fixedNoteColor = prefs.getString(FIXED_NOTE_COLOR, null)?.takeIf { NoteDisplayColor.isActive(it) },
@@ -157,6 +168,10 @@ class SettingsStore(context: Context) {
             .putOrRemove(SQUARE_CORNERS, settings.squareCorners)
             .putOrRemove(SHOW_SYNC_SIGNAL, settings.showSyncSignal)
             .putInt(NEW_BUTTON_SHAPE, settings.newButtonShape)
+            .putBoolean(CHECK_UPDATES, settings.checkUpdates)
+            .putLong(LAST_UPDATE_CHECK, settings.lastUpdateCheck)
+            .putOrRemove(DISMISSED_UPDATE, settings.dismissedUpdate)
+            .putOrRemove(KNOWN_UPDATE, settings.knownUpdate)
             .putInt(LIST_ORDER, settings.listOrder)
             .putInt(COLOR_RULE, settings.colorRule)
             .putOrRemove(FIXED_NOTE_COLOR, settings.fixedNoteColor)
@@ -201,6 +216,10 @@ class SettingsStore(context: Context) {
         const val SQUARE_CORNERS = "squareCorners"
         const val SHOW_SYNC_SIGNAL = "showSyncSignal"
         const val NEW_BUTTON_SHAPE = "newButtonShape"
+        const val CHECK_UPDATES = "checkUpdates"
+        const val LAST_UPDATE_CHECK = "lastUpdateCheck"
+        const val DISMISSED_UPDATE = "dismissedUpdate"
+        const val KNOWN_UPDATE = "knownUpdate"
         const val LIST_ORDER = "listOrder"
         const val COLOR_RULE = "colorRule"
         const val FIXED_NOTE_COLOR = "fixedNoteColor"

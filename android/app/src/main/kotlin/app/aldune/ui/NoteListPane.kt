@@ -100,6 +100,7 @@ import app.aldune.R
 import app.aldune.domain.ReminderLabel
 import app.aldune.domain.NoteListItem
 import app.aldune.domain.NoteState
+import app.aldune.text.AndroidReleaseUpdate
 import app.aldune.text.NoteChannels
 import app.aldune.text.NoteColorContrast
 import androidx.compose.ui.geometry.Offset
@@ -213,6 +214,15 @@ fun NoteListPane(
             StateTabs(state, viewModel::setFilter)
             if (state.allTags.isNotEmpty()) TagRow(state, viewModel::setTag)
             if (state.orphans.isNotEmpty()) OrphanConflictsBanner(state.orphans.size) { showOrphans = true }
+            // Una versión nueva de Android en GitHub (una vez al día, desactivable en Ajustes → General): solo avisa y abre la página.
+            val pendingUpdate by viewModel.update.collectAsStateWithLifecycle()
+            androidx.compose.runtime.LaunchedEffect(settingsNow.checkUpdates) { viewModel.checkForUpdates(currentVersionName(context)) }
+            pendingUpdate?.let { found ->
+                UpdateNotice(
+                    found.version, onDismiss = { viewModel.dismissUpdate(found.version) },
+                    onOpen = { context.startActivity(android.content.Intent(android.content.Intent.ACTION_VIEW, android.net.Uri.parse(AndroidReleaseUpdate.PAGE + found.tag))) },
+                )
+            }
             // Sin perfil de sync, las notas solo viven en el móvil: se avisa una vez que haya alguna (en la bienvenida ya se habla de la sync).
             if (!hasProfile && !settingsNow.backupNoticeDismissed && state.counts.values.sum() > 0) {
                 NoBackupNotice(onSettings = onOpenSettings, onDismiss = { viewModel.updateSettings { it.copy(backupNoticeDismissed = true) } })
@@ -695,6 +705,26 @@ private class PressHold {
 }
 
 /** El aviso de que, sin sincronización, no hay copia de las notas: lleva a Ajustes (sincronizar o exportar) y se puede descartar. */
+/** El aviso de que hay una versión nueva de Android: abre la página de la release en el navegador; no descarga nada. */
+@Composable
+private fun UpdateNotice(version: String, onDismiss: () -> Unit, onOpen: () -> Unit) {
+    androidx.compose.material3.Surface(
+        Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 4.dp),
+        shape = MaterialTheme.shapes.medium, color = MaterialTheme.colorScheme.primaryContainer,
+    ) {
+        Column(Modifier.padding(horizontal = 12.dp, vertical = 8.dp)) {
+            Text(stringResource(R.string.update_available, version), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onPrimaryContainer)
+            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
+                TextButton(onClick = onDismiss) { Text(stringResource(R.string.update_dismiss)) }
+                TextButton(onClick = onOpen) { Text(stringResource(R.string.update_open)) }
+            }
+        }
+    }
+}
+
+private fun currentVersionName(context: android.content.Context): String =
+    runCatching { context.packageManager.getPackageInfo(context.packageName, 0).versionName }.getOrNull().orEmpty()
+
 @Composable
 private fun NoBackupNotice(onSettings: () -> Unit, onDismiss: () -> Unit) {
     androidx.compose.material3.Surface(
