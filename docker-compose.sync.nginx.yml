@@ -13,6 +13,9 @@ services:
       ALDUNE_SYNC_TOKEN: ${ALDUNE_SYNC_TOKEN:-}
       ALDUNE_SYNC_TOKENS: ${ALDUNE_SYNC_TOKENS:-}
       ALDUNE_DATA_DIR: /data
+      # Límite de intentos fallidos de token por dirección (docs/SYNC.md → «Límite de intentos»).
+      ALDUNE_SYNC_MAX_AUTH_FAILURES_PER_MINUTE: ${ALDUNE_SYNC_MAX_AUTH_FAILURES_PER_MINUTE:-}
+      ALDUNE_SYNC_TRUST_PROXY: ${ALDUNE_SYNC_TRUST_PROXY:-}
       ASPNETCORE_URLS: http://+:8080
     # Esta variante escucha en todas las interfaces y permite acceso directo desde la red. Si quieres
     # que solo los procesos del host accedan al puerto, añade 127.0.0.1: delante del puerto:

@@ -5,14 +5,18 @@ on:
     tags:
       - "v*"
 
+# Permisos mínimos por defecto: el único job que escribe en el repositorio (publish) lo declara él mismo. Así un paquete NuGet o de
+# Chocolatey comprometido que se ejecute durante la compilación no tiene un token con permiso de escritura a mano.
 permissions:
-  contents: write
-  # La firma con SignPath lee los artefactos de este run.
-  actions: read
+  contents: read
 
 jobs:
-  package:
+  build:
     runs-on: windows-latest
+    permissions:
+      contents: read
+      # La firma con SignPath lee los artefactos de este run.
+      actions: read
 
     # La firma se activa sola cuando existen todas: las variables del repositorio
     # SIGNPATH_ORGANIZATION_ID, SIGNPATH_PROJECT_SLUG, SIGNPATH_POLICY_SLUG y las dos de configuración
@@ -38,7 +42,8 @@ jobs:
 
       - name: Install Inno Setup
         # Versión fija: Inno Setup genera el instalador que firma SignPath, y "latest" lo cambiaría sin que nadie lo vea.
-        run: choco install innosetup --version=6.7.1 --no-progress -y
+        # --require-checksums: Chocolatey se niega a instalar un paquete cuyas descargas no traigan checksum (las HTTPS quedan exentas, y la de Inno Setup lo es).
+        run: choco install innosetup --version=6.7.1 --require-checksums --no-progress -y
 
       - name: Publish portable executable
         shell: pwsh
@@ -133,15 +138,38 @@ jobs:
             ForEach-Object { '{0}  {1}' -f (Get-FileHash $_.FullName -Algorithm SHA256).Hash.ToLower(), $_.Name } |
             Set-Content -Path dist/SHA256SUMS.txt -Encoding ascii
 
-      # --- Publicación -----------------------------------------------------------------------------
-      # Un tag con guion (v0.99.0-rc1) se publica como pre-release: GitHub no lo ofrece como "latest"
-      # y el aviso de actualizaciones de la app (ReleaseUpdateChecker) lo ignora.
+      # --- Entrega al job de publicación -------------------------------------------------------------
+      # El job build no escribe en el repositorio: deja lo que se va a publicar como artefacto y publish lo recoge.
+      - name: Upload release files
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: release-files
+          path: |
+            dist/*.exe
+            dist/*.zip
+            dist/SHA256SUMS.txt
+          if-no-files-found: error
+
+  # --- Publicación ---------------------------------------------------------------------------------
+  # Único job con permiso de escritura: no compila ni ejecuta nada de terceros, solo descarga lo que dejó build y crea la release.
+  # Un tag con guion (v0.99.0-rc1) se publica como pre-release: GitHub no lo ofrece como "latest"
+  # y el aviso de actualizaciones de la app (ReleaseUpdateChecker) lo ignora.
+  publish:
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Download release files
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+        with:
+          name: release-files
+          path: dist
+
       - name: Create GitHub Release
-        shell: pwsh
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          $assets = Get-ChildItem -LiteralPath dist -File -Include *.exe, *.zip, SHA256SUMS.txt -Recurse | ForEach-Object { $_.FullName }
-          $flags = @()
-          if ($env:GITHUB_REF_NAME -like '*-*') { $flags += '--prerelease' }
-          gh release create $env:GITHUB_REF_NAME @assets --title "Aldune $env:GITHUB_REF_NAME" --generate-notes @flags
+          flags=()
+          if [[ "$GITHUB_REF_NAME" == *-* ]]; then flags+=(--prerelease); fi
+          gh release create "$GITHUB_REF_NAME" dist/*.exe dist/*.zip dist/SHA256SUMS.txt             --repo "$GITHUB_REPOSITORY" --title "Aldune $GITHUB_REF_NAME" --generate-notes "${flags[@]}"

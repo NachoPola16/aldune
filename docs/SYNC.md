@@ -357,6 +357,23 @@ de esa red. No desactives la verificación TLS en el cliente para evitar errores
 La rotación de tokens y la interfaz de conflictos ya están implementadas. Para HTTPS real falta
 probar la composición con un dominio y DNS controlados por el usuario.
 
+### Límite de intentos fallidos
+
+El servidor cuenta los tokens incorrectos por dirección, en una ventana de un minuto y solo en memoria. A partir de **10 fallos por minuto**
+esa dirección recibe `429 Too Many Requests` con `Retry-After`, **también si acierta el token**: si no, adivinar seguiría funcionando.
+Las demás direcciones no se ven afectadas y `/health` nunca se limita. Un token correcto no borra los fallos: solo los libera el tiempo.
+
+| Variable | Qué hace |
+|---|---|
+| `ALDUNE_SYNC_MAX_AUTH_FAILURES_PER_MINUTE` | Máximo de fallos por minuto y dirección. Por defecto 10; `0` lo desactiva. |
+| `ALDUNE_SYNC_TRUST_PROXY` | `1` o `true`: la dirección es la última entrada de `X-Forwarded-For` (la que añadió tu proxy). Sin ella, la de la conexión. |
+
+Sin `ALDUNE_SYNC_TRUST_PROXY`, la cabecera se ignora, así que nadie puede librarse del límite falsificándola. Pero detrás de un proxy **todas**
+las conexiones llegan desde la dirección del proxy: un solo cliente con el token mal puesto bloquearía a todos. Por eso `docker-compose.sync.https.yml`
+(Caddy, que fija `X-Forwarded-For`) la activa por defecto; en la variante de Nginx o Cloudflare Tunnel, actívala solo si ese proxy escribe la cabecera
+(`proxy_set_header X-Forwarded-For $remote_addr;` en Nginx, para no reenviar lo que mande el cliente) y no hay otra forma de llegar al puerto del servidor.
+Si tras cambiar un token ves 429, es que algún dispositivo sigue con el viejo: corrígelo y espera un minuto.
+
 ### Rotación de tokens
 
 El servidor sigue aceptando el token único `ALDUNE_SYNC_TOKEN`. Para rotarlo sin cortar los

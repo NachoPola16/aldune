@@ -1,5 +1,6 @@
 ﻿using System.Text.Json;
 using Aldune.Core;
+using Aldune.SyncServer;
 
 const long MaxObjectBytes = 5_000_000;
 
@@ -37,13 +38,33 @@ var putGate = new SemaphoreSlim(1, 1);
 Directory.CreateDirectory(objectPath);
 Aldune.SyncServer.DataDirectoryCheck.EnsureWritable(objectPath);
 
+// Límite de intentos fallidos de token por dirección (ver AuthFailureLimiter). /health queda fuera: no pide token.
+var limiter = AuthFailureLimiter.FromEnvironment();
+var trustProxy = AuthFailureLimiter.TrustProxyFromEnvironment();
+if (!limiter.Enabled)
+    app.Logger.LogWarning("{Variable}=0: failed-token rate limiting is disabled.", AuthFailureLimiter.MaxFailuresEnvVar);
+
 app.Use(async (context, next) =>
 {
-    if (context.Request.Path.StartsWithSegments("/api") &&
-        !SyncTokenSet.Matches(context.Request.Headers.Authorization, tokens))
+    if (context.Request.Path.StartsWithSegments("/api"))
     {
-        context.Response.StatusCode = StatusCodes.Status401Unauthorized;
-        return;
+        var address = AuthFailureLimiter.ClientAddress(
+            context.Request.Headers["X-Forwarded-For"].ToString(), context.Connection.RemoteIpAddress, trustProxy);
+        var now = DateTimeOffset.UtcNow;
+        // Antes de mirar el token: una dirección bloqueada no puede seguir probando, ni siquiera acertando.
+        if (limiter.RetryAfter(address, now) is { } wait)
+        {
+            context.Response.StatusCode = StatusCodes.Status429TooManyRequests;
+            context.Response.Headers.RetryAfter = Math.Max(1, (int)Math.Ceiling(wait.TotalSeconds)).ToString();
+            return;
+        }
+
+        if (!SyncTokenSet.Matches(context.Request.Headers.Authorization, tokens))
+        {
+            limiter.RecordFailure(address, now);
+            context.Response.StatusCode = StatusCodes.Status401Unauthorized;
+            return;
+        }
     }
 
     await next();

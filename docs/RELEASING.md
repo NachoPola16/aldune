@@ -6,6 +6,14 @@
   línea "La ronda actual se identifica como **vX.Y.Z**" de `docs/ROADMAP.md`.
 - Al empujar un tag `v*`, `.github/workflows/release.yml` pasa los tests, compila el portable y el
   instalador (Inno Setup) y crea el GitHub Release con los dos.
+- **Dos jobs, con permisos distintos.** `build` (Windows) compila, prueba, firma si procede y sube lo que se va a publicar como artefacto
+  `release-files`; solo tiene `contents: read` (y `actions: read`, que SignPath necesita para leer sus artefactos). `publish` (Ubuntu)
+  solo descarga ese artefacto y ejecuta `gh release create`; es el único con `contents: write` y no compila ni instala nada de terceros.
+  Así un paquete NuGet o de Chocolatey comprometido durante la compilación no tiene a mano un token que pueda escribir en el repositorio.
+  Los nombres de los ficheros de la release y `SHA256SUMS.txt` no cambian. Inno Setup se instala con la versión fija y `--require-checksums`
+  (Chocolatey se niega si el paquete no trae checksum para una descarga que no sea HTTPS; la de Inno Setup es HTTPS).
+- **CI** (`ci.yml`) tiene dos jobs: `build-and-test` (Windows: .NET) y `android` (Ubuntu, JDK 21: `./gradlew test`, que incluye la paridad
+  con `tests/vectors/`, y `:app:assembleDebug`). El de Android no usa emulador y no firma nada: el APK de la release se sigue compilando en local.
 - **Pre-release**: el tag **tiene que llevar guion** (`v0.99.0-rc1`); solo así se publica como
   pre-release. GitHub no lo ofrece como última versión y el aviso de actualizaciones de la app lo
   ignora. Un tag sin guion (`v0.99.0`) sale como versión normal y se ofrece a todos los usuarios.

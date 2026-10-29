@@ -36,3 +36,33 @@ jobs:
 
       - name: Test
         run: dotnet test Aldune.slnx --configuration Release --no-build --no-restore
+
+  # Los tests de Kotlin (formato de sync, cifrado, dominio, motor) y la paridad con tests/vectors/ no corrían en ningún sitio:
+  # un cambio que rompiera un lado solo se veía a mano. Sin emulador: solo la JVM y la compilación de la app.
+  android:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@c5195efecf7bdfc987ee8bae7a71cb8b11521c00 # v4.7.1
+        with:
+          distribution: temurin
+          java-version: 21
+
+      # Caché de Gradle y comprobación del wrapper (el wrapper va fijado por hash en gradle-wrapper.properties).
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@da187c8e6ffbd3802e00f2477aa5a822b25f2dda # v4.4.4
+
+      # gradlew está versionado sin el bit de ejecución (se creó en Windows).
+      - name: Unit tests
+        working-directory: android
+        run: |
+          chmod +x gradlew
+          ./gradlew test --console=plain
+
+      - name: Build debug app
+        working-directory: android
+        run: ./gradlew :app:assembleDebug --console=plain
