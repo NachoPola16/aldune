@@ -46,15 +46,18 @@ jobs:
       - name: Check out repository
         uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
 
+      # Sin setup-gradle: inyecta un plugin de Develocity cuyas dependencias no están en gradle/verification-metadata.xml y la
+      # verificación de dependencias (que se queda activa) rechaza el build. La caché de Gradle la da setup-java.
       - name: Set up JDK 21
         uses: actions/setup-java@c5195efecf7bdfc987ee8bae7a71cb8b11521c00 # v4.7.1
         with:
           distribution: temurin
           java-version: 21
-
-      # Caché de Gradle y comprobación del wrapper (el wrapper va fijado por hash en gradle-wrapper.properties).
-      - name: Set up Gradle
-        uses: gradle/actions/setup-gradle@da187c8e6ffbd3802e00f2477aa5a822b25f2dda # v4.4.4
+          cache: gradle
+          cache-dependency-path: |
+            android/**/*.gradle*
+            android/gradle/wrapper/gradle-wrapper.properties
+            android/gradle/libs.versions.toml
 
       # gradlew está versionado sin el bit de ejecución (se creó en Windows).
       - name: Unit tests
