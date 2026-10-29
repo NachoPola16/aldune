@@ -1,0 +1,1 @@
+A protected note can have an optional visible name: it shows in the list and the widget even while the note is locked, and it syncs. Long-press a note to open a menu with its options, visible name and protection; dragging still reorders. Also update Aldune for Windows (1.8.0) so the name syncs without being lost.

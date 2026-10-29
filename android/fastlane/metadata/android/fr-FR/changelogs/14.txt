@@ -1,0 +1,1 @@
+Une note protégée peut avoir un nom visible facultatif : il apparaît dans la liste et le widget même quand la note est verrouillée, et il se synchronise. Un appui long sur une note ouvre un menu avec ses options, le nom visible et la protection ; le glissement réorganise toujours. Mets aussi à jour Aldune pour Windows (1.8.0) pour que le nom ne se perde pas.

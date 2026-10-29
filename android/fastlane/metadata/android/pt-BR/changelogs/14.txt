@@ -1,0 +1,1 @@
+Uma nota protegida pode ter um nome visível opcional: aparece na lista e no widget mesmo com a nota bloqueada, e é sincronizado. Pressione e segure uma nota para abrir um menu com opções, nome visível e proteção; arrastar continua reordenando. Atualize também o Aldune para Windows (1.8.0) para o nome não se perder.

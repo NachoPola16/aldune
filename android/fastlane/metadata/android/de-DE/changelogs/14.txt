@@ -1,0 +1,1 @@
+Eine geschützte Notiz kann einen optionalen sichtbaren Namen haben: Er erscheint in der Liste und im Widget, auch wenn die Notiz gesperrt ist, und wird synchronisiert. Lange auf eine Notiz drücken öffnet ein Menü mit Optionen, sichtbarem Namen und Schutz; Ziehen sortiert weiter um. Aktualisiere auch Aldune für Windows (1.8.0), damit der Name nicht verloren geht.

@@ -163,7 +163,7 @@ public partial class NotesManagerWindow : Window
                 string.Equals(tag, _tagFilter, StringComparison.OrdinalIgnoreCase)));
         }
 
-        _rows = NoteListing.Sort(byState.Where(r => NoteSearch.Matches(r.Note.Text, _searchText)), r => r.Note, _order)
+        _rows = NoteListing.Sort(byState.Where(r => NoteSearch.Matches(ProtectedTitleRules.Visible(r.Note) ?? r.Note.Text, _searchText)), r => r.Note, _order)
             .ToList();
         RowsList.ItemsSource = _rows;
 
