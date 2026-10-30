@@ -119,7 +119,7 @@ devolvió Core, ya pasado por JSON. Convenciones de la traducción a JSON:
 - **`NoteTitleHelper`** usa el texto de relleno por defecto de Core, `"New note"` (en la app lo fija el idioma). En Kotlin es un parámetro.
 - **Números reales** (OKLCH, distancias, luminancia, `Between`): se escriben con el formato más corto que recupera el mismo `double`. Compáralos con una tolerancia
   pequeña (1e-9 relativa); los `#RRGGBB` se comparan **exactos**. Si algún hex difiere en una unidad de un canal por la diferencia entre `Math.Cbrt`/`Math.Pow` de .NET y
-  de la JVM, **no ensanches la tolerancia en silencio**: es un hallazgo para apuntar en el informe.
+  de la JVM, **no ensanches la tolerancia en silencio**: es un hallazgo que hay que apuntar.
 - `NoteColorAssigner.Assign`: `themeId` (de serie) o `theme` en línea (`{id, name, dark, light}`); `dockColors` son los colores del mazo en orden.
   `NoteThemes.Resolve`/`Sanitize` reciben `custom` (lista de temas propios) cuando hace falta.
 

@@ -109,7 +109,7 @@ Resultados y hallazgos: en el historial de git (`INFORME-ANDROID-F6.md`, retirad
    **devolverla con `adb push` a `/data/local/tmp` + `run-as cp`**, y borrar antes `-wal` y `-shm`. Pasar el binario por una tubería de Git Bash (`cat f | adb shell run-as ...`) lo estropea.
    Solo con la base de la app de depuración.
 4. Mirar la notificación: `cmd statusbar expand-notifications`; el panel de mosaicos: `cmd statusbar expand-settings`; tema: `cmd uimode night no|yes`.
-5. **Qué mirar al probar un widget**: la hora a la que se pinta con el proceso vivo y en frío (Glance reutiliza la sesión: ver informe, hallazgo 4); con 53 notas, el tope y la fila final; con la
+5. **Qué mirar al probar un widget**: la hora a la que se pinta con el proceso vivo y en frío (Glance reutiliza la sesión de composición); con 53 notas, el tope y la fila final; con la
    vista previa activa, que ninguna tira quede recortada; y, con una protegida, que su título no salga en ningún sitio (`uiautomator dump` no ve dentro del widget: mirar la captura).
 6. **El teclado de una nota nueva**: arrancar 4 veces seguidas con `force-stop` + `am start` y `dumpsys input_method | grep mInputShown`, como en la sonda del editor.
 7. `logcat -d | grep AppWidgetHostView` dice por qué un widget no se infla (una clase no admitida en `RemoteViews`, p. ej. un `<View>`).
