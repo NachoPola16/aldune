@@ -2,9 +2,8 @@
 
 > **Nota (2026-10-17):** los planes de implementación paso a paso de `docs/superpowers/plans/` (fases 1-3, 1.0, 1.5 y notas vinculadas; todo ya publicado) se eliminaron del árbol por residuales; las referencias de este documento a ellos siguen siendo válidas en el historial: `git log --diff-filter=D --name-only -- docs/superpowers/plans/`. Las specs de `specs/` se conservan.
 
-Documento de continuidad: si retomas este proyecto en otra sesión, otro chat, u
-otra IA, empieza por aquí. Todo lo importante vive en el repositorio (specs,
-planes, commits), no solo en una conversación concreta.
+Documento de continuidad: si retomas este proyecto después de un tiempo, empieza por
+aquí. Todo lo importante vive en el repositorio (specs, commits y estos documentos).
 
 ## Qué es Aldune
 
@@ -192,30 +191,15 @@ Tests: 506/506 pasando (`dotnet test tests/Aldune.Core.Tests --no-restore`).
   (`QrScanActivity` con CameraX 1.6.2 + `QrDecoder` sobre ZXing core 3.5.4, sin Play Services). Se decidió no dividir el QR en varios
   y que el token no viaje nunca. Cero cambios en el formato de sync.
 
-## Cómo se ha trabajado (para mantener el mismo estilo)
+## Cómo se trabaja
 
-- **Diseño**: skill `superpowers:brainstorming` → spec escrita y comprometida
-  en `docs/superpowers/specs/`.
-- **Planes de implementación**: skill `superpowers:writing-plans`, un plan por
-  fase en `docs/superpowers/plans/`, con tareas TDD detalladas (código
-  completo, no placeholders).
-- **Ejecución**: skill `superpowers:subagent-driven-development` — un
-  subagente implementador por tarea + un subagente revisor independiente por
-  tarea, con ronda de arreglo si el revisor encuentra algo. Cada fase termina
-  con una revisión final de toda la rama (modelo más capaz) antes de fusionar.
-- **Aislamiento**: cada fase/cambio se hace en un worktree separado
-  (`EnterWorktree`), se fusiona a `master` con `git merge --no-ff` al
-  terminar, tests verificados en el resultado fusionado antes de dar por
-  cerrado.
-- **Verificación manual**: los subagentes no siempre tienen forma de mover el
-  ratón/hacer clic en la app real — cuando el comportamiento es
-  interactivo (hover, foco de ventana, arrastrar), lo prueba el humano
-  directamente lanzando `dotnet run --project src/Aldune` y siguiendo un
-  checklist concreto.
-- **Preferencia del usuario confirmada**: entender el porqué de las
-  decisiones técnicas, no solo el qué — las explicaciones detalladas en la
-  conversación (WPF, DPAPI, Win32) fueron bien recibidas y conviene mantener
-  ese nivel de detalle al proponer cosas nuevas.
+- **Diseño**: cada cambio grande empieza por una especificación en `docs/superpowers/specs/`.
+- **Código**: lógica nueva en `Aldune.Core` con el test primero; la interfaz se verifica con sondas desechables
+  (`docs/WPF_PROBES.md`, `docs/ANDROID_PROBES.md`).
+- **Integración**: cada cambio se prueba antes de fusionarse a `main` (`dotnet test` y, en Android, `./gradlew test`).
+- **Verificación manual**: lo interactivo (hover, foco, arrastrar) se comprueba además a mano en la app real.
+- Las explicaciones de por qué se decide algo (WPF, DPAPI, Win32) importan tanto como el qué: conviene mantener ese
+  nivel de detalle en los documentos.
 
 ## Deuda técnica conocida y aplazada a propósito
 
@@ -312,5 +296,5 @@ ficheros en `docs/historia/` el 2026-10-24; el contenido no cambió, solo de sit
 - [`historia/STATUS-2026-10.md`](historia/STATUS-2026-10.md): del cierre del 2026-09-27 a 1.7.10 y el
   arranque del cliente Android (2026-10-17).
 
-Las especificaciones de fases ya publicadas y los informes Android cerrados están en
-`historia/specs/` y `historia/informes/`. Las vigentes siguen en `superpowers/specs/`.
+Las especificaciones de fases ya publicadas están en `historia/specs/`; los informes de fase y los
+planes de ejecución se retiraron del árbol (siguen en el historial de git). Las vigentes siguen en `superpowers/specs/`.

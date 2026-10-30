@@ -139,7 +139,7 @@ Cómo se publica una versión y cómo se firma: [docs/RELEASING.md](docs/RELEASI
 - [`docs/SYNC.md`](docs/SYNC.md): sincronización, servidor propio y modelo de seguridad.
 - [`docs/STATUS.md`](docs/STATUS.md): estado técnico y decisiones de implementación.
 - [`docs/ROADMAP.md`](docs/ROADMAP.md): lo previsto y lo descartado, con sus razones.
-- [`docs/superpowers/`](docs/superpowers/): especificaciones y planes de trabajo.
+- [`docs/superpowers/`](docs/superpowers/): especificaciones de diseño.
 
 ## Probar y dar tu opinión
 

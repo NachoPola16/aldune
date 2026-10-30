@@ -2,7 +2,7 @@
 
 > 2026-10-18. Detalla la fila F5 de [`2026-10-17-aldune-android-design.md`](2026-10-17-aldune-android-design.md) §5. Manda esa spec (sobre todo §2.6,
 > §3 y §3.1) en lo que no se diga aquí. Estado de partida: F0-F4 hechas y verificadas en el Pixel 10a y la tableta Lenovo TB350FU
-> ([`INFORME-ANDROID-F4.md`](../../historia/informes/INFORME-ANDROID-F4.md)); el motor (`planSync`/`execute`) y los transportes HTTP y WebDAV existen en `android/sync`
+> (`INFORME-ANDROID-F4.md`); el motor (`planSync`/`execute`) y los transportes HTTP y WebDAV existen en `android/sync`
 > con 119 pruebas. Las decisiones marcadas **(usuario)** las tomó el usuario el 18-10.
 
 ## 0. Objetivo y límite
@@ -40,7 +40,7 @@ android/
 **Por qué un módulo y no `domain`:** `domain` se queda sin OkHttp ni formato de sync, y el trabajo de la nube va a una carpeta nueva sin riesgo para los 414
 tests actuales. Paquete `app.aldune.syncclient`. Mismas opciones de compilación que los otros módulos puros (Java 11, JUnit 5).
 
-**Dónde se hace:** todo `syncclient` y el cambio de `domain` en una **sesión de nube** con TDD (resultado en [`INFORME-NUBE-F5.md`](../../historia/informes/INFORME-NUBE-F5.md)). `app` se hace luego aquí, en local, con los dispositivos (§7).
+**Dónde se hace:** todo `syncclient` y el cambio de `domain` en una **sesión de nube** con TDD (resultado en `INFORME-NUBE-F5.md`). `app` se hace luego aquí, en local, con los dispositivos (§7).
 
 ## 3. Cambios en `domain`
 

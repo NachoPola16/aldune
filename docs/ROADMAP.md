@@ -937,7 +937,7 @@ cascada".
 
 Se pidió estudiar el port a Android e iOS ("algo diferente: más gestionar las notas del ordenador y
 apuntar algo que imitar el dock") y revisar después qué hacer con los sistemas que faltan. Todo quedó
-**documentado y sin implementar**, para poder retomarlo en otra sesión u otra IA:
+**documentado y sin implementar**, para poder retomarlo más adelante:
 
 - **[`MOBILE_PORT.md`](MOBILE_PORT.md) — Android e iOS** con .NET MAUI compartiendo `Aldune.Core` (los
   850 tests y todo el formato de sync valen tal cual). Incluye qué se reutiliza y qué no se porta (dock,

@@ -2,7 +2,7 @@
 
 > 2026-10-18. Desarrolla la fila F6 de la spec madre ([`2026-10-17-aldune-android-design.md`](2026-10-17-aldune-android-design.md) §2.7, §2.8 y §5) y manda sobre
 > ella donde la concreta. Las decisiones marcadas **(usuario)** las tomó el usuario en esta sesión; el resto son defaults razonados.
-> Parte del trabajo (§3) lo hace una sesión de nube: su resultado está en [`INFORME-NUBE-F6.md`](../../historia/informes/INFORME-NUBE-F6.md).
+> Parte del trabajo (§3) lo hace una sesión de nube: su resultado está en `INFORME-NUBE-F6.md`.
 
 ## 1. Qué entra en F6
 

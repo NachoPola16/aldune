@@ -6,8 +6,8 @@
 > (Kotlin + Compose) con el formato de sync fijado por vectores generados desde `Aldune.Core`. Decidido por el usuario el
 > mismo día. Lo que dice el resto del documento sobre MAUI (§3, §4, §6, §7) es anterior a esa revisión; el producto y las fases
 > vigentes están en [`superpowers/specs/2026-10-17-aldune-android-design.md`](superpowers/specs/2026-10-17-aldune-android-design.md).**
-> Sesión del 2026-09-28. Este documento existe para que el port se pueda retomar en otra sesión, con
-> otra IA o dentro de meses, sin repetir la investigación que ya está hecha. Si algo de aquí se
+> Sesión del 2026-09-28. Este documento existe para que el port se pueda retomar dentro de meses,
+> sin repetir la investigación que ya está hecha. Si algo de aquí se
 > implementa, manda lo implementado: hay que actualizar `STATUS.md` (lo hecho y por qué) y
 > `ROADMAP.md` (lo decidido y lo descartado) y, si hay diseño nuevo de producto,
 > `docs/superpowers/specs/`.
@@ -395,9 +395,7 @@ Los tests de Core (850) valen tal cual, porque **el Core es el mismo ensamblado*
    target API de Play y las versiones de MAUI cambian cada temporada. Todo lo de arriba es del 2026-09-28.
 2. Si lo que se quiere es otro sistema de escritorio (macOS, Linux), leer antes
    [`DESKTOP_PORT.md`](DESKTOP_PORT.md): la conclusión allí es que **compensa el Core, no el dock**.
-3. Antes de empezar, que el plan lo revise otra IA con ojos frescos: el encargo completo está en
-   [`MOBILE_PORT_REVIEW.md`](MOBILE_PORT_REVIEW.md), con los comandos para comprobar cada afirmación,
-   los ocho puntos que hay que atacar y el prompt listo para pegar.
+3. Antes de empezar, conviene que alguien revise el plan con ojos frescos y compruebe las afirmaciones de hecho.
 4. Escribir la spec de producto de la fase 0 y hacer los cuatro spikes. Sin el resultado del spike A
    (SQLite + AES-GCM en un dispositivo real) y del D (widget iOS), no escribir producto.
 5. Antes de tocar `src/Aldune.Core`, comprobar que siguen **todos los tests en verde** (850 cuando se escribió esto; hoy ~1350) y que existe el
@@ -503,7 +501,7 @@ Lo que **no** se hace en ninguno (igual que antes): dock, abanico, ventanas flot
    - Compose exige API 21 como mínimo, así que 26 no lo limita.
    Bajar de 26 solo compensaría si aparece un usuario real con Android 5-7; hasta entonces no.
 4. **Pendiente:** `applicationId` y nombre (comprobar que «Aldune» está libre en F-Droid e IzzyOnDroid), y la versión exacta de Android de la tableta.
-5. Antes de escribir producto: **una revisión del plan por otra IA con ojos frescos** (`MOBILE_PORT_REVIEW.md` §7), con la pregunta
+5. Antes de escribir producto: **una revisión del plan con ojos frescos**, con la pregunta
    añadida de si Kotlin con vectores es de verdad más barato que MAUI.
 
 ### 13.5 Estado (2026-10-17)
@@ -511,10 +509,10 @@ Lo que **no** se hace en ninguno (igual que antes): dock, abanico, ventanas flot
 - **Hecho (sesión de diseño, tarde):** spec de producto, arquitectura, almacenamiento y fases en
   [`superpowers/specs/2026-10-17-aldune-android-design.md`](superpowers/specs/2026-10-17-aldune-android-design.md), con las decisiones
   de producto del usuario; revisión de §13 con internet (§13.6); prompt de nube para el motor de sync en
-  [`superpowers/plans/2026-10-17-android-motor-sync-nube.md`](superpowers/plans/2026-10-17-android-motor-sync-nube.md).
+  `superpowers/plans/2026-10-17-android-motor-sync-nube.md`.
 - **Hecho:** vectores de compatibilidad (`tests/vectors/`, verificados por `SyncVectorsTests`) y el **núcleo Kotlin** `android/core`
   (clave, sobres, borrados, notas protegidas, códigos de perfil, orden de versiones; 82 tests contra los vectores; informe en
-  [`INFORME-ANDROID-CORE.md`](historia/informes/INFORME-ANDROID-CORE.md)). Con el nonce de cada vector Kotlin reproduce byte a byte el cifrado de C#, y Core
+  `INFORME-ANDROID-CORE.md`). Con el nonce de cada vector Kotlin reproduce byte a byte el cifrado de C#, y Core
   lee lo que escribe Kotlin. Hecho por una sesión de nube (Sonnet) y revisado y fusionado aquí.
 - **No hecho:** motor de sync en Kotlin (`SyncService`: conflictos, bases, alcance, borrados), transportes (HTTP, WebDAV, carpeta no),
   base de datos, interfaz, widget, notificaciones, nombre de paquete. Nada probado aún en un Android real (el cifrado PBKDF2 de 600.000
@@ -527,8 +525,8 @@ Lo que **no** se hace en ninguno (igual que antes): dock, abanico, ventanas flot
   **bug probable de Windows**: una protección llegada por sync vacía el archivo de una nota vinculada (spec §9.3).
 - **F0 hecho (2026-10-17):** `tests/vectors/sync-scenarios.json` (34 escenarios del motor real, `SyncScenarioVectorsTests`), documentado en
   `tests/vectors/README.md`; sin tocar Core; 1450 tests de Core en verde.
-- **F1 hecho (2026-10-17):** `android/sync` (planSync + execute + transporte HTTP con OkHttp, 93 tests; los 34 escenarios pasan en el plan y de punta a punta). Informe: [`INFORME-ANDROID-SYNC.md`](historia/informes/INFORME-ANDROID-SYNC.md). Revisado aquí leyendo el planificador contra `SyncService.cs` (sin diferencias); **Gradle no se ha ejecutado en este PC** (Java 26), los 93 verdes son los del informe de la nube.
-- **F2 hecho y verificado aquí (2026-10-17):** `WebDavSyncTransport` (21 tests con MockWebServer) y `ServerIntegrationTest` (5 tests) **ejecutados contra el `Aldune.SyncServer` real** en local (token de prueba y carpeta temporal): todo en verde. `android/sync`: 119 tests (114 + 5 de servidor real, que se saltan sin `-Daldune.server.url`); `android/core`: 82. Informe: [`INFORME-ANDROID-F2.md`](historia/informes/INFORME-ANDROID-F2.md). Sin probar aún: el XML en Android real y un Nextcloud real.
+- **F1 hecho (2026-10-17):** `android/sync` (planSync + execute + transporte HTTP con OkHttp, 93 tests; los 34 escenarios pasan en el plan y de punta a punta). Informe: `INFORME-ANDROID-SYNC.md`. Revisado aquí leyendo el planificador contra `SyncService.cs` (sin diferencias); **Gradle no se ha ejecutado en este PC** (Java 26), los 93 verdes son los del informe de la nube.
+- **F2 hecho y verificado aquí (2026-10-17):** `WebDavSyncTransport` (21 tests con MockWebServer) y `ServerIntegrationTest` (5 tests) **ejecutados contra el `Aldune.SyncServer` real** en local (token de prueba y carpeta temporal): todo en verde. `android/sync`: 119 tests (114 + 5 de servidor real, que se saltan sin `-Daldune.server.url`); `android/core`: 82. Informe: `INFORME-ANDROID-F2.md`. Sin probar aún: el XML en Android real y un Nextcloud real.
 - **F4 tarea 1 y `android/domain` hechas (2026-10-17):** raíz Gradle común y módulo `app` que compila y arranca en el Pixel 10a (Android 17); `domain` (86 tests) fusionado de la nube. Informes: `INFORME-ANDROID-F4-DOMAIN.md`. Quedan las tareas 3-9 de la spec de F4.
 - **F3 hecho y verificado aquí (2026-10-17):** `android/text` (87 tests; informe `INFORME-ANDROID-F3.md`), fusionado desde la nube y ejecutado en este PC. Sin probar en Android real (pliegue de acentos, 1 ulp de cbrt/pow).
 - **F3, vectores hechos (2026-10-17):** `tests/vectors/text-lines.json`, `text-color.json` y `text-order.json` (≈12.800 casos de Core real: tareas, viñetas, sangría, mover líneas, listas de tareas, título/vista previa, OKLCH, contraste, derivación de color, temas, reparto de color y orden del mazo), generados y verificados por `TextVectorsTests` sin tocar Core (1454 tests de Core en verde). Pendiente: el módulo `android/text` (prompt de nube en `superpowers/plans/2026-10-17-android-f3-texto-nube.md`). Búsqueda sin vectores (Android pliega acentos); `ColorFit`, `ColorMix` y `AppPalette` quedan fuera de F3 (paleta de la app: decidir F3b o F4).
@@ -573,7 +571,7 @@ Revisión pedida por el usuario «con ojos frescos». Lo que se confirma, lo que
    consultadas el 2026-10-17): estable **1.3.0** (12-ago-2026); la 1.2.0 es estable desde el 22-oct-2025; en alfa la 1.4.0-alpha03
    (7-oct-2026). Usar la estable con `NavigableListDetailPaneScaffold` (gestiona el «atrás»).
 8. **Corrección de §3.3 para Android:** el widget (Glance) se pinta desde el proceso de la app, que puede descifrar con la clave del
-   Keystore; **no hace falta escribir una instantánea en claro**. (La pregunta de `MOBILE_PORT_REVIEW.md` §3.4 queda contestada para Android.)
+   Keystore; **no hace falta escribir una instantánea en claro**.
 9. **No se ha vuelto a comprobar** en esta revisión: la política de IzzyOnDroid y la lista de anti-features (Aldune no debería llevar
    ninguna: sin rastreo, servidor propio libre). Sigue valiendo lo de §13.1.
 

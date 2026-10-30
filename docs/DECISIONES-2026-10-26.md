@@ -99,7 +99,7 @@ aparte) funciona. Se retoma solo si la validación con 3-5 personas demuestra qu
 
 ## Auditoría de seguridad de Windows y servidor (26-10) y 1.7.13
 
-Pasada de solo lectura con el agente `seguridad`: nada crítico ni alto. Corregido en la 1.7.13:
+Pasada de seguridad de solo lectura: nada crítico ni alto. Corregido en la 1.7.13:
 
 - **WebDAV (media):** un `href` del listado que apuntase a otro host recibía el usuario y la contraseña. Ahora solo se usa su ruta contra el servidor configurado y lo que caiga en otro host se descarta (`WebDavSyncTransport.ResolveHref`, con tests). Android ya lo hacía bien.
 - **Contraseña de nota protegida (media-baja):** mínimo de 4 a 8 caracteres para las nuevas; desbloquear las existentes sigue sin mínimo.

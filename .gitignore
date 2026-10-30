@@ -37,6 +37,9 @@ tmp/
 *.p12
 *.pem
 *.key
+# Claves de firma de Android (también ignoradas dentro de android/).
+*.jks
+*.keystore
 
 # Configuración local habitual de otros editores y herramientas.
 .idea/
@@ -47,8 +50,19 @@ tmp/
 
 # APK firmado de una release de Android: se sube al GitHub Release, no al repositorio (docs/RELEASING.md).
 android/*.apk
-.superpowers/
 
-# Instrucciones locales para asistentes de código: viven en el disco del autor, no en el repositorio.
+# Instrucciones y estado local de asistentes de código y de herramientas de prueba: viven en el disco del
+# autor, no en el repositorio.
 /AGENTS.md
 /CLAUDE.md
+/GEMINI.md
+.mcp.json
+.superpowers/
+.cursor/
+.codex/
+.gemini/
+.windsurf/
+.cline/
+.continue/
+.aider*
+.playwright-mcp/
