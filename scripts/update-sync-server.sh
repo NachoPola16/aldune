@@ -44,8 +44,18 @@ docker compose "${compose_args[@]}" build --pull
 docker compose "${compose_args[@]}" up -d --remove-orphans
 
 if command -v curl >/dev/null 2>&1; then
-    curl --fail --silent --show-error --max-time 15 "$health_url" >/dev/null
-    echo "Servidor actualizado y saludable: $health_url"
+    # El contenedor acaba de recrearse y tarda unos segundos en aceptar conexiones: un solo curl justo después
+    # de «up -d» fallaba con el código 56 (conexión reiniciada) aunque el servidor arrancara bien. Se reintenta
+    # hasta 30 s y solo entonces se da por fallido.
+    for _ in $(seq 1 30); do
+        if curl --fail --silent --max-time 5 "$health_url" >/dev/null 2>&1; then
+            echo "Servidor actualizado y saludable: $health_url"
+            exit 0
+        fi
+        sleep 1
+    done
+    echo "El servidor no respondió en $health_url tras 30 s. Revisa: docker compose ${compose_args[*]} logs" >&2
+    exit 1
 else
     echo "Servidor actualizado. Instala curl para comprobar /health automáticamente." >&2
 fi
