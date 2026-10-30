@@ -175,7 +175,7 @@ android/
   fastlane/metadata/android/<locale>/   metadatos de F-Droid (título ≤50, corta ≤80, larga ≤4000, changelogs ≤500)
 ```
 
-- **Por qué `sync` y `text` son JVM puro**: se prueban con `gradle test` sin SDK de Android (sesiones de nube, CI de Linux) y son el
+- **Por qué `sync` y `text` son JVM puro**: se prueban con `gradle test` sin SDK de Android (CI de Linux, sin emulador) y son el
   sitio donde vive la cultura de tests del proyecto. `app` solo pega piezas y pinta.
 - **Hasta que exista la app**, `android/sync` es su propia compilación con `includeBuild("../core")` (coordenadas
   `app.aldune:aldune-core`): no hace falta tocar `android/core`. Al crear `app` se pasa a una raíz común.
@@ -234,16 +234,16 @@ daría datos ilegibles. La recuperación es **volver a pegar el código de perfi
 | # | Fase | Dónde | Entregable | Verificación (puerta) | Sesiones |
 |---|---|---|---|---|---|
 | F0 | **Vectores de escenario** | Este PC (Windows: `SyncService` usa DPAPI y en Linux no corre) | `tests/vectors/sync-scenarios.json` + generador en `Aldune.Core.Tests` (§6) | `dotnet test` verde; cada escenario cita la línea de `SyncService.cs` que cubre; README de vectores actualizado | 1 |
-| F1 | **Motor de sync Kotlin** | Nube (Sonnet) | `android/sync`: `planSync`, `execute`, dobles en memoria | `gradle test` verde con **todos** los escenarios; `android/core` sin tocar | 1 (nube) |
-| F2 | Transportes | Nube o local | HTTP y WebDAV con OkHttp | MockWebServer con las respuestas reales del servidor (401, 404, 413, 5 MB); y una sync real contra `Aldune.SyncServer` en local | 1 |
-| F3 | Texto, color, orden, búsqueda | Nube | `android/text` + vectores de texto generados desde Core (entrada, cursor, operación → salida) | `gradle test` verde contra los vectores de texto | 1-2 |
+| F1 | **Motor de sync Kotlin** | Aislado (JVM puro) | `android/sync`: `planSync`, `execute`, dobles en memoria | `gradle test` verde con **todos** los escenarios; `android/core` sin tocar | 1 |
+| F2 | Transportes | Local o aislado | HTTP y WebDAV con OkHttp | MockWebServer con las respuestas reales del servidor (401, 404, 413, 5 MB); y una sync real contra `Aldune.SyncServer` en local | 1 |
+| F3 | Texto, color, orden, búsqueda | Aislado (JVM puro) | `android/text` + vectores de texto generados desde Core (entrada, cursor, operación → salida) | `gradle test` verde contra los vectores de texto | 1-2 |
 | F4 | App: esqueleto | Local (Android Studio) | Room + Keystore + lista/nota adaptativas + editor, **sin sync** | Pruebas de Compose en dispositivo + capturas por `adb` en Pixel y Tab (sonda móvil, §7) | 3-4 |
 | F5 | App: sync | Local | Ajustes de sync, disparadores, WorkManager | Sonda: nota creada en Android aparece en el PC y al revés; conflicto provocado; borrado firmado y sin firma; servidor real del CT 103 con un perfil de prueba | 2 |
 | F6 | Captura | Local | Compartir, acceso directo, mosaico, notificación «+», widget Glance | Checklist en los dos dispositivos, con el móvil reiniciado; test de que el widget nunca pinta una protegida | 2 |
 | F7 | Recordatorios, protegidas, conflictos | Local | §2.3, §2.4, §2.9 | Aviso con la app cerrada y el móvil en reposo (exacto y no exacto); PBKDF2 medido en la tableta | 2 |
 | F8 | Publicar | Local | Firma, build reproducible, fastlane en 5 idiomas, IzzyOnDroid y F-Droid | `fdroid build` reproduce el APK firmado; confirmar con el usuario antes de publicar | 1-2 |
 
-**Total ≈ 14-17 sesiones** (F1 hecha en la nube cuenta como una). Coincide con la horquilla de `MOBILE_PORT.md` §13.2.
+**Total ≈ 14-17 sesiones** (F1 cuenta como una). Coincide con la horquilla de `MOBILE_PORT.md` §13.2.
 
 ## 6. Cómo se generan desde Aldune.Core los vectores de escenario (F0; no implementado)
 
@@ -307,7 +307,7 @@ registrar en la verificación de desarrolladores de Google (2027 en todo el mund
 - **Nombre visible: «Aldune».** Comprobado el 2026-10-17: F-Droid no tiene ninguna app con ese nombre y una búsqueda web no encuentra
   ninguna app Android llamada así. En IzzyOnDroid la búsqueda web no fue concluyente: mirarlo a mano al pedir la inclusión.
 - **Clave de firma:** una sola (RSA 4096, validez 30 años), generada en F8 con `keytool`; el almacén y su contraseña en KeePass y una
-  copia cifrada fuera del PC. Nunca en el repositorio ni en una sesión de nube. Perderla = no poder actualizar la app.
+  copia cifrada fuera del PC. Nunca en el repositorio ni en un entorno de integración continua compartido. Perderla = no poder actualizar la app.
 - **Cuenta de Google:** nada por ahora; cuenta de distribución limitada (gratis, 20 dispositivos) cuando haga falta para los dos
   dispositivos propios, y verificación completa solo antes de publicar para otros en 2027.
 - **Publicar:** primero APK firmado en las *releases* de GitHub + IzzyOnDroid; F-Droid cuando el build reproducible funcione.
@@ -318,7 +318,7 @@ registrar en la verificación de desarrolladores de Google (2027 en todo el mund
 1. `NoteSearch` dice ignorar acentos y no lo hace (`CurrentCultureIgnoreCase`). Arreglarlo en Windows es un cambio aparte, con test.
 2. Los borrados **locales** se filtran por ids del alcance pero no por etiqueta (`SyncService.cs:368-370`), a diferencia de las notas.
    Puede ser intencionado; el escenario E26 lo fija tal cual hasta decidirlo.
-3. **Probable pérdida de datos en Windows, ya hoy (encontrado por la revisión de agy, comprobado leyendo el código; falta un test que
+3. **Probable pérdida de datos en Windows, ya hoy (encontrado en una revisión independiente, comprobado leyendo el código; falta un test que
    lo reproduzca):** si llega por sync una versión **protegida** de una nota que en ese PC está **vinculada** a un archivo,
    `ApplySyncNote` no mira el vínculo y guarda el texto vacío; después `LinkedFileService.Reconcile` (:102-126) ve texto pendiente
    (`""` ≠ huella conocida), no comprueba `IsProtected` y **escribe el archivo vacío**. No hace falta Android: basta otro PC con Windows

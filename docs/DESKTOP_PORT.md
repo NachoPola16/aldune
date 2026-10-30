@@ -2,7 +2,7 @@
 
 > **Estado: macOS, Linux y web siguen sin decidir; el cliente móvil ya tiene plan decidido**
 > (Android primero, en tableta: `MOBILE_PORT.md` §0.1). En ninguno de los casos hay código escrito.
-> Sesión del 2026-09-28. Documento hermano de
+> Fecha: 2026-09-28. Documento hermano de
 > [`MOBILE_PORT.md`](MOBILE_PORT.md) (Android e iOS). Ese contesta "¿y en el teléfono?"; este contesta
 > "¿y en el Mac, y en Linux, y en el navegador?".
 >

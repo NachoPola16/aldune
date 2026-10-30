@@ -1,8 +1,8 @@
 # Aldune para Android — F5: la sync dentro de la app
 
 > 2026-10-18. Detalla la fila F5 de [`2026-10-17-aldune-android-design.md`](2026-10-17-aldune-android-design.md) §5. Manda esa spec (sobre todo §2.6,
-> §3 y §3.1) en lo que no se diga aquí. Estado de partida: F0-F4 hechas y verificadas en el Pixel 10a y la tableta Lenovo TB350FU
-> (`INFORME-ANDROID-F4.md`); el motor (`planSync`/`execute`) y los transportes HTTP y WebDAV existen en `android/sync`
+> §3 y §3.1) en lo que no se diga aquí. Estado de partida: F0-F4 hechas y verificadas en el Pixel 10a y la tableta Lenovo TB350FU;
+> el motor (`planSync`/`execute`) y los transportes HTTP y WebDAV existen en `android/sync`
 > con 119 pruebas. Las decisiones marcadas **(usuario)** las tomó el usuario el 18-10.
 
 ## 0. Objetivo y límite
@@ -37,10 +37,10 @@ android/
   app/                Room (implementa LocalSyncStore), secretos en el Keystore, pantallas, WorkManager. Casi sin reglas propias.
 ```
 
-**Por qué un módulo y no `domain`:** `domain` se queda sin OkHttp ni formato de sync, y el trabajo de la nube va a una carpeta nueva sin riesgo para los 414
+**Por qué un módulo y no `domain`:** `domain` se queda sin OkHttp ni formato de sync, y el trabajo nuevo va a una carpeta nueva sin riesgo para los 414
 tests actuales. Paquete `app.aldune.syncclient`. Mismas opciones de compilación que los otros módulos puros (Java 11, JUnit 5).
 
-**Dónde se hace:** todo `syncclient` y el cambio de `domain` en una **sesión de nube** con TDD (resultado en `INFORME-NUBE-F5.md`). `app` se hace luego aquí, en local, con los dispositivos (§7).
+**Dónde se hace:** todo `syncclient` y el cambio de `domain` aislados, con TDD. `app` se hace luego aquí, en local, con los dispositivos (§7).
 
 ## 3. Cambios en `domain`
 
@@ -241,12 +241,12 @@ lo distingue), se permite **un** cambio en `android/sync`: `SyncTransportExcepti
 
 | # | Tarea | Dónde |
 |---|---|---|
-| 1 | `domain`: campos y reglas de protegida (§3) | **Nube** |
-| 2 | `syncclient`: §4.1-§4.8 con TDD y `LocalSyncStoreContract` | **Nube** |
+| 1 | `domain`: campos y reglas de protegida (§3) | JVM puro |
+| 2 | `syncclient`: §4.1-§4.8 con TDD y `LocalSyncStoreContract` | JVM puro |
 | 3 | Room v2 + `RoomLocalSyncStore` + contrato en el dispositivo | Local |
 | 4 | Secretos, `SettingsStore` del perfil, Ajustes → Sincronización, primera conexión | Local |
 | 5 | Indicador, tirar para sincronizar, candado y conflicto en la fila, disparadores, WorkManager | Local |
-| 6 | Sondas contra el CT 103 en Pixel y tableta; `INFORME-ANDROID-F5.md` | Local |
+| 6 | Sondas contra el CT 103 en Pixel y tableta| Local |
 
 ## 8. Riesgos
 
@@ -256,4 +256,3 @@ lo distingue), se permite **un** cambio en `android/sync`: `SyncTransportExcepti
 3. **WorkManager en la tableta Lenovo**: algunos fabricantes retrasan o matan trabajos en segundo plano. No se promete periodicidad (spec madre §2.6); se mira en
    la sonda y se anota.
 4. **LF en notas creadas en Android** (F4 §1.2/§6.3): la sonda 4 lo comprueba de verdad. Si Windows reescribe CRLF y crea versiones nuevas, se arregla en Windows.
-5. **Coste de la nube**: tope ≈10 $ (saldo ≈22 $ el 17-10, caducan el 5-11-2026). Si se acaba, lo que falte de la tarea 2 se termina aquí.

@@ -1,12 +1,12 @@
 # Aldune — Cliente móvil (Android e iOS): estudio y plan
 
-> **Estado: plan decidido el 2026-09-28 —Android primero, en tableta, ver §0.1— y sin una sola línea de
-> código de móvil en el repositorio.**
+> **Estado: plan decidido el 2026-09-28 —Android primero, en tableta, ver §0.1—. Android ya está publicado; este estudio
+> es el origen de las decisiones y de lo descartado.**
 > **Revisión del 2026-10-17 (§13): .NET MAUI no sirve si se quiere F-Droid; la recomendación pasa a ser Android nativo
 > (Kotlin + Compose) con el formato de sync fijado por vectores generados desde `Aldune.Core`. Decidido por el usuario el
 > mismo día. Lo que dice el resto del documento sobre MAUI (§3, §4, §6, §7) es anterior a esa revisión; el producto y las fases
 > vigentes están en [`specs/2026-10-17-aldune-android-design.md`](specs/2026-10-17-aldune-android-design.md).**
-> Sesión del 2026-09-28. Este documento existe para que el port se pueda retomar dentro de meses,
+> Fecha: 2026-09-28. Este documento existe para que el port se pueda retomar dentro de meses,
 > sin repetir la investigación que ya está hecha. Si algo de aquí se
 > implementa, manda lo implementado: hay que actualizar `STATUS.md` (lo hecho y por qué) y
 > `ROADMAP.md` (lo decidido y lo descartado) y, si hay diseño nuevo de producto,
@@ -464,7 +464,7 @@ almacén → acciones), que hay que generar antes de dar un cliente Kotlin por c
 | §4: **MAUI recomendada** | Solo si se renuncia a F-Droid principal. Con F-Droid como objetivo, **Android nativo (Kotlin + Jetpack Compose)**. |
 | §11: «Reescribir Core en Kotlin: descartado» | La razón era el riesgo de **divergencia silenciosa** del formato cifrado. Se mitiga con **vectores de compatibilidad**: `Aldune.Core` (la fuente de verdad) genera ficheros JSON con sobres, claves y resultados esperados, y los tests del cliente Kotlin los consumen; y al revés (lo que escribe Kotlin lo lee C#). Con eso el coste de la divergencia es un test en rojo, no datos ilegibles. |
 | §5: **seams en Core** (`ISecretProtector`, `async`, `JsonSerializerContext`) | **Dejan de ser requisito del móvil**: Kotlin no usa Core. Siguen valiendo para Windows (y `ISecretProtector` arregla los 46 tests que fallan en Linux), pero ya no bloquean nada. Lo que sí hace falta es el **golden file del sobre (formato 4)** y los vectores. |
-| §7: «6 sesiones el MVP de Android» | Se vuelve a contar: núcleo Kotlin con vectores **≈ 6-8**, UI Compose adaptativa **≈ 6-8**, widget/notificaciones/atajos **≈ 3-4**. Total **≈ 15-20 sesiones**, no 23-26 con iOS, pero sin iOS. (Orden de magnitud: el propio brief de revisión decía que si reescribir sale por menos de 5 sesiones el plan está mal; sale por más, pero a cambio no hay seams ni toolchain MAUI.) |
+| §7: «6 sesiones el MVP de Android» | Se vuelve a contar: núcleo Kotlin con vectores **≈ 6-8**, UI Compose adaptativa **≈ 6-8**, widget/notificaciones/atajos **≈ 3-4**. Total **≈ 15-20 sesiones**, no 23-26 con iOS, pero sin iOS. (Orden de magnitud: si reescribir salía por menos de 5 sesiones el plan estaba mal; sale por más, pero a cambio no hay costuras ni toolchain MAUI.) |
 | §0.1: **tableta como dispositivo de referencia** | Ahora hay **dos** dispositivos reales: el Pixel 10a (teléfono) y la tableta. El **teléfono es el de referencia para la captura** y la **tableta para la gestión**; el diseño es adaptativo (ver 13.3). |
 | iOS | Sin cambios: fuera hasta que haya Mac. Con Kotlin, iOS sería un cliente Swift aparte que consume los mismos vectores (o Kotlin Multiplatform para el núcleo si se escribe pensando en ello desde el principio; no hace falta decidirlo ahora). |
 
@@ -504,36 +504,27 @@ Lo que **no** se hace en ninguno (igual que antes): dock, abanico, ventanas flot
 5. Antes de escribir producto: **una revisión del plan con ojos frescos**, con la pregunta
    añadida de si Kotlin con vectores es de verdad más barato que MAUI.
 
-### 13.5 Estado (2026-10-17)
+### 13.5 Estado a 2026-10-17 y decisiones
 
-- **Hecho (sesión de diseño, tarde):** spec de producto, arquitectura, almacenamiento y fases en
-  [`specs/2026-10-17-aldune-android-design.md`](specs/2026-10-17-aldune-android-design.md), con las decisiones
-  de producto del usuario; revisión de §13 con internet (§13.6); prompt de nube para el motor de sync en
-  un plan retirado del árbol.
-- **Hecho:** vectores de compatibilidad (`tests/vectors/`, verificados por `SyncVectorsTests`) y el **núcleo Kotlin** `android/core`
-  (clave, sobres, borrados, notas protegidas, códigos de perfil, orden de versiones; 82 tests contra los vectores; informe en
-  `INFORME-ANDROID-CORE.md`). Con el nonce de cada vector Kotlin reproduce byte a byte el cifrado de C#, y Core
-  lee lo que escribe Kotlin. Hecho por una sesión de nube (Sonnet) y revisado y fusionado aquí.
-- **No hecho:** motor de sync en Kotlin (`SyncService`: conflictos, bases, alcance, borrados), transportes (HTTP, WebDAV, carpeta no),
-  base de datos, interfaz, widget, notificaciones, nombre de paquete. Nada probado aún en un Android real (el cifrado PBKDF2 de 600.000
-  iteraciones solo está verificado en JDK 21).
-- **Cambios al plan en la sesión de diseño:** el widget de Android no necesita instantánea en claro (§13.6.8); rotación de clave,
-  combinar conflictos, biometría, QR y carpeta compartida fuera de la v1; transportes servidor + WebDAV; el motor Kotlin separa
-  decisión (`planSync`, pura) y efectos; nuevo riesgo de distribución: verificación de desarrolladores de Google (§13.6.3), que hace
-  del build reproducible un requisito desde el primer día. La revisión independiente de la spec (agy, Gemini 3.8 Flash; 14 hallazgos,
-  13 confirmados en el código) añadió escenarios, reglas de construcción de sobres (`ScreenOrigin`, autor, protegidas con texto vacío) y un
-  **bug probable de Windows**: una protección llegada por sync vacía el archivo de una nota vinculada (spec §9.3).
-- **F0 hecho (2026-10-17):** `tests/vectors/sync-scenarios.json` (34 escenarios del motor real, `SyncScenarioVectorsTests`), documentado en
-  `tests/vectors/README.md`; sin tocar Core; 1450 tests de Core en verde.
-- **F1 hecho (2026-10-17):** `android/sync` (planSync + execute + transporte HTTP con OkHttp, 93 tests; los 34 escenarios pasan en el plan y de punta a punta). Informe: `INFORME-ANDROID-SYNC.md`. Revisado aquí leyendo el planificador contra `SyncService.cs` (sin diferencias); **Gradle no se ha ejecutado en este PC** (Java 26), los 93 verdes son los del informe de la nube.
-- **F2 hecho y verificado aquí (2026-10-17):** `WebDavSyncTransport` (21 tests con MockWebServer) y `ServerIntegrationTest` (5 tests) **ejecutados contra el `Aldune.SyncServer` real** en local (token de prueba y carpeta temporal): todo en verde. `android/sync`: 119 tests (114 + 5 de servidor real, que se saltan sin `-Daldune.server.url`); `android/core`: 82. Informe: `INFORME-ANDROID-F2.md`. Sin probar aún: el XML en Android real y un Nextcloud real.
-- **F4 tarea 1 y `android/domain` hechas (2026-10-17):** raíz Gradle común y módulo `app` que compila y arranca en el Pixel 10a (Android 17); `domain` (86 tests) fusionado de la nube. Informes: `INFORME-ANDROID-F4-DOMAIN.md`. Quedan las tareas 3-9 de la spec de F4.
-- **F3 hecho y verificado aquí (2026-10-17):** `android/text` (87 tests; informe `INFORME-ANDROID-F3.md`), fusionado desde la nube y ejecutado en este PC. Sin probar en Android real (pliegue de acentos, 1 ulp de cbrt/pow).
-- **F3, vectores hechos (2026-10-17):** `tests/vectors/text-lines.json`, `text-color.json` y `text-order.json` (≈12.800 casos de Core real: tareas, viñetas, sangría, mover líneas, listas de tareas, título/vista previa, OKLCH, contraste, derivación de color, temas, reparto de color y orden del mazo), generados y verificados por `TextVectorsTests` sin tocar Core (1454 tests de Core en verde). Pendiente: el módulo `android/text` (prompt de nube en un plan retirado del árbol). Búsqueda sin vectores (Android pliega acentos); `ColorFit`, `ColorMix` y `AppPalette` quedan fuera de F3 (paleta de la app: decidir F3b o F4).
-- **Siguiente (ya hecho F0 y F1; lo de abajo es el plan original):** (1) commitear F0; (2) **F1 en la nube** con el prompt de nube (retirado del árbol) (motor contra esos vectores, ~10-12 $); (3) F2-F3
-  (transportes, texto); (4) app Compose (F4+), que necesita Android Studio o el SDK + JDK 21 en este PC.
-- **Decidido por el usuario (2026-10-17):** `applicationId` `io.github.nachopola16.aldune`, nombre «Aldune», una clave de firma,
-  GitHub + IzzyOnDroid primero, Android Studio antes de F4; la tableta tiene Android 14. Detalle en la spec §8.1.
+Esto era el estado el día de la revisión; lo que se hizo después (F4-F7, Android 1.0) está en `STATUS.md` y en las specs de `specs/`.
+
+- **Hecho:** la spec de producto, la arquitectura, el almacenamiento y las fases en
+  [`specs/2026-10-17-aldune-android-design.md`](specs/2026-10-17-aldune-android-design.md); los vectores de compatibilidad
+  (`tests/vectors/`, verificados por `SyncVectorsTests`, con 34 escenarios del motor real); el núcleo Kotlin `android/core`
+  (clave, sobres, borrados, notas protegidas, códigos de perfil, orden de versiones). Con el nonce de cada vector Kotlin reproduce
+  byte a byte el cifrado de C#, y Core lee lo que escribe Kotlin.
+- **Cambios al plan:** el widget de Android no necesita instantánea en claro (§13.6.8); rotación de clave, combinar conflictos,
+  biometría, QR y carpeta compartida quedan fuera de la v1; transportes servidor + WebDAV; el motor Kotlin separa decisión (`planSync`,
+  pura) y efectos; nuevo riesgo de distribución: verificación de desarrolladores de Google (§13.6.3), que hace del build reproducible un
+  requisito desde el primer día. Una revisión independiente de la spec (14 hallazgos, 13 confirmados en el código) añadió escenarios,
+  reglas de construcción de sobres (`ScreenOrigin`, autor, protegidas con texto vacío) y un **bug probable de Windows**: una protección
+  llegada por sync vacía el archivo de una nota vinculada (spec §9.3).
+- **Módulos Kotlin y sus pruebas:** `android/sync` (planSync, execute, transporte HTTP con OkHttp y WebDAV; los 34 escenarios pasan en el
+  plan y de punta a punta, y los transportes se ejecutaron contra el `Aldune.SyncServer` real), `android/text` (formato, color, orden y
+  búsqueda contra vectores generados desde Core: ≈12.800 casos) y `android/domain`. Búsqueda sin vectores (Android pliega acentos);
+  `ColorFit`, `ColorMix` y `AppPalette` quedaron fuera de F3 (la paleta de la app se decidió en F4).
+- **Decidido (2026-10-17):** `applicationId` `io.github.nachopola16.aldune`, nombre «Aldune», una clave de firma, GitHub + IzzyOnDroid
+  primero, Android Studio antes de F4; la tableta tiene Android 14. Detalle en la spec §8.1.
 
 ### 13.6 Segunda revisión con internet (2026-10-17, tarde)
 

@@ -1,7 +1,7 @@
 # Aldune para Android — F7: recordatorios, notas protegidas y conflictos
 
 > 2026-10-18. Cierra §2.3, §2.4 y §2.9 de la spec madre (`2026-10-17-aldune-android-design.md`). Las decisiones marcadas **(usuario)** las tomó el usuario
-> al preparar F7; el resto son defaults razonados. Partes: §3 (JVM puro, la hace la nube con TDD) y §4 (Android, se hace aquí con sondas).
+> al preparar F7; el resto son defaults razonados. Partes: §3 (JVM puro, con TDD) y §4 (Android, se hace aquí con sondas).
 
 ## 1. Qué entra en F7
 
@@ -27,7 +27,7 @@ recordatorios repetidos.
 | Notas vinculadas | Una nota vinculada a archivo no existe en Android; no hay nada que decidir. |
 | Texto en notificación | Una protegida **nunca** lleva su texto: título «Nota protegida» y ninguna tarea. |
 
-## 3. Parte JVM pura (la hace la nube, con TDD)
+## 3. Parte JVM pura (JVM puro, con TDD)
 
 Reparto por módulos ya existentes; **sin dependencias nuevas**, sin Android. Comentarios en español con el porqué. Textos de interfaz: nunca; los rellenos y las
 etiquetas devuelven tipos, no cadenas.
@@ -97,7 +97,7 @@ Port de `ConflictDiff.cs`:
 ### 3.5 Criterio de hecho de la parte JVM
 
 Línea base **650** pruebas (core 82, sync 119, text 100, domain 168, syncclient 181): siguen todas, más las nuevas (≈80-110). Ningún cambio de comportamiento en lo que ya
-existe. Informe `docs/historia/informes/INFORME-NUBE-F7.md`.
+existe.
 
 ## 4. Parte Android (aquí, con sondas en el Pixel y la tableta)
 
@@ -132,7 +132,7 @@ existe. Informe `docs/historia/informes/INFORME-NUBE-F7.md`.
 ## 6. Riesgos
 
 - **Alarmas en Android 14+**: `SCHEDULE_EXACT_ALARM` viene denegado; sin él la alarma puede tardar minutos. La interfaz lo dice y el ajuste lo explica.
-- **Fabricantes agresivos** (ahorro de batería): el Pixel y la tableta no, pero otros pueden matar la alarma. Se documenta en el informe, no se intenta resolver.
+- **Fabricantes agresivos** (ahorro de batería): el Pixel y la tableta no, pero otros pueden matar la alarma. Se documenta en `docs/ANDROID_PROBES.md`, no se intenta resolver.
 - **PBKDF2 en la tableta**: 600.000 iteraciones pueden pasar de 1 s. Por eso la sesión desbloqueada guarda la clave y `save` no deriva otra vez; si aun así el desbloqueo pasa de ~3 s,
   decidirlo con los números medidos (no se baja el número de iteraciones: es compatibilidad con Windows).
 - **Fecha nueva en `useOther`**: igual que en Windows, para que la próxima sync publique la decisión; si el reloj del móvil va atrasado, la decisión puede perder contra otra versión.

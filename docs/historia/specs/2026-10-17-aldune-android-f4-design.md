@@ -25,7 +25,7 @@ android/
   app/      Android. Room (implementa NoteStore), Keystore (implementa NoteCipher), Compose, ViewModels. Casi sin reglas propias.
 ```
 
-`domain` se puede construir en una **sesión de nube** (no necesita SDK ni Android Studio) con el mismo método que F1-F3. `app` se hace aquí, en local.
+`domain` se puede construir aislado (no necesita SDK ni Android Studio) con el mismo método que F1-F3. `app` se hace aquí, en local.
 
 ### 1.1 `domain`: contenido
 
@@ -152,16 +152,16 @@ desde Core y se porta **antes de la tarea de tema** (F3b, §4 tarea 5); hasta en
 | # | Tarea | Dónde | Notas |
 |---|---|---|---|
 | 1 | Raíz Gradle común, catálogo de versiones, plataforma 36 instalada, módulo `app` vacío que compila e instala (`adb install`) | Local, Sonnet medio | Antes: `gradle test` de core/sync/text. Decidir wrapper (§6). |
-| 2 | `android/domain` completo con tests | **Nube (Sonnet)** | Prompt de nube (retirado del árbol). ~8-10 $. Se puede lanzar ya. |
+| 2 | `android/domain` completo con tests | JVM puro | Se puede empezar ya. |
 | 3 | Room (entidades, DAO, migración v1) + `NoteStore` real + tests instrumentados | Local | Necesita dispositivo o emulador. |
 | 4 | Keystore + `DataKey` + `NoteCipher` + caso «clave perdida» | Local, **Opus medio** (diseño de seguridad) | Revisión cruzada con agy en solo lectura. |
-| 5 | F3b: vectores de `AppPalette`/`AspectPalettes` (en Windows) y su port a `android/text` | Windows + nube | Independiente de las demás. |
+| 5 | F3b: vectores de `AppPalette`/`AspectPalettes` (en Windows) y su port a `android/text` | Windows | Independiente de las demás. |
 | 6 | Lista adaptativa + filtros + búsqueda + reordenar | Local | |
 | 7 | Editor con `:text`, barra de edición, toque en casillas; `docs/ANDROID_PROBES.md` y primera sonda | Local | La tarea difícil (§2.2). Teclados reales. |
 | 8 | Ajustes mínimos, idioma, aspecto, tabla de cadenas con los cinco idiomas | Local | Script que falla si falta un idioma. |
 | 9 | Sondas completas en los dos dispositivos; informe `INFORME-ANDROID-F4.md` | Local | |
 
-Las tareas 2 y 5 no dependen de nada y se pueden hacer **en paralelo** con 1 y 3 (créditos de nube caducan el 5-11-2026).
+Las tareas 2 y 5 no dependen de nada y se pueden hacer **en paralelo** con 1 y 3.
 
 ## 5. Qué NO se decide aquí (se pregunta al usuario cuando toque)
 

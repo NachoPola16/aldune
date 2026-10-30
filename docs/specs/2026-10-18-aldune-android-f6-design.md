@@ -2,7 +2,7 @@
 
 > 2026-10-18. Desarrolla la fila F6 de la spec madre ([`2026-10-17-aldune-android-design.md`](2026-10-17-aldune-android-design.md) §2.7, §2.8 y §5) y manda sobre
 > ella donde la concreta. Las decisiones marcadas **(usuario)** las tomó el usuario en esta sesión; el resto son defaults razonados.
-> Parte del trabajo (§3) lo hace una sesión de nube: su resultado está en `INFORME-NUBE-F6.md`.
+> El apartado §3 es JVM puro y se hace con TDD, sin SDK de Android.
 
 ## 1. Qué entra en F6
 
@@ -85,7 +85,7 @@ sin escribir no queda nada). En tableta (panel doble) se abre a la derecha con l
 - **Si no se puede leer** (la clave de datos no abre, base no disponible): el widget dice «Abre Aldune» y tocarlo abre la app. Tras reiniciar, hasta el
   primer desbloqueo la app no corre (no es *direct boot aware*): el lanzador enseña lo último que pintó, que es lo esperado.
 
-## 3. Parte JVM pura (la hace la nube, con TDD)
+## 3. Parte JVM pura (con TDD)
 
 En el módulo `android/domain` (paquete `app.aldune.domain`), que ya depende de `android/text`. Sin Android, sin Glance, sin texto de interfaz: los
 textos de relleno entran como parámetro, igual que en `NoteListItem`.
@@ -157,7 +157,7 @@ Reglas (cada una con su test):
 ### 3.4 Criterio de hecho de la parte JVM
 
 `./gradlew :core:test :sync:test :text:test :domain:test :syncclient:test` verde, con las cifras de antes intactas y las nuevas sumadas; `NoteService`
-sin cambio de comportamiento; ningún fichero fuera de `android/domain` salvo el informe. Ver el prompt de la nube para el detalle.
+sin cambio de comportamiento; ningún fichero fuera de `android/domain`.
 
 ## 4. Parte Android (aquí, con sondas)
 
@@ -207,7 +207,7 @@ Orden de trabajo, cada paso probado antes del siguiente:
 | 15 | Escribir en una nota capturada con Gboard y con un teclado de terceros (AnySoftKeyboard) | Enter y Retroceso como en F4 |
 | 16 | Tema claro y oscuro del sistema; los cinco idiomas en el widget y en Ajustes → Captura | Legible, sin textos en inglés sueltos |
 
-- Informe en `docs/historia/informes/INFORME-ANDROID-F6.md` y lo aprendido en `docs/ANDROID_PROBES.md`.
+- Lo aprendido en `docs/ANDROID_PROBES.md`.
 
 ## 6. Riesgos
 
