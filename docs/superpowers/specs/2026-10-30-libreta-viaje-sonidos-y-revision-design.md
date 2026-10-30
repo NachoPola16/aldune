@@ -32,7 +32,7 @@ Sintonía de ajustes: tabla de ajustes de Windows (`AppSettings.cs`) frente a lo
 Dos aspectos nuevos que se suman a los que ya hay (Oscuro, Claro, Pastel, Medianoche, XP, Telecom, Bash, Fósforo) a la par, sin jerarquía entre ellos y sin tocar los existentes; cada uno con claro y oscuro (cuatro entradas en `AppPalette`), con colores editables por hueco como los demás aspectos retro (`AspectCatalog`):
 
 - **Libreta de viaje**: papel crema (claro) o marrón de noche (oscuro), tapa de cartón kraft como borde, pliegues, grano de papel, goma elástica y marcapáginas.
-- **Cuaderno de campo**: renglones azules y margen rojo, una mancha de café discreta, notas ligeramente torcidas.
+- **Cuaderno de campo**: renglones azules y margen rojo, notas ligeramente torcidas (sin manchas: se probó una mancha de café y no convenció).
 
 Reglas: desgaste **sutil**, siempre por debajo del texto y con poca opacidad; texto legible (los tests de contraste existentes se aplican a las paletas nuevas); título manuscrito y cuerpo en serifa; nada de hex suelto en XAML (claves de `AppPalette`); la textura es un dibujo (vectorial o mosaico pequeño), sin coste apreciable de batería ni de CPU. Quedan fuera por ahora el papel arrugado con borde irregular y la máquina de escribir.
 

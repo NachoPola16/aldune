@@ -613,7 +613,7 @@ private fun NoteRow(item: NoteListItem, selected: Boolean, conflicted: Boolean, 
     ) {
         Row(
             Modifier.fillMaxWidth().height(androidx.compose.foundation.layout.IntrinsicSize.Min)
-                .paperTexture(look.paper, MaterialTheme.colorScheme.onSurface, MaterialTheme.colorScheme.surface.luminance() > 0.5f),
+                .paperTextureRow(look.paper, MaterialTheme.colorScheme.onSurface, MaterialTheme.colorScheme.surface.luminance() > 0.5f),
         ) {
             // La tira de color de la nota: es lo que reconoce una nota de un vistazo.
             if (!fill) Box(Modifier.width(8.dp).fillMaxHeight().background(if (tint != null) noteFace(tint.accent) else face))

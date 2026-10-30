@@ -50,7 +50,7 @@ public enum SkinPaper
     None = 0,
     /// <summary>Pliegues de papel doblado y grano (libreta de viaje).</summary>
     Folds = 1,
-    /// <summary>Renglones, margen rojo y una mancha discreta (cuaderno de campo).</summary>
+    /// <summary>Renglones y margen rojo (cuaderno de campo).</summary>
     Ruled = 2,
 }
 

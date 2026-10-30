@@ -7,7 +7,7 @@ namespace Aldune.Windowing;
 
 /// <summary>
 /// El papel de las libretas, dibujado bajo el texto de la nota (el equivalente de <c>paperTexture</c> en Android): pliegues y grano en la libreta de
-/// viaje; renglones, margen rojo y una mancha de café en el cuaderno de campo. Todo con muy poca opacidad (se nota al mirar, nunca compite con las
+/// viaje; renglones y margen rojo en el cuaderno de campo. Todo con muy poca opacidad (se nota al mirar, nunca compite con las
 /// letras) y con pocas líneas y puntos: un dibujo congelado del tamaño de la nota, que se rehace solo cuando cambia el tamaño.
 /// </summary>
 internal static class NotePaper
@@ -70,19 +70,5 @@ internal static class NotePaper
         var rule = Line(light ? Color.FromRgb(0x46, 0x6E, 0x96) : Color.FromRgb(0xA0, 0xBE, 0xDC), light ? 0.16 : 0.10, 1);
         for (double y = firstRule; y < h; y += lineHeight) dc.DrawLine(rule, new Point(0, y), new Point(w, y));
         dc.DrawLine(Line(Color.FromRgb(0xBE, 0x3C, 0x32), light ? 0.40 : 0.30, 1.5), new Point(10, 0), new Point(10, h));
-        // Una mancha de café discreta en una esquina: difusa, más densa en el borde que en el centro, como el cerco de una taza.
-        var stain = Color.FromRgb(0x78, 0x46, 0x1A);
-        var gradient = new RadialGradientBrush
-        {
-            GradientStops =
-            {
-                new GradientStop(Color.FromArgb(0, stain.R, stain.G, stain.B), 0),
-                new GradientStop(Color.FromArgb((byte)(255 * (light ? 0.05 : 0.03)), stain.R, stain.G, stain.B), 0.6),
-                new GradientStop(Color.FromArgb((byte)(255 * (light ? 0.13 : 0.08)), stain.R, stain.G, stain.B), 0.85),
-                new GradientStop(Color.FromArgb(0, stain.R, stain.G, stain.B), 1),
-            },
-        };
-        gradient.Freeze();
-        dc.DrawEllipse(gradient, null, new Point(w * 0.82, h * 0.12), 30, 30);
     }
 }

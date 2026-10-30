@@ -3,15 +3,13 @@ package app.aldune.ui
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import app.aldune.text.AspectSkin
 
 /**
- * El papel de las libretas, dibujado bajo el texto: pliegues y grano en la libreta de viaje; renglones, margen rojo y una mancha de café en el
- * cuaderno de campo. Todo con muy poca opacidad (se nota al mirar, nunca compite con las letras) y con unas pocas líneas y puntos: sin imágenes ni
+ * El papel de las libretas, dibujado bajo el texto: pliegues y grano en la libreta de viaje; renglones y margen rojo en el cuaderno de campo. Todo con muy poca opacidad (se nota al mirar, nunca compite con las letras) y con unas pocas líneas y puntos: sin imágenes ni
  * ruido por píxel, así que no cuesta batería ni fotogramas al desplazar la lista. [ink] es el color del texto del aspecto y [light] dice si el
  * papel es claro (las líneas del cuaderno van más apagadas en oscuro).
  */
@@ -54,16 +52,28 @@ internal fun Modifier.paperTexture(
             y += step
         }
         drawLine(margin, Offset(marginX.toPx(), 0f), Offset(marginX.toPx(), size.height), 1.5.dp.toPx())
-        // Una mancha de café discreta en una esquina.
-        val stain = Color(0xFF78461A)
-        val center = Offset(size.width * 0.82f, size.height * 0.12f)
-        // Difusa, más densa en el borde que en el centro, como un cerco de taza: un disco plano se leía como un botón.
-        drawCircle(
-            Brush.radialGradient(
-                0f to stain.copy(alpha = 0f), 0.6f to stain.copy(alpha = if (light) 0.05f else 0.03f), 0.85f to stain.copy(alpha = if (light) 0.13f else 0.08f),
-                1f to stain.copy(alpha = 0f), center = center, radius = 30.dp.toPx(),
-            ),
-            radius = 30.dp.toPx(), center = center,
-        )
+    }
+}
+
+/**
+ * El papel de una fila de la lista: más contenido que el del editor, así que aquí **nada cruza el texto**. En la libreta de viaje, solo el grano
+ * (unos puntos casi invisibles, sin pliegues que pasen por las letras); en el cuaderno de campo, solo el margen rojo, dentro del hueco entre la franja
+ * de color y el texto (sin renglones). El editor sí lleva los pliegues y los renglones completos: ahí el texto se apoya en ellos.
+ */
+internal fun Modifier.paperTextureRow(paper: AspectSkin.Paper, ink: Color, light: Boolean): Modifier = when (paper) {
+    AspectSkin.Paper.NONE -> this
+    AspectSkin.Paper.FOLDS -> drawBehind {
+        var seed = 12345
+        repeat(30) {
+            seed = seed * 1103515245 + 12345
+            val x = ((seed ushr 8) and 0xFFFF) / 65535f * size.width
+            seed = seed * 1103515245 + 12345
+            val y = ((seed ushr 8) and 0xFFFF) / 65535f * size.height
+            drawCircle(ink.copy(alpha = if (light) 0.05f else 0.07f), radius = 0.7.dp.toPx(), center = Offset(x, y))
+        }
+    }
+    AspectSkin.Paper.RULED -> drawBehind {
+        // La franja de color mide 8 dp y el texto empieza en 22 dp: el margen va en medio.
+        drawLine(Color(0xFFBE3C32).copy(alpha = if (light) 0.40f else 0.30f), Offset(15.dp.toPx(), 0f), Offset(15.dp.toPx(), size.height), 1.5.dp.toPx())
     }
 }
