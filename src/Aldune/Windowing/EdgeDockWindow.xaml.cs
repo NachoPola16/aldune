@@ -434,7 +434,7 @@ public partial class EdgeDockWindow : Window
         if (button.Template.FindName("Waveform", button) is System.Windows.Shapes.Path wave)
         {
             wave.HorizontalAlignment = HorizontalAlignment.Left;
-            wave.Margin = new Thickness(22, 0, 0, 6);
+            wave.Margin = MirrorHorizontal(wave.Margin);
         }
     }
 

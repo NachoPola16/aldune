@@ -145,14 +145,15 @@
                                     BorderBrush="{Binding Converter={StaticResource NoteFaceConverter}, ConverterParameter=Accent}"
                                     CornerRadius="{Binding ElementName=CardBorder, Path=CornerRadius}"
                                     Visibility="Collapsed" />
-                            <!-- Forma de onda del canal, abajo: arriba está el aviso de recordatorio, y al
-                                 apilarse las pestañas solo queda a la vista la franja de arriba, que es la
-                                 del título. -->
-                            <Path x:Name="Waveform" Width="54" Height="18"
-                                  HorizontalAlignment="Right" VerticalAlignment="Bottom" Margin="0,0,22,6"
+                            <!-- Forma de onda del canal, a la altura de la vista previa y no debajo de ella:
+                                 el título conserva todo el ancho y solo la vista previa cede el hueco de la onda
+                                 (ver los disparadores de Tinted). Centro vertical = centro de la línea de la vista
+                                 previa (9 de margen + 16 de título + 2 + la mitad de la línea). -->
+                            <Path x:Name="Waveform" Width="40" Height="12" Stretch="Fill"
+                                  HorizontalAlignment="Right" VerticalAlignment="Top" Margin="0,29,16,0"
                                   Data="{Binding Converter={StaticResource NoteWaveConverter}}"
                                   Stroke="{Binding Converter={StaticResource NoteFaceConverter}, ConverterParameter=Accent}"
-                                  StrokeThickness="1.5" Visibility="Collapsed" />
+                                  StrokeThickness="1.25" Opacity="0.85" Visibility="Collapsed" />
 
                             <!-- Dos líneas, ancladas arriba. Al solaparse las pestañas solo queda
                                  visible la franja superior de cada una, así que ahí tiene que
@@ -221,28 +222,28 @@
                             <DataTrigger Binding="{Binding Card, Source={x:Static local:SkinState.Current}}" Value="{x:Static core:SkinCard.Mono}">
                                 <Setter TargetName="SheenBorder" Property="Visibility" Value="Collapsed" />
                             </DataTrigger>
-                            <!-- La onda (54 de ancho + 22 de margen = hasta 76 del canto) se dibuja sobre
-                                 la vista previa: con Tinted el texto deja 80 en ese lado (4 de hueco). Con
-                                 el dock a la derecha, arriba o abajo la onda va a la derecha; con el dock
-                                 a la izquierda ApplyLeftEdgeTabShape la pasa a la izquierda y marca
-                                 CardBorder.Tag para que el hueco del texto se espeje. Van después del
-                                 disparador de vista previa vacía y en este orden: el último que casa gana. -->
+                            <!-- La onda (40 de ancho + 16 de margen = hasta 56 del canto) comparte fila con la vista
+                                 previa, que cede 66 (10 de hueco) en ese lado; el título conserva el ancho de siempre.
+                                 Con el dock a la derecha, arriba o abajo la onda va a la derecha; con el dock a la
+                                 izquierda ApplyLeftEdgeTabShape la pasa a la izquierda y marca CardBorder.Tag para
+                                 que el hueco se espeje. Sin vista previa el título (centrado) cede el hueco. Van
+                                 después del disparador de vista previa vacía y en este orden: el último que casa gana. -->
                             <DataTrigger Binding="{Binding Card, Source={x:Static local:SkinState.Current}}" Value="{x:Static core:SkinCard.Tinted}">
-                                <Setter TargetName="LabelStack" Property="Margin" Value="16,9,80,0" />
+                                <Setter TargetName="SnippetText" Property="Margin" Value="0,2,46,0" />
                             </DataTrigger>
                             <MultiDataTrigger>
                                 <MultiDataTrigger.Conditions>
                                     <Condition Binding="{Binding Card, Source={x:Static local:SkinState.Current}}" Value="{x:Static core:SkinCard.Tinted}" />
                                     <Condition Binding="{Binding Converter={StaticResource NoteSnippetConverter}}" Value="" />
                                 </MultiDataTrigger.Conditions>
-                                <Setter TargetName="LabelStack" Property="Margin" Value="16,0,80,0" />
+                                <Setter TargetName="LabelStack" Property="Margin" Value="16,0,66,0" />
                             </MultiDataTrigger>
                             <MultiDataTrigger>
                                 <MultiDataTrigger.Conditions>
                                     <Condition Binding="{Binding Card, Source={x:Static local:SkinState.Current}}" Value="{x:Static core:SkinCard.Tinted}" />
                                     <Condition Binding="{Binding Tag, ElementName=CardBorder}" Value="LeftEdge" />
                                 </MultiDataTrigger.Conditions>
-                                <Setter TargetName="LabelStack" Property="Margin" Value="80,9,20,0" />
+                                <Setter TargetName="SnippetText" Property="Margin" Value="46,2,0,0" />
                             </MultiDataTrigger>
                             <MultiDataTrigger>
                                 <MultiDataTrigger.Conditions>
@@ -250,7 +251,7 @@
                                     <Condition Binding="{Binding Tag, ElementName=CardBorder}" Value="LeftEdge" />
                                     <Condition Binding="{Binding Converter={StaticResource NoteSnippetConverter}}" Value="" />
                                 </MultiDataTrigger.Conditions>
-                                <Setter TargetName="LabelStack" Property="Margin" Value="80,0,20,0" />
+                                <Setter TargetName="LabelStack" Property="Margin" Value="66,0,20,0" />
                             </MultiDataTrigger>
                             <Trigger Property="IsMouseOver" Value="True">
                                 <Setter TargetName="HoverOverlay" Property="Opacity" Value="0.07" />
