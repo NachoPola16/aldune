@@ -23,7 +23,7 @@ their own. No account, no required cloud, and the content is encrypted.
 - **A global shortcut** to create a note from anywhere (`Ctrl+Shift+N` by default).
 - **Password-protected notes**, encrypted with a key derived from the password (which is not stored), with an optional visible name to recognize them without opening them.
 - **Optional sync** between devices through a shared folder or NAS, your own server (Docker) or
-  WebDAV / Nextcloud, end-to-end encrypted. See [docs/SYNC.md](docs/SYNC.md) (in Spanish).
+  WebDAV / Nextcloud, end-to-end encrypted. See [docs/SYNC.md](docs/SYNC.md).
 - **Automatic backups**: one a day, the 7 most recent are kept.
 - **Accessible**: a visible focus ring when navigating with Tab, note colors chosen with the arrow keys, “Text size” (100–150 %) and per-note zoom with
   `Ctrl` + mouse wheel, and Windows high contrast. The dock opens with the mouse; without one, the optional `Ctrl+Alt+M` shortcut (Settings → General)
@@ -106,7 +106,7 @@ only to the storage you choose), and a daily request to GitHub to tell you about
 
 Sync encrypts the content before it leaves your computer: the storage can't read your notes or
 fabricate changes to them. The details, including what it does **not** protect, are in
-[docs/SYNC.md → Modelo de seguridad](docs/SYNC.md#modelo-de-seguridad).
+[docs/SYNC.md → Security model](docs/SYNC.md#security-model).
 
 ## Signing and privacy
 
@@ -134,12 +134,12 @@ How a version is released and signed: [docs/RELEASING.md](docs/RELEASING.md).
 
 ## Documentation
 
-(The technical documents are in Spanish for now.)
+(`SYNC.md`, `PROTECTED_NOTES.md`, `PRODUCT.md` and `DESIGN.md` are in English; the maintainer's working notes below, `STATUS`, `ROADMAP` and `specs`, are in Spanish.)
 
 - [`docs/SYNC.md`](docs/SYNC.md): sync, your own server and the security model.
-- [`docs/STATUS.md`](docs/STATUS.md): technical state and implementation decisions.
-- [`docs/ROADMAP.md`](docs/ROADMAP.md): what is planned and what was discarded, with the reasons.
-- [`docs/specs/`](docs/specs/): design specifications.
+- [`docs/STATUS.md`](docs/STATUS.md): technical state and implementation decisions (Spanish).
+- [`docs/ROADMAP.md`](docs/ROADMAP.md): what is planned and what was discarded, with the reasons (Spanish).
+- [`docs/specs/`](docs/specs/): design specifications (Spanish).
 
 ## Try it and give feedback
 

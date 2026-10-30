@@ -6,32 +6,32 @@ product
 
 ## Users
 
-Personas que apuntan cosas al vuelo mientras hacen otra cosa: estudiantes (apuntes, tareas, recordatorios) y gente que trabaja con el PC (ideas, listas, datos que pegar luego). Quieren que la nota esté a un gesto de distancia y que no estorbe. Una parte quiere además que la app se vea como ellos quieran (aspectos retro, libretas, terminal). Usan Windows en el escritorio y Android en el móvil, y valoran no tener cuenta ni nube obligatoria. El contexto: la ventana de otra app abierta en primer plano; Aldune aparece, se usa unos segundos y se aparta.
+People who jot things down on the fly while doing something else: students (notes, tasks, reminders) and people who work at a PC (ideas, lists, snippets to paste later). They want the note to be one gesture away and to stay out of the way. Some also want the app to look the way they like (retro looks, notebooks, terminal). They use Windows on the desktop and Android on the phone, and value having no account and no mandatory cloud. The context: another app's window open in the foreground; Aldune appears, is used for a few seconds and gets out of the way.
 
 ## Product Purpose
 
-Notas adhesivas al borde de la pantalla (Windows, WPF) y cliente Android nativo, con sincronización opcional cifrada de extremo a extremo. Existe para que apuntar algo cueste menos que acordarse de ello, sin sacrificar privacidad. Éxito: se abre, se escribe y se cierra sin pensar; los datos son del usuario; Windows y Android se sienten la misma app.
+Sticky notes on the edge of the screen (Windows, WPF) and a native Android client, with optional end-to-end encrypted sync. It exists so that writing something down costs less than remembering it, without sacrificing privacy. Success: it opens, you write and it closes without thinking; the data belongs to the user; Windows and Android feel like the same app.
 
 ## Brand Personality
 
-Cálida, discreta, personalizable. «Lo decide quien la usa»: la interfaz base es tranquila (papel cálido, tinta suave) y los aspectos dan carácter cuando se piden, nunca por defecto. Voz: clara, breve, tuteo, sin jerga ni exclamaciones. El logo es la «A» de tres notas de colores sobre marrón oscuro.
+Warm, discreet, customizable. “Whoever uses it decides”: the base interface is calm (warm paper, soft ink) and the looks add character when asked for, never by default. Voice: clear, brief, informal address, no jargon or exclamation marks. The logo is the “A” made of three colored notes on dark brown.
 
 ## Anti-references
 
-- Notion o Evernote: pesado, lleno de cajas, menús y cuenta obligatoria.
-- Sticky Notes de Windows: genérico, sin carácter ni control.
-- Estética de plantilla «IA»: degradados, brillos, glassmorfismo, tarjetas idénticas.
-- Retro de disfraz: un aspecto que sacrifica legibilidad, contraste o foco visible por nostalgia. El aspecto cambia la piel, no la usabilidad.
-- Dos apps distintas: que Windows y Android llamen o coloquen igual las cosas de forma distinta sin motivo de plataforma.
+- Notion or Evernote: heavy, full of boxes, menus and a mandatory account.
+- Windows Sticky Notes: generic, with no character or control.
+- “AI template” aesthetics: gradients, glows, glassmorphism, identical cards.
+- Costume retro: a look that sacrifices legibility, contrast or visible focus for nostalgia. A look changes the skin, not the usability.
+- Two different apps: Windows and Android naming or placing things differently for no platform reason.
 
 ## Design Principles
 
-1. **Aparta del camino.** Rápida de abrir, rápida de cerrar; el contenido de la nota manda sobre el chrome.
-2. **El usuario decide el carácter.** El defecto es calmado; la personalidad (XP, Telecom, libretas) es una elección, y cada aspecto es coherente de principio a fin.
-3. **Un aspecto es piel, no excusa.** Contraste, foco, objetivos táctiles y centrado se cumplen en todos los aspectos.
-4. **Misma app, dos plataformas.** Mismos nombres, orden y valores de ajustes; solo difiere lo que la plataforma obliga.
-5. **Medir antes de afirmar.** Los detalles (centrado, relleno, sombras) se comprueban con capturas ampliadas, no a ojo.
+1. **Stay out of the way.** Quick to open, quick to close; the note's content takes precedence over the chrome.
+2. **The user decides the character.** The default is calm; personality (XP, Telecom, notebooks) is a choice, and each look is coherent from start to finish.
+3. **A look is a skin, not an excuse.** Contrast, focus, touch targets and centering hold in every look.
+4. **Same app, two platforms.** Same names, order and values for settings; only what the platform forces differs.
+5. **Measure before claiming.** Details (centering, padding, shadows) are checked with magnified screenshots, not by eye.
 
 ## Accessibility & Inclusion
 
-WCAG AA como mínimo (los tests fijan el contraste de cada texto sobre sus fondos), 7:1 en alto contraste de Windows, anillo de foco visible con Tab, tamaño de texto de 100 a 150 % en Windows y el del sistema en Android, TalkBack con acciones y nombres de color descriptivos, no depender solo del color (la franja de color de nota lleva nombre), movimiento reducido respetado, cinco idiomas (en, es, de, fr, pt-BR) con textos que puedan alargarse.
+WCAG AA at minimum (tests fix the contrast of every text on its backgrounds), 7:1 in Windows high contrast, a visible focus ring with Tab, text size from 100 to 150 % on Windows and the system's on Android, TalkBack with actions and descriptive color names, not relying on color alone (the note color stripe has a name), reduced motion respected, five languages (en, es, de, fr, pt-BR) with text that is allowed to grow longer.

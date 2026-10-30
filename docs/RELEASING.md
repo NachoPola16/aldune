@@ -1,5 +1,6 @@
 # Publicar una versión
 
+> **Idioma:** las notas de cada release y el título («Aldune for Android x.y.z») se escriben en **inglés**, igual que el README. La guía de instalación enlazada es `https://github.com/NachoPola16/aldune#install` (ancla `#install`).
 ## Versiones y tags
 
 - La versión vive en `src/Aldune/Aldune.csproj` (`Version`, `AssemblyVersion`, `FileVersion`) y en la
@@ -84,7 +85,7 @@ Android **no tiene workflow**: el APK se compila y se firma en local y se sube a
    la huella del certificado, para que quien lo descargue pueda comprobarlos:
 
    ```powershell
-   gh release create android-v0.1.0-rcN .\aldune-0.1.0-rcN.apk --target main --prerelease --title "Aldune para Android 0.1.0-rcN" --notes-file notas.md
+   gh release create android-v0.1.0-rcN .\aldune-0.1.0-rcN.apk --target main --prerelease --title "Aldune for Android 0.1.0-rcN" --notes-file notas.md
    ```
 
 **Versión estable de Android (`0.1.0`, sin `-rcN`).** Se publica igual, pero con tag `android-v0.1.0`, **sin** `--prerelease` y con
@@ -92,7 +93,7 @@ Android **no tiene workflow**: el APK se compila y se firma en local y se sube a
 Windows siguen avisando. Comprobar al acabar con `gh release list` que la fila «Latest» es la `v1.7.x` y no la de Android:
 
 ```powershell
-gh release create android-v0.1.0 .ldune-0.1.0.apk --target main --latest=false --title "Aldune para Android 0.1.0" --notes-file notas.md
+gh release create android-v0.1.0 .ldune-0.1.0.apk --target main --latest=false --title "Aldune for Android 0.1.0" --notes-file notas.md
 ```
 
 **Por qué la de Android sale como pre-release.** La app de Windows busca actualizaciones en `releases/latest`

@@ -5,33 +5,33 @@ services:
       dockerfile: src/Aldune.SyncServer/Dockerfile
     container_name: aldune-sync
     restart: unless-stopped
-    # El proceso no puede ganar privilegios nuevos (setuid y similares) aunque lo comprometan.
+    # The process cannot gain new privileges (setuid and the like) even if it is compromised.
     security_opt:
       - no-new-privileges:true
     environment:
-      # Nombres de las variables: BrandIdentity.SyncTokenEnvVar / SyncTokensEnvVar (Aldune.Core).
+      # Variable names: BrandIdentity.SyncTokenEnvVar / SyncTokensEnvVar (Aldune.Core).
       ALDUNE_SYNC_TOKEN: ${ALDUNE_SYNC_TOKEN:-}
       ALDUNE_SYNC_TOKENS: ${ALDUNE_SYNC_TOKENS:-}
       ALDUNE_DATA_DIR: /data
-      # Límite de intentos fallidos de token por dirección (docs/SYNC.md → «Límite de intentos»).
-      # Apagado por defecto en esta variante: detrás de Nginx o de Cloudflare Tunnel todas las conexiones llegan desde la dirección del proxy y, sin
-      # ALDUNE_SYNC_TRUST_PROXY, los bots de internet que prueban tokens bloquearían también a tus dispositivos. Actívalo junto con TRUST_PROXY (docs/SYNC.md).
+      # Failed-token attempt limit per address (docs/SYNC.md → "Failed-attempt limit").
+      # Off by default in this variant: behind Nginx or Cloudflare Tunnel every connection arrives from the proxy's address and, without
+      # ALDUNE_SYNC_TRUST_PROXY, internet bots guessing tokens would lock out your own devices too. Turn it on together with TRUST_PROXY (docs/SYNC.md).
       ALDUNE_SYNC_MAX_AUTH_FAILURES_PER_MINUTE: ${ALDUNE_SYNC_MAX_AUTH_FAILURES_PER_MINUTE:-0}
       ALDUNE_SYNC_TRUST_PROXY: ${ALDUNE_SYNC_TRUST_PROXY:-}
       ASPNETCORE_URLS: http://+:8080
-    # Esta variante escucha en todas las interfaces y permite acceso directo desde la red. Si quieres
-    # que solo los procesos del host accedan al puerto, añade 127.0.0.1: delante del puerto:
+    # This variant listens on all interfaces and allows direct access from the network. If you want
+    # only processes on the host to reach the port, add 127.0.0.1: before the port:
     # "127.0.0.1:${ALDUNE_SYNC_PORT:-8087}:8080". No expongas esta variante a Internet sin HTTPS
-    # y autenticacion de red/proxy delante.
-    # Cambia ALDUNE_SYNC_PORT si el puerto por defecto ya esta ocupado en el servidor.
+    # and network/proxy authentication in front.
+    # Change ALDUNE_SYNC_PORT if the default port is already in use on the server.
     ports:
       - "${ALDUNE_SYNC_PORT:-8087}:8080"
     volumes:
       - aldune-sync-data:/data
 
 volumes:
-  # Nombre fisico del volumen en el servidor. Es configurable para que un servidor que ya
-  # sincronizaba antes del cambio de marca siga usando el volumen que tenia, en vez de arrancar
-  # con un almacen vacio: ver docs/SYNC.md, 'Migrar un servidor que ya sincronizaba'.
+  # Physical name of the volume on the server. It is configurable so that a server that
+  # already synced before the rebrand keeps using the volume it had, instead of starting
+  # with an empty store.
   aldune-sync-data:
     name: ${ALDUNE_SYNC_VOLUME:-aldune-sync-data}

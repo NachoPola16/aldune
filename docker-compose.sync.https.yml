@@ -5,15 +5,15 @@ services:
       dockerfile: src/Aldune.SyncServer/Dockerfile
     container_name: aldune-sync
     restart: unless-stopped
-    # El proceso no puede ganar privilegios nuevos (setuid y similares) aunque lo comprometan.
+    # The process cannot gain new privileges (setuid and the like) even if it is compromised.
     security_opt:
       - no-new-privileges:true
     environment:
-      # Nombres de las variables: BrandIdentity.SyncTokenEnvVar / SyncTokensEnvVar (Aldune.Core).
+      # Variable names: BrandIdentity.SyncTokenEnvVar / SyncTokensEnvVar (Aldune.Core).
       ALDUNE_SYNC_TOKEN: ${ALDUNE_SYNC_TOKEN:-}
       ALDUNE_SYNC_TOKENS: ${ALDUNE_SYNC_TOKENS:-}
       ALDUNE_DATA_DIR: /data
-      # Límite de intentos fallidos de token por dirección (docs/SYNC.md → «Límite de intentos»).
+      # Failed-token attempt limit per address (docs/SYNC.md → "Failed-attempt limit").
       ALDUNE_SYNC_MAX_AUTH_FAILURES_PER_MINUTE: ${ALDUNE_SYNC_MAX_AUTH_FAILURES_PER_MINUTE:-}
       ALDUNE_SYNC_TRUST_PROXY: ${ALDUNE_SYNC_TRUST_PROXY:-1}
       ASPNETCORE_URLS: http://+:8080
@@ -39,9 +39,9 @@ services:
       - aldune-sync
 
 volumes:
-  # Nombre fisico del volumen en el servidor. Es configurable para que un servidor que ya
-  # sincronizaba antes del cambio de marca siga usando el volumen que tenia, en vez de arrancar
-  # con un almacen vacio: ver docs/SYNC.md, 'Migrar un servidor que ya sincronizaba'.
+  # Physical name of the volume on the server. It is configurable so that a server that
+  # already synced before the rebrand keeps using the volume it had, instead of starting
+  # with an empty store.
   aldune-sync-data:
     name: ${ALDUNE_SYNC_VOLUME:-aldune-sync-data}
   caddy-data:

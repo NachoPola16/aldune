@@ -24,7 +24,7 @@ ratón y se abren como ventanas propias. Sin cuenta, sin nube obligatoria, y con
 - **Notas con contraseña**, cifradas con una clave que sale de la contraseña (que no se guarda), con un nombre visible opcional para reconocerlas sin abrirlas.
 - **Sincronización opcional** entre dispositivos por carpeta compartida o NAS, por tu propio
   servidor (Docker) o por WebDAV / Nextcloud, cifrada de extremo a extremo. Ver
-  [docs/SYNC.md](docs/SYNC.md).
+  [docs/SYNC.es.md](docs/SYNC.es.md).
 - **Copias de seguridad automáticas**: una al día, se guardan las 7 más recientes.
 - **Accesible**: anillo de foco visible al navegar con Tab, colores de nota que se eligen con las flechas, «Tamaño del texto» (100–150 %) y zoom de una
   nota con `Ctrl` + rueda, y alto contraste de Windows. El dock se abre con el ratón; sin ratón, el atajo opcional `Ctrl+Alt+M` (Ajustes → General)
@@ -96,7 +96,7 @@ Para sincronizar el móvil con el PC y tu servidor:
 4. Escribe el **token** de tu servidor: no va dentro del código ni del QR, a propósito.
 
 El código (y el QR) contiene la clave de cifrado de tus notas: trátalo como una contraseña y no lo compartas en sitios públicos.
-Más detalle en [docs/SYNC.md](docs/SYNC.md).
+Más detalle en [docs/SYNC.es.md](docs/SYNC.es.md).
 
 ## Privacidad y seguridad
 
@@ -108,7 +108,7 @@ desactivar en Ajustes → General).
 
 La sincronización cifra el contenido antes de que salga del equipo: el almacén no puede leer tus
 notas ni fabricar cambios en ellas. El detalle, incluido lo que **no** protege, está en
-[docs/SYNC.md → Modelo de seguridad](docs/SYNC.md#modelo-de-seguridad).
+[docs/SYNC.es.md → Modelo de seguridad](docs/SYNC.es.md#modelo-de-seguridad).
 
 ## Firma y privacidad
 
@@ -136,7 +136,7 @@ Cómo se publica una versión y cómo se firma: [docs/RELEASING.md](docs/RELEASI
 
 ## Documentación
 
-- [`docs/SYNC.md`](docs/SYNC.md): sincronización, servidor propio y modelo de seguridad.
+- [`docs/SYNC.es.md`](docs/SYNC.es.md): sincronización, servidor propio y modelo de seguridad.
 - [`docs/STATUS.md`](docs/STATUS.md): estado técnico y decisiones de implementación.
 - [`docs/ROADMAP.md`](docs/ROADMAP.md): lo previsto y lo descartado, con sus razones.
 - [`docs/specs/`](docs/specs/): especificaciones de diseño.

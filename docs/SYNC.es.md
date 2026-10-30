@@ -1,0 +1,460 @@
+# Sincronización
+
+[English](SYNC.md)
+
+La sincronización no copia `notes.db`. Cada nota se serializa en un sobre JSON y su contenido se
+cifra con una clave de sincronización compartida entre dispositivos. El almacén solo ve el id,
+la fecha, el dispositivo y el blob cifrado.
+
+## Elegir cómo sincronizar
+
+Hay tres tipos de almacén. Las notas viajan cifradas en los tres (ver el modelo de seguridad más abajo): lo que cambia es
+**dónde se guardan** y **qué dispositivos pueden usarlo**.
+
+| Tipo | Qué necesitas | Windows | Android | Cuándo elegirlo |
+|---|---|---|---|---|
+| **Carpeta compartida / NAS** | Una carpeta que vean todos tus PC (red local, NAS, o una carpeta que ya sincronice Syncthing, OneDrive, Dropbox o Nextcloud) | Sí | **No** | Solo usas PC y ya tienes una carpeta compartida |
+| **Servidor propio** (Docker) | Una máquina siempre encendida con Docker (un servidor casero, un NAS, un VPS) | Sí | Sí | Quieres controlar tus datos y usar también el móvil |
+| **WebDAV / Nextcloud / ownCloud** | Una cuenta WebDAV que ya tengas, y una contraseña de aplicación | Sí | Sí | Ya usas Nextcloud u otro WebDAV y no quieres montar nada |
+
+**Regla corta:** si vas a usar el móvil, elige *Servidor propio* o *WebDAV*. Un código de «carpeta compartida» no sirve en
+Android: la app lo rechaza con «This code is for a shared folder. On the phone use a server or WebDAV».
+
+Todos los tipos funcionan igual al principio: configuras el primer dispositivo, **compartes el perfil** (un código que lleva la
+clave de cifrado) y lo importas en los demás. **El token o la contraseña nunca viajan dentro del código**: se escriben aparte en
+cada dispositivo. Trata el código como una contraseña, porque contiene la clave de tus notas.
+
+### Paso a paso
+
+#### A. Carpeta compartida (solo Windows)
+
+1. Prepara una carpeta que todos tus PC puedan abrir: local, de red (`\\servidor\aldune`) o una que ya sincronice otra herramienta.
+2. En el primer PC: Ajustes → Sincronización → activa la sincronización, elige `Carpeta compartida / NAS` y
+   selecciona la carpeta.
+3. Pulsa **Compartir perfil** y copia el código.
+4. En cada PC más: Ajustes → Sincronización → pulsa **Nuevo** (junto a «Perfil de sincronización»), pega el código, pulsa `Importar código` y elige la carpeta (puede tener otra ruta
+   que en el primer PC, pero tiene que ser la misma carpeta).
+5. `Sincronizar ahora` (en Ajustes y en el dock), o activa la sincronización periódica.
+
+#### B. Servidor propio
+
+1. En el servidor (Linux, o cualquier máquina con **Git** y **Docker con Compose v2**; comprueba con `docker compose version`):
+   ```bash
+   git clone https://github.com/NachoPola16/aldune.git
+   cd aldune
+   cp .env.example .env
+   openssl rand -base64 32      # genera un token; si no tienes openssl, usa cualquier cadena larga y aleatoria
+   ```
+   Abre `.env` y sustituye `replace-with-a-long-random-token` por ese valor (solo el valor, sin comillas ni espacios). Luego
+   `docker compose -f docker-compose.sync.yml up -d --build` (la primera vez tarda unos minutos: compila el servidor).
+   Comprueba que responde: `curl http://IP-DEL-SERVIDOR:8087/health` debe devolver `{"status":"ok",...}`. Si no responde desde otro
+   equipo pero sí desde el servidor, es el cortafuegos: abre el puerto `8087` (TCP) en el servidor.
+2. En el primer PC: Ajustes → Sincronización → `Servidor propio`; URL (`http://IP-DEL-SERVIDOR:8087/`) y el
+   token. Pulsa **Compartir perfil** y copia el código.
+3. En cada PC más: Ajustes → Sincronización → pulsa **Nuevo** (junto a «Perfil de sincronización»), pega el código, `Importar código` y escribe el token (el transporte y la URL se rellenan solos).
+4. **En Android:** Ajustes → Sincronización → pega el código (o pulsa **Escanear QR** mientras el PC enseña **Mostrar QR**) → **Continuar** → elige «Aldune server» → comprueba la dirección y
+   escribe el token → **Conectar**.
+5. Fuera de casa usa HTTPS (ver [Nginx + Cloudflare Tunnel](#nginx--cloudflare-tunnel) y [HTTPS con Caddy](#https-con-caddy)): con
+   `http://` el token viaja sin proteger por la red (las notas siguen cifradas), y Android lo avisa.
+
+#### C. WebDAV, Nextcloud u ownCloud
+
+1. En tu servicio, crea una carpeta para Aldune (por ejemplo `Aldune`) y una **contraseña de aplicación**. En Nextcloud: Ajustes
+   personales → Seguridad → Dispositivos y sesiones → crear nueva contraseña de aplicación. No uses tu contraseña principal.
+2. La URL de esa carpeta suele ser `https://cloud.example.com/remote.php/dav/files/USUARIO/Aldune/`.
+3. En el primer PC: Ajustes → Sincronización → `WebDAV / Nextcloud`; URL, usuario y contraseña de aplicación.
+   Pulsa **Compartir perfil** y copia el código.
+4. En cada PC más: Ajustes → Sincronización → pulsa **Nuevo** (junto a «Perfil de sincronización»), pega el código, `Importar código` y escribe tu usuario y contraseña de aplicación.
+5. **En Android:** Ajustes → Sincronización → pega el código (o **Escanear QR**, como arriba) → **Continuar** → elige «WebDAV» → dirección (si es una carpeta,
+   termínala en `/`), usuario y contraseña de aplicación → **Conectar**.
+
+#### D. Una nota compartida con la familia (varios perfiles)
+
+Para compartir **solo una nota** (la lista de la compra, por ejemplo) sin mezclar el resto de tus notas:
+
+1. En Windows, crea un perfil aparte con *Notas seleccionadas* y marca solo esa nota. Alguien tiene que alojar su almacén, y **tiene que ser
+   uno distinto del de tu perfil personal**: un segundo servicio de Aldune (otro puerto, otro volumen y otro token; en `docker-compose.sync.yml`
+   basta con otro nombre de proyecto, de contenedor y de volumen) o un WebDAV. No vale el mismo almacén con otro token: ese perfil tiene otra
+   clave y no puede leer ninguna de las notas que ya hay allí, y Aldune se niega a escribir con «This device's sync code can't read the notes
+   in the store».
+2. Pulsa **Compartir perfil** y manda el código a cada persona. El token se da aparte, nunca dentro del código.
+3. En el móvil de cada uno: Ajustes → Sincronización → **Añadir otro perfil** → pega el código → elige el tipo → escribe el token →
+   **Conectar**. Android admite varios perfiles a la vez, así que tu sincronización personal sigue como estaba.
+4. Un perfil adicional **no pregunta** si subir o descartar tus notas: solo sincroniza lo que su alcance incluye. Si la nota compartida
+   también entra en tu perfil «todas», se sube a los dos almacenes.
+5. Desconectar un perfil no toca los demás ni borra ninguna nota.
+
+**Que cada uno decida qué comparte: alcance por etiqueta.** Con *Notas seleccionadas* la lista de notas queda fija en el código y desde Android
+nadie puede añadir más. Si quieres que cualquiera del grupo elija qué va a la familia, crea el perfil con *Notas con una etiqueta* (por
+ejemplo `familia`) y comparte ese código: toda nota que lleve esa etiqueta, la cree quien la cree, se sincroniza con el grupo, y las que no
+la lleven se quedan solo en su dispositivo. Las etiquetas viajan dentro del contenido cifrado de la nota (todas las de esa nota, no solo la
+del grupo). Quitar la etiqueta a una nota la deja de sincronizar desde ese dispositivo, pero no la borra de los demás: para retirarla de
+todos hay que borrarla. Cambiar el alcance de un perfil ya creado no cambia su clave ni su token, pero el alcance viaja en el código: los
+móviles que ya se unieron con el código anterior tienen que desconectar el perfil y volver a unirse con el código nuevo.
+
+Crear y compartir perfiles desde Android todavía no se puede; se hace en Windows.
+
+**QR de emparejamiento.** En Windows, Ajustes → Sincronización → **Mostrar QR** enseña el código de perfil como QR durante 2 minutos (negro sobre blanco, con aviso: lleva la clave de cifrado; no va al portapapeles ni a disco). En Android, **Escanear QR** (junto a «Pegar») rellena el campo del código; el token sigue escribiéndose aparte y nunca viaja en el QR. Si el perfil es demasiado grande para un QR (más de ~2.300 bytes), Windows lo dice y se copia el código como siempre.
+
+### Qué hacer si algo falla
+
+| Lo que ves | Qué pasa | Qué hacer |
+|---|---|---|
+| «The server rejected the credentials» | El token, o el usuario o la contraseña de WebDAV, no coinciden | Revisa el token (solo el valor, sin `ALDUNE_SYNC_TOKEN=`) o la contraseña de aplicación |
+| «This profile's key changed: paste the new code» | Se creó un perfil nuevo con otra clave en otro dispositivo | Copia el código nuevo y pégalo otra vez |
+| «No connection» | El servidor no responde o no hay red | Comprueba la URL, el puerto y que el servidor está encendido |
+| «The profile code is damaged or from a newer version» | El código se copió incompleto, o es de una versión más nueva | Cópialo entero otra vez; actualiza la app si hace falta |
+| «This code is for a shared folder» | El código es de una carpeta compartida | En el móvil, crea el perfil con *Servidor propio* o *WebDAV* |
+| «The address must start with http:// or https://» | Falta el protocolo en la dirección | Escríbela completa, con `http://` o `https://` |
+| Móvil nuevo y has perdido la sincronización | La copia de seguridad de Android **no** incluye las notas ni la clave | Pega otra vez el código del perfil: las notas bajan del almacén |
+
+Más abajo está el detalle de cada parte: modelo de seguridad, servidor con Nginx, HTTPS, rotación de tokens, perfiles y selección
+de notas.
+
+## Modelo de seguridad
+
+Qué protege Aldune y qué no, en corto:
+
+- **Contenido cifrado de extremo a extremo.** Texto, color, etiquetas, posición en el dock y el
+  contenido de las notas protegidas con contraseña viajan cifrados con **AES-256-GCM** usando la
+  clave de sincronización, que solo tienen tus dispositivos. El almacén (carpeta, NAS, servidor o
+  WebDAV) solo ve el id de cada nota, su fecha, el id del dispositivo y el bloque cifrado.
+- **Integridad.** Cada sobre cifrado incluye el id y la fecha de su nota, y se comprueba que coincidan
+  con la cabecera: el almacén no puede cambiar el contenido de una nota por el de otra. Desde la
+  1.0 los **borrados también van firmados**: quien pueda escribir en el almacén pero no tenga la
+  clave no puede fabricar un borrado. Un borrado sin firma válida se ignora: ni borra ni manda la nota
+  a la papelera (antes sí, y quien tuviera el token sin la clave podía vaciar las notas), y se quita del
+  almacén para que la nota se vuelva a publicar. Un objeto que no se puede descifrar se salta sin parar el resto de la sincronización;
+  solo se para si no se puede leer **ninguno**, que es lo que pasa con un código revocado.
+- **Acceso al servidor.** El servidor propio exige un token (`Authorization: Bearer`), que compara en
+  tiempo constante y admite rotación sin cortes (ver más abajo). Usa un valor largo y aleatorio, por
+  ejemplo `openssl rand -base64 32`; el servidor avisa en el registro si es de menos de 24
+  caracteres.
+- **Transporte.** El servidor habla HTTP; el HTTPS lo pone lo que tengas delante (Caddy, Nginx +
+  Cloudflare Tunnel, una VPN). Aldune avisa en Ajustes si configuras `http://` hacia un servidor
+  fuera de tu red local: las notas seguirían cifradas, pero el token viajaría en claro.
+- **En el equipo.** El texto de cada nota se guarda cifrado con AES-256-GCM en la base de datos local
+  (el color, las etiquetas, las fechas y el nombre visible opcional de una nota protegida no); la clave está protegida con
+  DPAPI (ligada a tu usuario de Windows). Las notas con contraseña usan una clave derivada con
+  PBKDF2-SHA256 (600.000 iteraciones); la contraseña no se guarda.
+- **Lo que no cubre.** No hay auditoría externa ni certificación. Quien controle el almacén puede
+  borrar o no servir los ficheros (dejar de sincronizar), servir una versión antigua auténtica de una
+  nota a un dispositivo que aún no tenga una más nueva; no puede leerlas ni fabricar cambios en ellas. Los metadatos (cuántas notas hay y cuándo cambian) son visibles para él.
+
+> **Al actualizar a la 1.0, actualiza todos tus dispositivos.** Un borrado hecho desde una versión
+> anterior no va firmado: los dispositivos con la 1.0 lo ignoran y la nota se queda donde está.
+
+## Carpeta compartida
+
+En Ajustes, activa la sincronización, elige `Carpeta compartida / NAS` y selecciona una carpeta local,
+UNC (`\\servidor\\aldune`) o una carpeta que ya sincronice Syncthing, OneDrive, Dropbox o Nextcloud.
+Genera el código en el primer dispositivo e impórtalo en los demás. La carpeta contiene `objects/`;
+no hay que abrir ni editar esos ficheros manualmente.
+
+## Servidor propio con Docker Compose
+
+En el servidor:
+
+```bash
+cp .env.example .env
+# Edita .env y sustituye ALDUNE_SYNC_TOKEN por un secreto largo y aleatorio.
+docker compose -f docker-compose.sync.yml up -d --build
+```
+
+El puerto publicado por defecto es `8087`. Para cambiarlo, pon `ALDUNE_SYNC_PORT=9000` en `.env` y
+configura en Aldune una URL como `http://192.168.1.20:9000/`. En Aldune selecciona `Servidor propio`,
+introduce el mismo token y usa el mismo código de sincronización en todos los dispositivos. El token
+debe ser solo el valor de la derecha de `ALDUNE_SYNC_TOKEN=`. El botón `Sincronizar ahora` está
+disponible en Ajustes y en el dock; también puedes activar la sincronización periódica y elegir el
+intervalo. Ajustes muestra la última sincronización correcta.
+
+Sin token el servidor se niega a arrancar, así que el fallo es inmediato y visible, no silencioso.
+
+En Ajustes también puedes elegir entre `Todas las notas`, `Notas seleccionadas` o `Notas con una
+etiqueta`. En el segundo modo, solo las notas marcadas en `Elegir notas…` se publican o se descargan
+en ese vínculo. En el tercero, se intercambian únicamente las notas que tengan la etiqueta elegida.
+La selección se guarda localmente y no se envía al servidor, salvo el nombre de la etiqueta dentro de
+un código de invitación de perfil.
+
+El servidor es un almacén de blobs y no necesita SQLite. El volumen lógico `aldune-sync-data` contiene
+los objetos y sobrevive a actualizaciones del contenedor. Su nombre físico se configura con
+`ALDUNE_SYNC_VOLUME` (por defecto `aldune-sync-data`).
+
+
+## WebDAV, Nextcloud y ownCloud
+
+En Ajustes puedes elegir `WebDAV / Nextcloud` para usar una carpeta WebDAV propia o la de
+Nextcloud/ownCloud. Introduce la URL de una carpeta que ya exista, el usuario y, preferiblemente,
+una contraseña de aplicación. Aldune crea dentro de ella la carpeta `objects/` y guarda allí los
+sobres cifrados por nota. La contraseña se protege localmente en Windows y nunca entra en el código
+de invitación ni se sube como parte de los datos.
+
+Para acceso fuera de la red usa siempre una URL `https://`. En una instalación de Nextcloud, la URL
+suele tener esta forma:
+
+```text
+https://cloud.example.com/remote.php/dav/files/usuario/Aldune/
+```
+
+La invitación de perfil puede transportar la URL de WebDAV, pero cada dispositivo debe introducir
+su propia cuenta o contraseña de aplicación. La carpeta WebDAV debe permitir `MKCOL`, `PROPFIND`,
+`GET`, `PUT` y `DELETE`; la mayoría de instalaciones de Nextcloud y ownCloud ya lo permiten.
+
+### Nginx + Cloudflare Tunnel
+
+Si el servidor ya usa Nginx y Cloudflare Tunnel, esta es la variante recomendada. No ejecutes
+tambien la composicion con Caddy: ambos intentarian ocupar los mismos puertos de proxy.
+
+Usa `docker-compose.sync.nginx.yml`. Para que solo Nginx/cloudflared accedan al servidor, el bloque
+`ports` debe tener esta forma:
+
+```yaml
+ports:
+  - "127.0.0.1:${ALDUNE_SYNC_PORT:-8087}:8080"
+```
+
+Si quitas `127.0.0.1:` y dejas `"${ALDUNE_SYNC_PORT:-8087}:8080"`, Docker escucha en todas las
+interfaces y permite acceso directo desde la red. Eso no debe exponerse a Internet sin HTTPS y un
+proxy o firewall delante.
+
+La configuración versionada usa la variante abierta a la red para permitir que un proxy en otro
+contenedor acceda al servicio. Si el tráfico entra por un proxy que corre directamente en el host,
+añade `127.0.0.1:` para restringirlo. Si Nginx Proxy Manager u otro proxy corre en otro contenedor,
+`127.0.0.1` apunta a ese contenedor, no al host: usa una red Docker compartida o la dirección del
+host y conserva el binding abierto solo si la red y el firewall lo permiten:
+
+```bash
+cp .env.example .env
+# Edita .env y define un secreto largo:
+# ALDUNE_SYNC_TOKEN=un-secreto-largo-y-aleatorio
+docker compose -f docker-compose.sync.nginx.yml up -d --build
+curl "http://127.0.0.1:${ALDUNE_SYNC_PORT:-8087}/health"
+```
+
+En Nginx, crea un host para el subdominio elegido, por ejemplo `sync.example.com`:
+
+```nginx
+server {
+    listen 80;
+    server_name sync.example.com;
+
+    location / {
+        proxy_pass http://127.0.0.1:<PUERTO_LOCAL>;
+        proxy_http_version 1.1;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+}
+```
+
+En Cloudflare Tunnel añade una ruta `Published application` con este destino local:
+
+```text
+Hostname: sync.example.com
+Service:  http://127.0.0.1:80
+```
+
+Cloudflare termina el HTTPS público y el túnel conecta con Nginx por localhost; no hace falta abrir
+el puerto local del servidor en el router ni publicarlo directamente en Internet. En Aldune configura
+`https://sync.example.com/` y usa el mismo token y código de sincronización de los otros dispositivos.
+
+### Actualizar el servidor desde Git
+
+El servidor no necesita una copia manual de `src/` ni de los ficheros publicados de Windows. El
+`Dockerfile` compila dentro de Docker `src/Aldune.SyncServer` y su referencia a `src/Aldune.Core`,
+por lo que basta con mantener un checkout del repositorio y reconstruir la imagen. Los objetos
+sincronizados permanecen en el volumen Docker y el `.env` debe vivir fuera del checkout para que los
+secretos nunca entren en Git.
+
+**Desde la versión que corre el contenedor como usuario no root** (UID 1654, `app`): un volumen ya existente lo creó root y el
+servidor no podría escribir en él. Antes de reconstruir hay que pasárselo una vez (el nombre del volumen es `aldune-sync-data` salvo
+que uses `ALDUNE_SYNC_VOLUME`):
+
+```bash
+docker run --rm -v aldune-sync-data:/data alpine chown -R 1654:1654 /data
+```
+
+Un volumen nuevo no necesita nada: hereda el dueño de `/data` de la imagen.
+
+Configuración inicial recomendada en un servidor Linux:
+
+```bash
+sudo mkdir -p /opt/aldune-sync
+sudo git clone --depth 1 https://github.com/NachoPola16/aldune.git /opt/aldune-sync
+sudo install -m 600 /dev/null /etc/aldune-sync.env
+sudo nano /etc/aldune-sync.env
+```
+
+En `/etc/aldune-sync.env` define al menos un token, y conserva también cualquier configuración del
+servidor existente, por ejemplo:
+
+```dotenv
+ALDUNE_SYNC_TOKEN=un-secreto-largo-y-aleatorio
+ALDUNE_SYNC_PORT=8087
+# Nombre del volumen Docker (por defecto aldune-sync-data):
+# ALDUNE_SYNC_VOLUME=aldune-sync-data
+```
+
+Para la variante recomendada con Nginx y Cloudflare Tunnel, ejecuta la primera actualización así:
+
+```bash
+sudo env ALDUNE_ENV_FILE=/etc/aldune-sync.env \
+  bash /opt/aldune-sync/scripts/update-sync-server.sh
+```
+
+En las siguientes versiones solo hace falta repetir ese comando. El script hace `git pull --ff-only`
+de `main`, valida la composición, reconstruye la imagen con `docker compose build --pull` para
+refrescar también las imágenes base de .NET, conserva el volumen de datos y comprueba `/health`, reintentando hasta 30 s porque el contenedor tarda
+unos segundos en aceptar conexiones (sale con 0 si responde y con 1 y un mensaje si no). No
+copia `src/`, no modifica el `.env` y falla antes de actualizar si falta el fichero de secretos.
+
+El volumen contiene los sobres sincronizados y sobrevive a la recreación del contenedor, pero sigue
+siendo necesario incluirlo en las copias de seguridad del servidor. No ejecutes `docker compose down
+-v` ni `docker volume prune` como parte de una actualización: esas operaciones pueden eliminar datos.
+
+Se eligió este pull manual frente a desplegar directamente desde GitHub Actions porque el servidor no
+necesita una clave SSH ni un secreto de producción en GitHub, no requiere exponer Docker al exterior y
+el cambio se puede revisar antes de aplicarlo. Si el repositorio se hiciera privado, usa una deploy key
+de solo lectura o un GitHub App con permisos mínimos; no guardes un token personal en el repositorio.
+
+Si se usa otra composición, se puede seleccionar sin editar el script:
+
+```bash
+sudo env ALDUNE_ENV_FILE=/etc/aldune-sync.env \
+  ALDUNE_COMPOSE_FILE=docker-compose.sync.https.yml \
+  ALDUNE_HEALTH_URL=http://127.0.0.1:8087/health \
+  bash /opt/aldune-sync/scripts/update-sync-server.sh
+```
+
+Para desplegar desde otro directorio se puede usar `ALDUNE_REPO_DIR`; para una rama distinta,
+`ALDUNE_BRANCH`. El repositorio público no requiere credenciales para el `git pull`; si se hace
+privado, configura una deploy key de solo lectura en el servidor, nunca un token dentro de este
+repositorio ni del fichero de sincronización.
+
+Si gestionas el túnel mediante `config.yml`, la regla equivalente es:
+
+```yaml
+ingress:
+  - hostname: sync.example.com
+    service: http://127.0.0.1:80
+  - service: http_status:404
+```
+
+Valida la configuración con `cloudflared tunnel ingress validate` y crea el DNS con
+`cloudflared tunnel route dns <TUNNEL> sync.example.com`, si no lo has creado desde el panel.
+
+### HTTPS con Caddy
+
+Para exponer el servidor con HTTPS automático mediante un dominio público, usa la composición
+preparada en `docker-compose.sync.https.yml`. Requiere que el DNS de `ALDUNE_SYNC_DOMAIN` apunte al
+servidor y que los puertos 80 y 443 lleguen a Docker:
+
+```powershell
+Copy-Item .env.example .env
+# Añade también al .env:
+# ALDUNE_SYNC_DOMAIN=sync.example.com
+docker compose -f docker-compose.sync.https.yml up -d --build
+```
+
+Caddy obtiene y renueva el certificado, y solo publica Caddy hacia Internet; `aldune-sync` queda en
+la red interna de Docker. En Aldune configura `https://sync.example.com/`. Los datos de Caddy viven
+en los volúmenes `caddy-data` y `caddy-config`, separados de los sobres cifrados de Aldune.
+
+Si el servidor solo se accede por VPN o red local, conserva `docker-compose.sync.yml` y usa HTTP dentro
+de esa red. No desactives la verificación TLS en el cliente para evitar errores de certificado.
+
+La rotación de tokens y la interfaz de conflictos ya están implementadas. Para HTTPS real falta
+probar la composición con un dominio y DNS controlados por el usuario.
+
+### Límite de intentos fallidos
+
+El servidor cuenta los tokens incorrectos por dirección, en una ventana de un minuto y solo en memoria. A partir de **10 fallos por minuto**
+esa dirección recibe `429 Too Many Requests` con `Retry-After`, **también si acierta el token**: si no, adivinar seguiría funcionando.
+Las demás direcciones no se ven afectadas y `/health` nunca se limita. Un token correcto no borra los fallos: solo los libera el tiempo.
+
+| Variable | Qué hace |
+|---|---|
+| `ALDUNE_SYNC_MAX_AUTH_FAILURES_PER_MINUTE` | Máximo de fallos por minuto y dirección. Por defecto 10; `0` lo desactiva. |
+| `ALDUNE_SYNC_TRUST_PROXY` | `1` o `true`: la dirección es la última entrada de `X-Forwarded-For` (la que añadió tu proxy). Sin ella, la de la conexión. |
+
+Sin `ALDUNE_SYNC_TRUST_PROXY`, la cabecera se ignora, así que nadie puede librarse del límite falsificándola. Pero detrás de un proxy **todas**
+las conexiones llegan desde la dirección del proxy: un solo cliente con el token mal puesto bloquearía a todos. Por eso `docker-compose.sync.https.yml`
+(Caddy, que fija `X-Forwarded-For`) la activa por defecto; en la variante de Nginx (`docker-compose.sync.nginx.yml`) el límite viene **apagado** (`0`) y, para activarlo, pon `ALDUNE_SYNC_TRUST_PROXY=1` y `ALDUNE_SYNC_MAX_AUTH_FAILURES_PER_MINUTE=10` solo si ese proxy escribe la cabecera
+(`proxy_set_header X-Forwarded-For $remote_addr;` en Nginx, para no reenviar lo que mande el cliente) y no hay otra forma de llegar al puerto del servidor.
+Si tras cambiar un token ves 429, es que algún dispositivo sigue con el viejo: corrígelo y espera un minuto.
+
+### Rotación de tokens
+
+El servidor sigue aceptando el token único `ALDUNE_SYNC_TOKEN`. Para rotarlo sin cortar los
+dispositivos, usa temporalmente la lista `ALDUNE_SYNC_TOKENS` en `.env`:
+
+```dotenv
+ALDUNE_SYNC_TOKENS=nuevo-token,token-antiguo
+```
+
+Recrea el contenedor, cambia el token en todos los dispositivos y comprueba que sincronizan. Cuando
+todos usen el nuevo, deja solo `ALDUNE_SYNC_TOKENS=nuevo-token` y recrea el contenedor otra vez: el
+antiguo queda revocado. La lista tiene prioridad sobre `ALDUNE_SYNC_TOKEN`; nunca pongas tokens en
+la URL ni en el repositorio.
+
+### Perfiles de sincronización
+
+Puedes crear varios perfiles desde Ajustes. Cada perfil mantiene su transporte, servidor o carpeta,
+token, clave de sincronización, notas seleccionadas y última sincronización por separado. La
+configuración antigua se migra al perfil `Mis dispositivos` al abrirla por primera vez. Para
+compartir una nota con otra persona, crea otro perfil, selecciona solo esa nota y comparte el
+código de ese perfil; el flujo futuro de invitación y revocación de perfiles queda pendiente.
+
+**Todos los perfiles activados se sincronizan a la vez** (27-10-2026), aunque no sea el elegido en el desplegable: ese
+desplegable solo decide cuál se edita. «Sincronizar ahora» y el sondeo automático recorren los perfiles con
+«Sincronizar este perfil» marcado, el elegido primero; el fallo de uno no detiene a los demás (el error nombra el perfil) y el
+intervalo automático es el más corto de los perfiles automáticos. Cada perfil guarda sus **bases de conflicto** por separado
+(`SyncBase` y `SyncConflict` llevan `ProfileKey`): sin eso, lo acordado con un almacén taparía un conflicto real en otro. El
+primer perfil conserva la clave vacía, así que las bases que ya había siguen siendo suyas; los demás usan su id
+(`SyncProfileSettings.BaseKey`). Una versión anterior que abra la base de datos sigue funcionando. Al borrar un perfil sus
+bases quedan huérfanas en la base de datos (inofensivo: el id no se reutiliza).
+
+### Compartir una selección de notas
+
+En el perfil de origen, crea o selecciona un perfil, marca `Notas seleccionadas` y elige las notas.
+`Compartir perfil` copia una invitación que contiene la clave, los identificadores de esa selección,
+el nombre del perfil y, si usa un servidor propio, su URL. En el otro dispositivo, crea el perfil,
+pega el código y pulsa `Importar código`; el transporte y la URL del servidor se rellenan solos,
+pero el token siempre debe introducirse aparte. El token nunca viaja dentro del código. Los
+códigos se generan con el prefijo `aldune-profile-v2`.
+
+## Compatibilidad futura
+
+La compatibilidad se controla por el formato de sincronización, no por el número visible de Aldune.
+Las actualizaciones que mantengan el mismo formato pueden sincronizarse entre sí. Si una versión
+introduce un cambio incompatible, aumenta el formato y cada cliente acepta solo la ventana que sabe
+leer (`MinimumSupportedFormat`-`CurrentFormat`). Una versión demasiado antigua o futura devuelve
+un error claro y no aplica datos parcialmente.
+
+El formato de los sobres y la API son JSON/HTTP y no dependen de Windows, WPF, SQLite ni DPAPI. Un
+futuro cliente para Android, iOS, macOS o Linux podrá reutilizar el servidor. DPAPI solo protege la
+clave y el token guardados localmente en la versión Windows.
+
+La versión de formato 2 sincroniza también las etiquetas dentro del contenido cifrado. El formato 3
+añade las notas protegidas. La versión de formato 4 añade la posición de cada nota dentro del mazo
+(`NoteOrder.Position`), para que todos los dispositivos enseñen el mismo orden de pestañas; las
+posiciones de las ventanas siguen siendo locales a cada dispositivo, porque un mismo escritorio no
+tiene sentido en monitores distintos. Un cliente antiguo rechaza los sobres que no sabe leer con un
+error claro en vez de aplicar datos parcialmente: una versión antigua reescribiría la nota sin la
+posición y desharía el reordenado sin avisar.
+
+La selección puede ser distinta en cada perfil. Para compartir una nota con otra persona, crea un
+perfil separado, selecciona solo esa nota y comparte el código de ese perfil.
+
+### Revocar una invitación
+
+En Ajustes, pulsa `Revocar códigos anteriores` dentro del perfil que quieras proteger. Aldune
+sincroniza primero la versión actual, genera una clave nueva y vuelve a cifrar los sobres del vínculo.
+Los dispositivos que conserven un código antiguo dejarán de sincronizar; genera después una nueva
+invitación y compártela solo con quienes deban continuar. El token del servidor no cambia. Si la
+aplicación se cierra durante el proceso, la siguiente sincronización intenta terminar la rotación.
+
+La revocación impide descifrar futuras versiones del almacén, pero no puede borrar una copia que otro
+dispositivo ya hubiera descargado antes de revocar.

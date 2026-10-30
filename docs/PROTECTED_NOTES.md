@@ -1,21 +1,23 @@
-# Notas protegidas
+# Protected notes
 
-Una nota protegida se cifra con AES-GCM usando una clave derivada de su contraseña mediante PBKDF2
-SHA-256. Aldune no guarda la contraseña ni una copia utilizable de ella.
+[Español](PROTECTED_NOTES.es.md)
 
-Mientras está bloqueada, el dock y Gestionar notas muestran únicamente `Nota protegida`, salvo que le pongas un **nombre visible**
-(opcional, por nota: al protegerla o desde «Nombre visible…»). Ese nombre es un campo aparte, en claro, de una sola línea y hasta 60
-caracteres; no sale del contenido y cualquiera que vea tu pantalla lo ve. Viaja por la sincronización (campo `protectedTitle` del
-sobre, cifrado con la clave del perfil como las etiquetas), sin subir el formato 4: las versiones anteriores a la 1.8.0 de Windows y
-a la 0.2.0 de Android lo ignoran y lo pierden si reenvían esa nota, así que conviene actualizar todos los dispositivos. Quitar la
-protección lo borra. Al abrirla
-se pide la contraseña; queda desbloqueada durante esa sesión de edición y vuelve a quedar bloqueada
-al cerrarla.
+A protected note is encrypted with AES-GCM using a key derived from its password with PBKDF2
+SHA-256. Aldune does not store the password or a usable copy of it.
 
-La protección forma parte del sobre de sincronización: el servidor y la carpeta compartida solo
-reciben datos cifrados, y cada dispositivo debe introducir la contraseña para leer la nota. Las
-versiones anteriores al formato de sincronización 3 rechazan el sobre para no reemplazar de forma
-silenciosa una nota protegida.
+While it is locked, the dock and Manage notes show only `Protected note`, unless you give it a **visible name**
+(optional, per note: when protecting it or from “Visible name…”). That name is a separate field, in the clear, a single line and up to 60
+characters; it is not taken from the content and anyone who sees your screen sees it. It travels through sync (the `protectedTitle` field of the
+envelope, encrypted with the profile key like tags), without raising format 4: Windows versions before 1.8.0 and
+Android versions before 0.2.0 ignore it and lose it if they resend that note, so it is best to update all devices. Removing the
+protection deletes it. When you open the note
+the password is asked for; it stays unlocked during that editing session and is locked again
+when you close it.
 
-La contraseña no se puede recuperar. Conviene probar primero con una nota de prueba y conservar la
-contraseña en un gestor de contraseñas.
+Protection is part of the sync envelope: the server and the shared folder only
+receive encrypted data, and each device must enter the password to read the note. Versions
+older than sync format 3 reject the envelope so as not to silently replace a protected
+note.
+
+The password cannot be recovered. It is a good idea to try with a test note first and keep the
+password in a password manager.

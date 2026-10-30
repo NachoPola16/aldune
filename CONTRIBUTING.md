@@ -3,7 +3,7 @@
 **Issues** (bugs, questions, ideas) are welcome, in English or Spanish: say which version you use, what you did and what you expected. For questions and
 open-ended ideas, use [Discussions](https://github.com/NachoPola16/aldune/discussions).
 
-Before sending a Pull Request, open an issue to talk about it: the project has design decisions documented in [docs/](docs/) (in Spanish for now;
+Before sending a Pull Request, open an issue to talk about it: the project has design decisions documented in [docs/](docs/) (`STATUS.md`, `ROADMAP.md` and `specs/` are written in Spanish;
 `ROADMAP.md` records what was discarded and why, `STATUS.md` what is done) and the rules for anyone touching the code are below.
 
 ## Project rules
