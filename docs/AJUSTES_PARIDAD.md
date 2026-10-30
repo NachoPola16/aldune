@@ -93,6 +93,7 @@ va al lado como `nombre (Aldune).md`). Los ficheros están en claro: el ajuste l
 
 - **No hay opción para ocultar las «señales»** (prefijo `CHn`, onda del canal): son la identidad del aspecto, y quien no las quiere tiene otros aspectos
   claros y oscuros. Ya existen los interruptores de señal de sincronización, esquinas rectas y color de nota solo como franja.
+- **Ancho de Ajustes y del gestor en Windows (decisión 2026-10-30):** con la ventana maximizada, el contenido de Ajustes se queda en 780 px junto al menú lateral (los interruptores no se pegan al borde derecho y las líneas de texto se leen) y el cuerpo del gestor en 1100 px centrado, sin menú lateral. Se mantiene: es lo habitual en los ajustes de Windows 11 y evita ojos que recorren 1900 px. Si alguien lo echa en falta, se sube el `MaxWidth` en `SettingsWindow.xaml` o `NotesManagerWindow.xaml`.
 - **Widget de Android**: en Telecom lleva la tipografía monoespaciada y el acento, pero **no** el prefijo `CHn` ni la onda (Glance no dibuja trazados; las tiras de color ya identifican el aspecto).
 - **Pestaña del dock**: la onda comparte fila con la vista previa (40×12, trazo fino) y solo la vista previa cede ese hueco; el título conserva todo el ancho.
 - **Retícula de la nota**: margen sin cuadrícula a izquierda, derecha y abajo, y el texto entra 6 px dentro de la primera cuadrícula. Bash y Fósforo no tienen retícula.
