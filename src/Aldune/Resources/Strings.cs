@@ -1601,11 +1601,17 @@ public static class Strings
           $"• {combo} ouvre la liste des notes : Tab ou les flèches passent d'une note à l'autre, Entrée en ouvre une, Espace la sélectionne.",
           $"• {combo} abre a lista de notas: Tab ou as setas se movem entre notas, Enter abre uma e Espaço a seleciona.");
     public static string QuickHelpKeyboardManagerOff => T(
-        "• The dock opens with the mouse. To reach a note with the keyboard, turn on “Open the notes list with a keyboard shortcut” above, or use the tray icon.",
-        "• El dock se abre con el ratón. Para llegar a una nota con el teclado, activa arriba «Abrir la lista de notas con un atajo de teclado» o usa el icono de la bandeja.",
-        "• Das Dock öffnet sich mit der Maus. Um eine Notiz per Tastatur zu erreichen, aktiviere oben „Notizenliste mit Tastenkombination öffnen“ oder nutze das Taskleistensymbol.",
-        "• Le dock s'ouvre à la souris. Pour atteindre une note au clavier, activez plus haut « Ouvrir la liste des notes avec un raccourci clavier » ou utilisez l'icône de la barre d'état.",
-        "• O dock abre com o mouse. Para chegar a uma nota pelo teclado, ative acima «Abrir a lista de notas com um atalho de teclado» ou use o ícone da bandeja.");
+        "• To open the list of notes from the keyboard, turn on “Open the notes list with a keyboard shortcut” above, or use the tray icon.",
+        "• Para abrir la lista de notas con el teclado, activa arriba «Abrir la lista de notas con un atajo de teclado» o usa el icono de la bandeja.",
+        "• Um die Notizenliste per Tastatur zu öffnen, aktiviere oben „Notizenliste mit Tastenkombination öffnen“ oder nutze das Taskleistensymbol.",
+        "• Pour ouvrir la liste des notes au clavier, activez plus haut « Ouvrir la liste des notes avec un raccourci clavier » ou utilisez l'icône de la barre d'état.",
+        "• Para abrir a lista de notas pelo teclado, ative acima «Abrir a lista de notas com um atalho de teclado» ou use o ícone da bandeja.");
+    public static string QuickHelpKeyboardDock => T(
+        "• Ctrl+Alt+D puts the keyboard on the dock: Up and Down move between tabs, Enter opens the note, Tab reaches the buttons below and Esc gives the keyboard back.",
+        "• Ctrl+Alt+D pone el teclado en el dock: Arriba y Abajo pasan de una pestaña a otra, Intro abre la nota, Tab llega a los botones de abajo y Esc devuelve el teclado.",
+        "• Strg+Alt+D legt die Tastatur auf das Dock: Pfeil nach oben und unten wechseln zwischen den Reitern, Eingabe öffnet die Notiz, Tab erreicht die Schaltflächen darunter und Esc gibt die Tastatur zurück.",
+        "• Ctrl+Alt+D donne le clavier au dock : Haut et Bas passent d'un onglet à l'autre, Entrée ouvre la note, Tab atteint les boutons du bas et Échap rend le clavier.",
+        "• Ctrl+Alt+D leva o teclado ao dock: Cima e Baixo passam de uma aba a outra, Enter abre a nota, Tab chega aos botões de baixo e Esc devolve o teclado.");
     public static string QuickHelpKeyboardZoom => T(
         "• In a note, Ctrl + mouse wheel (or Ctrl + plus / minus, Ctrl + 0 to reset) zooms its text. In Settings, “Text size” enlarges the whole app.",
         "• En una nota, Ctrl + rueda del ratón (o Ctrl + más / menos, Ctrl + 0 para volver) amplía su texto. En Ajustes, «Tamaño del texto» agranda toda la aplicación.",

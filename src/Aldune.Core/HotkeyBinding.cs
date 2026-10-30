@@ -34,6 +34,13 @@ public sealed record HotkeyBinding(uint Modifiers, uint Key)
     public static HotkeyBinding DockToggleDefault => new(ModControl | ModAlt, 0x48);
 
     /// <summary>
+    /// Ctrl + Alt + D: hands the keyboard to the dock (opens the fan and focuses the first tab). Fixed,
+    /// like <see cref="DockToggleDefault"/>: it is the only way to reach a tab without the mouse, so it
+    /// cannot depend on a setting the user would have to find first. D for dock; Windows does not use it.
+    /// </summary>
+    public static HotkeyBinding DockFocusDefault => new(ModControl | ModAlt, 0x44);
+
+    /// <summary>
     /// Ctrl + Alt + L: abrir la última nota editada (L de last). No Ctrl+Alt+N, por lo mismo que en
     /// <see cref="Default"/>, ni Ctrl+Shift+L, que dentro de una nota convierte la línea en viñeta y
     /// un atajo global se la quitaría. Con AltGr (Ctrl+Alt) la L no escribe nada en las

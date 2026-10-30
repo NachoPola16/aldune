@@ -604,7 +604,7 @@ public partial class SettingsWindow : Window
             (Strings.QuickHelpKeyboardGroup, new[]
             {
                 _settings.ManagerHotkeyEnabled ? Strings.QuickHelpKeyboardManagerOn(_settings.ManagerHotkey.DisplayName) : Strings.QuickHelpKeyboardManagerOff,
-                Strings.QuickHelpKeyboardZoom, Strings.QuickHelpKeyboardFocus,
+                Strings.QuickHelpKeyboardDock, Strings.QuickHelpKeyboardZoom, Strings.QuickHelpKeyboardFocus,
             }),
         };
 

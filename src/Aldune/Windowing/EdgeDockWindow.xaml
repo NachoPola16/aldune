@@ -108,6 +108,7 @@
         </LinearGradientBrush>
 
         <Style x:Key="NoteTabButtonStyle" TargetType="Button">
+            <Setter Property="FocusVisualStyle" Value="{StaticResource AlduneFocusVisual}" />
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="Button">

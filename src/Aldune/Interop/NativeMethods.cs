@@ -305,6 +305,15 @@ internal static class NativeMethods
     [DllImport("user32.dll")]
     private static extern IntPtr GetForegroundWindow();
 
+    /// <summary>The window that has the keyboard right now, to give it back later.</summary>
+    internal static IntPtr ForegroundWindow() => GetForegroundWindow();
+
+    /// <summary>Brings <paramref name="hWnd"/> back to the foreground (no-op for a null or dead handle).</summary>
+    internal static void Reactivate(IntPtr hWnd)
+    {
+        if (hWnd != IntPtr.Zero) SetForegroundWindow(hWnd);
+    }
+
     [DllImport("user32.dll")]
     private static extern uint GetWindowThreadProcessId(IntPtr hWnd, IntPtr lpdwProcessId);
 

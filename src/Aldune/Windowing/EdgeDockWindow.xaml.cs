@@ -538,6 +538,13 @@ public partial class EdgeDockWindow : Window
             }
         }
 
+        // In keyboard mode the fan stays open wherever the cursor is.
+        if (_keyboardMode)
+        {
+            _hover.Hold();
+            return;
+        }
+
         // Cortesía al abrir otra ventana desde el dock: mientras corre, el sondeo no decide nada y
         // el abanico se queda abierto aunque el cursor esté fuera. En cuanto caduca, el sondeo
         // normal vuelve a mandar y, si el cursor sigue fuera, lo pliega como siempre.
@@ -1167,8 +1174,116 @@ public partial class EdgeDockWindow : Window
         e.Handled = true;
     }
 
+    // --- Keyboard mode (Ctrl+Alt+D) ---------------------------------------------------------------
+    //
+    // The dock is WS_EX_NOACTIVATE so that hovering never steals focus, and that also left its tabs
+    // out of reach of the keyboard. This mode lifts the flag for as long as it lasts: it opens the fan,
+    // activates the window and focuses a tab. Up/Down move between tabs, Home/End jump to the ends,
+    // Enter or Space opens the note, Tab reaches the footer buttons and Esc gives the keyboard back.
+
+    private bool _keyboardMode;
+    private IntPtr _keyboardReturnWindow;
+
+    /// <summary>Starts keyboard mode (a second call leaves it). Does nothing if the dock is hidden or empty.</summary>
+    internal void EnterKeyboardMode()
+    {
+        if (_hwnd == IntPtr.Zero || !IsVisible || _noteCount == 0) return;
+        if (_keyboardMode)
+        {
+            ExitKeyboardMode(restoreFocus: true);
+            return;
+        }
+
+        _keyboardReturnWindow = NativeMethods.ForegroundWindow();
+        _keyboardMode = true;
+        if (!_fanState.IsExpanded) _fanState.PointerEntered();
+        NativeMethods.EnsureTopmost(_hwnd);
+        NativeMethods.AllowActivation(_hwnd);
+        NativeMethods.ForceActivate(this);
+        // The tab buttons only exist once the fan has been laid out.
+        Dispatcher.BeginInvoke(DispatcherPriority.Loaded, new Action(() => FocusTab(TabButtons().FirstOrDefault())));
+    }
+
+    private void ExitKeyboardMode(bool restoreFocus)
+    {
+        if (!_keyboardMode) return;
+        _keyboardMode = false;
+        NativeMethods.MakeNonActivating(_hwnd);
+        if (restoreFocus) NativeMethods.Reactivate(_keyboardReturnWindow);
+        _keyboardReturnWindow = IntPtr.Zero;
+    }
+
+    // Clicking elsewhere, or opening a note (which takes the focus), ends the mode without grabbing it back.
+    protected override void OnDeactivated(EventArgs e)
+    {
+        base.OnDeactivated(e);
+        ExitKeyboardMode(restoreFocus: false);
+    }
+
+    private IEnumerable<Button> TabButtons()
+    {
+        for (int i = 0; i < TabsList.Items.Count; i++)
+        {
+            if (TabsList.ItemContainerGenerator.ContainerFromIndex(i) is { } container && FirstButtonIn(container) is { } button)
+                yield return button;
+        }
+    }
+
+    private static Button? FirstButtonIn(DependencyObject parent)
+    {
+        for (int i = 0; i < VisualTreeHelper.GetChildrenCount(parent); i++)
+        {
+            var child = VisualTreeHelper.GetChild(parent, i);
+            if (child is Button button) return button;
+            if (FirstButtonIn(child) is { } inner) return inner;
+        }
+
+        return null;
+    }
+
+    private static void FocusTab(Button? tab)
+    {
+        if (tab is null) return;
+        tab.BringIntoView();
+        tab.Focus();
+        Keyboard.Focus(tab);
+    }
+
+    /// <summary>Returns true when the key was consumed by keyboard mode.</summary>
+    private bool HandleKeyboardModeKey(KeyEventArgs e)
+    {
+        var tabs = TabButtons().ToList();
+        int current = tabs.FindIndex(t => t.IsKeyboardFocused);
+        switch (e.Key)
+        {
+            case Key.Escape:
+                ExitKeyboardMode(restoreFocus: true);
+                return true;
+            case Key.Up:
+            case Key.Down:
+                if (tabs.Count == 0) return true;
+                int step = e.Key == Key.Up ? -1 : 1;
+                FocusTab(tabs[current < 0 ? 0 : Math.Clamp(current + step, 0, tabs.Count - 1)]);
+                return true;
+            case Key.Home:
+                FocusTab(tabs.FirstOrDefault());
+                return true;
+            case Key.End:
+                FocusTab(tabs.LastOrDefault());
+                return true;
+            default:
+                return false;
+        }
+    }
+
     private void OnDockPreviewKeyDown(object sender, KeyEventArgs e)
     {
+        if (_keyboardMode && HandleKeyboardModeKey(e))
+        {
+            e.Handled = true;
+            return;
+        }
+
         if (!_fanState.IsExpanded) return;
 
         switch (e.Key)

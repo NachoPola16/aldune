@@ -357,6 +357,11 @@ public partial class App : Application
         _dockHotkey = new GlobalHotkey(coordinator.ToggleDocksVisible);
         _dockHotkey.Enable(HotkeyBinding.DockToggleDefault);
 
+        // Fixed too (Ctrl+Alt+D): keyboard access to the dock's tabs. If the registration fails the
+        // manager shortcut remains as the keyboard route.
+        _dockFocusHotkey = new GlobalHotkey(coordinator.FocusDockWithKeyboard);
+        _dockFocusHotkey.Enable(HotkeyBinding.DockFocusDefault);
+
         // Tercer atajo: abrir la última nota editada. Configurable como el de crear nota.
         _recentHotkey = new GlobalHotkey(coordinator.OpenMostRecentNote);
         if (settings.RecentNoteHotkeyEnabled) _recentHotkey.Enable(settings.RecentNoteHotkey);
@@ -415,6 +420,7 @@ public partial class App : Application
             _trayIcon?.Dispose();
             _hotkey?.Dispose();
             _dockHotkey?.Dispose();
+            _dockFocusHotkey?.Dispose();
             _recentHotkey?.Dispose();
             _managerHotkey?.Dispose();
             _backupTimer?.Stop();
@@ -553,6 +559,7 @@ public partial class App : Application
     private TrayIcon? _trayIcon;
     private GlobalHotkey? _hotkey;
     private GlobalHotkey? _dockHotkey;
+    private GlobalHotkey? _dockFocusHotkey;
     private GlobalHotkey? _recentHotkey;
     private GlobalHotkey? _managerHotkey;
     private NotesRepository? _repository;

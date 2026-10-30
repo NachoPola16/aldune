@@ -45,7 +45,7 @@ On Android the tabs are chips in a 3-column grid (with more tabs, more rows), an
 
 ## Windows only
 
-Global shortcuts, dock (edge, alignment, monitor, follow the mouse, hide in full screen, keep open, trackpad gestures), text size
+Global shortcuts (including the fixed Ctrl+Alt+H, which hides the dock, and Ctrl+Alt+D, which puts the keyboard on it: Up/Down between tabs, Enter opens, Esc gives it back), dock (edge, alignment, monitor, follow the mouse, hide in full screen, keep open, trackpad gestures), text size
 (Android follows the system's), remember note position and size, default note layout, several sync profiles with their folder/server/WebDAV,
 custom themes (`CustomThemes`), start with Windows.
 

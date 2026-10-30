@@ -466,6 +466,13 @@ public sealed class AppCoordinator
     /// <summary>Interruptor para el atajo global y la bandeja.</summary>
     public void ToggleDocksVisible() => SetDocksVisible(!DocksVisible);
 
+    /// <summary>Ctrl+Alt+D: shows the dock if it was hidden and hands the keyboard to the one on the screen with the cursor.</summary>
+    public void FocusDockWithKeyboard()
+    {
+        SetDocksVisible(true);
+        DockNearCursor()?.EnterKeyboardMode();
+    }
+
     public void RegisterDock(EdgeDockWindow dock) => _docks.Add(dock);
 
 
