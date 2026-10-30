@@ -4,6 +4,8 @@ import android.content.Context
 import android.content.res.Configuration
 import app.aldune.capture.QuickList
 import app.aldune.domain.KeyboardOnOpen
+import app.aldune.domain.SoundEvent
+import app.aldune.domain.SoundSettings
 import app.aldune.text.AppPalette
 import app.aldune.text.AspectColorsJson
 import app.aldune.text.AspectSkin
@@ -79,6 +81,8 @@ data class AppSettings(
     val quickListTitle: String = "",
     /** Modo simplificado: Ajustes enseña solo lo esencial (ver `SettingsSections`). Los demás ajustes no cambian al activarlo. */
     val simplifiedMode: Boolean = false,
+    /** Los sonidos de la app (papel y pluma): mismo interruptor, volumen y claves que en Windows. Apagado de fábrica. */
+    val sounds: SoundSettings = SoundSettings(),
 ) {
     val quickList: QuickList? get() = quickListId?.let { QuickList(it, quickListTitle) }
     val colorFill: Boolean get() = if (AspectSkin.colorLocked(appearance)) false else fillNoteColor ?: AspectSkin.colorFill(appearance)
@@ -145,6 +149,11 @@ class SettingsStore(context: Context) {
             quickListId = prefs.getString(QUICK_LIST_ID, null),
             quickListTitle = prefs.getString(QUICK_LIST_TITLE, d.quickListTitle) ?: d.quickListTitle,
             simplifiedMode = prefs.getBoolean(SIMPLIFIED_MODE, d.simplifiedMode),
+            sounds = SoundSettings(
+                enabled = prefs.getBoolean(SOUNDS_ENABLED, false),
+                volume = prefs.getInt(SOUND_VOLUME, 100).coerceIn(0, 100),
+                choices = SoundEvent.entries.mapNotNull { e -> if (prefs.contains(SOUND_PREFIX + e.id)) e.id to prefs.getInt(SOUND_PREFIX + e.id, 0) else null }.toMap(),
+            ),
         )
     }
 
@@ -186,6 +195,9 @@ class SettingsStore(context: Context) {
             .putOrRemove(QUICK_LIST_ID, settings.quickListId)
             .putString(QUICK_LIST_TITLE, settings.quickListTitle)
             .putBoolean(SIMPLIFIED_MODE, settings.simplifiedMode)
+            .putBoolean(SOUNDS_ENABLED, settings.sounds.enabled)
+            .putInt(SOUND_VOLUME, settings.sounds.volume)
+            .also { editor -> for (e in SoundEvent.entries) settings.sounds.choices[e.id]?.let { editor.putInt(SOUND_PREFIX + e.id, it) } ?: editor.remove(SOUND_PREFIX + e.id) }
             .apply() // apply ya deja el valor visible en este proceso: el `recreate()` del cambio de idioma lo lee al instante.
     }
 
@@ -200,6 +212,9 @@ class SettingsStore(context: Context) {
         const val QUICK_LIST_ID = "quickListId"
         const val QUICK_LIST_TITLE = "quickListTitle"
         const val SIMPLIFIED_MODE = "simplifiedMode"
+        const val SOUNDS_ENABLED = "soundsEnabled"
+        const val SOUND_VOLUME = "soundVolume"
+        const val SOUND_PREFIX = "sound_"
         const val APPEARANCE = "appearance"
         const val ASPECT_COLORS = "aspectColors"
         const val LANGUAGE = "language"

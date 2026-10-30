@@ -53,6 +53,8 @@ import app.aldune.domain.KeyboardOnOpen
 import app.aldune.text.HiddenTasks
 import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.runtime.snapshotFlow
+import app.aldune.domain.SoundEvent
+import app.aldune.domain.TypingThrottle
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.MoreVert
@@ -205,6 +207,7 @@ fun NoteEditorPane(key: String, viewModel: NotesViewModel, onBack: () -> Unit, s
         // Lo recién cargado no se puede deshacer: el primer «deshacer» dejaría la nota vacía.
         state.undoState.clearHistory()
         loaded = true
+        viewModel.playSound(SoundEvent.NOTE_OPENED)
     }
     LaunchedEffect(key) { load() }
     // Abrir una nota trae antes lo que se haya escrito en otro dispositivo (la política limita a una pasada cada 30 s): si llega algo y no se
@@ -265,8 +268,11 @@ fun NoteEditorPane(key: String, viewModel: NotesViewModel, onBack: () -> Unit, s
 
     // Único punto por el que el texto llega al guardado: así ningún camino (teclado, barra, atajo, toque) se lo salta.
     LaunchedEffect(key) {
+        var previous = state.text.toString()
         snapshotFlow { state.text.toString() }.collect {
-            if (!loaded) return@collect
+            if (!loaded) { previous = it; return@collect }
+            if (TypingThrottle.isTyping(previous, it)) viewModel.playSound(SoundEvent.TYPING)
+            previous = it
             // El texto de una protegida abierta no pasa por los borradores: va a su sesión. Bloqueada, no se guarda nada.
             if (!protectedNote) viewModel.updateDraft(key, it) else if (unlocked) viewModel.updateProtectedText(key, it)
         }
@@ -377,6 +383,7 @@ fun NoteEditorPane(key: String, viewModel: NotesViewModel, onBack: () -> Unit, s
     fun toggleTask(glyph: Int, keepCaretPosition: Boolean) {
         val toggled = TaskLines.toggleCheckboxAt(text(), glyph) ?: return
         haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+        viewModel.playSound(SoundEvent.TASK_CHECKED)
         val sel = state.selection
         if (!settleChecked) return commit(toggled, sel)
         val edit = TaskLists.settleToggled(toggled, glyph)
@@ -460,7 +467,7 @@ fun NoteEditorPane(key: String, viewModel: NotesViewModel, onBack: () -> Unit, s
     ) {
         Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
             if (showBack) {
-                IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.back)) }
+                IconButton(onClick = { viewModel.playSound(SoundEvent.NOTE_CLOSED); onBack() }) { Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.back)) }
             }
             Spacer(Modifier.weight(1f))
             if (syncing) {

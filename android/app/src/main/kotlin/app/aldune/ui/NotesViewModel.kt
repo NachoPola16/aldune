@@ -6,6 +6,7 @@ import androidx.lifecycle.viewModelScope
 import app.aldune.AldunaApp
 import app.aldune.AppContainer
 import app.aldune.capture.CaptureRequest
+import app.aldune.audio.UiSounds
 import app.aldune.data.AppSettings
 import app.aldune.data.SettingsStore
 import app.aldune.core.ProtectedNotes
@@ -15,6 +16,7 @@ import app.aldune.domain.LostReason
 import app.aldune.domain.Note
 import app.aldune.domain.NewNoteColorSettings
 import app.aldune.domain.NoteListItem
+import app.aldune.domain.SoundEvent
 import app.aldune.domain.NoteListOrder
 import app.aldune.domain.NoteListing
 import app.aldune.text.AndroidReleaseUpdate
@@ -188,6 +190,17 @@ class NotesViewModel(application: Application) : AndroidViewModel(application) {
     private val _settings = MutableStateFlow(settingsStore.load())
     val settings: StateFlow<AppSettings> = _settings.asStateFlow()
 
+    private val sounds = UiSounds(application) { _settings.value.sounds }.also { it.preload() }
+
+    /** Hace sonar un evento si el usuario lo tiene elegido (apagado de fábrica, ver `SoundPlan`). */
+    fun playSound(event: SoundEvent) = sounds.play(event)
+
+    /** Para «Probar» en Ajustes: suena lo que hay elegido para [event] aunque el interruptor general esté apagado. */
+    fun previewSound(event: SoundEvent) {
+        val choice = _settings.value.sounds.choices[event.id]?.let(app.aldune.domain.SoundChoice::fromCode) ?: return
+        sounds.preview(choice, _settings.value.sounds.volumeFactor)
+    }
+
     fun updateSettings(transform: (AppSettings) -> AppSettings) {
         val previous = _settings.value
         val next = transform(previous)
@@ -196,6 +209,7 @@ class NotesViewModel(application: Application) : AndroidViewModel(application) {
         // El orden de la lista y el trabajo de segundo plano dependen de estos ajustes: se aplican al momento.
         if (next.listOrder != previous.listOrder) launchIo { refreshLocked() }
         if (next.syncInBackground != previous.syncInBackground) _sync.value?.refreshSchedule()
+        if (next.sounds.enabled && !previous.sounds.enabled) sounds.preload()
         // El aspecto, el idioma y la vista previa cambian lo que pinta el widget.
         widgetChanged()
     }
@@ -224,6 +238,7 @@ class NotesViewModel(application: Application) : AndroidViewModel(application) {
     override fun onCleared() {
         // La sync sigue viva (es del proceso); solo se suelta la referencia a este ViewModel, que ya no existe.
         _sync.value?.onNotesChanged = null
+        sounds.release()
     }
 
     private fun start(notes: NoteService, opened: AppContainer.Opened.Ready) {
@@ -710,13 +725,13 @@ class NotesViewModel(application: Application) : AndroidViewModel(application) {
 
     fun setNoteTags(noteId: String, tags: List<String>) = change { it.setTags(noteId, tags) }
 
-    fun archive(id: String) = change { it.archive(id) }
+    fun archive(id: String) = change { it.archive(id) }.also { sounds.play(SoundEvent.NOTE_ARCHIVED) }
 
-    fun trash(id: String) = change { it.trash(id) }
+    fun trash(id: String) = change { it.trash(id) }.also { sounds.play(SoundEvent.NOTE_DELETED) }
 
     fun restore(id: String) = change { it.restore(id) }
 
-    fun deleteForever(id: String) = change { it.deleteForever(id) }
+    fun deleteForever(id: String) = change { it.deleteForever(id) }.also { sounds.play(SoundEvent.NOTE_DELETED) }
 
     private fun newNoteColors() = NewNoteColorSettings(
         theme = NoteThemes.resolve(_settings.value.noteThemeId, null),

@@ -3,6 +3,7 @@ package app.aldune.ui
 import app.aldune.capture.QuickList
 import app.aldune.capture.CaptureNotification
 import androidx.activity.compose.BackHandler
+import app.aldune.domain.SoundEvent
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -143,7 +144,10 @@ private fun NotesScaffold(state: UiState.Ready, viewModel: NotesViewModel, onOpe
     }
 
     // En pantalla compacta, atrás desde el editor vuelve a la lista; en ancha no hay a dónde volver.
-    BackHandler(enabled = detailVisible && !listVisible) { scope.launch { navigator.navigateBack() } }
+    BackHandler(enabled = detailVisible && !listVisible) {
+        viewModel.playSound(SoundEvent.NOTE_CLOSED)
+        scope.launch { navigator.navigateBack() }
+    }
 
     NavigableListDetailPaneScaffold(
         navigator = navigator,

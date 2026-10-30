@@ -212,6 +212,9 @@ fun SettingsScreen(viewModel: NotesViewModel, onClose: () -> Unit) {
                             Choice(stringResource(label), settings.hideDoneAfterHours == hours) { viewModel.updateSettings { it.copy(hideDoneAfterHours = hours) } }
                         }
                     }
+                    HorizontalDivider(Modifier.padding(vertical = 12.dp))
+                    Section(R.string.sounds_section)
+                    SoundSettingsSection(settings, onChange = viewModel::updateSettings, onPreview = viewModel::previewSound)
                 }
                 if (inTab(0)) {
                 HorizontalDivider(Modifier.padding(vertical = 12.dp))

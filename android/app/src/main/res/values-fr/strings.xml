@@ -378,4 +378,22 @@
     <string name="check_updates">Me prévenir des nouvelles versions</string>
     <string name="check_updates_hint">Une fois par jour, la liste publique des versions sur GitHub est consultée. Rien de vos notes n\'est envoyé et rien n\'est téléchargé.</string>
     <string name="note_open_in_editor">Ouverte dans l\'éditeur</string>
+    <string name="sounds_section">Sons</string>
+    <string name="sounds_enabled">Activer les sons</string>
+    <string name="sounds_hint">Désactivé par défaut. Chaque événement a son propre son, ou aucun. Rien ne sonne quand le téléphone est en silencieux ou en vibreur.</string>
+    <string name="sound_volume">Volume</string>
+    <string name="sound_paper_pen">Papier et plume pour tout</string>
+    <string name="sound_test">Tester</string>
+    <string name="sound_event_note_opened">Note ouverte</string>
+    <string name="sound_event_note_closed">Note fermée</string>
+    <string name="sound_event_task_checked">Case cochée</string>
+    <string name="sound_event_note_deleted">Note supprimée</string>
+    <string name="sound_event_note_archived">Note archivée</string>
+    <string name="sound_event_typing">Saisie</string>
+    <string name="sound_choice_none">Aucun son</string>
+    <string name="sound_choice_page_turn">Tourner la page</string>
+    <string name="sound_choice_paper_fold">Papier qui se plie</string>
+    <string name="sound_choice_pen_tap">Touche de plume</string>
+    <string name="sound_choice_paper_crumple">Papier froissé</string>
+    <string name="sound_choice_pen_scratch">Grattement de plume</string>
 </resources>

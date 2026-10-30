@@ -44,7 +44,14 @@ copia de seguridad. Son cosas que no existen en un ordenador de sobremesa.
   un día se quiere igualar, el modelo guardado ya admite el valor libre en Android (`trashDays` entre 1 y 365; `hideDoneAfterHours` hasta un año).
 - **Fósforo**: Windows no enseña ningún color de nota (monitor monocromo); Android conserva la franja del color de la nota.
 
-## Pendiente de la fase de sonidos
+## Sonidos (fase 3)
 
-Windows ya tiene `SoundsEnabled` y `Sounds` por evento (`SoundPlan`). Android adoptará el mismo interruptor, las mismas claves de evento y los mismos
-sonidos propios (ver `docs/superpowers/specs/2026-10-30-libreta-viaje-sonidos-y-revision-design.md`).
+Mismo interruptor (`SoundsEnabled` / `soundsEnabled`), mismo volumen (`SoundVolume` 0-100), mismas claves de evento (`reminder`, `syncDone`, `syncFailed`,
+`noteCreated`, `noteArchived`, `noteOpened`, `noteClosed`, `taskChecked`, `noteDeleted`, `typing`) y mismos números de opción (7-11 = papel y pluma).
+Los WAV salen de `scripts/sounds/generar-sonidos.py`.
+
+- **Android solo ofrece** abrir, cerrar, marcar, borrar, archivar y escribir. Recordatorio, sync hecha/fallida y nota creada no se ofrecen: los
+  recordatorios ya suenan por su notificación y la sync no tiene sonido propio en el móvil.
+- **Android solo tiene los cinco sonidos propios**: los del sistema de Windows (1-5) y el `.wav` propio (6) no existen allí y se quedan en silencio.
+- Android no suena con el teléfono en silencio o vibración; Windows no tiene ese modo.
+- El volumen de Windows no afecta a los sonidos del sistema ni a un `.wav` propio (los reproduce `SoundPlayer`); el de Android afecta a todos.
