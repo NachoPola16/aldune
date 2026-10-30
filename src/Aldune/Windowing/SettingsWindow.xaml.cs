@@ -1607,7 +1607,9 @@ public partial class SettingsWindow : Window
                      (AppearanceMode.TravelNotebookLight, Strings.AppearanceTravelNotebookLight),
                      (AppearanceMode.TravelNotebookDark, Strings.AppearanceTravelNotebookDark),
                      (AppearanceMode.FieldNotebookLight, Strings.AppearanceFieldNotebookLight),
-                     (AppearanceMode.FieldNotebookDark, Strings.AppearanceFieldNotebookDark)
+                     (AppearanceMode.FieldNotebookDark, Strings.AppearanceFieldNotebookDark),
+                     (AppearanceMode.GridNotebookLight, Strings.AppearanceGridNotebookLight),
+                     (AppearanceMode.GridNotebookDark, Strings.AppearanceGridNotebookDark)
                  })
         {
             var radio = new RadioButton

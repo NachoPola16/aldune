@@ -52,6 +52,8 @@ public enum SkinPaper
     Folds = 1,
     /// <summary>Renglones y margen rojo (cuaderno de campo).</summary>
     Ruled = 2,
+    /// <summary>Cuadrícula de cuaderno de cuadros, con margen rojo (cuaderno cuadriculado).</summary>
+    Grid = 3,
 }
 
 /// <summary>
@@ -145,6 +147,9 @@ public sealed record AppSkin(
             => Default with { NoteFont = Serif, NoteLineHeight = 22, Card = SkinCard.Stripe, Paper = SkinPaper.Folds },
         AppearanceMode.FieldNotebookLight or AppearanceMode.FieldNotebookDark
             => Default with { NoteFont = Serif, NoteLineHeight = 22, Card = SkinCard.Stripe, Paper = SkinPaper.Ruled },
+        // El cuaderno cuadriculado: letra de imprenta (sin serifa, como el de cuadros de la escuela) sobre cuadros de 22 px, el alto de línea.
+        AppearanceMode.GridNotebookLight or AppearanceMode.GridNotebookDark
+            => Default with { NoteLineHeight = 22, Card = SkinCard.Stripe, Paper = SkinPaper.Grid },
         _ => Default,
     };
 }

@@ -97,6 +97,12 @@ public class AppSkinTests
         }
         foreach (var mode in new[] { AppearanceMode.FieldNotebookLight, AppearanceMode.FieldNotebookDark })
             Assert.Equal(SkinPaper.Ruled, AppSkin.For(mode).Paper);
+        foreach (var mode in new[] { AppearanceMode.GridNotebookLight, AppearanceMode.GridNotebookDark })
+        {
+            var skin = AppSkin.For(mode);
+            Assert.Equal(SkinPaper.Grid, skin.Paper);
+            Assert.Equal(SkinCard.Stripe, skin.Card);
+        }
         // El resto de aspectos no llevan papel.
         Assert.Equal(SkinPaper.None, AppSkin.For(AppearanceMode.Dark).Paper);
         Assert.Equal(SkinPaper.None, AppSkin.For(AppearanceMode.Bash).Paper);

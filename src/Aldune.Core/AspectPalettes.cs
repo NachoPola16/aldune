@@ -29,6 +29,8 @@ internal static class AspectPalettes
         AppearanceMode.TravelNotebookDark => NotebookDark(c["paper"], c["accent"], neutralHue: 70),
         AppearanceMode.FieldNotebookLight => NotebookLight(c["ink"], c["accent"], neutralHue: 92),
         AppearanceMode.FieldNotebookDark => NotebookDark(c["paper"], c["accent"], neutralHue: 75),
+        AppearanceMode.GridNotebookLight => NotebookLight(c["ink"], c["accent"], neutralHue: 250),
+        AppearanceMode.GridNotebookDark => NotebookDark(c["paper"], c["accent"], neutralHue: 255),
         _ => throw new ArgumentOutOfRangeException(nameof(mode)),
     };
 

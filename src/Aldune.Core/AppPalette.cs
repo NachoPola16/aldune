@@ -32,7 +32,11 @@ public enum AppearanceMode
     /// <summary>Cuaderno de campo, claro: renglones azules y margen rojo.</summary>
     FieldNotebookLight = 13,
     /// <summary>Cuaderno de campo, oscuro: renglones apagados sobre papel marrón oscuro.</summary>
-    FieldNotebookDark = 14
+    FieldNotebookDark = 14,
+    /// <summary>Cuaderno cuadriculado, claro: hoja de cuadros azul grisáceo y tinta azul marino.</summary>
+    GridNotebookLight = 15,
+    /// <summary>Cuaderno cuadriculado, oscuro: cuadros apagados sobre papel azul noche.</summary>
+    GridNotebookDark = 16
 }
 
 /// <summary>
@@ -285,6 +289,7 @@ public static class AppPalette
             or AppearanceMode.TelecomDark or AppearanceMode.Bash or AppearanceMode.Phosphor
             or AppearanceMode.TravelNotebookLight or AppearanceMode.TravelNotebookDark
             or AppearanceMode.FieldNotebookLight or AppearanceMode.FieldNotebookDark
+            or AppearanceMode.GridNotebookLight or AppearanceMode.GridNotebookDark
             => AspectPalettes.Derive(mode, AspectCatalog.Resolve(mode, aspectColors)),
         _ => For(IsLight(mode, windowsUsesLight))
     };
@@ -292,7 +297,7 @@ public static class AppPalette
     public static bool IsLight(AppearanceMode mode, bool windowsUsesLight) => mode switch
     {
         AppearanceMode.Light or AppearanceMode.Pastel or AppearanceMode.XpLight or AppearanceMode.TelecomLight
-            or AppearanceMode.TravelNotebookLight or AppearanceMode.FieldNotebookLight => true,
+            or AppearanceMode.TravelNotebookLight or AppearanceMode.FieldNotebookLight or AppearanceMode.GridNotebookLight => true,
         AppearanceMode.System => windowsUsesLight,
         _ => false
     };

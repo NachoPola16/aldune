@@ -23,6 +23,7 @@ internal static class NotePaper
             // Un rectángulo transparente del tamaño entero: el dibujo no se recorta al contenido, y el pincel mide lo mismo que el elemento.
             dc.DrawRectangle(Brushes.Transparent, null, new Rect(0, 0, width, height));
             if (paper == SkinPaper.Folds) DrawFolds(dc, ink, light, width, height);
+            else if (paper == SkinPaper.Grid) DrawGrid(dc, light, width, height, lineHeight, firstRule);
             else DrawRuled(dc, light, width, height, lineHeight, firstRule);
         }
         group.Freeze();
@@ -63,6 +64,16 @@ internal static class NotePaper
             double y = ((seed >> 8) & 0xFFFF) / 65535.0 * h;
             dc.DrawEllipse(grain, null, new Point(x, y), 0.7, 0.7);
         }
+    }
+
+    // Cuadros de cuaderno: líneas azul grisáceo cada `lineHeight` (el alto de línea, así el texto cae sobre un renglón de cuadros) y margen rojo
+    // a la izquierda, como el cuaderno de campo. Las horizontales parten de la primera línea del texto para que la letra apoye en un renglón.
+    private static void DrawGrid(DrawingContext dc, bool light, double w, double h, double cell, double firstRule)
+    {
+        var grid = Line(light ? Color.FromRgb(0x4A, 0x78, 0xB0) : Color.FromRgb(0x9C, 0xBC, 0xE0), light ? 0.15 : 0.10, 1);
+        for (double y = firstRule; y < h; y += cell) dc.DrawLine(grid, new Point(0, y), new Point(w, y));
+        for (double x = 10 + cell; x < w; x += cell) dc.DrawLine(grid, new Point(x, 0), new Point(x, h));
+        dc.DrawLine(Line(Color.FromRgb(0xBE, 0x3C, 0x32), light ? 0.40 : 0.30, 1.5), new Point(10, 0), new Point(10, h));
     }
 
     private static void DrawRuled(DrawingContext dc, bool light, double w, double h, double lineHeight, double firstRule)

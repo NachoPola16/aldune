@@ -80,6 +80,16 @@ public static class AspectCatalog
             new("paper", "#27241F", ["#27241F", "#1F1D19", "#2A2722"]),
             new("accent", "#CFA862", ["#CFA862", "#7FA8FF", "#D98A6A", "#8EC07C"]),
         ], [], null),
+        new(AppearanceMode.GridNotebookLight, "grid-notebook-light",
+        [
+            new("ink", "#26344F", ["#26344F", "#1F1F2E", "#3A2A1F"]),
+            new("accent", "#3F6FB5", ["#3F6FB5", "#A8342D", "#2E7D5B", "#8A5A9C"]),
+        ], [], null),
+        new(AppearanceMode.GridNotebookDark, "grid-notebook-dark",
+        [
+            new("paper", "#1E2430", ["#1E2430", "#181C26", "#242B38"]),
+            new("accent", "#7FA8E0", ["#7FA8E0", "#D98A6A", "#8EC07C", "#CFA862"]),
+        ], [], null),
     ];
 
     public static AspectDefinition? For(AppearanceMode mode) => Retro.FirstOrDefault(aspect => aspect.Mode == mode);

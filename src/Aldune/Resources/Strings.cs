@@ -1368,6 +1368,10 @@ public static class Strings
         "Reisenotizbuch, dunkel", "Carnet de voyage, sombre", "Caderneta de viagem, escura");
     public static string AppearanceFieldNotebookLight => T("Field notebook, light", "Cuaderno de campo, claro",
         "Feldbuch, hell", "Carnet de terrain, clair", "Caderno de campo, claro");
+    public static string AppearanceGridNotebookLight => T("Grid notebook, light", "Cuaderno cuadriculado, claro",
+        "Karoheft, hell", "Cahier à carreaux, clair", "Caderno quadriculado, claro");
+    public static string AppearanceGridNotebookDark => T("Grid notebook, dark", "Cuaderno cuadriculado, oscuro",
+        "Karoheft, dunkel", "Cahier à carreaux, sombre", "Caderno quadriculado, escuro");
     public static string AppearanceFieldNotebookDark => T("Field notebook, dark", "Cuaderno de campo, oscuro",
         "Feldbuch, dunkel", "Carnet de terrain, sombre", "Caderno de campo, escuro");
     public static string AppearancePhosphor => T("Phosphor (old monitor)", "Fósforo (monitor antiguo)",

@@ -143,6 +143,8 @@ internal static class ConfigPreview
         AppearanceMode.TravelNotebookDark => Strings.AppearanceTravelNotebookDark,
         AppearanceMode.FieldNotebookLight => Strings.AppearanceFieldNotebookLight,
         AppearanceMode.FieldNotebookDark => Strings.AppearanceFieldNotebookDark,
+        AppearanceMode.GridNotebookLight => Strings.AppearanceGridNotebookLight,
+        AppearanceMode.GridNotebookDark => Strings.AppearanceGridNotebookDark,
         _ => null,
     };
 }
