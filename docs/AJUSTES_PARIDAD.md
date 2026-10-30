@@ -47,13 +47,17 @@ copia de seguridad. Son cosas que no existen en un ordenador de sobremesa.
 ## Sonidos (fase 3)
 
 Mismo interruptor (`SoundsEnabled` / `soundsEnabled`), mismo volumen (`SoundVolume` 0-100), mismas claves de evento (`reminder`, `syncDone`, `syncFailed`,
-`noteCreated`, `noteArchived`, `noteOpened`, `noteClosed`, `taskChecked`, `noteDeleted`, `typing`) y mismos números de opción (7-11 = papel y pluma).
-Los WAV salen de `scripts/sounds/generar-sonidos.py`.
+`noteCreated`, `noteArchived`, `noteOpened`, `noteClosed`, `taskChecked`, `noteDeleted`, `typing`, `textDeleted`) y mismos números de opción (7-12 = papel y pluma; 12 = goma).
+Los WAV salen de `scripts/sounds/generar-sonidos.py`: sin brillo áspero, sin clics y nivelados por sonoridad; escribir y borrar texto van unos 8 dB por debajo.
+
+**Sonidos sugeridos.** Al encender el interruptor por primera vez, si no hay nada elegido para los eventos de las notas, se asignan los cuatro que se
+oyen de vez en cuando (abrir = pasar hoja, cerrar = papel que se pliega, marcar = toque de pluma, borrar nota = papel que se arruga). Escribir y borrar
+texto suenan en cada pulsación y se activan a mano. El botón «Usar los sonidos sugeridos» los vuelve a aplicar cuando se quiera.
 
 - **Android no ofrece «Recordatorio»**: los recordatorios ya suenan por su notificación del sistema. «Sync hecha» suena solo si el usuario pidió la
   sincronización (a mano o tirando de la lista), como en Windows; «sync fallida» suena siempre. «Nota nueva» suena al guardarse por primera vez.
 - **Android solo tiene los cinco sonidos propios**: los del sistema de Windows (1-5) y el `.wav` propio (6) no existen allí y se quedan en silencio.
-- Android no suena con el teléfono en silencio o vibración; Windows no tiene ese modo.
+- Android no suena con el teléfono en silencio o vibración, ni con «No molestar» si no deja pasar los sonidos del sistema; «Probar» lo dice con un aviso en vez de quedarse mudo. Windows no tiene ese modo.
 - El volumen de Windows no afecta a los sonidos del sistema ni a un `.wav` propio (los reproduce `SoundPlayer`); el de Android afecta a todos.
 
 ## Copia automática en una carpeta (fase 4)
