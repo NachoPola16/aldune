@@ -227,6 +227,8 @@ public partial class NoteWindow : Window
         };
 
         LocationChanged += (_, _) => OnLocationChanged();
+        // Dos ventanas Topmost se ordenan por la última activada: una nota que se activa sobre el dock en reposo lo tapaba.
+        Activated += (_, _) => _coordinator.RaiseDocksAboveNotes();
 
         // Red de seguridad: si el texto deja de caber por cualquier otra causa (la línea del prompt cambia de alto,
         // otra fuente, otro ancho, un texto que llega tarde), el alto se reajusta aunque no haya habido
@@ -1504,6 +1506,7 @@ public partial class NoteWindow : Window
                 // borde entre monitores. Al soltarla se recalculan el monitor propietario, los
                 // límites de tamaño y la posición visible, y se guarda el nuevo monitor.
                 OnLocationChanged();
+                _coordinator.RaiseDocksAboveNotes();
             }
         }
     }

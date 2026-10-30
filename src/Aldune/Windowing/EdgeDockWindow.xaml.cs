@@ -643,6 +643,17 @@ public partial class EdgeDockWindow : Window
     /// ratón entre. Las que sí son de la capa superior (menú Inicio, recortes) se respetan: tapar a
     /// esas sería peor. Antes esto solo se arreglaba al pasar el ratón por la tira.
     /// </summary>
+    /// <summary>
+    /// Vuelve a poner el dock por encima de las notas (que también son Topmost: entre ventanas Topmost manda la que se
+    /// activó la última). Sin esto, una nota arrastrada o activada sobre la tira plegada la tapaba y no se veía dónde
+    /// estaba el dock. Con el abanico abierto ya se mantenía encima; esto cubre el dock en reposo.
+    /// </summary>
+    internal void RaiseAboveNotes()
+    {
+        if (_hwnd == IntPtr.Zero || !IsVisible || _hiddenByFullscreenApp) return;
+        NativeMethods.EnsureTopmost(_hwnd);
+    }
+
     private void KeepStripOnTop()
     {
         if (_hwnd == IntPtr.Zero || !IsVisible || _hiddenByFullscreenApp || _fanState.IsExpanded || _dragging || _noteCount == 0) return;

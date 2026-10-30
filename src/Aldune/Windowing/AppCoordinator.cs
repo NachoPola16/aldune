@@ -345,6 +345,12 @@ public sealed class AppCoordinator
 
     public void RebuildDocks() => RebuildDocksAction?.Invoke();
 
+    /// <summary>Tras activar, arrastrar o redimensionar una nota: los docks vuelven a quedar por encima de ella.</summary>
+    internal void RaiseDocksAboveNotes()
+    {
+        foreach (var dock in _docks) dock.RaiseAboveNotes();
+    }
+
     public AppCoordinator(
         NotesRepository repository,
         AppSettings? settings = null,
