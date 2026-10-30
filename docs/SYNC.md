@@ -27,10 +27,10 @@ cada dispositivo. Trata el código como una contraseña, porque contiene la clav
 #### A. Carpeta compartida (solo Windows)
 
 1. Prepara una carpeta que todos tus PC puedan abrir: local, de red (`\\servidor\aldune`) o una que ya sincronice otra herramienta.
-2. En el primer PC: Ajustes → Sincronización entre dispositivos → activa la sincronización, elige `Carpeta compartida / NAS` y
+2. En el primer PC: Ajustes → Sincronización → activa la sincronización, elige `Carpeta compartida / NAS` y
    selecciona la carpeta.
 3. Pulsa **Compartir perfil** y copia el código.
-4. En cada PC más: Ajustes → Sincronización entre dispositivos → pulsa **Nuevo** (junto a «Perfil de sincronización»), pega el código, pulsa `Importar código` y elige la carpeta (puede tener otra ruta
+4. En cada PC más: Ajustes → Sincronización → pulsa **Nuevo** (junto a «Perfil de sincronización»), pega el código, pulsa `Importar código` y elige la carpeta (puede tener otra ruta
    que en el primer PC, pero tiene que ser la misma carpeta).
 5. `Sincronizar ahora` (en Ajustes y en el dock), o activa la sincronización periódica.
 
@@ -47,9 +47,9 @@ cada dispositivo. Trata el código como una contraseña, porque contiene la clav
    `docker compose -f docker-compose.sync.yml up -d --build` (la primera vez tarda unos minutos: compila el servidor).
    Comprueba que responde: `curl http://IP-DEL-SERVIDOR:8087/health` debe devolver `{"status":"ok",...}`. Si no responde desde otro
    equipo pero sí desde el servidor, es el cortafuegos: abre el puerto `8087` (TCP) en el servidor.
-2. En el primer PC: Ajustes → Sincronización entre dispositivos → `Servidor propio`; URL (`http://IP-DEL-SERVIDOR:8087/`) y el
+2. En el primer PC: Ajustes → Sincronización → `Servidor propio`; URL (`http://IP-DEL-SERVIDOR:8087/`) y el
    token. Pulsa **Compartir perfil** y copia el código.
-3. En cada PC más: Ajustes → Sincronización entre dispositivos → pulsa **Nuevo** (junto a «Perfil de sincronización»), pega el código, `Importar código` y escribe el token (el transporte y la URL se rellenan solos).
+3. En cada PC más: Ajustes → Sincronización → pulsa **Nuevo** (junto a «Perfil de sincronización»), pega el código, `Importar código` y escribe el token (el transporte y la URL se rellenan solos).
 4. **En Android:** Ajustes → Sincronización → pega el código (o pulsa **Escanear QR** mientras el PC enseña **Mostrar QR**) → **Continuar** → elige «Aldune server» → comprueba la dirección y
    escribe el token → **Conectar**.
 5. Fuera de casa usa HTTPS (ver [Nginx + Cloudflare Tunnel](#nginx--cloudflare-tunnel) y [HTTPS con Caddy](#https-con-caddy)): con
@@ -60,9 +60,9 @@ cada dispositivo. Trata el código como una contraseña, porque contiene la clav
 1. En tu servicio, crea una carpeta para Aldune (por ejemplo `Aldune`) y una **contraseña de aplicación**. En Nextcloud: Ajustes
    personales → Seguridad → Dispositivos y sesiones → crear nueva contraseña de aplicación. No uses tu contraseña principal.
 2. La URL de esa carpeta suele ser `https://cloud.example.com/remote.php/dav/files/USUARIO/Aldune/`.
-3. En el primer PC: Ajustes → Sincronización entre dispositivos → `WebDAV / Nextcloud`; URL, usuario y contraseña de aplicación.
+3. En el primer PC: Ajustes → Sincronización → `WebDAV / Nextcloud`; URL, usuario y contraseña de aplicación.
    Pulsa **Compartir perfil** y copia el código.
-4. En cada PC más: Ajustes → Sincronización entre dispositivos → pulsa **Nuevo** (junto a «Perfil de sincronización»), pega el código, `Importar código` y escribe tu usuario y contraseña de aplicación.
+4. En cada PC más: Ajustes → Sincronización → pulsa **Nuevo** (junto a «Perfil de sincronización»), pega el código, `Importar código` y escribe tu usuario y contraseña de aplicación.
 5. **En Android:** Ajustes → Sincronización → pega el código (o **Escanear QR**, como arriba) → **Continuar** → elige «WebDAV» → dirección (si es una carpeta,
    termínala en `/`), usuario y contraseña de aplicación → **Conectar**.
 

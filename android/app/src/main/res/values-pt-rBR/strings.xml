@@ -260,7 +260,7 @@
     <string name="reminders_section">Lembretes</string>
     <string name="reminder_exact">Hora exata</string>
     <string name="reminder_exact_hint">Avisa no minuto exato. Gasta um pouco mais de bateria; o Android pode pedir permissão.</string>
-    <string name="sync_howto">No Aldune para Windows: Configurações → Sincronização entre dispositivos → Compartilhar perfil, e copie o código. O token não vai dentro do código: você o digita na etapa seguinte.</string>
+    <string name="sync_howto">No Aldune para Windows: Configurações → Sincronização → Compartilhar perfil, e copie o código. O token não vai dentro do código: você o digita na etapa seguinte.</string>
     <string name="uniform_color">Mesma cor em todas as notas</string>
     <string name="uniform_color_hint">Só muda como aparecem; cada nota mantém a sua cor.</string>
     <string name="color_uniform_notice">“Mesma cor em todas as notas” está ativado: você pode escolher uma cor, mas ela só aparece depois de desativá-lo.</string>

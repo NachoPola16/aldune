@@ -101,7 +101,7 @@ Resultados y hallazgos: en el historial de git (`INFORME-ANDROID-F6.md`, retirad
    `am start -f 0x10008000 -a android.intent.action.SEND -t text/plain -n .../app.aldune.MainActivity --es android.intent.extra.TEXT '...' --es android.intent.extra.SUBJECT '...'`.
    **El `-f 0x10008000` (NEW_TASK + CLEAR_TASK) es obligatorio al repetir:** tras una reinstalación o una prueba anterior, el sistema ve un intent «igual» al de la raíz de la
    tarea (los extras no cuentan para eso) y solo trae la tarea al frente: «Activity not started, its current task has been brought to the front». La nota no se crea y parece un fallo de la app.
-2. **Poner el widget sin el selector del lanzador**: Ajustes → Captura rápida → «Añadir el widget». Para el mosaico, «Añadir el mosaico» (cae en la segunda página del panel: deslizar).
+2. **Poner el widget sin el selector del lanzador**: Ajustes → Avisos → «Añadir el widget». Para el mosaico, «Añadir el mosaico» (cae en la segunda página del panel: deslizar).
    Redimensionar: pulsación larga sobre el widget (`input swipe x y x y 900`) y `input draganddrop` sobre el tirador del borde. El widget del selector del sistema vive en la
    pantalla de inicio **real** del móvil: quitarlo al acabar.
 3. **Fijar una nota como protegida para ver el widget** (las protegidas solo llegan por sync): parar la app, copiar `databases/aldune.db*` con `adb exec-out run-as <pkg> cat ...`
