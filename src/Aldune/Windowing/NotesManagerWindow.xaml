@@ -104,7 +104,27 @@
 
         <!-- Botones de la cabecera: sobre la barra en degradado (XP) llevan el texto de la barra. El
              borrado de la búsqueda comparte CloseButtonStyle pero va sobre un campo claro, así que no. -->
+        <!-- Los botones de ventana son planos aquí, en Ajustes y en las notas: sin el relieve de la piel Bevel (que seguía
+             heredando de ToolbarButtonStyle y dejaba los de este gestor en cajas con sombra, distintas de las otras dos
+             ventanas). El relieve queda para los botones de acción, como el «+». -->
         <Style x:Key="TitleBarButtonStyle" TargetType="Button" BasedOn="{StaticResource CloseButtonStyle}">
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="Bg" Background="{TemplateBinding Background}" CornerRadius="{DynamicResource AlduneRadius6}">
+                            <ContentPresenter Margin="{TemplateBinding Padding}" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Bg" Property="Background" Value="{DynamicResource AlduneHoverBrush}" />
+                            </Trigger>
+                            <Trigger Property="IsPressed" Value="True">
+                                <Setter TargetName="Bg" Property="Background" Value="{DynamicResource AldunePressedBrush}" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
             <Style.Triggers>
                 <DataTrigger Binding="{Binding GradientTitleBar, Source={x:Static local:SkinState.Current}}" Value="True">
                     <Setter Property="Foreground" Value="{DynamicResource AlduneOnTitleBarBrush}" />
@@ -307,21 +327,22 @@
                     <!-- Crear desde aquí: quien está ordenando sus notas no tiene por qué ir al dock para
                          añadir una. Nace con la etiqueta del filtro, si hay, para no desaparecer de la vista. -->
                     <Button x:Name="NewNoteButton"
-                            Content="&#xE710;"
                             FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets"
                             Width="28" Height="28" Margin="0,0,6,0" Padding="0"
                             ToolTip="{x:Static res:Strings.NewNoteTooltip}"
                             AutomationProperties.Name="{x:Static res:Strings.NewNoteTooltip}"
                             Click="OnNewNoteClick"
                             WindowChrome.IsHitTestVisibleInChrome="True"
-                            Style="{StaticResource ToolbarButtonStyle}" />
+                            Style="{StaticResource ToolbarButtonStyle}">
+                        <TextBlock Text="&#xE710;" />
+                    </Button>
                     <Button Width="28" Height="28"
                             ToolTip="{x:Static res:Strings.MinimizeWindowTooltip}"
                             AutomationProperties.Name="{x:Static res:Strings.MinimizeWindowTooltip}"
                             Click="OnMinimizeClick"
                             WindowChrome.IsHitTestVisibleInChrome="True"
                             Style="{StaticResource TitleBarButtonStyle}">
-                        <Border Width="10" Height="1" VerticalAlignment="Center" Margin="0,8,0,0"
+                        <Border Width="10" Height="1" VerticalAlignment="Center"
                             UseLayoutRounding="True" SnapsToDevicePixels="True"
                             Background="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}" />
                     </Button>
@@ -344,7 +365,7 @@
                             WindowChrome.IsHitTestVisibleInChrome="True"
                             Style="{StaticResource TitleBarButtonStyle}" />
                     <Button x:Name="CloseButton"
-                            Content="&#x2715;"
+                            Content="&#xE8BB;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" FontSize="10"
                             Width="28" Height="28"
                             ToolTip="{x:Static res:Strings.CloseTooltip}"
                             AutomationProperties.Name="{x:Static res:Strings.CloseTooltip}"

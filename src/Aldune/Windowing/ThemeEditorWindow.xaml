@@ -18,7 +18,7 @@
             <Grid>
                 <TextBlock x:Name="TitleText" Text="{x:Static res:Strings.ThemeEditorTitle}"
                            Foreground="{DynamicResource AlduneTextStrongBrush}" FontSize="{DynamicResource AlduneTextHeading}" FontWeight="SemiBold" />
-                <Button Content="&#x2715;" Width="27" Height="27" HorizontalAlignment="Right" Padding="0"
+                <Button Content="&#xE8BB;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" FontSize="10" Width="27" Height="27" HorizontalAlignment="Right" Padding="0"
                         Style="{StaticResource ColorDialogButtonStyle}" Click="OnCancelClick"
                         WindowChrome.IsHitTestVisibleInChrome="True"
                         ToolTip="{x:Static res:Strings.CloseTooltip}"

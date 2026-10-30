@@ -267,7 +267,7 @@
                             Click="OnMinimizeClick"
                             WindowChrome.IsHitTestVisibleInChrome="True"
                             Style="{StaticResource CloseButtonStyle}">
-                        <Border Width="10" Height="1" VerticalAlignment="Center" Margin="0,8,0,0"
+                        <Border Width="10" Height="1" VerticalAlignment="Center"
                             UseLayoutRounding="True" SnapsToDevicePixels="True"
                             Background="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}" />
                     </Button>
@@ -280,7 +280,7 @@
                         <TextBlock x:Name="MaximizeGlyph" Text="&#xE922;"
                                    FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" FontSize="{DynamicResource AlduneTextSmall}" />
                     </Button>
-                    <Button Content="&#x2715;" Width="28" Height="28"
+                    <Button Content="&#xE8BB;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" FontSize="10" Width="28" Height="28"
                             ToolTip="{x:Static res:Strings.CloseTooltip}"
                             AutomationProperties.Name="{x:Static res:Strings.CloseTooltip}"
                             Click="OnCloseClick"

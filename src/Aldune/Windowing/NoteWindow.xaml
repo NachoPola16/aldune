@@ -239,7 +239,7 @@
                         Click="OnMinimizeClick"
                         WindowChrome.IsHitTestVisibleInChrome="True"
                         Style="{StaticResource CloseButtonStyle}">
-                    <Border Width="10" Height="1" VerticalAlignment="Center" Margin="0,8,0,0"
+                    <Border Width="10" Height="1" VerticalAlignment="Center"
                                 UseLayoutRounding="True" SnapsToDevicePixels="True"
                                 Background="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}" />
                 </Button>
@@ -254,16 +254,15 @@
                                FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" FontSize="11" />
                 </Button>
                 <Button x:Name="MenuButton"
-                        Content="&#x22EF;"
+                        Content="&#xE712;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" FontSize="14"
                         Width="26" Height="26"
-                        FontSize="14"
                         Click="OnMenuClick"
                         ToolTip="{x:Static res:Strings.MoreActionsTooltip}"
                         AutomationProperties.Name="{x:Static res:Strings.MoreActionsTooltip}"
                         WindowChrome.IsHitTestVisibleInChrome="True"
                         Style="{StaticResource CloseButtonStyle}" />
                 <Button x:Name="CloseButton"
-                        Content="&#x2715;"
+                        Content="&#xE8BB;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" FontSize="10"
                         Width="26" Height="26"
                         Click="OnCloseClick"
                         ToolTip="{x:Static res:Strings.CloseTooltip}"
@@ -513,7 +512,7 @@
              izquierda de una casilla de tarea es parte del cuadro de texto, y un clic ahí pone el
              cursor delante de la casilla. Como Margin quedaba fuera del TextBox y no hacía nada. -->
         <Grid x:Name="BodyHost" Grid.Row="2" Margin="0,14,20,20">
-            <TextBlock x:Name="BodyPlaceholder" Text="{x:Static res:Strings.BodyPlaceholder}" FontFamily="{DynamicResource AlduneNoteFont}" FontSize="{DynamicResource AlduneNoteBodySize}" Margin="20,0,0,0"
+            <TextBlock x:Name="BodyPlaceholder" Text="{x:Static res:Strings.BodyPlaceholder}" FontFamily="{DynamicResource AlduneNoteFont}" FontSize="{DynamicResource AlduneNoteBodySize}" Margin="25,0,0,0"
                        Panel.ZIndex="1"
                        Style="{StaticResource PlaceholderStyle}" TextWrapping="Wrap" />
             <!-- Tinta tintada hacia el cálido, nunca #000 puro: sobre un pastel, el negro
@@ -680,10 +679,12 @@
                         Style="{StaticResource NoteActionButtonStyle}" Foreground="{DynamicResource NoteInkBrush}"
                         ToolTip="{x:Static res:Strings.FindNextTooltip}" Click="OnFindNextClick" 
                         AutomationProperties.Name="{x:Static res:Strings.FindNextTooltip}" />
-                <Button Content="&#xE711;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" FontSize="11" Width="24" Height="24" Margin="2,0,0,0"
+                <Button FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" FontSize="11" Width="24" Height="24" Margin="2,0,0,0"
                         Style="{StaticResource NoteActionButtonStyle}" Foreground="{DynamicResource NoteInkBrush}"
                         ToolTip="{x:Static res:Strings.FindCloseTooltip}" Click="OnFindCloseClick" 
-                        AutomationProperties.Name="{x:Static res:Strings.FindCloseTooltip}" />
+                        AutomationProperties.Name="{x:Static res:Strings.FindCloseTooltip}">
+                    <TextBlock Text="&#xE711;" />
+                </Button>
             </StackPanel>
         </Border>
         <Border x:Name="FaceStripe" Grid.Row="1" Grid.RowSpan="3" Width="3" HorizontalAlignment="Left"

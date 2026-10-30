@@ -37,7 +37,7 @@
                     <TextBlock Text="{x:Static res:Strings.CustomColorWindowHint}"
                                Foreground="{DynamicResource AlduneMutedTextBrush}" FontSize="{DynamicResource AlduneTextSmall}" Margin="0,4,0,0" />
                 </StackPanel>
-                <Button Content="&#x2715;" Width="27" Height="27" HorizontalAlignment="Right"
+                <Button Content="&#xE8BB;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" FontSize="10" Width="27" Height="27" HorizontalAlignment="Right"
                         Style="{StaticResource ColorDialogButtonStyle}" Padding="0"
                         Click="OnCancelClick" ToolTip="{x:Static res:Strings.CloseTooltip}"
                         AutomationProperties.Name="{x:Static res:Strings.CloseTooltip}" />

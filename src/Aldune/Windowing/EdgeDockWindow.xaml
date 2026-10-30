@@ -316,6 +316,11 @@
                                 <Setter TargetName="Bg" Property="Visibility" Value="Collapsed" />
                                 <Setter TargetName="SquareBg" Property="Visibility" Value="Visible" />
                             </DataTrigger>
+                            <!-- Con el relieve de Windows 95 la sombra de caída sobra: el borde oscuro de abajo y de la derecha ya es la
+                                 sombra, y las dos juntas engordaban ese lado y hacían que el icono pareciera descentrado. -->
+                            <DataTrigger Binding="{Binding Bevel, Source={x:Static local:SkinState.Current}}" Value="True">
+                                <Setter TargetName="SquareBg" Property="Effect" Value="{x:Null}" />
+                            </DataTrigger>
                             <DataTrigger Binding="{Binding Gloss, Source={x:Static local:SkinState.Current}}" Value="True">
                                 <Setter TargetName="GlossRound" Property="Visibility" Value="Visible" />
                             </DataTrigger>
@@ -633,7 +638,7 @@
                             Style="{StaticResource CircularIconButtonStyle}"
                             ToolTip="{x:Static res:Strings.SyncNowButton}"
                             AutomationProperties.Name="{x:Static res:Strings.SyncNowButton}">
-                        <TextBlock x:Name="SyncButtonGlyph" Text="↻" FontSize="17" />
+                        <TextBlock x:Name="SyncButtonGlyph" Text="&#xE72C;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" FontSize="15" />
                     </Button>
                     <!-- Crear nota es la acción principal del dock, así que pesa más que el
                          engranaje: más grande y más clara. Ir las dos iguales las dejaba a la par

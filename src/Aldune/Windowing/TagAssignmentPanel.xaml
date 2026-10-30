@@ -33,12 +33,14 @@
             <TextBlock x:Name="NewTagPlaceholder" Grid.Column="0" Text="{x:Static res:Strings.NewTagPlaceholder}"
                        Foreground="{DynamicResource AlduneHintBrush}" FontSize="{DynamicResource AlduneTextBody}" Margin="11,0,0,0" VerticalAlignment="Center"
                        IsHitTestVisible="False" />
-            <Button x:Name="AddTagButton" Grid.Column="1" Content="&#xE710;"
+            <Button x:Name="AddTagButton" Grid.Column="1"
                     FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets"
                     Margin="8,0,0,0" Padding="11,8" IsEnabled="False"
                     ToolTip="{x:Static res:Strings.CreateTag}"
                     AutomationProperties.Name="{x:Static res:Strings.CreateTag}"
-                    Style="{StaticResource ColorDialogButtonStyle}" Click="OnAddClick" />
+                    Style="{StaticResource ColorDialogButtonStyle}" Click="OnAddClick">
+                <TextBlock Text="&#xE710;" />
+            </Button>
         </Grid>
     </StackPanel>
 </UserControl>

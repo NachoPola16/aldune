@@ -66,7 +66,7 @@
                         Click="OnDismissAllClick" Margin="0,0,8,0"
                         WindowChrome.IsHitTestVisibleInChrome="True"
                         Style="{StaticResource ConflictDangerButtonStyle}" />
-                <Button Content="&#x2715;" Width="28" Height="28"
+                <Button Content="&#xE8BB;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" FontSize="10" Width="28" Height="28"
                         ToolTip="{x:Static res:Strings.CloseTooltip}"
                         AutomationProperties.Name="{x:Static res:Strings.CloseTooltip}"
                         Click="OnCloseClick"

@@ -1652,9 +1652,8 @@ public partial class EdgeDockWindow : Window
     {
         if (_syncBusy) return; // el feedback caducado no debe reactivar un botón ocupado
 
-        SyncButtonGlyph.Text = "↻";
-        SyncButtonGlyph.FontSize = 17;
-        SyncButtonGlyph.ClearValue(TextBlock.FontFamilyProperty);
+        SyncButtonGlyph.Text = "";
+        SyncButtonGlyph.FontSize = 15;
         SyncButtonGlyph.ClearValue(TextBlock.ForegroundProperty);
         SyncButton.ToolTip = Strings.WithHint(Strings.SyncNowButton, Strings.SyncRightClickHint);
     }

@@ -197,6 +197,8 @@
             </Setter>
         </Style>
 
+        <!-- El pulgar en reposo es neutro (borde de línea, no de acento): una barra de scroll no es una acción ni un estado, y un
+             aro de color alrededor le daba más peso del que tiene. El acento aparece solo al acercar el ratón o arrastrar. -->
         <!-- Barra de scroll fina y oscura, aquí y no en cada ventana: la barra por defecto de WPF es
              gris claro con flechas, y canta sobre cualquier superficie de esta app. Estaba definida
              solo dentro de NotesManagerWindow; subirla a la aplicación evita duplicarla en cada
@@ -207,7 +209,7 @@
                     <ControlTemplate TargetType="Thumb">
                         <Border x:Name="Bar"
                                 Background="{DynamicResource AlduneSelectionBrush}"
-                                BorderBrush="{DynamicResource AlduneAccentBorderBrush}"
+                                BorderBrush="{DynamicResource AlduneBorderBrush}"
                                 BorderThickness="1"
                                 CornerRadius="{DynamicResource AlduneRadius4}"
                                 Margin="1,2" />
