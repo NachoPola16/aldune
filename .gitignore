@@ -48,3 +48,7 @@ tmp/
 # APK firmado de una release de Android: se sube al GitHub Release, no al repositorio (docs/RELEASING.md).
 android/*.apk
 .superpowers/
+
+# Instrucciones locales para asistentes de código: viven en el disco del autor, no en el repositorio.
+/AGENTS.md
+/CLAUDE.md

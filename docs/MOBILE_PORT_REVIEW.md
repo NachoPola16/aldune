@@ -22,7 +22,7 @@
   tableta Android (`MOBILE_PORT.md` §0.1), sin publicar al principio, y **el dock se queda en Windows**.
   Si crees que una de esas decisiones está mal, dilo, pero con el argumento y el dato que falta.
 - **No ejecutes la app de desarrollo contra `%LOCALAPPDATA%\Aldune`**: son las notas reales del usuario
-  (regla del proyecto, `AGENTS.md`). Para probar, base de datos temporal.
+  (regla del proyecto, `CONTRIBUTING.md`). Para probar, base de datos temporal.
 - **No commitees nada.**
 
 **Cómo quiero la respuesta:** una lista de hallazgos ordenada por gravedad, cada uno con
@@ -33,8 +33,8 @@ coste), **menor** (matiz, redacción, referencia). Para cada punto de la secció
 
 ## 1. Orden de lectura
 
-1. `AGENTS.md` — reglas del proyecto (idiomas, comentarios en español, test primero, sondas, sin
-   `Co-Authored-By`, nunca ejecutar contra los datos reales).
+1. `CONTRIBUTING.md` — reglas del proyecto (idiomas, comentarios en español, test primero, sondas,
+   nunca ejecutar contra los datos reales).
 2. `docs/STATUS.md` — última entrada: el estudio y la decisión del 2026-09-28.
 3. `docs/MOBILE_PORT.md` — **el plan a revisar**.
 4. `docs/DESKTOP_PORT.md` — macOS, Linux, web, Windows ARM64, servidor ARM.
@@ -225,7 +225,7 @@ Estaban verificados el **2026-09-28**; algunos envejecen rápido. Si un dato ya 
 | **Formato de sync = 4 en la v1 móvil** | subirlo obliga a publicar antes en Windows | `MOBILE_PORT.md` §7 |
 | **No hay PWA ni web ni ChromeOS propio** | la web competiría con la app real de una; ChromeOS se cubre con el APK de Android | `MOBILE_PORT.md` §9, `DESKTOP_PORT.md` |
 | **No hacer macOS ni Linux por ahora** | ver las líneas de arriba; el Core compartido es el ahorro real | `DESKTOP_PORT.md` |
-| **Las notas reales no salen de este equipo** | regla del proyecto; para probar, base de datos y datos temporales | `AGENTS.md` |
+| **Las notas reales no salen de este equipo** | regla del proyecto; para probar, base de datos y datos temporales | `CONTRIBUTING.md` |
 
 ## 7. Prompt listo para pegar en otra sesión (Claude Code, Cline, Gemini…)
 
@@ -233,7 +233,7 @@ Estaban verificados el **2026-09-28**; algunos envejecen rápido. Si un dato ya 
 Eres un revisor crítico de arquitectura. NO escribas código: esto es una revisión de un plan.
 
 Lee, en este orden:
-  AGENTS.md
+  CONTRIBUTING.md
   docs/STATUS.md            (última entrada: el estudio de port a móviles, 2026-09-28)
   docs/MOBILE_PORT.md       (el plan a revisar)
   docs/DESKTOP_PORT.md      (macOS, Linux, web, Windows ARM64, servidor ARM)
@@ -254,5 +254,5 @@ No commites nada, no toques src/ ni tests/, y nunca ejecutes la app contra %LOCA
 ```
 
 **Consejo de uso:** abre una sesión **por revisión** y no por fase de implementación: el repositorio
-es la memoria (`AGENTS.md` → `STATUS.md` → estas guías), así que una sesión nueva no pierde nada y la
+es la memoria (`CONTRIBUTING.md` → `STATUS.md` → estas guías), así que una sesión nueva no pierde nada y la
 consulta cuesta menos. Quien revise no debe ser quien redactó el plan: necesitas ojos frescos.

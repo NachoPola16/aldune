@@ -51,7 +51,7 @@ Android **no tiene workflow**: el APK se compila y se firma en local y se sube a
 
 1. Versión en `android/app/build.gradle.kts`: sube `versionCode` en 1 y cambia `versionName` (`0.1.0-rc10`). Commit y push
    a `main` (el APK sale de ese árbol: no compiles con cambios sin subir).
-2. Tests: `./gradlew test` desde `android/` (JDK 21; ver `AGENTS.md`).
+2. Tests: `./gradlew test` desde `android/` (JDK 21; ver `CONTRIBUTING.md`).
 3. Compilar y firmar, en PowerShell, desde `android/`. El almacén de claves (`.jks`) **no está en el repositorio** y su
    contraseña tampoco: van en tu gestor de contraseñas. La contraseña se pide con `Read-Host`, así no queda escrita en ningún
    fichero ni en el historial:

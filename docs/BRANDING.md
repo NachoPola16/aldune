@@ -31,7 +31,7 @@ El maestro es `docs/branding/aldune-symbol.svg` (sin fondo, lienzo de 108).
 - Por debajo de 24 px se usa la **versión gruesa** (`aldune-logo-small.svg`: patas de 15 en vez de 13 y huecos de 2 en
   vez de 1,2). Es la misma «A», solo con más masa para que no se pierda.
 - No inclinar, no rotar, no cambiar los colores de las notas ni añadir sombras o brillos.
-- Colores de nota de la app y de su interfaz siguen las reglas de `AGENTS.md` (temas y `AppPalette`); este documento solo
+- Colores de nota de la app y de su interfaz siguen las reglas de `CONTRIBUTING.md` (temas y `AppPalette`); este documento solo
   fija el **logo**.
 
 ## Dónde está cada formato

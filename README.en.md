@@ -134,6 +134,10 @@ If you are testing it: Windows [v2.1.2](https://github.com/NachoPola16/aldune/re
 A bug, a question or an idea goes to [Issues](https://github.com/NachoPola16/aldune/issues/new): say which version you use, what you did and what you expected.
 Do not paste profile codes, tokens or the contents of your notes in a public issue.
 
+## How it is made
+
+Aldune is developed by one person with the help of AI assistants. The author reviews, tests and maintains the code, and it is open so you can check it yourself.
+
 ## License
 
 [GPL-3.0](LICENSE). You can use, study, modify and share Aldune; if you distribute a modified
