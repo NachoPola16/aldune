@@ -629,6 +629,8 @@ fun NoteEditorPane(key: String, viewModel: NotesViewModel, onBack: () -> Unit, s
         // Con tareas, se deja sitio a la derecha para el asa de arrastre.
         val hasTasks = TaskLines.count(state.text.toString()).total > 0 && !protectedNote
         val lineHeight = with(LocalDensity.current) { MaterialTheme.typography.bodyLarge.lineHeight.toDp() }
+        // Con papel o retícula, un poco de aire entre la cabecera y la primera fila para que el texto no se apure arriba.
+        if (look.telecomGrid || look.paper == AspectSkin.Paper.RULED || look.paper == AspectSkin.Paper.GRID) Spacer(Modifier.height(12.dp))
         Box(
             Modifier.weight(1f).fillMaxWidth().paperTexture(
                 if (look.paper == AspectSkin.Paper.RULED || look.paper == AspectSkin.Paper.GRID) look.paper else AspectSkin.Paper.NONE, ink, faceLight,

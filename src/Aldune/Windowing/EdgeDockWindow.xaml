@@ -655,7 +655,7 @@
                         <TextBlock Text="&#xE710;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" FontSize="17" />
                     </Button>
                 </StackPanel>
-                <local:BevelEdge Margin="-7" />
+                <local:BevelEdge Margin="-7" ShadowOutside="True" />
                 </Grid>
             </Border>
 
