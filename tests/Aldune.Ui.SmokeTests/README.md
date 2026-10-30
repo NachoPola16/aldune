@@ -1,40 +1,40 @@
 # WPF dock regression smoke
 
-Windows interactivo y SDK .NET 10. Sin framework de tests ni paquetes adicionales: consola STA WPF que referencia la aplicación y reutiliza sus dependencias. Exit code 0 = PASS; 1 = fallo o limpieza fallida.
+Interactive Windows and the .NET 10 SDK. No test framework or extra packages: a WPF STA console that references the application and reuses its dependencies. Exit code 0 = PASS; 1 = failure or failed cleanup.
 
 ```powershell
 dotnet run --project "C:\Users\nacho\Proyectos\aldune\tests\Aldune.Ui.SmokeTests\Aldune.Ui.SmokeTests.csproj" --configuration Debug
 ```
 
-## Escenario prioritario ejecutado
+## Priority scenario executed
 
-1. DB SQLite nueva en un directorio temporal GUID; clave AES efímera; dos notas, una etiquetada.
-2. `EdgeDockWindow` real y `AppCoordinator`, monitor ficticio (100000, 100000), sin activar ventana ni mover cursor.
-3. Abre `OpenDockViewPopup` por reflexión; verifica el evento WPF `Opened` real.
-4. Lanza `ButtonBase.ClickEvent` sobre el botón de etiqueta construido por producción. Pasa por `OnDockTagChoiceClick`, el coordinator y `Refresh` (dos notas -> una y cambio de geometría).
-5. Comprueba gracia exactamente de cuatro segundos, renovada respecto de la apertura.
-6. Espera `Closed` real: el popup debe cerrarse, pero el dock seguir expandido con el mismo deadline y el temporizador de colapso parado.
-7. Bombea dispatcher durante la gracia real, muestreando estado/timer; después de vencer verifica colapso por poll y timer reales con cursor fuera.
-8. Cierra dock/desinstala hook mediante coordinator, detiene todos los `DispatcherTimer`, dispone coordinator/cipher, cierra pools SQLite y borra el directorio temporal.
+1. A new SQLite DB in a GUID temporary directory; an ephemeral AES key; two notes, one tagged.
+2. A real `EdgeDockWindow` and `AppCoordinator`, a fictitious monitor (100000, 100000), without activating a window or moving the cursor.
+3. Opens `OpenDockViewPopup` by reflection; verifies the real WPF `Opened` event.
+4. Raises `ButtonBase.ClickEvent` on the tag button built by production. It goes through `OnDockTagChoiceClick`, the coordinator and `Refresh` (two notes -> one and a geometry change).
+5. Checks a grace period of exactly four seconds, renewed with respect to the opening.
+6. Waits for the real `Closed`: the popup must close, but the dock stay expanded with the same deadline and the collapse timer stopped.
+7. Pumps the dispatcher during the real grace period, sampling state/timer; after it expires, verifies collapse by real poll and timer with the cursor outside.
+8. Closes the dock/uninstalls the hook through the coordinator, stops all `DispatcherTimer`s, disposes the coordinator/cipher, closes the SQLite pools and deletes the temporary directory.
 
-Se carga únicamente `Application.Resources` del `App.xaml` de producción embebido por enlace; nunca se instancia `Aldune.App` ni se ejecuta su startup. No se leen settings, DB, claves DPAPI o sincronización del usuario.
+Only the `Application.Resources` of the production `App.xaml`, embedded by link, are loaded; `Aldune.App` is never instantiated and its startup never runs. No user settings, DB, DPAPI keys or sync are read.
 
-## Segundo escenario: el "⋯" de la nota con clics físicos
+## Second scenario: the note's “⋯” with physical clicks
 
-Crea una nota real en (300, 200) y la pulsa con `SetCursorPos` + `mouse_event`: abrir el menú, volver a
-pulsar "⋯" (debe cerrarse, no reabrirse), reabrir y cerrar pulsando fuera. Este sí mueve el ratón y
-necesita la ventana en primer plano: no tocar el ratón mientras corre. Existe porque el fallo del
-toggle volvió tres veces: con eventos enrutados no se reproduce, solo con un clic real (ver
+It creates a real note at (300, 200) and clicks it with `SetCursorPos` + `mouse_event`: open the menu, click
+“⋯” again (it must close, not reopen), reopen and close by clicking outside. This one does move the mouse and
+needs the window in the foreground: do not touch the mouse while it runs. It exists because the toggle bug
+came back three times: with routed events it does not reproduce, only with a real click (see
 `PopupToggle`).
 
-## Límites
+## Limits
 
-Esta entrega se limitó por prioridad a **una** prueba de la causa concreta: cierre del selector después de cambiar etiqueta y refrescar geometría. No sustituye ni repite únicamente pruebas de `FanStateMachine`.
+This delivery was limited, by priority, to **one** test of the specific cause: closing of the picker after changing a tag and refreshing geometry. It does not replace or only repeat `FanStateMachine` tests.
 
-No cubre aún crear nota directa, `CreateNoteFromMenu` con texto, selección de otra vista, ni expiración con cursor dentro. No toca el clipboard. La renovación probada es apertura -> selección de etiqueta.
+It does not yet cover creating a note directly, `CreateNoteFromMenu` with text, selecting another view, or expiry with the cursor inside. It does not touch the clipboard. The renewal tested is opening -> tag selection.
 
-Se usan HWND, XAML, popup, eventos y timers WPF reales; el clic se dispara como evento enrutado, no como entrada física Win32. No verifica hit-testing del ratón, aspecto visual, DPI multimonitor ni fullscreen. La detección fullscreen se detiene para evitar depender de la aplicación activa. El popup real conserva sus eventos pero su contenido se hace transparente porque Windows puede recolocarlo en un monitor real. Puede capturar brevemente el ratón mientras está abierto (unos 100 ms), aunque el harness no mueve el cursor ni genera clics físicos. Requiere escritorio interactivo; mantener sin pulsar botones del ratón durante la prueba, pues producción ignora hover durante arrastres.
+Real HWND, XAML, popup, WPF events and timers are used; the click is fired as a routed event, not as physical Win32 input. It does not verify mouse hit-testing, visual appearance, multi-monitor DPI or fullscreen. Fullscreen detection is stopped to avoid depending on the active application. The real popup keeps its events but its content is made transparent because Windows may reposition it on a real monitor. It may briefly capture the mouse while open (about 100 ms), although the harness does not move the cursor or generate physical clicks. It requires an interactive desktop; keep mouse buttons unpressed during the test, since production ignores hover during drags.
 
-La prueba depende de nombres privados por reflexión: cambios de implementación pueden requerir actualizarla. Usa tiempo real de pared, por lo que pausas de depurador, saltos de reloj o carga extrema pueden producir fallos. No se añadió a la solución.
+The test depends on private names through reflection: implementation changes may require updating it. It uses real wall-clock time, so debugger pauses, clock jumps or extreme load can produce failures. It was not added to the solution.
 
-Validado con `dotnet run` Debug: PASS, 75 muestras durante la gracia y limpieza completa. La primera compilación emitió advertencias CA1416 existentes de `DatabaseKeyProvider` en Core; no errores de compilación.
+Validated with `dotnet run` Debug: PASS, 75 samples during the grace period and complete cleanup. The first build emitted the existing CA1416 warnings of `DatabaseKeyProvider` in Core; no build errors.
