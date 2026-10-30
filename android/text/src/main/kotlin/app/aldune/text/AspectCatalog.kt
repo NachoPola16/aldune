@@ -105,6 +105,22 @@ object AspectCatalog {
             ),
             emptyList(), null,
         ),
+        AspectDefinition(
+            AppPalette.GRID_NOTEBOOK_LIGHT, "grid-notebook-light",
+            listOf(
+                AspectColorSlot("ink", "#26344F", listOf("#26344F", "#1F1F2E", "#3A2A1F")),
+                AspectColorSlot("accent", "#3F6FB5", listOf("#3F6FB5", "#A8342D", "#2E7D5B", "#8A5A9C")),
+            ),
+            emptyList(), null,
+        ),
+        AspectDefinition(
+            AppPalette.GRID_NOTEBOOK_DARK, "grid-notebook-dark",
+            listOf(
+                AspectColorSlot("paper", "#1E2430", listOf("#1E2430", "#181C26", "#242B38")),
+                AspectColorSlot("accent", "#7FA8E0", listOf("#7FA8E0", "#D98A6A", "#8EC07C", "#CFA862")),
+            ),
+            emptyList(), null,
+        ),
     )
 
     fun forMode(mode: Int): AspectDefinition? = retro.firstOrNull { it.mode == mode }

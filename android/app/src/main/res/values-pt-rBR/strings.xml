@@ -59,6 +59,8 @@
     <string name="appearance_travel_notebook_dark">Caderneta de viagem, escura</string>
     <string name="appearance_field_notebook_light">Caderno de campo, claro</string>
     <string name="appearance_field_notebook_dark">Caderno de campo, escuro</string>
+    <string name="appearance_grid_notebook_light">Caderno quadriculado, claro</string>
+    <string name="appearance_grid_notebook_dark">Caderno quadriculado, escuro</string>
     <string name="aspect_colors">Cores da aparência</string>
     <string name="aspect_color_change">Alterar</string>
     <string name="aspect_colors_reset">Redefinir cores</string>

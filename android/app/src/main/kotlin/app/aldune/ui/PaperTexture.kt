@@ -53,6 +53,23 @@ internal fun Modifier.paperTexture(
         }
         drawLine(margin, Offset(marginX.toPx(), 0f), Offset(marginX.toPx(), size.height), 1.5.dp.toPx())
     }
+    // Cuaderno de cuadros: los mismos renglones y, además, verticales cada `ruleStep` a partir del margen (cuadros del alto de línea).
+    AspectSkin.Paper.GRID -> drawBehind {
+        val rule = if (light) Color(0xFF4A78B0).copy(alpha = 0.15f) else Color(0xFF9CBCE0).copy(alpha = 0.10f)
+        val margin = Color(0xFFBE3C32).copy(alpha = if (light) 0.40f else 0.30f)
+        val step = ruleStep.toPx()
+        var y = ruleOffset.toPx()
+        while (y < size.height) {
+            drawLine(rule, Offset(0f, y), Offset(size.width, y), 1.dp.toPx())
+            y += step
+        }
+        var x = marginX.toPx() + step
+        while (x < size.width) {
+            drawLine(rule, Offset(x, 0f), Offset(x, size.height), 1.dp.toPx())
+            x += step
+        }
+        drawLine(margin, Offset(marginX.toPx(), 0f), Offset(marginX.toPx(), size.height), 1.5.dp.toPx())
+    }
 }
 
 /**
@@ -72,7 +89,7 @@ internal fun Modifier.paperTextureRow(paper: AspectSkin.Paper, ink: Color, light
             drawCircle(ink.copy(alpha = if (light) 0.05f else 0.07f), radius = 0.7.dp.toPx(), center = Offset(x, y))
         }
     }
-    AspectSkin.Paper.RULED -> drawBehind {
+    AspectSkin.Paper.RULED, AspectSkin.Paper.GRID -> drawBehind {
         // La franja de color mide 8 dp y el texto empieza en 22 dp: el margen va en medio.
         drawLine(Color(0xFFBE3C32).copy(alpha = if (light) 0.40f else 0.30f), Offset(15.dp.toPx(), 0f), Offset(15.dp.toPx(), size.height), 1.5.dp.toPx())
     }

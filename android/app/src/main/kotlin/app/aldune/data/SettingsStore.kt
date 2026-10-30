@@ -119,7 +119,7 @@ class SettingsStore(context: Context) {
     fun load(): AppSettings {
         val d = AppSettings()
         return AppSettings(
-            appearance = prefs.getInt(APPEARANCE, d.appearance).takeIf { it in AppPalette.DARK..AppPalette.FIELD_NOTEBOOK_DARK } ?: d.appearance,
+            appearance = prefs.getInt(APPEARANCE, d.appearance).takeIf { it in AppPalette.DARK..AppPalette.GRID_NOTEBOOK_DARK } ?: d.appearance,
             aspectColors = AspectColorsJson.parse(prefs.getString(ASPECT_COLORS, null)),
             language = prefs.getString(LANGUAGE, d.language).takeIf { tag -> tag == "" || Languages.all.any { it.first == tag } } ?: d.language,
             trashDays = prefs.getInt(TRASH_DAYS, d.trashDays).coerceIn(1, 365),

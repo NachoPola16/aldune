@@ -59,6 +59,8 @@
     <string name="appearance_travel_notebook_dark">Libreta de viaje, oscura</string>
     <string name="appearance_field_notebook_light">Cuaderno de campo, claro</string>
     <string name="appearance_field_notebook_dark">Cuaderno de campo, oscuro</string>
+    <string name="appearance_grid_notebook_light">Cuaderno cuadriculado, claro</string>
+    <string name="appearance_grid_notebook_dark">Cuaderno cuadriculado, oscuro</string>
     <string name="aspect_colors">Colores del aspecto</string>
     <string name="aspect_color_change">Cambiar</string>
     <string name="aspect_colors_reset">Restablecer colores</string>

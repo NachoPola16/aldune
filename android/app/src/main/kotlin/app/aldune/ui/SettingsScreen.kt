@@ -56,9 +56,11 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.RadioButton
-import androidx.compose.material3.ScrollableTabRow
+import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Switch
-import androidx.compose.material3.Tab
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -118,11 +120,21 @@ fun SettingsScreen(viewModel: NotesViewModel, onClose: () -> Unit) {
                     add(R.string.settings_tab_general); add(R.string.settings_tab_appearance); add(R.string.settings_tab_notes); add(R.string.settings_tab_colors); add(R.string.settings_tab_alerts)
                     if (show(SettingsSection.SYNC) || show(SettingsSection.BACKUP)) add(R.string.settings_tab_sync)
                 }
-                ScrollableTabRow(selectedTabIndex = tab.coerceAtMost(labels.lastIndex), edgePadding = 8.dp) {
+                // Chips que se reparten en varias líneas, no una fila que se desplaza: con seis pestañas la fila cortaba las últimas y nada decía que
+                // había más a la derecha. Así están todas a la vista.
+                @OptIn(ExperimentalLayoutApi::class)
+                FlowRow(
+                    Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 4.dp),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                ) {
                     labels.forEachIndexed { index, label ->
-                        Tab(selected = tab == index, onClick = { tab = index }, text = { Text(stringResource(label)) })
+                        FilterChip(
+                            selected = tab.coerceAtMost(labels.lastIndex) == index, onClick = { tab = index },
+                            label = { Text(stringResource(label)) },
+                        )
                     }
                 }
+                HorizontalDivider()
             }
             Column(Modifier.verticalScroll(rememberScrollState()).padding(bottom = 24.dp)) {
                 if (show(SettingsSection.SYNC) && inTab(5)) SyncSection(viewModel)
@@ -141,6 +153,7 @@ fun SettingsScreen(viewModel: NotesViewModel, onClose: () -> Unit) {
                     AppPalette.BASH to R.string.appearance_bash, AppPalette.PHOSPHOR to R.string.appearance_phosphor,
                     AppPalette.TRAVEL_NOTEBOOK_LIGHT to R.string.appearance_travel_notebook_light, AppPalette.TRAVEL_NOTEBOOK_DARK to R.string.appearance_travel_notebook_dark,
                     AppPalette.FIELD_NOTEBOOK_LIGHT to R.string.appearance_field_notebook_light, AppPalette.FIELD_NOTEBOOK_DARK to R.string.appearance_field_notebook_dark,
+                    AppPalette.GRID_NOTEBOOK_LIGHT to R.string.appearance_grid_notebook_light, AppPalette.GRID_NOTEBOOK_DARK to R.string.appearance_grid_notebook_dark,
                 )
                 // Los aspectos retro proponen un tema de notas; se pregunta, no se impone (como en Windows).
                 // rememberSaveable: girar la pantalla no debe cerrar la pregunta sin avisar.

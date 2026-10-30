@@ -27,23 +27,25 @@ object AspectSkin {
     private val terminal = setOf(AppPalette.TELECOM_LIGHT, AppPalette.TELECOM_DARK, AppPalette.BASH, AppPalette.PHOSPHOR)
 
     /** El papel que se dibuja bajo el texto en las libretas (como `AppSkin.Paper` de Core). */
-    enum class Paper { NONE, FOLDS, RULED }
+    enum class Paper { NONE, FOLDS, RULED, GRID }
 
     fun paper(mode: Int): Paper = when (mode) {
         AppPalette.TRAVEL_NOTEBOOK_LIGHT, AppPalette.TRAVEL_NOTEBOOK_DARK -> Paper.FOLDS
         AppPalette.FIELD_NOTEBOOK_LIGHT, AppPalette.FIELD_NOTEBOOK_DARK -> Paper.RULED
+        AppPalette.GRID_NOTEBOOK_LIGHT, AppPalette.GRID_NOTEBOOK_DARK -> Paper.GRID
         else -> Paper.NONE
     }
 
     private val notebooks = setOf(
         AppPalette.TRAVEL_NOTEBOOK_LIGHT, AppPalette.TRAVEL_NOTEBOOK_DARK, AppPalette.FIELD_NOTEBOOK_LIGHT, AppPalette.FIELD_NOTEBOOK_DARK,
+        AppPalette.GRID_NOTEBOOK_LIGHT, AppPalette.GRID_NOTEBOOK_DARK,
     )
 
     /** Las libretas llevan el color de la nota como franja sobre el papel, como Bash (`SkinCard.Stripe` de Core). */
     fun stripeCard(mode: Int): Boolean = mode == AppPalette.BASH || mode in notebooks
 
     /** Las libretas usan serifa en el cuerpo y los títulos. */
-    fun serif(mode: Int): Boolean = mode in notebooks
+    fun serif(mode: Int): Boolean = mode in notebooks && paper(mode) != Paper.GRID
 
     fun squareCorners(mode: Int): Boolean = mode == AppPalette.XP_DARK || mode in terminal
 

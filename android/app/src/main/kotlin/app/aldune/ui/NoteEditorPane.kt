@@ -632,7 +632,7 @@ fun NoteEditorPane(key: String, viewModel: NotesViewModel, onBack: () -> Unit, s
         val lineHeight = with(LocalDensity.current) { MaterialTheme.typography.bodyLarge.lineHeight.toDp() }
         Box(
             Modifier.weight(1f).fillMaxWidth().paperTexture(
-                if (look.paper == AspectSkin.Paper.RULED) look.paper else AspectSkin.Paper.NONE, ink, faceLight,
+                if (look.paper == AspectSkin.Paper.RULED || look.paper == AspectSkin.Paper.GRID) look.paper else AspectSkin.Paper.NONE, ink, faceLight,
                 ruleStep = lineHeight, ruleOffset = TASK_DRAG_PAD_TOP + lineHeight * 0.88f, marginX = 10.dp,
             ),
         ) {

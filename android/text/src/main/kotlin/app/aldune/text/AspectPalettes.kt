@@ -28,6 +28,8 @@ object AspectPalettes {
         AppPalette.TRAVEL_NOTEBOOK_DARK -> notebookDark(c.getValue("paper"), c.getValue("accent"), neutralHue = 70.0)
         AppPalette.FIELD_NOTEBOOK_LIGHT -> notebookLight(c.getValue("ink"), c.getValue("accent"), neutralHue = 92.0)
         AppPalette.FIELD_NOTEBOOK_DARK -> notebookDark(c.getValue("paper"), c.getValue("accent"), neutralHue = 75.0)
+        AppPalette.GRID_NOTEBOOK_LIGHT -> notebookLight(c.getValue("ink"), c.getValue("accent"), neutralHue = 250.0)
+        AppPalette.GRID_NOTEBOOK_DARK -> notebookDark(c.getValue("paper"), c.getValue("accent"), neutralHue = 255.0)
         else -> throw IllegalArgumentException("Sin aspecto retro: $mode")
     }
 

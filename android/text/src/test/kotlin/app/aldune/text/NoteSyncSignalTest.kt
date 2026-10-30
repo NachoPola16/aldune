@@ -68,6 +68,12 @@ class NoteSyncSignalTest {
         }
         assertEquals(AspectSkin.Paper.FOLDS, AspectSkin.paper(AppPalette.TRAVEL_NOTEBOOK_DARK))
         assertEquals(AspectSkin.Paper.RULED, AspectSkin.paper(AppPalette.FIELD_NOTEBOOK_LIGHT))
+        // El cuaderno cuadriculado lleva papel de cuadros y la letra de siempre (sin serifa), como en Windows.
+        for (m in listOf(AppPalette.GRID_NOTEBOOK_LIGHT, AppPalette.GRID_NOTEBOOK_DARK)) {
+            assertEquals(AspectSkin.Paper.GRID, AspectSkin.paper(m))
+            assertTrue(AspectSkin.stripeCard(m) && AspectSkin.colorLocked(m) && !AspectSkin.colorFill(m))
+            assertFalse(AspectSkin.serif(m))
+        }
         assertEquals(AspectSkin.Paper.NONE, AspectSkin.paper(AppPalette.BASH))
         assertTrue(AspectSkin.colorFill(AppPalette.DARK))
     }

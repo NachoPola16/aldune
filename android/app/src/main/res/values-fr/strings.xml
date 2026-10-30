@@ -59,6 +59,8 @@
     <string name="appearance_travel_notebook_dark">Carnet de voyage, sombre</string>
     <string name="appearance_field_notebook_light">Carnet de terrain, clair</string>
     <string name="appearance_field_notebook_dark">Carnet de terrain, sombre</string>
+    <string name="appearance_grid_notebook_light">Cahier à carreaux, clair</string>
+    <string name="appearance_grid_notebook_dark">Cahier à carreaux, sombre</string>
     <string name="aspect_colors">Couleurs de l’apparence</string>
     <string name="aspect_color_change">Modifier</string>
     <string name="aspect_colors_reset">Réinitialiser les couleurs</string>

@@ -58,6 +58,8 @@ appearance_travel_notebook_light	Travel notebook, light	Libreta de viaje, clara	
 appearance_travel_notebook_dark	Travel notebook, dark	Libreta de viaje, oscura	Reisenotizbuch, dunkel	Carnet de voyage, sombre	Caderneta de viagem, escura
 appearance_field_notebook_light	Field notebook, light	Cuaderno de campo, claro	Feldbuch, hell	Carnet de terrain, clair	Caderno de campo, claro
 appearance_field_notebook_dark	Field notebook, dark	Cuaderno de campo, oscuro	Feldbuch, dunkel	Carnet de terrain, sombre	Caderno de campo, escuro
+appearance_grid_notebook_light	Grid notebook, light	Cuaderno cuadriculado, claro	Karoheft, hell	Cahier à carreaux, clair	Caderno quadriculado, claro
+appearance_grid_notebook_dark	Grid notebook, dark	Cuaderno cuadriculado, oscuro	Karoheft, dunkel	Cahier à carreaux, sombre	Caderno quadriculado, escuro
 aspect_colors	Aspect colors	Colores del aspecto	Farben des Erscheinungsbilds	Couleurs de l’apparence	Cores da aparência
 aspect_color_change	Change	Cambiar	Ändern	Modifier	Alterar
 aspect_colors_reset	Reset colors	Restablecer colores	Farben zurücksetzen	Réinitialiser les couleurs	Redefinir cores

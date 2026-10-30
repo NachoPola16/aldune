@@ -59,6 +59,8 @@
     <string name="appearance_travel_notebook_dark">Travel notebook, dark</string>
     <string name="appearance_field_notebook_light">Field notebook, light</string>
     <string name="appearance_field_notebook_dark">Field notebook, dark</string>
+    <string name="appearance_grid_notebook_light">Grid notebook, light</string>
+    <string name="appearance_grid_notebook_dark">Grid notebook, dark</string>
     <string name="aspect_colors">Aspect colors</string>
     <string name="aspect_color_change">Change</string>
     <string name="aspect_colors_reset">Reset colors</string>

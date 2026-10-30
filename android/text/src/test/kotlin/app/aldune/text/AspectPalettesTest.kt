@@ -87,6 +87,7 @@ class AspectPalettesTest {
         assertEquals("#171C21", AppPalette.forMode(AppPalette.TELECOM_DARK, false).getValue("Ground"))
         assertEquals("#2B231A", AppPalette.forMode(AppPalette.TRAVEL_NOTEBOOK_DARK, false).getValue("Ground"))
         assertEquals("#27241F", AppPalette.forMode(AppPalette.FIELD_NOTEBOOK_DARK, false).getValue("Ground"))
+        assertEquals("#1E2430", AppPalette.forMode(AppPalette.GRID_NOTEBOOK_DARK, false).getValue("Ground"))
     }
 
     @Test fun `el boton mas del dock sigue al acento`() {
@@ -95,6 +96,7 @@ class AspectPalettesTest {
             AppPalette.TELECOM_DARK to "trace", AppPalette.BASH to "accent", AppPalette.PHOSPHOR to "details",
             AppPalette.TRAVEL_NOTEBOOK_LIGHT to "accent", AppPalette.TRAVEL_NOTEBOOK_DARK to "accent",
             AppPalette.FIELD_NOTEBOOK_LIGHT to "accent", AppPalette.FIELD_NOTEBOOK_DARK to "accent",
+            AppPalette.GRID_NOTEBOOK_LIGHT to "accent", AppPalette.GRID_NOTEBOOK_DARK to "accent",
         )) {
             val p = AppPalette.forMode(mode, false, mapOf(slot to "#D03020"))
             val dock = OklchColor.fromHex(p.getValue("DockPrimary"))!!
@@ -113,7 +115,8 @@ class AspectPalettesTest {
         assertTrue(AppPalette.isLight(AppPalette.TELECOM_LIGHT, false))
         assertTrue(AppPalette.isLight(AppPalette.TRAVEL_NOTEBOOK_LIGHT, false))
         assertTrue(AppPalette.isLight(AppPalette.FIELD_NOTEBOOK_LIGHT, false))
-        for (mode in listOf(AppPalette.XP_DARK, AppPalette.TELECOM_DARK, AppPalette.BASH, AppPalette.PHOSPHOR, AppPalette.TRAVEL_NOTEBOOK_DARK, AppPalette.FIELD_NOTEBOOK_DARK))
+        assertTrue(AppPalette.isLight(AppPalette.GRID_NOTEBOOK_LIGHT, false))
+        for (mode in listOf(AppPalette.XP_DARK, AppPalette.TELECOM_DARK, AppPalette.BASH, AppPalette.PHOSPHOR, AppPalette.TRAVEL_NOTEBOOK_DARK, AppPalette.FIELD_NOTEBOOK_DARK, AppPalette.GRID_NOTEBOOK_DARK))
             assertEquals(false, AppPalette.isLight(mode, true), "mode $mode")
     }
 }

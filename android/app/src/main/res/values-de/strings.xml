@@ -59,6 +59,8 @@
     <string name="appearance_travel_notebook_dark">Reisenotizbuch, dunkel</string>
     <string name="appearance_field_notebook_light">Feldbuch, hell</string>
     <string name="appearance_field_notebook_dark">Feldbuch, dunkel</string>
+    <string name="appearance_grid_notebook_light">Karoheft, hell</string>
+    <string name="appearance_grid_notebook_dark">Karoheft, dunkel</string>
     <string name="aspect_colors">Farben des Erscheinungsbilds</string>
     <string name="aspect_color_change">Ändern</string>
     <string name="aspect_colors_reset">Farben zurücksetzen</string>
