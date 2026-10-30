@@ -306,14 +306,17 @@
                     <RadioButton x:Name="NavGeneral" Tag="General" GroupName="SettingsNav"
                                  Content="{x:Static res:Strings.SettingsPageGeneral}"
                                  Style="{StaticResource SettingsNavStyle}" Checked="OnPageChecked" />
+                    <RadioButton x:Name="NavAppearance" Tag="Appearance" GroupName="SettingsNav"
+                                 Content="{x:Static res:Strings.SettingsPageAppearance}"
+                                 Style="{StaticResource SettingsNavStyle}" Checked="OnPageChecked" />
                     <RadioButton x:Name="NavNotes" Tag="Notes" GroupName="SettingsNav"
                                  Content="{x:Static res:Strings.SettingsPageNotes}"
                                  Style="{StaticResource SettingsNavStyle}" Checked="OnPageChecked" />
-                    <RadioButton x:Name="NavDock" Tag="Dock" GroupName="SettingsNav"
-                                 Content="{x:Static res:Strings.SettingsPageDock}"
-                                 Style="{StaticResource SettingsNavStyle}" Checked="OnPageChecked" />
                     <RadioButton x:Name="NavColors" Tag="Colors" GroupName="SettingsNav"
                                  Content="{x:Static res:Strings.SettingsPageColors}"
+                                 Style="{StaticResource SettingsNavStyle}" Checked="OnPageChecked" />
+                    <RadioButton x:Name="NavDock" Tag="Dock" GroupName="SettingsNav"
+                                 Content="{x:Static res:Strings.SettingsPageDock}"
                                  Style="{StaticResource SettingsNavStyle}" Checked="OnPageChecked" />
                     <RadioButton x:Name="NavSync" Tag="Sync" GroupName="SettingsNav"
                                  Content="{x:Static res:Strings.SettingsPageSync}"
@@ -427,6 +430,28 @@
                     </StackPanel>
                     <Border Background="{DynamicResource AlduneRaisedBrush}" Height="1" Margin="0,20,0,0" />
                     <StackPanel Margin="0,20,0,0">
+                        <TextBlock Text="{x:Static res:Strings.LanguageSectionTitle}"
+                                   Foreground="{DynamicResource AlduneTextBrush}" FontSize="{DynamicResource AlduneTextBody}" FontWeight="SemiBold" />
+                        <TextBlock Text="{x:Static res:Strings.LanguageSectionHint}"
+                                   Foreground="{DynamicResource AlduneHintBrush}" FontSize="{DynamicResource AlduneTextSmall}" TextWrapping="Wrap" Margin="0,4,0,10" />
+
+                        <StackPanel x:Name="LanguageListContainer" />
+                    </StackPanel>
+                    <Border Background="{DynamicResource AlduneRaisedBrush}" Height="1" Margin="0,20,0,0" />
+                    <StackPanel Margin="0,20,0,0">
+                        <CheckBox x:Name="CheckForUpdatesAutomaticallyCheck"
+                                  Content="{x:Static res:Strings.CheckForUpdatesAutomaticallyCheckbox}"
+                                  Foreground="{DynamicResource AlduneTextBrush}" Background="{DynamicResource AlduneGroundBrush}" FontSize="{DynamicResource AlduneTextBody}"
+                                  Style="{StaticResource SettingsSwitchStyle}"
+                                  Click="OnCheckForUpdatesAutomaticallyToggled" />
+                        <TextBlock Text="{x:Static res:Strings.CheckForUpdatesAutomaticallyHint}"
+                                   Foreground="{DynamicResource AlduneHintBrush}" FontSize="{DynamicResource AlduneTextSmall}" TextWrapping="Wrap" Margin="0,6,56,0" />
+                    </StackPanel>
+                    <Border Background="{DynamicResource AlduneRaisedBrush}" Height="1" Margin="0,20,0,0" />
+                </StackPanel>
+                <StackPanel x:Name="AppearancePage" Visibility="Collapsed">
+                    <TextBlock Text="{x:Static res:Strings.SettingsPageAppearance}" Foreground="{DynamicResource AlduneTextStrongBrush}" FontSize="{DynamicResource AlduneTextTitle}" FontWeight="SemiBold" Margin="0,0,0,16" />
+                    <StackPanel>
                         <TextBlock Text="{x:Static res:Strings.AppearanceSectionTitle}"
                                    Foreground="{DynamicResource AlduneTextBrush}" FontSize="{DynamicResource AlduneTextBody}" FontWeight="SemiBold" />
                         <TextBlock Text="{x:Static res:Strings.AppearanceSectionHint}"
@@ -474,68 +499,6 @@
                         <StackPanel x:Name="UniformSwatches" Margin="0,8,0,0" />
                         <TextBlock Text="{x:Static res:Strings.AppearanceUniformColorHint}"
                                    Foreground="{DynamicResource AlduneHintBrush}" FontSize="{DynamicResource AlduneTextSmall}" TextWrapping="Wrap" Margin="0,6,56,0" />
-                    </StackPanel>
-                    <Border Background="{DynamicResource AlduneRaisedBrush}" Height="1" Margin="0,20,0,0" />
-                    <StackPanel Margin="0,20,0,0">
-                        <TextBlock Text="{x:Static res:Strings.LanguageSectionTitle}"
-                                   Foreground="{DynamicResource AlduneTextBrush}" FontSize="{DynamicResource AlduneTextBody}" FontWeight="SemiBold" />
-                        <TextBlock Text="{x:Static res:Strings.LanguageSectionHint}"
-                                   Foreground="{DynamicResource AlduneHintBrush}" FontSize="{DynamicResource AlduneTextSmall}" TextWrapping="Wrap" Margin="0,4,0,10" />
-
-                        <StackPanel x:Name="LanguageListContainer" />
-                    </StackPanel>
-                    <Border Background="{DynamicResource AlduneRaisedBrush}" Height="1" Margin="0,20,0,0" />
-                    <StackPanel Margin="0,20,0,0">
-                        <CheckBox x:Name="SoundsEnabledCheck"
-                                  Content="{x:Static res:Strings.SoundsEnabledCheckbox}"
-                                  Foreground="{DynamicResource AlduneTextBrush}" Background="{DynamicResource AlduneGroundBrush}" FontSize="{DynamicResource AlduneTextBody}"
-                                  Style="{StaticResource SettingsSwitchStyle}"
-                                  Click="OnSoundsEnabledToggled" />
-                        <TextBlock Text="{x:Static res:Strings.SoundsHint}"
-                                   Foreground="{DynamicResource AlduneHintBrush}" FontSize="{DynamicResource AlduneTextSmall}" TextWrapping="Wrap" Margin="0,6,56,0" />
-                        <Grid x:Name="SoundExtrasPanel" Margin="0,12,0,0">
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="150" />
-                                <ColumnDefinition Width="*" />
-                            </Grid.ColumnDefinitions>
-                            <TextBlock Text="{x:Static res:Strings.SoundVolumeLabel}" VerticalAlignment="Center" FontSize="13"
-                                       Foreground="{DynamicResource AlduneTextBrush}" />
-                            <Slider x:Name="SoundVolumeSlider" Grid.Column="1" Minimum="0" Maximum="100" SmallChange="5" LargeChange="10"
-                                    TickFrequency="10" Background="{DynamicResource AlduneTrackBrush}" VerticalAlignment="Center"
-                                    AutomationProperties.Name="{x:Static res:Strings.SoundVolumeLabel}"
-                                    ValueChanged="OnSoundVolumeChanged" />
-                            <Button Grid.Row="1" Grid.Column="1" Margin="0,10,0,0" HorizontalAlignment="Left" Padding="10,5"
-                                    Content="{x:Static res:Strings.SoundPaperAndPenButton}"
-                                    Style="{StaticResource RecordButtonStyle}" Click="OnSoundPaperAndPenClick" />
-                            <Grid.RowDefinitions><RowDefinition Height="Auto" /><RowDefinition Height="Auto" /></Grid.RowDefinitions>
-                        </Grid>
-                        <!-- Una fila por evento (la rellena BuildSoundRows): sonido propio o ninguno, con "Probar". -->
-                        <StackPanel x:Name="SoundRowsPanel" Margin="0,12,0,0" />
-                    </StackPanel>
-                    <Border Background="{DynamicResource AlduneRaisedBrush}" Height="1" Margin="0,20,0,0" />
-                    <StackPanel Margin="0,20,0,0">
-                        <CheckBox x:Name="AutoExportCheck"
-                                  Content="{x:Static res:Strings.AutoExportCheckbox}"
-                                  Foreground="{DynamicResource AlduneTextBrush}" Background="{DynamicResource AlduneGroundBrush}" FontSize="{DynamicResource AlduneTextBody}"
-                                  Style="{StaticResource SettingsSwitchStyle}"
-                                  Click="OnAutoExportToggled" />
-                        <TextBlock Text="{x:Static res:Strings.AutoExportHint}"
-                                   Foreground="{DynamicResource AlduneHintBrush}" FontSize="{DynamicResource AlduneTextSmall}" TextWrapping="Wrap" Margin="0,6,56,0" />
-                        <StackPanel x:Name="AutoExportDetails" Margin="0,12,0,0">
-                            <StackPanel Orientation="Horizontal">
-                                <Button Content="{x:Static res:Strings.AutoExportChooseFolder}" Padding="10,5" Style="{StaticResource RecordButtonStyle}"
-                                        Click="OnAutoExportChooseFolderClick" />
-                                <TextBlock x:Name="AutoExportFolderText" Margin="12,0,0,0" VerticalAlignment="Center" FontSize="13" TextTrimming="CharacterEllipsis" MaxWidth="360"
-                                           Foreground="{DynamicResource AlduneTextBrush}" />
-                            </StackPanel>
-                            <CheckBox x:Name="AutoExportArchivedCheck" Margin="0,12,0,0"
-                                      Content="{x:Static res:Strings.AutoExportArchivedCheckbox}"
-                                      Foreground="{DynamicResource AlduneTextBrush}" Background="{DynamicResource AlduneGroundBrush}" FontSize="{DynamicResource AlduneTextBody}"
-                                      Style="{StaticResource SettingsSwitchStyle}"
-                                      Click="OnAutoExportArchivedToggled" />
-                            <TextBlock x:Name="AutoExportErrorText" Margin="0,8,56,0" TextWrapping="Wrap" Visibility="Collapsed" FontSize="{DynamicResource AlduneTextSmall}"
-                                       Foreground="{DynamicResource AlduneHintBrush}" />
-                        </StackPanel>
                     </StackPanel>
                 </StackPanel>
                 <StackPanel x:Name="NotesPage" Visibility="Collapsed">
@@ -631,6 +594,34 @@
                             <TextBlock Text="{x:Static res:Strings.TrashRetentionDaysUnit}"
                                        Foreground="{DynamicResource AlduneTextBrush}" FontSize="{DynamicResource AlduneTextBody}" VerticalAlignment="Center" Margin="8,0,0,0" />
                         </StackPanel>
+                    </StackPanel>
+                    <Border Background="{DynamicResource AlduneRaisedBrush}" Height="1" Margin="0,20,0,0" />
+                    <StackPanel Margin="0,20,0,0">
+                        <CheckBox x:Name="SoundsEnabledCheck"
+                                  Content="{x:Static res:Strings.SoundsEnabledCheckbox}"
+                                  Foreground="{DynamicResource AlduneTextBrush}" Background="{DynamicResource AlduneGroundBrush}" FontSize="{DynamicResource AlduneTextBody}"
+                                  Style="{StaticResource SettingsSwitchStyle}"
+                                  Click="OnSoundsEnabledToggled" />
+                        <TextBlock Text="{x:Static res:Strings.SoundsHint}"
+                                   Foreground="{DynamicResource AlduneHintBrush}" FontSize="{DynamicResource AlduneTextSmall}" TextWrapping="Wrap" Margin="0,6,56,0" />
+                        <Grid x:Name="SoundExtrasPanel" Margin="0,12,0,0">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="150" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Text="{x:Static res:Strings.SoundVolumeLabel}" VerticalAlignment="Center" FontSize="13"
+                                       Foreground="{DynamicResource AlduneTextBrush}" />
+                            <Slider x:Name="SoundVolumeSlider" Grid.Column="1" Minimum="0" Maximum="100" SmallChange="5" LargeChange="10"
+                                    TickFrequency="10" Background="{DynamicResource AlduneTrackBrush}" VerticalAlignment="Center"
+                                    AutomationProperties.Name="{x:Static res:Strings.SoundVolumeLabel}"
+                                    ValueChanged="OnSoundVolumeChanged" />
+                            <Button Grid.Row="1" Grid.Column="1" Margin="0,10,0,0" HorizontalAlignment="Left" Padding="10,5"
+                                    Content="{x:Static res:Strings.SoundPaperAndPenButton}"
+                                    Style="{StaticResource RecordButtonStyle}" Click="OnSoundPaperAndPenClick" />
+                            <Grid.RowDefinitions><RowDefinition Height="Auto" /><RowDefinition Height="Auto" /></Grid.RowDefinitions>
+                        </Grid>
+                        <!-- Una fila por evento (la rellena BuildSoundRows): sonido propio o ninguno, con "Probar". -->
+                        <StackPanel x:Name="SoundRowsPanel" Margin="0,12,0,0" />
                     </StackPanel>
                 </StackPanel>
                 <StackPanel x:Name="DockPage" Visibility="Collapsed">
@@ -965,6 +956,31 @@
                                     Style="{StaticResource RecordButtonStyle}" />
                         </StackPanel>
                     </StackPanel>
+                    <Border Background="{DynamicResource AlduneRaisedBrush}" Height="1" Margin="0,20,0,0" />
+                    <StackPanel Margin="0,20,0,0">
+                        <CheckBox x:Name="AutoExportCheck"
+                                  Content="{x:Static res:Strings.AutoExportCheckbox}"
+                                  Foreground="{DynamicResource AlduneTextBrush}" Background="{DynamicResource AlduneGroundBrush}" FontSize="{DynamicResource AlduneTextBody}"
+                                  Style="{StaticResource SettingsSwitchStyle}"
+                                  Click="OnAutoExportToggled" />
+                        <TextBlock Text="{x:Static res:Strings.AutoExportHint}"
+                                   Foreground="{DynamicResource AlduneHintBrush}" FontSize="{DynamicResource AlduneTextSmall}" TextWrapping="Wrap" Margin="0,6,56,0" />
+                        <StackPanel x:Name="AutoExportDetails" Margin="0,12,0,0">
+                            <StackPanel Orientation="Horizontal">
+                                <Button Content="{x:Static res:Strings.AutoExportChooseFolder}" Padding="10,5" Style="{StaticResource RecordButtonStyle}"
+                                        Click="OnAutoExportChooseFolderClick" />
+                                <TextBlock x:Name="AutoExportFolderText" Margin="12,0,0,0" VerticalAlignment="Center" FontSize="13" TextTrimming="CharacterEllipsis" MaxWidth="360"
+                                           Foreground="{DynamicResource AlduneTextBrush}" />
+                            </StackPanel>
+                            <CheckBox x:Name="AutoExportArchivedCheck" Margin="0,12,0,0"
+                                      Content="{x:Static res:Strings.AutoExportArchivedCheckbox}"
+                                      Foreground="{DynamicResource AlduneTextBrush}" Background="{DynamicResource AlduneGroundBrush}" FontSize="{DynamicResource AlduneTextBody}"
+                                      Style="{StaticResource SettingsSwitchStyle}"
+                                      Click="OnAutoExportArchivedToggled" />
+                            <TextBlock x:Name="AutoExportErrorText" Margin="0,8,56,0" TextWrapping="Wrap" Visibility="Collapsed" FontSize="{DynamicResource AlduneTextSmall}"
+                                       Foreground="{DynamicResource AlduneHintBrush}" />
+                        </StackPanel>
+                    </StackPanel>
                 </StackPanel>
                 <StackPanel x:Name="HelpPage" Visibility="Collapsed">
                     <TextBlock Text="{x:Static res:Strings.SettingsPageHelp}" Foreground="{DynamicResource AlduneTextStrongBrush}" FontSize="{DynamicResource AlduneTextTitle}" FontWeight="SemiBold" Margin="0,0,0,16" />
@@ -994,16 +1010,6 @@
                                     Style="{StaticResource RecordButtonStyle}" />
                         </StackPanel>
                     </Grid>
-                    <Border Background="{DynamicResource AlduneRaisedBrush}" Height="1" Margin="0,20,0,0" />
-                    <StackPanel Margin="0,20,0,0">
-                        <CheckBox x:Name="CheckForUpdatesAutomaticallyCheck"
-                                  Content="{x:Static res:Strings.CheckForUpdatesAutomaticallyCheckbox}"
-                                  Foreground="{DynamicResource AlduneTextBrush}" Background="{DynamicResource AlduneGroundBrush}" FontSize="{DynamicResource AlduneTextBody}"
-                                  Style="{StaticResource SettingsSwitchStyle}"
-                                  Click="OnCheckForUpdatesAutomaticallyToggled" />
-                        <TextBlock Text="{x:Static res:Strings.CheckForUpdatesAutomaticallyHint}"
-                                   Foreground="{DynamicResource AlduneHintBrush}" FontSize="{DynamicResource AlduneTextSmall}" TextWrapping="Wrap" Margin="0,6,56,0" />
-                    </StackPanel>
                     <Border Background="{DynamicResource AlduneRaisedBrush}" Height="1" Margin="0,20,0,0" />
                     <StackPanel Margin="0,20,0,0">
                         <TextBlock Text="{x:Static res:Strings.ConfigSectionTitle}"

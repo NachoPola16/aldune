@@ -1574,8 +1574,11 @@ public static class Strings
         "• Clique com o botão direito em uma aba: mudar cor, arquivar ou enviar para a lixeira sem abri-la.");
     public static string SettingsPageGeneral => T("General", "General",
         "Allgemein", "Général", "Geral");
-    public static string SettingsPageNotes => T("Notes and tasks", "Notas y tareas",
-        "Notizen und Aufgaben", "Notes et tâches", "Notas e tarefas");
+    public static string SettingsPageAppearance => T("Appearance", "Aspecto",
+        "Aussehen", "Apparence", "Aparência");
+    // Mismo nombre que la pestaña de Android (AJUSTES_PARIDAD.md).
+    public static string SettingsPageNotes => T("Notes", "Notas",
+        "Notizen", "Notes", "Notas");
     public static string SettingsPageDock => T("Dock and screens", "Dock y pantallas",
         "Dock und Bildschirme", "Dock et écrans", "Dock e telas");
     public static string SettingsPageColors => T("Colors", "Colores",

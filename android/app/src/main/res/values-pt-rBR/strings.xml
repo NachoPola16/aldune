@@ -304,6 +304,7 @@
     <string name="settings_tab_general">Geral</string>
     <string name="settings_tab_appearance">Aparência</string>
     <string name="settings_tab_notes">Notas</string>
+    <string name="settings_tab_colors">Cores</string>
     <string name="settings_tab_alerts">Avisos</string>
     <string name="hide_done_tasks">Ocultar tarefas concluídas</string>
     <string name="hide_done_tasks_hint">O texto não muda: elas só ficam ocultas ao editar e você pode vê-las de novo na nota.</string>

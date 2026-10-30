@@ -41,12 +41,12 @@ import app.aldune.domain.NoteListOrder
 private const val DEFAULT_FIXED = "#EBD38B"
 
 /**
- * Orden de la lista y regla de color de las notas nuevas (`NotesManagerOrder`, `ColorAssignment` y `FixedNoteColor` de Windows).
- * Con un orden que no es el del mazo no se puede arrastrar: el arrastre cambia el mazo, y una lista ordenada por fecha no lo enseña.
+ * Orden de la lista (`NotesManagerOrder` de Windows). Con un orden que no es el del mazo no se puede arrastrar: el arrastre cambia el mazo, y una
+ * lista ordenada por fecha no lo enseña.
  */
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
-fun NoteBehaviourSettings(settings: AppSettings, onChange: ((AppSettings) -> AppSettings) -> Unit, onApplyToExisting: () -> Unit) {
+fun NoteOrderSettings(settings: AppSettings, onChange: ((AppSettings) -> AppSettings) -> Unit) {
     GroupLabel(stringResource(R.string.list_order))
     val orders = listOf(
         NoteListOrder.DOCK to R.string.order_dock, NoteListOrder.NEWEST to R.string.order_newest,
@@ -56,7 +56,12 @@ fun NoteBehaviourSettings(settings: AppSettings, onChange: ((AppSettings) -> App
     if (settings.listOrder != 0) {
         Text(stringResource(R.string.order_no_drag), Modifier.padding(horizontal = 16.dp), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
     }
+}
 
+/** Regla de color de las notas nuevas (`ColorAssignment` y `FixedNoteColor` de Windows) y «Aplicar a las notas existentes»: la pestaña Colores, como la página Colores de Windows. */
+@OptIn(ExperimentalLayoutApi::class)
+@Composable
+fun NoteColorRuleSettings(settings: AppSettings, onChange: ((AppSettings) -> AppSettings) -> Unit, onApplyToExisting: () -> Unit) {
     GroupLabel(stringResource(R.string.color_rule))
     val rules = listOf(0 to R.string.rule_avoid_neighbors, 1 to R.string.rule_rotate, 2 to R.string.rule_most_distinct, 3 to R.string.rule_fixed)
     for ((rule, label) in rules) Choice(stringResource(label), settings.colorRule == rule) { onChange { it.copy(colorRule = rule) } }

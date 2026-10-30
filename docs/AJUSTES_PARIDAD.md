@@ -5,6 +5,22 @@ recoge qué ajustes son comunes, cuáles son de una sola plataforma y las difere
 
 Estado a 2026-10-30. Windows: `src/Aldune.Core/AppSettings.cs`. Android: `AppSettings` en `android/app/.../data/SettingsStore.kt`.
 
+## Pestañas de Ajustes
+
+Mismo orden y mismos nombres para lo común; lo propio de cada plataforma va en su sitio fijo (entre Colores y Sincronización).
+
+| Pestaña | Windows | Android | Qué vive ahí (común) |
+|---|---|---|---|
+| General | General | General | Idioma, modo simplificado, avisar de versiones nuevas. Windows añade arranque con Windows y atajos globales; Android, la versión. |
+| Aspecto | Appearance | Aspecto | Aspecto y sus colores, esquinas rectas, señal de sync, color de nota solo como franja, mismo color en todas las notas. Windows añade el tamaño del texto. |
+| Notas | Notes | Notas | Casillas grandes, mover hechas al final, esconder hechas, papelera, sonidos. Windows: recordar posición y tamaño, recordatorio con tareas; Android: orden de la lista y teclado al abrir. |
+| Colores | Colors | Colores | Tema de color, tono de las notas nuevas, regla de color y «Aplicar a las notas existentes». Windows añade los temas propios. |
+| (propia) | Dock y pantallas | Avisos | Windows: borde, alineación, monitor, gestos. Android: captura rápida y recordatorios exactos. |
+| Sincronización | Sync | Sincronización | Perfiles de sync y copia automática en carpeta. Android añade la copia local en .zip. |
+| Ayuda / Acerca de | Help, About | (en General) | Solo Windows tiene páginas propias. |
+
+El modo simplificado esconde Notas, Colores y Sincronización en las dos plataformas (Windows esconde además lo avanzado del dock).
+
 ## Comunes (mismo texto de interfaz)
 
 | Qué | Windows | Android | Nota |

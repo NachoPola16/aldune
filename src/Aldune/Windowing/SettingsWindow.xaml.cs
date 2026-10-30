@@ -186,14 +186,14 @@ public partial class SettingsWindow : Window
 
     private RadioButton PageNav(string page) => (RadioButton)FindName("Nav" + page);
 
-    /// <summary>Enseña una página del menú lateral ("General", "Notes", "Dock", "Colors", "Sync", "Help"
+    /// <summary>Enseña una página del menú lateral ("General", "Appearance", "Notes", "Colors", "Dock", "Sync", "Help"
     /// o "About"). Si está escondida por el modo simplificado, va a General.</summary>
     internal void ShowPage(string page)
     {
         if (FindName(page + "Page") is not FrameworkElement || PageNav(page).Visibility != Visibility.Visible)
             page = "General";
 
-        foreach (var name in new[] { "General", "Notes", "Dock", "Colors", "Sync", "Help", "About" })
+        foreach (var name in new[] { "General", "Appearance", "Notes", "Colors", "Dock", "Sync", "Help", "About" })
             ((FrameworkElement)FindName(name + "Page")).Visibility = name == page ? Visibility.Visible : Visibility.Collapsed;
 
         _currentPage = page;

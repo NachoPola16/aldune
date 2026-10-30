@@ -98,7 +98,7 @@ fun SettingsScreen(viewModel: NotesViewModel, onClose: () -> Unit) {
     BackHandler(onBack = onClose)
     // Qué bloques se enseñan: la regla vive en `SettingsSections` (domain) para poder probarla; aquí solo se pregunta.
     fun show(section: SettingsSection) = SettingsSections.isVisible(section, settings.simplifiedMode)
-    // Con todo a la vista Ajustes ocupa varias pantallas: se reparte en pestañas (General, Aspecto, Notas, Avisos). El modo simplificado es corto y
+    // Con todo a la vista Ajustes ocupa varias pantallas: se reparte en pestañas (General, Aspecto, Notas, Colores, Avisos, Sincronización). El modo simplificado es corto y
     // sigue siendo una sola pantalla. rememberSaveable: girar el móvil no vuelve a la primera pestaña.
     val tabs = !settings.simplifiedMode
     var tab by rememberSaveable { mutableIntStateOf(0) }
@@ -115,7 +115,7 @@ fun SettingsScreen(viewModel: NotesViewModel, onClose: () -> Unit) {
                 // Mismo orden que Ajustes de Windows para lo que comparten: lo general primero, la sincronización al final. Sin ella
                 // (modo simplificado) la pestaña no aparece.
                 val labels = buildList {
-                    add(R.string.settings_tab_general); add(R.string.settings_tab_appearance); add(R.string.settings_tab_notes); add(R.string.settings_tab_alerts)
+                    add(R.string.settings_tab_general); add(R.string.settings_tab_appearance); add(R.string.settings_tab_notes); add(R.string.settings_tab_colors); add(R.string.settings_tab_alerts)
                     if (show(SettingsSection.SYNC) || show(SettingsSection.BACKUP)) add(R.string.settings_tab_sync)
                 }
                 ScrollableTabRow(selectedTabIndex = tab.coerceAtMost(labels.lastIndex), edgePadding = 8.dp) {
@@ -125,10 +125,10 @@ fun SettingsScreen(viewModel: NotesViewModel, onClose: () -> Unit) {
                 }
             }
             Column(Modifier.verticalScroll(rememberScrollState()).padding(bottom = 24.dp)) {
-                if (show(SettingsSection.SYNC) && inTab(4)) SyncSection(viewModel)
-                if (show(SettingsSection.BACKUP) && inTab(4)) BackupSection(viewModel)
-                if (show(SettingsSection.CAPTURE) && inTab(3)) CaptureSection(viewModel, settings.captureNotification)
-                if (show(SettingsSection.REMINDERS) && inTab(3)) RemindersSection(viewModel, settings.exactReminders)
+                if (show(SettingsSection.SYNC) && inTab(5)) SyncSection(viewModel)
+                if (show(SettingsSection.BACKUP) && inTab(5)) BackupSection(viewModel)
+                if (show(SettingsSection.CAPTURE) && inTab(4)) CaptureSection(viewModel, settings.captureNotification)
+                if (show(SettingsSection.REMINDERS) && inTab(4)) RemindersSection(viewModel, settings.exactReminders)
 
                 if (inTab(1)) {
                 Section(R.string.settings_appearance)
@@ -173,25 +173,11 @@ fun SettingsScreen(viewModel: NotesViewModel, onClose: () -> Unit) {
                         dismissButton = { TextButton(onClick = { suggestedTheme = null }) { Text(stringResource(R.string.aspect_suggest_keep)) } },
                     )
                 }
-
-                Section(R.string.settings_language)
-                Choice(stringResource(R.string.language_system), settings.language.isEmpty()) { changeLanguage(viewModel, activity, "") }
-                for ((tag, name) in Languages.all) {
-                    Choice(name, settings.language == tag) { changeLanguage(viewModel, activity, tag) }
-                }
                 }
 
                 if (show(SettingsSection.NOTES) && inTab(2)) {
                     Section(R.string.settings_notes)
-                    GroupLabel(stringResource(R.string.note_theme))
-                    for (theme in NoteThemes.builtIn) {
-                        val name = themeNameRes(theme.id)?.let { stringResource(it) } ?: theme.name
-                        Choice(name, settings.noteThemeId == theme.id) { viewModel.updateSettings { it.copy(noteThemeId = theme.id) } }
-                    }
-                    NoteBehaviourSettings(settings, onChange = viewModel::updateSettings, onApplyToExisting = viewModel::applyColorRuleToActive)
-                    GroupLabel(stringResource(R.string.new_note_tone))
-                    Choice(stringResource(R.string.tone_light), !settings.darkNotes) { viewModel.updateSettings { it.copy(darkNotes = false) } }
-                    Choice(stringResource(R.string.tone_dark), settings.darkNotes) { viewModel.updateSettings { it.copy(darkNotes = true) } }
+                    NoteOrderSettings(settings, onChange = viewModel::updateSettings)
                     GroupLabel(stringResource(R.string.trash_days))
                     for (days in TRASH_OPTIONS) {
                         Choice(stringResource(R.string.trash_days_value, days), settings.trashDays == days) { viewModel.updateSettings { it.copy(trashDays = days) } }
@@ -221,7 +207,25 @@ fun SettingsScreen(viewModel: NotesViewModel, onClose: () -> Unit) {
                     Section(R.string.sounds_section)
                     SoundSettingsSection(settings, onChange = viewModel::updateSettings, onPreview = viewModel::previewSound)
                 }
+
+                if (show(SettingsSection.NOTES) && inTab(3)) {
+                    Section(R.string.settings_tab_colors)
+                    GroupLabel(stringResource(R.string.note_theme))
+                    for (theme in NoteThemes.builtIn) {
+                        val name = themeNameRes(theme.id)?.let { stringResource(it) } ?: theme.name
+                        Choice(name, settings.noteThemeId == theme.id) { viewModel.updateSettings { it.copy(noteThemeId = theme.id) } }
+                    }
+                    GroupLabel(stringResource(R.string.new_note_tone))
+                    Choice(stringResource(R.string.tone_light), !settings.darkNotes) { viewModel.updateSettings { it.copy(darkNotes = false) } }
+                    Choice(stringResource(R.string.tone_dark), settings.darkNotes) { viewModel.updateSettings { it.copy(darkNotes = true) } }
+                    NoteColorRuleSettings(settings, onChange = viewModel::updateSettings, onApplyToExisting = viewModel::applyColorRuleToActive)
+                }
                 if (inTab(0)) {
+                Section(R.string.settings_language)
+                Choice(stringResource(R.string.language_system), settings.language.isEmpty()) { changeLanguage(viewModel, activity, "") }
+                for ((tag, name) in Languages.all) {
+                    Choice(name, settings.language == tag) { changeLanguage(viewModel, activity, tag) }
+                }
                 HorizontalDivider(Modifier.padding(vertical = 12.dp))
                 SwitchRow(stringResource(R.string.check_updates), stringResource(R.string.check_updates_hint), settings.checkUpdates) { on ->
                     viewModel.updateSettings { it.copy(checkUpdates = on, dismissedUpdate = null) }

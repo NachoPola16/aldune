@@ -304,6 +304,7 @@
     <string name="settings_tab_general">Allgemein</string>
     <string name="settings_tab_appearance">Aussehen</string>
     <string name="settings_tab_notes">Notizen</string>
+    <string name="settings_tab_colors">Farben</string>
     <string name="settings_tab_alerts">Hinweise</string>
     <string name="hide_done_tasks">Erledigte Aufgaben ausblenden</string>
     <string name="hide_done_tasks_hint">Der Text ändert sich nicht: Sie werden nur beim Bearbeiten ausgeblendet und lassen sich in der Notiz wieder einblenden.</string>

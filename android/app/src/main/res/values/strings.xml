@@ -304,6 +304,7 @@
     <string name="settings_tab_general">General</string>
     <string name="settings_tab_appearance">Appearance</string>
     <string name="settings_tab_notes">Notes</string>
+    <string name="settings_tab_colors">Colors</string>
     <string name="settings_tab_alerts">Alerts</string>
     <string name="hide_done_tasks">Hide completed tasks</string>
     <string name="hide_done_tasks_hint">The text does not change: they are only hidden while you edit, and you can show them again from the note.</string>

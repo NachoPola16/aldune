@@ -304,6 +304,7 @@
     <string name="settings_tab_general">Général</string>
     <string name="settings_tab_appearance">Apparence</string>
     <string name="settings_tab_notes">Notes</string>
+    <string name="settings_tab_colors">Couleurs</string>
     <string name="settings_tab_alerts">Alertes</string>
     <string name="hide_done_tasks">Masquer les tâches faites</string>
     <string name="hide_done_tasks_hint">Le texte ne change pas : elles sont seulement masquées pendant l\'édition et on peut les réafficher depuis la note.</string>

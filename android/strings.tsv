@@ -303,6 +303,7 @@ keyboard_never	Never	Nunca	Nie	Jamais	Nunca
 settings_tab_general	General	General	Allgemein	Général	Geral
 settings_tab_appearance	Appearance	Aspecto	Aussehen	Apparence	Aparência
 settings_tab_notes	Notes	Notas	Notizen	Notes	Notas
+settings_tab_colors	Colors	Colores	Farben	Couleurs	Cores
 settings_tab_alerts	Alerts	Avisos	Hinweise	Alertes	Avisos
 hide_done_tasks	Hide completed tasks	Ocultar las tareas hechas	Erledigte Aufgaben ausblenden	Masquer les tâches faites	Ocultar tarefas concluídas
 hide_done_tasks_hint	The text does not change: they are only hidden while you edit, and you can show them again from the note.	El texto no cambia: solo se esconden al editar y puedes volver a verlas desde la nota.	Der Text ändert sich nicht: Sie werden nur beim Bearbeiten ausgeblendet und lassen sich in der Notiz wieder einblenden.	Le texte ne change pas : elles sont seulement masquées pendant l'édition et on peut les réafficher depuis la note.	O texto não muda: elas só ficam ocultas ao editar e você pode vê-las de novo na nota.
