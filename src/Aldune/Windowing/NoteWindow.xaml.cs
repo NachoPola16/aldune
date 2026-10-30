@@ -818,6 +818,7 @@ public partial class NoteWindow : Window
             TextBody.SetResourceReference(System.Windows.Documents.TextElement.FontSizeProperty, "AlduneNoteBodySize");
             TextBody.SetResourceReference(System.Windows.Controls.TextBlock.LineHeightProperty, "AlduneNoteLineHeight");
             BodyPlaceholder.SetResourceReference(System.Windows.Controls.TextBlock.FontSizeProperty, "AlduneNoteBodySize");
+            BodyPlaceholder.SetResourceReference(System.Windows.Controls.TextBlock.LineHeightProperty, "AlduneNoteLineHeight");
             return;
         }
 
@@ -827,6 +828,7 @@ public partial class NoteWindow : Window
         TextBody.FontSize = size;
         BodyPlaceholder.FontSize = size;
         System.Windows.Controls.TextBlock.SetLineHeight(TextBody, double.IsNaN(line) ? double.NaN : Math.Round(line * zoom));
+        BodyPlaceholder.LineHeight = double.IsNaN(line) ? double.NaN : Math.Round(line * zoom);
     }
 
     private readonly TypingThrottle _typingThrottle = new();
