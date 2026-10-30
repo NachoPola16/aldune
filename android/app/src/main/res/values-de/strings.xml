@@ -257,8 +257,8 @@
     <string name="uniform_color">Gleiche Farbe für alle Notizen</string>
     <string name="uniform_color_hint">Ändert nur die Darstellung; jede Notiz behält ihre eigene Farbe.</string>
     <string name="color_uniform_notice">„Gleiche Farbe für alle Notizen“ ist aktiv: Du kannst eine Farbe wählen, sie wird aber erst sichtbar, wenn du das ausschaltest.</string>
-    <string name="fill_note_color">Notizfarbe als Hintergrund</string>
-    <string name="fill_note_color_hint">Die ganze Karte übernimmt die Notizfarbe, wie unter Windows. Aus: nur ein Streifen links.</string>
+    <string name="stripe_note_color">Notizfarbe nur als Seitenstreifen (nicht die ganze Notiz)</string>
+    <string name="stripe_note_color_locked">Dieses Design bestimmt bereits, wie die Notizfarbe angezeigt wird.</string>
     <string name="square_corners">Eckige Ecken</string>
     <string name="square_corners_hint">Notizen, Listen, Dialoge und Widget ohne abgerundete Ecken.</string>
     <string name="new_button_shape">Form der Schaltfläche für neue Notizen (+)</string>

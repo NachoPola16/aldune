@@ -24,6 +24,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import app.aldune.R
 import app.aldune.data.AppSettings
+import app.aldune.text.AspectSkin
 
 /** Color con el que arranca «mismo color en todas las notas»: el amarillo del tema Clásico, como en Windows. */
 private const val DEFAULT_UNIFORM = "#EBD38B"
@@ -52,9 +53,13 @@ fun NoteLookSection(settings: AppSettings, onChange: ((AppSettings) -> AppSettin
             )
         }
     }
-    SwitchRow(stringResource(R.string.fill_note_color), stringResource(R.string.fill_note_color_hint), settings.colorFill) { on ->
-        onChange { it.copy(fillNoteColor = on) }
-    }
+    // Igual que Windows («Color de la nota solo como franja lateral»): mismo texto y mismo sentido del interruptor, y bloqueado en los aspectos que
+    // ya deciden cómo se ve el color (Telecom, Bash, Fósforo).
+    val locked = AspectSkin.colorLocked(settings.appearance)
+    SwitchRow(
+        stringResource(R.string.stripe_note_color), if (locked) stringResource(R.string.stripe_note_color_locked) else "",
+        checked = !settings.colorFill, enabled = !locked,
+    ) { on -> onChange { it.copy(fillNoteColor = !on) } }
     SwitchRow(stringResource(R.string.square_corners), stringResource(R.string.square_corners_hint), settings.cornersSquare) { on ->
         onChange { it.copy(squareCorners = on) }
     }

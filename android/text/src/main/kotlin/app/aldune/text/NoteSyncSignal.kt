@@ -32,4 +32,7 @@ object AspectSkin {
 
     /** Color de la nota como fondo de toda la tarjeta: los aspectos de terminal ya deciden cómo llevarlo (franja, canal, sin color), así que van sin él. */
     fun colorFill(mode: Int): Boolean = mode !in terminal
+
+    /** El aspecto decide solo cómo se muestra el color de la nota (como `AppearanceNoteColorStripeLocked` de Windows): el ajuste se bloquea. */
+    fun colorLocked(mode: Int): Boolean = mode in terminal
 }

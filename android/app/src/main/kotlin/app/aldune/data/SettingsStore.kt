@@ -81,7 +81,7 @@ data class AppSettings(
     val simplifiedMode: Boolean = false,
 ) {
     val quickList: QuickList? get() = quickListId?.let { QuickList(it, quickListTitle) }
-    val colorFill: Boolean get() = fillNoteColor ?: AspectSkin.colorFill(appearance)
+    val colorFill: Boolean get() = if (AspectSkin.colorLocked(appearance)) false else fillNoteColor ?: AspectSkin.colorFill(appearance)
     val cornersSquare: Boolean get() = squareCorners ?: AspectSkin.squareCorners(appearance)
     val syncSignalVisible: Boolean get() = showSyncSignal ?: AspectSkin.syncSignal(appearance)
     val newButtonSquare: Boolean get() = when (newButtonShape) { 1 -> false; 2 -> true; else -> cornersSquare }
