@@ -396,4 +396,7 @@
     <string name="sound_choice_pen_tap">Federtupfer</string>
     <string name="sound_choice_paper_crumple">Papier zerknüllen</string>
     <string name="sound_choice_pen_scratch">Federkratzen</string>
+    <string name="sound_event_note_created">Neue Notiz</string>
+    <string name="sound_event_sync_done">Synchronisierung abgeschlossen (manuell)</string>
+    <string name="sound_event_sync_failed">Synchronisierung fehlgeschlagen</string>
 </resources>

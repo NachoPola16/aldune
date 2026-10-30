@@ -396,4 +396,7 @@
     <string name="sound_choice_pen_tap">Toque de pluma</string>
     <string name="sound_choice_paper_crumple">Papel que se arruga</string>
     <string name="sound_choice_pen_scratch">Rasguño de pluma</string>
+    <string name="sound_event_note_created">Nota nueva</string>
+    <string name="sound_event_sync_done">Sincronización terminada (manual)</string>
+    <string name="sound_event_sync_failed">Sincronización fallida</string>
 </resources>

@@ -176,6 +176,7 @@ class NotesViewModel(application: Application) : AndroidViewModel(application) {
             SharedNote.TooLong -> SharedOutcome.TooLong
             is SharedNote.Text -> io.withLock {
                 val created = service?.create(composed.value, settings = newNoteColors()) as? NoteResult.Ok
+                if (created != null) sounds.play(SoundEvent.NOTE_CREATED)
                 refreshLocked()
                 syncEvent(SyncEvent.LocalChange)
                 widgetChanged()
@@ -246,6 +247,7 @@ class NotesViewModel(application: Application) : AndroidViewModel(application) {
         protection = opened.protection
         ready = opened
         _sync.value = opened.sync.also { it.onNotesChanged = { launchIo { reconcileDrafts(); refreshLocked(); widgetChanged() } } }
+        watchSyncSounds(opened.sync)
         // Como Windows: la papelera se purga al abrir, con los días de los ajustes (30 por defecto).
         notes.purgeTrashed(_settings.value.trashDays)
         // Al abrir: avisa de los vencidos con la app muerta, limpia los de notas que ya no están y programa los demás.
@@ -265,7 +267,25 @@ class NotesViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     fun syncEvent(event: SyncEvent) {
+        if (event == SyncEvent.ManualSync || event == SyncEvent.PullToRefresh) manualSyncPending = true
         _sync.value?.request(event)
+    }
+
+    // Como en Windows, «sync hecha» solo suena cuando el usuario la pidió: las de segundo plano y las que siguen a cada edición no.
+    private var manualSyncPending = false
+
+    private fun watchSyncSounds(sync: app.aldune.syncing.SyncController) {
+        viewModelScope.launch {
+            var wasRunning = false
+            sync.status.collect { status ->
+                if (wasRunning && !status.running) {
+                    if (status.lastFailure != null) sounds.play(SoundEvent.SYNC_FAILED)
+                    else if (manualSyncPending) sounds.play(SoundEvent.SYNC_DONE)
+                    manualSyncPending = false
+                }
+                wasRunning = status.running
+            }
+        }
     }
 
     /**
@@ -362,7 +382,7 @@ class NotesViewModel(application: Application) : AndroidViewModel(application) {
             if (text == draft.lastSaved) return@withLock
             val id = draft.noteId
             if (id == null) {
-                if (text.isNotEmpty()) (service?.create(text, settings = newNoteColors()) as? NoteResult.Ok)?.let { draft.noteId = it.value.id; draft.lastSaved = text }
+                if (text.isNotEmpty()) (service?.create(text, settings = newNoteColors()) as? NoteResult.Ok)?.let { draft.noteId = it.value.id; draft.lastSaved = text; sounds.play(SoundEvent.NOTE_CREATED) }
             } else if (service?.edit(id, text) is NoteResult.Ok) {
                 draft.lastSaved = text
             }

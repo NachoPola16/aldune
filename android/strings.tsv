@@ -395,3 +395,6 @@ sound_choice_paper_fold	Folding paper	Papel que se pliega	Papier falten	Papier q
 sound_choice_pen_tap	Pen tap	Toque de pluma	Federtupfer	Touche de plume	Toque de caneta
 sound_choice_paper_crumple	Crumpling paper	Papel que se arruga	Papier zerknüllen	Papier froissé	Papel amassando
 sound_choice_pen_scratch	Pen scratch	Rasguño de pluma	Federkratzen	Grattement de plume	Rabisco de caneta
+sound_event_note_created	New note	Nota nueva	Neue Notiz	Nouvelle note	Nova nota
+sound_event_sync_done	Sync finished (manual)	Sincronización terminada (manual)	Synchronisierung abgeschlossen (manuell)	Synchronisation terminée (manuelle)	Sincronização concluída (manual)
+sound_event_sync_failed	Sync failed	Sincronización fallida	Synchronisierung fehlgeschlagen	Échec de la synchronisation	Falha na sincronização

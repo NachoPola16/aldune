@@ -396,4 +396,7 @@
     <string name="sound_choice_pen_tap">Toque de caneta</string>
     <string name="sound_choice_paper_crumple">Papel amassando</string>
     <string name="sound_choice_pen_scratch">Rabisco de caneta</string>
+    <string name="sound_event_note_created">Nova nota</string>
+    <string name="sound_event_sync_done">Sincronização concluída (manual)</string>
+    <string name="sound_event_sync_failed">Falha na sincronização</string>
 </resources>

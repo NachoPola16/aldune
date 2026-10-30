@@ -396,4 +396,7 @@
     <string name="sound_choice_pen_tap">Pen tap</string>
     <string name="sound_choice_paper_crumple">Crumpling paper</string>
     <string name="sound_choice_pen_scratch">Pen scratch</string>
+    <string name="sound_event_note_created">New note</string>
+    <string name="sound_event_sync_done">Sync finished (manual)</string>
+    <string name="sound_event_sync_failed">Sync failed</string>
 </resources>

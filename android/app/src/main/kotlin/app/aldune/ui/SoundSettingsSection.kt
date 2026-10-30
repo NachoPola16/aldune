@@ -30,7 +30,7 @@ import app.aldune.domain.SoundPlan
 
 /**
  * Los sonidos de papel y pluma (Ajustes → Notas): mismo interruptor, volumen y claves que en Windows. Apagados de fábrica.
- * Solo se ofrecen los eventos que Android produce; los recordatorios ya traen el sonido de su notificación.
+ * Los recordatorios no se ofrecen: ya traen el sonido de su notificación.
  */
 @Composable
 fun SoundSettingsSection(settings: AppSettings, onChange: ((AppSettings) -> AppSettings) -> Unit, onPreview: (SoundEvent) -> Unit) {
@@ -79,7 +79,8 @@ private fun SoundEventRow(event: SoundEvent, settings: AppSettings, onChange: ((
 }
 
 private val EVENTS = listOf(
-    SoundEvent.NOTE_OPENED, SoundEvent.NOTE_CLOSED, SoundEvent.TASK_CHECKED, SoundEvent.NOTE_DELETED, SoundEvent.NOTE_ARCHIVED, SoundEvent.TYPING,
+    SoundEvent.NOTE_OPENED, SoundEvent.NOTE_CLOSED, SoundEvent.NOTE_CREATED, SoundEvent.TASK_CHECKED, SoundEvent.NOTE_DELETED, SoundEvent.NOTE_ARCHIVED,
+    SoundEvent.SYNC_DONE, SoundEvent.SYNC_FAILED, SoundEvent.TYPING,
 )
 
 private fun eventName(event: SoundEvent): Int = when (event) {
@@ -88,6 +89,9 @@ private fun eventName(event: SoundEvent): Int = when (event) {
     SoundEvent.TASK_CHECKED -> R.string.sound_event_task_checked
     SoundEvent.NOTE_DELETED -> R.string.sound_event_note_deleted
     SoundEvent.NOTE_ARCHIVED -> R.string.sound_event_note_archived
+    SoundEvent.NOTE_CREATED -> R.string.sound_event_note_created
+    SoundEvent.SYNC_DONE -> R.string.sound_event_sync_done
+    SoundEvent.SYNC_FAILED -> R.string.sound_event_sync_failed
     else -> R.string.sound_event_typing
 }
 
