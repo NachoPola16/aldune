@@ -62,14 +62,15 @@ public partial class ConfigImportWindow : Window
     {
         var name = new TextBlock
         {
-            Text = change.Name, FontSize = 13, FontWeight = FontWeights.SemiBold,
+            Text = change.Name, FontWeight = FontWeights.SemiBold,
         };
+        name.SetResourceReference(TextBlock.FontSizeProperty, "AlduneTextBody");
         name.SetResourceReference(TextBlock.ForegroundProperty, "AlduneTextBrush");
 
         var values = new TextBlock
         {
             Text = $"{change.Old} → {change.New}",
-            FontFamily = new FontFamily("Cascadia Mono, Consolas"), FontSize = 11,
+            FontFamily = new FontFamily("Cascadia Mono, Consolas"),
             TextTrimming = TextTrimming.CharacterEllipsis, TextWrapping = TextWrapping.NoWrap,
             Margin = new Thickness(0, 2, 0, 0),
             ToolTip = new TextBlock
@@ -78,6 +79,7 @@ public partial class ConfigImportWindow : Window
                 FontFamily = new FontFamily("Cascadia Mono, Consolas"), FontSize = 11,
             },
         };
+        values.SetResourceReference(TextBlock.FontSizeProperty, "AlduneTextSmall");
         values.SetResourceReference(TextBlock.ForegroundProperty, "AlduneTextSoftBrush");
 
         var row = new StackPanel { Margin = new Thickness(0, 0, 0, 9) };

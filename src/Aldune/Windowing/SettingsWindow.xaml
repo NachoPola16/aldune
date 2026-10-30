@@ -267,7 +267,7 @@
                             Click="OnMinimizeClick"
                             WindowChrome.IsHitTestVisibleInChrome="True"
                             Style="{StaticResource CloseButtonStyle}">
-                        <Border Width="10" Height="1" VerticalAlignment="Center"
+                        <Border Width="10" Height="1" VerticalAlignment="Center" Margin="0,6,0,0"
                             UseLayoutRounding="True" SnapsToDevicePixels="True"
                             Background="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}" />
                     </Button>
@@ -334,7 +334,8 @@
 
             <ScrollViewer x:Name="PageScroller" Grid.Column="1" Margin="1,0,0,0"
                           VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
-                <Grid Margin="28,0,28,24">
+                <!-- Ancho máximo: en pantalla completa los interruptores no se van al borde derecho, siempre quedan a la misma distancia del texto. -->
+                <Grid Margin="28,0,28,24" MaxWidth="780" HorizontalAlignment="Left">
                 <StackPanel x:Name="GeneralPage" Visibility="Collapsed">
                     <TextBlock Text="{x:Static res:Strings.SettingsPageGeneral}" Foreground="{DynamicResource AlduneTextStrongBrush}" FontSize="{DynamicResource AlduneTextTitle}" FontWeight="SemiBold" Margin="0,0,0,16" />
                     <Border x:Name="InterfaceModePanel" Margin="0,0,0,0"
@@ -609,7 +610,7 @@
                                 <ColumnDefinition Width="150" />
                                 <ColumnDefinition Width="*" />
                             </Grid.ColumnDefinitions>
-                            <TextBlock Text="{x:Static res:Strings.SoundVolumeLabel}" VerticalAlignment="Center" FontSize="13"
+                            <TextBlock Text="{x:Static res:Strings.SoundVolumeLabel}" VerticalAlignment="Center" FontSize="{DynamicResource AlduneTextBody}"
                                        Foreground="{DynamicResource AlduneTextBrush}" />
                             <Slider x:Name="SoundVolumeSlider" Grid.Column="1" Minimum="0" Maximum="100" SmallChange="5" LargeChange="10"
                                     TickFrequency="10" Background="{DynamicResource AlduneTrackBrush}" VerticalAlignment="Center"
@@ -969,7 +970,7 @@
                             <StackPanel Orientation="Horizontal">
                                 <Button Content="{x:Static res:Strings.AutoExportChooseFolder}" Padding="10,5" Style="{StaticResource RecordButtonStyle}"
                                         Click="OnAutoExportChooseFolderClick" />
-                                <TextBlock x:Name="AutoExportFolderText" Margin="12,0,0,0" VerticalAlignment="Center" FontSize="13" TextTrimming="CharacterEllipsis" MaxWidth="360"
+                                <TextBlock x:Name="AutoExportFolderText" Margin="12,0,0,0" VerticalAlignment="Center" FontSize="{DynamicResource AlduneTextBody}" TextTrimming="CharacterEllipsis" MaxWidth="360"
                                            Foreground="{DynamicResource AlduneTextBrush}" />
                             </StackPanel>
                             <CheckBox x:Name="AutoExportArchivedCheck" Margin="0,12,0,0"

@@ -1270,6 +1270,8 @@ public sealed class AppCoordinator
     /// </summary>
     internal void RaiseAppWindow(Window window)
     {
+        // Minimizada no se ve aunque se active: se restaura (pulsar «Ajustes» o «Gestionar notas» con la ventana ya abierta y minimizada la trae de vuelta).
+        if (window.WindowState == WindowState.Minimized) window.WindowState = WindowState.Normal;
         if (_windowsAboveNotes.Add(window))
         {
             SuspendNotesAboveDockMenu();

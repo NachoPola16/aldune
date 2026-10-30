@@ -819,6 +819,7 @@ public partial class NoteWindow : Window
             TextBody.SetResourceReference(System.Windows.Controls.TextBlock.LineHeightProperty, "AlduneNoteLineHeight");
             BodyPlaceholder.SetResourceReference(System.Windows.Controls.TextBlock.FontSizeProperty, "AlduneNoteBodySize");
             BodyPlaceholder.SetResourceReference(System.Windows.Controls.TextBlock.LineHeightProperty, "AlduneNoteLineHeight");
+            RefreshPaper();
             return;
         }
 
@@ -829,6 +830,7 @@ public partial class NoteWindow : Window
         BodyPlaceholder.FontSize = size;
         System.Windows.Controls.TextBlock.SetLineHeight(TextBody, double.IsNaN(line) ? double.NaN : Math.Round(line * zoom));
         BodyPlaceholder.LineHeight = double.IsNaN(line) ? double.NaN : Math.Round(line * zoom);
+        RefreshPaper();
     }
 
     private readonly TypingThrottle _typingThrottle = new();
@@ -2003,8 +2005,8 @@ public partial class NoteWindow : Window
         NativeMethods.SetFrameColor(this, ((System.Windows.Media.SolidColorBrush)brush).Color);
         // Con retícula (osciloscopio) el cuadro de texto deja ver la cuadrícula del fondo.
         TextBody.Background = skin.NoteGrid || skin.Paper != SkinPaper.None ? Brushes.Transparent : brush;
-        double bodyLine = TryFindResource("AlduneNoteLineHeight") is double lh && lh > 0 ? lh : 24;
-        BodyHost.Background = skin.NoteGrid ? GridBrush(face.Ink, bodyLine, 6 + bodyLine - 1.5) : null;
+        _gridInk = skin.NoteGrid ? face.Ink : null;
+        BodyHost.Background = null;
         // La retícula no llega al borde de la nota: margen a la izquierda igual que a la derecha, y el texto entra un poco dentro de la primera
         // cuadrícula en vez de pegarse a su borde superior.
         _bodyPadding ??= TextBody.Padding;
@@ -2072,7 +2074,10 @@ public partial class NoteWindow : Window
 
     // Retícula de osciloscopio: líneas de 1 px cada 24, de la tinta muy translúcida, para que se lea
     // como fondo y no compita con el texto.
+    // Cuánto por debajo del fondo de la línea de texto cae el renglón: con 0 el cursor (alto de línea entero) tocaba el renglón de abajo.
+    private const double RuleClearance = 1.5;
     private SkinPaper _paper = SkinPaper.None;
+    private string? _gridInk;
     private Thickness? _bodyPadding, _placeholderMargin;
     private System.Windows.Media.Color _paperInk;
     private bool _paperLight;
@@ -2080,10 +2085,17 @@ public partial class NoteWindow : Window
     /// <summary>Repinta el papel de la libreta con el tamaño actual del cuerpo (no hace nada en los demás aspectos: ahí manda la retícula o nada).</summary>
     private void RefreshPaper()
     {
+        // El alto de línea REAL del cuerpo, con el zoom de la nota (Ctrl + rueda) y el «Tamaño del texto» ya aplicados: así los renglones y la retícula
+        // se redimensionan con el texto y cada línea sigue apoyada en el suyo.
+        double lineHeight = System.Windows.Controls.TextBlock.GetLineHeight(TextBody) is var lh && lh > 0 && !double.IsNaN(lh) ? lh : 22;
+        if (_gridInk is not null)
+        {
+            BodyHost.Background = GridBrush(_gridInk, lineHeight, 6 + lineHeight + RuleClearance);
+            return;
+        }
         if (_paper == SkinPaper.None) return;
-        double lineHeight = TryFindResource("AlduneNoteLineHeight") is double h && h > 0 ? h : 22;
         // El primer renglón cae bajo la primera línea del texto: su altura de línea menos lo que la letra queda por encima del renglón.
-        BodyHost.Background = NotePaper.Create(_paper, _paperInk, _paperLight, BodyHost.ActualWidth, BodyHost.ActualHeight, lineHeight, firstRule: lineHeight - 1.5);
+        BodyHost.Background = NotePaper.Create(_paper, _paperInk, _paperLight, BodyHost.ActualWidth, BodyHost.ActualHeight, lineHeight, firstRule: lineHeight + RuleClearance);
     }
 
     /// <summary>La retícula del osciloscopio: cuadros del alto de línea, con las horizontales justo bajo cada línea de texto (<paramref name="firstRule"/> es dónde cae la primera).</summary>

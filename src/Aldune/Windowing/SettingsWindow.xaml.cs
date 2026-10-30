@@ -731,11 +731,12 @@ public partial class SettingsWindow : Window
         {
             var setting = SoundPlan.SettingFor(_settings, soundEvent);
             var row = new Grid { Margin = new Thickness(0, 0, 0, 8) };
-            row.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(150) });
+            row.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(Math.Round(150 * ThemeManager.TextFactor)) });
             row.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
             row.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
 
-            var label = new TextBlock { Text = Strings.SoundEventName(soundEvent), VerticalAlignment = VerticalAlignment.Center, FontSize = 13 };
+            var label = new TextBlock { Text = Strings.SoundEventName(soundEvent), VerticalAlignment = VerticalAlignment.Center };
+            label.SetResourceReference(TextBlock.FontSizeProperty, "AlduneTextBody");
             label.SetResourceReference(TextBlock.ForegroundProperty, "AlduneTextBrush");
 
             var combo = new ComboBox
@@ -957,6 +958,9 @@ public partial class SettingsWindow : Window
         _settingsService.Save(_settings);
         ThemeManager.ApplyTextScale(Application.Current, percent);
         _coordinator?.RefreshNoteAppearance();
+        // Las filas que se construyen por código llevan medidas en píxeles (columnas, muestras): se rehacen con el tamaño nuevo.
+        PopulateAspectColors();
+        BuildSoundRows();
     }
 
     private void PopulateEdges()
@@ -1654,9 +1658,10 @@ public partial class SettingsWindow : Window
             row.Children.Add(Swatch(colors[slot.Id], selected: true));
             var value = new TextBlock
             {
-                Text = colors[slot.Id], FontFamily = new FontFamily("Cascadia Mono, Consolas"), FontSize = 11,
+                Text = colors[slot.Id], FontFamily = new FontFamily("Cascadia Mono, Consolas"),
                 VerticalAlignment = VerticalAlignment.Center, Margin = new Thickness(8, 0, 8, 0),
             };
+            value.SetResourceReference(TextBlock.FontSizeProperty, "AlduneTextSmall");
             value.SetResourceReference(TextBlock.ForegroundProperty, "AlduneTextBrush");
             row.Children.Add(value);
             foreach (var suggestion in slot.Suggestions)
@@ -1690,8 +1695,9 @@ public partial class SettingsWindow : Window
         {
             var label = new TextBlock
             {
-                Text = text, Width = 110, VerticalAlignment = VerticalAlignment.Center, FontSize = 13,
+                Text = text, Width = Math.Round(110 * ThemeManager.TextFactor), VerticalAlignment = VerticalAlignment.Center,
             };
+            label.SetResourceReference(TextBlock.FontSizeProperty, "AlduneTextBody");
             label.SetResourceReference(TextBlock.ForegroundProperty, "AlduneTextBrush");
             return label;
         }
@@ -1702,7 +1708,7 @@ public partial class SettingsWindow : Window
     {
         var swatch = new Border
         {
-            Width = 22, Height = 16, Margin = new Thickness(0, 0, 4, 0),
+            Width = Math.Round(22 * ThemeManager.TextFactor), Height = Math.Round(16 * ThemeManager.TextFactor), Margin = new Thickness(0, 0, 4, 0),
             BorderThickness = new Thickness(selected ? 2 : 1),
             Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString(color)),
         };

@@ -157,7 +157,7 @@
                                     VerticalAlignment="Center">
                                 <Grid>
                                     <!-- Marca y guion comparten sitio: uno u otro, nunca los dos. -->
-                                    <TextBlock x:Name="Tick" Text="&#x2713;" FontSize="12"
+                                    <TextBlock x:Name="Tick" Text="&#x2713;" FontSize="{DynamicResource AlduneTextCaption}"
                                                FontWeight="Bold"
                                                Foreground="{TemplateBinding Background}"
                                                HorizontalAlignment="Center" VerticalAlignment="Center"
@@ -334,7 +334,12 @@
                             Click="OnNewNoteClick"
                             WindowChrome.IsHitTestVisibleInChrome="True"
                             Style="{StaticResource ToolbarButtonStyle}">
-                        <TextBlock Text="&#xE710;" />
+                        <!-- El «+» se dibuja (dos barras de 2 px en una caja de 12): como glifo de fuente medía 10×9 y caía medio píxel alto; así queda
+                             centrado al píxel, como el «+» del dock. -->
+                        <Grid Width="12" Height="12" UseLayoutRounding="True" SnapsToDevicePixels="True">
+                            <Border Height="2" VerticalAlignment="Center" Background="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}" />
+                            <Border Width="2" HorizontalAlignment="Center" Background="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}" />
+                        </Grid>
                     </Button>
                     <Button Width="28" Height="28"
                             ToolTip="{x:Static res:Strings.MinimizeWindowTooltip}"
@@ -342,7 +347,7 @@
                             Click="OnMinimizeClick"
                             WindowChrome.IsHitTestVisibleInChrome="True"
                             Style="{StaticResource TitleBarButtonStyle}">
-                        <Border Width="10" Height="1" VerticalAlignment="Center"
+                        <Border Width="10" Height="1" VerticalAlignment="Center" Margin="0,6,0,0"
                             UseLayoutRounding="True" SnapsToDevicePixels="True"
                             Background="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}" />
                     </Button>

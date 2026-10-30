@@ -239,7 +239,7 @@
                         Click="OnMinimizeClick"
                         WindowChrome.IsHitTestVisibleInChrome="True"
                         Style="{StaticResource CloseButtonStyle}">
-                    <Border Width="10" Height="1" VerticalAlignment="Center"
+                    <Border Width="10" Height="1" VerticalAlignment="Center" Margin="0,6,0,0"
                                 UseLayoutRounding="True" SnapsToDevicePixels="True"
                                 Background="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}" />
                 </Button>
@@ -377,7 +377,7 @@
                         <!-- Aviso cuando la piel activa no va a enseñar el color elegido tal cual (franja gris, sin
                              colores, color del canal). Se decide al abrir el menú. -->
                         <TextBlock x:Name="ColorNotice" Visibility="Collapsed"
-                                   Foreground="{DynamicResource AlduneHintBrush}" FontSize="11" TextWrapping="Wrap"
+                                   Foreground="{DynamicResource AlduneHintBrush}" FontSize="{DynamicResource AlduneTextSmall}" TextWrapping="Wrap"
                                    MaxWidth="230" Margin="9,0,9,8" />
                         <Button x:Name="CustomColorButton" Click="OnCustomColorClick"
                                 Content="{x:Static res:Strings.CustomColor}"
@@ -385,7 +385,7 @@
                         <Button x:Name="PinButton" Click="OnPinClick"
                                 Style="{StaticResource NoteMenuItemStyle}" />
                         <TextBlock x:Name="PinHint"
-                                   Foreground="{DynamicResource AlduneHintBrush}" FontSize="11" TextWrapping="Wrap"
+                                   Foreground="{DynamicResource AlduneHintBrush}" FontSize="{DynamicResource AlduneTextSmall}" TextWrapping="Wrap"
                                    Margin="9,0,9,6" />
                         <Button x:Name="ProtectionButton" Click="OnProtectionClick" ToolTipService.ShowOnDisabled="True"
                                 Content="{x:Static res:Strings.ProtectNote}"
@@ -481,7 +481,7 @@
             <Border x:Name="UnavailableBar" Visibility="Collapsed" Padding="10,6" Margin="14,10,20,0"
                     Background="{DynamicResource AlduneDangerBgBrush}" CornerRadius="{DynamicResource AlduneRadius4}">
                 <StackPanel>
-                    <TextBlock x:Name="UnavailableText" TextWrapping="Wrap" FontSize="12"
+                    <TextBlock x:Name="UnavailableText" TextWrapping="Wrap" FontSize="{DynamicResource AlduneTextCaption}"
                                Foreground="{DynamicResource AlduneOnDangerBrush}" />
                     <WrapPanel Margin="0,6,0,0">
                         <Button x:Name="UnavailableRetryButton" Click="OnUnavailableRetryClick" Margin="0,0,6,0"
@@ -618,30 +618,30 @@
              encima del texto, para no tapar la última tarea. -->
         <StackPanel x:Name="AllDoneBar" Grid.Row="3" Orientation="Horizontal"
                     Margin="20,-8,20,12" Visibility="Collapsed">
-            <TextBlock Text="{x:Static res:Strings.AllTasksDone}" FontSize="12"
+            <TextBlock Text="{x:Static res:Strings.AllTasksDone}" FontSize="{DynamicResource AlduneTextCaption}"
                        Foreground="{DynamicResource NoteInkBrush}" Opacity="0.75"
                        VerticalAlignment="Center" Margin="0,0,10,0" />
             <Button Click="OnUncheckAllClick" Style="{StaticResource NoteActionButtonStyle}"
                     Padding="8,3" Margin="0,0,6,0">
-                <TextBlock Text="{x:Static res:Strings.UncheckAllTasks}" FontSize="12"
+                <TextBlock Text="{x:Static res:Strings.UncheckAllTasks}" FontSize="{DynamicResource AlduneTextCaption}"
                            Foreground="{DynamicResource NoteInkBrush}" />
             </Button>
             <Button x:Name="AllDoneArchiveButton" Click="OnArchiveClick" Style="{StaticResource NoteActionButtonStyle}"
                     Padding="8,3">
-                <TextBlock Text="{x:Static res:Strings.Archive}" FontSize="12"
+                <TextBlock Text="{x:Static res:Strings.Archive}" FontSize="{DynamicResource AlduneTextCaption}"
                            Foreground="{DynamicResource NoteInkBrush}" />
             </Button>
         </StackPanel>
 
         <!-- «Sincronizando…» mientras corre una pasada de sync (ver UpdateSyncingText). Abajo a la izquierda, frente a la señal. -->
         <TextBlock x:Name="SyncingText" Grid.Row="3" HorizontalAlignment="Left" VerticalAlignment="Bottom"
-                   Margin="14,-8,0,10" FontSize="11" Text="{x:Static res:Strings.SyncInProgressStatus}"
+                   Margin="14,-8,0,10" FontSize="{DynamicResource AlduneTextSmall}" Text="{x:Static res:Strings.SyncInProgressStatus}"
                    Foreground="{DynamicResource NoteInkBrush}" Opacity="0.7" IsHitTestVisible="False" Visibility="Collapsed" />
 
         <!-- Señal de sincronización (opción de Ajustes → Aspecto). En la fila de abajo, a la derecha,
              para no tapar texto; monoespaciada para que las barras ▂▄▆█ queden alineadas. -->
         <TextBlock x:Name="SyncSignalText" Grid.Row="3" HorizontalAlignment="Right" VerticalAlignment="Bottom"
-                   Margin="0,-8,14,10" FontFamily="Cascadia Mono, Consolas" FontSize="11"
+                   Margin="0,-8,14,10" FontFamily="Cascadia Mono, Consolas" FontSize="{DynamicResource AlduneTextSmall}"
                    Foreground="{DynamicResource NoteInkBrush}" Opacity="0.7" Visibility="Collapsed" />
 
         <!-- Franja de la piel Stripe: el color de la nota va solo aquí (ver NoteFace). -->
@@ -655,7 +655,7 @@
                 CornerRadius="{DynamicResource AlduneRadius4}">
             <StackPanel Orientation="Horizontal">
                 <Grid>
-                    <TextBlock Text="{x:Static res:Strings.FindInNotePlaceholder}" FontSize="12" IsHitTestVisible="False"
+                    <TextBlock Text="{x:Static res:Strings.FindInNotePlaceholder}" FontSize="{DynamicResource AlduneTextCaption}" IsHitTestVisible="False"
                                VerticalAlignment="Center" Opacity="0.55" Foreground="{DynamicResource NoteInkBrush}">
                         <TextBlock.Style>
                             <Style TargetType="TextBlock">
@@ -668,11 +668,11 @@
                             </Style>
                         </TextBlock.Style>
                     </TextBlock>
-                    <TextBox x:Name="FindBox" Width="120" FontSize="12" BorderThickness="0" Background="Transparent"
+                    <TextBox x:Name="FindBox" Width="120" FontSize="{DynamicResource AlduneTextCaption}" BorderThickness="0" Background="Transparent"
                              Foreground="{DynamicResource NoteInkBrush}" CaretBrush="{DynamicResource NoteInkBrush}"
                              VerticalContentAlignment="Center" TextChanged="OnFindTextChanged" PreviewKeyDown="OnFindKeyDown" />
                 </Grid>
-                <TextBlock x:Name="FindCount" FontSize="11" Margin="6,0,6,0" VerticalAlignment="Center"
+                <TextBlock x:Name="FindCount" FontSize="{DynamicResource AlduneTextSmall}" Margin="6,0,6,0" VerticalAlignment="Center"
                            Foreground="{DynamicResource NoteInkBrush}" Opacity="0.7" />
                 <Button Content="&#xE70E;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" FontSize="11" Width="24" Height="24"
                         Style="{StaticResource NoteActionButtonStyle}" Foreground="{DynamicResource NoteInkBrush}"

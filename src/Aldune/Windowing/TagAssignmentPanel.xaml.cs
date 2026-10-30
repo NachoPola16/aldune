@@ -50,9 +50,9 @@ public partial class TagAssignmentPanel : UserControl
                 Tag = tag,
                 IsChecked = _note.Tags.Contains(tag, StringComparer.OrdinalIgnoreCase),
                 Margin = new Thickness(0, 0, 0, 8),
-                FontSize = 13,
                 Style = (Style)FindResource("AppCheckBoxStyle"),
             };
+            checkBox.SetResourceReference(System.Windows.Controls.Control.FontSizeProperty, "AlduneTextBody");
             checkBox.SetResourceReference(ForegroundProperty, "AlduneTextBrush");
             checkBox.SetResourceReference(BackgroundProperty, "AlduneGroundBrush");
             checkBox.Click += (_, _) => Save();
