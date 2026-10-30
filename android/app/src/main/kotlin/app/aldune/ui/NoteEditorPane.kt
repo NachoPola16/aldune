@@ -658,7 +658,7 @@ fun NoteEditorPane(key: String, viewModel: NotesViewModel, onBack: () -> Unit, s
                         LineMovement.moveTo(raw, from, to)?.let { commit(it) }
                     },
                 )
-                .padding(start = TASK_DRAG_PAD_START, end = if (hasTasks) TASK_DRAG_ZONE else 16.dp, top = TASK_DRAG_PAD_TOP, bottom = 8.dp)
+                .padding(start = TASK_DRAG_PAD_START, end = if (hasTasks) TASK_DRAG_ZONE else TEXT_END_PAD, top = TASK_DRAG_PAD_TOP, bottom = 8.dp)
                 .focusProperties { this.canFocus = canFocus }
                 .focusRequester(focus)
                 // Marcar una tarea sin ver la pantalla: la casilla no es un nodo propio (todo el texto es un campo), así que TalkBack no

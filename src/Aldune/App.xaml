@@ -203,24 +203,27 @@
              gris claro con flechas, y canta sobre cualquier superficie de esta app. Estaba definida
              solo dentro de NotesManagerWindow; subirla a la aplicación evita duplicarla en cada
              ventana nueva que necesite scroll (Ajustes ya es la segunda). -->
+        <!-- Pulgar de las barras de Ajustes, gestor y listas: una pastilla fina con la tinta apagada del aspecto (como la de las
+             notas), que se ensancha y oscurece al acercar el ratón. Antes era un bloque relleno con el acento y borde, que en
+             XP claro (acento verde) y en los retro pesaba mucho más que el contenido que acompaña. -->
         <Style x:Key="SlimThumb" TargetType="Thumb">
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="Thumb">
                         <Border x:Name="Bar"
-                                Background="{DynamicResource AlduneSelectionBrush}"
-                                BorderBrush="{DynamicResource AlduneBorderBrush}"
-                                BorderThickness="1"
+                                Background="{DynamicResource AlduneMutedTextBrush}"
+                                Opacity="0.5"
                                 CornerRadius="{DynamicResource AlduneRadius4}"
-                                Margin="1,2" />
+                                Margin="3,2" />
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsMouseOver" Value="True">
-                                <Setter TargetName="Bar" Property="Background" Value="{DynamicResource AlduneAccentBrush}" />
-                                <Setter TargetName="Bar" Property="BorderBrush" Value="{DynamicResource AlduneScrollThumbBorderBrush}" />
+                                <Setter TargetName="Bar" Property="Opacity" Value="0.8" />
+                                <Setter TargetName="Bar" Property="Margin" Value="2,2" />
                             </Trigger>
                             <Trigger Property="IsDragging" Value="True">
-                                <Setter TargetName="Bar" Property="Background" Value="{DynamicResource AlduneAccentHoverBrush}" />
-                                <Setter TargetName="Bar" Property="BorderBrush" Value="{DynamicResource AlduneScrollThumbDragBorderBrush}" />
+                                <Setter TargetName="Bar" Property="Background" Value="{DynamicResource AlduneAccentBrush}" />
+                                <Setter TargetName="Bar" Property="Opacity" Value="1" />
+                                <Setter TargetName="Bar" Property="Margin" Value="2,2" />
                             </Trigger>
                         </ControlTemplate.Triggers>
                     </ControlTemplate>
@@ -416,7 +419,7 @@
 
         <Style TargetType="ScrollBar">
             <Setter Property="Width" Value="12" />
-            <Setter Property="Background" Value="#26000000" />
+            <Setter Property="Background" Value="Transparent" />
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="ScrollBar">

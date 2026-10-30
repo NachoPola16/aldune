@@ -48,6 +48,8 @@ internal val TASK_DRAG_PAD_TOP = 8.dp
 /** El margen izquierdo del campo de texto: la copia de la tarea levantada se dibuja desde aquí, igual que el texto de verdad. */
 internal val TASK_DRAG_PAD_START = 16.dp
 internal val TASK_DRAG_ZONE = 48.dp
+/** Relleno derecho del texto sin tareas: 12 y no 16 como a la izquierda, porque al partir una línea sobra de media hasta una letra y el hueco derecho acaba oscilando en torno al izquierdo. */
+internal val TEXT_END_PAD = 12.dp
 
 /** Línea visible (desde 0) de la tarea bajo la altura [yText] del diseño, o `null` si ahí no hay una tarea. */
 private fun taskLineAt(layout: TextLayoutResult, shown: String, yText: Float): Int? {

@@ -60,8 +60,15 @@ internal sealed class TrayIcon : IDisposable
         // El texto se refresca al abrir el menú en vez de por evento: es gratis, y así no hay forma
         // de que se quede desincronizado (el atajo global Ctrl+Alt+H también oculta el dock, sin
         // pasar por aquí).
-        menu.Opening += (_, _) => hideDockItem.Text =
-            _coordinator.DocksVisible ? Strings.TrayToggleDock : Strings.TrayShowDock;
+        menu.Opening += (_, _) =>
+        {
+            hideDockItem.Text = _coordinator.DocksVisible ? Strings.TrayToggleDock : Strings.TrayShowDock;
+            // BackColor y ForeColor se fijaban solo al construir, y el renderer lee la paleta al pintar: con otro aspecto
+            // (XP claro, o un cambio posterior) el cuerpo quedaba con los colores viejos y el margen y el resalte con los
+            // nuevos (cuerpo oscuro, franja beige y «Salir» ilegible). Se releen cada vez que se abre.
+            menu.BackColor = Ground;
+            menu.ForeColor = Ink;
+        };
         menu.Items.Add(new ToolStripSeparator());
         // "Ajustes…" en vez del interruptor de arranque suelto: ya son dos ajustes (arranque y
         // atajo global) y van a ser mas, y un menu contextual no es sitio para configurar nada.

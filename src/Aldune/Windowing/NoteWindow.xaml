@@ -535,7 +535,7 @@
                      SelectionOpacity="1"
                      VerticalScrollBarVisibility="Auto"
                      HorizontalScrollBarVisibility="Disabled"
-                     Padding="20,0,0,0"
+                     Padding="20,0,15,0"
                      BorderThickness="0">
                 <!-- Aire entre el texto y la barra de scroll. El Padding del TextBox no sirve para
                      esto: la barra vive DENTRO del ScrollViewer interno (PART_ContentHost), así que
@@ -553,6 +553,13 @@
                         <Setter Property="Margin" Value="8,0,0,0" />
                         <Setter Property="Width" Value="10" />
                         <Setter Property="Background" Value="Transparent" />
+                        <!-- El relleno derecho del cuadro (15; a la izquierda hay 20 y, al partir la línea, sobra hasta un carácter, así que el hueco
+                             derecho oscila en torno al izquierdo y el texto no llega casi al borde de la retícula) también empuja a la barra hacia dentro: este desplazamiento solo visual la devuelve al borde. -->
+                        <Setter Property="RenderTransform">
+                            <Setter.Value>
+                                <TranslateTransform X="15" />
+                            </Setter.Value>
+                        </Setter>
                         <Setter Property="Template">
                             <Setter.Value>
                                 <ControlTemplate TargetType="ScrollBar">
