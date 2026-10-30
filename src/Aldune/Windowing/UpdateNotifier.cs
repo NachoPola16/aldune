@@ -15,7 +15,8 @@ namespace Aldune.Windowing;
 internal sealed class UpdateNotifier : IDisposable
 {
     private readonly HttpClient _client = new() { Timeout = TimeSpan.FromSeconds(15) };
-    private readonly ReleaseUpdateChecker _checker;
+    private readonly Func<string, CancellationToken, Task<ReleaseUpdate?>> _check;
+    private readonly Action<Uri> _open;
     private readonly CancellationTokenSource _shutdown = new();
     private readonly DispatcherTimer _timer = new() { Interval = TimeSpan.FromSeconds(20) };
     private readonly HashSet<Version> _notified = new();
@@ -25,12 +26,20 @@ internal sealed class UpdateNotifier : IDisposable
     private readonly Func<bool> _automaticChecksEnabled;
     private bool _manualRequested;
     private bool _disposed;
+    private bool _availableShown;
 
-    internal UpdateNotifier(ToastCenter toasts, Func<bool> automaticChecksEnabled)
+    /// <summary>Cada cuánto se vuelve a mirar mientras el aviso de una versión nueva sigue sin responder.</summary>
+    internal static readonly TimeSpan PendingRecheck = TimeSpan.FromHours(1);
+
+    /// <param name="check">Solo para pruebas: sustituye a la consulta a GitHub.</param>
+    /// <param name="open">Solo para pruebas: sustituye a abrir el navegador.</param>
+    internal UpdateNotifier(ToastCenter toasts, Func<bool> automaticChecksEnabled,
+        Func<string, CancellationToken, Task<ReleaseUpdate?>>? check = null, Action<Uri>? open = null)
     {
         _toasts = toasts;
         _automaticChecksEnabled = automaticChecksEnabled;
-        _checker = new ReleaseUpdateChecker(_client);
+        _check = check ?? ((version, token) => new ReleaseUpdateChecker(_client).CheckAsync(version, token));
+        _open = open ?? (uri => Process.Start(new ProcessStartInfo(uri.AbsoluteUri) { UseShellExecute = true }));
         _timer.Tick += OnTick;
         _timer.Start();
     }
@@ -41,6 +50,8 @@ internal sealed class UpdateNotifier : IDisposable
         // Se consulta en cada vuelta y no al construir: apagarlo en Ajustes vale sin reiniciar.
         if (!_automaticChecksEnabled()) return;
         await CheckAsync(manual: false);
+        // Con un aviso sin responder, otra versión que salga mientras tanto tiene que reemplazarlo pronto, no a las 24 h.
+        if (_availableShown && !_disposed) _timer.Interval = PendingRecheck;
     }
 
     internal void CheckManually() => _ = CheckAsync(manual: true);
@@ -57,7 +68,7 @@ internal sealed class UpdateNotifier : IDisposable
         _checking = true;
         try
         {
-            var update = await _checker.CheckAsync(AppInfo.Version, _shutdown.Token);
+            var update = await _check(AppInfo.Version, _shutdown.Token);
             if (_disposed) return;
             if (update is not null)
             {
@@ -99,21 +110,45 @@ internal sealed class UpdateNotifier : IDisposable
         content = new ToastContent(Strings.UpdateAvailableTitle, Strings.UpdateAvailableMessage(version),
         [
             new ToastAction(Strings.UpdateLater, () => { }),
-            new ToastAction(Strings.UpdateDownload, () =>
-            {
-                try
-                {
-                    Process.Start(new ProcessStartInfo(downloadUri.AbsoluteUri) { UseShellExecute = true });
-                    _toast?.Close();
-                }
-                catch (Exception ex) when (ex is Win32Exception or InvalidOperationException)
-                {
-                    // El error se cuenta en el mismo aviso, con los botones intactos para reintentar.
-                    _toast?.SetContent(content with { Message = Strings.UpdateOpenErrorMessage });
-                }
-            }, Primary: true, Closes: false),
+            new ToastAction(Strings.UpdateDownload, () => _ = OpenLatestAsync(downloadUri, content),
+                Primary: true, Closes: false),
         ]);
+        _availableShown = true;
         ShowMessage(content);
+    }
+
+    /// <summary>
+    /// «Descargar»: antes de abrir la página se vuelve a mirar cuál es la última versión (con poco margen), porque puede
+    /// haber salido otra desde que se enseñó el aviso; sin red o con error se abre la que enseñaba.
+    /// </summary>
+    private async Task OpenLatestAsync(Uri shown, ToastContent content)
+    {
+        var target = shown;
+        try
+        {
+            using var limit = CancellationTokenSource.CreateLinkedTokenSource(_shutdown.Token);
+            limit.CancelAfter(TimeSpan.FromSeconds(5));
+            if (await _check(AppInfo.Version, limit.Token) is { } latest)
+            {
+                _notified.Add(latest.Version);
+                target = latest.DownloadUri;
+            }
+        }
+        catch (Exception)
+        {
+            // Sin red o GitHub no responde: vale la página que enseñaba el aviso.
+        }
+        if (_disposed) return;
+        try
+        {
+            _open(target);
+            _toast?.Close();
+        }
+        catch (Exception ex) when (ex is Win32Exception or InvalidOperationException)
+        {
+            // El error se cuenta en el mismo aviso, con los botones intactos para reintentar.
+            _toast?.SetContent(content with { Message = Strings.UpdateOpenErrorMessage });
+        }
     }
 
     /// <summary>
@@ -126,7 +161,7 @@ internal sealed class UpdateNotifier : IDisposable
         {
             var toast = _toasts.Show(content);
             _toast = toast;
-            toast.Closed += (_, _) => { if (_toast == toast) _toast = null; };
+            toast.Closed += (_, _) => { if (_toast == toast) { _toast = null; _availableShown = false; } };
         }
         else
         {
