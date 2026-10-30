@@ -143,7 +143,7 @@ Cómo se publica una versión y cómo se firma: [docs/RELEASING.md](docs/RELEASI
 
 ## Probar y dar tu opinión
 
-Si la estás probando: Windows [v2.1.3](https://github.com/NachoPola16/aldune/releases/tag/v2.1.3), Android [1.0.1](https://github.com/NachoPola16/aldune/releases/tag/android-v1.0.1).
+Si la estás probando: Windows [v2.1.4](https://github.com/NachoPola16/aldune/releases/tag/v2.1.4), Android [1.0.2](https://github.com/NachoPola16/aldune/releases/tag/android-v1.0.2).
 Un fallo, una duda o una idea van a [Issues](https://github.com/NachoPola16/aldune/issues/new): di qué versión usas, qué hiciste y qué esperabas.
 No pegues códigos de perfil, tokens ni el contenido de tus notas en un issue público.
 
