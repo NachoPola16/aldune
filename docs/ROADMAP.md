@@ -277,7 +277,7 @@ el usuario lo pidió y ahora pasa a implementación incremental. El núcleo inic
 con contenido cifrado por nota, clave compartida independiente de DPAPI, tombstones, escritura atómica
 y resolución determinista por fecha/dispositivo. El siguiente bloque visualiza la configuración,
 permite sincronización manual y ofrece sincronización periódica en segundo plano.
-Lo que ya se decidió en el brainstorming de esta sesión, para no volver a discutirlo desde cero:
+Lo que ya se decidió en el diseño inicial, para no volver a discutirlo desde cero:
 
 - **Las dos vías, no una sola** — decisión explícita del usuario tras ver el trade-off:
   1. **Carpeta elegida por el usuario** (OneDrive, Google Drive, Dropbox, Syncthing — cualquiera que
@@ -529,7 +529,7 @@ Por orden:
 
 ## 5. Revisión de apariencia — estado
 
-Hecho en esta sesión: cuerpo de la nota liberado de botones permanentes (eran ~90 px de 320, casi un
+Hecho: cuerpo de la nota liberado de botones permanentes (eran ~90 px de 320, casi un
 tercio), acciones movidas al panel del "⋯", panel oscuro bajo los botones del dock vacío.
 
 Pendiente, por orden de importancia:
@@ -747,7 +747,7 @@ cubrirla paso a paso. **Una sola release al final de la ronda.**
     en cada celda parece aleatoria. **Hecho:** `ArrangeOpenNotes` ordena las ventanas por su índice en
     la vista del dock (`NotesForCurrentDockView`).
 
-### Tanda C — Diseño y UX (hecho en esta sesión)
+### Tanda C — Diseño y UX (hecha)
 
 11. **Menú de los 3 puntos de la nota**: solo **redistribución y agrupación** de los botones; no se añade un modo
     simplificado/avanzado conmutable. **Hecho.** Cuatro bloques por intención: escritura (tarea, viñeta, con
@@ -772,7 +772,7 @@ cubrirla paso a paso. **Una sola release al final de la ronda.**
     siguen siendo los nativos, con la traducción del Windows del usuario, no una inventada. Lo coge
     cualquier `TextBox` (notas, Ajustes, gestor, recordatorios) sin tocar cada ventana.
 
-### Tanda D — Cierre (hecho en esta sesión)
+### Tanda D — Cierre (hecha)
 
 15. **Trackpad**: revisado. Un trackpad de precisión no manda gestos propios a una app de escritorio —
     manda rueda (y rueda horizontal) con deltas pequeños y seguidos, así que "interacciones de trackpad"

@@ -2,7 +2,7 @@
 
 > 2026-10-17. Sustituye a la «spec de fase 0» que pedía `docs/MOBILE_PORT.md` §7 (era para MAUI). Manda sobre §3 y §7 de
 > ese documento; la revisión de tecnología y distribución está en su §13. Las decisiones de producto marcadas **(usuario)**
-> las tomó el usuario en esta sesión; el resto son defaults razonados que se pueden discutir.
+> las tomó el usuario al definir la spec; el resto son defaults razonados que se pueden discutir.
 
 ## 0. En una frase
 

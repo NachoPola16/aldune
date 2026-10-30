@@ -15,7 +15,7 @@ alabada. Es un subsistema nuevo (persistencia + disparo periódico + aviso
 nativo del sistema operativo), no un ajuste sobre algo que ya exista, de ahí
 el spec completo en vez de un cambio acotado.
 
-Decisiones tomadas en el brainstorming de esta sesión, con su motivo, para
+Decisiones tomadas en el diseño, con su motivo, para
 no volver a discutirlas desde cero:
 
 - **Por nota entera, no por línea/tarea suelta dentro de una nota.** Encaja
@@ -201,8 +201,7 @@ el resto de entradas del menú.
 para cada pestaña) consulta `GetPendingReminders()` una vez por refresco
 (no por pestaña) y pasa si esa nota tiene una entrada. Cada pestaña pinta un
 glifo de reloj pequeño (a elegir de Segoe Fluent Icons, sin verificación
-visual todavía — mismo aviso que ya se dejó anotado para otros iconos de
-esta sesión) junto al título cuando corresponde.
+visual todavía — mismo aviso que ya se dejó anotado para otros iconos) junto al título cuando corresponde.
 
 ## Manejo de errores
 

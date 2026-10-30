@@ -154,7 +154,7 @@ desde Core y se porta **antes de la tarea de tema** (F3b, §4 tarea 5); hasta en
 | 1 | Raíz Gradle común, catálogo de versiones, plataforma 36 instalada, módulo `app` vacío que compila e instala (`adb install`) | Local, Sonnet medio | Antes: `gradle test` de core/sync/text. Decidir wrapper (§6). |
 | 2 | `android/domain` completo con tests | JVM puro | Se puede empezar ya. |
 | 3 | Room (entidades, DAO, migración v1) + `NoteStore` real + tests instrumentados | Local | Necesita dispositivo o emulador. |
-| 4 | Keystore + `DataKey` + `NoteCipher` + caso «clave perdida» | Local, **Opus medio** (diseño de seguridad) | Revisión cruzada con agy en solo lectura. |
+| 4 | Keystore + `DataKey` + `NoteCipher` + caso «clave perdida» | Local, **Opus medio** (diseño de seguridad) | Revisión cruzada de solo lectura. |
 | 5 | F3b: vectores de `AppPalette`/`AspectPalettes` (en Windows) y su port a `android/text` | Windows | Independiente de las demás. |
 | 6 | Lista adaptativa + filtros + búsqueda + reordenar | Local | |
 | 7 | Editor con `:text`, barra de edición, toque en casillas; `docs/ANDROID_PROBES.md` y primera sonda | Local | La tarea difícil (§2.2). Teclados reales. |

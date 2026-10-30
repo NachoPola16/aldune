@@ -46,7 +46,7 @@ autoridad de diseño; todo lo demás (planes, código) se argumenta contra él.
   purga automática de la papelera a los 30 días
   (`NotesRepository.PurgeExpiredTrash`), y una ventana aparte
   (`NotesManagerWindow`) para archivar/restaurar/borrar en bloque con
-  filtro por estado. El toggle "Archivadas"/"Activas" que esta sesión
+  filtro por estado. El toggle "Archivadas"/"Activas" que se
   añadió **al propio dock** fue retirado después por el rediseño de
   pestañas en abanico (ver más abajo) — `NotesManagerWindow` es ahora la
   única forma de ver notas archivadas/en papelera.
@@ -272,7 +272,7 @@ Queda:
   del texto libre se trata como título solo para mostrar (negrita, en la
   pestaña del dock y en la barra de título de la ventana). Ya implementado.
 - **Ver notas archivadas/en papelera — HECHO, pero no como se decidió
-  aquí originalmente.** Esta sesión había descartado una ventana nueva de
+  aquí originalmente.** Se había descartado una ventana nueva de
   lista+detalle a favor de un botón "Archivadas" que reemplazaba
   temporalmente lo que se ve en el dock. Se implementó así primero, pero
   el rediseño de pestañas en abanico (ver más abajo) lo revirtió: ahora

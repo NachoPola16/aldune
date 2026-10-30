@@ -88,3 +88,11 @@ va al lado como `nombre (Aldune).md`). Los ficheros están en claro: el ajuste l
 - **Carpeta:** Windows, un selector de carpeta; Android, el selector del sistema con permiso persistente. Si en Android se pierde el permiso o la carpeta, la
   copia se apaga y se avisa en la lista y en Ajustes (no hay reintentos); en Windows un fallo se apunta y se reintenta, y Ajustes lo enseña.
 - La carpeta es de cada equipo: no viaja en exportar/importar configuración.
+
+## Aspecto Telecom: señales y retícula (decisiones)
+
+- **No hay opción para ocultar las «señales»** (prefijo `CHn`, onda del canal): son la identidad del aspecto, y quien no las quiere tiene otros aspectos
+  claros y oscuros. Ya existen los interruptores de señal de sincronización, esquinas rectas y color de nota solo como franja.
+- **Pestaña del dock**: la onda comparte fila con la vista previa (40×12, trazo fino) y solo la vista previa cede ese hueco; el título conserva todo el ancho.
+- **Retícula de la nota**: margen sin cuadrícula a izquierda, derecha y abajo, y el texto entra 6 px dentro de la primera cuadrícula. Bash y Fósforo no tienen retícula.
+- **Botones del dock**: sombra más corta y ligera (profundidad 1, desenfoque 8); en los aspectos con bisel no hay sombra de caída.

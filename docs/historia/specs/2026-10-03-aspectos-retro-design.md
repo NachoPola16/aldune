@@ -1,7 +1,7 @@
 # Aldune — Aspectos retro, opciones de forma y color único (design spec)
 
-Decidido con el usuario el 2026-10-03, sobre maquetas en un lienzo privado
-(<https://claude.ai/artifact/N2AdurN792fDCFb3WeiCSX>, siete mesas de trabajo, cada una con sus *Tweaks*).
+Decidido con el usuario el 2026-10-03, sobre maquetas (siete mesas de trabajo,
+cada una con sus *Tweaks*).
 Las maquetas son la referencia visual; esta spec fija qué se construye y cómo encaja en el código.
 
 ## Qué se pidió
