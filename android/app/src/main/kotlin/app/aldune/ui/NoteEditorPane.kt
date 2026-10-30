@@ -466,7 +466,6 @@ fun NoteEditorPane(key: String, viewModel: NotesViewModel, onBack: () -> Unit, s
     Column(
         Modifier.fillMaxSize()
             .then(if (faceHex != null) Modifier.background(noteFace(faceHex)) else Modifier)
-            .then(if (tint != null && look.telecomGrid) Modifier.drawBehind { drawTelecomGrid(gridInk) } else Modifier)
             // Los pliegues cubren toda la hoja; los renglones van aparte, dentro del campo de texto, para alinearlos con sus líneas.
             .paperTexture(if (look.paper == AspectSkin.Paper.FOLDS) look.paper else AspectSkin.Paper.NONE, ink, faceLight)
             .safeDrawingPadding().imePadding(),
@@ -634,7 +633,9 @@ fun NoteEditorPane(key: String, viewModel: NotesViewModel, onBack: () -> Unit, s
             Modifier.weight(1f).fillMaxWidth().paperTexture(
                 if (look.paper == AspectSkin.Paper.RULED || look.paper == AspectSkin.Paper.GRID) look.paper else AspectSkin.Paper.NONE, ink, faceLight,
                 ruleStep = lineHeight, ruleOffset = TASK_DRAG_PAD_TOP + lineHeight * 0.88f, marginX = 10.dp,
-            ),
+            )
+                // La retícula del osciloscopio (Telecom oscuro) con cuadros del alto de línea y un renglón bajo cada línea del texto, como las libretas.
+                .then(if (tint != null && look.telecomGrid) Modifier.drawBehind { drawTelecomGrid(gridInk, lineHeight.toPx(), (TASK_DRAG_PAD_TOP + lineHeight * 0.88f).toPx()) } else Modifier),
         ) {
         BasicTextField(
             state = state,
@@ -747,11 +748,10 @@ fun NoteEditorPane(key: String, viewModel: NotesViewModel, onBack: () -> Unit, s
 }
 
 /** La retícula de osciloscopio: líneas de 1 px cada 24 dp, muy translúcidas, para que se lea como fondo y no compita con el texto. */
-private fun DrawScope.drawTelecomGrid(color: Color) {
-    val step = 24.dp.toPx()
+private fun DrawScope.drawTelecomGrid(color: Color, step: Float, firstRule: Float) {
     var x = 0f
     while (x <= size.width) { drawLine(color, Offset(x, 0f), Offset(x, size.height), strokeWidth = 1f); x += step }
-    var y = 0f
+    var y = firstRule % step
     while (y <= size.height) { drawLine(color, Offset(0f, y), Offset(size.width, y), strokeWidth = 1f); y += step }
 }
 
