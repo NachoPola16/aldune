@@ -514,6 +514,7 @@
              cursor delante de la casilla. Como Margin quedaba fuera del TextBox y no hacía nada. -->
         <Grid x:Name="BodyHost" Grid.Row="2" Margin="0,14,20,20">
             <TextBlock x:Name="BodyPlaceholder" Text="{x:Static res:Strings.BodyPlaceholder}" FontFamily="{DynamicResource AlduneNoteFont}" FontSize="{DynamicResource AlduneNoteBodySize}" Margin="20,0,0,0"
+                       Panel.ZIndex="1"
                        Style="{StaticResource PlaceholderStyle}" TextWrapping="Wrap" />
             <!-- Tinta tintada hacia el cálido, nunca #000 puro: sobre un pastel, el negro
                  absoluto es el único color de la ventana que no comparte hue con nada. -->
