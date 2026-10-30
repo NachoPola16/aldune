@@ -304,7 +304,8 @@ sudo env ALDUNE_ENV_FILE=/etc/aldune-sync.env \
 
 En las siguientes versiones solo hace falta repetir ese comando. El script hace `git pull --ff-only`
 de `main`, valida la composición, reconstruye la imagen con `docker compose build --pull` para
-refrescar también las imágenes base de .NET, conserva el volumen de datos y comprueba `/health`. No
+refrescar también las imágenes base de .NET, conserva el volumen de datos y comprueba `/health`, reintentando hasta 30 s porque el contenedor tarda
+unos segundos en aceptar conexiones (sale con 0 si responde y con 1 y un mensaje si no). No
 copia `src/`, no modifica el `.env` y falla antes de actualizar si falta el fichero de secretos.
 
 El volumen contiene los sobres sincronizados y sobrevive a la recreación del contenedor, pero sigue
