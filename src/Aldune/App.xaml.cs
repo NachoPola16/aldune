@@ -44,6 +44,10 @@ public partial class App : Application
         // escala fraccionaria (125% o 150%, lo normal en un portátil) sale borroso. Display ajusta los glifos
         // a la rejilla de píxeles. NoteWindow lo desactiva en su XAML: la medición de sus casillas está
         // calibrada con el modo anterior.
+        // Y el tamaño: sin esto, el texto que no fija su FontSize (etiquetas de Sync, casillas) se quedaba en el 12 del
+        // sistema y no seguía a «Tamaño del texto». Caption vale 12: a 100 % nada cambia. El dock lo fija a mano (no escala).
+        windowStyle.Setters.Add(new Setter(System.Windows.Controls.Control.FontSizeProperty,
+            new DynamicResourceExtension("AlduneTextCaption")));
         windowStyle.Setters.Add(new Setter(UIElement.SnapsToDevicePixelsProperty, true));
         windowStyle.Setters.Add(new Setter(FrameworkElement.UseLayoutRoundingProperty, true));
         windowStyle.Setters.Add(new Setter(System.Windows.Media.TextOptions.TextFormattingModeProperty,

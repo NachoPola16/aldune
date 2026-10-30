@@ -5,6 +5,7 @@
         xmlns:res="clr-namespace:Aldune.Resources"
         xmlns:core="clr-namespace:Aldune.Core;assembly=Aldune.Core"
         WindowStyle="None"
+        FontSize="12"
         ShowInTaskbar="False"
         ShowActivated="False"
         Topmost="True"

@@ -554,7 +554,7 @@
                             <Border Background="{DynamicResource AlduneSurfaceBrush}" CornerRadius="{DynamicResource AlduneRadius6}" VerticalAlignment="Center">
                                 <TextBox x:Name="AutoHideTasksDelayValueBox"
                                          Background="Transparent" Foreground="{DynamicResource AlduneTextBrush}" CaretBrush="{DynamicResource AlduneTextBrush}"
-                                         BorderThickness="0" FontSize="{DynamicResource AlduneTextBody}" Width="30" MaxLength="3"
+                                         BorderThickness="0" FontSize="{DynamicResource AlduneTextBody}" MinWidth="40" MaxLength="3"
                                          TextAlignment="Center" Padding="6,6"
                                          PreviewTextInput="OnDelayValuePreviewTextInput"
                                          TextChanged="OnDelayValueChanged" />
@@ -587,7 +587,7 @@
                             <Border Background="{DynamicResource AlduneSurfaceBrush}" CornerRadius="{DynamicResource AlduneRadius6}" VerticalAlignment="Center">
                                 <TextBox x:Name="TrashRetentionValueBox"
                                          Background="Transparent" Foreground="{DynamicResource AlduneTextBrush}" CaretBrush="{DynamicResource AlduneTextBrush}"
-                                         BorderThickness="0" FontSize="{DynamicResource AlduneTextBody}" Width="30" MaxLength="3"
+                                         BorderThickness="0" FontSize="{DynamicResource AlduneTextBody}" MinWidth="40" MaxLength="3"
                                          TextAlignment="Center" Padding="6,6"
                                          PreviewTextInput="OnTrashRetentionPreviewTextInput"
                                          TextChanged="OnTrashRetentionChanged" />
@@ -939,7 +939,7 @@
                             <TextBlock Text="{x:Static res:Strings.SyncIntervalLabel}" Foreground="{DynamicResource AlduneTextBrush}"
                                        VerticalAlignment="Center" Margin="0,0,8,0" />
                             <Border Background="{DynamicResource AlduneSurfaceBrush}" CornerRadius="{DynamicResource AlduneRadius6}">
-                                <TextBox x:Name="SyncIntervalValueBox" Width="38" MaxLength="4"
+                                <TextBox x:Name="SyncIntervalValueBox" MinWidth="44" MaxLength="4" FontSize="{DynamicResource AlduneTextBody}"
                                          Background="Transparent" Foreground="{DynamicResource AlduneTextBrush}" CaretBrush="{DynamicResource AlduneTextBrush}"
                                          BorderThickness="0" Padding="6,5" TextAlignment="Center"
                                          PreviewTextInput="OnSyncIntervalPreviewTextInput"
