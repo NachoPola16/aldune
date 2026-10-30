@@ -263,6 +263,16 @@
             </Border.Style>
             <Grid>
                 <StackPanel>
+                    <StackPanel.Style>
+                        <Style TargetType="StackPanel">
+                            <Style.Triggers>
+                                <!-- En la barra XP, centrado como los botones de la ventana (alineado arriba quedaba alto). -->
+                                <DataTrigger Binding="{Binding GradientTitleBar, Source={x:Static local:SkinState.Current}}" Value="True">
+                                    <Setter Property="VerticalAlignment" Value="Center" />
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </StackPanel.Style>
                     <TextBlock Text="{x:Static res:Strings.ManageNotesTitle}" Foreground="{DynamicResource AlduneOnTitleBarBrush}">
                         <TextBlock.Style>
                             <Style TargetType="TextBlock">

@@ -253,6 +253,8 @@
                                 <DataTrigger Binding="{Binding GradientTitleBar, Source={x:Static local:SkinState.Current}}" Value="True">
                                     <Setter Property="FontSize" Value="{DynamicResource AlduneTextBody}" />
                                     <Setter Property="FontWeight" Value="Bold" />
+                                    <!-- Centrado en la barra, como los botones de la ventana: alineado arriba quedaba unos píxeles alto. -->
+                                    <Setter Property="VerticalAlignment" Value="Center" />
                                 </DataTrigger>
                             </Style.Triggers>
                         </Style>
