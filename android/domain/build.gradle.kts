@@ -9,6 +9,8 @@ dependencies {
     // Las reglas de texto, color, orden y búsqueda salen de :text; aquí no se reimplementan.
     // `api` porque la interfaz pública de domain expone sus tipos (NoteTheme, NoteTone…).
     api(project(":text"))
+    // El manifiesto de la copia automática (AutoExport.kt) es JSON.
+    implementation(libs.kotlinx.serialization.json)
 
     testImplementation(kotlin("test"))
     testImplementation(platform(libs.junit.bom))

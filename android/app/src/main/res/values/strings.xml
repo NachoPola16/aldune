@@ -399,4 +399,10 @@
     <string name="sound_event_note_created">New note</string>
     <string name="sound_event_sync_done">Sync finished (manual)</string>
     <string name="sound_event_sync_failed">Sync failed</string>
+    <string name="auto_export">Automatic copy in a folder</string>
+    <string name="auto_export_hint">Off by default. Writes one Markdown file per note a few seconds after each change. Aldune only creates and rewrites its own files and never deletes anything: removed notes move to a _eliminadas folder, and a file you edited by hand is kept (the new copy is saved beside it). Notes with a password are left out. These files are NOT encrypted: choose the folder knowing that.</string>
+    <string name="auto_export_choose">Choose folder…</string>
+    <string name="auto_export_folder">Folder: %1$s</string>
+    <string name="auto_export_archived">Include archived notes</string>
+    <string name="auto_export_lost">The automatic copy was turned off: Aldune lost access to the folder. Choose a folder again in Settings to resume it.</string>
 </resources>

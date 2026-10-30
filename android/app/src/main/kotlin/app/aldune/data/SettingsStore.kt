@@ -83,6 +83,11 @@ data class AppSettings(
     val simplifiedMode: Boolean = false,
     /** Los sonidos de la app (papel y pluma): mismo interruptor, volumen y claves que en Windows. Apagado de fábrica. */
     val sounds: SoundSettings = SoundSettings(),
+    /** Copia automática de las notas en una carpeta (spec de la fase 4). Apagada de fábrica. La carpeta es un `content://` del selector del sistema, con permiso persistente. */
+    val autoExportEnabled: Boolean = false,
+    val autoExportUri: String? = null,
+    /** Incluir también las archivadas (en `archivadas/`). */
+    val autoExportArchived: Boolean = true,
 ) {
     val quickList: QuickList? get() = quickListId?.let { QuickList(it, quickListTitle) }
     val colorFill: Boolean get() = if (AspectSkin.colorLocked(appearance)) false else fillNoteColor ?: AspectSkin.colorFill(appearance)
@@ -149,6 +154,9 @@ class SettingsStore(context: Context) {
             quickListId = prefs.getString(QUICK_LIST_ID, null),
             quickListTitle = prefs.getString(QUICK_LIST_TITLE, d.quickListTitle) ?: d.quickListTitle,
             simplifiedMode = prefs.getBoolean(SIMPLIFIED_MODE, d.simplifiedMode),
+            autoExportEnabled = prefs.getBoolean(AUTO_EXPORT_ENABLED, d.autoExportEnabled),
+            autoExportUri = prefs.getString(AUTO_EXPORT_URI, null),
+            autoExportArchived = prefs.getBoolean(AUTO_EXPORT_ARCHIVED, d.autoExportArchived),
             sounds = SoundSettings(
                 enabled = prefs.getBoolean(SOUNDS_ENABLED, false),
                 volume = prefs.getInt(SOUND_VOLUME, 100).coerceIn(0, 100),
@@ -195,6 +203,9 @@ class SettingsStore(context: Context) {
             .putOrRemove(QUICK_LIST_ID, settings.quickListId)
             .putString(QUICK_LIST_TITLE, settings.quickListTitle)
             .putBoolean(SIMPLIFIED_MODE, settings.simplifiedMode)
+            .putBoolean(AUTO_EXPORT_ENABLED, settings.autoExportEnabled)
+            .putOrRemove(AUTO_EXPORT_URI, settings.autoExportUri)
+            .putBoolean(AUTO_EXPORT_ARCHIVED, settings.autoExportArchived)
             .putBoolean(SOUNDS_ENABLED, settings.sounds.enabled)
             .putInt(SOUND_VOLUME, settings.sounds.volume)
             .also { editor -> for (e in SoundEvent.entries) settings.sounds.choices[e.id]?.let { editor.putInt(SOUND_PREFIX + e.id, it) } ?: editor.remove(SOUND_PREFIX + e.id) }
@@ -213,6 +224,9 @@ class SettingsStore(context: Context) {
         const val QUICK_LIST_TITLE = "quickListTitle"
         const val SIMPLIFIED_MODE = "simplifiedMode"
         const val SOUNDS_ENABLED = "soundsEnabled"
+        const val AUTO_EXPORT_ENABLED = "autoExportEnabled"
+        const val AUTO_EXPORT_URI = "autoExportUri"
+        const val AUTO_EXPORT_ARCHIVED = "autoExportArchived"
         const val SOUND_VOLUME = "soundVolume"
         const val SOUND_PREFIX = "sound_"
         const val APPEARANCE = "appearance"

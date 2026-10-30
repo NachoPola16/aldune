@@ -235,7 +235,18 @@ fun NoteListPane(
             }
             // Sin perfil de sync, las notas solo viven en el móvil: se avisa una vez que haya alguna (en la bienvenida ya se habla de la sync).
             if (!hasProfile && !settingsNow.backupNoticeDismissed && state.counts.values.sum() > 0) {
-                NoBackupNotice(onSettings = onOpenSettings, onDismiss = { viewModel.updateSettings { it.copy(backupNoticeDismissed = true) } })
+                NoBackupNotice(R.string.no_backup_notice, onSettings = onOpenSettings, onDismiss = { viewModel.updateSettings { it.copy(backupNoticeDismissed = true) } })
+            }
+            // La copia automática perdió su carpeta (o el permiso): se avisa hasta que se descarta, y descartar la deja apagada.
+            val autoExportLost by app.aldune.export.AutoExportStatus.lost.collectAsStateWithLifecycle()
+            if (autoExportLost) {
+                NoBackupNotice(
+                    R.string.auto_export_lost, onSettings = onOpenSettings,
+                    onDismiss = {
+                        app.aldune.export.AutoExportStatus.setLost(context, false)
+                        viewModel.updateSettings { it.copy(autoExportEnabled = false) }
+                    },
+                )
             }
 
             // Tirar hacia abajo sincroniza (spec madre §2.1). Sin perfil no hace nada: la política no lanza pasadas sin perfil.
@@ -739,13 +750,13 @@ private fun currentVersionName(context: android.content.Context): String =
     runCatching { context.packageManager.getPackageInfo(context.packageName, 0).versionName }.getOrNull().orEmpty()
 
 @Composable
-private fun NoBackupNotice(onSettings: () -> Unit, onDismiss: () -> Unit) {
+private fun NoBackupNotice(message: Int, onSettings: () -> Unit, onDismiss: () -> Unit) {
     androidx.compose.material3.Surface(
         Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 4.dp),
         shape = MaterialTheme.shapes.medium, color = MaterialTheme.colorScheme.surfaceVariant,
     ) {
         Column(Modifier.padding(start = 12.dp, end = 4.dp, top = 8.dp, bottom = 0.dp)) {
-            Text(stringResource(R.string.no_backup_notice), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            Text(stringResource(message), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
                 // Botones de texto con menos relleno: el alto táctil sigue siendo el mínimo, pero el aviso deja de ocupar media pantalla.
                 TextButton(onClick = onDismiss, contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 12.dp)) { Text(stringResource(R.string.no_backup_dismiss)) }

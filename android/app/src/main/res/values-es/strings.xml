@@ -399,4 +399,10 @@
     <string name="sound_event_note_created">Nota nueva</string>
     <string name="sound_event_sync_done">Sincronización terminada (manual)</string>
     <string name="sound_event_sync_failed">Sincronización fallida</string>
+    <string name="auto_export">Copia automática en una carpeta</string>
+    <string name="auto_export_hint">Apagada de fábrica. Escribe un archivo Markdown por nota unos segundos después de cada cambio. Aldune solo crea y reescribe sus propios archivos y nunca borra nada: las notas eliminadas pasan a la carpeta _eliminadas, y un archivo que hayas editado a mano se respeta (la copia nueva se guarda a su lado). Las notas con contraseña quedan fuera. Estos archivos NO están cifrados: elige la carpeta sabiéndolo.</string>
+    <string name="auto_export_choose">Elegir carpeta…</string>
+    <string name="auto_export_folder">Carpeta: %1$s</string>
+    <string name="auto_export_archived">Incluir las notas archivadas</string>
+    <string name="auto_export_lost">La copia automática se apagó: Aldune perdió el acceso a la carpeta. Elige una carpeta otra vez en Ajustes para reanudarla.</string>
 </resources>

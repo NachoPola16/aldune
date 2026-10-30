@@ -399,4 +399,10 @@
     <string name="sound_event_note_created">Neue Notiz</string>
     <string name="sound_event_sync_done">Synchronisierung abgeschlossen (manuell)</string>
     <string name="sound_event_sync_failed">Synchronisierung fehlgeschlagen</string>
+    <string name="auto_export">Automatische Kopie in einem Ordner</string>
+    <string name="auto_export_hint">Standardmäßig aus. Schreibt wenige Sekunden nach jeder Änderung eine Markdown-Datei pro Notiz. Aldune erstellt und überschreibt nur eigene Dateien und löscht nie etwas: entfernte Notizen wandern in den Ordner _eliminadas, und eine von Hand bearbeitete Datei bleibt erhalten (die neue Kopie wird daneben gespeichert). Notizen mit Passwort bleiben außen vor. Diese Dateien sind NICHT verschlüsselt: Wähle den Ordner mit diesem Wissen.</string>
+    <string name="auto_export_choose">Ordner wählen…</string>
+    <string name="auto_export_folder">Ordner: %1$s</string>
+    <string name="auto_export_archived">Archivierte Notizen einbeziehen</string>
+    <string name="auto_export_lost">Die automatische Kopie wurde ausgeschaltet: Aldune hat den Zugriff auf den Ordner verloren. Wähle in den Einstellungen erneut einen Ordner, um sie fortzusetzen.</string>
 </resources>

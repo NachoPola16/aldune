@@ -284,6 +284,8 @@ private fun BackupSection(viewModel: NotesViewModel) {
             style = MaterialTheme.typography.bodyMedium,
         )
     }
+    HorizontalDivider(Modifier.padding(vertical = 12.dp))
+    AutoExportSection(viewModel)
 }
 
 /**

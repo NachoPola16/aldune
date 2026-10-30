@@ -399,4 +399,10 @@
     <string name="sound_event_note_created">Nova nota</string>
     <string name="sound_event_sync_done">Sincronização concluída (manual)</string>
     <string name="sound_event_sync_failed">Falha na sincronização</string>
+    <string name="auto_export">Cópia automática em uma pasta</string>
+    <string name="auto_export_hint">Desligada por padrão. Grava um arquivo Markdown por nota alguns segundos após cada alteração. O Aldune só cria e reescreve os próprios arquivos e nunca apaga nada: as notas removidas vão para a pasta _eliminadas, e um arquivo editado à mão é preservado (a cópia nova é salva ao lado). Notas com senha ficam de fora. Esses arquivos NÃO são criptografados: escolha a pasta sabendo disso.</string>
+    <string name="auto_export_choose">Escolher pasta…</string>
+    <string name="auto_export_folder">Pasta: %1$s</string>
+    <string name="auto_export_archived">Incluir as notas arquivadas</string>
+    <string name="auto_export_lost">A cópia automática foi desligada: o Aldune perdeu o acesso à pasta. Escolha uma pasta de novo nos ajustes para retomá-la.</string>
 </resources>

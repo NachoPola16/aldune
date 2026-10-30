@@ -50,8 +50,21 @@ Mismo interruptor (`SoundsEnabled` / `soundsEnabled`), mismo volumen (`SoundVolu
 `noteCreated`, `noteArchived`, `noteOpened`, `noteClosed`, `taskChecked`, `noteDeleted`, `typing`) y mismos números de opción (7-11 = papel y pluma).
 Los WAV salen de `scripts/sounds/generar-sonidos.py`.
 
-- **Android solo ofrece** abrir, cerrar, marcar, borrar, archivar y escribir. Recordatorio, sync hecha/fallida y nota creada no se ofrecen: los
-  recordatorios ya suenan por su notificación y la sync no tiene sonido propio en el móvil.
+- **Android no ofrece «Recordatorio»**: los recordatorios ya suenan por su notificación del sistema. «Sync hecha» suena solo si el usuario pidió la
+  sincronización (a mano o tirando de la lista), como en Windows; «sync fallida» suena siempre. «Nota nueva» suena al guardarse por primera vez.
 - **Android solo tiene los cinco sonidos propios**: los del sistema de Windows (1-5) y el `.wav` propio (6) no existen allí y se quedan en silencio.
 - Android no suena con el teléfono en silencio o vibración; Windows no tiene ese modo.
 - El volumen de Windows no afecta a los sonidos del sistema ni a un `.wav` propio (los reproduce `SoundPlayer`); el de Android afecta a todos.
+
+## Copia automática en una carpeta (fase 4)
+
+Mismos nombres, mismo formato de manifiesto (`.aldune-export.json`), mismas reglas en las dos apps (`AutoExportPlanner` en Core y su port en
+`android/domain`, con los mismos casos de test): un `.md` por nota en `notas/` (y `archivadas/` con la casilla), nombre fijo desde la primera vez,
+protegidas y papelera fuera, lo que sale se aparta en `_eliminadas/` y **nunca se borra nada**; un fichero cambiado a mano o ajeno no se pisa (la copia
+va al lado como `nombre (Aldune).md`). Los ficheros están en claro: el ajuste lo dice.
+
+- **Cuándo escribe:** Windows, unos segundos después de que se calmen los cambios y al cerrar; Android, 15 s después del último cambio (WorkManager, cada
+  cambio reinicia la espera) y una vez al día como red de seguridad.
+- **Carpeta:** Windows, un selector de carpeta; Android, el selector del sistema con permiso persistente. Si en Android se pierde el permiso o la carpeta, la
+  copia se apaga y se avisa en la lista y en Ajustes (no hay reintentos); en Windows un fallo se apunta y se reintenta, y Ajustes lo enseña.
+- La carpeta es de cada equipo: no viaja en exportar/importar configuración.

@@ -8,6 +8,8 @@ import app.aldune.AppContainer
 import app.aldune.capture.CaptureRequest
 import app.aldune.audio.UiSounds
 import app.aldune.data.AppSettings
+import app.aldune.export.AutoExportStatus
+import app.aldune.export.AutoExportWork
 import app.aldune.data.SettingsStore
 import app.aldune.core.ProtectedNotes
 import app.aldune.core.UnlockedProtectedNote
@@ -211,6 +213,10 @@ class NotesViewModel(application: Application) : AndroidViewModel(application) {
         if (next.listOrder != previous.listOrder) launchIo { refreshLocked() }
         if (next.syncInBackground != previous.syncInBackground) _sync.value?.refreshSchedule()
         if (next.sounds.enabled && !previous.sounds.enabled) sounds.preload()
+        if (next.autoExportEnabled != previous.autoExportEnabled || next.autoExportUri != previous.autoExportUri || next.autoExportArchived != previous.autoExportArchived) {
+            AutoExportWork.apply(getApplication(), next)
+            if (AutoExportWork.isActive(next)) AutoExportWork.kick(getApplication(), immediate = true)
+        }
         // El aspecto, el idioma y la vista previa cambian lo que pinta el widget.
         widgetChanged()
     }
@@ -244,6 +250,8 @@ class NotesViewModel(application: Application) : AndroidViewModel(application) {
 
     private fun start(notes: NoteService, opened: AppContainer.Opened.Ready) {
         service = notes
+        AutoExportStatus.init(getApplication())
+        AutoExportWork.apply(getApplication(), _settings.value)
         protection = opened.protection
         ready = opened
         _sync.value = opened.sync.also { it.onNotesChanged = { launchIo { reconcileDrafts(); refreshLocked(); widgetChanged() } } }
@@ -794,6 +802,8 @@ class NotesViewModel(application: Application) : AndroidViewModel(application) {
 
     private fun refreshLocked() {
         val notes = service ?: return
+        // Cada cambio en las notas (una edición, una pasada de sync) reinicia la espera de la copia automática, si está activa.
+        if (AutoExportWork.isActive(_settings.value)) AutoExportWork.kick(getApplication())
         val current = _state.value as? UiState.Ready ?: return
         val order = NoteListOrder.fromCode(_settings.value.listOrder)
         val items = NoteListing.sort(notes.list(current.filter, current.query, current.tag), order).map { NoteListItem.from(it, placeholder, protectedTitle) }
