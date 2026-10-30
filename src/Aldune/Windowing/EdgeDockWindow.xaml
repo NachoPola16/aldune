@@ -83,8 +83,8 @@
                           Color="#000000" Opacity="0.38" />
 
         <!-- Los botones no se apilan, así que su sombra sí cae hacia abajo como es natural. -->
-        <DropShadowEffect x:Key="ButtonShadow" BlurRadius="12" ShadowDepth="2" Direction="270"
-                          Color="#000000" Opacity="0.45" />
+        <DropShadowEffect x:Key="ButtonShadow" BlurRadius="8" ShadowDepth="1" Direction="270"
+                          Color="#000000" Opacity="0.4" />
 
         <!-- Reflejo en los cantos, cara plana en medio. Con una rampa larga el degradado se leía
              como tal y las pestañas parecían plástico brillante iluminado de lado, no papel. -->
