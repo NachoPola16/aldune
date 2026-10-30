@@ -2004,6 +2004,14 @@ public partial class NoteWindow : Window
         // Con retícula (osciloscopio) el cuadro de texto deja ver la cuadrícula del fondo.
         TextBody.Background = skin.NoteGrid || skin.Paper != SkinPaper.None ? Brushes.Transparent : brush;
         BodyHost.Background = skin.NoteGrid ? GridBrush(face.Ink) : null;
+        // La retícula no llega al borde de la nota: margen a la izquierda igual que a la derecha, y el texto entra un poco dentro de la primera
+        // cuadrícula en vez de pegarse a su borde superior.
+        _bodyPadding ??= TextBody.Padding;
+        _placeholderMargin ??= BodyPlaceholder.Margin;
+        BodyHost.Margin = skin.NoteGrid ? new Thickness(16, 14, 16, 20) : new Thickness(0, 14, 20, 20);
+        double gridInset = skin.NoteGrid ? 6 : 0;
+        TextBody.Padding = new Thickness(_bodyPadding.Value.Left, _bodyPadding.Value.Top + gridInset, _bodyPadding.Value.Right, _bodyPadding.Value.Bottom);
+        BodyPlaceholder.Margin = new Thickness(_placeholderMargin.Value.Left, _placeholderMargin.Value.Top + gridInset, _placeholderMargin.Value.Right, _placeholderMargin.Value.Bottom);
         // Las libretas: el papel (pliegues o renglones) bajo el texto, del tamaño del cuerpo; se rehace al cambiar el tamaño (ver RefreshPaper).
         _paper = skin.Paper;
         _paperInk = (System.Windows.Media.Color)System.Windows.Media.ColorConverter.ConvertFromString(face.Ink);
@@ -2064,6 +2072,7 @@ public partial class NoteWindow : Window
     // Retícula de osciloscopio: líneas de 1 px cada 24, de la tinta muy translúcida, para que se lea
     // como fondo y no compita con el texto.
     private SkinPaper _paper = SkinPaper.None;
+    private Thickness? _bodyPadding, _placeholderMargin;
     private System.Windows.Media.Color _paperInk;
     private bool _paperLight;
 
