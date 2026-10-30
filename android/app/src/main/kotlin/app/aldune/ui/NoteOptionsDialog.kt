@@ -5,6 +5,10 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.border
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.layout.offset
+import androidx.compose.ui.layout.layout
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
@@ -124,7 +128,9 @@ fun NoteOptionsDialog(
             ) {
                 Text(stringResource(R.string.note_options), style = MaterialTheme.typography.headlineSmall, modifier = Modifier.semantics { heading() })
                 Text(stringResource(R.string.note_color), style = MaterialTheme.typography.labelLarge)
-                FlowRow(horizontalArrangement = Arrangement.spacedBy(10.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                // Balanced rows (8 colours = 4 + 4, not 7 + 1 orphan); at most 7 per row, which is what fits on a phone.
+                val perRow = if (palette.isEmpty()) 1 else (palette.size + (palette.size + 6) / 7 - 1) / ((palette.size + 6) / 7)
+                FlowRow(horizontalArrangement = Arrangement.spacedBy(10.dp), verticalArrangement = Arrangement.spacedBy(10.dp), maxItemsInEachRow = perRow) {
                     for (hex in palette) {
                         Swatch(hex, selected = hex == color) {
                             color = hex
@@ -137,7 +143,7 @@ fun NoteOptionsDialog(
                 if (settings.uniformNoteColor != null) {
                     Text(stringResource(R.string.color_uniform_notice), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
-                TextButton(onClick = { customOpen = true }) { Text(stringResource(R.string.custom_color)) }
+                TextButton(onClick = { customOpen = true }, Modifier.alignWithHeadings()) { Text(stringResource(R.string.custom_color)) }
                 CollapsibleSection(stringResource(R.string.note_tags), startOpen = tags.isNotEmpty(), summary = tags.joinToString(", ")) {
                 FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     for (tag in tags) {
@@ -168,17 +174,17 @@ fun NoteOptionsDialog(
                     ReminderSection(initial.noteId, viewModel)
                 }
                 if (exportText != null) {
-                    TextButton(onClick = { exporter.launch(MarkdownExport.suggestedFileName(exportText, newNote)) }) {
+                    TextButton(onClick = { exporter.launch(MarkdownExport.suggestedFileName(exportText, newNote)) }, Modifier.alignWithHeadings()) {
                         Text(stringResource(R.string.export_markdown))
                     }
                 }
                 if (initial.isProtected) {
-                    TextButton(onClick = { nameOpen = true }, Modifier.padding(top = 8.dp)) { Text(stringResource(R.string.visible_name_menu)) }
+                    TextButton(onClick = { nameOpen = true }, Modifier.padding(top = 8.dp).alignWithHeadings()) { Text(stringResource(R.string.visible_name_menu)) }
                 }
                 // Desde la lista, con la nota abierta al lado, proteger o quitar la protección dejaría el editor con el estado viejo: ahí se hace
                 // desde el propio editor.
                 if (showProtection) {
-                    TextButton(onClick = onProtection, Modifier.padding(top = 8.dp)) {
+                    TextButton(onClick = onProtection, Modifier.padding(top = 8.dp).alignWithHeadings()) {
                         Text(stringResource(if (initial.isProtected) R.string.remove_protection else R.string.protect_note))
                     }
                 }
@@ -205,6 +211,20 @@ fun NoteOptionsDialog(
     }
 }
 
+/** Inner padding of the text buttons and of the section headers of the options sheet; headings and buttons are aligned by removing it again. */
+private val SHEET_TEXT_INSET = 12.dp
+
+/** Moves a text button left by its own inner padding, so its text starts where the headings of the sheet start. */
+private fun Modifier.alignWithHeadings(): Modifier = this.offset(x = -SHEET_TEXT_INSET)
+
+/** Makes the element [by] wider on each side without changing the space it takes in its parent. */
+private fun Modifier.widenBy(by: androidx.compose.ui.unit.Dp): Modifier = this.layout { measurable, constraints ->
+    val extra = by.roundToPx()
+    val width = constraints.maxWidth + 2 * extra
+    val placeable = measurable.measure(constraints.copy(minWidth = width, maxWidth = width))
+    layout(constraints.maxWidth, placeable.height) { placeable.place(-extra, 0) }
+}
+
 /** Una sección que se pliega: el título es un botón de ancho completo (48 dp) con la flecha que dice si está abierta. */
 @Composable
 private fun CollapsibleSection(
@@ -212,7 +232,10 @@ private fun CollapsibleSection(
 ) {
     var open by rememberSaveable(title) { mutableStateOf(startOpen) }
     Row(
-        Modifier.fillMaxWidth().heightIn(min = 48.dp).clickable(role = Role.Button) { open = !open; onToggle() }
+        // The highlight (pressed / focused) runs 12 dp beyond the text on each side, so the title is not flush against the band's edge, and
+        // the row is widened by the same amount so the title still lines up with the other headings.
+        Modifier.widenBy(SHEET_TEXT_INSET).heightIn(min = 48.dp).clip(RoundedCornerShape(8.dp)).clickable(role = Role.Button) { open = !open; onToggle() }
+            .padding(horizontal = SHEET_TEXT_INSET)
             .semantics { stateDescription = if (open) "▲" else "▼" },
         verticalAlignment = Alignment.CenterVertically,
     ) {
@@ -238,6 +261,8 @@ private fun Swatch(hex: String, selected: Boolean, onClick: () -> Unit) {
             .size(40.dp)
             .clip(CircleShape)
             .background(noteFace(hex))
+            // A thin outline: in the dark themes several note colours are almost the same grey and nearly the sheet's own colour.
+            .border(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.6f), CircleShape)
             .then(if (selected) Modifier.drawBehind { drawCircle(ring, radius = size.minDimension / 2 - 2.dp.toPx(), style = androidx.compose.ui.graphics.drawscope.Stroke(4.dp.toPx())) } else Modifier)
             .clickable(onClick = onClick)
             .semantics {

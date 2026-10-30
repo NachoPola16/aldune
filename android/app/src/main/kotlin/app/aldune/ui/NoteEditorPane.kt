@@ -509,7 +509,8 @@ fun NoteEditorPane(key: String, viewModel: NotesViewModel, onBack: () -> Unit, s
                 IconButton(onClick = { topMenu = true }, enabled = loaded) {
                     Icon(Icons.Default.MoreVert, contentDescription = stringResource(R.string.edit_more))
                 }
-                DropdownMenu(expanded = topMenu, onDismissRequest = { topMenu = false }) {
+                // Offset left so the menu does not touch the screen edge (it opened flush against it, with its longest entries clipped by the margin).
+                DropdownMenu(expanded = topMenu, onDismissRequest = { topMenu = false }, offset = androidx.compose.ui.unit.DpOffset((-12).dp, 0.dp)) {
                     DropdownMenuItem(
                         text = { Text(stringResource(R.string.note_options)) },
                         onClick = { topMenu = false; scope.launch { options = viewModel.noteOptions(key) } },

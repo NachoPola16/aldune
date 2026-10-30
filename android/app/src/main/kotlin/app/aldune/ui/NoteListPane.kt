@@ -520,7 +520,8 @@ private fun StateTabs(state: UiState.Ready, onSelect: (NoteState) -> Unit) {
 @Composable
 private fun TagRow(state: UiState.Ready, onSelect: (String?) -> Unit) {
     LazyRow(
-        Modifier.padding(top = 4.dp), contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 16.dp),
+        // Space below the chips equal to the space between them and the tabs (it was 20 dp above and 8 dp below).
+        Modifier.padding(bottom = 10.dp), contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 16.dp),
         horizontalArrangement = Arrangement.spacedBy(8.dp),
     ) {
         items(state.allTags) { tag ->
@@ -615,7 +616,10 @@ internal fun SwipeableRow(
         state = dismiss,
         modifier = modifier.padding(horizontal = 16.dp).semantics { customActions = actions; if (selected) stateDescription = openLabel },
         backgroundContent = {
-            Box(
+            // Only while the row is actually swiped: drawn at rest, this fill peeks out around the card's anti-aliased edge as a thin outline whose
+            // colour depends on the note colour (the "some notes have a border" report).
+            val swiped = runCatching { kotlin.math.abs(dismiss.requireOffset()) >= 1f }.getOrDefault(false)
+            if (swiped) Box(
                 Modifier.fillMaxSize().background(MaterialTheme.colorScheme.surfaceVariant, LocalNoteLook.current.cardShape).padding(horizontal = 20.dp),
                 contentAlignment = if (dismiss.dismissDirection == SwipeToDismissBoxValue.StartToEnd) Alignment.CenterStart else Alignment.CenterEnd,
             ) {
@@ -648,19 +652,24 @@ private fun NoteRow(item: NoteListItem, selected: Boolean, conflicted: Boolean, 
     val fill = look.fillColor
     val ink = if (fill) noteInk(hex) else MaterialTheme.colorScheme.onSurface
     val muted = if (fill) ink.copy(alpha = 0.75f) else MaterialTheme.colorScheme.onSurfaceVariant
+    val cardColor = when {
+        tint != null -> noteFace(tint.face)
+        fill -> face
+        selected -> MaterialTheme.colorScheme.primaryContainer
+        else -> MaterialTheme.colorScheme.surfaceContainerHigh
+    }
+    // A note whose face is almost the colour of the app background would read as loose text: a faint outline marks the card. Decided by the
+    // contrast between the two (not by the note colour), so the same rule gives the same result in every look and theme.
+    val blendsIn = contrastRatio(cardColor, MaterialTheme.colorScheme.background) < CARD_OUTLINE_BELOW
     Card(
         onClick = onOpen,
         shape = look.cardShape,
-        colors = CardDefaults.cardColors(
-            containerColor = when {
-                tint != null -> noteFace(tint.face)
-                fill -> face
-                selected -> MaterialTheme.colorScheme.primaryContainer
-                else -> MaterialTheme.colorScheme.surfaceContainerHigh
-            },
-            contentColor = ink,
-        ),
-        border = if ((fill || tint != null) && selected) BorderStroke(3.dp, MaterialTheme.colorScheme.primary) else null,
+        colors = CardDefaults.cardColors(containerColor = cardColor, contentColor = ink),
+        border = when {
+            (fill || tint != null) && selected -> BorderStroke(3.dp, MaterialTheme.colorScheme.primary)
+            blendsIn -> BorderStroke(1.dp, MaterialTheme.colorScheme.outline)
+            else -> null
+        },
     ) {
         Row(
             Modifier.fillMaxWidth().height(androidx.compose.foundation.layout.IntrinsicSize.Min)
@@ -737,6 +746,16 @@ private fun syncSignalLabel(state: NoteSyncSignal.State): Int = when (state) {
     NoteSyncSignal.State.SYNCED -> R.string.sync_signal_synced
     NoteSyncSignal.State.PENDING -> R.string.sync_signal_pending
     else -> R.string.sync_signal_conflict
+}
+
+/** Below this WCAG contrast ratio between a card and the background behind it, the card gets a thin outline. */
+private const val CARD_OUTLINE_BELOW = 1.25f
+
+/** WCAG contrast ratio (1 to 21) between two opaque colours. */
+internal fun contrastRatio(a: Color, b: Color): Float {
+    val la = a.luminance() + 0.05f
+    val lb = b.luminance() + 0.05f
+    return if (la > lb) la / lb else lb / la
 }
 
 /** El color de la nota tal cual (también un hex de un tema propio de Windows); uno ilegible cae en un gris, nunca rompe la lista. */
