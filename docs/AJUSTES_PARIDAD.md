@@ -19,7 +19,7 @@ Mismo orden y mismos nombres para lo común; lo propio de cada plataforma va en 
 | Sincronización | Sync | Sincronización | Perfiles de sync y copia automática en carpeta. Android añade la copia local en .zip. |
 | Ayuda / Acerca de | Help, About | (en General) | Solo Windows tiene páginas propias. |
 
-El modo simplificado esconde Notas, Colores y Sincronización en las dos plataformas (Windows esconde además lo avanzado del dock).
+En Android las pestañas son chips que se reparten en varias líneas (no una fila que se desplaza: con seis pestañas la última quedaba fuera de pantalla sin que nada lo dijera). El modo simplificado esconde Notas, Colores y Sincronización en las dos plataformas (Windows esconde además lo avanzado del dock).
 
 ## Comunes (mismo texto de interfaz)
 
@@ -95,4 +95,5 @@ va al lado como `nombre (Aldune).md`). Los ficheros están en claro: el ajuste l
   claros y oscuros. Ya existen los interruptores de señal de sincronización, esquinas rectas y color de nota solo como franja.
 - **Pestaña del dock**: la onda comparte fila con la vista previa (40×12, trazo fino) y solo la vista previa cede ese hueco; el título conserva todo el ancho.
 - **Retícula de la nota**: margen sin cuadrícula a izquierda, derecha y abajo, y el texto entra 6 px dentro de la primera cuadrícula. Bash y Fósforo no tienen retícula.
+- **Cuaderno cuadriculado** (aspectos 15 y 16, claro y oscuro, en las dos plataformas): hoja de cuadros del alto de línea con margen rojo, letra de siempre (las otras libretas usan serifa) y el color de la nota como franja, bloqueado como en las demás libretas. En las filas de la lista solo lleva el margen (nada cruza el texto).
 - **Botones del dock**: sombra más corta y ligera (profundidad 1, desenfoque 8); en los aspectos con bisel no hay sombra de caída.
