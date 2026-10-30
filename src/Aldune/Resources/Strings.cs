@@ -83,6 +83,11 @@ public static class Strings
         SoundEvent.SyncFailed => T("Sync failed", "Sincronización fallida", "Synchronisierung fehlgeschlagen", "Échec de la synchronisation", "Falha na sincronização"),
         SoundEvent.NoteCreated => T("New note", "Nota nueva", "Neue Notiz", "Nouvelle note", "Nova nota"),
         SoundEvent.NoteArchived => T("Note archived", "Nota archivada", "Notiz archiviert", "Note archivée", "Nota arquivada"),
+        SoundEvent.NoteOpened => T("Note opened", "Nota abierta", "Notiz geöffnet", "Note ouverte", "Nota aberta"),
+        SoundEvent.NoteClosed => T("Note closed", "Nota cerrada", "Notiz geschlossen", "Note fermée", "Nota fechada"),
+        SoundEvent.TaskChecked => T("Task checked", "Casilla marcada", "Aufgabe abgehakt", "Case cochée", "Caixa marcada"),
+        SoundEvent.NoteDeleted => T("Note deleted", "Nota borrada", "Notiz gelöscht", "Note supprimée", "Nota excluída"),
+        SoundEvent.Typing => T("Typing", "Escribir", "Tippen", "Saisie", "Digitação"),
         _ => "",
     };
     public static string SoundChoiceName(SoundChoice choice) => choice switch
@@ -94,9 +99,16 @@ public static class Strings
         SoundChoice.Hand => T("Windows: error", "Windows: error", "Windows: Fehler", "Windows : erreur", "Windows: erro"),
         SoundChoice.Question => T("Windows: question", "Windows: pregunta", "Windows: Frage", "Windows : question", "Windows: pergunta"),
         SoundChoice.File => T("A .wav file…", "Un archivo .wav…", "Eine .wav-Datei…", "Un fichier .wav…", "Um arquivo .wav…"),
+        SoundChoice.PageTurn => T("Aldune: turning a page", "Aldune: pasar hoja", "Aldune: Seite umblättern", "Aldune : tourner la page", "Aldune: virar a página"),
+        SoundChoice.PaperFold => T("Aldune: folding paper", "Aldune: papel que se pliega", "Aldune: Papier falten", "Aldune : papier qui se plie", "Aldune: papel dobrando"),
+        SoundChoice.PenTap => T("Aldune: pen tap", "Aldune: toque de pluma", "Aldune: Federtupfer", "Aldune : touche de plume", "Aldune: toque de caneta"),
+        SoundChoice.PaperCrumple => T("Aldune: crumpling paper", "Aldune: papel que se arruga", "Aldune: Papier zerknüllen", "Aldune : papier froissé", "Aldune: papel amassando"),
+        SoundChoice.PenScratch => T("Aldune: pen scratch", "Aldune: rasguño de pluma", "Aldune: Federkratzen", "Aldune : grattement de plume", "Aldune: rabisco de caneta"),
         _ => "",
     };
     public static string SoundFileChoiceName(string name) => T($"File: {name}", $"Archivo: {name}", $"Datei: {name}", $"Fichier : {name}", $"Arquivo: {name}");
+    public static string SoundVolumeLabel => T("Volume", "Volumen", "Lautstärke", "Volume", "Volume");
+    public static string SoundPaperAndPenButton => T("Paper and pen for everything", "Papel y pluma para todo", "Papier und Feder für alles", "Papier et plume pour tout", "Papel e caneta para tudo");
     public static string SoundTest => T("Test", "Probar", "Testen", "Tester", "Testar");
     public static string SoundFileFilter => T("WAV sound", "Sonido WAV", "WAV-Ton", "Son WAV", "Som WAV") + " (*.wav)|*.wav";
     public static string SoundFileRejected => T(

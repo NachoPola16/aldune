@@ -823,6 +823,7 @@ public partial class NotesManagerWindow : Window
             {
                 _repository.SetState(row.Note.Id, NoteState.Trashed);
             }
+            _coordinator.PlaySound(SoundEvent.NoteDeleted);   // una vez, aunque sean varias notas
             LoadRows();
             _coordinator.RefreshAll();
         });

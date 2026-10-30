@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <ItemGroup>
     <ProjectReference Include="..\Aldune.Core\Aldune.Core.csproj" />
@@ -8,6 +8,11 @@
     <!-- El mismo .ico, incrustado también como recurso: la bandeja lo abre pidiendo el tamaño pequeño
          del sistema, y así usa la versión de 16-24 px dibujada para eso en vez de reducir la de 32. -->
     <EmbeddedResource Include="Assets\aldune.ico" LogicalName="Aldune.aldune.ico" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Sonidos de papel y pluma (scripts/sounds/generar-sonidos.py): pocos KB cada uno, sin ficheros de terceros. -->
+    <EmbeddedResource Include="Resources\Sounds\*.wav" LogicalName="Aldune.sounds.%(Filename)%(Extension)" />
   </ItemGroup>
 
   <ItemGroup>

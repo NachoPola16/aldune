@@ -2460,8 +2460,9 @@ public partial class EdgeDockWindow : Window
     {
         if (_tabMenuNote is { } note)
         {
-            _repository.SetState(note.Id,
-                note.State == NoteState.Trashed ? NoteState.Active : NoteState.Trashed);
+            var toTrash = note.State != NoteState.Trashed;
+            _repository.SetState(note.Id, toTrash ? NoteState.Trashed : NoteState.Active);
+            if (toTrash) _coordinator.PlaySound(SoundEvent.NoteDeleted);
             _coordinator.RefreshAll();
         }
         CloseTabMenu();

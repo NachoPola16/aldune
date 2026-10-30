@@ -44,7 +44,7 @@ public sealed class AppCoordinator
     /// <summary>Hace sonar un evento si el usuario lo tiene activado (apagado de fábrica, ver SoundPlan).</summary>
     internal void PlaySound(SoundEvent soundEvent)
     {
-        if (_settings is not null) AppSounds.Play(SoundPlan.Resolve(_settings, soundEvent));
+        if (_settings is not null) AppSounds.Play(SoundPlan.Resolve(_settings, soundEvent), SoundPlan.VolumeFactor(_settings));
     }
 
     // Dónde estaba el cursor al cerrar cada nota, para volver ahí al reabrirla en la misma sesión.
@@ -597,6 +597,7 @@ public sealed class AppCoordinator
         }
 
         _openNoteWindows[note.Id] = noteWindow;
+        PlaySound(SoundEvent.NoteOpened);
         _openNoteIds[note.Id] = 0;
         noteWindow.Closed += (_, _) =>
         {

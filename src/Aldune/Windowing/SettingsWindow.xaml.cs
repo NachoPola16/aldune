@@ -770,17 +770,33 @@ public partial class SettingsWindow : Window
             row.Children.Add(test);
             SoundRowsPanel.Children.Add(row);
         }
+        SoundVolumeSlider.Value = Math.Clamp(_settings.SoundVolume, 0, 100);
         _buildingSounds = false;
-        SoundRowsPanel.IsEnabled = _settings.SoundsEnabled;
-        SoundRowsPanel.Opacity = _settings.SoundsEnabled ? 1 : 0.5;
+        SoundRowsPanel.IsEnabled = SoundExtrasPanel.IsEnabled = _settings.SoundsEnabled;
+        SoundRowsPanel.Opacity = SoundExtrasPanel.Opacity = _settings.SoundsEnabled ? 1 : 0.5;
     }
 
     private void OnSoundsEnabledToggled(object sender, RoutedEventArgs e)
     {
         _settings.SoundsEnabled = SoundsEnabledCheck.IsChecked == true;
         _settingsService.Save(_settings);
-        SoundRowsPanel.IsEnabled = _settings.SoundsEnabled;
-        SoundRowsPanel.Opacity = _settings.SoundsEnabled ? 1 : 0.5;
+        SoundRowsPanel.IsEnabled = SoundExtrasPanel.IsEnabled = _settings.SoundsEnabled;
+        SoundRowsPanel.Opacity = SoundExtrasPanel.Opacity = _settings.SoundsEnabled ? 1 : 0.5;
+    }
+
+    private void OnSoundVolumeChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
+    {
+        if (_buildingSounds) return;
+        _settings.SoundVolume = (int)Math.Round(SoundVolumeSlider.Value);
+        _settingsService.Save(_settings);
+    }
+
+    private void OnSoundPaperAndPenClick(object sender, RoutedEventArgs e)
+    {
+        SoundPlan.ApplyPaperAndPen(_settings);
+        _settingsService.Save(_settings);
+        BuildSoundRows();
+        AppSounds.Play(SoundPlan.Resolve(new AppSettings { SoundsEnabled = true, Sounds = _settings.Sounds }, SoundEvent.NoteOpened), SoundPlan.VolumeFactor(_settings));
     }
 
     private void OnSoundChoiceChanged(object sender, SelectionChangedEventArgs e)
@@ -810,7 +826,7 @@ public partial class SettingsWindow : Window
         _settings.Sounds[SoundPlan.Id(soundEvent)] = setting;
         _settingsService.Save(_settings);
         // Escuchar lo elegido nada más elegirlo, aunque sea el interruptor general el que lo silencie luego.
-        AppSounds.Play(SoundPlan.Resolve(new AppSettings { SoundsEnabled = true, Sounds = _settings.Sounds }, soundEvent));
+        AppSounds.Play(SoundPlan.Resolve(new AppSettings { SoundsEnabled = true, Sounds = _settings.Sounds }, soundEvent), SoundPlan.VolumeFactor(_settings));
         if (choice == SoundChoice.File) Dispatcher.BeginInvoke(BuildSoundRows);   // para ver el nombre del archivo
     }
 
@@ -818,7 +834,7 @@ public partial class SettingsWindow : Window
     {
         if (sender is not Button { Tag: SoundEvent soundEvent }) return;
         // "Probar" suena aunque el interruptor general esté apagado: es la forma de oír qué hay elegido.
-        AppSounds.Play(SoundPlan.Resolve(new AppSettings { SoundsEnabled = true, Sounds = _settings.Sounds }, soundEvent));
+        AppSounds.Play(SoundPlan.Resolve(new AppSettings { SoundsEnabled = true, Sounds = _settings.Sounds }, soundEvent), SoundPlan.VolumeFactor(_settings));
     }
 
     private void OnReminderIncludesTasksToggled(object sender, RoutedEventArgs e)

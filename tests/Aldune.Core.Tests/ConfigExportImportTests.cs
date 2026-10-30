@@ -409,6 +409,7 @@ public class ConfigExportImportTests
         ["SereneRecolored"] = "marca interna de una migración de datos de este equipo",
         ["SoundsEnabled"] = "sonidos: dependen de los archivos .wav y del volumen de cada equipo",
         ["Sounds"] = "sonidos: llevan rutas de archivos de este equipo",
+        ["SoundVolume"] = "volumen de los sonidos: va con el interruptor y los .wav de cada equipo",
     };
 
     [Fact]

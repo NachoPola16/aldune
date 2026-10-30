@@ -491,6 +491,22 @@
                                   Click="OnSoundsEnabledToggled" />
                         <TextBlock Text="{x:Static res:Strings.SoundsHint}"
                                    Foreground="{DynamicResource AlduneHintBrush}" FontSize="{DynamicResource AlduneTextSmall}" TextWrapping="Wrap" Margin="0,6,56,0" />
+                        <Grid x:Name="SoundExtrasPanel" Margin="0,12,0,0">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="150" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Text="{x:Static res:Strings.SoundVolumeLabel}" VerticalAlignment="Center" FontSize="13"
+                                       Foreground="{DynamicResource AlduneTextBrush}" />
+                            <Slider x:Name="SoundVolumeSlider" Grid.Column="1" Minimum="0" Maximum="100" SmallChange="5" LargeChange="10"
+                                    TickFrequency="10" Background="{DynamicResource AlduneTrackBrush}" VerticalAlignment="Center"
+                                    AutomationProperties.Name="{x:Static res:Strings.SoundVolumeLabel}"
+                                    ValueChanged="OnSoundVolumeChanged" />
+                            <Button Grid.Row="1" Grid.Column="1" Margin="0,10,0,0" HorizontalAlignment="Left" Padding="10,5"
+                                    Content="{x:Static res:Strings.SoundPaperAndPenButton}"
+                                    Style="{StaticResource RecordButtonStyle}" Click="OnSoundPaperAndPenClick" />
+                            <Grid.RowDefinitions><RowDefinition Height="Auto" /><RowDefinition Height="Auto" /></Grid.RowDefinitions>
+                        </Grid>
                         <!-- Una fila por evento (la rellena BuildSoundRows): sonido propio o ninguno, con "Probar". -->
                         <StackPanel x:Name="SoundRowsPanel" Margin="0,12,0,0" />
                     </StackPanel>

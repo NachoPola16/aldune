@@ -8,10 +8,16 @@ public enum SoundEvent
     SyncFailed,
     NoteCreated,
     NoteArchived,
+    NoteOpened,
+    NoteClosed,
+    TaskChecked,
+    NoteDeleted,
+    Typing,
 }
 
-/// <summary>Qué suena. Los cinco primeros son sonidos del sistema (siguen el volumen y el tema de Windows);
-/// <see cref="File"/> es un .wav que elige el usuario.</summary>
+/// <summary>Qué suena. Del 1 al 5, sonidos del sistema (siguen el volumen y el tema de Windows); <see cref="File"/>
+/// es un .wav que elige el usuario; del 7 al 11, los sonidos de papel y pluma de la app. Se guarda como número:
+/// las opciones nuevas van siempre al final.</summary>
 public enum SoundChoice
 {
     None = 0,
@@ -21,6 +27,11 @@ public enum SoundChoice
     Hand = 4,
     Question = 5,
     File = 6,
+    PageTurn = 7,
+    PaperFold = 8,
+    PenTap = 9,
+    PaperCrumple = 10,
+    PenScratch = 11,
 }
 
 /// <summary>La elección de un evento. Se guarda en <c>AppSettings.Sounds</c>; la ruta del .wav es de este equipo.</summary>
@@ -30,7 +41,7 @@ public sealed class SoundSetting
     public string? FilePath { get; set; }
 }
 
-public enum SoundActionKind { None, System, File }
+public enum SoundActionKind { None, System, File, Bundled }
 
 /// <summary>Lo que hay que hacer sonar, ya validado: la capa WPF solo lo reproduce.</summary>
 public sealed record SoundAction(SoundActionKind Kind, SoundChoice System = SoundChoice.None, string? Path = null)
@@ -50,7 +61,8 @@ public static class SoundPlan
     public const int MaxFileBytes = 5 * 1024 * 1024;
 
     public static IReadOnlyList<SoundEvent> All { get; } =
-        [SoundEvent.Reminder, SoundEvent.SyncDone, SoundEvent.SyncFailed, SoundEvent.NoteCreated, SoundEvent.NoteArchived];
+        [SoundEvent.Reminder, SoundEvent.SyncDone, SoundEvent.SyncFailed, SoundEvent.NoteCreated, SoundEvent.NoteArchived,
+         SoundEvent.NoteOpened, SoundEvent.NoteClosed, SoundEvent.TaskChecked, SoundEvent.NoteDeleted, SoundEvent.Typing];
 
     /// <summary>Clave estable de cada evento en el archivo de ajustes: no se renombra aunque cambie el enum.</summary>
     public static string Id(SoundEvent soundEvent) => soundEvent switch
@@ -60,6 +72,11 @@ public static class SoundPlan
         SoundEvent.SyncFailed => "syncFailed",
         SoundEvent.NoteCreated => "noteCreated",
         SoundEvent.NoteArchived => "noteArchived",
+        SoundEvent.NoteOpened => "noteOpened",
+        SoundEvent.NoteClosed => "noteClosed",
+        SoundEvent.TaskChecked => "taskChecked",
+        SoundEvent.NoteDeleted => "noteDeleted",
+        SoundEvent.Typing => "typing",
         _ => throw new ArgumentOutOfRangeException(nameof(soundEvent)),
     };
 
@@ -85,10 +102,32 @@ public static class SoundPlan
         {
             SoundChoice.None => SoundAction.Silence,
             SoundChoice.File => IsUsableFile(setting.FilePath) ? new SoundAction(SoundActionKind.File, Path: setting.FilePath) : SoundAction.Silence,
+            var own when own >= SoundChoice.PageTurn && Enum.IsDefined(own) => new SoundAction(SoundActionKind.Bundled, own),
             var system when Enum.IsDefined(system) => new SoundAction(SoundActionKind.System, system),
             _ => SoundAction.Silence,   // un número que no es de ningún sonido (archivo de otra versión)
         };
     }
+
+    /// <summary>Lo que asigna «Papel y pluma para todo». Solo los eventos nuevos: los avisos y la sync siguen con
+    /// lo que el usuario tenga.</summary>
+    public static IReadOnlyDictionary<SoundEvent, SoundChoice> PaperAndPen { get; } = new Dictionary<SoundEvent, SoundChoice>
+    {
+        [SoundEvent.NoteOpened] = SoundChoice.PageTurn,
+        [SoundEvent.NoteClosed] = SoundChoice.PaperFold,
+        [SoundEvent.TaskChecked] = SoundChoice.PenTap,
+        [SoundEvent.NoteDeleted] = SoundChoice.PaperCrumple,
+        [SoundEvent.Typing] = SoundChoice.PenScratch,
+    };
+
+    public static void ApplyPaperAndPen(AppSettings settings)
+    {
+        foreach (var (soundEvent, choice) in PaperAndPen)
+            settings.Sounds[Id(soundEvent)] = new SoundSetting { Choice = choice };
+    }
+
+    /// <summary>Volumen de la app (0-100 en los ajustes) como factor de 0 a 1. Afecta a los sonidos propios de la app;
+    /// los del sistema y los .wav del usuario siguen el volumen de Windows.</summary>
+    public static double VolumeFactor(AppSettings settings) => Math.Clamp(settings.SoundVolume, 0, 100) / 100.0;
 
     public static bool IsUsableFile(string? path)
     {

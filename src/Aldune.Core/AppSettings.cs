@@ -251,6 +251,9 @@ public sealed class AppSettings
     /// <summary>Interruptor general de los sonidos de la app. Apagado de fábrica (ver <see cref="SoundPlan"/>).</summary>
     public bool SoundsEnabled { get; set; }
 
+    /// <summary>Volumen de los sonidos de la app, de 0 a 100 (mismo nombre en Android).</summary>
+    public int SoundVolume { get; set; } = 100;
+
     /// <summary>Elección de sonido por evento, por la clave de <see cref="SoundPlan.Id"/>. Lo que falta toma la
     /// elección de partida. No viaja en exportar/importar: las rutas de los .wav son de cada equipo.</summary>
     public Dictionary<string, SoundSetting> Sounds { get; set; } = new();

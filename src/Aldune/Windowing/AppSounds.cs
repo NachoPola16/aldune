@@ -1,4 +1,5 @@
-﻿using System.Media;
+﻿using System.IO;
+using System.Media;
 using Aldune.Core;
 using Aldune.Interop;
 
@@ -13,7 +14,7 @@ internal static class AppSounds
     // SoundPlayer carga el .wav en segundo plano: mientras suena hay que conservar una referencia.
     private static SoundPlayer? _player;
 
-    public static void Play(SoundAction action)
+    public static void Play(SoundAction action, double volume = 1.0)
     {
         try
         {
@@ -21,6 +22,9 @@ internal static class AppSounds
             {
                 case SoundActionKind.System:
                     SystemSoundOf(action.System)?.Play();
+                    break;
+                case SoundActionKind.Bundled:
+                    PlayBundled(action.System, volume);
                     break;
                 case SoundActionKind.File:
                     _player?.Dispose();
@@ -33,6 +37,29 @@ internal static class AppSounds
         {
             AppLog.Write("sonidos", $"no se pudo reproducir: {ex.GetType().Name}: {ex.Message}");
         }
+    }
+
+    private static void PlayBundled(SoundChoice choice, double volume)
+    {
+        var name = choice switch
+        {
+            SoundChoice.PageTurn => "pagina",
+            SoundChoice.PaperFold => "pliegue",
+            SoundChoice.PenTap => "toque",
+            SoundChoice.PaperCrumple => "arruga",
+            SoundChoice.PenScratch => "rasguno",
+            _ => null,
+        };
+        if (name is null || volume <= 0) return;
+
+        using var stream = typeof(AppSounds).Assembly.GetManifestResourceStream($"Aldune.sounds.aldune_{name}.wav");
+        if (stream is null) return;
+        var bytes = new byte[stream.Length];
+        stream.ReadExactly(bytes);
+
+        _player?.Dispose();
+        _player = new SoundPlayer(new MemoryStream(SoundWav.Scale(bytes, volume)));
+        _player.Play();
     }
 
     private static SystemSound? SystemSoundOf(SoundChoice choice) => choice switch

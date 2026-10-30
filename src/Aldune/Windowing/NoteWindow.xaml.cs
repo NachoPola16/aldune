@@ -291,11 +291,17 @@ public partial class NoteWindow : Window
             if (e.Key != Key.Escape) return;
             // Con la búsqueda abierta, el primer Esc solo la cierra; otro Esc cierra la nota.
             if (FindBar.Visibility == Visibility.Visible) CloseFindBar();
-            else Close();
+            else CloseWithSound();
             e.Handled = true;
         };
 
         TextBody.PreviewKeyDown += OnBodyKeyDown;
+        // Un sonido por pulsación imprimible, como mucho cada 70 ms (ver TypingThrottle); borrar y las teclas de control no suenan.
+        TextBody.PreviewTextInput += (_, e) =>
+        {
+            if (e.Text.Length > 0 && TypingThrottle.IsPrintable(e.Text[0]) && _typingThrottle.TryAcquire(Environment.TickCount64))
+                _coordinator.PlaySound(SoundEvent.Typing);
+        };
         // Zoom del texto de esta nota: Ctrl + rueda (antes que el manejador de la rueda de abajo, que se come el gesto).
         TextBody.PreviewMouseWheel += OnBodyZoomWheel;
         // Con la barra oculta el texto cabe entero por construcción (FitHeightToContent), así que la rueda no
@@ -812,6 +818,8 @@ public partial class NoteWindow : Window
         System.Windows.Controls.TextBlock.SetLineHeight(TextBody, double.IsNaN(line) ? double.NaN : Math.Round(line * zoom));
     }
 
+    private readonly TypingThrottle _typingThrottle = new();
+
     private void OnBodyKeyDown(object sender, KeyEventArgs e)
     {
         _lastBodyKeyAt = DateTime.UtcNow;
@@ -1293,6 +1301,7 @@ public partial class NoteWindow : Window
         if (toggled is null) return false;
 
         RecordTaskToggle(toggled, glyphIndex);
+        _coordinator.PlaySound(SoundEvent.TaskChecked);
 
         int caret = TextBody.CaretIndex;
         var settled = _settings is { MoveCompletedTasksToEnd: true } && !IsLinked
@@ -1499,7 +1508,15 @@ public partial class NoteWindow : Window
         }
     }
 
-    private void OnCloseClick(object sender, RoutedEventArgs e) => Close();
+    private void OnCloseClick(object sender, RoutedEventArgs e) => CloseWithSound();
+
+    /// <summary>Cerrar por gesto del usuario (botón o Esc). Archivar, borrar o los cierres en bloque de la app no
+    /// pasan por aquí: ya suenan a su manera o no deben sonar una vez por nota.</summary>
+    private void CloseWithSound()
+    {
+        _coordinator.PlaySound(SoundEvent.NoteClosed);
+        Close();
+    }
 
     private void OnMinimizeClick(object sender, RoutedEventArgs e) => WindowState = WindowState.Minimized;
 
@@ -2246,6 +2263,7 @@ public partial class NoteWindow : Window
     {
         _hasPendingEdit = false; // discard any pending edit — the note is being trashed, not saved
         _repository.SetState(_note.Id, NoteState.Trashed);
+        _coordinator.PlaySound(SoundEvent.NoteDeleted);
         _coordinator.RefreshAll();
         Close();
     }
