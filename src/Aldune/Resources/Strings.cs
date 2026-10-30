@@ -1580,7 +1580,7 @@ public static class Strings
         "Allgemein", "Général", "Geral");
     public static string SettingsPageAppearance => T("Appearance", "Aspecto",
         "Aussehen", "Apparence", "Aparência");
-    // Mismo nombre que la pestaña de Android (AJUSTES_PARIDAD.md).
+    // Mismo nombre que la pestaña de Android (SETTINGS_PARITY.md).
     public static string SettingsPageNotes => T("Notes", "Notas",
         "Notizen", "Notes", "Notas");
     public static string SettingsPageDock => T("Dock and screens", "Dock y pantallas",

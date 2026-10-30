@@ -1,82 +1,82 @@
-# Identidad visual de Aldune
+# Aldune visual identity
 
-Decidido el 26-10-2026 (ver también `DECISIONES-2026-10-26.md`). El símbolo es **la «A» de tres notas**: dos patas
-inclinadas, una amarilla y otra cian, y un travesaño rosa. Es **un único dibujo**, definido como geometría en
-`scripts/branding/generar-iconos.py`; todos los formatos salen de él. No se retoca ningún icono a mano.
+Decided on 2026-10-26 (see also `DECISIONS-2026-10-26.md`). The symbol is the **“A” made of three notes**: two
+slanted legs, one yellow and one cyan, and a pink crossbar. It is **a single drawing**, defined as geometry in
+`scripts/branding/generar-iconos.py`; every format comes from it. No icon is touched up by hand.
 
-## El símbolo
+## The symbol
 
-- Tres formas, tres colores de nota, y huecos reales entre ellas (no un trazo del color del fondo): por eso sirve igual en
-  color que en monocromo, y en un `VectorDrawable` de Android.
-- Cabe en la **zona segura de 66 dp** del icono adaptativo (radio máximo del dibujo: 30,2 de 33), así que se ve igual en
-  máscara circular, squircle y cuadrada, y no se pega a los bordes.
-- No depende del contenedor: la «A» es una silueta compacta y centrada.
+- Three shapes, three note colors, and real gaps between them (not a stroke in the background color): that is why it works the same in
+  color and in monochrome, and in an Android `VectorDrawable`.
+- It fits in the adaptive icon's **66 dp safe zone** (maximum radius of the drawing: 30.2 of 33), so it looks the same in
+  a circular, squircle and square mask, and does not stick to the edges.
+- It does not depend on the container: the “A” is a compact, centered silhouette.
 
-| Elemento | Valor |
+| Element | Value |
 |---|---|
-| Fondo | `#2A261F` (marrón oscuro del logo de siempre) |
-| Pata izquierda (nota amarilla) | `#EBD38B` |
-| Pata derecha (nota cian) | `#83E7F2` |
-| Travesaño (nota rosa) | `#F9BEF2` |
-| Capas | la cian va sobre la amarilla; el travesaño sobre las dos; hueco de 1,2 (en 108) entre ellas |
+| Background | `#2A261F` (the usual dark brown of the logo) |
+| Left leg (yellow note) | `#EBD38B` |
+| Right leg (cyan note) | `#83E7F2` |
+| Crossbar (pink note) | `#F9BEF2` |
+| Layers | the cyan one sits over the yellow one; the crossbar over both; a gap of 1.2 (in 108) between them |
 
-El maestro es `docs/branding/aldune-symbol.svg` (sin fondo, lienzo de 108).
+The master is `docs/branding/aldune-symbol.svg` (no background, 108 canvas).
 
-## Reglas de uso
+## Usage rules
 
-- Siempre el símbolo **solo**, sin texto. El nombre «Aldune» va aparte, como texto.
-- Fondo oscuro `#2A261F` en los iconos. Sobre fondo claro (README, web) se usa la ficha con su fondo oscuro, nunca el
-  símbolo suelto: el amarillo y el rosa pierden contraste sobre blanco.
-- Monocromo: una sola tinta con los mismos huecos (Android lo hace el sistema con `ic_launcher_monochrome`).
-- Por debajo de 24 px se usa la **versión gruesa** (`aldune-logo-small.svg`: patas de 15 en vez de 13 y huecos de 2 en
-  vez de 1,2). Es la misma «A», solo con más masa para que no se pierda.
-- No inclinar, no rotar, no cambiar los colores de las notas ni añadir sombras o brillos.
-- Colores de nota de la app y de su interfaz siguen las reglas de `CONTRIBUTING.md` (temas y `AppPalette`); este documento solo
-  fija el **logo**.
+- Always the symbol **alone**, without text. The name “Aldune” goes separately, as text.
+- Dark background `#2A261F` in icons. On a light background (README, web) the tile with its dark background is used, never the
+  bare symbol: yellow and pink lose contrast on white.
+- Monochrome: a single ink with the same gaps (Android does it with `ic_launcher_monochrome`).
+- Below 24 px the **heavy version** is used (`aldune-logo-small.svg`: legs of 15 instead of 13 and gaps of 2 instead of
+  1.2). It is the same “A”, only with more mass so it does not get lost.
+- Do not tilt, do not rotate, do not change the note colors and do not add shadows or glows.
+- The app's note colors and its interface follow the rules in `CONTRIBUTING.md` (themes and `AppPalette`); this document only
+  fixes the **logo**.
 
-## Dónde está cada formato
+## Where each format is
 
-| Formato | Fichero | Cómo se obtiene |
+| Format | File | How it is obtained |
 |---|---|---|
-| Símbolo maestro | `docs/branding/aldune-symbol.svg` | generador |
-| Ficha de Windows | `src/Aldune/Assets/aldune-logo.svg`, `aldune-logo-small.svg` | generador |
-| Icono de Windows y bandeja | `src/Aldune/Assets/aldune.ico` (16-256 px, PNG) | generador; la bandeja lee este mismo `.ico` |
-| Android: icono adaptativo | `ic_launcher_foreground.xml` (108 dp, símbolo dentro de 66 dp), fondo `ic_launcher_colors.xml`, `ic_launcher_monochrome.xml` | generador |
-| Android: notificaciones | `ic_stat_aldune.xml` (24 dp, una tinta, versión gruesa); lo usa `CaptureNotification` | generador |
-| Android: acceso directo | `ic_shortcut_new_note.xml` | generador |
-| Android: widget | `ic_aldune_symbol.xml` en `widget_preview.xml` (vista previa del selector) | generador |
-| Ficha de tiendas | `android/fastlane/metadata/android/en-US/images/icon.png` (512 px, cuadrado completo) | generador |
-| README | `docs/branding/aldune-logo-128.png` (y `-512.png`) | generador |
-| Favicon | `docs/branding/favicon.ico` y `favicon.svg` | generador |
-| Imagen al compartir el repo | `docs/branding/social-preview-1280x640.png` | símbolo + nombre y lema en inglés («Notes on the edge of your screen») en Segoe UI (el texto va aparte del símbolo); se sube a mano en GitHub → Settings → Social preview, no se regenera con el script |
+| Master symbol | `docs/branding/aldune-symbol.svg` | generator |
+| Windows tile | `src/Aldune/Assets/aldune-logo.svg`, `aldune-logo-small.svg` | generator |
+| Windows and tray icon | `src/Aldune/Assets/aldune.ico` (16-256 px, PNG) | generator; the tray reads this same `.ico` |
+| Android: adaptive icon | `ic_launcher_foreground.xml` (108 dp, symbol inside 66 dp), background `ic_launcher_colors.xml`, `ic_launcher_monochrome.xml` | generator |
+| Android: notifications | `ic_stat_aldune.xml` (24 dp, one ink, heavy version); used by `CaptureNotification` | generator |
+| Android: shortcut | `ic_shortcut_new_note.xml` | generator |
+| Android: widget | `ic_aldune_symbol.xml` in `widget_preview.xml` (picker preview) | generator |
+| Store listing | `android/fastlane/metadata/android/en-US/images/icon.png` (512 px, full square) | generator |
+| README | `docs/branding/aldune-logo-128.png` (and `-512.png`) | generator |
+| Favicon | `docs/branding/favicon.ico` and `favicon.svg` | generator |
+| Image when sharing the repo | `docs/branding/social-preview-1280x640.png` | symbol + name and tagline in English (“Notes on the edge of your screen”) in Segoe UI (the text is separate from the symbol); uploaded by hand in GitHub → Settings → Social preview, not regenerated by the script |
 
-Para regenerar todo: `pip install shapely pillow` y `python scripts/branding/generar-iconos.py`. El script comprueba antes
-que el símbolo cabe en la zona segura y falla si no.
+To regenerate everything: `pip install shapely pillow` and `python scripts/branding/generar-iconos.py`. The script first checks
+that the symbol fits in the safe zone and fails if it does not.
 
-## Qué se descartó y por qué
+## What was discarded and why
 
-Se dibujaron ocho candidatos (capturas en `docs/branding/capturas/`, código de la exploración en
-`docs/branding/alternativas/`) y se probaron con el mismo código a 16, 24, 48, 108 y 512 px, en máscara circular, squircle y
-cuadrada, sobre fondo claro y oscuro y en monocromo. Después se hizo una segunda prueba de **los tres finalistas** a 16-32 px
-reales, en grises y con simulación de daltonismo (deuteranopia y protanopia), y entre iconos vecinos.
+Eight candidates were drawn (screenshots in `docs/branding/capturas/`, exploration code in
+`docs/branding/alternativas/`) and tried with the same code at 16, 24, 48, 108 and 512 px, in circular, squircle and
+square masks, on light and dark backgrounds and in monochrome. Then a second test of **the three finalists** at real 16-32 px,
+in grays and with color-blindness simulation (deuteranopia and protanopia), and among neighboring icons.
 
-| Candidato | Resultado |
+| Candidate | Result |
 |---|---|
-| **G · «A» de tres notas** | **Elegido.** Nítido a 16 px, el más reconocible entre vecinos, aguanta grises y daltonismo, y es la inicial de Aldune hecha con los tres colores de nota |
-| **C · Notas apiladas** | Finalista, **guardado** como alternativa (`alternativas/aldune-symbol-C-notas-apiladas.svg`). Cuenta mejor «nota adhesiva», pero a 16 px el rosa y el cian se funden en un bloque |
-| A · Tres pestañas (el concepto anterior) | A 16 px la barra y las pestañas se vuelven un borrón; el concepto del dock «pegado al borde» exigía la barra, que en un círculo no funciona |
-| F · Pestañas gruesas | Arregla A, pero en monocromo parece un icono de menú o lista, no de notas |
-| E · Abanico de notas | A 16 px es una mancha amarilla |
-| B · Nota con índices, D · Nota con cinta, H · Pila vista de frente | Las lengüetas o la cinta se pierden a tamaño pequeño; D y H parecen portapapeles o caja |
+| **G · “A” of three notes** | **Chosen.** Sharp at 16 px, the most recognizable among neighbors, holds up in grays and color blindness, and it is Aldune's initial made with the three note colors |
+| **C · Stacked notes** | Finalist, **kept** as an alternative (`alternativas/aldune-symbol-C-notas-apiladas.svg`). It says “sticky note” better, but at 16 px pink and cyan merge into a block |
+| A · Three tabs (the previous concept) | At 16 px the bar and the tabs become a blur; the dock “stuck to the edge” concept required the bar, which does not work in a circle |
+| F · Thick tabs | Fixes A, but in monochrome it looks like a menu or list icon, not a notes icon |
+| E · Fan of notes | At 16 px it is a yellow smudge |
+| B · Note with indexes, D · Note with tape, H · Stack seen from the front | The tabs or the tape get lost at small size; D and H look like a clipboard or a box |
 
-**Lo que se pierde con la G**: la idea del dock pegado al borde de la pantalla, que ya casi no se leía a 48 px. Si algún día se
-quiere recuperar, C o A son el punto de partida. El riesgo conocido de G es que una letra en un icono es menos distintiva
-que una forma propia; se compensa con los tres colores y con los huecos.
+**What is lost with G**: the idea of the dock stuck to the screen edge, which was already barely readable at 48 px. If one day
+it is wanted back, C or A are the starting point. The known risk of G is that a letter in an icon is less distinctive
+than a shape of its own; it is compensated with the three colors and the gaps.
 
-## Verificación
+## Verification
 
-- Windows: `aldune.exe` compilado lleva el icono nuevo (`capturas/08-pc-exe.png`); la bandeja usa el mismo `.ico`.
-- Pixel 10a: cajón de aplicaciones (`06-pixel-cajon.png`) y vista previa del widget (`07-pixel-widget.png`). La notificación
-  de captura usa `ic_stat_aldune` (comprobado con `dumpsys`); Pixel oculta en la barra de estado el icono de las
-  notificaciones silenciosas, así que la silueta se revisó aparte (`05-icono-de-estado.png`).
-- Los SVG se contrastaron con Inkscape: diferencia máxima de 40/255 respecto al rasterizado propio (solo antialiasing).
+- Windows: the compiled `aldune.exe` carries the new icon (`capturas/08-pc-exe.png`); the tray uses the same `.ico`.
+- Pixel 10a: app drawer (`06-pixel-cajon.png`) and widget preview (`07-pixel-widget.png`). The capture notification
+  uses `ic_stat_aldune` (checked with `dumpsys`); Pixel hides the icon of silent notifications in the status bar, so the
+  silhouette was reviewed separately (`05-icono-de-estado.png`).
+- The SVGs were compared with Inkscape: maximum difference of 40/255 against our own rasterization (only antialiasing).

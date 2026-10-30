@@ -104,4 +104,4 @@ mantener el otro, y la migración desde una instalación con un perfil.
 ## Documentación al terminar
 
 `docs/SYNC.md` (Android admite varios perfiles; paso a paso para la nota familiar), `docs/STATUS.md`, `docs/MOBILE_PORT.md` si algo de lo
-descartado cambia, `DECISIONES-2026-10-26.md` (QR) y la memoria según el protocolo.
+descartado cambia, `DECISIONS-2026-10-26.md` (QR) y la memoria según el protocolo.

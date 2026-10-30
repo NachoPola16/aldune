@@ -1,160 +1,161 @@
-# Publicar una versión
+# Publishing a version
 
-> **Idioma:** las notas de cada release y el título («Aldune for Android x.y.z») se escriben en **inglés**, igual que el README. La guía de instalación enlazada es `https://github.com/NachoPola16/aldune#install` (ancla `#install`).
-## Versiones y tags
+> **Language:** the notes of each release and its title (“Aldune for Android x.y.z”) are written in **English**, like the README. The linked install guide is `https://github.com/NachoPola16/aldune#install` (anchor `#install`).
 
-- La versión vive en `src/Aldune/Aldune.csproj` (`Version`, `AssemblyVersion`, `FileVersion`) y en la
-  línea "La ronda actual se identifica como **vX.Y.Z**" de `docs/ROADMAP.md`.
-- Al empujar un tag `v*`, `.github/workflows/release.yml` pasa los tests, compila el portable y el
-  instalador (Inno Setup) y crea el GitHub Release con los dos.
-- **Dos jobs, con permisos distintos.** `build` (Windows) compila, prueba, firma si procede y sube lo que se va a publicar como artefacto
-  `release-files`; solo tiene `contents: read` (y `actions: read`, que SignPath necesita para leer sus artefactos). `publish` (Ubuntu)
-  solo descarga ese artefacto y ejecuta `gh release create`; es el único con `contents: write` y no compila ni instala nada de terceros.
-  Así un paquete NuGet o de Chocolatey comprometido durante la compilación no tiene a mano un token que pueda escribir en el repositorio.
-  Los nombres de los ficheros de la release y `SHA256SUMS.txt` no cambian. Inno Setup se instala con la versión fija y `--require-checksums`
-  (Chocolatey se niega si el paquete no trae checksum para una descarga que no sea HTTPS; la de Inno Setup es HTTPS).
-- **CI** (`ci.yml`) tiene dos jobs: `build-and-test` (Windows: .NET) y `android` (Ubuntu, JDK 21: `./gradlew test`, que incluye la paridad
-  con `tests/vectors/`, y `:app:assembleDebug`). El de Android no usa emulador y no firma nada: el APK de la release se sigue compilando en local.
-- **Pre-release**: el tag **tiene que llevar guion** (`v0.99.0-rc1`); solo así se publica como
-  pre-release. GitHub no lo ofrece como última versión y el aviso de actualizaciones de la app lo
-  ignora. Un tag sin guion (`v0.99.0`) sale como versión normal y se ofrece a todos los usuarios.
-- **Una pre-release lleva un número menor que la final** (`0.99.0` en el `.csproj`, tag
-  `v0.99.0-rc1`, antes de la `1.0.0`): el aviso de actualizaciones compara números, así que quien
-  instaló la pre-release recibe el aviso de la final.
+## Versions and tags
 
-Pasos:
+- The version lives in `src/Aldune/Aldune.csproj` (`Version`, `AssemblyVersion`, `FileVersion`) and in the
+  line “The current round is identified as **vX.Y.Z**” of `docs/ROADMAP.md`.
+- When a `v*` tag is pushed, `.github/workflows/release.yml` runs the tests, builds the portable and the
+  installer (Inno Setup) and creates the GitHub Release with both.
+- **Two jobs, with different permissions.** `build` (Windows) builds, tests, signs if applicable and uploads what is going to be published as the artifact
+  `release-files`; it only has `contents: read` (and `actions: read`, which SignPath needs to read its artifacts). `publish` (Ubuntu)
+  only downloads that artifact and runs `gh release create`; it is the only one with `contents: write` and it builds and installs nothing from third parties.
+  That way a NuGet or Chocolatey package compromised during the build does not have at hand a token that can write to the repository.
+  The release file names and `SHA256SUMS.txt` do not change. Inno Setup is installed with a pinned version and `--require-checksums`
+  (Chocolatey refuses if the package carries no checksum for a non-HTTPS download; Inno Setup's is HTTPS).
+- **CI** (`ci.yml`) has two jobs: `build-and-test` (Windows: .NET) and `android` (Ubuntu, JDK 21: `./gradlew test`, which includes the parity
+  with `tests/vectors/`, and `:app:assembleDebug`). The Android one uses no emulator and signs nothing: the release APK is still built locally.
+- **Pre-release**: the tag **must contain a hyphen** (`v0.99.0-rc1`); only then is it published as a
+  pre-release. GitHub does not offer it as the latest version and the app's update notice
+  ignores it. A tag without a hyphen (`v0.99.0`) comes out as a normal version and is offered to all users.
+- **A pre-release carries a lower number than the final one** (`0.99.0` in the `.csproj`, tag
+  `v0.99.0-rc1`, before `1.0.0`): the update notice compares numbers, so whoever
+  installed the pre-release gets the notice for the final one.
+
+Steps:
 
 ```powershell
-# 1. Número de versión en Aldune.csproj y ROADMAP.md, tests en verde
+# 1. Version number in Aldune.csproj and ROADMAP.md, tests green
 dotnet test Aldune.slnx -c Release
-# 2. Commit y push a main
+# 2. Commit and push to main
 git push origin main
-# 3. Tag y seguir el workflow hasta que termine en verde
-#    pre-release: git tag v0.99.0-rc1   (con guion)
+# 3. Tag and follow the workflow until it finishes green
+#    pre-release: git tag v0.99.0-rc1   (with a hyphen)
 #    final:       git tag v1.0.0
 git tag v1.0.0
 git push origin v1.0.0
 gh run watch
 ```
 
-La release de Windows lleva cuatro ficheros: el instalador, el portable x64, el portable ARM64 y `SHA256SUMS.txt` (lo genera el paso
-`Generate checksums` del workflow, después de firmar si la firma está activa, con el SHA-256 de los otros tres). Si cambia el nombre o el
-número de ficheros de la release, hay que actualizar la lista de «Instalar» de `README.md` y `README.es.md`. Un tag de Windows con guion
-(`-rc`) también los publica: borrarlo después con `gh release delete <tag> --cleanup-tag`.
+The Windows release carries four files: the installer, the x64 portable, the ARM64 portable and `SHA256SUMS.txt` (generated by the
+`Generate checksums` step of the workflow, after signing if signing is active, with the SHA-256 of the other three). If the name or the
+number of release files changes, the “Install” list of `README.md` and `README.es.md` has to be updated. A Windows tag with a hyphen
+(`-rc`) publishes them too: delete it afterwards with `gh release delete <tag> --cleanup-tag`.
 
-Después de cada release hay que actualizar también el servidor de sincronización propio (ver
-`scripts/update-sync-server.sh` y `docs/SYNC.md`, "Actualizar el servidor desde Git").
+After every release the own sync server also has to be updated (see
+`scripts/update-sync-server.sh` and `docs/SYNC.md`, “Updating the server from Git”).
 
-## Android: APK firmado
+## Android: signed APK
 
-Android **no tiene workflow**: el APK se compila y se firma en local y se sube a mano a un GitHub Release. El tag es
-`android-v0.1.0-rcN` (con guion: sale como pre-release) y no dispara el workflow de Windows, que solo mira `v*`.
+Android **has no workflow**: the APK is built and signed locally and uploaded by hand to a GitHub Release. The tag is
+`android-v0.1.0-rcN` (with a hyphen: it comes out as a pre-release) and it does not trigger the Windows workflow, which only looks at `v*`.
 
-1. Versión en `android/app/build.gradle.kts`: sube `versionCode` en 1 y cambia `versionName` (`0.1.0-rc10`). Commit y push
-   a `main` (el APK sale de ese árbol: no compiles con cambios sin subir).
-2. Tests: `./gradlew test` desde `android/` (JDK 21; ver `CONTRIBUTING.md`).
-3. Compilar y firmar, en PowerShell, desde `android/`. El almacén de claves (`.jks`) **no está en el repositorio** y su
-   contraseña tampoco: van en tu gestor de contraseñas. La contraseña se pide con `Read-Host`, así no queda escrita en ningún
-   fichero ni en el historial:
+1. Version in `android/app/build.gradle.kts`: raise `versionCode` by 1 and change `versionName` (`0.1.0-rc10`). Commit and push
+   to `main` (the APK comes from that tree: do not build with unpushed changes).
+2. Tests: `./gradlew test` from `android/` (JDK 21; see `CONTRIBUTING.md`).
+3. Build and sign, in PowerShell, from `android/`. The keystore (`.jks`) **is not in the repository** and neither is its
+   password: they go in your password manager. The password is asked for with `Read-Host`, so it is not written in any
+   file or in the history:
 
    ```powershell
    cd <repo>\android
    $env:JAVA_HOME = "C:\Program Files\Eclipse Adoptium\jdk-21.0.12.101-hotspot"
-   $env:ALDUNE_KEYSTORE = "<ruta real del almacén>.jks"      # no es el debug.keystore de ~\.android
-   $pw = Read-Host "Contraseña de firma de Aldune" -AsSecureString
+   $env:ALDUNE_KEYSTORE = "<real path of the keystore>.jks"      # it is not the debug.keystore in ~\.android
+   $pw = Read-Host "Aldune signing password" -AsSecureString
    $env:ALDUNE_KEYSTORE_PASSWORD = [Runtime.InteropServices.Marshal]::PtrToStringAuto([Runtime.InteropServices.Marshal]::SecureStringToBSTR($pw))
-   # Solo si no son los de siempre: $env:ALDUNE_KEY_ALIAS (por defecto «aldune») y $env:ALDUNE_KEY_PASSWORD (por defecto, la del almacén)
+   # Only if they are not the usual ones: $env:ALDUNE_KEY_ALIAS (default "aldune") and $env:ALDUNE_KEY_PASSWORD (default, the keystore's)
    ./gradlew :app:assembleRelease
    Copy-Item app\build\outputs\apk\release\app-release.apk .\aldune-0.1.0-rcN.apk
    Remove-Item Env:ALDUNE_KEYSTORE_PASSWORD, Env:ALDUNE_KEYSTORE
    ```
 
-   Sin esas variables el build sale **sin firmar** (`app-release-unsigned.apk`): es lo que necesitan F-Droid y las
-   compilaciones de comprobación, y no se puede instalar.
-4. Verificar antes de publicar:
+   Without those variables the build comes out **unsigned** (`app-release-unsigned.apk`): that is what F-Droid and
+   verification builds need, and it cannot be installed.
+4. Verify before publishing:
 
    ```powershell
    (Get-FileHash .\aldune-0.1.0-rcN.apk -Algorithm SHA256).Hash.ToLower()
    & "$env:LOCALAPPDATA\Android\Sdk\build-tools\36.0.0\apksigner.bat" verify --verbose --print-certs .\aldune-0.1.0-rcN.apk
    ```
 
-   Tiene que decir `Verifies`, un solo firmante y la **huella SHA-256 del certificado de siempre**
-   (`a10d33e76b3e3bc82333f44815824d54e6f99f6e7b2183cacae212c9dd348d37`). Si es otra, se firmó con otra clave y Android no
-   instalará el APK encima de la versión anterior. `aapt2 dump badging` confirma `versionCode` y `versionName`.
-5. Publicar (es una acción hacia fuera: confirmarla): tag y pre-release con el APK adjunto y, en las notas, el SHA-256 del APK y
-   la huella del certificado, para que quien lo descargue pueda comprobarlos:
+   It has to say `Verifies`, a single signer and the **usual certificate SHA-256 fingerprint**
+   (`a10d33e76b3e3bc82333f44815824d54e6f99f6e7b2183cacae212c9dd348d37`). If it is another, it was signed with another key and Android will not
+   install the APK over the previous version. `aapt2 dump badging` confirms `versionCode` and `versionName`.
+5. Publish (it is an outward-facing action: confirm it): tag and pre-release with the APK attached and, in the notes, the APK's SHA-256 and
+   the certificate fingerprint, so whoever downloads it can check them:
 
    ```powershell
-   gh release create android-v0.1.0-rcN .\aldune-0.1.0-rcN.apk --target main --prerelease --title "Aldune for Android 0.1.0-rcN" --notes-file notas.md
+   gh release create android-v0.1.0-rcN .\aldune-0.1.0-rcN.apk --target main --prerelease --title "Aldune for Android 0.1.0-rcN" --notes-file notes.md
    ```
 
-**Versión estable de Android (`0.1.0`, sin `-rcN`).** Se publica igual, pero con tag `android-v0.1.0`, **sin** `--prerelease` y con
-`--latest=false`, y **después** de la de Windows que toque: así «la última» (`releases/latest`) sigue siendo la de Windows y los
-Windows siguen avisando. Comprobar al acabar con `gh release list` que la fila «Latest» es la `v1.7.x` y no la de Android:
+**Stable Android version (`0.1.0`, without `-rcN`).** It is published the same way, but with tag `android-v0.1.0`, **without** `--prerelease` and with
+`--latest=false`, and **after** the Windows one that is due: that way “the latest” (`releases/latest`) stays the Windows one and the
+Windows apps keep notifying. Check at the end with `gh release list` that the “Latest” row is `v1.7.x` and not the Android one:
 
 ```powershell
-gh release create android-v0.1.0 .ldune-0.1.0.apk --target main --latest=false --title "Aldune for Android 0.1.0" --notes-file notas.md
+gh release create android-v0.1.0 .\aldune-0.1.0.apk --target main --latest=false --title "Aldune for Android 0.1.0" --notes-file notes.md
 ```
 
-**Por qué la de Android sale como pre-release.** La app de Windows busca actualizaciones en `releases/latest`
-(`ReleaseUpdateChecker`), que devuelve la última versión que **no** es pre-release. Si un release de Android (tag
-`android-v…`) lo fuera, pasaría a ser «la última» y los Windows dejarían de avisar de las versiones nuevas hasta el siguiente
-release de Windows. Mientras la versión sea `0.1.0-rcN`, además, «pre-release» es lo honesto. Cuando Android pase a una versión
-estable hay dos salidas: publicarla con `gh release create … --latest=false` (no se marca como última) o hacer que el
-comprobador mire la lista de releases y solo los tags `v*` (eso exige una versión de Windows).
+**Why the Android one comes out as a pre-release.** The Windows app looks for updates in `releases/latest`
+(`ReleaseUpdateChecker`), which returns the latest version that is **not** a pre-release. If an Android release (tag
+`android-v…`) were one, it would become “the latest” and the Windows apps would stop notifying about new versions until the next
+Windows release. While the version is `0.1.0-rcN`, besides, “pre-release” is the honest label. When Android moves to a
+stable version there are two ways out: publish it with `gh release create … --latest=false` (it is not marked as latest) or make the
+checker look at the list of releases and only the `v*` tags (that requires a Windows version).
 
-Trampas: la ruta del almacén tiene que ser la real (un `C:\RUTA\...` de ejemplo falla en `validateSigningRelease`); el APK se
-deja fuera de git (`.gitignore` ignora `android/*.apk`); y una versión de solo Android no necesita actualizar el servidor de
-sincronización, que solo cambia con las de Windows y el servidor.
+Pitfalls: the keystore path has to be the real one (an example `C:\PATH\...` fails in `validateSigningRelease`); the APK is
+kept out of git (`.gitignore` ignores `android/*.apk`); and an Android-only version does not need to update the sync
+server, which only changes with the Windows ones and the server.
 
-### Verificación de dependencias (Android)
+### Dependency verification (Android)
 
-`android/gradle/verification-metadata.xml` fija el SHA-256 de cada dependencia de Gradle: si un artefacto cambia en origen, la compilación
-falla en vez de meterlo en el APK. Al **añadir o subir una dependencia** (o el plugin de Android/Kotlin) hay que regenerarlo desde `android/`:
+`android/gradle/verification-metadata.xml` pins the SHA-256 of each Gradle dependency: if an artifact changes at its origin, the build
+fails instead of putting it in the APK. When **adding or raising a dependency** (or the Android/Kotlin plugin) it has to be regenerated from `android/`:
 
 ```powershell
 ./gradlew --write-verification-metadata sha256 test :app:assembleDebug :app:assembleRelease :app:lintDebug
-git checkout ../tests/vectors/kotlin-output.json   # el test regenera los nonces
+git checkout ../tests/vectors/kotlin-output.json   # the test regenerates the nonces
 ```
 
-Y revisar el diff del XML (solo deben aparecer los componentes nuevos). En .NET no hay equivalente fiable: CI falla si alguna dependencia
-tiene una vulnerabilidad conocida (`dotnet list package --vulnerable --include-transitive`); los lockfiles de NuGet se probaron y no
-se cumplían en modo bloqueado.
+And review the XML diff (only the new components should appear). On .NET there is no reliable equivalent: CI fails if any dependency
+has a known vulnerability (`dotnet list package --vulnerable --include-transitive`); NuGet lockfiles were tried and
+were not satisfied in locked mode.
 
-## Firma del ejecutable con SignPath
+## Signing the executable with SignPath
 
-> **Estado (2026-09-28)**: la solicitud a SignPath Foundation fue **rechazada** por falta de
-> visibilidad pública del proyecto (estrellas, forks, referencias externas). Se puede volver a pedir
-> más adelante; hasta entonces las versiones salen sin firmar. Al volver a pedirla, restaurar la
-> sección "Code signing policy" de los README (está en el historial de git, antes del 2026-09-28).
+> **Status (2026-09-28)**: the application to SignPath Foundation was **rejected** for lack of
+> public visibility of the project (stars, forks, external references). It can be requested again
+> later; until then the versions come out unsigned. When requesting again, restore the
+> “Code signing policy” section of the READMEs (it is in git history, before 2026-09-28).
 
-Sin firma, Windows SmartScreen avisa de "editor desconocido" al descargar el instalador. SignPath
-Foundation firma gratis proyectos de código abierto, siempre que se compilen desde el repositorio
-público en GitHub Actions (así pueden comprobar que lo firmado sale del código publicado).
+Without a signature, Windows SmartScreen warns about an “unknown publisher” when downloading the installer. SignPath
+Foundation signs open-source projects for free, as long as they are built from the
+public repository on GitHub Actions (so they can verify that what is signed comes from the published code).
 
-El workflow ya está preparado y **se activa solo** cuando existen **todas** estas variables y el
-secreto del repositorio (GitHub → Settings → Secrets and variables → Actions). Si falta alguna,
-publica sin firmar.
+The workflow is already prepared and **turns on by itself** when **all** of these variables and the
+repository secret exist (GitHub → Settings → Secrets and variables → Actions). If any is missing, it
+publishes unsigned.
 
-| Tipo | Nombre | Valor |
+| Type | Name | Value |
 |---|---|---|
-| Secreto | `SIGNPATH_API_TOKEN` | Token de API de un usuario CI de SignPath |
-| Variable | `SIGNPATH_ORGANIZATION_ID` | Id de la organización en SignPath |
-| Variable | `SIGNPATH_PROJECT_SLUG` | Slug del proyecto (por ejemplo `aldune`) |
-| Variable | `SIGNPATH_POLICY_SLUG` | `release-signing` (o `test-signing` para probar) |
-| Variable | `SIGNPATH_EXE_CONFIGURATION_SLUG` | Configuración de artefacto para `aldune.exe` |
-| Variable | `SIGNPATH_SETUP_CONFIGURATION_SLUG` | Configuración de artefacto para el instalador |
+| Secret | `SIGNPATH_API_TOKEN` | API token of a SignPath CI user |
+| Variable | `SIGNPATH_ORGANIZATION_ID` | Id of the organization in SignPath |
+| Variable | `SIGNPATH_PROJECT_SLUG` | Project slug (for example `aldune`) |
+| Variable | `SIGNPATH_POLICY_SLUG` | `release-signing` (or `test-signing` to try it) |
+| Variable | `SIGNPATH_EXE_CONFIGURATION_SLUG` | Artifact configuration for `aldune.exe` |
+| Variable | `SIGNPATH_SETUP_CONFIGURATION_SLUG` | Artifact configuration for the installer |
 
-Cómo conseguirlos:
+How to get them:
 
-1. Solicitar la firma gratuita en <https://signpath.org/apply> con el repositorio público y la licencia
-   (GPL-3.0). Revisar antes sus condiciones actuales (por ejemplo, qué piden si la app se vende en
-   otro canal). Lo que exigen al repositorio ya está: la sección "Code signing policy" de los README
-   (atribución, roles y privacidad), la opción de desactivar la consulta de versiones nuevas y el
-   nombre y la versión en los metadatos del `.exe` y del instalador. Si cambian los roles (otra
-   persona con permiso de commit o de aprobar firmas), hay que actualizar esa sección. Piden
-   verificación en dos pasos en GitHub y en SignPath.
-2. Una vez aceptado, en SignPath: crear el proyecto, conectarlo al repositorio de GitHub como
-   *Trusted Build System*, crear un usuario CI y su token, y las dos configuraciones de artefacto
-   (un `.exe` suelto para `aldune.exe` y otro para el instalador de Inno Setup).
-3. Poner en GitHub los valores de la tabla. El siguiente tag ya sale firmado.
+1. Apply for the free signing at <https://signpath.org/apply> with the public repository and the license
+   (GPL-3.0). Check their current terms first (for example, what they ask for if the app is sold on
+   another channel). What they require of the repository is already there: the “Code signing policy” section of the READMEs
+   (attribution, roles and privacy), the option to turn off the new-version check, and the
+   name and version in the metadata of the `.exe` and the installer. If the roles change (another
+   person with commit or signing-approval permission), that section has to be updated. They ask for
+   two-step verification on GitHub and on SignPath.
+2. Once accepted, in SignPath: create the project, connect it to the GitHub repository as a
+   *Trusted Build System*, create a CI user and its token, and the two artifact configurations
+   (a single `.exe` for `aldune.exe` and another for the Inno Setup installer).
+3. Put the values of the table in GitHub. The next tag already comes out signed.
