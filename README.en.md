@@ -10,7 +10,7 @@ their own. No account, no required cloud, and the content is encrypted.
 
 ![Aldune: two open notes and the tab dock on the right edge](docs/images/aldune.png)
 
-![The dock fanning out, two notes opening and two tasks being ticked](docs/images/dock-abanico.gif)
+![The dock fanning out as the mouse approaches, two notes opening from their tabs and two tasks being ticked](docs/images/dock-abanico.gif)
 
 ## What it does
 

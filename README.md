@@ -10,7 +10,7 @@ ratón y se abren como ventanas propias. Sin cuenta, sin nube obligatoria, y con
 
 ![Aldune: dos notas abiertas y el dock de pestañas en el borde derecho](docs/images/aldune.png)
 
-![El dock desplegándose en abanico, dos notas abriéndose y dos tareas marcándose](docs/images/dock-abanico.gif)
+![El dock desplegándose al acercar el ratón, dos notas abriéndose desde sus pestañas y dos tareas marcándose](docs/images/dock-abanico.gif)
 
 ## Qué hace
 
