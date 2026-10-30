@@ -134,12 +134,9 @@ How a version is released and signed: [docs/RELEASING.md](docs/RELEASING.md).
 
 ## Documentation
 
-(`SYNC.md`, `PROTECTED_NOTES.md`, `PRODUCT.md` and `DESIGN.md` are in English; the maintainer's working notes below, `STATUS`, `ROADMAP` and `specs`, are in Spanish.)
-
-- [`docs/SYNC.md`](docs/SYNC.md): sync, your own server and the security model.
-- [`docs/STATUS.md`](docs/STATUS.md): technical state and implementation decisions (Spanish).
-- [`docs/ROADMAP.md`](docs/ROADMAP.md): what is planned and what was discarded, with the reasons (Spanish).
-- [`docs/specs/`](docs/specs/): design specifications (Spanish).
+See the [documentation index](docs/README.md). The sync guide ([`docs/SYNC.md`](docs/SYNC.md)), the protected-notes note, the product and design
+context, branding, releasing and the probe guides are in English. The long-running design archive (`STATUS`, `ROADMAP`, the port studies and
+`specs/`) is still in Spanish and is being translated.
 
 ## Try it and give feedback
 
