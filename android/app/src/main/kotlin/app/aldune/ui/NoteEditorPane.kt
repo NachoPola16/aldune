@@ -621,8 +621,10 @@ fun NoteEditorPane(key: String, viewModel: NotesViewModel, onBack: () -> Unit, s
         // El texto que se ve (sin las tareas hechas ocultas): el diseño del campo es de este texto, no del real.
         fun shownText(): String = StringBuilder(text()).also { sb -> for (span in hiddenSpans.asReversed()) sb.delete(span.start, span.end) }.toString()
         // La posición (en el texto real) de la casilla bajo [position], o null si no cae sobre ninguna.
+        // The pointer position is relative to the visible field; the text layout is not scrolled, so the field's scroll is added (as the task
+        // drag does). Without it, in a long scrolled list a tap resolved to a row `scroll` pixels higher up.
         fun checkboxAt(position: Offset): Int? =
-            toggleCheckboxAtTap(shownText(), layout?.invoke(), position, slack)?.let { HiddenTasks.toRaw(it, hiddenSpans) }
+            toggleCheckboxAtTap(shownText(), layout?.invoke(), position.copy(y = position.y + fieldScroll.value), slack)?.let { HiddenTasks.toRaw(it, hiddenSpans) }
         // `pointerInput(key)` conserva su primera lambda mientras `key` no cambie: sin esto leería los `hiddenSpans` de la primera composición,
         // y al ocultarse una tarea hecha el texto que se ve ya no coincidiría con el diseño (tocar mal una casilla, o un índice fuera de rango).
         val currentCheckboxAt = rememberUpdatedState<(Offset) -> Int?> { checkboxAt(it) }
@@ -682,7 +684,8 @@ fun NoteEditorPane(key: String, viewModel: NotesViewModel, onBack: () -> Unit, s
                         val up = waitForUpOrCancellation(PointerEventPass.Initial) ?: return@awaitEachGesture
                         if ((up.position - down.position).getDistance() > touchSlop) return@awaitEachGesture
                         if (up.uptimeMillis - down.uptimeMillis >= longPress) return@awaitEachGesture
-                        tap = up.position
+                        // Layout coordinates, taken now: the toggle runs a frame later and the list may have scrolled by then.
+                        tap = up.position.copy(y = up.position.y + fieldScroll.value)
                         if (onCheckbox) up.consume()
                     }
                 }

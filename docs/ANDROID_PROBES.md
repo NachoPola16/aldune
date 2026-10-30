@@ -146,3 +146,16 @@ Result: the 11 looks come out with their name; Bash changes the list, editor and
 ## Accessibility probe (TalkBack)
 
 2026-10-30, real Pixel 10a. Turn TalkBack on from adb: `settings put secure enabled_accessibility_services com.google.android.marvin.talkback/com.google.android.marvin.talkback.TalkBackService` and `settings put secure accessibility_enabled 1` (the first time it opens its tutorial: Back twice). **Turn it off when done**: `settings delete secure enabled_accessibility_services` and `settings put secure accessibility_enabled 0`. The speech does not show up in `logcat`; what TalkBack receives is read with `uiautomator dump` (text, `content-desc`, `clickable` and `bounds` of each node: in Compose, clickable containers merge the text of their children, which is what TalkBack reads). With TalkBack on, taps by `adb` are not reliable (a tap focuses, a double tap activates). Result: the tabs, rows and buttons carry a name (“Settings”, “New note”) or merged text, and all touch targets are at least 48 dp (126 px).
+
+## Long checklist probe (checkbox taps)
+
+2026-10-31, real Pixel 10a with the debug app. Create a long list without typing it: write the text with `☐ ` lines to a UTF-8 file, `adb push` it to `/sdcard/lista.txt` and run
+`adb shell 'am start -f 0x10008000 -a android.intent.action.SEND -t text/plain -n io.github.nachopola16.aldune.debug/app.aldune.MainActivity --es android.intent.extra.TEXT "$(cat /sdcard/lista.txt)"'`
+(the file avoids Git Bash and `adb` mangling the non-ASCII glyphs). Then scroll to the end with `input swipe 600 1800 600 500 400` and tap the checkboxes (x≈63) of rows visible in a screenshot. The counter in the top bar (`N/60`) says how many were
+marked, and the screenshot says which: with the old code the counter went up but none of the visible rows was ticked (the taps ticked rows `scroll` pixels higher up, out of view).
+`adb shell 'for y in ...; do input tap 63 $y; done'` taps as fast as `input` allows; the "editor stops accepting ticks until restart" symptom was **not** reproduced this way.
+
+## Compose gesture tests
+
+`app/src/androidTest/.../ui/*` use `createComposeRule` and run with `./gradlew :app:connectedDebugAndroidTest -Pandroid.testInstrumentationRunnerArguments.class=app.aldune.ui.TrashSwipeTest` (`ANDROID_SERIAL` selects the device).
+Two traps: `swipeLeft()`/`swipeRight()` start at the very edge of the node and do not drag a `SwipeToDismissBox` (use `swipe(Offset, Offset, ms)` between 10 % and 90 % of the width), and Espresso 3.5 (the default dependency) crashes on Android 17, so 3.7.0 is pinned.
