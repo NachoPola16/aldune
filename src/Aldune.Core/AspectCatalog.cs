@@ -59,6 +59,27 @@ public static class AspectCatalog
             new("phosphor", "#A8E6B4", ["#A8E6B4", "#FFB547", "#8EC9FF", "#E8E8E8"]), // verde, ámbar, azul, blanco
             new("details", "#D9A441", ["#D9A441", "#A8E6B4", "#E8E8E8"]),
         ], [], NoteThemes.SereneId),
+        // Las libretas: papel (o tinta, en claro) y acento. En oscuro el hueco es el papel, que arrastra los fondos; en claro es la tinta.
+        new(AppearanceMode.TravelNotebookLight, "travel-notebook-light",
+        [
+            new("ink", "#3D2F1B", ["#3D2F1B", "#2A2A3A", "#4A2A1A"]),
+            new("accent", "#9B4A2C", ["#9B4A2C", "#5C7A3E", "#2E5E7A", "#A8342D"]),
+        ], [], null),
+        new(AppearanceMode.TravelNotebookDark, "travel-notebook-dark",
+        [
+            new("paper", "#2B231A", ["#2B231A", "#231E18", "#2E2A22"]),
+            new("accent", "#C9A05A", ["#C9A05A", "#D98A6A", "#8EC07C", "#7FA8FF"]),
+        ], [], null),
+        new(AppearanceMode.FieldNotebookLight, "field-notebook-light",
+        [
+            new("ink", "#33281A", ["#33281A", "#1F2A44", "#3A2418"]),
+            new("accent", "#7D5B30", ["#7D5B30", "#2E5E7A", "#A8342D", "#5C7A3E"]),
+        ], [], null),
+        new(AppearanceMode.FieldNotebookDark, "field-notebook-dark",
+        [
+            new("paper", "#27241F", ["#27241F", "#1F1D19", "#2A2722"]),
+            new("accent", "#CFA862", ["#CFA862", "#7FA8FF", "#D98A6A", "#8EC07C"]),
+        ], [], null),
     ];
 
     public static AspectDefinition? For(AppearanceMode mode) => Retro.FirstOrDefault(aspect => aspect.Mode == mode);

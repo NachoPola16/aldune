@@ -16,6 +16,7 @@ import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.unit.dp
 import app.aldune.text.AppPalette
 import app.aldune.text.AspectCatalog
+import app.aldune.text.AspectSkin
 
 /** Cómo se elige el aspecto: los números son los de `AppearanceMode` de Core (Oscuro 0, Claro 1, Sistema 2, Pastel 3, Medianoche 4, XP claro 5, XP oscuro 6, Telecom claro 7, Telecom oscuro 8, Bash 9, Fósforo 10). */
 const val APPEARANCE_SYSTEM = AppPalette.SYSTEM
@@ -29,6 +30,8 @@ data class NoteLook(val uniformColor: String? = null, val squareCorners: Boolean
     val telecom: Map<String, String>? = null,
     /** La retícula de osciloscopio de fondo (solo Telecom oscuro). */
     val telecomGrid: Boolean = false,
+    /** El papel de las libretas bajo el texto; `NONE` en los demás aspectos. */
+    val paper: AspectSkin.Paper = AspectSkin.Paper.NONE,
 ) {
     /** El radio de una tarjeta de nota (12 dp de siempre, recto con «esquinas rectas»). */
     val cardShape get() = if (squareCorners) RectangleShape else RoundedCornerShape(12.dp)
@@ -72,7 +75,7 @@ fun AldunaTheme(appearance: Int = APPEARANCE_SYSTEM, aspectColors: Map<String, M
     val telecom = if (appearance == AppPalette.TELECOM_LIGHT || appearance == AppPalette.TELECOM_DARK) {
         remember(appearance, chosen) { AppPalette.forMode(appearance, systemLight, chosen) }
     } else null
-    CompositionLocalProvider(LocalNoteLook provides look.copy(telecom = telecom, telecomGrid = appearance == AppPalette.TELECOM_DARK)) {
+    CompositionLocalProvider(LocalNoteLook provides look.copy(telecom = telecom, telecomGrid = appearance == AppPalette.TELECOM_DARK, paper = AspectSkin.paper(appearance))) {
         MaterialTheme(colorScheme = scheme, typography = remember(appearance) { typographyFor(appearance) }, shapes = shapes, content = content)
     }
 }

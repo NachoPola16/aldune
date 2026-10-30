@@ -134,6 +134,8 @@ fun SettingsScreen(viewModel: NotesViewModel, onClose: () -> Unit) {
                     AppPalette.XP_LIGHT to R.string.appearance_xp_light, AppPalette.XP_DARK to R.string.appearance_xp_dark,
                     AppPalette.TELECOM_LIGHT to R.string.appearance_telecom_light, AppPalette.TELECOM_DARK to R.string.appearance_telecom_dark,
                     AppPalette.BASH to R.string.appearance_bash, AppPalette.PHOSPHOR to R.string.appearance_phosphor,
+                    AppPalette.TRAVEL_NOTEBOOK_LIGHT to R.string.appearance_travel_notebook_light, AppPalette.TRAVEL_NOTEBOOK_DARK to R.string.appearance_travel_notebook_dark,
+                    AppPalette.FIELD_NOTEBOOK_LIGHT to R.string.appearance_field_notebook_light, AppPalette.FIELD_NOTEBOOK_DARK to R.string.appearance_field_notebook_dark,
                 )
                 // Los aspectos retro proponen un tema de notas; se pregunta, no se impone (como en Windows).
                 // rememberSaveable: girar la pantalla no debe cerrar la pregunta sin avisar.

@@ -24,6 +24,12 @@ object AppPalette {
     const val BASH = 9
     const val PHOSPHOR = 10
 
+    /** Las libretas (claro y oscuro de la libreta de viaje y del cuaderno de campo): también se derivan en `AspectPalettes`. */
+    const val TRAVEL_NOTEBOOK_LIGHT = 11
+    const val TRAVEL_NOTEBOOK_DARK = 12
+    const val FIELD_NOTEBOOK_LIGHT = 13
+    const val FIELD_NOTEBOOK_DARK = 14
+
     val dark: Map<String, String> = linkedMapOf(
         "Ground" to "#2A261F",
         "GroundDeep" to "#25211B",
@@ -172,19 +178,19 @@ object AppPalette {
     )
 
     /**
-     * La paleta de [mode]. Los modos retro (5-10) se derivan en [AspectPalettes] con los colores que haya elegido el usuario ([aspectColors]:
+     * La paleta de [mode]. Los modos retro (5-14) se derivan en [AspectPalettes] con los colores que haya elegido el usuario ([aspectColors]:
      * id de hueco → hex; lo que falta o no es válido cae en los de fábrica). Un modo desconocido cae en Claro u Oscuro según [isLight], para
      * que un valor guardado por una versión más nueva nunca deje la app sin paleta.
      */
     fun forMode(mode: Int, systemUsesLight: Boolean, aspectColors: Map<String, String>? = null): Map<String, String> = when (mode) {
         PASTEL -> pastel
         MIDNIGHT -> midnight
-        in XP_LIGHT..PHOSPHOR -> AspectPalettes.derive(mode, AspectCatalog.resolve(mode, aspectColors))
+        in XP_LIGHT..FIELD_NOTEBOOK_DARK -> AspectPalettes.derive(mode, AspectCatalog.resolve(mode, aspectColors))
         else -> if (isLight(mode, systemUsesLight)) light else dark
     }
 
     fun isLight(mode: Int, systemUsesLight: Boolean): Boolean = when (mode) {
-        LIGHT, PASTEL, XP_LIGHT, TELECOM_LIGHT -> true
+        LIGHT, PASTEL, XP_LIGHT, TELECOM_LIGHT, TRAVEL_NOTEBOOK_LIGHT, FIELD_NOTEBOOK_LIGHT -> true
         SYSTEM -> systemUsesLight
         else -> false
     }

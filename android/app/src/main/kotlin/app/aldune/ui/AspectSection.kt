@@ -48,6 +48,7 @@ private fun slotNameRes(slotId: String): Int? = when (slotId) {
     "path" -> R.string.aspect_slot_path
     "phosphor" -> R.string.aspect_slot_phosphor
     "details" -> R.string.aspect_slot_details
+    "paper" -> R.string.aspect_slot_paper
     else -> null
 }
 

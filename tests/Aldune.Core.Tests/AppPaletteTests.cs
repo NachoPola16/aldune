@@ -91,6 +91,10 @@ public class AppPaletteTests
     [InlineData(AppearanceMode.TelecomDark, "trace")]
     [InlineData(AppearanceMode.Bash, "accent")]
     [InlineData(AppearanceMode.Phosphor, "details")]
+    [InlineData(AppearanceMode.TravelNotebookLight, "accent")]
+    [InlineData(AppearanceMode.TravelNotebookDark, "accent")]
+    [InlineData(AppearanceMode.FieldNotebookLight, "accent")]
+    [InlineData(AppearanceMode.FieldNotebookDark, "accent")]
     public void DockPlusButton_FollowsTheAccent(AppearanceMode mode, string slot)
     {
         var p = AppPalette.For(mode, false, new Dictionary<string, string> { [slot] = "#D03020" });
@@ -125,6 +129,10 @@ public class AppPaletteTests
     [InlineData(AppearanceMode.TelecomDark, true, false)]
     [InlineData(AppearanceMode.Bash, true, false)]
     [InlineData(AppearanceMode.Phosphor, true, false)]
+    [InlineData(AppearanceMode.TravelNotebookLight, false, true)]
+    [InlineData(AppearanceMode.TravelNotebookDark, true, false)]
+    [InlineData(AppearanceMode.FieldNotebookLight, false, true)]
+    [InlineData(AppearanceMode.FieldNotebookDark, true, false)]
     public void IsLight_FollowsTheChoiceOrWindows(AppearanceMode mode, bool windowsUsesLight, bool expectedLight)
     {
         Assert.Equal(expectedLight, AppPalette.IsLight(mode, windowsUsesLight));
@@ -211,6 +219,8 @@ public class AppPaletteTests
     [Theory]
     [InlineData(AppearanceMode.Bash, "#282828")]
     [InlineData(AppearanceMode.TelecomDark, "#171C21")]
+    [InlineData(AppearanceMode.TravelNotebookDark, "#2B231A")]
+    [InlineData(AppearanceMode.FieldNotebookDark, "#27241F")]
     public void TheChosenBackground_IsTheGround(AppearanceMode mode, string ground)
     {
         Assert.Equal(ground, AppPalette.For(mode, false)["Ground"]);

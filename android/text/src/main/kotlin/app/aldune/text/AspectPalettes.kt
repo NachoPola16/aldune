@@ -24,6 +24,10 @@ object AspectPalettes {
         AppPalette.TELECOM_DARK -> telecomDark(c.getValue("panel"), c.getValue("trace"))
         AppPalette.BASH -> bash(c.getValue("background"), c.getValue("user"), c.getValue("path"), c.getValue("accent"))
         AppPalette.PHOSPHOR -> phosphor(c.getValue("phosphor"), c.getValue("details"))
+        AppPalette.TRAVEL_NOTEBOOK_LIGHT -> notebookLight(c.getValue("ink"), c.getValue("accent"), neutralHue = 85.0)
+        AppPalette.TRAVEL_NOTEBOOK_DARK -> notebookDark(c.getValue("paper"), c.getValue("accent"), neutralHue = 70.0)
+        AppPalette.FIELD_NOTEBOOK_LIGHT -> notebookLight(c.getValue("ink"), c.getValue("accent"), neutralHue = 92.0)
+        AppPalette.FIELD_NOTEBOOK_DARK -> notebookDark(c.getValue("paper"), c.getValue("accent"), neutralHue = 75.0)
         else -> throw IllegalArgumentException("Sin aspecto retro: $mode")
     }
 
@@ -108,6 +112,32 @@ object AspectPalettes {
 
     // El acento y sus acompañantes, con el texto del botón (OnAccent) legible encima. También el botón «+» del dock, cuyo glifo es TextStrong:
     // se llama después de fijar TextStrong.
+    // Papel claro de libreta: el claro de siempre teñido hacia el crema (el matiz del papel es fijo, no depende de la tinta); la tinta elegida es el
+    // texto y se ajusta contra todos los fondos donde se lee, como en Telecom claro.
+    private fun notebookLight(ink: String, accent: String, neutralHue: Double): Map<String, String> {
+        val p = LinkedHashMap(AppPalette.tint(AppPalette.light, neutralHue = neutralHue, neutralChroma = 0.03, accentHue = hue(accent)))
+        val text = fitText(ink, p)
+        p["Text"] = text
+        p["TextStrong"] = text
+        p["OnTitleBar"] = text
+        setAccent(p, accent)
+        return p
+    }
+
+    // Papel oscuro de libreta: el oscuro de siempre con el fondo del papel elegido (que mueve todos los fondos) y el texto en un hueso cálido.
+    private fun notebookDark(paper: String, accent: String, neutralHue: Double): Map<String, String> {
+        val p = LinkedHashMap(
+            AppPalette.tint(AppPalette.dark, neutralHue = neutralHue(paper, neutralHue), neutralChroma = neutralChroma(paper, 0.03), accentHue = hue(accent)),
+        )
+        moveBackgrounds(p, paper)
+        val text = fitText("#E8DCC0", p)
+        p["Text"] = text
+        p["TextStrong"] = text
+        p["OnTitleBar"] = text
+        setAccent(p, accent)
+        return p
+    }
+
     private fun setAccent(p: MutableMap<String, String>, accent: String) {
         val onAccent = p.getValue("OnAccent")
         val fitted = ColorFit.background(accent, onAccent, 4.5)

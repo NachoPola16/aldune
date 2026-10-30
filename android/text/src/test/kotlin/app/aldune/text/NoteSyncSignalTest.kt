@@ -55,4 +55,20 @@ class NoteSyncSignalTest {
             assertTrue(AspectSkin.colorFill(m), "fondo $m")
         }
     }
+
+    @Test fun `las libretas llevan el color como franja, bloqueado, y su papel`() {
+        val notebooks = listOf(AppPalette.TRAVEL_NOTEBOOK_LIGHT, AppPalette.TRAVEL_NOTEBOOK_DARK, AppPalette.FIELD_NOTEBOOK_LIGHT, AppPalette.FIELD_NOTEBOOK_DARK)
+        for (m in notebooks) {
+            assertFalse(AspectSkin.colorFill(m), "fondo $m")
+            assertTrue(AspectSkin.colorLocked(m), "bloqueado $m")
+            assertTrue(AspectSkin.stripeCard(m), "franja $m")
+            assertTrue(AspectSkin.serif(m), "serifa $m")
+            assertFalse(AspectSkin.squareCorners(m), "esquinas $m")
+            assertFalse(AspectSkin.syncSignal(m), "señal $m")
+        }
+        assertEquals(AspectSkin.Paper.FOLDS, AspectSkin.paper(AppPalette.TRAVEL_NOTEBOOK_DARK))
+        assertEquals(AspectSkin.Paper.RULED, AspectSkin.paper(AppPalette.FIELD_NOTEBOOK_LIGHT))
+        assertEquals(AspectSkin.Paper.NONE, AspectSkin.paper(AppPalette.BASH))
+        assertTrue(AspectSkin.colorFill(AppPalette.DARK))
+    }
 }

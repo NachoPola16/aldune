@@ -24,7 +24,15 @@ public enum AppearanceMode
     /// <summary>Terminal de Linux (Gruvbox por defecto).</summary>
     Bash = 9,
     /// <summary>Monitor de fósforo antiguo, monocromo.</summary>
-    Phosphor = 10
+    Phosphor = 10,
+    /// <summary>Libreta de viaje, clara: papel crema, tinta marrón, pliegues del papel doblado.</summary>
+    TravelNotebookLight = 11,
+    /// <summary>Libreta de viaje, oscura: papel marrón de noche, tinta color hueso.</summary>
+    TravelNotebookDark = 12,
+    /// <summary>Cuaderno de campo, claro: renglones azules y margen rojo.</summary>
+    FieldNotebookLight = 13,
+    /// <summary>Cuaderno de campo, oscuro: renglones apagados sobre papel marrón oscuro.</summary>
+    FieldNotebookDark = 14
 }
 
 /// <summary>
@@ -275,13 +283,16 @@ public static class AppPalette
         AppearanceMode.Midnight => Midnight.Value,
         AppearanceMode.XpLight or AppearanceMode.XpDark or AppearanceMode.TelecomLight
             or AppearanceMode.TelecomDark or AppearanceMode.Bash or AppearanceMode.Phosphor
+            or AppearanceMode.TravelNotebookLight or AppearanceMode.TravelNotebookDark
+            or AppearanceMode.FieldNotebookLight or AppearanceMode.FieldNotebookDark
             => AspectPalettes.Derive(mode, AspectCatalog.Resolve(mode, aspectColors)),
         _ => For(IsLight(mode, windowsUsesLight))
     };
 
     public static bool IsLight(AppearanceMode mode, bool windowsUsesLight) => mode switch
     {
-        AppearanceMode.Light or AppearanceMode.Pastel or AppearanceMode.XpLight or AppearanceMode.TelecomLight => true,
+        AppearanceMode.Light or AppearanceMode.Pastel or AppearanceMode.XpLight or AppearanceMode.TelecomLight
+            or AppearanceMode.TravelNotebookLight or AppearanceMode.FieldNotebookLight => true,
         AppearanceMode.System => windowsUsesLight,
         _ => false
     };

@@ -72,6 +72,39 @@ object AspectCatalog {
             ),
             emptyList(), NoteThemes.SERENE_ID,
         ),
+        // Las libretas: en claro el hueco es la tinta; en oscuro, el papel (que arrastra los fondos).
+        AspectDefinition(
+            AppPalette.TRAVEL_NOTEBOOK_LIGHT, "travel-notebook-light",
+            listOf(
+                AspectColorSlot("ink", "#3D2F1B", listOf("#3D2F1B", "#2A2A3A", "#4A2A1A")),
+                AspectColorSlot("accent", "#9B4A2C", listOf("#9B4A2C", "#5C7A3E", "#2E5E7A", "#A8342D")),
+            ),
+            emptyList(), null,
+        ),
+        AspectDefinition(
+            AppPalette.TRAVEL_NOTEBOOK_DARK, "travel-notebook-dark",
+            listOf(
+                AspectColorSlot("paper", "#2B231A", listOf("#2B231A", "#231E18", "#2E2A22")),
+                AspectColorSlot("accent", "#C9A05A", listOf("#C9A05A", "#D98A6A", "#8EC07C", "#7FA8FF")),
+            ),
+            emptyList(), null,
+        ),
+        AspectDefinition(
+            AppPalette.FIELD_NOTEBOOK_LIGHT, "field-notebook-light",
+            listOf(
+                AspectColorSlot("ink", "#33281A", listOf("#33281A", "#1F2A44", "#3A2418")),
+                AspectColorSlot("accent", "#7D5B30", listOf("#7D5B30", "#2E5E7A", "#A8342D", "#5C7A3E")),
+            ),
+            emptyList(), null,
+        ),
+        AspectDefinition(
+            AppPalette.FIELD_NOTEBOOK_DARK, "field-notebook-dark",
+            listOf(
+                AspectColorSlot("paper", "#27241F", listOf("#27241F", "#1F1D19", "#2A2722")),
+                AspectColorSlot("accent", "#CFA862", listOf("#CFA862", "#7FA8FF", "#D98A6A", "#8EC07C")),
+            ),
+            emptyList(), null,
+        ),
     )
 
     fun forMode(mode: Int): AspectDefinition? = retro.firstOrNull { it.mode == mode }

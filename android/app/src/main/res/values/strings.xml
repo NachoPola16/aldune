@@ -55,6 +55,10 @@
     <string name="appearance_telecom_dark">Telecom Dark (oscilloscope)</string>
     <string name="appearance_bash">Bash</string>
     <string name="appearance_phosphor">Phosphor (old monitor)</string>
+    <string name="appearance_travel_notebook_light">Travel notebook, light</string>
+    <string name="appearance_travel_notebook_dark">Travel notebook, dark</string>
+    <string name="appearance_field_notebook_light">Field notebook, light</string>
+    <string name="appearance_field_notebook_dark">Field notebook, dark</string>
     <string name="aspect_colors">Aspect colors</string>
     <string name="aspect_color_change">Change</string>
     <string name="aspect_colors_reset">Reset colors</string>
@@ -69,6 +73,7 @@
     <string name="aspect_slot_path">Path</string>
     <string name="aspect_slot_phosphor">Phosphor</string>
     <string name="aspect_slot_details">Details</string>
+    <string name="aspect_slot_paper">Paper</string>
     <string name="aspect_suggest_body">Also use the “%1$s” note theme?</string>
     <string name="aspect_suggest_apply">Use it</string>
     <string name="aspect_suggest_keep">Keep current</string>

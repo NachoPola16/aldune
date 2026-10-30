@@ -55,6 +55,10 @@
     <string name="appearance_telecom_dark">Telecomunicaciones oscuro (osciloscopio)</string>
     <string name="appearance_bash">Bash</string>
     <string name="appearance_phosphor">Fósforo (monitor antiguo)</string>
+    <string name="appearance_travel_notebook_light">Libreta de viaje, clara</string>
+    <string name="appearance_travel_notebook_dark">Libreta de viaje, oscura</string>
+    <string name="appearance_field_notebook_light">Cuaderno de campo, claro</string>
+    <string name="appearance_field_notebook_dark">Cuaderno de campo, oscuro</string>
     <string name="aspect_colors">Colores del aspecto</string>
     <string name="aspect_color_change">Cambiar</string>
     <string name="aspect_colors_reset">Restablecer colores</string>
@@ -69,6 +73,7 @@
     <string name="aspect_slot_path">Ruta</string>
     <string name="aspect_slot_phosphor">Fósforo</string>
     <string name="aspect_slot_details">Detalles</string>
+    <string name="aspect_slot_paper">Papel</string>
     <string name="aspect_suggest_body">¿Usar también el tema de notas «%1$s»?</string>
     <string name="aspect_suggest_apply">Usarlo</string>
     <string name="aspect_suggest_keep">Mantener el actual</string>

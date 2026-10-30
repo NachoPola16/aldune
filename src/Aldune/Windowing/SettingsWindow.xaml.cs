@@ -1540,7 +1540,11 @@ public partial class SettingsWindow : Window
                      (AppearanceMode.TelecomLight, Strings.AppearanceTelecomLight),
                      (AppearanceMode.TelecomDark, Strings.AppearanceTelecomDark),
                      (AppearanceMode.Bash, Strings.AppearanceBash),
-                     (AppearanceMode.Phosphor, Strings.AppearancePhosphor)
+                     (AppearanceMode.Phosphor, Strings.AppearancePhosphor),
+                     (AppearanceMode.TravelNotebookLight, Strings.AppearanceTravelNotebookLight),
+                     (AppearanceMode.TravelNotebookDark, Strings.AppearanceTravelNotebookDark),
+                     (AppearanceMode.FieldNotebookLight, Strings.AppearanceFieldNotebookLight),
+                     (AppearanceMode.FieldNotebookDark, Strings.AppearanceFieldNotebookDark)
                  })
         {
             var radio = new RadioButton

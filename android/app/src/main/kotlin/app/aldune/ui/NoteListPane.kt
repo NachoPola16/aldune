@@ -107,6 +107,7 @@ import app.aldune.text.NoteChannels
 import app.aldune.text.NoteColorContrast
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.graphics.StrokeJoin
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.scale
@@ -610,7 +611,10 @@ private fun NoteRow(item: NoteListItem, selected: Boolean, conflicted: Boolean, 
         ),
         border = if ((fill || tint != null) && selected) BorderStroke(3.dp, MaterialTheme.colorScheme.primary) else null,
     ) {
-        Row(Modifier.fillMaxWidth().height(androidx.compose.foundation.layout.IntrinsicSize.Min)) {
+        Row(
+            Modifier.fillMaxWidth().height(androidx.compose.foundation.layout.IntrinsicSize.Min)
+                .paperTexture(look.paper, MaterialTheme.colorScheme.onSurface, MaterialTheme.colorScheme.surface.luminance() > 0.5f),
+        ) {
             // La tira de color de la nota: es lo que reconoce una nota de un vistazo.
             if (!fill) Box(Modifier.width(8.dp).fillMaxHeight().background(if (tint != null) noteFace(tint.accent) else face))
             Column(Modifier.weight(1f).padding(horizontal = 14.dp, vertical = 10.dp)) {

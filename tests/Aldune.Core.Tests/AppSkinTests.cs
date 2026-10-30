@@ -85,6 +85,24 @@ public class AppSkinTests
     }
 
     [Fact]
+    public void Notebooks_haveSerifBodyStripeCardsAndTheirPaper()
+    {
+        foreach (var mode in new[] { AppearanceMode.TravelNotebookLight, AppearanceMode.TravelNotebookDark })
+        {
+            var skin = AppSkin.For(mode);
+            Assert.StartsWith("Georgia", skin.NoteFont);
+            Assert.Equal(SkinCard.Stripe, skin.Card);
+            Assert.Equal(SkinPaper.Folds, skin.Paper);
+            Assert.False(skin.SquareCorners);
+        }
+        foreach (var mode in new[] { AppearanceMode.FieldNotebookLight, AppearanceMode.FieldNotebookDark })
+            Assert.Equal(SkinPaper.Ruled, AppSkin.For(mode).Paper);
+        // El resto de aspectos no llevan papel.
+        Assert.Equal(SkinPaper.None, AppSkin.For(AppearanceMode.Dark).Paper);
+        Assert.Equal(SkinPaper.None, AppSkin.For(AppearanceMode.Bash).Paper);
+    }
+
+    [Fact]
     public void Default_HasNoGloss_RoundCorners_AndNoSignal()
     {
         Assert.False(AppSkin.Default.Gloss);

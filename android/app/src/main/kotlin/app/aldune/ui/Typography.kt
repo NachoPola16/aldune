@@ -4,6 +4,7 @@ import androidx.compose.material3.Typography
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontFamily
 import app.aldune.text.AppPalette
+import app.aldune.text.AspectSkin
 
 /** Bash, Telecomunicaciones (claro y oscuro) y Fósforo usan fuente monoespaciada, como Cascadia Mono en Windows. XP y los demás, la de siempre. */
 internal fun isMonospaceAspect(appearance: Int): Boolean =
@@ -13,6 +14,15 @@ internal fun isMonospaceAspect(appearance: Int): Boolean =
 /** La tipografía de Material con la familia monoespaciada del sistema en los aspectos que la piden. */
 internal fun typographyFor(appearance: Int): Typography {
     val base = Typography()
+    if (AspectSkin.serif(appearance)) {
+        // Las libretas: serifa en el texto y los títulos; las etiquetas pequeñas de los botones se quedan como siempre (se leen mejor sin remates).
+        fun TextStyle.serif() = copy(fontFamily = FontFamily.Serif)
+        return base.copy(
+            headlineLarge = base.headlineLarge.serif(), headlineMedium = base.headlineMedium.serif(), headlineSmall = base.headlineSmall.serif(),
+            titleLarge = base.titleLarge.serif(), titleMedium = base.titleMedium.serif(), titleSmall = base.titleSmall.serif(),
+            bodyLarge = base.bodyLarge.serif(), bodyMedium = base.bodyMedium.serif(), bodySmall = base.bodySmall.serif(),
+        )
+    }
     if (!isMonospaceAspect(appearance)) return base
     fun TextStyle.mono() = copy(fontFamily = FontFamily.Monospace)
     return base.copy(

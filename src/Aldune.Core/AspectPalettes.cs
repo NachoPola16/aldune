@@ -25,6 +25,10 @@ internal static class AspectPalettes
         AppearanceMode.TelecomDark => TelecomDark(c["panel"], c["trace"]),
         AppearanceMode.Bash => Bash(c["background"], c["user"], c["path"], c["accent"]),
         AppearanceMode.Phosphor => Phosphor(c["phosphor"], c["details"]),
+        AppearanceMode.TravelNotebookLight => NotebookLight(c["ink"], c["accent"], neutralHue: 85),
+        AppearanceMode.TravelNotebookDark => NotebookDark(c["paper"], c["accent"], neutralHue: 70),
+        AppearanceMode.FieldNotebookLight => NotebookLight(c["ink"], c["accent"], neutralHue: 92),
+        AppearanceMode.FieldNotebookDark => NotebookDark(c["paper"], c["accent"], neutralHue: 75),
         _ => throw new ArgumentOutOfRangeException(nameof(mode)),
     };
 
@@ -104,6 +108,28 @@ internal static class AspectPalettes
         p["TextSoft"] = p["TextWarm"] = ColorFit.Foreground(ColorMix.Toward(text, p["Ground"], 0.15), p["Raised"], 4.5);
         p["OnAccent"] = p["Ground"];
         SetAccent(p, details);
+        return p;
+    }
+
+    // Papel claro de libreta: el claro de siempre teñido hacia el crema (el matiz del papel es fijo, no depende de la tinta); la tinta elegida es el
+    // texto y se ajusta contra todos los fondos donde se lee, como en Telecom claro.
+    private static Dictionary<string, string> NotebookLight(string ink, string accent, double neutralHue)
+    {
+        var p = new Dictionary<string, string>(AppPalette.Tint(AppPalette.Light, neutralHue: neutralHue, neutralChroma: 0.03, accentHue: Hue(accent)));
+        var text = FitText(ink, p);
+        p["Text"] = p["TextStrong"] = p["OnTitleBar"] = text;
+        SetAccent(p, accent);
+        return p;
+    }
+
+    // Papel oscuro de libreta: el oscuro de siempre con el fondo del papel elegido (que mueve todos los fondos) y el texto en un hueso cálido.
+    private static Dictionary<string, string> NotebookDark(string paper, string accent, double neutralHue)
+    {
+        var p = new Dictionary<string, string>(AppPalette.Tint(AppPalette.Dark, neutralHue: NeutralHue(paper, neutralHue), neutralChroma: NeutralChroma(paper, 0.03), accentHue: Hue(accent)));
+        MoveBackgrounds(p, paper);
+        var text = FitText("#E8DCC0", p);
+        p["Text"] = p["TextStrong"] = p["OnTitleBar"] = text;
+        SetAccent(p, accent);
         return p;
     }
 

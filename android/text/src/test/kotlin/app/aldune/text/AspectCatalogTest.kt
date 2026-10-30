@@ -7,10 +7,13 @@ import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 
 class AspectCatalogTest {
-    @Test fun `los retro son los seis de la spec con los numeros 5 a 10`() {
-        assertEquals(listOf(5, 6, 7, 8, 9, 10), AspectCatalog.retro.map { it.mode })
+    @Test fun `los retro son los seis de la spec y las cuatro libretas con sus numeros`() {
+        assertEquals(listOf(5, 6, 7, 8, 9, 10, 11, 12, 13, 14), AspectCatalog.retro.map { it.mode })
         assertEquals(
-            listOf("xp-light", "xp-dark", "telecom-light", "telecom-dark", "bash", "phosphor"),
+            listOf(
+                "xp-light", "xp-dark", "telecom-light", "telecom-dark", "bash", "phosphor",
+                "travel-notebook-light", "travel-notebook-dark", "field-notebook-light", "field-notebook-dark",
+            ),
             AspectCatalog.retro.map { it.id },
         )
     }

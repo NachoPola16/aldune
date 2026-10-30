@@ -35,6 +35,8 @@ import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.platform.LocalView
 import androidx.core.view.WindowCompat
 import app.aldune.text.AppPalette
+import app.aldune.text.AspectSkin
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import app.aldune.text.NoteChannels
@@ -452,6 +454,8 @@ fun NoteEditorPane(key: String, viewModel: NotesViewModel, onBack: () -> Unit, s
         Modifier.fillMaxSize()
             .then(if (faceHex != null) Modifier.background(noteFace(faceHex)) else Modifier)
             .then(if (tint != null && look.telecomGrid) Modifier.drawBehind { drawTelecomGrid(gridInk) } else Modifier)
+            // Los pliegues cubren toda la hoja; los renglones van aparte, dentro del campo de texto, para alinearlos con sus líneas.
+            .paperTexture(if (look.paper == AspectSkin.Paper.FOLDS) look.paper else AspectSkin.Paper.NONE, ink, faceLight)
             .safeDrawingPadding().imePadding(),
     ) {
         Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
@@ -612,7 +616,13 @@ fun NoteEditorPane(key: String, viewModel: NotesViewModel, onBack: () -> Unit, s
         val currentCheckboxAt = rememberUpdatedState<(Offset) -> Int?> { checkboxAt(it) }
         // Con tareas, se deja sitio a la derecha para el asa de arrastre.
         val hasTasks = TaskLines.count(state.text.toString()).total > 0 && !protectedNote
-        Box(Modifier.weight(1f).fillMaxWidth()) {
+        val lineHeight = with(LocalDensity.current) { MaterialTheme.typography.bodyLarge.lineHeight.toDp() }
+        Box(
+            Modifier.weight(1f).fillMaxWidth().paperTexture(
+                if (look.paper == AspectSkin.Paper.RULED) look.paper else AspectSkin.Paper.NONE, ink, faceLight,
+                ruleStep = lineHeight, ruleOffset = TASK_DRAG_PAD_TOP + lineHeight * 0.88f, marginX = 10.dp,
+            ),
+        ) {
         BasicTextField(
             state = state,
             scrollState = fieldScroll,

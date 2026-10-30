@@ -139,6 +139,10 @@ internal static class ConfigPreview
         AppearanceMode.TelecomDark => Strings.AppearanceTelecomDark,
         AppearanceMode.Bash => Strings.AppearanceBash,
         AppearanceMode.Phosphor => Strings.AppearancePhosphor,
+        AppearanceMode.TravelNotebookLight => Strings.AppearanceTravelNotebookLight,
+        AppearanceMode.TravelNotebookDark => Strings.AppearanceTravelNotebookDark,
+        AppearanceMode.FieldNotebookLight => Strings.AppearanceFieldNotebookLight,
+        AppearanceMode.FieldNotebookDark => Strings.AppearanceFieldNotebookDark,
         _ => null,
     };
 }

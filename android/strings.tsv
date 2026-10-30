@@ -54,6 +54,10 @@ appearance_telecom_light	Telecom Light (lab)	Telecomunicaciones claro (laborator
 appearance_telecom_dark	Telecom Dark (oscilloscope)	Telecomunicaciones oscuro (osciloscopio)	Telekom dunkel (Oszilloskop)	Télécom sombre (oscilloscope)	Telecom escuro (osciloscópio)
 appearance_bash	Bash	Bash	Bash	Bash	Bash
 appearance_phosphor	Phosphor (old monitor)	Fósforo (monitor antiguo)	Phosphor (alter Monitor)	Phosphore (vieux moniteur)	Fósforo (monitor antigo)
+appearance_travel_notebook_light	Travel notebook, light	Libreta de viaje, clara	Reisenotizbuch, hell	Carnet de voyage, clair	Caderneta de viagem, clara
+appearance_travel_notebook_dark	Travel notebook, dark	Libreta de viaje, oscura	Reisenotizbuch, dunkel	Carnet de voyage, sombre	Caderneta de viagem, escura
+appearance_field_notebook_light	Field notebook, light	Cuaderno de campo, claro	Feldbuch, hell	Carnet de terrain, clair	Caderno de campo, claro
+appearance_field_notebook_dark	Field notebook, dark	Cuaderno de campo, oscuro	Feldbuch, dunkel	Carnet de terrain, sombre	Caderno de campo, escuro
 aspect_colors	Aspect colors	Colores del aspecto	Farben des Erscheinungsbilds	Couleurs de l’apparence	Cores da aparência
 aspect_color_change	Change	Cambiar	Ändern	Modifier	Alterar
 aspect_colors_reset	Reset colors	Restablecer colores	Farben zurücksetzen	Réinitialiser les couleurs	Redefinir cores
@@ -68,6 +72,7 @@ aspect_slot_user	User	Usuario	Benutzer	Utilisateur	Usuário
 aspect_slot_path	Path	Ruta	Pfad	Chemin	Caminho
 aspect_slot_phosphor	Phosphor	Fósforo	Phosphor	Phosphore	Fósforo
 aspect_slot_details	Details	Detalles	Details	Détails	Detalhes
+aspect_slot_paper	Paper	Papel	Papier	Papier	Papel
 aspect_suggest_body	Also use the “%1$s” note theme?	¿Usar también el tema de notas «%1$s»?	Auch das Notizthema „%1$s“ verwenden?	Utiliser aussi le thème de notes « %1$s » ?	Usar também o tema de notas “%1$s”?
 aspect_suggest_apply	Use it	Usarlo	Verwenden	L’utiliser	Usar
 aspect_suggest_keep	Keep current	Mantener el actual	Aktuelles behalten	Garder l’actuel	Manter o atual

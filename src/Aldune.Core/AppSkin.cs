@@ -43,6 +43,17 @@ public enum SkinTitleAdornment
     Uppercase = 3,
 }
 
+/// <summary>El papel que se dibuja bajo el texto de la nota (las libretas). Es solo una textura de fondo, muy tenue y siempre por debajo del texto.</summary>
+public enum SkinPaper
+{
+    /// <summary>Sin textura (hoy).</summary>
+    None = 0,
+    /// <summary>Pliegues de papel doblado y grano (libreta de viaje).</summary>
+    Folds = 1,
+    /// <summary>Renglones, margen rojo y una mancha discreta (cuaderno de campo).</summary>
+    Ruled = 2,
+}
+
 /// <summary>
 /// La forma de un aspecto, frente a su paleta (<see cref="AppPalette"/>): tipografía, bordes, barra de
 /// título, cómo lleva cada nota su color y los adornos. Datos puros; la capa WPF los convierte en
@@ -66,7 +77,8 @@ public sealed record AppSkin(
     bool NoteGrid,
     bool Gloss,
     bool SquareCorners,
-    bool SyncSignal)
+    bool SyncSignal,
+    SkinPaper Paper = SkinPaper.None)
 {
     /// <summary>Lo de siempre: Segoe en el chrome y el cuerpo, título manuscrito, todo plano.</summary>
     public static AppSkin Default { get; } = new(
@@ -87,6 +99,7 @@ public sealed record AppSkin(
 
     private const string Tahoma = "Tahoma, Verdana, Segoe UI";
     private const string Mono = "Cascadia Mono, Consolas";
+    private const string Serif = "Georgia, Cambria, Times New Roman";
 
     // Lo común a los aspectos de terminal: monoespaciada en todo, rectas y con la señal de sync. Declarada
     // después de Default porque se construye a partir de él (los inicializadores estáticos van en orden).
@@ -127,6 +140,11 @@ public sealed record AppSkin(
         AppearanceMode.TelecomDark => Terminal with { Card = SkinCard.Tinted, Adornment = SkinTitleAdornment.Channel, NoteGrid = true },
         AppearanceMode.Bash => Terminal with { Card = SkinCard.Stripe, Adornment = SkinTitleAdornment.Folder, PromptLine = true },
         AppearanceMode.Phosphor => Terminal with { Card = SkinCard.Mono, Adornment = SkinTitleAdornment.Uppercase },
+        // Las libretas: cuerpo en serifa y título manuscrito (el de siempre), el papel como fondo y el color de la nota como franja.
+        AppearanceMode.TravelNotebookLight or AppearanceMode.TravelNotebookDark
+            => Default with { NoteFont = Serif, NoteLineHeight = 22, Card = SkinCard.Stripe, Paper = SkinPaper.Folds },
+        AppearanceMode.FieldNotebookLight or AppearanceMode.FieldNotebookDark
+            => Default with { NoteFont = Serif, NoteLineHeight = 22, Card = SkinCard.Stripe, Paper = SkinPaper.Ruled },
         _ => Default,
     };
 }

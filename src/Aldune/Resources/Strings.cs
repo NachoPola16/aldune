@@ -1336,6 +1336,14 @@ public static class Strings
     public static string AppearanceTelecomDark => T("Telecom Dark (oscilloscope)", "Telecomunicaciones oscuro (osciloscopio)",
         "Telekom dunkel (Oszilloskop)", "Télécom sombre (oscilloscope)", "Telecom escuro (osciloscópio)");
     public static string AppearanceBash => T("Bash", "Bash", "Bash", "Bash", "Bash");
+    public static string AppearanceTravelNotebookLight => T("Travel notebook, light", "Libreta de viaje, clara",
+        "Reisenotizbuch, hell", "Carnet de voyage, clair", "Caderneta de viagem, clara");
+    public static string AppearanceTravelNotebookDark => T("Travel notebook, dark", "Libreta de viaje, oscura",
+        "Reisenotizbuch, dunkel", "Carnet de voyage, sombre", "Caderneta de viagem, escura");
+    public static string AppearanceFieldNotebookLight => T("Field notebook, light", "Cuaderno de campo, claro",
+        "Feldbuch, hell", "Carnet de terrain, clair", "Caderno de campo, claro");
+    public static string AppearanceFieldNotebookDark => T("Field notebook, dark", "Cuaderno de campo, oscuro",
+        "Feldbuch, dunkel", "Carnet de terrain, sombre", "Caderno de campo, escuro");
     public static string AppearancePhosphor => T("Phosphor (old monitor)", "Fósforo (monitor antiguo)",
         "Phosphor (alter Monitor)", "Phosphore (vieux moniteur)", "Fósforo (monitor antigo)");
 
@@ -1352,6 +1360,7 @@ public static class Strings
         "path" => T("Path", "Ruta", "Pfad", "Chemin", "Caminho"),
         "phosphor" => T("Phosphor", "Fósforo", "Phosphor", "Phosphore", "Fósforo"),
         "details" => T("Details", "Detalles", "Details", "Détails", "Detalhes"),
+        "paper" => T("Paper", "Papel", "Papier", "Papier", "Papel"),
         _ => slot,
     };
 
