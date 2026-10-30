@@ -17,7 +17,7 @@ body:
     id: version
     attributes:
       label: Versión
-      description: Está en Ajustes (por ejemplo, 2.1.2 en Windows o 1.0.1 en Android).
+      description: Está en Ajustes (por ejemplo, 2.1.3 en Windows o 1.0.1 en Android).
     validations:
       required: true
   - type: input
