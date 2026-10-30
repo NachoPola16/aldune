@@ -1,0 +1,8 @@
+blank_issues_enabled: true
+contact_links:
+  - name: Preguntas y charla
+    url: https://github.com/NachoPola16/aldune/discussions
+    about: Dudas de uso, ideas abiertas y cómo montar la sincronización.
+  - name: Vulnerabilidad de seguridad
+    url: https://github.com/NachoPola16/aldune/security/advisories/new
+    about: Repórtala en privado, no en un issue público.

@@ -1,0 +1,40 @@
+name: Un fallo
+description: Algo no funciona como esperabas
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        No pegues códigos de perfil, tokens ni el contenido de tus notas. Si es una vulnerabilidad, **no** uses un issue: mira SECURITY.md.
+  - type: dropdown
+    id: platform
+    attributes:
+      label: Dónde ocurre
+      options: [Windows, Android, Servidor de sincronización]
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: Versión
+      description: Está en Ajustes (por ejemplo, 2.1.1 en Windows o 1.0.1 en Android).
+    validations:
+      required: true
+  - type: input
+    id: system
+    attributes:
+      label: Sistema
+      description: Versión de Windows, o modelo y versión de Android.
+  - type: textarea
+    id: steps
+    attributes:
+      label: Qué hiciste
+      description: Los pasos, en orden.
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Qué esperabas y qué pasó
+    validations:
+      required: true
