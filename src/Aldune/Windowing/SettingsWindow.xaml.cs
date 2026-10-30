@@ -776,6 +776,50 @@ public partial class SettingsWindow : Window
         SoundRowsPanel.Opacity = SoundExtrasPanel.Opacity = _settings.SoundsEnabled ? 1 : 0.5;
     }
 
+    // --- Copia automática ---------------------------------------------------------------------------
+
+    private void RefreshAutoExport()
+    {
+        AutoExportCheck.IsChecked = _settings.AutoExportEnabled;
+        AutoExportArchivedCheck.IsChecked = _settings.AutoExportArchived;
+        AutoExportFolderText.Text = string.IsNullOrWhiteSpace(_settings.AutoExportFolder) ? Strings.AutoExportNoFolder : _settings.AutoExportFolder;
+        AutoExportDetails.Visibility = _settings.AutoExportEnabled ? Visibility.Visible : Visibility.Collapsed;
+        var error = AutoExportService.LastError;
+        AutoExportErrorText.Text = error is null ? "" : Strings.AutoExportFailed(error);
+        AutoExportErrorText.Visibility = error is null ? Visibility.Collapsed : Visibility.Visible;
+    }
+
+    private void OnAutoExportToggled(object sender, RoutedEventArgs e)
+    {
+        _settings.AutoExportEnabled = AutoExportCheck.IsChecked == true;
+        // Sin carpeta elegida no hay nada que hacer: al encender se pide ahí mismo; si se cancela, vuelve a apagarse.
+        if (_settings.AutoExportEnabled && string.IsNullOrWhiteSpace(_settings.AutoExportFolder) && !ChooseAutoExportFolder())
+            _settings.AutoExportEnabled = false;
+        _settingsService.Save(_settings);
+        RefreshAutoExport();
+    }
+
+    private void OnAutoExportChooseFolderClick(object sender, RoutedEventArgs e)
+    {
+        if (ChooseAutoExportFolder()) _settingsService.Save(_settings);
+        RefreshAutoExport();
+    }
+
+    private bool ChooseAutoExportFolder()
+    {
+        var dialog = new Microsoft.Win32.OpenFolderDialog { Title = Strings.AutoExportChooseFolder, Multiselect = false };
+        if (!string.IsNullOrWhiteSpace(_settings.AutoExportFolder) && Directory.Exists(_settings.AutoExportFolder)) dialog.InitialDirectory = _settings.AutoExportFolder;
+        if (dialog.ShowDialog(this) != true) return false;
+        _settings.AutoExportFolder = dialog.FolderName;
+        return true;
+    }
+
+    private void OnAutoExportArchivedToggled(object sender, RoutedEventArgs e)
+    {
+        _settings.AutoExportArchived = AutoExportArchivedCheck.IsChecked == true;
+        _settingsService.Save(_settings);
+    }
+
     private void OnSoundsEnabledToggled(object sender, RoutedEventArgs e)
     {
         _settings.SoundsEnabled = SoundsEnabledCheck.IsChecked == true;
@@ -2165,6 +2209,7 @@ public partial class SettingsWindow : Window
         ReminderIncludesTasksCheck.IsChecked = _settings.ReminderIncludesTasks;
         SoundsEnabledCheck.IsChecked = _settings.SoundsEnabled;
         BuildSoundRows();
+        RefreshAutoExport();
         RememberPositionsCheck.IsChecked = _settings.RememberNotePositions;
         RememberSizesCheck.IsChecked = _settings.NoteSizesRemembered;
         PopulateTrackpadGestures();

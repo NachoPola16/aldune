@@ -251,6 +251,14 @@ public sealed class AppSettings
     /// <summary>Interruptor general de los sonidos de la app. Apagado de fábrica (ver <see cref="SoundPlan"/>).</summary>
     public bool SoundsEnabled { get; set; }
 
+    /// <summary>Copia automática de las notas en una carpeta (spec de la fase 4). Apagada de fábrica. La carpeta es de este equipo.</summary>
+    public bool AutoExportEnabled { get; set; }
+
+    public string? AutoExportFolder { get; set; }
+
+    /// <summary>Incluir también las notas archivadas en la copia automática (en <c>archivadas/</c>).</summary>
+    public bool AutoExportArchived { get; set; } = true;
+
     /// <summary>Volumen de los sonidos de la app, de 0 a 100 (mismo nombre en Android).</summary>
     public int SoundVolume { get; set; } = 100;
 

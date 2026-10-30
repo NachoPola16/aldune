@@ -258,6 +258,7 @@ public partial class App : Application
         _settings = settings;
         _settingsService = settingsService;
         StartDailyBackups(appDataDir);
+        _autoExport = new AutoExportService(repository, settings);
         _singleInstance.ListenForActivation(() => Dispatcher.BeginInvoke(() =>
         {
             var pending = OpenRequestInbox.Drain(inbox);
@@ -413,6 +414,8 @@ public partial class App : Application
             _recentHotkey?.Dispose();
             _managerHotkey?.Dispose();
             _backupTimer?.Stop();
+            _autoExport?.FlushNow();
+            _autoExport?.Dispose();
             _singleInstance?.Dispose();
         };
     }
@@ -462,6 +465,7 @@ public partial class App : Application
     }
 
     private DispatcherTimer? _backupTimer;
+    private AutoExportService? _autoExport;
     private SettingsService? _settingsService;
     private bool _firstRun;
 

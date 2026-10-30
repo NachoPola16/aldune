@@ -409,6 +409,9 @@ public class ConfigExportImportTests
         ["SereneRecolored"] = "marca interna de una migración de datos de este equipo",
         ["SoundsEnabled"] = "sonidos: dependen de los archivos .wav y del volumen de cada equipo",
         ["Sounds"] = "sonidos: llevan rutas de archivos de este equipo",
+        ["AutoExportEnabled"] = "copia automática: la carpeta es de cada equipo",
+        ["AutoExportFolder"] = "copia automática: la ruta es de este equipo",
+        ["AutoExportArchived"] = "copia automática: va con la carpeta de cada equipo",
         ["SoundVolume"] = "volumen de los sonidos: va con el interruptor y los .wav de cada equipo",
     };
 

@@ -84,6 +84,22 @@ public sealed class NotesRepository
         return results;
     }
 
+    /// <summary>
+    /// Una huella barata de "algo cambió en las notas": por estado, cuántas hay, la última modificación y cuántas protegidas. No lee ni descifra
+    /// ningún texto, así que se puede preguntar cada pocos segundos (la copia automática la usa para saber cuándo volver a escribir).
+    /// </summary>
+    public string ChangeStamp()
+    {
+        using var connection = _database.OpenConnection();
+        using var command = connection.CreateCommand();
+        command.CommandText = "SELECT State, COUNT(*), MAX(UpdatedAt), SUM(IsProtected) FROM Note GROUP BY State ORDER BY State;";
+        var parts = new List<string>();
+        using var reader = command.ExecuteReader();
+        while (reader.Read())
+            parts.Add($"{reader.GetString(0)}:{reader.GetInt64(1)}:{(reader.IsDBNull(2) ? "" : reader.GetValue(2))}:{(reader.IsDBNull(3) ? 0 : reader.GetInt64(3))}");
+        return string.Join("|", parts);
+    }
+
     /// <summary>Todas las notas actuales, incluidos archivadas y papelera, para exportación/sync.</summary>
     public IReadOnlyList<Note> GetAllForSync()
     {

@@ -510,6 +510,31 @@
                         <!-- Una fila por evento (la rellena BuildSoundRows): sonido propio o ninguno, con "Probar". -->
                         <StackPanel x:Name="SoundRowsPanel" Margin="0,12,0,0" />
                     </StackPanel>
+                    <Border Background="{DynamicResource AlduneRaisedBrush}" Height="1" Margin="0,20,0,0" />
+                    <StackPanel Margin="0,20,0,0">
+                        <CheckBox x:Name="AutoExportCheck"
+                                  Content="{x:Static res:Strings.AutoExportCheckbox}"
+                                  Foreground="{DynamicResource AlduneTextBrush}" Background="{DynamicResource AlduneGroundBrush}" FontSize="{DynamicResource AlduneTextBody}"
+                                  Style="{StaticResource SettingsSwitchStyle}"
+                                  Click="OnAutoExportToggled" />
+                        <TextBlock Text="{x:Static res:Strings.AutoExportHint}"
+                                   Foreground="{DynamicResource AlduneHintBrush}" FontSize="{DynamicResource AlduneTextSmall}" TextWrapping="Wrap" Margin="0,6,56,0" />
+                        <StackPanel x:Name="AutoExportDetails" Margin="0,12,0,0">
+                            <StackPanel Orientation="Horizontal">
+                                <Button Content="{x:Static res:Strings.AutoExportChooseFolder}" Padding="10,5" Style="{StaticResource RecordButtonStyle}"
+                                        Click="OnAutoExportChooseFolderClick" />
+                                <TextBlock x:Name="AutoExportFolderText" Margin="12,0,0,0" VerticalAlignment="Center" FontSize="13" TextTrimming="CharacterEllipsis" MaxWidth="360"
+                                           Foreground="{DynamicResource AlduneTextBrush}" />
+                            </StackPanel>
+                            <CheckBox x:Name="AutoExportArchivedCheck" Margin="0,12,0,0"
+                                      Content="{x:Static res:Strings.AutoExportArchivedCheckbox}"
+                                      Foreground="{DynamicResource AlduneTextBrush}" Background="{DynamicResource AlduneGroundBrush}" FontSize="{DynamicResource AlduneTextBody}"
+                                      Style="{StaticResource SettingsSwitchStyle}"
+                                      Click="OnAutoExportArchivedToggled" />
+                            <TextBlock x:Name="AutoExportErrorText" Margin="0,8,56,0" TextWrapping="Wrap" Visibility="Collapsed" FontSize="{DynamicResource AlduneTextSmall}"
+                                       Foreground="{DynamicResource AlduneHintBrush}" />
+                        </StackPanel>
+                    </StackPanel>
                 </StackPanel>
                 <StackPanel x:Name="NotesPage" Visibility="Collapsed">
                     <TextBlock Text="{x:Static res:Strings.SettingsPageNotes}" Foreground="{DynamicResource AlduneTextStrongBrush}" FontSize="{DynamicResource AlduneTextTitle}" FontWeight="SemiBold" Margin="0,0,0,16" />
