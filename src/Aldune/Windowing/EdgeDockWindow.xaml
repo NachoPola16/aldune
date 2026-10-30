@@ -301,7 +301,7 @@
                             </Ellipse>
                             <Rectangle x:Name="GlossSquare" IsHitTestVisible="False" Visibility="Collapsed"
                                        Fill="{Binding Fill, ElementName=GlossRound}" />
-                            <local:BevelEdge OnlyWhenSquare="True" />
+                            <local:BevelEdge OnlyWhenSquare="True" EdgeThickness="1" />
                             <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
                         </Grid>
                         <ControlTemplate.Triggers>
@@ -316,6 +316,7 @@
                             <DataTrigger Binding="{Binding Square, Source={x:Static local:SkinState.Current}}" Value="True">
                                 <Setter TargetName="Bg" Property="Visibility" Value="Collapsed" />
                                 <Setter TargetName="SquareBg" Property="Visibility" Value="Visible" />
+                                <Setter TargetName="SquareBg" Property="Effect" Value="{x:Null}" />
                             </DataTrigger>
                             <!-- Con el relieve de Windows 95 la sombra de caída sobra: el borde oscuro de abajo y de la derecha ya es la
                                  sombra, y las dos juntas engordaban ese lado y hacían que el icono pareciera descentrado. -->

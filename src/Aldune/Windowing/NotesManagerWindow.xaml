@@ -44,7 +44,7 @@
                                                   VerticalAlignment="Center" />
                             </Border>
                             <!-- Relieve de la piel Bevel; con las demás no dibuja nada. -->
-                            <local:BevelEdge OnlyWhenSquare="True" />
+                            <local:BevelEdge OnlyWhenSquare="True" EdgeThickness="1" />
                         </Grid>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsMouseOver" Value="True">
