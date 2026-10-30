@@ -22,6 +22,10 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Icon
+import androidx.compose.foundation.layout.Spacer
+import app.aldune.domain.ReminderLabel
+import androidx.compose.runtime.produceState
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.semantics.Role
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -130,7 +134,7 @@ fun NoteOptionsDialog(
                     Text(stringResource(R.string.color_uniform_notice), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
                 TextButton(onClick = { customOpen = true }) { Text(stringResource(R.string.custom_color)) }
-                CollapsibleSection(stringResource(R.string.note_tags), startOpen = tags.isNotEmpty()) {
+                CollapsibleSection(stringResource(R.string.note_tags), startOpen = tags.isNotEmpty(), summary = tags.joinToString(", ")) {
                 FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     for (tag in tags) {
                         InputChip(
@@ -152,7 +156,11 @@ fun NoteOptionsDialog(
                     TextButton(onClick = ::addTag, enabled = draft.isNotBlank()) { Text(stringResource(R.string.add_tag)) }
                 }
                 }
-                CollapsibleSection(stringResource(R.string.reminder_title), startOpen = false) {
+                // El resumen se relee al plegar: dentro de la sección el recordatorio se pone y se quita, y plegada tiene que decir lo que hay ahora.
+                var reminderTick by remember { mutableIntStateOf(0) }
+                val due by produceState<java.time.Instant?>(null, reminderTick) { value = viewModel.reminderFor(initial.noteId) }
+                val reminderSummary = due?.let { reminderText(ReminderLabel.of(it, java.time.Instant.now(), java.time.ZoneId.systemDefault())) }
+                CollapsibleSection(stringResource(R.string.reminder_title), startOpen = false, summary = reminderSummary, onToggle = { reminderTick++ }) {
                     ReminderSection(initial.noteId, viewModel)
                 }
                 if (exportText != null) {
@@ -195,14 +203,22 @@ fun NoteOptionsDialog(
 
 /** Una sección que se pliega: el título es un botón de ancho completo (48 dp) con la flecha que dice si está abierta. */
 @Composable
-private fun CollapsibleSection(title: String, startOpen: Boolean, content: @Composable () -> Unit) {
+private fun CollapsibleSection(
+    title: String, startOpen: Boolean, summary: String? = null, onToggle: () -> Unit = {}, content: @Composable () -> Unit,
+) {
     var open by rememberSaveable(title) { mutableStateOf(startOpen) }
     Row(
-        Modifier.fillMaxWidth().heightIn(min = 48.dp).clickable(role = Role.Button) { open = !open }
+        Modifier.fillMaxWidth().heightIn(min = 48.dp).clickable(role = Role.Button) { open = !open; onToggle() }
             .semantics { stateDescription = if (open) "▲" else "▼" },
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Text(title, Modifier.weight(1f), style = MaterialTheme.typography.labelLarge)
+        Text(title, style = MaterialTheme.typography.labelLarge)
+        // Plegada, dice lo que contiene (el recordatorio puesto, las etiquetas): sin abrirla no había forma de saberlo.
+        if (!open && !summary.isNullOrEmpty()) {
+            Text(summary, Modifier.weight(1f).padding(horizontal = 12.dp), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1, overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis)
+        } else {
+            Spacer(Modifier.weight(1f))
+        }
         Icon(if (open) Icons.Default.KeyboardArrowUp else Icons.Default.KeyboardArrowDown, contentDescription = null)
     }
     if (open) content()

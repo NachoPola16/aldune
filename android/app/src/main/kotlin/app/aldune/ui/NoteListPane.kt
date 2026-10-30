@@ -28,6 +28,8 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.imePadding
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.focusable
@@ -128,6 +130,7 @@ fun NoteListPane(
     val snackbar = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
     val rest = remember { androidx.compose.ui.focus.FocusRequester() }
+    var searchTouched by remember { mutableStateOf(false) }
     val windowInfo = androidx.compose.ui.platform.LocalWindowInfo.current
     val keyboard = androidx.compose.ui.platform.LocalSoftwareKeyboardController.current
     androidx.compose.runtime.LaunchedEffect(Unit) {
@@ -182,18 +185,15 @@ fun NoteListPane(
     Scaffold(
         containerColor = MaterialTheme.colorScheme.background,
         snackbarHost = { SnackbarHost(snackbar) },
-        floatingActionButton = {
-            FloatingActionButton(onClick = onNew, shape = if (look.squareNewButton) RectangleShape else RoundedCornerShape(16.dp)) { Icon(Icons.Default.Add, contentDescription = stringResource(R.string.new_note)) }
-        },
-    ) { padding ->
-        Column(Modifier.padding(padding).fillMaxSize()) {
-            // Al arrancar, Android da el foco inicial al primer elemento enfocable de la ventana y, si es un campo de texto, abre el teclado
-            // (tapando el «+»). Este elemento invisible va primero para quedárselo; el buscador solo toma el foco si se toca.
-            Box(Modifier.size(0.dp).focusRequester(rest).focusable())
-            Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+        // Buscar, Ajustes y «+» abajo, a la altura del pulgar: arriba solo quedan las pestañas y el estado de la sync. Antes el buscador y el
+        // engranaje estaban arriba y el «+» abajo, así que para buscar había que soltar la mano de donde se sujeta el móvil.
+        bottomBar = {
+            Row(
+                Modifier.fillMaxWidth().navigationBarsPadding().imePadding().padding(horizontal = 16.dp, vertical = 8.dp),
+                verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp),
+            ) {
                 // El buscador no puede tomar el foco hasta que se toca: si lo toma al arrancar (primer elemento enfocable), Android abre el
                 // teclado, y ocultarlo después es una carrera que a veces se pierde. El toque lo habilita antes de que el campo pida el foco.
-                var searchTouched by remember { mutableStateOf(false) }
                 SearchField(
                     state.query, viewModel::setQuery,
                     Modifier.weight(1f)
@@ -205,13 +205,22 @@ fun NoteListPane(
                             }
                         },
                 )
+                IconButton(onClick = onOpenSettings) { Icon(Icons.Default.Settings, contentDescription = stringResource(R.string.settings)) }
+                FloatingActionButton(onClick = onNew, shape = if (look.squareNewButton) RectangleShape else RoundedCornerShape(16.dp)) { Icon(Icons.Default.Add, contentDescription = stringResource(R.string.new_note)) }
+            }
+        },
+    ) { padding ->
+        Column(Modifier.padding(padding).fillMaxSize()) {
+            // Al arrancar, Android da el foco inicial al primer elemento enfocable de la ventana y, si es un campo de texto, abre el teclado
+            // (tapando el «+»). Este elemento invisible va primero para quedárselo; el buscador solo toma el foco si se toca.
+            Box(Modifier.size(0.dp).focusRequester(rest).focusable())
+            Row(Modifier.fillMaxWidth().padding(top = 8.dp), verticalAlignment = Alignment.CenterVertically) {
+                Box(Modifier.weight(1f)) { StateTabs(state, viewModel::setFilter) }
                 if (hasProfile && status != null) {
                     val line = formatStatus(status, rememberNow())
                     IconButton(onClick = { showSyncDetail = true }, modifier = Modifier.semantics { liveRegion = LiveRegionMode.Polite }) { SyncIcon(line.icon, stringResource(R.string.sync_status_cd)) }
                 }
-                IconButton(onClick = onOpenSettings) { Icon(Icons.Default.Settings, contentDescription = stringResource(R.string.settings)) }
             }
-            StateTabs(state, viewModel::setFilter)
             if (state.allTags.isNotEmpty()) TagRow(state, viewModel::setTag)
             if (state.orphans.isNotEmpty()) OrphanConflictsBanner(state.orphans.size) { showOrphans = true }
             // Una versión nueva de Android en GitHub (una vez al día, desactivable en Ajustes → General): solo avisa y abre la página.
@@ -290,7 +299,7 @@ fun NoteListPane(
                 // El margen de abajo deja la última nota por encima del «+» al llegar al final de la lista.
                 LazyColumn(
                     Modifier.fillMaxSize(), state = listState, verticalArrangement = Arrangement.spacedBy(8.dp),
-                    contentPadding = androidx.compose.foundation.layout.PaddingValues(bottom = 88.dp),
+                    contentPadding = androidx.compose.foundation.layout.PaddingValues(bottom = 16.dp),
                 ) {
                     items(order, key = { it.id }) { item ->
                         val dragging = draggedId == item.id
@@ -431,7 +440,7 @@ fun NoteListPane(
 private fun SearchField(query: String, onChange: (String) -> Unit, modifier: Modifier = Modifier) {
     OutlinedTextField(
         value = query, onValueChange = onChange, singleLine = true,
-        modifier = modifier.padding(start = 16.dp, top = 8.dp, bottom = 8.dp),
+        modifier = modifier,
         placeholder = { Text(stringResource(R.string.search_hint)) },
         leadingIcon = { Icon(Icons.Default.Search, contentDescription = null) },
         trailingIcon = {
@@ -731,11 +740,12 @@ private fun NoBackupNotice(onSettings: () -> Unit, onDismiss: () -> Unit) {
         Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 4.dp),
         shape = MaterialTheme.shapes.medium, color = MaterialTheme.colorScheme.surfaceVariant,
     ) {
-        Column(Modifier.padding(horizontal = 12.dp, vertical = 8.dp)) {
+        Column(Modifier.padding(start = 12.dp, end = 4.dp, top = 8.dp, bottom = 0.dp)) {
             Text(stringResource(R.string.no_backup_notice), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
-                TextButton(onClick = onDismiss) { Text(stringResource(R.string.no_backup_dismiss)) }
-                TextButton(onClick = onSettings) { Text(stringResource(R.string.settings)) }
+                // Botones de texto con menos relleno: el alto táctil sigue siendo el mínimo, pero el aviso deja de ocupar media pantalla.
+                TextButton(onClick = onDismiss, contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 12.dp)) { Text(stringResource(R.string.no_backup_dismiss)) }
+                TextButton(onClick = onSettings, contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 12.dp)) { Text(stringResource(R.string.settings)) }
             }
         }
     }
