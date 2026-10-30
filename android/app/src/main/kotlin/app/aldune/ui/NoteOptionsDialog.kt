@@ -22,6 +22,15 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Icon
+import androidx.compose.ui.semantics.stateDescription
+import androidx.compose.ui.semantics.Role
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.material3.rememberModalBottomSheetState
+import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material.icons.filled.KeyboardArrowUp
+import androidx.compose.material.icons.filled.KeyboardArrowDown
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.material3.InputChip
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
@@ -56,7 +65,7 @@ import app.aldune.text.NoteThemes
  * el usuario elige con «Elegir otro color…»; el de la nota se añade si no es de esa paleta (un tema propio de Windows que llegó por sync, o
  * un color libre).
  */
-@OptIn(ExperimentalLayoutApi::class)
+@OptIn(ExperimentalLayoutApi::class, ExperimentalMaterial3Api::class)
 @Composable
 fun NoteOptionsDialog(
     initial: NotesViewModel.NoteOptions, viewModel: NotesViewModel, onClose: () -> Unit, onProtection: () -> Unit,
@@ -98,11 +107,14 @@ fun NoteOptionsDialog(
         }
     }
 
-    AlertDialog(
-        onDismissRequest = onClose,
-        title = { Text(stringResource(R.string.note_options), Modifier.semantics { heading() }) },
-        text = {
-            Column(Modifier.verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+    // Un panel inferior en vez de un diálogo de pantalla casi entera: se alcanza con el pulgar y se cierra deslizando. Con una docena de controles
+    // en una sola ventana había demasiado que mirar, así que Etiquetas y Recordatorio van plegados (abiertos si la nota ya tiene algo).
+    ModalBottomSheet(onDismissRequest = onClose, sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)) {
+            Column(
+                Modifier.verticalScroll(rememberScrollState()).padding(horizontal = 24.dp).padding(bottom = 24.dp),
+                verticalArrangement = Arrangement.spacedBy(8.dp),
+            ) {
+                Text(stringResource(R.string.note_options), style = MaterialTheme.typography.headlineSmall, modifier = Modifier.semantics { heading() })
                 Text(stringResource(R.string.note_color), style = MaterialTheme.typography.labelLarge)
                 FlowRow(horizontalArrangement = Arrangement.spacedBy(10.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
                     for (hex in palette) {
@@ -118,7 +130,7 @@ fun NoteOptionsDialog(
                     Text(stringResource(R.string.color_uniform_notice), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
                 TextButton(onClick = { customOpen = true }) { Text(stringResource(R.string.custom_color)) }
-                Text(stringResource(R.string.note_tags), Modifier.padding(top = 8.dp), style = MaterialTheme.typography.labelLarge)
+                CollapsibleSection(stringResource(R.string.note_tags), startOpen = tags.isNotEmpty()) {
                 FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     for (tag in tags) {
                         InputChip(
@@ -139,7 +151,10 @@ fun NoteOptionsDialog(
                     )
                     TextButton(onClick = ::addTag, enabled = draft.isNotBlank()) { Text(stringResource(R.string.add_tag)) }
                 }
-                ReminderSection(initial.noteId, viewModel)
+                }
+                CollapsibleSection(stringResource(R.string.reminder_title), startOpen = false) {
+                    ReminderSection(initial.noteId, viewModel)
+                }
                 if (exportText != null) {
                     TextButton(onClick = { exporter.launch(MarkdownExport.suggestedFileName(exportText, newNote)) }) {
                         Text(stringResource(R.string.export_markdown))
@@ -156,9 +171,7 @@ fun NoteOptionsDialog(
                     }
                 }
             }
-        },
-        confirmButton = { TextButton(onClick = onClose) { Text(stringResource(R.string.done)) } },
-    )
+    }
 
     if (nameOpen) {
         VisibleNameDialog(visibleName, onDismiss = { nameOpen = false }) { name ->
@@ -178,6 +191,21 @@ fun NoteOptionsDialog(
             },
         )
     }
+}
+
+/** Una sección que se pliega: el título es un botón de ancho completo (48 dp) con la flecha que dice si está abierta. */
+@Composable
+private fun CollapsibleSection(title: String, startOpen: Boolean, content: @Composable () -> Unit) {
+    var open by rememberSaveable(title) { mutableStateOf(startOpen) }
+    Row(
+        Modifier.fillMaxWidth().heightIn(min = 48.dp).clickable(role = Role.Button) { open = !open }
+            .semantics { stateDescription = if (open) "▲" else "▼" },
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Text(title, Modifier.weight(1f), style = MaterialTheme.typography.labelLarge)
+        Icon(if (open) Icons.Default.KeyboardArrowUp else Icons.Default.KeyboardArrowDown, contentDescription = null)
+    }
+    if (open) content()
 }
 
 @Composable

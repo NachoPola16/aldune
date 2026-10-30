@@ -31,6 +31,13 @@ import app.aldune.capture.NewNoteTileService
 import app.aldune.widget.DockWidgetReceiver
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
+import androidx.compose.ui.graphics.Color
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.ui.draw.clip
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -132,13 +139,13 @@ fun SettingsScreen(viewModel: NotesViewModel, onClose: () -> Unit) {
                 // rememberSaveable: girar la pantalla no debe cerrar la pregunta sin avisar.
                 var suggestedTheme by rememberSaveable { mutableStateOf<String?>(null) }
                 for ((mode, label) in appearances) {
-                    Choice(stringResource(label), settings.appearance == mode) {
+                    Choice(stringResource(label), settings.appearance == mode, preview = { AspectPreview(mode) }, onClick = {
                         // Volver a pulsar el aspecto activo no repite la pregunta.
                         val changed = settings.appearance != mode
                         // Elegir un aspecto vuelve a sus esquinas, su señal y su forma de llevar el color (como Windows): lo ajustado a mano no se arrastra al siguiente.
                         viewModel.updateSettings { it.copy(appearance = mode, squareCorners = null, showSyncSignal = null, fillNoteColor = null) }
                         if (changed) AspectCatalog.forMode(mode)?.suggestedThemeId?.takeIf { it != settings.noteThemeId }?.let { suggestedTheme = it }
-                    }
+                    })
                 }
                 if (show(SettingsSection.APPEARANCE_ADVANCED)) {
                     AspectSection(settings, onChange = viewModel::updateSettings)
@@ -474,13 +481,37 @@ internal fun Section(title: Int) {
 }
 
 @Composable
-internal fun Choice(label: String, selected: Boolean, onClick: () -> Unit) {
+internal fun Choice(label: String, selected: Boolean, preview: (@Composable () -> Unit)? = null, onClick: () -> Unit) {
     Row(
         Modifier.fillMaxWidth().selectable(selected = selected, role = Role.RadioButton, onClick = onClick).padding(horizontal = 16.dp, vertical = 2.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         RadioButton(selected = selected, onClick = null)
-        Text(label, Modifier.padding(start = 16.dp).padding(vertical = 10.dp))
+        Text(label, Modifier.padding(start = 16.dp).padding(vertical = 10.dp).weight(1f))
+        preview?.invoke()
+    }
+}
+
+/**
+ * Una miniatura del aspecto: el fondo, la superficie y el acento reales de su paleta. Con solo el nombre («Telecom Dark (oscilloscope)»,
+ * «Phosphor (old monitor)») no se sabe qué se va a elegir. «Sistema» enseña las dos mitades, la clara y la oscura.
+ */
+@Composable
+internal fun AspectPreview(mode: Int) {
+    fun colorsOf(light: Boolean): Triple<Color, Color, Color> {
+        val palette = AppPalette.forMode(mode, systemUsesLight = light, aspectColors = null)
+        return Triple(paletteColor(palette.getValue("Ground")), paletteColor(palette.getValue("Surface")), paletteColor(palette.getValue("Accent")))
+    }
+    val (ground, surface, accent) = colorsOf(light = mode != AppPalette.DARK)
+    val system = mode == AppPalette.SYSTEM
+    Box(Modifier.size(width = 56.dp, height = 32.dp).clip(RoundedCornerShape(6.dp)).border(1.dp, MaterialTheme.colorScheme.outline, RoundedCornerShape(6.dp))) {
+        Box(Modifier.fillMaxSize().background(ground))
+        if (system) {
+            val (darkGround, _, _) = colorsOf(light = false)
+            Box(Modifier.size(28.dp, 32.dp).align(Alignment.CenterEnd).background(darkGround))
+        }
+        Box(Modifier.padding(start = 6.dp, top = 6.dp).size(28.dp, 8.dp).clip(RoundedCornerShape(2.dp)).background(surface))
+        Box(Modifier.padding(start = 6.dp, top = 18.dp).size(14.dp, 8.dp).clip(RoundedCornerShape(2.dp)).background(accent))
     }
 }
 

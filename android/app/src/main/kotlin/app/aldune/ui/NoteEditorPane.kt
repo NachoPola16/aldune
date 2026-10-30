@@ -18,6 +18,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.safeDrawingPadding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.BasicTextField
@@ -28,11 +29,18 @@ import androidx.compose.material3.AssistChip
 import androidx.compose.material3.AssistChipDefaults
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.ui.graphics.luminance
+import androidx.compose.ui.platform.LocalView
+import androidx.core.view.WindowCompat
+import app.aldune.text.AppPalette
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import app.aldune.text.NoteChannels
 import app.aldune.text.NoteDisplayColor
 import androidx.compose.foundation.background
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
@@ -89,6 +97,7 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalViewConfiguration
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.clearAndSetSemantics
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.SpanStyle
@@ -158,6 +167,7 @@ fun NoteEditorPane(key: String, viewModel: NotesViewModel, onBack: () -> Unit, s
     var passwordMode by remember(key) { mutableStateOf<PasswordMode?>(null) }
     val context = LocalContext.current
     var options by remember(key) { mutableStateOf<NotesViewModel.NoteOptions?>(null) }
+    var topMenu by remember(key) { mutableStateOf(false) }
     val scope = rememberCoroutineScope()
     var layout by remember(key) { mutableStateOf<(() -> TextLayoutResult?)?>(null) }
     // Toque pendiente sobre el texto. No se aplica en el mismo evento: el campo, al recibir ese mismo toque, emite el texto
@@ -421,6 +431,22 @@ fun NoteEditorPane(key: String, viewModel: NotesViewModel, onBack: () -> Unit, s
     val muted = if (faceHex == null) MaterialTheme.colorScheme.onSurfaceVariant else ink.copy(alpha = 0.75f)
     val gridInk = ink.copy(alpha = 0.15f)
 
+    // Los iconos de la barra de estado y de navegación siguen la claridad de la hoja que se ve, no la del aspecto: unos iconos blancos sobre
+    // una nota amarilla (o negros sobre una azul oscura) no se leen. Al salir del editor vuelven a los del aspecto.
+    val view = LocalView.current
+    val appLight = AppPalette.isLight(settings.appearance, !isSystemInDarkTheme())
+    val faceLight = faceHex?.let { noteFace(it).luminance() > 0.5f } ?: appLight
+    DisposableEffect(faceLight, appLight) {
+        val window = context.findActivity()?.window
+        val controller = window?.let { WindowCompat.getInsetsController(it, view) }
+        controller?.isAppearanceLightStatusBars = faceLight
+        controller?.isAppearanceLightNavigationBars = faceLight
+        onDispose {
+            controller?.isAppearanceLightStatusBars = appLight
+            controller?.isAppearanceLightNavigationBars = appLight
+        }
+    }
+
     CompositionLocalProvider(LocalContentColor provides ink) {
     Column(
         Modifier.fillMaxSize()
@@ -448,8 +474,27 @@ fun NoteEditorPane(key: String, viewModel: NotesViewModel, onBack: () -> Unit, s
                     style = MaterialTheme.typography.labelLarge, color = muted,
                 )
             }
-            IconButton(onClick = { scope.launch { options = viewModel.noteOptions(key) } }, enabled = loaded) {
-                Icon(Icons.Default.MoreVert, contentDescription = stringResource(R.string.note_options))
+            // El único menú «más» del editor: antes había dos (este y un «⋯» abajo) y no se sabía cuál tenía qué.
+            Box {
+                IconButton(onClick = { topMenu = true }, enabled = loaded) {
+                    Icon(Icons.Default.MoreVert, contentDescription = stringResource(R.string.edit_more))
+                }
+                DropdownMenu(expanded = topMenu, onDismissRequest = { topMenu = false }) {
+                    DropdownMenuItem(
+                        text = { Text(stringResource(R.string.note_options)) },
+                        onClick = { topMenu = false; scope.launch { options = viewModel.noteOptions(key) } },
+                    )
+                    if (!protectedNote || unlocked) {
+                        DropdownMenuItem(text = { Text(stringResource(R.string.edit_move_up)) }, onClick = { topMenu = false; move(LineDirection.Up) })
+                        DropdownMenuItem(text = { Text(stringResource(R.string.edit_move_down)) }, onClick = { topMenu = false; move(LineDirection.Down) })
+                        DropdownMenuItem(text = { Text(stringResource(R.string.edit_outdent)) }, onClick = { topMenu = false; outdent() })
+                        DropdownMenuItem(
+                            text = { Text(stringResource(R.string.edit_uncheck_all)) },
+                            enabled = TaskLists.hasChecked(text()),
+                            onClick = { topMenu = false; commit(TaskLists.uncheckAll(text()).text, state.selection) },
+                        )
+                    }
+                }
             }
         }
         options?.let { current ->
@@ -587,7 +632,7 @@ fun NoteEditorPane(key: String, viewModel: NotesViewModel, onBack: () -> Unit, s
                         LineMovement.moveTo(raw, from, to)?.let { commit(it) }
                     },
                 )
-                .padding(start = 16.dp, end = if (hasTasks) TASK_DRAG_ZONE else 16.dp, top = TASK_DRAG_PAD_TOP, bottom = 8.dp)
+                .padding(start = TASK_DRAG_PAD_START, end = if (hasTasks) TASK_DRAG_ZONE else 16.dp, top = TASK_DRAG_PAD_TOP, bottom = 8.dp)
                 .focusProperties { this.canFocus = canFocus }
                 .focusRequester(focus)
                 // Tocar una casilla la marca. Se mira en la pasada Initial. Si el toque cae sobre una casilla se consume el «down» para que el
@@ -629,7 +674,8 @@ fun NoteEditorPane(key: String, viewModel: NotesViewModel, onBack: () -> Unit, s
             textStyle = MaterialTheme.typography.bodyLarge.copy(color = ink),
             cursorBrush = SolidColor(MaterialTheme.colorScheme.primary),
         )
-        if (hasTasks) TaskDragOverlay(drag, layout = { layout?.invoke() }, scroll = fieldScroll, shown = ::shownText, modifier = Modifier.matchParentSize())
+        if (hasTasks) TaskDragOverlay(drag, layout = { layout?.invoke() }, scroll = fieldScroll, shown = ::shownText, modifier = Modifier.matchParentSize(), ink = ink,
+            lift = faceHex?.let { noteFace(it) } ?: MaterialTheme.colorScheme.background)
         }
         if (hiddenCandidates.isNotEmpty()) {
             val count = HiddenTasks.hiddenCount(text(), completed, now, hideDelayMs)
@@ -657,20 +703,12 @@ fun NoteEditorPane(key: String, viewModel: NotesViewModel, onBack: () -> Unit, s
         }
         HorizontalDivider()
         EditBar(
-            text = state.text.toString(),
             onCheckbox = { commit(TaskLines.toggleTaskLineAt(text(), caret())) },
             onBullet = { commit(BulletLines.toggleBulletLineAt(text(), caret())) },
             onOutdent = ::outdent,
             onIndent = ::indent,
-            onMoveUp = { move(LineDirection.Up) },
-            onMoveDown = { move(LineDirection.Down) },
-            onUncheckAll = { commit(TaskLists.uncheckAll(text()).text, state.selection) },
             canUndo = state.undoState.canUndo, canRedo = state.undoState.canRedo,
             onUndo = { state.undoState.undo() }, onRedo = { state.undoState.redo() },
-            onRemoveChecked = {
-                val edit = TaskLists.removeChecked(text())
-                commit(edit.text, TextRange(edit.mapIndex(state.selection.start), edit.mapIndex(state.selection.end)))
-            },
         )
     }
     }
@@ -710,63 +748,46 @@ private fun toggleCheckboxAtTap(text: String, layout: TextLayoutResult?, positio
 }
 
 /**
- * Barra sobre el teclado: deshacer, rehacer, casilla, viñeta, sangría y el menú «⋯» (subir y bajar la línea, y las acciones de la lista de
- * tareas). Los siete botones se reparten el ancho, sin desplazar: caben en 360 dp. En pantallas anchas la barra no pasa de [BAR_MAX_WIDTH].
- * Subir y bajar viven en el menú porque con el dedo se arrastra la tarea, pero TalkBack no puede arrastrar.
+ * Barra sobre el teclado: casilla, viñeta, sangría, deshacer y rehacer, con iconos. Antes eran siete botones de texto (↶ ↷ ☐ → ⇤ ⇥ ⋯) y
+ * cuatro flechas seguidas no se distinguían. Reducir la sangría va en la pulsación larga de «Aumentar sangría» (y en el menú «⋮» de arriba, para
+ * quien no pueda mantener pulsado); subir, bajar y desmarcar todo viven también en ese menú, porque con el dedo se arrastra la tarea pero TalkBack
+ * no puede arrastrar. En pantallas anchas la barra no pasa de [BAR_MAX_WIDTH].
  */
 @Composable
 private fun EditBar(
-    text: String,
     onCheckbox: () -> Unit,
     onBullet: () -> Unit,
     onOutdent: () -> Unit,
     onIndent: () -> Unit,
-    onMoveUp: () -> Unit,
-    onMoveDown: () -> Unit,
-    onUncheckAll: () -> Unit,
-    onRemoveChecked: () -> Unit,
     canUndo: Boolean,
     canRedo: Boolean,
     onUndo: () -> Unit,
     onRedo: () -> Unit,
 ) {
-    var menuOpen by remember { mutableStateOf(false) }
     Row(Modifier.widthIn(max = BAR_MAX_WIDTH).fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly) {
-        BarButton("↶", stringResource(R.string.edit_undo), onUndo, canUndo)
-        BarButton("↷", stringResource(R.string.edit_redo), onRedo, canRedo)
-        BarButton("☐", stringResource(R.string.edit_checkbox), onCheckbox)
-        BarButton("→", stringResource(R.string.edit_bullet), onBullet)
-        BarButton("⇤", stringResource(R.string.edit_outdent), onOutdent)
-        BarButton("⇥", stringResource(R.string.edit_indent), onIndent)
-        Box {
-            BarButton("⋯", stringResource(R.string.edit_more), { menuOpen = true })
-            DropdownMenu(expanded = menuOpen, onDismissRequest = { menuOpen = false }) {
-                DropdownMenuItem(text = { Text("↑  " + stringResource(R.string.edit_move_up)) }, onClick = { menuOpen = false; onMoveUp() })
-                DropdownMenuItem(text = { Text("↓  " + stringResource(R.string.edit_move_down)) }, onClick = { menuOpen = false; onMoveDown() })
-                DropdownMenuItem(
-                    text = { Text(stringResource(R.string.edit_uncheck_all)) },
-                    enabled = TaskLists.hasChecked(text),
-                    onClick = { menuOpen = false; onUncheckAll() },
-                )
-                DropdownMenuItem(
-                    text = { Text(stringResource(R.string.edit_remove_checked)) },
-                    enabled = TaskLists.hasChecked(text),
-                    onClick = { menuOpen = false; onRemoveChecked() },
-                )
-            }
-        }
+        BarButton(EditorIcons.Checkbox, stringResource(R.string.edit_checkbox), onCheckbox)
+        BarButton(EditorIcons.Bullets, stringResource(R.string.edit_bullet), onBullet)
+        BarButton(EditorIcons.Indent, stringResource(R.string.edit_indent), onIndent, onLongClick = onOutdent, longClickLabel = stringResource(R.string.edit_outdent))
+        BarButton(EditorIcons.Undo, stringResource(R.string.edit_undo), onUndo, canUndo)
+        BarButton(EditorIcons.Redo, stringResource(R.string.edit_redo), onRedo, canRedo)
     }
 }
 
 private val BAR_MAX_WIDTH = 480.dp
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
-private fun BarButton(label: String, description: String, onClick: () -> Unit, enabled: Boolean = true) {
-    IconButton(onClick = onClick, enabled = enabled, modifier = Modifier.semantics { contentDescription = description }) {
-        // El símbolo (↶, ⇥…) es solo dibujo: el nombre accesible es [description], y sin esto TalkBack lo leería también ("deshacer, flecha…").
-        Text(
-            label, Modifier.clearAndSetSemantics { }, style = MaterialTheme.typography.titleLarge,
-            color = LocalContentColor.current.copy(alpha = if (enabled) 1f else 0.38f),
-        )
+private fun BarButton(
+    icon: androidx.compose.ui.graphics.vector.ImageVector, description: String, onClick: () -> Unit, enabled: Boolean = true,
+    onLongClick: (() -> Unit)? = null, longClickLabel: String? = null,
+) {
+    // 64 × 48 dp: el alto mínimo táctil, y más ancho porque son cinco y no siete. Inactivo se atenúa a la mitad (con 0,38 casi desaparecía).
+    Box(
+        Modifier.size(width = 64.dp, height = 48.dp)
+            .combinedClickable(enabled = enabled, role = Role.Button, onClickLabel = null, onLongClickLabel = longClickLabel, onLongClick = onLongClick, onClick = onClick)
+            .semantics { contentDescription = description },
+        contentAlignment = Alignment.Center,
+    ) {
+        Icon(icon, contentDescription = null, tint = LocalContentColor.current.copy(alpha = if (enabled) 1f else 0.5f))
     }
 }

@@ -4,10 +4,10 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -36,6 +36,7 @@ import kotlinx.coroutines.launch
  * Proteger y quitar la protección reutilizan [PasswordDialog] sin pasar por el editor. Si la nota es la que está abierta al lado (tableta)
  * no se ofrecen: el editor tiene su propio estado de protección y se quedaría con el viejo; ahí se hacen desde su menú de opciones.
  */
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun NoteActionsDialog(
     item: NoteListItem, openInEditor: Boolean, viewModel: NotesViewModel, onOpen: () -> Unit, onClose: () -> Unit,
@@ -51,11 +52,13 @@ fun NoteActionsDialog(
     var visibleNameLoaded by remember(item.id) { mutableStateOf(false) }
 
     if (options == null && !naming && password == null) {
-        AlertDialog(
-            onDismissRequest = onClose,
-            title = { Text(item.title, Modifier.semantics { heading() }, maxLines = 1, overflow = TextOverflow.Ellipsis) },
-            text = {
-                Column {
+        // Panel inferior y no un diálogo en medio: cinco acciones de lista que se alcanzan con el pulgar y se cierran deslizando.
+        ModalBottomSheet(onDismissRequest = onClose) {
+                Column(Modifier.padding(horizontal = 24.dp).padding(bottom = 24.dp)) {
+                    Text(
+                        item.title, Modifier.padding(bottom = 4.dp).semantics { heading() }, style = MaterialTheme.typography.titleLarge,
+                        maxLines = 1, overflow = TextOverflow.Ellipsis,
+                    )
                     Action(stringResource(R.string.note_actions_open)) { onClose(); onOpen() }
                     // Subir/Bajar: lo mismo que arrastrar, sin arrastrar. Solo con la lista completa (con un filtro no se ofrecen).
                     if (ReorderPlan.Direction.UP in moves) Action(stringResource(R.string.note_move_up)) { onClose(); onMove(-1) }
@@ -78,9 +81,7 @@ fun NoteActionsDialog(
                         }
                     }
                 }
-            },
-            confirmButton = { TextButton(onClick = onClose) { Text(stringResource(R.string.done)) } },
-        )
+        }
     }
 
     options?.let { current ->
