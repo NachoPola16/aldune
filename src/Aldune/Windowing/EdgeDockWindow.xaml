@@ -136,8 +136,14 @@
                             <!-- Franja de la piel Stripe (bash) o del canal (Tinted), en el lado interior
                                  de la pestaña. Espejada por código con el dock a la izquierda, arriba o
                                  abajo (ApplyLeftEdgeTabShape / ApplyTopBottomTabShape). -->
-                            <Border x:Name="StripeBar" Width="3" HorizontalAlignment="Left"
-                                    Background="{Binding Converter={StaticResource NoteFaceConverter}, ConverterParameter=Accent}"
+                            <!-- La franja es el borde (3 px, solo del lado interior) de una capa con el MISMO
+                                 CornerRadius que la tarjeta (atado por binding, así también va espejado con el dock
+                                 a la izquierda): con esquinas redondeadas la franja se curva con ellas en vez de
+                                 asomar recta por encima. Sin redondeo (aspecto de esquinas rectas) es una barra normal.
+                                 El lado se fija por código (ApplyLeftEdgeTabShape / ApplyTopBottomTabShape). -->
+                            <Border x:Name="StripeBar" BorderThickness="3,0,0,0"
+                                    BorderBrush="{Binding Converter={StaticResource NoteFaceConverter}, ConverterParameter=Accent}"
+                                    CornerRadius="{Binding ElementName=CardBorder, Path=CornerRadius}"
                                     Visibility="Collapsed" />
                             <!-- Forma de onda del canal, abajo: arriba está el aviso de recordatorio, y al
                                  apilarse las pestañas solo queda a la vista la franja de arriba, que es la

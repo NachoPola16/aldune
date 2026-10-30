@@ -429,7 +429,7 @@ public partial class EdgeDockWindow : Window
         // La franja de las pieles Stripe/Tinted va en el lado interior (aquí, el derecho) y la onda
         // del canal en el opuesto, lejos del aviso de recordatorio.
         if (button.Template.FindName("StripeBar", button) is Border stripe)
-            stripe.HorizontalAlignment = HorizontalAlignment.Right;
+            stripe.BorderThickness = new Thickness(0, 0, 3, 0);
 
         if (button.Template.FindName("Waveform", button) is System.Windows.Shapes.Path wave)
         {
@@ -2278,10 +2278,7 @@ public partial class EdgeDockWindow : Window
         // Franja horizontal en el lado interior: abajo con el dock arriba, arriba con el dock abajo.
         if (button.Template.FindName("StripeBar", button) is Border stripe)
         {
-            stripe.Width = double.NaN;
-            stripe.Height = 3;
-            stripe.HorizontalAlignment = HorizontalAlignment.Stretch;
-            stripe.VerticalAlignment = _edge == EdgePosition.Top ? VerticalAlignment.Bottom : VerticalAlignment.Top;
+            stripe.BorderThickness = _edge == EdgePosition.Top ? new Thickness(0, 0, 0, 3) : new Thickness(0, 3, 0, 0);
         }
 
         if (button.Template.FindName("CardShadowLayer", button) is Border shadowLayer)
