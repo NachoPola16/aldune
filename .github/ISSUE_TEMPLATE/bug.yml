@@ -1,40 +1,41 @@
-name: Un fallo
-description: Algo no funciona como esperabas
+name: Bug
+description: Something does not work as you expected
 labels: ["bug"]
 body:
   - type: markdown
     attributes:
       value: |
-        No pegues códigos de perfil, tokens ni el contenido de tus notas. Si es una vulnerabilidad, **no** uses un issue: mira SECURITY.md.
+        Do not paste profile codes, tokens or the content of your notes. If it is a vulnerability, **do not** use an issue: see SECURITY.md.
+        English or Spanish are both fine / vale en español.
   - type: dropdown
     id: platform
     attributes:
-      label: Dónde ocurre
-      options: [Windows, Android, Servidor de sincronización]
+      label: Where it happens
+      options: [Windows, Android, Sync server]
     validations:
       required: true
   - type: input
     id: version
     attributes:
-      label: Versión
-      description: Está en Ajustes (por ejemplo, 2.1.3 en Windows o 1.0.1 en Android).
+      label: Version
+      description: It is in Settings (for example, 2.1.3 on Windows or 1.0.1 on Android).
     validations:
       required: true
   - type: input
     id: system
     attributes:
-      label: Sistema
-      description: Versión de Windows, o modelo y versión de Android.
+      label: System
+      description: Windows version, or Android model and version.
   - type: textarea
     id: steps
     attributes:
-      label: Qué hiciste
-      description: Los pasos, en orden.
+      label: What you did
+      description: The steps, in order.
     validations:
       required: true
   - type: textarea
     id: expected
     attributes:
-      label: Qué esperabas y qué pasó
+      label: What you expected and what happened
     validations:
       required: true

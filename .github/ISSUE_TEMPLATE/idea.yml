@@ -1,18 +1,18 @@
-name: Una idea
-description: Algo que te gustaría que hiciera
+name: Idea
+description: Something you would like it to do
 labels: ["enhancement"]
 body:
   - type: textarea
     id: need
     attributes:
-      label: Qué quieres conseguir
-      description: Cuéntalo como problema («cuando hago X me cuesta Y»), no solo como solución.
+      label: What you want to achieve
+      description: Tell it as a problem (“when I do X it is hard to Y”), not only as a solution.
     validations:
       required: true
   - type: textarea
     id: idea
     attributes:
-      label: Cómo lo imaginas
+      label: How you imagine it
   - type: markdown
     attributes:
-      value: Antes de pedir algo, mira `docs/ROADMAP.md`: recoge lo que ya se descartó y por qué.
+      value: Before asking for something, look at `docs/ROADMAP.md` (in Spanish): it records what was already discarded and why.

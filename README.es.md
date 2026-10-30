@@ -6,7 +6,7 @@
 viven como un mazo de pestañas en un borde de la pantalla, se despliegan en abanico al pasar el
 ratón y se abren como ventanas propias. Sin cuenta, sin nube obligatoria, y con el contenido cifrado.
 
-[English](README.en.md)
+[English](README.md)
 
 ![Aldune: dos notas abiertas y el dock de pestañas en el borde derecho](docs/images/aldune.png)
 

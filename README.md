@@ -6,7 +6,7 @@
 deck of tabs on one edge of the screen, fan out when you hover over them and open as windows of
 their own. No account, no required cloud, and the content is encrypted.
 
-[Español](README.md)
+[Español](README.es.md)
 
 ![Aldune: two open notes and the tab dock on the right edge](docs/images/aldune.png)
 
@@ -73,8 +73,10 @@ If Windows shows "Windows protected your PC", it's because the executable isn't 
 </p>
 
 There is an Android client (native Kotlin, Android 8 or later) in [`android/`](android/): notes with task lists, tags,
-password-protected notes, reminders, a widget and quick capture, and the same end-to-end encrypted sync as on Windows.
+password-protected notes, reminders, a widget and quick capture, the same looks as on Windows (the retro ones too: XP, Telecom, Bash and Phosphor) and the same end-to-end encrypted sync as on Windows.
 To install it, download the signed APK from [Releases](https://github.com/NachoPola16/aldune/releases) (the `android-v…` ones; each release's notes carry the APK's SHA-256 and the signing certificate's fingerprint) and open it on your phone.
+
+It has a **simplified mode** (Settings → “Use simplified mode”) that leaves only sync, look and language in view, and a **quick list**: pick a note as the list and add items from the capture notification without opening the app.
 
 **Something like the dock on Android.** A phone has no screen edge to stick tabs to as on Windows, but there are two ways to keep
 your notes within reach: the **widgets** (the deck at 4×2, 2×2 or 4×4, and a 1×1 new-note button) and, since **Android 17**, the
@@ -87,6 +89,8 @@ To sync your phone with your PC and your server:
 1. In Aldune for Windows: Settings → Sync → **Share profile**, and copy the code (`aldune-profile-v2:…`).
 2. Send it to your phone (a message to yourself, for example).
 3. In the Android app: Settings → Sync, paste the code and tap **Continue**.
+   **With a QR, without passing the code around:** on Windows tap **Show QR** (next to “Share profile”; it closes by itself after 2 minutes and does not appear
+   in screenshots) and on Android tap **Scan QR**. The camera only opens when you press the button and nothing it sees is saved.
 4. Type your server's **token**. It is deliberately not inside the code.
 
 The code contains the encryption key of your notes: treat it like a password and do not share it in public places.
@@ -127,6 +131,15 @@ dotnet test Aldune.slnx -c Release
 ```
 
 How a version is released and signed: [docs/RELEASING.md](docs/RELEASING.md).
+
+## Documentation
+
+(The technical documents are in Spanish for now.)
+
+- [`docs/SYNC.md`](docs/SYNC.md): sync, your own server and the security model.
+- [`docs/STATUS.md`](docs/STATUS.md): technical state and implementation decisions.
+- [`docs/ROADMAP.md`](docs/ROADMAP.md): what is planned and what was discarded, with the reasons.
+- [`docs/specs/`](docs/specs/): design specifications.
 
 ## Try it and give feedback
 
