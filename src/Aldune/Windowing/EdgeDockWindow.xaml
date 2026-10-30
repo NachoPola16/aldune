@@ -301,7 +301,7 @@
                             </Ellipse>
                             <Rectangle x:Name="GlossSquare" IsHitTestVisible="False" Visibility="Collapsed"
                                        Fill="{Binding Fill, ElementName=GlossRound}" />
-                            <local:BevelEdge OnlyWhenSquare="True" EdgeThickness="1" />
+                            <local:BevelEdge OnlyWhenSquare="True" EdgeThickness="2" ShadowOutside="True" />
                             <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
                         </Grid>
                         <ControlTemplate.Triggers>

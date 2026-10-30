@@ -22,6 +22,15 @@ public sealed class BevelEdge : FrameworkElement
     public static readonly DependencyProperty EdgeThicknessProperty = DependencyProperty.Register(
         nameof(EdgeThickness), typeof(double), typeof(BevelEdge), new FrameworkPropertyMetadata(2.0, FrameworkPropertyMetadataOptions.AffectsRender));
 
+    /// <summary>
+    /// Sombra aparte: la cara del botón lleva un contorno uniforme de 1 px (igual por los cuatro lados, así el icono queda centrado en ella) y el oscuro
+    /// del relieve se dibuja FUERA, abajo y a la derecha, como una sombra dura. Para botones de icono; los de texto conservan el relieve clásico.
+    /// </summary>
+    public static readonly DependencyProperty ShadowOutsideProperty = DependencyProperty.Register(
+        nameof(ShadowOutside), typeof(bool), typeof(BevelEdge), new FrameworkPropertyMetadata(false, FrameworkPropertyMetadataOptions.AffectsRender));
+
+    public bool ShadowOutside { get => (bool)GetValue(ShadowOutsideProperty); set => SetValue(ShadowOutsideProperty, value); }
+
     public bool Sunken { get => (bool)GetValue(SunkenProperty); set => SetValue(SunkenProperty, value); }
     public bool OnlyWhenSquare { get => (bool)GetValue(OnlyWhenSquareProperty); set => SetValue(OnlyWhenSquareProperty, value); }
     public double EdgeThickness { get => (double)GetValue(EdgeThicknessProperty); set => SetValue(EdgeThicknessProperty, value); }
@@ -66,6 +75,17 @@ public sealed class BevelEdge : FrameworkElement
 
         double t = EdgeThickness, w = ActualWidth, h = ActualHeight;
         if (w < 2 * t || h < 2 * t) return;
+        if (ShadowOutside)
+        {
+            // Contorno de 1 px por dentro, uniforme; la sombra, por fuera y sin tocar la cara.
+            dc.DrawRectangle(light, null, new Rect(0, 0, w, 1));
+            dc.DrawRectangle(light, null, new Rect(0, h - 1, w, 1));
+            dc.DrawRectangle(light, null, new Rect(0, 1, 1, h - 2));
+            dc.DrawRectangle(light, null, new Rect(w - 1, 1, 1, h - 2));
+            dc.DrawRectangle(dark, null, new Rect(t, h, w, t));
+            dc.DrawRectangle(dark, null, new Rect(w, t, t, h - t));
+            return;
+        }
         dc.DrawRectangle(light, null, new Rect(0, 0, w, t));
         dc.DrawRectangle(light, null, new Rect(0, 0, t, h));
         dc.DrawRectangle(dark, null, new Rect(0, h - t, w, t));
