@@ -1,568 +1,567 @@
-# Aldune — Cliente móvil (Android e iOS): estudio y plan
+# Aldune — Mobile client (Android and iOS): study and plan
 
-> **Estado: plan decidido el 2026-09-28 —Android primero, en tableta, ver §0.1—. Android ya está publicado; este estudio
-> es el origen de las decisiones y de lo descartado.**
-> **Revisión del 2026-10-17 (§13): .NET MAUI no sirve si se quiere F-Droid; la recomendación pasa a ser Android nativo
-> (Kotlin + Compose) con el formato de sync fijado por vectores generados desde `Aldune.Core`. Decidido por el usuario el
-> mismo día. Lo que dice el resto del documento sobre MAUI (§3, §4, §6, §7) es anterior a esa revisión; el producto y las fases
-> vigentes están en [`specs/2026-10-17-aldune-android-design.md`](specs/2026-10-17-aldune-android-design.md).**
-> Fecha: 2026-09-28. Este documento existe para que el port se pueda retomar dentro de meses,
-> sin repetir la investigación que ya está hecha. Si algo de aquí se
-> implementa, manda lo implementado: hay que actualizar `STATUS.md` (lo hecho y por qué) y
-> `ROADMAP.md` (lo decidido y lo descartado) y, si hay diseño nuevo de producto,
+> **Status: plan decided on 2026-09-28 —Android first, on a tablet, see §0.1—. Android is already published; this study
+> is the origin of the decisions and of what was ruled out.**
+> **Revision of 2026-10-17 (§13): .NET MAUI is not suitable if F-Droid is wanted; the recommendation becomes native Android
+> (Kotlin + Compose) with the sync format pinned by vectors generated from `Aldune.Core`. Decided by the user the
+> same day. What the rest of the document says about MAUI (§3, §4, §6, §7) predates that revision; the current product and phases
+> are in [`specs/2026-10-17-aldune-android-design.md`](specs/2026-10-17-aldune-android-design.md).**
+> Date: 2026-09-28. This document exists so the port can be picked up again months from now,
+> without repeating the research that has already been done. If anything here is
+> implemented, what was implemented takes precedence: `STATUS.md` (what is done and why) and
+> `ROADMAP.md` (what was decided and ruled out) must be updated and, if there is a new product design,
 > `docs/specs/`.
 
-## 0. El encargo y la respuesta corta
+## 0. The brief and the short answer
 
-Pedido por el usuario el 2026-09-28, en sus palabras: hacer **el mejor port posible a Android e iOS**;
-no está convencido de que deba funcionar igual ("para móvil debe ser más bien una app que me permita
-**gestionar las notas que tengo en el ordenador**, por si desde el móvil se me ocurre algo que quiera
-apuntar"); pide ver **cómo hacer el port, qué funcionalidades, algo diferente**.
+Requested by the user on 2026-09-28, in their words: build **the best possible port to Android and iOS**;
+they are not convinced it should work the same way ("on mobile it should rather be an app that lets me
+**manage the notes I have on the computer**, in case something occurs to me from the phone that I want to
+jot down"); they ask to see **how to do the port, which features, something different**.
 
-Respuesta corta: **no debe ser igual, y no por gusto, sino porque la metáfora del escritorio no existe
-en un móvil.** Aldune en Windows es un objeto de escritorio: un mazo pegado al canto de la pantalla que
-se abre en abanico al pasar el ratón, notas como ventanas, varias pantallas, atajo global. En el móvil
-no hay ratón, ni canto, ni ventanas, ni varios monitores: el "escritorio" es la pantalla de inicio y lo
-"siempre visible" son las notificaciones y los widgets. Copiar el abanico sería plantar un gesto de
-ratón donde no hay ratón.
+Short answer: **it should not be the same, and not out of taste, but because the desktop metaphor does not
+exist on a phone.** Aldune on Windows is a desktop object: a deck stuck to the edge of the screen that
+fans out when the mouse passes over it, notes as windows, several screens, a global shortcut. On a phone
+there is no mouse, no edge, no windows, no several monitors: the "desktop" is the home screen and what is
+"always visible" is notifications and widgets. Copying the fan would be planting a mouse gesture where
+there is no mouse.
 
-El cliente móvil tiene que hacer tres cosas, y ya:
+The mobile client has to do three things, and right away:
 
-1. **Capturar en dos segundos** (el caso de uso que da el usuario: se me ocurre algo y quiero apuntarlo).
-2. **Consultar y gestionar** lo que ya está en el ordenador (buscar, leer, editar, etiquetar, archivar,
-   papelera, reordenar el mazo).
-3. **Recordar** (los recordatorios, con acciones desde la notificación).
+1. **Capture in two seconds** (the use case the user gives: something occurs to me and I want to jot it down).
+2. **Browse and manage** what is already on the computer (search, read, edit, tag, archive,
+   trash, reorder the deck).
+3. **Remind** (reminders, with actions from the notification).
 
-Todo lo demás (dock, abanico, pill, ventanas, posición por pantalla, bandeja, atajos, editor de temas,
-gestión de monitores) **se queda en Windows**.
+Everything else (dock, fan, pill, windows, per-screen position, tray, shortcuts, theme editor,
+monitor management) **stays on Windows**.
 
-### 0.1 Decisión tomada (2026-09-28): Android primero, probado en una tableta
+### 0.1 Decision taken (2026-09-28): Android first, tested on a tablet
 
-El usuario tiene **iPhone y una tableta Android**. Se decide **Android primero**, por economía y por
-alcance:
+The user has an **iPhone and an Android tablet**. **Android first** is decided, for reasons of economy and
+reach:
 
-- **Coste de hacerlo: 0 €.** Sin Mac, sin cuenta de Apple, sin Xcode: Android se compila y se depura
-  desde Windows con lo que ya hay (el SDK y el JDK los instala Visual Studio).
-- **Ya hay dispositivo real para probar**: la tableta. Importa más de lo que parece, porque las sondas de
-  este proyecto se hacen con ventanas y dispositivos reales, no con simulaciones.
-- **La tableta es el mejor banco de pruebas del caso de uso principal**: gestionar y editar las notas que
-  ya existen, que es lo que pidió el usuario. Y acepta teclado y ratón, así que se puede probar también la
-  interacción de escritorio.
-- **Para el producto**: Android llega a más usuarios por euro invertido y publicar cuesta **25 $ una vez**
-  (Play) frente a **99 $/año** (Apple).
-- **Para uso propio no hace falta publicar**: un APK firmado instalado a mano en la tableta cuesta 0 €.
-  Google Play solo hace falta para que lo use otra gente o para tener actualizaciones automáticas.
+- **Cost of doing it: €0.** No Mac, no Apple account, no Xcode: Android is built and debugged
+  from Windows with what is already there (Visual Studio installs the SDK and the JDK).
+- **There is already a real device to test on**: the tablet. It matters more than it seems, because the probes of
+  this project are done with real windows and devices, not simulations.
+- **The tablet is the best test bench for the main use case**: managing and editing the notes that
+  already exist, which is what the user asked for. And it accepts keyboard and mouse, so desktop
+  interaction can be tested too.
+- **For the product**: Android reaches more users per euro invested and publishing costs a **one-time $25**
+  (Play) versus **$99/year** (Apple).
+- **For personal use there is no need to publish**: a signed APK installed by hand on the tablet costs €0.
+  Google Play is only needed for other people to use it or to have automatic updates.
 
-**Consecuencia de diseño: la tableta es el dispositivo de referencia y el teléfono es el subconjunto.**
-Lista y nota pueden convivir en dos paneles, el widget grande es el principal y hay que contar con teclado
-físico; el diseño de teléfono sale de comprimir eso, no al revés.
+**Design consequence: the tablet is the reference device and the phone is the subset.**
+List and note can coexist in two panes, the large widget is the main one and a physical keyboard has to be
+accounted for; the phone design comes from compressing that, not the other way around.
 
-**El iPhone se queda fuera hasta que exista el cliente iOS**, y conviene ser claro sobre por qué: iOS
-exige Mac con Xcode 26 y cuenta de Apple de pago, incluso para instalarlo en un teléfono propio. Lo que
-decide la prioridad no es el dinero, es el caso de uso:
+**The iPhone stays out until the iOS client exists**, and it is worth being clear about why: iOS
+requires a Mac with Xcode 26 and a paid Apple account, even to install it on one's own phone. What
+decides the priority is not money, it is the use case:
 
-- **Leer, buscar, editar y anotar** lo que ya está en el ordenador → la tableta cubre el caso completo.
-- **Apuntar algo desde el bolsillo** con el teléfono que se lleva encima → eso solo lo hace iOS, y
-  entonces la conversación empieza por el Mac y los 99 $/año, no por el código. Mientras tanto, en la
-  tableta el camino corto es abrir la app directamente en "nota nueva".
+- **Reading, searching, editing and annotating** what is already on the computer → the tablet covers the whole case.
+- **Jotting something down from your pocket** with the phone you carry → only iOS does that, and
+  then the conversation starts with the Mac and the $99/year, not with the code. Meanwhile, on the
+  tablet the short path is to open the app directly on "new note".
 
-La decisión no cierra iOS: el cliente se diseña como **un proyecto MAUI y dos extensiones Swift**, así que
-añadirlo después es sumar el toolchain, no rehacer nada (ver §7, fase 3).
+The decision does not close off iOS: the client is designed as **one MAUI project and two Swift extensions**, so
+adding it later means adding the toolchain, not redoing anything (see §7, phase 3).
 
-## 1. Lo que hay hoy, verificado en el repositorio (2026-09-28)
+## 1. What exists today, verified in the repository (2026-09-28)
 
-| Dato | Valor real |
+| Data point | Actual value |
 |---|---|
-| `src/Aldune.Core` | **69** ficheros `.cs`, **6.663** líneas, `net10.0` puro, sin WPF |
-| Dependencias de Core | `Microsoft.Data.Sqlite` 10.0.11 y `System.Security.Cryptography.ProtectedData` 10.0.11 |
-| `src/Aldune` (WPF) | **60** ficheros `.cs`/`.xaml`, **15.829** líneas, `net10.0-windows`, `UseWPF` + `UseWindowsForms` (bandeja), versión 1.4.1 |
-| `tests/Aldune.Core.Tests` | **60** ficheros, **6.260** líneas, **850/850** tests en verde (son tests *de Core*, no de WPF) |
-| `src/Aldune.SyncServer` | ASP.NET Core minimal API, ~150 líneas útiles (`/health`, `GET /api/v1/objects`, `GET`/`PUT`/`DELETE /api/v1/objects/{id}`), `Bearer` con rotación de tokens, tope de 5 MB por objeto |
-| Textos de interfaz | `src/Aldune/Resources/Strings.cs`, **1.268** líneas, `T(en, es, de, fr, pt)`; idiomas en `Aldune.Core.UiLanguages` |
-| CI | `.github/workflows/ci.yml`: `windows-latest`, `dotnet build` + `dotnet test` de `Aldune.slnx` |
+| `src/Aldune.Core` | **69** `.cs` files, **6,663** lines, pure `net10.0`, no WPF |
+| Core dependencies | `Microsoft.Data.Sqlite` 10.0.11 and `System.Security.Cryptography.ProtectedData` 10.0.11 |
+| `src/Aldune` (WPF) | **60** `.cs`/`.xaml` files, **15,829** lines, `net10.0-windows`, `UseWPF` + `UseWindowsForms` (tray), version 1.4.1 |
+| `tests/Aldune.Core.Tests` | **60** files, **6,260** lines, **850/850** tests green (these are *Core* tests, not WPF ones) |
+| `src/Aldune.SyncServer` | ASP.NET Core minimal API, ~150 useful lines (`/health`, `GET /api/v1/objects`, `GET`/`PUT`/`DELETE /api/v1/objects/{id}`), `Bearer` with token rotation, 5 MB cap per object |
+| UI texts | `src/Aldune/Resources/Strings.cs`, **1,268** lines, `T(en, es, de, fr, pt)`; languages in `Aldune.Core.UiLanguages` |
+| CI | `.github/workflows/ci.yml`: `windows-latest`, `dotnet build` + `dotnet test` of `Aldune.slnx` |
 
-**El único código realmente Windows de Core es el DPAPI.** Búsqueda exhaustiva de
-`ProtectedData|OperatingSystem.|Registry|DllImport|win-x64|Environment.` en `src/Aldune.Core/*.cs`:
-fuera de `DatabaseKeyProvider.cs` todo lo demás son comentarios sobre Windows, no API. Las llamadas
-están en:
+**The only truly Windows code in Core is DPAPI.** Exhaustive search for
+`ProtectedData|OperatingSystem.|Registry|DllImport|win-x64|Environment.` in `src/Aldune.Core/*.cs`:
+outside `DatabaseKeyProvider.cs` everything else is comments about Windows, not API. The calls
+are in:
 
-- `SyncService.cs`: líneas 69, 86, 110, 132, 144, 163, 254, 257, 428, 670-679.
+- `SyncService.cs`: lines 69, 86, 110, 132, 144, 163, 254, 257, 428, 670-679.
 - `LocalBackup.cs`: 153 (`DatabaseKeyRecovery.Opens`).
-- `src/Aldune/App.xaml.cs`: 115-127 (arranque: generar, envolver, desenvolver la clave de la base).
+- `src/Aldune/App.xaml.cs`: 115-127 (startup: generate, wrap, unwrap the database key).
 - Tests: `DatabaseKeyProviderTests`, `EnvelopeEncryptionTests`, `LocalBackupTests`.
 
-**Lo que viaja en la sincronización (formato 4)**: texto, color, etiquetas, estado (`Activa`,
-`Archivada`, `Papelera`), `ScreenOrigin`, notas protegidas (sal + contenido cifrado) y
-`DockPosition` (el orden del mazo). El sobre es JSON con `CipherText`/`Nonce`/`Tag` en base64.
+**What travels in sync (format 4)**: text, color, tags, state (`Activa`,
+`Archivada`, `Papelera`), `ScreenOrigin`, protected notes (salt + encrypted content) and
+`DockPosition` (the deck order). The envelope is JSON with `CipherText`/`Nonce`/`Tag` in base64.
 
-**Lo que NO viaja hoy** (es local a cada instalación y hay que decirlo en voz alta antes de diseñar el
-móvil): los **recordatorios** (`NoteReminder`), las **tareas marcadas** (`TaskCompletion`), las
-**posiciones de ventana** (`NotePlacement`), los **conflictos** (`SyncConflict`), los **temas de nota
-propios** (`CustomThemes`) y los ajustes de aspecto e idioma.
+**What does NOT travel today** (it is local to each installation and this must be said out loud before designing the
+mobile client): **reminders** (`NoteReminder`), **checked tasks** (`TaskCompletion`), **window
+positions** (`NotePlacement`), **conflicts** (`SyncConflict`), **custom note
+themes** (`CustomThemes`) and the appearance and language settings.
 
-**Notas protegidas**: `ProtectedNoteContent` — PBKDF2-SHA256, **600.000 iteraciones**, sal de 16 B,
-AES-256-GCM, `Version = 1`. El número de iteraciones **está en el código, no en el dato**, así que es
-una constante de compatibilidad: el cliente móvil tiene que usar exactamente la misma (usar la clase de
-Core lo garantiza).
+**Protected notes**: `ProtectedNoteContent` — PBKDF2-SHA256, **600,000 iterations**, 16 B salt,
+AES-256-GCM, `Version = 1`. The iteration count **is in the code, not in the data**, so it is
+a compatibility constant: the mobile client has to use exactly the same one (using the Core
+class guarantees it).
 
-**Transportes existentes** (todos en Core, todos portables en principio): `FolderSyncTransport`
-(`objects/` en una carpeta), `HttpSyncTransport` (servidor propio, `Bearer`) y `WebDavSyncTransport`
-(PROPFIND + Basic, para Nextcloud/ownCloud). El código de invitación (`SyncShareCodeCodec`) lleva
-clave, alcance, nombre del perfil, transporte y URL del servidor, **nunca el token**.
+**Existing transports** (all in Core, all portable in principle): `FolderSyncTransport`
+(`objects/` in a folder), `HttpSyncTransport` (own server, `Bearer`) and `WebDavSyncTransport`
+(PROPFIND + Basic, for Nextcloud/ownCloud). The invitation code (`SyncShareCodeCodec`) carries
+key, scope, profile name, transport and server URL, **never the token**.
 
-## 2. Qué se reutiliza y qué no
+## 2. What is reused and what is not
 
-| Se reutiliza tal cual (Core, con sus 850 tests) | Por qué |
+| Reused as is (Core, with its 850 tests) | Why |
 |---|---|
-| `Note`, `NoteState`, `NotesDatabase`, `NotesRepository` | SQLite + texto cifrado; el esquema no depende de Windows |
-| `ContentCipher` (AES-256-GCM), `PasswordRules`, `ProtectedNoteContent` | Cripto de biblioteca estándar; mismas constantes = misma compatibilidad |
-| `SyncService`, `SyncModels`/`SyncEnvelopeCodec`, `ISyncTransport`, `HttpSyncTransport`, `WebDavSyncTransport`, `SyncProfileStore`, `SyncShareCodeCodec` | El formato y la resolución de conflictos son la parte cara de duplicar |
-| `SettingsService`, `AppSettings` (con sus valores por defecto compatibles) | Mismo fichero, mismos enums numéricos |
-| `NoteSearch`, `NoteText`/`NoteTitleHelper`, `TaskLines`, `TaskLists`/`TaskCompletion`, `ListIndent`, `LineMovement`, `BulletLines`, `TextEdit`, `MarkdownExport` | Es el "formato de texto" del producto: casillas, listas, títulos |
-| `NoteOrdering`, `NoteListing` | El orden del mazo, que ya se sincroniza |
-| `NoteThemes`, `NoteColorDerivation`, `OklchColor`, `NoteColorContrast`, `AppPalette` | Continuidad visual PC↔móvil y contraste ya testeado |
-| `ReminderPresets`, `LocalBackup`, `DiagnosticLog`, `BrandIdentity` | Utilidades portables (con matices de rutas) |
+| `Note`, `NoteState`, `NotesDatabase`, `NotesRepository` | SQLite + encrypted text; the schema does not depend on Windows |
+| `ContentCipher` (AES-256-GCM), `PasswordRules`, `ProtectedNoteContent` | Standard-library crypto; same constants = same compatibility |
+| `SyncService`, `SyncModels`/`SyncEnvelopeCodec`, `ISyncTransport`, `HttpSyncTransport`, `WebDavSyncTransport`, `SyncProfileStore`, `SyncShareCodeCodec` | The format and the conflict resolution are the expensive part to duplicate |
+| `SettingsService`, `AppSettings` (with their compatible defaults) | Same file, same numeric enums |
+| `NoteSearch`, `NoteText`/`NoteTitleHelper`, `TaskLines`, `TaskLists`/`TaskCompletion`, `ListIndent`, `LineMovement`, `BulletLines`, `TextEdit`, `MarkdownExport` | This is the product's "text format": checkboxes, lists, titles |
+| `NoteOrdering`, `NoteListing` | The deck order, which is already synced |
+| `NoteThemes`, `NoteColorDerivation`, `OklchColor`, `NoteColorContrast`, `AppPalette` | PC↔mobile visual continuity and already-tested contrast |
+| `ReminderPresets`, `LocalBackup`, `DiagnosticLog`, `BrandIdentity` | Portable utilities (with path caveats) |
 
-| Se queda fuera en móvil | Por qué |
+| Left out on mobile | Why |
 |---|---|
-| Dock, abanico, pill, `EdgeGeometry`, `DockPlacement`, `DockHover*`, `FanStateMachine`/`FanTiming`, `DpiConversion`, `MonitorInfo`/`MonitorLookup`/`MonitorPowerTracker`, `FullscreenDetection` | Geometría y hover de escritorio |
-| `HotkeyBinding`, `TrayIcon`, `StartupRegistration`, notificaciones *toast* propias | Conceptos de Windows (o reemplazados por notificaciones del sistema) |
-| `ReleaseUpdateChecker` | En móvil actualiza la tienda, no GitHub |
+| Dock, fan, pill, `EdgeGeometry`, `DockPlacement`, `DockHover*`, `FanStateMachine`/`FanTiming`, `DpiConversion`, `MonitorInfo`/`MonitorLookup`/`MonitorPowerTracker`, `FullscreenDetection` | Desktop geometry and hover |
+| `HotkeyBinding`, `TrayIcon`, `StartupRegistration`, own *toast* notifications | Windows concepts (or replaced by system notifications) |
+| `ReleaseUpdateChecker` | On mobile the store updates, not GitHub |
 
-## 3. El producto móvil propuesto
+## 3. The proposed mobile product
 
-### 3.1 Traducción de conceptos
+### 3.1 Translation of concepts
 
-| Escritorio (WPF) | Móvil (propuesta) |
+| Desktop (WPF) | Mobile (proposal) |
 |---|---|
-| Pill en reposo = tiras de color al canto | **Widget** de pantalla de inicio (notas con su color). En iOS, además, widget de pantalla de bloqueo / StandBy |
-| Abanico al pasar el ratón | **Lista** con búsqueda arriba. Se toca, no se hace hover: el abanico no se imita |
-| Atajo global `Ctrl+Alt+H` | **Hoja de compartir**; **mosaico de Ajustes rápidos** (Android); **acción "Nueva nota"** del icono; **notificación persistente con "+"**; dictado del teclado |
-| Ventana de nota (título = 1ª línea + cuerpo) | Pantalla de nota a pantalla completa, con el mismo texto (`☐`/`☒`, listas, sangría) |
-| Recordatorio con notificación de Windows | Notificación local con botones: *Hecho*, *Posponer 10 min / 1 h / mañana*, *Abrir* |
-| Gestor de notas (buscar, ordenar, filtrar) | Es la pantalla principal |
-| Tema de color de nota | Igual (misma paleta: la nota se ve del mismo color en el PC y en el teléfono) |
-| Notas protegidas con contraseña | Igual, más desbloqueo **biométrico** (la clave derivada se guarda en Keychain/Keystore) |
-| Aspecto Oscuro/Claro/Pastel/Medianoche | Oscuro/Claro/según el sistema (Pastel y Medianoche se derivan solos, como en Windows). **Hecho en Android (25-10-2026, rc5-rc7):** también los aspectos retro (XP, Telecomunicaciones, Bash, Fósforo) con sus colores y la fuente monoespaciada, sin la «piel» de Windows (ver `ROADMAP.md` §13) |
-| Copia local diaria (`LocalBackup`) | Lo cubre la copia del sistema; decidir qué se excluye (ver riesgos) |
+| Resting pill = color strips at the edge | Home screen **widget** (notes with their color). On iOS, also a lock screen / StandBy widget |
+| Fan on mouse hover | **List** with search on top. You tap, you don't hover: the fan is not imitated |
+| Global shortcut `Ctrl+Alt+H` | **Share sheet**; **Quick Settings tile** (Android); icon **"New note" action**; **persistent notification with "+"**; keyboard dictation |
+| Note window (title = 1st line + body) | Full-screen note screen, with the same text (`☐`/`☒`, lists, indentation) |
+| Reminder with Windows notification | Local notification with buttons: *Done*, *Snooze 10 min / 1 h / tomorrow*, *Open* |
+| Notes manager (search, sort, filter) | It is the main screen |
+| Note color theme | Same (same palette: the note looks the same color on the PC and on the phone) |
+| Password-protected notes | Same, plus **biometric** unlock (the derived key is stored in Keychain/Keystore) |
+| Dark/Light/Pastel/Midnight appearance | Dark/Light/follow the system (Pastel and Midnight are derived on their own, as on Windows). **Done on Android (2026-10-25, rc5-rc7):** also the retro appearances (XP, Telecommunications, Bash, Phosphor) with their colors and the monospaced font, without the Windows "skin" (see `ROADMAP.md` §13) |
+| Daily local backup (`LocalBackup`) | Covered by the system backup; decide what is excluded (see risks) |
 
-### 3.2 Qué NO se porta, ni se imita
+### 3.2 What is NOT ported, nor imitated
 
-Dock, abanico, pill, ventanas flotantes de nota, posición por pantalla, varias pantallas, bandeja,
-atajos globales, detección de juegos a pantalla completa, editor de temas, "Gestionar notas" como
-ventana aparte. En móvil **no hay pantalla donde pegar un mazo**.
+Dock, fan, pill, floating note windows, per-screen position, several screens, tray,
+global shortcuts, full-screen game detection, theme editor, "Manage notes" as a
+separate window. On mobile **there is no screen to stick a deck to**.
 
-### 3.3 El widget, y la primera decisión de privacidad del port
+### 3.3 The widget, and the port's first privacy decision
 
-Un widget no puede pedir contraseña ni desbloquear nada: se pinta solo. Propuesta:
+A widget cannot ask for a password or unlock anything: it just paints. Proposal:
 
-- La app escribe una **instantánea** pequeña (color, título = primera línea y, opcionalmente, el
-  primer renglón) en un JSON del contenedor compartido (App Group en iOS, fichero propio en Android),
-  y el widget pinta eso. Se refresca al cambiar la nota y en el refresco de fondo.
-- **Por defecto, solo títulos.** Incluir más texto es un ajuste explícito del usuario, porque es una
-  excepción consciente a "el texto va cifrado en reposo": la instantánea va en claro (protegida por el
-  cifrado del sistema de ficheros, no por la clave de Aldune).
-- Las **notas protegidas nunca entran** en la instantánea.
+- The app writes a small **snapshot** (color, title = first line and, optionally, the
+  first line of body) into a JSON in the shared container (App Group on iOS, own file on Android),
+  and the widget paints that. It is refreshed when the note changes and in the background refresh.
+- **By default, titles only.** Including more text is an explicit user setting, because it is a
+  conscious exception to "the text is encrypted at rest": the snapshot is in the clear (protected by the
+  file system's encryption, not by Aldune's key).
+- **Protected notes never go** into the snapshot.
 
-Ventaja de este diseño: no hay que reimplementar AES-GCM en Swift para el widget, y Android e iOS usan
-el mismo mecanismo (un solo camino que probar).
+Advantage of this design: there is no need to reimplement AES-GCM in Swift for the widget, and Android and iOS use
+the same mechanism (only one path to test).
 
-### 3.4 Ideas móviles que sí son "algo diferente" (y baratas una vez existe el MVP)
+### 3.4 Mobile ideas that are indeed "something different" (and cheap once the MVP exists)
 
-- **Notificación persistente con acción "+"** en Android: es el equivalente exacto del atajo global.
-- **Widget del mazo**: la tira de colores del dock, en la pantalla de inicio. Es la continuidad visual
-  del producto, no un widget de lista genérico.
-- **Compartir cualquier cosa al teléfono** (un enlace, una frase de un artículo) → nota nueva con esa
-  semilla. En Android es un `intent-filter` de `ACTION_SEND`; en iOS, extensión de compartir (Swift) o,
-  sin escribir Swift, un atajo del usuario que abra `aldune://nueva?texto=...`.
-- **"Hecho" desde la notificación** del recordatorio, sin abrir la app.
-- **Dictado del teclado** en el editor: gratis, del sistema, y es la captura más rápida que existe.
+- **Persistent notification with a "+" action** on Android: it is the exact equivalent of the global shortcut.
+- **Deck widget**: the dock's color strip, on the home screen. It is the visual continuity
+  of the product, not a generic list widget.
+- **Share anything to the phone** (a link, a sentence from an article) → new note with that
+  seed. On Android it is an `intent-filter` for `ACTION_SEND`; on iOS, a share extension (Swift) or,
+  without writing Swift, a user shortcut that opens `aldune://nueva?texto=...`.
+- **"Done" from the reminder notification**, without opening the app.
+- **Keyboard dictation** in the editor: free, from the system, and it is the fastest capture there is.
 
-## 4. Tecnología: opciones y recomendación
+## 4. Technology: options and recommendation
 
-| Opción | Reutiliza Core | Coste | Riesgo | Veredicto |
+| Option | Reuses Core | Cost | Risk | Verdict |
 |---|---|---|---|---|
-| **A. .NET MAUI (C#/XAML)** | **Sí, casi entero** (los 850 tests siguen valiendo) | Medio-alto: XAML nuevo + toolchain Android/iOS | Calidad/perf de MAUI, AOT/trimming en iOS | **Recomendada** |
-| B. Avalonia (Skia) | Sí, igual | Medio | Móvil menos maduro; los widgets siguen necesitando código nativo | Sin ventaja clara frente a A |
-| C. Flutter | **No**: habría que reescribir cripto, sync y texto en Dart | Alto | Dos implementaciones de un **formato cifrado** = divergencia silenciosa | No |
-| D. Nativo (Kotlin + Swift) | No (dos reescrituras) | El doble | El más alto | No, salvo que se busque el máximo pulido y haya presupuesto de tiempo |
-| E. Web/PWA | No | Medio | Sin widgets, notificaciones poco fiables, texto en el navegador | No |
+| **A. .NET MAUI (C#/XAML)** | **Yes, almost entirely** (the 850 tests remain valid) | Medium-high: new XAML + Android/iOS toolchain | MAUI quality/perf, AOT/trimming on iOS | **Recommended** |
+| B. Avalonia (Skia) | Yes, same | Medium | Less mature on mobile; widgets still need native code | No clear advantage over A |
+| C. Flutter | **No**: crypto, sync and text would have to be rewritten in Dart | High | Two implementations of an **encrypted format** = silent divergence | No |
+| D. Native (Kotlin + Swift) | No (two rewrites) | Double | The highest | No, unless maximum polish is sought and there is a time budget |
+| E. Web/PWA | No | Medium | No widgets, unreliable notifications, text in the browser | No |
 
-**La razón de fondo para MAUI no es el framework, es el formato.** El sobre de sincronización y el
-cifrado se implementan **una sola vez**; duplicarlos en Dart/Kotlin/Swift es la forma más fácil de que
-un dispositivo escriba algo que los demás no sepan leer. Y MAUI permite mantener la cultura del
-proyecto: lógica en una librería con tests, UI verificada aparte.
+**The underlying reason for MAUI is not the framework, it is the format.** The sync envelope and the
+encryption are implemented **only once**; duplicating them in Dart/Kotlin/Swift is the easiest way for
+one device to write something the others cannot read. And MAUI allows keeping the project's
+culture: logic in a library with tests, UI verified separately.
 
-### 4.1 Hechos de plataforma verificados (2026-09-28), con fuentes
+### 4.1 Verified platform facts (2026-09-28), with sources
 
-- **AES-GCM**: en iOS **no existía**; se añadió en **.NET 9** con mínimo iOS 13
-  ([dotnet/runtime#91523](https://github.com/dotnet/runtime/issues/91523), cerrado con hito 9.0.0;
-  la API aparece marcada `SupportedOSPlatform("ios13.0")`). Android no figura como no soportado y el
-  runtime tiene implementación nativa de plataforma. **Con .NET 10, `ContentCipher` es portable tal
-  cual**; aun así, comprobar `AesGcm.IsSupported` al arrancar y dejarlo probado en el spike.
-  ([Criptografía multiplataforma en .NET](https://learn.microsoft.com/en-us/dotnet/standard/security/cross-platform-cryptography))
-- **SQLite**: `Microsoft.Data.Sqlite` está soportado en Android/iOS (la propia documentación de MAUI
-  lo lista como alternativa a `sqlite-net-pcl`), pero en **iOS Release (AOT + recorte)** es donde
-  aparecen los problemas clásicos: `DllNotFoundException: e_sqlite3` y enlaces que revientan en
-  AOT-only. Hay que resolverlo **en el spike**, no en producción:
-  ([SQLite en MAUI](https://learn.microsoft.com/en-us/dotnet/maui/data-cloud/database-sqlite),
+- **AES-GCM**: on iOS it **did not exist**; it was added in **.NET 9** with minimum iOS 13
+  ([dotnet/runtime#91523](https://github.com/dotnet/runtime/issues/91523), closed with milestone 9.0.0;
+  the API appears marked `SupportedOSPlatform("ios13.0")`). Android is not listed as unsupported and the
+  runtime has a native platform implementation. **With .NET 10, `ContentCipher` is portable as
+  is**; even so, check `AesGcm.IsSupported` at startup and have it proven in the spike.
+  ([Cross-platform cryptography in .NET](https://learn.microsoft.com/en-us/dotnet/standard/security/cross-platform-cryptography))
+- **SQLite**: `Microsoft.Data.Sqlite` is supported on Android/iOS (MAUI's own documentation
+  lists it as an alternative to `sqlite-net-pcl`), but on **iOS Release (AOT + trimming)** is where
+  the classic problems appear: `DllNotFoundException: e_sqlite3` and links that blow up in
+  AOT-only. This has to be resolved **in the spike**, not in production:
+  ([SQLite in MAUI](https://learn.microsoft.com/en-us/dotnet/maui/data-cloud/database-sqlite),
   [Resolving SQLite issues for .NET MAUI](https://www.banditoth.net/resolving-sqlite-issues-for-net-maui/)).
-- **Secretos (el sustituto de DPAPI)**: `SecureStorage` de MAUI usa **Keystore +
-  EncryptedSharedPreferences** en Android y **Keychain** en iOS. Dos avisos que ya están en la
-  documentación y que afectan al diseño:
+- **Secrets (the DPAPI replacement)**: MAUI's `SecureStorage` uses **Keystore +
+  EncryptedSharedPreferences** on Android and **Keychain** on iOS. Two warnings that are already in the
+  documentation and that affect the design:
   [Secure storage](https://learn.microsoft.com/en-us/dotnet/maui/platform-integration/storage/secure-storage)
-  - **Android Auto Backup** restaura preferencias cifradas cuyas claves **no** viajan: MAUI borra el
-    valor y hay que envolver toda lectura en `try/catch` (o excluir esas preferencias de la copia).
-  - En iOS, el **Keychain sobrevive a la desinstalación**; y si el usuario tiene **iCloud Keychain**
-    activado, los valores pueden sincronizarse a sus otros dispositivos Apple sin control desde la app.
-- **Widgets**: en **Android se pueden hacer en C# puro** con `AppWidgetProvider` + `RemoteViews`
-  (incluso widget con lista desplazable), **sin Kotlin ni Android Studio**
-  ([blog de .NET](https://devblogs.microsoft.com/dotnet/how-to-build-android-widgets-with-dotnet-maui/)).
-  En **iOS exige una extensión Swift/SwiftUI + Xcode + App Group** y no se puede escribir en C#: es la
-  parte más manual del port ([blog de .NET](https://devblogs.microsoft.com/dotnet/how-to-build-ios-widgets-with-dotnet-maui/)).
-- **Toolchain y tiendas**:
-  - iOS: **Mac con Xcode 26** y cuenta de Apple Developer de pago, **99 $/año**. Desde Windows **no**
-    se puede compilar iOS ([instalación de MAUI](https://learn.microsoft.com/en-us/dotnet/maui/get-started/installation)).
-    Apple exige desde el **28-abr-2026** compilar con Xcode 26 y el SDK de iOS 26
-    ([requisitos próximos](https://developer.apple.com/news/upcoming-requirements/)).
-  - Android: los SDK/JDK son gratuitos y se instalan desde Visual Studio; Google Play exige
-    **target API 36 (Android 16) desde el 31-ago-2026** para apps nuevas y actualizaciones
-    ([requisitos de target API](https://support.google.com/googleplay/android-developer/answer/11926878)),
-    y la cuenta son **25 $ una sola vez**.
-- **Segundo plano (esto condiciona lo que se puede prometer)**: en iOS `BGAppRefreshTask` es
-  **oportunista** — `earliestBeginDate` es un suelo, no una promesa, y el sistema decide si te deja
-  correr, con qué frecuencia y si te corta a mitad
-  ([resumen práctico 2026](https://vburojevic.dev/blog/ios-background-tasks-2026/)). En Android,
-  `WorkManager` tiene un mínimo de **15 minutos** y los avisos exactos necesitan permiso de alarmas
-  (Android 12+), que la política de Play restringe para apps que no sean de reloj/calendario
-  ([alarmas en Android](https://developer.android.com/develop/background-work/services/alarms/schedule)).
-  **Conclusión de diseño: nunca prometer "sincroniza cada 15 minutos".** Hay que sincronizar siempre
-  **al abrir, al volver a primer plano y antes de editar**, y además "cuando el sistema quiera" en
-  segundo plano. El motor de sync ya es idempotente (sube sobres completos y desempata por fecha), así
-  que sincronizar de más no rompe nada.
-- **Recordatorios**: en iOS las notificaciones locales las entrega el sistema aunque la app esté
-  cerrada (fiables, previo permiso); en Android conviene asumir que sin permiso de alarmas exactas el
-  aviso puede llegar con minutos de retraso. Hay que probarlo **con la app cerrada** en Android 16 e
+  - **Android Auto Backup** restores encrypted preferences whose keys do **not** travel: MAUI deletes the
+    value and every read has to be wrapped in `try/catch` (or those preferences excluded from the backup).
+  - On iOS, the **Keychain survives uninstallation**; and if the user has **iCloud Keychain**
+    enabled, values may sync to their other Apple devices with no control from the app.
+- **Widgets**: on **Android they can be made in pure C#** with `AppWidgetProvider` + `RemoteViews`
+  (even a widget with a scrollable list), **without Kotlin or Android Studio**
+  ([.NET blog](https://devblogs.microsoft.com/dotnet/how-to-build-android-widgets-with-dotnet-maui/)).
+  On **iOS it requires a Swift/SwiftUI extension + Xcode + App Group** and cannot be written in C#: it is the
+  most manual part of the port ([.NET blog](https://devblogs.microsoft.com/dotnet/how-to-build-ios-widgets-with-dotnet-maui/)).
+- **Toolchain and stores**:
+  - iOS: **Mac with Xcode 26** and a paid Apple Developer account, **$99/year**. From Windows iOS
+    **cannot** be built ([MAUI installation](https://learn.microsoft.com/en-us/dotnet/maui/get-started/installation)).
+    Since **28 Apr 2026** Apple requires building with Xcode 26 and the iOS 26 SDK
+    ([upcoming requirements](https://developer.apple.com/news/upcoming-requirements/)).
+  - Android: the SDKs/JDK are free and install from Visual Studio; Google Play requires
+    **target API 36 (Android 16) from 31 Aug 2026** for new apps and updates
+    ([target API requirements](https://support.google.com/googleplay/android-developer/answer/11926878)),
+    and the account is a **one-time $25**.
+- **Background (this conditions what can be promised)**: on iOS `BGAppRefreshTask` is
+  **opportunistic** — `earliestBeginDate` is a floor, not a promise, and the system decides whether to let you
+  run, how often, and whether to cut you off midway
+  ([practical summary 2026](https://vburojevic.dev/blog/ios-background-tasks-2026/)). On Android,
+  `WorkManager` has a minimum of **15 minutes** and exact alerts need the alarms permission
+  (Android 12+), which Play policy restricts for apps that are not clock/calendar apps
+  ([alarms on Android](https://developer.android.com/develop/background-work/services/alarms/schedule)).
+  **Design conclusion: never promise "syncs every 15 minutes".** Sync always
+  **on open, on return to the foreground and before editing**, and also "whenever the system allows" in the
+  background. The sync engine is already idempotent (it uploads whole envelopes and breaks ties by date),
+  so syncing too often breaks nothing.
+- **Reminders**: on iOS local notifications are delivered by the system even if the app is
+  closed (reliable, with permission); on Android it is wise to assume that without the exact-alarms permission the
+  alert may arrive minutes late. It has to be tested **with the app closed** on Android 16 and
   iOS 26 (spike C).
 
-## 5. Lo que hay que cambiar antes, en Core y en Windows
+## 5. What has to change first, in Core and in Windows
 
-Nada de esto rompe compatibilidad; es cirugía acotada y con test primero. **Es la única parte que toca
-el repositorio actual**, así que se puede hacer (y probar) sin ningún proyecto móvil todavía.
+None of this breaks compatibility; it is bounded surgery, test first. **It is the only part that touches
+the current repository**, so it can be done (and tested) without any mobile project yet.
 
-1. **Sacar DPAPI de Core.** Introducir
-   `ISecretProtector { byte[] Protect(byte[]); byte[] Unprotect(byte[]); }` con una implementación
-   `DpapiSecretProtector` (lo que hoy hace `DatabaseKeyProvider`, más `GenerateKey`) e inyectarla en
-   `SyncService`, `LocalBackup`/`DatabaseKeyRecovery` y el arranque. En móvil se implementa con
-   Keystore/Keychain. Los tests inyectan la de Windows y **siguen pasando tal cual** (los ficheros de
-   test que la usan: `DatabaseKeyProviderTests`, `EnvelopeEncryptionTests`, `LocalBackupTests`).
-2. **Sincronización asíncrona.** Hoy `ISyncTransport` y `SyncService` son síncronos con
-   `GetAwaiter().GetResult()` (ver `HttpSyncTransport`, `WebDavSyncTransport`). En móvil eso bloquea
-   hilos del pool y en iOS es directamente mala idea. Añadir API `async` **conservando la síncrona**,
-   con los tests de conflictos, tombstones y formato como red de seguridad.
-3. **Serialización con generador de código (`JsonSerializerContext`).** iOS Release compila AOT y
-   recorta: `System.Text.Json` por reflexión da avisos IL2026/IL3050 y puede fallar en ejecución.
-   Puntos afectados: `SyncModels.cs` (líneas 243, 255, 330, 337, 382, 415, 425, 429, 446),
-   `SettingsService.cs` (19, 30, 44) y `NotesRepository.cs` (341, 363).
-   **Antes de tocar nada: un test que fije el JSON exacto de un sobre** (golden file) para garantizar
-   que el formato 4 sigue siendo byte a byte el mismo.
-4. **Rutas.** Ya se pasan por parámetro (`SettingsService(path)`, `NotesDatabase(path)`,
-   `LocalBackup.CreateDaily(appDataDir, ...)`), así que basta con que la app móvil use
-   `FileSystem.AppDataDirectory`. No hace falta un `IAppPaths` nuevo.
-5. **Windows, para que el móvil sea usable sin fricción** (dos funciones nuevas, ambas reutilizan lo
-   que ya existe):
-   - **Emparejamiento con QR.** Hoy la invitación no lleva el token (bien), pero teclearlo en un móvil
-     es horrible. Un QR generado por el PC con perfil + URL + token de un solo uso, y escaneo desde la
-     app móvil. *Ojo: toca el modelo de seguridad de la sync (`docs/SYNC.md` → "Modelo de seguridad"):
-     hay que decidirlo con el usuario y documentarlo.*
-   - **Servidor de sync dentro del propio PC** (opcional y barato): arrancar en el proceso WPF el mismo
-     minimal API de `Aldune.SyncServer` sobre una carpeta de la LAN (el servidor son ~150 líneas). El
-     escenario sin Docker queda: instalar la app → escanear el QR → sincronizado, sin nube y sin cuenta.
-6. **Nada de esto es necesario para el MVP móvil, pero condiciona la v1**: los recordatorios no se
-   sincronizan. Si algún día deben viajar PC↔móvil, hace falta **subir el formato a 5**, y por la regla
-   del proyecto (una versión antigua rechaza lo que no entiende, con error claro, sin aplicar nada a
-   medias) **hay que publicar primero Windows que acepte el 5 y solo después el móvil que lo escribe**.
-   Recomendación: en la v1 móvil los recordatorios son locales al teléfono, y se dice claramente en la
-   interfaz. El formato 5 se decide con uso real en la mano.
+1. **Take DPAPI out of Core.** Introduce
+   `ISecretProtector { byte[] Protect(byte[]); byte[] Unprotect(byte[]); }` with an implementation
+   `DpapiSecretProtector` (what `DatabaseKeyProvider` does today, plus `GenerateKey`) and inject it into
+   `SyncService`, `LocalBackup`/`DatabaseKeyRecovery` and startup. On mobile it is implemented with
+   Keystore/Keychain. The tests inject the Windows one and **keep passing as is** (the test
+   files that use it: `DatabaseKeyProviderTests`, `EnvelopeEncryptionTests`, `LocalBackupTests`).
+2. **Asynchronous sync.** Today `ISyncTransport` and `SyncService` are synchronous with
+   `GetAwaiter().GetResult()` (see `HttpSyncTransport`, `WebDavSyncTransport`). On mobile that blocks
+   thread-pool threads and on iOS it is simply a bad idea. Add an `async` API **keeping the synchronous one**,
+   with the conflict, tombstone and format tests as a safety net.
+3. **Serialization with a code generator (`JsonSerializerContext`).** iOS Release compiles AOT and
+   trims: `System.Text.Json` via reflection gives IL2026/IL3050 warnings and may fail at runtime.
+   Affected points: `SyncModels.cs` (lines 243, 255, 330, 337, 382, 415, 425, 429, 446),
+   `SettingsService.cs` (19, 30, 44) and `NotesRepository.cs` (341, 363).
+   **Before touching anything: a test that pins the exact JSON of an envelope** (golden file) to guarantee
+   that format 4 remains byte for byte the same.
+4. **Paths.** They are already passed as parameters (`SettingsService(path)`, `NotesDatabase(path)`,
+   `LocalBackup.CreateDaily(appDataDir, ...)`), so it is enough for the mobile app to use
+   `FileSystem.AppDataDirectory`. No new `IAppPaths` is needed.
+5. **Windows, so that mobile is usable without friction** (two new features, both reuse what
+   already exists):
+   - **QR pairing.** Today the invitation does not carry the token (good), but typing it on a phone
+     is awful. A QR generated by the PC with profile + URL + one-time token, scanned from the
+     mobile app. *Careful: it touches the sync security model (`docs/SYNC.md` → "Security model"):
+     it has to be decided with the user and documented.*
+   - **Sync server inside the PC itself** (optional and cheap): start in the WPF process the same
+     minimal API as `Aldune.SyncServer` over a LAN folder (the server is ~150 lines). The
+     no-Docker scenario then becomes: install the app → scan the QR → synced, no cloud and no account.
+6. **None of this is necessary for the mobile MVP, but it conditions v1**: reminders are not
+   synced. If someday they must travel PC↔mobile, **the format has to go up to 5**, and by the
+   project's rule (an old version rejects what it does not understand, with a clear error, applying nothing
+   halfway) **Windows that accepts 5 must be published first and only afterwards the mobile client that writes it**.
+   Recommendation: in mobile v1 reminders are local to the phone, and this is stated clearly in the
+   interface. Format 5 is decided with real use in hand.
 
-### 5.1 Formatos y compatibilidad, en corto
+### 5.1 Formats and compatibility, in brief
 
-- El cliente móvil implementa **el formato 4 tal cual** (mismos sobres, misma validación, mismos
-  desempates por `UpdatedAt` y `DeviceId`). No se añade ningún campo nuevo en la v1.
-- El `DeviceId` del móvil se genera una vez por instalación y no cambia (participa en el desempate).
-- Las **posiciones de ventana siguen siendo locales**: en móvil no se usan, pero la columna
-  `ScreenOrigin` existe y no molesta (se guarda un valor sintético y punto).
-- **Temas propios y conflictos quedan fuera del MVP móvil** (son locales hoy): el móvil lee los colores
-  que vengan en cada nota y ya. La pantalla de conflictos puede ser una lista de solo lectura más
-  adelante.
+- The mobile client implements **format 4 as is** (same envelopes, same validation, same
+  tie-breaking by `UpdatedAt` and `DeviceId`). No new field is added in v1.
+- The mobile `DeviceId` is generated once per installation and does not change (it takes part in tie-breaking).
+- **Window positions remain local**: they are not used on mobile, but the `ScreenOrigin` column
+  exists and does no harm (a synthetic value is stored, and that's it).
+- **Custom themes and conflicts are left out of the mobile MVP** (they are local today): mobile reads the colors
+  that come in each note and that's it. The conflicts screen can be a read-only list later
+  on.
 
-## 6. Estructura de repositorio propuesta
+## 6. Proposed repository structure
 
 ```
-Aldune.slnx                       (Windows + Core; sin cambios de fondo)
-src/Aldune.Core                   net10.0 puro (se le quita DPAPI)
-src/Aldune.Core.Windows           nuevo: DPAPI y lo que solo existe en Windows
-src/Aldune                        WPF (referencia Core + Core.Windows)
-src/Aldune.Mobile.Core            nuevo, net10.0: ViewModels, servicios de presentación y navegación
-                                  abstracta → testeable sin UI (aquí vive la cultura de tests)
-src/Aldune.Mobile                 nuevo, MAUI: net10.0-android (+ net10.0-ios)
-src/Aldune.Mobile.iOS.Widget      extensión Swift (WidgetKit + hoja de compartir), fuera de la solución .NET
-tests/Aldune.Core.Tests           los 850 de siempre
-tests/Aldune.Mobile.Tests         xUnit sobre Aldune.Mobile.Core
-docs/MOBILE_PROBES.md             "sondas" en móvil: pantalla de diagnóstico + checklist por dispositivo
+Aldune.slnx                       (Windows + Core; no changes of substance)
+src/Aldune.Core                   pure net10.0 (DPAPI removed)
+src/Aldune.Core.Windows           new: DPAPI and whatever exists only on Windows
+src/Aldune                        WPF (references Core + Core.Windows)
+src/Aldune.Mobile.Core            new, net10.0: ViewModels, presentation services and abstract
+                                  navigation → testable without UI (the test culture lives here)
+src/Aldune.Mobile                 new, MAUI: net10.0-android (+ net10.0-ios)
+src/Aldune.Mobile.iOS.Widget      Swift extension (WidgetKit + share sheet), outside the .NET solution
+tests/Aldune.Core.Tests           the usual 850
+tests/Aldune.Mobile.Tests         xUnit over Aldune.Mobile.Core
+docs/MOBILE_PROBES.md             mobile "probes": diagnostics screen + per-device checklist
 ```
 
-Convenciones que se mantienen: textos con `Strings.T(en, es, de, fr, pt)` (para no duplicar las cinco
-traducciones, el proyecto móvil enlaza `src/Aldune/Resources/Strings.cs` con un `<Compile Include>`
-en vez de copiarlo), comentarios en español, BOM UTF-8 en `.cs`/`.xaml`, documentación sin BOM, y
-**test primero** para todo lo que sea lógica.
+Conventions that are kept: texts with `Strings.T(en, es, de, fr, pt)` (so as not to duplicate the five
+translations, the mobile project links `src/Aldune/Resources/Strings.cs` with a `<Compile Include>`
+instead of copying it), comments in Spanish, UTF-8 BOM in `.cs`/`.xaml`, documentation without BOM, and
+**test first** for anything that is logic.
 
-## 7. Fases (estimación en sesiones de trabajo como las de este proyecto)
+## 7. Phases (estimate in work sessions like those of this project)
 
-| # | Fase | Entregable | Verificación / puerta | Sesiones |
+| # | Phase | Deliverable | Verification / gate | Sessions |
 |---|---|---|---|---|
-| 0 | **Spec y spikes** | `docs/specs/<fecha>-aldune-movil-design.md` (producto, qué no se porta, privacidad del widget) + cuatro sondas desechables | A: abrir `notes.db` y descifrar en Android. B: sync real contra el servidor Docker, con conflicto y borrado. C: notificación con la app cerrada, Android 16 e iOS 26. D: widget Swift mínimo leyendo del App Group. **Si A o D fallan, se revisa el stack antes de escribir producto** | 2 |
-| 1 | **Seams en Core** | `ISecretProtector`, API `async` de sync, `JsonSerializerContext`, `Aldune.Core.Windows` | Los 850 tests + el smoke test de UI de Windows, **sin cambios de comportamiento** | 3 |
-| 2 | **MVP Android** | Capturar (nota nueva, compartir, acceso directo, notificación "+"), lista con búsqueda y filtros, leer/editar con el formato de texto real, color/tema, etiquetar/archivar/papelera, ajustes de sync (código de perfil + token), sync automática al abrir y al volver a primer plano, recordatorios locales, notas protegidas | Tests de Core + tests de `Aldune.Mobile.Core` + **sonda móvil** con informe desde el dispositivo + checklist manual | 6 |
-| 3 | **MVP iOS** | El mismo alcance sobre el pipeline del Mac (Xcode 26), TestFlight y la extensión Swift de compartir | Igual que la fase 2, con checklist propia de iOS | 4 |
-| 4 | **Lo que hace que valga la pena** | Widget del mazo (Android en C#; iOS en Swift + App Group), widget de pantalla de bloqueo, mosaico de Ajustes rápidos, acciones en la notificación (*Hecho*, *Posponer*, *Abrir*), desbloqueo biométrico, diseño de tablet | Checklist por dispositivo + capturas; y un test de que la instantánea del widget **nunca** incluye notas protegidas | 4-5 |
-| 5 | **Emparejamiento sin fricción** | QR en Windows y, si se quiere, servidor de sync dentro del PC | Sonda: emparejar desde cero y ver llegar la nota al PC; y un intento con token inválido | 2-3 |
-| 6 | **Tiendas (solo si se publica)** | Android: Play (AAB, target API 36, seguridad de datos, política de privacidad). iOS, cuando toque: App Store (manifiesto de privacidad, declaración de cifrado, App Privacy). CI: job de Android en `windows-latest` | Para uso propio basta con un **APK firmado instalado a mano** (§0.1); si se publica, pista interna primero y comprobar **disponibilidad del nombre "Aldune"** | 1 (Android) + 2 (iOS) |
+| 0 | **Spec and spikes** | `docs/specs/<date>-aldune-movil-design.md` (product, what is not ported, widget privacy) + four disposable probes | A: open `notes.db` and decrypt on Android. B: real sync against the Docker server, with a conflict and a deletion. C: notification with the app closed, Android 16 and iOS 26. D: minimal Swift widget reading from the App Group. **If A or D fail, the stack is reviewed before writing product** | 2 |
+| 1 | **Seams in Core** | `ISecretProtector`, `async` sync API, `JsonSerializerContext`, `Aldune.Core.Windows` | The 850 tests + the Windows UI smoke test, **with no behavior changes** | 3 |
+| 2 | **Android MVP** | Capture (new note, share, shortcut, "+" notification), list with search and filters, read/edit with the real text format, color/theme, tag/archive/trash, sync settings (profile code + token), automatic sync on open and on return to the foreground, local reminders, protected notes | Core tests + `Aldune.Mobile.Core` tests + **mobile probe** with a report from the device + manual checklist | 6 |
+| 3 | **iOS MVP** | The same scope on the Mac pipeline (Xcode 26), TestFlight and the Swift share extension | Same as phase 2, with its own iOS checklist | 4 |
+| 4 | **What makes it worthwhile** | Deck widget (Android in C#; iOS in Swift + App Group), lock screen widget, Quick Settings tile, notification actions (*Done*, *Snooze*, *Open*), biometric unlock, tablet design | Per-device checklist + screenshots; and a test that the widget snapshot **never** includes protected notes | 4-5 |
+| 5 | **Frictionless pairing** | QR on Windows and, if wanted, sync server inside the PC | Probe: pair from scratch and see the note arrive on the PC; and an attempt with an invalid token | 2-3 |
+| 6 | **Stores (only if published)** | Android: Play (AAB, target API 36, data safety, privacy policy). iOS, when its turn comes: App Store (privacy manifest, encryption declaration, App Privacy). CI: Android job on `windows-latest` | For personal use a **signed APK installed by hand** is enough (§0.1); if published, internal track first and check **availability of the name "Aldune"** | 1 (Android) + 2 (iOS) |
 
-**Total: ~23-26 sesiones.** Es un proyecto del tamaño del original, no un añadido.
+**Total: ~23-26 sessions.** It is a project the size of the original, not an add-on.
 
-## 8. Costes y requisitos
+## 8. Costs and requirements
 
-- **Apple Developer Program: 99 $/año** (obligatorio para instalar en un iPhone y para publicar).
-- **Google Play: 25 $** una sola vez.
-- **Un Mac con Xcode 26** para iOS, o un runner macOS en la nube (GitHub Actions en repositorio público,
-  o un servicio tipo MacinCloud, ~25-40 $/mes). **Desde Windows no se compila iOS.**
-- Nada nuevo para el servidor: el `SyncServer` y las composiciones Docker que ya existen sirven igual.
+- **Apple Developer Program: $99/year** (mandatory to install on an iPhone and to publish).
+- **Google Play: $25** one time.
+- **A Mac with Xcode 26** for iOS, or a cloud macOS runner (GitHub Actions on a public repository,
+  or a service like MacinCloud, ~$25-40/month). **iOS cannot be built from Windows.**
+- Nothing new for the server: the `SyncServer` and the Docker compositions that already exist work just as well.
 
-## 9. Verificación: cómo se mantiene la cultura de sondas
+## 9. Verification: how the probe culture is maintained
 
-Los tests de Core (850) valen tal cual, porque **el Core es el mismo ensamblado**. Encima:
+The Core tests (850) are valid as they are, because **Core is the same assembly**. On top of that:
 
-1. `tests/Aldune.Mobile.Tests`: xUnit sobre `Aldune.Mobile.Core` (ViewModels, filtros, formateo, reglas
-   de captura). Sin UI.
-2. **Sonda móvil**: una pantalla de diagnóstico (solo en compilación de depuración) que ejecuta un guion
-   de comprobaciones sobre datos temporales — abrir la base, descifrar N notas, sincronizar contra un
-   servidor local, disparar una notificación, escribir la instantánea del widget, medir el PBKDF2 de una
-   nota protegida — y guarda un informe. Se documenta en `docs/MOBILE_PROBES.md`, en la línea de
+1. `tests/Aldune.Mobile.Tests`: xUnit over `Aldune.Mobile.Core` (ViewModels, filters, formatting, capture
+   rules). No UI.
+2. **Mobile probe**: a diagnostics screen (debug build only) that runs a script
+   of checks over temporary data — open the database, decrypt N notes, sync against a
+   local server, fire a notification, write the widget snapshot, time the PBKDF2 of a
+   protected note — and saves a report. It is documented in `docs/MOBILE_PROBES.md`, along the lines of
    `docs/WPF_PROBES.md`.
-3. **Checklist manual por dispositivo** en cada fase: widget tras reiniciar el teléfono, notificación con
-   la app cerrada, sync con la pantalla apagada y con cambio de red, rotación y modo oscuro.
-4. CI: el job actual no cambia; se añade uno de Android (compila `-f net10.0-android`) y, cuando haya
-   cuenta de Apple, otro de iOS en runner macOS.
+3. **Manual per-device checklist** in each phase: widget after restarting the phone, notification with
+   the app closed, sync with the screen off and with a network change, rotation and dark mode.
+4. CI: the current job does not change; an Android one is added (builds `-f net10.0-android`) and, when there is
+   an Apple account, another for iOS on a macOS runner.
 
-## 10. Riesgos y decisiones abiertas
+## 10. Risks and open decisions
 
-1. **iOS depende de un Mac.** Si no hay Mac, iOS queda atado a CI + un iPhone físico para probar. Es el
-   mayor bloqueo práctico del plan.
-2. **Widget y privacidad**: la instantánea de texto es una excepción deliberada a "cifrado en reposo".
-   Propuesta: solo títulos por defecto, con aviso claro al activar el texto.
-3. **Recordatorios**: locales en el móvil (v1) o formato 5 (después, con orden de publicación
-   obligatorio: primero Windows que lo entienda).
-4. **"Carpeta compartida" en móvil: descartada.** En iOS depende del proveedor (descargas bajo demanda)
-   y en Android obliga a SAF. La apuesta es **servidor propio o WebDAV**, que ya funcionan.
-5. **Mantenimiento**: tres aplicaciones × cinco idiomas × los tests. El recorte de funciones en móvil es
-   deliberado, no un descuido.
-6. **Modelo de pago (si algún día se cobra)**: Apple exige IAP para bienes digitales; el pago único de
-   escritorio y el de tienda no se mezclan sin pensarlo. Hay que decidir si el móvil es gratis
-   (compañero del escritorio) o de pago único en cada tienda.
-7. **Marca**: revisar que "Aldune" esté libre también en Play y App Store (el `ROADMAP.md` §6 ya avisa
-   de *FanNote* como nombre parecido).
-8. **Decidido el 2026-09-28** (§0.1): Android primero, en la tableta y sin publicar al principio. Lo único
-   que queda por elegir es el arranque fino: hacer la fase 0 (spec + spikes) o ir directo a un MVP de
-   Android.
+1. **iOS depends on a Mac.** Without a Mac, iOS is tied to CI + a physical iPhone to test on. It is the
+   biggest practical blocker of the plan.
+2. **Widget and privacy**: the text snapshot is a deliberate exception to "encrypted at rest".
+   Proposal: titles only by default, with a clear warning when enabling the text.
+3. **Reminders**: local on the phone (v1) or format 5 (later, with a mandatory publication order:
+   first a Windows version that understands it).
+4. **"Shared folder" on mobile: ruled out.** On iOS it depends on the provider (on-demand downloads)
+   and on Android it forces SAF. The bet is on **own server or WebDAV**, which already work.
+5. **Maintenance**: three applications × five languages × the tests. Cutting features on mobile is
+   deliberate, not an oversight.
+6. **Payment model (if it is ever charged for)**: Apple requires IAP for digital goods; the one-time desktop
+   payment and the store one are not mixed without thinking. It has to be decided whether mobile is free
+   (a companion to the desktop) or a one-time payment in each store.
+7. **Brand**: check that "Aldune" is also free on Play and the App Store (`ROADMAP.md` §6 already warns
+   about *FanNote* as a similar name).
+8. **Decided on 2026-09-28** (§0.1): Android first, on the tablet and without publishing at the start. The only thing
+   left to choose is the fine-grained start: do phase 0 (spec + spikes) or go straight to an Android
+   MVP.
 
-## 11. Descartes, con su razón (para no volver a proponerlos)
+## 11. Ruled out, with the reason (so they are not proposed again)
 
-- **Imitar el abanico/dock en táctil**: es un gesto de ratón sin ratón. Descartado como diseño.
-- **Reescribir Core en otro lenguaje** (Flutter, React Native, nativo): duplica el cifrado y el formato de
-  sync, que es justo la parte donde una divergencia se paga con datos ilegibles.
-- **PWA como cliente principal**: sin widgets, notificaciones poco fiables en iOS, y el texto acabaría en
-  el navegador.
-- **"Carpeta compartida" en el móvil**: ver riesgo 4.
-- **Sincronizar cada N minutos en segundo plano**: no es algo que iOS ni Android garanticen.
-- **Guardar la base de datos del PC en la nube y abrirla desde el móvil**: la clave está envuelta para el
-  usuario de Windows (DPAPI), así que ese fichero no se puede abrir desde otro sistema. Lo que se
-  comparte entre dispositivos es la **sync**, no `notes.db`.
+- **Imitating the fan/dock on touch**: it is a mouse gesture without a mouse. Ruled out as a design.
+- **Rewriting Core in another language** (Flutter, React Native, native): duplicates the encryption and the
+  sync format, which is exactly the part where a divergence is paid for with unreadable data.
+- **PWA as the main client**: no widgets, unreliable notifications on iOS, and the text would end up in
+  the browser.
+- **"Shared folder" on mobile**: see risk 4.
+- **Syncing every N minutes in the background**: neither iOS nor Android guarantees it.
+- **Storing the PC's database in the cloud and opening it from the phone**: the key is wrapped for the
+  Windows user (DPAPI), so that file cannot be opened from another system. What is
+  shared between devices is the **sync**, not `notes.db`.
 
-## 12. Cómo se retoma esto
+## 12. How to pick this up again
 
-1. Leer este documento entero y, si han pasado meses, **revalidar §4.1**: las versiones de Xcode, el
-   target API de Play y las versiones de MAUI cambian cada temporada. Todo lo de arriba es del 2026-09-28.
-2. Si lo que se quiere es otro sistema de escritorio (macOS, Linux), leer antes
-   [`DESKTOP_PORT.md`](DESKTOP_PORT.md): la conclusión allí es que **compensa el Core, no el dock**.
-3. Antes de empezar, conviene que alguien revise el plan con ojos frescos y compruebe las afirmaciones de hecho.
-4. Escribir la spec de producto de la fase 0 y hacer los cuatro spikes. Sin el resultado del spike A
-   (SQLite + AES-GCM en un dispositivo real) y del D (widget iOS), no escribir producto.
-5. Antes de tocar `src/Aldune.Core`, comprobar que siguen **todos los tests en verde** (850 cuando se escribió esto; hoy ~1350) y que existe el
-   golden file del sobre (formato 4).
-6. Plataforma: **ya decidida** el 2026-09-28 (§0.1): Android primero, en la tableta, sin publicar. Lo que
-   queda por elegir es el arranque fino: fase 0 (spec + spikes) o MVP de Android directo.
+1. Read this whole document and, if months have passed, **revalidate §4.1**: Xcode versions, the
+   Play target API and MAUI versions change every season. Everything above dates from 2026-09-28.
+2. If what is wanted is another desktop system (macOS, Linux), first read
+   [`DESKTOP_PORT.md`](DESKTOP_PORT.md): the conclusion there is that **Core is worth it, the dock is not**.
+3. Before starting, it is advisable that someone review the plan with fresh eyes and check the factual claims.
+4. Write the phase 0 product spec and do the four spikes. Without the result of spike A
+   (SQLite + AES-GCM on a real device) and of D (iOS widget), do not write product.
+5. Before touching `src/Aldune.Core`, check that **all tests are still green** (850 when this was written; today ~1350) and that the
+   envelope golden file (format 4) exists.
+6. Platform: **already decided** on 2026-09-28 (§0.1): Android first, on the tablet, without publishing. What is
+   left to choose is the fine-grained start: phase 0 (spec + spikes) or straight to the Android MVP.
 
-## Fuentes
+## Sources
 
-- [AES-GCM en iOS (dotnet/runtime#91523)](https://github.com/dotnet/runtime/issues/91523) ·
-  [Criptografía multiplataforma en .NET](https://learn.microsoft.com/en-us/dotnet/standard/security/cross-platform-cryptography)
-- [Qué es .NET MAUI](https://learn.microsoft.com/en-us/dotnet/maui/what-is-maui) ·
-  [Novedades de MAUI en .NET 10](https://learn.microsoft.com/en-us/dotnet/maui/whats-new/dotnet-10) ·
-  [Instalación: el Mac es obligatorio para iOS](https://learn.microsoft.com/en-us/dotnet/maui/get-started/installation)
-- [Widgets de Android con .NET MAUI](https://devblogs.microsoft.com/dotnet/how-to-build-android-widgets-with-dotnet-maui/) ·
-  [Widgets de iOS con .NET MAUI](https://devblogs.microsoft.com/dotnet/how-to-build-ios-widgets-with-dotnet-maui/)
-- [SecureStorage de MAUI](https://learn.microsoft.com/en-us/dotnet/maui/platform-integration/storage/secure-storage) ·
-  [SQLite en MAUI](https://learn.microsoft.com/en-us/dotnet/maui/data-cloud/database-sqlite) ·
-  [Problemas de SQLite en MAUI](https://www.banditoth.net/resolving-sqlite-issues-for-net-maui/)
-- [Requisitos próximos de Apple](https://developer.apple.com/news/upcoming-requirements/) ·
-  [Target API de Google Play](https://support.google.com/googleplay/android-developer/answer/11926878) ·
-  [Alarmas en Android](https://developer.android.com/develop/background-work/services/alarms/schedule) ·
-  [Segundo plano en iOS, 2026](https://vburojevic.dev/blog/ios-background-tasks-2026/)
-- [Avalonia](https://avaloniaui.net/) (comparación de opciones)
+- [AES-GCM on iOS (dotnet/runtime#91523)](https://github.com/dotnet/runtime/issues/91523) ·
+  [Cross-platform cryptography in .NET](https://learn.microsoft.com/en-us/dotnet/standard/security/cross-platform-cryptography)
+- [What is .NET MAUI](https://learn.microsoft.com/en-us/dotnet/maui/what-is-maui) ·
+  [What's new in MAUI in .NET 10](https://learn.microsoft.com/en-us/dotnet/maui/whats-new/dotnet-10) ·
+  [Installation: the Mac is mandatory for iOS](https://learn.microsoft.com/en-us/dotnet/maui/get-started/installation)
+- [Android widgets with .NET MAUI](https://devblogs.microsoft.com/dotnet/how-to-build-android-widgets-with-dotnet-maui/) ·
+  [iOS widgets with .NET MAUI](https://devblogs.microsoft.com/dotnet/how-to-build-ios-widgets-with-dotnet-maui/)
+- [MAUI SecureStorage](https://learn.microsoft.com/en-us/dotnet/maui/platform-integration/storage/secure-storage) ·
+  [SQLite in MAUI](https://learn.microsoft.com/en-us/dotnet/maui/data-cloud/database-sqlite) ·
+  [SQLite issues in MAUI](https://www.banditoth.net/resolving-sqlite-issues-for-net-maui/)
+- [Apple upcoming requirements](https://developer.apple.com/news/upcoming-requirements/) ·
+  [Google Play target API](https://support.google.com/googleplay/android-developer/answer/11926878) ·
+  [Alarms on Android](https://developer.android.com/develop/background-work/services/alarms/schedule) ·
+  [Background tasks on iOS, 2026](https://vburojevic.dev/blog/ios-background-tasks-2026/)
+- [Avalonia](https://avaloniaui.net/) (comparison of options)
 
-## 13. Revisión del 2026-10-17: móvil + tableta, F-Droid, y qué se corrige del plan
+## 13. Revision of 2026-10-17: phone + tablet, F-Droid, and what is corrected in the plan
 
-Pedido del usuario (2026-10-17): versión de **móvil además de tableta** (su móvil ahora es Android, un Pixel 10a),
-**publicar también en F-Droid**, y revisar si el plan de Android es correcto. Qué se comprobó y qué cambia:
+Requested by the user (2026-10-17): a **phone version in addition to the tablet** (their phone is now Android, a Pixel 10a),
+**publishing on F-Droid too**, and reviewing whether the Android plan is correct. What was checked and what changes:
 
-### 13.1 Hallazgos (con fuente)
+### 13.1 Findings (with sources)
 
-1. **F-Droid y .NET MAUI: hoy no hay camino en el repositorio principal.** En el foro de F-Droid
+1. **F-Droid and .NET MAUI: today there is no path in the main repository.** On the F-Droid forum
    ([«Why isn't C# .NET MAUI supported?»](https://forum.f-droid.org/t/why-isnt-c-net-maui-supported/24842),
-   [pág. 2](https://forum.f-droid.org/t/why-isnt-c-net-maui-supported/24842?page=2)) un mantenedor dijo en marzo de 2024 que
-   **no hay ninguna app .NET en F-Droid**; el obstáculo en marzo de 2026 es el workload **`maui-android`**, que no se compila
-   desde el código fuente (F-Droid exige que todo se construya desde fuente, con las excepciones ya listadas), y la última
-   entrada visible (27-sep-2026) sigue **sin respuesta oficial**. Bitwarden, que sí es FOSS, acabó reescribiendo en Kotlin.
-   *No hay una política publicada a favor ni en contra: lo cierto es que nadie lo ha conseguido.* Antes de decidir,
-   conviene volver a mirar el hilo y [la política de inclusión](https://f-droid.org/docs/FAQ_-_App_Developers/).
-2. **La licencia no es el problema:** Aldune es **GPL-3.0** (`LICENSE`), que F-Droid y IzzyOnDroid aceptan.
-3. **Alternativas de distribución sin F-Droid principal**, válidas con MAUI: APK firmado en las *releases* de GitHub, un
-   **repositorio F-Droid propio** (F-Droid lo permite para lo que no puede construir) e
-   [IzzyOnDroid](https://izzyondroid.org/docs/general/AppInclusionPolicy/) (acepta APK ya firmados por el desarrollador,
-   código abierto, metadatos con Fastlane; no consta que haya reglas especiales para .NET).
-4. **Entorno de este PC (comprobado el 2026-10-17):** .NET 10.0.400, **sin** workloads de MAUI, **sin** Android SDK, **sin**
-   Visual Studio. La frase de §0.1 («el SDK y el JDK los instala Visual Studio») no se cumple aquí; con MAUI habría que
-   instalar el workload y el SDK por línea de comandos (varios GB).
-5. **Móvil y tableta no son dos apps:** Compose lo resuelve con **una sola app adaptativa**
-   ([ListDetailPaneScaffold y clases de tamaño de ventana](https://developer.android.com/develop/ui/compose/layouts/adaptive/list-detail)):
-   en pantalla grande lista y nota van lado a lado; en pequeña, una a la vez.
-6. **Lo que hay que portar, medido:** el núcleo de sync y cifrado son **~1.900 líneas** de C# (`SyncModels` 513,
-   `SyncService` 765, `ContentCipher`, `ProtectedNoteContent`, códigos de invitación, transportes HTTP y WebDAV,
-   `ConflictMerge`…), más ~900 de formato de texto (`TaskLines`, `TaskLists`, `BulletLines`, `ListIndent`, `TextEdit`…) y
-   ~450 de color (`NoteThemes`, `OklchColor`…). Toda la criptografía es estándar (AES-256-GCM, PBKDF2-SHA256, HMAC si procede),
-   y Android la trae en `javax.crypto`; SQLite viene con el sistema.
+   [page 2](https://forum.f-droid.org/t/why-isnt-c-net-maui-supported/24842?page=2)) a maintainer said in March 2024 that
+   **there is no .NET app on F-Droid**; the obstacle in March 2026 is the **`maui-android`** workload, which is not built
+   from source (F-Droid requires everything to be built from source, with the exceptions already listed), and the last
+   visible entry (27 Sep 2026) is still **without an official reply**. Bitwarden, which is FOSS, ended up rewriting in Kotlin.
+   *There is no published policy for or against: what is certain is that nobody has managed it.* Before deciding,
+   it is worth looking at the thread again and at [the inclusion policy](https://f-droid.org/docs/FAQ_-_App_Developers/).
+2. **The license is not the problem:** Aldune is **GPL-3.0** (`LICENSE`), which F-Droid and IzzyOnDroid accept.
+3. **Distribution alternatives without main F-Droid**, valid with MAUI: signed APK in the GitHub *releases*, an
+   **own F-Droid repository** (F-Droid allows it for what it cannot build) and
+   [IzzyOnDroid](https://izzyondroid.org/docs/general/AppInclusionPolicy/) (accepts APKs already signed by the developer,
+   open source, metadata with Fastlane; there are no special rules for .NET on record).
+4. **Environment of this PC (checked on 2026-10-17):** .NET 10.0.400, **no** MAUI workloads, **no** Android SDK, **no**
+   Visual Studio. The sentence in §0.1 ("Visual Studio installs the SDK and the JDK") does not hold here; with MAUI the
+   workload and the SDK would have to be installed from the command line (several GB).
+5. **Phone and tablet are not two apps:** Compose solves it with **a single adaptive app**
+   ([ListDetailPaneScaffold and window size classes](https://developer.android.com/develop/ui/compose/layouts/adaptive/list-detail)):
+   on a large screen list and note sit side by side; on a small one, one at a time.
+6. **What has to be ported, measured:** the sync and encryption core is **~1,900 lines** of C# (`SyncModels` 513,
+   `SyncService` 765, `ContentCipher`, `ProtectedNoteContent`, invitation codes, HTTP and WebDAV transports,
+   `ConflictMerge`…), plus ~900 of text format (`TaskLines`, `TaskLists`, `BulletLines`, `ListIndent`, `TextEdit`…) and
+   ~450 of color (`NoteThemes`, `OklchColor`…). All the cryptography is standard (AES-256-GCM, PBKDF2-SHA256, HMAC where applicable),
+   and Android ships it in `javax.crypto`; SQLite comes with the system.
 
-Los **vectores de compatibilidad del formato 4** ya existen (`tests/vectors/`, ver su `README.md`) y los verifica `SyncVectorsTests`: son el
-contrato que cualquier cliente que no use `Aldune.Core` tiene que cumplir. Faltan los de **escenario** del motor de sync (estado local + estado del
-almacén → acciones), que hay que generar antes de dar un cliente Kotlin por compatible.
+The **format 4 compatibility vectors** already exist (`tests/vectors/`, see its `README.md`) and `SyncVectorsTests` verifies them: they are the
+contract that any client that does not use `Aldune.Core` has to meet. The **scenario** vectors of the sync engine (local state + store state →
+actions) are missing, and have to be generated before a Kotlin client is considered compatible.
 
-### 13.2 Qué se corrige del plan
+### 13.2 What is corrected in the plan
 
-| Punto del plan original | Corrección |
+| Point of the original plan | Correction |
 |---|---|
-| §4: **MAUI recomendada** | Solo si se renuncia a F-Droid principal. Con F-Droid como objetivo, **Android nativo (Kotlin + Jetpack Compose)**. |
-| §11: «Reescribir Core en Kotlin: descartado» | La razón era el riesgo de **divergencia silenciosa** del formato cifrado. Se mitiga con **vectores de compatibilidad**: `Aldune.Core` (la fuente de verdad) genera ficheros JSON con sobres, claves y resultados esperados, y los tests del cliente Kotlin los consumen; y al revés (lo que escribe Kotlin lo lee C#). Con eso el coste de la divergencia es un test en rojo, no datos ilegibles. |
-| §5: **seams en Core** (`ISecretProtector`, `async`, `JsonSerializerContext`) | **Dejan de ser requisito del móvil**: Kotlin no usa Core. Siguen valiendo para Windows (y `ISecretProtector` arregla los 46 tests que fallan en Linux), pero ya no bloquean nada. Lo que sí hace falta es el **golden file del sobre (formato 4)** y los vectores. |
-| §7: «6 sesiones el MVP de Android» | Se vuelve a contar: núcleo Kotlin con vectores **≈ 6-8**, UI Compose adaptativa **≈ 6-8**, widget/notificaciones/atajos **≈ 3-4**. Total **≈ 15-20 sesiones**, no 23-26 con iOS, pero sin iOS. (Orden de magnitud: si reescribir salía por menos de 5 sesiones el plan estaba mal; sale por más, pero a cambio no hay costuras ni toolchain MAUI.) |
-| §0.1: **tableta como dispositivo de referencia** | Ahora hay **dos** dispositivos reales: el Pixel 10a (teléfono) y la tableta. El **teléfono es el de referencia para la captura** y la **tableta para la gestión**; el diseño es adaptativo (ver 13.3). |
-| iOS | Sin cambios: fuera hasta que haya Mac. Con Kotlin, iOS sería un cliente Swift aparte que consume los mismos vectores (o Kotlin Multiplatform para el núcleo si se escribe pensando en ello desde el principio; no hace falta decidirlo ahora). |
+| §4: **MAUI recommended** | Only if main F-Droid is given up. With F-Droid as the goal, **native Android (Kotlin + Jetpack Compose)**. |
+| §11: "Rewriting Core in Kotlin: ruled out" | The reason was the risk of **silent divergence** of the encrypted format. It is mitigated with **compatibility vectors**: `Aldune.Core` (the source of truth) generates JSON files with envelopes, keys and expected results, and the Kotlin client's tests consume them; and the other way round (what Kotlin writes, C# reads). With that, the cost of divergence is a red test, not unreadable data. |
+| §5: **seams in Core** (`ISecretProtector`, `async`, `JsonSerializerContext`) | **They stop being a mobile requirement**: Kotlin does not use Core. They remain valid for Windows (and `ISecretProtector` fixes the 46 tests that fail on Linux), but they no longer block anything. What is needed is the **envelope golden file (format 4)** and the vectors. |
+| §7: "6 sessions for the Android MVP" | Recounted: Kotlin core with vectors **≈ 6-8**, adaptive Compose UI **≈ 6-8**, widget/notifications/shortcuts **≈ 3-4**. Total **≈ 15-20 sessions**, not 23-26 with iOS, but without iOS. (Order of magnitude: if rewriting came out under 5 sessions the plan was wrong; it comes out higher, but in exchange there are no seams and no MAUI toolchain.) |
+| §0.1: **tablet as the reference device** | There are now **two** real devices: the Pixel 10a (phone) and the tablet. The **phone is the reference for capture** and the **tablet for management**; the design is adaptive (see 13.3). |
+| iOS | No change: out until there is a Mac. With Kotlin, iOS would be a separate Swift client consuming the same vectors (or Kotlin Multiplatform for the core if written with that in mind from the start; it need not be decided now). |
 
-### 13.3 Móvil y tableta: una app, mismo motor, distinta cara
+### 13.3 Phone and tablet: one app, same engine, different face
 
-Misma sincronización, mismo formato de texto, mismos datos y mismos ajustes. Cambia **la pantalla de entrada y la disposición**,
-no el producto:
+Same sync, same text format, same data and same settings. What changes is **the entry screen and the layout**,
+not the product:
 
-| | Teléfono (caso de uso: apuntar al vuelo) | Tableta (caso de uso: gestionar y editar) |
+| | Phone (use case: jot down on the fly) | Tablet (use case: manage and edit) |
 |---|---|---|
-| Pantalla de inicio | **Captura primero**: «nota nueva» a un toque, lista debajo | Lista y nota **lado a lado** |
-| Entradas rápidas | Widget, mosaico de Ajustes rápidos, notificación con «+», compartir hacia la app | Lo mismo, y además atajos de teclado y ratón |
-| Edición | Pantalla completa | Panel derecho, varias notas recientes |
-| Mazo (orden del dock) | Reordenar con pulsación larga | Reordenar con arrastre o teclado |
-| Widget | Pequeño (tira de colores / títulos) | Grande (cuadrícula del mazo) |
+| Home screen | **Capture first**: "new note" one tap away, list below | List and note **side by side** |
+| Quick entries | Widget, Quick Settings tile, notification with "+", share into the app | The same, plus keyboard and mouse shortcuts |
+| Editing | Full screen | Right pane, several recent notes |
+| Deck (dock order) | Reorder with long press | Reorder with drag or keyboard |
+| Widget | Small (color strip / titles) | Large (deck grid) |
 
-Lo que **no** se hace en ninguno (igual que antes): dock, abanico, ventanas flotantes, posición por pantalla.
+What is **not** done in either (same as before): dock, fan, floating windows, per-screen position.
 
-### 13.4 Decisiones (2026-10-17)
+### 13.4 Decisions (2026-10-17)
 
-1. **Kotlin nativo en vez de MAUI: decidido por el usuario el 2026-10-17.**
-2. **Dispositivos de prueba:** Google Pixel 10a (Android 16, API 36) y **Lenovo Tab P11**. Según la tabla de ciclo de vida de Lenovo
-   ([PSREF](https://psref.lenovo.com/WDProduct/Lenovo_Tablets/Tab_P11)) el TB-J606F salió con Android 10 y tiene prevista la
-   actualización a Android 11; **no consta Android 12**. Es decir, la tableta es probablemente un Android 10 u 11 (API 29-30).
-   **Corregido el 2026-10-17: el usuario comprobó que la tableta tiene Android 14 (API 34)**, así que no es el TB-J606F de la tabla de arriba (modelo exacto sin anotar). `minSdk` 26 se mantiene por los usuarios de F-Droid, no por la tableta.
-3. **`minSdk` 26 (Android 8.0), `targetSdk`/`compileSdk` 36.** Razones:
-   - Cubre la tableta (API 29-30), el Pixel (API 36) y los móviles antiguos que suelen usar los usuarios de F-Droid
-     (LineageOS 15 en adelante).
-   - **`PBKDF2WithHmacSHA256` solo existe desde la API 26** (en la 25 y anteriores solo hay `PBKDF2WithHmacSHA1`;
-     [referencia de `SecretKeyFactory`](https://developer.android.com/reference/javax/crypto/SecretKeyFactory)). Las notas protegidas
-     del formato usan PBKDF2-SHA256 con 600.000 iteraciones, así que por debajo habría que reimplementarlo a mano sobre HMAC,
-     más lento y con más riesgo, para ganar una fracción mínima de dispositivos.
-   - `java.time` (fechas ISO 8601 del sobre) viene en el sistema desde la API 26, sin *desugaring*.
-   - Compose exige API 21 como mínimo, así que 26 no lo limita.
-   Bajar de 26 solo compensaría si aparece un usuario real con Android 5-7; hasta entonces no.
-4. **Pendiente:** `applicationId` y nombre (comprobar que «Aldune» está libre en F-Droid e IzzyOnDroid), y la versión exacta de Android de la tableta.
-5. Antes de escribir producto: **una revisión del plan con ojos frescos**, con la pregunta
-   añadida de si Kotlin con vectores es de verdad más barato que MAUI.
+1. **Native Kotlin instead of MAUI: decided by the user on 2026-10-17.**
+2. **Test devices:** Google Pixel 10a (Android 16, API 36) and **Lenovo Tab P11**. According to Lenovo's lifecycle table
+   ([PSREF](https://psref.lenovo.com/WDProduct/Lenovo_Tablets/Tab_P11)) the TB-J606F shipped with Android 10 and is scheduled to
+   receive the update to Android 11; **Android 12 is not on record**. That is, the tablet is probably Android 10 or 11 (API 29-30).
+   **Corrected on 2026-10-17: the user checked that the tablet has Android 14 (API 34)**, so it is not the TB-J606F from the table above (exact model not noted down). `minSdk` 26 is kept for the sake of F-Droid users, not the tablet.
+3. **`minSdk` 26 (Android 8.0), `targetSdk`/`compileSdk` 36.** Reasons:
+   - It covers the tablet (API 29-30), the Pixel (API 36) and the old phones that F-Droid users tend to use
+     (LineageOS 15 onwards).
+   - **`PBKDF2WithHmacSHA256` only exists since API 26** (on 25 and earlier there is only `PBKDF2WithHmacSHA1`;
+     [`SecretKeyFactory` reference](https://developer.android.com/reference/javax/crypto/SecretKeyFactory)). The format's protected notes
+     use PBKDF2-SHA256 with 600,000 iterations, so below that it would have to be reimplemented by hand over HMAC,
+     slower and riskier, to gain a tiny fraction of devices.
+   - `java.time` (the envelope's ISO 8601 dates) ships with the system since API 26, without *desugaring*.
+   - Compose requires API 21 at minimum, so 26 does not limit it.
+   Going below 26 would only pay off if a real user with Android 5-7 shows up; until then, no.
+4. **Pending:** `applicationId` and name (check that "Aldune" is free on F-Droid and IzzyOnDroid), and the tablet's exact Android version.
+5. Before writing product: **a review of the plan with fresh eyes**, with the added question
+   of whether Kotlin with vectors is really cheaper than MAUI.
 
-### 13.5 Estado a 2026-10-17 y decisiones
+### 13.5 Status as of 2026-10-17 and decisions
 
-Esto era el estado el día de la revisión; lo que se hizo después (F4-F7, Android 1.0) está en `STATUS.md` y en las specs de `specs/`.
+This was the status on the day of the revision; what was done afterwards (F4-F7, Android 1.0) is in `STATUS.md` and in the specs under `specs/`.
 
-- **Hecho:** la spec de producto, la arquitectura, el almacenamiento y las fases en
-  [`specs/2026-10-17-aldune-android-design.md`](specs/2026-10-17-aldune-android-design.md); los vectores de compatibilidad
-  (`tests/vectors/`, verificados por `SyncVectorsTests`, con 34 escenarios del motor real); el núcleo Kotlin `android/core`
-  (clave, sobres, borrados, notas protegidas, códigos de perfil, orden de versiones). Con el nonce de cada vector Kotlin reproduce
-  byte a byte el cifrado de C#, y Core lee lo que escribe Kotlin.
-- **Cambios al plan:** el widget de Android no necesita instantánea en claro (§13.6.8); rotación de clave, combinar conflictos,
-  biometría, QR y carpeta compartida quedan fuera de la v1; transportes servidor + WebDAV; el motor Kotlin separa decisión (`planSync`,
-  pura) y efectos; nuevo riesgo de distribución: verificación de desarrolladores de Google (§13.6.3), que hace del build reproducible un
-  requisito desde el primer día. Una revisión independiente de la spec (14 hallazgos, 13 confirmados en el código) añadió escenarios,
-  reglas de construcción de sobres (`ScreenOrigin`, autor, protegidas con texto vacío) y un **bug probable de Windows**: una protección
-  llegada por sync vacía el archivo de una nota vinculada (spec §9.3).
-- **Módulos Kotlin y sus pruebas:** `android/sync` (planSync, execute, transporte HTTP con OkHttp y WebDAV; los 34 escenarios pasan en el
-  plan y de punta a punta, y los transportes se ejecutaron contra el `Aldune.SyncServer` real), `android/text` (formato, color, orden y
-  búsqueda contra vectores generados desde Core: ≈12.800 casos) y `android/domain`. Búsqueda sin vectores (Android pliega acentos);
-  `ColorFit`, `ColorMix` y `AppPalette` quedaron fuera de F3 (la paleta de la app se decidió en F4).
-- **Decidido (2026-10-17):** `applicationId` `io.github.nachopola16.aldune`, nombre «Aldune», una clave de firma, GitHub + IzzyOnDroid
-  primero, Android Studio antes de F4; la tableta tiene Android 14. Detalle en la spec §8.1.
+- **Done:** the product spec, the architecture, the storage and the phases in
+  [`specs/2026-10-17-aldune-android-design.md`](specs/2026-10-17-aldune-android-design.md); the compatibility vectors
+  (`tests/vectors/`, verified by `SyncVectorsTests`, with 34 scenarios of the real engine); the Kotlin core `android/core`
+  (key, envelopes, deletions, protected notes, profile codes, version ordering). With each vector's nonce Kotlin reproduces
+  C#'s encryption byte for byte, and Core reads what Kotlin writes.
+- **Changes to the plan:** the Android widget does not need a clear-text snapshot (§13.6.8); key rotation, merging conflicts,
+  biometrics, QR and shared folder are left out of v1; server + WebDAV transports; the Kotlin engine separates decision (`planSync`,
+  pure) from effects; new distribution risk: Google developer verification (§13.6.3), which makes the reproducible build a
+  requirement from day one. An independent review of the spec (14 findings, 13 confirmed in the code) added scenarios,
+  envelope-construction rules (`ScreenOrigin`, author, protected notes with empty text) and a **probable Windows bug**: a protection
+  arriving via sync empties the file of a linked note (spec §9.3).
+- **Kotlin modules and their tests:** `android/sync` (planSync, execute, HTTP transport with OkHttp and WebDAV; the 34 scenarios pass in the
+  plan and end to end, and the transports were run against the real `Aldune.SyncServer`), `android/text` (format, color, ordering and
+  search against vectors generated from Core: ≈12,800 cases) and `android/domain`. Search without vectors (Android folds accents);
+  `ColorFit`, `ColorMix` and `AppPalette` were left out of F3 (the app palette was decided in F4).
+- **Decided (2026-10-17):** `applicationId` `io.github.nachopola16.aldune`, name "Aldune", a single signing key, GitHub + IzzyOnDroid
+  first, Android Studio before F4; the tablet has Android 14. Detail in spec §8.1.
 
-### 13.6 Segunda revisión con internet (2026-10-17, tarde)
+### 13.6 Second review with internet access (2026-10-17, afternoon)
 
-Revisión pedida por el usuario «con ojos frescos». Lo que se confirma, lo que se corrige y lo que es nuevo:
+Review requested by the user "with fresh eyes". What is confirmed, what is corrected and what is new:
 
-1. **F-Droid y .NET: se confirma.** En el [hilo del foro](https://forum.f-droid.org/t/why-isnt-c-net-maui-supported/24842?page=2)
-   la última entrada (27-sep-2026) pregunta si valdría un SDK de .NET compilado desde fuente y **sigue sin respuesta de F-Droid**; no se
-   menciona ninguna app .NET aceptada. La [política de inclusión](https://f-droid.org/docs/Inclusion_Policy/) (consultada el 2026-10-17)
-   exige una cadena de compilación «100 % FLOSS» y solo admite binarios precompilados de una lista cerrada (Debian, Maven Central y Google
-   Maven si son libres, SDK de Android, Flutter, Hermes, PyPI, Rust, Go, Node): **.NET/NuGet no está**. Kotlin sigue siendo la única vía
-   al repositorio principal.
-2. **Kotlin frente a MAUI, con lo ya hecho: se confirma.** El formato, el cifrado, las protegidas y los códigos de perfil ya están
-   portados (82 tests). Queda el motor (`SyncService`, ~765 líneas de referencia) y los transportes. MAUI exigiría además instalar los
-   workloads y el SDK en este PC y renunciar a F-Droid.
-3. **Nuevo: verificación de desarrolladores de Google.** Según [la página oficial](https://developer.android.com/developer-verification)
-   (sin fecha; contenido de junio de 2026 o posterior): desde el **30-sep-2026** en Brasil, Indonesia, Singapur y Tailandia, en
-   dispositivos certificados con Android 7+, solo se instalan apps de desarrolladores verificados, **también fuera de Play**; en **2027**
-   se extiende a todo el mundo. Hay cuentas de «distribución limitada» (estudiantes y aficionados, **hasta 20 dispositivos**, sin
-   documento ni cuota) y un «flujo avanzado» para usuarios expertos (previsto en agosto de 2026, en vista previa). F-Droid lo considera
-   una [amenaza existencial](https://thenewstack.io/f-droid-says-googles-android-developer-verification-plan-is-an-existential-threat-to-alternative-app-stores/)
-   porque firma con su propia clave. La página no dice nada de `adb install` ni de cómo se tratarán las apps firmadas por una tienda:
-   **no consta**. Consecuencias para Aldune: para uso propio en España no cambia nada hasta 2027 (y una cuenta limitada cubre los dos
-   dispositivos); para publicar, registrar el `applicationId` y la clave antes de la extensión global, y **build reproducible desde el
-   primer día** para que F-Droid sirva el APK firmado por el desarrollador (una sola clave registrada para GitHub, IzzyOnDroid y F-Droid).
-4. **Builds reproducibles** ([documentación](https://f-droid.org/docs/Reproducible_Builds/)): F-Droid recompila, copia la firma del APK del
-   desarrollador y lo publica solo si coincide byte a byte. Trampas conocidas: marcas de tiempo, `baseline.prof` no determinista
-   (desactivar las tareas ArtProfile), `vcsInfo` de AGP 8.3+ (árbol limpio en el tag o desactivarlo), número de núcleos (R8 8.6.33+),
-   mismas versiones de JDK y AGP, y firmar con `apksigner` de build-tools 34 (el de la 35 no lo verifica `apksigcopier`).
-5. **Metadatos** ([documentación](https://f-droid.org/docs/All_About_Descriptions_Graphics_and_Screenshots/)):
-   `fastlane/metadata/android/<locale>/` con `title.txt` (≤50), `short_description.txt` (≤80), `full_description.txt` (≤4000),
-   `images/icon.png`, `images/phoneScreenshots/`, `changelogs/<versionCode>.txt` (≤500). `en-US` es el idioma de respaldo.
-6. **Dependencias**: AndroidX, Compose, M3 Adaptive, Room, WorkManager, Glance y OkHttp están en Google Maven / Maven Central y son libres:
-   admitidas. Prohibidos Google Play Services, Firebase, ML Kit y SDK de analítica o anuncios (un QR futuro, con ZXing).
-7. **Compose Material 3 Adaptive** ([notas de versión](https://developer.android.com/jetpack/androidx/releases/compose-material3-adaptive),
-   consultadas el 2026-10-17): estable **1.3.0** (12-ago-2026); la 1.2.0 es estable desde el 22-oct-2025; en alfa la 1.4.0-alpha03
-   (7-oct-2026). Usar la estable con `NavigableListDetailPaneScaffold` (gestiona el «atrás»).
-8. **Corrección de §3.3 para Android:** el widget (Glance) se pinta desde el proceso de la app, que puede descifrar con la clave del
-   Keystore; **no hace falta escribir una instantánea en claro**.
-9. **No se ha vuelto a comprobar** en esta revisión: la política de IzzyOnDroid y la lista de anti-features (Aldune no debería llevar
-   ninguna: sin rastreo, servidor propio libre). Sigue valiendo lo de §13.1.
-
+1. **F-Droid and .NET: confirmed.** In the [forum thread](https://forum.f-droid.org/t/why-isnt-c-net-maui-supported/24842?page=2)
+   the last entry (27 Sep 2026) asks whether a .NET SDK built from source would be acceptable and **F-Droid still has not replied**; no
+   accepted .NET app is mentioned. The [inclusion policy](https://f-droid.org/docs/Inclusion_Policy/) (consulted on 2026-10-17)
+   requires a "100% FLOSS" build chain and only admits precompiled binaries from a closed list (Debian, Maven Central and Google
+   Maven if free, Android SDK, Flutter, Hermes, PyPI, Rust, Go, Node): **.NET/NuGet is not on it**. Kotlin remains the only route
+   to the main repository.
+2. **Kotlin versus MAUI, given what is already done: confirmed.** The format, the encryption, the protected notes and the profile codes are already
+   ported (82 tests). What remains is the engine (`SyncService`, ~765 reference lines) and the transports. MAUI would additionally require installing the
+   workloads and the SDK on this PC and giving up F-Droid.
+3. **New: Google developer verification.** According to [the official page](https://developer.android.com/developer-verification)
+   (undated; content from June 2026 or later): from **30 Sep 2026** in Brazil, Indonesia, Singapore and Thailand, on
+   certified devices with Android 7+, only apps from verified developers can be installed, **also outside Play**; in **2027**
+   it extends worldwide. There are "limited distribution" accounts (students and hobbyists, **up to 20 devices**, no
+   document or fee) and an "advanced flow" for expert users (planned for August 2026, in preview). F-Droid considers it
+   an [existential threat](https://thenewstack.io/f-droid-says-googles-android-developer-verification-plan-is-an-existential-threat-to-alternative-app-stores/)
+   because it signs with its own key. The page says nothing about `adb install` or about how apps signed by a store will be treated:
+   **not on record**. Consequences for Aldune: for personal use in Spain nothing changes until 2027 (and a limited account covers both
+   devices); to publish, register the `applicationId` and the key before the global extension, and a **reproducible build from the
+   first day** so that F-Droid serves the developer-signed APK (a single registered key for GitHub, IzzyOnDroid and F-Droid).
+4. **Reproducible builds** ([documentation](https://f-droid.org/docs/Reproducible_Builds/)): F-Droid rebuilds, copies the APK signature from the
+   developer and publishes it only if it matches byte for byte. Known pitfalls: timestamps, non-deterministic `baseline.prof`
+   (disable the ArtProfile tasks), `vcsInfo` of AGP 8.3+ (clean tree at the tag or disable it), number of cores (R8 8.6.33+),
+   same JDK and AGP versions, and signing with `apksigner` from build-tools 34 (the one from 35 is not verified by `apksigcopier`).
+5. **Metadata** ([documentation](https://f-droid.org/docs/All_About_Descriptions_Graphics_and_Screenshots/)):
+   `fastlane/metadata/android/<locale>/` with `title.txt` (≤50), `short_description.txt` (≤80), `full_description.txt` (≤4000),
+   `images/icon.png`, `images/phoneScreenshots/`, `changelogs/<versionCode>.txt` (≤500). `en-US` is the fallback language.
+6. **Dependencies**: AndroidX, Compose, M3 Adaptive, Room, WorkManager, Glance and OkHttp are on Google Maven / Maven Central and are free:
+   accepted. Google Play Services, Firebase, ML Kit and analytics or ad SDKs are forbidden (a future QR, with ZXing).
+7. **Compose Material 3 Adaptive** ([release notes](https://developer.android.com/jetpack/androidx/releases/compose-material3-adaptive),
+   consulted on 2026-10-17): stable **1.3.0** (12 Aug 2026); 1.2.0 has been stable since 22 Oct 2025; in alpha 1.4.0-alpha03
+   (7 Oct 2026). Use the stable one with `NavigableListDetailPaneScaffold` (it handles "back").
+8. **Correction to §3.3 for Android:** the widget (Glance) is painted from the app's process, which can decrypt with the
+   Keystore key; **there is no need to write a clear-text snapshot**.
+9. **Not re-checked** in this review: IzzyOnDroid's policy and the anti-features list (Aldune should carry
+   none: no tracking, free own server). What §13.1 says still holds.

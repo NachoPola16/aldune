@@ -1,131 +1,131 @@
-# Aldune — Paquete MSIX para la Microsoft Store (design spec)
+# Aldune — MSIX package for the Microsoft Store (design spec)
 
-Decidido con el usuario el 2026-09-28, después de que SignPath Foundation rechazara la solicitud de firma
-gratuita (ver `STATUS.md`). Regla que se mantiene: solo vías gratuitas.
+Decided with the user on 2026-09-28, after SignPath Foundation rejected the free signing request
+(see `STATUS.md`). Rule that stays: free paths only.
 
-## Problema
+## Problem
 
-Los binarios de GitHub van sin firmar y SmartScreen avisa de "editor desconocido". La única vía gratuita
-que queda es la Microsoft Store: el registro de desarrollador individual es gratis y la Store firma los
-paquetes MSIX con el certificado de Microsoft. Subir un `.exe`/`.msi` a la Store no sirve: exige que el
-instalador ya venga firmado con un certificado de confianza.
+The GitHub binaries are unsigned and SmartScreen warns about an "unknown publisher". The only free path
+left is the Microsoft Store: individual developer registration is free and the Store signs the
+MSIX packages with Microsoft's certificate. Uploading an `.exe`/`.msi` to the Store does not work: it requires the
+installer to already come signed with a trusted certificate.
 
-## Objetivo y límites
+## Goal and limits
 
-- Aldune se puede instalar desde la Store, firmado, sin avisos.
-- La descarga de GitHub (instalador y portable) no cambia y sigue sin firmar.
-- Un solo código: la app detecta en tiempo de ejecución si corre dentro del paquete y se adapta. Sin
-  rama ni proyecto aparte.
-- Solo x64, autocontenido, como hoy.
-- Fuera de alcance: subir a la Store de forma automática (API de envíos), ARM64, la ficha de la Store
-  (textos y capturas; se hace en Partner Center).
+- Aldune can be installed from the Store, signed, without warnings.
+- The GitHub download (installer and portable) does not change and stays unsigned.
+- A single codebase: the app detects at run time whether it is running inside the package and adapts. No
+  separate branch or project.
+- x64 only, self-contained, as today.
+- Out of scope: uploading to the Store automatically (submission API), ARM64, the Store listing
+  (texts and screenshots; done in Partner Center).
 
-## Decisiones
+## Decisions
 
-### Construcción: manifiesto a mano + `makeappx`
+### Build: hand-written manifest + `makeappx`
 
-Descartados el proyecto de empaquetado de Visual Studio (`.wapproj`: necesita el MSBuild de VS y no
-compila con `dotnet build`) y el MSIX de un solo proyecto del Windows App SDK (una dependencia entera
-solo para empaquetar).
+Ruled out: the Visual Studio packaging project (`.wapproj`: it needs VS's MSBuild and does not
+build with `dotnet build`) and the Windows App SDK single-project MSIX (a whole dependency
+just to package).
 
-- `installer/msix/AppxManifest.xml`: plantilla con marcadores para versión e identidad.
-- `installer/msix/identity.json`: los tres valores que da Partner Center (`Name`, `Publisher`,
-  `PublisherDisplayName`). Hasta que exista la cuenta lleva valores de prueba (`CN=Aldune Dev`); al
-  tenerla se cambian solo aquí.
-- `installer/msix/Assets/`: PNG de los logotipos obligatorios (Square44x44, StoreLogo 50x50,
-  Square150x150, Wide310x150; escalas 100 y 200; Square44x44 también `targetsize-*` sin placa),
-  generados una vez desde `src/Aldune/Assets/aldune-logo*.svg` y guardados en el repositorio para que
-  la build no dependa de un conversor de SVG.
-- `scripts/build-msix.ps1`: mismo `dotnet publish` autocontenido x64 que `build-installer.ps1` (se
-  extrae a una función común si el código se repite), copia publish + manifiesto + logotipos a una
-  carpeta de trabajo, rellena la versión y la identidad, y ejecuta `makeappx pack` →
-  `dist/Aldune-<versión>.msix`. Busca `makeappx`/`signtool` en `Windows Kits\10\bin\<última>\x64`.
-- Versión del paquete: la del `.csproj` con cuarto número `0` (`1.4.1.0`); la Store lo exige.
-- `-Sign`: crea (o reutiliza) un certificado autofirmado en `Cert:\CurrentUser\My` con el mismo
-  `Publisher` que `identity.json` y firma el paquete para instalarlo en local. Para instalarlo hay que
-  confiar en ese certificado (Personas de confianza del equipo; el script lo explica, no lo hace solo
-  porque pide administrador). A la Store se sube sin firmar: firma Microsoft.
-- Workflow de release: genera el `.msix` sin firmar y lo guarda como **artefacto de la ejecución**, no
-  como archivo de la versión de GitHub (sin firma de confianza no se puede instalar). Lo sube a mano el
-  usuario a Partner Center.
+- `installer/msix/AppxManifest.xml`: template with placeholders for version and identity.
+- `installer/msix/identity.json`: the three values given by Partner Center (`Name`, `Publisher`,
+  `PublisherDisplayName`). Until the account exists it carries test values (`CN=Aldune Dev`); once
+  it is there they are changed only here.
+- `installer/msix/Assets/`: PNGs of the mandatory logos (Square44x44, StoreLogo 50x50,
+  Square150x150, Wide310x150; scales 100 and 200; Square44x44 also `targetsize-*` without plate),
+  generated once from `src/Aldune/Assets/aldune-logo*.svg` and kept in the repository so that
+  the build does not depend on an SVG converter.
+- `scripts/build-msix.ps1`: same self-contained x64 `dotnet publish` as `build-installer.ps1` (extracted
+  into a common function if the code is repeated), copies publish + manifest + logos to a
+  working folder, fills in the version and the identity, and runs `makeappx pack` →
+  `dist/Aldune-<version>.msix`. It looks for `makeappx`/`signtool` in `Windows Kits\10\bin\<latest>\x64`.
+- Package version: the one from the `.csproj` with a fourth number `0` (`1.4.1.0`); the Store requires it.
+- `-Sign`: creates (or reuses) a self-signed certificate in `Cert:\CurrentUser\My` with the same
+  `Publisher` as `identity.json` and signs the package to install it locally. To install it you have to
+  trust that certificate (the machine's Trusted People store; the script explains it, it does not do it by itself
+  because it needs administrator). It is uploaded to the Store unsigned: Microsoft signs it.
+- Release workflow: generates the unsigned `.msix` and stores it as a **run artifact**, not
+  as a file of the GitHub release (without a trusted signature it cannot be installed). The user uploads it by hand to
+  Partner Center.
 
-### Detección del paquete
+### Package detection
 
-`Interop/PackageContext.cs`: `IsPackaged` = `GetCurrentPackageFullName` (kernel32, P/Invoke) devuelve
-algo distinto de `APPMODEL_ERROR_NO_PACKAGE`. Se calcula una vez. Sin WinRT para esto.
+`Interop/PackageContext.cs`: `IsPackaged` = `GetCurrentPackageFullName` (kernel32, P/Invoke) returns
+something other than `APPMODEL_ERROR_NO_PACKAGE`. It is computed once. No WinRT for this.
 
-En Core, `DistributionChannel` (`GitHub` | `Store`) y `DistributionFeatures.For(channel)`: qué
-arranque se usa y si se ofrece la consulta de versiones. Pequeño, pero con test, y la app no reparte
-`if (IsPackaged)` por todas partes.
+In Core, `DistributionChannel` (`GitHub` | `Store`) and `DistributionFeatures.For(channel)`: which
+startup is used and whether the version check is offered. Small, but with a test, and the app does not scatter
+`if (IsPackaged)` everywhere.
 
-### Datos: la misma carpeta real
+### Data: the same real folder
 
-Decidido por el usuario: la versión de la Store usa `%LOCALAPPDATA%\Aldune`, la misma que la de GitHub.
-Quien se cambia conserva sus notas y desinstalar desde la Store no las borra (como con Inno Setup).
+Decided by the user: the Store version uses `%LOCALAPPDATA%\Aldune`, the same as the GitHub one.
+Whoever switches keeps their notes and uninstalling from the Store does not delete them (as with Inno Setup).
 
-- Manifiesto: capacidad restringida `rescap:unvirtualizedResources` y, en `Properties`,
-  `desktop6:FileSystemWriteVirtualization` y `desktop6:RegistryWriteVirtualization` a `disabled`.
-  El registro también, para poder borrar la entrada `Run` de la versión de GitHub (abajo).
-- `ResolveAppDataDirectory` no cambia.
-- El mutex `AlduneSingleInstance` no está aislado para apps de escritorio empaquetadas de plena
-  confianza: las dos versiones no pueden correr a la vez sobre la misma carpeta. Se verifica en la sonda.
-- Microsoft revisa las capacidades restringidas. Texto de justificación preparado en
-  `installer/msix/README.md`: los datos del usuario deben sobrevivir a desinstalar y ser los mismos
-  que los de la versión descargable.
-- **Plan B, no se construye ahora**: si la rechazan, se quitan capacidad y propiedades; los datos van a
-  la carpeta privada del paquete y hay que avisar (ficha y Ajustes) de que desinstalar borra las notas.
+- Manifest: restricted capability `rescap:unvirtualizedResources` and, in `Properties`,
+  `desktop6:FileSystemWriteVirtualization` and `desktop6:RegistryWriteVirtualization` set to `disabled`.
+  The registry as well, to be able to delete the GitHub version's `Run` entry (below).
+- `ResolveAppDataDirectory` does not change.
+- The `AlduneSingleInstance` mutex is not isolated for full-trust packaged desktop apps:
+  the two versions cannot run at the same time on the same folder. It is verified in the probe.
+- Microsoft reviews restricted capabilities. Justification text prepared in
+  `installer/msix/README.md`: the user's data must survive uninstalling and be the same
+  as those of the downloadable version.
+- **Plan B, not built now**: if it is rejected, the capability and properties are removed; the data goes to
+  the package's private folder and the user must be warned (listing and Settings) that uninstalling deletes the notes.
 
-### Arranque con Windows
+### Start with Windows
 
-La clave `Run` no sirve desde el paquete: apuntaría a `C:\Program Files\WindowsApps\...`, que no se
-puede lanzar directamente. Dentro del paquete se usa la extensión `desktop:StartupTask`
-(`TaskId="AlduneStartup"`, `Enabled="false"`) y la API `Windows.ApplicationModel.StartupTask`.
+The `Run` key is no use from the package: it would point to `C:\Program Files\WindowsApps\...`, which cannot
+be launched directly. Inside the package the `desktop:StartupTask` extension is used
+(`TaskId="AlduneStartup"`, `Enabled="false"`) and the `Windows.ApplicationModel.StartupTask` API.
 
-- `StartupRegistration` pasa a una interfaz con dos implementaciones: `RunKeyStartup` (el código actual)
-  y `PackagedStartup`. `App` elige según `DistributionFeatures`.
-- La API es WinRT: el proyecto `Aldune` pasa a `net10.0-windows10.0.19041.0` (Core no cambia).
-  Comprobar que no aparecen avisos nuevos ni cambia el tamaño del publish de forma notable.
-- Estados de `StartupTask`: `Enabled`, `Disabled` (activable; la primera vez Windows muestra su propio
-  diálogo), `DisabledByUser` (desactivado en el Administrador de tareas: la app **no** puede
-  reactivarlo), `DisabledByPolicy`. En los dos últimos la casilla de Ajustes queda desactivada con un
-  texto que explica dónde se cambia. Texto nuevo con `Strings.T` en los cinco idiomas.
-- La API es asíncrona: la casilla se actualiza al terminar, sin bloquear el hilo de la interfaz.
-- Al activar el arranque desde el paquete se borra la entrada `Run` de la versión de GitHub si existe
-  (`AlduneStartup` y la heredada): si no, Windows lanzaría las dos al iniciar sesión y ganaría la
-  primera al azar.
+- `StartupRegistration` becomes an interface with two implementations: `RunKeyStartup` (the current code)
+  and `PackagedStartup`. `App` chooses according to `DistributionFeatures`.
+- The API is WinRT: the `Aldune` project moves to `net10.0-windows10.0.19041.0` (Core does not change).
+  Check that no new warnings appear and that the publish size does not change noticeably.
+- `StartupTask` states: `Enabled`, `Disabled` (can be enabled; the first time Windows shows its own
+  dialog), `DisabledByUser` (disabled in Task Manager: the app **cannot** re-enable
+  it), `DisabledByPolicy`. In the last two the Settings checkbox is disabled with a
+  text explaining where it is changed. New text with `Strings.T` in the five languages.
+- The API is asynchronous: the checkbox is updated when it finishes, without blocking the UI thread.
+- When enabling startup from the package, the GitHub version's `Run` entry is deleted if it exists
+  (`AlduneStartup` and the legacy one): otherwise Windows would launch both at sign-in and the
+  first would win at random.
 
-### Aviso de versiones nuevas
+### New-version notice
 
-Dentro del paquete no se consulta GitHub (`UpdateNotifier` no arranca) y la opción no aparece en
-Ajustes → Acerca de. Actualiza la Store, y sus normas no permiten actualizarse por otra vía. El ajuste
-`CheckForUpdatesAutomatically` se queda como está en `settings.json` (lo usa la versión de GitHub si
-el usuario vuelve a ella).
+Inside the package GitHub is not queried (`UpdateNotifier` does not start) and the option does not appear in
+Settings → About. The Store updates, and its rules do not allow updating through another channel. The
+`CheckForUpdatesAutomatically` setting stays as it is in `settings.json` (the GitHub version uses it if
+the user goes back to it).
 
-### Carpeta de datos para pruebas
+### Data folder for tests
 
-Para probar el paquete sin tocar las notas reales hace falta otra carpeta de datos, y a una app
-empaquetada no se le pasan argumentos con facilidad. `ALDUNE_DATA_DIR`: si existe, `App` la usa en
-lugar de `%LOCALAPPDATA%\Aldune` (sin migración de la carpeta heredada). No se documenta para usuarios.
+To test the package without touching the real notes another data folder is needed, and a packaged
+app is not easily given arguments. `ALDUNE_DATA_DIR`: if it exists, `App` uses it
+instead of `%LOCALAPPDATA%\Aldune` (without migrating the legacy folder). It is not documented for users.
 
-## Pruebas
+## Tests
 
-- Core (TDD): `DistributionFeatures.For` por canal; lectura y validación de `identity.json`
-  (`Publisher` con forma `CN=...`, `Name` sin espacios) y la conversión de versión a cuatro números
-  con el último a 0. Si la validación vive en el script, se prueba desde Core con la misma regla.
-- Build: `build-msix.ps1 -Sign` genera un paquete que `Add-AppxPackage` instala.
-- Sonda (fuera del repo, con `ALDUNE_DATA_DIR` temporal): la app instalada desde el MSIX escribe en la
-  carpeta indicada y no en una virtualizada; activar el arranque muestra el diálogo de Windows y queda
-  `Enabled`; una entrada `Run` de prueba desaparece; Acerca de no muestra la consulta de versiones;
-  abrir a la vez la versión de GitHub no crea una segunda instancia; desinstalar deja los datos.
-- `dotnet test` completo y smoke test sin cambios (la versión de GitHub no debe notar nada).
+- Core (TDD): `DistributionFeatures.For` per channel; reading and validating `identity.json`
+  (`Publisher` of the form `CN=...`, `Name` without spaces) and the conversion of the version to four numbers
+  with the last one at 0. If the validation lives in the script, it is tested from Core with the same rule.
+- Build: `build-msix.ps1 -Sign` produces a package that `Add-AppxPackage` installs.
+- Probe (outside the repo, with a temporary `ALDUNE_DATA_DIR`): the app installed from the MSIX writes to the
+  indicated folder and not to a virtualized one; enabling startup shows the Windows dialog and ends up
+  `Enabled`; a test `Run` entry disappears; About does not show the version check;
+  opening the GitHub version at the same time does not create a second instance; uninstalling leaves the data.
+- Full `dotnet test` and smoke test unchanged (the GitHub version must not notice anything).
 
-## Lo que hace el usuario
+## What the user does
 
-1. Instalar el SDK de Windows (`winget install Microsoft.WindowsSDK.10.0.26100`).
-2. Crear la cuenta de desarrollador individual en Partner Center (gratis, con verificación de
-   identidad) y reservar el nombre "Aldune".
-3. Pasar los tres valores de identidad (Gestión de productos → Identidad del producto) para
+1. Install the Windows SDK (`winget install Microsoft.WindowsSDK.10.0.26100`).
+2. Create the individual developer account in Partner Center (free, with identity
+   verification) and reserve the name "Aldune".
+3. Pass the three identity values (Product management → Product identity) for
    `identity.json`.
-4. Subir el primer `.msix`, con la justificación de `unvirtualizedResources` preparada.
-5. Rellenar la ficha: descripción, capturas, clasificación por edades y URL de la política de
-   privacidad (el párrafo de privacidad del README, publicado en una página).
+4. Upload the first `.msix`, with the `unvirtualizedResources` justification prepared.
+5. Fill in the listing: description, screenshots, age rating and the privacy policy URL
+   (the README's privacy paragraph, published on a page).

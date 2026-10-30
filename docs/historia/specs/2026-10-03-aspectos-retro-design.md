@@ -1,207 +1,206 @@
-# Aldune — Aspectos retro, opciones de forma y color único (design spec)
+# Aldune — Retro looks, shape options and single colour (design spec)
 
-Decidido con el usuario el 2026-10-03, sobre maquetas (siete mesas de trabajo,
-cada una con sus *Tweaks*).
-Las maquetas son la referencia visual; esta spec fija qué se construye y cómo encaja en el código.
+Decided with the user on 2026-10-03, based on mockups (seven artboards,
+each with its own *Tweaks*).
+The mockups are the visual reference; this spec fixes what gets built and how it fits into the code.
 
-## Qué se pidió
+## What was asked for
 
-- Aspectos "más retro": XP, Windows 95, terminal de Linux, telecomunicaciones, monitor de fósforo.
-- Que los colores de esos aspectos se puedan **personalizar** (el color de `nacho@aldune`, el de la barra
-  de XP, etc.).
-- Esquinas **rectas** en notas, dock y ventanas, y una **señal de sincronización**, elegibles en
-  **cualquier** aspecto.
-- Poder pintar **todas las notas del mismo color** (monocromo) sin cambiarlas una a una, con cualquier
-  tema.
-- Un tema de notas oscuro mejor que los actuales, y revisar los temas que hay.
-- Exportar e importar la configuración visual y los ajustes (la sincronización de ajustes no existe).
-- El dock rediseñado a partir del real (tira de reposo + tarjetas de 208×52 + pie), no inventado.
+- "More retro" looks: XP, Windows 95, Linux terminal, telecommunications, phosphor monitor.
+- That the colours of those looks can be **customised** (the colour of `nacho@aldune`, the XP bar colour,
+  etc.).
+- **Square** corners on notes, dock and windows, and a **sync signal**, selectable in **any** look.
+- Being able to paint **all notes the same colour** (monochrome) without changing them one by one, with any
+  theme.
+- A better dark note theme than the current ones, and a review of the existing themes.
+- Export and import of the visual configuration and the settings (settings sync does not exist).
+- The dock redesigned from the real one (resting strip + 208×52 cards + footer), not invented.
 
-## Fuera de alcance
+## Out of scope
 
-- Markdown, notas vinculadas a archivos y fotos (su propia spec, después).
-- MSIX (spec de 2026-09-28, después de esta).
-- Cambiar la estructura del dock o de la nota: los aspectos cambian cómo se pintan las mismas piezas.
+- Markdown, notes linked to files, and photos (their own spec, later).
+- MSIX (spec of 2026-09-28, after this one).
+- Changing the structure of the dock or the note: looks change how the same pieces are painted.
 
-## Decisiones
+## Decisions
 
-### 1. Aspecto = paleta + piel
+### 1. Look = palette + skin
 
-Hoy un aspecto es solo una paleta de ~55 colores (`AppPalette`). Un aspecto retro necesita además
-**forma**. Se separan las dos cosas:
+Today a look is just a palette of ~55 colours (`AppPalette`). A retro look also needs **shape**. The two
+are separated:
 
-- **Paleta** (colores del chrome, en Core): como hoy. Los aspectos retro la **derivan** de Dark o Light
-  con el mismo mecanismo que Pastel y Medianoche (`AppPalette.Tint`: se conserva la claridad OKLCH de
-  cada clave y se cambia el matiz), más los colores que elige el usuario. Así heredan el contraste ya
-  comprobado. Claves nuevas: `TitleBar`, `TitleBarEnd` (degradado), `OnTitleBar`, `BevelLight`,
-  `BevelDark` (relieve de Windows 95). En Dark y Light valen lo mismo que hoy se ve (barra = fondo, sin
-  relieve), así que los aspectos actuales no cambian.
-- **Piel** (`AppSkin`, en Core, datos puros): tipografía del chrome y de las notas, estilo de borde
-  (`Flat` | `Bevel`), barra de título (`Plain` | `Gradient`), estilo de tarjeta del dock
-  (`Filled` | `Stripe` | `Tinted`), adornos de texto (ninguno | prefijo de canal `CH1` | sufijo de
-  carpeta `hoy/` | mayúsculas) y línea de prompt en la nota (sí/no). La capa WPF la convierte en
-  recursos (`AldunePrimaryFont`, `AlduneNoteFont`, estilos con `DataTrigger` sobre el estilo de borde)
-  igual que `ThemeManager` hace con la paleta.
+- **Palette** (chrome colours, in Core): as today. The retro looks **derive** it from Dark or Light
+  with the same mechanism as Pastel and Midnight (`AppPalette.Tint`: the OKLCH lightness of each key is
+  kept and the hue is changed), plus the colours chosen by the user. This way they inherit the contrast
+  that is already verified. New keys: `TitleBar`, `TitleBarEnd` (gradient), `OnTitleBar`, `BevelLight`,
+  `BevelDark` (Windows 95 relief). In Dark and Light they have the same value as what is seen today (bar
+  = background, no relief), so the current looks do not change.
+- **Skin** (`AppSkin`, in Core, pure data): typography of the chrome and the notes, border style
+  (`Flat` | `Bevel`), title bar (`Plain` | `Gradient`), dock card style
+  (`Filled` | `Stripe` | `Tinted`), text decorations (none | channel prefix `CH1` | folder suffix
+  `hoy/` | uppercase) and prompt line in the note (yes/no). The WPF layer turns it into
+  resources (`AldunePrimaryFont`, `AlduneNoteFont`, styles with `DataTrigger` on the border style)
+  just as `ThemeManager` does with the palette.
 
-`AppearanceMode` gana valores nuevos (5 en adelante, escritos como número; un `settings.json`
-antiguo sigue cargando y una versión anterior que lea un valor desconocido cae en Oscuro, que es el
-`_` de `AppPalette.For`).
+`AppearanceMode` gains new values (5 onwards, written as a number; an old `settings.json`
+still loads, and an earlier version that reads an unknown value falls back to Dark, which is the
+`_` of `AppPalette.For`).
 
-### 2. Los aspectos nuevos
+### 2. The new looks
 
-| Aspecto | Base | Piel | Colores que elige el usuario |
+| Look | Base | Skin | Colours the user chooses |
 |---|---|---|---|
-| **XP claro** (Luna) | Light | Tahoma; barra en degradado vertical; botones con brillo; tarjetas `Filled`; esquinas redondeadas por defecto | Barra (azul Luna, oliva, plata, teja…), acento (botón de nueva nota, casillas) |
-| **XP + 95 oscuro** | Dark | Tahoma; relieve de Windows 95 (`Bevel`); barra en degradado horizontal de Windows 98; esquinas rectas | Barra (azul marino, verde azulado, morado, granate…), acento |
-| **Telecomunicaciones claro** (laboratorio) | Light (papel) | Cascadia Mono; líneas de 1 px; tarjetas `Tinted` por canal con su forma de onda; prefijo `CH1…`; rectas | Tinta, acento |
-| **Telecomunicaciones oscuro** (osciloscopio) | Dark (panel) | Igual, con retícula de fondo en la nota | Panel, traza (CH1) |
-| **Bash** | Dark | Cascadia Mono; notas con fondo de terminal **sin teñir** y el color solo en una franja (`Stripe`); sufijo `hoy/`; línea de prompt `usuario@aldune:~/notas$`; rectas | Paleta (Gruvbox por defecto, Ubuntu, Tango), y sobre ella usuario, ruta y acento |
-| **Fósforo** (monitor antiguo) | Dark | Cascadia Mono; mayúsculas; sin brillo ni barrido; rectas | Fósforo (verde, ámbar, azul, blanco), detalles |
+| **XP light** (Luna) | Light | Tahoma; vertical-gradient bar; buttons with gloss; `Filled` cards; rounded corners by default | Bar (Luna blue, olive, silver, tile red…), accent (new-note button, checkboxes) |
+| **XP + 95 dark** | Dark | Tahoma; Windows 95 relief (`Bevel`); Windows 98 horizontal-gradient bar; square corners | Bar (navy blue, teal, purple, maroon…), accent |
+| **Telecom light** (lab) | Light (paper) | Cascadia Mono; 1 px lines; `Tinted` cards per channel with their waveform; `CH1…` prefix; square | Ink, accent |
+| **Telecom dark** (oscilloscope) | Dark (panel) | Same, with a background grid on the note | Panel, trace (CH1) |
+| **Bash** | Dark | Cascadia Mono; notes with an **untinted** terminal background and the colour only in a stripe (`Stripe`); `hoy/` suffix; prompt line `usuario@aldune:~/notas$`; square | Palette (Gruvbox by default, Ubuntu, Tango), and on top of it user, path and accent |
+| **Phosphor** (old monitor) | Dark | Cascadia Mono; uppercase; no glow or sweep; square | Phosphor (green, amber, blue, white), details |
 
-Detalles que salieron de la revisión con el usuario y hay que respetar:
+Details that came out of the review with the user and must be respected:
 
-- XP + 95 oscuro: la nota es grafito neutro, **sin** el marrón/naranja de Royale Noir.
-- Bash: nada de colores fuertes por defecto (Gruvbox apagado); las notas **siempre oscuras**, solo la
-  franja lleva color; título de la tarjeta en el color del texto, no en el de la nota.
-- Fósforo y telecomunicaciones son aspectos distintos: los canales (`CH1`, `RX`, formas de onda) solo
-  en telecomunicaciones. Colores de canal de osciloscopio: CH1 amarillo, CH2 cian, CH3 magenta, CH4
-  azul (oscurecidos en la variante clara); el canal y su forma de onda (senoidal, cuadrada, triangular,
-  diente de sierra) dependen del **puesto** en el dock, cíclicos de 4 en 4.
-- Los adornos son de presentación: el texto de las notas no cambia (`hoy/` o `CH1 HOY` solo se pintan).
+- XP + 95 dark: the note is neutral graphite, **without** the brown/orange of Royale Noir.
+- Bash: no strong colours by default (muted Gruvbox); notes **always dark**, only the
+  stripe carries colour; card title in the text colour, not in the note's colour.
+- Phosphor and telecom are different looks: the channels (`CH1`, `RX`, waveforms) only
+  in telecom. Oscilloscope channel colours: CH1 yellow, CH2 cyan, CH3 magenta, CH4
+  blue (darkened in the light variant); the channel and its waveform (sine, square, triangle,
+  sawtooth) depend on the **position** in the dock, cycling every 4.
+- The decorations are presentation only: the note text does not change (`hoy/` or `CH1 HOY` are only painted).
 
-**Colores personalizables**: cada aspecto declara sus huecos (`AspectColorSlot`: id, nombre visible,
-valor por defecto, rol en la derivación). Se guardan en `settings.json` como
-`AspectColors: { "<aspecto>": { "<hueco>": "#RRGGBB" } }` (falta = por defecto). Ajustes → Aspecto
-enseña los huecos del aspecto elegido, cada uno con su muestra, su valor y "Cambiar" (el selector de
-color que ya existe, `CustomColorWindow`), más "Restablecer colores". Para que un color elegido no
-rompa la legibilidad, la derivación **ajusta la claridad** del color del usuario cuando hace falta (por
-ejemplo, una barra demasiado clara para texto blanco se oscurece hasta 4.5:1): se conserva el matiz,
-que es lo que el usuario está eligiendo. Tests con colores extremos (blanco, negro, amarillo puro).
+**Customisable colours**: each look declares its slots (`AspectColorSlot`: id, visible name,
+default value, role in the derivation). They are stored in `settings.json` as
+`AspectColors: { "<aspecto>": { "<hueco>": "#RRGGBB" } }` (missing = default). Settings → Appearance
+shows the slots of the chosen look, each with its swatch, its value and "Change" (the colour picker
+that already exists, `CustomColorWindow`), plus "Reset colours". So that a chosen colour does not
+break legibility, the derivation **adjusts the lightness** of the user's colour when needed (for
+example, a bar too light for white text is darkened until 4.5:1): the hue is kept,
+which is what the user is choosing. Tests with extreme colours (white, black, pure yellow).
 
-### 3. Opciones para cualquier aspecto
+### 3. Options for any look
 
-En Ajustes → Aspecto, debajo de los colores, valen con todos los aspectos (también los de hoy):
+In Settings → Appearance, below the colours, they apply to all looks (including today's):
 
-- **Esquinas rectas en notas y dock** (`SquareCorners`, `bool?`; `null` = lo que diga el aspecto: rectas
-  en bash, telecomunicaciones, fósforo y XP + 95; redondeadas en el resto). Requiere sacar los radios
-  escritos a mano (~83 `CornerRadius` en 12 XAML) a recursos `AlduneRadiusSmall/Medium/Large/Pill` y
-  `AlduneTabRadius` (el de la pestaña pegada al borde, que se espeja con el dock a la izquierda: hoy lo
-  hace `ApplyLeftEdgeTabShape` por código). Con esquinas rectas, `NativeMethods.ApplyRoundedCorners` pide
-  a DWM esquinas rectas (`DWMWCP_DONOTROUND`) en vez de las pequeñas.
-- **Señal de sincronización** (`ShowSyncSignal`, por defecto según el aspecto): al pie de cada nota,
-  `▂▄▆█ sync` en monoespaciada. Estado real, calculado en Core (`NoteSyncSignal`): sincronizada (su fecha
-  coincide con la versión base guardada), pendiente de subir, en conflicto, o sin sincronizar (excluida
-  por la sync selectiva). Sin sync configurada no se muestra.
-- **Mismo color en todas las notas** (`UniformNoteColor`: `null` = desactivado, o `#RRGGBB`): solo
-  cambia cómo se **pintan** (nota, pestaña del dock, cápsula de la tira); cada nota conserva su color
-  guardado, así que desactivarla lo devuelve todo y la sincronización no ve cambios. El color se elige
-  entre los del tema de notas activo o libre; la tinta, el borde y la etiqueta se derivan de él como
-  siempre (`NoteColorDerivation`). En el estilo `Stripe`, el color único es el de todas las franjas.
-  Un único sitio decide el color visible (`NoteDisplayColor.Resolve(color, settings)` en Core) y lo
-  usan los convertidores del dock y `NoteWindow.ApplyColor`.
+- **Square corners on notes and dock** (`SquareCorners`, `bool?`; `null` = whatever the look says: square
+  in bash, telecom, phosphor and XP + 95; rounded in the rest). It requires moving the hand-written radii
+  (~83 `CornerRadius` in 12 XAML files) to resources `AlduneRadiusSmall/Medium/Large/Pill` and
+  `AlduneTabRadius` (the one for the tab attached to the edge, which is mirrored with the dock on the left: today
+  `ApplyLeftEdgeTabShape` does it in code). With square corners, `NativeMethods.ApplyRoundedCorners` asks
+  DWM for square corners (`DWMWCP_DONOTROUND`) instead of the small ones.
+- **Sync signal** (`ShowSyncSignal`, default depends on the look): at the foot of each note,
+  `▂▄▆█ sync` in monospace. Real state, computed in Core (`NoteSyncSignal`): synced (its date
+  matches the stored base version), pending upload, in conflict, or not synced (excluded
+  by selective sync). With no sync configured it is not shown.
+- **Same colour on all notes** (`UniformNoteColor`: `null` = disabled, or `#RRGGBB`): it only
+  changes how they are **painted** (note, dock tab, strip capsule); each note keeps its stored colour,
+  so disabling it brings everything back and sync sees no changes. The colour is chosen
+  among those of the active note theme or freely; ink, border and label are derived from it
+  as always (`NoteColorDerivation`). In the `Stripe` style, the single colour is that of all stripes.
+  A single place decides the visible colour (`NoteDisplayColor.Resolve(color, settings)` in Core) and
+  the dock converters and `NoteWindow.ApplyColor` use it.
 
-### 4. Temas de notas
+### 4. Note themes
 
-Revisión medida (distancia OKLab mínima entre dos colores de un tema; los tests exigen ≥ 0.03):
-Clásico 0.074, Pastel 0.044, Otoño 0.033, Océano 0.030, **Sereno 0.020 (oscuros) y 0.008 (claros)**,
-**Grafito 0.004–0.006**. Decidido:
+Measured review (minimum OKLab distance between two colours of a theme; the tests require ≥ 0.03):
+Classic 0.074, Pastel 0.044, Autumn 0.033, Ocean 0.030, **Serene 0.020 (dark) and 0.008 (light)**,
+**Graphite 0.004–0.006**. Decided:
 
-- **Sereno se renueva** (mismo id `serene` y mismo nombre). Colores con la misma claridad, croma
-  justo para separarse y matices repartidos por igual:
-  - Oscuros (L 0.31, C 0.052, cada 45°): `#472525 #422A11 #36310E #1F371F #033936 #113447 #2B2D4A
-    #3E273F` (distancia mínima 0.033, contraste de la tinta ≥ 10:1).
-  - Claros (L 0.925, C 0.042, cada 60°): `#FFDDD4 #EFE7C7 #D3EFD8 #C7EFF4 #D9E7FF #F5DDF6` (0.037,
+- **Serene is renewed** (same id `serene` and same name). Colours with the same lightness,
+  just enough chroma to separate, and hues spread evenly:
+  - Dark (L 0.31, C 0.052, every 45°): `#472525 #422A11 #36310E #1F371F #033936 #113447 #2B2D4A
+    #3E273F` (minimum distance 0.033, ink contrast ≥ 10:1).
+  - Light (L 0.925, C 0.042, every 60°): `#FFDDD4 #EFE7C7 #D3EFD8 #C7EFF4 #D9E7FF #F5DDF6` (0.037,
     ≥ 13:1).
-  Sustituye a la "Penumbra" de las maquetas: dos temas apagados casi iguales sobraban. Los tests
-  existentes de distancia y contraste se extienden a todos los temas de serie (hoy no cubren Sereno ni
-  Grafito, por eso pasaban).
-- **Grafito se quita**: su papel (monocromo) lo cubre mejor "mismo color en todas las notas", que deja
-  elegir el gris. Migración: quien lo tenga activo pasa a `UniformNoteColor` con su gris (`#2E2E2E` o
-  `#E8E8E8` según `NewNoteTone`) y a Clásico como tema; sus notas no cambian (guardan su color). Un
-  `settings.json` que nombre `graphite` ya cae en Clásico (`NoteThemes.Resolve`).
-- **Recoloreo de Sereno**: una vez, al arrancar la versión nueva, cada nota cuyo color sea uno de los
-  antiguos de Sereno pasa al nuevo del mismo puesto y tono (oscuro → oscuro, claro → claro). Es un cambio
-  de color normal (`NotesRepository.SetColor`) y se sincroniza. Se marca en `settings.json`
-  (`SereneRecolored`) para no repetirlo. Riesgo: dos equipos que actualizan a la vez recolorean la misma
-  nota con el mismo resultado; la sincronización tiene que tratarlo como el mismo cambio y no como
-  conflicto. Test de integración de sync antes de dar la migración por buena; si hoy lo marcara como
-  conflicto, se arregla ahí (contenido y color idénticos = sin conflicto).
-- Clásico, Pastel, Otoño y Océano no cambian. Los aspectos Pastel y Medianoche tampoco.
-- **XP** (claro): los colores post-it de las maquetas (`#FFFFE1 #E1F0FF #E8F5D8 #FCE4D6 #EDE3F7 #FFF0C2
-  #DDEFEF #F0EFEA`), mismos tests.
-- Cada aspecto **propone** un tema al elegirlo, con una pregunta
-  "¿Usar también el tema de notas X?": no se cambia el tema del usuario sin preguntar. Aspecto y tema
-  siguen siendo independientes. (XP claro → XP; los oscuros → Sereno.)
-- Con `Stripe` (bash), la franja necesita verse sobre el fondo oscuro aunque el color de la nota sea
-  apagado: se deriva del color de la nota subiendo su claridad (L≈0.72) y con un croma mínimo, en Core
-  (`NoteColorDerivation.StripeColor`), con test de contraste ≥ 3:1 contra el fondo.
+  It replaces the "Penumbra" of the mockups: two almost identical muted themes were redundant. The
+  existing distance and contrast tests are extended to all built-in themes (today they do not cover Serene
+  or Graphite, which is why they passed).
+- **Graphite is removed**: its role (monochrome) is better covered by "same colour on all notes", which lets
+  you choose the grey. Migration: whoever has it active moves to `UniformNoteColor` with its grey (`#2E2E2E` or
+  `#E8E8E8` depending on `NewNoteTone`) and to Classic as theme; their notes do not change (they store their colour). A
+  `settings.json` that names `graphite` already falls back to Classic (`NoteThemes.Resolve`).
+- **Serene recolouring**: once, on starting the new version, each note whose colour is one of the old
+  Serene colours moves to the new one of the same position and tone (dark → dark, light → light). It is a
+  normal colour change (`NotesRepository.SetColor`) and it is synced. It is flagged in `settings.json`
+  (`SereneRecolored`) so it is not repeated. Risk: two machines that update at the same time recolour the same
+  note with the same result; sync has to treat it as the same change and not as a
+  conflict. Sync integration test before considering the migration good; if today it flagged it as
+  a conflict, it is fixed there (identical content and colour = no conflict).
+- Classic, Pastel, Autumn and Ocean do not change. The Pastel and Midnight looks do not either.
+- **XP** (light): the post-it colours of the mockups (`#FFFFE1 #E1F0FF #E8F5D8 #FCE4D6 #EDE3F7 #FFF0C2
+  #DDEFEF #F0EFEA`), same tests.
+- Each look **proposes** a theme when chosen, with the question
+  "Use the X note theme as well?": the user's theme is not changed without asking. Look and theme
+  remain independent. (XP light → XP; the dark ones → Serene.)
+- With `Stripe` (bash), the stripe needs to be visible against the dark background even if the note colour is
+  muted: it is derived from the note colour by raising its lightness (L≈0.72) and with a minimum chroma, in Core
+  (`NoteColorDerivation.StripeColor`), with a contrast test ≥ 3:1 against the background.
 
-### 5. El dock en cada aspecto
+### 5. The dock in each look
 
-Misma estructura y medidas que hoy (`EdgeDockWindow.xaml`: tira de reposo de 20 px con cápsulas de
-12×26; tarjetas de 208×52 pegadas al borde con título y vista previa; pie en píldora con Ver todas,
-Gestionar, Sincronizar y Nueva nota de 40 px). Lo que cambia por piel:
+Same structure and measurements as today (`EdgeDockWindow.xaml`: 20 px resting strip with 12×26
+capsules; 208×52 cards attached to the edge with title and preview; pill footer with See all,
+Manage, Sync and a 40 px New note). What changes per skin:
 
-- Tarjetas: `Filled` (hoy), `Stripe` (fondo del chrome + franja de 3 px a la izquierda, o a la derecha
-  con el dock en ese lado), `Tinted` (tinte suave + franja + forma de onda de su canal). En `Tinted` el
-  color es el del **canal** (por puesto en el dock), no el de la nota: es lo que da sentido a `CH1…`.
-  Con "mismo color en todas las notas" activado, el color único sustituye a los de canal y solo las
-  formas de onda y el número de canal siguen distinguiendo las tarjetas.
-- Bordes `Bevel`: relieve claro arriba-izquierda y oscuro abajo-derecha en tarjetas, cápsulas, pie y
-  botones.
-- Pie: con esquinas rectas deja de ser píldora; los botones redondos pasan a cuadrados.
-- Telecomunicaciones: la forma de onda es un `Path` fijo por canal (cuatro geometrías en recursos).
+- Cards: `Filled` (today), `Stripe` (chrome background + 3 px stripe on the left, or on the right
+  with the dock on that side), `Tinted` (soft tint + stripe + waveform of its channel). In `Tinted` the
+  colour is that of the **channel** (by position in the dock), not of the note: that is what gives `CH1…` its meaning.
+  With "same colour on all notes" enabled, the single colour replaces the channel ones and only the
+  waveforms and the channel number keep distinguishing the cards.
+- `Bevel` borders: light relief at top-left and dark at bottom-right on cards, capsules, footer and
+  buttons.
+- Footer: with square corners it stops being a pill; the round buttons become square.
+- Telecom: the waveform is a fixed `Path` per channel (four geometries in resources).
 
-### 6. Exportar e importar la configuración
+### 6. Exporting and importing the configuration
 
-Un archivo, `*.aldune-config.json`, desde Ajustes → Acerca de ("Exportar configuración…",
-"Importar configuración…"):
+One file, `*.aldune-config.json`, from Settings → About ("Export configuration…",
+"Import configuration…"):
 
-- Al exportar se marcan las secciones: **Aspecto** (aspecto, colores personalizados de cada aspecto,
-  esquinas, señal de sync, mismo color, tema de notas activo, temas propios, tono y asignación de color
-  de las notas nuevas) y **Ajustes** (idioma, modo de interfaz, atajos, dock: borde, vista, mantener
-  abierto, vista previa, pantalla completa, trackpad; tareas: mover hechas, ocultar hechas y su plazo;
-  papelera; posiciones recordadas sí/no; consulta de versiones).
-- **Nunca** se exportan: perfiles y contraseñas de sincronización, claves, la pantalla elegida
-  (`MonitorInfo.StableId` es de cada equipo), posiciones de ventanas, arranque con Windows (es del
-  registro de cada equipo).
-- Formato: `{"format": "aldune-config", "version": 1, "app": "1.5.0", "appearance": {…}, "settings": {…}}`.
-  Una sección que falta no se toca al importar. Campos desconocidos se ignoran; colores inválidos se
-  descartan (`NoteThemes.Sanitize` para los temas propios); enums fuera de rango caen en su valor por
-  defecto. Un archivo de una versión futura (`version` > 1) se lee igualmente con lo que se entienda.
-- Al importar: vista previa con la lista de lo que cambiaría (valor actual → valor nuevo), botones
-  "Aplicar" y "Cancelar". Se aplica en vivo (aspecto y atajos sin reiniciar). Antes de aplicar se
-  guarda una copia del `settings.json` actual junto a él (como ya hace la copia diaria), para poder
-  volver atrás.
-- Lógica en Core (`ConfigExport.Build(settings, sections)` y `ConfigImport.Plan(json, current)` →
-  lista de cambios + ajustes resultantes), con tests: ida y vuelta, secciones parciales, archivo
-  corrupto, campos raros, que nunca salgan credenciales ni la pantalla.
+- On export the sections are ticked: **Appearance** (look, custom colours of each look,
+  corners, sync signal, same colour, active note theme, custom themes, tone and colour assignment
+  of new notes) and **Settings** (language, interface mode, shortcuts, dock: edge, view, keep
+  open, preview, full screen, trackpad; tasks: move done, hide done and its deadline;
+  trash; remembered positions yes/no; version check).
+- They are **never** exported: sync profiles and passwords, keys, the chosen screen
+  (`MonitorInfo.StableId` is specific to each machine), window positions, start with Windows (it belongs to
+  each machine's registry).
+- Format: `{"format": "aldune-config", "version": 1, "app": "1.5.0", "appearance": {…}, "settings": {…}}`.
+  A missing section is left untouched on import. Unknown fields are ignored; invalid colours are
+  discarded (`NoteThemes.Sanitize` for custom themes); out-of-range enums fall back to their default
+  value. A file from a future version (`version` > 1) is still read with whatever is understood.
+- On import: a preview with the list of what would change (current value → new value), buttons
+  "Apply" and "Cancel". It is applied live (look and shortcuts without restarting). Before applying, a copy of the
+  current `settings.json` is saved next to it (as the daily copy already does), so it can be
+  rolled back.
+- Logic in Core (`ConfigExport.Build(settings, sections)` and `ConfigImport.Plan(json, current)` →
+  list of changes + resulting settings), with tests: round trip, partial sections, corrupt
+  file, odd fields, and that credentials and the screen never come out.
 
-## Orden de trabajo
+## Order of work
 
-Tres bloques que se pueden publicar por separado, cada uno con sus tests y su sonda:
+Three blocks that can be released separately, each with its tests and its probe:
 
-1. **Opciones transversales y temas**: radios a recursos, esquinas rectas, señal de sync, mismo color,
-   Sereno renovado (con su recoloreo), Grafito fuera (con su migración) y XP. No cambia ningún aspecto
-   existente salvo por las opciones nuevas.
-2. **Piel**: `AppSkin`, tipografía, relieve, barra en degradado, estilos de tarjeta, adornos, prompt; las
-   claves nuevas de paleta con sus valores neutros en Dark/Light.
-3. **Los seis aspectos** con sus huecos de color y la página de Ajustes → Aspecto ampliada.
-4. **Exportar e importar** la configuración (independiente de los demás; puede ir en cualquier punto).
+1. **Cross-cutting options and themes**: radii to resources, square corners, sync signal, same colour,
+   renewed Serene (with its recolouring), Graphite out (with its migration) and XP. It does not change any existing
+   look except through the new options.
+2. **Skin**: `AppSkin`, typography, relief, gradient bar, card styles, decorations, prompt; the
+   new palette keys with their neutral values in Dark/Light.
+3. **The six looks** with their colour slots and the expanded Settings → Appearance page.
+4. **Export and import** of the configuration (independent of the others; can go at any point).
 
-Todo antes de la 1.5.0, junto con las listas y el atajo ya hechos.
+All before 1.5.0, together with the lists and the shortcut already done.
 
-## Pruebas
+## Tests
 
-- Core (TDD): derivación de cada paleta retro con los colores por defecto y con colores extremos
-  (contraste de todos los textos sobre sus fondos, como los tests de paleta actuales);
-  `NoteSyncSignal` en sus cuatro estados más "sin sync"; `NoteDisplayColor.Resolve` (desactivado, color
-  único, color inválido en `settings.json`); `StripeColor` (contraste ≥ 3:1 con cada fondo oscuro);
-  distancia y contraste en **todos** los temas de serie (Sereno renovado y XP incluidos); recoloreo de
-  Sereno (cada color antiguo al nuevo de su puesto, una sola vez, colores ajenos intactos); migración de
-  Grafito; sync con el mismo recoloreo en dos equipos sin conflicto; exportar/importar; carga de un
-  `settings.json` antiguo sin los campos nuevos.
-- Sondas con datos temporales: capturas de nota, dock (reposo y desplegado, a la derecha y a la
-  izquierda) y Ajustes en cada aspecto, con esquinas rectas y redondeadas; cambio de aspecto en vivo;
-  mismo color activado y desactivado. Se comparan con las maquetas.
-- Textos nuevos en los cinco idiomas con `Strings.T` (nombres de aspectos, huecos de color, opciones).
+- Core (TDD): derivation of each retro palette with the default colours and with extreme colours
+  (contrast of all texts on their backgrounds, like the current palette tests);
+  `NoteSyncSignal` in its four states plus "no sync"; `NoteDisplayColor.Resolve` (disabled, single
+  colour, invalid colour in `settings.json`); `StripeColor` (contrast ≥ 3:1 with each dark background);
+  distance and contrast in **all** built-in themes (renewed Serene and XP included); Serene recolouring
+  (each old colour to the new one of its position, only once, foreign colours untouched); Graphite
+  migration; sync with the same recolouring on two machines without conflict; export/import; loading an old
+  `settings.json` without the new fields.
+- Probes with temporary data: screenshots of note, dock (resting and expanded, on the right and on the
+  left) and Settings in each look, with square and rounded corners; live look change;
+  same colour enabled and disabled. They are compared with the mockups.
+- New texts in the five languages with `Strings.T` (look names, colour slots, options).

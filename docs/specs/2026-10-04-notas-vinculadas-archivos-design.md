@@ -1,233 +1,232 @@
-# Aldune — Notas vinculadas a archivos `.md` y `.txt` (design spec)
+# Aldune — Notes linked to `.md` and `.txt` files (design spec)
 
-Decidido con el usuario el 2026-10-04 (fase F1 de un plan retirado del árbol),
-a partir de lo que pidió en `docs/ROADMAP.md` §11. Sale como **1.6.0**.
+Decided with the user on 2026-10-04 (phase F1 of a plan removed from the tree),
+based on what they asked for in `docs/ROADMAP.md` §11. Ships as **1.6.0**.
 
-## Qué se pidió
+## What was asked for
 
-- Abrir un `.md` que ya está en cualquier carpeta del equipo y que **se quede en el dock apuntando a ese
-  sitio**: la nota *es* el archivo (se edita ahí y el archivo cambia), no una copia.
-- **Elegir por nota si entra en la sincronización.** Ejemplo real: los apuntes de una asignatura en `Z:`
-  (volumen en red), que el portátil ve en el mismo sitio.
-- El usuario edita esos archivos también con otros programas, aunque no necesariamente a la vez.
+- Open a `.md` that already lives in any folder on the machine and have it **stay in the dock pointing at that
+  place**: the note *is* the file (it is edited there and the file changes), not a copy.
+- **Choose per note whether it takes part in sync.** Real example: the notes for a course on `Z:`
+  (a network volume), which the laptop sees in the same place.
+- The user also edits those files with other programs, though not necessarily at the same time.
 
-## Qué no entra, y por qué
+## What is not included, and why
 
-- **Ver Markdown con formato** (títulos grandes, negritas): el editor es un `TextBox` plano y tareas,
-  viñetas, sangrías, mover líneas y deshacer dependen de ello. Rehacerlo es tocar el corazón de la app con
-  mucho riesgo; el `.md` se edita bien como texto.
-- **Fotos**: ya descartadas en `ROADMAP.md` §3. Rompen el modelo de texto plano en el que se apoyan el
-  cifrado, la búsqueda, la exportación, la sync (servidor y tamaño de los sobres) y el cliente móvil.
-- **Vincular la misma nota a un archivo en cada equipo** ("raíces con nombre" que viajan por la sync):
-  con `Z:` no aporta nada (el archivo ya es el mismo en los dos equipos y sincronizarlo además crearía
-  conflictos falsos por doble camino); con copias locales convertiría Aldune en un sincronizador de
-  archivos que compite con OneDrive o Syncthing; obligaría a subir el formato de sync a 5; y daría a lo
-  que llega por la sync la capacidad de escribir archivos del disco de otro equipo. El vínculo es de cada
-  equipo: en el portátil se abre el archivo una vez y queda en su dock.
-- **Notas protegidas vinculadas**: ver decisión 7.
-- **Edición simultánea letra a letra** con otro programa (fusionar mientras se escribe en los dos): muy
-  compleja; con la decisión 4 no se pierde nada.
-- Formatos con otra sintaxis de listas (`.org`, `.rst`).
+- **Rendering Markdown with formatting** (big headings, bold): the editor is a plain `TextBox` and tasks,
+  bullets, indentation, moving lines and undo depend on it. Redoing it means touching the heart of the app with
+  a lot of risk; `.md` edits fine as text.
+- **Photos**: already ruled out in `ROADMAP.md` §3. They break the plain-text model that encryption, search, export, sync (server and envelope size)
+  and the mobile client rely on.
+- **Linking the same note to a file on each machine** ("named roots" that travel through sync):
+  with `Z:` it adds nothing (the file is already the same on both machines and syncing it as well would create
+  false conflicts through a double path); with local copies it would turn Aldune into a file synchroniser that competes with OneDrive or Syncthing; it would force the sync format up to 5; and it would give
+  what arrives through sync the ability to write files on another machine's disk. The link belongs to each
+  machine: on the laptop the file is opened once and stays in its dock.
+- **Linked protected notes**: see decision 7.
+- **Letter-by-letter simultaneous editing** with another program (merging while both are being typed into): very
+  complex; with decision 4 nothing is lost.
+- Formats with another list syntax (`.org`, `.rst`).
 
-## Decisiones
+## Decisions
 
-### 1. Una nota vinculada sigue siendo una nota
+### 1. A linked note is still a note
 
-Tiene su fila en `Note` (color, etiquetas, posición en el mazo, recordatorio, estado) como cualquier otra.
-Solo cambia de dónde sale y adónde va su texto. `Note.Text` guarda la **traducción** del archivo al formato
-de Aldune (`☐`, `☒`, `→`; ver decisión 3): es la copia del último contenido leído, y por eso el dock, el
-gestor, la búsqueda, el recordatorio y "Exportar a Markdown" funcionan sin casos especiales. La base de
-datos va cifrada como siempre; lo único en claro es el archivo, que ya lo estaba.
+It has its row in `Note` (colour, tags, position in the deck, reminder, state) like any other.
+Only where its text comes from and where it goes changes. `Note.Text` stores the **translation** of the file into
+Aldune's format (`☐`, `☒`, `→`; see decision 3): it is the copy of the last content read, and that is why the dock, the
+manager, search, the reminder and "Exportar a Markdown" work without special cases. The database
+is encrypted as always; the only thing in plaintext is the file, which already was.
 
-### 2. El vínculo es local y no viaja
+### 2. The link is local and does not travel
 
-Tabla nueva `NoteFileLink` (creada con `CREATE TABLE IF NOT EXISTS`, como las demás; una base antigua la
-gana al abrirse y una versión antigua la ignora):
+New table `NoteFileLink` (created with `CREATE TABLE IF NOT EXISTS`, like the others; an old database
+gains it on opening and an old version ignores it):
 
-| Columna | Qué guarda |
+| Column | What it stores |
 |---|---|
-| `NoteId` (PK) | La nota. |
-| `Path` | Ruta completa del archivo. |
-| `SyncEnabled` | Si la nota entra en la sync. **0 por defecto.** |
-| `KnownHash` | SHA-256 del contenido del archivo la última vez que Aldune lo leyó o escribió. |
-| `KnownWriteTime` | Fecha de escritura del archivo en ese momento (para la comprobación barata). |
-| `KnownTextHash` | SHA-256 de `Note.Text` en ese mismo momento. |
+| `NoteId` (PK) | The note. |
+| `Path` | Full path of the file. |
+| `SyncEnabled` | Whether the note takes part in sync. **0 by default.** |
+| `KnownHash` | SHA-256 of the file's content the last time Aldune read or wrote it. |
+| `KnownWriteTime` | The file's write date at that moment (for the cheap check). |
+| `KnownTextHash` | SHA-256 of `Note.Text` at that same moment. |
 
-**"Cambios sin escribir"** se define como `hash(Note.Text) != KnownTextHash`. Vive en la base de datos, así
-que sobrevive a un cierre inesperado: si Aldune se cierra antes de escribir el archivo, al arrancar sigue
-sabiendo que hay algo pendiente.
+**"Unwritten changes"** is defined as `hash(Note.Text) != KnownTextHash`. It lives in the database, so
+it survives an unexpected shutdown: if Aldune closes before writing the file, on start-up it still
+knows something is pending.
 
-Nada de esto entra en el sobre de sync. **El formato de sync sigue en 4.**
+None of this goes into the sync envelope. **The sync format stays at 4.**
 
-- **Sync desactivada** (por defecto): `SyncScopeFilter.Includes` deja fuera la nota. Es el sitio único que
-  ya comparten la sync y la señal ▂▄▆█, así que la señal dirá "fuera del alcance".
-- **Sync activada**: la nota viaja como una nota normal y cifrada, y en el otro equipo es una nota normal.
-  Lo que llega de otro equipo se guarda en la nota y **se escribe en el archivo** por el camino de la
-  decisión 4 (con su comprobación de huella). "Sincronizar esta nota" se **suma** al alcance general: si la
-  sync está limitada a una etiqueta o a notas elegidas, la nota tiene que cumplirlo también.
+- **Sync off** (default): `SyncScopeFilter.Includes` leaves the note out. It is the single place
+  already shared by sync and the ▂▄▆█ signal, so the signal will say "out of scope".
+- **Sync on**: the note travels as a normal, encrypted note, and on the other machine it is a normal note.
+  What arrives from another machine is stored in the note and **written to the file** by way of
+  decision 4 (with its fingerprint check). "Sincronizar esta nota" is **added** to the general scope: if
+  sync is limited to a tag or to chosen notes, the note has to satisfy that as well.
 
-### 3. Traducción entre el archivo y la nota (`MarkdownLink`, Core)
+### 3. Translation between the file and the note (`MarkdownLink`, Core)
 
-Dos funciones puras:
+Two pure functions:
 
-- `ToNoteText(string fileText) → string`: `- [ ] ` → `☐ `, `- [x] `/`- [X] ` → `☒ `, `- ` → `→ `, también con
-  `*` y `+`, respetando la sangría. Reutiliza lo que ya hace `TaskLists.ConvertMarkdownTasks` al pegar.
-  Lo demás (encabezados `#`, enlaces, tablas, cabecera YAML, listas numeradas) se queda literal.
-  **Dentro de un bloque de código** (entre vallas ```` ``` ```` o `~~~`) no se traduce nada.
-- `ToFileText(string noteText, string originalFileText) → string`: reconstruye el archivo. Traduce el
-  original línea a línea a formato nota, empareja esas líneas con las de `noteText` (subsecuencia común más
-  larga) y **toda línea emparejada se escribe con los bytes originales exactos** (marcador `*`/`+`/`-`,
-  `[X]` mayúscula, tabuladores, espacios al final). Las líneas nuevas o editadas se escriben en forma
-  estándar: tarea `- [ ] `/`- [x] `; viñeta con el marcador más usado en el archivo (o `-` si no hay
-  ninguno). Las líneas que en la nota no llevan glifo se escriben tal cual.
-- **Garantía**: `ToFileText(ToNoteText(f), f) == f` para cualquier `f`, y editar una línea solo cambia esa
-  línea del archivo.
+- `ToNoteText(string fileText) → string`: `- [ ] ` → `☐ `, `- [x] `/`- [X] ` → `☒ `, `- ` → `→ `, also with
+  `*` and `+`, respecting indentation. It reuses what `TaskLists.ConvertMarkdownTasks` already does when pasting.
+  Everything else (`#` headings, links, tables, YAML header, numbered lists) stays literal.
+  **Inside a code block** (between ```` ``` ```` or `~~~` fences) nothing is translated.
+- `ToFileText(string noteText, string originalFileText) → string`: rebuilds the file. It translates the
+  original line by line into note format, pairs those lines with those of `noteText` (longest common
+  subsequence) and **every paired line is written with its exact original bytes** (`*`/`+`/`-` marker,
+  capital `[X]`, tabs, trailing spaces). New or edited lines are written in
+  standard form: task `- [ ] `/`- [x] `; bullet with the marker most used in the file (or `-` if there is
+  none). Lines that carry no glyph in the note are written as they are.
+- **Guarantee**: `ToFileText(ToNoteText(f), f) == f` for any `f`, and editing one line changes only that
+  line of the file.
 
-Formato del archivo (`LinkedFileFormat`, Core): se detecta al leer y se conserva al escribir.
+File format (`LinkedFileFormat`, Core): detected when reading and preserved when writing.
 
-- UTF-8 con o sin BOM, UTF-16 LE/BE con BOM. Un archivo que no es UTF-8 válido y no lleva BOM (ANSI antiguo)
-  **no se vincula**, con aviso: guardarlo estropearía sus tildes.
-- Saltos de línea: se conserva el dominante (CRLF o LF); las líneas emparejadas conservan el suyo. Se
-  conserva si el archivo terminaba o no en salto de línea.
-- Tope de **2 MB**, como el editor. Más grande: no se vincula, con aviso.
-- Extensiones: `.md`, `.markdown`, `.txt`. La misma traducción para las tres (una tarea nueva en un `.txt` se
-  escribe `- [ ]`, que se lee bien en cualquier editor).
+- UTF-8 with or without BOM, UTF-16 LE/BE with BOM. A file that is not valid UTF-8 and has no BOM (old ANSI)
+  **is not linked**, with a notice: saving it would damage its accents.
+- Line breaks: the dominant one (CRLF or LF) is kept; paired lines keep their own. Whether the file ended
+  with a line break or not is also kept.
+- Cap of **2 MB**, like the editor. Larger: not linked, with a notice.
+- Extensions: `.md`, `.markdown`, `.txt`. The same translation for all three (a new task in a `.txt` is
+  written `- [ ]`, which reads fine in any editor).
 
-### 4. Leer, guardar y cambios hechos por fuera (`LinkedFileDecision`, Core)
+### 4. Reading, saving and changes made from outside (`LinkedFileDecision`, Core)
 
-Una función pura decide, con `KnownHash`, la huella actual del disco (o "no existe/no accesible") y si la
-nota tiene cambios sin escribir en el archivo:
+A pure function decides, given `KnownHash`, the disk's current fingerprint (or "does not exist / not accessible") and whether the
+note has changes not yet written to the file:
 
-| Disco | Cambios sin escribir en Aldune | Qué se hace |
+| Disk | Unwritten changes in Aldune | What is done |
 |---|---|---|
-| igual a `KnownHash` | sí | **Escribir** el archivo. |
-| igual a `KnownHash` | no | Nada. |
-| distinto | no | **Recargar**: el archivo manda; la nota se actualiza. |
-| distinto | sí | **Conflicto**. |
-| no accesible | cualquiera | **No disponible** (decisión 5). |
+| equal to `KnownHash` | yes | **Write** the file. |
+| equal to `KnownHash` | no | Nothing. |
+| different | no | **Reload**: the file wins; the note is updated. |
+| different | yes | **Conflict**. |
+| not accessible | any | **Unavailable** (decision 5). |
 
-- **Escribir**: con el mismo autoguardado de las notas. Se escribe en un temporal oculto de la misma carpeta
-  (`.~aldune-<guid>.tmp`) y se sustituye con `File.Replace`, de modo que un corte no deja el archivo a
-  medias; si la unidad no lo admite, se escribe en el sitio (el texto sigue a salvo en la base de datos).
-  Justo antes se vuelve a leer y comparar la huella: **nunca se escribe sobre un archivo cuya huella no es
-  la conocida**. Tras escribir se guardan la huella y la fecha nuevas. Un temporal huérfano de Aldune se
-  borra en el siguiente guardado de esa nota (es lo único que Aldune borra en una carpeta del usuario, y
-  solo si su nombre sigue el patrón exacto).
-- **Recargar**: la nota toma el texto traducido, con `UpdatedAt` = ahora (si la sync está activada, se
-  publica). Con la ventana abierta, el cursor se queda en la misma línea si existe.
-- **Conflicto**: el archivo **no se toca**. El texto de Aldune pasa a una **nota normal nueva** ("⚠
-  Conflicto: \<título\>", mismo color, sin vínculo), la nota vinculada recarga el disco y se avisa. No se
-  crean archivos en las carpetas del usuario.
-- **Vigilancia** (WPF): un `FileSystemWatcher` por carpeta con archivos vinculados, más una comprobación
-  periódica de la fecha de escritura (cada 3 s con la nota abierta, cada 30 s si no; en unidades de red el
-  vigilante falla). Tras un aviso se espera a que el archivo deje de cambiar (dos lecturas iguales
-  separadas 300 ms) antes de decidir: los editores guardan en varios pasos. Las escrituras de la propia
-  Aldune se reconocen por la huella y no hacen nada. Las notas archivadas o en la papelera no se vigilan;
-  al restaurarlas se vuelve a decidir.
-- **Cambios automáticos**: en una nota vinculada **no** se aplican "ocultar tareas hechas" ni "mover las hechas
-  al final" de forma automática (reescribirían líneas del archivo sin que el usuario haga nada). Lo que el
-  usuario hace a mano (marcar, borrar hechas, mover líneas) sí.
+- **Write**: with the same autosave as notes. It is written to a hidden temporary file in the same folder
+  (`.~aldune-<guid>.tmp`) and swapped in with `File.Replace`, so that a cut-off does not leave the file
+  half-written; if the drive does not support it, it is written in place (the text stays safe in the database).
+  Right before, the fingerprint is read again and compared: **it never writes over a file whose fingerprint is not
+  the known one**. After writing, the new fingerprint and date are stored. An orphaned Aldune temporary file is
+  deleted on that note's next save (it is the only thing Aldune deletes in a user folder, and
+  only if its name follows the exact pattern).
+- **Reload**: the note takes the translated text, with `UpdatedAt` = now (if sync is on, it is
+  published). With the window open, the cursor stays on the same line if it exists.
+- **Conflict**: the file is **not touched**. Aldune's text goes into a **new normal note** ("⚠
+  Conflicto: \<título\>", same colour, no link), the linked note reloads the disk and a notice is shown. No
+  files are created in the user's folders.
+- **Watching** (WPF): one `FileSystemWatcher` per folder with linked files, plus a periodic check
+  of the write date (every 3 s with the note open, every 30 s otherwise; on network drives the
+  watcher fails). After a notification it waits for the file to stop changing (two equal reads
+  300 ms apart) before deciding: editors save in several steps. Aldune's own writes
+  are recognised by the fingerprint and do nothing. Archived notes or those in the trash are not watched;
+  when restored, the decision is made again.
+- **Automatic changes**: in a linked note, "hide done tasks" and "move done ones to
+  the end" are **not** applied automatically (they would rewrite lines of the file without the user doing anything). What the
+  user does by hand (ticking, deleting done ones, moving lines) is.
 
-### 5. Archivo no disponible
+### 5. File unavailable
 
-Archivo borrado, carpeta movida, `Z:` desconectado o sin permisos:
+File deleted, folder moved, `Z:` disconnected or no permissions:
 
-- La nota pasa a **solo lectura** y muestra una franja: "Archivo no disponible: Z:\apuntes\tema3.md", con
-  **Reintentar**, **Buscar…** (vincular de nuevo a otra ruta: la huella conocida se descarta, así que
-  se decide como "disco distinto": sin cambios pendientes manda el archivo; con ellos, conflicto) y **Convertir en nota normal**.
-- La comprobación periódica sigue: cuando el archivo vuelve, la franja desaparece sola y se decide como en
-  la decisión 4.
-- Lo que se edita justo antes de que desaparezca, o lo que llega por la sync mientras no está, se queda en
-  la nota como cambio pendiente y se escribe cuando vuelve (o da conflicto si el archivo cambió entretanto).
-- Un renombrado dentro de la misma carpeta (evento `Renamed` del vigilante) actualiza la ruta solo.
+- The note becomes **read-only** and shows a strip: "Archivo no disponible: Z:\apuntes\tema3.md", with
+  **Reintentar**, **Buscar…** (link again to another path: the known fingerprint is discarded, so
+  it is decided as "different disk": with no pending changes the file wins; with them, conflict) and **Convertir en nota normal**.
+- The periodic check continues: when the file comes back, the strip disappears on its own and it is decided as in
+  decision 4.
+- What is edited just before it disappears, or what arrives through sync while it is away, stays in
+  the note as a pending change and is written when it returns (or gives a conflict if the file changed in the meantime).
+- A rename within the same folder (the watcher's `Renamed` event) updates the path by itself.
 
-### 6. Interfaz
+### 6. Interface
 
-Abrir (las tres primeras admiten varios archivos):
+Opening (the first three accept several files):
 
-1. **"Abrir archivo…"** en el menú del dock y en el de la bandeja (filtro `.md`, `.markdown`, `.txt`).
-2. **Arrastrar** archivos desde el Explorador al dock.
-3. **"Abrir con → Aldune"** en el Explorador: el instalador registra Aldune en `OpenWithProgids` de las tres
-   extensiones, **sin hacerse el programa predeterminado**. `aldune.exe "<ruta>"` abre el archivo; si ya hay
-   una Aldune en marcha, la nueva le pasa las rutas por una tubería con nombre (`SingleInstance` hoy solo
-   avisa para mostrarse) y sale. La versión portable no registra nada, pero la línea de órdenes funciona.
-4. **"Guardar como archivo vinculado…"** en el "⋯" de una nota normal no protegida: crea el archivo con
-   `ToFileText(texto, "")` (UTF-8 sin BOM, CRLF) y vincula la nota.
+1. **"Abrir archivo…"** in the dock menu and in the tray menu (filter `.md`, `.markdown`, `.txt`).
+2. **Dragging** files from Explorer onto the dock.
+3. **"Abrir con → Aldune"** in Explorer: the installer registers Aldune in `OpenWithProgids` for the three
+   extensions, **without becoming the default program**. `aldune.exe "<path>"` opens the file; if there is already
+   an Aldune running, the new one passes the paths to it through a named pipe (`SingleInstance` today only
+   signals it to show itself) and exits. The portable version registers nothing, but the command line works.
+4. **"Guardar como archivo vinculado…"** in the "⋯" of a normal, unprotected note: creates the file with
+   `ToFileText(text, "")` (UTF-8 without BOM, CRLF) and links the note.
 
-Abrir un archivo ya vinculado (misma ruta completa, sin distinguir mayúsculas) **muestra la nota existente**.
-Uno nuevo entra al final del mazo, con el color que toque por las reglas de asignación, y se abre.
+Opening an already linked file (same full path, case-insensitive) **shows the existing note**.
+A new one goes at the end of the deck, with the colour given by the assignment rules, and is opened.
 
-En la nota vinculada:
+In the linked note:
 
-- **Marca en la pestaña** (icono de página de Segoe Fluent Icons) y la ruta en el tooltip; igual en el gestor.
-- **Título**: la primera línea sin los `#` de encabezado de Markdown (`# Tema 3` → "Tema 3"). Se aplica a todas
-  las notas en `NoteTitleHelper`. Si la primera línea está vacía, el nombre del archivo sin extensión.
-- **Menú "⋯"**: "Sincronizar esta nota" (casilla), "Abrir en su editor" (el programa predeterminado de
-  Windows para la extensión), "Mostrar en el Explorador", "Convertir en nota normal" (quita el vínculo,
-  conserva el texto y avisa de que el archivo sigue en el disco) y "Proteger" desactivado con su
-  explicación.
-- "Exportar a Markdown" sigue disponible y crea una copia aparte.
+- **Mark on the tab** (page icon from Segoe Fluent Icons) and the path in the tooltip; the same in the manager.
+- **Title**: the first line without the Markdown heading `#` characters (`# Tema 3` → "Tema 3"). Applied to all
+  notes in `NoteTitleHelper`. If the first line is empty, the file name without extension.
+- **"⋯" menu**: "Sincronizar esta nota" (checkbox), "Abrir en su editor" (Windows' default program
+  for the extension), "Mostrar en el Explorador", "Convertir en nota normal" (removes the link,
+  keeps the text and warns that the file stays on disk) and "Proteger" disabled with its
+  explanation.
+- "Exportar a Markdown" remains available and creates a separate copy.
 
-Textos con `Strings.T` en los cinco idiomas; colores por `DynamicResource`.
+Texts with `Strings.T` in the five languages; colours via `DynamicResource`.
 
-### 7. Notas protegidas: no se vinculan
+### 7. Protected notes: they are not linked
 
-"La nota es tu archivo" y el archivo es texto en claro. Proteger solo en Aldune sería una falsa seguridad
-(cualquiera abre el `.md` con el Bloc de notas); cifrar el archivo lo haría ilegible para los demás
-programas, que es para lo que se vincula. Así que en una nota vinculada "Proteger" está desactivado, y para
-protegerla primero se convierte en nota normal (con el aviso de que el archivo sigue en claro en el disco).
-"Guardar como archivo vinculado…" no se ofrece en una nota protegida.
+"The note is your file" and the file is plaintext. Protecting only in Aldune would be false security
+(anyone opens the `.md` with Notepad); encrypting the file would make it unreadable to the other
+programs, which is what linking is for. So in a linked note "Proteger" is disabled, and to
+protect it you first convert it into a normal note (with the notice that the file stays in plaintext on disk).
+"Guardar como archivo vinculado…" is not offered on a protected note.
 
-### 8. Archivar, papelera y borrar
+### 8. Archive, trash and delete
 
-- Archivar conserva el vínculo y deja de vigilar; restaurar vuelve a leer.
-- En la papelera se conserva el vínculo, para que restaurar funcione.
-- Vaciar la papelera (o su plazo) borra la nota y la fila de `NoteFileLink`. **Aldune nunca borra un archivo
-  vinculado**, esté donde esté: borrarlo no se puede deshacer y en una unidad de red ni siquiera pasa por la
-  Papelera de Windows. Para borrarlo, "Mostrar en el Explorador".
+- Archiving keeps the link and stops watching; restoring reads again.
+- In the trash the link is kept, so that restoring works.
+- Emptying the trash (or its time limit) deletes the note and the `NoteFileLink` row. **Aldune never deletes a linked
+  file**, wherever it is: deleting it cannot be undone and on a network drive it does not even go through the
+  Windows Recycle Bin. To delete it, "Mostrar en el Explorador".
 
-## Piezas
+## Pieces
 
 Core (TDD):
 
 - `MarkdownLink`: `ToNoteText`, `ToFileText`.
-- `LinkedFileFormat`: lectura de bytes → texto + formato (codificación, BOM, salto dominante, salto final);
-  escritura texto + formato → bytes; rechazos (codificación, tamaño).
-- `LinkedFileDecision`: la tabla de la decisión 4.
-- `NotesRepository`: tabla `NoteFileLink` y sus operaciones; `SyncScopeFilter` con la casilla por nota;
-  `NoteTitleHelper` sin `#`.
+- `LinkedFileFormat`: reading bytes → text + format (encoding, BOM, dominant line break, final line break);
+  writing text + format → bytes; rejections (encoding, size).
+- `LinkedFileDecision`: the table in decision 4.
+- `NotesRepository`: `NoteFileLink` table and its operations; `SyncScopeFilter` with the per-note checkbox;
+  `NoteTitleHelper` without `#`.
 
 WPF:
 
-- `LinkedFileWatcher`: vigilantes por carpeta, comprobación periódica, espera a que el archivo se asiente.
-- `AppCoordinator`: abrir/vincular, aplicar decisiones, conflicto, convertir en nota normal.
-- `NoteWindow`: guardado por el camino del archivo, franja de no disponible y solo lectura, menús, no aplicar
-  los cambios automáticos.
-- `EdgeDockWindow`: soltar archivos; marca en la pestaña. Gestor: marca y tooltip.
-- `SingleInstance`: tubería con nombre para pasar rutas; `App.OnStartup` lee los argumentos.
-- Instalador (`Aldune.iss`): `OpenWithProgids` para `.md`, `.markdown`, `.txt`, que se quita al desinstalar.
+- `LinkedFileWatcher`: per-folder watchers, periodic check, wait for the file to settle.
+- `AppCoordinator`: open/link, apply decisions, conflict, convert into a normal note.
+- `NoteWindow`: saving through the file path, unavailable strip and read-only mode, menus, not applying
+  the automatic changes.
+- `EdgeDockWindow`: dropping files; mark on the tab. Manager: mark and tooltip.
+- `SingleInstance`: named pipe to pass paths; `App.OnStartup` reads the arguments.
+- Installer (`Aldune.iss`): `OpenWithProgids` for `.md`, `.markdown`, `.txt`, removed on uninstall.
 
-## Pruebas
+## Tests
 
-- **Ida y vuelta byte a byte** (`ToFileText(ToNoteText(f), f) == f`) con una colección de archivos difíciles:
-  bloques de código con `- [ ]` dentro (con ```` ``` ```` y `~~~`), listas anidadas y numeradas, `* [X]`, `+`,
-  tabuladores, espacios al final, CRLF, LF y mezcla, con y sin BOM, UTF-16, cabecera YAML, archivo vacío,
-  sin salto final, solo saltos.
-- **Ediciones localizadas**: marcar una tarea, añadir una línea, borrar otra, mover una con Alt+↑: solo
-  cambian esas líneas del archivo.
-- `LinkedFileDecision`: cada fila de la tabla; `LinkedFileFormat`: cada codificación y cada rechazo.
-- `SyncScopeFilter`: nota vinculada sin sync fuera; con sync, sujeta al alcance general.
-- **Sondas** (fuera del repo, datos temporales): cambio por fuera que se recarga; conflicto (nota "⚠
-  Conflicto" y archivo intacto); carpeta renombrada (no disponible, solo lectura, vuelve sola); arrastrar
-  dos archivos al dock; segunda instancia con una ruta; "Guardar como archivo vinculado…". Las que mueven
-  ratón o teclado, con aviso previo.
-- Smoke test en verde antes de publicar.
+- **Byte-for-byte round trip** (`ToFileText(ToNoteText(f), f) == f`) with a collection of difficult files:
+  code blocks with `- [ ]` inside (with ```` ``` ```` and `~~~`), nested and numbered lists, `* [X]`, `+`,
+  tabs, trailing spaces, CRLF, LF and a mix, with and without BOM, UTF-16, YAML header, empty file,
+  no final line break, only line breaks.
+- **Localised edits**: ticking a task, adding a line, deleting another, moving one with Alt+↑: only
+  those lines of the file change.
+- `LinkedFileDecision`: each row of the table; `LinkedFileFormat`: each encoding and each rejection.
+- `SyncScopeFilter`: linked note without sync is out; with sync, subject to the general scope.
+- **Probes** (outside the repo, temporary data): outside change that is reloaded; conflict ("⚠
+  Conflicto" note and file intact); renamed folder (unavailable, read-only, comes back on its own); dragging
+  two files onto the dock; second instance with a path; "Guardar como archivo vinculado…". Those that move
+  the mouse or keyboard, with prior warning.
+- Smoke test green before publishing.
 
-## Orden de trabajo
+## Order of work
 
-Un plan, en dos tandas:
+One plan, in two batches:
 
-1. Core completo; abrir ("Abrir archivo…" y arrastrar), guardar, vigilar, no disponible (con "Convertir en
-   nota normal"), conflicto, archivar/papelera, marca y título. Con esto ya se usan los apuntes de `Z:`.
-2. "Abrir con" (instalador y tubería), "Guardar como archivo vinculado…", "Sincronizar esta nota",
-   "Abrir en su editor" y "Mostrar en el Explorador".
+1. Complete Core; open ("Abrir archivo…" and drag), save, watch, unavailable (with "Convertir en
+   nota normal"), conflict, archive/trash, mark and title. With this the notes on `Z:` are already usable.
+2. "Abrir con" (installer and pipe), "Guardar como archivo vinculado…", "Sincronizar esta nota",
+   "Abrir en su editor" and "Mostrar en el Explorador".

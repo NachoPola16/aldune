@@ -1,116 +1,116 @@
-# Aldune Android: aspectos retro (colores y fuente)
+# Aldune Android: retro looks (colours and font)
 
-Fecha: 2026-10-25. Estado: **spec, pendiente de revisión**. Decisión del usuario del mismo día; revierte la nota de `AppPalette.kt` y de
-`tests/vectors/README.md` («los aspectos retro son de Windows y en Android no se ofrecen»).
+Date: 2026-10-25. Status: **spec, pending review**. User decision of the same day; it reverses the note in `AppPalette.kt` and in
+`tests/vectors/README.md` ("the retro looks are a Windows thing and are not offered on Android").
 
-## Qué se pide
+## What is asked for
 
-Poder elegir en Android los aspectos retro que ya existen en Windows (**XP claro, XP oscuro, Telecomunicaciones claro, Telecomunicaciones
-oscuro, Bash y Fósforo**) con sus colores personalizables, y que se vean con los mismos colores que en el PC. Alcance acordado: **colores y
-fuente**. Nada que el PC no tenga.
+Being able to choose on Android the retro looks that already exist on Windows (**XP light, XP dark, Telecom light, Telecom
+dark, Bash and Phosphor**) with their customisable colours, and that they look with the same colours as on the PC. Agreed scope: **colours and
+font**. Nothing that the PC does not have.
 
-Referencia en Windows: `docs/historia/specs/2026-10-03-aspectos-retro-design.md`, `src/Aldune.Core/AspectCatalog.cs`,
+Reference on Windows: `docs/historia/specs/2026-10-03-aspectos-retro-design.md`, `src/Aldune.Core/AspectCatalog.cs`,
 `AspectPalettes.cs`, `ColorFit.cs`, `ColorMix.cs`.
 
-## Fuera de alcance
+## Out of scope
 
-La «piel» de Windows: relieve de Windows 95, barras de título con degradado, tarjetas con franja o tinte por canal, prefijos y sufijos
-(`CH1`, `hoy/`), mayúsculas de Fósforo, línea de prompt en la nota, retícula del osciloscopio. Tampoco las opciones «Esquinas rectas», «Señal de
-sincronización» y «Mismo color en todas las notas». Cada una es una decisión de diseño propia en Compose y no hace falta para que el aspecto
-se reconozca. Tahoma (XP) y Cascadia Mono no existen en Android.
+The Windows "skin": Windows 95 relief, gradient title bars, cards with a stripe or tint per channel, prefixes and suffixes
+(`CH1`, `hoy/`), Phosphor's uppercase, prompt line in the note, oscilloscope grid. Nor the options "Square corners", "Sync
+signal" and "Same colour on all notes". Each one is a design decision of its own in Compose and is not needed for the look
+to be recognisable. Tahoma (XP) and Cascadia Mono do not exist on Android.
 
-## Diseño
+## Design
 
-### 1. Núcleo en Kotlin (módulo `text`, sin Android)
+### 1. Core in Kotlin (`text` module, no Android)
 
-Port literal de Core, con los mismos nombres:
+A literal port of Core, with the same names:
 
-- `ColorFit` (`ratio`, `background`, `foreground`, `lighter`, `darker`) y `ColorMix.toward`.
-- `AspectCatalog`: los 6 aspectos con id estable (`xp-light`, `xp-dark`, `telecom-light`, `telecom-dark`, `bash`, `phosphor`), sus huecos
-  (`AspectColorSlot`: id, valor por defecto, muestras), las paletas de Bash (Gruvbox por defecto, Ubuntu, Tango) y el tema de notas sugerido
-  (`SuggestedThemeId`). `resolve(mode, elegidos)`: lo elegido que sea `#RRGGBB` válido, y lo de fábrica para el resto.
-- `AspectPalettes.derive(mode, colores)`, con las mismas funciones privadas que en Core (`xpLight`, `xpDark`, `telecomLight`, `telecomDark`,
+- `ColorFit` (`ratio`, `background`, `foreground`, `lighter`, `darker`) and `ColorMix.toward`.
+- `AspectCatalog`: the 6 looks with a stable id (`xp-light`, `xp-dark`, `telecom-light`, `telecom-dark`, `bash`, `phosphor`), their slots
+  (`AspectColorSlot`: id, default value, swatches), the Bash palettes (Gruvbox by default, Ubuntu, Tango) and the suggested note theme
+  (`SuggestedThemeId`). `resolve(mode, chosen)`: whatever is chosen that is a valid `#RRGGBB`, and the factory value for the rest.
+- `AspectPalettes.derive(mode, colours)`, with the same private functions as in Core (`xpLight`, `xpDark`, `telecomLight`, `telecomDark`,
   `bash`, `phosphor`, `moveBackgrounds`, `fitText`, `setAccent`).
-- `AppPalette.forMode(mode, systemUsesLight, aspectColors = null)` acepta los modos 5 a 10 y devuelve la paleta derivada. `isLight` incluye
-  los retro claros (5 y 7), que ya contempla. Un modo desconocido sigue cayendo en Oscuro.
+- `AppPalette.forMode(mode, systemUsesLight, aspectColors = null)` accepts modes 5 to 10 and returns the derived palette. `isLight` includes
+  the light retro ones (5 and 7), which it already handles. An unknown mode still falls back to Dark.
 
-El `OklchColor` de Android ya existe; `AppPalette.tint` también. La paleta derivada es la de Core y se fija con vectores.
+Android's `OklchColor` already exists; `AppPalette.tint` too. The derived palette is Core's and is pinned with vectors.
 
-### 2. Vectores de compatibilidad
+### 2. Compatibility vectors
 
-Nuevos casos en `tests/vectors/text-color.json`, generados por `TextVectorsTests` de Core con las funciones reales:
+New cases in `tests/vectors/text-color.json`, generated by Core's `TextVectorsTests` with the real functions:
 
-- `ColorFit.Ratio`, `Background`, `Foreground`, `Lighter`, `Darker`, y `ColorMix.Toward`, con entradas ordinarias y extremas.
-- `AppPalette.For` para los modos 5 a 10 con los colores de fábrica y con colores extremos (blanco, negro, amarillo puro) en cada hueco, y el
-  `windowsUsesLight` de siempre. Hace falta que el caso lleve `aspectColors` (id de hueco → hex).
-- `AspectCatalog.Resolve` con entradas válidas, inválidas y ausentes.
+- `ColorFit.Ratio`, `Background`, `Foreground`, `Lighter`, `Darker`, and `ColorMix.Toward`, with ordinary and extreme inputs.
+- `AppPalette.For` for modes 5 to 10 with the factory colours and with extreme colours (white, black, pure yellow) in each slot, and the usual
+  `windowsUsesLight`. The case needs to carry `aspectColors` (slot id → hex).
+- `AspectCatalog.Resolve` with valid, invalid and absent inputs.
 
-Los verifican los dos lados (`TextVectorsTests.cs` y `TextVectorsTest.kt`). Añadir casos no cambia el formato de sync, y regenerar sin cambiar
-Core no cambia los ficheros (la salida es determinista). `tests/vectors/README.md` se actualiza: ya no dice que los retro no tienen vectores.
+Both sides verify them (`TextVectorsTests.cs` and `TextVectorsTest.kt`). Adding cases does not change the sync format, and regenerating without changing
+Core does not change the files (the output is deterministic). `tests/vectors/README.md` is updated: it no longer says that the retro looks have no vectors.
 
-Además, los tests de contraste de Core sobre cada aspecto con colores extremos se portan a Kotlin tal cual (`AspectCatalogTests`,
-`AppPaletteTests`), para que la propiedad «el texto se lee» no dependa solo de que los vectores coincidan.
+In addition, Core's contrast tests on each look with extreme colours are ported to Kotlin as they are (`AspectCatalogTests`,
+`AppPaletteTests`), so that the property "the text is readable" does not depend only on the vectors matching.
 
-### 3. Ajustes
+### 3. Settings
 
-- `SettingsStore`: `appearance` acepta 0 a 10 (hoy recorta a 0-4). Valor desconocido → `SYSTEM`, como hoy.
-- Clave nueva `aspectColors`: JSON con la misma forma que `AspectColors` de `settings.json` del PC
-  (`{"bash": {"accent": "#D79921"}}`), en `SharedPreferences`. Falta = de fábrica. Se guardan los de todos los aspectos, no solo el activo
-  (volver a uno ya personalizado lo encuentra como se dejó). Un JSON ilegible se ignora y vale lo de fábrica.
-- `AppSettings.aspectColors: Map<String, Map<String, String>>`, vacío por defecto. Una instalación existente carga sin migración.
+- `SettingsStore`: `appearance` accepts 0 to 10 (today it clamps to 0-4). Unknown value → `SYSTEM`, as today.
+- New key `aspectColors`: JSON with the same shape as `AspectColors` in the PC's `settings.json`
+  (`{"bash": {"accent": "#D79921"}}`), in `SharedPreferences`. Missing = factory. Those of all looks are stored, not just the active one
+  (going back to one already customised finds it as it was left). Unreadable JSON is ignored and the factory values apply.
+- `AppSettings.aspectColors: Map<String, Map<String, String>>`, empty by default. An existing installation loads without migration.
 
-### 4. Interfaz
+### 4. Interface
 
-- **Ajustes → Aspecto**: la lista actual (Sistema, Oscuro, Claro, Pastel, Medianoche) suma los 6, con los nombres del PC traducidos a los
-  cinco idiomas (`Strings.cs`: `AppearanceXpLight` y similares; se reutiliza su texto).
-- **Colores del aspecto**: con un aspecto retro elegido aparece, debajo de la lista, un bloque con un renglón por hueco (nombre, muestra,
-  valor `#RRGGBB` y «Cambiar», que abre el `CustomColorDialog` ya hecho), las paletas de Bash como atajos de un toque, y «Restablecer colores».
-  Las muestras de un hueco (`Suggestions`) salen como atajos del propio renglón.
-- **Tema de notas sugerido**: al elegir un aspecto con `SuggestedThemeId` distinto del tema activo, un diálogo ofrece pasar a ese tema
-  («Aplicar» / «Mantener»), como `AspectSuggestTheme` en Windows. No cambia las notas existentes.
-- **Tema de Compose** (`AldunaTheme`): recibe la paleta ya derivada (ya lo hace con Pastel y Medianoche); las claves nuevas de los retro
-  (`TitleBar`, `OnTitleBar`, `BevelLight`…) se ignoran donde no hay equivalente. La barra de estado y el contraste de la barra del sistema se
-  eligen con `isLight`.
-- **Fuente**: Bash, Telecomunicaciones (claro y oscuro) y Fósforo usan `FontFamily.Monospace` en la interfaz y en el editor de notas, como
-  Cascadia Mono en el PC. XP y los aspectos de siempre mantienen la fuente actual.
-- **Widget y mosaico** de Ajustes rápidos: usan la paleta del aspecto como hoy con Pastel y Medianoche, sin cambios propios.
+- **Settings → Appearance**: the current list (System, Dark, Light, Pastel, Midnight) adds the 6, with the PC's names translated into the
+  five languages (`Strings.cs`: `AppearanceXpLight` and similar; their text is reused).
+- **Look colours**: with a retro look chosen, a block appears below the list with a row per slot (name, swatch,
+  `#RRGGBB` value and "Change", which opens the already-built `CustomColorDialog`), the Bash palettes as one-tap shortcuts, and "Reset colours".
+  The swatches of a slot (`Suggestions`) appear as shortcuts in the row itself.
+- **Suggested note theme**: when choosing a look whose `SuggestedThemeId` differs from the active theme, a dialog offers switching to that theme
+  ("Apply" / "Keep"), like `AspectSuggestTheme` on Windows. It does not change existing notes.
+- **Compose theme** (`AldunaTheme`): receives the already-derived palette (it already does so with Pastel and Midnight); the new keys of the retro looks
+  (`TitleBar`, `OnTitleBar`, `BevelLight`…) are ignored where there is no equivalent. The status bar and the system bar contrast are
+  chosen with `isLight`.
+- **Font**: Bash, Telecom (light and dark) and Phosphor use `FontFamily.Monospace` in the interface and in the note editor, like
+  Cascadia Mono on the PC. XP and the usual looks keep the current font.
+- **Widget and tile** of Quick Settings: they use the look's palette as they do today with Pastel and Midnight, with no changes of their own.
 
-### 5. Compatibilidad
+### 5. Compatibility
 
-- `settings.json`/preferencias antiguas cargan sin migración. Un `appearance` guardado por una versión nueva y leído por una antigua (valor
-  5-10) cae en Sistema, no en un fallo.
-- Los aspectos son locales a cada dispositivo (como el aspecto actual): no viajan por la sync.
-- No se toca el formato de sync (4), los prefijos de códigos de perfil ni los vectores de sync.
+- Old `settings.json`/preferences load without migration. An `appearance` saved by a new version and read by an old one (value
+  5-10) falls back to System, not to a failure.
+- The looks are local to each device (like the current look): they do not travel through sync.
+- The sync format (4), the profile code prefixes and the sync vectors are not touched.
 
-## Pruebas
+## Tests
 
-1. **Kotlin puro, con test primero**: `ColorFit`, `ColorMix`, `AspectCatalog`, `AspectPalettes`, `AppPalette.forMode` con modos 5 a 10.
-2. **Vectores** (sección 2) en los dos lados.
-3. **Contraste**: cada aspecto con colores extremos, portado de Core.
-4. **`SettingsStore`**: carga con `appearance` fuera de rango y con `aspectColors` ilegible (prueba instrumentada solo si ya hay infraestructura;
-   si no, la lógica de lectura va en una función pura y se prueba en JVM).
-5. **Sonda en el Pixel** (versión de depuración, notas inventadas): cada aspecto, un color cambiado, «Restablecer», el diálogo del tema
-   sugerido y que no hay texto ilegible en la lista, el editor y los diálogos. Capturas del Pixel y, si hay forma barata, comparación con la
-   paleta del PC.
+1. **Pure Kotlin, test first**: `ColorFit`, `ColorMix`, `AspectCatalog`, `AspectPalettes`, `AppPalette.forMode` with modes 5 to 10.
+2. **Vectors** (section 2) on both sides.
+3. **Contrast**: each look with extreme colours, ported from Core.
+4. **`SettingsStore`**: loading with out-of-range `appearance` and with unreadable `aspectColors` (instrumented test only if the infrastructure already exists;
+   if not, the reading logic goes in a pure function and is tested on the JVM).
+5. **Probe on the Pixel** (debug build, made-up notes): each look, one colour changed, "Reset", the suggested-theme dialog
+   and that there is no unreadable text in the list, the editor and the dialogs. Pixel screenshots and, if there is a cheap way, comparison with the
+   PC palette.
 
-## Orden de trabajo y tamaño
+## Order of work and size
 
-Estimado en sesiones como las de este proyecto (≈ 3-4):
+Estimated in sessions like those of this project (≈ 3-4):
 
-1. `ColorFit`, `ColorMix`, `AspectCatalog` y `AspectPalettes` con sus tests y los vectores de Core regenerados.
-2. `AppPalette.forMode` extendido y verificación de vectores en Kotlin.
-3. Ajustes (`SettingsStore`, `AppSettings`) y la pantalla de aspecto con los huecos de color.
-4. Fuente monoespaciada, diálogo del tema sugerido, textos en cinco idiomas y sonda en el Pixel.
+1. `ColorFit`, `ColorMix`, `AspectCatalog` and `AspectPalettes` with their tests and Core's vectors regenerated.
+2. `AppPalette.forMode` extended and vector verification in Kotlin.
+3. Settings (`SettingsStore`, `AppSettings`) and the look screen with the colour slots.
+4. Monospace font, suggested-theme dialog, texts in five languages and probe on the Pixel.
 
-Cada paso deja el proyecto compilando y con tests en verde, y se puede commitear solo. No se publica ninguna versión sin confirmación.
+Each step leaves the project compiling and with green tests, and can be committed on its own. No version is published without confirmation.
 
-## Riesgos y decisiones abiertas
+## Risks and open decisions
 
-- **Fidelidad de color**: un redondeo distinto en `OklchColor` entre C# y Kotlin movería un canal ±1. El port de paletas ya existe
-  (`Pastel`, `Medianoche`) y pasa sus vectores, así que se espera lo mismo; si un vector difiere en ±1 se investiga la causa, no se afloja el test.
-- **Claridad del fondo en Bash/Telecom/Fósforo**: `moveBackgrounds` limita la claridad a [0.14, 0.30] por contraste; se respeta tal cual.
-- **Tamaño de la lista de Ajustes**: con 11 aspectos y los huecos, la pantalla crece. Si resulta incómoda en el móvil, el aspecto se elige en un
-  selector y los huecos en una hoja aparte; se decide en la sonda, no antes.
-- **XP sin Tahoma**: el aspecto se reconoce por la paleta y la barra no existe en Android, así que puede parecer «solo un beige». Se acepta
-  (alcance acordado) y se revisa tras la sonda.
-- **Idiomas**: los nombres de los aspectos y de los huecos ya están en los cinco idiomas en `Strings.cs`; se copian a `strings.tsv`.
+- **Colour fidelity**: a different rounding in `OklchColor` between C# and Kotlin would move a channel by ±1. The palette port already exists
+  (`Pastel`, `Midnight`) and passes its vectors, so the same is expected; if a vector differs by ±1 the cause is investigated, the test is not loosened.
+- **Background lightness in Bash/Telecom/Phosphor**: `moveBackgrounds` limits lightness to [0.14, 0.30] for contrast; it is respected as is.
+- **Size of the Settings list**: with 11 looks and the slots, the screen grows. If it turns out awkward on the phone, the look is chosen in a
+  selector and the slots in a separate sheet; decided in the probe, not before.
+- **XP without Tahoma**: the look is recognised by its palette and the bar does not exist on Android, so it may look like "just a beige". It is accepted
+  (agreed scope) and reviewed after the probe.
+- **Languages**: the names of the looks and of the slots are already in the five languages in `Strings.cs`; they are copied to `strings.tsv`.

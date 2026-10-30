@@ -1,1027 +1,1026 @@
-# Aldune — Hoja de ruta y decisiones pendientes
+# Aldune — Roadmap and pending decisions
 
-Documento hermano de `STATUS.md`. Aquel cuenta **lo que está hecho y por qué**; este guarda **lo que
-no se ha hecho, lo que se descartó y con qué razón**, para que no haya que volver a investigarlo ni
-volver a discutirlo desde cero.
+Sibling document of `STATUS.md`. That one tells **what is done and why**; this one keeps **what has
+not been done, what was discarded and for what reason**, so that it does not have to be investigated
+again or argued from scratch.
 
-Sesión de origen: 2026-09-06.
-
----
-
-## Versión visible de la aplicación
-
-La ronda actual se identifica como **v2.1.3**. La versión se muestra en Ajustes y también en el texto
-del icono de la bandeja. Cada actualización grande deberá incrementar este número siguiendo SemVer:
-parches para correcciones, versión menor para funcionalidades nuevas y versión mayor cuando haya
-cambios incompatibles.
-
-## 1. Inspiración
-
-Aldune nació para llevar a Windows un concepto que existe en macOS: notas ancladas al borde de la pantalla que se despliegan en
-abanico. Lo inspiraron [Hold My Notes](https://holdmynotes.app/) y [noty](https://github.com/aimen08/noty) (código abierto). En
-Windows no había nada con ese modelo de mazo anclado al canto, y de ahí salió el diseño de Aldune. Se mantiene como principio que
-la app funcione **sin cuenta y con el contenido cifrado**, y que cualquier nube sea opcional.
+Originating session: 2026-09-06.
 
 ---
 
-## 2. Pendiente y decidido: se hará
+## Visible version of the application
 
-### ~~Volver sobre el título de la nota~~ — RESUELTO (opción E)
+The current round is identified as **v2.1.3**. The version is shown in Settings and also in the tray
+icon's text. Every major update must increment this number following SemVer: patches for fixes, a
+minor version for new features and a major version when there are incompatible changes.
 
-Se maquetaron y renderizaron las cuatro alternativas al lado (script en el scratchpad de la sesión) y
-al hacerlo apareció el argumento que faltaba: **el texto de la nota se guarda cifrado en un solo
-bloque**. Un título guardado aparte tendría que cifrarse por su cuenta (blob, nonce y tag propios) o
-ir en claro, filtrando justo lo más descriptivo de cada nota. Y meterlo dentro del mismo bloque
-cifrado es, literalmente, "la primera línea".
+## 1. Inspiration
 
-De ahí salió una quinta opción que no estaba sobre la mesa y es la que se implementó: **la cabecera
-muestra y edita la primera línea, y el cuerpo empieza en la segunda** (`Aldune.Core.NoteText` parte y
-recompone). Sin duplicado, sin cabecera vacía, con título editable, y sin cambiar absolutamente nada
-de cómo se guarda ni se cifra.
-
-Lo que sigue anotado por si se retoma: **no** se implementó unir con Retroceso al principio del
-cuerpo (fusionar la línea con el título). Hacerlo bien exige lógica de fusión de líneas; hacerlo a
-medias se siente roto. Se puede subir con la flecha Arriba, que es lo que hace cualquier control.
-
-### Nota histórica: el descarte anterior del título (por si vuelve el debate)
-
-El usuario dijo explícitamente que **la solución actual no le convence** (se quitó el texto de la
-cabecera; el título es la primera línea del cuerpo). Queda pendiente darle una vuelta **con
-alternativas maquetadas y renderizadas**, no solo argumentadas — la técnica de rasterizar en
-aislamiento con `RenderTargetBitmap` ya sirvió para decidir los glifos de las casillas y aquí aplica
-igual.
-
-Alternativas a poner sobre la mesa, con su render al lado:
-1. Como está ahora (cabecera sin texto).
-2. Cabecera con el título, como antes (aceptando la duplicación).
-3. Título editable de verdad, separado del cuerpo — ahora es barato, porque **no hay datos que
-   preservar**; el argumento de la migración que se dio al principio no era válido y el usuario lo
-   señaló con razón. Ver el descarte más abajo para las razones que sí valen y la que sí lo
-   justificaría.
-4. La cabecera muestra la primera línea **solo cuando el cuerpo está scrolleado** y esa línea ya no
-   se ve. Resuelve la duplicación y el único caso que se pierde hoy, a cambio de una regla de
-   comportamiento no obvia.
-
-### ~~Reordenar notas arrastrando en el mazo~~ — HECHO
-
-Ver `STATUS.md`. Se mantiene aquí la decisión de diseño por si hay que retomarla: tabla `NoteOrder`
-aparte con `Position REAL`, para mover una nota escribiendo una sola fila en vez de renumerar.
-
-### ~~Solapamiento visual al arrastrar hacia abajo~~ — IMPLEMENTADO (pendiente de verificación visual)
-
-Al arrastrar una pestaña hacia abajo, debe pasar visualmente por delante de las pestañas que
-atraviesa, igual que cuando se arrastra hacia arriba. El orden lógico y la persistencia ya funcionan;
-durante el gesto se eleva el botón seleccionado y, sobre todo, su `ContentPresenter`/contenedor real
-del `ItemsControl`, que es el que decide la capa entre pestañas solapadas. Al soltar se restauran esos
-valores y se recalcula el orden normal. Falta comprobar visualmente en el dock que una pestaña
-arrastrada hacia abajo queda delante de todas las que atraviesa.
-
-### Reordenar notas arrastrando en el mazo (diseño original, ya implementado)
-
-Hoy el orden es `CreatedAt` y no se puede cambiar. En una metáfora de mazo de fichas, no poder
-decidir cuál está arriba es un hueco real; noty lo tiene.
-
-**Decisión de diseño ya tomada**: la posición **no** se guarda añadiendo una columna a la tabla
-`Note` — esa tabla tiene datos reales del usuario y esta app no tiene sistema de migraciones. Se hace
-con una tabla aparte, `NoteOrder (NoteId TEXT PRIMARY KEY, Position REAL NOT NULL)`, igual que se
-hizo con `NotePlacement`. `Position` en `REAL` y no `INTEGER` **a propósito**: permite insertar entre
-dos notas (media aritmética de sus posiciones) sin renumerar toda la lista en cada arrastre.
-
-### ~~Dock a la izquierda no se ve bien~~ — RESUELTO (ver `STATUS.md`)
-
-Causa real, encontrada con capturas del usuario (2026-09-09): `RestStrip`, las pestañas del abanico
-y el pie de botones estaban alineados "a la derecha" **en el XAML mismo**, sin condicionar por
-borde — valor correcto solo para `EdgePosition.Right`, que fue el único con el que se diseñó esto
-originalmente. La ventana del dock (`EdgeGeometry.WindowRect`) ya se posicionaba bien pegada al
-borde físico de la pantalla con `DockEdge = Left`, pero ese contenido interno seguía alineado contra
-el lado equivocado (el interior del dock, no el exterior), dejando el hueco que se veía en las
-capturas. Arreglado espejando esas tres alineaciones por código cuando el borde es Izquierda — ver
-`STATUS.md` para el detalle técnico. `EdgeDockWindow.PositionNoteWindow` (dónde se abre la nota en
-sí) nunca tuvo el bug: ya distinguía los bordes correctamente.
-
-**Segunda ronda, misma causa de fondo**: la propia forma de cada pestaña (`CornerRadius`/
-`BorderThickness`/degradado de brillo en `NoteTabButtonStyle`) también estaba pensada solo para el
-borde derecho — redondeada por la izquierda, a ras por la derecha. Espejada igual, verificado con un
-render aislado antes de tocar el XAML real.
-
-**Tercera ronda, la causa raíz de verdad**: seguía habiendo hueco (tira, abanico y botones del pie
-por igual) porque el `Grid` que envuelve *todo* el contenido del dock tiene su propio
-`Margin="18,18,0,18"` asimétrico en el XAML — sin margen a la derecha, correcto solo para
-`EdgePosition.Right`. Ningún ajuste dentro de ese `Grid` podía compensar que el propio contenedor ya
-estuviera encogido por el lado equivocado. Espejado también. Detalle completo en `STATUS.md`.
-
-### ~~Bordes Arriba y Abajo para el dock~~ — HECHO, pendiente solo una futura revisión opcional de diseño
-
-El usuario pidió explícitamente diseñar también los bordes **Arriba** y **Abajo** — la spec original
-de las pestañas en abanico los excluyó a propósito ("exigiría deslizar en vertical, que queda fuera
-de esta ronda", ver la nota histórica de `EdgeDockWindow.PopulateEdges`, que entonces solo ofrecía
-Izquierda/Derecha en
-Ajustes). **Hallazgo al investigar el bug de arriba**: `Aldune.Core.EdgeGeometry` (la geometría pura,
-con tests) **ya contemplaba los cuatro bordes**, pero el primer layout de Arriba/Abajo era incorrecto:
-trataba una tarjeta lateral como si se pudiera rotar sin cambiar sus medidas. El diseño corregido
-mantiene una barra horizontal en reposo y, al desplegarse, abre una columna vertical de tarjetas
-anchas de 208px, igual que las laterales, para que el título conserve espacio. Arriba crece hacia
-abajo y Abajo hacia arriba; si hay muchas notas, el scroll es vertical. El grosor del dock, el
-presupuesto de longitud, el arrastre y la apertura de notas usan ahora esa geometría específica.
-La implementación actual queda cerrada para esta ronda. La alternativa de tarjetas anchas apiladas
-hacia dentro se conserva únicamente como posible revisión visual futura.
-
-### ~~Plantillas de disposición de notas en el escritorio~~ — HECHO
-
-Idea del usuario (2026-09-09): en vez de arrastrar cada nota a mano para dejarlas ordenadas,
-ofrecer plantillas de disposición automática (rejilla, cascada uniforme, columnas...) que las
-coloquen todas de golpe. Conecta directamente con "Abrir todas las notas" (ver `STATUS.md`, misma
-sesión): hoy esa función solo cascada con un desplazamiento diagonal fijo
-(`EdgeDockWindow.NoteWindowCascadeStep`/`NoteWindowMaxCascadeSteps`), que con varias notas abiertas a
-la vez deja una pila desordenada en vez de algo "ordenado".
-
-**La colocación libre actual (arrastrar cada nota donde se quiera) tiene que seguir disponible** —
-las plantillas son una opción más, no un reemplazo. Encaja con `AppSettings.RememberNotePositions`
-tal como existe hoy: seguirá siendo el modo por defecto, y una plantilla es algo que el usuario pide
-explícitamente cuando quiere ordenar de golpe, no algo que se imponga.
-
-Preguntas sin responder para cuando le toque su sesión de diseño:
-
-- ¿Qué plantillas ofrecer de entrada? Rejilla y cascada uniforme parecen las dos obvias; ¿alguna más?
-- ¿Se aplica solo al usar "Abrir todas", o también como acción aparte sobre notas que ya están
-  abiertas (reordenarlas sin cerrarlas)?
-- ~~Interacción con `AppSettings.RememberNotePositions`: aplicar una plantilla sobrescribe la posición
-  guardada de cada nota. ¿Se pierde ese recuerdo sin más, se pregunta antes, o se puede deshacer?~~
-  **Resuelto** (2026-09-16, ver `STATUS.md`): el movimiento de la plantilla no guarda la posición —va
-  marcado como recolocación del coordinador (`NoteWindow._isLayoutMove`)—, así que el recuerdo de cada
-  nota sobrevive mientras esté colocada; solo se pierde si se cierra la nota estando colocada, que es la
-  regla general de "recordar la última posición". Y se puede deshacer: "Restaurar posiciones
-  originales", en el mismo menú.
-- ~~En multimonitor, ¿la plantilla se aplica por pantalla (cada dock coloca solo las suyas) o hay que
-  pensar en el conjunto de todos los monitores a la vez?~~ **Resuelto** (2026-09-16): todas a una
-  pantalla, la del dock que se pulsa —una disposición repartida entre dos monitores no es una
-  disposición—. Si hay más pantallas que docks, el menú deja elegir a cuál (ver `STATUS.md`).
-
-### ~~Acciones contextuales del dock~~ — HECHO, con mejoras futuras opcionales
-
-Primera entrega implementada: el clic derecho sobre el botón de abrir todas ofrece modo normal,
-cuadrícula, columnas y cerrar todas. La elección queda guardada como modo
-predeterminado del botón; el modo normal sigue siendo el valor inicial y debe elegirse de forma
-explícita para volver a él. La plantilla se aplica en la pantalla del dock que se pulsa (o en la que se
-elija, si alguna pantalla se queda sin dock) y solo cambia posiciones cuando el usuario la elige. Los
-cambios de distribución se animan brevemente para evitar saltos bruscos.
-La cuadrícula y las columnas son sensibles al número de notas y a la orientación de la pantalla:
-hasta 12 notas se distribuyen en una plantilla compacta; las restantes quedan abiertas en una
-cascada legible para evitar comprimirlas hasta hacerlas inutilizables.
-
-El clic derecho sobre una nota ya tiene utilidad real: abrirla, cambiar su color, archivarla o
-enviarla a la papelera. Falta decidir si los botones del pie del dock también deben ofrecer un menú
-contextual, sin quitarles su acción normal con clic izquierdo. Ideas iniciales:
-
-- `+`: crear una nota desde el portapapeles o crearla con una plantilla rápida.
-- "Abrir todas": elegir una disposición (cascada, rejilla o columnas) antes de abrirlas.
-- "Gestionar notas": abrir directamente Activas, Archivadas o Papelera.
-
-Debe evitarse llenar el dock de opciones avanzadas: el menú contextual solo debe aportar atajos que
-sean difíciles de descubrir o que ahorren varios pasos.
-
-### Etiquetas, vistas del dock y sincronización selectiva — primera entrega
-
-Se ha añadido una primera base usable: las notas tienen etiquetas persistentes, editables desde el
-menú contextual de la pestaña, y el dock puede mostrar activas, archivadas, papelera o solo las
-activas de una etiqueta. La papelera no aparece en la vista normal. El clic derecho del botón de
-gestión abre directamente ese selector, para conservar los botones principales sin llenarlos de
-submenús.
-
-Las etiquetas forman parte del formato cifrado de sincronización 2. El formato 1 se puede leer,
-pero una versión antigua rechaza el formato 2 para no eliminar etiquetas silenciosamente al guardar
-una versión posterior. Queda para la siguiente ronda diseñar la sincronización selectiva de notas,
-varios perfiles de sincronización y compartir una nota con otra persona; no se deben mezclar esas
-identidades con el código de dispositivo actual.
-
-La primera parte de esa siguiente ronda ya está implementada: en Ajustes se puede elegir sincronizar
-todas las notas o una selección concreta. El ámbito selectivo es local a la instalación y excluye
-tanto publicaciones como descargas fuera de la selección. Los perfiles independientes y el código
-para compartir una selección ya están implementados; queda pendiente mejorar el flujo de invitación
-y revocación sin mezclarlo con el vínculo de “Mis dispositivos”.
-
-### Modo simplificado / modo completo — IMPLEMENTADO
-
-Ofrecer en Ajustes un botón claro para cambiar entre una **versión completa** y una **versión
-simplificada** de Aldune, pensado para quien quiera usar las notas sin tantas opciones. No sería otra
-instalación ni una base de datos distinta: sería un modo de interfaz reversible y persistente.
-
-El modo simplificado debería conservar el núcleo (dock, crear/abrir notas y gestor básico) y ocultar
-la configuración avanzada, como selección de monitor, borde, atajo global, pantalla completa,
-retención de papelera y automatización de tareas. El botón debe permitir volver al modo completo sin
-perder ni resetear ajustes; cambiar de modo no puede tocar las notas.
-
-Pendiente de decidir en una sesión de diseño:
-
-- si el cambio se aplica al instante o pide reiniciar;
-- si el gestor de notas simplificado mantiene archivado/papelera o solo las notas activas;
-- qué texto y ubicación del botón hacen evidente que se puede volver al modo completo.
-
-### ~~Color de nota libre, además de la paleta~~ — HECHO
-
-Idea del usuario (2026-09-11): además de los 6 colores de `NoteColorPalette`, poder elegir un color
-libre para una nota concreta. **La paleta actual se queda como está por defecto** — mismo patrón que
-"plantillas de disposición" y "sincronización" más arriba: la opción estructurada de fábrica sigue
-siendo el camino normal, y la libertad es algo que se pide explícitamente, no un reemplazo. Motivo
-para no tocar el valor por defecto: la paleta está pensada a propósito (seis colores derivados en
-OKLCH con la misma claridad exacta, para que "el color sea identidad, no jerarquía" y ninguna nota
-pese visualmente más que otra) — un color elegido libremente puede romper ese equilibrio a propósito,
-que es justo lo que se busca al elegirlo.
-
-**Ya existe la mitad de la infraestructura**: `NoteColorPalette.RimFor`/`LabelFor` ya calculan un
-borde y un color de etiqueta razonables para cualquier hexadecimal fuera de la paleta (oscureciendo
-proporcionalmente) — hoy ese camino solo se usa para notas heredadas con colores antiguos, pero
-serviría igual para un color elegido a mano. Falta el propio selector de color (un `ColorDialog` de
-Windows, o algo propio a juego con el resto de la app) y decidir dónde vive: ¿un color más en la fila
-de pastillas del menú "⋯" que abre un selector, o una entrada aparte? Su propia sesión de diseño
-cuando le toque — no es grande, pero antes se descartó explícitamente un selector de color en la
-creación de la nota ("complejidad innecesaria para el beneficio", ver más abajo), así que conviene no
-repetir ese argumento sin pensarlo primero.
-
-### ~~Internacionalizar a inglés~~ — HECHO (ver `STATUS.md`)
-
-No fue solo traducir: el usuario usa Aldune en español a diario, así que se añadió un selector
-Español/Inglés en Ajustes (`AppSettings.Language`) en vez de sustituir sin más. Textos en
-`Aldune.Resources.Strings` (diccionario a mano, no `.resx` — motivo en `STATUS.md`). El cambio de
-idioma pide reiniciar la app para verse en todas las ventanas.
-
-**Hueco que queda a propósito**: `HotkeyBinding.DisplayName` (Core) no traduce "Espacio"/"Supr"/"sin
-asignar" — ver el porqué en `STATUS.md`. Si se retoma, hay que convertir esa propiedad en un método
-parametrizado y tocar `HotkeyBindingTests`, que fija esos tres textos literalmente.
-
-### ~~Exportar a Markdown / texto plano~~ — HECHO (ver `STATUS.md`)
-
-Lo tienen las dos rivales de macOS. Además de utilidad es una **función de confianza** ("no te
-secuestro tus datos"), que pesa más si algún día se cobra. Al exportar, las casillas `☐`/`☒` se
-traducen a la sintaxis de tareas de Markdown (`- [ ]` / `- [x]`), tal como decía este punto — se
-implementó solo Markdown, no texto plano aparte (ver el brainstorming en `STATUS.md` para el porqué).
-Una nota a la vez desde `NoteWindow`, o en bloque desde `NotesManagerWindow`.
-
-### ~~Recordatorios con notificación de Windows~~ — HECHO (ver `STATUS.md`)
-
-**Un hueco funcional importante frente a otras apps de notas de Windows** y una de las funciones más pedidas. Un solo
-recordatorio puntual por nota (En 1 hora / Esta noche / Mañana 9:00, o calendario + hora manual),
-aviso nativo de Windows vía el icono de bandeja ya existente, e insignia en la pestaña del dock.
-Detalle completo, incluidos los 5 huecos de integración que encontró la revisión final de toda la
-rama (y se arreglaron en una sola ronda) y lo que queda pendiente de verificación manual del usuario
-(el aviso visual en pantalla), en `STATUS.md`.
-
-**No implementado, sigue pendiente si se retoma**: posponer un recordatorio ya sonado (hoy hay que
-ponerlo desde cero, con el mismo panel de siempre — no hay un atajo de "posponer 10 minutos" sobre un
-aviso que acaba de sonar).
-
-### Sincronización entre dispositivos — base implementada, con dos vías
-
-Antes estaba aparcado como "descartado por ahora, no tocar hasta que alguien lo pida de verdad" —
-el usuario lo pidió y ahora pasa a implementación incremental. El núcleo inicial ya usa sobres JSON
-con contenido cifrado por nota, clave compartida independiente de DPAPI, tombstones, escritura atómica
-y resolución determinista por fecha/dispositivo. El siguiente bloque visualiza la configuración,
-permite sincronización manual y ofrece sincronización periódica en segundo plano.
-Lo que ya se decidió en el diseño inicial, para no volver a discutirlo desde cero:
-
-- **Las dos vías, no una sola** — decisión explícita del usuario tras ver el trade-off:
-  1. **Carpeta elegida por el usuario** (OneDrive, Google Drive, Dropbox, Syncthing — cualquiera que
-     ya sincronice una carpeta normal del disco). Aldune nunca habla con ninguna nube: guarda un
-     fichero cifrado por nota dentro de esa carpeta y reconstruye. Mantiene "sin cuenta, sin
-     servidor", funciona con cualquier proveedor (incluido ninguno, con Syncthing), y es la vía que
-     de forma natural sirve también a un futuro cliente en otro sistema operativo (Android/iOS,
-     mencionados por el usuario como posibles pero sin decidir) — ese cliente futuro sincronizaría
-     leyendo la misma carpeta a través de su propia app de Drive/OneDrive, sin que Aldune tenga que
-     hablar con la API de nadie.
-  2. **Aldune habla directamente con la API de Google Drive** (OAuth, sin cliente de escritorio de
-     por medio). Pedida explícitamente a pesar del coste, que quede anotado para cuando se diseñe:
-     hace falta el flujo de login de Google, guardar y renovar un token (delicado, misma familia de
-     problema que la clave de cifrado — ver `DatabaseKeyProvider` en `STATUS.md`), registrar la app
-     en Google Cloud y, si Aldune se publica algún día, pasar su proceso de verificación de apps
-     OAuth (si no, sale un aviso de "app no verificada"). Y contradice, para quien la use, el propio
-     principio del proyecto ("sin cuenta, nunca", §1) — por
-     eso tiene que ser una vía **opcional**, nunca la única, con la vía 1 siempre disponible por
-     defecto.
-- **Aviso técnico que sigue vigente para la vía 1** (ya estaba anotado antes de que esto se decidiera):
-  *no* sincronizar el fichero SQLite directamente — las carpetas de sync corrompen bases de datos
-  abiertas por dos máquinas a la vez. Un fichero cifrado por nota, reconstruible, es la única forma
-  segura.
-- **Vía autohosteable, también decidida** — no dependerá de un servicio de Aldune:
-  1. **Carpeta local, UNC o NAS**: para una carpeta compartida en la red (`\\servidor\\aldune`) o
-     una carpeta sincronizada por Syncthing/Nextcloud/otro cliente. Es la primera implementación y
-     cubre el caso "mi propio servidor dentro de casa" sin añadir una API nueva.
-  2. **WebDAV sobre HTTPS**: para un servidor accesible desde fuera de la red, especialmente
-     Nextcloud/ownCloud o un servidor WebDAV propio. Aldune guardará la URL y una credencial de
-     aplicación, no la contraseña principal cuando el servidor ofrezca esa posibilidad.
-  3. **API dedicada de Aldune**: queda como opción futura, solo si WebDAV no cubre algún caso real;
-     implicaría mantener servidor, autenticación, TLS, versiones y migraciones propias.
-- **Orden propuesto de implementación**:
-  1. núcleo de sincronización independiente del transporte, con ficheros cifrados por nota,
-     manifiesto, eliminaciones representadas por *tombstones*, escritura atómica y recuperación;
-  2. transporte de carpeta local/UNC/NAS;
-  3. transporte WebDAV autohosteable;
-  4. Google Drive directo como integración opcional posterior (OAuth y renovación de tokens).
-- **Clave compartida entre dispositivos** — la protección DPAPI actual queda solo para proteger la
-  copia local. Para que otro equipo pueda descifrar las notas habrá que introducir una clave de sync
-  independiente, transferible mediante código/frase de recuperación y protegida localmente en cada
-  equipo. Nunca se subirá una clave DPAPI ligada a un único usuario de Windows.
-- **Política inicial recomendada** — `Guid` para evitar colisiones al crear notas, `UpdatedAt` más un
-  desempate determinista por dispositivo para conflictos de la misma nota, y *tombstones* para que
-  una eliminación no reaparezca al sincronizar un equipo antiguo. La interfaz deberá mostrar estado,
-  última sincronización, errores y conflictos recuperables.
-- **Sin decidir todavía, para la sesión de diseño**: qué pasa si la misma nota se edita en dos
-  dispositivos antes de sincronizar (probablemente "gana la más reciente" por `UpdatedAt`, dado que
-  esto es una herramienta personal de una persona, no colaborativa — pero no se ha confirmado con el
-  usuario); formato exacto del fichero por nota; cómo detectar cambios remotos sin un cliente que
-  avise (¿vigilar la carpeta con `FileSystemWatcher`, sondear al arrancar, las dos?); qué pasa si dos
-  dispositivos crean una nota nueva "al mismo tiempo" (con `Guid` como Id, no debería colisionar,
-  pero conviene confirmarlo explícitamente en la spec).
-
-#### Servidor propio con Docker Compose
-
-La primera versión del servidor autohosteable se añade como `src/Aldune.SyncServer` y se puede levantar
-con `docker-compose.sync.yml`. Es un almacén HTTP de objetos cifrados, no una base de datos con texto
-de notas: guarda los sobres sin conocer la clave. El usuario configura una IP/hostname y puerto (por
-defecto `8087`) en Aldune, junto con un token de acceso. El volumen Docker conserva los objetos aunque
-se recree el contenedor.
-
-La API y el formato no dependen de Windows: un futuro cliente de Android, iOS, macOS o Linux podrá
-usar el mismo endpoint HTTP y la misma clave compartida. DPAPI solo protege la copia local del token y
-de la clave en Windows; nunca se envía al servidor.
-
-HTTPS detrás de un proxy inverso, rotación de tokens e interfaz de resolución de conflictos ya están
-preparados o implementados. Falta probar el despliegue HTTPS real con un dominio del usuario.
-
-#### Próxima revisión de sincronización
-
-Antes de dar por cerrada esta primera versión, queda anotado este checklist:
-
-1. ~~**Validar conflictos reales**~~: hecho con dos bases independientes y una carpeta compartida.
-2. ~~**Acceso seguro desde fuera de la red local**~~: composición HTTPS con Caddy preparada; falta
-   validación en el servidor real.
-3. ~~**Endurecer la autenticación**~~: rotación de tokens documentada mediante `ALDUNE_SYNC_TOKENS`.
-4. ~~**Interfaz de conflictos**~~: revisar, restaurar o descartar la versión perdedora.
-5. **Clientes multiplataforma**: reutilizar el formato y la API para futuras versiones de Android,
-   iOS, macOS y Linux.
-6. ~~**Compatibilidad entre versiones**~~: ventana de formatos soportados y rechazo claro de versiones
-   incompatibles ya implementados.
-
-#### Bloque WebDAV implementado
-
-La importación guiada y la revocación segura de perfiles ya están implementadas. La revocación guarda
-una clave pendiente y vuelve a cifrar los sobres antes de activarla; si la aplicación se cierra a
-mitad, la siguiente sincronización reanuda el proceso. Los dispositivos con el código antiguo deben
-importar una invitación nueva. El siguiente bloque es el transporte WebDAV sobre HTTPS para servidores
-como Nextcloud y otros servicios autohosteables.
-
-La interfaz ya permite configurar WebDAV/Nextcloud con usuario y contraseña protegida localmente.
-La invitación transporta la URL, pero no credenciales. Para Internet debe usarse siempre HTTPS.
-
-#### Siguiente bloque recomendado
-
-Probar WebDAV contra una instalación real de Nextcloud/ownCloud y, después, priorizar los clientes
-multiplataforma reutilizando el formato común de sincronización.
+Aldune was born to bring to Windows a concept that exists on macOS: notes anchored to the screen edge that fan out. It was
+inspired by [Hold My Notes](https://holdmynotes.app/) and [noty](https://github.com/aimen08/noty) (open source). On
+Windows there was nothing with that model of a deck anchored to the edge, and Aldune's design came out of that. It remains a principle that
+the app works **without an account and with encrypted content**, and that any cloud is optional.
 
 ---
 
-## 3. Descartado por ahora, con su razón
+## 2. Pending and decided: it will be done
 
-Que no se vuelva a proponer sin leer esto primero.
+### ~~Revisit the note title~~ — RESOLVED (option E)
 
-### Sangría francesa en listas y editor de markdown renderizado — descartados (2026-10-09)
+The four alternatives were laid out and rendered side by side (script in the session's scratchpad) and
+in doing so the missing argument appeared: **the note text is stored encrypted in a single
+block**. A title stored separately would have to be encrypted on its own (its own blob, nonce and tag) or
+go in the clear, leaking precisely the most descriptive part of each note. And putting it inside the same encrypted
+block is, literally, "the first line".
 
-Dos ideas que piden lo mismo: sustituir el `TextBox` plano por un editor con formato.
+From that came a fifth option that was not on the table and is the one that was implemented: **the header
+shows and edits the first line, and the body starts on the second** (`Aldune.Core.NoteText` splits and
+recomposes). No duplicate, no empty header, with an editable title, and without changing absolutely anything
+about how it is stored or encrypted.
 
-- **Sangría francesa** (que la segunda línea visual de una tarea larga y sangrada quede bajo el texto y
-  no en el margen izquierdo). Un `TextBox` de WPF no sangra por párrafo. Ya funcionan Tab (sangra la
-  línea entera, glifo y texto) y que el Enter siguiente herede la sangría; no hay listas numeradas.
-  Aproximarlo metiendo saltos de línea reales ensuciaría el texto de la nota, y un editor propio
-  arriesga Ctrl+Z, las casillas clicables y el reajuste de alto.
-- **Notas vinculadas a `.md`: editar en crudo, no renderizado.** Un editor con el markdown ya compilado
-  tiene que convertirlo de vuelta a texto al guardar, y esa ida y vuelta puede reescribir el archivo
-  del usuario (espacios, `*` frente a `-`, saltos). Aldune nunca escribe sobre un archivo vinculado de
-  forma que no controla (ver la spec de notas vinculadas). Si algún día se quiere ver el resultado:
-  una vista previa de solo lectura aparte, sin tocar el editor.
+What remains noted in case it is picked up again: joining with Backspace at the start of the
+body (merging the line with the title) was **not** implemented. Doing it properly requires line-merging logic; doing it
+halfway feels broken. You can go up with the Up arrow, which is what any control does.
 
-Se reabre solo si aparece una forma de hacerlo sin sustituir el editor.
+### Historical note: the earlier discarding of the title (in case the debate returns)
 
-### Notas por escritorio virtual de Windows — descartado
+The user explicitly said that **the current solution does not convince them** (the header text was removed;
+the title is the first line of the body). What remains pending is to give it another look **with
+alternatives laid out and rendered**, not just argued — the technique of rasterizing in
+isolation with `RenderTargetBitmap` already helped decide the checkbox glyphs and applies
+equally here.
 
-Idea atractiva (sería algo propio de Windows que ninguna app de Mac puede copiar), pero la API de
-escritorios virtuales de Windows (`IVirtualDesktopManager` y sus interfaces COM internas) **no está
-documentada y cambia entre builds de Windows**: el código se rompería solo en cada actualización
-grande del sistema. No merece la pena mantenerlo.
+Alternatives to put on the table, with their render side by side:
+1. As it is now (header without text).
+2. Header with the title, as before (accepting the duplication).
+3. A truly editable title, separate from the body — now cheap, because **there is no data to
+   preserve**; the migration argument given at the start was not valid and the user pointed
+   this out rightly. See the discarding below for the reasons that do hold and the one that would
+   justify it.
+4. The header shows the first line **only when the body is scrolled** and that line is no longer
+   visible. It resolves the duplication and the only case that is lost today, in exchange for a
+   non-obvious behavior rule.
 
-### Selector de tipografía — descartado; si acaso, de tamaño
+### ~~Reorder notes by dragging in the deck~~ — DONE
 
-Decidido con un render comparativo de 8 fuentes de Windows. El cuerpo se queda en la fuente de
-sistema y el título pasa a Ink Free (ver `STATUS.md`). Un **selector de familia** se descarta por dos
-motivos, el segundo descubierto al renderizar:
+See `STATUS.md`. The design decision is kept here in case it has to be picked up again: a separate `NoteOrder`
+table with `Position REAL`, to move a note by writing a single row instead of renumbering.
 
-1. Según la búsqueda de mercado, en apps de notas de Windows lo que la gente pide es **tamaño de
-   letra** (legibilidad, accesibilidad), no elegir familia.
-2. Las fuentes manuscritas **no tienen los glifos `☐`/`☒`**. Windows los sustituye por otra fuente y
-   quedan desalineados con el texto — exactamente el problema que se arregló eligiendo `☒` por sus
-   métricas. Dejar elegir familia libremente lo reintroduce, y encima de forma intermitente según la
-   fuente que elija cada uno.
+### ~~Visual overlap when dragging downward~~ — IMPLEMENTED (pending visual verification)
 
-Si algún día se añade algo, que sea **tamaño de texto** (pequeño / normal / grande) aplicado a todas
-las notas: es lo que se pide, no rompe la alineación y es barato.
+When dragging a tab downward, it must visually pass in front of the tabs it
+crosses, just as when dragging upward. The logical order and persistence already work;
+during the gesture the selected button is raised and, above all, its real `ContentPresenter`/container
+in the `ItemsControl`, which is what decides the layer between overlapping tabs. On release those values are restored
+and the normal order is recalculated. What remains is to check visually in the dock that a tab
+dragged downward ends up in front of all the ones it crosses.
 
-### Captura rápida sin robar el foco — descartada (2026-10-04)
+### Reorder notes by dragging in the deck (original design, already implemented)
 
-Una barra mínima que aparece con el atajo, escribes y desaparece. **Descartada porque ya está cubierta**: el
-atajo global de "nota nueva" (`CreateAndOpenNote`) crea la nota y deja el cursor listo para escribir, y otro
-atajo abre la última nota editada. Una barra aparte sería una ventana más que mantener (foco, pantallas,
-temas) para ganar un gesto que ya existe. Si alguna vez se quiere de verdad "sin ventana de nota", se
-retoma con un caso de uso concreto.
+Today the order is `CreatedAt` and cannot be changed. In a deck-of-cards metaphor, not being able to
+decide which one is on top is a real gap; noty has it.
 
-### Persistir el "siempre encima" por nota — HECHO en la 1.7.0 (tabla `NoteUnpinned`, solo las notas que se sueltan)
+**Design decision already made**: the position is **not** stored by adding a column to the `Note` table
+— that table holds real user data and this app has no migration system. It is done
+with a separate table, `NoteOrder (NoteId TEXT PRIMARY KEY, Position REAL NOT NULL)`, just as was
+done with `NotePlacement`. `Position` is `REAL` and not `INTEGER` **on purpose**: it allows inserting between
+two notes (arithmetic mean of their positions) without renumbering the whole list on every drag.
 
-El interruptor ya existe (menú "⋯" de la nota) pero es por sesión: al reabrir la nota vuelve a estar
-fijada. Persistirlo exigiría una columna nueva en la tabla `Note`, que es la que tiene datos reales
-del usuario y no hay migraciones. Se puede resolver con una tabla aparte si se confirma que alguien
-lo usa así de verdad.
+### ~~Dock on the left does not look right~~ — RESOLVED (see `STATUS.md`)
 
-### Vista previa al pasar el ratón por una pestaña — descartado por ahora
+Real cause, found with the user's screenshots (2026-09-09): `RestStrip`, the fan's tabs
+and the button footer were aligned "to the right" **in the XAML itself**, without conditioning on the
+edge — a value correct only for `EdgePosition.Right`, which was the only one this was originally
+designed with. The dock window (`EdgeGeometry.WindowRect`) was already positioned correctly against the
+physical screen edge with `DockEdge = Left`, but that inner content was still aligned against
+the wrong side (the inside of the dock, not the outside), leaving the gap seen in the
+screenshots. Fixed by mirroring those three alignments in code when the edge is Left — see
+`STATUS.md` for the technical detail. `EdgeDockWindow.PositionNoteWindow` (where the note itself
+opens) never had the bug: it already distinguished the edges correctly.
 
-Lo tiene noty, y el usuario lo propuso como forma de que el título importara menos. Dos razones para
-no hacerlo:
+**Second round, same underlying cause**: the shape of each tab itself (`CornerRadius`/
+`BorderThickness`/shine gradient in `NoteTabButtonStyle`) was also designed only for the
+right edge — rounded on the left, flush on the right. Mirrored in the same way, verified with an
+isolated render before touching the real XAML.
 
-1. En un **abanico** hay que cruzar por encima de varias pestañas para llegar a la que quieres, así
-   que un panel flotante al hacer hover estaría apareciendo y desapareciendo todo el rato durante un
-   gesto normal. Por eso noty lo ofrece como **opción**, no por defecto.
-2. Su motivo principal desapareció al quitar el título duplicado de la cabecera: la pestaña ya
-   enseña título, una línea de vista previa y el progreso de tareas.
+**Third round, the true root cause**: there was still a gap (strip, fan and footer buttons
+alike) because the `Grid` that wraps *all* of the dock's content has its own asymmetric
+`Margin="18,18,0,18"` in the XAML — no margin on the right, correct only for
+`EdgePosition.Right`. No adjustment inside that `Grid` could compensate for the container itself
+already being shrunk on the wrong side. Mirrored as well. Full detail in `STATUS.md`.
 
-Si se retoma, que sea como ajuste opcional y con un retardo de ~500 ms antes de aparecer.
+### ~~Top and Bottom edges for the dock~~ — DONE, only an optional future design review remains
 
-### Arrastrar para reordenar líneas dentro de una nota — descartado a favor de un atajo
+The user explicitly asked to design the **Top** and **Bottom** edges too — the original spec for the
+fanned tabs excluded them on purpose ("it would require sliding vertically, which is out of
+scope for this round", see the historical note in `EdgeDockWindow.PopulateEdges`, which at that time only offered
+Left/Right in
+Settings). **Finding while investigating the bug above**: `Aldune.Core.EdgeGeometry` (the pure geometry,
+with tests) **already covered all four edges**, but the first Top/Bottom layout was incorrect:
+it treated a side card as if it could be rotated without changing its measurements. The corrected design
+keeps a horizontal bar at rest and, when unfolded, opens a vertical column of
+208px-wide cards, just like the side ones, so that the title keeps its room. Top grows
+downward and Bottom upward; if there are many notes, the scroll is vertical. The dock thickness,
+the length budget, dragging and opening of notes now use that specific geometry.
+The current implementation is closed for this round. The alternative of wide cards stacked
+inward is kept only as a possible future visual review.
 
-Pedido explícito del usuario (2026-09-09): mover de sitio las tareas con casilla arrastrándolas
-dentro del cuerpo de la nota, como el mazo ya permite con notas enteras. Se descartó **el arrastre en
-sí**, no la posibilidad de reordenar: el cuerpo es un `TextBox` plano a propósito (spec v1, sin texto
-enriquecido), así que arrastrar líneas ahí dentro exige simular el gesto a mano — distinguirlo del
-clic de marcar la casilla, dibujar una línea fantasma que siga el ratón, reconstruir el texto al
-soltar — bastante más complejo que nada hecho hasta ahora y en tensión directa con esa decisión de
-diseño. Implementado en su lugar (ver `STATUS.md`): Alt+Arriba/Alt+Abajo intercambia la línea del
-cursor con la vecina, mismo resultado sin arrastrar nada. Si el arrastre de verdad se pide otra vez
-con más insistencia, el coste de arriba sigue siendo el mismo — no ha cambiado nada que lo abarate.
+### ~~Note layout templates on the desktop~~ — DONE
 
-### Recordatorio por tarea y tipo de nota "lista de la compra" — descartados (2026-09-26)
+User idea (2026-09-09): instead of dragging each note by hand to leave them tidy,
+offer automatic layout templates (grid, uniform cascade, columns...) that
+place them all at once. It connects directly with "Open all notes" (see `STATUS.md`, same
+session): today that function only cascades with a fixed diagonal offset
+(`EdgeDockWindow.NoteWindowCascadeStep`/`NoteWindowMaxCascadeSteps`), which with several notes open at
+the same time leaves a messy pile instead of something "tidy".
 
-- **Recordatorio por tarea**: ya lo descartó la spec de recordatorios (una línea no tiene identidad
-  estable) y la revisión de las tareas lo confirmó (la identidad por texto fallaba en el borrado
-  automático). En su lugar, el aviso del recordatorio de la nota enseña las tareas pendientes.
-- **Tipo de nota "lista de la compra"**: sería un campo nuevo en el formato de sync, que las versiones
-  anteriores rechazan, y un segundo editor. Se cubre con funciones de lista válidas para cualquier nota:
-  Ctrl+Enter, desmarcar todas, borrar las hechas, hechas al final y la franja "Todo hecho" (ver
-  `STATUS.md`). Si se retoma, lo siguiente con sentido sería autocompletar con artículos ya usados.
+**The current free placement (dragging each note wherever you want) must remain available** —
+templates are one more option, not a replacement. It fits with `AppSettings.RememberNotePositions`
+as it exists today: it will remain the default mode, and a template is something the user asks for
+explicitly when they want to tidy up all at once, not something imposed.
 
-### Otros descartes menores
+Unanswered questions for when its design session comes up:
 
-- **Etiquetas y carpetas**: es la queja nº1 de Microsoft Sticky Notes, pero choca con el minimalismo
-  de Aldune (el mazo son notas activas, punto). Si crece la lista de notas, la respuesta correcta
-  probablemente sea mejorar el gestor y la búsqueda, no añadir jerarquía.
-- **Adjuntar imágenes / capturas** (otras apps de notas lo tienen): rompería el modelo
-  de texto plano, que es lo que hace posible el cifrado simple, la búsqueda y la exportación. No sin
-  una razón muy buena.
-- **Título duplicado en la nota** — **resuelto**: se quitó el texto de la cabecera. El título es la
-  primera línea del cuerpo (justo debajo) y lo que enseña la pestaña del dock; la cabecera sigue
-  siendo reconocible como "la pestaña que viajó con la nota" por su color y su troquelado.
+- Which templates to offer at the start? Grid and uniform cascade seem the two obvious ones; any more?
+- Does it apply only when using "Open all", or also as a separate action on notes that are already
+  open (rearranging them without closing them)?
+- ~~Interaction with `AppSettings.RememberNotePositions`: applying a template overwrites each note's
+  saved position. Is that memory simply lost, is the user asked first, or can it be undone?~~
+  **Resolved** (2026-09-16, see `STATUS.md`): the template's movement does not save the position — it is
+  flagged as a coordinator relocation (`NoteWindow._isLayoutMove`) — so each
+  note's memory survives while it is laid out; it is only lost if the note is closed while laid out, which is the
+  general rule of "remember the last position". And it can be undone: "Restore original
+  positions", in the same menu.
+- ~~On multi-monitor, is the template applied per screen (each dock lays out only its own) or does the whole
+  set of monitors have to be considered at once?~~ **Resolved** (2026-09-16): all onto one
+  screen, that of the dock that is clicked — a layout spread across two monitors is not a
+  layout —. If there are more screens than docks, the menu lets you choose which one (see `STATUS.md`).
 
-- **Campo de título editable, separado del cuerpo — descartado por diseño, no por coste.**
-  Conviene dejar claro el porqué, porque la primera vez se argumentó mal: se dijo que obligaría a una
-  columna nueva en la tabla `Note` y que no hay migraciones. El usuario señaló, con razón, que ahora
-  mismo no hay datos que preservar — así que ese argumento no vale. Las razones que sí valen:
-  1. **No resuelve el problema que parecía resolver.** La queja de fondo era una pila de pestañas
-     que ponían todas "NUEVA NOTA". Eso pasa porque son notas **vacías**, y una nota vacía tendría
-     también el título vacío: con campo de título se vería exactamente la misma pila.
-  2. **Cuesta un paso en cada nota.** El gesto de esta app es "abrir y escribir". Un campo de título
-     mete una decisión ("¿cómo llamo a esto?") delante de anotar tres palabras, que es el 90 % de los
-     casos.
-  3. Mantener una sola pieza de texto es lo que hace que cifrado, búsqueda y exportación no tengan
-     casos especiales.
+### ~~Contextual dock actions~~ — DONE, with optional future improvements
 
-  Si algún día se retoma, el argumento a favor sería poder nombrar una nota **independientemente** de
-  su contenido (una nota larga cuya primera línea no la describe). Ese sí es un motivo válido, y no
-  tiene nada que ver con el que se dio al principio.
+First delivery implemented: right-clicking the open-all button offers normal mode,
+grid, columns and close all. The choice is saved as the button's default
+mode; normal mode remains the initial value and must be chosen
+explicitly to return to it. The template is applied on the screen of the dock that is clicked (or on the one
+chosen, if some screen is left without a dock) and only changes positions when the user chooses it. Layout
+changes are briefly animated to avoid abrupt jumps.
+The grid and the columns are sensitive to the number of notes and to the screen orientation:
+up to 12 notes are arranged in a compact template; the remaining ones stay open in a
+readable cascade to avoid compressing them until they become unusable.
+
+Right-clicking a note already has real use: open it, change its color, archive it or
+send it to the trash. What remains to decide is whether the dock footer buttons should also offer a contextual
+menu, without taking away their normal left-click action. Initial ideas:
+
+- `+`: create a note from the clipboard or create it with a quick template.
+- "Open all": choose a layout (cascade, grid or columns) before opening them.
+- "Manage notes": open Active, Archived or Trash directly.
+
+Filling the dock with advanced options must be avoided: the contextual menu should only provide shortcuts that
+are hard to discover or that save several steps.
+
+### Tags, dock views and selective sync — first delivery
+
+A first usable base has been added: notes have persistent tags, editable from the
+tab's contextual menu, and the dock can show active, archived, trash or only the
+active ones of a tag. The trash does not appear in the normal view. Right-clicking the management
+button opens that selector directly, to keep the main buttons without filling them with
+submenus.
+
+Tags are part of the encrypted sync format 2. Format 1 can be read,
+but an old version rejects format 2 so as not to silently delete tags when saving
+a later version. What is left for the next round is designing selective sync of notes,
+multiple sync profiles and sharing a note with another person; those
+identities must not be mixed with the current device code.
+
+The first part of that next round is already implemented: in Settings you can choose to sync
+all notes or a specific selection. The selective scope is local to the installation and excludes
+both publishing and downloads outside the selection. Independent profiles and the code
+to share a selection are already implemented; what remains pending is improving the invitation
+and revocation flow without mixing it with the “My devices” link.
+
+### Simplified mode / full mode — IMPLEMENTED
+
+Offer in Settings a clear button to switch between a **full version** and a **simplified
+version** of Aldune, intended for those who want to use notes without so many options. It would not be another
+installation or a different database: it would be a reversible, persistent interface mode.
+
+The simplified mode should keep the core (dock, create/open notes and basic manager) and hide
+the advanced configuration, such as monitor selection, edge, global shortcut, full screen,
+trash retention and task automation. The button must allow returning to full mode without
+losing or resetting settings; switching modes cannot touch the notes.
+
+Pending to decide in a design session:
+
+- whether the change applies instantly or asks for a restart;
+- whether the simplified notes manager keeps archive/trash or only the active notes;
+- which text and location of the button make it obvious that you can go back to full mode.
+
+### ~~Free note color, in addition to the palette~~ — DONE
+
+User idea (2026-09-11): in addition to the 6 colors of `NoteColorPalette`, being able to choose a free
+color for a specific note. **The current palette stays as the default** — same pattern as
+"layout templates" and "sync" above: the structured out-of-the-box option remains
+the normal path, and freedom is something asked for explicitly, not a replacement. Reason
+for not touching the default: the palette is deliberately designed (six colors derived in
+OKLCH with exactly the same lightness, so that "color is identity, not hierarchy" and no note
+weighs visually more than another) — a freely chosen color can break that balance on purpose,
+which is precisely what is sought by choosing it.
+
+**Half of the infrastructure already exists**: `NoteColorPalette.RimFor`/`LabelFor` already compute a
+reasonable border and label color for any hexadecimal outside the palette (darkening
+proportionally) — today that path is only used for legacy notes with old colors, but it
+would serve just as well for a hand-picked color. What is missing is the color picker itself (a Windows
+`ColorDialog`, or something custom to match the rest of the app) and deciding where it lives: one more color in the row
+of pills of the "⋯" menu that opens a picker, or a separate entry? Its own design session
+when its turn comes — it is not big, but a color picker at note
+creation was explicitly discarded earlier ("unnecessary complexity for the benefit", see below), so it is best not to
+repeat that argument without thinking it over first.
+
+### ~~Internationalize into English~~ — DONE (see `STATUS.md`)
+
+It was not just translating: the user uses Aldune in Spanish daily, so a
+Spanish/English selector was added in Settings (`AppSettings.Language`) instead of simply replacing. Texts in
+`Aldune.Resources.Strings` (hand-written dictionary, not `.resx` — reason in `STATUS.md`). Changing the
+language asks to restart the app to be seen in all windows.
+
+**Gap left on purpose**: `HotkeyBinding.DisplayName` (Core) does not translate "Espacio"/"Supr"/"sin
+asignar" — see the why in `STATUS.md`. If picked up again, that property has to be turned into a
+parameterized method and `HotkeyBindingTests` touched, which fixes those three texts literally.
+
+### ~~Export to Markdown / plain text~~ — DONE (see `STATUS.md`)
+
+Both macOS rivals have it. Besides being useful it is a **trust feature** ("I don't
+hold your data hostage"), which weighs more if one day it is charged for. On export, the `☐`/`☒` checkboxes are
+translated to Markdown's task syntax (`- [ ]` / `- [x]`), as this item said — only
+Markdown was implemented, not separate plain text (see the brainstorming in `STATUS.md` for the why).
+One note at a time from `NoteWindow`, or in bulk from `NotesManagerWindow`.
+
+### ~~Reminders with Windows notification~~ — DONE (see `STATUS.md`)
+
+**An important functional gap compared with other Windows note apps** and one of the most requested features. A single
+one-off reminder per note (In 1 hour / Tonight / Tomorrow 9:00, or calendar + manual time),
+native Windows notice via the already existing tray icon, and a badge on the dock tab.
+Full detail, including the 5 integration gaps found by the final review of the whole
+branch (and fixed in a single round) and what remains pending manual verification by the user
+(the visual notice on screen), in `STATUS.md`.
+
+**Not implemented, still pending if picked up again**: snoozing a reminder that has already gone off (today it has to be
+set from scratch, with the same panel as always — there is no "snooze 10 minutes" shortcut on a
+notice that has just gone off).
+
+### Sync between devices — base implemented, with two paths
+
+It used to be parked as "discarded for now, do not touch until someone really asks for it" —
+the user asked for it and it now moves to incremental implementation. The initial core already uses JSON envelopes
+with per-note encrypted content, a shared key independent of DPAPI, tombstones, atomic writes
+and deterministic resolution by date/device. The next block shows the configuration,
+allows manual sync and offers periodic background sync.
+What was already decided in the initial design, so as not to argue it again from scratch:
+
+- **Both paths, not just one** — explicit user decision after seeing the trade-off:
+  1. **Folder chosen by the user** (OneDrive, Google Drive, Dropbox, Syncthing — any that
+     already syncs a normal disk folder). Aldune never talks to any cloud: it stores one
+     encrypted file per note inside that folder and rebuilds. It keeps "no account, no
+     server", works with any provider (including none, with Syncthing), and is the path that
+     naturally also serves a future client on another operating system (Android/iOS,
+     mentioned by the user as possible but undecided) — that future client would sync by
+     reading the same folder through its own Drive/OneDrive app, without Aldune having to
+     talk to anyone's API.
+  2. **Aldune talks directly to the Google Drive API** (OAuth, with no desktop client in
+     between). Explicitly requested despite the cost, so let it be noted for when it is designed:
+     it needs the Google login flow, storing and renewing a token (delicate, same family of
+     problem as the encryption key — see `DatabaseKeyProvider` in `STATUS.md`), registering the app
+     in Google Cloud and, if Aldune is ever published, going through its OAuth app verification
+     process (otherwise an "unverified app" warning appears). And it contradicts, for whoever uses it, the project's own
+     principle ("no account, ever", §1) — which is
+     why it has to be an **optional** path, never the only one, with path 1 always available by
+     default.
+- **Technical warning that still holds for path 1** (it was already noted before this was decided):
+  do *not* sync the SQLite file directly — sync folders corrupt databases
+  opened by two machines at the same time. One encrypted file per note, rebuildable, is the only safe
+  way.
+- **Self-hostable path, also decided** — it will not depend on an Aldune service:
+  1. **Local folder, UNC or NAS**: for a folder shared on the network (`\\servidor\\aldune`) or
+     a folder synced by Syncthing/Nextcloud/another client. It is the first implementation and
+     covers the "my own server inside the house" case without adding a new API.
+  2. **WebDAV over HTTPS**: for a server reachable from outside the network, especially
+     Nextcloud/ownCloud or a WebDAV server of one's own. Aldune will store the URL and an application
+     credential, not the main password when the server offers that possibility.
+  3. **Dedicated Aldune API**: remains as a future option, only if WebDAV does not cover some real case;
+     it would imply maintaining its own server, authentication, TLS, versions and migrations.
+- **Proposed implementation order**:
+  1. transport-independent sync core, with per-note encrypted files,
+     manifest, deletions represented by *tombstones*, atomic writes and recovery;
+  2. local folder/UNC/NAS transport;
+  3. self-hostable WebDAV transport;
+  4. direct Google Drive as a later optional integration (OAuth and token renewal).
+- **Key shared between devices** — the current DPAPI protection remains only to protect the local
+  copy. For another machine to be able to decrypt the notes, an independent sync key will have to be introduced,
+  transferable through a recovery code/phrase and protected locally on each
+  machine. A DPAPI key tied to a single Windows user will never be uploaded.
+- **Recommended initial policy** — `Guid` to avoid collisions when creating notes, `UpdatedAt` plus a
+  deterministic per-device tiebreaker for conflicts on the same note, and *tombstones* so that
+  a deletion does not reappear when syncing an old machine. The interface will have to show status,
+  last sync, errors and recoverable conflicts.
+- **Not yet decided, for the design session**: what happens if the same note is edited on two
+  devices before syncing (probably "the most recent wins" by `UpdatedAt`, given that
+  this is a personal tool for one person, not collaborative — but it has not been confirmed with the
+  user); exact format of the per-note file; how to detect remote changes without a client that
+  notifies (watch the folder with `FileSystemWatcher`, poll at startup, both?); what happens if two
+  devices create a new note "at the same time" (with `Guid` as Id, it should not collide,
+  but it is worth confirming explicitly in the spec).
+
+#### Self-hosted server with Docker Compose
+
+The first version of the self-hostable server is added as `src/Aldune.SyncServer` and can be brought up
+with `docker-compose.sync.yml`. It is an HTTP store of encrypted objects, not a database with note
+text: it stores the envelopes without knowing the key. The user configures an IP/hostname and port (by
+default `8087`) in Aldune, along with an access token. The Docker volume keeps the objects even if
+the container is recreated.
+
+The API and the format do not depend on Windows: a future Android, iOS, macOS or Linux client will be able to
+use the same HTTP endpoint and the same shared key. DPAPI only protects the local copy of the token and
+of the key on Windows; it is never sent to the server.
+
+HTTPS behind a reverse proxy, token rotation and the conflict-resolution interface are already
+prepared or implemented. What remains is testing the real HTTPS deployment with a domain of the user's.
+
+#### Next sync review
+
+Before considering this first version closed, this checklist is noted:
+
+1. ~~**Validate real conflicts**~~: done with two independent databases and a shared folder.
+2. ~~**Secure access from outside the local network**~~: HTTPS composition with Caddy prepared; validation
+   on the real server is missing.
+3. ~~**Harden authentication**~~: token rotation documented through `ALDUNE_SYNC_TOKENS`.
+4. ~~**Conflict interface**~~: review, restore or discard the losing version.
+5. **Cross-platform clients**: reuse the format and the API for future Android,
+   iOS, macOS and Linux versions.
+6. ~~**Compatibility between versions**~~: window of supported formats and clear rejection of
+   incompatible versions already implemented.
+
+#### WebDAV block implemented
+
+Guided import and safe revocation of profiles are already implemented. Revocation stores
+a pending key and re-encrypts the envelopes before activating it; if the application is closed
+midway, the next sync resumes the process. Devices with the old code must
+import a new invitation. The next block is the WebDAV transport over HTTPS for servers
+such as Nextcloud and other self-hostable services.
+
+The interface now allows configuring WebDAV/Nextcloud with a username and a locally protected password.
+The invitation carries the URL, but not credentials. For the Internet, HTTPS must always be used.
+
+#### Next recommended block
+
+Test WebDAV against a real Nextcloud/ownCloud installation and, afterwards, prioritize the
+cross-platform clients reusing the common sync format.
 
 ---
 
-## 4. Si se decide publicar
+## 3. Discarded for now, with its reason
 
-Por orden:
+Do not propose again without reading this first.
 
-1. ~~Terminar la internacionalización~~ — hecho: inglés, español, alemán, francés y portugués de
-   Brasil (1.4.0). Falta que un nativo revise las tres últimas.
-2. **Instalador firmado**. Un `.exe` sin firmar dispara SmartScreen y se lleva por delante buena
-   parte de las descargas. Decidido (2026-09-27): **solo vías gratuitas**, en este orden:
-   - ~~**SignPath Foundation**~~ — **rechazada el 2026-09-28**: piden señales de visibilidad pública
-     (estrellas, forks, colaboradores, artículos o hilos externos, actividad sostenida) que el
-     proyecto aún no tiene. Se puede volver a pedir cuando las tenga; el workflow sigue preparado
-     (firma solo si existen las variables) y lo que exigían al repositorio está en el historial de
-     git (sección "Code signing policy" de los README, quitada al rechazarla). La suscripción de
-     pago de SignPath queda fuera por la regla de solo vías gratuitas.
-   - **Microsoft Store**, ahora la vía principal: el registro de desarrollador es gratis desde 2025 y firma el
-     MSIX, pero empaquetar como MSIX es trabajo aparte (arranque con Windows, aviso de
-     actualizaciones, rutas de datos) y solo firma lo que se instala desde la Store.
-3. Página de presentación. Lo que hay que decir, por orden de fuerza: es lo único así **en Windows**;
-   las notas están **cifradas y no salen del equipo**; **no hay cuenta ni nube**; hay **versión
-   portable** que no se instala.
+### Hanging indent in lists and rendered markdown editor — discarded (2026-10-09)
+
+Two ideas that ask for the same thing: replacing the plain `TextBox` with a rich-text editor.
+
+- **Hanging indent** (so that the second visual line of a long, indented task sits under the text and
+  not in the left margin). A WPF `TextBox` does not indent per paragraph. Tab already works (it indents the
+  whole line, glyph and text) and so does having the next Enter inherit the indentation; there are no numbered lists.
+  Approximating it by inserting real line breaks would pollute the note's text, and a custom editor
+  risks Ctrl+Z, the clickable checkboxes and the height readjustment.
+- **Notes linked to `.md`: edit raw, not rendered.** An editor with the markdown already compiled
+  has to convert it back to text on save, and that round trip can rewrite the user's file
+  (whitespace, `*` versus `-`, line breaks). Aldune never writes to a linked file in a
+  way it does not control (see the linked notes spec). If one day you want to see the result:
+  a separate read-only preview, without touching the editor.
+
+It is reopened only if a way appears to do it without replacing the editor.
+
+### Notes per Windows virtual desktop — discarded
+
+An attractive idea (it would be something specific to Windows that no Mac app can copy), but the Windows
+virtual desktop API (`IVirtualDesktopManager` and its internal COM interfaces) **is not
+documented and changes between Windows builds**: the code would break by itself on every major
+system update. It is not worth maintaining.
+
+### Font picker — discarded; if anything, a size one
+
+Decided with a comparative render of 8 Windows fonts. The body stays in the system
+font and the title moves to Ink Free (see `STATUS.md`). A **family picker** is discarded for two
+reasons, the second discovered while rendering:
+
+1. According to the market research, in Windows note apps what people ask for is **font
+   size** (readability, accessibility), not choosing a family.
+2. Handwriting fonts **do not have the `☐`/`☒` glyphs**. Windows substitutes another font for them and
+   they end up misaligned with the text — exactly the problem that was fixed by choosing `☒` for its
+   metrics. Letting people freely choose a family reintroduces it, and moreover intermittently depending on the
+   font each person picks.
+
+If one day something is added, let it be **text size** (small / normal / large) applied to all
+notes: it is what is asked for, it does not break the alignment and it is cheap.
+
+### Quick capture without stealing focus — discarded (2026-10-04)
+
+A minimal bar that appears with the shortcut, you type and it disappears. **Discarded because it is already covered**: the
+global "new note" shortcut (`CreateAndOpenNote`) creates the note and leaves the cursor ready to type, and another
+shortcut opens the last edited note. A separate bar would be one more window to maintain (focus, screens,
+themes) to gain a gesture that already exists. If one ever really wants it "without a note window", it is
+picked up again with a concrete use case.
+
+### Persist "always on top" per note — DONE in 1.7.0 (`NoteUnpinned` table, only the notes that are released)
+
+The switch already exists (the note's "⋯" menu) but it is per session: when the note is reopened it is pinned
+again. Persisting it would require a new column in the `Note` table, which is the one holding the user's
+real data and there are no migrations. It can be solved with a separate table if it is confirmed that someone
+really uses it that way.
+
+### Preview on hovering over a tab — discarded for now
+
+noty has it, and the user proposed it as a way to make the title matter less. Two reasons
+not to do it:
+
+1. In a **fan** you have to pass over several tabs to reach the one you want,
+   so a floating panel on hover would be appearing and disappearing all the time during a
+   normal gesture. That is why noty offers it as an **option**, not by default.
+2. Its main reason disappeared when the duplicate title was removed from the header: the tab already
+   shows a title, a preview line and the task progress.
+
+If picked up again, let it be as an optional setting and with a delay of ~500 ms before appearing.
+
+### Drag to reorder lines within a note — discarded in favor of a shortcut
+
+Explicit user request (2026-09-09): move checkbox tasks around by dragging them
+inside the note body, as the deck already allows with whole notes. **The drag
+itself** was discarded, not the possibility of reordering: the body is a plain `TextBox` on purpose (spec v1, no
+rich text), so dragging lines in there requires simulating the gesture by hand — telling it apart from the
+click that ticks the checkbox, drawing a ghost line that follows the mouse, rebuilding the text on
+release — considerably more complex than anything done so far and in direct tension with that design
+decision. Implemented instead (see `STATUS.md`): Alt+Up/Alt+Down swaps the cursor's line
+with its neighbor, the same result without dragging anything. If dragging is really asked for again
+with more insistence, the cost above is still the same — nothing has changed that makes it cheaper.
+
+### Per-task reminder and "shopping list" note type — discarded (2026-09-26)
+
+- **Per-task reminder**: already discarded by the reminders spec (a line has no stable
+  identity) and the review of tasks confirmed it (identity by text failed in automatic
+  deletion). Instead, the note reminder's notice shows the pending tasks.
+- **"Shopping list" note type**: it would be a new field in the sync format, which earlier versions
+  reject, and a second editor. It is covered with list functions valid for any note:
+  Ctrl+Enter, uncheck all, delete the done ones, done ones at the end and the "All done" strip (see
+  `STATUS.md`). If picked up again, the next sensible thing would be autocompleting with already-used items.
+
+### Other minor discards
+
+- **Tags and folders**: it is Microsoft Sticky Notes' complaint no. 1, but it clashes with Aldune's
+  minimalism (the deck is active notes, period). If the list of notes grows, the right answer
+  is probably to improve the manager and the search, not to add hierarchy.
+- **Attaching images / screenshots** (other note apps have it): it would break the plain-text
+  model, which is what makes simple encryption, search and export possible. Not without
+  a very good reason.
+- **Duplicate title in the note** — **resolved**: the header text was removed. The title is the
+  first line of the body (right below) and what the dock tab shows; the header remains
+  recognizable as "the tab that traveled with the note" by its color and its die-cut.
+
+- **Editable title field, separate from the body — discarded by design, not by cost.**
+  It is worth making clear why, because the first time it was argued badly: it was said that it would force a new
+  column in the `Note` table and that there are no migrations. The user pointed out, rightly, that right now
+  there is no data to preserve — so that argument does not hold. The reasons that do hold:
+  1. **It does not solve the problem it seemed to solve.** The underlying complaint was a stack of tabs
+     that all said "NEW NOTE". That happens because they are **empty** notes, and an empty note would
+     also have an empty title: with a title field you would see exactly the same stack.
+  2. **It costs one step on every note.** This app's gesture is "open and type". A title field
+     puts a decision ("what do I call this?") in front of jotting down three words, which is 90 % of
+     cases.
+  3. Keeping a single piece of text is what makes encryption, search and export have no
+     special cases.
+
+  If it is ever picked up again, the argument in favor would be being able to name a note **independently** of
+  its content (a long note whose first line does not describe it). That is indeed a valid reason, and it has
+  nothing to do with the one given at the start.
 
 ---
 
-## 5. Revisión de apariencia — estado
+## 4. If it is decided to publish
 
-Hecho: cuerpo de la nota liberado de botones permanentes (eran ~90 px de 320, casi un
-tercio), acciones movidas al panel del "⋯", panel oscuro bajo los botones del dock vacío.
+In order:
 
-Pendiente, por orden de importancia:
+1. ~~Finish internationalization~~ — done: English, Spanish, German, French and Brazilian
+   Portuguese (1.4.0). A native speaker still has to review the last three.
+2. **Signed installer**. An unsigned `.exe` triggers SmartScreen and takes a good
+   part of the downloads with it. Decided (2026-09-27): **free paths only**, in this order:
+   - ~~**SignPath Foundation**~~ — **rejected on 2026-09-28**: they ask for public visibility signals
+     (stars, forks, contributors, external articles or threads, sustained activity) that the
+     project does not have yet. It can be requested again when it has them; the workflow is still prepared
+     (it signs only if the variables exist) and what they required of the repository is in the git history
+     (the "Code signing policy" section of the READMEs, removed when it was rejected). SignPath's paid
+     subscription is out under the free-paths-only rule.
+   - **Microsoft Store**, now the main path: developer registration has been free since 2025 and it signs the
+     MSIX, but packaging as MSIX is separate work (startup with Windows, update notice,
+     data paths) and it only signs what is installed from the Store.
+3. Presentation page. What has to be said, in order of strength: it is the only one like it **on Windows**;
+   notes are **encrypted and do not leave the machine**; **there is no account or cloud**; there is a
+   **portable version** that does not need installing.
 
-1. ~~`SettingsWindow` puede crecer más que la pantalla.~~ **Hecho** (ver `STATUS.md`, sesión
-   2026-09-07): primero se le puso `MaxHeight` + `ScrollViewer` como red de seguridad, pero el
-   usuario reportó con captura real que la ventana se le seguía saliendo por abajo — el problema de
-   fondo no era la falta de scroll, sino demasiada altura. Se rediseñó a dos columnas (760px de
-   ancho), verificado con maqueta antes de implementar: la altura baja a la mitad. El
-   `MaxHeight`/`ScrollViewer` se mantienen como red de seguridad para pantallas muy pequeñas.
-2. ~~**Dos lenguajes de control mezclados en Ajustes**~~ **Hecho** (2026-10-04, ver `STATUS.md`): tarjetas con radio (monitor, borde) conviven
-   con casillas sueltas (arranque, atajo, pantalla completa, posiciones). Unificar: o todo tarjetas,
-   o las casillas a interruptores alineados a la derecha, estilo Configuración de Windows 11.
-3. ~~**Escala tipográfica**~~ **Hecho** (2026-10-04): había 11/12/13/14/15/17 px repartidos a ojo por las cuatro ventanas. Fijar
-   tres tamaños y aplicarlos.
-4. ~~**`NotesManagerWindow`** es la ventana más cargada (452 líneas de XAML) y la que más se aleja del
-   minimalismo del resto.~~ **Revisada** (2026-10-04, con captura de la ventana con 4 notas): ya no es cierto. Las 681 líneas
-   de XAML son plantillas de estilo; a la vista es una cabecera, una búsqueda, un orden y filas de nota, igual de sobria que
-   el resto. Sin cambios; la escala tipográfica ya se le aplicó.
-5. ~~**Tema claro para el chrome**~~ — **HECHO** (2026-09-27): Oscuro, Claro, Pastel, Medianoche y
-   Como Windows, en vivo. Ver `STATUS.md`.
-6. ~~El abanico puede dejar de ser compacto con muchas notas.~~ **Hecho** — ver `STATUS.md`. La
-   ventana tiene tope (`EdgeGeometry.FanBudget`), lo que sobra se scrollea, y la tira de reposo solo
-   dibuja los guiones que caben.
-7. **El cursor de escritura se cruza con la "T" de "Title"** en la cabecera cuando el título está
-   vacío — reportado por el usuario con captura (2026-09-12). El caret parpadeante de `TitleBox` se
-   dibuja en el mismo punto que el placeholder, en vez de dejarle su sitio.
-8. **El botón "⋯" no cierra el menú al volver a pulsarlo estando abierto** — lo vuelve a abrir en su
-   lugar (reportado 2026-09-12). Sospecha: el `Popup` (`StaysOpen="False"`) se cierra solo por el clic
-   "de fuera" antes de que `OnMenuClick` llegue a ejecutarse, así que el toggle parte de `IsOpen` ya en
-   `false` y lo reabre — bug clásico de WPF con popups que se cierran solos. Pendiente de arreglar.
+---
 
-7. ~~Caret del título~~ **Hecho** (2026-09-12): el marcador se oculta mientras el campo tiene
-   el foco, dejando el cursor libre.
-8. ~~Menú `⋯` que no se cierra al repetir clic~~ **Hecho** (2026-09-12): el segundo clic se
-   captura antes de que el `Popup` lo interprete como clic exterior.
-9. **Colores de nota personalizados** — **Hecho** (2026-09-12): la paleta rápida se conserva y
-   el menú de acciones ofrece un selector libre, limitado a colores legibles.
-10. **Revisión de ventanas y movimiento** — **Hecho** (2026-09-12): el gestor gana aire y nitidez,
-   se eliminan focos azules del chrome y las transiciones quedan más ágiles.
+## 5. Appearance review — status
 
-### Validación de conflictos de sincronización — HECHO (2026-09-12)
+Done: note body freed from permanent buttons (they were ~90 px of 320, almost a
+third), actions moved to the "⋯" panel, dark panel under the empty dock's buttons.
 
-Se han reproducido con dos bases de datos independientes y una carpeta compartida los casos de
-edición en ambos dispositivos y de borrado frente a una edición antigua. La versión más reciente
-gana y el dispositivo remoto converge; una eliminación más reciente se conserva como tombstone y
-no hace reaparecer la nota. El sobre de tombstone usa ahora el identificador real del dispositivo
-que lo publica para que el desempate sea estable.
+Pending, in order of importance:
 
-### HTTPS para el servidor autohosteable — PREPARADO (2026-09-12)
+1. ~~`SettingsWindow` can grow taller than the screen.~~ **Done** (see `STATUS.md`, session
+   2026-09-07): first `MaxHeight` + `ScrollViewer` were added as a safety net, but the
+   user reported with a real screenshot that the window kept running off the bottom — the underlying problem
+   was not the lack of scroll, but too much height. It was redesigned into two columns (760px
+   wide), verified with a mockup before implementing: the height drops by half. The
+   `MaxHeight`/`ScrollViewer` are kept as a safety net for very small screens.
+2. ~~**Two mixed control languages in Settings**~~ **Done** (2026-10-04, see `STATUS.md`): rounded cards (monitor, edge) coexist
+   with loose checkboxes (startup, shortcut, full screen, positions). Unify: either all cards,
+   or the checkboxes turned into right-aligned switches, Windows 11 Settings style.
+3. ~~**Typographic scale**~~ **Done** (2026-10-04): there were 11/12/13/14/15/17 px scattered by eye across the four windows. Fix
+   three sizes and apply them.
+4. ~~**`NotesManagerWindow`** is the busiest window (452 lines of XAML) and the one that strays furthest from the
+   minimalism of the rest.~~ **Reviewed** (2026-10-04, with a screenshot of the window with 4 notes): no longer true. The 681 lines
+   of XAML are style templates; what you see is a header, a search, a sort and note rows, just as sober as
+   the rest. No changes; the typographic scale was already applied to it.
+5. ~~**Light theme for the chrome**~~ — **DONE** (2026-09-27): Dark, Light, Pastel, Midnight and
+   Like Windows, live. See `STATUS.md`.
+6. ~~The fan can stop being compact with many notes.~~ **Done** — see `STATUS.md`. The
+   window has a cap (`EdgeGeometry.FanBudget`), the excess scrolls, and the rest strip only
+   draws the dashes that fit.
+7. **The text cursor collides with the "T" of "Title"** in the header when the title is
+   empty — reported by the user with a screenshot (2026-09-12). The blinking caret of `TitleBox` is
+   drawn at the same point as the placeholder, instead of leaving it its place.
+8. **The "⋯" button does not close the menu when pressed again while open** — it reopens it
+   instead (reported 2026-09-12). Suspicion: the `Popup` (`StaysOpen="False"`) closes itself on the "outside"
+   click before `OnMenuClick` gets to run, so the toggle starts from `IsOpen` already
+   `false` and reopens it — a classic WPF bug with popups that close themselves. Pending a fix.
 
-Se añadió `docker-compose.sync.https.yml` con Caddy como proxy inverso, certificados automáticos y
-persistencia de su configuración. El servicio de sincronización ya no se publica directamente en
-Internet en ese modo. Falta probarlo en el servidor real con un dominio y DNS controlados por el
-usuario; la composición HTTP local sigue intacta.
+7. ~~Title caret~~ **Done** (2026-09-12): the marker is hidden while the field has
+   focus, leaving the cursor free.
+8. ~~`⋯` menu that does not close on repeated click~~ **Done** (2026-09-12): the second click is
+   captured before the `Popup` interprets it as an outside click.
+9. **Custom note colors** — **Done** (2026-09-12): the quick palette is kept and
+   the actions menu offers a free picker, limited to readable colors.
+10. **Review of windows and motion** — **Done** (2026-09-12): the manager gains air and sharpness,
+   blue focus rings are removed from the chrome and transitions become snappier.
 
-### Rotación y revocación de tokens — HECHO (2026-09-12)
+### Sync conflict validation — DONE (2026-09-12)
 
-El servidor acepta una lista temporal de tokens mediante `ALDUNE_SYNC_TOKENS`, con prioridad sobre
-el token único anterior. Esto permite publicar el nuevo token, actualizar los dispositivos y retirar
-el antiguo sin dejar la sincronización inutilizada durante el cambio. La revocación se hace quitando
-el token de la lista y recreando el contenedor.
+The cases of editing on both devices and of deletion versus an old edit were reproduced with two independent
+databases and a shared folder. The most recent version
+wins and the remote device converges; a more recent deletion is kept as a tombstone and
+does not make the note reappear. The tombstone envelope now uses the real identifier of the device
+that publishes it so that the tiebreak is stable.
 
-### Interfaz para resolver conflictos — HECHO (2026-09-12)
+### HTTPS for the self-hostable server — PREPARED (2026-09-12)
 
-Los conflictos ya no desaparecen tras el desempate automático: se conserva localmente la versión
-perdedora cifrada con la clave de la base de datos. Ajustes muestra cuántos hay y abre una ventana
-con acciones para restaurar esa versión o descartar el registro. Restaurar la versión perdedora le
-da una marca temporal nueva para que la decisión pueda volver a sincronizarse.
+`docker-compose.sync.https.yml` was added with Caddy as a reverse proxy, automatic certificates and
+persistence of its configuration. The sync service is no longer published directly to the
+Internet in that mode. What remains is testing it on the real server with a domain and DNS controlled by the
+user; the local HTTP composition remains intact.
 
-### Perfiles de sincronización — HECHO (2026-09-13)
+### Token rotation and revocation — DONE (2026-09-12)
 
-Ajustes permite crear varios perfiles independientes. Cada uno conserva su nombre, transporte,
-servidor o carpeta, token, clave de sincronización, selección de notas y última sincronización.
-La configuración existente se migra automáticamente como `Mis dispositivos`. Esto prepara
-compartir una selección de notas con otra persona sin mezclarla con el perfil de los dispositivos
-propios; queda pendiente mejorar el flujo de invitación e intercambio de perfiles.
+The server accepts a temporary list of tokens through `ALDUNE_SYNC_TOKENS`, with priority over
+the earlier single token. This allows publishing the new token, updating the devices and retiring
+the old one without leaving sync unusable during the change. Revocation is done by removing
+the token from the list and recreating the container.
 
-### Código de perfil compartido — HECHO (2026-09-13)
+### Interface for resolving conflicts — DONE (2026-09-12)
 
-El perfil compartido puede incluir la selección de notas junto con la clave de sincronización. Así,
-otro usuario puede recibir solo esas notas aunque aún no las tenga localmente. El código no incluye
-la URL, la carpeta ni el token del servidor, que se configuran por separado.
+Conflicts no longer disappear after the automatic tiebreak: the losing version is kept locally,
+encrypted with the database key. Settings shows how many there are and opens a window
+with actions to restore that version or discard the record. Restoring the losing version gives
+it a new timestamp so that the decision can sync again.
+
+### Sync profiles — DONE (2026-09-13)
+
+Settings allows creating several independent profiles. Each keeps its name, transport,
+server or folder, token, sync key, note selection and last sync.
+The existing configuration is migrated automatically as `Mis dispositivos`. This prepares
+sharing a selection of notes with another person without mixing it with the profile of one's own
+devices; what remains pending is improving the invitation and profile exchange flow.
+
+### Shared profile code — DONE (2026-09-13)
+
+The shared profile can include the note selection together with the sync key. This way,
+another user can receive just those notes even if they do not yet have them locally. The code does not include
+the URL, the folder or the server token, which are configured separately.
 
 ## 6. Logo
 
-El concepto actual (tres pestañas de color pegadas al canto derecho, cortadas por el borde) es
-correcto y se mantiene: dibuja literalmente el producto y usa la paleta real.
+The current concept (three colored tabs stuck to the right edge, cut off by the edge) is
+correct and stays: it literally draws the product and uses the real palette.
 
-### Decisión de marca (2026-09-13, cerrada el 2026-09-15)
+### Brand decision (2026-09-13, closed on 2026-09-15)
 
-Se adopta **Aldune** como nombre de la aplicación en todos los niveles: nombre visible, proyectos y
-namespaces (`src/Aldune`, `src/Aldune.Core`, `src/Aldune.SyncServer`), datos locales, ejecutable,
-instalador, documentación y despliegue de sincronización.
+**Aldune** is adopted as the application's name at every level: visible name, projects and
+namespaces (`src/Aldune`, `src/Aldune.Core`, `src/Aldune.SyncServer`), local data, executable,
+installer, documentation and sync deployment.
 
-El nombre físico del volumen Docker del servidor es configurable con `ALDUNE_SYNC_VOLUME` (ver `SYNC.md`).
+The physical name of the server's Docker volume is configurable with `ALDUNE_SYNC_VOLUME` (see `SYNC.md`).
 
-El icono actual también se mantiene: las tres tarjetas escalonadas representan directamente el dock y
-conectan con la paleta real de las notas. No se hará un rediseño completo antes de validar el producto
-con uso real.
+The current icon is also kept: the three staggered cards directly represent the dock and
+connect with the real palette of the notes. A complete redesign will not be done before validating the product
+with real use.
 
-Antes de una publicación comercial o de cobrar por la aplicación se hará una comprobación final de
-marca, dominios y tiendas, porque existe al menos un nombre muy parecido, **FanNote**. Si el nombre
-cambia, se rediseñarán juntos el icono, el instalador y los recursos públicos, en vez de cambiar solo
-el logo.
+Before a commercial release or charging for the application, a final check of
+brand, domains and stores will be made, because at least one very similar name exists, **FanNote**. If the name
+changes, the icon, the installer and the public resources will be redesigned together, instead of changing only
+the logo.
 
-El problema es de tamaño pequeño: a 16 px — bandeja, barra de tareas, Alt+Tab, que es donde más se ve
-— tres barras finas con huecos se empastan y acaban leyéndose como un icono genérico de lista. La
-solución es la estándar en diseño de iconos: **una variante propia para 16 y 32 px**, con menos
-barras y más gruesas, en vez de reescalar la de 256.
+The problem is one of small size: at 16 px — tray, taskbar, Alt+Tab, which is where it is seen most
+— three thin bars with gaps blur together and end up reading as a generic list icon. The
+solution is the standard one in icon design: **a dedicated variant for 16 and 32 px**, with fewer
+and thicker bars, instead of rescaling the 256 one.
 
-## 7. Pulido visual de lanzamiento
+## 7. Launch visual polish
 
-Bloque activo después de cerrar la funcionalidad principal. Se conserva la identidad actual y se
-revisan solo los detalles que más afectan a la sensación de producto:
+Active block after closing the main functionality. The current identity is kept and
+only the details that most affect the product feel are reviewed:
 
-1. **Tipografía**: fijar una escala corta y coherente para títulos, cuerpo y texto auxiliar.
-2. **Iconos**: usar una familia consistente y corregir tamaños y alineación óptica en ventanas,
-   dock y bandeja.
-3. **Espaciado**: revisar márgenes y separación entre grupos en Ajustes y Gestionar notas.
-4. **Estados**: comprobar hover, pulsación, foco, deshabilitado, error y éxito sin introducir
-   nuevas formas de interacción.
+1. **Typography**: set a short, coherent scale for titles, body and auxiliary text.
+2. **Icons**: use a consistent family and fix sizes and optical alignment in windows,
+   dock and tray.
+3. **Spacing**: review margins and separation between groups in Settings and Manage notes.
+4. **States**: check hover, press, focus, disabled, error and success without introducing
+   new forms of interaction.
 
-No se añade todavía un sistema completo de temas ni una versión Lite. Se estudiarán después de
-obtener uso real y medir si existe una necesidad clara.
+A complete theme system or a Lite version is not added yet. They will be studied after
+obtaining real use and measuring whether a clear need exists.
 
-El primer pulido ya aplicado incluye la base visual compartida, el ajuste de nitidez de las ventanas,
-la separacion de los botones de sincronizacion y un ICO con tres tarjetas legibles en tamanos pequenos.
-
----
-
-## 8. Ronda de pulido de interacción (sesión 2026-09-18)
-
-Ronda pedida por el usuario como lista de puntos concretos, agrupada aquí en cuatro tandas para
-cubrirla paso a paso. **Una sola release al final de la ronda.**
-
-### Alcance decidido
-
-- **Modo claro: NO en esta ronda.** Se estudia después de esta ronda de interacción. La razón no es
-  solo el volumen (afecta a todas las XAML y a los recursos `Aldune*Brush`, hoy pensados para fondo
-  oscuro): el punto 7 de "Pulido visual de lanzamiento" ya dice que no se añade un sistema de temas
-  hasta tener uso real. Queda como candidato firme de la ronda siguiente.
-- **Recuperación de nota con contraseña olvidada: NO se implementa.** No es un olvido, es una
-  decisión de diseño: la nota se cifra con una clave derivada de la contraseña y Aldune **no guarda
-  la contraseña**. Cualquier "recuperación" exige una segunda credencial (frase de recuperación) que
-  hay que presentar al proteger la nota, y eso contradice la promesa actual ("si se pierde, esa nota
-  no se puede recuperar"). Lo que sí entra en esta ronda es **avisar mejor antes de proteger**: el
-  diálogo de contraseña debe decir explícitamente que no hay recuperación posible. Si en el futuro se
-  quiere recuperación real, el camino es la frase de recuperación guardada aparte, nunca una puerta
-  trasera en el cifrado.
-
-### Tanda A — Ventanas y legibilidad (en curso)
-
-1. **El gestor de notas y Ajustes se quedaban detrás de las notas.** Causa: `Topmost="False"` en
-   `NotesManagerWindow`, `SettingsWindow` y `SyncConflictsWindow`, mientras las notas y los docks son
-   `Topmost="True"`. Una ventana normal queda siempre por debajo, así que había que pulsar dos veces.
-   **Hecho:** las tres pasan a `Topmost="True"` y se abren con `AppCoordinator.RaiseAppWindow`, que
-   además aparta las notas de la capa superior mientras viven (el mismo mecanismo del menú del dock,
-   ahora con contador para que dos dueños no se pisen) y sube la ventana al frente.
-2. **Minimizar una nota hacía desaparecer su pestaña del dock.** `RefreshOpenState` ocultaba la
-   pestaña con solo estar abierta la ventana, sin mirar `WindowState`. **Hecho.**
-3. **Selección de texto ilegible.** `ApplyColor` pintaba la selección con la tinta **opaca**, así que
-   se veía un bloque macizo del color del texto. **Hecho:** lavado translúcido de la tinta.
-4. **Poco aire entre la barra de scroll de la nota y el texto.** **Hecho** con un estilo implícito de
-   `ScrollBar` en los recursos del `TextBox`: el `Padding` del control no habría servido, porque la
-   barra vive dentro del `ScrollViewer` interno y el padding desplaza texto y barra a la vez.
-5. **Las notificaciones salían siempre en el monitor primario.** `UpdateAvailableWindow` usaba
-   `SystemParameters.WorkArea`, que es siempre el primario, ignorando desde qué pantalla se pidió.
-   **Hecho:** `MonitorEnumerator.MonitorContainingCursor` resuelve el monitor del cursor (que en una
-   acción disparada por clic es el de origen) y el aviso se coloca en su esquina inferior derecha.
-
-### Tanda B — Interacción (en curso)
-
-6. **Desplegables que no son interruptor.** El panel de acciones de la ventana de nota intenta cerrar al
-   volver a pulsar el disparador (`OnMenuPreviewMouseDown`), pero **no funciona**, y la causa está
-   comprobada en la fuente de WPF (`Popup.cs`): con `StaysOpen="False"` el popup toma la captura del
-   ratón (`Mouse.Capture(_popupRoot, CaptureMode.SubTree)`) y se descarta **en el mouse-down** — hay un
-   comentario en el propio WPF sobre descartar popups anidados "uno en MouseDown y otro en MouseUp".
-   Es decir: cuando el clic llega al disparador, `Popup.IsOpen` YA es `false`, así que consultarlo ahí
-   responde siempre "cerrado" y el handler reabre. Los cuatro menús de clic derecho del dock
-   (`OpenAllMenuPopup`, `DockViewPopup`, `NewNoteMenuPopup`, `TabMenuPopup`) y los dos del gestor
-   (`TagManagerPopup`, `TagEditorPopup`) tienen el mismo problema.
-
-   **Hecho.** Helper reutilizable `PopupToggle` (`Windowing`), que decide desde el evento
-   `Popup.Closed` en vez de desde `IsOpen`: se arma solo si al cerrarse (a) el puntero está sobre el
-   disparador — **comprobado por coordenadas**, no con `IsMouseOver`, que con la captura del popup
-   activa ya no refleja dónde está el cursor — y (b) hay un botón del ratón pulsado. Esas dos cosas
-   juntas son la firma de "lo ha cerrado el propio disparador"; los demás cierres (elegir una opción,
-   `Esc`, el cierre automático del menú de pestaña) no cumplen ninguna de las dos y no se comen el
-   siguiente clic. El disparador consulta `ShouldConsumeOpen()` en su mouse-up/click. El disparador del
-   menú de pestaña es variable (cada pestaña es la suya), así que `SetTrigger` se llama en cada
-   apertura; el resto usa el botón fijo de su pie.
-7. **Rueda / autoscroll bajo el cursor.** Hallazgo: `OnTabsPreviewMouseWheel` no era el problema de
-   fondo. El problema real es que el dock nunca se activa (`WS_EX_NOACTIVATE`, `ShowActivated="False"`)
-   y Windows entrega `WM_MOUSEWHEEL` a la ventana **con el foco**, confiando en que su `DefWindowProc`
-   lo reenvíe a la ventana bajo el cursor; varias apps se lo comen y el dock no lo recibe.
-
-   Lo que pidió el usuario al final no era la rueda nativa sino el **autoscroll clásico**: un clic
-   central fija un punto de origen y, desde ahí, la vista se desplaza sola en la dirección del cursor
-   (arriba, abajo y, si la superficie lo permite, izquierda y derecha), más rápido cuanto más lejos.
-   **Hecho:** `AutoScrollManager` (nuevo, `Windowing`) lo implementa para las tres superficies: el
-   abanico del dock, la lista del gestor y el cuerpo de la nota. Sondea el cursor con Win32 —con la
-   API de WPF se quedaría congelado en cuanto el cursor saliera de la ventana, que es lo normal en este
-   modo—, no usa ningún hook global (el clic central sí llega a las ventanas no activables) y se apaga
-   con otro clic central, cualquier otro botón, Esc, la rueda o al mover la barra a mano. El glifo del
-   punto de origen es el recurso compartido `AutoScrollOriginGlyph` (`App.xaml`), con `x:Shared="False"`
-   para que dos ventanas no peleen por la misma instancia visual.
-8. **Casilla de tarea vacía: clicar al lado marca en vez de escribir.** **Hecho:** el clic se acepta
-   solo dentro de la misma caja que se resalta al pasar el ratón (`visualRect.Contains`), en vez de
-   valer cualquier punto desde el inicio de línea hasta el fin del prefijo.
-9. ~~**Asignador de etiquetas del dock distinto del del gestor**~~ **Hecho** (ya los tres usan `TagAssignmentPanel`): eran dos implementaciones
-   (`OnTabMenuTagsClick` + `DockTagAssignmentItems` frente a `TagChoiceItems` + `OnSaveTagsClick`);
-   se unifican en la del gestor. **Pendiente.**
-10. **Las plantillas reparten en orden de apertura**, no en el orden del mazo, así que la nota que cae
-    en cada celda parece aleatoria. **Hecho:** `ArrangeOpenNotes` ordena las ventanas por su índice en
-    la vista del dock (`NotesForCurrentDockView`).
-
-### Tanda C — Diseño y UX (hecha)
-
-11. **Menú de los 3 puntos de la nota**: solo **redistribución y agrupación** de los botones; no se añade un modo
-    simplificado/avanzado conmutable. **Hecho.** Cuatro bloques por intención: escritura (tarea, viñeta, con
-    su atajo a la vista — sigue siendo la única forma de descubrir Ctrl+L sin ir a Ajustes), recordatorio,
-    estado de la nota (color, fijar con su explicación, proteger, etiquetas) y, separado al final, lo que
-    guarda fuera o destruye (exportar, restaurar tamaño, archivar, papelera). Mismo criterio que Distill de
-    `impeccable` (agrupar por intención, jerarquía en cuatro bloques) aplicado a mano sobre el XAML.
-12. **El desplegable del dock se cerraba solo al alejar el ratón** (timer de 550 ms). **Hecho:** el menú de
-    pestaña ahora es fijo — solo lo cierra un clic fuera (nativo de `StaysOpen="False"`) o elegir una opción.
-    Fuera el timer, los flags y los cuatro handlers de entrar/salir, tanto del `code-behind` como del XAML.
-13. **Las disposiciones del menú de "abrir todas"** — cuadrícula, columnas y cascada — quedan como las
-    tres únicas, y **"Restaurar posiciones originales" se elimina**: el usuario no sabía qué hacía y el
-    mismo trabajo lo cubre recordar la posición al abrir cada nota. Además la cascada se pega al canto
-    del dock (antes quedaba arriba a la derecha, lejos del abanico).
-    **Novedad de negocio**: una nota nueva **entra en la disposición elegida**. Al abrir cualquier nota
-    con una disposición distinta de la Normal, se redistribuyen las abiertas de esa pantalla para que
-    quepa — así "abrir todas en columnas" es un estado del escritorio y no una acción de un instante, y
-    las notas que se abran después encajan donde toca. Con Normal (fábrica) no se toca nada.
-14. **Menú contextual nativo de copiar/pegar/cortar** con la estética de la app en modo oscuro.
-    **Hecho:** estilos implícitos `ContextMenu` + `MenuItem` en `App.xaml`, con la misma superficie que el
-    resto de flotantes (Ground + esquinas + sombra) y las mismas filas de `NoteMenuItemStyle`. Los comandos
-    siguen siendo los nativos, con la traducción del Windows del usuario, no una inventada. Lo coge
-    cualquier `TextBox` (notas, Ajustes, gestor, recordatorios) sin tocar cada ventana.
-
-### Tanda D — Cierre (hecha)
-
-15. **Trackpad**: revisado. Un trackpad de precisión no manda gestos propios a una app de escritorio —
-    manda rueda (y rueda horizontal) con deltas pequeños y seguidos, así que "interacciones de trackpad"
-    no es una lista de gestos que se puedan activar: es **cómo se interpreta la rueda**. Ajuste nuevo
-    `AppSettings.TrackpadGestures`: con él encendido, el abanico del dock usa paso proporcional al delta
-    (un gesto de dos dedos mueve lo que debe) en vez del paso fijo de una muesca de ratón por evento.
-    `TouchpadDetector` (`Interop`, best-effort por registro) decide si el ajuste está disponible: sin
-    trackpad de precisión, Ajustes lo deja **deshabilitado y apagado**, y explica por qué. **No
-    verificado en hardware real**: el equipo de desarrollo no tiene trackpad (`PrecisionTouchPad` no
-    existe en el registro), así que lo único comprobado es que la detección responde "no" y que el
-    interruptor sale bloqueado con su explicación. Con ratón el camino no cambia (deltas ≥ 120).
-    El clic central (autoscroll, punto 7) es la alternativa de trackpad para desplazar sin rueda.
-16. **Trackpad y atajos, documentados**: `Ctrl+Alt+H` (nuevo) y el interruptor de bandeja en la ayuda
-    rápida. Ver "Efectos secundarios del apagado de pantalla" para el tercer punto de esta tanda.
-17. **Documentación y versión**: `STATUS.md`, este roadmap, ayuda rápida y `README` al día; versión a
-    **0.10.0** (funcionalidad nueva) en `Aldune.csproj` y aquí.
-
-### Correcciones sobre la v0.10.0 (misma sesión, tras probarla el usuario)
-
-- **El autoscroll iba lento** (tick de 33 ms y tope bajo): pasa a 16 ms con tope mayor.
-- **El "⋯" de la nota no cerraba al volver a pulsarlo**: el toggle (`PopupToggle`) se declaraba pero
-  **nunca se instanciaba** en `NoteWindow` — el campo quedaba `null` y el guard no se evaluaba jamás.
-  Ahora se crea en el constructor.
-- **Cut/Copy/Paste salían blancos**: el estilo implícito de `ContextMenu` no fijaba `Foreground`, y los
-  `MenuItem` heredaban el de sistema (negro sobre oscuro). Ahora el propio menú trae el tono de tinta.
-- **Hover de la bandeja**: `DarkMenuColors` pinta el hover plano y sin degradados, incluido el de la
-  fila marcada ("Ocultar el dock").
-- **Bug del monitor al apagar la pantalla** (visto en la prueba): la firma del "antes" se calculaba en
-  el evento de cambio, cuando el driver ya había sacado la pantalla de la lista, así que guardaba el
-  estado roto. Ahora se graba tras cada reconstrucción buena, que es el único momento en que la app
-  tiene monitores y docks alineados.
-
-### Revisión sobre la 0.10.0 (segunda pasada; publicada como 0.10.2: unificación)
-
-- **El ciclo de monitores seguía parando tras el primer rebuild**: `_preChangeMonitorKey` se fijaba
-  **dentro** de `BuildDocks`, así que la comparación del tick contra la firma recién construida era
-  siempre verdadera y el ciclo se daba por terminado sin esperar a que la pantalla volviera. Ahora el
-  criterio es de **estabilidad**: se reconstruye mientras la firma cambie de un tick a otro, con una
-  espera mínima de 3 s desde el cambio (para drivers lentos que publican la pantalla en 1-2 s) y tope
-  de 20 ticks. El debounce inicial baja de 600 a 400 ms, que es lo que se notaba de "tarda más de lo
-  debido".
-- **La bandeja decía siempre "Ocultar el dock"** con una marca de verificación invertida: ahora el
-  texto dice la acción — "Ocultar el dock" a la vista, "Mostrar el dock" oculto — y la marca ha
-  desaparecido.
-- **La cascada y las plantillas van en orden del mazo**, extraído a `OpenWindowsInDeckOrder()` para no
-  duplicarlo: antes la cascada usaba el orden de apertura del diccionario.
-- **El autoscroll aguanta el abanico abierto** mientras está activo: sin eso, alejar el ratón para
-  desplazarse más rápido plegaba el dock bajo el cursor.
-- **Fuera el `OnMenuPreviewMouseDown` muerto** de la nota (y su enganche en el XAML): desde que
-  `PopupToggle` decide en el Click, ese handler era un no-op que confundía más de lo que explicaba.
-- **Unificación de dos sesiones en paralelo**: al trabajar dos sesiones a la vez en el mismo árbol, la
-  otra sesión implementó por su cuenta el trackpad (`TouchpadDetector`, `AppSettings.TrackpadGestures`,
-  casilla en Ajustes) y publicó la `v0.10.1` con el menú de "abrir todas" **sin** "Restaurar
-  posiciones" (eliminado, no renombrado). Al juntar, se respeta su decisión y se elimina lo que
-  sobraba: `OnRestoreOriginalPositionsClick`, `Coordinator.RestoreNotePositions`,
-  `RestoreOpenNotesToMonitor` y el texto `Strings.RestoreOriginalPositions` — todo sin referencias
-  desde ningún lado. **Si el usuario echa de menos la restauración, se recupera de git** (el código
-  sigue entero en el historial) en vez de dejar la mitad muerta.
-
-### Correcciones sobre la 0.10.2 (publicada como 0.10.3)
-
-- **El "⋯" de la nota se reabría al pulsarlo con el menú abierto**: el `PopupToggle` de `NoteWindow`
-  nunca recibía su disparador (`SetTrigger`), así que no podía saber que el cierre lo había provocado
-  el propio botón. Los toggles del dock y del gestor sí lo fijaban; este no.
-- **El menú de copiar/pegar seguía claro**: el menú nativo de un TextBox es una subclase interna de
-  `ContextMenu` y los estilos implícitos de WPF casan solo por tipo exacto. `DarkTextContextMenu` da a
-  cada TextBox un `ContextMenu` propio (Cortar/Copiar/Pegar con los comandos nativos) que sí recibe el
-  estilo oscuro de `App.xaml`.
-- **Cascada junto al dock con hueco para el abanico**: `NoteCascade` (Core, con tests para los 4
-  cantos) arranca junto al rectángulo del dock desplegado (`EdgeGeometry.WindowRect`), no del canto.
-- **Orden de las plantillas**: abrir varias notas lanzaba un reparto por nota (`arrangeAfterOpen`), que
-  se pisaban entre sí; ahora el lote hace uno solo. Cuadrícula/columnas se rellenan por columnas con el
-  dock en un lateral y por filas con el dock arriba o abajo.
-- **Barra de scroll de la nota** con la tinta de la nota (pulgar fino, pista transparente).
-- Fuera el comentario huérfano de "Restaurar posiciones" sobre `OpenSettings`.
-
-### Ajustes sobre la 0.10.3 (publicada como 0.10.4)
-
-- **"Cascada junto al dock" ahora es una plantilla que se recuerda** (`NoteLayoutTemplate.DockCascade`,
-  al final del enum porque se guarda como número). Antes solo se recordaban Normal, Cuadrícula y
-  Columnas: tras cascadear, cerrar y pulsar el botón con clic izquierdo, las notas salían en otra
-  disposición. Ahora el clic izquierdo repite la última elegida, cascada incluida, y una nota abierta
-  suelta encaja en ella.
-- **Menú de cortar/copiar/pegar**: se abre explícitamente hacia la derecha y abajo del puntero
-  (`PlacementMode.MousePoint`) y su plantilla deja 10 px de aire para la sombra, que salía recortada.
-- Revisión de animaciones: ya son coherentes (150-220 ms, ease-out, escala 0,95 + fundido) y no se toca
-  nada. Los desplegables del dock se abren hacia dentro de la pantalla según el canto, a propósito.
-
-### Ocultar el dock (pedido durante la ronda)
-
-`Ctrl+Alt+H` y una fila en el menú de la bandeja ("Ocultar el dock", con marca mientras lo está) ocultan
-el dock sin cerrarlo y lo devuelven. Motivo: hay pantallas completas que Windows **no** reporta como
-tales (vídeo a pantalla completa dentro de un navegador, sobre todo sin bordes), así que la detección de
-pantalla completa no las cubre y el dock se queda encima. El atajo es imprescindible en ese caso porque
-la bandeja tampoco está a la vista. `AppCoordinator.DocksVisible` **no se guarda**: es una acción de un
-momento, no una preferencia, y persistirla significaría arrancar algún día sin dock y sin recordar por qué.
-
-### Efectos secundarios del apagado de pantalla (bug reportado)
-
-**Síntoma**: con dos monitores, apagar uno mueve su dock a la otra pantalla; al volver a encenderlo, el
-dock se queda donde se movió en vez de regresar.
-
-**Causa**: al reconstruir los docks tras un `DisplaySettingsChanged`, Windows publica la lista de
-monitores en varios pasos y `App.OnRebuildTick` paraba a los **5 ticks** (≈3 s) contara lo que contara.
-Si la pantalla que vuelve tarda más en aparecer en la lista, el último rebuild se hace con un solo
-monitor, ese dock se crea en la pantalla equivocada y ya no hay más intentos.
-
-**Arreglo**: el criterio de parada pasa a ser "el conjunto de pantallas ya es el de antes del cambio"
-(firma por nombre de dispositivo y tamaño, `MonitorSignature`) y solo el tope de 12 ticks corta un cambio
-permanente. Mientras el conjunto siga distinto se sigue reconstruyendo cada 600 ms, así que la pantalla
-que vuelve recupera su dock sola.
-
-**Pendiente de verificar por el usuario**: apagar y encender la pantalla otra vez con la app abierta.
-
-
-### Decisiones tomadas con el usuario (2026-09-18)
-
-- **Notificaciones**: que salgan en la pantalla desde la que se pidieron y nunca en la otra. Desde la
-  bandeja, la del cursor.
-- **Rueda del ratón**: las tres — dock (los cuatro bordes), listas del gestor y scroll de la nota.
-- **Plantillas**: el orden de celdas sigue el **orden del mazo**, no el de apertura.
-- **"Restaurar posiciones originales"**: se hacen **las dos cosas** — el botón pasa a colocar todas
-  las notas en cascada junto al dock, y se conserva la restauración de las posiciones guardadas.
-- **Menú de los 3 puntos**: solo **redistribución y agrupación** de los botones; no se añade un modo
-  simplificado/avanzado conmutable.
-- **Aire entre scroll y texto**: 8 px (a validar en la app; es una constante).
-- **Menú de copiar/pegar/cortar**: se replantilla con la estética de la app.
-
-### Ajustes sobre la 0.10.4 (publicada como 0.10.5)
-
-Auditoría general (bugs, seguridad, visual/UX, calidad) pedida por el usuario, seguida de una ronda de
-arreglos. Detalle técnico completo en `docs/STATUS.md` → "Auditoría general + arreglos de nitidez y
-cascada".
-
-- **Menú de copiar/pegar (y demás paneles flotantes) ya no sale borroso** en monitores con escala
-  >100%: el `DropShadowEffect` forzaba a WPF a rasterizar el texto junto con la sombra a un bitmap de
-  resolución fija. Se separó la sombra del contenido en `ContextMenu`, `ToolTip`, los popups del dock
-  y de la nota, y también en las tarjetas del abanico (título/preview de cada pestaña).
-- **"Desplegar todas" ya no vuelve a cascada** si se movió una nota a mano: mover una nota desactiva la
-  plantilla automática activa.
-- **Cascada junto al dock**: con muchas notas ya no se solapan del todo unas encima de otras — el paso
-  se comprime en vez de clamparse a un tope fijo, así que siempre asoma algo de cada nota.
-- **Accesibilidad**: `AutomationProperties.Name` en los botones de icono que solo tenían `ToolTip`
-  (dock, nota, ajustes, gestor de notas, selector de color).
-
-### Ajustes sobre la 0.10.5 (publicada como 0.10.6)
-
-- **La cascada seguía reapareciendo al mover una nota por la cabecera normal** (no por la asa): el aviso
-  que desactiva la plantilla automática solo se disparaba desde la asa (`OnGripMouseDown`); movido a
-  `OnLocationChanged`, que ve el arrastre venga de donde venga. Detalle en `docs/STATUS.md`.
-
-### Ajustes sobre la 0.10.6 (publicada como 0.10.7)
-
-- **"Desplegar todas" seguía centrando las notas en cascada** aunque la plantilla ya estuviera en
-  `Normal`: `OpenAllNotes` reordenaba TODAS las notas en diagonal centrada en pantalla para cualquier
-  plantilla, `Normal` incluida, pisando la posición recién restaurada de cada una. Ahora `Normal` no
-  reordena nada — cada nota se queda donde cayó al abrirse. Detalle en `docs/STATUS.md`.
+The first polish already applied includes the shared visual base, the sharpness adjustment of the windows,
+the separation of the sync buttons and an ICO with three cards legible at small sizes.
 
 ---
 
-## 9. Cliente móvil y otros sistemas operativos (2026-09-28): Android decidido; macOS, Linux y web, no
+## 8. Interaction polish round (session 2026-09-18)
 
-Se pidió estudiar el port a Android e iOS ("algo diferente: más gestionar las notas del ordenador y
-apuntar algo que imitar el dock") y revisar después qué hacer con los sistemas que faltan. Todo quedó
-**documentado y sin implementar**, para poder retomarlo más adelante:
+Round requested by the user as a list of concrete points, grouped here into four batches to
+cover it step by step. **A single release at the end of the round.**
 
-- **[`MOBILE_PORT.md`](MOBILE_PORT.md) — Android e iOS** con .NET MAUI compartiendo `Aldune.Core` (los
-  850 tests y todo el formato de sync valen tal cual). Incluye qué se reutiliza y qué no se porta (dock,
-  abanico, ventanas de nota, posición por pantalla, bandeja, atajos), el producto móvil propuesto
-  (widget del mazo, captura rápida, notificaciones con acciones, biometría), los dos cambios previos
-  necesarios en Windows (emparejamiento por QR y, opcional, servidor de sync dentro del propio PC),
-  fases y costes (Apple 99 $/año, Play 25 $, **Mac obligatorio para iOS**) y la decisión pendiente de
-  **subir el formato a 5** si algún día los recordatorios tienen que viajar entre dispositivos (hoy no
-  viajan).
-- **[`DESKTOP_PORT.md`](DESKTOP_PORT.md) — macOS, Linux y web.** Conclusión: en macOS el concepto **ya
-  existe y está ocupado** (las apps que inspiraron Aldune) y la mecánica del dock hay que rehacerla en
-  AppKit; en Linux, GNOME (Mutter) no soporta `wlr-layer-shell`, así que un dock al canto sería una
-  extensión del escritorio, no una aplicación. Lo que compensa de esos sistemas es el **Core**, no el
-  dock: un cliente de escritorio **sin dock** (Avalonia) el día que haya alguien que lo use. El servidor
-  de sync ya corre en Linux. La web, descartada.
-- **Los dos sistemas que sí faltan de verdad, y son baratos** (también en `DESKTOP_PORT.md` §9):
-  **Windows en ARM64** —hoy se instala y funciona emulado, porque el instalador usa `x64compatible`, que
-  incluye Windows 11 ARM; publicar `win-arm64` nativo es un RID más, sin código nuevo— y el **servidor en
-  ARM** (Raspberry Pi, NAS), que ya funciona porque la imagen de .NET es multi-arquitectura.
+### Decided scope
 
-**Decidido el 2026-09-28: Android primero, en una tableta Android, sin publicar al principio** (el usuario
-tiene iPhone y una tableta Android). Las razones y las consecuencias de diseño están en `MOBILE_PORT.md`
-§0.1: 0 € de licencias, sin Mac, dispositivo real para probar, y la tableta como referencia de diseño.
-iOS queda aparcado hasta que haya Mac o hasta que la prioridad sea capturar desde el bolsillo, y eso no
-cambia nada de lo ya decidido porque el cliente es un proyecto MAUI más dos extensiones Swift.
+- **Light mode: NOT in this round.** It will be studied after this interaction round. The reason is not
+  only the volume (it affects all the XAMLs and the `Aldune*Brush` resources, today designed for a dark
+  background): point 7 of "Launch visual polish" already says that no theme system is added
+  until there is real use. It remains a firm candidate for the next round.
+- **Recovery of a note with a forgotten password: NOT implemented.** It is not an oversight, it is a
+  design decision: the note is encrypted with a key derived from the password and Aldune **does not store
+  the password**. Any "recovery" requires a second credential (a recovery phrase) that
+  has to be presented when protecting the note, and that contradicts the current promise ("if it is lost, that note
+  cannot be recovered"). What does enter this round is **warning better before protecting**: the
+  password dialog must say explicitly that no recovery is possible. If in the future
+  real recovery is wanted, the path is the recovery phrase stored separately, never a back
+  door in the encryption.
 
-## 10. Sonidos personalizables — HECHO en la 1.7.0 (sin volumen propio ni evento "error"; apagados de fábrica)
+### Batch A — Windows and legibility (in progress)
 
-Hoy la app no suena en ningún sitio (los avisos de `AppDialog` son "sin sonido" a propósito) y el modo
-"Papel vintage" con sonidos sigue sin hacer. Valorado al planificar el bloque 2 de los aspectos:
+1. **The notes manager and Settings stayed behind the notes.** Cause: `Topmost="False"` in
+   `NotesManagerWindow`, `SettingsWindow` and `SyncConflictsWindow`, while the notes and the docks are
+   `Topmost="True"`. A normal window always ends up below, so you had to click twice.
+   **Done:** the three become `Topmost="True"` and are opened with `AppCoordinator.RaiseAppWindow`, which
+   also moves the notes off the top layer while they are alive (the same mechanism as the dock menu,
+   now with a counter so that two owners do not step on each other) and brings the window to the front.
+2. **Minimizing a note made its tab disappear from the dock.** `RefreshOpenState` hid the
+   tab just because the window was open, without looking at `WindowState`. **Done.**
+3. **Unreadable text selection.** `ApplyColor` painted the selection with the **opaque** ink, so
+   a solid block of the text color showed. **Done:** translucent wash of the ink.
+4. **Little air between the note's scroll bar and the text.** **Done** with an implicit style of
+   `ScrollBar` in the `TextBox` resources: the control's `Padding` would not have worked, because the
+   bar lives inside the internal `ScrollViewer` and the padding shifts text and bar at the same time.
+5. **Notifications always appeared on the primary monitor.** `UpdateAvailableWindow` used
+   `SystemParameters.WorkArea`, which is always the primary one, ignoring which screen it was requested from.
+   **Done:** `MonitorEnumerator.MonitorContainingCursor` resolves the cursor's monitor (which in an
+   action triggered by a click is the originating one) and the notice is placed in its bottom-right corner.
 
-- **Vale la pena** porque encaja con los aspectos retro (el pitido de una terminal, el "ding" de XP) y
-  con un aviso de recordatorio que hoy solo se ve. **No entra en la 1.5.0**: es un bloque aparte y los
-  aspectos ya van cargados.
-- **Diseño que se propone**: eventos fijos (recordatorio vence, sincronización terminada o fallida, nota
-  nueva, nota archivada, error), cada uno con "sin sonido" / sonido de la app / archivo `.wav` propio
-  elegido por el usuario; volumen general; **apagado por defecto** (una app que vive en un borde de la
-  pantalla no debe sonar sin pedirlo). Cada aspecto puede *proponer* un juego de sonidos, igual que
-  propone un tema de notas (preguntando, sin cambiarlo solo).
-- **Lógica en Core con tests** (`SoundSettings`: evento → origen, validación de la ruta y del formato,
-  ruta que falta = silencio, nunca un error). Reproducción con `System.Media.SoundPlayer` o
-  `MediaPlayer`, desde la capa WPF, nunca bloqueando la interfaz; un `.wav` que no se puede leer se
-  ignora y se apunta en el diario de diagnóstico.
-- **Cosas a decidir entonces**: si los sonidos viajan en exportar/importar configuración (los de la app
-  sí; los archivos propios no, son de cada equipo, como la pantalla elegida), y si respetar "no molestar"
-  de Windows.
+### Batch B — Interaction (in progress)
 
-## 11. Markdown vinculado a archivos (requisitos del usuario, 2026-10-03; HECHO en la 1.6.0, fase F1)
+6. **Dropdowns that are not toggles.** The note window's actions panel tries to close when the
+   trigger is pressed again (`OnMenuPreviewMouseDown`), but it **does not work**, and the cause is
+   verified in the WPF source (`Popup.cs`): with `StaysOpen="False"` the popup takes mouse
+   capture (`Mouse.Capture(_popupRoot, CaptureMode.SubTree)`) and is dismissed **on mouse-down** — there is
+   a comment in WPF itself about dismissing nested popups "one on MouseDown and another on MouseUp".
+   That is: when the click reaches the trigger, `Popup.IsOpen` is ALREADY `false`, so querying it there
+   always answers "closed" and the handler reopens. The four right-click menus of the dock
+   (`OpenAllMenuPopup`, `DockViewPopup`, `NewNoteMenuPopup`, `TabMenuPopup`) and the two of the manager
+   (`TagManagerPopup`, `TagEditorPopup`) have the same problem.
 
-Para la spec de Markdown (fase F1 de un plan retirado del árbol), lo que pidió
-el usuario, tal cual:
+   **Done.** Reusable helper `PopupToggle` (`Windowing`), which decides from the
+   `Popup.Closed` event instead of from `IsOpen`: it arms itself only if, on closing, (a) the pointer is over the
+   trigger — **checked by coordinates**, not with `IsMouseOver`, which with the popup's capture
+   active no longer reflects where the cursor is — and (b) a mouse button is pressed. Those two things
+   together are the signature of "the trigger itself closed it"; the other closings (choosing an option,
+   `Esc`, the tab menu's automatic close) meet neither of the two and do not swallow the
+   next click. The trigger queries `ShouldConsumeOpen()` on its mouse-up/click. The tab menu's
+   trigger is variable (each tab is its own), so `SetTrigger` is called on each
+   opening; the rest use the fixed button in their footer.
+7. **Wheel / autoscroll under the cursor.** Finding: `OnTabsPreviewMouseWheel` was not the underlying problem.
+   The real problem is that the dock is never activated (`WS_EX_NOACTIVATE`, `ShowActivated="False"`)
+   and Windows delivers `WM_MOUSEWHEEL` to the window **with focus**, trusting that its `DefWindowProc`
+   will forward it to the window under the cursor; several apps swallow it and the dock does not receive it.
 
-- **Abrir un `.md` que ya está en cualquier carpeta del equipo** con la aplicación, y que **se quede en el
-  dock apuntando a ese sitio**: la nota *es* el archivo (se edita ahí y el archivo cambia), no una copia.
-- **Elegir por nota si entra en la sincronización o no.** Motivo: el mismo archivo puede estar en el mismo
-  sitio en el otro equipo (el portátil), por ejemplo los apuntes de una asignatura en `Z:` (volumen en
-  red), o no estarlo.
-- Lo demás de la fase F1 sigue en pie: escritura en Markdown, fotos, y archivos locales.
+   What the user finally asked for was not the native wheel but the **classic autoscroll**: a
+   middle click sets an origin point and, from there, the view scrolls by itself in the direction of the cursor
+   (up, down and, if the surface allows it, left and right), faster the farther away.
+   **Done:** `AutoScrollManager` (new, `Windowing`) implements it for the three surfaces: the
+   dock's fan, the manager's list and the note body. It polls the cursor with Win32 — with the
+   WPF API it would freeze as soon as the cursor left the window, which is normal in this
+   mode —, uses no global hook (the middle click does reach non-activatable windows) and turns off
+   with another middle click, any other button, Esc, the wheel or moving the bar by hand. The origin point's glyph
+   is the shared resource `AutoScrollOriginGlyph` (`App.xaml`), with `x:Shared="False"`
+   so that two windows do not fight over the same visual instance.
+8. **Empty task checkbox: clicking beside it ticks instead of typing.** **Done:** the click is accepted
+   only inside the same box that is highlighted on hover (`visualRect.Contains`), instead of
+   counting any point from the start of the line to the end of the prefix.
+9. ~~**Dock tag assigner different from the manager's**~~ **Done** (all three already use `TagAssignmentPanel`): there were two implementations
+   (`OnTabMenuTagsClick` + `DockTagAssignmentItems` versus `TagChoiceItems` + `OnSaveTagsClick`);
+   they are unified into the manager's. **Pending.**
+10. **Templates distribute in opening order**, not in deck order, so the note that lands
+    in each cell looks random. **Done:** `ArrangeOpenNotes` sorts the windows by their index in
+    the dock view (`NotesForCurrentDockView`).
 
-Cuestiones que la spec tendrá que cerrar (no decididas): qué viaja por la sync cuando la nota está
-vinculada (la ruta, que difiere entre equipos, o solo el contenido, o una ruta relativa a una "raíz"
-con nombre que cada equipo asigna: `Z:\apuntes` aquí, otra letra allí); qué pasa si el archivo falta, se
-mueve o está en una unidad de red desconectada; edición simultánea del archivo por otra aplicación
-(vigilar cambios, conflicto); y cómo se ve en la papelera y en el archivo. Cambia el formato de datos
-para siempre: brainstorming a fondo antes de escribir código.
+### Batch C — Design and UX (done)
 
-## 12. Cliente móvil: después de todo lo anterior (decisión del usuario, 2026-10-03)
+11. **The note's 3-dot menu**: only **redistribution and grouping** of the buttons; no switchable simplified/advanced
+    mode is added. **Done.** Four blocks by intent: writing (task, bullet, with
+    their shortcut in view — it remains the only way to discover Ctrl+L without going to Settings), reminder,
+    note state (color, pin with its explanation, protect, tags) and, separated at the end, what
+    saves outside or destroys (export, restore size, archive, trash). Same criterion as `impeccable`'s Distill
+    (group by intent, hierarchy in four blocks) applied by hand to the XAML.
+12. **The dock dropdown closed by itself when the mouse moved away** (550 ms timer). **Done:** the tab
+    menu is now fixed — it is closed only by a click outside (native to `StaysOpen="False"`) or by choosing an option.
+    Out went the timer, the flags and the four enter/leave handlers, in both the `code-behind` and the XAML.
+13. **The layouts in the "open all" menu** — grid, columns and cascade — remain the
+    only three, and **"Restore original positions" is removed**: the user did not know what it did and the
+    same job is covered by remembering the position when opening each note. In addition, the cascade sticks to the edge
+    of the dock (before it ended up at the top right, far from the fan).
+    **Business novelty**: a new note **enters the chosen layout**. When opening any note
+    with a layout other than Normal, the open ones on that screen are redistributed so that it
+    fits — so "open all in columns" is a state of the desktop and not an action of one instant, and
+    the notes opened afterwards fit in where they belong. With Normal (factory) nothing is touched.
+14. **Native copy/paste/cut context menu** with the app's dark-mode look.
+    **Done:** implicit `ContextMenu` + `MenuItem` styles in `App.xaml`, with the same surface as the
+    rest of the floating elements (Ground + corners + shadow) and the same rows as `NoteMenuItemStyle`. The commands
+    remain the native ones, with the translation of the user's Windows, not an invented one. It is picked up by
+    any `TextBox` (notes, Settings, manager, reminders) without touching each window.
 
-Orden: bloques de aspectos y publicación de la 1.5.0, Markdown, MSIX y, **después**, el cliente móvil
-poco a poco, para **poder editar notas desde el móvil sin depender del ordenador**. Lo ya estudiado y
-decidido (Android primero, en la tableta, sin publicar al principio) está en `docs/MOBILE_PORT.md` y en
-el §9 de este fichero; hay que releerlo y revisarlo contra lo que haya cambiado para entonces (vinculación
-de archivos, sonidos, formato de sync).
+### Batch D — Closing (done)
 
-## 13. Qué podría hacer que alguien pague (2026-10-25)
+15. **Trackpad**: reviewed. A precision trackpad does not send its own gestures to a desktop app —
+    it sends wheel (and horizontal wheel) with small, consecutive deltas, so "trackpad interactions"
+    is not a list of gestures that can be enabled: it is **how the wheel is interpreted**. New setting
+    `AppSettings.TrackpadGestures`: with it on, the dock's fan uses a step proportional to the delta
+    (a two-finger gesture moves what it should) instead of the fixed step of one mouse notch per event.
+    `TouchpadDetector` (`Interop`, best-effort via registry) decides whether the setting is available: without a
+    precision trackpad, Settings leaves it **disabled and off**, and explains why. **Not
+    verified on real hardware**: the development machine has no trackpad (`PrecisionTouchPad` does not
+    exist in the registry), so the only thing checked is that detection answers "no" and that the
+    switch comes out locked with its explanation. With a mouse the path does not change (deltas ≥ 120).
+    The middle click (autoscroll, point 7) is the trackpad alternative for scrolling without a wheel.
+16. **Trackpad and shortcuts, documented**: `Ctrl+Alt+H` (new) and the tray switch in the quick
+    help. See "Side effects of the screen turning off" for the third point of this batch.
+17. **Documentation and version**: `STATUS.md`, this roadmap, quick help and `README` up to date; version to
+    **0.10.0** (new functionality) in `Aldune.csproj` and here.
+
+### Fixes on v0.10.0 (same session, after the user tried it)
+
+- **Autoscroll was slow** (33 ms tick and low cap): it goes to 16 ms with a higher cap.
+- **The note's "⋯" did not close when pressed again**: the toggle (`PopupToggle`) was declared but
+  **never instantiated** in `NoteWindow` — the field stayed `null` and the guard was never evaluated.
+  It is now created in the constructor.
+- **Cut/Copy/Paste came out white**: the implicit `ContextMenu` style did not set `Foreground`, and the
+  `MenuItem`s inherited the system one (black on dark). Now the menu itself brings the ink tone.
+- **Tray hover**: `DarkMenuColors` paints the hover flat and without gradients, including that of the
+  checked row ("Hide the dock").
+- **Monitor bug on screen turning off** (seen in the test): the "before" signature was computed in
+  the change event, when the driver had already removed the screen from the list, so it stored the broken
+  state. It is now recorded after each good rebuild, which is the only moment in which the app
+  has monitors and docks aligned.
+
+### Review on 0.10.0 (second pass; published as 0.10.2: unification)
+
+- **The monitor cycle kept stopping after the first rebuild**: `_preChangeMonitorKey` was set
+  **inside** `BuildDocks`, so the tick's comparison against the freshly built signature was
+  always true and the cycle was considered finished without waiting for the screen to come back. Now the
+  criterion is one of **stability**: it rebuilds as long as the signature changes from one tick to the next, with a
+  minimum wait of 3 s from the change (for slow drivers that publish the screen in 1-2 s) and a cap
+  of 20 ticks. The initial debounce drops from 600 to 400 ms, which was what was noticed as "takes longer than
+  it should".
+- **The tray always said "Hide the dock"** with an inverted checkmark: now the
+  text says the action — "Hide the dock" when visible, "Show the dock" when hidden — and the checkmark has
+  gone away.
+- **The cascade and the templates go in deck order**, extracted into `OpenWindowsInDeckOrder()` so as not to
+  duplicate it: before, the cascade used the dictionary's opening order.
+- **Autoscroll holds the fan open** while it is active: without that, moving the mouse away to
+  scroll faster folded the dock under the cursor.
+- **Out went the dead `OnMenuPreviewMouseDown`** of the note (and its hook in the XAML): since
+  `PopupToggle` decides on Click, that handler was a no-op that confused more than it explained.
+- **Unification of two parallel sessions**: with two sessions working at the same time on the same tree, the
+  other session implemented the trackpad on its own (`TouchpadDetector`, `AppSettings.TrackpadGestures`,
+  checkbox in Settings) and published `v0.10.1` with the "open all" menu **without** "Restore
+  positions" (removed, not renamed). On merging, its decision is respected and what was
+  left over is removed: `OnRestoreOriginalPositionsClick`, `Coordinator.RestoreNotePositions`,
+  `RestoreOpenNotesToMonitor` and the text `Strings.RestoreOriginalPositions` — all without references
+  from anywhere. **If the user misses the restoration, it is recovered from git** (the code
+  remains whole in the history) instead of leaving half of it dead.
+
+### Fixes on 0.10.2 (published as 0.10.3)
+
+- **The note's "⋯" reopened when pressed with the menu open**: `NoteWindow`'s `PopupToggle`
+  never received its trigger (`SetTrigger`), so it could not know that the closing had been caused
+  by the button itself. The dock's and the manager's toggles did set it; this one did not.
+- **The copy/paste menu was still light**: a TextBox's native menu is an internal subclass of
+  `ContextMenu` and WPF's implicit styles match only by exact type. `DarkTextContextMenu` gives
+  each TextBox its own `ContextMenu` (Cut/Copy/Paste with the native commands) that does receive
+  the dark style from `App.xaml`.
+- **Cascade next to the dock with room for the fan**: `NoteCascade` (Core, with tests for the 4
+  edges) starts next to the unfolded dock's rectangle (`EdgeGeometry.WindowRect`), not the edge.
+- **Order of the templates**: opening several notes triggered one layout per note (`arrangeAfterOpen`), which
+  stepped on each other; now the batch does just one. Grid/columns are filled by columns with the
+  dock on a side and by rows with the dock at the top or bottom.
+- **The note's scroll bar** with the note's ink (thin thumb, transparent track).
+- Out went the orphan "Restore positions" comment above `OpenSettings`.
+
+### Adjustments on 0.10.3 (published as 0.10.4)
+
+- **"Cascade next to the dock" is now a template that is remembered** (`NoteLayoutTemplate.DockCascade`,
+  at the end of the enum because it is stored as a number). Before, only Normal, Grid and
+  Columns were remembered: after cascading, closing and pressing the button with a left click, the notes came out in another
+  layout. Now the left click repeats the last one chosen, cascade included, and a loose open note
+  fits into it.
+- **Cut/copy/paste menu**: it opens explicitly to the right and below the pointer
+  (`PlacementMode.MousePoint`) and its template leaves 10 px of air for the shadow, which came out clipped.
+- Animation review: they are now coherent (150-220 ms, ease-out, scale 0.95 + fade) and nothing
+  is touched. The dock's dropdowns open toward the inside of the screen depending on the edge, on purpose.
+
+### Hiding the dock (requested during the round)
+
+`Ctrl+Alt+H` and a row in the tray menu ("Hide the dock", with a checkmark while it is hidden) hide
+the dock without closing it and bring it back. Reason: there are full screens that Windows does **not** report as
+such (full-screen video inside a browser, especially borderless), so the full-screen
+detection does not cover them and the dock stays on top. The shortcut is essential in that case because
+the tray is not in view either. `AppCoordinator.DocksVisible` is **not saved**: it is an action of one
+moment, not a preference, and persisting it would mean one day starting without a dock and not remembering why.
+
+### Side effects of the screen turning off (reported bug)
+
+**Symptom**: with two monitors, turning one off moves its dock to the other screen; when turning it back on, the
+dock stays where it was moved instead of returning.
+
+**Cause**: when rebuilding the docks after a `DisplaySettingsChanged`, Windows publishes the list of
+monitors in several steps and `App.OnRebuildTick` stopped at **5 ticks** (≈3 s) no matter what.
+If the returning screen takes longer to appear in the list, the last rebuild is done with a single
+monitor, that dock is created on the wrong screen and there are no more attempts.
+
+**Fix**: the stop criterion becomes "the set of screens is already the one from before the change"
+(signature by device name and size, `MonitorSignature`) and only the cap of 12 ticks cuts off a permanent change.
+While the set remains different it keeps rebuilding every 600 ms, so the returning screen
+recovers its dock by itself.
+
+**Pending verification by the user**: turning the screen off and on again with the app open.
 
 
-Decisión previa (sin cambios): seguir GPL-3.0 y **validar con 3-5 personas antes de vender**. Ideas, de más a menos clara:
+### Decisions made with the user (2026-09-18)
 
-1. **Emparejamiento fácil (elegida por el usuario para implementar, 25-10-2026).** Hoy se pega `aldune-profile-v2:…` y se teclea el token aparte (`SYNC.md`). Un QR del código de perfil lo reduce a escanear. Esto revisa la decisión del 21-10 («QR después de F8»): el usuario prefiere hacerlo ahora. **Restricción que no cambia:** el token nunca viaja en el QR (ese código también sirve para compartir una nota y regalaría escritura sobre todo el almacén). Diseño pendiente: cómo llega el token (introducirlo a mano, o un segundo paso corto), cámara en Android (CameraX + ZXing) y generación en Windows (QRCoder). Sin cambiar el formato de sync (4) ni los prefijos `aldune-profile-*`.
+- **Notifications**: they should appear on the screen they were requested from and never on the other. From the
+  tray, the cursor's.
+- **Mouse wheel**: all three — dock (all four edges), manager lists and note scroll.
+- **Templates**: the cell order follows the **deck order**, not the opening order.
+- **"Restore original positions"**: **both things** are done — the button now places all
+  the notes in a cascade next to the dock, and the restoration of the saved positions is kept.
+- **3-dot menu**: only **redistribution and grouping** of the buttons; no switchable
+  simplified/advanced mode is added.
+- **Air between scroll and text**: 8 px (to be validated in the app; it is a constant).
+- **Copy/paste/cut menu**: it is re-templated with the app's look.
 
-   **Decidido el 25-10-2026 (falta spec y plan; pendiente, no empezado):** el token se sigue tecleando aparte (sin cambios en servidor ni formato). Windows y Android muestran el QR del código de perfil; Android lo escanea. Propuesta: CameraX + ZXing (libre, compatible con F-Droid; el escáner de ML Kit necesita Play Services) en Android y QRCoder (MIT) en Windows. Si el perfil lleva notas concretas y el código no cabe en un QR, la pantalla lo avisa y ofrece copiar el código como hoy. Siguiente paso: escribir la spec en `docs/specs/` y, con su visto bueno, el plan con tests primero.
-2. **Importar Markdown y copia de seguridad con un clic.** Barato; quita fricción de entrada (ver `PENDIENTES.md`).
-3. **Microsoft Store (MSIX).** La firma y el no pasar por SmartScreen pesan más que cualquier función; SignPath ya rechazó el proyecto. Pospuesto hasta cerrar Android; para vender es probablemente lo más necesario.
+### Adjustments on 0.10.4 (published as 0.10.5)
+
+General audit (bugs, security, visual/UX, quality) requested by the user, followed by a round of
+fixes. Full technical detail in `docs/STATUS.md` → "General audit + sharpness and
+cascade fixes".
+
+- **The copy/paste menu (and the other floating panels) no longer comes out blurry** on monitors with scale
+  >100%: the `DropShadowEffect` forced WPF to rasterize the text together with the shadow into a bitmap of
+  fixed resolution. The shadow was separated from the content in `ContextMenu`, `ToolTip`, the popups of the dock
+  and of the note, and also in the fan's cards (title/preview of each tab).
+- **"Unfold all" no longer goes back to cascade** if a note was moved by hand: moving a note turns off the
+  active automatic template.
+- **Cascade next to the dock**: with many notes they no longer overlap completely on top of each other — the step
+  is compressed instead of being clamped to a fixed cap, so something of each note always peeks out.
+- **Accessibility**: `AutomationProperties.Name` on the icon buttons that only had a `ToolTip`
+  (dock, note, settings, notes manager, color picker).
+
+### Adjustments on 0.10.5 (published as 0.10.6)
+
+- **The cascade kept reappearing when moving a note by the normal header** (not by the grip): the notice
+  that turns off the automatic template was only fired from the grip (`OnGripMouseDown`); moved to
+  `OnLocationChanged`, which sees the drag wherever it comes from. Detail in `docs/STATUS.md`.
+
+### Adjustments on 0.10.6 (published as 0.10.7)
+
+- **"Unfold all" kept centering the notes in a cascade** even though the template was already
+  `Normal`: `OpenAllNotes` rearranged ALL the notes in a diagonal centered on the screen for any
+  template, `Normal` included, overriding each one's just-restored position. Now `Normal` does not
+  rearrange anything — each note stays where it landed on opening. Detail in `docs/STATUS.md`.
+
+---
+
+## 9. Mobile client and other operating systems (2026-09-28): Android decided; macOS, Linux and web, not
+
+A study of the port to Android and iOS was requested ("something different: more about managing the computer's notes and
+jotting something down than imitating the dock") and then a review of what to do with the systems that are missing. Everything was left
+**documented and unimplemented**, so it can be picked up later:
+
+- **[`MOBILE_PORT.md`](MOBILE_PORT.md) — Android and iOS** with .NET MAUI sharing `Aldune.Core` (the
+  850 tests and the whole sync format are valid as they are). It includes what is reused and what is not ported (dock,
+  fan, note windows, per-screen position, tray, shortcuts), the proposed mobile product
+  (deck widget, quick capture, notifications with actions, biometrics), the two prior changes
+  needed on Windows (QR pairing and, optionally, a sync server inside the PC itself),
+  phases and costs (Apple $99/year, Play $25, **a Mac is mandatory for iOS**) and the pending decision to
+  **raise the format to 5** if one day reminders have to travel between devices (today they do not
+  travel).
+- **[`DESKTOP_PORT.md`](DESKTOP_PORT.md) — macOS, Linux and web.** Conclusion: on macOS the concept **already
+  exists and is taken** (the apps that inspired Aldune) and the dock mechanics would have to be redone in
+  AppKit; on Linux, GNOME (Mutter) does not support `wlr-layer-shell`, so a dock on the edge would be
+  a desktop extension, not an application. What pays off from those systems is the **Core**, not the
+  dock: a desktop client **without a dock** (Avalonia) the day someone uses it. The sync
+  server already runs on Linux. The web, discarded.
+- **The two systems that are genuinely missing, and are cheap** (also in `DESKTOP_PORT.md` §9):
+  **Windows on ARM64** —today it installs and works emulated, because the installer uses `x64compatible`, which
+  includes Windows 11 ARM; publishing a native `win-arm64` is one more RID, no new code— and the **server on
+  ARM** (Raspberry Pi, NAS), which already works because the .NET image is multi-architecture.
+
+**Decided on 2026-09-28: Android first, on an Android tablet, without publishing at first** (the user
+has an iPhone and an Android tablet). The reasons and the design consequences are in `MOBILE_PORT.md`
+§0.1: €0 in licenses, no Mac, a real device to test on, and the tablet as the design reference.
+iOS is parked until there is a Mac or until the priority is capturing from the pocket, and that does not
+change anything of what has already been decided because the client is one MAUI project plus two Swift extensions.
+
+## 10. Customizable sounds — DONE in 1.7.0 (without its own volume or an "error" event; off by default)
+
+Today the app makes no sound anywhere (the `AppDialog` notices are "silent" on purpose) and the
+"Vintage paper" mode with sounds is still not done. Assessed when planning block 2 of the looks:
+
+- **Worth it** because it fits the retro looks (a terminal's beep, XP's "ding") and
+  with a reminder notice that today is only seen. **It does not go into 1.5.0**: it is a separate block and the
+  looks are already loaded.
+- **Proposed design**: fixed events (reminder due, sync finished or failed, new
+  note, note archived, error), each with "no sound" / app sound / the user's own `.wav` file
+  chosen by the user; general volume; **off by default** (an app that lives on a screen
+  edge must not make noise without being asked). Each look can *propose* a set of sounds, just as it
+  proposes a note theme (asking, without changing it by itself).
+- **Logic in Core with tests** (`SoundSettings`: event → source, validation of the path and the format,
+  missing path = silence, never an error). Playback with `System.Media.SoundPlayer` or
+  `MediaPlayer`, from the WPF layer, never blocking the interface; a `.wav` that cannot be read is
+  ignored and noted in the diagnostics log.
+- **Things to decide then**: whether the sounds travel in export/import of settings (the app's
+  do; the custom files do not, they belong to each machine, like the chosen screen), and whether to respect Windows'
+  "do not disturb".
+
+## 11. Markdown linked to files (user requirements, 2026-10-03; DONE in 1.6.0, phase F1)
+
+For the Markdown spec (phase F1 of a plan removed from the tree), what the user
+asked for, verbatim:
+
+- **Open a `.md` that is already in any folder of the machine** with the application, and have it **stay in the
+  dock pointing to that place**: the note *is* the file (it is edited there and the file changes), not a copy.
+- **Choose per note whether it enters sync or not.** Reason: the same file may be in the same
+  place on the other machine (the laptop), for example a subject's notes on `Z:` (network
+  volume), or may not be.
+- The rest of phase F1 stands: writing in Markdown, photos, and local files.
+
+Questions the spec will have to close (not decided): what travels through sync when the note is
+linked (the path, which differs between machines, or just the content, or a path relative to a named "root"
+that each machine assigns: `Z:\apuntes` here, another letter there); what happens if the file is missing,
+moved or on a disconnected network drive; simultaneous editing of the file by another application
+(watching for changes, conflict); and how it looks in the trash and in the archive. It changes the data format
+forever: deep brainstorming before writing code.
+
+## 12. Mobile client: after everything above (user decision, 2026-10-03)
+
+Order: looks blocks and the 1.5.0 release, Markdown, MSIX and, **afterwards**, the mobile client
+little by little, so as to **be able to edit notes from the phone without depending on the computer**. What has already been studied and
+decided (Android first, on the tablet, without publishing at first) is in `docs/MOBILE_PORT.md` and in
+§9 of this file; it has to be reread and reviewed against whatever has changed by then (file
+linking, sounds, sync format).
+
+## 13. What could make someone pay (2026-10-25)
 
 
-**Paridad móvil, aspectos retro en Android — HECHO (2026-10-25).** XP claro y oscuro, Telecomunicaciones claro y oscuro, Bash y Fósforo, con sus colores personalizables, las paletas de Bash, el tema de notas sugerido y fuente monoespaciada donde toca; sin la «piel» de Windows. Paletas idénticas a las del PC, fijadas por vectores (`tests/vectors/text-color.json`). Probado en el Pixel con la versión de depuración. El widget también (acento en el título y el «+», y fuente monoespaciada en Bash, Telecomunicaciones y Fósforo). Publicado en `android-v0.1.0-rc5`, `rc6` (acento del widget) y `rc7` (fuente del widget); instaladas en Pixel y tableta. Spec: `docs/historia/specs/2026-10-25-aldune-android-aspectos-retro-design.md`.
+Prior decision (unchanged): stay GPL-3.0 and **validate with 3-5 people before selling**. Ideas, from most to least clear:
+
+1. **Easy pairing (chosen by the user to implement, 25-10-2026).** Today you paste `aldune-profile-v2:…` and type the token separately (`SYNC.md`). A QR of the profile code reduces it to scanning. This revises the decision of 21-10 («QR after F8»): the user prefers to do it now. **Restriction that does not change:** the token never travels in the QR (that code is also used to share a note and would hand over write access to the whole store). Design pending: how the token arrives (typing it by hand, or a short second step), camera on Android (CameraX + ZXing) and generation on Windows (QRCoder). Without changing the sync format (4) or the `aldune-profile-*` prefixes.
+
+   **Decided on 25-10-2026 (spec and plan missing; pending, not started):** the token is still typed separately (no changes to server or format). Windows and Android show the profile code's QR; Android scans it. Proposal: CameraX + ZXing (free, F-Droid compatible; the ML Kit scanner needs Play Services) on Android and QRCoder (MIT) on Windows. If the profile carries specific notes and the code does not fit in a QR, the screen warns about it and offers to copy the code as today. Next step: write the spec in `docs/specs/` and, with its approval, the plan with tests first.
+2. **Import Markdown and one-click backup.** Cheap; removes entry friction (see `PENDIENTES.md`).
+3. **Microsoft Store (MSIX).** The signing and not going through SmartScreen weigh more than any feature; SignPath already rejected the project. Postponed until Android is closed; to sell it is probably the most necessary.
+
+
+**Mobile parity, retro looks on Android — DONE (2026-10-25).** XP light and dark, Telecommunications light and dark, Bash and Phosphor, with their customizable colors, the Bash palettes, the suggested note theme and a monospaced font where applicable; without the Windows "skin". Palettes identical to the PC's, fixed by vectors (`tests/vectors/text-color.json`). Tested on the Pixel with the debug version. The widget too (accent on the title and the "+", and monospaced font in Bash, Telecommunications and Phosphor). Published in `android-v0.1.0-rc5`, `rc6` (widget accent) and `rc7` (widget font); installed on Pixel and tablet. Spec: `docs/historia/specs/2026-10-25-aldune-android-aspectos-retro-design.md`.

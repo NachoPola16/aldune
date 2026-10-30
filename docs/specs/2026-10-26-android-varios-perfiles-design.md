@@ -1,107 +1,106 @@
-# Android: varios perfiles de sincronización
+# Android: multiple sync profiles
 
-Fecha: 26-10-2026. Estado: implementada en la rama `android-varios-perfiles` (sin publicar). Primer bloque de la ampliación de la sync (los siguientes: emparejamiento por QR y
-pegado/compartir de códigos; transparencia de la sync en segundo plano; pasada de huecos en errores y conflictos).
+Date: 26-10-2026. Status: implemented on the `android-varios-perfiles` branch (unpublished). First block of the sync expansion (the next ones: QR pairing and
+pasting/sharing codes; background sync transparency; a pass over gaps in errors and conflicts).
 
-## Objetivo
+## Goal
 
-Que un móvil pueda estar unido a **más de un perfil de sync a la vez**. Caso que lo motiva: el usuario sincroniza todas sus notas con su
-servidor (perfil «todas») y además se une al perfil de la familia, que solo comparte una nota (la lista de la compra), alojado por otra
-persona. Windows ya lo permite; Android hoy guarda un único perfil (`SyncController._profile`, `SyncProfileStore.load()` devuelve uno).
+Let a phone be joined to **more than one sync profile at a time**. The case that motivates it: the user syncs all their notes with their
+server (the "all" profile) and also joins the family profile, which shares only one note (the shopping list), hosted by another
+person. Windows already allows it; Android today stores a single profile (`SyncController._profile`, `SyncProfileStore.load()` returns one).
 
-## Decisiones tomadas con el usuario
+## Decisions made with the user
 
-1. **Cada perfil sincroniza según su alcance, como en Windows.** Una nota que cae en dos alcances (la lista familiar también está en
-   «todas») se sube a los dos almacenes. No hay una marca «nota de perfil ajeno».
-2. **Solo unirse.** Android importa tantos códigos como se quiera. Crear y compartir perfiles desde Android (selector de notas, generar
-   clave y código) queda para un bloque posterior; esos perfiles se siguen creando en Windows.
+1. **Each profile syncs according to its scope, as on Windows.** A note that falls into two scopes (the family list is also in
+   "all") is uploaded to both stores. There is no "note from another profile" marker.
+2. **Join only.** Android imports as many codes as desired. Creating and sharing profiles from Android (note picker, generating a
+   key and code) is left for a later block; those profiles keep being created on Windows.
 
-## Fuera de alcance
+## Out of scope
 
-- Formato de sync: sigue siendo el 4. No se tocan `tests/vectors/` ni `Aldune.Core`.
-- QR, pegar/compartir el código, aviso de batería, indicador de «nota compartida» dentro de la nota.
-- Cambios en el servidor de sync.
+- Sync format: it stays 4. `tests/vectors/` and `Aldune.Core` are not touched.
+- QR, pasting/sharing the code, battery notice, "shared note" indicator inside the note.
+- Changes to the sync server.
 
-## Diseño
+## Design
 
-### 1. Datos
+### 1. Data
 
-- Cada perfil tiene un `profileId` (UUID, generado al conectar; el perfil heredado usa el id fijo `default`, `LEGACY_PROFILE_ID`). `SyncProfile` pasa a llevarlo. Transporte, URL, alcance y nombre se
-  guardan por perfil.
-- **Secretos:** un fichero por perfil (`SecretVault`, con el `profileId` en el nombre), con el mismo envoltorio del Keystore y la misma
-  escritura atómica. El formato del fichero no cambia.
-- **Estado** (último éxito, intento, fallo): por perfil.
-- **`sync_base` y `sync_conflict`:** pasan a clave `(profileId, noteId)`. Migración de Room con test.
-- **Notas, lápidas y recordatorios** siguen siendo globales: son del dispositivo. Una lápida creada al borrar una nota la sube cada
-  perfil cuyo alcance incluía la nota (lo decide el planner, igual que hoy).
-- **`deviceId`** es único por instalación y sigue sobreviviendo a desconectar.
+- Each profile has a `profileId` (UUID, generated on connecting; the legacy profile uses the fixed id `default`, `LEGACY_PROFILE_ID`). `SyncProfile` now carries it. Transport, URL, scope and name are
+  stored per profile.
+- **Secrets:** one file per profile (`SecretVault`, with the `profileId` in the name), with the same Keystore wrapping and the same
+  atomic write. The file format does not change.
+- **State** (last success, attempt, failure): per profile.
+- **`sync_base` and `sync_conflict`:** become keyed by `(profileId, noteId)`. Room migration with a test.
+- **Notes, tombstones and reminders** remain global: they belong to the device. A tombstone created when deleting a note is uploaded by each
+  profile whose scope included the note (the planner decides it, as today).
+- **`deviceId`** is unique per installation and still survives disconnecting.
 
-### 2. Migración de lo existente
+### 2. Migrating what exists
 
-El perfil único actual se convierte en el primero con el id fijo `default` (la migración de Room es SQL y no puede inventar un UUID; el fichero de secretos de siempre `syncsecrets.bin` no se mueve) y se mueven a él sus preferencias, su fichero de
-secretos, sus bases y sus conflictos. Sin pasos manuales. Una instalación sin perfil sigue sin perfil. Si el fichero de secretos no se
-abre (`VaultState.Unreadable`), el perfil migrado queda con ese mismo estado y se vuelve a resolver pegando el código, como hoy.
+The current single profile becomes the first one with the fixed id `default` (the Room migration is SQL and cannot invent a UUID; the usual secrets file `syncsecrets.bin` is not moved) and its preferences, its secrets file, its bases and its conflicts are moved to it. No manual steps. An installation with no profile stays without a profile. If the secrets file does not
+open (`VaultState.Unreadable`), the migrated profile keeps that same state and it is resolved again by pasting the code, as today.
 
-### 3. Pasadas
+### 3. Passes
 
-- `SyncController` mantiene la lista de perfiles y recorre los que hay **de uno en uno**, dentro del mismo `passLock`. El fallo de un
-  perfil queda en su estado y no detiene a los demás.
-- `LocalSyncStore` se instancia por perfil (la vista de Room recibe el `profileId` y lo aplica a bases y conflictos). `runSync` y el
-  planner no cambian: siguen trabajando con un solo almacén.
-- Una sola `SyncTriggerPolicy` para toda la app. Cada disparo (abrir, primer plano, cambio local, manual, periódico) hace una pasada que
-  recorre todos los perfiles. El trabajador de segundo plano no cambia de programación.
-- `SyncStatus` y `secretsUnreadable` pasan a ser por perfil; la cabecera de la lista usa un estado agregado (`aggregateStatus`) y la señal de cada nota, la base más antigua entre los perfiles que la tienen.
+- `SyncController` keeps the list of profiles and goes through the existing ones **one by one**, inside the same `passLock`. One profile's
+  failure stays in its state and does not stop the others.
+- `LocalSyncStore` is instantiated per profile (the Room view receives the `profileId` and applies it to bases and conflicts). `runSync` and the
+  planner do not change: they keep working with a single store.
+- A single `SyncTriggerPolicy` for the whole app. Each trigger (open, foreground, local change, manual, periodic) makes one pass that
+  goes through all the profiles. The background worker does not change its schedule.
+- `SyncStatus` and `secretsUnreadable` become per profile; the list header uses an aggregate status (`aggregateStatus`) and each note's signal is the oldest base among the profiles that have it.
 
-### 4. Primera conexión de un perfil adicional
+### 4. First connection of an additional profile
 
-Hoy, al conectar con notas ya en el dispositivo, se pregunta «subir o descartar», y descartar **borra todas las notas locales** sin
-lápidas. Con un segundo perfil de alcance «elegidas» eso borraría las notas personales.
+Today, when connecting with notes already on the device, it asks "upload or discard", and discarding **deletes all local notes** without
+tombstones. With a second profile of "chosen" scope that would delete the personal notes.
 
-- El primer perfil se comporta como hoy.
-- En un **perfil adicional** no hay opción de descartar ni pregunta: solo se sube lo que el alcance incluye y se baja lo que haya en el
-  almacén. `firstConnectDecision` recibe si es el primer perfil.
-- Una nota local con el mismo id que otra del almacén se resuelve por el planner existente (conflicto o gana la más reciente), como en
-  cualquier pasada.
+- The first profile behaves as today.
+- On an **additional profile** there is no discard option or question: only what the scope includes is uploaded and what is in the
+  store is downloaded. `firstConnectDecision` receives whether it is the first profile.
+- A local note with the same id as one in the store is resolved by the existing planner (conflict or the most recent wins), as in
+  any pass.
 
-### 5. Desconectar
+### 5. Disconnecting
 
-Se desconecta un perfil sin tocar los demás: borra sus secretos, bases y conflictos y deja las notas y las lápidas. Al desconectar el
-último, el estado vuelve a ser el actual sin perfil (`policy.setProfileConfigured(false)`, se cancela el trabajo periódico).
+One profile is disconnected without touching the others: it deletes its secrets, bases and conflicts and leaves the notes and the tombstones. When disconnecting the
+last one, the state goes back to the current no-profile one (`policy.setProfileConfigured(false)`, the periodic job is cancelled).
 
-### 6. Interfaz
+### 6. Interface
 
-- Ajustes → Sincronización pasa a una **lista de perfiles**: nombre, tipo, alcance (`scopeText`) y último estado, con «Sincronizar
-  ahora» global y «Desconectar» por perfil.
-- «Añadir perfil» abre el flujo actual (pegar código → elegir transporte → credencial → Conectar).
-- Un perfil con credenciales ilegibles se marca en su fila.
-- Las cadenas nuevas van en `android/strings.tsv` (cinco idiomas) y se regeneran con `python android/scripts/gen_strings.py`; `--check`
-  debe pasar.
+- Settings → Sync becomes a **list of profiles**: name, type, scope (`scopeText`) and last status, with a global "Sync
+  now" and a per-profile "Disconnect".
+- "Add profile" opens the current flow (paste code → choose transport → credential → Connect).
+- A profile with unreadable credentials is marked in its row.
+- The new strings go in `android/strings.tsv` (five languages) and are regenerated with `python android/scripts/gen_strings.py`; `--check`
+  must pass.
 
-### 7. Conflictos
+### 7. Conflicts
 
-La clave de un conflicto guardado es `(profileId, noteId)`. Si una nota tiene conflicto en dos perfiles, la interfaz actual (por nota)
-enseña el más reciente, y **resolverlo limpia solo ese**: el de la nota en el otro perfil sigue marcado y aparece a continuación.
-Decisión del 26-10 (delegada por el usuario): las versiones perdedoras de dos almacenes pueden ser distintas, y limpiar las dos de una vez
-perdería una en silencio. Cuesta como mucho una resolución más, y la siguiente pasada sincroniza el resultado en ambos perfiles. Un test
-fija este comportamiento antes de implementarlo.
+The key of a stored conflict is `(profileId, noteId)`. If a note has a conflict in two profiles, the current interface (per note)
+shows the most recent one, and **resolving it clears only that one**: the one for the note in the other profile stays marked and appears next.
+Decision of 26-10 (delegated by the user): the losing versions from two stores can be different, and clearing both at once
+would silently lose one. It costs at most one more resolution, and the next pass syncs the result in both profiles. A test
+fixes this behavior before implementing it.
 
-## Pruebas
+## Tests
 
-Lógica nueva con test primero, en la JVM (`android/syncclient`, `./gradlew test`):
+New logic with test first, on the JVM (`android/syncclient`, `./gradlew test`):
 
-- Dos perfiles sobre el mismo almacén en memoria con alcances solapados (todas + una nota): las bases no se mezclan, cada pasada sube
-  y baja lo suyo, y un fallo en uno no afecta al otro.
-- Borrado de una nota compartida: la lápida llega a los dos almacenes.
-- Primera conexión del perfil adicional: no ofrece descartar y no borra notas.
-- Desconectar un perfil deja intactos los demás y las notas.
-- Migración de preferencias y secretos del perfil único (en `app`, instrumentada o Robolectric según lo que ya haya) y migración de
-  Room de `sync_base`/`sync_conflict`.
+- Two profiles over the same in-memory store with overlapping scopes (all + one note): the bases do not get mixed, each pass uploads
+  and downloads its own, and a failure in one does not affect the other.
+- Deleting a shared note: the tombstone reaches both stores.
+- First connection of the additional profile: it does not offer to discard and does not delete notes.
+- Disconnecting one profile leaves the others and the notes intact.
+- Migration of the single profile's preferences and secrets (in `app`, instrumented or Robolectric depending on what is already there) and Room
+  migration of `sync_base`/`sync_conflict`.
 
-Interfaz: compilación debug en el Pixel con datos propios y un servidor/WebDAV de prueba (sin notas reales; sin capturas de la pantalla
-de inicio ni de notificaciones). Se comprueba: añadir un segundo perfil, que las notas personales sobreviven, desconectar uno y
-mantener el otro, y la migración desde una instalación con un perfil.
+Interface: debug build on the Pixel with its own data and a test server/WebDAV (no real notes; no screenshots of the home screen
+or of notifications). To check: adding a second profile, that the personal notes survive, disconnecting one and
+keeping the other, and the migration from an installation with one profile.
 
-## Documentación al terminar
+## Documentation when finished
 
-`docs/SYNC.md` (Android admite varios perfiles; paso a paso para la nota familiar), `docs/STATUS.md`, `docs/MOBILE_PORT.md` si algo de lo
-descartado cambia, `DECISIONS-2026-10-26.md` (QR) y la memoria según el protocolo.
+`docs/SYNC.md` (Android supports several profiles; step by step for the family note), `docs/STATUS.md`, `docs/MOBILE_PORT.md` if anything of what was
+ruled out changes, `DECISIONS-2026-10-26.md` (QR) and the memory per the protocol.

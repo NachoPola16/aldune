@@ -1,34 +1,34 @@
-# Aldune — Ajustes con menú lateral y modo simplificado con lo esencial (design spec)
+# Aldune — Settings with a side menu and a simplified mode with the essentials (design spec)
 
-Decidido con el usuario el 2026-09-26 ("haz lo que consideres") tras medir la ventana con una sonda.
+Decided with the user on 2026-09-26 ("do whatever you think best") after measuring the window with a probe.
 
-## Problema
+## Problem
 
-- Ajustes medía 920 × 2150 px con todo abierto. En una pantalla de 1440 px de alto quedaba cortada a
-  1296 y había que desplazarse para casi todo; la columna izquierda era el doble de alta que la derecha.
-- El modo simplificado escondía **todos** los ajustes (solo quedaban el botón de modo, la ayuda y la
-  versión), aunque su texto dijera "deja lo esencial".
+- Settings measured 920 × 2150 px with everything open. On a 1440 px-tall screen it was cut off at
+  1296 and you had to scroll for almost everything; the left column was twice as tall as the right one.
+- Simplified mode hid **all** the settings (only the mode button, help and the version were left),
+  even though its text said it "leaves the essentials".
 
-## Decisiones
+## Decisions
 
-- **No ensanchar ni depender de la pantalla**: menú lateral con páginas, tamaño fijo de 900 × 700 con
-  tope contra el área de trabajo del monitor (90 %). Cada página cabe sin desplazarse en una pantalla
-  normal; en una pequeña, cada página tiene su propio scroll.
-- **Páginas**: General (modo de interfaz, arranque, atajo, idioma) · Notas y tareas (recordar
-  posición, tareas, papelera) · Dock y pantallas (pantalla y borde lado a lado, pantalla completa,
-  mantener abierto, trackpad) · Colores · Sincronización · Ayuda · Acerca de (versión, buscar
-  actualizaciones, reiniciar, salir).
-- **El gestor de notas no entra en Ajustes**: se usa a diario, Ajustes poco. Queda un botón
-  "Gestionar notas" al pie del menú lateral (el gestor ya tenía uno hacia Ajustes).
-- **Ajustes desde el dock**: ya se llega con el clic derecho de sus botones; no se añade un botón
-  visible. El clic derecho en "Sincronizar" abre directamente la página de Sincronización
+- **Do not widen the window or depend on the screen**: a side menu with pages, a fixed size of 900 × 700
+  capped against the monitor's work area (90 %). Each page fits without scrolling on a normal screen; on
+  a small one, each page has its own scroll.
+- **Pages**: General (interface mode, startup, shortcut, language) · Notes and tasks (remember
+  position, tasks, trash) · Dock and screens (screen and edge side by side, full screen,
+  keep open, trackpad) · Colors · Sync · Help · About (version, check for
+  updates, restart, quit).
+- **The note manager does not go into Settings**: it is used daily, Settings rarely. A
+  "Manage notes" button stays at the foot of the side menu (the manager already had one towards Settings).
+- **Settings from the dock**: it is already reached with the right click on its buttons; no visible
+  button is added. Right-clicking "Sync" opens the Sync page directly
   (`AppCoordinator.OpenSettings(page)`).
-- **Modo simplificado**: General, Dock y pantallas (solo pantalla y borde), Colores (solo el tema),
-  Ayuda y Acerca de. Esconde Notas y tareas, Sincronización y lo avanzado del dock y de los colores.
-  Los valores por defecto de lo escondido no cambian: ya valen para empezar.
-- La última página vista se recuerda durante la sesión.
+- **Simplified mode**: General, Dock and screens (only screen and edge), Colors (only the theme),
+  Help and About. It hides Notes and tasks, Sync and the advanced parts of the dock and the colors.
+  The default values of what is hidden do not change: they are already good enough to start with.
+- The last page viewed is remembered during the session.
 
-## Verificación
+## Verification
 
-Sonda con la ventana real en los dos modos: alto de contenido de cada página frente al visible, y
-captura de cada una. Mismos nombres de controles y manejadores que antes (comprobado comparando el XAML).
+A probe with the real window in both modes: content height of each page versus the visible height, and
+a capture of each one. Same control and handler names as before (checked by comparing the XAML).

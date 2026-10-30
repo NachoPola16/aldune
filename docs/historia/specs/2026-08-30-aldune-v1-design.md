@@ -1,367 +1,344 @@
 # Aldune v1 — Design Spec
 
-## Contexto y objetivo
+## Context and goal
 
-Aldune es una aplicación de notas para Windows inspirada en Hold My Notes,
-Noty (aimen08/noty) y noty-sepia: notas ancladas al borde de la pantalla
-que viven como una fina franja ("pill") y se despliegan en abanico al
-pasar el ratón por encima. Ninguna de las referencias existe para
-Windows — todas son apps nativas de macOS (Swift/SwiftUI).
+Aldune is a notes application for Windows inspired by Hold My Notes,
+Noty (aimen08/noty) and noty-sepia: notes anchored to the edge of the
+screen that live as a thin strip ("pill") and fan out when the mouse
+hovers over them. None of the references exists for Windows — they are
+all native macOS apps (Swift/SwiftUI).
 
-Uso previsto: herramienta personal del autor para apuntar cosas rápido,
-como un post-it real — sin gestión de fechas ni recordatorios, sin
-cuenta ni sincronización. Objetivo secundario, no bloqueante para v1: si
-el proyecto sale bien, publicarlo para que otros lo usen.
+Intended use: a personal tool for the author to jot things down quickly,
+like a real post-it — with no date handling or reminders, no account and
+no sync. Secondary goal, not blocking for v1: if the project turns out
+well, publish it so that others can use it.
 
-Esta spec fue revisada de forma independiente (segunda opinión) antes de
-pasar a plan de implementación; los cambios de esa revisión ya están
-incorporados en las secciones siguientes.
+This spec was independently reviewed (second opinion) before moving on to
+the implementation plan; the changes from that review are already
+incorporated in the sections below.
 
-## Alcance de v1
+## v1 scope
 
-### Núcleo (mecánica de ventana)
+### Core (window mechanics)
 
-- Una franja fina anclada a un borde de pantalla (arriba/abajo/
-  izquierda/derecha), que se despliega en abanico al pasar el ratón por
-  encima.
-- Clic en una pestaña del abanico → la nota se abre a tamaño completo en
-  su sitio.
-- Multi-monitor: la app puede mostrarse en todas las pantallas
-  conectadas o solo en una, configurable en Ajustes.
-- Posición de borde: **una sola, global, para todas las pantallas
-  activas** en v1 (ver "Aplazado a v1.1" para la variante por pantalla).
-- La ventana **cambia de tamaño real** en vez de usar una superficie
-  transparente con click-through conmutado: pequeña (solo el pill) en
-  reposo, crece para ocupar el área del abanico mientras está expandida,
-  y vuelve a encogerse al colapsar. Así no existe nunca una zona
-  transparente que gestionar ni un estado de "pasar clics a través" que
-  activar/desactivar — se descartó ese diseño porque era contradictorio
-  (una ventana con el estilo de click-through activado no recibe
-  eventos de ratón, así que nunca podría detectar el hover que lo
-  desactivaría). Este enfoque evita además que `AllowsTransparency`
-  desactive el suavizado de texto normal (ClearType) del sistema, que
-  chocaría con "tipografía elegida por legibilidad".
-- El pill **no roba el foco** al expandirse por hover (estilo de
-  ventana `WS_EX_NOACTIVATE`) — no debe interrumpir lo que se esté
-  escribiendo en otra aplicación. La ventana de nota expandida
-  (`NoteWindow`), en cambio, sí se activa y recibe foco al abrirse,
-  porque ahí se espera que el usuario escriba.
-- El colapso del abanico no depende solo de `MouseLeave` (poco fiable:
-  oscila en el límite del área expandida, y puede no dispararse si otra
-  ventana queda por encima) — se aplica un pequeño retardo antes de
-  colapsar (~150-250ms) más una comprobación de posición del ratón de
-  baja frecuencia **solo mientras está expandido**, como red de
-  seguridad. Esto no contradice "sin sondeo": la detección del hover en
-  sí sigue siendo por eventos nativos de la ventana; el temporizador
-  solo entra en juego como respaldo del colapso.
-- Si el borde elegido coincide con el de la barra de tareas de Windows,
-  el dock se ancla al área de trabajo (excluyendo la barra), no al
-  borde físico de la pantalla, para no solaparse ni pelear con su
-  z-order.
-- Consciente de DPI por monitor (Per-Monitor V2): cada pantalla puede
-  tener un factor de escala distinto (p. ej. portátil a 150% + monitor
-  externo a 100%); la app se re-renderiza nítida en cada una en vez de
-  dejar que Windows estire un mapa de bits ya renderizado.
-- Cada pantalla se identifica por un id estable de dispositivo (no por
-  el número `\\.\DISPLAY1`, que puede cambiar al reconectar monitores).
-  Si un monitor con notas ancladas se desconecta, esas notas se
-  **muestran** temporalmente en la pantalla principal sin **reescribir**
-  su pantalla de origen almacenada — al reconectar el monitor original,
-  vuelven a su sitio. Nunca se pierden ni quedan inaccesibles, y nunca
-  se pierde la disposición original por un desconectado/reconectado.
+- A thin strip anchored to a screen edge (top/bottom/left/right), which
+  fans out when the mouse hovers over it.
+- Click on a tab of the fan → the note opens at full size in place.
+- Multi-monitor: the app can be shown on all connected screens or on just
+  one, configurable in Settings.
+- Edge position: **a single one, global, for all active screens** in v1
+  (see "Postponed to v1.1" for the per-screen variant).
+- The window **really changes size** instead of using a transparent
+  surface with toggled click-through: small (just the pill) at rest, it
+  grows to occupy the fan area while expanded, and shrinks again on
+  collapse. That way there is never a transparent zone to manage nor a
+  "pass clicks through" state to switch on/off — that design was
+  discarded because it was contradictory (a window with the click-through
+  style enabled does not receive mouse events, so it could never detect
+  the hover that would disable it). This approach also prevents
+  `AllowsTransparency` from disabling the system's normal text smoothing
+  (ClearType), which would clash with "typography chosen for legibility".
+- The pill **does not steal focus** when it expands on hover (window style
+  `WS_EX_NOACTIVATE`) — it must not interrupt what is being typed in
+  another application. The expanded note window (`NoteWindow`), on the
+  other hand, does activate and receive focus when opened, because that is
+  where the user is expected to type.
+- The collapse of the fan does not depend solely on `MouseLeave` (not very
+  reliable: it oscillates at the edge of the expanded area, and may not
+  fire if another window ends up on top) — a small delay is applied before
+  collapsing (~150-250ms) plus a low-frequency mouse position check
+  **only while expanded**, as a safety net. This does not contradict "no
+  polling": the hover detection itself is still done through native window
+  events; the timer only comes into play as a fallback for the collapse.
+- If the chosen edge coincides with that of the Windows taskbar, the dock
+  anchors to the work area (excluding the bar), not to the physical edge
+  of the screen, so as not to overlap or fight with its z-order.
+- Per-monitor DPI aware (Per-Monitor V2): each screen can have a
+  different scale factor (e.g. laptop at 150% + external monitor at
+  100%); the app re-renders crisply on each one instead of letting
+  Windows stretch an already-rendered bitmap.
+- Each screen is identified by a stable device id (not by the
+  `\\.\DISPLAY1` number, which can change when monitors are reconnected).
+  If a monitor with anchored notes is disconnected, those notes are
+  temporarily **shown** on the primary screen without **rewriting** their
+  stored origin screen — when the original monitor is reconnected, they go
+  back to their place. They are never lost or left inaccessible, and the
+  original layout is never lost through a disconnect/reconnect.
 
-### Contenido de la nota
+### Note content
 
-- Texto libre, con checkboxes inline: una línea que empieza con `[ ]`
-  se muestra como ☐ y, al hacer clic, pasa a `[x]`/☑. La sintaxis vive
-  dentro del propio campo de texto de la nota (no hay tabla de tareas
-  separada), pero renderizar un ☐ clicable dentro de una línea es
-  trabajo de UI real: la nota necesita un modo de visualización
-  (lista de líneas, con las de checkbox como control clicable) distinto
-  de su modo de edición (texto plano) — no es "gratis" solo por
-  guardarse como texto.
-- Color de nota, elegible por el usuario.
-- Fecha de creación y de última edición, guardadas como metadato (no se
-  exponen como sistema de organización, solo como dato).
-- Autoguardado silencioso: no hay botón "Guardar", el texto se persiste
-  solo mientras se escribe (con un pequeño debounce para no escribir a
-  disco en cada pulsación). Al cerrar la aplicación (incluido un cierre
-  de sesión de Windows) se fuerza un guardado inmediato de cualquier
-  cambio pendiente del debounce, para no perder las últimas pulsaciones.
-- Archivar: oculta la nota de la vista activa sin borrarla.
-- Papelera: el borrado no es instantáneo ni definitivo; las notas
-  borradas pasan a un estado "Papelera" recuperable. Archivado y
-  papelera son el mismo mecanismo de estado (`Active` / `Archived` /
-  `Trashed`), no dos sistemas distintos — solo cambia qué filtro de
-  vista se aplica.
+- Free text, with inline checkboxes: a line that starts with `[ ]` is
+  shown as ☐ and, when clicked, turns into `[x]`/☑. The syntax lives
+  inside the note's own text field (there is no separate tasks table), but
+  rendering a clickable ☐ inside a line is real UI work: the note needs a
+  display mode (list of lines, with the checkbox ones as a clickable
+  control) distinct from its edit mode (plain text) — it is not "free"
+  just because it is stored as text.
+- Note color, chosen by the user.
+- Creation and last-edit date, stored as metadata (not exposed as an
+  organization system, only as data).
+- Silent autosave: there is no "Save" button, the text is persisted by
+  itself as you type (with a small debounce so as not to write to disk on
+  every keystroke). When the application closes (including a Windows
+  sign-out) an immediate save of any change pending in the debounce is
+  forced, so as not to lose the last keystrokes.
+- Archive: hides the note from the active view without deleting it.
+- Trash: deletion is neither instant nor definitive; deleted notes move to
+  a recoverable "Trash" state. Archive and trash are the same state
+  mechanism (`Active` / `Archived` / `Trashed`), not two different
+  systems — only the view filter that is applied changes.
 
-### Personalización
+### Customization
 
-- Tema claro/oscuro: sigue el tema del sistema operativo por defecto,
-  pero con un selector propio en Ajustes de tres estados (Sistema /
-  Claro / Oscuro) para forzar uno manualmente si el usuario lo prefiere.
-- Tipografía fija en el tema por defecto, elegida por legibilidad — sin
-  selector de fuente/tamaño en v1.
-- La app respeta el ajuste de accesibilidad de Windows "Mostrar
-  animaciones en Windows" (Configuración → Accesibilidad → Efectos
-  visuales): si está desactivado, las transiciones (abanico,
-  apertura/cierre de nota) se aplican de forma instantánea en vez de
-  animada. No existe un interruptor de "ahorro de batería" propio — las
-  animaciones son demasiado ligeras para que tenga sentido un mecanismo
-  dedicado, y el ajuste de accesibilidad ya cubre a quien quiera menos
-  efectos por el motivo que sea.
+- Light/dark theme: follows the operating system theme by default, but
+  with its own three-state selector in Settings (System / Light / Dark) to
+  force one manually if the user prefers.
+- Fixed typography in the default theme, chosen for legibility — no
+  font/size selector in v1.
+- The app respects the Windows accessibility setting "Show animations in
+  Windows" (Settings → Accessibility → Visual effects): if it is off,
+  transitions (fan, note open/close) are applied instantly instead of
+  animated. There is no dedicated "battery saver" switch — the animations
+  are too light for a dedicated mechanism to make sense, and the
+  accessibility setting already covers anyone who wants fewer effects for
+  whatever reason.
 
-El "Modo Papel vintage" (textura, sonido, inclinación por nota,
-envejecimiento) se aplaza a v1.1 — ver esa sección.
+The "Vintage Paper mode" (texture, sound, per-note tilt, aging) is
+postponed to v1.1 — see that section.
 
-### Almacenamiento
+### Storage
 
-- Local, en SQLite. Cifrado por sobre (*envelope encryption*): se
-  genera una clave simétrica para la base de datos, y esa clave (no
-  cada nota por separado) se protege con DPAPI ligada al
-  usuario/equipo de Windows y se guarda en el archivo de configuración
-  local. Sin servidor, sin cuenta, sin telemetría.
-  - Límite honesto que hay que documentar en la propia app antes de
-    publicarla: DPAPI-por-usuario protege frente a otra cuenta de
-    Windows o frente a alguien sin tu sesión iniciada, pero **no**
-    frente a otro proceso corriendo con tu misma sesión de usuario.
-  - Cifrar el contenido bloquea poder hacer búsqueda por SQL/`LIKE`
-    sobre el texto de las notas en el futuro (búsqueda ya está fuera de
-    alcance de v1, así que no se resuelve ahora — solo se deja
-    constancia de la dependencia para cuando se retome).
-- **Exportar/Importar** (para mover las notas a otro ordenador o hacer
-  copia de seguridad): genera un archivo propio (`.aldunebackup`, un
-  zip con JSON dentro, con un campo de versión de formato desde v1 para
-  poder evolucionar el formato sin romper backups antiguos) que
-  contiene las notas **sin cifrar**. Es una decisión deliberada: la
-  clave DPAPI está ligada a la máquina y no puede viajar con el
-  archivo, así que cifrar el export exigiría pedir una contraseña al
-  usuario — se descarta por fricción. En su lugar, se sigue el mismo
-  patrón que usa Firefox para exportar marcadores (JSON sin cifrar por
-  defecto, cifrado solo como extensión opcional de terceros): el
-  archivo de export es responsabilidad del usuario mientras exista (no
-  dejarlo en una carpeta compartida, moverlo a mano).
-  - **Semántica de import**: fusiona con lo existente, nunca reemplaza
-    ni borra notas que ya estuvieran ahí. Si un id del archivo coincide
-    con uno ya existente en destino, se genera un id nuevo para la nota
-    importada en vez de sobrescribir. Se incluyen notas archivadas y en
-    papelera, no solo las activas (fidelidad completa del backup).
-  - El import valida el formato (incluida la versión) antes de tocar la
-    base de datos real; si no es válido, se rechaza con un mensaje
-    claro sin modificar nada de lo existente. Al importar, las notas se
-    cifran con la clave del equipo de destino.
+- Local, in SQLite. Envelope encryption: a symmetric key is generated for
+  the database, and that key (not each note separately) is protected with
+  DPAPI bound to the Windows user/machine and stored in the local
+  configuration file. No server, no account, no telemetry.
+  - Honest limit that must be documented in the app itself before
+    publishing it: per-user DPAPI protects against another Windows account
+    or against someone without your session signed in, but **not** against
+    another process running under your same user session.
+  - Encrypting the content blocks being able to do SQL/`LIKE` search over
+    the text of the notes in the future (search is already out of scope
+    for v1, so it is not solved now — the dependency is only noted for
+    when it is taken up again).
+- **Export/Import** (to move the notes to another computer or make a
+  backup): generates a file of its own (`.aldunebackup`, a zip with JSON
+  inside, with a format version field from v1 on so the format can evolve
+  without breaking old backups) that contains the notes **unencrypted**.
+  This is a deliberate decision: the DPAPI key is bound to the machine and
+  cannot travel with the file, so encrypting the export would require
+  asking the user for a password — discarded because of the friction.
+  Instead, the same pattern Firefox uses to export bookmarks is followed
+  (unencrypted JSON by default, encryption only as an optional third-party
+  extension): the export file is the user's responsibility while it exists
+  (do not leave it in a shared folder, move it by hand).
+  - **Import semantics**: merges with what exists, never replaces or
+    deletes notes that were already there. If an id in the file matches one
+    already existing at the destination, a new id is generated for the
+    imported note instead of overwriting. Archived and trashed notes are
+    included, not just the active ones (full backup fidelity).
+  - The import validates the format (including the version) before
+    touching the real database; if it is not valid, it is rejected with a
+    clear message without modifying anything that exists. On import, the
+    notes are encrypted with the destination machine's key.
 
-### Integración con Windows
+### Windows integration
 
-- Icono en la bandeja del sistema, con menú: abrir todas las notas,
-  ajustes, salir.
-- Atajo de teclado global configurable para crear una nota nueva desde
-  cualquier sitio.
-- Inicio automático con Windows (activable/desactivable en Ajustes).
-- **Instancia única**: al arrancar, la app comprueba (con un mutex con
-  nombre) si ya hay una instancia corriendo, y si la hay, no arranca
-  una segunda — evita atajo de teclado roto, docks duplicados y dos
-  procesos escribiendo a la vez en la misma base de datos. Relevante
-  porque la combinación de inicio automático + bandeja + atajo global
-  hace fácil lanzar la app dos veces sin querer.
+- System tray icon, with a menu: open all notes, settings, quit.
+- Configurable global keyboard shortcut to create a new note from
+  anywhere.
+- Auto-start with Windows (can be enabled/disabled in Settings).
+- **Single instance**: on startup, the app checks (with a named mutex)
+  whether an instance is already running, and if so, it does not start a
+  second one — this avoids a broken keyboard shortcut, duplicate docks and
+  two processes writing at once to the same database. Relevant because the
+  combination of auto-start + tray + global shortcut makes it easy to
+  launch the app twice by accident.
 
-### Explícitamente fuera de v1 (sin plan de añadir pronto)
+### Explicitly out of v1 (no plan to add soon)
 
-Búsqueda entre notas, etiquetas/carpetas, sincronización en la nube,
-recordatorios o notas con fecha/notificación, editor de temas libre
-(colores arbitrarios elegidos por el usuario), export cifrado con
-contraseña. Se dejan fuera a propósito para no convertir un post-it
-simple en un gestor de tareas — si con el uso real hace falta alguna,
-se añade en una versión posterior sin que el diseño actual la bloquee
-(salvo búsqueda, que sí requeriría revisar el cifrado del contenido
-cuando se retome, como se anota en Almacenamiento).
+Search across notes, tags/folders, cloud sync, reminders or notes with a
+date/notification, free theme editor (arbitrary colors chosen by the
+user), password-encrypted export. They are left out on purpose so as not
+to turn a simple post-it into a task manager — if real use shows that
+any of them is needed, it is added in a later version without the current
+design blocking it (except search, which would require revisiting the
+content encryption when it is taken up again, as noted in Storage).
 
-### Aplazado a v1.1 (decidido tras la revisión de diseño, no descartado)
+### Postponed to v1.1 (decided after the design review, not discarded)
 
-Reducen el riesgo del primer hito de implementación porque son
-ortogonales al mecanismo difícil de la app (ventana/hover/multi-monitor)
-y no cuesta nada dejarlos fuera del primer build:
+They reduce the risk of the first implementation milestone because they
+are orthogonal to the hard mechanism of the app (window/hover/
+multi-monitor) and it costs nothing to leave them out of the first build:
 
-- **Modo "Papel vintage"** (opcional, desactivado por defecto cuando
-  llegue, con un sub-interruptor para separar visual de sonido):
-  - Visual: fondo con textura de papel envejecido/kraft y paleta cálida
-    (sepia), ligera inclinación aleatoria por nota (como un post-it
-    pegado a mano), tipografía tipo máquina de escribir/manuscrita,
-    borde con aspecto de papel rasgado, icono de chincheta o cinta
-    washi en la esquina de la nota.
-  - Envejecimiento por antigüedad: las notas más viejas se ven algo más
-    amarillentas/gastadas que las recientes, calculado a partir de la
-    fecha de creación ya almacenada (no requiere ningún dato nuevo).
-  - Sonido: un sonido suave de papel al abrir/cerrar una nota, y un
-    sonido de "papel arrugado" al mandar una nota a la papelera
-    (acompañado de una pequeña animación de arrugado). Los archivos de
-    audio deben ser de un banco libre de derechos (p. ej. freesound.org
-    con licencia CC0) — no se usa ningún asset con copyright.
-- **Posición de borde independiente por pantalla**: v1 solo ofrece una
-  posición global para todas las pantallas activas; la variante "cada
-  pantalla su propio borde, con una casilla para volver al modo global"
-  se añade en v1.1 sobre la misma base de configuración.
+- **"Vintage Paper" mode** (optional, off by default when it arrives, with
+  a sub-switch to separate visual from sound):
+  - Visual: background with an aged paper/kraft texture and a warm
+    (sepia) palette, slight random tilt per note (like a post-it stuck on
+    by hand), typewriter/handwritten-style typography, torn-paper-looking
+    border, pushpin or washi tape icon in the corner of the note.
+  - Aging by age: older notes look somewhat more yellowed/worn than
+    recent ones, computed from the creation date already stored (it needs
+    no new data).
+  - Sound: a soft paper sound when opening/closing a note, and a
+    "crumpled paper" sound when sending a note to the trash (accompanied
+    by a small crumpling animation). The audio files must come from a
+    royalty-free library (e.g. freesound.org with a CC0 license) — no
+    copyrighted asset is used.
+- **Independent edge position per screen**: v1 only offers one global
+  position for all active screens; the variant "each screen its own edge,
+  with a checkbox to go back to global mode" is added in v1.1 on top of
+  the same configuration base.
 
-## Stack tecnológico
+## Technology stack
 
 **C# + WPF (.NET), Windows-only.**
 
-Justificación (no por familiaridad con otros lenguajes del autor, sino
-por criterio técnico puro):
+Rationale (not out of familiarity with the author's other languages, but
+on purely technical grounds):
 
-- La dificultad real de esta app no está en la lógica de negocio, está
-  en lograr que Windows deje a una ventana comportarse de forma no
-  estándar: sin bordes, redimensionable en vivo entre pill y abanico,
-  anclada a un borde, siempre-encima, consciente de DPI por monitor.
-- WPF renderiza su propia UI por composición vectorial en vez de
-  delegar en controles nativos de Windows, y por eso tiene 18 años de
-  precedente documentado exactamente para este tipo de "hack de
-  ventana" (paneles ocultos que se despliegan, notas ancladas a un
-  borde). Mantiene acceso completo a Win32 vía P/Invoke cuando hace
-  falta bajar de nivel (icono de bandeja, atajo global).
-- Se descarta C++/Win32 puro: da control máximo pero a un coste de
-  desarrollo y de riesgo de errores de memoria que esta app no
-  necesita, porque no tiene ninguna exigencia real de rendimiento
-  (pasa el 99% del tiempo inactiva).
-- Se descarta Rust + windowing nativo: técnicamente sólido y sin
-  garbage collector, pero el patrón concreto de ventana que necesita
-  Aldune tiene muchísimo menos precedente en el ecosistema Rust en
-  Windows que en WPF — mayor riesgo de quedarse atascado resolviendo
-  problemas de plataforma por primera vez.
-- Se descartan Electron y Tauri: Electron tiene un coste de RAM en
-  reposo (100-200MB+) inasumible para una app que vive todo el día en
-  el borde de la pantalla; Tauri resuelve ese problema pero la UI sigue
-  siendo un webview, con el mismo problema de ventanas "raras" que
-  Electron.
-- Se descarta WinUI 3 frente a WPF pese a ser la dirección "moderna" de
-  Microsoft: restringe mucho más la personalización de ventana por
-  consistencia/seguridad, justo en la parte que hace única a esta app,
-  con menos precedente de comunidad para resolver dudas.
+- The real difficulty of this app is not in the business logic, it is in
+  getting Windows to let a window behave in a non-standard way:
+  borderless, live-resizable between pill and fan, anchored to an edge,
+  always-on-top, per-monitor DPI aware.
+- WPF renders its own UI through vector composition instead of delegating
+  to native Windows controls, and for that reason it has 18 years of
+  documented precedent for exactly this kind of "window hack" (hidden
+  panels that slide out, notes anchored to an edge). It keeps full access
+  to Win32 via P/Invoke when it is necessary to drop down a level (tray
+  icon, global shortcut).
+- Pure C++/Win32 is discarded: it gives maximum control but at a
+  development cost and a risk of memory errors that this app does not
+  need, because it has no real performance requirement (it spends 99% of
+  its time idle).
+- Rust + native windowing is discarded: technically solid and with no
+  garbage collector, but the specific window pattern Aldune needs has far
+  less precedent in the Rust ecosystem on Windows than in WPF — a higher
+  risk of getting stuck solving platform problems for the first time.
+- Electron and Tauri are discarded: Electron has an idle RAM cost
+  (100-200MB+) that is unacceptable for an app that lives all day at the
+  edge of the screen; Tauri solves that problem but the UI is still a
+  webview, with the same "odd" window problem as Electron.
+- WinUI 3 is discarded in favor of WPF despite being Microsoft's "modern"
+  direction: it restricts window customization much more for the sake of
+  consistency/security, precisely in the part that makes this app unique,
+  with less community precedent for resolving questions.
 
-## Arquitectura
+## Architecture
 
-Aplicación WPF única (.exe), patrón MVVM, dividida en capas:
+A single WPF application (.exe), MVVM pattern, divided into layers:
 
-- **Capa de ventanas/shell**: una instancia de `EdgeDockWindow` por cada
-  pantalla activa según Ajustes. Gestiona la franja, la detección de
-  hover y la animación de abanico usando eventos nativos de WPF
-  (`MouseEnter`/`MouseLeave`) sobre la propia ventana anclada, que
-  cambia de tamaño real entre estado pill y estado expandido (ver
-  Núcleo) — no hace falta ningún hook global de ratón (`WH_MOUSE_LL`)
-  para la detección de hover en sí, solo un temporizador de respaldo
-  para el colapso.
-- **Capa de persistencia**: SQLite + cifrado por sobre vía DPAPI,
-  papelera/archivado, serialización a/desde el formato de backup
-  portable versionado.
-- **Capa de integración con Windows**: icono de bandeja (interop, WPF no
-  tiene control nativo de bandeja), atajo global (`RegisterHotKey`),
-  inicio automático (entrada de Registro o acceso directo en la carpeta
-  de Inicio), mutex de instancia única.
-- **Ajustes**: archivo de configuración local aparte de la base de
-  datos de notas (pantallas activas, posición de borde global, atajo de
-  teclado, inicio automático, clave DPAPI-protegida de la base de
-  datos).
+- **Window/shell layer**: one `EdgeDockWindow` instance per active screen
+  according to Settings. It manages the strip, the hover detection and the
+  fan animation using native WPF events (`MouseEnter`/`MouseLeave`) on the
+  anchored window itself, which really changes size between the pill state
+  and the expanded state (see Core) — no global mouse hook
+  (`WH_MOUSE_LL`) is needed for the hover detection itself, only a
+  fallback timer for the collapse.
+- **Persistence layer**: SQLite + envelope encryption via DPAPI,
+  trash/archive, serialization to/from the versioned portable backup
+  format.
+- **Windows integration layer**: tray icon (interop, WPF has no native
+  tray control), global shortcut (`RegisterHotKey`), auto-start (Registry
+  entry or shortcut in the Startup folder), single-instance mutex.
+- **Settings**: local configuration file separate from the notes database
+  (active screens, global edge position, keyboard shortcut, auto-start,
+  DPAPI-protected database key).
 
-### Componentes
+### Components
 
-1. `EdgeDockWindow` — pill + abanico por monitor.
-2. `NoteWindow` — nota expandida (texto, checkboxes, color,
-   archivar/borrar/restaurar).
-3. `NotesRepository` — acceso a SQLite, cifrado, lógica de
-   papelera/archivado.
-4. `ImportExportService` — genera/lee el archivo de backup portable
-   versionado, con la semántica de fusión descrita en Almacenamiento.
-5. `TrayIconService` — icono de bandeja + menú.
-6. `HotkeyService` — registro del atajo global.
-7. `SettingsService` — lee/escribe el archivo de ajustes.
-8. `MonitorService` — detecta pantallas conectadas/desconectadas (por
-   id estable de dispositivo) y cambios de DPI, posiciona cada
-   `EdgeDockWindow`.
+1. `EdgeDockWindow` — pill + fan per monitor.
+2. `NoteWindow` — expanded note (text, checkboxes, color,
+   archive/delete/restore).
+3. `NotesRepository` — SQLite access, encryption, trash/archive logic.
+4. `ImportExportService` — generates/reads the versioned portable backup
+   file, with the merge semantics described in Storage.
+5. `TrayIconService` — tray icon + menu.
+6. `HotkeyService` — registration of the global shortcut.
+7. `SettingsService` — reads/writes the settings file.
+8. `MonitorService` — detects connected/disconnected screens (by stable
+   device id) and DPI changes, positions each `EdgeDockWindow`.
 
-Cada componente tiene una responsabilidad única y es comprensible/
-testeable sin conocer los demás — `NotesRepository` no sabe nada de
-ventanas, `EdgeDockWindow` no sabe nada de SQLite.
+Each component has a single responsibility and is understandable/
+testable without knowing the others — `NotesRepository` knows nothing
+about windows, `EdgeDockWindow` knows nothing about SQLite.
 
-## Modelo de datos
+## Data model
 
-Tabla `Note`:
+`Note` table:
 
 - `Id`
-- `Text` (contenido libre; los checkboxes viven como texto `[ ]`/`[x]`
-  dentro de este campo, renderizados como controles clicables en modo
-  visualización)
+- `Text` (free content; checkboxes live as `[ ]`/`[x]` text inside this
+  field, rendered as clickable controls in display mode)
 - `Color`
-- `ScreenOrigin` (id estable de dispositivo de la pantalla de origen;
-  no se reescribe por una desconexión temporal del monitor)
+- `ScreenOrigin` (stable device id of the origin screen; it is not
+  rewritten by a temporary monitor disconnection)
 - `CreatedAt`
 - `UpdatedAt`
 - `State` (`Active` | `Archived` | `Trashed`)
 
-No hay tablas de etiquetas, carpetas ni recordatorios — quedaron fuera
-de alcance.
+There are no tables for tags, folders or reminders — they were left out
+of scope.
 
-## Manejo de errores
+## Error handling
 
-- **Base de datos corrupta/ilegible al arrancar**: se copia el archivo
-  dañado antes de tocar nada, y se ofrece crear una base nueva vacía en
-  vez de fallar sin más.
-- **Clave DPAPI no disponible**: cubre dos causas distintas y hay que
-  distinguirlas en el mensaje. (a) Perfil de Windows dañado — puede ser
-  recuperable. (b) La contraseña de la cuenta de Windows fue reseteada
-  por un administrador — esto **destruye permanentemente** la clave
-  DPAPI y con ella el acceso a todas las notas cifradas; no hay
-  recuperación posible salvo restaurar desde un `.aldunebackup`
-  exportado previamente. El mensaje debe decir esto explícitamente,
-  porque es la causa más probable en la práctica y la única sin ninguna
-  solución técnica.
-- **Import de un `.aldunebackup` corrupto o de versión de formato no
-  reconocida**: se valida el formato (incluida la versión) antes de
-  tocar la base de datos real; si falla, se rechaza con un mensaje
-  claro sin modificar nada de lo existente.
-- **Atajo de teclado global ya usado por otra app**: se detecta el
-  fallo de registro y se muestra en Ajustes, en vez de fallar en
-  silencio.
-- **Monitor desconectado con su dock abierto**: las notas de esa
-  pantalla se muestran temporalmente en la pantalla principal sin
-  perder su `ScreenOrigin` real (ver Núcleo).
-- **Segunda instancia lanzada**: se detecta vía el mutex de instancia
-  única y no se abre una segunda copia (opcionalmente, se podría
-  enfocar/mostrar la instancia ya corriendo — detalle a decidir en el
-  plan de implementación, no bloqueante para la spec).
+- **Corrupt/unreadable database at startup**: the damaged file is copied
+  before touching anything, and creating a new empty database is offered
+  instead of just failing.
+- **DPAPI key unavailable**: covers two different causes and they must be
+  distinguished in the message. (a) Damaged Windows profile — may be
+  recoverable. (b) The Windows account password was reset by an
+  administrator — this **permanently destroys** the DPAPI key and with it
+  access to all the encrypted notes; there is no possible recovery except
+  restoring from a previously exported `.aldunebackup`. The message must
+  say this explicitly, because it is the most likely cause in practice and
+  the only one with no technical solution.
+- **Import of a corrupt `.aldunebackup` or of an unrecognized format
+  version**: the format (including the version) is validated before
+  touching the real database; if it fails, it is rejected with a clear
+  message without modifying anything that exists.
+- **Global keyboard shortcut already used by another app**: the
+  registration failure is detected and shown in Settings, instead of
+  failing silently.
+- **Monitor disconnected with its dock open**: the notes of that screen
+  are temporarily shown on the primary screen without losing their real
+  `ScreenOrigin` (see Core).
+- **Second instance launched**: it is detected via the single-instance
+  mutex and a second copy is not opened (optionally, the instance already
+  running could be focused/shown — a detail to decide in the
+  implementation plan, not blocking for the spec).
 
 ## Testing
 
-- `NotesRepository`, `ImportExportService` y `SettingsService` son
-  testeables de forma aislada (sin levantar ventanas): pruebas
-  unitarias sobre CRUD, papelera/archivado, cifrado/descifrado, y el
-  ciclo export→import (incluida la fusión con ids en conflicto).
-- La parte de ventanas/hover/multi-monitor depende del compositor de
-  Windows y es la más difícil de automatizar; se valida con una lista
-  de escenarios manuales dirigidos: monitor único, dos monitores con
-  DPI distinto, conectar/desconectar un monitor con el dock abierto,
-  borde coincidiendo con la barra de tareas, arrancar una segunda
-  instancia.
+- `NotesRepository`, `ImportExportService` and `SettingsService` are
+  testable in isolation (without bringing up windows): unit tests on CRUD,
+  trash/archive, encryption/decryption, and the export→import cycle
+  (including the merge with conflicting ids).
+- The windows/hover/multi-monitor part depends on the Windows compositor
+  and is the hardest to automate; it is validated with a list of targeted
+  manual scenarios: single monitor, two monitors with different DPI,
+  connecting/disconnecting a monitor with the dock open, edge coinciding
+  with the taskbar, launching a second instance.
 
-## Orden de implementación sugerido
+## Suggested implementation order
 
-Para minimizar riesgo en el primer hito, dado que el autor es nuevo en
+To minimize risk in the first milestone, given that the author is new to
 C#/WPF/Win32:
 
-1. Mecánica de ventana en un solo monitor (pill, hover, expansión,
-   nota abierta) — el núcleo técnicamente más incierto, aislado primero.
-2. CRUD de notas + almacenamiento (SQLite, cifrado, papelera/archivado).
+1. Window mechanics on a single monitor (pill, hover, expansion, open
+   note) — the technically most uncertain core, isolated first.
+2. Notes CRUD + storage (SQLite, encryption, trash/archive).
 3. Multi-monitor + DPI.
-4. Bandeja, atajo global, inicio automático, instancia única.
+4. Tray, global shortcut, auto-start, single instance.
 5. Import/export.
 
-El Modo Papel vintage y la posición de borde por pantalla quedan fuera
-de este orden — son v1.1, después de que v1 funcione de punta a punta.
+The Vintage Paper mode and the per-screen edge position are left out of
+this order — they are v1.1, after v1 works end to end.
 
-## Nombre
+## Name
 
-**Aldune** (fan + note) — sin colisiones encontradas en búsquedas de
-apps/software existentes en el momento de escribir esta spec. Se
-descartaron "EdgeNotes" (app de notas de borde de pantalla ya existente
-en Microsoft Store, mismo concepto), "Perch" (tomado por Perch AI) y
-"Margin" (usado por varias apps de notas ya establecidas). Se evita
-cualquier nombre que incluya "Post-it", marca registrada de 3M.
+**Aldune** (fan + note) — no collisions found in searches of existing
+apps/software at the time of writing this spec. "EdgeNotes" (an existing
+screen-edge notes app in the Microsoft Store, same concept), "Perch"
+(taken by Perch AI) and "Margin" (used by several established notes apps)
+were discarded. Any name that includes "Post-it", a 3M registered
+trademark, is avoided.

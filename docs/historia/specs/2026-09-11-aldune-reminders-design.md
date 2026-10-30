@@ -1,248 +1,243 @@
-# Aldune — Recordatorios con notificación de Windows (design spec)
+# Aldune — Reminders with Windows notification (design spec)
 
-Añade un recordatorio puntual (fecha/hora concreta, no recurrente) por nota,
-con aviso nativo de Windows al vencer y posponer sencillo. Ver
-`docs/ROADMAP.md`, sección "Recordatorios con notificación de Windows" —
-marcado ahí como el mayor hueco funcional frente a la competencia (Notezilla
-lo tiene y es lo más alabado de esa app; Aldune hoy no tiene nada de esto).
+Adds a one-off reminder (specific date/time, not recurring) per note,
+with a native Windows notification when it falls due and simple snoozing. See
+`docs/ROADMAP.md`, section "Reminders with Windows notification" —
+marked there as the biggest functional gap against the competition (Notezilla
+has it and it is the most praised thing about that app; Aldune today has nothing of the sort).
 
-## Contexto y motivación
+## Context and motivation
 
-Aldune no tiene ninguna forma de que una nota "avise" en un momento
-concreto — hoy solo existe si el usuario recuerda mirarla. Notezilla, la
-referencia explícita del roadmap, ofrece justo esto y es su función más
-alabada. Es un subsistema nuevo (persistencia + disparo periódico + aviso
-nativo del sistema operativo), no un ajuste sobre algo que ya exista, de ahí
-el spec completo en vez de un cambio acotado.
+Aldune has no way for a note to "alert" at a specific
+moment — today it only exists if the user remembers to look at it. Notezilla, the
+roadmap's explicit reference, offers exactly this and it is its most
+praised feature. It is a new subsystem (persistence + periodic firing + native
+operating-system notification), not a tweak to something that already exists, hence
+the full spec instead of a bounded change.
 
-Decisiones tomadas en el diseño, con su motivo, para
-no volver a discutirlas desde cero:
+Decisions taken in the design, with their reasons, so as
+not to discuss them again from scratch:
 
-- **Por nota entera, no por línea/tarea suelta dentro de una nota.** Encaja
-  con la metáfora de post-it de Aldune (y con lo que hace la propia
-  Notezilla citada) y no contradice la decisión ya tomada varias veces de
-  mantener el cuerpo como `TextBox` plano sin campos estructurados (mismo
-  argumento que descartó el título separado, el arrastre de líneas y el
-  selector de color al crear nota). Un recordatorio por línea, además,
-  sería frágil: el cuerpo no tiene identidad estable por línea (Alt+Arriba/
-  Abajo reordena, se edita, se borra), así que "la línea 3" deja de ser la
-  línea 3 en cuanto algo cambia por encima — un recordatorio que se
-  desengancha en silencio de la tarea correcta es peor que no tener la
-  función.
-- **Puntual, no recurrente**, con posponer. Recurrente (diario/semanal) es
-  una categoría de producto distinta (calendario/alarma) y una superficie de
-  diseño bastante mayor (qué pasa con una serie archivada, cómo se edita una
-  serie...) que no hace falta para el caso real de un post-it ("no olvides
+- **Per whole note, not per loose line/task inside a note.** It fits
+  the Aldune post-it metaphor (and what Notezilla itself does) and does not contradict the decision already taken several times to
+  keep the body as a plain `TextBox` with no structured fields (same
+  argument that ruled out the separate title, line dragging and
+  the colour picker when creating a note). A reminder per line, moreover,
+  would be fragile: the body has no stable identity per line (Alt+Up/
+  Down reorders, it is edited, deleted), so "line 3" stops being
+  line 3 as soon as something changes above it — a reminder that
+  silently detaches from the right task is worse than not having the
+  feature.
+- **One-off, not recurring**, with snooze. Recurring (daily/weekly) is
+  a different product category (calendar/alarm) and a considerably larger
+  design surface (what happens with an archived series, how a
+  series is edited...) that is not needed for the real case of a post-it ("don't forget
   X").
-- **Notificación vía `NotifyIcon.ShowBalloonTip`** (WinForms, ya en uso por
-  `TrayIcon`), no un toast interactivo de verdad
-  (`CommunityToolkit.WinUI.Notifications`). El toast interactivo con botones
-  de acción incrustados exige registrar un acceso directo con AUMID en el
-  menú Inicio apuntando a una ruta fija — si el portable se mueve de carpeta
-  o corre desde otra ubicación (el caso de uso que el propio roadmap vende
-  como diferenciador: "hay versión portable que no se instala, ningún
-  competidor la ofrece"), ese acceso directo queda apuntando al sitio viejo
-  y el toast deja de poder reabrir la nota correcta. `ShowBalloonTip` no
-  toca nada fuera de la carpeta portable y en Windows 10/11 el propio
-  sistema ya lo renderiza como notificación moderna en el Centro de
-  actividades — solo pierde los botones de acción incrustados, y la nota
-  abre en menos de un segundo al hacer clic, así que posponer desde ahí no
-  es un paso pesado.
-- **Un recordatorio vencido con la app cerrada o el PC dormido avisa igual
-  al volver a abrir Aldune**, en vez de descartarse en silencio — coherente
-  con "no te secuestro datos ni acciones".
-- **Selector con atajos rápidos** ("En 1 hora", "Esta noche", "Mañana
-  9:00") **+ fecha/hora exacta** para el resto de casos, no solo un
-  calendario crudo — cubre el uso más común de un post-it sin navegar un
-  calendario cada vez.
+- **Notification via `NotifyIcon.ShowBalloonTip`** (WinForms, already used by
+  `TrayIcon`), not a truly interactive toast
+  (`CommunityToolkit.WinUI.Notifications`). The interactive toast with embedded action
+  buttons requires registering a shortcut with an AUMID in the
+  Start menu pointing to a fixed path — if the portable build is moved to another folder
+  or runs from another location (the use case the roadmap itself sells
+  as a differentiator: "there is a portable version that needs no installing, no
+  competitor offers it"), that shortcut ends up pointing at the old place
+  and the toast can no longer reopen the right note. `ShowBalloonTip` does not
+  touch anything outside the portable folder and on Windows 10/11 the system itself
+  already renders it as a modern notification in the Action Center — it only loses
+  the embedded action buttons, and the note opens in under a second on click,
+  so snoozing from there is not a heavy step.
+- **A reminder that fell due with the app closed or the PC asleep still alerts
+  when Aldune is reopened**, instead of being silently dropped — consistent
+  with "I don't hijack your data or actions".
+- **Picker with quick shortcuts** ("In 1 hour", "Tonight", "Tomorrow
+  9:00") **+ exact date/time** for the other cases, not just a raw
+  calendar — it covers the most common post-it use without navigating a
+  calendar every time.
 
-## Alcance
+## Scope
 
-**Dentro:**
+**In:**
 
-- Tabla nueva `NoteReminder` (`Aldune.Core.NotesDatabase`), con
+- New `NoteReminder` table (`Aldune.Core.NotesDatabase`), with
   `NotesRepository.SetReminder`/`ClearReminder`/`GetReminder`/
   `GetDueReminders`/`GetPendingReminders`.
-- `Delete`/`PurgeExpiredTrash` de `NotesRepository` amplíados para limpiar
-  también `NoteReminder` de la nota que se borra — mismo cuidado que ya
-  tienen con `NotePlacement`.
-- `Aldune.Windowing.ReminderScheduler` (nuevo): sondeo periódico mientras
-  Aldune corre + una pasada de catch-up al arrancar, dispara el aviso vía
+- `NotesRepository`'s `Delete`/`PurgeExpiredTrash` extended to also clean up
+  the `NoteReminder` of the note being deleted — same care they already
+  take with `NotePlacement`.
+- `Aldune.Windowing.ReminderScheduler` (new): periodic polling while Aldune runs
+  + a catch-up pass on startup, fires the alert via
   `NotifyIcon`.
-- Entrada "Recordatorio" en el menú "⋯" de `NoteWindow`: poner, ver, quitar
-  un recordatorio para la nota abierta. Mismo panel sirve para posponer
-  (abrir la nota desde el aviso y volver a poner uno nuevo).
-- Indicador visual en la pestaña del dock (`EdgeDockWindow`) para notas con
-  recordatorio pendiente.
-- Localización de los textos nuevos en `Aldune.Resources.Strings` (ES/EN).
+- "Reminder" entry in the "⋯" menu of `NoteWindow`: set, view, remove
+  a reminder for the open note. The same panel serves for snoozing
+  (open the note from the alert and set a new one).
+- Visual indicator on the dock tab (`EdgeDockWindow`) for notes with
+  a pending reminder.
+- Localisation of the new texts in `Aldune.Resources.Strings` (ES/EN).
 
-**Fuera de alcance (no en esta ronda):**
+**Out of scope (not in this round):**
 
-- Recordatorios recurrentes.
-- Recordatorios por línea/tarea suelta.
-- Toast interactivo con botones de acción incrustados (`CommunityToolkit.
-  WinUI.Notifications`) — descartado explícitamente por la tensión con
-  "portable, sin huella"; ver más arriba.
-- Cualquier disparo cuando Aldune no está corriendo (Task Scheduler,
-  `ScheduledToastNotification`...) — aceptado a propósito: el dock tampoco
-  existe si Aldune no corre, así que no es una limitación nueva frente al
-  resto de la app.
-- Sonido/vibración distintos del que ya trae la notificación nativa de
-  Windows por defecto.
+- Recurring reminders.
+- Per-line/loose-task reminders.
+- Interactive toast with embedded action buttons (`CommunityToolkit.
+  WinUI.Notifications`) — explicitly ruled out because of the tension with
+  "portable, no footprint"; see above.
+- Any firing when Aldune is not running (Task Scheduler,
+  `ScheduledToastNotification`...) — accepted on purpose: the dock does not
+  exist either if Aldune is not running, so it is not a new limitation compared with the
+  rest of the app.
+- Sound/vibration different from what the native Windows notification
+  already brings by default.
 
-## Componentes y cambios
+## Components and changes
 
-### `Aldune.Core.NotesDatabase` — tabla nueva
+### `Aldune.Core.NotesDatabase` — new table
 
 ```sql
 CREATE TABLE IF NOT EXISTS NoteReminder (
     NoteId TEXT PRIMARY KEY,
-    DueAt TEXT NOT NULL   -- ISO-8601 UTC, misma convención que CreatedAt/UpdatedAt
+    DueAt TEXT NOT NULL   -- ISO-8601 UTC, same convention as CreatedAt/UpdatedAt
 );
 ```
 
-`PRIMARY KEY NoteId`, no una clave compuesta ni un `Id` propio: como mucho
-un recordatorio activo por nota (coherente con "puntual, no recurrente" —
-poner uno nuevo reemplaza cualquiera anterior en vez de acumularlos). Mismo
-patrón que `NotePlacement`, con `CREATE TABLE IF NOT EXISTS` y sin
-migraciones — una base de datos ya existente del usuario simplemente gana la
-tabla la primera vez que arranca con esta versión.
+`PRIMARY KEY NoteId`, not a composite key nor its own `Id`: at most one
+active reminder per note (consistent with "one-off, not recurring" —
+setting a new one replaces any previous one instead of accumulating them). Same
+pattern as `NotePlacement`, with `CREATE TABLE IF NOT EXISTS` and no
+migrations — an existing user database simply gains the
+table the first time it starts with this version.
 
-### `Aldune.Core.NotesRepository` — métodos nuevos
+### `Aldune.Core.NotesRepository` — new methods
 
 - `SetReminder(Guid noteId, DateTimeOffset dueAt)`: `INSERT OR REPLACE`,
-  mismo patrón que `SavePlacement`/`MoveNote`.
-- `ClearReminder(Guid noteId)`: `DELETE ... WHERE NoteId = $noteId`, mismo
-  patrón que `DeletePlacement`. Se llama tanto al cancelar a mano como
-  desde `ReminderScheduler` justo después de avisar (puntual: una vez
-  disparado, deja de estar pendiente).
-- `GetReminder(Guid noteId) -> DateTimeOffset?`: para pintar el estado
-  actual en el menú "⋯" de la nota abierta.
+  same pattern as `SavePlacement`/`MoveNote`.
+- `ClearReminder(Guid noteId)`: `DELETE ... WHERE NoteId = $noteId`, same
+  pattern as `DeletePlacement`. It is called both on manual cancel and
+  from `ReminderScheduler` right after alerting (one-off: once
+  fired, it is no longer pending).
+- `GetReminder(Guid noteId) -> DateTimeOffset?`: to paint the current state
+  in the "⋯" menu of the open note.
 - `GetDueReminders(DateTimeOffset now) -> IReadOnlyList<(Guid NoteId,
-  DateTimeOffset DueAt)>`: `WHERE DueAt <= $now`, usado tanto por el sondeo
-  periódico como por el catch-up de arranque (misma consulta, distinto
-  disparador).
+  DateTimeOffset DueAt)>`: `WHERE DueAt <= $now`, used both by the periodic
+  polling and by the startup catch-up (same query, different
+  trigger).
 - `GetPendingReminders() -> IReadOnlyDictionary<Guid, DateTimeOffset>`:
-  todas las filas de `NoteReminder`, para pintar el indicador en el dock sin
-  una consulta por nota — se llama junto a `GetByState(Active)` cuando el
-  dock recarga.
-- `Delete(Guid id)` y `PurgeExpiredTrash(TimeSpan retention)`: se les añade
-  `DELETE FROM NoteReminder WHERE NoteId = ...` igual que ya hacen con
-  `NotePlacement`, para que una nota borrada no deje un recordatorio
-  huérfano que `GetDueReminders` intentaría resolver contra una nota que ya
-  no existe.
+  all rows of `NoteReminder`, to paint the indicator in the dock without
+  a query per note — it is called together with `GetByState(Active)` when the
+  dock reloads.
+- `Delete(Guid id)` and `PurgeExpiredTrash(TimeSpan retention)`: they get
+  `DELETE FROM NoteReminder WHERE NoteId = ...` added, just as they already do with
+  `NotePlacement`, so that a deleted note does not leave an orphaned reminder
+  that `GetDueReminders` would try to resolve against a note that no longer
+  exists.
 
-### `Aldune.Windowing.ReminderScheduler` (nuevo)
+### `Aldune.Windowing.ReminderScheduler` (new)
 
-Instanciado una vez desde `App.xaml.cs`, junto al resto de servicios de
-nivel de aplicación (mismo sitio que ya arma `AppCoordinator`/`TrayIcon`).
-Recibe `NotesRepository`, `AppCoordinator` (para abrir notas/el gestor) y el
-`NotifyIcon` que ya crea `TrayIcon` (se le pasa la instancia existente, no
-se crea uno nuevo — un segundo icono de bandeja sería confuso).
+Instantiated once from `App.xaml.cs`, alongside the other application-level
+services (the same place that already builds `AppCoordinator`/`TrayIcon`).
+It receives `NotesRepository`, `AppCoordinator` (to open notes/the manager) and the
+`NotifyIcon` that `TrayIcon` already creates (the existing instance is passed to it, a new one
+is not created — a second tray icon would be confusing).
 
-- Un `DispatcherTimer` con intervalo de 30s hace `GetDueReminders(now)` en
-  cada tick. Mismo orden de magnitud que otros temporizadores del proyecto
-  (autoguardado 500ms, sondeo de hover 50ms, purga de tareas al
-  autoguardar) — 30s es de sobra para un recordatorio pensado en minutos u
-  horas, no en segundos.
-- Además, una pasada inmediata al construirse (llamada desde
-  `App.OnStartup` después de `PurgeExpiredTrash`), para el catch-up de
-  vencidos con la app cerrada — misma consulta, sin esperar al primer tick.
-- Con **un** vencido: `ClearReminder`, luego `NotifyIcon.ShowBalloonTip`
-  con el título de la nota (`NoteTitleHelper.GetTitle`) como texto del
-  globo. Se guarda el `NoteId` asociado a ese aviso concreto; el evento
-  `BalloonTipClicked` del `NotifyIcon` lo usa para abrir esa nota via
+- A `DispatcherTimer` with a 30 s interval runs `GetDueReminders(now)` on
+  each tick. Same order of magnitude as other timers in the project
+  (autosave 500ms, hover polling 50ms, task purge on
+  autosave) — 30 s is plenty for a reminder meant in minutes or
+  hours, not seconds.
+- In addition, an immediate pass on construction (called from
+  `App.OnStartup` after `PurgeExpiredTrash`), for the catch-up of
+  reminders that fell due with the app closed — same query, without waiting for the first tick.
+- With **one** due: `ClearReminder`, then `NotifyIcon.ShowBalloonTip`
+  with the note title (`NoteTitleHelper.GetTitle`) as the balloon
+  text. The `NoteId` associated with that specific alert is stored; the
+  `BalloonTipClicked` event of the `NotifyIcon` uses it to open that note via
   `AppCoordinator.OpenOrActivateNote`.
-- Con **varios** vencidos a la vez (típico solo del catch-up de arranque
-  con la app cerrada un tiempo): se limpian todos de golpe, y el globo dice
-  "N recordatorios pendientes" en vez de listarlos; el clic abre
-  `NotesManagerWindow` en lugar de N ventanas de nota de golpe — evita el
-  spam de ventanas cuando son varias.
-- `NotifyIcon` solo mantiene un balloon tip a la vez de forma nativa: si un
-  segundo grupo de vencidos aparece mientras el globo anterior sigue
-  visible, `ShowBalloonTip` simplemente lo reemplaza — aceptable, es el
-  mismo comportamiento que ya tiene cualquier notificación de Windows
-  encolada.
+- With **several** due at once (typical only of the startup catch-up
+  after the app has been closed for a while): all are cleared at once, and the balloon says
+  "N pending reminders" instead of listing them; the click opens
+  `NotesManagerWindow` instead of N note windows at once — it avoids
+  window spam when there are several.
+- `NotifyIcon` natively keeps only one balloon tip at a time: if a
+  second group of due reminders appears while the previous balloon is still
+  visible, `ShowBalloonTip` simply replaces it — acceptable, it is the
+  same behaviour any queued Windows notification already has.
 
-### `NoteWindow` — poner/ver/quitar recordatorio
+### `NoteWindow` — set/view/remove reminder
 
-Nueva entrada "Recordatorio" en `ActionsPopup` (el menú "⋯"), junto a
-"Exportar a Markdown" — un icono de reloj antes del texto, mismo estilo que
-el resto de entradas del menú.
+New "Reminder" entry in `ActionsPopup` (the "⋯" menu), next to
+"Export to Markdown" — a clock icon before the text, same style as
+the rest of the menu entries.
 
-- **Sin recordatorio puesto**: al pulsar, se abre un panel (mismo estilo
-  visual que `ActionsPopup`, ver `NoteMenuItemStyle`) con: tres botones de
-  atajo y, debajo, un `Calendar` + campo de hora para el resto de casos. Un
-  botón "Guardar" llama a `NotesRepository.SetReminder`. Los tres atajos se
-  calculan contra `DateTimeOffset.Now` (hora local, no UTC — se convierte a
-  UTC solo al guardar, igual que el resto de timestamps de la app):
-  - **"En 1 hora"**: `Now + 1h`, sin ambigüedad.
-  - **"Esta noche"**: hoy a las 20:00 si `Now` es antes de las 20:00; si ya
-    son las 20:00 o más tarde, pasa a ser mañana a las 20:00 (evita
-    proponer una hora que ya pasó hoy).
-  - **"Mañana 9:00"**: el día siguiente a las 9:00, siempre — no depende de
-    la hora actual.
-  `Aldune.Core.ReminderPresets` (nuevo, puro, TDD) calcula las tres a partir
-  de un `DateTimeOffset "now"` explícito, para poder testear "esta noche"
-  en los dos lados del límite de las 20:00 sin depender del reloj real.
-- **Con recordatorio puesto**: la entrada del menú muestra la fecha/hora en
-  vez de solo "Recordatorio" (p. ej. "Recordatorio: mañana 9:00"). Al
-  pulsar se abre el mismo panel, con un botón adicional "Quitar" que llama
-  a `ClearReminder`.
-- **Posponer** reutiliza este mismo flujo sin UI aparte: al hacer clic en
-  el globo de aviso se abre la nota (el recordatorio que acaba de sonar ya
-  se limpió solo), y "⋯ → Recordatorio" está ahí mismo para poner uno
-  nuevo. No se construye un panel de "posponer" independiente — sería
-  duplicar exactamente el mismo panel con otro título.
+- **No reminder set**: on click, a panel opens (same visual style as
+  `ActionsPopup`, see `NoteMenuItemStyle`) with: three shortcut buttons
+  and, below, a `Calendar` + time field for the other cases. A
+  "Save" button calls `NotesRepository.SetReminder`. The three shortcuts
+  are computed against `DateTimeOffset.Now` (local time, not UTC — converted to
+  UTC only when saving, like the rest of the app's timestamps):
+  - **"In 1 hour"**: `Now + 1h`, unambiguous.
+  - **"Tonight"**: today at 20:00 if `Now` is before 20:00; if it is already
+    20:00 or later, it becomes tomorrow at 20:00 (avoids
+    proposing a time that has already passed today).
+  - **"Tomorrow 9:00"**: the next day at 9:00, always — it does not depend on
+    the current time.
+  `Aldune.Core.ReminderPresets` (new, pure, TDD) computes the three from
+  an explicit `DateTimeOffset "now"`, so that "tonight" can be tested
+  on both sides of the 20:00 limit without depending on the real clock.
+- **With a reminder set**: the menu entry shows the date/time instead of
+  just "Reminder" (e.g. "Reminder: tomorrow 9:00"). On click the
+  same panel opens, with an additional "Remove" button that calls
+  `ClearReminder`.
+- **Snoozing** reuses this same flow with no separate UI: clicking
+  the alert balloon opens the note (the reminder that just fired has already
+  cleared itself), and "⋯ → Reminder" is right there to set a new
+  one. A separate "snooze" panel is not built — it would be
+  duplicating exactly the same panel with another title.
 
-### `EdgeDockWindow` — indicador en la pestaña
+### `EdgeDockWindow` — indicator on the tab
 
-`SetNotes`/`Refresh` (donde ya se calcula `NoteTitleHelper.GetTabPreview`
-para cada pestaña) consulta `GetPendingReminders()` una vez por refresco
-(no por pestaña) y pasa si esa nota tiene una entrada. Cada pestaña pinta un
-glifo de reloj pequeño (a elegir de Segoe Fluent Icons, sin verificación
-visual todavía — mismo aviso que ya se dejó anotado para otros iconos) junto al título cuando corresponde.
+`SetNotes`/`Refresh` (where `NoteTitleHelper.GetTabPreview` is already computed
+for each tab) queries `GetPendingReminders()` once per refresh
+(not per tab) and passes whether that note has an entry. Each tab paints a
+small clock glyph (to be chosen from Segoe Fluent Icons, with no visual verification
+yet — same warning already noted for other icons) next to the title when applicable.
 
-## Manejo de errores
+## Error handling
 
-- **`DueAt` en el pasado al guardarlo** (el usuario deja el panel abierto
-  hasta que la hora elegida ya pasó, o el reloj del sistema cambia):
-  `SetReminder` no valida nada especial — se guarda igual, y el próximo
-  tick de `ReminderScheduler` (máximo 30s después) lo trata como vencido y
-  avisa. Más simple que rechazarlo, y el resultado (avisa casi
-  inmediatamente) es razonable.
-- **La nota se borra/purga con un recordatorio pendiente**: cubierto por
-  la limpieza añadida a `Delete`/`PurgeExpiredTrash` (ver arriba) — sin
-  este cuidado, `GetDueReminders` devolvería un `NoteId` que
-  `AppCoordinator.OpenOrActivateNote` no podría resolver.
-- **El reloj del sistema retrocede** (cambio manual, DST mal aplicado):
-  mismo caso que "`DueAt` en el pasado", sin manejo especial — el
-  recordatorio simplemente espera hasta que `now >= DueAt` vuelva a ser
-  cierto.
-- **`ShowBalloonTip` mientras Windows tiene las notificaciones silenciadas**
-  (modo concentración/pantalla completa): comportamiento nativo del
-  sistema, Aldune no lo detecta ni lo gestiona — coherente con no
-  interferir con las decisiones del usuario sobre su propio sistema.
+- **`DueAt` in the past when saving** (the user leaves the panel open
+  until the chosen time has passed, or the system clock changes):
+  `SetReminder` validates nothing special — it is saved anyway, and the next
+  `ReminderScheduler` tick (at most 30 s later) treats it as due and
+  alerts. Simpler than rejecting it, and the result (it alerts almost
+  immediately) is reasonable.
+- **The note is deleted/purged with a pending reminder**: covered by
+  the cleanup added to `Delete`/`PurgeExpiredTrash` (see above) — without
+  this care, `GetDueReminders` would return a `NoteId` that
+  `AppCoordinator.OpenOrActivateNote` could not resolve.
+- **The system clock goes backwards** (manual change, DST badly applied):
+  same case as "`DueAt` in the past", with no special handling — the
+  reminder simply waits until `now >= DueAt` becomes true again.
+- **`ShowBalloonTip` while Windows has notifications muted**
+  (focus mode/full screen): native system behaviour, Aldune does not detect or handle it — consistent with not
+  interfering with the user's decisions about their own system.
 
 ## Testing
 
-Core, TDD como el resto del proyecto:
+Core, TDD like the rest of the project:
 
-- `NotesRepositoryReminderTests` (nuevo, mismo patrón que
+- `NotesRepositoryReminderTests` (new, same pattern as
   `NotesRepositoryTaskCompletionTests`): `SetReminder`/`GetReminder`
-  (round-trip), `SetReminder` dos veces reemplaza en vez de acumular,
-  `ClearReminder`, `GetDueReminders` distingue vencidos de futuros y no
-  devuelve lo ya limpiado, `Delete`/`PurgeExpiredTrash` dejan
-  `NoteReminder` sin la fila de la nota borrada.
-- `ReminderPresetsTests` (nuevo): "En 1 hora" siempre `+1h`; "Esta noche"
-  antes de las 20:00 da hoy 20:00, a las 20:00 en punto y después da mañana
-  20:00 (el límite exacto); "Mañana 9:00" da el día siguiente a las 9:00
-  sin importar la hora de `now`.
+  (round trip), `SetReminder` twice replaces instead of accumulating,
+  `ClearReminder`, `GetDueReminders` distinguishes due from future and does not
+  return what has already been cleared, `Delete`/`PurgeExpiredTrash` leave
+  `NoteReminder` without the deleted note's row.
+- `ReminderPresetsTests` (new): "In 1 hour" always `+1h`; "Tonight"
+  before 20:00 gives today 20:00, at exactly 20:00 and after it gives tomorrow
+  20:00 (the exact limit); "Tomorrow 9:00" gives the next day at 9:00
+  regardless of the hour of `now`.
 
-`ReminderScheduler` y los cambios de `NoteWindow`/`EdgeDockWindow` son capa
-WPF (temporizador, `NotifyIcon`, UI) — sin test automatizado, mismo patrón
-que el resto de esa capa en el proyecto (autoguardado, sondeo de hover,
-animaciones). Se verifica a mano: poner un recordatorio a 1-2 minutos,
-confirmar que el aviso llega y que el clic abre la nota correcta; forzar el
-caso de "app cerrada al vencer" cerrando Aldune y reabriendo después de la
-hora puesta.
+`ReminderScheduler` and the `NoteWindow`/`EdgeDockWindow` changes are the
+WPF layer (timer, `NotifyIcon`, UI) — no automated test, same pattern
+as the rest of that layer in the project (autosave, hover polling,
+animations). Verified by hand: set a reminder 1-2 minutes ahead,
+confirm that the alert arrives and that the click opens the right note; force the
+"app closed when due" case by closing Aldune and reopening after the
+set time.

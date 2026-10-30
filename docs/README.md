@@ -1,7 +1,6 @@
 # Documentation index
 
-Everything a user or contributor needs is in English. The documents marked *(Spanish)* are the maintainer's long-running design archive and are
-being translated; they are linked from here so nothing is hidden.
+Everything is in English. Quoted interface strings that appear in Spanish are the literal app text; the Spanish copies of the user guides are `SYNC.es.md` and `PROTECTED_NOTES.es.md`.
 
 ## For users
 
@@ -21,7 +20,7 @@ being translated; they are linked from here so nothing is hidden.
 - [`DOCK_DIAGNOSTICS.md`](DOCK_DIAGNOSTICS.md): the retired dock diagnostic log and what fixed the bugs.
 - [`../tests/vectors/README.md`](../tests/vectors/README.md): the cross-platform compatibility vectors.
 
-## Design archive *(Spanish, being translated)*
+## Design archive
 
 - [`STATUS.md`](STATUS.md): what is done, by round, and why.
 - [`ROADMAP.md`](ROADMAP.md): what is planned and what was discarded, with the reasons.

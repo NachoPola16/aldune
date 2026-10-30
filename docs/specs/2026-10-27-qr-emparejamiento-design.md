@@ -1,64 +1,64 @@
-# Emparejar por QR (Windows lo muestra, Android lo escanea)
+# Pairing by QR (Windows shows it, Android scans it)
 
-Fecha: 27-10-2026. Estado: **implementada** (el plan de ejecución se retiró del árbol). Sustituye la decisión «No se hace por ahora» de
-`docs/DECISIONS-2026-10-26.md`, que se aplazó por la densidad del código; con lo medido abajo no hace falta dividirlo.
+Date: 27-10-2026. Status: **implemented** (the execution plan was removed from the tree). Replaces the "Not done for now" decision from
+`docs/DECISIONS-2026-10-26.md`, which was postponed because of the density of the code; with what was measured below there is no need to split it.
 
-## Para qué
+## What for
 
-Unir un móvil a un perfil de sync sin pegar el código: en el PC se pulsa «Mostrar QR», en el móvil «Escanear QR», y el campo del código
-se rellena igual que con «Pegar». El token **nunca** va en el QR (decisión del 26-10): se sigue escribiendo aparte.
+Join a phone to a sync profile without pasting the code: on the PC you press "Show QR", on the phone "Scan QR", and the code field
+is filled in the same way as with "Paste". The token **never** goes in the QR (decision of 26-10): it is still typed separately.
 
-## Lo que se mantiene
+## What stays
 
-- El código de perfil es el de siempre (`aldune-profile-v2:…`): el QR es solo otra forma de transportarlo. Cero cambios de formato de sync.
-- El móvil sigue sin crear ni compartir perfiles: solo se une.
-- Android solo rellena el campo; `parseProfileInput` y «Continuar» validan como hoy.
+- The profile code is the usual one (`aldune-profile-v2:…`): the QR is just another way of carrying it. Zero sync format changes.
+- The phone still does not create or share profiles: it only joins.
+- Android only fills in the field; `parseProfileInput` and "Continue" validate as today.
 
-## Seguridad
+## Security
 
-- El código lleva la **clave de cifrado** del perfil. Un QR en pantalla tiene el mismo riesgo que copiar el código: quien lo vea o lo fotografíe
-  puede leer esas notas. Por eso:
-  - La ventana de Windows lo avisa («Enséñalo solo a tus dispositivos») y **se cierra sola a los 2 minutos**, con cuenta atrás visible.
-  - No se guarda ni se escribe en disco; no va al portapapeles (el botón «Copiar código» de siempre es aparte y explícito).
-  - «Revocar acceso» sigue siendo la salida si alguien lo vio.
-- Android: no se guardan fotogramas ni se envían a ningún sitio; la cámara se abre solo en la pantalla del escáner y se libera al salir.
-  Solo se acepta un texto que contenga `aldune-profile-v2:` (`ProfileCodes.findShareCode`); cualquier otro QR se ignora con un aviso.
-  El permiso de cámara se pide al pulsar «Escanear QR», no al arrancar, y `uses-feature camera` va `required=false`.
+- The code carries the profile's **encryption key**. A QR on screen has the same risk as copying the code: whoever sees or photographs it
+  can read those notes. That is why:
+  - The Windows window warns about it ("Show it only to your own devices") and **closes by itself after 2 minutes**, with a visible countdown.
+  - It is not saved or written to disk; it does not go to the clipboard (the usual "Copy code" button is separate and explicit).
+  - "Revoke access" remains the way out if someone saw it.
+- Android: no frames are saved or sent anywhere; the camera is opened only on the scanner screen and released on exit.
+  Only a text containing `aldune-profile-v2:` is accepted (`ProfileCodes.findShareCode`); any other QR is ignored with a notice.
+  The camera permission is requested when pressing "Scan QR", not at startup, and `uses-feature camera` is `required=false`.
 
-## Tamaño
+## Size
 
-Medido: «todas las notas» ≈ 250 caracteres; con notas elegidas, ≈ 50 más por nota. Un QR de nivel de corrección M admite unos 2.300 bytes, así
-que caben cientos de notas. Si aun así no cabe (`DataTooLongException`), Windows dice «Este perfil es demasiado grande para un QR» y deja
-copiar el código como hoy. No se divide en varios QR.
+Measured: "all notes" ≈ 250 characters; with chosen notes, ≈ 50 more per note. A QR with error correction level M holds about 2,300 bytes, so
+hundreds of notes fit. If it still does not fit (`DataTooLongException`), Windows says "This profile is too large for a QR" and lets the code
+be copied as today. It is not split into several QRs.
 
 ## Windows
 
-- Dependencia nueva: **QRCoder** (MIT, C# puro, versión fijada en el `.csproj`). Solo se usa para la matriz de módulos.
-- Pintado propio en WPF (rectángulos negros sobre blanco con zona de silencio de 4 módulos): nítido a cualquier tamaño y sin
-  `System.Drawing`. Siempre blanco y negro, también en los aspectos oscuros: un QR claro sobre oscuro no lo leen todos los lectores.
-- `ShareQrWindow` (modal, mismo estilo que `AppDialog`): el QR, el aviso, la cuenta atrás y «Cerrar». Se abre desde un botón nuevo «Mostrar QR» junto
-  a «Compartir perfil» en Ajustes → Sincronización. Textos con `Strings.T` en los cinco idiomas.
-- Lógica pura y con test en Core: `ShareQr.Build(code)` → matriz de módulos o «demasiado grande» (el test fija capacidad, matriz estable para un
-  código dado y el límite).
+- New dependency: **QRCoder** (MIT, pure C#, version pinned in the `.csproj`). It is only used for the module matrix.
+- Own painting in WPF (black rectangles on white with a quiet zone of 4 modules): sharp at any size and without
+  `System.Drawing`. Always black and white, also in the dark aspects: a light QR on dark is not read by all readers.
+- `ShareQrWindow` (modal, same style as `AppDialog`): the QR, the notice, the countdown and "Close". It is opened from a new "Show QR" button next
+  to "Share profile" in Settings → Sync. Texts with `Strings.T` in the five languages.
+- Pure logic with a test in Core: `ShareQr.Build(code)` → module matrix or "too large" (the test fixes capacity, a stable matrix for a
+  given code and the limit).
 
 ## Android
 
-- **CameraX** (cámara actual de Android; no la API antigua Camera1) + **ZXing `core`** (decodificador de Java puro, Apache-2.0; sin Google
-  Play Services, sin ML Kit y sin binarios nativos, así que F-Droid e IzzyOnDroid pueden construirlo). Descartados: `zxing-android-embedded`
-  (modo mantenimiento y Camera1), Google Code Scanner y ML Kit (propietarios, sin F-Droid) y `zxing-cpp` (nativo; queda como mejora si el
-  escaneo en pruebas reales resulta flojo).
-- `QrScanScreen` (Compose + `PreviewView`): `ImageAnalysis` con `STRATEGY_KEEP_ONLY_LATEST`, decodifica el plano de luminancia con
-  `MultiFormatReader` restringido a QR, y al primer código válido devuelve el texto y cierra.
-- Botón «Escanear QR» junto a «Pegar» en «Añadir perfil»; su resultado va por el mismo camino que «Pegar» (`ProfileCodes.findShareCode`).
-- Lógica pura y con test en JVM: `QrDecoder.decodeText(luma, rowStride, width, height)` (ZXing core; QR normal, invertido y con stride de CameraX). El filtro de «solo códigos de perfil» ya existe: `ProfileCodes.findShareCode`.
+- **CameraX** (Android's current camera; not the old Camera1 API) + **ZXing `core`** (pure Java decoder, Apache-2.0; no Google
+  Play Services, no ML Kit and no native binaries, so F-Droid and IzzyOnDroid can build it). Ruled out: `zxing-android-embedded`
+  (maintenance mode and Camera1), Google Code Scanner and ML Kit (proprietary, no F-Droid) and `zxing-cpp` (native; it stays as an improvement if
+  scanning turns out weak in real tests).
+- `QrScanScreen` (Compose + `PreviewView`): `ImageAnalysis` with `STRATEGY_KEEP_ONLY_LATEST`, decodes the luminance plane with
+  `MultiFormatReader` restricted to QR, and on the first valid code returns the text and closes.
+- "Scan QR" button next to "Paste" in "Add profile"; its result goes through the same path as "Paste" (`ProfileCodes.findShareCode`).
+- Pure logic with a test on the JVM: `QrDecoder.decodeText(luma, rowStride, width, height)` (ZXing core; normal QR, inverted and with CameraX stride). The "profile codes only" filter already exists: `ProfileCodes.findShareCode`.
 
-## Fuera de alcance
+## Out of scope
 
-Generar el QR desde Android, escanear otros tipos de QR, guardar el QR como imagen, y QR de varios trozos.
+Generating the QR from Android, scanning other types of QR, saving the QR as an image, and multi-part QRs.
 
-## Pruebas
+## Tests
 
-- Core y JVM: lo indicado arriba, con test primero.
-- A mano: el PC enseña el QR y el Pixel lo escanea (cámara real, sin capturas de su pantalla de inicio); QR demasiado grande; permiso de cámara
-  denegado (la pantalla lo explica y ofrece «Pegar»); otro QR cualquiera (se ignora).
-- `seguridad` antes de publicar: ventana de Windows, ciclo de vida de la cámara y que el código no quede en logs.
+- Core and JVM: as indicated above, with test first.
+- By hand: the PC shows the QR and the Pixel scans it (real camera, no screenshots of its home screen); QR too large; camera permission
+  denied (the screen explains it and offers "Paste"); any other QR (it is ignored).
+- `seguridad` before publishing: Windows window, camera lifecycle and that the code does not end up in logs.

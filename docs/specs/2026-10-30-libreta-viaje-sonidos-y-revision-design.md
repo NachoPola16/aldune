@@ -1,83 +1,83 @@
-# Libreta de viaje, sonidos y revisión de diseño (Android y Windows)
+# Travel notebook, sounds and design review (Android and Windows)
 
-Fecha: 2026-10-30. Estado: aprobado por Nacho en chat («Sí, adelante con todo»). Se construye en cuatro fases, en este orden.
+Date: 2026-10-30. Status: approved by Nacho in chat ("Yes, go ahead with everything"). It is built in four phases, in this order.
 
-## Intención
+## Intent
 
-Aldune es una sola app en dos plataformas. Tres cosas a la vez:
+Aldune is a single app on two platforms. Three things at once:
 
-1. **Revisión de diseño**: arreglar lo que encontró la crítica de `impeccable` (barra inferior del editor, menús, diálogos, aspectos sin vista previa) en Android, hacer una pasada real a Windows y arreglar lo que salga.
-2. **Dos aspectos nuevos con aire de libreta vieja**, en claro y oscuro, en Android y en Windows.
-3. **Sonidos de papel y pluma**, opcionales, en las dos apps y en todos los aspectos.
+1. **Design review**: fix what the `impeccable` critique found (editor bottom bar, menus, dialogs, aspects without a preview) on Android, do a real pass on Windows and fix whatever comes up.
+2. **Two new aspects with an old-notebook feel**, in light and dark, on Android and on Windows.
+3. **Paper and pen sounds**, optional, in both apps and in all aspects.
 
-Además, un principio que cruza las tres: **los ajustes de las dos apps están en sintonía**. Mismos nombres, mismo orden, mismos valores por defecto y mismo significado; lo que solo existe en una plataforma (teclado en Android, dock en Windows) se dice en la documentación y no se inventa en la otra.
+In addition, a principle that cuts across the three: **the settings of the two apps are in tune**. Same names, same order, same defaults and same meaning; what exists on only one platform (keyboard on Android, dock on Windows) is stated in the documentation and not invented on the other.
 
-## Fase 1: revisión
+## Phase 1: review
 
 Android:
-- Barra de abajo del editor: cinco botones con iconos vectoriales (no glifos de texto): casilla, viñeta `•`, sangría (reducir con pulsación larga), deshacer, rehacer.
-- Un solo menú «más»: el `⋮` de arriba. Contiene Opciones de la nota, Subir/Bajar línea, Desmarcar todo y Exportar. Desaparece el `⋯` de abajo y «Quitar hechas» deja de estar duplicado (queda el botón sobre la barra).
-- Opciones de la nota: panel inferior con secciones plegables (Color abierto; Etiquetas, Recordatorio y Más plegadas, con su valor actual como resumen).
-- Menú al mantener pulsado: panel inferior en vez de diálogo central.
-- Aspectos con miniatura de color junto a cada opción.
-- Detalles: aviso de copia de seguridad más compacto, botones inactivos con contraste suficiente.
-- No se mueve el buscador ni el engranaje abajo: es el patrón Material que el usuario ya conoce; se prefiere familiaridad a novedad.
+- Editor bottom bar: five buttons with vector icons (not text glyphs): checkbox, bullet `•`, indent (outdent with long press), undo, redo.
+- A single "more" menu: the `⋮` at the top. It contains Note options, Move line up/down, Uncheck all and Export. The `⋯` at the bottom disappears and "Remove done" is no longer duplicated (the button above the bar remains).
+- Note options: bottom sheet with collapsible sections (Color open; Labels, Reminder and More collapsed, with their current value as a summary).
+- Long-press menu: bottom sheet instead of a central dialog.
+- Aspects with a color thumbnail next to each option.
+- Details: more compact backup notice, inactive buttons with enough contrast.
+- The search bar and the gear are not moved to the bottom: it is the Material pattern the user already knows; familiarity is preferred over novelty.
 
-Windows: pasada con una sonda WPF (`docs/WPF_PROBES.md`, base de datos temporal) sobre el dock, la ventana de nota y Ajustes; se arregla lo que salga (candidatos ya vistos en la captura: botones de la ventana de nota pequeños y de poco contraste; botones del dock sin etiqueta visible).
+Windows: pass with a WPF probe (`docs/WPF_PROBES.md`, temporary database) over the dock, the note window and Settings; whatever comes up is fixed (candidates already seen in the screenshot: note window buttons small and with low contrast; dock buttons without a visible label).
 
-Sintonía de ajustes: tabla de ajustes de Windows (`AppSettings.cs`) frente a los de Android (`SettingsStore.kt`); se alinean nombre, orden de secciones y valores por defecto, y se documentan los que son de una sola plataforma.
+Settings tuning: table of Windows settings (`AppSettings.cs`) against those of Android (`SettingsStore.kt`); name, section order and defaults are aligned, and those that belong to only one platform are documented.
 
-## Fase 2: aspectos
+## Phase 2: aspects
 
-Dos aspectos nuevos que se suman a los que ya hay (Oscuro, Claro, Pastel, Medianoche, XP, Telecom, Bash, Fósforo) a la par, sin jerarquía entre ellos y sin tocar los existentes; cada uno con claro y oscuro (cuatro entradas en `AppPalette`), con colores editables por hueco como los demás aspectos retro (`AspectCatalog`):
+Two new aspects that are added to those that already exist (Dark, Light, Pastel, Midnight, XP, Telecom, Bash, Phosphor) on an equal footing, with no hierarchy among them and without touching the existing ones; each with light and dark (four entries in `AppPalette`), with colors editable per slot like the other retro aspects (`AspectCatalog`):
 
-- **Libreta de viaje**: papel crema (claro) o marrón de noche (oscuro), tapa de cartón kraft como borde, pliegues, grano de papel, goma elástica y marcapáginas.
-- **Cuaderno de campo**: renglones azules y margen rojo, notas ligeramente torcidas (sin manchas: se probó una mancha de café y no convenció).
+- **Travel notebook**: cream paper (light) or night brown (dark), kraft cardboard cover as the border, folds, paper grain, elastic band and bookmark.
+- **Field notebook**: blue rules and red margin, slightly crooked notes (no stains: a coffee stain was tried and it was not convincing).
 
-Reglas: desgaste **sutil**, siempre por debajo del texto y con poca opacidad; texto legible (los tests de contraste existentes se aplican a las paletas nuevas); título manuscrito y cuerpo en serifa; nada de hex suelto en XAML (claves de `AppPalette`); la textura es un dibujo (vectorial o mosaico pequeño), sin coste apreciable de batería ni de CPU. Quedan fuera por ahora el papel arrugado con borde irregular y la máquina de escribir.
+Rules: **subtle** wear, always below the text and with low opacity; legible text (the existing contrast tests apply to the new palettes); handwritten title and serif body; no loose hex in XAML (`AppPalette` keys); the texture is a drawing (vector or small tile), with no appreciable battery or CPU cost. Out for now: crumpled paper with an irregular edge and the typewriter.
 
-## Fase 3: sonidos
+## Phase 3: sounds
 
-Windows **ya tiene** un sistema de sonidos (`SoundPlan`, `AppSounds`): interruptor general apagado de fábrica, elección por evento entre sonidos del sistema y un `.wav` propio, y los eventos Recordatorio, Sync hecha, Sync fallida, Nota creada y Nota archivada. Se **amplía**, no se sustituye, y Android adopta el mismo modelo.
+Windows **already has** a sound system (`SoundPlan`, `AppSounds`): a master switch off by default, per-event choice between system sounds and a custom `.wav`, and the events Reminder, Sync done, Sync failed, Note created and Note archived. It is **extended**, not replaced, and Android adopts the same model.
 
-- **Eventos nuevos**: Abrir nota, Cerrar nota, Marcar casilla, Borrar y **Escribir**. Se suman a los cinco existentes con sus claves estables (`noteOpened`, `noteClosed`, `taskChecked`, `noteDeleted`, `typing`).
-- **Sonidos propios de la app**, en papel y pluma: pasar hoja, papel que se pliega, toque de pluma, papel que se arruga y rasguño corto de pluma. Se generan por código (`scripts/sounds/generar-sonidos.py`: ruido filtrado y envolventes), así que no hay licencias ni ficheros de terceros. Salen WAV pequeños, incrustados en Windows y como recursos en Android.
-- **Nuevas opciones en `SoundChoice`** (se añaden al final: el enum se guarda como número) para elegirlos por evento. Un botón «Papel y pluma para todo» los asigna de una vez. Los sonidos del sistema y el `.wav` propio siguen disponibles.
-- **Apagado de fábrica**, como ahora. Los eventos nuevos arrancan en «ninguno» aunque el interruptor general esté encendido; no suenan solos. Además, un volumen de la app (mismo nombre en las dos).
-- **Escribir** suena como mucho una vez cada 70 ms y solo con caracteres imprimibles (no con borrar ni con teclas de control).
-- **Android**: mismos eventos, mismas claves y mismo interruptor general en Ajustes. Respeta el modo silencio y vibración del sistema y usa el canal de sonidos de interfaz. Hoy Android no tiene sonidos propios (los recordatorios usan la notificación del sistema); los sonidos de la app son aparte.
-- Funcionan igual en todos los aspectos.
+- **New events**: Open note, Close note, Check box, Delete and **Type**. They are added to the five existing ones with their stable keys (`noteOpened`, `noteClosed`, `taskChecked`, `noteDeleted`, `typing`).
+- **The app's own sounds**, in paper and pen: turning a page, paper being folded, pen tap, paper being crumpled and a short pen scratch. They are generated by code (`scripts/sounds/generar-sonidos.py`: filtered noise and envelopes), so there are no licenses or third-party files. The result is small WAVs, embedded in Windows and as resources on Android.
+- **New options in `SoundChoice`** (added at the end: the enum is stored as a number) to choose them per event. A "Paper and pen for everything" button assigns them all at once. System sounds and the custom `.wav` remain available.
+- **Off by default**, as now. The new events start at "none" even if the master switch is on; they do not sound on their own. In addition, an app volume (same name in both).
+- **Type** sounds at most once every 70 ms and only with printable characters (not with delete or control keys).
+- **Android**: same events, same keys and same master switch in Settings. It respects the system's silent and vibrate mode and uses the interface-sounds channel. Today Android has no sounds of its own (reminders use the system notification); the app's sounds are separate.
+- They work the same in all aspects.
 
-## Fase 4: exportación automática (en Windows y en Android)
+## Phase 4: automatic export (on Windows and on Android)
 
-Hoy solo hay exportación manual a Markdown (Windows: por nota y desde el gestor; Android: «Exportar todas las notas» en un zip y por nota). Se añade una
-**copia automática en una carpeta que elige el usuario**, en las dos apps: el usuario la quiere para tener un respaldo legible aunque falle la sync o la
-base de datos, o para apuntarla a una carpeta que ya sincroniza otra herramienta.
+Today there is only manual export to Markdown (Windows: per note and from the manager; Android: "Export all notes" in a zip and per note). An
+**automatic copy to a folder chosen by the user** is added, in both apps: the user wants it to have a readable backup even if sync or the
+database fails, or to point it at a folder that another tool already syncs.
 
-Decisiones del constructor (a confirmar al probar):
-- **Apagada de fábrica.** Un ajuste «Copia automática en una carpeta» con «Elegir carpeta…», mismo nombre y mismo comportamiento en las dos.
-- **Qué escribe:** un `.md` por nota activa (y archivada, con una casilla), con el nombre del título y las casillas como en la exportación manual. Las notas
-  **protegidas se dejan fuera**, como en la manual: sus textos no salen en claro sin permiso.
-- **Cuándo:** Windows, unos segundos después de cada cambio (con pausa para agrupar) y al cerrar; Android, tras un cambio y como mínimo una vez al día
-  (WorkManager). Siempre en segundo plano y sin bloquear la edición.
-- **Nunca borra nada del usuario.** Solo crea y reescribe sus propios ficheros, que reconoce por un manifiesto `.aldune-export.json` en la carpeta. Una nota
-  borrada o a la papelera se mueve a una subcarpeta `_eliminadas/`; nunca se borra un fichero (misma regla que los archivos vinculados). Si el usuario cambió
-  un fichero a mano desde la última copia, no se pisa: se guarda al lado con un sufijo.
-- **Android:** la carpeta se elige con el selector del sistema (`ACTION_OPEN_DOCUMENT_TREE`, permiso persistente); si se pierde el permiso o la carpeta, se
-  avisa una vez y se apaga, sin reintentos infinitos.
-- **Aviso claro en la interfaz:** estos ficheros están **en claro** fuera de la base cifrada; quien los elige decide dónde ponerlos.
-- La lógica de nombres, del manifiesto y de qué escribir va en Core / `text`, con tests; la parte de plataforma solo escribe ficheros.
+Builder's decisions (to be confirmed when testing):
+- **Off by default.** A setting "Automatic copy to a folder" with "Choose folder…", same name and same behavior in both.
+- **What it writes:** one `.md` per active note (and archived, with a checkbox), named after the title and with the checkboxes as in the manual export. **Protected**
+  notes are left out, as in the manual one: their texts do not come out in the clear without permission.
+- **When:** Windows, a few seconds after each change (with a pause to group them) and on close; Android, after a change and at least once a day
+  (WorkManager). Always in the background and without blocking editing.
+- **It never deletes anything of the user's.** It only creates and rewrites its own files, which it recognizes by a `.aldune-export.json` manifest in the folder. A deleted
+  note or one in the trash is moved to a `_eliminadas/` subfolder; a file is never deleted (same rule as linked files). If the user changed
+  a file by hand since the last copy, it is not overwritten: it is saved next to it with a suffix.
+- **Android:** the folder is chosen with the system picker (`ACTION_OPEN_DOCUMENT_TREE`, persistent permission); if the permission or the folder is lost, the user is
+  warned once and it is turned off, without endless retries.
+- **Clear notice in the interface:** these files are **in the clear** outside the encrypted database; whoever chooses them decides where to put them.
+- The logic for names, the manifest and what to write goes in Core / `text`, with tests; the platform part only writes files.
 
-## No objetivos
+## Non-goals
 
-- No cambia el formato de sync ni los datos de las notas.
-- No hay sonidos de terceros ni voz.
-- No se rediseña la navegación de Android (buscador arriba, «+» abajo).
+- The sync format and the notes' data do not change.
+- There are no third-party sounds or voice.
+- Android navigation is not redesigned (search at the top, "+" at the bottom).
 
-## Restricciones del proyecto que aplican
+## Project constraints that apply
 
-Textos con `Strings.T` en cinco idiomas (Windows) y `android/strings.tsv` (Android); colores por `AppPalette` y no hex sueltos; compatibilidad de `settings.json` y de las preferencias de Android sin migración; comentarios en español; lógica nueva en Core/`text`/`domain` con test primero; commits con autor y committer de Nacho, sin `Co-Authored-By`.
+Texts with `Strings.T` in five languages (Windows) and `android/strings.tsv` (Android); colors through `AppPalette` and no loose hex; compatibility of `settings.json` and of the Android preferences without migration; comments in Spanish; new logic in Core/`text`/`domain` with test first; commits with Nacho as author and committer, without `Co-Authored-By`.
 
-## Lo que queda al constructor
+## What is left to the builder
 
-El orden interno de cada fase, los colores exactos de las paletas (se comprueban con los tests de contraste), los detalles de las miniaturas y de las texturas, y los valores concretos de los sonidos.
+The internal order of each phase, the exact colors of the palettes (checked with the contrast tests), the details of the thumbnails and the textures, and the concrete values of the sounds.

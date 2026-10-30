@@ -1,258 +1,258 @@
-# Aldune para Android — F5: la sync dentro de la app
+# Aldune for Android — F5: sync inside the app
 
-> 2026-10-18. Detalla la fila F5 de [`2026-10-17-aldune-android-design.md`](2026-10-17-aldune-android-design.md) §5. Manda esa spec (sobre todo §2.6,
-> §3 y §3.1) en lo que no se diga aquí. Estado de partida: F0-F4 hechas y verificadas en el Pixel 10a y la tableta Lenovo TB350FU;
-> el motor (`planSync`/`execute`) y los transportes HTTP y WebDAV existen en `android/sync`
-> con 119 pruebas. Las decisiones marcadas **(usuario)** las tomó el usuario el 18-10.
+> 2026-10-18. Details row F5 of [`2026-10-17-aldune-android-design.md`](2026-10-17-aldune-android-design.md) §5. That spec (especially §2.6,
+> §3 and §3.1) takes precedence for anything not said here. Starting state: F0-F4 done and verified on the Pixel 10a and the Lenovo TB350FU tablet;
+> the engine (`planSync`/`execute`) and the HTTP and WebDAV transports exist in `android/sync`
+> with 119 tests. The decisions marked **(user)** were made by the user on 18-10.
 
-## 0. Objetivo y límite
+## 0. Goal and limit
 
-Que el móvil y la tableta **sincronicen con el mismo almacén que el PC** (servidor de Aldune o WebDAV) sin que el usuario tenga que pensar en ello, sin
-perder nunca una edición y sin cambiar el formato 4. Al acabar F5: una nota creada en Android aparece en el PC y al revés; un conflicto provocado se guarda;
-un borrado firmado borra y uno sin firma manda a la papelera; todo contra el servidor real del CT 103 con un perfil de prueba.
+Make the phone and the tablet **sync with the same store as the PC** (Aldune server or WebDAV) without the user having to think about it, without
+ever losing an edit and without changing format 4. When F5 is done: a note created on Android appears on the PC and vice versa; a provoked conflict is saved;
+a signed deletion deletes and an unsigned one sends to the trash; all against the real server on CT 103 with a test profile.
 
-Fuera de F5: abrir/proteger/desproteger notas protegidas y resolver conflictos (F7; en F5 se **guardan y se señalan**, §5), más de un perfil, carpeta compartida,
-iniciar una rotación de clave, QR, captura y widget (F6).
+Outside F5: opening/protecting/unprotecting protected notes and resolving conflicts (F7; in F5 they are **saved and flagged**, §5), more than one profile, shared folder,
+starting a key rotation, QR, capture and widget (F6).
 
-## 1. Decisiones del usuario (18-10)
+## 1. User decisions (18-10)
 
-| Tema | Decisión |
+| Topic | Decision |
 |---|---|
-| Servidor que no responde | **Silencioso** **(usuario)**: la app sigue en local; el indicador pasa a «Sin conexión · última sync hace X»; se reintenta en el siguiente disparador y con WorkManager cuando hay red. Ni avisos emergentes ni reintento agresivo. |
-| Qué se muestra | **Icono + detalle** **(usuario)**: icono discreto en la barra de la lista (sin configurar no se dibuja; ok / sincronizando / sin conexión / error). Al tocarlo: «Última sync hace 3 min» o el error en texto claro y «Sincronizar ahora». En Ajustes → Sincronización, lo mismo más el último error completo. No hay aviso tras cada sync. |
-| Alcance | **El del código** **(usuario)**: todas / elegidas / etiqueta, como en Windows. Se muestra en Ajustes y no se edita en el móvil. |
-| Primera conexión con notas locales | **Preguntar** **(usuario)**: «Subir estas N notas al perfil» o «Descartarlas de este dispositivo y quedarme con las del perfil». Sin notas locales, se conecta sin preguntar. |
-| Protegidas que llegan antes de F7 | **Candado, solo lectura** **(usuario)**: se guardan enteras (`protectedContent` intacto), salen con candado y «Nota protegida» y, al abrirlas, «Se podrá abrir en una próxima versión». Se pueden archivar, mandar a la papelera, colorear y mover (eso viaja); el texto no se toca. |
-| Conflictos antes de F7 | **Guardar + aviso** **(usuario)**: tabla `sync_conflict` (migración 1→2 de Room) e icono en la fila de la nota. Resolverlos llega en F7. La ganadora ya está aplicada: no se pierde nada. |
+| Server that does not respond | **Silent** **(user)**: the app keeps going locally; the indicator changes to "Offline · last sync X ago"; it retries on the next trigger and with WorkManager when there is network. No pop-up notices nor aggressive retries. |
+| What is shown | **Icon + detail** **(user)**: discreet icon in the list bar (not drawn if not configured; ok / syncing / offline / error). On tapping it: "Last sync 3 min ago" or the error in clear text and "Sync now". In Settings → Sync, the same plus the full last error. There is no notice after each sync. |
+| Scope | **The code's** **(user)**: all / chosen / tag, as on Windows. It is shown in Settings and not edited on the phone. |
+| First connection with local notes | **Ask** **(user)**: "Upload these N notes to the profile" or "Discard them from this device and keep the profile's". Without local notes, it connects without asking. |
+| Protected notes arriving before F7 | **Lock, read-only** **(user)**: they are stored whole (`protectedContent` intact), shown with a lock and "Protected note" and, when opened, "It will be possible to open it in a future version". They can be archived, sent to the trash, colored and moved (that travels); the text is not touched. |
+| Conflicts before F7 | **Save + notice** **(user)**: `sync_conflict` table (Room migration 1→2) and an icon on the note's row. Resolving them arrives in F7. The winner is already applied: nothing is lost. |
 
-## 2. Reparto: un módulo puro nuevo, `android/syncclient`
+## 2. Split: a new pure module, `android/syncclient`
 
 ```
 android/
-  core/ sync/ text/   sin cambios (salvo la excepción tipada de §4.6, solo si hace falta)
-  domain/             + campos de protegida en Note y sus reglas (§3)
-  syncclient/         NUEVO. Kotlin/JVM puro. Depende de :domain, :sync, :core. Puente entre las notas del dominio y el motor:
-                      foto local → SyncInput, ejecución en dos fases, contrato LocalSyncStore (+ su batería de pruebas reutilizable),
-                      disparadores, estado para la interfaz, validación del código de perfil, primera conexión.
-  app/                Room (implementa LocalSyncStore), secretos en el Keystore, pantallas, WorkManager. Casi sin reglas propias.
+  core/ sync/ text/   unchanged (except the typed exception of §4.6, only if needed)
+  domain/             + protected-note fields in Note and their rules (§3)
+  syncclient/         NEW. Pure Kotlin/JVM. Depends on :domain, :sync, :core. Bridge between the domain notes and the engine:
+                      local snapshot → SyncInput, two-phase execution, LocalSyncStore contract (+ its reusable test suite),
+                      triggers, state for the UI, profile code validation, first connection.
+  app/                Room (implements LocalSyncStore), secrets in the Keystore, screens, WorkManager. Almost no rules of its own.
 ```
 
-**Por qué un módulo y no `domain`:** `domain` se queda sin OkHttp ni formato de sync, y el trabajo nuevo va a una carpeta nueva sin riesgo para los 414
-tests actuales. Paquete `app.aldune.syncclient`. Mismas opciones de compilación que los otros módulos puros (Java 11, JUnit 5).
+**Why a module and not `domain`:** `domain` stays free of OkHttp and the sync format, and the new work goes into a new folder with no risk to the current 414
+tests. Package `app.aldune.syncclient`. Same compile options as the other pure modules (Java 11, JUnit 5).
 
-**Dónde se hace:** todo `syncclient` y el cambio de `domain` aislados, con TDD. `app` se hace luego aquí, en local, con los dispositivos (§7).
+**Where it is done:** all of `syncclient` and the `domain` change isolated, with TDD. `app` is done afterwards here, locally, with the devices (§7).
 
-## 3. Cambios en `domain`
+## 3. Changes in `domain`
 
-- `Note` gana `isProtected: Boolean = false` y `protectedContentJson: String? = null`: el JSON de `ProtectedNoteContent` **tal cual llegó**, opaco para `domain`
-  (que no depende de `core`). Una protegida tiene `text == ""`. Room ya tiene las columnas `isProtected` y `protectedContent` (F4 las reservó).
+- `Note` gains `isProtected: Boolean = false` and `protectedContentJson: String? = null`: the JSON of `ProtectedNoteContent` **exactly as it arrived**, opaque to `domain`
+  (which does not depend on `core`). A protected note has `text == ""`. Room already has the `isProtected` and `protectedContent` columns (F4 reserved them).
 - `NoteService`:
-  - `edit` sobre una protegida devuelve un error (`NoteResult.Err`, código nuevo «protegida») y no escribe.
-  - `setColor`, `setTags`, `archive`, `trash`, `restore`, `move`, `deleteForever`, `purgeTrashed`: igual que con una nota normal, y **conservan** `isProtected` y
-    `protectedContentJson` sin tocarlos.
-  - `list(query = no vacío)`: las protegidas no salen (su texto no se conoce); con la búsqueda vacía sí salen.
-  - Tampoco se encuentran por sus etiquetas: una búsqueda no vacía nunca devuelve una protegida (más simple y más prudente).
-- `NoteTitleHelper`/vista previa de una protegida: lo decide `app` (título de relleno de `strings.tsv`), no `domain`.
+  - `edit` on a protected note returns an error (`NoteResult.Err`, new "protected" code) and does not write.
+  - `setColor`, `setTags`, `archive`, `trash`, `restore`, `move`, `deleteForever`, `purgeTrashed`: same as with a normal note, and they **keep** `isProtected` and
+    `protectedContentJson` without touching them.
+  - `list(query = non-empty)`: protected notes do not appear (their text is not known); with an empty search they do appear.
+  - They are not found by their tags either: a non-empty search never returns a protected note (simpler and more prudent).
+- `NoteTitleHelper`/preview of a protected note: decided by `app` (placeholder title from `strings.tsv`), not `domain`.
 
 ## 4. `syncclient`
 
-### 4.1 La foto local y la construcción del `SyncInput`
+### 4.1 The local snapshot and building the `SyncInput`
 
-`LocalSnapshot` (leída en **una** transacción, §4.2): notas (`domain.Note`), lápidas (`domain.Tombstone`), bases (`noteId` → `SyncBase`).
+`LocalSnapshot` (read in **one** transaction, §4.2): notes (`domain.Note`), tombstones (`domain.Tombstone`), bases (`noteId` → `SyncBase`).
 
 `buildSyncInput(snapshot, settings, deviceId, now): SyncInput`:
 
 - `Note` → `LocalNote(SyncNote, authorDeviceId = note.syncAuthorDeviceId)`.
-- Ids `String` → `UUID` (Core los escribe en minúsculas con guiones; `RandomIdFactory` también). Un id que no es UUID es un fallo de programa: excepción, no se salta.
-- `Instant` → `OffsetDateTime` en **UTC** y **truncado a 100 ns** (`createdAt`, `updatedAt`, `deletedAt`, `now`). Así la cabecera y el contenido cifrado coinciden
-  (comentario de `toTicks` en `SyncPlanner.kt`) y la misma nota da el mismo sobre en dos pasadas seguidas.
-- `text` = `note.wireText` (devuelve el CRLF de una nota de Windows; una nota de Android va en LF). Protegida: `text = ""` aunque llegue otra cosa (el motor
-  también lo fuerza en `forSync`; aquí se fija con test desde el lado de la entrada), `isProtected = true`, `protectedContent` = el JSON parseado.
-  `protectedContentJson` ilegible = fallo de programa (lo escribió la propia app al aplicar).
-- `state` = `NoteState.code`; `tags`, `color`, `dockPosition`, `screenOrigin` **tal cual** (sin normalizar: E28).
-- Lápidas: `LocalTombstone(noteId, deletedAt, deviceId)` conservando el marcador `"local"` (el motor lo sustituye por el `deviceId` al firmar).
-- `excludedIds` = vacío siempre (Android no tiene notas vinculadas a archivos).
-- `scope`: del perfil guardado (`SyncScope.All` / `SelectedNotes` / `Tag`).
-- `deviceId`: 32 hex en minúsculas (`UUID` sin guiones, como `Guid.ToString("N")` de Core), generado **una vez por instalación** y nunca cambiado (ni al
-  desconectar). Lo guarda `app`; `syncclient` da la función que lo genera y valida.
+- `String` ids → `UUID` (Core writes them lowercase with hyphens; `RandomIdFactory` too). An id that is not a UUID is a program bug: exception, it is not skipped.
+- `Instant` → `OffsetDateTime` in **UTC** and **truncated to 100 ns** (`createdAt`, `updatedAt`, `deletedAt`, `now`). That way the header and the encrypted content match
+  (comment on `toTicks` in `SyncPlanner.kt`) and the same note gives the same envelope on two consecutive passes.
+- `text` = `note.wireText` (it brings back the CRLF of a Windows note; an Android note goes in LF). Protected: `text = ""` even if something else arrives (the engine
+  also forces it in `forSync`; here it is pinned with a test from the input side), `isProtected = true`, `protectedContent` = the parsed JSON.
+  Unreadable `protectedContentJson` = program bug (the app itself wrote it when applying).
+- `state` = `NoteState.code`; `tags`, `color`, `dockPosition`, `screenOrigin` **as is** (not normalized: E28).
+- Tombstones: `LocalTombstone(noteId, deletedAt, deviceId)` keeping the `"local"` marker (the engine replaces it with the `deviceId` when signing).
+- `excludedIds` = always empty (Android has no notes linked to files).
+- `scope`: from the stored profile (`SyncScope.All` / `SelectedNotes` / `Tag`).
+- `deviceId`: 32 lowercase hex (`UUID` without hyphens, like Core's `Guid.ToString("N")`), generated **once per installation** and never changed (not even on
+  disconnecting). `app` stores it; `syncclient` provides the function that generates and validates it.
 
-Y al revés, `toDomainNote(SyncNote, authorDeviceId): Note?` para aplicar: `LineEnding.detect` + `normalize` sobre el texto, `Instant` desde el instante,
-etiquetas, color, posición y origen tal cual, `syncAuthorDeviceId = author`, protegida con su JSON (serializado con `core`, en el mismo orden de claves que
-Core para poder compararlo). **Estado desconocido** (`NoteState.fromCode == null`, p. ej. un formato futuro): devuelve `null`; la acción se salta, su base no
-se fija y se cuenta como «omitida» en el resultado (no se inventa un estado, porque al volver a subir se perdería).
+And the other way round, `toDomainNote(SyncNote, authorDeviceId): Note?` for applying: `LineEnding.detect` + `normalize` on the text, `Instant` from the instant,
+tags, color, position and origin as is, `syncAuthorDeviceId = author`, protected with its JSON (serialized with `core`, in the same key order as
+Core so it can be compared). **Unknown state** (`NoteState.fromCode == null`, e.g. a future format): returns `null`; the action is skipped, its base is
+not set and it is counted as "omitted" in the result (no state is invented, because it would be lost on uploading again).
 
-### 4.2 Contrato `LocalSyncStore` (transaccional)
+### 4.2 `LocalSyncStore` contract (transactional)
 
 ```kotlin
 interface LocalSyncStore {
-    /** Notas, lápidas y bases leídas en una sola transacción. */
+    /** Notes, tombstones and bases read in a single transaction. */
     fun snapshot(): LocalSnapshot
-    /** Aplica todo lo local de una pasada en UNA transacción; devuelve qué se aplicó y qué se saltó. */
+    /** Applies everything local from a pass in ONE transaction; returns what was applied and what was skipped. */
     fun commit(commit: LocalCommit): CommitReport
     fun conflictedNoteIds(): Set<String>
-    /** Primera conexión → «descartar»: borra notas, lápidas, bases y conflictos SIN crear lápidas. */
+    /** First connection → "discard": deletes notes, tombstones, bases and conflicts WITHOUT creating tombstones. */
     fun discardAllLocal()
-    /** Desconectar: borra bases y conflictos; las notas y las lápidas se quedan. */
+    /** Disconnect: deletes bases and conflicts; the notes and tombstones stay. */
     fun forgetSyncState()
 }
 ```
 
-`LocalCommit` lleva las acciones locales del plan (`ApplyNote`, `ApplyTombstone`, `TrashNote`, `SaveConflict`), las bases nuevas y, por nota, la
-**versión esperada** que se vio en la foto (`updatedAt` + autor, o «no existía», o «había lápida»).
+`LocalCommit` carries the plan's local actions (`ApplyNote`, `ApplyTombstone`, `TrashNote`, `SaveConflict`), the new bases and, per note, the
+**expected version** that was seen in the snapshot (`updatedAt` + author, or "did not exist", or "had a tombstone").
 
-Semántica de cada acción, igual que Core:
-- `ApplyNote`: inserta o reemplaza la nota con el autor remoto y **quita la lápida local** de ese id si la hay (`NotesRepository.cs`, `DELETE FROM SyncTombstone`
-  en `ApplySyncNote`).
-- `ApplyTombstone`: borra la nota y guarda la lápida con el `deviceId` del autor remoto (para no volver a firmarla como propia).
-- `TrashNote`: estado papelera, `updatedAt = at`, autor `null` («este equipo», como `SetState`).
-- `SaveConflict`: guarda el conflicto (versión perdedora entera); si ya había uno para esa nota, lo reemplaza.
+Semantics of each action, same as Core:
+- `ApplyNote`: inserts or replaces the note with the remote author and **removes the local tombstone** of that id if there is one (`NotesRepository.cs`, `DELETE FROM SyncTombstone`
+  in `ApplySyncNote`).
+- `ApplyTombstone`: deletes the note and stores the tombstone with the remote author's `deviceId` (so as not to sign it again as its own).
+- `TrashNote`: trash state, `updatedAt = at`, author `null` ("this machine", like `SetState`).
+- `SaveConflict`: stores the conflict (the whole losing version); if there was already one for that note, it replaces it.
 
-**Concurrencia optimista** (la regla que evita perder ediciones): la sync tarda segundos en la red y el usuario puede editar mientras tanto. Dentro de la
-transacción, para cada nota con acción local se compara el estado actual con la versión esperada. Si **no coincide**, todas las acciones locales de esa nota
-se saltan y **su base no se fija**. Con la base vieja, la pasada siguiente ve los dos lados cambiados y guarda un conflicto real si lo hay, en vez de pisar la
-edición en silencio. Las bases de notas **sin** acciones locales (solo subida, o contenido igual) se fijan siempre: lo que dicen es verdad en el almacén.
-`CommitReport` dice cuántas se saltaron; si hay alguna, el disparador pide otra pasada pronto (§4.4).
+**Optimistic concurrency** (the rule that avoids losing edits): sync takes seconds on the network and the user may edit in the meantime. Inside the
+transaction, for each note with a local action the current state is compared with the expected version. If it **does not match**, all the local actions of that note
+are skipped and **its base is not set**. With the old base, the next pass sees both sides changed and saves a real conflict if there is one, instead of silently
+overwriting the edit. The bases of notes **without** local actions (upload only, or equal content) are always set: what they say is true in the store.
+`CommitReport` says how many were skipped; if there is any, the trigger asks for another pass soon (§4.4).
 
-**Batería de pruebas del contrato**: una clase abstracta (`LocalSyncStoreContract`) con todas las pruebas de esta sección, en un *source set* de
-`testFixtures` (plugin `java-test-fixtures`) para que `app` la herede en sus pruebas instrumentadas con la implementación de Room. `syncclient` la pasa con
-`InMemoryLocalSyncStore` (sobre `InMemoryNoteStore` de `domain`, que es también el `NoteStore` de `NoteService`: un solo almacén para las dos cosas, como
-hará Room). Si `testFixtures` no funciona con AGP en `androidTest`, alternativa: la batería en un módulo `:syncclient-contract` con JUnit en `implementation`.
+**Contract test suite**: an abstract class (`LocalSyncStoreContract`) with all the tests of this section, in a `testFixtures` *source set*
+(`java-test-fixtures` plugin) so that `app` inherits it in its instrumented tests with the Room implementation. `syncclient` passes it with
+`InMemoryLocalSyncStore` (on top of `domain`'s `InMemoryNoteStore`, which is also the `NoteStore` of `NoteService`: a single store for both things, as
+Room will do). If `testFixtures` does not work with AGP in `androidTest`, alternative: the suite in a `:syncclient-contract` module with JUnit in `implementation`.
 
-### 4.3 Ejecución en dos fases: `runSync`
+### 4.3 Two-phase execution: `runSync`
 
 ```
-foto  →  buildSyncInput  →  transporte.readAll  →  planSync  →  FASE 1: transporte (Upload, DeleteRemote, en el orden del plan)
-                                                              →  FASE 2: commit local (una transacción, con las bases)
+snapshot  →  buildSyncInput  →  transport.readAll  →  planSync  →  PHASE 1: transport (Upload, DeleteRemote, in the plan's order)
+                                                              →  PHASE 2: local commit (one transaction, with the bases)
 ```
 
-- **Las bases nunca se guardan antes de que el almacén tenga lo que dicen.** Si se escribieran antes y la subida fallara, la pasada siguiente vería la nota
-  local «igual que la base» y aplicaría encima la versión vieja del almacén: se perdería la edición. Por eso la fase 2 va después de la 1.
-- Si la fase 1 falla a medias: **no se escribe nada local**. Las subidas ya hechas son idempotentes; la pasada siguiente converge.
-- **Nunca hay red dentro de la transacción de Room** (bloquearía las escrituras del editor hasta 20 s).
-- El plan con error (`NOTHING_READABLE_ERROR`) no escribe nada en ninguna fase.
-- `runSync` no usa `execute()` de `android/sync` (que intercala y no es transaccional); `execute` se queda para los vectores y sus pruebas.
-- Devuelve `SyncOutcome`: contadores (subidas, recibidas, borrados aplicados, conflictos, omitidas, saltadas por edición concurrente) o un `SyncFailure` (§4.5).
-- Una sola pasada a la vez: el que llama lo garantiza (§4.4); `runSync` no es reentrante y no lo intenta ser.
+- **The bases are never stored before the store has what they say.** If they were written first and the upload failed, the next pass would see the local note
+  as "equal to the base" and would apply the store's old version on top: the edit would be lost. That is why phase 2 comes after phase 1.
+- If phase 1 fails halfway: **nothing local is written**. The uploads already done are idempotent; the next pass converges.
+- **There is never network inside the Room transaction** (it would block the editor's writes for up to 20 s).
+- A plan with an error (`NOTHING_READABLE_ERROR`) writes nothing in either phase.
+- `runSync` does not use `execute()` from `android/sync` (which interleaves and is not transactional); `execute` stays for the vectors and their tests.
+- It returns `SyncOutcome`: counters (uploads, received, deletions applied, conflicts, omitted, skipped due to concurrent edit) or a `SyncFailure` (§4.5).
+- One pass at a time: the caller guarantees it (§4.4); `runSync` is not reentrant and does not try to be.
 
-### 4.4 Cuándo se sincroniza: `SyncTriggerPolicy`
+### 4.4 When it syncs: `SyncTriggerPolicy`
 
-Máquina de estados pura, con reloj inyectado; `app` le pasa eventos y obedece sus decisiones (`RunNow`, `RunAt(instante)`, `Nothing`).
+A pure state machine, with an injected clock; `app` feeds it events and obeys its decisions (`RunNow`, `RunAt(instant)`, `Nothing`).
 
-| Evento | Decisión |
+| Event | Decision |
 |---|---|
-| Sin perfil configurado | `Nothing` siempre |
+| No profile configured | `Nothing` always |
 | `AppOpened` | `RunNow` |
-| `Foreground` (volver a primer plano) | `RunNow` si la última pasada **intentada** fue hace más de 30 s |
-| `LocalChange` (cada guardado del editor o cambio de estado/color/orden) | `RunAt(último cambio + 5 s)`: cada cambio nuevo lo retrasa |
-| `PullToRefresh`, `ManualSync` | `RunNow`, sin esperas ni límites |
-| `Periodic` (WorkManager, ≥15 min, con red) | `RunNow` |
-| `SyncFinished(outcome)` | si durante la pasada llegó algún evento, una repetición; si hubo acciones saltadas por edición concurrente, `RunAt(+5 s)` |
+| `Foreground` (returning to the foreground) | `RunNow` if the last **attempted** pass was more than 30 s ago |
+| `LocalChange` (every editor save or state/color/order change) | `RunAt(last change + 5 s)`: each new change delays it |
+| `PullToRefresh`, `ManualSync` | `RunNow`, with no waits or limits |
+| `Periodic` (WorkManager, ≥15 min, with network) | `RunNow` |
+| `SyncFinished(outcome)` | if any event arrived during the pass, one repetition; if there were actions skipped due to concurrent edit, `RunAt(+5 s)` |
 
-- **Una sola pasada a la vez**: un evento con una pasada en curso no lanza otra; marca «repetir al acabar» (una sola repetición, por muchos eventos que lleguen).
-- **Tras un fallo** (cualquiera): las automáticas (`AppOpened`, `Foreground`, `LocalChange`, `Periodic`) esperan al menos **60 s** desde el fallo. Las manuales
-  nunca esperan. No hay reintento creciente **(usuario: silencioso)**.
-- La política no conoce Android ni WorkManager: `app` traduce `RunAt` a un `Handler`/corrutina mientras está en primer plano, y `Periodic` lo pide WorkManager.
+- **One pass at a time**: an event with a pass in progress does not launch another; it marks "repeat when finished" (a single repetition, however many events arrive).
+- **After a failure** (any): the automatic ones (`AppOpened`, `Foreground`, `LocalChange`, `Periodic`) wait at least **60 s** from the failure. The manual ones
+  never wait. There is no growing retry **(user: silent)**.
+- The policy knows nothing about Android or WorkManager: `app` translates `RunAt` into a `Handler`/coroutine while in the foreground, and WorkManager requests `Periodic`.
 
-### 4.5 Errores y estado para la interfaz
+### 4.5 Errors and state for the UI
 
-`classifyFailure(Throwable | planError): SyncFailure`, con `kind`:
+`classifyFailure(Throwable | planError): SyncFailure`, with `kind`:
 
-| `kind` | Cuándo | Lo que verá el usuario (texto en `strings.tsv`) |
+| `kind` | When | What the user will see (text in `strings.tsv`) |
 |---|---|---|
-| `OFFLINE` | `UnknownHostException`, `ConnectException`, `SocketTimeoutException`, `InterruptedIOException` de `callTimeout`, sin ruta | «Sin conexión» |
-| `UNAUTHORIZED` | 401 (servidor: token; WebDAV: usuario o contraseña) | «El servidor rechazó el token» / «Usuario o contraseña de WebDAV incorrectos» |
-| `KEY_CHANGED` | `NOTHING_READABLE_ERROR` | «La clave de este perfil cambió: pega el código nuevo» |
-| `SERVER_ERROR` | 5xx, 404 de la ruta base, respuesta que no es JSON/XML | «El servidor respondió con un error» |
-| `TOO_LARGE` | 413 | «Una nota es demasiado grande para el servidor» |
-| `UNSUPPORTED_FORMAT` | `SyncFormatException` de formato desconocido | «El almacén tiene notas de una versión más nueva de Aldune: actualiza la app» |
-| `UNKNOWN` | lo demás | «No se pudo sincronizar» + detalle técnico solo en Ajustes |
+| `OFFLINE` | `UnknownHostException`, `ConnectException`, `SocketTimeoutException`, `InterruptedIOException` from `callTimeout`, no route | "Offline" |
+| `UNAUTHORIZED` | 401 (server: token; WebDAV: user or password) | "The server rejected the token" / "Wrong WebDAV user or password" |
+| `KEY_CHANGED` | `NOTHING_READABLE_ERROR` | "This profile's key changed: paste the new code" |
+| `SERVER_ERROR` | 5xx, 404 of the base path, response that is not JSON/XML | "The server responded with an error" |
+| `TOO_LARGE` | 413 | "A note is too large for the server" |
+| `UNSUPPORTED_FORMAT` | `SyncFormatException` for unknown format | "The store has notes from a newer version of Aldune: update the app" |
+| `UNKNOWN` | everything else | "Could not sync" + technical detail only in Settings |
 
-- Se clasifica **por tipo de excepción y, si hace falta, por el código HTTP del mensaje**, con pruebas que usan los transportes reales contra MockWebServer
-  (no mensajes escritos a mano en el test). §4.6 si el mensaje no basta.
-- `SyncStatus` (lo que guarda `app`): `lastSuccessAt`, `lastAttemptAt`, `lastFailure`, `running`. `formatStatus(status, now): StatusLine` devuelve **claves y
-  números**, no texto: `icon` (`NONE`, `OK`, `SYNCING`, `OFFLINE`, `ERROR`), `message` (enum que `app` traduce a `R.string`) y un `RelativeTime` para «hace…»:
-  `JUST_NOW` (< 1 min), minutos (< 60), horas (< 24), días (< 7) y, a partir de ahí, la fecha (que formatea `app` con el `Locale`). `OFFLINE` lleva el icono
-  de sin conexión, no el de error (no es culpa del usuario). Sin perfil: `NONE` (no se dibuja). Nunca sincronizado: «Aún no se ha sincronizado».
-- El detalle técnico del último error (el mensaje en inglés del transporte) solo se ve en Ajustes y en el diagnóstico, **sin contenido de notas**.
+- Classification is **by exception type and, if needed, by the HTTP code in the message**, with tests that use the real transports against MockWebServer
+  (not messages written by hand in the test). §4.6 if the message is not enough.
+- `SyncStatus` (what `app` stores): `lastSuccessAt`, `lastAttemptAt`, `lastFailure`, `running`. `formatStatus(status, now): StatusLine` returns **keys and
+  numbers**, not text: `icon` (`NONE`, `OK`, `SYNCING`, `OFFLINE`, `ERROR`), `message` (an enum that `app` translates to `R.string`) and a `RelativeTime` for "… ago":
+  `JUST_NOW` (< 1 min), minutes (< 60), hours (< 24), days (< 7) and, from there on, the date (which `app` formats with the `Locale`). `OFFLINE` carries the offline
+  icon, not the error one (it is not the user's fault). Without a profile: `NONE` (not drawn). Never synced: "Not synced yet".
+- The technical detail of the last error (the transport's message in English) is only seen in Settings and in diagnostics, **without note contents**.
 
-### 4.6 Excepción tipada en `android/sync` (solo si hace falta)
+### 4.6 Typed exception in `android/sync` (only if needed)
 
-Hoy el 401 de HTTP es `IllegalStateException` y el resto `IOException` con el código en el mensaje. Si clasificar por mensaje resulta frágil (p. ej. WebDAV no
-lo distingue), se permite **un** cambio en `android/sync`: `SyncTransportException(val status: Int?, message)` que herede del tipo que ya se lanza en cada caso,
-**con el mismo mensaje**, y sin tocar nada más. Los 119 tests de `sync` y los vectores tienen que seguir verdes.
+Today HTTP's 401 is an `IllegalStateException` and the rest are `IOException` with the code in the message. If classifying by message turns out to be fragile (e.g. WebDAV does not
+distinguish it), **one** change in `android/sync` is allowed: `SyncTransportException(val status: Int?, message)` inheriting from the type already thrown in each case,
+**with the same message**, and touching nothing else. The 119 tests of `sync` and the vectors must stay green.
 
-### 4.7 Validar el código de perfil pegado
+### 4.7 Validating the pasted profile code
 
 `parseProfileInput(pasted: String): ProfileParse`:
-- Limpia lo que añade copiar de un chat o un correo: espacios, saltos de línea y tabuladores **en cualquier sitio** (el base64url no los lleva), comillas o
-  `<>` alrededor.
-- `ProfileCodes.decode`. Resultado:
-  - `Server(url, scope, tag, noteIds, profileName, key)`: pide el token.
-  - `WebDav(url, …)`: pide usuario y contraseña de aplicación.
-  - `NeedsTransport(…)` si el código no trae `Transport` (códigos antiguos): la interfaz pide elegir servidor o WebDAV y escribir la URL.
-  - Errores: `EMPTY`, `NOT_A_CODE` (no empieza por un prefijo conocido), `INVALID` (base64/JSON roto, versión no soportada, clave mala),
-    `FOLDER_NOT_SUPPORTED` («Este código es de una carpeta compartida; en el móvil usa servidor o WebDAV»).
-- `validateCredentials(transport, url, token | usuario+contraseña)`: URL absoluta `http`/`https` (se admite `http`: el servidor de casa va por LAN), token o
-  usuario no vacíos tras recortar; para el token, si se pegó la línea entera `ALDUNE_SYNC_TOKEN=…`, se queda con lo de después del `=` (es el error típico que
-  ya avisa el mensaje del 401).
-- La clave nunca se registra ni se muestra.
-- «Probar conexión» (en `app`) = `transport.readAll()` + `classifyFailure`; no escribe nada.
+- Cleans what copying from a chat or an email adds: spaces, line breaks and tabs **anywhere** (base64url has none), quotes or
+  `<>` around it.
+- `ProfileCodes.decode`. Result:
+  - `Server(url, scope, tag, noteIds, profileName, key)`: asks for the token.
+  - `WebDav(url, …)`: asks for user and app password.
+  - `NeedsTransport(…)` if the code carries no `Transport` (old codes): the UI asks to choose server or WebDAV and type the URL.
+  - Errors: `EMPTY`, `NOT_A_CODE` (does not start with a known prefix), `INVALID` (broken base64/JSON, unsupported version, bad key),
+    `FOLDER_NOT_SUPPORTED` ("This code is for a shared folder; on the phone use server or WebDAV").
+- `validateCredentials(transport, url, token | user+password)`: absolute `http`/`https` URL (`http` is allowed: the home server goes over the LAN), token or
+  user non-empty after trimming; for the token, if the whole `ALDUNE_SYNC_TOKEN=…` line was pasted, what comes after the `=` is kept (it is the typical mistake that the
+  401 message already warns about).
+- The key is never logged or shown.
+- "Test connection" (in `app`) = `transport.readAll()` + `classifyFailure`; it writes nothing.
 
-### 4.8 Primera conexión y desconexión
+### 4.8 First connection and disconnection
 
-- `firstConnectDecision(snapshot): Proceed | AskUser(noteCount)`: pregunta si hay **alguna nota** en cualquier estado (activa, archivada o papelera).
-  Lápidas sin notas: no preguntan; se descartan en silencio con `forgetSyncState` + borrado de lápidas (eran borrados de notas que el perfil no conoce).
-- «Subir»: se guarda el perfil y se lanza una pasada normal (el motor sube lo local sin base: no hay conflicto porque el almacén no tiene esos ids).
-- «Descartar»: `discardAllLocal()` **sin crear lápidas** (si se crearan, subirían borrados firmados al perfil) y luego la pasada.
-- «Desconectar»: borra clave, token y contraseña (en `app`) y llama a `forgetSyncState()`: las bases son de ese perfil y no valen para otro. Las notas se quedan.
-  Al volver a conectar, con notas locales, vuelve a preguntar.
+- `firstConnectDecision(snapshot): Proceed | AskUser(noteCount)`: asks if there is **any note** in any state (active, archived or trash).
+  Tombstones without notes: they do not ask; they are discarded silently with `forgetSyncState` + deleting the tombstones (they were deletions of notes the profile does not know).
+- "Upload": the profile is stored and a normal pass is launched (the engine uploads the local notes with no base: there is no conflict because the store does not have those ids).
+- "Discard": `discardAllLocal()` **without creating tombstones** (if they were created, they would upload signed deletions to the profile) and then the pass.
+- "Disconnect": deletes key, token and password (in `app`) and calls `forgetSyncState()`: the bases belong to that profile and are not valid for another. The notes stay.
+  On reconnecting, with local notes, it asks again.
 
-## 5. `app` (después, en local)
+## 5. `app` (afterwards, locally)
 
-1. Room v2: tabla `sync_conflict` (noteId, detectedAt, versión ganadora: fecha + dispositivo + tombstone; perdedora: cifrada con `NoteCipher`, mismo modelo
-   que el texto) y migración 1→2 con su prueba. `RoomLocalSyncStore` (sobre la misma base que `RoomNoteStore`) que pasa `LocalSyncStoreContract` en el
-   dispositivo.
-2. Secretos: clave de sync, token y contraseña de WebDAV envueltos por el Keystore en `noBackupFilesDir` (spec madre §4.2); `deviceId` y perfil (sin secretos) en
+1. Room v2: `sync_conflict` table (noteId, detectedAt, winning version: date + device + tombstone; losing: encrypted with `NoteCipher`, same model
+   as the text) and migration 1→2 with its test. `RoomLocalSyncStore` (on the same database as `RoomNoteStore`) that passes `LocalSyncStoreContract` on the
+   device.
+2. Secrets: sync key, token and WebDAV password wrapped by the Keystore in `noBackupFilesDir` (parent spec §4.2); `deviceId` and profile (without secrets) in
    `SettingsStore`.
-3. Ajustes → Sincronización: pegar código, token o usuario+contraseña, «Probar conexión», alcance (solo lectura), última sync, último error, «Sincronizar ahora»,
-   «Desconectar» (con confirmación). Diálogo de primera conexión. Aviso de que la copia del sistema no guarda las notas: la recuperación es volver a pegar el código.
-4. Lista: icono de estado en la barra con su detalle; tirar para sincronizar; candado y conflicto en la fila; protegida al abrirse → aviso de solo lectura.
-5. Disparadores: `ProcessLifecycleOwner` (abrir, primer plano), guardados del `NotesViewModel` (`LocalChange`), WorkManager periódico de 15 min con
-   `NetworkType.CONNECTED` que llama a la misma función y respeta la pasada única (un `Mutex` del proceso).
-6. Textos nuevos en `android/strings.tsv` con los cinco idiomas y `python android/scripts/gen_strings.py` (+ `--check`).
-7. Probar el editor con Gboard **y** un teclado de terceros tras los cambios (el guardado dispara la sync: no puede notarse al escribir).
+3. Settings → Sync: paste code, token or user+password, "Test connection", scope (read-only), last sync, last error, "Sync now",
+   "Disconnect" (with confirmation). First-connection dialog. Notice that the system backup does not keep the notes: recovery is pasting the code again.
+4. List: status icon in the bar with its detail; pull to sync; lock and conflict on the row; protected note on opening → read-only notice.
+5. Triggers: `ProcessLifecycleOwner` (open, foreground), `NotesViewModel` saves (`LocalChange`), periodic 15-min WorkManager with
+   `NetworkType.CONNECTED` that calls the same function and respects the single pass (a process `Mutex`).
+6. New texts in `android/strings.tsv` with the five languages and `python android/scripts/gen_strings.py` (+ `--check`).
+7. Test the editor with Gboard **and** a third-party keyboard after the changes (saving triggers sync: it must not be noticeable while typing).
 
-## 6. Verificación (puertas)
+## 6. Verification (gates)
 
-1. `./gradlew test` verde: los 414 de antes (core 82, sync 119, text 100, domain 113) **sin perder ninguno** + los nuevos de `domain` y `syncclient`.
-   Los vectores (`tests/vectors/`) no se regeneran ni se tocan; `kotlin-output.json` cambia con cada ejecución: descartarlo antes de commitear.
-2. `syncclient` (JVM): pruebas de §4.1-§4.8, incluido un **extremo a extremo** con `InMemoryLocalSyncStore` + `NoteService` + el doble en memoria del transporte
-   de `android/sync`, que demuestre: nota creada aquí sube; nota del «PC» se aplica con su autor y **no se resube** en la pasada siguiente; abrir y cerrar sin
-   editar no genera subida (E28); CRLF vuelve igual; protegida sube con `text ""` aunque el `Note` traiga texto; gana la versión mayor con dos del mismo id;
-   borrado sin firma → papelera y nunca borra; edición concurrente durante la fase 1 → no se pisa y la siguiente pasada guarda conflicto; fallo de red en la
-   fase 1 → nada local escrito; dos pasadas seguidas sin cambios → la segunda no hace nada.
-3. `app` (instrumentadas): `LocalSyncStoreContract` con Room, migración 1→2.
-4. **Sondas** contra el servidor del CT 103 con un **perfil de prueba** (nunca el perfil real del usuario; la app de depuración tiene su propia base): nota
-   creada en Android aparece en el PC (con una instalación de Windows de pruebas o una base temporal, nunca `%LOCALAPPDATA%\Aldune`) y al revés; conflicto
-   provocado (editar en los dos con la red cortada); borrado firmado; borrado sin firma (sobre escrito a mano en el almacén de prueba); servidor apagado →
-   «Sin conexión» sin avisos; token malo → mensaje claro; modo avión y vuelta; en el Pixel y en la tableta.
+1. `./gradlew test` green: the previous 414 (core 82, sync 119, text 100, domain 113) **without losing any** + the new ones of `domain` and `syncclient`.
+   The vectors (`tests/vectors/`) are not regenerated or touched; `kotlin-output.json` changes with every run: discard it before committing.
+2. `syncclient` (JVM): tests for §4.1-§4.8, including an **end-to-end** one with `InMemoryLocalSyncStore` + `NoteService` + the in-memory transport double
+   from `android/sync`, that shows: a note created here uploads; a note from the "PC" is applied with its author and **is not re-uploaded** on the next pass; opening and closing without
+   editing generates no upload (E28); CRLF comes back the same; a protected note uploads with `text ""` even if the `Note` carries text; the higher version wins with two of the same id;
+   unsigned deletion → trash and never deletes; concurrent edit during phase 1 → not overwritten and the next pass saves a conflict; network failure in
+   phase 1 → nothing local written; two consecutive passes without changes → the second does nothing.
+3. `app` (instrumented): `LocalSyncStoreContract` with Room, migration 1→2.
+4. **Probes** against the CT 103 server with a **test profile** (never the user's real profile; the debug app has its own database): a note
+   created on Android appears on the PC (with a test Windows installation or a temporary database, never `%LOCALAPPDATA%\Aldune`) and vice versa; provoked
+   conflict (edit on both with the network cut); signed deletion; unsigned deletion (envelope written by hand into the test store); server off →
+   "Offline" without notices; bad token → clear message; airplane mode and back; on the Pixel and on the tablet.
 
-## 7. Tareas
+## 7. Tasks
 
-| # | Tarea | Dónde |
+| # | Task | Where |
 |---|---|---|
-| 1 | `domain`: campos y reglas de protegida (§3) | JVM puro |
-| 2 | `syncclient`: §4.1-§4.8 con TDD y `LocalSyncStoreContract` | JVM puro |
-| 3 | Room v2 + `RoomLocalSyncStore` + contrato en el dispositivo | Local |
-| 4 | Secretos, `SettingsStore` del perfil, Ajustes → Sincronización, primera conexión | Local |
-| 5 | Indicador, tirar para sincronizar, candado y conflicto en la fila, disparadores, WorkManager | Local |
-| 6 | Sondas contra el CT 103 en Pixel y tableta| Local |
+| 1 | `domain`: protected-note fields and rules (§3) | Pure JVM |
+| 2 | `syncclient`: §4.1-§4.8 with TDD and `LocalSyncStoreContract` | Pure JVM |
+| 3 | Room v2 + `RoomLocalSyncStore` + contract on the device | Local |
+| 4 | Secrets, profile `SettingsStore`, Settings → Sync, first connection | Local |
+| 5 | Indicator, pull to sync, lock and conflict on the row, triggers, WorkManager | Local |
+| 6 | Probes against CT 103 on Pixel and tablet| Local |
 
-## 8. Riesgos
+## 8. Risks
 
-1. **`testFixtures` en `androidTest`**: si AGP no lo consume bien, módulo `:syncclient-contract` (§4.2). Se descubre en la tarea 3.
-2. **Reloj del móvil desajustado**: las versiones se ordenan por fecha. Un móvil adelantado gana siempre; atrasado, pierde. Es igual que en Windows y no se
-   corrige en F5; si aparece, se anota.
-3. **WorkManager en la tableta Lenovo**: algunos fabricantes retrasan o matan trabajos en segundo plano. No se promete periodicidad (spec madre §2.6); se mira en
-   la sonda y se anota.
-4. **LF en notas creadas en Android** (F4 §1.2/§6.3): la sonda 4 lo comprueba de verdad. Si Windows reescribe CRLF y crea versiones nuevas, se arregla en Windows.
+1. **`testFixtures` in `androidTest`**: if AGP does not consume it well, a `:syncclient-contract` module (§4.2). It is discovered in task 3.
+2. **Phone clock out of sync**: versions are ordered by date. A phone that is ahead always wins; one that is behind loses. It is the same as on Windows and is not
+   corrected in F5; if it shows up, it is noted.
+3. **WorkManager on the Lenovo tablet**: some manufacturers delay or kill background jobs. No periodicity is promised (parent spec §2.6); it is checked in
+   the probe and noted.
+4. **LF in notes created on Android** (F4 §1.2/§6.3): probe 4 really checks it. If Windows rewrites CRLF and creates new versions, it is fixed on Windows.

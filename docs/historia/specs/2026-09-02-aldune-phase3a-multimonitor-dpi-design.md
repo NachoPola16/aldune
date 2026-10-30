@@ -1,108 +1,104 @@
-# Aldune Fase 3a — Multi-monitor real + DPI por monitor (design spec)
+# Aldune Phase 3a — Real multi-monitor + per-monitor DPI (design spec)
 
-Primera sub-entrega de la Fase 3 (multi-monitor + DPI, ver
-`docs/STATUS.md`). La Fase 3 completa se troceó porque mezcla piezas
-independientes: esta sub-entrega cubre solo la parte técnica dura y
-aislada — geometría real por monitor, DPI, y el coordinador de ventanas
-a nivel de app. Deliberadamente fuera de esta entrega (ver "Fuera de
-alcance" más abajo): el toggle de Ajustes para elegir monitores, IDs
-estables de dispositivo, y el comportamiento de desconectar/reconectar
-un monitor.
+First sub-delivery of Phase 3 (multi-monitor + DPI, see
+`docs/STATUS.md`). The complete Phase 3 was split up because it mixes
+independent pieces: this sub-delivery covers only the hard, isolated
+technical part — real per-monitor geometry, DPI, and the app-level
+window coordinator. Deliberately out of this delivery (see "Out of
+scope" below): the Settings toggle to choose monitors, stable device
+IDs, and the behavior of disconnecting/reconnecting a monitor.
 
-## Contexto y motivación
+## Context and motivation
 
-Hoy Aldune crea un único `EdgeDockWindow`, siempre en el monitor
-principal, usando `SystemParameters.WorkArea` para su geometría — una
-API de WPF que **solo devuelve el área de trabajo del monitor
-principal**, sin importar cuántos monitores haya conectados. Tampoco
-existe ningún `app.manifest` que declare a la aplicación consciente de
-DPI por monitor (`PerMonitorV2`), así que hoy corre bajo el
-comportamiento por defecto de Windows para un proceso sin declarar.
+Today Aldune creates a single `EdgeDockWindow`, always on the primary
+monitor, using `SystemParameters.WorkArea` for its geometry — a WPF API
+that **only returns the work area of the primary monitor**, no matter how
+many monitors are connected. There is also no `app.manifest` declaring the
+application as per-monitor DPI aware (`PerMonitorV2`), so today it runs
+under Windows' default behavior for an undeclared process.
 
-Esto es exactamente el hueco que la spec v1 (`2026-08-30-aldune-v1-design.md`)
-señala en su sección "Núcleo": "consciente de DPI por monitor (Per-Monitor
-V2)" y "multi-monitor: la app puede mostrarse en todas las pantallas
-conectadas". Los prerrequisitos ya identificados en `docs/STATUS.md` tras
-la revisión final de la Fase 2 son el punto de partida de este diseño:
+This is exactly the gap that the v1 spec (`2026-08-30-aldune-v1-design.md`)
+points out in its "Core" section: "per-monitor DPI aware (Per-Monitor
+V2)" and "multi-monitor: the app can be shown on all connected screens".
+The prerequisites already identified in `docs/STATUS.md` after the final
+review of Phase 2 are the starting point of this design:
 
-1. `_openNoteWindows` (el diccionario que evita abrir la misma nota dos
-   veces) y la relación `NoteWindow` → `EdgeDockWindow` propietario viven
-   hoy dentro de `EdgeDockWindow`, que pasará a ser una instancia **por
-   monitor**. Si esto no se mueve a un coordinador de nivel de aplicación
-   antes de crear el segundo dock, se reproduce el bug de "ventanas
-   duplicadas"/"etiqueta desactualizada" que costó varias rondas arreglar
-   en la Fase 2.
-2. `SystemParameters.WorkArea` no sirve para monitores no principales —
-   hace falta geometría real vía Win32.
-3. `ScreenOrigin` sigue fijo al literal `"primary"` en todas las notas —
-   esta entrega **no** lo toca (ver "Fuera de alcance").
+1. `_openNoteWindows` (the dictionary that prevents opening the same note
+   twice) and the `NoteWindow` → owner `EdgeDockWindow` relationship live
+   today inside `EdgeDockWindow`, which will become one instance **per
+   monitor**. If this is not moved to an application-level coordinator
+   before the second dock is created, the "duplicate windows"/"stale
+   label" bug that took several rounds to fix in Phase 2 is reproduced.
+2. `SystemParameters.WorkArea` is no good for non-primary monitors —
+   real geometry via Win32 is needed.
+3. `ScreenOrigin` is still fixed to the literal `"primary"` in all notes —
+   this delivery does **not** touch it (see "Out of scope").
 
-## Alcance de esta sub-entrega
+## Scope of this sub-delivery
 
-**Dentro:**
+**In:**
 
-- Declarar la app consciente de DPI por monitor (`PerMonitorV2`) vía
+- Declare the app as per-monitor DPI aware (`PerMonitorV2`) via
   `app.manifest`.
-- Enumerar los monitores conectados (Win32) con su área de trabajo real
-  en píxeles y su DPI real.
-- Crear **un `EdgeDockWindow` por cada monitor conectado**, siempre —
-  sin toggle de configuración todavía (eso es de la siguiente
-  sub-entrega). Esto ya es uno de los dos comportamientos que la spec v1
-  permite ("todas las pantallas conectadas").
-- Cada dock usa la geometría y DPI reales de *su* monitor, no las del
-  monitor principal.
-- Coordinador a nivel de aplicación (`AppCoordinator`) que centraliza:
-  las notas ya abiertas (evita duplicados entre docks), refrescar todos
-  los docks a la vez, y la ventana única de "Gestionar notas".
-- Detección de monitores **solo al arrancar** — no se maneja conectar o
-  desconectar un monitor con la app ya corriendo (ver "Fuera de
-  alcance").
+- Enumerate the connected monitors (Win32) with their real work area in
+  pixels and their real DPI.
+- Create **one `EdgeDockWindow` per connected monitor**, always — with no
+  configuration toggle yet (that belongs to the next sub-delivery). This
+  is already one of the two behaviors the v1 spec allows ("all connected
+  screens").
+- Each dock uses the real geometry and DPI of *its* monitor, not those of
+  the primary monitor.
+- Application-level coordinator (`AppCoordinator`) that centralizes: the
+  already-open notes (avoids duplicates between docks), refreshing all
+  the docks at once, and the single "Manage notes" window.
+- Monitor detection **only at startup** — connecting or disconnecting a
+  monitor while the app is already running is not handled (see "Out of
+  scope").
 
-**Fuera de alcance** (para una sub-entrega posterior de la Fase 3):
+**Out of scope** (for a later sub-delivery of Phase 3):
 
-- Selección de qué monitores usar desde Ajustes (hoy no existe ninguna
-  UI de Ajustes; `AppSettings` solo guarda la clave de cifrado).
-- Posición de borde distinta por pantalla (la spec v1 ya la aplaza a
-  v1.1; sigue habiendo una sola posición de borde global).
-- IDs estables de dispositivo para `ScreenOrigin` (sigue siendo el
-  literal `"primary"` para todas las notas).
-- Conectar/desconectar un monitor con la app ya corriendo
-  (`WM_DISPLAYCHANGE`), y el comportamiento de "mostrar temporalmente en
-  la pantalla principal sin reescribir el origen" que depende de tener
-  IDs estables primero.
-- Cambiar la escala de DPI en Windows con la app ya corriendo: WPF con
-  `PerMonitorV2` reescala solo las ventanas existentes, así que no
-  debería romperse, pero el reposicionamiento fino específico del
-  docking al borde no se ha probado para ese caso — límite conocido.
-- Con varios docks pero `ScreenOrigin` todavía sin diferenciar por
-  monitor: **todos los docks muestran exactamente el mismo listado
-  completo de notas activas** (son espejo unos de otros). Crear o
-  archivar una nota desde cualquier dock actualiza todos. Cuando una
-  sub-entrega posterior añada IDs estables por monitor, cada dock podrá
-  empezar a filtrar por su propio origen.
+- Selecting which monitors to use from Settings (today there is no
+  Settings UI at all; `AppSettings` only stores the encryption key).
+- A different edge position per screen (the v1 spec already postpones it
+  to v1.1; there is still a single global edge position).
+- Stable device IDs for `ScreenOrigin` (it is still the literal
+  `"primary"` for all notes).
+- Connecting/disconnecting a monitor while the app is already running
+  (`WM_DISPLAYCHANGE`), and the behavior of "temporarily show on the
+  primary screen without rewriting the origin" which depends on having
+  stable IDs first.
+- Changing the DPI scale in Windows while the app is already running: WPF
+  with `PerMonitorV2` rescales the existing windows on its own, so it
+  should not break, but the fine repositioning specific to edge docking
+  has not been tested for that case — a known limit.
+- With several docks but `ScreenOrigin` still not differentiated per
+  monitor: **all the docks show exactly the same full list of active
+  notes** (they mirror each other). Creating or archiving a note from any
+  dock updates all of them. When a later sub-delivery adds stable IDs per
+  monitor, each dock will be able to start filtering by its own origin.
 
-## Componentes
+## Components
 
-### `Aldune.Core.MonitorInfo` (nuevo)
+### `Aldune.Core.MonitorInfo` (new)
 
-Tipo de dato puro, sin dependencias de Win32/WPF — fácil de testear:
+Pure data type, with no Win32/WPF dependencies — easy to test:
 
 ```csharp
 public readonly record struct MonitorInfo(
-    string DeviceName,      // ej. "\\.\DISPLAY1" — NO es el id estable
-                            // futuro, solo lo que da Win32 hoy; ver
-                            // "Fuera de alcance"
-    WorkingArea WorkArea,   // ya convertida a DIPs de ESE monitor
+    string DeviceName,      // e.g. "\\.\DISPLAY1" — NOT the future stable
+                            // id, just what Win32 gives today; see
+                            // "Out of scope"
+    WorkingArea WorkArea,   // already converted to DIPs of THAT monitor
     double DpiScale,        // 1.0 = 96 DPI, 1.5 = 150%, etc.
     bool IsPrimary);
 ```
 
-### Conversión píxeles → DIP (nuevo, `Aldune.Core`)
+### Pixel → DIP conversion (new, `Aldune.Core`)
 
-Win32 da rectángulos en píxeles físicos; WPF interpreta
-`Window.Left/Top/Width/Height` en DIPs relativas a la escala de DPI de
-ese monitor concreto (una vez declarado `PerMonitorV2`). Una función
-pura y testeable hace la conversión:
+Win32 gives rectangles in physical pixels; WPF interprets
+`Window.Left/Top/Width/Height` in DIPs relative to the DPI scale of that
+specific monitor (once `PerMonitorV2` is declared). A pure, testable
+function does the conversion:
 
 ```csharp
 public static class DpiConversion
@@ -113,40 +109,40 @@ public static class DpiConversion
 }
 ```
 
-Con esto, **`EdgeGeometry.cs` no cambia nada** — sus cálculos de
-`PillRect`/`ExpandedRect` son aritmética de ancho/alto pura, no les
-importa la unidad mientras sea consistente. Cada dock recibe ya las
-DIPs correctas de su propio monitor.
+With this, **`EdgeGeometry.cs` does not change at all** — its
+`PillRect`/`ExpandedRect` calculations are pure width/height arithmetic,
+the unit does not matter as long as it is consistent. Each dock already
+receives the correct DIPs of its own monitor.
 
-### Enumeración de monitores (nuevo, `Aldune.Interop`)
+### Monitor enumeration (new, `Aldune.Interop`)
 
-Nuevos métodos junto a `NativeMethods.cs` (o un fichero nuevo
-`MonitorEnumerator.cs` en el mismo namespace si `NativeMethods.cs` se
-queda demasiado grande): `EnumDisplayMonitors` + `GetMonitorInfoW` (área
-de trabajo en píxeles + si es el principal) + `GetDpiForMonitor` (DPI
-real). Expone `IReadOnlyList<MonitorInfo> EnumerateMonitors()`, usando
-`DpiConversion.ToWorkingArea` internamente. Se llama una vez, al
-arrancar (`App.xaml.cs`).
+New methods next to `NativeMethods.cs` (or a new `MonitorEnumerator.cs`
+file in the same namespace if `NativeMethods.cs` gets too large):
+`EnumDisplayMonitors` + `GetMonitorInfoW` (work area in pixels + whether
+it is the primary) + `GetDpiForMonitor` (real DPI). It exposes
+`IReadOnlyList<MonitorInfo> EnumerateMonitors()`, using
+`DpiConversion.ToWorkingArea` internally. It is called once, at startup
+(`App.xaml.cs`).
 
-Se eligió Win32 puro (no `System.Windows.Forms.Screen`) para no meter
-una dependencia a WinForms solo para esto, y porque coincide con el
-patrón ya establecido en el proyecto (`NativeMethods.cs`) y con la
-justificación de stack tecnológico de la spec v1 ("acceso completo a
-Win32 vía P/Invoke cuando hace falta bajar de nivel").
+Pure Win32 was chosen (not `System.Windows.Forms.Screen`) so as not to
+bring in a WinForms dependency just for this, and because it matches the
+pattern already established in the project (`NativeMethods.cs`) and the
+technology stack rationale of the v1 spec ("full access to Win32 via
+P/Invoke when it is necessary to drop down a level").
 
-### `app.manifest` (nuevo, `src/Aldune/`)
+### `app.manifest` (new, `src/Aldune/`)
 
-Declara `<dpiAwareness>PerMonitorV2</dpiAwareness>` (namespace
-`http://schemas.microsoft.com/SMI/2016/WindowsSettings`). Referenciado
-desde `Aldune.csproj`. Sin esto, nada de lo anterior tiene efecto:
-Windows seguiría tratando a la app como no consciente de DPI por
-monitor y escalaría un mapa de bits ya renderizado en vez de dejar que
-cada ventana se renderice nítida en su propio monitor.
+Declares `<dpiAwareness>PerMonitorV2</dpiAwareness>` (namespace
+`http://schemas.microsoft.com/SMI/2016/WindowsSettings`). Referenced from
+`Aldune.csproj`. Without this, none of the above takes effect: Windows
+would keep treating the app as not per-monitor DPI aware and would scale
+an already-rendered bitmap instead of letting each window render crisply
+on its own monitor.
 
-### `AppCoordinator` (nuevo, `Aldune.Windowing`)
+### `AppCoordinator` (new, `Aldune.Windowing`)
 
-Una sola instancia para toda la app (no una por dock). Sustituye lo que
-hoy vive dentro de `EdgeDockWindow`:
+A single instance for the whole app (not one per dock). It replaces what
+today lives inside `EdgeDockWindow`:
 
 ```csharp
 public sealed class AppCoordinator
@@ -203,93 +199,92 @@ public sealed class AppCoordinator
 }
 ```
 
-`requestingDock.PositionNoteWindow(...)` se queda en `EdgeDockWindow`
-(necesita la posición/límites de **ese** monitor concreto), pero el
-contador de notas abiertas para calcular el escalón de la cascada pasa
-a leerse de `coordinator.OpenNoteWindowCount` en vez de un diccionario
-por dock, para que la cascada sea consistente aunque las notas estén
-repartidas entre monitores.
+`requestingDock.PositionNoteWindow(...)` stays in `EdgeDockWindow` (it
+needs the position/bounds of **that** specific monitor), but the count of
+open notes used to compute the cascade step is now read from
+`coordinator.OpenNoteWindowCount` instead of a per-dock dictionary, so
+that the cascade is consistent even if the notes are spread across
+monitors.
 
-### Cambios en clases existentes
+### Changes to existing classes
 
-- **`EdgeDockWindow`**: constructor pasa a recibir `MonitorInfo` en vez
-  de `WorkingArea` suelta (internamente sigue guardando el
-  `WorkingArea` de `MonitorInfo.WorkArea` para `EdgeGeometry`), y recibe
-  el `AppCoordinator`. `OnTabClick` delega en
-  `_coordinator.OpenOrActivateNote(note, this)` en vez de gestionar
-  `_openNoteWindows` él mismo. `OnManageArchiveClick` delega en
-  `_coordinator.OpenOrActivateNotesManager()`. Pierde el campo
-  `_openNoteWindows` y `_notesManagerWindow` (se van al coordinador).
-  `PositionNoteWindow` pasa de `private` a `internal` — el coordinador
-  (misma librería, distinta clase) necesita poder llamarlo.
-- **`NoteWindow`**: el constructor recibe `AppCoordinator coordinator`
-  en vez de `EdgeDockWindow owner`; todas las llamadas a
-  `_owner.Refresh()` pasan a ser `_coordinator.RefreshAll()`.
-- **`NotesManagerWindow`**: mismo cambio — recibe el coordinador, sus
-  acciones en bloque llaman a `_coordinator.RefreshAll()`.
-- **`App.xaml.cs`**: en vez de crear un único `EdgeDockWindow` con
-  `SystemParameters.WorkArea`, enumera monitores
-  (`MonitorEnumerator.EnumerateMonitors()`), crea un `AppCoordinator`,
-  crea un `EdgeDockWindow` por cada `MonitorInfo` (todos con
-  `EdgePosition.Right` — la posición de borde sigue siendo global, sin
-  cambios), registra cada uno en el coordinador, llama a
-  `coordinator.RefreshAll()` una vez (sustituye el actual
-  `dock.Refresh()` suelto — el primer intento real de descifrado sigue
-  ocurriendo aquí, el `try/catch` de `AuthenticationTagMismatchException`
-  no cambia), y muestra todos los docks.
+- **`EdgeDockWindow`**: the constructor now receives `MonitorInfo`
+  instead of a loose `WorkingArea` (internally it still keeps the
+  `WorkingArea` from `MonitorInfo.WorkArea` for `EdgeGeometry`), and
+  receives the `AppCoordinator`. `OnTabClick` delegates to
+  `_coordinator.OpenOrActivateNote(note, this)` instead of managing
+  `_openNoteWindows` itself. `OnManageArchiveClick` delegates to
+  `_coordinator.OpenOrActivateNotesManager()`. It loses the
+  `_openNoteWindows` and `_notesManagerWindow` fields (they go to the
+  coordinator). `PositionNoteWindow` goes from `private` to `internal` —
+  the coordinator (same library, different class) needs to be able to
+  call it.
+- **`NoteWindow`**: the constructor receives `AppCoordinator coordinator`
+  instead of `EdgeDockWindow owner`; all the calls to `_owner.Refresh()`
+  become `_coordinator.RefreshAll()`.
+- **`NotesManagerWindow`**: same change — it receives the coordinator, and
+  its bulk actions call `_coordinator.RefreshAll()`.
+- **`App.xaml.cs`**: instead of creating a single `EdgeDockWindow` with
+  `SystemParameters.WorkArea`, it enumerates monitors
+  (`MonitorEnumerator.EnumerateMonitors()`), creates an `AppCoordinator`,
+  creates an `EdgeDockWindow` for each `MonitorInfo` (all with
+  `EdgePosition.Right` — the edge position is still global, unchanged),
+  registers each one in the coordinator, calls `coordinator.RefreshAll()`
+  once (replacing the current loose `dock.Refresh()` — the first real
+  decryption attempt still happens here, the `try/catch` of
+  `AuthenticationTagMismatchException` does not change), and shows all the
+  docks.
 
-## Manejo de errores
+## Error handling
 
-- **Cero monitores detectados** (extremadamente improbable en Windows
-  real, pero hay que cubrirlo): se trata como un cuarto caso de fallo de
-  arranque, con el mismo patrón que los tres ya existentes en
-  `App.xaml.cs` (mensaje claro + `Shutdown(1)`).
-- **`GetDpiForMonitor` falla para un monitor concreto**: se asume DPI 96
-  (escala 1.0) para ese monitor en vez de propagar la excepción — mismo
-  espíritu que `NativeMethods.ApplyRoundedCorners`, que no rompe nada en
-  sistemas donde la API subyacente no está disponible.
-- **Cambio de escala de DPI en caliente** (sin desconectar el monitor):
-  no se maneja de forma especial en esta entrega; queda como límite
-  conocido documentado arriba.
+- **Zero monitors detected** (extremely unlikely on real Windows, but it
+  must be covered): it is treated as a fourth startup failure case, with
+  the same pattern as the three already existing in `App.xaml.cs` (clear
+  message + `Shutdown(1)`).
+- **`GetDpiForMonitor` fails for a specific monitor**: 96 DPI (scale 1.0)
+  is assumed for that monitor instead of propagating the exception — same
+  spirit as `NativeMethods.ApplyRoundedCorners`, which breaks nothing on
+  systems where the underlying API is not available.
+- **Hot DPI scale change** (without disconnecting the monitor): it is not
+  handled specially in this delivery; it remains a known limit documented
+  above.
 
 ## Testing
 
-- `DpiConversion.ToWorkingArea`: tests unitarios normales en
-  `Aldune.Core.Tests`, con varias escalas (100%, 150%, 200%) — pura
-  aritmética, sin Win32 de por medio.
-- `MonitorInfo`: tipo de dato, sin lógica propia que testear más allá de
-  la conversión anterior.
-- Enumeración real de monitores, creación de varios `EdgeDockWindow`, y
-  el `AppCoordinator` en conjunto: Win32/WPF puro, se verifica a mano
-  (igual que el resto de la mecánica de ventana de esta app). El usuario
-  tiene un segundo monitor disponible (en vertical) para probar esto en
-  persona. Checklist manual sugerido:
-  1. Un solo monitor conectado — regresión: debe verse exactamente como
-     hoy.
-  2. Dos monitores — aparece un dock en cada uno, ambos en el borde
-     derecho, cada uno con su geometría/tamaño correctos para su propio
-     monitor (el vertical incluido — `EdgeGeometry` es agnóstico a
-     orientación, pero es la primera vez que se prueba con un monitor en
-     vertical).
-  3. Crear una nota desde el dock del monitor A → aparece también en la
-     pestaña del dock del monitor B (mismo listado, ver "Fuera de
-     alcance").
-  4. Abrir la misma nota haciendo clic desde los dos docks (si la nota
-     aparece en ambos) → se activa la misma ventana, nunca se duplica.
-  5. Abrir "Gestionar notas" desde el dock del monitor A y luego desde
-     el B → es la misma ventana (se activa, no se abre una segunda).
-  6. Archivar una nota desde `NotesManagerWindow` → los dos docks
-     actualizan su pestaña.
+- `DpiConversion.ToWorkingArea`: normal unit tests in
+  `Aldune.Core.Tests`, with several scales (100%, 150%, 200%) — pure
+  arithmetic, no Win32 involved.
+- `MonitorInfo`: a data type, with no logic of its own to test beyond the
+  above conversion.
+- Real monitor enumeration, creation of several `EdgeDockWindow`s, and the
+  `AppCoordinator` as a whole: pure Win32/WPF, verified by hand (like the
+  rest of this app's window mechanics). The user has a second monitor
+  available (in portrait) to test this in person. Suggested manual
+  checklist:
+  1. A single monitor connected — regression: it must look exactly as it
+     does today.
+  2. Two monitors — a dock appears on each, both on the right edge, each
+     with the correct geometry/size for its own monitor (the portrait one
+     included — `EdgeGeometry` is orientation-agnostic, but this is the
+     first time it is tested with a portrait monitor).
+  3. Create a note from the dock of monitor A → it also appears in the tab
+     of the dock of monitor B (same list, see "Out of scope").
+  4. Open the same note by clicking from both docks (if the note appears
+     in both) → the same window is activated, never duplicated.
+  5. Open "Manage notes" from the dock of monitor A and then from B → it
+     is the same window (it is activated, a second one is not opened).
+  6. Archive a note from `NotesManagerWindow` → both docks update their
+     tab.
 
-## Orden de implementación sugerido
+## Suggested implementation order
 
-1. `Aldune.Core.MonitorInfo` + `DpiConversion` (TDD, sin dependencias).
-2. `app.manifest` + enumeración Win32 de monitores
-   (`Aldune.Interop`) — verificable con un `Console.WriteLine` temporal
-   o test manual antes de tocar las ventanas.
-3. `AppCoordinator` (aún sin usar).
-4. Refactor de `EdgeDockWindow`/`NoteWindow`/`NotesManagerWindow` para
-   usar el coordinador — comportamiento debe seguir idéntico con un solo
-   monitor (regresión).
-5. `App.xaml.cs`: crear un dock por monitor real.
-6. Verificación manual completa con el segundo monitor.
+1. `Aldune.Core.MonitorInfo` + `DpiConversion` (TDD, no dependencies).
+2. `app.manifest` + Win32 monitor enumeration (`Aldune.Interop`) —
+   verifiable with a temporary `Console.WriteLine` or a manual test before
+   touching the windows.
+3. `AppCoordinator` (not yet used).
+4. Refactor of `EdgeDockWindow`/`NoteWindow`/`NotesManagerWindow` to use
+   the coordinator — behavior must remain identical with a single monitor
+   (regression).
+5. `App.xaml.cs`: create one dock per real monitor.
+6. Full manual verification with the second monitor.

@@ -1,284 +1,284 @@
-# Aldune — macOS, Linux y web: ¿hay port? Estudio y propuesta
+# Aldune — macOS, Linux and web: is there a port? Study and proposal
 
-> **Estado: macOS, Linux y web siguen sin decidir; el cliente móvil ya tiene plan decidido**
-> (Android primero, en tableta: `MOBILE_PORT.md` §0.1). En ninguno de los casos hay código escrito.
-> Fecha: 2026-09-28. Documento hermano de
-> [`MOBILE_PORT.md`](MOBILE_PORT.md) (Android e iOS). Ese contesta "¿y en el teléfono?"; este contesta
-> "¿y en el Mac, y en Linux, y en el navegador?".
+> **Status: macOS, Linux and web are still undecided; the mobile client already has a decided plan**
+> (Android first, on tablet: `MOBILE_PORT.md` §0.1). In none of the cases is there any code written.
+> Date: 2026-09-28. Sibling document of
+> [`MOBILE_PORT.md`](MOBILE_PORT.md) (Android and iOS). That one answers "what about the phone?"; this one answers
+> "what about the Mac, Linux and the browser?".
 >
-> Regla de lectura: aquí se separa a propósito **lo verificado** (con enlace) de **lo que hay que
-> comprobar en un spike**. No se ha escrito ni una línea de código para ninguno de estos sistemas.
+> Reading rule: this document deliberately separates **what has been verified** (with a link) from **what has to be
+> checked in a spike**. Not a single line of code has been written for any of these systems.
 
-## 0. Resumen para quien tenga prisa
+## 0. Summary for those in a hurry
 
-| Sistema | ¿Lo hacemos? | Por qué |
+| System | Do we do it? | Why |
 |---|---|---|
-| **Windows** | Ya está | Es el producto: 1.4.1, dock al canto, instalador y MSIX en camino |
-| **Windows en ARM64** | **Sí, y es barato** (1 sesión) | Hoy se publica solo `win-x64`; el instalador **sí** acepta ARM64 (`x64compatible` incluye Windows 11 ARM), pero corre **emulado**. Un RID más no añade mantenimiento: §9.1 |
-| **Servidor en ARM** (Raspberry Pi, NAS) | Ya funciona | El `Dockerfile` parte de una imagen multi-arquitectura y compila en destino: §9.2 |
-| **Android** | **Sí, primero: decidido el 2026-09-28** | Es donde el port tiene sentido y se reutiliza Core entero (ver `MOBILE_PORT.md` §0.1: sin Mac, sin licencias, tableta como referencia) |
-| **iOS** | Sí, después de Android | Mismo código, otro toolchain y una extensión en Swift |
-| **macOS** | **No, por ahora** | Es el único sistema donde **el concepto ya existe y está ocupado** (las apps que inspiraron Aldune) y encima es donde la mecánica de Aldune (ventanas recortadas al canto) hay que rehacerla de otra manera |
-| **Linux** | **No como app**; sí como servidor | El dock al canto no es portable a Wayland sin ser una extensión del escritorio (GNOME no soporta `wlr-layer-shell`); y el `SyncServer` ya corre en Linux, que es lo que un usuario de Linux necesita para sincronizar |
-| **Web / WASM** | **No** | Sin widgets, sin notificaciones fiables, y el texto acabaría en el navegador. Ya descartado en `MOBILE_PORT.md` §11 |
-| **ChromeOS** | Cubierto por Android | ChromeOS ejecuta aplicaciones de Play Store, así que el cliente Android (§`MOBILE_PORT.md`) vale; y su Linux (Crostini) es el caso de Linux de §3 |
+| **Windows** | Already done | It is the product: 1.4.1, edge dock, installer and MSIX on the way |
+| **Windows on ARM64** | **Yes, and it is cheap** (1 session) | Today only `win-x64` is published; the installer **does** accept ARM64 (`x64compatible` includes Windows 11 ARM), but it runs **emulated**. One more RID adds no maintenance: §9.1 |
+| **Server on ARM** (Raspberry Pi, NAS) | Already works | The `Dockerfile` starts from a multi-architecture image and builds on the target: §9.2 |
+| **Android** | **Yes, first: decided on 2026-09-28** | It is where the port makes sense and the whole of Core is reused (see `MOBILE_PORT.md` §0.1: no Mac, no licenses, tablet as the reference) |
+| **iOS** | Yes, after Android | Same code, another toolchain and an extension in Swift |
+| **macOS** | **No, for now** | It is the only system where **the concept already exists and is taken** (the apps that inspired Aldune) and, on top of that, it is where Aldune's mechanics (windows clipped to the edge) would have to be redone in a different way |
+| **Linux** | **Not as an app**; yes as a server | The edge dock is not portable to Wayland without being a desktop extension (GNOME does not support `wlr-layer-shell`); and the `SyncServer` already runs on Linux, which is what a Linux user needs to sync |
+| **Web / WASM** | **No** | No widgets, no reliable notifications, and the text would end up in the browser. Already ruled out in `MOBILE_PORT.md` §11 |
+| **ChromeOS** | Covered by Android | ChromeOS runs Play Store apps, so the Android client (§`MOBILE_PORT.md`) works; and its Linux (Crostini) is the Linux case from §3 |
 
-**Lo que sí deberíamos hacer con los sistemas que faltan, y es barato:** dejar el **Core listo para
-cualquier cliente** (los llamados "seams", `MOBILE_PORT.md` §5). Con eso, el día que macOS o Linux
-interese, no hay que tocar la lógica, solo escribir interfaz. Esa es la parte que se recomienda hacer
-**una sola vez y pronto**, porque el port móvil la necesita igual.
+**What we should do for the missing systems, and it is cheap:** leave the **Core ready for any client** (the
+so-called "seams", `MOBILE_PORT.md` §5). With that, the day macOS or Linux becomes interesting, the logic does not
+need to be touched, only the interface has to be written. This is the part that is recommended to do
+**once and soon**, because the mobile port needs it just the same.
 
-## 1. Lo que ya es multiplataforma hoy, sin tocar nada
+## 1. What is already cross-platform today, without touching anything
 
-| Pieza | Estado | Nota |
+| Piece | Status | Note |
 |---|---|---|
-| `Aldune.Core` (69 ficheros, 6.663 líneas, `net10.0`) | Portable salvo **un** fichero | El único Windows es DPAPI (`DatabaseKeyProvider`) |
-| Formato de sync (JSON + AES-256-GCM, formato 4) | Portable por diseño | `SYNC.md` lo dice explícitamente: "no dependen de Windows, WPF, SQLite ni DPAPI" |
-| `Aldune.SyncServer` (ASP.NET Core minimal API) | **Ya corre en Linux** | Es el `docker-compose.sync.yml` que se documenta en `SYNC.md` |
-| `tests/Aldune.Core.Tests` (850) | Portables | Valen para cualquier cliente que enlace Core |
-| UI: `src/Aldune` (WPF, 15.829 líneas) | **No portable** | Es lo único que habría que reescribir por sistema |
+| `Aldune.Core` (69 files, 6,663 lines, `net10.0`) | Portable except **one** file | The only Windows-specific piece is DPAPI (`DatabaseKeyProvider`) |
+| Sync format (JSON + AES-256-GCM, format 4) | Portable by design | `SYNC.md` says so explicitly: "do not depend on Windows, WPF, SQLite or DPAPI" |
+| `Aldune.SyncServer` (ASP.NET Core minimal API) | **Already runs on Linux** | It is the `docker-compose.sync.yml` documented in `SYNC.md` |
+| `tests/Aldune.Core.Tests` (850) | Portable | Valid for any client that links Core |
+| UI: `src/Aldune` (WPF, 15,829 lines) | **Not portable** | It is the only thing that would have to be rewritten for each system |
 
-Es decir: **Aldune ya tiene el cerebro y el servidor multiplataforma; lo que no tiene es cuerpo.** Todo
-este documento va de cuánto cuesta ponerle cuerpo a macOS, Linux o web, y de si merece la pena.
+That is: **Aldune already has the brain and the server cross-platform; what it lacks is a body.** This whole
+document is about how much it costs to give a body to macOS, Linux or web, and whether it is worth it.
 
-## 2. macOS: el sistema donde el concepto **ya existe**
+## 2. macOS: the system where the concept **already exists**
 
-### 2.1 El problema no es técnico, es de mercado
+### 2.1 The problem is not technical, it is about the market
 
-El concepto de Aldune nació en macOS y allí sigue (`ROADMAP.md` §1): las apps que lo inspiraron ya lo cubren. Aldune se hizo
-precisamente para llevarlo a Windows, donde no existía.
+Aldune's concept was born on macOS and is still there (`ROADMAP.md` §1): the apps that inspired it already cover it. Aldune was made
+precisely to bring it to Windows, where it did not exist.
 
-Portar Aldune a macOS invierte ese argumento: entraría como **cuarto** en un mercado con tres jugadores,
-uno de ellos gratis y con el código a la vista, y con la app que inspiró el diseño. En Windows el hueco
-está vacío; en macOS está lleno.
+Porting Aldune to macOS reverses that argument: it would enter as the **fourth** in a market with three players,
+one of them free and with its code in the open, and with the app that inspired the design. On Windows the gap
+is empty; on macOS it is full.
 
-### 2.2 Lo técnico: la mecánica del dock hay que rehacerla entera
+### 2.2 The technical side: the dock mechanics would have to be redone entirely
 
-La pieza central de la 1.0 de Windows es que **la ventana del dock nunca se redimensiona**: se mide una
-vez y lo único que cambia por frame es la **región recortada** (`SetWindowRgn` + `CombineRgn`). En macOS
-no existe ese concepto: `NSWindow` es rectangular. Cada pieza tiene su equivalente, pero es otro código:
+The central piece of Windows 1.0 is that **the dock window is never resized**: it is measured once
+and the only thing that changes per frame is the **clipped region** (`SetWindowRgn` + `CombineRgn`). On macOS
+that concept does not exist: `NSWindow` is rectangular. Each piece has an equivalent, but it is different code:
 
-| En Windows | En macOS | Estado |
+| On Windows | On macOS | Status |
 |---|---|---|
-| `SetWindowRgn` + `CombineRgn` (recorte por frame) | Ventana sin borde (`borderless`) + `isOpaque = false` + **máscara de `CALayer`** sobre la vista de contenido | Técnica estándar, verificada; **a comprobar**: parpadeo por frame y que la sombra del sistema (que sigue la forma rectangular) no se vea mal |
-| `WS_EX_TOPMOST` / "siempre encima" | `NSWindow.level = .floating` / `.statusBar`, más `collectionBehavior` (`.canJoinAllSpaces`, `.fullScreenAuxiliary`) para no desaparecer en pantalla completa y en otros espacios | Verificado; el equivalente de la detección de juegos de Windows es esto |
-| Abrir el dock sin robar el foco | `NSPanel` con `nonactivatingPanel` + app de agente (`LSUIElement`, sin icono en el Dock) | Verificado como patrón habitual (apps de panel y utilidades de barra de menús) |
-| Bandeja (`NotifyIcon`) | `NSStatusItem` en la barra de menús | Verificado |
-| Arranque al iniciar sesión (clave `Run`) | `SMAppService` (macOS 13+) | Verificado |
-| Atajo global `Ctrl+Alt+H` | **`RegisterEventHotKey`** (Carbon, obsoleto pero funcional, **sin permisos**); el camino "moderno", `NSEvent.addGlobalMonitorForEvents`, **exige permiso de Accesibilidad** | Verificado; es un detalle que decide la experiencia |
-| Sondeo del cursor para el hover | `NSTrackingArea` | Verificado; el sondeo de Windows habría que reescribirlo |
-| Varias pantallas y `MonitorInfo.StableId` | `NSScreen` + `CGDisplayCreateUUIDFromDisplayID` (el UUID es el id estable natural) | Verificado |
-| Notificaciones *toast* propias | `UNUserNotificationCenter` | **Ya se escribirá** si se hace el port móvil de iOS |
-| Instalador Inno Setup / MSIX | DMG + **notarización obligatoria** para distribuir fuera de la App Store; o sandbox + Mac App Store | Verificado ([notarización](https://developer.apple.com/documentation/security/notarizing-macos-software-before-distribution)) |
-| `Microsoft.Data.Sqlite`, AES-GCM, PBKDF2 | Soportados en macOS | Verificado (`cross-platform-cryptography`); macOS lleva AES-GCM desde antes que iOS |
+| `SetWindowRgn` + `CombineRgn` (clipping per frame) | Borderless window (`borderless`) + `isOpaque = false` + **`CALayer` mask** over the content view | Standard technique, verified; **to be checked**: per-frame flicker and that the system shadow (which follows the rectangular shape) does not look bad |
+| `WS_EX_TOPMOST` / "always on top" | `NSWindow.level = .floating` / `.statusBar`, plus `collectionBehavior` (`.canJoinAllSpaces`, `.fullScreenAuxiliary`) so it does not disappear in full screen and in other spaces | Verified; the equivalent of Windows' game detection is this |
+| Open the dock without stealing focus | `NSPanel` with `nonactivatingPanel` + agent app (`LSUIElement`, no Dock icon) | Verified as a common pattern (panel apps and menu bar utilities) |
+| Tray (`NotifyIcon`) | `NSStatusItem` in the menu bar | Verified |
+| Start at sign-in (`Run` key) | `SMAppService` (macOS 13+) | Verified |
+| Global shortcut `Ctrl+Alt+H` | **`RegisterEventHotKey`** (Carbon, deprecated but functional, **no permissions**); the "modern" way, `NSEvent.addGlobalMonitorForEvents`, **requires the Accessibility permission** | Verified; it is a detail that decides the experience |
+| Cursor polling for hover | `NSTrackingArea` | Verified; the Windows polling would have to be rewritten |
+| Several screens and `MonitorInfo.StableId` | `NSScreen` + `CGDisplayCreateUUIDFromDisplayID` (the UUID is the natural stable id) | Verified |
+| Own *toast* notifications | `UNUserNotificationCenter` | **Will be written anyway** if the iOS mobile port is done |
+| Inno Setup / MSIX installer | DMG + **mandatory notarization** to distribute outside the App Store; or sandbox + Mac App Store | Verified ([notarization](https://developer.apple.com/documentation/security/notarizing-macos-software-before-distribution)) |
+| `Microsoft.Data.Sqlite`, AES-GCM, PBKDF2 | Supported on macOS | Verified (`cross-platform-cryptography`); macOS has had AES-GCM since before iOS |
 
-Dos consecuencias prácticas:
+Two practical consequences:
 
-- **El dinero y el Mac ya están pagados** si se hace el port móvil de iOS: la cuenta de Apple (99 $/año),
-  el Mac y Xcode sirven para macOS. El coste de macOS es **trabajo, no licencias**.
-- **Lo caro es justo lo que ya está hecho por otros.** El dock recortado al canto, con animación por
-  frame y varios monitores, es un trabajo de semanas en Windows; replicarlo en AppKit es empezar de cero
-  en la parte más frágil del producto para entrar en el mercado más competido.
+- **The money and the Mac are already paid for** if the iOS mobile port is done: the Apple account ($99/year),
+  the Mac and Xcode serve for macOS. The cost of macOS is **work, not licenses**.
+- **The expensive part is exactly what others have already done.** The dock clipped to the edge, with per-frame
+  animation and several monitors, is weeks of work on Windows; replicating it in AppKit means starting from scratch
+  on the most fragile part of the product to enter the most competitive market.
 
-### 2.3 La única vía realista de tener *el* Aldune en macOS
+### 2.3 The only realistic way to have *the* Aldune on macOS
 
-**XPF** (el producto comercial de Avalonia) ejecuta aplicaciones WPF sin modificar en macOS y Linux. Es
-la única forma de llevar *el mismo* programa con su dock, en lugar de escribir otro. Dos reservas, y
-son grandes: es de pago y hay que **comprobar qué hace XPF con los P/Invoke a `user32`/`gdi32`/`dwmapi`**
-que son el corazón de la mecánica del dock (regiones, sombras, `WS_EX_NOACTIVATE`, ganchos de ratón). Si
-XPF no mapea esas llamadas, el valor cae y queda solo "una app WPF que arranca en macOS", que para este
-producto es poco. **Antes de considerarlo hay que probar ese punto concreto.**
+**XPF** (Avalonia's commercial product) runs unmodified WPF applications on macOS and Linux. It is
+the only way to bring *the same* program with its dock, instead of writing another one. Two reservations, and
+they are big: it is paid and we have to **check what XPF does with the P/Invokes to `user32`/`gdi32`/`dwmapi`**
+that are the heart of the dock mechanics (regions, shadows, `WS_EX_NOACTIVATE`, mouse hooks). If
+XPF does not map those calls, the value drops and what is left is just "a WPF app that starts on macOS", which for this
+product is little. **Before considering it, that specific point has to be tested.**
 
-## 3. Linux: se puede hacer **el servidor**, no **el dock**
+## 3. Linux: the **server** can be done, not the **dock**
 
-### 3.1 Qué es portable y qué no
+### 3.1 What is portable and what is not
 
-- **Servidor de sync: ya funciona en Linux.** Es el `docker-compose.sync.yml` de `SYNC.md`. Para un
-  usuario de Linux, la mitad de Aldune (el almacén cifrado, sin cuenta y autohospedado) **ya está hecha**.
-- **El dock al canto: no es portable sin dejar de ser una aplicación normal.** Es el problema del
-  capítulo anterior, agravado por Wayland.
+- **Sync server: already works on Linux.** It is the `docker-compose.sync.yml` from `SYNC.md`. For a
+  Linux user, half of Aldune (the encrypted store, no account and self-hosted) **is already done**.
+- **The edge dock: it is not portable without ceasing to be a normal application.** It is the problem of the
+  previous chapter, made worse by Wayland.
 
-### 3.2 Wayland, en una tabla (esto es lo que decide)
+### 3.2 Wayland, in a table (this is what decides)
 
-Una superficie pegada al borde con reserva de espacio (lo que en Windows se consigue con la región de la
-ventana y en X11 con `_NET_WM_STRUT_PARTIAL`) en Wayland se hace con el protocolo **`wlr-layer-shell`**.
-Y ahí está el problema: no lo implementan todos los compositores.
+A surface stuck to the edge with space reservation (what on Windows is achieved with the window region and on X11
+with `_NET_WM_STRUT_PARTIAL`) is done on Wayland with the **`wlr-layer-shell`** protocol.
+And that is where the problem lies: not all compositors implement it.
 
-| Compositor | `wlr-layer-shell` | Consecuencia |
+| Compositor | `wlr-layer-shell` | Consequence |
 |---|---|---|
-| **KWin / KDE Plasma 6.7** | **Sí** (versión 5) | Un panel al canto es posible, pero como *capa de escritorio*: se comporta y se pinta como un panel de Plasma, no como una app |
-| **Mutter / GNOME 51** | **No** | En GNOME (el escritorio más usado) una app normal **no puede** reservar el borde ni colocarse en coordenadas absolutas. Solo se puede siendo **extensión de GNOME Shell** (JavaScript) |
-| Sway, Hyprland, niri, COSMIC, Muffin, Mir, Labwc, Wayfire… | Sí | Tantas variantes como compositores, cada una con sus reglas |
+| **KWin / KDE Plasma 6.7** | **Yes** (version 5) | An edge panel is possible, but as a *desktop layer*: it behaves and is painted like a Plasma panel, not like an app |
+| **Mutter / GNOME 51** | **No** | On GNOME (the most used desktop) a normal app **cannot** reserve the edge or place itself at absolute coordinates. It can only be done as a **GNOME Shell extension** (JavaScript) |
+| Sway, Hyprland, niri, COSMIC, Muffin, Mir, Labwc, Wayfire… | Yes | As many variants as compositors, each with its own rules |
 | Weston, Cage | No | — |
 
-Fuente: tabla de soporte de [`wlr-layer-shell-unstable-v1`](https://wayland.app/protocols/wlr-layer-shell-unstable-v1)
-(Wayland Explorer, 2026-09-28). Además, bajo **XWayland** (una app X11 en un escritorio Wayland) no se
-puede ni colocar la ventana ni reservar el borde: el `_NET_WM_STRUT_PARTIAL` clásico queda ignorado.
+Source: support table of [`wlr-layer-shell-unstable-v1`](https://wayland.app/protocols/wlr-layer-shell-unstable-v1)
+(Wayland Explorer, 2026-09-28). Furthermore, under **XWayland** (an X11 app on a Wayland desktop) you can
+neither place the window nor reserve the edge: the classic `_NET_WM_STRUT_PARTIAL` is ignored.
 
-**Traducción:** en Windows, Aldune es *una aplicación*; en Linux, para hacer lo mismo, habría que ser
-**una extensión del escritorio por cada escritorio** (GNOME Shell en JavaScript, un plasmoid en QML para
-KDE…), sin margen para las otras variantes. Es otro producto, con otro lenguaje y otra distribución.
+**Translation:** on Windows, Aldune is *an application*; on Linux, to do the same, it would have to be
+**a desktop extension for each desktop** (GNOME Shell in JavaScript, a plasmoid in QML for
+KDE…), with no room left for the other variants. It is another product, with another language and another distribution.
 
-### 3.3 Lo demás que cambia
+### 3.3 What else changes
 
-- **Tres o cuatro formas de distribuir** (`.deb`, `.rpm`, AppImage, Flatpak, Snap) y ninguna "la" forma.
-  Con **Flatpak**, además, el sandbox complica dos cosas que Aldune usa: un atajo global (portal
-  `GlobalShortcuts`, soporte irregular) y el acceso permanente a una carpeta de sync.
-- **Bandeja**: `StatusNotifierItem`; en GNOME hace falta una extensión para verla.
-- **Escalado fraccionario por monitor** en Wayland: la geometría al píxel, que en Windows ya costó lo
-  suyo (`DpiConversion`, `EdgeGeometry`), vuelve a ser un problema con otras reglas.
-- **Mercado**: los usuarios de Linux esperan software libre y gratis. Lo que valoran de Aldune —local,
-  cifrado, sin cuenta, autohospedado— encaja perfectamente con su cultura, pero **no con un precio**.
+- **Three or four ways to distribute** (`.deb`, `.rpm`, AppImage, Flatpak, Snap) and none of them "the" way.
+  With **Flatpak**, moreover, the sandbox complicates two things that Aldune uses: a global shortcut (portal
+  `GlobalShortcuts`, uneven support) and permanent access to a sync folder.
+- **Tray**: `StatusNotifierItem`; on GNOME an extension is needed to see it.
+- **Per-monitor fractional scaling** on Wayland: pixel-level geometry, which on Windows already cost
+  a fair amount (`DpiConversion`, `EdgeGeometry`), becomes a problem again with different rules.
+- **Market**: Linux users expect free and gratis software. What they value in Aldune —local,
+  encrypted, no account, self-hosted— fits their culture perfectly, but **not a price**.
 
-### 3.4 Qué sí se les puede dar, sin escribir una app
+### 3.4 What can be given to them, without writing an app
 
-1. **El servidor**: ya está. Mantenerlo documentado y con la imagen actualizada en cada release (es lo
-   que ya se hace).
-2. **El formato**: ya está documentado como legible por cualquier cliente futuro (`SYNC.md`,
-   "Compatibilidad futura"). Cualquiera puede escribir un cliente.
-3. **Un cliente de escritorio sin dock**, si algún día se hace: el mismo que serviría para macOS
-   (§4.1), y con el Core compartido.
+1. **The server**: it is already there. Keep it documented and with the image updated on every release (which is
+   what is already done).
+2. **The format**: it is already documented as readable by any future client (`SYNC.md`,
+   "Future compatibility"). Anyone can write a client.
+3. **A desktop client without a dock**, if it is ever made: the same one that would serve for macOS
+   (§4.1), and with the shared Core.
 
-## 4. Web / WASM: descartado, y con un argumento que no admite vuelta
+## 4. Web / WASM: ruled out, with an argument that admits no way back
 
-- Un cliente web necesitaría la **clave de descifrado en el navegador**: o se sirve desde una web de
-  terceros (rompe la promesa "sin nube, sin cuenta") o se autohospeda (un servicio más que mantener,
-  que sirve la aplicación y ve el texto en la pestaña).
-- **No hay "visor" posible sin clave**: el almacén de sync solo contiene sobres cifrados, así que una
-  vista web del servidor no mostraría nada. La única utilidad real sería un cliente completo, con todo lo
-  anterior.
-- En móvil, una PWA no tiene widgets ni notificaciones fiables: justo las dos cosas que hacen útil al
-  cliente de bolsillo.
-- Y en el escritorio, el navegador no puede ser un panel al canto de manera fiable.
+- A web client would need the **decryption key in the browser**: either it is served from a third-party website
+  (it breaks the "no cloud, no account" promise) or it is self-hosted (one more service to maintain,
+  which serves the application and sees the text in the tab).
+- **There is no possible "viewer" without a key**: the sync store only contains encrypted envelopes, so a web
+  view of the server would show nothing. The only real use would be a full client, with everything
+  above.
+- On mobile, a PWA has no widgets or reliable notifications: precisely the two things that make the
+  pocket client useful.
+- And on the desktop, the browser cannot be an edge panel reliably.
 
-Queda descartado también como herramienta de soporte ("enséñame mi almacén"): sin clave no enseña nada,
-y con clave es un cliente.
+It is also ruled out as a support tool ("show me my store"): without a key it shows nothing,
+and with a key it is a client.
 
-## 5. Lo que propongo hacer (y lo que no)
+## 5. What I propose to do (and what not)
 
-| Prioridad | Qué | Por qué | Cuándo |
+| Priority | What | Why | When |
 |---|---|---|---|
-| **1** | **Core sin Windows** (los "seams": `ISecretProtector`, sync `async`, `JsonSerializerContext`) | Es el mismo trabajo que necesita el móvil, y deja el cerebro listo para cualquier cliente | Con el móvil, `MOBILE_PORT.md` §5 fase 1 |
-| **2** | **Cliente móvil Android y después iOS** | Es donde hay uso real y hueco de mercado | `MOBILE_PORT.md` |
-| **3** | **Cliente de escritorio *sin dock* para macOS y Linux** (Avalonia), compartiendo Core y la capa de presentación (`Aldune.Mobile.Core`) | Da "el cuaderno también en el Mac" sin reescribir la mecánica del dock y sin entrar de frente en el mercado ocupado de macOS | Solo si hay alguien que lo pida y lo use |
-| 4 | Dock al canto en macOS (AppKit, o XPF) | Carísimo y en el mercado más competido; XPF tiene los P/Invoke por verificar (§2.3) | **No, por ahora** |
-| 5 | Dock al canto en Linux (extensión de GNOME/KDE) | Otro producto, otro lenguaje, y hay que mantener una extensión publicada que se rompe con cada versión del escritorio | **No** |
-| 6 | Cliente web | §4 | **No** |
+| **1** | **Core without Windows** (the "seams": `ISecretProtector`, `async` sync, `JsonSerializerContext`) | It is the same work the mobile needs, and it leaves the brain ready for any client | With mobile, `MOBILE_PORT.md` §5 phase 1 |
+| **2** | **Android mobile client and then iOS** | It is where there is real use and a market gap | `MOBILE_PORT.md` |
+| **3** | **Desktop client *without a dock* for macOS and Linux** (Avalonia), sharing Core and the presentation layer (`Aldune.Mobile.Core`) | Gives "the notebook also on the Mac" without rewriting the dock mechanics and without entering head-on into macOS's occupied market | Only if someone asks for it and uses it |
+| 4 | Edge dock on macOS (AppKit, or XPF) | Very expensive and in the most competitive market; XPF has the P/Invokes still to verify (§2.3) | **No, for now** |
+| 5 | Edge dock on Linux (GNOME/KDE extension) | Another product, another language, and a published extension has to be maintained that breaks with every desktop version | **No** |
+| 6 | Web client | §4 | **No** |
 
-Tres cosas que **no** hay que hacer por el camino: separar Core en un paquete NuGet (el monorepo basta),
-duplicar los textos (`Strings.cs` se enlaza, no se copia) y portar el editor de temas de nota.
+Three things that must **not** be done along the way: splitting Core into a NuGet package (the monorepo is enough),
+duplicating the texts (`Strings.cs` is linked, not copied) and porting the note theme editor.
 
-## 6. Estimación (sesiones, como las de este proyecto)
+## 6. Estimate (sessions, like those of this project)
 
-| Trabajo | Sesiones | Nota |
+| Work | Sessions | Note |
 |---|---|---|
-| Core sin Windows | 3 | Ya contadas en el plan móvil; no se suman |
-| Cliente de escritorio sin dock en Avalonia, macOS + Linux, reutilizando Core y la presentación | 5-7 | Es el camino barato a macOS/Linux |
-| Empaquetado: DMG + firma + notarización (macOS); AppImage/Flatpak + `.deb` (Linux) | 1-2 | La cuenta de Apple y el Mac ya se necesitan para iOS |
-| Dock al canto en macOS con AppKit | 6-10 | Incertidumbre alta: regiones, sombras, hover, multi-monitor. **No recomendado** |
-| Dock al canto en Linux como extensión de escritorio | 3-5 **por escritorio** | Más el mantenimiento permanente de la extensión. **No recomendado** |
+| Core without Windows | 3 | Already counted in the mobile plan; not added |
+| Desktop client without a dock in Avalonia, macOS + Linux, reusing Core and the presentation | 5-7 | It is the cheap path to macOS/Linux |
+| Packaging: DMG + signing + notarization (macOS); AppImage/Flatpak + `.deb` (Linux) | 1-2 | The Apple account and the Mac are already needed for iOS |
+| Edge dock on macOS with AppKit | 6-10 | High uncertainty: regions, shadows, hover, multi-monitor. **Not recommended** |
+| Edge dock on Linux as a desktop extension | 3-5 **per desktop** | Plus the permanent maintenance of the extension. **Not recommended** |
 
-## 7. Decisiones abiertas
+## 7. Open decisions
 
-1. **¿macOS y Linux se quieren de verdad o son curiosidad?** De la respuesta depende todo: el cliente sin
-   dock solo tiene sentido si alguien va a usarlo.
-2. **Avalonia o Mac Catalyst.** Si el móvil se hace con MAUI, Mac Catalyst "sale casi gratis", pero es
-   iOS adaptado a escritorio: ventanas múltiples, paneles de agente y atajos globales encajan mal.
-   Recomendación: **MAUI para el móvil, Avalonia para el escritorio**.
-3. **¿XPF?** Solo si se prueba antes qué hace con los P/Invoke del dock (§2.3).
-4. **¿El cliente sin dock también en Windows** (una "vista lista" para tablet y pantallas pequeñas)?
-   Sería una función nueva de Windows: va a `ROADMAP.md` §2, no aquí.
+1. **Are macOS and Linux really wanted or are they a curiosity?** Everything depends on the answer: the client without a
+   dock only makes sense if someone is going to use it.
+2. **Avalonia or Mac Catalyst.** If mobile is done with MAUI, Mac Catalyst "comes almost for free", but it is
+   iOS adapted to the desktop: multiple windows, agent panels and global shortcuts fit badly.
+   Recommendation: **MAUI for mobile, Avalonia for the desktop**.
+3. **XPF?** Only if what it does with the dock's P/Invokes is tested first (§2.3).
+4. **The client without a dock on Windows too** (a "list view" for tablets and small screens)?
+   It would be a new Windows feature: it goes to `ROADMAP.md` §2, not here.
 
-## 8. Cómo se retoma y fuentes
+## 8. How to pick this up again, and sources
 
-Antes de trabajar en esto, **revalidar**: la tabla de Wayland (§3.2, los compositores cambian cada
-versión), el estado de XPF y los requisitos de Apple. Todo lo de este documento es del **2026-09-28**.
+Before working on this, **revalidate**: the Wayland table (§3.2, compositors change with every
+version), the state of XPF and Apple's requirements. Everything in this document is from **2026-09-28**.
 
-- Concepto original e inspiración: `ROADMAP.md` §1.
-- [Soporte de `wlr-layer-shell` por compositor](https://wayland.app/protocols/wlr-layer-shell-unstable-v1)
-- [Notarización de software para macOS](https://developer.apple.com/documentation/security/notarizing-macos-software-before-distribution)
-- [Requisitos próximos de Apple](https://developer.apple.com/news/upcoming-requirements/)
-- [Avalonia](https://avaloniaui.net/) (y su producto XPF, que ejecuta apps WPF sin modificar en macOS y
+- Original concept and inspiration: `ROADMAP.md` §1.
+- [`wlr-layer-shell` support per compositor](https://wayland.app/protocols/wlr-layer-shell-unstable-v1)
+- [Notarizing macOS software](https://developer.apple.com/documentation/security/notarizing-macos-software-before-distribution)
+- [Apple's upcoming requirements](https://developer.apple.com/news/upcoming-requirements/)
+- [Avalonia](https://avaloniaui.net/) (and its XPF product, which runs unmodified WPF apps on macOS and
   Linux)
-- [Criptografía multiplataforma en .NET](https://learn.microsoft.com/en-us/dotnet/standard/security/cross-platform-cryptography)
-  (SQLite, AES-GCM y PBKDF2 también en macOS y Linux)
-- Los enlaces de plataforma del cliente móvil están en [`MOBILE_PORT.md`](MOBILE_PORT.md) → "Fuentes".
+- [Cross-platform cryptography in .NET](https://learn.microsoft.com/en-us/dotnet/standard/security/cross-platform-cryptography)
+  (SQLite, AES-GCM and PBKDF2 also on macOS and Linux)
+- The platform links of the mobile client are in [`MOBILE_PORT.md`](MOBILE_PORT.md) → "Sources".
 
-## 9. Windows en ARM64 y el servidor en ARM: los dos "sistemas que faltan" de verdad
+## 9. Windows on ARM64 and the server on ARM: the two truly "missing systems"
 
-Son los únicos sistemas que hoy existen y no están atendidos, y son **baratos**: no añaden superficie de
-mantenimiento porque no hay código nuevo, solo otro destino de compilación.
+They are the only systems that exist today and are not served, and they are **cheap**: they add no maintenance
+surface because there is no new code, only another build target.
 
-### 9.1 Windows en ARM64: hoy funciona, pero emulado
+### 9.1 Windows on ARM64: it works today, but emulated
 
-Lo que hay, verificado:
+What there is, verified:
 
-- El publish es **solo `win-x64`**: `src/Aldune/Properties/PublishProfiles/portable.pubxml` (línea 23),
-  `scripts/build-installer.ps1` (línea 17 y el nombre del zip, línea 52) y
-  `.github/workflows/release.yml` (líneas 34 y 45).
-- El instalador declara `ArchitecturesAllowed=x64compatible` y
-  `ArchitecturesInstallIn64BitMode=x64compatible` (`installer/Aldune.iss`, líneas 21-22). Según la
-  definición oficial de Inno Setup, **`x64compatible` incluye los sistemas ARM64 con Windows 11**, que
-  pueden ejecutar binarios x64 por emulación ([identificadores de arquitectura de Inno
-  Setup](https://jrsoftware.org/ishelp/topic_archidentifiers.htm)). Es decir: en un Copilot+ o un
-  Snapdragon X, **Aldune ya se instala y funciona**, pero emulado: más batería y más coste en la parte de
-  dibujo, que es justo la que más se nota en un dock animado.
-- El aviso de versiones (`ReleaseUpdateChecker`) **no elige fichero por nombre**: solo lee el `tag_name`
-  del release, así que por ese lado no hay nada que cambiar.
+- The publish is **only `win-x64`**: `src/Aldune/Properties/PublishProfiles/portable.pubxml` (line 23),
+  `scripts/build-installer.ps1` (line 17 and the zip name, line 52) and
+  `.github/workflows/release.yml` (lines 34 and 45).
+- The installer declares `ArchitecturesAllowed=x64compatible` and
+  `ArchitecturesInstallIn64BitMode=x64compatible` (`installer/Aldune.iss`, lines 21-22). According to the official
+  Inno Setup definition, **`x64compatible` includes ARM64 systems with Windows 11**, which
+  can run x64 binaries through emulation ([Inno
+  Setup architecture identifiers](https://jrsoftware.org/ishelp/topic_archidentifiers.htm)). That is: on a Copilot+ or a
+  Snapdragon X, **Aldune already installs and works**, but emulated: more battery drain and more cost in the drawing
+  part, which is precisely the one most noticeable in an animated dock.
+- The version notice (`ReleaseUpdateChecker`) **does not choose a file by name**: it only reads the `tag_name`
+  of the release, so on that side there is nothing to change.
 
-Un ARM64 nativo sería, en corto:
+A native ARM64 would be, in short:
 
-1. Publicar también `-r win-arm64`. WPF, el runtime de escritorio de .NET y `Microsoft.Data.Sqlite`
-   (por SQLitePCLRaw) tienen ARM64; no hay dependencias propias que lo impidan.
-2. Añadir `arm64` a `ArchitecturesAllowed`/`ArchitecturesInstallIn64BitMode` y meter los dos juegos de
-   ficheros en el mismo instalador decidiendo por arquitectura (`IsArm64`), o publicar dos instaladores.
-   El zip portable, con el nombre por arquitectura (`aldune-portable-win-arm64.zip`), y el `release.yml`
-   con una matriz de dos RID.
-3. Verificar en un equipo ARM real o en una VM de Windows 11 ARM. Para compilar en CI hay runners
-   **`windows-11-arm`** (GitHub Actions los ofrece para **repositorios públicos**; la imagen con Windows
-   11 ARM y Visual Studio 2026 llegó en septiembre de 2026
+1. Also publish `-r win-arm64`. WPF, the .NET desktop runtime and `Microsoft.Data.Sqlite`
+   (through SQLitePCLRaw) have ARM64; there are no dependencies of our own that prevent it.
+2. Add `arm64` to `ArchitecturesAllowed`/`ArchitecturesInstallIn64BitMode` and put both sets of
+   files in the same installer, deciding by architecture (`IsArm64`), or publish two installers.
+   The portable zip, with the name per architecture (`aldune-portable-win-arm64.zip`), and the `release.yml`
+   with a matrix of two RIDs.
+3. Verify on a real ARM machine or in a Windows 11 ARM VM. To build in CI there are
+   **`windows-11-arm`** runners (GitHub Actions offers them for **public repositories**; the image with Windows
+   11 ARM and Visual Studio 2026 arrived in September 2026
    ([changelog](https://github.blog/changelog/2025-04-02-arm64-windows-runners-for-public-repositories-in-public-preview/),
-   [issue de la imagen](https://github.com/actions/partner-runner-images/issues/14602))), pero el smoke
-   test de UI se hace igual en un dispositivo.
+   [image issue](https://github.com/actions/partner-runner-images/issues/14602))), but the UI smoke
+   test is done on a device all the same.
 
-**Recomendación:** hacerlo **cuando alguien lo pida** o cuando haya un equipo ARM para probarlo. Es de las
-pocas ampliaciones que no añaden deuda, y evita que un usuario de Copilot+ piense que "la app va rara".
+**Recommendation:** do it **when someone asks for it** or when there is an ARM machine to test it on. It is one of the
+few extensions that add no debt, and it prevents a Copilot+ user from thinking that "the app is acting weird".
 
-### 9.2 El servidor de sync en ARM (Raspberry Pi, NAS)
+### 9.2 The sync server on ARM (Raspberry Pi, NAS)
 
-**Ya funciona y no hay que hacer nada**: el `Dockerfile` parte de
-`mcr.microsoft.com/dotnet/aspnet:10.0`, que es una **imagen multi-arquitectura** (linux/amd64 y
-linux/arm64), y `docker compose ... up --build` compila en la máquina donde se ejecuta. Es decir, el
-almacén cifrado de Aldune se puede autohospedar hoy en un Raspberry Pi o un NAS ARM.
+**It already works and nothing needs to be done**: the `Dockerfile` starts from
+`mcr.microsoft.com/dotnet/aspnet:10.0`, which is a **multi-architecture image** (linux/amd64 and
+linux/arm64), and `docker compose ... up --build` builds on the machine where it runs. That is, Aldune's
+encrypted store can be self-hosted today on a Raspberry Pi or an ARM NAS.
 
-Lo único que **no** está hecho es **publicar una imagen ya construida** para las dos arquitecturas
-(`docker buildx build --platform linux/amd64,linux/arm64`). Solo importa si algún día se reparte la imagen
-en vez del código (por ejemplo, para quien no quiera compilar). Es una decisión de distribución, no de
-compatibilidad.
-## 10. Linux, otra vez (2026-10-29): qué dock es posible según el escritorio
+The only thing that is **not** done is **publishing a prebuilt image** for both architectures
+(`docker buildx build --platform linux/amd64,linux/arm64`). It only matters if one day the image is distributed
+instead of the code (for example, for those who do not want to build). It is a distribution decision, not a
+compatibility one.
+## 10. Linux, again (2026-10-29): which dock is possible depending on the desktop
 
-Revisión corta, solo de si existe **alguna** forma de un dock al canto en Linux. Conclusión: depende del escritorio, y
-la prueba barata es una ventana tipo dock con Avalonia sobre `Aldune.Core`.
+Short review, only of whether **any** way of an edge dock on Linux exists. Conclusion: it depends on the desktop, and
+the cheap test is a dock-type window with Avalonia on top of `Aldune.Core`.
 
-| Escritorio | ¿Dock al canto? | Cómo |
+| Desktop | Edge dock? | How |
 |---|---|---|
-| **X11** (también GNOME o KDE sobre X11) | Sí | Ventana sin marco con `_NET_WM_WINDOW_TYPE_DOCK` y `_NET_WM_STRUT_PARTIAL` (reserva el borde); siempre encima con `_NET_WM_STATE_ABOVE`. |
-| **KDE Plasma, Sway, Hyprland, COSMIC** (Wayland) | Sí | Protocolo `wlr-layer-shell`: la ventana es una *superficie de capa* anclada a un borde. Lo implementan los compositores wlroots, KWin y COSMIC. |
-| **GNOME** (Wayland, el predeterminado de Ubuntu y Fedora) | No | Mutter no implementa `wlr-layer-shell` y Wayland no deja que una ventana normal se ponga siempre encima ni se pegue a un borde. Solo cabe una ventana normal o un icono de bandeja con lista de notas. |
+| **X11** (also GNOME or KDE on X11) | Yes | Frameless window with `_NET_WM_WINDOW_TYPE_DOCK` and `_NET_WM_STRUT_PARTIAL` (reserves the edge); always on top with `_NET_WM_STATE_ABOVE`. |
+| **KDE Plasma, Sway, Hyprland, COSMIC** (Wayland) | Yes | `wlr-layer-shell` protocol: the window is a *layer surface* anchored to an edge. It is implemented by wlroots compositors, KWin and COSMIC. |
+| **GNOME** (Wayland, the default on Ubuntu and Fedora) | No | Mutter does not implement `wlr-layer-shell` and Wayland does not let a normal window be always on top or stick to an edge. Only a normal window or a tray icon with a list of notes fits. |
 
-**Lo que no sé y habría que comprobar con una prueba de un día:** si Avalonia expone `wlr-layer-shell` (no lo encontré;
-existen `gtk-layer-shell` y `qt-layer-shell` para GTK y Qt, no uno para .NET) o si habría que hacerlo con P/Invoke a
-`libwayland`/`gtk-layer-shell`. En X11 Avalonia ya permite ventanas sin marco y siempre encima; los *struts* hay que
-fijarlos por P/Invoke a Xlib.
+**What I do not know and would have to be checked with a one-day test:** whether Avalonia exposes `wlr-layer-shell` (I did not find it;
+`gtk-layer-shell` and `qt-layer-shell` exist for GTK and Qt, none for .NET) or whether it would have to be done with P/Invoke to
+`libwayland`/`gtk-layer-shell`. On X11 Avalonia already allows frameless and always-on-top windows; the *struts* have to be
+set through P/Invoke to Xlib.
 
-**Forma realista de entregarlo:** un cliente Avalonia con dos modos. *Modo dock* donde se pueda (X11, KDE, Sway,
-Hyprland) y *modo lista* (ventana normal más bandeja) en GNOME-Wayland. `Aldune.Core` y el formato de sync se reutilizan
-tal cual; el trabajo está en la capa de ventanas y en el empaquetado (AppImage, Flatpak, .deb). La cifra de la clave de
-base de datos hay que cambiarla: hoy usa DPAPI (solo Windows), y en Linux iría al llavero (libsecret).
+**Realistic way to deliver it:** an Avalonia client with two modes. *Dock mode* where possible (X11, KDE, Sway,
+Hyprland) and *list mode* (normal window plus tray) on GNOME-Wayland. `Aldune.Core` and the sync format are reused
+as they are; the work is in the window layer and in the packaging (AppImage, Flatpak, .deb). The encryption of the
+database key has to be changed: today it uses DPAPI (Windows only), and on Linux it would go to the keyring (libsecret).
 
-**Recomendación sin cambios:** no entra en la 1.8.0. Si se hace, empezar por la prueba de la ventana tipo dock en X11 y
-KDE antes de comprometerse.
+**Recommendation unchanged:** it does not go into 1.8.0. If it is done, start with the test of the dock-type window on X11 and
+KDE before committing.
 
-Fuentes: [Avalonia, soporte de Wayland](https://avaloniaui.net/blog/bringing-wayland-support-to-avalonia) (varios
-backends por escritorio, sin confirmar layer-shell), [gtk-layer-shell](https://github.com/wmww/gtk-layer-shell) (no
-funciona en GNOME-Wayland), [propuesta de «siempre encima» en Wayland](https://gitlab.freedesktop.org/wayland/wayland/-/issues/305).
+Sources: [Avalonia, Wayland support](https://avaloniaui.net/blog/bringing-wayland-support-to-avalonia) (several
+backends per desktop, layer-shell not confirmed), [gtk-layer-shell](https://github.com/wmww/gtk-layer-shell) (does not
+work on GNOME-Wayland), [proposal for "always on top" on Wayland](https://gitlab.freedesktop.org/wayland/wayland/-/issues/305).
