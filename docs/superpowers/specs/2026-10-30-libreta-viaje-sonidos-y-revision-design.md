@@ -1,6 +1,6 @@
 # Libreta de viaje, sonidos y revisión de diseño (Android y Windows)
 
-Fecha: 2026-10-30. Estado: aprobado por Nacho en chat («Sí, adelante con todo»). Se construye en tres fases, en este orden.
+Fecha: 2026-10-30. Estado: aprobado por Nacho en chat («Sí, adelante con todo»). Se construye en cuatro fases, en este orden.
 
 ## Intención
 
@@ -47,6 +47,26 @@ Windows **ya tiene** un sistema de sonidos (`SoundPlan`, `AppSounds`): interrupt
 - **Escribir** suena como mucho una vez cada 70 ms y solo con caracteres imprimibles (no con borrar ni con teclas de control).
 - **Android**: mismos eventos, mismas claves y mismo interruptor general en Ajustes. Respeta el modo silencio y vibración del sistema y usa el canal de sonidos de interfaz. Hoy Android no tiene sonidos propios (los recordatorios usan la notificación del sistema); los sonidos de la app son aparte.
 - Funcionan igual en todos los aspectos.
+
+## Fase 4: exportación automática (en Windows y en Android)
+
+Hoy solo hay exportación manual a Markdown (Windows: por nota y desde el gestor; Android: «Exportar todas las notas» en un zip y por nota). Se añade una
+**copia automática en una carpeta que elige el usuario**, en las dos apps: el usuario la quiere para tener un respaldo legible aunque falle la sync o la
+base de datos, o para apuntarla a una carpeta que ya sincroniza otra herramienta.
+
+Decisiones del constructor (a confirmar al probar):
+- **Apagada de fábrica.** Un ajuste «Copia automática en una carpeta» con «Elegir carpeta…», mismo nombre y mismo comportamiento en las dos.
+- **Qué escribe:** un `.md` por nota activa (y archivada, con una casilla), con el nombre del título y las casillas como en la exportación manual. Las notas
+  **protegidas se dejan fuera**, como en la manual: sus textos no salen en claro sin permiso.
+- **Cuándo:** Windows, unos segundos después de cada cambio (con pausa para agrupar) y al cerrar; Android, tras un cambio y como mínimo una vez al día
+  (WorkManager). Siempre en segundo plano y sin bloquear la edición.
+- **Nunca borra nada del usuario.** Solo crea y reescribe sus propios ficheros, que reconoce por un manifiesto `.aldune-export.json` en la carpeta. Una nota
+  borrada o a la papelera se mueve a una subcarpeta `_eliminadas/`; nunca se borra un fichero (misma regla que los archivos vinculados). Si el usuario cambió
+  un fichero a mano desde la última copia, no se pisa: se guarda al lado con un sufijo.
+- **Android:** la carpeta se elige con el selector del sistema (`ACTION_OPEN_DOCUMENT_TREE`, permiso persistente); si se pierde el permiso o la carpeta, se
+  avisa una vez y se apaga, sin reintentos infinitos.
+- **Aviso claro en la interfaz:** estos ficheros están **en claro** fuera de la base cifrada; quien los elige decide dónde ponerlos.
+- La lógica de nombres, del manifiesto y de qué escribir va en Core / `text`, con tests; la parte de plataforma solo escribe ficheros.
 
 ## No objetivos
 
