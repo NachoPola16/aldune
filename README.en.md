@@ -44,7 +44,7 @@ Requirements: 64-bit Windows 10 or 11. You don't need to install .NET.
 **Check your download** (optional, in PowerShell). The result must equal that file's line in `SHA256SUMS.txt`:
 
 ```powershell
-(Get-FileHash .\Aldune-Setup-2.0.0.0.exe -Algorithm SHA256).Hash.ToLower()
+(Get-FileHash .\Aldune-Setup-2.1.0.0.exe -Algorithm SHA256).Hash.ToLower()
 ```
 
 It catches a corrupted download or one altered on the way. It is not a substitute for code signing (see "Signing and privacy"): anyone who could
@@ -119,7 +119,7 @@ How a version is released and signed: [docs/RELEASING.md](docs/RELEASING.md).
 
 ## Try it and give feedback
 
-If you are testing it: Windows [v2.0.0](https://github.com/NachoPola16/aldune/releases/tag/v2.0.0), Android [1.0.0](https://github.com/NachoPola16/aldune/releases/tag/android-v1.0.0).
+If you are testing it: Windows [v2.1.0](https://github.com/NachoPola16/aldune/releases/tag/v2.1.0), Android [1.0.1](https://github.com/NachoPola16/aldune/releases/tag/android-v1.0.1).
 A bug, a question or an idea goes to [Issues](https://github.com/NachoPola16/aldune/issues/new): say which version you use, what you did and what you expected.
 Do not paste profile codes, tokens or the contents of your notes in a public issue.
 
