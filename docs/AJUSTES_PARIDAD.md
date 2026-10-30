@@ -19,7 +19,7 @@ Mismo orden y mismos nombres para lo común; lo propio de cada plataforma va en 
 | Sincronización | Sync | Sincronización | Perfiles de sync y copia automática en carpeta. Android añade la copia local en .zip. |
 | Ayuda / Acerca de | Help, About | (en General) | Solo Windows tiene páginas propias. |
 
-En Android las pestañas son chips que se reparten en varias líneas (no una fila que se desplaza: con seis pestañas la última quedaba fuera de pantalla sin que nada lo dijera). El modo simplificado esconde Notas, Colores y Sincronización en las dos plataformas (Windows esconde además lo avanzado del dock).
+En Android las pestañas son chips en una rejilla de 3 columnas (con más pestañas, más filas), y la de sincronización se llama «Sync» en todos los idiomas para que quepa en un tercio de pantalla; antes era una fila que se desplazaba: con seis pestañas la última quedaba fuera de pantalla sin que nada lo dijera. El modo simplificado esconde Notas, Colores y Sincronización en las dos plataformas (Windows esconde además lo avanzado del dock).
 
 ## Comunes (mismo texto de interfaz)
 

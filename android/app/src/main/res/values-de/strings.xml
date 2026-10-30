@@ -413,7 +413,7 @@
     <string name="sound_silenced_ringer">Das Telefon ist stumm oder auf Vibration, daher werden die Töne von Aldune nicht abgespielt.</string>
     <string name="sound_silenced_dnd">„Nicht stören“ blockiert Systemtöne. Erlaube „Berührungstöne“ in den Einstellungen oder schalte es aus.</string>
     <string name="edit_toggle_task">Aufgabe in dieser Zeile abhaken oder zurücksetzen</string>
-    <string name="settings_tab_sync">Synchronisierung</string>
+    <string name="settings_tab_sync">Sync</string>
     <string name="color_name_red">Rot</string>
     <string name="color_name_orange">Orange</string>
     <string name="color_name_yellow">Gelb</string>

@@ -413,7 +413,7 @@
     <string name="sound_silenced_ringer">O telefone está no silencioso ou no modo vibrar, então os sons do Aldune não serão tocados.</string>
     <string name="sound_silenced_dnd">O modo Não perturbe bloqueia os sons do sistema. Permita os «Sons de toque» nas configurações dele, ou desative-o.</string>
     <string name="edit_toggle_task">Marcar ou desmarcar a tarefa desta linha</string>
-    <string name="settings_tab_sync">Sincronização</string>
+    <string name="settings_tab_sync">Sync</string>
     <string name="color_name_red">Vermelho</string>
     <string name="color_name_orange">Laranja</string>
     <string name="color_name_yellow">Amarelo</string>

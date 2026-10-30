@@ -57,10 +57,11 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.FilterChip
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.material3.Switch
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.ExperimentalLayoutApi
-import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -92,6 +93,9 @@ import app.aldune.text.NoteThemes
 private val TRASH_OPTIONS = listOf(7, 14, 30, 60, 90)
 private val HIDE_AFTER_OPTIONS = listOf(1 to R.string.hide_after_hour, 24 to R.string.hide_after_day, 24 * 7 to R.string.hide_after_week)
 
+/** Pestañas por fila en Ajustes. */
+private const val TAB_COLUMNS = 3
+
 /** Ajustes (spec §2.6): sincronización, aspecto, idioma y notas. Captura y recordatorios llegan con sus fases. */
 @Composable
 fun SettingsScreen(viewModel: NotesViewModel, onClose: () -> Unit) {
@@ -120,18 +124,20 @@ fun SettingsScreen(viewModel: NotesViewModel, onClose: () -> Unit) {
                     add(R.string.settings_tab_general); add(R.string.settings_tab_appearance); add(R.string.settings_tab_notes); add(R.string.settings_tab_colors); add(R.string.settings_tab_alerts)
                     if (show(SettingsSection.SYNC) || show(SettingsSection.BACKUP)) add(R.string.settings_tab_sync)
                 }
-                // Chips que se reparten en varias líneas, no una fila que se desplaza: con seis pestañas la fila cortaba las últimas y nada decía que
-                // había más a la derecha. Así están todas a la vista.
-                @OptIn(ExperimentalLayoutApi::class)
-                FlowRow(
-                    Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 4.dp),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                ) {
-                    labels.forEachIndexed { index, label ->
-                        FilterChip(
-                            selected = tab.coerceAtMost(labels.lastIndex) == index, onClick = { tab = index },
-                            label = { Text(stringResource(label)) },
-                        )
+                // Rejilla de TAB_COLUMNS columnas, no una fila que se desplaza: con seis pestañas la fila cortaba las últimas y nada decía que había más a
+                // la derecha. Cada chip ocupa el mismo ancho y la última fila se completa con huecos, así que queda ordenada con 4, 6, 7 u 8 pestañas.
+                val selectedTab = tab.coerceAtMost(labels.lastIndex)
+                Column(Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 4.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    labels.withIndex().chunked(TAB_COLUMNS).forEach { row ->
+                        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                            for ((index, label) in row) {
+                                FilterChip(
+                                    selected = selectedTab == index, onClick = { tab = index }, modifier = Modifier.weight(1f),
+                                    label = { Text(stringResource(label), Modifier.fillMaxWidth(), textAlign = TextAlign.Center, maxLines = 1, overflow = TextOverflow.Ellipsis) },
+                                )
+                            }
+                            repeat(TAB_COLUMNS - row.size) { Spacer(Modifier.weight(1f)) }
+                        }
                     }
                 }
                 HorizontalDivider()

@@ -412,7 +412,7 @@ sound_choice_eraser	Eraser	Goma de borrar	Radiergummi	Gomme	Borracha
 sound_silenced_ringer	Your phone is on silent or vibrate, so Aldune sounds will not play.	El teléfono está en silencio o en vibración, así que los sonidos de Aldune no se oirán.	Das Telefon ist stumm oder auf Vibration, daher werden die Töne von Aldune nicht abgespielt.	Le téléphone est en silencieux ou en vibreur : les sons d’Aldune ne seront pas joués.	O telefone está no silencioso ou no modo vibrar, então os sons do Aldune não serão tocados.
 sound_silenced_dnd	Do Not Disturb is blocking system sounds. Allow “Touch sounds” in its settings, or turn it off.	No molestar bloquea los sonidos del sistema. Permite «Sonidos al tocar» en sus ajustes, o desactívalo.	„Nicht stören“ blockiert Systemtöne. Erlaube „Berührungstöne“ in den Einstellungen oder schalte es aus.	« Ne pas déranger » bloque les sons système. Autorisez les « Sons tactiles » dans ses réglages, ou désactivez-le.	O modo Não perturbe bloqueia os sons do sistema. Permita os «Sons de toque» nas configurações dele, ou desative-o.
 edit_toggle_task	Check or uncheck the task on this line	Marcar o desmarcar la tarea de esta línea	Aufgabe in dieser Zeile abhaken oder zurücksetzen	Cocher ou décocher la tâche de cette ligne	Marcar ou desmarcar a tarefa desta linha
-settings_tab_sync	Sync	Sincronización	Synchronisierung	Synchronisation	Sincronização
+settings_tab_sync	Sync	Sync	Sync	Sync	Sync
 color_name_red	Red	Rojo	Rot	Rouge	Vermelho
 color_name_orange	Orange	Naranja	Orange	Orange	Laranja
 color_name_yellow	Yellow	Amarillo	Gelb	Jaune	Amarelo

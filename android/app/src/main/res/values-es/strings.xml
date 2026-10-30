@@ -413,7 +413,7 @@
     <string name="sound_silenced_ringer">El teléfono está en silencio o en vibración, así que los sonidos de Aldune no se oirán.</string>
     <string name="sound_silenced_dnd">No molestar bloquea los sonidos del sistema. Permite «Sonidos al tocar» en sus ajustes, o desactívalo.</string>
     <string name="edit_toggle_task">Marcar o desmarcar la tarea de esta línea</string>
-    <string name="settings_tab_sync">Sincronización</string>
+    <string name="settings_tab_sync">Sync</string>
     <string name="color_name_red">Rojo</string>
     <string name="color_name_orange">Naranja</string>
     <string name="color_name_yellow">Amarillo</string>

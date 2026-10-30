@@ -413,7 +413,7 @@
     <string name="sound_silenced_ringer">Le téléphone est en silencieux ou en vibreur : les sons d’Aldune ne seront pas joués.</string>
     <string name="sound_silenced_dnd">« Ne pas déranger » bloque les sons système. Autorisez les « Sons tactiles » dans ses réglages, ou désactivez-le.</string>
     <string name="edit_toggle_task">Cocher ou décocher la tâche de cette ligne</string>
-    <string name="settings_tab_sync">Synchronisation</string>
+    <string name="settings_tab_sync">Sync</string>
     <string name="color_name_red">Rouge</string>
     <string name="color_name_orange">Orange</string>
     <string name="color_name_yellow">Jaune</string>

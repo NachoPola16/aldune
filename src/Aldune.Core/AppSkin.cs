@@ -138,8 +138,9 @@ public sealed record AppSkin(
             NoteLineHeight = 19, // Tahoma a 14 px da 16,9 px por línea (Segoe, 18,6): se queda apretada
             Border = SkinBorder.Bevel, TitleBar = SkinTitleBar.GradientHorizontal, SquareCorners = true,
         },
-        AppearanceMode.TelecomLight => Terminal with { Card = SkinCard.Tinted, Adornment = SkinTitleAdornment.Channel },
-        AppearanceMode.TelecomDark => Terminal with { Card = SkinCard.Tinted, Adornment = SkinTitleAdornment.Channel, NoteGrid = true },
+        // Interlineado de 24 px = el cuadro de la retícula: cada línea de texto cae en una fila de cuadros.
+        AppearanceMode.TelecomLight => Terminal with { Card = SkinCard.Tinted, Adornment = SkinTitleAdornment.Channel, NoteLineHeight = 24 },
+        AppearanceMode.TelecomDark => Terminal with { Card = SkinCard.Tinted, Adornment = SkinTitleAdornment.Channel, NoteGrid = true, NoteLineHeight = 24 },
         AppearanceMode.Bash => Terminal with { Card = SkinCard.Stripe, Adornment = SkinTitleAdornment.Folder, PromptLine = true },
         AppearanceMode.Phosphor => Terminal with { Card = SkinCard.Mono, Adornment = SkinTitleAdornment.Uppercase },
         // Las libretas: cuerpo en serifa y título manuscrito (el de siempre), el papel como fondo y el color de la nota como franja.

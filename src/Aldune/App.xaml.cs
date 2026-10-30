@@ -510,6 +510,8 @@ public partial class App : Application
 
     private static string ResolveAppDataDirectory()
     {
+        var overridden = Environment.GetEnvironmentVariable(BrandIdentity.DataDirEnvVar);
+        if (!string.IsNullOrWhiteSpace(overridden)) return Path.GetFullPath(overridden);
         var localAppData = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
         return Path.Combine(localAppData, BrandIdentity.AppDataDirectoryName);
     }

@@ -2003,7 +2003,8 @@ public partial class NoteWindow : Window
         NativeMethods.SetFrameColor(this, ((System.Windows.Media.SolidColorBrush)brush).Color);
         // Con retícula (osciloscopio) el cuadro de texto deja ver la cuadrícula del fondo.
         TextBody.Background = skin.NoteGrid || skin.Paper != SkinPaper.None ? Brushes.Transparent : brush;
-        BodyHost.Background = skin.NoteGrid ? GridBrush(face.Ink) : null;
+        double bodyLine = TryFindResource("AlduneNoteLineHeight") is double lh && lh > 0 ? lh : 24;
+        BodyHost.Background = skin.NoteGrid ? GridBrush(face.Ink, bodyLine, 6 + bodyLine - 1.5) : null;
         // La retícula no llega al borde de la nota: margen a la izquierda igual que a la derecha, y el texto entra un poco dentro de la primera
         // cuadrícula en vez de pegarse a su borde superior.
         _bodyPadding ??= TextBody.Padding;
@@ -2085,19 +2086,21 @@ public partial class NoteWindow : Window
         BodyHost.Background = NotePaper.Create(_paper, _paperInk, _paperLight, BodyHost.ActualWidth, BodyHost.ActualHeight, lineHeight, firstRule: lineHeight - 1.5);
     }
 
-    private static Brush GridBrush(string inkHex)
+    /// <summary>La retícula del osciloscopio: cuadros del alto de línea, con las horizontales justo bajo cada línea de texto (<paramref name="firstRule"/> es dónde cae la primera).</summary>
+    private static Brush GridBrush(string inkHex, double cell, double firstRule)
     {
+        double offset = ((firstRule % cell) + cell) % cell;
         var ink = (Color)ColorConverter.ConvertFromString(inkHex);
         var pen = new Pen(new SolidColorBrush(Color.FromArgb(0x26, ink.R, ink.G, ink.B)), 1);
         var lines = new GeometryGroup();
-        lines.Children.Add(new LineGeometry(new Point(0, 0), new Point(24, 0)));
-        lines.Children.Add(new LineGeometry(new Point(0, 0), new Point(0, 24)));
+        lines.Children.Add(new LineGeometry(new Point(0, 0), new Point(cell, 0)));
+        lines.Children.Add(new LineGeometry(new Point(0, 0), new Point(0, cell)));
         var brush = new DrawingBrush(new GeometryDrawing(null, pen, lines))
         {
             TileMode = TileMode.Tile,
-            Viewport = new System.Windows.Rect(0, 0, 24, 24),
+            Viewport = new System.Windows.Rect(0, offset, cell, cell),
             ViewportUnits = BrushMappingMode.Absolute,
-            Viewbox = new System.Windows.Rect(0, 0, 24, 24),
+            Viewbox = new System.Windows.Rect(0, 0, cell, cell),
             ViewboxUnits = BrushMappingMode.Absolute,
         };
         brush.Freeze();

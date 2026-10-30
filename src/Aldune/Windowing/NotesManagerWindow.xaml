@@ -452,7 +452,7 @@
              el borrado permanente, que solo tiene sentido en Papelera. Cambiar de pestaña conserva
              el texto, así que buscar y luego mirar en otra categoría no obliga a escribirlo dos
              veces. -->
-        <Border Grid.Row="2" Background="{DynamicResource AlduneSurfaceBrush}" CornerRadius="{DynamicResource AlduneRadius7}" Margin="20,10,20,0">
+        <Border Grid.Row="2" Background="{DynamicResource AlduneSurfaceBrush}" CornerRadius="{DynamicResource AlduneRadius7}" Margin="20,12,20,0">
             <Grid>
                 <TextBlock Text="&#xE721;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets"
                            Foreground="{DynamicResource AlduneTextFaintBrush}" FontSize="13"
@@ -490,15 +490,15 @@
                   IsThreeState="True"
                   Style="{StaticResource AppCheckBoxStyle}"
                   Click="OnSelectAllClick"
-                  Margin="32,12,20,0" VerticalAlignment="Top" />
+                  Margin="32,19,20,0" VerticalAlignment="Top" />
         <ComboBox Grid.Row="3" x:Name="SortBox" MinWidth="140" MinHeight="26"
-                  HorizontalAlignment="Right" VerticalAlignment="Top" Margin="0,7,20,0"
+                  HorizontalAlignment="Right" VerticalAlignment="Top" Margin="0,14,20,0"
                   ToolTip="{x:Static res:Strings.SortTooltip}"
                   AutomationProperties.Name="{x:Static res:Strings.SortTooltip}"
                   SelectionChanged="OnSortChanged"
                   Style="{StaticResource DarkComboBoxStyle}" />
 
-        <Grid x:Name="RowsHost" Grid.Row="3" Margin="20,42,12,0">
+        <Grid x:Name="RowsHost" Grid.Row="3" Margin="20,56,12,0">
             <ScrollViewer x:Name="RowsScroll" VerticalScrollBarVisibility="Auto"
                           HorizontalScrollBarVisibility="Disabled" Padding="0,0,8,0">
                 <ItemsControl x:Name="RowsList">

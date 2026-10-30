@@ -59,4 +59,7 @@ public static class BrandIdentity
 
     /// <summary>Monitor al que forzar el dock en pruebas manuales (ver App.OnDisplaySettingsChanged).</summary>
     public const string MonitorIndexEnvVar = "ALDUNE_MONITOR_INDEX";
+
+    /// <summary>Carpeta de datos alternativa (solo para pruebas manuales): una build de desarrollo se prueba aquí y no toca las notas reales de <c>%LOCALAPPDATA%\Aldune</c>.</summary>
+    public const string DataDirEnvVar = "ALDUNE_DATA_DIR";
 }
