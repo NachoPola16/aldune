@@ -93,6 +93,7 @@ va al lado como `nombre (Aldune).md`). Los ficheros están en claro: el ajuste l
 
 - **No hay opción para ocultar las «señales»** (prefijo `CHn`, onda del canal): son la identidad del aspecto, y quien no las quiere tiene otros aspectos
   claros y oscuros. Ya existen los interruptores de señal de sincronización, esquinas rectas y color de nota solo como franja.
+- **Widget de Android**: en Telecom lleva la tipografía monoespaciada y el acento, pero **no** el prefijo `CHn` ni la onda (Glance no dibuja trazados; las tiras de color ya identifican el aspecto).
 - **Pestaña del dock**: la onda comparte fila con la vista previa (40×12, trazo fino) y solo la vista previa cede ese hueco; el título conserva todo el ancho.
 - **Retícula de la nota**: margen sin cuadrícula a izquierda, derecha y abajo, y el texto entra 6 px dentro de la primera cuadrícula. Bash y Fósforo no tienen retícula.
 - **Cuaderno cuadriculado** (aspectos 15 y 16, claro y oscuro, en las dos plataformas): hoja de cuadros del alto de línea con margen rojo, letra de siempre (las otras libretas usan serifa) y el color de la nota como franja, bloqueado como en las demás libretas. En las filas de la lista solo lleva el margen (nada cruza el texto).
