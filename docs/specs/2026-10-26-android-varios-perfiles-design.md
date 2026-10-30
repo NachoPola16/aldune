@@ -1,6 +1,6 @@
 # Android: multiple sync profiles
 
-Date: 26-10-2026. Status: implemented on the `android-varios-perfiles` branch (unpublished). First block of the sync expansion (the next ones: QR pairing and
+Date: 26-10-2026. Status: implemented on the `android-varios-perfiles` branch (published). First block of the sync expansion (the next ones: QR pairing and
 pasting/sharing codes; background sync transparency; a pass over gaps in errors and conflicts).
 
 ## Goal

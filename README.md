@@ -55,7 +55,7 @@ Requirements: 64-bit Windows 10 or 11. You don't need to install .NET.
 **Check your download** (optional, in PowerShell). The result must equal that file's line in `SHA256SUMS.txt`:
 
 ```powershell
-(Get-FileHash .\Aldune-Setup-2.1.3.0.exe -Algorithm SHA256).Hash.ToLower()
+(Get-FileHash .\Aldune-Setup-2.1.4.0.exe -Algorithm SHA256).Hash.ToLower()
 ```
 
 It catches a corrupted download or one altered on the way. It is not a substitute for code signing (see "Signing and privacy"): anyone who could

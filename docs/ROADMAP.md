@@ -10,7 +10,7 @@ Originating session: 2026-09-06.
 
 ## Visible version of the application
 
-The current round is identified as **v2.1.3**. The version is shown in Settings and also in the tray
+The current round is identified as **v2.1.4**. The version is shown in Settings and also in the tray
 icon's text. Every major update must increment this number following SemVer: patches for fixes, a
 minor version for new features and a major version when there are incompatible changes.
 
