@@ -22,6 +22,8 @@ import java.util.concurrent.TimeUnit
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 
 /**
  * Si la copia automática perdió su carpeta. Vive aparte de los ajustes a propósito: el trabajador de segundo plano lo escribe y el `ViewModel`
@@ -73,7 +75,11 @@ object AutoExportWork {
 }
 
 class AutoExportWorker(context: Context, params: WorkerParameters) : CoroutineWorker(context, params) {
-    override suspend fun doWork(): Result {
+    // De una en una: al activar la copia llegan a la vez el trabajo inmediato, el del cambio y el diario, y cancelar uno no interrumpe la
+    // escritura que ya empezó. Dos pasadas solapadas veían la carpeta a medias y creaban `notas (1)/`, `nota (1).md` y un segundo manifiesto.
+    override suspend fun doWork(): Result = gate.withLock { run() }
+
+    private fun run(): Result {
         AutoExportStatus.init(applicationContext)
         val store = SettingsStore(applicationContext)
         val settings = store.load()
@@ -97,5 +103,9 @@ class AutoExportWorker(context: Context, params: WorkerParameters) : CoroutineWo
             // Un fallo de disco pasajero: unos reintentos y se deja; la siguiente edición o el trabajo diario lo vuelven a intentar.
             if (runAttemptCount < 3) Result.retry() else Result.success()
         }
+    }
+
+    private companion object {
+        val gate = Mutex()
     }
 }
