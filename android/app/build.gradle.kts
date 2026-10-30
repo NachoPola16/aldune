@@ -113,6 +113,12 @@ dependencies {
     // donde lifecycle fija el 1.7.3 y da AbstractMethodError. Solo en debug: la versión de producción no lo lleva.
     debugImplementation(libs.kotlinx.serialization.json)
     androidTestImplementation(libs.junit4)
+    // Compose gesture tests (swiping rows, checkboxes) on a device or emulator.
+    androidTestImplementation(platform(libs.androidx.compose.bom))
+    androidTestImplementation(libs.androidx.compose.ui.test.junit4)
+    // Espresso 3.5 (pulled in by compose-ui-test) fails on Android 17: InputManager.getInstance no longer exists.
+    androidTestImplementation(libs.androidx.test.espresso.core)
+    debugImplementation(libs.androidx.compose.ui.test.manifest)
     // La batería del contrato de LocalSyncStore: la misma que pasa el almacén en memoria, aquí con Room (F5).
     androidTestImplementation(testFixtures(project(":syncclient")))
 }

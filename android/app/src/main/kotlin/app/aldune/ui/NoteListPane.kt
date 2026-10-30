@@ -77,7 +77,7 @@ import androidx.compose.material3.SwipeToDismissBox
 import androidx.compose.material3.SwipeToDismissBoxValue
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.material3.rememberSwipeToDismissBoxState
+import androidx.compose.material3.SwipeToDismissBoxState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -428,7 +428,14 @@ fun NoteListPane(
         }
     }
 
-    menuFor?.let { item ->
+    // A menu or confirmation about a note that is no longer in this list (deleted, restored, archived) is closed: otherwise
+    // "Open note" would open a note that no longer exists, and the menu would show stale data.
+    LaunchedEffect(state.items) {
+        if (menuFor != null && state.items.none { it.id == menuFor?.id }) menuFor = null
+        if (deleting != null && state.items.none { it.id == deleting?.id }) deleting = null
+    }
+    menuFor?.let { shown ->
+        val item = state.items.firstOrNull { it.id == shown.id } ?: return@let
         NoteActionsDialog(
             item, openInEditor = item.id == selectedId, viewModel = viewModel, onOpen = { onOpen(item.id) }, onClose = { menuFor = null },
             moves = ReorderPlan.available(state.items.map { it.id }, item.id, reorderable), onMove = { delta -> moveBy(item.id, delta) },
@@ -514,13 +521,17 @@ private fun EmptyMessage(state: UiState.Ready) {
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun SwipeableRow(
+internal fun SwipeableRow(
     modifier: Modifier,
     item: NoteListItem, selected: Boolean, conflicted: Boolean, reminder: java.time.Instant?, onOpen: () -> Unit, signal: NoteSyncSignal.State, channel: Int,
     onMenu: () -> Unit, moves: Set<ReorderPlan.Direction>, onMove: (Int) -> Unit,
     onArchive: () -> Unit, onTrash: () -> Unit, onRestore: () -> Unit, onDelete: () -> Unit,
 ) {
-    val dismiss = rememberSwipeToDismissBoxState(
+    // No rememberSaveable: that state was restored already "dismissed" (StartToEnd) when a note came back to the trash after being restored and
+    // undone, and the row stopped swiping. It is created anew per note and per state, always at rest.
+    val density = androidx.compose.ui.platform.LocalDensity.current
+    val dismiss = remember(item.id, item.state) { SwipeToDismissBoxState(
+        SwipeToDismissBoxValue.Settled, density, positionalThreshold = { it * 0.56f },
         confirmValueChange = { value ->
             when (value) {
                 SwipeToDismissBoxValue.StartToEnd -> when (item.state) {
@@ -530,13 +541,13 @@ private fun SwipeableRow(
                 SwipeToDismissBoxValue.EndToStart -> when (item.state) {
                     NoteState.ACTIVE -> onArchive()
                     NoteState.ARCHIVED -> onTrash()
-                    NoteState.TRASHED -> { onDelete(); return@rememberSwipeToDismissBoxState false }
+                    NoteState.TRASHED -> { onDelete(); return@SwipeToDismissBoxState false }
                 }
                 SwipeToDismissBoxValue.Settled -> Unit
             }
             value != SwipeToDismissBoxValue.Settled
         },
-    )
+    ) }
     // El estado del deslizamiento se guarda por id de nota (rememberSaveable): una nota que acaba de archivarse o ir a la papelera volvía a
     // aparecer en su nueva pestaña ya «descartada», fuera de la pantalla. Al entrar en la composición se repone.
     LaunchedEffect(item.state) { dismiss.snapTo(SwipeToDismissBoxValue.Settled) }
