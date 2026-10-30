@@ -38,12 +38,14 @@ Reglas: desgaste **sutil**, siempre por debajo del texto y con poca opacidad; te
 
 ## Fase 3: sonidos
 
-Decisiones tomadas por el constructor (a confirmar al probar):
-- Los sonidos **se generan por código** (`scripts/sounds/generar-sonidos.py`, ruido filtrado y envolventes), así que no hay licencias ni ficheros de terceros. Salen WAV pequeños que van incrustados en Windows y como recursos en Android.
-- Eventos: abrir nota (pasar hoja), cerrar nota (papel que se pliega), crear nota, marcar casilla (toque de pluma), borrar (papel que se arruga) y **escribir** (rasguño corto de pluma).
-- **Apagados por defecto.** Un interruptor «Sonidos», otro aparte «Sonido al escribir», y un volumen. Mismos nombres en las dos apps.
-- Escribir suena como mucho una vez cada 70 ms y solo con caracteres imprimibles (no con borrar ni con teclas de control).
-- Android respeta el modo silencio y vibración del sistema y usa el canal de sonidos de interfaz; Windows usa solo el volumen propio de la app.
+Windows **ya tiene** un sistema de sonidos (`SoundPlan`, `AppSounds`): interruptor general apagado de fábrica, elección por evento entre sonidos del sistema y un `.wav` propio, y los eventos Recordatorio, Sync hecha, Sync fallida, Nota creada y Nota archivada. Se **amplía**, no se sustituye, y Android adopta el mismo modelo.
+
+- **Eventos nuevos**: Abrir nota, Cerrar nota, Marcar casilla, Borrar y **Escribir**. Se suman a los cinco existentes con sus claves estables (`noteOpened`, `noteClosed`, `taskChecked`, `noteDeleted`, `typing`).
+- **Sonidos propios de la app**, en papel y pluma: pasar hoja, papel que se pliega, toque de pluma, papel que se arruga y rasguño corto de pluma. Se generan por código (`scripts/sounds/generar-sonidos.py`: ruido filtrado y envolventes), así que no hay licencias ni ficheros de terceros. Salen WAV pequeños, incrustados en Windows y como recursos en Android.
+- **Nuevas opciones en `SoundChoice`** (se añaden al final: el enum se guarda como número) para elegirlos por evento. Un botón «Papel y pluma para todo» los asigna de una vez. Los sonidos del sistema y el `.wav` propio siguen disponibles.
+- **Apagado de fábrica**, como ahora. Los eventos nuevos arrancan en «ninguno» aunque el interruptor general esté encendido; no suenan solos. Además, un volumen de la app (mismo nombre en las dos).
+- **Escribir** suena como mucho una vez cada 70 ms y solo con caracteres imprimibles (no con borrar ni con teclas de control).
+- **Android**: mismos eventos, mismas claves y mismo interruptor general en Ajustes. Respeta el modo silencio y vibración del sistema y usa el canal de sonidos de interfaz. Hoy Android no tiene sonidos propios (los recordatorios usan la notificación del sistema); los sonidos de la app son aparte.
 - Funcionan igual en todos los aspectos.
 
 ## No objetivos
