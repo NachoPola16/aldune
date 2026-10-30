@@ -1,6 +1,6 @@
 # Emparejar por QR (Windows lo muestra, Android lo escanea)
 
-Fecha: 27-10-2026. Estado: **implementada** (plan en `docs/superpowers/plans/2026-10-27-qr-emparejamiento.md`). Sustituye la decisión «No se hace por ahora» de
+Fecha: 27-10-2026. Estado: **implementada** (el plan de ejecución se retiró del árbol). Sustituye la decisión «No se hace por ahora» de
 `docs/DECISIONES-2026-10-26.md`, que se aplazó por la densidad del código; con lo medido abajo no hace falta dividirlo.
 
 ## Para qué

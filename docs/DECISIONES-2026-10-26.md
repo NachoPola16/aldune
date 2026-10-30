@@ -49,7 +49,7 @@ uso y lo descartado: [`BRANDING.md`](BRANDING.md).
 
 ## Emparejamiento por QR
 
-**Revisado el 27-10:** se hace; ver `superpowers/specs/2026-10-27-qr-emparejamiento-design.md` (cabe en un solo QR y se descarta dividirlo). Texto original:
+**Revisado el 27-10:** se hace; ver `specs/2026-10-27-qr-emparejamiento-design.md` (cabe en un solo QR y se descarta dividirlo). Texto original:
 
 **No se hace por ahora.** El código `aldune-profile-v2:` lleva clave, scope, noteIds y URL; con muchas notas un solo QR
 sale demasiado denso y habría que dividirlo en dos. El emparejamiento actual (pegar el código y teclear el token

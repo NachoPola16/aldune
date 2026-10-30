@@ -1,6 +1,6 @@
 # Aldune para Android — F4: esqueleto de la app (sin sync)
 
-> 2026-10-17. Detalla la fila F4 de [`2026-10-17-aldune-android-design.md`](../../superpowers/specs/2026-10-17-aldune-android-design.md) §5. Manda esa spec en todo lo que
+> 2026-10-17. Detalla la fila F4 de [`2026-10-17-aldune-android-design.md`](../../specs/2026-10-17-aldune-android-design.md) §5. Manda esa spec en todo lo que
 > no se diga aquí. Estado de partida: F0-F3 hechas (`android/core`, `android/sync`, `android/text`), Android Studio Rabbit 1 instalado,
 > SDK con plataforma 37 (falta la 36), sin dispositivo conectado todavía.
 
@@ -152,7 +152,7 @@ desde Core y se porta **antes de la tarea de tema** (F3b, §4 tarea 5); hasta en
 | # | Tarea | Dónde | Notas |
 |---|---|---|---|
 | 1 | Raíz Gradle común, catálogo de versiones, plataforma 36 instalada, módulo `app` vacío que compila e instala (`adb install`) | Local, Sonnet medio | Antes: `gradle test` de core/sync/text. Decidir wrapper (§6). |
-| 2 | `android/domain` completo con tests | **Nube (Sonnet)** | Prompt `superpowers/plans/…f4-domain-nube.md`. ~8-10 $. Se puede lanzar ya. |
+| 2 | `android/domain` completo con tests | **Nube (Sonnet)** | Prompt de nube (retirado del árbol). ~8-10 $. Se puede lanzar ya. |
 | 3 | Room (entidades, DAO, migración v1) + `NoteStore` real + tests instrumentados | Local | Necesita dispositivo o emulador. |
 | 4 | Keystore + `DataKey` + `NoteCipher` + caso «clave perdida» | Local, **Opus medio** (diseño de seguridad) | Revisión cruzada con agy en solo lectura. |
 | 5 | F3b: vectores de `AppPalette`/`AspectPalettes` (en Windows) y su port a `android/text` | Windows + nube | Independiente de las demás. |

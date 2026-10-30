@@ -1,6 +1,6 @@
 # Aldune — Notas vinculadas a archivos `.md` y `.txt` (design spec)
 
-Decidido con el usuario el 2026-10-04 (fase F1 de `docs/superpowers/plans/2026-10-03-orden-de-trabajo.md`),
+Decidido con el usuario el 2026-10-04 (fase F1 de un plan retirado del árbol),
 a partir de lo que pidió en `docs/ROADMAP.md` §11. Sale como **1.6.0**.
 
 ## Qué se pidió

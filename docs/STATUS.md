@@ -1,6 +1,6 @@
 # Aldune — Estado del proyecto
 
-> **Nota (2026-10-17):** los planes de implementación paso a paso de `docs/superpowers/plans/` (fases 1-3, 1.0, 1.5 y notas vinculadas; todo ya publicado) se eliminaron del árbol por residuales; las referencias de este documento a ellos siguen siendo válidas en el historial: `git log --diff-filter=D --name-only -- docs/superpowers/plans/`. Las specs de `specs/` se conservan.
+> **Nota (2026-10-17):** los planes de implementación paso a paso (fases 1-3, 1.0, 1.5 y notas vinculadas; todo ya publicado) se eliminaron del árbol por residuales; siguen en el historial de git. Las specs de `docs/specs/` se conservan.
 
 Documento de continuidad: si retomas este proyecto después de un tiempo, empieza por
 aquí. Todo lo importante vive en el repositorio (specs, commits y estos documentos).
@@ -15,11 +15,11 @@ autoridad de diseño; todo lo demás (planes, código) se argumenta contra él.
 
 ## Qué hay hecho (fusionado en `main`)
 
-- **Fase 1** (`docs/superpowers/plans/2026-08-30-aldune-phase1-window-mechanics.md`):
+- **Fase 1** (plan retirado del árbol):
   mecánica de ventana — pill anclado al borde, hover con abanico, ventana de
   nota que activa el foco correctamente, animación respetando el ajuste de
   accesibilidad de Windows. Un solo monitor, notas falsas en memoria.
-- **Fase 2** (`docs/superpowers/plans/2026-08-30-aldune-phase2-persistence.md`):
+- **Fase 2** (plan retirado del árbol):
   persistencia real — SQLite, cifrado AES-GCM con clave envuelta en DPAPI
   (ligada a tu usuario de Windows), CRUD, papelera/archivado, autoguardado con
   debounce y guardado forzado al cerrar, manejo de errores de arranque (clave
@@ -55,7 +55,7 @@ autoridad de diseño; todo lo demás (planes, código) se argumenta contra él.
   rehecho con pestañas escalonadas, etiqueta de texto rotada
   verticalmente por nota, y apertura de la nota creciendo desde la
   posición de su propia pestaña.
-- **Fase 3a** (`docs/superpowers/plans/2026-09-02-aldune-phase3a-multimonitor-dpi.md`):
+- **Fase 3a** (plan retirado del árbol):
   primera sub-entrega de la Fase 3 — un `EdgeDockWindow` real por cada
   monitor conectado (antes solo el principal), con geometría y DPI reales
   de Win32 (`MonitorEnumerator`, `app.manifest` con `PerMonitorV2`), y un
@@ -104,7 +104,7 @@ Tests: 506/506 pasando (`dotnet test tests/Aldune.Core.Tests --no-restore`).
 - **Accesibilidad de Windows (2026-10-29, en `main`, sin release):** auditoría del código y arreglos. (1) Foco de teclado visible: estilo `AlduneFocusVisual` (anillo de 2 px, color `AppPalette.FocusRing`, calculado de cada paleta con ≥ 3:1 sobre todos sus fondos, test en las 4 paletas y los retro con colores extremos; NO es clave de la paleta porque esa lista es el contrato compartido con Android) en todos los estilos de botón con plantilla propia y como valor por defecto de `Control`; en la nota, anillo del color de la tinta de esa cara. (2) Las pastillas de color son `ToggleButton` (Tab entra una vez, flechas, Espacio/Intro, nombre y estado para el lector). (3) El gestor de notas: **Intro abre la nota, Espacio la marca, flechas suben y bajan** (antes una fila tenía foco y no hacía nada) y atajo global opcional `Ctrl+Alt+M` (apagado de fábrica; tres campos nuevos en `AppSettings` y `ConfigFields`). **Límite conocido:** las pestañas del dock siguen siendo solo de ratón (`WS_EX_NOACTIVATE` a propósito, para no robar el foco al pasar el cursor); la ruta por teclado es el gestor. (4) Alto contraste de Windows: `AppPalette.HighContrast` con los colores de sistema (7:1, tests con cinco temas de Windows), en vivo al activarlo o cambiarlo; los aspectos retro se sustituyen por la piel lisa. (5) «Tamaño del texto» 100/115/130/150 % (`TextScale`, `AppSettings.TextScalePercent`, por defecto 100): la escala tipográfica pasó de `StaticResource` a `DynamicResource` y se añadieron `AlduneTextCaption` (12) y `AlduneTextLarge` (14); las ventanas de tamaño fijo crecen con él (`ThemeManager.ScaleWindowToText`); en la nota, `Ctrl`+rueda, `Ctrl`+`+`/`-` y `Ctrl`+`0` hacen zoom solo de esa ventana. **Sin escalar** (a propósito): iconos y glifos, el texto de las pestañas del dock y las ventanas de aviso. (6) Botones de la barra de búsqueda de la nota: 24 px y enfocables.
 - **Windows 2.1.2 (2026-10-30):** el dock en reposo ya no queda tapado por una nota. Notas y docks son ventanas Topmost y entre ellas manda la última activada, así que una nota arrastrada, activada o redimensionada sobre la tira plegada la tapaba y no se veía dónde estaba el dock (con el abanico abierto ya quedaba encima). Ahora `NoteWindow` pide `AppCoordinator.RaiseDocksAboveNotes()` (→ `EdgeDockWindow.RaiseAboveNotes()`, `EnsureTopmost` sin activar) al activarse y al soltar un arrastre. Comprobado con una sonda con ratón real (arrastre por el asa, clic, redimensión y abanico): sin el arreglo la nota tapaba la tira al 100 %; con él se ve. **Contrapartida:** una nota pegada al borde de la pantalla puede tener su botón de cerrar bajo la tira (se sigue pudiendo mover). **Aviso de actualizaciones:** un aviso de versión nueva sin responder se sustituía por otra más reciente solo en el siguiente sondeo (cada 24 h), y «Descargar» abría la página de la versión que enseñaba aunque ya hubiera otra. Ahora, mientras haya un aviso pendiente se vuelve a consultar cada hora (`UpdateNotifier.PendingRecheck`) y «Descargar» consulta una vez más (5 s de margen; sin red abre la del aviso) y abre la última. Comprobado con una sonda con consulta y navegador simulados (`UpdateNotifier` acepta ambos como parámetros opcionales). Servidor de sync sin cambios. **`scripts/update-sync-server.sh`** (`37b4c3e`): el `curl` único a `/health` justo tras `up -d` salía con el código 56 y daba el script por fallido aunque el servidor arrancara bien; ahora reintenta hasta 30 s (0 si responde, 1 con mensaje si no).
 - **Windows 2.1.1 (2026-10-30):** la franja del color de la nota en las pestañas del dock (aspecto con «color solo como franja») sigue ahora las esquinas redondeadas en vez de asomar recta (`StripeBar` es un borde con el `CornerRadius` de la tarjeta). Sin más cambios que la 2.1.0.
-- **Windows 2.1.0 y Android 1.0.1 (2026-10-30):** aspectos «libreta de viaje» y «cuaderno de campo» (claro y oscuro, con papel bajo el texto en Windows y Android); sonidos de papel y pluma (eventos abrir, cerrar, marcar, borrar y escribir, volumen, apagados de fábrica; `scripts/sounds/generar-sonidos.py`); copia automática de las notas en una carpeta (`AutoExportPlanner`, nunca borra, protegidas fuera; Android por SAF y WorkManager); en Android además barra del editor con iconos, selector de color visual, «Aplicar a las notas existentes», buscar/ajustes/«+» abajo y aviso de versión nueva. Diseño en `docs/superpowers/specs/2026-10-30-libreta-viaje-sonidos-y-revision-design.md`, paridad en `docs/AJUSTES_PARIDAD.md`.
+- **Windows 2.1.0 y Android 1.0.1 (2026-10-30):** aspectos «libreta de viaje» y «cuaderno de campo» (claro y oscuro, con papel bajo el texto en Windows y Android); sonidos de papel y pluma (eventos abrir, cerrar, marcar, borrar y escribir, volumen, apagados de fábrica; `scripts/sounds/generar-sonidos.py`); copia automática de las notas en una carpeta (`AutoExportPlanner`, nunca borra, protegidas fuera; Android por SAF y WorkManager); en Android además barra del editor con iconos, selector de color visual, «Aplicar a las notas existentes», buscar/ajustes/«+» abajo y aviso de versión nueva. Diseño en `docs/specs/2026-10-30-libreta-viaje-sonidos-y-revision-design.md`, paridad en `docs/AJUSTES_PARIDAD.md`.
 - **Windows 2.0.0 y Android 1.0.0 (2026-10-29, publicadas):** versiones «definitivas» tras una ronda de pulido. Nombre visible opcional de las notas protegidas (`ProtectedTitle`/`protectedTitle`, en claro, ≤ 60 caracteres, viaja en el sobre sin subir el formato 4; las versiones anteriores lo pierden si reenvían la nota; `docs/PROTECTED_NOTES.md`); menú al mantener pulsada una nota en Android (sin archivar ni borrar: eso es deslizar); Subir/Bajar como alternativa al arrastre; exportar todas las notas en zip y aviso de que sin sync no hay copia; Ajustes de Android en pestañas (General, Aspecto, Notas, Avisos; el modo simplificado sigue en una sola pantalla), más aire bajo las rayas y entre grupos, y ajuste «Teclado al abrir una nota» (solo nuevas por defecto / todas / nunca; `KeyboardOnOpen` en domain); semántica de TalkBack (cabeceras, estado, regiones vivas); QR en horizontal. Seguridad (auditoría del 29-10, sin bloqueantes): recorte del nombre sin partir emojis, release con permisos mínimos (`build` de solo lectura y `publish` aparte), job Android en CI, límite de intentos fallidos de token en el servidor (`ALDUNE_SYNC_MAX_AUTH_FAILURES_PER_MINUTE`, `ALDUNE_SYNC_TRUST_PROXY`), test de que las redirecciones no reenvían `Authorization` a otro host. **Límites conocidos:** el dock de Windows sigue siendo solo de ratón (la ruta por teclado es el gestor y su atajo opcional `Ctrl+Alt+M`); sin TalkBack real con voz ni Narrador probados; `usesCleartextTraffic` sigue permitido en Android porque `network_security_config` no admite rangos de IP (el aviso de la app cubre el caso fuera de la red local); el nombre visible va en claro en el equipo, en el widget y en el aviso.
 - **Pulido de uso real (2026-10-27, en `main`, sin release)**: (1) Windows sincroniza **todos los perfiles activados**, no solo el elegido en Ajustes; `SyncBase` y
   `SyncConflict` pasan a clave por perfil (`ProfileKey`, migración que conserva las filas en el primer perfil), detalle en `SYNC.md`. (2) Android: el color de la
@@ -127,7 +127,7 @@ Tests: 506/506 pasando (`dotnet test tests/Aldune.Core.Tests --no-restore`).
   los perfiles de uno en uno y el fallo de uno no frena a los demás; un perfil adicional nunca ofrece «descartar». El perfil único de las
   versiones anteriores migra solo (id `default`). Crear y compartir perfiles sigue siendo cosa de Windows. Pendiente de la ampliación de la
   sync: QR y pegar/compartir el código, transparencia de la sync en segundo plano, pasada de errores y conflictos. Spec y plan en
-  `docs/superpowers/`. Probado en el emulador (migración desde un perfil, segundo perfil, duplicado, desconectar uno); sin probar en el Pixel.
+  `docs/specs/`. Probado en el emulador (migración desde un perfil, segundo perfil, duplicado, desconectar uno); sin probar en el Pixel.
 
 - **Modo simplificado en Android y ajustes predeterminados (2026-10-27):** Ajustes tiene un botón «Usar modo simplificado» que deja a la vista solo sincronización, aspecto, idioma y la versión (la regla vive en `SettingsSections`, `android/domain`, con test; los ajustes escondidos no cambian). Las casillas de tarea grandes vienen activadas en instalaciones **nuevas** de Android (quien ya tenía la app conserva lo que tenía). En Windows se movió «Mostrar tareas pendientes en el recordatorio» de la página Dock a «Notas y tareas»; el resto de valores por defecto se revisó y se deja igual (ver `docs/DECISIONES-2026-10-27.md`). Temas propios sigue siendo solo de Windows.
 - **Nota compartida con la familia (2026-10-27):** funciona con un perfil «Familia» de alcance por etiqueta (`familia`) y **su propio servicio de sync**
@@ -186,14 +186,14 @@ Tests: 506/506 pasando (`dotnet test tests/Aldune.Core.Tests --no-restore`).
   archivo inválido es la forma de recuperarlo») y ya existía; cambiarlo (dejar en paz lo ilegible) toca todos los transportes y Android y hay que decidirlo con calma por si un objeto
   roto se queda atascado para siempre. **La `v1.7.18-rc1` publicada es anterior a todos estos arreglos.**
 - **Versiones (2026-10-27 noche):** Windows **1.7.18** y Android **0.1.1** (`versionCode` 13) **publicadas** (la de Windows con `SHA256SUMS.txt`; recogen los arreglos de seguridad de la sync, la casilla sin cursor, el aviso del host y el plazo de WebDAV). Antes: Windows 1.7.17 y Android 0.1.0 (la primera estable, `versionCode` 12, sin `-rc`; se publica con `--latest=false`, ver `RELEASING.md`).
-- **QR de emparejamiento** (2026-10-27, spec `superpowers/specs/2026-10-27-qr-emparejamiento-design.md`): Windows muestra el código de
+- **QR de emparejamiento** (2026-10-27, spec `specs/2026-10-27-qr-emparejamiento-design.md`): Windows muestra el código de
   perfil como QR (`ShareQr` en Core con QRCoder 1.8.1; `ShareQrWindow` con aviso y cierre a los 120 s) y Android lo escanea
   (`QrScanActivity` con CameraX 1.6.2 + `QrDecoder` sobre ZXing core 3.5.4, sin Play Services). Se decidió no dividir el QR en varios
   y que el token no viaje nunca. Cero cambios en el formato de sync.
 
 ## Cómo se trabaja
 
-- **Diseño**: cada cambio grande empieza por una especificación en `docs/superpowers/specs/`.
+- **Diseño**: cada cambio grande empieza por una especificación en `docs/specs/`.
 - **Código**: lógica nueva en `Aldune.Core` con el test primero; la interfaz se verifica con sondas desechables
   (`docs/WPF_PROBES.md`, `docs/ANDROID_PROBES.md`).
 - **Integración**: cada cambio se prueba antes de fusionarse a `main` (`dotnet test` y, en Android, `./gradlew test`).
@@ -288,13 +288,8 @@ Queda:
 
 ## Historial de sesiones
 
-El diario cronológico (qué se hizo en cada ronda, con el porqué y las trampas) se partió en dos
-ficheros en `docs/historia/` el 2026-10-24; el contenido no cambió, solo de sitio:
-
-- [`historia/STATUS-2026-09.md`](historia/STATUS-2026-09.md): de las rondas del 2026-09-02 a la 1.4.0
-  (2026-09-27).
-- [`historia/STATUS-2026-10.md`](historia/STATUS-2026-10.md): del cierre del 2026-09-27 a 1.7.10 y el
-  arranque del cliente Android (2026-10-17).
+El diario cronológico de sesiones (2026-09-02 a 2026-10-17: qué se hizo en cada ronda, con el porqué y las trampas) se retiró
+del árbol; sigue en el historial de git (`docs/historia/STATUS-2026-09.md` y `docs/historia/STATUS-2026-10.md`).
 
 Las especificaciones de fases ya publicadas están en `historia/specs/`; los informes de fase y los
-planes de ejecución se retiraron del árbol (siguen en el historial de git). Las vigentes siguen en `superpowers/specs/`.
+planes de ejecución se retiraron del árbol (siguen en el historial de git). Las vigentes siguen en `specs/`.

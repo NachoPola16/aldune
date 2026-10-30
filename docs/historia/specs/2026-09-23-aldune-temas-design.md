@@ -1,7 +1,7 @@
 # Temas de notas — diseño
 
 Fecha: 2026-09-23. Forma parte de la Fase 2 del plan de cierre de la 1.0
-(`docs/superpowers/plans/2026-09-23-aldune-1.0-cierre.md`). Maqueta de referencia: paletas A y B y
+(plan retirado del árbol). Maqueta de referencia: paletas A y B y
 acabado "filo superior", validados por el usuario el mismo día.
 
 ## Objetivo

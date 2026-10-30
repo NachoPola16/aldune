@@ -987,7 +987,7 @@ Hoy la app no suena en ningún sitio (los avisos de `AppDialog` son "sin sonido"
 
 ## 11. Markdown vinculado a archivos (requisitos del usuario, 2026-10-03; HECHO en la 1.6.0, fase F1)
 
-Para la spec de Markdown (fase F1 de `docs/superpowers/plans/2026-10-03-orden-de-trabajo.md`), lo que pidió
+Para la spec de Markdown (fase F1 de un plan retirado del árbol), lo que pidió
 el usuario, tal cual:
 
 - **Abrir un `.md` que ya está en cualquier carpeta del equipo** con la aplicación, y que **se quede en el
@@ -1019,7 +1019,7 @@ Decisión previa (sin cambios): seguir GPL-3.0 y **validar con 3-5 personas ante
 
 1. **Emparejamiento fácil (elegida por el usuario para implementar, 25-10-2026).** Hoy se pega `aldune-profile-v2:…` y se teclea el token aparte (`SYNC.md`). Un QR del código de perfil lo reduce a escanear. Esto revisa la decisión del 21-10 («QR después de F8»): el usuario prefiere hacerlo ahora. **Restricción que no cambia:** el token nunca viaja en el QR (ese código también sirve para compartir una nota y regalaría escritura sobre todo el almacén). Diseño pendiente: cómo llega el token (introducirlo a mano, o un segundo paso corto), cámara en Android (CameraX + ZXing) y generación en Windows (QRCoder). Sin cambiar el formato de sync (4) ni los prefijos `aldune-profile-*`.
 
-   **Decidido el 25-10-2026 (falta spec y plan; pendiente, no empezado):** el token se sigue tecleando aparte (sin cambios en servidor ni formato). Windows y Android muestran el QR del código de perfil; Android lo escanea. Propuesta: CameraX + ZXing (libre, compatible con F-Droid; el escáner de ML Kit necesita Play Services) en Android y QRCoder (MIT) en Windows. Si el perfil lleva notas concretas y el código no cabe en un QR, la pantalla lo avisa y ofrece copiar el código como hoy. Siguiente paso: escribir la spec en `docs/superpowers/specs/` y, con su visto bueno, el plan con tests primero.
+   **Decidido el 25-10-2026 (falta spec y plan; pendiente, no empezado):** el token se sigue tecleando aparte (sin cambios en servidor ni formato). Windows y Android muestran el QR del código de perfil; Android lo escanea. Propuesta: CameraX + ZXing (libre, compatible con F-Droid; el escáner de ML Kit necesita Play Services) en Android y QRCoder (MIT) en Windows. Si el perfil lleva notas concretas y el código no cabe en un QR, la pantalla lo avisa y ofrece copiar el código como hoy. Siguiente paso: escribir la spec en `docs/specs/` y, con su visto bueno, el plan con tests primero.
 2. **Importar Markdown y copia de seguridad con un clic.** Barato; quita fricción de entrada (ver `PENDIENTES.md`).
 3. **Microsoft Store (MSIX).** La firma y el no pasar por SmartScreen pesan más que cualquier función; SignPath ya rechazó el proyecto. Pospuesto hasta cerrar Android; para vender es probablemente lo más necesario.
 

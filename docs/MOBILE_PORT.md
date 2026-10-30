@@ -5,12 +5,12 @@
 > **Revisión del 2026-10-17 (§13): .NET MAUI no sirve si se quiere F-Droid; la recomendación pasa a ser Android nativo
 > (Kotlin + Compose) con el formato de sync fijado por vectores generados desde `Aldune.Core`. Decidido por el usuario el
 > mismo día. Lo que dice el resto del documento sobre MAUI (§3, §4, §6, §7) es anterior a esa revisión; el producto y las fases
-> vigentes están en [`superpowers/specs/2026-10-17-aldune-android-design.md`](superpowers/specs/2026-10-17-aldune-android-design.md).**
+> vigentes están en [`specs/2026-10-17-aldune-android-design.md`](specs/2026-10-17-aldune-android-design.md).**
 > Sesión del 2026-09-28. Este documento existe para que el port se pueda retomar dentro de meses,
 > sin repetir la investigación que ya está hecha. Si algo de aquí se
 > implementa, manda lo implementado: hay que actualizar `STATUS.md` (lo hecho y por qué) y
 > `ROADMAP.md` (lo decidido y lo descartado) y, si hay diseño nuevo de producto,
-> `docs/superpowers/specs/`.
+> `docs/specs/`.
 
 ## 0. El encargo y la respuesta corta
 
@@ -321,7 +321,7 @@ en vez de copiarlo), comentarios en español, BOM UTF-8 en `.cs`/`.xaml`, docume
 
 | # | Fase | Entregable | Verificación / puerta | Sesiones |
 |---|---|---|---|---|
-| 0 | **Spec y spikes** | `docs/superpowers/specs/<fecha>-aldune-movil-design.md` (producto, qué no se porta, privacidad del widget) + cuatro sondas desechables | A: abrir `notes.db` y descifrar en Android. B: sync real contra el servidor Docker, con conflicto y borrado. C: notificación con la app cerrada, Android 16 e iOS 26. D: widget Swift mínimo leyendo del App Group. **Si A o D fallan, se revisa el stack antes de escribir producto** | 2 |
+| 0 | **Spec y spikes** | `docs/specs/<fecha>-aldune-movil-design.md` (producto, qué no se porta, privacidad del widget) + cuatro sondas desechables | A: abrir `notes.db` y descifrar en Android. B: sync real contra el servidor Docker, con conflicto y borrado. C: notificación con la app cerrada, Android 16 e iOS 26. D: widget Swift mínimo leyendo del App Group. **Si A o D fallan, se revisa el stack antes de escribir producto** | 2 |
 | 1 | **Seams en Core** | `ISecretProtector`, API `async` de sync, `JsonSerializerContext`, `Aldune.Core.Windows` | Los 850 tests + el smoke test de UI de Windows, **sin cambios de comportamiento** | 3 |
 | 2 | **MVP Android** | Capturar (nota nueva, compartir, acceso directo, notificación "+"), lista con búsqueda y filtros, leer/editar con el formato de texto real, color/tema, etiquetar/archivar/papelera, ajustes de sync (código de perfil + token), sync automática al abrir y al volver a primer plano, recordatorios locales, notas protegidas | Tests de Core + tests de `Aldune.Mobile.Core` + **sonda móvil** con informe desde el dispositivo + checklist manual | 6 |
 | 3 | **MVP iOS** | El mismo alcance sobre el pipeline del Mac (Xcode 26), TestFlight y la extensión Swift de compartir | Igual que la fase 2, con checklist propia de iOS | 4 |
@@ -507,9 +507,9 @@ Lo que **no** se hace en ninguno (igual que antes): dock, abanico, ventanas flot
 ### 13.5 Estado (2026-10-17)
 
 - **Hecho (sesión de diseño, tarde):** spec de producto, arquitectura, almacenamiento y fases en
-  [`superpowers/specs/2026-10-17-aldune-android-design.md`](superpowers/specs/2026-10-17-aldune-android-design.md), con las decisiones
+  [`specs/2026-10-17-aldune-android-design.md`](specs/2026-10-17-aldune-android-design.md), con las decisiones
   de producto del usuario; revisión de §13 con internet (§13.6); prompt de nube para el motor de sync en
-  `superpowers/plans/2026-10-17-android-motor-sync-nube.md`.
+  un plan retirado del árbol.
 - **Hecho:** vectores de compatibilidad (`tests/vectors/`, verificados por `SyncVectorsTests`) y el **núcleo Kotlin** `android/core`
   (clave, sobres, borrados, notas protegidas, códigos de perfil, orden de versiones; 82 tests contra los vectores; informe en
   `INFORME-ANDROID-CORE.md`). Con el nonce de cada vector Kotlin reproduce byte a byte el cifrado de C#, y Core
@@ -529,8 +529,8 @@ Lo que **no** se hace en ninguno (igual que antes): dock, abanico, ventanas flot
 - **F2 hecho y verificado aquí (2026-10-17):** `WebDavSyncTransport` (21 tests con MockWebServer) y `ServerIntegrationTest` (5 tests) **ejecutados contra el `Aldune.SyncServer` real** en local (token de prueba y carpeta temporal): todo en verde. `android/sync`: 119 tests (114 + 5 de servidor real, que se saltan sin `-Daldune.server.url`); `android/core`: 82. Informe: `INFORME-ANDROID-F2.md`. Sin probar aún: el XML en Android real y un Nextcloud real.
 - **F4 tarea 1 y `android/domain` hechas (2026-10-17):** raíz Gradle común y módulo `app` que compila y arranca en el Pixel 10a (Android 17); `domain` (86 tests) fusionado de la nube. Informes: `INFORME-ANDROID-F4-DOMAIN.md`. Quedan las tareas 3-9 de la spec de F4.
 - **F3 hecho y verificado aquí (2026-10-17):** `android/text` (87 tests; informe `INFORME-ANDROID-F3.md`), fusionado desde la nube y ejecutado en este PC. Sin probar en Android real (pliegue de acentos, 1 ulp de cbrt/pow).
-- **F3, vectores hechos (2026-10-17):** `tests/vectors/text-lines.json`, `text-color.json` y `text-order.json` (≈12.800 casos de Core real: tareas, viñetas, sangría, mover líneas, listas de tareas, título/vista previa, OKLCH, contraste, derivación de color, temas, reparto de color y orden del mazo), generados y verificados por `TextVectorsTests` sin tocar Core (1454 tests de Core en verde). Pendiente: el módulo `android/text` (prompt de nube en `superpowers/plans/2026-10-17-android-f3-texto-nube.md`). Búsqueda sin vectores (Android pliega acentos); `ColorFit`, `ColorMix` y `AppPalette` quedan fuera de F3 (paleta de la app: decidir F3b o F4).
-- **Siguiente (ya hecho F0 y F1; lo de abajo es el plan original):** (1) commitear F0; (2) **F1 en la nube** con el prompt de `superpowers/plans/` (motor contra esos vectores, ~10-12 $); (3) F2-F3
+- **F3, vectores hechos (2026-10-17):** `tests/vectors/text-lines.json`, `text-color.json` y `text-order.json` (≈12.800 casos de Core real: tareas, viñetas, sangría, mover líneas, listas de tareas, título/vista previa, OKLCH, contraste, derivación de color, temas, reparto de color y orden del mazo), generados y verificados por `TextVectorsTests` sin tocar Core (1454 tests de Core en verde). Pendiente: el módulo `android/text` (prompt de nube en un plan retirado del árbol). Búsqueda sin vectores (Android pliega acentos); `ColorFit`, `ColorMix` y `AppPalette` quedan fuera de F3 (paleta de la app: decidir F3b o F4).
+- **Siguiente (ya hecho F0 y F1; lo de abajo es el plan original):** (1) commitear F0; (2) **F1 en la nube** con el prompt de nube (retirado del árbol) (motor contra esos vectores, ~10-12 $); (3) F2-F3
   (transportes, texto); (4) app Compose (F4+), que necesita Android Studio o el SDK + JDK 21 en este PC.
 - **Decidido por el usuario (2026-10-17):** `applicationId` `io.github.nachopola16.aldune`, nombre «Aldune», una clave de firma,
   GitHub + IzzyOnDroid primero, Android Studio antes de F4; la tableta tiene Android 14. Detalle en la spec §8.1.
