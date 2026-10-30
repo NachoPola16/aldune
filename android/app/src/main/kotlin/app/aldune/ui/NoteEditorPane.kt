@@ -767,19 +767,25 @@ private tailrec fun Context.findActivity(): Activity? = when (this) {
 }
 
 /**
- * La posición de la casilla tocada, o `null` si el toque no cayó sobre una. `getOffsetForPosition` da el límite de carácter más
- * cercano, así que se prueban el carácter anterior y el siguiente; y se exige que el toque esté a menos de [slack] del glifo, para que
- * tocar el texto de la tarea no la marque.
+ * The position of the tapped checkbox, or `null` if the tap did not land on one. The target is the checkbox plus the space that follows it (up
+ * to where the task text begins), over the whole height of its line: a tap in that gap used to resolve to the text (the nearest character
+ * boundary is the first letter), so it put the cursor there, and the cursor handle then covered the next row's checkbox. Tapping the text of
+ * the task itself still does not tick it.
  */
-private fun toggleCheckboxAtTap(text: String, layout: TextLayoutResult?, position: Offset, slack: Float): Int? {
+internal fun toggleCheckboxAtTap(text: String, layout: TextLayoutResult?, position: Offset, slack: Float): Int? {
     layout ?: return null
     if (text.isEmpty()) return null
     val offset = layout.getOffsetForPosition(position)
-    for (candidate in intArrayOf(offset, offset - 1)) {
-        if (candidate !in text.indices) continue
+    val line = layout.getLineForVerticalPosition(position.y)
+    if (position.y < layout.getLineTop(line) || position.y > layout.getLineBottom(line)) return null
+    for (candidate in intArrayOf(offset, offset - 1, offset - 2)) {
+        if (candidate !in text.indices || candidate < layout.getLineStart(line) || candidate >= layout.getLineEnd(line)) continue
         if (TaskLines.toggleCheckboxAt(text, candidate) == null) continue
         val box = layout.getBoundingBox(candidate)
-        if (position.y in box.top..box.bottom && position.x in (box.left - slack)..(box.right + slack)) return candidate
+        // Up to the start of the next visible character (the task text) when it is on the same line; otherwise the usual slack.
+        val textStart = if (candidate + 1 < layout.getLineEnd(line)) layout.getBoundingBox(candidate + 1).right else box.right + slack
+        val right = maxOf(box.right + slack / 2, textStart)
+        if (position.x in (box.left - slack)..right) return candidate
     }
     return null
 }

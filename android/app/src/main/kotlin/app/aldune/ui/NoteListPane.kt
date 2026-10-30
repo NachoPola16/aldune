@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.gestures.awaitEachGesture
+import androidx.compose.foundation.gestures.scrollBy
 import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.foundation.gestures.awaitLongPressOrCancellation
 import androidx.compose.foundation.gestures.detectDragGesturesAfterLongPress
@@ -20,6 +21,7 @@ import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.zIndex
 import app.aldune.domain.ReorderPlan
@@ -281,9 +283,8 @@ fun NoteListPane(
                     dragStartIds = order.map { it.id }
                 }
 
-                fun dragBy(dy: Float) {
+                fun swapUnderDrag() {
                     val id = draggedId ?: return
-                    dragDelta += dy
                     val visible = listState.layoutInfo.visibleItemsInfo
                     // Tras un intercambio, la pantalla tarda un fotograma en recolocarse: sin esperar, el mismo gesto intercambiaría dos veces.
                     val shown = visible.sortedBy { it.offset }.map { it.key }
@@ -298,6 +299,34 @@ fun NoteListPane(
                     // La nota arrastrada cambia de sitio en la lista: su desplazamiento se compensa para que siga bajo el dedo.
                     val newOffset = if (to < from) target.offset else target.offset + target.size - me.size
                     dragDelta -= (newOffset - me.offset)
+                }
+
+                fun dragBy(dy: Float) {
+                    dragDelta += dy
+                    swapUnderDrag()
+                }
+
+                // Dragging near the top or bottom edge scrolls the list so the note can keep moving (the finger can be still at the edge, hence a
+                // loop per frame and not the drag callback). The scrolled distance goes into `dragDelta`: the row stays under the finger.
+                val edge = with(LocalDensity.current) { 72.dp.toPx() }
+                LaunchedEffect(draggedId) {
+                    val id = draggedId ?: return@LaunchedEffect
+                    while (true) {
+                        androidx.compose.runtime.withFrameNanos { }
+                        val info = listState.layoutInfo
+                        val me = info.visibleItemsInfo.firstOrNull { it.key == id } ?: continue
+                        val center = me.offset + me.size / 2f + dragDelta
+                        val speed = 14f
+                        val step = when {
+                            center < info.viewportStartOffset + edge -> -speed * ((info.viewportStartOffset + edge - center) / edge).coerceIn(0.2f, 1.5f)
+                            center > info.viewportEndOffset - edge -> speed * ((center - (info.viewportEndOffset - edge)) / edge).coerceIn(0.2f, 1.5f)
+                            else -> 0f
+                        }
+                        if (step != 0f) {
+                            val moved = listState.scrollBy(step)
+                            if (moved != 0f) { dragDelta += moved; swapUnderDrag() }
+                        }
+                    }
                 }
 
                 fun dragEnd() {

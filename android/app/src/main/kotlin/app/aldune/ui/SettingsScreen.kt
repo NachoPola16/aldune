@@ -64,6 +64,7 @@ import androidx.compose.material3.Switch
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -108,6 +109,11 @@ fun SettingsScreen(viewModel: NotesViewModel, onClose: () -> Unit) {
     // sigue siendo una sola pantalla. rememberSaveable: girar el móvil no vuelve a la primera pestaña.
     val tabs = !settings.simplifiedMode
     var tab by rememberSaveable { mutableIntStateOf(0) }
+    // One scroll for all tabs: a new tab starts at the top instead of where the previous one was. `shownTab` tells a real tab change from the
+    // effect re-running after a rotation, which must keep the position.
+    val settingsScroll = rememberScrollState()
+    var shownTab by rememberSaveable { mutableIntStateOf(0) }
+    LaunchedEffect(tab) { if (shownTab != tab) { settingsScroll.scrollTo(0); shownTab = tab } }
     fun inTab(index: Int) = !tabs || tab == index
 
     // En una pantalla ancha (tableta) los ajustes van en una columna centrada, no estirados a todo el ancho.
@@ -142,7 +148,7 @@ fun SettingsScreen(viewModel: NotesViewModel, onClose: () -> Unit) {
                 }
                 HorizontalDivider()
             }
-            Column(Modifier.verticalScroll(rememberScrollState()).padding(bottom = 24.dp)) {
+            Column(Modifier.verticalScroll(settingsScroll).padding(bottom = 24.dp)) {
                 if (show(SettingsSection.SYNC) && inTab(5)) SyncSection(viewModel)
                 if (show(SettingsSection.BACKUP) && inTab(5)) BackupSection(viewModel)
                 if (show(SettingsSection.CAPTURE) && inTab(4)) CaptureSection(viewModel, settings.captureNotification)
