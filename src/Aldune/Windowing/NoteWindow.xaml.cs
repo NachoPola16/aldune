@@ -89,6 +89,7 @@ public partial class NoteWindow : Window
         _initialWidth = Width;
         _initialHeight = Height;
         _autoScroll = new AutoScrollManager(BodyHost, null, TextBody);
+        BodyHost.SizeChanged += (_, _) => RefreshPaper();
         TextBody.AddHandler(ScrollViewer.ScrollChangedEvent, new ScrollChangedEventHandler(OnBodyScrollChanged));
         _menuToggle = new PopupToggle(ActionsPopup);
         // Sin disparador el toggle no puede saber que el cierre lo provocó el propio "⋯" y el clic
@@ -1969,8 +1970,14 @@ public partial class NoteWindow : Window
         // El marco de DWM sigue a la cara: si no, la franja que aparece al crecer sale blanca (ver SetFrameColor).
         NativeMethods.SetFrameColor(this, ((System.Windows.Media.SolidColorBrush)brush).Color);
         // Con retícula (osciloscopio) el cuadro de texto deja ver la cuadrícula del fondo.
-        TextBody.Background = skin.NoteGrid ? Brushes.Transparent : brush;
+        TextBody.Background = skin.NoteGrid || skin.Paper != SkinPaper.None ? Brushes.Transparent : brush;
         BodyHost.Background = skin.NoteGrid ? GridBrush(face.Ink) : null;
+        // Las libretas: el papel (pliegues o renglones) bajo el texto, del tamaño del cuerpo; se rehace al cambiar el tamaño (ver RefreshPaper).
+        _paper = skin.Paper;
+        _paperInk = (System.Windows.Media.Color)System.Windows.Media.ColorConverter.ConvertFromString(face.Ink);
+        var faceColor = (System.Windows.Media.Color)System.Windows.Media.ColorConverter.ConvertFromString(face.Face);
+        _paperLight = (0.2126 * faceColor.R + 0.7152 * faceColor.G + 0.0722 * faceColor.B) / 255 > 0.5;
+        RefreshPaper();
         Resources["NoteInkBrush"] = ink;
         Resources["NotePlaceholderBrush"] = ink;
         // Move hover away from the foreground so text retains contrast on middle tones too.
@@ -2024,6 +2031,19 @@ public partial class NoteWindow : Window
 
     // Retícula de osciloscopio: líneas de 1 px cada 24, de la tinta muy translúcida, para que se lea
     // como fondo y no compita con el texto.
+    private SkinPaper _paper = SkinPaper.None;
+    private System.Windows.Media.Color _paperInk;
+    private bool _paperLight;
+
+    /// <summary>Repinta el papel de la libreta con el tamaño actual del cuerpo (no hace nada en los demás aspectos: ahí manda la retícula o nada).</summary>
+    private void RefreshPaper()
+    {
+        if (_paper == SkinPaper.None) return;
+        double lineHeight = TryFindResource("AlduneNoteLineHeight") is double h && h > 0 ? h : 22;
+        // El primer renglón cae bajo la primera línea del texto: su altura de línea menos lo que la letra queda por encima del renglón.
+        BodyHost.Background = NotePaper.Create(_paper, _paperInk, _paperLight, BodyHost.ActualWidth, BodyHost.ActualHeight, lineHeight, firstRule: lineHeight - 1.5);
+    }
+
     private static Brush GridBrush(string inkHex)
     {
         var ink = (Color)ColorConverter.ConvertFromString(inkHex);
