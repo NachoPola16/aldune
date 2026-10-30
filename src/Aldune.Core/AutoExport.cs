@@ -70,6 +70,9 @@ public static class AutoExportPlanner
     public const string RemovedDir = "_eliminadas";
     private const string SideSuffix = "Aldune";
 
+    /// <summary>Lo que queda en el fichero de una nota que pasó a estar protegida: su texto en claro no puede seguir en la carpeta de copia.</summary>
+    public const string ProtectedStub = "# (nota protegida)\r\n\r\nEsta nota ahora está protegida con contraseña: su texto ya no se copia.";
+
     public static string HashOf(string content) => Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(content)));
 
     public static AutoExportPlan Plan(IReadOnlyList<ExportNote> notes, ExportManifest manifest, bool includeArchived, Func<string, string?> readHash)
@@ -87,6 +90,8 @@ public static class AutoExportPlanner
         {
             files.Remove(id);
             if (readHash(entry.Path) != entry.Hash) continue;
+            // Una nota que pasó a protegida: el fichero (nuestro, intacto) se reescribe sin su texto antes de apartarlo. No se borra nada: es reescribir lo propio.
+            if (notes.Any(n => n.Id.ToString() == id && n.IsProtected)) actions.Add(new ExportAction.Write(entry.Path, ProtectedStub));
             var target = UniquePath(RemovedDir, FileNameOf(entry.Path), used, readHash, checkDisk: true);
             actions.Add(new ExportAction.Move(entry.Path, target));
         }
@@ -268,7 +273,10 @@ public static class AutoExportRunner
         }
         finally
         {
-            File.WriteAllText(manifestPath, plan.Manifest.ToJson(), Utf8NoBom);
+            // Atómico: en un fichero temporal y luego reemplazo, para que un corte a medias no deje un manifiesto roto (que se leería como vacío).
+            var temp = manifestPath + ".tmp";
+            File.WriteAllText(temp, plan.Manifest.ToJson(), Utf8NoBom);
+            File.Move(temp, manifestPath, overwrite: true);
         }
         return plan.Actions.Count;
     }

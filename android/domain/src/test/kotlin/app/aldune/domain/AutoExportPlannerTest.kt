@@ -105,7 +105,7 @@ class AutoExportPlannerTest {
         val first = run(folder, ExportManifest(), listOf(note("Antes", id = "a")))
         run(folder, first.manifest, listOf(note("Antes", isProtected = true, id = "a")))
         assertFalse("notas/Antes.md" in folder.files)
-        assertTrue("_eliminadas/Antes.md" in folder.files)
+        assertEquals(AutoExportPlanner.PROTECTED_STUB, folder.files["_eliminadas/Antes.md"]) // el texto en claro no se queda en la carpeta
     }
 
     @Test

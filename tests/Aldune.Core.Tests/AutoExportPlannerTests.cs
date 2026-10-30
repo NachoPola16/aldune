@@ -1,4 +1,4 @@
-using Xunit;
+﻿using Xunit;
 
 namespace Aldune.Core.Tests;
 
@@ -145,7 +145,7 @@ public class AutoExportPlannerTests
         var second = Run(folder, first.Manifest, [N("Antes", isProtected: true, id: id)]);
 
         Assert.False(folder.Files.ContainsKey("notas/Antes.md"));
-        Assert.True(folder.Files.ContainsKey("_eliminadas/Antes.md"));
+        Assert.Equal(AutoExportPlanner.ProtectedStub, folder.Files["_eliminadas/Antes.md"]);   // el texto en claro no se queda en la carpeta
     }
 
     [Fact]

@@ -73,6 +73,9 @@ object AutoExportPlanner {
     const val REMOVED_DIR = "_eliminadas"
     private const val SIDE_SUFFIX = "Aldune"
 
+    /** Lo que queda en el fichero de una nota que pasó a estar protegida: su texto en claro no puede seguir en la carpeta de copia. */
+    const val PROTECTED_STUB = "# (nota protegida)\r\n\r\nEsta nota ahora está protegida con contraseña: su texto ya no se copia."
+
     fun hashOf(content: String): String =
         MessageDigest.getInstance("SHA-256").digest(content.toByteArray(Charsets.UTF_8)).joinToString("") { "%02X".format(it) }
 
@@ -87,6 +90,8 @@ object AutoExportPlanner {
         for ((id, entry) in files.entries.filter { it.key !in wanted }.sortedBy { it.key }) {
             files.remove(id)
             if (readHash(entry.path) != entry.hash) continue
+            // Una nota que pasó a protegida: el fichero (nuestro, intacto) se reescribe sin su texto antes de apartarlo. No se borra nada: es reescribir lo propio.
+            if (notes.any { it.id == id && it.isProtected }) actions += ExportAction.Write(entry.path, PROTECTED_STUB)
             actions += ExportAction.Move(entry.path, uniquePath(REMOVED_DIR, fileNameOf(entry.path), used, readHash, checkDisk = true))
         }
 
