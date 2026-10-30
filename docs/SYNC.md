@@ -30,18 +30,26 @@ cada dispositivo. Trata el código como una contraseña, porque contiene la clav
 2. En el primer PC: Ajustes → Sincronización entre dispositivos → activa la sincronización, elige `Carpeta compartida / NAS` y
    selecciona la carpeta.
 3. Pulsa **Compartir perfil** y copia el código.
-4. En cada PC más: Ajustes → crea un perfil, pega el código, pulsa `Importar código` y elige la carpeta (puede tener otra ruta
+4. En cada PC más: Ajustes → Sincronización entre dispositivos → pulsa **Nuevo** (junto a «Perfil de sincronización»), pega el código, pulsa `Importar código` y elige la carpeta (puede tener otra ruta
    que en el primer PC, pero tiene que ser la misma carpeta).
 5. `Sincronizar ahora` (en Ajustes y en el dock), o activa la sincronización periódica.
 
 #### B. Servidor propio
 
-1. En el servidor, con el repositorio clonado: `cp .env.example .env`, pon en `.env` un `ALDUNE_SYNC_TOKEN` largo y aleatorio y
-   arranca con `docker compose -f docker-compose.sync.yml up -d --build`. Comprueba que responde:
-   `curl http://IP-DEL-SERVIDOR:8087/health` debe devolver `{"status":"ok",...}`.
+1. En el servidor (Linux, o cualquier máquina con **Git** y **Docker con Compose v2**; comprueba con `docker compose version`):
+   ```bash
+   git clone https://github.com/NachoPola16/aldune.git
+   cd aldune
+   cp .env.example .env
+   openssl rand -base64 32      # genera un token; si no tienes openssl, usa cualquier cadena larga y aleatoria
+   ```
+   Abre `.env` y sustituye `replace-with-a-long-random-token` por ese valor (solo el valor, sin comillas ni espacios). Luego
+   `docker compose -f docker-compose.sync.yml up -d --build` (la primera vez tarda unos minutos: compila el servidor).
+   Comprueba que responde: `curl http://IP-DEL-SERVIDOR:8087/health` debe devolver `{"status":"ok",...}`. Si no responde desde otro
+   equipo pero sí desde el servidor, es el cortafuegos: abre el puerto `8087` (TCP) en el servidor.
 2. En el primer PC: Ajustes → Sincronización entre dispositivos → `Servidor propio`; URL (`http://IP-DEL-SERVIDOR:8087/`) y el
    token. Pulsa **Compartir perfil** y copia el código.
-3. En cada PC más: crea un perfil, pega el código, `Importar código` y escribe el token (el transporte y la URL se rellenan solos).
+3. En cada PC más: Ajustes → Sincronización entre dispositivos → pulsa **Nuevo** (junto a «Perfil de sincronización»), pega el código, `Importar código` y escribe el token (el transporte y la URL se rellenan solos).
 4. **En Android:** Ajustes → Sincronización → pega el código (o pulsa **Escanear QR** mientras el PC enseña **Mostrar QR**) → **Continuar** → elige «Aldune server» → comprueba la dirección y
    escribe el token → **Conectar**.
 5. Fuera de casa usa HTTPS (ver [Nginx + Cloudflare Tunnel](#nginx--cloudflare-tunnel) y [HTTPS con Caddy](#https-con-caddy)): con
@@ -54,7 +62,7 @@ cada dispositivo. Trata el código como una contraseña, porque contiene la clav
 2. La URL de esa carpeta suele ser `https://cloud.example.com/remote.php/dav/files/USUARIO/Aldune/`.
 3. En el primer PC: Ajustes → Sincronización entre dispositivos → `WebDAV / Nextcloud`; URL, usuario y contraseña de aplicación.
    Pulsa **Compartir perfil** y copia el código.
-4. En cada PC más: crea un perfil, pega el código, `Importar código` y escribe tu usuario y contraseña de aplicación.
+4. En cada PC más: Ajustes → Sincronización entre dispositivos → pulsa **Nuevo** (junto a «Perfil de sincronización»), pega el código, `Importar código` y escribe tu usuario y contraseña de aplicación.
 5. **En Android:** Ajustes → Sincronización → pega el código (o **Escanear QR**, como arriba) → **Continuar** → elige «WebDAV» → dirección (si es una carpeta,
    termínala en `/`), usuario y contraseña de aplicación → **Conectar**.
 
@@ -129,7 +137,7 @@ Qué protege Aldune y qué no, en corto:
   PBKDF2-SHA256 (600.000 iteraciones); la contraseña no se guarda.
 - **Lo que no cubre.** No hay auditoría externa ni certificación. Quien controle el almacén puede
   borrar o no servir los ficheros (dejar de sincronizar), servir una versión antigua auténtica de una
-  nota a un dispositivo que aún no tenga una más nueva, ; no puede leerlas ni fabricar cambios en ellas. Los metadatos (cuántas notas hay y cuándo cambian) son visibles para él.
+  nota a un dispositivo que aún no tenga una más nueva; no puede leerlas ni fabricar cambios en ellas. Los metadatos (cuántas notas hay y cuándo cambian) son visibles para él.
 
 > **Al actualizar a la 1.0, actualiza todos tus dispositivos.** Un borrado hecho desde una versión
 > anterior no va firmado: los dispositivos con la 1.0 lo ignoran y la nota se queda donde está.

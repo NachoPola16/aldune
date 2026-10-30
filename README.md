@@ -10,6 +10,8 @@ ratón y se abren como ventanas propias. Sin cuenta, sin nube obligatoria, y con
 
 ![Aldune: dos notas abiertas y el dock de pestañas en el borde derecho](docs/images/aldune.png)
 
+![El dock desplegándose en abanico y dos notas abriéndose](docs/images/dock-abanico.gif)
+
 ## Qué hace
 
 - **Dock en el borde de la pantalla**, en cualquiera de los cuatro, en todas las pantallas o en una.
@@ -28,6 +30,15 @@ ratón y se abren como ventanas propias. Sin cuenta, sin nube obligatoria, y con
   nota con `Ctrl` + rueda, y alto contraste de Windows. El dock se abre con el ratón; sin ratón, el atajo opcional `Ctrl+Alt+M` (Ajustes → General)
   abre la lista de notas (Intro abre una, Espacio la marca). Más en «Ayuda rápida» de Ajustes.
 - En **español**, **inglés**, **alemán**, **francés** y **portugués de Brasil**.
+
+### Aspectos
+
+Además de Oscuro, Claro, Pastel y Medianoche hay aspectos con carácter propio (también en Android). Dos de los últimos: la **libreta de viaje** (papel crema con pliegues) y el **cuaderno de campo** (renglones y margen rojo), cada uno en claro y en oscuro.
+
+| Libreta de viaje | Cuaderno de campo |
+|---|---|
+| ![Libreta de viaje, clara](docs/images/aspecto-libreta-viaje.png) | ![Cuaderno de campo, claro](docs/images/aspecto-cuaderno-campo.png) |
+| ![Libreta de viaje, oscura](docs/images/aspecto-libreta-viaje-oscuro.png) | ![Cuaderno de campo, oscuro](docs/images/aspecto-cuaderno-campo-oscuro.png) |
 
 ## Instalar
 

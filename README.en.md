@@ -10,6 +10,8 @@ their own. No account, no required cloud, and the content is encrypted.
 
 ![Aldune: two open notes and the tab dock on the right edge](docs/images/aldune.png)
 
+![The dock fanning out and two notes opening](docs/images/dock-abanico.gif)
+
 ## What it does
 
 - **A dock on the edge of the screen**, on any of the four edges, on every screen or just one. It
@@ -27,6 +29,15 @@ their own. No account, no required cloud, and the content is encrypted.
   `Ctrl` + mouse wheel, and Windows high contrast. The dock opens with the mouse; without one, the optional `Ctrl+Alt+M` shortcut (Settings → General)
   opens the notes list (Enter opens a note, Space selects it). More in “Quick help” in Settings.
 - In **English**, **Spanish**, **German**, **French** and **Brazilian Portuguese**.
+
+### Looks
+
+Besides Dark, Light, Pastel and Midnight there are looks with a character of their own (on Android too). Two of the newest: the **travel notebook** (cream paper with folds) and the **field notebook** (ruled lines and a red margin), each in light and dark.
+
+| Travel notebook | Field notebook |
+|---|---|
+| ![Travel notebook, light](docs/images/aspecto-libreta-viaje.png) | ![Field notebook, light](docs/images/aspecto-cuaderno-campo.png) |
+| ![Travel notebook, dark](docs/images/aspecto-libreta-viaje-oscuro.png) | ![Field notebook, dark](docs/images/aspecto-cuaderno-campo-oscuro.png) |
 
 ## Install
 
