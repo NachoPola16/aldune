@@ -33,12 +33,12 @@ ratón y se abren como ventanas propias. Sin cuenta, sin nube obligatoria, y con
 
 ### Aspectos
 
-Además de Oscuro, Claro, Pastel y Medianoche hay aspectos con carácter propio (también en Android). Dos de los últimos: la **libreta de viaje** (papel crema con pliegues) y el **cuaderno de campo** (renglones y margen rojo), cada uno en claro y en oscuro.
+Además de Oscuro, Claro, Pastel y Medianoche hay aspectos con carácter propio (también en Android). Tres de los últimos: la **libreta de viaje** (papel crema con pliegues), el **cuaderno de campo** (renglones y margen rojo) y el **cuaderno cuadriculado** (hoja de cuadros con margen rojo; sale en la próxima versión), cada uno en claro y en oscuro.
 
-| Libreta de viaje | Cuaderno de campo |
-|---|---|
-| ![Libreta de viaje, clara](docs/images/aspecto-libreta-viaje.png) | ![Cuaderno de campo, claro](docs/images/aspecto-cuaderno-campo.png) |
-| ![Libreta de viaje, oscura](docs/images/aspecto-libreta-viaje-oscuro.png) | ![Cuaderno de campo, oscuro](docs/images/aspecto-cuaderno-campo-oscuro.png) |
+| Libreta de viaje | Cuaderno de campo | Cuaderno cuadriculado |
+|---|---|---|
+| ![Libreta de viaje, clara](docs/images/aspecto-libreta-viaje.png) | ![Cuaderno de campo, claro](docs/images/aspecto-cuaderno-campo.png) | ![Cuaderno cuadriculado, claro](docs/images/aspecto-cuaderno-cuadriculado.png) |
+| ![Libreta de viaje, oscura](docs/images/aspecto-libreta-viaje-oscuro.png) | ![Cuaderno de campo, oscuro](docs/images/aspecto-cuaderno-campo-oscuro.png) | ![Cuaderno cuadriculado, oscuro](docs/images/aspecto-cuaderno-cuadriculado-oscuro.png) |
 
 ## Instalar
 
@@ -87,7 +87,7 @@ haciendo. Es una función del sistema (Aldune no tiene que hacer nada); el nombr
 
 Para sincronizar el móvil con el PC y tu servidor:
 
-1. En Aldune para Windows: Ajustes → Sincronización entre dispositivos → **Compartir perfil**, y copia el código
+1. En Aldune para Windows: Ajustes → Sincronización → **Compartir perfil**, y copia el código
    (`aldune-profile-v2:…`).
 2. Pásalo al móvil (un mensaje a ti mismo, por ejemplo).
 3. En la app de Android: Ajustes → Sincronización, pega el código y pulsa **Continuar**.
@@ -104,7 +104,7 @@ Tus notas se guardan en `%LOCALAPPDATA%\Aldune`, en tu equipo. El texto de cada 
 AES-256-GCM, y la clave está protegida con tu usuario de Windows. Aldune no tiene cuenta ni servidor
 propio. Lo único que sale de tu equipo es la sincronización, si la activas (y solo hacia el
 almacén que tú elijas), y una consulta diaria a GitHub para avisarte de versiones nuevas (se puede
-desactivar en Ajustes → Acerca de).
+desactivar en Ajustes → General).
 
 La sincronización cifra el contenido antes de que salga del equipo: el almacén no puede leer tus
 notas ni fabricar cambios en ellas. El detalle, incluido lo que **no** protege, está en
@@ -120,7 +120,7 @@ Privacidad: este programa no envía información a otros sistemas de la red salv
 expresamente quien lo usa o lo instala. Las dos excepciones se activan o se pueden desactivar: la
 sincronización, que solo funciona si la configuras y solo habla con el almacén que elijas, y la
 consulta diaria de versiones nuevas, que pide a GitHub la lista de versiones, no envía nada tuyo ni
-de tus notas y se desactiva en Ajustes → Acerca de.
+de tus notas y se desactiva en Ajustes → General.
 
 ## Compilar desde el código
 

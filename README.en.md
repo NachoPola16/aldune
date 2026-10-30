@@ -32,12 +32,12 @@ their own. No account, no required cloud, and the content is encrypted.
 
 ### Looks
 
-Besides Dark, Light, Pastel and Midnight there are looks with a character of their own (on Android too). Two of the newest: the **travel notebook** (cream paper with folds) and the **field notebook** (ruled lines and a red margin), each in light and dark.
+Besides Dark, Light, Pastel and Midnight there are looks with a character of their own (on Android too). Three of the newest: the **travel notebook** (cream paper with folds), the **field notebook** (ruled lines and a red margin) and the **graph-paper notebook** (squared sheet with a red margin; coming in the next version), each in light and dark.
 
-| Travel notebook | Field notebook |
-|---|---|
-| ![Travel notebook, light](docs/images/aspecto-libreta-viaje.png) | ![Field notebook, light](docs/images/aspecto-cuaderno-campo.png) |
-| ![Travel notebook, dark](docs/images/aspecto-libreta-viaje-oscuro.png) | ![Field notebook, dark](docs/images/aspecto-cuaderno-campo-oscuro.png) |
+| Travel notebook | Field notebook | Graph-paper notebook |
+|---|---|---|
+| ![Travel notebook, light](docs/images/aspecto-libreta-viaje.png) | ![Field notebook, light](docs/images/aspecto-cuaderno-campo.png) | ![Graph-paper notebook, light](docs/images/aspecto-cuaderno-cuadriculado.png) |
+| ![Travel notebook, dark](docs/images/aspecto-libreta-viaje-oscuro.png) | ![Field notebook, dark](docs/images/aspecto-cuaderno-campo-oscuro.png) | ![Graph-paper notebook, dark](docs/images/aspecto-cuaderno-cuadriculado-oscuro.png) |
 
 ## Install
 
@@ -84,7 +84,7 @@ into an icon you can drag to a screen edge, and opens with one tap without leavi
 
 To sync your phone with your PC and your server:
 
-1. In Aldune for Windows: Settings → Sync between devices → **Share profile**, and copy the code (`aldune-profile-v2:…`).
+1. In Aldune for Windows: Settings → Sync → **Share profile**, and copy the code (`aldune-profile-v2:…`).
 2. Send it to your phone (a message to yourself, for example).
 3. In the Android app: Settings → Sync, paste the code and tap **Continue**.
 4. Type your server's **token**. It is deliberately not inside the code.
@@ -98,7 +98,7 @@ Your notes are stored in `%LOCALAPPDATA%\Aldune`, on your computer. The text of 
 encrypted with AES-256-GCM, and the key is protected by your Windows user. Aldune has no account and
 no server of its own. The only things that leave your computer are sync, if you turn it on (and
 only to the storage you choose), and a daily request to GitHub to tell you about new versions
-(you can turn it off in Settings → About).
+(you can turn it off in Settings → General).
 
 Sync encrypts the content before it leaves your computer: the storage can't read your notes or
 fabricate changes to them. The details, including what it does **not** protect, are in
@@ -114,7 +114,7 @@ Privacy: this program will not transfer any information to other networked syste
 specifically requested by the user or the person installing or operating it. The two exceptions
 are opt-in or can be turned off: sync, which only runs if you set it up and only talks to the
 storage you choose, and the daily check for new versions, which asks GitHub for the list of
-releases, sends nothing about you or your notes, and can be turned off in Settings → About.
+releases, sends nothing about you or your notes, and can be turned off in Settings → General.
 
 ## Build from source
 
