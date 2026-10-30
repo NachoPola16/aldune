@@ -823,7 +823,10 @@ public partial class SettingsWindow : Window
     private void OnSoundsEnabledToggled(object sender, RoutedEventArgs e)
     {
         _settings.SoundsEnabled = SoundsEnabledCheck.IsChecked == true;
+        // La primera vez, ya con los sonidos sugeridos: encender el interruptor sin elegir nada no sonaba a nada.
+        bool applied = _settings.SoundsEnabled && SoundPlan.ApplyPaperAndPenIfUnset(_settings);
         _settingsService.Save(_settings);
+        if (applied) BuildSoundRows();
         SoundRowsPanel.IsEnabled = SoundExtrasPanel.IsEnabled = _settings.SoundsEnabled;
         SoundRowsPanel.Opacity = SoundExtrasPanel.Opacity = _settings.SoundsEnabled ? 1 : 0.5;
     }

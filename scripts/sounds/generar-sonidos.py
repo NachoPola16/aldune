@@ -1,8 +1,10 @@
 """Genera los sonidos de papel y pluma de Aldune (WAV mono, 16 bits, 22050 Hz, cabecera de 44 bytes).
 
 Todo sale de ruido filtrado y envolventes: sin ficheros ni licencias de terceros. La semilla es fija, así que
-volver a ejecutarlo da los mismos bytes. Salida: src/Aldune/Resources/Sounds/*.wav (incrustados en Windows) y
-android/app/src/main/res/raw/*.wav. Los nombres siguen a SoundChoice: pagina, pliegue, toque, arruga, rasguno.
+volver a ejecutarlo da los mismos bytes. Para que sean cómodos: sin agudos ásperos (pasa-bajos a ~3,6 kHz), sin clics
+al empezar o acabar (fundidos de 4 ms) y nivelados por sonoridad (RMS en ventanas de 20 ms), no por pico; los que
+suenan muy a menudo (escribir, borrar texto) van unos 8 dB por debajo de los demás. Salida: src/Aldune/Resources/Sounds/*.wav (incrustados en Windows) y
+android/app/src/main/res/raw/*.wav. Los nombres siguen a SoundChoice: pagina, pliegue, toque, arruga, rasguno, goma.
 
 Uso: python scripts/sounds/generar-sonidos.py
 """
@@ -91,11 +93,58 @@ def arruga(rng):
 def rasguno(rng):
     """Rasguño corto de pluma: ruido agudo muy breve. Suena al escribir, así que es discreto."""
     n = int(RATE * 0.06)
-    base = paso_banda(ruido(n, rng), 2500, 7500)
+    base = paso_banda(ruido(n, rng), 1400, 4200)
     return normalizar([v * env(i / RATE, 0.004, 0.018) for i, v in enumerate(base)], 0.28)
 
 
-SONIDOS = {"pagina": pagina, "pliegue": pliegue, "toque": toque, "arruga": arruga, "rasguno": rasguno}
+def goma(rng):
+    """Goma de borrar: dos pasadas suaves de roce grave, sin chasquido. Suena al borrar texto, así que es discreto."""
+    n = int(RATE * 0.11)
+    out = [0.0] * n
+    for inicio, fuerza in [(0.0, 1.0), (0.045, 0.8)]:
+        k = int(RATE * 0.06)
+        trozo = paso_banda(ruido(k, rng), 450, 2600)
+        for i, v in enumerate(trozo):
+            j = int(inicio * RATE) + i
+            if j < n:
+                out[j] += v * fuerza * env(i / RATE, 0.012, 0.02)
+    return out
+
+
+def suavizar(x):
+    """Quita el brillo áspero (dos pasa-bajos de un polo a ~3,6 kHz) y añade fundidos de 4 ms al principio y al final."""
+    a = 1 - math.exp(-2 * math.pi * 3600 / RATE)
+    for _ in range(2):
+        y = 0.0
+        out = []
+        for v in x:
+            y += a * (v - y)
+            out.append(y)
+        x = out
+    f = int(RATE * 0.004)
+    for i in range(min(f, len(x))):
+        x[i] *= i / f
+        x[-1 - i] *= i / f
+    return x
+
+
+def nivelar(x, objetivo_db, tope=0.4):
+    """Escala para que el tramo más fuerte de 20 ms tenga ese RMS (dBFS); el pico nunca pasa de `tope`."""
+    k = int(RATE * 0.02)
+    paso = max(1, k // 2)
+    mejor = max(math.sqrt(sum(v * v for v in x[i:i + k]) / k) for i in range(0, max(1, len(x) - k), paso)) or 1.0
+    g = 10 ** (objetivo_db / 20) / mejor
+    pico = max(abs(v) for v in x) * g
+    if pico > tope:
+        g *= tope / pico
+    return [v * g for v in x]
+
+
+# nombre -> (generador, sonoridad objetivo en dBFS de RMS de 20 ms)
+SONIDOS = {
+    "pagina": (pagina, -22.0), "pliegue": (pliegue, -22.0), "toque": (toque, -22.0), "arruga": (arruga, -23.0),
+    "rasguno": (rasguno, -30.0), "goma": (goma, -30.0),
+}
 
 
 def escribir(ruta, muestras):
@@ -107,8 +156,8 @@ def escribir(ruta, muestras):
 
 
 def main():
-    for nombre, fn in SONIDOS.items():
-        muestras = fn(random.Random(hash_estable(nombre)))
+    for nombre, (fn, objetivo) in SONIDOS.items():
+        muestras = nivelar(suavizar(fn(random.Random(hash_estable(nombre)))), objetivo)
         for d in DESTINOS:
             d.mkdir(parents=True, exist_ok=True)
             escribir(d / f"aldune_{nombre}.wav", muestras)

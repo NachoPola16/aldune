@@ -48,6 +48,7 @@ internal static class AppSounds
             SoundChoice.PenTap => "toque",
             SoundChoice.PaperCrumple => "arruga",
             SoundChoice.PenScratch => "rasguno",
+            SoundChoice.Eraser => "goma",
             _ => null,
         };
         if (name is null || volume <= 0) return;

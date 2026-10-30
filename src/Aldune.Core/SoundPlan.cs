@@ -13,10 +13,11 @@ public enum SoundEvent
     TaskChecked,
     NoteDeleted,
     Typing,
+    TextDeleted,
 }
 
 /// <summary>Qué suena. Del 1 al 5, sonidos del sistema (siguen el volumen y el tema de Windows); <see cref="File"/>
-/// es un .wav que elige el usuario; del 7 al 11, los sonidos de papel y pluma de la app. Se guarda como número:
+/// es un .wav que elige el usuario; del 7 al 12, los sonidos de papel y pluma de la app. Se guarda como número:
 /// las opciones nuevas van siempre al final.</summary>
 public enum SoundChoice
 {
@@ -32,6 +33,7 @@ public enum SoundChoice
     PenTap = 9,
     PaperCrumple = 10,
     PenScratch = 11,
+    Eraser = 12,
 }
 
 /// <summary>La elección de un evento. Se guarda en <c>AppSettings.Sounds</c>; la ruta del .wav es de este equipo.</summary>
@@ -62,7 +64,7 @@ public static class SoundPlan
 
     public static IReadOnlyList<SoundEvent> All { get; } =
         [SoundEvent.Reminder, SoundEvent.SyncDone, SoundEvent.SyncFailed, SoundEvent.NoteCreated, SoundEvent.NoteArchived,
-         SoundEvent.NoteOpened, SoundEvent.NoteClosed, SoundEvent.TaskChecked, SoundEvent.NoteDeleted, SoundEvent.Typing];
+         SoundEvent.NoteOpened, SoundEvent.NoteClosed, SoundEvent.TaskChecked, SoundEvent.NoteDeleted, SoundEvent.Typing, SoundEvent.TextDeleted];
 
     /// <summary>Clave estable de cada evento en el archivo de ajustes: no se renombra aunque cambie el enum.</summary>
     public static string Id(SoundEvent soundEvent) => soundEvent switch
@@ -77,6 +79,7 @@ public static class SoundPlan
         SoundEvent.TaskChecked => "taskChecked",
         SoundEvent.NoteDeleted => "noteDeleted",
         SoundEvent.Typing => "typing",
+        SoundEvent.TextDeleted => "textDeleted",
         _ => throw new ArgumentOutOfRangeException(nameof(soundEvent)),
     };
 
@@ -108,21 +111,29 @@ public static class SoundPlan
         };
     }
 
-    /// <summary>Lo que asigna «Papel y pluma para todo». Solo los eventos nuevos: los avisos y la sync siguen con
-    /// lo que el usuario tenga.</summary>
+    /// <summary>Los sonidos sugeridos. Solo los eventos de las notas y solo los que se oyen de vez en cuando: escribir y
+    /// borrar texto suenan en cada pulsación y se activan a mano. Los avisos y la sync siguen con lo que el usuario tenga.</summary>
     public static IReadOnlyDictionary<SoundEvent, SoundChoice> PaperAndPen { get; } = new Dictionary<SoundEvent, SoundChoice>
     {
         [SoundEvent.NoteOpened] = SoundChoice.PageTurn,
         [SoundEvent.NoteClosed] = SoundChoice.PaperFold,
         [SoundEvent.TaskChecked] = SoundChoice.PenTap,
         [SoundEvent.NoteDeleted] = SoundChoice.PaperCrumple,
-        [SoundEvent.Typing] = SoundChoice.PenScratch,
     };
 
     public static void ApplyPaperAndPen(AppSettings settings)
     {
         foreach (var (soundEvent, choice) in PaperAndPen)
             settings.Sounds[Id(soundEvent)] = new SoundSetting { Choice = choice };
+    }
+
+    /// <summary>Al encender los sonidos por primera vez no hay nada elegido para las notas: se aplican los sugeridos, para que
+    /// encender el interruptor ya suene a algo. Si el usuario ya eligió algo para esos eventos, no se toca nada.</summary>
+    public static bool ApplyPaperAndPenIfUnset(AppSettings settings)
+    {
+        if (PaperAndPen.Keys.Any(e => settings.Sounds.ContainsKey(Id(e)))) return false;
+        ApplyPaperAndPen(settings);
+        return true;
     }
 
     /// <summary>Volumen de la app (0-100 en los ajustes) como factor de 0 a 1. Afecta a los sonidos propios de la app;

@@ -88,6 +88,7 @@ public static class Strings
         SoundEvent.TaskChecked => T("Task checked", "Casilla marcada", "Aufgabe abgehakt", "Case cochée", "Caixa marcada"),
         SoundEvent.NoteDeleted => T("Note deleted", "Nota borrada", "Notiz gelöscht", "Note supprimée", "Nota excluída"),
         SoundEvent.Typing => T("Typing", "Escribir", "Tippen", "Saisie", "Digitação"),
+        SoundEvent.TextDeleted => T("Deleting text", "Borrar texto", "Text löschen", "Effacement du texte", "Apagar texto"),
         _ => "",
     };
     public static string SoundChoiceName(SoundChoice choice) => choice switch
@@ -104,6 +105,7 @@ public static class Strings
         SoundChoice.PenTap => T("Aldune: pen tap", "Aldune: toque de pluma", "Aldune: Federtupfer", "Aldune : touche de plume", "Aldune: toque de caneta"),
         SoundChoice.PaperCrumple => T("Aldune: crumpling paper", "Aldune: papel que se arruga", "Aldune: Papier zerknüllen", "Aldune : papier froissé", "Aldune: papel amassando"),
         SoundChoice.PenScratch => T("Aldune: pen scratch", "Aldune: rasguño de pluma", "Aldune: Federkratzen", "Aldune : grattement de plume", "Aldune: rabisco de caneta"),
+        SoundChoice.Eraser => T("Aldune: eraser", "Aldune: goma de borrar", "Aldune: Radiergummi", "Aldune : gomme", "Aldune: borracha"),
         _ => "",
     };
     public static string SoundFileChoiceName(string name) => T($"File: {name}", $"Archivo: {name}", $"Datei: {name}", $"Fichier : {name}", $"Arquivo: {name}");
@@ -120,7 +122,7 @@ public static class Strings
     public static string AutoExportArchivedCheckbox => T("Include archived notes", "Incluir las notas archivadas", "Archivierte Notizen einbeziehen", "Inclure les notes archivées", "Incluir as notas arquivadas");
     public static string AutoExportFailed(string error) => T($"The last copy failed: {error}", $"La última copia falló: {error}", $"Die letzte Kopie ist fehlgeschlagen: {error}", $"La dernière copie a échoué : {error}", $"A última cópia falhou: {error}");
     public static string SoundVolumeLabel => T("Volume", "Volumen", "Lautstärke", "Volume", "Volume");
-    public static string SoundPaperAndPenButton => T("Paper and pen for everything", "Papel y pluma para todo", "Papier und Feder für alles", "Papier et plume pour tout", "Papel e caneta para tudo");
+    public static string SoundPaperAndPenButton => T("Use the suggested sounds", "Usar los sonidos sugeridos", "Empfohlene Töne verwenden", "Utiliser les sons suggérés", "Usar os sons sugeridos");
     public static string SoundTest => T("Test", "Probar", "Testen", "Tester", "Testar");
     public static string SoundFileFilter => T("WAV sound", "Sonido WAV", "WAV-Ton", "Son WAV", "Som WAV") + " (*.wav)|*.wav";
     public static string SoundFileRejected => T(

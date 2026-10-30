@@ -304,6 +304,15 @@ public partial class NoteWindow : Window
             if (e.Text.Length > 0 && TypingThrottle.IsPrintable(e.Text[0]) && _typingThrottle.TryAcquire(Environment.TickCount64))
                 _coordinator.PlaySound(SoundEvent.Typing);
         };
+        // Una pasada de goma por pulsación de Retroceso o Supr que borre algo (hay selección, o texto antes/después del cursor),
+        // con el mismo freno que escribir. Sin nada que borrar no suena: sería un sonido sin efecto.
+        TextBody.PreviewKeyDown += (_, e) =>
+        {
+            bool deletes = e.Key == Key.Back ? TextBody.SelectionLength > 0 || TextBody.CaretIndex > 0
+                : e.Key == Key.Delete && (TextBody.SelectionLength > 0 || TextBody.CaretIndex < TextBody.Text.Length);
+            if (deletes && _deletingThrottle.TryAcquire(Environment.TickCount64))
+                _coordinator.PlaySound(SoundEvent.TextDeleted);
+        };
         // Zoom del texto de esta nota: Ctrl + rueda (antes que el manejador de la rueda de abajo, que se come el gesto).
         TextBody.PreviewMouseWheel += OnBodyZoomWheel;
         // Con la barra oculta el texto cabe entero por construcción (FitHeightToContent), así que la rueda no
@@ -821,6 +830,7 @@ public partial class NoteWindow : Window
     }
 
     private readonly TypingThrottle _typingThrottle = new();
+    private readonly TypingThrottle _deletingThrottle = new();
 
     private void OnBodyKeyDown(object sender, KeyEventArgs e)
     {

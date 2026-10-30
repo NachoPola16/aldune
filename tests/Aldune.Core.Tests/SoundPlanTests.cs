@@ -100,7 +100,7 @@ public class SoundPlanTests : IDisposable
     {
         var ids = SoundPlan.All.Select(SoundPlan.Id).ToList();
         Assert.Equal(new[] { "reminder", "syncDone", "syncFailed", "noteCreated", "noteArchived",
-            "noteOpened", "noteClosed", "taskChecked", "noteDeleted", "typing" }, ids);
+            "noteOpened", "noteClosed", "taskChecked", "noteDeleted", "typing", "textDeleted" }, ids);
         Assert.Equal(ids.Count, ids.Distinct().Count());
     }
 
@@ -108,7 +108,7 @@ public class SoundPlanTests : IDisposable
     public void NewEvents_StartSilentEvenWithTheSwitchOn()
     {
         var settings = new AppSettings { SoundsEnabled = true };
-        foreach (var e in new[] { SoundEvent.NoteOpened, SoundEvent.NoteClosed, SoundEvent.TaskChecked, SoundEvent.NoteDeleted, SoundEvent.Typing })
+        foreach (var e in new[] { SoundEvent.NoteOpened, SoundEvent.NoteClosed, SoundEvent.TaskChecked, SoundEvent.NoteDeleted, SoundEvent.Typing, SoundEvent.TextDeleted })
             Assert.Equal(SoundActionKind.None, SoundPlan.Resolve(settings, e).Kind);
     }
 
@@ -121,6 +121,7 @@ public class SoundPlanTests : IDisposable
         Assert.Equal(9, (int)SoundChoice.PenTap);
         Assert.Equal(10, (int)SoundChoice.PaperCrumple);
         Assert.Equal(11, (int)SoundChoice.PenScratch);
+        Assert.Equal(12, (int)SoundChoice.Eraser);
     }
 
     [Fact]
@@ -133,7 +134,7 @@ public class SoundPlanTests : IDisposable
     }
 
     [Fact]
-    public void PaperAndPenForAll_AssignsAnOwnSoundToEveryNewEvent_AndLeavesTheOthers()
+    public void SuggestedSounds_AssignAnOwnSoundToTheOccasionalNoteEvents_AndLeaveTheOthers()
     {
         var settings = new AppSettings { SoundsEnabled = true };
         settings.Sounds[SoundPlan.Id(SoundEvent.SyncDone)] = new SoundSetting { Choice = SoundChoice.Beep };
@@ -144,9 +145,42 @@ public class SoundPlanTests : IDisposable
         Assert.Equal(SoundChoice.PaperFold, SoundPlan.SettingFor(settings, SoundEvent.NoteClosed).Choice);
         Assert.Equal(SoundChoice.PenTap, SoundPlan.SettingFor(settings, SoundEvent.TaskChecked).Choice);
         Assert.Equal(SoundChoice.PaperCrumple, SoundPlan.SettingFor(settings, SoundEvent.NoteDeleted).Choice);
-        Assert.Equal(SoundChoice.PenScratch, SoundPlan.SettingFor(settings, SoundEvent.Typing).Choice);
+        // Escribir y borrar texto suenan en cada pulsación: se activan a mano, no vienen en los sugeridos.
+        Assert.Equal(SoundChoice.None, SoundPlan.SettingFor(settings, SoundEvent.Typing).Choice);
+        Assert.Equal(SoundChoice.None, SoundPlan.SettingFor(settings, SoundEvent.TextDeleted).Choice);
         Assert.Equal(SoundChoice.Beep, SoundPlan.SettingFor(settings, SoundEvent.SyncDone).Choice);
         Assert.Equal(SoundChoice.Exclamation, SoundPlan.SettingFor(settings, SoundEvent.Reminder).Choice);
+    }
+
+    [Fact]
+    public void FirstTimeTheSwitchIsTurnedOn_TheSuggestedSoundsAreApplied()
+    {
+        var settings = new AppSettings { SoundsEnabled = true };
+
+        Assert.True(SoundPlan.ApplyPaperAndPenIfUnset(settings));
+
+        Assert.Equal(new SoundAction(SoundActionKind.Bundled, SoundChoice.PageTurn), SoundPlan.Resolve(settings, SoundEvent.NoteOpened));
+    }
+
+    [Fact]
+    public void WhenTheUserAlreadyChoseSomethingForTheNoteEvents_NothingIsOverwritten()
+    {
+        var settings = new AppSettings { SoundsEnabled = true };
+        settings.Sounds[SoundPlan.Id(SoundEvent.NoteClosed)] = new SoundSetting { Choice = SoundChoice.None };
+
+        Assert.False(SoundPlan.ApplyPaperAndPenIfUnset(settings));
+
+        Assert.Equal(SoundChoice.None, SoundPlan.SettingFor(settings, SoundEvent.NoteOpened).Choice);
+    }
+
+    [Fact]
+    public void TheEraser_ResolvesToBundled_AndHasItsOwnEventKey()
+    {
+        var settings = new AppSettings { SoundsEnabled = true };
+        settings.Sounds[SoundPlan.Id(SoundEvent.TextDeleted)] = new SoundSetting { Choice = SoundChoice.Eraser };
+
+        Assert.Equal("textDeleted", SoundPlan.Id(SoundEvent.TextDeleted));
+        Assert.Equal(new SoundAction(SoundActionKind.Bundled, SoundChoice.Eraser), SoundPlan.Resolve(settings, SoundEvent.TextDeleted));
     }
 
     [Fact]
