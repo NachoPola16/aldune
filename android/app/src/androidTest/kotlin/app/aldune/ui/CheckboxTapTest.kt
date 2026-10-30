@@ -38,6 +38,8 @@ class CheckboxTapTest {
         // The middle of the gap between the box and the first letter used to resolve to the text and put the cursor there.
         assertEquals(0, toggleCheckboxAtTap(text, layout, Offset((box.right + gapEnd) / 2, y), 8f))
         assertEquals(0, toggleCheckboxAtTap(text, layout, Offset(gapEnd - 1f, y), 8f))
+        // Left of the box (the field's left margin, where a thumb lands) counts too.
+        assertEquals(0, toggleCheckboxAtTap(text, layout, Offset(-40f, y), 8f))
         assertNull(toggleCheckboxAtTap(text, layout, Offset(gapEnd + layout.getBoundingBox(2).width, y), 8f))
     }
 

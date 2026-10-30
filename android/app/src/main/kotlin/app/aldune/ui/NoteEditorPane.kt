@@ -107,12 +107,14 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.customActions
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.style.TextIndent
 import androidx.compose.ui.text.TextLayoutResult
 import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.coerceIn
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LifecycleEventEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -366,6 +368,19 @@ fun NoteEditorPane(key: String, viewModel: NotesViewModel, onBack: () -> Unit, s
     val hiddenSpans = if (showDone) emptyList() else hiddenCandidates
     // Las casillas se dibujan con AlduneCheck (☒ con tick, sin cambiar lo guardado); el resto del texto no cambia de fuente.
     val checkboxSpan = if (settings.largeCheckboxes) LargeCheckboxSpan else CheckboxSpan
+    // Hanging indent: the continuation lines of a long line start under the task text, not under the checkbox. One indent for the whole field,
+    // the width of "checkbox + space" measured in the font the field draws; Android applies it to each hard line. (A paragraph style per task
+    // line was tried: a line feed outside the paragraph needs a paragraph of its own and the cursor at the end of a line then lands in it.)
+    val measurer = androidx.compose.ui.text.rememberTextMeasurer()
+    val bodyStyle = MaterialTheme.typography.bodyLarge
+    val density = LocalDensity.current
+    val taskIndent = remember(checkboxSpan, bodyStyle, density, measurer) {
+        val styled = androidx.compose.ui.text.buildAnnotatedString {
+            append(TaskLines.PREFIX)
+            addStyle(checkboxSpan, 0, 1)
+        }
+        with(density) { measurer.measure(styled, bodyStyle).size.width.toSp() }
+    }
     val hideTransformation = remember(hideActive, showDone, completed, hideDelayMs, checkboxSpan) {
         OutputTransformation {
             if (hideActive && !showDone) {
@@ -378,8 +393,7 @@ fun NoteEditorPane(key: String, viewModel: NotesViewModel, onBack: () -> Unit, s
             for (i in shown.indices) {
                 val c = shown[i]
                 if (c == TaskLines.UNCHECKED || c == TaskLines.CHECKED || c == TaskLines.CHECKED_ALTERNATE) addStyle(checkboxSpan, i, i + 1)
-            }
-        }
+            }        }
     }
 
     /**
@@ -660,6 +674,28 @@ fun NoteEditorPane(key: String, viewModel: NotesViewModel, onBack: () -> Unit, s
                         LineMovement.moveTo(raw, from, to)?.let { commit(it) }
                     },
                 )
+                // Tocar una casilla la marca. Se mira en la pasada Initial. Si el toque cae sobre una casilla se consume el «down» para que el
+                // campo no ponga ahí el cursor ni abra el teclado (marcar una lista no debe taparla); el desplazamiento sigue funcionando
+                // porque el scroll no exige un down sin consumir. Fuera de una casilla no se consume nada.
+                .pointerInput(key) {
+                    // This detector sits outside the padding, so the left margin counts as part of the checkbox target (a thumb that
+                    // lands left of the box still ticks it). Positions are converted to the text layout's own coordinates.
+                    val padStart = TASK_DRAG_PAD_START.toPx()
+                    val padTop = TASK_DRAG_PAD_TOP.toPx()
+                    fun contentOffset(p: Offset) = Offset(p.x - padStart, p.y - padTop)
+                    awaitEachGesture {
+                        val down = awaitFirstDown(requireUnconsumed = false, pass = PointerEventPass.Initial)
+                        touched = true
+                        val onCheckbox = currentCheckboxAt.value(contentOffset(down.position)) != null
+                        if (onCheckbox) down.consume()
+                        val up = waitForUpOrCancellation(PointerEventPass.Initial) ?: return@awaitEachGesture
+                        if ((up.position - down.position).getDistance() > touchSlop) return@awaitEachGesture
+                        if (up.uptimeMillis - down.uptimeMillis >= longPress) return@awaitEachGesture
+                        // Layout coordinates, taken now: the toggle runs a frame later and the list may have scrolled by then.
+                        tap = contentOffset(up.position).let { it.copy(y = it.y + fieldScroll.value) }
+                        if (onCheckbox) up.consume()
+                    }
+                }
                 .padding(start = TASK_DRAG_PAD_START, end = if (hasTasks) TASK_DRAG_ZONE else TEXT_END_PAD, top = TASK_DRAG_PAD_TOP, bottom = 8.dp)
                 .focusProperties { this.canFocus = canFocus }
                 .focusRequester(focus)
@@ -671,23 +707,6 @@ fun NoteEditorPane(key: String, viewModel: NotesViewModel, onBack: () -> Unit, s
                         if (glyph != null) toggleTask(glyph, keepCaretPosition = true)
                         glyph != null
                     })
-                }
-                // Tocar una casilla la marca. Se mira en la pasada Initial. Si el toque cae sobre una casilla se consume el «down» para que el
-                // campo no ponga ahí el cursor ni abra el teclado (marcar una lista no debe taparla); el desplazamiento sigue funcionando
-                // porque el scroll no exige un down sin consumir. Fuera de una casilla no se consume nada.
-                .pointerInput(key) {
-                    awaitEachGesture {
-                        val down = awaitFirstDown(requireUnconsumed = false, pass = PointerEventPass.Initial)
-                        touched = true
-                        val onCheckbox = currentCheckboxAt.value(down.position) != null
-                        if (onCheckbox) down.consume()
-                        val up = waitForUpOrCancellation(PointerEventPass.Initial) ?: return@awaitEachGesture
-                        if ((up.position - down.position).getDistance() > touchSlop) return@awaitEachGesture
-                        if (up.uptimeMillis - down.uptimeMillis >= longPress) return@awaitEachGesture
-                        // Layout coordinates, taken now: the toggle runs a frame later and the list may have scrolled by then.
-                        tap = up.position.copy(y = up.position.y + fieldScroll.value)
-                        if (onCheckbox) up.consume()
-                    }
                 }
                 .onPreviewKeyEvent { event ->
                     if (event.type != KeyEventType.KeyDown) return@onPreviewKeyEvent false
@@ -709,7 +728,7 @@ fun NoteEditorPane(key: String, viewModel: NotesViewModel, onBack: () -> Unit, s
                         else -> false
                     }
                 },
-            textStyle = MaterialTheme.typography.bodyLarge.copy(color = ink),
+            textStyle = bodyStyle.copy(color = ink, textIndent = if (hasTasks) TextIndent(firstLine = 0.sp, restLine = taskIndent) else null),
             cursorBrush = SolidColor(MaterialTheme.colorScheme.primary),
         )
         if (hasTasks) TaskDragOverlay(drag, layout = { layout?.invoke() }, scroll = fieldScroll, shown = ::shownText, modifier = Modifier.matchParentSize(), ink = ink,
@@ -785,7 +804,7 @@ internal fun toggleCheckboxAtTap(text: String, layout: TextLayoutResult?, positi
         // Up to the start of the next visible character (the task text) when it is on the same line; otherwise the usual slack.
         val textStart = if (candidate + 1 < layout.getLineEnd(line)) layout.getBoundingBox(candidate + 1).right else box.right + slack
         val right = maxOf(box.right + slack / 2, textStart)
-        if (position.x in (box.left - slack)..right) return candidate
+        if (position.x <= right) return candidate
     }
     return null
 }
