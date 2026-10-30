@@ -11,7 +11,7 @@ class SoundPlanTest {
     fun `las claves de los eventos son las de Windows y no se repiten`() {
         val ids = SoundEvent.entries.map { it.id }
         assertEquals(
-            listOf("reminder", "syncDone", "syncFailed", "noteCreated", "noteArchived", "noteOpened", "noteClosed", "taskChecked", "noteDeleted", "typing"),
+            listOf("reminder", "syncDone", "syncFailed", "noteCreated", "noteArchived", "noteOpened", "noteClosed", "taskChecked", "noteDeleted", "typing", "textDeleted"),
             ids,
         )
         assertEquals(ids.size, ids.toSet().size)
@@ -25,6 +25,7 @@ class SoundPlanTest {
         assertEquals(9, SoundChoice.PEN_TAP.code)
         assertEquals(10, SoundChoice.PAPER_CRUMPLE.code)
         assertEquals(11, SoundChoice.PEN_SCRATCH.code)
+        assertEquals(12, SoundChoice.ERASER.code)
     }
 
     @Test
@@ -55,16 +56,37 @@ class SoundPlanTest {
     }
 
     @Test
-    fun `papel y pluma para todo asigna los cinco sonidos y respeta lo demas`() {
+    fun `los sonidos sugeridos asignan los cuatro eventos de las notas y respetan lo demas`() {
         val before = mapOf("syncDone" to 3)
         val after = SoundPlan.paperAndPen(before)
         assertEquals(SoundChoice.PAGE_TURN.code, after["noteOpened"])
         assertEquals(SoundChoice.PAPER_FOLD.code, after["noteClosed"])
         assertEquals(SoundChoice.PEN_TAP.code, after["taskChecked"])
         assertEquals(SoundChoice.PAPER_CRUMPLE.code, after["noteDeleted"])
-        assertEquals(SoundChoice.PEN_SCRATCH.code, after["typing"])
+        // Escribir y borrar texto suenan en cada pulsación: se activan a mano.
+        assertNull(after["typing"])
+        assertNull(after["textDeleted"])
         assertEquals(3, after["syncDone"])
         assertEquals(1, before.size) // no toca el original
+    }
+
+    @Test
+    fun `al encender los sonidos por primera vez se aplican los sugeridos`() {
+        val applied = SoundPlan.paperAndPenIfUnset(emptyMap())
+        assertEquals(SoundChoice.PAGE_TURN.code, applied?.get("noteOpened"))
+    }
+
+    @Test
+    fun `si ya se eligio algo para las notas no se pisa nada`() {
+        assertNull(SoundPlan.paperAndPenIfUnset(mapOf("noteClosed" to 0)))
+    }
+
+    @Test
+    fun `borrar texto es un cambio que acorta el texto`() {
+        assertTrue(TypingThrottle.isDeleting("hola", "hol"))
+        assertTrue(TypingThrottle.isDeleting("hola", ""))
+        assertFalse(TypingThrottle.isDeleting("hola", "holas"))
+        assertFalse(TypingThrottle.isDeleting("hola", "hola"))
     }
 
     @Test

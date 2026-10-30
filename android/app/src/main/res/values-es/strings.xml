@@ -382,7 +382,7 @@
     <string name="sounds_enabled">Activar sonidos</string>
     <string name="sounds_hint">Apagado de fábrica. Cada evento tiene su propio sonido, o ninguno. No suena nada con el teléfono en silencio o en vibración.</string>
     <string name="sound_volume">Volumen</string>
-    <string name="sound_paper_pen">Papel y pluma para todo</string>
+    <string name="sound_paper_pen">Usar los sonidos sugeridos</string>
     <string name="sound_test">Probar</string>
     <string name="sound_event_note_opened">Nota abierta</string>
     <string name="sound_event_note_closed">Nota cerrada</string>
@@ -405,4 +405,22 @@
     <string name="auto_export_folder">Carpeta: %1$s</string>
     <string name="auto_export_archived">Incluir las notas archivadas</string>
     <string name="auto_export_lost">La copia automática se apagó: Aldune perdió el acceso a la carpeta. Elige una carpeta otra vez en Ajustes para reanudarla.</string>
+    <string name="sound_event_text_deleted">Borrar texto</string>
+    <string name="sound_choice_eraser">Goma de borrar</string>
+    <string name="sound_silenced_ringer">El teléfono está en silencio o en vibración, así que los sonidos de Aldune no se oirán.</string>
+    <string name="sound_silenced_dnd">No molestar bloquea los sonidos del sistema. Permite «Sonidos al tocar» en sus ajustes, o desactívalo.</string>
+    <string name="edit_toggle_task">Marcar o desmarcar la tarea de esta línea</string>
+    <string name="settings_tab_sync">Sincronización</string>
+    <string name="color_name_red">Rojo</string>
+    <string name="color_name_orange">Naranja</string>
+    <string name="color_name_yellow">Amarillo</string>
+    <string name="color_name_green">Verde</string>
+    <string name="color_name_turquoise">Turquesa</string>
+    <string name="color_name_blue">Azul</string>
+    <string name="color_name_purple">Morado</string>
+    <string name="color_name_pink">Rosa</string>
+    <string name="color_name_brown">Marrón</string>
+    <string name="color_name_gray">Gris</string>
+    <string name="color_name_white">Blanco</string>
+    <string name="color_name_black">Negro</string>
 </resources>

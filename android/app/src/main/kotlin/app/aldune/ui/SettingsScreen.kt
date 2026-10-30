@@ -112,16 +112,21 @@ fun SettingsScreen(viewModel: NotesViewModel, onClose: () -> Unit) {
                 Text(stringResource(R.string.settings), style = MaterialTheme.typography.titleLarge)
             }
             if (tabs) {
-                val labels = listOf(R.string.settings_tab_general, R.string.settings_tab_appearance, R.string.settings_tab_notes, R.string.settings_tab_alerts)
-                ScrollableTabRow(selectedTabIndex = tab, edgePadding = 8.dp) {
+                // Mismo orden que Ajustes de Windows para lo que comparten: lo general primero, la sincronización al final. Sin ella
+                // (modo simplificado) la pestaña no aparece.
+                val labels = buildList {
+                    add(R.string.settings_tab_general); add(R.string.settings_tab_appearance); add(R.string.settings_tab_notes); add(R.string.settings_tab_alerts)
+                    if (show(SettingsSection.SYNC) || show(SettingsSection.BACKUP)) add(R.string.settings_tab_sync)
+                }
+                ScrollableTabRow(selectedTabIndex = tab.coerceAtMost(labels.lastIndex), edgePadding = 8.dp) {
                     labels.forEachIndexed { index, label ->
                         Tab(selected = tab == index, onClick = { tab = index }, text = { Text(stringResource(label)) })
                     }
                 }
             }
             Column(Modifier.verticalScroll(rememberScrollState()).padding(bottom = 24.dp)) {
-                if (show(SettingsSection.SYNC) && inTab(0)) SyncSection(viewModel)
-                if (show(SettingsSection.BACKUP) && inTab(0)) BackupSection(viewModel)
+                if (show(SettingsSection.SYNC) && inTab(4)) SyncSection(viewModel)
+                if (show(SettingsSection.BACKUP) && inTab(4)) BackupSection(viewModel)
                 if (show(SettingsSection.CAPTURE) && inTab(3)) CaptureSection(viewModel, settings.captureNotification)
                 if (show(SettingsSection.REMINDERS) && inTab(3)) RemindersSection(viewModel, settings.exactReminders)
 

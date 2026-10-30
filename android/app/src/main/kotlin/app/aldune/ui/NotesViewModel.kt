@@ -198,10 +198,11 @@ class NotesViewModel(application: Application) : AndroidViewModel(application) {
     /** Hace sonar un evento si el usuario lo tiene elegido (apagado de fábrica, ver `SoundPlan`). */
     fun playSound(event: SoundEvent) = sounds.play(event)
 
-    /** Para «Probar» en Ajustes: suena lo que hay elegido para [event] aunque el interruptor general esté apagado. */
-    fun previewSound(event: SoundEvent) {
-        val choice = _settings.value.sounds.choices[event.id]?.let(app.aldune.domain.SoundChoice::fromCode) ?: return
-        sounds.preview(choice, _settings.value.sounds.volumeFactor)
+    /** Para «Probar» en Ajustes: suena lo que hay elegido para [event] aunque el interruptor general esté apagado. Si el teléfono lo
+     * va a silenciar (timbre en silencio o vibración, No molestar), lo devuelve para que Ajustes lo diga en vez de quedarse mudo. */
+    fun previewSound(event: SoundEvent): app.aldune.audio.UiSounds.Silence? {
+        val choice = _settings.value.sounds.choices[event.id]?.let(app.aldune.domain.SoundChoice::fromCode) ?: return null
+        return sounds.preview(choice, _settings.value.sounds.volumeFactor)
     }
 
     fun updateSettings(transform: (AppSettings) -> AppSettings) {

@@ -382,7 +382,7 @@
     <string name="sounds_enabled">Play sounds</string>
     <string name="sounds_hint">Off by default. Each event has its own sound, or none. Nothing plays when the phone is silent or on vibrate.</string>
     <string name="sound_volume">Volume</string>
-    <string name="sound_paper_pen">Paper and pen for everything</string>
+    <string name="sound_paper_pen">Use the suggested sounds</string>
     <string name="sound_test">Test</string>
     <string name="sound_event_note_opened">Note opened</string>
     <string name="sound_event_note_closed">Note closed</string>
@@ -405,4 +405,22 @@
     <string name="auto_export_folder">Folder: %1$s</string>
     <string name="auto_export_archived">Include archived notes</string>
     <string name="auto_export_lost">The automatic copy was turned off: Aldune lost access to the folder. Choose a folder again in Settings to resume it.</string>
+    <string name="sound_event_text_deleted">Deleting text</string>
+    <string name="sound_choice_eraser">Eraser</string>
+    <string name="sound_silenced_ringer">Your phone is on silent or vibrate, so Aldune sounds will not play.</string>
+    <string name="sound_silenced_dnd">Do Not Disturb is blocking system sounds. Allow “Touch sounds” in its settings, or turn it off.</string>
+    <string name="edit_toggle_task">Check or uncheck the task on this line</string>
+    <string name="settings_tab_sync">Sync</string>
+    <string name="color_name_red">Red</string>
+    <string name="color_name_orange">Orange</string>
+    <string name="color_name_yellow">Yellow</string>
+    <string name="color_name_green">Green</string>
+    <string name="color_name_turquoise">Turquoise</string>
+    <string name="color_name_blue">Blue</string>
+    <string name="color_name_purple">Purple</string>
+    <string name="color_name_pink">Pink</string>
+    <string name="color_name_brown">Brown</string>
+    <string name="color_name_gray">Gray</string>
+    <string name="color_name_white">White</string>
+    <string name="color_name_black">Black</string>
 </resources>

@@ -381,7 +381,7 @@ sounds_section	Sounds	Sonidos	Töne	Sons	Sons
 sounds_enabled	Play sounds	Activar sonidos	Töne abspielen	Activer les sons	Ativar sons
 sounds_hint	Off by default. Each event has its own sound, or none. Nothing plays when the phone is silent or on vibrate.	Apagado de fábrica. Cada evento tiene su propio sonido, o ninguno. No suena nada con el teléfono en silencio o en vibración.	Standardmäßig aus. Jedes Ereignis hat seinen eigenen Ton oder keinen. Bei stummem oder Vibrationsmodus bleibt alles still.	Désactivé par défaut. Chaque événement a son propre son, ou aucun. Rien ne sonne quand le téléphone est en silencieux ou en vibreur.	Desligado por padrão. Cada evento tem seu próprio som, ou nenhum. Nada toca com o telefone no silencioso ou no vibrar.
 sound_volume	Volume	Volumen	Lautstärke	Volume	Volume
-sound_paper_pen	Paper and pen for everything	Papel y pluma para todo	Papier und Feder für alles	Papier et plume pour tout	Papel e caneta para tudo
+sound_paper_pen	Use the suggested sounds	Usar los sonidos sugeridos	Empfohlene Töne verwenden	Utiliser les sons suggérés	Usar os sons sugeridos
 sound_test	Test	Probar	Testen	Tester	Testar
 sound_event_note_opened	Note opened	Nota abierta	Notiz geöffnet	Note ouverte	Nota aberta
 sound_event_note_closed	Note closed	Nota cerrada	Notiz geschlossen	Note fermée	Nota fechada
@@ -404,3 +404,21 @@ auto_export_choose	Choose folder…	Elegir carpeta…	Ordner wählen…	Choisir 
 auto_export_folder	Folder: %1$s	Carpeta: %1$s	Ordner: %1$s	Dossier : %1$s	Pasta: %1$s
 auto_export_archived	Include archived notes	Incluir las notas archivadas	Archivierte Notizen einbeziehen	Inclure les notes archivées	Incluir as notas arquivadas
 auto_export_lost	The automatic copy was turned off: Aldune lost access to the folder. Choose a folder again in Settings to resume it.	La copia automática se apagó: Aldune perdió el acceso a la carpeta. Elige una carpeta otra vez en Ajustes para reanudarla.	Die automatische Kopie wurde ausgeschaltet: Aldune hat den Zugriff auf den Ordner verloren. Wähle in den Einstellungen erneut einen Ordner, um sie fortzusetzen.	La copie automatique a été désactivée : Aldune a perdu l'accès au dossier. Choisissez à nouveau un dossier dans les réglages pour la reprendre.	A cópia automática foi desligada: o Aldune perdeu o acesso à pasta. Escolha uma pasta de novo nos ajustes para retomá-la.
+sound_event_text_deleted	Deleting text	Borrar texto	Text löschen	Effacement du texte	Apagar texto
+sound_choice_eraser	Eraser	Goma de borrar	Radiergummi	Gomme	Borracha
+sound_silenced_ringer	Your phone is on silent or vibrate, so Aldune sounds will not play.	El teléfono está en silencio o en vibración, así que los sonidos de Aldune no se oirán.	Das Telefon ist stumm oder auf Vibration, daher werden die Töne von Aldune nicht abgespielt.	Le téléphone est en silencieux ou en vibreur : les sons d’Aldune ne seront pas joués.	O telefone está no silencioso ou no modo vibrar, então os sons do Aldune não serão tocados.
+sound_silenced_dnd	Do Not Disturb is blocking system sounds. Allow “Touch sounds” in its settings, or turn it off.	No molestar bloquea los sonidos del sistema. Permite «Sonidos al tocar» en sus ajustes, o desactívalo.	„Nicht stören“ blockiert Systemtöne. Erlaube „Berührungstöne“ in den Einstellungen oder schalte es aus.	« Ne pas déranger » bloque les sons système. Autorisez les « Sons tactiles » dans ses réglages, ou désactivez-le.	O modo Não perturbe bloqueia os sons do sistema. Permita os «Sons de toque» nas configurações dele, ou desative-o.
+edit_toggle_task	Check or uncheck the task on this line	Marcar o desmarcar la tarea de esta línea	Aufgabe in dieser Zeile abhaken oder zurücksetzen	Cocher ou décocher la tâche de cette ligne	Marcar ou desmarcar a tarefa desta linha
+settings_tab_sync	Sync	Sincronización	Synchronisierung	Synchronisation	Sincronização
+color_name_red	Red	Rojo	Rot	Rouge	Vermelho
+color_name_orange	Orange	Naranja	Orange	Orange	Laranja
+color_name_yellow	Yellow	Amarillo	Gelb	Jaune	Amarelo
+color_name_green	Green	Verde	Grün	Vert	Verde
+color_name_turquoise	Turquoise	Turquesa	Türkis	Turquoise	Turquesa
+color_name_blue	Blue	Azul	Blau	Bleu	Azul
+color_name_purple	Purple	Morado	Violett	Violet	Roxo
+color_name_pink	Pink	Rosa	Rosa	Rose	Rosa
+color_name_brown	Brown	Marrón	Braun	Marron	Marrom
+color_name_gray	Gray	Gris	Grau	Gris	Cinza
+color_name_white	White	Blanco	Weiß	Blanc	Branco
+color_name_black	Black	Negro	Schwarz	Noir	Preto

@@ -12,11 +12,12 @@ enum class SoundEvent(val id: String) {
     TASK_CHECKED("taskChecked"),
     NOTE_DELETED("noteDeleted"),
     TYPING("typing"),
+    TEXT_DELETED("textDeleted"),
 }
 
 /**
  * Qué suena. Los números son los de `SoundChoice` en Windows. Android solo tiene los cinco sonidos propios de papel y pluma
- * (del 7 al 11): los del sistema de Windows (1-5) y el .wav propio (6) no existen aquí y se quedan en silencio.
+ * (del 7 al 12): los del sistema de Windows (1-5) y el .wav propio (6) no existen aquí y se quedan en silencio.
  */
 enum class SoundChoice(val code: Int) {
     NONE(0),
@@ -24,7 +25,8 @@ enum class SoundChoice(val code: Int) {
     PAPER_FOLD(8),
     PEN_TAP(9),
     PAPER_CRUMPLE(10),
-    PEN_SCRATCH(11);
+    PEN_SCRATCH(11),
+    ERASER(12);
 
     companion object {
         fun fromCode(code: Int): SoundChoice? = entries.firstOrNull { it.code == code }
@@ -50,7 +52,6 @@ object SoundPlan {
         SoundEvent.NOTE_CLOSED to SoundChoice.PAPER_FOLD,
         SoundEvent.TASK_CHECKED to SoundChoice.PEN_TAP,
         SoundEvent.NOTE_DELETED to SoundChoice.PAPER_CRUMPLE,
-        SoundEvent.TYPING to SoundChoice.PEN_SCRATCH,
     )
 
     /** El sonido a reproducir, o `null` si no debe sonar nada. */
@@ -60,9 +61,16 @@ object SoundPlan {
         return choice.takeIf { it != SoundChoice.NONE }
     }
 
-    /** «Papel y pluma para todo»: asigna los cinco eventos nuevos y deja lo demás como estaba. */
+    /**
+     * Los sonidos sugeridos: los cuatro eventos de las notas que se oyen de vez en cuando. Escribir y borrar texto suenan en cada
+     * pulsación y se activan a mano; lo demás (avisos, sync) queda como estaba.
+     */
     fun paperAndPen(choices: Map<String, Int>): Map<String, Int> =
         choices + PAPER_AND_PEN.map { (event, choice) -> event.id to choice.code }
+
+    /** Al encender los sonidos la primera vez no hay nada elegido: se aplican los sugeridos. Con algo ya elegido, `null` (no tocar nada). */
+    fun paperAndPenIfUnset(choices: Map<String, Int>): Map<String, Int>? =
+        if (PAPER_AND_PEN.keys.any { it.id in choices }) null else paperAndPen(choices)
 }
 
 /** Frena el sonido de escribir: como mucho uno cada 70 ms y solo con caracteres imprimibles. */
@@ -79,6 +87,9 @@ class TypingThrottle {
         const val MIN_INTERVAL_MS = 70L
 
         fun isPrintable(c: Char): Boolean = !c.isISOControl()
+
+        /** ¿Este cambio de texto es borrar? El texto queda más corto: Retroceso, Supr, cortar o borrar una selección. */
+        fun isDeleting(before: String, after: String): Boolean = after.length < before.length
 
         /**
          * ¿Este cambio de texto es escribir? El texto es más largo y lo añadido es imprimible (un intro, un pegado de varias

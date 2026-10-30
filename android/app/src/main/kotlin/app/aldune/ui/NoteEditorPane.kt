@@ -102,7 +102,9 @@ import androidx.compose.ui.platform.LocalViewConfiguration
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.CustomAccessibilityAction
 import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.customActions
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.TextLayoutResult
@@ -272,6 +274,8 @@ fun NoteEditorPane(key: String, viewModel: NotesViewModel, onBack: () -> Unit, s
         snapshotFlow { state.text.toString() }.collect {
             if (!loaded) { previous = it; return@collect }
             if (TypingThrottle.isTyping(previous, it)) viewModel.playSound(SoundEvent.TYPING)
+            // Una nota protegida se vacía al bloquearse: eso no es borrar, y `unlocked` ya está bajado cuando ocurre.
+            else if (TypingThrottle.isDeleting(previous, it) && (!protectedNote || unlocked)) viewModel.playSound(SoundEvent.TEXT_DELETED)
             previous = it
             // El texto de una protegida abierta no pasa por los borradores: va a su sesión. Bloqueada, no se guarda nada.
             if (!protectedNote) viewModel.updateDraft(key, it) else if (unlocked) viewModel.updateProtectedText(key, it)
@@ -303,6 +307,8 @@ fun NoteEditorPane(key: String, viewModel: NotesViewModel, onBack: () -> Unit, s
         }
     }
     LifecycleEventEffect(Lifecycle.Event.ON_STOP) { viewModel.flushAll() }
+
+    val toggleTaskLabel = stringResource(R.string.edit_toggle_task)
 
     fun text() = state.text.toString()
 
@@ -652,6 +658,15 @@ fun NoteEditorPane(key: String, viewModel: NotesViewModel, onBack: () -> Unit, s
                 .padding(start = TASK_DRAG_PAD_START, end = if (hasTasks) TASK_DRAG_ZONE else 16.dp, top = TASK_DRAG_PAD_TOP, bottom = 8.dp)
                 .focusProperties { this.canFocus = canFocus }
                 .focusRequester(focus)
+                // Marcar una tarea sin ver la pantalla: la casilla no es un nodo propio (todo el texto es un campo), así que TalkBack no
+                // puede tocarla. Esta acción marca o desmarca la tarea de la línea del cursor, como Ctrl+Enter con teclado físico.
+                .semantics {
+                    customActions = listOf(CustomAccessibilityAction(toggleTaskLabel) {
+                        val glyph = TaskLists.checkboxOnLine(text(), caret())
+                        if (glyph != null) toggleTask(glyph, keepCaretPosition = true)
+                        glyph != null
+                    })
+                }
                 // Tocar una casilla la marca. Se mira en la pasada Initial. Si el toque cae sobre una casilla se consume el «down» para que el
                 // campo no ponga ahí el cursor ni abra el teclado (marcar una lista no debe taparla); el desplazamiento sigue funcionando
                 // porque el scroll no exige un down sin consumir. Fuera de una casilla no se consume nada.

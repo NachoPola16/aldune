@@ -53,6 +53,10 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.role
+import androidx.compose.ui.semantics.selected
+import app.aldune.text.ColorName
+import app.aldune.text.ColorNames
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.platform.LocalContext
@@ -227,6 +231,8 @@ private fun CollapsibleSection(
 @Composable
 private fun Swatch(hex: String, selected: Boolean, onClick: () -> Unit) {
     val ring = MaterialTheme.colorScheme.primary
+    // El nombre del color («Amarillo»), no su código: con TalkBack «#EBD38B» no dice nada.
+    val name = ColorNames.of(hex)?.let { stringResource(colorNameRes(it)) } ?: hex
     Row(
         Modifier
             .size(40.dp)
@@ -234,6 +240,25 @@ private fun Swatch(hex: String, selected: Boolean, onClick: () -> Unit) {
             .background(noteFace(hex))
             .then(if (selected) Modifier.drawBehind { drawCircle(ring, radius = size.minDimension / 2 - 2.dp.toPx(), style = androidx.compose.ui.graphics.drawscope.Stroke(4.dp.toPx())) } else Modifier)
             .clickable(onClick = onClick)
-            .semantics { contentDescription = hex },
+            .semantics {
+                contentDescription = name
+                this.selected = selected
+                role = Role.RadioButton
+            },
     ) {}
+}
+
+private fun colorNameRes(name: ColorName): Int = when (name) {
+    ColorName.RED -> R.string.color_name_red
+    ColorName.ORANGE -> R.string.color_name_orange
+    ColorName.YELLOW -> R.string.color_name_yellow
+    ColorName.GREEN -> R.string.color_name_green
+    ColorName.TURQUOISE -> R.string.color_name_turquoise
+    ColorName.BLUE -> R.string.color_name_blue
+    ColorName.PURPLE -> R.string.color_name_purple
+    ColorName.PINK -> R.string.color_name_pink
+    ColorName.BROWN -> R.string.color_name_brown
+    ColorName.GRAY -> R.string.color_name_gray
+    ColorName.WHITE -> R.string.color_name_white
+    ColorName.BLACK -> R.string.color_name_black
 }
