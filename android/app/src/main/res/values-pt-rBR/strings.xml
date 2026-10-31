@@ -429,4 +429,5 @@
     <string name="note_pin">Fixar no topo da lista</string>
     <string name="note_unpin">Soltar do topo da lista</string>
     <string name="pinned_mark_cd">Fixada no topo da lista</string>
+    <string name="existing_tags">Suas etiquetas</string>
 </resources>

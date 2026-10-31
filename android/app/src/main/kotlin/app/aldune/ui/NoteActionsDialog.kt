@@ -8,6 +8,7 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -24,6 +25,7 @@ import androidx.compose.ui.unit.dp
 import app.aldune.R
 import app.aldune.core.PasswordProblem
 import app.aldune.domain.NoteListItem
+import app.aldune.domain.NoteState
 import app.aldune.domain.ReorderPlan
 import app.aldune.syncclient.ProtectionError
 import app.aldune.syncclient.ProtectionResult
@@ -41,6 +43,8 @@ import kotlinx.coroutines.launch
 fun NoteActionsDialog(
     item: NoteListItem, openInEditor: Boolean, viewModel: NotesViewModel, onOpen: () -> Unit, onClose: () -> Unit,
     moves: Set<ReorderPlan.Direction> = emptySet(), onMove: (Int) -> Unit = {},
+    // Lo que el deslizamiento hace (archivar, papelera, restaurar), también aquí: quien no sabe que se desliza lo encuentra en el menú.
+    onArchive: (() -> Unit)? = null, onTrash: (() -> Unit)? = null, onRestore: (() -> Unit)? = null,
 ) {
     var options by remember { mutableStateOf<NotesViewModel.NoteOptions?>(null) }
     var naming by remember { mutableStateOf(false) }
@@ -53,7 +57,7 @@ fun NoteActionsDialog(
 
     if (options == null && !naming && password == null) {
         // Panel inferior y no un diálogo en medio: cinco acciones de lista que se alcanzan con el pulgar y se cierran deslizando.
-        ModalBottomSheet(onDismissRequest = onClose) {
+        ModalBottomSheet(onDismissRequest = onClose, sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)) {
                 Column(Modifier.padding(horizontal = 24.dp).padding(bottom = 24.dp)) {
                     Text(
                         item.title, Modifier.padding(bottom = 4.dp).semantics { heading() }, style = MaterialTheme.typography.titleLarge,
@@ -68,6 +72,12 @@ fun NoteActionsDialog(
                     }
                     Action(stringResource(R.string.note_options)) {
                         scope.launch { viewModel.noteOptions(item.id)?.let { options = it } ?: onClose() }
+                    }
+                    if (item.state == NoteState.ACTIVE) {
+                        onArchive?.let { Action(stringResource(R.string.archive)) { onClose(); it() } }
+                        onTrash?.let { Action(stringResource(R.string.move_to_trash)) { onClose(); it() } }
+                    } else {
+                        onRestore?.let { Action(stringResource(R.string.restore)) { onClose(); it() } }
                     }
                     if (item.isProtected) {
                         Action(stringResource(R.string.visible_name_menu)) {

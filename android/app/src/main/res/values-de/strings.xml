@@ -429,4 +429,5 @@
     <string name="note_pin">Oben in der Liste anheften</string>
     <string name="note_unpin">Von der Listenspitze lösen</string>
     <string name="pinned_mark_cd">Oben in der Liste angeheftet</string>
+    <string name="existing_tags">Deine Tags</string>
 </resources>

@@ -158,6 +158,23 @@ fun NoteOptionsDialog(
                         )
                     }
                 }
+                // Las etiquetas que ya existen en otras notas, a un toque: antes solo se podía escribir una nueva.
+                val known = (viewModel.state.collectAsState().value as? UiState.Ready)?.allTags.orEmpty()
+                    .filter { candidate -> tags.none { it.equals(candidate, ignoreCase = true) } }
+                if (known.isNotEmpty()) {
+                    Text(stringResource(R.string.existing_tags), style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        for (tag in known) {
+                            androidx.compose.material3.SuggestionChip(
+                                onClick = {
+                                    tags = NoteService.normalizeTags(tags + tag)
+                                    viewModel.setNoteTags(initial.noteId, tags)
+                                },
+                                label = { Text(tag) },
+                            )
+                        }
+                    }
+                }
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     OutlinedTextField(
                         value = draft, onValueChange = { draft = it }, singleLine = true, modifier = Modifier.weight(1f),

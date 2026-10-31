@@ -104,3 +104,17 @@ Nothing has been published. Commits are local on `main` (not pushed). Work list 
    versions in `Aldune.csproj` (2.2.0) and Android (1.1.0, `versionCode`); confirm each publication with the user. Order: Windows first, sync servers after, Android last with `--latest=false`.
 6. **Hygiene:** `git log --format='%an <%ae> | %cn <%ce>' origin/main..HEAD` before any push (so far all NachoPola16); the emulator is closed; the Pixel has the *debug* app installed with test notes (your real notes are in the other package, untouched).
 7. **Sync review (asked by the owner, second session):** after the pin work, review note sync end to end for bugs on both platforms: pinned notes travelling both ways and through conflicts (`ConflictPayload`, `SyncPlanner`, `SyncMapping`), an edit racing a pin change, deletes and the trash, reordering (`dockPosition`) together with the pin, old 2.1.x / 1.0.x clients re-sending, and the sync servers. Use the `seguridad` and `tests` agents; record findings here before publishing.
+
+## Android list B10 / C11-C20 (second session): do / do not
+
+- **B10 landscape: open.** Needs a pass on the emulator in landscape (list, editor, sheets); nothing to decide from code alone. Not done.
+- **C11 action sheet hint: DONE.** The long-press sheet now opens fully expanded (`skipPartiallyExpanded`), so it no longer invites you to drag it up for more.
+- **C13 swipe discoverability: DONE, without a new indicator.** The sheet (long press) now also offers Archive, Move to trash and Restore, the same actions the swipe does. A hint on the row would add noise to every card; the menu everyone already finds is the better place.
+- **C14 task drag handle left / right / off: DO NOT, for now.** It is a new setting with its own parity row in `SETTINGS_PARITY` and a layout change in the editor, and nobody reported the handle as wrong where it is. Revisit if it comes back.
+- **C15 how tags look: DO NOT.** The "#" is what makes a tag read as a tag in the list; the real complaint (they look like the top tabs) is a styling matter to judge on a device. Left as is.
+- **C16 copy a hyperlink: DO NOT in this version.** Needs link detection in the editor plus a long-press target that does not clash with the cursor handles (see checkbox follow-ups). Not worth the risk for 1.1.0.
+- **C17 three-dots menu: done earlier.**
+- **C18 find inside a note on Android: DO NOT in this version.** A search bar inside the editor interacts with the keyboard, the checkbox tap area and hidden tasks; it deserves its own spec and tests. The menu entry stays.
+- **C19 note title next to the back arrow: DO NOT.** The title is the first line of the note, shown right below; repeating it in the bar costs width (the bar also holds sync status and task progress) and reads as a duplicate. Revisit only if it is shown once the first line has scrolled out of view.
+- **C20 options distribution: PARTLY DONE.** The options sheet now lists the tags that already exist in the app as one-tap chips ("Your tags") next to the "new tag" field. Reshuffling which action lives in the row menu, sheet, three dots and editor bar is left as is: with Archive / Trash / Restore / Pin now in the long-press sheet and colours / tags / reminder in the options sheet, each place has a clear job.
+

@@ -477,6 +477,9 @@ fun NoteListPane(
         NoteActionsDialog(
             item, openInEditor = item.id == selectedId, viewModel = viewModel, onOpen = { onOpen(item.id) }, onClose = { menuFor = null },
             moves = ReorderPlan.available(sameGroup(state.items, item.id), item.id, reorderable), onMove = { delta -> moveBy(item.id, delta) },
+            onArchive = { viewModel.archive(item.id); announce(archivedMsg) { viewModel.restore(item.id) } },
+            onTrash = { viewModel.trash(item.id); announce(trashedMsg) { viewModel.restore(item.id) } },
+            onRestore = { viewModel.restore(item.id); announce(restoredMsg) { viewModel.trash(item.id) } },
         )
     }
 
