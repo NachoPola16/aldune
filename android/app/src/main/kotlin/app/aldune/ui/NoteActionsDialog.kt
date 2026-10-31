@@ -4,6 +4,8 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.MaterialTheme
@@ -58,7 +60,8 @@ fun NoteActionsDialog(
     if (options == null && !naming && password == null) {
         // Panel inferior y no un diálogo en medio: cinco acciones de lista que se alcanzan con el pulgar y se cierran deslizando.
         ModalBottomSheet(onDismissRequest = onClose, sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)) {
-                Column(Modifier.padding(horizontal = 24.dp).padding(bottom = 24.dp)) {
+                // Con desplazamiento: en horizontal (o con letra grande) las acciones no caben y las últimas quedaban inalcanzables.
+                Column(Modifier.verticalScroll(rememberScrollState()).padding(horizontal = 24.dp).padding(bottom = 24.dp)) {
                     Text(
                         item.title, Modifier.padding(bottom = 4.dp).semantics { heading() }, style = MaterialTheme.typography.titleLarge,
                         maxLines = 1, overflow = TextOverflow.Ellipsis,

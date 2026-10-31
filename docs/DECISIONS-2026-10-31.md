@@ -107,7 +107,7 @@ Nothing has been published. Commits are local on `main` (not pushed). Work list 
 
 ## Android list B10 / C11-C20 (second session): do / do not
 
-- **B10 landscape: open.** Needs a pass on the emulator in landscape (list, editor, sheets); nothing to decide from code alone. Not done.
+- **B10 landscape: checked on the Pixel (list + long-press sheet), one bug fixed.** The sheet's actions did not fit in landscape and the last ones (Move to trash, Protect) were unreachable; the sheet now scrolls. Not yet checked in landscape: the editor, the options sheet and Settings. Noted, not changed: with the sync notice showing, the two-pane list has room for only two notes.
 - **C11 action sheet hint: DONE.** The long-press sheet now opens fully expanded (`skipPartiallyExpanded`), so it no longer invites you to drag it up for more.
 - **C13 swipe discoverability: DONE, without a new indicator.** The sheet (long press) now also offers Archive, Move to trash and Restore, the same actions the swipe does. A hint on the row would add noise to every card; the menu everyone already finds is the better place.
 - **C14 task drag handle left / right / off: DO NOT, for now.** It is a new setting with its own parity row in `SETTINGS_PARITY` and a layout change in the editor, and nobody reported the handle as wrong where it is. Revisit if it comes back.
