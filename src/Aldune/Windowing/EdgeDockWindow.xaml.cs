@@ -148,6 +148,7 @@ public partial class EdgeDockWindow : Window
         // así que sus propios eventos de ratón no coinciden con lo que se ve. Ver docs/STATUS.md.
         _hoverPollTimer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(50) };
         _hoverPollTimer.Tick += (_, _) => PollHoverState();
+        _wheelSessionTimer.Tick += OnWheelSessionTimer;
         _hoverPollTimer.Start();
 
         // Aparte y mucho más lento: pasar a pantalla completa no hay que detectarlo en 50ms, y
@@ -413,12 +414,12 @@ public partial class EdgeDockWindow : Window
         FooterBorder.HorizontalAlignment = HorizontalAlignment.Center;
         FooterBorder.VerticalAlignment = top ? VerticalAlignment.Top : VerticalAlignment.Bottom;
         FooterBorder.Padding = new Thickness(FooterPadding);
-        // Hueco visible de ~16 px entre la barra y las notas en los cuatro bordes (con 24 se veía despegada de las notas): arriba la primera
-        // tarjeta ya lleva 14 px de aire de sombra (TabShadowHeadroom), así que ahí el margen es de 2; abajo y en los laterales la última
-        // tarjeta queda a ras de su zona.
+        // Visible gap of ~8 px between the button bar and the notes on the four edges (it was 16, then 24 before that). On top the first card
+        // already carries 14 px of shadow headroom (TabShadowHeadroom), so the margin there is negative (-6); at the bottom and on the sides
+        // the last card sits flush with its zone. EdgeGeometry.FooterLength follows (button 32 + margin 8 + padding 10 + shadow air).
         FooterBorder.Margin = top
-            ? new Thickness(0, 0, 0, 2)
-            : new Thickness(0, 16, 0, 0);
+            ? new Thickness(0, 0, 0, -6)
+            : new Thickness(0, 8, 0, 0);
 
     }
 
@@ -477,7 +478,7 @@ public partial class EdgeDockWindow : Window
     /// </summary>
     private void ApplyWindowRect()
     {
-        var rect = EdgeGeometry.WindowRect(_workingArea, _edge, _noteCount, Alignment);
+        var rect = CurrentWindowRect();
         Left = rect.X;
         Top = rect.Y;
         Width = rect.Width;
@@ -587,7 +588,7 @@ public partial class EdgeDockWindow : Window
         // y desplegarse al entrar ahí sería desplegarse por pasar el ratón sobre nada.
         // Sin notas la ventana entera es zona sensible: no hay tira que sobrevolar, y los botones
         // tienen que poder pulsarse sin desplegar nada primero.
-        var windowRect = EdgeGeometry.WindowRect(_workingArea, _edge, _noteCount, Alignment);
+        var windowRect = CurrentWindowRect();
         bool empty = _noteCount == 0;
         bool inWindow = Contains(windowRect, cursorX, cursorY);
         bool inRest = empty
@@ -642,7 +643,7 @@ public partial class EdgeDockWindow : Window
         if (_hwnd == IntPtr.Zero || !IsVisible || _hiddenByFullscreenApp || _fanState.IsExpanded || _dragging) return;
 
         var dpi = VisualTreeHelper.GetDpi(this);
-        var expected = EdgeGeometry.WindowRect(_workingArea, _edge, _noteCount, Alignment);
+        var expected = CurrentWindowRect();
         var expectedPx = new Aldune.Core.Rect(expected.X * dpi.DpiScaleX, expected.Y * dpi.DpiScaleY,
             expected.Width * dpi.DpiScaleX, expected.Height * dpi.DpiScaleY);
         var (x, y, width, height) = NativeMethods.GetWindowRectPx(_hwnd);
@@ -1743,11 +1744,60 @@ public partial class EdgeDockWindow : Window
         _settings?.DockView ?? DockViewKind.Active, _settings?.DockTagFilter,
         Strings.DockViewActive, Strings.DockViewArchived, Strings.DockViewTrash, Strings.DockViewAll);
 
+    // --- Wheel session -------------------------------------------------------------------------------
+    //
+    // Turning the wheel from a tag with a long list to one with few notes shrinks the window with the new note count: the cursor was left
+    // over transparent pixels (the OS sends the wheel to whatever is behind) and the user could not keep turning. While a session is
+    // alive (1.5 s after the last notch) the window keeps the size it had when the session began and gets a nearly invisible background
+    // (alpha 1: a layered window only passes clicks through alpha 0), so the wheel keeps arriving here wherever the cursor was.
+
+    private static readonly TimeSpan WheelSessionLength = TimeSpan.FromMilliseconds(1500);
+    private int _wheelFloorCount;
+    private readonly DispatcherTimer _wheelSessionTimer = new() { Interval = WheelSessionLength };
+    private static readonly Brush WheelCatcherBrush = Freeze(new SolidColorBrush(System.Windows.Media.Color.FromArgb(1, 0, 0, 0)));
+
+    private static Brush Freeze(Brush brush)
+    {
+        brush.Freeze();
+        return brush;
+    }
+
+    private bool WheelSessionActive => DateTime.UtcNow < _wheelViewUntil;
+
+    /// <summary>The window rectangle: for the real note count, or the bigger one a live wheel session started with.</summary>
+    private Aldune.Core.Rect CurrentWindowRect() =>
+        EdgeGeometry.WindowRect(_workingArea, _edge, Math.Max(_noteCount, _wheelFloorCount), Alignment);
+
+    private void BeginWheelSession()
+    {
+        _wheelFloorCount = Math.Max(_wheelFloorCount, _noteCount);
+        Background = WheelCatcherBrush;
+        _wheelSessionTimer.Stop();
+        _wheelSessionTimer.Start();
+    }
+
+    private void OnWheelSessionTimer(object? sender, EventArgs e)
+    {
+        _wheelSessionTimer.Stop();
+        _wheelFloorCount = 0;
+        Background = System.Windows.Media.Brushes.Transparent;
+        ApplyWindowRect();
+    }
+
+    /// <summary>During a live session the wheel always changes the view, wherever it falls inside the window.</summary>
+    private void OnDockWindowPreviewMouseWheel(object sender, MouseWheelEventArgs e)
+    {
+        if (e.Handled || e.Delta == 0 || _settings is not { WheelChangesDockView: true } || !WheelSessionActive) return;
+        CycleDockView(e.Delta < 0 ? 1 : -1, showLabel: true);
+        e.Handled = true;
+    }
+
     private void CycleDockView(int direction, bool showLabel)
     {
+        BeginWheelSession();
         var (view, tag) = DockViewCycle.Next(_settings?.DockView ?? DockViewKind.Active, _settings?.DockTagFilter, BuildViewCounts(), direction);
         _coordinator.SetDockView(view, tag);
-        _wheelViewUntil = DateTime.UtcNow.AddMilliseconds(1500);
+        _wheelViewUntil = DateTime.UtcNow + WheelSessionLength;
         HoldOpenForNextInteraction();
         if (showLabel) ShowViewLabel(CurrentViewLabel());
     }
@@ -1759,6 +1809,7 @@ public partial class EdgeDockWindow : Window
         e.Handled = true;
     }
 
+    private const double ViewLabelGap = 4;
     private System.Windows.Controls.Primitives.Popup? _viewLabelPopup;
     private TextBlock? _viewLabelText;
     private readonly System.Windows.Threading.DispatcherTimer _viewLabelTimer = new() { Interval = TimeSpan.FromMilliseconds(1100) };
@@ -1782,26 +1833,30 @@ public partial class EdgeDockWindow : Window
         }
 
         _viewLabelText!.Text = text;
-        // Junto al engranaje (donde está el punto) y hacia dentro de la pantalla: no tapa ninguna nota ni el pie. Decisión: el centro de las
-        // pestañas era lo más visible pero escondía justo las notas que cambian al girar la rueda.
-        _viewLabelPopup.PlacementTarget = ManageArchiveButton;
-        _viewLabelPopup.Placement = _edge switch
+        // Always in the same place: centred on the notes column, at the free end of the strip (opposite to the button bar: above the first
+        // note on the left, right and bottom docks; below the last one on the top dock, where the bar hugs the screen edge). A custom
+        // placement never flips to the other side of its target the way PlacementMode.Left/Right/Bottom did when the label did not fit,
+        // which is what made it jump from one side of the gear to the other. It never covers a note either.
+        // With no notes there is no strip, so it falls back to being centred under/over the gear.
+        _viewLabelPopup.PlacementTarget = _noteCount > 0 ? TabsScroll : ManageArchiveButton;
+        _viewLabelPopup.Placement = PlacementMode.Custom;
+        _viewLabelPopup.CustomPopupPlacementCallback = (popupSize, targetSize, _) =>
         {
-            EdgePosition.Top => PlacementMode.Bottom,
-            EdgePosition.Bottom => PlacementMode.Top,
-            EdgePosition.Left => PlacementMode.Right,
-            _ => PlacementMode.Left
+            double x = (targetSize.Width - popupSize.Width) / 2;
+            bool below = _edge == EdgePosition.Top;
+            double y = below ? targetSize.Height + ViewLabelGap : -popupSize.Height - ViewLabelGap;
+            return [new CustomPopupPlacement(new Point(x, y), PopupPrimaryAxis.Horizontal)];
         };
         _viewLabelPopup.IsOpen = true;
         _viewLabelTimer.Stop();
         _viewLabelTimer.Start();
     }
 
-    /// <summary>El engranaje dice en qué vista está el dock (tooltip) y lleva un punto si no es «Activas».</summary>
+    /// <summary>El engranaje dice en qué vista está el dock (tooltip) y lleva un anillo de acento si no es «Activas» (Tag="Filtered", ver CircularIconButtonStyle).</summary>
     private void UpdateViewIndicator()
     {
         var view = _settings?.DockView ?? DockViewKind.Active;
-        ViewFilterDot.Visibility = view == DockViewKind.Active ? Visibility.Collapsed : Visibility.Visible;
+        ManageArchiveButton.Tag = view == DockViewKind.Active ? null : "Filtered";
         UpdateTagAwareTooltips();
     }
 
@@ -3010,6 +3065,7 @@ public partial class EdgeDockWindow : Window
         CloseDockPopups();
         _hoverLayoutHold = false;
         _hoverPollTimer.Stop();
+        _wheelSessionTimer.Stop();
         _fullscreenPollTimer.Stop();
         _arrowScrollTimer.Stop();
         _syncFeedbackTimer.Stop();

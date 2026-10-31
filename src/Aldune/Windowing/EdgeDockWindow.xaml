@@ -16,7 +16,7 @@
         SnapsToDevicePixels="True"
         TextOptions.TextFormattingMode="Display"
         AllowDrop="True" DragOver="OnDockDragOver" Drop="OnDockDrop"
-        PreviewKeyDown="OnDockPreviewKeyDown">
+        PreviewKeyDown="OnDockPreviewKeyDown" PreviewMouseWheel="OnDockWindowPreviewMouseWheel">
     <!-- AllowsTransparency, a diferencia del resto de la app. Antes la forma del dock la recortaba
          SetWindowRgn, y una región es una máscara de 1 BIT: un píxel está dentro o fuera, sin
          medios tonos, así que toda curva salía escalonada — las esquinas de las pestañas y sobre
@@ -190,11 +190,12 @@
                                  docs/STATUS.md. -->
                             <!-- Los distintivos (fijada, vinculada, recordatorio) en una sola fila pegada arriba a la derecha: los que no
                                  aplican se pliegan y no dejan hueco, así que la chincheta no queda flotando a mitad de la pestaña. -->
-                            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Top" Margin="0,8,10,0">
+                            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Top" Margin="0,11,10,0">
                                 <!-- Fijada arriba en la lista (no el «siempre encima»). -->
-                                <TextBlock Text="&#xE840;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" FontSize="10"
-                                           Foreground="{Binding Converter={StaticResource NoteFaceConverter}, ConverterParameter=Label}"
-                                           VerticalAlignment="Center" Margin="0,0,7,0" Opacity="0.85"
+                                <!-- Filled pin in the face's ink (not its softer «label» tone) so it reads on every look. -->
+                                <TextBlock Text="&#xE718;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" FontSize="11"
+                                           Foreground="{Binding Converter={StaticResource NoteFaceConverter}, ConverterParameter=Ink}"
+                                           VerticalAlignment="Center" Margin="0,0,7,0"
                                            Visibility="{Binding IsPinnedToTop, Converter={StaticResource BoolToVisibility}}"
                                            ToolTip="{x:Static res:Strings.PinnedToTopMarker}" />
                                 <!-- Nota vinculada a un archivo: página pequeña con la ruta en el tooltip (spec, decisión 6). -->
@@ -312,9 +313,17 @@
                             <Rectangle x:Name="GlossSquare" IsHitTestVisible="False" Visibility="Collapsed"
                                        Fill="{Binding Fill, ElementName=GlossRound}" />
                             <local:BevelEdge OnlyWhenSquare="True" EdgeThickness="2" ShadowOutside="True" />
+                            <!-- Accent ring for a button that stands for an active filter (Tag="Filtered", the dock gear when the view is not
+                                 «Active»). It replaces the old dot hanging off the corner, which looked like a pending notification and made
+                                 the gear look off-centre without moving the glyph at all. -->
+                            <Border x:Name="FilterRing" IsHitTestVisible="False" Visibility="Collapsed" BorderThickness="2"
+                                    BorderBrush="{DynamicResource AlduneAccentBrush}" CornerRadius="17" />
                             <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
                         </Grid>
                         <ControlTemplate.Triggers>
+                            <Trigger Property="Tag" Value="Filtered">
+                                <Setter TargetName="FilterRing" Property="Visibility" Value="Visible" />
+                            </Trigger>
                             <Trigger Property="IsMouseOver" Value="True">
                                 <Setter TargetName="Bg" Property="Fill" Value="{DynamicResource AlduneHoverBrush}" />
                                 <Setter TargetName="SquareBg" Property="Fill" Value="{DynamicResource AlduneHoverBrush}" />
@@ -327,6 +336,7 @@
                                 <Setter TargetName="Bg" Property="Visibility" Value="Collapsed" />
                                 <Setter TargetName="SquareBg" Property="Visibility" Value="Visible" />
                                 <Setter TargetName="SquareBg" Property="Effect" Value="{x:Null}" />
+                                <Setter TargetName="FilterRing" Property="CornerRadius" Value="0" />
                             </DataTrigger>
                             <!-- Con el relieve de Windows 95 la sombra de caída sobra: el borde oscuro de abajo y de la derecha ya es la
                                  sombra, y las dos juntas engordaban ese lado y hacían que el icono pareciera descentrado. -->
@@ -624,7 +634,7 @@
                  decir, contra el lado INTERIOR del dock en vez del exterior, dejando un hueco entre
                  la tira/pestañas y el borde real de la pantalla. -->
             <Border x:Name="FooterBorder" Grid.Row="1" Style="{StaticResource XpBarBorderStyle}" CornerRadius="{DynamicResource AlduneRadius21}"
-                    HorizontalAlignment="Center" Margin="0,16,0,0" Padding="5">
+                    HorizontalAlignment="Center" Margin="0,8,0,0" Padding="5">
                 <Grid>
                 <StackPanel x:Name="FooterPanel" Orientation="Horizontal">
                     <!-- "Ver todas": interruptor, no solo abrir. Si hay alguna nota abierta ahora
@@ -648,10 +658,6 @@
                             AutomationProperties.Name="{x:Static res:Strings.ManageNotesTooltip}">
                         <Grid>
                             <TextBlock Text="&#xE713;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" FontSize="14" />
-                            <!-- Un punto cuando el dock no enseña «Activas»: hay un filtro (etiqueta, archivadas, papelera, todas). -->
-                            <Ellipse x:Name="ViewFilterDot" Width="9" Height="9" Fill="{DynamicResource AlduneNoticeBrush}"
-                                     Stroke="{DynamicResource AlduneGroundBrush}" StrokeThickness="1.5"
-                                     HorizontalAlignment="Right" VerticalAlignment="Top" Margin="0,-6,-7,0" Visibility="Collapsed" IsHitTestVisible="False" />
                         </Grid>
                     </Button>
                     <Button x:Name="SyncButton" Click="OnSyncClick"
