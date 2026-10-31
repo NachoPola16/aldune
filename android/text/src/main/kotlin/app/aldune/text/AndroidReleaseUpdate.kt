@@ -13,7 +13,7 @@ import kotlinx.serialization.json.booleanOrNull
  */
 object AndroidReleaseUpdate {
     const val PAGE = "https://github.com/NachoPola16/aldune/releases/tag/"
-    const val API = "https://api.github.com/repos/NachoPola16/aldune/releases?per_page=30"
+    const val API = "https://api.github.com/repos/NachoPola16/aldune/releases?per_page=100"
     private const val PREFIX = "android-v"
 
     /** [version] es la de `versionName` y [tag] el tag completo: la página se abre con [PAGE] + tag, nunca con una URL del JSON. */

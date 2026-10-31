@@ -442,5 +442,6 @@ tag_move_up	Move %1$s up	Subir %1$s	%1$s nach oben	Monter %1$s	Subir %1$s
 tag_move_down	Move %1$s down	Bajar %1$s	%1$s nach unten	Descendre %1$s	Descer %1$s
 show_tag_hash	Show # before tags	Mostrar # delante de las etiquetas	# vor Tags anzeigen	Afficher # devant les étiquettes	Mostrar # antes das etiquetas
 show_tag_hash_hint	Off: a small tag icon instead of the #.	Apagado: un pequeño icono de etiqueta en vez de la #.	Aus: ein kleines Tag-Symbol statt der #.	Désactivé : une petite icône d'étiquette à la place du #.	Desligado: um pequeno ícone de etiqueta no lugar do #.
+all_notes_chip	All	Todas	Alle	Toutes	Todas
 pinned_mark_cd	Pinned to the top of the list	Fijada arriba en la lista	Oben in der Liste angeheftet	Épinglée en haut de la liste	Fixada no topo da lista
 existing_tags	Your tags	Tus etiquetas	Deine Tags	Vos étiquettes	Suas etiquetas

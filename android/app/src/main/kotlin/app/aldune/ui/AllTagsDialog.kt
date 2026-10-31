@@ -54,6 +54,13 @@ fun AllTagsDialog(
             Column {
                 OutlinedTextField(query, { query = it }, Modifier.fillMaxWidth(), singleLine = true, placeholder = { Text(stringResource(R.string.search_tags)) })
                 LazyColumn(Modifier.fillMaxWidth().heightIn(max = 360.dp).padding(top = 8.dp), verticalArrangement = Arrangement.spacedBy(0.dp)) {
+                    if (!searching) item {
+                        Text(
+                            stringResource(R.string.all_notes_chip), style = MaterialTheme.typography.bodyLarge,
+                            color = if (selected == null) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface,
+                            modifier = Modifier.fillMaxWidth().clickable { onSelect(null) }.padding(vertical = 14.dp, horizontal = 4.dp),
+                        )
+                    }
                     items(shown, key = { it.lowercase() }) { tag ->
                         val isSelected = tag.equals(selected, ignoreCase = true)
                         Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {

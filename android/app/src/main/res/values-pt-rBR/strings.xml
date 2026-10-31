@@ -443,6 +443,7 @@
     <string name="tag_move_down">Descer %1$s</string>
     <string name="show_tag_hash">Mostrar # antes das etiquetas</string>
     <string name="show_tag_hash_hint">Desligado: um pequeno ícone de etiqueta no lugar do #.</string>
+    <string name="all_notes_chip">Todas</string>
     <string name="pinned_mark_cd">Fixada no topo da lista</string>
     <string name="existing_tags">Suas etiquetas</string>
 </resources>

@@ -542,6 +542,10 @@ private fun TagRow(state: UiState.Ready, showHash: Boolean, onSelect: (String?) 
             state = listState, contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 16.dp),
             horizontalArrangement = Arrangement.spacedBy(8.dp),
         ) {
+            // «Todas»: quitar el filtro de etiqueta sin tener que volver a pulsar la activa (y ver que no hay ninguna activa).
+            item {
+                FilterChip(selected = state.tag == null, onClick = { onSelect(null) }, label = { Text(stringResource(R.string.all_notes_chip)) })
+            }
             items(state.allTags) { tag ->
                 val selected = state.tag.equals(tag, ignoreCase = true)
                 FilterChip(
@@ -840,7 +844,8 @@ private fun SyncIcon(icon: StatusIcon, description: String) {
 
 /** Un dedo que mantiene pulsada una fila: si ya abrió el menú o empezó a arrastrar, al levantarlo no se debe abrir la nota. */
 /** Cuánto aguanta el dedo quieto, tras la pulsación larga, para abrir el menú sin soltar. */
-private const val MENU_HOLD_MS = 350L
+// Tras la pulsación larga del sistema (~400 ms), cuánto esperar con el dedo quieto antes de abrir el menú (350 ms sumaban ~750 ms: se notaba lento).
+private const val MENU_HOLD_MS = 100L
 
 private class PressHold {
     var active = false
