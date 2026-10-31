@@ -95,6 +95,18 @@ class NoteVersionHistoryTest {
         assertTrue(r.service.versions(note.id).isEmpty())
     }
 
+    @Test fun `un reemplazo por sync guarda antes el texto local y no si no cambia el texto ni si alguna es protegida`() {
+        val versions = InMemoryVersionStore()
+        val history = NoteHistory(versions)
+        val at = java.time.Instant.parse("2026-03-01T10:00:00Z")
+        history.keepBeforeOverwrite("n1", "local", false, "remoto", false, at)
+        assertEquals(listOf("local"), versions.list("n1").map { it.text })
+        history.keepBeforeOverwrite("n2", "igual", false, "igual", false, at)
+        history.keepBeforeOverwrite("n3", "secreto", true, "remoto", false, at)
+        history.keepBeforeOverwrite("n4", "local", false, "secreto", true, at)
+        assertTrue(listOf("n2", "n3", "n4").all { versions.list(it).isEmpty() })
+    }
+
     @Test fun `sin historial inyectado el servicio se comporta como siempre`() {
         val f = Fixture()
         val note = f.create("v0")

@@ -23,6 +23,8 @@ class RoomLocalSyncStore(
     private val cipher: NoteCipher,
     /** El perfil de esta vista: bases y conflictos son suyos. Notas y lápidas son de todos. */
     private val profileId: String,
+    /** El historial local de versiones (opcional): lo que la sync va a pisar se guarda antes. */
+    private val history: app.aldune.domain.NoteHistory? = null,
 ) : LocalSyncStore {
     private val noteDao = database.notes()
     private val syncDao = database.sync()
@@ -48,6 +50,9 @@ class RoomLocalSyncStore(
             if (action.noteId in skipped) continue
             when (action) {
                 is LocalAction.ApplyNote -> {
+                    notes.get(action.note.id)?.let { local ->
+                        history?.keepBeforeOverwrite(local.id, local.text, local.isProtected, action.note.text, action.note.isProtected, java.time.Instant.now())
+                    }
                     notes.put(action.note)
                     noteDao.deleteTombstone(action.note.id)
                     appliedNotes++

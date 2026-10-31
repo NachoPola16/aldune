@@ -91,7 +91,9 @@ class AppContainer(context: Context) {
             // Los secretos de la sync tienen su propia clave de envoltura (otro alias): empezar de cero con las notas no los toca. Un fichero por
             // perfil; el perfil heredado conserva el de siempre (`vaultFileName`).
             val vaultFor = { profileId: String -> SecretVault(File(appContext.noBackupFilesDir, vaultFileName(profileId)), AndroidKeystoreKeyWrapper(VAULT_ALIAS)) }
-            val storeFor = { profileId: String -> RoomLocalSyncStore(database, store, cipher, profileId) }
+            // Un solo historial para el servicio de notas y para la sync (la sync guarda lo que va a pisar).
+            val history = NoteHistory(RoomVersionStore(database, cipher))
+            val storeFor = { profileId: String -> RoomLocalSyncStore(database, store, cipher, profileId, history) }
             val sync = SyncController(SyncProfileStore(appContext), vaultFor, storeFor, SystemClock, scope, SyncWork(appContext))
             val reminderStore = RoomReminderStore(database)
             val reminders = Reminders(appContext, store, reminderStore, SystemClock)
@@ -104,7 +106,7 @@ class AppContainer(context: Context) {
             val storeLock = Any()
             return Opened.Ready(
                 database,
-                NoteService(store, SystemClock, deviceId = "", idFactory = RandomIdFactory, lock = storeLock, history = NoteHistory(RoomVersionStore(database, cipher))),
+                NoteService(store, SystemClock, deviceId = "", idFactory = RandomIdFactory, lock = storeLock, history = history),
                 sync,
                 ProtectionService(store, SystemClock, storeLock),
                 conflictStore,

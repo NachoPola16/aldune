@@ -49,6 +49,12 @@ class NoteHistory(private val store: VersionStore) {
     /** Guarda [text] saltándose el plazo (al cerrar la nota, o antes de restaurar). Dos copias iguales seguidas no se guardan. */
     fun record(noteId: String, text: String, at: Instant) = add(noteId, text, at)
 
+    /** Lo que llega por sync de otro dispositivo va a reemplazar el texto local: se guarda antes, por si el reemplazo no era lo que se quería. */
+    fun keepBeforeOverwrite(noteId: String, localText: String, localProtected: Boolean, incomingText: String, incomingProtected: Boolean, at: Instant) {
+        if (localProtected || incomingProtected || localText == incomingText) return
+        add(noteId, localText, at)
+    }
+
     fun versions(noteId: String): List<NoteVersion> = store.list(noteId)
 
     fun forget(noteId: String) = store.deleteAll(noteId)
