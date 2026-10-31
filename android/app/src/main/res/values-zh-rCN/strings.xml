@@ -315,6 +315,7 @@
     <string name="hide_after_day">1 天</string>
     <string name="hide_after_week">1 周</string>
     <string name="hidden_tasks_show">显示 %1$d 项已完成的任务</string>
+    <string name="open_link">打开 %1$s</string>
     <string name="hidden_tasks_hide">隐藏已完成的任务</string>
     <string name="edit_undo">撤销</string>
     <string name="edit_redo">重做</string>

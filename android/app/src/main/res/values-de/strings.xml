@@ -315,6 +315,7 @@
     <string name="hide_after_day">1 Tag</string>
     <string name="hide_after_week">1 Woche</string>
     <string name="hidden_tasks_show">%1$d erledigte Aufgaben anzeigen</string>
+    <string name="open_link">%1$s öffnen</string>
     <string name="hidden_tasks_hide">Erledigte Aufgaben ausblenden</string>
     <string name="edit_undo">Rückgängig</string>
     <string name="edit_redo">Wiederholen</string>

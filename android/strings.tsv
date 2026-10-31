@@ -314,6 +314,7 @@ hide_after_hour	1 hour	1 hora	1 Stunde	1 heure	1 hora	1 ora	1 時間	1 小时
 hide_after_day	1 day	1 día	1 Tag	1 jour	1 dia	1 giorno	1 日	1 天
 hide_after_week	1 week	1 semana	1 Woche	1 semaine	1 semana	1 settimana	1 週間	1 周
 hidden_tasks_show	Show %1$d done tasks	Ver %1$d tareas hechas	%1$d erledigte Aufgaben anzeigen	Afficher %1$d tâches faites	Mostrar %1$d tarefas concluídas	Mostra %1$d attività completate	完了した %1$d 件のタスクを表示	显示 %1$d 项已完成的任务
+open_link	Open %1$s	Abrir %1$s	%1$s öffnen	Ouvrir %1$s	Abrir %1$s	Apri %1$s	%1$s を開く	打开 %1$s
 hidden_tasks_hide	Hide done tasks	Ocultar tareas hechas	Erledigte Aufgaben ausblenden	Masquer les tâches faites	Ocultar tarefas concluídas	Nascondi le attività completate	完了したタスクを隠す	隐藏已完成的任务
 edit_undo	Undo	Deshacer	Rückgängig	Annuler	Desfazer	Annulla	元に戻す	撤销
 edit_redo	Redo	Rehacer	Wiederholen	Rétablir	Refazer	Ripeti	やり直す	重做

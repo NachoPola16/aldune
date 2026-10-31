@@ -27,7 +27,7 @@ their own. No account, no required cloud, and the content is encrypted.
 - **Tasks and lists** inside each note (`Ctrl+L`, `Ctrl+Shift+L`), with indentation, and an option to
   remove completed tasks after a while.
 - **Reminders**, **tags**, **archive** and **trash**, plus a manager to search and organize.
-- **Web links**: an `http://` or `https://` address in a note opens with `Ctrl`+click (Windows; never by itself, and only web addresses).
+- **Web links**: an `http://` or `https://` address in a note opens with `Ctrl`+click on Windows; on Android, with the cursor on a link, an «Open» button appears. Never by itself, and only web addresses.
 - **Per-note history and done-task rules**: up to 20 local versions of each note you can preview and restore, and a per-note choice for what happens to done tasks (so a shared shopping list is never emptied by another device). On Windows, the mouse wheel on the dock's gear (or on the tabs when they all fit) switches between all notes, each tag, archived and trash.
 - **Color themes**: Classic, Serene and Graphite, with light, dark or alternating notes, or your own.
 - **A global shortcut** to create a note from anywhere (`Ctrl+Shift+N` by default).

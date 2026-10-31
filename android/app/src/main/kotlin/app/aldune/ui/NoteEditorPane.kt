@@ -52,6 +52,7 @@ import app.aldune.data.CompletedTasksStore
 import app.aldune.domain.CompletedTasksPolicy
 import app.aldune.domain.KeyboardOnOpen
 import app.aldune.text.HiddenTasks
+import app.aldune.text.LinkText
 import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.runtime.snapshotFlow
 import app.aldune.domain.SoundEvent
@@ -150,6 +151,7 @@ private const val KEYBOARD_DELAY_MS = 250L
 /** Lo que el campo no puede enfocarse al abrir una nota que no abre el teclado: lo que tarda Android en repartir el foco inicial. */
 private const val FOCUS_SETTLE_MS = 700L
 private val CheckboxSpan = SpanStyle(fontFamily = FontFamily(Font(R.font.aldune_check)))
+private val LinkSpan = SpanStyle(textDecoration = androidx.compose.ui.text.style.TextDecoration.Underline)
 private val LargeCheckboxSpan = SpanStyle(fontFamily = FontFamily(Font(R.font.aldune_check_large)))
 
 /**
@@ -433,7 +435,10 @@ fun NoteEditorPane(key: String, viewModel: NotesViewModel, onBack: () -> Unit, s
             for (i in shown.indices) {
                 val c = shown[i]
                 if (c == TaskLines.UNCHECKED || c == TaskLines.CHECKED || c == TaskLines.CHECKED_ALTERNATE) addStyle(checkboxSpan, i, i + 1)
-            }        }
+            }
+            // Web addresses are underlined (the text itself never changes); they open from the chip below, never by themselves.
+            for (link in LinkText.findAll(shown)) addStyle(LinkSpan, link.start, link.end)
+        }
     }
 
     /**
@@ -814,6 +819,31 @@ fun NoteEditorPane(key: String, viewModel: NotesViewModel, onBack: () -> Unit, s
         )
         if (hasTasks) TaskDragOverlay(drag, layout = { layout?.invoke() }, scroll = fieldScroll, shown = ::shownText, modifier = Modifier.matchParentSize(), ink = ink,
             lift = faceHex?.let { noteFace(it) } ?: MaterialTheme.colorScheme.background)
+        }
+        // A web link under the cursor offers «Open <host>». The host is shown so the user sees where it goes; only http(s) ever qualifies
+        // (LinkText), and nothing opens without this tap.
+        val caretLink = remember(state.text, state.selection) {
+            val raw = state.text.toString()
+            val at = state.selection.start
+            if (!state.selection.collapsed) null
+            else (LinkText.findAt(raw, at) ?: LinkText.findAt(raw, at - 1))?.let { raw.substring(it.start, it.end) }
+        }
+        if (caretLink != null) {
+            val linkContext = LocalContext.current
+            val linkHost = LinkText.hostOf(caretLink) ?: caretLink
+            AssistChip(
+                onClick = {
+                    try {
+                        linkContext.startActivity(android.content.Intent(android.content.Intent.ACTION_VIEW, android.net.Uri.parse(caretLink)))
+                    } catch (_: android.content.ActivityNotFoundException) {
+                        // No browser installed: nothing to open.
+                    }
+                },
+                label = { Text(stringResource(R.string.open_link, linkHost)) },
+                modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp),
+                colors = AssistChipDefaults.assistChipColors(labelColor = ink),
+                border = AssistChipDefaults.assistChipBorder(true, borderColor = ink.copy(alpha = 0.4f)),
+            )
         }
         if (hiddenCandidates.isNotEmpty()) {
             val count = HiddenTasks.hiddenCount(text(), completed, now, hideDelayMs)

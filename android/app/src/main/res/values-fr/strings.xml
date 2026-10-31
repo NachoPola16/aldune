@@ -315,6 +315,7 @@
     <string name="hide_after_day">1 jour</string>
     <string name="hide_after_week">1 semaine</string>
     <string name="hidden_tasks_show">Afficher %1$d tâches faites</string>
+    <string name="open_link">Ouvrir %1$s</string>
     <string name="hidden_tasks_hide">Masquer les tâches faites</string>
     <string name="edit_undo">Annuler</string>
     <string name="edit_redo">Rétablir</string>

@@ -315,6 +315,7 @@
     <string name="hide_after_day">1 日</string>
     <string name="hide_after_week">1 週間</string>
     <string name="hidden_tasks_show">完了した %1$d 件のタスクを表示</string>
+    <string name="open_link">%1$s を開く</string>
     <string name="hidden_tasks_hide">完了したタスクを隠す</string>
     <string name="edit_undo">元に戻す</string>
     <string name="edit_redo">やり直す</string>

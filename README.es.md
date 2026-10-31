@@ -27,7 +27,7 @@ ratón y se abren como ventanas propias. Sin cuenta, sin nube obligatoria, y con
 - **Tareas y listas** dentro de cada nota (`Ctrl+L`, `Ctrl+Mayús+L`), con sangría, y la opción de
   borrar solas las tareas hechas pasado un tiempo.
 - **Recordatorios**, **etiquetas**, **archivo** y **papelera**, y un gestor para buscar y ordenar.
-- **Enlaces web**: una dirección `http://` o `https://` en una nota se abre con `Ctrl`+clic (Windows; nunca sola, y solo direcciones web).
+- **Enlaces web**: una dirección `http://` o `https://` en una nota se abre con `Ctrl`+clic en Windows; en Android, con el cursor sobre el enlace aparece un botón «Abrir». Nunca sola, y solo direcciones web.
 - **Temas de color**: Clásico, Sereno y Grafito, con notas claras, oscuras o alternando, o los tuyos.
 - **Atajo global** para crear una nota desde cualquier sitio (por defecto `Ctrl+Mayús+N`).
 - **Notas con contraseña**, cifradas con una clave que sale de la contraseña (que no se guarda), con un nombre visible opcional para reconocerlas sin abrirlas.
