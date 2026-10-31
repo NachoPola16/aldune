@@ -426,4 +426,7 @@
     <string name="color_name_gray">Grau</string>
     <string name="color_name_white">Weiß</string>
     <string name="color_name_black">Schwarz</string>
+    <string name="note_pin">Oben in der Liste anheften</string>
+    <string name="note_unpin">Von der Listenspitze lösen</string>
+    <string name="pinned_mark_cd">Oben in der Liste angeheftet</string>
 </resources>

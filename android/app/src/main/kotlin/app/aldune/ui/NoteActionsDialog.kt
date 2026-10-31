@@ -63,6 +63,9 @@ fun NoteActionsDialog(
                     // Subir/Bajar: lo mismo que arrastrar, sin arrastrar. Solo con la lista completa (con un filtro no se ofrecen).
                     if (ReorderPlan.Direction.UP in moves) Action(stringResource(R.string.note_move_up)) { onClose(); onMove(-1) }
                     if (ReorderPlan.Direction.DOWN in moves) Action(stringResource(R.string.note_move_down)) { onClose(); onMove(+1) }
+                    Action(stringResource(if (item.pinnedToTop) R.string.note_unpin else R.string.note_pin)) {
+                        onClose(); viewModel.setPinned(item.id, !item.pinnedToTop)
+                    }
                     Action(stringResource(R.string.note_options)) {
                         scope.launch { viewModel.noteOptions(item.id)?.let { options = it } ?: onClose() }
                     }

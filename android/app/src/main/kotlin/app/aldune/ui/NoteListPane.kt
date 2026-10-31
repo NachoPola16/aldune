@@ -113,6 +113,8 @@ import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.graphics.StrokeJoin
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.scale
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.graphics.drawscope.rotate
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import app.aldune.text.NoteDisplayColor
 import app.aldune.text.NoteSyncSignal
@@ -164,7 +166,7 @@ fun NoteListPane(
 
     /** Sube o baja la nota una posición (la alternativa al arrastre) y lo anuncia: «Movida a la posición N de M». */
     fun moveBy(id: String, delta: Int) {
-        val ids = state.items.map { it.id }
+        val ids = sameGroup(state.items, id)
         val step = ReorderPlan.step(ids, id, delta) ?: return
         viewModel.moveNote(id, step.neighbours.before, step.neighbours.after)
         scope.launch {
@@ -291,7 +293,11 @@ fun NoteListPane(
                     if (shown != order.map { it.id }.filter { it in shown }) return
                     val me = visible.firstOrNull { it.key == id } ?: return
                     val center = me.offset + me.size / 2f + dragDelta
-                    val target = visible.firstOrNull { it.key != id && center >= it.offset && center <= it.offset + it.size } ?: return
+                    val pinned = order.firstOrNull { it.id == id }?.pinnedToTop ?: return
+                    // Fijadas y no fijadas son dos grupos: arrastrar no cruza la frontera (las fijadas van siempre delante).
+                    val target = visible.firstOrNull {
+                        it.key != id && center >= it.offset && center <= it.offset + it.size && order.firstOrNull { n -> n.id == it.key }?.pinnedToTop == pinned
+                    } ?: return
                     val from = order.indexOfFirst { it.id == id }
                     val to = order.indexOfFirst { it.id == target.key }
                     if (from < 0 || to < 0) return
@@ -331,7 +337,10 @@ fun NoteListPane(
 
                 fun dragEnd() {
                     val id = draggedId ?: return
-                    val plan = ReorderPlan.neighbours(dragStartIds, dragStartIds.indexOf(id), order.indexOfFirst { it.id == id })
+                    val pinned = order.firstOrNull { it.id == id }?.pinnedToTop
+                    val startGroup = dragStartIds.filter { start -> order.firstOrNull { it.id == start }?.pinnedToTop == pinned }
+                    val nowGroup = order.filter { it.pinnedToTop == pinned }.map { it.id }
+                    val plan = ReorderPlan.neighbours(startGroup, startGroup.indexOf(id), nowGroup.indexOf(id))
                     draggedId = null
                     dragDelta = 0f
                     if (plan != null) viewModel.moveNote(id, plan.before, plan.after) else order = state.items
@@ -402,7 +411,7 @@ fun NoteListPane(
                                 ),
                             item = item, selected = item.id == selectedId || item.id == highlight, conflicted = item.id in conflicted, reminder = state.reminders[item.id],
                             onOpen = { if (!hold.active) onOpen(item.id) }, onMenu = { menuFor = item },
-                            moves = ReorderPlan.available(order.map { it.id }, item.id, reorderable), onMove = { delta -> moveBy(item.id, delta) },
+                            moves = ReorderPlan.available(sameGroup(order, item.id), item.id, reorderable), onMove = { delta -> moveBy(item.id, delta) },
                             channel = order.indexOfFirst { it.id == item.id },
                             signal = if (look.syncSignal) NoteSyncSignal.of(hasProfile, item.id in conflicted, bases[item.id], item.updatedAt) else NoteSyncSignal.State.HIDDEN,
                             onArchive = { viewModel.archive(item.id); announce(archivedMsg) { viewModel.restore(item.id) } },
@@ -467,7 +476,7 @@ fun NoteListPane(
         val item = state.items.firstOrNull { it.id == shown.id } ?: return@let
         NoteActionsDialog(
             item, openInEditor = item.id == selectedId, viewModel = viewModel, onOpen = { onOpen(item.id) }, onClose = { menuFor = null },
-            moves = ReorderPlan.available(state.items.map { it.id }, item.id, reorderable), onMove = { delta -> moveBy(item.id, delta) },
+            moves = ReorderPlan.available(sameGroup(state.items, item.id), item.id, reorderable), onMove = { delta -> moveBy(item.id, delta) },
         )
     }
 
@@ -711,6 +720,9 @@ private fun NoteRow(item: NoteListItem, selected: Boolean, conflicted: Boolean, 
                 }
             }
             Row(Modifier.align(Alignment.CenterVertically).padding(end = 10.dp), verticalAlignment = Alignment.CenterVertically) {
+                if (item.pinnedToTop) {
+                    PinMark(muted, stringResource(R.string.pinned_mark_cd), Modifier.padding(end = 6.dp).size(18.dp))
+                }
                 if (item.isProtected) {
                     // Con el título genérico («Nota protegida») el candado no repite lo mismo: TalkBack leería «Nota protegida, Nota protegida».
                     val protectedLabel = stringResource(R.string.protected_note_title)
@@ -727,6 +739,26 @@ private fun NoteRow(item: NoteListItem, selected: Boolean, conflicted: Boolean, 
                     style = MaterialTheme.typography.labelLarge, color = muted,
                 )
             }
+        }
+    }
+}
+
+/** Los ids del grupo de [id] (fijadas o no) en el orden de la lista: Subir/Bajar y el arrastre solo se mueven dentro de su grupo. */
+private fun sameGroup(items: List<NoteListItem>, id: String): List<String> {
+    val pinned = items.firstOrNull { it.id == id }?.pinnedToTop ?: return emptyList()
+    return items.filter { it.pinnedToTop == pinned }.map { it.id }
+}
+
+/** Chincheta de «fijada arriba», dibujada: `material-icons-core` no trae ninguna. Cabeza redonda, aro y aguja, inclinada como una chincheta clavada. */
+@Composable
+private fun PinMark(color: Color, description: String, modifier: Modifier = Modifier) {
+    androidx.compose.foundation.Canvas(modifier.semantics { contentDescription = description }) {
+        val unit = size.minDimension / 24f
+        rotate(degrees = 40f, pivot = Offset(size.width / 2f, size.height / 2f)) {
+            // Cabeza (cuerpo) + base más ancha + aguja.
+            drawRoundRect(color, Offset(8f * unit, 2f * unit), androidx.compose.ui.geometry.Size(8f * unit, 9f * unit), androidx.compose.ui.geometry.CornerRadius(2f * unit))
+            drawRect(color, Offset(5f * unit, 11f * unit), androidx.compose.ui.geometry.Size(14f * unit, 2.4f * unit))
+            drawLine(color, Offset(12f * unit, 13.4f * unit), Offset(12f * unit, 22f * unit), strokeWidth = 1.8f * unit, cap = StrokeCap.Round)
         }
     }
 }

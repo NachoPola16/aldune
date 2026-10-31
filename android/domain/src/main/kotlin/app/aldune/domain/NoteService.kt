@@ -256,13 +256,20 @@ class NoteService(
         NoteResult.Ok(moved)
     }
 
-    /** La vecina si existe, es de otra nota y está en el mismo estado (el orden del mazo es por estado). */
+    /**
+     * La vecina si existe, es de otra nota y está en el mismo estado (el orden del mazo es por estado) y en el mismo grupo de fijado:
+     * las fijadas van siempre delante, así que arrastrar no cruza esa frontera y una vecina del otro grupo no daría un orden coherente.
+     */
     private fun neighbour(neighbourId: String, moved: Note): Note? =
-        store.get(neighbourId)?.takeIf { it.id != moved.id && it.state == moved.state }
+        store.get(neighbourId)?.takeIf { it.id != moved.id && it.state == moved.state && it.pinnedToTop == moved.pinnedToTop }
 
     private fun neighbourError(neighbourId: String, moved: Note): NoteResult.Err {
         val found = store.get(neighbourId) ?: return NoteResult.Err(NoteError.NotFound(neighbourId))
-        val reason = if (found.id == moved.id) "Una nota no puede ser vecina de sí misma" else "La vecina $neighbourId está en ${found.state}, no en ${moved.state}"
+        val reason = when {
+            found.id == moved.id -> "Una nota no puede ser vecina de sí misma"
+            found.state != moved.state -> "La vecina $neighbourId está en ${found.state}, no en ${moved.state}"
+            else -> "La vecina $neighbourId y ${moved.id} no están en el mismo grupo de fijado"
+        }
         return NoteResult.Err(NoteError.InvalidArgument(reason))
     }
 

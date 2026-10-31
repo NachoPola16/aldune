@@ -426,4 +426,7 @@
     <string name="color_name_gray">Gray</string>
     <string name="color_name_white">White</string>
     <string name="color_name_black">Black</string>
+    <string name="note_pin">Pin to the top of the list</string>
+    <string name="note_unpin">Unpin from the top of the list</string>
+    <string name="pinned_mark_cd">Pinned to the top of the list</string>
 </resources>

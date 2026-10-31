@@ -92,6 +92,7 @@ fun NoteOptionsDialog(
     var customOpen by remember { mutableStateOf(false) }
     var nameOpen by remember { mutableStateOf(false) }
     var visibleName by remember { mutableStateOf(initial.protectedTitle) }
+    var pinned by remember { mutableStateOf(initial.pinnedToTop) }
 
     // «Exportar a Markdown» guarda un .md con el selector de ficheros del sistema (el «Guardar como» de Windows).
     val context = LocalContext.current
@@ -172,6 +173,9 @@ fun NoteOptionsDialog(
                 val reminderSummary = due?.let { reminderText(ReminderLabel.of(it, java.time.Instant.now(), java.time.ZoneId.systemDefault())) }
                 CollapsibleSection(stringResource(R.string.reminder_title), startOpen = false, summary = reminderSummary, onToggle = { reminderTick++ }) {
                     ReminderSection(initial.noteId, viewModel)
+                }
+                TextButton(onClick = { pinned = !pinned; viewModel.setPinned(initial.noteId, pinned) }, Modifier.alignWithHeadings()) {
+                    Text(stringResource(if (pinned) R.string.note_unpin else R.string.note_pin))
                 }
                 if (exportText != null) {
                     TextButton(onClick = { exporter.launch(MarkdownExport.suggestedFileName(exportText, newNote)) }, Modifier.alignWithHeadings()) {

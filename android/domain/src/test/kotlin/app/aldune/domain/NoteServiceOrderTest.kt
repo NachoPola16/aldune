@@ -20,6 +20,25 @@ class NoteServiceOrderTest {
     private fun ids(f: Fixture, state: NoteState = NoteState.ACTIVE, query: String = "", tag: String? = null) =
         f.service.list(state, query, tag).map { it.id }
 
+    // --- fijadas arriba ---
+
+    @Test fun `las fijadas van delante y cada grupo conserva su orden`() {
+        val f = Fixture()
+        put(f, "a", 1); put(f, "b", 2); put(f, "c", 3)
+        f.service.setPinned("c", true)
+        assertEquals(listOf("c", "a", "b"), ids(f))
+    }
+
+    @Test fun `una vecina del otro grupo de fijado no vale para colocar una nota`() {
+        val f = Fixture()
+        put(f, "a", 1); put(f, "b", 2); put(f, "c", 3)
+        f.service.setPinned("c", true)
+        assertIs<NoteResult.Err>(f.service.move("a", beforeId = "c", afterId = null))
+        assertEquals(listOf("c", "a", "b"), ids(f))
+        assertIs<NoteResult.Ok<Note>>(f.service.move("b", beforeId = null, afterId = "a"))
+        assertEquals(listOf("c", "b", "a"), ids(f))
+    }
+
     // --- list: orden del mazo ---
 
     @Test fun `sin posiciones ordena por fecha de creacion`() {

@@ -651,7 +651,10 @@ class NotesViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     /** Color y etiquetas de una nota, para su menú. */
-    class NoteOptions(val noteId: String, val color: String, val tags: List<String>, val isProtected: Boolean, val protectedTitle: String? = null)
+    class NoteOptions(
+        val noteId: String, val color: String, val tags: List<String>, val isProtected: Boolean, val protectedTitle: String? = null,
+        val pinnedToTop: Boolean = false,
+    )
 
     /**
      * Las opciones de la nota que se edita en [key], o `null` si todavía no existe (una nota nueva sin texto). Antes se guarda lo escrito,
@@ -664,7 +667,7 @@ class NotesViewModel(application: Application) : AndroidViewModel(application) {
         }
         io.withLock {
             val id = idOf(key).ifEmpty { return@withLock null }
-            service?.get(id)?.let { NoteOptions(id, it.color, it.tags, it.isProtected, it.protectedTitle) }
+            service?.get(id)?.let { NoteOptions(id, it.color, it.tags, it.isProtected, it.protectedTitle, it.pinnedToTop) }
         }
     }
 
@@ -680,6 +683,9 @@ class NotesViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     fun moveNote(id: String, before: String?, after: String?) = change { it.move(id, before, after) }
+
+    /** Fija la nota arriba de las listas (o la suelta). Cuenta como edición y viaja por la sync. */
+    fun setPinned(id: String, pinned: Boolean) = change { it.setPinned(id, pinned) }
 
     /**
      * Escribe en [out] el zip con todas las notas activas y archivadas (ver `NotesExport`). Las protegidas no salen: su texto no está aquí en
