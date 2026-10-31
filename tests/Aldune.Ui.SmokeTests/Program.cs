@@ -141,11 +141,16 @@ internal static class Program
     /// </summary>
     private static void RunDockRound24(EdgeDockWindow dock, AppSettings settings, AppCoordinator coordinator, NotesRepository repository)
     {
-        var gear = (Button)dock.FindName("ManageArchiveButton");
-        coordinator.SetDockView(DockViewKind.Archived, null);
-        Check(Equals(gear.Tag, "Filtered"), "Cogwheel carries the accent ring (Tag) when the dock shows a filtered view");
+        // A filtered view keeps its label up while the fan is open (the cue that the dock is filtered); «Active» does not.
+        settings.KeepDockOpen = true; // keeps the fan open while the hover poll runs with the cursor elsewhere
+        Pump(TimeSpan.FromMilliseconds(400));
+        coordinator.SetDockView(DockViewKind.Tag, "smoke-tag"); // a view with notes: the label is not shown over an empty strip
+        Pump(TimeSpan.FromMilliseconds(1700));
+        Check(typeof(EdgeDockWindow).GetField("_viewLabelPopup", PrivateInstance)!.GetValue(dock) is Popup { IsOpen: true }, "The view label stays up (past its 1.1 s) while the dock shows a filtered view with the fan open");
         coordinator.SetDockView(DockViewKind.Active, null);
-        Check(gear.Tag is null, "Cogwheel ring is removed on the Active view");
+        Pump(TimeSpan.FromMilliseconds(1700));
+        Check(typeof(EdgeDockWindow).GetField("_viewLabelPopup", PrivateInstance)!.GetValue(dock) is not Popup { IsOpen: true }, "The view label goes away on the Active view");
+        settings.KeepDockOpen = false;
 
         // View label: custom placement, centred on the notes column at the free end (above for the right edge, below for the top edge).
         typeof(EdgeDockWindow).GetMethod("ShowViewLabel", PrivateInstance)!.Invoke(dock, ["smoke"]);

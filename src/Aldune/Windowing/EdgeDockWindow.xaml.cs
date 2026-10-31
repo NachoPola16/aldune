@@ -812,6 +812,8 @@ public partial class EdgeDockWindow : Window
     /// </summary>
     private void ApplyState(bool animate)
     {
+        // The pinned view label follows the fan: up when it opens, down when it folds (after this layout pass).
+        Dispatcher.BeginInvoke(DispatcherPriority.Loaded, new Action(RefreshViewLabel));
         // Sin notas no hay tira de reposo que ensenar — quedaba un pegote oscuro diminuto en el
         // canto, sin nada dentro y sin decir nada — ni abanico que desplegar. Se muestran los
         // botones directamente: son la unica accion posible en ese estado, y ademas la unica forma
@@ -1837,7 +1839,7 @@ public partial class EdgeDockWindow : Window
             {
                 Child = border, AllowsTransparency = true, StaysOpen = true, IsHitTestVisible = false
             };
-            _viewLabelTimer.Tick += (_, _) => { _viewLabelTimer.Stop(); _viewLabelPopup.IsOpen = false; };
+            _viewLabelTimer.Tick += (_, _) => { _viewLabelTimer.Stop(); if (!ViewLabelPinned) _viewLabelPopup.IsOpen = false; };
         }
 
         _viewLabelText!.Text = text;
@@ -1855,17 +1857,33 @@ public partial class EdgeDockWindow : Window
             double y = below ? targetSize.Height + ViewLabelGap : -popupSize.Height - ViewLabelGap;
             return [new CustomPopupPlacement(new Point(x, y), PopupPrimaryAxis.Horizontal)];
         };
+        // A popup does not follow its target when the strip changes size: nudging the offset makes it place itself again.
+        _viewLabelPopup.HorizontalOffset = _viewLabelPopup.HorizontalOffset == 0 ? 0.01 : 0;
         _viewLabelPopup.IsOpen = true;
         _viewLabelTimer.Stop();
-        _viewLabelTimer.Start();
+        if (!ViewLabelPinned) _viewLabelTimer.Start();
     }
 
-    /// <summary>El engranaje dice en qué vista está el dock (tooltip) y lleva un anillo de acento si no es «Activas» (Tag="Filtered", ver CircularIconButtonStyle).</summary>
+    /// <summary>
+    /// The cogwheel says which view the dock shows (tooltip). While the view is not «Active» and the fan is open, the view label stays up
+    /// above the notes (see <see cref="RefreshViewLabel"/>): that is the cue that the dock is filtered, so notes that are not shown are not
+    /// mistaken for lost ones. (A dot, and then an accent ring, on the cogwheel were tried and dropped.)
+    /// </summary>
     private void UpdateViewIndicator()
     {
-        var view = _settings?.DockView ?? DockViewKind.Active;
-        ManageArchiveButton.Tag = view == DockViewKind.Active ? null : "Filtered";
         UpdateTagAwareTooltips();
+        Dispatcher.BeginInvoke(DispatcherPriority.Loaded, new Action(RefreshViewLabel));
+    }
+
+    private bool ViewLabelPinned =>
+        (_settings?.DockView ?? DockViewKind.Active) != DockViewKind.Active && _noteCount > 0 && _fanState.IsExpanded
+        && IsVisible && !_hiddenByFullscreenApp;
+
+    /// <summary>Keeps the view label up while it should be pinned (filtered view, fan open) and takes it down when it should not.</summary>
+    private void RefreshViewLabel()
+    {
+        if (ViewLabelPinned) ShowViewLabel(CurrentViewLabel());
+        else if (_viewLabelPopup is { IsOpen: true } && !_viewLabelTimer.IsEnabled) _viewLabelPopup.IsOpen = false;
     }
 
     private void OnDockViewPopupOpened(object sender, EventArgs e)
@@ -3074,6 +3092,8 @@ public partial class EdgeDockWindow : Window
         _hoverLayoutHold = false;
         _hoverPollTimer.Stop();
         EndWheelSession();
+        _viewLabelTimer.Stop();
+        if (_viewLabelPopup is not null) _viewLabelPopup.IsOpen = false;
         _fullscreenPollTimer.Stop();
         _arrowScrollTimer.Stop();
         _syncFeedbackTimer.Stop();

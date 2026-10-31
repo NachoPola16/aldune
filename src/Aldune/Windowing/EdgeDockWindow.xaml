@@ -313,17 +313,9 @@
                             <Rectangle x:Name="GlossSquare" IsHitTestVisible="False" Visibility="Collapsed"
                                        Fill="{Binding Fill, ElementName=GlossRound}" />
                             <local:BevelEdge OnlyWhenSquare="True" EdgeThickness="2" ShadowOutside="True" />
-                            <!-- Accent ring for a button that stands for an active filter (Tag="Filtered", the dock gear when the view is not
-                                 «Active»). It replaces the old dot hanging off the corner, which looked like a pending notification and made
-                                 the gear look off-centre without moving the glyph at all. -->
-                            <Border x:Name="FilterRing" IsHitTestVisible="False" Visibility="Collapsed" BorderThickness="2"
-                                    BorderBrush="{DynamicResource AlduneAccentBrush}" CornerRadius="17" />
                             <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
                         </Grid>
                         <ControlTemplate.Triggers>
-                            <Trigger Property="Tag" Value="Filtered">
-                                <Setter TargetName="FilterRing" Property="Visibility" Value="Visible" />
-                            </Trigger>
                             <Trigger Property="IsMouseOver" Value="True">
                                 <Setter TargetName="Bg" Property="Fill" Value="{DynamicResource AlduneHoverBrush}" />
                                 <Setter TargetName="SquareBg" Property="Fill" Value="{DynamicResource AlduneHoverBrush}" />
@@ -336,7 +328,6 @@
                                 <Setter TargetName="Bg" Property="Visibility" Value="Collapsed" />
                                 <Setter TargetName="SquareBg" Property="Visibility" Value="Visible" />
                                 <Setter TargetName="SquareBg" Property="Effect" Value="{x:Null}" />
-                                <Setter TargetName="FilterRing" Property="CornerRadius" Value="0" />
                             </DataTrigger>
                             <!-- Con el relieve de Windows 95 la sombra de caída sobra: el borde oscuro de abajo y de la derecha ya es la
                                  sombra, y las dos juntas engordaban ese lado y hacían que el icono pareciera descentrado. -->
