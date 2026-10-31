@@ -722,6 +722,9 @@ public partial class NoteWindow : Window
         _closingAnimationDone = true;
         e.Cancel = true;
 
+        // The whole note fades as one piece (see ClosingGhost); if it cannot be photographed, the content-only fade below still runs.
+        if (ClosingGhost.Play(this, CloseDuration, Close)) return;
+
         var content = (UIElement)Content;
         content.RenderTransformOrigin = new Point(0.5, 0.5);
         var scale = content.RenderTransform as ScaleTransform ?? new ScaleTransform(1, 1);

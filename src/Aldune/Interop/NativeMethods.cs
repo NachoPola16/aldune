@@ -228,7 +228,7 @@ internal static class NativeMethods
                 new Action(() => SetCloak(window, false)));
     }
 
-    private static void SetCloak(Window window, bool cloaked)
+    internal static void SetCloak(Window window, bool cloaked)
     {
         var hwnd = new WindowInteropHelper(window).Handle;
         if (hwnd == IntPtr.Zero) return;

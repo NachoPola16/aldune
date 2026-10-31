@@ -397,7 +397,7 @@ cross-platform clients reusing the common sync format.
 - **Settings header** uses the notes manager's spacing (20,18,14 and 20,17,16,17 with a real title bar, more air under it).
 - **Tray menu**: the outline of the hovered row follows the look's accent, so a custom accent colour reaches it.
 - **Links in notes**: allowed, in the smallest safe form. Plain `http://` and `https://` text opens with Ctrl+click (hand cursor while Ctrl is held), never by itself; nothing else opens (no `file:`, UNC, `javascript:`, `mailto:`), URLs with user info are ignored, runs over 2048 characters are ignored (`LinkText`, Core). The note stays plain text, so sync and storage do not change. Windows only for now; Android can follow in its next release.
-- **Not changed, on purpose**: manager rows and tab previews keep their spacing (measured, nothing cramped). Closing a note fades its content but the window frame (and the DWM shadow) still goes at once: fading the whole window needs a layered window and Windows refuses `WS_EX_LAYERED` on these WPF windows (`SetLayeredWindowAttributes` fails); the way out is a snapshot window that fades in its place, not done yet.
+- **Not changed, on purpose**: manager rows and tab previews keep their spacing (measured, nothing cramped). Closing a note used to fade only its content while the window frame and the DWM shadow stayed at full strength and vanished with a pop (worst with the XP looks). Windows refuses `WS_EX_LAYERED` on these WPF windows, so now `ClosingGhost` renders the note (background + content), cloaks the real window and fades a transparent stand-in with the same corners and a soft shadow; if the render fails, the old content fade still runs.
 
 ## 3. Discarded for now, with its reason
 
