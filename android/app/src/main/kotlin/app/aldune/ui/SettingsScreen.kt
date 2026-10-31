@@ -138,7 +138,7 @@ fun SettingsScreen(viewModel: NotesViewModel, onClose: () -> Unit) {
                 val selectedTab = tab.coerceAtMost(labels.lastIndex)
                 // Chips de 48 dp (el alto del toque) y 8 dp de hueco en los dos sentidos: con el chip de 32 dp inflado por el objetivo táctil, el hueco entre filas era casi el triple que entre columnas.
                 androidx.compose.runtime.CompositionLocalProvider(androidx.compose.material3.LocalMinimumInteractiveComponentSize provides androidx.compose.ui.unit.Dp.Unspecified) {
-                Column(Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                Column(Modifier.fillMaxWidth().padding(start = 12.dp, end = 12.dp, top = 8.dp, bottom = 20.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     val columns = if (shortScreen) labels.size else TAB_COLUMNS
                     labels.withIndex().chunked(columns).forEach { row ->
                         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
