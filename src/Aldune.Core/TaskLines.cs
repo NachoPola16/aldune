@@ -48,7 +48,7 @@ public static class TaskLines
 
     /// <summary>
     /// Índice del glifo de casilla dentro de <paramref name="line"/>, o -1 si esa línea no es una
-    /// tarea. Se permite sangría delante (para listas indentadas) y se exige un espacio detrás del
+    /// tarea. Se permite sangría delante (para listas indentadas) y se exige un espacio (o un signo, ver <see cref="EndsGlyph"/>) detrás del
     /// glifo: un <c>☐</c> suelto o pegado a una palabra es texto, no una lista que aparece sola.
     /// Hasta la 1.4 se aceptaba pegado, porque borrar el espacio sin querer dejaba la tarea sin
     /// marcar; desde que el retroceso quita el prefijo entero (<see cref="ListPrefix"/>) ese
@@ -62,14 +62,60 @@ public static class TaskLines
         // Una flecha delante no impide que sea tarea: "→ ☐ x" es una viñeta con casilla (flecha y casilla son dos
         // interruptores independientes). El índice que se devuelve es el de la casilla, no el de la flecha.
         if (i + 1 < line.Length && line[i] == BulletLines.Glyph && line[i + 1] == ' ') i += 2;
+        else i += MarkerLength(line, i);
 
         if (i + 1 >= line.Length) return -1;
-        if (!IsBoxGlyph(line[i]) || line[i + 1] != ' ') return -1;
+        if (!IsBoxGlyph(line[i]) || !EndsGlyph(line[i + 1])) return -1;
 
         return i;
     }
 
     public static bool IsTaskLine(string line) => GlyphIndex(line) >= 0;
+
+    /// <summary>
+    /// Cuánto ocupa (con su espacio) un marcador de lista normal puesto delante de la casilla: "- ", "• ", "* "... o una
+    /// numeración corta ("1. ", "12) "). Como la flecha, no impide que la línea sea una tarea. 0 si ahí no hay ninguno.
+    /// </summary>
+    internal static int MarkerLength(string line, int i)
+    {
+        if (i + 1 >= line.Length) return 0;
+        if ("-–—•*+·".Contains(line[i]) && line[i + 1] == ' ') return 2;
+        int j = i;
+        while (j < line.Length && char.IsAsciiDigit(line[j])) j++;
+        if (j > i && j - i <= 3 && j + 1 < line.Length && (line[j] == '.' || line[j] == ')') && line[j + 1] == ' ') return j + 2 - i;
+        return 0;
+    }
+
+    /// <summary>
+    /// El espacio justo detrás de la casilla es parte de ella: el cursor no puede quedarse entre el glifo y ese espacio (ni se
+    /// puede escribir ahí), así que se pasa al otro lado: detrás del espacio, o delante del glifo si el cursor venía de la derecha
+    /// (<paramref name="movingLeft"/>), para que la flecha izquierda no se quede atascada. Devuelve <paramref name="caret"/> tal cual si no hace falta moverlo.
+    /// </summary>
+    public static int ClampCaret(string text, int caret, bool movingLeft = false)
+    {
+        if (caret < 0 || caret > text.Length) return caret;
+        int start = LineStart(text, caret);
+        var line = text[start..LineEnd(text, caret)];
+        int glyph = GlyphIndex(line);
+        return glyph >= 0 && caret - start == glyph + 1 && glyph + 1 < line.Length && line[glyph + 1] == ' '
+            ? (movingLeft ? caret - 1 : caret + 1)
+            : caret;
+    }
+
+    /// <summary>
+    /// Deja siempre un espacio entre la casilla y lo que sigue en la línea del cursor: una tarea con un signo pegado ("☐-", que
+    /// llega de un texto pegado o sincronizado) lo recibe aquí. El cursor se mueve con el texto si estaba detrás del glifo.
+    /// </summary>
+    public static (string Text, int Caret) EnsureGlyphSpace(string text, int caret)
+    {
+        if (caret < 0 || caret > text.Length) return (text, caret);
+        int start = LineStart(text, caret);
+        var line = text[start..LineEnd(text, caret)];
+        int glyph = GlyphIndex(line);
+        if (glyph < 0 || glyph + 1 >= line.Length || line[glyph + 1] == ' ') return (text, caret);
+        int at = start + glyph + 1;
+        return (text.Insert(at, " "), caret >= at ? caret + 1 : caret);
+    }
 
     /// <summary>
     /// Cuántos caracteres ocupa el prefijo de casilla en esta línea a partir de
@@ -118,6 +164,10 @@ public static class TaskLines
         int glyph = GlyphIndex(line);
         return glyph >= 0 && IsCheckedGlyph(line[glyph]);
     }
+
+    /// <summary>Lo que puede ir justo detrás de la casilla para que la línea siga siendo una tarea: un espacio, o un signo (un guion, un punto...) y no una
+    /// palabra ni otra casilla. Antes solo valía el espacio, y un "-" escrito pegado a una casilla vacía la dejaba sin poder marcar.</summary>
+    private static bool EndsGlyph(char c) => c == ' ' || !(char.IsLetterOrDigit(c) || IsBoxGlyph(c));
 
     private static bool IsBoxGlyph(char c) => c == Unchecked || IsCheckedGlyph(c);
 

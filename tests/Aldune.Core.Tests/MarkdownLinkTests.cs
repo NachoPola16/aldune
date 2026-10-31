@@ -83,6 +83,13 @@ public class MarkdownLinkTests
     }
 
     [Fact]
+    public void ATaskWithAListMarkerBeforeTheBox_IsWrittenAsOneMarkdownTask()
+    {
+        // "- ☐ x" ya es un elemento de lista con casilla: al archivo va "- [ ] x", no "- - [ ] x".
+        Assert.Equal("- [ ] a\r\n- [x] b\r\n", MarkdownLink.ToFileText("- ☐ a\n1. ☒ b\n", ""));
+    }
+
+    [Fact]
     public void MovingALine_KeepsItsOriginalBytes()
     {
         var file = "* [X] hecha\n- [ ] pendiente\n";

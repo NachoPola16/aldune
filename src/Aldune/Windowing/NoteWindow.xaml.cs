@@ -42,6 +42,9 @@ public partial class NoteWindow : Window
     private readonly DispatcherTimer _autosaveTimer;
     private readonly DispatcherTimer _taskPruneTimer;
     private bool _hasPendingEdit;
+    // Posición anterior del cursor del cuerpo y guarda de reentrada del ajuste de cursor (ver el SelectionChanged del constructor).
+    private int _lastBodyCaret;
+    private bool _adjustingCaret;
 
     /// <summary>El objeto de nota asociado a esta ventana.</summary>
     public Note Note => _note;
@@ -245,8 +248,38 @@ public partial class NoteWindow : Window
             }));
         }));
 
+        // El espacio justo detrás de una casilla es parte de ella (ver TaskLines.ClampCaret): el cursor no se queda entre el glifo y ese espacio.
+        // Hacia la izquierda con el teclado salta delante de la casilla (si no, la flecha se quedaría atascada); con el ratón o hacia
+        // la derecha, pasa al otro lado del espacio.
+        TextBody.SelectionChanged += (_, _) =>
+        {
+            if (_adjustingCaret) return;
+            int caret = TextBody.CaretIndex;
+            if (TextBody.SelectionLength == 0)
+            {
+                bool movingLeft = caret < _lastBodyCaret && (Keyboard.IsKeyDown(Key.Left) || Keyboard.IsKeyDown(Key.Home));
+                int clamped = TaskLines.ClampCaret(TextBody.Text, caret, movingLeft);
+                if (clamped != caret)
+                {
+                    _adjustingCaret = true;
+                    try { TextBody.CaretIndex = clamped; }
+                    finally { _adjustingCaret = false; }
+                    caret = clamped;
+                }
+            }
+            _lastBodyCaret = caret;
+        };
+
         TextBody.TextChanged += (_, _) =>
         {
+            // Y siempre queda ese espacio: una tarea con un signo pegado (llegada por pegado o por sync) lo recibe. Diferido para no
+            // tocar el texto dentro del propio aviso de cambio.
+            if (TaskLines.EnsureGlyphSpace(TextBody.Text, TextBody.CaretIndex).Text != TextBody.Text)
+                Dispatcher.BeginInvoke(DispatcherPriority.Normal, new Action(() =>
+                {
+                    var (spaced, caret) = TaskLines.EnsureGlyphSpace(TextBody.Text, TextBody.CaretIndex);
+                    if (spaced != TextBody.Text) ReplaceBody(spaced, caret);
+                }));
             OnEdited();
             // El texto puede cambiar sin que el ratón se mueva -- por ejemplo, una tarea que se
             // autoborra sola (ver PruneExpiredTasks) mientras el cursor sigue quieto encima de la

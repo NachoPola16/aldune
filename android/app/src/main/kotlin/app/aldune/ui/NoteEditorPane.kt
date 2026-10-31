@@ -162,10 +162,24 @@ private val LargeCheckboxSpan = SpanStyle(fontFamily = FontFamily(Font(R.font.al
 private val ListKeysTransformation = InputTransformation {
     val old = TextSelection(originalText.toString(), originalSelection.min, originalSelection.max)
     val typed = TextAndCaret(asCharSequence().toString(), selection.start)
-    if (old.text == typed.text) return@InputTransformation
-    val fixed = ListKeys.resolve(old, typed) ?: return@InputTransformation
-    replace(0, length, fixed.text)
-    selection = TextRange(fixed.caret)
+    if (old.text != typed.text) {
+        ListKeys.resolve(old, typed)?.let {
+            replace(0, length, it.text)
+            selection = TextRange(it.caret)
+        }
+        // A box always keeps its space (a sign glued to it, pasted or synced, gets one)...
+        val spaced = TaskLines.ensureGlyphSpace(asCharSequence().toString(), selection.start)
+        if (spaced.text != asCharSequence().toString()) {
+            replace(0, length, spaced.text)
+            selection = TextRange(spaced.caret)
+        }
+    }
+    // ...and the caret cannot rest between the box and that space: it jumps over it, or in front of the box when it came from the right.
+    val shown = asCharSequence().toString()
+    val movingLeft = old.text == shown && selection.start < originalSelection.start
+    val start = TaskLines.clampCaret(shown, selection.start, movingLeft)
+    val end = if (selection.collapsed) start else TaskLines.clampCaret(shown, selection.end, movingLeft)
+    if (start != selection.start || end != selection.end) selection = TextRange(start, end)
 }
 
 @OptIn(ExperimentalFoundationApi::class)
@@ -201,6 +215,10 @@ fun NoteEditorPane(key: String, viewModel: NotesViewModel, onBack: () -> Unit, s
     var topMenu by remember(key) { mutableStateOf(false) }
     val scope = rememberCoroutineScope()
     var layout by remember(key) { mutableStateOf<(() -> TextLayoutResult?)?>(null) }
+    // The hanging indent is one setting for the whole field (a paragraph style per task line adds a blank line at every break), so it would also
+    // indent the wrapped lines of a plain paragraph. It is dropped while any plain line wraps: the first visual line does not depend on the indent,
+    // so this cannot flip back and forth.
+    var plainWraps by remember(key) { mutableStateOf(false) }
     // Toque pendiente sobre el texto. No se aplica en el mismo evento: el campo, al recibir ese mismo toque, emite el texto
     // anterior con el cursor nuevo y pisaría el cambio; se espera al siguiente fotograma (ver LaunchedEffect de abajo).
     var tap by remember(key) { mutableStateOf<Offset?>(null) }
@@ -700,7 +718,10 @@ fun NoteEditorPane(key: String, viewModel: NotesViewModel, onBack: () -> Unit, s
             scrollState = fieldScroll,
             inputTransformation = ListKeysTransformation,
             outputTransformation = hideTransformation,
-            onTextLayout = { getResult -> layout = getResult },
+            onTextLayout = { getResult ->
+                layout = getResult
+                getResult()?.let { plainWraps = plainLineWraps(it) }
+            },
             modifier = Modifier
                 .fillMaxSize()
                 .taskDrag(
@@ -768,7 +789,7 @@ fun NoteEditorPane(key: String, viewModel: NotesViewModel, onBack: () -> Unit, s
                         else -> false
                     }
                 },
-            textStyle = bodyStyle.copy(color = ink, textIndent = if (hasTasks) TextIndent(firstLine = 0.sp, restLine = taskIndent) else null),
+            textStyle = bodyStyle.copy(color = ink, textIndent = if (hasTasks && !plainWraps) TextIndent(firstLine = 0.sp, restLine = taskIndent) else null),
             cursorBrush = SolidColor(MaterialTheme.colorScheme.primary),
         )
         if (hasTasks) TaskDragOverlay(drag, layout = { layout?.invoke() }, scroll = fieldScroll, shown = ::shownText, modifier = Modifier.matchParentSize(), ink = ink,
@@ -831,6 +852,18 @@ private tailrec fun Context.findActivity(): Activity? = when (this) {
  * boundary is the first letter), so it put the cursor there, and the cursor handle then covered the next row's checkbox. Tapping the text of
  * the task itself still does not tick it.
  */
+internal fun plainLineWraps(layout: TextLayoutResult): Boolean {
+    val text = layout.layoutInput.text.text
+    var start = 0
+    while (start <= text.length) {
+        val end = text.indexOf('\n', start).let { if (it < 0) text.length else it }
+        val line = text.substring(start, end).trimEnd('\r')
+        if (line.isNotBlank() && !TaskLines.isTaskLine(line) && layout.getLineForOffset(start) != layout.getLineForOffset(start + line.length - 1)) return true
+        start = end + 1
+    }
+    return false
+}
+
 internal fun toggleCheckboxAtTap(text: String, layout: TextLayoutResult?, position: Offset, slack: Float): Int? {
     layout ?: return null
     if (text.isEmpty()) return null

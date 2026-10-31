@@ -18,14 +18,57 @@ object TaskLines {
         // Una flecha delante no impide que sea tarea: "→ ☐ x" es una viñeta con casilla (flecha y casilla son dos
         // interruptores independientes). El índice que se devuelve es el de la casilla, no el de la flecha.
         if (i + 1 < line.length && line[i] == BulletLines.GLYPH && line[i + 1] == ' ') i += 2
+        else i += markerLength(line, i)
 
         if (i + 1 >= line.length) return -1
-        if (!isBoxGlyph(line[i]) || line[i + 1] != ' ') return -1
+        if (!isBoxGlyph(line[i]) || !endsGlyph(line[i + 1])) return -1
 
         return i
     }
 
     fun isTaskLine(line: String): Boolean = glyphIndex(line) >= 0
+
+    /**
+     * How much room (with its space) a plain list marker in front of the box takes: "- ", "• ", "* "... or a short number ("1. ", "12) ").
+     * Like the arrow, it does not stop the line from being a task. 0 when there is none. Same as `MarkerLength` in Aldune.Core.
+     */
+    internal fun markerLength(line: String, i: Int): Int {
+        if (i + 1 >= line.length) return 0
+        if (line[i] in "-–—•*+·" && line[i + 1] == ' ') return 2
+        var j = i
+        while (j < line.length && line[j] in '0'..'9') j++
+        if (j > i && j - i <= 3 && j + 1 < line.length && (line[j] == '.' || line[j] == ')') && line[j + 1] == ' ') return j + 2 - i
+        return 0
+    }
+
+    /**
+     * The space right behind the box belongs to it: the caret cannot stay between the glyph and that space (nor can anything be typed there), so it
+     * moves to the other side: behind the space, or in front of the glyph when the caret came from the right ([movingLeft]), so the left arrow does
+     * not get stuck. Returns [caret] as is when it does not need to move. Same as `ClampCaret` in Aldune.Core.
+     */
+    fun clampCaret(text: String, caret: Int, movingLeft: Boolean = false): Int {
+        if (caret < 0 || caret > text.length) return caret
+        val start = lineStart(text, caret)
+        val line = text.substring(start, lineEnd(text, caret))
+        val glyph = glyphIndex(line)
+        return if (glyph >= 0 && caret - start == glyph + 1 && glyph + 1 < line.length && line[glyph + 1] == ' ') {
+            if (movingLeft) caret - 1 else caret + 1
+        } else caret
+    }
+
+    /**
+     * Always leaves a space between the box and what follows on the caret's line: a task with a sign glued to it ("☐-", from pasted or synced
+     * text) gets it here. The caret moves with the text if it was behind the glyph. Same as `EnsureGlyphSpace` in Aldune.Core.
+     */
+    fun ensureGlyphSpace(text: String, caret: Int): TextAndCaret {
+        if (caret < 0 || caret > text.length) return TextAndCaret(text, caret)
+        val start = lineStart(text, caret)
+        val line = text.substring(start, lineEnd(text, caret))
+        val glyph = glyphIndex(line)
+        if (glyph < 0 || glyph + 1 >= line.length || line[glyph + 1] == ' ') return TextAndCaret(text, caret)
+        val at = start + glyph + 1
+        return TextAndCaret(text.substring(0, at) + " " + text.substring(at), if (caret >= at) caret + 1 else caret)
+    }
 
     fun prefixLength(line: String, glyphIndex: Int): Int =
         if (glyphIndex + 1 < line.length && line[glyphIndex + 1] == ' ') 2 else 1
@@ -46,6 +89,9 @@ object TaskLines {
         val glyph = glyphIndex(line)
         return glyph >= 0 && isCheckedGlyph(line[glyph])
     }
+
+    /** What may follow the box for the line to stay a task: a space, or a sign (a dash, a dot...) but not a word or another box. Same as `EndsGlyph` in Aldune.Core. */
+    private fun endsGlyph(c: Char) = c == ' ' || !(c.isLetterOrDigit() || isBoxGlyph(c))
 
     private fun isBoxGlyph(c: Char) = c == UNCHECKED || isCheckedGlyph(c)
 

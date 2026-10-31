@@ -143,7 +143,7 @@ public static partial class MarkdownLink
             return line[..bullet] + bulletMarker + " " + glyph + line[(task + 1)..];
         }
         if (task >= 0)
-            return line[..task] + (TaskLines.IsChecked(line) ? "- [x] " : "- [ ] ") + line[(task + TaskLines.PrefixLength(line, task))..];
+            return line[..ListPrefix.IndentLength(line)] + (TaskLines.IsChecked(line) ? "- [x] " : "- [ ] ") + line[(task + TaskLines.PrefixLength(line, task))..];
         if (bullet >= 0)
             return line[..bullet] + bulletMarker + " " + line[(bullet + BulletLines.PrefixLength(line, bullet))..];
         return line;

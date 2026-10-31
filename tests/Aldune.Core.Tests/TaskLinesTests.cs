@@ -29,6 +29,125 @@ public class TaskLinesTests
         Assert.False(TaskLines.IsTaskLine("☐comprar"));
     }
 
+    [Theory]
+    [InlineData("☐-")]
+    [InlineData("☐- comprar")]
+    [InlineData("☒.")]
+    [InlineData("    ☐—")]
+    [InlineData("→ ☐-")]
+    public void IsTaskLine_GlyphWithPunctuationGluedRightAfterIt_IsATask(string line)
+    {
+        // Un guion (o cualquier signo) pegado a la casilla no la convierte en texto: lo que deja de ser tarea es una PALABRA pegada.
+        // Sin esto, escribir "-" justo detrás de una casilla vacía la dejaba sin poder marcar.
+        Assert.True(TaskLines.IsTaskLine(line));
+    }
+
+    [Fact]
+    public void ToggleCheckboxAt_GlyphWithADashGluedRightAfterIt_TicksIt()
+    {
+        Assert.Equal("☒-", TaskLines.ToggleCheckboxAt("☐-", 0));
+    }
+
+    [Fact]
+    public void IsTaskLine_GlyphGluedToAnotherGlyph_IsNotATask()
+    {
+        Assert.False(TaskLines.IsTaskLine("☐☐"));
+    }
+
+    [Theory]
+    [InlineData("- ☐ comprar", 2)]
+    [InlineData("• ☒ hecho", 2)]
+    [InlineData("  * ☐ x", 4)]
+    [InlineData("1. ☐ x", 3)]
+    [InlineData("12) ☐ x", 4)]
+    [InlineData("- ☐-", 2)]
+    public void GlyphIndex_ListMarkerBeforeTheGlyph_StillFindsIt(string line, int expected)
+    {
+        Assert.Equal(expected, TaskLines.GlyphIndex(line));
+    }
+
+    [Theory]
+    [InlineData("-☐ x")]
+    [InlineData("- - ☐ x")]
+    [InlineData("-x ☐ x")]
+    [InlineData("hola ☐ x")]
+    [InlineData("1234. ☐ x")]
+    [InlineData("1.☐ x")]
+    public void IsTaskLine_SomethingElseBeforeTheGlyph_IsNotATask(string line)
+    {
+        Assert.False(TaskLines.IsTaskLine(line));
+    }
+
+    // --- Espacio protegido detrás de la casilla ---------------------------------------------------
+
+    [Theory]
+    [InlineData("☐ x", 1, 2)]
+    [InlineData("- ☐ x", 3, 4)]
+    [InlineData("→ ☐ x", 3, 4)]
+    [InlineData("  ☒ x", 3, 4)]
+    [InlineData("☐ ", 1, 2)]
+    public void ClampCaret_BetweenTheGlyphAndItsSpace_MovesAfterTheSpace(string line, int caret, int expected)
+    {
+        Assert.Equal(expected, TaskLines.ClampCaret(line, caret));
+    }
+
+    [Theory]
+    [InlineData("☐ x", 0)]
+    [InlineData("☐ x", 2)]
+    [InlineData("☐ x", 3)]
+    [InlineData("- ☐ x", 2)]
+    [InlineData("- ☐ x", 1)]
+    [InlineData("☐x", 1)]
+    [InlineData("texto", 3)]
+    public void ClampCaret_AnyOtherPosition_IsLeftAlone(string line, int caret)
+    {
+        Assert.Equal(caret, TaskLines.ClampCaret(line, caret));
+    }
+
+    [Theory]
+    [InlineData("☐ x", 1, 0)]
+    [InlineData("- ☐ x", 3, 2)]
+    public void ClampCaret_MovingLeft_JumpsToTheFrontOfTheGlyph(string line, int caret, int expected)
+    {
+        Assert.Equal(expected, TaskLines.ClampCaret(line, caret, movingLeft: true));
+    }
+
+    [Fact]
+    public void ClampCaret_OnlyLooksAtTheLineTheCaretIsIn()
+    {
+        const string text = "☐ a\n☐ b";
+        Assert.Equal(6, TaskLines.ClampCaret(text, 5));   // entre la casilla y el espacio de la segunda línea
+        Assert.Equal(1, TaskLines.ClampCaret("x\n☐ b", 1));
+    }
+
+    [Fact]
+    public void EnsureGlyphSpace_SignGluedToTheGlyph_GetsItsSpace()
+    {
+        var (text, caret) = TaskLines.EnsureGlyphSpace("☐-", 2);
+        Assert.Equal("☐ -", text);
+        Assert.Equal(3, caret);
+    }
+
+    [Fact]
+    public void EnsureGlyphSpace_CaretBeforeTheGlyph_StaysPut()
+    {
+        var (text, caret) = TaskLines.EnsureGlyphSpace("- ☐-x", 0);
+        Assert.Equal("- ☐ -x", text);
+        Assert.Equal(0, caret);
+    }
+
+    [Theory]
+    [InlineData("☐ x")]
+    [InlineData("☐comprar")]
+    [InlineData("☐")]
+    [InlineData("hola")]
+    public void EnsureGlyphSpace_NothingToFix_ReturnsTheSameText(string line)
+    {
+        var (text, caret) = TaskLines.EnsureGlyphSpace(line, 1);
+        Assert.Equal(line, text);
+        Assert.Equal(1, caret);
+    }
+
     [Fact]
     public void IsTaskLine_GlyphAlone_IsNotATask()
     {
