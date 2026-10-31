@@ -47,6 +47,11 @@ public static class NoteCascade
         double step = StepFor(area, edge, noteCount, dock, noteWidth, noteHeight);
         double offset = level * step;
 
+        // Arriba y abajo con un mazo grande el abanico desplegado ocupa casi todo el alto: la cascada "debajo" (o "encima") del dock no cabría
+        // en pantalla y, al recortarla, las notas acababan encima de las pestañas. Entonces se abre al lado de la columna de pestañas.
+        if (edge is EdgePosition.Top or EdgePosition.Bottom && SideOfColumn(area, edge, noteCount, dock, noteWidth, noteHeight, level) is { } side)
+            return side;
+
         return edge switch
         {
             EdgePosition.Left => (dock.X + dock.Width + DockGap + offset, centeredTop + offset),
@@ -55,6 +60,37 @@ public static class NoteCascade
             EdgePosition.Bottom => (dock.X + offset, dock.Y - DockGap - noteHeight - offset),
             _ => throw new ArgumentOutOfRangeException(nameof(edge))
         };
+    }
+
+    /// <summary>
+    /// La posición al lado de la columna de pestañas del dock de arriba/abajo, o <c>null</c> si la cascada cabe debajo (encima) del dock como
+    /// siempre. Elige el lado derecho si hay sitio y, si no, el izquierdo; el paso se acota al hueco de pantalla como en <see cref="StepFor"/>.
+    /// </summary>
+    private static (double Left, double Top)? SideOfColumn(
+        WorkingArea area, EdgePosition edge, int noteCount, Rect dock, double noteWidth, double noteHeight, int level)
+    {
+        double baseTop = edge == EdgePosition.Top
+            ? dock.Y + dock.Height + DockGap
+            : dock.Y - DockGap - noteHeight;
+        bool fitsBelow = edge == EdgePosition.Top
+            ? baseTop + noteHeight <= area.Y + area.Height
+            : baseTop >= area.Y;
+        if (fitsBelow) return null;
+
+        double columnLeft = dock.X + (dock.Width - EdgeGeometry.TabWidth) / 2;
+        double columnRight = columnLeft + EdgeGeometry.TabWidth;
+        bool onRight = columnRight + DockGap + noteWidth <= area.X + area.Width;
+        double baseLeft = onRight ? columnRight + DockGap : columnLeft - DockGap - noteWidth;
+        double top0 = edge == EdgePosition.Top ? area.Y + EdgeGeometry.EdgeMargin + DockGap : area.Y + area.Height - DockGap - noteHeight;
+
+        double roomX = onRight ? area.X + area.Width - noteWidth - baseLeft : baseLeft - area.X;
+        double roomY = edge == EdgePosition.Top ? area.Y + area.Height - noteHeight - top0 : top0 - area.Y;
+        double step = noteCount <= 1 ? Step : Math.Clamp(Math.Max(Math.Min(roomX, roomY), 0) / (noteCount - 1), MinStep, Step);
+        double offset = level * step;
+
+        double left = onRight ? baseLeft + offset : baseLeft - offset;
+        double top = edge == EdgePosition.Top ? top0 + offset : top0 - offset;
+        return (Math.Clamp(left, area.X, Math.Max(area.X, area.X + area.Width - noteWidth)), Math.Clamp(top, area.Y, Math.Max(area.Y, area.Y + area.Height - noteHeight)));
     }
 
     /// <summary>

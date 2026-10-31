@@ -23,9 +23,16 @@ public class NoteCascadeTests
     public void FirstNote_NeverOverlapsTheDeployedDock(WorkingArea area, EdgePosition edge)
     {
         var dock = EdgeGeometry.WindowRect(area, edge, noteCount: 8);
+        // Arriba y abajo la ventana del dock es más ancha que su columna de pestañas y el resto es transparente: lo que de verdad se tapa es la columna.
+        double blockedX = dock.X, blockedWidth = dock.Width;
+        if (edge is EdgePosition.Top or EdgePosition.Bottom)
+        {
+            blockedX = dock.X + (dock.Width - EdgeGeometry.TabWidth) / 2;
+            blockedWidth = EdgeGeometry.TabWidth;
+        }
         var (left, top) = NoteCascade.Position(area, edge, 8, W, H, level: 0);
 
-        bool overlaps = left < dock.X + dock.Width && left + W > dock.X
+        bool overlaps = left < blockedX + blockedWidth && left + W > blockedX
             && top < dock.Y + dock.Height && top + H > dock.Y;
         Assert.False(overlaps);
     }
@@ -85,5 +92,40 @@ public class NoteCascadeTests
         var second = NoteCascade.Position(Area, EdgePosition.Left, 3, W, H, 1);
         Assert.Equal(NoteCascade.Step, second.Left - first.Left);
         Assert.Equal(NoteCascade.Step, second.Top - first.Top);
+    }
+
+    [Theory]
+    [InlineData(EdgePosition.Top, 40)]
+    [InlineData(EdgePosition.Bottom, 40)]
+    [InlineData(EdgePosition.Top, 12)]
+    [InlineData(EdgePosition.Bottom, 12)]
+    public void TopOrBottomWithABigDeck_OpensBesideTheColumnInsteadOfOffScreen(EdgePosition edge, int deck)
+    {
+        var area = new WorkingArea(0, 0, 2560, 1440);
+        var dock = EdgeGeometry.WindowRect(area, edge, deck);
+        double columnLeft = dock.X + (dock.Width - EdgeGeometry.TabWidth) / 2, columnRight = columnLeft + EdgeGeometry.TabWidth;
+
+        for (int level = 0; level < 12; level++)
+        {
+            var (left, top) = NoteCascade.Position(area, edge, deck, 360, 700, level);
+
+            Assert.InRange(left, area.X, area.X + area.Width - 360);
+            Assert.InRange(top, area.Y, area.Y + area.Height - 700);
+            bool overColumn = left < columnRight && left + 360 > columnLeft;
+            Assert.False(overColumn, $"level {level} sits over the tab column");
+        }
+    }
+
+    [Theory]
+    [InlineData(EdgePosition.Top)]
+    [InlineData(EdgePosition.Bottom)]
+    public void TopOrBottomWithASmallDeck_StillOpensBelowOrAboveTheDock(EdgePosition edge)
+    {
+        var (left, top) = NoteCascade.Position(Area, edge, 3, W, H, level: 0);
+        var dock = EdgeGeometry.WindowRect(Area, edge, 3);
+
+        Assert.Equal(dock.X, left, 1);
+        if (edge == EdgePosition.Top) Assert.True(top >= dock.Y + dock.Height);
+        else Assert.True(top + H <= dock.Y);
     }
 }
