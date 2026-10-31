@@ -41,6 +41,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.layout.safeDrawingPadding
@@ -135,19 +136,22 @@ fun SettingsScreen(viewModel: NotesViewModel, onClose: () -> Unit) {
                 // Rejilla de TAB_COLUMNS columnas, no una fila que se desplaza: con seis pestañas la fila cortaba las últimas y nada decía que había más a
                 // la derecha. Cada chip ocupa el mismo ancho y la última fila se completa con huecos, así que queda ordenada con 4, 6, 7 u 8 pestañas.
                 val selectedTab = tab.coerceAtMost(labels.lastIndex)
-                Column(Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 4.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                // Chips de 48 dp (el alto del toque) y 8 dp de hueco en los dos sentidos: con el chip de 32 dp inflado por el objetivo táctil, el hueco entre filas era casi el triple que entre columnas.
+                androidx.compose.runtime.CompositionLocalProvider(androidx.compose.material3.LocalMinimumInteractiveComponentSize provides androidx.compose.ui.unit.Dp.Unspecified) {
+                Column(Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     val columns = if (shortScreen) labels.size else TAB_COLUMNS
                     labels.withIndex().chunked(columns).forEach { row ->
                         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                             for ((index, label) in row) {
                                 FilterChip(
-                                    selected = selectedTab == index, onClick = { tab = index }, modifier = Modifier.weight(1f),
+                                    selected = selectedTab == index, onClick = { tab = index }, modifier = Modifier.weight(1f).then(Modifier.height(48.dp)),
                                     label = { Text(stringResource(label), Modifier.fillMaxWidth(), textAlign = TextAlign.Center, maxLines = 1, overflow = TextOverflow.Ellipsis) },
                                 )
                             }
                             repeat(columns - row.size) { Spacer(Modifier.weight(1f)) }
                         }
                     }
+                }
                 }
                 HorizontalDivider()
             }
