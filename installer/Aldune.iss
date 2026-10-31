@@ -46,6 +46,7 @@ Name: "spanish"; MessagesFile: "compiler:Languages\Spanish.isl"
 Name: "german"; MessagesFile: "compiler:Languages\German.isl"
 Name: "french"; MessagesFile: "compiler:Languages\French.isl"
 Name: "brazilianportuguese"; MessagesFile: "compiler:Languages\BrazilianPortuguese.isl"
+Name: "italian"; MessagesFile: "compiler:Languages\Italian.isl"
 
 [Tasks]
 Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{cm:AdditionalIcons}"; Flags: unchecked
@@ -82,6 +83,7 @@ spanish.CloseAldune=Aldune sigue abierta. Ciérrala (icono de la bandeja > Salir
 german.CloseAldune=Aldune läuft noch. Schließe es (Symbol im Infobereich > Beenden) und versuche es erneut.
 french.CloseAldune=Aldune est toujours ouvert. Fermez-le (icône de la zone de notification > Quitter) et réessayez.
 brazilianportuguese.CloseAldune=O Aldune ainda está aberto. Feche-o (ícone na área de notificação > Sair) e tente novamente.
+italian.CloseAldune=Aldune è ancora in esecuzione. Chiudilo (icona nell'area di notifica > Esci) e riprova.
 
 [Code]
 // Mismos nombres que BrandIdentity.SingleInstanceMutexName y SingleInstanceQuitEventName.

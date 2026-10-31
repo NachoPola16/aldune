@@ -18,6 +18,7 @@ public static class UiLanguages
         new("en", "English", "en-US"),
         new("es", "Español", "es-ES"),
         new("fr", "Français", "fr-FR"),
+        new("it", "Italiano", "it-IT"),
         new("pt", "Português (Brasil)", "pt-BR"),
     ];
 
