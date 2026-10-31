@@ -1037,6 +1037,9 @@
                             <Button Content="{x:Static res:Strings.TrayCheckForUpdates}"
                                 Padding="12,7" Click="OnCheckForUpdatesClick"
                                 Style="{StaticResource RecordButtonStyle}" />
+                            <Button Content="{x:Static res:Strings.WhatsNewButton}"
+                                Margin="8,0,0,0" Padding="12,7" Click="OnWhatsNewClick"
+                                    Style="{StaticResource RecordButtonStyle}" />
                             <Button Content="{x:Static res:Strings.RestartApplicationButton}"
                                 Margin="8,0,0,0" Padding="12,7" Click="OnRestartClick"
                                     ToolTip="{x:Static res:Strings.RestartAppTooltip}"

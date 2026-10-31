@@ -1,0 +1,1 @@
+Novità: dopo ogni aggiornamento una breve finestra elenca le novità; riaprila dalle Impostazioni.

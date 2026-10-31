@@ -316,6 +316,16 @@
     <string name="hide_after_week">1 semaine</string>
     <string name="hidden_tasks_show">Afficher %1$d tâches faites</string>
     <string name="open_link">Ouvrir %1$s</string>
+    <string name="whatsnew_title">Nouveautés d\'Aldune</string>
+    <string name="whatsnew_ok">Compris</string>
+    <string name="whatsnew_open">Nouveautés</string>
+    <string name="whatsnew_more">Tous les changements :</string>
+    <string name="whatsnew_120_tasks">Chaque note décide du sort de ses tâches faites : suivre vos réglages, rester en place ou aller en bas.</string>
+    <string name="whatsnew_120_history">Historique des versions de chaque note, conservé sur cet appareil.</string>
+    <string name="whatsnew_120_tags">Tags : une puce « Tous », une feuille avec tous vos tags (recherche, ordre personnel) et une option pour afficher une icône au lieu de #.</string>
+    <string name="whatsnew_120_langs">Nouvelles langues : italien, japonais et chinois simplifié.</string>
+    <string name="whatsnew_120_links">Les adresses web d\'une note sont soulignées ; avec le curseur dessus apparaît un bouton Ouvrir (http et https seulement, jamais tout seul).</string>
+    <string name="whatsnew_130_news">Après chaque mise à jour, cette fenêtre liste les nouveautés. Rouvrez-la dans les réglages.</string>
     <string name="hidden_tasks_hide">Masquer les tâches faites</string>
     <string name="edit_undo">Annuler</string>
     <string name="edit_redo">Rétablir</string>

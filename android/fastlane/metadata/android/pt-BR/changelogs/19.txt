@@ -1,0 +1,1 @@
+Novo: após cada atualização, uma janela curta lista as novidades; reabra em Configurações.

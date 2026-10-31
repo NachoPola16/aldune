@@ -23,6 +23,11 @@
   `v0.99.0-rc1`, before `1.0.0`): the update notice compares numbers, so whoever
   installed the pre-release gets the notice for the final one.
 
+**Every version carries its «What's new» entry** (from Windows 2.7.0 and Android 1.3.0 on). After an update the app shows, once, the news of the versions the person skipped (never on a fresh install); Settings → About reopens it. Before tagging, add the entry:
+- Windows: the strings (all eight languages) in `src/Aldune/Resources/Strings.cs` (`WhatsNew<version><topic>`) and one line in `src/Aldune/Resources/WhatsNew.cs`.
+- Android: rows `whatsnew_<version>_<topic>` in `android/strings.tsv` (then `python android/scripts/gen_strings.py`) and one line in `android/app/src/main/kotlin/app/aldune/ui/WhatsNew.kt`.
+Two or three short lines per version, only what a person will notice (the full list is the GitHub release). `WhatsNewPlan` (Core and `android/text`, twin tests) decides what to list.
+
 Steps:
 
 ```powershell

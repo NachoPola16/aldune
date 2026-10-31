@@ -255,6 +255,9 @@ public sealed class AppSettings
     /// siempre de la nota entera; esto solo decide si el aviso las enseña.</summary>
     public bool ReminderIncludesTasks { get; set; } = true;
 
+    /// <summary>The app version whose news this install has already shown (see <see cref="WhatsNewPlan"/>). Local to this device.</summary>
+    public string? LastSeenVersion { get; set; }
+
     /// <summary>The user's own order for the tags (dock menu, manager, tag panel); empty = alphabetical. Local to this device: it never
     /// travels with the sync, so the sync format does not change. See <see cref="TagOrder"/>.</summary>
     public List<string> TagOrder { get; set; } = new();

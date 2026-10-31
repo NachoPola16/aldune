@@ -316,6 +316,16 @@
     <string name="hide_after_week">1 周</string>
     <string name="hidden_tasks_show">显示 %1$d 项已完成的任务</string>
     <string name="open_link">打开 %1$s</string>
+    <string name="whatsnew_title">Aldune 新内容</string>
+    <string name="whatsnew_ok">知道了</string>
+    <string name="whatsnew_open">新内容</string>
+    <string name="whatsnew_more">全部更改:</string>
+    <string name="whatsnew_120_tasks">每条便笺可自行决定已完成任务的处理方式：沿用设置、保持原位或移到末尾。</string>
+    <string name="whatsnew_120_history">每条便笺的版本历史（保存在本设备上）。</string>
+    <string name="whatsnew_120_tags">标签：“全部”标签块、列出所有标签的面板（可搜索、可自定义顺序），以及用图标代替 # 的选项。</string>
+    <string name="whatsnew_120_langs">新增语言：意大利语、日语和简体中文。</string>
+    <string name="whatsnew_120_links">便笺中的网址带下划线；光标放在上面会出现“打开”按钮（仅限 http 和 https，绝不会自动打开）。</string>
+    <string name="whatsnew_130_news">每次更新后，此窗口都会列出新内容。可在设置中再次打开。</string>
     <string name="hidden_tasks_hide">隐藏已完成的任务</string>
     <string name="edit_undo">撤销</string>
     <string name="edit_redo">重做</string>

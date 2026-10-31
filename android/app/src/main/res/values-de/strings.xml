@@ -316,6 +316,16 @@
     <string name="hide_after_week">1 Woche</string>
     <string name="hidden_tasks_show">%1$d erledigte Aufgaben anzeigen</string>
     <string name="open_link">%1$s öffnen</string>
+    <string name="whatsnew_title">Neu in Aldune</string>
+    <string name="whatsnew_ok">Verstanden</string>
+    <string name="whatsnew_open">Neuerungen</string>
+    <string name="whatsnew_more">Alle Änderungen:</string>
+    <string name="whatsnew_120_tasks">Jede Notiz entscheidet, was mit erledigten Aufgaben passiert: Einstellungen folgen, bleiben oder ans Ende.</string>
+    <string name="whatsnew_120_history">Versionsverlauf für jede Notiz, auf diesem Gerät gespeichert.</string>
+    <string name="whatsnew_120_tags">Tags: ein „Alle“-Chip, ein Blatt mit allen Tags (durchsuchbar, in eigener Reihenfolge) und eine Option für ein Symbol statt #.</string>
+    <string name="whatsnew_120_langs">Neue Sprachen: Italienisch, Japanisch und vereinfachtes Chinesisch.</string>
+    <string name="whatsnew_120_links">Webadressen in einer Notiz sind unterstrichen; mit dem Cursor darauf erscheint eine Schaltfläche Öffnen (nur http und https, nie von selbst).</string>
+    <string name="whatsnew_130_news">Nach jedem Update zeigt dieses Fenster die Neuerungen. Du kannst es in den Einstellungen erneut öffnen.</string>
     <string name="hidden_tasks_hide">Erledigte Aufgaben ausblenden</string>
     <string name="edit_undo">Rückgängig</string>
     <string name="edit_redo">Wiederholen</string>

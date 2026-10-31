@@ -77,6 +77,8 @@ data class AppSettings(
     val hideDoneAfterHours: Int = 24,
     /** La bienvenida de la primera vez ya se enseñó (o no hacía falta: ya había notas). */
     val welcomeSeen: Boolean = false,
+    /** El `versionCode` cuyas novedades ya se enseñaron (0 = nunca guardado). Local. */
+    val lastSeenVersionCode: Int = 0,
     /** El aviso de «sin sincronización no hay copia» de la lista se descartó (no vuelve a salir). */
     val backupNoticeDismissed: Boolean = false,
     /** La nota elegida como lista rápida (se le añaden artículos desde la notificación de captura); `null` = ninguna. */
@@ -156,6 +158,7 @@ class SettingsStore(context: Context) {
             keyboardOnOpen = KeyboardOnOpen.migrate(prefs.getInt(KEYBOARD_ON_OPEN, d.keyboardOnOpen), prefs.getBoolean(KEYBOARD_MIGRATED, false)),
             hideDoneAfterHours = prefs.getInt(HIDE_DONE_AFTER_HOURS, d.hideDoneAfterHours).coerceIn(1, 24 * 365),
             welcomeSeen = prefs.getBoolean(WELCOME_SEEN, d.welcomeSeen),
+            lastSeenVersionCode = prefs.getInt(LAST_SEEN_VERSION_CODE, d.lastSeenVersionCode),
             backupNoticeDismissed = prefs.getBoolean(BACKUP_NOTICE_DISMISSED, d.backupNoticeDismissed),
             quickListId = prefs.getString(QUICK_LIST_ID, null),
             quickListTitle = prefs.getString(QUICK_LIST_TITLE, d.quickListTitle) ?: d.quickListTitle,
@@ -207,6 +210,7 @@ class SettingsStore(context: Context) {
             .putBoolean(KEYBOARD_MIGRATED, true)
             .putInt(HIDE_DONE_AFTER_HOURS, settings.hideDoneAfterHours)
             .putBoolean(WELCOME_SEEN, settings.welcomeSeen)
+            .putInt(LAST_SEEN_VERSION_CODE, settings.lastSeenVersionCode)
             .putBoolean(BACKUP_NOTICE_DISMISSED, settings.backupNoticeDismissed)
             .putOrRemove(QUICK_LIST_ID, settings.quickListId)
             .putString(QUICK_LIST_TITLE, settings.quickListTitle)
@@ -227,6 +231,7 @@ class SettingsStore(context: Context) {
     private companion object {
         const val FILE = "settings"
         const val WELCOME_SEEN = "welcomeSeen"
+        const val LAST_SEEN_VERSION_CODE = "lastSeenVersionCode"
         const val BACKUP_NOTICE_DISMISSED = "backupNoticeDismissed"
         const val QUICK_LIST_ID = "quickListId"
         const val QUICK_LIST_TITLE = "quickListTitle"

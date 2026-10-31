@@ -143,6 +143,14 @@ public partial class SettingsWindow : Window
     private void OnExitClick(object sender, RoutedEventArgs e) =>
         Application.Current.Shutdown();
 
+    /// <summary>The news of the last few versions (up to and including the running one), on demand.</summary>
+    private void OnWhatsNewClick(object sender, RoutedEventArgs e)
+    {
+        var current = Version.Parse(AppInfo.Version);
+        var recent = WhatsNew.Versions.Where(v => v <= current).OrderByDescending(v => v).Take(3).ToList();
+        AppDialog.Show(this, WhatsNew.Compose(recent), Strings.WhatsNewTitle(AppInfo.Version), MessageBoxButton.OK, MessageBoxImage.Information);
+    }
+
     private void OnRestartClick(object sender, RoutedEventArgs e)
     {
         var executable = Environment.ProcessPath;

@@ -316,6 +316,16 @@
     <string name="hide_after_week">1 週間</string>
     <string name="hidden_tasks_show">完了した %1$d 件のタスクを表示</string>
     <string name="open_link">%1$s を開く</string>
+    <string name="whatsnew_title">Aldune の新機能</string>
+    <string name="whatsnew_ok">OK</string>
+    <string name="whatsnew_open">新機能</string>
+    <string name="whatsnew_more">すべての変更:</string>
+    <string name="whatsnew_120_tasks">完了したタスクの扱いをノートごとに選べます（設定に従う・そのまま・末尾へ）。</string>
+    <string name="whatsnew_120_history">ノートごとのバージョン履歴（この端末に保存）。</string>
+    <string name="whatsnew_120_tags">タグ：「すべて」チップ、全タグのシート（検索・並べ替え可）、# の代わりにアイコンを表示する設定。</string>
+    <string name="whatsnew_120_langs">新しい言語：イタリア語、日本語、簡体字中国語。</string>
+    <string name="whatsnew_120_links">ノート内の Web アドレスに下線が付き、カーソルを置くと「開く」ボタンが出ます（http / https のみ、自動では開きません）。</string>
+    <string name="whatsnew_130_news">更新のたびに、この画面で新機能をお知らせします。設定からいつでも開けます。</string>
     <string name="hidden_tasks_hide">完了したタスクを隠す</string>
     <string name="edit_undo">元に戻す</string>
     <string name="edit_redo">やり直す</string>

@@ -316,6 +316,16 @@
     <string name="hide_after_week">1 week</string>
     <string name="hidden_tasks_show">Show %1$d done tasks</string>
     <string name="open_link">Open %1$s</string>
+    <string name="whatsnew_title">What\'s new in Aldune</string>
+    <string name="whatsnew_ok">Got it</string>
+    <string name="whatsnew_open">What\'s new</string>
+    <string name="whatsnew_more">All changes:</string>
+    <string name="whatsnew_120_tasks">Each note decides what happens to its done tasks: follow your settings, stay in place or move to the bottom.</string>
+    <string name="whatsnew_120_history">Version history for each note, kept on this device.</string>
+    <string name="whatsnew_120_tags">Tags: an All chip, a sheet with all your tags (searchable, in your own order) and an option to show an icon instead of #.</string>
+    <string name="whatsnew_120_langs">New languages: Italian, Japanese and Simplified Chinese.</string>
+    <string name="whatsnew_120_links">Web addresses in a note are underlined; put the cursor on one and an Open button appears (only http and https, never by itself).</string>
+    <string name="whatsnew_130_news">After every update this window lists what is new. You can open it again from Settings.</string>
     <string name="hidden_tasks_hide">Hide done tasks</string>
     <string name="edit_undo">Undo</string>
     <string name="edit_redo">Redo</string>

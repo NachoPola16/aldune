@@ -73,6 +73,18 @@ fun NotesApp(viewModel: NotesViewModel) {
                 LaunchedEffect(settings.welcomeSeen, firstRun) {
                     if (!settings.welcomeSeen && !firstRun) viewModel.updateSettings { it.copy(welcomeSeen = true) }
                 }
+                // What's new: once after an update, the news of the versions skipped (never on a fresh install). The version is remembered right
+                // away, so if something fails the next start does not try again forever.
+                val newsContext = LocalContext.current
+                var news by remember { mutableStateOf<List<Int>?>(null) }
+                LaunchedEffect(settings.lastSeenVersionCode, firstRun) {
+                    if (news != null) return@LaunchedEffect
+                    val current = WhatsNew.currentCode(newsContext)
+                    val plan = app.aldune.text.WhatsNewPlan.toShow(settings.lastSeenVersionCode, firstRun, current, WhatsNew.codes)
+                    if (settings.lastSeenVersionCode != current) viewModel.updateSettings { it.copy(lastSeenVersionCode = current) }
+                    news = plan
+                }
+                if (news?.isNotEmpty() == true && !firstRun && !showSettings) WhatsNewDialog(news!!, onDismiss = { news = emptyList() })
                 // El título de la lista rápida va guardado para la notificación: se actualiza si la nota se renombró.
                 val context = LocalContext.current
                 LaunchedEffect(s.items, settings.quickListId) {

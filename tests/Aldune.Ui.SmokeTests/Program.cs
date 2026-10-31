@@ -209,6 +209,16 @@ internal static class Program
         window.Close();
         Pump(TimeSpan.FromMilliseconds(500));
         Check(!window.IsLoaded, "The closing animation ends and the note window is gone");
+        // «What's new»: every catalog entry composes into a non-empty text with its heading, in the current language.
+        var whatsNew = typeof(NoteWindow).Assembly.GetType("Aldune.Resources.WhatsNew")!;
+        var versions = (IEnumerable<Version>)whatsNew.GetProperty("Versions", BindingFlags.Static | BindingFlags.NonPublic)!.GetValue(null)!;
+        var compose = whatsNew.GetMethod("Compose", BindingFlags.Static | BindingFlags.NonPublic)!;
+        foreach (var version in versions)
+        {
+            var text = (string)compose.Invoke(null, [new[] { version }])!;
+            Check(text.Contains(version.ToString(3)) && text.Contains("•"), $"What's new has text for {version.ToString(3)}");
+        }
+
         Console.WriteLine("PASS: round 2.4.0 dock scenario");
     }
 

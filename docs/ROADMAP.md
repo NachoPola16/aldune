@@ -10,7 +10,7 @@ Originating session: 2026-09-06.
 
 ## Visible version of the application
 
-The current round is identified as **v2.6.0**. The version is shown in Settings and also in the tray
+The current round is identified as **v2.7.0**. The version is shown in Settings and also in the tray
 icon's text. Every major update must increment this number following SemVer: patches for fixes, a
 minor version for new features and a major version when there are incompatible changes.
 
@@ -385,6 +385,10 @@ cross-platform clients reusing the common sync format.
 - **Tag order on Android uses arrows, not drag**: larger touch targets and TalkBack. The order is per device (not synced); Windows got the same in 2.5.0: `TagOrder` in settings, arrows in the manager's «Manage tags», read by the dock menu, the wheel tour, the manager and the tag panel through `NotesRepository.GetAllTags`.
 - **Wheel changes dock view**: gear always; tabs only when they all fit (a turn continuing a recent change keeps cycling); Ctrl+wheel always. The label sits next to the gear, towards the screen, so it never covers notes. No extra button on the dock (it would add weight where less was asked).
 - **Not done / later**: capping the dock column height with very many notes on the top and bottom edges; filtering the Android widget by tag; checkable boxes in the widget. Italian and Japanese were added at the end of this round (machine-assisted, not reviewed by native speakers).
+
+### «What's new» after every update — decided 2026-11-01 (Windows 2.7.0, Android 1.3.0)
+
+A window, not a tour: after an update the app lists, once, what the person skipped (one heading per version, a few short lines each, in their language), and Settings → About («What's new») reopens it. Never on a fresh install (the welcome toast does that job). An install that never stored a version is assumed to be the last release without the feature, so its first update lists everything since (Windows 2.3.0 / Android 17). The version is remembered **before** showing, so a failure never repeats forever. Windows uses the app's own dialog (`AppDialog`); Android an `AlertDialog` like the welcome one. The text lives in `Strings.cs` / `strings.tsv` in eight languages, one catalog line per version (`WhatsNew.cs`, `WhatsNew.kt`); the rule is in `RELEASING.md`: no version ships without its entry.
 
 ### Round 2.4.0 (Windows) — decisions (2026-11-01)
 

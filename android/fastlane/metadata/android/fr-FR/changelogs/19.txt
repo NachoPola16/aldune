@@ -1,0 +1,1 @@
+Nouveau : après chaque mise à jour, une courte fenêtre liste les nouveautés ; rouvrez-la dans les réglages.

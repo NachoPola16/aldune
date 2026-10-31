@@ -1,0 +1,1 @@
+Neu: Nach jedem Update listet ein kurzes Fenster die Neuerungen; in den Einstellungen erneut zu öffnen.

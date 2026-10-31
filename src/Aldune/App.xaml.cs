@@ -394,6 +394,8 @@ public partial class App : Application
 
         _reminderScheduler = new ReminderScheduler(repository, coordinator, _toastCenter, settings);
         if (_firstRun) ShowWelcome(settings, coordinator);
+        // The news of the versions skipped since this install last showed them, once the app is up and idle (never on a fresh install).
+        Dispatcher.BeginInvoke(DispatcherPriority.ApplicationIdle, () => ShowWhatsNewIfUpdated(settings, settingsService));
         // Catch-up: avisa ya de lo vencido con la app cerrada. Diferido con BeginInvoke en vez de
         // llamado aquí mismo, en línea: este punto de OnStartup queda FUERA del último try/catch de
         // arranque (ver el comentario de DispatcherUnhandledException más arriba — OnStartup no
@@ -485,6 +487,21 @@ public partial class App : Application
     /// de bienvenida: una nota se sincronizaría, y cada dispositivo nuevo añadiría la suya a todos.
     /// Se va sola a los 20 s; su botón abre el gestor.
     /// </summary>
+    private void ShowWhatsNewIfUpdated(AppSettings settings, SettingsService settingsService)
+    {
+        var current = Version.Parse(AppInfo.Version);
+        var versions = WhatsNewPlan.ToShow(settings.LastSeenVersion, _firstRun, current, WhatsNew.Versions);
+        // Remembered before showing: if anything fails below, the next start must not try again forever.
+        if (settings.LastSeenVersion != AppInfo.Version)
+        {
+            settings.LastSeenVersion = AppInfo.Version;
+            settingsService.Save(settings);
+        }
+
+        if (versions.Count == 0) return;
+        AppDialog.Show(WhatsNew.Compose(versions), Strings.WhatsNewTitle(AppInfo.Version), MessageBoxButton.OK, MessageBoxImage.Information);
+    }
+
     private void ShowWelcome(AppSettings settings, AppCoordinator coordinator)
     {
         var hotkey = settings.GlobalHotkeyEnabled ? settings.Hotkey.DisplayName : null;

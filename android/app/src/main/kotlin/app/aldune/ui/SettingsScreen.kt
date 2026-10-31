@@ -297,6 +297,13 @@ fun SettingsScreen(viewModel: NotesViewModel, onClose: () -> Unit) {
                     Text(stringResource(if (settings.simplifiedMode) R.string.interface_mode_full else R.string.interface_mode_simplify))
                 }
                 if (show(SettingsSection.ABOUT)) {
+                    // The news of the last two versions, on demand.
+                    var showNews by remember { mutableStateOf(false) }
+                    OutlinedButton(onClick = { showNews = true }, Modifier.padding(horizontal = 16.dp, vertical = 8.dp)) { Text(stringResource(R.string.whatsnew_open)) }
+                    if (showNews) {
+                        val currentCode = WhatsNew.currentCode(androidx.compose.ui.platform.LocalContext.current)
+                        WhatsNewDialog(WhatsNew.codes.filter { it <= currentCode }.sortedDescending().take(2), onDismiss = { showNews = false })
+                    }
                     Text(
                         stringResource(R.string.about_version, versionName(activity)), Modifier.padding(16.dp),
                         color = MaterialTheme.colorScheme.onSurfaceVariant,

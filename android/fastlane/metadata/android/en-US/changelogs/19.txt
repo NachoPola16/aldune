@@ -1,0 +1,1 @@
+New: after every update a short window lists what is new; you can reopen it from Settings.

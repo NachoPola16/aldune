@@ -316,6 +316,16 @@
     <string name="hide_after_week">1 settimana</string>
     <string name="hidden_tasks_show">Mostra %1$d attività completate</string>
     <string name="open_link">Apri %1$s</string>
+    <string name="whatsnew_title">Novità di Aldune</string>
+    <string name="whatsnew_ok">Ho capito</string>
+    <string name="whatsnew_open">Novità</string>
+    <string name="whatsnew_more">Tutte le modifiche:</string>
+    <string name="whatsnew_120_tasks">Ogni nota decide cosa fare delle attività completate: seguire le impostazioni, restare o andare in fondo.</string>
+    <string name="whatsnew_120_history">Cronologia delle versioni di ogni nota, salvata su questo dispositivo.</string>
+    <string name="whatsnew_120_tags">Etichette: un chip «Tutte», un foglio con tutte le etichette (con ricerca e ordine personale) e un\'opzione per mostrare un\'icona al posto di #.</string>
+    <string name="whatsnew_120_langs">Nuove lingue: italiano, giapponese e cinese semplificato.</string>
+    <string name="whatsnew_120_links">Gli indirizzi web in una nota sono sottolineati; con il cursore sopra compare un pulsante Apri (solo http e https, mai da solo).</string>
+    <string name="whatsnew_130_news">Dopo ogni aggiornamento questa finestra elenca le novità. Riaprila dalle Impostazioni.</string>
     <string name="hidden_tasks_hide">Nascondi le attività completate</string>
     <string name="edit_undo">Annulla</string>
     <string name="edit_redo">Ripeti</string>
