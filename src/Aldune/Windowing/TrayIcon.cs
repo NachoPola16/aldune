@@ -104,12 +104,12 @@ internal sealed class TrayIcon : IDisposable
         public override Color ToolStripDropDownBackground => Ground;
         // Hover de las filas: sin degradado (los gradientes del renderer por defecto son los que
         // hacen que un item "encendido" parezca de otro tema) y con el mismo tono que usa el dock
-        // para sus menús (#4E4840). El borde del item activo se mantiene en el mismo tono para que
-        // el resalte se lea como relleno y no como una caja con borde.
+        // para sus menús (#4E4840). The outline of the hovered row comes from the palette accent, the slot the
+        // user changes per look in Settings: before it was a fixed grey that ignored the custom colour.
         public override Color MenuItemSelected => Palette("Hover");
         public override Color MenuItemSelectedGradientBegin => Palette("Hover");
         public override Color MenuItemSelectedGradientEnd => Palette("Hover");
-        public override Color MenuItemBorder => Color.Transparent;
+        public override Color MenuItemBorder => Palette("Accent");
         public override Color MenuBorder => Palette("Raised");
         public override Color ImageMarginGradientBegin => Ground;
         public override Color ImageMarginGradientMiddle => Ground;

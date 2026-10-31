@@ -646,18 +646,21 @@
                                             <!-- Fijar arriba en la lista (no el «siempre encima»): la chincheta es un interruptor,
                                                  tenue si la nota no está fijada y plena si lo está. -->
                                             <Button DockPanel.Dock="Left" Tag="{Binding}" Click="OnPinToTopClick"
-                                                    Foreground="{Binding Note.Color, Converter={StaticResource NoteLabelColorConverter}}"
                                                     Margin="-4,-2,3,-2" VerticalAlignment="Center"
                                                     ToolTip="{Binding Note.IsPinnedToTop, Converter={StaticResource PinToTopTextConverter}}"
                                                     AutomationProperties.Name="{Binding Note.IsPinnedToTop, Converter={StaticResource PinToTopTextConverter}}"
                                                     Style="{StaticResource TagChipsButtonStyle}">
+                                                <!-- The colour is the row's own ink (what the title uses), so it contrasts on every look; the old
+                                                     «label» tone of the note colour read grey and faded on dark looks. Pinned = filled glyph at full
+                                                     strength; not pinned = outline at 0.45, enough to find the toggle. -->
                                                 <TextBlock Text="&#xE840;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets"
                                                            FontSize="{DynamicResource AlduneTextSmall}">
                                                     <TextBlock.Style>
                                                         <Style TargetType="TextBlock">
-                                                            <Setter Property="Opacity" Value="0.28" />
+                                                            <Setter Property="Opacity" Value="0.45" />
                                                             <Style.Triggers>
                                                                 <DataTrigger Binding="{Binding Note.IsPinnedToTop}" Value="True">
+                                                                    <Setter Property="Text" Value="&#xE718;" />
                                                                     <Setter Property="Opacity" Value="1" />
                                                                 </DataTrigger>
                                                             </Style.Triggers>

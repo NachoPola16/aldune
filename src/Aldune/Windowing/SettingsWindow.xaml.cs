@@ -1825,6 +1825,7 @@ public partial class SettingsWindow : Window
         {
             _settings.Language = code;
             _settingsService.Save(_settings);
+            LanguageRestartRow.Visibility = Visibility.Visible;
             // No se recarga en caliente: los enlaces {x:Static} del XAML se resuelven al construir
             // cada ventana, así que un cambio de idioma solo se ve entero tras reiniciar (ver
             // Aldune.Resources.Strings). Rehacer todas las ventanas abiertas —incluidas notas con

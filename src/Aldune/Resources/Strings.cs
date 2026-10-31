@@ -1511,6 +1511,14 @@ public static class Strings
         "Redémarrer Aldune applique la modification à toutes les fenêtres.",
         "Reiniciar o Aldune aplica a mudança em todas as janelas.", "Riavviando Aldune la modifica si applica a ogni finestra.", "Aldune を再起動すると、変更がすべてのウィンドウに反映されます。", "重新启动 Aldune 后，更改会应用到所有窗口。");
 
+    /// <summary>Shown under the language list once a language is picked: the change is saved but only applies after a restart.</summary>
+    public static string LanguageRestartNotice => T("Language saved. Restart Aldune to see it in every window.", "Idioma guardado. Reinicia Aldune para verlo en todas las ventanas.",
+        "Sprache gespeichert. Starte Aldune neu, um sie in allen Fenstern zu sehen.",
+        "Langue enregistrée. Redémarrez Aldune pour la voir dans toutes les fenêtres.",
+        "Idioma salvo. Reinicie o Aldune para vê-lo em todas as janelas.", "Lingua salvata. Riavvia Aldune per vederla in tutte le finestre.",
+        "言語を保存しました。すべてのウィンドウに反映するには Aldune を再起動してください。", "语言已保存。重新启动 Aldune 后，所有窗口都会生效。");
+    public static string RestartNowButton => T("Restart now", "Reiniciar ahora", "Jetzt neu starten", "Redémarrer maintenant", "Reiniciar agora", "Riavvia ora", "今すぐ再起動", "立即重新启动");
+
     // --- Temas -----------------------------------------------------------------------------------
 
     public static string ThemesSectionTitle => T("Note colors", "Colores de las notas",
