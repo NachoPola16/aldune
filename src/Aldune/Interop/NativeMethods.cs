@@ -108,6 +108,12 @@ internal static class NativeMethods
     internal static bool IsMouseButtonDown(IntPtr message) =>
         (long)message is 0x0201 or 0x0204 or 0x0207 or 0x020B;
 
+    /// <summary>Whether the low-level mouse message is the wheel (WM_MOUSEWHEEL).</summary>
+    internal static bool IsMouseWheel(IntPtr message) => (long)message == 0x020A;
+
+    /// <summary>The wheel delta of a WM_MOUSEWHEEL hook event (MSLLHOOKSTRUCT.mouseData, high word, signed).</summary>
+    internal static int MouseHookWheelDelta(IntPtr data) => (short)((Marshal.ReadInt32(data, 8) >> 16) & 0xFFFF);
+
     /// <summary>Dónde ha ocurrido el evento del gancho de ratón, en píxeles físicos (MSLLHOOKSTRUCT.pt).</summary>
     internal static Point MouseHookPoint(IntPtr data)
     {

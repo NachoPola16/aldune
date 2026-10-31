@@ -16,7 +16,7 @@
         SnapsToDevicePixels="True"
         TextOptions.TextFormattingMode="Display"
         AllowDrop="True" DragOver="OnDockDragOver" Drop="OnDockDrop"
-        PreviewKeyDown="OnDockPreviewKeyDown" PreviewMouseWheel="OnDockWindowPreviewMouseWheel">
+        PreviewKeyDown="OnDockPreviewKeyDown">
     <!-- AllowsTransparency, a diferencia del resto de la app. Antes la forma del dock la recortaba
          SetWindowRgn, y una región es una máscara de 1 BIT: un píxel está dentro o fuera, sin
          medios tonos, así que toda curva salía escalonada — las esquinas de las pestañas y sobre

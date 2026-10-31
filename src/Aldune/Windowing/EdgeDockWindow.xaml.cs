@@ -149,6 +149,7 @@ public partial class EdgeDockWindow : Window
         _hoverPollTimer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(50) };
         _hoverPollTimer.Tick += (_, _) => PollHoverState();
         _wheelSessionTimer.Tick += OnWheelSessionTimer;
+        _wheelHookProc = OnWheelHook;
         _hoverPollTimer.Start();
 
         // Aparte y mucho más lento: pasar a pantalla completa no hay que detectarlo en 50ms, y
@@ -478,7 +479,7 @@ public partial class EdgeDockWindow : Window
     /// </summary>
     private void ApplyWindowRect()
     {
-        var rect = CurrentWindowRect();
+        var rect = EdgeGeometry.WindowRect(_workingArea, _edge, _noteCount, Alignment);
         Left = rect.X;
         Top = rect.Y;
         Width = rect.Width;
@@ -588,7 +589,7 @@ public partial class EdgeDockWindow : Window
         // y desplegarse al entrar ahí sería desplegarse por pasar el ratón sobre nada.
         // Sin notas la ventana entera es zona sensible: no hay tira que sobrevolar, y los botones
         // tienen que poder pulsarse sin desplegar nada primero.
-        var windowRect = CurrentWindowRect();
+        var windowRect = EdgeGeometry.WindowRect(_workingArea, _edge, _noteCount, Alignment);
         bool empty = _noteCount == 0;
         bool inWindow = Contains(windowRect, cursorX, cursorY);
         bool inRest = empty
@@ -643,7 +644,7 @@ public partial class EdgeDockWindow : Window
         if (_hwnd == IntPtr.Zero || !IsVisible || _hiddenByFullscreenApp || _fanState.IsExpanded || _dragging) return;
 
         var dpi = VisualTreeHelper.GetDpi(this);
-        var expected = CurrentWindowRect();
+        var expected = EdgeGeometry.WindowRect(_workingArea, _edge, _noteCount, Alignment);
         var expectedPx = new Aldune.Core.Rect(expected.X * dpi.DpiScaleX, expected.Y * dpi.DpiScaleY,
             expected.Width * dpi.DpiScaleX, expected.Height * dpi.DpiScaleY);
         var (x, y, width, height) = NativeMethods.GetWindowRectPx(_hwnd);
@@ -1748,48 +1749,55 @@ public partial class EdgeDockWindow : Window
     //
     // Turning the wheel from a tag with a long list to one with few notes shrinks the window with the new note count: the cursor was left
     // over transparent pixels (the OS sends the wheel to whatever is behind) and the user could not keep turning. While a session is
-    // alive (1.5 s after the last notch) the window keeps the size it had when the session began and gets a nearly invisible background
-    // (alpha 1: a layered window only passes clicks through alpha 0), so the wheel keeps arriving here wherever the cursor was.
+    // alive (1.5 s after the last notch) a global wheel hook, limited to the area the dock covered when the session began, keeps feeding
+    // the view change wherever the cursor is inside it. Nothing is painted and nothing is kept: the dock shrinks at once as usual.
+    // (A nearly transparent background to catch the wheel was tried and rendered as black bands on some systems.)
 
     private static readonly TimeSpan WheelSessionLength = TimeSpan.FromMilliseconds(1500);
-    private int _wheelFloorCount;
     private readonly DispatcherTimer _wheelSessionTimer = new() { Interval = WheelSessionLength };
-    private static readonly Brush WheelCatcherBrush = Freeze(new SolidColorBrush(System.Windows.Media.Color.FromArgb(1, 0, 0, 0)));
-
-    private static Brush Freeze(Brush brush)
-    {
-        brush.Freeze();
-        return brush;
-    }
+    private IntPtr _wheelHook;
+    private readonly NativeMethods.LowLevelMouseProc _wheelHookProc;
+    private Aldune.Core.Rect _wheelZonePx;
 
     private bool WheelSessionActive => DateTime.UtcNow < _wheelViewUntil;
 
-    /// <summary>The window rectangle: for the real note count, or the bigger one a live wheel session started with.</summary>
-    private Aldune.Core.Rect CurrentWindowRect() =>
-        EdgeGeometry.WindowRect(_workingArea, _edge, Math.Max(_noteCount, _wheelFloorCount), Alignment);
-
     private void BeginWheelSession()
     {
-        _wheelFloorCount = Math.Max(_wheelFloorCount, _noteCount);
-        Background = WheelCatcherBrush;
+        if (_wheelHook == IntPtr.Zero)
+        {
+            // The zone is what the dock covers NOW (before the view changes), in physical pixels.
+            var dpi = VisualTreeHelper.GetDpi(this);
+            var rect = EdgeGeometry.WindowRect(_workingArea, _edge, _noteCount, Alignment);
+            _wheelZonePx = new Aldune.Core.Rect(rect.X * dpi.DpiScaleX, rect.Y * dpi.DpiScaleY, rect.Width * dpi.DpiScaleX, rect.Height * dpi.DpiScaleY);
+            _wheelHook = NativeMethods.InstallMouseHook(_wheelHookProc);
+        }
         _wheelSessionTimer.Stop();
         _wheelSessionTimer.Start();
     }
 
-    private void OnWheelSessionTimer(object? sender, EventArgs e)
+    private void EndWheelSession()
     {
         _wheelSessionTimer.Stop();
-        _wheelFloorCount = 0;
-        Background = System.Windows.Media.Brushes.Transparent;
-        ApplyWindowRect();
+        NativeMethods.UninstallHook(_wheelHook);
+        _wheelHook = IntPtr.Zero;
     }
 
-    /// <summary>During a live session the wheel always changes the view, wherever it falls inside the window.</summary>
-    private void OnDockWindowPreviewMouseWheel(object sender, MouseWheelEventArgs e)
+    private void OnWheelSessionTimer(object? sender, EventArgs e) => EndWheelSession();
+
+    private IntPtr OnWheelHook(int code, IntPtr message, IntPtr data)
     {
-        if (e.Handled || e.Delta == 0 || _settings is not { WheelChangesDockView: true } || !WheelSessionActive) return;
-        CycleDockView(e.Delta < 0 ? 1 : -1, showLabel: true);
-        e.Handled = true;
+        if (code >= 0 && NativeMethods.IsMouseWheel(message) && WheelSessionActive && _settings is { WheelChangesDockView: true })
+        {
+            var point = NativeMethods.MouseHookPoint(data);
+            int delta = NativeMethods.MouseHookWheelDelta(data);
+            if (delta != 0 && point.X >= _wheelZonePx.X && point.X <= _wheelZonePx.X + _wheelZonePx.Width
+                && point.Y >= _wheelZonePx.Y && point.Y <= _wheelZonePx.Y + _wheelZonePx.Height)
+            {
+                Dispatcher.BeginInvoke(DispatcherPriority.Input, new Action(() => CycleDockView(delta < 0 ? 1 : -1, showLabel: true)));
+                return (IntPtr)1; // swallowed: the view change is the only effect of this notch
+            }
+        }
+        return NativeMethods.ContinueHook(_wheelHook, code, message, data);
     }
 
     private void CycleDockView(int direction, bool showLabel)
@@ -3065,7 +3073,7 @@ public partial class EdgeDockWindow : Window
         CloseDockPopups();
         _hoverLayoutHold = false;
         _hoverPollTimer.Stop();
-        _wheelSessionTimer.Stop();
+        EndWheelSession();
         _fullscreenPollTimer.Stop();
         _arrowScrollTimer.Stop();
         _syncFeedbackTimer.Stop();

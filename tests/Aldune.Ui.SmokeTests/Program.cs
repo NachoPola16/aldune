@@ -157,14 +157,13 @@ internal static class Program
             "View label is centred over the column and above it on the right edge");
         popup.IsOpen = false;
 
-        // Wheel session: the window keeps its size while the wheel turns and is released afterwards.
-        int notes = Field<int>(dock, "_noteCount");
+        // Wheel session: while the wheel keeps turning a wheel hook (limited to the area the dock covered) feeds the view change, and nothing
+        // is painted on the dock window (an almost transparent background rendered as black bands on some systems).
         typeof(EdgeDockWindow).GetMethod("CycleDockView", PrivateInstance)!.Invoke(dock, [1, false]);
-        Check(Field<int>(dock, "_wheelFloorCount") >= Math.Min(notes, 2), "A wheel session remembers the note count it started with");
-        Check(dock.Background is System.Windows.Media.SolidColorBrush { Color.A: 1 }, "During a wheel session the window catches the wheel (alpha 1 background)");
+        Check(Field<IntPtr>(dock, "_wheelHook") != IntPtr.Zero, "A wheel session installs the wheel hook");
+        Check(dock.Background is not System.Windows.Media.SolidColorBrush { Color.A: > 0 }, "The dock window paints nothing extra during a wheel session");
         Pump(TimeSpan.FromMilliseconds(1900));
-        Check(Field<int>(dock, "_wheelFloorCount") == 0, "The wheel session ends and releases the window size");
-        Check(dock.Background is System.Windows.Media.SolidColorBrush { Color.A: 0 }, "The window stops catching the wheel after the session");
+        Check(Field<IntPtr>(dock, "_wheelHook") == IntPtr.Zero, "The wheel session ends and removes the wheel hook");
         coordinator.SetDockView(DockViewKind.Active, null);
         Pump(TimeSpan.FromMilliseconds(150));
 
