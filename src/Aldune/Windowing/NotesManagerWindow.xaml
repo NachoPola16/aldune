@@ -276,7 +276,7 @@
                         <!-- Con barra en degradado (XP) la cabecera es una barra de título de verdad:
                              compacta, de borde a borde y con el texto de la barra. -->
                         <DataTrigger Binding="{Binding GradientTitleBar, Source={x:Static local:SkinState.Current}}" Value="True">
-                            <Setter Property="Padding" Value="12,6,8,6" />
+                            <Setter Property="Padding" Value="8,6,8,6" />
                         </DataTrigger>
                     </Style.Triggers>
                 </Style>
@@ -323,7 +323,19 @@
                 <!-- Acceso a Ajustes tambien desde aqui. Estaban solo en el clic derecho de la
                      bandeja, y ahi no los encontro el usuario: esta es la ventana que uno abre cuando
                      busca "donde se configura esto". -->
-                <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Top">
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                    <StackPanel.Style>
+                        <Style TargetType="StackPanel">
+                            <Setter Property="VerticalAlignment" Value="Top" />
+                            <Style.Triggers>
+                                <!-- En la barra XP la cabecera mide lo que sus dos líneas de texto (más que los botones): centrados, el hueco de arriba
+                                     y el de abajo son iguales (antes 6 px arriba y 11 abajo). -->
+                                <DataTrigger Binding="{Binding GradientTitleBar, Source={x:Static local:SkinState.Current}}" Value="True">
+                                    <Setter Property="VerticalAlignment" Value="Center" />
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </StackPanel.Style>
                     <!-- Crear desde aquí: quien está ordenando sus notas no tiene por qué ir al dock para
                          añadir una. Nace con la etiqueta del filtro, si hay, para no desaparecer de la vista. -->
                     <Button x:Name="NewNoteButton"

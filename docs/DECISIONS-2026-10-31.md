@@ -50,3 +50,19 @@ To review on the emulator (rotation) together with the editor changes of A2b; no
 
 ### C17. Menu of the three dots in the editor — DONE
 Offset 12 dp to the left: it opened flush against the screen edge.
+
+## Windows
+
+All four measured with a probe of real windows (physical mouse and keys, temporary data), before and after, in XP light and Dark and with "Text size" at 100 % and 150 %.
+
+### W1. The X of the "Sync conflicts" window — DONE
+Measured: 3 px too high (dx 0, dy -3). The button style placed its content without centring it, so the 28 x 28 glyph box was drawn at the top left. Fixed in `SyncConflictsWindow.xaml` (centred content presenter): the X is now at 0.0 / 0.0. The other windows with a close X were measured at the same time (manager, settings, note): all within 1 px, so nothing else changed. The minimise dash of the manager stays 2.5 px low on purpose (earlier decision).
+
+### W2. Margins of the manager's button bar — DONE
+In the XP bars the manager's header is taller than the buttons (two lines of text), and the buttons were top aligned: 6 px above, 11 below, 8 to the right. They are now vertically centred in that bar (8 / 9 / 8 px; the bar is 45 px tall, so an odd pixel is left) and the left margin of the text went from 12 to 8, so the four sides are alike. Settings was already 6 / 6 / 8 and the note 8 / 7, so they are untouched. The flat looks keep their layout (the buttons sit at the top, 18 px from the edge, because the header is a title block, not a bar).
+
+### W3. The cogwheel looks selected in the manager — FIXED, it was a bug
+Not the "Settings is open" signal. After the click, the cogwheel keeps keyboard focus; when Settings is closed (almost always with Esc) WPF gives the focus back to it and, as the last input was the keyboard, draws the app's focus ring (and the tooltip in XP). Reproduced with a physical click and Esc. Now the manager moves keyboard and logical focus to the window itself before opening Settings, so nothing is highlighted on return (checked: the cogwheel no longer has focus).
+
+### W4. Ctrl+F bar in the note — FIXED
+At the default size (300 px) the bar did not leave the window, but it nearly filled it: 3 px from the left edge and 26 px from the right, with the text box fixed at 120 px. Now the text box is the only elastic part (40 to 120 px) and the bar leaves the same gap on both sides (25 / 27 px); the counter reserves the width of "No results" so the bar does not jump while typing. Checked at 100 % and 150 % text size.

@@ -90,6 +90,7 @@ public partial class NoteWindow : Window
         _initialHeight = Height;
         _autoScroll = new AutoScrollManager(BodyHost, null, TextBody);
         BodyHost.SizeChanged += (_, _) => RefreshPaper();
+        SizeChanged += (_, _) => FitFindBar();
         TextBody.AddHandler(ScrollViewer.ScrollChangedEvent, new ScrollChangedEventHandler(OnBodyScrollChanged));
         _menuToggle = new PopupToggle(ActionsPopup);
         // Sin disparador el toggle no puede saber que el cierre lo provocó el propio "⋯" y el clic
@@ -990,9 +991,33 @@ public partial class NoteWindow : Window
     private IReadOnlyList<int> _findMatches = [];
     private int _findCurrent = -1;
 
+    // La barra tiene que caber en la nota con su tamaño por defecto y con «Tamaño del texto» al 150 %: lo único elástico es el cuadro de
+    // texto (entre FindBoxMinWidth y su ancho normal). El contador reserva el ancho de «Sin resultados», para que la barra no se mueva al escribir.
+    private const double FindBoxMinWidth = 40;
+    private const double FindBoxNormalWidth = 120;
+
+    private void FitFindBar()
+    {
+        if (FindBar.Visibility != Visibility.Visible || ActualWidth <= 0) return;
+        var widest = new TextBlock
+        {
+            Text = Strings.FindNoResults, FontSize = FindCount.FontSize, FontFamily = FindCount.FontFamily,
+            FontWeight = FindCount.FontWeight,
+        };
+        widest.Measure(new System.Windows.Size(double.PositiveInfinity, double.PositiveInfinity));
+        FindCount.MinWidth = Math.Ceiling(widest.DesiredSize.Width);
+        FindBox.Width = FindBoxNormalWidth;
+        FindBar.Measure(new System.Windows.Size(double.PositiveInfinity, double.PositiveInfinity));
+        // DesiredSize incluye los márgenes de la barra; el hueco por la izquierda se deja igual que el de la derecha.
+        double fixedPart = FindBar.DesiredSize.Width - FindBar.Margin.Left - FindBar.Margin.Right - FindBoxNormalWidth;
+        double available = ActualWidth - 2 * FindBar.Margin.Right - fixedPart;
+        FindBox.Width = Math.Clamp(available, FindBoxMinWidth, FindBoxNormalWidth);
+    }
+
     private void OpenFindBar()
     {
         FindBar.Visibility = Visibility.Visible;
+        FitFindBar();
         // Con texto seleccionado en el cuerpo (de una sola línea), se busca eso, como en cualquier editor.
         if (TextBody.SelectionLength > 0 && !TextBody.SelectedText.Contains('\n')) FindBox.Text = TextBody.SelectedText;
         FindBox.Focus();

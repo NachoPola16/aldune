@@ -606,7 +606,15 @@ public partial class NotesManagerWindow : Window
         }
     }
 
-    private void OnSettingsClick(object sender, RoutedEventArgs e) => _coordinator.OpenSettings();
+    private void OnSettingsClick(object sender, RoutedEventArgs e)
+    {
+        // El engranaje conserva el foco mientras Ajustes está abierta; al cerrarla (casi siempre con Esc) WPF se lo devuelve y dibuja su anillo
+        // de foco, que se lee como «seleccionado». Con el foco en la propia ventana no queda nada resaltado al volver.
+        Focus();
+        // Hay que fijar también el foco lógico: al reactivarse la ventana WPF restaura el del ámbito de foco (el engranaje), no el de teclado.
+        FocusManager.SetFocusedElement(this, this);
+        _coordinator.OpenSettings();
+    }
 
     private void OnNewNoteClick(object sender, RoutedEventArgs e)
     {

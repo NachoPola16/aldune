@@ -22,7 +22,8 @@
                 <Setter.Value>
                     <ControlTemplate TargetType="Button">
                         <Border x:Name="BackgroundBorder" Background="{TemplateBinding Background}" CornerRadius="{DynamicResource AlduneRadius6}">
-                            <ContentPresenter Margin="{TemplateBinding Padding}" />
+                            <!-- Centrado: sin esto el glifo de la X (28x28) se dibujaba arriba a la izquierda, descentrado. -->
+                            <ContentPresenter Margin="{TemplateBinding Padding}" HorizontalAlignment="Center" VerticalAlignment="Center" />
                         </Border>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsMouseOver" Value="True">
