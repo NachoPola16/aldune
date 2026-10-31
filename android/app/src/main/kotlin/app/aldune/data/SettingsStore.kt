@@ -103,7 +103,7 @@ data class AppSettings(
 object Languages {
     /** Idiomas de la interfaz y cómo se llama cada uno en su propio idioma (no se traduce: así se reconoce en cualquier idioma). */
     val all: List<Pair<String, String>> = listOf(
-        "en" to "English", "es" to "Español", "de" to "Deutsch", "fr" to "Français", "it" to "Italiano", "pt-BR" to "Português (Brasil)",
+        "en" to "English", "es" to "Español", "de" to "Deutsch", "fr" to "Français", "it" to "Italiano", "pt-BR" to "Português (Brasil)", "ja" to "日本語",
     )
 
     fun locale(tag: String): Locale? = if (tag.isEmpty()) null else Locale.forLanguageTag(tag)
