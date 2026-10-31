@@ -661,8 +661,10 @@ public sealed class NotesRepository
         System.Globalization.CultureInfo.InvariantCulture,
         System.Globalization.DateTimeStyles.RoundtripKind);
 
-    public void UpdateText(Guid id, string newText)
+    public void UpdateText(Guid id, string newText, DateTimeOffset? now = null)
     {
+        var at = now ?? DateTimeOffset.UtcNow;
+        KeepPreviousTextIfDue(id, newText, at);
         var encrypted = _cipher.Encrypt(newText);
         using var connection = _database.OpenConnection();
         using var command = connection.CreateCommand();
@@ -673,7 +675,103 @@ public sealed class NotesRepository
         command.Parameters.AddWithValue("$text", encrypted.CipherText);
         command.Parameters.AddWithValue("$nonce", encrypted.Nonce);
         command.Parameters.AddWithValue("$tag", encrypted.Tag);
-        command.Parameters.AddWithValue("$updatedAt", DateTimeOffset.UtcNow.ToString("O"));
+        command.Parameters.AddWithValue("$updatedAt", at.ToString("O"));
+        command.Parameters.AddWithValue("$id", id.ToString());
+        command.ExecuteNonQuery();
+    }
+
+    // ---- Historial de versiones (local; ver NoteVersionRules) ----
+
+    /// <summary>Antes de reemplazar el texto: si la última copia es de hace más del plazo (o no hay ninguna), guarda el texto que se va a perder.</summary>
+    private void KeepPreviousTextIfDue(Guid id, string newText, DateTimeOffset at)
+    {
+        var last = LastVersionTime(id);
+        if (last is { } l && at - l < NoteVersionRules.MinInterval) return;
+        var current = GetById(id);
+        if (current is null || current.IsProtected || current.Text == newText) return;
+        InsertVersion(id, current.Text, at);
+    }
+
+    private DateTimeOffset? LastVersionTime(Guid id)
+    {
+        using var connection = _database.OpenConnection();
+        using var command = connection.CreateCommand();
+        command.CommandText = "SELECT SavedAt FROM NoteVersion WHERE NoteId = $id ORDER BY Id DESC LIMIT 1;";
+        command.Parameters.AddWithValue("$id", id.ToString());
+        return command.ExecuteScalar() is string text
+            ? DateTimeOffset.Parse(text, System.Globalization.CultureInfo.InvariantCulture, System.Globalization.DateTimeStyles.RoundtripKind)
+            : null;
+    }
+
+    private void InsertVersion(Guid id, string text, DateTimeOffset at)
+    {
+        // Dos copias iguales seguidas no aportan nada (p. ej. cerrar la nota dos veces sin tocarla).
+        if (GetVersions(id).FirstOrDefault() is { } latest && latest.Text == text) return;
+        var encrypted = _cipher.Encrypt(text);
+        using var connection = _database.OpenConnection();
+        using var command = connection.CreateCommand();
+        command.CommandText = """
+            INSERT INTO NoteVersion (NoteId, SavedAt, EncryptedText, Nonce, Tag) VALUES ($id, $savedAt, $text, $nonce, $tag);
+            DELETE FROM NoteVersion WHERE NoteId = $id
+              AND Id NOT IN (SELECT Id FROM NoteVersion WHERE NoteId = $id ORDER BY Id DESC LIMIT $max);
+            """;
+        command.Parameters.AddWithValue("$id", id.ToString());
+        command.Parameters.AddWithValue("$savedAt", at.ToString("O"));
+        command.Parameters.AddWithValue("$text", encrypted.CipherText);
+        command.Parameters.AddWithValue("$nonce", encrypted.Nonce);
+        command.Parameters.AddWithValue("$tag", encrypted.Tag);
+        command.Parameters.AddWithValue("$max", NoteVersionRules.MaxVersions);
+        command.ExecuteNonQuery();
+    }
+
+    /// <summary>Guarda el texto actual como versión. Con <paramref name="force"/> (al cerrar la nota, o antes de restaurar) se salta el plazo mínimo.
+    /// Una nota protegida no guarda nada.</summary>
+    public void RecordVersion(Guid id, bool force = false)
+    {
+        var now = DateTimeOffset.UtcNow;
+        if (!force && LastVersionTime(id) is { } last && now - last < NoteVersionRules.MinInterval) return;
+        var note = GetById(id);
+        if (note is null || note.IsProtected) return;
+        InsertVersion(id, note.Text, now);
+    }
+
+    /// <summary>Las versiones guardadas de la nota, la más reciente primero.</summary>
+    public IReadOnlyList<NoteVersion> GetVersions(Guid id)
+    {
+        using var connection = _database.OpenConnection();
+        using var command = connection.CreateCommand();
+        command.CommandText = "SELECT Id, SavedAt, EncryptedText, Nonce, Tag FROM NoteVersion WHERE NoteId = $id ORDER BY Id DESC;";
+        command.Parameters.AddWithValue("$id", id.ToString());
+        var list = new List<NoteVersion>();
+        using var reader = command.ExecuteReader();
+        while (reader.Read())
+        {
+            var text = _cipher.Decrypt(new EncryptedContent((byte[])reader["EncryptedText"], (byte[])reader["Nonce"], (byte[])reader["Tag"]));
+            var savedAt = DateTimeOffset.Parse((string)reader["SavedAt"], System.Globalization.CultureInfo.InvariantCulture,
+                System.Globalization.DateTimeStyles.RoundtripKind);
+            list.Add(new NoteVersion(Convert.ToInt64(reader["Id"]), id, savedAt, text));
+        }
+        return list;
+    }
+
+    /// <summary>Vuelve al texto de una versión. Antes guarda el texto actual como versión, así que restaurar se puede deshacer.
+    /// Devuelve false si la versión no es de esa nota o la nota está protegida.</summary>
+    public bool RestoreVersion(Guid noteId, long versionId)
+    {
+        var version = GetVersions(noteId).FirstOrDefault(v => v.Id == versionId);
+        if (version is null) return false;
+        var note = GetById(noteId);
+        if (note is null || note.IsProtected) return false;
+        RecordVersion(noteId, force: true);
+        UpdateText(noteId, version.Text);
+        return true;
+    }
+
+    private void DeleteVersions(Guid id)
+    {
+        using var connection = _database.OpenConnection();
+        using var command = connection.CreateCommand();
+        command.CommandText = "DELETE FROM NoteVersion WHERE NoteId = $id;";
         command.Parameters.AddWithValue("$id", id.ToString());
         command.ExecuteNonQuery();
     }
@@ -729,6 +827,7 @@ public sealed class NotesRepository
             DELETE FROM Note WHERE Id = $id;
             DELETE FROM NotePlacement WHERE NoteId = $id;
             DELETE FROM TaskCompletion WHERE NoteId = $id;
+            DELETE FROM NoteVersion WHERE NoteId = $id;
             DELETE FROM NoteReminder WHERE NoteId = $id;
             DELETE FROM NoteTag WHERE NoteId = $id;
             """;
@@ -746,6 +845,9 @@ public sealed class NotesRepository
     {
         if (note.IsProtected && note.ProtectedContent is null)
             throw new FormatException("A protected note is missing its encrypted content.");
+        // Lo que llega de otro dispositivo reemplaza el texto local: se guarda antes, por si el reemplazo no era lo que se quería.
+        if (!note.IsProtected && GetById(note.Id) is { IsProtected: false } existing && existing.Text != note.Text)
+            InsertVersion(note.Id, existing.Text, DateTimeOffset.UtcNow);
         var encrypted = _cipher.Encrypt(note.IsProtected ? string.Empty : note.Text);
         using var connection = _database.OpenConnection();
         using var command = connection.CreateCommand();
@@ -827,6 +929,7 @@ public sealed class NotesRepository
             DELETE FROM NotePlacement WHERE NoteId = $id;
             DELETE FROM NoteOrder WHERE NoteId = $id;
             DELETE FROM TaskCompletion WHERE NoteId = $id;
+            DELETE FROM NoteVersion WHERE NoteId = $id;
             DELETE FROM NoteReminder WHERE NoteId = $id;
             DELETE FROM NoteTag WHERE NoteId = $id;
             INSERT OR REPLACE INTO SyncTombstone (NoteId, DeletedAt, DeviceId)
@@ -848,6 +951,8 @@ public sealed class NotesRepository
         if (GetFileLink(id) is not null) throw new InvalidOperationException("A linked note cannot be protected.");
         var protectedContent = ProtectedNoteContent.Protect(note.Text, password);
         UpdateProtectionColumns(id, protectedContent, _cipher.Encrypt(string.Empty));
+        // El historial guarda el texto en claro (cifrado con la clave de la base, no con la contraseña): al proteger la nota no puede quedar.
+        DeleteVersions(id);
         return protectedContent;
     }
 
@@ -988,6 +1093,7 @@ public sealed class NotesRepository
             DELETE FROM NoteTag WHERE NoteId IN (SELECT Id FROM Note WHERE State = $state AND UpdatedAt < $cutoff);
             DELETE FROM NoteFileLink WHERE NoteId IN (SELECT Id FROM Note WHERE State = $state AND UpdatedAt < $cutoff);
             DELETE FROM NoteUnpinned WHERE NoteId IN (SELECT Id FROM Note WHERE State = $state AND UpdatedAt < $cutoff);
+            DELETE FROM NoteVersion WHERE NoteId IN (SELECT Id FROM Note WHERE State = $state AND UpdatedAt < $cutoff);
             DELETE FROM Note WHERE State = $state AND UpdatedAt < $cutoff;
             """;
         command.Parameters.AddWithValue("$state", NoteState.Trashed.ToString());

@@ -304,6 +304,8 @@ public partial class NoteWindow : Window
         UpdatePromptLine(CurrentFace());
 
         Closing += SavePlacementOnce;
+        // Una copia al cerrar (además de las de cada 5 minutos de edición): así el historial siempre termina en lo último que se vio.
+        Closing += (_, _) => { Flush(); _repository.RecordVersion(_note.Id, force: true); };
 
         Closed += (_, _) => _taskPruneTimer.Stop();
 
@@ -1880,6 +1882,18 @@ public partial class NoteWindow : Window
         _repository.SetCompletedTasksPolicy(_note.Id, _note.CompletedTasks);
         UpdateDoneTasksPolicyButton();
         _coordinator.RefreshAll();
+    }
+
+    /// <summary>Abre el historial de versiones. Antes se guarda lo tecleado, para que la última edición ya cuente como texto actual.</summary>
+    private void OnHistoryClick(object sender, RoutedEventArgs e)
+    {
+        Flush();
+        ActionsPopup.IsOpen = false;
+        new VersionHistoryWindow(_repository, _note.Id, this, () =>
+        {
+            ReloadFromRepository();
+            _coordinator.RefreshAll();
+        }).Show();
     }
 
     private void UpdateDoneTasksPolicyButton() =>

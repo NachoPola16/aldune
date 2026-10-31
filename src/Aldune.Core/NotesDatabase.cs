@@ -68,6 +68,18 @@ public sealed class NotesDatabase
             -- completadas solas" (ver Aldune.Core.TaskCompletion). Aparte de Note por el mismo
             -- motivo que NoteOrder/NotePlacement. LineHash identifica la tarea por su contenido, no
             -- por su posición, porque la posición cambia con cualquier edición alrededor.
+            -- Historial de versiones de una nota (ver NoteVersionRules): texto anterior cifrado con la misma clave que Note.EncryptedText. Local, no se
+            -- sincroniza. Id autoincremental = orden cronológico. Se borra con la nota y al protegerla.
+            CREATE TABLE IF NOT EXISTS NoteVersion (
+                Id INTEGER PRIMARY KEY AUTOINCREMENT,
+                NoteId TEXT NOT NULL,
+                SavedAt TEXT NOT NULL,
+                EncryptedText BLOB NOT NULL,
+                Nonce BLOB NOT NULL,
+                Tag BLOB NOT NULL
+            );
+            CREATE INDEX IF NOT EXISTS IX_NoteVersion_Note ON NoteVersion (NoteId, Id);
+
             CREATE TABLE IF NOT EXISTS TaskCompletion (
                 NoteId TEXT NOT NULL,
                 LineHash TEXT NOT NULL,

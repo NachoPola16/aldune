@@ -1,0 +1,60 @@
+﻿<Window x:Class="Aldune.Windowing.VersionHistoryWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:res="clr-namespace:Aldune.Resources"
+        x:ClassModifier="internal"
+        Width="580" Height="420" MinWidth="460" MinHeight="300"
+        WindowStyle="None"
+        AllowsTransparency="False"
+        ResizeMode="CanResizeWithGrip"
+        ShowInTaskbar="False"
+        Topmost="True"
+        Background="{DynamicResource AlduneGroundBrush}"
+        PreviewKeyDown="OnWindowKeyDown"
+        SourceInitialized="OnSourceInitialized">
+    <WindowChrome.WindowChrome>
+        <WindowChrome CaptionHeight="34" ResizeBorderThickness="4" GlassFrameThickness="-1" CornerRadius="0" />
+    </WindowChrome.WindowChrome>
+
+    <Border BorderBrush="{DynamicResource AlduneBorderSubtleBrush}" BorderThickness="1" Padding="18,12,18,16">
+        <Grid>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="*" />
+                <RowDefinition Height="Auto" />
+            </Grid.RowDefinitions>
+            <TextBlock Text="{x:Static res:Strings.HistoryTitle}" Foreground="{DynamicResource AlduneTextStrongBrush}"
+                       FontSize="{DynamicResource AlduneTextTitle}" FontWeight="SemiBold" Margin="0,0,0,2" />
+            <TextBlock Grid.Row="1" Text="{x:Static res:Strings.HistoryHint}" Foreground="{DynamicResource AlduneHintBrush}"
+                       FontSize="{DynamicResource AlduneTextSmall}" TextWrapping="Wrap" Margin="0,0,0,10" />
+            <Grid Grid.Row="2">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="200" />
+                    <ColumnDefinition Width="12" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+                <!-- Una fila por versión, la más reciente arriba. Sin plantilla propia: el texto es la fecha. -->
+                <ListBox x:Name="VersionList" Background="{DynamicResource AlduneRaisedBrush}" BorderThickness="1"
+                         BorderBrush="{DynamicResource AlduneBorderSubtleBrush}" Foreground="{DynamicResource AlduneTextStrongBrush}"
+                         FontSize="{DynamicResource AlduneTextBody}" SelectionChanged="OnSelectionChanged"
+                         MouseDoubleClick="OnRestoreClick" />
+                <Border Grid.Column="2" Background="{DynamicResource AlduneRaisedBrush}" BorderThickness="1"
+                        BorderBrush="{DynamicResource AlduneBorderSubtleBrush}" CornerRadius="{DynamicResource AlduneRadius6}">
+                    <TextBox x:Name="Preview" IsReadOnly="True" TextWrapping="Wrap" VerticalScrollBarVisibility="Auto" AcceptsReturn="True"
+                             Background="Transparent" BorderThickness="0" Padding="9,7"
+                             Foreground="{DynamicResource AlduneTextStrongBrush}" FontSize="{DynamicResource AlduneTextBody}"
+                             SelectionBrush="{DynamicResource AlduneSelectionBrush}" />
+                </Border>
+                <TextBlock x:Name="EmptyText" Grid.ColumnSpan="3" Text="{x:Static res:Strings.HistoryEmpty}" Visibility="Collapsed"
+                           Foreground="{DynamicResource AlduneHintBrush}" FontSize="{DynamicResource AlduneTextBody}"
+                           HorizontalAlignment="Center" VerticalAlignment="Center" />
+            </Grid>
+            <StackPanel Grid.Row="3" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,14,0,0">
+                <Button x:Name="RestoreButton" Content="{x:Static res:Strings.HistoryRestore}" Click="OnRestoreClick" IsEnabled="False"
+                        Style="{StaticResource PrimaryColorDialogButtonStyle}" Margin="0,0,8,0" />
+                <Button Content="{x:Static res:Strings.HistoryClose}" Click="OnCloseClick" Style="{StaticResource ColorDialogButtonStyle}" />
+            </StackPanel>
+        </Grid>
+    </Border>
+</Window>

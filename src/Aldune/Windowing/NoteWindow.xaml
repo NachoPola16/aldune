@@ -389,6 +389,8 @@
                                    Margin="9,0,9,6" />
                         <Button x:Name="PinToTopButton" Click="OnPinToTopClick"
                                 Style="{StaticResource NoteMenuItemStyle}" />
+                        <Button x:Name="HistoryButton" Click="OnHistoryClick" Content="{x:Static res:Strings.HistoryMenu}"
+                                Style="{StaticResource NoteMenuItemStyle}" />
                         <Button x:Name="DoneTasksPolicyButton" Click="OnDoneTasksPolicyClick"
                                 ToolTip="{x:Static res:Strings.DoneTasksPolicyTooltip}"
                                 Style="{StaticResource NoteMenuItemStyle}" />

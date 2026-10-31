@@ -582,6 +582,21 @@ public static class Strings
         "Oben in der Liste anheften", "Épingler en haut de la liste", "Fixar no topo da lista");
     public static string UnpinFromTop => T("Unpin from the top of the list", "Quitar de arriba en la lista",
         "Von der Listenspitze lösen", "Détacher du haut de la liste", "Soltar do topo da lista");
+    // Historial de versiones de una nota (local, 20 como mucho).
+    public static string HistoryMenu => T("Version history…", "Historial de versiones…",
+        "Versionsverlauf…", "Historique des versions…", "Histórico de versões…");
+    public static string HistoryTitle => T("Version history", "Historial de versiones",
+        "Versionsverlauf", "Historique des versions", "Histórico de versões");
+    public static string HistoryHint => T("Up to 20 earlier versions of this note, kept on this device only. Restoring first saves the current text, so you can undo it.",
+        "Hasta 20 versiones anteriores de esta nota, guardadas solo en este dispositivo. Restaurar guarda antes el texto actual, así se puede deshacer.",
+        "Bis zu 20 frühere Versionen dieser Notiz, nur auf diesem Gerät gespeichert. Beim Wiederherstellen wird zuerst der aktuelle Text gesichert, sodass man es rückgängig machen kann.",
+        "Jusqu'à 20 versions précédentes de cette note, conservées sur cet appareil uniquement. Restaurer enregistre d'abord le texte actuel, ce qui permet d'annuler.",
+        "Até 20 versões anteriores desta nota, guardadas apenas neste dispositivo. Restaurar guarda antes o texto atual, então dá para desfazer.");
+    public static string HistoryEmpty => T("No earlier versions yet. They appear as you edit the note.", "Aún no hay versiones anteriores. Aparecen al editar la nota.",
+        "Noch keine früheren Versionen. Sie erscheinen beim Bearbeiten der Notiz.", "Pas encore de versions précédentes. Elles apparaissent quand vous modifiez la note.",
+        "Ainda não há versões anteriores. Elas aparecem ao editar a nota.");
+    public static string HistoryRestore => T("Restore", "Restaurar", "Wiederherstellen", "Restaurer", "Restaurar");
+    public static string HistoryClose => T("Close", "Cerrar", "Schließen", "Fermer", "Fechar");
     // Ajuste de «tareas hechas» por nota (un elemento de menú que cicla; las dos últimas nunca borran). Ver CompletedTasksPolicy.
     public static string DoneTasksFollowSettings => T("Done tasks: as in my settings", "Tareas hechas: según mis ajustes",
         "Erledigte Aufgaben: wie in meinen Einstellungen", "Tâches faites : selon mes réglages", "Tarefas feitas: conforme minhas configurações");
