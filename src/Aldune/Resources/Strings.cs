@@ -690,6 +690,16 @@ public static class Strings
         "Im Dock anzeigen", "Afficher dans le dock", "Mostrar no dock");
     public static string DockViewActive => T("Active notes", "Notas activas",
         "Aktive Notizen", "Notes actives", "Notas ativas");
+    public static string WheelChangesViewCheckbox => T("Change view with the mouse wheel", "Cambiar de vista con la rueda",
+        "Ansicht mit dem Mausrad wechseln", "Changer de vue avec la molette", "Trocar de exibição com a roda do mouse");
+    public static string WheelChangesViewHint => T(
+        "Scroll over the gear to switch between all notes, each tag, archived and trash. Over the tabs it only switches when every note fits; with Ctrl it always does.",
+        "Gira la rueda sobre el engranaje para pasar entre notas, cada etiqueta, archivadas y papelera. Sobre las pestañas solo cambia si caben todas las notas; con Ctrl siempre.",
+        "Mausrad über dem Zahnrad wechselt zwischen allen Notizen, jedem Tag, Archiv und Papierkorb. Über den Reitern nur, wenn alle Notizen passen; mit Strg immer.",
+        "La molette sur l'engrenage passe entre toutes les notes, chaque étiquette, archivées et corbeille. Sur les onglets, seulement si toutes les notes tiennent ; avec Ctrl, toujours.",
+        "A roda sobre a engrenagem alterna entre todas as notas, cada etiqueta, arquivadas e lixeira. Sobre as abas só troca se todas as notas couberem; com Ctrl sempre.");
+    public static string DockViewAll => T("All notes", "Todas las notas",
+        "Alle Notizen", "Toutes les notes", "Todas as notas");
     public static string DockViewArchived => T("Archived notes", "Notas archivadas",
         "Archivierte Notizen", "Notes archivées", "Notas arquivadas");
     public static string DockViewTrash => T("Trash", "Papelera",

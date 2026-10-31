@@ -171,6 +171,10 @@ public sealed class AppSettings
     /// </summary>
     public bool TrackpadGestures { get; set; } = true;
 
+    /// <summary>Cambiar de vista del dock con la rueda: sobre el engranaje siempre; sobre las pestañas solo cuando caben todas (sin barra de
+    /// scroll), y con Ctrl+rueda en cualquier caso. Ver <see cref="DockViewCycle"/>. Activado por defecto; se apaga para quien la toca sin querer.</summary>
+    public bool WheelChangesDockView { get; set; } = true;
+
     /// <summary>
     /// Borde de la pantalla donde se ancla el dock de Aldune. Por defecto derecha (EdgePosition.Right).
     /// </summary>

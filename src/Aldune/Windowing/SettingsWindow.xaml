@@ -697,6 +697,16 @@
                             <TextBlock x:Name="TrackpadGesturesHint"
                                        Foreground="{DynamicResource AlduneHintBrush}" FontSize="{DynamicResource AlduneTextSmall}" TextWrapping="Wrap" Margin="0,6,56,0" />
                         </StackPanel>
+                        <Border Background="{DynamicResource AlduneRaisedBrush}" Height="1" Margin="0,20,0,0" />
+                        <StackPanel Margin="0,20,0,0">
+                            <CheckBox x:Name="WheelChangesViewCheck"
+                                      Content="{x:Static res:Strings.WheelChangesViewCheckbox}"
+                                      Foreground="{DynamicResource AlduneTextBrush}" Background="{DynamicResource AlduneGroundBrush}" FontSize="{DynamicResource AlduneTextBody}"
+                                      Style="{StaticResource SettingsSwitchStyle}"
+                                      Click="OnWheelChangesViewToggled" />
+                            <TextBlock Text="{x:Static res:Strings.WheelChangesViewHint}"
+                                       Foreground="{DynamicResource AlduneHintBrush}" FontSize="{DynamicResource AlduneTextSmall}" TextWrapping="Wrap" Margin="0,6,56,0" />
+                        </StackPanel>
                     </StackPanel>
                 </StackPanel>
                 <StackPanel x:Name="ColorsPage" Visibility="Collapsed">

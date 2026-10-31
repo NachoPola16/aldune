@@ -97,6 +97,7 @@ internal static class ConfigPreview
                 DockViewKind.Archived => Strings.DockViewArchived,
                 DockViewKind.Trashed => Strings.DockViewTrash,
                 DockViewKind.Tag => Strings.DockViewTags,
+                DockViewKind.All => Strings.DockViewAll,
                 _ => raw,
             },
             "newNoteTone" when Enum.TryParse(raw, out NoteTone tone) => tone switch

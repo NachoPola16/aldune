@@ -924,6 +924,12 @@ public partial class SettingsWindow : Window
             : Strings.TrackpadGesturesNotFound;
     }
 
+    private void OnWheelChangesViewToggled(object sender, RoutedEventArgs e)
+    {
+        _settings.WheelChangesDockView = WheelChangesViewCheck.IsChecked == true;
+        _settingsService.Save(_settings);
+    }
+
     private void OnTrackpadGesturesToggled(object sender, RoutedEventArgs e)
     {
         _settings.TrackpadGestures = TrackpadGesturesCheck.IsChecked == true;
@@ -2224,6 +2230,7 @@ public partial class SettingsWindow : Window
         RememberPositionsCheck.IsChecked = _settings.RememberNotePositions;
         RememberSizesCheck.IsChecked = _settings.NoteSizesRemembered;
         PopulateTrackpadGestures();
+        WheelChangesViewCheck.IsChecked = _settings.WheelChangesDockView;
         UpdateUniformColorUi();
         SyncSignalCheck.IsChecked = _settings.SyncSignalVisible;
         SquareCornersCheck.IsChecked = _settings.CornersSquare;

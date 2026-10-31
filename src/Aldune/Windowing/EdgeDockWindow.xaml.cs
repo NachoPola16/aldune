@@ -992,10 +992,12 @@ public partial class EdgeDockWindow : Window
             || !string.Equals(_lastTagFilter, tagFilter, StringComparison.OrdinalIgnoreCase);
         _lastView = view;
         _lastTagFilter = tagFilter;
+        UpdateViewIndicator();
         var notes = view switch
         {
             DockViewKind.Archived => _repository.GetByState(NoteState.Archived),
             DockViewKind.Trashed => _repository.GetByState(NoteState.Trashed),
+            DockViewKind.All => _repository.GetByState(NoteState.Active).Concat(_repository.GetByState(NoteState.Archived)).ToList(),
             DockViewKind.Tag when !string.IsNullOrWhiteSpace(_settings?.DockTagFilter) =>
                 _repository.GetByTag(_settings!.DockTagFilter!, NoteState.Active),
             _ => _repository.GetByState(NoteState.Active)
@@ -1145,6 +1147,19 @@ public partial class EdgeDockWindow : Window
     private void OnTabsPreviewMouseWheel(object sender, MouseWheelEventArgs e)
     {
         if (!_fanState.IsExpanded || e.Delta == 0) return;
+
+        // Cambiar de vista con la rueda: con Ctrl siempre; sin él, solo si todas las notas caben (no hay barra de scroll). Si no caben, la
+        // rueda sigue desplazando la lista y la vista se cambia sobre el engranaje o con Ctrl.
+        if (_settings is { WheelChangesDockView: true })
+        {
+            bool fits = TabsScroll.ScrollableHeight <= 0.5;
+            if (Keyboard.Modifiers == ModifierKeys.Control || (Keyboard.Modifiers == ModifierKeys.None && fits))
+            {
+                CycleDockView(e.Delta < 0 ? 1 : -1, showLabel: true);
+                e.Handled = true;
+                return;
+            }
+        }
 
         // La rueda de un ratón llega en muescas de 120; un trackpad de precisión (gesto de dos dedos)
         // manda muchos eventos pequeños y seguidos. Con el paso fijo de una muesca por evento, un
@@ -1706,6 +1721,72 @@ public partial class EdgeDockWindow : Window
 
         OpenDockViewPopup();
         e.Handled = true;
+    }
+
+    // --- Cambiar de vista con la rueda --------------------------------------------------------------
+
+    private DockViewCycle.Counts BuildViewCounts()
+    {
+        var tags = _repository.GetAllTags().ToDictionary(t => t, t => _repository.GetByTag(t, NoteState.Active).Count, StringComparer.OrdinalIgnoreCase);
+        return new DockViewCycle.Counts(
+            _repository.GetByState(NoteState.Active).Count, _repository.GetByState(NoteState.Archived).Count,
+            _repository.GetByState(NoteState.Trashed).Count, tags);
+    }
+
+    private string CurrentViewLabel() => DockViewCycle.Label(
+        _settings?.DockView ?? DockViewKind.Active, _settings?.DockTagFilter,
+        Strings.DockViewActive, Strings.DockViewArchived, Strings.DockViewTrash, Strings.DockViewAll);
+
+    private void CycleDockView(int direction, bool showLabel)
+    {
+        var (view, tag) = DockViewCycle.Next(_settings?.DockView ?? DockViewKind.Active, _settings?.DockTagFilter, BuildViewCounts(), direction);
+        _coordinator.SetDockView(view, tag);
+        HoldOpenForNextInteraction();
+        if (showLabel) ShowViewLabel(CurrentViewLabel());
+    }
+
+    private void OnManageArchiveWheel(object sender, MouseWheelEventArgs e)
+    {
+        if (_settings is not { WheelChangesDockView: true } || e.Delta == 0) return;
+        CycleDockView(e.Delta < 0 ? 1 : -1, showLabel: true);
+        e.Handled = true;
+    }
+
+    private System.Windows.Controls.Primitives.Popup? _viewLabelPopup;
+    private TextBlock? _viewLabelText;
+    private readonly System.Windows.Threading.DispatcherTimer _viewLabelTimer = new() { Interval = TimeSpan.FromMilliseconds(1100) };
+
+    /// <summary>Un rótulo breve con el nombre de la vista a la que se acaba de llegar, sobre las pestañas; se apaga solo.</summary>
+    private void ShowViewLabel(string text)
+    {
+        if (_viewLabelPopup is null)
+        {
+            _viewLabelText = new TextBlock { FontSize = 13, FontWeight = FontWeights.SemiBold };
+            _viewLabelText.SetResourceReference(TextBlock.ForegroundProperty, "AlduneTextStrongBrush");
+            var border = new Border { Padding = new Thickness(12, 6, 12, 6), BorderThickness = new Thickness(1), Child = _viewLabelText, IsHitTestVisible = false };
+            border.SetResourceReference(Border.BackgroundProperty, "AlduneRaisedBrush");
+            border.SetResourceReference(Border.BorderBrushProperty, "AlduneBorderSubtleBrush");
+            border.SetResourceReference(Border.CornerRadiusProperty, "AlduneRadius6");
+            _viewLabelPopup = new System.Windows.Controls.Primitives.Popup
+            {
+                Child = border, AllowsTransparency = true, StaysOpen = true, Placement = PlacementMode.Center, IsHitTestVisible = false
+            };
+            _viewLabelTimer.Tick += (_, _) => { _viewLabelTimer.Stop(); _viewLabelPopup.IsOpen = false; };
+        }
+
+        _viewLabelText!.Text = text;
+        _viewLabelPopup.PlacementTarget = TabsScroll;
+        _viewLabelPopup.IsOpen = true;
+        _viewLabelTimer.Stop();
+        _viewLabelTimer.Start();
+    }
+
+    /// <summary>El engranaje dice en qué vista está el dock (tooltip) y lleva un punto si no es «Activas».</summary>
+    private void UpdateViewIndicator()
+    {
+        var view = _settings?.DockView ?? DockViewKind.Active;
+        ViewFilterDot.Visibility = view == DockViewKind.Active ? Visibility.Collapsed : Visibility.Visible;
+        ManageArchiveButton.ToolTip = view == DockViewKind.Active ? Strings.ManageNotesTooltip : $"{Strings.ManageNotesTooltip} · {CurrentViewLabel()}";
     }
 
     private void OnDockViewPopupOpened(object sender, EventArgs e)

@@ -641,11 +641,17 @@
                     </Button>
                     <Button x:Name="ManageArchiveButton" Click="OnManageArchiveClick"
                             PreviewMouseRightButtonUp="OnManageArchiveRightClick"
+                            PreviewMouseWheel="OnManageArchiveWheel"
                             Width="32" Height="32"
                             Style="{StaticResource CircularIconButtonStyle}"
                             ToolTip="{x:Static res:Strings.ManageNotesTooltip}"
                             AutomationProperties.Name="{x:Static res:Strings.ManageNotesTooltip}">
-                        <TextBlock Text="&#xE713;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" FontSize="14" />
+                        <Grid>
+                            <TextBlock Text="&#xE713;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" FontSize="14" />
+                            <!-- Un punto cuando el dock no enseña «Activas»: hay un filtro (etiqueta, archivadas, papelera, todas). -->
+                            <Ellipse x:Name="ViewFilterDot" Width="6" Height="6" Fill="{DynamicResource AlduneNoticeBrush}"
+                                     HorizontalAlignment="Right" VerticalAlignment="Top" Margin="0,-5,-6,0" Visibility="Collapsed" IsHitTestVisible="False" />
+                        </Grid>
                     </Button>
                     <Button x:Name="SyncButton" Click="OnSyncClick"
                             PreviewMouseRightButtonUp="OnSyncRightClick"
@@ -783,6 +789,8 @@
                                        Foreground="{DynamicResource AlduneTextWarmBrush}" FontSize="11" FontWeight="SemiBold"
                                        Margin="8,3,8,6" />
                             <Button Content="{x:Static res:Strings.DockViewActive}" Tag="Active"
+                                    Click="OnDockViewChoiceClick" Style="{StaticResource NoteMenuItemStyle}" />
+                            <Button Content="{x:Static res:Strings.DockViewAll}" Tag="All"
                                     Click="OnDockViewChoiceClick" Style="{StaticResource NoteMenuItemStyle}" />
                             <Button Content="{x:Static res:Strings.DockViewArchived}" Tag="Archived"
                                     Click="OnDockViewChoiceClick" Style="{StaticResource NoteMenuItemStyle}" />
