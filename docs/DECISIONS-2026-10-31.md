@@ -88,6 +88,8 @@ Measured the ink of each icon against the centre of its button in 7 looks (round
 
 ## Still pending (end of the first working session, 2026-10-31)
 
+> **Status (2026-11-01): everything below was done** in the rounds that became Windows 2.2.0 / Android 1.1.0 (published) and 2.3.0 / 1.2.0 (built and documented). The list is kept as history.
+
 Nothing has been published. Commits are local on `main` (not pushed). Work list for Windows 2.2.0 + Android 1.1.0:
 
 1. **Pinned notes, interface** (Core, Room, mapping, vectors and tests are done): Android (`NotesViewModel.setPinned` -> `NoteService.setPinned`; "Pin to the top of the list" / "Unpin" in `NoteActionsDialog` and `NoteOptionsDialog`

@@ -6,7 +6,15 @@
 viven como un mazo de pestañas en un borde de la pantalla, se despliegan en abanico al pasar el
 ratón y se abren como ventanas propias. Sin cuenta, sin nube obligatoria, y con el contenido cifrado.
 
-[English](README.md)
+<p align="center">
+  <a href="https://github.com/NachoPola16/aldune/releases/latest"><img alt="Última versión" src="https://img.shields.io/github/v/release/NachoPola16/aldune?label=Windows&color=7a5c3a"></a>
+  <a href="https://github.com/NachoPola16/aldune/actions/workflows/ci.yml"><img alt="CI" src="https://img.shields.io/github/actions/workflow/status/NachoPola16/aldune/ci.yml?label=CI"></a>
+  <a href="LICENSE"><img alt="Licencia: GPL-3.0" src="https://img.shields.io/badge/licencia-GPL--3.0-blue"></a>
+  <img alt="Plataformas: Windows y Android" src="https://img.shields.io/badge/plataformas-Windows%20%7C%20Android-5a6b7a">
+  <img alt="Idiomas: 8" src="https://img.shields.io/badge/idiomas-8-5a7a5c">
+</p>
+
+[English](README.md) · [Descargar](#instalar) · [Android](#android) · [Cómo hemos llegado hasta aquí](docs/PROGRESS.md) (en inglés)
 
 ![Aldune: dos notas abiertas y el dock de pestañas en el borde derecho](docs/images/aldune.png)
 
@@ -138,6 +146,7 @@ Cómo se publica una versión y cómo se firma: [docs/RELEASING.md](docs/RELEASI
 
 - [`docs/SYNC.es.md`](docs/SYNC.es.md): sincronización, servidor propio y modelo de seguridad.
 - [`docs/STATUS.md`](docs/STATUS.md): estado técnico y decisiones de implementación.
+- [`docs/PROGRESS.md`](docs/PROGRESS.md): la historia del proyecto para quien lo usa (en inglés).
 - [`docs/ROADMAP.md`](docs/ROADMAP.md): lo previsto y lo descartado, con sus razones.
 - [`docs/specs/`](docs/specs/): especificaciones de diseño.
 
