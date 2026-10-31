@@ -66,3 +66,6 @@ Not the "Settings is open" signal. After the click, the cogwheel keeps keyboard 
 
 ### W4. Ctrl+F bar in the note — FIXED
 At the default size (300 px) the bar did not leave the window, but it nearly filled it: 3 px from the left edge and 26 px from the right, with the text box fixed at 120 px. Now the text box is the only elastic part (40 to 120 px) and the bar leaves the same gap on both sides (25 / 27 px); the counter reserves the width of "No results" so the bar does not jump while typing. Checked at 100 % and 150 % text size.
+
+### W5. "New note" button of the manager (requested later) — DONE
+In the header it was the only button with a box among flat window buttons and clashed in every look, worst in XP. Moved to the end of the filter row (Active / Archived / Trash / tags), as a 30 x 30 accent square with a drawn "+". Tried first in the footer: with a label the footer wraps to two lines at the default width, and the footer already holds four action buttons. The filter row's right side was empty, the button sits next to what it acts on, and the header is now only window buttons. Checked in XP light, Dark and Telecom, and at 150 % text size.
