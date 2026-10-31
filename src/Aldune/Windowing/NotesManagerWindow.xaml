@@ -29,6 +29,9 @@
         <local:NoteDateConverter x:Key="NoteDateConverter" />
 
         <Style x:Key="ToolbarButtonStyle" TargetType="Button">
+            <!-- Sin tamaño propio el botón heredaba el de la ventana (fijo) y no seguía a «Tamaño del texto»: los del pie se quedaban pequeños
+                 mientras el resto del gestor crecía. -->
+            <Setter Property="FontSize" Value="{DynamicResource AlduneTextCaption}" />
             <Setter Property="Foreground" Value="{DynamicResource AlduneTextBrush}" />
             <Setter Property="Background" Value="{DynamicResource AlduneRaisedBrush}" />
             <Setter Property="BorderThickness" Value="0" />
@@ -76,6 +79,28 @@
             <Setter Property="Background" Value="{DynamicResource AlduneAccentBrush}" />
             <Setter Property="Foreground" Value="{DynamicResource AlduneOnAccentBrush}" />
             <Setter Property="FontWeight" Value="SemiBold" />
+            <!-- Hover y pulsado con el acento más marcado (ToolbarButtonStyle los pone en gris, y el texto de acento sobre gris no se lee: contraste
+                 1,5 a 2,5). OnAccent sobre AccentHover cumple 4,5 en todos los aspectos. -->
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Grid>
+                            <Border x:Name="Bg" Background="{TemplateBinding Background}" CornerRadius="{DynamicResource AlduneRadius6}">
+                                <ContentPresenter Margin="{TemplateBinding Padding}" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                            </Border>
+                            <local:BevelEdge OnlyWhenSquare="True" EdgeThickness="2" ShadowOutside="True" />
+                        </Grid>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Bg" Property="Background" Value="{DynamicResource AlduneAccentHoverBrush}" />
+                            </Trigger>
+                            <Trigger Property="IsPressed" Value="True">
+                                <Setter TargetName="Bg" Property="Background" Value="{DynamicResource AlduneAccentHoverBrush}" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
         </Style>
 
         <Style x:Key="LinkButtonStyle" TargetType="Button">

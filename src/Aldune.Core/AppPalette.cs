@@ -222,6 +222,23 @@ public static class AppPalette
         return Works(ring) ? ring : Fit(palette["TextStrong"]);
     }
 
+    /// <summary>Contraste mínimo del texto de un control desactivado con el fondo en que va (los botones desactivados llevan <c>Surface</c>).</summary>
+    public const double DisabledTextContrast = 3.0;
+
+    /// <summary>
+    /// La paleta con <c>TextDisabled</c> movido lo justo para que un botón o campo desactivado siga pudiéndose leer (3:1) sobre <c>Surface</c> y
+    /// <c>Ground</c>. Se hace al aplicar el tema en Windows y no en las paletas base: esas son el contrato compartido con Android (con sus
+    /// vectores), y sin esto «Archivar», «Restaurar» y «Papelera» sin selección se perdían en casi todos los aspectos (2,2 a 3,1).
+    /// </summary>
+    public static IReadOnlyDictionary<string, string> WithReadableDisabledText(IReadOnlyDictionary<string, string> palette)
+    {
+        if (!palette.TryGetValue("TextDisabled", out var disabled) || !palette.ContainsKey("Surface") || !palette.ContainsKey("Ground")) return palette;
+        var fitted = ColorFit.Foreground(ColorFit.Foreground(Opaque(disabled), Opaque(palette["Surface"]), DisabledTextContrast),
+            Opaque(palette["Ground"]), DisabledTextContrast);
+        if (string.Equals(fitted, disabled, StringComparison.OrdinalIgnoreCase)) return palette;
+        return new Dictionary<string, string>(palette) { ["TextDisabled"] = fitted };
+    }
+
     /// <summary>Si el fondo de un tema de alto contraste es claro (decide qué paleta hace de base para las claves que el sistema no da).</summary>
     public static bool IsLightHighContrast(string window) =>
         NoteColorContrast.TryGetLuminance(window, out var luminance) && luminance > 0.18;

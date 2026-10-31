@@ -99,7 +99,7 @@ public static class ThemeManager
         var palette = highContrast
             ? AppPalette.HighContrast(Hex(SystemColors.WindowColor), Hex(SystemColors.WindowTextColor), Hex(SystemColors.HighlightColor),
                 Hex(SystemColors.HighlightTextColor), Hex(SystemColors.GrayTextColor), Hex(SystemColors.HotTrackColor))
-            : AppPalette.For(mode, windowsLight, aspectColors);
+            : AppPalette.WithReadableDisabledText(AppPalette.For(mode, windowsLight, aspectColors));
         var dictionary = new ResourceDictionary();
         foreach (var (token, hex) in palette)
         {
