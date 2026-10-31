@@ -29,7 +29,7 @@ ratón y se abren como ventanas propias. Sin cuenta, sin nube obligatoria, y con
 - **Accesible**: anillo de foco visible al navegar con Tab, colores de nota que se eligen con las flechas, «Tamaño del texto» (100–150 %) y zoom de una
   nota con `Ctrl` + rueda, y alto contraste de Windows. El dock se abre con el ratón; sin ratón, el atajo opcional `Ctrl+Alt+M` (Ajustes → General)
   abre la lista de notas (Intro abre una, Espacio la marca). Más en «Ayuda rápida» de Ajustes.
-- En **español**, **inglés**, **alemán**, **francés**, **italiano** y **portugués de Brasil**.
+- En **español**, **inglés**, **alemán**, **francés**, **italiano**, **portugués de Brasil** y **japonés**.
 
 ### Aspectos
 
