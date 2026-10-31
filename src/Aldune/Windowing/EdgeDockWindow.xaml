@@ -649,8 +649,9 @@
                         <Grid>
                             <TextBlock Text="&#xE713;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" FontSize="14" />
                             <!-- Un punto cuando el dock no enseña «Activas»: hay un filtro (etiqueta, archivadas, papelera, todas). -->
-                            <Ellipse x:Name="ViewFilterDot" Width="6" Height="6" Fill="{DynamicResource AlduneNoticeBrush}"
-                                     HorizontalAlignment="Right" VerticalAlignment="Top" Margin="0,-5,-6,0" Visibility="Collapsed" IsHitTestVisible="False" />
+                            <Ellipse x:Name="ViewFilterDot" Width="9" Height="9" Fill="{DynamicResource AlduneNoticeBrush}"
+                                     Stroke="{DynamicResource AlduneGroundBrush}" StrokeThickness="1.5"
+                                     HorizontalAlignment="Right" VerticalAlignment="Top" Margin="0,-6,-7,0" Visibility="Collapsed" IsHitTestVisible="False" />
                         </Grid>
                     </Button>
                     <Button x:Name="SyncButton" Click="OnSyncClick"
