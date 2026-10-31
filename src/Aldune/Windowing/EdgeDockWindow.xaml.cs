@@ -2733,14 +2733,14 @@ public partial class EdgeDockWindow : Window
         CloseTabMenu();
     }
 
+    // Cicla la política y deja el menú abierto con el texto nuevo, igual que el menú de la propia nota: son tres estados y se ve el cambio.
     private void OnTabMenuDoneTasksClick(object sender, RoutedEventArgs e)
     {
-        if (_tabMenuNote is { } note)
-        {
-            _repository.SetCompletedTasksPolicy(note.Id, CompletedTasksPolicyRules.Next(note.CompletedTasks));
-            _coordinator.RefreshAll();
-        }
-        CloseTabMenu();
+        if (_tabMenuNote is not { } note) return;
+        note.CompletedTasks = CompletedTasksPolicyRules.Next(note.CompletedTasks);
+        _repository.SetCompletedTasksPolicy(note.Id, note.CompletedTasks);
+        TabMenuDoneTasksButton.Content = Strings.DoneTasksPolicyLabel(note.CompletedTasks);
+        _coordinator.RefreshAll();
     }
 
     private void OnTabMenuArchiveClick(object sender, RoutedEventArgs e)
