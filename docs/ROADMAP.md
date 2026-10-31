@@ -10,7 +10,7 @@ Originating session: 2026-09-06.
 
 ## Visible version of the application
 
-The current round is identified as **v2.2.0**. The version is shown in Settings and also in the tray
+The current round is identified as **v2.3.0**. The version is shown in Settings and also in the tray
 icon's text. Every major update must increment this number following SemVer: patches for fixes, a
 minor version for new features and a major version when there are incompatible changes.
 
@@ -384,11 +384,15 @@ cross-platform clients reusing the common sync format.
 - **Version history is local and never syncs**: no format change, nothing extra to protect; protected notes keep none. Android keeps the local text before a sync overwrites it, like Windows.
 - **Tag order on Android uses arrows, not drag**: larger touch targets and TalkBack. The order is per device (not synced); Windows has no custom tag order.
 - **Wheel changes dock view**: gear always; tabs only when they all fit (a turn continuing a recent change keeps cycling); Ctrl+wheel always. The label sits next to the gear, towards the screen, so it never covers notes. No extra button on the dock (it would add weight where less was asked).
-- **Not done / later**: capping the dock column height with very many notes on the top and bottom edges; filtering the Android widget by tag; checkable boxes in the widget; Italian as a sixth language (a full translation pass on `Strings.T` and `android/strings.tsv`).
+- **Not done / later**: capping the dock column height with very many notes on the top and bottom edges; filtering the Android widget by tag; checkable boxes in the widget. Italian and Japanese were added at the end of this round (machine-assisted, not reviewed by native speakers).
 
 ## 3. Discarded for now, with its reason
 
 Do not propose again without reading this first.
+
+### A shareable "join sync" link instead of the profile code — not for now (2026-11-01)
+
+The profile code already travels as text, as a QR code, or with Android's Share to Aldune (one tap on the phone), and it never carries the token. A custom-scheme link (`aldune://join#code`) would save little: chat apps and mail clients do not make such links tappable, so the person would still copy and paste. An `https` link would need a page hosted for it (and Android App Links need a verified domain), which is a service to run and a new place where an invitation could be phished or logged. Putting the access token in a link is out of the question: a link is stored, previewed and indexed by chats. Revisit only if there is a hosted page for another reason.
 
 ### Hanging indent in lists and rendered markdown editor — discarded (2026-10-09)
 
