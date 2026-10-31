@@ -383,7 +383,7 @@
     <string name="note_open_in_editor">エディターで開く</string>
     <string name="sounds_section">サウンド</string>
     <string name="sounds_enabled">サウンドを再生する</string>
-    <string name="sounds_hint">初期設定ではオフです。イベントごとに専用のサウンドを設定できます（なしも可）。スマートフォンがサイレントまたはバイブレーションのときは再生されません。</string>
+    <string name="sounds_hint">初期設定ではオフです。イベントごとに専用のサウンドを設定できます（なしも可）。スマートフォンがマナーモードのときは再生されません。</string>
     <string name="sound_volume">音量</string>
     <string name="sound_paper_pen">おすすめのサウンドを使う</string>
     <string name="sound_test">テスト</string>
@@ -410,8 +410,8 @@
     <string name="auto_export_lost">自動コピーをオフにしました。Aldune がフォルダーにアクセスできなくなりました。再開するには、設定でもう一度フォルダーを選んでください。</string>
     <string name="sound_event_text_deleted">テキストの削除</string>
     <string name="sound_choice_eraser">消しゴム</string>
-    <string name="sound_silenced_ringer">スマートフォンがサイレントまたはバイブレーションのため、Aldune のサウンドは再生されません。</string>
-    <string name="sound_silenced_dnd">おやすみモードがシステムサウンドをブロックしています。その設定で「タッチ操作音」を許可するか、おやすみモードをオフにしてください。</string>
+    <string name="sound_silenced_ringer">スマートフォンがマナーモード（サイレントまたはバイブレーション）のため、Aldune のサウンドは再生されません。</string>
+    <string name="sound_silenced_dnd">サイレント モードがシステムサウンドをブロックしています。その設定で「タッチ操作音」を許可するか、サイレント モードをオフにしてください。</string>
     <string name="edit_toggle_task">この行のタスクのチェックを切り替える</string>
     <string name="settings_tab_sync">同期</string>
     <string name="color_name_red">赤</string>

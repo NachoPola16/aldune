@@ -949,7 +949,7 @@ public static class Strings
     public static string StartupHint => T("You can also remove it from Task Manager, in the Startup tab.", "También puedes quitarlo desde Administrador de tareas, en la pestaña Inicio.",
         "Du kannst es auch über den Task-Manager entfernen, auf der Registerkarte Autostart.",
         "Vous pouvez aussi le supprimer depuis le Gestionnaire des tâches, dans l'onglet Démarrage.",
-        "Você também pode removê-lo pelo Gerenciador de Tarefas, na guia Inicializar.", "Puoi anche rimuoverlo da Gestione attività, nella scheda Avvio.", "タスク マネージャーの [スタートアップ] タブから無効にすることもできます。", "您也可以在任务管理器的“启动”选项卡中将其移除。");
+        "Você também pode removê-lo pelo Gerenciador de Tarefas, na guia Inicializar.", "Puoi anche rimuoverlo da Gestione attività, nella scheda App di avvio.", "タスク マネージャーの [スタートアップ アプリ] タブから無効にすることもできます。", "您也可以在任务管理器的“启动应用”选项卡中将其移除。");
 
     public static string TextScaleTitle => T("Text size", "Tamaño del texto", "Textgröße", "Taille du texte", "Tamanho do texto", "Dimensione del testo", "文字サイズ", "文字大小");
     public static string TextScaleHint => T(
