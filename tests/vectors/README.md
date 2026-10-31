@@ -28,7 +28,7 @@ JSON already decoded.
 
 **Note JSON (`payloadJson`).** camelCase keys: `id`, `text`, `color`, `createdAt`, `updatedAt`, `state`
 (**number**: 0 active, 1 archived, 2 trash), `screenOrigin`, `tags` (list, may be missing), `isProtected`,
-`protectedContent` (object or `null`), `protectedTitle` (clear text or `null`/absent: the visible name of a protected note, ≤ 60 characters, one line; ignored if the note is not protected), `dockPosition` (number or `null`). .NET writes non-ASCII characters as `\uXXXX`
+`protectedContent` (object or `null`), `protectedTitle` (clear text or `null`/absent: the visible name of a protected note, ≤ 60 characters, one line; ignored if the note is not protected), `dockPosition` (number or `null`). `pinnedToTop` (boolean, **optional**: written only when `true`; absent means `false`. It is the note being pinned to the top of the lists; a version that does not know it ignores it and, if it edits and re-sends the note, drops the pin). .NET writes non-ASCII characters as `\uXXXX`
 (emoji surrogate pairs too): when reading, any valid JSON works. **After decrypting you must check** that the content's `id` and
 `updatedAt` match the header's `noteId` and `updatedAt` (otherwise the note is rejected) and that a protected
 note carries `protectedContent`.

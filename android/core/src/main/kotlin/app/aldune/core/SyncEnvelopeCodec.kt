@@ -140,7 +140,10 @@ object SyncEnvelopeCodec {
         "protectedContent" to (note.protectedContent?.let(::protectedContentToJson) ?: JsonNull),
         "protectedTitle" to (normalizeTitle(note.protectedTitle?.takeIf { note.isProtected })?.let(::JsonPrimitive) ?: JsonNull),
         "dockPosition" to (note.dockPosition?.let(::JsonPrimitive) ?: JsonNull),
-    )).toString()
+    ).also {
+        // Solo si es cierto, como en Core: el contenido de una nota no fijada es idéntico al de antes.
+        if (note.pinnedToTop) it["pinnedToTop"] = JsonPrimitive(true)
+    }).toString()
 
     internal fun base64Text(json: String): String = Base64.getEncoder().encodeToString(json.toByteArray(Charsets.UTF_8))
 
@@ -218,6 +221,7 @@ object SyncEnvelopeCodec {
             dockPosition = o.double("dockPosition"),
             // Falta en lo que escribieron las versiones anteriores, y en una nota sin proteger no significa nada.
             protectedTitle = normalizeTitle(o.string("protectedTitle")?.takeIf { isProtected }),
+            pinnedToTop = o.boolean("pinnedToTop") ?: false,
         )
     }
 

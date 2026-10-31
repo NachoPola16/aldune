@@ -65,4 +65,6 @@ data class SyncNote(
     val dockPosition: Double?,
     /** Nombre visible, en claro, de una nota protegida (null = «Nota protegida»). Solo se conserva si la nota está protegida. */
     val protectedTitle: String? = null,
+    /** Fijada arriba de las listas. Opcional en el contenido cifrado: solo se escribe si es cierto y su ausencia es «no fijada». */
+    val pinnedToTop: Boolean = false,
 )

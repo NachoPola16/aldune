@@ -39,12 +39,13 @@ class KotlinOutputTest {
         protectedContent: ProtectedNoteContent? = null,
         dockPosition: Double? = null,
         protectedTitle: String? = null,
+        pinnedToTop: Boolean = false,
     ) = SyncNote(
         id = UUID.fromString(id), text = text, color = "#EBD38B",
         createdAt = OffsetDateTime.parse(createdAt), updatedAt = OffsetDateTime.parse(updatedAt),
         state = state, screenOrigin = "primary", tags = tags,
         isProtected = protectedContent != null, protectedContent = protectedContent, dockPosition = dockPosition,
-        protectedTitle = protectedTitle,
+        protectedTitle = protectedTitle, pinnedToTop = pinnedToTop,
     )
 
     private fun str(v: String?): JsonElement = if (v == null) JsonNull else JsonPrimitive(v)
@@ -61,6 +62,7 @@ class KotlinOutputTest {
         "isProtected" to JsonPrimitive(n.isProtected),
         "dockPosition" to (n.dockPosition?.let(::JsonPrimitive) ?: JsonNull),
         "protectedTitle" to str(n.protectedTitle),
+        "pinnedToTop" to JsonPrimitive(n.pinnedToTop),
     ))
 
     private fun envelopeEntry(name: String, n: SyncNote, extra: Map<String, JsonElement> = emptyMap()): JsonObject {
@@ -105,6 +107,7 @@ class KotlinOutputTest {
                 "a1b2c3d4-0008-4000-8000-000000000008", "", protectedContent = protectedContent, protectedTitle = "Banco ñ ☐"),
                 extra = mapOf("protectedPassword" to JsonPrimitive(protectedPassword),
                     "protectedPlaintext" to JsonPrimitive(protectedPlaintext))),
+            envelopeEntry("kotlin: fijada arriba", note("a1b2c3d4-0009-4000-8000-000000000009", "Importante\ncuerpo", pinnedToTop = true)),
         )
 
         val deletedAt = OffsetDateTime.parse("2026-10-17T11:00:00+00:00")
@@ -178,6 +181,7 @@ class KotlinOutputTest {
             assertEquals(v.getValue("expected").jsonObject.str("id"), note.id.toString())
             assertEquals(v.getValue("expected").jsonObject.str("text"), note.text)
             assertEquals(v.getValue("expected").jsonObject["protectedTitle"]?.jsonPrimitive?.contentOrNull, note.protectedTitle)
+            assertEquals(v.getValue("expected").jsonObject["pinnedToTop"]?.jsonPrimitive?.content?.toBoolean() ?: false, note.pinnedToTop)
             val password = v["protectedPassword"]?.jsonPrimitive?.content
             if (password != null)
                 assertEquals(v.str("protectedPlaintext"), ProtectedNotes.tryUnprotect(note.protectedContent!!, password))

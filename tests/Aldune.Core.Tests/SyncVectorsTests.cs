@@ -29,12 +29,12 @@ public sealed class SyncVectorsTests
         DateTimeOffset.Parse(iso, null, System.Globalization.DateTimeStyles.RoundtripKind);
 
     private static Note MakeNote(string id, string text, NoteState state, string[] tags, double? dock,
-        bool isProtected = false, ProtectedNoteContent? content = null, string? protectedTitle = null) => new()
+        bool isProtected = false, ProtectedNoteContent? content = null, string? protectedTitle = null, bool pinned = false) => new()
     {
         Id = Guid.Parse(id), Text = text, Color = "#EBD38B",
         CreatedAt = T("2026-10-01T08:00:00.1234567+00:00"), UpdatedAt = T("2026-10-17T10:30:15.5000000+00:00"),
         State = state, ScreenOrigin = "primary", Tags = tags, DockPosition = dock,
-        IsProtected = isProtected, ProtectedContent = content, ProtectedTitle = protectedTitle
+        IsProtected = isProtected, ProtectedContent = content, ProtectedTitle = protectedTitle, IsPinnedToTop = pinned
     };
 
     private static JsonObject Expected(Note n) => new()
@@ -43,7 +43,8 @@ public sealed class SyncVectorsTests
         ["createdAt"] = n.CreatedAt.ToString("O"), ["updatedAt"] = n.UpdatedAt.ToString("O"),
         ["state"] = (int)n.State, ["screenOrigin"] = n.ScreenOrigin,
         ["tags"] = new JsonArray(n.Tags.Select(t => (JsonNode?)t).ToArray()),
-        ["isProtected"] = n.IsProtected, ["dockPosition"] = n.DockPosition, ["protectedTitle"] = n.ProtectedTitle
+        ["isProtected"] = n.IsProtected, ["dockPosition"] = n.DockPosition, ["protectedTitle"] = n.ProtectedTitle,
+        ["pinnedToTop"] = n.IsPinnedToTop
     };
 
     // El contenido cifrado del sobre es AES-GCM del TEXTO BASE64 del JSON (no del JSON directamente): ver el README.
@@ -115,7 +116,9 @@ public sealed class SyncVectorsTests
                     "Compra 🛒\n☐ pan\n☒ leche\n→ viñeta con acentos: áéíóú ñ ü ß", NoteState.Archived, ["casa", "urgente"], 2.5)),
                 NoteVector("papelera con posición", MakeNote("2f5e7d0a-3b4c-4d8e-9f0a-1c2d3e4f5a6b", "", NoteState.Trashed, [], -3.25)),
                 NoteVector("protegida", MakeNote("3a6f8e1b-4c5d-4e9f-8a1b-2d3e4f5a6b7c", "", NoteState.Active, [], null, true, protectedContent)),
-                NoteVector("protegida con nombre visible", MakeNote("4b7a9f2c-5d6e-4fa0-9b2c-3e4f5a6b7c8d", "", NoteState.Active, [], null, true, protectedContent, "Banco ☐"))),
+                NoteVector("protegida con nombre visible", MakeNote("4b7a9f2c-5d6e-4fa0-9b2c-3e4f5a6b7c8d", "", NoteState.Active, [], null, true, protectedContent, "Banco ☐")),
+                // Fijada arriba: campo opcional del contenido cifrado (solo se escribe si es cierto). Las demás notas no lo traen y se leen como no fijadas.
+                NoteVector("fijada arriba", MakeNote("5c8b0a3d-6e7f-4ab1-8c3d-4f5a6b7c8d9e", "Importante\ncuerpo", NoteState.Active, ["casa"], 1.5, pinned: true))),
             ["tombstones"] = new JsonArray(
                 TombstoneVector("borrado firmado", authentic, true),
                 TombstoneVector("borrado con fecha falsificada", forged, false)),
@@ -177,6 +180,8 @@ public sealed class SyncVectorsTests
         Assert.True(expected["dockPosition"]?.GetValue<double>() == note.DockPosition, $"{name}: dockPosition");
         // Un fichero anterior al nombre visible no trae la clave: equivale a «sin nombre».
         Assert.True(expected["protectedTitle"]?.GetValue<string>() == note.ProtectedTitle, $"{name}: protectedTitle");
+        // Un fichero anterior a «fijada arriba» no trae la clave: equivale a «no fijada».
+        Assert.True((expected["pinnedToTop"]?.GetValue<bool>() ?? false) == note.IsPinnedToTop, $"{name}: pinnedToTop");
     }
 
     [Theory]

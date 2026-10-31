@@ -28,6 +28,17 @@ class SyncEnvelopeWriteTest {
     }
 
     @Test
+    fun `el pin solo se escribe si es cierto, asi una nota no fijada produce el mismo contenido que antes`() {
+        val plain = vectorNotes().first { it.first == "nota simple" }.third
+        val unpinned = Json.parseToJsonElement(SyncEnvelopeCodec.noteToJson(plain)).jsonObject
+        assertEquals(false, unpinned.containsKey("pinnedToTop"))
+        val pinned = Json.parseToJsonElement(SyncEnvelopeCodec.noteToJson(plain.copy(pinnedToTop = true))).jsonObject
+        assertEquals(true, pinned.getValue("pinnedToTop").jsonPrimitive.content.toBoolean())
+        val reread = SyncEnvelopeCodec.decryptNote(SyncEnvelopeCodec.createNote(plain.copy(pinnedToTop = true), key, "device-k"), key)
+        assertEquals(true, reread.pinnedToTop)
+    }
+
+    @Test
     fun `el nombre visible viaja en claro dentro del contenido y solo en notas protegidas`() {
         val named = vectorNotes().first { it.first == "protegida con nombre visible" }.third
         val json = Json.parseToJsonElement(SyncEnvelopeCodec.noteToJson(named)).jsonObject

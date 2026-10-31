@@ -48,6 +48,8 @@ class SyncEnvelopeReadTest {
             assertEquals(expected.getValue("isProtected").jsonPrimitive.content.toBoolean(), note.isProtected)
             // Un fichero de vectores anterior al nombre visible no trae la clave: es «sin nombre».
             assertEquals(expected["protectedTitle"]?.jsonPrimitive?.contentOrNull, note.protectedTitle)
+            // Un fichero anterior a «fijada arriba» no trae la clave: es «no fijada».
+            assertEquals(expected["pinnedToTop"]?.jsonPrimitive?.content?.toBoolean() ?: false, note.pinnedToTop)
             val dock = expected.getValue("dockPosition").jsonPrimitive
             if (dock.content == "null") assertNull(note.dockPosition) else assertEquals(dock.content.toDouble(), note.dockPosition)
         }
@@ -73,6 +75,18 @@ class SyncEnvelopeReadTest {
         val plain = SyncEnvelopeCodec.decryptNote(
             SyncEnvelopeCodec.deserialize(byName.getValue("protegida").str("envelopeJson")), key)
         assertNull(plain.protectedTitle)
+    }
+
+    @Test
+    fun `solo el vector fijada arriba trae el pin y los demas se leen como no fijados`() {
+        val byName = Vectors.objects("envelopes").associateBy { it.str("name") }
+        val pinned = SyncEnvelopeCodec.decryptNote(SyncEnvelopeCodec.deserialize(byName.getValue("fijada arriba").str("envelopeJson")), key)
+        assertEquals(true, pinned.pinnedToTop)
+        // Lo que escribe una versión que no conoce el campo (cualquiera de los demás vectores) no lo trae: no fijada.
+        for (name in listOf("nota simple", "protegida", "unicode, casillas y etiquetas")) {
+            val note = SyncEnvelopeCodec.decryptNote(SyncEnvelopeCodec.deserialize(byName.getValue(name).str("envelopeJson")), key)
+            assertEquals(false, note.pinnedToTop, name)
+        }
     }
 
     @Test
