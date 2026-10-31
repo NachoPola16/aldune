@@ -804,6 +804,17 @@ public static class Strings
         "Tag löschen", "Supprimer le tag", "Excluir tag", "Elimina etichetta", "タグを削除", "删除标签");
     public static string MoveTagUpTooltip(string tag) => T($"Move {tag} up", $"Subir {tag}", $"{tag} nach oben", $"Monter {tag}", $"Subir {tag}", $"Sposta {tag} su", $"{tag} を上へ移動", $"将 {tag} 上移");
     public static string MoveTagDownTooltip(string tag) => T($"Move {tag} down", $"Bajar {tag}", $"{tag} nach unten", $"Descendre {tag}", $"Descer {tag}", $"Sposta {tag} giù", $"{tag} を下へ移動", $"将 {tag} 下移");
+    public static string ViewLabelSectionTitle => T("View name above the notes", "Nombre de la vista sobre las notas", "Name der Ansicht über den Notizen",
+        "Nom de la vue au-dessus des notes", "Nome da vista acima das notas", "Nome della vista sopra le note", "ノートの上にビュー名を表示", "在便笺上方显示视图名称");
+    public static string ViewLabelHint => T("Click it to change the view.", "Púlsalo para cambiar de vista.", "Anklicken, um die Ansicht zu wechseln.",
+        "Cliquez dessus pour changer de vue.", "Clique nele para mudar de vista.", "Fai clic per cambiare vista.", "クリックするとビューを切り替えられます。", "点击它即可切换视图。");
+    public static string ViewLabelWhenChanging => T("Only when I change the view", "Solo al cambiar de vista", "Nur beim Wechseln der Ansicht",
+        "Seulement au changement de vue", "Somente ao mudar de vista", "Solo quando cambio vista", "ビューを切り替えたときだけ", "仅在切换视图时");
+    public static string ViewLabelWhenFiltered => T("Fixed while a tag, archive or trash is shown", "Fijo mientras se ve una etiqueta, el archivo o la papelera",
+        "Fest, solange ein Tag, das Archiv oder der Papierkorb gezeigt wird", "Fixe tant qu'un tag, les archives ou la corbeille sont affichés",
+        "Fixo enquanto uma tag, o arquivo ou a lixeira estão à vista", "Fisso mentre si vede un'etichetta, l'archivio o il cestino", "タグ・アーカイブ・ゴミ箱の表示中は固定", "查看标签、归档或回收站时固定显示");
+    public static string ViewLabelAlways => T("Always fixed (also in Active)", "Siempre fijo (también en Activas)", "Immer fest (auch bei Aktiv)",
+        "Toujours fixe (aussi dans Actives)", "Sempre fixo (também em Ativas)", "Sempre fisso (anche in Attive)", "常に固定（アクティブも含む）", "始终固定（包括活动笔记）");
     public static string AllTags => T("All tags", "Todas las etiquetas",
         "Alle Tags", "Tous les tags", "Todas as tags", "Tutte le etichette", "すべてのタグ", "所有标签");
     public static string TagFilterTooltip => T("Filter by tag", "Filtrar por etiqueta",

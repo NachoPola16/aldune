@@ -80,6 +80,7 @@ public static class ConfigFields
         NullableUInt("managerHotkeyKey", nameof(AppSettings.ManagerHotkeyKey), ConfigSections.Settings, s => s.ManagerHotkeyKey, (s, v) => s.ManagerHotkeyKey = v),
         Enum<EdgePosition>("dockEdge", nameof(AppSettings.DockEdge), ConfigSections.Settings, s => s.DockEdge, (s, v) => s.DockEdge = v),
         Enum<DockAlignment>("dockAlignment", nameof(AppSettings.DockAlignment), ConfigSections.Settings, s => s.DockAlignment, (s, v) => s.DockAlignment = v),
+        Enum<DockViewLabelMode>("dockViewLabel", nameof(AppSettings.DockViewLabel), ConfigSections.Settings, s => s.DockViewLabel, (s, v) => s.DockViewLabel = v),
         Enum<DockViewKind>("dockView", nameof(AppSettings.DockView), ConfigSections.Settings, s => s.DockView, (s, v) => s.DockView = v),
         Bool("keepDockOpen", nameof(AppSettings.KeepDockOpen), ConfigSections.Settings, s => s.KeepDockOpen, (s, v) => s.KeepDockOpen = v),
         Bool("showNotePreview", nameof(AppSettings.ShowNotePreview), ConfigSections.Settings, s => s.ShowNotePreview, (s, v) => s.ShowNotePreview = v),

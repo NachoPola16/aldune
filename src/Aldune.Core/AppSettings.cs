@@ -184,6 +184,9 @@ public sealed class AppSettings
     /// campo carga como centro, la colocación de siempre.</summary>
     public DockAlignment DockAlignment { get; set; } = DockAlignment.Center;
 
+    /// <summary>When the dock shows the name of its view above the notes (see <see cref="DockViewLabelMode"/>). Windows only.</summary>
+    public DockViewLabelMode DockViewLabel { get; set; } = DockViewLabelMode.WhenFiltered;
+
     /// <summary>
     /// Si las notas deben recordar su última posición en el escritorio cuando el usuario las mueve
     /// (comportamiento libre tipo post-it). Por defecto <c>true</c>. El tamaño es otro ajuste

@@ -10,7 +10,7 @@ Originating session: 2026-09-06.
 
 ## Visible version of the application
 
-The current round is identified as **v2.5.0**. The version is shown in Settings and also in the tray
+The current round is identified as **v2.6.0**. The version is shown in Settings and also in the tray
 icon's text. Every major update must increment this number following SemVer: patches for fixes, a
 minor version for new features and a major version when there are incompatible changes.
 
@@ -389,7 +389,7 @@ cross-platform clients reusing the common sync format.
 ### Round 2.4.0 (Windows) — decisions (2026-11-01)
 
 - **View label**: one pill, always in the same place — centred on the notes column at the free end of the strip (above the first note on the left, right and bottom docks; below the last one on the top dock, where the button bar hugs the screen edge). A custom popup placement never flips sides, which is what made it jump around the cogwheel. It fades on its own after about a second.
-- **Filter indicator**: the notification-like dot on the cogwheel is gone (the glyph was never off-centre: ink measured at 0.0 px in most looks). An accent ring replaced it in 2.4.0 and was dropped in 2.5.0 (it read as a focus ring and shared the colour of «+»). Now the view label stays up above the notes while the view is not «Active» and the fan is open; folded, nothing floats. The tooltip still names the view.
+- **Filter indicator**: the notification-like dot on the cogwheel is gone (the glyph was never off-centre: ink measured at 0.0 px in most looks). An accent ring replaced it in 2.4.0 and was dropped in 2.5.0 (it read as a focus ring and shared the colour of «+»). Since 2.5.0 the view label can stay up above the notes, and since 2.6.0 it is a setting (`DockViewLabel`, Windows only): «fixed while a tag, archive or trash is shown» (default), «always fixed» (Active too) or «only when I change the view» (the 2.4 flash). Fixed, it is a control: a click opens the same view menu as the cogwheel's right click, and a chevron says so. It is the twin of the button bar: same pill and look-by-look style, same 42 px height, 8 px of visible air to the notes (measured on the four edges and with 25 and 40 notes), and the hover zone of the dock includes it. If it does not fit on the screen (dock aligned to a screen end) it goes beside the first note, on the screen side; folded, nothing floats. The tooltip still names the view.
 - **Wheel session**: while the wheel keeps turning (1.5 s after the last notch) a global wheel hook, limited to the area the dock covered when the session began, keeps changing the view, so switching to a tag with few notes never leaves the cursor outside the dock. Nothing is painted: an almost transparent background was tried first and rendered as black bands on some systems.
 - **Gap between the button bar and the notes**: 8 px visible on the four edges (was 16).
 - **Pin colour**: the row's own ink (what the title uses) instead of the softer note «label» tone; filled glyph when pinned, outline at 0.45 when not.

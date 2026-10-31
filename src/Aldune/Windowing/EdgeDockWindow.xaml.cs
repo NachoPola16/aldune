@@ -1555,8 +1555,27 @@ public partial class EdgeDockWindow : Window
     private bool IsOverDockTarget(IReadOnlyList<Aldune.Core.Rect> surfaces, double cursorX, double cursorY) =>
         _fanState.IsExpanded && DockHoverZone.Contains(surfaces, cursorX, cursorY, 0);
 
+    private Aldune.Core.Rect? ViewLabelRect()
+    {
+        if (!ViewLabelPinned || _viewLabelPopup is not { IsOpen: true, Child: FrameworkElement label } || label.ActualWidth <= 0) return null;
+        try
+        {
+            var origin = label.PointToScreen(new Point(0, 0));
+            var dpi = VisualTreeHelper.GetDpi(this);
+            const double slop = ViewLabelGap + 2;
+            return new Aldune.Core.Rect(origin.X / dpi.DpiScaleX - slop, origin.Y / dpi.DpiScaleY - slop, label.ActualWidth + slop * 2, label.ActualHeight + slop * 2);
+        }
+        catch (InvalidOperationException)
+        {
+            return null; // the popup went away between the check and the read
+        }
+    }
+
     private IEnumerable<Aldune.Core.Rect> ExpandedSurfaces()
     {
+        // The fixed view label counts as part of the dock (a little margin bridges the gap to the notes): going up to click it must not fold the fan.
+        if (ViewLabelRect() is { } labelRect) yield return labelRect;
+
         foreach (var element in new FrameworkElement[] { FooterBorder, ScrollArrowOverlay, ScrollOverlay })
             if (ElementRect(element) is { } rect) yield return rect;
 
@@ -1819,22 +1838,79 @@ public partial class EdgeDockWindow : Window
         e.Handled = true;
     }
 
-    private const double ViewLabelGap = 4;
+    private const double ViewLabelGap = 4;      // margin of the hover surface around the label
+    private const double ViewLabelAir = 8;      // visible air between the label and the notes: the same as above the button bar
+    private const double ViewLabelSideGap = 10; // distance to the notes when the label has to go beside them
     private System.Windows.Controls.Primitives.Popup? _viewLabelPopup;
     private TextBlock? _viewLabelText;
+    private TextBlock? _viewLabelChevron;
+    private Border? _viewLabelBorder;
+
+    /// <summary>A click on the fixed view label opens the same view menu as the cogwheel's right click.</summary>
+    private void OnViewLabelClick(object sender, MouseButtonEventArgs e)
+    {
+        if (!ViewLabelPinned) return;
+        e.Handled = true;
+        if (_dockViewToggle.ShouldConsumeOpen()) return;
+        OpenDockViewPopupFrom(_viewLabelBorder!);
+    }
     private readonly System.Windows.Threading.DispatcherTimer _viewLabelTimer = new() { Interval = TimeSpan.FromMilliseconds(1100) };
 
     /// <summary>Un rótulo breve con el nombre de la vista a la que se acaba de llegar, sobre las pestañas; se apaga solo.</summary>
+    /// <summary>Whether a label of <paramref name="height"/> fits on the screen at the free end of the strip (see <see cref="ShowViewLabel"/>).</summary>
+    private bool ViewLabelFitsOnScreen(double height)
+    {
+        try
+        {
+            var top = TabsScroll.TranslatePoint(new Point(0, 0), this);
+            double stripTop = Top + top.Y, stripBottom = stripTop + TabsScroll.ActualHeight;
+            const double margin = 2;
+            return _edge == EdgePosition.Top
+                ? stripBottom + ViewLabelAir + height <= _workingArea.Y + _workingArea.Height - margin
+                : stripTop + EdgeGeometry.TabShadowHeadroom - ViewLabelAir - height >= _workingArea.Y + margin;
+        }
+        catch (InvalidOperationException)
+        {
+            return true;
+        }
+    }
+
     private void ShowViewLabel(string text)
     {
         if (_viewLabelPopup is null)
         {
-            _viewLabelText = new TextBlock { FontSize = 13, FontWeight = FontWeights.SemiBold };
+            _viewLabelText = new TextBlock
+            {
+                FontSize = 13, FontWeight = FontWeights.SemiBold, MaxWidth = 220, TextTrimming = TextTrimming.CharacterEllipsis,
+                VerticalAlignment = VerticalAlignment.Center
+            };
             _viewLabelText.SetResourceReference(TextBlock.ForegroundProperty, "AlduneTextStrongBrush");
-            var border = new Border { Padding = new Thickness(12, 6, 12, 6), BorderThickness = new Thickness(1), Child = _viewLabelText, IsHitTestVisible = false };
-            border.SetResourceReference(Border.BackgroundProperty, "AlduneRaisedBrush");
-            border.SetResourceReference(Border.BorderBrushProperty, "AlduneBorderSubtleBrush");
-            border.SetResourceReference(Border.CornerRadiusProperty, "AlduneRadius6");
+            // The chevron only shows when the label is fixed: that is when it is a control (a click opens the view menu).
+            _viewLabelChevron = new TextBlock
+            {
+                Text = "", FontFamily = new FontFamily("Segoe Fluent Icons, Segoe MDL2 Assets"), FontSize = 9,
+                Margin = new Thickness(8, 1, 0, 0), VerticalAlignment = VerticalAlignment.Center, Visibility = Visibility.Collapsed
+            };
+            _viewLabelChevron.SetResourceReference(TextBlock.ForegroundProperty, "AlduneTextSoftBrush");
+            var content = new StackPanel { Orientation = Orientation.Horizontal, Margin = new Thickness(11, 0, 11, 0), VerticalAlignment = VerticalAlignment.Center };
+            content.Children.Add(_viewLabelText);
+            content.Children.Add(_viewLabelChevron);
+            // Twin of the button bar (FooterBorder): same pill, same style per look (XP gradient included), same bevel and the same height, so
+            // the two read as the top and bottom of one frame. A translucent layer is the hover feedback: a local background would
+            // override the style's per-look triggers.
+            var hover = new Border { Margin = new Thickness(-5), Opacity = 0.55, Visibility = Visibility.Collapsed, IsHitTestVisible = false };
+            hover.SetResourceReference(Border.BackgroundProperty, "AlduneHoverBrush");
+            hover.SetResourceReference(Border.CornerRadiusProperty, "AlduneRadius21");
+            var inner = new Grid();
+            inner.Children.Add(hover);
+            inner.Children.Add(content);
+            inner.Children.Add(new BevelEdge { Margin = new Thickness(-FooterPadding), ShadowOutside = true });
+            var border = new Border { Padding = new Thickness(FooterPadding), Child = inner, IsHitTestVisible = false, Style = (Style)FindResource("XpBarBorderStyle") };
+            border.SetResourceReference(Border.CornerRadiusProperty, "AlduneRadius21");
+            border.MouseEnter += (_, _) => hover.Visibility = Visibility.Visible;
+            border.MouseLeave += (_, _) => hover.Visibility = Visibility.Collapsed;
+            border.MouseLeftButtonUp += OnViewLabelClick;
+            _viewLabelBorder = border;
             _viewLabelPopup = new System.Windows.Controls.Primitives.Popup
             {
                 Child = border, AllowsTransparency = true, StaysOpen = true, IsHitTestVisible = false
@@ -1843,18 +1919,38 @@ public partial class EdgeDockWindow : Window
         }
 
         _viewLabelText!.Text = text;
+        // Fixed = a control (hand cursor, chevron, clickable); the one-second flash after a change stays inert so it cannot swallow a click.
+        bool pinned = ViewLabelPinned;
+        _viewLabelChevron!.Visibility = pinned ? Visibility.Visible : Visibility.Collapsed;
+        _viewLabelBorder!.IsHitTestVisible = pinned;
+        _viewLabelBorder.Cursor = pinned ? Cursors.Hand : null;
+        _viewLabelPopup.IsHitTestVisible = pinned;
         // Always in the same place: centred on the notes column, at the free end of the strip (opposite to the button bar: above the first
         // note on the left, right and bottom docks; below the last one on the top dock, where the bar hugs the screen edge). A custom
         // placement never flips to the other side of its target the way PlacementMode.Left/Right/Bottom did when the label did not fit,
         // which is what made it jump from one side of the gear to the other. It never covers a note either.
         // With no notes there is no strip, so it falls back to being centred under/over the gear.
+        // Same height as the button bar and, like it, 8 px of visible air to the notes: on the left, right and bottom docks the first card sits
+        // TabShadowHeadroom below the top of the strip (that headroom is transparent), so the label overlaps it; on the top dock the last card
+        // is flush with the bottom of the strip. If that does not fit on the screen (dock aligned to a screen end, or a very long list) the
+        // label goes beside the first note, on the screen side, instead of covering notes.
+        _viewLabelBorder!.Height = FooterBorder.ActualHeight > 0 ? FooterBorder.ActualHeight : 42;
         _viewLabelPopup.PlacementTarget = _noteCount > 0 ? TabsScroll : ManageArchiveButton;
         _viewLabelPopup.Placement = PlacementMode.Custom;
+        bool onStrip = _noteCount > 0;
+        bool fits = !onStrip || ViewLabelFitsOnScreen(_viewLabelBorder.Height);
         _viewLabelPopup.CustomPopupPlacementCallback = (popupSize, targetSize, _) =>
         {
-            double x = (targetSize.Width - popupSize.Width) / 2;
             bool below = _edge == EdgePosition.Top;
-            double y = below ? targetSize.Height + ViewLabelGap : -popupSize.Height - ViewLabelGap;
+            if (onStrip && !fits)
+            {
+                // Beside the first note (or the last, on the top dock), towards the inside of the screen.
+                double sideX = _edge == EdgePosition.Left ? targetSize.Width + ViewLabelSideGap : -popupSize.Width - ViewLabelSideGap;
+                double sideY = below ? targetSize.Height - popupSize.Height : EdgeGeometry.TabShadowHeadroom;
+                return [new CustomPopupPlacement(new Point(sideX, sideY), PopupPrimaryAxis.Vertical)];
+            }
+            double x = (targetSize.Width - popupSize.Width) / 2;
+            double y = below ? targetSize.Height + ViewLabelAir : EdgeGeometry.TabShadowHeadroom - ViewLabelAir - popupSize.Height;
             return [new CustomPopupPlacement(new Point(x, y), PopupPrimaryAxis.Horizontal)];
         };
         // A popup does not follow its target when the strip changes size: nudging the offset makes it place itself again.
@@ -1875,9 +1971,20 @@ public partial class EdgeDockWindow : Window
         Dispatcher.BeginInvoke(DispatcherPriority.Loaded, new Action(RefreshViewLabel));
     }
 
-    private bool ViewLabelPinned =>
-        (_settings?.DockView ?? DockViewKind.Active) != DockViewKind.Active && _noteCount > 0 && _fanState.IsExpanded
-        && IsVisible && !_hiddenByFullscreenApp;
+    /// <summary>
+    /// Whether the view label is fixed above the notes right now: depends on the user's choice (<see cref="DockViewLabelMode"/>), on the view
+    /// («Active» only counts in the «always» mode) and on the fan being open, so nothing floats over the desktop while the dock is folded.
+    /// </summary>
+    private bool ViewLabelPinned
+    {
+        get
+        {
+            var mode = _settings?.DockViewLabel ?? DockViewLabelMode.WhenFiltered;
+            bool filtered = (_settings?.DockView ?? DockViewKind.Active) != DockViewKind.Active;
+            bool wanted = mode == DockViewLabelMode.Always || (mode == DockViewLabelMode.WhenFiltered && filtered);
+            return wanted && _noteCount > 0 && _fanState.IsExpanded && IsVisible && !_hiddenByFullscreenApp;
+        }
+    }
 
     /// <summary>Keeps the view label up while it should be pinned (filtered view, fan open) and takes it down when it should not.</summary>
     private void RefreshViewLabel()
@@ -1905,7 +2012,9 @@ public partial class EdgeDockWindow : Window
         PollHoverState();
     }
 
-    private void OpenDockViewPopup()
+    private void OpenDockViewPopup() => OpenDockViewPopupFrom(ManageArchiveButton);
+
+    private void OpenDockViewPopupFrom(UIElement trigger)
     {
         DockViewPopup.PlacementTarget = ManageArchiveButton;
         DockViewPopup.Placement = _edge switch
@@ -1916,7 +2025,7 @@ public partial class EdgeDockWindow : Window
             _ => PlacementMode.Left
         };
         BuildDockTagChoices();
-        _dockViewToggle.SetTrigger(ManageArchiveButton);
+        _dockViewToggle.SetTrigger(trigger);
         DockViewPopup.IsOpen = true;
     }
 

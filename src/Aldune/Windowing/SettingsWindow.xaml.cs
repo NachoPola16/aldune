@@ -977,6 +977,7 @@ public partial class SettingsWindow : Window
         AddEdgeRadio(EdgePosition.Top, Strings.EdgeTop);
         AddEdgeRadio(EdgePosition.Bottom, Strings.EdgeBottom);
         PopulateAlignment();
+        PopulateViewLabelModes();
     }
 
     /// <summary>Dónde va el dock a lo largo de su borde. Los extremos se llaman según el borde: en los
@@ -988,6 +989,39 @@ public partial class SettingsWindow : Window
         AddAlignRadio(DockAlignment.Start, side ? Strings.EdgeTop : Strings.EdgeLeft);
         AddAlignRadio(DockAlignment.Center, Strings.AlignCenter);
         AddAlignRadio(DockAlignment.End, side ? Strings.EdgeBottom : Strings.EdgeRight);
+    }
+
+    /// <summary>When the dock shows the name of its view above the notes (Core: <see cref="DockViewLabelMode"/>).</summary>
+    private void PopulateViewLabelModes()
+    {
+        ViewLabelListContainer.Children.Clear();
+        AddViewLabelRadio(DockViewLabelMode.WhenFiltered, Strings.ViewLabelWhenFiltered);
+        AddViewLabelRadio(DockViewLabelMode.Always, Strings.ViewLabelAlways);
+        AddViewLabelRadio(DockViewLabelMode.WhenChanging, Strings.ViewLabelWhenChanging);
+    }
+
+    private void AddViewLabelRadio(DockViewLabelMode mode, string label)
+    {
+        var radio = new RadioButton
+        {
+            GroupName = "ViewLabelGroup",
+            Style = (Style)FindResource("MonitorRadioStyle"),
+            Tag = mode,
+            Content = label,
+            IsChecked = _settings.DockViewLabel == mode
+        };
+        radio.Checked += OnViewLabelModeChanged;
+        ViewLabelListContainer.Children.Add(radio);
+    }
+
+    private void OnViewLabelModeChanged(object sender, RoutedEventArgs e)
+    {
+        if (sender is RadioButton { IsChecked: true, Tag: DockViewLabelMode mode } && _settings.DockViewLabel != mode)
+        {
+            _settings.DockViewLabel = mode;
+            _settingsService.Save(_settings);
+            _coordinator?.RefreshAll();
+        }
     }
 
     private void AddAlignRadio(DockAlignment alignment, string label)

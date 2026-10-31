@@ -150,6 +150,25 @@ internal static class Program
         coordinator.SetDockView(DockViewKind.Active, null);
         Pump(TimeSpan.FromMilliseconds(1700));
         Check(typeof(EdgeDockWindow).GetField("_viewLabelPopup", PrivateInstance)!.GetValue(dock) is not Popup { IsOpen: true }, "The view label goes away on the Active view");
+        // The mode decides when the label is fixed: «always» also in Active, «only when I change» never. A click on the fixed label opens the view menu.
+        Popup? Label() => typeof(EdgeDockWindow).GetField("_viewLabelPopup", PrivateInstance)!.GetValue(dock) as Popup;
+        settings.DockViewLabel = DockViewLabelMode.Always;
+        coordinator.RefreshAll();
+        Pump(TimeSpan.FromMilliseconds(1700));
+        Check(Label() is { IsOpen: true }, "In the «always» mode the view label is fixed in Active too");
+        var labelBorder = (Border)Label()!.Child;
+        Check(labelBorder.IsHitTestVisible, "The fixed view label is clickable");
+        labelBorder.RaiseEvent(new System.Windows.Input.MouseButtonEventArgs(System.Windows.Input.Mouse.PrimaryDevice, 0, System.Windows.Input.MouseButton.Left)
+            { RoutedEvent = UIElement.MouseLeftButtonUpEvent });
+        Pump(TimeSpan.FromMilliseconds(200));
+        Check(((Popup)dock.FindName("DockViewPopup")).IsOpen, "Clicking the fixed view label opens the view menu");
+        ((Popup)dock.FindName("DockViewPopup")).IsOpen = false;
+        settings.DockViewLabel = DockViewLabelMode.WhenChanging;
+        coordinator.SetDockView(DockViewKind.Tag, "smoke-tag");
+        Pump(TimeSpan.FromMilliseconds(1700));
+        Check(Label() is not { IsOpen: true }, "In the «only when I change» mode the label is not fixed even on a filtered view");
+        settings.DockViewLabel = DockViewLabelMode.WhenFiltered;
+        coordinator.SetDockView(DockViewKind.Active, null);
         settings.KeepDockOpen = false;
 
         // View label: custom placement, centred on the notes column at the free end (above for the right edge, below for the top edge).
