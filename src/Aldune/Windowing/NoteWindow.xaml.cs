@@ -1340,9 +1340,26 @@ public partial class NoteWindow : Window
         return new CheckboxZone(glyphIndex, visualRect);
     }
 
+    /// <summary>The http(s) link under a point of the body, or null. Links are plain text (see <see cref="LinkText"/>).</summary>
+    private Uri? LinkUriAt(Point position)
+    {
+        int index = TextBody.GetCharacterIndexFromPoint(position, snapToText: false);
+        if (index < 0 || LinkText.FindAt(TextBody.Text, index) is not { } span) return null;
+        return LinkText.TryGetUri(TextBody.Text.Substring(span.Start, span.Length), out var uri) ? uri : null;
+    }
+
     private void OnBodyMouseDown(object sender, MouseButtonEventArgs e)
     {
         var position = e.GetPosition(TextBody);
+
+        // Ctrl+click opens a link in the default browser. Never a plain click (that places the caret), never on its own, and only http(s).
+        if (Keyboard.Modifiers == ModifierKeys.Control && LinkUriAt(position) is { } link)
+        {
+            try { System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo(link.AbsoluteUri) { UseShellExecute = true }); }
+            catch (Exception ex) when (ex is System.ComponentModel.Win32Exception or InvalidOperationException) { /* no browser: nothing to do */ }
+            e.Handled = true;
+            return;
+        }
         if (PlaceCaretFromLeftGutter(position, e.ClickCount))
         {
             e.Handled = true;
@@ -1472,7 +1489,8 @@ public partial class NoteWindow : Window
         else
         {
             TaskHoverHighlight.Visibility = Visibility.Collapsed;
-            TextBody.Cursor = Cursors.IBeam;
+            // With Ctrl held, a link under the pointer shows the hand: that is the hint that Ctrl+click opens it.
+            TextBody.Cursor = Keyboard.Modifiers == ModifierKeys.Control && LinkUriAt(position) is not null ? Cursors.Hand : Cursors.IBeam;
         }
     }
 
