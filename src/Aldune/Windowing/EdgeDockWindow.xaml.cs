@@ -413,9 +413,11 @@ public partial class EdgeDockWindow : Window
         FooterBorder.HorizontalAlignment = HorizontalAlignment.Center;
         FooterBorder.VerticalAlignment = top ? VerticalAlignment.Top : VerticalAlignment.Bottom;
         FooterBorder.Padding = new Thickness(FooterPadding);
+        // Hueco visible de ~24 px entre la barra y las notas en los cuatro bordes: arriba la primera tarjeta ya lleva 14 px de aire de sombra
+        // (TabShadowHeadroom), así que ahí el margen es menor; abajo y en los laterales la última tarjeta queda a ras de su zona.
         FooterBorder.Margin = top
-            ? new Thickness(0, 0, 0, 8)
-            : new Thickness(0, 8, 0, 0);
+            ? new Thickness(0, 0, 0, 10)
+            : new Thickness(0, 24, 0, 0);
 
     }
 
