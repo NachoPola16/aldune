@@ -60,7 +60,7 @@ fun NoteActionsDialog(
     if (options == null && !naming && password == null) {
         // Panel inferior y no un diálogo en medio: cinco acciones de lista que se alcanzan con el pulgar y se cierran deslizando.
         // Sin la barrita de arrastre: el contenido cabe (o se desplaza) y no hay más opciones «arriba»; con ella parecía que sí.
-        ModalBottomSheet(onDismissRequest = onClose, sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true), dragHandle = null) {
+        ModalBottomSheet(onDismissRequest = onClose, sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true), shape = sheetShape(), dragHandle = null) {
                 // Con desplazamiento: en horizontal (o con letra grande) las acciones no caben y las últimas quedaban inalcanzables.
                 Column(Modifier.verticalScroll(rememberScrollState()).padding(horizontal = 24.dp).padding(top = 28.dp, bottom = 24.dp)) {
                     Text(

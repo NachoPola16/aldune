@@ -125,7 +125,7 @@ fun NoteOptionsDialog(
 
     // Un panel inferior en vez de un diálogo de pantalla casi entera: se alcanza con el pulgar y se cierra deslizando. Con una docena de controles
     // en una sola ventana había demasiado que mirar, así que Etiquetas y Recordatorio van plegados (abiertos si la nota ya tiene algo).
-    ModalBottomSheet(onDismissRequest = onClose, sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)) {
+    ModalBottomSheet(onDismissRequest = onClose, sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true), shape = sheetShape()) {
             Column(
                 Modifier.verticalScroll(rememberScrollState()).padding(horizontal = 24.dp).padding(bottom = 24.dp),
                 verticalArrangement = Arrangement.spacedBy(8.dp),

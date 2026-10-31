@@ -39,6 +39,12 @@ data class NoteLook(val uniformColor: String? = null, val squareCorners: Boolean
 
 val LocalNoteLook = staticCompositionLocalOf { NoteLook() }
 
+/** La forma de una hoja inferior: recta con «esquinas rectas» (Telecom, Bash, XP…) como las tarjetas; la de siempre en los demás aspectos. */
+@Composable
+@OptIn(androidx.compose.material3.ExperimentalMaterial3Api::class)
+internal fun sheetShape(): androidx.compose.ui.graphics.Shape =
+    if (LocalNoteLook.current.squareCorners) RectangleShape else androidx.compose.material3.BottomSheetDefaults.ExpandedShape
+
 /**
  * El aspecto de Aldune: la paleta de Core (`AppPalette`, ya portada y fijada por vectores) traducida al esquema de Material 3. Nada de
  * Material You (decisión del usuario): los colores son los de la app, no los del fondo de pantalla.
