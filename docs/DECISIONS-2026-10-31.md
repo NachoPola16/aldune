@@ -119,3 +119,10 @@ Nothing has been published. Commits are local on `main` (not pushed). Work list 
 " keeps its line break when opened and closed (no spurious edit).
 - **C20 options distribution: DONE.** Row = quick swipe gestures; long-press sheet = everything about the note in the list (open, move, pin, options, archive, trash/restore, protect); editor three-dots = note actions (options, pin, archive, trash) then, after a divider, text editing (move line, outdent, uncheck all); options sheet = colour, tags (with existing tags as one-tap chips), reminder, pin, export, protect.
 
+## Before publishing: images and GIF (decided: refresh them)
+
+- **Windows:** `docs/images/aldune.png` (probe8) and `docs/images/dock-abanico.gif` (probe9) show the dock whose footer changed (symmetric 40 px buttons, 17 px icons, drawn plus); retake both, and the six `aspecto-*.png` (probe9) if the footer or the tab badges show in them. Tools: `_herramientasldune-sondas`, close `aldune.exe` first.
+- **Android** (`android/fastlane/metadata/android/en-US/images/phoneScreenshots`, taken from the emulator, never from the Pixel with real notes): all four are out of date: `1_notes` (card edges, spacing, pin), `2_checklist` (the title now sits in the header), `3_reminder` (options sheet: existing tags, pin), `4_settings` (tab grid). Retake with English sample notes.
+- Social preview and the other README art do not change. The README links to v2.1.5 / 1.0.2 and the installer hash example (`Aldune-Setup-2.1.5.0.exe`) are updated only when the release is published.
+- Release text for Android 1.1.0 is in `android/fastlane/metadata/android/*/changelogs/17.txt` (five languages, under 500 characters).
+

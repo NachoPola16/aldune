@@ -21,10 +21,10 @@ Same order and same names for what is common; what is specific to each platform 
 
 On Android the tabs are chips in a 3-column grid (with more tabs, more rows), and the sync one is called “Sync” in every language so that it fits in a third of the screen; before it was a row that scrolled: with six tabs the last one was left off screen without anything saying so. Simplified mode hides Notes, Colors and Sync on both platforms (Windows also hides the advanced parts of the dock).
 
-## Pinned notes (2026-10-31, in progress)
+## Pinned notes (2026-10-31)
 
 Not a setting: a per-note property that syncs (`pinnedToTop`, optional field of the encrypted payload; spec `specs/2026-10-31-pinned-notes-design.md`). Same meaning on both platforms: pinned notes come first in every list, each
-group keeps the chosen order. Differences kept on purpose: Android offers it in the long-press menu and the options sheet and marks the row with a pin; Windows in the manager row, the dock tab marker and the note's menu.
+group keeps the chosen order. Differences kept on purpose: Android offers it in the long-press sheet, the options sheet and the editor's three-dots menu and marks the row with a pin; Windows in the manager row, the dock tab marker and menu, and the note's menu.
 It is **not** Windows' "always on top of other windows" (`NoteUnpinned`, local, never synced).
 
 ## Common (same interface text)
