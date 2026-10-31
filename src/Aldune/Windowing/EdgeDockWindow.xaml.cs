@@ -1773,7 +1773,7 @@ public partial class EdgeDockWindow : Window
     {
         SyncButtonGlyph.Text = ok ? "\uE73E" : "\uE783";
         SyncButtonGlyph.FontFamily = new FontFamily("Segoe Fluent Icons, Segoe MDL2 Assets");
-        SyncButtonGlyph.FontSize = 15;
+        SyncButtonGlyph.FontSize = 17;
         SyncButtonGlyph.SetResourceReference(ForegroundProperty, ok ? "AlduneSuccessBrush" : "AlduneDangerTextBrush");
         SyncButton.ToolTip = tooltip;
 
@@ -1790,7 +1790,7 @@ public partial class EdgeDockWindow : Window
         if (_syncBusy) return; // el feedback caducado no debe reactivar un botón ocupado
 
         SyncButtonGlyph.Text = "";
-        SyncButtonGlyph.FontSize = 15;
+        SyncButtonGlyph.FontSize = 17;
         SyncButtonGlyph.ClearValue(TextBlock.ForegroundProperty);
         SyncButton.ToolTip = Strings.WithHint(Strings.SyncNowButton, Strings.SyncRightClickHint);
     }

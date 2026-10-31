@@ -629,7 +629,7 @@
                             Style="{StaticResource CircularIconButtonStyle}"
                             ToolTip="{x:Static res:Strings.OpenAllNotesTooltip}"
                             AutomationProperties.Name="{x:Static res:Strings.OpenAllNotesTooltip}">
-                        <TextBlock Text="&#xE8A9;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" FontSize="15" />
+                        <TextBlock Text="&#xE8A9;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" FontSize="17" />
                     </Button>
                     <Button x:Name="ManageArchiveButton" Click="OnManageArchiveClick"
                             PreviewMouseRightButtonUp="OnManageArchiveRightClick"
@@ -637,7 +637,7 @@
                             Style="{StaticResource CircularIconButtonStyle}"
                             ToolTip="{x:Static res:Strings.ManageNotesTooltip}"
                             AutomationProperties.Name="{x:Static res:Strings.ManageNotesTooltip}">
-                        <TextBlock Text="&#xE713;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" FontSize="15" />
+                        <TextBlock Text="&#xE713;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" FontSize="17" />
                     </Button>
                     <Button x:Name="SyncButton" Click="OnSyncClick"
                             PreviewMouseRightButtonUp="OnSyncRightClick"
@@ -645,7 +645,7 @@
                             Style="{StaticResource CircularIconButtonStyle}"
                             ToolTip="{x:Static res:Strings.SyncNowButton}"
                             AutomationProperties.Name="{x:Static res:Strings.SyncNowButton}">
-                        <TextBlock x:Name="SyncButtonGlyph" Text="&#xE72C;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" FontSize="15" />
+                        <TextBlock x:Name="SyncButtonGlyph" Text="&#xE72C;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" FontSize="17" />
                     </Button>
                     <!-- Crear nota es la acción principal del dock y se distingue por el color de acento, no por el tamaño: con un círculo
                          mayor que los demás, el hueco hasta el borde era distinto según el botón del extremo (y los círculos no quedaban concéntricos
@@ -657,7 +657,11 @@
                             Style="{StaticResource CircularIconButtonStyle}"
                             ToolTip="{x:Static res:Strings.NewNoteTooltip}"
                             AutomationProperties.Name="{x:Static res:Strings.NewNoteTooltip}">
-                        <TextBlock Text="&#xE710;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" FontSize="17" />
+                        <!-- Dibujado (dos barras de 2 px en una caja de 16): como glifo de fuente quedaba 1 px descentrado. -->
+                        <Grid Width="16" Height="16" UseLayoutRounding="True" SnapsToDevicePixels="True">
+                            <Border Height="2" VerticalAlignment="Center" Background="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}" />
+                            <Border Width="2" HorizontalAlignment="Center" Background="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}" />
+                        </Grid>
                     </Button>
                 </StackPanel>
                 <local:BevelEdge Margin="-7" ShadowOutside="True" />
