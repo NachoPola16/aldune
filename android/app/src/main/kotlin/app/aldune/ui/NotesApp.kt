@@ -167,7 +167,9 @@ private fun NotesScaffold(state: UiState.Ready, viewModel: NotesViewModel, onOpe
             AnimatedPane {
                 NoteListPane(
                     state = state, viewModel = viewModel,
-                    selectedId = navigator.currentDestination?.contentKey,
+                    // The open note is marked in the list only when the editor sits beside it (wide screens). On a phone the editor replaces the
+                    // list, and the last opened note stayed ringed in the theme colour when coming back.
+                    selectedId = if (detailVisible && listVisible) navigator.currentDestination?.contentKey else null,
                     onOpen = openNote, onNew = { viewModel.startNewNote(); openNote(NEW_NOTE) }, onOpenSettings = onOpenSettings,
                 )
             }

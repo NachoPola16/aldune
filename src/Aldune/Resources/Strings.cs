@@ -1434,8 +1434,8 @@ public static class Strings
         "Hell", "Clair", "Claro", "Chiaro", "ライト", "浅色");
     public static string AppearancePastel => T("Pastel", "Pastel", "Pastell", "Pastel", "Pastel", "Pastello", "パステル", "粉彩");
     public static string AppearanceMidnight => T("Midnight", "Medianoche", "Mitternacht", "Minuit", "Meia-noite", "Mezzanotte", "ミッドナイト", "午夜");
-    public static string AppearanceXpLight => T("XP Light", "XP claro", "XP hell", "XP clair", "XP claro", "XP chiaro", "XP ライト", "XP 浅色");
-    public static string AppearanceXpDark => T("XP + 95 Dark", "XP + 95 oscuro", "XP + 95 dunkel", "XP + 95 sombre", "XP + 95 escuro", "XP + 95 scuro", "XP + 95 ダーク", "XP + 95 深色");
+    public static string AppearanceXpLight => T("Windows XP, light", "Windows XP, claro", "Windows XP, hell", "Windows XP, clair", "Windows XP, claro", "Windows XP, chiaro", "Windows XP（ライト）", "Windows XP（浅色）");
+    public static string AppearanceXpDark => T("Windows 98, dark", "Windows 98, oscuro", "Windows 98, dunkel", "Windows 98, sombre", "Windows 98, escuro", "Windows 98, scuro", "Windows 98（ダーク）", "Windows 98（深色）");
     public static string AppearanceTelecomLight => T("Telecom Light (lab)", "Telecomunicaciones claro (laboratorio)",
         "Telekom hell (Labor)", "Télécom clair (labo)", "Telecom claro (laboratório)", "Telecom chiaro (laboratorio)", "テレコム ライト (ラボ)", "Telecom 浅色（实验室）");
     public static string AppearanceTelecomDark => T("Telecom Dark (oscilloscope)", "Telecomunicaciones oscuro (osciloscopio)",

@@ -1077,3 +1077,5 @@ Prior decision (unchanged): stay GPL-3.0 and **validate with 3-5 people before s
 - **Logo**: shown once inside each app, in Settings → About (Android and Windows). Not on the main list (the tab row is the tightest on Android and the launcher icon already says whose app it is) and not on the dock (Windows).
 - **Translations**: `docs/TRANSLATION_REVIEW.md` and a «Translation review» issue template let a native speaker check Italian, Japanese and Chinese without touching code.
 - **Dropped (and why)**: widget tag filter and checkable widget boxes (above); a logo on the Android list.
+- **Appearance names (2026-11-01)**: «XP Light» is now «Windows XP, light» and «XP + 95 Dark» is «Windows 98, dark» (it is a Windows 98 title bar with the XP accent). A new brand appearance, «Aldune» (plum ink with the logo's pink, cyan and yellow, derived from Dark like Midnight), is the next round's design task.
+- **List highlight on Android**: the open note is ringed in the theme colour only when the editor is beside the list (wide screens); on a phone it stayed ringed after coming back.

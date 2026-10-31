@@ -49,8 +49,8 @@
     <string name="appearance_system">跟随系统</string>
     <string name="appearance_pastel">粉彩</string>
     <string name="appearance_midnight">午夜</string>
-    <string name="appearance_xp_light">XP 浅色</string>
-    <string name="appearance_xp_dark">XP + 95 深色</string>
+    <string name="appearance_xp_light">Windows XP（浅色）</string>
+    <string name="appearance_xp_dark">Windows 98（深色）</string>
     <string name="appearance_telecom_light">Telecom 浅色（实验室）</string>
     <string name="appearance_telecom_dark">Telecom 深色（示波器）</string>
     <string name="appearance_bash">Bash</string>

@@ -49,8 +49,8 @@
     <string name="appearance_system">システムに合わせる</string>
     <string name="appearance_pastel">パステル</string>
     <string name="appearance_midnight">ミッドナイト</string>
-    <string name="appearance_xp_light">XP ライト</string>
-    <string name="appearance_xp_dark">XP + 95 ダーク</string>
+    <string name="appearance_xp_light">Windows XP（ライト）</string>
+    <string name="appearance_xp_dark">Windows 98（ダーク）</string>
     <string name="appearance_telecom_light">テレコム ライト (ラボ)</string>
     <string name="appearance_telecom_dark">テレコム ダーク (オシロスコープ)</string>
     <string name="appearance_bash">Bash</string>

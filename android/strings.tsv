@@ -48,8 +48,8 @@ appearance_light	Light	Claro	Hell	Clair	Claro	Chiaro	ライト	浅色
 appearance_system	Follow the system	Según el sistema	Wie das System	Selon le système	Seguir o sistema	Segui il sistema	システムに合わせる	跟随系统
 appearance_pastel	Pastel	Pastel	Pastell	Pastel	Pastel	Pastello	パステル	粉彩
 appearance_midnight	Midnight	Medianoche	Mitternacht	Minuit	Meia-noite	Mezzanotte	ミッドナイト	午夜
-appearance_xp_light	XP Light	XP claro	XP hell	XP clair	XP claro	XP chiaro	XP ライト	XP 浅色
-appearance_xp_dark	XP + 95 Dark	XP + 95 oscuro	XP + 95 dunkel	XP + 95 sombre	XP + 95 escuro	XP + 95 scuro	XP + 95 ダーク	XP + 95 深色
+appearance_xp_light	Windows XP, light	Windows XP, claro	Windows XP, hell	Windows XP, clair	Windows XP, claro	Windows XP, chiaro	Windows XP（ライト）	Windows XP（浅色）
+appearance_xp_dark	Windows 98, dark	Windows 98, oscuro	Windows 98, dunkel	Windows 98, sombre	Windows 98, escuro	Windows 98, scuro	Windows 98（ダーク）	Windows 98（深色）
 appearance_telecom_light	Telecom Light (lab)	Telecomunicaciones claro (laboratorio)	Telekom hell (Labor)	Télécom clair (labo)	Telecom claro (laboratório)	Telecom chiaro (laboratorio)	テレコム ライト (ラボ)	Telecom 浅色（实验室）
 appearance_telecom_dark	Telecom Dark (oscilloscope)	Telecomunicaciones oscuro (osciloscopio)	Telekom dunkel (Oszilloskop)	Télécom sombre (oscilloscope)	Telecom escuro (osciloscópio)	Telecom scuro (oscilloscopio)	テレコム ダーク (オシロスコープ)	Telecom 深色（示波器）
 appearance_bash	Bash	Bash	Bash	Bash	Bash	Bash	Bash	Bash

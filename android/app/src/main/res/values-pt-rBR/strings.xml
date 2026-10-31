@@ -49,8 +49,8 @@
     <string name="appearance_system">Seguir o sistema</string>
     <string name="appearance_pastel">Pastel</string>
     <string name="appearance_midnight">Meia-noite</string>
-    <string name="appearance_xp_light">XP claro</string>
-    <string name="appearance_xp_dark">XP + 95 escuro</string>
+    <string name="appearance_xp_light">Windows XP, claro</string>
+    <string name="appearance_xp_dark">Windows 98, escuro</string>
     <string name="appearance_telecom_light">Telecom claro (laboratório)</string>
     <string name="appearance_telecom_dark">Telecom escuro (osciloscópio)</string>
     <string name="appearance_bash">Bash</string>
