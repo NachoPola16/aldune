@@ -623,8 +623,8 @@
                  de la pantalla, pero este contenido seguía alineado "a la derecha" sin más — es
                  decir, contra el lado INTERIOR del dock en vez del exterior, dejando un hueco entre
                  la tira/pestañas y el borde real de la pantalla. -->
-            <Border x:Name="FooterBorder" Grid.Row="1" Style="{StaticResource XpBarBorderStyle}" CornerRadius="{DynamicResource AlduneRadius27}"
-                    HorizontalAlignment="Right" Margin="0,14,8,0" Padding="7">
+            <Border x:Name="FooterBorder" Grid.Row="1" Style="{StaticResource XpBarBorderStyle}" CornerRadius="{DynamicResource AlduneRadius21}"
+                    HorizontalAlignment="Center" Margin="0,10,0,0" Padding="5">
                 <Grid>
                 <StackPanel x:Name="FooterPanel" Orientation="Horizontal">
                     <!-- "Ver todas": interruptor, no solo abrir. Si hay alguna nota abierta ahora
@@ -633,46 +633,46 @@
                          abrirlas ni cerrarlas de una en una. Ver AppCoordinator.ToggleAllNotes. -->
                     <Button x:Name="OpenAllButton" Click="OnOpenAllClick"
                             PreviewMouseRightButtonUp="OnOpenAllRightClick"
-                            Width="40" Height="40"
+                            Width="32" Height="32"
                             Style="{StaticResource CircularIconButtonStyle}"
                             ToolTip="{x:Static res:Strings.OpenAllNotesTooltip}"
                             AutomationProperties.Name="{x:Static res:Strings.OpenAllNotesTooltip}">
-                        <TextBlock Text="&#xE8A9;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" FontSize="17" />
+                        <TextBlock Text="&#xE8A9;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" FontSize="14" />
                     </Button>
                     <Button x:Name="ManageArchiveButton" Click="OnManageArchiveClick"
                             PreviewMouseRightButtonUp="OnManageArchiveRightClick"
-                            Width="40" Height="40"
+                            Width="32" Height="32"
                             Style="{StaticResource CircularIconButtonStyle}"
                             ToolTip="{x:Static res:Strings.ManageNotesTooltip}"
                             AutomationProperties.Name="{x:Static res:Strings.ManageNotesTooltip}">
-                        <TextBlock Text="&#xE713;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" FontSize="17" />
+                        <TextBlock Text="&#xE713;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" FontSize="14" />
                     </Button>
                     <Button x:Name="SyncButton" Click="OnSyncClick"
                             PreviewMouseRightButtonUp="OnSyncRightClick"
-                            Width="40" Height="40"
+                            Width="32" Height="32"
                             Style="{StaticResource CircularIconButtonStyle}"
                             ToolTip="{x:Static res:Strings.SyncNowButton}"
                             AutomationProperties.Name="{x:Static res:Strings.SyncNowButton}">
-                        <TextBlock x:Name="SyncButtonGlyph" Text="&#xE72C;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" FontSize="17" />
+                        <TextBlock x:Name="SyncButtonGlyph" Text="&#xE72C;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" FontSize="14" />
                     </Button>
                     <!-- Crear nota es la acción principal del dock y se distingue por el color de acento, no por el tamaño: con un círculo
                          mayor que los demás, el hueco hasta el borde era distinto según el botón del extremo (y los círculos no quedaban concéntricos
                          con el extremo redondeado del pie). Los cuatro miden 40, así que el relleno es igual por todos los lados. -->
                     <Button x:Name="NewNoteButton" Click="OnNewNoteClick"
                             PreviewMouseRightButtonUp="OnNewNoteRightClick"
-                            Width="40" Height="40"
+                            Width="32" Height="32"
                             Background="{DynamicResource AlduneDockPrimaryBrush}" Foreground="{DynamicResource AlduneTextStrongBrush}"
                             Style="{StaticResource CircularIconButtonStyle}"
                             ToolTip="{x:Static res:Strings.NewNoteTooltip}"
                             AutomationProperties.Name="{x:Static res:Strings.NewNoteTooltip}">
                         <!-- Dibujado (dos barras de 2 px en una caja de 16): como glifo de fuente quedaba 1 px descentrado. -->
-                        <Grid Width="16" Height="16" UseLayoutRounding="True" SnapsToDevicePixels="True">
+                        <Grid Width="12" Height="12" UseLayoutRounding="True" SnapsToDevicePixels="True">
                             <Border Height="2" VerticalAlignment="Center" Background="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}" />
                             <Border Width="2" HorizontalAlignment="Center" Background="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}" />
                         </Grid>
                     </Button>
                 </StackPanel>
-                <local:BevelEdge Margin="-7" ShadowOutside="True" />
+                <local:BevelEdge Margin="-5" ShadowOutside="True" />
                 </Grid>
             </Border>
 

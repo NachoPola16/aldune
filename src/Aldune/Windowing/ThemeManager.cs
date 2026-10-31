@@ -178,7 +178,7 @@ public static class ThemeManager
 
     // Los radios que usa la app. Con esquinas rectas todos valen 0; si no, su valor. Recursos y no
     // números escritos en cada XAML para que el cambio se vea en vivo, como la paleta.
-    private static readonly double[] Radii = [3, 4, 5, 6, 7, 8, 9, 10, 11, 27];
+    private static readonly double[] Radii = [3, 4, 5, 6, 7, 8, 9, 10, 11, 21, 27];
 
     public static bool IsSquare { get; private set; }
 

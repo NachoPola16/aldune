@@ -240,10 +240,10 @@ public partial class EdgeDockWindow : Window
     /// <see cref="EdgeGeometry.WindowRect"/>; aquí solo se cambia la disposición interna.
     /// </summary>
     /// <summary>El relleno del pie del dock: el mismo en los cuatro lados (y en los cuatro cantos del dock).</summary>
-    private const double FooterPadding = 7;
+    private const double FooterPadding = 5;
 
     /// <summary>Separación entre los botones del pie: igual que el relleno, para que el ritmo sea el mismo en todos los sentidos (y el pie cabe en los docks laterales).</summary>
-    private const double FooterButtonGap = 7;
+    private const double FooterButtonGap = 5;
 
     /// <summary>
     /// La separación va entre botones, no a la izquierda de cada uno: con <c>Margin="10,0,0,0"</c> en todos, el primero (el del extremo) tenía 10 px
@@ -291,8 +291,10 @@ public partial class EdgeDockWindow : Window
         RestStrip.HorizontalAlignment = HorizontalAlignment.Left;
         RestStrip.Margin = new Thickness(RestStrip.Margin.Right, 0, 0, 0);
 
-        FooterBorder.HorizontalAlignment = HorizontalAlignment.Left;
-        FooterBorder.Margin = new Thickness(FooterBorder.Margin.Right, FooterBorder.Margin.Top, 0, 0);
+        // El pie va centrado bajo la columna de notas en los dos lados, así que no hay nada que espejar (antes iba pegado al borde y,
+        // con los botones de 40, quedaba casi centrado por casualidad; con los de 32 se habría ido 19 px hacia el canto).
+        FooterBorder.HorizontalAlignment = HorizontalAlignment.Center;
+        FooterBorder.Margin = new Thickness(0, FooterBorder.Margin.Top, 0, 0);
 
         // La barra acompaña el canto físico del dock, no el canto interior de la tarjeta. Así en el
         // lado izquierdo queda a la izquierda y deja de parecer una pieza flotante dentro del panel.
@@ -382,7 +384,9 @@ public partial class EdgeDockWindow : Window
         ScrollArrowOverlay.Orientation = Orientation.Vertical;
         ScrollArrowOverlay.Width = 26;
         ScrollArrowOverlay.HorizontalAlignment = HorizontalAlignment.Right;
-        ScrollArrowOverlay.Margin = new Thickness(0);
+        // Fuera de la columna, a su derecha: centradas encima de las tarjetas tapaban el borde de una. La ventana de arriba/abajo es
+        // más ancha que la columna cuando hay muchas notas (que es cuando salen estas flechas), así que ahí hay sitio.
+        ScrollArrowOverlay.Margin = new Thickness(0, 0, -(ScrollArrowOverlay.Width + 6), 0);
         ScrollArrowOverlay.RenderTransform = null;
         if (ScrollArrowOverlay.Children.Count >= 2)
         {

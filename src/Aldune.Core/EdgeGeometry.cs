@@ -222,10 +222,11 @@ public static class EdgeGeometry
 
     /// <summary>
     /// Alto de la fila de botones ("+" y engranaje), fuera de la lista con scroll para que siempre
-    /// se puedan pulsar. Es el botón mayor (40) más su margen superior (14), el relleno del panel
-    /// oscuro que los agrupa (7 arriba y abajo) y aire para la sombra.
+    /// se puedan pulsar. Es el botón (32) más su margen superior (10), el relleno del panel
+    /// oscuro que los agrupa (5 arriba y abajo) y aire para la sombra. Eran botones de 40 (78 en total): el pie pesaba tanto como una
+    /// pestaña, y la acción importante (crear nota) ya se distingue por el color, no por el tamaño.
     /// </summary>
-    public const double FooterLength = 78;
+    public const double FooterLength = 62;
 
     /// <summary>Separación del borde físico de la pantalla.</summary>
     public const double EdgeMargin = 0;

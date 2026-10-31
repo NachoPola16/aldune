@@ -310,7 +310,7 @@
                         <!-- Con barra en degradado (XP) la cabecera es una barra de título de verdad:
                              compacta, de borde a borde y con el texto de la barra. -->
                         <DataTrigger Binding="{Binding GradientTitleBar, Source={x:Static local:SkinState.Current}}" Value="True">
-                            <Setter Property="Padding" Value="8,6,8,6" />
+                            <Setter Property="Padding" Value="20,12,14,12" />
                         </DataTrigger>
                     </Style.Triggers>
                 </Style>
@@ -341,7 +341,7 @@
                             </Style>
                         </TextBlock.Style>
                     </TextBlock>
-                    <TextBlock x:Name="SubtitleText" FontSize="{DynamicResource AlduneTextSmall}" Margin="0,3,0,0">
+                    <TextBlock x:Name="SubtitleText" FontSize="{DynamicResource AlduneTextSmall}" Margin="0,4,0,0">
                         <TextBlock.Style>
                             <Style TargetType="TextBlock">
                                 <Setter Property="Foreground" Value="{DynamicResource AlduneMutedTextBrush}" />
