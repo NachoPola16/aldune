@@ -22,7 +22,8 @@ public sealed class SyncRekeyEnvelopeTests
             State = NoteState.Archived,
             ScreenOrigin = "primary",
             Tags = new[] { "Trabajo" },
-            DockPosition = 1.5
+            DockPosition = 1.5,
+            IsPinnedToTop = true
         };
         var rekeyedAt = new DateTimeOffset(2026, 3, 1, 0, 0, 0, TimeSpan.Zero);
 
@@ -36,5 +37,23 @@ public sealed class SyncRekeyEnvelopeTests
         Assert.Equal(note.State, copy.State);
         Assert.Equal(note.Tags, copy.Tags);
         Assert.Equal(note.DockPosition, copy.DockPosition);
+        Assert.True(copy.IsPinnedToTop);
+    }
+
+    [Fact]
+    public void RekeyedProtectedNote_KeepsItsVisibleName()
+    {
+        var key = new byte[32];
+        var note = new Note
+        {
+            Id = Guid.NewGuid(), Text = "", Color = "#EBD38B", ScreenOrigin = "primary", State = NoteState.Active,
+            CreatedAt = new DateTimeOffset(2026, 1, 1, 0, 0, 0, TimeSpan.Zero),
+            UpdatedAt = new DateTimeOffset(2026, 2, 1, 0, 0, 0, TimeSpan.Zero),
+            IsProtected = true, ProtectedContent = ProtectedNoteContent.Protect("secreto", "contraseña"), ProtectedTitle = "Diario"
+        };
+
+        var envelope = SyncService.CreateRekeyedNoteEnvelope(note, key, "device", new DateTimeOffset(2026, 3, 1, 0, 0, 0, TimeSpan.Zero));
+
+        Assert.Equal("Diario", SyncEnvelopeCodec.DecryptNote(envelope, key).ProtectedTitle);
     }
 }

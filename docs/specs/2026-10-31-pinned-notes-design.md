@@ -1,6 +1,6 @@
 # Pinned notes (Windows 2.2.0 + Android 1.1.0)
 
-Status: **spec, not implemented.** Decision by the owner (2026-10-31): the pin is synced between devices, even if it costs more, and it must not raise sync format 4.
+Status: **implemented** (Core, Room, sync, vectors, Windows and Android interface; second session, 2026-10-31). Decision by the owner (2026-10-31): the pin is synced between devices, even if it costs more, and it must not raise sync format 4.
 
 ## Naming: do not confuse it with "always on top"
 
@@ -19,7 +19,7 @@ On Windows a note already has a *pin* in the sense of **always on top of other w
 | Where | Change |
 |---|---|
 | `Aldune.Core` `Note` | `bool IsPinnedToTop { get; set; }` (default `false`). Part of `NoteEquivalence`. |
-| Core SQLite | `ALTER TABLE Note ADD COLUMN IsPinnedToTop INTEGER NOT NULL DEFAULT 0;` as a numbered migration (existing databases get `0`). |
+| Core SQLite | `ALTER TABLE Note ADD COLUMN PinnedToTop INTEGER NOT NULL DEFAULT 0;` as a numbered migration (existing databases get `0`). |
 | Android `Note` / `SyncNote` | `pinnedToTop: Boolean = false`. |
 | Android Room | `NoteEntity.pinnedToTop` with a default of `0`, `Migrations.kt` 4 → 5 (`ALTER TABLE ... DEFAULT 0`), exported schema `5.json`, `MigrationTest` extended. |
 

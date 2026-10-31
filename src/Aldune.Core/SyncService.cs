@@ -787,7 +787,11 @@ public sealed class SyncService
             ProtectedContent = note.ProtectedContent,
             // Sin esto el sobre re-cifrado salía sin posición en el mazo, y un equipo que se une con el código
             // nuevo recibía las notas sin el orden (formato 4).
-            DockPosition = note.DockPosition
+            DockPosition = note.DockPosition,
+            // Lo mismo con el resto de campos opcionales del contenido cifrado: sin ellos, rotar el código borraba en todos los
+            // equipos el «fijada arriba» y el nombre visible de las protegidas (gana la versión más reciente, que era esta).
+            IsPinnedToTop = note.IsPinnedToTop,
+            ProtectedTitle = note.ProtectedTitle
         };
         return SyncEnvelopeCodec.CreateNote(copy, key, deviceId);
     }
