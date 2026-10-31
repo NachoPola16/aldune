@@ -437,6 +437,12 @@
     <string name="history_empty">Pas encore de versions précédentes. Elles apparaissent quand vous modifiez la note.</string>
     <string name="history_restore">Restaurer</string>
     <string name="history_close">Fermer</string>
+    <string name="all_tags">Toutes les étiquettes</string>
+    <string name="search_tags">Rechercher des étiquettes</string>
+    <string name="tag_move_up">Monter %1$s</string>
+    <string name="tag_move_down">Descendre %1$s</string>
+    <string name="show_tag_hash">Afficher # devant les étiquettes</string>
+    <string name="show_tag_hash_hint">Désactivé : une petite icône d\'étiquette à la place du #.</string>
     <string name="pinned_mark_cd">Épinglée en haut de la liste</string>
     <string name="existing_tags">Vos étiquettes</string>
 </resources>

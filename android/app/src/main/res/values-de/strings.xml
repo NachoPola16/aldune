@@ -437,6 +437,12 @@
     <string name="history_empty">Noch keine früheren Versionen. Sie erscheinen beim Bearbeiten der Notiz.</string>
     <string name="history_restore">Wiederherstellen</string>
     <string name="history_close">Schließen</string>
+    <string name="all_tags">Alle Tags</string>
+    <string name="search_tags">Tags suchen</string>
+    <string name="tag_move_up">%1$s nach oben</string>
+    <string name="tag_move_down">%1$s nach unten</string>
+    <string name="show_tag_hash"># vor Tags anzeigen</string>
+    <string name="show_tag_hash_hint">Aus: ein kleines Tag-Symbol statt der #.</string>
     <string name="pinned_mark_cd">Oben in der Liste angeheftet</string>
     <string name="existing_tags">Deine Tags</string>
 </resources>

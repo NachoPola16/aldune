@@ -12,6 +12,7 @@ import app.aldune.export.AutoExportStatus
 import app.aldune.export.AutoExportWork
 import app.aldune.data.SettingsStore
 import app.aldune.domain.NoteVersion
+import app.aldune.domain.TagOrder
 import app.aldune.core.ProtectedNotes
 import app.aldune.core.UnlockedProtectedNote
 import app.aldune.domain.LineEnding
@@ -398,6 +399,14 @@ class NotesViewModel(application: Application) : AndroidViewModel(application) {
             draft?.let { persist(it) }
             service?.recordVersion(draft?.noteId ?: id)
         }
+    }
+
+    /** Mueve una etiqueta una posición en el orden propio (arriba = -1). El orden se guarda en este dispositivo y se refresca la lista. */
+    fun moveTag(tag: String, delta: Int) {
+        val visible = (_state.value as? UiState.Ready)?.allTags ?: return
+        val moved = TagOrder.move(visible, tag, delta)
+        updateSettings { it.copy(tagOrder = TagOrder.encode(moved)) }
+        launchIo { refresh() }
     }
 
     /** Las versiones guardadas de la nota (historial local), la más reciente primero. */
@@ -862,7 +871,7 @@ class NotesViewModel(application: Application) : AndroidViewModel(application) {
         val order = NoteListOrder.fromCode(_settings.value.listOrder)
         val items = NoteListing.sort(notes.list(current.filter, current.query, current.tag), order).map { NoteListItem.from(it, placeholder, protectedTitle) }
         val counts = NoteState.entries.associateWith { notes.list(it).size }
-        val tags = notes.list(current.filter).flatMap { it.tags }.distinctBy { it.lowercase() }.sortedBy { it.lowercase() }
+        val tags = notes.list(current.filter).flatMap { it.tags }.distinctBy { it.lowercase() }.let { TagOrder.apply(it, TagOrder.decode(_settings.value.tagOrder)) }
         val orphans = ready?.conflicts?.orphans().orEmpty().mapNotNull { conflict ->
             val note = conflict.losing.note ?: return@mapNotNull null
             val title = if (note.isProtected) ProtectedTitleRules.visible(true, note.protectedTitle) ?: protectedTitle else NoteTitleHelper.getTitle(LineEnding.normalize(note.text), placeholder)

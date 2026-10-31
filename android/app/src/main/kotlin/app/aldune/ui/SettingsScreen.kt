@@ -190,6 +190,9 @@ fun SettingsScreen(viewModel: NotesViewModel, onClose: () -> Unit) {
                     AspectSection(settings, onChange = viewModel::updateSettings)
                     NoteLookSection(settings, onChange = viewModel::updateSettings)
                 }
+                SwitchRow(stringResource(R.string.show_tag_hash), stringResource(R.string.show_tag_hash_hint), settings.showTagHash) { on ->
+                    viewModel.updateSettings { it.copy(showTagHash = on) }
+                }
                 suggestedTheme?.let { themeId ->
                     val themeName = themeNameRes(themeId)?.let { stringResource(it) } ?: themeId
                     AlertDialog(

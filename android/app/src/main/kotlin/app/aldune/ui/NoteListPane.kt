@@ -48,6 +48,7 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.Warning
@@ -226,7 +227,7 @@ fun NoteListPane(
                     IconButton(onClick = { showSyncDetail = true }, modifier = Modifier.semantics { liveRegion = LiveRegionMode.Polite }) { SyncIcon(line.icon, stringResource(R.string.sync_status_cd)) }
                 }
             }
-            if (state.allTags.isNotEmpty()) TagRow(state, viewModel::setTag)
+            if (state.allTags.isNotEmpty()) TagRow(state, settingsNow.showTagHash, viewModel::setTag, onMoveTag = viewModel::moveTag)
             if (state.orphans.isNotEmpty()) OrphanConflictsBanner(state.orphans.size) { showOrphans = true }
             // Una versión nueva de Android en GitHub (una vez al día, desactivable en Ajustes → General): solo avisa y abre la página.
             val pendingUpdate by viewModel.update.collectAsStateWithLifecycle()
@@ -530,9 +531,12 @@ private fun StateTabs(state: UiState.Ready, onSelect: (NoteState) -> Unit) {
 }
 
 @Composable
-private fun TagRow(state: UiState.Ready, onSelect: (String?) -> Unit) {
+private fun TagRow(state: UiState.Ready, showHash: Boolean, onSelect: (String?) -> Unit, onMoveTag: (String, Int) -> Unit) {
     val listState = rememberLazyListState()
-    Box(Modifier.padding(bottom = 10.dp)) {
+    var sheetOpen by remember { mutableStateOf(false) }
+    if (sheetOpen) AllTagsDialog(state.allTags, state.tag, showHash, onSelect = { sheetOpen = false; onSelect(it) }, onMove = onMoveTag, onDismiss = { sheetOpen = false })
+    Row(Modifier.padding(bottom = 10.dp), verticalAlignment = Alignment.CenterVertically) {
+    Box(Modifier.weight(1f)) {
         LazyRow(
             // Space below the chips equal to the space between them and the tabs (it was 20 dp above and 8 dp below).
             state = listState, contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 16.dp),
@@ -540,8 +544,13 @@ private fun TagRow(state: UiState.Ready, onSelect: (String?) -> Unit) {
         ) {
             items(state.allTags) { tag ->
                 val selected = state.tag.equals(tag, ignoreCase = true)
-                FilterChip(selected = selected, onClick = { onSelect(if (selected) null else tag) }, label = { Text("#$tag") })
+                FilterChip(
+                    selected = selected, onClick = { onSelect(if (selected) null else tag) },
+                    label = { Text(if (showHash) "#$tag" else tag) },
+                    leadingIcon = if (showHash) null else ({ Icon(TagIcon, contentDescription = null, Modifier.size(16.dp)) }),
+                )
             }
+
         }
         // A fade on the right edge says "there are more tags": it only shows while some are out of view, and the half-cut chip does the rest.
         if (listState.canScrollForward) {
@@ -551,6 +560,12 @@ private fun TagRow(state: UiState.Ready, onSelect: (String?) -> Unit) {
                     .background(androidx.compose.ui.graphics.Brush.horizontalGradient(listOf(Color.Transparent, ground))),
             )
         }
+    }
+    // Siempre a la vista, fuera del desplazamiento: todas las etiquetas en una hoja buscable y ordenable (la fila solo enseña las primeras).
+    val allTagsLabel = stringResource(R.string.all_tags)
+    IconButton(onClick = { sheetOpen = true }, Modifier.semantics { contentDescription = allTagsLabel }) {
+        Icon(Icons.Filled.KeyboardArrowDown, contentDescription = null)
+    }
     }
 }
 

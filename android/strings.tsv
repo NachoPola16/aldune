@@ -436,5 +436,11 @@ history_hint	Up to 20 earlier versions, kept on this device only. Restoring firs
 history_empty	No earlier versions yet. They appear as you edit the note.	Aún no hay versiones anteriores. Aparecen al editar la nota.	Noch keine früheren Versionen. Sie erscheinen beim Bearbeiten der Notiz.	Pas encore de versions précédentes. Elles apparaissent quand vous modifiez la note.	Ainda não há versões anteriores. Elas aparecem ao editar a nota.
 history_restore	Restore	Restaurar	Wiederherstellen	Restaurer	Restaurar
 history_close	Close	Cerrar	Schließen	Fermer	Fechar
+all_tags	All tags	Todas las etiquetas	Alle Tags	Toutes les étiquettes	Todas as etiquetas
+search_tags	Search tags	Buscar etiquetas	Tags suchen	Rechercher des étiquettes	Buscar etiquetas
+tag_move_up	Move %1$s up	Subir %1$s	%1$s nach oben	Monter %1$s	Subir %1$s
+tag_move_down	Move %1$s down	Bajar %1$s	%1$s nach unten	Descendre %1$s	Descer %1$s
+show_tag_hash	Show # before tags	Mostrar # delante de las etiquetas	# vor Tags anzeigen	Afficher # devant les étiquettes	Mostrar # antes das etiquetas
+show_tag_hash_hint	Off: a small tag icon instead of the #.	Apagado: un pequeño icono de etiqueta en vez de la #.	Aus: ein kleines Tag-Symbol statt der #.	Désactivé : une petite icône d'étiquette à la place du #.	Desligado: um pequeno ícone de etiqueta no lugar do #.
 pinned_mark_cd	Pinned to the top of the list	Fijada arriba en la lista	Oben in der Liste angeheftet	Épinglée en haut de la liste	Fixada no topo da lista
 existing_tags	Your tags	Tus etiquetas	Deine Tags	Vos étiquettes	Suas etiquetas

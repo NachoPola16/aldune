@@ -437,6 +437,12 @@
     <string name="history_empty">Aún no hay versiones anteriores. Aparecen al editar la nota.</string>
     <string name="history_restore">Restaurar</string>
     <string name="history_close">Cerrar</string>
+    <string name="all_tags">Todas las etiquetas</string>
+    <string name="search_tags">Buscar etiquetas</string>
+    <string name="tag_move_up">Subir %1$s</string>
+    <string name="tag_move_down">Bajar %1$s</string>
+    <string name="show_tag_hash">Mostrar # delante de las etiquetas</string>
+    <string name="show_tag_hash_hint">Apagado: un pequeño icono de etiqueta en vez de la #.</string>
     <string name="pinned_mark_cd">Fijada arriba en la lista</string>
     <string name="existing_tags">Tus etiquetas</string>
 </resources>

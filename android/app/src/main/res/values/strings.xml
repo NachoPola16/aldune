@@ -437,6 +437,12 @@
     <string name="history_empty">No earlier versions yet. They appear as you edit the note.</string>
     <string name="history_restore">Restore</string>
     <string name="history_close">Close</string>
+    <string name="all_tags">All tags</string>
+    <string name="search_tags">Search tags</string>
+    <string name="tag_move_up">Move %1$s up</string>
+    <string name="tag_move_down">Move %1$s down</string>
+    <string name="show_tag_hash">Show # before tags</string>
+    <string name="show_tag_hash_hint">Off: a small tag icon instead of the #.</string>
     <string name="pinned_mark_cd">Pinned to the top of the list</string>
     <string name="existing_tags">Your tags</string>
 </resources>
