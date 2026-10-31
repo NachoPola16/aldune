@@ -7,7 +7,7 @@ using System.Windows.Media.Animation;
 namespace Aldune.Windowing;
 
 /// <summary>
-/// Cierre con fundido y encogimiento hasta el 95%, simétrico a la apertura. Es el mismo que ya tenían
+/// Cierre con fundido y encogimiento hasta el 95%, simétrico a la apertura (la ventana entera, vía <see cref="ClosingGhost"/>). Es el mismo que ya tenían
 /// las notas (<c>NoteWindow.OnClosingWithAnimation</c>); el gestor y Ajustes se abrían animados pero
 /// desaparecían de golpe.
 ///
@@ -31,6 +31,10 @@ internal static class WindowCloseAnimation
 
         Animating.Add(window, new object());
         e.Cancel = true;
+
+        // The whole window fades as one piece, frame and shadow included (see ClosingGhost); fading only the content left the frame at full
+        // strength until it vanished with a pop. If the window cannot be photographed, the content-only fade below still runs.
+        if (ClosingGhost.Play(window, Duration, window.Close)) return;
 
         content.RenderTransformOrigin = new Point(0.5, 0.5);
         var scale = content.RenderTransform as ScaleTransform ?? new ScaleTransform(1, 1);

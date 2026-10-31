@@ -10,7 +10,7 @@ Originating session: 2026-09-06.
 
 ## Visible version of the application
 
-The current round is identified as **v2.4.1**. The version is shown in Settings and also in the tray
+The current round is identified as **v2.4.2**. The version is shown in Settings and also in the tray
 icon's text. Every major update must increment this number following SemVer: patches for fixes, a
 minor version for new features and a major version when there are incompatible changes.
 
@@ -397,7 +397,7 @@ cross-platform clients reusing the common sync format.
 - **Settings header** uses the notes manager's spacing (20,18,14 and 20,17,16,17 with a real title bar, more air under it).
 - **Tray menu**: the outline of the hovered row follows the look's accent, so a custom accent colour reaches it.
 - **Links in notes**: allowed, in the smallest safe form. Plain `http://` and `https://` text opens with Ctrl+click (hand cursor while Ctrl is held), never by itself; nothing else opens (no `file:`, UNC, `javascript:`, `mailto:`), URLs with user info are ignored, runs over 2048 characters are ignored (`LinkText`, Core). The note stays plain text, so sync and storage do not change. On Android (1.2.0) the same rules apply (`LinkText` in the `text` module, twin tests): addresses are underlined and, with the cursor on one, a chip «Open <host>» appears under the editor; tapping the chip is the only way to open it, and the host is shown so the destination is visible. Plain taps still place the cursor.
-- **Not changed, on purpose**: manager rows and tab previews keep their spacing (measured, nothing cramped). Closing a note used to fade only its content while the window frame and the DWM shadow stayed at full strength and vanished with a pop (worst with the XP looks). Windows refuses `WS_EX_LAYERED` on these WPF windows, so now `ClosingGhost` renders the note (background + content), cloaks the real window and fades a transparent stand-in with the same corners and a soft shadow; if the render fails, the old content fade still runs.
+- **Not changed, on purpose**: manager rows and tab previews keep their spacing (measured, nothing cramped). Closing a note used to fade only its content while the window frame and the DWM shadow stayed at full strength and vanished with a pop (worst with the XP looks). Windows refuses `WS_EX_LAYERED` on these WPF windows, so now `ClosingGhost` renders the note (background + content), cloaks the real window and fades a transparent stand-in with the same corners and a soft shadow; if the render fails, the old content fade still runs. 2.4.2 extends it to the notes manager and Settings through `WindowCloseAnimation` (they also faded only their content).
 
 ## 3. Discarded for now, with its reason
 
