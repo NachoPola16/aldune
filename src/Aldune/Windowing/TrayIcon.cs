@@ -34,7 +34,7 @@ internal sealed class TrayIcon : IDisposable
         {
             // El renderer por defecto de WinForms es gris claro y con bordes de otra epoca. Con
             // uno propio el menu usa los mismos tonos que el dock y el gestor.
-            Renderer = new ToolStripProfessionalRenderer(new DarkMenuColors()),
+            Renderer = new AccentMenuRenderer(new DarkMenuColors()),
             // ShowImageMargin TIENE que quedarse en true: en WinForms la marca de verificación se
             // dibuja precisamente en ese margen, así que apagarlo (que era lo que había, por
             // estética) dejaba "Abrir al iniciar sesión" funcionando a ciegas — se activaba de
@@ -97,6 +97,30 @@ internal sealed class TrayIcon : IDisposable
     private static Color Ground => Palette("Ground");
     private static Color Ink => Palette("Text");
     private static Color Palette(string token) => ColorTranslator.FromHtml(ThemeManager.Color(token));
+
+    /// <summary>
+    /// Paints the hovered row itself: the colour table's <c>MenuItemBorder</c> is not what draws the outline on current Windows (it came out
+    /// as the system blue whatever the table said), so the fill and a 1 px outline in the look's accent are drawn here. The accent is the
+    /// slot the user changes per look in Settings, so a custom colour reaches this menu too.
+    /// </summary>
+    private sealed class AccentMenuRenderer(ProfessionalColorTable table) : ToolStripProfessionalRenderer(table)
+    {
+        protected override void OnRenderMenuItemBackground(ToolStripItemRenderEventArgs e)
+        {
+            var item = e.Item;
+            if (!item.IsOnDropDown || !item.Selected || !item.Enabled)
+            {
+                base.OnRenderMenuItemBackground(e);
+                return;
+            }
+
+            var bounds = new Rectangle(2, 0, item.Width - 4, item.Height - 1);
+            using var fill = new SolidBrush(Palette("Hover"));
+            using var outline = new Pen(Palette("Accent"));
+            e.Graphics.FillRectangle(fill, bounds);
+            e.Graphics.DrawRectangle(outline, bounds);
+        }
+    }
 
     /// <summary>Paleta del menu, a juego con el resto de la app.</summary>
     private sealed class DarkMenuColors : ProfessionalColorTable

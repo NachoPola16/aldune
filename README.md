@@ -27,6 +27,7 @@ their own. No account, no required cloud, and the content is encrypted.
 - **Tasks and lists** inside each note (`Ctrl+L`, `Ctrl+Shift+L`), with indentation, and an option to
   remove completed tasks after a while.
 - **Reminders**, **tags**, **archive** and **trash**, plus a manager to search and organize.
+- **Web links**: an `http://` or `https://` address in a note opens with `Ctrl`+click (Windows; never by itself, and only web addresses).
 - **Per-note history and done-task rules**: up to 20 local versions of each note you can preview and restore, and a per-note choice for what happens to done tasks (so a shared shopping list is never emptied by another device). On Windows, the mouse wheel on the dock's gear (or on the tabs when they all fit) switches between all notes, each tag, archived and trash.
 - **Color themes**: Classic, Serene and Graphite, with light, dark or alternating notes, or your own.
 - **A global shortcut** to create a note from anywhere (`Ctrl+Shift+N` by default).
@@ -64,7 +65,7 @@ Requirements: 64-bit Windows 10 or 11. You don't need to install .NET.
 **Check your download** (optional, in PowerShell). The result must equal that file's line in `SHA256SUMS.txt`:
 
 ```powershell
-(Get-FileHash .\Aldune-Setup-2.3.0.0.exe -Algorithm SHA256).Hash.ToLower()
+(Get-FileHash .\Aldune-Setup-2.4.0.0.exe -Algorithm SHA256).Hash.ToLower()
 ```
 
 It catches a corrupted download or one altered on the way. It is not a substitute for code signing (see "Signing and privacy"): anyone who could
@@ -151,7 +152,7 @@ context, branding, releasing and the probe guides are in English. The long-runni
 
 ## Try it and give feedback
 
-If you are testing it: Windows [v2.3.0](https://github.com/NachoPola16/aldune/releases/tag/v2.3.0), Android [1.2.0](https://github.com/NachoPola16/aldune/releases/tag/android-v1.2.0).
+If you are testing it: Windows [v2.4.0](https://github.com/NachoPola16/aldune/releases/tag/v2.4.0), Android [1.1.0](https://github.com/NachoPola16/aldune/releases/tag/android-v1.1.0).
 A bug, a question or an idea goes to [Issues](https://github.com/NachoPola16/aldune/issues/new): say which version you use, what you did and what you expected.
 Do not paste profile codes, tokens or the contents of your notes in a public issue.
 

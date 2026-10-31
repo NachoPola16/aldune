@@ -27,6 +27,7 @@ ratón y se abren como ventanas propias. Sin cuenta, sin nube obligatoria, y con
 - **Tareas y listas** dentro de cada nota (`Ctrl+L`, `Ctrl+Mayús+L`), con sangría, y la opción de
   borrar solas las tareas hechas pasado un tiempo.
 - **Recordatorios**, **etiquetas**, **archivo** y **papelera**, y un gestor para buscar y ordenar.
+- **Enlaces web**: una dirección `http://` o `https://` en una nota se abre con `Ctrl`+clic (Windows; nunca sola, y solo direcciones web).
 - **Temas de color**: Clásico, Sereno y Grafito, con notas claras, oscuras o alternando, o los tuyos.
 - **Atajo global** para crear una nota desde cualquier sitio (por defecto `Ctrl+Mayús+N`).
 - **Notas con contraseña**, cifradas con una clave que sale de la contraseña (que no se guarda), con un nombre visible opcional para reconocerlas sin abrirlas.
@@ -64,7 +65,7 @@ Requisitos: Windows 10 u 11 de 64 bits. No hace falta instalar .NET.
 **Comprobar la descarga** (opcional, en PowerShell). El resultado tiene que ser igual a la línea de ese fichero en `SHA256SUMS.txt`:
 
 ```powershell
-(Get-FileHash .\Aldune-Setup-2.3.0.0.exe -Algorithm SHA256).Hash.ToLower()
+(Get-FileHash .\Aldune-Setup-2.4.0.0.exe -Algorithm SHA256).Hash.ToLower()
 ```
 
 Sirve para detectar una descarga corrupta o cambiada por el camino. No sustituye a una firma de código (ver «Firma y privacidad»): quien pudiera
@@ -152,7 +153,7 @@ Cómo se publica una versión y cómo se firma: [docs/RELEASING.md](docs/RELEASI
 
 ## Probar y dar tu opinión
 
-Si la estás probando: Windows [v2.3.0](https://github.com/NachoPola16/aldune/releases/tag/v2.3.0), Android [1.2.0](https://github.com/NachoPola16/aldune/releases/tag/android-v1.2.0).
+Si la estás probando: Windows [v2.4.0](https://github.com/NachoPola16/aldune/releases/tag/v2.4.0), Android [1.1.0](https://github.com/NachoPola16/aldune/releases/tag/android-v1.1.0).
 Un fallo, una duda o una idea van a [Issues](https://github.com/NachoPola16/aldune/issues/new): di qué versión usas, qué hiciste y qué esperabas.
 No pegues códigos de perfil, tokens ni el contenido de tus notas en un issue público.
 

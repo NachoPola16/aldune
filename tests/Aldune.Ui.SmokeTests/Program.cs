@@ -49,6 +49,7 @@ internal static class Program
             Field<DispatcherTimer>(dock, "_fullscreenPollTimer").Stop();
             Pump(TimeSpan.FromMilliseconds(150));
             Check(Field<int>(dock, "_noteCount") == 2, "Initial repository refresh contains two notes");
+            RunDockRound24(dock, settings, coordinator, repository);
             RunTagSelection(dock, settings);
             RunNoteGrowFlash(repository, coordinator, settings);
             RunNoteMenuToggle(repository, coordinator, settings);
@@ -132,6 +133,53 @@ internal static class Program
         Check(!Field<FanStateMachine>(dock, "_fanState").IsExpanded,
             "Real hover polling collapses after expiry with cursor outside");
         Console.WriteLine("PASS: dock tag selection/Closed/grace/expiry regression scenario");
+    }
+
+    /// <summary>
+    /// Round 2.4.0 on the dock: accent ring on the cogwheel for a filtered view, the view label's fixed placement, the wheel session that keeps
+    /// the window size and then releases it, and the note's closing ghost. No mouse involved; the state is restored for the next scenario.
+    /// </summary>
+    private static void RunDockRound24(EdgeDockWindow dock, AppSettings settings, AppCoordinator coordinator, NotesRepository repository)
+    {
+        var gear = (Button)dock.FindName("ManageArchiveButton");
+        coordinator.SetDockView(DockViewKind.Archived, null);
+        Check(Equals(gear.Tag, "Filtered"), "Cogwheel carries the accent ring (Tag) when the dock shows a filtered view");
+        coordinator.SetDockView(DockViewKind.Active, null);
+        Check(gear.Tag is null, "Cogwheel ring is removed on the Active view");
+
+        // View label: custom placement, centred on the notes column at the free end (above for the right edge, below for the top edge).
+        typeof(EdgeDockWindow).GetMethod("ShowViewLabel", PrivateInstance)!.Invoke(dock, ["smoke"]);
+        var popup = Field<Popup>(dock, "_viewLabelPopup");
+        Check(popup.Placement == PlacementMode.Custom && ReferenceEquals(popup.PlacementTarget, dock.FindName("TabsScroll")),
+            "View label uses a custom placement on the notes column");
+        var places = popup.CustomPopupPlacementCallback!(new Size(100, 30), new Size(200, 300), default);
+        Check(places.Length == 1 && Math.Abs(places[0].Point.X - 50) < 0.01 && places[0].Point.Y < 0,
+            "View label is centred over the column and above it on the right edge");
+        popup.IsOpen = false;
+
+        // Wheel session: the window keeps its size while the wheel turns and is released afterwards.
+        int notes = Field<int>(dock, "_noteCount");
+        typeof(EdgeDockWindow).GetMethod("CycleDockView", PrivateInstance)!.Invoke(dock, [1, false]);
+        Check(Field<int>(dock, "_wheelFloorCount") >= Math.Min(notes, 2), "A wheel session remembers the note count it started with");
+        Check(dock.Background is System.Windows.Media.SolidColorBrush { Color.A: 1 }, "During a wheel session the window catches the wheel (alpha 1 background)");
+        Pump(TimeSpan.FromMilliseconds(1900));
+        Check(Field<int>(dock, "_wheelFloorCount") == 0, "The wheel session ends and releases the window size");
+        Check(dock.Background is System.Windows.Media.SolidColorBrush { Color.A: 0 }, "The window stops catching the wheel after the session");
+        coordinator.SetDockView(DockViewKind.Active, null);
+        Pump(TimeSpan.FromMilliseconds(150));
+
+        // Closing ghost: the note can be photographed (background + content), which is what lets the whole window fade.
+        var note = repository.Create("Smoke ghost note", "#F7E6A3", "SMOKE");
+        var window = new NoteWindow(note, repository, coordinator, settings) { Left = 300, Top = 200 };
+        window.Show();
+        Pump(TimeSpan.FromMilliseconds(400));
+        var capture = typeof(NoteWindow).Assembly.GetType("Aldune.Windowing.ClosingGhost")!
+            .GetMethod("Capture", BindingFlags.Static | BindingFlags.NonPublic)!.Invoke(null, [window]);
+        Check(capture is System.Windows.Media.Imaging.BitmapSource { PixelWidth: > 100, PixelHeight: > 100 }, "The note can be photographed for the closing ghost");
+        window.Close();
+        Pump(TimeSpan.FromMilliseconds(500));
+        Check(!window.IsLoaded, "The closing animation ends and the note window is gone");
+        Console.WriteLine("PASS: round 2.4.0 dock scenario");
     }
 
     /// <summary>
