@@ -51,8 +51,15 @@ internal static class Program
             Check(Field<int>(dock, "_noteCount") == 2, "Initial repository refresh contains two notes");
             RunDockRound24(dock, settings, coordinator, repository);
             RunTagSelection(dock, settings);
-            RunNoteGrowFlash(repository, coordinator, settings);
-            RunNoteMenuToggle(repository, coordinator, settings);
+            // The two scenarios below take the real mouse, grab the real screen and activate note windows (they steal keyboard focus):
+            // ALDUNE_SMOKE_QUIET=1 skips them so the suite can run while someone is working at the PC.
+            if (Environment.GetEnvironmentVariable("ALDUNE_SMOKE_QUIET") == "1")
+                Console.WriteLine("SKIP: note grow flash and note menu toggle (physical mouse, screen and focus) in quiet mode");
+            else
+            {
+                RunNoteGrowFlash(repository, coordinator, settings);
+                RunNoteMenuToggle(repository, coordinator, settings);
+            }
         }
         catch (Exception exception)
         {
@@ -193,7 +200,7 @@ internal static class Program
 
         // Closing ghost: the note can be photographed (background + content), which is what lets the whole window fade.
         var note = repository.Create("Smoke ghost note", "#F7E6A3", "SMOKE");
-        var window = new NoteWindow(note, repository, coordinator, settings) { Left = 300, Top = 200 };
+        var window = new NoteWindow(note, repository, coordinator, settings) { Left = 300, Top = 200, ShowActivated = false };
         window.Show();
         Pump(TimeSpan.FromMilliseconds(400));
         var capture = typeof(NoteWindow).Assembly.GetType("Aldune.Windowing.ClosingGhost")!

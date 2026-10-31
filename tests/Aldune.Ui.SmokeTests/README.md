@@ -6,6 +6,8 @@ Interactive Windows and the .NET 10 SDK. No test framework or extra packages: a 
 dotnet run --project "C:\Users\nacho\Proyectos\aldune\tests\Aldune.Ui.SmokeTests\Aldune.Ui.SmokeTests.csproj" --configuration Debug
 ```
 
+Quiet mode: `ALDUNE_SMOKE_QUIET=1` skips the two scenarios that use the physical mouse, grab the real screen and activate note windows (the note grow flash and the note menu toggle). Everything else (including the 2.4-2.6 dock checks) runs without touching the mouse, the keyboard focus or the screen. Use it whenever you are working while the suite runs.
+
 ## Priority scenario executed
 
 1. A new SQLite DB in a GUID temporary directory; an ephemeral AES key; two notes, one tagged.
