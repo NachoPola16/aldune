@@ -577,6 +577,13 @@ public static class Strings
         "Nächste Notizen anzeigen", "Afficher les notes suivantes", "Ver notas seguintes");
     public static string OpenNote => T("Open", "Abrir",
         "Öffnen", "Ouvrir", "Abrir");
+    // «Fijar arriba» (la nota va la primera de las listas y viaja por la sync): distinto del «siempre encima» de arriba.
+    public static string PinToTop => T("Pin to the top of the list", "Fijar arriba en la lista",
+        "Oben in der Liste anheften", "Épingler en haut de la liste", "Fixar no topo da lista");
+    public static string UnpinFromTop => T("Unpin from the top of the list", "Quitar de arriba en la lista",
+        "Von der Listenspitze lösen", "Détacher du haut de la liste", "Soltar do topo da lista");
+    public static string PinnedToTopMarker => T("Pinned to the top of the list", "Fijada arriba en la lista",
+        "Oben in der Liste angeheftet", "Épinglée en haut de la liste", "Fixada no topo da lista");
     public static string ProtectNote => T("Protect with password…", "Proteger con contraseña…",
         "Mit Passwort schützen…", "Protéger par mot de passe…", "Proteger com senha…");
     public static string VisibleNameMenu => T("Visible name…", "Nombre visible…",

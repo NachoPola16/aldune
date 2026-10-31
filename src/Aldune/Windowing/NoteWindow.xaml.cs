@@ -120,6 +120,7 @@ public partial class NoteWindow : Window
 
         Topmost = !_repository.IsUnpinned(note.Id);
         UpdatePinButton();
+        UpdatePinToTopButton();
         UpdateReminderButton();
         ProtectionButton.Content = note.IsProtected ? Strings.RemoveProtection : Strings.ProtectNote;
         VisibleNameButton.Visibility = note.IsProtected ? Visibility.Visible : Visibility.Collapsed;
@@ -1817,6 +1818,24 @@ public partial class NoteWindow : Window
         PinButton.Content = Topmost ? Strings.PinnedOn : Strings.PinnedOff;
         PinHint.Text = Topmost ? Strings.PinnedOnHint : Strings.PinnedOffHint;
     }
+
+    /// <summary>
+    /// «Fijar arriba en la lista»: la nota va la primera del dock y del gestor, y el hecho viaja por la sync. Es otra cosa que
+    /// «Siempre encima» (<see cref="OnPinClick"/>, local): por eso el texto nunca dice solo «fijar».
+    /// </summary>
+    private void OnPinToTopClick(object sender, RoutedEventArgs e)
+    {
+        // Antes de escribir, por si lo que se teclea aún no se ha guardado: el guardado reescribe la fila entera.
+        Flush();
+        _note.IsPinnedToTop = !_note.IsPinnedToTop;
+        _repository.SetPinnedToTop(_note.Id, _note.IsPinnedToTop);
+        UpdatePinToTopButton();
+        ActionsPopup.IsOpen = false;
+        _coordinator.RefreshAll();
+    }
+
+    private void UpdatePinToTopButton() =>
+        PinToTopButton.Content = _note.IsPinnedToTop ? Strings.UnpinFromTop : Strings.PinToTop;
 
     private void OnProtectionClick(object sender, RoutedEventArgs e)
     {

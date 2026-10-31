@@ -46,6 +46,7 @@
         </Style>
         <local:NoteTabLabelConverter x:Key="NoteTabLabelConverter" />
         <local:NoteLinkedConverter x:Key="NoteLinkedConverter" />
+        <BooleanToVisibilityConverter x:Key="BoolToVisibility" />
         <local:NoteRimConverter x:Key="NoteRimConverter" />
         <local:NoteDisplayColorConverter x:Key="NoteDisplayColorConverter" />
         <local:NoteRestOutlineConverter x:Key="NoteRestOutlineConverter" />
@@ -202,6 +203,13 @@
                                        HorizontalAlignment="Right" VerticalAlignment="Top" Margin="0,9,28,0" Opacity="0.75"
                                        Visibility="{Binding Converter={StaticResource NoteLinkedConverter}}"
                                        ToolTip="{Binding Converter={StaticResource NoteLinkedConverter}, ConverterParameter=Path}" />
+
+                            <!-- Fijada arriba en la lista (no el «siempre encima»): chincheta junto a la página de las vinculadas. -->
+                            <TextBlock Text="&#xE840;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" FontSize="10"
+                                       Foreground="{Binding Converter={StaticResource NoteFaceConverter}, ConverterParameter=Label}"
+                                       HorizontalAlignment="Right" VerticalAlignment="Top" Margin="0,9,44,0" Opacity="0.85"
+                                       Visibility="{Binding IsPinnedToTop, Converter={StaticResource BoolToVisibility}}"
+                                       ToolTip="{x:Static res:Strings.PinnedToTopMarker}" />
 
                             <local:BevelEdge x:Name="CardBevel" />
                             <Border x:Name="HoverOverlay" Background="#1E1A14" Opacity="0" CornerRadius="{DynamicResource AlduneRadiusTabRight}" />
@@ -830,6 +838,8 @@
                                 Click="OnTabMenuProtectionClick" Style="{StaticResource NoteMenuItemStyle}" />
                         <Button x:Name="TabMenuVisibleNameButton" Content="{x:Static res:Strings.VisibleNameMenu}"
                                 Click="OnTabMenuVisibleNameClick" Style="{StaticResource NoteMenuItemStyle}" />
+                        <Button x:Name="TabMenuPinToTopButton" Click="OnTabMenuPinToTopClick"
+                                Style="{StaticResource NoteMenuItemStyle}" />
                         <Button x:Name="TabMenuArchiveButton" Content="{x:Static res:Strings.Archive}"
                                 Click="OnTabMenuArchiveClick"
                                 Style="{StaticResource NoteMenuItemStyle}" />

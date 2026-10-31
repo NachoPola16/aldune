@@ -387,6 +387,8 @@
                         <TextBlock x:Name="PinHint"
                                    Foreground="{DynamicResource AlduneHintBrush}" FontSize="{DynamicResource AlduneTextSmall}" TextWrapping="Wrap"
                                    Margin="9,0,9,6" />
+                        <Button x:Name="PinToTopButton" Click="OnPinToTopClick"
+                                Style="{StaticResource NoteMenuItemStyle}" />
                         <Button x:Name="ProtectionButton" Click="OnProtectionClick" ToolTipService.ShowOnDisabled="True"
                                 Content="{x:Static res:Strings.ProtectNote}"
                                 Style="{StaticResource NoteMenuItemStyle}" />

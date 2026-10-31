@@ -2289,7 +2289,10 @@ public partial class EdgeDockWindow : Window
 
         if (note is null) return;
 
-        var current = (TabsList.ItemsSource as IEnumerable<Note>)?.Select(n => n.Id).ToList();
+        // Solo el grupo de la nota (fijadas o no): arrastrar no cruza la frontera, y las vecinas que
+        // se miran para calcular la posición son del mismo grupo.
+        var current = (TabsList.ItemsSource as IEnumerable<Note>)?
+            .Where(n => n.IsPinnedToTop == note.IsPinnedToTop).Select(n => n.Id).ToList();
         if (current is null || current.Count == 0) return;
 
         int originalIndex = current.IndexOf(note.Id);
@@ -2455,6 +2458,8 @@ public partial class EdgeDockWindow : Window
         _tabMenuNote = note;
         TabMenuArchiveButton.Content = note.State == NoteState.Active ? Strings.Archive : Strings.Restore;
         TabMenuTrashButton.Content = note.State == NoteState.Trashed ? Strings.Restore : Strings.MoveToTrash;
+        TabMenuPinToTopButton.Content = note.IsPinnedToTop ? Strings.UnpinFromTop : Strings.PinToTop;
+        TabMenuPinToTopButton.Visibility = note.State == NoteState.Active ? Visibility.Visible : Visibility.Collapsed;
         TabMenuProtectionButton.Content = note.IsProtected ? Strings.RemoveProtection : Strings.ProtectNote;
         TabMenuVisibleNameButton.Visibility = note.IsProtected ? Visibility.Visible : Visibility.Collapsed;
         // Una nota vinculada es el archivo en claro: no se protege (spec, decisión 7).
@@ -2558,6 +2563,16 @@ public partial class EdgeDockWindow : Window
         if (!PasswordPromptWindow.ShowVisibleName(this, note.ProtectedTitle, out var visibleName)) return;
         _repository.SetProtectedTitle(note.Id, visibleName);
         _coordinator.RefreshAll();
+    }
+
+    private void OnTabMenuPinToTopClick(object sender, RoutedEventArgs e)
+    {
+        if (_tabMenuNote is { } note)
+        {
+            _repository.SetPinnedToTop(note.Id, !note.IsPinnedToTop);
+            _coordinator.RefreshAll();
+        }
+        CloseTabMenu();
     }
 
     private void OnTabMenuArchiveClick(object sender, RoutedEventArgs e)

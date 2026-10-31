@@ -413,6 +413,15 @@ public partial class NotesManagerWindow : Window
         _coordinator.RefreshAll();
     }
 
+    private void OnPinToTopClick(object sender, RoutedEventArgs e)
+    {
+        if (sender is not Button { Tag: NoteRow row }) return;
+        _repository.SetPinnedToTop(row.Note.Id, !row.Note.IsPinnedToTop);
+        LoadRows();
+        _coordinator.RefreshAll();
+        e.Handled = true;
+    }
+
     private void OnEditTagsClick(object sender, RoutedEventArgs e)
     {
         if (sender is not Button { Tag: NoteRow row } button) return;

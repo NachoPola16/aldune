@@ -22,6 +22,7 @@
     <Window.Resources>
         <local:NoteTitleConverter x:Key="NoteTitleConverter" />
         <local:NoteLinkedConverter x:Key="NoteLinkedConverter" />
+        <local:PinToTopTextConverter x:Key="PinToTopTextConverter" />
         <local:NoteRimConverter x:Key="NoteRimConverter" />
         <local:NoteDisplayColorConverter x:Key="NoteDisplayColorConverter" />
         <local:NoteLabelColorConverter x:Key="NoteLabelColorConverter" />
@@ -631,6 +632,28 @@
                                                        VerticalAlignment="Center" Margin="0,0,5,0" Opacity="0.75"
                                                        Visibility="{Binding Note, Converter={StaticResource NoteLinkedConverter}}"
                                                        ToolTip="{Binding Note, Converter={StaticResource NoteLinkedConverter}, ConverterParameter=Path}" />
+                                            <!-- Fijar arriba en la lista (no el «siempre encima»): la chincheta es un interruptor,
+                                                 tenue si la nota no está fijada y plena si lo está. -->
+                                            <Button DockPanel.Dock="Left" Tag="{Binding}" Click="OnPinToTopClick"
+                                                    Foreground="{Binding Note.Color, Converter={StaticResource NoteLabelColorConverter}}"
+                                                    Margin="-4,-2,3,-2" VerticalAlignment="Center"
+                                                    ToolTip="{Binding Note.IsPinnedToTop, Converter={StaticResource PinToTopTextConverter}}"
+                                                    AutomationProperties.Name="{Binding Note.IsPinnedToTop, Converter={StaticResource PinToTopTextConverter}}"
+                                                    Style="{StaticResource TagChipsButtonStyle}">
+                                                <TextBlock Text="&#xE840;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets"
+                                                           FontSize="{DynamicResource AlduneTextSmall}">
+                                                    <TextBlock.Style>
+                                                        <Style TargetType="TextBlock">
+                                                            <Setter Property="Opacity" Value="0.28" />
+                                                            <Style.Triggers>
+                                                                <DataTrigger Binding="{Binding Note.IsPinnedToTop}" Value="True">
+                                                                    <Setter Property="Opacity" Value="1" />
+                                                                </DataTrigger>
+                                                            </Style.Triggers>
+                                                        </Style>
+                                                    </TextBlock.Style>
+                                                </TextBlock>
+                                            </Button>
                                             <TextBlock Text="{Binding Note, Converter={StaticResource NoteTitleConverter}}"
                                                        FontWeight="SemiBold" FontSize="{DynamicResource AlduneTextBody}"
                                                        VerticalAlignment="Center"

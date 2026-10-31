@@ -56,6 +56,21 @@ public sealed class PinnedToTopTests : IDisposable
     }
 
     [Fact]
+    public void TheDeckListsPinnedNotesFirstAndKeepsTheOrderInsideEachGroup()
+    {
+        var a = _sut.Create("a", "#EBD38B", "primary");
+        var b = _sut.Create("b", "#EBD38B", "primary");
+        var c = _sut.Create("c", "#EBD38B", "primary");
+        _sut.SetPinnedToTop(c.Id, true);
+
+        Assert.Equal(new[] { c.Id, a.Id, b.Id }, _sut.GetByState(NoteState.Active).Select(n => n.Id));
+
+        // Arrastrar dentro del grupo (la lista que ve el dock es solo la del grupo) no mezcla los dos.
+        _sut.MoveNote(b.Id, 0, new[] { a.Id, b.Id });
+        Assert.Equal(new[] { c.Id, b.Id, a.Id }, _sut.GetByState(NoteState.Active).Select(n => n.Id));
+    }
+
+    [Fact]
     public void ThePinTravelsWithASyncedNote()
     {
         var note = MakeNote("remota", pinned: true);

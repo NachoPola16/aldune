@@ -70,7 +70,7 @@ public sealed class NotesRepository
             , o.Position AS DockPosition
             FROM Note n LEFT JOIN NoteOrder o ON o.NoteId = n.Id
             WHERE n.State = $state
-            ORDER BY COALESCE(o.Position, 1e18), n.CreatedAt;
+            ORDER BY n.PinnedToTop DESC, COALESCE(o.Position, 1e18), n.CreatedAt;
             """;
         command.Parameters.AddWithValue("$state", state.ToString());
 
@@ -244,7 +244,7 @@ public sealed class NotesRepository
             JOIN Tag t ON t.Id = nt.TagId
             LEFT JOIN NoteOrder o ON o.NoteId = n.Id
             WHERE n.State = $state AND t.Name = $tag COLLATE NOCASE
-            ORDER BY COALESCE(o.Position, 1e18), n.CreatedAt;
+            ORDER BY n.PinnedToTop DESC, COALESCE(o.Position, 1e18), n.CreatedAt;
             """;
         command.Parameters.AddWithValue("$state", state.ToString());
         command.Parameters.AddWithValue("$tag", tag);
