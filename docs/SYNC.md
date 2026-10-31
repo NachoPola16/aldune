@@ -447,6 +447,8 @@ clear error instead of applying partial data: an old version would rewrite the n
 position and silently undo the reordering.
 
 Pinned notes (Windows 2.2.0 / Android 1.1.0) do **not** raise the format: the pin travels inside the encrypted note as the optional field `pinnedToTop`, written only when it is true. A
+
+Per-note “done tasks” setting (Windows 2.3.0 / Android 1.2.0) does not raise the format either: it travels as the optional field `completedTasks` (an integer: 1 = keep in place, 2 = move to the bottom), written only when it is not 0 (“follow this device's settings”). Readers ignore unknown fields, and a number they do not know reads as 0. Notes with 1 or 2 are never deleted (Windows) or hidden (Android) by the device's own “done tasks” settings, which is what protects a shared list. As with the pin, an older version that *edits* and re-sends the note drops the field (the note goes back to “follow this device's settings”). The version history is **local**: it is never part of the payload and does not sync.
 version that does not know it ignores it and shows the note unpinned; if that older version **edits the note and sends it back**, the pin is lost (an unedited note is not re-sent, so nothing
 changes unless you edit it there). Pinning or unpinning counts as an edit of the note, so it syncs like any other change.
 
