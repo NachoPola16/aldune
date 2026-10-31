@@ -19,6 +19,7 @@ The first screenshot uses Spanish sample notes because that is what the app was 
 | Languages | English, Spanish, German, French, Italian, Brazilian Portuguese, Japanese and Simplified Chinese (1.0.0 had English and Spanish) |
 | Looks | dark, light, pastel, midnight, XP, Telecom, Bash, Phosphor and six notebook looks (1.0.0 had a single dark look) |
 | Tasks | checklists with tick boxes, per-note rules for done tasks, progress on the tab and in the Android widget |
+| Links | `http://` and `https://` addresses in a note open with Ctrl+click (Windows, 2.4.0) |
 | Safety net | automatic backups, local version history per note, password-protected notes |
 
 ## The first weeks, when it did not always work

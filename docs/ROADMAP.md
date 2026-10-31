@@ -10,7 +10,7 @@ Originating session: 2026-09-06.
 
 ## Visible version of the application
 
-The current round is identified as **v2.3.0**. The version is shown in Settings and also in the tray
+The current round is identified as **v2.4.0**. The version is shown in Settings and also in the tray
 icon's text. Every major update must increment this number following SemVer: patches for fixes, a
 minor version for new features and a major version when there are incompatible changes.
 
@@ -385,6 +385,19 @@ cross-platform clients reusing the common sync format.
 - **Tag order on Android uses arrows, not drag**: larger touch targets and TalkBack. The order is per device (not synced); Windows has no custom tag order.
 - **Wheel changes dock view**: gear always; tabs only when they all fit (a turn continuing a recent change keeps cycling); Ctrl+wheel always. The label sits next to the gear, towards the screen, so it never covers notes. No extra button on the dock (it would add weight where less was asked).
 - **Not done / later**: capping the dock column height with very many notes on the top and bottom edges; filtering the Android widget by tag; checkable boxes in the widget. Italian and Japanese were added at the end of this round (machine-assisted, not reviewed by native speakers).
+
+### Round 2.4.0 (Windows) — decisions (2026-11-01)
+
+- **View label**: one pill, always in the same place — centred on the notes column at the free end of the strip (above the first note on the left, right and bottom docks; below the last one on the top dock, where the button bar hugs the screen edge). A custom popup placement never flips sides, which is what made it jump around the cogwheel. It fades on its own after about a second.
+- **Filter indicator**: the notification-like dot on the cogwheel is gone; the button gets an accent ring instead (it also stops the glyph looking off-centre, which it never was: ink measured at 0.0 px off centre in most looks). The tooltip still names the view.
+- **Wheel session**: while the wheel keeps turning (1.5 s after the last notch) the dock window keeps the size it had and catches the wheel anywhere inside, so switching to a tag with few notes never leaves the cursor outside the dock. It shrinks when the session ends.
+- **Gap between the button bar and the notes**: 8 px visible on the four edges (was 16).
+- **Pin colour**: the row's own ink (what the title uses) instead of the softer note «label» tone; filled glyph when pinned, outline at 0.45 when not.
+- **Language**: still applied on restart (a live reload would rebuild every open window, notes with unsaved text included); Settings now says so under the list, with a «Restart now» button.
+- **Settings header** uses the notes manager's spacing (20,18,14 and 20,17,16,17 with a real title bar, more air under it).
+- **Tray menu**: the outline of the hovered row follows the look's accent, so a custom accent colour reaches it.
+- **Links in notes**: allowed, in the smallest safe form. Plain `http://` and `https://` text opens with Ctrl+click (hand cursor while Ctrl is held), never by itself; nothing else opens (no `file:`, UNC, `javascript:`, `mailto:`), URLs with user info are ignored, runs over 2048 characters are ignored (`LinkText`, Core). The note stays plain text, so sync and storage do not change. Windows only for now; Android can follow in its next release.
+- **Not changed, on purpose**: manager rows and tab previews keep their spacing (measured, nothing cramped). Closing a note fades its content but the window frame (and the DWM shadow) still goes at once: fading the whole window needs a layered window and Windows refuses `WS_EX_LAYERED` on these WPF windows (`SetLayeredWindowAttributes` fails); the way out is a snapshot window that fades in its place, not done yet.
 
 ## 3. Discarded for now, with its reason
 
