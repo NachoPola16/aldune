@@ -279,6 +279,12 @@ fun NoteListPane(
                     if (highlight != null && index >= 0) listState.animateScrollToItem(index)
                 }
 
+                // A menu only opens for a row that is on screen: a gesture that ends or is cancelled after the list scrolled must never
+                // surface the options of a note the user cannot see.
+                fun openMenuIfShown(item: NoteListItem) {
+                    if (listState.layoutInfo.visibleItemsInfo.any { it.key == item.id }) menuFor = item
+                }
+
                 fun dragStart(id: String) {
                     haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                     draggedId = id
@@ -364,13 +370,14 @@ fun NoteListPane(
                                         detectDragGesturesAfterLongPress(
                                             onDragStart = {
                                                 hold.active = true; hold.travelled = 0f; hold.menuShown = false; dragStart(item.id)
+                                                val press = ++hold.press
                                                 // Si el dedo sigue quieto un momento tras la pulsación larga no se quiere recolocar la nota: el menú se
                                                 // abre sin esperar a levantarlo. Si se mueve antes, es un arrastre y el menú no sale.
                                                 scope.launch {
                                                     delay(MENU_HOLD_MS)
-                                                    if (hold.active && !hold.menuShown && hold.travelled <= viewConfiguration.touchSlop) {
+                                                    if (hold.press == press && hold.active && !hold.menuShown && hold.travelled <= viewConfiguration.touchSlop) {
                                                         hold.menuShown = true
-                                                        menuFor = item
+                                                        openMenuIfShown(item)
                                                     }
                                                 }
                                             },
@@ -384,13 +391,15 @@ fun NoteListPane(
                                             onDragEnd = {
                                                 val moved = hold.travelled > viewConfiguration.touchSlop
                                                 dragEnd()
-                                                if (!moved && !hold.menuShown) menuFor = item
+                                                if (!moved && !hold.menuShown) openMenuIfShown(item)
                                                 hold.active = false
                                             },
+                                            // Also called when the row leaves the composition (scrolled away) mid-gesture: then it is not a held
+                                            // finger and openMenuIfShown refuses the row because it is no longer on screen.
                                             onDragCancel = {
                                                 val moved = hold.travelled > viewConfiguration.touchSlop
                                                 dragEnd()
-                                                if (!moved && !hold.menuShown) menuFor = item
+                                                if (!moved && !hold.menuShown) openMenuIfShown(item)
                                                 hold.active = false
                                             },
                                         )
@@ -401,7 +410,7 @@ fun NoteListPane(
                                             if (awaitLongPressOrCancellation(down.id) != null) {
                                                 hold.active = true
                                                 haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                                                menuFor = item
+                                                openMenuIfShown(item)
                                                 do {
                                                     val event = awaitPointerEvent()
                                                 } while (event.changes.any { it.pressed })
@@ -852,6 +861,8 @@ private class PressHold {
     var travelled = 0f
     /** El menú ya se abrió con el dedo todavía puesto: al levantarlo no hay que abrirlo otra vez. */
     var menuShown = false
+    /** Bumped on every press: a delayed menu request from an earlier press must not fire for a later one. */
+    var press = 0
 }
 
 /** El aviso de que, sin sincronización, no hay copia de las notas: lleva a Ajustes (sincronizar o exportar) y se puede descartar. */

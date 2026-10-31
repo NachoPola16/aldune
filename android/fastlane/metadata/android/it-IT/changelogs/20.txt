@@ -1,0 +1,1 @@
+Corretto: premere a lungo o scorrere nella lista non apre più le opzioni di una nota fuori dalla vista.

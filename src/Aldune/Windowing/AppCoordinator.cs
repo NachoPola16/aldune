@@ -1512,6 +1512,56 @@ public sealed class AppCoordinator
         _settings.DockTagFilter = view == DockViewKind.Tag ? tag : null;
         if (save) _settingsService?.Save(_settings);
 
+        FlushDockViewRefresh();
+    }
+
+    // A wheel turning over the dock changes the view several times in a row, and every rebuild of the list costs about 1.5 ms per tab
+    // (40 ms with 10 notes, 240 ms with 150). The first notch of a burst refreshes at once; the ones that follow only change the setting
+    // (so the label and the next step are right) and the list is rebuilt once the wheel pauses.
+    private static readonly TimeSpan ViewBurstGap = TimeSpan.FromMilliseconds(250);
+    private static readonly TimeSpan ViewRefreshQuiet = TimeSpan.FromMilliseconds(90);
+    private static readonly TimeSpan ViewRefreshMaxDelay = TimeSpan.FromMilliseconds(300);
+    private DispatcherTimer? _viewRefreshTimer;
+    private DateTime _lastViewChange = DateTime.MinValue;
+    private DateTime _viewRefreshPendingSince;
+    private bool _viewRefreshPending;
+
+    /// <summary><see cref="SetDockView"/> for a wheel gesture: chained changes are grouped into one rebuild (see above).</summary>
+    public void SetDockViewCoalesced(DockViewKind view, string? tag = null)
+    {
+        if (_settings is null) return;
+        var now = DateTime.UtcNow;
+        bool inBurst = now - _lastViewChange < ViewBurstGap;
+        _lastViewChange = now;
+        if (!inBurst && !_viewRefreshPending)
+        {
+            SetDockView(view, tag);
+            return;
+        }
+
+        _settings.DockView = view;
+        _settings.DockTagFilter = view == DockViewKind.Tag ? tag : null;
+        _settingsService?.Save(_settings);
+        if (!_viewRefreshPending) { _viewRefreshPending = true; _viewRefreshPendingSince = now; }
+        if (now - _viewRefreshPendingSince >= ViewRefreshMaxDelay)
+        {
+            FlushDockViewRefresh();
+            return;
+        }
+        _viewRefreshTimer ??= new DispatcherTimer(DispatcherPriority.Input);
+        _viewRefreshTimer.Stop();
+        _viewRefreshTimer.Interval = ViewRefreshQuiet;
+        _viewRefreshTimer.Tick -= OnViewRefreshTimer;
+        _viewRefreshTimer.Tick += OnViewRefreshTimer;
+        _viewRefreshTimer.Start();
+    }
+
+    private void OnViewRefreshTimer(object? sender, EventArgs e) => FlushDockViewRefresh();
+
+    private void FlushDockViewRefresh()
+    {
+        _viewRefreshTimer?.Stop();
+        _viewRefreshPending = false;
         CloseNotesOutsideCurrentView();
         RefreshAll();
     }

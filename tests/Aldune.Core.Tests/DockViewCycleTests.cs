@@ -47,13 +47,16 @@ public sealed class DockViewCycleTests
     }
 
     [Fact]
-    public void EmptyViewsAreSkipped()
+    public void TagsWithoutNotesAreSkippedButTheFixedViewsAreAlwaysReachable()
     {
         var counts = Counts(active: 4, archived: 0, trashed: 0, ("casa", 0), ("trabajo", 2));
 
         Assert.Equal((DockViewKind.Tag, (string?)"trabajo"), DockViewCycle.Next(DockViewKind.Active, null, counts, +1));
-        // Sin archivadas ni papelera, «Todas» no aporta nada y se salta.
-        Assert.Equal((DockViewKind.Active, (string?)null), DockViewCycle.Next(DockViewKind.Tag, "trabajo", counts, +1));
+        // Archivadas, Papelera y Todas se alcanzan con la rueda aunque estén vacías.
+        Assert.Equal((DockViewKind.Archived, (string?)null), DockViewCycle.Next(DockViewKind.Tag, "trabajo", counts, +1));
+        Assert.Equal((DockViewKind.Trashed, (string?)null), DockViewCycle.Next(DockViewKind.Archived, null, counts, +1));
+        Assert.Equal((DockViewKind.All, (string?)null), DockViewCycle.Next(DockViewKind.Trashed, null, counts, +1));
+        Assert.Equal((DockViewKind.Active, (string?)null), DockViewCycle.Next(DockViewKind.All, null, counts, +1));
     }
 
     [Fact]
@@ -65,12 +68,13 @@ public sealed class DockViewCycleTests
     }
 
     [Fact]
-    public void WithNothingElseTheViewStaysOnActive()
+    public void WithNothingElseTheWheelStillWalksTheFixedViewsAndComesBack()
     {
         var counts = Counts(active: 0, archived: 0, trashed: 0);
 
-        Assert.Equal((DockViewKind.Active, (string?)null), DockViewCycle.Next(DockViewKind.Active, null, counts, +1));
-        Assert.Equal((DockViewKind.Active, (string?)null), DockViewCycle.Next(DockViewKind.Active, null, counts, -1));
+        Assert.Equal((DockViewKind.Archived, (string?)null), DockViewCycle.Next(DockViewKind.Active, null, counts, +1));
+        Assert.Equal((DockViewKind.All, (string?)null), DockViewCycle.Next(DockViewKind.Active, null, counts, -1));
+        Assert.Equal((DockViewKind.Active, (string?)null), DockViewCycle.Next(DockViewKind.All, null, counts, +1));
     }
 
     [Fact]

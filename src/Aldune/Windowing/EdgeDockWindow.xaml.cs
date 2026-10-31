@@ -138,7 +138,8 @@ public partial class EdgeDockWindow : Window
         _mouseHookProc = OnGlobalMouseHook;
 
         TabsScroll.ScrollChanged += OnTabsScrollChanged;
-        TabsScroll.SizeChanged += (_, _) => QueueScrollIndicatorUpdate();
+        TabsScroll.SizeChanged += (_, _) => { QueueScrollIndicatorUpdate(); ReplaceViewLabelIfOpen(); };
+        SizeChanged += (_, _) => ReplaceViewLabelIfOpen();
         ScrollOverlay.SizeChanged += (_, _) => QueueScrollIndicatorUpdate();
 
         _fanState.ExpansionChanged += (_, _) => ApplyState(animate: true);
@@ -1300,6 +1301,7 @@ public partial class EdgeDockWindow : Window
 
         _keyboardReturnWindow = NativeMethods.ForegroundWindow();
         _keyboardMode = true;
+        FocusRingState.Current.Visible = true;
         if (!_fanState.IsExpanded) _fanState.PointerEntered();
         NativeMethods.EnsureTopmost(_hwnd);
         NativeMethods.AllowActivation(_hwnd);
@@ -1312,6 +1314,9 @@ public partial class EdgeDockWindow : Window
     {
         if (!_keyboardMode) return;
         _keyboardMode = false;
+        // The tab or footer button that had the focus must not keep its ring once the keyboard is given back.
+        FocusRingState.Current.Visible = false;
+        Keyboard.ClearFocus();
         NativeMethods.MakeNonActivating(_hwnd);
         if (restoreFocus) NativeMethods.Reactivate(_keyboardReturnWindow);
         _keyboardReturnWindow = IntPtr.Zero;
@@ -1825,7 +1830,7 @@ public partial class EdgeDockWindow : Window
     {
         BeginWheelSession();
         var (view, tag) = DockViewCycle.Next(_settings?.DockView ?? DockViewKind.Active, _settings?.DockTagFilter, BuildViewCounts(), direction);
-        _coordinator.SetDockView(view, tag);
+        _coordinator.SetDockViewCoalesced(view, tag);
         _wheelViewUntil = DateTime.UtcNow + WheelSessionLength;
         HoldOpenForNextInteraction();
         if (showLabel) ShowViewLabel(CurrentViewLabel());
@@ -1911,6 +1916,8 @@ public partial class EdgeDockWindow : Window
             border.MouseLeave += (_, _) => hover.Visibility = Visibility.Collapsed;
             border.MouseLeftButtonUp += OnViewLabelClick;
             _viewLabelBorder = border;
+            // The label only knows its size once it is open and measured: until then the popup would sit at the screen origin.
+            border.SizeChanged += (_, _) => ReplaceViewLabelIfOpen();
             _viewLabelPopup = new System.Windows.Controls.Primitives.Popup
             {
                 Child = border, AllowsTransparency = true, StaysOpen = true, IsHitTestVisible = false
@@ -1934,7 +1941,22 @@ public partial class EdgeDockWindow : Window
         // TabShadowHeadroom below the top of the strip (that headroom is transparent), so the label overlaps it; on the top dock the last card
         // is flush with the bottom of the strip. If that does not fit on the screen (dock aligned to a screen end, or a very long list) the
         // label goes beside the first note, on the screen side, instead of covering notes.
-        _viewLabelBorder!.Height = FooterBorder.ActualHeight > 0 ? FooterBorder.ActualHeight : 42;
+        PlaceViewLabel();
+        _viewLabelPopup.IsOpen = true;
+        _viewLabelTimer.Stop();
+        if (!ViewLabelPinned) _viewLabelTimer.Start();
+    }
+
+    /// <summary>
+    /// Computes where the label goes from the sizes the strip has NOW and nudges the popup so WPF asks for that placement again. It is called
+    /// when the label is shown and again whenever the strip, the window or the label itself changes size: a popup does not follow its target
+    /// on its own, and <see cref="ShowViewLabel"/> runs right after the view changes, before the list has been measured, so the first placement
+    /// is made with the old size (the label hung in the old spot for a frame or two).
+    /// </summary>
+    private void PlaceViewLabel()
+    {
+        if (_viewLabelPopup is null || _viewLabelBorder is null) return;
+        _viewLabelBorder.Height = FooterBorder.ActualHeight > 0 ? FooterBorder.ActualHeight : 42;
         _viewLabelPopup.PlacementTarget = _noteCount > 0 ? TabsScroll : ManageArchiveButton;
         _viewLabelPopup.Placement = PlacementMode.Custom;
         bool onStrip = _noteCount > 0;
@@ -1955,9 +1977,11 @@ public partial class EdgeDockWindow : Window
         };
         // A popup does not follow its target when the strip changes size: nudging the offset makes it place itself again.
         _viewLabelPopup.HorizontalOffset = _viewLabelPopup.HorizontalOffset == 0 ? 0.01 : 0;
-        _viewLabelPopup.IsOpen = true;
-        _viewLabelTimer.Stop();
-        if (!ViewLabelPinned) _viewLabelTimer.Start();
+    }
+
+    private void ReplaceViewLabelIfOpen()
+    {
+        if (_viewLabelPopup is { IsOpen: true }) PlaceViewLabel();
     }
 
     /// <summary>

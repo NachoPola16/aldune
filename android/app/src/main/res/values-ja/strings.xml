@@ -462,4 +462,5 @@
     <string name="update_check_failed">確認できませんでした。接続を確認して、もう一度お試しください。</string>
     <string name="pinned_mark_cd">リストの先頭に固定済み</string>
     <string name="existing_tags">自分のタグ</string>
+    <string name="whatsnew_131_news">リストを長押ししたりスワイプしたりしても、画面外にスクロールしたノートのオプションが開かなくなりました。</string>
 </resources>

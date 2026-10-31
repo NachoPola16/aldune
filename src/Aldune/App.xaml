@@ -35,11 +35,13 @@
         <!-- Anillo del foco de teclado: se ve solo al navegar con Tab o flechas (no al hacer clic). Vale para los
              controles con plantilla propia, que tenían el foco visual apagado y dejaban a quien usa teclado sin saber
              dónde está. Fuera del control (margen negativo) para no tapar su contenido; sigue el radio de las esquinas. -->
+        <BooleanToVisibilityConverter x:Key="FocusRingVisibility" />
         <Style x:Key="AlduneFocusVisual">
             <Setter Property="Control.Template">
                 <Setter.Value>
                     <ControlTemplate>
                         <Border Margin="-3" BorderThickness="2" IsHitTestVisible="False" SnapsToDevicePixels="True"
+                                Visibility="{Binding Source={x:Static local:FocusRingState.Current}, Path=Visible, Converter={StaticResource FocusRingVisibility}}"
                                 BorderBrush="{DynamicResource AlduneFocusRingBrush}"
                                 CornerRadius="{DynamicResource AlduneRadius6}" />
                     </ControlTemplate>

@@ -1,0 +1,1 @@
+Fixed: long-pressing or swiping the list no longer opens the options of a note that is out of view.

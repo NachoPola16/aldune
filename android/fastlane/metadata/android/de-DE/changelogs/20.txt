@@ -1,0 +1,1 @@
+Behoben: Langes Drücken oder Wischen in der Liste öffnet nicht mehr die Optionen einer Notiz außerhalb des Sichtbereichs.

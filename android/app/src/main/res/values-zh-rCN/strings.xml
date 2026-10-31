@@ -462,4 +462,5 @@
     <string name="update_check_failed">无法检查。请检查网络连接后重试。</string>
     <string name="pinned_mark_cd">已固定在列表顶部</string>
     <string name="existing_tags">您的标签</string>
+    <string name="whatsnew_131_news">在列表中长按或滑动时，不会再打开已滚出视野的笔记的选项。</string>
 </resources>

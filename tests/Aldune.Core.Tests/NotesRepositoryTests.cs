@@ -178,7 +178,11 @@ public class NotesRepositoryTests : IDisposable
     public void GetByState_OrdersByCreatedAt()
     {
         var first = _sut.Create("primera", "#FFFFFF", "primary");
-        System.Threading.Thread.Sleep(10); // ensure a distinct timestamp
+        // A fixed 10 ms sleep can still land on the same clock tick under load (the system clock may tick every ~15 ms), which makes the
+        // order of the two notes a tie: wait until the clock has really moved.
+        var created = first.CreatedAt;
+        while (DateTimeOffset.UtcNow <= created) System.Threading.Thread.Sleep(5);
+        System.Threading.Thread.Sleep(5);
         var second = _sut.Create("segunda", "#FFFFFF", "primary");
 
         var active = _sut.GetByState(NoteState.Active);

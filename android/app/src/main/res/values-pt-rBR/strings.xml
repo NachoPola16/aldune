@@ -462,4 +462,5 @@
     <string name="update_check_failed">Não foi possível verificar. Confira a conexão e tente de novo.</string>
     <string name="pinned_mark_cd">Fixada no topo da lista</string>
     <string name="existing_tags">Suas etiquetas</string>
+    <string name="whatsnew_131_news">Pressionar e segurar ou deslizar na lista não abre mais as opções de uma nota que saiu da tela.</string>
 </resources>

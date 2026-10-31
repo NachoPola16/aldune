@@ -1,0 +1,1 @@
+Corrigé : un appui long ou un balayage dans la liste n'ouvre plus les options d'une note hors de l'écran.

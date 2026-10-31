@@ -2,8 +2,8 @@
 
 /// <summary>
 /// Cambiar de vista del dock girando la rueda (sobre el engranaje, o sobre las pestañas cuando caben todas). El orden es
-/// Activas → cada etiqueta con notas → Archivadas → Papelera → Todas → Activas; se saltan las vistas vacías, salvo Activas, que siempre es
-/// alcanzable para poder volver. Lógica pura: la ventana solo aplica el resultado.
+/// Activas → cada etiqueta con notas → Archivadas → Papelera → Todas → Activas. Solo se saltan las etiquetas sin notas: Archivadas, Papelera y
+/// Todas son paradas fijas aunque estén vacías (si no, la rueda no las alcanzaba y solo se podían elegir con el menú del engranaje). Lógica pura: la ventana solo aplica el resultado.
 /// </summary>
 public static class DockViewCycle
 {
@@ -42,10 +42,9 @@ public static class DockViewCycle
         // The tags in the order the user sees them (alphabetical unless they set their own, see TagOrder).
         foreach (var name in TagOrder.Apply(counts.Tags.Keys, counts.CustomTagOrder ?? []))
             if (counts.Tags[name] > 0) steps.Add((DockViewKind.Tag, name));
-        if (counts.Archived > 0) steps.Add((DockViewKind.Archived, null));
-        if (counts.Trashed > 0) steps.Add((DockViewKind.Trashed, null));
-        // «Todas» solo aporta algo si hay algo más que las activas.
-        if (counts.Archived > 0 || counts.Trashed > 0) steps.Add((DockViewKind.All, null));
+        steps.Add((DockViewKind.Archived, null));
+        steps.Add((DockViewKind.Trashed, null));
+        steps.Add((DockViewKind.All, null));
         return steps;
     }
 

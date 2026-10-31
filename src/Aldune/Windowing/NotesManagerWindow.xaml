@@ -647,6 +647,7 @@
                                                  tenue si la nota no está fijada y plena si lo está. -->
                                             <Button DockPanel.Dock="Left" Tag="{Binding}" Click="OnPinToTopClick"
                                                     Margin="-4,-2,3,-2" VerticalAlignment="Center"
+                                                    Foreground="{Binding Note.Color, Converter={StaticResource NoteLabelColorConverter}}"
                                                     ToolTip="{Binding Note.IsPinnedToTop, Converter={StaticResource PinToTopTextConverter}}"
                                                     AutomationProperties.Name="{Binding Note.IsPinnedToTop, Converter={StaticResource PinToTopTextConverter}}"
                                                     Style="{StaticResource TagChipsButtonStyle}">

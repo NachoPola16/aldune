@@ -462,4 +462,5 @@
     <string name="update_check_failed">Impossibile controllare. Verifica la connessione e riprova.</string>
     <string name="pinned_mark_cd">Fissata in cima all\'elenco</string>
     <string name="existing_tags">Le tue etichette</string>
+    <string name="whatsnew_131_news">Premere a lungo o scorrere nella lista non apre più le opzioni di una nota uscita dalla vista.</string>
 </resources>

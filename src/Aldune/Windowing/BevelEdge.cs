@@ -15,9 +15,13 @@ public sealed class BevelEdge : FrameworkElement
     public static readonly DependencyProperty SunkenProperty = DependencyProperty.Register(
         nameof(Sunken), typeof(bool), typeof(BevelEdge), new FrameworkPropertyMetadata(false, FrameworkPropertyMetadataOptions.AffectsRender));
 
-    /// <summary>Para piezas redondas (los botones del pie): el relieve recto solo cuadra cuando son cuadradas.</summary>
+    /// <summary>
+    /// The straight relief only fits square pieces: on a rounded one it sticks out of the corners (the dark Windows look kept its square
+    /// edges after turning «square corners» off). So by default it is not drawn while the corners are rounded; set it to false only for a
+    /// piece whose corners stay square whatever the setting.
+    /// </summary>
     public static readonly DependencyProperty OnlyWhenSquareProperty = DependencyProperty.Register(
-        nameof(OnlyWhenSquare), typeof(bool), typeof(BevelEdge), new FrameworkPropertyMetadata(false, FrameworkPropertyMetadataOptions.AffectsRender));
+        nameof(OnlyWhenSquare), typeof(bool), typeof(BevelEdge), new FrameworkPropertyMetadata(true, FrameworkPropertyMetadataOptions.AffectsRender));
 
     public static readonly DependencyProperty EdgeThicknessProperty = DependencyProperty.Register(
         nameof(EdgeThickness), typeof(double), typeof(BevelEdge), new FrameworkPropertyMetadata(2.0, FrameworkPropertyMetadataOptions.AffectsRender));

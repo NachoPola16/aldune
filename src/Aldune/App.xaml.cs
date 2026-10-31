@@ -18,6 +18,7 @@ public partial class App : Application
     protected override void OnStartup(StartupEventArgs e)
     {
         base.OnStartup(e);
+        FocusRingState.Hook();
 
         // Los botones sin estilo propio traen el foco visual de WPF (un punteado negro que no se ve sobre fondos oscuros): se
         // sustituye por el anillo de la paleta. Va aquí y no en cada XAML para que ningún control nuevo se quede sin él.

@@ -462,4 +462,5 @@
     <string name="update_check_failed">Couldn\'t check. Check your connection and try again.</string>
     <string name="pinned_mark_cd">Pinned to the top of the list</string>
     <string name="existing_tags">Your tags</string>
+    <string name="whatsnew_131_news">Long-pressing or swiping in the list no longer opens the options of a note that has scrolled out of view.</string>
 </resources>
