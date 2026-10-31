@@ -2,6 +2,10 @@
 
 Status: **spec, not implemented.** Decision by the owner (2026-10-31): the pin is synced between devices, even if it costs more, and it must not raise sync format 4.
 
+## Naming: do not confuse it with "always on top"
+
+On Windows a note already has a *pin* in the sense of **always on top of other windows** (`NoteUnpinned` table, local, never synced). This feature is a different thing: **pinned to the top of the list**. In code and in the sync payload it is `pinnedToTop` / `IsPinnedToTop`; in the interface the text is "Pin to top of the list" / "Unpin from the top" (never just "Pin"), and the Windows marker must not reuse the always-on-top pin icon.
+
 ## What the user sees
 
 - A note can be **pinned**. Pinned notes are always shown first, in every list that shows notes: the Android list, the Android widget, the dock deck and the manager on Windows.
@@ -14,14 +18,14 @@ Status: **spec, not implemented.** Decision by the owner (2026-10-31): the pin i
 
 | Where | Change |
 |---|---|
-| `Aldune.Core` `Note` | `bool IsPinned { get; set; }` (default `false`). Part of `NoteEquivalence`. |
-| Core SQLite | `ALTER TABLE Note ADD COLUMN IsPinned INTEGER NOT NULL DEFAULT 0;` as a numbered migration (existing databases get `0`). |
-| Android `Note` / `SyncNote` | `isPinned: Boolean = false`. |
-| Android Room | `NoteEntity.isPinned` with a default of `0`, `Migrations.kt` 4 → 5 (`ALTER TABLE ... DEFAULT 0`), exported schema `5.json`, `MigrationTest` extended. |
+| `Aldune.Core` `Note` | `bool IsPinnedToTop { get; set; }` (default `false`). Part of `NoteEquivalence`. |
+| Core SQLite | `ALTER TABLE Note ADD COLUMN IsPinnedToTop INTEGER NOT NULL DEFAULT 0;` as a numbered migration (existing databases get `0`). |
+| Android `Note` / `SyncNote` | `pinnedToTop: Boolean = false`. |
+| Android Room | `NoteEntity.pinnedToTop` with a default of `0`, `Migrations.kt` 4 → 5 (`ALTER TABLE ... DEFAULT 0`), exported schema `5.json`, `MigrationTest` extended. |
 
 ## Sync
 
-The pin travels inside the encrypted note JSON (`payloadJson`) as an **optional** field `isPinned` (boolean). Absent means `false`. This is the same pattern as `protectedTitle` and `dockPosition`.
+The pin travels inside the encrypted note JSON (`payloadJson`) as an **optional** field `pinnedToTop` (boolean). Absent means `false`. This is the same pattern as `protectedTitle` and `dockPosition`.
 
 - **The sync format stays 4.** An older version never reads a format it does not know, and here nothing about the envelope changes: only a key is added inside the encrypted JSON. `System.Text.Json` (Core) and the key-by-key reader of `SyncEnvelopeCodec` (Kotlin) ignore keys they do not know; this is covered by a vector (below).
 - **Pinning or unpinning counts as an edit**: it refreshes `UpdatedAt` (as `NotesRepository.TouchUpdatedAt` already does for reordering), otherwise the note would not be published again and the other device would never see the pin. Consequence: with "most recently edited first", pinning moves the note up inside its group. This is accepted and documented in the user-facing text.
@@ -32,16 +36,16 @@ The pin travels inside the encrypted note JSON (`payloadJson`) as an **optional*
 | Writer | Reader | Result |
 |---|---|---|
 | New, note pinned | Old | The old version reads the note normally and shows it unpinned. Nothing breaks. |
-| Old edits that note and sends it back | New | The old version writes the note **without** `isPinned`, so the pin is lost. Documented in `SYNC.md` and `STATUS.md`. It only happens when an old device *edits* the note (an unedited note is not re-sent). |
+| Old edits that note and sends it back | New | The old version writes the note **without** `pinnedToTop`, so the pin is lost. Documented in `SYNC.md` and `STATUS.md`. It only happens when an old device *edits* the note (an unedited note is not re-sent). |
 | New, note not pinned | Old | The field is written only when `true`, so the payload is byte-identical to today's. |
-| Old, any note | New | No `isPinned` means `false`. |
+| Old, any note | New | No `pinnedToTop` means `false`. |
 
 ## Vectors (`tests/vectors/sync-format4.json`)
 
 Regenerated with `ALDUNE_REGEN_VECTORS=1` once the Core change is in, after checking that **the existing vectors do not change** (only additions). New vectors:
 
-1. A note with `"isPinned": true` (the field present).
-2. A note written by an old client (no `isPinned`), which must read as `false` on both sides.
+1. A note with `"pinnedToTop": true` (the field present).
+2. A note written by an old client (no `pinnedToTop`), which must read as `false` on both sides.
 3. A scenario where an old device re-sends a pinned note (the pin disappears) so the documented loss is fixed by a test and not only by prose.
 
 Checked by `SyncVectorsTests` (C#) and by the Kotlin tests in `android/core` (`SyncEnvelopeReadTest` / `SyncEnvelopeWriteTest`): C# writes and Kotlin reads, and the other way round.

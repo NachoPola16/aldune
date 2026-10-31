@@ -66,7 +66,7 @@ public sealed class NotesRepository
         using var command = connection.CreateCommand();
         command.CommandText = """
             SELECT n.Id, n.EncryptedText, n.Nonce, n.Tag, n.Color, n.CreatedAt, n.UpdatedAt, n.State, n.ScreenOrigin
-            , n.IsProtected, n.ProtectionSalt, n.ProtectionCipherText, n.ProtectionNonce, n.ProtectionTag, n.ProtectedTitle
+            , n.IsProtected, n.ProtectionSalt, n.ProtectionCipherText, n.ProtectionNonce, n.ProtectionTag, n.ProtectedTitle, n.PinnedToTop
             , o.Position AS DockPosition
             FROM Note n LEFT JOIN NoteOrder o ON o.NoteId = n.Id
             WHERE n.State = $state
@@ -107,7 +107,7 @@ public sealed class NotesRepository
         using var command = connection.CreateCommand();
         command.CommandText = """
             SELECT n.Id, n.EncryptedText, n.Nonce, n.Tag, n.Color, n.CreatedAt, n.UpdatedAt, n.State, n.ScreenOrigin
-            , n.IsProtected, n.ProtectionSalt, n.ProtectionCipherText, n.ProtectionNonce, n.ProtectionTag, n.ProtectedTitle
+            , n.IsProtected, n.ProtectionSalt, n.ProtectionCipherText, n.ProtectionNonce, n.ProtectionTag, n.ProtectedTitle, n.PinnedToTop
             , o.Position AS DockPosition
             FROM Note n LEFT JOIN NoteOrder o ON o.NoteId = n.Id ORDER BY n.CreatedAt;
             """;
@@ -237,7 +237,7 @@ public sealed class NotesRepository
         using var command = connection.CreateCommand();
         command.CommandText = """
             SELECT n.Id, n.EncryptedText, n.Nonce, n.Tag, n.Color, n.CreatedAt, n.UpdatedAt, n.State, n.ScreenOrigin
-            , n.IsProtected, n.ProtectionSalt, n.ProtectionCipherText, n.ProtectionNonce, n.ProtectionTag, n.ProtectedTitle
+            , n.IsProtected, n.ProtectionSalt, n.ProtectionCipherText, n.ProtectionNonce, n.ProtectionTag, n.ProtectedTitle, n.PinnedToTop
             , o.Position AS DockPosition
             FROM Note n
             JOIN NoteTag nt ON nt.NoteId = n.Id
@@ -752,9 +752,9 @@ public sealed class NotesRepository
         command.CommandText = """
             INSERT INTO Note (Id, EncryptedText, Nonce, Tag, Color, CreatedAt, UpdatedAt, State, ScreenOrigin,
                               IsProtected, ProtectionSalt, ProtectionCipherText, ProtectionNonce, ProtectionTag,
-                              ProtectedTitle, SyncAuthorDeviceId)
+                              ProtectedTitle, PinnedToTop, SyncAuthorDeviceId)
             VALUES ($id, $text, $nonce, $tag, $color, $createdAt, $updatedAt, $state, $screenOrigin,
-                    $isProtected, $salt, $protectedText, $protectedNonce, $protectedTag, $protectedTitle, $syncAuthorDeviceId)
+                    $isProtected, $salt, $protectedText, $protectedNonce, $protectedTag, $protectedTitle, $pinnedToTop, $syncAuthorDeviceId)
             ON CONFLICT(Id) DO UPDATE SET
                 EncryptedText = excluded.EncryptedText,
                 Nonce = excluded.Nonce,
@@ -770,6 +770,7 @@ public sealed class NotesRepository
                 ProtectionNonce = excluded.ProtectionNonce,
                 ProtectionTag = excluded.ProtectionTag,
                 ProtectedTitle = excluded.ProtectedTitle,
+                PinnedToTop = excluded.PinnedToTop,
                 SyncAuthorDeviceId = excluded.SyncAuthorDeviceId;
             DELETE FROM SyncTombstone WHERE NoteId = $id;
             """;
@@ -788,6 +789,7 @@ public sealed class NotesRepository
         command.Parameters.AddWithValue("$protectedNonce", (object?)note.ProtectedContent?.Nonce ?? DBNull.Value);
         command.Parameters.AddWithValue("$protectedTag", (object?)note.ProtectedContent?.Tag ?? DBNull.Value);
         command.Parameters.AddWithValue("$protectedTitle", (object?)ProtectedTitleRules.Visible(note) ?? DBNull.Value);
+        command.Parameters.AddWithValue("$pinnedToTop", note.IsPinnedToTop ? 1 : 0);
         command.Parameters.AddWithValue("$syncAuthorDeviceId", (object?)authorDeviceId ?? DBNull.Value);
         command.ExecuteNonQuery();
 
@@ -874,6 +876,19 @@ public sealed class NotesRepository
         command.Parameters.AddWithValue("$id", id.ToString());
         command.ExecuteNonQuery();
         return true;
+    }
+
+    /// <summary>Fija o desfija una nota arriba de las listas. Cuenta como una edición (refresca <c>UpdatedAt</c> y borra el autor de la versión): sin
+    /// eso el sobre no se volvería a publicar y el otro equipo nunca vería el cambio.</summary>
+    public void SetPinnedToTop(Guid id, bool pinned)
+    {
+        using var connection = _database.OpenConnection();
+        using var command = connection.CreateCommand();
+        command.CommandText = "UPDATE Note SET PinnedToTop = $pinned, UpdatedAt = $updatedAt, SyncAuthorDeviceId = NULL WHERE Id = $id;";
+        command.Parameters.AddWithValue("$pinned", pinned ? 1 : 0);
+        command.Parameters.AddWithValue("$updatedAt", DateTimeOffset.UtcNow.ToString("O"));
+        command.Parameters.AddWithValue("$id", id.ToString());
+        command.ExecuteNonQuery();
     }
 
     /// <summary>Pone (o quita, si queda vacío) el nombre visible de una nota protegida. No pide la contraseña: el nombre es
@@ -1263,7 +1278,7 @@ public sealed class NotesRepository
         using var command = connection.CreateCommand();
         command.CommandText = """
             SELECT n.Id, n.EncryptedText, n.Nonce, n.Tag, n.Color, n.CreatedAt, n.UpdatedAt, n.State, n.ScreenOrigin
-            , n.IsProtected, n.ProtectionSalt, n.ProtectionCipherText, n.ProtectionNonce, n.ProtectionTag, n.ProtectedTitle
+            , n.IsProtected, n.ProtectionSalt, n.ProtectionCipherText, n.ProtectionNonce, n.ProtectionTag, n.ProtectedTitle, n.PinnedToTop
             , o.Position AS DockPosition
             FROM Note n LEFT JOIN NoteOrder o ON o.NoteId = n.Id WHERE n.Id = $id;
             """;
@@ -1398,6 +1413,7 @@ public sealed class NotesRepository
             IsProtected = isProtected,
             ProtectedContent = protectedContent,
             ProtectedTitle = isProtected && reader["ProtectedTitle"] is string title ? title : null,
+            IsPinnedToTop = reader["PinnedToTop"] is long pinned && pinned != 0,
             IsUnlocked = !isProtected
         };
     }

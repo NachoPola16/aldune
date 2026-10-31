@@ -340,7 +340,8 @@ public static class SyncEnvelopeCodec
             IsProtected = note.IsProtected,
             ProtectedContent = note.ProtectedContent,
             ProtectedTitle = ProtectedTitleRules.Visible(note),
-            DockPosition = note.DockPosition
+            DockPosition = note.DockPosition,
+            PinnedToTop = note.IsPinnedToTop
         }, JsonOptions);
 
         try
@@ -460,6 +461,7 @@ public static class SyncEnvelopeCodec
             ProtectedContent = payload.ProtectedContent,
             ProtectedTitle = payload.IsProtected ? ProtectedTitleRules.Normalize(payload.ProtectedTitle) : null,
             DockPosition = payload.DockPosition,
+            IsPinnedToTop = payload.PinnedToTop,
             IsUnlocked = !payload.IsProtected
         };
     }
@@ -498,6 +500,10 @@ public static class SyncEnvelopeCodec
         public ProtectedNoteContent? ProtectedContent { get; set; }
         public string? ProtectedTitle { get; set; }
         public double? DockPosition { get; set; }
+        /// <summary>Opcional: solo se escribe si es cierto, así que el contenido de una nota no fijada es idéntico al de antes y una versión
+        /// anterior (que no lo conoce) lo ignora. Ausente = no fijada.</summary>
+        [System.Text.Json.Serialization.JsonIgnore(Condition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingDefault)]
+        public bool PinnedToTop { get; set; }
     }
 }
 

@@ -24,6 +24,11 @@ public sealed class Note
     /// un mismo escritorio no significa nada en monitores distintos.</summary>
     public double? DockPosition { get; set; }
 
+    /// <summary>Fijada arriba: va la primera de las listas, sea cual sea su orden. No es el «siempre encima» de Windows (<c>NoteUnpinned</c>, local):
+    /// este viaja por la sincronización como un campo opcional del contenido cifrado (<c>pinnedToTop</c>, solo se escribe si es cierto). Ver
+    /// docs/specs/2026-10-31-pinned-notes-design.md.</summary>
+    public bool IsPinnedToTop { get; set; }
+
     public bool IsProtected { get; set; }
     public ProtectedNoteContent? ProtectedContent { get; set; }
     /// <summary>Nombre en claro que se enseña en lugar de «Nota protegida» (ver <see cref="ProtectedTitleRules"/>). Null = oculto.</summary>

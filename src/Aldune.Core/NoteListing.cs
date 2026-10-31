@@ -21,7 +21,14 @@ public enum NoteDateKind
 
 public static class NoteListing
 {
-    public static IEnumerable<T> Sort<T>(IEnumerable<T> items, Func<T, Note> noteOf, NoteListOrder order) => order switch
+    /// <summary>Las fijadas arriba van primero y cada grupo conserva el orden elegido (partición estable, sin un «orden de fijado» aparte).</summary>
+    public static IEnumerable<T> Sort<T>(IEnumerable<T> items, Func<T, Note> noteOf, NoteListOrder order)
+    {
+        var ordered = SortBy(items, noteOf, order).ToList();
+        return ordered.Where(item => noteOf(item).IsPinnedToTop).Concat(ordered.Where(item => !noteOf(item).IsPinnedToTop));
+    }
+
+    private static IEnumerable<T> SortBy<T>(IEnumerable<T> items, Func<T, Note> noteOf, NoteListOrder order) => order switch
     {
         NoteListOrder.Newest => items.OrderByDescending(item => noteOf(item).UpdatedAt),
         NoteListOrder.Oldest => items.OrderBy(item => noteOf(item).UpdatedAt),
