@@ -188,28 +188,28 @@
                                  franja, arriba a la derecha. Glifo elegido sin verificación visual
                                  todavía — mismo aviso que el resto de iconos de esta sesión, ver
                                  docs/STATUS.md. -->
-                            <TextBlock x:Name="ReminderBadge"
-                                       Text="&#xE917;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets"
-                                       FontSize="11"
-                                       Foreground="{Binding Converter={StaticResource NoteFaceConverter}, ConverterParameter=Label}"
-                                       HorizontalAlignment="Right" VerticalAlignment="Top"
-                                       Margin="0,8,10,0"
-                                       Visibility="Collapsed" />
-
-                            <!-- Nota vinculada a un archivo: página pequeña junto al hueco del recordatorio, con la
-                                 ruta en el tooltip (spec, decisión 6). Hereda el color de la etiqueta. -->
-                            <TextBlock Text="&#xE7C3;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" FontSize="10"
-                                       Foreground="{Binding Converter={StaticResource NoteFaceConverter}, ConverterParameter=Label}"
-                                       HorizontalAlignment="Right" VerticalAlignment="Top" Margin="0,9,28,0" Opacity="0.75"
-                                       Visibility="{Binding Converter={StaticResource NoteLinkedConverter}}"
-                                       ToolTip="{Binding Converter={StaticResource NoteLinkedConverter}, ConverterParameter=Path}" />
-
-                            <!-- Fijada arriba en la lista (no el «siempre encima»): chincheta junto a la página de las vinculadas. -->
-                            <TextBlock Text="&#xE840;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" FontSize="10"
-                                       Foreground="{Binding Converter={StaticResource NoteFaceConverter}, ConverterParameter=Label}"
-                                       HorizontalAlignment="Right" VerticalAlignment="Top" Margin="0,9,44,0" Opacity="0.85"
-                                       Visibility="{Binding IsPinnedToTop, Converter={StaticResource BoolToVisibility}}"
-                                       ToolTip="{x:Static res:Strings.PinnedToTopMarker}" />
+                            <!-- Los distintivos (fijada, vinculada, recordatorio) en una sola fila pegada arriba a la derecha: los que no
+                                 aplican se pliegan y no dejan hueco, así que la chincheta no queda flotando a mitad de la pestaña. -->
+                            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Top" Margin="0,8,10,0">
+                                <!-- Fijada arriba en la lista (no el «siempre encima»). -->
+                                <TextBlock Text="&#xE840;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" FontSize="10"
+                                           Foreground="{Binding Converter={StaticResource NoteFaceConverter}, ConverterParameter=Label}"
+                                           VerticalAlignment="Center" Margin="0,0,7,0" Opacity="0.85"
+                                           Visibility="{Binding IsPinnedToTop, Converter={StaticResource BoolToVisibility}}"
+                                           ToolTip="{x:Static res:Strings.PinnedToTopMarker}" />
+                                <!-- Nota vinculada a un archivo: página pequeña con la ruta en el tooltip (spec, decisión 6). -->
+                                <TextBlock Text="&#xE7C3;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" FontSize="10"
+                                           Foreground="{Binding Converter={StaticResource NoteFaceConverter}, ConverterParameter=Label}"
+                                           VerticalAlignment="Center" Margin="0,0,7,0" Opacity="0.75"
+                                           Visibility="{Binding Converter={StaticResource NoteLinkedConverter}}"
+                                           ToolTip="{Binding Converter={StaticResource NoteLinkedConverter}, ConverterParameter=Path}" />
+                                <TextBlock x:Name="ReminderBadge"
+                                           Text="&#xE917;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets"
+                                           FontSize="11"
+                                           Foreground="{Binding Converter={StaticResource NoteFaceConverter}, ConverterParameter=Label}"
+                                           VerticalAlignment="Center"
+                                           Visibility="Collapsed" />
+                            </StackPanel>
 
                             <local:BevelEdge x:Name="CardBevel" />
                             <Border x:Name="HoverOverlay" Background="#1E1A14" Opacity="0" CornerRadius="{DynamicResource AlduneRadiusTabRight}" />
