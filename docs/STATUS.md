@@ -196,6 +196,16 @@ Tests: 506/506 passing (`dotnet test tests/Aldune.Core.Tests --no-restore`).
   (`QrScanActivity` with CameraX 1.6.2 + `QrDecoder` over ZXing core 3.5.4, without Play Services). It was decided not to split the QR into several
   and that the token never travels. Zero changes to the sync format.
 
+- **Unreleased, in progress (2026-10-31): Windows 2.2.0 + Android 1.1.0 in a single release each** (nothing published in between; list and reasons in `DECISIONS-2026-10-31.md`).
+  Done so far: Android bugs (trash rows after restore + Undo, wrong checkbox ticked in a scrolled list, checkbox tap target now includes the left margin and the gap after the box, hanging indent for
+  wrapped tasks, Settings tabs scroll to the top, auto-scroll when dragging a note to the list edge); Android look (no ghost card outlines, contrast outline for cards that blend into the
+  background, balanced colour rows, aligned options sheet); Windows (centred X of the sync conflicts window, even margins of the manager's bar, no focus ring on the cogwheel after Settings, Ctrl+F bar that
+  fits the note, New-note button moved to the filter row in accent, manager buttons follow "Text size", readable disabled text in every look, symmetric dock button bar with four 40 px buttons).
+  **Pinned notes** (spec `specs/2026-10-31-pinned-notes-design.md`): Core, Room (migration 4 to 5), the sync mapping and the vectors (C# and Kotlin) are done; **the interface on both platforms is
+  still to do** (menus, marker, order between groups, widget, dock and manager). **Compatibility:** the pin travels as the optional field `pinnedToTop` of the encrypted payload, written only when
+  true, so the sync format stays 4; an older version (2.1.x / 1.0.x) shows the note unpinned and, if it *edits* and re-sends it, **drops the pin**. Cross-version test still to do before publishing.
+  New: Compose instrumented tests on a device (`./gradlew :app:connectedDebugAndroidTest`, see `ANDROID_PROBES.md`) and `ButtonContrastTests`.
+
 ## How we work
 
 - **Design**: every large change starts with a specification in `docs/specs/`.

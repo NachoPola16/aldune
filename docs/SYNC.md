@@ -446,6 +446,10 @@ no sense on different monitors. An old client rejects the envelopes it cannot re
 clear error instead of applying partial data: an old version would rewrite the note without the
 position and silently undo the reordering.
 
+Pinned notes (Windows 2.2.0 / Android 1.1.0) do **not** raise the format: the pin travels inside the encrypted note as the optional field `pinnedToTop`, written only when it is true. A
+version that does not know it ignores it and shows the note unpinned; if that older version **edits the note and sends it back**, the pin is lost (an unedited note is not re-sent, so nothing
+changes unless you edit it there). Pinning or unpinning counts as an edit of the note, so it syncs like any other change.
+
 The selection can be different in each profile. To share a note with another person, create a
 separate profile, select only that note and share that profile's code.
 

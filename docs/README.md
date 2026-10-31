@@ -15,7 +15,7 @@ Everything is in English. Quoted interface strings that appear in Spanish are th
 - [`SETTINGS_PARITY.md`](SETTINGS_PARITY.md): which settings Windows and Android share, and the differences kept on purpose.
 - [`RELEASING.md`](RELEASING.md): how a Windows or Android version is published.
 - [`WPF_PROBES.md`](WPF_PROBES.md) and [`ANDROID_PROBES.md`](ANDROID_PROBES.md): how the interface is verified.
-- [`DECISIONS-2026-10-26.md`](DECISIONS-2026-10-26.md) and [`DECISIONS-2026-10-27.md`](DECISIONS-2026-10-27.md): product decisions.
+- [`DECISIONS-2026-10-26.md`](DECISIONS-2026-10-26.md), [`DECISIONS-2026-10-27.md`](DECISIONS-2026-10-27.md) and [`DECISIONS-2026-10-31.md`](DECISIONS-2026-10-31.md): product decisions (the last one is the working list for Windows 2.2.0 / Android 1.1.0, with what is still pending).
 - [`MSIX_STORE.md`](MSIX_STORE.md): feasibility study for the Microsoft Store.
 - [`DOCK_DIAGNOSTICS.md`](DOCK_DIAGNOSTICS.md): the retired dock diagnostic log and what fixed the bugs.
 - [`../tests/vectors/README.md`](../tests/vectors/README.md): the cross-platform compatibility vectors.

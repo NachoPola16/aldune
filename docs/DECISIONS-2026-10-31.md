@@ -83,3 +83,23 @@ Measured the gap between the bar's edge and its buttons in every dock edge, roun
 
 ### W9. Icons of the dock's button bar — DONE
 Measured the ink of each icon against the centre of its button in 7 looks (round and square, every edge): all within 0.5 px (half a pixel is inherent to a 13 to 17 px stroke in a 40 px box). With the buttons now 40 px the 15 px glyphs looked small (33 % of the button, 44 % before), so the three glyph icons went to 17 and the "+" to a drawn cross (two 2 px bars in a 16 px box, 0.0 / 0.0 px: as a font glyph at 19 it was 1 px off). The sync button's glyph is reset to 17 in code too (it was put back to 15 by the sync animation code).
+
+## Still pending (end of the first working session, 2026-10-31)
+
+Nothing has been published. Commits are local on `main` (not pushed). Work list for Windows 2.2.0 + Android 1.1.0:
+
+1. **Pinned notes, interface** (Core, Room, mapping, vectors and tests are done): Android (`NotesViewModel.setPinned` -> `NoteService.setPinned`; "Pin to the top of the list" / "Unpin" in `NoteActionsDialog` and `NoteOptionsDialog`
+   (`NoteOptions` needs the flag); a pin mark in `NoteRow` (a drawn pin: `material-icons-core` has none); reorder and Up/Down only inside the group (neighbours from the same pinned group; see the spec); the widget
+   (`WidgetContent.build` must put pinned first); strings in `android/strings.tsv` for the five languages, then `python android/scripts/gen_strings.py`). Windows: `Strings.T(en, es, de, fr, pt)` texts, manager row, dock tab marker
+   (not the always-on-top pin icon), note menu; the manager's sort and the dock order must call `NoteListing.Sort` (already partitions) and the dock's deck order needs the same partition.
+2. **Right-click on the buttons** (asked at the end of the session): review what the dock buttons do with the right button (`PreviewMouseRightButtonUp` on Open all, Manager, Sync and New note in `EdgeDockWindow.xaml`; handlers `OnOpenAllRightClick`, `OnManageArchiveRightClick`, `OnSyncRightClick`, `OnNewNoteRightClick`),
+   whether each is discoverable and consistent, and the same question for the manager's buttons and for Android long-press equivalents.
+3. **Android, from the list not done yet:** B10 landscape; C11 bottom sheet hint when there are more options; C13 discoverability of the swipe gestures; C14 task drag handle on the right / left / off (and Windows?); C15 how tags are shown; C16 copy a hyperlink;
+   C18 find inside a note on Android; C19 note title next to the back arrow; C20 distribute the options between row menu, sheet, three dots and editor bar (the sheet only lets you add a *new* tag, not an existing one).
+   Each one: decide "do / do not" with the reason in this file; anything that touches Windows is reviewed there too.
+4. **Checkbox follow-ups:** the real-world "editor stops accepting ticks until restart" was not reproduced (the gap between the box and the text is the likely cause and is fixed); the cursor handle can still cover the next row's box (a system popup).
+   An idea left open: a larger line height for task lists to give a taller target.
+5. **Before publishing:** `dotnet test Aldune.slnx` (was green: Core 1891, server 29), `./gradlew test` (green) and the device tests; agents `tests` and `seguridad` (sync format and server are touched only by an optional field, but RELEASING asks for it);
+   cross-version test of the pin with 2.1.x / 1.0.x (a pinned note travelling and coming back must not break anything; old versions lose the pin when they edit and re-send); `STATUS`, `SETTINGS_PARITY`, `SYNC` (done in draft) and `docs/RELEASING.md`;
+   versions in `Aldune.csproj` (2.2.0) and Android (1.1.0, `versionCode`); confirm each publication with the user. Order: Windows first, sync servers after, Android last with `--latest=false`.
+6. **Hygiene:** `git log --format='%an <%ae> | %cn <%ce>' origin/main..HEAD` before any push (so far all NachoPola16); the emulator is closed; the Pixel has the *debug* app installed with test notes (your real notes are in the other package, untouched).

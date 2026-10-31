@@ -445,6 +445,10 @@ tiene sentido en monitores distintos. Un cliente antiguo rechaza los sobres que 
 error claro en vez de aplicar datos parcialmente: una versión antigua reescribiría la nota sin la
 posición y desharía el reordenado sin avisar.
 
+Las notas fijadas arriba (Windows 2.2.0 / Android 1.1.0) **no** suben el formato: el pin viaja dentro de la nota cifrada como el campo opcional `pinnedToTop`, que solo se escribe si es cierto. Una
+versión que no lo conoce lo ignora y enseña la nota sin fijar; si esa versión antigua **edita la nota y la reenvía**, el pin se pierde (una nota que no se edita no se reenvía, así que no cambia nada
+mientras no la edites ahí). Fijar o desfijar cuenta como una edición de la nota, así que se sincroniza como cualquier otro cambio.
+
 La selección puede ser distinta en cada perfil. Para compartir una nota con otra persona, crea un
 perfil separado, selecciona solo esa nota y comparte el código de ese perfil.
 
