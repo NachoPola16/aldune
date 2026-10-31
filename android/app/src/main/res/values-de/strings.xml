@@ -444,6 +444,11 @@
     <string name="show_tag_hash"># vor Tags anzeigen</string>
     <string name="show_tag_hash_hint">Aus: ein kleines Tag-Symbol statt der #.</string>
     <string name="all_notes_chip">Alle</string>
+    <string name="update_check_now">Jetzt nach Updates suchen</string>
+    <string name="update_checking">Prüfe…</string>
+    <string name="update_up_to_date">Du hast die neueste Version.</string>
+    <string name="update_available_now">Version %1$s ist verfügbar; siehe den Hinweis in der Liste.</string>
+    <string name="update_check_failed">Prüfung fehlgeschlagen. Verbindung prüfen und erneut versuchen.</string>
     <string name="pinned_mark_cd">Oben in der Liste angeheftet</string>
     <string name="existing_tags">Deine Tags</string>
 </resources>

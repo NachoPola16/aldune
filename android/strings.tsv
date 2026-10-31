@@ -443,5 +443,10 @@ tag_move_down	Move %1$s down	Bajar %1$s	%1$s nach unten	Descendre %1$s	Descer %1
 show_tag_hash	Show # before tags	Mostrar # delante de las etiquetas	# vor Tags anzeigen	Afficher # devant les étiquettes	Mostrar # antes das etiquetas
 show_tag_hash_hint	Off: a small tag icon instead of the #.	Apagado: un pequeño icono de etiqueta en vez de la #.	Aus: ein kleines Tag-Symbol statt der #.	Désactivé : une petite icône d'étiquette à la place du #.	Desligado: um pequeno ícone de etiqueta no lugar do #.
 all_notes_chip	All	Todas	Alle	Toutes	Todas
+update_check_now	Check for updates now	Buscar actualizaciones ahora	Jetzt nach Updates suchen	Rechercher des mises à jour maintenant	Buscar atualizações agora
+update_checking	Checking…	Comprobando…	Prüfe…	Vérification…	Verificando…
+update_up_to_date	You have the latest version.	Tienes la última versión.	Du hast die neueste Version.	Vous avez la dernière version.	Você tem a versão mais recente.
+update_available_now	Version %1$s is available; see the notice in the list.	Hay una versión nueva, %1$s; mira el aviso en la lista.	Version %1$s ist verfügbar; siehe den Hinweis in der Liste.	La version %1$s est disponible ; voir l’avis dans la liste.	A versão %1$s está disponível; veja o aviso na lista.
+update_check_failed	Couldn't check. Check your connection and try again.	No se pudo comprobar. Revisa la conexión e inténtalo de nuevo.	Prüfung fehlgeschlagen. Verbindung prüfen und erneut versuchen.	Vérification impossible. Vérifiez la connexion et réessayez.	Não foi possível verificar. Confira a conexão e tente de novo.
 pinned_mark_cd	Pinned to the top of the list	Fijada arriba en la lista	Oben in der Liste angeheftet	Épinglée en haut de la liste	Fixada no topo da lista
 existing_tags	Your tags	Tus etiquetas	Deine Tags	Vos étiquettes	Suas etiquetas

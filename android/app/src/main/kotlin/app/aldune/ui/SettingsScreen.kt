@@ -23,6 +23,7 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.LocalContext
@@ -265,6 +266,27 @@ fun SettingsScreen(viewModel: NotesViewModel, onClose: () -> Unit) {
                 SwitchRow(stringResource(R.string.check_updates), stringResource(R.string.check_updates_hint), settings.checkUpdates) { on ->
                     viewModel.updateSettings { it.copy(checkUpdates = on, dismissedUpdate = null) }
                     if (on) viewModel.checkForUpdates(versionName(activity))
+                }
+                // Una petición explícita: dice el resultado en la propia pantalla (la comprobación automática calla cuando no hay nada).
+                var checking by remember { mutableStateOf(false) }
+                var checkResult by remember { mutableStateOf<NotesViewModel.UpdateCheckResult?>(null) }
+                val checkScope = rememberCoroutineScope()
+                OutlinedButton(
+                    onClick = {
+                        checking = true; checkResult = null
+                        checkScope.launch { checkResult = viewModel.checkForUpdatesNow(versionName(activity)); checking = false }
+                    },
+                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp), enabled = !checking,
+                ) { Text(stringResource(if (checking) R.string.update_checking else R.string.update_check_now)) }
+                checkResult?.let { result ->
+                    Text(
+                        when (result) {
+                            NotesViewModel.UpdateCheckResult.UpToDate -> stringResource(R.string.update_up_to_date)
+                            is NotesViewModel.UpdateCheckResult.Available -> stringResource(R.string.update_available_now, result.version)
+                            NotesViewModel.UpdateCheckResult.Failed -> stringResource(R.string.update_check_failed)
+                        },
+                        Modifier.padding(horizontal = 16.dp), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
                 }
                 // El botón de modo no se esconde nunca: sin él no habría forma de volver al modo completo. Aplica al instante y no toca otros ajustes.
                 Text(

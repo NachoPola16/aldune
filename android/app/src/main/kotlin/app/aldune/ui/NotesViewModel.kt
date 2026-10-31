@@ -795,6 +795,26 @@ class NotesViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
+    /** Qué dice una comprobación manual de actualizaciones. */
+    sealed interface UpdateCheckResult {
+        data object UpToDate : UpdateCheckResult
+        data class Available(val version: String) : UpdateCheckResult
+        data object Failed : UpdateCheckResult
+    }
+
+    /**
+     * «Buscar actualizaciones ahora»: pregunta a GitHub sin esperar a las 24 h y devuelve qué hay, para decirlo en pantalla (la comprobación
+     * automática calla si no hay nada). Funciona aunque el aviso automático esté apagado: es una petición explícita. Si hay una nueva, también
+     * se enseña el aviso de la lista.
+     */
+    suspend fun checkForUpdatesNow(currentVersion: String): UpdateCheckResult = withContext(Dispatchers.IO) {
+        val json = runCatching { fetchReleases() }.getOrNull() ?: return@withContext UpdateCheckResult.Failed
+        val found = AndroidReleaseUpdate.latest(json, currentVersion)
+        updateSettings { it.copy(lastUpdateCheck = System.currentTimeMillis(), knownUpdate = found?.tag, dismissedUpdate = null) }
+        _update.value = found
+        if (found == null) UpdateCheckResult.UpToDate else UpdateCheckResult.Available(found.version)
+    }
+
     private fun fetchReleases(): String {
         val connection = java.net.URL(AndroidReleaseUpdate.API).openConnection() as java.net.HttpURLConnection
         try {

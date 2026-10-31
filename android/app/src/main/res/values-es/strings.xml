@@ -444,6 +444,11 @@
     <string name="show_tag_hash">Mostrar # delante de las etiquetas</string>
     <string name="show_tag_hash_hint">Apagado: un pequeño icono de etiqueta en vez de la #.</string>
     <string name="all_notes_chip">Todas</string>
+    <string name="update_check_now">Buscar actualizaciones ahora</string>
+    <string name="update_checking">Comprobando…</string>
+    <string name="update_up_to_date">Tienes la última versión.</string>
+    <string name="update_available_now">Hay una versión nueva, %1$s; mira el aviso en la lista.</string>
+    <string name="update_check_failed">No se pudo comprobar. Revisa la conexión e inténtalo de nuevo.</string>
     <string name="pinned_mark_cd">Fijada arriba en la lista</string>
     <string name="existing_tags">Tus etiquetas</string>
 </resources>
