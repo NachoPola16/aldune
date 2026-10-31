@@ -4,7 +4,6 @@ using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
 using System.Windows.Input;
 using System.Windows.Media;
-using System.Windows.Threading;
 using Aldune.Core;
 using Aldune.Interop;
 
@@ -27,7 +26,6 @@ namespace Aldune.Windowing;
 /// </summary>
 internal sealed class AutoScrollManager
 {
-    private readonly DispatcherTimer _timer = new() { Interval = TimeSpan.FromMilliseconds(16) };
     private readonly Panel _host;
     private readonly ScrollViewer? _scrollViewer;
     private readonly TextBox? _textBox;
@@ -40,6 +38,11 @@ internal sealed class AutoScrollManager
     private readonly Stopwatch _clock = new();
     private TimeSpan _lastTick;
 
+    // Un DispatcherTimer de 16 ms en Windows se queda en ~35-40 avisos por segundo y a intervalos irregulares (medido: 26 ms de media, hasta 44 ms),
+    // y a velocidad alta la imagen iba a tirones. Se avanza una vez por fotograma de pantalla (CompositionTarget.Rendering), que es el ritmo en el
+    // que se ve; solo mientras el modo está activo, porque suscribirse obliga a la ventana a renderizar de continuo.
+    private TimeSpan _lastRenderingTime = TimeSpan.MinValue;
+
     internal AutoScrollManager(Panel host, ScrollViewer? scrollViewer, TextBox? textBox)
     {
         if (scrollViewer is null && textBox is null)
@@ -48,7 +51,6 @@ internal sealed class AutoScrollManager
         _host = host;
         _scrollViewer = scrollViewer;
         _textBox = textBox;
-        _timer.Tick += OnTick;
 
         host.PreviewMouseDown += OnHostPreviewMouseDown;
         host.PreviewKeyDown += OnHostPreviewKeyDown;
@@ -102,12 +104,13 @@ internal sealed class AutoScrollManager
         _buttonsWereDown = true;
         _clock.Restart();
         _lastTick = TimeSpan.Zero;
-        _timer.Start();
+        _lastRenderingTime = TimeSpan.MinValue;
+        CompositionTarget.Rendering += OnRendering;
     }
 
     internal void Stop()
     {
-        _timer.Stop();
+        CompositionTarget.Rendering -= OnRendering;
 
         if (_originMarker is not null)
         {
@@ -135,7 +138,18 @@ internal sealed class AutoScrollManager
         // La rueda manda sobre el modo: girarla con el autoscroll activo lo apaga y deja pasar el giro.
         if (IsActive) Stop();
     }
-    private void OnTick(object? sender, EventArgs e)
+    private void OnRendering(object? sender, EventArgs e)
+    {
+        // WPF puede avisar más de una vez por fotograma con el mismo instante: un solo paso por fotograma.
+        if (e is RenderingEventArgs r)
+        {
+            if (r.RenderingTime == _lastRenderingTime) return;
+            _lastRenderingTime = r.RenderingTime;
+        }
+        OnTick();
+    }
+
+    private void OnTick()
     {
         // El primer botón que se suelte tras arrancar es el clic central que encendió el modo: si fue un clic
         // corto no cuenta y el modo sigue; si se mantuvo (mantener, arrastrar y soltar, como en Chrome), soltar

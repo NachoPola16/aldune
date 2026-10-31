@@ -1150,14 +1150,66 @@ public partial class EdgeDockWindow : Window
         // son muescas completas). Ver AppSettings.TrackpadGestures.
         if (_settings is { TrackpadGestures: true } && !IsFullWheelNotch(e.Delta))
         {
-            TabsScroll.ScrollToVerticalOffset(
-                TabsScroll.VerticalOffset - e.Delta / 120.0 * ArrowScrollStep);
+            SmoothScrollBy(-e.Delta / 120.0 * ArrowScrollStep);
             e.Handled = true;
             return;
         }
 
-        ScrollByArrow(e.Delta < 0 ? 1 : -1);
+        SmoothScrollBy((e.Delta < 0 ? 1 : -1) * ArrowScrollStep);
         e.Handled = true;
+    }
+
+    // Rueda suave: cada muesca saltaba de golpe una pestaña entera. Ahora se fija un destino (varias muescas seguidas se acumulan) y se
+    // avanza hacia él en cada fotograma con una curva de frenada corta. Se cancela si otra cosa mueve la lista (arrastrar la barra, el
+    // autoscroll, las flechas): comparar con lo último escrito es más fiable que un indicador, porque ScrollChanged llega más tarde.
+    private double? _smoothTarget;
+    private double _smoothLastWritten;
+    private bool _smoothRunning;
+    private readonly System.Diagnostics.Stopwatch _smoothClock = new();
+    private TimeSpan _smoothLastFrame;
+
+    private void SmoothScrollBy(double delta)
+    {
+        double max = Math.Max(0, TabsScroll.ExtentHeight - TabsScroll.ViewportHeight);
+        double from = _smoothRunning && _smoothTarget is { } pending ? pending : TabsScroll.VerticalOffset;
+        _smoothTarget = Math.Clamp(from + delta, 0, max);
+        if (_smoothRunning) return;
+
+        _smoothRunning = true;
+        _smoothLastWritten = TabsScroll.VerticalOffset;
+        _smoothClock.Restart();
+        _smoothLastFrame = TimeSpan.Zero;
+        CompositionTarget.Rendering += OnSmoothScrollFrame;
+    }
+
+    private void StopSmoothScroll()
+    {
+        CompositionTarget.Rendering -= OnSmoothScrollFrame;
+        _smoothRunning = false;
+        _smoothTarget = null;
+    }
+
+    private void OnSmoothScrollFrame(object? sender, EventArgs e)
+    {
+        var now = _smoothClock.Elapsed;
+        double dt = Math.Min((now - _smoothLastFrame).TotalSeconds, 0.05);
+        _smoothLastFrame = now;
+        if (_smoothTarget is not { } target) { StopSmoothScroll(); return; }
+
+        double current = TabsScroll.VerticalOffset;
+        if (Math.Abs(current - _smoothLastWritten) > 1) { StopSmoothScroll(); return; }
+
+        double diff = target - current;
+        if (Math.Abs(diff) < 0.5)
+        {
+            TabsScroll.ScrollToVerticalOffset(target);
+            StopSmoothScroll();
+            return;
+        }
+
+        double next = current + diff * (1 - Math.Exp(-dt / 0.05));
+        TabsScroll.ScrollToVerticalOffset(next);
+        _smoothLastWritten = next;
     }
 
     /// <summary>Una muesca completa de rueda de ratón: Windows la define como múltiplo de 120.</summary>
