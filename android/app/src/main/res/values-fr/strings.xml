@@ -471,4 +471,6 @@
     <string name="selection_tag">Ajouter une étiquette</string>
     <string name="selection_tag_title">Ajouter une étiquette aux notes sélectionnées</string>
     <string name="selection_new_tag">Nouvelle étiquette</string>
+    <string name="appearance_aldune">Aldune (prune)</string>
+    <string name="whatsnew_131_look">Nouvel aspect « Aldune » : encre prune avec le rose, le cyan et le jaune du logo.</string>
 </resources>

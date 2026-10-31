@@ -88,6 +88,7 @@ class AspectPalettesTest {
         assertEquals("#2B231A", AppPalette.forMode(AppPalette.TRAVEL_NOTEBOOK_DARK, false).getValue("Ground"))
         assertEquals("#27241F", AppPalette.forMode(AppPalette.FIELD_NOTEBOOK_DARK, false).getValue("Ground"))
         assertEquals("#1E2430", AppPalette.forMode(AppPalette.GRID_NOTEBOOK_DARK, false).getValue("Ground"))
+        assertEquals("#17121F", AppPalette.forMode(AppPalette.ALDUNE, false).getValue("Ground"))
     }
 
     @Test fun `el boton mas del dock sigue al acento`() {
@@ -96,7 +97,7 @@ class AspectPalettesTest {
             AppPalette.TELECOM_DARK to "trace", AppPalette.BASH to "accent", AppPalette.PHOSPHOR to "details",
             AppPalette.TRAVEL_NOTEBOOK_LIGHT to "accent", AppPalette.TRAVEL_NOTEBOOK_DARK to "accent",
             AppPalette.FIELD_NOTEBOOK_LIGHT to "accent", AppPalette.FIELD_NOTEBOOK_DARK to "accent",
-            AppPalette.GRID_NOTEBOOK_LIGHT to "accent", AppPalette.GRID_NOTEBOOK_DARK to "accent",
+            AppPalette.GRID_NOTEBOOK_LIGHT to "accent", AppPalette.GRID_NOTEBOOK_DARK to "accent", AppPalette.ALDUNE to "accent",
         )) {
             val p = AppPalette.forMode(mode, false, mapOf(slot to "#D03020"))
             val dock = OklchColor.fromHex(p.getValue("DockPrimary"))!!

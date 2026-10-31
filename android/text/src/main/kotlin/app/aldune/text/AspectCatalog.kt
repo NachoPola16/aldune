@@ -121,6 +121,15 @@ object AspectCatalog {
             ),
             emptyList(), null,
         ),
+        // The brand look: plum ink and the three colours of the logo as accent suggestions.
+        AspectDefinition(
+            AppPalette.ALDUNE, "aldune",
+            listOf(
+                AspectColorSlot("paper", "#17121F", listOf("#17121F", "#12121F", "#1D1626")),
+                AspectColorSlot("accent", "#F9BEF2", listOf("#F9BEF2", "#83E7F2", "#EBD38B", "#B8A6FF")),
+            ),
+            emptyList(), null,
+        ),
     )
 
     fun forMode(mode: Int): AspectDefinition? = retro.firstOrNull { it.mode == mode }

@@ -13,10 +13,10 @@ public class AspectCatalogTests
                     AppearanceMode.TelecomDark, AppearanceMode.Bash, AppearanceMode.Phosphor,
                     AppearanceMode.TravelNotebookLight, AppearanceMode.TravelNotebookDark,
                     AppearanceMode.FieldNotebookLight, AppearanceMode.FieldNotebookDark,
-                    AppearanceMode.GridNotebookLight, AppearanceMode.GridNotebookDark },
+                    AppearanceMode.GridNotebookLight, AppearanceMode.GridNotebookDark, AppearanceMode.Aldune },
             AspectCatalog.Retro.Select(a => a.Mode));
-        Assert.Equal(new[] { 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16 }, AspectCatalog.Retro.Select(a => (int)a.Mode));
-        Assert.Equal(12, AspectCatalog.Retro.Select(a => a.Id).Distinct().Count());
+        Assert.Equal(new[] { 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17 }, AspectCatalog.Retro.Select(a => (int)a.Mode));
+        Assert.Equal(13, AspectCatalog.Retro.Select(a => a.Id).Distinct().Count());
     }
 
     [Fact]

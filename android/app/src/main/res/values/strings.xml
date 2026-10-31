@@ -471,4 +471,6 @@
     <string name="selection_tag">Add tag</string>
     <string name="selection_tag_title">Add a tag to the selected notes</string>
     <string name="selection_new_tag">New tag</string>
+    <string name="appearance_aldune">Aldune (plum)</string>
+    <string name="whatsnew_131_look">New look «Aldune»: plum ink with the pink, cyan and yellow of the logo.</string>
 </resources>

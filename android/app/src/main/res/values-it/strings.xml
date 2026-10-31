@@ -471,4 +471,6 @@
     <string name="selection_tag">Aggiungi etichetta</string>
     <string name="selection_tag_title">Aggiungi un\'etichetta alle note selezionate</string>
     <string name="selection_new_tag">Nuova etichetta</string>
+    <string name="appearance_aldune">Aldune (prugna)</string>
+    <string name="whatsnew_131_look">Nuovo aspetto «Aldune»: inchiostro prugna con il rosa, il ciano e il giallo del logo.</string>
 </resources>

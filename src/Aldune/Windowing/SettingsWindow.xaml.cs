@@ -1650,6 +1650,7 @@ public partial class SettingsWindow : Window
                      (AppearanceMode.Light, Strings.AppearanceLight),
                      (AppearanceMode.Pastel, Strings.AppearancePastel),
                      (AppearanceMode.Midnight, Strings.AppearanceMidnight),
+                     (AppearanceMode.Aldune, Strings.AppearanceAldune),
                      (AppearanceMode.System, Strings.AppearanceSystem),
                      (AppearanceMode.XpLight, Strings.AppearanceXpLight),
                      (AppearanceMode.XpDark, Strings.AppearanceXpDark),

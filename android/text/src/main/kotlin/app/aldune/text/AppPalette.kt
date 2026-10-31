@@ -31,6 +31,7 @@ object AppPalette {
     const val FIELD_NOTEBOOK_DARK = 14
     const val GRID_NOTEBOOK_LIGHT = 15
     const val GRID_NOTEBOOK_DARK = 16
+    const val ALDUNE = 17
 
     val dark: Map<String, String> = linkedMapOf(
         "Ground" to "#2A261F",
@@ -187,7 +188,7 @@ object AppPalette {
     fun forMode(mode: Int, systemUsesLight: Boolean, aspectColors: Map<String, String>? = null): Map<String, String> = when (mode) {
         PASTEL -> pastel
         MIDNIGHT -> midnight
-        in XP_LIGHT..GRID_NOTEBOOK_DARK -> AspectPalettes.derive(mode, AspectCatalog.resolve(mode, aspectColors))
+        in XP_LIGHT..ALDUNE -> AspectPalettes.derive(mode, AspectCatalog.resolve(mode, aspectColors))
         else -> if (isLight(mode, systemUsesLight)) light else dark
     }
 

@@ -167,7 +167,7 @@ fun SettingsScreen(viewModel: NotesViewModel, onClose: () -> Unit) {
                 val appearances = listOf(
                     AppPalette.SYSTEM to R.string.appearance_system, AppPalette.DARK to R.string.appearance_dark,
                     AppPalette.LIGHT to R.string.appearance_light, AppPalette.PASTEL to R.string.appearance_pastel,
-                    AppPalette.MIDNIGHT to R.string.appearance_midnight,
+                    AppPalette.MIDNIGHT to R.string.appearance_midnight, AppPalette.ALDUNE to R.string.appearance_aldune,
                     AppPalette.XP_LIGHT to R.string.appearance_xp_light, AppPalette.XP_DARK to R.string.appearance_xp_dark,
                     AppPalette.TELECOM_LIGHT to R.string.appearance_telecom_light, AppPalette.TELECOM_DARK to R.string.appearance_telecom_dark,
                     AppPalette.BASH to R.string.appearance_bash, AppPalette.PHOSPHOR to R.string.appearance_phosphor,

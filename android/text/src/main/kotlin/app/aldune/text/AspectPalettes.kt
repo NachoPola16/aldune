@@ -30,6 +30,7 @@ object AspectPalettes {
         AppPalette.FIELD_NOTEBOOK_DARK -> notebookDark(c.getValue("paper"), c.getValue("accent"), neutralHue = 75.0)
         AppPalette.GRID_NOTEBOOK_LIGHT -> notebookLight(c.getValue("ink"), c.getValue("accent"), neutralHue = 250.0)
         AppPalette.GRID_NOTEBOOK_DARK -> notebookDark(c.getValue("paper"), c.getValue("accent"), neutralHue = 255.0)
+        AppPalette.ALDUNE -> aldunePalette(c.getValue("paper"), c.getValue("accent"))
         else -> throw IllegalArgumentException("Sin aspecto retro: $mode")
     }
 
@@ -127,6 +128,20 @@ object AspectPalettes {
     }
 
     // Papel oscuro de libreta: el oscuro de siempre con el fondo del papel elegido (que mueve todos los fondos) y el texto en un hueso cálido.
+    /** The app's own look: plum ink, lilac-white text and an accent from the logo (twin of `AldunePalette` in Aldune.Core). */
+    private fun aldunePalette(paper: String, accent: String): Map<String, String> {
+        val p = LinkedHashMap(
+            AppPalette.tint(AppPalette.dark, neutralHue = neutralHue(paper, 320.0), neutralChroma = neutralChroma(paper, 0.03), accentHue = hue(accent)),
+        )
+        moveBackgrounds(p, paper)
+        val text = fitText("#F1EAF7", p)
+        p["Text"] = text
+        p["TextStrong"] = text
+        p["OnTitleBar"] = text
+        setAccent(p, accent)
+        return p
+    }
+
     private fun notebookDark(paper: String, accent: String, neutralHue: Double): Map<String, String> {
         val p = LinkedHashMap(
             AppPalette.tint(AppPalette.dark, neutralHue = neutralHue(paper, neutralHue), neutralChroma = neutralChroma(paper, 0.03), accentHue = hue(accent)),

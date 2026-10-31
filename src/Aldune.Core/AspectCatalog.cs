@@ -90,6 +90,12 @@ public static class AspectCatalog
             new("paper", "#1E2430", ["#1E2430", "#181C26", "#242B38"]),
             new("accent", "#7FA8E0", ["#7FA8E0", "#D98A6A", "#8EC07C", "#CFA862"]),
         ], [], null),
+        // The brand look: plum ink and the three colours of the logo (pink, cyan, yellow) as accent suggestions.
+        new(AppearanceMode.Aldune, "aldune",
+        [
+            new("paper", "#17121F", ["#17121F", "#12121F", "#1D1626"]),
+            new("accent", "#F9BEF2", ["#F9BEF2", "#83E7F2", "#EBD38B", "#B8A6FF"]),
+        ], [], null),
     ];
 
     public static AspectDefinition? For(AppearanceMode mode) => Retro.FirstOrDefault(aspect => aspect.Mode == mode);

@@ -31,6 +31,7 @@ internal static class AspectPalettes
         AppearanceMode.FieldNotebookDark => NotebookDark(c["paper"], c["accent"], neutralHue: 75),
         AppearanceMode.GridNotebookLight => NotebookLight(c["ink"], c["accent"], neutralHue: 250),
         AppearanceMode.GridNotebookDark => NotebookDark(c["paper"], c["accent"], neutralHue: 255),
+        AppearanceMode.Aldune => AldunePalette(c["paper"], c["accent"]),
         _ => throw new ArgumentOutOfRangeException(nameof(mode)),
     };
 
@@ -130,6 +131,17 @@ internal static class AspectPalettes
         var p = new Dictionary<string, string>(AppPalette.Tint(AppPalette.Dark, neutralHue: NeutralHue(paper, neutralHue), neutralChroma: NeutralChroma(paper, 0.03), accentHue: Hue(accent)));
         MoveBackgrounds(p, paper);
         var text = FitText("#E8DCC0", p);
+        p["Text"] = p["TextStrong"] = p["OnTitleBar"] = text;
+        SetAccent(p, accent);
+        return p;
+    }
+
+    /// <summary>The app's own look: plum ink, lilac-white text, and an accent taken from the logo (pink by default; cyan and yellow are the suggestions).</summary>
+    private static Dictionary<string, string> AldunePalette(string paper, string accent)
+    {
+        var p = new Dictionary<string, string>(AppPalette.Tint(AppPalette.Dark, neutralHue: NeutralHue(paper, 320), neutralChroma: NeutralChroma(paper, 0.03), accentHue: Hue(accent)));
+        MoveBackgrounds(p, paper);
+        var text = FitText("#F1EAF7", p);
         p["Text"] = p["TextStrong"] = p["OnTitleBar"] = text;
         SetAccent(p, accent);
         return p;

@@ -36,7 +36,9 @@ public enum AppearanceMode
     /// <summary>Cuaderno cuadriculado, claro: hoja de cuadros azul grisáceo y tinta azul marino.</summary>
     GridNotebookLight = 15,
     /// <summary>Cuaderno cuadriculado, oscuro: cuadros apagados sobre papel azul noche.</summary>
-    GridNotebookDark = 16
+    GridNotebookDark = 16,
+    /// <summary>The app's own look: plum ink with the pink, cyan and yellow of the logo. Derived from Dark like Midnight, so it inherits its checked contrast.</summary>
+    Aldune = 17
 }
 
 /// <summary>
@@ -306,7 +308,7 @@ public static class AppPalette
             or AppearanceMode.TelecomDark or AppearanceMode.Bash or AppearanceMode.Phosphor
             or AppearanceMode.TravelNotebookLight or AppearanceMode.TravelNotebookDark
             or AppearanceMode.FieldNotebookLight or AppearanceMode.FieldNotebookDark
-            or AppearanceMode.GridNotebookLight or AppearanceMode.GridNotebookDark
+            or AppearanceMode.GridNotebookLight or AppearanceMode.GridNotebookDark or AppearanceMode.Aldune
             => AspectPalettes.Derive(mode, AspectCatalog.Resolve(mode, aspectColors)),
         _ => For(IsLight(mode, windowsUsesLight))
     };

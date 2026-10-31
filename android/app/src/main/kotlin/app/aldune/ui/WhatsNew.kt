@@ -32,7 +32,7 @@ internal object WhatsNew {
     val entries: List<Entry> = listOf(
         Entry(18, "1.2.0", listOf(R.string.whatsnew_120_tasks, R.string.whatsnew_120_history, R.string.whatsnew_120_tags, R.string.whatsnew_120_links, R.string.whatsnew_120_langs)),
         Entry(19, "1.3.0", listOf(R.string.whatsnew_130_news)),
-        Entry(20, "1.3.1", listOf(R.string.whatsnew_131_news)),
+        Entry(20, "1.3.1", listOf(R.string.whatsnew_131_look, R.string.whatsnew_131_news)),
     )
 
     val codes: List<Int> get() = entries.map { it.versionCode }

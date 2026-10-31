@@ -146,6 +146,7 @@ internal static class ConfigPreview
         AppearanceMode.FieldNotebookDark => Strings.AppearanceFieldNotebookDark,
         AppearanceMode.GridNotebookLight => Strings.AppearanceGridNotebookLight,
         AppearanceMode.GridNotebookDark => Strings.AppearanceGridNotebookDark,
+        AppearanceMode.Aldune => Strings.AppearanceAldune,
         _ => null,
     };
 }
