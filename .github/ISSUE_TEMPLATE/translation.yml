@@ -1,0 +1,26 @@
+name: Translation review
+description: You speak one of the languages natively and want to check or fix its texts
+labels: ["translation"]
+body:
+  - type: dropdown
+    id: language
+    attributes:
+      label: Language
+      description: Italian, Japanese and Simplified Chinese are machine-assisted and have never been read by a native speaker; the others were reviewed by the author.
+      options: [Italian, Japanese, Chinese (Simplified), German, French, Portuguese (Brazil), Spanish, Other]
+    validations:
+      required: true
+  - type: dropdown
+    id: app
+    attributes:
+      label: Where
+      options: [Windows app, Android app, Both, README or docs]
+    validations:
+      required: true
+  - type: textarea
+    id: text
+    attributes:
+      label: The text and your suggestion
+      description: Paste what you see (or a screenshot) and what it should say. A list is fine. See docs/TRANSLATION_REVIEW.md for how to find the strings.
+    validations:
+      required: true

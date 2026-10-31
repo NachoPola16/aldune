@@ -462,5 +462,13 @@
     <string name="update_check_failed">Vérification impossible. Vérifiez la connexion et réessayez.</string>
     <string name="pinned_mark_cd">Épinglée en haut de la liste</string>
     <string name="existing_tags">Vos étiquettes</string>
-    <string name="whatsnew_131_news">Un appui long ou un balayage dans la liste n\'ouvre plus les options d\'une note sortie de l\'écran.</string>
+    <string name="whatsnew_131_news">Sélectionnez plusieurs notes à la fois (archiver, corbeille, étiquette), une fenêtre signale les nouvelles versions, et les balayages et cases sont plus sûrs.</string>
+    <string name="update_dialog_body">Une nouvelle version est disponible sur GitHub. L\'installer par-dessus celle-ci conserve vos notes.</string>
+    <string name="select_notes">Sélectionner</string>
+    <string name="selection_count">%1$d sélectionnées</string>
+    <string name="selection_all">Tout sélectionner</string>
+    <string name="selection_exit">Annuler la sélection</string>
+    <string name="selection_tag">Ajouter une étiquette</string>
+    <string name="selection_tag_title">Ajouter une étiquette aux notes sélectionnées</string>
+    <string name="selection_new_tag">Nouvelle étiquette</string>
 </resources>

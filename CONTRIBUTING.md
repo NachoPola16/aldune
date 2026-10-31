@@ -26,3 +26,7 @@ By sending code you agree that it is published under [GPL-3.0](LICENSE) and that
 
 - Changes to the sync format (the format is 4; installed versions reject what they do not understand).
 - Code that sends data off the device or adds telemetry, ads or trackers.
+
+## Translations
+
+Italian, Japanese and Chinese have not been read by a native speaker yet. If you can, see [`docs/TRANSLATION_REVIEW.md`](docs/TRANSLATION_REVIEW.md) and open a **Translation review** issue.

@@ -462,5 +462,13 @@
     <string name="update_check_failed">Impossibile controllare. Verifica la connessione e riprova.</string>
     <string name="pinned_mark_cd">Fissata in cima all\'elenco</string>
     <string name="existing_tags">Le tue etichette</string>
-    <string name="whatsnew_131_news">Premere a lungo o scorrere nella lista non apre più le opzioni di una nota uscita dalla vista.</string>
+    <string name="whatsnew_131_news">Seleziona più note insieme (archivia, cestino, etichetta), una finestra segnala le nuove versioni e scorrimenti e caselle più sicuri.</string>
+    <string name="update_dialog_body">C\'è una nuova versione su GitHub. Installandola sopra questa, le tue note restano.</string>
+    <string name="select_notes">Seleziona</string>
+    <string name="selection_count">%1$d selezionate</string>
+    <string name="selection_all">Seleziona tutte</string>
+    <string name="selection_exit">Annulla la selezione</string>
+    <string name="selection_tag">Aggiungi etichetta</string>
+    <string name="selection_tag_title">Aggiungi un\'etichetta alle note selezionate</string>
+    <string name="selection_new_tag">Nuova etichetta</string>
 </resources>

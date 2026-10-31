@@ -47,6 +47,7 @@ fun NoteActionsDialog(
     moves: Set<ReorderPlan.Direction> = emptySet(), onMove: (Int) -> Unit = {},
     // Lo que el deslizamiento hace (archivar, papelera, restaurar), también aquí: quien no sabe que se desliza lo encuentra en el menú.
     onArchive: (() -> Unit)? = null, onTrash: (() -> Unit)? = null, onRestore: (() -> Unit)? = null,
+    onSelect: (() -> Unit)? = null,
 ) {
     var options by remember { mutableStateOf<NotesViewModel.NoteOptions?>(null) }
     var naming by remember { mutableStateOf(false) }
@@ -68,6 +69,7 @@ fun NoteActionsDialog(
                         maxLines = 1, overflow = TextOverflow.Ellipsis,
                     )
                     Action(stringResource(R.string.note_actions_open)) { onClose(); onOpen() }
+                    onSelect?.let { Action(stringResource(R.string.select_notes)) { onClose(); it() } }
                     // Subir/Bajar: lo mismo que arrastrar, sin arrastrar. Solo con la lista completa (con un filtro no se ofrecen).
                     if (ReorderPlan.Direction.UP in moves) Action(stringResource(R.string.note_move_up)) { onClose(); onMove(-1) }
                     if (ReorderPlan.Direction.DOWN in moves) Action(stringResource(R.string.note_move_down)) { onClose(); onMove(+1) }

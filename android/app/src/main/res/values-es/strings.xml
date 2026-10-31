@@ -462,5 +462,13 @@
     <string name="update_check_failed">No se pudo comprobar. Revisa la conexión e inténtalo de nuevo.</string>
     <string name="pinned_mark_cd">Fijada arriba en la lista</string>
     <string name="existing_tags">Tus etiquetas</string>
-    <string name="whatsnew_131_news">Mantener pulsada o deslizar la lista ya no abre las opciones de una nota que ha salido de la vista.</string>
+    <string name="whatsnew_131_news">Selecciona varias notas a la vez (archivar, papelera, etiqueta), aviso emergente de versiones nuevas y deslizamientos y casillas más seguros.</string>
+    <string name="update_dialog_body">Hay una versión nueva en GitHub. Si la instalas encima de esta, tus notas se conservan.</string>
+    <string name="select_notes">Seleccionar</string>
+    <string name="selection_count">%1$d seleccionadas</string>
+    <string name="selection_all">Seleccionar todas</string>
+    <string name="selection_exit">Cancelar la selección</string>
+    <string name="selection_tag">Añadir etiqueta</string>
+    <string name="selection_tag_title">Añadir una etiqueta a las notas seleccionadas</string>
+    <string name="selection_new_tag">Etiqueta nueva</string>
 </resources>

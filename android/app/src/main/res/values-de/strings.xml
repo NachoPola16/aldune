@@ -462,5 +462,13 @@
     <string name="update_check_failed">Prüfung fehlgeschlagen. Verbindung prüfen und erneut versuchen.</string>
     <string name="pinned_mark_cd">Oben in der Liste angeheftet</string>
     <string name="existing_tags">Deine Tags</string>
-    <string name="whatsnew_131_news">Langes Drücken oder Wischen in der Liste öffnet nicht mehr die Optionen einer Notiz, die aus dem Sichtbereich gescrollt ist.</string>
+    <string name="whatsnew_131_news">Mehrere Notizen auf einmal auswählen (archivieren, Papierkorb, Tag), Hinweisfenster bei neuen Versionen und sicherere Wischgesten und Aufgabenkästchen.</string>
+    <string name="update_dialog_body">Eine neue Version ist auf GitHub. Wenn du sie über diese installierst, bleiben deine Notizen erhalten.</string>
+    <string name="select_notes">Auswählen</string>
+    <string name="selection_count">%1$d ausgewählt</string>
+    <string name="selection_all">Alle auswählen</string>
+    <string name="selection_exit">Auswahl beenden</string>
+    <string name="selection_tag">Tag hinzufügen</string>
+    <string name="selection_tag_title">Tag zu den ausgewählten Notizen hinzufügen</string>
+    <string name="selection_new_tag">Neues Tag</string>
 </resources>

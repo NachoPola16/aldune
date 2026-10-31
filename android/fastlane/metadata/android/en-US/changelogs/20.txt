@@ -1,1 +1,1 @@
-Fixed: long-pressing or swiping the list no longer opens the options of a note that is out of view.
+New: select several notes at once, a pop-up for new versions, safer swipes and task boxes; fixed an options menu opening for a note out of view.

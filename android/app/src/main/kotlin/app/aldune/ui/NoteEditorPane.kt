@@ -181,7 +181,9 @@ private val ListKeysTransformation = InputTransformation {
     // ...and the caret cannot rest between the box and that space: it jumps over it, or in front of the box when it came from the right.
     val shown = asCharSequence().toString()
     val movingLeft = old.text == shown && selection.start < originalSelection.start
-    val start = TaskLines.clampCaret(shown, selection.start, movingLeft)
+    var start = TaskLines.clampCaret(shown, selection.start, movingLeft)
+    // A lone caret also never rests in front of a box: its handle would cover the box and the tap that unticks it.
+    if (selection.collapsed) start = TaskLines.keepCaretOffBox(shown, start, movingLeft)
     val end = if (selection.collapsed) start else TaskLines.clampCaret(shown, selection.end, movingLeft)
     if (start != selection.start || end != selection.end) selection = TextRange(start, end)
 }

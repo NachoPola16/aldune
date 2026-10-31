@@ -462,5 +462,13 @@
     <string name="update_check_failed">確認できませんでした。接続を確認して、もう一度お試しください。</string>
     <string name="pinned_mark_cd">リストの先頭に固定済み</string>
     <string name="existing_tags">自分のタグ</string>
-    <string name="whatsnew_131_news">リストを長押ししたりスワイプしたりしても、画面外にスクロールしたノートのオプションが開かなくなりました。</string>
+    <string name="whatsnew_131_news">複数のノートをまとめて選択（アーカイブ・ごみ箱・タグ）、新バージョンのお知らせ、より安全なスワイプとチェックボックス。</string>
+    <string name="update_dialog_body">GitHub に新しいバージョンがあります。上書きインストールしてもノートは残ります。</string>
+    <string name="select_notes">選択</string>
+    <string name="selection_count">%1$d 件選択</string>
+    <string name="selection_all">すべて選択</string>
+    <string name="selection_exit">選択を解除</string>
+    <string name="selection_tag">タグを追加</string>
+    <string name="selection_tag_title">選択したノートにタグを追加</string>
+    <string name="selection_new_tag">新しいタグ</string>
 </resources>

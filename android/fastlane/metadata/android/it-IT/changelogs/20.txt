@@ -1,1 +1,1 @@
-Corretto: premere a lungo o scorrere nella lista non apre più le opzioni di una nota fuori dalla vista.
+Novità: selezione di più note, finestra per le nuove versioni, scorrimenti e caselle più sicuri; corretto un menu che si apriva per una nota fuori dalla vista.

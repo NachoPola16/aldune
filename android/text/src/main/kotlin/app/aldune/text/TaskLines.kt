@@ -57,6 +57,26 @@ object TaskLines {
     }
 
     /**
+     * Android only: on a task line the caret never rests in front of the box. Its insertion handle would be drawn over the box and swallow the
+     * tap that unticks it, and a caret there only invites typing before the box. A caret in front of the box moves behind its space; moving left
+     * from the text it goes to the end of the previous line instead (so the left arrow still walks out of the line). Does not touch selections.
+     */
+    fun keepCaretOffBox(text: String, caret: Int, movingLeft: Boolean = false): Int {
+        if (caret < 0 || caret > text.length) return caret
+        val start = lineStart(text, caret)
+        val line = text.substring(start, lineEnd(text, caret))
+        val glyph = glyphIndex(line)
+        if (glyph < 0 || caret - start > glyph + 1) return caret
+        val behind = start + glyph + prefixLength(line, glyph)
+        if (movingLeft && start > 0) {
+            var previousEnd = start - 1
+            if (previousEnd > 0 && text[previousEnd - 1] == '\r') previousEnd--
+            return previousEnd
+        }
+        return behind
+    }
+
+    /**
      * Always leaves a space between the box and what follows on the caret's line: a task with a sign glued to it ("☐-", from pasted or synced
      * text) gets it here. The caret moves with the text if it was behind the glyph. Same as `EnsureGlyphSpace` in Aldune.Core.
      */

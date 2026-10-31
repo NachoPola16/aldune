@@ -1,1 +1,1 @@
-Corregido: mantener pulsada o deslizar la lista ya no abre las opciones de una nota fuera de la vista.
+Novedades: selecciona varias notas a la vez, aviso emergente de versiones nuevas, deslizamientos y casillas más seguros; corregido un menú que se abría para una nota fuera de la vista.

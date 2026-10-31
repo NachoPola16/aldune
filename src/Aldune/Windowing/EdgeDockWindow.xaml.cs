@@ -2040,7 +2040,8 @@ public partial class EdgeDockWindow : Window
 
     private void OpenDockViewPopupFrom(UIElement trigger)
     {
-        DockViewPopup.PlacementTarget = ManageArchiveButton;
+        // Opened from the fixed label, the menu appears next to the label (the thing that was clicked), not down at the button bar.
+        DockViewPopup.PlacementTarget = ReferenceEquals(trigger, _viewLabelBorder) && trigger is FrameworkElement label ? label : ManageArchiveButton;
         DockViewPopup.Placement = _edge switch
         {
             EdgePosition.Top => PlacementMode.Bottom,

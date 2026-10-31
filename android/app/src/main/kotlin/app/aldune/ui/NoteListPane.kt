@@ -17,7 +17,9 @@ import androidx.compose.ui.input.pointer.PointerEventPass
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.input.pointer.pointerInput
@@ -159,6 +161,11 @@ fun NoteListPane(
     var showOrphans by remember { mutableStateOf(false) }
     // La nota cuyo menú (mantener pulsada) está abierto.
     var menuFor by remember { mutableStateOf<NoteListItem?>(null) }
+    // Selection mode: notes picked for a bulk action (archive, trash, restore, tag). Empty = normal list.
+    var picked by remember { mutableStateOf<Set<String>>(emptySet()) }
+    var taggingPicked by remember { mutableStateOf(false) }
+    androidx.activity.compose.BackHandler(enabled = picked.isNotEmpty()) { picked = emptySet() }
+    LaunchedEffect(state.items) { if (picked.isNotEmpty()) picked = picked.filter { id -> state.items.any { it.id == id } }.toSet() }
 
     // Reordenar (arrastrando o con Subir/Bajar) solo con la lista completa (sin búsqueda ni etiqueta): con un filtro, las vecinas que se ven no
     // son las vecinas reales y el orden no se puede decidir.
@@ -181,10 +188,17 @@ fun NoteListPane(
     val restoredMsg = stringResource(R.string.note_restored)
     val undoLabel = stringResource(R.string.undo)
 
+    // Right after swiping a note away or undoing it, the finger is still near the list: a hold detector must not read that touch as a request
+    // for the options of the note that just moved (reported: undo opened the menu of the restored note).
+    var calmUntil by remember { mutableLongStateOf(0L) }
     fun announce(message: String, undo: () -> Unit) {
+        calmUntil = System.currentTimeMillis() + MENU_CALM_MS
         scope.launch {
             snackbar.currentSnackbarData?.dismiss()
-            if (snackbar.showSnackbar(message, undoLabel, duration = SnackbarDuration.Short) == SnackbarResult.ActionPerformed) undo()
+            if (snackbar.showSnackbar(message, undoLabel, duration = SnackbarDuration.Short) == SnackbarResult.ActionPerformed) {
+                calmUntil = System.currentTimeMillis() + MENU_CALM_MS
+                undo()
+            }
         }
     }
 
@@ -220,6 +234,14 @@ fun NoteListPane(
             // Al arrancar, Android da el foco inicial al primer elemento enfocable de la ventana y, si es un campo de texto, abre el teclado
             // (tapando el «+»). Este elemento invisible va primero para quedárselo; el buscador solo toma el foco si se toca.
             Box(Modifier.size(0.dp).focusRequester(rest).focusable())
+            if (picked.isNotEmpty()) SelectionBar(
+                count = picked.size, filter = state.filter,
+                onAll = { picked = state.items.map { it.id }.toSet() }, onExit = { picked = emptySet() },
+                onArchive = { val ids = picked; ids.forEach(viewModel::archive); picked = emptySet(); announce(archivedMsg) { ids.forEach(viewModel::restore) } },
+                onTrash = { val ids = picked; ids.forEach(viewModel::trash); picked = emptySet(); announce(trashedMsg) { ids.forEach(viewModel::restore) } },
+                onRestore = { val ids = picked; ids.forEach(viewModel::restore); picked = emptySet(); announce(restoredMsg) { ids.forEach(viewModel::trash) } },
+                onTag = { taggingPicked = true },
+            ) else
             Row(Modifier.fillMaxWidth().padding(top = 8.dp, end = 8.dp), verticalAlignment = Alignment.CenterVertically) {
                 Box(Modifier.weight(1f)) { StateTabs(state, viewModel::setFilter) }
                 if (hasProfile && status != null) {
@@ -233,6 +255,21 @@ fun NoteListPane(
             val pendingUpdate by viewModel.update.collectAsStateWithLifecycle()
             androidx.compose.runtime.LaunchedEffect(settingsNow.checkUpdates) { viewModel.checkForUpdates(currentVersionName(context)) }
             pendingUpdate?.let { found ->
+                val openPage = { context.startActivity(android.content.Intent(android.content.Intent.ACTION_VIEW, android.net.Uri.parse(AndroidReleaseUpdate.PAGE + found.tag))) }
+                // A pop-up once per version (a banner alone went unnoticed); the banner below stays as a reminder.
+                if (settingsNow.announcedUpdate != found.version) {
+                    AlertDialog(
+                        onDismissRequest = { viewModel.updateSettings { it.copy(announcedUpdate = found.version) } },
+                        title = { Text(stringResource(R.string.update_available, found.version), Modifier.semantics { heading() }) },
+                        text = { Text(stringResource(R.string.update_dialog_body)) },
+                        confirmButton = {
+                            TextButton(onClick = { viewModel.updateSettings { it.copy(announcedUpdate = found.version) }; openPage() }) { Text(stringResource(R.string.update_open)) }
+                        },
+                        dismissButton = {
+                            TextButton(onClick = { viewModel.updateSettings { it.copy(announcedUpdate = found.version) } }) { Text(stringResource(R.string.update_dismiss)) }
+                        },
+                    )
+                }
                 UpdateNotice(
                     found.version, onDismiss = { viewModel.dismissUpdate(found.version) },
                     onOpen = { context.startActivity(android.content.Intent(android.content.Intent.ACTION_VIEW, android.net.Uri.parse(AndroidReleaseUpdate.PAGE + found.tag))) },
@@ -282,6 +319,7 @@ fun NoteListPane(
                 // A menu only opens for a row that is on screen: a gesture that ends or is cancelled after the list scrolled must never
                 // surface the options of a note the user cannot see.
                 fun openMenuIfShown(item: NoteListItem) {
+                    if (System.currentTimeMillis() < calmUntil) return
                     if (listState.layoutInfo.visibleItemsInfo.any { it.key == item.id }) menuFor = item
                 }
 
@@ -419,8 +457,8 @@ fun NoteListPane(
                                         }
                                     }
                                 ),
-                            item = item, selected = item.id == selectedId || item.id == highlight, conflicted = item.id in conflicted, reminder = state.reminders[item.id],
-                            onOpen = { if (!hold.active) onOpen(item.id) }, onMenu = { menuFor = item },
+                            item = item, selected = item.id == selectedId || item.id == highlight || item.id in picked, swipeEnabled = picked.isEmpty(), conflicted = item.id in conflicted, reminder = state.reminders[item.id],
+                            onOpen = { if (picked.isNotEmpty()) picked = if (item.id in picked) picked - item.id else picked + item.id else if (!hold.active) onOpen(item.id) }, onMenu = { menuFor = item },
                             moves = ReorderPlan.available(sameGroup(order, item.id), item.id, reorderable), onMove = { delta -> moveBy(item.id, delta) },
                             channel = order.indexOfFirst { it.id == item.id },
                             signal = if (look.syncSignal) NoteSyncSignal.of(hasProfile, item.id in conflicted, bases[item.id], item.updatedAt) else NoteSyncSignal.State.HIDDEN,
@@ -490,8 +528,18 @@ fun NoteListPane(
             onArchive = { viewModel.archive(item.id); announce(archivedMsg) { viewModel.restore(item.id) } },
             onTrash = { viewModel.trash(item.id); announce(trashedMsg) { viewModel.restore(item.id) } },
             onRestore = { viewModel.restore(item.id); announce(restoredMsg) { viewModel.trash(item.id) } },
+            onSelect = { picked = setOf(item.id) },
         )
     }
+
+    if (taggingPicked) TagPickedDialog(
+        state.allTags,
+        onPick = { tag ->
+            for (id in picked) state.items.firstOrNull { it.id == id }?.let { n -> viewModel.setNoteTags(id, (n.tags + tag).distinct()) }
+            taggingPicked = false; picked = emptySet()
+        },
+        onDismiss = { taggingPicked = false },
+    )
 
     deleting?.let { item ->
         AlertDialog(
@@ -544,7 +592,8 @@ private fun TagRow(state: UiState.Ready, showHash: Boolean, onSelect: (String?) 
     val listState = rememberLazyListState()
     var sheetOpen by remember { mutableStateOf(false) }
     if (sheetOpen) AllTagsDialog(state.allTags, state.tag, showHash, onSelect = { sheetOpen = false; onSelect(it) }, onMove = onMoveTag, onDismiss = { sheetOpen = false })
-    Row(Modifier.padding(bottom = 10.dp), verticalAlignment = Alignment.CenterVertically) {
+    // end = 8.dp: the same margin as the row above, so the arrow sits right under the sync status icon.
+    Row(Modifier.padding(bottom = 10.dp, end = 8.dp), verticalAlignment = Alignment.CenterVertically) {
     Box(Modifier.weight(1f)) {
         LazyRow(
             // Space below the chips equal to the space between them and the tabs (it was 20 dp above and 8 dp below).
@@ -604,16 +653,24 @@ private fun EmptyMessage(state: UiState.Ready) {
 @Composable
 internal fun SwipeableRow(
     modifier: Modifier,
-    item: NoteListItem, selected: Boolean, conflicted: Boolean, reminder: java.time.Instant?, onOpen: () -> Unit, signal: NoteSyncSignal.State, channel: Int,
+    item: NoteListItem, selected: Boolean, swipeEnabled: Boolean = true, conflicted: Boolean, reminder: java.time.Instant?, onOpen: () -> Unit, signal: NoteSyncSignal.State, channel: Int,
     onMenu: () -> Unit, moves: Set<ReorderPlan.Direction>, onMove: (Int) -> Unit,
     onArchive: () -> Unit, onTrash: () -> Unit, onRestore: () -> Unit, onDelete: () -> Unit,
 ) {
     // No rememberSaveable: that state was restored already "dismissed" (StartToEnd) when a note came back to the trash after being restored and
     // undone, and the row stopped swiping. It is created anew per note and per state, always at rest.
     val density = androidx.compose.ui.platform.LocalDensity.current
+    // A note was archived by accident: the swipe must travel most of the row (70 %) and a quick flick that does not get there is refused
+    // (the library also accepts a fast fling from any distance).
+    val rowWidth = remember(item.id, item.state) { FloatArray(1) }
+    val stateRef = remember(item.id, item.state) { arrayOfNulls<SwipeToDismissBoxState>(1) }
     val dismiss = remember(item.id, item.state) { SwipeToDismissBoxState(
-        SwipeToDismissBoxValue.Settled, density, positionalThreshold = { it * 0.56f },
+        SwipeToDismissBoxValue.Settled, density, positionalThreshold = { total -> total * 0.7f },
         confirmValueChange = { value ->
+            if (value != SwipeToDismissBoxValue.Settled) {
+                val travelled = runCatching { kotlin.math.abs(stateRef[0]?.requireOffset() ?: 0f) }.getOrDefault(0f)
+                if (rowWidth[0] > 0f && travelled < rowWidth[0] * 0.5f) return@SwipeToDismissBoxState false
+            }
             when (value) {
                 SwipeToDismissBoxValue.StartToEnd -> when (item.state) {
                     NoteState.ACTIVE -> onTrash()
@@ -628,7 +685,7 @@ internal fun SwipeableRow(
             }
             value != SwipeToDismissBoxValue.Settled
         },
-    ) }
+    ).also { stateRef[0] = it } }
     // El estado del deslizamiento se guarda por id de nota (rememberSaveable): una nota que acaba de archivarse o ir a la papelera volvía a
     // aparecer en su nueva pestaña ya «descartada», fuera de la pantalla. Al entrar en la composición se repone.
     LaunchedEffect(item.state) { dismiss.snapTo(SwipeToDismissBoxValue.Settled) }
@@ -665,7 +722,8 @@ internal fun SwipeableRow(
     }
     SwipeToDismissBox(
         state = dismiss,
-        modifier = modifier.padding(horizontal = 16.dp).semantics { customActions = actions; if (selected) stateDescription = openLabel },
+        enableDismissFromStartToEnd = swipeEnabled, enableDismissFromEndToStart = swipeEnabled,
+        modifier = modifier.padding(horizontal = 16.dp).onSizeChanged { rowWidth[0] = it.width.toFloat() }.semantics { customActions = actions; if (selected) stateDescription = openLabel },
         backgroundContent = {
             // Only while the row is actually swiped: drawn at rest, this fill peeks out around the card's anti-aliased edge as a thin outline whose
             // colour depends on the note colour (the "some notes have a border" report).
@@ -855,6 +913,7 @@ private fun SyncIcon(icon: StatusIcon, description: String) {
 /** Cuánto aguanta el dedo quieto, tras la pulsación larga, para abrir el menú sin soltar. */
 // Tras la pulsación larga del sistema (~400 ms), cuánto esperar con el dedo quieto antes de abrir el menú (350 ms sumaban ~750 ms: se notaba lento).
 private const val MENU_HOLD_MS = 100L
+private const val MENU_CALM_MS = 700L
 
 private class PressHold {
     var active = false
@@ -901,4 +960,44 @@ private fun NoBackupNotice(message: Int, onSettings: () -> Unit, onDismiss: () -
             }
         }
     }
+}
+
+
+/** The bar shown instead of the tabs while notes are picked: close, count, select all and the bulk actions that fit the current list. */
+@Composable
+private fun SelectionBar(
+    count: Int, filter: NoteState, onAll: () -> Unit, onExit: () -> Unit,
+    onArchive: () -> Unit, onTrash: () -> Unit, onRestore: () -> Unit, onTag: () -> Unit,
+) {
+    Row(Modifier.fillMaxWidth().padding(end = 8.dp), verticalAlignment = Alignment.CenterVertically) {
+        val exit = stringResource(R.string.selection_exit)
+        IconButton(onClick = onExit, Modifier.semantics { contentDescription = exit }) { Icon(Icons.Filled.Close, contentDescription = null) }
+        Text(stringResource(R.string.selection_count, count), Modifier.weight(1f), style = MaterialTheme.typography.titleMedium, maxLines = 1, overflow = TextOverflow.Ellipsis)
+        TextButton(onClick = onAll) { Text(stringResource(R.string.selection_all)) }
+    }
+    Row(Modifier.fillMaxWidth().padding(horizontal = 8.dp), horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+        if (filter == NoteState.ACTIVE) TextButton(onClick = onArchive) { Text(stringResource(R.string.archive)) } else TextButton(onClick = onRestore) { Text(stringResource(R.string.restore)) }
+        if (filter != NoteState.TRASHED) TextButton(onClick = onTrash) { Text(stringResource(R.string.move_to_trash)) }
+        if (filter != NoteState.TRASHED) TextButton(onClick = onTag) { Text(stringResource(R.string.selection_tag)) }
+    }
+}
+
+/** Pick one of the existing tags (or write a new one) to add to every selected note. */
+@Composable
+private fun TagPickedDialog(tags: List<String>, onPick: (String) -> Unit, onDismiss: () -> Unit) {
+    var typed by remember { mutableStateOf("") }
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(stringResource(R.string.selection_tag_title), Modifier.semantics { heading() }) },
+        text = {
+            Column(Modifier.verticalScroll(rememberScrollState())) {
+                androidx.compose.material3.OutlinedTextField(
+                    typed, { typed = it }, label = { Text(stringResource(R.string.selection_new_tag)) }, singleLine = true, modifier = Modifier.fillMaxWidth(),
+                )
+                for (tag in tags) Text(tag, Modifier.fillMaxWidth().clickable { onPick(tag) }.padding(vertical = 12.dp), style = MaterialTheme.typography.bodyLarge)
+            }
+        },
+        confirmButton = { TextButton(onClick = { onPick(typed.trim()) }, enabled = typed.isNotBlank()) { Text(stringResource(R.string.selection_tag)) } },
+        dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.update_dismiss)) } },
+    )
 }

@@ -304,10 +304,19 @@ fun SettingsScreen(viewModel: NotesViewModel, onClose: () -> Unit) {
                         val currentCode = WhatsNew.currentCode(androidx.compose.ui.platform.LocalContext.current)
                         WhatsNewDialog(WhatsNew.codes.filter { it <= currentCode }.sortedDescending().take(2), onDismiss = { showNews = false })
                     }
-                    Text(
-                        stringResource(R.string.about_version, versionName(activity)), Modifier.padding(16.dp),
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    )
+                    // The app's own mark and name, once, in the About section.
+                    androidx.compose.foundation.layout.Row(Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
+                        androidx.compose.foundation.Image(
+                            androidx.compose.ui.res.painterResource(R.drawable.ic_aldune_symbol), contentDescription = null, Modifier.size(44.dp),
+                        )
+                        Column(Modifier.padding(start = 12.dp)) {
+                            Text(stringResource(R.string.app_name), style = MaterialTheme.typography.titleMedium)
+                            Text(
+                                stringResource(R.string.about_version, versionName(activity)),
+                                color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.bodyMedium,
+                            )
+                        }
+                    }
                 }
                 }
             }

@@ -136,7 +136,7 @@ internal partial class ToastWindow : Window
     /// <summary>El logo de la app, del mismo .ico que usa la bandeja. Se coge el fotograma más cercano
     /// a 64 px y se reduce: a 28 DIP con escalado del 200 % harían falta 56, y reducir queda nítido
     /// donde ampliar el de 32 se vería borroso.</summary>
-    private static ImageSource? LoadLogo()
+    internal static ImageSource? LoadLogo()
     {
         if (_logo is not null) return _logo;
         try

@@ -17,7 +17,7 @@ internal static class WhatsNew
         (new Version(2, 5, 0), () => [Strings.WhatsNew250Tags]),
         (new Version(2, 6, 0), () => [Strings.WhatsNew260Label]),
         (new Version(2, 7, 0), () => [Strings.WhatsNew270Window]),
-        (new Version(2, 7, 1), () => [Strings.WhatsNew271Fixes]),
+        (new Version(2, 7, 1), () => [Strings.WhatsNew271Fixes, Strings.WhatsNew271Wheel]),
     ];
 
     /// <summary>The versions that have an entry.</summary>

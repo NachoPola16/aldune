@@ -462,5 +462,13 @@
     <string name="update_check_failed">Não foi possível verificar. Confira a conexão e tente de novo.</string>
     <string name="pinned_mark_cd">Fixada no topo da lista</string>
     <string name="existing_tags">Suas etiquetas</string>
-    <string name="whatsnew_131_news">Pressionar e segurar ou deslizar na lista não abre mais as opções de uma nota que saiu da tela.</string>
+    <string name="whatsnew_131_news">Selecione várias notas de uma vez (arquivar, lixeira, etiqueta), um aviso para novas versões e deslizes e caixas de tarefa mais seguros.</string>
+    <string name="update_dialog_body">Há uma nova versão no GitHub. Instalá-la sobre esta mantém suas notas.</string>
+    <string name="select_notes">Selecionar</string>
+    <string name="selection_count">%1$d selecionadas</string>
+    <string name="selection_all">Selecionar todas</string>
+    <string name="selection_exit">Cancelar a seleção</string>
+    <string name="selection_tag">Adicionar etiqueta</string>
+    <string name="selection_tag_title">Adicionar uma etiqueta às notas selecionadas</string>
+    <string name="selection_new_tag">Nova etiqueta</string>
 </resources>

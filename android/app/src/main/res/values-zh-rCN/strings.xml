@@ -462,5 +462,13 @@
     <string name="update_check_failed">无法检查。请检查网络连接后重试。</string>
     <string name="pinned_mark_cd">已固定在列表顶部</string>
     <string name="existing_tags">您的标签</string>
-    <string name="whatsnew_131_news">在列表中长按或滑动时，不会再打开已滚出视野的笔记的选项。</string>
+    <string name="whatsnew_131_news">可一次选择多条笔记（归档、废纸篓、标签）；新版本弹窗提醒；滑动和任务复选框更不易误操作。</string>
+    <string name="update_dialog_body">GitHub 上有新版本。直接覆盖安装即可，笔记会保留。</string>
+    <string name="select_notes">选择</string>
+    <string name="selection_count">已选 %1$d 条</string>
+    <string name="selection_all">全选</string>
+    <string name="selection_exit">取消选择</string>
+    <string name="selection_tag">添加标签</string>
+    <string name="selection_tag_title">为所选笔记添加标签</string>
+    <string name="selection_new_tag">新标签</string>
 </resources>

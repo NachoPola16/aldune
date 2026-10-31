@@ -462,5 +462,13 @@
     <string name="update_check_failed">Couldn\'t check. Check your connection and try again.</string>
     <string name="pinned_mark_cd">Pinned to the top of the list</string>
     <string name="existing_tags">Your tags</string>
-    <string name="whatsnew_131_news">Long-pressing or swiping in the list no longer opens the options of a note that has scrolled out of view.</string>
+    <string name="whatsnew_131_news">Select several notes at once (archive, trash, tag), a pop-up for new versions, and safer swipes and task boxes.</string>
+    <string name="update_dialog_body">A new version is on GitHub. Installing it over this one keeps your notes.</string>
+    <string name="select_notes">Select</string>
+    <string name="selection_count">%1$d selected</string>
+    <string name="selection_all">Select all</string>
+    <string name="selection_exit">Cancel selection</string>
+    <string name="selection_tag">Add tag</string>
+    <string name="selection_tag_title">Add a tag to the selected notes</string>
+    <string name="selection_new_tag">New tag</string>
 </resources>
