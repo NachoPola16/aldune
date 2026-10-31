@@ -242,7 +242,17 @@ class DockWidget : GlanceAppWidget() {
                         "🔒  " + (strip.title ?: data.texts.protectedTitle), style = TextStyle(color = ink, fontSize = 14.sp, fontFamily = data.colors.font), maxLines = 1,
                     )
                     is WidgetStrip.Open -> {
-                        Text(strip.title, style = TextStyle(color = ink, fontSize = 14.sp, fontWeight = FontWeight.Medium, fontFamily = data.colors.font), maxLines = 1)
+                        // El título con su marca de fijada, y a la derecha el progreso de tareas («2/5») como en la lista.
+                        Row(GlanceModifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                            Text(
+                                (if (strip.pinned) PIN else "") + strip.title, GlanceModifier.defaultWeight(),
+                                style = TextStyle(color = ink, fontSize = 14.sp, fontWeight = FontWeight.Medium, fontFamily = data.colors.font), maxLines = 1,
+                            )
+                            if (strip.tasksTotal > 0) Text(
+                                "${strip.tasksDone}/${strip.tasksTotal}", GlanceModifier.padding(start = 6.dp),
+                                style = TextStyle(color = muted, fontSize = 12.sp, fontFamily = data.colors.font),
+                            )
+                        }
                         strip.preview?.let {
                             Text(it, style = TextStyle(color = muted, fontSize = 12.sp, fontFamily = data.colors.font), maxLines = 2)
                         }
@@ -254,6 +264,7 @@ class DockWidget : GlanceAppWidget() {
     }
 
     private companion object {
+        const val PIN = "\uD83D\uDCCC "
         val STRIP_HEIGHT = 40.dp
         val STRIP_HEIGHT_PREVIEW = 66.dp
         val NARROW = DpSize(110.dp, 110.dp)

@@ -14,7 +14,13 @@ sealed interface WidgetStrip {
     val color: String
 
     /** [preview] es `null` si el ajuste está apagado o la nota no tiene más líneas que enseñar. */
-    data class Open(override val id: String, override val color: String, val title: String, val preview: String?) : WidgetStrip
+    data class Open(
+        override val id: String, override val color: String, val title: String, val preview: String?,
+        /** Tareas hechas y total (0/0 si la nota no tiene casillas): el widget enseña «2/5» como la lista. */
+        val tasksDone: Int = 0, val tasksTotal: Int = 0,
+        /** Fijada arriba: el widget lo marca igual que la lista. */
+        val pinned: Boolean = false,
+    ) : WidgetStrip
 
     /** Nota protegida: sitio y color, y su nombre visible solo si el usuario se lo puso (es público por diseño). Nunca nada del contenido. */
     data class Locked(override val id: String, override val color: String, val title: String? = null) : WidgetStrip
@@ -55,7 +61,8 @@ object WidgetContentBuilder {
         } else {
             null
         }
-        return WidgetStrip.Open(note.id, note.color, title, preview)
+        val tasks = app.aldune.text.TaskLines.count(note.text)
+        return WidgetStrip.Open(note.id, note.color, title, preview, tasks.done, tasks.total, note.pinnedToTop)
     }
 
     /** Como mucho [max] unidades UTF-16 contando los puntos suspensivos, sin dejar a medias un par sustituto. */
