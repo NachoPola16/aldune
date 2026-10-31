@@ -38,10 +38,16 @@ val MIGRATION_2_3 = object : Migration(2, 3) {
     }
 }
 
-/** v5 → v6: ajuste de tareas hechas por nota (0 = según los ajustes del dispositivo). Las notas que había quedan como estaban. */
+/** v5 → v6: ajuste de tareas hechas por nota (0 = según los ajustes del dispositivo) y la tabla del historial de versiones. Las notas que había quedan como estaban. */
 val MIGRATION_5_6 = object : Migration(5, 6) {
     override fun migrate(db: SupportSQLiteDatabase) {
         db.execSQL("ALTER TABLE `note` ADD COLUMN `completedTasks` INTEGER NOT NULL DEFAULT 0")
+        // Historial de versiones local (no se sincroniza).
+        db.execSQL(
+            "CREATE TABLE IF NOT EXISTS `note_version` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `noteId` TEXT NOT NULL, `savedAt` TEXT NOT NULL, " +
+                "`textCipher` BLOB NOT NULL, `nonce` BLOB NOT NULL, `tag` BLOB NOT NULL)",
+        )
+        db.execSQL("CREATE INDEX IF NOT EXISTS `index_note_version_noteId_id` ON `note_version` (`noteId`, `id`)")
     }
 }
 

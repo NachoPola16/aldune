@@ -341,7 +341,7 @@ fun NoteEditorPane(key: String, viewModel: NotesViewModel, onBack: () -> Unit, s
     // en el ViewModel y el editor nuevo la recoge.
     DisposableEffect(key) {
         onDispose {
-            viewModel.flushDraft(key)
+            viewModel.closeNote(key)
             if (context.findActivity()?.isChangingConfigurations != true) viewModel.lockProtected(key)
         }
     }
@@ -618,6 +618,7 @@ fun NoteEditorPane(key: String, viewModel: NotesViewModel, onBack: () -> Unit, s
                 current, viewModel, onClose = { options = null },
                 // Lo que se ve ahora en el editor (como en Windows). Una protegida cerrada no tiene texto que exportar.
                 exportText = if (!current.isProtected || unlocked) fullText() else null,
+                onRestored = { setFullText(it) },
                 onProtection = {
                     options = null
                     passwordMode = if (current.isProtected) PasswordMode.Remove else PasswordMode.Protect

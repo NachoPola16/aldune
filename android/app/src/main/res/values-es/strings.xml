@@ -431,6 +431,12 @@
     <string name="done_tasks_default">Tareas hechas: según mis ajustes</string>
     <string name="done_tasks_keep">Tareas hechas: se quedan en su sitio</string>
     <string name="done_tasks_end">Tareas hechas: bajan al final</string>
+    <string name="history_menu">Historial de versiones…</string>
+    <string name="history_title">Historial de versiones</string>
+    <string name="history_hint">Hasta 20 versiones anteriores, guardadas solo en este dispositivo. Restaurar guarda antes el texto actual, así se puede deshacer.</string>
+    <string name="history_empty">Aún no hay versiones anteriores. Aparecen al editar la nota.</string>
+    <string name="history_restore">Restaurar</string>
+    <string name="history_close">Cerrar</string>
     <string name="pinned_mark_cd">Fijada arriba en la lista</string>
     <string name="existing_tags">Tus etiquetas</string>
 </resources>

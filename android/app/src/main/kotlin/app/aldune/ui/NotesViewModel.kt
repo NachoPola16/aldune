@@ -11,6 +11,7 @@ import app.aldune.data.AppSettings
 import app.aldune.export.AutoExportStatus
 import app.aldune.export.AutoExportWork
 import app.aldune.data.SettingsStore
+import app.aldune.domain.NoteVersion
 import app.aldune.core.ProtectedNotes
 import app.aldune.core.UnlockedProtectedNote
 import app.aldune.domain.LineEnding
@@ -385,6 +386,42 @@ class NotesViewModel(application: Application) : AndroidViewModel(application) {
 
     fun flushAll() = drafts.keys.toList().forEach(::flushDraft)
 
+    /**
+     * Al salir de la nota: guarda ya lo escrito y deja una versión del texto final en el historial (además de las de cada 5 minutos de edición).
+     * Rotar la pantalla también pasa por aquí; no importa, dos copias iguales seguidas no se guardan.
+     */
+    fun closeNote(key: String) {
+        val draft = drafts[key]
+        draft?.pending?.cancel()
+        val id = idOf(key)
+        viewModelScope.launch(Dispatchers.IO) {
+            draft?.let { persist(it) }
+            service?.recordVersion(draft?.noteId ?: id)
+        }
+    }
+
+    /** Las versiones guardadas de la nota (historial local), la más reciente primero. */
+    suspend fun versions(noteId: String): List<NoteVersion> = withContext(Dispatchers.IO) { io.withLock { service?.versions(noteId) ?: emptyList() } }
+
+    /**
+     * Vuelve al texto de una versión (antes se guarda el actual). Devuelve el texto restaurado para ponerlo en el editor abierto, o `null` si no se pudo.
+     * El borrador de la nota se pone al día para que salir del editor no vuelva a escribir el texto viejo encima.
+     */
+    suspend fun restoreVersion(noteId: String, versionId: Long): String? = withContext(Dispatchers.IO) {
+        val open = drafts.values.filter { it.noteId == noteId || drafts[noteId] === it }
+        open.forEach { it.pending?.cancel(); persist(it) }
+        io.withLock {
+            val restored = (service?.restoreVersion(noteId, versionId) as? NoteResult.Ok)?.value?.text
+            if (restored != null) {
+                open.forEach { it.latest = restored; it.lastSaved = restored }
+                refreshLocked()
+                syncEvent(SyncEvent.LocalChange)
+                widgetChanged()
+            }
+            restored
+        }
+    }
+
     private suspend fun persist(draft: Draft) = withContext(NonCancellable) {
         io.withLock {
             val text = draft.latest
@@ -552,6 +589,8 @@ class NotesViewModel(application: Application) : AndroidViewModel(application) {
         drafts[key]?.let { it.pending?.cancel(); persist(it) }
         val result = service.protect(id, password, confirmation, visibleName)
         if (result is ProtectionResult.Ok) {
+            // El historial guarda texto en claro: una nota protegida no puede dejar copias fuera de ella.
+            this@NotesViewModel.service?.forgetVersions(id)
             drafts.remove(key)
             if (key != id) aliases[key] = id
             io.withLock {

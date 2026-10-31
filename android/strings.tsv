@@ -430,5 +430,11 @@ note_unpin	Unpin from the top of the list	Quitar de arriba en la lista	Von der L
 done_tasks_default	Done tasks: as in my settings	Tareas hechas: según mis ajustes	Erledigte Aufgaben: wie in meinen Einstellungen	Tâches faites : selon mes réglages	Tarefas feitas: conforme minhas configurações
 done_tasks_keep	Done tasks: stay in place	Tareas hechas: se quedan en su sitio	Erledigte Aufgaben: bleiben an ihrem Platz	Tâches faites : restent en place	Tarefas feitas: ficam no lugar
 done_tasks_end	Done tasks: move to the bottom	Tareas hechas: bajan al final	Erledigte Aufgaben: wandern nach unten	Tâches faites : descendent en bas	Tarefas feitas: descem para o fim
+history_menu	Version history…	Historial de versiones…	Versionsverlauf…	Historique des versions…	Histórico de versões…
+history_title	Version history	Historial de versiones	Versionsverlauf	Historique des versions	Histórico de versões
+history_hint	Up to 20 earlier versions, kept on this device only. Restoring first saves the current text, so you can undo it.	Hasta 20 versiones anteriores, guardadas solo en este dispositivo. Restaurar guarda antes el texto actual, así se puede deshacer.	Bis zu 20 frühere Versionen, nur auf diesem Gerät gespeichert. Beim Wiederherstellen wird zuerst der aktuelle Text gesichert, sodass man es rückgängig machen kann.	Jusqu'à 20 versions précédentes, conservées sur cet appareil uniquement. Restaurer enregistre d'abord le texte actuel, ce qui permet d'annuler.	Até 20 versões anteriores, guardadas apenas neste dispositivo. Restaurar guarda antes o texto atual, então dá para desfazer.
+history_empty	No earlier versions yet. They appear as you edit the note.	Aún no hay versiones anteriores. Aparecen al editar la nota.	Noch keine früheren Versionen. Sie erscheinen beim Bearbeiten der Notiz.	Pas encore de versions précédentes. Elles apparaissent quand vous modifiez la note.	Ainda não há versões anteriores. Elas aparecem ao editar a nota.
+history_restore	Restore	Restaurar	Wiederherstellen	Restaurer	Restaurar
+history_close	Close	Cerrar	Schließen	Fermer	Fechar
 pinned_mark_cd	Pinned to the top of the list	Fijada arriba en la lista	Oben in der Liste angeheftet	Épinglée en haut de la liste	Fixada no topo da lista
 existing_tags	Your tags	Tus etiquetas	Deine Tags	Vos étiquettes	Suas etiquetas

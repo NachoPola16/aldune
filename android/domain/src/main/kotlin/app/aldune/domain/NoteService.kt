@@ -40,6 +40,8 @@ class NoteService(
     private val idFactory: IdFactory,
     // Compartido con ProtectionService y ConflictResolver (AppContainer): los tres leen-modifican-escriben el mismo NoteStore.
     private val lock: Any = Any(),
+    // Historial local de versiones (opcional: sin él el servicio se comporta como siempre). No viaja por la sync.
+    private val history: NoteHistory? = null,
 ) {
     // Todas las operaciones leen, derivan y escriben dentro del mismo cerrojo: dos hilos que cambian cosas distintas de una nota
     // (el texto y el color, p. ej.) nunca se pisan, porque cada uno parte de lo último guardado y no de una copia vieja.
@@ -105,9 +107,33 @@ class NoteService(
         if (text == note.text) return NoteResult.Ok(note)
 
         val edited = note.copy(text = text, updatedAt = clock.now(), syncAuthorDeviceId = null)
+        history?.keepPreviousIfDue(id, note.text, text, edited.updatedAt)
         store.put(edited)
         NoteResult.Ok(edited)
     }
+
+    // ---- Historial de versiones (local; ver NoteHistory) ----
+
+    /** Las versiones guardadas de la nota, la más reciente primero. */
+    fun versions(id: String): List<NoteVersion> = synchronized(lock) { history?.versions(id) ?: emptyList() }
+
+    /** Guarda el texto actual como versión (al cerrar la nota). Una nota protegida no guarda nada. */
+    fun recordVersion(id: String) = synchronized(lock) {
+        val note = store.get(id) ?: return@synchronized
+        if (!note.isProtected) history?.record(id, note.text, clock.now())
+    }
+
+    /** Vuelve al texto de una versión; antes guarda el actual, así que se puede deshacer. */
+    fun restoreVersion(id: String, versionId: Long): NoteResult<Note> = synchronized(lock) {
+        val note = store.get(id) ?: return NoteResult.Err(NoteError.NotFound(id))
+        if (note.isProtected) return NoteResult.Err(NoteError.Protected(id))
+        val version = history?.versions(id)?.firstOrNull { it.id == versionId } ?: return NoteResult.Err(NoteError.NotFound(versionId.toString()))
+        history.record(id, note.text, clock.now())
+        edit(id, version.text)
+    }
+
+    /** Borra el historial de la nota (al protegerla: guarda texto en claro, y una protegida no puede dejarlo en ningún sitio fuera de ella). */
+    fun forgetVersions(id: String) = synchronized(lock) { history?.forget(id) }
 
     /**
      * Añade `item` como tarea al final de la lista de la nota (la lista rápida de la notificación). Solo una nota activa y sin proteger la
@@ -178,6 +204,7 @@ class NoteService(
         val note = store.get(id) ?: return NoteResult.Err(NoteError.NotFound(id))
         if (note.state != NoteState.TRASHED) return NoteResult.Err(NoteError.NotInTrash(id, note.state))
         store.delete(id, clock.now())
+        history?.forget(id)
         lastTextEdit.remove(id)
         NoteResult.Ok(Unit)
     }
@@ -188,7 +215,7 @@ class NoteService(
         val now = clock.now()
         val cutoff = now.minus(Duration.ofDays(days.toLong()))
         val expired = store.all().filter { it.state == NoteState.TRASHED && it.updatedAt < cutoff }
-        expired.forEach { store.delete(it.id, now); lastTextEdit.remove(it.id) }
+        expired.forEach { store.delete(it.id, now); history?.forget(it.id); lastTextEdit.remove(it.id) }
         NoteResult.Ok(expired.size)
     }
 

@@ -82,8 +82,10 @@ import app.aldune.text.NoteThemes
 @Composable
 fun NoteOptionsDialog(
     initial: NotesViewModel.NoteOptions, viewModel: NotesViewModel, onClose: () -> Unit, onProtection: () -> Unit,
-    exportText: String? = null, showProtection: Boolean = true,
+    exportText: String? = null, showProtection: Boolean = true, onRestored: (String) -> Unit = {},
 ) {
+    var historyOpen by remember { mutableStateOf(false) }
+    if (historyOpen) VersionHistoryDialog(initial.noteId, viewModel, onDismiss = { historyOpen = false }, onRestored = onRestored)
     var color by remember { mutableStateOf(initial.color) }
     var tags by remember { mutableStateOf(initial.tags) }
     var draft by remember { mutableStateOf("") }
@@ -201,6 +203,9 @@ fun NoteOptionsDialog(
                     Modifier.alignWithHeadings(),
                 ) {
                     Text(stringResource(doneTasksPolicyLabel(doneTasks)))
+                }
+                if (!initial.isProtected) {
+                    TextButton(onClick = { historyOpen = true }, Modifier.alignWithHeadings()) { Text(stringResource(R.string.history_menu)) }
                 }
                 if (exportText != null) {
                     TextButton(onClick = { exporter.launch(MarkdownExport.suggestedFileName(exportText, newNote)) }, Modifier.alignWithHeadings()) {

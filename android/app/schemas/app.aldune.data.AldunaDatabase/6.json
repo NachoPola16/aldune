@@ -2,7 +2,7 @@
   "formatVersion": 1,
   "database": {
     "version": 6,
-    "identityHash": "73b746af3b0b00164082019c94b15b76",
+    "identityHash": "6b28a3412401dd010e434482c33301f7",
     "entities": [
       {
         "tableName": "note",
@@ -261,11 +261,71 @@
             "noteId"
           ]
         }
+      },
+      {
+        "tableName": "note_version",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `noteId` TEXT NOT NULL, `savedAt` TEXT NOT NULL, `textCipher` BLOB NOT NULL, `nonce` BLOB NOT NULL, `tag` BLOB NOT NULL)",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "noteId",
+            "columnName": "noteId",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "savedAt",
+            "columnName": "savedAt",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "textCipher",
+            "columnName": "textCipher",
+            "affinity": "BLOB",
+            "notNull": true
+          },
+          {
+            "fieldPath": "nonce",
+            "columnName": "nonce",
+            "affinity": "BLOB",
+            "notNull": true
+          },
+          {
+            "fieldPath": "tag",
+            "columnName": "tag",
+            "affinity": "BLOB",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": true,
+          "columnNames": [
+            "id"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_note_version_noteId_id",
+            "unique": false,
+            "columnNames": [
+              "noteId",
+              "id"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_note_version_noteId_id` ON `${TABLE_NAME}` (`noteId`, `id`)"
+          }
+        ]
       }
     ],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '73b746af3b0b00164082019c94b15b76')"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '6b28a3412401dd010e434482c33301f7')"
     ]
   }
 }

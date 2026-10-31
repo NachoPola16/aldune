@@ -11,7 +11,7 @@ import androidx.room.RoomDatabase
  * v4 añade el nombre visible de las notas protegidas.
  */
 @Database(
-    entities = [NoteEntity::class, TombstoneEntity::class, SyncBaseEntity::class, SyncConflictEntity::class, ReminderEntity::class],
+    entities = [NoteEntity::class, TombstoneEntity::class, SyncBaseEntity::class, SyncConflictEntity::class, ReminderEntity::class, NoteVersionEntity::class],
     version = 6,
     exportSchema = true,
 )
@@ -21,6 +21,8 @@ abstract class AldunaDatabase : RoomDatabase() {
     abstract fun sync(): SyncDao
 
     abstract fun reminders(): ReminderDao
+
+    abstract fun versions(): VersionDao
 
     companion object {
         const val FILE_NAME = "aldune.db"

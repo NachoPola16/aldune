@@ -431,6 +431,12 @@
     <string name="done_tasks_default">Erledigte Aufgaben: wie in meinen Einstellungen</string>
     <string name="done_tasks_keep">Erledigte Aufgaben: bleiben an ihrem Platz</string>
     <string name="done_tasks_end">Erledigte Aufgaben: wandern nach unten</string>
+    <string name="history_menu">Versionsverlauf…</string>
+    <string name="history_title">Versionsverlauf</string>
+    <string name="history_hint">Bis zu 20 frühere Versionen, nur auf diesem Gerät gespeichert. Beim Wiederherstellen wird zuerst der aktuelle Text gesichert, sodass man es rückgängig machen kann.</string>
+    <string name="history_empty">Noch keine früheren Versionen. Sie erscheinen beim Bearbeiten der Notiz.</string>
+    <string name="history_restore">Wiederherstellen</string>
+    <string name="history_close">Schließen</string>
     <string name="pinned_mark_cd">Oben in der Liste angeheftet</string>
     <string name="existing_tags">Deine Tags</string>
 </resources>

@@ -7,8 +7,10 @@ import app.aldune.data.RoomLocalSyncStore
 import app.aldune.data.RoomConflictStore
 import app.aldune.data.RoomNoteStore
 import app.aldune.data.RoomReminderStore
+import app.aldune.data.RoomVersionStore
 import app.aldune.data.SyncProfileStore
 import app.aldune.domain.AesGcmNoteCipher
+import app.aldune.domain.NoteHistory
 import app.aldune.domain.DataKeyManager
 import app.aldune.domain.DataKeyState
 import app.aldune.domain.LostReason
@@ -102,7 +104,7 @@ class AppContainer(context: Context) {
             val storeLock = Any()
             return Opened.Ready(
                 database,
-                NoteService(store, SystemClock, deviceId = "", idFactory = RandomIdFactory, lock = storeLock),
+                NoteService(store, SystemClock, deviceId = "", idFactory = RandomIdFactory, lock = storeLock, history = NoteHistory(RoomVersionStore(database, cipher))),
                 sync,
                 ProtectionService(store, SystemClock, storeLock),
                 conflictStore,
