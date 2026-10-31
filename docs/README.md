@@ -22,6 +22,7 @@ Everything is in English. Quoted interface strings that appear in Spanish are th
 
 ## Design archive
 
+- [`PROGRESS.md`](PROGRESS.md): the story of the project for users: then and now, release by release, and the bugs that mattered.
 - [`STATUS.md`](STATUS.md): what is done, by round, and why.
 - [`ROADMAP.md`](ROADMAP.md): what is planned and what was discarded, with the reasons.
 - [`MOBILE_PORT.md`](MOBILE_PORT.md) and [`DESKTOP_PORT.md`](DESKTOP_PORT.md): closed studies of the Android/iOS and desktop ports.

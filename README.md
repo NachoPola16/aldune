@@ -135,6 +135,8 @@ How a version is released and signed: [docs/RELEASING.md](docs/RELEASING.md).
 
 ## Documentation
 
+The story so far, with then-and-now screenshots and the bugs that mattered: [docs/PROGRESS.md](docs/PROGRESS.md).
+
 See the [documentation index](docs/README.md). The sync guide ([`docs/SYNC.md`](docs/SYNC.md)), the protected-notes note, the product and design
 context, branding, releasing and the probe guides are in English. The long-running design archive (`STATUS`, `ROADMAP`, the port studies and
 `specs/`) is still in Spanish and is being translated.
