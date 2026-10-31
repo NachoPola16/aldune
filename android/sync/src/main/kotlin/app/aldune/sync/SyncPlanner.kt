@@ -260,6 +260,7 @@ private fun sameContent(a: SyncNote?, b: SyncNote?): Boolean {
         a.color.equals(b.color, ignoreCase = true) &&
         a.state == b.state &&
         a.dockPosition == b.dockPosition &&
+        a.pinnedToTop == b.pinnedToTop &&
         a.isProtected == b.isProtected &&
         a.protectedTitle == b.protectedTitle &&
         a.tags.sorted() == b.tags.sorted() &&

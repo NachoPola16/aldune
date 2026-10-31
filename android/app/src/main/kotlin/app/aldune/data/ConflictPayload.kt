@@ -57,6 +57,7 @@ internal object ConflictPayload {
         )
         .put("protectedTitle", n.protectedTitle ?: JSONObject.NULL)
         .put("dockPosition", n.dockPosition ?: JSONObject.NULL)
+        .put("pinnedToTop", n.pinnedToTop)
 
     private fun readNote(o: JSONObject): SyncNote {
         val tags = o.getJSONArray("tags").let { a -> List(a.length()) { a.getString(it) } }
@@ -70,6 +71,8 @@ internal object ConflictPayload {
             if (o.isNull("dockPosition")) null else o.getDouble("dockPosition"),
             // Los conflictos guardados antes del nombre visible no traen la clave.
             protectedTitle = if (o.isNull("protectedTitle")) null else o.getString("protectedTitle"),
+            // Los conflictos guardados antes de «fijada arriba» no traen la clave.
+            pinnedToTop = o.optBoolean("pinnedToTop", false),
         )
     }
 }

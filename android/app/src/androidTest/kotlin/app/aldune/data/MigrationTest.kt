@@ -80,4 +80,21 @@ class MigrationTest {
             db.execSQL("UPDATE note SET protectedTitle = 'Banco' WHERE id = 'x'")
         }
     }
+
+    @Test fun migration4To5AddsThePinWithNoNoteFixedAndKeepsRows() {
+        helper.createDatabase("migration-45", 4).use { db ->
+            db.execSQL(
+                "INSERT INTO note (id, textCipher, nonce, tag, color, createdAt, updatedAt, state, lineEnding, tags, dockPosition, " +
+                    "screenOrigin, syncAuthorDeviceId, isProtected, protectedContent, protectedTitle) VALUES ('x', x'00', x'00', x'00', '#EBD38B', 't', 't', 0, 0, '[]', " +
+                    "NULL, '', NULL, 0, NULL, NULL)",
+            )
+        }
+        helper.runMigrationsAndValidate("migration-45", 5, true, MIGRATION_4_5).use { db ->
+            db.query("SELECT pinnedToTop FROM note WHERE id = 'x'").use { c ->
+                assertTrue(c.moveToFirst())
+                assertEquals(0, c.getInt(0))
+            }
+            db.execSQL("UPDATE note SET pinnedToTop = 1 WHERE id = 'x'")
+        }
+    }
 }

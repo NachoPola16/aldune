@@ -135,6 +135,14 @@ class NoteService(
         change(id) { if (it.tags == normalized) it else it.copy(tags = normalized) }
     }
 
+    /**
+     * Fija o desfija la nota arriba de las listas. Cuenta como una edición (la sella `change`): sin refrescar `updatedAt` la sync no
+     * volvería a publicar la nota y el otro equipo nunca vería el pin.
+     */
+    fun setPinned(id: String, pinned: Boolean): NoteResult<Note> = synchronized(lock) {
+        change(id) { if (it.pinnedToTop == pinned) it else it.copy(pinnedToTop = pinned) }
+    }
+
     fun archive(id: String): NoteResult<Note> = setState(id, NoteState.ARCHIVED)
 
     fun trash(id: String): NoteResult<Note> = setState(id, NoteState.TRASHED)

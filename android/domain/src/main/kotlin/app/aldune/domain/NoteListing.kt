@@ -14,7 +14,12 @@ enum class NoteListOrder(val code: Int) {
 
 /** Port de `NoteListing.Sort`. */
 object NoteListing {
-    fun sort(notes: List<Note>, order: NoteListOrder): List<Note> = when (order) {
+    /** Las fijadas arriba van primero y cada grupo conserva el orden elegido (partición estable, sin un «orden de fijado» aparte). */
+    fun sort(notes: List<Note>, order: NoteListOrder): List<Note> = sortBy(notes, order).let { sorted ->
+        sorted.filter { it.pinnedToTop } + sorted.filterNot { it.pinnedToTop }
+    }
+
+    private fun sortBy(notes: List<Note>, order: NoteListOrder): List<Note> = when (order) {
         NoteListOrder.NEWEST -> notes.sortedByDescending { it.updatedAt }
         NoteListOrder.OLDEST -> notes.sortedBy { it.updatedAt }
         // Las protegidas sin nombre visible no enseñan título: al final, en vez de ordenarlas por un texto que no se ve.

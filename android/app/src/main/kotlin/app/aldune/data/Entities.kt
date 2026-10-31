@@ -31,6 +31,8 @@ class NoteEntity(
     val protectedContent: String? = null,
     /** Nombre visible, en claro, de una nota protegida (v4). */
     val protectedTitle: String? = null,
+    /** Fijada arriba (v5). */
+    @ColumnInfo(defaultValue = "0") val pinnedToTop: Boolean = false,
 )
 
 /** Borrado definitivo pendiente de firmar por la sync. */

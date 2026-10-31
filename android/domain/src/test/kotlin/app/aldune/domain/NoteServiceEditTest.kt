@@ -119,4 +119,28 @@ class NoteServiceEditTest {
         assertEquals("fantasma", error.id)
         assertEquals(0, f.store.writeCount)
     }
+
+    @Test fun `fijar y desfijar cuenta como edicion y no cambia el texto`() {
+        val f = Fixture()
+        val note = f.create("hola")
+        f.clock.current = f.clock.current.plusSeconds(60)
+
+        val pinned = (f.service.setPinned(note.id, true) as NoteResult.Ok).value
+        assertTrue(pinned.pinnedToTop)
+        assertEquals("hola", pinned.text)
+        // Sin sellar updatedAt la sync no volveria a publicar la nota y el otro equipo nunca veria el pin.
+        assertEquals(f.clock.current, pinned.updatedAt)
+
+        f.clock.current = f.clock.current.plusSeconds(60)
+        assertEquals(false, (f.service.setPinned(note.id, false) as NoteResult.Ok).value.pinnedToTop)
+    }
+
+    @Test fun `fijar una nota ya fijada no escribe nada`() {
+        val f = Fixture()
+        val note = f.create("hola")
+        f.service.setPinned(note.id, true)
+        val writes = f.store.writeCount
+        f.service.setPinned(note.id, true)
+        assertEquals(writes, f.store.writeCount)
+    }
 }

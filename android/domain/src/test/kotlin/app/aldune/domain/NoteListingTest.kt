@@ -35,4 +35,15 @@ class NoteListingTest {
         assertEquals(listOf(0, 1, 2, 3), NoteListOrder.entries.map { it.code })
         assertEquals(NoteListOrder.DOCK, NoteListOrder.fromCode(99))
     }
+
+    @Test fun `las fijadas van primero en todos los ordenes y cada grupo conserva el suyo`() {
+        val pinnedC = c.copy(pinnedToTop = true)
+        val pinnedA = a.copy(pinnedToTop = true)
+        val notes = listOf(a, b, pinnedC, locked, pinnedA)
+        for (order in NoteListOrder.entries) {
+            val sorted = NoteListing.sort(notes, order)
+            val pinnedFirst = NoteListing.sort(listOf(pinnedC, pinnedA), order) + NoteListing.sort(listOf(a, b, locked), order)
+            assertEquals(pinnedFirst.map { it.id }, sorted.map { it.id }, order.name)
+        }
+    }
 }

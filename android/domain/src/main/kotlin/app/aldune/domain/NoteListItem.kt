@@ -21,6 +21,8 @@ data class NoteListItem(
     val isProtected: Boolean = false,
     /** Para la señal de sincronización de la fila (se compara con la última versión acordada con el almacén). */
     val updatedAt: java.time.Instant = java.time.Instant.EPOCH,
+    /** Fijada arriba: la fila lleva un marcador. */
+    val pinnedToTop: Boolean = false,
 ) {
     val hasTasks: Boolean get() = tasksTotal > 0
 
@@ -30,13 +32,13 @@ data class NoteListItem(
             if (note.isProtected) {
                 return NoteListItem(
                     id = note.id, title = ProtectedTitleRules.visible(true, note.protectedTitle) ?: protectedTitle, preview = "", color = note.color, tasksDone = 0, tasksTotal = 0,
-                    tags = note.tags, state = note.state, isProtected = true, updatedAt = note.updatedAt,
+                    tags = note.tags, state = note.state, isProtected = true, updatedAt = note.updatedAt, pinnedToTop = note.pinnedToTop,
                 )
             }
             val count = TaskLines.count(note.text)
             return NoteListItem(
                 id = note.id, title = NoteTitleHelper.getTitle(note.text, placeholder), preview = NoteTitleHelper.getPreview(note.text),
-                color = note.color, tasksDone = count.done, tasksTotal = count.total, tags = note.tags, state = note.state, updatedAt = note.updatedAt,
+                color = note.color, tasksDone = count.done, tasksTotal = count.total, tags = note.tags, state = note.state, updatedAt = note.updatedAt, pinnedToTop = note.pinnedToTop,
             )
         }
     }

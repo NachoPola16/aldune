@@ -12,7 +12,7 @@ import androidx.room.RoomDatabase
  */
 @Database(
     entities = [NoteEntity::class, TombstoneEntity::class, SyncBaseEntity::class, SyncConflictEntity::class, ReminderEntity::class],
-    version = 4,
+    version = 5,
     exportSchema = true,
 )
 abstract class AldunaDatabase : RoomDatabase() {
@@ -27,7 +27,7 @@ abstract class AldunaDatabase : RoomDatabase() {
 
         fun open(context: Context): AldunaDatabase =
             Room.databaseBuilder(context.applicationContext, AldunaDatabase::class.java, FILE_NAME)
-                .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4)
+                .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5)
                 .build()
     }
 }

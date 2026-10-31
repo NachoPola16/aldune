@@ -38,6 +38,13 @@ val MIGRATION_2_3 = object : Migration(2, 3) {
     }
 }
 
+/** v4 → v5: fijada arriba (0 = no). Las notas que había quedan sin fijar. */
+val MIGRATION_4_5 = object : Migration(4, 5) {
+    override fun migrate(db: SupportSQLiteDatabase) {
+        db.execSQL("ALTER TABLE `note` ADD COLUMN `pinnedToTop` INTEGER NOT NULL DEFAULT 0")
+    }
+}
+
 /** v3 → v4: el nombre visible de las notas protegidas (en claro, opcional). Las filas que había quedan con `NULL`: «Nota protegida», como antes. */
 val MIGRATION_3_4 = object : Migration(3, 4) {
     override fun migrate(db: SupportSQLiteDatabase) {
