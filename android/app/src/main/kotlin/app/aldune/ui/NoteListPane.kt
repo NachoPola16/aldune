@@ -219,7 +219,7 @@ fun NoteListPane(
             // Al arrancar, Android da el foco inicial al primer elemento enfocable de la ventana y, si es un campo de texto, abre el teclado
             // (tapando el «+»). Este elemento invisible va primero para quedárselo; el buscador solo toma el foco si se toca.
             Box(Modifier.size(0.dp).focusRequester(rest).focusable())
-            Row(Modifier.fillMaxWidth().padding(top = 8.dp), verticalAlignment = Alignment.CenterVertically) {
+            Row(Modifier.fillMaxWidth().padding(top = 8.dp, end = 8.dp), verticalAlignment = Alignment.CenterVertically) {
                 Box(Modifier.weight(1f)) { StateTabs(state, viewModel::setFilter) }
                 if (hasProfile && status != null) {
                     val line = formatStatus(status, rememberNow())
@@ -531,14 +531,25 @@ private fun StateTabs(state: UiState.Ready, onSelect: (NoteState) -> Unit) {
 
 @Composable
 private fun TagRow(state: UiState.Ready, onSelect: (String?) -> Unit) {
-    LazyRow(
-        // Space below the chips equal to the space between them and the tabs (it was 20 dp above and 8 dp below).
-        Modifier.padding(bottom = 10.dp), contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 16.dp),
-        horizontalArrangement = Arrangement.spacedBy(8.dp),
-    ) {
-        items(state.allTags) { tag ->
-            val selected = state.tag.equals(tag, ignoreCase = true)
-            FilterChip(selected = selected, onClick = { onSelect(if (selected) null else tag) }, label = { Text("#$tag") })
+    val listState = rememberLazyListState()
+    Box(Modifier.padding(bottom = 10.dp)) {
+        LazyRow(
+            // Space below the chips equal to the space between them and the tabs (it was 20 dp above and 8 dp below).
+            state = listState, contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 16.dp),
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+        ) {
+            items(state.allTags) { tag ->
+                val selected = state.tag.equals(tag, ignoreCase = true)
+                FilterChip(selected = selected, onClick = { onSelect(if (selected) null else tag) }, label = { Text("#$tag") })
+            }
+        }
+        // A fade on the right edge says "there are more tags": it only shows while some are out of view, and the half-cut chip does the rest.
+        if (listState.canScrollForward) {
+            val ground = MaterialTheme.colorScheme.background
+            Box(
+                Modifier.align(Alignment.CenterEnd).size(width = 40.dp, height = 32.dp)
+                    .background(androidx.compose.ui.graphics.Brush.horizontalGradient(listOf(Color.Transparent, ground))),
+            )
         }
     }
 }
@@ -804,7 +815,8 @@ internal fun noteInk(hex: String): Color = runCatching { paletteColor(NoteColorC
 private fun SyncIcon(icon: StatusIcon, description: String) {
     when (icon) {
         StatusIcon.NONE -> Unit
-        StatusIcon.OK -> Icon(Icons.Default.Check, description, tint = MaterialTheme.colorScheme.primary)
+        // "All good" is the usual state, so it stays small and dim; the warning and error icons below keep their full weight.
+        StatusIcon.OK -> Icon(Icons.Default.Check, description, Modifier.size(18.dp), tint = MaterialTheme.colorScheme.primary.copy(alpha = 0.7f))
         StatusIcon.SYNCING -> CircularProgressIndicator(Modifier.size(20.dp), strokeWidth = 2.dp)
         StatusIcon.OFFLINE -> Icon(Icons.Default.Warning, description, tint = MaterialTheme.colorScheme.onSurfaceVariant)
         StatusIcon.ERROR -> Icon(Icons.Default.Warning, description, tint = MaterialTheme.colorScheme.error)
