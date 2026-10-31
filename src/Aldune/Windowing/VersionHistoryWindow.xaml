@@ -42,7 +42,7 @@
                 <Border Grid.Column="2" Background="{DynamicResource AlduneRaisedBrush}" BorderThickness="1"
                         BorderBrush="{DynamicResource AlduneBorderSubtleBrush}" CornerRadius="{DynamicResource AlduneRadius6}">
                     <TextBox x:Name="Preview" IsReadOnly="True" TextWrapping="Wrap" VerticalScrollBarVisibility="Auto" AcceptsReturn="True"
-                             Background="Transparent" BorderThickness="0" Padding="9,7"
+                             Background="Transparent" BorderThickness="0" Padding="9,7" VerticalContentAlignment="Top"
                              Foreground="{DynamicResource AlduneTextStrongBrush}" FontSize="{DynamicResource AlduneTextBody}"
                              SelectionBrush="{DynamicResource AlduneSelectionBrush}" />
                 </Border>
