@@ -117,6 +117,7 @@ public partial class EdgeDockWindow : Window
         InitializeComponent();
         _edge = edge;
         ApplyEdgeAlignment();
+        SpaceFooterButtons();
         // Una barra de tareas que se oculta sola en este mismo canto aparece al llevar el ratón a su
         // última fila, y la botonera del dock desplegado la tapaba (medido: la barra no llegaba a
         // salir). El dock le deja esas filas libres, y empujar contra el canto pasa a ser su gesto.
@@ -238,6 +239,27 @@ public partial class EdgeDockWindow : Window
     /// columna vertical ancha. El HWND ya tiene el rectángulo correcto gracias a
     /// <see cref="EdgeGeometry.WindowRect"/>; aquí solo se cambia la disposición interna.
     /// </summary>
+    /// <summary>El relleno del pie del dock: el mismo en los cuatro lados (y en los cuatro cantos del dock).</summary>
+    private const double FooterPadding = 7;
+
+    /// <summary>Separación entre los botones del pie: igual que el relleno, para que el ritmo sea el mismo en todos los sentidos (y el pie cabe en los docks laterales).</summary>
+    private const double FooterButtonGap = 7;
+
+    /// <summary>
+    /// La separación va entre botones, no a la izquierda de cada uno: con <c>Margin="10,0,0,0"</c> en todos, el primero (el del extremo) tenía 10 px
+    /// de más por ese lado (17 frente a 7 en el otro extremo) y el pie parecía descentrado. Se pone después de espejar el orden (dock a la
+    /// izquierda), porque el primero de la fila cambia.
+    /// </summary>
+    private void SpaceFooterButtons()
+    {
+        bool first = true;
+        foreach (var child in FooterPanel.Children.OfType<FrameworkElement>())
+        {
+            child.Margin = new Thickness(first ? 0 : FooterButtonGap, 0, 0, 0);
+            first = false;
+        }
+    }
+
     private void ApplyEdgeAlignment()
     {
         // La columna útil tiene el mismo ancho que una pestaña en todas las orientaciones. Al ser un
@@ -386,7 +408,7 @@ public partial class EdgeDockWindow : Window
 
         FooterBorder.HorizontalAlignment = HorizontalAlignment.Center;
         FooterBorder.VerticalAlignment = top ? VerticalAlignment.Top : VerticalAlignment.Bottom;
-        FooterBorder.Padding = new Thickness(6);
+        FooterBorder.Padding = new Thickness(FooterPadding);
         FooterBorder.Margin = top
             ? new Thickness(0, 0, 0, 8)
             : new Thickness(0, 8, 0, 0);

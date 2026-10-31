@@ -625,6 +625,7 @@
                          abrirlas ni cerrarlas de una en una. Ver AppCoordinator.ToggleAllNotes. -->
                     <Button x:Name="OpenAllButton" Click="OnOpenAllClick"
                             PreviewMouseRightButtonUp="OnOpenAllRightClick"
+                            Width="40" Height="40"
                             Style="{StaticResource CircularIconButtonStyle}"
                             ToolTip="{x:Static res:Strings.OpenAllNotesTooltip}"
                             AutomationProperties.Name="{x:Static res:Strings.OpenAllNotesTooltip}">
@@ -632,6 +633,7 @@
                     </Button>
                     <Button x:Name="ManageArchiveButton" Click="OnManageArchiveClick"
                             PreviewMouseRightButtonUp="OnManageArchiveRightClick"
+                            Width="40" Height="40"
                             Style="{StaticResource CircularIconButtonStyle}"
                             ToolTip="{x:Static res:Strings.ManageNotesTooltip}"
                             AutomationProperties.Name="{x:Static res:Strings.ManageNotesTooltip}">
@@ -639,14 +641,15 @@
                     </Button>
                     <Button x:Name="SyncButton" Click="OnSyncClick"
                             PreviewMouseRightButtonUp="OnSyncRightClick"
+                            Width="40" Height="40"
                             Style="{StaticResource CircularIconButtonStyle}"
                             ToolTip="{x:Static res:Strings.SyncNowButton}"
                             AutomationProperties.Name="{x:Static res:Strings.SyncNowButton}">
                         <TextBlock x:Name="SyncButtonGlyph" Text="&#xE72C;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" FontSize="15" />
                     </Button>
-                    <!-- Crear nota es la acción principal del dock, así que pesa más que el
-                         engranaje: más grande y más clara. Ir las dos iguales las dejaba a la par
-                         cuando no lo están. -->
+                    <!-- Crear nota es la acción principal del dock y se distingue por el color de acento, no por el tamaño: con un círculo
+                         mayor que los demás, el hueco hasta el borde era distinto según el botón del extremo (y los círculos no quedaban concéntricos
+                         con el extremo redondeado del pie). Los cuatro miden 40, así que el relleno es igual por todos los lados. -->
                     <Button x:Name="NewNoteButton" Click="OnNewNoteClick"
                             PreviewMouseRightButtonUp="OnNewNoteRightClick"
                             Width="40" Height="40"
