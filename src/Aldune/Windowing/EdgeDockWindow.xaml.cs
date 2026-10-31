@@ -1040,8 +1040,10 @@ public partial class EdgeDockWindow : Window
         NewNoteButton.ToolTip = Strings.WithHint(
             tag is null ? Strings.NewNoteTooltip : Strings.NewNoteTaggedTooltip(tag),
             Strings.NewNoteRightClickHint);
+        // Fuera de «Activas» el tooltip dice también en qué vista está el dock (la rueda sobre el engranaje la cambia).
+        var viewLine = (_settings?.DockView ?? DockViewKind.Active) == DockViewKind.Active ? "" : Environment.NewLine + CurrentViewLabel();
         ManageArchiveButton.ToolTip = Strings.WithHint(
-            tag is null ? Strings.ManageNotesTooltip : Strings.ManageNotesTaggedTooltip(tag),
+            (tag is null ? Strings.ManageNotesTooltip : Strings.ManageNotesTaggedTooltip(tag)) + viewLine,
             Strings.ManageNotesRightClickHint);
         OpenAllButton.ToolTip = Strings.WithHint(
             tag is null ? Strings.OpenAllNotesTooltip : Strings.OpenAllNotesTaggedTooltip(tag),
@@ -1152,7 +1154,9 @@ public partial class EdgeDockWindow : Window
         // rueda sigue desplazando la lista y la vista se cambia sobre el engranaje o con Ctrl.
         if (_settings is { WheelChangesDockView: true })
         {
-            bool fits = TabsScroll.ScrollableHeight <= 0.5;
+            // Al cambiar de vista la altura de la lista se anima y durante un instante «no cabe» aunque sí quepa: un giro que continúa el anterior
+            // (menos de 1,5 s) sigue cambiando de vista en vez de empezar a desplazar la lista a mitad del gesto.
+            bool fits = TabsScroll.ScrollableHeight <= 0.5 || DateTime.UtcNow < _wheelViewUntil;
             if (Keyboard.Modifiers == ModifierKeys.Control || (Keyboard.Modifiers == ModifierKeys.None && fits))
             {
                 CycleDockView(e.Delta < 0 ? 1 : -1, showLabel: true);
@@ -1725,6 +1729,8 @@ public partial class EdgeDockWindow : Window
 
     // --- Cambiar de vista con la rueda --------------------------------------------------------------
 
+    private DateTime _wheelViewUntil = DateTime.MinValue;
+
     private DockViewCycle.Counts BuildViewCounts()
     {
         var tags = _repository.GetAllTags().ToDictionary(t => t, t => _repository.GetByTag(t, NoteState.Active).Count, StringComparer.OrdinalIgnoreCase);
@@ -1741,6 +1747,7 @@ public partial class EdgeDockWindow : Window
     {
         var (view, tag) = DockViewCycle.Next(_settings?.DockView ?? DockViewKind.Active, _settings?.DockTagFilter, BuildViewCounts(), direction);
         _coordinator.SetDockView(view, tag);
+        _wheelViewUntil = DateTime.UtcNow.AddMilliseconds(1500);
         HoldOpenForNextInteraction();
         if (showLabel) ShowViewLabel(CurrentViewLabel());
     }
@@ -1786,7 +1793,7 @@ public partial class EdgeDockWindow : Window
     {
         var view = _settings?.DockView ?? DockViewKind.Active;
         ViewFilterDot.Visibility = view == DockViewKind.Active ? Visibility.Collapsed : Visibility.Visible;
-        ManageArchiveButton.ToolTip = view == DockViewKind.Active ? Strings.ManageNotesTooltip : $"{Strings.ManageNotesTooltip} · {CurrentViewLabel()}";
+        UpdateTagAwareTooltips();
     }
 
     private void OnDockViewPopupOpened(object sender, EventArgs e)
