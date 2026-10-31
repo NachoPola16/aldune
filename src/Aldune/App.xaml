@@ -237,6 +237,9 @@
              mismo panel. -->
         <Style x:Key="NoteMenuItemStyle" TargetType="Button">
             <Setter Property="Foreground" Value="{DynamicResource AlduneTextBrush}" />
+            <!-- La fuente del chrome de la piel (Tahoma en XP, monoespaciada en las de terminal): un Popup es otra ventana y la herencia del
+                 valor por defecto no siempre le llega, así que los menús la piden por su cuenta. -->
+            <Setter Property="FontFamily" Value="{DynamicResource AldunePrimaryFont}" />
             <Setter Property="FontSize" Value="{DynamicResource AlduneTextBody}" />
             <Setter Property="Cursor" Value="Hand" />
             <Setter Property="FocusVisualStyle" Value="{StaticResource AlduneFocusVisual}" />
