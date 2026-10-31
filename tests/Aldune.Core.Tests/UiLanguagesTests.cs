@@ -7,6 +7,7 @@ public class UiLanguagesTests
     [InlineData("de", "es", "de")]
     [InlineData("fr", "en", "fr")]
     [InlineData("it", "en", "it")]
+    [InlineData("ja", "en", "ja")]
     [InlineData("pt", "en", "pt")]
     [InlineData("en", "de", "en")]
     public void AnExplicitChoice_WinsOverWindows(string chosen, string windows, string expected) =>
@@ -19,7 +20,8 @@ public class UiLanguagesTests
     [InlineData(null, "pt", "pt")]
     [InlineData(null, "es", "es")]
     [InlineData(null, "it", "it")]
-    [InlineData(null, "ja", "en")]
+    [InlineData(null, "ja", "ja")]
+    [InlineData(null, "ko", "en")]
     [InlineData("xx", "fr", "fr")]
     public void WithoutAValidChoice_FollowsWindowsOrFallsBackToEnglish(string? chosen, string windows, string expected) =>
         Assert.Equal(expected, UiLanguages.Resolve(chosen, windows));
@@ -29,7 +31,7 @@ public class UiLanguagesTests
     [Fact]
     public void EveryLanguage_NamesItselfInItsOwnLanguage_SortedByThatName()
     {
-        Assert.Equal(new[] { "de", "en", "es", "fr", "it", "pt" }, UiLanguages.All.Select(l => l.Code));
+        Assert.Equal(new[] { "de", "en", "es", "fr", "it", "pt", "ja" }, UiLanguages.All.Select(l => l.Code));
         Assert.Equal(UiLanguages.All.Select(l => l.Name).Order(StringComparer.InvariantCultureIgnoreCase),
             UiLanguages.All.Select(l => l.Name));
         Assert.Equal("Português (Brasil)", UiLanguages.All.Single(l => l.Code == "pt").Name);

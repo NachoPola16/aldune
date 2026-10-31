@@ -20,6 +20,7 @@ public static class UiLanguages
         new("fr", "Français", "fr-FR"),
         new("it", "Italiano", "it-IT"),
         new("pt", "Português (Brasil)", "pt-BR"),
+        new("ja", "日本語", "ja-JP"),
     ];
 
     /// <summary>La elección guardada si es un idioma conocido; si no (nunca se eligió, o viene de
