@@ -69,3 +69,6 @@ At the default size (300 px) the bar did not leave the window, but it nearly fil
 
 ### W5. "New note" button of the manager (requested later) — DONE
 In the header it was the only button with a box among flat window buttons and clashed in every look, worst in XP. Moved to the end of the filter row (Active / Archived / Trash / tags), as a 30 x 30 accent square with a drawn "+". Tried first in the footer: with a label the footer wraps to two lines at the default width, and the footer already holds four action buttons. The filter row's right side was empty, the button sits next to what it acts on, and the header is now only window buttons. Checked in XP light, Dark and Telecom, and at 150 % text size.
+
+### W6. Footer buttons of the manager: right-aligned or spread out — RIGHT-ALIGNED, same width
+Kept at the right (actions on the selection go at the end; "Delete", which only appears in the trash, stays alone on the left as the irreversible one) and made all four the same width (`MinWidth` 86): Export and Trash were narrower than Archive and Restore and the row looked ragged. Spreading them over the full width was rejected: they would drift apart from each other and would wrap sooner with a larger text size. Still one row at the default width.
