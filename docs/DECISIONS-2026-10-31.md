@@ -84,6 +84,8 @@ Measured the gap between the bar's edge and its buttons in every dock edge, roun
 ### W9. Icons of the dock's button bar — DONE
 Measured the ink of each icon against the centre of its button in 7 looks (round and square, every edge): all within 0.5 px (half a pixel is inherent to a 13 to 17 px stroke in a 40 px box). With the buttons now 40 px the 15 px glyphs looked small (33 % of the button, 44 % before), so the three glyph icons went to 17 and the "+" to a drawn cross (two 2 px bars in a 16 px box, 0.0 / 0.0 px: as a font glyph at 19 it was 1 px off). The sync button's glyph is reset to 17 in code too (it was put back to 15 by the sync animation code).
 
+> **Status (end of 2026-10-31): everything in this section was done or decided in the second session and shipped as Windows 2.2.0 and Android 1.1.0.** Kept as the record of what was pending at the end of the first session.
+
 ## Still pending (end of the first working session, 2026-10-31)
 
 Nothing has been published. Commits are local on `main` (not pushed). Work list for Windows 2.2.0 + Android 1.1.0:
@@ -107,7 +109,7 @@ Nothing has been published. Commits are local on `main` (not pushed). Work list 
 
 ## Android list B10 / C11-C20 (second session): do / do not
 
-- **B10 landscape: checked on the Pixel (list + long-press sheet), one bug fixed.** The sheet's actions did not fit in landscape and the last ones (Move to trash, Protect) were unreachable; the sheet now scrolls. Not yet checked in landscape: the editor, the options sheet and Settings. Noted, not changed: with the sync notice showing, the two-pane list has room for only two notes.
+- **B10 landscape: DONE.** Checked on the Pixel in landscape: list, long-press sheet, editor (short and long note), three-dots menu, options sheet and Settings tabs. Fixed: the sheet's last actions were unreachable (it now scrolls); the six Settings tabs sit in one row; the title aligns with the body in the two-pane layout. Left as is: with the sync notice showing, the two-pane list fits two notes, and with the keyboard open in landscape the system keyboard fills the screen (the editor header and toolbar stay visible).
 - **C11 action sheet hint: DONE.** The long-press sheet opens fully expanded and without the drag handle (nothing more "above" to pull), and it scrolls when the actions do not fit.
 - **C13 swipe discoverability: DONE, without a new indicator.** The sheet (long press) now also offers Archive, Move to trash and Restore, the same actions the swipe does. A hint on the row would add noise to every card; the menu everyone already finds is the better place.
 - **C14 task drag handle left / right / off: DO NOT, for now.** It is a new setting with its own parity row in `SETTINGS_PARITY` and a layout change in the editor, and nobody reported the handle as wrong where it is. Revisit if it comes back.
