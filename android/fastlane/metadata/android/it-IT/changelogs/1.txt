@@ -1,0 +1,1 @@
+Prima versione: note, elenchi di attività, etichette, note protette, promemoria, widget, cattura rapida e sincronizzazione cifrata end-to-end.

@@ -1,0 +1,1 @@
+Note adesive con elenchi, promemoria e sincronizzazione cifrata end-to-end.

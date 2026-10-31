@@ -1,13 +1,13 @@
 #!/usr/bin/env python3
-"""Genera los `strings.xml` de la app desde `android/strings.tsv` (clave + los cinco idiomas).
+"""Genera los `strings.xml` de la app desde `android/strings.tsv` (clave + los seis idiomas).
 
 Falla (y no escribe nada) si falta una traducción, como la regla de `Strings.T` en Windows. Se ejecuta a mano tras editar la tabla:
 
     python android/scripts/gen_strings.py          # genera
     python android/scripts/gen_strings.py --check  # solo comprueba que la tabla y los XML coinciden (para CI)
 
-Columnas: key, en, es, de, fr, pt-BR. `en` va en `values/` (el idioma de reserva); los demás en `values-es`, `values-de`, `values-fr`
-y `values-pt-rBR`.
+Columnas: key, en, es, de, fr, pt-BR, it. `en` va en `values/` (el idioma de reserva); los demás en `values-es`, `values-de`, `values-fr`,
+`values-pt-rBR` y `values-it`.
 """
 import re
 import sys
@@ -17,7 +17,7 @@ from xml.sax.saxutils import escape
 ROOT = Path(__file__).resolve().parent.parent
 TABLE = ROOT / "strings.tsv"
 RES = ROOT / "app" / "src" / "main" / "res"
-FOLDERS = {"en": "values", "es": "values-es", "de": "values-de", "fr": "values-fr", "pt-BR": "values-pt-rBR"}
+FOLDERS = {"en": "values", "es": "values-es", "de": "values-de", "fr": "values-fr", "pt-BR": "values-pt-rBR", "it": "values-it"}
 
 
 def android_text(value: str) -> str:
