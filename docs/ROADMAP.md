@@ -378,6 +378,14 @@ cross-platform clients reusing the common sync format.
 
 ---
 
+### Round after 2.2.0 / 1.1.0 — decisions (2026-10-31/11-01)
+
+- **Done tasks per note, not per device**: a device-wide "delete done tasks" would empty a shared list on every device. The per-note value (follow settings / keep in place / move to the bottom) travels as the optional field `completedTasks`; the last two never delete or hide. Format stays 4.
+- **Version history is local and never syncs**: no format change, nothing extra to protect; protected notes keep none. Android keeps the local text before a sync overwrites it, like Windows.
+- **Tag order on Android uses arrows, not drag**: larger touch targets and TalkBack. The order is per device (not synced); Windows has no custom tag order.
+- **Wheel changes dock view**: gear always; tabs only when they all fit (a turn continuing a recent change keeps cycling); Ctrl+wheel always. The label sits next to the gear, towards the screen, so it never covers notes. No extra button on the dock (it would add weight where less was asked).
+- **Not done / later**: capping the dock column height with very many notes on the top and bottom edges; filtering the Android widget by tag; checkable boxes in the widget; Italian as a sixth language (a full translation pass on `Strings.T` and `android/strings.tsv`).
+
 ## 3. Discarded for now, with its reason
 
 Do not propose again without reading this first.

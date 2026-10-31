@@ -19,6 +19,7 @@ their own. No account, no required cloud, and the content is encrypted.
 - **Tasks and lists** inside each note (`Ctrl+L`, `Ctrl+Shift+L`), with indentation, and an option to
   remove completed tasks after a while.
 - **Reminders**, **tags**, **archive** and **trash**, plus a manager to search and organize.
+- **Per-note history and done-task rules** (coming in 2.3.0 / 1.2.0): up to 20 local versions of each note you can preview and restore, and a per-note choice for what happens to done tasks (so a shared shopping list is never emptied by another device). On Windows, the mouse wheel on the dock's gear (or on the tabs when they all fit) switches between all notes, each tag, archived and trash.
 - **Color themes**: Classic, Serene and Graphite, with light, dark or alternating notes, or your own.
 - **A global shortcut** to create a note from anywhere (`Ctrl+Shift+N` by default).
 - **Password-protected notes**, encrypted with a key derived from the password (which is not stored), with an optional visible name to recognize them without opening them.
