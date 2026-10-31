@@ -802,6 +802,8 @@ public static class Strings
         "Löschen", "Supprimer", "Excluir", "Elimina", "削除", "删除");
     public static string DeleteTagTooltip => T("Delete tag", "Eliminar etiqueta",
         "Tag löschen", "Supprimer le tag", "Excluir tag", "Elimina etichetta", "タグを削除", "删除标签");
+    public static string MoveTagUpTooltip(string tag) => T($"Move {tag} up", $"Subir {tag}", $"{tag} nach oben", $"Monter {tag}", $"Subir {tag}", $"Sposta {tag} su", $"{tag} を上へ移動", $"将 {tag} 上移");
+    public static string MoveTagDownTooltip(string tag) => T($"Move {tag} down", $"Bajar {tag}", $"{tag} nach unten", $"Descendre {tag}", $"Descer {tag}", $"Sposta {tag} giù", $"{tag} を下へ移動", $"将 {tag} 下移");
     public static string AllTags => T("All tags", "Todas las etiquetas",
         "Alle Tags", "Tous les tags", "Todas as tags", "Tutte le etichette", "すべてのタグ", "所有标签");
     public static string TagFilterTooltip => T("Filter by tag", "Filtrar por etiqueta",

@@ -26,6 +26,17 @@ public sealed class DockViewCycleTests
     }
 
     [Fact]
+    public void ForwardFollowsTheUsersOwnTagOrder()
+    {
+        var counts = new DockViewCycle.Counts(3, 0, 0,
+            new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase) { ["casa"] = 2, ["trabajo"] = 1, ["ideas"] = 1 }, new[] { "trabajo", "ideas" });
+        var (view, tag) = (DockViewKind.Active, (string?)null);
+        var seen = new List<string?>();
+        for (int i = 0; i < 3; i++) { (view, tag) = DockViewCycle.Next(view, tag, counts, +1); seen.Add(tag); }
+        Assert.Equal(new string?[] { "trabajo", "ideas", "casa" }, seen);
+    }
+
+    [Fact]
     public void BackwardIsTheExactReverse()
     {
         var counts = Counts(3, 2, 1, ("casa", 2), ("trabajo", 1));

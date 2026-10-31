@@ -1738,7 +1738,7 @@ public partial class EdgeDockWindow : Window
         var tags = _repository.GetAllTags().ToDictionary(t => t, t => _repository.GetByTag(t, NoteState.Active).Count, StringComparer.OrdinalIgnoreCase);
         return new DockViewCycle.Counts(
             _repository.GetByState(NoteState.Active).Count, _repository.GetByState(NoteState.Archived).Count,
-            _repository.GetByState(NoteState.Trashed).Count, tags);
+            _repository.GetByState(NoteState.Trashed).Count, tags, _settings?.TagOrder);
     }
 
     private string CurrentViewLabel() => DockViewCycle.Label(

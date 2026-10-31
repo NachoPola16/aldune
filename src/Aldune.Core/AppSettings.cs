@@ -252,6 +252,10 @@ public sealed class AppSettings
     /// siempre de la nota entera; esto solo decide si el aviso las enseña.</summary>
     public bool ReminderIncludesTasks { get; set; } = true;
 
+    /// <summary>The user's own order for the tags (dock menu, manager, tag panel); empty = alphabetical. Local to this device: it never
+    /// travels with the sync, so the sync format does not change. See <see cref="TagOrder"/>.</summary>
+    public List<string> TagOrder { get; set; } = new();
+
     /// <summary>Interruptor general de los sonidos de la app. Apagado de fábrica (ver <see cref="SoundPlan"/>).</summary>
     public bool SoundsEnabled { get; set; }
 

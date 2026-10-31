@@ -380,6 +380,7 @@ public class ConfigExportImportTests
     private static readonly Dictionary<string, string> NotExported = new()
     {
         ["WrappedDatabaseKey"] = "clave de la base de datos, protegida por DPAPI en este equipo",
+        ["TagOrder"] = "orden propio de las etiquetas: es de este equipo, como en Android",
         ["SyncEnabled"] = "sincronización: es de este equipo y de su perfil",
         ["SyncTransport"] = "sincronización: transporte del perfil",
         ["SyncFolderPath"] = "sincronización: ruta local del equipo",

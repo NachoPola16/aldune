@@ -8,7 +8,7 @@
 public static class DockViewCycle
 {
     /// <summary>Cuántas notas hay en cada vista; <paramref name="Tags"/> son las etiquetas con sus notas ACTIVAS.</summary>
-    public sealed record Counts(int Active, int Archived, int Trashed, IReadOnlyDictionary<string, int> Tags);
+    public sealed record Counts(int Active, int Archived, int Trashed, IReadOnlyDictionary<string, int> Tags, IReadOnlyList<string>? CustomTagOrder = null);
 
     public static (DockViewKind View, string? Tag) Next(DockViewKind view, string? tag, Counts counts, int direction)
     {
@@ -39,8 +39,9 @@ public static class DockViewCycle
     private static List<(DockViewKind View, string? Tag)> Steps(Counts counts)
     {
         var steps = new List<(DockViewKind, string?)> { (DockViewKind.Active, null) };
-        foreach (var (name, n) in counts.Tags.OrderBy(t => t.Key, StringComparer.OrdinalIgnoreCase))
-            if (n > 0) steps.Add((DockViewKind.Tag, name));
+        // The tags in the order the user sees them (alphabetical unless they set their own, see TagOrder).
+        foreach (var name in TagOrder.Apply(counts.Tags.Keys, counts.CustomTagOrder ?? []))
+            if (counts.Tags[name] > 0) steps.Add((DockViewKind.Tag, name));
         if (counts.Archived > 0) steps.Add((DockViewKind.Archived, null));
         if (counts.Trashed > 0) steps.Add((DockViewKind.Trashed, null));
         // «Todas» solo aporta algo si hay algo más que las activas.

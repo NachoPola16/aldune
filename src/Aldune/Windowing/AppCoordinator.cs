@@ -361,7 +361,22 @@ public sealed class AppCoordinator
         _settings = settings;
         _syncService = syncService;
         _settingsService = settingsService;
+        _repository.CustomTagOrder = settings?.TagOrder ?? [];
         LinkedFiles = new LinkedFileService(repository, NextNoteColor, () => Strings.LinkedConflictPrefix);
+    }
+
+    /// <summary>
+    /// Moves a tag one place up (-1) or down (+1) in the order the app lists tags in. The order is a setting of this device (not synced); the
+    /// dock, the manager and the tag panel all read it through <see cref="NotesRepository.GetAllTags"/>.
+    /// </summary>
+    public void MoveTag(string tag, int delta)
+    {
+        if (_settings is null) return;
+        var moved = TagOrder.Move(_repository.GetAllTags(), tag, delta);
+        _settings.TagOrder = moved;
+        _repository.CustomTagOrder = moved;
+        _settingsService?.Save(_settings);
+        RefreshAll();
     }
 
     public int OpenNoteWindowCount => _openNoteWindows.Count;

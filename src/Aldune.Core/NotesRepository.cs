@@ -119,6 +119,9 @@ public sealed class NotesRepository
         return results;
     }
 
+    /// <summary>The user's own tag order (<see cref="AppSettings.TagOrder"/>), set by the app; empty = alphabetical.</summary>
+    public IReadOnlyList<string> CustomTagOrder { get; set; } = [];
+
     public IReadOnlyList<string> GetAllTags()
     {
         using var connection = _database.OpenConnection();
@@ -127,7 +130,7 @@ public sealed class NotesRepository
         using var reader = command.ExecuteReader();
         var result = new List<string>();
         while (reader.Read()) result.Add((string)reader["Name"]);
-        return result;
+        return CustomTagOrder.Count == 0 ? result : TagOrder.Apply(result, CustomTagOrder);
     }
 
     public bool CreateTag(string name)

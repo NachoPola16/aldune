@@ -50,6 +50,7 @@ It is **not** Windows' "always on top of other windows" (`NoteUnpinned`, local, 
 | Sync in the background | `SyncAutomatically` | `syncInBackground` | |
 | Notice of new versions | `CheckForUpdatesAutomatically` | `checkUpdates` | Once a day, can be turned off, only opens the release page. |
 | Preview in dock or widget | `ShowNotePreview` | `widgetPreview` | |
+| Own tag order | `TagOrder` | `tagOrder` | Per device, never synced (the sync format stays 4); alphabetical by default, new tags go last. Windows: arrows in the manager's «Manage tags»; Android: arrows in the all-tags sheet. Not in the exported config file. |
 
 ## Windows only
 

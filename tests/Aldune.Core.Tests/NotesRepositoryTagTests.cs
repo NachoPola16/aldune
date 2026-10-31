@@ -30,6 +30,18 @@ public sealed class NotesRepositoryTagTests : IDisposable
     }
 
     [Fact]
+    public void GetAllTags_FollowsTheCustomOrderAndKeepsNewTagsAlphabeticalAfterIt()
+    {
+        foreach (var name in new[] { "casa", "trabajo", "ideas" }) _repository.CreateTag(name);
+        Assert.Equal(new[] { "casa", "ideas", "trabajo" }, _repository.GetAllTags());
+
+        _repository.CustomTagOrder = new[] { "trabajo", "casa" };
+        _repository.CreateTag("zeta");
+
+        Assert.Equal(new[] { "trabajo", "casa", "ideas", "zeta" }, _repository.GetAllTags());
+    }
+
+    [Fact]
     public void SetTags_Empty_UnassignsButKeepsTheTag()
     {
         // Las etiquetas se crean y se borran en el gestor. Quitar la última nota de una etiqueta no

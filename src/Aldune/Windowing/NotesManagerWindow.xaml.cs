@@ -352,8 +352,9 @@ public partial class NotesManagerWindow : Window
         var tags = _repository.GetAllTags();
         TagManagerEmptyText.Visibility = tags.Count == 0 ? Visibility.Visible : Visibility.Collapsed;
 
-        foreach (var tag in tags)
+        for (int i = 0; i < tags.Count; i++)
         {
+            var tag = tags[i];
             var row = new Border
             {
                 CornerRadius = ThemeManager.Radius(6),
@@ -387,10 +388,48 @@ public partial class NotesManagerWindow : Window
             delete.Click += OnDeleteTagClick;
             DockPanel.SetDock(delete, Dock.Right);
             content.Children.Add(delete);
+            // Own order (per device, not synced): up and down arrows, as on Android. The ends are disabled instead of hidden so the rows align.
+            var down = MakeMoveButton("", Strings.MoveTagDownTooltip(tag), tag, +1, enabled: i < tags.Count - 1);
+            var up = MakeMoveButton("", Strings.MoveTagUpTooltip(tag), tag, -1, enabled: i > 0);
+            DockPanel.SetDock(down, Dock.Right);
+            DockPanel.SetDock(up, Dock.Right);
+            content.Children.Add(down);
+            content.Children.Add(up);
             content.Children.Add(label);
             row.Child = content;
             TagManagerItems.Children.Add(row);
         }
+    }
+
+    private Button MakeMoveButton(string glyph, string tooltip, string tag, int delta, bool enabled)
+    {
+        var button = new Button
+        {
+            Content = glyph,
+            FontFamily = new FontFamily("Segoe Fluent Icons, Segoe MDL2 Assets"),
+            FontSize = 11,
+            Width = 28,
+            Height = 28,
+            Padding = new Thickness(0),
+            Tag = (tag, delta),
+            ToolTip = tooltip,
+            IsEnabled = enabled,
+            HorizontalContentAlignment = HorizontalAlignment.Center,
+            VerticalContentAlignment = VerticalAlignment.Center,
+            Style = (Style)FindResource("ToolbarButtonStyle")
+        };
+        System.Windows.Automation.AutomationProperties.SetName(button, tooltip);
+        button.Click += OnMoveTagClick;
+        return button;
+    }
+
+    private void OnMoveTagClick(object sender, RoutedEventArgs e)
+    {
+        if (sender is not Button { Tag: ValueTuple<string, int> (var tag, var delta) }) return;
+
+        _coordinator.MoveTag(tag, delta);
+        PopulateTagManager();
+        LoadTagFilterOptions();
     }
 
     private void OnCreateTagClick(object sender, RoutedEventArgs e)
