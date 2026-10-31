@@ -6,7 +6,15 @@
 deck of tabs on one edge of the screen, fan out when you hover over them and open as windows of
 their own. No account, no required cloud, and the content is encrypted.
 
-[Español](README.es.md)
+<p align="center">
+  <a href="https://github.com/NachoPola16/aldune/releases/latest"><img alt="Latest release" src="https://img.shields.io/github/v/release/NachoPola16/aldune?label=Windows&color=7a5c3a"></a>
+  <a href="https://github.com/NachoPola16/aldune/actions/workflows/ci.yml"><img alt="CI" src="https://img.shields.io/github/actions/workflow/status/NachoPola16/aldune/ci.yml?label=CI"></a>
+  <a href="LICENSE"><img alt="License: GPL-3.0" src="https://img.shields.io/badge/license-GPL--3.0-blue"></a>
+  <img alt="Platforms: Windows and Android" src="https://img.shields.io/badge/platforms-Windows%20%7C%20Android-5a6b7a">
+  <img alt="Languages: 8" src="https://img.shields.io/badge/languages-8-5a7a5c">
+</p>
+
+[Español](README.es.md) · [Download](#install) · [Android](#android) · [How it got here](docs/PROGRESS.md)
 
 ![Aldune: two open notes and the tab dock on the right edge](docs/images/aldune.png)
 
@@ -29,7 +37,7 @@ their own. No account, no required cloud, and the content is encrypted.
 - **Accessible**: a visible focus ring when navigating with Tab, note colors chosen with the arrow keys, “Text size” (100–150 %) and per-note zoom with
   `Ctrl` + mouse wheel, and Windows high contrast. The dock opens with the mouse; without one, the optional `Ctrl+Alt+M` shortcut (Settings → General)
   opens the notes list (Enter opens a note, Space selects it). More in “Quick help” in Settings.
-- In **English**, **Spanish**, **German**, **French**, **Italian**, **Brazilian Portuguese** and **Japanese**.
+- In **English**, **Spanish**, **German**, **French**, **Italian**, **Brazilian Portuguese**, **Japanese** and **Simplified Chinese**.
 
 ### Looks
 

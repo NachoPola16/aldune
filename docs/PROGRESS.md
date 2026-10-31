@@ -16,10 +16,29 @@ The first screenshot uses Spanish sample notes because that is what the app was 
 |---|---|
 | Platforms | Windows and Android (native Kotlin, not a wrapper) |
 | Sync | your own server, a shared folder or WebDAV / Nextcloud, end-to-end encrypted |
-| Languages | English, Spanish, German, French, Italian, Brazilian Portuguese, Japanese (1.0.0 had English and Spanish) |
+| Languages | English, Spanish, German, French, Italian, Brazilian Portuguese, Japanese and Simplified Chinese (1.0.0 had English and Spanish) |
 | Looks | dark, light, pastel, midnight, XP, Telecom, Bash, Phosphor and six notebook looks (1.0.0 had a single dark look) |
 | Tasks | checklists with tick boxes, per-note rules for done tasks, progress on the tab and in the Android widget |
 | Safety net | automatic backups, local version history per note, password-protected notes |
+
+## The first weeks, when it did not always work
+
+The first public builds (0.5 to 0.10, 13 to 22 September) did what the screenshot above promises most of the time, and the rest of the time they were rough. These are real entries from the history, not a polished retelling:
+
+| What you would have met in September | What it does now |
+|---|---|
+| The dock folded away while a sync was running, or right after you created a note or changed the filter, so the tab you were reaching for disappeared (0.8, 0.9) | The dock keeps a margin after a change of view, never folds while syncing and has a more generous resting zone (0.9.1) |
+| Opening a note from the dock could be rude to other windows and the hover zone was too tight (0.9.1) | Opening is polite to windows already in use and the zone is larger |
+| Turning a monitor off and on again could leave the dock on the wrong screen or off-screen (0.10) | Screens are identified by a stable ID, not their position in the Windows list, and the dock comes back to its own screen |
+| Clicking *next to* an empty checkbox ticked it (0.10) | Only a click on the box ticks it |
+| The middle-click autoscroll ran at the wrong speed and gave up when the dock fanned out (0.10) | Autoscroll steps once per screen frame and works in the dock too |
+| The note menu's toggles and the dark right-click menu misbehaved (0.10.3) | Menus follow the look and close the way every other menu does |
+| Accented characters were garbled in places (mojibake, fixed on 15 September) | Text is UTF-8 end to end, and files that are not UTF-8 are refused instead of damaged |
+| No reminders (added 11 September), no password protection (13 September) and no sync (it arrives by 16 September) | All three exist, with signed deletions and end-to-end encryption on the sync |
+
+Two things changed about *how* the app is made along the way. Every large change now starts with a short written specification and new logic is written test-first in a library with no interface code; and the interface is checked with disposable probes that open real windows with temporary data, click and type like a person, and save screenshots. Several of the bugs above only showed up that way.
+
+The app also started under another name. It was renamed Aldune on 13 September, with the data folder of existing installs moved over, and the last leftovers of the old name were cleaned up in October.
 
 ## The road, release by release
 
@@ -32,7 +51,7 @@ The first screenshot uses Spanish sample notes because that is what the app was 
 - **2.0 (29 October).** An optional visible name for protected notes, and the "definitive" polish round.
 - **2.1 (30 October).** The travel, field and graph-paper notebook looks, with paper under the text; paper-and-pen sounds; the same Settings layout on both platforms; a full accessibility pass (visible keyboard focus, keyboard-only dock with Ctrl+Alt+D).
 - **2.2 / Android 1.1 (31 October).** Pinned notes that sync, and a long list of details found by using the app.
-- **Next (2.3 / Android 1.2, in the tree).** A per-note rule for done tasks (so a shared shopping list is never emptied by another device), local version history, Android tag tools, the mouse wheel to switch dock views, a quieter button bar on the dock, Italian and Japanese.
+- **Next (2.3 / Android 1.2, in the tree).** A per-note rule for done tasks (so a shared shopping list is never emptied by another device), local version history, Android tag tools, the mouse wheel to switch dock views, a quieter button bar on the dock, and Italian, Japanese and Simplified Chinese.
 
 ## Bugs that mattered, and what changed
 
@@ -47,6 +66,13 @@ These are the ones a person using Aldune could actually notice. None of them is 
 - **A pin that vanished on a key change (fixed before 2.2).** Re-keying a sync profile dropped optional fields such as the pin; now covered by a test.
 - **A task you could not tick (fixed in the 2.3 round).** A dash glued to the box (`☐-`) made the line stop being a task. Now a sign next to the box still counts, and the space behind it is protected.
 - **A dock that scrolled in jumps (fixed in the 2.3 round).** The mouse wheel moved a whole tab at a time and the middle-click autoscroll ran at an irregular rate; both are now smooth.
+
+## How the look changed
+
+- **September:** one dark look, rounded tabs and a first logo made of three tabs on a bar.
+- **24 to 27 September:** note themes (Classic, Serene, Graphite and others, plus your own), then light, pastel and midnight looks for the app itself.
+- **October:** retro looks (XP, Telecom, Bash, Phosphor) and, on 26 October, the final three-note "A" logo, drawn from one generator so every format stays consistent.
+- **End of October:** the notebook looks with paper under the text, the footer bar of the dock getting quieter and smaller, and the manager's title bar getting more room.
 
 ## What keeps it trustworthy
 

@@ -33,7 +33,7 @@ It is **not** Windows' "always on top of other windows" (`NoteUnpinned`, local, 
 
 | What | Windows | Android | Note |
 |---|---|---|---|
-| Language | `Language` | `language` | The same seven languages. |
+| Language | `Language` | `language` | The same eight languages. |
 | Look and look colors | `Appearance`, `AspectColors` | `appearance`, `aspectColors` | Same numbers and same color slots per look. |
 | Simplified mode | `SimplifiedMode` | `simplifiedMode` | |
 | Large checkboxes | `LargeCheckboxes` | `largeCheckboxes` | Factory default: off on Windows, on only in new Android installs (touch screen). |
