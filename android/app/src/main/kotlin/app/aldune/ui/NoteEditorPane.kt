@@ -69,7 +69,9 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.produceState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -80,6 +82,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.foundation.text.input.TextFieldLineLimits
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.input.key.Key
 import androidx.compose.ui.input.key.KeyEventType
 import androidx.compose.ui.input.key.isAltPressed
@@ -166,7 +171,25 @@ private val ListKeysTransformation = InputTransformation {
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun NoteEditorPane(key: String, viewModel: NotesViewModel, onBack: () -> Unit, showBack: Boolean) {
+    // Como en Windows (`NoteText`): el título (la primera línea) vive en su propio campo, en la cabecera, y `state` es solo el cuerpo. La nota
+    // sigue siendo un único texto que se guarda de una pieza (ver `fullText`); lo que cambia es dónde se escribe cada parte.
     val state = remember(key) { TextFieldState() }
+    val title = remember(key) { TextFieldState() }
+    // Si hay salto tras el título. Una nota «título\n» (cuerpo vacío) no debe perder ese salto al abrirla, o abrir y cerrar la reescribiría.
+    var breakAfterTitle by remember(key) { mutableStateOf(false) }
+    val titleFocus = remember { FocusRequester() }
+    fun fullText(): String {
+        val body = state.text.toString()
+        return if (body.isNotEmpty() || breakAfterTitle) title.text.toString() + "\n" + body else title.text.toString()
+    }
+    fun setFullText(full: String, bodyCaret: Int = 0) {
+        val cut = full.indexOf('\n')
+        val head = if (cut < 0) full else full.substring(0, cut)
+        val body = if (cut < 0) "" else full.substring(cut + 1)
+        breakAfterTitle = cut >= 0
+        title.edit { replace(0, length, head); selection = TextRange(head.length) }
+        state.edit { replace(0, length, body); selection = TextRange(bodyCaret.coerceIn(0, body.length)) }
+    }
     var loaded by remember(key) { mutableStateOf(false) }
     // Una protegida solo se lee y se edita con su contraseña: hasta entonces se ve un aviso con el botón de abrirla. `unlocked` dice que hay una
     // sesión abierta en el ViewModel; el texto en claro está solo en este campo y en esa sesión (nunca en un borrador ni en estado guardado).
@@ -191,18 +214,12 @@ fun NoteEditorPane(key: String, viewModel: NotesViewModel, onBack: () -> Unit, s
         val text = viewModel.openDraft(key)
         protectedNote = viewModel.isProtected(key)
         if (!protectedNote) {
-            state.edit {
-                replace(0, length, text)
-                selection = TextRange(0)
-            }
+            setFullText(text)
         } else {
             // Al rotar, la sesión sigue abierta en el ViewModel: se recarga sin volver a pedir la contraseña.
             val plain = viewModel.protectedText(key)
             if (plain != null) {
-                state.edit {
-                    replace(0, length, plain)
-                    selection = TextRange(0)
-                }
+                setFullText(plain)
                 unlocked = true
             } else {
                 passwordMode = PasswordMode.Unlock
@@ -210,6 +227,7 @@ fun NoteEditorPane(key: String, viewModel: NotesViewModel, onBack: () -> Unit, s
         }
         // Lo recién cargado no se puede deshacer: el primer «deshacer» dejaría la nota vacía.
         state.undoState.clearHistory()
+        title.undoState.clearHistory()
         loaded = true
         viewModel.playSound(SoundEvent.NOTE_OPENED)
     }
@@ -223,12 +241,10 @@ fun NoteEditorPane(key: String, viewModel: NotesViewModel, onBack: () -> Unit, s
         viewModel.externalEdits.collect { changed ->
             if (changed != key) return@collect
             val fresh = viewModel.draftText(key)
-            if (fresh == state.text.toString()) return@collect
-            state.edit {
-                replace(0, length, fresh)
-                selection = TextRange(selection.min.coerceAtMost(fresh.length))
-            }
+            if (fresh == fullText()) return@collect
+            setFullText(fresh, state.selection.min)
             state.undoState.clearHistory()
+            title.undoState.clearHistory()
         }
     }
     LaunchedEffect(key) {
@@ -272,8 +288,8 @@ fun NoteEditorPane(key: String, viewModel: NotesViewModel, onBack: () -> Unit, s
 
     // Único punto por el que el texto llega al guardado: así ningún camino (teclado, barra, atajo, toque) se lo salta.
     LaunchedEffect(key) {
-        var previous = state.text.toString()
-        snapshotFlow { state.text.toString() }.collect {
+        var previous = fullText()
+        snapshotFlow { fullText() }.collect {
             if (!loaded) { previous = it; return@collect }
             if (TypingThrottle.isTyping(previous, it)) viewModel.playSound(SoundEvent.TYPING)
             // Una nota protegida se vacía al bloquearse: eso no es borrar, y `unlocked` ya está bajado cuando ocurre.
@@ -289,8 +305,9 @@ fun NoteEditorPane(key: String, viewModel: NotesViewModel, onBack: () -> Unit, s
         viewModel.unlockedIds.collect { ids ->
             if (protectedNote && unlocked && key !in ids) {
                 unlocked = false
-                state.edit { replace(0, length, "") }
+                setFullText("")
                 state.undoState.clearHistory()
+                title.undoState.clearHistory()
                 passwordMode = PasswordMode.Unlock
             }
         }
@@ -426,7 +443,7 @@ fun NoteEditorPane(key: String, viewModel: NotesViewModel, onBack: () -> Unit, s
     val canFocus = wantsKeyboard || touched || !settling
     LaunchedEffect(key, loaded, protectedNote) {
         if (loaded && KeyboardOnOpen.shouldShow(settings.keyboardOnOpen, isNewNote = key.isEmpty(), isProtected = protectedNote)) {
-            focus.requestFocus()
+            (if (title.text.isEmpty() && state.text.isEmpty()) titleFocus else focus).requestFocus()
             // `stateHidden` de la ventana oculta el teclado al arrancar y se come un show() demasiado temprano: se espera a que la ventana se
             // asiente. (Con la app ya abierta no hace falta, pero no estorba.)
             delay(KEYBOARD_DELAY_MS)
@@ -488,7 +505,22 @@ fun NoteEditorPane(key: String, viewModel: NotesViewModel, onBack: () -> Unit, s
             if (showBack) {
                 IconButton(onClick = { viewModel.playSound(SoundEvent.NOTE_CLOSED); onBack() }) { Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.back)) }
             }
-            Spacer(Modifier.weight(1f))
+            // El título, junto a la flecha, como la cabecera de la ventana de nota de Windows. Intro pasa al cuerpo. Una protegida cerrada no enseña nada.
+            val titleEnabled = loaded && (!protectedNote || unlocked)
+            BasicTextField(
+                state = title, enabled = titleEnabled, lineLimits = TextFieldLineLimits.SingleLine,
+                modifier = Modifier.weight(1f).padding(horizontal = 4.dp).focusProperties { this.canFocus = canFocus }.focusRequester(titleFocus),
+                textStyle = MaterialTheme.typography.titleMedium.copy(color = ink),
+                cursorBrush = SolidColor(ink),
+                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
+                onKeyboardAction = { focus.requestFocus() },
+                decorator = { inner ->
+                    Box(contentAlignment = Alignment.CenterStart) {
+                        if (title.text.isEmpty() && titleEnabled) Text(stringResource(R.string.new_note_title), style = MaterialTheme.typography.titleMedium, color = muted)
+                        inner()
+                    }
+                },
+            )
             if (syncing) {
                 Text(
                     stringResource(R.string.sync_status_syncing), Modifier.padding(end = 12.dp),
@@ -515,7 +547,23 @@ fun NoteEditorPane(key: String, viewModel: NotesViewModel, onBack: () -> Unit, s
                         text = { Text(stringResource(R.string.note_options)) },
                         onClick = { topMenu = false; scope.launch { options = viewModel.noteOptions(key) } },
                     )
+                    // Lo que se hace con la nota entera (antes solo desde la lista): fijarla, archivarla o tirarla sin salir a deslizar la fila.
+                    // Una nota nueva sin texto aún no existe (noteOptions devuelve null): no hay nada que fijar ni archivar.
+                    val pinnedNow by produceState(false, topMenu) { value = if (topMenu) viewModel.noteOptions(key)?.pinnedToTop ?: false else false }
+                    DropdownMenuItem(
+                        text = { Text(stringResource(if (pinnedNow) R.string.note_unpin else R.string.note_pin)) },
+                        onClick = { topMenu = false; scope.launch { viewModel.noteOptions(key)?.let { viewModel.setPinned(it.noteId, !pinnedNow) } } },
+                    )
+                    DropdownMenuItem(
+                        text = { Text(stringResource(R.string.archive)) },
+                        onClick = { topMenu = false; scope.launch { viewModel.noteOptions(key)?.let { viewModel.archive(it.noteId); onBack() } } },
+                    )
+                    DropdownMenuItem(
+                        text = { Text(stringResource(R.string.move_to_trash)) },
+                        onClick = { topMenu = false; scope.launch { viewModel.noteOptions(key)?.let { viewModel.trash(it.noteId); onBack() } } },
+                    )
                     if (!protectedNote || unlocked) {
+                        HorizontalDivider()
                         DropdownMenuItem(text = { Text(stringResource(R.string.edit_move_up)) }, onClick = { topMenu = false; move(LineDirection.Up) })
                         DropdownMenuItem(text = { Text(stringResource(R.string.edit_move_down)) }, onClick = { topMenu = false; move(LineDirection.Down) })
                         DropdownMenuItem(text = { Text(stringResource(R.string.edit_outdent)) }, onClick = { topMenu = false; outdent() })
@@ -532,7 +580,7 @@ fun NoteEditorPane(key: String, viewModel: NotesViewModel, onBack: () -> Unit, s
             NoteOptionsDialog(
                 current, viewModel, onClose = { options = null },
                 // Lo que se ve ahora en el editor (como en Windows). Una protegida cerrada no tiene texto que exportar.
-                exportText = if (!current.isProtected || unlocked) text() else null,
+                exportText = if (!current.isProtected || unlocked) fullText() else null,
                 onProtection = {
                     options = null
                     passwordMode = if (current.isProtected) PasswordMode.Remove else PasswordMode.Protect
@@ -544,10 +592,7 @@ fun NoteEditorPane(key: String, viewModel: NotesViewModel, onBack: () -> Unit, s
                 when (mode) {
                     PasswordMode.Unlock -> when (val outcome = viewModel.unlockProtected(key, password)) {
                         is NotesViewModel.UnlockOutcome.Opened -> {
-                            state.edit {
-                                replace(0, length, outcome.text)
-                                selection = TextRange(0)
-                            }
+                            setFullText(outcome.text)
                             unlocked = true
                             null
                         }
@@ -561,10 +606,7 @@ fun NoteEditorPane(key: String, viewModel: NotesViewModel, onBack: () -> Unit, s
                             // Queda abierta, como en Windows: se abre la sesión con la misma contraseña (derivar otra vez).
                             when (val outcome = viewModel.unlockProtected(key, password)) {
                                 is NotesViewModel.UnlockOutcome.Opened -> {
-                                    state.edit {
-                                        replace(0, length, outcome.text)
-                                        selection = TextRange(0)
-                                    }
+                                    setFullText(outcome.text)
                                     unlocked = true
                                     protectedNote = true
                                 }
@@ -587,10 +629,7 @@ fun NoteEditorPane(key: String, viewModel: NotesViewModel, onBack: () -> Unit, s
                             // El texto vuelve a ser el normal: pasa a ser una nota corriente con su borrador, y la sesión se suelta.
                             protectedNote = false
                             val plain = viewModel.openDraft(key)
-                            state.edit {
-                                replace(0, length, plain)
-                                selection = TextRange(0)
-                            }
+                            setFullText(plain)
                             viewModel.dropProtected(key)
                             null
                         }
