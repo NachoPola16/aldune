@@ -2519,6 +2519,8 @@ public partial class EdgeDockWindow : Window
         TabMenuTrashButton.Content = note.State == NoteState.Trashed ? Strings.Restore : Strings.MoveToTrash;
         TabMenuPinToTopButton.Content = note.IsPinnedToTop ? Strings.UnpinFromTop : Strings.PinToTop;
         TabMenuPinToTopButton.Visibility = note.State == NoteState.Active ? Visibility.Visible : Visibility.Collapsed;
+        TabMenuDoneTasksButton.Content = Strings.DoneTasksPolicyLabel(note.CompletedTasks);
+        TabMenuDoneTasksButton.Visibility = note.State == NoteState.Active && !note.IsProtected ? Visibility.Visible : Visibility.Collapsed;
         TabMenuProtectionButton.Content = note.IsProtected ? Strings.RemoveProtection : Strings.ProtectNote;
         TabMenuVisibleNameButton.Visibility = note.IsProtected ? Visibility.Visible : Visibility.Collapsed;
         // Una nota vinculada es el archivo en claro: no se protege (spec, decisión 7).
@@ -2629,6 +2631,16 @@ public partial class EdgeDockWindow : Window
         if (_tabMenuNote is { } note)
         {
             _repository.SetPinnedToTop(note.Id, !note.IsPinnedToTop);
+            _coordinator.RefreshAll();
+        }
+        CloseTabMenu();
+    }
+
+    private void OnTabMenuDoneTasksClick(object sender, RoutedEventArgs e)
+    {
+        if (_tabMenuNote is { } note)
+        {
+            _repository.SetCompletedTasksPolicy(note.Id, CompletedTasksPolicyRules.Next(note.CompletedTasks));
             _coordinator.RefreshAll();
         }
         CloseTabMenu();

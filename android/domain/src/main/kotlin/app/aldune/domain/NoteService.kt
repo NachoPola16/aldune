@@ -143,6 +143,12 @@ class NoteService(
         change(id) { if (it.pinnedToTop == pinned) it else it.copy(pinnedToTop = pinned) }
     }
 
+    /** Cambia el ajuste de tareas hechas de la nota. Cuenta como edición (la sella `change`) por la misma razón que [setPinned]. */
+    fun setCompletedTasks(id: String, policy: Int): NoteResult<Note> = synchronized(lock) {
+        val value = CompletedTasksPolicy.normalize(policy)
+        change(id) { if (it.completedTasks == value) it else it.copy(completedTasks = value) }
+    }
+
     fun archive(id: String): NoteResult<Note> = setState(id, NoteState.ARCHIVED)
 
     fun trash(id: String): NoteResult<Note> = setState(id, NoteState.TRASHED)

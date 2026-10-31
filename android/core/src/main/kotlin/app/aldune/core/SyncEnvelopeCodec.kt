@@ -143,6 +143,8 @@ object SyncEnvelopeCodec {
     ).also {
         // Solo si es cierto, como en Core: el contenido de una nota no fijada es idéntico al de antes.
         if (note.pinnedToTop) it["pinnedToTop"] = JsonPrimitive(true)
+        // Igual: solo si no es «según mis ajustes» (0), para que una nota sin el ajuste siga idéntica a como la escribían las versiones anteriores.
+        if (note.completedTasks != 0) it["completedTasks"] = JsonPrimitive(note.completedTasks)
     }).toString()
 
     internal fun base64Text(json: String): String = Base64.getEncoder().encodeToString(json.toByteArray(Charsets.UTF_8))
@@ -222,6 +224,8 @@ object SyncEnvelopeCodec {
             // Falta en lo que escribieron las versiones anteriores, y en una nota sin proteger no significa nada.
             protectedTitle = normalizeTitle(o.string("protectedTitle")?.takeIf { isProtected }),
             pinnedToTop = o.boolean("pinnedToTop") ?: false,
+            // Un número que esta versión no conoce se lee como «según mis ajustes» (como Core) en vez de fallar al leer la nota.
+            completedTasks = (o.int("completedTasks") ?: 0).let { if (it == 1 || it == 2) it else 0 },
         )
     }
 

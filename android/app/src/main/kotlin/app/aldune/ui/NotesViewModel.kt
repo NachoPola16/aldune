@@ -653,7 +653,7 @@ class NotesViewModel(application: Application) : AndroidViewModel(application) {
     /** Color y etiquetas de una nota, para su menú. */
     class NoteOptions(
         val noteId: String, val color: String, val tags: List<String>, val isProtected: Boolean, val protectedTitle: String? = null,
-        val pinnedToTop: Boolean = false,
+        val pinnedToTop: Boolean = false, val completedTasks: Int = 0,
     )
 
     /**
@@ -667,7 +667,7 @@ class NotesViewModel(application: Application) : AndroidViewModel(application) {
         }
         io.withLock {
             val id = idOf(key).ifEmpty { return@withLock null }
-            service?.get(id)?.let { NoteOptions(id, it.color, it.tags, it.isProtected, it.protectedTitle, it.pinnedToTop) }
+            service?.get(id)?.let { NoteOptions(id, it.color, it.tags, it.isProtected, it.protectedTitle, it.pinnedToTop, it.completedTasks) }
         }
     }
 
@@ -683,6 +683,14 @@ class NotesViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     fun moveNote(id: String, before: String?, after: String?) = change { it.move(id, before, after) }
+
+    /** Cambia el ajuste de tareas hechas de la nota (0 por defecto, 1 mantener, 2 al final). Cuenta como edición y viaja por la sync. */
+    fun setCompletedTasks(id: String, policy: Int) = change { it.setCompletedTasks(id, policy) }
+
+    /** El ajuste de tareas hechas de la nota que se edita en [key], sin tocar el borrador (a diferencia de [noteOptions]). */
+    suspend fun completedTasksPolicy(key: String): Int = withContext(Dispatchers.IO) {
+        io.withLock { idOf(key).takeIf { it.isNotEmpty() }?.let { service?.get(it)?.completedTasks } ?: 0 }
+    }
 
     /** Fija la nota arriba de las listas (o la suelta). Cuenta como edición y viaja por la sync. */
     fun setPinned(id: String, pinned: Boolean) = change { it.setPinned(id, pinned) }

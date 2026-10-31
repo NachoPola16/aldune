@@ -428,6 +428,9 @@
     <string name="color_name_black">Black</string>
     <string name="note_pin">Pin to the top of the list</string>
     <string name="note_unpin">Unpin from the top of the list</string>
+    <string name="done_tasks_default">Done tasks: as in my settings</string>
+    <string name="done_tasks_keep">Done tasks: stay in place</string>
+    <string name="done_tasks_end">Done tasks: move to the bottom</string>
     <string name="pinned_mark_cd">Pinned to the top of the list</string>
     <string name="existing_tags">Your tags</string>
 </resources>

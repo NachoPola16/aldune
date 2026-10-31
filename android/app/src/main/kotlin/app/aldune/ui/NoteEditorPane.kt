@@ -49,6 +49,7 @@ import androidx.compose.foundation.layout.widthIn
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import app.aldune.data.CompletedTasksStore
+import app.aldune.domain.CompletedTasksPolicy
 import app.aldune.domain.KeyboardOnOpen
 import app.aldune.text.HiddenTasks
 import androidx.compose.foundation.text.input.TextFieldState
@@ -72,6 +73,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.produceState
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -380,11 +382,14 @@ fun NoteEditorPane(key: String, viewModel: NotesViewModel, onBack: () -> Unit, s
 
     val haptic = LocalHapticFeedback.current
     val settings by viewModel.settings.collectAsStateWithLifecycle()
-    val settleChecked = settings.reorderOnCheck
+    // «Tareas hechas» por nota (0 según mis ajustes, 1 se quedan, 2 bajan al final): manda sobre los ajustes del dispositivo y las dos últimas nunca ocultan.
+    var doneTasksPolicy by remember(key) { mutableIntStateOf(0) }
+    LaunchedEffect(key, loaded) { if (loaded) doneTasksPolicy = viewModel.completedTasksPolicy(key) }
+    val settleChecked = CompletedTasksPolicy.shouldMoveToEnd(doneTasksPolicy, settings.reorderOnCheck)
 
     // «Ocultar tareas hechas»: el texto real no cambia; el campo dibuja el texto sin esas líneas (OutputTransformation) y los toques se
     // traducen de vuelta al texto real. Una protegida no apunta nada: no se guarda ni un rastro de su contenido fuera de ella.
-    val hideActive = settings.hideDoneTasks && !protectedNote
+    val hideActive = CompletedTasksPolicy.mayHide(doneTasksPolicy, settings.hideDoneTasks) && !protectedNote
     val hideDelayMs = settings.hideDoneAfterHours * 3_600_000L
     val completedStore = remember { CompletedTasksStore(context) }
     var completed by remember(key) { mutableStateOf<Map<String, Long>>(emptyMap()) }
@@ -571,6 +576,20 @@ fun NoteEditorPane(key: String, viewModel: NotesViewModel, onBack: () -> Unit, s
                     DropdownMenuItem(
                         text = { Text(stringResource(if (pinnedNow) R.string.note_unpin else R.string.note_pin)) },
                         onClick = { topMenu = false; scope.launch { viewModel.noteOptions(key)?.let { viewModel.setPinned(it.noteId, !pinnedNow) } } },
+                    )
+                    // Un elemento que cicla, sin avisos: el propio texto dice el estado. El menú se cierra al pulsarlo, como los demás.
+                    DropdownMenuItem(
+                        text = { Text(stringResource(doneTasksPolicyLabel(doneTasksPolicy))) },
+                        onClick = {
+                            topMenu = false
+                            scope.launch {
+                                viewModel.noteOptions(key)?.let {
+                                    val next = CompletedTasksPolicy.next(doneTasksPolicy)
+                                    doneTasksPolicy = next
+                                    viewModel.setCompletedTasks(it.noteId, next)
+                                }
+                            }
+                        },
                     )
                     DropdownMenuItem(
                         text = { Text(stringResource(R.string.archive)) },

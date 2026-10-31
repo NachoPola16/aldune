@@ -67,6 +67,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.unit.dp
 import app.aldune.R
+import app.aldune.domain.CompletedTasksPolicy
 import app.aldune.domain.NoteService
 import app.aldune.text.MarkdownExport
 import app.aldune.text.NoteColorChoices
@@ -193,6 +194,13 @@ fun NoteOptionsDialog(
                 }
                 TextButton(onClick = { pinned = !pinned; viewModel.setPinned(initial.noteId, pinned) }, Modifier.alignWithHeadings()) {
                     Text(stringResource(if (pinned) R.string.note_unpin else R.string.note_pin))
+                }
+                var doneTasks by remember { mutableIntStateOf(initial.completedTasks) }
+                TextButton(
+                    onClick = { doneTasks = CompletedTasksPolicy.next(doneTasks); viewModel.setCompletedTasks(initial.noteId, doneTasks) },
+                    Modifier.alignWithHeadings(),
+                ) {
+                    Text(stringResource(doneTasksPolicyLabel(doneTasks)))
                 }
                 if (exportText != null) {
                     TextButton(onClick = { exporter.launch(MarkdownExport.suggestedFileName(exportText, newNote)) }, Modifier.alignWithHeadings()) {

@@ -60,6 +60,8 @@ data class Note(
     val protectedContentJson: String? = null,
     val protectedTitle: String? = null,
     val pinnedToTop: Boolean = false,
+    /** Qué hace con sus tareas hechas (ver [CompletedTasksPolicy]); viaja por la sync como campo opcional. */
+    val completedTasks: Int = CompletedTasksPolicy.DEFAULT,
 ) {
     init {
         // Es un fallo de programa, no de usuario: quien construye la nota desde un fichero o desde sync debe normalizar antes.

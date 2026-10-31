@@ -19,6 +19,7 @@ public static class NoteEquivalence
             && a.State == b.State
             && a.DockPosition == b.DockPosition
             && a.IsPinnedToTop == b.IsPinnedToTop
+            && a.CompletedTasks == b.CompletedTasks
             && a.IsProtected == b.IsProtected
             && ProtectedTitleRules.Visible(a) == ProtectedTitleRules.Visible(b)
             && a.Tags.OrderBy(tag => tag, StringComparer.Ordinal)

@@ -66,7 +66,7 @@ public sealed class NotesRepository
         using var command = connection.CreateCommand();
         command.CommandText = """
             SELECT n.Id, n.EncryptedText, n.Nonce, n.Tag, n.Color, n.CreatedAt, n.UpdatedAt, n.State, n.ScreenOrigin
-            , n.IsProtected, n.ProtectionSalt, n.ProtectionCipherText, n.ProtectionNonce, n.ProtectionTag, n.ProtectedTitle, n.PinnedToTop
+            , n.IsProtected, n.ProtectionSalt, n.ProtectionCipherText, n.ProtectionNonce, n.ProtectionTag, n.ProtectedTitle, n.PinnedToTop, n.CompletedTasks
             , o.Position AS DockPosition
             FROM Note n LEFT JOIN NoteOrder o ON o.NoteId = n.Id
             WHERE n.State = $state
@@ -107,7 +107,7 @@ public sealed class NotesRepository
         using var command = connection.CreateCommand();
         command.CommandText = """
             SELECT n.Id, n.EncryptedText, n.Nonce, n.Tag, n.Color, n.CreatedAt, n.UpdatedAt, n.State, n.ScreenOrigin
-            , n.IsProtected, n.ProtectionSalt, n.ProtectionCipherText, n.ProtectionNonce, n.ProtectionTag, n.ProtectedTitle, n.PinnedToTop
+            , n.IsProtected, n.ProtectionSalt, n.ProtectionCipherText, n.ProtectionNonce, n.ProtectionTag, n.ProtectedTitle, n.PinnedToTop, n.CompletedTasks
             , o.Position AS DockPosition
             FROM Note n LEFT JOIN NoteOrder o ON o.NoteId = n.Id ORDER BY n.CreatedAt;
             """;
@@ -237,7 +237,7 @@ public sealed class NotesRepository
         using var command = connection.CreateCommand();
         command.CommandText = """
             SELECT n.Id, n.EncryptedText, n.Nonce, n.Tag, n.Color, n.CreatedAt, n.UpdatedAt, n.State, n.ScreenOrigin
-            , n.IsProtected, n.ProtectionSalt, n.ProtectionCipherText, n.ProtectionNonce, n.ProtectionTag, n.ProtectedTitle, n.PinnedToTop
+            , n.IsProtected, n.ProtectionSalt, n.ProtectionCipherText, n.ProtectionNonce, n.ProtectionTag, n.ProtectedTitle, n.PinnedToTop, n.CompletedTasks
             , o.Position AS DockPosition
             FROM Note n
             JOIN NoteTag nt ON nt.NoteId = n.Id
@@ -752,9 +752,9 @@ public sealed class NotesRepository
         command.CommandText = """
             INSERT INTO Note (Id, EncryptedText, Nonce, Tag, Color, CreatedAt, UpdatedAt, State, ScreenOrigin,
                               IsProtected, ProtectionSalt, ProtectionCipherText, ProtectionNonce, ProtectionTag,
-                              ProtectedTitle, PinnedToTop, SyncAuthorDeviceId)
+                              ProtectedTitle, PinnedToTop, CompletedTasks, SyncAuthorDeviceId)
             VALUES ($id, $text, $nonce, $tag, $color, $createdAt, $updatedAt, $state, $screenOrigin,
-                    $isProtected, $salt, $protectedText, $protectedNonce, $protectedTag, $protectedTitle, $pinnedToTop, $syncAuthorDeviceId)
+                    $isProtected, $salt, $protectedText, $protectedNonce, $protectedTag, $protectedTitle, $pinnedToTop, $completedTasks, $syncAuthorDeviceId)
             ON CONFLICT(Id) DO UPDATE SET
                 EncryptedText = excluded.EncryptedText,
                 Nonce = excluded.Nonce,
@@ -771,6 +771,7 @@ public sealed class NotesRepository
                 ProtectionTag = excluded.ProtectionTag,
                 ProtectedTitle = excluded.ProtectedTitle,
                 PinnedToTop = excluded.PinnedToTop,
+                CompletedTasks = excluded.CompletedTasks,
                 SyncAuthorDeviceId = excluded.SyncAuthorDeviceId;
             DELETE FROM SyncTombstone WHERE NoteId = $id;
             """;
@@ -790,6 +791,7 @@ public sealed class NotesRepository
         command.Parameters.AddWithValue("$protectedTag", (object?)note.ProtectedContent?.Tag ?? DBNull.Value);
         command.Parameters.AddWithValue("$protectedTitle", (object?)ProtectedTitleRules.Visible(note) ?? DBNull.Value);
         command.Parameters.AddWithValue("$pinnedToTop", note.IsPinnedToTop ? 1 : 0);
+        command.Parameters.AddWithValue("$completedTasks", (int)CompletedTasksPolicyRules.Normalize(note.CompletedTasks));
         command.Parameters.AddWithValue("$syncAuthorDeviceId", (object?)authorDeviceId ?? DBNull.Value);
         command.ExecuteNonQuery();
 
@@ -886,6 +888,19 @@ public sealed class NotesRepository
         using var command = connection.CreateCommand();
         command.CommandText = "UPDATE Note SET PinnedToTop = $pinned, UpdatedAt = $updatedAt, SyncAuthorDeviceId = NULL WHERE Id = $id;";
         command.Parameters.AddWithValue("$pinned", pinned ? 1 : 0);
+        command.Parameters.AddWithValue("$updatedAt", DateTimeOffset.UtcNow.ToString("O"));
+        command.Parameters.AddWithValue("$id", id.ToString());
+        command.ExecuteNonQuery();
+    }
+
+    /// <summary>Cambia la política de tareas hechas de la nota. Cuenta como una edición (refresca <c>UpdatedAt</c> y borra el autor), por la misma razón que
+    /// <see cref="SetPinnedToTop"/>: sin ello el cambio nunca saldría hacia los demás dispositivos.</summary>
+    public void SetCompletedTasksPolicy(Guid id, CompletedTasksPolicy policy)
+    {
+        using var connection = _database.OpenConnection();
+        using var command = connection.CreateCommand();
+        command.CommandText = "UPDATE Note SET CompletedTasks = $policy, UpdatedAt = $updatedAt, SyncAuthorDeviceId = NULL WHERE Id = $id;";
+        command.Parameters.AddWithValue("$policy", (int)CompletedTasksPolicyRules.Normalize(policy));
         command.Parameters.AddWithValue("$updatedAt", DateTimeOffset.UtcNow.ToString("O"));
         command.Parameters.AddWithValue("$id", id.ToString());
         command.ExecuteNonQuery();
@@ -1278,7 +1293,7 @@ public sealed class NotesRepository
         using var command = connection.CreateCommand();
         command.CommandText = """
             SELECT n.Id, n.EncryptedText, n.Nonce, n.Tag, n.Color, n.CreatedAt, n.UpdatedAt, n.State, n.ScreenOrigin
-            , n.IsProtected, n.ProtectionSalt, n.ProtectionCipherText, n.ProtectionNonce, n.ProtectionTag, n.ProtectedTitle, n.PinnedToTop
+            , n.IsProtected, n.ProtectionSalt, n.ProtectionCipherText, n.ProtectionNonce, n.ProtectionTag, n.ProtectedTitle, n.PinnedToTop, n.CompletedTasks
             , o.Position AS DockPosition
             FROM Note n LEFT JOIN NoteOrder o ON o.NoteId = n.Id WHERE n.Id = $id;
             """;
@@ -1373,7 +1388,8 @@ public sealed class NotesRepository
         int changed = 0;
         foreach (var note in GetByState(NoteState.Active))
         {
-            if (note.IsProtected || skip.Contains(note.Id)) continue;
+            // Una nota con política propia (mantener / al final) nunca borra: es lo que protege una lista compartida de que otro PC la vacíe.
+            if (note.IsProtected || note.CompletedTasks != CompletedTasksPolicy.Default || skip.Contains(note.Id)) continue;
             if (PruneExpiredCompletedTasks(note.Id, note.Text, delay)) changed++;
         }
         return changed;
@@ -1414,6 +1430,7 @@ public sealed class NotesRepository
             ProtectedContent = protectedContent,
             ProtectedTitle = isProtected && reader["ProtectedTitle"] is string title ? title : null,
             IsPinnedToTop = reader["PinnedToTop"] is long pinned && pinned != 0,
+            CompletedTasks = reader["CompletedTasks"] is long policy ? CompletedTasksPolicyRules.Normalize((CompletedTasksPolicy)policy) : CompletedTasksPolicy.Default,
             IsUnlocked = !isProtected
         };
     }

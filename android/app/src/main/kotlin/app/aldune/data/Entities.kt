@@ -33,6 +33,8 @@ class NoteEntity(
     val protectedTitle: String? = null,
     /** Fijada arriba (v5). */
     @ColumnInfo(defaultValue = "0") val pinnedToTop: Boolean = false,
+    /** Tareas hechas de la nota: 0 por defecto, 1 mantener, 2 al final (v6). */
+    @ColumnInfo(defaultValue = "0") val completedTasks: Int = 0,
 )
 
 /** Borrado definitivo pendiente de firmar por la sync. */

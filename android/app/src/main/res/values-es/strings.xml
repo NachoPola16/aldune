@@ -428,6 +428,9 @@
     <string name="color_name_black">Negro</string>
     <string name="note_pin">Fijar arriba en la lista</string>
     <string name="note_unpin">Quitar de arriba en la lista</string>
+    <string name="done_tasks_default">Tareas hechas: según mis ajustes</string>
+    <string name="done_tasks_keep">Tareas hechas: se quedan en su sitio</string>
+    <string name="done_tasks_end">Tareas hechas: bajan al final</string>
     <string name="pinned_mark_cd">Fijada arriba en la lista</string>
     <string name="existing_tags">Tus etiquetas</string>
 </resources>

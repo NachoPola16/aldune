@@ -38,6 +38,13 @@ val MIGRATION_2_3 = object : Migration(2, 3) {
     }
 }
 
+/** v5 → v6: ajuste de tareas hechas por nota (0 = según los ajustes del dispositivo). Las notas que había quedan como estaban. */
+val MIGRATION_5_6 = object : Migration(5, 6) {
+    override fun migrate(db: SupportSQLiteDatabase) {
+        db.execSQL("ALTER TABLE `note` ADD COLUMN `completedTasks` INTEGER NOT NULL DEFAULT 0")
+    }
+}
+
 /** v4 → v5: fijada arriba (0 = no). Las notas que había quedan sin fijar. */
 val MIGRATION_4_5 = object : Migration(4, 5) {
     override fun migrate(db: SupportSQLiteDatabase) {

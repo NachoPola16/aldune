@@ -124,6 +124,7 @@ public partial class NoteWindow : Window
         Topmost = !_repository.IsUnpinned(note.Id);
         UpdatePinButton();
         UpdatePinToTopButton();
+        UpdateDoneTasksPolicyButton();
         UpdateReminderButton();
         ProtectionButton.Content = note.IsProtected ? Strings.RemoveProtection : Strings.ProtectNote;
         VisibleNameButton.Visibility = note.IsProtected ? Visibility.Visible : Visibility.Collapsed;
@@ -1379,7 +1380,7 @@ public partial class NoteWindow : Window
         _coordinator.PlaySound(SoundEvent.TaskChecked);
 
         int caret = TextBody.CaretIndex;
-        var settled = _settings is { MoveCompletedTasksToEnd: true } && !IsLinked
+        var settled = _settings is { } moveSettings && CompletedTasksPolicyRules.ShouldMoveToEnd(_note.CompletedTasks, moveSettings) && !IsLinked
             ? TaskLists.SettleToggled(toggled, glyphIndex)
             : TextEdit.Unchanged(toggled);
 
@@ -1529,6 +1530,7 @@ public partial class NoteWindow : Window
     {
         if (IsLinked) return;   // no se borran líneas del archivo solas (spec, decisión 4)
         if (_settings is not { AutoHideCompletedTasks: true } settings) return;
+        if (!CompletedTasksPolicyRules.MayDelete(_note.CompletedTasks, settings)) return;   // «se quedan» / «al final» nunca borran
         if (!_coordinator.TaskPruningAllowed) return;
         if (TextBody.IsKeyboardFocusWithin && DateTime.UtcNow - _lastBodyKeyAt < TypingGrace) return;
 
@@ -1866,6 +1868,22 @@ public partial class NoteWindow : Window
         ActionsPopup.IsOpen = false;
         _coordinator.RefreshAll();
     }
+
+    /// <summary>
+    /// Cicla «tareas hechas»: según mis ajustes → se quedan → bajan al final. Sin aviso emergente: el propio elemento del menú dice el estado.
+    /// El menú se queda abierto para ver el cambio de texto, como en cualquier conmutador. Ver <see cref="CompletedTasksPolicy"/>.
+    /// </summary>
+    private void OnDoneTasksPolicyClick(object sender, RoutedEventArgs e)
+    {
+        Flush();
+        _note.CompletedTasks = CompletedTasksPolicyRules.Next(_note.CompletedTasks);
+        _repository.SetCompletedTasksPolicy(_note.Id, _note.CompletedTasks);
+        UpdateDoneTasksPolicyButton();
+        _coordinator.RefreshAll();
+    }
+
+    private void UpdateDoneTasksPolicyButton() =>
+        DoneTasksPolicyButton.Content = Strings.DoneTasksPolicyLabel(_note.CompletedTasks);
 
     private void UpdatePinToTopButton() =>
         PinToTopButton.Content = _note.IsPinnedToTop ? Strings.UnpinFromTop : Strings.PinToTop;

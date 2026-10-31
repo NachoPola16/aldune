@@ -341,7 +341,8 @@ public static class SyncEnvelopeCodec
             ProtectedContent = note.ProtectedContent,
             ProtectedTitle = ProtectedTitleRules.Visible(note),
             DockPosition = note.DockPosition,
-            PinnedToTop = note.IsPinnedToTop
+            PinnedToTop = note.IsPinnedToTop,
+            CompletedTasks = note.CompletedTasks
         }, JsonOptions);
 
         try
@@ -462,6 +463,7 @@ public static class SyncEnvelopeCodec
             ProtectedTitle = payload.IsProtected ? ProtectedTitleRules.Normalize(payload.ProtectedTitle) : null,
             DockPosition = payload.DockPosition,
             IsPinnedToTop = payload.PinnedToTop,
+            CompletedTasks = CompletedTasksPolicyRules.Normalize(payload.CompletedTasks),
             IsUnlocked = !payload.IsProtected
         };
     }
@@ -504,6 +506,10 @@ public static class SyncEnvelopeCodec
         /// anterior (que no lo conoce) lo ignora. Ausente = no fijada.</summary>
         [System.Text.Json.Serialization.JsonIgnore(Condition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingDefault)]
         public bool PinnedToTop { get; set; }
+        /// <summary>Opcional, como <see cref="PinnedToTop"/>: solo se escribe si no es Default (0), así que el contenido de una nota sin el ajuste es
+        /// idéntico al de antes y una versión anterior lo ignora. Ausente = Default.</summary>
+        [System.Text.Json.Serialization.JsonIgnore(Condition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingDefault)]
+        public CompletedTasksPolicy CompletedTasks { get; set; }
     }
 }
 

@@ -428,6 +428,9 @@
     <string name="color_name_black">Noir</string>
     <string name="note_pin">Épingler en haut de la liste</string>
     <string name="note_unpin">Détacher du haut de la liste</string>
+    <string name="done_tasks_default">Tâches faites : selon mes réglages</string>
+    <string name="done_tasks_keep">Tâches faites : restent en place</string>
+    <string name="done_tasks_end">Tâches faites : descendent en bas</string>
     <string name="pinned_mark_cd">Épinglée en haut de la liste</string>
     <string name="existing_tags">Vos étiquettes</string>
 </resources>

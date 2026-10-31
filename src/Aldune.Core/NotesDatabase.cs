@@ -233,6 +233,8 @@ public sealed class NotesDatabase
             ["ProtectedTitle"] = "TEXT",
             // Fijada arriba (ver Note.IsPinnedToTop). Una base anterior la recibe con 0: ninguna nota fijada.
             ["PinnedToTop"] = "INTEGER NOT NULL DEFAULT 0",
+            // Política de tareas hechas de la nota (ver CompletedTasksPolicy). Una base anterior la recibe con 0 = Default.
+            ["CompletedTasks"] = "INTEGER NOT NULL DEFAULT 0",
             // Dispositivo que escribió la versión actual, si llegó por sincronización (NULL si se
             // editó aquí). Sin él, la copia local se firmaba con el id de este equipo y nunca
             // coincidía con la del almacén: ver SyncService.CreateLocalEnvelopes.

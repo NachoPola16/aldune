@@ -582,6 +582,24 @@ public static class Strings
         "Oben in der Liste anheften", "Épingler en haut de la liste", "Fixar no topo da lista");
     public static string UnpinFromTop => T("Unpin from the top of the list", "Quitar de arriba en la lista",
         "Von der Listenspitze lösen", "Détacher du haut de la liste", "Soltar do topo da lista");
+    // Ajuste de «tareas hechas» por nota (un elemento de menú que cicla; las dos últimas nunca borran). Ver CompletedTasksPolicy.
+    public static string DoneTasksFollowSettings => T("Done tasks: as in my settings", "Tareas hechas: según mis ajustes",
+        "Erledigte Aufgaben: wie in meinen Einstellungen", "Tâches faites : selon mes réglages", "Tarefas feitas: conforme minhas configurações");
+    public static string DoneTasksKeepInPlace => T("Done tasks: stay in place", "Tareas hechas: se quedan en su sitio",
+        "Erledigte Aufgaben: bleiben an ihrem Platz", "Tâches faites : restent en place", "Tarefas feitas: ficam no lugar");
+    public static string DoneTasksMoveToEnd => T("Done tasks: move to the bottom", "Tareas hechas: bajan al final",
+        "Erledigte Aufgaben: wandern nach unten", "Tâches faites : descendent en bas", "Tarefas feitas: descem para o fim");
+    public static string DoneTasksPolicyTooltip => T("Click to change. The last two never delete anything, even if another device deletes done tasks.",
+        "Pulsa para cambiar. Las dos últimas nunca borran nada, aunque otro dispositivo borre las tareas hechas.",
+        "Zum Ändern klicken. Die letzten beiden löschen nie etwas, auch wenn ein anderes Gerät erledigte Aufgaben löscht.",
+        "Cliquez pour changer. Les deux dernières ne suppriment jamais rien, même si un autre appareil supprime les tâches faites.",
+        "Clique para mudar. As duas últimas nunca apagam nada, mesmo que outro dispositivo apague as tarefas feitas.");
+    public static string DoneTasksPolicyLabel(Aldune.Core.CompletedTasksPolicy policy) => policy switch
+    {
+        Aldune.Core.CompletedTasksPolicy.KeepInPlace => DoneTasksKeepInPlace,
+        Aldune.Core.CompletedTasksPolicy.MoveToEnd => DoneTasksMoveToEnd,
+        _ => DoneTasksFollowSettings
+    };
     public static string PinnedToTopMarker => T("Pinned to the top of the list", "Fijada arriba en la lista",
         "Oben in der Liste angeheftet", "Épinglée en haut de la liste", "Fixada no topo da lista");
     public static string ProtectNote => T("Protect with password…", "Proteger con contraseña…",

@@ -840,6 +840,9 @@
                                 Click="OnTabMenuVisibleNameClick" Style="{StaticResource NoteMenuItemStyle}" />
                         <Button x:Name="TabMenuPinToTopButton" Click="OnTabMenuPinToTopClick"
                                 Style="{StaticResource NoteMenuItemStyle}" />
+                        <Button x:Name="TabMenuDoneTasksButton" Click="OnTabMenuDoneTasksClick"
+                                ToolTip="{x:Static res:Strings.DoneTasksPolicyTooltip}"
+                                Style="{StaticResource NoteMenuItemStyle}" />
                         <Button x:Name="TabMenuArchiveButton" Content="{x:Static res:Strings.Archive}"
                                 Click="OnTabMenuArchiveClick"
                                 Style="{StaticResource NoteMenuItemStyle}" />

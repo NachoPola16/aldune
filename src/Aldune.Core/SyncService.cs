@@ -791,6 +791,7 @@ public sealed class SyncService
             // Lo mismo con el resto de campos opcionales del contenido cifrado: sin ellos, rotar el código borraba en todos los
             // equipos el «fijada arriba» y el nombre visible de las protegidas (gana la versión más reciente, que era esta).
             IsPinnedToTop = note.IsPinnedToTop,
+            CompletedTasks = note.CompletedTasks,
             ProtectedTitle = note.ProtectedTitle
         };
         return SyncEnvelopeCodec.CreateNote(copy, key, deviceId);

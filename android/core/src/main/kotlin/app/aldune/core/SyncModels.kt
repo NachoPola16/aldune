@@ -67,4 +67,6 @@ data class SyncNote(
     val protectedTitle: String? = null,
     /** Fijada arriba de las listas. Opcional en el contenido cifrado: solo se escribe si es cierto y su ausencia es «no fijada». */
     val pinnedToTop: Boolean = false,
+    /** «Tareas hechas» de la nota: 0 según los ajustes del dispositivo, 1 mantener en su sitio, 2 bajar al final. Opcional: solo se escribe si no es 0. */
+    val completedTasks: Int = 0,
 )

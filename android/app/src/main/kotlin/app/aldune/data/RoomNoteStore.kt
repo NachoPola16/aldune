@@ -46,7 +46,7 @@ class RoomNoteStore(private val database: AldunaDatabase, private val cipher: No
             state = note.state.code, lineEnding = if (note.lineEnding == LineEnding.CRLF) 1 else 0,
             tags = JSONArray(note.tags).toString(), dockPosition = note.dockPosition, screenOrigin = note.screenOrigin,
             syncAuthorDeviceId = note.syncAuthorDeviceId, isProtected = note.isProtected, protectedContent = note.protectedContentJson,
-            protectedTitle = note.protectedTitle, pinnedToTop = note.pinnedToTop,
+            protectedTitle = note.protectedTitle, pinnedToTop = note.pinnedToTop, completedTasks = note.completedTasks,
         )
     }
 
@@ -60,7 +60,7 @@ class RoomNoteStore(private val database: AldunaDatabase, private val cipher: No
             state = NoteState.fromCode(row.state) ?: error("Estado de nota desconocido: ${row.state}"),
             tags = tags, dockPosition = row.dockPosition, screenOrigin = row.screenOrigin, syncAuthorDeviceId = row.syncAuthorDeviceId,
             isProtected = row.isProtected, protectedContentJson = row.protectedContent, protectedTitle = row.protectedTitle,
-            pinnedToTop = row.pinnedToTop,
+            pinnedToTop = row.pinnedToTop, completedTasks = row.completedTasks,
         )
     }
 }

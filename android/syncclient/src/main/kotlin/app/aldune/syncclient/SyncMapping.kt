@@ -92,6 +92,7 @@ fun toDomainNote(note: SyncNote, authorDeviceId: String): Note? {
         // Se normaliza al entrar, como en Windows: un nombre con saltos de línea o enorme no llega a la lista.
         protectedTitle = ProtectedTitleRules.visible(note.isProtected, note.protectedTitle),
         pinnedToTop = note.pinnedToTop,
+        completedTasks = note.completedTasks,
     )
 }
 
@@ -117,6 +118,7 @@ private fun Note.toSyncNote(): SyncNote {
         dockPosition = dockPosition,
         protectedTitle = ProtectedTitleRules.visible(isProtected, protectedTitle),
         pinnedToTop = pinnedToTop,
+        completedTasks = completedTasks,
     )
 }
 

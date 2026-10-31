@@ -29,6 +29,9 @@ public sealed class Note
     /// docs/specs/2026-10-31-pinned-notes-design.md.</summary>
     public bool IsPinnedToTop { get; set; }
 
+    /// <summary>Qué hace esta nota con sus tareas hechas (ver <see cref="CompletedTasksPolicy"/>). Viaja por la sync como campo opcional.</summary>
+    public CompletedTasksPolicy CompletedTasks { get; set; }
+
     public bool IsProtected { get; set; }
     public ProtectedNoteContent? ProtectedContent { get; set; }
     /// <summary>Nombre en claro que se enseña en lugar de «Nota protegida» (ver <see cref="ProtectedTitleRules"/>). Null = oculto.</summary>
