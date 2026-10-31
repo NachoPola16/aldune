@@ -1776,13 +1776,22 @@ public partial class EdgeDockWindow : Window
             border.SetResourceReference(Border.CornerRadiusProperty, "AlduneRadius6");
             _viewLabelPopup = new System.Windows.Controls.Primitives.Popup
             {
-                Child = border, AllowsTransparency = true, StaysOpen = true, Placement = PlacementMode.Center, IsHitTestVisible = false
+                Child = border, AllowsTransparency = true, StaysOpen = true, IsHitTestVisible = false
             };
             _viewLabelTimer.Tick += (_, _) => { _viewLabelTimer.Stop(); _viewLabelPopup.IsOpen = false; };
         }
 
         _viewLabelText!.Text = text;
-        _viewLabelPopup.PlacementTarget = TabsScroll;
+        // Junto al engranaje (donde está el punto) y hacia dentro de la pantalla: no tapa ninguna nota ni el pie. Decisión: el centro de las
+        // pestañas era lo más visible pero escondía justo las notas que cambian al girar la rueda.
+        _viewLabelPopup.PlacementTarget = ManageArchiveButton;
+        _viewLabelPopup.Placement = _edge switch
+        {
+            EdgePosition.Top => PlacementMode.Bottom,
+            EdgePosition.Bottom => PlacementMode.Top,
+            EdgePosition.Left => PlacementMode.Right,
+            _ => PlacementMode.Left
+        };
         _viewLabelPopup.IsOpen = true;
         _viewLabelTimer.Stop();
         _viewLabelTimer.Start();
