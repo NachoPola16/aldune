@@ -62,7 +62,7 @@ fun NoteActionsDialog(
         // Sin la barrita de arrastre: el contenido cabe (o se desplaza) y no hay más opciones «arriba»; con ella parecía que sí.
         ModalBottomSheet(onDismissRequest = onClose, sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true), dragHandle = null) {
                 // Con desplazamiento: en horizontal (o con letra grande) las acciones no caben y las últimas quedaban inalcanzables.
-                Column(Modifier.verticalScroll(rememberScrollState()).padding(horizontal = 24.dp).padding(bottom = 24.dp)) {
+                Column(Modifier.verticalScroll(rememberScrollState()).padding(horizontal = 24.dp).padding(top = 12.dp, bottom = 24.dp)) {
                     Text(
                         item.title, Modifier.padding(bottom = 4.dp).semantics { heading() }, style = MaterialTheme.typography.titleLarge,
                         maxLines = 1, overflow = TextOverflow.Ellipsis,

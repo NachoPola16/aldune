@@ -117,8 +117,10 @@ fun SettingsScreen(viewModel: NotesViewModel, onClose: () -> Unit) {
     fun inTab(index: Int) = !tabs || tab == index
 
     // En una pantalla ancha (tableta) los ajustes van en una columna centrada, no estirados a todo el ancho.
+    // En horizontal (poca altura) las pestañas caben en una sola fila, ancha: en dos filas se comían casi la mitad de la pantalla.
+    val shortScreen = androidx.compose.ui.platform.LocalConfiguration.current.screenHeightDp < 480
     Column(Modifier.fillMaxSize().safeDrawingPadding(), horizontalAlignment = Alignment.CenterHorizontally) {
-        Column(Modifier.widthIn(max = 640.dp).fillMaxWidth()) {
+        Column(Modifier.widthIn(max = if (shortScreen) 840.dp else 640.dp).fillMaxWidth()) {
             Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
                 IconButton(onClick = onClose) { Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.back)) }
                 Text(stringResource(R.string.settings), style = MaterialTheme.typography.titleLarge)
@@ -134,7 +136,8 @@ fun SettingsScreen(viewModel: NotesViewModel, onClose: () -> Unit) {
                 // la derecha. Cada chip ocupa el mismo ancho y la última fila se completa con huecos, así que queda ordenada con 4, 6, 7 u 8 pestañas.
                 val selectedTab = tab.coerceAtMost(labels.lastIndex)
                 Column(Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 4.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    labels.withIndex().chunked(TAB_COLUMNS).forEach { row ->
+                    val columns = if (shortScreen) labels.size else TAB_COLUMNS
+                    labels.withIndex().chunked(columns).forEach { row ->
                         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                             for ((index, label) in row) {
                                 FilterChip(
@@ -142,7 +145,7 @@ fun SettingsScreen(viewModel: NotesViewModel, onClose: () -> Unit) {
                                     label = { Text(stringResource(label), Modifier.fillMaxWidth(), textAlign = TextAlign.Center, maxLines = 1, overflow = TextOverflow.Ellipsis) },
                                 )
                             }
-                            repeat(TAB_COLUMNS - row.size) { Spacer(Modifier.weight(1f)) }
+                            repeat(columns - row.size) { Spacer(Modifier.weight(1f)) }
                         }
                     }
                 }

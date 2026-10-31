@@ -509,7 +509,7 @@ fun NoteEditorPane(key: String, viewModel: NotesViewModel, onBack: () -> Unit, s
             val titleEnabled = loaded && (!protectedNote || unlocked)
             BasicTextField(
                 state = title, enabled = titleEnabled, lineLimits = TextFieldLineLimits.SingleLine,
-                modifier = Modifier.weight(1f).padding(horizontal = 4.dp).focusProperties { this.canFocus = canFocus }.focusRequester(titleFocus),
+                modifier = Modifier.weight(1f).padding(start = if (showBack) 4.dp else TASK_DRAG_PAD_START, end = 4.dp).focusProperties { this.canFocus = canFocus }.focusRequester(titleFocus),
                 textStyle = MaterialTheme.typography.titleMedium.copy(color = ink),
                 cursorBrush = SolidColor(ink),
                 keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
