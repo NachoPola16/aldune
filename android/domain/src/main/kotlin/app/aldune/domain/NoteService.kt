@@ -188,6 +188,34 @@ class NoteService(
 
     private fun tagColor(tag: String): String? = tagColors.entries.firstOrNull { it.key.equals(tag, ignoreCase = true) }?.value
 
+    private fun hasTag(note: Note, tag: String) = note.tags.any { it.equals(tag, ignoreCase = true) }
+
+    /**
+     * Renames [from] to [to] in every note that carries it (any state). It is not «gaining» a tag, so colours do not change. A name that is
+     * empty changes nothing. Returns how many notes changed.
+     */
+    fun renameTag(from: String, to: String): Int = synchronized(lock) {
+        val name = to.trimDotNet()
+        if (name.isEmpty()) return 0
+        store.all().filter { hasTag(it, from) }.count { note ->
+            val renamed = normalizeTags(note.tags.map { if (it.equals(from, ignoreCase = true)) name else it })
+            change(note.id) { if (it.tags == renamed) it else it.copy(tags = renamed) } is NoteResult.Ok
+        }
+    }
+
+    /** Takes [tag] off every note that carries it (the notes stay). Returns how many notes changed. */
+    fun removeTag(tag: String): Int = synchronized(lock) {
+        store.all().filter { hasTag(it, tag) }.count { note ->
+            val rest = note.tags.filterNot { it.equals(tag, ignoreCase = true) }
+            change(note.id) { it.copy(tags = rest) } is NoteResult.Ok
+        }
+    }
+
+    /** Sends to the trash the active and archived notes that carry [tag] (they keep it, so restoring brings both back). Returns how many. */
+    fun trashNotesWithTag(tag: String): Int = synchronized(lock) {
+        store.all().filter { it.state != NoteState.TRASHED && hasTag(it, tag) }.count { trash(it.id) is NoteResult.Ok }
+    }
+
     /** Paints the active and archived notes that carry [tag] with [color] (the notes' own colour, so it syncs); trashed ones are left alone. */
     fun applyTagColor(tag: String, color: String) = synchronized(lock) {
         store.all()

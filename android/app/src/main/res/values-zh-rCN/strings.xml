@@ -483,6 +483,16 @@
     <string name="tag_move_down">将 %1$s 下移</string>
     <string name="tag_colour">%1$s 的颜色：其便笺会采用</string>
     <string name="tag_colour_none">无颜色</string>
+    <string name="tag_options_cd">%1$s 的选项</string>
+    <string name="tag_rename">重命名</string>
+    <string name="tag_rename_title">重命名标签</string>
+    <string name="tag_new_name">新名称</string>
+    <string name="tag_remove">删除标签（保留便笺）</string>
+    <string name="tag_remove_with_notes">删除标签及其便笺</string>
+    <string name="tag_remove_confirm">从所有便笺中移除标签“%1$s”？便笺会保留。</string>
+    <string name="tag_remove_notes_confirm">将带有标签“%1$s”的所有便笺移到回收站？可以从回收站恢复。</string>
+    <string name="tag_confirm_remove">移除</string>
+    <string name="tag_confirm_trash">移到回收站</string>
     <string name="show_tag_hash">在标签前显示 #</string>
     <string name="show_tag_hash_hint">关闭：用小标签图标代替 #。</string>
     <string name="group_by_tag">按标签分组“全部便笺”</string>

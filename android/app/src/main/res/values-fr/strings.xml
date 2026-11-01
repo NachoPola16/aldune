@@ -483,6 +483,16 @@
     <string name="tag_move_down">Descendre %1$s</string>
     <string name="tag_colour">Couleur de %1$s : ses notes la prennent</string>
     <string name="tag_colour_none">Sans couleur</string>
+    <string name="tag_options_cd">Options de %1$s</string>
+    <string name="tag_rename">Renommer</string>
+    <string name="tag_rename_title">Renommer le tag</string>
+    <string name="tag_new_name">Nouveau nom</string>
+    <string name="tag_remove">Supprimer le tag (les notes restent)</string>
+    <string name="tag_remove_with_notes">Supprimer le tag et ses notes</string>
+    <string name="tag_remove_confirm">Retirer le tag « %1$s » de toutes ses notes ? Les notes restent.</string>
+    <string name="tag_remove_notes_confirm">Déplacer à la corbeille toutes les notes avec le tag « %1$s » ? Vous pouvez les y restaurer.</string>
+    <string name="tag_confirm_remove">Retirer</string>
+    <string name="tag_confirm_trash">Mettre à la corbeille</string>
     <string name="show_tag_hash">Afficher # devant les étiquettes</string>
     <string name="show_tag_hash_hint">Désactivé : une petite icône d\'étiquette à la place du #.</string>
     <string name="group_by_tag">Grouper « Toutes les notes » par étiquette</string>

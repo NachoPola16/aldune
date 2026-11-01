@@ -425,6 +425,32 @@ class NotesViewModel(application: Application) : AndroidViewModel(application) {
         launchIo { refresh() }
     }
 
+    /** Renames a tag in every note; its colour and its place in the order go with it. */
+    fun renameTag(from: String, to: String) {
+        val name = to.trim()
+        if (name.isEmpty() || name == from) return
+        updateSettings { st ->
+            val colour = TagColors.decode(st.tagColors).entries.firstOrNull { it.key.equals(from, ignoreCase = true) }?.value
+            val colours = TagColors.with(TagColors.with(TagColors.decode(st.tagColors), from, null), name, colour)
+            val order = TagOrder.decode(st.tagOrder).map { if (it.equals(from, ignoreCase = true)) name else it }
+            st.copy(tagColors = TagColors.encode(colours), tagOrder = TagOrder.encode(order))
+        }
+        if (_state.value.let { it is UiState.Ready && it.tag.equals(from, ignoreCase = true) }) setTag(name)
+        change { it.renameTag(from, name) }
+    }
+
+    /** Deletes a tag: it is taken off its notes, or (with [withNotes]) its notes go to the trash, where they can be restored. */
+    fun deleteTag(tag: String, withNotes: Boolean) {
+        updateSettings { st ->
+            st.copy(
+                tagColors = TagColors.encode(TagColors.with(TagColors.decode(st.tagColors), tag, null)),
+                tagOrder = TagOrder.encode(TagOrder.decode(st.tagOrder).filterNot { it.equals(tag, ignoreCase = true) }),
+            )
+        }
+        if (_state.value.let { it is UiState.Ready && it.tag.equals(tag, ignoreCase = true) }) setTag(null)
+        change { if (withNotes) it.trashNotesWithTag(tag) else it.removeTag(tag) }
+    }
+
     /** Sets or removes (null) the colour of a tag. Setting one paints the notes that carry it; removing it leaves them as they are. */
     fun setTagColor(tag: String, color: String?) {
         updateSettings { it.copy(tagColors = TagColors.encode(TagColors.with(TagColors.decode(it.tagColors), tag, color))) }

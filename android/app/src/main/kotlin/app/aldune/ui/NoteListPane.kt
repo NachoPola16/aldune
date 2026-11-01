@@ -31,6 +31,7 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.navigationBarsPadding
@@ -48,6 +49,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.KeyboardArrowDown
@@ -430,14 +432,19 @@ fun NoteListPane(
                     tagDragDelta -= (newOffset - me.offset)
                 }
 
-                // Folding the groups moves the header that is being dragged (the ones above it shrink): it is put back under the finger.
+                // Folding the groups moves the header that is being dragged (the ones above it shrink). The folded list is pushed down by that much,
+                // so the slot of the dragged header stays where the finger is and the other slots are where they look to be (moving the header alone
+                // under the finger made it overlap the slot of its neighbour and swap with it the wrong way).
                 var tagDragStartOffset by remember { androidx.compose.runtime.mutableIntStateOf(0) }
+                var tagDragPad by remember { mutableFloatStateOf(0f) }
+                // The tag whose options are open (rename / delete…).
+                var tagMenu by remember { mutableStateOf<String?>(null) }
                 LaunchedEffect(tagDrag) {
-                    val key = tagDrag ?: return@LaunchedEffect
+                    val key = tagDrag ?: run { tagDragPad = 0f; return@LaunchedEffect }
                     androidx.compose.runtime.withFrameNanos { }
                     androidx.compose.runtime.withFrameNanos { }
                     val now = listState.layoutInfo.visibleItemsInfo.firstOrNull { it.key == key } ?: return@LaunchedEffect
-                    tagDragDelta += (tagDragStartOffset - now.offset)
+                    tagDragPad = (tagDragStartOffset - now.offset).coerceAtLeast(0).toFloat()
                 }
 
                 fun tagDragEnd(save: Boolean) {
@@ -485,10 +492,18 @@ fun NoteListPane(
                     if (plan != null) viewModel.moveNote(id, plan.before, plan.after) else order = state.items
                 }
 
+                tagMenu?.let { tag ->
+                    TagOptionsDialogs(
+                        tag, onDismiss = { tagMenu = null },
+                        onRename = { to -> viewModel.renameTag(tag, to) },
+                        onDelete = { withNotes -> viewModel.deleteTag(tag, withNotes) },
+                    )
+                }
+
                 // El margen de abajo deja la última nota por encima del «+» al llegar al final de la lista.
                 LazyColumn(
                     Modifier.fillMaxSize(), state = listState, verticalArrangement = Arrangement.spacedBy(8.dp),
-                    contentPadding = androidx.compose.foundation.layout.PaddingValues(bottom = 16.dp),
+                    contentPadding = androidx.compose.foundation.layout.PaddingValues(top = with(LocalDensity.current) { tagDragPad.toDp() }, bottom = 16.dp),
                 ) {
                     items(entries, key = { it.key }) { entry ->
                       when (entry) {
@@ -499,19 +514,36 @@ fun NoteListPane(
                                 entry,
                                 modifier = (if (headerDragging) Modifier.zIndex(1f).graphicsLayer { translationY = tagDragDelta } else Modifier.animateItem())
                                     .then(
-                                        if (draggable) Modifier.pointerInput(entry.key, groupOrder) {
+                                        Modifier.pointerInput(entry.key, groupOrder) {
+                                            // Holding a header and moving it reorders the tags. The folding of the groups waits for the first
+                                            // movement, so a plain hold does not flicker the list. The options of the tag are the three dots.
+                                            var started = false
+                                            var travelled = 0f
                                             detectDragGesturesAfterLongPress(
                                                 onDragStart = {
                                                     haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                                                    tagDragStartOffset = listState.layoutInfo.visibleItemsInfo.firstOrNull { it.key == entry.key }?.offset ?: 0
-                                                    tagDrag = entry.key; tagDragDelta = 0f; tagDragStart = groupOrder; tagDragOrder = groupOrder
+                                                    started = false; travelled = 0f
                                                 },
-                                                onDrag = { change, amount -> change.consume(); tagDragDelta += amount.y; swapTagUnderDrag() },
-                                                onDragEnd = { tagDragEnd(save = true) },
-                                                onDragCancel = { tagDragEnd(save = false) },
+                                                onDrag = { change, amount ->
+                                                    change.consume()
+                                                    if (!started) {
+                                                        travelled += amount.y
+                                                        if (draggable && kotlin.math.abs(travelled) > viewConfiguration.touchSlop) {
+                                                            started = true
+                                                            tagDragStartOffset = listState.layoutInfo.visibleItemsInfo.firstOrNull { it.key == entry.key }?.offset ?: 0
+                                                            tagDrag = entry.key; tagDragDelta = travelled; tagDragStart = groupOrder; tagDragOrder = groupOrder
+                                                        }
+                                                    } else {
+                                                        tagDragDelta += amount.y
+                                                        swapTagUnderDrag()
+                                                    }
+                                                },
+                                                onDragEnd = { if (started) tagDragEnd(save = true) },
+                                                onDragCancel = { if (started) tagDragEnd(save = false) },
                                             )
-                                        } else Modifier,
+                                        },
                                     ),
+                                onMenu = if (entry.key != TagGrouping.UNTAGGED) ({ tagMenu = entry.title }) else null,
                             ) { collapsed = if (entry.key in collapsed) collapsed - entry.key else collapsed + entry.key }
                         }
                         is ListEntry.Note -> {
@@ -1137,19 +1169,77 @@ private sealed interface ListEntry {
 
 
 @Composable
-private fun GroupHeader(header: ListEntry.Header, modifier: Modifier = Modifier, onToggle: () -> Unit) {
+private fun GroupHeader(header: ListEntry.Header, modifier: Modifier = Modifier, onMenu: (() -> Unit)? = null, onToggle: () -> Unit) {
     val state = stringResource(if (header.open) R.string.group_expanded else R.string.group_collapsed)
-    Row(
-        modifier.fillMaxWidth().clickable(onClick = onToggle).padding(start = 16.dp, end = 8.dp)
-            .semantics(mergeDescendants = true) { heading(); stateDescription = state },
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        Text(if (header.open) "▾" else "▸", Modifier.padding(end = 8.dp), style = MaterialTheme.typography.titleMedium)
-        Text(header.title, Modifier.weight(1f), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
-        // The same 48 dp box and 8 dp margin as the check and the arrow of the two bars above (the tags' IconButton), so the counts sit in the same column.
-        Box(Modifier.width(48.dp).height(48.dp), contentAlignment = Alignment.Center) {
+    Row(modifier.fillMaxWidth().padding(start = 16.dp, end = 8.dp), verticalAlignment = Alignment.CenterVertically) {
+        // Arrow, title and count are one thing to tap (fold or unfold) and to read aloud; the options button is its own, so TalkBack keeps both.
+        Row(
+            Modifier.weight(1f).heightIn(min = 48.dp).clickable(onClick = onToggle).semantics(mergeDescendants = true) { heading(); stateDescription = state },
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Text(if (header.open) "▾" else "▸", Modifier.padding(end = 8.dp), style = MaterialTheme.typography.titleMedium)
+            Text(header.title, Modifier.weight(1f), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
             Text(header.count.toString(), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        }
+        // A 48 dp column on the right with the options of the tag (three dots); the headers without options («No tag») leave it empty, so every count
+        // stays in the same column.
+        Box(Modifier.width(48.dp).height(48.dp), contentAlignment = Alignment.Center) {
+            if (onMenu != null) {
+                val cd = stringResource(R.string.tag_options_cd, header.title)
+                IconButton(onClick = onMenu, Modifier.semantics { contentDescription = cd }) { Icon(Icons.Filled.MoreVert, null) }
+            }
         }
     }
 }
 
+/**
+ * The options of a tag: rename it, delete it (the notes stay) or delete it with its notes (they go to the trash and can be restored). The two
+ * deletions ask first: they touch many notes at once.
+ */
+@Composable
+private fun TagOptionsDialogs(tag: String, onDismiss: () -> Unit, onRename: (String) -> Unit, onDelete: (withNotes: Boolean) -> Unit) {
+    var step by remember(tag) { mutableStateOf(0) } // 0 menu, 1 rename, 2 confirm delete, 3 confirm delete with notes
+    // The name starts selected, so typing replaces it.
+    var typed by remember(tag) { mutableStateOf(androidx.compose.ui.text.input.TextFieldValue(tag, androidx.compose.ui.text.TextRange(0, tag.length))) }
+    val nameFocus = remember { androidx.compose.ui.focus.FocusRequester() }
+    when (step) {
+        0 -> androidx.compose.material3.AlertDialog(
+            onDismissRequest = onDismiss,
+            title = { Text("#$tag") },
+            text = {
+                // No horizontal padding in the buttons: their text starts where the title does (the default padding indented it 12 dp).
+                val rowPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 0.dp, vertical = 12.dp)
+                Column {
+                    TextButton({ step = 1 }, Modifier.fillMaxWidth(), contentPadding = rowPadding) { Text(stringResource(R.string.tag_rename), Modifier.fillMaxWidth()) }
+                    TextButton({ step = 2 }, Modifier.fillMaxWidth(), contentPadding = rowPadding) { Text(stringResource(R.string.tag_remove), Modifier.fillMaxWidth()) }
+                    TextButton({ step = 3 }, Modifier.fillMaxWidth(), contentPadding = rowPadding) { Text(stringResource(R.string.tag_remove_with_notes), Modifier.fillMaxWidth(), color = MaterialTheme.colorScheme.error) }
+                }
+            },
+            confirmButton = { TextButton(onDismiss) { Text(stringResource(R.string.cancel)) } },
+        )
+        1 -> androidx.compose.material3.AlertDialog(
+            onDismissRequest = onDismiss,
+            title = { Text(stringResource(R.string.tag_rename_title)) },
+            text = {
+                androidx.compose.material3.OutlinedTextField(
+                    typed, { typed = it.copy(text = it.text.replace("\n", " ")) }, Modifier.focusRequester(nameFocus), singleLine = true,
+                    label = { Text(stringResource(R.string.tag_new_name)) },
+                )
+                LaunchedEffect(Unit) { nameFocus.requestFocus() }
+            },
+            confirmButton = { TextButton({ onRename(typed.text); onDismiss() }, enabled = typed.text.isNotBlank() && typed.text.trim() != tag) { Text(stringResource(R.string.tag_rename)) } },
+            dismissButton = { TextButton(onDismiss) { Text(stringResource(R.string.cancel)) } },
+        )
+        else -> androidx.compose.material3.AlertDialog(
+            onDismissRequest = onDismiss,
+            title = { Text("#$tag") },
+            text = { Text(stringResource(if (step == 2) R.string.tag_remove_confirm else R.string.tag_remove_notes_confirm, tag)) },
+            confirmButton = {
+                TextButton({ onDelete(step == 3); onDismiss() }) {
+                    Text(stringResource(if (step == 2) R.string.tag_confirm_remove else R.string.tag_confirm_trash), color = MaterialTheme.colorScheme.error)
+                }
+            },
+            dismissButton = { TextButton(onDismiss) { Text(stringResource(R.string.cancel)) } },
+        )
+    }
+}

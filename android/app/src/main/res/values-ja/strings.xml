@@ -483,6 +483,16 @@
     <string name="tag_move_down">%1$s を下へ移動</string>
     <string name="tag_colour">%1$s の色：そのノートが採用します</string>
     <string name="tag_colour_none">色なし</string>
+    <string name="tag_options_cd">%1$s のオプション</string>
+    <string name="tag_rename">名前を変更</string>
+    <string name="tag_rename_title">タグの名前を変更</string>
+    <string name="tag_new_name">新しい名前</string>
+    <string name="tag_remove">タグを削除（ノートは残る）</string>
+    <string name="tag_remove_with_notes">タグとそのノートを削除</string>
+    <string name="tag_remove_confirm">すべてのノートからタグ「%1$s」を外しますか？ノートは残ります。</string>
+    <string name="tag_remove_notes_confirm">タグ「%1$s」の付いたノートをすべてゴミ箱に移動しますか？ゴミ箱から復元できます。</string>
+    <string name="tag_confirm_remove">外す</string>
+    <string name="tag_confirm_trash">ゴミ箱へ移動</string>
     <string name="show_tag_hash">タグの前に # を表示</string>
     <string name="show_tag_hash_hint">オフ: # の代わりに小さなタグアイコンを表示します。</string>
     <string name="group_by_tag">「すべてのノート」をタグでグループ化</string>

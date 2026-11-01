@@ -483,6 +483,16 @@
     <string name="tag_move_down">Sposta %1$s giù</string>
     <string name="tag_colour">Colore di %1$s: le note lo assumono</string>
     <string name="tag_colour_none">Nessun colore</string>
+    <string name="tag_options_cd">Opzioni di %1$s</string>
+    <string name="tag_rename">Rinomina</string>
+    <string name="tag_rename_title">Rinomina etichetta</string>
+    <string name="tag_new_name">Nuovo nome</string>
+    <string name="tag_remove">Elimina etichetta (le note restano)</string>
+    <string name="tag_remove_with_notes">Elimina etichetta e le sue note</string>
+    <string name="tag_remove_confirm">Rimuovere l\'etichetta “%1$s” da tutte le sue note? Le note restano.</string>
+    <string name="tag_remove_notes_confirm">Spostare nel cestino tutte le note con l\'etichetta “%1$s”? Da lì si possono ripristinare.</string>
+    <string name="tag_confirm_remove">Rimuovi</string>
+    <string name="tag_confirm_trash">Sposta nel cestino</string>
     <string name="show_tag_hash">Mostra # davanti alle etichette</string>
     <string name="show_tag_hash_hint">Disattivato: una piccola icona di etichetta al posto del #.</string>
     <string name="group_by_tag">Raggruppa «Tutte le note» per etichetta</string>

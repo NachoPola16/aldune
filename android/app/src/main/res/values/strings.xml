@@ -483,6 +483,16 @@
     <string name="tag_move_down">Move %1$s down</string>
     <string name="tag_colour">Colour of %1$s: its notes take it</string>
     <string name="tag_colour_none">No colour</string>
+    <string name="tag_options_cd">Options for %1$s</string>
+    <string name="tag_rename">Rename</string>
+    <string name="tag_rename_title">Rename tag</string>
+    <string name="tag_new_name">New name</string>
+    <string name="tag_remove">Delete tag (the notes stay)</string>
+    <string name="tag_remove_with_notes">Delete tag and its notes</string>
+    <string name="tag_remove_confirm">Remove the tag “%1$s” from all its notes? The notes stay.</string>
+    <string name="tag_remove_notes_confirm">Move all notes tagged “%1$s” to the trash? You can restore them from there.</string>
+    <string name="tag_confirm_remove">Remove</string>
+    <string name="tag_confirm_trash">Move to trash</string>
     <string name="show_tag_hash">Show # before tags</string>
     <string name="show_tag_hash_hint">Off: a small tag icon instead of the #.</string>
     <string name="group_by_tag">Group \"All notes\" by tag</string>

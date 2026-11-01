@@ -483,6 +483,16 @@
     <string name="tag_move_down">%1$s nach unten</string>
     <string name="tag_colour">Farbe von %1$s: Notizen übernehmen sie</string>
     <string name="tag_colour_none">Keine Farbe</string>
+    <string name="tag_options_cd">Optionen für %1$s</string>
+    <string name="tag_rename">Umbenennen</string>
+    <string name="tag_rename_title">Tag umbenennen</string>
+    <string name="tag_new_name">Neuer Name</string>
+    <string name="tag_remove">Tag löschen (die Notizen bleiben)</string>
+    <string name="tag_remove_with_notes">Tag und seine Notizen löschen</string>
+    <string name="tag_remove_confirm">Das Tag „%1$s“ von allen Notizen entfernen? Die Notizen bleiben.</string>
+    <string name="tag_remove_notes_confirm">Alle Notizen mit dem Tag „%1$s“ in den Papierkorb verschieben? Dort lassen sie sich wiederherstellen.</string>
+    <string name="tag_confirm_remove">Entfernen</string>
+    <string name="tag_confirm_trash">In den Papierkorb</string>
     <string name="show_tag_hash"># vor Tags anzeigen</string>
     <string name="show_tag_hash_hint">Aus: ein kleines Tag-Symbol statt der #.</string>
     <string name="group_by_tag">„Alle Notizen“ nach Tag gruppieren</string>
