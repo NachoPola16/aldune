@@ -427,12 +427,24 @@ public partial class NotesManagerWindow : Window
     private Button MakeTagColorButton(string tag, StackPanel palette)
     {
         var current = _coordinator.TagColor(tag);
-        var dot = new Border
+        // No colour yet: a palette glyph (what the button is for); with one, the colour itself as a dot.
+        FrameworkElement dot;
+        if (current is null)
         {
-            Width = 16, Height = 16, CornerRadius = new CornerRadius(8), BorderThickness = new Thickness(1),
-            Background = current is null ? System.Windows.Media.Brushes.Transparent : (System.Windows.Media.Brush)new System.Windows.Media.BrushConverter().ConvertFromString(current)!
-        };
-        dot.SetResourceReference(Border.BorderBrushProperty, "AlduneTextFaintBrush");
+            var glyph = new TextBlock { Text = "", FontFamily = new FontFamily("Segoe Fluent Icons, Segoe MDL2 Assets"), FontSize = 14, HorizontalAlignment = HorizontalAlignment.Center, VerticalAlignment = VerticalAlignment.Center };
+            glyph.SetResourceReference(TextBlock.ForegroundProperty, "AlduneTextBrush");
+            dot = glyph;
+        }
+        else
+        {
+            var filled = new Border
+            {
+                Width = 16, Height = 16, CornerRadius = new CornerRadius(8), BorderThickness = new Thickness(1),
+                Background = (System.Windows.Media.Brush)new System.Windows.Media.BrushConverter().ConvertFromString(current)!
+            };
+            filled.SetResourceReference(Border.BorderBrushProperty, "AlduneTextFaintBrush");
+            dot = filled;
+        }
         var button = new Button
         {
             Content = dot, Width = 28, Height = 28, Margin = new Thickness(4, 0, 0, 0), VerticalAlignment = VerticalAlignment.Center,

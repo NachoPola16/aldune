@@ -88,10 +88,9 @@ fun AllTagsDialog(
                             val own = tagColors.entries.firstOrNull { it.key.equals(tag, ignoreCase = true) }?.value
                             val colourCd = stringResource(R.string.tag_colour, tag)
                             IconButton({ paletteFor = if (paletteFor.equals(tag, ignoreCase = true)) null else tag }, Modifier.semantics { contentDescription = colourCd }) {
-                                Box(
-                                    Modifier.size(20.dp).clip(CircleShape).background(own?.let { noteFace(it) } ?: Color.Transparent)
-                                        .border(1.dp, MaterialTheme.colorScheme.outline, CircleShape),
-                                )
+                                // No colour yet: a palette (what the button is for); with one, the colour itself as a dot.
+                                if (own == null) Icon(PaletteIcon, null, Modifier.size(22.dp))
+                                else Box(Modifier.size(20.dp).clip(CircleShape).background(noteFace(own)).border(1.dp, MaterialTheme.colorScheme.outline, CircleShape))
                             }
                             if (!searching) {
                                 val up = stringResource(R.string.tag_move_up, tag)
