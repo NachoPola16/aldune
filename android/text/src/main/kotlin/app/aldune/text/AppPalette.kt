@@ -186,11 +186,15 @@ object AppPalette {
      * que un valor guardado por una versión más nueva nunca deje la app sin paleta.
      */
     fun forMode(mode: Int, systemUsesLight: Boolean, aspectColors: Map<String, String>? = null): Map<String, String> = when (mode) {
-        PASTEL -> pastel
-        MIDNIGHT -> midnight
-        in XP_LIGHT..ALDUNE -> AspectPalettes.derive(mode, AspectCatalog.resolve(mode, aspectColors))
-        else -> if (isLight(mode, systemUsesLight)) light else dark
+        // The danger red is fitted last, to the final backgrounds and accent of whichever look was derived.
+        PASTEL -> DangerTokens.apply(pastel)
+        MIDNIGHT -> DangerTokens.apply(midnight)
+        in XP_LIGHT..ALDUNE -> DangerTokens.apply(AspectPalettes.derive(mode, AspectCatalog.resolve(mode, aspectColors)))
+        else -> if (isLight(mode, systemUsesLight)) lightFitted else darkFitted
     }
+
+    private val darkFitted: Map<String, String> by lazy { DangerTokens.apply(dark) }
+    private val lightFitted: Map<String, String> by lazy { DangerTokens.apply(light) }
 
     fun isLight(mode: Int, systemUsesLight: Boolean): Boolean = when (mode) {
         LIGHT, PASTEL, XP_LIGHT, TELECOM_LIGHT, TRAVEL_NOTEBOOK_LIGHT, FIELD_NOTEBOOK_LIGHT, GRID_NOTEBOOK_LIGHT -> true

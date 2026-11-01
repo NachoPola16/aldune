@@ -75,6 +75,30 @@ public class AppPaletteTests
         AssertContrast(p, "Text", "Hover", 4.5);
     }
 
+    // One red per palette: the danger tokens share a hue in every look, and their lightness is fitted to that look's own
+    // backgrounds (text 4.5:1, borders and icons 3:1), so a destructive action never reads as salmon or as a stray fixed red.
+    [Theory]
+    [MemberData(nameof(Palettes))]
+    public void DangerTokens_AreOneRedThatReadsOnTheirOwnSurfaces(string mode)
+    {
+        var p = Palette(mode);
+        foreach (var text in new[] { "DangerText", "ErrorText" })
+            foreach (var ground in new[] { "Ground", "Surface", "Raised", "Popup", "Hover", "DangerBg", "DangerHover" })
+                AssertContrast(p, text, ground, 4.5);
+        foreach (var ground in new[] { "Ground", "Surface", "Raised", "Popup" })
+            AssertContrast(p, "ErrorBorder", ground, 3.0);
+        AssertContrast(p, "OnDanger", "DangerStrong", 4.5);
+        AssertContrast(p, "OnDanger", "DangerStrongHover", 4.5);
+        AssertContrast(p, "OnDangerBg", "DangerBg", 4.5);
+        AssertContrast(p, "Text", "DangerBg", 4.5);
+
+        foreach (var key in new[] { "DangerText", "ErrorText", "ErrorBorder", "DangerStrong", "DangerBg", "OnDangerBg" })
+        {
+            Assert.True(OklchColor.TryFromHex(p[key], out var color));
+            Assert.InRange(color.H, 18, 38);
+        }
+    }
+
     // El botón "+" del dock lleva TextStrong sobre DockPrimary.
     [Theory]
     [MemberData(nameof(Palettes))]

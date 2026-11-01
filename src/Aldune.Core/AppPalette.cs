@@ -195,7 +195,10 @@ public static class AppPalette
         ["PromptPath"] = "#2F5F86",
     };
 
-    public static IReadOnlyDictionary<string, string> For(bool light) => light ? Light : Dark;
+    private static readonly Lazy<IReadOnlyDictionary<string, string>> DarkFitted = new(() => DangerTokens.Apply(Dark));
+    private static readonly Lazy<IReadOnlyDictionary<string, string>> LightFitted = new(() => DangerTokens.Apply(Light));
+
+    public static IReadOnlyDictionary<string, string> For(bool light) => light ? LightFitted.Value : DarkFitted.Value;
 
     // Fondos sobre los que puede caer el anillo del foco: la ventana, los paneles y el fondo de un botón en cada estado.
     private static readonly string[] FocusBackgrounds =
@@ -300,7 +303,14 @@ public static class AppPalette
     /// <param name="aspectColors">Colores elegidos para un aspecto retro (id de hueco → hex); los
     /// aspectos de siempre los ignoran, y lo que falta se completa con los de fábrica.</param>
     public static IReadOnlyDictionary<string, string> For(
-        AppearanceMode mode, bool windowsUsesLight, IReadOnlyDictionary<string, string>? aspectColors = null) => mode switch
+        AppearanceMode mode, bool windowsUsesLight, IReadOnlyDictionary<string, string>? aspectColors = null) =>
+        // The danger red is fitted last, to the final backgrounds and accent of whichever look was derived.
+        mode is AppearanceMode.Dark or AppearanceMode.Light or AppearanceMode.System
+            ? For(IsLight(mode, windowsUsesLight))
+            : DangerTokens.Apply(Derived(mode, windowsUsesLight, aspectColors));
+
+    private static IReadOnlyDictionary<string, string> Derived(
+        AppearanceMode mode, bool windowsUsesLight, IReadOnlyDictionary<string, string>? aspectColors) => mode switch
     {
         AppearanceMode.Pastel => Pastel.Value,
         AppearanceMode.Midnight => Midnight.Value,
