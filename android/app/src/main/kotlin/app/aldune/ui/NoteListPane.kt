@@ -1047,12 +1047,15 @@ private const val UNTAGGED_KEY = "\u0000untagged"
 private fun GroupHeader(header: ListEntry.Header, onToggle: () -> Unit) {
     val state = stringResource(if (header.open) R.string.group_expanded else R.string.group_collapsed)
     Row(
-        Modifier.fillMaxWidth().clickable(onClick = onToggle).padding(horizontal = 16.dp, vertical = 10.dp)
+        Modifier.fillMaxWidth().clickable(onClick = onToggle).padding(start = 16.dp, end = 8.dp)
             .semantics(mergeDescendants = true) { heading(); stateDescription = state },
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Text(if (header.open) "▾" else "▸", Modifier.padding(end = 8.dp), style = MaterialTheme.typography.titleMedium)
         Text(header.title, Modifier.weight(1f), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
-        Text(header.count.toString(), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        // The same 48 dp box and 8 dp margin as the check and the arrow of the two bars above (the tags' IconButton), so the counts sit in the same column.
+        Box(Modifier.width(48.dp).height(48.dp), contentAlignment = Alignment.Center) {
+            Text(header.count.toString(), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        }
     }
 }
