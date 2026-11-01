@@ -15,7 +15,8 @@
         <sys:Double x:Key="AlduneTextCaption">12</sys:Double> <!-- botones, filas y controles compactos -->
         <sys:Double x:Key="AlduneTextBody">13</sys:Double>    <!-- el texto normal y las etiquetas -->
         <sys:Double x:Key="AlduneTextLarge">14</sys:Double>   <!-- texto destacado -->
-        <sys:Double x:Key="AlduneTextTitle">15</sys:Double>   <!-- título de una página o sección -->
+        <sys:Double x:Key="AlduneTextTitle">15</sys:Double>   <!-- título de una sección -->
+        <sys:Double x:Key="AlduneTextPageTitle">20</sys:Double> <!-- title of a Settings page: clearly above its sections -->
         <sys:Double x:Key="AlduneTextHeading">17</sys:Double> <!-- título de una ventana o diálogo -->
         <!-- Base visual compartida. Los colores de cada nota siguen siendo independientes, pero el
              chrome de Aldune parte de estos mismos valores en todas las ventanas. -->

@@ -47,7 +47,7 @@ public static class ThemeManager
     private static readonly (string Key, double Size)[] TextSizes =
     [
         ("AlduneTextSmall", 11), ("AlduneTextCaption", 12), ("AlduneTextBody", 13), ("AlduneTextLarge", 14),
-        ("AlduneTextTitle", 15), ("AlduneTextHeading", 17),
+        ("AlduneTextTitle", 15), ("AlduneTextPageTitle", 20), ("AlduneTextHeading", 17),
     ];
 
     private const double NoteBodyBaseSize = 14;
