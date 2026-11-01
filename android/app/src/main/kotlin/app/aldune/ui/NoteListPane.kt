@@ -176,9 +176,11 @@ fun NoteListPane(
     androidx.activity.compose.BackHandler(enabled = picked.isNotEmpty()) { picked = emptySet() }
     LaunchedEffect(state.items) { if (picked.isNotEmpty()) picked = picked.filter { id -> state.items.any { it.id == id } }.toSet() }
 
-    // Reordenar (arrastrando o con Subir/Bajar) solo con la lista completa (sin búsqueda ni etiqueta): con un filtro, las vecinas que se ven no
-    // son las vecinas reales y el orden no se puede decidir.
-    val reorderable = state.query.isBlank() && state.tag == null && state.items.size > 1 && settingsNow.listOrder == 0 && !settingsNow.groupByTag
+    // Reordering (by dragging, or with Move up / Move down): in the plain list, in the view of one tag (the neighbours that are shown are what
+    // decides: the note is placed between them, and the order of the others is untouched), and inside each group of the grouped list. Not with
+    // a search: its results are not a list the user arranged.
+    val groupedReorder = state.query.isBlank() && state.tag == null && state.items.size > 1 && settingsNow.listOrder == 0 && settingsNow.groupByTag
+    val reorderable = state.query.isBlank() && state.items.size > 1 && settingsNow.listOrder == 0 && (state.tag != null || !settingsNow.groupByTag)
     val context = androidx.compose.ui.platform.LocalContext.current
 
     // Template read configuration-aware here and formatted when the note moves.
@@ -338,6 +340,8 @@ fun NoteListPane(
                 val haptic = LocalHapticFeedback.current
                 var order by remember { mutableStateOf(state.items) }
                 var draggedId by remember { mutableStateOf<String?>(null) }
+                // The key of the row being dragged: the note id in the plain list, `<group>/<id>` in the grouped one (a note can show under several tags).
+                var dragRowKey by remember { mutableStateOf<String?>(null) }
                 var dragDelta by remember { mutableFloatStateOf(0f) }
                 var dragStartIds by remember { mutableStateOf<List<String>>(emptyList()) }
                 // Mientras se arrastra manda el orden local; fuera del arrastre, el de la base.
@@ -401,28 +405,36 @@ fun NoteListPane(
                     if (listState.layoutInfo.visibleItemsInfo.any { RowKeys.shows(it.key, item.id) }) menuFor = item
                 }
 
-                fun dragStart(id: String) {
+                fun dragStart(id: String, rowKey: String) {
                     haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                     draggedId = id
+                    dragRowKey = rowKey
                     dragDelta = 0f
                     dragStartIds = order.map { it.id }
                 }
 
                 fun swapUnderDrag() {
                     val id = draggedId ?: return
+                    val rowKey = dragRowKey ?: return
                     val visible = listState.layoutInfo.visibleItemsInfo
+                    val noteIds = order.map { it.id }.toHashSet()
+                    fun idOf(key: Any): String? = (key as? String)?.substringAfterLast('/')?.takeIf { it in noteIds }
+                    fun groupOf(key: Any): String = (key as? String)?.substringBeforeLast('/', "") ?: ""
+                    // Only the rows of the group the note is dragged in (the whole list when it is not grouped) take part: a note does not
+                    // jump to another tag by being dragged over it.
+                    val rows = visible.filter { idOf(it.key) != null && groupOf(it.key) == groupOf(rowKey) }
                     // Tras un intercambio, la pantalla tarda un fotograma en recolocarse: sin esperar, el mismo gesto intercambiaría dos veces.
-                    val shown = visible.sortedBy { it.offset }.map { it.key }
+                    val shown = rows.sortedBy { it.offset }.mapNotNull { idOf(it.key) }
                     if (shown != order.map { it.id }.filter { it in shown }) return
-                    val me = visible.firstOrNull { it.key == id } ?: return
+                    val me = rows.firstOrNull { it.key == rowKey } ?: return
                     val center = me.offset + me.size / 2f + dragDelta
                     val pinned = order.firstOrNull { it.id == id }?.pinnedToTop ?: return
                     // Fijadas y no fijadas son dos grupos: arrastrar no cruza la frontera (las fijadas van siempre delante).
-                    val target = visible.firstOrNull {
-                        it.key != id && center >= it.offset && center <= it.offset + it.size && order.firstOrNull { n -> n.id == it.key }?.pinnedToTop == pinned
+                    val target = rows.firstOrNull {
+                        it.key != rowKey && center >= it.offset && center <= it.offset + it.size && order.firstOrNull { n -> n.id == idOf(it.key) }?.pinnedToTop == pinned
                     } ?: return
                     val from = order.indexOfFirst { it.id == id }
-                    val to = order.indexOfFirst { it.id == target.key }
+                    val to = order.indexOfFirst { it.id == idOf(target.key) }
                     if (from < 0 || to < 0) return
                     order = order.toMutableList().apply { add(to, removeAt(from)) }
                     // La nota arrastrada cambia de sitio en la lista: su desplazamiento se compensa para que siga bajo el dedo.
@@ -478,11 +490,12 @@ fun NoteListPane(
                 // loop per frame and not the drag callback). The scrolled distance goes into `dragDelta`: the row stays under the finger.
                 val edge = with(LocalDensity.current) { 72.dp.toPx() }
                 LaunchedEffect(draggedId) {
-                    val id = draggedId ?: return@LaunchedEffect
+                    draggedId ?: return@LaunchedEffect
                     while (true) {
                         androidx.compose.runtime.withFrameNanos { }
+                        val rowKey = dragRowKey ?: continue
                         val info = listState.layoutInfo
-                        val me = info.visibleItemsInfo.firstOrNull { it.key == id } ?: continue
+                        val me = info.visibleItemsInfo.firstOrNull { it.key == rowKey } ?: continue
                         val center = me.offset + me.size / 2f + dragDelta
                         val speed = 14f
                         val step = when {
@@ -504,6 +517,7 @@ fun NoteListPane(
                     val nowGroup = order.filter { it.pinnedToTop == pinned }.map { it.id }
                     val plan = ReorderPlan.neighbours(startGroup, startGroup.indexOf(id), nowGroup.indexOf(id))
                     draggedId = null
+                    dragRowKey = null
                     dragDelta = 0f
                     if (plan != null) viewModel.moveNote(id, plan.before, plan.after) else order = state.items
                 }
@@ -573,17 +587,17 @@ fun NoteListPane(
                         }
                         is ListEntry.Note -> {
                         val item = entry.item
-                        val dragging = draggedId == item.id
+                        val dragging = draggedId == item.id && dragRowKey == entry.key
                         // Mantener pulsada una nota: arrastrar la reordena y soltar sin mover abre su menú. En los dos casos el «soltar» no debe
                         // abrir la nota, que es lo que haría el toque de la fila al levantar el dedo.
                         val hold = remember(item.id) { PressHold() }
                         SwipeableRow(
                             modifier = (if (dragging) Modifier.zIndex(1f).graphicsLayer { translationY = dragDelta } else Modifier.animateItem())
                                 .then(
-                                    if (reorderable) Modifier.pointerInput(item.id) {
+                                    if (reorderable || groupedReorder) Modifier.pointerInput(item.id) {
                                         detectDragGesturesAfterLongPress(
                                             onDragStart = {
-                                                hold.active = true; hold.travelled = 0f; hold.menuShown = false; dragStart(item.id)
+                                                hold.active = true; hold.travelled = 0f; hold.menuShown = false; dragStart(item.id, entry.key)
                                                 val press = ++hold.press
                                                 // Si el dedo sigue quieto un momento tras la pulsación larga no se quiere recolocar la nota: el menú se
                                                 // abre sin esperar a levantarlo. Si se mueve antes, es un arrastre y el menú no sale.
@@ -1094,8 +1108,10 @@ private fun SyncIcon(icon: StatusIcon, description: String) {
 
 /** Un dedo que mantiene pulsada una fila: si ya abrió el menú o empezó a arrastrar, al levantarlo no se debe abrir la nota. */
 /** Cuánto aguanta el dedo quieto, tras la pulsación larga, para abrir el menú sin soltar. */
-// Tras la pulsación larga del sistema (~400 ms), cuánto esperar con el dedo quieto antes de abrir el menú (350 ms sumaban ~750 ms: se notaba lento).
-private const val MENU_HOLD_MS = 100L
+// After the system long press (~400 ms), how long a still finger waits before the menu opens on its own. 350 ms felt slow for whoever wants the
+// menu, 100 ms opened it on people who were only about to drag (the buzz tells them to go, and a reaction takes 200-300 ms): 300 ms is the
+// middle. Lifting the finger without moving opens it at once either way.
+private const val MENU_HOLD_MS = 300L
 private const val MENU_CALM_MS = 700L
 
 private class PressHold {
