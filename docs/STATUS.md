@@ -310,3 +310,5 @@ from the tree; it remains in git history (`docs/historia/STATUS-2026-09.md` and 
 
 The specs of already published phases are in `historia/specs/`; the phase reports and
 execution plans were removed from the tree (they remain in git history). The current ones remain in `specs/`.
+
+- **Windows 2.7.1 and Android 1.3.1 (2026-11-01):** the «Aldune» look (plum ink with the logo's pink, cyan and yellow) is the default for new installs; Windows dock polish (view label, pin ink, wheel bursts grouped, bevel only on square pieces, focus ring on keyboard only, wheel reaches Archived/Trash/All); Android: select several notes, update pop-up, caret kept off the task box, longer swipes, logo in About, widget limited to a tag and tickable tasks (`ToggleTaskAction` refuses a stale line), plural selection notices, roomier task lines with large boxes, the What's new window fixed on Android 8, lint clean. Server: `ALDUNE_SYNC_SPACES` hosts one separate store per token on a single URL (`SyncSpaces`, `docs/SYNC.md`). Verified on a Pixel (tasks, swipes, selection, looks) and on an emulator (widget). Decisions in `docs/ROADMAP.md`.
