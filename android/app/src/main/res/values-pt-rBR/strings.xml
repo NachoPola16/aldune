@@ -166,7 +166,7 @@
     <string name="sync_connected_to">Conectado a %1$s</string>
     <string name="sync_scope_all">Todas as notas são sincronizadas</string>
     <string name="sync_scope_tag">As notas com a etiqueta “%1$s” são sincronizadas</string>
-    <string name="sync_scope_chosen">%1$d notas escolhidas são sincronizadas</string>
+    <string name="sync_scope_chosen">Notas escolhidas sincronizadas (%1$d)</string>
     <string name="sync_now">Sincronizar agora</string>
     <string name="sync_disconnect">Desconectar</string>
     <string name="sync_disconnect_title">Desconectar do perfil?</string>
@@ -339,7 +339,7 @@
     <string name="hide_after_hour">1 hora</string>
     <string name="hide_after_day">1 dia</string>
     <string name="hide_after_week">1 semana</string>
-    <string name="hidden_tasks_show">Mostrar %1$d tarefas concluídas</string>
+    <string name="hidden_tasks_show">Mostrar tarefas concluídas (%1$d)</string>
     <string name="open_link">Abrir %1$s</string>
     <string name="whatsnew_title">Novidades do Aldune</string>
     <string name="whatsnew_ok">Entendi</string>
@@ -403,11 +403,11 @@
     <string name="backup_section">Cópia de segurança</string>
     <string name="export_all">Exportar todas as notas</string>
     <string name="export_all_hint">Um .zip com um arquivo Markdown por nota (ativas e arquivadas). As notas com senha ficam de fora: só podem ser lidas com a senha deles.</string>
-    <string name="export_all_done">%1$d notas exportadas.</string>
-    <string name="export_all_done_skipped">%1$d notas exportadas. %2$d protegidas ficaram de fora.</string>
+    <string name="export_all_done">Notas exportadas: %1$d.</string>
+    <string name="export_all_done_skipped">Notas exportadas: %1$d. Protegidas que ficaram de fora: %2$d.</string>
     <string name="export_all_empty">Não há notas para exportar.</string>
     <string name="export_all_failed">Não foi possível gravar o arquivo.</string>
-    <string name="export_all_omitted_file">%1$d notas protegidas por senha não foram exportadas: o conteúdo só pode ser lido com a senha.</string>
+    <string name="export_all_omitted_file">Notas protegidas por senha não exportadas: %1$d. O conteúdo só pode ser lido com a senha.</string>
     <string name="export_file_name">aldune-notas</string>
     <string name="no_backup_notice">Sem perfil de sincronização: suas notas só estão neste celular. Configure a sincronização ou exporte-as em Ajustes para ter uma cópia.</string>
     <string name="no_backup_dismiss">Não mostrar de novo</string>

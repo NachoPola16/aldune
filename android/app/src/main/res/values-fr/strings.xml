@@ -166,7 +166,7 @@
     <string name="sync_connected_to">Connecté à %1$s</string>
     <string name="sync_scope_all">Toutes les notes sont synchronisées</string>
     <string name="sync_scope_tag">Les notes avec l\'étiquette « %1$s » sont synchronisées</string>
-    <string name="sync_scope_chosen">%1$d notes choisies sont synchronisées</string>
+    <string name="sync_scope_chosen">Notes choisies synchronisées (%1$d)</string>
     <string name="sync_now">Synchroniser maintenant</string>
     <string name="sync_disconnect">Déconnecter</string>
     <string name="sync_disconnect_title">Déconnecter du profil ?</string>
@@ -339,7 +339,7 @@
     <string name="hide_after_hour">1 heure</string>
     <string name="hide_after_day">1 jour</string>
     <string name="hide_after_week">1 semaine</string>
-    <string name="hidden_tasks_show">Afficher %1$d tâches faites</string>
+    <string name="hidden_tasks_show">Afficher les tâches faites (%1$d)</string>
     <string name="open_link">Ouvrir %1$s</string>
     <string name="whatsnew_title">Nouveautés d\'Aldune</string>
     <string name="whatsnew_ok">Compris</string>
@@ -403,11 +403,11 @@
     <string name="backup_section">Sauvegarde</string>
     <string name="export_all">Exporter toutes les notes</string>
     <string name="export_all_hint">Un .zip avec un fichier Markdown par note (actives et archivées). Les notes protégées par mot de passe sont exclues : elles ne se lisent qu\'avec leur mot de passe.</string>
-    <string name="export_all_done">%1$d notes exportées.</string>
-    <string name="export_all_done_skipped">%1$d notes exportées. %2$d notes protégées exclues.</string>
+    <string name="export_all_done">Notes exportées : %1$d.</string>
+    <string name="export_all_done_skipped">Notes exportées : %1$d. Notes protégées exclues : %2$d.</string>
     <string name="export_all_empty">Il n\'y a aucune note à exporter.</string>
     <string name="export_all_failed">Impossible d\'écrire le fichier.</string>
-    <string name="export_all_omitted_file">%1$d notes protégées par mot de passe n\'ont pas été exportées : leur contenu ne se lit qu\'avec le mot de passe.</string>
+    <string name="export_all_omitted_file">Notes protégées par mot de passe non exportées : %1$d. Leur contenu ne se lit qu\'avec le mot de passe.</string>
     <string name="export_file_name">aldune-notes</string>
     <string name="no_backup_notice">Aucun profil de synchronisation : vos notes ne sont que sur ce téléphone. Configurez la synchronisation ou exportez-les depuis les Réglages pour en garder une copie.</string>
     <string name="no_backup_dismiss">Ne plus afficher</string>

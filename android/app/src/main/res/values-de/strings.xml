@@ -166,7 +166,7 @@
     <string name="sync_connected_to">Verbunden mit %1$s</string>
     <string name="sync_scope_all">Alle Notizen werden synchronisiert</string>
     <string name="sync_scope_tag">Notizen mit dem Tag „%1$s“ werden synchronisiert</string>
-    <string name="sync_scope_chosen">%1$d ausgewählte Notizen werden synchronisiert</string>
+    <string name="sync_scope_chosen">Ausgewählte Notizen werden synchronisiert (%1$d)</string>
     <string name="sync_now">Jetzt synchronisieren</string>
     <string name="sync_disconnect">Trennen</string>
     <string name="sync_disconnect_title">Vom Profil trennen?</string>
@@ -339,7 +339,7 @@
     <string name="hide_after_hour">1 Stunde</string>
     <string name="hide_after_day">1 Tag</string>
     <string name="hide_after_week">1 Woche</string>
-    <string name="hidden_tasks_show">%1$d erledigte Aufgaben anzeigen</string>
+    <string name="hidden_tasks_show">Erledigte Aufgaben anzeigen (%1$d)</string>
     <string name="open_link">%1$s öffnen</string>
     <string name="whatsnew_title">Neu in Aldune</string>
     <string name="whatsnew_ok">Verstanden</string>
@@ -403,11 +403,11 @@
     <string name="backup_section">Sicherung</string>
     <string name="export_all">Alle Notizen exportieren</string>
     <string name="export_all_hint">Eine .zip-Datei mit je einer Markdown-Datei pro Notiz (aktive und archivierte). Passwortgeschützte Notizen bleiben draußen: Sie sind nur mit ihrem Passwort lesbar.</string>
-    <string name="export_all_done">%1$d Notizen exportiert.</string>
-    <string name="export_all_done_skipped">%1$d Notizen exportiert. %2$d geschützte wurden ausgelassen.</string>
+    <string name="export_all_done">Exportierte Notizen: %1$d.</string>
+    <string name="export_all_done_skipped">Exportierte Notizen: %1$d. Ausgelassene geschützte Notizen: %2$d.</string>
     <string name="export_all_empty">Es gibt keine Notizen zum Exportieren.</string>
     <string name="export_all_failed">Die Datei konnte nicht geschrieben werden.</string>
-    <string name="export_all_omitted_file">%1$d passwortgeschützte Notizen wurden nicht exportiert: Ihr Inhalt ist nur mit dem Passwort lesbar.</string>
+    <string name="export_all_omitted_file">Nicht exportierte passwortgeschützte Notizen: %1$d. Ihr Inhalt ist nur mit dem Passwort lesbar.</string>
     <string name="export_file_name">aldune-notizen</string>
     <string name="no_backup_notice">Kein Sync-Profil: Deine Notizen liegen nur auf diesem Handy. Richte die Synchronisierung ein oder exportiere sie in den Einstellungen, um eine Kopie zu haben.</string>
     <string name="no_backup_dismiss">Nicht mehr anzeigen</string>
