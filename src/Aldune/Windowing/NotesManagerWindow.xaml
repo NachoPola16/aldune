@@ -386,8 +386,7 @@
                             Click="OnMaximizeClick"
                             WindowChrome.IsHitTestVisibleInChrome="True"
                             Style="{StaticResource TitleBarButtonStyle}">
-                        <TextBlock x:Name="MaximizeGlyph" Text="&#xE922;"
-                                   FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" FontSize="{DynamicResource AlduneTextSmall}" />
+                        <local:MaximizeGlyph x:Name="MaximizeGlyph" Ink="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}" />
                     </Button>
                     <Button x:Name="SettingsButton"
                             Content="&#xE713;"

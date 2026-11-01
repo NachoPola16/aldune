@@ -43,6 +43,7 @@ public partial class NotesManagerWindow : Window
     public NotesManagerWindow(NotesRepository repository, AppCoordinator coordinator, string? tagFilter = null)
     {
         InitializeComponent();
+        MaximizeHook.Install(this);
         // Con «Tamaño del texto» al 130 o 150 % la ventana crece con él (ver ThemeManager.ScaleWindowToText).
         ThemeManager.ScaleWindowToText(this);
         NativeMethods.CloakUntilFirstFrame(this);
@@ -637,6 +638,7 @@ public partial class NotesManagerWindow : Window
     {
         var monitor = MonitorLookup.MonitorAt(Left, Top, Width, Height, MonitorEnumerator.EnumerateMonitors());
         MaxHeight = (monitor?.WorkArea.Height ?? SystemParameters.WorkArea.Height) * 0.9;
+        MaxWidth = monitor?.WorkArea.Width ?? SystemParameters.WorkArea.Width;
     }
 
     private void OnWindowStateChanged(object? sender, EventArgs e)
@@ -650,8 +652,10 @@ public partial class NotesManagerWindow : Window
             MaximizeButton.ToolTip = WindowState == WindowState.Maximized
                 ? Strings.RestoreWindowTooltip
                 : Strings.MaximizeWindowTooltip;
-            MaximizeGlyph.Text = WindowState == WindowState.Maximized ? "\uE923" : "\uE922";
+            MaximizeGlyph.IsRestore = WindowState == WindowState.Maximized;
         }
+
+        if (WindowState == WindowState.Normal) RestoreNormalHeightLimit();
     }
 
     private void OnSettingsClick(object sender, RoutedEventArgs e)

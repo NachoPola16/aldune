@@ -173,7 +173,14 @@
                                     <Ellipse x:Name="DotInner" Width="8" Height="8" Fill="{DynamicResource AlduneTextBrush}"
                                              Visibility="Collapsed" HorizontalAlignment="Center" VerticalAlignment="Center" />
                                 </Border>
-                                <ContentPresenter Grid.Column="1" VerticalAlignment="Center" />
+                                <!-- Con el texto en varias líneas si no cabe: a 720 px, el ancho mínimo, «On the screen with the mouse» se cortaba. -->
+                                <ContentPresenter Grid.Column="1" VerticalAlignment="Center">
+                                    <ContentPresenter.Resources>
+                                        <Style TargetType="TextBlock">
+                                            <Setter Property="TextWrapping" Value="Wrap" />
+                                        </Style>
+                                    </ContentPresenter.Resources>
+                                </ContentPresenter>
                             </Grid>
                         </Border>
                         <ControlTemplate.Triggers>
@@ -277,8 +284,7 @@
                             Click="OnMaximizeClick"
                             WindowChrome.IsHitTestVisibleInChrome="True"
                             Style="{StaticResource CloseButtonStyle}">
-                        <TextBlock x:Name="MaximizeGlyph" Text="&#xE922;"
-                                   FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" FontSize="{DynamicResource AlduneTextSmall}" />
+                        <local:MaximizeGlyph x:Name="MaximizeGlyph" Ink="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}" />
                     </Button>
                     <Button Content="&#xE8BB;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" FontSize="10" Width="28" Height="28"
                             ToolTip="{x:Static res:Strings.CloseTooltip}"
@@ -650,8 +656,8 @@
                 </StackPanel>
                 <StackPanel x:Name="DockPage" Visibility="Collapsed">
                     <TextBlock Text="{x:Static res:Strings.SettingsPageDock}" Foreground="{DynamicResource AlduneTextStrongBrush}" FontSize="{DynamicResource AlduneTextTitle}" FontWeight="SemiBold" Margin="0,0,0,16" />
-                    <!-- Pantalla y borde lado a lado: son dos listas cortas de tarjetas y una encima de
-                         otra obligaban a desplazarse para llegar al resto de la página. -->
+                    <!-- Dos columnas equilibradas: a la izquierda pantalla y posición a lo largo del borde, a la derecha borde y rótulo
+                         de vista. Con todo el peso a la derecha quedaba la izquierda casi vacía. -->
                     <Grid>
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="*" />
@@ -665,6 +671,9 @@
                                        Foreground="{DynamicResource AlduneHintBrush}" FontSize="{DynamicResource AlduneTextSmall}" TextWrapping="Wrap" Margin="0,4,0,10" />
 
                             <StackPanel x:Name="MonitorListContainer" />
+                            <TextBlock Text="{x:Static res:Strings.AlignSectionTitle}" Margin="0,18,0,8"
+                                       Foreground="{DynamicResource AlduneTextBrush}" FontSize="{DynamicResource AlduneTextBody}" FontWeight="SemiBold" />
+                            <StackPanel x:Name="AlignListContainer" />
                         </StackPanel>
                         <StackPanel Grid.Column="2">
                             <TextBlock Text="{x:Static res:Strings.EdgeSectionTitle}"
@@ -673,9 +682,6 @@
                                        Foreground="{DynamicResource AlduneHintBrush}" FontSize="{DynamicResource AlduneTextSmall}" TextWrapping="Wrap" Margin="0,4,0,10" />
 
                             <StackPanel x:Name="EdgeListContainer" />
-                            <TextBlock Text="{x:Static res:Strings.AlignSectionTitle}" Margin="0,14,0,8"
-                                       Foreground="{DynamicResource AlduneTextBrush}" FontSize="{DynamicResource AlduneTextBody}" FontWeight="SemiBold" />
-                            <StackPanel x:Name="AlignListContainer" />
                             <TextBlock Text="{x:Static res:Strings.ViewLabelSectionTitle}" Margin="0,14,0,0"
                                        Foreground="{DynamicResource AlduneTextBrush}" FontSize="{DynamicResource AlduneTextBody}" FontWeight="SemiBold" />
                             <TextBlock Text="{x:Static res:Strings.ViewLabelHint}"

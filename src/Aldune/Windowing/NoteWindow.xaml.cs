@@ -88,6 +88,7 @@ public partial class NoteWindow : Window
         AppSettings? settings = null, string? protectionPassword = null)
     {
         InitializeComponent();
+        MaximizeHook.Install(this);
         NativeMethods.CloakUntilFirstFrame(this);
         _initialWidth = Width;
         _initialHeight = Height;
@@ -364,6 +365,7 @@ public partial class NoteWindow : Window
         TextBody.MouseMove += OnBodyMouseMove;
         TextBody.MouseLeave += OnBodyMouseLeave;
         TitleBox.PreviewKeyDown += OnTitleKeyDown;
+        TitleBox.PreviewMouseLeftButtonDown += OnTitleMouseDown;
 
         SourceInitialized += (_, _) =>
         {
@@ -1585,6 +1587,14 @@ public partial class NoteWindow : Window
     /// en vez de dejar que WindowChrome lo maneje solo como con el resto de la cabecera.</summary>
     private void OnGripMouseDown(object sender, MouseButtonEventArgs e)
     {
+        // El asa es un elemento normal y no la «caption» de WindowChrome, así que el doble clic de maximizar no llega solo.
+        if (e.ClickCount == 2)
+        {
+            e.Handled = true;
+            ToggleMaximized();
+            return;
+        }
+
         if (e.LeftButton == MouseButtonState.Pressed)
         {
             StopLayoutPositionAnimation();
@@ -1607,6 +1617,22 @@ public partial class NoteWindow : Window
                 _coordinator.RaiseDocksAboveNotes();
             }
         }
+    }
+
+    /// <summary>
+    /// El cuadro del título ocupa todo el ancho de la cabecera (así un clic en cualquier punto pone el cursor), y por eso el doble clic
+    /// de maximizar solo funcionaba en los márgenes. Ahora, un doble clic más allá del final del texto maximiza; sobre las letras
+    /// sigue seleccionando la palabra.
+    /// </summary>
+    private void OnTitleMouseDown(object sender, MouseButtonEventArgs e)
+    {
+        if (e.ClickCount != 2 || e.ChangedButton != MouseButton.Left) return;
+
+        double textEnd = TitleBox.Text.Length == 0 ? 0 : TitleBox.GetRectFromCharacterIndex(TitleBox.Text.Length).Right;
+        if (e.GetPosition(TitleBox).X <= textEnd + 6) return;
+
+        e.Handled = true;
+        ToggleMaximized();
     }
 
     private void OnCloseClick(object sender, RoutedEventArgs e) => CloseWithSound();
@@ -1649,7 +1675,7 @@ public partial class NoteWindow : Window
                 MaxHeight = double.PositiveInfinity;
                 MaxWidth = double.PositiveInfinity;
             }
-            MaximizeGlyph.Text = WindowState == WindowState.Maximized ? "\uE923" : "\uE922";
+            MaximizeGlyph.IsRestore = WindowState == WindowState.Maximized;
         }
         if (MaximizeButton is not null)
         {

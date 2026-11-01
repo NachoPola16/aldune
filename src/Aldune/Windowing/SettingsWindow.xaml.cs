@@ -105,6 +105,7 @@ public partial class SettingsWindow : Window
 
         SourceInitialized += (_, _) =>
             NativeMethods.ApplyRoundedCorners(new WindowInteropHelper(this).Handle);
+        MaximizeHook.Install(this);
     }
 
     private static readonly TimeSpan OpenDuration = TimeSpan.FromMilliseconds(180);
@@ -336,6 +337,7 @@ public partial class SettingsWindow : Window
     {
         var monitor = MonitorLookup.MonitorAt(Left, Top, Width, Height, MonitorEnumerator.EnumerateMonitors());
         MaxHeight = (monitor?.WorkArea.Height ?? SystemParameters.WorkArea.Height) * 0.9;
+        MaxWidth = monitor?.WorkArea.Width ?? SystemParameters.WorkArea.Width;
     }
 
     private void OnWindowStateChanged(object? sender, EventArgs e)
@@ -349,8 +351,11 @@ public partial class SettingsWindow : Window
             MaximizeButton.ToolTip = WindowState == WindowState.Maximized
                 ? Strings.RestoreWindowTooltip
                 : Strings.MaximizeWindowTooltip;
-            MaximizeGlyph.Text = WindowState == WindowState.Maximized ? "\uE923" : "\uE922";
+            MaximizeGlyph.IsRestore = WindowState == WindowState.Maximized;
         }
+
+        // Restaurada con el doble clic de la barra (no con el botón): el tope normal también hay que ponerlo.
+        if (WindowState == WindowState.Normal) RestoreNormalHeightLimit();
     }
 
     /// <summary>

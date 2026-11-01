@@ -2513,6 +2513,11 @@ public partial class EdgeDockWindow : Window
     internal void CenterOnThisMonitor(Window window)
     {
         window.MaxHeight = _workingArea.Height * 0.9;
+        // Y el ancho: Ajustes (900 px) en una pantalla pequeña o muy escalada (1280 px a 150 % son 853) se salía por la derecha. Los
+        // mínimos bajan con los máximos, para que un mínimo mayor que la pantalla no gane. (Maximizar quita estos topes: MaximizeHook.)
+        window.MaxWidth = _workingArea.Width;
+        window.MinWidth = Math.Min(window.MinWidth, window.MaxWidth);
+        window.MinHeight = Math.Min(window.MinHeight, window.MaxHeight);
 
         if (window.IsVisible) window.UpdateLayout();
 
