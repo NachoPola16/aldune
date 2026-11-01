@@ -135,6 +135,14 @@
     <string name="sync_edit_note">Sua chave de sincronização e suas notas permanecem como estão; nada é desconectado. Altere o endereço só se o servidor mudou (ele deve ter as mesmas notas). Deixe o token ou a senha em branco para manter o atual.</string>
     <string name="sync_edit_keep_hint">Vazio = manter o atual</string>
     <string name="sync_edit_save">Salvar</string>
+    <string name="sync_invite_hint">Ou cole um convite de quem hospeda um servidor compartilhado: você terá seu próprio espaço privado e a chave é criada neste celular.</string>
+    <string name="invite_profile_name">Servidor compartilhado</string>
+    <string name="invite_err_invalid">Esse convite não é válido: já foi usado, expirou ou está errado.</string>
+    <string name="invite_err_offline">O servidor não respondeu.</string>
+    <string name="invite_err_not_supported">Este servidor não tem convites: o dono precisa definir antes um token de administrador.</string>
+    <string name="invite_err_full">O servidor não pode criar mais espaços.</string>
+    <string name="invite_err_busy">Muitas tentativas. Tente de novo em um minuto.</string>
+    <string name="invite_err_server">O servidor retornou um erro.</string>
     <string name="sync_token_label">Token</string>
     <string name="sync_username_label">Usuário</string>
     <string name="sync_password_label">Senha de aplicativo</string>

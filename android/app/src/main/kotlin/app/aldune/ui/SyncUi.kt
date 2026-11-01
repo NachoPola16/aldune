@@ -59,6 +59,9 @@ import app.aldune.capture.CaptureRequest
 import app.aldune.core.ProfileCodes
 import app.aldune.data.SyncProfile
 import app.aldune.data.SyncTransportKind
+import app.aldune.sync.Invitations
+import app.aldune.sync.InviteException
+import app.aldune.sync.InviteFailure
 import app.aldune.sync.SyncScope
 import app.aldune.syncclient.isCleartextOutsideLan
 import app.aldune.syncclient.CredentialsCheck
@@ -79,7 +82,9 @@ import app.aldune.syncing.ConnectRequest
 import app.aldune.syncing.ConnectResult
 import app.aldune.syncing.SyncController
 import java.time.Instant
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.withContext
 import kotlinx.coroutines.launch
 
 /** La hora de ahora, refrescada cada 30 s: «hace 3 min» tiene que ir cambiando sin que ocurra nada más en pantalla. */
@@ -240,6 +245,7 @@ private fun ConnectForm(controller: SyncController, additional: Boolean, initial
     var discardRequest by remember { mutableStateOf<ConnectRequest?>(null) }
     var alreadyName by remember { mutableStateOf<String?>(null) }
     var publicHttpAccepted by remember { mutableStateOf(false) }
+    val inviteProfileName = stringResource(R.string.invite_profile_name)
 
     // Mientras el campo del código está a la vista (lleva la clave del perfil): ni capturas ni miniatura en Recientes. Solo en la app de
     // producción (en la de depuración se hacen capturas), y sin tocar el flag si ya lo puso otra pantalla (notas protegidas).
@@ -285,6 +291,7 @@ private fun ConnectForm(controller: SyncController, additional: Boolean, initial
                 keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.None, autoCorrectEnabled = false, keyboardType = KeyboardType.Ascii),
                 isError = errorText != null, supportingText = errorText?.let { { Text(stringResource(it)) } },
             )
+            Text(stringResource(R.string.sync_invite_hint), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
             // Pegar solo cuando se pulsa: Aldune no lee el portapapeles por su cuenta.
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 OutlinedButton(onClick = {
@@ -301,7 +308,26 @@ private fun ConnectForm(controller: SyncController, additional: Boolean, initial
                 }) { Text(stringResource(R.string.sync_paste)) }
                 OutlinedButton(onClick = { scanner.launch(Unit) }) { Text(stringResource(R.string.scan_qr)) }
             }
-            Button(onClick = {
+            Button(enabled = !busy, onClick = {
+                val invitation = Invitations.parse(code)
+                if (invitation != null) {
+                    busy = true; errorText = null; failureKind = null; alreadyName = null
+                    scope.launch {
+                        // El canje es red: fuera del hilo de la interfaz. La clave de sync se genera aquí y nunca sale del móvil.
+                        val redeemed = withContext(Dispatchers.IO) { runCatching { Invitations.redeem(invitation) } }
+                        val token = redeemed.getOrNull()
+                        if (token == null) {
+                            errorText = inviteErrorText((redeemed.exceptionOrNull() as? InviteException)?.failure)
+                            busy = false
+                        } else {
+                            val key = ByteArray(32).also { java.security.SecureRandom().nextBytes(it) }
+                            val share = app.aldune.core.SyncShareCodeData(key, ProfileCodes.SCOPE_ALL, emptyList(), profileName = inviteProfileName)
+                            busy = false
+                            connect(ConnectRequest(share, SyncTransportKind.SERVER, invitation.serverUrl, ProfileCredentials.Token(token)), null)
+                        }
+                    }
+                    return@Button
+                }
                 when (val result = parseProfileInput(code)) {
                     is ProfileParse.Rejected -> errorText = parseErrorText(result.error)
                     is ProfileParse.Parsed -> {
@@ -422,6 +448,15 @@ private fun ConnectForm(controller: SyncController, additional: Boolean, initial
             dismissButton = { TextButton(onClick = { discardRequest = null }) { Text(stringResource(R.string.cancel)) } },
         )
     }
+}
+
+private fun inviteErrorText(failure: InviteFailure?): Int = when (failure) {
+    InviteFailure.INVALID_CODE -> R.string.invite_err_invalid
+    InviteFailure.OFFLINE -> R.string.invite_err_offline
+    InviteFailure.NOT_SUPPORTED -> R.string.invite_err_not_supported
+    InviteFailure.SERVER_FULL -> R.string.invite_err_full
+    InviteFailure.TOO_MANY_ATTEMPTS -> R.string.invite_err_busy
+    else -> R.string.invite_err_server
 }
 
 private fun parseErrorText(error: ProfileParseError): Int = when (error) {

@@ -135,6 +135,14 @@
     <string name="sync_edit_note">Your sync key and notes stay as they are; nothing is disconnected. Only change the address if the server moved (it must hold the same notes). Leave the token or password empty to keep the current one.</string>
     <string name="sync_edit_keep_hint">Empty = keep the current one</string>
     <string name="sync_edit_save">Save</string>
+    <string name="sync_invite_hint">Or paste an invitation from the owner of a shared server: you get your own private space and the key is created on this phone.</string>
+    <string name="invite_profile_name">Shared server</string>
+    <string name="invite_err_invalid">That invitation is not valid: it was already used, it expired or it is wrong.</string>
+    <string name="invite_err_offline">The server did not answer.</string>
+    <string name="invite_err_not_supported">This server has no invitations: its owner has to set an admin token first.</string>
+    <string name="invite_err_full">The server cannot create more spaces.</string>
+    <string name="invite_err_busy">Too many attempts. Try again in a minute.</string>
+    <string name="invite_err_server">The server returned an error.</string>
     <string name="sync_token_label">Token</string>
     <string name="sync_username_label">User</string>
     <string name="sync_password_label">App password</string>

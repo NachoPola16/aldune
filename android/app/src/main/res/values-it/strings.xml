@@ -135,6 +135,14 @@
     <string name="sync_edit_note">La chiave di sincronizzazione e le note restano come sono; nulla viene disconnesso. Cambia l’indirizzo solo se il server si è spostato (deve contenere le stesse note). Lascia vuoto il token o la password per mantenere quello attuale.</string>
     <string name="sync_edit_keep_hint">Vuoto = mantieni quello attuale</string>
     <string name="sync_edit_save">Salva</string>
+    <string name="sync_invite_hint">Oppure incolla un invito di chi ospita un server condiviso: avrai uno spazio privato e la chiave viene creata su questo telefono.</string>
+    <string name="invite_profile_name">Server condiviso</string>
+    <string name="invite_err_invalid">Questo invito non è valido: già usato, scaduto o errato.</string>
+    <string name="invite_err_offline">Il server non ha risposto.</string>
+    <string name="invite_err_not_supported">Questo server non ha inviti: il proprietario deve prima impostare un token di amministratore.</string>
+    <string name="invite_err_full">Il server non può creare altri spazi.</string>
+    <string name="invite_err_busy">Troppi tentativi. Riprova tra un minuto.</string>
+    <string name="invite_err_server">Il server ha restituito un errore.</string>
     <string name="sync_token_label">Token</string>
     <string name="sync_username_label">Utente</string>
     <string name="sync_password_label">Password per le app</string>

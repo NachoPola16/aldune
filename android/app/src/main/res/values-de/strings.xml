@@ -135,6 +135,14 @@
     <string name="sync_edit_note">Dein Sync-Schlüssel und deine Notizen bleiben unverändert; nichts wird getrennt. Ändere die Adresse nur, wenn der Server umgezogen ist (er muss dieselben Notizen enthalten). Token oder Passwort leer lassen, um das aktuelle zu behalten.</string>
     <string name="sync_edit_keep_hint">Leer = aktuellen behalten</string>
     <string name="sync_edit_save">Speichern</string>
+    <string name="sync_invite_hint">Oder füge eine Einladung vom Betreiber eines geteilten Servers ein: Du bekommst einen eigenen privaten Bereich, der Schlüssel wird auf diesem Handy erzeugt.</string>
+    <string name="invite_profile_name">Geteilter Server</string>
+    <string name="invite_err_invalid">Diese Einladung ist ungültig: bereits benutzt, abgelaufen oder falsch.</string>
+    <string name="invite_err_offline">Der Server hat nicht geantwortet.</string>
+    <string name="invite_err_not_supported">Dieser Server hat keine Einladungen: Der Betreiber muss zuerst einen Admin-Token festlegen.</string>
+    <string name="invite_err_full">Der Server kann keine weiteren Bereiche erstellen.</string>
+    <string name="invite_err_busy">Zu viele Versuche. Versuche es in einer Minute erneut.</string>
+    <string name="invite_err_server">Der Server hat einen Fehler zurückgegeben.</string>
     <string name="sync_token_label">Token</string>
     <string name="sync_username_label">Benutzer</string>
     <string name="sync_password_label">App-Passwort</string>

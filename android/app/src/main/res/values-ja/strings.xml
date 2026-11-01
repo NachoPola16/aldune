@@ -135,6 +135,14 @@
     <string name="sync_edit_note">同期キーとノートはそのままで、接続は切れません。サーバーが移転した場合のみアドレスを変更してください（同じノートが必要です）。トークンまたはパスワードを空にすると現在のものを維持します。</string>
     <string name="sync_edit_keep_hint">空欄＝現在のものを維持</string>
     <string name="sync_edit_save">保存</string>
+    <string name="sync_invite_hint">または共有サーバーの管理者からの招待を貼り付けてください。専用の非公開スペースができ、鍵はこの端末で作成されます。</string>
+    <string name="invite_profile_name">共有サーバー</string>
+    <string name="invite_err_invalid">この招待は無効です。使用済み、期限切れ、または誤りです。</string>
+    <string name="invite_err_offline">サーバーが応答しませんでした。</string>
+    <string name="invite_err_not_supported">このサーバーには招待機能がありません。管理者が先に管理トークンを設定する必要があります。</string>
+    <string name="invite_err_full">サーバーはこれ以上スペースを作成できません。</string>
+    <string name="invite_err_busy">試行回数が多すぎます。1分後にもう一度お試しください。</string>
+    <string name="invite_err_server">サーバーがエラーを返しました。</string>
     <string name="sync_token_label">トークン</string>
     <string name="sync_username_label">ユーザー</string>
     <string name="sync_password_label">アプリ パスワード</string>
