@@ -39,6 +39,7 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import app.aldune.R
+import app.aldune.domain.TagGrouping
 import app.aldune.domain.TagOrder
 
 /**
@@ -50,7 +51,7 @@ import app.aldune.domain.TagOrder
 fun AllTagsDialog(
     tags: List<String>, selected: String?, showHash: Boolean,
     onSelect: (String?) -> Unit, onMove: (String, Int) -> Unit, onDismiss: () -> Unit,
-    tagColors: Map<String, String> = emptyMap(), paletteColors: List<String> = emptyList(), onSetColor: (String, String?) -> Unit = { _, _ -> },
+    untaggedLabel: String = "", tagColors: Map<String, String> = emptyMap(), paletteColors: List<String> = emptyList(), onSetColor: (String, String?) -> Unit = { _, _ -> },
 ) {
     var query by remember { mutableStateOf("") }
     // The tag whose colour palette is open under its row.
@@ -72,6 +73,22 @@ fun AllTagsDialog(
                         )
                     }
                     items(shown, key = { it.lowercase() }) { tag ->
+                        if (tag == TagGrouping.UNTAGGED) {
+                            // The «no tag» group of the grouped list: it has a place in the order like a tag, and nothing else (no filter, no colour).
+                            Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                                Text(
+                                    untaggedLabel, Modifier.weight(1f).padding(vertical = 14.dp, horizontal = 4.dp),
+                                    style = MaterialTheme.typography.bodyLarge, fontStyle = androidx.compose.ui.text.font.FontStyle.Italic,
+                                )
+                                if (!searching) {
+                                    val up = stringResource(R.string.tag_move_up, untaggedLabel)
+                                    val down = stringResource(R.string.tag_move_down, untaggedLabel)
+                                    IconButton({ onMove(tag, -1) }, Modifier.semantics { contentDescription = up }) { Icon(Icons.Filled.KeyboardArrowUp, null) }
+                                    IconButton({ onMove(tag, 1) }, Modifier.semantics { contentDescription = down }) { Icon(Icons.Filled.KeyboardArrowDown, null) }
+                                }
+                            }
+                            return@items
+                        }
                         val isSelected = tag.equals(selected, ignoreCase = true)
                         Column {
                         Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {

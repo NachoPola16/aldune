@@ -35,13 +35,6 @@ object TagOrder {
         return orderedTags.take(before) + TagGrouping.UNTAGGED + orderedTags.drop(before)
     }
 
-    /** Saving a tag order made without the mark (the dialog's arrows) keeps the «no tag» group where it was. */
-    fun keepUntagged(newOrder: List<String>, previousCustom: List<String>): List<String> {
-        val at = previousCustom.indexOf(TagGrouping.UNTAGGED)
-        if (at < 0) return newOrder
-        return newOrder.toMutableList().also { it.add(at.coerceAtMost(it.size), TagGrouping.UNTAGGED) }
-    }
-
     // Un nombre de etiqueta no lleva saltos de línea (una sola línea en la nota), así que sirven de separador.
     fun encode(tags: List<String>): String = tags.joinToString("\n")
 

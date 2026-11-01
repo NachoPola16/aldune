@@ -266,6 +266,10 @@ fun NoteListPane(
                 tagColors = remember(settingsNow.tagColors) { TagColors.decode(settingsNow.tagColors) },
                 paletteColors = NoteThemes.resolve(settingsNow.noteThemeId, null).let { it.lightColors + it.darkColors },
                 onSetTagColor = viewModel::setTagColor,
+                groupOrder = remember(state.allTags, settingsNow.tagOrder) {
+                    val custom = TagOrder.decode(settingsNow.tagOrder)
+                    TagOrder.groupOrder(TagOrder.apply(state.allTags, custom), custom)
+                },
             )
             if (state.orphans.isNotEmpty()) OrphanConflictsBanner(state.orphans.size) { showOrphans = true }
             // Una versión nueva de Android en GitHub (una vez al día, desactivable en Ajustes → General): solo avisa y abre la página.
@@ -411,6 +415,10 @@ fun NoteListPane(
                     val key = tagDrag ?: return
                     val local = tagDragOrder ?: return
                     val visible = listState.layoutInfo.visibleItemsInfo
+                    // After a swap the screen takes a frame to re-place the rows: without waiting, the same gesture would swap twice (or, dragging
+                    // a header from the top to the bottom, not finish). Same guard as the notes' drag.
+                    val wanted = local.map { it.lowercase() }.filter { k -> visible.any { it.key == k } }
+                    if (visible.sortedBy { it.offset }.map { it.key }.filter { it in wanted } != wanted) return
                     val me = visible.firstOrNull { it.key == key } ?: return
                     val center = me.offset + me.size / 2f + tagDragDelta
                     val target = visible.firstOrNull { it.key != key && it.key is String && local.any { t -> t.lowercase() == it.key } && center >= it.offset && center <= it.offset + it.size } ?: return
@@ -419,6 +427,16 @@ fun NoteListPane(
                     tagDragOrder = moved
                     val newOffset = if (target.offset < me.offset) target.offset else target.offset + target.size - me.size
                     tagDragDelta -= (newOffset - me.offset)
+                }
+
+                // Folding the groups moves the header that is being dragged (the ones above it shrink): it is put back under the finger.
+                var tagDragStartOffset by remember { androidx.compose.runtime.mutableIntStateOf(0) }
+                LaunchedEffect(tagDrag) {
+                    val key = tagDrag ?: return@LaunchedEffect
+                    androidx.compose.runtime.withFrameNanos { }
+                    androidx.compose.runtime.withFrameNanos { }
+                    val now = listState.layoutInfo.visibleItemsInfo.firstOrNull { it.key == key } ?: return@LaunchedEffect
+                    tagDragDelta += (tagDragStartOffset - now.offset)
                 }
 
                 fun tagDragEnd(save: Boolean) {
@@ -484,6 +502,7 @@ fun NoteListPane(
                                             detectDragGesturesAfterLongPress(
                                                 onDragStart = {
                                                     haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                                                    tagDragStartOffset = listState.layoutInfo.visibleItemsInfo.firstOrNull { it.key == entry.key }?.offset ?: 0
                                                     tagDrag = entry.key; tagDragDelta = 0f; tagDragStart = groupOrder; tagDragOrder = groupOrder
                                                 },
                                                 onDrag = { change, amount -> change.consume(); tagDragDelta += amount.y; swapTagUnderDrag() },
@@ -692,11 +711,12 @@ private fun StateTabs(state: UiState.Ready, onSelect: (NoteState) -> Unit) {
 private fun TagRow(
     state: UiState.Ready, showHash: Boolean, onSelect: (String?) -> Unit, onMoveTag: (String, Int) -> Unit,
     tagColors: Map<String, String>, paletteColors: List<String>, onSetTagColor: (String, String?) -> Unit,
+    groupOrder: List<String>,
 ) {
     val listState = rememberLazyListState()
     var sheetOpen by remember { mutableStateOf(false) }
-    if (sheetOpen) AllTagsDialog(state.allTags, state.tag, showHash, onSelect = { sheetOpen = false; onSelect(it) }, onMove = onMoveTag, onDismiss = { sheetOpen = false },
-        tagColors = tagColors, paletteColors = paletteColors, onSetColor = onSetTagColor)
+    if (sheetOpen) AllTagsDialog(groupOrder, state.tag, showHash, onSelect = { sheetOpen = false; onSelect(it) }, onMove = onMoveTag, onDismiss = { sheetOpen = false },
+        untaggedLabel = stringResource(R.string.group_untagged), tagColors = tagColors, paletteColors = paletteColors, onSetColor = onSetTagColor)
     // end = 8.dp: the same margin as the row above, so the arrow sits right under the sync status icon.
     Row(Modifier.padding(bottom = 10.dp, end = 8.dp), verticalAlignment = Alignment.CenterVertically) {
     Box(Modifier.weight(1f)) {

@@ -411,8 +411,10 @@ class NotesViewModel(application: Application) : AndroidViewModel(application) {
 
     /** Mueve una etiqueta una posición en el orden propio (arriba = -1). El orden se guarda en este dispositivo y se refresca la lista. */
     fun moveTag(tag: String, delta: Int) {
-        val visible = (_state.value as? UiState.Ready)?.allTags ?: return
-        val moved = TagOrder.keepUntagged(TagOrder.move(visible, tag, delta), TagOrder.decode(_settings.value.tagOrder))
+        val tags = (_state.value as? UiState.Ready)?.allTags ?: return
+        // The «no tag» group is part of the order the user moves things in.
+        val custom = TagOrder.decode(_settings.value.tagOrder)
+        val moved = TagOrder.move(TagOrder.groupOrder(TagOrder.apply(tags, custom), custom), tag, delta)
         updateSettings { it.copy(tagOrder = TagOrder.encode(moved)) }
         launchIo { refresh() }
     }
