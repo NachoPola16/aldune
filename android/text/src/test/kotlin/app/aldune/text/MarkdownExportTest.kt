@@ -2,6 +2,7 @@ package app.aldune.text
 
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertTrue
+import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Test
 
 /** Los mismos casos que `MarkdownExportTests` de Core: el fichero exportado en Android es idéntico al de Windows. */
@@ -59,5 +60,14 @@ class MarkdownExportTest {
         val name = MarkdownExport.suggestedFileName("a".repeat(200), "Nota nueva")
         assertTrue(name.length <= 84, "salió de ${name.length} caracteres")
         assertTrue(name.endsWith(".md"))
+    }
+
+    @Test
+    fun `a title can never climb out of the export folder`() {
+        val bs = 92.toChar() // a backslash
+        for (title in listOf("../x", "a/b", "${bs}x", "C:${bs}x", "/etc/passwd", "..")) {
+            val name = MarkdownExport.suggestedFileName(title, "Note")
+            assertFalse(name.contains('/') || name.contains(bs) || name.contains(':'), "$title -> $name")
+        }
     }
 }
