@@ -331,6 +331,13 @@ public partial class NotesManagerWindow : Window
         PlayListEntrance();
     }
 
+    private void OnRestorePlacementsClick(object sender, RoutedEventArgs e)
+    {
+        var answer = AppDialog.Show(this, Strings.RestoreAllPlacementsConfirm, Title,
+            MessageBoxButton.YesNo, MessageBoxImage.Question, MessageBoxResult.No);
+        if (answer == MessageBoxResult.Yes) _coordinator.RestoreAllNotePlacements();
+    }
+
     private void OnManageTagsClick(object sender, RoutedEventArgs e)
     {
         if (_tagManagerToggle.ShouldConsumeOpen())

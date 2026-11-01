@@ -550,6 +550,10 @@
                                   Click="OnRememberSizesToggled" />
                         <TextBlock Text="{x:Static res:Strings.RememberSizesHint}"
                                    Foreground="{DynamicResource AlduneHintBrush}" FontSize="{DynamicResource AlduneTextSmall}" TextWrapping="Wrap" Margin="0,6,56,0" />
+                        <Button Content="{x:Static res:Strings.RestoreAllPlacementsButton}" HorizontalAlignment="Left" Margin="0,16,0,0"
+                                Padding="12,7" Click="OnRestoreAllPlacementsClick" Style="{StaticResource RecordButtonStyle}" />
+                        <TextBlock Text="{x:Static res:Strings.RestoreAllPlacementsHint}"
+                                   Foreground="{DynamicResource AlduneHintBrush}" FontSize="{DynamicResource AlduneTextSmall}" TextWrapping="Wrap" Margin="0,6,56,0" />
                     </StackPanel>
                     <Border Background="{DynamicResource AlduneRaisedBrush}" Height="1" Margin="0,20,0,0" />
                     <StackPanel Margin="0,20,0,0">

@@ -1860,6 +1860,13 @@ public partial class NoteWindow : Window
     /// mismo clic. El ajuste automático queda reactivado para los siguientes cambios de texto.</summary>
     private void OnRestoreSizeClick(object sender, RoutedEventArgs e)
     {
+        RestoreDefaultSize();
+        ActionsPopup.IsOpen = false;
+    }
+
+    /// <summary>Back to the size the window was born with (also used by "restore size and position of all notes").</summary>
+    internal void RestoreDefaultSize()
+    {
         _hasManualSize = false;
 
         _isAutoResizing = true;
@@ -1874,7 +1881,6 @@ public partial class NoteWindow : Window
         TextBody.VerticalScrollBarVisibility = TextBody.ExtentHeight > TextBody.ViewportHeight + 0.5
             ? ScrollBarVisibility.Auto
             : ScrollBarVisibility.Hidden;
-        ActionsPopup.IsOpen = false;
     }
 
     /// <summary>

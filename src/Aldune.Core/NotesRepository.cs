@@ -1141,6 +1141,15 @@ public sealed class NotesRepository
         command.ExecuteNonQuery();
     }
 
+    /// <summary>Forgets where and how big every note was, on every screen: they come back at the standard size and place the next time they open.</summary>
+    public void DeleteAllPlacements()
+    {
+        using var connection = _database.OpenConnection();
+        using var command = connection.CreateCommand();
+        command.CommandText = "DELETE FROM NotePlacement;";
+        command.ExecuteNonQuery();
+    }
+
     public NotePlacement? GetPlacement(Guid noteId, string monitorKey)
     {
         using var connection = _database.OpenConnection();

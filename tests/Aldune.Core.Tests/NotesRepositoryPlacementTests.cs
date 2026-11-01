@@ -43,6 +43,23 @@ public class NotesRepositoryPlacementTests : IDisposable
     }
 
     [Fact]
+    public void DeleteAllPlacements_ForgetsEveryNoteOnEveryScreen()
+    {
+        var first = _sut.Create("one", "#F5E3B3", "primary");
+        var second = _sut.Create("two", "#F5E3B3", "primary");
+        _sut.SavePlacement(first.Id, "\\\\.\\DISPLAY1", 10, 10, 300, 320);
+        _sut.SavePlacement(first.Id, "\\\\.\\DISPLAY2", 20, 20, 300, 320);
+        _sut.SavePlacement(second.Id, "\\\\.\\DISPLAY1", 30, 30, 300, 320);
+
+        _sut.DeleteAllPlacements();
+
+        Assert.Null(_sut.GetPlacement(first.Id, "\\\\.\\DISPLAY1"));
+        Assert.Null(_sut.GetPlacement(first.Id, "\\\\.\\DISPLAY2"));
+        Assert.Null(_sut.GetPlacement(second.Id, "\\\\.\\DISPLAY1"));
+        Assert.Equal("one", _sut.GetById(first.Id)!.Text);
+    }
+
+    [Fact]
     public void SavePlacement_WithoutTheFlag_IsNotAManualHeight()
     {
         var note = _sut.Create("hola", "#F5E3B3", "primary");

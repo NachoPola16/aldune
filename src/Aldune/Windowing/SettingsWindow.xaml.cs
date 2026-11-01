@@ -1129,6 +1129,13 @@ public partial class SettingsWindow : Window
         _settingsService.Save(_settings);
     }
 
+    private void OnRestoreAllPlacementsClick(object sender, RoutedEventArgs e)
+    {
+        var answer = AppDialog.Show(this, Strings.RestoreAllPlacementsConfirm, Title,
+            MessageBoxButton.YesNo, MessageBoxImage.Question, MessageBoxResult.No);
+        if (answer == MessageBoxResult.Yes) _coordinator?.RestoreAllNotePlacements();
+    }
+
     private void OnRememberSizesToggled(object sender, RoutedEventArgs e)
     {
         _settings.RememberNoteSizes = RememberSizesCheck.IsChecked == true;

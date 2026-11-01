@@ -558,12 +558,23 @@
                   Style="{StaticResource AppCheckBoxStyle}"
                   Click="OnSelectAllClick"
                   Margin="32,19,20,0" VerticalAlignment="Top" />
-        <ComboBox Grid.Row="2" x:Name="SortBox" MinWidth="140" MinHeight="26"
-                  HorizontalAlignment="Right" VerticalAlignment="Top" Margin="0,14,20,0"
-                  ToolTip="{x:Static res:Strings.SortTooltip}"
-                  AutomationProperties.Name="{x:Static res:Strings.SortTooltip}"
-                  SelectionChanged="OnSortChanged"
-                  Style="{StaticResource DarkComboBoxStyle}" />
+        <!-- The list's own options, right-aligned: the order, and "restore size and position of all notes", which is not about the
+             selection and would not fit in the footer's row at the minimum width. -->
+        <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Top" Margin="0,14,20,0">
+            <Button x:Name="RestorePlacementsButton" Click="OnRestorePlacementsClick" MinHeight="26" Margin="0,0,8,0"
+                    MaxWidth="150"
+                    ToolTip="{x:Static res:Strings.RestoreAllPlacementsButton}"
+                    AutomationProperties.Name="{x:Static res:Strings.RestoreAllPlacementsButton}"
+                    Style="{StaticResource ToolbarButtonStyle}">
+                <!-- Trimmed rather than pushing the order box over "Select all" in a longer language at the minimum width; the tooltip has the full text. -->
+                <TextBlock Text="{x:Static res:Strings.RestoreAllPlacementsShort}" TextTrimming="CharacterEllipsis" />
+            </Button>
+            <ComboBox x:Name="SortBox" MinWidth="140" MinHeight="26"
+                      ToolTip="{x:Static res:Strings.SortTooltip}"
+                      AutomationProperties.Name="{x:Static res:Strings.SortTooltip}"
+                      SelectionChanged="OnSortChanged"
+                      Style="{StaticResource DarkComboBoxStyle}" />
+        </StackPanel>
 
         <Grid x:Name="RowsHost" Grid.Row="2" Margin="20,56,12,0">
             <ScrollViewer x:Name="RowsScroll" VerticalScrollBarVisibility="Auto"

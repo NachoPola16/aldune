@@ -874,6 +874,24 @@ public sealed class AppCoordinator
         }));
     }
 
+    /// <summary>
+    /// "Restore size and position of all notes": forgets what every note remembered (so closed ones reopen at the standard size and place) and
+    /// puts the open ones back at the standard size, in the cascade next to the dock. The text of the notes is never touched.
+    /// </summary>
+    public void RestoreAllNotePlacements()
+    {
+        _repository.DeleteAllPlacements();
+        var open = OpenWindowsInDeckOrder();
+        if (open.Count == 0) return;
+
+        foreach (var window in open) window.RestoreDefaultSize();
+
+        var dock = _docks.FirstOrDefault();
+        if (dock is null) return;
+        if (MonitorLookup.TargetOrFallback(null, dock.MonitorKey, MonitorEnumerator.EnumerateMonitors()) is not { } target) return;
+        CascadeOpenNotesNearDock(target.WorkArea, _settings?.DockEdge ?? EdgePosition.Right, NotesForCurrentDockView().Count);
+    }
+
     public void OpenSyncNotesSelector(Window owner)
     {
         if (_settings is null || _settingsService is null) return;
