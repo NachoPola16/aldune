@@ -556,4 +556,5 @@
     <string name="settings_search">Search settings</string>
     <string name="settings_search_none">Nothing found</string>
     <string name="note_moved_tag">Moved to “%1$s”</string>
+    <string name="whatsnew_200_search">Search in Settings (the magnifier next to the title), forgiving about typos. Drag a note onto another tag to move it; an empty tag stays at the end of the list. In landscape the editing buttons share the title row.</string>
 </resources>

@@ -556,4 +556,5 @@
     <string name="settings_search">Rechercher dans les réglages</string>
     <string name="settings_search_none">Aucun résultat</string>
     <string name="note_moved_tag">Déplacée vers « %1$s »</string>
+    <string name="whatsnew_200_search">Recherche dans les réglages (la loupe à côté du titre), qui pardonne les fautes de frappe. Faites glisser une note sur un autre tag pour la déplacer ; un tag vide reste en fin de liste. En paysage, les boutons d’édition partagent la ligne du titre.</string>
 </resources>

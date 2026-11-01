@@ -556,4 +556,5 @@
     <string name="settings_search">Einstellungen durchsuchen</string>
     <string name="settings_search_none">Nichts gefunden</string>
     <string name="note_moved_tag">Verschoben nach „%1$s“</string>
+    <string name="whatsnew_200_search">Suche in den Einstellungen (die Lupe neben dem Titel), die Tippfehler verzeiht. Zieh eine Notiz auf einen anderen Tag, um sie zu verschieben; ein leerer Tag bleibt am Ende der Liste. Im Querformat teilen sich die Bearbeitungsschaltflächen die Titelzeile.</string>
 </resources>

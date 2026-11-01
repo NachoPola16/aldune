@@ -556,4 +556,5 @@
     <string name="settings_search">Buscar en Ajustes</string>
     <string name="settings_search_none">No se encontró nada</string>
     <string name="note_moved_tag">Movida a «%1$s»</string>
+    <string name="whatsnew_200_search">Buscador en Ajustes (la lupa junto al título) que perdona erratas. Arrastra una nota sobre otra etiqueta para moverla; una etiqueta vacía se queda al final de la lista. En horizontal, los botones de edición comparten la fila del título.</string>
 </resources>

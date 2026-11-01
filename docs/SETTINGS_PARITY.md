@@ -21,6 +21,21 @@ Same order and same names for what is common; what is specific to each platform 
 
 On Android the tabs are chips in a 3-column grid (with more tabs, more rows), and the sync one is called “Sync” in every language so that it fits in a third of the screen; before it was a row that scrolled: with six tabs the last one was left off screen without anything saying so. Simplified mode hides Notes, Colors and Sync on both platforms (Windows also hides the advanced parts of the dock).
 
+## Search in Settings, and how tags behave (2026-11-02)
+
+**Search (both, local)**: a box in Settings that forgives accents, capitals, typos and half-typed words, and finds an option by its name, its explanation or its section (`FuzzySearch`
+in Core and its Kotlin port, pinned by the same cases). Windows: a box above the page list (Ctrl+F focuses it; the first Esc clears it, Enter opens the first result), indexed from what is
+on the pages themselves, so a new option is found without registering it. Android: the magnifier next to the title; the index is a written list (`SETTINGS_INDEX`), so **a new option
+needs a line there**. Picking a result opens its page/tab, scrolls the option into view and lights it for a moment (Android: switches, choices and headings).
+
+**Tags**: on Windows tags are a table of their own and an empty one stays until it is deleted (Manage tags: the minus button deletes the tag, the trash button deletes the tag with its notes,
+which go to the trash). Android now does the same with a local list of known tags (`knownTags`, never synced): an empty tag stays as a chip and at the end of the grouped list until
+deleted on purpose. Android only: a note dragged onto another tag's group moves to it (lands where it is let go; over the header it goes first), with an undo; notes can also be
+dragged to reorder inside a tag (the tag view and each group).
+
+**Note colour sets**: Aldune and Jewel (dark and light), Graphite with a fifth step; the dark looks suggest the set that fits them (notebooks and Bash: Autumn, Grid: Ocean, Aldune: Aldune).
+**Danger red**: one hue in every look, fitted to each palette (`DangerTokens`).
+
 ## Pinned notes (2026-10-31)
 
 Not a setting: a per-note property that syncs (`pinnedToTop`, optional field of the encrypted payload). Same meaning on both platforms: pinned notes come first in every list, each

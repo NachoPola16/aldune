@@ -556,4 +556,5 @@
     <string name="settings_search">Pesquisar nas configurações</string>
     <string name="settings_search_none">Nada encontrado</string>
     <string name="note_moved_tag">Movida para “%1$s”</string>
+    <string name="whatsnew_200_search">Busca nas configurações (a lupa ao lado do título), que perdoa erros de digitação. Arraste uma nota sobre outra tag para movê-la; uma tag vazia fica no fim da lista. Na horizontal, os botões de edição ficam na linha do título.</string>
 </resources>

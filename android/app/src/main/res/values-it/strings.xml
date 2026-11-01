@@ -556,4 +556,5 @@
     <string name="settings_search">Cerca nelle impostazioni</string>
     <string name="settings_search_none">Nessun risultato</string>
     <string name="note_moved_tag">Spostata in «%1$s»</string>
+    <string name="whatsnew_200_search">Ricerca nelle impostazioni (la lente accanto al titolo), che perdona gli errori di battitura. Trascina una nota su un’altra etichetta per spostarla; un’etichetta vuota resta in fondo all’elenco. In orizzontale i pulsanti di modifica stanno nella riga del titolo.</string>
 </resources>
