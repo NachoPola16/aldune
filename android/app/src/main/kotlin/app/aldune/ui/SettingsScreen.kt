@@ -51,6 +51,10 @@ import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowDropDown
+import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.filled.Refresh
+import androidx.compose.material.icons.filled.Notifications
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
@@ -100,10 +104,10 @@ private val HIDE_AFTER_OPTIONS = listOf(1 to R.string.hide_after_hour, 24 to R.s
 /** Pestañas por fila en Ajustes. */
 private const val TAB_COLUMNS = 3
 
-/** The emoji of each settings tab in the compact row. */
-private val TAB_EMOJI = mapOf(
-    R.string.settings_tab_general to "⚙️", R.string.settings_tab_appearance to "👁️", R.string.settings_tab_notes to "📝",
-    R.string.settings_tab_colors to "🎨", R.string.settings_tab_alerts to "🔔", R.string.settings_tab_sync to "🔄",
+/** The icon of each settings tab in the compact row: monochrome, so it takes the colour of the theme. */
+private val TAB_ICON = mapOf(
+    R.string.settings_tab_general to Icons.Filled.Settings, R.string.settings_tab_appearance to EyeIcon, R.string.settings_tab_notes to Icons.Filled.Edit,
+    R.string.settings_tab_colors to PaletteIcon, R.string.settings_tab_alerts to Icons.Filled.Notifications, R.string.settings_tab_sync to Icons.Filled.Refresh,
 )
 private const val LAST_TAB_MEMORY_MS = 10 * 60 * 1000L
 private var lastTab = 0
@@ -153,7 +157,7 @@ fun SettingsScreen(viewModel: NotesViewModel, onClose: () -> Unit) {
                 // Chips de 48 dp (el alto del toque) y 8 dp de hueco en los dos sentidos: con el chip de 32 dp inflado por el objetivo táctil, el hueco entre filas era casi el triple que entre columnas.
                 androidx.compose.runtime.CompositionLocalProvider(androidx.compose.material3.LocalMinimumInteractiveComponentSize provides androidx.compose.ui.unit.Dp.Unspecified) {
                 Column(Modifier.fillMaxWidth().padding(start = 12.dp, end = 12.dp, top = 8.dp, bottom = 20.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    // Compact: one row, an emoji per tab (the name is spoken by TalkBack and shown as the heading of the open tab).
+                    // Compact: one row, an icon per tab (the name is spoken by TalkBack and shown as the heading of the open tab).
                     val compact = settings.compactSettingsTabs
                     val columns = if (shortScreen || compact) labels.size else TAB_COLUMNS
                     labels.withIndex().chunked(columns).forEach { row ->
@@ -166,7 +170,11 @@ fun SettingsScreen(viewModel: NotesViewModel, onClose: () -> Unit) {
                                     selected = selectedTab == index, onClick = { tab = index; lastTab = index; lastTabAt = System.currentTimeMillis() }, modifier = Modifier.weight(1f).then(Modifier.height(48.dp)),
                                     label = {
                                         val name = stringResource(label)
-                                        if (compact) Text(TAB_EMOJI.getOrElse(label) { "•" }, Modifier.fillMaxWidth().semantics { contentDescription = name }, textAlign = TextAlign.Center, maxLines = 1)
+                                        if (compact) Icon(
+                                            TAB_ICON.getValue(label), contentDescription = name, Modifier.size(22.dp),
+                                            // The open tab in the accent colour of the theme, the others in the plain text colour.
+                                            tint = if (selectedTab == index) MaterialTheme.colorScheme.primary else androidx.compose.material3.LocalContentColor.current,
+                                        )
                                         else Text(name, Modifier.fillMaxWidth(), textAlign = TextAlign.Center, maxLines = 1, overflow = TextOverflow.Ellipsis)
                                     },
                                     colors = if (quiet) FilterChipDefaults.filterChipColors(containerColor = MaterialTheme.colorScheme.surfaceContainerLow) else FilterChipDefaults.filterChipColors(),

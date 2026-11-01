@@ -451,7 +451,7 @@
     <string name="edit_toggle_task">Aufgabe in dieser Zeile abhaken oder zurücksetzen</string>
     <string name="settings_tab_sync">Sync</string>
     <string name="compact_settings_tabs">Kompakte Reiter</string>
-    <string name="compact_settings_tabs_hint">Eine Reihe Emojis statt benannter Schaltflächen: mehr Platz für die Einstellungen.</string>
+    <string name="compact_settings_tabs_hint">Eine Reihe Symbole statt benannter Schaltflächen: mehr Platz für die Einstellungen.</string>
     <string name="color_name_red">Rot</string>
     <string name="color_name_orange">Orange</string>
     <string name="color_name_yellow">Gelb</string>

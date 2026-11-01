@@ -451,7 +451,7 @@
     <string name="edit_toggle_task">勾选或取消勾选此行的任务</string>
     <string name="settings_tab_sync">同步</string>
     <string name="compact_settings_tabs">紧凑标签页</string>
-    <string name="compact_settings_tabs_hint">用一行表情符号代替带名称的按钮，为设置留出更多空间。</string>
+    <string name="compact_settings_tabs_hint">用一行图标代替带名称的按钮，为设置留出更多空间。</string>
     <string name="color_name_red">红色</string>
     <string name="color_name_orange">橙色</string>
     <string name="color_name_yellow">黄色</string>

@@ -451,7 +451,7 @@
     <string name="edit_toggle_task">Spunta o togli la spunta all\'attività di questa riga</string>
     <string name="settings_tab_sync">Sync</string>
     <string name="compact_settings_tabs">Schede compatte</string>
-    <string name="compact_settings_tabs_hint">Una sola riga di emoji invece di pulsanti con nome: lascia più spazio alle impostazioni.</string>
+    <string name="compact_settings_tabs_hint">Una sola riga di icone invece di pulsanti con nome: lascia più spazio alle impostazioni.</string>
     <string name="color_name_red">Rosso</string>
     <string name="color_name_orange">Arancione</string>
     <string name="color_name_yellow">Giallo</string>

@@ -451,7 +451,7 @@
     <string name="edit_toggle_task">Cocher ou décocher la tâche de cette ligne</string>
     <string name="settings_tab_sync">Sync</string>
     <string name="compact_settings_tabs">Onglets compacts</string>
-    <string name="compact_settings_tabs_hint">Une seule rangée d\'émojis au lieu de boutons nommés : plus de place pour les réglages.</string>
+    <string name="compact_settings_tabs_hint">Une seule rangée d\'icônes au lieu de boutons nommés : plus de place pour les réglages.</string>
     <string name="color_name_red">Rouge</string>
     <string name="color_name_orange">Orange</string>
     <string name="color_name_yellow">Jaune</string>

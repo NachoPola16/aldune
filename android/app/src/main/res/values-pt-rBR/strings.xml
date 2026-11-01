@@ -451,7 +451,7 @@
     <string name="edit_toggle_task">Marcar ou desmarcar a tarefa desta linha</string>
     <string name="settings_tab_sync">Sync</string>
     <string name="compact_settings_tabs">Abas compactas</string>
-    <string name="compact_settings_tabs_hint">Uma única fileira de emojis em vez de botões com nome: deixa mais espaço para os ajustes.</string>
+    <string name="compact_settings_tabs_hint">Uma única fileira de ícones em vez de botões com nome: deixa mais espaço para os ajustes.</string>
     <string name="color_name_red">Vermelho</string>
     <string name="color_name_orange">Laranja</string>
     <string name="color_name_yellow">Amarelo</string>

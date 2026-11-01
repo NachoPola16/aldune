@@ -33,3 +33,13 @@ internal val PaletteIcon: ImageVector = ImageVector.Builder("Palette", 24.dp, 24
         curveTo(18.33f, 9f, 19f, 9.67f, 19f, 10.5f); curveTo(19f, 11.33f, 18.33f, 12f, 17.5f, 12f); close()
     }
 }.build()
+
+/** An eye, for the look of the app (material-icons-core has no Visibility). */
+internal val EyeIcon: ImageVector = ImageVector.Builder("Eye", 24.dp, 24.dp, 24f, 24f).apply {
+    addPath(
+        pathData = androidx.compose.ui.graphics.vector.PathParser()
+            .parsePathString("M12,4.5C7,4.5 2.73,7.61 1,12c1.73,4.39 6,7.5 11,7.5s9.27,-3.11 11,-7.5c-1.73,-4.39 -6,-7.5 -11,-7.5zM12,17c-2.76,0 -5,-2.24 -5,-5s2.24,-5 5,-5 5,2.24 5,5 -2.24,5 -5,5zM12,9c-1.66,0 -3,1.34 -3,3s1.34,3 3,3 3,-1.34 3,-3 -1.34,-3 -3,-3z")
+            .toNodes(),
+        pathFillType = PathFillType.NonZero, fill = SolidColor(Color.Black),
+    )
+}.build()
