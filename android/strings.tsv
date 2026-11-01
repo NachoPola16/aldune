@@ -451,6 +451,8 @@ edit_toggle_task	Check or uncheck the task on this line	Marcar o desmarcar la ta
 settings_tab_sync	Sync	Sync	Sync	Sync	Sync	Sync	同期	同步
 compact_settings_tabs	Compact tabs	Pestañas compactas	Kompakte Reiter	Onglets compacts	Abas compactas	Schede compatte	コンパクトなタブ	紧凑标签页
 compact_settings_tabs_hint	One row of icons instead of named buttons: leaves more room for the settings.	Una sola fila de iconos en lugar de botones con nombre: deja más sitio a los ajustes.	Eine Reihe Symbole statt benannter Schaltflächen: mehr Platz für die Einstellungen.	Une seule rangée d'icônes au lieu de boutons nommés : plus de place pour les réglages.	Uma única fileira de ícones em vez de botões com nome: deixa mais espaço para os ajustes.	Una sola riga di icone invece di pulsanti con nome: lascia più spazio alle impostazioni.	名前付きボタンの代わりにアイコンを1列に並べ、設定の表示領域を広げます。	用一行图标代替带名称的按钮，为设置留出更多空间。
+settings_tabs_bottom	Tabs at the bottom	Pestañas abajo	Reiter unten	Onglets en bas	Abas embaixo	Schede in basso	タブを下に表示	标签页置于底部
+settings_tabs_bottom_hint	Puts the tabs of Settings at the bottom of the screen, within reach of the thumb.	Pone las pestañas de Ajustes abajo, al alcance del pulgar.	Setzt die Reiter der Einstellungen unten auf den Bildschirm, in Reichweite des Daumens.	Place les onglets des réglages en bas de l'écran, à portée du pouce.	Coloca as abas dos ajustes na parte de baixo da tela, ao alcance do polegar.	Mette le schede delle impostazioni in basso, a portata di pollice.	設定のタブを画面の下に置き、親指が届きやすくします。	将设置的标签页放在屏幕底部，方便拇指操作。
 color_name_red	Red	Rojo	Rot	Rouge	Vermelho	Rosso	赤	红色
 color_name_orange	Orange	Naranja	Orange	Orange	Laranja	Arancione	オレンジ	橙色
 color_name_yellow	Yellow	Amarillo	Gelb	Jaune	Amarelo	Giallo	黄	黄色

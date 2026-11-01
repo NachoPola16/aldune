@@ -452,6 +452,8 @@
     <string name="settings_tab_sync">同步</string>
     <string name="compact_settings_tabs">紧凑标签页</string>
     <string name="compact_settings_tabs_hint">用一行图标代替带名称的按钮，为设置留出更多空间。</string>
+    <string name="settings_tabs_bottom">标签页置于底部</string>
+    <string name="settings_tabs_bottom_hint">将设置的标签页放在屏幕底部，方便拇指操作。</string>
     <string name="color_name_red">红色</string>
     <string name="color_name_orange">橙色</string>
     <string name="color_name_yellow">黄色</string>

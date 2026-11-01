@@ -452,6 +452,8 @@
     <string name="settings_tab_sync">同期</string>
     <string name="compact_settings_tabs">コンパクトなタブ</string>
     <string name="compact_settings_tabs_hint">名前付きボタンの代わりにアイコンを1列に並べ、設定の表示領域を広げます。</string>
+    <string name="settings_tabs_bottom">タブを下に表示</string>
+    <string name="settings_tabs_bottom_hint">設定のタブを画面の下に置き、親指が届きやすくします。</string>
     <string name="color_name_red">赤</string>
     <string name="color_name_orange">オレンジ</string>
     <string name="color_name_yellow">黄</string>

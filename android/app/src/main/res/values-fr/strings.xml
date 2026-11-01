@@ -452,6 +452,8 @@
     <string name="settings_tab_sync">Sync</string>
     <string name="compact_settings_tabs">Onglets compacts</string>
     <string name="compact_settings_tabs_hint">Une seule rangée d\'icônes au lieu de boutons nommés : plus de place pour les réglages.</string>
+    <string name="settings_tabs_bottom">Onglets en bas</string>
+    <string name="settings_tabs_bottom_hint">Place les onglets des réglages en bas de l\'écran, à portée du pouce.</string>
     <string name="color_name_red">Rouge</string>
     <string name="color_name_orange">Orange</string>
     <string name="color_name_yellow">Jaune</string>

@@ -452,6 +452,8 @@
     <string name="settings_tab_sync">Sync</string>
     <string name="compact_settings_tabs">Compact tabs</string>
     <string name="compact_settings_tabs_hint">One row of icons instead of named buttons: leaves more room for the settings.</string>
+    <string name="settings_tabs_bottom">Tabs at the bottom</string>
+    <string name="settings_tabs_bottom_hint">Puts the tabs of Settings at the bottom of the screen, within reach of the thumb.</string>
     <string name="color_name_red">Red</string>
     <string name="color_name_orange">Orange</string>
     <string name="color_name_yellow">Yellow</string>

@@ -148,7 +148,9 @@ fun SettingsScreen(viewModel: NotesViewModel, onClose: () -> Unit) {
                 val openTab = if (tabs && settings.compactSettingsTabs) " · " + stringResource(labels[tab.coerceAtMost(labels.lastIndex)]) else ""
                 Text(stringResource(R.string.settings) + openTab, style = MaterialTheme.typography.titleLarge)
             }
-            if (tabs) {
+            val atBottom = tabs && settings.settingsTabsAtBottom
+            // The bar of tabs, drawn under the title or (option) at the bottom of the screen.
+            val tabBar: @Composable () -> Unit = { if (tabs) {
                 // Mismo orden que Ajustes de Windows para lo que comparten: lo general primero, la sincronización al final. Sin ella
                 // (modo simplificado) la pestaña no aparece.
                 // Rejilla de TAB_COLUMNS columnas, no una fila que se desplaza: con seis pestañas la fila cortaba las últimas y nada decía que había más a
@@ -156,7 +158,8 @@ fun SettingsScreen(viewModel: NotesViewModel, onClose: () -> Unit) {
                 val selectedTab = tab.coerceAtMost(labels.lastIndex)
                 // Chips de 48 dp (el alto del toque) y 8 dp de hueco en los dos sentidos: con el chip de 32 dp inflado por el objetivo táctil, el hueco entre filas era casi el triple que entre columnas.
                 androidx.compose.runtime.CompositionLocalProvider(androidx.compose.material3.LocalMinimumInteractiveComponentSize provides androidx.compose.ui.unit.Dp.Unspecified) {
-                Column(Modifier.fillMaxWidth().padding(start = 12.dp, end = 12.dp, top = 8.dp, bottom = 20.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                if (atBottom) HorizontalDivider()
+                Column(Modifier.fillMaxWidth().padding(start = 12.dp, end = 12.dp, top = 8.dp, bottom = if (atBottom) 8.dp else 20.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     // Compact: one row, an icon per tab (the name is spoken by TalkBack and shown as the heading of the open tab).
                     val compact = settings.compactSettingsTabs
                     val columns = if (shortScreen || compact) labels.size else TAB_COLUMNS
@@ -186,9 +189,10 @@ fun SettingsScreen(viewModel: NotesViewModel, onClose: () -> Unit) {
                     }
                 }
                 }
-                HorizontalDivider()
-            }
-            Column(Modifier.verticalScroll(settingsScroll).padding(bottom = 24.dp)) {
+                if (!atBottom) HorizontalDivider()
+            } }
+            if (!atBottom) tabBar()
+            Column(Modifier.weight(1f).verticalScroll(settingsScroll).padding(bottom = 24.dp)) {
                 if (show(SettingsSection.SYNC) && inTab(5)) SyncSection(viewModel)
                 if (show(SettingsSection.BACKUP) && inTab(5)) BackupSection(viewModel)
                 if (show(SettingsSection.CAPTURE) && inTab(4)) CaptureSection(viewModel, settings.captureNotification)
@@ -317,6 +321,9 @@ fun SettingsScreen(viewModel: NotesViewModel, onClose: () -> Unit) {
                     }
                 }
                 HorizontalDivider(Modifier.padding(vertical = 12.dp))
+                if (tabs) SwitchRow(stringResource(R.string.settings_tabs_bottom), stringResource(R.string.settings_tabs_bottom_hint), settings.settingsTabsAtBottom) { on ->
+                    viewModel.updateSettings { it.copy(settingsTabsAtBottom = on) }
+                }
                 if (tabs) SwitchRow(stringResource(R.string.compact_settings_tabs), stringResource(R.string.compact_settings_tabs_hint), settings.compactSettingsTabs) { on ->
                     viewModel.updateSettings { it.copy(compactSettingsTabs = on) }
                 }
@@ -377,6 +384,7 @@ fun SettingsScreen(viewModel: NotesViewModel, onClose: () -> Unit) {
                 }
                 }
             }
+            if (atBottom) tabBar()
         }
     }
 }
