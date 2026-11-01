@@ -175,6 +175,17 @@ public sealed class AppSettings
     /// scroll), y con Ctrl+rueda en cualquier caso. Ver <see cref="DockViewCycle"/>. Activado por defecto; se apaga para quien la toca sin querer.</summary>
     public bool WheelChangesDockView { get; set; } = true;
 
+    /// <summary>Qué vistas fijas entran en la rueda cuando tienen notas (ver <see cref="DockViewCycle.Stops"/>). Las vacías se saltan siempre; una vista
+    /// quitada de la rueda sigue en el menú del engranaje y se puede elegir con un clic. Las tres entran por defecto.</summary>
+    public bool WheelStopArchived { get; set; } = true;
+
+    public bool WheelStopTrash { get; set; } = true;
+
+    public bool WheelStopAll { get; set; } = true;
+
+    /// <summary>Las paradas de la rueda según los ajustes.</summary>
+    public DockViewCycle.Stops WheelStops => new(WheelStopArchived, WheelStopTrash, WheelStopAll);
+
     /// <summary>
     /// Borde de la pantalla donde se ancla el dock de Aldune. Por defecto derecha (EdgePosition.Right).
     /// </summary>

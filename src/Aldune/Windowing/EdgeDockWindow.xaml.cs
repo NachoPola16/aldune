@@ -1829,7 +1829,7 @@ public partial class EdgeDockWindow : Window
     private void CycleDockView(int direction, bool showLabel)
     {
         BeginWheelSession();
-        var (view, tag) = DockViewCycle.Next(_settings?.DockView ?? DockViewKind.Active, _settings?.DockTagFilter, BuildViewCounts(), direction);
+        var (view, tag) = DockViewCycle.Next(_settings?.DockView ?? DockViewKind.Active, _settings?.DockTagFilter, BuildViewCounts(), direction, _settings?.WheelStops);
         _coordinator.SetDockViewCoalesced(view, tag);
         _wheelViewUntil = DateTime.UtcNow + WheelSessionLength;
         HoldOpenForNextInteraction();
@@ -1957,7 +1957,9 @@ public partial class EdgeDockWindow : Window
     {
         if (_viewLabelPopup is null || _viewLabelBorder is null) return;
         _viewLabelBorder.Height = FooterBorder.ActualHeight > 0 ? FooterBorder.ActualHeight : 42;
-        _viewLabelPopup.PlacementTarget = _noteCount > 0 ? TabsScroll : ManageArchiveButton;
+        // With no notes there is no strip: the label sits over (or under) the whole button bar, centred on it. It used to be centred on the
+        // first button, and a label wider than that button hung off the bar to the left.
+        _viewLabelPopup.PlacementTarget = _noteCount > 0 ? TabsScroll : FooterBorder;
         _viewLabelPopup.Placement = PlacementMode.Custom;
         bool onStrip = _noteCount > 0;
         bool fits = !onStrip || ViewLabelFitsOnScreen(_viewLabelBorder.Height);
@@ -1972,7 +1974,9 @@ public partial class EdgeDockWindow : Window
                 return [new CustomPopupPlacement(new Point(sideX, sideY), PopupPrimaryAxis.Vertical)];
             }
             double x = (targetSize.Width - popupSize.Width) / 2;
-            double y = below ? targetSize.Height + ViewLabelAir : EdgeGeometry.TabShadowHeadroom - ViewLabelAir - popupSize.Height;
+            double y = !onStrip
+                ? (below ? targetSize.Height + ViewLabelAir : -ViewLabelAir - popupSize.Height)
+                : (below ? targetSize.Height + ViewLabelAir : EdgeGeometry.TabShadowHeadroom - ViewLabelAir - popupSize.Height);
             return [new CustomPopupPlacement(new Point(x, y), PopupPrimaryAxis.Horizontal)];
         };
         // A popup does not follow its target when the strip changes size: nudging the offset makes it place itself again.

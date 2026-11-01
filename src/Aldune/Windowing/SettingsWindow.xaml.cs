@@ -939,6 +939,14 @@ public partial class SettingsWindow : Window
         _settingsService.Save(_settings);
     }
 
+    private void OnWheelStopsToggled(object sender, RoutedEventArgs e)
+    {
+        _settings.WheelStopArchived = WheelStopArchivedCheck.IsChecked == true;
+        _settings.WheelStopTrash = WheelStopTrashCheck.IsChecked == true;
+        _settings.WheelStopAll = WheelStopAllCheck.IsChecked == true;
+        _settingsService.Save(_settings);
+    }
+
     private void OnTrackpadGesturesToggled(object sender, RoutedEventArgs e)
     {
         _settings.TrackpadGestures = TrackpadGesturesCheck.IsChecked == true;
@@ -2276,6 +2284,9 @@ public partial class SettingsWindow : Window
         RememberSizesCheck.IsChecked = _settings.NoteSizesRemembered;
         PopulateTrackpadGestures();
         WheelChangesViewCheck.IsChecked = _settings.WheelChangesDockView;
+        WheelStopArchivedCheck.IsChecked = _settings.WheelStopArchived;
+        WheelStopTrashCheck.IsChecked = _settings.WheelStopTrash;
+        WheelStopAllCheck.IsChecked = _settings.WheelStopAll;
         UpdateUniformColorUi();
         SyncSignalCheck.IsChecked = _settings.SyncSignalVisible;
         SquareCornersCheck.IsChecked = _settings.CornersSquare;

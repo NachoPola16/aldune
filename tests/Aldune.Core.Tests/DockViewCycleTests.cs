@@ -1,6 +1,6 @@
 ﻿namespace Aldune.Core.Tests;
 
-/// <summary>Cambiar de vista del dock con la rueda: Activas → cada etiqueta con notas → Archivadas → Papelera → Todas, saltando las vacías.</summary>
+/// <summary>Cambiar de vista del dock con la rueda: Activas → cada etiqueta con notas → Archivadas → Papelera → Todas, saltando las vacías y las que el usuario quita de la rueda.</summary>
 public sealed class DockViewCycleTests
 {
     private static DockViewCycle.Counts Counts(int active = 3, int archived = 2, int trashed = 1, params (string Tag, int N)[] tags) =>
@@ -47,16 +47,67 @@ public sealed class DockViewCycleTests
     }
 
     [Fact]
-    public void TagsWithoutNotesAreSkippedButTheFixedViewsAreAlwaysReachable()
+    public void EmptyTagsArchivedAndTrashAreSkipped()
     {
         var counts = Counts(active: 4, archived: 0, trashed: 0, ("casa", 0), ("trabajo", 2));
 
         Assert.Equal((DockViewKind.Tag, (string?)"trabajo"), DockViewCycle.Next(DockViewKind.Active, null, counts, +1));
-        // Archivadas, Papelera y Todas se alcanzan con la rueda aunque estén vacías.
-        Assert.Equal((DockViewKind.Archived, (string?)null), DockViewCycle.Next(DockViewKind.Tag, "trabajo", counts, +1));
-        Assert.Equal((DockViewKind.Trashed, (string?)null), DockViewCycle.Next(DockViewKind.Archived, null, counts, +1));
-        Assert.Equal((DockViewKind.All, (string?)null), DockViewCycle.Next(DockViewKind.Trashed, null, counts, +1));
+        // With nothing archived or trashed those two views, and «All» (which would equal Active), are not stops.
+        Assert.Equal((DockViewKind.Active, (string?)null), DockViewCycle.Next(DockViewKind.Tag, "trabajo", counts, +1));
+        Assert.Equal((DockViewKind.Tag, (string?)"trabajo"), DockViewCycle.Next(DockViewKind.Active, null, counts, -1));
+    }
+
+    [Fact]
+    public void OnlyTheNonEmptyOnesAreStops()
+    {
+        var counts = Counts(active: 4, archived: 2, trashed: 0);
+
+        Assert.Equal((DockViewKind.Archived, (string?)null), DockViewCycle.Next(DockViewKind.Active, null, counts, +1));
+        // Trash is empty: after Archived comes «All» (it differs from Active because something is archived).
+        Assert.Equal((DockViewKind.All, (string?)null), DockViewCycle.Next(DockViewKind.Archived, null, counts, +1));
         Assert.Equal((DockViewKind.Active, (string?)null), DockViewCycle.Next(DockViewKind.All, null, counts, +1));
+    }
+
+    [Fact]
+    public void ViewsTheUserLeftOutOfTheWheelAreSkippedEvenWhenTheyHaveNotes()
+    {
+        var counts = Counts(active: 3, archived: 2, trashed: 5);
+        var noTrash = new DockViewCycle.Stops(Trash: false);
+
+        Assert.Equal((DockViewKind.Archived, (string?)null), DockViewCycle.Next(DockViewKind.Active, null, counts, +1, noTrash));
+        Assert.Equal((DockViewKind.All, (string?)null), DockViewCycle.Next(DockViewKind.Archived, null, counts, +1, noTrash));
+        Assert.Equal((DockViewKind.Archived, (string?)null), DockViewCycle.Next(DockViewKind.All, null, counts, -1, noTrash));
+    }
+
+    [Fact]
+    public void FromAViewOutsideTheWheelTheWheelContinuesInTheNormalOrder()
+    {
+        // The user clicked «Trash» on purpose, but it is not in the wheel: turning forward goes on to «All», backward to «Archived».
+        var counts = Counts(active: 3, archived: 2, trashed: 5);
+        var noTrash = new DockViewCycle.Stops(Trash: false);
+
+        Assert.Equal((DockViewKind.All, (string?)null), DockViewCycle.Next(DockViewKind.Trashed, null, counts, +1, noTrash));
+        Assert.Equal((DockViewKind.Archived, (string?)null), DockViewCycle.Next(DockViewKind.Trashed, null, counts, -1, noTrash));
+    }
+
+    [Fact]
+    public void FromAnEmptyViewTheWheelStillMovesOn()
+    {
+        // Looking at an empty Trash (clicked on purpose): the wheel goes to something that has notes.
+        var counts = Counts(active: 3, archived: 0, trashed: 0, ("casa", 1));
+
+        Assert.Equal((DockViewKind.Active, (string?)null), DockViewCycle.Next(DockViewKind.Trashed, null, counts, +1));
+        Assert.Equal((DockViewKind.Tag, (string?)"casa"), DockViewCycle.Next(DockViewKind.Trashed, null, counts, -1));
+    }
+
+    [Fact]
+    public void LeavingEverythingOutStillLeavesActive()
+    {
+        var counts = Counts(active: 3, archived: 2, trashed: 5);
+        var none = new DockViewCycle.Stops(Archived: false, Trash: false, All: false);
+
+        Assert.Equal((DockViewKind.Active, (string?)null), DockViewCycle.Next(DockViewKind.Archived, null, counts, +1, none));
+        Assert.Equal((DockViewKind.Active, (string?)null), DockViewCycle.Next(DockViewKind.Active, null, counts, +1, none));
     }
 
     [Fact]
@@ -64,16 +115,6 @@ public sealed class DockViewCycleTests
     {
         var counts = Counts(active: 0, archived: 1, trashed: 0);
 
-        Assert.Equal((DockViewKind.Active, (string?)null), DockViewCycle.Next(DockViewKind.All, null, counts, +1));
-    }
-
-    [Fact]
-    public void WithNothingElseTheWheelStillWalksTheFixedViewsAndComesBack()
-    {
-        var counts = Counts(active: 0, archived: 0, trashed: 0);
-
-        Assert.Equal((DockViewKind.Archived, (string?)null), DockViewCycle.Next(DockViewKind.Active, null, counts, +1));
-        Assert.Equal((DockViewKind.All, (string?)null), DockViewCycle.Next(DockViewKind.Active, null, counts, -1));
         Assert.Equal((DockViewKind.Active, (string?)null), DockViewCycle.Next(DockViewKind.All, null, counts, +1));
     }
 

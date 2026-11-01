@@ -10,7 +10,7 @@ Originating session: 2026-09-06.
 
 ## Visible version of the application
 
-The current round is identified as **v2.7.1**. The version is shown in Settings and also in the tray
+The current round is identified as **v2.7.2**. The version is shown in Settings and also in the tray
 icon's text. Every major update must increment this number following SemVer: patches for fixes, a
 minor version for new features and a major version when there are incompatible changes.
 
@@ -1085,3 +1085,4 @@ Prior decision (unchanged): stay GPL-3.0 and **validate with 3-5 people before s
 - **Roomier task lists (2.7.1 / 1.3.1)**: with «Larger task checkboxes» on, the line is taller (Windows about 1.5x the text for the whole note; Android 1.15x only for notes that have tasks) for an easier target. Looks with their own line step (ruled paper, grids) keep it.
 - **Android selection notices**: archiving, trashing or restoring several notes says how many («3 notes archived») instead of the singular text. «Telecomunicaciones claro/oscuro» is «Telecom claro/oscuro» in Spanish (Windows and Android).
 - **Not done: animations for the «Aldune» look.** There is no defined target to animate, and the accent brush is shared by every control, so a drift would repaint the whole interface and could break the contrast the tests pin. Left for a concrete proposal (for example a single accent glow on the «+» button, off with «reduce animations»).
+- **Wheel stops and the empty-view label (Windows 2.7.2)**: reverses the 2.7.1 rule «the wheel always reaches Archived, Trash and All». Now a view is a stop only when it has something to show: empty tags, Archived and Trash are skipped, and «All» stops only when something is archived or in the trash (otherwise it equals Active). Three settings (`WheelStopArchived`, `WheelStopTrash`, `WheelStopAll`, Settings → Dock and screens) take Archived, Trash or All out of the wheel even when they have notes; they stay in the gear menu and a click opens them. From a view that is not a stop (Trash clicked on purpose, a tag that lost its notes) the wheel goes on in the normal order to the next stop, so from Trash it reaches «All» (or Active). `DockViewCycle.Next` takes a `Stops` record; tests cover empty, left-out and off-wheel cases. With no notes the view label is centred on the whole button bar (it was centred on the first button and hung off to the left); measured on the four edges with `probe33-emptylabel` (offset 0, 8 px of air). Windows only; Android 1.3.1 is unchanged.
