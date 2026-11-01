@@ -54,6 +54,8 @@ if (adminToken is not null && (adminToken == ExampleToken || tokens.Contains(adm
     throw new InvalidOperationException(
         $"{BrandIdentity.SyncAdminTokenEnvVar} must be its own long random value, different from every store token.");
 var maxSpaces = int.TryParse(Environment.GetEnvironmentVariable(BrandIdentity.SyncMaxSpacesEnvVar), out var parsedMax) && parsedMax > 0 ? parsedMax : 20;
+// Per-store object cap: without it a token holder could PUT unlimited distinct ids and fill the disk every store shares.
+var maxObjects = int.TryParse(Environment.GetEnvironmentVariable(BrandIdentity.SyncMaxObjectsEnvVar), out var parsedObjects) && parsedObjects > 0 ? parsedObjects : 5000;
 SyncRegistry? registry = null;
 if (adminToken is not null)
 {
@@ -198,6 +200,9 @@ app.MapPut("/api/v1/objects/{id:guid}", async (Guid id, HttpRequest request) =>
     await putGate.WaitAsync();
     try
     {
+        if (!File.Exists(finalPath) && Directory.EnumerateFiles(objectPath, "*.json", SearchOption.TopDirectoryOnly).Count() >= maxObjects)
+            return Results.StatusCode(StatusCodes.Status507InsufficientStorage);
+
         if (File.Exists(finalPath))
         {
             try

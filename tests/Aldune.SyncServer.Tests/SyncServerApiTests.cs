@@ -78,6 +78,46 @@ public sealed class SyncServerApiTests : IDisposable
     }
 
     [Fact]
+    public async Task OnceTheSpaceIsFull_NewObjectsAreRejectedWith507ButExistingOnesCanStillBeUpdated()
+    {
+        Environment.SetEnvironmentVariable(BrandIdentity.SyncMaxObjectsEnvVar, "2");
+        try
+        {
+            using var factory = new WebApplicationFactory<Program>();
+            using var client = factory.CreateClient();
+            client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", Token);
+            var first = Guid.NewGuid();
+            var second = Guid.NewGuid();
+            var third = Guid.NewGuid();
+
+            using var a = await client.PutAsync($"/api/v1/objects/{first}", Json(Envelope(first, 1)));
+            using var b = await client.PutAsync($"/api/v1/objects/{second}", Json(Envelope(second, 1)));
+            using var c = await client.PutAsync($"/api/v1/objects/{third}", Json(Envelope(third, 1)));
+            // Updating a note that is already stored does not add an object, so it must keep working at the limit.
+            using var update = await client.PutAsync($"/api/v1/objects/{first}", Json(Envelope(first, 2)));
+
+            Assert.Equal(HttpStatusCode.NoContent, a.StatusCode);
+            Assert.Equal(HttpStatusCode.NoContent, b.StatusCode);
+            Assert.Equal(HttpStatusCode.InsufficientStorage, c.StatusCode);
+            Assert.Equal(HttpStatusCode.NoContent, update.StatusCode);
+        }
+        finally
+        {
+            Environment.SetEnvironmentVariable(BrandIdentity.SyncMaxObjectsEnvVar, null);
+        }
+    }
+
+    [Fact]
+    public async Task ADoubleSlashBeforeApi_DoesNotBypassTheToken()
+    {
+        using var anonymous = _factory.CreateClient();
+
+        using var response = await anonymous.GetAsync("//api/v1/objects");
+
+        Assert.NotEqual(HttpStatusCode.OK, response.StatusCode);
+    }
+
+    [Fact]
     public async Task AnIdThatDoesNotMatchTheUrl_IsRejectedWith400AndNotStored()
     {
         var urlId = Guid.NewGuid();

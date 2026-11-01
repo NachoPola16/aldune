@@ -8,6 +8,9 @@ services:
     # The process cannot gain new privileges (setuid and the like) even if it is compromised.
     security_opt:
       - no-new-privileges:true
+    # No Linux capabilities: a blob store needs none (it runs as a non-root user).
+    cap_drop:
+      - ALL
     environment:
       # Variable names: BrandIdentity.SyncTokenEnvVar / SyncTokensEnvVar (Aldune.Core).
       ALDUNE_SYNC_TOKEN: ${ALDUNE_SYNC_TOKEN:-}

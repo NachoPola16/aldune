@@ -62,6 +62,9 @@ public static class BrandIdentity
     /// <summary>Server only: the most spaces that invitations can create (default 20).</summary>
     public const string SyncMaxSpacesEnvVar = "ALDUNE_SYNC_MAX_SPACES";
 
+    /// <summary>Server only: the most objects (notes) one store can hold (default 5000). Bounds the disk a token can fill.</summary>
+    public const string SyncMaxObjectsEnvVar = "ALDUNE_SYNC_MAX_OBJECTS";
+
     public const string SyncPortEnvVar = "ALDUNE_SYNC_PORT";
 
     public const string SyncDataDirEnvVar = "ALDUNE_DATA_DIR";
