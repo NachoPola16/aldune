@@ -29,7 +29,7 @@ their own. No account, no required cloud, and the content is encrypted.
 - **Reminders**, **tags** (in your own order), **archive** and **trash**, plus a manager to search and organize.
 - **What's new after every update**: a short window with what changed (never on a fresh install; reopen it from Settings).
 - **Web links**: an `http://` or `https://` address in a note opens with `Ctrl`+click on Windows; on Android, with the cursor on a link, an «Open» button appears. Never by itself, and only web addresses.
-- **Per-note history and done-task rules**: up to 20 local versions of each note you can preview and restore, and a per-note choice for what happens to done tasks (so a shared shopping list is never emptied by another device). On Windows, the mouse wheel on the dock's gear (or on the tabs when they all fit) switches between all notes, each tag, archived and trash.
+- **Per-note history and done-task rules**: up to 20 local versions of each note you can preview and restore, and a per-note choice for what happens to done tasks (so a shared shopping list is never emptied by another device). On Windows, the mouse wheel on the dock's gear (or on the tabs when they all fit) switches between all notes, each tag, archived and trash; it skips the empty ones and you choose which of archived, trash and all it stops at.
 - **Color themes**: Classic, Serene and Graphite, with light, dark or alternating notes, or your own.
 - **A global shortcut** to create a note from anywhere (`Ctrl+Shift+N` by default).
 - **Password-protected notes**, encrypted with a key derived from the password (which is not stored), with an optional visible name to recognize them without opening them.
@@ -90,7 +90,7 @@ To install it, download the signed APK from [Releases](https://github.com/NachoP
 It has a **simplified mode** (Settings → “Use simplified mode”) that leaves only sync, look and language in view, and a **quick list**: pick a note as the list and add items from the capture notification without opening the app.
 
 **Something like the dock on Android.** A phone has no screen edge to stick tabs to as on Windows, but there are two ways to keep
-your notes within reach: the **widgets** (the deck at 4×2, 2×2 or 4×4, and a 1×1 new-note button) and, since **Android 17**, the
+your notes within reach: the **widgets** (the deck at 4×2, 2×2 or 4×4, which you can limit to one tag and where you can tick tasks without opening the note, and a 1×1 new-note button) and, since **Android 17**, the
 **bubble**: long-press the Aldune icon in your launcher and choose the bubble option. The app floats over any other app, folds
 into an icon you can drag to a screen edge, and opens with one tap without leaving what you were doing. It is a system feature
 (Aldune needs to do nothing); the exact name of the option depends on the launcher.

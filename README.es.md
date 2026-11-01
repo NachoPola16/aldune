@@ -90,7 +90,7 @@ sincronización cifrada de extremo a extremo que en Windows. Instalar: descarga 
 Tiene un **modo simplificado** (Ajustes → «Usar modo simplificado») que deja a la vista solo la sincronización, el aspecto y el idioma, y una **lista rápida**: elige una nota como lista y añade artículos desde la notificación de captura sin abrir la app.
 
 **Algo parecido al dock en Android.** El móvil no tiene un borde de pantalla donde pegar pestañas como en Windows, pero hay dos
-formas de tener tus notas siempre a mano: los **widgets** (el mazo en 4×2, 2×2 o 4×4, y un botón 1×1 de nota nueva) y, desde
+formas de tener tus notas siempre a mano: los **widgets** (el mazo en 4×2, 2×2 o 4×4, que puedes limitar a una etiqueta y donde puedes marcar tareas sin abrir la nota, y un botón 1×1 de nota nueva) y, desde
 **Android 17**, la **burbuja**: mantén pulsado el icono de Aldune en el lanzador y elige la opción de burbuja. La app flota sobre
 cualquier otra, se pliega a un icono que arrastras a un borde de la pantalla y la abres con un toque, sin salir de lo que estabas
 haciendo. Es una función del sistema (Aldune no tiene que hacer nada); el nombre exacto de la opción depende del lanzador.
