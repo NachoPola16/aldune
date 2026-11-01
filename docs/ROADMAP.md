@@ -413,6 +413,19 @@ A window, not a tour: after an update the app lists, once, what the person skipp
 - **Windows: dock card shadow as a setting (on by default)**: the tabs already draw a drop shadow (`EdgeGeometry.TabShadowHeadroom` reserves room for it) with no way to turn it off. Add a Dock-page option to switch it off (flat cards); with it off the headroom can shrink too. Windows only; Android has no dock.
 - **Sync the look between devices (opt-in) — BUILT for server, Folder (Windows) and WebDAV profiles (see `specs/2026-11-01-sync-look-design.md`)**: the person chooses to share theme/aspect (and, later, custom themes) like notes: encrypted, as an optional field the older versions ignore (format stays 4). Device-specific settings (monitor, dock edge, hotkeys, paths) are never part of it. Needs its own spec before building.
 
+### Before the final 3.0.0 / 2.0.0, and after — triaged 2026-11-01 (night)
+
+**Gate before publishing the definitive versions** (the owner asked for this order: review first, release after):
+1. **General review of both apps** with the security, tests and Explore agents: security (sync, encryption, invitations, the new admin routes, widget and intents), bugs and improvements. Also the deferred server audit: container as user `app`, token-attempt limit (exists: `AuthFailureLimiter`; confirm it covers every route), object quota, NuGet lockfile.
+2. **Design review, premium feel / equality / precision / practicality**: the dock's button bar and the bar above the tags (keep or change, definitively); the inner margins of a note against Manage notes and Settings (same inset to the border everywhere); where the note text starts and ends at the edges (selecting text with the mouse near the border was hard: measure the hit area first, with a probe, before changing anything); and the two aspect proposals still open (Windows switches filled with the accent like Android; page title larger than its sections in Windows Settings). Brand colours are never touched without showing captures first.
+3. **`docs/PROGRESS.md` rewritten** to keep only the captures where something visibly changes, each with a line saying what changed (many are identical today); Android captures full screen (the bottom of Settings is cut today); a few looks too.
+
+**Decided now (small, worth doing, after the review):**
+- **Windows: «Reset note windows»** (size and position of every open note back to the default cascade), in Manage notes and Settings → Notes. Android has no free-floating windows: not applicable.
+- **Notes you have not touched for a long time:** a quiet filter in Manage notes («Not edited for N days») and, at most, a one-line suggestion to archive inside the manager. No notifications and nothing in the dock: the app stays out of the way.
+
+**Decision point, one week after the test week:** (a) promote the open-source app (LinkedIn, X, communities) as it is, or (b) invest: market research to lead in notes, a website, professionalising the app, and only then versions for other systems (macOS, Linux, web; studied in `DESKTOP_PORT.md` / `MOBILE_PORT.md`, not before). Nothing is sent or published for this without the owner's word.
+
 ## 3. Discarded for now, with its reason
 
 Do not propose again without reading this first.
