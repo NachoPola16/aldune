@@ -452,14 +452,14 @@
                              Checked="OnFilterChanged" Style="{StaticResource FilterToggleStyle}" />
                 <!-- The three filters beside the tabs wrap together as one row (tag, not-edited, manage tags), instead of splitting at any point. -->
                 <StackPanel Orientation="Horizontal">
-                <ComboBox x:Name="TagFilterBox" MinWidth="110" MinHeight="30" Margin="0,3,4,0"
+                <ComboBox x:Name="TagFilterBox" MinWidth="110" MinHeight="30" Margin="0,3,0,0"
                           ToolTip="{x:Static res:Strings.TagFilterTooltip}"
                           AutomationProperties.Name="{x:Static res:Strings.TagFilterTooltip}"
                           SelectionChanged="OnTagFilterChanged"
                            Style="{StaticResource TagFilterStyle}"
                            Visibility="Collapsed" />
                 <!-- Not edited in a week / month / 3 months / year: only a way to look at the list (select all and archive works on what it shows). -->
-                <ComboBox x:Name="StaleFilterBox" MinWidth="200" MinHeight="30" Margin="0,3,0,0"
+                <ComboBox x:Name="StaleFilterBox" MinWidth="200" MinHeight="30" Margin="8,3,0,0"
                           ToolTip="{x:Static res:Strings.StaleFilterTooltip}"
                           AutomationProperties.Name="{x:Static res:Strings.StaleFilterTooltip}"
                           SelectionChanged="OnStaleFilterChanged"
@@ -467,7 +467,7 @@
                 <!-- Solo icono y en la misma fila: antes ocupaba una fila entera para un botón que
                      se usa de higos a brevas. El tooltip dice qué es. -->
                 <Button x:Name="ManageTagsButton" Click="OnManageTagsClick"
-                        Width="30" Height="30" Padding="0"
+                        Width="30" Height="30" Padding="0" Margin="8,3,0,0"
                         ToolTip="{x:Static res:Strings.ManageTags}"
                         AutomationProperties.Name="{x:Static res:Strings.ManageTags}"
                         Style="{StaticResource ToolbarButtonStyle}">
