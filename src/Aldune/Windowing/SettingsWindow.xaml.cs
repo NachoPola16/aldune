@@ -1268,6 +1268,18 @@ public partial class SettingsWindow : Window
         InviteWindow.ShowCreate(this, SyncServerUrlBox.Text.Trim());
     }
 
+    /// <summary>«Sincronizar el aspecto con este perfil»: es del perfil elegido (cada perfil decide si lleva el aspecto), no de todo el equipo.</summary>
+    private void OnSyncLookToggled(object sender, RoutedEventArgs e)
+    {
+        if (!_syncUiReady) return;
+        var profile = SyncProfileStore.GetActive(_settings);
+        profile.SyncLook = SyncLookCheck.IsChecked == true;
+        // Sin esto, activarlo no llevaría nada hasta que algo cambiase: la primera pasada toma el aspecto del almacén si ya hay uno, o sube el de aquí.
+        profile.LookHash = null;
+        profile.LookStamp = null;
+        _settingsService.Save(_settings);
+    }
+
     private void OnSyncDeleteProfileClick(object sender, RoutedEventArgs e)
     {
         if (!_syncUiReady) return;
@@ -1353,6 +1365,7 @@ public partial class SettingsWindow : Window
         SyncProfileNameBox.Text = activeName;
         SyncProfileNameDisplayText.Text = activeName;
         SyncEnabledCheck.IsChecked = _settings.SyncEnabled;
+        SyncLookCheck.IsChecked = SyncProfileStore.GetActive(_settings).SyncLook;
         SyncAllNotesRadio.IsChecked = _settings.SyncScope == SyncScopeKind.AllNotes;
         SyncSelectedNotesRadio.IsChecked = _settings.SyncScope == SyncScopeKind.SelectedNotes;
         SyncTagRadio.IsChecked = _settings.SyncScope == SyncScopeKind.Tag;

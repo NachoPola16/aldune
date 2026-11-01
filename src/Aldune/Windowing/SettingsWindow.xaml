@@ -832,6 +832,11 @@
                                     Content="{x:Static res:Strings.SyncDeleteProfile}" Click="OnSyncDeleteProfileClick"
                                     Margin="6,0,0,0" Padding="8,5" Style="{StaticResource RecordButtonStyle}" />
                         </Grid>
+                        <CheckBox x:Name="SyncLookCheck" Content="{x:Static res:Strings.SyncLookCheckbox}"
+                                  Foreground="{DynamicResource AlduneTextBrush}" Background="{DynamicResource AlduneGroundBrush}" FontSize="{DynamicResource AlduneTextBody}"
+                                  Style="{StaticResource SettingsSwitchStyle}" Click="OnSyncLookToggled" Margin="0,0,0,2" />
+                        <TextBlock Text="{x:Static res:Strings.SyncLookHint}"
+                                   Foreground="{DynamicResource AlduneHintBrush}" FontSize="{DynamicResource AlduneTextSmall}" TextWrapping="Wrap" Margin="0,0,56,10" />
                         <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
                             <Button x:Name="SyncJoinInviteButton" Content="{x:Static res:Strings.InviteJoinButton}" Click="OnSyncJoinInviteClick"
                                     Padding="8,5" Style="{StaticResource RecordButtonStyle}" />

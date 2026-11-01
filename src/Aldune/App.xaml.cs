@@ -257,6 +257,16 @@ public partial class App : Application
         NoteSnippetConverter.Enabled = settings.ShowNotePreview;
         NoteColorDisplay.Uniform = settings.UniformNoteColor;
         var coordinator = new AppCoordinator(repository, settings, syncService, settingsService);
+        // A sync pass took a newer look from the store (docs/specs/2026-11-01-sync-look-design.md): repaint like Settings does after a change.
+        syncService.LookApplied += () => Dispatcher.BeginInvoke(() =>
+        {
+            ThemeManager.Apply(this, settings.Appearance, settings.ColorsFor(settings.Appearance));
+            ThemeManager.ApplySkin(this, AppSkin.For(ThemeManager.SkinMode(settings.Appearance), settings.NoteColorAsStripe));
+            ThemeManager.ApplyShape(this, settings.CornersSquare);
+            NoteColorDisplay.Uniform = settings.UniformNoteColor;
+            coordinator.RebuildDocks();
+            coordinator.RefreshNoteAppearance();
+        });
         _coordinator = coordinator;
         coordinator.StartLinkedFiles(Dispatcher);
         _repository = repository;
