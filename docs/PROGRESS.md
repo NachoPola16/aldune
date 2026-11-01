@@ -24,7 +24,7 @@ Only the releases where the picture really changes are shown. Each one was made 
 
 In 0.5.0 the five tabs all read "NEW NOTE" with these sample notes. By 0.8.0, three days later, they show the first line of each note. Windows 3.0.0 looks the same as 2.7.3 in this view: what it adds (invitations, a synced look) lives in Settings and in the sync.
 
-### Looks
+### Notebook looks
 
 Since 2.1 the app can also wear the notebook looks, with paper under the text. These are three of the eleven:
 
@@ -76,23 +76,67 @@ Two things changed about *how* the app is made along the way. Every large change
 
 The app also started under another name. It was renamed Aldune on 13 September, with the data folder of existing installs moved over, and the last leftovers of the old name were cleaned up in October.
 
-## The road, release by release
+## What changed, why, and how it was done
 
-- **0.5 → 0.10 (September 2026).** The dock, the note windows, the archive and trash, a notes manager, and a first sync. Most of this stretch was about making the dock behave: not disappearing on you, remembering which screen it lives on, and surviving monitors being plugged in and out.
-- **1.0 (24 September).** Note themes, sync where *deletions are signed* (a delete that cannot be verified never erases anything), automatic backups, a dock that finds its way back to its screen, and a new logo.
-- **1.1 (26 September).** Tasks and lists: Ctrl+Enter to tick, uncheck all for a weekly shopping list, move done tasks to the end, paste a Markdown list and get its boxes, pending tasks in the reminder.
-- **1.2–1.4 (27 September).** Sync stopped resending what it had just received and inventing conflicts. The manager gained text, dates and tags. Light, pastel and midnight looks; the interface in German, French and Brazilian Portuguese (installer included).
-- **1.5–1.7 (October).** Linked files (edit a `.md` or `.txt` file as a note without Aldune ever deleting it), sounds for events, and a long run of fixes from daily use.
-- **Android (24 to 29 October).** Eleven release candidates, then 0.1.0 and 1.0.0: a native Kotlin app with the same encrypted sync format, a home-screen widget, a quick-capture notification and tile, reminders, and pairing with the PC by scanning a QR code.
-- **2.0 (29 October).** An optional visible name for protected notes, and the "definitive" polish round.
-- **2.1 (30 October).** The travel, field and graph-paper notebook looks, with paper under the text; paper-and-pen sounds; the same Settings layout on both platforms; a full accessibility pass (visible keyboard focus, keyboard-only dock with Ctrl+Alt+D).
-- **2.2 / Android 1.1 (31 October).** Pinned notes that sync, and a long list of details found by using the app.
-- **2.3–2.4 / Android 1.2 (31 October).** A per-note rule for done tasks (so a shared shopping list is never emptied by another device), local version history, Android tag tools, the mouse wheel to switch dock views, a quieter button bar on the dock, and Italian, Japanese and Simplified Chinese. 2.4 went through the whole list of small things found by using it every day.
-- **2.5–2.6 (31 October).** The view label above the notes (it says which tag, archive or trash the dock is showing) became a control you can click, fixed or only when you change view, and the dock rebuild stopped stalling on long lists.
-- **2.7.0 / Android 1.3.0 (31 October).** A "What's new" window once after an update, your own order for tags, safer links, and closing windows fading as one piece.
-- **2.7.1 / Android 1.3.1 (1 November).** The "Aldune" look, selecting several notes at once on Android, an update pop-up, swipes that need a deliberate pull, and a widget you can limit to one tag and tick tasks from.
-- **2.7.2 (Windows, 1 November).** The wheel skips empty views and you choose which of Archived, Trash and All it stops at; an empty view's label is centred on the button bar.
-- **3.0.0 / Android 2.0.0 (1 November).** Invitations: join a shared server with a one-use code, or invite someone (and, from either app, see who has joined and revoke them), each person in a space of their own with a key made on their device. The look can follow you across devices over the server, a shared folder or WebDAV; the Android list can be grouped by tag; the dock card shadow can be switched off; Android buttons follow "square corners" and the widget ends long task texts in an ellipsis.
+The releases that changed the most, told as ideas: what we wanted, what it became, and how it was built. The small releases in between were mostly fixes found by using the app every day.
+
+### The dock and the note windows (0.5 to 0.10, September)
+
+- **The idea.** A note should be one gesture away and out of the way: tabs on the edge of the screen that fan out when you reach for them, and notes that are real windows you can leave on the desktop.
+- **What it became.** The dock, note windows with a header, archive and trash, a notes manager and a first sync. Most of the first weeks went into making the dock behave: not folding while you reach for a tab, remembering which screen it lives on, surviving monitors being switched off and on.
+- **How.** The dock is a window that never takes focus, so it cannot steal what you are typing. When it opens and closes is decided by a small pure class (`DockHoverPolicy`) with its own tests, fed by a mouse poll, instead of by window events that fire at odd moments. Screens are identified by a stable ID, not by their position in the Windows list, which changes when a monitor is turned off.
+
+### Sync you can trust (1.0 and 1.2, September)
+
+- **The idea.** Sync across devices without an account and without anyone, the server included, being able to read your notes.
+- **What it became.** Your own server, a shared folder, or WebDAV / Nextcloud, always end-to-end encrypted. A delete that cannot be verified never erases anything.
+- **How.** Everything that leaves the device, deletions included, is encrypted with AES-GCM; deletions are signed. In 1.2 each version started to carry its author and the last version both sides agreed on, which ended the phantom conflicts, and the engine got scenario tests for the awkward cases (edit against delete, two devices offline, a changed key).
+
+### Tasks and lists (1.1, 26 September)
+
+- **The idea.** A shopping list you reuse every week.
+- **What it became.** Tick boxes with Ctrl+Enter, "uncheck all", done tasks moving to the end, a pasted Markdown list turning into boxes, and the pending tasks inside the reminder. Later: progress on the dock tab and in the Android widget, and a per-note rule for done tasks so that a shared list is never emptied by another device (2.3).
+- **How.** The text stays plain text with ☐ and ☒ glyphs, so any file or paste is still readable; the logic lives in Core with tests first. One rule came from a bug: the space right behind the glyph is part of the box, so the cursor can never end up between the box and its text.
+
+### Looks (1.2 to 1.4, 2.1, 2.7.1)
+
+- **The idea.** Whoever uses it decides how it looks, but a look is a skin and never an excuse to lose legibility.
+- **What it became.** Light, pastel and midnight; then the retro looks (Windows XP and 98, Telecom, Bash, Phosphor); then, in 2.1, the travel, field and graph-paper notebooks with real paper under the text and their own sounds; and in 2.7.1 the brand look "Aldune" (plum ink with the pink, cyan and yellow of the logo), now the default. The "A" logo of three notes arrived on 26 October.
+- **How.** Interface colours are never typed as hex in the layout: they come from named keys (`Ground`, `Text`, `Accent`...) in one palette, so every look and the live switch work, and tests fix the contrast of each text on its background. The logo and every icon come from a single script that draws the symbol as geometry, so no format is ever retouched by hand.
+
+### Files that live on disk (1.5 to 1.7, October)
+
+- **The idea.** Edit a `.md` or `.txt` file as if it were a note, for people whose notes already live in files.
+- **What it became.** Linked notes that follow the file and the file that follows the note.
+- **How.** A fingerprint of the file decides what to do: if the file is the one Aldune knows, it can write; if it changed, it is a conflict you resolve. **Aldune never deletes a linked file**, wherever it is, and in 3.0.0 it says so out loud: archiving, trashing or deleting a linked note now tells you that the file on disk was not touched.
+
+### Android, built native (24 to 29 October)
+
+- **The idea.** The same notes in your pocket, with the same encryption, not a wrapper.
+- **What it became.** Eleven release candidates and then 1.0.0: a native app with a home-screen widget (you can tick tasks from it), a quick-capture notification and tile, reminders, tags and pairing with the PC by scanning a QR code.
+- **How.** Kotlin, not MAUI, because F-Droid does not build .NET. The sync format, the encryption and the note rules are a port of the Windows library into plain Kotlin/JVM modules with no Android code in them, so they are tested on the PC. What keeps the two sides honest is a set of shared test vectors that both the C# and the Kotlin tests must reproduce: if one side changes the format, the other side's tests fail.
+
+### Eight languages, and an accessibility pass (1.4, 2.1 to 2.4)
+
+- **What it became.** English and Spanish at the start; German, French and Brazilian Portuguese in 1.4; Italian, Japanese and Simplified Chinese in 2.4 (these three are machine-assisted and have not been reviewed by native speakers). Visible keyboard focus, a dock you can drive with the keyboard (Ctrl+Alt+D) and contrast rules in every look arrived in 2.1.
+- **How.** Every piece of interface text goes through one function that takes all the languages at once, so a missing translation is a compile error rather than a surprise, and batches of translations are checked with a script.
+
+### The polish rounds (2.0 to 2.7, late October)
+
+Smaller things people notice: pinned notes that sync (2.2), local version history (2.3), the mouse wheel to switch dock views and a quieter, smaller button bar (2.3 and 2.4), the view label above the notes as a control you can click (2.5 and 2.6), a "What's new" window shown once after an update, your own order for tags and safer links (2.7), and the wheel skipping empty views (2.7.2).
+
+### 3.0.0 and Android 2.0.0 (1 November)
+
+- **The idea.** Let the family use one server without anyone editing configuration files, and without anyone seeing anyone else's notes.
+- **What it became.** Invitations. The owner makes a one-use code (with a QR code on Android); the other person pastes or scans it and gets a private space of their own. Both apps list who has joined and can revoke them. The look can follow you across devices, and the Android list can be grouped by tag.
+- **How.** The server stores only hashes of codes and tokens; a code has 128 bits, expires and works once; the sync key is created on the guest's device and the server never sees it; the admin token is asked for every time and never saved. Wrong guesses are limited per address on every route.
+- **The review before publishing.** Three read-only audits (server and sync, Android, and a bug hunt), with every finding checked against the code before it was fixed. They led to a cap on the number of notes per space, a look document that is never overwritten if it cannot be opened, bounded reads of server replies, a confirmation before sending an invitation or the admin token over plain `http` outside the home network, a long-press menu that works in the grouped list, and no pull-to-refresh spinner when there is no sync profile. The design pass added a text box that reaches the edges of the note (a click in the margin used to hit nothing, measured with a probe), switches filled with the accent colour, page titles in Settings that clearly stand above their sections, "Restore size and position of all notes", and a filter in Manage notes for notes you have not edited in a week, a month, three months or a year.
+
+### How the work is done
+
+- **Specification first.** Every large change starts as a short written design; new logic is written test-first in a library with no interface code.
+- **Probes for the interface.** What the tests cannot see is checked with throwaway programs that open the real windows with temporary data, press real keys, measure what is under the pointer and take screenshots. Several bugs only showed up this way (a menu that would not close, a white strip when resizing, a note edge that did not respond).
+- **Reviews by reading.** Before a big release, separate read-only passes look for security problems and bugs, and each finding is verified before anything changes.
 
 ## Bugs that mattered, and what changed
 
@@ -111,14 +155,6 @@ These are the ones a person using Aldune could actually notice. None of them is 
 - **Ticking the wrong task from the widget (guarded in 1.3.1).** The widget remembers where a task's box was in the note; if the note changed meanwhile (on another device, say), the tap is refused instead of ticking another task.
 - **"What's new" on Android 8 (fixed in 1.3.1).** The window asked for a version number that only exists from Android 9; it now works from Android 8, the oldest the app supports.
 
-## How the look changed
-
-- **September:** one dark look, rounded tabs and a first logo made of three tabs on a bar.
-- **24 to 27 September:** note themes (Classic, Serene, Graphite and others, plus your own), then light, pastel and midnight looks for the app itself.
-- **October:** retro looks (XP, Telecom, Bash, Phosphor) and, on 26 October, the final three-note "A" logo, drawn from one generator so every format stays consistent.
-- **End of October:** the notebook looks with paper under the text, the footer bar of the dock getting quieter and smaller, and the manager's title bar getting more room.
-- **1 November:** "Windows XP, light" and "Windows 98, dark" got their proper names, and the brand look "Aldune" arrived: plum ink with the pink, cyan and yellow of the logo, now the default on a fresh install (an existing install keeps what it had).
-
 ## What keeps it trustworthy
 
 - Everything that leaves the device is encrypted with AES-GCM, deletions included. The server only ever sees encrypted data.
@@ -128,4 +164,4 @@ These are the ones a person using Aldune could actually notice. None of them is 
 
 ## What is next
 
-See [`ROADMAP.md`](ROADMAP.md). The short version: find out from real users what is missing (several people can already share one server, each in a private space they join with an invitation), maybe sync the look between devices, and keep the data format stable so that every version installed keeps working with the others.
+See [`ROADMAP.md`](ROADMAP.md). The short version: find out from real users what is missing (several people can already share one server, each in a private space they join with an invitation), and keep the data format stable so that every version installed keeps working with the others.
