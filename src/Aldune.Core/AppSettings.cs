@@ -289,7 +289,10 @@ public sealed class AppSettings
     /// </summary>
     public bool ShowNotePreview { get; set; } = true;
 
-    /// <summary>Oscuro, claro o como Windows. Solo el chrome: las notas conservan su tema.</summary>
+    /// <summary>
+    /// Oscuro, claro o como Windows. Solo el chrome: las notas conservan su tema. Un archivo antiguo sin el campo sigue en
+    /// Dark (0); el aspecto de marca solo se pone en instalaciones nuevas (<see cref="SettingsService.Load"/>).
+    /// </summary>
     public AppearanceMode Appearance { get; set; }
 
     /// <summary>

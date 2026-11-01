@@ -36,6 +36,17 @@ public class SettingsServiceTests : IDisposable
     }
 
     [Fact]
+    public void Appearance_DefaultsToAldune_ButAnEarlierChoiceIsKept()
+    {
+        // A fresh install starts with the brand look; a settings.json that already carries a number (Dark is 0) must not change.
+        var sut = new SettingsService(_settingsPath);
+        Assert.Equal(AppearanceMode.Aldune, sut.Load().Appearance);
+
+        sut.Save(new AppSettings { Appearance = AppearanceMode.Dark });
+        Assert.Equal(AppearanceMode.Dark, new SettingsService(_settingsPath).Load().Appearance);
+    }
+
+    [Fact]
     public void Load_WhenFileDoesNotExist_ReturnsFreshSettings()
     {
         var sut = new SettingsService(_settingsPath);

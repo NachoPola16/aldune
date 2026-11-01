@@ -26,8 +26,9 @@ public sealed class SettingsService
 
     public AppSettings Load()
     {
+        // Sin archivo = instalación nueva: empieza con el aspecto de marca. Un archivo que ya existe conserva lo suyo.
         if (!File.Exists(_settingsPath))
-            return new AppSettings();
+            return new AppSettings { Appearance = AppearanceMode.Aldune };
 
         var json = File.ReadAllText(_settingsPath);
         var settings = JsonSerializer.Deserialize<AppSettings>(json, ReadOptions) ?? new AppSettings();
