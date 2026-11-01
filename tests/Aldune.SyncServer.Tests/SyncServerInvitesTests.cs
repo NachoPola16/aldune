@@ -163,6 +163,36 @@ public sealed class SyncServerInvitesTests : IDisposable
         Assert.Equal(HttpStatusCode.TooManyRequests, last);
     }
 
+    [Fact]
+    public async Task TheClientLibraryCompletesTheWholeFlow()
+    {
+        Start();
+        using var http = _factory!.CreateClient();
+        var baseUrl = http.BaseAddress!.ToString();
+
+        var invite = await SyncInviteClient.CreateAsync(http, baseUrl, Admin, "hermano");
+        Assert.True(SyncInvite.TryParse(invite, out var url, out var code));
+        var token = await SyncInviteClient.RedeemAsync(http, url, code);
+
+        using var guest = Client(token);
+        Assert.Equal(HttpStatusCode.OK, (await guest.GetAsync("/api/v1/objects")).StatusCode);
+        var again = await Assert.ThrowsAsync<InviteException>(() => SyncInviteClient.RedeemAsync(http, url, code));
+        Assert.Equal(InviteFailure.InvalidCode, again.Failure);
+        var wrongAdmin = await Assert.ThrowsAsync<InviteException>(() => SyncInviteClient.CreateAsync(http, baseUrl, "nope", null));
+        Assert.Equal(InviteFailure.NotAllowed, wrongAdmin.Failure);
+    }
+
+    [Fact]
+    public async Task TheClientLibraryReportsAServerWithoutInvitations()
+    {
+        Start(admin: null);
+        using var http = _factory!.CreateClient();
+
+        var failure = await Assert.ThrowsAsync<InviteException>(() => SyncInviteClient.RedeemAsync(http, http.BaseAddress!.ToString(), "x"));
+
+        Assert.Equal(InviteFailure.NotSupported, failure.Failure);
+    }
+
     private static SyncEnvelope Envelope(Guid id) => new()
     {
         NoteId = id,
