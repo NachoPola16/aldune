@@ -65,6 +65,12 @@ public partial class SettingsWindow : Window
         _recentHotkey = recentHotkey;
         _managerHotkey = managerHotkey;
         _coordinator = coordinator;
+        if (coordinator is not null)
+        {
+            // The dock's own menus change «keep open» and the view-name mode: show the new value here without reopening Settings.
+            coordinator.DockSettingsChanged += OnDockSettingsChanged;
+            Closed += (_, _) => coordinator.DockSettingsChanged -= OnDockSettingsChanged;
+        }
         _syncService = syncService;
         _checkForUpdates = checkForUpdates;
 
@@ -1063,6 +1069,12 @@ public partial class SettingsWindow : Window
         };
         radio.Checked += OnViewLabelModeChanged;
         ViewLabelListContainer.Children.Add(radio);
+    }
+
+    private void OnDockSettingsChanged()
+    {
+        KeepDockOpenCheck.IsChecked = _settings.KeepDockOpen;
+        PopulateViewLabelModes();
     }
 
     private void OnViewLabelModeChanged(object sender, RoutedEventArgs e)

@@ -427,6 +427,9 @@ public sealed class AppCoordinator
         }
     }
 
+    /// <summary>A setting that also has a control in Settings was changed from the dock (its menus): an open Settings window refreshes that control.</summary>
+    public event Action? DockSettingsChanged;
+
     public void SetKeepDockOpen(bool keepOpen)
     {
         if (_settings is null) return;
@@ -434,6 +437,7 @@ public sealed class AppCoordinator
         _settings.KeepDockOpen = keepOpen;
         _settingsService?.Save(_settings);
         RefreshAll();
+        DockSettingsChanged?.Invoke();
     }
 
     /// <summary>Cuándo enseña el dock el nombre de su vista (el menú del botón de vistas): se guarda y se repinta todo al momento.</summary>
@@ -444,6 +448,7 @@ public sealed class AppCoordinator
         _settings.DockViewLabel = mode;
         _settingsService?.Save(_settings);
         RefreshAll();
+        DockSettingsChanged?.Invoke();
     }
 
     /// <param name="owner">Quien lo abre como parte de su tarea (Ajustes): la ventana queda por

@@ -249,7 +249,7 @@ public partial class EdgeDockWindow : Window
     /// sides; the round look gets 4 px more there, the square one keeps its even 5.</summary>
     private void ApplyFooterPadding()
     {
-        double side = ThemeManager.IsSquare ? FooterPadding : FooterPadding + 4;
+        double side = ThemeManager.IsSquare ? FooterPadding : FooterPadding + 4.5;
         FooterBorder.Padding = new Thickness(side, FooterPadding, side, FooterPadding);
     }
 
@@ -1983,6 +1983,10 @@ public partial class EdgeDockWindow : Window
     {
         if (_viewLabelPopup is null || _viewLabelBorder is null) return;
         _viewLabelBorder.Height = FooterBorder.ActualHeight > 0 ? FooterBorder.ActualHeight : 42;
+        // An even width, so that centred on the (even) notes column it sits on whole pixels: with an odd one it ended half a pixel to one side.
+        _viewLabelBorder.ClearValue(FrameworkElement.WidthProperty);
+        _viewLabelBorder.Measure(new Size(double.PositiveInfinity, double.PositiveInfinity));
+        _viewLabelBorder.Width = Math.Ceiling(_viewLabelBorder.DesiredSize.Width / 2) * 2;
         // With no notes there is no strip: the label sits over (or under) the whole button bar, centred on it. It used to be centred on the
         // first button, and a label wider than that button hung off the bar to the left.
         _viewLabelPopup.PlacementTarget = _noteCount > 0 ? TabsScroll : FooterBorder;
