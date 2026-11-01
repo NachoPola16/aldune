@@ -346,9 +346,15 @@ internal static class Program
         (T)(target.GetType().GetField(name, PrivateInstance)?.GetValue(target)
             ?? throw new MissingFieldException(target.GetType().Name, name));
 
-    private static void Call(object target, string name) =>
-        (target.GetType().GetMethod(name, PrivateInstance)
-            ?? throw new MissingMethodException(target.GetType().Name, name)).Invoke(target, null);
+    // Optional parameters have to be passed as Type.Missing through reflection: a method that gained one (OpenDockViewPopup(labelOptions)) is
+    // still called with no arguments here.
+    private static void Call(object target, string name)
+    {
+        var method = target.GetType().GetMethod(name, PrivateInstance)
+            ?? throw new MissingMethodException(target.GetType().Name, name);
+        method.Invoke(target, BindingFlags.OptionalParamBinding | PrivateInstance, null,
+            method.GetParameters().Select(_ => Type.Missing).ToArray(), null);
+    }
 
     private static void Check(bool condition, string message, bool quiet = false)
     {
