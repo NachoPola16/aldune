@@ -1930,6 +1930,8 @@ public partial class EdgeDockWindow : Window
             border.MouseEnter += (_, _) => hover.Visibility = Visibility.Visible;
             border.MouseLeave += (_, _) => hover.Visibility = Visibility.Collapsed;
             border.MouseLeftButtonUp += OnViewLabelClick;
+            // The pinned label is a popup (its own HWND): a wheel turned over it never reached the dock and the view stopped changing there.
+            border.PreviewMouseWheel += OnManageArchiveWheel;
             _viewLabelBorder = border;
             // The label only knows its size once it is open and measured: until then the popup would sit at the screen origin.
             border.SizeChanged += (_, _) => ReplaceViewLabelIfOpen();

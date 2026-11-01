@@ -366,6 +366,10 @@ public partial class NoteWindow : Window
         TextBody.MouseLeave += OnBodyMouseLeave;
         TitleBox.PreviewKeyDown += OnTitleKeyDown;
         TitleBox.PreviewMouseLeftButtonDown += OnTitleMouseDown;
+        // A TextBox cannot show an ellipsis, so a title wider than the note ended up scrolled to its tail when typing stopped; going back to the
+        // start at least shows how it begins.
+        TitleBox.LostKeyboardFocus += (_, _) => TitleBox.ScrollToHome();
+        Loaded += (_, _) => TitleBox.ScrollToHome();
 
         SourceInitialized += (_, _) =>
         {
