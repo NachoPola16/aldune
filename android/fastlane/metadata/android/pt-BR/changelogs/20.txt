@@ -1,1 +1,1 @@
-Novo: seleção de várias notas, aviso para novas versões, deslizes e caixas de tarefa mais seguros; corrigido um menu que abria para uma nota fora da tela.
+Novo: seleção de várias notas, aviso para novas versões, deslizes e caixas de tarefa mais seguros; widget filtrável por etiqueta com tarefas marcáveis; corrigido um menu que abria para uma nota fora da tela.

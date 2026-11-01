@@ -13,6 +13,9 @@
     <string name="note_archived">Nota arquivada</string>
     <string name="note_trashed">Nota movida para a lixeira</string>
     <string name="note_restored">Nota restaurada</string>
+    <string name="notes_archived_n">%1$d notas arquivadas</string>
+    <string name="notes_trashed_n">%1$d notas movidas para a lixeira</string>
+    <string name="notes_restored_n">%1$d notas restauradas</string>
     <string name="restore">Restaurar</string>
     <string name="archive">Arquivar</string>
     <string name="move_to_trash">Mover para a lixeira</string>
@@ -205,6 +208,12 @@
     <string name="widget_unavailable">Abra o Aldune</string>
     <string name="widget_preview">Mostrar mais texto no widget</string>
     <string name="widget_preview_hint">Ficará visível na tela inicial</string>
+    <string name="widget_tasks">Marcar tarefas no widget</string>
+    <string name="widget_tasks_hint">Mostra as primeiras tarefas pendentes de cada lista sob o título.</string>
+    <string name="widget_config_title">Notas deste widget</string>
+    <string name="widget_config_all">Todas as notas</string>
+    <string name="widget_config_hint">Escolha uma etiqueta para mostrar só as notas dela.</string>
+    <string name="widget_filter_empty">Não há notas com esta etiqueta.</string>
     <string name="note_gone">Essa nota não está mais na pilha</string>
     <string name="add_widget">Adicionar o widget à tela inicial</string>
     <string name="add_widget_hint">Suas notas em tiras coloridas; toque em uma para abri-la</string>
@@ -463,6 +472,7 @@
     <string name="pinned_mark_cd">Fixada no topo da lista</string>
     <string name="existing_tags">Suas etiquetas</string>
     <string name="whatsnew_131_news">Selecione várias notas de uma vez (arquivar, lixeira, etiqueta), um aviso para novas versões e deslizes e caixas de tarefa mais seguros.</string>
+    <string name="whatsnew_131_widget">O widget pode ser limitado a uma etiqueta e permite marcar tarefas direto nele.</string>
     <string name="update_dialog_body">Há uma nova versão no GitHub. Instalá-la sobre esta mantém suas notas.</string>
     <string name="select_notes">Selecionar</string>
     <string name="selection_count">%1$d selecionadas</string>

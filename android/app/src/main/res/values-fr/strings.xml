@@ -13,6 +13,9 @@
     <string name="note_archived">Note archivée</string>
     <string name="note_trashed">Note déplacée dans la corbeille</string>
     <string name="note_restored">Note restaurée</string>
+    <string name="notes_archived_n">%1$d notes archivées</string>
+    <string name="notes_trashed_n">%1$d notes déplacées dans la corbeille</string>
+    <string name="notes_restored_n">%1$d notes restaurées</string>
     <string name="restore">Restaurer</string>
     <string name="archive">Archiver</string>
     <string name="move_to_trash">Mettre à la corbeille</string>
@@ -205,6 +208,12 @@
     <string name="widget_unavailable">Ouvrez Aldune</string>
     <string name="widget_preview">Afficher plus de texte dans le widget</string>
     <string name="widget_preview_hint">Il sera visible sur l\'écran d\'accueil</string>
+    <string name="widget_tasks">Cocher les tâches depuis le widget</string>
+    <string name="widget_tasks_hint">Affiche les premières tâches en attente de chaque liste sous son titre.</string>
+    <string name="widget_config_title">Notes de ce widget</string>
+    <string name="widget_config_all">Toutes les notes</string>
+    <string name="widget_config_hint">Choisissez une étiquette pour n’afficher que ses notes.</string>
+    <string name="widget_filter_empty">Aucune note avec cette étiquette.</string>
     <string name="note_gone">Cette note n\'est plus dans la pile</string>
     <string name="add_widget">Ajouter le widget à l\'écran d\'accueil</string>
     <string name="add_widget_hint">Vos notes en bandes de couleur ; touchez-en une pour l\'ouvrir</string>
@@ -463,6 +472,7 @@
     <string name="pinned_mark_cd">Épinglée en haut de la liste</string>
     <string name="existing_tags">Vos étiquettes</string>
     <string name="whatsnew_131_news">Sélectionnez plusieurs notes à la fois (archiver, corbeille, étiquette), une fenêtre signale les nouvelles versions, et les balayages et cases sont plus sûrs.</string>
+    <string name="whatsnew_131_widget">Le widget peut se limiter à une étiquette et permet de cocher des tâches directement.</string>
     <string name="update_dialog_body">Une nouvelle version est disponible sur GitHub. L\'installer par-dessus celle-ci conserve vos notes.</string>
     <string name="select_notes">Sélectionner</string>
     <string name="selection_count">%1$d sélectionnées</string>

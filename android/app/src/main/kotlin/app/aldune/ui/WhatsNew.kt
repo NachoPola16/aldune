@@ -32,14 +32,15 @@ internal object WhatsNew {
     val entries: List<Entry> = listOf(
         Entry(18, "1.2.0", listOf(R.string.whatsnew_120_tasks, R.string.whatsnew_120_history, R.string.whatsnew_120_tags, R.string.whatsnew_120_links, R.string.whatsnew_120_langs)),
         Entry(19, "1.3.0", listOf(R.string.whatsnew_130_news)),
-        Entry(20, "1.3.1", listOf(R.string.whatsnew_131_look, R.string.whatsnew_131_news)),
+        Entry(20, "1.3.1", listOf(R.string.whatsnew_131_look, R.string.whatsnew_131_news, R.string.whatsnew_131_widget)),
     )
 
     val codes: List<Int> get() = entries.map { it.versionCode }
 
     /** The running app's `versionCode`. */
     fun currentCode(context: Context): Int =
-        context.packageManager.getPackageInfo(context.packageName, 0).longVersionCode.toInt()
+        // PackageInfoCompat: `longVersionCode` itself needs Android 9 and the app runs from Android 8 (minSdk 26).
+        androidx.core.content.pm.PackageInfoCompat.getLongVersionCode(context.packageManager.getPackageInfo(context.packageName, 0)).toInt()
 }
 
 /** The news of [codes] (newest first): a heading per version and a line per item. Dismissing it is the only action. */

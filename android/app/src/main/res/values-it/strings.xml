@@ -13,6 +13,9 @@
     <string name="note_archived">Nota archiviata</string>
     <string name="note_trashed">Nota spostata nel cestino</string>
     <string name="note_restored">Nota ripristinata</string>
+    <string name="notes_archived_n">%1$d note archiviate</string>
+    <string name="notes_trashed_n">%1$d note spostate nel cestino</string>
+    <string name="notes_restored_n">%1$d note ripristinate</string>
     <string name="restore">Ripristina</string>
     <string name="archive">Archivia</string>
     <string name="move_to_trash">Sposta nel cestino</string>
@@ -205,6 +208,12 @@
     <string name="widget_unavailable">Apri Aldune</string>
     <string name="widget_preview">Mostra più testo nel widget</string>
     <string name="widget_preview_hint">Sarà visibile nella schermata Home</string>
+    <string name="widget_tasks">Spunta le attività dal widget</string>
+    <string name="widget_tasks_hint">Mostra le prime attività in sospeso di ogni lista sotto il titolo.</string>
+    <string name="widget_config_title">Note di questo widget</string>
+    <string name="widget_config_all">Tutte le note</string>
+    <string name="widget_config_hint">Scegli un’etichetta per mostrare solo le sue note.</string>
+    <string name="widget_filter_empty">Nessuna nota con questa etichetta.</string>
     <string name="note_gone">Quella nota non è più nel mazzo</string>
     <string name="add_widget">Aggiungi il widget alla schermata Home</string>
     <string name="add_widget_hint">Le tue note come strisce colorate; tocca una per aprirla</string>
@@ -463,6 +472,7 @@
     <string name="pinned_mark_cd">Fissata in cima all\'elenco</string>
     <string name="existing_tags">Le tue etichette</string>
     <string name="whatsnew_131_news">Seleziona più note insieme (archivia, cestino, etichetta), una finestra segnala le nuove versioni e scorrimenti e caselle più sicuri.</string>
+    <string name="whatsnew_131_widget">Il widget può essere limitato a un’etichetta e permette di spuntare le attività direttamente.</string>
     <string name="update_dialog_body">C\'è una nuova versione su GitHub. Installandola sopra questa, le tue note restano.</string>
     <string name="select_notes">Seleziona</string>
     <string name="selection_count">%1$d selezionate</string>

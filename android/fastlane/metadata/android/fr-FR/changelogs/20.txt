@@ -1,1 +1,1 @@
-Nouveau : sélection de plusieurs notes, fenêtre pour les nouvelles versions, balayages et cases plus sûrs ; corrigé un menu qui s'ouvrait pour une note hors de l'écran.
+Nouveau : sélection de plusieurs notes, fenêtre pour les nouvelles versions, balayages et cases plus sûrs ; widget filtrable par étiquette avec tâches à cocher ; corrigé un menu qui s'ouvrait pour une note hors de l'écran.

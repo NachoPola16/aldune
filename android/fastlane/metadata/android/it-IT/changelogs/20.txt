@@ -1,1 +1,1 @@
-Novità: selezione di più note, finestra per le nuove versioni, scorrimenti e caselle più sicuri; corretto un menu che si apriva per una nota fuori dalla vista.
+Novità: selezione di più note, finestra per le nuove versioni, scorrimenti e caselle più sicuri; widget filtrabile per etichetta con attività da spuntare; corretto un menu che si apriva per una nota fuori dalla vista.

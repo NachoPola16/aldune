@@ -1,1 +1,1 @@
-New: select several notes at once, a pop-up for new versions, safer swipes and task boxes; fixed an options menu opening for a note out of view.
+New: select several notes at once, a pop-up for new versions, safer swipes and task boxes; the widget can show one tag and tick tasks. Fixed an options menu opening for a note out of view.

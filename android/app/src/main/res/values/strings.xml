@@ -13,6 +13,9 @@
     <string name="note_archived">Note archived</string>
     <string name="note_trashed">Note moved to trash</string>
     <string name="note_restored">Note restored</string>
+    <string name="notes_archived_n">%1$d notes archived</string>
+    <string name="notes_trashed_n">%1$d notes moved to trash</string>
+    <string name="notes_restored_n">%1$d notes restored</string>
     <string name="restore">Restore</string>
     <string name="archive">Archive</string>
     <string name="move_to_trash">Move to trash</string>
@@ -205,6 +208,12 @@
     <string name="widget_unavailable">Open Aldune</string>
     <string name="widget_preview">Show more text in the widget</string>
     <string name="widget_preview_hint">It will be visible on the home screen</string>
+    <string name="widget_tasks">Tick tasks in the widget</string>
+    <string name="widget_tasks_hint">Shows the first pending tasks of each list note under its title.</string>
+    <string name="widget_config_title">Notes in this widget</string>
+    <string name="widget_config_all">All notes</string>
+    <string name="widget_config_hint">Choose a tag to show only its notes.</string>
+    <string name="widget_filter_empty">No notes with this tag.</string>
     <string name="note_gone">That note is no longer in the deck</string>
     <string name="add_widget">Add the widget to the home screen</string>
     <string name="add_widget_hint">Your notes as colored strips; tap one to open it</string>
@@ -463,6 +472,7 @@
     <string name="pinned_mark_cd">Pinned to the top of the list</string>
     <string name="existing_tags">Your tags</string>
     <string name="whatsnew_131_news">Select several notes at once (archive, trash, tag), a pop-up for new versions, and safer swipes and task boxes.</string>
+    <string name="whatsnew_131_widget">The widget can be limited to one tag and lets you tick tasks right on it.</string>
     <string name="update_dialog_body">A new version is on GitHub. Installing it over this one keeps your notes.</string>
     <string name="select_notes">Select</string>
     <string name="selection_count">%1$d selected</string>

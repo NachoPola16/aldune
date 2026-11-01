@@ -13,6 +13,9 @@
     <string name="note_archived">Nota archivada</string>
     <string name="note_trashed">Nota enviada a la papelera</string>
     <string name="note_restored">Nota restaurada</string>
+    <string name="notes_archived_n">%1$d notas archivadas</string>
+    <string name="notes_trashed_n">%1$d notas enviadas a la papelera</string>
+    <string name="notes_restored_n">%1$d notas restauradas</string>
     <string name="restore">Restaurar</string>
     <string name="archive">Archivar</string>
     <string name="move_to_trash">Mover a la papelera</string>
@@ -51,8 +54,8 @@
     <string name="appearance_midnight">Medianoche</string>
     <string name="appearance_xp_light">Windows XP, claro</string>
     <string name="appearance_xp_dark">Windows 98, oscuro</string>
-    <string name="appearance_telecom_light">Telecomunicaciones claro (laboratorio)</string>
-    <string name="appearance_telecom_dark">Telecomunicaciones oscuro (osciloscopio)</string>
+    <string name="appearance_telecom_light">Telecom claro (laboratorio)</string>
+    <string name="appearance_telecom_dark">Telecom oscuro (osciloscopio)</string>
     <string name="appearance_bash">Bash</string>
     <string name="appearance_phosphor">Fósforo (monitor antiguo)</string>
     <string name="appearance_travel_notebook_light">Libreta de viaje, clara</string>
@@ -205,6 +208,12 @@
     <string name="widget_unavailable">Abre Aldune</string>
     <string name="widget_preview">Mostrar más texto en el widget</string>
     <string name="widget_preview_hint">Se verá en la pantalla de inicio</string>
+    <string name="widget_tasks">Marcar tareas desde el widget</string>
+    <string name="widget_tasks_hint">Enseña las primeras tareas pendientes de cada lista bajo su título.</string>
+    <string name="widget_config_title">Notas de este widget</string>
+    <string name="widget_config_all">Todas las notas</string>
+    <string name="widget_config_hint">Elige una etiqueta para enseñar solo sus notas.</string>
+    <string name="widget_filter_empty">No hay notas con esta etiqueta.</string>
     <string name="note_gone">Esa nota ya no está en el mazo</string>
     <string name="add_widget">Añadir el widget a la pantalla de inicio</string>
     <string name="add_widget_hint">Tus notas como tiras de color; toca una para abrirla</string>
@@ -463,6 +472,7 @@
     <string name="pinned_mark_cd">Fijada arriba en la lista</string>
     <string name="existing_tags">Tus etiquetas</string>
     <string name="whatsnew_131_news">Selecciona varias notas a la vez (archivar, papelera, etiqueta), aviso emergente de versiones nuevas y deslizamientos y casillas más seguros.</string>
+    <string name="whatsnew_131_widget">El widget puede limitarse a una etiqueta y deja marcar tareas desde él.</string>
     <string name="update_dialog_body">Hay una versión nueva en GitHub. Si la instalas encima de esta, tus notas se conservan.</string>
     <string name="select_notes">Seleccionar</string>
     <string name="selection_count">%1$d seleccionadas</string>

@@ -136,6 +136,22 @@ class NoteService(
     fun forgetVersions(id: String) = synchronized(lock) { history?.forget(id) }
 
     /**
+     * Ticks (or unticks) the task whose box is at [boxIndex], for the widget. [line] is the whole line as the widget saw it: if the note
+     * changed since (an edit here or a sync from another device), the index may now point at another task, so a line that differs is
+     * refused and nothing is written. A normal edit otherwise: it syncs like any other.
+     */
+    fun toggleTask(id: String, boxIndex: Int, line: String): NoteResult<Note> = synchronized(lock) {
+        val note = store.get(id) ?: return NoteResult.Err(NoteError.NotFound(id))
+        if (note.isProtected) return NoteResult.Err(NoteError.Protected(id))
+        if (note.state != NoteState.ACTIVE) return NoteResult.Err(NoteError.InvalidArgument("La nota $id no está activa"))
+        val current = if (boxIndex in note.text.indices) app.aldune.text.TaskLines.lineContaining(note.text, boxIndex) else null
+        if (current != line) return NoteResult.Err(NoteError.InvalidArgument("La tarea de la nota $id ya no es la que se vio"))
+        val toggled = app.aldune.text.TaskLines.toggleCheckboxAt(note.text, boxIndex)
+            ?: return NoteResult.Err(NoteError.InvalidArgument("En la posición $boxIndex de la nota $id no hay una casilla"))
+        edit(id, toggled)
+    }
+
+    /**
      * Añade `item` como tarea al final de la lista de la nota (la lista rápida de la notificación). Solo una nota activa y sin proteger la
      * recibe; un artículo vacío es un no-op (no escribe ni cambia la hora). Es una edición normal: sube por sync como cualquier otra.
      */

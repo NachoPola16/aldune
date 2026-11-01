@@ -13,6 +13,9 @@
     <string name="note_archived">ノートをアーカイブしました</string>
     <string name="note_trashed">ノートをごみ箱に移動しました</string>
     <string name="note_restored">ノートを元に戻しました</string>
+    <string name="notes_archived_n">%1$d 件のノートをアーカイブしました</string>
+    <string name="notes_trashed_n">%1$d 件のノートをごみ箱に移動しました</string>
+    <string name="notes_restored_n">%1$d 件のノートを元に戻しました</string>
     <string name="restore">元に戻す</string>
     <string name="archive">アーカイブ</string>
     <string name="move_to_trash">ごみ箱に移動</string>
@@ -205,6 +208,12 @@
     <string name="widget_unavailable">Aldune を開く</string>
     <string name="widget_preview">ウィジェットにより多くのテキストを表示</string>
     <string name="widget_preview_hint">ホーム画面に表示されます</string>
+    <string name="widget_tasks">ウィジェットからタスクにチェック</string>
+    <string name="widget_tasks_hint">各リストノートのタイトルの下に、未完了のタスクを先頭から表示します。</string>
+    <string name="widget_config_title">このウィジェットのノート</string>
+    <string name="widget_config_all">すべてのノート</string>
+    <string name="widget_config_hint">タグを選ぶと、そのノートだけを表示します。</string>
+    <string name="widget_filter_empty">このタグのノートはありません。</string>
     <string name="note_gone">そのノートはデッキにありません</string>
     <string name="add_widget">ウィジェットをホーム画面に追加</string>
     <string name="add_widget_hint">ノートを色付きの帯で表示します。タップして開きます</string>
@@ -463,6 +472,7 @@
     <string name="pinned_mark_cd">リストの先頭に固定済み</string>
     <string name="existing_tags">自分のタグ</string>
     <string name="whatsnew_131_news">複数のノートをまとめて選択（アーカイブ・ごみ箱・タグ）、新バージョンのお知らせ、より安全なスワイプとチェックボックス。</string>
+    <string name="whatsnew_131_widget">ウィジェットを特定のタグに絞り込めるようになり、タスクをそのままチェックできます。</string>
     <string name="update_dialog_body">GitHub に新しいバージョンがあります。上書きインストールしてもノートは残ります。</string>
     <string name="select_notes">選択</string>
     <string name="selection_count">%1$d 件選択</string>

@@ -20,17 +20,31 @@ sealed interface WidgetStrip {
         val tasksDone: Int = 0, val tasksTotal: Int = 0,
         /** Fijada arriba: el widget lo marca igual que la lista. */
         val pinned: Boolean = false,
+        /** Las primeras tareas pendientes, para marcarlas desde el widget (vacío si el ajuste está apagado o no hay). */
+        val tasks: List<WidgetTask> = emptyList(),
     ) : WidgetStrip
 
     /** Nota protegida: sitio y color, y su nombre visible solo si el usuario se lo puso (es público por diseño). Nunca nada del contenido. */
     data class Locked(override val id: String, override val color: String, val title: String? = null) : WidgetStrip
 }
 
+/**
+ * Una tarea pendiente que el widget deja marcar. [index] es la posición de su casilla en el texto de la nota y [line] la línea entera tal
+ * como se vio: al marcarla se comprueba que sigue siendo esa (la nota pudo cambiar desde que se pintó el widget; ver `NoteService.toggleTask`).
+ */
+data class WidgetTask(val index: Int, val text: String, val line: String)
+
 /** Lo que pinta el widget: las tiras que caben y cuántas notas activas se quedaron fuera (la fila «Más notas: N»). */
 data class WidgetContent(val strips: List<WidgetStrip>, val hiddenCount: Int)
 
 /** [placeholder] es el título de una nota sin texto, en el idioma de la interfaz (este módulo no escribe textos de interfaz). */
-data class WidgetOptions(val placeholder: String, val showPreview: Boolean = false, val limit: Int = DEFAULT_LIMIT) {
+data class WidgetOptions(
+    val placeholder: String, val showPreview: Boolean = false, val limit: Int = DEFAULT_LIMIT,
+    /** Cuántas tareas pendientes lleva cada tira para marcarlas (0 = ninguna). */
+    val tasksPerNote: Int = 0,
+    /** Solo las notas con esta etiqueta (sin distinguir mayúsculas); `null` = todas. */
+    val tag: String? = null,
+) {
     companion object {
         /** Tope de seguridad: un `RemoteViews` enorme lo rechaza el lanzador. */
         const val DEFAULT_LIMIT = 50
@@ -44,7 +58,7 @@ object WidgetContentBuilder {
     private const val ELLIPSIS = "…"
 
     fun build(notes: Collection<Note>, options: WidgetOptions): WidgetContent {
-        val active = DockOrder.sort(notes.filter { it.state == NoteState.ACTIVE })
+        val active = DockOrder.sort(notes.filter { it.state == NoteState.ACTIVE && (options.tag == null || it.tags.any { tag -> tag.equals(options.tag, ignoreCase = true) }) })
         val shown = active.take(options.limit.coerceAtLeast(0))
         return WidgetContent(shown.map { strip(it, options) }, active.size - shown.size)
     }
@@ -62,7 +76,24 @@ object WidgetContentBuilder {
             null
         }
         val tasks = app.aldune.text.TaskLines.count(note.text)
-        return WidgetStrip.Open(note.id, note.color, title, preview, tasks.done, tasks.total, note.pinnedToTop)
+        return WidgetStrip.Open(note.id, note.color, title, preview, tasks.done, tasks.total, note.pinnedToTop, pendingTasks(note.text, options.tasksPerNote))
+    }
+
+    /** Las primeras [max] tareas sin marcar, con la posición de su casilla en [text] (las líneas se separan con `\n`: el texto guardado va normalizado). */
+    private fun pendingTasks(text: String, max: Int): List<WidgetTask> {
+        if (max <= 0) return emptyList()
+        val found = ArrayList<WidgetTask>()
+        var start = 0
+        for (line in text.split('\n')) {
+            val glyph = app.aldune.text.TaskLines.glyphIndex(line)
+            if (glyph >= 0 && !app.aldune.text.TaskLines.isChecked(line)) {
+                val label = truncate(line.substring(app.aldune.text.TaskLines.prefixLength(line, glyph)).trim(), MAX_TITLE_LENGTH)
+                found.add(WidgetTask(start + glyph, label, line))
+                if (found.size == max) break
+            }
+            start += line.length + 1
+        }
+        return found
     }
 
     /** Como mucho [max] unidades UTF-16 contando los puntos suspensivos, sin dejar a medias un par sustituto. */

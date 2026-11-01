@@ -1,1 +1,1 @@
-Neu: mehrere Notizen auswählen, Hinweisfenster bei neuen Versionen, sicherere Wischgesten und Aufgabenkästchen; behoben: Optionsmenü einer Notiz außerhalb des Sichtbereichs.
+Neu: mehrere Notizen auswählen, Hinweisfenster bei neuen Versionen, sicherere Wischgesten und Aufgabenkästchen; Widget nach Tag filterbar und mit abhakbaren Aufgaben; behoben: Optionsmenü einer Notiz außerhalb des Sichtbereichs.

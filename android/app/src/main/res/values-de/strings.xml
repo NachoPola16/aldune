@@ -13,6 +13,9 @@
     <string name="note_archived">Notiz archiviert</string>
     <string name="note_trashed">Notiz in den Papierkorb verschoben</string>
     <string name="note_restored">Notiz wiederhergestellt</string>
+    <string name="notes_archived_n">%1$d Notizen archiviert</string>
+    <string name="notes_trashed_n">%1$d Notizen in den Papierkorb verschoben</string>
+    <string name="notes_restored_n">%1$d Notizen wiederhergestellt</string>
     <string name="restore">Wiederherstellen</string>
     <string name="archive">Archivieren</string>
     <string name="move_to_trash">In den Papierkorb</string>
@@ -205,6 +208,12 @@
     <string name="widget_unavailable">Aldune öffnen</string>
     <string name="widget_preview">Mehr Text im Widget anzeigen</string>
     <string name="widget_preview_hint">Er ist auf dem Startbildschirm sichtbar</string>
+    <string name="widget_tasks">Aufgaben im Widget abhaken</string>
+    <string name="widget_tasks_hint">Zeigt die ersten offenen Aufgaben jeder Liste unter ihrem Titel.</string>
+    <string name="widget_config_title">Notizen in diesem Widget</string>
+    <string name="widget_config_all">Alle Notizen</string>
+    <string name="widget_config_hint">Wähle ein Tag, um nur dessen Notizen zu zeigen.</string>
+    <string name="widget_filter_empty">Keine Notizen mit diesem Tag.</string>
     <string name="note_gone">Diese Notiz ist nicht mehr im Stapel</string>
     <string name="add_widget">Widget zum Startbildschirm hinzufügen</string>
     <string name="add_widget_hint">Deine Notizen als farbige Streifen; tippe auf einen, um ihn zu öffnen</string>
@@ -463,6 +472,7 @@
     <string name="pinned_mark_cd">Oben in der Liste angeheftet</string>
     <string name="existing_tags">Deine Tags</string>
     <string name="whatsnew_131_news">Mehrere Notizen auf einmal auswählen (archivieren, Papierkorb, Tag), Hinweisfenster bei neuen Versionen und sicherere Wischgesten und Aufgabenkästchen.</string>
+    <string name="whatsnew_131_widget">Das Widget lässt sich auf ein Tag beschränken und erlaubt, Aufgaben direkt darin abzuhaken.</string>
     <string name="update_dialog_body">Eine neue Version ist auf GitHub. Wenn du sie über diese installierst, bleiben deine Notizen erhalten.</string>
     <string name="select_notes">Auswählen</string>
     <string name="selection_count">%1$d ausgewählt</string>

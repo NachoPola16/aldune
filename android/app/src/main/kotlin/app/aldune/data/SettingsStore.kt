@@ -36,6 +36,8 @@ data class AppSettings(
     val captureNotification: Boolean = false,
     /** El widget enseña también una vista previa del texto, no solo el título (spec de F6 §2.3). Apagado: el texto llega al lanzador. */
     val widgetPreview: Boolean = false,
+    /** Las primeras tareas pendientes de cada lista en el widget, con su casilla para marcarla desde ahí. */
+    val widgetTasks: Boolean = true,
     /** Recordatorios a la hora exacta, si el sistema concede el permiso (spec madre §2.9). Apagado: alarma no exacta. */
     val exactReminders: Boolean = false,
     /** «Mismo color en todas las notas»: `#RRGGBB` o `null` (apagado). Solo cambia cómo se ven; cada nota conserva el suyo. */
@@ -139,6 +141,7 @@ class SettingsStore(context: Context) {
             noteThemeId = prefs.getString(NOTE_THEME_ID, d.noteThemeId) ?: d.noteThemeId,
             captureNotification = prefs.getBoolean(CAPTURE_NOTIFICATION, d.captureNotification),
             widgetPreview = prefs.getBoolean(WIDGET_PREVIEW, d.widgetPreview),
+            widgetTasks = prefs.getBoolean(WIDGET_TASKS, d.widgetTasks),
             exactReminders = prefs.getBoolean(EXACT_REMINDERS, d.exactReminders),
             uniformNoteColor = prefs.getString(UNIFORM_NOTE_COLOR, null)?.takeIf { NoteDisplayColor.isActive(it) },
             fillNoteColor = nullableBoolean(FILL_NOTE_COLOR),
@@ -191,6 +194,7 @@ class SettingsStore(context: Context) {
             .putString(NOTE_THEME_ID, settings.noteThemeId)
             .putBoolean(CAPTURE_NOTIFICATION, settings.captureNotification)
             .putBoolean(WIDGET_PREVIEW, settings.widgetPreview)
+            .putBoolean(WIDGET_TASKS, settings.widgetTasks)
             .putBoolean(EXACT_REMINDERS, settings.exactReminders)
             .putOrRemove(UNIFORM_NOTE_COLOR, settings.uniformNoteColor)
             .putOrRemove(FILL_NOTE_COLOR, settings.fillNoteColor)
@@ -256,6 +260,7 @@ class SettingsStore(context: Context) {
         const val NOTE_THEME_ID = "noteThemeId"
         const val CAPTURE_NOTIFICATION = "captureNotification"
         const val WIDGET_PREVIEW = "widgetPreview"
+        const val WIDGET_TASKS = "widgetTasks"
         const val EXACT_REMINDERS = "exactReminders"
         const val UNIFORM_NOTE_COLOR = "uniformNoteColor"
         const val FILL_NOTE_COLOR = "fillNoteColor"

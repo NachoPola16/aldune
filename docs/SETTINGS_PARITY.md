@@ -50,6 +50,9 @@ It is **not** Windows' "always on top of other windows" (`NoteUnpinned`, local, 
 | Sync in the background | `SyncAutomatically` | `syncInBackground` | |
 | Notice of new versions | `CheckForUpdatesAutomatically` | `checkUpdates` | Once a day, can be turned off, only opens the release page. |
 | Preview in dock or widget | `ShowNotePreview` | `widgetPreview` | |
+| Tick tasks in the widget | — | `widgetTasks` | Android only (the widget is). Default on: each list note in the widget shows its first 3 pending tasks with a box that ticks it there. |
+| Widget limited to a tag | — | per widget (`WidgetTagStore`) | Android only. Chosen when the widget is placed and from its reconfigure handle; not a setting, not synced. |
+| Roomier lines with large task boxes | `LargeCheckboxes` | `largeCheckboxes` | Windows: whole note, about 1.5x line; Android: only notes with tasks. Looks with their own line step (ruled paper, grids) keep it. |
 | Own tag order | `TagOrder` | `tagOrder` | Per device, never synced (the sync format stays 4); alphabetical by default, new tags go last. Windows: arrows in the manager's «Manage tags»; Android: arrows in the all-tags sheet. Not in the exported config file. |
 
 ## Windows only

@@ -1438,9 +1438,9 @@ public static class Strings
     public static string AppearanceAldune => T("Aldune (plum)", "Aldune (ciruela)", "Aldune (Pflaume)", "Aldune (prune)", "Aldune (ameixa)", "Aldune (prugna)", "Aldune（プラム）", "Aldune（李紫）");
     public static string AppearanceXpLight => T("Windows XP, light", "Windows XP, claro", "Windows XP, hell", "Windows XP, clair", "Windows XP, claro", "Windows XP, chiaro", "Windows XP（ライト）", "Windows XP（浅色）");
     public static string AppearanceXpDark => T("Windows 98, dark", "Windows 98, oscuro", "Windows 98, dunkel", "Windows 98, sombre", "Windows 98, escuro", "Windows 98, scuro", "Windows 98（ダーク）", "Windows 98（深色）");
-    public static string AppearanceTelecomLight => T("Telecom Light (lab)", "Telecomunicaciones claro (laboratorio)",
+    public static string AppearanceTelecomLight => T("Telecom Light (lab)", "Telecom claro (laboratorio)",
         "Telekom hell (Labor)", "Télécom clair (labo)", "Telecom claro (laboratório)", "Telecom chiaro (laboratorio)", "テレコム ライト (ラボ)", "Telecom 浅色（实验室）");
-    public static string AppearanceTelecomDark => T("Telecom Dark (oscilloscope)", "Telecomunicaciones oscuro (osciloscopio)",
+    public static string AppearanceTelecomDark => T("Telecom Dark (oscilloscope)", "Telecom oscuro (osciloscopio)",
         "Telekom dunkel (Oszilloskop)", "Télécom sombre (oscilloscope)", "Telecom escuro (osciloscópio)", "Telecom scuro (oscilloscopio)", "テレコム ダーク (オシロスコープ)", "Telecom 深色（示波器）");
     public static string AppearanceBash => T("Bash", "Bash", "Bash", "Bash", "Bash", "Bash", "Bash", "Bash");
     public static string AppearanceTravelNotebookLight => T("Travel notebook, light", "Libreta de viaje, clara",

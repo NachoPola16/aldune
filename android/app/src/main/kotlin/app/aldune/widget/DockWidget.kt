@@ -21,14 +21,17 @@ import androidx.glance.Image
 import androidx.glance.ImageProvider
 import androidx.glance.LocalContext
 import androidx.glance.LocalSize
+import androidx.glance.action.actionParametersOf
 import androidx.glance.action.clickable
+import androidx.glance.appwidget.CheckBox
+import androidx.glance.appwidget.CheckboxDefaults
 import androidx.glance.appwidget.GlanceAppWidget
+import androidx.glance.appwidget.GlanceAppWidgetManager
 import androidx.glance.appwidget.SizeMode
+import androidx.glance.appwidget.action.actionRunCallback
 import androidx.glance.appwidget.action.actionStartActivity
 import androidx.glance.appwidget.cornerRadius
-import androidx.glance.appwidget.lazy.GridCells
 import androidx.glance.appwidget.lazy.LazyColumn
-import androidx.glance.appwidget.lazy.LazyVerticalGrid
 import androidx.glance.appwidget.lazy.items
 import androidx.glance.appwidget.provideContent
 import androidx.glance.background
@@ -74,6 +77,7 @@ import kotlinx.coroutines.withContext
 /** Los textos del widget ya en el idioma elegido en la app (el widget no pasa por `attachBaseContext`). */
 private class WidgetTexts(
     val appName: String, val newNote: String, val empty: String, val protectedTitle: String, val unavailable: String, val moreFormat: String,
+    val filterEmpty: String,
 )
 
 private class WidgetColors(
@@ -88,6 +92,8 @@ private class WidgetColors(
 private class WidgetData(val content: WidgetContent?, val texts: WidgetTexts, val colors: WidgetColors, val showPreview: Boolean,
     val uniformColor: String? = null, val squareCorners: Boolean = false, val squareNewButton: Boolean = false,
     val colorFill: Boolean = true,
+    /** The tag this widget is limited to, or `null` for all notes. */
+    val tag: String? = null,
 )
 
 /**
@@ -101,7 +107,8 @@ class DockWidget : GlanceAppWidget() {
 
     override suspend fun provideGlance(context: Context, id: GlanceId) {
         val firstVersion = WidgetUpdater.version.value
-        val first = withContext(Dispatchers.IO) { load(context) }
+        val appWidgetId = GlanceAppWidgetManager(context).getAppWidgetId(id)
+        val first = withContext(Dispatchers.IO) { load(context, appWidgetId) }
         provideContent {
             // Glance reutiliza la sesión de un widget mientras sigue viva y NO vuelve a llamar a provideGlance: lo cargado arriba se
             // quedaría viejo. Por eso el widget recarga aquí dentro cada vez que el WidgetUpdater sube la versión.
@@ -110,7 +117,7 @@ class DockWidget : GlanceAppWidget() {
             var shownVersion by remember { mutableLongStateOf(firstVersion) }
             LaunchedEffect(version) {
                 if (version != shownVersion) {
-                    shown = withContext(Dispatchers.IO) { load(context) }
+                    shown = withContext(Dispatchers.IO) { load(context, appWidgetId) }
                     shownVersion = version
                 }
             }
@@ -118,24 +125,29 @@ class DockWidget : GlanceAppWidget() {
         }
     }
 
-    private fun load(context: Context): WidgetData {
+    private fun load(context: Context, appWidgetId: Int): WidgetData {
         val settings = SettingsStore(context).load()
+        val tag = WidgetTagStore.get(context, appWidgetId)
         val localized = Languages.wrap(context, settings.language)
         val texts = WidgetTexts(
             appName = localized.getString(R.string.app_name), newNote = localized.getString(R.string.new_note),
             empty = localized.getString(R.string.widget_empty), protectedTitle = localized.getString(R.string.protected_note_title),
             unavailable = localized.getString(R.string.widget_unavailable), moreFormat = localized.getString(R.string.widget_more),
+            filterEmpty = localized.getString(R.string.widget_filter_empty),
         )
         val content = (context.applicationContext as AldunaApp).container.open().let { opened ->
             (opened as? AppContainer.Opened.Ready)?.let { ready ->
                 WidgetContentBuilder.build(
                     ready.notes.list(NoteState.ACTIVE),
-                    WidgetOptions(placeholder = localized.getString(R.string.new_note_title), showPreview = settings.widgetPreview),
+                    WidgetOptions(
+                        placeholder = localized.getString(R.string.new_note_title), showPreview = settings.widgetPreview,
+                        tasksPerNote = if (settings.widgetTasks) TASKS_PER_NOTE else 0, tag = tag,
+                    ),
                 )
             }
         }
         return WidgetData(content, texts, colors(settings.appearance, settings.aspectColors), settings.widgetPreview,
-            settings.uniformNoteColor, settings.cornersSquare, settings.newButtonSquare, settings.colorFill)
+            settings.uniformNoteColor, settings.cornersSquare, settings.newButtonSquare, settings.colorFill, tag)
     }
 
     /** Con «seguir el sistema» el widget cambia solo de claro a oscuro; con un aspecto elegido se queda en ese. */
@@ -171,7 +183,7 @@ class DockWidget : GlanceAppWidget() {
         Column(GlanceModifier.fillMaxSize().background(data.colors.ground).cornerRadius(if (data.squareCorners) 0.dp else 20.dp).padding(8.dp)) {
             Row(GlanceModifier.fillMaxWidth().padding(start = 6.dp, end = 2.dp, bottom = 6.dp), verticalAlignment = Alignment.CenterVertically) {
                 Text(
-                    data.texts.appName, GlanceModifier.defaultWeight().clickable(openApp),
+                    data.texts.appName + (data.tag?.let { "  ·  #$it" } ?: ""), GlanceModifier.defaultWeight().clickable(openApp),
                     style = TextStyle(color = data.colors.title, fontSize = 13.sp, fontWeight = FontWeight.Medium, fontFamily = data.colors.font),
                 )
                 Image(
@@ -185,13 +197,17 @@ class DockWidget : GlanceAppWidget() {
             val content = data.content
             when {
                 content == null -> Message(data.texts.unavailable, data.colors, openApp)
-                content.strips.isEmpty() -> Message(data.texts.empty, data.colors, null)
-                columns == 1 -> LazyColumn {
-                    items(content.strips, itemId = { it.id.hashCode().toLong() }) { Strip(it, data) }
-                    if (content.hiddenCount > 0) item { More(content.hiddenCount, data, openApp) }
-                }
-                else -> LazyVerticalGrid(gridCells = GridCells.Fixed(columns)) {
-                    items(content.strips, itemId = { it.id.hashCode().toLong() }) { Strip(it, data) }
+                content.strips.isEmpty() -> Message(if (data.tag != null) data.texts.filterEmpty else data.texts.empty, data.colors, null)
+                // One list of rows, not a grid: a strip with tasks is taller and a grid sizes every row after the first one. Each row is as
+                // tall as its tallest strip and the strips of a row share the width.
+                else -> LazyColumn {
+                    items(content.strips.chunked(columns), itemId = { it.first().id.hashCode().toLong() }) { row ->
+                        val height = row.maxOf { stripHeight(it, data) }
+                        Row(GlanceModifier.fillMaxWidth()) {
+                            row.forEach { Box(GlanceModifier.defaultWeight()) { Strip(it, data, height) } }
+                            repeat(columns - row.size) { Box(GlanceModifier.defaultWeight()) {} }
+                        }
+                    }
                     if (content.hiddenCount > 0) item { More(content.hiddenCount, data, openApp) }
                 }
             }
@@ -214,7 +230,7 @@ class DockWidget : GlanceAppWidget() {
     }
 
     @Composable
-    private fun Strip(strip: WidgetStrip, data: WidgetData) {
+    private fun Strip(strip: WidgetStrip, data: WidgetData, height: androidx.compose.ui.unit.Dp) {
         val context = LocalContext.current
         val open = actionStartActivity(CaptureIntents.openNote(context, strip.id))
         // «Mismo color en todas las notas» también en el widget: solo cambia la presentación, la nota conserva el suyo.
@@ -225,9 +241,8 @@ class DockWidget : GlanceAppWidget() {
         val ink = if (fill) ColorProvider(noteInk(shown)) else data.colors.text
         val muted = if (fill) ColorProvider(noteInk(shown).copy(alpha = 0.75f)) else data.colors.muted
         Box(GlanceModifier.fillMaxWidth().padding(2.dp)) {
-            // Altura fija y la misma para todas: el GridView de un widget dimensiona todas las filas con la primera, y una tira con vista previa
-            // quedaría recortada. Con el ajuste de vista previa las tiras son más altas, tengan o no segunda línea.
-            val height = if (data.showPreview) STRIP_HEIGHT_PREVIEW else STRIP_HEIGHT
+            // The height comes from the row (its tallest strip, see `stripHeight`): a fixed value, never wrapped, so a strip with a preview
+            // or tasks is not clipped.
             Row(
                 GlanceModifier.fillMaxWidth().height(height).background(if (fill) ColorProvider(face) else data.colors.surface).cornerRadius(if (data.squareCorners) 0.dp else 12.dp).clickable(open),
             ) {
@@ -256,6 +271,20 @@ class DockWidget : GlanceAppWidget() {
                         strip.preview?.let {
                             Text(it, style = TextStyle(color = muted, fontSize = 12.sp, fontFamily = data.colors.font), maxLines = 2)
                         }
+                        // Pending tasks, each with a box that ticks it right here (`ToggleTaskAction`); the strip's own tap still opens the note.
+                        strip.tasks.forEach { task ->
+                            CheckBox(
+                                checked = false,
+                                onCheckedChange = actionRunCallback<ToggleTaskAction>(actionParametersOf(
+                                    ToggleTaskAction.NOTE_ID to strip.id, ToggleTaskAction.BOX_INDEX to task.index, ToggleTaskAction.LINE to task.line,
+                                )),
+                                text = task.text,
+                                modifier = GlanceModifier.fillMaxWidth().height(TASK_ROW),
+                                maxLines = 1,
+                                style = TextStyle(color = ink, fontSize = 12.sp, fontFamily = data.colors.font),
+                                colors = CheckboxDefaults.colors(checkedColor = ink, uncheckedColor = ink),
+                            )
+                        }
                     }
                 }
             }
@@ -263,8 +292,17 @@ class DockWidget : GlanceAppWidget() {
         }
     }
 
+    /** A strip's height: the base one (taller with the preview setting) plus a row per task it lists. */
+    private fun stripHeight(strip: WidgetStrip, data: WidgetData): androidx.compose.ui.unit.Dp {
+        val base = if (data.showPreview) STRIP_HEIGHT_PREVIEW else STRIP_HEIGHT
+        val tasks = (strip as? WidgetStrip.Open)?.tasks?.size ?: 0
+        return base + TASK_ROW * tasks
+    }
+
     private companion object {
         const val PIN = "\uD83D\uDCCC "
+        const val TASKS_PER_NOTE = 3
+        val TASK_ROW = 28.dp
         val STRIP_HEIGHT = 40.dp
         val STRIP_HEIGHT_PREVIEW = 66.dp
         val NARROW = DpSize(110.dp, 110.dp)

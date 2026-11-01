@@ -422,6 +422,9 @@ private fun CaptureSection(viewModel: NotesViewModel, notificationOn: Boolean) {
     SwitchRow(stringResource(R.string.widget_preview), stringResource(R.string.widget_preview_hint), widgetPreview.widgetPreview) { on ->
         viewModel.updateSettings { it.copy(widgetPreview = on) }
     }
+    SwitchRow(stringResource(R.string.widget_tasks), stringResource(R.string.widget_tasks_hint), widgetPreview.widgetTasks) { on ->
+        viewModel.updateSettings { it.copy(widgetTasks = on) }
+    }
 
     // Poner el widget sin ir al selector del lanzador: el sistema enseña su diálogo y el lanzador lo coloca. Si no lo admite, no se ofrece.
     val widgets = remember { AppWidgetManager.getInstance(context) }

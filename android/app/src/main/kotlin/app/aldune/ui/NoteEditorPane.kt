@@ -816,7 +816,13 @@ fun NoteEditorPane(key: String, viewModel: NotesViewModel, onBack: () -> Unit, s
                         else -> false
                     }
                 },
-            textStyle = bodyStyle.copy(color = ink, textIndent = if (hasTasks && !plainWraps) TextIndent(firstLine = 0.sp, restLine = taskIndent) else null),
+            // With big boxes a task list gets a little more line height: a taller row is an easier target. Ruled paper and grids keep theirs
+            // (the rules are drawn at that step).
+            textStyle = bodyStyle.copy(
+                color = ink,
+                lineHeight = if (hasTasks && settings.largeCheckboxes && !(look.telecomGrid || look.paper == AspectSkin.Paper.RULED || look.paper == AspectSkin.Paper.GRID)) bodyStyle.lineHeight * 1.15f else bodyStyle.lineHeight,
+                textIndent = if (hasTasks && !plainWraps) TextIndent(firstLine = 0.sp, restLine = taskIndent) else null,
+            ),
             cursorBrush = SolidColor(MaterialTheme.colorScheme.primary),
         )
         if (hasTasks) TaskDragOverlay(drag, layout = { layout?.invoke() }, scroll = fieldScroll, shown = ::shownText, modifier = Modifier.matchParentSize(), ink = ink,

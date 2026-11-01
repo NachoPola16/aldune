@@ -186,6 +186,10 @@ fun NoteListPane(
     val archivedMsg = stringResource(R.string.note_archived)
     val trashedMsg = stringResource(R.string.note_trashed)
     val restoredMsg = stringResource(R.string.note_restored)
+    // The «N notes …» texts for a multi-selection: read as templates here (configuration-aware) and formatted when the action runs.
+    val archivedManyTpl = stringResource(R.string.notes_archived_n)
+    val trashedManyTpl = stringResource(R.string.notes_trashed_n)
+    val restoredManyTpl = stringResource(R.string.notes_restored_n)
     val undoLabel = stringResource(R.string.undo)
 
     // Right after swiping a note away or undoing it, the finger is still near the list: a hold detector must not read that touch as a request
@@ -237,12 +241,11 @@ fun NoteListPane(
             if (picked.isNotEmpty()) SelectionBar(
                 count = picked.size, filter = state.filter,
                 onAll = { picked = state.items.map { it.id }.toSet() }, onExit = { picked = emptySet() },
-                onArchive = { val ids = picked; ids.forEach(viewModel::archive); picked = emptySet(); announce(archivedMsg) { ids.forEach(viewModel::restore) } },
-                onTrash = { val ids = picked; ids.forEach(viewModel::trash); picked = emptySet(); announce(trashedMsg) { ids.forEach(viewModel::restore) } },
-                onRestore = { val ids = picked; ids.forEach(viewModel::restore); picked = emptySet(); announce(restoredMsg) { ids.forEach(viewModel::trash) } },
+                onArchive = { val ids = picked; ids.forEach(viewModel::archive); picked = emptySet(); announce(if (ids.size == 1) archivedMsg else String.format(archivedManyTpl, ids.size)) { ids.forEach(viewModel::restore) } },
+                onTrash = { val ids = picked; ids.forEach(viewModel::trash); picked = emptySet(); announce(if (ids.size == 1) trashedMsg else String.format(trashedManyTpl, ids.size)) { ids.forEach(viewModel::restore) } },
+                onRestore = { val ids = picked; ids.forEach(viewModel::restore); picked = emptySet(); announce(if (ids.size == 1) restoredMsg else String.format(restoredManyTpl, ids.size)) { ids.forEach(viewModel::trash) } },
                 onTag = { taggingPicked = true },
-            ) else
-            Row(Modifier.fillMaxWidth().padding(top = 8.dp, end = 8.dp), verticalAlignment = Alignment.CenterVertically) {
+            ) else Row(Modifier.fillMaxWidth().padding(top = 8.dp, end = 8.dp), verticalAlignment = Alignment.CenterVertically) {
                 Box(Modifier.weight(1f)) { StateTabs(state, viewModel::setFilter) }
                 if (hasProfile && status != null) {
                     val line = formatStatus(status, rememberNow())

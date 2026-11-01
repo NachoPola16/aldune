@@ -60,6 +60,13 @@
             </intent-filter>
         </service>
 
+        <!-- Asked by the launcher when a dock widget is placed or reconfigured: all notes or one tag. -->
+        <activity android:name=".widget.WidgetConfigActivity" android:exported="true">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_CONFIGURE" />
+            </intent-filter>
+        </activity>
+
         <receiver android:name=".widget.DockWidgetReceiver" android:exported="true" android:label="@string/widget_label">
             <intent-filter>
                 <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />

@@ -146,7 +146,10 @@ public static class ThemeManager
             ["AlduneNoteTitleFontSize"] = Math.Round(skin.NoteTitleFontSize * TextFactor),
             ["AlduneNoteBodySize"] = Math.Round(NoteBodyBaseSize * TextFactor),
             // NaN = el interlineado natural de la fuente (lo de siempre).
-            ["AlduneNoteLineHeight"] = skin.NoteLineHeight > 0 ? Math.Round(skin.NoteLineHeight * TextFactor) : double.NaN,
+            // With big task boxes a looser line (about 1.5x the text) gives a taller row to hit; the body is one plain TextBox, so it
+            // applies to the whole note. Looks with their own fixed step (ruled paper, grids) keep it.
+            ["AlduneNoteLineHeight"] = skin.NoteLineHeight > 0 ? Math.Round(skin.NoteLineHeight * TextFactor)
+                : LargeCheckboxes ? Math.Round(NoteBodyBaseSize * TextFactor * 1.5) : double.NaN,
             ["AlduneTitleBarFill"] = TitleBarFill(skin.TitleBar),
         };
 
