@@ -21,7 +21,7 @@ public static partial class SyncSpaces
     private const int MaxNameLength = 32;
 
     // The name is a folder name: lowercase letters, digits, «-» and «_», never a path.
-    [GeneratedRegex("^[a-z0-9][a-z0-9_-]*$")]
+    [GeneratedRegex(@"^[a-z0-9][a-z0-9_-]*\z")]
     private static partial Regex NamePattern();
 
     public static IReadOnlyList<SyncSpace> Parse(string? spec)
@@ -33,7 +33,7 @@ public static partial class SyncSpaces
             if (entry.Length == 0) continue;
 
             var equals = entry.IndexOf('=');
-            if (equals < 0) throw new FormatException($"A space must be written name=token, and '{Mask(entry)}' has no '='.");
+            if (equals < 0) throw new FormatException("A space must be written name=token: an entry has no '='.");
             var name = entry[..equals].Trim();
             var token = entry[(equals + 1)..].Trim();
 
@@ -71,7 +71,4 @@ public static partial class SyncSpaces
     /// <summary>The folder with a space's objects (the original store keeps <c>/data/objects</c>, as always).</summary>
     public static string ObjectsPath(string dataPath, string? space) =>
         space is null ? Path.Combine(dataPath, "objects") : Path.Combine(dataPath, "spaces", space, "objects");
-
-    // Never print a token in an error: an entry without '=' may be just a token.
-    private static string Mask(string entry) => entry.Length <= 4 ? "…" : entry[..2] + "…";
 }

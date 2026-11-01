@@ -111,6 +111,18 @@ public sealed class SyncServerSpacesTests : IDisposable
         Assert.ThrowsAny<Exception>(() => _factory.CreateClient());
     }
 
+    [Fact]
+    public void TheExampleTokenIsRefusedAsASpaceTokenToo()
+    {
+        Environment.SetEnvironmentVariable(BrandIdentity.SyncDataDirEnvVar, _dataDir);
+        Environment.SetEnvironmentVariable(BrandIdentity.SyncTokensEnvVar, null);
+        Environment.SetEnvironmentVariable(BrandIdentity.SyncTokenEnvVar, null);
+        Environment.SetEnvironmentVariable(BrandIdentity.SyncSpacesEnvVar, "madre=replace-with-a-long-random-token");
+        _factory = new WebApplicationFactory<Program>();
+
+        Assert.ThrowsAny<Exception>(() => _factory.CreateClient());
+    }
+
     private static SyncEnvelope Envelope(Guid id) => new()
     {
         NoteId = id,
