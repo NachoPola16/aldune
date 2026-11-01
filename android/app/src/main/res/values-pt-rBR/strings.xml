@@ -553,4 +553,6 @@
     <string name="invite_share">Compartilhar</string>
     <string name="invite_scan_hint">Ou peça que escaneiem este código com “Escanear QR” ao entrar.</string>
     <string name="whatsnew_200_people">Convide pelo celular: crie um convite com QR code e veja quem entrou no seu servidor (e revogue o acesso) em Configurações → Sincronização.</string>
+    <string name="settings_search">Pesquisar nas configurações</string>
+    <string name="settings_search_none">Nada encontrado</string>
 </resources>

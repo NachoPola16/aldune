@@ -553,4 +553,6 @@
     <string name="invite_share">分享</string>
     <string name="invite_scan_hint">或者让对方在加入时用“扫描二维码”扫描此代码。</string>
     <string name="whatsnew_200_people">在手机上邀请：创建带二维码的邀请，并在 设置 → 同步 中查看加入服务器的人并撤销其访问权限。</string>
+    <string name="settings_search">搜索设置</string>
+    <string name="settings_search_none">未找到</string>
 </resources>

@@ -553,4 +553,6 @@
     <string name="invite_share">Compartir</string>
     <string name="invite_scan_hint">O que escaneen este código con «Escanear QR» al unirse.</string>
     <string name="whatsnew_200_people">Invita desde el móvil: crea una invitación con código QR y mira quién se unió a tu servidor (y revoca su acceso) en Ajustes → Sincronización.</string>
+    <string name="settings_search">Buscar en Ajustes</string>
+    <string name="settings_search_none">No se encontró nada</string>
 </resources>

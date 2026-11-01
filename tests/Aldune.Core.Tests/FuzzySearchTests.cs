@@ -17,6 +17,7 @@ public class FuzzySearchTests
     [InlineData("notificasiones", "Notificaciones")]   // a different spelling of a sound
     [InlineData("shadow", "Shadows on the dock")]      // the singular of a word in the text
     [InlineData("colour", "Color theme")]              // another spelling of the word (1 letter)
+    [InlineData("sond volme", "Volume Sounds")]        // a letter missing from a word that is only half there ("sond" is one edit from "sound")
     public void Matches_ToleratesTypos(string query, string text) =>
         Assert.True(FuzzySearch.Score(query, text) >= FuzzySearch.MinimumScore, $"{query} / {text}");
 

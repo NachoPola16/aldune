@@ -553,4 +553,6 @@
     <string name="invite_share">Share</string>
     <string name="invite_scan_hint">Or let them scan this code with “Scan QR” when they join.</string>
     <string name="whatsnew_200_people">Invite from your phone: create an invitation with a QR code and see who joined your server (and revoke their access) in Settings → Sync.</string>
+    <string name="settings_search">Search settings</string>
+    <string name="settings_search_none">Nothing found</string>
 </resources>

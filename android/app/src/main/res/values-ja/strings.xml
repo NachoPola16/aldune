@@ -553,4 +553,6 @@
     <string name="invite_share">共有</string>
     <string name="invite_scan_hint">または、参加時に「QR をスキャン」でこのコードを読み取ってもらいます。</string>
     <string name="whatsnew_200_people">スマホから招待：QR コード付きの招待を作成し、設定 → 同期で、サーバーに参加した人の確認とアクセスの取り消しができます。</string>
+    <string name="settings_search">設定を検索</string>
+    <string name="settings_search_none">見つかりません</string>
 </resources>

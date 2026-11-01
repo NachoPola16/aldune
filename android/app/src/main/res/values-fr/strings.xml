@@ -553,4 +553,6 @@
     <string name="invite_share">Partager</string>
     <string name="invite_scan_hint">Ou faites-leur scanner ce code avec « Scanner le QR » en rejoignant.</string>
     <string name="whatsnew_200_people">Invitez depuis votre téléphone : créez une invitation avec un QR code et voyez qui a rejoint votre serveur (et révoquez son accès) dans Réglages → Synchronisation.</string>
+    <string name="settings_search">Rechercher dans les réglages</string>
+    <string name="settings_search_none">Aucun résultat</string>
 </resources>

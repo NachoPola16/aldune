@@ -51,7 +51,9 @@ import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowDropDown
+import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Settings
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.Edit
@@ -131,7 +133,14 @@ fun SettingsScreen(viewModel: NotesViewModel, onClose: () -> Unit) {
     val settingsScroll = rememberScrollState()
     var shownTab by rememberSaveable { mutableIntStateOf(0) }
     LaunchedEffect(tab) { if (shownTab != tab) { settingsScroll.scrollTo(0); shownTab = tab } }
-    fun inTab(index: Int) = !tabs || tab == index
+    // The search over the options: while it has text the results take the place of the tab's content (`inTab` is false for every tab), and
+    // touching one goes to its tab.
+    var searchOpen by rememberSaveable { mutableStateOf(false) }
+    var searchQuery by rememberSaveable { mutableStateOf("") }
+    val searching = tabs && searchOpen && searchQuery.isNotBlank()
+    val searchFocus = remember { androidx.compose.ui.focus.FocusRequester() }
+    LaunchedEffect(searchOpen) { if (searchOpen) searchFocus.requestFocus() }
+    fun inTab(index: Int) = !searching && (!tabs || tab == index)
 
     // En una pantalla ancha (tableta) los ajustes van en una columna centrada, no estirados a todo el ancho.
     // En horizontal (poca altura) las pestañas caben en una sola fila, ancha: en dos filas se comían casi la mitad de la pantalla.
@@ -146,7 +155,18 @@ fun SettingsScreen(viewModel: NotesViewModel, onClose: () -> Unit) {
                 IconButton(onClick = onClose) { Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.back)) }
                 // With the compact row (emoji only) the title also says which tab is open.
                 val openTab = if (tabs && settings.compactSettingsTabs) " · " + stringResource(labels[tab.coerceAtMost(labels.lastIndex)]) else ""
-                Text(stringResource(R.string.settings) + openTab, style = MaterialTheme.typography.titleLarge)
+                Text(stringResource(R.string.settings) + openTab, Modifier.weight(1f), style = MaterialTheme.typography.titleLarge)
+                if (tabs) IconButton(onClick = { searchOpen = !searchOpen; if (!searchOpen) searchQuery = "" }, Modifier.padding(end = 8.dp)) {
+                    Icon(Icons.Filled.Search, contentDescription = stringResource(R.string.settings_search))
+                }
+            }
+            if (tabs && searchOpen) {
+                androidx.compose.material3.OutlinedTextField(
+                    value = searchQuery, onValueChange = { searchQuery = it },
+                    modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp).focusRequester(searchFocus),
+                    singleLine = true, placeholder = { Text(stringResource(R.string.settings_search)) },
+                    keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(imeAction = androidx.compose.ui.text.input.ImeAction.Search),
+                )
             }
             val atBottom = tabs && settings.settingsTabsAtBottom
             // The bar of tabs, drawn under the title or (option) at the bottom of the screen.
@@ -193,6 +213,10 @@ fun SettingsScreen(viewModel: NotesViewModel, onClose: () -> Unit) {
             } }
             if (!atBottom) tabBar()
             Column(Modifier.weight(1f).verticalScroll(settingsScroll).padding(bottom = 24.dp)) {
+                if (searching) SettingsSearchResults(searchQuery, labels) { picked ->
+                    tab = picked; lastTab = picked; lastTabAt = System.currentTimeMillis()
+                    searchQuery = ""; searchOpen = false
+                }
                 if (show(SettingsSection.SYNC) && inTab(5)) SyncSection(viewModel)
                 if (show(SettingsSection.BACKUP) && inTab(5)) BackupSection(viewModel)
                 if (show(SettingsSection.CAPTURE) && inTab(4)) CaptureSection(viewModel, settings.captureNotification)

@@ -1,4 +1,4 @@
-using System.Globalization;
+﻿using System.Globalization;
 using System.Text;
 
 namespace Aldune.Core;
@@ -74,11 +74,11 @@ public static class FuzzySearch
         int distance = Distance(query, word);
         if (distance <= allowed) return 0.7 - 0.1 * (distance - 1);
         // A typo in a word that is still being typed: compare with the start of the word.
-        if (word.Length > query.Length)
-        {
-            int prefixDistance = Distance(query, word[..query.Length]);
-            if (prefixDistance <= allowed) return 0.55 - 0.05 * (prefixDistance - 1);
-        }
+        // (Also against a start one letter longer or shorter: a missing letter is one edit from the start of the word that has it.)
+        int best = int.MaxValue;
+        for (int length = Math.Max(1, query.Length - 1); length <= Math.Min(word.Length - 1, query.Length + 1); length++)
+            best = Math.Min(best, Distance(query, word[..length]));
+        if (best <= allowed) return 0.55 - 0.05 * (best - 1);
         return 0;
     }
 

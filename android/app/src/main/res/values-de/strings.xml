@@ -553,4 +553,6 @@
     <string name="invite_share">Teilen</string>
     <string name="invite_scan_hint">Oder lass sie diesen Code beim Beitritt mit „QR scannen“ einlesen.</string>
     <string name="whatsnew_200_people">Vom Handy einladen: Erstelle eine Einladung mit QR-Code und sieh in Einstellungen → Synchronisierung, wer deinem Server beigetreten ist (und widerrufe den Zugang).</string>
+    <string name="settings_search">Einstellungen durchsuchen</string>
+    <string name="settings_search_none">Nichts gefunden</string>
 </resources>
