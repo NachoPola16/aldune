@@ -1,7 +1,7 @@
 FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
 WORKDIR /src
 COPY . .
-RUN dotnet restore src/Aldune.SyncServer/Aldune.SyncServer.csproj
+RUN dotnet restore src/Aldune.SyncServer/Aldune.SyncServer.csproj --locked-mode
 RUN dotnet publish src/Aldune.SyncServer/Aldune.SyncServer.csproj -c Release -o /app/publish --no-restore
 
 FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS runtime
