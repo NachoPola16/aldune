@@ -1047,7 +1047,7 @@ private const val UNTAGGED_KEY = "\u0000untagged"
 private fun GroupHeader(header: ListEntry.Header, onToggle: () -> Unit) {
     val state = stringResource(if (header.open) R.string.group_expanded else R.string.group_collapsed)
     Row(
-        Modifier.fillMaxWidth().clickable(onClick = onToggle).padding(horizontal = 4.dp, vertical = 10.dp)
+        Modifier.fillMaxWidth().clickable(onClick = onToggle).padding(horizontal = 16.dp, vertical = 10.dp)
             .semantics(mergeDescendants = true) { heading(); stateDescription = state },
         verticalAlignment = Alignment.CenterVertically,
     ) {
