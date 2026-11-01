@@ -243,6 +243,11 @@
                                  izquierda ApplyLeftEdgeTabShape la pasa a la izquierda y marca CardBorder.Tag para
                                  que el hueco se espeje. Sin vista previa el título (centrado) cede el hueco. Van
                                  después del disparador de vista previa vacía y en este orden: el último que casa gana. -->
+                            <!-- Measured with a probe: with the default font the preview's first ink sits 1 px left of the title's (the capital's side
+                                 bearing is wider than a digit's), so the two read as misaligned. Only the plain cards: the tinted ones set their own margins below. -->
+                            <DataTrigger Binding="{Binding Card, Source={x:Static local:SkinState.Current}}" Value="{x:Static core:SkinCard.Filled}">
+                                <Setter TargetName="SnippetText" Property="Margin" Value="1,2,0,0" />
+                            </DataTrigger>
                             <DataTrigger Binding="{Binding Card, Source={x:Static local:SkinState.Current}}" Value="{x:Static core:SkinCard.Tinted}">
                                 <Setter TargetName="SnippetText" Property="Margin" Value="0,2,46,0" />
                             </DataTrigger>
