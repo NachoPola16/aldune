@@ -126,7 +126,7 @@
                                                           VerticalAlignment="Center" />
                                         <TextBlock Text="&#x2304;" FontSize="12"
                                                    Foreground="{DynamicResource AlduneMutedTextBrush}" HorizontalAlignment="Right"
-                                                   VerticalAlignment="Center" Margin="8,0,1,3" />
+                                                   VerticalAlignment="Center" Margin="8,0,-1,3" />
                                     </Grid>
                                 </Border>
                             </ToggleButton>

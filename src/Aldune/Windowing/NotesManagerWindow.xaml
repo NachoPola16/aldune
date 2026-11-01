@@ -434,7 +434,7 @@
                     </Style>
                 </Border.Style>
                 <Grid>
-                <WrapPanel HorizontalAlignment="Left">
+                <WrapPanel HorizontalAlignment="Left" Margin="0,0,78,0">
                 <!-- IsChecked se fija desde el code-behind tras InitializeComponent, no aquí: un
                      IsChecked="True" en XAML dispara Checked mientras el árbol se está
                      construyendo, antes de que RowsList exista — ver el constructor. -->
@@ -450,7 +450,7 @@
                              Checked="OnFilterChanged" Style="{StaticResource FilterToggleStyle}" />
                 <RadioButton x:Name="FilterTrashed" GroupName="NotesFilter" Content="{x:Static res:Strings.FilterTrashed}"
                              Checked="OnFilterChanged" Style="{StaticResource FilterToggleStyle}" />
-                <!-- The three filters beside the tabs wrap together as one row (tag, manage tags), instead of splitting at any point. -->
+                <!-- The three filters beside the tabs wrap together as one row (tag), instead of splitting at any point. -->
                 <StackPanel Orientation="Horizontal">
                 <ComboBox x:Name="TagFilterBox" MinWidth="110" MinHeight="31" Margin="0"
                           ToolTip="{x:Static res:Strings.TagFilterTooltip}"
@@ -458,21 +458,23 @@
                           SelectionChanged="OnTagFilterChanged"
                            Style="{StaticResource TagFilterStyle}"
                            Visibility="Collapsed" />
-                <!-- Solo icono y en la misma fila: antes ocupaba una fila entera para un botón que
-                     se usa de higos a brevas. El tooltip dice qué es. -->
-                <Button x:Name="ManageTagsButton" Click="OnManageTagsClick"
-                        Width="31" Height="31" Padding="0" Margin="8,0,0,0"
-                        ToolTip="{x:Static res:Strings.ManageTags}"
-                        AutomationProperties.Name="{x:Static res:Strings.ManageTags}"
-                        Style="{StaticResource ToolbarButtonStyle}">
-                    <TextBlock Text="&#xE8EC;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" FontSize="{DynamicResource AlduneTextBody}" />
-                </Button>
                 </StackPanel>
                 </WrapPanel>
                 <!-- «Nueva nota» al final de la fila de filtros, con el acento de la app: antes estaba en la cabecera, un botón con caja entre botones
                      de ventana planos, y desentonaba en todos los aspectos. Solo el «+», que se dibuja (dos barras de 2 px en una caja de 12) para que
                      quede centrado al píxel. -->
-                <Button x:Name="NewNoteButton" Click="OnNewNoteClick" HorizontalAlignment="Right" VerticalAlignment="Top"
+                <!-- Actions on the right (manage tags, new note), apart from the filters on the left: the filters are what you look at, these are what you do. -->
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Top">
+                <!-- Solo icono y en la misma fila: antes ocupaba una fila entera para un botón que
+                     se usa de higos a brevas. El tooltip dice qué es. -->
+                <Button x:Name="ManageTagsButton" Click="OnManageTagsClick"
+                        Width="31" Height="31" Padding="0" Margin="0,0,8,0"
+                        ToolTip="{x:Static res:Strings.ManageTags}"
+                        AutomationProperties.Name="{x:Static res:Strings.ManageTags}"
+                        Style="{StaticResource ToolbarButtonStyle}">
+                    <TextBlock Text="&#xE8EC;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" FontSize="{DynamicResource AlduneTextBody}" />
+                </Button>
+                <Button x:Name="NewNoteButton" Click="OnNewNoteClick"
                         Width="30" Height="30" Padding="0"
                         ToolTip="{x:Static res:Strings.NewNoteTooltip}"
                         AutomationProperties.Name="{x:Static res:Strings.NewNoteTooltip}"
@@ -482,6 +484,7 @@
                         <Border Width="2" HorizontalAlignment="Center" Background="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}" />
                     </Grid>
                 </Button>
+                </StackPanel>
                 </Grid>
         </Border>
 
