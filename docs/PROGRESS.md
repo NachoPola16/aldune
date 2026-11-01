@@ -31,11 +31,11 @@ Every picture below was made by building that very release from its tag and rend
 
 In 0.5.0 the five tabs all read "NEW NOTE" with these sample notes: the tabs did not take their title from the note text yet. By 0.8.0, three days later, they show the first line of each note.
 
-On Android the first release candidate, 1.0.0 and today (1.3.1, which starts in the new "Aldune" look on a fresh install):
+On Android the first release candidate, 1.0.0 and today (2.0.0, in the "Aldune" look, with the list grouped by tag):
 
-![Aldune for Android: 0.1.0-rc1 on 24 October, 1.0.0 on 29 October and 1.3.1 today](images/progress-android.png)
+![Aldune for Android: 0.1.0-rc1 on 24 October, 1.0.0 on 29 October and 2.0.0 today](images/progress-android.png)
 
-The first candidate was a plain list with a colour stripe; 1.0.0 added full-colour cards, the sync notice and the welcome message; today there is a bottom search bar with the settings gear and a preview line under each title.
+The first candidate was a plain list with a colour stripe; 1.0.0 added full-colour cards, the sync notice and the welcome message; today there is a bottom search bar with the settings gear, a preview line under each title and, if you want, sections by tag.
 
 ## At a glance
 

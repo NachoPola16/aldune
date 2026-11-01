@@ -610,11 +610,14 @@ fun NoteEditorPane(key: String, viewModel: NotesViewModel, onBack: () -> Unit, s
                         DropdownMenuItem(text = { Text(stringResource(R.string.edit_move_up)) }, onClick = { topMenu = false; move(LineDirection.Up) })
                         DropdownMenuItem(text = { Text(stringResource(R.string.edit_move_down)) }, onClick = { topMenu = false; move(LineDirection.Down) })
                         DropdownMenuItem(text = { Text(stringResource(R.string.edit_outdent)) }, onClick = { topMenu = false; outdent() })
-                        DropdownMenuItem(
-                            text = { Text(stringResource(R.string.edit_uncheck_all)) },
-                            enabled = TaskLists.hasChecked(text()),
-                            onClick = { topMenu = false; commit(TaskLists.uncheckAll(text()).text, state.selection) },
-                        )
+                        // Solo en notas con tareas: en una nota de texto era una entrada gris que nunca se podía usar.
+                        if (TaskLines.count(text()).total > 0) {
+                            DropdownMenuItem(
+                                text = { Text(stringResource(R.string.edit_uncheck_all)) },
+                                enabled = TaskLists.hasChecked(text()),
+                                onClick = { topMenu = false; commit(TaskLists.uncheckAll(text()).text, state.selection) },
+                            )
+                        }
                     }
                 }
             }
