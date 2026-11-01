@@ -166,12 +166,42 @@
                                  Ambas en tonos del propio color de la nota: el negro sería el
                                  único valor de la pestaña sin relación de hue con ella. -->
                             <StackPanel x:Name="LabelStack" VerticalAlignment="Top" Margin="16,9,20,0">
-                                <TextBlock Text="{Binding Converter={StaticResource NoteTabLabelConverter}}"
-                                           Foreground="{Binding Converter={StaticResource NoteFaceConverter}, ConverterParameter=Label}"
-                                           FontSize="12"
-                                           FontWeight="SemiBold"
-                                           TextTrimming="CharacterEllipsis"
-                                           TextWrapping="NoWrap" />
+                                <!-- El título y los distintivos (fijada, vinculada, recordatorio) comparten fila: el título cede el sitio de los
+                                     distintivos y se recorta con «…» antes de pisarlos, y ellos quedan siempre a la altura del título (arriba con vista
+                                     previa, centrados sin ella). Antes iban en otra capa anclada arriba: con la vista previa apagada, el título se
+                                     centra y el icono se quedaba pequeño y pegado arriba. Los distintivos que no aplican se pliegan y no dejan hueco. -->
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="Auto" />
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock Text="{Binding Converter={StaticResource NoteTabLabelConverter}}"
+                                               Foreground="{Binding Converter={StaticResource NoteFaceConverter}, ConverterParameter=Label}"
+                                               FontSize="12"
+                                               FontWeight="SemiBold"
+                                               TextTrimming="CharacterEllipsis"
+                                               TextWrapping="NoWrap" />
+                                    <StackPanel x:Name="BadgeRow" Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center" Margin="6,0,0,0">
+                                        <!-- Fijada arriba en la lista (no el «siempre encima»). Filled pin in the face's ink (not its softer «label» tone) so it reads on every look. -->
+                                        <TextBlock x:Name="PinBadge" Text="&#xE718;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" FontSize="11"
+                                                   Foreground="{Binding Converter={StaticResource NoteFaceConverter}, ConverterParameter=Ink}"
+                                                   VerticalAlignment="Center" Margin="0,0,7,0"
+                                                   Visibility="{Binding IsPinnedToTop, Converter={StaticResource BoolToVisibility}}"
+                                                   ToolTip="{x:Static res:Strings.PinnedToTopMarker}" />
+                                        <!-- Nota vinculada a un archivo: página pequeña con la ruta en el tooltip (spec, decisión 6). -->
+                                        <TextBlock x:Name="LinkBadge" Text="&#xE7C3;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" FontSize="10"
+                                                   Foreground="{Binding Converter={StaticResource NoteFaceConverter}, ConverterParameter=Label}"
+                                                   VerticalAlignment="Center" Margin="0,0,7,0" Opacity="0.75"
+                                                   Visibility="{Binding Converter={StaticResource NoteLinkedConverter}}"
+                                                   ToolTip="{Binding Converter={StaticResource NoteLinkedConverter}, ConverterParameter=Path}" />
+                                        <TextBlock x:Name="ReminderBadge"
+                                                   Text="&#xE917;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets"
+                                                   FontSize="11"
+                                                   Foreground="{Binding Converter={StaticResource NoteFaceConverter}, ConverterParameter=Label}"
+                                                   VerticalAlignment="Center"
+                                                   Visibility="Collapsed" />
+                                    </StackPanel>
+                                </Grid>
                                 <TextBlock x:Name="SnippetText"
                                            Text="{Binding Converter={StaticResource NoteSnippetConverter}}"
                                            Foreground="{Binding Converter={StaticResource NoteFaceConverter}, ConverterParameter=Snippet}"
@@ -182,36 +212,6 @@
                                            Margin="0,2,0,0" />
                             </StackPanel>
 
-                            <!-- Solo el glifo importa aquí, no si hay hueco para más: cuando las
-                                 pestañas se apilan solo se ve la franja superior de cada una (ver
-                                 el comentario de LabelStack), así que el badge va en esa misma
-                                 franja, arriba a la derecha. Glifo elegido sin verificación visual
-                                 todavía — mismo aviso que el resto de iconos de esta sesión, ver
-                                 docs/STATUS.md. -->
-                            <!-- Los distintivos (fijada, vinculada, recordatorio) en una sola fila pegada arriba a la derecha: los que no
-                                 aplican se pliegan y no dejan hueco, así que la chincheta no queda flotando a mitad de la pestaña. -->
-                            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Top" Margin="0,11,10,0">
-                                <!-- Fijada arriba en la lista (no el «siempre encima»). -->
-                                <!-- Filled pin in the face's ink (not its softer «label» tone) so it reads on every look. -->
-                                <TextBlock Text="&#xE718;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" FontSize="11"
-                                           Foreground="{Binding Converter={StaticResource NoteFaceConverter}, ConverterParameter=Ink}"
-                                           VerticalAlignment="Center" Margin="0,0,7,0"
-                                           Visibility="{Binding IsPinnedToTop, Converter={StaticResource BoolToVisibility}}"
-                                           ToolTip="{x:Static res:Strings.PinnedToTopMarker}" />
-                                <!-- Nota vinculada a un archivo: página pequeña con la ruta en el tooltip (spec, decisión 6). -->
-                                <TextBlock Text="&#xE7C3;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" FontSize="10"
-                                           Foreground="{Binding Converter={StaticResource NoteFaceConverter}, ConverterParameter=Label}"
-                                           VerticalAlignment="Center" Margin="0,0,7,0" Opacity="0.75"
-                                           Visibility="{Binding Converter={StaticResource NoteLinkedConverter}}"
-                                           ToolTip="{Binding Converter={StaticResource NoteLinkedConverter}, ConverterParameter=Path}" />
-                                <TextBlock x:Name="ReminderBadge"
-                                           Text="&#xE917;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets"
-                                           FontSize="11"
-                                           Foreground="{Binding Converter={StaticResource NoteFaceConverter}, ConverterParameter=Label}"
-                                           VerticalAlignment="Center"
-                                           Visibility="Collapsed" />
-                            </StackPanel>
-
                             <local:BevelEdge x:Name="CardBevel" />
                             <Border x:Name="HoverOverlay" Background="#1E1A14" Opacity="0" CornerRadius="{DynamicResource AlduneRadiusTabRight}" />
                         </Grid>
@@ -220,6 +220,10 @@
                                 <Setter TargetName="SnippetText" Property="Visibility" Value="Collapsed" />
                                 <Setter TargetName="LabelStack" Property="VerticalAlignment" Value="Center" />
                                 <Setter TargetName="LabelStack" Property="Margin" Value="16,0,20,0" />
+                                <!-- Sin vista previa el título se centra y es lo único de la pestaña: los distintivos crecen un paso para ir a su altura. -->
+                                <Setter TargetName="PinBadge" Property="FontSize" Value="14" />
+                                <Setter TargetName="LinkBadge" Property="FontSize" Value="14" />
+                                <Setter TargetName="ReminderBadge" Property="FontSize" Value="14" />
                             </DataTrigger>
                             <DataTrigger Binding="{Binding Card, Source={x:Static local:SkinState.Current}}" Value="{x:Static core:SkinCard.Stripe}">
                                 <Setter TargetName="StripeBar" Property="Visibility" Value="Visible" />
