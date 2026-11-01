@@ -33,6 +33,7 @@ public partial class NotesManagerWindow : Window
     private string _searchText = "";
     private string? _tagFilter;
     private bool _loadingTagFilter;
+    private int _staleDays;
     private NoteListOrder _order;
     private readonly PopupToggle _tagManagerToggle;
     private readonly PopupToggle _tagEditorToggle;
@@ -54,6 +55,7 @@ public partial class NotesManagerWindow : Window
         _tagFilter = tagFilter;
         _order = coordinator.NotesManagerOrder;
         LoadSortOptions();
+        LoadStaleFilterOptions();
 
         SourceInitialized += (_, _) =>
         {
@@ -166,6 +168,12 @@ public partial class NotesManagerWindow : Window
                 string.Equals(tag, _tagFilter, StringComparison.OrdinalIgnoreCase)));
         }
 
+        if (_staleDays > 0)
+        {
+            var now = DateTimeOffset.UtcNow;
+            byState = byState.Where(r => StaleNotes.IsStale(r.Note.UpdatedAt, _staleDays, now));
+        }
+
         _rows = NoteListing.Sort(byState.Where(r => NoteSearch.Matches(ProtectedTitleRules.Visible(r.Note) ?? r.Note.Text, _searchText)), r => r.Note, _order)
             .ToList();
         RowsList.ItemsSource = _rows;
@@ -215,6 +223,7 @@ public partial class NotesManagerWindow : Window
         // mentir sobre la causa.
         EmptyState.Text = _searchText.Trim().Length > 0
             ? Strings.NoSearchResults(_searchText.Trim())
+            : _staleDays > 0 ? Strings.StaleNoResults
             : _filter switch
             {
                 Filter.Active when !string.IsNullOrWhiteSpace(_tagFilter) => Strings.NoTagResults(_tagFilter!),
@@ -320,6 +329,22 @@ public partial class NotesManagerWindow : Window
         _coordinator.NotesManagerOrder = order;
         ApplyFilter();
         PlayListEntrance();
+    }
+
+    private void LoadStaleFilterOptions()
+    {
+        StaleFilterBox.Items.Clear();
+        StaleFilterBox.Items.Add(new ComboBoxItem { Content = Strings.StaleAnyTime, Tag = 0 });
+        foreach (int days in StaleNotes.PresetDays)
+            StaleFilterBox.Items.Add(new ComboBoxItem { Content = Strings.StaleFor(days), Tag = days });
+        StaleFilterBox.SelectedIndex = 0;
+    }
+
+    private void OnStaleFilterChanged(object sender, SelectionChangedEventArgs e)
+    {
+        if (StaleFilterBox.SelectedItem is not ComboBoxItem { Tag: int days } || days == _staleDays) return;
+        _staleDays = days;
+        ApplyFilter();
     }
 
     private void OnTagFilterChanged(object sender, SelectionChangedEventArgs e)
