@@ -1,6 +1,6 @@
 # Travel notebook, sounds and design review (Android and Windows)
 
-Date: 2026-10-30. Status: approved by Nacho in chat ("Yes, go ahead with everything"). It is built in four phases, in this order.
+Date: 2026-10-30. Status: approved by the owner in chat ("Yes, go ahead with everything"). It is built in four phases, in this order.
 
 ## Intent
 
@@ -76,7 +76,7 @@ Builder's decisions (to be confirmed when testing):
 
 ## Project constraints that apply
 
-Texts with `Strings.T` in five languages (Windows) and `android/strings.tsv` (Android); colors through `AppPalette` and no loose hex; compatibility of `settings.json` and of the Android preferences without migration; comments in Spanish; new logic in Core/`text`/`domain` with test first; commits with Nacho as author and committer, without `Co-Authored-By`.
+Texts with `Strings.T` in five languages (Windows) and `android/strings.tsv` (Android); colors through `AppPalette` and no loose hex; compatibility of `settings.json` and of the Android preferences without migration; comments in Spanish; new logic in Core/`text`/`domain` with test first; commits with the owner as author and committer, without `Co-Authored-By`.
 
 ## What is left to the builder
 

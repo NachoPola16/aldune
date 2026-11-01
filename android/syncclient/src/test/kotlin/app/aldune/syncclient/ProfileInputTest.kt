@@ -34,8 +34,8 @@ class ProfileInputTest {
     @Test
     fun `las credenciales no se imprimen en toString`() {
         assertEquals("Token(***)", ProfileCredentials.Token("secreto-123").toString())
-        val basic = ProfileCredentials.Basic("nacho", "clave-123").toString()
-        assertTrue("clave-123" !in basic && "nacho" in basic, basic)
+        val basic = ProfileCredentials.Basic("user", "clave-123").toString()
+        assertTrue("clave-123" !in basic && "user" in basic, basic)
     }
 
     private fun rejected(text: String) = assertIs<ProfileParse.Rejected>(parseProfileInput(text)).error
@@ -132,7 +132,7 @@ class ProfileInputTest {
 
     @Test
     fun `http solo es de riesgo fuera de la red local`() {
-        for (safe in listOf("https://notas.example.com/", "http://192.168.1.73:8100/", "http://10.0.0.5/", "http://172.16.0.1/", "http://172.31.255.1/",
+        for (safe in listOf("https://notas.example.com/", "http://192.168.1.20:8100/", "http://10.0.0.5/", "http://172.16.0.1/", "http://172.31.255.1/",
             "http://localhost:8087/", "http://127.0.0.1/", "http://nas.local/", "http://nas/", "http://169.254.1.1/", "http://[::1]/"))
             assertTrue(!isCleartextOutsideLan(safe), safe)
         for (risky in listOf("http://notas.example.com/", "http://8.8.8.8/", "http://172.32.0.1/", "http://192.169.1.1/", "http://localhost.evil.com/"))

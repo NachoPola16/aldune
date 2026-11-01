@@ -9,7 +9,7 @@
 
 Make the phone and the tablet **sync with the same store as the PC** (Aldune server or WebDAV) without the user having to think about it, without
 ever losing an edit and without changing format 4. When F5 is done: a note created on Android appears on the PC and vice versa; a provoked conflict is saved;
-a signed deletion deletes and an unsigned one sends to the trash; all against the real server on CT 103 with a test profile.
+a signed deletion deletes and an unsigned one sends to the trash; all against the real server with a test profile.
 
 Outside F5: opening/protecting/unprotecting protected notes and resolving conflicts (F7; in F5 they are **saved and flagged**, §5), more than one profile, shared folder,
 starting a key rotation, QR, capture and widget (F6).
@@ -232,7 +232,7 @@ distinguish it), **one** change in `android/sync` is allowed: `SyncTransportExce
    unsigned deletion → trash and never deletes; concurrent edit during phase 1 → not overwritten and the next pass saves a conflict; network failure in
    phase 1 → nothing local written; two consecutive passes without changes → the second does nothing.
 3. `app` (instrumented): `LocalSyncStoreContract` with Room, migration 1→2.
-4. **Probes** against the CT 103 server with a **test profile** (never the user's real profile; the debug app has its own database): a note
+4. **Probes** against the home server with a **test profile** (never the user's real profile; the debug app has its own database): a note
    created on Android appears on the PC (with a test Windows installation or a temporary database, never `%LOCALAPPDATA%\Aldune`) and vice versa; provoked
    conflict (edit on both with the network cut); signed deletion; unsigned deletion (envelope written by hand into the test store); server off →
    "Offline" without notices; bad token → clear message; airplane mode and back; on the Pixel and on the tablet.
@@ -246,7 +246,7 @@ distinguish it), **one** change in `android/sync` is allowed: `SyncTransportExce
 | 3 | Room v2 + `RoomLocalSyncStore` + contract on the device | Local |
 | 4 | Secrets, profile `SettingsStore`, Settings → Sync, first connection | Local |
 | 5 | Indicator, pull to sync, lock and conflict on the row, triggers, WorkManager | Local |
-| 6 | Probes against CT 103 on Pixel and tablet| Local |
+| 6 | Probes against the home server on Pixel and tablet| Local |
 
 ## 8. Risks
 

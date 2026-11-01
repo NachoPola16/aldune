@@ -7,7 +7,7 @@ The mockups are the visual reference; this spec fixes what gets built and how it
 ## What was asked for
 
 - "More retro" looks: XP, Windows 95, Linux terminal, telecommunications, phosphor monitor.
-- That the colours of those looks can be **customised** (the colour of `nacho@aldune`, the XP bar colour,
+- That the colours of those looks can be **customised** (the colour of `user@aldune`, the XP bar colour,
   etc.).
 - **Square** corners on notes, dock and windows, and a **sync signal**, selectable in **any** look.
 - Being able to paint **all notes the same colour** (monochrome) without changing them one by one, with any

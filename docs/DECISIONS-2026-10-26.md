@@ -109,7 +109,7 @@ Read-only security pass: nothing critical or high. Fixed in 1.7.13:
 
 Deliberately postponed (noted in PENDIENTES):
 
-- Server container as user `app` instead of root: the permissions of the already created `/data` volume have to be migrated; not touched without testing it on CT 103.
+- Server container as user `app` instead of root: the permissions of the already created `/data` volume have to be migrated; not touched without testing it on the real server.
 - Port published on `0.0.0.0` by default: the real deployment depends on it (NPM on another machine); it is already documented and the app warns. The default is not changed.
 - No limit on failed token attempts, `GET /objects` reads all objects on every call, no size cap on server responses to the client, no object quota, `release.yml` with `contents: write` in the whole job, no NuGet lockfile.
 

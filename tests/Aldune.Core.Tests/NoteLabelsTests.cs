@@ -44,9 +44,9 @@ public class NoteLabelsTests
     [Fact]
     public void Prompt_IsAShellLine()
     {
-        var prompt = NoteLabels.Prompt("Nacho Pola", "notas", "Hoy", Es);
+        var prompt = NoteLabels.Prompt("Ana Lopez", "notas", "Hoy", Es);
 
-        Assert.Equal("nacho_pola@aldune", prompt.User);
+        Assert.Equal("ana_lopez@aldune", prompt.User);
         Assert.Equal("~/notas", prompt.Path);
         Assert.Equal("cat hoy", prompt.Command);
     }

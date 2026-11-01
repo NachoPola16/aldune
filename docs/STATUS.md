@@ -136,7 +136,7 @@ Tests: 506/506 passing (`dotnet test tests/Aldune.Core.Tests --no-restore`).
 
 - **Simplified mode on Android and default settings (2026-10-27):** Settings has a «Use simplified mode» button that leaves in view only sync, look, language and the version (the rule lives in `SettingsSections`, `android/domain`, with a test; hidden settings do not change). Large task checkboxes come enabled on **new** Android installs (whoever already had the app keeps what they had). On Windows «Show pending tasks in the reminder» was moved from the Dock page to «Notes and tasks»; the rest of the default values was reviewed and left the same (see `docs/DECISIONS-2026-10-27.md`). Custom themes remains Windows-only.
 - **Note shared with the family (2026-10-27):** works with a «Family» profile with tag scope (`familia`) and **its own sync service**
-  (`aldune-sync-familia`, port 8100, `aldune-familia.polacabezon.com`): a profile with a different key cannot share a store with the personal one
+  (a second sync service with its own port, domain and volume): a profile with a different key cannot share a store with the personal one
   because Aldune refuses to write if it cannot read any note (`SyncService`, «sync code can't read the notes in the store»). See `SYNC.md` section D
   and `servidor-config/docs/actualizar-contenedores.md`.
 - **Sync security audit (2026-10-27, in `main`, released by 2.1.4 and 1.0.2):** done: WebDAV on Android discards an `href` that changes host (before, it sent
@@ -146,7 +146,7 @@ Tests: 506/506 passing (`dotnet test tests/Aldune.Core.Tests --no-restore`).
   A delete **without a signature** no longer sends the note to the trash (M2: with the token and without the key the notes could be emptied, and the purge at 30 days made it permanent;
   a local mark did not work because the «trash» state travels as a normal note): it is ignored and removed from the store, and the note is published again (Core and Android,
   scenarios E12a/E12c/E23b updated). **Open:** discarding authentic envelopes dated more than a day ago, `AppSettings` shared between the sync thread and the UI, non-root `USER` in the
-  server Dockerfile (volume permissions must be checked in CT 103), token attempt limit, lockfiles and `dotnet list package --vulnerable`.
+  server Dockerfile (volume permissions must be checked on the server host), token attempt limit, lockfiles and `dotnet list package --vulnerable`.
 - **Second security pass (2026-10-27, in `main`, released by 2.1.4 and 1.0.2):** reviewed the WPF UI, `SecretVault`, `syncclient`, `QrScanActivity`, DPAPI/`SettingsService`,
   the installer and the workflows: nothing high. Done: a profile code with `user@` in the URL is rejected (Core and Android; before `https://good-host.com@attacker.tld/`
   looked trustworthy) and when connecting from a code the real host is shown in bold with a warning; `http` outside the local network asks to tick a checkbox before

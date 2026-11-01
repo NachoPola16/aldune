@@ -56,12 +56,12 @@ public sealed class SyncShareCodeTests
             Array.Empty<Guid>(),
             "Nextcloud personal",
             SyncTransportKind.WebDav,
-            "https://cloud.example.test/remote.php/dav/files/nacho/Aldune/");
+            "https://cloud.example.test/remote.php/dav/files/user/Aldune/");
 
         var decoded = SyncShareCodeCodec.Decode(code);
 
         Assert.Equal(SyncTransportKind.WebDav, decoded.Transport);
-        Assert.Equal("https://cloud.example.test/remote.php/dav/files/nacho/Aldune/", decoded.ServerUrl);
+        Assert.Equal("https://cloud.example.test/remote.php/dav/files/user/Aldune/", decoded.ServerUrl);
         Assert.DoesNotContain("password", code, StringComparison.OrdinalIgnoreCase);
     }
 

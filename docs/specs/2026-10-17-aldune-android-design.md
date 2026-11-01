@@ -238,7 +238,7 @@ would give unreadable data. Recovery is **pasting the profile code again** and s
 | F2 | Transports | Local or isolated | HTTP and WebDAV with OkHttp | MockWebServer with the server's real responses (401, 404, 413, 5 MB); and a real sync against `Aldune.SyncServer` locally | 1 |
 | F3 | Text, color, order, search | Isolated (pure JVM) | `android/text` + text vectors generated from Core (input, cursor, operation → output) | `gradle test` green against the text vectors | 1-2 |
 | F4 | App: skeleton | Local (Android Studio) | Room + Keystore + adaptive list/note + editor, **without sync** | Compose tests on device + `adb` screenshots on Pixel and Tab (mobile probe, §7) | 3-4 |
-| F5 | App: sync | Local | Sync settings, triggers, WorkManager | Probe: note created on Android appears on the PC and vice versa; provoked conflict; signed and unsigned deletion; real server on CT 103 with a test profile | 2 |
+| F5 | App: sync | Local | Sync settings, triggers, WorkManager | Probe: note created on Android appears on the PC and vice versa; provoked conflict; signed and unsigned deletion; real server with a test profile | 2 |
 | F6 | Capture | Local | Share, shortcut, tile, "+" notification, Glance widget | Checklist on both devices, with the phone rebooted; test that the widget never paints a protected note | 2 |
 | F7 | Reminders, protected notes, conflicts | Local | §2.3, §2.4, §2.9 | Notification with the app closed and the phone idle (exact and inexact); PBKDF2 measured on the tablet | 2 |
 | F8 | Publish | Local | Signing, reproducible build, fastlane in 5 languages, IzzyOnDroid and F-Droid | `fdroid build` reproduces the signed APK; confirm with the user before publishing | 1-2 |
