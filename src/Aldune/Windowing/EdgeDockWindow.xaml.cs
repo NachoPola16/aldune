@@ -1820,8 +1820,9 @@ public partial class EdgeDockWindow : Window
             if (delta != 0 && point.X >= _wheelZonePx.X && point.X <= _wheelZonePx.X + _wheelZonePx.Width
                 && point.Y >= _wheelZonePx.Y && point.Y <= _wheelZonePx.Y + _wheelZonePx.Height)
             {
-                // Another window of Aldune over the zone (Manage notes, a note, Settings): the wheel is for it, not for the dock. Without this,
-                // scrolling the list of Manage notes next to the dock was swallowed to cycle the view, and since that list follows the view, it emptied.
+                // Another window of Aldune over the zone (Manage notes, a note, Settings): the wheel is for it, not for the dock. The zone is where
+                // the dock WAS when the session began, and with the dock folded the cursor over such a window used to be swallowed to cycle the view
+                // (reproduced with a real mouse: probe37, before and after).
                 if (NativeMethods.IsOtherOwnWindowAt((int)point.X, (int)point.Y, _hwnd))
                 {
                     Dispatcher.BeginInvoke(DispatcherPriority.Input, new Action(EndWheelSession));
