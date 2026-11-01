@@ -331,7 +331,6 @@
     <string name="settings_tab_general">Generale</string>
     <string name="settings_tab_appearance">Aspetto</string>
     <string name="settings_tab_notes">Note</string>
-    <string name="settings_tab_sounds">Suoni</string>
     <string name="settings_tab_colors">Colori</string>
     <string name="settings_tab_alerts">Avvisi</string>
     <string name="hide_done_tasks">Nascondi le attività completate</string>
@@ -450,7 +449,7 @@
     <string name="sound_silenced_ringer">Il telefono è in silenzioso o in vibrazione, quindi i suoni di Aldune non verranno riprodotti.</string>
     <string name="sound_silenced_dnd">Non disturbare sta bloccando i suoni di sistema. Consenti “Suoni al tocco” nelle sue impostazioni, oppure disattivalo.</string>
     <string name="edit_toggle_task">Spunta o togli la spunta all\'attività di questa riga</string>
-    <string name="settings_tab_sync">Sincronizzazione</string>
+    <string name="settings_tab_sync">Sync</string>
     <string name="color_name_red">Rosso</string>
     <string name="color_name_orange">Arancione</string>
     <string name="color_name_yellow">Giallo</string>

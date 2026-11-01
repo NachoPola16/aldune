@@ -412,7 +412,7 @@ class NotesViewModel(application: Application) : AndroidViewModel(application) {
     /** Mueve una etiqueta una posición en el orden propio (arriba = -1). El orden se guarda en este dispositivo y se refresca la lista. */
     fun moveTag(tag: String, delta: Int) {
         val visible = (_state.value as? UiState.Ready)?.allTags ?: return
-        val moved = TagOrder.move(visible, tag, delta)
+        val moved = TagOrder.keepUntagged(TagOrder.move(visible, tag, delta), TagOrder.decode(_settings.value.tagOrder))
         updateSettings { it.copy(tagOrder = TagOrder.encode(moved)) }
         launchIo { refresh() }
     }

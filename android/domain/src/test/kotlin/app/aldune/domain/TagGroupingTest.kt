@@ -44,4 +44,13 @@ class TagGroupingTest {
         val r = group(listOf(N("a", listOf("x", "X"))), listOf("x"))
         assertEquals(listOf("x" to listOf("a")), r)
     }
+
+    @Test
+    fun `las notas sin etiqueta van donde el orden pone su marca`() {
+        val items = listOf(N("x", emptyList()), N("y", listOf("a")), N("z", listOf("b")))
+        val r = TagGrouping.group(items, listOf("a", TagGrouping.UNTAGGED, "b")) { it.tags }
+        assertEquals(listOf("a", null, "b"), r.map { it.tag })
+        val first = TagGrouping.group(items, listOf(TagGrouping.UNTAGGED, "a", "b")) { it.tags }
+        assertEquals(listOf(null, "a", "b"), first.map { it.tag })
+    }
 }

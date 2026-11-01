@@ -331,7 +331,6 @@
     <string name="settings_tab_general">Geral</string>
     <string name="settings_tab_appearance">Aparência</string>
     <string name="settings_tab_notes">Notas</string>
-    <string name="settings_tab_sounds">Sons</string>
     <string name="settings_tab_colors">Cores</string>
     <string name="settings_tab_alerts">Avisos</string>
     <string name="hide_done_tasks">Ocultar tarefas concluídas</string>

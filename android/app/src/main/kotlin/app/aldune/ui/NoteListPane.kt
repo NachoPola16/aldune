@@ -345,11 +345,18 @@ fun NoteListPane(
                 var tagDrag by remember { mutableStateOf<String?>(null) }
                 var tagDragDelta by remember { mutableFloatStateOf(0f) }
                 var tagDragOrder by remember { mutableStateOf<List<String>?>(null) }
-                val entries = remember(order, grouped, collapsed, state.allTags, tagDrag != null, tagDragOrder) {
+                var tagDragStart by remember { mutableStateOf<List<String>>(emptyList()) }
+                // The group order, straight from the saved setting (not from `state.allTags`, which refreshes a moment later): after a drop the list
+                // must already be in the new order, or it would jump back to the old one and then animate to the new.
+                val customTagOrder = remember(settingsNow.tagOrder) { TagOrder.decode(settingsNow.tagOrder) }
+                val groupOrder = remember(state.allTags, customTagOrder) { TagOrder.groupOrder(TagOrder.apply(state.allTags, customTagOrder), customTagOrder) }
+                // The local order of a finished drag is dropped once the saved one has arrived.
+                LaunchedEffect(settingsNow.tagOrder) { if (tagDrag == null) tagDragOrder = null }
+                val entries = remember(order, grouped, collapsed, groupOrder, tagDrag != null, tagDragOrder) {
                     if (!grouped) order.map<NoteListItem, ListEntry> { ListEntry.Note(it, it.id) }
                     else buildList<ListEntry> {
-                        for (group in TagGrouping.group(order, tagDragOrder ?: state.allTags) { it.tags }) {
-                            val groupKey = group.tag?.lowercase() ?: UNTAGGED_KEY
+                        for (group in TagGrouping.group(order, tagDragOrder ?: groupOrder) { it.tags }) {
+                            val groupKey = group.tag?.lowercase() ?: TagGrouping.UNTAGGED
                             val open = groupKey !in collapsed && tagDrag == null
                             add(ListEntry.Header(group.tag ?: untaggedLabel, groupKey, group.items.size, open))
                             if (open) for (note in group.items) add(ListEntry.Note(note, "$groupKey/${note.id}"))
@@ -406,7 +413,7 @@ fun NoteListPane(
                     val visible = listState.layoutInfo.visibleItemsInfo
                     val me = visible.firstOrNull { it.key == key } ?: return
                     val center = me.offset + me.size / 2f + tagDragDelta
-                    val target = visible.firstOrNull { it.key != key && it.key != UNTAGGED_KEY && it.key is String && local.any { t -> t.lowercase() == it.key } && center >= it.offset && center <= it.offset + it.size } ?: return
+                    val target = visible.firstOrNull { it.key != key && it.key is String && local.any { t -> t.lowercase() == it.key } && center >= it.offset && center <= it.offset + it.size } ?: return
                     val moved = TagOrder.moveTo(local, key, target.key as String)
                     if (moved == local) return
                     tagDragOrder = moved
@@ -416,8 +423,8 @@ fun NoteListPane(
 
                 fun tagDragEnd(save: Boolean) {
                     val finished = tagDragOrder
-                    tagDrag = null; tagDragOrder = null; tagDragDelta = 0f
-                    if (save && finished != null && finished != state.allTags) viewModel.setTagOrder(finished)
+                    tagDrag = null; tagDragDelta = 0f
+                    if (save && finished != null && finished != tagDragStart) viewModel.setTagOrder(finished) else tagDragOrder = null
                 }
 
                 fun dragBy(dy: Float) {
@@ -467,7 +474,7 @@ fun NoteListPane(
                     items(entries, key = { it.key }) { entry ->
                       when (entry) {
                         is ListEntry.Header -> {
-                            val draggable = entry.key != UNTAGGED_KEY && state.allTags.size > 1
+                            val draggable = groupOrder.size > 1
                             val headerDragging = tagDrag == entry.key
                             GroupHeader(
                                 entry,
@@ -477,7 +484,7 @@ fun NoteListPane(
                                             detectDragGesturesAfterLongPress(
                                                 onDragStart = {
                                                     haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                                                    tagDrag = entry.key; tagDragDelta = 0f; tagDragOrder = state.allTags
+                                                    tagDrag = entry.key; tagDragDelta = 0f; tagDragStart = groupOrder; tagDragOrder = groupOrder
                                                 },
                                                 onDrag = { change, amount -> change.consume(); tagDragDelta += amount.y; swapTagUnderDrag() },
                                                 onDragEnd = { tagDragEnd(save = true) },
@@ -1107,7 +1114,6 @@ private sealed interface ListEntry {
     class Header(val title: String, override val key: String, val count: Int, val open: Boolean) : ListEntry
 }
 
-private const val UNTAGGED_KEY = "\u0000untagged"
 
 @Composable
 private fun GroupHeader(header: ListEntry.Header, modifier: Modifier = Modifier, onToggle: () -> Unit) {

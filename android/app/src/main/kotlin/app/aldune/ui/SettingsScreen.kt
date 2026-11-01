@@ -131,7 +131,7 @@ fun SettingsScreen(viewModel: NotesViewModel, onClose: () -> Unit) {
                 // Mismo orden que Ajustes de Windows para lo que comparten: lo general primero, la sincronización al final. Sin ella
                 // (modo simplificado) la pestaña no aparece.
                 val labels = buildList {
-                    add(R.string.settings_tab_general); add(R.string.settings_tab_appearance); add(R.string.settings_tab_notes); add(R.string.settings_tab_sounds); add(R.string.settings_tab_colors); add(R.string.settings_tab_alerts)
+                    add(R.string.settings_tab_general); add(R.string.settings_tab_appearance); add(R.string.settings_tab_notes); add(R.string.settings_tab_colors); add(R.string.settings_tab_alerts)
                     if (show(SettingsSection.SYNC) || show(SettingsSection.BACKUP)) add(R.string.settings_tab_sync)
                 }
                 // Rejilla de TAB_COLUMNS columnas, no una fila que se desplaza: con seis pestañas la fila cortaba las últimas y nada decía que había más a
@@ -162,10 +162,16 @@ fun SettingsScreen(viewModel: NotesViewModel, onClose: () -> Unit) {
                 HorizontalDivider()
             }
             Column(Modifier.verticalScroll(settingsScroll).padding(bottom = 24.dp)) {
-                if (show(SettingsSection.SYNC) && inTab(6)) SyncSection(viewModel)
-                if (show(SettingsSection.BACKUP) && inTab(6)) BackupSection(viewModel)
-                if (show(SettingsSection.CAPTURE) && inTab(5)) CaptureSection(viewModel, settings.captureNotification)
-                if (show(SettingsSection.REMINDERS) && inTab(5)) RemindersSection(viewModel, settings.exactReminders)
+                if (show(SettingsSection.SYNC) && inTab(5)) SyncSection(viewModel)
+                if (show(SettingsSection.BACKUP) && inTab(5)) BackupSection(viewModel)
+                if (show(SettingsSection.CAPTURE) && inTab(4)) CaptureSection(viewModel, settings.captureNotification)
+                if (show(SettingsSection.REMINDERS) && inTab(4)) RemindersSection(viewModel, settings.exactReminders)
+                // Sounds belong with the alerts (on Windows they have a page of their own; a seventh tab here broke the grid of chips).
+                if (show(SettingsSection.NOTES) && inTab(4)) {
+                    HorizontalDivider(Modifier.padding(vertical = 12.dp))
+                    Section(R.string.sounds_section)
+                    SoundSettingsSection(settings, onChange = viewModel::updateSettings, onPreview = viewModel::previewSound)
+                }
 
                 if (inTab(1)) {
                 Section(R.string.settings_appearance)
@@ -249,13 +255,7 @@ fun SettingsScreen(viewModel: NotesViewModel, onClose: () -> Unit) {
                     }
                 }
 
-                // Sounds have their own tab, as on Windows (they were half of the Notes tab).
                 if (show(SettingsSection.NOTES) && inTab(3)) {
-                    Section(R.string.sounds_section)
-                    SoundSettingsSection(settings, onChange = viewModel::updateSettings, onPreview = viewModel::previewSound)
-                }
-
-                if (show(SettingsSection.NOTES) && inTab(4)) {
                     Section(R.string.settings_tab_colors)
                     GroupLabel(stringResource(R.string.note_theme))
                     for (theme in NoteThemes.builtIn) {

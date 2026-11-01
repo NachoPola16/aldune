@@ -42,4 +42,14 @@ class TagOrderTest {
         assertEquals(listOf("Compras", "decompras"), TagOrder.filter(listOf("Compras", "casa", "decompras"), "OMPR"))
         assertEquals(listOf("a", "b"), TagOrder.filter(listOf("a", "b"), "  "))
     }
+
+    @Test fun `el sitio de las notas sin etiqueta se inserta y se conserva al reordenar etiquetas`() {
+        val u = TagGrouping.UNTAGGED
+        assertEquals(listOf("a", "b", u), TagOrder.groupOrder(listOf("a", "b"), emptyList()))
+        assertEquals(listOf("a", u, "b"), TagOrder.groupOrder(listOf("a", "b"), listOf("a", u, "b")))
+        assertEquals(listOf("a", "b", u), TagOrder.groupOrder(listOf("a", "b"), listOf("a", "b", "c", u)))
+        // Moving tags from the dialog must not forget where the untagged group was.
+        assertEquals(listOf("b", u, "a"), TagOrder.keepUntagged(listOf("b", "a"), listOf("a", u, "b")))
+        assertEquals(listOf("b", "a"), TagOrder.keepUntagged(listOf("b", "a"), listOf("a", "b")))
+    }
 }

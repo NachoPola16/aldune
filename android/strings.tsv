@@ -330,7 +330,6 @@ keyboard_never	Never	Nunca	Nie	Jamais	Nunca	Mai	表示しない	从不
 settings_tab_general	General	General	Allgemein	Général	Geral	Generale	全般	常规
 settings_tab_appearance	Appearance	Aspecto	Aussehen	Apparence	Aparência	Aspetto	外観	外观
 settings_tab_notes	Notes	Notas	Notizen	Notes	Notas	Note	ノート	笔记
-settings_tab_sounds	Sounds	Sonidos	Töne	Sons	Sons	Suoni	サウンド	声音
 settings_tab_colors	Colors	Colores	Farben	Couleurs	Cores	Colori	色	颜色
 settings_tab_alerts	Alerts	Avisos	Hinweise	Alertes	Avisos	Avvisi	通知	提醒
 hide_done_tasks	Hide completed tasks	Ocultar las tareas hechas	Erledigte Aufgaben ausblenden	Masquer les tâches faites	Ocultar tarefas concluídas	Nascondi le attività completate	完了したタスクを隠す	隐藏已完成的任务
@@ -449,7 +448,7 @@ sound_choice_eraser	Eraser	Goma de borrar	Radiergummi	Gomme	Borracha	Gomma	消�
 sound_silenced_ringer	Your phone is on silent or vibrate, so Aldune sounds will not play.	El teléfono está en silencio o en vibración, así que los sonidos de Aldune no se oirán.	Das Telefon ist stumm oder auf Vibration, daher werden die Töne von Aldune nicht abgespielt.	Le téléphone est en silencieux ou en vibreur : les sons d’Aldune ne seront pas joués.	O telefone está no silencioso ou no modo vibrar, então os sons do Aldune não serão tocados.	Il telefono è in silenzioso o in vibrazione, quindi i suoni di Aldune non verranno riprodotti.	スマートフォンがマナーモード（サイレントまたはバイブレーション）のため、Aldune のサウンドは再生されません。	您的手机处于静音或振动模式，因此不会播放 Aldune 的声音。
 sound_silenced_dnd	Do Not Disturb is blocking system sounds. Allow “Touch sounds” in its settings, or turn it off.	No molestar bloquea los sonidos del sistema. Permite «Sonidos al tocar» en sus ajustes, o desactívalo.	„Nicht stören“ blockiert Systemtöne. Erlaube „Berührungstöne“ in den Einstellungen oder schalte es aus.	« Ne pas déranger » bloque les sons système. Autorisez les « Sons tactiles » dans ses réglages, ou désactivez-le.	O modo Não perturbe bloqueia os sons do sistema. Permita os «Sons de toque» nas configurações dele, ou desative-o.	Non disturbare sta bloccando i suoni di sistema. Consenti “Suoni al tocco” nelle sue impostazioni, oppure disattivalo.	サイレント モードがシステムサウンドをブロックしています。その設定で「タッチ操作音」を許可するか、サイレント モードをオフにしてください。	勿扰模式正在屏蔽系统声音。请在其设置中允许“触摸提示音”，或将其关闭。
 edit_toggle_task	Check or uncheck the task on this line	Marcar o desmarcar la tarea de esta línea	Aufgabe in dieser Zeile abhaken oder zurücksetzen	Cocher ou décocher la tâche de cette ligne	Marcar ou desmarcar a tarefa desta linha	Spunta o togli la spunta all'attività di questa riga	この行のタスクのチェックを切り替える	勾选或取消勾选此行的任务
-settings_tab_sync	Sync	Sync	Sync	Sync	Sync	Sincronizzazione	同期	同步
+settings_tab_sync	Sync	Sync	Sync	Sync	Sync	Sync	同期	同步
 color_name_red	Red	Rojo	Rot	Rouge	Vermelho	Rosso	赤	红色
 color_name_orange	Orange	Naranja	Orange	Orange	Laranja	Arancione	オレンジ	橙色
 color_name_yellow	Yellow	Amarillo	Gelb	Jaune	Amarelo	Giallo	黄	黄色
