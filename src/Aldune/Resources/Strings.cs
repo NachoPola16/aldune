@@ -807,6 +807,10 @@ public static class Strings
         "Löschen", "Supprimer", "Excluir", "Elimina", "削除", "删除");
     public static string DeleteTagTooltip => T("Delete tag (the notes stay)", "Eliminar etiqueta (las notas se quedan)",
         "Tag löschen (die Notizen bleiben)", "Supprimer le tag (les notes restent)", "Excluir tag (as notas ficam)", "Elimina etichetta (le note restano)", "タグを削除（ノートは残ります）", "删除标签（便笺保留）");
+    public static string SettingsSearchHint => T("Search settings (Ctrl+F)", "Buscar en Ajustes (Ctrl+F)",
+        "Einstellungen durchsuchen (Strg+F)", "Rechercher dans les réglages (Ctrl+F)", "Pesquisar nas configurações (Ctrl+F)", "Cerca nelle impostazioni (Ctrl+F)", "設定を検索 (Ctrl+F)", "搜索设置 (Ctrl+F)");
+    public static string SettingsSearchNone => T("Nothing found", "No se encontró nada",
+        "Nichts gefunden", "Aucun résultat", "Nada encontrado", "Nessun risultato", "見つかりません", "未找到");
     public static string DeleteTagWithNotesTooltip => T("Delete tag and its notes (they go to the trash)", "Eliminar etiqueta y sus notas (van a la papelera)",
         "Tag und seine Notizen löschen (sie kommen in den Papierkorb)", "Supprimer le tag et ses notes (elles vont à la corbeille)", "Excluir tag e suas notas (vão para a lixeira)", "Elimina etichetta e le sue note (vanno nel cestino)", "タグとそのノートを削除（ゴミ箱へ移動します）", "删除标签及其便笺（移入回收站）");
     public static string DeleteTagWithNotesTitle => T("Delete tag and its notes", "Borrar etiqueta y sus notas",

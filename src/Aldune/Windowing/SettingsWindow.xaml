@@ -62,6 +62,27 @@
             </Setter>
         </Style>
 
+        <!-- A search result: like a record button but with its text on the left, one row per setting. -->
+        <Style x:Key="SearchResultButtonStyle" TargetType="Button">
+            <Setter Property="Foreground" Value="{DynamicResource AlduneTextBrush}" />
+            <Setter Property="Background" Value="{DynamicResource AlduneRaisedBrush}" />
+            <Setter Property="FontSize" Value="{DynamicResource AlduneTextCaption}" />
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="Bg" Background="{TemplateBinding Background}" CornerRadius="{DynamicResource AlduneRadius6}">
+                            <ContentPresenter Margin="{TemplateBinding Padding}" HorizontalAlignment="Left" VerticalAlignment="Center" />
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Bg" Property="Background" Value="{DynamicResource AlduneHoverBrush}" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
         <Style x:Key="RecordButtonStyle" TargetType="Button">
             <Setter Property="Foreground" Value="{DynamicResource AlduneTextBrush}" />
             <Setter Property="Background" Value="{DynamicResource AlduneRaisedBrush}" />
@@ -322,6 +343,28 @@
                         Click="OnManageNotesClick" Padding="10,7" HorizontalAlignment="Stretch"
                         Style="{StaticResource RecordButtonStyle}" />
                 <StackPanel DockPanel.Dock="Top">
+                    <!-- Search: fuzzy (accents, typos, half-typed words); Ctrl+F focuses it. While it has text the page list gives way to the results. -->
+                    <Grid Margin="0,0,0,10">
+                        <TextBox x:Name="SettingsSearchBox" Padding="8,6" FontSize="{DynamicResource AlduneTextBody}"
+                                 AutomationProperties.Name="{x:Static res:Strings.SettingsSearchHint}"
+                                 TextChanged="OnSettingsSearchChanged" PreviewKeyDown="OnSettingsSearchKeyDown" />
+                        <TextBlock Text="{x:Static res:Strings.SettingsSearchHint}" IsHitTestVisible="False" Margin="10,0,8,0"
+                                   VerticalAlignment="Center" TextTrimming="CharacterEllipsis"
+                                   Foreground="{DynamicResource AlduneHintBrush}" FontSize="{DynamicResource AlduneTextSmall}">
+                            <TextBlock.Style>
+                                <Style TargetType="TextBlock">
+                                    <Setter Property="Visibility" Value="Collapsed" />
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding Text, ElementName=SettingsSearchBox}" Value="">
+                                            <Setter Property="Visibility" Value="Visible" />
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </TextBlock.Style>
+                        </TextBlock>
+                    </Grid>
+                    <StackPanel x:Name="SettingsSearchResults" Visibility="Collapsed" Width="172" />
+                    <StackPanel x:Name="SettingsNavList">
                     <RadioButton x:Name="NavGeneral" Tag="General" GroupName="SettingsNav"
                                  Content="{x:Static res:Strings.SettingsPageGeneral}"
                                  Style="{StaticResource SettingsNavStyle}" Checked="OnPageChecked" />
@@ -349,6 +392,7 @@
                     <RadioButton x:Name="NavAbout" Tag="About" GroupName="SettingsNav"
                                  Content="{x:Static res:Strings.SettingsPageAbout}"
                                  Style="{StaticResource SettingsNavStyle}" Checked="OnPageChecked" />
+                    </StackPanel>
                 </StackPanel>
             </DockPanel>
 

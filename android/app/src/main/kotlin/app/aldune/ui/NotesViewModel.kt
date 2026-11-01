@@ -374,7 +374,12 @@ class NotesViewModel(application: Application) : AndroidViewModel(application) {
         drafts.remove("")
         aliases.remove("")
         previewColor = null
+        // Worked out now, while the editor is still sliding in, so its first frame already has the colour instead of popping in a beat later.
+        viewModelScope.launch { previewNewNoteColor() }
     }
+
+    /** The colour already worked out for the pending new note, or `null` if it is not ready yet (the editor then asks for it). */
+    fun cachedPreviewColor(): String? = previewColor
 
     private val _scrollTo = MutableStateFlow<String?>(null)
 
@@ -385,7 +390,7 @@ class NotesViewModel(application: Application) : AndroidViewModel(application) {
 
     // The colour the pending new note will get, shown on the empty editor before anything is typed. The note is only created with its
     // first character, and it is created with exactly this colour, so what the user sees is what is saved.
-    private var previewColor: String? = null
+    @Volatile private var previewColor: String? = null
 
     suspend fun previewNewNoteColor(): String = withContext(Dispatchers.IO) {
         io.withLock {

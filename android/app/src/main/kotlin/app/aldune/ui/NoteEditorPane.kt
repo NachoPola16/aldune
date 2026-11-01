@@ -501,8 +501,8 @@ fun NoteEditorPane(key: String, viewModel: NotesViewModel, onBack: () -> Unit, s
     val tint = look.telecom?.takeIf { !look.fillColor && shownItem != null }
         ?.let { NoteChannels.tint(shownItems.indexOf(shownItem), it, look.uniformColor) }
     // A new note is not in the list until its first character is typed: until then it shows the colour it will be created with.
-    var newNoteColor by remember(key) { mutableStateOf<String?>(null) }
-    LaunchedEffect(key) { if (key.isEmpty()) newNoteColor = viewModel.previewNewNoteColor() }
+    var newNoteColor by remember(key) { mutableStateOf(if (key.isEmpty()) viewModel.cachedPreviewColor() else null) }
+    LaunchedEffect(key) { if (key.isEmpty() && newNoteColor == null) newNoteColor = viewModel.previewNewNoteColor() }
     val faceHex = tint?.face ?: (shownItem?.color ?: newNoteColor)?.takeIf { look.fillColor }?.let { NoteDisplayColor.resolve(it, look.uniformColor) }
     val themeInk = MaterialTheme.colorScheme.onBackground
     val ink = if (faceHex == null || tint != null) themeInk else noteInk(faceHex)

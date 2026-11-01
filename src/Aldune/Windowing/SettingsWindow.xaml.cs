@@ -431,7 +431,7 @@ public partial class SettingsWindow : Window
 
     private void OnPreviewKeyDown(object sender, KeyEventArgs e)
     {
-        if (!_recording) return;
+        if (!_recording) { TryHandleSearchShortcut(e); return; }
         e.Handled = true;
 
         var key = e.Key == Key.System ? e.SystemKey : e.Key;
