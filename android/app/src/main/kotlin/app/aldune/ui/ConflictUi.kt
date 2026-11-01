@@ -10,7 +10,6 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Warning
@@ -21,7 +20,6 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -48,7 +46,7 @@ fun ConflictStrip(
     val deleted = view.other is NotesViewModel.OtherVersion.Deleted
     // Sobre el fondo rojizo, el color de acento de los botones de texto no se lee: llevan el color del contenido de esa superficie.
     val onError = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.onErrorContainer)
-    Surface(modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 4.dp), shape = RoundedCornerShape(12.dp), color = MaterialTheme.colorScheme.errorContainer) {
+    Surface(modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 4.dp), shape = LocalNoteLook.current.cardShape, color = MaterialTheme.colorScheme.errorContainer) {
         Column(Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 Icon(Icons.Default.Warning, contentDescription = null, Modifier.size(18.dp), tint = MaterialTheme.colorScheme.onErrorContainer)
@@ -80,7 +78,7 @@ fun ConflictStrip(
 private fun OtherVersionLines(lines: List<DiffLine>) {
     Text(stringResource(R.string.conflict_other_version), style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onErrorContainer)
     Column(
-        Modifier.fillMaxWidth().heightIn(max = 160.dp).background(MaterialTheme.colorScheme.surface, RoundedCornerShape(8.dp)).padding(8.dp)
+        Modifier.fillMaxWidth().heightIn(max = 160.dp).background(MaterialTheme.colorScheme.surface, LocalNoteLook.current.cardShape).padding(8.dp)
             .verticalScroll(rememberScrollState()),
     ) {
         for (line in lines) {
@@ -97,7 +95,7 @@ private fun OtherVersionLines(lines: List<DiffLine>) {
 fun OrphanConflictsBanner(count: Int, onClick: () -> Unit) {
     Surface(
         Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 4.dp).clickable(onClick = onClick),
-        shape = RoundedCornerShape(12.dp), color = MaterialTheme.colorScheme.errorContainer,
+        shape = LocalNoteLook.current.cardShape, color = MaterialTheme.colorScheme.errorContainer,
     ) {
         Row(Modifier.padding(12.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             Icon(Icons.Default.Warning, contentDescription = null, Modifier.size(18.dp), tint = MaterialTheme.colorScheme.onErrorContainer)
