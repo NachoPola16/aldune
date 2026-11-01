@@ -452,7 +452,7 @@
                              Checked="OnFilterChanged" Style="{StaticResource FilterToggleStyle}" />
                 <!-- The three filters beside the tabs wrap together as one row (tag, manage tags), instead of splitting at any point. -->
                 <StackPanel Orientation="Horizontal">
-                <ComboBox x:Name="TagFilterBox" MinWidth="110" MinHeight="30" Margin="0,3,0,0"
+                <ComboBox x:Name="TagFilterBox" MinWidth="110" MinHeight="31" Margin="0"
                           ToolTip="{x:Static res:Strings.TagFilterTooltip}"
                           AutomationProperties.Name="{x:Static res:Strings.TagFilterTooltip}"
                           SelectionChanged="OnTagFilterChanged"
@@ -461,7 +461,7 @@
                 <!-- Solo icono y en la misma fila: antes ocupaba una fila entera para un botón que
                      se usa de higos a brevas. El tooltip dice qué es. -->
                 <Button x:Name="ManageTagsButton" Click="OnManageTagsClick"
-                        Width="30" Height="30" Padding="0" Margin="8,3,0,0"
+                        Width="31" Height="31" Padding="0" Margin="8,0,0,0"
                         ToolTip="{x:Static res:Strings.ManageTags}"
                         AutomationProperties.Name="{x:Static res:Strings.ManageTags}"
                         Style="{StaticResource ToolbarButtonStyle}">
