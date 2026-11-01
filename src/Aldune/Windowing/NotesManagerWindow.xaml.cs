@@ -767,7 +767,6 @@ public partial class NotesManagerWindow : Window
         }
 
         Add(Strings.OpenNote, (_, _) => _coordinator.OpenNoteById(row.Note.Id));
-        menu.Items.Add(new Separator());
         Add(Strings.Export, OnExportSelectedClick);
         if (_filter == Filter.Active) Add(Strings.Archive, OnArchiveSelectedClick);
         if (_filter != Filter.Active) Add(Strings.Restore, OnRestoreSelectedClick);
