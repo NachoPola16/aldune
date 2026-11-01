@@ -477,6 +477,8 @@
     <string name="search_tags">Buscar etiquetas</string>
     <string name="tag_move_up">Subir %1$s</string>
     <string name="tag_move_down">Descer %1$s</string>
+    <string name="tag_colour">Cor de %1$s: as notas a adotam</string>
+    <string name="tag_colour_none">Sem cor</string>
     <string name="show_tag_hash">Mostrar # antes das etiquetas</string>
     <string name="show_tag_hash_hint">Desligado: um pequeno ícone de etiqueta no lugar do #.</string>
     <string name="group_by_tag">Agrupar “Todas as notas” por etiqueta</string>

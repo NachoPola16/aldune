@@ -174,7 +174,25 @@ class NoteService(
      */
     fun setTags(id: String, tags: List<String>): NoteResult<Note> = synchronized(lock) {
         val normalized = normalizeTags(tags)
-        change(id) { if (it.tags == normalized) it else it.copy(tags = normalized) }
+        change(id) { note ->
+            if (note.tags == normalized) return@change note
+            // A tag with a colour gives it to the note it is added to (the last one added wins); tags the note already had change nothing, so
+            // saving the same list again does not undo a colour picked by hand. Twin of `NotesRepository.SetTags` in Core.
+            val gained = normalized.lastOrNull { tag -> note.tags.none { it.equals(tag, ignoreCase = true) } && tagColor(tag) != null }
+            note.copy(tags = normalized, color = gained?.let { tagColor(it) } ?: note.color)
+        }
+    }
+
+    /** The colour each tag gives its notes (tag in lower case → hex), a setting of this device that the app keeps up to date. Not synced. */
+    @Volatile var tagColors: Map<String, String> = emptyMap()
+
+    private fun tagColor(tag: String): String? = tagColors.entries.firstOrNull { it.key.equals(tag, ignoreCase = true) }?.value
+
+    /** Paints the active and archived notes that carry [tag] with [color] (the notes' own colour, so it syncs); trashed ones are left alone. */
+    fun applyTagColor(tag: String, color: String) = synchronized(lock) {
+        store.all()
+            .filter { it.state != NoteState.TRASHED && it.tags.any { t -> t.equals(tag, ignoreCase = true) } }
+            .forEach { setColor(it.id, color) }
     }
 
     /**

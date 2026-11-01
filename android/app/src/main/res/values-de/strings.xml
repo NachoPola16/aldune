@@ -477,6 +477,8 @@
     <string name="search_tags">Tags suchen</string>
     <string name="tag_move_up">%1$s nach oben</string>
     <string name="tag_move_down">%1$s nach unten</string>
+    <string name="tag_colour">Farbe von %1$s: Notizen übernehmen sie</string>
+    <string name="tag_colour_none">Keine Farbe</string>
     <string name="show_tag_hash"># vor Tags anzeigen</string>
     <string name="show_tag_hash_hint">Aus: ein kleines Tag-Symbol statt der #.</string>
     <string name="group_by_tag">„Alle Notizen“ nach Tag gruppieren</string>

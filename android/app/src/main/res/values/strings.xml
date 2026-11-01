@@ -477,6 +477,8 @@
     <string name="search_tags">Search tags</string>
     <string name="tag_move_up">Move %1$s up</string>
     <string name="tag_move_down">Move %1$s down</string>
+    <string name="tag_colour">Colour of %1$s: its notes take it</string>
+    <string name="tag_colour_none">No colour</string>
     <string name="show_tag_hash">Show # before tags</string>
     <string name="show_tag_hash_hint">Off: a small tag icon instead of the #.</string>
     <string name="group_by_tag">Group \"All notes\" by tag</string>

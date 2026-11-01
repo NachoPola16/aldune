@@ -477,6 +477,8 @@
     <string name="search_tags">タグを検索</string>
     <string name="tag_move_up">%1$s を上へ移動</string>
     <string name="tag_move_down">%1$s を下へ移動</string>
+    <string name="tag_colour">%1$s の色：そのノートが採用します</string>
+    <string name="tag_colour_none">色なし</string>
     <string name="show_tag_hash">タグの前に # を表示</string>
     <string name="show_tag_hash_hint">オフ: # の代わりに小さなタグアイコンを表示します。</string>
     <string name="group_by_tag">「すべてのノート」をタグでグループ化</string>

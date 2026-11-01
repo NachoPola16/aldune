@@ -1,6 +1,14 @@
 package app.aldune.ui
 
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material3.TextButton
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -42,8 +50,11 @@ import app.aldune.domain.TagOrder
 fun AllTagsDialog(
     tags: List<String>, selected: String?, showHash: Boolean,
     onSelect: (String?) -> Unit, onMove: (String, Int) -> Unit, onDismiss: () -> Unit,
+    tagColors: Map<String, String> = emptyMap(), paletteColors: List<String> = emptyList(), onSetColor: (String, String?) -> Unit = { _, _ -> },
 ) {
     var query by remember { mutableStateOf("") }
+    // The tag whose colour palette is open under its row.
+    var paletteFor by remember { mutableStateOf<String?>(null) }
     val shown = TagOrder.filter(tags, query)
     val searching = query.isNotBlank()
     AlertDialog(
@@ -62,6 +73,7 @@ fun AllTagsDialog(
                     }
                     items(shown, key = { it.lowercase() }) { tag ->
                         val isSelected = tag.equals(selected, ignoreCase = true)
+                        Column {
                         Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
                             Row(
                                 Modifier.weight(1f).clickable { onSelect(if (isSelected) null else tag) }.padding(vertical = 14.dp, horizontal = 4.dp),
@@ -73,12 +85,33 @@ fun AllTagsDialog(
                                     color = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface,
                                 )
                             }
+                            val own = tagColors.entries.firstOrNull { it.key.equals(tag, ignoreCase = true) }?.value
+                            val colourCd = stringResource(R.string.tag_colour, tag)
+                            IconButton({ paletteFor = if (paletteFor.equals(tag, ignoreCase = true)) null else tag }, Modifier.semantics { contentDescription = colourCd }) {
+                                Box(
+                                    Modifier.size(20.dp).clip(CircleShape).background(own?.let { noteFace(it) } ?: Color.Transparent)
+                                        .border(1.dp, MaterialTheme.colorScheme.outline, CircleShape),
+                                )
+                            }
                             if (!searching) {
                                 val up = stringResource(R.string.tag_move_up, tag)
                                 val down = stringResource(R.string.tag_move_down, tag)
                                 IconButton({ onMove(tag, -1) }, Modifier.semantics { contentDescription = up }) { Icon(Icons.Filled.KeyboardArrowUp, null) }
                                 IconButton({ onMove(tag, 1) }, Modifier.semantics { contentDescription = down }) { Icon(Icons.Filled.KeyboardArrowDown, null) }
                             }
+                        }
+                        if (paletteFor.equals(tag, ignoreCase = true)) {
+                            @OptIn(androidx.compose.foundation.layout.ExperimentalLayoutApi::class)
+                            FlowRow(Modifier.fillMaxWidth().padding(start = 4.dp, bottom = 8.dp), horizontalArrangement = Arrangement.spacedBy(10.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                                for (hex in paletteColors) {
+                                    Box(
+                                        Modifier.size(36.dp).clip(CircleShape).background(noteFace(hex)).border(1.dp, MaterialTheme.colorScheme.outline, CircleShape)
+                                            .clickable { onSetColor(tag, hex); paletteFor = null }.semantics { contentDescription = hex },
+                                    )
+                                }
+                                TextButton({ onSetColor(tag, null); paletteFor = null }) { Text(stringResource(R.string.tag_colour_none)) }
+                            }
+                        }
                         }
                     }
                 }

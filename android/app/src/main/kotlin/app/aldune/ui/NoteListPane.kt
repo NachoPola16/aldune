@@ -88,6 +88,8 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.text.font.FontWeight
+import app.aldune.text.NoteThemes
+import app.aldune.domain.TagColors
 import app.aldune.domain.TagGrouping
 import app.aldune.domain.TagOrder
 import androidx.compose.runtime.rememberCoroutineScope
@@ -259,7 +261,12 @@ fun NoteListPane(
                     IconButton(onClick = { showSyncDetail = true }, modifier = Modifier.semantics { liveRegion = LiveRegionMode.Polite }) { SyncIcon(line.icon, stringResource(R.string.sync_status_cd)) }
                 }
             }
-            if (state.allTags.isNotEmpty()) TagRow(state, settingsNow.showTagHash, viewModel::setTag, onMoveTag = viewModel::moveTag)
+            if (state.allTags.isNotEmpty()) TagRow(
+                state, settingsNow.showTagHash, viewModel::setTag, onMoveTag = viewModel::moveTag,
+                tagColors = remember(settingsNow.tagColors) { TagColors.decode(settingsNow.tagColors) },
+                paletteColors = NoteThemes.resolve(settingsNow.noteThemeId, null).let { it.lightColors + it.darkColors },
+                onSetTagColor = viewModel::setTagColor,
+            )
             if (state.orphans.isNotEmpty()) OrphanConflictsBanner(state.orphans.size) { showOrphans = true }
             // Una versión nueva de Android en GitHub (una vez al día, desactivable en Ajustes → General): solo avisa y abre la página.
             val pendingUpdate by viewModel.update.collectAsStateWithLifecycle()
@@ -675,10 +682,14 @@ private fun StateTabs(state: UiState.Ready, onSelect: (NoteState) -> Unit) {
 }
 
 @Composable
-private fun TagRow(state: UiState.Ready, showHash: Boolean, onSelect: (String?) -> Unit, onMoveTag: (String, Int) -> Unit) {
+private fun TagRow(
+    state: UiState.Ready, showHash: Boolean, onSelect: (String?) -> Unit, onMoveTag: (String, Int) -> Unit,
+    tagColors: Map<String, String>, paletteColors: List<String>, onSetTagColor: (String, String?) -> Unit,
+) {
     val listState = rememberLazyListState()
     var sheetOpen by remember { mutableStateOf(false) }
-    if (sheetOpen) AllTagsDialog(state.allTags, state.tag, showHash, onSelect = { sheetOpen = false; onSelect(it) }, onMove = onMoveTag, onDismiss = { sheetOpen = false })
+    if (sheetOpen) AllTagsDialog(state.allTags, state.tag, showHash, onSelect = { sheetOpen = false; onSelect(it) }, onMove = onMoveTag, onDismiss = { sheetOpen = false },
+        tagColors = tagColors, paletteColors = paletteColors, onSetColor = onSetTagColor)
     // end = 8.dp: the same margin as the row above, so the arrow sits right under the sync status icon.
     Row(Modifier.padding(bottom = 10.dp, end = 8.dp), verticalAlignment = Alignment.CenterVertically) {
     Box(Modifier.weight(1f)) {

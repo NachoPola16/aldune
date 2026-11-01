@@ -12,6 +12,7 @@ import app.aldune.export.AutoExportStatus
 import app.aldune.export.AutoExportWork
 import app.aldune.data.SettingsStore
 import app.aldune.domain.NoteVersion
+import app.aldune.domain.TagColors
 import app.aldune.domain.TagOrder
 import app.aldune.core.ProtectedNotes
 import app.aldune.core.UnlockedProtectedNote
@@ -212,6 +213,7 @@ class NotesViewModel(application: Application) : AndroidViewModel(application) {
         val next = transform(previous)
         _settings.value = next
         settingsStore.save(next)
+        if (next.tagColors != previous.tagColors) service?.tagColors = TagColors.decode(next.tagColors)
         // El orden de la lista y el trabajo de segundo plano dependen de estos ajustes: se aplican al momento.
         if (next.listOrder != previous.listOrder) launchIo { refreshLocked() }
         if (next.syncInBackground != previous.syncInBackground) _sync.value?.refreshSchedule()
@@ -254,6 +256,7 @@ class NotesViewModel(application: Application) : AndroidViewModel(application) {
 
     private fun start(notes: NoteService, opened: AppContainer.Opened.Ready) {
         service = notes
+        notes.tagColors = TagColors.decode(_settings.value.tagColors)
         AutoExportStatus.init(getApplication())
         AutoExportWork.apply(getApplication(), _settings.value)
         protection = opened.protection
@@ -418,6 +421,12 @@ class NotesViewModel(application: Application) : AndroidViewModel(application) {
     fun setTagOrder(order: List<String>) {
         updateSettings { it.copy(tagOrder = TagOrder.encode(order)) }
         launchIo { refresh() }
+    }
+
+    /** Sets or removes (null) the colour of a tag. Setting one paints the notes that carry it; removing it leaves them as they are. */
+    fun setTagColor(tag: String, color: String?) {
+        updateSettings { it.copy(tagColors = TagColors.encode(TagColors.with(TagColors.decode(it.tagColors), tag, color))) }
+        if (color != null) change { it.applyTagColor(tag, color) }
     }
 
     /** Las versiones guardadas de la nota (historial local), la más reciente primero. */

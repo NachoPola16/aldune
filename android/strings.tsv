@@ -476,6 +476,8 @@ all_tags	All tags	Todas las etiquetas	Alle Tags	Toutes les étiquettes	Todas as 
 search_tags	Search tags	Buscar etiquetas	Tags suchen	Rechercher des étiquettes	Buscar etiquetas	Cerca etichette	タグを検索	搜索标签
 tag_move_up	Move %1$s up	Subir %1$s	%1$s nach oben	Monter %1$s	Subir %1$s	Sposta %1$s su	%1$s を上へ移動	将 %1$s 上移
 tag_move_down	Move %1$s down	Bajar %1$s	%1$s nach unten	Descendre %1$s	Descer %1$s	Sposta %1$s giù	%1$s を下へ移動	将 %1$s 下移
+tag_colour	Colour of %1$s: its notes take it	Color de %1$s: sus notas lo toman	Farbe von %1$s: Notizen übernehmen sie	Couleur de %1$s : ses notes la prennent	Cor de %1$s: as notas a adotam	Colore di %1$s: le note lo assumono	%1$s の色：そのノートが採用します	%1$s 的颜色：其便笺会采用
+tag_colour_none	No colour	Sin color	Keine Farbe	Sans couleur	Sem cor	Nessun colore	色なし	无颜色
 show_tag_hash	Show # before tags	Mostrar # delante de las etiquetas	# vor Tags anzeigen	Afficher # devant les étiquettes	Mostrar # antes das etiquetas	Mostra # davanti alle etichette	タグの前に # を表示	在标签前显示 #
 show_tag_hash_hint	Off: a small tag icon instead of the #.	Apagado: un pequeño icono de etiqueta en vez de la #.	Aus: ein kleines Tag-Symbol statt der #.	Désactivé : une petite icône d'étiquette à la place du #.	Desligado: um pequeno ícone de etiqueta no lugar do #.	Disattivato: una piccola icona di etichetta al posto del #.	オフ: # の代わりに小さなタグアイコンを表示します。	关闭：用小标签图标代替 #。
 group_by_tag	Group "All notes" by tag	Agrupar «Todas las notas» por etiqueta	„Alle Notizen“ nach Tag gruppieren	Grouper « Toutes les notes » par étiquette	Agrupar “Todas as notas” por etiqueta	Raggruppa «Tutte le note» per etichetta	「すべてのノート」をタグでグループ化	按标签分组“全部便笺”

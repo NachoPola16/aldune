@@ -73,6 +73,8 @@ data class AppSettings(
     val hideDoneTasks: Boolean = false,
     /** Orden propio de las etiquetas (codificado con `TagOrder.encode`); vacío = alfabético. Local: no viaja por la sync. */
     val tagOrder: String = "",
+    /** El color que cada etiqueta da a sus notas (`TagColors.encode`). Local: no viaja por la sync; lo que viaja es el color de cada nota. */
+    val tagColors: String = "",
     /** «#» delante de las etiquetas (por defecto sí, como en Windows); apagado, un icono pequeño de etiqueta. */
     val showTagHash: Boolean = true,
     /** «Todas las notas» repartida en secciones plegables por etiqueta. Solo Android; apagado por defecto. */
@@ -162,6 +164,7 @@ class SettingsStore(context: Context) {
             syncInBackground = prefs.getBoolean(SYNC_IN_BACKGROUND, d.syncInBackground),
             hideDoneTasks = prefs.getBoolean(HIDE_DONE_TASKS, d.hideDoneTasks),
             tagOrder = prefs.getString(TAG_ORDER, d.tagOrder) ?: d.tagOrder,
+            tagColors = prefs.getString(TAG_COLORS, d.tagColors) ?: d.tagColors,
             showTagHash = prefs.getBoolean(SHOW_TAG_HASH, d.showTagHash),
             groupByTag = prefs.getBoolean(GROUP_BY_TAG, d.groupByTag),
             keyboardOnOpen = KeyboardOnOpen.migrate(prefs.getInt(KEYBOARD_ON_OPEN, d.keyboardOnOpen), prefs.getBoolean(KEYBOARD_MIGRATED, false)),
@@ -216,6 +219,7 @@ class SettingsStore(context: Context) {
             .putBoolean(SYNC_IN_BACKGROUND, settings.syncInBackground)
             .putBoolean(HIDE_DONE_TASKS, settings.hideDoneTasks)
             .putString(TAG_ORDER, settings.tagOrder)
+            .putString(TAG_COLORS, settings.tagColors)
             .putBoolean(SHOW_TAG_HASH, settings.showTagHash)
             .putBoolean(GROUP_BY_TAG, settings.groupByTag)
             .putInt(KEYBOARD_ON_OPEN, settings.keyboardOnOpen)
@@ -283,6 +287,7 @@ class SettingsStore(context: Context) {
         const val SYNC_IN_BACKGROUND = "syncInBackground"
         const val HIDE_DONE_TASKS = "hideDoneTasks"
         const val TAG_ORDER = "tagOrder"
+        const val TAG_COLORS = "tagColors"
         const val SHOW_TAG_HASH = "showTagHash"
         const val GROUP_BY_TAG = "groupByTag"
         const val KEYBOARD_ON_OPEN = "keyboardOnOpen"
