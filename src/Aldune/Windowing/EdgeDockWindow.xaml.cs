@@ -3118,6 +3118,9 @@ public partial class EdgeDockWindow : Window
         if (_edge == EdgePosition.Left) ApplyLeftEdgeTabShape(button);
         else if (IsTopBottomEdge) ApplyTopBottomTabShape(button);
         ApplyFaceFinish(button);
+        // Sombra apagada en Ajustes: la capa de sombra se queda sin efecto y la tarjeta queda plana.
+        if (_settings is { DockCardShadow: false } && button.Template.FindName("CardShadowLayer", button) is Border flat)
+            flat.Effect = null;
 
         // La última no lleva el margen del solape. En esta disposición el margen es inferior y no
         // hace falta después de la última tarjeta porque no hay otra que solapar.

@@ -82,6 +82,7 @@ public static class ConfigFields
         Enum<DockAlignment>("dockAlignment", nameof(AppSettings.DockAlignment), ConfigSections.Settings, s => s.DockAlignment, (s, v) => s.DockAlignment = v),
         Enum<DockViewLabelMode>("dockViewLabel", nameof(AppSettings.DockViewLabel), ConfigSections.Settings, s => s.DockViewLabel, (s, v) => s.DockViewLabel = v),
         Enum<DockViewKind>("dockView", nameof(AppSettings.DockView), ConfigSections.Settings, s => s.DockView, (s, v) => s.DockView = v),
+        Bool("dockCardShadow", nameof(AppSettings.DockCardShadow), ConfigSections.Settings, s => s.DockCardShadow, (s, v) => s.DockCardShadow = v),
         Bool("keepDockOpen", nameof(AppSettings.KeepDockOpen), ConfigSections.Settings, s => s.KeepDockOpen, (s, v) => s.KeepDockOpen = v),
         Bool("showNotePreview", nameof(AppSettings.ShowNotePreview), ConfigSections.Settings, s => s.ShowNotePreview, (s, v) => s.ShowNotePreview = v),
         Bool("hideOnFullscreen", nameof(AppSettings.HideOnFullscreen), ConfigSections.Settings, s => s.HideOnFullscreen, (s, v) => s.HideOnFullscreen = v),

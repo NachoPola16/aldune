@@ -301,6 +301,12 @@ public sealed class AppSettings
     public bool ShowNotePreview { get; set; } = true;
 
     /// <summary>
+    /// Sombra que cada tarjeta del dock proyecta sobre la de al lado. Activada por defecto (es el aspecto de siempre);
+    /// apagada, las tarjetas quedan planas. Solo Windows: Android no tiene dock.
+    /// </summary>
+    public bool DockCardShadow { get; set; } = true;
+
+    /// <summary>
     /// Oscuro, claro o como Windows. Solo el chrome: las notas conservan su tema. Un archivo antiguo sin el campo sigue en
     /// Dark (0); el aspecto de marca solo se pone en instalaciones nuevas (<see cref="SettingsService.Load"/>).
     /// </summary>

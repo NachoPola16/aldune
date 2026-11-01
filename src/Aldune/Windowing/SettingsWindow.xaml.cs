@@ -724,6 +724,14 @@ public partial class SettingsWindow : Window
         _settingsService.Save(_settings);
     }
 
+    private void OnDockCardShadowToggled(object sender, RoutedEventArgs e)
+    {
+        _settings.DockCardShadow = DockCardShadowCheck.IsChecked == true;
+        _settingsService.Save(_settings);
+        // Cada pestaña lleva su sombra en la plantilla: se rehacen para que OnTabLoaded la quite o la ponga.
+        _coordinator?.RebuildDocks();
+    }
+
     private void OnShowNotePreviewToggled(object sender, RoutedEventArgs e)
     {
         _settings.ShowNotePreview = ShowNotePreviewCheck.IsChecked == true;
@@ -2281,6 +2289,7 @@ public partial class SettingsWindow : Window
         HideOnFullscreenCheck.IsChecked = _settings.HideOnFullscreen;
         KeepDockOpenCheck.IsChecked = _settings.KeepDockOpen;
         ShowNotePreviewCheck.IsChecked = _settings.ShowNotePreview;
+        DockCardShadowCheck.IsChecked = _settings.DockCardShadow;
         ReminderIncludesTasksCheck.IsChecked = _settings.ReminderIncludesTasks;
         SoundsEnabledCheck.IsChecked = _settings.SoundsEnabled;
         BuildSoundRows();

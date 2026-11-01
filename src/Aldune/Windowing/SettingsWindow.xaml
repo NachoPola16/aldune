@@ -691,6 +691,15 @@
                     </Grid>
                     <Border Background="{DynamicResource AlduneRaisedBrush}" Height="1" Margin="0,20,0,0" />
                     <StackPanel Margin="0,20,0,0">
+                        <CheckBox x:Name="DockCardShadowCheck"
+                                  Content="{x:Static res:Strings.DockCardShadowCheckbox}"
+                                  Foreground="{DynamicResource AlduneTextBrush}" Background="{DynamicResource AlduneGroundBrush}" FontSize="{DynamicResource AlduneTextBody}"
+                                  Style="{StaticResource SettingsSwitchStyle}"
+                                  Click="OnDockCardShadowToggled" />
+                        <TextBlock Text="{x:Static res:Strings.DockCardShadowHint}"
+                                   Foreground="{DynamicResource AlduneHintBrush}" FontSize="{DynamicResource AlduneTextSmall}" TextWrapping="Wrap" Margin="0,6,56,0" />
+                    </StackPanel>
+                    <StackPanel Margin="0,20,0,0">
                         <CheckBox x:Name="ShowNotePreviewCheck"
                                   Content="{x:Static res:Strings.ShowNotePreviewCheckbox}"
                                   Foreground="{DynamicResource AlduneTextBrush}" Background="{DynamicResource AlduneGroundBrush}" FontSize="{DynamicResource AlduneTextBody}"
