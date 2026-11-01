@@ -19,7 +19,13 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.WindowInsetsSides
+import androidx.compose.foundation.layout.only
+import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.safeDrawingPadding
+import androidx.compose.foundation.layout.windowInsetsPadding
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.input.InputTransformation
@@ -525,13 +531,29 @@ fun NoteEditorPane(key: String, viewModel: NotesViewModel, onBack: () -> Unit, s
         }
     }
 
+    // A phone on its side: the keyboard would leave the text a sliver between a title row and a button bar.
+    val compactHeight = LocalConfiguration.current.screenHeightDp < 480
+    // On its side the status bar costs a tenth of the height; it goes while a note is open and comes back with a swipe from the edge.
+    DisposableEffect(compactHeight) {
+        val controller = context.findActivity()?.window?.let { WindowCompat.getInsetsController(it, view) }
+        if (compactHeight) {
+            controller?.systemBarsBehavior = androidx.core.view.WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
+            controller?.hide(androidx.core.view.WindowInsetsCompat.Type.statusBars())
+        }
+        onDispose { controller?.show(androidx.core.view.WindowInsetsCompat.Type.statusBars()) }
+    }
     CompositionLocalProvider(LocalContentColor provides ink) {
     Column(
         Modifier.fillMaxSize()
             .then(if (faceHex != null) Modifier.background(noteFace(faceHex)) else Modifier)
             // Los pliegues cubren toda la hoja; los renglones van aparte, dentro del campo de texto, para alinearlos con sus líneas.
             .paperTexture(if (look.paper == AspectSkin.Paper.FOLDS) look.paper else AspectSkin.Paper.NONE, ink, faceLight)
-            .safeDrawingPadding().imePadding(),
+            // Beside the list (showBack is false) this pane does not touch the screen's left edge: the camera cut-out margin belongs to the list.
+            .then(
+                if (showBack) Modifier.safeDrawingPadding()
+                else Modifier.windowInsetsPadding(WindowInsets.safeDrawing.only(WindowInsetsSides.Top + WindowInsetsSides.End + WindowInsetsSides.Bottom)),
+            )
+            .imePadding(),
     ) {
         Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
             if (showBack) {
@@ -566,6 +588,19 @@ fun NoteEditorPane(key: String, viewModel: NotesViewModel, onBack: () -> Unit, s
                 Text(
                     "${progress.done}/${progress.total}", Modifier.semantics { contentDescription = label },
                     style = MaterialTheme.typography.labelLarge, color = muted,
+                )
+            }
+            // A short screen (a phone on its side) has no room for a bar of its own under the text, least of all with the keyboard up: the
+            // editing buttons move into this row, so the text keeps the height.
+            if (compactHeight) {
+                EditBar(
+                    onCheckbox = { commit(TaskLines.toggleTaskLineAt(text(), caret())) },
+                    onBullet = { commit(BulletLines.toggleBulletLineAt(text(), caret())) },
+                    onOutdent = ::outdent,
+                    onIndent = ::indent,
+                    canUndo = state.undoState.canUndo, canRedo = state.undoState.canRedo,
+                    onUndo = { state.undoState.undo() }, onRedo = { state.undoState.redo() },
+                    inline = true,
                 )
             }
             // El único menú «más» del editor: antes había dos (este y un «⋯» abajo) y no se sabía cuál tenía qué.
@@ -882,15 +917,17 @@ fun NoteEditorPane(key: String, viewModel: NotesViewModel, onBack: () -> Unit, s
                 border = AssistChipDefaults.assistChipBorder(true, borderColor = ink.copy(alpha = 0.4f)),
             )
         }
-        HorizontalDivider()
-        EditBar(
-            onCheckbox = { commit(TaskLines.toggleTaskLineAt(text(), caret())) },
-            onBullet = { commit(BulletLines.toggleBulletLineAt(text(), caret())) },
-            onOutdent = ::outdent,
-            onIndent = ::indent,
-            canUndo = state.undoState.canUndo, canRedo = state.undoState.canRedo,
-            onUndo = { state.undoState.undo() }, onRedo = { state.undoState.redo() },
-        )
+        if (!compactHeight) {
+            HorizontalDivider()
+            EditBar(
+                onCheckbox = { commit(TaskLines.toggleTaskLineAt(text(), caret())) },
+                onBullet = { commit(BulletLines.toggleBulletLineAt(text(), caret())) },
+                onOutdent = ::outdent,
+                onIndent = ::indent,
+                canUndo = state.undoState.canUndo, canRedo = state.undoState.canRedo,
+                onUndo = { state.undoState.undo() }, onRedo = { state.undoState.redo() },
+            )
+        }
     }
     }
 }
@@ -961,13 +998,15 @@ private fun EditBar(
     canRedo: Boolean,
     onUndo: () -> Unit,
     onRedo: () -> Unit,
+    inline: Boolean = false,
 ) {
-    Row(Modifier.widthIn(max = BAR_MAX_WIDTH).fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly) {
-        BarButton(EditorIcons.Checkbox, stringResource(R.string.edit_checkbox), onCheckbox)
-        BarButton(EditorIcons.Bullets, stringResource(R.string.edit_bullet), onBullet)
-        BarButton(EditorIcons.Indent, stringResource(R.string.edit_indent), onIndent, onLongClick = onOutdent, longClickLabel = stringResource(R.string.edit_outdent))
-        BarButton(EditorIcons.Undo, stringResource(R.string.edit_undo), onUndo, canUndo)
-        BarButton(EditorIcons.Redo, stringResource(R.string.edit_redo), onRedo, canRedo)
+    val width = if (inline) 44.dp else 64.dp
+    Row(if (inline) Modifier else Modifier.widthIn(max = BAR_MAX_WIDTH).fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly) {
+        BarButton(EditorIcons.Checkbox, stringResource(R.string.edit_checkbox), onCheckbox, width = width)
+        BarButton(EditorIcons.Bullets, stringResource(R.string.edit_bullet), onBullet, width = width)
+        BarButton(EditorIcons.Indent, stringResource(R.string.edit_indent), onIndent, onLongClick = onOutdent, longClickLabel = stringResource(R.string.edit_outdent), width = width)
+        BarButton(EditorIcons.Undo, stringResource(R.string.edit_undo), onUndo, canUndo, width = width)
+        BarButton(EditorIcons.Redo, stringResource(R.string.edit_redo), onRedo, canRedo, width = width)
     }
 }
 
@@ -977,11 +1016,11 @@ private val BAR_MAX_WIDTH = 480.dp
 @Composable
 private fun BarButton(
     icon: androidx.compose.ui.graphics.vector.ImageVector, description: String, onClick: () -> Unit, enabled: Boolean = true,
-    onLongClick: (() -> Unit)? = null, longClickLabel: String? = null,
+    onLongClick: (() -> Unit)? = null, longClickLabel: String? = null, width: androidx.compose.ui.unit.Dp = 64.dp,
 ) {
     // 64 × 48 dp: el alto mínimo táctil, y más ancho porque son cinco y no siete. Inactivo se atenúa a la mitad (con 0,38 casi desaparecía).
     Box(
-        Modifier.size(width = 64.dp, height = 48.dp)
+        Modifier.size(width = width, height = 48.dp)
             .combinedClickable(enabled = enabled, role = Role.Button, onClickLabel = null, onLongClickLabel = longClickLabel, onLongClick = onLongClick, onClick = onClick)
             .semantics { contentDescription = description },
         contentAlignment = Alignment.Center,
