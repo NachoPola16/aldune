@@ -289,6 +289,18 @@ private fun ConnectForm(controller: SyncController, additional: Boolean, initial
                 isError = errorText != null, supportingText = errorText?.let { { Text(stringResource(it)) } },
             )
             Text(stringResource(R.string.sync_invite_hint), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            // An invitation over plain http outside the home network sends its one-use code and then the token unprotected: same confirmation as the manual route.
+            val inviteNeedsHttpConfirm = Invitations.parse(code)?.let { isCleartextOutsideLan(it.serverUrl) } == true
+            var inviteHttpAccepted by remember { mutableStateOf(false) }
+            if (inviteNeedsHttpConfirm) {
+                Row(
+                    Modifier.fillMaxWidth().toggleable(value = inviteHttpAccepted, role = Role.Checkbox, onValueChange = { inviteHttpAccepted = it }),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Checkbox(checked = inviteHttpAccepted, onCheckedChange = null)
+                    Text(stringResource(R.string.sync_http_public_confirm), Modifier.padding(start = 12.dp, top = 8.dp, bottom = 8.dp), style = MaterialTheme.typography.bodySmall)
+                }
+            }
             // Pegar solo cuando se pulsa: Aldune no lee el portapapeles por su cuenta.
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 OutlinedButton(onClick = {
@@ -305,7 +317,7 @@ private fun ConnectForm(controller: SyncController, additional: Boolean, initial
                 }) { Text(stringResource(R.string.sync_paste)) }
                 OutlinedButton(onClick = { scanner.launch(Unit) }) { Text(stringResource(R.string.scan_qr)) }
             }
-            Button(enabled = !busy, onClick = {
+            Button(enabled = !busy && (!inviteNeedsHttpConfirm || inviteHttpAccepted), onClick = {
                 val invitation = Invitations.parse(code)
                 if (invitation != null) {
                     busy = true; errorText = null; failureKind = null; alreadyName = null

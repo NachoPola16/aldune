@@ -7,6 +7,9 @@ import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.selection.toggleable
+import androidx.compose.material3.Checkbox
+import androidx.compose.ui.semantics.Role
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -43,6 +46,7 @@ import app.aldune.sync.Invitations
 import app.aldune.sync.InviteException
 import app.aldune.sync.SpaceInfo
 import app.aldune.syncclient.QrEncoder
+import app.aldune.syncclient.isCleartextOutsideLan
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -67,6 +71,10 @@ internal fun InviteDialog(profile: SyncProfile, onDone: () -> Unit) {
     var people by remember { mutableStateOf<List<SpaceInfo>?>(null) }
     var revoking by remember { mutableStateOf<SpaceInfo?>(null) }
     val url = profile.url
+    // The admin token travels with every call here: over plain http outside the home network it needs the same explicit confirmation as the sync token.
+    val needsHttpConfirm = isCleartextOutsideLan(url)
+    var httpAccepted by remember { mutableStateOf(false) }
+    val httpBlocked = needsHttpConfirm && !httpAccepted
 
     fun <T> call(work: () -> T, done: (T) -> Unit) {
         if (admin.isBlank()) { error = R.string.invite_err_need_admin; return }
@@ -139,7 +147,16 @@ internal fun InviteDialog(profile: SyncProfile, onDone: () -> Unit) {
                             value = label, onValueChange = { label = it.take(60) }, modifier = Modifier.fillMaxWidth(), singleLine = true,
                             label = { Text(stringResource(R.string.invite_label_label)) },
                         )
-                        TextButton(enabled = !busy, onClick = { loadPeople() }) { Text(stringResource(R.string.people_button)) }
+                        if (needsHttpConfirm) {
+                            Row(
+                    Modifier.fillMaxWidth().toggleable(value = httpAccepted, role = Role.Checkbox, onValueChange = { httpAccepted = it }),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Checkbox(checked = httpAccepted, onCheckedChange = null)
+                    Text(stringResource(R.string.sync_http_public_confirm), Modifier.padding(start = 12.dp, top = 8.dp, bottom = 8.dp), style = MaterialTheme.typography.bodySmall)
+                }
+                        }
+                        TextButton(enabled = !busy && !httpBlocked, onClick = { loadPeople() }) { Text(stringResource(R.string.people_button)) }
                     }
                 }
                 error?.let { Text(stringResource(it), color = MaterialTheme.colorScheme.error) }
@@ -147,7 +164,7 @@ internal fun InviteDialog(profile: SyncProfile, onDone: () -> Unit) {
         },
         confirmButton = {
             if (invitation == null && people == null) {
-                TextButton(enabled = !busy, onClick = { call({ Invitations.create(url, admin, label) }) { invitation = it } }) {
+                TextButton(enabled = !busy && !httpBlocked, onClick = { call({ Invitations.create(url, admin, label) }) { invitation = it } }) {
                     Text(stringResource(R.string.invite_create_action))
                 }
             } else {
