@@ -1760,6 +1760,7 @@ public static class Strings
     // Mismo nombre que la pestaña de Android (SETTINGS_PARITY.md).
     public static string SettingsPageNotes => T("Notes", "Notas",
         "Notizen", "Notes", "Notas", "Note", "ノート", "笔记");
+    public static string SettingsPageSounds => T("Sounds", "Sonidos", "Töne", "Sons", "Sons", "Suoni", "サウンド", "声音");
     public static string SettingsPageDock => T("Dock and screens", "Dock y pantallas",
         "Dock und Bildschirme", "Dock et écrans", "Dock e telas", "Dock e schermi", "ドックと画面", "程序坞和屏幕");
     public static string SettingsPageColors => T("Colors", "Colores",

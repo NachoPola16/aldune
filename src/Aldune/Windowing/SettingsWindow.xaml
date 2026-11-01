@@ -331,6 +331,9 @@
                     <RadioButton x:Name="NavNotes" Tag="Notes" GroupName="SettingsNav"
                                  Content="{x:Static res:Strings.SettingsPageNotes}"
                                  Style="{StaticResource SettingsNavStyle}" Checked="OnPageChecked" />
+                    <RadioButton x:Name="NavSounds" Tag="Sounds" GroupName="SettingsNav"
+                                 Content="{x:Static res:Strings.SettingsPageSounds}"
+                                 Style="{StaticResource SettingsNavStyle}" Checked="OnPageChecked" />
                     <RadioButton x:Name="NavColors" Tag="Colors" GroupName="SettingsNav"
                                  Content="{x:Static res:Strings.SettingsPageColors}"
                                  Style="{StaticResource SettingsNavStyle}" Checked="OnPageChecked" />
@@ -640,8 +643,10 @@
                                        Foreground="{DynamicResource AlduneTextBrush}" FontSize="{DynamicResource AlduneTextBody}" VerticalAlignment="Center" Margin="8,0,0,0" />
                         </StackPanel>
                     </StackPanel>
-                    <Border Background="{DynamicResource AlduneRaisedBrush}" Height="1" Margin="0,20,0,0" />
-                    <StackPanel Margin="0,20,0,0">
+                </StackPanel>
+                <StackPanel x:Name="SoundsPage" Visibility="Collapsed">
+                    <TextBlock Text="{x:Static res:Strings.SettingsPageSounds}" Foreground="{DynamicResource AlduneTextStrongBrush}" FontSize="{DynamicResource AlduneTextPageTitle}" FontWeight="SemiBold" Margin="0,0,0,16" />
+                    <StackPanel>
                         <CheckBox x:Name="SoundsEnabledCheck"
                                   Content="{x:Static res:Strings.SoundsEnabledCheckbox}"
                                   Foreground="{DynamicResource AlduneTextBrush}" Background="{DynamicResource AlduneGroundBrush}" FontSize="{DynamicResource AlduneTextBody}"

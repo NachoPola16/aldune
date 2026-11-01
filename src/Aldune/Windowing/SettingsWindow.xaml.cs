@@ -186,6 +186,7 @@ public partial class SettingsWindow : Window
     {
         var advanced = _settings.SimplifiedMode ? Visibility.Collapsed : Visibility.Visible;
         NavNotes.Visibility = advanced;
+        NavSounds.Visibility = advanced;
         NavSync.Visibility = advanced;
         DockAdvancedPanel.Visibility = advanced;
         ThemeAdvancedPanel.Visibility = advanced;
@@ -209,7 +210,7 @@ public partial class SettingsWindow : Window
         if (FindName(page + "Page") is not FrameworkElement || PageNav(page).Visibility != Visibility.Visible)
             page = "General";
 
-        foreach (var name in new[] { "General", "Appearance", "Notes", "Colors", "Dock", "Sync", "Help", "About" })
+        foreach (var name in new[] { "General", "Appearance", "Notes", "Sounds", "Colors", "Dock", "Sync", "Help", "About" })
             ((FrameworkElement)FindName(name + "Page")).Visibility = name == page ? Visibility.Visible : Visibility.Collapsed;
 
         _currentPage = page;
@@ -1932,59 +1933,53 @@ public partial class SettingsWindow : Window
     // Los nombres de los idiomas ("Español"/"English") no se traducen: un idioma se nombra a sí
     // mismo igual sea cual sea el idioma activo de la interfaz, que es la convención de cualquier
     // selector de idioma.
+    private ComboBox? _languageBox;
+    private bool _loadingLanguages;
+
+    /// <summary>The language picker: a drop-down (eight tall radio cards took a third of the page) with each language in its own name and, in grey,
+    /// its name in the current language, as before.</summary>
     private void PopulateLanguages()
     {
         LanguageListContainer.Children.Clear();
-        foreach (var language in UiLanguages.All) AddLanguageRadio(language.Code, language.Name);
+        _loadingLanguages = true;
+        _languageBox = new ComboBox { MinWidth = 300, HorizontalAlignment = HorizontalAlignment.Left, Style = (Style)FindResource("DarkComboBoxStyle") };
+        System.Windows.Automation.AutomationProperties.SetName(_languageBox, Strings.LanguageSectionTitle);
+        foreach (var language in UiLanguages.All)
+            _languageBox.Items.Add(new ComboBoxItem { Content = LanguageLabelText(language.Code, language.Name), Tag = language.Code });
+        SelectLanguage(Strings.Current);
+        _languageBox.SelectionChanged += OnLanguageSelectionChanged;
+        LanguageListContainer.Children.Add(_languageBox);
+        _loadingLanguages = false;
     }
 
-    private void AddLanguageRadio(string code, string label)
+    private void SelectLanguage(string? code)
     {
-        var radio = new RadioButton
-        {
-            GroupName = "LanguageGroup",
-            Style = (Style)FindResource("MonitorRadioStyle"),
-            Tag = code,
-            Content = LanguageLabel(code, label),
-            // Contra Strings.Current (ya resuelto al arrancar), no contra _settings.Language: así
-            // la tarjeta correcta sale marcada incluso cuando el usuario nunca ha elegido idioma
-            // explícitamente y se está siguiendo el de Windows.
-            IsChecked = Strings.Current == code
-        };
-        radio.Checked += OnLanguageSelectionChanged;
-        LanguageListContainer.Children.Add(radio);
+        if (_languageBox is null) return;
+        _loadingLanguages = true;
+        _languageBox.SelectedItem = _languageBox.Items.OfType<ComboBoxItem>().FirstOrDefault(i => (string?)i.Tag == code);
+        _loadingLanguages = false;
     }
 
-    /// <summary>"Deutsch · Alemán": el nombre del idioma en sí mismo, que es como lo busca quien lo
-    /// habla, y en gris el mismo nombre en el idioma actual, para quien no lo reconoce. El del idioma
-    /// activo va solo: repetirlo ("Español · Español") no aporta nada.</summary>
-    private static TextBlock LanguageLabel(string code, string ownName)
+    /// <summary>"Deutsch · Alemán": the language in its own name (how its speakers look for it) and the same name in the current language for
+    /// those who do not recognise it. The active one goes alone: repeating it ("Español · Español") adds nothing.</summary>
+    private static string LanguageLabelText(string code, string ownName)
     {
-        var label = new TextBlock();
-        label.Inlines.Add(new System.Windows.Documents.Run(ownName));
         var translated = Strings.LanguageNameIn(code);
-        if (!string.Equals(translated, ownName, StringComparison.Ordinal))
-        {
-            var hint = new System.Windows.Documents.Run("  ·  " + translated);
-            hint.SetResourceReference(System.Windows.Documents.TextElement.ForegroundProperty, "AlduneHintBrush");
-            label.Inlines.Add(hint);
-        }
-        return label;
+        return string.Equals(translated, ownName, StringComparison.Ordinal) ? ownName : ownName + "  ·  " + translated;
     }
 
-    private void OnLanguageSelectionChanged(object sender, RoutedEventArgs e)
+    private void OnLanguageSelectionChanged(object sender, SelectionChangedEventArgs e)
     {
-        if (sender is RadioButton { IsChecked: true, Tag: string code } && _settings.Language != code)
-        {
-            _settings.Language = code;
-            _settingsService.Save(_settings);
-            LanguageRestartRow.Visibility = Visibility.Visible;
-            // No se recarga en caliente: los enlaces {x:Static} del XAML se resuelven al construir
-            // cada ventana, así que un cambio de idioma solo se ve entero tras reiniciar (ver
-            // Aldune.Resources.Strings). Rehacer todas las ventanas abiertas —incluidas notas con
-            // texto sin guardar— para simular un cambio en caliente sería más frágil que pedir un
-            // reinicio, así que no se intenta.
-        }
+        if (_loadingLanguages || _languageBox?.SelectedItem is not ComboBoxItem { Tag: string code } || _settings.Language == code) return;
+
+        _settings.Language = code;
+        _settingsService.Save(_settings);
+        LanguageRestartRow.Visibility = Visibility.Visible;
+        // No se recarga en caliente: los enlaces {x:Static} del XAML se resuelven al construir
+        // cada ventana, así que un cambio de idioma solo se ve entero tras reiniciar (ver
+        // Aldune.Resources.Strings). Rehacer todas las ventanas abiertas —incluidas notas con
+        // texto sin guardar— para simular un cambio en caliente sería más frágil que pedir un
+        // reinicio, así que no se intenta.
     }
 
     // --- Temas ---------------------------------------------------------------------------------
@@ -2415,9 +2410,7 @@ public partial class SettingsWindow : Window
         // sin elegir, contra el efectivo, como PopulateLanguages.
         if (languageChanged)
         {
-            var shown = _settings.Language ?? Strings.Current;
-            foreach (var radio in LanguageListContainer.Children.OfType<RadioButton>())
-                radio.IsChecked = radio.Tag is string code && code == shown;
+            SelectLanguage(_settings.Language ?? Strings.Current);
         }
     }
 }
