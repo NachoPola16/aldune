@@ -129,6 +129,7 @@
     <string name="sync_transport_server">Aldune 服务器</string>
     <string name="sync_transport_webdav">WebDAV</string>
     <string name="sync_url_label">地址</string>
+    <string name="sync_guide_link">如何搭建自己的服务器？</string>
     <string name="sync_token_label">令牌</string>
     <string name="sync_username_label">用户</string>
     <string name="sync_password_label">应用专用密码</string>

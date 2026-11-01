@@ -917,6 +917,9 @@
                                      Background="{DynamicResource AlduneSurfaceBrush}" Foreground="{DynamicResource AlduneTextBrush}" BorderThickness="0"
                                      Padding="7,6" TextChanged="OnSyncValueChanged" />
                         </Grid>
+                        <TextBlock Margin="0,6,0,0" FontSize="{DynamicResource AlduneTextSmall}">
+                            <Hyperlink Click="OnSyncGuideClick" Foreground="{DynamicResource AlduneAccentBrush}"><Run Text="{x:Static res:Strings.SyncGuideLink}" /></Hyperlink>
+                        </TextBlock>
                         <!-- http:// hacia un servidor fuera de la red local: el token viajaría en claro.
                              Ver SyncEndpointSecurity. -->
                         <TextBlock x:Name="SyncInsecureUrlText" Text="{x:Static res:Strings.SyncInsecureUrlWarning}"

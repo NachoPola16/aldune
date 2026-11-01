@@ -129,6 +129,7 @@
     <string name="sync_transport_server">Aldune server</string>
     <string name="sync_transport_webdav">WebDAV</string>
     <string name="sync_url_label">Address</string>
+    <string name="sync_guide_link">How do I set up my own server?</string>
     <string name="sync_token_label">Token</string>
     <string name="sync_username_label">User</string>
     <string name="sync_password_label">App password</string>

@@ -129,6 +129,7 @@
     <string name="sync_transport_server">Serveur Aldune</string>
     <string name="sync_transport_webdav">WebDAV</string>
     <string name="sync_url_label">Adresse</string>
+    <string name="sync_guide_link">Comment installer mon propre serveur ?</string>
     <string name="sync_token_label">Jeton</string>
     <string name="sync_username_label">Utilisateur</string>
     <string name="sync_password_label">Mot de passe d\'application</string>

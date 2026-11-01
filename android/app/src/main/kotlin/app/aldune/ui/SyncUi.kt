@@ -338,6 +338,14 @@ private fun ConnectForm(controller: SyncController, additional: Boolean, initial
             }
             if (transport == SyncTransportKind.WEBDAV) Text(stringResource(R.string.sync_webdav_slash_hint), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
             if (url.trim().startsWith("http://", ignoreCase = true)) Text(stringResource(R.string.sync_http_warning), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.error)
+            // Guía para montar el servidor propio: la de GitHub, en español si el móvil está en español (si no, en inglés).
+            val guideContext = androidx.compose.ui.platform.LocalContext.current
+            androidx.compose.material3.TextButton(onClick = {
+                val file = if (java.util.Locale.getDefault().language == "es") "SYNC.es.md" else "SYNC.md"
+                runCatching {
+                    guideContext.startActivity(android.content.Intent(android.content.Intent.ACTION_VIEW, android.net.Uri.parse("https://github.com/NachoPola16/aldune/blob/main/docs/$file")))
+                }
+            }) { Text(stringResource(R.string.sync_guide_link)) }
             // http fuera de la red local: el aviso no basta, se pide confirmar (en casa por la LAN se sigue admitiendo sin esto).
             val needsHttpConfirm = isCleartextOutsideLan(url)
             if (needsHttpConfirm) {

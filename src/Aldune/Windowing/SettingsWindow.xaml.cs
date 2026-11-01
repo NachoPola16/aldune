@@ -724,6 +724,14 @@ public partial class SettingsWindow : Window
         _settingsService.Save(_settings);
     }
 
+    /// <summary>Guía para montar el servidor propio: la de GitHub, en el idioma de la interfaz si existe (hay inglés y español).</summary>
+    private void OnSyncGuideClick(object sender, RoutedEventArgs e)
+    {
+        string file = Strings.Current == "es" ? "SYNC.es.md" : "SYNC.md";
+        try { Process.Start(new ProcessStartInfo("https://github.com/NachoPola16/aldune/blob/main/docs/" + file) { UseShellExecute = true }); }
+        catch (Exception) { /* sin navegador predeterminado: no hay nada útil que hacer */ }
+    }
+
     private void OnDockCardShadowToggled(object sender, RoutedEventArgs e)
     {
         _settings.DockCardShadow = DockCardShadowCheck.IsChecked == true;

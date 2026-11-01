@@ -128,6 +128,7 @@ sync_continue	Continue	Continuar	Weiter	Continuer	Continuar	Continua	続ける	�
 sync_transport_server	Aldune server	Servidor de Aldune	Aldune-Server	Serveur Aldune	Servidor do Aldune	Server Aldune	Aldune サーバー	Aldune 服务器
 sync_transport_webdav	WebDAV	WebDAV	WebDAV	WebDAV	WebDAV	WebDAV	WebDAV	WebDAV
 sync_url_label	Address	Dirección	Adresse	Adresse	Endereço	Indirizzo	アドレス	地址
+sync_guide_link	How do I set up my own server?	¿Cómo monto mi propio servidor?	Wie richte ich meinen eigenen Server ein?	Comment installer mon propre serveur ?	Como configuro meu próprio servidor?	Come configuro il mio server?	自分のサーバーの設定方法	如何搭建自己的服务器？
 sync_token_label	Token	Token	Token	Jeton	Token	Token	トークン	令牌
 sync_username_label	User	Usuario	Benutzer	Utilisateur	Usuário	Utente	ユーザー	用户
 sync_password_label	App password	Contraseña de aplicación	App-Passwort	Mot de passe d'application	Senha de aplicativo	Password per le app	アプリ パスワード	应用专用密码

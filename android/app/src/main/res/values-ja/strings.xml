@@ -129,6 +129,7 @@
     <string name="sync_transport_server">Aldune サーバー</string>
     <string name="sync_transport_webdav">WebDAV</string>
     <string name="sync_url_label">アドレス</string>
+    <string name="sync_guide_link">自分のサーバーの設定方法</string>
     <string name="sync_token_label">トークン</string>
     <string name="sync_username_label">ユーザー</string>
     <string name="sync_password_label">アプリ パスワード</string>
