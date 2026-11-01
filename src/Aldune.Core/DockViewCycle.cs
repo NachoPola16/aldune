@@ -13,8 +13,8 @@ public static class DockViewCycle
     /// <summary>Cuántas notas hay en cada vista; <paramref name="Tags"/> son las etiquetas con sus notas ACTIVAS.</summary>
     public sealed record Counts(int Active, int Archived, int Trashed, IReadOnlyDictionary<string, int> Tags, IReadOnlyList<string>? CustomTagOrder = null);
 
-    /// <summary>Qué vistas fijas entran en la rueda cuando tienen notas. Activas y las etiquetas con notas siempre entran.</summary>
-    public sealed record Stops(bool Archived = true, bool Trash = true, bool All = true);
+    /// <summary>Qué vistas entran en la rueda cuando tienen notas: Archivadas, Papelera, Todas y las etiquetas. Activas siempre entra.</summary>
+    public sealed record Stops(bool Archived = true, bool Trash = true, bool All = true, bool Tags = true);
 
     public static (DockViewKind View, string? Tag) Next(DockViewKind view, string? tag, Counts counts, int direction, Stops? stops = null)
     {
@@ -64,7 +64,7 @@ public static class DockViewCycle
 
     private static bool IsStop((DockViewKind View, string? Tag) step, Counts counts, Stops stops) => step.View switch
     {
-        DockViewKind.Tag => counts.Tags.TryGetValue(step.Tag!, out var n) && n > 0,
+        DockViewKind.Tag => stops.Tags && counts.Tags.TryGetValue(step.Tag!, out var n) && n > 0,
         DockViewKind.Archived => stops.Archived && counts.Archived > 0,
         DockViewKind.Trashed => stops.Trash && counts.Trashed > 0,
         DockViewKind.All => stops.All && counts.Archived + counts.Trashed > 0,

@@ -80,6 +80,28 @@ public sealed class DockViewCycleTests
     }
 
     [Fact]
+    public void TagsLeftOutOfTheWheelAreSkippedAndOnlyTheViewsRemain()
+    {
+        var counts = Counts(active: 3, archived: 2, trashed: 5, ("casa", 2), ("trabajo", 1));
+        var noTags = new DockViewCycle.Stops(Tags: false);
+
+        Assert.Equal((DockViewKind.Archived, (string?)null), DockViewCycle.Next(DockViewKind.Active, null, counts, +1, noTags));
+        Assert.Equal((DockViewKind.Active, (string?)null), DockViewCycle.Next(DockViewKind.All, null, counts, +1, noTags));
+        Assert.Equal((DockViewKind.All, (string?)null), DockViewCycle.Next(DockViewKind.Active, null, counts, -1, noTags));
+    }
+
+    [Fact]
+    public void WithOnlyTagsInTheWheelItGoesRoundTheTagsAndBackToActive()
+    {
+        var counts = Counts(active: 3, archived: 2, trashed: 5, ("casa", 2), ("trabajo", 1));
+        var onlyTags = new DockViewCycle.Stops(Archived: false, Trash: false, All: false);
+
+        Assert.Equal((DockViewKind.Tag, (string?)"casa"), DockViewCycle.Next(DockViewKind.Active, null, counts, +1, onlyTags));
+        Assert.Equal((DockViewKind.Tag, (string?)"trabajo"), DockViewCycle.Next(DockViewKind.Tag, "casa", counts, +1, onlyTags));
+        Assert.Equal((DockViewKind.Active, (string?)null), DockViewCycle.Next(DockViewKind.Tag, "trabajo", counts, +1, onlyTags));
+    }
+
+    [Fact]
     public void FromAViewOutsideTheWheelTheWheelContinuesInTheNormalOrder()
     {
         // The user clicked «Trash» on purpose, but it is not in the wheel: turning forward goes on to «All», backward to «Archived».

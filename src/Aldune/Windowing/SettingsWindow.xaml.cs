@@ -976,6 +976,7 @@ public partial class SettingsWindow : Window
         _settings.WheelStopArchived = WheelStopArchivedCheck.IsChecked == true;
         _settings.WheelStopTrash = WheelStopTrashCheck.IsChecked == true;
         _settings.WheelStopAll = WheelStopAllCheck.IsChecked == true;
+        _settings.WheelStopTags = WheelStopTagsCheck.IsChecked == true;
         _settingsService.Save(_settings);
     }
 
@@ -2376,6 +2377,7 @@ public partial class SettingsWindow : Window
         WheelStopArchivedCheck.IsChecked = _settings.WheelStopArchived;
         WheelStopTrashCheck.IsChecked = _settings.WheelStopTrash;
         WheelStopAllCheck.IsChecked = _settings.WheelStopAll;
+        WheelStopTagsCheck.IsChecked = _settings.WheelStopTags;
         UpdateUniformColorUi();
         SyncSignalCheck.IsChecked = _settings.SyncSignalVisible;
         SquareCornersCheck.IsChecked = _settings.CornersSquare;

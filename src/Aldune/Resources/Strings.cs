@@ -695,6 +695,7 @@ public static class Strings
         "Aktive Notizen", "Notes actives", "Notas ativas", "Note attive", "アクティブなノート", "活动笔记");
     public static string WheelChangesViewCheckbox => T("Change view with the mouse wheel", "Cambiar de vista con la rueda",
         "Ansicht mit dem Mausrad wechseln", "Changer de vue avec la molette", "Trocar de exibição com a roda do mouse", "Cambia vista con la rotellina del mouse", "マウスホイールで表示を切り替える", "用鼠标滚轮切换视图");
+    public static string WheelStopTags => T("Tags", "Etiquetas", "Tags", "Tags", "Tags", "Etichette", "タグ", "标签");
     public static string WheelStopsTitle => T("The wheel stops at (views with no notes are skipped):", "La rueda se detiene en (las vistas sin notas se saltan):",
         "Das Rad hält an bei (Ansichten ohne Notizen werden übersprungen):", "La molette s'arrête sur (les vues sans notes sont ignorées) :", "A roda para em (exibições sem notas são ignoradas):",
         "La rotellina si ferma su (le viste senza note vengono saltate):", "ホイールで切り替える表示（ノートのない表示は飛ばされます）：", "滚轮会停在（没有笔记的视图将被跳过）：");
