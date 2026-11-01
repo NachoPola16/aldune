@@ -95,6 +95,8 @@
     <string name="theme_pastel">パステル</string>
     <string name="theme_autumn">オータム</string>
     <string name="theme_ocean">オーシャン</string>
+    <string name="theme_aldune">Aldune</string>
+    <string name="theme_jewel">ジュエル</string>
     <string name="theme_xp">XP</string>
     <string name="custom_color">別の色を選択…</string>
     <string name="custom_color_title">ノートのカスタムカラー</string>

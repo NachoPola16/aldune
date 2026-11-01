@@ -1,4 +1,4 @@
-﻿using System.Text;
+using System.Text;
 using System.Text.Encodings.Web;
 using System.Text.Json;
 using System.Text.Json.Nodes;
@@ -547,7 +547,7 @@ public sealed class TextVectorsTests
         // Temas.
         yield return Case("NoteThemes.BuiltIn");
         yield return Case("NoteThemes.Legacy");
-        foreach (var id in new[] { "classic", "serene", "graphite", "gray", "xp", "pastel", "autumn", "ocean", "nope", "", "CLASSIC" })
+        foreach (var id in new[] { "classic", "serene", "graphite", "gray", "xp", "pastel", "autumn", "ocean", "aldune", "jewel", "nope", "", "CLASSIC" })
             yield return Case("NoteThemes.Resolve", ("id", id));
         yield return Case("NoteThemes.Resolve", ("id", null));
         var mine = new JsonObject { ["id"] = "mio", ["name"] = "Mío", ["dark"] = Array(["#112233"]), ["light"] = Array(["#EEDDCC"]) };

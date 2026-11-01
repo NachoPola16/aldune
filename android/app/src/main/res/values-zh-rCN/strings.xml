@@ -95,6 +95,8 @@
     <string name="theme_pastel">粉彩</string>
     <string name="theme_autumn">秋日</string>
     <string name="theme_ocean">海洋</string>
+    <string name="theme_aldune">Aldune</string>
+    <string name="theme_jewel">宝石</string>
     <string name="theme_xp">XP</string>
     <string name="custom_color">选择其他颜色…</string>
     <string name="custom_color_title">自定义笔记颜色</string>

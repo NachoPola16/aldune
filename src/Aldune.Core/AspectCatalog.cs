@@ -53,7 +53,7 @@ public static class AspectCatalog
             new("gruvbox", "Gruvbox", new Dictionary<string, string> { ["background"] = "#282828", ["user"] = "#B8BB26", ["path"] = "#83A598", ["accent"] = "#D79921" }),
             new("ubuntu", "Ubuntu", new Dictionary<string, string> { ["background"] = "#300A24", ["user"] = "#8AE234", ["path"] = "#729FCF", ["accent"] = "#E95420" }),
             new("tango", "Tango", new Dictionary<string, string> { ["background"] = "#1E1E1E", ["user"] = "#8AE234", ["path"] = "#729FCF", ["accent"] = "#3465A4" }),
-        ], NoteThemes.SereneId),
+        ], NoteThemes.AutumnId),
         new(AppearanceMode.Phosphor, "phosphor",
         [
             new("phosphor", "#A8E6B4", ["#A8E6B4", "#FFB547", "#8EC9FF", "#E8E8E8"]), // verde, ámbar, azul, blanco
@@ -69,7 +69,7 @@ public static class AspectCatalog
         [
             new("paper", "#2B231A", ["#2B231A", "#231E18", "#2E2A22"]),
             new("accent", "#C9A05A", ["#C9A05A", "#D98A6A", "#8EC07C", "#7FA8FF"]),
-        ], [], null),
+        ], [], NoteThemes.AutumnId),
         new(AppearanceMode.FieldNotebookLight, "field-notebook-light",
         [
             new("ink", "#33281A", ["#33281A", "#1F2A44", "#3A2418"]),
@@ -79,7 +79,7 @@ public static class AspectCatalog
         [
             new("paper", "#27241F", ["#27241F", "#1F1D19", "#2A2722"]),
             new("accent", "#CFA862", ["#CFA862", "#7FA8FF", "#D98A6A", "#8EC07C"]),
-        ], [], null),
+        ], [], NoteThemes.AutumnId),
         new(AppearanceMode.GridNotebookLight, "grid-notebook-light",
         [
             new("ink", "#26344F", ["#26344F", "#1F1F2E", "#3A2A1F"]),
@@ -89,13 +89,13 @@ public static class AspectCatalog
         [
             new("paper", "#1E2430", ["#1E2430", "#181C26", "#242B38"]),
             new("accent", "#7FA8E0", ["#7FA8E0", "#D98A6A", "#8EC07C", "#CFA862"]),
-        ], [], null),
+        ], [], NoteThemes.OceanId),
         // The brand look: plum ink and the three colours of the logo (pink, cyan, yellow) as accent suggestions.
         new(AppearanceMode.Aldune, "aldune",
         [
             new("paper", "#17121F", ["#17121F", "#12121F", "#1D1626"]),
             new("accent", "#F9BEF2", ["#F9BEF2", "#83E7F2", "#EBD38B", "#B8A6FF"]),
-        ], [], null),
+        ], [], NoteThemes.AldunePaletteId),
     ];
 
     public static AspectDefinition? For(AppearanceMode mode) => Retro.FirstOrDefault(aspect => aspect.Mode == mode);

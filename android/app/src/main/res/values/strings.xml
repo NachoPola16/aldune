@@ -95,6 +95,8 @@
     <string name="theme_pastel">Pastel</string>
     <string name="theme_autumn">Autumn</string>
     <string name="theme_ocean">Ocean</string>
+    <string name="theme_aldune">Aldune</string>
+    <string name="theme_jewel">Jewel</string>
     <string name="theme_xp">XP</string>
     <string name="custom_color">Choose another color…</string>
     <string name="custom_color_title">Custom note color</string>

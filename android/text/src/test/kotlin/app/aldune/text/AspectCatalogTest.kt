@@ -57,7 +57,12 @@ class AspectCatalogTest {
     @Test fun `los temas sugeridos siguen la spec`() {
         assertEquals(NoteThemes.XP_ID, AspectCatalog.forMode(AppPalette.XP_LIGHT)!!.suggestedThemeId)
         assertNull(AspectCatalog.forMode(AppPalette.TELECOM_LIGHT)!!.suggestedThemeId)
-        for (mode in listOf(AppPalette.XP_DARK, AppPalette.TELECOM_DARK, AppPalette.BASH, AppPalette.PHOSPHOR))
+        for (mode in listOf(AppPalette.XP_DARK, AppPalette.TELECOM_DARK, AppPalette.PHOSPHOR))
             assertEquals(NoteThemes.SERENE_ID, AspectCatalog.forMode(mode)!!.suggestedThemeId)
+        // The dark looks with their own character get the dark set that matches it.
+        for (mode in listOf(AppPalette.BASH, AppPalette.TRAVEL_NOTEBOOK_DARK, AppPalette.FIELD_NOTEBOOK_DARK))
+            assertEquals(NoteThemes.AUTUMN_ID, AspectCatalog.forMode(mode)!!.suggestedThemeId)
+        assertEquals(NoteThemes.OCEAN_ID, AspectCatalog.forMode(AppPalette.GRID_NOTEBOOK_DARK)!!.suggestedThemeId)
+        assertEquals(NoteThemes.ALDUNE_ID, AspectCatalog.forMode(AppPalette.ALDUNE)!!.suggestedThemeId)
     }
 }

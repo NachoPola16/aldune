@@ -1,4 +1,4 @@
-﻿using Aldune.Core;
+using Aldune.Core;
 using Xunit;
 
 namespace Aldune.Core.Tests;
@@ -78,7 +78,12 @@ public class AspectCatalogTests
     {
         Assert.Equal(NoteThemes.XpId, AspectCatalog.For(AppearanceMode.XpLight)!.SuggestedThemeId);
         Assert.Null(AspectCatalog.For(AppearanceMode.TelecomLight)!.SuggestedThemeId);
-        foreach (var mode in new[] { AppearanceMode.XpDark, AppearanceMode.TelecomDark, AppearanceMode.Bash, AppearanceMode.Phosphor })
+        foreach (var mode in new[] { AppearanceMode.XpDark, AppearanceMode.TelecomDark, AppearanceMode.Phosphor })
             Assert.Equal(NoteThemes.SereneId, AspectCatalog.For(mode)!.SuggestedThemeId);
+        // The dark looks with their own character get the dark set that matches it.
+        foreach (var mode in new[] { AppearanceMode.Bash, AppearanceMode.TravelNotebookDark, AppearanceMode.FieldNotebookDark })
+            Assert.Equal(NoteThemes.AutumnId, AspectCatalog.For(mode)!.SuggestedThemeId);
+        Assert.Equal(NoteThemes.OceanId, AspectCatalog.For(AppearanceMode.GridNotebookDark)!.SuggestedThemeId);
+        Assert.Equal(NoteThemes.AldunePaletteId, AspectCatalog.For(AppearanceMode.Aldune)!.SuggestedThemeId);
     }
 }

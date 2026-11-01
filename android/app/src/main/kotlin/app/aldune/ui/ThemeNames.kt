@@ -13,6 +13,8 @@ internal fun themeNameRes(id: String): Int? = when (id) {
     NoteThemes.PASTEL_ID -> R.string.theme_pastel
     NoteThemes.AUTUMN_ID -> R.string.theme_autumn
     NoteThemes.OCEAN_ID -> R.string.theme_ocean
+    NoteThemes.ALDUNE_ID -> R.string.theme_aldune
+    NoteThemes.JEWEL_ID -> R.string.theme_jewel
     NoteThemes.XP_ID -> R.string.theme_xp
     else -> null
 }

@@ -95,6 +95,8 @@
     <string name="theme_pastel">Pastell</string>
     <string name="theme_autumn">Herbst</string>
     <string name="theme_ocean">Ozean</string>
+    <string name="theme_aldune">Aldune</string>
+    <string name="theme_jewel">Juwel</string>
     <string name="theme_xp">XP</string>
     <string name="custom_color">Andere Farbe wählen…</string>
     <string name="custom_color_title">Benutzerdefinierte Notizfarbe</string>

@@ -62,7 +62,7 @@ object AspectCatalog {
                 AspectPreset("ubuntu", "Ubuntu", mapOf("background" to "#300A24", "user" to "#8AE234", "path" to "#729FCF", "accent" to "#E95420")),
                 AspectPreset("tango", "Tango", mapOf("background" to "#1E1E1E", "user" to "#8AE234", "path" to "#729FCF", "accent" to "#3465A4")),
             ),
-            NoteThemes.SERENE_ID,
+            NoteThemes.AUTUMN_ID,
         ),
         AspectDefinition(
             AppPalette.PHOSPHOR, "phosphor",
@@ -87,7 +87,7 @@ object AspectCatalog {
                 AspectColorSlot("paper", "#2B231A", listOf("#2B231A", "#231E18", "#2E2A22")),
                 AspectColorSlot("accent", "#C9A05A", listOf("#C9A05A", "#D98A6A", "#8EC07C", "#7FA8FF")),
             ),
-            emptyList(), null,
+            emptyList(), NoteThemes.AUTUMN_ID,
         ),
         AspectDefinition(
             AppPalette.FIELD_NOTEBOOK_LIGHT, "field-notebook-light",
@@ -103,7 +103,7 @@ object AspectCatalog {
                 AspectColorSlot("paper", "#27241F", listOf("#27241F", "#1F1D19", "#2A2722")),
                 AspectColorSlot("accent", "#CFA862", listOf("#CFA862", "#7FA8FF", "#D98A6A", "#8EC07C")),
             ),
-            emptyList(), null,
+            emptyList(), NoteThemes.AUTUMN_ID,
         ),
         AspectDefinition(
             AppPalette.GRID_NOTEBOOK_LIGHT, "grid-notebook-light",
@@ -119,7 +119,7 @@ object AspectCatalog {
                 AspectColorSlot("paper", "#1E2430", listOf("#1E2430", "#181C26", "#242B38")),
                 AspectColorSlot("accent", "#7FA8E0", listOf("#7FA8E0", "#D98A6A", "#8EC07C", "#CFA862")),
             ),
-            emptyList(), null,
+            emptyList(), NoteThemes.OCEAN_ID,
         ),
         // The brand look: plum ink and the three colours of the logo as accent suggestions.
         AspectDefinition(
@@ -128,7 +128,7 @@ object AspectCatalog {
                 AspectColorSlot("paper", "#17121F", listOf("#17121F", "#12121F", "#1D1626")),
                 AspectColorSlot("accent", "#F9BEF2", listOf("#F9BEF2", "#83E7F2", "#EBD38B", "#B8A6FF")),
             ),
-            emptyList(), null,
+            emptyList(), NoteThemes.ALDUNE_ID,
         ),
     )
 

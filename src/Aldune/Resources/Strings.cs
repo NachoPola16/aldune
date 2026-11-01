@@ -1739,6 +1739,9 @@ public static class Strings
             "Herbst", "Automne", "Outono", "Autunno", "オータム", "秋日"),
         Aldune.Core.NoteThemes.OceanId => T("Ocean", "Océano",
             "Ozean", "Océan", "Oceano", "Oceano", "オーシャン", "海洋"),
+        Aldune.Core.NoteThemes.AldunePaletteId => T("Aldune", "Aldune", "Aldune", "Aldune", "Aldune", "Aldune", "Aldune", "Aldune"),
+        Aldune.Core.NoteThemes.JewelId => T("Jewel", "Joya",
+            "Juwel", "Joyau", "Joia", "Gioiello", "ジュエル", "宝石"),
         Aldune.Core.NoteThemes.XpId => T("XP", "XP", "XP", "XP", "XP", "XP", "XP", "XP"),
         _ => theme.Name,
     };

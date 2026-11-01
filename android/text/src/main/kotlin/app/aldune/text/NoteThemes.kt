@@ -12,6 +12,8 @@ object NoteThemes {
     const val PASTEL_ID = "pastel"
     const val AUTUMN_ID = "autumn"
     const val OCEAN_ID = "ocean"
+    const val ALDUNE_ID = "aldune"
+    const val JEWEL_ID = "jewel"
 
     /** Los temas de serie, en el orden de Core; el primero (Clásico) es el de reserva. */
     val builtIn: List<NoteTheme> = listOf(
@@ -25,8 +27,8 @@ object NoteThemes {
         NoteTheme(
             id = GRAY_ID, name = "Grafito", isBuiltIn = true,
             // Grises neutros: entre grises sin matiz solo se distinguen por la claridad, así que son una escalera de cuatro pasos.
-            darkColors = listOf("#191B1D", "#252729", "#313336", "#3E4043"),
-            lightColors = listOf("#F1F4F8", "#E4E6EA", "#D7D9DD", "#CACCD0"),
+            darkColors = listOf("#191B1D", "#252729", "#313336", "#3E4043", "#4B4D50"),
+            lightColors = listOf("#F1F4F8", "#E4E6EA", "#D7D9DD", "#CACCD0", "#BDBFC3"),
         ),
         NoteTheme(
             id = PASTEL_ID, name = "Pastel", isBuiltIn = true,
@@ -42,6 +44,18 @@ object NoteThemes {
             id = OCEAN_ID, name = "Océano", isBuiltIn = true,
             darkColors = listOf("#1B3914", "#003A2F", "#00373F", "#093351", "#2A2B53"), // L 0.31
             lightColors = listOf("#C6EABE", "#ADEEDB", "#A7EBF8", "#C2E2FF", "#D7DBFF"), // L 0.90
+        ),
+        NoteTheme(
+            id = ALDUNE_ID, name = "Aldune", isBuiltIn = true,
+            // The brand look's own set: matices 340/295/205/155/95. Dark L 0.31 C 0.065, light L 0.925 C 0.07.
+            darkColors = listOf("#46223B", "#33294D", "#00383D", "#0E3A21", "#3A2F00"),
+            lightColors = listOf("#FFD9F1", "#E8E2FF", "#AFF4FC", "#C2F5D2", "#F5E7B2"),
+        ),
+        NoteTheme(
+            id = JEWEL_ID, name = "Joya", isBuiltIn = true,
+            // The vivid set: dark L 0.31 C 0.09, light L 0.89 C 0.085, matices every 45° from 20.
+            darkColors = listOf("#55181D", "#482700", "#333300", "#003B1E", "#00383B", "#003355", "#31265A", "#4A1B42"),
+            lightColors = listOf("#FFCCCB", "#FFD1A5", "#DEE09F", "#AEECC2", "#94ECF1", "#BCE0FF", "#D9D5FF", "#FFC6F1"),
         ),
         NoteTheme(
             id = XP_ID, name = "XP", isBuiltIn = true,

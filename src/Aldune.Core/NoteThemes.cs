@@ -20,6 +20,8 @@ public static class NoteThemes
     public const string PastelId = "pastel";
     public const string AutumnId = "autumn";
     public const string OceanId = "ocean";
+    public const string AldunePaletteId = "aldune";
+    public const string JewelId = "jewel";
 
     public static IReadOnlyList<NoteTheme> BuiltIn =>
     [
@@ -43,8 +45,9 @@ public static class NoteThemes
             // Grises neutros (croma 0.006, apenas fríos) para quien quiere notas oscuras a juego con el aspecto
             // oscuro. Excepción a "una claridad por grupo": entre grises sin matiz solo se distinguen por la
             // claridad, así que son una escalera de cuatro pasos (L 0.22–0.37 y 0.845–0.965).
-            DarkColors = ["#191B1D", "#252729", "#313336", "#3E4043"],
-            LightColors = ["#F1F4F8", "#E4E6EA", "#D7D9DD", "#CACCD0"],
+            // A fifth step at each end (L 0.42 and 0.80) so a long list of notes repeats later.
+            DarkColors = ["#191B1D", "#252729", "#313336", "#3E4043", "#4B4D50"],
+            LightColors = ["#F1F4F8", "#E4E6EA", "#D7D9DD", "#CACCD0", "#BDBFC3"],
         },
         // Los tres siguientes, con la misma regla (una claridad por grupo) y los matices repartidos
         // para que dos notas seguidas no se confundan (distancia OKLab >= 0.03, fijada en tests).
@@ -68,6 +71,22 @@ public static class NoteThemes
             // Verdes y azules de mar, matices 140–280 cada 35°. Alga, Laguna, Turquesa, Cielo/Profundo, Marino
             DarkColors = ["#1B3914", "#003A2F", "#00373F", "#093351", "#2A2B53"],   // L 0.31
             LightColors = ["#C6EABE", "#ADEEDB", "#A7EBF8", "#C2E2FF", "#D7DBFF"],  // L 0.90
+        },
+        new NoteTheme
+        {
+            Id = AldunePaletteId, Name = "Aldune", IsBuiltIn = true,
+            // The brand look's own set: plum-leaning tones from the logo hues, matices 340/295/205/155/95.
+            // Rosa, Violeta, Cian, Verde, Amarillo. Dark L 0.31 C 0.065, light L 0.925 C 0.07.
+            DarkColors = ["#46223B", "#33294D", "#00383D", "#0E3A21", "#3A2F00"],
+            LightColors = ["#FFD9F1", "#E8E2FF", "#AFF4FC", "#C2F5D2", "#F5E7B2"],
+        },
+        new NoteTheme
+        {
+            Id = JewelId, Name = "Joya", IsBuiltIn = true,
+            // The vivid set: gem tones at C 0.09 (dark, L 0.31) and 0.085 (light, L 0.89), matices every 45° from 20.
+            // Rubí, Ámbar, Oliva, Esmeralda, Turquesa, Zafiro, Amatista, Granate-rosa.
+            DarkColors = ["#55181D", "#482700", "#333300", "#003B1E", "#00383B", "#003355", "#31265A", "#4A1B42"],
+            LightColors = ["#FFCCCB", "#FFD1A5", "#DEE09F", "#AEECC2", "#94ECF1", "#BCE0FF", "#D9D5FF", "#FFC6F1"],
         },
         new NoteTheme
         {

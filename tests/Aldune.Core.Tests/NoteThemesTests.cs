@@ -1,4 +1,4 @@
-﻿using Aldune.Core;
+using Aldune.Core;
 using Xunit;
 
 namespace Aldune.Core.Tests;
@@ -9,7 +9,7 @@ public class NoteThemesTests
     public void BuiltIn_AreTheFactoryThemes_InThatOrder()
     {
         // Grafito se retiró en la 1.5: su papel (monocromo) lo cubre "mismo color en todas las notas".
-        Assert.Equal(new[] { "classic", "serene", "gray", "pastel", "autumn", "ocean", "xp" }, NoteThemes.BuiltIn.Select(t => t.Id));
+        Assert.Equal(new[] { "classic", "serene", "gray", "pastel", "autumn", "ocean", "aldune", "jewel", "xp" }, NoteThemes.BuiltIn.Select(t => t.Id));
         Assert.All(NoteThemes.BuiltIn, theme => Assert.True(theme.IsBuiltIn));
     }
 
@@ -22,6 +22,8 @@ public class NoteThemesTests
     [InlineData("pastel")]
     [InlineData("autumn")]
     [InlineData("ocean")]
+    [InlineData("aldune")]
+    [InlineData("jewel")]
     [InlineData("xp")]
     public void CalculatedThemes_KeepOneLightnessPerGroup(string id)
     {
@@ -43,6 +45,8 @@ public class NoteThemesTests
     [InlineData("pastel")]
     [InlineData("autumn")]
     [InlineData("ocean")]
+    [InlineData("aldune")]
+    [InlineData("jewel")]
     [InlineData("xp")]
     public void BuiltInThemes_ColorsAreDistinguishable(string id)
     {
@@ -66,6 +70,8 @@ public class NoteThemesTests
     [InlineData("pastel")]
     [InlineData("autumn")]
     [InlineData("ocean")]
+    [InlineData("aldune")]
+    [InlineData("jewel")]
     [InlineData("xp")]
     public void BuiltInThemes_InkIsReadable(string id)
     {
