@@ -1,6 +1,6 @@
 # How Aldune got here
 
-Aldune started at the end of August 2026 as a small idea: sticky notes that live on the edge of the screen, with nothing to sign up for. This page is the short story of what it has become since, written for the people who use it (or might): what you can see, what you can trust, and the bugs that bit real users and how they were fixed. The full technical record is in [`STATUS.md`](STATUS.md); what was decided *not* to do is in [`ROADMAP.md`](ROADMAP.md).
+Aldune started at the end of August 2026 as a small idea: sticky notes that live on the edge of the screen, with nothing to sign up for. This page is the short story of what it has become since, written for the people who use it (or might): what you can see, what you can trust, and the bugs that bit real users and how they were fixed.
 
 ## Then and now
 
@@ -164,4 +164,4 @@ These are the ones a person using Aldune could actually notice. None of them is 
 
 ## What is next
 
-See [`ROADMAP.md`](ROADMAP.md). The short version: find out from real users what is missing (several people can already share one server, each in a private space they join with an invitation), and keep the data format stable so that every version installed keeps working with the others.
+The short version: find out from real users what is missing (several people can already share one server, each in a private space they join with an invitation), and keep the data format stable so that every version installed keeps working with the others.

@@ -90,7 +90,7 @@ jobs:
         run: ./scripts/build-installer.ps1 -SkipPublish
 
       # Portable nativo para Windows en ARM64 (sin instalador: el de x64 también instala en ARM, emulado). Va sin
-      # firmar y, si falla, el release sale igual con lo de x64 (continue-on-error). Ver docs/DESKTOP_PORT.md.
+      # firmar y, si falla, el release sale igual con lo de x64 (continue-on-error).
       - name: Build ARM64 portable package
         continue-on-error: true
         shell: pwsh

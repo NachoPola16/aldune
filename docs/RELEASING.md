@@ -4,8 +4,7 @@
 
 ## Versions and tags
 
-- The version lives in `src/Aldune/Aldune.csproj` (`Version`, `AssemblyVersion`, `FileVersion`) and in the
-  line “The current round is identified as **vX.Y.Z**” of `docs/ROADMAP.md`.
+- The version lives in `src/Aldune/Aldune.csproj` (`Version`, `AssemblyVersion`, `FileVersion`).
 - When a `v*` tag is pushed, `.github/workflows/release.yml` runs the tests, builds the portable and the
   installer (Inno Setup) and creates the GitHub Release with both.
 - **Two jobs, with different permissions.** `build` (Windows) builds, tests, signs if applicable and uploads what is going to be published as the artifact
@@ -31,7 +30,7 @@ Two or three short lines per version, only what a person will notice (the full l
 Steps:
 
 ```powershell
-# 1. Version number in Aldune.csproj and ROADMAP.md, tests green
+# 1. Version number in Aldune.csproj, tests green
 dotnet test Aldune.slnx -c Release
 # 2. Commit and push to main
 git push origin main

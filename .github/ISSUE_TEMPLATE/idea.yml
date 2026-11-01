@@ -15,4 +15,4 @@ body:
       label: How you imagine it
   - type: markdown
     attributes:
-      value: Before asking for something, look at `docs/ROADMAP.md` (in Spanish): it records what was already discarded and why.
+      value: Before asking for something, search the existing issues and read `docs/PROGRESS.md`: it tells what the app already does and how it got there.

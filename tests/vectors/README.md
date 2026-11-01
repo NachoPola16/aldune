@@ -70,7 +70,7 @@ PascalCase keys** (`Version` (2), `Key`, `Scope`, `NoteIds`, `Tag`, `ProfileName
 
 They are generated and verified by `tests/Aldune.Core.Tests/SyncScenarioVectorsTests.cs` with the real `SyncService` (a temporary folder as the store).
 Regenerate only on purpose: `ALDUNE_REGEN_VECTORS=1 dotnet test tests/Aldune.Core.Tests --filter "FullyQualifiedName~RegenerateScenarioVectors"`.
-It has to be done on Windows (the engine uses DPAPI). Spec: `docs/specs/2026-10-17-aldune-android-design.md` §6.
+It has to be done on Windows (the engine uses DPAPI).
 
 Each scenario (`scenarios[]`): `name` (E01…), `covers` (where it is in `SyncService.cs`), `settings` (local `deviceId`, `scope` 0/1/2, `tag`,
 `noteIds`), `local` (`notes` with `authorDeviceId` —null = this machine's version—, `bases`, `tombstones`), `remote` (`envelopeJson` as it

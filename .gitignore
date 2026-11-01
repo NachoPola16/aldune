@@ -66,3 +66,10 @@ android/*.apk
 .continue/
 .aider*
 .playwright-mcp/
+
+# Internal working notes of the author: kept on disk, not published.
+/docs/STATUS.md
+/docs/ROADMAP.md
+/docs/specs/
+/docs/MOBILE_PORT.md
+/docs/DESKTOP_PORT.md

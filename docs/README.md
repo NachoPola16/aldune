@@ -17,10 +17,8 @@ Everything is in English. Quoted interface strings that appear in Spanish are th
 - [`WPF_PROBES.md`](WPF_PROBES.md) and [`ANDROID_PROBES.md`](ANDROID_PROBES.md): how the interface is verified.
 - [`../tests/vectors/README.md`](../tests/vectors/README.md): the cross-platform compatibility vectors.
 
-## Design archive
+## Story
 
-- [`PROGRESS.md`](PROGRESS.md): the story of the project for users: then and now, release by release, and the bugs that mattered.
-- [`STATUS.md`](STATUS.md): what is done, by round, and why.
-- [`ROADMAP.md`](ROADMAP.md): what is planned and what was discarded, with the reasons.
-- [`MOBILE_PORT.md`](MOBILE_PORT.md) and [`DESKTOP_PORT.md`](DESKTOP_PORT.md): closed studies of the Android/iOS and desktop ports.
-- [`specs/`](specs/): design specifications of the current phases (the older ones were removed from the tree and remain in git history).
+- [`PROGRESS.md`](PROGRESS.md): the story of the project for users: then and now, the ideas behind each stretch and how they were built, and the bugs that mattered.
+
+The internal working notes (status by round, roadmap with what was discarded, design specifications and the port studies) are kept locally by the author and are not part of the repository.

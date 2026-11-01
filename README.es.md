@@ -147,10 +147,7 @@ Cómo se publica una versión y cómo se firma: [docs/RELEASING.md](docs/RELEASI
 ## Documentación
 
 - [`docs/SYNC.es.md`](docs/SYNC.es.md): sincronización, servidor propio y modelo de seguridad.
-- [`docs/STATUS.md`](docs/STATUS.md): estado técnico y decisiones de implementación.
 - [`docs/PROGRESS.md`](docs/PROGRESS.md): la historia del proyecto para quien lo usa (en inglés).
-- [`docs/ROADMAP.md`](docs/ROADMAP.md): lo previsto y lo descartado, con sus razones.
-- [`docs/specs/`](docs/specs/): especificaciones de diseño.
 
 ## Probar y dar tu opinión
 
