@@ -300,11 +300,19 @@ fun NoteListPane(
                 )
             }
 
-            // Tirar hacia abajo sincroniza (spec madre §2.1). Sin perfil no hace nada: la política no lanza pasadas sin perfil.
+            // Tirar hacia abajo sincroniza (spec madre §2.1). Without a profile there is nothing to sync: no pass starts and the pull draws no
+            // spinner, so the gesture does not suggest that something is being checked.
+            val pullState = androidx.compose.material3.pulltorefresh.rememberPullToRefreshState()
             PullToRefreshBox(
                 isRefreshing = status?.running == true,
-                onRefresh = { viewModel.syncEvent(SyncEvent.PullToRefresh) },
+                onRefresh = { if (hasProfile) viewModel.syncEvent(SyncEvent.PullToRefresh) },
                 modifier = Modifier.fillMaxSize(),
+                state = pullState,
+                indicator = {
+                    if (hasProfile) androidx.compose.material3.pulltorefresh.PullToRefreshDefaults.Indicator(
+                        state = pullState, isRefreshing = status?.running == true, modifier = Modifier.align(Alignment.TopCenter),
+                    )
+                },
             ) {
             if (state.items.isEmpty()) {
                 EmptyMessage(state)
