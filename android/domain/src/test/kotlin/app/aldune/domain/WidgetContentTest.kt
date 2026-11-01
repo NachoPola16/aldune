@@ -118,6 +118,18 @@ class WidgetContentTest {
     }
 
     @Test
+    fun `con tareas en la tira la vista previa no repite las tareas`() {
+        val o = options.copy(showPreview = true, tasksPerNote = 3)
+        // Las casillas ya se dibujan debajo: la previa solo lleva el texto que no es una tarea (pendiente o hecha).
+        val mixed = open(build(listOf(note("a", text = "t\nuna idea\n☐ uno\n☒ dos\notra idea")), o).strips.single())
+        assertEquals("una idea otra idea", mixed.preview)
+        // Una nota que solo es una lista de tareas no tiene previa: no se deja un hueco vacío.
+        assertNull(open(build(listOf(note("b", text = "t\n☐ uno\n☐ dos")), o).strips.single()).preview)
+        // Sin tareas en la tira (tasksPerNote 0) la previa sigue siendo la de siempre.
+        assertEquals("uno dos", open(build(listOf(note("c", text = "t\n☐ uno\ndos")), options.copy(showPreview = true)).strips.single()).preview)
+    }
+
+    @Test
     fun `con showPreview la vista previa es la de NoteTitleHelper`() {
         val strip = open(build(listOf(note("a", text = "t\n☐ uno\ndos")), options.copy(showPreview = true)).strips.single())
         assertEquals("uno dos", strip.preview)

@@ -71,12 +71,22 @@ object WidgetContentBuilder {
 
         val title = truncate(NoteTitleHelper.getTitle(note.text, options.placeholder), MAX_TITLE_LENGTH)
         val preview = if (options.showPreview) {
-            NoteTitleHelper.getPreview(note.text).takeIf { it.isNotEmpty() }?.let { truncate(it, MAX_PREVIEW_LENGTH) }
+            NoteTitleHelper.getPreview(previewSource(note.text, options)).takeIf { it.isNotEmpty() }?.let { truncate(it, MAX_PREVIEW_LENGTH) }
         } else {
             null
         }
         val tasks = app.aldune.text.TaskLines.count(note.text)
         return WidgetStrip.Open(note.id, note.color, title, preview, tasks.done, tasks.total, note.pinnedToTop, pendingTasks(note.text, options.tasksPerNote))
+    }
+
+    /**
+     * El texto del que sale la vista previa. Si la tira ya lleva casillas para marcar (`tasksPerNote` > 0), las líneas de tarea se quitan: la
+     * previa las repetía justo encima de las mismas casillas (y el contador «0/4» ya dice cuántas hay). Sin casillas en la tira, el texto entero.
+     */
+    private fun previewSource(text: String, options: WidgetOptions): String {
+        if (options.tasksPerNote <= 0) return text
+        val lines = text.split('\n')
+        return lines.filterIndexed { i, line -> i == 0 || app.aldune.text.TaskLines.glyphIndex(line) < 0 }.joinToString("\n")
     }
 
     /** Las primeras [max] tareas sin marcar, con la posición de su casilla en [text] (las líneas se separan con `\n`: el texto guardado va normalizado). */

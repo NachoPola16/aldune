@@ -294,7 +294,8 @@ class DockWidget : GlanceAppWidget() {
 
     /** A strip's height: the base one (taller with the preview setting) plus a row per task it lists. */
     private fun stripHeight(strip: WidgetStrip, data: WidgetData): androidx.compose.ui.unit.Dp {
-        val base = if (data.showPreview) STRIP_HEIGHT_PREVIEW else STRIP_HEIGHT
+        // La altura «con vista previa» solo se reserva si esta tira la tiene (una lista de tareas ya no la lleva: ver WidgetContentBuilder).
+        val base = if (data.showPreview && (strip as? WidgetStrip.Open)?.preview != null) STRIP_HEIGHT_PREVIEW else STRIP_HEIGHT
         val tasks = (strip as? WidgetStrip.Open)?.tasks?.size ?: 0
         return base + TASK_ROW * tasks
     }
