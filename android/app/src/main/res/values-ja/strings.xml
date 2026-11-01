@@ -500,6 +500,7 @@
     <string name="whatsnew_200_edit">接続中の同期プロファイルのアドレスやトークンを、切断せずに変更できます。</string>
     <string name="whatsnew_200_group">すべてのノートのタグ別グループ化（任意）：折りたたみ可能で、複数を同時に開けます。</string>
     <string name="whatsnew_200_widget">ウィジェット：チェックボックスで表示されるタスクがプレビューで重複しなくなりました。</string>
+    <string name="whatsnew_200_tagcolor">タグの色：タグがそのノートに色を付けられます（「すべてのタグ」シート）。グループ表示では、タグの見出しを長押ししてドラッグすると並べ替えできます。</string>
     <string name="whatsnew_200_look">外観の同期：プロファイルごとにオンにすると、外観と色がデバイス間で引き継がれます。</string>
     <string name="update_dialog_body">GitHub に新しいバージョンがあります。上書きインストールしてもノートは残ります。</string>
     <string name="select_notes">選択</string>

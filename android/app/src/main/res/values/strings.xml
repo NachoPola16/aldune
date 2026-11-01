@@ -500,6 +500,7 @@
     <string name="whatsnew_200_edit">Change the address or token of a connected sync profile without disconnecting it.</string>
     <string name="whatsnew_200_group">Optional «Group by tag» for All notes: collapsible sections, several open at once.</string>
     <string name="whatsnew_200_widget">Widget: the preview no longer repeats the tasks shown as boxes.</string>
+    <string name="whatsnew_200_tagcolor">Tag colours: a tag can give its colour to its notes (All tags sheet). In the grouped list, long-press a tag header and drag to reorder the tags.</string>
     <string name="whatsnew_200_look">Sync the look: turn it on per profile and your appearance and colours follow you across devices.</string>
     <string name="update_dialog_body">A new version is on GitHub. Installing it over this one keeps your notes.</string>
     <string name="select_notes">Select</string>

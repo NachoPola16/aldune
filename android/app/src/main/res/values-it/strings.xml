@@ -500,6 +500,7 @@
     <string name="whatsnew_200_edit">Cambia indirizzo o token di un profilo di sync collegato senza scollegarlo.</string>
     <string name="whatsnew_200_group">«Raggruppa per etichetta» facoltativo in Tutte le note: sezioni comprimibili, più aperte insieme.</string>
     <string name="whatsnew_200_widget">Widget: l’anteprima non ripete più le attività mostrate come caselle.</string>
+    <string name="whatsnew_200_tagcolor">Colori delle etichette: un\'etichetta può dare il suo colore alle sue note (foglio Tutte le etichette). Nell\'elenco raggruppato, tieni premuta l\'intestazione di un\'etichetta e trascina per riordinarle.</string>
     <string name="whatsnew_200_look">Sincronizza l’aspetto: attivalo per profilo e aspetto e colori ti seguono tra i dispositivi.</string>
     <string name="update_dialog_body">C\'è una nuova versione su GitHub. Installandola sopra questa, le tue note restano.</string>
     <string name="select_notes">Seleziona</string>

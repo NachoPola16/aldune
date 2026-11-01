@@ -500,6 +500,7 @@
     <string name="whatsnew_200_edit">Modifiez l’adresse ou le jeton d’un profil de sync connecté sans le déconnecter.</string>
     <string name="whatsnew_200_group">« Grouper par étiquette » facultatif pour Toutes les notes : sections repliables, plusieurs ouvertes à la fois.</string>
     <string name="whatsnew_200_widget">Widget : l’aperçu ne répète plus les tâches affichées sous forme de cases.</string>
+    <string name="whatsnew_200_tagcolor">Couleurs de tag : un tag peut donner sa couleur à ses notes (feuille Tous les tags). Dans la liste groupée, appuyez longuement sur un en-tête de tag et faites-le glisser pour réordonner les tags.</string>
     <string name="whatsnew_200_look">Synchroniser l’apparence : activez-le par profil et votre apparence et vos couleurs vous suivent d’un appareil à l’autre.</string>
     <string name="update_dialog_body">Une nouvelle version est disponible sur GitHub. L\'installer par-dessus celle-ci conserve vos notes.</string>
     <string name="select_notes">Sélectionner</string>
