@@ -913,6 +913,14 @@ class NotesViewModel(application: Application) : AndroidViewModel(application) {
 
     fun setNoteTags(noteId: String, tags: List<String>) = change { it.setTags(noteId, tags) }
 
+    /** Moves a note from the tag [from] to the tag [to] (`null` = no tag): drops the first and adds the second, leaving its other tags alone. */
+    fun moveNoteToTag(noteId: String, from: String?, to: String?) = change { service ->
+        service.get(noteId)?.let { note ->
+            val kept = note.tags.filterNot { from != null && it.equals(from, ignoreCase = true) }
+            service.setTags(noteId, if (to != null && kept.none { it.equals(to, ignoreCase = true) }) kept + to else kept)
+        }
+    }
+
     fun archive(id: String) = change { it.archive(id) }.also { sounds.play(SoundEvent.NOTE_ARCHIVED) }
 
     fun trash(id: String) = change { it.trash(id) }.also { sounds.play(SoundEvent.NOTE_DELETED) }

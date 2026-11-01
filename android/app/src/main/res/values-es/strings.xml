@@ -498,7 +498,7 @@
     <string name="show_tag_hash">Mostrar # delante de las etiquetas</string>
     <string name="show_tag_hash_hint">Apagado: un pequeño icono de etiqueta en vez de la #.</string>
     <string name="group_by_tag">Agrupar «Todas las notas» por etiqueta</string>
-    <string name="group_by_tag_hint">Secciones plegables, varias abiertas a la vez. Una nota con varias etiquetas sale bajo cada una. Mientras está activo no se puede reordenar a mano.</string>
+    <string name="group_by_tag_hint">Secciones plegables, varias abiertas a la vez. Una nota con varias etiquetas sale bajo cada una. Arrastra una nota dentro de su grupo para ordenarla, o sobre otra etiqueta para moverla.</string>
     <string name="group_untagged">Sin etiqueta</string>
     <string name="group_expanded">Desplegada</string>
     <string name="group_collapsed">Plegada</string>
@@ -555,4 +555,5 @@
     <string name="whatsnew_200_people">Invita desde el móvil: crea una invitación con código QR y mira quién se unió a tu servidor (y revoca su acceso) en Ajustes → Sincronización.</string>
     <string name="settings_search">Buscar en Ajustes</string>
     <string name="settings_search_none">No se encontró nada</string>
+    <string name="note_moved_tag">Movida a «%1$s»</string>
 </resources>

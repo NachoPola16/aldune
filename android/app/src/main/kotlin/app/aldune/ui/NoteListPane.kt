@@ -188,6 +188,7 @@ fun NoteListPane(
 
     // Template read configuration-aware here and formatted when the note moves.
     val movedTpl = stringResource(R.string.note_moved)
+    val movedTagTpl = stringResource(R.string.note_moved_tag)
 
     /** Sube o baja la nota una posición (la alternativa al arrastre) y lo anuncia: «Movida a la posición N de M». */
     fun moveBy(id: String, delta: Int) {
@@ -348,6 +349,8 @@ fun NoteListPane(
                 var draggedId by remember { mutableStateOf<String?>(null) }
                 // The key of the row being dragged: the note id in the plain list, `<group>/<id>` in the grouped one (a note can show under several tags).
                 var dragRowKey by remember { mutableStateOf<String?>(null) }
+                // The group (tag) the dragged note is over when it is not its own: letting go there moves the note to that tag.
+                var dropGroup by remember { mutableStateOf<String?>(null) }
                 var dragDelta by remember { mutableFloatStateOf(0f) }
                 var dragStartIds by remember { mutableStateOf<List<String>>(emptyList()) }
                 // Mientras se arrastra manda el orden local; fuera del arrastre, el de la base.
@@ -448,6 +451,20 @@ fun NoteListPane(
                     dragDelta -= (newOffset - me.offset)
                 }
 
+                // Over another group (its header or one of its notes) the note will change tag when dropped; the header lights up to say so.
+                fun updateDropGroup() {
+                    val rowKey = dragRowKey ?: return
+                    val own = draggedId?.let { rowKey.removeSuffix("/$it") }
+                    if (own == null || own == rowKey) { dropGroup = null; return }
+                    val visible = listState.layoutInfo.visibleItemsInfo
+                    val me = visible.firstOrNull { it.key == rowKey } ?: return
+                    val center = me.offset + me.size / 2f + dragDelta
+                    val under = visible.firstOrNull { it.key != rowKey && center >= it.offset && center <= it.offset + it.size }?.key as? String
+                    if (under == null) { dropGroup = null; return }
+                    val group = if (entries.any { it is ListEntry.Header && it.key == under }) under else under.substringBeforeLast('/')
+                    dropGroup = group.takeIf { it != own }
+                }
+
                 fun swapTagUnderDrag() {
                     val key = tagDrag ?: return
                     val local = tagDragOrder ?: return
@@ -490,6 +507,7 @@ fun NoteListPane(
                 fun dragBy(dy: Float) {
                     dragDelta += dy
                     swapUnderDrag()
+                    updateDropGroup()
                 }
 
                 // Dragging near the top or bottom edge scrolls the list so the note can keep moving (the finger can be still at the edge, hence a
@@ -511,7 +529,7 @@ fun NoteListPane(
                         }
                         if (step != 0f) {
                             val moved = listState.scrollBy(step)
-                            if (moved != 0f) { dragDelta += moved; swapUnderDrag() }
+                            if (moved != 0f) { dragDelta += moved; swapUnderDrag(); updateDropGroup() }
                         }
                     }
                 }
@@ -522,10 +540,23 @@ fun NoteListPane(
                     val startGroup = dragStartIds.filter { start -> order.firstOrNull { it.id == start }?.pinnedToTop == pinned }
                     val nowGroup = order.filter { it.pinnedToTop == pinned }.map { it.id }
                     val plan = ReorderPlan.neighbours(startGroup, startGroup.indexOf(id), nowGroup.indexOf(id))
+                    val target = dropGroup
+                    val fromGroup = dragRowKey?.removeSuffix("/$id")
                     draggedId = null
                     dragRowKey = null
                     dragDelta = 0f
-                    if (plan != null) viewModel.moveNote(id, plan.before, plan.after) else order = state.items
+                    dropGroup = null
+                    if (target != null && fromGroup != null) {
+                        // Dropped on another tag: the note leaves its tag and takes that one (the order of the list stays as it was).
+                        fun tagOf(group: String): String? =
+                            if (group == TagGrouping.UNTAGGED) null else entries.firstNotNullOfOrNull { (it as? ListEntry.Header)?.takeIf { h -> h.key == group }?.title }
+                        val from = tagOf(fromGroup)
+                        val to = tagOf(target)
+                        order = state.items
+                        viewModel.moveNoteToTag(id, from, to)
+                        val shownTo = to ?: untaggedLabel
+                        announce(String.format(movedTagTpl, shownTo)) { viewModel.moveNoteToTag(id, to, from) }
+                    } else if (plan != null) viewModel.moveNote(id, plan.before, plan.after) else order = state.items
                 }
 
                 tagMenu?.let { tag ->
@@ -547,7 +578,7 @@ fun NoteListPane(
                             val draggable = groupOrder.size > 1
                             val headerDragging = tagDrag == entry.key
                             GroupHeader(
-                                entry,
+                                entry, highlighted = dropGroup == entry.key,
                                 modifier = (if (headerDragging) Modifier.zIndex(1f).graphicsLayer { translationY = tagDragDelta } else Modifier.animateItem())
                                     .then(
                                         Modifier.pointerInput(entry.key, groupOrder) {
@@ -1220,9 +1251,13 @@ private sealed interface ListEntry {
 
 
 @Composable
-private fun GroupHeader(header: ListEntry.Header, modifier: Modifier = Modifier, onMenu: (() -> Unit)? = null, onToggle: () -> Unit) {
+private fun GroupHeader(header: ListEntry.Header, modifier: Modifier = Modifier, highlighted: Boolean = false, onMenu: (() -> Unit)? = null, onToggle: () -> Unit) {
     val state = stringResource(if (header.open) R.string.group_expanded else R.string.group_collapsed)
-    Row(modifier.fillMaxWidth().padding(start = 16.dp, end = 8.dp), verticalAlignment = Alignment.CenterVertically) {
+    Row(
+        modifier.fillMaxWidth().then(if (highlighted) Modifier.background(MaterialTheme.colorScheme.primary.copy(alpha = 0.18f), RoundedCornerShape(12.dp)) else Modifier)
+            .padding(start = 16.dp, end = 8.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
         // Arrow, title and count are one thing to tap (fold or unfold) and to read aloud; the options button is its own, so TalkBack keeps both.
         Row(
             Modifier.weight(1f).heightIn(min = 48.dp).clickable(onClick = onToggle).semantics(mergeDescendants = true) { heading(); stateDescription = state },

@@ -498,7 +498,7 @@
     <string name="show_tag_hash"># vor Tags anzeigen</string>
     <string name="show_tag_hash_hint">Aus: ein kleines Tag-Symbol statt der #.</string>
     <string name="group_by_tag">„Alle Notizen“ nach Tag gruppieren</string>
-    <string name="group_by_tag_hint">Einklappbare Abschnitte, mehrere gleichzeitig offen. Eine Notiz mit mehreren Tags erscheint unter jedem. Solange aktiv, ist manuelles Umsortieren aus.</string>
+    <string name="group_by_tag_hint">Einklappbare Abschnitte, mehrere gleichzeitig offen. Eine Notiz mit mehreren Tags erscheint unter jedem. Zieh eine Notiz in ihrer Gruppe, um sie umzusortieren, oder auf einen anderen Tag, um sie zu verschieben.</string>
     <string name="group_untagged">Ohne Tag</string>
     <string name="group_expanded">Aufgeklappt</string>
     <string name="group_collapsed">Eingeklappt</string>
@@ -555,4 +555,5 @@
     <string name="whatsnew_200_people">Vom Handy einladen: Erstelle eine Einladung mit QR-Code und sieh in Einstellungen → Synchronisierung, wer deinem Server beigetreten ist (und widerrufe den Zugang).</string>
     <string name="settings_search">Einstellungen durchsuchen</string>
     <string name="settings_search_none">Nichts gefunden</string>
+    <string name="note_moved_tag">Verschoben nach „%1$s“</string>
 </resources>

@@ -498,7 +498,7 @@
     <string name="show_tag_hash">Mostra # davanti alle etichette</string>
     <string name="show_tag_hash_hint">Disattivato: una piccola icona di etichetta al posto del #.</string>
     <string name="group_by_tag">Raggruppa «Tutte le note» per etichetta</string>
-    <string name="group_by_tag_hint">Sezioni comprimibili, più aperte insieme. Una nota con più etichette compare sotto ciascuna. Finché è attivo, il riordino manuale è disattivato.</string>
+    <string name="group_by_tag_hint">Sezioni comprimibili, più aperte insieme. Una nota con più etichette compare sotto ciascuna. Trascina una nota nel suo gruppo per riordinarla, o su un’altra etichetta per spostarla.</string>
     <string name="group_untagged">Senza etichetta</string>
     <string name="group_expanded">Espansa</string>
     <string name="group_collapsed">Compressa</string>
@@ -555,4 +555,5 @@
     <string name="whatsnew_200_people">Invita dal telefono: crea un invito con codice QR e vedi chi si è unito al tuo server (e revoca l’accesso) in Impostazioni → Sincronizzazione.</string>
     <string name="settings_search">Cerca nelle impostazioni</string>
     <string name="settings_search_none">Nessun risultato</string>
+    <string name="note_moved_tag">Spostata in «%1$s»</string>
 </resources>

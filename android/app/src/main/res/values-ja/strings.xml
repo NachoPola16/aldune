@@ -498,7 +498,7 @@
     <string name="show_tag_hash">タグの前に # を表示</string>
     <string name="show_tag_hash_hint">オフ: # の代わりに小さなタグアイコンを表示します。</string>
     <string name="group_by_tag">「すべてのノート」をタグでグループ化</string>
-    <string name="group_by_tag_hint">折りたたみ可能なセクションで、複数を同時に開けます。複数のタグを持つノートは各タグの下に表示されます。オンの間は手動の並べ替えはできません。</string>
+    <string name="group_by_tag_hint">折りたたみ可能なセクションで、複数を同時に開けます。複数のタグを持つノートは各タグの下に表示されます。ノートをグループ内でドラッグすると並べ替え、別のタグにドラッグすると移動します。</string>
     <string name="group_untagged">タグなし</string>
     <string name="group_expanded">展開中</string>
     <string name="group_collapsed">折りたたみ中</string>
@@ -555,4 +555,5 @@
     <string name="whatsnew_200_people">スマホから招待：QR コード付きの招待を作成し、設定 → 同期で、サーバーに参加した人の確認とアクセスの取り消しができます。</string>
     <string name="settings_search">設定を検索</string>
     <string name="settings_search_none">見つかりません</string>
+    <string name="note_moved_tag">「%1$s」に移動しました</string>
 </resources>

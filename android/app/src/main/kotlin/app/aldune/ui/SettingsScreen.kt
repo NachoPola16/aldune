@@ -213,9 +213,10 @@ fun SettingsScreen(viewModel: NotesViewModel, onClose: () -> Unit) {
             } }
             if (!atBottom) tabBar()
             Column(Modifier.weight(1f).verticalScroll(settingsScroll).padding(bottom = 24.dp)) {
-                if (searching) SettingsSearchResults(searchQuery, labels) { picked ->
+                if (searching) SettingsSearchResults(searchQuery, labels) { picked, title ->
                     tab = picked; lastTab = picked; lastTabAt = System.currentTimeMillis()
                     searchQuery = ""; searchOpen = false
+                    SettingsFocus.target = title
                 }
                 if (show(SettingsSection.SYNC) && inTab(5)) SyncSection(viewModel)
                 if (show(SettingsSection.BACKUP) && inTab(5)) BackupSection(viewModel)
@@ -656,14 +657,14 @@ private fun versionName(activity: Activity?): String =
 /** Rótulo de un grupo de opciones dentro de una sección (p. ej. «Orden de la lista»): con aire por encima para que no quede pegado a la opción de arriba. */
 @Composable
 internal fun GroupLabel(text: String) {
-    Text(text, Modifier.padding(start = 16.dp, end = 16.dp, top = 16.dp, bottom = 2.dp), style = MaterialTheme.typography.labelLarge)
+    Text(text, Modifier.settingsTarget(text).padding(start = 16.dp, end = 16.dp, top = 16.dp, bottom = 2.dp), style = MaterialTheme.typography.labelLarge)
 }
 
 @Composable
 internal fun Section(title: Int) {
     // heading(): TalkBack salta de bloque en bloque por las cabeceras en vez de recorrer los ajustes uno a uno.
     Text(
-        stringResource(title), Modifier.padding(start = 16.dp, end = 16.dp, top = 20.dp, bottom = 4.dp).semantics { heading() },
+        stringResource(title), Modifier.settingsTarget(stringResource(title)).padding(start = 16.dp, end = 16.dp, top = 20.dp, bottom = 4.dp).semantics { heading() },
         style = MaterialTheme.typography.titleSmall, color = MaterialTheme.colorScheme.primary,
     )
 }
@@ -671,7 +672,7 @@ internal fun Section(title: Int) {
 @Composable
 internal fun Choice(label: String, selected: Boolean, preview: (@Composable () -> Unit)? = null, onClick: () -> Unit) {
     Row(
-        Modifier.fillMaxWidth().selectable(selected = selected, role = Role.RadioButton, onClick = onClick).padding(horizontal = 16.dp, vertical = 2.dp),
+        Modifier.fillMaxWidth().settingsTarget(label).selectable(selected = selected, role = Role.RadioButton, onClick = onClick).padding(horizontal = 16.dp, vertical = 2.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         RadioButton(selected = selected, onClick = null)
@@ -706,7 +707,7 @@ internal fun AspectPreview(mode: Int) {
 @Composable
 internal fun SwitchRow(label: String, hint: String, checked: Boolean, enabled: Boolean = true, onChange: (Boolean) -> Unit) {
     Row(
-        Modifier.fillMaxWidth().toggleable(value = checked, enabled = enabled, role = Role.Switch, onValueChange = onChange).padding(horizontal = 16.dp, vertical = 8.dp),
+        Modifier.fillMaxWidth().settingsTarget(label).toggleable(value = checked, enabled = enabled, role = Role.Switch, onValueChange = onChange).padding(horizontal = 16.dp, vertical = 8.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         // El margen a la derecha: sin él, una descripción larga llega hasta el interruptor y se ve pegada a él.

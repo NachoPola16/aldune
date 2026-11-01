@@ -498,7 +498,7 @@
     <string name="show_tag_hash">Show # before tags</string>
     <string name="show_tag_hash_hint">Off: a small tag icon instead of the #.</string>
     <string name="group_by_tag">Group \"All notes\" by tag</string>
-    <string name="group_by_tag_hint">Collapsible sections, several open at once. A note with several tags shows under each. Reordering by hand is off while this is on.</string>
+    <string name="group_by_tag_hint">Collapsible sections, several open at once. A note with several tags shows under each. Drag a note within its group to reorder it, or onto another tag to move it.</string>
     <string name="group_untagged">No tag</string>
     <string name="group_expanded">Expanded</string>
     <string name="group_collapsed">Collapsed</string>
@@ -555,4 +555,5 @@
     <string name="whatsnew_200_people">Invite from your phone: create an invitation with a QR code and see who joined your server (and revoke their access) in Settings → Sync.</string>
     <string name="settings_search">Search settings</string>
     <string name="settings_search_none">Nothing found</string>
+    <string name="note_moved_tag">Moved to “%1$s”</string>
 </resources>

@@ -498,7 +498,7 @@
     <string name="show_tag_hash">在标签前显示 #</string>
     <string name="show_tag_hash_hint">关闭：用小标签图标代替 #。</string>
     <string name="group_by_tag">按标签分组“全部便笺”</string>
-    <string name="group_by_tag_hint">可折叠的分区，可同时展开多个。带有多个标签的便笺会出现在每个标签下。开启时无法手动排序。</string>
+    <string name="group_by_tag_hint">可折叠的分区，可同时展开多个。带有多个标签的便签会出现在每个标签下。在分区内拖动便签可排序，拖到其他标签上可移动。</string>
     <string name="group_untagged">无标签</string>
     <string name="group_expanded">已展开</string>
     <string name="group_collapsed">已折叠</string>
@@ -555,4 +555,5 @@
     <string name="whatsnew_200_people">在手机上邀请：创建带二维码的邀请，并在 设置 → 同步 中查看加入服务器的人并撤销其访问权限。</string>
     <string name="settings_search">搜索设置</string>
     <string name="settings_search_none">未找到</string>
+    <string name="note_moved_tag">已移到“%1$s”</string>
 </resources>

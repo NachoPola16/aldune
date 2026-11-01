@@ -1,9 +1,20 @@
 package app.aldune.ui
 
 import androidx.annotation.StringRes
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.relocation.BringIntoViewRequester
+import androidx.compose.foundation.relocation.bringIntoViewRequester
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -14,6 +25,33 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import app.aldune.R
 import app.aldune.text.FuzzySearch
+
+/** The option the search just picked: once its tab is shown, the row with that name scrolls into view and flashes once. */
+internal object SettingsFocus {
+    var target by mutableStateOf<String?>(null)
+}
+
+/** Marks a row of Settings as findable by its [text]: when the search picks it, it comes into view and is lit for a moment. */
+@Composable
+internal fun Modifier.settingsTarget(text: String): Modifier {
+    val requester = remember { BringIntoViewRequester() }
+    val scope = rememberCoroutineScope()
+    var flash by remember { mutableStateOf(false) }
+    val mine = SettingsFocus.target?.let { FuzzySearch.normalize(it) == FuzzySearch.normalize(text) } == true
+    LaunchedEffect(mine) {
+        if (!mine) return@LaunchedEffect
+        SettingsFocus.target = null
+        // On the scope of the row, not of this effect: clearing the target re-runs the effect, which would cut the flash short.
+        scope.launch {
+            delay(150)
+            requester.bringIntoView()
+            flash = true
+            delay(1300)
+            flash = false
+        }
+    }
+    return this.bringIntoViewRequester(requester).background(MaterialTheme.colorScheme.primary.copy(alpha = if (flash) 0.2f else 0f))
+}
 
 /** An option of Settings: the tab it lives in (as in `SettingsScreen`), its name and, when it has one, the line that explains it. */
 internal class SettingsEntry(val tab: Int, @StringRes val label: Int, @StringRes val hint: Int? = null, @StringRes val group: Int? = null)
@@ -95,7 +133,7 @@ internal val SETTINGS_INDEX: List<SettingsEntry> = listOf(
  * simplified mode); touching a result calls [onPick] with its tab.
  */
 @Composable
-internal fun SettingsSearchResults(query: String, @StringRes tabNames: List<Int>, onPick: (Int) -> Unit) {
+internal fun SettingsSearchResults(query: String, tabNames: List<Int>, onPick: (tab: Int, title: String) -> Unit) {
     val found = rememberResolved(query, tabNames.size)
     if (found.isEmpty()) {
         Text(
@@ -104,8 +142,10 @@ internal fun SettingsSearchResults(query: String, @StringRes tabNames: List<Int>
         )
         return
     }
+    // Air between the divider under the tabs and the first result.
+    androidx.compose.foundation.layout.Spacer(Modifier.height(14.dp))
     for (entry in found) {
-        Column(Modifier.fillMaxWidth().clickable { onPick(entry.tab) }.padding(horizontal = 16.dp, vertical = 10.dp)) {
+        Column(Modifier.fillMaxWidth().clickable { onPick(entry.tab, entry.title) }.padding(horizontal = 16.dp, vertical = 10.dp)) {
             Text(entry.title, style = MaterialTheme.typography.bodyLarge)
             Text(entry.where ?: stringResource(tabNames[entry.tab]), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
         }

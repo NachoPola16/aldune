@@ -498,7 +498,7 @@
     <string name="show_tag_hash">Afficher # devant les étiquettes</string>
     <string name="show_tag_hash_hint">Désactivé : une petite icône d\'étiquette à la place du #.</string>
     <string name="group_by_tag">Grouper « Toutes les notes » par étiquette</string>
-    <string name="group_by_tag_hint">Sections repliables, plusieurs ouvertes à la fois. Une note avec plusieurs étiquettes apparaît sous chacune. Tant que c’est actif, le tri manuel est désactivé.</string>
+    <string name="group_by_tag_hint">Sections repliables, plusieurs ouvertes à la fois. Une note avec plusieurs étiquettes apparaît sous chacune. Faites glisser une note dans son groupe pour la réordonner, ou sur une autre étiquette pour la déplacer.</string>
     <string name="group_untagged">Sans étiquette</string>
     <string name="group_expanded">Dépliée</string>
     <string name="group_collapsed">Repliée</string>
@@ -555,4 +555,5 @@
     <string name="whatsnew_200_people">Invitez depuis votre téléphone : créez une invitation avec un QR code et voyez qui a rejoint votre serveur (et révoquez son accès) dans Réglages → Synchronisation.</string>
     <string name="settings_search">Rechercher dans les réglages</string>
     <string name="settings_search_none">Aucun résultat</string>
+    <string name="note_moved_tag">Déplacée vers « %1$s »</string>
 </resources>
