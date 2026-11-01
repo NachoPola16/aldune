@@ -812,7 +812,6 @@ public static class Strings
     public static string ViewLabelHint => T("Click it to change the view.", "Púlsalo para cambiar de vista.", "Anklicken, um die Ansicht zu wechseln.",
         "Cliquez dessus pour changer de vue.", "Clique nele para mudar de vista.", "Fai clic per cambiare vista.", "クリックするとビューを切り替えられます。", "点击它即可切换视图。");
     public static string ViewLabelHidden => T("Never show the view name", "No mostrar nunca el nombre de la vista", "Den Namen der Ansicht nie anzeigen", "Ne jamais afficher le nom de la vue", "Nunca mostrar o nome da vista", "Non mostrare mai il nome della vista", "ビュー名を表示しない", "从不显示视图名称");
-    public static string DockLabelMenuTitle => T("View name", "Nombre de la vista", "Name der Ansicht", "Nom de la vue", "Nome da vista", "Nome della vista", "ビュー名", "视图名称");
     public static string ViewLabelWhenChanging => T("Only when I change the view", "Solo al cambiar de vista", "Nur beim Wechseln der Ansicht",
         "Seulement au changement de vue", "Somente ao mudar de vista", "Solo quando cambio vista", "ビューを切り替えたときだけ", "仅在切换视图时");
     public static string ViewLabelWhenFiltered => T("Fixed while a tag, archive or trash is shown", "Fijo mientras se ve una etiqueta, el archivo o la papelera",

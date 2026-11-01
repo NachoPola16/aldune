@@ -1751,7 +1751,8 @@ public partial class EdgeDockWindow : Window
             return;
         }
 
-        OpenDockViewPopup();
+        // Clic derecho: solo las opciones de cuándo se ve el nombre de la vista (las mismas de Ajustes); el izquierdo abre la lista de vistas.
+        OpenDockViewPopup(labelOptions: true);
         e.Handled = true;
     }
 
@@ -2042,10 +2043,12 @@ public partial class EdgeDockWindow : Window
         PollHoverState();
     }
 
-    private void OpenDockViewPopup() => OpenDockViewPopupFrom(ManageArchiveButton);
+    private void OpenDockViewPopup(bool labelOptions = false) => OpenDockViewPopupFrom(ManageArchiveButton, labelOptions);
 
-    private void OpenDockViewPopupFrom(UIElement trigger)
+    private void OpenDockViewPopupFrom(UIElement trigger, bool labelOptions = false)
     {
+        DockViewMenuPanel.Visibility = labelOptions ? Visibility.Collapsed : Visibility.Visible;
+        DockLabelMenuPanel.Visibility = labelOptions ? Visibility.Visible : Visibility.Collapsed;
         // Opened from the fixed label, the menu appears next to the label (the thing that was clicked), not down at the button bar.
         DockViewPopup.PlacementTarget = ReferenceEquals(trigger, _viewLabelBorder) && trigger is FrameworkElement label ? label : ManageArchiveButton;
         DockViewPopup.Placement = _edge switch
