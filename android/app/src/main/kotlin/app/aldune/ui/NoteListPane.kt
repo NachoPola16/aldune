@@ -34,7 +34,10 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.imePadding
+import androidx.compose.foundation.layout.isImeVisible
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -220,6 +223,9 @@ fun NoteListPane(
         }
     }
 
+    // A phone on its side with the keyboard up (typing a search, or a note beside the list) leaves the results no height at all: the state tabs
+    // and the tag chips step aside until the keyboard goes, so the search box has its results under it.
+    val tight = LocalConfiguration.current.screenHeightDp < 480 && imeVisible()
     Scaffold(
         containerColor = MaterialTheme.colorScheme.background,
         snackbarHost = { SnackbarHost(snackbar) },
@@ -259,14 +265,14 @@ fun NoteListPane(
                 onTrash = { val ids = picked; ids.forEach(viewModel::trash); picked = emptySet(); announce(if (ids.size == 1) trashedMsg else String.format(trashedManyTpl, ids.size)) { ids.forEach(viewModel::restore) } },
                 onRestore = { val ids = picked; ids.forEach(viewModel::restore); picked = emptySet(); announce(if (ids.size == 1) restoredMsg else String.format(restoredManyTpl, ids.size)) { ids.forEach(viewModel::trash) } },
                 onTag = { taggingPicked = true },
-            ) else Row(Modifier.fillMaxWidth().padding(top = 8.dp, end = 8.dp), verticalAlignment = Alignment.CenterVertically) {
+            ) else if (!tight) Row(Modifier.fillMaxWidth().padding(top = 8.dp, end = 8.dp), verticalAlignment = Alignment.CenterVertically) {
                 Box(Modifier.weight(1f)) { StateTabs(state, viewModel::setFilter) }
                 if (hasProfile && status != null) {
                     val line = formatStatus(status, rememberNow())
                     IconButton(onClick = { showSyncDetail = true }, modifier = Modifier.semantics { liveRegion = LiveRegionMode.Polite }) { SyncIcon(line.icon, stringResource(R.string.sync_status_cd)) }
                 }
             }
-            if (state.allTags.isNotEmpty()) TagRow(
+            if (!tight && state.allTags.isNotEmpty()) TagRow(
                 state, settingsNow.showTagHash, viewModel::setTag, onMoveTag = viewModel::moveTag,
                 tagColors = remember(settingsNow.tagColors) { TagColors.decode(settingsNow.tagColors) },
                 paletteColors = NoteThemes.resolve(settingsNow.noteThemeId, null).let { it.lightColors + it.darkColors },
@@ -1113,6 +1119,10 @@ private fun SyncIcon(icon: StatusIcon, description: String) {
 // middle. Lifting the finger without moving opens it at once either way.
 private const val MENU_HOLD_MS = 300L
 private const val MENU_CALM_MS = 700L
+
+@OptIn(androidx.compose.foundation.layout.ExperimentalLayoutApi::class)
+@Composable
+private fun imeVisible(): Boolean = WindowInsets.isImeVisible
 
 private class PressHold {
     var active = false
