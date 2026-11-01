@@ -80,7 +80,8 @@ public partial class SettingsWindow : Window
         RefreshControlsFromSettings(languageChanged: false);
         PopulateMonitors();
         PopulateLanguages();
-        ShowPage(s_lastPage);
+        // The page where it was left, but only for a while: opened again hours later it starts at General.
+        ShowPage(DateTime.UtcNow - s_lastPageAt < LastPageMemory ? s_lastPage : "General");
         SyncProfileStore.Ensure(_settings);
         PopulateSyncProfiles();
         PopulateSyncTags();
@@ -199,6 +200,8 @@ public partial class SettingsWindow : Window
 
     /// <summary>La última página vista en esta sesión: al reabrir Ajustes se vuelve a ella.</summary>
     private static string s_lastPage = "General";
+    private static DateTime s_lastPageAt = DateTime.MinValue;
+    private static readonly TimeSpan LastPageMemory = TimeSpan.FromMinutes(10);
     private string? _currentPage;
 
     private RadioButton PageNav(string page) => (RadioButton)FindName("Nav" + page);
@@ -215,6 +218,7 @@ public partial class SettingsWindow : Window
 
         _currentPage = page;
         s_lastPage = page;
+        s_lastPageAt = DateTime.UtcNow;
         PageNav(page).IsChecked = true;
         PageScroller.ScrollToTop();
     }

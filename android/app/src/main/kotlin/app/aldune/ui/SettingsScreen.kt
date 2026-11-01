@@ -98,6 +98,9 @@ private val HIDE_AFTER_OPTIONS = listOf(1 to R.string.hide_after_hour, 24 to R.s
 
 /** Pestañas por fila en Ajustes. */
 private const val TAB_COLUMNS = 3
+private const val LAST_TAB_MEMORY_MS = 10 * 60 * 1000L
+private var lastTab = 0
+private var lastTabAt = 0L
 
 /** Ajustes (spec §2.6): sincronización, aspecto, idioma y notas. Captura y recordatorios llegan con sus fases. */
 @Composable
@@ -110,7 +113,8 @@ fun SettingsScreen(viewModel: NotesViewModel, onClose: () -> Unit) {
     // Con todo a la vista Ajustes ocupa varias pantallas: se reparte en pestañas (General, Aspecto, Notas, Colores, Avisos, Sincronización). El modo simplificado es corto y
     // sigue siendo una sola pantalla. rememberSaveable: girar el móvil no vuelve a la primera pestaña.
     val tabs = !settings.simplifiedMode
-    var tab by rememberSaveable { mutableIntStateOf(0) }
+    // The tab where Settings was left, but only for ten minutes: opened again later it starts at General (same rule as Windows).
+    var tab by rememberSaveable { mutableIntStateOf(if (System.currentTimeMillis() - lastTabAt < LAST_TAB_MEMORY_MS) lastTab else 0) }
     // One scroll for all tabs: a new tab starts at the top instead of where the previous one was. `shownTab` tells a real tab change from the
     // effect re-running after a rotation, which must keep the position.
     val settingsScroll = rememberScrollState()
@@ -148,7 +152,7 @@ fun SettingsScreen(viewModel: NotesViewModel, onClose: () -> Unit) {
                                 // lateral tampoco los lleva). Los aspectos retro conservan el borde: es parte de su estética.
                                 val quiet = settings.appearance == AppPalette.ALDUNE
                                 FilterChip(
-                                    selected = selectedTab == index, onClick = { tab = index }, modifier = Modifier.weight(1f).then(Modifier.height(48.dp)),
+                                    selected = selectedTab == index, onClick = { tab = index; lastTab = index; lastTabAt = System.currentTimeMillis() }, modifier = Modifier.weight(1f).then(Modifier.height(48.dp)),
                                     label = { Text(stringResource(label), Modifier.fillMaxWidth(), textAlign = TextAlign.Center, maxLines = 1, overflow = TextOverflow.Ellipsis) },
                                     colors = if (quiet) FilterChipDefaults.filterChipColors(containerColor = MaterialTheme.colorScheme.surfaceContainerLow) else FilterChipDefaults.filterChipColors(),
                                     border = if (quiet) null else FilterChipDefaults.filterChipBorder(enabled = true, selected = selectedTab == index),
