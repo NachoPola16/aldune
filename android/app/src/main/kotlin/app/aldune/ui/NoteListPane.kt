@@ -546,7 +546,16 @@ fun NoteListPane(
                                                         travelled += amount.y
                                                         if (draggable && kotlin.math.abs(travelled) > viewConfiguration.touchSlop) {
                                                             started = true
-                                                            tagDragStartOffset = listState.layoutInfo.visibleItemsInfo.firstOrNull { it.key == entry.key }?.offset ?: 0
+                                                            val me = listState.layoutInfo.visibleItemsInfo.firstOrNull { it.key == entry.key }
+                                                            tagDragStartOffset = me?.offset ?: 0
+                                                            // The folded list puts this header at (its position among the headers) rows from the top, all
+                                                            // headers being the same height: the padding that keeps it under the finger is known right now,
+                                                            // so folding and padding happen in the same frame and the rows slide instead of jumping up and
+                                                            // then down a couple of frames later (the exact value is still measured below, once laid out).
+                                                            if (me != null) {
+                                                                val position = entries.filterIsInstance<ListEntry.Header>().indexOfFirst { it.key == entry.key }
+                                                                tagDragPad = (me.offset - position * (me.size + 8.dp.toPx())).coerceAtLeast(0f)
+                                                            }
                                                             tagDrag = entry.key; tagDragDelta = travelled; tagDragStart = groupOrder; tagDragOrder = groupOrder
                                                         }
                                                     } else {
