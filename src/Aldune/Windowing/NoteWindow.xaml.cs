@@ -2167,9 +2167,14 @@ public partial class NoteWindow : Window
         // cuadrícula en vez de pegarse a su borde superior.
         _bodyPadding ??= TextBody.Padding;
         _placeholderMargin ??= BodyPlaceholder.Margin;
-        BodyHost.Margin = skin.NoteGrid ? new Thickness(16, 14, 16, 20) : new Thickness(0, 14, 20, 20);
+        var hostMargin = skin.NoteGrid ? new Thickness(16, 14, 16, 20) : new Thickness(0, 14, 20, 20);
+        BodyHost.Margin = hostMargin;
         double gridInset = skin.NoteGrid ? 6 : 0;
-        TextBody.Padding = new Thickness(_bodyPadding.Value.Left, _bodyPadding.Value.Top + gridInset, _bodyPadding.Value.Right, _bodyPadding.Value.Bottom);
+        // The text box reaches the right and bottom edges of the body row (a negative margin the size of the host's) and takes the same amount as padding,
+        // so the text and the scroll bar stay where they were but a click or a drag start in that strip lands in the text instead of on nothing.
+        // Left and top are not extended: the origin of the box stays put, and the find and task highlights are laid out from it.
+        TextBody.Margin = new Thickness(0, 0, -hostMargin.Right, -hostMargin.Bottom);
+        TextBody.Padding = new Thickness(_bodyPadding.Value.Left, _bodyPadding.Value.Top + gridInset, _bodyPadding.Value.Right + hostMargin.Right, _bodyPadding.Value.Bottom + hostMargin.Bottom);
         BodyPlaceholder.Margin = new Thickness(_placeholderMargin.Value.Left, _placeholderMargin.Value.Top + gridInset, _placeholderMargin.Value.Right, _placeholderMargin.Value.Bottom);
         // Las libretas: el papel (pliegues o renglones) bajo el texto, del tamaño del cuerpo; se rehace al cambiar el tamaño (ver RefreshPaper).
         _paper = skin.Paper;

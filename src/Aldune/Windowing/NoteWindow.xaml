@@ -26,6 +26,7 @@
         <WindowChrome CaptionHeight="40" ResizeBorderThickness="6" GlassFrameThickness="-1" CornerRadius="0" />
     </WindowChrome.WindowChrome>
     <Window.Resources>
+        <local:NoteBarShiftConverter x:Key="BarShift" />
         <SolidColorBrush x:Key="NoteInkBrush" Color="#1E1A14" />
         <!-- Tinta de la cabecera: la de la nota con la barra plana; ApplyColor la cambia con barra en
              degradado o título con tinte de canal. -->
@@ -563,7 +564,7 @@
                              derecho oscila en torno al izquierdo y el texto no llega casi al borde de la retícula) también empuja a la barra hacia dentro: este desplazamiento solo visual la devuelve al borde. -->
                         <Setter Property="RenderTransform">
                             <Setter.Value>
-                                <TranslateTransform X="15" />
+                                <TranslateTransform X="{Binding Margin.Right, RelativeSource={RelativeSource AncestorType=TextBox}, Converter={StaticResource BarShift}}" />
                             </Setter.Value>
                         </Setter>
                         <Setter Property="Template">
