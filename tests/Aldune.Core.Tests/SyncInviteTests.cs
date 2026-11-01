@@ -60,7 +60,9 @@ public sealed class SyncJoinWithInvitationTests : IDisposable
 
     public void Dispose()
     {
-        if (Directory.Exists(_root)) Directory.Delete(_root, recursive: true);
+        // The SQLite pool keeps notes.db open until it is cleared: without this Windows refuses to delete the folder.
+        Microsoft.Data.Sqlite.SqliteConnection.ClearAllPools();
+        try { if (Directory.Exists(_root)) Directory.Delete(_root, recursive: true); } catch (IOException) { }
     }
 
     private (SyncService Sync, AppSettings Settings) Create()
