@@ -478,7 +478,7 @@
                 <!-- «Nueva nota» al final de la fila de filtros, con el acento de la app: antes estaba en la cabecera, un botón con caja entre botones
                      de ventana planos, y desentonaba en todos los aspectos. Solo el «+», que se dibuja (dos barras de 2 px en una caja de 12) para que
                      quede centrado al píxel. -->
-                <Button x:Name="NewNoteButton" Click="OnNewNoteClick" HorizontalAlignment="Right" VerticalAlignment="Center"
+                <Button x:Name="NewNoteButton" Click="OnNewNoteClick" HorizontalAlignment="Right" VerticalAlignment="Top"
                         Width="30" Height="30" Padding="0"
                         ToolTip="{x:Static res:Strings.NewNoteTooltip}"
                         AutomationProperties.Name="{x:Static res:Strings.NewNoteTooltip}"
