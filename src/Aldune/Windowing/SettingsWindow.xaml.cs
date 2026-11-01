@@ -308,6 +308,7 @@ public partial class SettingsWindow : Window
             && NoteDisplayColor.Resolve(string.Empty, uniform).Length > 0;
         UniformColorCheck.IsChecked = on;
         UniformColorButton.IsEnabled = on;
+        UpdateColorsLookNotice();
         UniformColorSwatch.Background = on
             ? (Brush)new BrushConverter().ConvertFromString(_settings.UniformNoteColor!)!
             : Brushes.Transparent;
@@ -1916,6 +1917,17 @@ public partial class SettingsWindow : Window
     {
         _settingsService.Save(_settings);
         ApplyAppearance();
+        UpdateColorsLookNotice();
+    }
+
+    /// <summary>Tells, at the top of the note colours page, when the look in use will not show them as chosen.</summary>
+    private void UpdateColorsLookNotice()
+    {
+        var kind = SkinColorNotice.For(AppSkin.For(ThemeManager.SkinMode(_settings.Appearance), _settings.NoteColorAsStripe).Card, "#A8E0B4", _settings.UniformNoteColor);
+        string? text = NoteDisplayColor.IsActive(_settings.UniformNoteColor) ? Strings.UniformColorNotice
+            : kind is SkinColorNoticeKind.ColorsNotShown or SkinColorNoticeKind.ChannelColors ? Strings.SkinColorNotice(kind) : null;
+        ColorsLookNotice.Text = text ?? string.Empty;
+        ColorsLookNoticeBox.Visibility = text is null ? Visibility.Collapsed : Visibility.Visible;
     }
 
     private void ApplyAppearance()
@@ -2390,6 +2402,7 @@ public partial class SettingsWindow : Window
         WheelStopAllCheck.IsChecked = _settings.WheelStopAll;
         WheelStopTagsCheck.IsChecked = _settings.WheelStopTags;
         UpdateUniformColorUi();
+        UpdateColorsLookNotice();
         SyncSignalCheck.IsChecked = _settings.SyncSignalVisible;
         SquareCornersCheck.IsChecked = _settings.CornersSquare;
         UpdateNoteColorStripeUi();

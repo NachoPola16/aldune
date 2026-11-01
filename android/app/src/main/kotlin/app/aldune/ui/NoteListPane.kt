@@ -266,6 +266,7 @@ fun NoteListPane(
                 tagColors = remember(settingsNow.tagColors) { TagColors.decode(settingsNow.tagColors) },
                 paletteColors = NoteThemes.resolve(settingsNow.noteThemeId, null).let { it.lightColors + it.darkColors },
                 onSetTagColor = viewModel::setTagColor,
+                uniformColorOn = settingsNow.uniformNoteColor != null,
                 groupOrder = remember(state.allTags, settingsNow.tagOrder) {
                     val custom = TagOrder.decode(settingsNow.tagOrder)
                     TagOrder.groupOrder(TagOrder.apply(state.allTags, custom), custom)
@@ -711,12 +712,12 @@ private fun StateTabs(state: UiState.Ready, onSelect: (NoteState) -> Unit) {
 private fun TagRow(
     state: UiState.Ready, showHash: Boolean, onSelect: (String?) -> Unit, onMoveTag: (String, Int) -> Unit,
     tagColors: Map<String, String>, paletteColors: List<String>, onSetTagColor: (String, String?) -> Unit,
-    groupOrder: List<String>,
+    groupOrder: List<String>, uniformColorOn: Boolean,
 ) {
     val listState = rememberLazyListState()
     var sheetOpen by remember { mutableStateOf(false) }
     if (sheetOpen) AllTagsDialog(groupOrder, state.tag, showHash, onSelect = { sheetOpen = false; onSelect(it) }, onMove = onMoveTag, onDismiss = { sheetOpen = false },
-        untaggedLabel = stringResource(R.string.group_untagged), tagColors = tagColors, paletteColors = paletteColors, onSetColor = onSetTagColor)
+        untaggedLabel = stringResource(R.string.group_untagged), uniformColorOn = uniformColorOn, tagColors = tagColors, paletteColors = paletteColors, onSetColor = onSetTagColor)
     // end = 8.dp: the same margin as the row above, so the arrow sits right under the sync status icon.
     Row(Modifier.padding(bottom = 10.dp, end = 8.dp), verticalAlignment = Alignment.CenterVertically) {
     Box(Modifier.weight(1f)) {

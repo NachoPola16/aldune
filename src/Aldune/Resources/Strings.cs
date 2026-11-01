@@ -1503,8 +1503,8 @@ public static class Strings
 
     public static string LanguageSectionTitle => T("Language", "Idioma",
         "Sprache", "Langue", "Idioma", "Lingua", "言語", "语言");
-    public static string AppearanceSectionTitle => T("Appearance", "Aspecto",
-        "Erscheinungsbild", "Apparence", "Aparência", "Aspetto", "外観", "外观");
+    public static string AppearanceSectionTitle => T("Look of the app", "Aspecto de la aplicación",
+        "Aussehen der App", "Apparence de l'application", "Visual do app", "Aspetto dell'app", "アプリの外観", "应用外观");
     public static string AppearanceSectionHint => T("Windows, the dock and messages. Notes keep their own colors.", "Ventanas, dock y avisos. Las notas conservan sus colores.",
         "Fenster, Dock und Meldungen. Notizen behalten ihre eigenen Farben.",
         "Fenêtres, dock et messages. Les notes conservent leurs propres couleurs.",
@@ -1570,6 +1570,7 @@ public static class Strings
     public static string TagColorNone => T("No colour", "Sin color", "Keine Farbe", "Sans couleur", "Sem cor", "Nessun colore", "色なし", "无颜色");
     public static string PickScreenTooltip => T("Pick a colour from the screen", "Tomar un color de la pantalla", "Farbe vom Bildschirm aufnehmen", "Prélever une couleur à l'écran", "Capturar uma cor da tela", "Preleva un colore dallo schermo", "画面から色を取得", "从屏幕取色");
     public static string PickScreenHint => T("Click to take the colour · Esc to cancel", "Clic para tomar el color · Esc para cancelar", "Klicken, um die Farbe zu übernehmen · Esc zum Abbrechen", "Cliquez pour prélever la couleur · Échap pour annuler", "Clique para capturar a cor · Esc para cancelar", "Clic per prelevare il colore · Esc per annullare", "クリックで色を取得 · Esc でキャンセル", "点击取色 · Esc 取消");
+    public static string UniformColorNotice => T("“Same color on all notes” is on: you can pick a color, but it won't show until you turn that off.", "«Mismo color en todas las notas» está activado: puedes elegir un color, pero no se verá hasta que lo desactives.", "„Gleiche Farbe für alle Notizen“ ist aktiv: Du kannst eine Farbe wählen, sie wird aber erst sichtbar, wenn du das ausschaltest.", "« Même couleur pour toutes les notes » est activé : vous pouvez choisir une couleur, mais elle ne s’affichera qu’une fois l’option désactivée.", "“Mesma cor em todas as notas” está ativado: você pode escolher uma cor, mas ela só aparece depois de desativá-lo.", "“Stesso colore su tutte le note” è attivo: puoi scegliere un colore, ma non si vedrà finché non lo disattivi.", "「すべてのノートを同じ色にする」がオンです。色は選べますが、オフにするまで表示されません。", "“所有笔记使用同一颜色”已开启：您可以选择颜色，但在关闭该选项之前不会显示。");
     public static string NotesWindowsSectionTitle => T("Windows", "Ventanas", "Fenster", "Fenêtres", "Janelas", "Finestre", "ウィンドウ", "窗口");
     public static string NotesTasksSectionTitle => T("Tasks", "Tareas", "Aufgaben", "Tâches", "Tarefas", "Attività", "タスク", "任务");
     public static string NotesLookSectionTitle => T("Look", "Aspecto", "Darstellung", "Apparence", "Aparência", "Aspetto", "表示", "外观");
@@ -1633,8 +1634,8 @@ public static class Strings
 
     // --- Temas -----------------------------------------------------------------------------------
 
-    public static string ThemesSectionTitle => T("Note colors", "Colores de las notas",
-        "Notizfarben", "Couleurs des notes", "Cores das notas", "Colori delle note", "ノートの色", "笔记颜色");
+    public static string ThemesSectionTitle => T("Color theme", "Tema de color",
+        "Farbthema", "Thème de couleurs", "Tema de cores", "Tema di colori", "カラーテーマ", "颜色主题");
     public static string ThemesSectionHint => T(
         "The theme sets the colors for new notes and the quick colors in each note's menu.",
         "El tema decide el color de las notas nuevas y los colores rápidos del menú de cada nota.",
@@ -1765,8 +1766,8 @@ public static class Strings
     public static string SettingsPageSounds => T("Sounds", "Sonidos", "Töne", "Sons", "Sons", "Suoni", "サウンド", "声音");
     public static string SettingsPageDock => T("Dock and screens", "Dock y pantallas",
         "Dock und Bildschirme", "Dock et écrans", "Dock e telas", "Dock e schermi", "ドックと画面", "程序坞和屏幕");
-    public static string SettingsPageColors => T("Colors", "Colores",
-        "Farben", "Couleurs", "Cores", "Colori", "色", "颜色");
+    public static string SettingsPageColors => T("Note colors", "Colores de notas",
+        "Notizfarben", "Couleurs des notes", "Cores das notas", "Colori delle note", "ノートの色", "笔记颜色");
     public static string SettingsPageSync => T("Sync", "Sincronización",
         "Synchronisierung", "Synchronisation", "Sincronização", "Sincronizzazione", "同期", "同步");
     public static string SettingsPageHelp => T("Help", "Ayuda",

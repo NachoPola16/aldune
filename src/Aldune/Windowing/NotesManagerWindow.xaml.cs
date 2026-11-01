@@ -468,6 +468,16 @@ public partial class NotesManagerWindow : Window
             none.Click += (_, _) => { _coordinator.SetTagColor(tag, null); PopulateTagManager(); };
             palette.Children.Add(swatches);
             palette.Children.Add(none);
+            // The tag colour lands in each note's own colour, which not every look shows: say so here, as the note's own colour menu does.
+            var kind = SkinColorNotice.For(ThemeManager.Skin.Card, "#A8E0B4", NoteColorDisplay.Uniform);
+            string? notice = NoteDisplayColor.IsActive(NoteColorDisplay.Uniform) ? Strings.UniformColorNotice
+                : kind is SkinColorNoticeKind.ColorsNotShown or SkinColorNoticeKind.ChannelColors ? Strings.SkinColorNotice(kind) : null;
+            if (notice is not null)
+            {
+                var text = new TextBlock { Text = notice, TextWrapping = TextWrapping.Wrap, FontSize = 11, Margin = new Thickness(0, 8, 0, 0), MaxWidth = 250 };
+                text.SetResourceReference(TextBlock.ForegroundProperty, "AlduneMutedTextBrush");
+                palette.Children.Add(text);
+            }
             palette.Visibility = Visibility.Visible;
         };
         return button;

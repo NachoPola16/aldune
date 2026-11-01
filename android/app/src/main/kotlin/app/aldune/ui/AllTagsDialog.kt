@@ -51,7 +51,7 @@ import app.aldune.domain.TagOrder
 fun AllTagsDialog(
     tags: List<String>, selected: String?, showHash: Boolean,
     onSelect: (String?) -> Unit, onMove: (String, Int) -> Unit, onDismiss: () -> Unit,
-    untaggedLabel: String = "", tagColors: Map<String, String> = emptyMap(), paletteColors: List<String> = emptyList(), onSetColor: (String, String?) -> Unit = { _, _ -> },
+    untaggedLabel: String = "", uniformColorOn: Boolean = false, tagColors: Map<String, String> = emptyMap(), paletteColors: List<String> = emptyList(), onSetColor: (String, String?) -> Unit = { _, _ -> },
 ) {
     var query by remember { mutableStateOf("") }
     // The tag whose colour palette is open under its row.
@@ -126,6 +126,11 @@ fun AllTagsDialog(
                                     )
                                 }
                                 TextButton({ onSetColor(tag, null); paletteFor = null }) { Text(stringResource(R.string.tag_colour_none)) }
+                                // The tag colour is saved in each note, but «same colour on all notes» hides it: say so, as the note options do.
+                                if (uniformColorOn) Text(
+                                    stringResource(R.string.color_uniform_notice), style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                )
                             }
                         }
                         }

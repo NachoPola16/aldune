@@ -788,6 +788,12 @@
                 </StackPanel>
                 <StackPanel x:Name="ColorsPage" Visibility="Collapsed">
                     <TextBlock Text="{x:Static res:Strings.SettingsPageColors}" Foreground="{DynamicResource AlduneTextStrongBrush}" FontSize="{DynamicResource AlduneTextPageTitle}" FontWeight="SemiBold" Margin="0,0,0,16" />
+                    <!-- When the look in use does not show the colours of the notes (or one colour for all is on), the colours chosen here would seem to do nothing: it says so. -->
+                    <Border x:Name="ColorsLookNoticeBox" Visibility="Collapsed" Margin="0,-6,0,16" Padding="12,8"
+                            Background="{DynamicResource AlduneSurfaceBrush}" CornerRadius="{DynamicResource AlduneRadius7}">
+                        <TextBlock x:Name="ColorsLookNotice" TextWrapping="Wrap"
+                                   Foreground="{DynamicResource AlduneTextBrush}" FontSize="{DynamicResource AlduneTextSmall}" />
+                    </Border>
                     <StackPanel>
                         <TextBlock Text="{x:Static res:Strings.ThemesSectionTitle}"
                                    Foreground="{DynamicResource AlduneTextBrush}" FontSize="{DynamicResource AlduneTextBody}" FontWeight="SemiBold" />
