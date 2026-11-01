@@ -13,7 +13,7 @@ public sealed class CleartextUrlTests
 
     [Theory]
     [InlineData("https://sync.example.com/")]
-    [InlineData("http://192.168.1.73:8087")]
+    [InlineData("http://192.168.1.20:8087")]
     [InlineData("http://10.0.0.5")]
     [InlineData("http://172.16.0.1")]
     [InlineData("http://127.0.0.1:8080")]
