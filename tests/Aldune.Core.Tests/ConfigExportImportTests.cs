@@ -382,6 +382,7 @@ public class ConfigExportImportTests
         ["WrappedDatabaseKey"] = "clave de la base de datos, protegida por DPAPI en este equipo",
         ["LastSeenVersion"] = "qué novedades ya se enseñaron en este equipo",
         ["TagOrder"] = "orden propio de las etiquetas: es de este equipo, como en Android",
+        ["TagColors"] = "color de cada etiqueta: es de este equipo; lo que viaja es el color de cada nota",
         ["SyncEnabled"] = "sincronización: es de este equipo y de su perfil",
         ["SyncTransport"] = "sincronización: transporte del perfil",
         ["SyncFolderPath"] = "sincronización: ruta local del equipo",

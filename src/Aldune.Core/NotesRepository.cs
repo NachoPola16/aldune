@@ -178,7 +178,49 @@ public sealed class NotesRepository
     /// Las etiquetas de una nota, cambiadas por el usuario: actualiza su fecha para que el cambio se
     /// sincronice. Antes no lo hacía y cambiar solo las etiquetas nunca llegaba a los otros equipos.
     /// </summary>
-    public void SetTags(Guid noteId, IEnumerable<string> tags) => SetTags(noteId, tags, touch: true);
+    public void SetTags(Guid noteId, IEnumerable<string> tags)
+    {
+        var wanted = tags.ToList();
+        var before = TagColors.Count == 0 ? null : TagNamesOf(noteId);
+        SetTags(noteId, wanted, touch: true);
+        if (before is null) return;
+
+        // A tag that has a colour gives it to the note it is added to; with several new ones the last wins. Tags it already had change nothing,
+        // so saving the same list again does not undo a colour picked by hand.
+        string? colour = null;
+        foreach (var name in wanted.Select(t => t.Trim()).Where(t => t.Length > 0))
+            if (!before.Contains(name) && TagColors.TryGetValue(name, out var c)) colour = c;
+        if (colour is not null) SetColor(noteId, colour);
+    }
+
+    /// <summary>The colour each tag gives its notes (<see cref="AppSettings.TagColors"/>), set by the app; names compare ignoring case.</summary>
+    public IReadOnlyDictionary<string, string> TagColors
+    {
+        get => _tagColors;
+        set => _tagColors = new Dictionary<string, string>(value, StringComparer.OrdinalIgnoreCase);
+    }
+    private Dictionary<string, string> _tagColors = new(StringComparer.OrdinalIgnoreCase);
+
+    private HashSet<string> TagNamesOf(Guid noteId)
+    {
+        using var connection = _database.OpenConnection();
+        using var command = connection.CreateCommand();
+        command.CommandText = "SELECT t.Name FROM Tag t JOIN NoteTag nt ON nt.TagId = t.Id WHERE nt.NoteId = $id;";
+        command.Parameters.AddWithValue("$id", noteId.ToString());
+        var names = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        using var reader = command.ExecuteReader();
+        while (reader.Read()) names.Add(reader.GetString(0));
+        return names;
+    }
+
+    /// <summary>Paints every active and archived note that carries <paramref name="tag"/> with <paramref name="color"/> (the notes' own colour:
+    /// it syncs like any colour change). Trashed notes are left as they are.</summary>
+    public void ApplyTagColor(string tag, string color)
+    {
+        foreach (var state in new[] { NoteState.Active, NoteState.Archived })
+            foreach (var note in GetByTag(tag, state))
+                SetColor(note.Id, color);
+    }
 
     /// <summary>
     /// <paramref name="touch"/> es false al aplicar una nota que llega por sincronización: esa nota ya

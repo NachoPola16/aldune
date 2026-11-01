@@ -42,6 +42,55 @@ public sealed class NotesRepositoryTagTests : IDisposable
     }
 
     [Fact]
+    public void SetTags_GivesTheNoteTheColorOfTheTagItGained()
+    {
+        _repository.TagColors = new Dictionary<string, string> { ["casa"] = "#A8E0B4", ["trabajo"] = "#9EC9F0" };
+        var note = _repository.Create("n", "#F5E3B3", "primary");
+
+        _repository.SetTags(note.Id, new[] { "Casa" });
+        Assert.Equal("#A8E0B4", Reload(note.Id).Color);
+
+        // Adding a second coloured tag: the one just added wins. Saving the same tags again changes nothing.
+        _repository.SetTags(note.Id, new[] { "Casa", "Trabajo" });
+        Assert.Equal("#9EC9F0", Reload(note.Id).Color);
+        _repository.SetColor(note.Id, "#F5E3B3");
+        _repository.SetTags(note.Id, new[] { "Casa", "Trabajo" });
+        Assert.Equal("#F5E3B3", Reload(note.Id).Color);
+    }
+
+    [Fact]
+    public void SetTags_WithATagThatHasNoColor_LeavesTheNoteColorAlone()
+    {
+        _repository.TagColors = new Dictionary<string, string> { ["casa"] = "#A8E0B4" };
+        var note = _repository.Create("n", "#F5E3B3", "primary");
+
+        _repository.SetTags(note.Id, new[] { "ideas" });
+
+        Assert.Equal("#F5E3B3", Reload(note.Id).Color);
+    }
+
+    [Fact]
+    public void ApplyTagColor_RecolorsActiveAndArchivedNotesButNotTrashed()
+    {
+        var active = _repository.Create("a", "#F5E3B3", "primary");
+        var archived = _repository.Create("b", "#F5E3B3", "primary");
+        var trashed = _repository.Create("c", "#F5E3B3", "primary");
+        var untagged = _repository.Create("d", "#F5E3B3", "primary");
+        foreach (var n in new[] { active, archived, trashed }) _repository.SetTags(n.Id, new[] { "casa" });
+        _repository.SetState(archived.Id, NoteState.Archived);
+        _repository.SetState(trashed.Id, NoteState.Trashed);
+
+        _repository.ApplyTagColor("CASA", "#A8E0B4");
+
+        Assert.Equal("#A8E0B4", Reload(active.Id).Color);
+        Assert.Equal("#A8E0B4", Reload(archived.Id).Color);
+        Assert.Equal("#F5E3B3", Reload(trashed.Id).Color);
+        Assert.Equal("#F5E3B3", Reload(untagged.Id).Color);
+    }
+
+    private Note Reload(Guid id) => new[] { NoteState.Active, NoteState.Archived, NoteState.Trashed }.SelectMany(_repository.GetByState).First(n => n.Id == id);
+
+    [Fact]
     public void SetTags_Empty_UnassignsButKeepsTheTag()
     {
         // Las etiquetas se crean y se borran en el gestor. Quitar la última nota de una etiqueta no

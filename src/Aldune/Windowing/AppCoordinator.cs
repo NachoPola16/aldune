@@ -362,7 +362,30 @@ public sealed class AppCoordinator
         _syncService = syncService;
         _settingsService = settingsService;
         _repository.CustomTagOrder = settings?.TagOrder ?? [];
+        _repository.TagColors = settings?.TagColors ?? new();
         LinkedFiles = new LinkedFileService(repository, NextNoteColor, () => Strings.LinkedConflictPrefix);
+    }
+
+    /// <summary>The colours the active note theme offers (what a tag colour is picked from).</summary>
+    public NoteTheme ActiveNoteTheme => _settings is null ? NoteThemes.BuiltIn.First() : NoteThemes.Resolve(_settings.ActiveThemeId, _settings.CustomThemes);
+
+    /// <summary>The colour of a tag, or null if it has none.</summary>
+    public string? TagColor(string tag) => _settings?.TagColors.FirstOrDefault(p => string.Equals(p.Key, tag, StringComparison.OrdinalIgnoreCase)).Value;
+
+    /// <summary>Sets (or, with null, removes) the colour of a tag. Setting one repaints the notes that carry the tag; removing it leaves them as they are.</summary>
+    public void SetTagColor(string tag, string? color)
+    {
+        if (_settings is null) return;
+        foreach (var key in _settings.TagColors.Keys.Where(k => string.Equals(k, tag, StringComparison.OrdinalIgnoreCase)).ToList())
+            _settings.TagColors.Remove(key);
+        if (color is not null) _settings.TagColors[tag] = color;
+        _repository.TagColors = _settings.TagColors;
+        _settingsService?.Save(_settings);
+        if (color is not null)
+        {
+            _repository.ApplyTagColor(tag, color);
+            RefreshAll();
+        }
     }
 
     /// <summary>

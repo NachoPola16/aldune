@@ -370,7 +370,7 @@ public partial class NotesManagerWindow : Window
             var row = new Border
             {
                 CornerRadius = ThemeManager.Radius(6),
-                Padding = new Thickness(9, 5, 6, 5),
+                Padding = new Thickness(9, 5, 9, 5),
                 Margin = new Thickness(0, 0, 0, 6)
             };
             // Por referencia a la paleta: estas filas se crean en código y antes llevaban el fondo
@@ -380,6 +380,7 @@ public partial class NotesManagerWindow : Window
             var label = new TextBlock
             {
                 Text = tag,
+                Margin = new Thickness(0, 0, 8, 0),
                 VerticalAlignment = VerticalAlignment.Center,
                 TextTrimming = TextTrimming.CharacterEllipsis
             };
@@ -390,6 +391,8 @@ public partial class NotesManagerWindow : Window
                 FontFamily = new FontFamily("Segoe Fluent Icons, Segoe MDL2 Assets"),
                 Width = 28,
                 Height = 28,
+                Margin = new Thickness(4, 0, 0, 0),
+                VerticalAlignment = VerticalAlignment.Center,
                 Padding = new Thickness(0),
                 Tag = tag,
                 ToolTip = Strings.DeleteTagTooltip,
@@ -407,10 +410,55 @@ public partial class NotesManagerWindow : Window
             DockPanel.SetDock(up, Dock.Right);
             content.Children.Add(down);
             content.Children.Add(up);
+            // The colour of the tag: a swatch that opens the theme's palette under the row. Picking one repaints the notes that carry the tag.
+            var palette = new StackPanel { Visibility = Visibility.Collapsed, Margin = new Thickness(0, 8, 0, 2) };
+            var swatchButton = MakeTagColorButton(tag, palette);
+            DockPanel.SetDock(swatchButton, Dock.Right);
+            content.Children.Add(swatchButton);
             content.Children.Add(label);
-            row.Child = content;
+            var stack = new StackPanel();
+            stack.Children.Add(content);
+            stack.Children.Add(palette);
+            row.Child = stack;
             TagManagerItems.Children.Add(row);
         }
+    }
+
+    private Button MakeTagColorButton(string tag, StackPanel palette)
+    {
+        var current = _coordinator.TagColor(tag);
+        var dot = new Border
+        {
+            Width = 16, Height = 16, CornerRadius = new CornerRadius(8), BorderThickness = new Thickness(1),
+            Background = current is null ? System.Windows.Media.Brushes.Transparent : (System.Windows.Media.Brush)new System.Windows.Media.BrushConverter().ConvertFromString(current)!
+        };
+        dot.SetResourceReference(Border.BorderBrushProperty, "AlduneTextFaintBrush");
+        var button = new Button
+        {
+            Content = dot, Width = 28, Height = 28, Margin = new Thickness(4, 0, 0, 0), VerticalAlignment = VerticalAlignment.Center,
+            Padding = new Thickness(0), ToolTip = Strings.TagColorTooltip,
+            HorizontalContentAlignment = HorizontalAlignment.Center, VerticalContentAlignment = VerticalAlignment.Center,
+            Style = (Style)FindResource("ToolbarButtonStyle")
+        };
+        System.Windows.Automation.AutomationProperties.SetName(button, Strings.TagColorTooltip);
+        button.Click += (_, _) =>
+        {
+            if (palette.Visibility == Visibility.Visible) { palette.Visibility = Visibility.Collapsed; return; }
+            palette.Children.Clear();
+            var swatches = new StackPanel();
+            NoteSwatchPanel.Fill(swatches, _coordinator.ActiveNoteTheme, _coordinator.TagColor(tag), (sender, _) =>
+            {
+                _coordinator.SetTagColor(tag, (string)((FrameworkElement)sender).Tag);
+                PopulateTagManager();
+                LoadRows();
+            });
+            var none = new Button { Content = Strings.TagColorNone, Margin = new Thickness(0, 6, 0, 0), HorizontalAlignment = HorizontalAlignment.Left, Padding = new Thickness(10, 4, 10, 4), Style = (Style)FindResource("ToolbarButtonStyle") };
+            none.Click += (_, _) => { _coordinator.SetTagColor(tag, null); PopulateTagManager(); };
+            palette.Children.Add(swatches);
+            palette.Children.Add(none);
+            palette.Visibility = Visibility.Visible;
+        };
+        return button;
     }
 
     private Button MakeMoveButton(string glyph, string tooltip, string tag, int delta, bool enabled)
@@ -422,6 +470,8 @@ public partial class NotesManagerWindow : Window
             FontSize = 11,
             Width = 28,
             Height = 28,
+            Margin = new Thickness(4, 0, 0, 0),
+            VerticalAlignment = VerticalAlignment.Center,
             Padding = new Thickness(0),
             Tag = (tag, delta),
             ToolTip = tooltip,

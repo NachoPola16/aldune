@@ -273,6 +273,10 @@ public sealed class AppSettings
     /// travels with the sync, so the sync format does not change. See <see cref="TagOrder"/>.</summary>
     public List<string> TagOrder { get; set; } = new();
 
+    /// <summary>The colour each tag gives the notes that carry it (tag name, any case → #RRGGBB). Local to this device: the colour lands in
+    /// each note's own colour, which is what syncs, so the sync format does not change. See <see cref="NotesRepository.ApplyTagColor"/>.</summary>
+    public Dictionary<string, string> TagColors { get; set; } = new();
+
     /// <summary>Interruptor general de los sonidos de la app. Apagado de fábrica (ver <see cref="SoundPlan"/>).</summary>
     public bool SoundsEnabled { get; set; }
 
