@@ -1021,7 +1021,7 @@ public partial class EdgeDockWindow : Window
         // hacer que su ventana y su pestaña discrepen. Con la vista Activa sin filtro ya está cargado.
         NoteChannelDisplay.Set(view == DockViewKind.Active ? notes : _repository.GetByState(NoteState.Active));
         LinkedNoteDisplay.Set(_repository.GetFileLinks());
-        SetNotes(notes, animateArrivals: !viewChanged);
+        SetNotes(notes, animateArrivals: !viewChanged, fadeAll: viewChanged);
         if (viewChanged)
         {
             HoldHoverDuringLayout();
@@ -1086,7 +1086,7 @@ public partial class EdgeDockWindow : Window
         }
     }
 
-    public void SetNotes(IReadOnlyList<Note> notes, bool animateArrivals = true)
+    public void SetNotes(IReadOnlyList<Note> notes, bool animateArrivals = true, bool fadeAll = false)
     {
         var previousIds = _knownNoteIds;
         _knownNoteIds = notes.Select(n => n.Id).ToHashSet();
@@ -1142,9 +1142,16 @@ public partial class EdgeDockWindow : Window
                 return;
             }
 
+            // A change of view (wheel, menu) swaps every tab: they fade in one after another, a short ripple down the strip, instead of the
+            // old ones blinking out and the new ones blinking in. Only a fade, no slide: a transform on the cards would blur their text.
+            int ripple = 0;
             foreach (var button in _tabButtons.Values)
             {
-                if (button.Tag is Note note && arrived.Contains(note.Id))
+                if (fadeAll && SystemParameters.ClientAreaAnimation)
+                {
+                    PlayEntrance(button, Math.Min(ripple++, 8) * 16, slideIn: false);
+                }
+                else if (button.Tag is Note note && arrived.Contains(note.Id))
                 {
                     PlayEntrance(button, 0, slideIn: false);
                 }
@@ -1948,7 +1955,7 @@ public partial class EdgeDockWindow : Window
             {
                 Child = border, AllowsTransparency = true, StaysOpen = true, IsHitTestVisible = false
             };
-            _viewLabelTimer.Tick += (_, _) => { _viewLabelTimer.Stop(); if (!ViewLabelPinned) _viewLabelPopup.IsOpen = false; };
+            _viewLabelTimer.Tick += (_, _) => { _viewLabelTimer.Stop(); if (!ViewLabelPinned) FadeViewLabel(show: false); };
         }
 
         _viewLabelText!.Text = text;
@@ -1968,9 +1975,41 @@ public partial class EdgeDockWindow : Window
         // is flush with the bottom of the strip. If that does not fit on the screen (dock aligned to a screen end, or a very long list) the
         // label goes beside the first note, on the screen side, instead of covering notes.
         PlaceViewLabel();
-        _viewLabelPopup.IsOpen = true;
+        FadeViewLabel(show: true);
         _viewLabelTimer.Stop();
         if (!ViewLabelPinned) _viewLabelTimer.Start();
+    }
+
+    private int _viewLabelFade;
+
+    /// <summary>
+    /// The label eases in and out instead of blinking: quick on the way in (it answers the turn of the wheel), slower on the way out (it just
+    /// stops being needed). A label that is already showing only keeps its place when the text changes, and one that is leaving comes
+    /// back from where it was; a newer call always wins over an older fade.
+    /// </summary>
+    private void FadeViewLabel(bool show)
+    {
+        if (_viewLabelPopup is not { } popup || _viewLabelBorder is not { } border) return;
+        int id = ++_viewLabelFade;
+        if (!SystemParameters.ClientAreaAnimation)
+        {
+            border.BeginAnimation(OpacityProperty, null);
+            border.Opacity = 1;
+            popup.IsOpen = show;
+            return;
+        }
+
+        if (show && !popup.IsOpen)
+        {
+            border.Opacity = 0;
+            popup.IsOpen = true;
+        }
+        if (!show && !popup.IsOpen) return;
+
+        var animation = new DoubleAnimation(show ? 1 : 0, new Duration(TimeSpan.FromMilliseconds(show ? 140 : 280))) { EasingFunction = EaseOut() };
+        if (!show)
+            animation.Completed += (_, _) => { if (id == _viewLabelFade) popup.IsOpen = false; };
+        border.BeginAnimation(OpacityProperty, animation, HandoffBehavior.SnapshotAndReplace);
     }
 
     /// <summary>
@@ -2048,7 +2087,7 @@ public partial class EdgeDockWindow : Window
     private void RefreshViewLabel()
     {
         if (ViewLabelPinned) ShowViewLabel(CurrentViewLabel());
-        else if (_viewLabelPopup is { IsOpen: true } && !_viewLabelTimer.IsEnabled) _viewLabelPopup.IsOpen = false;
+        else if (_viewLabelPopup is { IsOpen: true } && !_viewLabelTimer.IsEnabled) FadeViewLabel(show: false);
     }
 
     private void OnDockViewPopupOpened(object sender, EventArgs e)
