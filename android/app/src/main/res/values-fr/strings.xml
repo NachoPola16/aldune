@@ -469,6 +469,11 @@
     <string name="tag_move_down">Descendre %1$s</string>
     <string name="show_tag_hash">Afficher # devant les étiquettes</string>
     <string name="show_tag_hash_hint">Désactivé : une petite icône d\'étiquette à la place du #.</string>
+    <string name="group_by_tag">Grouper « Toutes les notes » par étiquette</string>
+    <string name="group_by_tag_hint">Sections repliables, plusieurs ouvertes à la fois. Une note avec plusieurs étiquettes apparaît sous chacune. Tant que c’est actif, le tri manuel est désactivé.</string>
+    <string name="group_untagged">Sans étiquette</string>
+    <string name="group_expanded">Dépliée</string>
+    <string name="group_collapsed">Repliée</string>
     <string name="all_notes_chip">Toutes</string>
     <string name="update_check_now">Rechercher des mises à jour maintenant</string>
     <string name="update_checking">Vérification…</string>

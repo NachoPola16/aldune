@@ -469,6 +469,11 @@
     <string name="tag_move_down">Sposta %1$s giù</string>
     <string name="show_tag_hash">Mostra # davanti alle etichette</string>
     <string name="show_tag_hash_hint">Disattivato: una piccola icona di etichetta al posto del #.</string>
+    <string name="group_by_tag">Raggruppa «Tutte le note» per etichetta</string>
+    <string name="group_by_tag_hint">Sezioni comprimibili, più aperte insieme. Una nota con più etichette compare sotto ciascuna. Finché è attivo, il riordino manuale è disattivato.</string>
+    <string name="group_untagged">Senza etichetta</string>
+    <string name="group_expanded">Espansa</string>
+    <string name="group_collapsed">Compressa</string>
     <string name="all_notes_chip">Tutte</string>
     <string name="update_check_now">Cerca aggiornamenti ora</string>
     <string name="update_checking">Controllo in corso…</string>

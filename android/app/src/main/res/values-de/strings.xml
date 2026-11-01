@@ -469,6 +469,11 @@
     <string name="tag_move_down">%1$s nach unten</string>
     <string name="show_tag_hash"># vor Tags anzeigen</string>
     <string name="show_tag_hash_hint">Aus: ein kleines Tag-Symbol statt der #.</string>
+    <string name="group_by_tag">„Alle Notizen“ nach Tag gruppieren</string>
+    <string name="group_by_tag_hint">Einklappbare Abschnitte, mehrere gleichzeitig offen. Eine Notiz mit mehreren Tags erscheint unter jedem. Solange aktiv, ist manuelles Umsortieren aus.</string>
+    <string name="group_untagged">Ohne Tag</string>
+    <string name="group_expanded">Aufgeklappt</string>
+    <string name="group_collapsed">Eingeklappt</string>
     <string name="all_notes_chip">Alle</string>
     <string name="update_check_now">Jetzt nach Updates suchen</string>
     <string name="update_checking">Prüfe…</string>

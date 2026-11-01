@@ -469,6 +469,11 @@
     <string name="tag_move_down">将 %1$s 下移</string>
     <string name="show_tag_hash">在标签前显示 #</string>
     <string name="show_tag_hash_hint">关闭：用小标签图标代替 #。</string>
+    <string name="group_by_tag">按标签分组“全部便笺”</string>
+    <string name="group_by_tag_hint">可折叠的分区，可同时展开多个。带有多个标签的便笺会出现在每个标签下。开启时无法手动排序。</string>
+    <string name="group_untagged">无标签</string>
+    <string name="group_expanded">已展开</string>
+    <string name="group_collapsed">已折叠</string>
     <string name="all_notes_chip">全部</string>
     <string name="update_check_now">立即检查更新</string>
     <string name="update_checking">正在检查…</string>

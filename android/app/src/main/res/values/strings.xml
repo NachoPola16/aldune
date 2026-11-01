@@ -469,6 +469,11 @@
     <string name="tag_move_down">Move %1$s down</string>
     <string name="show_tag_hash">Show # before tags</string>
     <string name="show_tag_hash_hint">Off: a small tag icon instead of the #.</string>
+    <string name="group_by_tag">Group \"All notes\" by tag</string>
+    <string name="group_by_tag_hint">Collapsible sections, several open at once. A note with several tags shows under each. Reordering by hand is off while this is on.</string>
+    <string name="group_untagged">No tag</string>
+    <string name="group_expanded">Expanded</string>
+    <string name="group_collapsed">Collapsed</string>
     <string name="all_notes_chip">All</string>
     <string name="update_check_now">Check for updates now</string>
     <string name="update_checking">Checking…</string>

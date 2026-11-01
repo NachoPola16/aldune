@@ -87,6 +87,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.ui.text.font.FontWeight
+import app.aldune.domain.TagGrouping
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -169,7 +172,7 @@ fun NoteListPane(
 
     // Reordenar (arrastrando o con Subir/Bajar) solo con la lista completa (sin búsqueda ni etiqueta): con un filtro, las vecinas que se ven no
     // son las vecinas reales y el orden no se puede decidir.
-    val reorderable = state.query.isBlank() && state.tag == null && state.items.size > 1 && settingsNow.listOrder == 0
+    val reorderable = state.query.isBlank() && state.tag == null && state.items.size > 1 && settingsNow.listOrder == 0 && !settingsNow.groupByTag
     val context = androidx.compose.ui.platform.LocalContext.current
 
     // Template read configuration-aware here and formatted when the note moves.
@@ -315,6 +318,23 @@ fun NoteListPane(
                 var dragStartIds by remember { mutableStateOf<List<String>>(emptyList()) }
                 // Mientras se arrastra manda el orden local; fuera del arrastre, el de la base.
                 LaunchedEffect(state.items) { if (draggedId == null) order = state.items }
+
+                // Vista agrupada de «Todas las notas»: una cabecera plegable por etiqueta y, debajo, sus notas. Una nota con varias etiquetas sale
+                // bajo cada una (por eso su clave lleva la sección). Con búsqueda o con una etiqueta elegida se enseña la lista de siempre.
+                val grouped = settingsNow.groupByTag && state.tag == null && state.query.isBlank()
+                var collapsed by rememberSaveable { mutableStateOf(emptySet<String>()) }
+                val untaggedLabel = stringResource(R.string.group_untagged)
+                val entries = remember(order, grouped, collapsed, state.allTags) {
+                    if (!grouped) order.map<NoteListItem, ListEntry> { ListEntry.Note(it, it.id) }
+                    else buildList<ListEntry> {
+                        for (group in TagGrouping.group(order, state.allTags) { it.tags }) {
+                            val groupKey = group.tag?.lowercase() ?: UNTAGGED_KEY
+                            val open = groupKey !in collapsed
+                            add(ListEntry.Header(group.tag ?: untaggedLabel, groupKey, group.items.size, open))
+                            if (open) for (note in group.items) add(ListEntry.Note(note, "$groupKey/${note.id}"))
+                        }
+                    }
+                }
                 // La fila que señala el widget (una protegida): se lleva a la vista.
                 val highlight by viewModel.highlight.collectAsStateWithLifecycle()
                 LaunchedEffect(highlight, order) {
@@ -402,7 +422,11 @@ fun NoteListPane(
                     Modifier.fillMaxSize(), state = listState, verticalArrangement = Arrangement.spacedBy(8.dp),
                     contentPadding = androidx.compose.foundation.layout.PaddingValues(bottom = 16.dp),
                 ) {
-                    items(order, key = { it.id }) { item ->
+                    items(entries, key = { it.key }) { entry ->
+                      when (entry) {
+                        is ListEntry.Header -> GroupHeader(entry) { collapsed = if (entry.key in collapsed) collapsed - entry.key else collapsed + entry.key }
+                        is ListEntry.Note -> {
+                        val item = entry.item
                         val dragging = draggedId == item.id
                         // Mantener pulsada una nota: arrastrar la reordena y soltar sin mover abre su menú. En los dos casos el «soltar» no debe
                         // abrir la nota, que es lo que haría el toque de la fila al levantar el dedo.
@@ -473,6 +497,8 @@ fun NoteListPane(
                             onRestore = { viewModel.restore(item.id); announce(restoredMsg) { viewModel.trash(item.id) } },
                             onDelete = { deleting = item },
                         )
+                        }
+                      }
                     }
                 }
             }
@@ -1006,4 +1032,27 @@ private fun TagPickedDialog(tags: List<String>, onPick: (String) -> Unit, onDism
         confirmButton = { TextButton(onClick = { onPick(typed.trim()) }, enabled = typed.isNotBlank()) { Text(stringResource(R.string.selection_tag)) } },
         dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.update_dismiss)) } },
     )
+}
+
+/** Una fila de la lista: una nota o, en la vista agrupada, la cabecera plegable de una etiqueta. [key] es única aunque la nota salga en varias secciones. */
+private sealed interface ListEntry {
+    val key: String
+    class Note(val item: NoteListItem, override val key: String) : ListEntry
+    class Header(val title: String, override val key: String, val count: Int, val open: Boolean) : ListEntry
+}
+
+private const val UNTAGGED_KEY = "\u0000untagged"
+
+@Composable
+private fun GroupHeader(header: ListEntry.Header, onToggle: () -> Unit) {
+    val state = stringResource(if (header.open) R.string.group_expanded else R.string.group_collapsed)
+    Row(
+        Modifier.fillMaxWidth().clickable(onClick = onToggle).padding(horizontal = 4.dp, vertical = 10.dp)
+            .semantics(mergeDescendants = true) { heading(); stateDescription = state },
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Text(if (header.open) "▾" else "▸", Modifier.padding(end = 8.dp), style = MaterialTheme.typography.titleMedium)
+        Text(header.title, Modifier.weight(1f), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
+        Text(header.count.toString(), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+    }
 }

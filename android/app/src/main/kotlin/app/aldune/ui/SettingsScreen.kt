@@ -194,6 +194,9 @@ fun SettingsScreen(viewModel: NotesViewModel, onClose: () -> Unit) {
                 SwitchRow(stringResource(R.string.show_tag_hash), stringResource(R.string.show_tag_hash_hint), settings.showTagHash) { on ->
                     viewModel.updateSettings { it.copy(showTagHash = on) }
                 }
+                SwitchRow(stringResource(R.string.group_by_tag), stringResource(R.string.group_by_tag_hint), settings.groupByTag) { on ->
+                    viewModel.updateSettings { it.copy(groupByTag = on) }
+                }
                 suggestedTheme?.let { themeId ->
                     val themeName = themeNameRes(themeId)?.let { stringResource(it) } ?: themeId
                     AlertDialog(

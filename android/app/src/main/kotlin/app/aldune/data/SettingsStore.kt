@@ -75,6 +75,8 @@ data class AppSettings(
     val tagOrder: String = "",
     /** «#» delante de las etiquetas (por defecto sí, como en Windows); apagado, un icono pequeño de etiqueta. */
     val showTagHash: Boolean = true,
+    /** «Todas las notas» repartida en secciones plegables por etiqueta. Solo Android; apagado por defecto. */
+    val groupByTag: Boolean = false,
     /** Cuándo se abre el teclado solo al abrir una nota (`KeyboardOnOpen`): 0 nunca (por defecto), 1 solo en las nuevas, 2 siempre. */
     val keyboardOnOpen: Int = 0,
     /** Horas que una tarea hecha sigue a la vista antes de esconderse. */
@@ -161,6 +163,7 @@ class SettingsStore(context: Context) {
             hideDoneTasks = prefs.getBoolean(HIDE_DONE_TASKS, d.hideDoneTasks),
             tagOrder = prefs.getString(TAG_ORDER, d.tagOrder) ?: d.tagOrder,
             showTagHash = prefs.getBoolean(SHOW_TAG_HASH, d.showTagHash),
+            groupByTag = prefs.getBoolean(GROUP_BY_TAG, d.groupByTag),
             keyboardOnOpen = KeyboardOnOpen.migrate(prefs.getInt(KEYBOARD_ON_OPEN, d.keyboardOnOpen), prefs.getBoolean(KEYBOARD_MIGRATED, false)),
             hideDoneAfterHours = prefs.getInt(HIDE_DONE_AFTER_HOURS, d.hideDoneAfterHours).coerceIn(1, 24 * 365),
             welcomeSeen = prefs.getBoolean(WELCOME_SEEN, d.welcomeSeen),
@@ -214,6 +217,7 @@ class SettingsStore(context: Context) {
             .putBoolean(HIDE_DONE_TASKS, settings.hideDoneTasks)
             .putString(TAG_ORDER, settings.tagOrder)
             .putBoolean(SHOW_TAG_HASH, settings.showTagHash)
+            .putBoolean(GROUP_BY_TAG, settings.groupByTag)
             .putInt(KEYBOARD_ON_OPEN, settings.keyboardOnOpen)
             .putBoolean(KEYBOARD_MIGRATED, true)
             .putInt(HIDE_DONE_AFTER_HOURS, settings.hideDoneAfterHours)
@@ -280,6 +284,7 @@ class SettingsStore(context: Context) {
         const val HIDE_DONE_TASKS = "hideDoneTasks"
         const val TAG_ORDER = "tagOrder"
         const val SHOW_TAG_HASH = "showTagHash"
+        const val GROUP_BY_TAG = "groupByTag"
         const val KEYBOARD_ON_OPEN = "keyboardOnOpen"
         const val KEYBOARD_MIGRATED = "keyboardOnOpenMigrated"
         const val HIDE_DONE_AFTER_HOURS = "hideDoneAfterHours"
