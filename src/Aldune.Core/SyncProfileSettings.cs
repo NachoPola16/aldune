@@ -28,6 +28,18 @@ public sealed class SyncProfileSettings
     public string? SyncTag { get; set; }
 
     /// <summary>
+    /// Sync the look (appearance and colours) through this profile (docs/specs/2026-11-01-sync-look-design.md). Off by default. It lives only
+    /// here, not in the per-device legacy fields: the look itself is global to the device.
+    /// </summary>
+    public bool SyncLook { get; set; }
+
+    /// <summary>Hash of this device's look the last time it was pushed or pulled: a different one now means the person changed it here.</summary>
+    public string? LookHash { get; set; }
+
+    /// <summary>Stamp of the look document this device last pushed or pulled.</summary>
+    public DateTimeOffset? LookStamp { get; set; }
+
+    /// <summary>
     /// Con qué clave guarda este perfil sus bases de conflicto en la base de datos (ver <c>SyncBase</c>). El
     /// primer perfil conserva la vacía, que es la de siempre, para no perder lo ya acordado con su almacén; los
     /// demás usan su propio id. Va aparte de <see cref="Id"/> por esa herencia, y no cambia aunque se borre otro perfil.

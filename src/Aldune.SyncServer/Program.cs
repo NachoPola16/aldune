@@ -230,6 +230,43 @@ app.MapPut("/api/v1/objects/{id:guid}", async (Guid id, HttpRequest request) =>
     return Results.NoContent();
 });
 
+// The look document (docs/specs/2026-11-01-sync-look-design.md): one opaque encrypted blob per space, beside `objects/` and never inside it,
+// so versions that do not know it never list it. The server cannot read it (it is encrypted with the profile's key).
+const long MaxLookBytes = 64 * 1024;
+
+app.MapGet("/api/v1/look", (HttpContext http) =>
+{
+    var path = LookFile(ObjectsOf(http));
+    return File.Exists(path) ? Results.File(path, "application/octet-stream") : Results.NotFound();
+});
+
+app.MapPut("/api/v1/look", async (HttpRequest request) =>
+{
+    if (request.ContentLength is > MaxLookBytes) return Results.StatusCode(StatusCodes.Status413PayloadTooLarge);
+    using var stream = new MemoryStream();
+    var buffer = new byte[8192];
+    int read;
+    while ((read = await request.Body.ReadAsync(buffer)) > 0)
+    {
+        if (stream.Length + read > MaxLookBytes) return Results.StatusCode(StatusCodes.Status413PayloadTooLarge);
+        stream.Write(buffer, 0, read);
+    }
+
+    var path = LookFile(ObjectsOf(request.HttpContext));
+    var temp = path + "." + Guid.NewGuid().ToString("N") + ".tmp";
+    try
+    {
+        await File.WriteAllBytesAsync(temp, stream.ToArray());
+        File.Move(temp, path, overwrite: true);
+    }
+    finally
+    {
+        if (File.Exists(temp)) File.Delete(temp);
+    }
+
+    return Results.NoContent();
+});
+
 app.MapDelete("/api/v1/objects/{id:guid}", (Guid id, HttpContext http) =>
 {
     var path = ObjectFile(ObjectsOf(http), id);
@@ -301,6 +338,9 @@ if (registry is not null)
 app.Run();
 
 static string ObjectsOf(HttpContext http) => (string)http.Items[SpaceItemKey]!;
+
+// Beside the objects folder (its parent), so the object listing, which reads only `objects/*.json`, never sees it.
+static string LookFile(string objectPath) => Path.Combine(Path.GetDirectoryName(objectPath)!, "look.bin");
 
 static string ObjectFile(string objectPath, Guid id) => Path.Combine(objectPath, $"{id:N}.json");
 

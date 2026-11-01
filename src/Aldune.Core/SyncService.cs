@@ -23,13 +23,21 @@ public sealed class SyncService
     }
 
     private SyncService(NotesRepository repository, AppSettings settings, Action<AppSettings> persist,
-        TimeSpan? httpTimeout)
+        TimeSpan? httpTimeout, AppSettings? lookTarget = null)
     {
         _repository = repository;
         _settings = settings;
         _persist = persist;
         _httpTimeout = httpTimeout;
+        _lookTarget = lookTarget;
     }
+
+    // The settings whose look is synced: the real ones. A worker that syncs a profile that is not the chosen one runs on scratch settings and
+    // must read and write the look of the real ones.
+    private readonly AppSettings? _lookTarget;
+
+    /// <summary>Raised after a sync pass took a newer look from the store and applied it to the settings: the app repaints.</summary>
+    public event Action? LookApplied;
 
     public string GetOrCreateSyncCode()
     {
@@ -326,7 +334,8 @@ public sealed class SyncService
         {
             SyncProfileStore.SaveActiveFromLegacy(scratch);
             _persist(_settings);
-        }, _httpTimeout);
+        }, _httpTimeout, _lookTarget ?? _settings);
+        worker.LookApplied += () => LookApplied?.Invoke();
         return worker.SynchronizeCore();
     }
 
@@ -391,6 +400,7 @@ public sealed class SyncService
                 var transport = CreateTransport();
                 var classified = ClassifyRemote(transport.ReadAll(), key);
                 var unreadable = transport.UnreadableIds.ToHashSet();
+                if (!classified.NoReadableNotes) ReconcileLook(transport, key);
                 if (classified.NoReadableNotes)
                 {
                     // Ninguna nota del almacén se descifra con este código: casi seguro que se revocó
@@ -831,6 +841,43 @@ public sealed class SyncService
 
     /// <summary>Solo para pruebas: un transporte falso en lugar del real.</summary>
     internal Func<ISyncTransport>? TransportFactoryOverride { get; set; }
+
+    /// <summary>
+    /// The look document of the profile in this pass (only if the person turned it on, and only over the server transport): push a change made here,
+    /// pull a newer one made elsewhere (<see cref="SyncLook.Decide"/>). Best effort: whatever goes wrong here never fails the sync of the notes.
+    /// </summary>
+    private void ReconcileLook(ISyncTransport transport, byte[] key)
+    {
+        var profile = SyncProfileStore.GetActive(_settings);
+        if (!profile.SyncLook || transport is not HttpSyncTransport http) return;
+        var target = _lookTarget ?? _settings;
+        try
+        {
+            var localHash = SyncLook.Hash(target);
+            var blob = http.ReadLook();
+            var remote = blob is null ? null : SyncLook.Open(key, blob);
+            switch (SyncLook.Decide(localHash, profile.LookHash, profile.LookStamp, remote?.Stamp))
+            {
+                case LookAction.Push:
+                    var now = DateTimeOffset.UtcNow;
+                    http.WriteLook(SyncLook.Seal(key, now, EnsureDeviceId(), SyncLook.Capture(target)));
+                    profile.LookHash = localHash;
+                    profile.LookStamp = now;
+                    _persist(_settings);
+                    break;
+                case LookAction.Pull when remote is not null:
+                    if (SyncLook.Apply(target, remote.Look)) LookApplied?.Invoke();
+                    profile.LookHash = SyncLook.Hash(target);
+                    profile.LookStamp = remote.Stamp;
+                    _persist(_settings);
+                    break;
+            }
+        }
+        catch (Exception ex) when (ex is HttpRequestException or InvalidOperationException or TaskCanceledException or IOException)
+        {
+            // The server is older than the look route, or went away: the notes sync went on, the look waits for the next pass.
+        }
+    }
 
     private ISyncTransport CreateTransport() => TransportFactoryOverride?.Invoke() ?? _settings.SyncTransport switch
     {

@@ -60,6 +60,23 @@ public sealed class HttpSyncTransport : ISyncTransport
         EnsureSuccess(response);
     }
 
+    /// <summary>The sealed look document of this store, or <c>null</c> if there is none (or the server does not know the route: it answers 404).</summary>
+    public byte[]? ReadLook()
+    {
+        using var response = _client.GetAsync(BuildUri("api/v1/look")).GetAwaiter().GetResult();
+        if (response.StatusCode == System.Net.HttpStatusCode.NotFound) return null;
+        EnsureSuccess(response);
+        return response.Content.ReadAsByteArrayAsync().GetAwaiter().GetResult();
+    }
+
+    public void WriteLook(byte[] sealedLook)
+    {
+        using var content = new ByteArrayContent(sealedLook);
+        content.Headers.ContentType = new MediaTypeHeaderValue("application/octet-stream");
+        using var response = _client.PutAsync(BuildUri("api/v1/look"), content).GetAwaiter().GetResult();
+        EnsureSuccess(response);
+    }
+
     public void Delete(Guid noteId)
     {
         using var response = _client.DeleteAsync(BuildUri($"api/v1/objects/{noteId:N}"))
