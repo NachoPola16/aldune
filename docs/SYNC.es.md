@@ -417,6 +417,11 @@ No cambia nada en las apps ni en el formato de sync.
 - Para añadir o quitar a alguien, edita la línea y recrea el contenedor. Revocar un token corta ese espacio pero **conserva sus ficheros**; borra `/data/spaces/<nombre>` a mano cuando de verdad quieras eliminarlos.
 - Si solo usas espacios, deja `ALDUNE_SYNC_TOKEN` vacío (el valor de ejemplo se rechaza). Los tokens fallidos se siguen contando por dirección, en todos los espacios.
 
+**Pasar un servidor suelto a un espacio.** Si una persona ya tiene su propio contenedor, puedes meterlo en el servidor principal sin tocar la clave ni el token de sus dispositivos:
+deja de escribir en el antiguo, copia su carpeta `objects` a `/data/spaces/<nombre>/objects` del principal (con el usuario del contenedor, UID 1654), añade `<nombre>=<su token actual>` a `ALDUNE_SYNC_SPACES` y recrea el contenedor.
+Después apunta la dirección antigua al servidor principal (o pide a la persona que cambie la URL en Ajustes → Sync). **Solo puede cambiar la URL**: el token y la clave de sync siguen igual, porque el token por sí solo decide el almacén.
+Conserva el contenedor antiguo parado, no borrado, unos días por si hace falta comparar.
+
 ### Perfiles de sincronización
 
 Puedes crear varios perfiles desde Ajustes. Cada perfil mantiene su transporte, servidor o carpeta,

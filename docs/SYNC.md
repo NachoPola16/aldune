@@ -418,6 +418,11 @@ Nothing changes in the apps or in the sync format.
 - Add or revoke a person by editing the line and recreating the container. Revoking a token cuts off that space but **keeps its files**; delete `/data/spaces/<name>` by hand when you really want them gone.
 - If you only use spaces, leave `ALDUNE_SYNC_TOKEN` empty (the example value is rejected). Failed tokens are still counted per address, across all spaces.
 
+**Moving a separate server into a space.** If a person already has their own container, you can fold it into the main server without touching their devices' key or token:
+stop writing to the old one, copy its `objects` folder to `/data/spaces/<name>/objects` of the main server (owned by the container's user, UID 1654), add `<name>=<their current token>` to `ALDUNE_SYNC_SPACES` and recreate the container.
+Then point the old address at the main server (or ask the person to change the URL in Settings → Sync). **Only the URL can change**: the token and the sync key stay the same, because the token alone decides the store.
+Keep the old container stopped, not deleted, for a few days in case you need to compare.
+
 ### Sync profiles
 
 You can create several profiles from Settings. Each profile keeps its transport, server or folder,
