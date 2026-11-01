@@ -114,6 +114,23 @@ public sealed class SyncService
         }
     }
 
+    /// <summary>
+    /// Joins a server by invitation: a NEW profile (the existing ones are untouched) pointing at <paramref name="serverUrl"/> with the token the
+    /// invitation gave, and a sync key generated here, on this device. The key never leaves it: the person shares the profile code later if they
+    /// want another device on the same space.
+    /// </summary>
+    public SyncProfileSettings JoinWithInvitation(string profileName, string serverUrl, string token)
+    {
+        var profile = SyncProfileStore.Create(_settings, profileName);
+        _settings.SyncTransport = SyncTransportKind.Server;
+        _settings.SyncServerUrl = serverUrl.Trim();
+        _settings.SyncEnabled = true;
+        _settings.SyncAutomatically = true;
+        SetServerToken(token);
+        CryptographicOperations.ZeroMemory(GetOrCreateKey());
+        return profile;
+    }
+
     public string GetServerToken()
     {
         if (_settings.WrappedSyncServerToken is null) return string.Empty;
