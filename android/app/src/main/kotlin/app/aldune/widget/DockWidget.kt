@@ -273,17 +273,23 @@ class DockWidget : GlanceAppWidget() {
                         }
                         // Pending tasks, each with a box that ticks it right here (`ToggleTaskAction`); the strip's own tap still opens the note.
                         strip.tasks.forEach { task ->
-                            CheckBox(
-                                checked = false,
-                                onCheckedChange = actionRunCallback<ToggleTaskAction>(actionParametersOf(
-                                    ToggleTaskAction.NOTE_ID to strip.id, ToggleTaskAction.BOX_INDEX to task.index, ToggleTaskAction.LINE to task.line,
-                                )),
-                                text = task.text,
-                                modifier = GlanceModifier.fillMaxWidth().height(TASK_ROW),
-                                maxLines = 1,
-                                style = TextStyle(color = ink, fontSize = 12.sp, fontFamily = data.colors.font),
-                                colors = CheckboxDefaults.colors(checkedColor = ink, uncheckedColor = ink),
-                            )
+                            val toggle = actionRunCallback<ToggleTaskAction>(actionParametersOf(
+                                ToggleTaskAction.NOTE_ID to strip.id, ToggleTaskAction.BOX_INDEX to task.index, ToggleTaskAction.LINE to task.line,
+                            ))
+                            // The box and the text are separate: the text of a Glance CheckBox is cut at the edge with no ellipsis, a plain Text ends in «…». The
+                            // text carries the same action, so tapping it ticks the task like before.
+                            Row(GlanceModifier.fillMaxWidth().height(TASK_ROW), verticalAlignment = Alignment.CenterVertically) {
+                                CheckBox(
+                                    checked = false,
+                                    onCheckedChange = toggle,
+                                    text = "",
+                                    colors = CheckboxDefaults.colors(checkedColor = ink, uncheckedColor = ink),
+                                )
+                                Text(
+                                    task.text, GlanceModifier.defaultWeight().clickable(toggle),
+                                    style = TextStyle(color = ink, fontSize = 12.sp, fontFamily = data.colors.font), maxLines = 1,
+                                )
+                            }
                         }
                     }
                 }
