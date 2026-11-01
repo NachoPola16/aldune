@@ -2655,6 +2655,10 @@ public partial class EdgeDockWindow : Window
     {
         if (sender is not Button { Tag: Note note } button) return;
 
+        // Dragging only reorders within the note's group (pinned or not): alone in it (the only note, in particular) there is nothing to move,
+        // so the tab stays put and the press remains a plain click.
+        if ((TabsList.ItemsSource as IEnumerable<Note>)?.Count(n => n.IsPinnedToTop == note.IsPinnedToTop) <= 1) return;
+
         // No se marca como manejado ni se captura todavía: hasta que no se mueva de verdad, esto
         // tiene que seguir siendo un clic normal que abre la nota.
         _dragButton = button;
