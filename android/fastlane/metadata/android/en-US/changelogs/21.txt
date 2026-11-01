@@ -1,0 +1,1 @@
+New: invitations — join a shared server with a one-use code and get your own private space, or invite someone with a code or a QR and revoke access later. The look can follow you across devices, a connected profile's address or token can change without disconnecting, All notes can be grouped by tag, and the widget preview no longer repeats the tasks shown as boxes.

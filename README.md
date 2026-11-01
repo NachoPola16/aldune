@@ -34,16 +34,16 @@ their own. No account, no required cloud, and the content is encrypted.
 - **A global shortcut** to create a note from anywhere (`Ctrl+Shift+N` by default).
 - **Password-protected notes**, encrypted with a key derived from the password (which is not stored), with an optional visible name to recognize them without opening them.
 - **Optional sync** between devices through a shared folder or NAS, your own server (Docker) or
-  WebDAV / Nextcloud, end-to-end encrypted. See [docs/SYNC.md](docs/SYNC.md).
+  WebDAV / Nextcloud, end-to-end encrypted. If you host the server, someone can join with a one-use invitation and gets a private space of their own, and the look can follow you across devices. See [docs/SYNC.md](docs/SYNC.md).
 - **Automatic backups**: one a day, the 7 most recent are kept.
 - **Accessible**: a visible focus ring when navigating with Tab, note colors chosen with the arrow keys, “Text size” (100–150 %) and per-note zoom with
-  `Ctrl` + mouse wheel, and Windows high contrast. The dock opens with the mouse; without one, the optional `Ctrl+Alt+M` shortcut (Settings → General)
-  opens the notes list (Enter opens a note, Space selects it). More in “Quick help” in Settings.
+  `Ctrl` + mouse wheel, and Windows high contrast. The dock opens with the mouse; from the keyboard, `Ctrl+Alt+D` focuses it (arrows move between
+  tabs, Enter opens) and the optional `Ctrl+Alt+M` (Settings → General) opens the notes list (Enter opens a note, Space selects it). More in “Quick help” in Settings.
 - In **English**, **Spanish**, **German**, **French**, **Italian**, **Brazilian Portuguese**, **Japanese** and **Simplified Chinese**.
 
 ### Looks
 
-Besides Dark, Light, Pastel and Midnight there are looks with a character of their own (on Android too). Three of the newest: the **travel notebook** (cream paper with folds), the **field notebook** (ruled lines and a red margin) and the **graph-paper notebook** (squared sheet with a red margin; coming in the next version), each in light and dark.
+Besides Dark, Light, Pastel and Midnight there are looks with a character of their own (on Android too). Three of the newest: the **travel notebook** (cream paper with folds), the **field notebook** (ruled lines and a red margin) and the **graph-paper notebook** (squared sheet with a red margin), each in light and dark.
 
 | Travel notebook | Field notebook | Graph-paper notebook |
 |---|---|---|
@@ -54,7 +54,7 @@ Besides Dark, Light, Pastel and Midnight there are looks with a character of the
 
 Download the latest version from [Releases](https://github.com/NachoPola16/aldune/releases):
 
-- **Installer** (`Aldune-Setup-x.y.z.exe`): shortcuts and an uninstaller. No administrator rights
+- **Installer** (`Aldune-Setup-x.y.z.0.exe`): shortcuts and an uninstaller. No administrator rights
   needed. Uninstalling does not delete your notes.
 - **Portable** (`aldune-portable-win-x64.zip`): a single `aldune.exe`, nothing to install.
 - **Portable for ARM** (`aldune-portable-win-arm64.zip`): the same for Windows on ARM64 (Surface Pro X, Snapdragon laptops). The x64 builds also
@@ -66,7 +66,7 @@ Requirements: 64-bit Windows 10 or 11. You don't need to install .NET.
 **Check your download** (optional, in PowerShell). The result must equal that file's line in `SHA256SUMS.txt`:
 
 ```powershell
-(Get-FileHash .\Aldune-Setup-2.7.3.0.exe -Algorithm SHA256).Hash.ToLower()
+(Get-FileHash .\Aldune-Setup-3.0.0.0.exe -Algorithm SHA256).Hash.ToLower()
 ```
 
 It catches a corrupted download or one altered on the way. It is not a substitute for code signing (see "Signing and privacy"): anyone who could
@@ -148,8 +148,8 @@ How a version is released and signed: [docs/RELEASING.md](docs/RELEASING.md).
 The story so far, with then-and-now screenshots and the bugs that mattered: [docs/PROGRESS.md](docs/PROGRESS.md).
 
 See the [documentation index](docs/README.md). The sync guide ([`docs/SYNC.md`](docs/SYNC.md)), the protected-notes note, the product and design
-context, branding, releasing and the probe guides are in English. The long-running design archive (`STATUS`, `ROADMAP`, the port studies and
-`specs/`) is still in Spanish and is being translated.
+context, branding, releasing and the probe guides are in English. `STATUS`, `ROADMAP`, the port studies, the probe guides and `specs/` are in English;
+the Spanish copies of the user guides are `SYNC.es.md` and `PROTECTED_NOTES.es.md`.
 
 ## Try it and give feedback
 
