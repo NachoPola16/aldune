@@ -1820,6 +1820,14 @@ public partial class EdgeDockWindow : Window
             if (delta != 0 && point.X >= _wheelZonePx.X && point.X <= _wheelZonePx.X + _wheelZonePx.Width
                 && point.Y >= _wheelZonePx.Y && point.Y <= _wheelZonePx.Y + _wheelZonePx.Height)
             {
+                // Another window of Aldune over the zone (Manage notes, a note, Settings): the wheel is for it, not for the dock. Without this,
+                // scrolling the list of Manage notes next to the dock was swallowed to cycle the view, and since that list follows the view, it emptied.
+                if (NativeMethods.IsOtherOwnWindowAt((int)point.X, (int)point.Y, _hwnd))
+                {
+                    Dispatcher.BeginInvoke(DispatcherPriority.Input, new Action(EndWheelSession));
+                    return NativeMethods.ContinueHook(_wheelHook, code, message, data);
+                }
+
                 Dispatcher.BeginInvoke(DispatcherPriority.Input, new Action(() => CycleDockView(delta < 0 ? 1 : -1, showLabel: true)));
                 return (IntPtr)1; // swallowed: the view change is the only effect of this notch
             }

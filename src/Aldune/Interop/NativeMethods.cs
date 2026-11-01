@@ -121,6 +121,30 @@ internal static class NativeMethods
         return new Point(point.X, point.Y);
     }
 
+    /// <summary>
+    /// Whether the window under the physical-pixel point <paramref name="x"/>, <paramref name="y"/> is another window of this same process than
+    /// <paramref name="ownHwnd"/> (Manage notes, a note, Settings, a menu of the dock). The wheel hook of the dock uses it to leave alone a wheel that
+    /// is aimed at them: the zone it watches is where the dock WAS, and one of those windows can sit right on top of it.
+    /// </summary>
+    internal static bool IsOtherOwnWindowAt(int x, int y, IntPtr ownHwnd)
+    {
+        var under = WindowFromPoint(new POINT { X = x, Y = y });
+        if (under == IntPtr.Zero) return false;
+        var root = GetAncestor(under, GaRoot);
+        if (root == IntPtr.Zero) root = under;
+        if (root == ownHwnd) return false;
+        GetWindowThreadProcessId(root, out uint processId);
+        return processId == GetCurrentProcessId();
+    }
+
+    private const uint GaRoot = 2;
+
+    [DllImport("user32.dll")]
+    private static extern IntPtr WindowFromPoint(POINT point);
+
+    [DllImport("user32.dll")]
+    private static extern IntPtr GetAncestor(IntPtr hWnd, uint flags);
+
     internal static int GetKeyboardVirtualKey(IntPtr hookData) => Marshal.ReadInt32(hookData);
 
     /// <summary>
