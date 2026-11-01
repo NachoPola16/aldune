@@ -59,9 +59,11 @@ It is **not** Windows' "always on top of other windows" (`NoteUnpinned`, local, 
 
 Global shortcuts (including the fixed Ctrl+Alt+H, which hides the dock, and Ctrl+Alt+D, which puts the keyboard on it: Up/Down between tabs, Enter opens, Esc gives it back), dock (edge, alignment, monitor, follow the mouse, hide in full screen, keep open, trackpad gestures), text size
 (Android follows the system's), remember note position and size, default note layout, several sync profiles with their folder/server/WebDAV,
-custom themes (`CustomThemes`), shadow on the dock cards (`DockCardShadow`, on by default), start with Windows.
+custom themes (`CustomThemes`), shadow on the dock cards (`DockCardShadow`, on by default), the view-name label of the dock (`DockViewLabel`: also «never»; right-click on the views button chooses it), start with Windows.
 
 ## Android only
+
+**Group «All notes» by tag (`groupByTag`, off by default)**: collapsible sections per tag, several open at once; a note with several tags shows under each, untagged ones under «No tag»; manual reordering is off while it is on. Windows keeps its dock as it is.
 
 Keyboard when opening a note, shape of the “+” button (app and widgets), quick capture notification and tile, quick list, exact alarms, notice about a missing
 backup. These are things that do not exist on a desktop computer.

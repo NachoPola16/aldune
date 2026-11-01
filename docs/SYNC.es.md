@@ -437,6 +437,11 @@ ALDUNE_SYNC_MAX_SPACES=20
 - El token de administrador solo crea códigos y revoca espacios: **no** abre ningún almacén. Ni los códigos ni los tokens se guardan en claro (solo su hash, en `/data/registry.json`). Un código erróneo o un token de administrador erróneo cuentan en el mismo límite de fallos por dirección que un token de almacén erróneo.
 - Sin `ALDUNE_SYNC_ADMIN_TOKEN` estas rutas no existen (404). Están fuera de `/api`, así que un proxy que reenvía todo ya las sirve.
 
+### El aspecto te sigue (opcional)
+
+Cada perfil de **servidor** tiene un interruptor, apagado de serie («Sincronizar el aspecto con este perfil»). Con él activado, el aspecto, los colores del aspecto, las esquinas, la señal de sincronización, el tema de las notas, el tono y la regla de color de las notas nuevas y «mismo color en todas las notas» viajan entre los dispositivos que usan el perfil. El idioma, el tamaño del texto, los atajos, el dock y los **temas propios** (solo Windows) nunca viajan.
+El aspecto es un documento pequeño, sellado con la clave de sync del perfil, que se guarda junto a las notas (`GET/PUT /api/v1/look`, 64 KB como máximo, en el espacio del propio perfil) y nunca entre ellas, así que las versiones que no lo conocen no lo ven. Un servidor sin esa ruta contesta 404 y el interruptor simplemente no hace nada. Cada dispositivo recuerda un hash de su aspecto y la marca del último documento que subió o bajó: un cambio hecho aquí se sube; si no, se baja el documento más nuevo de otro dispositivo (gana el cambio más reciente). Diseño: `docs/specs/2026-11-01-sync-look-design.md`.
+
 ### Perfiles de sincronización
 
 Puedes crear varios perfiles desde Ajustes. Cada perfil mantiene su transporte, servidor o carpeta,

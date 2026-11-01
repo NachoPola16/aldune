@@ -438,6 +438,11 @@ ALDUNE_SYNC_MAX_SPACES=20
 - The admin token can only make codes and revoke spaces: it opens **no** store. Neither codes nor tokens are kept in clear (only their hash, in `/data/registry.json`). Wrong codes and wrong admin tokens count against the same per-address failure limit as a wrong store token.
 - Without `ALDUNE_SYNC_ADMIN_TOKEN` these routes do not exist (404). They live outside `/api`, so a proxy that forwards everything already serves them.
 
+### The look follows you (optional)
+
+Each **server** profile has a switch, off by default («Sync the look with this profile»). With it on, appearance, look colours, corners, the sync signal, the note theme, the tone and colour rule of new notes and the «same colour on all notes» setting travel between the devices that use the profile. Language, text size, shortcuts, the dock and **custom themes** (Windows only) never travel.
+The look is one small document, sealed with the profile's sync key, stored next to the notes (`GET/PUT /api/v1/look`, at most 64 KB, in the profile's own space) and never among them, so versions that do not know it never see it. A server without the route answers 404 and the switch simply does nothing. Each device remembers a hash of its look and the stamp of the last document it pushed or pulled: a change made here is pushed, otherwise a newer document from another device is pulled (the later change wins). Design: `docs/specs/2026-11-01-sync-look-design.md`.
+
 ### Sync profiles
 
 You can create several profiles from Settings. Each profile keeps its transport, server or folder,
