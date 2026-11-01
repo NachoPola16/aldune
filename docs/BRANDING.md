@@ -1,6 +1,6 @@
 # Aldune visual identity
 
-Decided on 2026-10-26 (see also `DECISIONS-2026-10-26.md`). The symbol is the **“A” made of three notes**: two
+Decided on 2026-10-26. The symbol is the **“A” made of three notes**: two
 slanted legs, one yellow and one cyan, and a pink crossbar. It is **a single drawing**, defined as geometry in
 `scripts/branding/generar-iconos.py`; every format comes from it. No icon is touched up by hand.
 
@@ -55,8 +55,7 @@ that the symbol fits in the safe zone and fails if it does not.
 
 ## What was discarded and why
 
-Eight candidates were drawn (screenshots in `docs/branding/capturas/`, exploration code in
-`docs/branding/alternativas/`) and tried with the same code at 16, 24, 48, 108 and 512 px, in circular, squircle and
+Eight candidates were drawn (the exploration screenshots and scratch code were removed from the tree; they remain in git history) and tried with the same code at 16, 24, 48, 108 and 512 px, in circular, squircle and
 square masks, on light and dark backgrounds and in monochrome. Then a second test of **the three finalists** at real 16-32 px,
 in grays and with color-blindness simulation (deuteranopia and protanopia), and among neighboring icons.
 

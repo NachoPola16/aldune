@@ -15,9 +15,6 @@ Everything is in English. Quoted interface strings that appear in Spanish are th
 - [`SETTINGS_PARITY.md`](SETTINGS_PARITY.md): which settings Windows and Android share, and the differences kept on purpose.
 - [`RELEASING.md`](RELEASING.md): how a Windows or Android version is published.
 - [`WPF_PROBES.md`](WPF_PROBES.md) and [`ANDROID_PROBES.md`](ANDROID_PROBES.md): how the interface is verified.
-- [`DECISIONS-2026-10-26.md`](DECISIONS-2026-10-26.md), [`DECISIONS-2026-10-27.md`](DECISIONS-2026-10-27.md) and [`DECISIONS-2026-10-31.md`](DECISIONS-2026-10-31.md): product decisions (the last one is the working list for Windows 2.2.0 / Android 1.1.0, with what is still pending).
-- [`MSIX_STORE.md`](MSIX_STORE.md): feasibility study for the Microsoft Store.
-- [`DOCK_DIAGNOSTICS.md`](DOCK_DIAGNOSTICS.md): the retired dock diagnostic log and what fixed the bugs.
 - [`../tests/vectors/README.md`](../tests/vectors/README.md): the cross-platform compatibility vectors.
 
 ## Design archive
@@ -26,4 +23,4 @@ Everything is in English. Quoted interface strings that appear in Spanish are th
 - [`STATUS.md`](STATUS.md): what is done, by round, and why.
 - [`ROADMAP.md`](ROADMAP.md): what is planned and what was discarded, with the reasons.
 - [`MOBILE_PORT.md`](MOBILE_PORT.md) and [`DESKTOP_PORT.md`](DESKTOP_PORT.md): closed studies of the Android/iOS and desktop ports.
-- [`specs/`](specs/) and [`historia/specs/`](historia/specs/): design specifications.
+- [`specs/`](specs/): design specifications of the current phases (the older ones were removed from the tree and remain in git history).
