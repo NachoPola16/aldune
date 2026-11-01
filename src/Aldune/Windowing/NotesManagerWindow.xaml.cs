@@ -56,6 +56,10 @@ public partial class NotesManagerWindow : Window
         _order = coordinator.NotesManagerOrder;
         LoadSortOptions();
         LoadStaleFilterOptions();
+        // The rows read "note colour only on the edge" when they are built: rebuild them if the look changes while the window is open.
+        Action onLookChanged = () => Dispatcher.BeginInvoke(new Action(LoadRows));
+        ThemeManager.Changed += onLookChanged;
+        Closed += (_, _) => ThemeManager.Changed -= onLookChanged;
 
         SourceInitialized += (_, _) =>
         {

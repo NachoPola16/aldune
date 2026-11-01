@@ -1900,7 +1900,9 @@ public partial class EdgeDockWindow : Window
             _viewLabelText = new TextBlock
             {
                 FontSize = 13, FontWeight = FontWeights.SemiBold, MaxWidth = 220, TextTrimming = TextTrimming.CharacterEllipsis,
-                VerticalAlignment = VerticalAlignment.Center
+                VerticalAlignment = VerticalAlignment.Center,
+                // Measured: the glyphs sat 1 px low (17 px of air above, 15 below); the line box has more room above the baseline than below.
+                Margin = new Thickness(0, 0, 0, 2)
             };
             _viewLabelText.SetResourceReference(TextBlock.ForegroundProperty, "AlduneTextStrongBrush");
             // The chevron only shows when the label is fixed: that is when it is a control (a click opens the view menu).

@@ -638,7 +638,7 @@
                          abrirlas ni cerrarlas de una en una. Ver AppCoordinator.ToggleAllNotes. -->
                     <Button x:Name="OpenAllButton" Click="OnOpenAllClick"
                             PreviewMouseRightButtonUp="OnOpenAllRightClick"
-                            Width="32" Height="32"
+                            Width="32" Height="32" Margin="1,0"
                             Style="{StaticResource CircularIconButtonStyle}"
                             ToolTip="{x:Static res:Strings.OpenAllNotesTooltip}"
                             AutomationProperties.Name="{x:Static res:Strings.OpenAllNotesTooltip}">
@@ -647,7 +647,7 @@
                     <Button x:Name="ManageArchiveButton" Click="OnManageArchiveClick"
                             PreviewMouseRightButtonUp="OnManageArchiveRightClick"
                             PreviewMouseWheel="OnManageArchiveWheel"
-                            Width="32" Height="32"
+                            Width="32" Height="32" Margin="1,0"
                             Style="{StaticResource CircularIconButtonStyle}"
                             ToolTip="{x:Static res:Strings.ManageNotesTooltip}"
                             AutomationProperties.Name="{x:Static res:Strings.ManageNotesTooltip}">
@@ -657,7 +657,7 @@
                     </Button>
                     <Button x:Name="SyncButton" Click="OnSyncClick"
                             PreviewMouseRightButtonUp="OnSyncRightClick"
-                            Width="32" Height="32"
+                            Width="32" Height="32" Margin="1,0"
                             Style="{StaticResource CircularIconButtonStyle}"
                             ToolTip="{x:Static res:Strings.SyncNowButton}"
                             AutomationProperties.Name="{x:Static res:Strings.SyncNowButton}">
@@ -668,7 +668,7 @@
                          con el extremo redondeado del pie). Los cuatro miden 40, así que el relleno es igual por todos los lados. -->
                     <Button x:Name="NewNoteButton" Click="OnNewNoteClick"
                             PreviewMouseRightButtonUp="OnNewNoteRightClick"
-                            Width="32" Height="32"
+                            Width="32" Height="32" Margin="1,0"
                             Background="{DynamicResource AlduneDockPrimaryBrush}" Foreground="{DynamicResource AlduneTextStrongBrush}"
                             Style="{StaticResource CircularIconButtonStyle}"
                             ToolTip="{x:Static res:Strings.NewNoteTooltip}"

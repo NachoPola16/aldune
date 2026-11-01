@@ -26,6 +26,10 @@
         <local:NoteRimConverter x:Key="NoteRimConverter" />
         <local:NoteDisplayColorConverter x:Key="NoteDisplayColorConverter" />
         <local:NoteLabelColorConverter x:Key="NoteLabelColorConverter" />
+        <local:ManagerRowFaceConverter x:Key="ManagerRowFaceConverter" />
+        <local:ManagerRowInkConverter x:Key="ManagerRowInkConverter" />
+        <local:ManagerRowRimConverter x:Key="ManagerRowRimConverter" />
+        <local:ManagerRowStripeVisibilityConverter x:Key="ManagerRowStripeVisibilityConverter" />
         <local:NoteSnippetConverter x:Key="NoteSnippetConverter" />
         <local:NoteDateConverter x:Key="NoteDateConverter" />
 
@@ -448,14 +452,14 @@
                              Checked="OnFilterChanged" Style="{StaticResource FilterToggleStyle}" />
                 <!-- The three filters beside the tabs wrap together as one row (tag, not-edited, manage tags), instead of splitting at any point. -->
                 <StackPanel Orientation="Horizontal">
-                <ComboBox x:Name="TagFilterBox" MinWidth="130" MinHeight="30" Margin="8,0,4,0"
+                <ComboBox x:Name="TagFilterBox" MinWidth="110" MinHeight="30" Margin="0,3,4,0"
                           ToolTip="{x:Static res:Strings.TagFilterTooltip}"
                           AutomationProperties.Name="{x:Static res:Strings.TagFilterTooltip}"
                           SelectionChanged="OnTagFilterChanged"
                            Style="{StaticResource TagFilterStyle}"
                            Visibility="Collapsed" />
                 <!-- Not edited in a week / month / 3 months / year: only a way to look at the list (select all and archive works on what it shows). -->
-                <ComboBox x:Name="StaleFilterBox" MinWidth="130" MinHeight="30" Margin="8,0,0,0"
+                <ComboBox x:Name="StaleFilterBox" MinWidth="200" MinHeight="30" Margin="0,3,0,0"
                           ToolTip="{x:Static res:Strings.StaleFilterTooltip}"
                           AutomationProperties.Name="{x:Static res:Strings.StaleFilterTooltip}"
                           SelectionChanged="OnStaleFilterChanged"
@@ -594,8 +598,8 @@
                             <!-- TextElement.Foreground, no Foreground a secas: Border no es un
                                  Control y no tiene esa propiedad, pero la adjunta sí se hereda por
                                  el árbol, que es lo que hace falta para tenir toda la fila. -->
-                            <Border Background="{Binding Note.Color, Converter={StaticResource NoteDisplayColorConverter}}"
-                                    TextElement.Foreground="{Binding Note.Color, Converter={StaticResource NoteLabelColorConverter}}"
+                            <Border Background="{Binding Note.Color, Converter={StaticResource ManagerRowFaceConverter}}"
+                                    TextElement.Foreground="{Binding Note.Color, Converter={StaticResource ManagerRowInkConverter}}"
                                     CornerRadius="{DynamicResource AlduneRadius8}" Margin="0,0,0,8" Padding="12,8"
                                     Cursor="Hand"
                                     Focusable="True"
@@ -608,7 +612,7 @@
                                     >
                                 <Border.Style>
                                     <Style TargetType="Border">
-                                        <Setter Property="BorderBrush" Value="{Binding Note.Color, Converter={StaticResource NoteRimConverter}}" />
+                                        <Setter Property="BorderBrush" Value="{Binding Note.Color, Converter={StaticResource ManagerRowRimConverter}}" />
                                         <Setter Property="BorderThickness" Value="1" />
                                         <Setter Property="Opacity" Value="0.96" />
                                         <Style.Triggers>
@@ -632,13 +636,19 @@
                                         <ColumnDefinition Width="*" />
                                     </Grid.ColumnDefinitions>
 
+                                    <!-- With "note colour only on the edge" the row keeps the app's surface and this is the colour: a stripe on the left, like the dock cards. -->
+                                    <Border Grid.ColumnSpan="2" HorizontalAlignment="Left" Width="4" Margin="-12,-8,0,-8" CornerRadius="7,0,0,7"
+                                            Background="{Binding Note.Color, Converter={StaticResource NoteDisplayColorConverter}}"
+                                            Visibility="{Binding Note.Color, Converter={StaticResource ManagerRowStripeVisibilityConverter}}"
+                                            IsHitTestVisible="False" />
+
                                     <!-- Sin chip de estado ("Archivada", "Papelera"): la lista solo
                                          enseña un estado a la vez (no hay vista "Todas"), así que
                                          repetía la pestaña y descolocaba la fila. -->
                                     <CheckBox Grid.Column="0"
                                               IsChecked="{Binding IsSelected, Mode=TwoWay}"
-                                              Foreground="{Binding Note.Color, Converter={StaticResource NoteLabelColorConverter}}"
-                                              Background="{Binding Note.Color, Converter={StaticResource NoteDisplayColorConverter}}"
+                                              Foreground="{Binding Note.Color, Converter={StaticResource ManagerRowInkConverter}}"
+                                              Background="{Binding Note.Color, Converter={StaticResource ManagerRowFaceConverter}}"
                                               Style="{StaticResource AppCheckBoxStyle}"
                                               PreviewMouseLeftButtonDown="OnRowCheckBoxPreviewMouseLeftButtonDown"
                                               VerticalAlignment="Center" Margin="0,0,12,0" />
@@ -666,7 +676,7 @@
                                                  tenue si la nota no está fijada y plena si lo está. -->
                                             <Button DockPanel.Dock="Left" Tag="{Binding}" Click="OnPinToTopClick"
                                                     Margin="-4,-2,3,-2" VerticalAlignment="Center"
-                                                    Foreground="{Binding Note.Color, Converter={StaticResource NoteLabelColorConverter}}"
+                                                    Foreground="{Binding Note.Color, Converter={StaticResource ManagerRowInkConverter}}"
                                                     ToolTip="{Binding Note.IsPinnedToTop, Converter={StaticResource PinToTopTextConverter}}"
                                                     AutomationProperties.Name="{Binding Note.IsPinnedToTop, Converter={StaticResource PinToTopTextConverter}}"
                                                     Style="{StaticResource TagChipsButtonStyle}">
@@ -706,7 +716,7 @@
                                         <Button Grid.Row="1" Grid.Column="1" Tag="{Binding}"
                                                 Click="OnEditTagsClick" Margin="10,1,-2,-2"
                                                 HorizontalAlignment="Right"
-                                                Foreground="{Binding Note.Color, Converter={StaticResource NoteLabelColorConverter}}"
+                                                Foreground="{Binding Note.Color, Converter={StaticResource ManagerRowInkConverter}}"
                                                 ToolTip="{x:Static res:Strings.EditTagsTooltip}"
                                                 AutomationProperties.Name="{x:Static res:Strings.EditTagsTooltip}"
                                                 Style="{StaticResource TagChipsButtonStyle}">
