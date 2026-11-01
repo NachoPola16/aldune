@@ -511,31 +511,13 @@
                                   Foreground="{DynamicResource AlduneTextBrush}" Background="{DynamicResource AlduneGroundBrush}" FontSize="{DynamicResource AlduneTextBody}"
                                   Style="{StaticResource SettingsSwitchStyle}" Margin="0,0,0,10"
                                   Click="OnNoteColorStripeToggled" />
-                        <CheckBox x:Name="SyncSignalCheck"
-                                  Content="{x:Static res:Strings.AppearanceSyncSignal}"
-                                  Foreground="{DynamicResource AlduneTextBrush}" Background="{DynamicResource AlduneGroundBrush}" FontSize="{DynamicResource AlduneTextBody}"
-                                  Style="{StaticResource SettingsSwitchStyle}" Margin="0,0,0,10"
-                                  Click="OnSyncSignalToggled" />
-                        <CheckBox x:Name="UniformColorCheck"
-                                  Content="{x:Static res:Strings.AppearanceUniformColor}"
-                                  Foreground="{DynamicResource AlduneTextBrush}" Background="{DynamicResource AlduneGroundBrush}" FontSize="{DynamicResource AlduneTextBody}"
-                                  Style="{StaticResource SettingsSwitchStyle}"
-                                  Click="OnUniformColorToggled" />
-                        <StackPanel Orientation="Horizontal" Margin="0,8,0,0">
-                            <Border x:Name="UniformColorSwatch" Width="22" Height="16" VerticalAlignment="Center"
-                                    BorderBrush="{DynamicResource AlduneBorderBrush}" BorderThickness="1" />
-                            <Button x:Name="UniformColorButton" Content="{x:Static res:Strings.AppearanceUniformColorPick}"
-                                    Click="OnPickUniformColorClick" Margin="8,0,0,0" Padding="12,7"
-                                    Style="{StaticResource RecordButtonStyle}" />
-                        </StackPanel>
-                        <StackPanel x:Name="UniformSwatches" Margin="0,8,0,0" />
-                        <TextBlock Text="{x:Static res:Strings.AppearanceUniformColorHint}"
-                                   Foreground="{DynamicResource AlduneHintBrush}" FontSize="{DynamicResource AlduneTextSmall}" TextWrapping="Wrap" Margin="0,6,56,0" />
                     </StackPanel>
                 </StackPanel>
                 <StackPanel x:Name="NotesPage" Visibility="Collapsed">
                     <TextBlock Text="{x:Static res:Strings.SettingsPageNotes}" Foreground="{DynamicResource AlduneTextStrongBrush}" FontSize="{DynamicResource AlduneTextPageTitle}" FontWeight="SemiBold" Margin="0,0,0,16" />
                     <StackPanel>
+                        <TextBlock Text="{x:Static res:Strings.NotesWindowsSectionTitle}"
+                                   Foreground="{DynamicResource AlduneTextBrush}" FontSize="{DynamicResource AlduneTextBody}" FontWeight="SemiBold" Margin="0,0,0,12" />
                         <CheckBox x:Name="RememberPositionsCheck"
                                   Content="{x:Static res:Strings.RememberPositionsCheckbox}"
                                   Foreground="{DynamicResource AlduneTextBrush}" Background="{DynamicResource AlduneGroundBrush}" FontSize="{DynamicResource AlduneTextBody}"
@@ -557,6 +539,8 @@
                     </StackPanel>
                     <Border Background="{DynamicResource AlduneRaisedBrush}" Height="1" Margin="0,20,0,0" />
                     <StackPanel Margin="0,20,0,0">
+                        <TextBlock Text="{x:Static res:Strings.NotesTasksSectionTitle}"
+                                   Foreground="{DynamicResource AlduneTextBrush}" FontSize="{DynamicResource AlduneTextBody}" FontWeight="SemiBold" Margin="0,0,0,12" />
                         <CheckBox x:Name="LargeCheckboxesCheck"
                                   Content="{x:Static res:Strings.LargeCheckboxesCheckbox}"
                                   Foreground="{DynamicResource AlduneTextBrush}" Background="{DynamicResource AlduneGroundBrush}" FontSize="{DynamicResource AlduneTextBody}"
@@ -606,6 +590,31 @@
                                   Style="{StaticResource SettingsSwitchStyle}"
                                   Click="OnReminderIncludesTasksToggled" />
                         <TextBlock Text="{x:Static res:Strings.ReminderIncludeTasksHint}"
+                                   Foreground="{DynamicResource AlduneHintBrush}" FontSize="{DynamicResource AlduneTextSmall}" TextWrapping="Wrap" Margin="0,6,56,0" />
+                    </StackPanel>
+                    <Border Background="{DynamicResource AlduneRaisedBrush}" Height="1" Margin="0,20,0,0" />
+                    <StackPanel Margin="0,20,0,0">
+                        <TextBlock Text="{x:Static res:Strings.NotesLookSectionTitle}"
+                                   Foreground="{DynamicResource AlduneTextBrush}" FontSize="{DynamicResource AlduneTextBody}" FontWeight="SemiBold" Margin="0,0,0,12" />
+                        <CheckBox x:Name="SyncSignalCheck"
+                                  Content="{x:Static res:Strings.AppearanceSyncSignal}"
+                                  Foreground="{DynamicResource AlduneTextBrush}" Background="{DynamicResource AlduneGroundBrush}" FontSize="{DynamicResource AlduneTextBody}"
+                                  Style="{StaticResource SettingsSwitchStyle}" Margin="0,0,0,10"
+                                  Click="OnSyncSignalToggled" />
+                        <CheckBox x:Name="UniformColorCheck"
+                                  Content="{x:Static res:Strings.AppearanceUniformColor}"
+                                  Foreground="{DynamicResource AlduneTextBrush}" Background="{DynamicResource AlduneGroundBrush}" FontSize="{DynamicResource AlduneTextBody}"
+                                  Style="{StaticResource SettingsSwitchStyle}"
+                                  Click="OnUniformColorToggled" />
+                        <StackPanel Orientation="Horizontal" Margin="0,8,0,0">
+                            <Border x:Name="UniformColorSwatch" Width="22" Height="16" VerticalAlignment="Center"
+                                    BorderBrush="{DynamicResource AlduneBorderBrush}" BorderThickness="1" />
+                            <Button x:Name="UniformColorButton" Content="{x:Static res:Strings.AppearanceUniformColorPick}"
+                                    Click="OnPickUniformColorClick" Margin="8,0,0,0" Padding="12,7"
+                                    Style="{StaticResource RecordButtonStyle}" />
+                        </StackPanel>
+                        <StackPanel x:Name="UniformSwatches" Margin="0,8,0,0" />
+                        <TextBlock Text="{x:Static res:Strings.AppearanceUniformColorHint}"
                                    Foreground="{DynamicResource AlduneHintBrush}" FontSize="{DynamicResource AlduneTextSmall}" TextWrapping="Wrap" Margin="0,6,56,0" />
                     </StackPanel>
                     <Border Background="{DynamicResource AlduneRaisedBrush}" Height="1" Margin="0,20,0,0" />

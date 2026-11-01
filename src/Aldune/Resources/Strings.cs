@@ -1565,6 +1565,9 @@ public static class Strings
         $"Usar também o tema de notas “{theme}”?", $"Usare anche il tema di note “{theme}”?", $"ノートのテーマ「{theme}」も使いますか？", $"是否也使用“{theme}”笔记主题？");
     public static string AppearanceSystem => T("Same as Windows", "Como Windows",
         "Wie Windows", "Comme Windows", "Como Windows", "Come Windows", "Windows と同じ", "与 Windows 相同");
+    public static string NotesWindowsSectionTitle => T("Windows", "Ventanas", "Fenster", "Fenêtres", "Janelas", "Finestre", "ウィンドウ", "窗口");
+    public static string NotesTasksSectionTitle => T("Tasks", "Tareas", "Aufgaben", "Tâches", "Tarefas", "Attività", "タスク", "任务");
+    public static string NotesLookSectionTitle => T("Look", "Aspecto", "Darstellung", "Apparence", "Aparência", "Aspetto", "表示", "外观");
     public static string AppearanceUniformColor => T("Same color for every note", "Mismo color en todas las notas",
         "Gleiche Farbe für alle Notizen", "Même couleur pour toutes les notes", "Mesma cor em todas as notas", "Stesso colore per tutte le note", "すべてのノートを同じ色にする", "所有笔记使用同一颜色");
     public static string AppearanceUniformColorHint => T("Only changes how they look: each note keeps its own color.",
