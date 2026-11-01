@@ -1,4 +1,4 @@
-using System.Net.Http;
+﻿using System.Net.Http;
 using System.Windows;
 using System.Windows.Input;
 using System.Windows.Interop;
@@ -94,8 +94,18 @@ internal partial class InviteWindow : Window
         // Tras crear la invitación, el botón principal copia el texto.
         if (_created)
         {
-            Clipboard.SetText(ResultBox.Text);
-            ShowStatus(Strings.InviteCopied, error: false);
+            // The clipboard can be locked by another program (COMException); that must not reach the global crash notice.
+            try
+            {
+                Clipboard.SetText(ResultBox.Text);
+                ShowStatus(Strings.InviteCopied, error: false);
+            }
+            catch (System.Runtime.InteropServices.COMException)
+            {
+                // Nothing to report: the text stays selected in the box for copying by hand.
+                ResultBox.SelectAll();
+                ResultBox.Focus();
+            }
             return;
         }
 
@@ -129,6 +139,7 @@ internal partial class InviteWindow : Window
             return;
         }
 
+        if (!ConfirmCleartext(_serverUrl)) return;
         var text = await SyncInviteClient.CreateAsync(Http, _serverUrl, AdminInput.Password, LabelInput.Text);
         ResultBox.Text = text;
         ResultPanel.Visibility = Visibility.Visible;
@@ -148,10 +159,19 @@ internal partial class InviteWindow : Window
             return;
         }
 
+        if (!ConfirmCleartext(url)) return;
         var token = await SyncInviteClient.RedeemAsync(Http, url, code);
         _join!(url, token);
         Joined = true;
         Close();
+    }
+
+    /// <summary>The admin token and the one-use code travel with these calls: over plain http outside the home network the person must say so explicitly.</summary>
+    private bool ConfirmCleartext(string url)
+    {
+        if (!CleartextUrl.IsOutsideLan(url)) return true;
+        return AppDialog.Show(this, Strings.SyncInsecureUrlWarning + "\n\n" + Strings.SyncInsecureContinue, Title,
+            MessageBoxButton.YesNo, MessageBoxImage.Warning, MessageBoxResult.No) == MessageBoxResult.Yes;
     }
 
     private void ShowStatus(string text, bool error)

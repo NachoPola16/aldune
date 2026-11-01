@@ -732,6 +732,7 @@ public static class Strings
         "Älteste zuerst", "Les plus anciens d'abord", "Mais antigas primeiro", "Prima le più vecchie", "古い順", "最早的在前");
     public static string SortTitle => T("Title (A–Z)", "Título (A-Z)",
         "Titel (A–Z)", "Titre (A–Z)", "Título (A–Z)", "Titolo (A–Z)", "タイトル順 (A–Z)", "标题 (A–Z)");
+    public static string SyncInsecureContinue => T("Continue anyway?", "¿Continuar de todos modos?", "Trotzdem fortfahren?", "Continuer quand même ?", "Continuar mesmo assim?", "Continuare comunque?", "このまま続けますか？", "仍要继续吗？");
     public static string SyncInsecureUrlWarning => T(
         "This address uses http:// outside your local network: your notes stay encrypted, but the access token or password travels unprotected. Use https://.",
         "Esta dirección usa http:// fuera de tu red local: las notas siguen cifradas, pero el token o la contraseña viajan sin protección. Usa https://.",

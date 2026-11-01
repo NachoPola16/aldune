@@ -1,4 +1,4 @@
-using System.Net.Http.Headers;
+﻿using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using System.Text;
 using System.Text.Json;
@@ -85,7 +85,9 @@ public static class SyncInviteClient
 
         if (!response.IsSuccessStatusCode) throw new InviteException(InviteFailure.Server);
         var body = await response.Content.ReadFromJsonAsync<JsonElement>(ct);
-        return body.GetProperty("token").GetString()!;
+        // A reply without a token is a server fault, not a crash (the Android client rejects it the same way).
+        var token = body.ValueKind == JsonValueKind.Object && body.TryGetProperty("token", out var value) ? value.GetString() : null;
+        return string.IsNullOrEmpty(token) ? throw new InviteException(InviteFailure.Server) : token;
     }
 
     /// <summary>Owner side: the spaces created from invitations (the ones the admin token can revoke). Env-configured spaces are not listed.</summary>

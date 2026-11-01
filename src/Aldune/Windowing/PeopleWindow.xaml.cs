@@ -1,4 +1,4 @@
-using System.Net.Http;
+﻿using System.Net.Http;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
@@ -66,6 +66,7 @@ internal partial class PeopleWindow : Window
             return;
         }
 
+        if (!ConfirmCleartext(_serverUrl)) return;
         _busy = true;
         ShowButton.IsEnabled = false;
         StatusText.Visibility = Visibility.Collapsed;
@@ -126,6 +127,14 @@ internal partial class PeopleWindow : Window
             row.Children.Add(revoke);
             ListPanel.Children.Add(row);
         }
+    }
+
+    /// <summary>The admin token and the one-use code travel with these calls: over plain http outside the home network the person must say so explicitly.</summary>
+    private bool ConfirmCleartext(string url)
+    {
+        if (!CleartextUrl.IsOutsideLan(url)) return true;
+        return AppDialog.Show(this, Strings.SyncInsecureUrlWarning + "\n\n" + Strings.SyncInsecureContinue, Title,
+            MessageBoxButton.YesNo, MessageBoxImage.Warning, MessageBoxResult.No) == MessageBoxResult.Yes;
     }
 
     private async Task RevokeAsync(SyncSpaceInfo space, string name)
