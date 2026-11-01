@@ -236,7 +236,10 @@ class SyncController(
         try {
             val local = access.read()
             val localHash = LookSync.hash(local)
-            val remote = transport.readLook()?.let { LookSync.open(key, it) }
+            val blob = transport.readLook()
+            val remote = blob?.let { LookSync.open(key, it) }
+            // A document that exists but does not open (another key, damage) is not ours to replace: leave it and wait.
+            if (blob != null && remote == null) return
             val lastStamp = profile.lookStampMs.takeIf { it > 0 }?.let(Instant::ofEpochMilli)
             when (LookSync.decide(localHash, profile.lookHash, lastStamp, remote?.stamp)) {
                 LookAction.PUSH -> {

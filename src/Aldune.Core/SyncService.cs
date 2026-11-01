@@ -856,6 +856,8 @@ public sealed class SyncService
             var localHash = SyncLook.Hash(target);
             var blob = store.ReadLook();
             var remote = blob is null ? null : SyncLook.Open(key, blob);
+            // A document that exists but does not open (another key, damage) is not ours to replace: leave it and wait.
+            if (blob is not null && remote is null) return;
             switch (SyncLook.Decide(localHash, profile.LookHash, profile.LookStamp, remote?.Stamp))
             {
                 case LookAction.Push:

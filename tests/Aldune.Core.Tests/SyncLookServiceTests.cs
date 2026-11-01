@@ -1,4 +1,4 @@
-using System.Net;
+﻿using System.Net;
 using Aldune.Core;
 
 namespace Aldune.Core.Tests;
@@ -148,6 +148,21 @@ public sealed class SyncLookServiceTests : IDisposable
         var result = a.Sync.Synchronize();
 
         Assert.True(result.Succeeded, result.Error);
+    }
+
+    [Fact]
+    public void ALookDocumentThatCannotBeOpenedIsNeverOverwritten()
+    {
+        // Sealed with another key (or damaged): it is not ours to replace, even though this device has a change to push.
+        var unreadable = new byte[] { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28 };
+        _look = unreadable;
+        var a = NewDevice("a", syncLook: true);
+        a.Settings.Appearance = Other(a.Settings.Appearance);
+
+        var result = a.Sync.Synchronize();
+
+        Assert.True(result.Succeeded, result.Error);
+        Assert.Equal(unreadable, _look);
     }
 
     [Fact]
