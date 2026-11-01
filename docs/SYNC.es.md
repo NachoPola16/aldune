@@ -422,6 +422,21 @@ deja de escribir en el antiguo, copia su carpeta `objects` a `/data/spaces/<nomb
 Después apunta la dirección antigua al servidor principal (o pide a la persona que cambie la URL en Ajustes → Sync). **Solo puede cambiar la URL**: el token y la clave de sync siguen igual, porque el token por sí solo decide el almacén.
 Conserva el contenedor antiguo parado, no borrado, unos días por si hace falta comparar.
 
+### Invitaciones: cada persona consigue su espacio desde la app
+
+En lugar de editar `ALDUNE_SYNC_SPACES` por cada persona, quien aloja el servidor puede dejarla entrar con un código de un solo uso. Define un **token de administrador** (un valor largo y aleatorio que no sea ningún token de almacén) y recrea el contenedor:
+
+```dotenv
+ALDUNE_SYNC_ADMIN_TOKEN=otro-valor-largo-y-aleatorio
+ALDUNE_SYNC_MAX_SPACES=20
+```
+
+- El propietario crea un código con `POST /admin/v1/invites` (cabecera `Authorization: Bearer <token de administrador>`, JSON opcional `{"label":"mi hermano","expiresInHours":168}`). Un código funciona **una sola vez** y caduca (7 días por defecto, 30 como máximo).
+- La persona invitada lo envía a `POST /invites/v1/redeem` (`{"code":"…"}`) y recibe un **token nuevo** para un **espacio nuevo** (`/data/spaces/u-xxxxxxxx/objects`). La clave de sync se genera en el dispositivo de la persona; el servidor nunca la ve.
+- `GET /admin/v1/spaces` los lista y `DELETE /admin/v1/spaces/<nombre>` revoca uno: su token deja de valer y sus ficheros se quedan en disco hasta que los borres.
+- El token de administrador solo crea códigos y revoca espacios: **no** abre ningún almacén. Ni los códigos ni los tokens se guardan en claro (solo su hash, en `/data/registry.json`). Un código erróneo o un token de administrador erróneo cuentan en el mismo límite de fallos por dirección que un token de almacén erróneo.
+- Sin `ALDUNE_SYNC_ADMIN_TOKEN` estas rutas no existen (404). Están fuera de `/api`, así que un proxy que reenvía todo ya las sirve.
+
 ### Perfiles de sincronización
 
 Puedes crear varios perfiles desde Ajustes. Cada perfil mantiene su transporte, servidor o carpeta,

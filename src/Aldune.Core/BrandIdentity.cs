@@ -56,6 +56,12 @@ public static class BrandIdentity
     /// <summary>Server only: `name=token,name2=token2`, one separate store per token (see SyncSpaces).</summary>
     public const string SyncSpacesEnvVar = "ALDUNE_SYNC_SPACES";
 
+    /// <summary>Server only: lets the owner create invitations (see SyncRegistry). Never opens a store: it can only create and revoke spaces.</summary>
+    public const string SyncAdminTokenEnvVar = "ALDUNE_SYNC_ADMIN_TOKEN";
+
+    /// <summary>Server only: the most spaces that invitations can create (default 20).</summary>
+    public const string SyncMaxSpacesEnvVar = "ALDUNE_SYNC_MAX_SPACES";
+
     public const string SyncPortEnvVar = "ALDUNE_SYNC_PORT";
 
     public const string SyncDataDirEnvVar = "ALDUNE_DATA_DIR";

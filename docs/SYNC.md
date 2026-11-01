@@ -423,6 +423,21 @@ stop writing to the old one, copy its `objects` folder to `/data/spaces/<name>/o
 Then point the old address at the main server (or ask the person to change the URL in Settings → Sync). **Only the URL can change**: the token and the sync key stay the same, because the token alone decides the store.
 Keep the old container stopped, not deleted, for a few days in case you need to compare.
 
+### Invitations: a person gets their own space from the app
+
+Instead of editing `ALDUNE_SYNC_SPACES` for every person, the owner can let them join with a one-use code. Set an **admin token** (a long random value that is not any store token) and recreate the container:
+
+```dotenv
+ALDUNE_SYNC_ADMIN_TOKEN=another-long-random-value
+ALDUNE_SYNC_MAX_SPACES=20
+```
+
+- The owner makes a code with `POST /admin/v1/invites` (header `Authorization: Bearer <admin token>`, optional JSON `{"label":"my brother","expiresInHours":168}`). A code works **once** and expires (7 days by default, 30 at most).
+- The guest sends it to `POST /invites/v1/redeem` (`{"code":"…"}`) and gets back a **new token** for a **new space** (`/data/spaces/u-xxxxxxxx/objects`). The sync key is generated on the guest's device; the server never sees it.
+- `GET /admin/v1/spaces` lists them and `DELETE /admin/v1/spaces/<name>` revokes one: its token stops working and its files stay on disk until you delete them.
+- The admin token can only make codes and revoke spaces: it opens **no** store. Neither codes nor tokens are kept in clear (only their hash, in `/data/registry.json`). Wrong codes and wrong admin tokens count against the same per-address failure limit as a wrong store token.
+- Without `ALDUNE_SYNC_ADMIN_TOKEN` these routes do not exist (404). They live outside `/api`, so a proxy that forwards everything already serves them.
+
 ### Sync profiles
 
 You can create several profiles from Settings. Each profile keeps its transport, server or folder,
