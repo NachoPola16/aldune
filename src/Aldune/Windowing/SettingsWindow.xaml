@@ -832,6 +832,12 @@
                                     Content="{x:Static res:Strings.SyncDeleteProfile}" Click="OnSyncDeleteProfileClick"
                                     Margin="6,0,0,0" Padding="8,5" Style="{StaticResource RecordButtonStyle}" />
                         </Grid>
+                        <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
+                            <Button x:Name="SyncJoinInviteButton" Content="{x:Static res:Strings.InviteJoinButton}" Click="OnSyncJoinInviteClick"
+                                    Padding="8,5" Style="{StaticResource RecordButtonStyle}" />
+                            <Button x:Name="SyncCreateInviteButton" Content="{x:Static res:Strings.InviteCreateButton}" Click="OnSyncCreateInviteClick"
+                                    Margin="6,0,0,0" Padding="8,5" Style="{StaticResource RecordButtonStyle}" />
+                        </StackPanel>
                         <Grid Margin="0,0,0,8">
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="Auto" />

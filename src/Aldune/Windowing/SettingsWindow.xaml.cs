@@ -1234,6 +1234,29 @@ public partial class SettingsWindow : Window
         _coordinator?.ConfigureAutomaticSync();
     }
 
+    /// <summary>«Tengo una invitación»: el código se canjea por el token de un espacio nuevo y se crea un perfil con una clave generada aquí.</summary>
+    private void OnSyncJoinInviteClick(object sender, RoutedEventArgs e)
+    {
+        if (!_syncUiReady || _syncService is null) return;
+        _settingsService.Save(_settings);
+        bool joined = InviteWindow.ShowJoin(this, (url, token) =>
+        {
+            _syncService.JoinWithInvitation(Strings.InviteProfileName, url, token);
+            _settingsService.Save(_settings);
+            return Strings.InviteProfileName;
+        });
+        if (!joined) return;
+        ReloadSyncProfileUi();
+        _coordinator?.ConfigureAutomaticSync();
+    }
+
+    /// <summary>«Invitar a alguien»: crea un código de un solo uso en el servidor de este perfil (hace falta su token de administrador).</summary>
+    private void OnSyncCreateInviteClick(object sender, RoutedEventArgs e)
+    {
+        if (!_syncUiReady) return;
+        InviteWindow.ShowCreate(this, SyncServerUrlBox.Text.Trim());
+    }
+
     private void OnSyncDeleteProfileClick(object sender, RoutedEventArgs e)
     {
         if (!_syncUiReady) return;

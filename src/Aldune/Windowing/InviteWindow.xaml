@@ -1,0 +1,81 @@
+<Window x:Class="Aldune.Windowing.InviteWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        x:ClassModifier="internal"
+        Width="440" SizeToContent="Height"
+        WindowStyle="None"
+        AllowsTransparency="False"
+        ResizeMode="NoResize"
+        ShowInTaskbar="False"
+        Topmost="True"
+        Background="{DynamicResource AlduneGroundBrush}"
+        PreviewKeyDown="OnWindowKeyDown"
+        SourceInitialized="OnSourceInitialized">
+    <WindowChrome.WindowChrome>
+        <WindowChrome CaptionHeight="34" ResizeBorderThickness="0" GlassFrameThickness="-1" CornerRadius="0" />
+    </WindowChrome.WindowChrome>
+    <Window.Resources>
+        <Style x:Key="FieldBorderStyle" TargetType="Border">
+            <Setter Property="Background" Value="{DynamicResource AlduneRaisedBrush}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource AlduneBorderSubtleBrush}" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="CornerRadius" Value="{DynamicResource AlduneRadius6}" />
+            <Setter Property="Margin" Value="0,4,0,0" />
+            <Style.Triggers>
+                <Trigger Property="IsKeyboardFocusWithin" Value="True">
+                    <Setter Property="BorderBrush" Value="{DynamicResource AlduneFieldFocusBrush}" />
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+        <Style x:Key="BareTextBoxStyle" TargetType="TextBox">
+            <Setter Property="Foreground" Value="{DynamicResource AlduneTextStrongBrush}" />
+            <Setter Property="CaretBrush" Value="{DynamicResource AlduneTextStrongBrush}" />
+            <Setter Property="SelectionBrush" Value="{DynamicResource AlduneSelectionBrush}" />
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="Padding" Value="9,7" />
+            <Setter Property="FontSize" Value="{DynamicResource AlduneTextBody}" />
+        </Style>
+    </Window.Resources>
+
+    <Border BorderBrush="{DynamicResource AlduneBorderSubtleBrush}" BorderThickness="1" Padding="20,18,20,16">
+        <StackPanel>
+            <TextBlock x:Name="TitleText" Foreground="{DynamicResource AlduneTextStrongBrush}" FontSize="{DynamicResource AlduneTextTitle}"
+                       FontWeight="SemiBold" TextWrapping="Wrap" />
+            <TextBlock x:Name="HintText" Foreground="{DynamicResource AlduneTextSoftBrush}" FontSize="{DynamicResource AlduneTextBody}"
+                       TextWrapping="Wrap" LineHeight="19" Margin="0,8,0,0" />
+
+            <!-- Unirse: lo pegado. Crear: el token de administrador, la etiqueta y, al terminar, el texto de la invitación. -->
+            <TextBlock x:Name="FirstLabel" Foreground="{DynamicResource AlduneTextBrush}" FontSize="{DynamicResource AlduneTextBody}" Margin="0,14,0,0" />
+            <Border Style="{StaticResource FieldBorderStyle}">
+                <Grid>
+                    <TextBox x:Name="FirstInput" Style="{StaticResource BareTextBoxStyle}" TextWrapping="Wrap" AcceptsReturn="False" MaxHeight="90" />
+                    <PasswordBox x:Name="AdminInput" Visibility="Collapsed" Background="Transparent" BorderThickness="0" Padding="9,7"
+                                 Foreground="{DynamicResource AlduneTextStrongBrush}" CaretBrush="{DynamicResource AlduneTextStrongBrush}"
+                                 FontSize="{DynamicResource AlduneTextBody}" />
+                </Grid>
+            </Border>
+
+            <StackPanel x:Name="LabelPanel" Visibility="Collapsed">
+                <TextBlock x:Name="SecondLabel" Foreground="{DynamicResource AlduneTextBrush}" FontSize="{DynamicResource AlduneTextBody}" Margin="0,12,0,0" />
+                <Border Style="{StaticResource FieldBorderStyle}">
+                    <TextBox x:Name="LabelInput" Style="{StaticResource BareTextBoxStyle}" MaxLength="60" />
+                </Border>
+            </StackPanel>
+
+            <StackPanel x:Name="ResultPanel" Visibility="Collapsed">
+                <Border Style="{StaticResource FieldBorderStyle}" Margin="0,14,0,0">
+                    <TextBox x:Name="ResultBox" Style="{StaticResource BareTextBoxStyle}" IsReadOnly="True" TextWrapping="Wrap" MaxHeight="90" />
+                </Border>
+            </StackPanel>
+
+            <TextBlock x:Name="StatusText" Foreground="{DynamicResource AlduneErrorTextBrush}" FontSize="{DynamicResource AlduneTextSmall}"
+                       TextWrapping="Wrap" Margin="0,10,0,0" Visibility="Collapsed" />
+
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,18,0,0">
+                <Button x:Name="CloseButton" MinWidth="84" Margin="8,0,0,0" Style="{StaticResource ColorDialogButtonStyle}" Click="OnCloseClick" />
+                <Button x:Name="ActionButton" MinWidth="84" Margin="8,0,0,0" IsDefault="True" Style="{StaticResource PrimaryColorDialogButtonStyle}" Click="OnActionClick" />
+            </StackPanel>
+        </StackPanel>
+    </Border>
+</Window>
