@@ -108,6 +108,7 @@ import androidx.compose.ui.unit.dp
 import app.aldune.R
 import app.aldune.domain.ReminderLabel
 import app.aldune.domain.NoteListItem
+import app.aldune.domain.RowKeys
 import app.aldune.domain.NoteState
 import app.aldune.text.AndroidReleaseUpdate
 import app.aldune.text.NoteChannels
@@ -336,8 +337,9 @@ fun NoteListPane(
                 }
                 // La fila que señala el widget (una protegida): se lleva a la vista.
                 val highlight by viewModel.highlight.collectAsStateWithLifecycle()
-                LaunchedEffect(highlight, order) {
-                    val index = order.indexOfFirst { it.id == highlight }
+                LaunchedEffect(highlight, entries) {
+                    // The index is in the rows actually drawn (headers and repeated notes included), not in `order`.
+                    val index = entries.indexOfFirst { it is ListEntry.Note && it.item.id == highlight }
                     if (highlight != null && index >= 0) listState.animateScrollToItem(index)
                 }
 
@@ -345,7 +347,7 @@ fun NoteListPane(
                 // surface the options of a note the user cannot see.
                 fun openMenuIfShown(item: NoteListItem) {
                     if (System.currentTimeMillis() < calmUntil) return
-                    if (listState.layoutInfo.visibleItemsInfo.any { it.key == item.id }) menuFor = item
+                    if (listState.layoutInfo.visibleItemsInfo.any { RowKeys.shows(it.key, item.id) }) menuFor = item
                 }
 
                 fun dragStart(id: String) {
@@ -1058,3 +1060,4 @@ private fun GroupHeader(header: ListEntry.Header, onToggle: () -> Unit) {
         }
     }
 }
+
