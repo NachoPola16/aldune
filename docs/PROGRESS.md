@@ -10,6 +10,27 @@ Aldune started at the end of August 2026 as a small idea: sticky notes that live
 
 The first screenshot uses Spanish sample notes because that is what the app was tested with at the time. Since then the dock got a quieter button bar, a text preview on each tab, pinned notes, tags and reminders on the tabs, and more than a dozen looks instead of one (the notebook looks are in the [README](../README.md#looks)).
 
+## The versions, one by one
+
+Every picture below was made by building that very release from its tag and rendering its real windows off-screen with the same sample notes (English text, no personal data), so what you see is what that version drew, not a mock-up. The dock is on the right edge with its fan open and one note is open beside it.
+
+| Version | What it looked like |
+|---|---|
+| **0.5.0**, 13 September, still called Fanote | ![Fanote 0.5.0: five coloured tabs with the same title and a dark button bar](images/progress-windows-0.5.0.png) |
+| **0.8.0**, 16 September | ![Aldune 0.8.0: tabs with the first line as title, a handwritten-style note header](images/progress-windows-0.8.0.png) |
+| **1.0.0**, 24 September | ![Aldune 1.0.0](images/progress-windows-1.0.0.png) |
+| **1.4.0**, 27 September | ![Aldune 1.4.0: each tab with a preview line and the task count](images/progress-windows-1.4.0.png) |
+| **1.7.18**, 27 October | ![Aldune 1.7.18: tabs with a second line, task progress and a quieter header](images/progress-windows-1.7.18.png) |
+| **2.7.2**, today | ![Aldune 2.7.2: a lighter button bar and the same tabs](images/progress-windows-2.7.2.png) |
+
+In 0.5.0 the five tabs all read "NEW NOTE" with these sample notes: the tabs did not take their title from the note text yet. By 0.8.0, three days later, they show the first line of each note.
+
+On Android the first release candidate, 1.0.0 and today (1.3.1, which starts in the new "Aldune" look on a fresh install):
+
+![Aldune for Android: 0.1.0-rc1 on 24 October, 1.0.0 on 29 October and 1.3.1 today](images/progress-android.png)
+
+The first candidate was a plain list with a colour stripe; 1.0.0 added full-colour cards, the sync notice and the welcome message; today there is a bottom search bar with the settings gear and a preview line under each title.
+
 ## At a glance
 
 | | Today |
@@ -17,8 +38,9 @@ The first screenshot uses Spanish sample notes because that is what the app was 
 | Platforms | Windows and Android (native Kotlin, not a wrapper) |
 | Sync | your own server, a shared folder or WebDAV / Nextcloud, end-to-end encrypted |
 | Languages | English, Spanish, German, French, Italian, Brazilian Portuguese, Japanese and Simplified Chinese (1.0.0 had English and Spanish) |
-| Looks | dark, light, pastel, midnight, XP, Telecom, Bash, Phosphor and six notebook looks (1.0.0 had a single dark look) |
-| Tasks | checklists with tick boxes, per-note rules for done tasks, progress on the tab and in the Android widget |
+| Looks | the brand look "Aldune" (the default on a new install), dark, light, pastel, midnight, Windows XP and 98, Telecom, Bash, Phosphor and six notebook looks (1.0.0 had a single dark look) |
+| Tasks | checklists with tick boxes, per-note rules for done tasks, progress on the tab and in the Android widget, where you can also tick them (2.7 / 1.3) |
+| Servers | one sync server can host several separate stores, one per person, with a single URL (server option `ALDUNE_SYNC_SPACES`) |
 | Links | `http://` and `https://` addresses in a note open with Ctrl+click (Windows, 2.4.0) |
 | Safety net | automatic backups, local version history per note, password-protected notes |
 
@@ -52,7 +74,11 @@ The app also started under another name. It was renamed Aldune on 13 September, 
 - **2.0 (29 October).** An optional visible name for protected notes, and the "definitive" polish round.
 - **2.1 (30 October).** The travel, field and graph-paper notebook looks, with paper under the text; paper-and-pen sounds; the same Settings layout on both platforms; a full accessibility pass (visible keyboard focus, keyboard-only dock with Ctrl+Alt+D).
 - **2.2 / Android 1.1 (31 October).** Pinned notes that sync, and a long list of details found by using the app.
-- **Next (2.3 / Android 1.2, in the tree).** A per-note rule for done tasks (so a shared shopping list is never emptied by another device), local version history, Android tag tools, the mouse wheel to switch dock views, a quieter button bar on the dock, and Italian, Japanese and Simplified Chinese.
+- **2.3–2.4 / Android 1.2 (31 October).** A per-note rule for done tasks (so a shared shopping list is never emptied by another device), local version history, Android tag tools, the mouse wheel to switch dock views, a quieter button bar on the dock, and Italian, Japanese and Simplified Chinese. 2.4 went through the whole list of small things found by using it every day.
+- **2.5–2.6 (31 October).** The view label above the notes (it says which tag, archive or trash the dock is showing) became a control you can click, fixed or only when you change view, and the dock rebuild stopped stalling on long lists.
+- **2.7.0 / Android 1.3.0 (31 October).** A "What's new" window once after an update, your own order for tags, safer links, and closing windows fading as one piece.
+- **2.7.1 / Android 1.3.1 (1 November).** The "Aldune" look, selecting several notes at once on Android, an update pop-up, swipes that need a deliberate pull, and a widget you can limit to one tag and tick tasks from.
+- **2.7.2 (Windows, 1 November).** The wheel skips empty views and you choose which of Archived, Trash and All it stops at; an empty view's label is centred on the button bar.
 
 ## Bugs that mattered, and what changed
 
@@ -67,6 +93,9 @@ These are the ones a person using Aldune could actually notice. None of them is 
 - **A pin that vanished on a key change (fixed before 2.2).** Re-keying a sync profile dropped optional fields such as the pin; now covered by a test.
 - **A task you could not tick (fixed in the 2.3 round).** A dash glued to the box (`☐-`) made the line stop being a task. Now a sign next to the box still counts, and the space behind it is protected.
 - **A dock that scrolled in jumps (fixed in the 2.3 round).** The mouse wheel moved a whole tab at a time and the middle-click autoscroll ran at an irregular rate; both are now smooth.
+- **The wheel stopping at empty views (fixed in 2.7.2).** In 2.7.1 the wheel always reached Archived, Trash and All even with nothing in them; now it skips what is empty and you can leave views out.
+- **Ticking the wrong task from the widget (guarded in 1.3.1).** The widget remembers where a task's box was in the note; if the note changed meanwhile (on another device, say), the tap is refused instead of ticking another task.
+- **"What's new" on Android 8 (fixed in 1.3.1).** The window asked for a version number that only exists from Android 9; it now works from Android 8, the oldest the app supports.
 
 ## How the look changed
 
@@ -74,6 +103,7 @@ These are the ones a person using Aldune could actually notice. None of them is 
 - **24 to 27 September:** note themes (Classic, Serene, Graphite and others, plus your own), then light, pastel and midnight looks for the app itself.
 - **October:** retro looks (XP, Telecom, Bash, Phosphor) and, on 26 October, the final three-note "A" logo, drawn from one generator so every format stays consistent.
 - **End of October:** the notebook looks with paper under the text, the footer bar of the dock getting quieter and smaller, and the manager's title bar getting more room.
+- **1 November:** "Windows XP, light" and "Windows 98, dark" got their proper names, and the brand look "Aldune" arrived: plum ink with the pink, cyan and yellow of the logo, now the default on a fresh install (an existing install keeps what it had).
 
 ## What keeps it trustworthy
 
@@ -84,4 +114,4 @@ These are the ones a person using Aldune could actually notice. None of them is 
 
 ## What is next
 
-See [`ROADMAP.md`](ROADMAP.md). The short version: publish the 2.3 / 1.2 round, find out from real users what is missing, and keep the data format stable so that every version installed keeps working with the others.
+See [`ROADMAP.md`](ROADMAP.md). The short version: find out from real users what is missing, host several people on one server without extra containers, and keep the data format stable so that every version installed keeps working with the others.
