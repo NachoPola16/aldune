@@ -245,6 +245,14 @@ public partial class EdgeDockWindow : Window
     /// <summary>El relleno del pie del dock: el mismo en los cuatro lados (y en los cuatro cantos del dock).</summary>
     private const double FooterPadding = 5;
 
+    /// <summary>The round bar's ends curve away from the first and last button, so with the same 5 px as above and below it looked tighter at the
+    /// sides; the round look gets 4 px more there, the square one keeps its even 5.</summary>
+    private void ApplyFooterPadding()
+    {
+        double side = ThemeManager.IsSquare ? FooterPadding : FooterPadding + 4;
+        FooterBorder.Padding = new Thickness(side, FooterPadding, side, FooterPadding);
+    }
+
     /// <summary>Separación entre los botones del pie: igual que el relleno, para que el ritmo sea el mismo en todos los sentidos (y el pie cabe en los docks laterales).</summary>
     private const double FooterButtonGap = 5;
 
@@ -415,7 +423,7 @@ public partial class EdgeDockWindow : Window
 
         FooterBorder.HorizontalAlignment = HorizontalAlignment.Center;
         FooterBorder.VerticalAlignment = top ? VerticalAlignment.Top : VerticalAlignment.Bottom;
-        FooterBorder.Padding = new Thickness(FooterPadding);
+        ApplyFooterPadding();
         // Visible gap of ~8 px between the button bar and the notes on the four edges (it was 16, then 24 before that). On top the first card
         // already carries 14 px of shadow headroom (TabShadowHeadroom), so the margin there is negative (-6); at the bottom and on the sides
         // the last card sits flush with its zone. EdgeGeometry.FooterLength follows (button 32 + margin 8 + padding 10 + shadow air).
@@ -998,6 +1006,7 @@ public partial class EdgeDockWindow : Window
         _lastView = view;
         _lastTagFilter = tagFilter;
         UpdateViewIndicator();
+        ApplyFooterPadding();
         var notes = view switch
         {
             DockViewKind.Archived => _repository.GetByState(NoteState.Archived),
