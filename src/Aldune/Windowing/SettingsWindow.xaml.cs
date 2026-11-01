@@ -1336,6 +1336,11 @@ public partial class SettingsWindow : Window
 
     private void LoadSyncProfileFields()
     {
+        // El nombre también es del perfil activo: sin esto, al cambiar de perfil la caja se quedaba con el del anterior y, al perder el foco,
+        // OnSyncProfileNameLostFocus le ponía ese nombre al perfil nuevo.
+        var activeName = SyncProfileStore.GetActive(_settings).Name;
+        SyncProfileNameBox.Text = activeName;
+        SyncProfileNameDisplayText.Text = activeName;
         SyncEnabledCheck.IsChecked = _settings.SyncEnabled;
         SyncAllNotesRadio.IsChecked = _settings.SyncScope == SyncScopeKind.AllNotes;
         SyncSelectedNotesRadio.IsChecked = _settings.SyncScope == SyncScopeKind.SelectedNotes;
