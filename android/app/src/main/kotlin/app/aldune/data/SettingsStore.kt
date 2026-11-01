@@ -75,6 +75,8 @@ data class AppSettings(
     val tagOrder: String = "",
     /** El color que cada etiqueta da a sus notas (`TagColors.encode`). Local: no viaja por la sync; lo que viaja es el color de cada nota. */
     val tagColors: String = "",
+    /** The tags that exist (`TagOrder.encode`), so one that loses its last note stays (empty) until it is deleted. Local, like on Windows, where tags are a table of their own. */
+    val knownTags: String = "",
     /** «#» delante de las etiquetas (por defecto sí, como en Windows); apagado, un icono pequeño de etiqueta. */
     val showTagHash: Boolean = true,
     /** Settings tabs as one row of emoji (the name of the open one is the heading below) instead of the grid of named chips. Android only; off by default. */
@@ -169,6 +171,7 @@ class SettingsStore(context: Context) {
             hideDoneTasks = prefs.getBoolean(HIDE_DONE_TASKS, d.hideDoneTasks),
             tagOrder = prefs.getString(TAG_ORDER, d.tagOrder) ?: d.tagOrder,
             tagColors = prefs.getString(TAG_COLORS, d.tagColors) ?: d.tagColors,
+            knownTags = prefs.getString(KNOWN_TAGS, d.knownTags) ?: d.knownTags,
             showTagHash = prefs.getBoolean(SHOW_TAG_HASH, d.showTagHash),
             compactSettingsTabs = prefs.getBoolean(COMPACT_SETTINGS_TABS, d.compactSettingsTabs),
             settingsTabsAtBottom = prefs.getBoolean(SETTINGS_TABS_AT_BOTTOM, d.settingsTabsAtBottom),
@@ -226,6 +229,7 @@ class SettingsStore(context: Context) {
             .putBoolean(HIDE_DONE_TASKS, settings.hideDoneTasks)
             .putString(TAG_ORDER, settings.tagOrder)
             .putString(TAG_COLORS, settings.tagColors)
+            .putString(KNOWN_TAGS, settings.knownTags)
             .putBoolean(SHOW_TAG_HASH, settings.showTagHash)
             .putBoolean(COMPACT_SETTINGS_TABS, settings.compactSettingsTabs)
             .putBoolean(SETTINGS_TABS_AT_BOTTOM, settings.settingsTabsAtBottom)
@@ -296,6 +300,7 @@ class SettingsStore(context: Context) {
         const val HIDE_DONE_TASKS = "hideDoneTasks"
         const val TAG_ORDER = "tagOrder"
         const val TAG_COLORS = "tagColors"
+        const val KNOWN_TAGS = "knownTags"
         const val SHOW_TAG_HASH = "showTagHash"
         const val COMPACT_SETTINGS_TABS = "compactSettingsTabs"
         const val SETTINGS_TABS_AT_BOTTOM = "settingsTabsAtBottom"

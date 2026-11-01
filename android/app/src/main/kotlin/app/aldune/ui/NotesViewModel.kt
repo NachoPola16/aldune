@@ -465,7 +465,10 @@ class NotesViewModel(application: Application) : AndroidViewModel(application) {
             st.copy(tagColors = TagColors.encode(colours), tagOrder = TagOrder.encode(order))
         }
         if (_state.value.let { it is UiState.Ready && it.tag.equals(from, ignoreCase = true) }) setTag(name)
-        change { it.renameTag(from, name) }
+        change {
+            it.renameTag(from, name)
+            updateSettings { st -> st.copy(knownTags = TagOrder.encode(TagOrder.decode(st.knownTags).map { t -> if (t.equals(from, ignoreCase = true)) name else t })) }
+        }
     }
 
     /** Deletes a tag: it is taken off its notes, or (with [withNotes]) its notes go to the trash, where they can be restored. */
@@ -477,7 +480,11 @@ class NotesViewModel(application: Application) : AndroidViewModel(application) {
             )
         }
         if (_state.value.let { it is UiState.Ready && it.tag.equals(tag, ignoreCase = true) }) setTag(null)
-        change { if (withNotes) it.trashNotesWithTag(tag) else it.removeTag(tag) }
+        change {
+            if (withNotes) it.trashNotesWithTag(tag) else it.removeTag(tag)
+            // Forgotten only now, once no note carries it: a refresh in between would have remembered it again.
+            updateSettings { st -> st.copy(knownTags = TagOrder.encode(TagOrder.decode(st.knownTags).filterNot { t -> t.equals(tag, ignoreCase = true) })) }
+        }
     }
 
     /** Sets or removes (null) the colour of a tag. Setting one paints the notes that carry it; removing it leaves them as they are. */
@@ -976,7 +983,15 @@ class NotesViewModel(application: Application) : AndroidViewModel(application) {
         val order = NoteListOrder.fromCode(_settings.value.listOrder)
         val items = NoteListing.sort(notes.list(current.filter, current.query, current.tag), order).map { NoteListItem.from(it, placeholder, protectedTitle) }
         val counts = NoteState.entries.associateWith { notes.list(it).size }
-        val tags = notes.list(current.filter).flatMap { it.tags }.distinctBy { it.lowercase() }.let { TagOrder.apply(it, TagOrder.decode(_settings.value.tagOrder)) }
+        // The tags that exist: the ones on the notes plus the ones remembered. A tag whose last note moved elsewhere stays, empty, until it is
+        // deleted on purpose (as on Windows); the active view is the one that lists them all, the others only list what they hold.
+        val known = TagOrder.decode(_settings.value.knownTags)
+        val knownKeys = known.map { it.lowercase() }.toHashSet()
+        val inUse = (notes.list(NoteState.ACTIVE) + notes.list(NoteState.ARCHIVED)).flatMap { it.tags }.distinctBy { it.lowercase() }
+        val fresh = inUse.filter { it.lowercase() !in knownKeys }
+        if (fresh.isNotEmpty()) updateSettings { st -> st.copy(knownTags = TagOrder.encode((TagOrder.decode(st.knownTags) + fresh).distinctBy { it.lowercase() })) }
+        val shownTags = notes.list(current.filter).flatMap { it.tags } + if (current.filter == NoteState.ACTIVE) known + fresh else emptyList()
+        val tags = shownTags.distinctBy { it.lowercase() }.let { TagOrder.apply(it, TagOrder.decode(_settings.value.tagOrder)) }
         val orphans = ready?.conflicts?.orphans().orEmpty().mapNotNull { conflict ->
             val note = conflict.losing.note ?: return@mapNotNull null
             val title = if (note.isProtected) ProtectedTitleRules.visible(true, note.protectedTitle) ?: protectedTitle else NoteTitleHelper.getTitle(LineEnding.normalize(note.text), placeholder)

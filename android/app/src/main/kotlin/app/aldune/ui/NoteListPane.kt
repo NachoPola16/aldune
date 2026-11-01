@@ -351,6 +351,9 @@ fun NoteListPane(
                 var dragRowKey by remember { mutableStateOf<String?>(null) }
                 // The group (tag) the dragged note is over when it is not its own: letting go there moves the note to that tag.
                 var dropGroup by remember { mutableStateOf<String?>(null) }
+                // Where in that group it was let go: over a note of it (and in which half), or over its header (the top).
+                var dropOnId by remember { mutableStateOf<String?>(null) }
+                var dropBelow by remember { mutableStateOf(false) }
                 var dragDelta by remember { mutableFloatStateOf(0f) }
                 var dragStartIds by remember { mutableStateOf<List<String>>(emptyList()) }
                 // Mientras se arrastra manda el orden local; fuera del arrastre, el de la base.
@@ -376,11 +379,23 @@ fun NoteListPane(
                 val entries = remember(order, grouped, collapsed, groupOrder, tagDrag != null, tagDragOrder) {
                     if (!grouped) order.map<NoteListItem, ListEntry> { ListEntry.Note(it, it.id) }
                     else buildList<ListEntry> {
-                        for (group in TagGrouping.group(order, tagDragOrder ?: groupOrder) { it.tags }) {
-                            val groupKey = group.tag?.lowercase() ?: TagGrouping.UNTAGGED
+                        val sequence = tagDragOrder ?: groupOrder
+                        val groups = TagGrouping.group(order, sequence) { it.tags }
+                        val byKey = groups.associateBy { it.tag?.lowercase() ?: TagGrouping.UNTAGGED }
+                        // Every tag has its group, in the order of the tags, an empty one too (a note can be dropped on it); a group the order does not
+                        // know yet goes last, so no note is ever hidden.
+                        val all = (sequence.map { it.lowercase() } + byKey.keys).distinct()
+                        // An empty tag goes to the end by itself, below every group that has notes, so it does not take room up in the list; while the
+                        // tags are being dragged they keep their own order, which is the one the drag works on.
+                        val keys = if (tagDrag != null) all else all.filter { it in byKey } + all.filter { it !in byKey }
+                        for (groupKey in keys) {
+                            val group = byKey[groupKey]
+                            if (group == null && groupKey == TagGrouping.UNTAGGED) continue
+                            val title = group?.tag ?: if (groupKey == TagGrouping.UNTAGGED) untaggedLabel else sequence.first { it.lowercase() == groupKey }
+                            val items = group?.items.orEmpty()
                             val open = groupKey !in collapsed && tagDrag == null
-                            add(ListEntry.Header(group.tag ?: untaggedLabel, groupKey, group.items.size, open))
-                            if (open) for (note in group.items) add(ListEntry.Note(note, "$groupKey/${note.id}"))
+                            add(ListEntry.Header(title, groupKey, items.size, open))
+                            if (open) for (note in items) add(ListEntry.Note(note, "$groupKey/${note.id}"))
                         }
                     }
                 }
@@ -459,10 +474,14 @@ fun NoteListPane(
                     val visible = listState.layoutInfo.visibleItemsInfo
                     val me = visible.firstOrNull { it.key == rowKey } ?: return
                     val center = me.offset + me.size / 2f + dragDelta
-                    val under = visible.firstOrNull { it.key != rowKey && center >= it.offset && center <= it.offset + it.size }?.key as? String
-                    if (under == null) { dropGroup = null; return }
-                    val group = if (entries.any { it is ListEntry.Header && it.key == under }) under else under.substringBeforeLast('/')
+                    val underInfo = visible.firstOrNull { it.key != rowKey && center >= it.offset && center <= it.offset + it.size }
+                    val under = underInfo?.key as? String
+                    if (underInfo == null || under == null) { dropGroup = null; return }
+                    val onHeader = entries.any { it is ListEntry.Header && it.key == under }
+                    val group = if (onHeader) under else under.substringBeforeLast('/')
                     dropGroup = group.takeIf { it != own }
+                    dropOnId = if (onHeader) null else under.substringAfterLast('/')
+                    dropBelow = !onHeader && center > underInfo.offset + underInfo.size / 2f
                 }
 
                 fun swapTagUnderDrag() {
@@ -541,6 +560,8 @@ fun NoteListPane(
                     val nowGroup = order.filter { it.pinnedToTop == pinned }.map { it.id }
                     val plan = ReorderPlan.neighbours(startGroup, startGroup.indexOf(id), nowGroup.indexOf(id))
                     val target = dropGroup
+                    val onId = dropOnId
+                    val below = dropBelow
                     val fromGroup = dragRowKey?.removeSuffix("/$id")
                     draggedId = null
                     dragRowKey = null
@@ -552,8 +573,30 @@ fun NoteListPane(
                             if (group == TagGrouping.UNTAGGED) null else entries.firstNotNullOfOrNull { (it as? ListEntry.Header)?.takeIf { h -> h.key == group }?.title }
                         val from = tagOf(fromGroup)
                         val to = tagOf(target)
-                        order = state.items
+                        // Its place in the other tag: where it was let go (over a note: before or after it by the half; over the header: first).
+                        val inTarget = order.filter { n -> n.id != id && (if (to == null) n.tags.isEmpty() else n.tags.any { t -> t.equals(to, ignoreCase = true) }) }.map { n -> n.id }
+                        val at = if (onId == null) 0 else (inTarget.indexOf(onId).takeIf { it >= 0 } ?: inTarget.size).let { if (below) it + 1 else it }
+                        val beforeId = inTarget.getOrNull(at - 1)
+                        val afterId = inTarget.getOrNull(at)
+                        // The note shows in its new group at once: waiting for the saved list, it jumped back to its old place for a frame.
+                        order = order.map { n ->
+                            if (n.id != id) n else {
+                                val kept = n.tags.filterNot { t -> from != null && t.equals(from, ignoreCase = true) }
+                                n.copy(tags = if (to != null && kept.none { t -> t.equals(to, ignoreCase = true) }) kept + to else kept)
+                            }
+                        }
+                        if (beforeId != null || afterId != null) {
+                            val moved = order.first { n -> n.id == id }
+                            val without = order.filter { n -> n.id != id }
+                            val index = if (afterId != null) without.indexOfFirst { n -> n.id == afterId } else without.indexOfFirst { n -> n.id == beforeId } + 1
+                            order = without.toMutableList().apply { add(index, moved) }
+                        }
+                        // The list keeps its place by the key of its first visible row; if that row is the header of the tag that just emptied
+                        // (it goes to the end), the list would follow it all the way down. Asking for the same place before the change is
+                        // laid out keeps the view where it was, with no frame in between.
+                        listState.requestScrollToItem(listState.firstVisibleItemIndex, listState.firstVisibleItemScrollOffset)
                         viewModel.moveNoteToTag(id, from, to)
+                        if (beforeId != null || afterId != null) viewModel.moveNote(id, beforeId, afterId)
                         val shownTo = to ?: untaggedLabel
                         announce(String.format(movedTagTpl, shownTo)) { viewModel.moveNoteToTag(id, to, from) }
                     } else if (plan != null) viewModel.moveNote(id, plan.before, plan.after) else order = state.items
