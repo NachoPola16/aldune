@@ -23,6 +23,11 @@ data class SyncProfile(
     val scope: SyncScope,
     val profileName: String?,
     val deviceId: String,
+    /** Sync the look (appearance and colours) through this profile: off by default (docs/specs/2026-11-01-sync-look-design.md). Server profiles only. */
+    val syncLook: Boolean = false,
+    /** Hash of this device's look when it last pushed or pulled, and the stamp of that document (ms since 1970; 0 = never). */
+    val lookHash: String? = null,
+    val lookStampMs: Long = 0L,
 )
 
 /**
@@ -131,7 +136,8 @@ class SyncProfileStore(context: Context) {
     }
 
     private fun toJson(profile: SyncProfile): JSONObject = JSONObject().put("id", profile.id).put("transport", profile.transport.name)
-        .put("url", profile.url).put("name", profile.profileName ?: JSONObject.NULL).apply {
+        .put("url", profile.url).put("name", profile.profileName ?: JSONObject.NULL)
+        .put("syncLook", profile.syncLook).put("lookHash", profile.lookHash ?: JSONObject.NULL).put("lookStamp", profile.lookStampMs).apply {
             when (val scope = profile.scope) {
                 SyncScope.All -> put("scope", ProfileCodes.SCOPE_ALL)
                 is SyncScope.SelectedNotes -> put("scope", ProfileCodes.SCOPE_CHOSEN).put("noteIds", scope.noteIds.joinToString(","))
@@ -146,7 +152,10 @@ class SyncProfileStore(context: Context) {
             ProfileCodes.SCOPE_TAG -> SyncScope.Tag(if (o.isNull("tag")) null else o.optString("tag"))
             else -> SyncScope.All
         }
-        return SyncProfile(o.getString("id"), transport, o.getString("url"), scope, if (o.isNull("name")) null else o.optString("name"), deviceId)
+        return SyncProfile(
+            o.getString("id"), transport, o.getString("url"), scope, if (o.isNull("name")) null else o.optString("name"), deviceId,
+            syncLook = o.optBoolean("syncLook", false), lookHash = if (o.isNull("lookHash")) null else o.optString("lookHash"), lookStampMs = o.optLong("lookStamp", 0L),
+        )
     }
 
     private fun statusKey(profileId: String, suffix: String) = "status.$profileId.$suffix"

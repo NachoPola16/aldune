@@ -6,6 +6,9 @@ import app.aldune.data.AndroidKeystoreKeyWrapper
 import app.aldune.data.RoomLocalSyncStore
 import app.aldune.data.RoomConflictStore
 import app.aldune.data.RoomNoteStore
+import app.aldune.data.LookMapping
+import app.aldune.data.SettingsStore
+import app.aldune.syncing.LookAccess
 import app.aldune.data.RoomReminderStore
 import app.aldune.data.RoomVersionStore
 import app.aldune.data.SyncProfileStore
@@ -94,7 +97,13 @@ class AppContainer(context: Context) {
             // Un solo historial para el servicio de notas y para la sync (la sync guarda lo que va a pisar).
             val history = NoteHistory(RoomVersionStore(database, cipher))
             val storeFor = { profileId: String -> RoomLocalSyncStore(database, store, cipher, profileId, history) }
-            val sync = SyncController(SyncProfileStore(appContext), vaultFor, storeFor, SystemClock, scope, SyncWork(appContext))
+            // The look of this device, for the sync of the look (docs/specs/2026-11-01-sync-look-design.md): read from and written to the settings.
+            val settingsStore = SettingsStore(appContext)
+            val lookAccess = LookAccess(
+                read = { LookMapping.toValues(settingsStore.load()) },
+                write = { values -> settingsStore.save(LookMapping.apply(settingsStore.load(), values)) },
+            )
+            val sync = SyncController(SyncProfileStore(appContext), vaultFor, storeFor, SystemClock, scope, SyncWork(appContext), lookAccess)
             val reminderStore = RoomReminderStore(database)
             val reminders = Reminders(appContext, store, reminderStore, SystemClock)
             // Una pasada que trae notas archivadas o borradas deja recordatorios sin nota: se reconcilian también sin interfaz.

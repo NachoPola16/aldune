@@ -500,6 +500,19 @@ private fun ConnectedPanel(controller: SyncController, profile: SyncProfile) {
                 )
             }
         }
+        if (profile.transport == SyncTransportKind.SERVER && !unreadable) {
+            // The look rides along with the notes (docs/specs/2026-11-01-sync-look-design.md): per profile, off by default.
+            Row(
+                Modifier.fillMaxWidth().toggleable(value = profile.syncLook, role = Role.Switch, onValueChange = { controller.setSyncLook(profile.id, it) }),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Column(Modifier.weight(1f).padding(vertical = 6.dp)) {
+                    Text(stringResource(R.string.sync_look_title))
+                    Text(stringResource(R.string.sync_look_hint), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                }
+                androidx.compose.material3.Switch(checked = profile.syncLook, onCheckedChange = null)
+            }
+        }
         if (!unreadable) OutlinedButton(onClick = { editing = true }, modifier = Modifier.padding(top = 4.dp)) { Text(stringResource(R.string.sync_edit_server)) }
         OutlinedButton(onClick = { confirming = true }, modifier = Modifier.padding(top = 4.dp)) { Text(stringResource(R.string.sync_disconnect)) }
         HorizontalDivider(Modifier.padding(vertical = 12.dp))

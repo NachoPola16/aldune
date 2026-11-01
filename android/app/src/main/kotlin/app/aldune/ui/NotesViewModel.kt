@@ -248,6 +248,7 @@ class NotesViewModel(application: Application) : AndroidViewModel(application) {
     override fun onCleared() {
         // La sync sigue viva (es del proceso); solo se suelta la referencia a este ViewModel, que ya no existe.
         _sync.value?.onNotesChanged = null
+        _sync.value?.onLookApplied = null
         sounds.release()
     }
 
@@ -257,7 +258,11 @@ class NotesViewModel(application: Application) : AndroidViewModel(application) {
         AutoExportWork.apply(getApplication(), _settings.value)
         protection = opened.protection
         ready = opened
-        _sync.value = opened.sync.also { it.onNotesChanged = { launchIo { reconcileDrafts(); refreshLocked(); widgetChanged() } } }
+        _sync.value = opened.sync.also {
+            it.onNotesChanged = { launchIo { reconcileDrafts(); refreshLocked(); widgetChanged() } }
+            // A pass wrote a newer look to the settings: the interface takes them again.
+            it.onLookApplied = { _settings.value = settingsStore.load() }
+        }
         watchSyncSounds(opened.sync)
         // Como Windows: la papelera se purga al abrir, con los días de los ajustes (30 por defecto).
         notes.purgeTrashed(_settings.value.trashDays)

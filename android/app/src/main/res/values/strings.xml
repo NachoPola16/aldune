@@ -135,6 +135,8 @@
     <string name="sync_edit_note">Your sync key and notes stay as they are; nothing is disconnected. Only change the address if the server moved (it must hold the same notes). Leave the token or password empty to keep the current one.</string>
     <string name="sync_edit_keep_hint">Empty = keep the current one</string>
     <string name="sync_edit_save">Save</string>
+    <string name="sync_look_title">Sync the look with this profile</string>
+    <string name="sync_look_hint">Look and colours follow you across devices that use this profile. Language, text size and notification settings stay per device.</string>
     <string name="sync_invite_hint">Or paste an invitation from the owner of a shared server: you get your own private space and the key is created on this phone.</string>
     <string name="invite_profile_name">Shared server</string>
     <string name="invite_err_invalid">That invitation is not valid: it was already used, it expired or it is wrong.</string>

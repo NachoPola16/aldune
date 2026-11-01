@@ -135,6 +135,8 @@
     <string name="sync_edit_note">La chiave di sincronizzazione e le note restano come sono; nulla viene disconnesso. Cambia l’indirizzo solo se il server si è spostato (deve contenere le stesse note). Lascia vuoto il token o la password per mantenere quello attuale.</string>
     <string name="sync_edit_keep_hint">Vuoto = mantieni quello attuale</string>
     <string name="sync_edit_save">Salva</string>
+    <string name="sync_look_title">Sincronizza l’aspetto con questo profilo</string>
+    <string name="sync_look_hint">L’aspetto e i colori ti seguono sui dispositivi che usano questo profilo. Lingua, dimensione del testo e notifiche restano per dispositivo.</string>
     <string name="sync_invite_hint">Oppure incolla un invito di chi ospita un server condiviso: avrai uno spazio privato e la chiave viene creata su questo telefono.</string>
     <string name="invite_profile_name">Server condiviso</string>
     <string name="invite_err_invalid">Questo invito non è valido: già usato, scaduto o errato.</string>

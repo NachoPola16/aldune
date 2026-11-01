@@ -135,6 +135,8 @@
     <string name="sync_edit_note">Tu clave de sync y tus notas se quedan como están; no se desconecta nada. Cambia la dirección solo si el servidor se ha mudado (debe tener las mismas notas). Deja el token o la contraseña vacíos para conservar el actual.</string>
     <string name="sync_edit_keep_hint">Vacío = conservar el actual</string>
     <string name="sync_edit_save">Guardar</string>
+    <string name="sync_look_title">Sincronizar el aspecto con este perfil</string>
+    <string name="sync_look_hint">El aspecto y los colores te siguen entre los dispositivos que usan este perfil. El idioma, el tamaño del texto y las notificaciones siguen siendo de cada dispositivo.</string>
     <string name="sync_invite_hint">O pega una invitación de quien aloja un servidor compartido: tendrás tu propio espacio privado y la clave se crea en este móvil.</string>
     <string name="invite_profile_name">Servidor compartido</string>
     <string name="invite_err_invalid">Esa invitación no vale: ya se usó, caducó o es incorrecta.</string>

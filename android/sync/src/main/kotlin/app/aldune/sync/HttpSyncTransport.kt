@@ -77,6 +77,22 @@ class HttpSyncTransport(
 
     private fun get(relative: String): Request = request(relative).get().build()
 
+    /** The sealed look document of this store (docs/specs/2026-11-01-sync-look-design.md), or `null` if there is none or the server does not know the route (404). */
+    fun readLook(): ByteArray? {
+        val request = request("api/v1/look").get().build()
+        return client.newCall(request).execute().use { response ->
+            if (response.code == 404) return null
+            ensureSuccess(response)
+            val bytes = response.body?.bytes() ?: return null
+            if (bytes.size > MAX_LOOK_BYTES) throw IOException("The look document is too large.") else bytes
+        }
+    }
+
+    fun writeLook(sealedLook: ByteArray) {
+        val request = request("api/v1/look").put(sealedLook.toRequestBody("application/octet-stream".toMediaType())).build()
+        client.newCall(request).execute().use { ensureSuccess(it) }
+    }
+
     private fun request(relative: String): Request.Builder {
         // `resolve` aplica RFC 3986 igual que `new Uri(base, relative)` de .NET: sin barra final en la ruta
         // base, el último segmento se sustituye. Core normaliza el código de perfil para que acabe en «/».
@@ -109,5 +125,6 @@ class HttpSyncTransport(
         val DEFAULT_TIMEOUT: Duration = Duration.ofSeconds(20)
 
         private val JSON = "application/json".toMediaType()
+        private const val MAX_LOOK_BYTES = 64 * 1024
     }
 }

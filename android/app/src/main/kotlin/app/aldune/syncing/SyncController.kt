@@ -19,6 +19,9 @@ import app.aldune.syncclient.SyncEvent
 import app.aldune.syncclient.SyncFailure
 import app.aldune.syncclient.SyncFailureKind
 import app.aldune.syncclient.SyncOutcome
+import app.aldune.syncclient.LookAction
+import app.aldune.syncclient.LookSync
+import app.aldune.syncclient.LookValues
 import app.aldune.syncclient.SyncSecrets
 import app.aldune.syncclient.SyncStatus
 import app.aldune.syncclient.SyncTriggerPolicy
@@ -30,6 +33,7 @@ import app.aldune.syncclient.completeFirstConnect
 import app.aldune.syncclient.firstConnectDecision
 import app.aldune.syncclient.runSync
 import java.time.Duration
+import java.time.Instant
 import java.util.UUID
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -51,6 +55,9 @@ interface SyncSchedule {
 
     fun cancel()
 }
+
+/** Where this device's look lives: read it as the document's values, write the merged ones back to the settings. */
+class LookAccess(val read: () -> LookValues, val write: (LookValues) -> Unit)
 
 /** Lo que hace falta para conectar: el código ya leído, el transporte elegido, la URL y la credencial (ya validadas). */
 class ConnectRequest(val share: SyncShareCodeData, val transport: SyncTransportKind, val url: String, val credentials: ProfileCredentials)
@@ -85,7 +92,13 @@ class SyncController(
     private val clock: Clock,
     private val scope: CoroutineScope,
     private val schedule: SyncSchedule,
+    /** Where the look of this device is read and written (the settings). Null = no look sync (tests, or nothing to repaint). */
+    private val look: LookAccess? = null,
 ) {
+    /** A pass took a newer look from the store and wrote it to the settings: the interface reloads them. */
+    @Volatile
+    var onLookApplied: (() -> Unit)? = null
+
     /** Una pasada cambió notas locales (recibidas, borradas, a la papelera o conflictos): la lista y los borradores tienen que enterarse. Lo pone la interfaz. */
     @Volatile
     var onNotesChanged: (() -> Unit)? = null
@@ -192,7 +205,11 @@ class SyncController(
         setStatus(profile.id, before.copy(running = true, lastAttemptAt = clock.now()))
         val outcome = withContext(Dispatchers.IO) {
             try {
-                runSync(storeFor(profile.id), transportFor(profile.transport, profile.url, secrets.credentials), secrets.key, SyncClientSettings(profile.scope), profile.deviceId, clock)
+                val transport = transportFor(profile.transport, profile.url, secrets.credentials)
+                val result = runSync(storeFor(profile.id), transport, secrets.key, SyncClientSettings(profile.scope), profile.deviceId, clock)
+                // The look rides along only after the notes synced fine, and never fails them.
+                if (result is SyncOutcome.Success) reconcileLook(profile, transport, secrets.key)
+                result
             } catch (e: Exception) {
                 // Un fallo de programa (dato local que no cuadra) no debe tumbar la app: queda en el estado, con su detalle, para el diagnóstico.
                 SyncOutcome.Failure(classifyFailure(e))
@@ -206,6 +223,55 @@ class SyncController(
             is SyncOutcome.Failure -> setStatus(profile.id, current.copy(running = false, lastFailure = outcome.failure))
         }
         return outcome
+    }
+
+    /**
+     * The look document of the profile in this pass (docs/specs/2026-11-01-sync-look-design.md): push a change made here, pull a newer one made
+     * elsewhere (`LookSync.decide`). Best effort: a server older than the route (404) or a failure waits for the next pass.
+     */
+    private fun reconcileLook(profile: SyncProfile, transport: SyncTransport, key: ByteArray) {
+        val access = look ?: return
+        if (!profile.syncLook || transport !is HttpSyncTransport) return
+        try {
+            val local = access.read()
+            val localHash = LookSync.hash(local)
+            val remote = transport.readLook()?.let { LookSync.open(key, it) }
+            val lastStamp = profile.lookStampMs.takeIf { it > 0 }?.let(Instant::ofEpochMilli)
+            when (LookSync.decide(localHash, profile.lookHash, lastStamp, remote?.stamp)) {
+                LookAction.PUSH -> {
+                    val now = clock.now()
+                    transport.writeLook(LookSync.seal(key, now, profile.deviceId, LookSync.capture(local)))
+                    rememberLook(profile.id, localHash, now)
+                }
+                LookAction.PULL -> if (remote != null) {
+                    val merged = LookSync.apply(local, remote.look)
+                    if (merged != local) {
+                        access.write(merged)
+                        onLookApplied?.invoke()
+                    }
+                    rememberLook(profile.id, LookSync.hash(access.read()), remote.stamp)
+                }
+                LookAction.NONE -> Unit
+            }
+        } catch (e: Exception) {
+            // The notes already synced: the look waits for the next pass.
+        }
+    }
+
+    private fun rememberLook(profileId: String, hash: String, stamp: Instant) {
+        val current = _profiles.value.firstOrNull { it.id == profileId } ?: return
+        val updated = current.copy(lookHash = hash, lookStampMs = stamp.toEpochMilli())
+        profileStore.save(updated)
+        _profiles.update { list -> list.map { if (it.id == profileId) updated else it } }
+    }
+
+    /** Turns the look sync of a profile on or off. Turning it on forgets what was remembered, so the first pass takes the look from the store if there is one, or sends this one. */
+    fun setSyncLook(profileId: String, enabled: Boolean) {
+        val current = _profiles.value.firstOrNull { it.id == profileId } ?: return
+        val updated = current.copy(syncLook = enabled, lookHash = null, lookStampMs = 0L)
+        profileStore.save(updated)
+        _profiles.update { list -> list.map { if (it.id == profileId) updated else it } }
+        if (enabled) request(SyncEvent.ManualSync)
     }
 
     private fun setStatus(profileId: String, status: SyncStatus) {

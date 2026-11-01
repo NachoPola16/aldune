@@ -135,6 +135,8 @@
     <string name="sync_edit_note">同期キーとノートはそのままで、接続は切れません。サーバーが移転した場合のみアドレスを変更してください（同じノートが必要です）。トークンまたはパスワードを空にすると現在のものを維持します。</string>
     <string name="sync_edit_keep_hint">空欄＝現在のものを維持</string>
     <string name="sync_edit_save">保存</string>
+    <string name="sync_look_title">このプロファイルで外観を同期する</string>
+    <string name="sync_look_hint">外観と色は、このプロファイルを使うデバイス間で引き継がれます。言語、文字サイズ、通知はデバイスごとのままです。</string>
     <string name="sync_invite_hint">または共有サーバーの管理者からの招待を貼り付けてください。専用の非公開スペースができ、鍵はこの端末で作成されます。</string>
     <string name="invite_profile_name">共有サーバー</string>
     <string name="invite_err_invalid">この招待は無効です。使用済み、期限切れ、または誤りです。</string>
