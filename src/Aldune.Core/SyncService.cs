@@ -843,24 +843,24 @@ public sealed class SyncService
     internal Func<ISyncTransport>? TransportFactoryOverride { get; set; }
 
     /// <summary>
-    /// The look document of the profile in this pass (only if the person turned it on, and only over the server transport): push a change made here,
+    /// The look document of the profile in this pass (only if the person turned it on; over the server, a folder or WebDAV: every <see cref="ILookStore"/>): push a change made here,
     /// pull a newer one made elsewhere (<see cref="SyncLook.Decide"/>). Best effort: whatever goes wrong here never fails the sync of the notes.
     /// </summary>
     private void ReconcileLook(ISyncTransport transport, byte[] key)
     {
         var profile = SyncProfileStore.GetActive(_settings);
-        if (!profile.SyncLook || transport is not HttpSyncTransport http) return;
+        if (!profile.SyncLook || transport is not ILookStore store) return;
         var target = _lookTarget ?? _settings;
         try
         {
             var localHash = SyncLook.Hash(target);
-            var blob = http.ReadLook();
+            var blob = store.ReadLook();
             var remote = blob is null ? null : SyncLook.Open(key, blob);
             switch (SyncLook.Decide(localHash, profile.LookHash, profile.LookStamp, remote?.Stamp))
             {
                 case LookAction.Push:
                     var now = DateTimeOffset.UtcNow;
-                    http.WriteLook(SyncLook.Seal(key, now, EnsureDeviceId(), SyncLook.Capture(target)));
+                    store.WriteLook(SyncLook.Seal(key, now, EnsureDeviceId(), SyncLook.Capture(target)));
                     profile.LookHash = localHash;
                     profile.LookStamp = now;
                     _persist(_settings);

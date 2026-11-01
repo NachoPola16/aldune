@@ -498,7 +498,7 @@
     <string name="whatsnew_200_edit">Ändere Adresse oder Token eines verbundenen Sync-Profils, ohne es zu trennen.</string>
     <string name="whatsnew_200_group">Optional „Nach Tag gruppieren“ für Alle Notizen: einklappbare Abschnitte, mehrere gleichzeitig offen.</string>
     <string name="whatsnew_200_widget">Widget: Die Vorschau wiederholt die als Kästchen gezeigten Aufgaben nicht mehr.</string>
-    <string name="whatsnew_200_look">Aussehen synchronisieren: pro Serverprofil aktivieren, und Aussehen und Farben folgen dir auf allen Geräten.</string>
+    <string name="whatsnew_200_look">Aussehen synchronisieren: pro Profil aktivieren, und Aussehen und Farben folgen dir auf allen Geräten.</string>
     <string name="update_dialog_body">Eine neue Version ist auf GitHub. Wenn du sie über diese installierst, bleiben deine Notizen erhalten.</string>
     <string name="select_notes">Auswählen</string>
     <string name="selection_count">%1$d ausgewählt</string>

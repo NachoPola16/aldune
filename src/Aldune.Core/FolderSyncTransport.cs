@@ -3,14 +3,16 @@
 using System.Text.Json;
 
 /// <summary>Transporte sin servidor: sirve para una carpeta local, UNC, NAS o carpeta de Syncthing/Drive.</summary>
-public sealed class FolderSyncTransport : ISyncTransport
+public sealed class FolderSyncTransport : ISyncTransport, ILookStore
 {
     private readonly string _objectsPath;
+    private readonly string _lookPath;
 
     public FolderSyncTransport(string folderPath)
     {
         if (string.IsNullOrWhiteSpace(folderPath)) throw new ArgumentException("A sync folder is required.", nameof(folderPath));
         _objectsPath = Path.Combine(folderPath, "objects");
+        _lookPath = Path.Combine(folderPath, "look.aldune");
         Directory.CreateDirectory(_objectsPath);
     }
 
@@ -69,5 +71,28 @@ public sealed class FolderSyncTransport : ISyncTransport
     {
         var path = Path.Combine(_objectsPath, $"{noteId:N}.json");
         if (File.Exists(path)) File.Delete(path);
+    }
+
+    /// <summary>The look document, in the folder's root: <c>ReadAll</c> lists only <c>objects/*.json</c>, so no version ever mistakes it for a note.</summary>
+    public byte[]? ReadLook()
+    {
+        var info = new FileInfo(_lookPath);
+        if (!info.Exists || info.Length > ILookStore.MaxBytes) return null;
+        return File.ReadAllBytes(_lookPath);
+    }
+
+    public void WriteLook(byte[] sealedLook)
+    {
+        // Same as the notes: a temporary file and a move, so a reader never sees half a document.
+        var tempPath = Path.Combine(Path.GetDirectoryName(_lookPath)!, $".look.{Guid.NewGuid():N}.tmp");
+        try
+        {
+            File.WriteAllBytes(tempPath, sealedLook);
+            File.Move(tempPath, _lookPath, overwrite: true);
+        }
+        finally
+        {
+            if (File.Exists(tempPath)) File.Delete(tempPath);
+        }
     }
 }

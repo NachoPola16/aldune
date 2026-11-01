@@ -11,11 +11,12 @@ namespace Aldune.Core;
 /// Transporte WebDAV para Nextcloud, ownCloud y servidores WebDAV compatibles.
 /// Solo sube sobres cifrados; la clave de sincronización nunca sale del dispositivo.
 /// </summary>
-public sealed class WebDavSyncTransport : ISyncTransport
+public sealed class WebDavSyncTransport : ISyncTransport, ILookStore
 {
     private static readonly XNamespace Dav = "DAV:";
     private readonly HttpClient _client;
     private readonly Uri _objectsUri;
+    private readonly Uri _lookUri;
     private bool _collectionReady;
 
     public WebDavSyncTransport(string serverUrl, string username, string password, TimeSpan? timeout = null)
@@ -29,6 +30,8 @@ public sealed class WebDavSyncTransport : ISyncTransport
             throw new ArgumentException("A WebDAV password is required.", nameof(password));
 
         _objectsUri = new Uri(baseUri, "objects/");
+        // Beside objects/, not inside: the listing of the objects folder is all an older version reads.
+        _lookUri = new Uri(baseUri, "look.aldune");
         _client = new HttpClient
         {
             Timeout = timeout ?? HttpSyncTransport.DefaultTimeout,
@@ -148,6 +151,24 @@ public sealed class WebDavSyncTransport : ISyncTransport
         using var response = _client.DeleteAsync(new Uri(_objectsUri, $"{noteId:N}.json"))
             .GetAwaiter().GetResult();
         if (response.StatusCode != HttpStatusCode.NotFound) EnsureSuccess(response);
+    }
+
+    /// <summary>The look document (a 404 is «none»); an oversized answer is ignored.</summary>
+    public byte[]? ReadLook()
+    {
+        using var response = _client.GetAsync(_lookUri).GetAwaiter().GetResult();
+        if (response.StatusCode == HttpStatusCode.NotFound) return null;
+        EnsureSuccess(response);
+        var bytes = response.Content.ReadAsByteArrayAsync().GetAwaiter().GetResult();
+        return bytes.Length > ILookStore.MaxBytes ? null : bytes;
+    }
+
+    public void WriteLook(byte[] sealedLook)
+    {
+        using var content = new ByteArrayContent(sealedLook);
+        content.Headers.ContentType = new MediaTypeHeaderValue("application/octet-stream");
+        using var response = _client.PutAsync(_lookUri, content).GetAwaiter().GetResult();
+        EnsureSuccess(response);
     }
 
     private void EnsureCollection()

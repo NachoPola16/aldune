@@ -499,7 +499,7 @@ private fun ConnectedPanel(controller: SyncController, profile: SyncProfile) {
                 )
             }
         }
-        if (profile.transport == SyncTransportKind.SERVER && !unreadable) {
+        if (!unreadable) {
             // The look rides along with the notes (docs/specs/2026-11-01-sync-look-design.md): per profile, off by default.
             Row(
                 Modifier.fillMaxWidth().toggleable(value = profile.syncLook, role = Role.Switch, onValueChange = { controller.setSyncLook(profile.id, it) }),

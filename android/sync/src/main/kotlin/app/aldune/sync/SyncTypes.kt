@@ -144,3 +144,18 @@ interface SyncTransport {
 
     fun delete(noteId: UUID)
 }
+
+/**
+ * Un almacén que además guarda el documento del aspecto (docs/specs/2026-11-01-sync-look-design.md): un blob sellado de a lo sumo [MAX_LOOK_BYTES]
+ * en la raíz del almacén, junto a los objetos y nunca entre ellos, de modo que las versiones que no lo conocen no lo listan.
+ */
+interface LookStore {
+    /** El documento sellado, o `null` si no hay (o pasa del tope). */
+    fun readLook(): ByteArray?
+
+    fun writeLook(sealedLook: ByteArray)
+
+    companion object {
+        const val MAX_LOOK_BYTES = 64 * 1024
+    }
+}

@@ -403,4 +403,42 @@ class WebDavSyncTransportTest {
         assertEquals(SyncResult(0, 0, 0, 0), pass("device-a", a))
         assertEquals(listOf("$idN.json"), store.keys.toList())
     }
+
+    // --- El documento del aspecto (docs/specs/2026-11-01-sync-look-design.md): `look.aldune` junto a `objects/`, nunca dentro. ---
+
+    @Test
+    fun `sin documento del aspecto readLook es null y lo pide en la raiz del almacen`() {
+        server.enqueue(MockResponse().setResponseCode(404))
+
+        assertEquals(null, transport().readLook())
+
+        val request = server.takeRequest()
+        assertEquals("GET", request.method)
+        assertEquals("/dav/look.aldune", request.path)
+        assertTrue(request.getHeader("Authorization")!!.startsWith("Basic "))
+    }
+
+    @Test
+    fun `lee el documento del aspecto y lo sube con PUT en la misma ruta`() {
+        server.enqueue(MockResponse().setBody(okio.Buffer().write(byteArrayOf(9, 8, 7))))
+        server.enqueue(MockResponse().setResponseCode(201))
+
+        assertEquals(listOf<Byte>(9, 8, 7), transport().readLook()!!.toList())
+        transport().writeLook(byteArrayOf(1, 2, 3))
+
+        server.takeRequest()
+        val put = server.takeRequest()
+        assertEquals("PUT", put.method)
+        assertEquals("/dav/look.aldune", put.path)
+        assertEquals(listOf<Byte>(1, 2, 3), put.body.readByteArray().toList())
+    }
+
+    @Test
+    fun `un documento del aspecto por encima del tope se ignora y un PUT rechazado es IOException`() {
+        server.enqueue(MockResponse().setBody(okio.Buffer().write(ByteArray(70_000))))
+        server.enqueue(MockResponse().setResponseCode(403))
+
+        assertEquals(null, transport().readLook())
+        assertThrows(IOException::class.java) { transport().writeLook(byteArrayOf(1)) }
+    }
 }

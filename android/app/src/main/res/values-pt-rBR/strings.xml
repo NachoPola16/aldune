@@ -498,7 +498,7 @@
     <string name="whatsnew_200_edit">Altere o endereço ou o token de um perfil de sync conectado sem desconectá-lo.</string>
     <string name="whatsnew_200_group">“Agrupar por etiqueta” opcional em Todas as notas: seções recolhíveis, várias abertas ao mesmo tempo.</string>
     <string name="whatsnew_200_widget">Widget: a prévia não repete mais as tarefas mostradas como caixas.</string>
-    <string name="whatsnew_200_look">Sincronizar a aparência: ative por perfil de servidor e sua aparência e cores acompanham você entre dispositivos.</string>
+    <string name="whatsnew_200_look">Sincronizar a aparência: ative por perfil e sua aparência e cores acompanham você entre dispositivos.</string>
     <string name="update_dialog_body">Há uma nova versão no GitHub. Instalá-la sobre esta mantém suas notas.</string>
     <string name="select_notes">Selecionar</string>
     <string name="selection_count">%1$d selecionadas</string>

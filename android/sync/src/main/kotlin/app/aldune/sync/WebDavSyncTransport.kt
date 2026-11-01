@@ -39,8 +39,9 @@ class WebDavSyncTransport(
     password: String,
     timeout: Duration = HttpSyncTransport.DEFAULT_TIMEOUT,
     client: OkHttpClient = OkHttpClient(),
-) : SyncTransport {
+) : SyncTransport, LookStore {
     private val objectsUrl: HttpUrl
+    private val lookUrl: HttpUrl
     private val authorization: String
     private val client: OkHttpClient
     private var collectionReady = false
@@ -53,6 +54,8 @@ class WebDavSyncTransport(
         require(username.isNotBlank()) { "A WebDAV username is required." }
         require(password.isNotBlank()) { "A WebDAV password is required." }
         objectsUrl = base.resolve("objects/")!!
+        // Junto a objects/, no dentro: el listado de objects/ es lo único que lee una versión anterior.
+        lookUrl = base.resolve("look.aldune")!!
         // UTF-8 explícito: con ISO-8859-1 (el valor por defecto de OkHttp) una contraseña con tildes no coincidiría con la de Core.
         authorization = Credentials.basic(username, password, Charsets.UTF_8)
         // callTimeout cubre la llamada entera (conectar, enviar y leer), como HttpClient.Timeout en Core.
@@ -138,6 +141,20 @@ class WebDavSyncTransport(
     }
 
     /** Crea la carpeta `objects/` la primera vez; 405 (Method Not Allowed) es lo que contestan los servidores cuando ya existe. */
+    /** El documento del aspecto (un 404 es «no hay»); si pasa del tope se ignora, como en Core. */
+    override fun readLook(): ByteArray? =
+        client.newCall(request(lookUrl).get().build()).execute().use { response ->
+            if (response.code == 404) return null
+            ensureSuccess(response)
+            val bytes = response.body?.bytes() ?: return null
+            if (bytes.size > LookStore.MAX_LOOK_BYTES) null else bytes
+        }
+
+    override fun writeLook(sealedLook: ByteArray) {
+        val body = sealedLook.toRequestBody("application/octet-stream".toMediaType())
+        client.newCall(request(lookUrl).put(body).build()).execute().use { ensureSuccess(it) }
+    }
+
     private fun ensureCollection() {
         if (collectionReady) return
         client.newCall(request(objectsUrl).method("MKCOL", null).build()).execute().use { response ->

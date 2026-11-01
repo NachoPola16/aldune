@@ -6,6 +6,7 @@ import app.aldune.data.SyncProfileStore
 import app.aldune.data.SyncTransportKind
 import app.aldune.domain.Clock
 import app.aldune.sync.HttpSyncTransport
+import app.aldune.sync.LookStore
 import app.aldune.sync.SyncTransport
 import app.aldune.sync.WebDavSyncTransport
 import app.aldune.syncclient.FirstConnectChoice
@@ -231,7 +232,7 @@ class SyncController(
      */
     private fun reconcileLook(profile: SyncProfile, transport: SyncTransport, key: ByteArray) {
         val access = look ?: return
-        if (!profile.syncLook || transport !is HttpSyncTransport) return
+        if (!profile.syncLook || transport !is LookStore) return
         try {
             val local = access.read()
             val localHash = LookSync.hash(local)

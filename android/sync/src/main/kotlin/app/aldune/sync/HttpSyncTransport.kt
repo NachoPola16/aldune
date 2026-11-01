@@ -34,7 +34,7 @@ class HttpSyncTransport(
     token: String,
     timeout: Duration = DEFAULT_TIMEOUT,
     client: OkHttpClient = OkHttpClient(),
-) : SyncTransport {
+) : SyncTransport, LookStore {
     private val baseUrl: HttpUrl = serverUrl.trim().toHttpUrlOrNull()
         ?: throw IllegalArgumentException("The sync server URL must be an absolute HTTP(S) URL.")
     private val authorization: String
@@ -78,7 +78,7 @@ class HttpSyncTransport(
     private fun get(relative: String): Request = request(relative).get().build()
 
     /** The sealed look document of this store (docs/specs/2026-11-01-sync-look-design.md), or `null` if there is none or the server does not know the route (404). */
-    fun readLook(): ByteArray? {
+    override fun readLook(): ByteArray? {
         val request = request("api/v1/look").get().build()
         return client.newCall(request).execute().use { response ->
             if (response.code == 404) return null
@@ -88,7 +88,7 @@ class HttpSyncTransport(
         }
     }
 
-    fun writeLook(sealedLook: ByteArray) {
+    override fun writeLook(sealedLook: ByteArray) {
         val request = request("api/v1/look").put(sealedLook.toRequestBody("application/octet-stream".toMediaType())).build()
         client.newCall(request).execute().use { ensureSuccess(it) }
     }
@@ -125,6 +125,6 @@ class HttpSyncTransport(
         val DEFAULT_TIMEOUT: Duration = Duration.ofSeconds(20)
 
         private val JSON = "application/json".toMediaType()
-        private const val MAX_LOOK_BYTES = 64 * 1024
+        private const val MAX_LOOK_BYTES = LookStore.MAX_LOOK_BYTES
     }
 }

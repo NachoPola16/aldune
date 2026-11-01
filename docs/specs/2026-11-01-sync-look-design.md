@@ -1,6 +1,6 @@
 # Syncing the look between devices — design (2026-11-01)
 
-Status: **built (server transport) in Windows 3.0.0 and Android 2.0.0** — `SyncLook` (Core) and `LookSync` (Android) share one document format, checked by a document sealed in C# that Kotlin opens; Folder and WebDAV are left for a later round. Opt-in: a person who wants the same look (appearance, note theme…) on all their devices turns it on; everyone else keeps a look per device, as today.
+Status: **built in Windows 3.0.0 and Android 2.0.0, over the server, Folder and WebDAV transports** — `SyncLook` (Core) and `LookSync` (Android) share one document format, checked by a document sealed in C# that Kotlin opens. Folder (`look.aldune` in the folder's root) is Windows only, like the Folder transport itself; WebDAV puts the same file beside `objects/`. The old-version question left open for WebDAV is settled for the current transports (Core and Android): they `PROPFIND` only `objects/` and keep `.json` files, so a file in the root is never read. Opt-in: a person who wants the same look (appearance, note theme…) on all their devices turns it on; everyone else keeps a look per device, as today.
 
 ## The trap that decides the design
 
@@ -63,4 +63,4 @@ Core and `android/core`: document round trip, a vector made by C# read by Kotlin
 
 ## Out of scope
 
-Custom themes, per-note colours (those are in the notes already), and syncing any other setting. Folder and WebDAV can follow the server transport in a later round.
+Custom themes, per-note colours (those are in the notes already), and syncing any other setting. 

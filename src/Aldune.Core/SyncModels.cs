@@ -526,3 +526,17 @@ public interface ISyncTransport
     void Write(SyncEnvelope envelope);
     void Delete(Guid noteId);
 }
+
+/// <summary>
+/// A store that can also keep the look document (docs/specs/2026-11-01-sync-look-design.md): one sealed blob of at most <see cref="MaxBytes"/>
+/// that lives in the root of the store, next to the objects and never among them, so versions that do not know it never list it.
+/// </summary>
+public interface ILookStore
+{
+    const int MaxBytes = 64 * 1024;
+
+    /// <summary>The sealed document, or <c>null</c> if there is none (or it is over the cap).</summary>
+    byte[]? ReadLook();
+
+    void WriteLook(byte[] sealedLook);
+}

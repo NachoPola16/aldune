@@ -498,7 +498,7 @@
     <string name="whatsnew_200_edit">无需断开即可更改已连接同步配置文件的地址或令牌。</string>
     <string name="whatsnew_200_group">“全部便笺”可选“按标签分组”：可折叠分区，可同时展开多个。</string>
     <string name="whatsnew_200_widget">小组件：预览不再重复以复选框显示的任务。</string>
-    <string name="whatsnew_200_look">同步外观：按服务器配置文件开启，外观和颜色会在设备间同步。</string>
+    <string name="whatsnew_200_look">同步外观：按配置文件开启，外观和颜色会在设备间同步。</string>
     <string name="update_dialog_body">GitHub 上有新版本。直接覆盖安装即可，笔记会保留。</string>
     <string name="select_notes">选择</string>
     <string name="selection_count">已选 %1$d 条</string>

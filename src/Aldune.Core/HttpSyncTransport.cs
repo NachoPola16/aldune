@@ -7,7 +7,7 @@ namespace Aldune.Core;
 /// Transporte contra el servidor autohosteable. El servidor solo enumera y almacena sobres cifrados;
 /// no recibe la clave de sincronización.
 /// </summary>
-public sealed class HttpSyncTransport : ISyncTransport
+public sealed class HttpSyncTransport : ISyncTransport, ILookStore
 {
     /// <summary>Lo que se espera a un servidor que no contesta, aquí y en WebDAV: corto para no dejar la sync
     /// colgada al salir de casa sin VPN, largo para una subida lenta.</summary>
