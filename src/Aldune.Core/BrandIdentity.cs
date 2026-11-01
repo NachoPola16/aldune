@@ -53,6 +53,9 @@ public static class BrandIdentity
 
     public const string SyncTokensEnvVar = "ALDUNE_SYNC_TOKENS";
 
+    /// <summary>Server only: `name=token,name2=token2`, one separate store per token (see SyncSpaces).</summary>
+    public const string SyncSpacesEnvVar = "ALDUNE_SYNC_SPACES";
+
     public const string SyncPortEnvVar = "ALDUNE_SYNC_PORT";
 
     public const string SyncDataDirEnvVar = "ALDUNE_DATA_DIR";

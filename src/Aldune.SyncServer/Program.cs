@@ -3,6 +3,7 @@ using Aldune.Core;
 using Aldune.SyncServer;
 
 const long MaxObjectBytes = 5_000_000;
+const string SpaceItemKey = "aldune.objects-path";
 
 var builder = WebApplication.CreateBuilder(args);
 // El tope lo aplica Kestrel mientras recibe, no solo el código de abajo: una subida sin
@@ -14,9 +15,21 @@ var dataPath = Environment.GetEnvironmentVariable(BrandIdentity.SyncDataDirEnvVa
 var tokens = SyncTokenSet.Parse(
     Environment.GetEnvironmentVariable(BrandIdentity.SyncTokensEnvVar),
     Environment.GetEnvironmentVariable(BrandIdentity.SyncTokenEnvVar));
-if (tokens.Count == 0)
+// One store per token (ALDUNE_SYNC_SPACES): optional, alongside the original token(s) or instead of them.
+IReadOnlyList<SyncSpace> spaces;
+try
+{
+    spaces = SyncSpaces.Parse(Environment.GetEnvironmentVariable(BrandIdentity.SyncSpacesEnvVar));
+    SyncSpaces.EnsureDistinct(tokens, spaces);
+}
+catch (FormatException ex)
+{
+    throw new InvalidOperationException($"{BrandIdentity.SyncSpacesEnvVar}: {ex.Message}", ex);
+}
+
+if (tokens.Count == 0 && spaces.Count == 0)
     throw new InvalidOperationException(
-        $"{BrandIdentity.SyncTokenEnvVar} or {BrandIdentity.SyncTokensEnvVar} must be configured.");
+        $"{BrandIdentity.SyncTokenEnvVar}, {BrandIdentity.SyncTokensEnvVar} or {BrandIdentity.SyncSpacesEnvVar} must be configured.");
 
 // El token de ejemplo de .env.example es público: quien copia el fichero sin editarlo tendría un servidor abierto.
 // Es un valor literal que nadie usa a propósito, así que aquí sí se rechaza (a diferencia de un token corto).
@@ -28,15 +41,19 @@ if (tokens.Contains(ExampleToken))
 // Aviso y no rechazo: un servidor que ya funciona con un token corto no debe dejar de arrancar al
 // actualizarse. El contenido de las notas va cifrado igual, pero un token corto se puede adivinar.
 const int RecommendedTokenLength = 24;
-if (tokens.Any(token => token.Length < RecommendedTokenLength))
+if (tokens.Concat(spaces.Select(space => space.Token)).Any(token => token.Length < RecommendedTokenLength))
     app.Logger.LogWarning(
         "A sync token is shorter than {Length} characters. Use a long random value, for example the output of 'openssl rand -base64 32'.",
         RecommendedTokenLength);
 
-var objectPath = Path.Combine(dataPath, "objects");
 var putGate = new SemaphoreSlim(1, 1);
-Directory.CreateDirectory(objectPath);
-Aldune.SyncServer.DataDirectoryCheck.EnsureWritable(objectPath);
+// The original store keeps /data/objects (only if its token is configured, as before); each space gets /data/spaces/<name>/objects.
+foreach (var path in (tokens.Count > 0 ? new[] { SyncSpaces.ObjectsPath(dataPath, null) } : Array.Empty<string>())
+             .Concat(spaces.Select(space => SyncSpaces.ObjectsPath(dataPath, space.Name))))
+{
+    Directory.CreateDirectory(path);
+    Aldune.SyncServer.DataDirectoryCheck.EnsureWritable(path);
+}
 
 // Límite de intentos fallidos de token por dirección (ver AuthFailureLimiter). /health queda fuera: no pide token.
 var limiter = AuthFailureLimiter.FromEnvironment();
@@ -59,12 +76,16 @@ app.Use(async (context, next) =>
             return;
         }
 
-        if (!SyncTokenSet.Matches(context.Request.Headers.Authorization, tokens))
+        var resolved = SyncSpaces.Resolve(context.Request.Headers.Authorization, tokens, spaces);
+        if (resolved is null)
         {
             limiter.RecordFailure(address, now);
             context.Response.StatusCode = StatusCodes.Status401Unauthorized;
             return;
         }
+
+        // The token decides the store: every handler below reads its folder from here, never from a shared variable.
+        context.Items[SpaceItemKey] = SyncSpaces.ObjectsPath(dataPath, resolved.Value.Name);
     }
 
     await next();
@@ -77,8 +98,9 @@ app.MapGet("/health", () => Results.Ok(new
     minimumFormat = SyncCompatibility.MinimumSupportedFormat
 }));
 
-app.MapGet("/api/v1/objects", () =>
+app.MapGet("/api/v1/objects", (HttpContext http) =>
 {
+    var objectPath = ObjectsOf(http);
     var descriptors = new List<object>();
     foreach (var path in Directory.EnumerateFiles(objectPath, "*.json", SearchOption.TopDirectoryOnly))
     {
@@ -106,9 +128,9 @@ app.MapGet("/api/v1/objects", () =>
     return Results.Json(descriptors);
 });
 
-app.MapGet("/api/v1/objects/{id:guid}", (Guid id) =>
+app.MapGet("/api/v1/objects/{id:guid}", (Guid id, HttpContext http) =>
 {
-    var path = ObjectFile(objectPath, id);
+    var path = ObjectFile(ObjectsOf(http), id);
     return File.Exists(path)
         ? Results.File(path, "application/json")
         : Results.NotFound();
@@ -116,6 +138,7 @@ app.MapGet("/api/v1/objects/{id:guid}", (Guid id) =>
 
 app.MapPut("/api/v1/objects/{id:guid}", async (Guid id, HttpRequest request) =>
 {
+    var objectPath = ObjectsOf(request.HttpContext);
     if (request.ContentLength is > MaxObjectBytes)
         return Results.StatusCode(StatusCodes.Status413PayloadTooLarge);
 
@@ -186,14 +209,16 @@ app.MapPut("/api/v1/objects/{id:guid}", async (Guid id, HttpRequest request) =>
     return Results.NoContent();
 });
 
-app.MapDelete("/api/v1/objects/{id:guid}", (Guid id) =>
+app.MapDelete("/api/v1/objects/{id:guid}", (Guid id, HttpContext http) =>
 {
-    var path = ObjectFile(objectPath, id);
+    var path = ObjectFile(ObjectsOf(http), id);
     if (File.Exists(path)) File.Delete(path);
     return Results.NoContent();
 });
 
 app.Run();
+
+static string ObjectsOf(HttpContext http) => (string)http.Items[SpaceItemKey]!;
 
 static string ObjectFile(string objectPath, Guid id) => Path.Combine(objectPath, $"{id:N}.json");
 

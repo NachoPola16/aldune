@@ -76,7 +76,7 @@ To share **just one note** (the shopping list, for example) without mixing in th
 
 1. On Windows, create a separate profile with *Selected notes* and tick only that note. Somebody has to host its store, and it **has to be
    a different one from your personal profile's**: a second Aldune service (another port, another volume and another token; in `docker-compose.sync.yml`
-   it is enough to use another project name, container name and volume name) or a WebDAV. The same store with another token does not work: that profile has another
+   it is enough to use another project name, container name and volume name) or a WebDAV, a WebDAV, or, simplest, **a space on the same server** (see *Several people on one server* below: one URL, one token per person). The same store with another token does not work: that profile has another
    key and cannot read any of the notes already there, and Aldune refuses to write with “This device's sync code can't read the notes
    in the store”.
 2. Click **Share profile** and send the code to each person. The token is given separately, never inside the code.
@@ -399,6 +399,24 @@ Recreate the container, change the token on all devices and check that they sync
 all of them use the new one, leave only `ALDUNE_SYNC_TOKENS=new-token` and recreate the container again: the
 old one is revoked. The list takes priority over `ALDUNE_SYNC_TOKEN`; never put tokens in
 the URL or in the repository.
+
+### Several people on one server (spaces)
+
+One server URL can host several **separate stores**, one per person or group, so you do not need another container, port or domain for each:
+
+```dotenv
+ALDUNE_SYNC_SPACES=mother=a-long-random-token,family=another-long-random-token
+```
+
+Each `name=token` pair is a **space**. The token decides the store: the clients send the same URL and their own token, and see only what is in their space.
+Spaces live in `/data/spaces/<name>/objects`, apart from each other and from the original store (the one `ALDUNE_SYNC_TOKEN(S)` still opens, in `/data/objects`).
+Nothing changes in the apps or in the sync format.
+
+- A name is 1 to 32 lowercase letters, digits, `-` or `_` (it is a folder). A token may not appear twice, nor be the same as an original token: the server refuses to start rather than mix two stores.
+- Each space is its **own sync profile**: create it in Aldune with its own sync key (a profile with *Selected notes* or *Notes with a tag*, as in section D), and hand that person the profile code and their token.
+  The same URL with a different token and a *different* profile is exactly what a space is for.
+- Add or revoke a person by editing the line and recreating the container. Revoking a token cuts off that space but **keeps its files**; delete `/data/spaces/<name>` by hand when you really want them gone.
+- If you only use spaces, leave `ALDUNE_SYNC_TOKEN` empty (the example value is rejected). Failed tokens are still counted per address, across all spaces.
 
 ### Sync profiles
 

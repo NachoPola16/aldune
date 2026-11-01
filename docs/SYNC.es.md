@@ -399,6 +399,24 @@ todos usen el nuevo, deja solo `ALDUNE_SYNC_TOKENS=nuevo-token` y recrea el cont
 antiguo queda revocado. La lista tiene prioridad sobre `ALDUNE_SYNC_TOKEN`; nunca pongas tokens en
 la URL ni en el repositorio.
 
+### Varias personas en un servidor (espacios)
+
+Una sola URL de servidor puede alojar varios **almacenes separados**, uno por persona o grupo, sin otro contenedor, puerto ni dominio para cada uno:
+
+```dotenv
+ALDUNE_SYNC_SPACES=madre=un-token-largo-y-aleatorio,familia=otro-token-largo-y-aleatorio
+```
+
+Cada pareja `nombre=token` es un **espacio**. El token decide el almacén: los clientes mandan la misma URL y su propio token, y solo ven lo que hay en su espacio.
+Los espacios viven en `/data/spaces/<nombre>/objects`, aparte entre sí y del almacén original (el que sigue abriendo `ALDUNE_SYNC_TOKEN(S)`, en `/data/objects`).
+No cambia nada en las apps ni en el formato de sync.
+
+- Un nombre son de 1 a 32 letras minúsculas, cifras, `-` o `_` (es una carpeta). Un token no puede repetirse, ni ser igual a uno original: el servidor se niega a arrancar antes que mezclar dos almacenes.
+- Cada espacio es su **propio perfil de sync**: créalo en Aldune con su propia clave (un perfil con *Notas elegidas* o *Notas con una etiqueta*, como en la sección D) y dale a esa persona el código del perfil y su token.
+  La misma URL con otro token y un perfil *distinto* es justo para lo que sirve un espacio.
+- Para añadir o quitar a alguien, edita la línea y recrea el contenedor. Revocar un token corta ese espacio pero **conserva sus ficheros**; borra `/data/spaces/<nombre>` a mano cuando de verdad quieras eliminarlos.
+- Si solo usas espacios, deja `ALDUNE_SYNC_TOKEN` vacío (el valor de ejemplo se rechaza). Los tokens fallidos se siguen contando por dirección, en todos los espacios.
+
 ### Perfiles de sincronización
 
 Puedes crear varios perfiles desde Ajustes. Cada perfil mantiene su transporte, servidor o carpeta,
