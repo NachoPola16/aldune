@@ -415,6 +415,9 @@ public partial class NotesManagerWindow : Window
             var swatchButton = MakeTagColorButton(tag, palette);
             DockPanel.SetDock(swatchButton, Dock.Right);
             content.Children.Add(swatchButton);
+            var edit = MakeRenameButton(tag, content, label);
+            DockPanel.SetDock(edit, Dock.Right);
+            content.Children.Add(edit);
             content.Children.Add(label);
             var stack = new StackPanel();
             stack.Children.Add(content);
@@ -422,6 +425,42 @@ public partial class NotesManagerWindow : Window
             row.Child = stack;
             TagManagerItems.Children.Add(row);
         }
+    }
+
+    /// <summary>A pencil that turns the name into a text box: Enter renames the tag, Esc (or leaving the box) leaves it as it was.</summary>
+    private Button MakeRenameButton(string tag, DockPanel content, TextBlock label)
+    {
+        var button = new Button
+        {
+            Content = "", FontFamily = new FontFamily("Segoe Fluent Icons, Segoe MDL2 Assets"), FontSize = 12, Width = 28, Height = 28,
+            Margin = new Thickness(4, 0, 0, 0), VerticalAlignment = VerticalAlignment.Center, Padding = new Thickness(0), ToolTip = Strings.TagRenameTooltip,
+            HorizontalContentAlignment = HorizontalAlignment.Center, VerticalContentAlignment = VerticalAlignment.Center,
+            Style = (Style)FindResource("ToolbarButtonStyle")
+        };
+        System.Windows.Automation.AutomationProperties.SetName(button, Strings.TagRenameTooltip);
+        button.Click += (_, _) =>
+        {
+            var box = new TextBox { Text = tag, MaxLength = 40, VerticalAlignment = VerticalAlignment.Center, Margin = new Thickness(0, 0, 8, 0), Padding = new Thickness(4, 2, 4, 2) };
+            bool done = false;
+            void Finish(bool commit)
+            {
+                if (done) return;
+                done = true;
+                if (commit && _coordinator.RenameTag(tag, box.Text)) LoadTagFilterOptions();
+                PopulateTagManager();
+            }
+            box.KeyDown += (_, e) =>
+            {
+                if (e.Key == Key.Enter) { Finish(true); e.Handled = true; }
+                else if (e.Key == Key.Escape) { Finish(false); e.Handled = true; }
+            };
+            box.LostKeyboardFocus += (_, _) => Finish(false);
+            content.Children.Remove(label);
+            content.Children.Add(box);
+            box.Focus();
+            box.SelectAll();
+        };
+        return button;
     }
 
     private Button MakeTagColorButton(string tag, StackPanel palette)

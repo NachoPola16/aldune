@@ -91,6 +91,50 @@ public sealed class NotesRepositoryTagTests : IDisposable
     private Note Reload(Guid id) => new[] { NoteState.Active, NoteState.Archived, NoteState.Trashed }.SelectMany(_repository.GetByState).First(n => n.Id == id);
 
     [Fact]
+    public void RenameTag_ChangesTheNameOnEveryNoteAndTouchesThem()
+    {
+        var a = _repository.Create("a", "#F5E3B3", "primary");
+        var b = _repository.Create("b", "#F5E3B3", "primary");
+        _repository.SetTags(a.Id, new[] { "Casa", "otra" });
+        _repository.SetTags(b.Id, new[] { "casa" });
+        var before = Reload(a.Id).UpdatedAt;
+        System.Threading.Thread.Sleep(5);
+
+        Assert.True(_repository.RenameTag("CASA", "Hogar"));
+
+        Assert.Equal(new[] { "Hogar", "otra" }, Reload(a.Id).Tags.OrderBy(t => t, StringComparer.OrdinalIgnoreCase));
+        Assert.Equal(new[] { "Hogar" }, Reload(b.Id).Tags);
+        Assert.DoesNotContain("Casa", _repository.GetAllTags(), StringComparer.OrdinalIgnoreCase);
+        Assert.True(Reload(a.Id).UpdatedAt > before); // the sync must carry the change
+    }
+
+    [Fact]
+    public void RenameTag_ToAnExistingTag_MergesThemAndDoesNotDuplicate()
+    {
+        var a = _repository.Create("a", "#F5E3B3", "primary");
+        var b = _repository.Create("b", "#F5E3B3", "primary");
+        _repository.SetTags(a.Id, new[] { "x", "y" });
+        _repository.SetTags(b.Id, new[] { "x" });
+
+        Assert.True(_repository.RenameTag("x", "y"));
+
+        Assert.Equal(new[] { "y" }, Reload(a.Id).Tags);
+        Assert.Equal(new[] { "y" }, Reload(b.Id).Tags);
+        Assert.Equal(new[] { "y" }, _repository.GetAllTags());
+    }
+
+    [Fact]
+    public void RenameTag_WithAnEmptyNameOrAnUnknownTag_DoesNothing()
+    {
+        var a = _repository.Create("a", "#F5E3B3", "primary");
+        _repository.SetTags(a.Id, new[] { "x" });
+
+        Assert.False(_repository.RenameTag("x", "   "));
+        Assert.False(_repository.RenameTag("nope", "z"));
+        Assert.Equal(new[] { "x" }, Reload(a.Id).Tags);
+    }
+
+    [Fact]
     public void SetTags_Empty_UnassignsButKeepsTheTag()
     {
         // Las etiquetas se crean y se borran en el gestor. Quitar la última nota de una etiqueta no

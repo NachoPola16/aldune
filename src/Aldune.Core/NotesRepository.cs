@@ -146,6 +146,66 @@ public sealed class NotesRepository
         return command.ExecuteNonQuery() > 0;
     }
 
+    /// <summary>
+    /// Renames a tag on every note that carries it. If another tag already has the new name the two are merged (a note that had both keeps one).
+    /// The notes are stamped as changed, so the sync carries the new name. False when the name is empty or the tag does not exist.
+    /// </summary>
+    public bool RenameTag(string from, string to)
+    {
+        var oldName = from.Trim();
+        var newName = to.Trim();
+        if (oldName.Length == 0 || newName.Length == 0) return false;
+
+        using var connection = _database.OpenConnection();
+        using var transaction = connection.BeginTransaction();
+        string? oldId = Scalar(connection, transaction, "SELECT Id FROM Tag WHERE Name = $name COLLATE NOCASE;", oldName);
+        if (oldId is null) return false;
+        string? otherId = Scalar(connection, transaction, "SELECT Id FROM Tag WHERE Name = $name COLLATE NOCASE;", newName);
+
+        using (var stamp = connection.CreateCommand())
+        {
+            stamp.Transaction = transaction;
+            stamp.CommandText = "UPDATE Note SET UpdatedAt = $now, SyncAuthorDeviceId = NULL WHERE Id IN (SELECT NoteId FROM NoteTag WHERE TagId = $old);";
+            stamp.Parameters.AddWithValue("$now", DateTimeOffset.UtcNow.ToString("O"));
+            stamp.Parameters.AddWithValue("$old", oldId);
+            stamp.ExecuteNonQuery();
+        }
+
+        using (var change = connection.CreateCommand())
+        {
+            change.Transaction = transaction;
+            if (otherId is not null && otherId != oldId)
+            {
+                change.CommandText = """
+                    INSERT OR IGNORE INTO NoteTag (NoteId, TagId) SELECT NoteId, $other FROM NoteTag WHERE TagId = $old;
+                    DELETE FROM NoteTag WHERE TagId = $old;
+                    DELETE FROM Tag WHERE Id = $old;
+                    """;
+                change.Parameters.AddWithValue("$other", otherId);
+            }
+            else
+            {
+                // Only the spelling changes (or just the case): the same tag row keeps its notes.
+                change.CommandText = "UPDATE Tag SET Name = $name WHERE Id = $old;";
+                change.Parameters.AddWithValue("$name", newName);
+            }
+            change.Parameters.AddWithValue("$old", oldId);
+            change.ExecuteNonQuery();
+        }
+
+        transaction.Commit();
+        return true;
+    }
+
+    private static string? Scalar(Microsoft.Data.Sqlite.SqliteConnection connection, Microsoft.Data.Sqlite.SqliteTransaction transaction, string sql, string name)
+    {
+        using var command = connection.CreateCommand();
+        command.Transaction = transaction;
+        command.CommandText = sql;
+        command.Parameters.AddWithValue("$name", name);
+        return command.ExecuteScalar() as string;
+    }
+
     public bool DeleteTag(string name)
     {
         using var connection = _database.OpenConnection();

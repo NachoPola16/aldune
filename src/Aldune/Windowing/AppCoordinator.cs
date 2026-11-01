@@ -372,6 +372,33 @@ public sealed class AppCoordinator
     /// <summary>The colour of a tag, or null if it has none.</summary>
     public string? TagColor(string tag) => _settings?.TagColors.FirstOrDefault(p => string.Equals(p.Key, tag, StringComparison.OrdinalIgnoreCase)).Value;
 
+    /// <summary>Renames a tag everywhere: its notes, its colour, its place in the order and the dock view if it is showing it. False if nothing was renamed.</summary>
+    public bool RenameTag(string from, string to)
+    {
+        var name = to.Trim();
+        if (!_repository.RenameTag(from, name)) return false;
+        if (_settings is not null)
+        {
+            if (TagColor(from) is { } colour) { SetTagColorOnly(from, null); SetTagColorOnly(name, colour); }
+            _settings.TagOrder = _settings.TagOrder.Select(t => string.Equals(t, from, StringComparison.OrdinalIgnoreCase) ? name : t).ToList();
+            _repository.CustomTagOrder = _settings.TagOrder;
+            if (string.Equals(_settings.DockTagFilter, from, StringComparison.OrdinalIgnoreCase)) _settings.DockTagFilter = name;
+            _settingsService?.Save(_settings);
+        }
+        RefreshAll();
+        return true;
+    }
+
+    // The colour map without repainting any note (used when a tag only changes its name).
+    private void SetTagColorOnly(string tag, string? colour)
+    {
+        if (_settings is null) return;
+        foreach (var key in _settings.TagColors.Keys.Where(k => string.Equals(k, tag, StringComparison.OrdinalIgnoreCase)).ToList())
+            _settings.TagColors.Remove(key);
+        if (colour is not null) _settings.TagColors[tag] = colour;
+        _repository.TagColors = _settings.TagColors;
+    }
+
     /// <summary>Sets (or, with null, removes) the colour of a tag. Setting one repaints the notes that carry the tag; removing it leaves them as they are.</summary>
     public void SetTagColor(string tag, string? color)
     {
