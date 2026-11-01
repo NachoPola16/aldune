@@ -89,6 +89,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.text.font.FontWeight
 import app.aldune.domain.TagGrouping
+import app.aldune.domain.TagOrder
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -332,12 +333,17 @@ fun NoteListPane(
                 val grouped = settingsNow.groupByTag && state.tag == null && state.query.isBlank()
                 var collapsed by rememberSaveable { mutableStateOf(emptySet<String>()) }
                 val untaggedLabel = stringResource(R.string.group_untagged)
-                val entries = remember(order, grouped, collapsed, state.allTags) {
+                // Dragging a header reorders the tags: while it lasts every group is folded (equal rows to swap) and the groups follow the local
+                // order; the tag order is saved when the finger lifts.
+                var tagDrag by remember { mutableStateOf<String?>(null) }
+                var tagDragDelta by remember { mutableFloatStateOf(0f) }
+                var tagDragOrder by remember { mutableStateOf<List<String>?>(null) }
+                val entries = remember(order, grouped, collapsed, state.allTags, tagDrag != null, tagDragOrder) {
                     if (!grouped) order.map<NoteListItem, ListEntry> { ListEntry.Note(it, it.id) }
                     else buildList<ListEntry> {
-                        for (group in TagGrouping.group(order, state.allTags) { it.tags }) {
+                        for (group in TagGrouping.group(order, tagDragOrder ?: state.allTags) { it.tags }) {
                             val groupKey = group.tag?.lowercase() ?: UNTAGGED_KEY
-                            val open = groupKey !in collapsed
+                            val open = groupKey !in collapsed && tagDrag == null
                             add(ListEntry.Header(group.tag ?: untaggedLabel, groupKey, group.items.size, open))
                             if (open) for (note in group.items) add(ListEntry.Note(note, "$groupKey/${note.id}"))
                         }
@@ -387,6 +393,26 @@ fun NoteListPane(
                     dragDelta -= (newOffset - me.offset)
                 }
 
+                fun swapTagUnderDrag() {
+                    val key = tagDrag ?: return
+                    val local = tagDragOrder ?: return
+                    val visible = listState.layoutInfo.visibleItemsInfo
+                    val me = visible.firstOrNull { it.key == key } ?: return
+                    val center = me.offset + me.size / 2f + tagDragDelta
+                    val target = visible.firstOrNull { it.key != key && it.key != UNTAGGED_KEY && it.key is String && local.any { t -> t.lowercase() == it.key } && center >= it.offset && center <= it.offset + it.size } ?: return
+                    val moved = TagOrder.moveTo(local, key, target.key as String)
+                    if (moved == local) return
+                    tagDragOrder = moved
+                    val newOffset = if (target.offset < me.offset) target.offset else target.offset + target.size - me.size
+                    tagDragDelta -= (newOffset - me.offset)
+                }
+
+                fun tagDragEnd(save: Boolean) {
+                    val finished = tagDragOrder
+                    tagDrag = null; tagDragOrder = null; tagDragDelta = 0f
+                    if (save && finished != null && finished != state.allTags) viewModel.setTagOrder(finished)
+                }
+
                 fun dragBy(dy: Float) {
                     dragDelta += dy
                     swapUnderDrag()
@@ -433,7 +459,27 @@ fun NoteListPane(
                 ) {
                     items(entries, key = { it.key }) { entry ->
                       when (entry) {
-                        is ListEntry.Header -> GroupHeader(entry) { collapsed = if (entry.key in collapsed) collapsed - entry.key else collapsed + entry.key }
+                        is ListEntry.Header -> {
+                            val draggable = entry.key != UNTAGGED_KEY && state.allTags.size > 1
+                            val headerDragging = tagDrag == entry.key
+                            GroupHeader(
+                                entry,
+                                modifier = (if (headerDragging) Modifier.zIndex(1f).graphicsLayer { translationY = tagDragDelta } else Modifier.animateItem())
+                                    .then(
+                                        if (draggable) Modifier.pointerInput(entry.key) {
+                                            detectDragGesturesAfterLongPress(
+                                                onDragStart = {
+                                                    haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                                                    tagDrag = entry.key; tagDragDelta = 0f; tagDragOrder = state.allTags
+                                                },
+                                                onDrag = { change, amount -> change.consume(); tagDragDelta += amount.y; swapTagUnderDrag() },
+                                                onDragEnd = { tagDragEnd(save = true) },
+                                                onDragCancel = { tagDragEnd(save = false) },
+                                            )
+                                        } else Modifier,
+                                    ),
+                            ) { collapsed = if (entry.key in collapsed) collapsed - entry.key else collapsed + entry.key }
+                        }
                         is ListEntry.Note -> {
                         val item = entry.item
                         val dragging = draggedId == item.id
@@ -1053,10 +1099,10 @@ private sealed interface ListEntry {
 private const val UNTAGGED_KEY = "\u0000untagged"
 
 @Composable
-private fun GroupHeader(header: ListEntry.Header, onToggle: () -> Unit) {
+private fun GroupHeader(header: ListEntry.Header, modifier: Modifier = Modifier, onToggle: () -> Unit) {
     val state = stringResource(if (header.open) R.string.group_expanded else R.string.group_collapsed)
     Row(
-        Modifier.fillMaxWidth().clickable(onClick = onToggle).padding(start = 16.dp, end = 8.dp)
+        modifier.fillMaxWidth().clickable(onClick = onToggle).padding(start = 16.dp, end = 8.dp)
             .semantics(mergeDescendants = true) { heading(); stateDescription = state },
         verticalAlignment = Alignment.CenterVertically,
     ) {

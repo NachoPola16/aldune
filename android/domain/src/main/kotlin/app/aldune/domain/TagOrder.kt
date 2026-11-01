@@ -19,6 +19,14 @@ object TagOrder {
         return visible.toMutableList().also { val t = it.removeAt(from); it.add(to, t) }
     }
 
+    /** Moves [tag] to where [target] is (the other tags shift by one), for dragging a tag over another. Unknown names change nothing. */
+    fun moveTo(visible: List<String>, tag: String, target: String): List<String> {
+        val from = visible.indexOfFirst { it.equals(tag, ignoreCase = true) }
+        val to = visible.indexOfFirst { it.equals(target, ignoreCase = true) }
+        if (from < 0 || to < 0 || from == to) return visible
+        return visible.toMutableList().also { val t = it.removeAt(from); it.add(to, t) }
+    }
+
     // Un nombre de etiqueta no lleva saltos de línea (una sola línea en la nota), así que sirven de separador.
     fun encode(tags: List<String>): String = tags.joinToString("\n")
 

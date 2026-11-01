@@ -24,6 +24,14 @@ class TagOrderTest {
         assertEquals(visible, TagOrder.move(visible, "c", +1))
     }
 
+    @Test fun `llevar una etiqueta al sitio de otra la deja en esa posicion`() {
+        val visible = listOf("a", "b", "c", "d")
+        assertEquals(listOf("b", "c", "a", "d"), TagOrder.moveTo(visible, "a", "c"))
+        assertEquals(listOf("d", "a", "b", "c"), TagOrder.moveTo(visible, "D", "a"))
+        assertEquals(visible, TagOrder.moveTo(visible, "b", "b"))
+        assertEquals(visible, TagOrder.moveTo(visible, "x", "a"))
+    }
+
     @Test fun `la lista guardada se codifica con saltos de linea y se lee igual`() {
         val tags = listOf("uno", "dos palabras", "tres")
         assertEquals(tags, TagOrder.decode(TagOrder.encode(tags)))

@@ -414,6 +414,12 @@ class NotesViewModel(application: Application) : AndroidViewModel(application) {
         launchIo { refresh() }
     }
 
+    /** Saves a whole tag order (dragging a group header in the grouped list). */
+    fun setTagOrder(order: List<String>) {
+        updateSettings { it.copy(tagOrder = TagOrder.encode(order)) }
+        launchIo { refresh() }
+    }
+
     /** Las versiones guardadas de la nota (historial local), la más reciente primero. */
     suspend fun versions(noteId: String): List<NoteVersion> = withContext(Dispatchers.IO) { io.withLock { service?.versions(noteId) ?: emptyList() } }
 
