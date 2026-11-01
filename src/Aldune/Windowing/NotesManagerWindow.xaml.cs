@@ -535,6 +535,12 @@ public partial class NotesManagerWindow : Window
     /// En el filtro "Todas" no se va ninguna: solo cambia su chip de estado. Animarlas saliendo
     /// ahí seria mentir sobre lo que pasa, y ademas volverian a aparecer de inmediato.
     /// </summary>
+    /// <summary>Rows a right-click menu acts on when the clicked row is not part of the selection (the selection itself is left alone); null otherwise.</summary>
+    private List<NoteRow>? _menuTargets;
+
+    /// <summary>The rows an action works on: the menu's target if there is one, else what is selected.</summary>
+    private List<NoteRow> ActionRows() => _menuTargets ?? _rows.Where(r => r.IsSelected).ToList();
+
     private IReadOnlyList<NoteRow> RowsLeavingView(NoteState newState)
     {
         var stays = _filter switch
@@ -546,7 +552,7 @@ public partial class NotesManagerWindow : Window
 
         return newState == stays
             ? Array.Empty<NoteRow>()
-            : _rows.Where(r => r.IsSelected).ToList();
+            : ActionRows();
     }
 
     private static readonly Duration ListFade = new(TimeSpan.FromMilliseconds(140));
@@ -750,19 +756,19 @@ public partial class NotesManagerWindow : Window
     {
         if (sender is not FrameworkElement { DataContext: NoteRow row } rowElement) return;
 
-        if (!row.IsSelected)
-        {
-            foreach (var other in _allRows) other.IsSelected = false;
-            row.IsSelected = true;
-            _selectionAnchor = row;
-            UpdateSelectionState();
-        }
+        // The menu acts on the whole selection if this row is part of it, and only on this row otherwise; right-click never changes the selection.
+        var targets = row.IsSelected ? _rows.Where(r => r.IsSelected).ToList() : [row];
 
         var menu = new ContextMenu { PlacementTarget = rowElement, Placement = System.Windows.Controls.Primitives.PlacementMode.MousePoint };
         void Add(string header, RoutedEventHandler handler)
         {
             var item = new MenuItem { Header = header };
-            item.Click += handler;
+            item.Click += (s, args) =>
+            {
+                _menuTargets = row.IsSelected ? null : targets;
+                try { handler(s, args); }
+                finally { _menuTargets = null; }
+            };
             menu.Items.Add(item);
         }
 
@@ -872,10 +878,11 @@ public partial class NotesManagerWindow : Window
     private void OnArchiveSelectedClick(object sender, RoutedEventArgs e)
     {
         var leaving = RowsLeavingView(NoteState.Archived);
-        var selectedIds = _rows.Where(r => r.IsSelected).Select(r => r.Note.Id).ToList();
+        var targets = ActionRows();
+        var selectedIds = targets.Select(r => r.Note.Id).ToList();
         AnimateOut(leaving, () =>
         {
-            foreach (var row in _rows.Where(r => r.IsSelected))
+            foreach (var row in targets)
             {
                 _repository.SetState(row.Note.Id, NoteState.Archived);
             }
@@ -889,9 +896,10 @@ public partial class NotesManagerWindow : Window
     private void OnRestoreSelectedClick(object sender, RoutedEventArgs e)
     {
         var leaving = RowsLeavingView(NoteState.Active);
+        var targets = ActionRows();
         AnimateOut(leaving, () =>
         {
-            foreach (var row in _rows.Where(r => r.IsSelected))
+            foreach (var row in targets)
             {
                 _repository.SetState(row.Note.Id, NoteState.Active);
             }
@@ -906,7 +914,7 @@ public partial class NotesManagerWindow : Window
     /// </summary>
     private void OnDeleteSelectedClick(object sender, RoutedEventArgs e)
     {
-        var selected = _rows.Where(r => r.IsSelected).ToList();
+        var selected = ActionRows();
         if (selected.Count == 0) return;
 
         var message = selected.Count == 1
@@ -930,10 +938,11 @@ public partial class NotesManagerWindow : Window
     private void OnTrashSelectedClick(object sender, RoutedEventArgs e)
     {
         var leaving = RowsLeavingView(NoteState.Trashed);
-        var selectedIds = _rows.Where(r => r.IsSelected).Select(r => r.Note.Id).ToList();
+        var targets = ActionRows();
+        var selectedIds = targets.Select(r => r.Note.Id).ToList();
         AnimateOut(leaving, () =>
         {
-            foreach (var row in _rows.Where(r => r.IsSelected))
+            foreach (var row in targets)
             {
                 _repository.SetState(row.Note.Id, NoteState.Trashed);
             }
@@ -951,8 +960,8 @@ public partial class NotesManagerWindow : Window
     /// </summary>
     private void OnExportSelectedClick(object sender, RoutedEventArgs e)
     {
-        var toExport = _rows.Where(r => r.IsSelected).ToList();
-        if (toExport.Count == 0) toExport = _rows;
+        var toExport = ActionRows();
+        if (toExport.Count == 0 && _menuTargets is null) toExport = _rows;
         if (toExport.Count == 0) return;
 
         var choice = AppDialog.Show(this, Strings.ExportAsZipPrompt, Strings.ExportFormatTitle,

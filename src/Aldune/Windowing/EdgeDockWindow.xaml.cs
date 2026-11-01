@@ -70,7 +70,7 @@ public partial class EdgeDockWindow : Window
     /// cursor queda sobre un hueco que el sondeo interpreta como salida: el dock se pliega bajo los
     /// pies.
     /// </summary>
-    private static readonly TimeSpan HoverOpenGrace = TimeSpan.FromSeconds(3);
+    private static readonly TimeSpan HoverOpenGrace = TimeSpan.FromMilliseconds(1200);
 
     /// <summary>Hasta cuándo vale <see cref="HoverOpenGrace"/>; <c>MinValue</c> si no hay ninguno.</summary>
     private DateTime _hoverGraceUntil = DateTime.MinValue;

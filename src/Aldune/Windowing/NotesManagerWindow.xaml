@@ -446,14 +446,16 @@
                              Checked="OnFilterChanged" Style="{StaticResource FilterToggleStyle}" />
                 <RadioButton x:Name="FilterTrashed" GroupName="NotesFilter" Content="{x:Static res:Strings.FilterTrashed}"
                              Checked="OnFilterChanged" Style="{StaticResource FilterToggleStyle}" />
-                <ComboBox x:Name="TagFilterBox" MinWidth="145" MinHeight="30" Margin="8,0,4,0"
+                <!-- The three filters beside the tabs wrap together as one row (tag, not-edited, manage tags), instead of splitting at any point. -->
+                <StackPanel Orientation="Horizontal">
+                <ComboBox x:Name="TagFilterBox" MinWidth="130" MinHeight="30" Margin="8,0,4,0"
                           ToolTip="{x:Static res:Strings.TagFilterTooltip}"
                           AutomationProperties.Name="{x:Static res:Strings.TagFilterTooltip}"
                           SelectionChanged="OnTagFilterChanged"
                            Style="{StaticResource TagFilterStyle}"
                            Visibility="Collapsed" />
                 <!-- Not edited in a week / month / 3 months / year: only a way to look at the list (select all and archive works on what it shows). -->
-                <ComboBox x:Name="StaleFilterBox" MinWidth="145" MinHeight="30" Margin="8,0,0,0"
+                <ComboBox x:Name="StaleFilterBox" MinWidth="130" MinHeight="30" Margin="8,0,0,0"
                           ToolTip="{x:Static res:Strings.StaleFilterTooltip}"
                           AutomationProperties.Name="{x:Static res:Strings.StaleFilterTooltip}"
                           SelectionChanged="OnStaleFilterChanged"
@@ -467,6 +469,7 @@
                         Style="{StaticResource ToolbarButtonStyle}">
                     <TextBlock Text="&#xE8EC;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" FontSize="{DynamicResource AlduneTextBody}" />
                 </Button>
+                </StackPanel>
                 </WrapPanel>
                 <!-- «Nueva nota» al final de la fila de filtros, con el acento de la app: antes estaba en la cabecera, un botón con caja entre botones
                      de ventana planos, y desentonaba en todos los aspectos. Solo el «+», que se dibuja (dos barras de 2 px en una caja de 12) para que
