@@ -1269,6 +1269,13 @@ public partial class SettingsWindow : Window
         InviteWindow.ShowCreate(this, SyncServerUrlBox.Text.Trim());
     }
 
+    /// <summary>«Personas de este servidor»: los espacios creados con invitaciones y su «Revocar» (también con el token de administrador).</summary>
+    private void OnSyncPeopleClick(object sender, RoutedEventArgs e)
+    {
+        if (!_syncUiReady) return;
+        PeopleWindow.Show(this, SyncServerUrlBox.Text.Trim());
+    }
+
     /// <summary>«Sincronizar el aspecto con este perfil»: es del perfil elegido (cada perfil decide si lleva el aspecto), no de todo el equipo.</summary>
     private void OnSyncLookToggled(object sender, RoutedEventArgs e)
     {

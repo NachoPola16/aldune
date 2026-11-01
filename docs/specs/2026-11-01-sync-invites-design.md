@@ -29,7 +29,7 @@ Status: **decided, not built.** Goal: a person you trust gets their own space on
 
 - No `aldune://` join links (see ROADMAP, discarded: a tappable link has the hostile-link risk). The code is pasted by hand.
 - No open sign-up page, no email.
-- Android is guest-only at first (like profile creation, owner tools stay on Windows); owner tools on Android can follow.
+- ~~Android is guest-only at first~~ — **built in 3.0.0 / 2.0.0**: both apps create invitations (Android also shows a QR) and list/revoke spaces. The admin token is asked every time and never stored; storing it protected (DPAPI / Keystore) was considered and left out: it is used rarely, and it is the one secret that can lock people out.
 
 ## Tests
 

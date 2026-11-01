@@ -10,7 +10,6 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
@@ -33,7 +32,7 @@ internal object WhatsNew {
         Entry(18, "1.2.0", listOf(R.string.whatsnew_120_tasks, R.string.whatsnew_120_history, R.string.whatsnew_120_tags, R.string.whatsnew_120_links, R.string.whatsnew_120_langs)),
         Entry(19, "1.3.0", listOf(R.string.whatsnew_130_news)),
         Entry(20, "1.3.1", listOf(R.string.whatsnew_131_look, R.string.whatsnew_131_news, R.string.whatsnew_131_widget)),
-        Entry(21, "2.0.0", listOf(R.string.whatsnew_200_invite, R.string.whatsnew_200_look, R.string.whatsnew_200_edit, R.string.whatsnew_200_group, R.string.whatsnew_200_widget)),
+        Entry(21, "2.0.0", listOf(R.string.whatsnew_200_invite, R.string.whatsnew_200_people, R.string.whatsnew_200_look, R.string.whatsnew_200_edit, R.string.whatsnew_200_group, R.string.whatsnew_200_widget)),
     )
 
     val codes: List<Int> get() = entries.map { it.versionCode }

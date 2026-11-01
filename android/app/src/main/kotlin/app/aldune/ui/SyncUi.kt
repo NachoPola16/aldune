@@ -13,16 +13,13 @@ import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Button
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.DisposableEffect
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -366,7 +363,7 @@ private fun ConnectForm(controller: SyncController, additional: Boolean, initial
             if (url.trim().startsWith("http://", ignoreCase = true)) Text(stringResource(R.string.sync_http_warning), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.error)
             // Guía para montar el servidor propio: la de GitHub, en español si el móvil está en español (si no, en inglés).
             val guideContext = androidx.compose.ui.platform.LocalContext.current
-            androidx.compose.material3.TextButton(onClick = {
+            TextButton(onClick = {
                 val file = if (java.util.Locale.getDefault().language == "es") "SYNC.es.md" else "SYNC.md"
                 runCatching {
                     guideContext.startActivity(android.content.Intent(android.content.Intent.ACTION_VIEW, android.net.Uri.parse("https://github.com/NachoPola16/aldune/blob/main/docs/$file")))
@@ -450,8 +447,9 @@ private fun ConnectForm(controller: SyncController, additional: Boolean, initial
     }
 }
 
-private fun inviteErrorText(failure: InviteFailure?): Int = when (failure) {
+internal fun inviteErrorText(failure: InviteFailure?): Int = when (failure) {
     InviteFailure.INVALID_CODE -> R.string.invite_err_invalid
+    InviteFailure.NOT_ALLOWED -> R.string.invite_err_not_allowed
     InviteFailure.OFFLINE -> R.string.invite_err_offline
     InviteFailure.NOT_SUPPORTED -> R.string.invite_err_not_supported
     InviteFailure.SERVER_FULL -> R.string.invite_err_full
@@ -484,6 +482,7 @@ private fun ConnectedPanel(controller: SyncController, profile: SyncProfile) {
     val line = formatStatus(status, now)
     var confirming by remember { mutableStateOf(false) }
     var editing by remember { mutableStateOf(false) }
+    var inviting by remember { mutableStateOf(false) }
 
     Column(Modifier.padding(horizontal = 16.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
         Text(stringResource(R.string.sync_connected_to, profile.profileName?.takeIf { it.isNotBlank() } ?: profile.url))
@@ -506,7 +505,7 @@ private fun ConnectedPanel(controller: SyncController, profile: SyncProfile) {
                 Modifier.fillMaxWidth().toggleable(value = profile.syncLook, role = Role.Switch, onValueChange = { controller.setSyncLook(profile.id, it) }),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                Column(Modifier.weight(1f).padding(vertical = 6.dp)) {
+                Column(Modifier.weight(1f).padding(end = 16.dp, top = 6.dp, bottom = 6.dp)) {
                     Text(stringResource(R.string.sync_look_title))
                     Text(stringResource(R.string.sync_look_hint), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
@@ -514,11 +513,15 @@ private fun ConnectedPanel(controller: SyncController, profile: SyncProfile) {
             }
         }
         if (!unreadable) OutlinedButton(onClick = { editing = true }, modifier = Modifier.padding(top = 4.dp)) { Text(stringResource(R.string.sync_edit_server)) }
+        if (profile.transport == SyncTransportKind.SERVER && !unreadable) {
+            OutlinedButton(onClick = { inviting = true }, modifier = Modifier.padding(top = 4.dp)) { Text(stringResource(R.string.invite_create_button)) }
+        }
         OutlinedButton(onClick = { confirming = true }, modifier = Modifier.padding(top = 4.dp)) { Text(stringResource(R.string.sync_disconnect)) }
         HorizontalDivider(Modifier.padding(vertical = 12.dp))
     }
 
     if (editing) EditServerDialog(controller, profile, onDone = { editing = false })
+    if (inviting) InviteDialog(profile, onDone = { inviting = false })
 
     if (confirming) {
         AlertDialog(

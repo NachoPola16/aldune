@@ -435,6 +435,7 @@ ALDUNE_SYNC_MAX_SPACES=20
 - La persona invitada lo envía a `POST /invites/v1/redeem` (`{"code":"…"}`) y recibe un **token nuevo** para un **espacio nuevo** (`/data/spaces/u-xxxxxxxx/objects`). La clave de sync se genera en el dispositivo de la persona; el servidor nunca la ve.
 - `GET /admin/v1/spaces` los lista y `DELETE /admin/v1/spaces/<nombre>` revoca uno: su token deja de valer y sus ficheros se quedan en disco hasta que los borres.
 - El token de administrador solo crea códigos y revoca espacios: **no** abre ningún almacén. Ni los códigos ni los tokens se guardan en claro (solo su hash, en `/data/registry.json`). Un código erróneo o un token de administrador erróneo cuentan en el mismo límite de fallos por dirección que un token de almacén erróneo.
+- **Desde las apps** (Windows y Android, Ajustes → Sync): *Invitar a alguien…* crea el código (texto y, en Android, un QR que la persona lee con *Escanear QR*) y *Personas de este servidor…* lista los espacios con un botón *Revocar*. Las dos piden el token de administrador **cada vez** y no lo guardan nunca (ni en el perfil ni en el fichero de ajustes). Un servidor sin token de administrador contesta 404 y las apps lo dicen. Solo salen los espacios creados con invitaciones; los de `ALDUNE_SYNC_SPACES` los gestionas tú en el entorno. Una invitación que nadie ha canjeado aún no tiene nada que revocar: simplemente caduca.
 - Sin `ALDUNE_SYNC_ADMIN_TOKEN` estas rutas no existen (404). Están fuera de `/api`, así que un proxy que reenvía todo ya las sirve.
 
 ### El aspecto te sigue (opcional)

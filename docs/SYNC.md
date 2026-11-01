@@ -436,6 +436,7 @@ ALDUNE_SYNC_MAX_SPACES=20
 - The guest sends it to `POST /invites/v1/redeem` (`{"code":"…"}`) and gets back a **new token** for a **new space** (`/data/spaces/u-xxxxxxxx/objects`). The sync key is generated on the guest's device; the server never sees it.
 - `GET /admin/v1/spaces` lists them and `DELETE /admin/v1/spaces/<name>` revokes one: its token stops working and its files stay on disk until you delete them.
 - The admin token can only make codes and revoke spaces: it opens **no** store. Neither codes nor tokens are kept in clear (only their hash, in `/data/registry.json`). Wrong codes and wrong admin tokens count against the same per-address failure limit as a wrong store token.
+- **From the apps** (Windows and Android, Settings → Sync): *Invite someone…* creates the code (text, and a QR on Android that the guest reads with *Scan QR*) and *People on this server…* lists the spaces with a *Revoke* button. Both ask for the admin token **every time** and never store it (not in the profile, not in the settings file). A server with no admin token answers 404 and the apps say so. Only spaces made from invitations are listed; spaces from `ALDUNE_SYNC_SPACES` are yours to manage in the environment. An invitation that nobody has redeemed yet has no entry to revoke: it simply expires.
 - Without `ALDUNE_SYNC_ADMIN_TOKEN` these routes do not exist (404). They live outside `/api`, so a proxy that forwards everything already serves them.
 
 ### The look follows you (optional)

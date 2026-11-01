@@ -61,6 +61,75 @@ class InvitationsTest {
     }
 
     @Test
+    fun `crea una invitacion con el token de administrador y devuelve el texto que lee parse`() {
+        MockWebServer().use { server ->
+            server.enqueue(MockResponse().setBody("""{"code":"fresh-code","expiresAt":"2026-11-08T00:00:00Z"}"""))
+            val url = server.url("/").toString()
+
+            val text = Invitations.create(url, "  admin-token ", "hermano")
+
+            val request = server.takeRequest()
+            assertEquals("/admin/v1/invites", request.path)
+            assertEquals("Bearer admin-token", request.getHeader("Authorization"))
+            assertEquals("""{"label":"hermano"}""", request.body.readUtf8())
+            assertEquals(Invitation(url, "fresh-code"), Invitations.parse(text))
+        }
+    }
+
+    @Test
+    fun `una invitacion sin etiqueta no la manda`() {
+        MockWebServer().use { server ->
+            server.enqueue(MockResponse().setBody("""{"code":"c"}"""))
+            Invitations.create(server.url("/").toString(), "t", "  ")
+            assertEquals("{}", server.takeRequest().body.readUtf8())
+        }
+    }
+
+    @Test
+    fun `lista los espacios del mas nuevo al mas viejo`() {
+        MockWebServer().use { server ->
+            server.enqueue(
+                MockResponse().setBody(
+                    """[{"name":"u-1","label":"vieja","createdAt":"2026-10-01T10:00:00+00:00"},
+                       {"name":"u-2","label":null,"createdAt":"2026-11-01T10:00:00.123+00:00"}]"""
+                )
+            )
+
+            val spaces = Invitations.listSpaces(server.url("/").toString(), "adm")
+
+            assertEquals(listOf("u-2", "u-1"), spaces.map { it.name })
+            assertNull(spaces[0].label)
+            assertEquals("vieja", spaces[1].label)
+            assertEquals("/admin/v1/spaces", server.takeRequest().path)
+        }
+    }
+
+    @Test
+    fun `revoca un espacio y distingue el que ya no existe`() {
+        MockWebServer().use { server ->
+            server.enqueue(MockResponse().setResponseCode(204))
+            server.enqueue(MockResponse().setResponseCode(404))
+            val url = server.url("/").toString()
+
+            assertEquals(true, Invitations.revokeSpace(url, "adm", "u-1"))
+            assertEquals(false, Invitations.revokeSpace(url, "adm", "u-1"))
+
+            val request = server.takeRequest()
+            assertEquals("DELETE", request.method)
+            assertEquals("/admin/v1/spaces/u-1", request.path)
+        }
+    }
+
+    @Test
+    fun `un token de administrador malo es no permitido y no cuenta como falta de soporte`() {
+        MockWebServer().use { server ->
+            server.enqueue(MockResponse().setResponseCode(401))
+            val error = assertThrows(InviteException::class.java) { Invitations.listSpaces(server.url("/").toString(), "mal") }
+            assertEquals(InviteFailure.NOT_ALLOWED, error.failure)
+        }
+    }
+
+    @Test
     fun `sin servidor es sin conexion`() {
         val error = assertThrows(InviteException::class.java) { Invitations.redeem(Invitation("http://127.0.0.1:1/", "x")) }
         assertEquals(InviteFailure.OFFLINE, error.failure)

@@ -183,6 +183,32 @@ public sealed class SyncServerInvitesTests : IDisposable
     }
 
     [Fact]
+    public async Task TheClientLibraryListsAndRevokesSpaces()
+    {
+        Start();
+        using var http = _factory!.CreateClient();
+        var baseUrl = http.BaseAddress!.ToString();
+        Assert.Empty(await SyncInviteClient.ListSpacesAsync(http, baseUrl, Admin));
+        SyncInvite.TryParse(await SyncInviteClient.CreateAsync(http, baseUrl, Admin, "hermano"), out var url, out var code);
+        var token = await SyncInviteClient.RedeemAsync(http, url, code);
+
+        var spaces = await SyncInviteClient.ListSpacesAsync(http, baseUrl, Admin);
+
+        var space = Assert.Single(spaces);
+        Assert.Equal("hermano", space.Label);
+        Assert.StartsWith("u-", space.Name);
+        Assert.True(space.CreatedAt > DateTimeOffset.UtcNow.AddMinutes(-5));
+        Assert.True(await SyncInviteClient.RevokeSpaceAsync(http, baseUrl, Admin, space.Name));
+        Assert.Empty(await SyncInviteClient.ListSpacesAsync(http, baseUrl, Admin));
+        using var guest = Client(token);
+        Assert.Equal(HttpStatusCode.Unauthorized, (await guest.GetAsync("/api/v1/objects")).StatusCode);
+        // Already gone: not an error, just «nothing to revoke».
+        Assert.False(await SyncInviteClient.RevokeSpaceAsync(http, baseUrl, Admin, space.Name));
+        var wrongAdmin = await Assert.ThrowsAsync<InviteException>(() => SyncInviteClient.ListSpacesAsync(http, baseUrl, "nope"));
+        Assert.Equal(InviteFailure.NotAllowed, wrongAdmin.Failure);
+    }
+
+    [Fact]
     public async Task TheClientLibraryReportsAServerWithoutInvitations()
     {
         Start(admin: null);

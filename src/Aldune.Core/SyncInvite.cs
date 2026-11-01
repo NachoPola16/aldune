@@ -88,6 +88,48 @@ public static class SyncInviteClient
         return body.GetProperty("token").GetString()!;
     }
 
+    /// <summary>Owner side: the spaces created from invitations (the ones the admin token can revoke). Env-configured spaces are not listed.</summary>
+    public static async Task<IReadOnlyList<SyncSpaceInfo>> ListSpacesAsync(HttpClient http, string serverUrl, string adminToken, CancellationToken ct = default)
+    {
+        using var request = new HttpRequestMessage(HttpMethod.Get, Endpoint(serverUrl, "admin/v1/spaces"));
+        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", adminToken.Trim());
+        using var response = await Send(http, request, ct);
+        ThrowForAdminStatus(response);
+        try
+        {
+            var body = await response.Content.ReadFromJsonAsync<JsonElement>(ct);
+            return body.EnumerateArray().Select(item => new SyncSpaceInfo(
+                item.GetProperty("name").GetString()!,
+                item.TryGetProperty("label", out var label) && label.ValueKind == JsonValueKind.String ? label.GetString() : null,
+                item.GetProperty("createdAt").GetDateTimeOffset())).OrderByDescending(space => space.CreatedAt).ToList();
+        }
+        catch (Exception ex) when (ex is JsonException or InvalidOperationException or KeyNotFoundException or FormatException)
+        {
+            throw new InviteException(InviteFailure.Server);
+        }
+    }
+
+    /// <summary>Owner side: cuts the token of a space (its files stay on the server). <c>false</c> when it no longer exists.</summary>
+    public static async Task<bool> RevokeSpaceAsync(HttpClient http, string serverUrl, string adminToken, string name, CancellationToken ct = default)
+    {
+        using var request = new HttpRequestMessage(HttpMethod.Delete, Endpoint(serverUrl, "admin/v1/spaces/" + Uri.EscapeDataString(name)));
+        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", adminToken.Trim());
+        using var response = await Send(http, request, ct);
+        // A 404 here is ambiguous with «server without admin routes»: the routes exist only with the admin token, so a wrong
+        // token is 401 first and a 404 means the space was already gone.
+        if (response.StatusCode == System.Net.HttpStatusCode.NotFound) return false;
+        ThrowForAdminStatus(response);
+        return true;
+    }
+
+    private static void ThrowForAdminStatus(HttpResponseMessage response)
+    {
+        if (response.StatusCode == System.Net.HttpStatusCode.Unauthorized) throw new InviteException(InviteFailure.NotAllowed);
+        if (response.StatusCode == System.Net.HttpStatusCode.NotFound) throw new InviteException(InviteFailure.NotSupported);
+        if (response.StatusCode == System.Net.HttpStatusCode.TooManyRequests) throw new InviteException(InviteFailure.TooManyAttempts);
+        if (!response.IsSuccessStatusCode) throw new InviteException(InviteFailure.Server);
+    }
+
     private static Uri Endpoint(string serverUrl, string path)
     {
         var baseText = serverUrl.Trim();
@@ -107,6 +149,9 @@ public static class SyncInviteClient
         }
     }
 }
+
+/// <summary>A space created from an invitation, as the owner sees it (the label is only ever shown to the owner).</summary>
+public sealed record SyncSpaceInfo(string Name, string? Label, DateTimeOffset CreatedAt);
 
 public enum InviteFailure { Offline, InvalidCode, NotAllowed, NotSupported, ServerFull, TooManyAttempts, Server }
 
