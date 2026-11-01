@@ -16,6 +16,7 @@ import androidx.compose.ui.focus.focusProperties
 import androidx.compose.ui.input.pointer.PointerEventPass
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.runtime.withFrameNanos
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.runtime.mutableFloatStateOf
@@ -376,6 +377,21 @@ fun NoteListPane(
                     // The index is in the rows actually drawn (headers and repeated notes included), not in `order`.
                     val index = entries.indexOfFirst { it is ListEntry.Note && it.item.id == highlight }
                     if (highlight != null && index >= 0) listState.animateScrollToItem(index)
+                }
+
+                // A note just created from the editor goes to the end of the list, which may be off screen: bring it into view (unless it already
+                // is) so that leaving the note shows where it went instead of the place the list was at when it was created.
+                val scrollTo by viewModel.scrollTo.collectAsStateWithLifecycle()
+                LaunchedEffect(scrollTo, entries) {
+                    val target = scrollTo ?: return@LaunchedEffect
+                    val index = entries.indexOfFirst { it is ListEntry.Note && it.item.id == target }
+                    if (index < 0) return@LaunchedEffect
+                    withFrameNanos { }
+                    val shown = listState.layoutInfo.visibleItemsInfo.any { RowKeys.shows(it.key, target) }
+                    // A jump, not an animation: the list is coming back under the closing editor, and watching it travel to the end looked like
+                    // it was struggling to get there.
+                    if (!shown) listState.scrollToItem(index)
+                    viewModel.scrollHandled()
                 }
 
                 // A menu only opens for a row that is on screen: a gesture that ends or is cancelled after the list scrolled must never

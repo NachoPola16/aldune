@@ -373,6 +373,30 @@ class NotesViewModel(application: Application) : AndroidViewModel(application) {
         flushDraft("")
         drafts.remove("")
         aliases.remove("")
+        previewColor = null
+    }
+
+    private val _scrollTo = MutableStateFlow<String?>(null)
+
+    /** The note just created from the editor: the list brings it into view (a new note goes to the end, maybe off screen) and then calls [scrollHandled]. */
+    val scrollTo: StateFlow<String?> = _scrollTo.asStateFlow()
+
+    fun scrollHandled() { _scrollTo.value = null }
+
+    // The colour the pending new note will get, shown on the empty editor before anything is typed. The note is only created with its
+    // first character, and it is created with exactly this colour, so what the user sees is what is saved.
+    private var previewColor: String? = null
+
+    suspend fun previewNewNoteColor(): String = withContext(Dispatchers.IO) {
+        io.withLock {
+            // After a rotation the pane is rebuilt with the same empty key: if the note was already created, its own colour is the answer.
+            drafts[""]?.noteId?.let { id -> service?.get(id)?.color?.let { return@withLock it } }
+            previewColor ?: run {
+                val colors = newNoteColors()
+                val taken = service?.list(NoteState.ACTIVE)?.map { it.color }.orEmpty()
+                NoteColorAssigner.assign(colors.theme, colors.tone, colors.rule, colors.fixedColor, taken).also { previewColor = it }
+            }
+        }
     }
 
     /** El texto cambió: se guarda tras una pausa en la escritura. */
@@ -485,7 +509,7 @@ class NotesViewModel(application: Application) : AndroidViewModel(application) {
             if (text == draft.lastSaved) return@withLock
             val id = draft.noteId
             if (id == null) {
-                if (text.isNotEmpty()) (service?.create(text, settings = newNoteColors()) as? NoteResult.Ok)?.let { draft.noteId = it.value.id; draft.lastSaved = text; sounds.play(SoundEvent.NOTE_CREATED) }
+                if (text.isNotEmpty()) (service?.create(text, color = previewColor, settings = newNoteColors()) as? NoteResult.Ok)?.let { draft.noteId = it.value.id; draft.lastSaved = text; previewColor = null; _scrollTo.value = it.value.id; sounds.play(SoundEvent.NOTE_CREATED) }
             } else if (service?.edit(id, text) is NoteResult.Ok) {
                 draft.lastSaved = text
             }
