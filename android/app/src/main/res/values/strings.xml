@@ -492,6 +492,10 @@
     <string name="existing_tags">Your tags</string>
     <string name="whatsnew_131_news">Select several notes at once (archive, trash, tag), a pop-up for new versions, and safer swipes and task boxes.</string>
     <string name="whatsnew_131_widget">The widget can be limited to one tag and lets you tick tasks right on it.</string>
+    <string name="whatsnew_200_invite">Join a shared server with an invitation: paste it and you get your own private space.</string>
+    <string name="whatsnew_200_edit">Change the address or token of a connected sync profile without disconnecting it.</string>
+    <string name="whatsnew_200_group">Optional «Group by tag» for All notes: collapsible sections, several open at once.</string>
+    <string name="whatsnew_200_widget">Widget: the preview no longer repeats the tasks shown as boxes.</string>
     <string name="update_dialog_body">A new version is on GitHub. Installing it over this one keeps your notes.</string>
     <string name="select_notes">Select</string>
     <string name="selection_count">%1$d selected</string>

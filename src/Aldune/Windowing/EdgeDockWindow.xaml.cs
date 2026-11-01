@@ -2512,7 +2512,11 @@ public partial class EdgeDockWindow : Window
 
     internal void CenterOnThisMonitor(Window window)
     {
-        window.MaxHeight = _workingArea.Height * 0.9;
+        // Alto fijo (Ajustes, Gestionar notas): empieza con holgura (90 %) pero su tope es el área entera, para que Win+flecha pueda ajustarla a
+        // media pantalla sin dejar franja. Las que se ajustan al contenido (diálogos) conservan el 90 % como tope.
+        bool fixedHeight = !double.IsNaN(window.Height);
+        window.MaxHeight = fixedHeight ? _workingArea.Height : _workingArea.Height * 0.9;
+        if (fixedHeight) window.Height = Math.Min(window.Height, _workingArea.Height * 0.9);
         // Y el ancho: Ajustes (900 px) en una pantalla pequeña o muy escalada (1280 px a 150 % son 853) se salía por la derecha. Los
         // mínimos bajan con los máximos, para que un mínimo mayor que la pantalla no gane. (Maximizar quita estos topes: MaximizeHook.)
         window.MaxWidth = _workingArea.Width;

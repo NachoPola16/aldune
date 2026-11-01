@@ -492,6 +492,10 @@
     <string name="existing_tags">您的标签</string>
     <string name="whatsnew_131_news">可一次选择多条笔记（归档、废纸篓、标签）；新版本弹窗提醒；滑动和任务复选框更不易误操作。</string>
     <string name="whatsnew_131_widget">小组件可以只显示某个标签，并且可直接勾选任务。</string>
+    <string name="whatsnew_200_invite">用邀请加入共享服务器：粘贴后即可获得你自己的私人空间。</string>
+    <string name="whatsnew_200_edit">无需断开即可更改已连接同步配置文件的地址或令牌。</string>
+    <string name="whatsnew_200_group">“全部便笺”可选“按标签分组”：可折叠分区，可同时展开多个。</string>
+    <string name="whatsnew_200_widget">小组件：预览不再重复以复选框显示的任务。</string>
     <string name="update_dialog_body">GitHub 上有新版本。直接覆盖安装即可，笔记会保留。</string>
     <string name="select_notes">选择</string>
     <string name="selection_count">已选 %1$d 条</string>

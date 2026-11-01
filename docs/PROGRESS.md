@@ -114,4 +114,4 @@ These are the ones a person using Aldune could actually notice. None of them is 
 
 ## What is next
 
-See [`ROADMAP.md`](ROADMAP.md). The short version: find out from real users what is missing, host several people on one server without extra containers, and keep the data format stable so that every version installed keeps working with the others.
+See [`ROADMAP.md`](ROADMAP.md). The short version: find out from real users what is missing (several people can already share one server, each in a private space they join with an invitation), maybe sync the look between devices, and keep the data format stable so that every version installed keeps working with the others.

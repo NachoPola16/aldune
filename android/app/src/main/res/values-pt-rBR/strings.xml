@@ -492,6 +492,10 @@
     <string name="existing_tags">Suas etiquetas</string>
     <string name="whatsnew_131_news">Selecione várias notas de uma vez (arquivar, lixeira, etiqueta), um aviso para novas versões e deslizes e caixas de tarefa mais seguros.</string>
     <string name="whatsnew_131_widget">O widget pode ser limitado a uma etiqueta e permite marcar tarefas direto nele.</string>
+    <string name="whatsnew_200_invite">Entre em um servidor compartilhado com um convite: cole e você terá seu próprio espaço privado.</string>
+    <string name="whatsnew_200_edit">Altere o endereço ou o token de um perfil de sync conectado sem desconectá-lo.</string>
+    <string name="whatsnew_200_group">“Agrupar por etiqueta” opcional em Todas as notas: seções recolhíveis, várias abertas ao mesmo tempo.</string>
+    <string name="whatsnew_200_widget">Widget: a prévia não repete mais as tarefas mostradas como caixas.</string>
     <string name="update_dialog_body">Há uma nova versão no GitHub. Instalá-la sobre esta mantém suas notas.</string>
     <string name="select_notes">Selecionar</string>
     <string name="selection_count">%1$d selecionadas</string>

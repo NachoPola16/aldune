@@ -492,6 +492,10 @@
     <string name="existing_tags">Le tue etichette</string>
     <string name="whatsnew_131_news">Seleziona più note insieme (archivia, cestino, etichetta), una finestra segnala le nuove versioni e scorrimenti e caselle più sicuri.</string>
     <string name="whatsnew_131_widget">Il widget può essere limitato a un’etichetta e permette di spuntare le attività direttamente.</string>
+    <string name="whatsnew_200_invite">Unisciti a un server condiviso con un invito: incollalo e avrai il tuo spazio privato.</string>
+    <string name="whatsnew_200_edit">Cambia indirizzo o token di un profilo di sync collegato senza scollegarlo.</string>
+    <string name="whatsnew_200_group">«Raggruppa per etichetta» facoltativo in Tutte le note: sezioni comprimibili, più aperte insieme.</string>
+    <string name="whatsnew_200_widget">Widget: l’anteprima non ripete più le attività mostrate come caselle.</string>
     <string name="update_dialog_body">C\'è una nuova versione su GitHub. Installandola sopra questa, le tue note restano.</string>
     <string name="select_notes">Seleziona</string>
     <string name="selection_count">%1$d selezionate</string>

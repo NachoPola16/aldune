@@ -492,6 +492,10 @@
     <string name="existing_tags">Vos étiquettes</string>
     <string name="whatsnew_131_news">Sélectionnez plusieurs notes à la fois (archiver, corbeille, étiquette), une fenêtre signale les nouvelles versions, et les balayages et cases sont plus sûrs.</string>
     <string name="whatsnew_131_widget">Le widget peut se limiter à une étiquette et permet de cocher des tâches directement.</string>
+    <string name="whatsnew_200_invite">Rejoignez un serveur partagé avec une invitation : collez-la et vous avez votre propre espace privé.</string>
+    <string name="whatsnew_200_edit">Modifiez l’adresse ou le jeton d’un profil de sync connecté sans le déconnecter.</string>
+    <string name="whatsnew_200_group">« Grouper par étiquette » facultatif pour Toutes les notes : sections repliables, plusieurs ouvertes à la fois.</string>
+    <string name="whatsnew_200_widget">Widget : l’aperçu ne répète plus les tâches affichées sous forme de cases.</string>
     <string name="update_dialog_body">Une nouvelle version est disponible sur GitHub. L\'installer par-dessus celle-ci conserve vos notes.</string>
     <string name="select_notes">Sélectionner</string>
     <string name="selection_count">%1$d sélectionnées</string>

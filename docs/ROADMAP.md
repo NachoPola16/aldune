@@ -10,7 +10,7 @@ Originating session: 2026-09-06.
 
 ## Visible version of the application
 
-The current round is identified as **v2.7.3**. The version is shown in Settings and also in the tray
+The current round is identified as **v3.0.0**. The version is shown in Settings and also in the tray
 icon's text. Every major update must increment this number following SemVer: patches for fixes, a
 minor version for new features and a major version when there are incompatible changes.
 
@@ -405,7 +405,7 @@ A window, not a tour: after an update the app lists, once, what the person skipp
 - **Dock fluidity, measured (2.6.0, `probe27-perf`)**: the repository (about 1 ms with 150 notes) and the colour converters (about 6 ms for 150 tabs) are not the cost; building the tab visuals is: about 1.5 ms per tab on every view change or wheel notch (around 40 ms with 10 notes, 100 ms with 50, 240 ms with 150). Hover polling is free (0.05 ms). Left as it is: typical docks hold well under 30 notes. If someone keeps 100+ notes in the dock, the next step is a virtualised tab list (it touches the entrance animation, drag-to-reorder and the `_tabButtons` map) or coalescing the rebuild while the wheel is still turning.
 - **Not changed, on purpose**: manager rows and tab previews keep their spacing (measured, nothing cramped). Closing a note used to fade only its content while the window frame and the DWM shadow stayed at full strength and vanished with a pop (worst with the XP looks). Windows refuses `WS_EX_LAYERED` on these WPF windows, so now `ClosingGhost` renders the note (background + content), cloaks the real window and fades a transparent stand-in with the same corners and a soft shadow; if the render fails, the old content fade still runs. 2.4.2 extends it to the notes manager and Settings through `WindowCloseAnimation` (they also faded only their content).
 
-### Next rounds — decided 2026-11-01
+### Next rounds — decided 2026-11-01 (invitations, tag grouping and the card shadow option are built in Windows 3.0.0 / Android 2.0.0; the tick animation was not built; syncing the look is still open)
 
 - **Invitations to the shared sync server** (server + Windows + Android): one-use codes so someone can get their own space from the app without the owner touching the server. Design in `docs/specs/2026-11-01-sync-invites-design.md`. It replaces the discarded «join link» as the way to make joining easy; the code is still pasted, never tapped. Together with a *How do I set up a server?* button in Settings → Sync (both apps) that opens the Docker guide.
 - **Android: group «All notes» by tag (optional setting, default off, Android only)**: collapsible sections per tag, several open at once, state remembered; a note with several tags appears under each; untagged notes go under «No tag»; manual reordering is off in this mode. Windows keeps its dock as it is.

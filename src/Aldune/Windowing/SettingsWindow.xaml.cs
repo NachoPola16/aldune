@@ -91,7 +91,7 @@ public partial class SettingsWindow : Window
         // (reportado por el usuario, 2026-09-11). Valor de reserva aquí, por si algún día se
         // muestra sin pasar por AppCoordinator.OpenSettings (que sí conoce el monitor correcto):
         // CenterOnThisMonitor lo corrige contra el monitor real justo después, en el camino normal.
-        MaxHeight = SystemParameters.WorkArea.Height * 0.9;
+        LimitToWorkArea(SystemParameters.WorkArea.Width, SystemParameters.WorkArea.Height);
 
         PreviewKeyDown += OnPreviewKeyDown;
         // Esc cierra Ajustes. En KeyDown, no en Preview: mientras se graba un atajo, o con un
@@ -336,8 +336,19 @@ public partial class SettingsWindow : Window
     private void RestoreNormalHeightLimit()
     {
         var monitor = MonitorLookup.MonitorAt(Left, Top, Width, Height, MonitorEnumerator.EnumerateMonitors());
-        MaxHeight = (monitor?.WorkArea.Height ?? SystemParameters.WorkArea.Height) * 0.9;
-        MaxWidth = monitor?.WorkArea.Width ?? SystemParameters.WorkArea.Width;
+        LimitToWorkArea(monitor?.WorkArea.Width ?? SystemParameters.WorkArea.Width, monitor?.WorkArea.Height ?? SystemParameters.WorkArea.Height);
+    }
+
+    /// <summary>
+    /// El tamaño inicial cabe con holgura (90 % del alto útil) pero el TOPE es el área de trabajo entera: con el 90 % también de tope, Win+flecha
+    /// (que no pasa por «maximizar») dejaba una franja sin cubrir al ajustar la ventana a la mitad de la pantalla. Igual que en NoteWindow, el
+    /// tope describe el límite real de redimensionado y de ajuste.
+    /// </summary>
+    private void LimitToWorkArea(double workWidth, double workHeight)
+    {
+        MaxHeight = workHeight;
+        MaxWidth = workWidth;
+        if (!double.IsNaN(Height)) Height = Math.Min(Height, workHeight * 0.9);
     }
 
     private void OnWindowStateChanged(object? sender, EventArgs e)
