@@ -450,6 +450,8 @@
     <string name="sound_silenced_dnd">Do Not Disturb is blocking system sounds. Allow “Touch sounds” in its settings, or turn it off.</string>
     <string name="edit_toggle_task">Check or uncheck the task on this line</string>
     <string name="settings_tab_sync">Sync</string>
+    <string name="compact_settings_tabs">Compact tabs</string>
+    <string name="compact_settings_tabs_hint">One row of emoji instead of named buttons: leaves more room for the settings.</string>
     <string name="color_name_red">Red</string>
     <string name="color_name_orange">Orange</string>
     <string name="color_name_yellow">Yellow</string>

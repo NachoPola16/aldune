@@ -77,6 +77,8 @@ data class AppSettings(
     val tagColors: String = "",
     /** «#» delante de las etiquetas (por defecto sí, como en Windows); apagado, un icono pequeño de etiqueta. */
     val showTagHash: Boolean = true,
+    /** Settings tabs as one row of emoji (the name of the open one is the heading below) instead of the grid of named chips. Android only; off by default. */
+    val compactSettingsTabs: Boolean = false,
     /** «Todas las notas» repartida en secciones plegables por etiqueta. Solo Android; apagado por defecto. */
     val groupByTag: Boolean = false,
     /** Cuándo se abre el teclado solo al abrir una nota (`KeyboardOnOpen`): 0 nunca (por defecto), 1 solo en las nuevas, 2 siempre. */
@@ -166,6 +168,7 @@ class SettingsStore(context: Context) {
             tagOrder = prefs.getString(TAG_ORDER, d.tagOrder) ?: d.tagOrder,
             tagColors = prefs.getString(TAG_COLORS, d.tagColors) ?: d.tagColors,
             showTagHash = prefs.getBoolean(SHOW_TAG_HASH, d.showTagHash),
+            compactSettingsTabs = prefs.getBoolean(COMPACT_SETTINGS_TABS, d.compactSettingsTabs),
             groupByTag = prefs.getBoolean(GROUP_BY_TAG, d.groupByTag),
             keyboardOnOpen = KeyboardOnOpen.migrate(prefs.getInt(KEYBOARD_ON_OPEN, d.keyboardOnOpen), prefs.getBoolean(KEYBOARD_MIGRATED, false)),
             hideDoneAfterHours = prefs.getInt(HIDE_DONE_AFTER_HOURS, d.hideDoneAfterHours).coerceIn(1, 24 * 365),
@@ -221,6 +224,7 @@ class SettingsStore(context: Context) {
             .putString(TAG_ORDER, settings.tagOrder)
             .putString(TAG_COLORS, settings.tagColors)
             .putBoolean(SHOW_TAG_HASH, settings.showTagHash)
+            .putBoolean(COMPACT_SETTINGS_TABS, settings.compactSettingsTabs)
             .putBoolean(GROUP_BY_TAG, settings.groupByTag)
             .putInt(KEYBOARD_ON_OPEN, settings.keyboardOnOpen)
             .putBoolean(KEYBOARD_MIGRATED, true)
@@ -289,6 +293,7 @@ class SettingsStore(context: Context) {
         const val TAG_ORDER = "tagOrder"
         const val TAG_COLORS = "tagColors"
         const val SHOW_TAG_HASH = "showTagHash"
+        const val COMPACT_SETTINGS_TABS = "compactSettingsTabs"
         const val GROUP_BY_TAG = "groupByTag"
         const val KEYBOARD_ON_OPEN = "keyboardOnOpen"
         const val KEYBOARD_MIGRATED = "keyboardOnOpenMigrated"

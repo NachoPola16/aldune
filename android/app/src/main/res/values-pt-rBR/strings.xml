@@ -450,6 +450,8 @@
     <string name="sound_silenced_dnd">O modo Não perturbe bloqueia os sons do sistema. Permita os «Sons de toque» nas configurações dele, ou desative-o.</string>
     <string name="edit_toggle_task">Marcar ou desmarcar a tarefa desta linha</string>
     <string name="settings_tab_sync">Sync</string>
+    <string name="compact_settings_tabs">Abas compactas</string>
+    <string name="compact_settings_tabs_hint">Uma única fileira de emojis em vez de botões com nome: deixa mais espaço para os ajustes.</string>
     <string name="color_name_red">Vermelho</string>
     <string name="color_name_orange">Laranja</string>
     <string name="color_name_yellow">Amarelo</string>

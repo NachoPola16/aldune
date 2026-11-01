@@ -73,6 +73,7 @@ import androidx.compose.ui.Modifier
 import androidx.activity.compose.LocalActivity
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.liveRegion
 import androidx.compose.ui.semantics.semantics
@@ -98,6 +99,12 @@ private val HIDE_AFTER_OPTIONS = listOf(1 to R.string.hide_after_hour, 24 to R.s
 
 /** Pestañas por fila en Ajustes. */
 private const val TAB_COLUMNS = 3
+
+/** The emoji of each settings tab in the compact row. */
+private val TAB_EMOJI = mapOf(
+    R.string.settings_tab_general to "⚙️", R.string.settings_tab_appearance to "👁️", R.string.settings_tab_notes to "📝",
+    R.string.settings_tab_colors to "🎨", R.string.settings_tab_alerts to "🔔", R.string.settings_tab_sync to "🔄",
+)
 private const val LAST_TAB_MEMORY_MS = 10 * 60 * 1000L
 private var lastTab = 0
 private var lastTabAt = 0L
@@ -125,26 +132,30 @@ fun SettingsScreen(viewModel: NotesViewModel, onClose: () -> Unit) {
     // En una pantalla ancha (tableta) los ajustes van en una columna centrada, no estirados a todo el ancho.
     // En horizontal (poca altura) las pestañas caben en una sola fila, ancha: en dos filas se comían casi la mitad de la pantalla.
     val shortScreen = androidx.compose.ui.platform.LocalConfiguration.current.screenHeightDp < 480
+    val labels = buildList {
+        add(R.string.settings_tab_general); add(R.string.settings_tab_appearance); add(R.string.settings_tab_notes); add(R.string.settings_tab_colors); add(R.string.settings_tab_alerts)
+        if (show(SettingsSection.SYNC) || show(SettingsSection.BACKUP)) add(R.string.settings_tab_sync)
+    }
     Column(Modifier.fillMaxSize().safeDrawingPadding(), horizontalAlignment = Alignment.CenterHorizontally) {
         Column(Modifier.widthIn(max = if (shortScreen) 840.dp else 640.dp).fillMaxWidth()) {
             Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
                 IconButton(onClick = onClose) { Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.back)) }
-                Text(stringResource(R.string.settings), style = MaterialTheme.typography.titleLarge)
+                // With the compact row (emoji only) the title also says which tab is open.
+                val openTab = if (tabs && settings.compactSettingsTabs) " · " + stringResource(labels[tab.coerceAtMost(labels.lastIndex)]) else ""
+                Text(stringResource(R.string.settings) + openTab, style = MaterialTheme.typography.titleLarge)
             }
             if (tabs) {
                 // Mismo orden que Ajustes de Windows para lo que comparten: lo general primero, la sincronización al final. Sin ella
                 // (modo simplificado) la pestaña no aparece.
-                val labels = buildList {
-                    add(R.string.settings_tab_general); add(R.string.settings_tab_appearance); add(R.string.settings_tab_notes); add(R.string.settings_tab_colors); add(R.string.settings_tab_alerts)
-                    if (show(SettingsSection.SYNC) || show(SettingsSection.BACKUP)) add(R.string.settings_tab_sync)
-                }
                 // Rejilla de TAB_COLUMNS columnas, no una fila que se desplaza: con seis pestañas la fila cortaba las últimas y nada decía que había más a
                 // la derecha. Cada chip ocupa el mismo ancho y la última fila se completa con huecos, así que queda ordenada con 4, 6, 7 u 8 pestañas.
                 val selectedTab = tab.coerceAtMost(labels.lastIndex)
                 // Chips de 48 dp (el alto del toque) y 8 dp de hueco en los dos sentidos: con el chip de 32 dp inflado por el objetivo táctil, el hueco entre filas era casi el triple que entre columnas.
                 androidx.compose.runtime.CompositionLocalProvider(androidx.compose.material3.LocalMinimumInteractiveComponentSize provides androidx.compose.ui.unit.Dp.Unspecified) {
                 Column(Modifier.fillMaxWidth().padding(start = 12.dp, end = 12.dp, top = 8.dp, bottom = 20.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    val columns = if (shortScreen) labels.size else TAB_COLUMNS
+                    // Compact: one row, an emoji per tab (the name is spoken by TalkBack and shown as the heading of the open tab).
+                    val compact = settings.compactSettingsTabs
+                    val columns = if (shortScreen || compact) labels.size else TAB_COLUMNS
                     labels.withIndex().chunked(columns).forEach { row ->
                         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                             for ((index, label) in row) {
@@ -153,7 +164,11 @@ fun SettingsScreen(viewModel: NotesViewModel, onClose: () -> Unit) {
                                 val quiet = settings.appearance == AppPalette.ALDUNE
                                 FilterChip(
                                     selected = selectedTab == index, onClick = { tab = index; lastTab = index; lastTabAt = System.currentTimeMillis() }, modifier = Modifier.weight(1f).then(Modifier.height(48.dp)),
-                                    label = { Text(stringResource(label), Modifier.fillMaxWidth(), textAlign = TextAlign.Center, maxLines = 1, overflow = TextOverflow.Ellipsis) },
+                                    label = {
+                                        val name = stringResource(label)
+                                        if (compact) Text(TAB_EMOJI.getOrElse(label) { "•" }, Modifier.fillMaxWidth().semantics { contentDescription = name }, textAlign = TextAlign.Center, maxLines = 1)
+                                        else Text(name, Modifier.fillMaxWidth(), textAlign = TextAlign.Center, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                                    },
                                     colors = if (quiet) FilterChipDefaults.filterChipColors(containerColor = MaterialTheme.colorScheme.surfaceContainerLow) else FilterChipDefaults.filterChipColors(),
                                     border = if (quiet) null else FilterChipDefaults.filterChipBorder(enabled = true, selected = selectedTab == index),
                                 )
@@ -294,6 +309,9 @@ fun SettingsScreen(viewModel: NotesViewModel, onClose: () -> Unit) {
                     }
                 }
                 HorizontalDivider(Modifier.padding(vertical = 12.dp))
+                if (tabs) SwitchRow(stringResource(R.string.compact_settings_tabs), stringResource(R.string.compact_settings_tabs_hint), settings.compactSettingsTabs) { on ->
+                    viewModel.updateSettings { it.copy(compactSettingsTabs = on) }
+                }
                 SwitchRow(stringResource(R.string.check_updates), stringResource(R.string.check_updates_hint), settings.checkUpdates) { on ->
                     viewModel.updateSettings { it.copy(checkUpdates = on, dismissedUpdate = null) }
                     if (on) viewModel.checkForUpdates(versionName(activity))
