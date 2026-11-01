@@ -137,6 +137,11 @@ public partial class CustomColorWindow : Window
         DialogResult = true;
     }
 
+    private void OnPickScreenClick(object sender, RoutedEventArgs e)
+    {
+        if (ScreenColorPicker.Pick(this) is { } picked) UpdateFromColor(ToHex(picked));
+    }
+
     private void OnCancelClick(object sender, RoutedEventArgs e) => DialogResult = false;
 
     private void OnWindowKeyDown(object sender, KeyEventArgs e)

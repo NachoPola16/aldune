@@ -1568,6 +1568,8 @@ public static class Strings
         "Wie Windows", "Comme Windows", "Como Windows", "Come Windows", "Windows と同じ", "与 Windows 相同");
     public static string TagColorTooltip => T("Tag colour: notes with this tag take it", "Color de la etiqueta: las notas con ella lo toman", "Farbe des Tags: Notizen mit diesem Tag übernehmen sie", "Couleur du tag : les notes qui l'ont la prennent", "Cor da tag: as notas com ela a adotam", "Colore dell'etichetta: le note che la hanno lo assumono", "タグの色：このタグのノートがその色になります", "标签颜色：带此标签的便笺会采用它");
     public static string TagColorNone => T("No colour", "Sin color", "Keine Farbe", "Sans couleur", "Sem cor", "Nessun colore", "色なし", "无颜色");
+    public static string PickScreenTooltip => T("Pick a colour from the screen", "Tomar un color de la pantalla", "Farbe vom Bildschirm aufnehmen", "Prélever une couleur à l'écran", "Capturar uma cor da tela", "Preleva un colore dallo schermo", "画面から色を取得", "从屏幕取色");
+    public static string PickScreenHint => T("Click to take the colour · Esc to cancel", "Clic para tomar el color · Esc para cancelar", "Klicken, um die Farbe zu übernehmen · Esc zum Abbrechen", "Cliquez pour prélever la couleur · Échap pour annuler", "Clique para capturar a cor · Esc para cancelar", "Clic per prelevare il colore · Esc per annullare", "クリックで色を取得 · Esc でキャンセル", "点击取色 · Esc 取消");
     public static string NotesWindowsSectionTitle => T("Windows", "Ventanas", "Fenster", "Fenêtres", "Janelas", "Finestre", "ウィンドウ", "窗口");
     public static string NotesTasksSectionTitle => T("Tasks", "Tareas", "Aufgaben", "Tâches", "Tarefas", "Attività", "タスク", "任务");
     public static string NotesLookSectionTitle => T("Look", "Aspecto", "Darstellung", "Apparence", "Aparência", "Aspetto", "表示", "外观");

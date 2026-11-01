@@ -26,8 +26,13 @@ public sealed class ColorSpectrumControl : FrameworkElement
         get => _selectedColor;
         set
         {
+            // The window writes the colour back as hex text and reads it again: the same colour must not be taken apart again. Black, white and
+            // greys have no hue (and black no saturation), so re-deriving them sent the hue to 0 (red) and the cursor to the left edge when
+            // the user dragged down to black.
+            if (value == _selectedColor) return;
             _selectedColor = value;
-            RgbToHsv(value, out _hue, out _saturation, out _value);
+            RgbToHsv(value, out var hue, out _saturation, out _value);
+            if (!(value.R == value.G && value.G == value.B)) _hue = hue;
             InvalidateVisual();
         }
     }
@@ -40,6 +45,8 @@ public sealed class ColorSpectrumControl : FrameworkElement
         double height = Math.Max(1, ActualHeight);
         var hueColor = HsvToColor(_hue, 1, 1);
 
+        // The gradients are square and the border is rounded: clipped to the same rounded shape, or their corners stick out of it.
+        drawingContext.PushClip(new RectangleGeometry(new Rect(0, 0, squareWidth, height), 7, 7));
         var saturationBrush = new LinearGradientBrush(
             Color.FromRgb(247, 241, 232), hueColor, new Point(0, 0.5), new Point(1, 0.5));
         drawingContext.DrawRectangle(saturationBrush, null, new Rect(0, 0, squareWidth, height));
@@ -47,6 +54,7 @@ public sealed class ColorSpectrumControl : FrameworkElement
         var valueBrush = new LinearGradientBrush(
             Colors.Transparent, Color.FromRgb(30, 26, 20), new Point(0.5, 0), new Point(0.5, 1));
         drawingContext.DrawRectangle(valueBrush, null, new Rect(0, 0, squareWidth, height));
+        drawingContext.Pop();
 
         var hueBrush = new LinearGradientBrush
         {
