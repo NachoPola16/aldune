@@ -16,12 +16,18 @@ Every picture below was made by building that very release from its tag and rend
 
 | Version | What it looked like |
 |---|---|
-| **0.5.0**, 13 September, still called Fanote | ![Fanote 0.5.0: five coloured tabs with the same title and a dark button bar](images/progress-windows-0.5.0.png) |
-| **0.8.0**, 16 September | ![Aldune 0.8.0: tabs with the first line as title, a handwritten-style note header](images/progress-windows-0.8.0.png) |
+| **0.5.0**, 13 September, still called Fanote | ![Fanote 0.5.0: five coloured tabs that all read NEW NOTE](images/progress-windows-0.5.0.png) |
+| **0.7.1**, 15 September | ![Aldune 0.7.1](images/progress-windows-0.7.1.png) |
+| **0.8.0**, 16 September | ![Aldune 0.8.0: tabs with the first line as title](images/progress-windows-0.8.0.png) |
+| **0.10.0**, 20 September | ![Aldune 0.10.0](images/progress-windows-0.10.0.png) |
 | **1.0.0**, 24 September | ![Aldune 1.0.0](images/progress-windows-1.0.0.png) |
 | **1.4.0**, 27 September | ![Aldune 1.4.0: each tab with a preview line and the task count](images/progress-windows-1.4.0.png) |
-| **1.7.18**, 27 October | ![Aldune 1.7.18: tabs with a second line, task progress and a quieter header](images/progress-windows-1.7.18.png) |
-| **2.7.2**, today | ![Aldune 2.7.2: a lighter button bar and the same tabs](images/progress-windows-2.7.2.png) |
+| **1.7.18**, 27 October | ![Aldune 1.7.18: tabs with a second line and task progress](images/progress-windows-1.7.18.png) |
+| **2.0.0**, 29 October | ![Aldune 2.0.0](images/progress-windows-2.0.0.png) |
+| **2.1.0**, 30 October | ![Aldune 2.1.0](images/progress-windows-2.1.0.png) |
+| **2.5.0**, 31 October | ![Aldune 2.5.0](images/progress-windows-2.5.0.png) |
+| **2.7.3**, 1 November | ![Aldune 2.7.3: the Aldune look, a lighter button bar](images/progress-windows-2.7.3.png) |
+| **3.0.0**, today | ![Aldune 3.0.0](images/progress-windows-3.0.0.png) |
 
 In 0.5.0 the five tabs all read "NEW NOTE" with these sample notes: the tabs did not take their title from the note text yet. By 0.8.0, three days later, they show the first line of each note.
 

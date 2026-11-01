@@ -174,3 +174,12 @@ mouse_event(0x02, 0, 0, 0, UIntPtr.Zero); Pump(60); mouse_event(0x04, 0, 0, 0, U
   `_hasManualSize = true` by reflection, so that auto-fit does not return the note to its height. Save the bad frame in a PNG and look at it: that is where
   it was seen that the new area was white and not the face color. The color of the unpainted area
   is set by `DWMWA_CAPTION_COLOR`; `DwmGetWindowAttribute` cannot read it (E_INVALIDARG), so it is only tested with screenshots.
+
+## History shots (`docs/PROGRESS.md`)
+
+The pictures of every release in `PROGRESS.md` come from one quiet probe (no mouse, no visible window: the windows are parked off-screen) run against a git worktree of each tag:
+
+1. `git worktree add <dir> <tag>`; the app folder is `src/Aldune` (`src/Fanote` for 0.5.0).
+2. A probe project like the one above, but with `<EmbeddedResource Include="$(AppRoot)\App.xaml" ...>` and `<ProjectReference Include="$(AppRoot)\$(Brand).csproj" />`, built with `-p:AppRoot=<dir>/src/<App> -p:Brand=Aldune|Fanote` (and, for 2.x, a define that applies the look before any window exists; the `Aldune` look only exists from 2.7.1). The constructors of `AppCoordinator`, `EdgeDockWindow` and `NoteWindow` are the same in every tag, so one probe serves all.
+3. It creates five English sample notes in a temporary database, opens the dock with `KeepDockOpen`, opens the first note and renders **the whole window** (`RenderTargetBitmap.Render(window)`, not only its content: the content alone cut off the button bar) to a PNG.
+4. A short Pillow script lays the note and the dock on a plain background with a thin strip for the screen edge the dock hangs from, so the tabs read as attached to it instead of cut off.
