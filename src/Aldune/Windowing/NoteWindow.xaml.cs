@@ -2460,6 +2460,7 @@ public partial class NoteWindow : Window
     {
         Flush();
         _repository.SetState(_note.Id, NoteState.Archived);
+        _coordinator.NotifyLinkedFilesKept([_note.Id], AppCoordinator.LinkedLeave.Archived);
         _coordinator.PlaySound(SoundEvent.NoteArchived);
         _coordinator.RefreshAll();
         Close();
@@ -2469,6 +2470,7 @@ public partial class NoteWindow : Window
     {
         _hasPendingEdit = false; // discard any pending edit — the note is being trashed, not saved
         _repository.SetState(_note.Id, NoteState.Trashed);
+        _coordinator.NotifyLinkedFilesKept([_note.Id], AppCoordinator.LinkedLeave.Trashed);
         _coordinator.PlaySound(SoundEvent.NoteDeleted);
         _coordinator.RefreshAll();
         Close();

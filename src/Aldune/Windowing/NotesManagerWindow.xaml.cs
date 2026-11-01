@@ -855,12 +855,14 @@ public partial class NotesManagerWindow : Window
     private void OnArchiveSelectedClick(object sender, RoutedEventArgs e)
     {
         var leaving = RowsLeavingView(NoteState.Archived);
+        var selectedIds = _rows.Where(r => r.IsSelected).Select(r => r.Note.Id).ToList();
         AnimateOut(leaving, () =>
         {
             foreach (var row in _rows.Where(r => r.IsSelected))
             {
                 _repository.SetState(row.Note.Id, NoteState.Archived);
             }
+            _coordinator.NotifyLinkedFilesKept(selectedIds, AppCoordinator.LinkedLeave.Archived);
             _coordinator.PlaySound(SoundEvent.NoteArchived);   // una vez, aunque sean varias notas
             LoadRows();
             _coordinator.RefreshAll();
@@ -898,6 +900,8 @@ public partial class NotesManagerWindow : Window
             MessageBoxButton.OKCancel, MessageBoxImage.Warning, MessageBoxResult.Cancel);
         if (answer != MessageBoxResult.OK) return;
 
+        // Before deleting: the link row goes with the note, and the message names the file that stays.
+        _coordinator.NotifyLinkedFilesKept(selected.Select(r => r.Note.Id).ToList(), AppCoordinator.LinkedLeave.Deleted);
         AnimateOut(selected, () =>
         {
             foreach (var row in selected) _repository.Delete(row.Note.Id);
@@ -909,12 +913,14 @@ public partial class NotesManagerWindow : Window
     private void OnTrashSelectedClick(object sender, RoutedEventArgs e)
     {
         var leaving = RowsLeavingView(NoteState.Trashed);
+        var selectedIds = _rows.Where(r => r.IsSelected).Select(r => r.Note.Id).ToList();
         AnimateOut(leaving, () =>
         {
             foreach (var row in _rows.Where(r => r.IsSelected))
             {
                 _repository.SetState(row.Note.Id, NoteState.Trashed);
             }
+            _coordinator.NotifyLinkedFilesKept(selectedIds, AppCoordinator.LinkedLeave.Trashed);
             _coordinator.PlaySound(SoundEvent.NoteDeleted);   // una vez, aunque sean varias notas
             LoadRows();
             _coordinator.RefreshAll();

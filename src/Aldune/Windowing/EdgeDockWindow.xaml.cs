@@ -3027,7 +3027,11 @@ public partial class EdgeDockWindow : Window
         {
             _repository.SetState(note.Id,
                 note.State == NoteState.Active ? NoteState.Archived : NoteState.Active);
-            if (note.State == NoteState.Active) _coordinator.PlaySound(SoundEvent.NoteArchived);
+            if (note.State == NoteState.Active)
+            {
+                _coordinator.NotifyLinkedFilesKept([note.Id], AppCoordinator.LinkedLeave.Archived);
+                _coordinator.PlaySound(SoundEvent.NoteArchived);
+            }
             _coordinator.RefreshAll();
         }
         CloseTabMenu();
@@ -3067,7 +3071,11 @@ public partial class EdgeDockWindow : Window
         {
             var toTrash = note.State != NoteState.Trashed;
             _repository.SetState(note.Id, toTrash ? NoteState.Trashed : NoteState.Active);
-            if (toTrash) _coordinator.PlaySound(SoundEvent.NoteDeleted);
+            if (toTrash)
+            {
+                _coordinator.NotifyLinkedFilesKept([note.Id], AppCoordinator.LinkedLeave.Trashed);
+                _coordinator.PlaySound(SoundEvent.NoteDeleted);
+            }
             _coordinator.RefreshAll();
         }
         CloseTabMenu();

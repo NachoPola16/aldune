@@ -892,6 +892,27 @@ public sealed class AppCoordinator
         CascadeOpenNotesNearDock(target.WorkArea, _settings?.DockEdge ?? EdgePosition.Right, NotesForCurrentDockView().Count);
     }
 
+    /// <summary>What happened to a note that follows a file on disk.</summary>
+    internal enum LinkedLeave { Trashed, Archived, Deleted }
+
+    /// <summary>
+    /// A note linked to a file leaves the dock (trash, archive or deletion) but Aldune never touches the file: say so, because from the dock
+    /// it looks like the note and the file are one thing. Nothing is shown for ordinary notes. Call it BEFORE a deletion (the link row goes with the note).
+    /// </summary>
+    internal void NotifyLinkedFilesKept(IEnumerable<Guid> noteIds, LinkedLeave leave)
+    {
+        var paths = noteIds.Select(LinkedNoteDisplay.PathOf).Where(path => path is not null).Select(path => path!).ToList();
+        if (paths.Count == 0) return;
+        string path = paths[0];
+        string message = leave switch
+        {
+            LinkedLeave.Trashed => Strings.LinkedKeptTrashed(paths.Count, path),
+            LinkedLeave.Archived => Strings.LinkedKeptArchived(paths.Count, path),
+            _ => Strings.LinkedKeptDeleted(paths.Count, path)
+        };
+        ToastSink?.Invoke(new ToastContent(Strings.AppName, message, AutoDismiss: TimeSpan.FromSeconds(12)));
+    }
+
     public void OpenSyncNotesSelector(Window owner)
     {
         if (_settings is null || _settingsService is null) return;
