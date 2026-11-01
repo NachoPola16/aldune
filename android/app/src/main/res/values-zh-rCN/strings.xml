@@ -331,6 +331,7 @@
     <string name="settings_tab_general">常规</string>
     <string name="settings_tab_appearance">外观</string>
     <string name="settings_tab_notes">笔记</string>
+    <string name="settings_tab_sounds">声音</string>
     <string name="settings_tab_colors">颜色</string>
     <string name="settings_tab_alerts">提醒</string>
     <string name="hide_done_tasks">隐藏已完成的任务</string>

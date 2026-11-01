@@ -50,6 +50,7 @@ import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
@@ -130,7 +131,7 @@ fun SettingsScreen(viewModel: NotesViewModel, onClose: () -> Unit) {
                 // Mismo orden que Ajustes de Windows para lo que comparten: lo general primero, la sincronización al final. Sin ella
                 // (modo simplificado) la pestaña no aparece.
                 val labels = buildList {
-                    add(R.string.settings_tab_general); add(R.string.settings_tab_appearance); add(R.string.settings_tab_notes); add(R.string.settings_tab_colors); add(R.string.settings_tab_alerts)
+                    add(R.string.settings_tab_general); add(R.string.settings_tab_appearance); add(R.string.settings_tab_notes); add(R.string.settings_tab_sounds); add(R.string.settings_tab_colors); add(R.string.settings_tab_alerts)
                     if (show(SettingsSection.SYNC) || show(SettingsSection.BACKUP)) add(R.string.settings_tab_sync)
                 }
                 // Rejilla de TAB_COLUMNS columnas, no una fila que se desplaza: con seis pestañas la fila cortaba las últimas y nada decía que había más a
@@ -161,10 +162,10 @@ fun SettingsScreen(viewModel: NotesViewModel, onClose: () -> Unit) {
                 HorizontalDivider()
             }
             Column(Modifier.verticalScroll(settingsScroll).padding(bottom = 24.dp)) {
-                if (show(SettingsSection.SYNC) && inTab(5)) SyncSection(viewModel)
-                if (show(SettingsSection.BACKUP) && inTab(5)) BackupSection(viewModel)
-                if (show(SettingsSection.CAPTURE) && inTab(4)) CaptureSection(viewModel, settings.captureNotification)
-                if (show(SettingsSection.REMINDERS) && inTab(4)) RemindersSection(viewModel, settings.exactReminders)
+                if (show(SettingsSection.SYNC) && inTab(6)) SyncSection(viewModel)
+                if (show(SettingsSection.BACKUP) && inTab(6)) BackupSection(viewModel)
+                if (show(SettingsSection.CAPTURE) && inTab(5)) CaptureSection(viewModel, settings.captureNotification)
+                if (show(SettingsSection.REMINDERS) && inTab(5)) RemindersSection(viewModel, settings.exactReminders)
 
                 if (inTab(1)) {
                 Section(R.string.settings_appearance)
@@ -246,12 +247,15 @@ fun SettingsScreen(viewModel: NotesViewModel, onClose: () -> Unit) {
                             Choice(stringResource(label), settings.hideDoneAfterHours == hours) { viewModel.updateSettings { it.copy(hideDoneAfterHours = hours) } }
                         }
                     }
-                    HorizontalDivider(Modifier.padding(vertical = 12.dp))
+                }
+
+                // Sounds have their own tab, as on Windows (they were half of the Notes tab).
+                if (show(SettingsSection.NOTES) && inTab(3)) {
                     Section(R.string.sounds_section)
                     SoundSettingsSection(settings, onChange = viewModel::updateSettings, onPreview = viewModel::previewSound)
                 }
 
-                if (show(SettingsSection.NOTES) && inTab(3)) {
+                if (show(SettingsSection.NOTES) && inTab(4)) {
                     Section(R.string.settings_tab_colors)
                     GroupLabel(stringResource(R.string.note_theme))
                     for (theme in NoteThemes.builtIn) {
@@ -265,9 +269,25 @@ fun SettingsScreen(viewModel: NotesViewModel, onClose: () -> Unit) {
                 }
                 if (inTab(0)) {
                 Section(R.string.settings_language)
-                Choice(stringResource(R.string.language_system), settings.language.isEmpty()) { changeLanguage(viewModel, activity, "") }
-                for ((tag, name) in Languages.all) {
-                    Choice(name, settings.language == tag) { changeLanguage(viewModel, activity, tag) }
+                // A drop-down: nine radio rows took most of the General tab (Windows did the same).
+                var languageOpen by remember { mutableStateOf(false) }
+                val systemLabel = stringResource(R.string.language_system)
+                val currentLanguage = if (settings.language.isEmpty()) systemLabel else Languages.all.firstOrNull { it.first == settings.language }?.second ?: systemLabel
+                Box(Modifier.padding(horizontal = 16.dp)) {
+                    OutlinedButton(onClick = { languageOpen = true }) {
+                        Text(currentLanguage)
+                        Icon(Icons.Filled.ArrowDropDown, contentDescription = null)
+                    }
+                    androidx.compose.material3.DropdownMenu(expanded = languageOpen, onDismissRequest = { languageOpen = false }) {
+                        androidx.compose.material3.DropdownMenuItem(
+                            text = { Text(systemLabel) }, onClick = { languageOpen = false; changeLanguage(viewModel, activity, "") },
+                        )
+                        for ((tag, name) in Languages.all) {
+                            androidx.compose.material3.DropdownMenuItem(
+                                text = { Text(name) }, onClick = { languageOpen = false; changeLanguage(viewModel, activity, tag) },
+                            )
+                        }
+                    }
                 }
                 HorizontalDivider(Modifier.padding(vertical = 12.dp))
                 SwitchRow(stringResource(R.string.check_updates), stringResource(R.string.check_updates_hint), settings.checkUpdates) { on ->
