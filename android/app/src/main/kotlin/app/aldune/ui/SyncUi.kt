@@ -512,11 +512,18 @@ private fun ConnectedPanel(controller: SyncController, profile: SyncProfile) {
                 androidx.compose.material3.Switch(checked = profile.syncLook, onCheckedChange = null)
             }
         }
-        if (!unreadable) OutlinedButton(onClick = { editing = true }, modifier = Modifier.padding(top = 4.dp)) { Text(stringResource(R.string.sync_edit_server)) }
-        if (profile.transport == SyncTransportKind.SERVER && !unreadable) {
-            OutlinedButton(onClick = { inviting = true }, modifier = Modifier.padding(top = 4.dp)) { Text(stringResource(R.string.invite_create_button)) }
+        // Los botones del perfil en una fila que envuelve (como en Windows), no uno por línea: tres botones sueltos a distinto ancho dejaban un borde derecho
+        // irregular y alargaban el panel.
+        @OptIn(androidx.compose.foundation.layout.ExperimentalLayoutApi::class)
+        androidx.compose.foundation.layout.FlowRow(
+            Modifier.padding(top = 4.dp), horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp),
+        ) {
+            if (!unreadable) OutlinedButton(onClick = { editing = true }) { Text(stringResource(R.string.sync_edit_server)) }
+            if (profile.transport == SyncTransportKind.SERVER && !unreadable) {
+                OutlinedButton(onClick = { inviting = true }) { Text(stringResource(R.string.invite_create_button)) }
+            }
+            OutlinedButton(onClick = { confirming = true }) { Text(stringResource(R.string.sync_disconnect)) }
         }
-        OutlinedButton(onClick = { confirming = true }, modifier = Modifier.padding(top = 4.dp)) { Text(stringResource(R.string.sync_disconnect)) }
         HorizontalDivider(Modifier.padding(vertical = 12.dp))
     }
 

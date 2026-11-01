@@ -57,6 +57,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.FilterChip
+import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.text.style.TextAlign
@@ -142,9 +143,14 @@ fun SettingsScreen(viewModel: NotesViewModel, onClose: () -> Unit) {
                     labels.withIndex().chunked(columns).forEach { row ->
                         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                             for ((index, label) in row) {
+                                // Aspecto Aldune: las pestañas sin borde y con un fondo tonal suave, para que el contenido pese más que el marco (en Windows la barra
+                                // lateral tampoco los lleva). Los aspectos retro conservan el borde: es parte de su estética.
+                                val quiet = settings.appearance == AppPalette.ALDUNE
                                 FilterChip(
                                     selected = selectedTab == index, onClick = { tab = index }, modifier = Modifier.weight(1f).then(Modifier.height(48.dp)),
                                     label = { Text(stringResource(label), Modifier.fillMaxWidth(), textAlign = TextAlign.Center, maxLines = 1, overflow = TextOverflow.Ellipsis) },
+                                    colors = if (quiet) FilterChipDefaults.filterChipColors(containerColor = MaterialTheme.colorScheme.surfaceContainerLow) else FilterChipDefaults.filterChipColors(),
+                                    border = if (quiet) null else FilterChipDefaults.filterChipBorder(enabled = true, selected = selectedTab == index),
                                 )
                             }
                             repeat(columns - row.size) { Spacer(Modifier.weight(1f)) }
