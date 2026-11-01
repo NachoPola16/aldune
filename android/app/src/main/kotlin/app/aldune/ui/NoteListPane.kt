@@ -498,7 +498,7 @@ fun NoteListPane(
                                 entry,
                                 modifier = (if (headerDragging) Modifier.zIndex(1f).graphicsLayer { translationY = tagDragDelta } else Modifier.animateItem())
                                     .then(
-                                        if (draggable) Modifier.pointerInput(entry.key) {
+                                        if (draggable) Modifier.pointerInput(entry.key, groupOrder) {
                                             detectDragGesturesAfterLongPress(
                                                 onDragStart = {
                                                     haptic.performHapticFeedback(HapticFeedbackType.LongPress)
