@@ -387,7 +387,7 @@ public partial class NotesManagerWindow : Window
             label.SetResourceReference(TextBlock.ForegroundProperty, "AlduneTextBrush");
             var delete = new Button
             {
-                Content = "\uE74D",
+                Content = "\uE738",
                 FontFamily = new FontFamily("Segoe Fluent Icons, Segoe MDL2 Assets"),
                 Width = 28,
                 Height = 28,
@@ -400,7 +400,28 @@ public partial class NotesManagerWindow : Window
                 VerticalContentAlignment = VerticalAlignment.Center,
                 Style = (Style)FindResource("DangerToolbarButtonStyle")
             };
+            System.Windows.Automation.AutomationProperties.SetName(delete, Strings.DeleteTagTooltip);
             delete.Click += OnDeleteTagClick;
+            // The trash can is the bigger action: the tag goes away together with its notes (to the trash, after a confirmation).
+            var deleteWithNotes = new Button
+            {
+                Content = "\uE74D",
+                FontFamily = new FontFamily("Segoe Fluent Icons, Segoe MDL2 Assets"),
+                Width = 28,
+                Height = 28,
+                Margin = new Thickness(4, 0, 0, 0),
+                VerticalAlignment = VerticalAlignment.Center,
+                Padding = new Thickness(0),
+                Tag = tag,
+                ToolTip = Strings.DeleteTagWithNotesTooltip,
+                HorizontalContentAlignment = HorizontalAlignment.Center,
+                VerticalContentAlignment = VerticalAlignment.Center,
+                Style = (Style)FindResource("DangerToolbarButtonStyle")
+            };
+            System.Windows.Automation.AutomationProperties.SetName(deleteWithNotes, Strings.DeleteTagWithNotesTooltip);
+            deleteWithNotes.Click += OnDeleteTagWithNotesClick;
+            DockPanel.SetDock(deleteWithNotes, Dock.Right);
+            content.Children.Add(deleteWithNotes);
             DockPanel.SetDock(delete, Dock.Right);
             content.Children.Add(delete);
             // Own order (per device, not synced): up and down arrows, as on Android. The ends are disabled instead of hidden so the rows align.
@@ -571,6 +592,21 @@ public partial class NotesManagerWindow : Window
 
         _repository.DeleteTag(tag);
         PopulateTagManager();
+        LoadRows();
+        _coordinator.RefreshAll();
+    }
+
+    private void OnDeleteTagWithNotesClick(object sender, RoutedEventArgs e)
+    {
+        if (sender is not Button { Tag: string tag }) return;
+
+        int count = _repository.GetByTag(tag, NoteState.Active).Count + _repository.GetByTag(tag, NoteState.Archived).Count;
+        if (count > 0 && AppDialog.Show(this, Strings.DeleteTagWithNotesConfirm(tag, count), Strings.DeleteTagWithNotesTitle,
+                MessageBoxButton.YesNo, MessageBoxImage.Warning, MessageBoxResult.No) != MessageBoxResult.Yes) return;
+
+        _repository.DeleteTagAndNotes(tag);
+        PopulateTagManager();
+        LoadTagFilterOptions();
         LoadRows();
         _coordinator.RefreshAll();
     }

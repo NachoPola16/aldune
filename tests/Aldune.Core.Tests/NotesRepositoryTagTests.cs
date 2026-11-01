@@ -172,6 +172,37 @@ public sealed class NotesRepositoryTagTests : IDisposable
         Assert.Empty(_repository.GetByState(NoteState.Active).Single().Tags);
     }
 
+    [Fact]
+    public void DeleteTagAndNotes_SendsActiveAndArchivedNotesWithTheTagToTheTrash_AndDropsTheTag()
+    {
+        var active = _repository.Create("active", "#F5E3B3", "primary");
+        var archived = _repository.Create("archived", "#F5E3B3", "primary");
+        var trashed = _repository.Create("already trashed", "#F5E3B3", "primary");
+        var other = _repository.Create("other tag", "#F5E3B3", "primary");
+        _repository.SetTags(active.Id, new[] { "Trabajo" });
+        _repository.SetTags(archived.Id, new[] { "trabajo" });
+        _repository.SetTags(trashed.Id, new[] { "Trabajo" });
+        _repository.SetTags(other.Id, new[] { "Viaje" });
+        _repository.SetState(archived.Id, NoteState.Archived);
+        _repository.SetState(trashed.Id, NoteState.Trashed);
+
+        Assert.Equal(2, _repository.DeleteTagAndNotes("TRABAJO"));
+
+        Assert.Equal(new[] { "Viaje" }, _repository.GetAllTags());
+        Assert.Equal(other.Id, _repository.GetByState(NoteState.Active).Single().Id);
+        Assert.Empty(_repository.GetByState(NoteState.Archived));
+        Assert.Equal(3, _repository.GetByState(NoteState.Trashed).Count);
+    }
+
+    [Fact]
+    public void DeleteTagAndNotes_WithAnUnknownTag_ChangesNothing()
+    {
+        var note = _repository.Create("note", "#F5E3B3", "primary");
+
+        Assert.Equal(0, _repository.DeleteTagAndNotes("nope"));
+        Assert.Equal(NoteState.Active, _repository.GetByState(NoteState.Active).Single().State);
+    }
+
     public void Dispose()
     {
         using var connection = new SqliteConnection(new SqliteConnectionStringBuilder { DataSource = _dbPath }.ToString());

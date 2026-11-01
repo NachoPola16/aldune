@@ -805,8 +805,21 @@ public static class Strings
         "Erstellen", "Créer", "Criar", "Crea", "作成", "创建");
     public static string DeleteTag => T("Delete", "Eliminar",
         "Löschen", "Supprimer", "Excluir", "Elimina", "削除", "删除");
-    public static string DeleteTagTooltip => T("Delete tag", "Eliminar etiqueta",
-        "Tag löschen", "Supprimer le tag", "Excluir tag", "Elimina etichetta", "タグを削除", "删除标签");
+    public static string DeleteTagTooltip => T("Delete tag (the notes stay)", "Eliminar etiqueta (las notas se quedan)",
+        "Tag löschen (die Notizen bleiben)", "Supprimer le tag (les notes restent)", "Excluir tag (as notas ficam)", "Elimina etichetta (le note restano)", "タグを削除（ノートは残ります）", "删除标签（便笺保留）");
+    public static string DeleteTagWithNotesTooltip => T("Delete tag and its notes (they go to the trash)", "Eliminar etiqueta y sus notas (van a la papelera)",
+        "Tag und seine Notizen löschen (sie kommen in den Papierkorb)", "Supprimer le tag et ses notes (elles vont à la corbeille)", "Excluir tag e suas notas (vão para a lixeira)", "Elimina etichetta e le sue note (vanno nel cestino)", "タグとそのノートを削除（ゴミ箱へ移動します）", "删除标签及其便笺（移入回收站）");
+    public static string DeleteTagWithNotesTitle => T("Delete tag and its notes", "Borrar etiqueta y sus notas",
+        "Tag und seine Notizen löschen", "Supprimer le tag et ses notes", "Excluir tag e suas notas", "Elimina etichetta e le sue note", "タグとそのノートを削除", "删除标签及其便笺");
+    public static string DeleteTagWithNotesConfirm(string tag, int count) => T(
+        $"The notes with the tag \"{tag}\" ({count}) will go to the trash. You can restore them from there.",
+        $"Las notas con la etiqueta \"{tag}\" ({count}) irán a la papelera. Puedes restaurarlas desde allí.",
+        $"Die Notizen mit dem Tag \"{tag}\" ({count}) kommen in den Papierkorb. Dort kannst du sie wiederherstellen.",
+        $"Les notes avec le tag \"{tag}\" ({count}) iront à la corbeille. Vous pourrez les y restaurer.",
+        $"As notas com a tag \"{tag}\" ({count}) irão para a lixeira. Você pode restaurá-las de lá.",
+        $"Le note con l'etichetta \"{tag}\" ({count}) andranno nel cestino. Potrai ripristinarle da lì.",
+        $"タグ「{tag}」が付いたノート（{count}件）はゴミ箱に移動します。ゴミ箱から元に戻せます。",
+        $"带有标签“{tag}”的便笺（{count} 条）将移入回收站，可在那里恢复。");
     public static string MoveTagUpTooltip(string tag) => T($"Move {tag} up", $"Subir {tag}", $"{tag} nach oben", $"Monter {tag}", $"Subir {tag}", $"Sposta {tag} su", $"{tag} を上へ移動", $"将 {tag} 上移");
     public static string MoveTagDownTooltip(string tag) => T($"Move {tag} down", $"Bajar {tag}", $"{tag} nach unten", $"Descendre {tag}", $"Descer {tag}", $"Sposta {tag} giù", $"{tag} を下へ移動", $"将 {tag} 下移");
     public static string ViewLabelSectionTitle => T("View name above the notes", "Nombre de la vista sobre las notas", "Name der Ansicht über den Notizen",

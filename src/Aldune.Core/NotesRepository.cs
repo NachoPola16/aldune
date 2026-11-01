@@ -206,6 +206,18 @@ public sealed class NotesRepository
         return command.ExecuteScalar() as string;
     }
 
+    /// <summary>
+    /// Deletes a tag together with the notes that carry it: the active and archived ones go to the trash (where they can be
+    /// restored, without the tag); the ones already there are left alone. Returns how many notes were trashed.
+    /// </summary>
+    public int DeleteTagAndNotes(string name)
+    {
+        var notes = GetByTag(name, NoteState.Active).Concat(GetByTag(name, NoteState.Archived)).ToList();
+        foreach (var note in notes) SetState(note.Id, NoteState.Trashed);
+        DeleteTag(name);
+        return notes.Count;
+    }
+
     public bool DeleteTag(string name)
     {
         using var connection = _database.OpenConnection();
