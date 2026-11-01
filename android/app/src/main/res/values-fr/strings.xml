@@ -130,6 +130,11 @@
     <string name="sync_transport_webdav">WebDAV</string>
     <string name="sync_url_label">Adresse</string>
     <string name="sync_guide_link">Comment installer mon propre serveur ?</string>
+    <string name="sync_edit_server">Modifier l’adresse ou le jeton</string>
+    <string name="sync_edit_title">Serveur de ce profil</string>
+    <string name="sync_edit_note">Votre clé de synchronisation et vos notes restent telles quelles ; rien n’est déconnecté. Ne changez l’adresse que si le serveur a déménagé (il doit contenir les mêmes notes). Laissez le jeton ou le mot de passe vide pour garder l’actuel.</string>
+    <string name="sync_edit_keep_hint">Vide = conserver l’actuel</string>
+    <string name="sync_edit_save">Enregistrer</string>
     <string name="sync_token_label">Jeton</string>
     <string name="sync_username_label">Utilisateur</string>
     <string name="sync_password_label">Mot de passe d\'application</string>

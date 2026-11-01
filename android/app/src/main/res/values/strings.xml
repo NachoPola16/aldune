@@ -130,6 +130,11 @@
     <string name="sync_transport_webdav">WebDAV</string>
     <string name="sync_url_label">Address</string>
     <string name="sync_guide_link">How do I set up my own server?</string>
+    <string name="sync_edit_server">Change address or token</string>
+    <string name="sync_edit_title">Server of this profile</string>
+    <string name="sync_edit_note">Your sync key and notes stay as they are; nothing is disconnected. Only change the address if the server moved (it must hold the same notes). Leave the token or password empty to keep the current one.</string>
+    <string name="sync_edit_keep_hint">Empty = keep the current one</string>
+    <string name="sync_edit_save">Save</string>
     <string name="sync_token_label">Token</string>
     <string name="sync_username_label">User</string>
     <string name="sync_password_label">App password</string>

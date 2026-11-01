@@ -130,6 +130,11 @@
     <string name="sync_transport_webdav">WebDAV</string>
     <string name="sync_url_label">アドレス</string>
     <string name="sync_guide_link">自分のサーバーの設定方法</string>
+    <string name="sync_edit_server">アドレスまたはトークンを変更</string>
+    <string name="sync_edit_title">このプロファイルのサーバー</string>
+    <string name="sync_edit_note">同期キーとノートはそのままで、接続は切れません。サーバーが移転した場合のみアドレスを変更してください（同じノートが必要です）。トークンまたはパスワードを空にすると現在のものを維持します。</string>
+    <string name="sync_edit_keep_hint">空欄＝現在のものを維持</string>
+    <string name="sync_edit_save">保存</string>
     <string name="sync_token_label">トークン</string>
     <string name="sync_username_label">ユーザー</string>
     <string name="sync_password_label">アプリ パスワード</string>

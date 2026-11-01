@@ -130,6 +130,11 @@
     <string name="sync_transport_webdav">WebDAV</string>
     <string name="sync_url_label">Indirizzo</string>
     <string name="sync_guide_link">Come configuro il mio server?</string>
+    <string name="sync_edit_server">Cambia indirizzo o token</string>
+    <string name="sync_edit_title">Server di questo profilo</string>
+    <string name="sync_edit_note">La chiave di sincronizzazione e le note restano come sono; nulla viene disconnesso. Cambia l’indirizzo solo se il server si è spostato (deve contenere le stesse note). Lascia vuoto il token o la password per mantenere quello attuale.</string>
+    <string name="sync_edit_keep_hint">Vuoto = mantieni quello attuale</string>
+    <string name="sync_edit_save">Salva</string>
     <string name="sync_token_label">Token</string>
     <string name="sync_username_label">Utente</string>
     <string name="sync_password_label">Password per le app</string>

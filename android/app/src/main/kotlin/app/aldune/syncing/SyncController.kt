@@ -283,6 +283,32 @@ class SyncController(
         }.also { if (it == ConnectResult.Connected) request(SyncEvent.ManualSync) }
     }
 
+    /**
+     * Cambia la dirección y la credencial de un perfil ya conectado (p. ej. el servidor se mudó de dominio) **sin desconectar**: la clave, el
+     * alcance, las bases y los conflictos del perfil se quedan como están. [credentials] nulo conserva la actual (solo cambia la dirección).
+     * Se comprueba antes que el servidor nuevo contesta y que la credencial vale; si falla no se guarda nada. Devuelve el fallo, o nulo si se
+     * guardó. El transporte no cambia (uno de servidor sigue siendo de servidor).
+     */
+    suspend fun updateServer(profileId: String, url: String, credentials: ProfileCredentials?): SyncFailure? = withContext(Dispatchers.IO) {
+        val unknown = SyncFailure(SyncFailureKind.UNKNOWN, null, null)
+        val profile = _profiles.value.firstOrNull { it.id == profileId } ?: return@withContext unknown
+        passLock.withLock {
+            val secrets = (vaultFor(profileId).load() as? VaultState.Ready)?.secrets ?: return@withLock unknown
+            try {
+                val chosen = credentials ?: secrets.credentials
+                if ((profile.transport == SyncTransportKind.SERVER) != (chosen is ProfileCredentials.Token)) return@withLock unknown
+                testConnection(profile.transport, url, chosen)?.let { return@withLock it }
+                vaultFor(profileId).save(SyncSecrets(secrets.key, chosen))
+                val updated = profile.copy(url = url)
+                profileStore.save(updated)
+                _profiles.update { list -> list.map { if (it.id == profileId) updated else it } }
+                null
+            } finally {
+                secrets.key.fill(0)
+            }
+        }.also { if (it == null) request(SyncEvent.ManualSync) }
+    }
+
     private fun sameKey(profileId: String, key: ByteArray): Boolean {
         val secrets = (vaultFor(profileId).load() as? VaultState.Ready)?.secrets ?: return false
         return try {

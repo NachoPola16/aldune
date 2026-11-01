@@ -448,6 +448,7 @@ private fun ConnectedPanel(controller: SyncController, profile: SyncProfile) {
     val now = rememberNow()
     val line = formatStatus(status, now)
     var confirming by remember { mutableStateOf(false) }
+    var editing by remember { mutableStateOf(false) }
 
     Column(Modifier.padding(horizontal = 16.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
         Text(stringResource(R.string.sync_connected_to, profile.profileName?.takeIf { it.isNotBlank() } ?: profile.url))
@@ -464,9 +465,12 @@ private fun ConnectedPanel(controller: SyncController, profile: SyncProfile) {
                 )
             }
         }
+        if (!unreadable) OutlinedButton(onClick = { editing = true }, modifier = Modifier.padding(top = 4.dp)) { Text(stringResource(R.string.sync_edit_server)) }
         OutlinedButton(onClick = { confirming = true }, modifier = Modifier.padding(top = 4.dp)) { Text(stringResource(R.string.sync_disconnect)) }
         HorizontalDivider(Modifier.padding(vertical = 12.dp))
     }
+
+    if (editing) EditServerDialog(controller, profile, onDone = { editing = false })
 
     if (confirming) {
         AlertDialog(
@@ -484,4 +488,79 @@ private fun scopeText(scope: SyncScope): String = when (scope) {
     SyncScope.All -> stringResource(R.string.sync_scope_all)
     is SyncScope.SelectedNotes -> stringResource(R.string.sync_scope_chosen, scope.noteIds.size)
     is SyncScope.Tag -> if (scope.tag.isNullOrBlank()) stringResource(R.string.sync_scope_all) else stringResource(R.string.sync_scope_tag, scope.tag!!)
+}
+
+/**
+ * Cambia la dirección (y, si se escribe, el token o la contraseña) de un perfil conectado sin desconectarlo. Los campos secretos vacíos
+ * conservan el valor actual: el panel no conoce la credencial guardada y no hace falta que la conozca.
+ */
+@Composable
+private fun EditServerDialog(controller: SyncController, profile: SyncProfile, onDone: () -> Unit) {
+    val scope = rememberCoroutineScope()
+    var url by remember { mutableStateOf(profile.url) }
+    var token by remember { mutableStateOf("") }
+    var username by remember { mutableStateOf("") }
+    var password by remember { mutableStateOf("") }
+    var busy by remember { mutableStateOf(false) }
+    var errorText by remember { mutableStateOf<Int?>(null) }
+    var failureKind by remember { mutableStateOf<SyncFailureKind?>(null) }
+    val server = profile.transport == SyncTransportKind.SERVER
+
+    AlertDialog(
+        onDismissRequest = { if (!busy) onDone() },
+        title = { Text(stringResource(R.string.sync_edit_title), Modifier.semantics { heading() }) },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                Text(stringResource(R.string.sync_edit_note), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                OutlinedTextField(
+                    value = url, onValueChange = { url = it; errorText = null }, modifier = Modifier.fillMaxWidth(), singleLine = true,
+                    label = { Text(stringResource(R.string.sync_url_label)) }, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Uri),
+                )
+                if (url.trim().startsWith("http://", ignoreCase = true)) Text(stringResource(R.string.sync_http_warning), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.error)
+                if (server) {
+                    OutlinedTextField(
+                        value = token, onValueChange = { token = it }, modifier = Modifier.fillMaxWidth(), singleLine = true,
+                        label = { Text(stringResource(R.string.sync_token_label)) }, placeholder = { Text(stringResource(R.string.sync_edit_keep_hint)) },
+                        visualTransformation = PasswordVisualTransformation(), keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
+                    )
+                } else {
+                    OutlinedTextField(
+                        value = username, onValueChange = { username = it }, modifier = Modifier.fillMaxWidth(), singleLine = true,
+                        label = { Text(stringResource(R.string.sync_username_label)) }, placeholder = { Text(stringResource(R.string.sync_edit_keep_hint)) },
+                    )
+                    OutlinedTextField(
+                        value = password, onValueChange = { password = it }, modifier = Modifier.fillMaxWidth(), singleLine = true,
+                        label = { Text(stringResource(R.string.sync_password_label)) }, placeholder = { Text(stringResource(R.string.sync_edit_keep_hint)) },
+                        visualTransformation = PasswordVisualTransformation(), keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
+                    )
+                }
+                errorText?.let { Text(stringResource(it), color = MaterialTheme.colorScheme.error) }
+                failureKind?.let { Text(failureText(it), color = MaterialTheme.colorScheme.error) }
+            }
+        },
+        confirmButton = {
+            TextButton(enabled = !busy, onClick = {
+                // Credencial nueva solo si se escribió algo; si no, nula = conservar la actual.
+                val typed: ProfileCredentials? = when {
+                    server && token.isNotBlank() -> ProfileCredentials.Token(token)
+                    !server && (username.isNotBlank() || password.isNotEmpty()) -> ProfileCredentials.Basic(username, password)
+                    else -> null
+                }
+                // La URL se valida con una credencial de relleno si no hay nueva (solo importa su forma).
+                val probe = typed ?: if (server) ProfileCredentials.Token("x") else ProfileCredentials.Basic("x", "x")
+                when (val check = validateCredentials(url, probe)) {
+                    is CredentialsCheck.Invalid -> errorText = credentialErrorText(check.errors)
+                    is CredentialsCheck.Valid -> {
+                        busy = true; errorText = null; failureKind = null
+                        scope.launch {
+                            val failure = controller.updateServer(profile.id, check.url, typed?.let { check.credentials })
+                            busy = false
+                            if (failure == null) onDone() else failureKind = failure.kind
+                        }
+                    }
+                }
+            }) { Text(stringResource(if (busy) R.string.sync_connecting else R.string.sync_edit_save)) }
+        },
+        dismissButton = { TextButton(enabled = !busy, onClick = onDone) { Text(stringResource(R.string.cancel)) } },
+    )
 }
