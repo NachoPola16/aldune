@@ -1047,6 +1047,7 @@ public partial class SettingsWindow : Window
         AddViewLabelRadio(DockViewLabelMode.WhenFiltered, Strings.ViewLabelWhenFiltered);
         AddViewLabelRadio(DockViewLabelMode.Always, Strings.ViewLabelAlways);
         AddViewLabelRadio(DockViewLabelMode.WhenChanging, Strings.ViewLabelWhenChanging);
+        AddViewLabelRadio(DockViewLabelMode.Hidden, Strings.ViewLabelHidden);
     }
 
     private void AddViewLabelRadio(DockViewLabelMode mode, string label)

@@ -1882,6 +1882,7 @@ public partial class EdgeDockWindow : Window
 
     private void ShowViewLabel(string text)
     {
+        if (_settings?.DockViewLabel == DockViewLabelMode.Hidden) return;
         if (_viewLabelPopup is null)
         {
             _viewLabelText = new TextBlock
@@ -2026,6 +2027,7 @@ public partial class EdgeDockWindow : Window
         DockViewKeepDockButton.Content = _settings?.KeepDockOpen == true
             ? Strings.KeepDockOpenOn
             : Strings.KeepDockOpenOff;
+        BuildDockLabelModeChoices();
 
         _coordinator.SuspendNotesAboveDockMenu();
         _openAllMenuTopmostTimer.Start();
@@ -2092,6 +2094,40 @@ public partial class EdgeDockWindow : Window
         _coordinator.SetDockView(DockViewKind.Tag, tag);
         HoldOpenForNextInteraction();
         DockViewPopup.IsOpen = false;
+    }
+
+    /// <summary>
+    /// Cuándo se ve el nombre de la vista, elegible desde el mismo menú que cambia de vista (clic derecho o izquierdo en el botón de vistas): así
+    /// «nunca» o «solo al cambiar» no obligan a ir a Ajustes, y «nunca» tampoco deja sin salida a quien no ve ya la etiqueta para pulsarla.
+    /// </summary>
+    private void BuildDockLabelModeChoices()
+    {
+        DockLabelModeItems.Children.Clear();
+        var current = _settings?.DockViewLabel ?? DockViewLabelMode.WhenFiltered;
+        foreach (var (mode, text) in new[]
+                 {
+                     (DockViewLabelMode.Hidden, Strings.ViewLabelHidden),
+                     (DockViewLabelMode.WhenChanging, Strings.ViewLabelWhenChanging),
+                     (DockViewLabelMode.WhenFiltered, Strings.ViewLabelWhenFiltered),
+                     (DockViewLabelMode.Always, Strings.ViewLabelAlways),
+                 })
+        {
+            var button = new Button
+            {
+                Content = (mode == current ? "✓  " : "    ") + text,
+                Tag = mode,
+                Style = (Style)FindResource("NoteMenuItemStyle")
+            };
+            button.Click += OnDockLabelModeClick;
+            DockLabelModeItems.Children.Add(button);
+        }
+    }
+
+    private void OnDockLabelModeClick(object sender, RoutedEventArgs e)
+    {
+        if (sender is not Button { Tag: DockViewLabelMode mode }) return;
+        DockViewPopup.IsOpen = false;
+        _coordinator.SetDockViewLabel(mode);
     }
 
     private void OnDockViewKeepDockToggleClick(object sender, RoutedEventArgs e)

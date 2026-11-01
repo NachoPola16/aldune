@@ -805,6 +805,10 @@
                             <Button x:Name="DockViewKeepDockButton"
                                 Click="OnDockViewKeepDockToggleClick"
                                 Style="{StaticResource NoteMenuItemStyle}" />
+                            <Border Background="{DynamicResource AlduneTrackBrush}" Height="1" Margin="0,6,0,6" />
+                            <TextBlock Text="{x:Static res:Strings.DockLabelMenuTitle}"
+                                       Foreground="{DynamicResource AlduneTextWarmBrush}" FontSize="11" FontWeight="SemiBold" Margin="8,0,8,4" />
+                            <StackPanel x:Name="DockLabelModeItems" />
                         </StackPanel>
                     </Border>
                 </Grid>

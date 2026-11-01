@@ -413,6 +413,16 @@ public sealed class AppCoordinator
         RefreshAll();
     }
 
+    /// <summary>Cuándo enseña el dock el nombre de su vista (el menú del botón de vistas): se guarda y se repinta todo al momento.</summary>
+    public void SetDockViewLabel(DockViewLabelMode mode)
+    {
+        if (_settings is null || _settings.DockViewLabel == mode) return;
+
+        _settings.DockViewLabel = mode;
+        _settingsService?.Save(_settings);
+        RefreshAll();
+    }
+
     /// <param name="owner">Quien lo abre como parte de su tarea (Ajustes): la ventana queda por
     /// encima de ella y se cierra con ella, en vez de quedarse suelta al cerrar Ajustes.</param>
     public void OpenSyncConflicts(Window? owner = null)

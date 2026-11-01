@@ -13,5 +13,8 @@ public enum DockViewLabelMode
     WhenChanging = 1,
 
     /// <summary>Fixed above the notes whenever the dock is open, «Active» included.</summary>
-    Always = 2
+    Always = 2,
+
+    /// <summary>Never shown: neither fixed nor after a change. The view still changes; only its name stays away.</summary>
+    Hidden = 3
 }

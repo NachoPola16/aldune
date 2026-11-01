@@ -751,13 +751,13 @@
                                        Foreground="{DynamicResource AlduneHintBrush}" FontSize="{DynamicResource AlduneTextSmall}" TextWrapping="Wrap" Margin="0,6,56,0" />
                             <TextBlock Text="{x:Static res:Strings.WheelStopsTitle}"
                                        Foreground="{DynamicResource AlduneTextBrush}" FontSize="{DynamicResource AlduneTextBody}" TextWrapping="Wrap" Margin="0,14,56,6" />
-                            <CheckBox x:Name="WheelStopArchivedCheck" Content="{x:Static res:Strings.DockViewArchived}" Margin="0,2,0,0"
+                            <CheckBox x:Name="WheelStopArchivedCheck" Content="{x:Static res:Strings.DockViewArchived}" Margin="0,10,0,0"
                                       Foreground="{DynamicResource AlduneTextBrush}" Background="{DynamicResource AlduneGroundBrush}" FontSize="{DynamicResource AlduneTextBody}"
                                       Style="{StaticResource SettingsSwitchStyle}" Click="OnWheelStopsToggled" />
-                            <CheckBox x:Name="WheelStopTrashCheck" Content="{x:Static res:Strings.DockViewTrash}" Margin="0,2,0,0"
+                            <CheckBox x:Name="WheelStopTrashCheck" Content="{x:Static res:Strings.DockViewTrash}" Margin="0,10,0,0"
                                       Foreground="{DynamicResource AlduneTextBrush}" Background="{DynamicResource AlduneGroundBrush}" FontSize="{DynamicResource AlduneTextBody}"
                                       Style="{StaticResource SettingsSwitchStyle}" Click="OnWheelStopsToggled" />
-                            <CheckBox x:Name="WheelStopAllCheck" Content="{x:Static res:Strings.DockViewAll}" Margin="0,2,0,0"
+                            <CheckBox x:Name="WheelStopAllCheck" Content="{x:Static res:Strings.DockViewAll}" Margin="0,10,0,0"
                                       Foreground="{DynamicResource AlduneTextBrush}" Background="{DynamicResource AlduneGroundBrush}" FontSize="{DynamicResource AlduneTextBody}"
                                       Style="{StaticResource SettingsSwitchStyle}" Click="OnWheelStopsToggled" />
                         </StackPanel>
