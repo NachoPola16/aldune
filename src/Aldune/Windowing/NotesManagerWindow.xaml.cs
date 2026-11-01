@@ -720,30 +720,25 @@ public partial class NotesManagerWindow : Window
     }
 
     /// <summary>
-    /// Hace clicable toda la fila, no solo la casilla. Un clic normal alterna esa fila; con Shift se
-    /// selecciona el intervalo entre la última fila marcada y la actual. Ctrl+Shift añade el
-    /// intervalo a la selección existente.
+    /// What a click on a row does. The checkbox selects; the rest of the row opens the note, except that Ctrl or Shift select instead (Shift picks the
+    /// range from the last marked row, Ctrl+Shift adds it to the selection) and that, once anything is selected, a click toggles the row, as taps do
+    /// on Android. So a click never does two things at once, and the note can always be opened from here (the only way in when the dock is hidden).
     /// </summary>
     private void OnRowMouseLeftButtonUp(object sender, MouseButtonEventArgs e)
     {
         if (sender is not FrameworkElement { DataContext: NoteRow row }) return;
 
-        // El segundo MouseUp de un doble clic no debe deshacer la selección que hizo el primero.
-        if (e.ClickCount >= 2 && FindVisualAncestor<CheckBox>(e.OriginalSource as DependencyObject) is null)
-        {
-            e.Handled = true;
-            return;
-        }
-
-        // Si el clic empezó sobre la casilla, su binding ya se encarga de alternarla y aquí solo
-        // conservamos la fila como ancla para el siguiente Shift+clic.
+        // If the click started on the checkbox, its binding already toggles it: here the row only becomes the anchor for the next Shift+click.
         if (FindVisualAncestor<CheckBox>(e.OriginalSource as DependencyObject) is not null)
         {
             _selectionAnchor = row;
             return;
         }
 
-        SelectFromRow(row, Keyboard.Modifiers);
+        var modifiers = Keyboard.Modifiers;
+        bool selecting = modifiers.HasFlag(ModifierKeys.Shift) || modifiers.HasFlag(ModifierKeys.Control) || _rows.Any(r => r.IsSelected);
+        if (selecting) SelectFromRow(row, modifiers);
+        else _coordinator.OpenNoteById(row.Note.Id);
         e.Handled = true;
     }
 
@@ -772,18 +767,6 @@ public partial class NotesManagerWindow : Window
             default:
                 return;
         }
-        e.Handled = true;
-    }
-
-    private void OnRowMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
-    {
-        if (sender is not FrameworkElement { DataContext: NoteRow row }) return;
-        if (e.ClickCount < 2 || FindVisualAncestor<CheckBox>(e.OriginalSource as DependencyObject) is not null)
-            return;
-
-        // El gestor sigue usando un clic para seleccionar. El doble clic conserva ese gesto y
-        // añade la acción esperable en una lista: abrir la nota completa.
-        _coordinator.OpenNoteById(row.Note.Id);
         e.Handled = true;
     }
 

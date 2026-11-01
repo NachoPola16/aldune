@@ -598,7 +598,6 @@
                                     Focusable="True"
                                     FocusVisualStyle="{StaticResource AlduneFocusVisual}"
                                     KeyboardNavigation.IsTabStop="True"
-                                    MouseLeftButtonDown="OnRowMouseLeftButtonDown"
                                     MouseLeftButtonUp="OnRowMouseLeftButtonUp"
                                     KeyDown="OnRowKeyDown"
                                     AutomationProperties.Name="{Binding Note, Converter={StaticResource NoteTitleConverter}}"
