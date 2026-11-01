@@ -85,6 +85,7 @@ The app also started under another name. It was renamed Aldune on 13 September, 
 - **2.7.0 / Android 1.3.0 (31 October).** A "What's new" window once after an update, your own order for tags, safer links, and closing windows fading as one piece.
 - **2.7.1 / Android 1.3.1 (1 November).** The "Aldune" look, selecting several notes at once on Android, an update pop-up, swipes that need a deliberate pull, and a widget you can limit to one tag and tick tasks from.
 - **2.7.2 (Windows, 1 November).** The wheel skips empty views and you choose which of Archived, Trash and All it stops at; an empty view's label is centred on the button bar.
+- **3.0.0 / Android 2.0.0 (1 November).** Invitations: join a shared server with a one-use code, or invite someone (and, from either app, see who has joined and revoke them), each person in a space of their own with a key made on their device. The look can follow you across devices over the server, a shared folder or WebDAV; the Android list can be grouped by tag; the dock card shadow can be switched off; Android buttons follow "square corners" and the widget ends long task texts in an ellipsis.
 
 ## Bugs that mattered, and what changed
 
