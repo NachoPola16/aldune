@@ -17,8 +17,9 @@ dependencies {
     testFixturesApi(kotlin("test"))
     testFixturesApi(libs.junit4)
 
-    // Solo para leer y escribir el JSON del contenido protegido con el mismo formato que core (ver SyncMapping.kt).
-    implementation(libs.kotlinx.serialization.json)
+    // Para leer y escribir el JSON del contenido protegido con el mismo formato que core (ver SyncMapping.kt) y, sobre todo, porque `LookSync` expone
+    // `JsonObject` en su API: `api`, o `app` no lo ve en la compilación de release (en la de debug lo trae `debugImplementation`).
+    api(libs.kotlinx.serialization.json)
     // Decodificador de QR de Java puro (sin Play Services ni nativo, para que F-Droid lo construya); lo usa QrDecoder.
     implementation(libs.zxing.core)
 

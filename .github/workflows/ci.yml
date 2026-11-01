@@ -69,3 +69,9 @@ jobs:
       - name: Build debug app
         working-directory: android
         run: ./gradlew :app:assembleDebug --console=plain
+
+      # The release build (R8, no signing without the keystore variables) has its own classpath: a dependency that only `debugImplementation`
+      # provides compiles in debug and breaks the release APK, which is only built locally at publish time.
+      - name: Build release app (unsigned)
+        working-directory: android
+        run: ./gradlew :app:assembleRelease --console=plain
