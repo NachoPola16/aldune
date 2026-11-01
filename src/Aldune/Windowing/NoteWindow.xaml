@@ -33,6 +33,7 @@
         <SolidColorBrush x:Key="NoteHeaderInkBrush" Color="#1E1A14" />
         <SolidColorBrush x:Key="NotePlaceholderBrush" Color="#1E1A14" />
         <SolidColorBrush x:Key="NoteHoverBrush" Color="#40000000" />
+        <SolidColorBrush x:Key="NotePressedBrush" Color="#66000000" />
         <SolidColorBrush x:Key="NoteTaskHoverBrush" Color="#26000000" />
         <!-- Foco de teclado de los botones de la nota: del color de la tinta de ESTA cara, porque el anillo de la paleta
              del chrome no tiene por qué verse sobre un amarillo o un verde pastel. -->
@@ -53,7 +54,9 @@
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="Button">
-                        <Border x:Name="Bg" Background="{TemplateBinding Background}" CornerRadius="{DynamicResource AlduneRadius4}">
+                        <!-- Same corner radius and the same hover / pressed steps as the buttons of Manage notes and Settings; only the tint comes
+                             from the note's face (hover and pressed are black or white over it) instead of from the app palette. -->
+                        <Border x:Name="Bg" Background="{TemplateBinding Background}" CornerRadius="{DynamicResource AlduneRadius6}">
                             <ContentPresenter Margin="{TemplateBinding Padding}"
                                               HorizontalAlignment="Center"
                                               VerticalAlignment="Center" />
@@ -61,6 +64,9 @@
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsMouseOver" Value="True">
                                 <Setter TargetName="Bg" Property="Background" Value="{DynamicResource NoteHoverBrush}" />
+                            </Trigger>
+                            <Trigger Property="IsPressed" Value="True">
+                                <Setter TargetName="Bg" Property="Background" Value="{DynamicResource NotePressedBrush}" />
                             </Trigger>
                         </ControlTemplate.Triggers>
                     </ControlTemplate>
@@ -77,7 +83,7 @@
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="Button">
-                        <Border x:Name="Bg" Background="{TemplateBinding Background}" CornerRadius="{DynamicResource AlduneRadius4}">
+                        <Border x:Name="Bg" Background="{TemplateBinding Background}" CornerRadius="{DynamicResource AlduneRadius6}">
                             <ContentPresenter Margin="{TemplateBinding Padding}"
                                               HorizontalAlignment="Center"
                                               VerticalAlignment="Center" />
@@ -85,6 +91,9 @@
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsMouseOver" Value="True">
                                 <Setter TargetName="Bg" Property="Background" Value="#8CB02F2F" />
+                            </Trigger>
+                            <Trigger Property="IsPressed" Value="True">
+                                <Setter TargetName="Bg" Property="Background" Value="#B3B02F2F" />
                             </Trigger>
                         </ControlTemplate.Triggers>
                     </ControlTemplate>

@@ -743,6 +743,41 @@ public partial class NotesManagerWindow : Window
     }
 
     /// <summary>
+    /// Right-click on a row: the same actions as the buttons at the bottom, on that row. As in Explorer, a row that is not part of the selection
+    /// becomes the selection first, so the menu never acts on rows the person is not pointing at; on a selected row it acts on the whole selection.
+    /// </summary>
+    private void OnRowMouseRightButtonUp(object sender, MouseButtonEventArgs e)
+    {
+        if (sender is not FrameworkElement { DataContext: NoteRow row } rowElement) return;
+
+        if (!row.IsSelected)
+        {
+            foreach (var other in _allRows) other.IsSelected = false;
+            row.IsSelected = true;
+            _selectionAnchor = row;
+            UpdateSelectionState();
+        }
+
+        var menu = new ContextMenu { PlacementTarget = rowElement, Placement = System.Windows.Controls.Primitives.PlacementMode.MousePoint };
+        void Add(string header, RoutedEventHandler handler)
+        {
+            var item = new MenuItem { Header = header };
+            item.Click += handler;
+            menu.Items.Add(item);
+        }
+
+        Add(Strings.OpenNote, (_, _) => _coordinator.OpenNoteById(row.Note.Id));
+        menu.Items.Add(new Separator());
+        Add(Strings.Export, OnExportSelectedClick);
+        if (_filter == Filter.Active) Add(Strings.Archive, OnArchiveSelectedClick);
+        if (_filter != Filter.Active) Add(Strings.Restore, OnRestoreSelectedClick);
+        if (_filter == Filter.Trashed) Add(Strings.Delete, OnDeleteSelectedClick);
+        else Add(Strings.Trash, OnTrashSelectedClick);
+        menu.IsOpen = true;
+        e.Handled = true;
+    }
+
+    /// <summary>
     /// Lo que el ratón hace con una fila, con teclado: Intro abre la nota, Espacio la marca (con Mayús, el intervalo) y las flechas
     /// pasan a la fila de arriba o de abajo. Sin esto una fila recibía el foco con Tab pero no hacía nada, y el gestor, la ruta
     /// por teclado a cualquier nota, no servía sin ratón.

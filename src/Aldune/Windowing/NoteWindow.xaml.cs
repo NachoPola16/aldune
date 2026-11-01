@@ -2196,6 +2196,7 @@ public partial class NoteWindow : Window
         bool darkenHover = face.Ink == NoteColorContrast.White
             || (OklchColor.TryFromHex(face.Face, out var faceLch) && faceLch.L >= 0.8);
         Resources["NoteHoverBrush"] = BrushOf(darkenHover ? "#40000000" : "#40FFFFFF");
+        Resources["NotePressedBrush"] = BrushOf(darkenHover ? "#66000000" : "#66FFFFFF");
         Resources["NoteTaskHoverBrush"] = BrushOf(darkenHover ? "#26000000" : "#26FFFFFF");
         TextBody.Foreground = ink;
         TextBody.CaretBrush = ink;
