@@ -12,6 +12,14 @@ internal const val MAX_RESPONSE_BYTES = 8L * 1024 * 1024
 /** Una respuesta por encima del tope: en WebDAV un objeto así se salta (como uno ilegible); en una lista o un listado sigue siendo un fallo. */
 internal class ResponseTooLargeException : IOException("The server's response is larger than the allowed $MAX_RESPONSE_BYTES bytes.")
 
+/** Lee el cuerpo sin pasar de [limit] bytes; devuelve null si lo supera (o no hay cuerpo), sin cargarlo entero. */
+internal fun Response.readBytesUpTo(limit: Long): ByteArray? {
+    val source = body?.source() ?: return null
+    source.request(limit + 1)
+    if (source.buffer.size > limit) return null
+    return source.readByteArray()
+}
+
 /** Lee el cuerpo como texto sin pasar de [MAX_RESPONSE_BYTES]; si lo supera, falla en vez de cargarlo entero. */
 internal fun Response.readLimitedString(): String {
     val source = body?.source() ?: return ""

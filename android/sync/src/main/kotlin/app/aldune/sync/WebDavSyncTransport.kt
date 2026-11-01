@@ -146,8 +146,8 @@ class WebDavSyncTransport(
         client.newCall(request(lookUrl).get().build()).execute().use { response ->
             if (response.code == 404) return null
             ensureSuccess(response)
-            val bytes = response.body?.bytes() ?: return null
-            if (bytes.size > LookStore.MAX_LOOK_BYTES) null else bytes
+            // Bounded read: a hostile server cannot make us buffer gigabytes before the size check.
+            response.readBytesUpTo(LookStore.MAX_LOOK_BYTES.toLong())
         }
 
     override fun writeLook(sealedLook: ByteArray) {

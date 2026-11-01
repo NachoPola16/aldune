@@ -58,11 +58,11 @@ object Invitations {
     }
 
     /** Lado de quien aloja: pide al servidor un código de un solo uso (hace falta el token de administrador) y devuelve el texto a entregar. */
-    fun create(serverUrl: String, adminToken: String, label: String?, client: OkHttpClient = OkHttpClient()): String {
+    fun create(serverUrl: String, adminToken: String, label: String?, client: OkHttpClient = DEFAULT_CLIENT): String {
         val fields = label?.trim()?.takeIf { it.isNotEmpty() }?.let { mapOf("label" to JsonPrimitive(it)) } ?: emptyMap()
         val body = JsonObject(fields).toString().toRequestBody("application/json".toMediaType())
         val request = adminRequest(serverUrl, "admin/v1/invites", adminToken).post(body).build()
-        val text = adminCall(client, request) { it.body?.string().orEmpty() }
+        val text = adminCall(client, request) { it.readLimitedString() }
         val code = try {
             Json.parseToJsonElement(text).jsonObject["code"]?.jsonPrimitive?.content
         } catch (e: Exception) {
@@ -72,9 +72,9 @@ object Invitations {
     }
 
     /** Los espacios creados con invitaciones (los que el token de administrador puede revocar), del más nuevo al más viejo. */
-    fun listSpaces(serverUrl: String, adminToken: String, client: OkHttpClient = OkHttpClient()): List<SpaceInfo> {
+    fun listSpaces(serverUrl: String, adminToken: String, client: OkHttpClient = DEFAULT_CLIENT): List<SpaceInfo> {
         val request = adminRequest(serverUrl, "admin/v1/spaces", adminToken).get().build()
-        val text = adminCall(client, request) { it.body?.string().orEmpty() }
+        val text = adminCall(client, request) { it.readLimitedString() }
         return try {
             Json.parseToJsonElement(text).jsonArray.map { item ->
                 val obj = item.jsonObject
@@ -90,7 +90,7 @@ object Invitations {
     }
 
     /** Corta el token de un espacio (sus archivos se quedan en el servidor). `false` si ya no existía. */
-    fun revokeSpace(serverUrl: String, adminToken: String, name: String, client: OkHttpClient = OkHttpClient()): Boolean {
+    fun revokeSpace(serverUrl: String, adminToken: String, name: String, client: OkHttpClient = DEFAULT_CLIENT): Boolean {
         // El nombre lo genera el servidor (`u-` + hex), pero se escapa igual: un nombre nunca debe poder cambiar la ruta.
         val request = adminRequest(serverUrl, "admin/v1/spaces/" + java.net.URLEncoder.encode(name, "UTF-8"), adminToken).delete().build()
         return adminCall(client, request, ifGone = false) { true }
@@ -118,13 +118,15 @@ object Invitations {
                 if (!response.isSuccessful) throw InviteException(InviteFailure.SERVER)
                 return read(response)
             }
+        } catch (e: ResponseTooLargeException) {
+            throw InviteException(InviteFailure.SERVER)
         } catch (e: IOException) {
             throw InviteException(InviteFailure.OFFLINE)
         }
     }
 
     /** Canjea el código y devuelve el token del espacio nuevo. Bloqueante: se llama desde un hilo de fondo. */
-    fun redeem(invitation: Invitation, client: OkHttpClient = OkHttpClient()): String {
+    fun redeem(invitation: Invitation, client: OkHttpClient = DEFAULT_CLIENT): String {
         val base = invitation.serverUrl.trim().let { if (it.endsWith("/")) it else "$it/" }.toHttpUrlOrNull()
             ?: throw InviteException(InviteFailure.SERVER)
         val body = JsonObject(mapOf("code" to JsonPrimitive(invitation.code))).toString().toRequestBody("application/json".toMediaType())
@@ -138,11 +140,16 @@ object Invitations {
                     429 -> throw InviteException(InviteFailure.TOO_MANY_ATTEMPTS)
                 }
                 if (!response.isSuccessful) throw InviteException(InviteFailure.SERVER)
-                val token = Json.parseToJsonElement(response.body?.string().orEmpty()).jsonObject["token"]?.jsonPrimitive?.content
+                val token = Json.parseToJsonElement(response.readLimitedString()).jsonObject["token"]?.jsonPrimitive?.content
                 return token?.takeIf { it.isNotEmpty() } ?: throw InviteException(InviteFailure.SERVER)
             }
+        } catch (e: ResponseTooLargeException) {
+            throw InviteException(InviteFailure.SERVER)
         } catch (e: IOException) {
             throw InviteException(InviteFailure.OFFLINE)
         }
     }
+
+    /** No redirects: the admin token and the one-use code must only ever go to the host the person typed. */
+    private val DEFAULT_CLIENT = OkHttpClient.Builder().followRedirects(false).followSslRedirects(false).build()
 }

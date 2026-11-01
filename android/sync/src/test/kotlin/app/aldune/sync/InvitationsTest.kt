@@ -134,4 +134,25 @@ class InvitationsTest {
         val error = assertThrows(InviteException::class.java) { Invitations.redeem(Invitation("http://127.0.0.1:1/", "x")) }
         assertEquals(InviteFailure.OFFLINE, error.failure)
     }
+
+    @Test
+    fun `no sigue redirecciones y el codigo solo va al servidor que se escribio`() {
+        MockWebServer().use { other ->
+            MockWebServer().use { server ->
+                server.enqueue(MockResponse().setResponseCode(307).setHeader("Location", other.url("/invites/v1/redeem").toString()))
+                val error = assertThrows(InviteException::class.java) { Invitations.redeem(Invitation(server.url("/").toString(), "x")) }
+                assertEquals(InviteFailure.SERVER, error.failure)
+                assertEquals(0, other.requestCount)
+            }
+        }
+    }
+
+    @Test
+    fun `una respuesta enorme es un fallo del servidor y no agota la memoria`() {
+        MockWebServer().use { server ->
+            server.enqueue(MockResponse().setBody(okio.Buffer().write(ByteArray(9 * 1024 * 1024) { 'a'.code.toByte() })))
+            val error = assertThrows(InviteException::class.java) { Invitations.redeem(Invitation(server.url("/").toString(), "x")) }
+            assertEquals(InviteFailure.SERVER, error.failure)
+        }
+    }
 }

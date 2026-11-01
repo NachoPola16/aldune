@@ -83,8 +83,9 @@ class HttpSyncTransport(
         return client.newCall(request).execute().use { response ->
             if (response.code == 404) return null
             ensureSuccess(response)
-            val bytes = response.body?.bytes() ?: return null
-            if (bytes.size > MAX_LOOK_BYTES) throw IOException("The look document is too large.") else bytes
+            if (response.body == null) return null
+            // Read at most the cap + 1, so a hostile server cannot make us buffer gigabytes before the size check.
+            response.readBytesUpTo(MAX_LOOK_BYTES.toLong()) ?: throw IOException("The look document is too large.")
         }
     }
 
