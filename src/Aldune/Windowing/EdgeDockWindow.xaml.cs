@@ -1780,7 +1780,9 @@ public partial class EdgeDockWindow : Window
     // the view change wherever the cursor is inside it. Nothing is painted and nothing is kept: the dock shrinks at once as usual.
     // (A nearly transparent background to catch the wheel was tried and rendered as black bands on some systems.)
 
-    private static readonly TimeSpan WheelSessionLength = TimeSpan.FromMilliseconds(1500);
+    // 1 s after the last notch (it was 1.5 s): while it lasts the wheel over the zone the dock covered is taken, even over what is now behind it
+    // (a browser under a dock that has just shrunk). A turn of the wheel arrives every 100-600 ms, so a second is enough to keep cycling.
+    private static readonly TimeSpan WheelSessionLength = TimeSpan.FromMilliseconds(1000);
     private readonly DispatcherTimer _wheelSessionTimer = new() { Interval = WheelSessionLength };
     private IntPtr _wheelHook;
     private readonly NativeMethods.LowLevelMouseProc _wheelHookProc;
