@@ -10,32 +10,39 @@ Aldune started at the end of August 2026 as a small idea: sticky notes that live
 
 The first screenshot uses Spanish sample notes because that is what the app was tested with at the time. Since then the dock got a quieter button bar, a text preview on each tab, pinned notes, tags and reminders on the tabs, and more than a dozen looks instead of one (the notebook looks are in the [README](../README.md#looks)).
 
-## The versions, one by one
+## Five jumps you can see
 
-Every picture below was made by building that very release from its tag and rendering its real windows off-screen with the same sample notes (English text, no personal data), so what you see is what that version drew, not a mock-up. The dock is on the right edge with its fan open and one note is open beside it.
+Only the releases where the picture really changes are shown. Each one was made by building that very release from its tag and rendering its real windows off-screen with the same sample notes (English text, no personal data), so what you see is what that version drew. The versions in between looked the same as their neighbours.
 
-| Version | What it looked like |
+| Version | What changed, and why it matters |
 |---|---|
-| **0.5.0**, 13 September, still called Fanote | ![Fanote 0.5.0: five coloured tabs that all read NEW NOTE](images/progress-windows-0.5.0.png) |
-| **0.7.1**, 15 September | ![Aldune 0.7.1](images/progress-windows-0.7.1.png) |
-| **0.8.0**, 16 September | ![Aldune 0.8.0: tabs with the first line as title](images/progress-windows-0.8.0.png) |
-| **0.10.0**, 20 September | ![Aldune 0.10.0](images/progress-windows-0.10.0.png) |
-| **1.0.0**, 24 September | ![Aldune 1.0.0](images/progress-windows-1.0.0.png) |
-| **1.4.0**, 27 September | ![Aldune 1.4.0: each tab with a preview line and the task count](images/progress-windows-1.4.0.png) |
-| **1.7.18**, 27 October | ![Aldune 1.7.18: tabs with a second line and task progress](images/progress-windows-1.7.18.png) |
-| **2.0.0**, 29 October | ![Aldune 2.0.0](images/progress-windows-2.0.0.png) |
-| **2.1.0**, 30 October | ![Aldune 2.1.0](images/progress-windows-2.1.0.png) |
-| **2.5.0**, 31 October | ![Aldune 2.5.0](images/progress-windows-2.5.0.png) |
-| **2.7.3**, 1 November | ![Aldune 2.7.3: the Aldune look, a lighter button bar](images/progress-windows-2.7.3.png) |
-| **3.0.0**, today | ![Aldune 3.0.0](images/progress-windows-3.0.0.png) |
+| ![Fanote 0.5.0: five coloured tabs that all read NEW NOTE](images/progress-windows-0.5.0.png) **0.5.0**, 13 September, still called Fanote | The starting point. The five tabs all read "NEW NOTE": they did not take their title from the note yet, so you could not tell notes apart without opening them. |
+| ![Aldune 0.8.0: tabs with the first line as title](images/progress-windows-0.8.0.png) **0.8.0**, 16 September | Each tab shows the first line of its note. The dock became something you can read, not just a row of colours. |
+| ![Aldune 1.4.0: each tab with a preview line and the task count](images/progress-windows-1.4.0.png) **1.4.0**, 27 September | A second line on each tab with a preview and the task count ("1/3"). Often you no longer need to open the note to know what is in it. |
+| ![Aldune 2.5.0: a smaller, quieter button bar](images/progress-windows-2.5.0.png) **2.5.0**, 31 October | The button bar of the dock became smaller and quieter, so the notes, not the controls, are what you see first. |
+| ![Aldune 2.7.3: the Aldune look](images/progress-windows-2.7.3.png) **2.7.3**, 1 November | The brand look: plum ink with the pink, cyan and yellow of the logo, now the default on a fresh install. |
 
-In 0.5.0 the five tabs all read "NEW NOTE" with these sample notes: the tabs did not take their title from the note text yet. By 0.8.0, three days later, they show the first line of each note.
+In 0.5.0 the five tabs all read "NEW NOTE" with these sample notes. By 0.8.0, three days later, they show the first line of each note. Windows 3.0.0 looks the same as 2.7.3 in this view: what it adds (invitations, a synced look) lives in Settings and in the sync.
 
-On Android the first release candidate, 1.0.0 and today (2.0.0, in the "Aldune" look, with the list grouped by tag):
+### Looks
+
+Since 2.1 the app can also wear the notebook looks, with paper under the text. These are three of the eleven:
+
+| Travel notebook | Field notebook | Graph paper (dark) |
+|---|---|---|
+| ![Travel notebook look](images/aspecto-libreta-viaje.png) | ![Field notebook look](images/aspecto-cuaderno-campo.png) | ![Graph-paper notebook look, dark](images/aspecto-cuaderno-cuadriculado-oscuro.png) |
+
+### Android
+
+The first release candidate, 1.0.0 and today (2.0.0, in the "Aldune" look, with the list grouped by tag):
 
 ![Aldune for Android: 0.1.0-rc1 on 24 October, 1.0.0 on 29 October and 2.0.0 today](images/progress-android.png)
 
 The first candidate was a plain list with a colour stripe; 1.0.0 added full-colour cards, the sync notice and the welcome message; today there is a bottom search bar with the settings gear, a preview line under each title and, if you want, sections by tag.
+
+Settings, full screen, on 2.0.0:
+
+![Aldune for Android: Settings, full screen](images/progress-android-settings.png)
 
 ## At a glance
 
