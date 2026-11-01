@@ -172,6 +172,9 @@ fun NoteListPane(
     val reorderable = state.query.isBlank() && state.tag == null && state.items.size > 1 && settingsNow.listOrder == 0
     val context = androidx.compose.ui.platform.LocalContext.current
 
+    // Template read configuration-aware here and formatted when the note moves.
+    val movedTpl = stringResource(R.string.note_moved)
+
     /** Sube o baja la nota una posición (la alternativa al arrastre) y lo anuncia: «Movida a la posición N de M». */
     fun moveBy(id: String, delta: Int) {
         val ids = sameGroup(state.items, id)
@@ -179,7 +182,7 @@ fun NoteListPane(
         viewModel.moveNote(id, step.neighbours.before, step.neighbours.after)
         scope.launch {
             snackbar.currentSnackbarData?.dismiss()
-            snackbar.showSnackbar(context.getString(R.string.note_moved, step.position, ids.size), duration = SnackbarDuration.Short)
+            snackbar.showSnackbar(String.format(movedTpl, step.position, ids.size), duration = SnackbarDuration.Short)
         }
     }
 

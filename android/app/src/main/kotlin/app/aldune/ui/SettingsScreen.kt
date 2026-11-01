@@ -334,19 +334,26 @@ private fun BackupSection(viewModel: NotesViewModel) {
     val scope = androidx.compose.runtime.rememberCoroutineScope()
     var message by rememberSaveable { mutableStateOf<String?>(null) }
     val placeholder = stringResource(R.string.new_note_title)
+    // The export messages are read here (configuration-aware) and formatted when the export ends.
+    val omittedFileTpl = stringResource(R.string.export_all_omitted_file)
+    val failedMsg = stringResource(R.string.export_all_failed)
+    val emptyMsg = stringResource(R.string.export_all_empty)
+    val doneSkippedTpl = stringResource(R.string.export_all_done_skipped)
+    val doneTpl = stringResource(R.string.export_all_done)
+    val exportFileName = stringResource(R.string.export_file_name)
     val launcher = rememberLauncherForActivityResult(ActivityResultContracts.CreateDocument("application/zip")) { uri ->
         if (uri == null) return@rememberLauncherForActivityResult
         scope.launch {
             val result = runCatching {
                 context.contentResolver.openOutputStream(uri)?.use { out ->
-                    viewModel.exportAll(out, placeholder) { count -> context.getString(R.string.export_all_omitted_file, count) }
+                    viewModel.exportAll(out, placeholder) { count -> String.format(omittedFileTpl, count) }
                 }
             }.getOrNull()
             message = when {
-                result == null -> context.getString(R.string.export_all_failed)
-                result.exported == 0 && result.omittedProtected == 0 -> context.getString(R.string.export_all_empty)
-                result.omittedProtected > 0 -> context.getString(R.string.export_all_done_skipped, result.exported, result.omittedProtected)
-                else -> context.getString(R.string.export_all_done, result.exported)
+                result == null -> failedMsg
+                result.exported == 0 && result.omittedProtected == 0 -> emptyMsg
+                result.omittedProtected > 0 -> String.format(doneSkippedTpl, result.exported, result.omittedProtected)
+                else -> String.format(doneTpl, result.exported)
             }
         }
     }
@@ -356,7 +363,7 @@ private fun BackupSection(viewModel: NotesViewModel) {
         style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant,
     )
     OutlinedButton(
-        onClick = { launcher.launch(context.getString(R.string.export_file_name) + ".zip") },
+        onClick = { launcher.launch(exportFileName + ".zip") },
         Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
     ) { Text(stringResource(R.string.export_all)) }
     // El resultado se anuncia solo (región viva): el selector de documentos se cierra y quien usa TalkBack no ve otra señal.
