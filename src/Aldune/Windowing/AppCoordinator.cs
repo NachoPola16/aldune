@@ -506,6 +506,16 @@ public sealed class AppCoordinator
     /// </summary>
     public bool IsNoteOpen(Guid noteId) => _openNoteWindows.ContainsKey(noteId);
 
+    // Notes whose window is fading out: their tab is already back in the deck (fading in), the reverse of what happens when one opens.
+    private readonly HashSet<Guid> _closingNotes = [];
+
+    public bool IsNoteClosing(Guid noteId) => _closingNotes.Contains(noteId);
+
+    internal void NoteClosingStarted(Guid noteId)
+    {
+        if (_closingNotes.Add(noteId)) RefreshOpenState();
+    }
+
     /// <summary>
     /// Si la ventana de esa nota está abierta pero minimizada.
     ///
@@ -696,6 +706,7 @@ public sealed class AppCoordinator
         {
             _openNoteWindows.Remove(note.Id);
             _openNoteIds.TryRemove(note.Id, out _);
+            _closingNotes.Remove(note.Id);
             // Devuelve la pestaña a su hueco en el mazo. Va aquí y no en el Closing de NoteWindow
             // porque Closing se dispara *antes* de que esta entrada se quite del diccionario, así
             // que un refresco desde allí seguiría viendo la nota como abierta.
@@ -1307,9 +1318,27 @@ public sealed class AppCoordinator
         {
             // ToList antes de cerrar: cada Close dispara el Closed que la quita del diccionario, y
             // recorrerlo en directo mientras se modifica lanzaría.
-            foreach (var window in openInView.Select(note => _openNoteWindows[note.Id]).ToList())
+            var windows = openInView.Select(note => _openNoteWindows[note.Id]).ToList();
+            if (windows.Count < 3 || !SystemParameters.ClientAreaAnimation)
             {
-                window.Close();
+                foreach (var window in windows) window.Close();
+                return;
+            }
+
+            // They are gathered back one after another in deck order (a short ripple, 130 ms in all) instead of all in the same frame: each
+            // closing note is photographed for its fade, and doing that for every note at once stalled the first frames of the animation.
+            double step = Math.Min(30, 130.0 / (windows.Count - 1));
+            for (int index = 0; index < windows.Count; index++)
+            {
+                var window = windows[index];
+                if (index == 0) { window.Close(); continue; }
+                var timer = new DispatcherTimer(DispatcherPriority.Normal) { Interval = TimeSpan.FromMilliseconds(step * index) };
+                timer.Tick += (_, _) =>
+                {
+                    timer.Stop();
+                    if (_openNoteWindows.ContainsValue(window)) window.Close();
+                };
+                timer.Start();
             }
             return;
         }

@@ -727,6 +727,7 @@ public partial class NoteWindow : Window
 
         _closingAnimationDone = true;
         e.Cancel = true;
+        _coordinator.NoteClosingStarted(_note.Id); // the tab comes back to the deck while the note fades
 
         // The whole note fades as one piece (see ClosingGhost); if it cannot be photographed, the content-only fade below still runs.
         if (ClosingGhost.Play(this, CloseDuration, Close)) return;

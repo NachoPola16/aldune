@@ -20,8 +20,10 @@
         <WindowChrome CaptionHeight="34" ResizeBorderThickness="6" GlassFrameThickness="-1" CornerRadius="0" />
     </WindowChrome.WindowChrome>
     <Window.Resources>
-        <!-- The list bar runs the whole height of the list, with the same small gap at both ends. -->
-        <Thickness x:Key="ScrollBarMargin">0,0,0,0</Thickness>
+        <!-- The drawn thumb spans exactly the cards: it starts at the top of the first one and ends at the bottom of the last one. The thumb
+             template keeps 2 px of air above and below its bar, so the track starts 2 px above the list, and it stops 8 px (the gap each row keeps
+             under it) plus those 2 px before the bottom. -->
+        <Thickness x:Key="ScrollBarMargin">0,-2,0,6</Thickness>
         <local:NoteTitleConverter x:Key="NoteTitleConverter" />
         <local:NoteLinkedConverter x:Key="NoteLinkedConverter" />
         <local:PinToTopTextConverter x:Key="PinToTopTextConverter" />

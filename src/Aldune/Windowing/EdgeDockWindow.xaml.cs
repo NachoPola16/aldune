@@ -849,6 +849,7 @@ public partial class EdgeDockWindow : Window
     /// </summary>
     private void ApplyState(bool animate)
     {
+        UpdateWheelHook();
         // The pinned view label follows the fan: up when it opens, down when it folds (after this layout pass).
         Dispatcher.BeginInvoke(DispatcherPriority.Loaded, new Action(RefreshViewLabel));
         // Sin notas no hay tira de reposo que ensenar — quedaba un pegote oscuro diminuto en el
@@ -1044,6 +1045,7 @@ public partial class EdgeDockWindow : Window
         else
         {
             _viewSwapToken++; // a swap still waiting for its fade is superseded by this one
+            _viewLabelHold = false;
             ResetTabsFadeIfStuck();
             SetNotes(LoadNotesForView(), animateArrivals: !viewChanged, fadeAll: viewChanged);
             if (_labelOnSwap) { _labelOnSwap = false; ShowViewLabel(CurrentViewLabel()); }
@@ -1076,6 +1078,7 @@ public partial class EdgeDockWindow : Window
     }
 
     private int _viewSwapToken;
+    private bool _viewLabelHold; // the name card is leaving for a change of view: it keeps its place until it comes back with the new name
 
     // What fades is the whole column (tabs, scroll rail and the arrows of the top and bottom docks), not only the list: the arrows light up for a
     // frame while the new list is measured in a window that has not reached its final height yet, and showed as a flash.
@@ -1088,6 +1091,7 @@ public partial class EdgeDockWindow : Window
         }
     }
 
+    private const int SwapBlankFrames = 2;
     private const double DeckGatherMs = 95;
     private const double DeckSpreadMs = 190;
 
@@ -1101,14 +1105,22 @@ public partial class EdgeDockWindow : Window
     private void SwapNotesThroughFade()
     {
         int token = ++_viewSwapToken;
-        bool deck = _tabButtons.Count is > 1 and <= 14;
+        var root = (UIElement)Content;
+        bool deck = _tabButtons.Count > 1;
         if (deck) AnimateDeck(gather: true);
-        if (_viewLabelPopup is { IsOpen: true } && !_viewLabelTimer.IsEnabled) FadeViewLabel(show: false);
+        // The name card leaves with the old cards (even the one-second flash) and stays where it is, invisible, until the new list is in
+        // place: the strip changes size under it and it used to slide to the new end while still fading out, and then change text in view.
+        if (_viewLabelPopup is { IsOpen: true })
+        {
+            _viewLabelTimer.Stop();
+            _viewLabelHold = true;
+            FadeViewLabel(show: false, milliseconds: 90);
+        }
 
         var fadeOut = new DoubleAnimation(0, new Duration(TimeSpan.FromMilliseconds(deck ? DeckGatherMs - 35 : 75))) { EasingFunction = EaseOut(), BeginTime = TimeSpan.FromMilliseconds(deck ? 35 : 0) };
         void SwapNow()
         {
-            if (token != _viewSwapToken) { Opacity = 1; return; }
+            if (token != _viewSwapToken) { Cloak(false); return; }
             foreach (var old in _tabButtons.Values)
                 if (old.RenderTransform is TranslateTransform { IsFrozen: false } oldMove) { oldMove.BeginAnimation(TranslateTransform.YProperty, null); oldMove.Y = 0; }
             SetNotes(LoadNotesForView(), animateArrivals: false, fadeAll: false);
@@ -1123,23 +1135,41 @@ public partial class EdgeDockWindow : Window
             Dispatcher.BeginInvoke(DispatcherPriority.Loaded, new Action(() =>
             {
                 if (token != _viewSwapToken) return;
-                if (_tabButtons.Count is > 1 and <= 14) AnimateDeck(gather: false);
-                NotesColumn.BeginAnimation(OpacityProperty, fadeIn);
+                // The cards wait in the pile while the window is still transparent, and the spread (and the fade of the column) start only once
+                // the window is visible again: started earlier, the first 50-60 ms of the spread, the fastest part, ran unseen.
+                var startSpread = _tabButtons.Count > 1 ? PrepareDeckSpread() : null;
                 // The name of the view comes back when the cards are nearly in place: it sits at the far end of the new strip, and shown
                 // before them it hung there alone (with many notes, far from where the old pile was).
                 bool flash = _labelOnSwap;
                 _labelOnSwap = false;
                 UpdateTagAwareTooltips();
-                AfterFrames(4, () => Opacity = 1);
-                var labelTimer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(deck ? DeckSpreadMs * 0.6 : 90) };
+                AfterFrames(4, () =>
+                {
+                    if (token != _viewSwapToken) { Cloak(false); return; }
+                    Opacity = 1;
+                    // The bar comes back with the cards instead of popping in.
+                    var rootFadeIn = new DoubleAnimation(0, 1, new Duration(TimeSpan.FromMilliseconds(90))) { EasingFunction = EaseOut() };
+                    rootFadeIn.Completed += (_, _) => { root.BeginAnimation(OpacityProperty, null); root.Opacity = 1; };
+                    root.BeginAnimation(OpacityProperty, rootFadeIn);
+                    startSpread?.Invoke();
+                    NotesColumn.BeginAnimation(OpacityProperty, fadeIn);
+                    // After the interface thread has caught up with the first frames of the new list (a long strip takes a while), so the name does
+                    // not come back before the cards.
+                    Dispatcher.BeginInvoke(DispatcherPriority.ContextIdle, new Action(StartLabelTimer));
+                });
+                void StartLabelTimer()
+                {
+                var labelTimer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(deck ? DeckSpreadMs * 0.45 : 90) };
                 labelTimer.Tick += (_, _) =>
                 {
                     labelTimer.Stop();
                     if (token != _viewSwapToken) return;
+                    _viewLabelHold = false;
                     if (flash) ShowViewLabel(CurrentViewLabel());
                     else RefreshViewLabel();
                 };
                 labelTimer.Start();
+                }
             }));
         }
         fadeOut.Completed += (_, _) =>
@@ -1150,21 +1180,75 @@ public partial class EdgeDockWindow : Window
             // The whole window goes transparent and that has to reach the screen BEFORE the window changes size: while the interface thread builds the
             // new cards, the composition thread keeps showing the last picture it was given (the old layout) pinned to the top-left corner of the
             // enlarged window, and the button bar was seen there for about 30 ms. Two frames later the window is already invisible.
-            Opacity = 0;
-            AfterFrames(2, SwapNow);
+            // The window now waits a few frames with nothing drawn: the picture the enlarged window shows for its first frames comes from an
+            // older buffer, and with the button bar still in it the bar showed pinned to the top-left corner for ~100 ms.
+            Cloak(true);
+            root.BeginAnimation(OpacityProperty, null); // the local 0 set by Cloak takes over from the finished fade
+            AfterFrames(SwapBlankFrames, SwapNow);
         };
+        // The button bar fades out with the last of the cards (it is part of what is cleared before the window changes size).
+        var barFade = new DoubleAnimation(0, new Duration(TimeSpan.FromMilliseconds(deck ? DeckGatherMs - 45 : 40))) { EasingFunction = EaseOut(), BeginTime = TimeSpan.FromMilliseconds(deck ? 45 : 35) };
+        root.BeginAnimation(OpacityProperty, barFade);
         NotesColumn.BeginAnimation(OpacityProperty, fadeOut);
     }
 
-    /// <summary>Moves every card to the pile (gather) or from the pile to its place (spread). The pile is the card nearest the button bar.</summary>
+    /// <summary>
+    /// Hides (or shows) the whole dock while the window changes size (see <see cref="SwapNotesThroughFade"/>).
+    /// </summary>
+    private void Cloak(bool hidden)
+    {
+        Opacity = hidden ? 0 : 1;
+        if (Content is UIElement root) root.Opacity = hidden ? 0 : 1;
+
+    }
+
+    /// <summary>Moves the cards in view to the pile (the card nearest the button bar) and fades them out as they go.</summary>
     private void AnimateDeck(bool gather)
     {
+        foreach (var (move, offset) in DeckCards())
+        {
+            var animation = new DoubleAnimation(0, offset, new Duration(TimeSpan.FromMilliseconds(DeckGatherMs))) { EasingFunction = new CubicEase { EasingMode = EasingMode.EaseIn }, FillBehavior = FillBehavior.HoldEnd };
+            move.BeginAnimation(TranslateTransform.YProperty, animation);
+        }
+    }
+
+    /// <summary>
+    /// Puts the cards of the new list in the pile, unseen, and returns what starts them spreading to their places. A long strip takes a little longer:
+    /// 1100 px in 190 ms was a rush, and it arrived blurred.
+    /// </summary>
+    private Action? PrepareDeckSpread()
+    {
+        var cards = DeckCards();
+        if (cards.Count == 0) return null;
+        double span = cards.Max(card => Math.Abs(card.Offset));
+        var duration = new Duration(TimeSpan.FromMilliseconds(DeckSpreadMs + Math.Min(110, span * 0.08)));
+        foreach (var (move, offset) in cards) move.Y = offset; // before the first frame: the cards start in the pile, not in their places
+        return () =>
+        {
+            foreach (var (move, offset) in cards)
+            {
+                var animation = new DoubleAnimation(offset, 0, duration) { EasingFunction = new CubicEase { EasingMode = EasingMode.EaseOut } };
+                animation.Completed += (_, _) => { move.BeginAnimation(TranslateTransform.YProperty, null); move.Y = 0; };
+                move.BeginAnimation(TranslateTransform.YProperty, animation);
+            }
+        };
+    }
+
+    /// <summary>
+    /// The cards in view and how far each is from the pile. Only those move (the rest are clipped anyway), so the deck costs the same with 8
+    /// notes as with 80.
+    /// </summary>
+    private List<(TranslateTransform Move, double Offset)> DeckCards()
+    {
+        double viewport = TabsScroll.ActualHeight;
         var cards = _tabButtons.Values
             .Where(button => button.IsVisible && button.ActualHeight > 0)
-            .Select(button => (Button: button, Y: button.TransformToAncestor(TabsList).Transform(new Point(0, 0)).Y))
+            .Select(button => (Button: button, Y: button.TransformToAncestor(TabsScroll).Transform(new Point(0, 0)).Y))
+            .Where(card => card.Y + card.Button.ActualHeight > 0 && card.Y < viewport)
             .OrderBy(card => card.Y)
             .ToList();
-        if (cards.Count < 2) return;
+        var result = new List<(TranslateTransform, double)>();
+        if (cards.Count < 2) return result;
         double pile = _edge == EdgePosition.Top ? cards[0].Y : cards[^1].Y;
         foreach (var (button, y) in cards)
         {
@@ -1173,21 +1257,9 @@ public partial class EdgeDockWindow : Window
                 move = new TranslateTransform();
                 button.RenderTransform = move;
             }
-            double offset = pile - y;
-            var animation = gather
-                ? new DoubleAnimation(0, offset, new Duration(TimeSpan.FromMilliseconds(DeckGatherMs))) { EasingFunction = new CubicEase { EasingMode = EasingMode.EaseIn } }
-                : new DoubleAnimation(offset, 0, new Duration(TimeSpan.FromMilliseconds(DeckSpreadMs))) { EasingFunction = new CubicEase { EasingMode = EasingMode.EaseOut } };
-            if (!gather)
-            {
-                move.Y = offset; // before the first frame: the cards start in the pile, not in their places
-                animation.Completed += (_, _) => { move.BeginAnimation(TranslateTransform.YProperty, null); move.Y = 0; };
-            }
-            else
-            {
-                animation.FillBehavior = FillBehavior.HoldEnd;
-            }
-            move.BeginAnimation(TranslateTransform.YProperty, animation);
+            result.Add((move, pile - y));
         }
+        return result;
     }
 
     /// <summary>
@@ -1240,10 +1312,20 @@ public partial class EdgeDockWindow : Window
             // una nota la borraba del dock sin forma de recuperarla desde ahí.
             bool onDesk = button.Tag is Note note
                 && _coordinator.IsNoteOpen(note.Id)
-                && !_coordinator.IsNoteMinimized(note.Id);
+                && !_coordinator.IsNoteMinimized(note.Id)
+                && !_coordinator.IsNoteClosing(note.Id);
             // Hidden y no Collapsed: conserva su hueco, y el mazo enseña el sitio vacío de donde se
             // sacó la ficha.
+            bool returning = !onDesk && button.Visibility == Visibility.Hidden && IsVisible;
             button.Visibility = onDesk ? Visibility.Hidden : Visibility.Visible;
+            if (returning && SystemParameters.ClientAreaAnimation)
+            {
+                // The tab fades back in while its note fades out (the reverse of opening), instead of popping in when the note is gone.
+                var fadeIn = new DoubleAnimation(0, 1, new Duration(TimeSpan.FromMilliseconds(140))) { EasingFunction = EaseOut() };
+                fadeIn.Completed += (_, _) => { button.BeginAnimation(OpacityProperty, null); button.Opacity = 1; };
+                button.Opacity = 0;
+                button.BeginAnimation(OpacityProperty, fadeIn);
+            }
         }
     }
 
@@ -1960,7 +2042,7 @@ public partial class EdgeDockWindow : Window
             return;
         }
 
-        // Clic derecho: solo las opciones de cuándo se ve el nombre de la vista (las mismas de Ajustes); el izquierdo abre la lista de vistas.
+        // Right click: the list of views and tags plus the options for when the view name shows (the same as in Settings).
         OpenDockViewPopup(labelOptions: true);
         e.Handled = true;
     }
@@ -1999,15 +2081,47 @@ public partial class EdgeDockWindow : Window
 
     private bool WheelSessionActive => DateTime.UtcNow < _wheelViewUntil;
 
+    // While the fan is open the wheel hook is installed too, not only for the second after a notch: the gaps of the dock (between the last
+    // note and the button bar, beside the cards) are transparent and the wheel over them goes to whatever is behind, so the first notch had to
+    // land on a card or on the bar.
+    private bool WantsWheelHook => _settings is { WheelChangesDockView: true } && _fanState.IsExpanded && _noteCount > 0 && IsVisible;
+
+    private void UpdateWheelHook()
+    {
+        if (WantsWheelHook)
+        {
+            if (_wheelHook == IntPtr.Zero) _wheelHook = NativeMethods.InstallMouseHook(_wheelHookProc);
+        }
+        else if (!WheelSessionActive && !_wheelSessionTimer.IsEnabled)
+        {
+            UninstallWheelHook();
+        }
+    }
+
+    private void UninstallWheelHook()
+    {
+        NativeMethods.UninstallHook(_wheelHook);
+        _wheelHook = IntPtr.Zero;
+    }
+
+    private Aldune.Core.Rect CurrentWheelZonePx()
+    {
+        var dpi = VisualTreeHelper.GetDpi(this);
+        var rect = EdgeGeometry.WindowRect(_workingArea, _edge, _noteCount, Alignment);
+        return new Aldune.Core.Rect(rect.X * dpi.DpiScaleX, rect.Y * dpi.DpiScaleY, rect.Width * dpi.DpiScaleX, rect.Height * dpi.DpiScaleY);
+    }
+
     private void BeginWheelSession()
     {
         if (_wheelHook == IntPtr.Zero)
         {
             // The zone is what the dock covers NOW (before the view changes), in physical pixels.
-            var dpi = VisualTreeHelper.GetDpi(this);
-            var rect = EdgeGeometry.WindowRect(_workingArea, _edge, _noteCount, Alignment);
-            _wheelZonePx = new Aldune.Core.Rect(rect.X * dpi.DpiScaleX, rect.Y * dpi.DpiScaleY, rect.Width * dpi.DpiScaleX, rect.Height * dpi.DpiScaleY);
+            _wheelZonePx = CurrentWheelZonePx();
             _wheelHook = NativeMethods.InstallMouseHook(_wheelHookProc);
+        }
+        else if (!WheelSessionActive && !_wheelSessionTimer.IsEnabled)
+        {
+            _wheelZonePx = CurrentWheelZonePx(); // the hook was already there for the open fan: the zone is where the dock is now
         }
         _wheelSessionTimer.Stop();
         _wheelSessionTimer.Start();
@@ -2016,16 +2130,18 @@ public partial class EdgeDockWindow : Window
     private void EndWheelSession()
     {
         _wheelSessionTimer.Stop();
-        NativeMethods.UninstallHook(_wheelHook);
-        _wheelHook = IntPtr.Zero;
+        if (WantsWheelHook) return; // the fan is still open: the hook stays for the gaps
+        UninstallWheelHook();
     }
 
     private void OnWheelSessionTimer(object? sender, EventArgs e) => EndWheelSession();
 
     private IntPtr OnWheelHook(int code, IntPtr message, IntPtr data)
     {
-        if (code >= 0 && NativeMethods.IsMouseWheel(message) && WheelSessionActive && _settings is { WheelChangesDockView: true })
+        if (code >= 0 && NativeMethods.IsMouseWheel(message) && (WheelSessionActive || WantsWheelHook) && _settings is { WheelChangesDockView: true })
         {
+            // Without a session the zone is where the dock is right now; with one, where it was when the session began (the dock may have shrunk).
+            if (!WheelSessionActive) _wheelZonePx = CurrentWheelZonePx();
             var point = NativeMethods.MouseHookPoint(data);
             int delta = NativeMethods.MouseHookWheelDelta(data);
             if (delta != 0 && point.X >= _wheelZonePx.X && point.X <= _wheelZonePx.X + _wheelZonePx.Width
@@ -2114,6 +2230,28 @@ public partial class EdgeDockWindow : Window
     private void ShowViewLabel(string text)
     {
         if (_settings?.DockViewLabel == DockViewLabelMode.Hidden) return;
+        // A name that changes while the card is showing (a fixed card, or a refresh with no swap): it leaves, and comes back already with the
+        // new size, instead of resizing in view (its window follows the new size a couple of frames late).
+        if (_viewLabelPopup is { IsOpen: true } && _viewLabelBorder is { Opacity: > 0.05 } shown && _viewLabelText is { } current
+            && current.Text != text && SystemParameters.ClientAreaAnimation)
+        {
+            int id = ++_viewLabelFade;
+            _viewLabelTimer.Stop();
+            var leave = new DoubleAnimation(0, new Duration(TimeSpan.FromMilliseconds(70))) { EasingFunction = EaseOut() };
+            leave.Completed += (_, _) =>
+            {
+                if (id != _viewLabelFade) return;
+                _viewLabelPopup!.IsOpen = false;
+                ShowViewLabelCore(text);
+            };
+            shown.BeginAnimation(OpacityProperty, leave, HandoffBehavior.SnapshotAndReplace);
+            return;
+        }
+        ShowViewLabelCore(text);
+    }
+
+    private void ShowViewLabelCore(string text)
+    {
         if (_viewLabelPopup is null)
         {
             _viewLabelText = new TextBlock
@@ -2151,6 +2289,11 @@ public partial class EdgeDockWindow : Window
             border.MouseLeftButtonUp += OnViewLabelClick;
             // The pinned label is a popup (its own HWND): a wheel turned over it never reached the dock and the view stopped changing there.
             border.PreviewMouseWheel += OnManageArchiveWheel;
+            // The window draws its text in Display mode and the card inherits that only while it is open. Measured closed (as it is just before it
+            // opens) it used to be measured in Ideal mode, 1-2 px narrower, and the name came out cut ("#Carrer…") until the first resize.
+            TextOptions.SetTextFormattingMode(border, TextFormattingMode.Display);
+            border.UseLayoutRounding = true;
+            border.SnapsToDevicePixels = true;
             _viewLabelBorder = border;
             // The label only knows its size once it is open and measured: until then the popup would sit at the screen origin.
             border.SizeChanged += (_, _) => ReplaceViewLabelIfOpen();
@@ -2178,7 +2321,30 @@ public partial class EdgeDockWindow : Window
         // is flush with the bottom of the strip. If that does not fit on the screen (dock aligned to a screen end, or a very long list) the
         // label goes beside the first note, on the screen side, instead of covering notes.
         PlaceViewLabel();
-        FadeViewLabel(show: true);
+        // The card is a window of its own and it takes a couple of frames to take the new size: it is kept invisible until then, or the fade-in
+        // showed it with the size of the previous name (too wide or too narrow) and then jumping.
+        if (SystemParameters.ClientAreaAnimation && (_viewLabelPopup.IsOpen ? _viewLabelBorder.Opacity < 0.05 : true))
+        {
+            int pending = ++_viewLabelFade;
+            if (!_viewLabelPopup.IsOpen)
+            {
+                _viewLabelBorder.BeginAnimation(OpacityProperty, null);
+                _viewLabelBorder.Opacity = 0;
+                _viewLabelPopup.IsOpen = true;
+            }
+            AfterFrames(2, () =>
+            {
+                if (pending != _viewLabelFade) return;
+                // Measured again now that the card is open and laid out: it is the only measure that is always right (the first one, made while
+                // the card is closed, can come out a pixel or two short), and nobody sees it yet.
+                PlaceViewLabel();
+                FadeViewLabel(show: true);
+            });
+        }
+        else
+        {
+            FadeViewLabel(show: true);
+        }
         _viewLabelTimer.Stop();
         if (!ViewLabelPinned) _viewLabelTimer.Start();
     }
@@ -2190,7 +2356,7 @@ public partial class EdgeDockWindow : Window
     /// stops being needed). A label that is already showing only keeps its place when the text changes, and one that is leaving comes
     /// back from where it was; a newer call always wins over an older fade.
     /// </summary>
-    private void FadeViewLabel(bool show)
+    private void FadeViewLabel(bool show, double milliseconds = 0)
     {
         if (_viewLabelPopup is not { } popup || _viewLabelBorder is not { } border) return;
         int id = ++_viewLabelFade;
@@ -2209,7 +2375,7 @@ public partial class EdgeDockWindow : Window
         }
         if (!show && !popup.IsOpen) return;
 
-        var animation = new DoubleAnimation(show ? 1 : 0, new Duration(TimeSpan.FromMilliseconds(show ? 140 : 280))) { EasingFunction = EaseOut() };
+        var animation = new DoubleAnimation(show ? 1 : 0, new Duration(TimeSpan.FromMilliseconds(milliseconds > 0 ? milliseconds : show ? 140 : 280))) { EasingFunction = EaseOut() };
         if (!show)
             animation.Completed += (_, _) => { if (id == _viewLabelFade) popup.IsOpen = false; };
         border.BeginAnimation(OpacityProperty, animation, HandoffBehavior.SnapshotAndReplace);
@@ -2227,6 +2393,10 @@ public partial class EdgeDockWindow : Window
         _viewLabelBorder.Height = FooterBorder.ActualHeight > 0 ? FooterBorder.ActualHeight : 42;
         // An even width, so that centred on the (even) notes column it sits on whole pixels: with an odd one it ended half a pixel to one side.
         _viewLabelBorder.ClearValue(FrameworkElement.WidthProperty);
+        // A card that is closed is not hooked to the layout manager: the new name does not mark its measure as stale there, and the measure
+        // below used to answer with the size of the previous name (the card came out too narrow, "#Carrer…", and widened later).
+        _viewLabelText?.InvalidateMeasure();
+        _viewLabelBorder.InvalidateMeasure();
         _viewLabelBorder.Measure(new Size(double.PositiveInfinity, double.PositiveInfinity));
         _viewLabelBorder.Width = Math.Ceiling(_viewLabelBorder.DesiredSize.Width / 2) * 2;
         // With no notes there is no strip: the label sits over (or under) the whole button bar, centred on it. It used to be centred on the
@@ -2257,7 +2427,7 @@ public partial class EdgeDockWindow : Window
 
     private void ReplaceViewLabelIfOpen()
     {
-        if (_viewLabelPopup is { IsOpen: true }) PlaceViewLabel();
+        if (_viewLabelPopup is { IsOpen: true } && !_viewLabelHold) PlaceViewLabel();
     }
 
     /// <summary>
@@ -2317,7 +2487,8 @@ public partial class EdgeDockWindow : Window
 
     private void OpenDockViewPopupFrom(UIElement trigger, bool labelOptions = false)
     {
-        DockViewMenuPanel.Visibility = labelOptions ? Visibility.Collapsed : Visibility.Visible;
+        // The list of views and tags is always there: with the wheel off and the name never shown, this menu is the only way to change view.
+        DockViewMenuPanel.Visibility = Visibility.Visible;
         DockLabelMenuPanel.Visibility = labelOptions ? Visibility.Visible : Visibility.Collapsed;
         // Opened from the fixed label, the menu appears next to the label (the thing that was clicked), not down at the button bar.
         DockViewPopup.PlacementTarget = (ReferenceEquals(trigger, _viewLabelBorder) || ReferenceEquals(trigger, ViewButton)) && trigger is FrameworkElement label ? label : ManageArchiveButton;
@@ -3573,7 +3744,8 @@ public partial class EdgeDockWindow : Window
         CloseDockPopups();
         _hoverLayoutHold = false;
         _hoverPollTimer.Stop();
-        EndWheelSession();
+        _wheelSessionTimer.Stop();
+        UninstallWheelHook();
         _viewLabelTimer.Stop();
         if (_viewLabelPopup is not null) _viewLabelPopup.IsOpen = false;
         _fullscreenPollTimer.Stop();

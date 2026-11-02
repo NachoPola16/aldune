@@ -803,12 +803,7 @@
                         </Border.Effect>
                     </Border>
                     <Border Background="{DynamicResource AlduneGroundBrush}" CornerRadius="{DynamicResource AlduneRadius10}" Padding="8">
-                      <Grid>
-                        <StackPanel x:Name="DockLabelMenuPanel" MinWidth="190" Visibility="Collapsed">
-                            <TextBlock Text="{x:Static res:Strings.ViewLabelSectionTitle}"
-                                       Foreground="{DynamicResource AlduneTextWarmBrush}" FontSize="11" FontWeight="SemiBold" Margin="8,3,8,6" />
-                            <StackPanel x:Name="DockLabelModeItems" />
-                        </StackPanel>
+                      <StackPanel>
                         <StackPanel x:Name="DockViewMenuPanel" MinWidth="190">
                             <TextBlock Text="{x:Static res:Strings.DockViewTitle}"
                                        Foreground="{DynamicResource AlduneTextWarmBrush}" FontSize="11" FontWeight="SemiBold"
@@ -833,7 +828,14 @@
                                 Click="OnDockViewKeepDockToggleClick"
                                 Style="{StaticResource NoteMenuItemStyle}" />
                         </StackPanel>
-                      </Grid>
+                        <!-- Only in the right-click menu (see OpenDockViewPopupFrom); under the views, so the list is always there to change view. -->
+                        <StackPanel x:Name="DockLabelMenuPanel" MinWidth="190" Visibility="Collapsed">
+                            <Border Background="{DynamicResource AlduneTrackBrush}" Height="1" Margin="0,6,0,6" />
+                            <TextBlock Text="{x:Static res:Strings.ViewLabelSectionTitle}"
+                                       Foreground="{DynamicResource AlduneTextWarmBrush}" FontSize="11" FontWeight="SemiBold" Margin="8,3,8,6" />
+                            <StackPanel x:Name="DockLabelModeItems" />
+                        </StackPanel>
+                      </StackPanel>
                     </Border>
                 </Grid>
             </Popup>
