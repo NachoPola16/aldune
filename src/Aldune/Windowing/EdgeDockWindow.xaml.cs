@@ -1074,6 +1074,7 @@ public partial class EdgeDockWindow : Window
         int token = ++_viewSwapToken;
         bool deck = _tabButtons.Count is > 1 and <= 14;
         if (deck) AnimateDeck(gather: true);
+        if (_viewLabelPopup is { IsOpen: true } && !_viewLabelTimer.IsEnabled) FadeViewLabel(show: false);
 
         var fadeOut = new DoubleAnimation(0, new Duration(TimeSpan.FromMilliseconds(deck ? DeckGatherMs - 35 : 75))) { EasingFunction = EaseOut(), BeginTime = TimeSpan.FromMilliseconds(deck ? 35 : 0) };
         fadeOut.Completed += (_, _) =>
@@ -1084,7 +1085,6 @@ public partial class EdgeDockWindow : Window
             foreach (var old in _tabButtons.Values)
                 if (old.RenderTransform is TranslateTransform { IsFrozen: false } oldMove) { oldMove.BeginAnimation(TranslateTransform.YProperty, null); oldMove.Y = 0; }
             SetNotes(LoadNotesForView(), animateArrivals: false, fadeAll: false);
-            UpdateViewIndicator();
             var fadeIn = new DoubleAnimation(0, 1, new Duration(TimeSpan.FromMilliseconds(deck ? 90 : 140))) { EasingFunction = EaseOut() };
             fadeIn.Completed += (_, _) =>
             {
@@ -1098,7 +1098,20 @@ public partial class EdgeDockWindow : Window
                 if (token != _viewSwapToken) return;
                 if (_tabButtons.Count is > 1 and <= 14) AnimateDeck(gather: false);
                 TabsScroll.BeginAnimation(OpacityProperty, fadeIn);
-                if (_labelOnSwap) { _labelOnSwap = false; ShowViewLabel(CurrentViewLabel()); }
+                // The name of the view comes back when the cards are nearly in place: it sits at the far end of the new strip, and shown
+                // before them it hung there alone (with many notes, far from where the old pile was).
+                bool flash = _labelOnSwap;
+                _labelOnSwap = false;
+                UpdateTagAwareTooltips();
+                var labelTimer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(deck ? DeckSpreadMs * 0.6 : 90) };
+                labelTimer.Tick += (_, _) =>
+                {
+                    labelTimer.Stop();
+                    if (token != _viewSwapToken) return;
+                    if (flash) ShowViewLabel(CurrentViewLabel());
+                    else RefreshViewLabel();
+                };
+                labelTimer.Start();
             }));
         };
         TabsScroll.BeginAnimation(OpacityProperty, fadeOut);
