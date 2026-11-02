@@ -157,6 +157,8 @@ private const val KEYBOARD_DELAY_MS = 250L
 /** Lo que el campo no puede enfocarse al abrir una nota que no abre el teclado: lo que tarda Android en repartir el foco inicial. */
 private const val FOCUS_SETTLE_MS = 700L
 private val CheckboxSpan = SpanStyle(fontFamily = FontFamily(Font(R.font.aldune_check)))
+// The arrow of a bullet line in Roboto is a hairline at the height of the lowercase letters, next to text it looks lost: heavier, it reads as a bullet.
+private val BulletSpan = SpanStyle(fontWeight = androidx.compose.ui.text.font.FontWeight.Bold)
 private val LinkSpan = SpanStyle(textDecoration = androidx.compose.ui.text.style.TextDecoration.Underline)
 private val LargeCheckboxSpan = SpanStyle(fontFamily = FontFamily(Font(R.font.aldune_check_large)))
 
@@ -466,6 +468,12 @@ fun NoteEditorPane(key: String, viewModel: NotesViewModel, onBack: () -> Unit, s
             for (i in shown.indices) {
                 val c = shown[i]
                 if (c == TaskLines.UNCHECKED || c == TaskLines.CHECKED || c == TaskLines.CHECKED_ALTERNATE) addStyle(checkboxSpan, i, i + 1)
+                else if (c == BulletLines.GLYPH && i + 1 < shown.length && shown[i + 1] == ' ') {
+                    // Only the arrow that opens a line (after its indent), not one written in the middle of a sentence.
+                    var back = i - 1
+                    while (back >= 0 && (shown[back] == ' ' || shown[back] == '\t')) back--
+                    if (back < 0 || shown[back] == '\n') addStyle(BulletSpan, i, i + 1)
+                }
             }
             // Web addresses are underlined (the text itself never changes); they open from the chip below, never by themselves.
             for (link in LinkText.findAll(shown)) addStyle(LinkSpan, link.start, link.end)
