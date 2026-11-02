@@ -766,7 +766,11 @@ fun NoteListPane(
                                             onDragCancel = {
                                                 val moved = hold.travelled > viewConfiguration.touchSlop
                                                 dragEnd()
-                                                if (!moved && !hold.menuShown) openMenuIfShown(item)
+                                                // Compose also calls this when the row's gesture coroutine is cancelled while it only waits for a long
+                                                // press (the row is recomposed or leaves the list as a group folds or unfolds): there was no held finger
+                                                // then, and opening the menu made the options of a note pop up on their own (seen in the logs: every
+                                                // time it came from here, with no long press started).
+                                                if (hold.active && !moved && !hold.menuShown) openMenuIfShown(item)
                                                 hold.active = false
                                             },
                                         )
