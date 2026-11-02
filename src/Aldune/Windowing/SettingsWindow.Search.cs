@@ -202,16 +202,39 @@ public partial class SettingsWindow
     {
         public FlashAdorner(UIElement target) : base(target) => IsHitTestVisible = false;
 
+        /// <summary>The border that paints the card of the element (most of its width, with a background), if it has one.</summary>
+        private static Border? CardOf(DependencyObject element)
+        {
+            var queue = new Queue<DependencyObject>();
+            queue.Enqueue(element);
+            while (queue.Count > 0)
+            {
+                var node = queue.Dequeue();
+                if (node is Border { Background: not null, ActualWidth: > 0 } border && element is FrameworkElement host
+                    && border.ActualWidth >= host.ActualWidth * 0.8 && border.ActualHeight >= host.ActualHeight * 0.5
+                    && !ReferenceEquals(border, element))
+                    return border;
+                for (int i = 0; i < VisualTreeHelper.GetChildrenCount(node); i++) queue.Enqueue(VisualTreeHelper.GetChild(node, i));
+            }
+            return null;
+        }
+
         protected override void OnRender(DrawingContext context)
         {
             var accent = (Brush)FindResource("AlduneAccentBrush");
             var wash = accent.CloneCurrentValue();
             wash.Opacity = 0.22;
             var pen = new Pen(accent, 2);
-            // Exactly over the element (the frame inside its edge): rows that touch each other (the list of looks) must not get a piece of the
-            // light on their neighbours.
+            // Over what is drawn, not over the element: a row (the list of looks) has a margin around its card that is not part of it, and the
+            // frame over the whole element left a gap outside the card.
             var size = AdornedElement.RenderSize;
-            context.DrawRoundedRectangle(wash, pen, new System.Windows.Rect(1, 1, Math.Max(0, size.Width - 2), Math.Max(0, size.Height - 2)), 5, 5);
+            var area = new System.Windows.Rect(0, 0, size.Width, size.Height);
+            if (CardOf(AdornedElement) is { } card && card.IsVisible && card.ActualWidth > 0)
+            {
+                var origin = card.TransformToAncestor(AdornedElement).Transform(new System.Windows.Point(0, 0));
+                area = new System.Windows.Rect(origin.X, origin.Y, card.ActualWidth, card.ActualHeight);
+            }
+            context.DrawRoundedRectangle(wash, pen, new System.Windows.Rect(area.X + 1, area.Y + 1, Math.Max(0, area.Width - 2), Math.Max(0, area.Height - 2)), 5, 5);
         }
     }
 }

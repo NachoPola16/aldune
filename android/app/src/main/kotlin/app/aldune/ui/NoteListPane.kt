@@ -41,6 +41,7 @@ import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.focusable
 import androidx.compose.ui.focus.focusRequester
@@ -1341,7 +1342,7 @@ private fun GroupHeader(header: ListEntry.Header, modifier: Modifier = Modifier,
     val state = stringResource(if (header.open) R.string.group_expanded else R.string.group_collapsed)
     Row(
         modifier.fillMaxWidth().then(if (highlighted) Modifier.background(MaterialTheme.colorScheme.primary.copy(alpha = 0.18f), RoundedCornerShape(12.dp)) else Modifier)
-            .padding(start = 16.dp, end = 8.dp),
+            .padding(start = 8.dp, end = 8.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         // Arrow, title and count are one thing to tap (fold or unfold) and to read aloud; the options button is its own, so TalkBack keeps both.
@@ -1349,7 +1350,14 @@ private fun GroupHeader(header: ListEntry.Header, modifier: Modifier = Modifier,
             Modifier.weight(1f).heightIn(min = 48.dp).clickable(onClick = onToggle).semantics(mergeDescendants = true) { heading(); stateDescription = state },
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            Text(if (header.open) "▾" else "▸", Modifier.padding(end = 8.dp), style = MaterialTheme.typography.titleMedium)
+            // An icon turned a quarter, not the text glyphs ▾ ▸: those have different widths and sit on the baseline of the font (the title moved
+            // a little when a group was folded and the arrow was never centred on the line). 24 dp whatever the state, and the title starts 4 dp after it.
+            val turn by androidx.compose.animation.core.animateFloatAsState(if (header.open) 0f else -90f, label = "groupArrow")
+            Icon(
+                Icons.Filled.KeyboardArrowDown, null, Modifier.size(24.dp).graphicsLayer { rotationZ = turn },
+                tint = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+            Spacer(Modifier.width(4.dp))
             Text(header.title, Modifier.weight(1f), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
             Text(header.count.toString(), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
         }
