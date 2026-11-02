@@ -363,6 +363,8 @@ public partial class NoteWindow : Window
         DataObject.AddPastingHandler(TextBody, OnBodyPasting);
         TextBody.PreviewMouseLeftButtonDown += OnBodyMouseDown;
         TextBody.MouseMove += OnBodyMouseMove;
+        TextBody.PreviewMouseLeftButtonUp += (_, e) => { if (_dragFromLine >= 0) { EndTaskDrag(drop: true); e.Handled = true; } };
+        TextBody.LostMouseCapture += (_, _) => EndTaskDrag(drop: false);
         TextBody.MouseLeave += OnBodyMouseLeave;
         TitleBox.PreviewKeyDown += OnTitleKeyDown;
         TitleBox.PreviewMouseLeftButtonDown += OnTitleMouseDown;
@@ -1360,6 +1362,11 @@ public partial class NoteWindow : Window
             e.Handled = true;
             return;
         }
+        if (TryBeginTaskDrag(position))
+        {
+            e.Handled = true;
+            return;
+        }
         if (PlaceCaretFromLeftGutter(position, e.ClickCount))
         {
             e.Handled = true;
@@ -1494,7 +1501,17 @@ public partial class NoteWindow : Window
         }
     }
 
-    private void OnBodyMouseMove(object sender, MouseEventArgs e) => UpdateCheckboxHover(e.GetPosition(TextBody));
+    private void OnBodyMouseMove(object sender, MouseEventArgs e)
+    {
+        var position = e.GetPosition(TextBody);
+        if (_dragFromLine >= 0)
+        {
+            UpdateTaskDrag(position);
+            return;
+        }
+        UpdateCheckboxHover(position);
+        ShowGripAt(position);
+    }
 
     /// <summary>
     /// Se llama tras cualquier cambio de texto (ver el <c>TextChanged</c> del constructor), pero
@@ -1513,8 +1530,151 @@ public partial class NoteWindow : Window
         UpdateCheckboxHover(Mouse.GetPosition(TextBody));
     }
 
+    // --- Reordering tasks by dragging their grip (the same gesture as on Android; Alt+Up / Alt+Down still work) -----------------------
+    //
+    // The grip sits in the left margin of a task line, where a click used to just place the caret. It is drawn only for the task under the
+    // pointer, so a list does not wear a column of handles. The drag works in lines of the text (LineMovement.MoveTo) and measures a line as
+    // all the visual lines it wraps into, so a long task is carried whole and the drop line goes before or after the whole line under the
+    // pointer, never in the middle of a wrapped task.
+
+    private const double GripZoneRight = 18;
+    private int _dragFromLine = -1;
+    private int _dragTargetLine = -1;
+    private Point _dragStart;
+    private bool _dragMoved;
+
+    /// <summary>The line (from 0) at height <paramref name="y"/>, with its top and bottom (all the visual lines it wraps into) and whether it is a task.</summary>
+    private bool TryGetLineAt(double y, out int line, out double top, out double bottom, out bool isTask)
+    {
+        line = 0; top = bottom = 0; isTask = false;
+        var text = TextBody.Text;
+        int index = TextBody.GetCharacterIndexFromPoint(new Point(GripZoneRight + 40, y), snapToText: true);
+        if (index < 0) return false;
+        index = Math.Min(index, text.Length);
+
+        for (int i = 0; i < index; i++) if (text[i] == '\n') line++;
+        if (!TryMeasureLine(text, line, out top, out bottom)) return false;
+        isTask = TaskLines.GlyphIndex(TaskLines.LineContaining(text, index)) >= 0;
+        return true;
+    }
+
+    /// <summary>Top and bottom of line <paramref name="line"/> across all the visual lines it wraps into.</summary>
+    private bool TryMeasureLine(string text, int line, out double top, out double bottom)
+    {
+        top = bottom = 0;
+        int start = LineIndexStart(text, line);
+        int lf = text.IndexOf('\n', start);
+        int end = lf < 0 ? text.Length : lf;
+        if (end > start && text[end - 1] == '\r') end--;
+        var first = TextBody.GetRectFromCharacterIndex(start);
+        var last = end > start ? TextBody.GetRectFromCharacterIndex(end - 1) : first;
+        if (first.IsEmpty || last.IsEmpty) return false;
+        top = first.Top;
+        bottom = Math.Max(last.Bottom, first.Bottom);
+        return true;
+    }
+
+    private static int LineIndexStart(string text, int line)
+    {
+        int start = 0;
+        for (int i = 0; i < line; i++)
+        {
+            int lf = text.IndexOf('\n', start);
+            if (lf < 0) break;
+            start = lf + 1;
+        }
+        return start;
+    }
+
+    private void ShowGripAt(Point position)
+    {
+        if (_dragFromLine >= 0) return;
+        bool inMargin = position.X >= 0 && position.X <= GripZoneRight;
+        if (position.X <= GripZoneRight + 60 && TryGetLineAt(position.Y, out int line, out var top, out _, out var isTask) && isTask)
+        {
+            var firstLine = TextBody.GetRectFromCharacterIndex(LineIndexStart(TextBody.Text, line));
+            double lineHeight = firstLine.IsEmpty ? 18 : firstLine.Height;
+            Canvas.SetLeft(TaskGrip, 5);
+            Canvas.SetTop(TaskGrip, top + (lineHeight - 8) / 2);
+            TaskGrip.Visibility = Visibility.Visible;
+            if (inMargin) TextBody.Cursor = Cursors.SizeAll;
+        }
+        else
+        {
+            TaskGrip.Visibility = Visibility.Collapsed;
+        }
+    }
+
+    /// <summary>Starts a drag if the press is on the grip of a task line. True when it took the press.</summary>
+    private bool TryBeginTaskDrag(Point position)
+    {
+        if (position.X < 0 || position.X > GripZoneRight) return false;
+        if (!TryGetLineAt(position.Y, out int line, out _, out _, out bool isTask) || !isTask) return false;
+
+        _dragFromLine = line;
+        _dragTargetLine = line;
+        _dragStart = position;
+        _dragMoved = false;
+        TextBody.CaptureMouse();
+        TextBody.Cursor = Cursors.SizeAll;
+        return true;
+    }
+
+    private void UpdateTaskDrag(Point position)
+    {
+        if (_dragFromLine < 0) return;
+        if (!_dragMoved && (position - _dragStart).Length < 4) return;
+        _dragMoved = true;
+
+        double clampedY = Math.Clamp(position.Y, 0, Math.Max(0, TextBody.ViewportHeight - 1));
+        if (!TryGetLineAt(clampedY, out int target, out var targetTop, out var targetBottom, out _)) return;
+        _dragTargetLine = target;
+
+        if (TryMeasureLine(TextBody.Text, _dragFromLine, out var fromTop, out var fromBottom))
+        {
+            Canvas.SetLeft(TaskDragSource, 0);
+            Canvas.SetTop(TaskDragSource, fromTop);
+            TaskDragSource.Width = TextBody.ActualWidth;
+            TaskDragSource.Height = fromBottom - fromTop;
+            TaskDragSource.Visibility = Visibility.Visible;
+        }
+
+        // Before the line when going up, after it when going down: where the task will really end up.
+        double lineY = target >= _dragFromLine ? targetBottom : targetTop;
+        Canvas.SetLeft(TaskDropLine, 0);
+        Canvas.SetTop(TaskDropLine, lineY - 1.5);
+        TaskDropLine.Width = TextBody.ActualWidth;
+        TaskDropLine.Visibility = Visibility.Visible;
+        Canvas.SetLeft(TaskDropDot, 0);
+        Canvas.SetTop(TaskDropDot, lineY - 4.5);
+        TaskDropDot.Visibility = Visibility.Visible;
+    }
+
+    private void EndTaskDrag(bool drop)
+    {
+        if (_dragFromLine < 0) return;
+        int from = _dragFromLine, target = _dragTargetLine;
+        bool moved = _dragMoved;
+        _dragFromLine = _dragTargetLine = -1;
+        _dragMoved = false;
+        TaskDragSource.Visibility = TaskDropLine.Visibility = TaskDropDot.Visibility = TaskGrip.Visibility = Visibility.Collapsed;
+        if (TextBody.IsMouseCaptured) TextBody.ReleaseMouseCapture();
+        TextBody.Cursor = Cursors.IBeam;
+        if (!drop || !moved) return;
+
+        if (LineMovement.MoveTo(TextBody.Text, from, target) is { } result)
+        {
+            double offset = TextBody.VerticalOffset;
+            ReplaceBody(result.Text, result.Caret);
+            TextBody.Focus();
+            TextBody.ScrollToVerticalOffset(offset);
+            _coordinator.PlaySound(SoundEvent.TaskChecked);
+        }
+    }
+
     private void OnBodyMouseLeave(object sender, MouseEventArgs e)
     {
+        if (_dragFromLine < 0) TaskGrip.Visibility = Visibility.Collapsed;
         TaskHoverHighlight.Visibility = Visibility.Collapsed;
         TextBody.Cursor = Cursors.IBeam;
     }

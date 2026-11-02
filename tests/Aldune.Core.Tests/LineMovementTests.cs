@@ -5,6 +5,32 @@ namespace Aldune.Core.Tests;
 
 public class LineMovementTests
 {
+    [Theory]
+    [InlineData("a\nb\nc\nd", 0, 2, "b\nc\na\nd")]
+    [InlineData("a\nb\nc\nd", 3, 1, "a\nd\nb\nc")]
+    [InlineData("a\r\nb\r\nc", 0, 2, "b\r\nc\r\na")]
+    public void MoveTo_PutsTheLineAtTheNewIndexKeepingTheTerminators(string text, int from, int to, string expected)
+    {
+        Assert.Equal(expected, LineMovement.MoveTo(text, from, to)!.Value.Text);
+    }
+
+    [Fact]
+    public void MoveTo_LeavesTheCaretAtTheEndOfTheMovedLine()
+    {
+        var result = LineMovement.MoveTo("uno\ndos\ntres", 0, 2)!.Value;
+        Assert.Equal("dos\ntres\nuno", result.Text);
+        Assert.Equal(result.Text.Length, result.Caret);
+    }
+
+    [Theory]
+    [InlineData("a\nb", 1, 1)]
+    [InlineData("a\nb", 0, 5)]
+    [InlineData("a\nb", -1, 0)]
+    public void MoveTo_IsNullWhenNothingChangesOrALineDoesNotExist(string text, int from, int to)
+    {
+        Assert.Null(LineMovement.MoveTo(text, from, to));
+    }
+
     [Fact]
     public void Move_Up_SwapsWithThePreviousLine()
     {

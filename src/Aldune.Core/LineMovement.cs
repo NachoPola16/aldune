@@ -24,6 +24,31 @@ public enum LineDirection
 public static class LineMovement
 {
     /// <summary>
+    /// Moves line <paramref name="fromLine"/> so that it ends up at index <paramref name="toLine"/> (what dragging a task does). Only the
+    /// CONTENTS travel; each position keeps its own terminator, so line breaks are never shuffled. The caret ends at the end of the moved line.
+    /// <c>null</c> if nothing changes or a line does not exist. Same rule as <c>LineMovement.moveTo</c> on Android.
+    /// </summary>
+    public static (string Text, int Caret)? MoveTo(string text, int fromLine, int toLine)
+    {
+        var (contents, terminators) = SplitLines(text);
+        if (fromLine == toLine || fromLine < 0 || toLine < 0 || fromLine >= contents.Count || toLine >= contents.Count) return null;
+
+        var moved = contents[fromLine];
+        contents.RemoveAt(fromLine);
+        contents.Insert(toLine, moved);
+
+        var builder = new StringBuilder();
+        int caret = 0;
+        for (int i = 0; i < contents.Count; i++)
+        {
+            builder.Append(contents[i]);
+            if (i == toLine) caret = builder.Length;
+            builder.Append(terminators[i]);
+        }
+        return (builder.ToString(), caret);
+    }
+
+    /// <summary>
     /// Devuelve el texto con la línea de <paramref name="caret"/> intercambiada por su vecina en
     /// <paramref name="direction"/>, y dónde queda el cursor (mismo desplazamiento dentro de la
     /// línea, que ahora vive en su nueva posición). <c>null</c> si no hay vecina en esa dirección

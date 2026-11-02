@@ -604,6 +604,14 @@
             <Canvas x:Name="FindLayer" IsHitTestVisible="False">
                 <Border x:Name="TaskHoverHighlight" Background="{DynamicResource NoteTaskHoverBrush}" CornerRadius="{DynamicResource AlduneRadius3}"
                         Visibility="Collapsed" />
+                <!-- Reordering a task: the grip in the left margin of the task under the pointer, and while dragging the task being carried
+                     (dimmed) and the line where it will land. All in the ink of the note, so they read on any note colour and in every look. -->
+                <Path x:Name="TaskGrip" Data="M0,0 H9 M0,4 H9 M0,8 H9" Stroke="{DynamicResource NoteInkBrush}" StrokeThickness="2"
+                      StrokeStartLineCap="Round" StrokeEndLineCap="Round" Opacity="0.55" Visibility="Collapsed" />
+                <Border x:Name="TaskDragSource" Background="{DynamicResource NoteInkBrush}" Opacity="0.14" CornerRadius="{DynamicResource AlduneRadius3}"
+                        Visibility="Collapsed" />
+                <Border x:Name="TaskDropLine" Height="3" CornerRadius="1.5" Background="{DynamicResource NoteInkBrush}" Visibility="Collapsed" />
+                <Ellipse x:Name="TaskDropDot" Width="9" Height="9" Fill="{DynamicResource NoteInkBrush}" Visibility="Collapsed" />
                 <!-- Coincidencia actual de Ctrl+F: se pinta aparte porque la selección de un cuadro sin el
                      foco (la barra lo tiene) sale en el gris de sistema y casi no se ve sobre la nota. -->
                 <Border x:Name="FindHighlight" BorderThickness="1.5" CornerRadius="{DynamicResource AlduneRadius3}"
