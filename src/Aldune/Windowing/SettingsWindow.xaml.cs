@@ -50,6 +50,7 @@ public partial class SettingsWindow : Window
         GlobalHotkey? managerHotkey = null)
     {
         InitializeComponent();
+        PageScroller.ScrollChanged += (_, _) => UpdatePageFades();
         AboutLogo.Source = ToastWindow.LoadLogo();
         // Con «Tamaño del texto» al 130 o 150 % la ventana crece con él (ver ThemeManager.ScaleWindowToText).
         ThemeManager.ScaleWindowToText(this);
@@ -222,6 +223,13 @@ public partial class SettingsWindow : Window
         PageNav(page).IsChecked = true;
         ClearFlash();
         PageScroller.ScrollToTop();
+    }
+
+    // The soft edges of the page (see PageFadeTop/PageFadeBottom in the XAML) show only where there is more content to scroll to.
+    private void UpdatePageFades()
+    {
+        PageFadeTop.Opacity = PageScroller.VerticalOffset > 1 ? 1 : 0;
+        PageFadeBottom.Opacity = PageScroller.VerticalOffset < PageScroller.ScrollableHeight - 1 ? 1 : 0;
     }
 
     private void OnPageChecked(object sender, RoutedEventArgs e)

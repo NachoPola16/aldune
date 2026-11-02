@@ -1215,6 +1215,26 @@
                 </StackPanel>
                 </Grid>
             </ScrollViewer>
+            <!-- Where the page continues past the edge of the viewport the content fades out instead of being cut off: a soft edge
+                 (the window background, opaque at the edge and clear inwards) that only shows while there is more to scroll that way. -->
+            <Border x:Name="PageFadeTop" Grid.Column="1" Height="26" VerticalAlignment="Top" Margin="1,0,20,0" IsHitTestVisible="False" Opacity="0"
+                    Background="{DynamicResource AlduneGroundBrush}">
+                <Border.OpacityMask>
+                    <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
+                        <GradientStop Color="#FF000000" Offset="0" />
+                        <GradientStop Color="#00000000" Offset="1" />
+                    </LinearGradientBrush>
+                </Border.OpacityMask>
+            </Border>
+            <Border x:Name="PageFadeBottom" Grid.Column="1" Height="26" VerticalAlignment="Bottom" Margin="1,0,20,0" IsHitTestVisible="False" Opacity="0"
+                    Background="{DynamicResource AlduneGroundBrush}">
+                <Border.OpacityMask>
+                    <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
+                        <GradientStop Color="#00000000" Offset="0" />
+                        <GradientStop Color="#FF000000" Offset="1" />
+                    </LinearGradientBrush>
+                </Border.OpacityMask>
+            </Border>
         </Grid>
     </Grid>
 </Window>
