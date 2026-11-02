@@ -364,7 +364,7 @@ public partial class SettingsWindow : Window
 
         // MaxHeight es útil en modo normal para no cortar Ajustes, pero interfiere con el estado
         // maximizado: lo dejaría en el límite del 90% en vez de ocupar el área de trabajo completa.
-        MaxHeight = double.PositiveInfinity;
+        MaxHeight = double.PositiveInfinity; MaxWidth = double.PositiveInfinity;
         WindowState = WindowState.Maximized;
     }
 
@@ -392,7 +392,7 @@ public partial class SettingsWindow : Window
         {
             if (WindowState == WindowState.Maximized)
             {
-                MaxHeight = double.PositiveInfinity;
+                MaxHeight = double.PositiveInfinity; MaxWidth = double.PositiveInfinity;
             }
             MaximizeButton.ToolTip = WindowState == WindowState.Maximized
                 ? Strings.RestoreWindowTooltip

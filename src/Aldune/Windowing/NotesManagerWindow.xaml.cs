@@ -796,7 +796,7 @@ public partial class NotesManagerWindow : Window
             return;
         }
 
-        MaxHeight = double.PositiveInfinity;
+        MaxHeight = double.PositiveInfinity; MaxWidth = double.PositiveInfinity;
         WindowState = WindowState.Maximized;
     }
 
@@ -815,7 +815,7 @@ public partial class NotesManagerWindow : Window
         {
             if (WindowState == WindowState.Maximized)
             {
-                MaxHeight = double.PositiveInfinity;
+                MaxHeight = double.PositiveInfinity; MaxWidth = double.PositiveInfinity;
             }
             MaximizeButton.ToolTip = WindowState == WindowState.Maximized
                 ? Strings.RestoreWindowTooltip
