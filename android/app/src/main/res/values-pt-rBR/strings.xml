@@ -561,4 +561,5 @@
     <string name="whatsnew_200_search">Busca nas configurações (a lupa ao lado do título), que perdoa erros de digitação. Arraste uma nota sobre outra tag para movê-la; uma tag vazia fica no fim da lista. Na horizontal, os botões de edição ficam na linha do título.</string>
     <string name="whatsnew_200_swipe">Deslize para o lado na parte vazia da lista para alternar entre Todas e cada tag.</string>
     <string name="whatsnew_200_folded">A lista lembra quais grupos de tags estavam recolhidos, mesmo depois de fechar o app.</string>
+    <string name="whatsnew_200_plain">Nova opção: o editor pode usar o fundo do app enquanto as notas mantêm a cor na lista. O texto tem margens maiores e o widget perde a barra de rolagem.</string>
 </resources>

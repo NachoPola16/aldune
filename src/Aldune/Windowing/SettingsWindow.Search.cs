@@ -166,24 +166,50 @@ public partial class SettingsWindow
         });
     }
 
+    /// <summary>
+    /// Lights the setting for a moment: a frame and a wash in the accent colour drawn over it, fading out. It is an adorner, not a background:
+    /// the switches and rows draw their own template, so a background set on them was never seen.
+    /// </summary>
     private void Flash(FrameworkElement element)
     {
-        // Only text and panels take a background; anything else is just scrolled to.
-        var (property, original) = element switch
+        ClearFlash();
+        var layer = System.Windows.Documents.AdornerLayer.GetAdornerLayer(element);
+        if (layer is null) return;
+        var adorner = new FlashAdorner(element);
+        layer.Add(adorner);
+        _flashLayer = layer;
+        _flashAdorner = adorner;
+        var fade = new System.Windows.Media.Animation.DoubleAnimation(1, 0, new Duration(TimeSpan.FromMilliseconds(1600)))
         {
-            TextBlock => (TextBlock.BackgroundProperty, element.GetValue(TextBlock.BackgroundProperty)),
-            Control => (Control.BackgroundProperty, element.GetValue(Control.BackgroundProperty)),
-            _ => (null, null),
+            BeginTime = TimeSpan.FromMilliseconds(500),
+            EasingFunction = new System.Windows.Media.Animation.QuadraticEase { EasingMode = System.Windows.Media.Animation.EasingMode.EaseIn },
         };
-        if (property is null) return;
-        element.SetResourceReference(property, "AlduneSelectedBrush");
-        var timer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(1400) };
-        timer.Tick += (_, _) =>
+        fade.Completed += (_, _) => { layer.Remove(adorner); if (ReferenceEquals(_flashAdorner, adorner)) _flashAdorner = null; };
+        adorner.BeginAnimation(UIElement.OpacityProperty, fade);
+    }
+
+    private System.Windows.Documents.AdornerLayer? _flashLayer;
+    private System.Windows.Documents.Adorner? _flashAdorner;
+
+    /// <summary>The light of the previous jump goes out when another starts or the page changes (an adorner of a hidden page is drawn where it was).</summary>
+    private void ClearFlash()
+    {
+        if (_flashAdorner is not null) _flashLayer?.Remove(_flashAdorner);
+        _flashAdorner = null;
+    }
+
+    private sealed class FlashAdorner : System.Windows.Documents.Adorner
+    {
+        public FlashAdorner(UIElement target) : base(target) => IsHitTestVisible = false;
+
+        protected override void OnRender(DrawingContext context)
         {
-            timer.Stop();
-            element.ClearValue(property);
-            if (original is not null && original != DependencyProperty.UnsetValue) element.SetValue(property, original);
-        };
-        timer.Start();
+            var accent = (Brush)FindResource("AlduneAccentBrush");
+            var wash = accent.CloneCurrentValue();
+            wash.Opacity = 0.22;
+            var pen = new Pen(accent, 2);
+            var rect = new System.Windows.Rect(-6, -3, AdornedElement.RenderSize.Width + 12, AdornedElement.RenderSize.Height + 6);
+            context.DrawRoundedRectangle(wash, pen, rect, 6, 6);
+        }
     }
 }

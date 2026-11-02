@@ -220,6 +220,7 @@ public partial class SettingsWindow : Window
         s_lastPage = page;
         s_lastPageAt = DateTime.UtcNow;
         PageNav(page).IsChecked = true;
+        ClearFlash();
         PageScroller.ScrollToTop();
     }
 

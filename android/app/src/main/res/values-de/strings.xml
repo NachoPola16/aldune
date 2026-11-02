@@ -561,4 +561,5 @@
     <string name="whatsnew_200_search">Suche in den Einstellungen (die Lupe neben dem Titel), die Tippfehler verzeiht. Zieh eine Notiz auf einen anderen Tag, um sie zu verschieben; ein leerer Tag bleibt am Ende der Liste. Im Querformat teilen sich die Bearbeitungsschaltflächen die Titelzeile.</string>
     <string name="whatsnew_200_swipe">Wische seitlich über den leeren Teil der Liste, um zwischen Alle und den einzelnen Tags zu wechseln.</string>
     <string name="whatsnew_200_folded">Die Liste merkt sich, welche Tag-Gruppen eingeklappt waren, auch nach dem Schließen der App.</string>
+    <string name="whatsnew_200_plain">Neue Einstellung: Der Editor kann den Hintergrund der App nutzen, während die Notizen in der Liste ihre Farbe behalten. Der Text hat größere Ränder und das Widget verliert seine Bildlaufleiste.</string>
 </resources>

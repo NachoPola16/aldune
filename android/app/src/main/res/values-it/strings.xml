@@ -561,4 +561,5 @@
     <string name="whatsnew_200_search">Ricerca nelle impostazioni (la lente accanto al titolo), che perdona gli errori di battitura. Trascina una nota su un’altra etichetta per spostarla; un’etichetta vuota resta in fondo all’elenco. In orizzontale i pulsanti di modifica stanno nella riga del titolo.</string>
     <string name="whatsnew_200_swipe">Scorri di lato nella parte vuota dell’elenco per passare da Tutte alle singole etichette.</string>
     <string name="whatsnew_200_folded">L’elenco ricorda quali gruppi di etichette erano chiusi, anche dopo aver chiuso l’app.</string>
+    <string name="whatsnew_200_plain">Nuova impostazione: l\'editor può usare lo sfondo dell\'app mentre le note mantengono il colore nell\'elenco. Il testo ha margini più ampi e il widget perde la barra di scorrimento.</string>
 </resources>

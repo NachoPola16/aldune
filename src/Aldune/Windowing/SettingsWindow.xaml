@@ -347,12 +347,12 @@
                 <StackPanel DockPanel.Dock="Top">
                     <!-- Search: fuzzy (accents, typos, half-typed words); Ctrl+F focuses it. While it has text the page list gives way to the results. -->
                     <Grid Margin="0,0,0,10">
-                        <TextBox x:Name="SettingsSearchBox" Padding="10,6" FontSize="{DynamicResource AlduneTextBody}"
+                        <TextBox x:Name="SettingsSearchBox" Padding="10,6" FontSize="{DynamicResource AlduneTextBody}" VerticalContentAlignment="Center"
                                  AutomationProperties.Name="{x:Static res:Strings.SettingsSearchHint}"
                                  TextChanged="OnSettingsSearchChanged" PreviewKeyDown="OnSettingsSearchKeyDown" />
                         <TextBlock Text="{x:Static res:Strings.SettingsSearchHint}" IsHitTestVisible="False" Margin="15,0,8,0"
                                    VerticalAlignment="Center" TextTrimming="CharacterEllipsis"
-                                   Foreground="{DynamicResource AlduneHintBrush}" FontSize="{DynamicResource AlduneTextSmall}">
+                                   Foreground="{DynamicResource AlduneHintBrush}" FontSize="{DynamicResource AlduneTextBody}">
                             <TextBlock.Style>
                                 <Style TargetType="TextBlock">
                                     <Setter Property="Visibility" Value="Collapsed" />
