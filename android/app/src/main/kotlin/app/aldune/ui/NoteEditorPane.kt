@@ -90,6 +90,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.graphics.toArgb
 import androidx.compose.foundation.text.input.TextFieldLineLimits
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.ui.text.input.ImeAction
@@ -888,7 +889,11 @@ fun NoteEditorPane(key: String, viewModel: NotesViewModel, onBack: () -> Unit, s
                 lineHeight = if (hasTasks && settings.largeCheckboxes && !(look.telecomGrid || look.paper == AspectSkin.Paper.RULED || look.paper == AspectSkin.Paper.GRID)) bodyStyle.lineHeight * 1.15f else bodyStyle.lineHeight,
                 textIndent = if (hasTasks && !plainWraps) TextIndent(firstLine = 0.sp, restLine = taskIndent) else null,
             ),
-            cursorBrush = SolidColor(MaterialTheme.colorScheme.primary),
+            // The accent when it can be seen on the page, the ink of the note when it cannot: the accent on a yellow or a pink note was lost.
+            cursorBrush = SolidColor(MaterialTheme.colorScheme.primary.let { accent ->
+                val page = faceHex?.let { noteFace(it) } ?: MaterialTheme.colorScheme.background
+                if (androidx.core.graphics.ColorUtils.calculateContrast(accent.toArgb(), page.copy(alpha = 1f).toArgb()) >= 4.5) accent else ink
+            }),
         )
         if (hasTasks) TaskDragOverlay(drag, layout = { layout?.invoke() }, scroll = fieldScroll, shown = ::shownText, modifier = Modifier.matchParentSize(), ink = ink,
             lift = faceHex?.let { noteFace(it) } ?: MaterialTheme.colorScheme.background)
