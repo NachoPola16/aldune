@@ -1,4 +1,4 @@
-using System.Windows;
+﻿using System.Windows;
 using System.Windows.Interop;
 
 namespace Aldune.Windowing;
@@ -11,6 +11,24 @@ namespace Aldune.Windowing;
 /// </summary>
 internal static class MaximizeHook
 {
+    /// <summary>Room, in DIPs, that a cap of «the work area» needs on top of it: a snapped window carries invisible resize borders (about 7 px a side) that count in its size.</summary>
+    internal const double SnapBorderSlack = 16;
+
+    /// <summary>
+    /// The size a window may reach: the largest work area of any screen, plus <see cref="SnapBorderSlack"/>. Measured on the screen the window
+    /// started on, the cap was wrong as soon as it was snapped on another one (a taller portrait screen was cut at the height of the main one).
+    /// </summary>
+    internal static (double Width, double Height) SnapCap()
+    {
+        double w = SystemParameters.WorkArea.Width, h = SystemParameters.WorkArea.Height;
+        foreach (var monitor in Aldune.Interop.MonitorEnumerator.EnumerateMonitors())
+        {
+            w = Math.Max(w, monitor.WorkArea.Width);
+            h = Math.Max(h, monitor.WorkArea.Height);
+        }
+        return (w + SnapBorderSlack, h + SnapBorderSlack);
+    }
+
     private const int WmSysCommand = 0x0112;
     private const int ScMaximize = 0xF030;
 

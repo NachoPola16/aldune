@@ -370,8 +370,8 @@ public partial class SettingsWindow : Window
 
     private void RestoreNormalHeightLimit()
     {
-        var monitor = MonitorLookup.MonitorAt(Left, Top, Width, Height, MonitorEnumerator.EnumerateMonitors());
-        LimitToWorkArea(monitor?.WorkArea.Width ?? SystemParameters.WorkArea.Width, monitor?.WorkArea.Height ?? SystemParameters.WorkArea.Height);
+        var (capWidth, capHeight) = MaximizeHook.SnapCap();
+        LimitToWorkArea(capWidth - MaximizeHook.SnapBorderSlack, capHeight - MaximizeHook.SnapBorderSlack);
     }
 
     /// <summary>
@@ -381,8 +381,8 @@ public partial class SettingsWindow : Window
     /// </summary>
     private void LimitToWorkArea(double workWidth, double workHeight)
     {
-        MaxHeight = workHeight;
-        MaxWidth = workWidth;
+        MaxHeight = workHeight + MaximizeHook.SnapBorderSlack;
+        MaxWidth = workWidth + MaximizeHook.SnapBorderSlack;
         if (!double.IsNaN(Height)) Height = Math.Min(Height, workHeight * 0.9);
     }
 

@@ -802,11 +802,11 @@ public partial class NotesManagerWindow : Window
 
     private void RestoreNormalHeightLimit()
     {
-        var monitor = MonitorLookup.MonitorAt(Left, Top, Width, Height, MonitorEnumerator.EnumerateMonitors());
         // The initial size leaves room (90 %) but the cap is the whole work area: with 90 % as the cap too, a snap that does not go through
         // «maximize» (Win+arrow, PowerToys FancyZones) left a strip uncovered when the window was fitted to half of the screen.
-        MaxHeight = monitor?.WorkArea.Height ?? SystemParameters.WorkArea.Height;
-        MaxWidth = monitor?.WorkArea.Width ?? SystemParameters.WorkArea.Width;
+        // Plus the invisible resize borders that Windows puts around a snapped window (about 7 px a side): a cap of exactly the work area cut
+        // them and left a strip uncovered on the right and at the bottom.
+        (MaxWidth, MaxHeight) = MaximizeHook.SnapCap();
     }
 
     private void OnWindowStateChanged(object? sender, EventArgs e)
