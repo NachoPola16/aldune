@@ -1608,9 +1608,10 @@ public partial class NoteWindow : Window
         {
             var firstLine = TextBody.GetRectFromCharacterIndex(LineIndexStart(TextBody.Text, line));
             double lineHeight = firstLine.IsEmpty ? 18 : firstLine.Height;
-            Canvas.SetLeft(TaskGrip, 5.8);
+            // Centred in the margin: measured, the dots then sit 8 px from the edge of the note and 8 px from the checkbox.
+            Canvas.SetLeft(TaskGrip, 8.0);
             Canvas.SetTop(TaskGrip, top + (lineHeight - 12) / 2);
-            Canvas.SetLeft(TaskGripHover, 1);
+            Canvas.SetLeft(TaskGripHover, 3.5);
             Canvas.SetTop(TaskGripHover, top + (lineHeight - 20) / 2);
             TaskGrip.Visibility = Visibility.Visible;
             TaskGrip.Opacity = inMargin ? 0.95 : 0.5;
@@ -1658,7 +1659,10 @@ public partial class NoteWindow : Window
         }
 
         // Before the line when going up, after it when going down: where the task will really end up.
-        double lineY = target >= _dragFromLine ? targetBottom : targetTop;
+        // The text sits a little low in its line box (the extra leading goes above it), so the boundary between two boxes is closer to the line
+        // above than to the one below: nudged down by a fraction of the font size so the gap looks the same on both sides (measured at 14 px:
+        // 2 px above and 4 px below before, 3 and 3 now; it scales with the text size).
+        double lineY = (target >= _dragFromLine ? targetBottom : targetTop) + TextBody.FontSize * 0.075;
         Canvas.SetLeft(TaskDropLine, 0);
         Canvas.SetTop(TaskDropLine, lineY - 1.5);
         TaskDropLine.Width = TextBody.ActualWidth;
