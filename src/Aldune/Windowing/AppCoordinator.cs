@@ -1703,7 +1703,17 @@ public sealed class AppCoordinator
         _viewRefreshTimer?.Stop();
         _viewRefreshPending = false;
         CloseNotesOutsideCurrentView();
+        // Before RefreshAll, which reloads the manager's rows: that way the list changes once, with its entrance, not twice.
+        if (_settings is not null) _notesManagerWindow?.ApplyDockView(_settings.DockView, _settings.DockTagFilter);
         RefreshAll();
+    }
+
+    /// <summary>The manager's state/tag filter was changed by the user: the dock shows the same view (no-op if it already does).</summary>
+    internal void SetDockViewFromManager(DockViewKind view, string? tag)
+    {
+        if (_settings is null) return;
+        if (_settings.DockView == view && string.Equals(_settings.DockTagFilter, view == DockViewKind.Tag ? tag : null, StringComparison.OrdinalIgnoreCase)) return;
+        SetDockView(view, tag);
     }
 
     /// <summary>

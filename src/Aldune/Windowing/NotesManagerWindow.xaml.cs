@@ -78,11 +78,50 @@ public partial class NotesManagerWindow : Window
     /// dock está en la vista de una etiqueta. Recargar también restablece la selección, que es lo
     /// esperable al cambiar de filtro. Si ya estaba ese filtro, no se toca nada.
     /// </summary>
-    public void ApplyTagFilter(string? tag)
+    public void ApplyTagFilter(string? tag) => ApplyDockView(DockViewKind.Tag, tag);
+
+    private bool _syncingFromDock;
+
+    /// <summary>
+    /// The dock changed its view (state or tag) while this window is open: show the same list, with the same entrance
+    /// as when the user picks it here. The dock has no state filter for "All", so it shows the active notes.
+    /// </summary>
+    public void ApplyDockView(DockViewKind view, string? tag)
     {
-        if (string.Equals(_tagFilter, tag, StringComparison.OrdinalIgnoreCase)) return;
-        _tagFilter = tag;
-        LoadRows();
+        var (filter, tagFilter) = view switch
+        {
+            DockViewKind.Archived => (Filter.Archived, (string?)null),
+            DockViewKind.Trashed => (Filter.Trashed, null),
+            DockViewKind.Tag => (Filter.Active, tag),
+            _ => (Filter.Active, null),
+        };
+        if (filter == _filter && string.Equals(_tagFilter, tagFilter, StringComparison.OrdinalIgnoreCase)) return;
+
+        _syncingFromDock = true;
+        try
+        {
+            _filter = filter;
+            _tagFilter = tagFilter;
+            (filter == Filter.Archived ? FilterArchived : filter == Filter.Trashed ? FilterTrashed : FilterActive).IsChecked = true;
+            LoadTagFilterOptions();
+            ApplyFilter();
+            PlayListEntrance();
+        }
+        finally { _syncingFromDock = false; }
+    }
+
+    /// <summary>The user picked a state or tag here: the dock follows, so both show the same notes.</summary>
+    private void PushViewToDock()
+    {
+        if (_syncingFromDock) return;
+        var (view, tag) = _filter switch
+        {
+            Filter.Archived => (DockViewKind.Archived, (string?)null),
+            Filter.Trashed => (DockViewKind.Trashed, null),
+            _ when !string.IsNullOrWhiteSpace(_tagFilter) => (DockViewKind.Tag, _tagFilter),
+            _ => (DockViewKind.Active, null),
+        };
+        _coordinator.SetDockViewFromManager(view, tag);
     }
 
     private void LoadRows()
@@ -290,12 +329,14 @@ public partial class NotesManagerWindow : Window
 
     private void OnFilterChanged(object sender, RoutedEventArgs e)
     {
+        if (_syncingFromDock) return;
         _filter = sender == FilterArchived ? Filter.Archived
             : sender == FilterTrashed ? Filter.Trashed
             : Filter.Active;
 
         ApplyFilter();
         PlayListEntrance();
+        PushViewToDock();
     }
 
     private void LoadSortOptions()
@@ -333,6 +374,7 @@ public partial class NotesManagerWindow : Window
         _tagFilter = item.Tag as string;
         ApplyFilter();
         PlayListEntrance();
+        PushViewToDock();
     }
 
     private void OnRestorePlacementsClick(object sender, RoutedEventArgs e)
