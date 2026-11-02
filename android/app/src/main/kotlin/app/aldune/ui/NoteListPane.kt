@@ -336,8 +336,23 @@ fun NoteListPane(
             val pullState = androidx.compose.material3.pulltorefresh.rememberPullToRefreshState()
             // While the list is being pulled (and just after), a hold on a row is part of the pull, not a request for its options.
             LaunchedEffect(pullState.distanceFraction) { if (pullState.distanceFraction > 0f) calmUntil = System.currentTimeMillis() + MENU_CALM_MS }
+            // The spinner follows the sync, but steadied: passes that follow each other (or end within a blink) made it go away and come back, and
+            // the indicator slid up and down with every change. It stays up while a new pass starts within 400 ms of the last one ending, and
+            // at least 700 ms once it has appeared, so that a very short pass does not flash.
+            val syncRunning = status?.running == true
+            var spinnerShown by remember { mutableStateOf(syncRunning) }
+            var spinnerSince by remember { mutableLongStateOf(0L) }
+            LaunchedEffect(syncRunning) {
+                if (syncRunning) {
+                    if (!spinnerShown) spinnerSince = System.currentTimeMillis()
+                    spinnerShown = true
+                } else if (spinnerShown) {
+                    delay(maxOf(400L, 700L - (System.currentTimeMillis() - spinnerSince)))
+                    spinnerShown = false
+                }
+            }
             PullToRefreshBox(
-                isRefreshing = status?.running == true,
+                isRefreshing = spinnerShown,
                 onRefresh = {
                     // The finger that pulled the list is still around: for a moment nothing may read it as a request for a note's options.
                     calmUntil = System.currentTimeMillis() + MENU_CALM_MS
@@ -347,7 +362,7 @@ fun NoteListPane(
                 state = pullState,
                 indicator = {
                     if (hasProfile) androidx.compose.material3.pulltorefresh.PullToRefreshDefaults.Indicator(
-                        state = pullState, isRefreshing = status?.running == true, modifier = Modifier.align(Alignment.TopCenter),
+                        state = pullState, isRefreshing = spinnerShown, modifier = Modifier.align(Alignment.TopCenter),
                     )
                 },
             ) {

@@ -132,10 +132,41 @@ public partial class SettingsWindow
         ShowPage(hit.Page);
         Dispatcher.BeginInvoke(DispatcherPriority.Loaded, () =>
         {
-            hit.Element.BringIntoView();
+            Reveal(hit.Element);
             Flash(hit.Element);
         });
     }
+
+    /// <summary>
+    /// Scrolls the page so that <paramref name="element"/> sits a little below the top. BringIntoView only moves the page the minimum and left
+    /// the line stuck against the edge of the window (or, called before the page had been laid out, did nothing: the notice that points to an
+    /// option arrived at its page and not at its line).
+    /// </summary>
+    private void Reveal(FrameworkElement element)
+    {
+        PageScroller.UpdateLayout();
+        if (PageScroller.Content is not UIElement content || !element.IsVisible) { element.BringIntoView(); return; }
+        double top = element.TransformToVisual(content).Transform(new Point(0, 0)).Y;
+        double wanted = Math.Max(0, top - RevealMargin);
+        // A setting near the end of its page cannot be brought down from the edge: there is no page left under it. The page gets the room it
+        // needs, until another page is shown (see ResetPageRoom).
+        if (wanted > PageScroller.ScrollableHeight && content is FrameworkElement page)
+        {
+            page.Margin = new Thickness(page.Margin.Left, page.Margin.Top, page.Margin.Right, PageBottomMargin + (wanted - PageScroller.ScrollableHeight));
+            PageScroller.UpdateLayout();
+        }
+        PageScroller.ScrollToVerticalOffset(wanted);
+    }
+
+    private const double PageBottomMargin = 24;
+
+    private void ResetPageRoom()
+    {
+        if (PageScroller.Content is FrameworkElement page && page.Margin.Bottom != PageBottomMargin)
+            page.Margin = new Thickness(page.Margin.Left, page.Margin.Top, page.Margin.Right, PageBottomMargin);
+    }
+
+    private const double RevealMargin = 90;
 
     /// <summary>Opens <paramref name="page"/> and, when an element name is given, scrolls to it and lights it (a notice elsewhere sends the person to the option it talks about).</summary>
     internal void ShowOption(string page, string? elementName)
@@ -144,7 +175,7 @@ public partial class SettingsWindow
         if (elementName is null || FindName(elementName) is not FrameworkElement element) return;
         Dispatcher.BeginInvoke(DispatcherPriority.Loaded, () =>
         {
-            element.BringIntoView();
+            Reveal(element);
             Flash(element);
         });
     }

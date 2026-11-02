@@ -261,6 +261,9 @@ public sealed class AppSettings
     /// </summary>
     public bool NoteColorAsStripe { get; set; }
 
+    /// <summary>The note window is drawn with the look's own background (the colour only as a strip) while the dock and Manage notes keep the full colour. Only matters in the looks with a full-colour card.</summary>
+    public bool PlainNoteWindow { get; set; }
+
     /// <summary>
     /// Consulta diaria a GitHub para avisar de versiones nuevas. Es lo único que sale del equipo sin
     /// que el usuario lo pida, así que se puede apagar (la política de firma de SignPath exige

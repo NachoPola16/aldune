@@ -79,6 +79,7 @@ public partial class EdgeDockWindow : Window
     private DateTime _hoverGraceUntil = DateTime.MinValue;
 
     private bool _hoverLayoutHold;
+    private bool _buttonWasDown;
     private double _hoverLayoutAnchorX;
     private double _hoverLayoutAnchorY;
     private bool _hiddenByFullscreenApp;
@@ -557,6 +558,28 @@ public partial class EdgeDockWindow : Window
         {
             _hover.Hold();
             return;
+        }
+
+        // A click outside the dock folds it at once, whatever grace is running (the one after a change of view, after opening a window, while
+        // syncing): those graces exist so that the dock does not fold under a cursor that is about to use it, and a click elsewhere says it is not.
+        // Only the moment of the press counts, so a drag that starts on the dock (its scroll bar) and leaves it is not a click outside.
+        bool buttonDown = NativeMethods.IsLeftButtonDown();
+        bool freshPress = buttonDown && !_buttonWasDown;
+        _buttonWasDown = buttonDown;
+        if (freshPress && _fanState.IsExpanded && !_dragging && !_keyboardMode && IsVisible && _noteCount > 0)
+        {
+            var clickDpi = VisualTreeHelper.GetDpi(this);
+            var click = NativeMethods.GetCursorScreenPosition();
+            if (!IsInsideExpandedSurface(ExpandedSurfaces().ToList(), click.X / clickDpi.DpiScaleX, click.Y / clickDpi.DpiScaleY))
+            {
+                _interactionGraceUntil = DateTime.MinValue;
+                _hoverGraceUntil = DateTime.MinValue;
+                _hoverLayoutHold = false;
+                _hover.Collapsed();
+                _fanState.PointerLeft();
+                _fanState.CollapseTimerElapsed();
+                return;
+            }
         }
 
         // Lo mismo durante el margen de cortesía de una acción recién hecha (ver
@@ -2172,7 +2195,7 @@ public partial class EdgeDockWindow : Window
             || !string.Equals(tag, _settings?.DockTagFilter, StringComparison.OrdinalIgnoreCase) && view == DockViewKind.Tag;
         _coordinator.SetDockViewCoalesced(view, tag);
         _wheelViewUntil = DateTime.UtcNow + WheelSessionLength;
-        HoldOpenForNextInteraction();
+        HoldOpenForNextInteraction(grace: false);
         if (!showLabel) return;
         // The name of the view appears when the cards change (inside the swap), not the instant the wheel turns: it used to name the new view
         // over cards that still showed the old one. With nothing to wait for (no animation, or the view did not change) it shows at once.
@@ -3366,6 +3389,8 @@ public partial class EdgeDockWindow : Window
         if (_tabMenuNote is not { } note) return;
 
         var color = (string)((FrameworkElement)sender).Tag;
+        // The swatch of the colour in use is also a way to pick another one (the same picker as «Choose color…»).
+        if (color == note.Color) { OnTabMenuCustomColorClick(sender, e); return; }
         if (color != note.Color)
         {
             _repository.SetColor(note.Id, color);
@@ -3702,9 +3727,11 @@ public partial class EdgeDockWindow : Window
     /// volvió a pasar por encima tampoco cambia nada. No es el ajuste "mantener el dock abierto"
     /// (<c>AppSettings.KeepDockOpen</c>): esto es una cortesía puntual, no un modo permanente.
     /// </summary>
-    private void HoldOpenForNextInteraction()
+    private void HoldOpenForNextInteraction(bool grace = true)
     {
-        _interactionGraceUntil = DateTime.UtcNow + InteractionGrace;
+        // The wheel changes the view with the cursor on the dock: there is nothing to wait for, and the 4 s grace made the dock stay open that long
+        // after the cursor left. Without it the usual delay applies (the same as after opening the dock and leaving).
+        if (grace) _interactionGraceUntil = DateTime.UtcNow + InteractionGrace;
         _hoverLayoutHold = false;
         _hover.Hold();
         if (_noteCount > 0 && !_fanState.IsExpanded) _fanState.PointerEntered();

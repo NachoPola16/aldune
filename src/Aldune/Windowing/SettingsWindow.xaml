@@ -560,6 +560,12 @@
                                   Foreground="{DynamicResource AlduneTextBrush}" Background="{DynamicResource AlduneGroundBrush}" FontSize="{DynamicResource AlduneTextBody}"
                                   Style="{StaticResource SettingsSwitchStyle}" Margin="0,0,0,10"
                                   Click="OnNoteColorStripeToggled" />
+                        <CheckBox x:Name="PlainNoteWindowCheck"
+                                  Content="{x:Static res:Strings.AppearancePlainNoteWindow}"
+                                  ToolTip="{x:Static res:Strings.AppearancePlainNoteWindowHint}"
+                                  Foreground="{DynamicResource AlduneTextBrush}" Background="{DynamicResource AlduneGroundBrush}" FontSize="{DynamicResource AlduneTextBody}"
+                                  Style="{StaticResource SettingsSwitchStyle}" Margin="0,0,0,10"
+                                  Click="OnPlainNoteWindowToggled" />
                     </StackPanel>
                 </StackPanel>
                 <StackPanel x:Name="NotesPage" Visibility="Collapsed">
@@ -656,7 +662,7 @@
                                   Style="{StaticResource SettingsSwitchStyle}"
                                   Click="OnUniformColorToggled" />
                         <StackPanel Orientation="Horizontal" Margin="0,8,0,0">
-                            <Border x:Name="UniformColorSwatch" Width="22" Height="16" VerticalAlignment="Center"
+                            <Border x:Name="UniformColorSwatch" Width="22" Height="16" VerticalAlignment="Center" Cursor="Hand" MouseLeftButtonUp="OnUniformPreviewClick"
                                     BorderBrush="{DynamicResource AlduneBorderBrush}" BorderThickness="1" />
                             <Button x:Name="UniformColorButton" Content="{x:Static res:Strings.AppearanceUniformColorPick}"
                                     Click="OnPickUniformColorClick" Margin="8,0,0,0" Padding="12,7"

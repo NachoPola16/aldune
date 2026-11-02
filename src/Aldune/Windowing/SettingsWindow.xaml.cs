@@ -220,6 +220,7 @@ public partial class SettingsWindow : Window
         s_lastPage = page;
         s_lastPageAt = DateTime.UtcNow;
         PageNav(page).IsChecked = true;
+        ResetPageRoom();
         PageScroller.ScrollToTop();
     }
 
@@ -266,16 +267,30 @@ public partial class SettingsWindow : Window
         NoteColorStripeCheck.IsEnabled = !decidedBySkin;
         NoteColorStripeCheck.IsChecked = decidedBySkin ? own == SkinCard.Stripe : _settings.NoteColorAsStripe;
         NoteColorStripeCheck.ToolTip = decidedBySkin ? Strings.AppearanceNoteColorStripeLocked : null;
+        // Without a full-colour card (a look that decides, or the strip already chosen) there is nothing to make plain.
+        bool fullCard = !decidedBySkin && !_settings.NoteColorAsStripe;
+        PlainNoteWindowCheck.IsChecked = fullCard ? _settings.PlainNoteWindow : (decidedBySkin ? own == SkinCard.Stripe : true);
+        PlainNoteWindowCheck.IsEnabled = fullCard;
+        PlainNoteWindowCheck.ToolTip = decidedBySkin ? Strings.AppearanceNoteColorStripeLocked : null;
     }
 
     private void OnNoteColorStripeToggled(object sender, RoutedEventArgs e)
     {
         _settings.NoteColorAsStripe = NoteColorStripeCheck.IsChecked == true;
         _settingsService.Save(_settings);
+        UpdateNoteColorStripeUi();
         ThemeManager.ApplySkin(Application.Current, AppSkin.For(_settings.Appearance, _settings.NoteColorAsStripe));
         // Las ventanas de nota se repintan con RefreshNoteAppearance; las pestañas del dock, al rehacerlas.
         _coordinator?.RefreshNoteAppearance();
         _coordinator?.RebuildDocks();
+    }
+
+    private void OnPlainNoteWindowToggled(object sender, RoutedEventArgs e)
+    {
+        _settings.PlainNoteWindow = PlainNoteWindowCheck.IsChecked == true;
+        ThemeManager.PlainNoteWindow = _settings.PlainNoteWindow;
+        _settingsService.Save(_settings);
+        _coordinator?.RefreshNoteAppearance();
     }
 
     private void OnSyncSignalToggled(object sender, RoutedEventArgs e)
@@ -319,8 +334,16 @@ public partial class SettingsWindow : Window
 
     private void OnUniformSwatchClick(object sender, RoutedEventArgs e)
     {
-        _settings.UniformNoteColor = (string)((FrameworkElement)sender).Tag;
+        var color = (string)((FrameworkElement)sender).Tag;
+        // The swatch of the colour already in use is also a way to choose another one (the same picker as «Choose color…»).
+        if (string.Equals(color, _settings.UniformNoteColor, StringComparison.OrdinalIgnoreCase)) { OnPickUniformColorClick(sender, e); return; }
+        _settings.UniformNoteColor = color;
         ApplyUniformColor();
+    }
+
+    private void OnUniformPreviewClick(object sender, MouseButtonEventArgs e)
+    {
+        if (UniformColorButton.IsEnabled) OnPickUniformColorClick(sender, e);
     }
 
     private void OnManageNotesClick(object sender, RoutedEventArgs e) => _coordinator?.OpenNotesManager();
@@ -1861,7 +1884,11 @@ public partial class SettingsWindow : Window
         {
             var row = new WrapPanel { Margin = new Thickness(0, 0, 0, 6) };
             row.Children.Add(Label(Strings.AspectSlotName(slot.Id)));
-            row.Children.Add(Swatch(colors[slot.Id], selected: true));
+            var current = Swatch(colors[slot.Id], selected: true);
+            // The square of the colour in use opens the same picker as «Choose color…».
+            current.Cursor = Cursors.Hand;
+            current.ToolTip = Strings.AppearanceUniformColorPick;
+            row.Children.Add(current);
             var value = new TextBlock
             {
                 Text = colors[slot.Id], FontFamily = new FontFamily("Cascadia Mono, Consolas"),
@@ -1879,11 +1906,13 @@ public partial class SettingsWindow : Window
                 row.Children.Add(swatch);
             }
             var pick = AspectButton(Strings.AppearanceUniformColorPick);
-            pick.Click += (_, _) =>
+            void Pick()
             {
                 var picked = CustomColorWindow.Show(this, colors[slot.Id]);
                 if (picked is not null) SetAspectColors(aspect, new Dictionary<string, string> { [slot.Id] = picked });
-            };
+            }
+            pick.Click += (_, _) => Pick();
+            current.MouseLeftButtonUp += (_, _) => Pick();
             row.Children.Add(pick);
             AspectColorsContainer.Children.Add(row);
         }
@@ -2398,6 +2427,7 @@ public partial class SettingsWindow : Window
         // Estado estático que leen los convertidores de XAML (no se enteran solos de un cambio).
         NoteSnippetConverter.Enabled = _settings.ShowNotePreview;
         NoteColorDisplay.Uniform = _settings.UniformNoteColor;
+        ThemeManager.PlainNoteWindow = _settings.PlainNoteWindow;
 
         // Atajos globales: volver a registrar lo que haya ahora, como al editarlos en Ajustes.
         if (Changed("hotkeyEnabled", "hotkeyModifiers", "hotkeyKey"))

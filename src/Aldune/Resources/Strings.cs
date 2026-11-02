@@ -1617,6 +1617,24 @@ public static class Strings
         "Notizfarbe nur als Seitenstreifen (nicht die ganze Notiz)",
         "Couleur de la note en bande latérale (pas toute la note)",
         "Cor da nota só como faixa lateral (não a nota inteira)", "Colore della nota come striscia laterale (non su tutta la nota)", "ノートの色をサイドの帯で表示（ノート全体ではなく）", "笔记颜色显示为侧边条带（而非整条笔记）");
+    public static string AppearancePlainNoteWindow => T(
+        "Plain background in open notes",
+        "Fondo neutro en las notas abiertas",
+        "Neutraler Hintergrund in geöffneten Notizen",
+        "Fond neutre dans les notes ouvertes",
+        "Fundo neutro nas notas abertas",
+        "Sfondo neutro nelle note aperte",
+        "開いたノートは無地の背景",
+        "打开的笔记使用中性背景");
+    public static string AppearancePlainNoteWindowHint => T(
+        "Only applies when the note color is shown on the whole note: the dock and Manage notes keep the full color, the open note is written on the plain page.",
+        "Solo cuenta cuando el color se ve en toda la nota: el dock y Gestionar notas mantienen el color entero, la nota abierta se escribe sobre la hoja neutra.",
+        "Gilt nur, wenn die Farbe die ganze Notiz färbt: Dock und Notizverwaltung behalten die volle Farbe, die geöffnete Notiz wird auf neutralem Grund geschrieben.",
+        "Ne compte que lorsque la couleur est sur toute la note : le dock et la gestion des notes gardent la couleur entière, la note ouverte s'écrit sur la page neutre.",
+        "Só vale quando a cor aparece em toda a nota: o dock e Gerir notas mantêm a cor inteira, a nota aberta é escrita na folha neutra.",
+        "Vale solo quando il colore è su tutta la nota: il dock e Gestisci note mantengono il colore intero, la nota aperta si scrive sulla pagina neutra.",
+        "ノート全体に色が付く場合のみ有効：ドックと「ノートの管理」は色のまま、開いたノートは無地のページに書きます。",
+        "仅在笔记整体着色时有效：停靠栏和笔记管理保留完整颜色，打开的笔记写在中性页面上。");
     public static string AppearanceNoteColorStripeLocked => T(
         "This look already decides how the note color is shown.",
         "Este aspecto ya decide cómo se muestra el color de la nota.",

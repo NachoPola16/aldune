@@ -123,6 +123,7 @@ public partial class App : Application
             // Antes de crear ninguna ventana: todas toman sus colores de estos pinceles.
             ThemeManager.Apply(this, settings.Appearance, settings.ColorsFor(settings.Appearance));
             ThemeManager.LargeCheckboxes = settings.LargeCheckboxes;
+            ThemeManager.PlainNoteWindow = settings.PlainNoteWindow;
             ThemeManager.ApplyTextScale(this, settings.TextScalePercent);
             ThemeManager.ApplySkin(this, AppSkin.For(ThemeManager.SkinMode(settings.Appearance), settings.NoteColorAsStripe));
             ThemeManager.ApplyShape(this, settings.CornersSquare);

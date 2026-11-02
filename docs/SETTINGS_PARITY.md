@@ -59,7 +59,7 @@ It is **not** Windows' "always on top of other windows" (`NoteUnpinned`, local, 
 | Square corners | `SquareCorners` | `squareCorners` | Same. |
 | **Note color as a stripe only** | `NoteColorAsStripe` | `fillNoteColor` (inverted, “background” is what is stored) | **Same text and same direction of the switch** in the interface; locked with the same notice in the terminal looks (Telecom, Bash, Phosphor). Since 2026-10-30. |
 | Same color on all notes | `UniformNoteColor` | `uniformNoteColor` | |
-| Editor with the app's colors | — | `plainEditor` | Android only. The note keeps its color in the list but the editor page uses the app's own background. Off by default. |
+| Plain background in open notes | `PlainNoteWindow` | `plainEditor` | The note keeps its full color on the dock tab / in the list (and Manage notes) but the open note (Windows window, Android editor) uses the look's own background. Off by default. Windows: only in looks with a full-colour card (the switch shows the strip and is disabled otherwise); in the config file as `plainNoteWindow`, not in the synced look; Android: local, not synced. |
 | Theme, tone and color rule of new notes | `ActiveThemeId`, `NewNoteTone`, `ColorAssignment`, `FixedNoteColor` | `noteThemeId`, `darkNotes`, `colorRule`, `fixedNoteColor` | Android adds “Apply to existing notes”, like Windows. |
 | List order | `NotesManagerOrder` | `listOrder` | |
 | Reminder with tasks | `ReminderIncludesTasks` | `reminderIncludesTasks` | |

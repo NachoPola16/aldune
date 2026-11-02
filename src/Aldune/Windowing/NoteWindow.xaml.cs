@@ -2144,12 +2144,12 @@ public partial class NoteWindow : Window
 
     // La cara de la nota según la piel; ApplyColor y el refresco del prompt la comparten para no discrepar.
     private NoteFaceColors CurrentFace(string? color = null) =>
-        NoteFace.For(ThemeManager.Skin.Card, color ?? _note.Color, NoteColorDisplay.Uniform,
+        NoteFace.For(ThemeManager.NoteSkin.Card, color ?? _note.Color, NoteColorDisplay.Uniform,
             NoteChannelDisplay.Of(_note.Id), ThemeManager.Palette);
 
     private void ApplyColor(string color)
     {
-        var skin = ThemeManager.Skin;
+        var skin = ThemeManager.NoteSkin;
         int channel = NoteChannelDisplay.Of(_note.Id);
         _appliedChannel = channel;
         var face = CurrentFace(color);
@@ -2338,7 +2338,8 @@ public partial class NoteWindow : Window
     private void OnColorSwatchClick(object sender, RoutedEventArgs e)
     {
         var color = (string)((FrameworkElement)sender).Tag;
-        if (color == _note.Color) return;
+        // The swatch of the colour in use is also a way to pick another one (the same picker as «Choose color…»).
+        if (color == _note.Color) { OnCustomColorClick(sender, e); return; }
 
         _note.Color = color;
         _repository.SetColor(_note.Id, color);

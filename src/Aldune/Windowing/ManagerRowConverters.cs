@@ -41,9 +41,12 @@ public sealed class ManagerRowInkConverter : IValueConverter
 public sealed class ManagerRowRimConverter : IValueConverter
 {
     private static readonly NoteRimConverter Filled = new();
+    private static readonly NoteDisplayColorConverter Colour = new();
 
+    // With the colour on the edge only, the 1 px outline of the row is the note's colour too: the line goes all round the row (the stripe on the
+    // left is the thicker part of it) instead of a grey frame with a coloured bar glued to one side. Square or rounded, it follows the row.
     public object Convert(object? value, Type targetType, object? parameter, CultureInfo culture) =>
-        ManagerRows.ColourOnEdgeOnly ? ManagerRows.Resource("AlduneBorderBrush") : Filled.Convert(value, targetType, parameter, culture);
+        ManagerRows.ColourOnEdgeOnly ? Colour.Convert(value, targetType, parameter, culture) : Filled.Convert(value, targetType, parameter, culture);
 
     public object ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture) => throw new NotSupportedException();
 }

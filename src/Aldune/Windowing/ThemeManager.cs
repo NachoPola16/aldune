@@ -35,6 +35,12 @@ public static class ThemeManager
 
     public static AppSkin Skin { get; private set; } = AppSkin.Default;
 
+    /// <summary>Setting «plain note window»: the open note uses the strip look while the tabs and the manager keep the full colour.</summary>
+    public static bool PlainNoteWindow { get; set; }
+
+    /// <summary>The skin of an open note window: [Skin], except that with <see cref="PlainNoteWindow"/> a full-colour card becomes a strip.</summary>
+    public static AppSkin NoteSkin => PlainNoteWindow && Skin.Card == SkinCard.Filled ? Skin with { Card = SkinCard.Stripe } : Skin;
+
     /// <summary>Ajuste «Casillas grandes»: elige la fuente de las casillas y la zona de clic de NoteWindow.</summary>
     public static bool LargeCheckboxes { get; set; }
 
