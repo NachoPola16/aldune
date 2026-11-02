@@ -126,6 +126,17 @@ public class NoteThemesTests
     }
 
     [Fact]
+    public void BuiltIn_EverySetButClassicHasBothTones()
+    {
+        // "Dark new notes" must work with any set, so a set with only light colours would silently ignore it.
+        foreach (var theme in NoteThemes.BuiltIn.Where(t => t.Id != NoteThemes.ClassicId))
+        {
+            Assert.NotEmpty(theme.DarkColors);
+            Assert.NotEmpty(theme.LightColors);
+        }
+    }
+
+    [Fact]
     public void BuiltIn_EveryColorHasAReadableDerivedLabel()
     {
         foreach (var color in NoteThemes.BuiltIn.SelectMany(t => t.DarkColors.Concat(t.LightColors)))

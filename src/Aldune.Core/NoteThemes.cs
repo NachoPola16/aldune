@@ -54,8 +54,9 @@ public static class NoteThemes
         new NoteTheme
         {
             Id = PastelId, Name = "Pastel", IsBuiltIn = true,
-            // L 0.91, C 0.055. Solo claros: un pastel oscuro deja de serlo.
-            // Rosa, Melocotón, Mantequilla, Menta, Cielo, Lavanda
+            // L 0.91, C 0.055. Rosa, Melocotón, Mantequilla, Menta, Cielo, Lavanda
+            // The dark set keeps each hue at L 0.31, C 0.055 (OKLCH), so "dark notes" works with this theme too.
+            DarkColors = ["#452434", "#472717", "#39300A", "#123927", "#093547", "#322A49"],
             LightColors = ["#FFD3E6", "#FFD8C6", "#ECE2B9", "#C3EDD5", "#BDE9FF", "#E3DCFF"],
         },
         new NoteTheme
@@ -92,10 +93,11 @@ public static class NoteThemes
         {
             Id = XpId, Name = "XP", IsBuiltIn = true,
             // Los colores de nota de los aspectos XP: el amarillo de los avisos de Windows XP y tonos
-            // de la misma familia. Solo claros, como Pastel. Los valores de partida (#FFFFE1 y
+            // de la misma familia. The dark set keeps each hue at L 0.31, C 0.05 (OKLCH). Los valores de partida (#FFFFE1 y
             // compañeros) tenían la claridad dispersa (0.93-0.99) y dos pares a 0.023 y 0.020; se
             // recalcularon en OKLCH con L 0.95 y C 0.03-0.044, matices 100/262/150/35/322/192
             // (distancia mínima 0.032). Amarillo, Azul, Verde, Melocotón, Lila, Turquesa.
+            DarkColors = ["#373110", "#173348", "#1C3723", "#46271C", "#3D273E", "#053837"],
             LightColors = ["#F7F1D0", "#E0F1FF", "#DCF9E1", "#FFE6DD", "#FFE7FF", "#CFFAF8"],
         },
     ];

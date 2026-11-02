@@ -32,7 +32,8 @@ object NoteThemes {
         ),
         NoteTheme(
             id = PASTEL_ID, name = "Pastel", isBuiltIn = true,
-            // L 0.91, C 0.055. Solo claros: un pastel oscuro deja de serlo.
+            // L 0.91, C 0.055; the dark set keeps each hue at L 0.31, C 0.055 (OKLCH).
+            darkColors = listOf("#452434", "#472717", "#39300A", "#123927", "#093547", "#322A49"),
             lightColors = listOf("#FFD3E6", "#FFD8C6", "#ECE2B9", "#C3EDD5", "#BDE9FF", "#E3DCFF"),
         ),
         NoteTheme(
@@ -59,7 +60,8 @@ object NoteThemes {
         ),
         NoteTheme(
             id = XP_ID, name = "XP", isBuiltIn = true,
-            // Solo claros, L 0.95: amarillo, azul, verde, melocotón, lila, turquesa.
+            // Light L 0.95; dark keeps each hue at L 0.31, C 0.05: amarillo, azul, verde, melocotón, lila, turquesa.
+            darkColors = listOf("#373110", "#173348", "#1C3723", "#46271C", "#3D273E", "#053837"),
             lightColors = listOf("#F7F1D0", "#E0F1FF", "#DCF9E1", "#FFE6DD", "#FFE7FF", "#CFFAF8"),
         ),
     )
