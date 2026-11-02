@@ -47,10 +47,32 @@ public sealed class ManagerRowRimConverter : IValueConverter
     // left is the thicker part of it) instead of a grey frame with a coloured bar glued to one side. Square or rounded, it follows the row.
     // The colour is the dock card's own (NoteFace: limited for contrast against the look's background, the channel colour in Telecom), so a
     // note has the same colour on its tab and in its row. The value is the note itself, not its colour string.
-    public object Convert(object? value, Type targetType, object? parameter, CultureInfo culture) =>
-        ManagerRows.ColourOnEdgeOnly
-            ? Face.Convert(value, targetType, "Accent", culture)
-            : Filled.Convert(value is Note note ? note.Color : value, targetType, parameter, culture);
+    public object Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
+    {
+        if (ManagerRows.ColourOnEdgeOnly) return Face.Convert(value, targetType, "Accent", culture);
+        var rim = Filled.Convert(value is Note note ? note.Color : value, targetType, parameter, culture);
+        return SoftenedAgainstFace(rim, value is Note n ? n.Color : value as string);
+    }
+
+    // A 1 px rim much darker than the face doubles up along the diagonal of a rounded corner (the curve covers two pixels where a straight
+    // edge covers one) and reads as a dark smear around each corner. Halfway between the rim and the face keeps the outline and loses the smear.
+    private static object SoftenedAgainstFace(object rim, string? faceColor)
+    {
+        if (rim is not SolidColorBrush { Color: var rimColor } || faceColor is null) return rim;
+        try
+        {
+            var face = (Color)ColorConverter.ConvertFromString(faceColor);
+            var mixed = Color.FromArgb(rimColor.A,
+                (byte)((rimColor.R + face.R) / 2), (byte)((rimColor.G + face.G) / 2), (byte)((rimColor.B + face.B) / 2));
+            var brush = new SolidColorBrush(mixed);
+            brush.Freeze();
+            return brush;
+        }
+        catch (FormatException)
+        {
+            return rim;
+        }
+    }
 
     public object ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture) => throw new NotSupportedException();
 }
