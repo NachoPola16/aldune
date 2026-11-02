@@ -16,6 +16,9 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.isImeVisible
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.material3.adaptive.ExperimentalMaterial3AdaptiveApi
 import androidx.compose.material3.adaptive.layout.AnimatedPane
 import androidx.compose.material3.adaptive.layout.ListDetailPaneScaffoldRole
@@ -99,9 +102,13 @@ fun NotesApp(viewModel: NotesViewModel) {
     }
 }
 
-@OptIn(ExperimentalMaterial3AdaptiveApi::class, ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3AdaptiveApi::class, ExperimentalMaterial3Api::class, androidx.compose.foundation.layout.ExperimentalLayoutApi::class)
 @Composable
 private fun NotesScaffold(state: UiState.Ready, viewModel: NotesViewModel, onOpenSettings: () -> Unit) {
+    // A phone on its side with the keyboard up while a note is being typed: the list would be a strip with nothing but its search box, so
+    // the note takes the width (the list pane shrinks to a sliver) until the keyboard goes. Typing in the search box keeps the list, of course.
+    var searchFocused by remember { mutableStateOf(false) }
+    val typingNote = LocalConfiguration.current.screenHeightDp < 480 && WindowInsets.isImeVisible && !searchFocused
     val navigator = rememberListDetailPaneScaffoldNavigator<String>()
     val scope = rememberCoroutineScope()
     val openNote: (String) -> Unit = { id -> scope.launch { navigator.navigateTo(ListDetailPaneScaffoldRole.Detail, id) } }
@@ -162,13 +169,14 @@ private fun NotesScaffold(state: UiState.Ready, viewModel: NotesViewModel, onOpe
     NavigableListDetailPaneScaffold(
         navigator = navigator,
         listPane = {
-            AnimatedPane {
+            AnimatedPane(if (typingNote && detailVisible) Modifier.preferredWidth(1.dp) else Modifier) {
                 NoteListPane(
                     state = state, viewModel = viewModel,
                     // The open note is marked in the list only when the editor sits beside it (wide screens). On a phone the editor replaces the
                     // list, and the last opened note stayed ringed in the theme colour when coming back.
                     selectedId = if (detailVisible && listVisible) navigator.currentDestination?.contentKey else null,
                     onOpen = openNote, onNew = { viewModel.startNewNote(); openNote(NEW_NOTE) }, onOpenSettings = onOpenSettings,
+                    onSearchFocus = { searchFocused = it },
                 )
             }
         },

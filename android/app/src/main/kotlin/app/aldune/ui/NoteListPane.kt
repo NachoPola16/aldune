@@ -38,6 +38,7 @@ import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.isImeVisible
 import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -147,6 +148,7 @@ fun NoteListPane(
     onOpen: (String) -> Unit,
     onNew: () -> Unit,
     onOpenSettings: () -> Unit,
+    onSearchFocus: (Boolean) -> Unit = {},
 ) {
     val snackbar = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
@@ -244,6 +246,7 @@ fun NoteListPane(
                     state.query, viewModel::setQuery,
                     Modifier.weight(1f)
                         .focusProperties { canFocus = searchTouched }
+                        .onFocusChanged { onSearchFocus(it.isFocused) }
                         .pointerInput(Unit) {
                             awaitEachGesture {
                                 awaitFirstDown(requireUnconsumed = false, pass = PointerEventPass.Initial)
