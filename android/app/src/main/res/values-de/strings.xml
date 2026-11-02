@@ -293,6 +293,8 @@
     <string name="color_uniform_notice">„Gleiche Farbe für alle Notizen“ ist aktiv: Du kannst eine Farbe wählen, sie wird aber erst sichtbar, wenn du das ausschaltest.</string>
     <string name="stripe_note_color">Notizfarbe nur als Seitenstreifen (nicht die ganze Notiz)</string>
     <string name="stripe_note_color_locked">Dieses Design bestimmt bereits, wie die Notizfarbe angezeigt wird.</string>
+    <string name="plain_editor">Editor mit den Farben der App</string>
+    <string name="plain_editor_hint">Die Notiz behält ihre Farbe in der Liste, beim Schreiben nutzt die Seite aber den Hintergrund der App.</string>
     <string name="square_corners">Eckige Ecken</string>
     <string name="square_corners_hint">Notizen, Listen, Dialoge und Widget ohne abgerundete Ecken.</string>
     <string name="new_button_shape">Form der Schaltfläche für neue Notizen (+)</string>

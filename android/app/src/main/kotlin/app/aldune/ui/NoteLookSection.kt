@@ -60,6 +60,9 @@ fun NoteLookSection(settings: AppSettings, onChange: ((AppSettings) -> AppSettin
         // Bloqueado, enseña lo que hace el aspecto (como Windows): marcado si lleva franja (Bash, libretas), sin marcar si decide otra cosa (Telecom, Fósforo).
         checked = if (locked) AspectSkin.stripeCard(settings.appearance) else !settings.colorFill, enabled = !locked,
     ) { on -> onChange { it.copy(fillNoteColor = !on) } }
+    SwitchRow(stringResource(R.string.plain_editor), stringResource(R.string.plain_editor_hint), settings.plainEditor) { on ->
+        onChange { it.copy(plainEditor = on) }
+    }
     SwitchRow(stringResource(R.string.square_corners), stringResource(R.string.square_corners_hint), settings.cornersSquare) { on ->
         onChange { it.copy(squareCorners = on) }
     }

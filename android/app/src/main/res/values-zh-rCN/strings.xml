@@ -293,6 +293,8 @@
     <string name="color_uniform_notice">“所有笔记使用同一颜色”已开启：您可以选择颜色，但在关闭该选项之前不会显示。</string>
     <string name="stripe_note_color">笔记颜色显示为侧边条带（而非整条笔记）</string>
     <string name="stripe_note_color_locked">此外观已决定笔记颜色的显示方式。</string>
+    <string name="plain_editor">编辑器使用应用配色</string>
+    <string name="plain_editor_hint">列表中笔记保留自己的颜色，书写时页面使用应用自己的背景。</string>
     <string name="square_corners">方形边角</string>
     <string name="square_corners_hint">笔记、列表、对话框和小组件不使用圆角。</string>
     <string name="new_button_shape">新建笔记按钮 (+) 的形状</string>

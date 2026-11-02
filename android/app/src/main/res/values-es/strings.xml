@@ -293,6 +293,8 @@
     <string name="color_uniform_notice">«Mismo color en todas las notas» está activado: puedes elegir un color, pero no se verá hasta que lo desactives.</string>
     <string name="stripe_note_color">Color de la nota solo como franja lateral (no la nota entera)</string>
     <string name="stripe_note_color_locked">Este aspecto ya decide cómo se muestra el color de la nota.</string>
+    <string name="plain_editor">Editor con los colores de la app</string>
+    <string name="plain_editor_hint">La nota conserva su color en la lista, pero al escribirla la hoja usa el fondo de la app.</string>
     <string name="square_corners">Esquinas rectas</string>
     <string name="square_corners_hint">Notas, listas, diálogos y widget sin esquinas redondeadas.</string>
     <string name="new_button_shape">Forma del botón de nota nueva (+)</string>

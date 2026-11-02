@@ -293,6 +293,8 @@
     <string name="color_uniform_notice">“Same color on all notes” is on: you can pick a color, but it won\'t show until you turn that off.</string>
     <string name="stripe_note_color">Note color as a side strip (not the whole note)</string>
     <string name="stripe_note_color_locked">This look already decides how the note color is shown.</string>
+    <string name="plain_editor">Editor with the app\'s colors</string>
+    <string name="plain_editor_hint">The note keeps its color in the list, but while you write it the page uses the app\'s own background.</string>
     <string name="square_corners">Square corners</string>
     <string name="square_corners_hint">Notes, lists, dialogs and the widget without rounded corners.</string>
     <string name="new_button_shape">Shape of the new-note button (+)</string>

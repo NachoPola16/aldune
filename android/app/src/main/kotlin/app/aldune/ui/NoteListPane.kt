@@ -369,11 +369,16 @@ fun NoteListPane(
                 var dragDelta by remember { mutableFloatStateOf(0f) }
                 var dragStartIds by remember { mutableStateOf<List<String>>(emptyList()) }
                 // Mientras se arrastra manda el orden local; fuera del arrastre, el de la base.
-                LaunchedEffect(state.items) { if (draggedId == null) order = state.items }
+                // Synchronous (in the same composition that receives the new items), not in an effect: an effect leaves one frame in which the
+                // rows are built from the old items with the new view, and the groups jumped when going back to «All».
+                var orderSource by remember { mutableStateOf(state.items) }
+                if (draggedId == null && orderSource !== state.items) { orderSource = state.items; order = state.items }
 
                 // Vista agrupada de «Todas las notas»: una cabecera plegable por etiqueta y, debajo, sus notas. Una nota con varias etiquetas sale
                 // bajo cada una (por eso su clave lleva la sección). Con búsqueda o con una etiqueta elegida se enseña la lista de siempre.
-                val grouped = settingsNow.groupByTag && state.tag == null && state.query.isBlank()
+                // By what the items really are (see UiState.Ready.itemsTag), not by the view just asked for: for a moment after going back to «All» the
+                // items are still those of the tag, and grouping them put the headers in a wrong order that then animated into the right one.
+                val grouped = settingsNow.groupByTag && state.itemsTag == null && state.itemsQuery.isBlank()
                 // Kept in the settings, not just in the saved state of the screen: it has to survive closing the app, not only turning the phone.
                 val collapsed = remember(settingsNow.collapsedGroups) { CollapsedGroups.decode(settingsNow.collapsedGroups) }
                 val untaggedLabel = stringResource(R.string.group_untagged)

@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- The dock widget's list (Glance's ListView, which has no scroll bar option): no scroll bar. The default one sat badly against the rounded
+         cards and the thumb was not aligned with them; a list that goes on past the widget shows a cut card, which already says it scrolls. -->
+    <style name="Glance.AppWidget.List" parent="">
+        <item name="android:scrollbars">none</item>
+        <item name="android:overScrollMode">never</item>
+    </style>
+</resources>

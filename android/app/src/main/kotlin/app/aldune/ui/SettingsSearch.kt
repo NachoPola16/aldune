@@ -82,6 +82,7 @@ internal val SETTINGS_INDEX: List<SettingsEntry> = listOf(
     SettingsEntry(1, R.string.aspect_colors), SettingsEntry(1, R.string.aspect_presets),
     SettingsEntry(1, R.string.square_corners, R.string.square_corners_hint),
     SettingsEntry(1, R.string.stripe_note_color),
+    SettingsEntry(1, R.string.plain_editor, R.string.plain_editor_hint),
     SettingsEntry(1, R.string.sync_signal, R.string.sync_signal_hint),
     SettingsEntry(1, R.string.uniform_color, R.string.uniform_color_hint),
     SettingsEntry(1, R.string.new_button_shape),

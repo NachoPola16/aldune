@@ -28,6 +28,8 @@ data class AppSettings(
     val reorderOnCheck: Boolean = false,
     /** Casillas de tarea un 25 % mayores (fuente AlduneCheckLarge). Solo cambia cómo se dibujan. En una instalación nueva viene activado (ver `load`). */
     val largeCheckboxes: Boolean = false,
+    /** The note editor uses the app's own background even when the notes are filled with their colour in the list. */
+    val plainEditor: Boolean = false,
     /** Tono de las notas nuevas: claros (por defecto, como Windows) u oscuros. */
     val darkNotes: Boolean = false,
     /** Tema de las notas nuevas y de la hoja de color (`ActiveThemeId` de Windows). Un id que no existe se resuelve a Clásico. */
@@ -148,6 +150,7 @@ class SettingsStore(context: Context) {
             reorderOnCheck = prefs.getBoolean(REORDER_ON_CHECK, d.reorderOnCheck),
             // En un móvil táctil las casillas grandes son lo cómodo: una instalación nueva (sin ningún ajuste guardado) las trae activadas. Quien ya
             // tenía la app sin ese ajuste conserva lo que veía (apagado); `save` escribe el valor y, desde entonces, manda lo guardado.
+            plainEditor = prefs.getBoolean(PLAIN_EDITOR, false),
             largeCheckboxes = if (prefs.contains(LARGE_CHECKBOXES)) prefs.getBoolean(LARGE_CHECKBOXES, false) else prefs.all.isEmpty(),
             darkNotes = prefs.getBoolean(DARK_NOTES, d.darkNotes),
             noteThemeId = prefs.getString(NOTE_THEME_ID, d.noteThemeId) ?: d.noteThemeId,
@@ -208,6 +211,7 @@ class SettingsStore(context: Context) {
             .putInt(TRASH_DAYS, settings.trashDays)
             .putBoolean(REORDER_ON_CHECK, settings.reorderOnCheck)
             .putBoolean(LARGE_CHECKBOXES, settings.largeCheckboxes)
+            .putBoolean(PLAIN_EDITOR, settings.plainEditor)
             .putBoolean(DARK_NOTES, settings.darkNotes)
             .putString(NOTE_THEME_ID, settings.noteThemeId)
             .putBoolean(CAPTURE_NOTIFICATION, settings.captureNotification)
@@ -280,6 +284,7 @@ class SettingsStore(context: Context) {
         const val TRASH_DAYS = "trashDays"
         const val REORDER_ON_CHECK = "reorderOnCheck"
         const val LARGE_CHECKBOXES = "largeCheckboxes"
+        const val PLAIN_EDITOR = "plainEditor"
         const val DARK_NOTES = "darkNotes"
         const val NOTE_THEME_ID = "noteThemeId"
         const val CAPTURE_NOTIFICATION = "captureNotification"

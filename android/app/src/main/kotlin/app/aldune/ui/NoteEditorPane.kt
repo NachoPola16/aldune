@@ -362,8 +362,31 @@ fun NoteEditorPane(key: String, viewModel: NotesViewModel, onBack: () -> Unit, s
 
     fun commit(text: String, selection: TextRange) {
         state.edit {
-            replace(0, length, text)
+            // Only the stretch that changes is replaced: replacing the whole text (as this used to) rebuilds the layout from nothing, and the
+            // field scrolled to wherever it ended up, usually back up to the caret.
+            val old = asCharSequence().toString()
+            val max = minOf(old.length, text.length)
+            var prefix = 0
+            while (prefix < max && old[prefix] == text[prefix]) prefix++
+            var suffix = 0
+            while (suffix < max - prefix && old[old.length - 1 - suffix] == text[text.length - 1 - suffix]) suffix++
+            // Never between the two halves of an emoji.
+            if (prefix > 0 && old[prefix - 1].isHighSurrogate()) prefix--
+            if (suffix > 0 && old[old.length - suffix].isLowSurrogate()) suffix--
+            if (old != text) replace(prefix, old.length - suffix, text.substring(prefix, text.length - suffix))
             this.selection = selection.coerceIn(0, text.length)
+        }
+    }
+
+    // The checkbox and bullet buttons of the bar change the line that holds the caret and nothing else: the text stays where the reader had
+    // it, even if the caret is somewhere else on the note (the field scrolls to the caret after an edit, and used to take the reader there).
+    fun commitKeepingScroll(edit: TextAndCaret) {
+        val before = fieldScroll.value
+        commit(edit.text, TextRange(edit.caret))
+        scope.launch {
+            withFrameNanos { }
+            withFrameNanos { }
+            if (fieldScroll.value != before) fieldScroll.scrollTo(before.coerceAtMost(fieldScroll.maxValue))
         }
     }
 
@@ -504,12 +527,14 @@ fun NoteEditorPane(key: String, viewModel: NotesViewModel, onBack: () -> Unit, s
     val listState by viewModel.state.collectAsStateWithLifecycle()
     val shownItems = (listState as? UiState.Ready)?.items.orEmpty()
     val shownItem = shownItems.firstOrNull { it.id == key }
-    val tint = look.telecom?.takeIf { !look.fillColor && shownItem != null }
+    // «Editor con los colores de la app»: the note keeps its colour in the list, but the page it is written on is the app's own.
+    val plainEditor = settings.plainEditor
+    val tint = look.telecom?.takeIf { !look.fillColor && shownItem != null && !plainEditor }
         ?.let { NoteChannels.tint(shownItems.indexOf(shownItem), it, look.uniformColor) }
     // A new note is not in the list until its first character is typed: until then it shows the colour it will be created with.
     var newNoteColor by remember(key) { mutableStateOf(if (key.isEmpty()) viewModel.cachedPreviewColor() else null) }
     LaunchedEffect(key) { if (key.isEmpty() && newNoteColor == null) newNoteColor = viewModel.previewNewNoteColor() }
-    val faceHex = tint?.face ?: (shownItem?.color ?: newNoteColor)?.takeIf { look.fillColor }?.let { NoteDisplayColor.resolve(it, look.uniformColor) }
+    val faceHex = tint?.face ?: (shownItem?.color ?: newNoteColor)?.takeIf { look.fillColor && !plainEditor }?.let { NoteDisplayColor.resolve(it, look.uniformColor) }
     val themeInk = MaterialTheme.colorScheme.onBackground
     val ink = if (faceHex == null || tint != null) themeInk else noteInk(faceHex)
     val muted = if (faceHex == null) MaterialTheme.colorScheme.onSurfaceVariant else ink.copy(alpha = 0.75f)
@@ -594,8 +619,8 @@ fun NoteEditorPane(key: String, viewModel: NotesViewModel, onBack: () -> Unit, s
             // editing buttons move into this row, so the text keeps the height.
             if (compactHeight) {
                 EditBar(
-                    onCheckbox = { commit(TaskLines.toggleTaskLineAt(text(), caret())) },
-                    onBullet = { commit(BulletLines.toggleBulletLineAt(text(), caret())) },
+                    onCheckbox = { commitKeepingScroll(TaskLines.toggleTaskLineAt(text(), caret())) },
+                    onBullet = { commitKeepingScroll(BulletLines.toggleBulletLineAt(text(), caret())) },
                     onOutdent = ::outdent,
                     onIndent = ::indent,
                     canUndo = state.undoState.canUndo, canRedo = state.undoState.canRedo,
@@ -920,8 +945,8 @@ fun NoteEditorPane(key: String, viewModel: NotesViewModel, onBack: () -> Unit, s
         if (!compactHeight) {
             HorizontalDivider()
             EditBar(
-                onCheckbox = { commit(TaskLines.toggleTaskLineAt(text(), caret())) },
-                onBullet = { commit(BulletLines.toggleBulletLineAt(text(), caret())) },
+                onCheckbox = { commitKeepingScroll(TaskLines.toggleTaskLineAt(text(), caret())) },
+                onBullet = { commitKeepingScroll(BulletLines.toggleBulletLineAt(text(), caret())) },
                 onOutdent = ::outdent,
                 onIndent = ::indent,
                 canUndo = state.undoState.canUndo, canRedo = state.undoState.canRedo,

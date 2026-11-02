@@ -77,6 +77,13 @@ sealed interface UiState {
         val query: String = "",
         val tag: String? = null,
         val items: List<NoteListItem> = emptyList(),
+        /**
+         * The tag and the search that [items] were listed for. They lag behind [tag] and [query] for a moment after a change (the list is read
+         * on the I/O thread), and the screen lays the list out by what it really holds: grouping notes of one tag as if they were all of them
+         * made the groups jump when going back to «All».
+         */
+        val itemsTag: String? = null,
+        val itemsQuery: String = "",
         val allTags: List<String> = emptyList(),
         /** Cuántas notas hay en cada estado, para las pestañas. */
         val counts: Map<NoteState, Int> = emptyMap(),
@@ -996,6 +1003,6 @@ class NotesViewModel(application: Application) : AndroidViewModel(application) {
             OrphanConflict(conflict.noteId.toString(), title, note.isProtected)
         }
         val reminders = ready?.reminders?.all().orEmpty().associate { it.noteId to it.dueAt }
-        _state.update { (it as? UiState.Ready)?.copy(items = items, allTags = tags, counts = counts, orphans = orphans, reminders = reminders) ?: it }
+        _state.update { (it as? UiState.Ready)?.copy(items = items, itemsTag = current.tag, itemsQuery = current.query, allTags = tags, counts = counts, orphans = orphans, reminders = reminders) ?: it }
     }
 }

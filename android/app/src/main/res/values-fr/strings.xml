@@ -293,6 +293,8 @@
     <string name="color_uniform_notice">« Même couleur pour toutes les notes » est activé : vous pouvez choisir une couleur, mais elle ne s’affichera qu’une fois l’option désactivée.</string>
     <string name="stripe_note_color">Couleur de la note en bande latérale (pas toute la note)</string>
     <string name="stripe_note_color_locked">Cet aspect décide déjà comment la couleur de la note s\'affiche.</string>
+    <string name="plain_editor">Éditeur aux couleurs de l\'application</string>
+    <string name="plain_editor_hint">La note garde sa couleur dans la liste, mais pendant l\'écriture la page prend le fond de l\'application.</string>
     <string name="square_corners">Coins droits</string>
     <string name="square_corners_hint">Notes, listes, boîtes de dialogue et widget sans coins arrondis.</string>
     <string name="new_button_shape">Forme du bouton de nouvelle note (+)</string>

@@ -293,6 +293,8 @@
     <string name="color_uniform_notice">「すべてのノートを同じ色にする」がオンです。色は選べますが、オフにするまで表示されません。</string>
     <string name="stripe_note_color">ノートの色をサイドの帯で表示（ノート全体ではなく）</string>
     <string name="stripe_note_color_locked">このデザインでは、ノートの色の表示方法がすでに決まっています。</string>
+    <string name="plain_editor">エディターはアプリの色で表示</string>
+    <string name="plain_editor_hint">リストではノートの色のまま、書いているあいだはアプリ自身の背景を使います。</string>
     <string name="square_corners">角を四角にする</string>
     <string name="square_corners_hint">ノート、リスト、ダイアログ、ウィジェットの角を丸くしません。</string>
     <string name="new_button_shape">新しいノートボタン (+) の形</string>
