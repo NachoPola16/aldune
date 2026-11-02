@@ -803,7 +803,9 @@ public partial class NotesManagerWindow : Window
     private void RestoreNormalHeightLimit()
     {
         var monitor = MonitorLookup.MonitorAt(Left, Top, Width, Height, MonitorEnumerator.EnumerateMonitors());
-        MaxHeight = (monitor?.WorkArea.Height ?? SystemParameters.WorkArea.Height) * 0.9;
+        // The initial size leaves room (90 %) but the cap is the whole work area: with 90 % as the cap too, a snap that does not go through
+        // «maximize» (Win+arrow, PowerToys FancyZones) left a strip uncovered when the window was fitted to half of the screen.
+        MaxHeight = monitor?.WorkArea.Height ?? SystemParameters.WorkArea.Height;
         MaxWidth = monitor?.WorkArea.Width ?? SystemParameters.WorkArea.Width;
     }
 
