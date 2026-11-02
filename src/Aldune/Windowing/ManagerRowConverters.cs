@@ -64,6 +64,23 @@ public sealed class LeftCornersConverter : IValueConverter
     public object ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture) => throw new NotSupportedException();
 }
 
+/// <summary>
+/// Width of the row's stripe: at least 5 px, and at least the corner radius, so that its outer edge follows the row's own rounded corner
+/// (a piece narrower than the radius cut the corner short). With the parameter «cover»: how much of it lies beyond the 5 px of the stripe.
+/// </summary>
+public sealed class StripeWidthConverter : IValueConverter
+{
+    private const double Stripe = 5;
+
+    public object Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
+    {
+        double width = Math.Max(Stripe, value is CornerRadius radius ? radius.TopLeft : 0);
+        return parameter as string == "cover" ? width - Stripe : width;
+    }
+
+    public object ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture) => throw new NotSupportedException();
+}
+
 /// <summary>Visible only when the colour is on the edge alone: the stripe of the row.</summary>
 public sealed class ManagerRowStripeVisibilityConverter : IValueConverter
 {
