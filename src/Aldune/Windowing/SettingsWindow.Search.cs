@@ -200,6 +200,8 @@ public partial class SettingsWindow
 
     private sealed class FlashAdorner : System.Windows.Documents.Adorner
     {
+        private const double AirX = 8, AirY = 5;
+
         public FlashAdorner(UIElement target) : base(target) => IsHitTestVisible = false;
 
         /// <summary>The border that paints the card of the element (most of its width, with a background), if it has one.</summary>
@@ -228,13 +230,14 @@ public partial class SettingsWindow
             // Over what is drawn, not over the element: a row (the list of looks) has a margin around its card that is not part of it, and the
             // frame over the whole element left a gap outside the card.
             var size = AdornedElement.RenderSize;
-            var area = new System.Windows.Rect(0, 0, size.Width, size.Height);
+            // A row that has no card of its own (a switch, a line of text) is lit a little outside its bounds, so the text does not touch the frame.
+            var area = new System.Windows.Rect(-AirX, -AirY, size.Width + 2 * AirX, size.Height + 2 * AirY);
             if (CardOf(AdornedElement) is { } card && card.IsVisible && card.ActualWidth > 0)
             {
                 var origin = card.TransformToAncestor(AdornedElement).Transform(new System.Windows.Point(0, 0));
                 area = new System.Windows.Rect(origin.X, origin.Y, card.ActualWidth, card.ActualHeight);
             }
-            context.DrawRoundedRectangle(wash, pen, new System.Windows.Rect(area.X + 1, area.Y + 1, Math.Max(0, area.Width - 2), Math.Max(0, area.Height - 2)), 5, 5);
+            context.DrawRoundedRectangle(wash, pen, new System.Windows.Rect(area.X + 1, area.Y + 1, Math.Max(0, area.Width - 2), Math.Max(0, area.Height - 2)), 6, 6);
         }
     }
 }
