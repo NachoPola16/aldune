@@ -1,0 +1,1 @@
+Eine Aufgabe über mehrere Zeilen wird beim Ziehen komplett angehoben und zeigt, wo sie landet; der Rahmen ist bei jeder Notizfarbe sichtbar. Das Notizmenü öffnet sich nicht mehr von selbst beim Einklappen von Tag-Gruppen. Die Widget-Notizauswahl hat Bestätigen und Abbrechen, die +-Schaltfläche wurde neu gestaltet.

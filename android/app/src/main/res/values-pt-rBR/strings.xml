@@ -565,4 +565,7 @@
     <string name="whatsnew_300_plain">Nova opção: o editor pode usar o fundo do app enquanto as notas mantêm a cor na lista. O texto tem margens maiores e o widget perde a barra de rolagem.</string>
     <string name="whatsnew_300_remember">De volta de onde parou: a lista lembra a tag, e a aba (Notas, Arquivadas, Lixeira) por 15 minutos. Recolher grupos rápido não abre mais uma nota sem querer, e o indicador de sync gira sem reiniciar. As cores de nota Pastel e XP agora têm versões escuras.</string>
     <string name="whatsnew_300_accent">A cor de destaque da aparência agora mostra onde você está: a aba ativa, o botão de nova nota, a tag escolhida e a seta de cada grupo. As aparências XP ganham uma faixa de título na cor de barra que você escolheu.</string>
+    <string name="whatsnew_330_drag">Arrastar uma tarefa de várias linhas agora a levanta inteira e mostra onde ela vai cair; a moldura do arrasto fica sempre visível, seja qual for a cor da nota.</string>
+    <string name="whatsnew_330_menu">Corrigido: o menu de opções de uma nota não abre mais sozinho ao recolher ou expandir grupos de tags rapidamente.</string>
+    <string name="whatsnew_330_widget">O seletor de notas do widget agora tem botões Confirmar e Cancelar, e o botão «+» do widget foi redesenhado para combinar com os cantos das notas.</string>
 </resources>

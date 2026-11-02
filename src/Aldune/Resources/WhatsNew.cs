@@ -21,6 +21,7 @@ internal static class WhatsNew
         (new Version(2, 7, 2), () => [Strings.WhatsNew272Wheel, Strings.WhatsNew272Label]),
         (new Version(2, 7, 3), () => [Strings.WhatsNew273Maximize, Strings.WhatsNew273Settings]),
         (new Version(3, 0, 0), () => [Strings.WhatsNew300Invites, Strings.WhatsNew300People, Strings.WhatsNew300Look, Strings.WhatsNew300Shadow, Strings.WhatsNew300Dock, Strings.WhatsNew300Sync, Strings.WhatsNew300Tidy, Strings.WhatsNew300Linked, Strings.WhatsNew300Search, Strings.WhatsNew300TagNotes, Strings.WhatsNew300Polish, Strings.WhatsNew300DockViews, Strings.WhatsNew300Plain, Strings.WhatsNew300Live]),
+        (new Version(3, 3, 0), () => [Strings.WhatsNew330Drag, Strings.WhatsNew330Settings, Strings.WhatsNew330Polish]),
     ];
 
     /// <summary>The versions that have an entry.</summary>

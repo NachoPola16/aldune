@@ -1,0 +1,1 @@
+Dragging a task that spans several lines lifts it whole and shows where it lands; the drag frame is visible on any note colour. A note's options menu no longer opens by itself after folding tag groups. The widget's note picker has Confirm and Cancel, and its + button was redesigned.

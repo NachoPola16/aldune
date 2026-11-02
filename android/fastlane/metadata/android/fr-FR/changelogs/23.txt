@@ -1,0 +1,1 @@
+Faire glisser une tâche sur plusieurs lignes la soulève en entier et montre où elle tombe ; le cadre est visible sur toute couleur de note. Le menu d'une note ne s'ouvre plus tout seul en repliant des groupes de tags. Le sélecteur de notes du widget a Confirmer et Annuler, et son bouton + a été redessiné.

@@ -1,0 +1,1 @@
+Arrastar uma tarefa de várias linhas a levanta inteira e mostra onde cai; a moldura fica visível em qualquer cor de nota. O menu de uma nota não abre mais sozinho ao recolher grupos de tags. O seletor de notas do widget tem Confirmar e Cancelar e o botão + foi redesenhado.

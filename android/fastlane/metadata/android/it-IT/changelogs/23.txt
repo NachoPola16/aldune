@@ -1,0 +1,1 @@
+Trascinare un'attività su più righe la solleva per intero e mostra dove cade; il riquadro è visibile con qualsiasi colore di nota. Il menu di una nota non si apre più da solo chiudendo i gruppi di etichette. Il selettore di note del widget ha Conferma e Annulla e il pulsante + è stato ridisegnato.

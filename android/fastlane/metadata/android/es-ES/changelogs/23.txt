@@ -1,0 +1,1 @@
+Arrastrar una tarea de varias líneas la levanta entera y enseña dónde cae; el marco se ve con cualquier color de nota. El menú de una nota ya no se abre solo al plegar grupos de etiquetas. El selector de notas del widget tiene Confirmar y Cancelar y su botón + se rediseñó.

@@ -565,4 +565,7 @@
     <string name="whatsnew_300_plain">Neue Einstellung: Der Editor kann den Hintergrund der App nutzen, während die Notizen in der Liste ihre Farbe behalten. Der Text hat größere Ränder und das Widget verliert seine Bildlaufleiste.</string>
     <string name="whatsnew_300_remember">Du machst dort weiter, wo du aufgehört hast: Die Liste merkt sich den Tag und den Tab (Notizen, Archiviert, Papierkorb) 15 Minuten lang. Schnelles Ein- und Ausklappen öffnet nicht mehr versehentlich eine Notiz, und der Sync-Kreisel dreht sich ohne Neustart. Die Notizfarben Pastell und XP haben jetzt dunkle Varianten.</string>
     <string name="whatsnew_300_accent">Die Akzentfarbe des Designs zeigt jetzt, wo du bist: der aktive Tab, die Schaltfläche für neue Notizen, das gewählte Tag und der Pfeil jeder Gruppe. Die XP-Designs bekommen ein Titelband in der gewählten Titelleistenfarbe.</string>
+    <string name="whatsnew_330_drag">Eine Aufgabe über mehrere Zeilen wird beim Ziehen jetzt komplett angehoben und zeigt, wo sie landet; der Ziehrahmen ist bei jeder Notizfarbe gut sichtbar.</string>
+    <string name="whatsnew_330_menu">Behoben: Das Optionsmenü einer Notiz öffnet sich nicht mehr von selbst, wenn Tag-Gruppen schnell ein- oder ausgeklappt werden.</string>
+    <string name="whatsnew_330_widget">Die Notizauswahl des Widgets hat jetzt Bestätigen- und Abbrechen-Schaltflächen, und die «+»-Schaltfläche des Widgets wurde passend zu den Ecken der Notizen neu gestaltet.</string>
 </resources>

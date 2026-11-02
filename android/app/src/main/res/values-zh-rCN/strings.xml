@@ -565,4 +565,7 @@
     <string name="whatsnew_300_plain">新设置：列表中笔记保留颜色，编辑器可使用应用自身的背景。文字边距更宽，小组件不再显示滚动条。</string>
     <string name="whatsnew_300_remember">从上次的位置继续：列表会记住标签，并在15分钟内记住所在标签页（笔记、已归档、回收站）。快速折叠或展开分组不再误开笔记，同步指示器也不再从头重转。粉彩和 XP 便签配色现在有深色版本。</string>
     <string name="whatsnew_300_accent">外观的强调色现在会标出您所在的位置：当前标签页、新建笔记按钮、所选标签和每个分组的箭头。XP 外观新增了使用您所选标题栏颜色的标题带。</string>
+    <string name="whatsnew_330_drag">拖动跨多行的任务时，现在会整条抬起并显示落点；无论笔记是什么颜色，拖动边框都清晰可见。</string>
+    <string name="whatsnew_330_menu">已修复：快速折叠或展开标签分组时，笔记的选项菜单不再自动弹出。</string>
+    <string name="whatsnew_330_widget">小组件的笔记选择现在有“确认”和“取消”按钮，小组件的“+”按钮也重新设计，与笔记的边角保持一致。</string>
 </resources>

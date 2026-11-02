@@ -871,6 +871,33 @@ public static class Strings
         "Le modifiche raggiungono gli altri dispositivi pochi secondi dopo che smetti di scrivere, non al prossimo intervallo di sync. Gestisci note e dock si seguono per vista ed etichetta, e i colori delle note Pastello e XP hanno versioni scure (le Impostazioni offrono anche di ricolorare le note esistenti quando cambi set o tono).",
         "編集は入力をやめて数秒後に他のデバイスへ届きます（次の同期間隔を待ちません）。ノート管理とドックはビューとタグが連動し、パステルとXPのノート色にダーク版が加わりました（セットやトーンを変えると、既存のノートの色を付け直すか設定が尋ねます）。",
         "编辑在您停止输入几秒后即可到达其他设备，而不必等到下一个同步间隔。笔记管理器与停靠栏的视图和标签会互相跟随，粉彩和 XP 便签配色新增深色版本（更改配色或色调时，设置还会询问是否为现有笔记重新上色）。");
+    public static string WhatsNew330Drag => T(
+        "Reorder tasks by dragging: point at the left margin of a task and drag its grip (a long task moves whole). Alt+Up and Alt+Down still work.",
+        "Reordena las tareas arrastrando: coloca el ratón en el margen izquierdo de una tarea y arrastra su asa (una tarea larga se mueve entera). Alt+Arriba y Alt+Abajo siguen funcionando.",
+        "Aufgaben per Ziehen neu ordnen: Zeiger an den linken Rand einer Aufgabe halten und den Griff ziehen (eine lange Aufgabe wandert komplett). Alt+Oben und Alt+Unten funktionieren weiter.",
+        "Réorganisez les tâches en les faisant glisser : placez le pointeur dans la marge gauche d'une tâche et tirez sa poignée (une tâche longue se déplace en entier). Alt+Haut et Alt+Bas fonctionnent toujours.",
+        "Reordene as tarefas arrastando: aponte para a margem esquerda de uma tarefa e arraste a alça (uma tarefa longa se move inteira). Alt+Cima e Alt+Baixo continuam funcionando.",
+        "Riordina le attività trascinando: punta il margine sinistro di un'attività e trascina la maniglia (un'attività lunga si sposta per intero). Alt+Su e Alt+Giù continuano a funzionare.",
+        "タスクをドラッグで並べ替え：タスクの左余白にポインターを置き、ハンドルをドラッグします（長いタスクも丸ごと移動）。Alt+上 と Alt+下 も引き続き使えます。",
+        "拖动重新排序任务：将指针移到任务左侧空白处并拖动手柄（较长的任务会整条移动）。Alt+上 和 Alt+下 仍然可用。");
+    public static string WhatsNew330Settings => T(
+        "Settings now says which notes ignore the done-task switches (they have their own choice) and warns that, with sync on, deleting done tasks also happens on your other devices.",
+        "Ajustes ahora dice qué notas ignoran los interruptores de tareas hechas (tienen su propia opción) y avisa de que, con la sincronización activa, borrar tareas hechas también ocurre en tus otros dispositivos.",
+        "Die Einstellungen zeigen jetzt, welche Notizen die Schalter für erledigte Aufgaben ignorieren (eigene Einstellung), und warnen, dass bei aktiver Synchronisierung das Löschen erledigter Aufgaben auch auf deinen anderen Geräten geschieht.",
+        "Les Réglages indiquent maintenant quelles notes ignorent les interrupteurs des tâches faites (elles ont leur propre choix) et avertissent qu'avec la synchronisation, supprimer des tâches faites se produit aussi sur vos autres appareils.",
+        "As Configurações agora dizem quais notas ignoram os interruptores das tarefas concluídas (têm escolha própria) e avisam que, com a sincronização ativa, apagar tarefas concluídas também acontece nos seus outros dispositivos.",
+        "Le Impostazioni ora indicano quali note ignorano gli interruttori delle attività completate (hanno una scelta propria) e avvisano che, con la sincronizzazione attiva, eliminare le attività completate avviene anche sugli altri dispositivi.",
+        "設定で、完了タスクのスイッチに従わないノート（独自の設定を持つノート）が分かるようになり、同期がオンのときは完了タスクの削除が他のデバイスでも行われることを知らせます。",
+        "设置现在会说明哪些笔记不受已完成任务开关影响（有自己的设置），并提醒：开启同步后，删除已完成任务也会在您的其他设备上发生。");
+    public static string WhatsNew330Polish => T(
+        "Smoother details: the settings page fades at the edges where it keeps scrolling, coloured rows in Manage notes have cleaner corners, and the installer has a new welcome panel.",
+        "Detalles más finos: la página de Ajustes se desvanece en los bordes donde sigue el scroll, las filas de color de Gestionar notas tienen esquinas más limpias y el instalador tiene un panel de bienvenida nuevo.",
+        "Feinere Details: Die Einstellungsseite blendet an den Rändern aus, an denen sie weiter scrollt, farbige Zeilen in der Notizenverwaltung haben sauberere Ecken, und das Installationsprogramm hat ein neues Willkommenspanel.",
+        "Détails plus soignés : la page des Réglages s'estompe aux bords où elle continue de défiler, les lignes colorées de la gestion des notes ont des coins plus nets et l'installateur a un nouveau panneau d'accueil.",
+        "Detalhes mais refinados: a página de Configurações esmaece nas bordas onde continua a rolar, as linhas coloridas do Gerenciar notas têm cantos mais limpos e o instalador tem um novo painel de boas-vindas.",
+        "Dettagli più curati: la pagina delle Impostazioni sfuma ai bordi dove continua a scorrere, le righe colorate di Gestisci note hanno angoli più puliti e il programma di installazione ha un nuovo pannello di benvenuto.",
+        "細部の改善：スクロールが続く端で設定ページがフェードし、ノート管理の色付きの行は角がきれいになり、インストーラーには新しいウェルカムパネルが付きました。",
+        "细节更精致：设置页在可继续滚动的边缘会渐隐，笔记管理器中带颜色的行边角更干净，安装程序也有了新的欢迎面板。");
     public static string WhatsNew300Plain => T(
         "New option: open notes can use the look's plain background while the dock tab and Manage notes keep the note's color. The dock now folds at once when you click elsewhere.",
         "Opción nueva: las notas abiertas pueden usar el fondo neutro del aspecto mientras la pestaña del dock y Gestionar notas conservan el color de la nota. El dock se pliega al momento si pulsas fuera.",

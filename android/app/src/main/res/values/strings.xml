@@ -565,4 +565,7 @@
     <string name="whatsnew_300_plain">New setting: the editor can use the app\'s own background while notes keep their color in the list. The text has roomier margins and the dock widget loses its scroll bar.</string>
     <string name="whatsnew_300_remember">Back where you left it: the list remembers its tag, and its tab (Notes, Archived, Trash) for 15 minutes. Folding groups quickly no longer opens a note by accident, and the sync spinner turns without restarting. Pastel and XP note colours now have dark versions.</string>
     <string name="whatsnew_300_accent">The look\'s accent colour now shows where you are: the tab you are on, the new-note button, the selected tag and the arrow of each group. The XP looks get a title band in the title bar colour you chose.</string>
+    <string name="whatsnew_330_drag">Dragging a task that spans several lines now lifts it whole and shows where it will land, and the drag frame is always visible, whatever the note colour.</string>
+    <string name="whatsnew_330_menu">Fixed: a note\'s options menu no longer opens by itself after folding or unfolding tag groups quickly.</string>
+    <string name="whatsnew_330_widget">The widget\'s note picker now has Confirm and Cancel buttons, and the widget\'s «+» button was redesigned to match the notes\' corners.</string>
 </resources>

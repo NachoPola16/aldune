@@ -565,4 +565,7 @@
     <string name="whatsnew_300_plain">Nuova impostazione: l\'editor può usare lo sfondo dell\'app mentre le note mantengono il colore nell\'elenco. Il testo ha margini più ampi e il widget perde la barra di scorrimento.</string>
     <string name="whatsnew_300_remember">Riparti da dove eri rimasto: l’elenco ricorda l’etichetta e la scheda (Note, Archiviate, Cestino) per 15 minuti. Chiudere e aprire in fretta i gruppi non apre più una nota per sbaglio, e l’indicatore di sync gira senza ripartire. I colori delle note Pastello e XP hanno ora versioni scure.</string>
     <string name="whatsnew_300_accent">Il colore d’accento dell’aspetto ora indica dove sei: la scheda attiva, il pulsante di nuova nota, l’etichetta scelta e la freccia di ogni gruppo. Gli aspetti XP hanno una banda del titolo nel colore di barra scelto.</string>
+    <string name="whatsnew_330_drag">Trascinare un\'attività su più righe ora la solleva per intero e mostra dove cadrà; il riquadro del trascinamento è sempre visibile, qualunque sia il colore della nota.</string>
+    <string name="whatsnew_330_menu">Corretto: il menu delle opzioni di una nota non si apre più da solo quando si chiudono o aprono in fretta i gruppi di etichette.</string>
+    <string name="whatsnew_330_widget">Il selettore di note del widget ora ha i pulsanti Conferma e Annulla, e il pulsante «+» del widget è stato ridisegnato per seguire gli angoli delle note.</string>
 </resources>
