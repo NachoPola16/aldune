@@ -122,7 +122,7 @@ fun OrphanConflictsDialog(
                     HorizontalDivider(Modifier.padding(vertical = 4.dp))
                     Text(item.title, style = MaterialTheme.typography.titleSmall)
                     Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
-                        TextButton(onClick = { onDiscard(item.noteId) }) { Text(stringResource(R.string.conflict_discard)) }
+                        TextButton(onClick = { onDiscard(item.noteId) }) { Text(stringResource(R.string.conflict_discard), color = MaterialTheme.colorScheme.error) }
                         TextButton(onClick = { onRecover(item.noteId) }) { Text(stringResource(R.string.conflict_recover)) }
                     }
                 }

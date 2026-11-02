@@ -810,7 +810,7 @@ fun NoteListPane(
             title = { Text(stringResource(R.string.delete_forever_title), Modifier.semantics { heading() }) },
             text = { Text(item.title + "\n\n" + stringResource(R.string.delete_forever_body)) },
             confirmButton = {
-                TextButton(onClick = { viewModel.deleteForever(item.id); deleting = null }) { Text(stringResource(R.string.delete_forever)) }
+                TextButton(onClick = { viewModel.deleteForever(item.id); deleting = null }) { Text(stringResource(R.string.delete_forever), color = MaterialTheme.colorScheme.error) }
             },
             dismissButton = { TextButton(onClick = { deleting = null }) { Text(stringResource(R.string.cancel)) } },
         )
