@@ -274,6 +274,7 @@ public partial class NoteWindow : Window
 
         TextBody.TextChanged += (_, _) =>
         {
+            if (_dragFromLine < 0) HideGrip();
             // Y siempre queda ese espacio: una tarea con un signo pegado (llegada por pegado o por sync) lo recibe. Diferido para no
             // tocar el texto dentro del propio aviso de cambio.
             if (TaskLines.EnsureGlyphSpace(TextBody.Text, TextBody.CaretIndex).Text != TextBody.Text)
@@ -365,6 +366,7 @@ public partial class NoteWindow : Window
         TextBody.MouseMove += OnBodyMouseMove;
         // The drag is followed in the tunnelling event: the TextBox captures the mouse and marks MouseMove as handled while it tracks a selection,
         // so the bubbling handler below never saw the pointer move during a drag.
+        TextBody.AddHandler(ScrollViewer.ScrollChangedEvent, new ScrollChangedEventHandler((_, _) => { if (_dragFromLine < 0) HideGrip(); }));
         TextBody.PreviewMouseMove += (_, e) =>
         {
             if (_dragFromLine < 0) return;
@@ -1594,22 +1596,30 @@ public partial class NoteWindow : Window
         return start;
     }
 
+    private void HideGrip() => TaskGrip.Visibility = TaskGripHover.Visibility = Visibility.Collapsed;
+
     private void ShowGripAt(Point position)
     {
         if (_dragFromLine >= 0) return;
         bool inMargin = position.X >= 0 && position.X <= GripZoneRight;
-        if (position.X <= GripZoneRight + 60 && TryGetLineAt(position.Y, out int line, out var top, out _, out var isTask) && isTask)
+        // The grip follows the task line under the pointer wherever along the line it is (not only near the margin), so it is found
+        // by simply moving over the list; it is stronger, with a pill behind it, once the pointer is on it.
+        if (TryGetLineAt(position.Y, out int line, out var top, out _, out var isTask) && isTask)
         {
             var firstLine = TextBody.GetRectFromCharacterIndex(LineIndexStart(TextBody.Text, line));
             double lineHeight = firstLine.IsEmpty ? 18 : firstLine.Height;
-            Canvas.SetLeft(TaskGrip, 5);
-            Canvas.SetTop(TaskGrip, top + (lineHeight - 8) / 2);
+            Canvas.SetLeft(TaskGrip, 5.8);
+            Canvas.SetTop(TaskGrip, top + (lineHeight - 12) / 2);
+            Canvas.SetLeft(TaskGripHover, 1);
+            Canvas.SetTop(TaskGripHover, top + (lineHeight - 20) / 2);
             TaskGrip.Visibility = Visibility.Visible;
+            TaskGrip.Opacity = inMargin ? 0.95 : 0.5;
+            TaskGripHover.Visibility = inMargin ? Visibility.Visible : Visibility.Collapsed;
             if (inMargin) TextBody.Cursor = Cursors.SizeAll;
         }
         else
         {
-            TaskGrip.Visibility = Visibility.Collapsed;
+            HideGrip();
         }
     }
 
@@ -1665,7 +1675,8 @@ public partial class NoteWindow : Window
         bool moved = _dragMoved;
         _dragFromLine = _dragTargetLine = -1;
         _dragMoved = false;
-        TaskDragSource.Visibility = TaskDropLine.Visibility = TaskDropDot.Visibility = TaskGrip.Visibility = Visibility.Collapsed;
+        TaskDragSource.Visibility = TaskDropLine.Visibility = TaskDropDot.Visibility = Visibility.Collapsed;
+        HideGrip();
         if (TextBody.IsMouseCaptured) TextBody.ReleaseMouseCapture();
         TextBody.Cursor = Cursors.IBeam;
         if (!drop || !moved) return;
@@ -1682,7 +1693,7 @@ public partial class NoteWindow : Window
 
     private void OnBodyMouseLeave(object sender, MouseEventArgs e)
     {
-        if (_dragFromLine < 0) TaskGrip.Visibility = Visibility.Collapsed;
+        if (_dragFromLine < 0) HideGrip();
         TaskHoverHighlight.Visibility = Visibility.Collapsed;
         TextBody.Cursor = Cursors.IBeam;
     }

@@ -606,8 +606,22 @@
                         Visibility="Collapsed" />
                 <!-- Reordering a task: the grip in the left margin of the task under the pointer, and while dragging the task being carried
                      (dimmed) and the line where it will land. All in the ink of the note, so they read on any note colour and in every look. -->
-                <Path x:Name="TaskGrip" Data="M0,0 H9 M0,4 H9 M0,8 H9" Stroke="{DynamicResource NoteInkBrush}" StrokeThickness="2"
-                      StrokeStartLineCap="Round" StrokeEndLineCap="Round" Opacity="0.55" Visibility="Collapsed" />
+                <!-- A pill behind the grip while the pointer is on it, and the grip itself: six dots, the usual «drag» mark on the desktop (three
+                     bars read as a menu). Shown for the task line under the pointer. -->
+                <Border x:Name="TaskGripHover" Width="16" Height="20" CornerRadius="4" Background="{DynamicResource NoteInkBrush}" Opacity="0.13"
+                        Visibility="Collapsed" />
+                <Path x:Name="TaskGrip" Fill="{DynamicResource NoteInkBrush}" Opacity="0.5" Visibility="Collapsed">
+                    <Path.Data>
+                        <GeometryGroup>
+                            <EllipseGeometry Center="1.3,1.3" RadiusX="1.3" RadiusY="1.3" />
+                            <EllipseGeometry Center="6.1,1.3" RadiusX="1.3" RadiusY="1.3" />
+                            <EllipseGeometry Center="1.3,6.1" RadiusX="1.3" RadiusY="1.3" />
+                            <EllipseGeometry Center="6.1,6.1" RadiusX="1.3" RadiusY="1.3" />
+                            <EllipseGeometry Center="1.3,10.9" RadiusX="1.3" RadiusY="1.3" />
+                            <EllipseGeometry Center="6.1,10.9" RadiusX="1.3" RadiusY="1.3" />
+                        </GeometryGroup>
+                    </Path.Data>
+                </Path>
                 <Border x:Name="TaskDragSource" Background="{DynamicResource NoteInkBrush}" Opacity="0.14" CornerRadius="{DynamicResource AlduneRadius3}"
                         Visibility="Collapsed" />
                 <Border x:Name="TaskDropLine" Height="3" CornerRadius="1.5" Background="{DynamicResource NoteInkBrush}" Visibility="Collapsed" />
