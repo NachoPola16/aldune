@@ -226,6 +226,9 @@ fun NoteListPane(
     // Right after swiping a note away or undoing it, the finger is still near the list: a hold detector must not read that touch as a request
     // for the options of the note that just moved (reported: undo opened the menu of the restored note).
     var calmUntil by remember { mutableLongStateOf(0L) }
+    // Folding or unfolding a group slides the rows under the finger for a moment: a quick second tap meant for the header would land on a note that
+    // is still on its way and open it (reported when folding and unfolding tags fast).
+    var rowsMovingUntil by remember { mutableLongStateOf(0L) }
     fun announce(message: String, undo: () -> Unit) {
         calmUntil = System.currentTimeMillis() + MENU_CALM_MS
         scope.launch {
@@ -717,6 +720,7 @@ fun NoteListPane(
                                     ),
                                 onMenu = if (entry.key != TagGrouping.UNTAGGED) ({ tagMenu = entry.title }) else null,
                             ) {
+                                rowsMovingUntil = System.currentTimeMillis() + ROWS_MOVING_MS
                                 viewModel.updateSettings { st -> st.copy(collapsedGroups = CollapsedGroups.encode(CollapsedGroups.toggle(CollapsedGroups.decode(st.collapsedGroups), entry.key))) }
                             }
                         }
@@ -783,7 +787,7 @@ fun NoteListPane(
                                     }
                                 ),
                             item = item, selected = item.id == selectedId || item.id == highlight || item.id in picked, swipeEnabled = picked.isEmpty(), conflicted = item.id in conflicted, reminder = state.reminders[item.id],
-                            onOpen = { if (picked.isNotEmpty()) picked = if (item.id in picked) picked - item.id else picked + item.id else if (!hold.active) onOpen(item.id) }, onMenu = { menuFor = item },
+                            onOpen = { if (System.currentTimeMillis() < rowsMovingUntil) Unit else if (picked.isNotEmpty()) picked = if (item.id in picked) picked - item.id else picked + item.id else if (!hold.active) onOpen(item.id) }, onMenu = { menuFor = item },
                             moves = ReorderPlan.available(sameGroup(order, item.id), item.id, reorderable), onMove = { delta -> moveBy(item.id, delta) },
                             channel = order.indexOfFirst { it.id == item.id },
                             signal = if (look.syncSignal) NoteSyncSignal.of(hasProfile, item.id in conflicted, bases[item.id], item.updatedAt) else NoteSyncSignal.State.HIDDEN,
@@ -1252,6 +1256,8 @@ private fun SyncIcon(icon: StatusIcon, description: String) {
 // middle. Lifting the finger without moving opens it at once either way.
 private const val MENU_HOLD_MS = 300L
 private const val MENU_CALM_MS = 700L
+// A bit longer than the rows' slide when a group folds or unfolds.
+private const val ROWS_MOVING_MS = 400L
 
 @OptIn(androidx.compose.foundation.layout.ExperimentalLayoutApi::class)
 @Composable

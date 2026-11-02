@@ -282,7 +282,11 @@ class NotesViewModel(application: Application) : AndroidViewModel(application) {
         opened.reminders.reconcile()
         // Un receptor (la alarma, los botones de la notificación) puede cambiar recordatorios con la lista abierta: la campana se repinta.
         viewModelScope.launch { opened.reminders.changes.collect { launchIo { refreshLocked() } } }
-        _state.value = UiState.Ready()
+        // Back where the list was left (see SettingsStore.saveView); a tag that no longer has notes is not restored.
+        val (savedFilter, savedTag) = settingsStore.loadView()
+        val filter = NoteState.entries.getOrNull(savedFilter) ?: NoteState.ACTIVE
+        val tag = savedTag?.takeIf { wanted -> notes.list(filter).any { note -> note.tags.any { it.equals(wanted, ignoreCase = true) } } }
+        _state.value = UiState.Ready(filter = filter, tag = tag)
         refresh()
         widgetChanged()
         started = true
@@ -348,11 +352,13 @@ class NotesViewModel(application: Application) : AndroidViewModel(application) {
     /** El texto que tiene ahora el borrador de [key] (para recargar el editor tras [externalEdits]). */
     fun draftText(key: String): String = drafts[key]?.latest ?: ""
 
-    fun setFilter(filter: NoteState) = update { it.copy(filter = filter, tag = null) }
+    fun setFilter(filter: NoteState) = update { it.copy(filter = filter, tag = null) }.also { rememberView(filter, null) }
 
     fun setQuery(query: String) = update { it.copy(query = query) }
 
-    fun setTag(tag: String?) = update { it.copy(tag = tag) }
+    fun setTag(tag: String?) = update { it.copy(tag = tag) }.also { (_state.value as? UiState.Ready)?.let { rememberView(it.filter, tag) } }
+
+    private fun rememberView(filter: NoteState, tag: String?) = settingsStore.saveView(filter.ordinal, tag)
 
     // ───────────── Borradores: lo que se está escribiendo en el editor ─────────────
     // Viven aquí y no en el panel del editor: el panel se destruye al volver a la lista o al rotar, y un guardado a medias no puede

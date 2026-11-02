@@ -140,6 +140,21 @@ object Languages {
 class SettingsStore(context: Context) {
     private val prefs = context.applicationContext.getSharedPreferences(FILE, Context.MODE_PRIVATE)
 
+    /**
+     * Where the list was left: the state tab (Notes / Archived / Trash) and the tag. The tag is kept for good; the tab only for
+     * [VIEW_MEMORY_MS], so that coming back after a while starts at the notes and not in the trash, while leaving for a minute and returning
+     * (to copy something, say) finds the list as it was. Kept apart from [AppSettings]: it is state, not a setting, and never syncs.
+     */
+    fun saveView(filter: Int, tag: String?, now: Long = System.currentTimeMillis()) {
+        prefs.edit().putInt(VIEW_FILTER, filter).putLong(VIEW_FILTER_AT, now).putString(VIEW_TAG, tag).apply()
+    }
+
+    /** The saved tab (its ordinal) if it is recent enough, else 0 (Notes), and the saved tag. */
+    fun loadView(now: Long = System.currentTimeMillis()): Pair<Int, String?> {
+        val filter = if (now - prefs.getLong(VIEW_FILTER_AT, 0L) < VIEW_MEMORY_MS) prefs.getInt(VIEW_FILTER, 0) else 0
+        return filter to prefs.getString(VIEW_TAG, null)
+    }
+
     fun load(): AppSettings {
         val d = AppSettings()
         return AppSettings(
@@ -311,6 +326,10 @@ class SettingsStore(context: Context) {
         const val TAG_COLORS = "tagColors"
         const val KNOWN_TAGS = "knownTags"
         const val COLLAPSED_GROUPS = "collapsedGroups"
+        const val VIEW_FILTER = "viewFilter"
+        const val VIEW_FILTER_AT = "viewFilterAt"
+        const val VIEW_TAG = "viewTag"
+        const val VIEW_MEMORY_MS = 15 * 60 * 1000L
         const val SHOW_TAG_HASH = "showTagHash"
         const val COMPACT_SETTINGS_TABS = "compactSettingsTabs"
         const val SETTINGS_TABS_AT_BOTTOM = "settingsTabsAtBottom"
