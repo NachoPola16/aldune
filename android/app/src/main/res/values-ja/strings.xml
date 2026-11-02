@@ -558,4 +558,5 @@
     <string name="note_moved_tag">「%1$s」に移動しました</string>
     <string name="whatsnew_200_search">設定の検索（タイトル横の虹眼鏡）。誤字を大目に見ます。ノートを別のタグにドラッグすると移動します。空のタグはリストの最後に残ります。横向きでは編集ボタンがタイトルの行に入ります。</string>
     <string name="whatsnew_200_swipe">リストの空いている部分を横にスワイプすると、「すべて」と各タグを切り替えられます。</string>
+    <string name="whatsnew_200_folded">リストは、アプリを閉じたあとも、折りたたんだタグのグループを覚えています。</string>
 </resources>

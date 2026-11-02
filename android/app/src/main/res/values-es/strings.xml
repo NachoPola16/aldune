@@ -558,4 +558,5 @@
     <string name="note_moved_tag">Movida a «%1$s»</string>
     <string name="whatsnew_200_search">Buscador en Ajustes (la lupa junto al título) que perdona erratas. Arrastra una nota sobre otra etiqueta para moverla; una etiqueta vacía se queda al final de la lista. En horizontal, los botones de edición comparten la fila del título.</string>
     <string name="whatsnew_200_swipe">Desliza de lado por la parte vacía de la lista para pasar de Todas a cada etiqueta.</string>
+    <string name="whatsnew_200_folded">La lista recuerda qué grupos de etiquetas tenías plegados, incluso al cerrar la app.</string>
 </resources>
