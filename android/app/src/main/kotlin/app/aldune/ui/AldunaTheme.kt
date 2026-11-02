@@ -32,10 +32,15 @@ data class NoteLook(val uniformColor: String? = null, val squareCorners: Boolean
     val telecomGrid: Boolean = false,
     /** El papel de las libretas bajo el texto; `NONE` en los demás aspectos. */
     val paper: AspectSkin.Paper = AspectSkin.Paper.NONE,
+    /** La barra de título del aspecto (solo los dos XP la definen); `null` en los demás. La rellena [AldunaTheme]. */
+    val titleBar: TitleBarLook? = null,
 ) {
     /** El radio de una tarjeta de nota (12 dp de siempre, recto con «esquinas rectas»). */
     val cardShape get() = if (squareCorners) RectangleShape else RoundedCornerShape(12.dp)
 }
+
+/** Los colores de la banda de título de un aspecto: degradado de [start] a [end], vertical (Luna) u horizontal (Windows 98), con [on] encima. */
+data class TitleBarLook(val start: Color, val end: Color, val on: Color, val vertical: Boolean)
 
 val LocalNoteLook = staticCompositionLocalOf { NoteLook() }
 
@@ -81,7 +86,14 @@ fun AldunaTheme(appearance: Int = APPEARANCE_SYSTEM, aspectColors: Map<String, M
     val telecom = if (appearance == AppPalette.TELECOM_LIGHT || appearance == AppPalette.TELECOM_DARK) {
         remember(appearance, chosen) { AppPalette.forMode(appearance, systemLight, chosen) }
     } else null
-    CompositionLocalProvider(LocalNoteLook provides look.copy(telecom = telecom, telecomGrid = appearance == AppPalette.TELECOM_DARK, paper = AspectSkin.paper(appearance))) {
+    // Only the aspects that let the user pick a title bar colour have a title band (the XP ones); the others keep the plain screen.
+    val titleBar = if (AspectCatalog.forMode(appearance)?.slots?.any { it.id == "titleBar" } == true) {
+        remember(appearance, systemLight, chosen) {
+            val palette = AppPalette.forMode(appearance, systemLight, chosen)
+            TitleBarLook(paletteColor(palette.getValue("TitleBar")), paletteColor(palette.getValue("TitleBarEnd")), paletteColor(palette.getValue("OnTitleBar")), vertical = appearance == AppPalette.XP_LIGHT)
+        }
+    } else null
+    CompositionLocalProvider(LocalNoteLook provides look.copy(telecom = telecom, telecomGrid = appearance == AppPalette.TELECOM_DARK, paper = AspectSkin.paper(appearance), titleBar = titleBar)) {
         MaterialTheme(colorScheme = scheme, typography = remember(appearance) { typographyFor(appearance) }, shapes = shapes, content = content)
     }
 }

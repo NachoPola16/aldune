@@ -77,8 +77,10 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
+import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.FloatingActionButton
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import app.aldune.syncclient.StatusIcon
@@ -272,7 +274,11 @@ fun NoteListPane(
                         },
                 )
                 IconButton(onClick = onOpenSettings) { Icon(Icons.Default.Settings, contentDescription = stringResource(R.string.settings)) }
-                FloatingActionButton(onClick = onNew, shape = if (look.squareNewButton) RectangleShape else RoundedCornerShape(16.dp)) { Icon(Icons.Default.Add, contentDescription = stringResource(R.string.new_note)) }
+                FloatingActionButton(
+                    onClick = onNew, shape = if (look.squareNewButton) RectangleShape else RoundedCornerShape(16.dp),
+                    // The look's accent, so the one button that always matters carries the colour chosen for the look.
+                    containerColor = MaterialTheme.colorScheme.primary, contentColor = MaterialTheme.colorScheme.onPrimary,
+                ) { Icon(Icons.Default.Add, contentDescription = stringResource(R.string.new_note)) }
             }
         },
     ) { padding ->
@@ -280,6 +286,7 @@ fun NoteListPane(
             // Al arrancar, Android da el foco inicial al primer elemento enfocable de la ventana y, si es un campo de texto, abre el teclado
             // (tapando el «+»). Este elemento invisible va primero para quedárselo; el buscador solo toma el foco si se toca.
             Box(Modifier.size(0.dp).focusRequester(rest).focusable())
+            look.titleBar?.let { if (!tight) AspectTitleBand(it) }
             if (picked.isNotEmpty()) SelectionBar(
                 count = picked.size, filter = state.filter,
                 onAll = { picked = state.items.map { it.id }.toSet() }, onExit = { picked = emptySet() },
@@ -910,6 +917,19 @@ private fun SearchField(query: String, onChange: (String) -> Unit, modifier: Mod
     )
 }
 
+/** The title band of the looks that have one (XP): the app's name on the colour chosen for the title bar, flush with the screen's edges. */
+@Composable
+private fun AspectTitleBand(bar: TitleBarLook) {
+    val colors = listOf(bar.start, bar.end)
+    val brush = if (bar.vertical) Brush.verticalGradient(colors) else Brush.horizontalGradient(colors)
+    Row(
+        Modifier.fillMaxWidth().background(brush).height(44.dp).padding(horizontal = 16.dp).semantics { heading() },
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Text(stringResource(R.string.app_name), color = bar.on, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
+    }
+}
+
 @Composable
 private fun StateTabs(state: UiState.Ready, onSelect: (NoteState) -> Unit) {
     // Con scroll: en una ventana muy estrecha (burbuja, multiventana) la última pestaña se comprimía hasta quedar en una tira de letras apiladas.
@@ -921,6 +941,11 @@ private fun StateTabs(state: UiState.Ready, onSelect: (NoteState) -> Unit) {
             FilterChip(
                 selected = state.filter == filter, onClick = { onSelect(filter) },
                 label = { Text(stringResource(label) + if (count > 0) " $count" else "") },
+                // The tab you are on takes the look's accent; the tag chips below only outline theirs, so the two rows do not shout together.
+                colors = FilterChipDefaults.filterChipColors(
+                    selectedContainerColor = MaterialTheme.colorScheme.primary, selectedLabelColor = MaterialTheme.colorScheme.onPrimary,
+                ),
+                border = FilterChipDefaults.filterChipBorder(enabled = true, selected = state.filter == filter, selectedBorderColor = MaterialTheme.colorScheme.primary),
             )
         }
     }
@@ -946,7 +971,10 @@ private fun TagRow(
         ) {
             // «Todas»: quitar el filtro de etiqueta sin tener que volver a pulsar la activa (y ver que no hay ninguna activa).
             item {
-                FilterChip(selected = state.tag == null, onClick = { onSelect(null) }, label = { Text(stringResource(R.string.all_notes_chip)) })
+                FilterChip(
+                    selected = state.tag == null, onClick = { onSelect(null) }, label = { Text(stringResource(R.string.all_notes_chip)) },
+                    border = FilterChipDefaults.filterChipBorder(enabled = true, selected = state.tag == null, selectedBorderColor = MaterialTheme.colorScheme.primary, selectedBorderWidth = 1.5.dp),
+                )
             }
             items(state.allTags) { tag ->
                 val selected = state.tag.equals(tag, ignoreCase = true)
@@ -954,6 +982,7 @@ private fun TagRow(
                     selected = selected, onClick = { onSelect(if (selected) null else tag) },
                     label = { Text(if (showHash) "#$tag" else tag) },
                     leadingIcon = if (showHash) null else ({ Icon(TagIcon, contentDescription = null, Modifier.size(16.dp)) }),
+                    border = FilterChipDefaults.filterChipBorder(enabled = true, selected = selected, selectedBorderColor = MaterialTheme.colorScheme.primary, selectedBorderWidth = 1.5.dp),
                 )
             }
 
@@ -1279,6 +1308,8 @@ private fun SyncIconNow(icon: StatusIcon, description: String) {
 private const val MENU_HOLD_MS = 300L
 private const val MENU_CALM_MS = 700L
 // A bit longer than the rows' slide when a group folds or unfolds.
+// Room under a notice (sync, update, conflicts) before the first note: the notes are 8 dp apart, so the 4 dp that was left read as the notice being glued to them.
+private val NOTICE_GAP = 14.dp
 private const val ROWS_MOVING_MS = 400L
 private const val SPINNER_GAP_MS = 500L
 private const val SPINNER_MIN_MS = 900L
@@ -1301,7 +1332,7 @@ private class PressHold {
 @Composable
 private fun UpdateNotice(version: String, onDismiss: () -> Unit, onOpen: () -> Unit) {
     androidx.compose.material3.Surface(
-        Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 4.dp),
+        Modifier.fillMaxWidth().padding(start = 16.dp, end = 16.dp, top = 4.dp, bottom = NOTICE_GAP),
         shape = MaterialTheme.shapes.medium, color = MaterialTheme.colorScheme.primaryContainer,
     ) {
         Column(Modifier.padding(horizontal = 12.dp, vertical = 8.dp)) {
@@ -1320,7 +1351,7 @@ private fun currentVersionName(context: android.content.Context): String =
 @Composable
 private fun NoBackupNotice(message: Int, onSettings: () -> Unit, onDismiss: () -> Unit) {
     androidx.compose.material3.Surface(
-        Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 4.dp),
+        Modifier.fillMaxWidth().padding(start = 16.dp, end = 16.dp, top = 4.dp, bottom = NOTICE_GAP),
         shape = MaterialTheme.shapes.medium, color = MaterialTheme.colorScheme.surfaceVariant,
     ) {
         Column(Modifier.padding(start = 12.dp, end = 4.dp, top = 8.dp, bottom = 0.dp)) {
@@ -1403,7 +1434,7 @@ private fun GroupHeader(header: ListEntry.Header, modifier: Modifier = Modifier,
             val turn by androidx.compose.animation.core.animateFloatAsState(if (header.open) 0f else -90f, label = "groupArrow")
             Icon(
                 Icons.Filled.KeyboardArrowDown, null, Modifier.size(14.dp).graphicsLayer { rotationZ = turn },
-                tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                tint = MaterialTheme.colorScheme.primary,
             )
             // Arrow on the edge of the cards and title on the text of the cards, with the room between them that the 14 dp arrow leaves.
             Spacer(Modifier.width(4.dp))

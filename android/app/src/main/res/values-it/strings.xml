@@ -564,4 +564,5 @@
     <string name="whatsnew_300_folded">L’elenco ricorda quali gruppi di etichette erano chiusi, anche dopo aver chiuso l’app.</string>
     <string name="whatsnew_300_plain">Nuova impostazione: l\'editor può usare lo sfondo dell\'app mentre le note mantengono il colore nell\'elenco. Il testo ha margini più ampi e il widget perde la barra di scorrimento.</string>
     <string name="whatsnew_300_remember">Riparti da dove eri rimasto: l’elenco ricorda l’etichetta e la scheda (Note, Archiviate, Cestino) per 15 minuti. Chiudere e aprire in fretta i gruppi non apre più una nota per sbaglio, e l’indicatore di sync gira senza ripartire. I colori delle note Pastello e XP hanno ora versioni scure.</string>
+    <string name="whatsnew_300_accent">Il colore d’accento dell’aspetto ora indica dove sei: la scheda attiva, il pulsante di nuova nota, l’etichetta scelta e la freccia di ogni gruppo. Gli aspetti XP hanno una banda del titolo nel colore di barra scelto.</string>
 </resources>

@@ -94,7 +94,7 @@ private fun OtherVersionLines(lines: List<DiffLine>) {
 @Composable
 fun OrphanConflictsBanner(count: Int, onClick: () -> Unit) {
     Surface(
-        Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 4.dp).clickable(onClick = onClick),
+        Modifier.fillMaxWidth().padding(start = 16.dp, end = 16.dp, top = 4.dp, bottom = 14.dp).clickable(onClick = onClick),
         shape = LocalNoteLook.current.cardShape, color = MaterialTheme.colorScheme.errorContainer,
     ) {
         Row(Modifier.padding(12.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
