@@ -1050,12 +1050,14 @@ public partial class EdgeDockWindow : Window
 
     private int _viewSwapToken;
 
+    // What fades is the whole column (tabs, scroll rail and the arrows of the top and bottom docks), not only the list: the arrows light up for a
+    // frame while the new list is measured in a window that has not reached its final height yet, and showed as a flash.
     private void ResetTabsFadeIfStuck()
     {
-        if (TabsScroll.Opacity < 1 || TabsScroll.HasAnimatedProperties)
+        if (NotesColumn.Opacity < 1 || NotesColumn.HasAnimatedProperties)
         {
-            TabsScroll.BeginAnimation(OpacityProperty, null);
-            TabsScroll.Opacity = 1;
+            NotesColumn.BeginAnimation(OpacityProperty, null);
+            NotesColumn.Opacity = 1;
         }
     }
 
@@ -1080,8 +1082,8 @@ public partial class EdgeDockWindow : Window
         fadeOut.Completed += (_, _) =>
         {
             if (token != _viewSwapToken) return;
-            TabsScroll.BeginAnimation(OpacityProperty, null);
-            TabsScroll.Opacity = 0;
+            NotesColumn.BeginAnimation(OpacityProperty, null);
+            NotesColumn.Opacity = 0;
             foreach (var old in _tabButtons.Values)
                 if (old.RenderTransform is TranslateTransform { IsFrozen: false } oldMove) { oldMove.BeginAnimation(TranslateTransform.YProperty, null); oldMove.Y = 0; }
             SetNotes(LoadNotesForView(), animateArrivals: false, fadeAll: false);
@@ -1089,15 +1091,15 @@ public partial class EdgeDockWindow : Window
             fadeIn.Completed += (_, _) =>
             {
                 if (token != _viewSwapToken) return;
-                TabsScroll.BeginAnimation(OpacityProperty, null);
-                TabsScroll.Opacity = 1;
+                NotesColumn.BeginAnimation(OpacityProperty, null);
+                NotesColumn.Opacity = 1;
             };
             // After the layout of the new list, so it never shows for a frame at full strength (and the pile can be measured).
             Dispatcher.BeginInvoke(DispatcherPriority.Loaded, new Action(() =>
             {
                 if (token != _viewSwapToken) return;
                 if (_tabButtons.Count is > 1 and <= 14) AnimateDeck(gather: false);
-                TabsScroll.BeginAnimation(OpacityProperty, fadeIn);
+                NotesColumn.BeginAnimation(OpacityProperty, fadeIn);
                 // The name of the view comes back when the cards are nearly in place: it sits at the far end of the new strip, and shown
                 // before them it hung there alone (with many notes, far from where the old pile was).
                 bool flash = _labelOnSwap;
@@ -1114,7 +1116,7 @@ public partial class EdgeDockWindow : Window
                 labelTimer.Start();
             }));
         };
-        TabsScroll.BeginAnimation(OpacityProperty, fadeOut);
+        NotesColumn.BeginAnimation(OpacityProperty, fadeOut);
     }
 
     /// <summary>Moves every card to the pile (gather) or from the pile to its place (spread). The pile is the card nearest the button bar.</summary>
