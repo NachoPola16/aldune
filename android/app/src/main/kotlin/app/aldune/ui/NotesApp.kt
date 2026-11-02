@@ -81,7 +81,7 @@ fun NotesApp(viewModel: NotesViewModel) {
                 LaunchedEffect(settings.lastSeenVersionCode, firstRun) {
                     if (news != null) return@LaunchedEffect
                     val current = WhatsNew.currentCode(newsContext)
-                    val plan = app.aldune.text.WhatsNewPlan.toShow(settings.lastSeenVersionCode, firstRun, current, WhatsNew.codes)
+                    val plan = app.aldune.text.WhatsNewPlan.toShow(settings.lastSeenVersionCode, firstRun, current, WhatsNew.codes, app.aldune.text.WhatsNewPlan.OLDEST_LISTED)
                     if (settings.lastSeenVersionCode != current) viewModel.updateSettings { it.copy(lastSeenVersionCode = current) }
                     news = plan
                 }

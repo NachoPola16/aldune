@@ -17,6 +17,11 @@ class WhatsNewPlanTest {
     @Test fun `una instalacion que nunca guardo version lista todo desde la base`() =
         assertEquals(listOf(20, 19, 18), WhatsNewPlan.toShow(0, false, 20, catalog))
 
+    @Test fun `nada anterior al suelo se lista`() =
+        assertEquals(listOf(20, 19), WhatsNewPlan.toShow(0, false, 20, catalog, oldest = 19))
+
+    @Test fun `el suelo que se publica es la ultima version grande`() = assertEquals(21, WhatsNewPlan.OLDEST_LISTED)
+
     @Test fun `una version mas nueva que la que corre no se lista y bajar de version no ensena nada`() {
         assertEquals(listOf(18), WhatsNewPlan.toShow(17, false, 18, catalog))
         assertEquals(emptyList<Int>(), WhatsNewPlan.toShow(20, false, 18, catalog))

@@ -2331,6 +2331,12 @@ public partial class NoteWindow : Window
     private void PopulateColorSwatches() =>
         NoteSwatchPanel.Fill(ColorSwatches, _coordinator.ActiveTheme, _note.Color, OnColorSwatchClick);
 
+    private void OnColorNoticeClick(object sender, MouseButtonEventArgs e)
+    {
+        _coordinator.OpenColorNoticeSetting(NoteDisplayColor.IsActive(_settings?.UniformNoteColor));
+        e.Handled = true;
+    }
+
     private void UpdateColorNotice()
     {
         var kind = SkinColorNotice.For(ThemeManager.Skin.Card, _note.Color, _settings?.UniformNoteColor);

@@ -32,6 +32,18 @@ public class WhatsNewPlanTests
         Assert.Equal([new Version(2, 5, 0), new Version(2, 4, 0)], WhatsNewPlan.ToShow("2.3.0", false, new Version(2, 5, 1), Catalog));
 
     [Fact]
+    public void NothingOlderThanTheFloorIsListed() =>
+        Assert.Equal([new Version(2, 7, 0)], WhatsNewPlan.ToShow("2.3.0", false, new Version(2, 7, 0), Catalog, oldest: new Version(2, 7, 0)));
+
+    [Fact]
+    public void TheFloorAlsoCutsAnInstallThatNeverStoredAVersion() =>
+        Assert.Equal([new Version(2, 7, 0), new Version(2, 6, 0)], WhatsNewPlan.ToShow(null, false, new Version(2, 7, 0), Catalog, oldest: new Version(2, 6, 0)));
+
+    [Fact]
+    public void TheShippedFloorIsTheLastBigRelease() =>
+        Assert.Equal(new Version(3, 0, 0), WhatsNewPlan.OldestListed);
+
+    [Fact]
     public void ADowngradeShowsNothing() =>
         Assert.Empty(WhatsNewPlan.ToShow("2.7.0", false, new Version(2, 5, 0), Catalog));
 }

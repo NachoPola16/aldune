@@ -358,7 +358,8 @@
                         <StackPanel x:Name="ColorSwatches" Margin="6,4,6,8" />
                         <!-- Aviso cuando la piel activa no va a enseñar el color elegido tal cual (franja gris, sin
                              colores, color del canal). Se decide al abrir el menú. -->
-                        <TextBlock x:Name="ColorNotice" Visibility="Collapsed"
+                        <TextBlock x:Name="ColorNotice" Visibility="Collapsed" Cursor="Hand" ToolTip="{x:Static res:Strings.NoticeOpenSetting}"
+                                   MouseLeftButtonUp="OnColorNoticeClick"
                                    Foreground="{DynamicResource AlduneHintBrush}" FontSize="{DynamicResource AlduneTextSmall}" TextWrapping="Wrap"
                                    MaxWidth="230" Margin="9,0,9,8" />
                         <Button x:Name="CustomColorButton" Click="OnCustomColorClick"
@@ -540,7 +541,8 @@
                          reposo casi no compite con el texto. -->
                     <Style TargetType="ScrollBar">
                         <Setter Property="Margin" Value="8,2,0,10" />
-                        <Setter Property="Width" Value="10" />
+                        <Setter Property="Width" Value="16" />
+                        <Setter Property="MinWidth" Value="16" />
                         <Setter Property="Background" Value="Transparent" />
                         <!-- El relleno derecho del cuadro (15; a la izquierda hay 20 y, al partir la línea, sobra hasta un carácter, así que el hueco
                              derecho oscila en torno al izquierdo y el texto no llega casi al borde de la retícula) también empuja a la barra hacia dentro: este desplazamiento solo visual la devuelve al borde. -->
@@ -562,15 +564,15 @@
                                                                     Background="{DynamicResource NoteInkBrush}"
                                                                     Opacity="0.28"
                                                                     CornerRadius="{DynamicResource AlduneRadius3}"
-                                                                    Margin="2,2" />
+                                                                    Margin="3,2" />
                                                             <ControlTemplate.Triggers>
                                                                 <Trigger Property="IsMouseOver" Value="True">
                                                                     <Setter TargetName="Bar" Property="Opacity" Value="0.5" />
-                                                                    <Setter TargetName="Bar" Property="Margin" Value="1,2" />
+                                                                    <Setter TargetName="Bar" Property="Margin" Value="2,2" />
                                                                 </Trigger>
                                                                 <Trigger Property="IsDragging" Value="True">
                                                                     <Setter TargetName="Bar" Property="Opacity" Value="0.7" />
-                                                                    <Setter TargetName="Bar" Property="Margin" Value="1,2" />
+                                                                    <Setter TargetName="Bar" Property="Margin" Value="2,2" />
                                                                 </Trigger>
                                                             </ControlTemplate.Triggers>
                                                         </ControlTemplate>

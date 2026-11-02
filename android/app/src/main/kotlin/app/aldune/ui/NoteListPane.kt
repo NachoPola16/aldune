@@ -98,6 +98,7 @@ import androidx.compose.ui.text.font.FontWeight
 import app.aldune.text.NoteThemes
 import app.aldune.domain.TagColors
 import app.aldune.domain.TagDrop
+import app.aldune.domain.TagViewCycle
 import app.aldune.domain.TagGrouping
 import app.aldune.domain.TagOrder
 import androidx.compose.runtime.rememberCoroutineScope
@@ -602,8 +603,29 @@ fun NoteListPane(
                 }
 
                 // El margen de abajo deja la última nota por encima del «+» al llegar al final de la lista.
+                // A swipe over the empty part of the list (below the last note, when the notes do not fill the screen) goes to the next view: All,
+                // then each tag, then All again. Rows keep their own swipes: a gesture that starts on a note is not read here.
+                val swipeMinimum = with(LocalDensity.current) { 64.dp.toPx() }
                 LazyColumn(
-                    Modifier.fillMaxSize(), state = listState, verticalArrangement = Arrangement.spacedBy(8.dp),
+                    Modifier.fillMaxSize().pointerInput(state.allTags, state.tag) {
+                        awaitEachGesture {
+                            val down = awaitFirstDown(requireUnconsumed = false)
+                            val info = listState.layoutInfo
+                            val endOfNotes = info.visibleItemsInfo.lastOrNull()?.let { it.offset + it.size } ?: info.viewportStartOffset
+                            val onEmptySpace = info.visibleItemsInfo.size == info.totalItemsCount && down.position.y > endOfNotes
+                            if (!onEmptySpace || state.allTags.isEmpty()) return@awaitEachGesture
+                            var end = down.position
+                            while (true) {
+                                val event = awaitPointerEvent()
+                                val change = event.changes.firstOrNull { it.id == down.id } ?: break
+                                if (!change.pressed) break
+                                end = change.position
+                            }
+                            val swipe = TagViewCycle.swipe(end.x - down.position.x, end.y - down.position.y, swipeMinimum)
+                            if (swipe != TagViewCycle.Swipe.NONE) viewModel.setTag(TagViewCycle.next(state.allTags, state.tag, forward = swipe == TagViewCycle.Swipe.NEXT))
+                        }
+                    },
+                    state = listState, verticalArrangement = Arrangement.spacedBy(8.dp),
                     contentPadding = androidx.compose.foundation.layout.PaddingValues(top = with(LocalDensity.current) { tagDragPad.toDp() }, bottom = 16.dp),
                 ) {
                     items(entries, key = { it.key }) { entry ->

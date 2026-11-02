@@ -137,6 +137,18 @@ public partial class SettingsWindow
         });
     }
 
+    /// <summary>Opens <paramref name="page"/> and, when an element name is given, scrolls to it and lights it (a notice elsewhere sends the person to the option it talks about).</summary>
+    internal void ShowOption(string page, string? elementName)
+    {
+        ShowPage(page);
+        if (elementName is null || FindName(elementName) is not FrameworkElement element) return;
+        Dispatcher.BeginInvoke(DispatcherPriority.Loaded, () =>
+        {
+            element.BringIntoView();
+            Flash(element);
+        });
+    }
+
     private void Flash(FrameworkElement element)
     {
         // Only text and panels take a background; anything else is just scrolled to.

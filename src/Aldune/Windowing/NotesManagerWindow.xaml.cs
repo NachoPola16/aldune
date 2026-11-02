@@ -534,8 +534,10 @@ public partial class NotesManagerWindow : Window
                 : kind is SkinColorNoticeKind.ColorsNotShown or SkinColorNoticeKind.ChannelColors ? Strings.SkinColorNotice(kind) : null;
             if (notice is not null)
             {
-                var text = new TextBlock { Text = notice, TextWrapping = TextWrapping.Wrap, FontSize = 11, Margin = new Thickness(0, 8, 0, 0), MaxWidth = 250 };
+                var text = new TextBlock { Text = notice, TextWrapping = TextWrapping.Wrap, FontSize = 11, Margin = new Thickness(0, 8, 0, 0), MaxWidth = 250, Cursor = Cursors.Hand, ToolTip = Strings.NoticeOpenSetting };
                 text.SetResourceReference(TextBlock.ForegroundProperty, "AlduneMutedTextBrush");
+                var uniform = NoteDisplayColor.IsActive(NoteColorDisplay.Uniform);
+                text.MouseLeftButtonUp += (_, _) => _coordinator.OpenColorNoticeSetting(uniform);
                 palette.Children.Add(text);
             }
             palette.Visibility = Visibility.Visible;

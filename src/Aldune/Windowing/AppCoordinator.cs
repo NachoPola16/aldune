@@ -1525,15 +1525,22 @@ public sealed class AppCoordinator
         NativeMethods.ForceActivate(windows[^1]);
     }
 
+    /// <summary>Sends the person to the setting a colour notice talks about: «Same colour on all notes» when that is what hides the colour, the look otherwise.</summary>
+    public void OpenColorNoticeSetting(bool uniform)
+    {
+        if (uniform) OpenSettings("Notes", "UniformColorCheck");
+        else OpenSettings("Appearance");
+    }
+
     /// <summary>Abre Ajustes (o la trae al frente), en <paramref name="page"/> si se indica: por
     /// ejemplo, el clic derecho en el botón de sincronizar del dock va directo a Sincronización.</summary>
-    public void OpenSettings(string? page = null)
+    public void OpenSettings(string? page = null, string? option = null)
     {
         if (_openingSettings) return;
 
         if (_settingsWindow is not null && !WindowCloseAnimation.IsClosing(_settingsWindow))
         {
-            if (page is not null) _settingsWindow.ShowPage(page);
+            if (page is not null) _settingsWindow.ShowOption(page, option);
             RaiseAppWindow(_settingsWindow);
             return;
         }
@@ -1545,7 +1552,7 @@ public sealed class AppCoordinator
         {
             var settingsDock = DockNearCursor();
             var created = SettingsWindowFactory();
-            if (page is not null) created.ShowPage(page);
+            if (page is not null) created.ShowOption(page, option);
             _settingsWindow = created;
             settingsDock?.CenterOnThisMonitor(created);
             created.Closed += (_, _) =>

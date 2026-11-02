@@ -398,10 +398,10 @@
 
             <Border Grid.Column="1" Background="{DynamicResource AlduneRaisedBrush}" Width="1" HorizontalAlignment="Left" Margin="0,0,0,18" />
 
-            <ScrollViewer x:Name="PageScroller" Grid.Column="1" Margin="1,0,0,0"
+            <ScrollViewer x:Name="PageScroller" Grid.Column="1" Margin="1,0,20,0"
                           VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
                 <!-- Ancho máximo: en pantalla completa los interruptores no se van al borde derecho, siempre quedan a la misma distancia del texto. -->
-                <Grid Margin="28,0,28,24" MaxWidth="780" HorizontalAlignment="Left">
+                <Grid Margin="28,0,8,24" MaxWidth="780" HorizontalAlignment="Left">
                 <StackPanel x:Name="GeneralPage" Visibility="Collapsed">
                     <TextBlock Text="{x:Static res:Strings.SettingsPageGeneral}" Foreground="{DynamicResource AlduneTextStrongBrush}" FontSize="{DynamicResource AlduneTextPageTitle}" FontWeight="SemiBold" Margin="0,0,0,16" />
                     <Border x:Name="InterfaceModePanel" Margin="0,0,0,0"
@@ -835,7 +835,8 @@
                     <!-- When the look in use does not show the colours of the notes (or one colour for all is on), the colours chosen here would seem to do nothing: it says so. -->
                     <Border x:Name="ColorsLookNoticeBox" Visibility="Collapsed" Margin="0,-6,0,16" Padding="12,8"
                             Background="{DynamicResource AlduneSurfaceBrush}" CornerRadius="{DynamicResource AlduneRadius7}">
-                        <TextBlock x:Name="ColorsLookNotice" TextWrapping="Wrap"
+                        <TextBlock x:Name="ColorsLookNotice" TextWrapping="Wrap" Cursor="Hand" ToolTip="{x:Static res:Strings.NoticeOpenSetting}"
+                                   MouseLeftButtonUp="OnColorsLookNoticeClick"
                                    Foreground="{DynamicResource AlduneTextBrush}" FontSize="{DynamicResource AlduneTextSmall}" />
                     </Border>
                     <StackPanel>

@@ -1920,6 +1920,12 @@ public partial class SettingsWindow : Window
         UpdateColorsLookNotice();
     }
 
+    private void OnColorsLookNoticeClick(object sender, MouseButtonEventArgs e)
+    {
+        if (NoteDisplayColor.IsActive(_settings.UniformNoteColor)) ShowOption("Notes", "UniformColorCheck");
+        else ShowOption("Appearance", null);
+    }
+
     /// <summary>Tells, at the top of the note colours page, when the look in use will not show them as chosen.</summary>
     private void UpdateColorsLookNotice()
     {

@@ -586,9 +586,9 @@
                       Style="{StaticResource DarkComboBoxStyle}" />
         </StackPanel>
 
-        <Grid x:Name="RowsHost" Grid.Row="2" Margin="20,56,14,0">
+        <Grid x:Name="RowsHost" Grid.Row="2" Margin="20,56,20,0">
             <ScrollViewer x:Name="RowsScroll" VerticalScrollBarVisibility="Auto"
-                          HorizontalScrollBarVisibility="Disabled" Padding="0,0,5,0">
+                          HorizontalScrollBarVisibility="Disabled" Padding="0">
                 <ItemsControl x:Name="RowsList">
                     <ItemsControl.ItemTemplate>
                         <DataTemplate>
@@ -633,8 +633,8 @@
                                         <ColumnDefinition Width="*" />
                                     </Grid.ColumnDefinitions>
 
-                                    <!-- With "note colour only on the edge" the row keeps the app's surface and this is the colour: a stripe on the left, like the dock cards. -->
-                                    <Border Grid.ColumnSpan="2" HorizontalAlignment="Left" Width="4" Margin="-12,-8,0,-8" CornerRadius="7,0,0,7"
+                                    <!-- With "note colour only on the edge" the row keeps the app's surface and this is the colour: a stripe on the left, like the dock cards. It covers the 1 px rim so the colour reaches the row's own corner (inside the rim it left a grey hairline). -->
+                                    <Border Grid.ColumnSpan="2" HorizontalAlignment="Left" Width="5" Margin="-13,-9,0,-9" CornerRadius="8,0,0,8"
                                             Background="{Binding Note.Color, Converter={StaticResource NoteDisplayColorConverter}}"
                                             Visibility="{Binding Note.Color, Converter={StaticResource ManagerRowStripeVisibilityConverter}}"
                                             IsHitTestVisible="False" />

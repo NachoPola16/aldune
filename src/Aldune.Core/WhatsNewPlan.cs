@@ -12,11 +12,17 @@ public static class WhatsNewPlan
     /// <summary>The version assumed for an existing install that never stored one (the last release before «What's new» existed).</summary>
     public static readonly Version BaselineForUnknown = new(2, 3, 0);
 
-    /// <summary>The versions to list, newest first: those after the last one seen, up to and including the running one.</summary>
-    public static IReadOnlyList<Version> ToShow(string? lastSeen, bool freshInstall, Version current, IEnumerable<Version> available)
+    /// <summary>
+    /// The oldest version whose news is ever listed. 3.0.0 rewrote most of the app and its entry covers what came before, so a person coming
+    /// from any 2.x gets that one and not a stack of older ones they mostly had already.
+    /// </summary>
+    public static readonly Version OldestListed = new(3, 0, 0);
+
+    /// <summary>The versions to list, newest first: those after the last one seen (and not older than <paramref name="oldest"/>), up to and including the running one.</summary>
+    public static IReadOnlyList<Version> ToShow(string? lastSeen, bool freshInstall, Version current, IEnumerable<Version> available, Version? oldest = null)
     {
         if (freshInstall) return [];
         var from = Version.TryParse(lastSeen, out var seen) ? seen : BaselineForUnknown;
-        return available.Where(v => v > from && v <= current).OrderByDescending(v => v).ToList();
+        return available.Where(v => v > from && v <= current && (oldest is null || v >= oldest)).OrderByDescending(v => v).ToList();
     }
 }

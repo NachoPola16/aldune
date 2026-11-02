@@ -501,7 +501,7 @@ public partial class App : Application
     private void ShowWhatsNewIfUpdated(AppSettings settings, SettingsService settingsService)
     {
         var current = Version.Parse(AppInfo.Version);
-        var versions = WhatsNewPlan.ToShow(settings.LastSeenVersion, _firstRun, current, WhatsNew.Versions);
+        var versions = WhatsNewPlan.ToShow(settings.LastSeenVersion, _firstRun, current, WhatsNew.Versions, WhatsNewPlan.OldestListed);
         // Remembered before showing: if anything fails below, the next start must not try again forever.
         if (settings.LastSeenVersion != AppInfo.Version)
         {

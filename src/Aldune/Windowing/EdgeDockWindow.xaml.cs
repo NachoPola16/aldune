@@ -901,10 +901,10 @@ public partial class EdgeDockWindow : Window
     }
 
     /// <summary>Una pestaña entra deslizándose desde el canto de la pantalla y apareciendo.</summary>
-    private void PlayEntrance(Button button, double delayMs, bool slideIn)
+    private void PlayEntrance(Button button, double delayMs, bool slideIn, double durationMs = FanTiming.TabSweepMs)
     {
         var delay = TimeSpan.FromMilliseconds(delayMs);
-        var duration = new Duration(TimeSpan.FromMilliseconds(FanTiming.TabSweepMs));
+        var duration = new Duration(TimeSpan.FromMilliseconds(durationMs));
 
         // Las dos animaciones se limpian al terminar y fijan su valor final como valor local plano.
         // Sin eso quedan enganchadas para siempre (FillBehavior.HoldEnd) y **cualquier asignación
@@ -1086,11 +1086,37 @@ public partial class EdgeDockWindow : Window
         }
     }
 
+    /// <summary>
+    /// The list can keep the height it had with the previous view: the items presenter caches a measure taken for four tabs and, with one left, the
+    /// scroll area still reports 246 px of content for 52 px of tab. The wheel then scrolled that empty extent and pushed the only tab out of sight (a
+    /// thin line was all that remained). Invalidating the presenter itself, which the panel's own invalidation does not reach, measures it again.
+    /// </summary>
+    private void RefreshTabsMeasure()
+    {
+        ItemsPresenter? Find(DependencyObject node)
+        {
+            for (int i = 0; i < VisualTreeHelper.GetChildrenCount(node); i++)
+            {
+                var child = VisualTreeHelper.GetChild(node, i);
+                if (child is ItemsPresenter presenter) return presenter;
+                if (Find(child) is { } inner) return inner;
+            }
+            return null;
+        }
+        Find(TabsList)?.InvalidateMeasure();
+        TabsScroll.InvalidateScrollInfo();
+        if (TabsScroll.VerticalOffset > Math.Max(0, TabsScroll.ExtentHeight - TabsScroll.ViewportHeight)) TabsScroll.ScrollToHome();
+    }
+
     public void SetNotes(IReadOnlyList<Note> notes, bool animateArrivals = true, bool fadeAll = false)
     {
         var previousIds = _knownNoteIds;
         _knownNoteIds = notes.Select(n => n.Id).ToHashSet();
         _pendingReminders = _repository.GetPendingReminders();
+
+        // A change of view swaps every tab. Without a snapshot the old ones vanished in one frame and the new ones faded in from nothing: a
+        // blink. Now the old ones stay as a picture that fades out while the new ones fade in.
+        bool crossfade = fadeAll && _fanState.IsExpanded && SystemParameters.ClientAreaAnimation && SnapshotTabs();
 
         _tabButtons.Clear();
         TabsScroll.ScrollToHome();
@@ -1131,8 +1157,12 @@ public partial class EdgeDockWindow : Window
             ? _knownNoteIds.Except(previousIds).ToHashSet()
             : new HashSet<Guid>();
 
+        // After the tabs are in place, not before: see RefreshTabsMeasure.
+        Dispatcher.BeginInvoke(DispatcherPriority.Loaded, new Action(RefreshTabsMeasure));
+
         Dispatcher.BeginInvoke(DispatcherPriority.Loaded, new Action(() =>
         {
+            if (crossfade) FadeOutTabsGhost();
             RefreshOpenState();
             UpdateScrollIndicator();
 
@@ -1149,7 +1179,8 @@ public partial class EdgeDockWindow : Window
             {
                 if (fadeAll && SystemParameters.ClientAreaAnimation)
                 {
-                    PlayEntrance(button, Math.Min(ripple++, 8) * 16, slideIn: false);
+                    // With the old tabs still fading out underneath, the new ones come in together (a small ripple) and not from an empty strip.
+                    PlayEntrance(button, crossfade ? Math.Min(ripple++, 5) * 10 : Math.Min(ripple++, 8) * 16, slideIn: false, durationMs: crossfade ? ViewCrossfadeMs : FanTiming.TabSweepMs);
                 }
                 else if (button.Tag is Note note && arrived.Contains(note.Id))
                 {
@@ -1161,6 +1192,51 @@ public partial class EdgeDockWindow : Window
                 }
             }
         }));
+    }
+
+    private const double ViewCrossfadeMs = 150;
+
+    /// <summary>Puts a picture of the tabs as they are over them, so a change of view can fade it out. False when there is nothing to show.</summary>
+    private bool SnapshotTabs()
+    {
+        double width = TabsScroll.ActualWidth, height = TabsScroll.ActualHeight;
+        if (width < 1 || height < 1 || _tabButtons.Count == 0) return false;
+        try
+        {
+            var dpi = VisualTreeHelper.GetDpi(this);
+            var bitmap = new System.Windows.Media.Imaging.RenderTargetBitmap(
+                (int)Math.Ceiling(width * dpi.DpiScaleX), (int)Math.Ceiling(height * dpi.DpiScaleY), 96 * dpi.DpiScaleX, 96 * dpi.DpiScaleY, PixelFormats.Pbgra32);
+            bitmap.Render(TabsScroll);
+            bitmap.Freeze();
+            TabsGhost.BeginAnimation(OpacityProperty, null);
+            TabsGhost.Source = bitmap;
+            TabsGhost.Width = width;
+            TabsGhost.Height = height;
+            TabsGhost.HorizontalAlignment = TabsScroll.HorizontalAlignment;
+            TabsGhost.VerticalAlignment = TabsScroll.VerticalAlignment;
+            TabsGhost.Margin = TabsScroll.Margin;
+            TabsGhost.Opacity = 1;
+            TabsGhost.Visibility = Visibility.Visible;
+            return true;
+        }
+        catch (Exception ex) when (ex is InvalidOperationException or ArgumentException or OutOfMemoryException)
+        {
+            // Not worth a failure: the view still changes, just with the plain fade.
+            TabsGhost.Visibility = Visibility.Collapsed;
+            return false;
+        }
+    }
+
+    private void FadeOutTabsGhost()
+    {
+        var fade = new DoubleAnimation(1, 0, new Duration(TimeSpan.FromMilliseconds(ViewCrossfadeMs))) { EasingFunction = EaseOut() };
+        fade.Completed += (_, _) =>
+        {
+            TabsGhost.BeginAnimation(OpacityProperty, null);
+            TabsGhost.Visibility = Visibility.Collapsed;
+            TabsGhost.Source = null;
+        };
+        TabsGhost.BeginAnimation(OpacityProperty, fade);
     }
 
     private void OnTabsScrollChanged(object sender, ScrollChangedEventArgs e) => UpdateScrollIndicator();
