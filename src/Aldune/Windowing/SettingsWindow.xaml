@@ -347,10 +347,10 @@
                 <StackPanel DockPanel.Dock="Top">
                     <!-- Search: fuzzy (accents, typos, half-typed words); Ctrl+F focuses it. While it has text the page list gives way to the results. -->
                     <Grid Margin="0,0,0,10">
-                        <TextBox x:Name="SettingsSearchBox" Padding="8,6" FontSize="{DynamicResource AlduneTextBody}"
+                        <TextBox x:Name="SettingsSearchBox" Padding="10,6" FontSize="{DynamicResource AlduneTextBody}"
                                  AutomationProperties.Name="{x:Static res:Strings.SettingsSearchHint}"
                                  TextChanged="OnSettingsSearchChanged" PreviewKeyDown="OnSettingsSearchKeyDown" />
-                        <TextBlock Text="{x:Static res:Strings.SettingsSearchHint}" IsHitTestVisible="False" Margin="10,0,8,0"
+                        <TextBlock Text="{x:Static res:Strings.SettingsSearchHint}" IsHitTestVisible="False" Margin="15,0,8,0"
                                    VerticalAlignment="Center" TextTrimming="CharacterEllipsis"
                                    Foreground="{DynamicResource AlduneHintBrush}" FontSize="{DynamicResource AlduneTextSmall}">
                             <TextBlock.Style>
@@ -403,7 +403,7 @@
             <ScrollViewer x:Name="PageScroller" Grid.Column="1" Margin="1,0,20,0"
                           VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
                 <!-- Ancho máximo: en pantalla completa los interruptores no se van al borde derecho, siempre quedan a la misma distancia del texto. -->
-                <Grid Margin="28,0,8,24" MaxWidth="780" HorizontalAlignment="Left">
+                <Grid Margin="28,0,8,56" MaxWidth="780" HorizontalAlignment="Left">
                 <StackPanel x:Name="GeneralPage" Visibility="Collapsed">
                     <TextBlock Text="{x:Static res:Strings.SettingsPageGeneral}" Foreground="{DynamicResource AlduneTextStrongBrush}" FontSize="{DynamicResource AlduneTextPageTitle}" FontWeight="SemiBold" Margin="0,0,0,16" />
                     <Border x:Name="InterfaceModePanel" Margin="0,0,0,0"

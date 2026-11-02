@@ -147,23 +147,9 @@ public partial class SettingsWindow
         PageScroller.UpdateLayout();
         if (PageScroller.Content is not UIElement content || !element.IsVisible) { element.BringIntoView(); return; }
         double top = element.TransformToVisual(content).Transform(new Point(0, 0)).Y;
-        double wanted = Math.Max(0, top - RevealMargin);
-        // A setting near the end of its page cannot be brought down from the edge: there is no page left under it. The page gets the room it
-        // needs, until another page is shown (see ResetPageRoom).
-        if (wanted > PageScroller.ScrollableHeight && content is FrameworkElement page)
-        {
-            page.Margin = new Thickness(page.Margin.Left, page.Margin.Top, page.Margin.Right, PageBottomMargin + (wanted - PageScroller.ScrollableHeight));
-            PageScroller.UpdateLayout();
-        }
-        PageScroller.ScrollToVerticalOffset(wanted);
-    }
-
-    private const double PageBottomMargin = 24;
-
-    private void ResetPageRoom()
-    {
-        if (PageScroller.Content is FrameworkElement page && page.Margin.Bottom != PageBottomMargin)
-            page.Margin = new Thickness(page.Margin.Left, page.Margin.Top, page.Margin.Right, PageBottomMargin);
+        // The page never grows for this (it did, to bring the last settings up, and the window visibly stretched): a setting at the very end
+        // stays where the end of the page puts it, which the page's own bottom margin keeps clear of the edge.
+        PageScroller.ScrollToVerticalOffset(Math.Min(Math.Max(0, top - RevealMargin), PageScroller.ScrollableHeight));
     }
 
     private const double RevealMargin = 90;
