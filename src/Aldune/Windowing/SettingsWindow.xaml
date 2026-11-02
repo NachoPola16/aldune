@@ -620,6 +620,12 @@
                         <TextBlock Text="{x:Static res:Strings.AutoHideCompletedTasksHint}"
                                    Foreground="{DynamicResource AlduneHintBrush}" FontSize="{DynamicResource AlduneTextSmall}" TextWrapping="Wrap" Margin="0,6,56,0" />
 
+                        <!-- What the two switches above will NOT do: notes with their own choice, and the fact that a deletion syncs. -->
+                        <TextBlock x:Name="TaskPolicySyncNote" Visibility="Collapsed" Margin="0,8,56,0" TextWrapping="Wrap"
+                                   Foreground="{DynamicResource AlduneHintBrush}" FontSize="{DynamicResource AlduneTextSmall}" />
+                        <TextBlock x:Name="TaskPolicyOverrideNote" Visibility="Collapsed" Margin="0,6,56,0" TextWrapping="Wrap"
+                                   Foreground="{DynamicResource AlduneHintBrush}" FontSize="{DynamicResource AlduneTextSmall}" />
+
                         <StackPanel x:Name="AutoHideTasksDelayPanel" Orientation="Horizontal" Margin="0,10,0,0">
                             <TextBlock Text="{x:Static res:Strings.AutoHideCompletedTasksDelayLabel}"
                                        Foreground="{DynamicResource AlduneTextBrush}" FontSize="{DynamicResource AlduneTextBody}" VerticalAlignment="Center" Margin="0,0,8,0" />

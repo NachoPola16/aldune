@@ -1242,6 +1242,31 @@ public static class Strings
         "Erledigte Aufgaben automatisch löschen",
         "Supprimer automatiquement les tâches terminées",
         "Excluir tarefas concluídas automaticamente", "Elimina automaticamente le attività completate", "完了したタスクを自動的に削除", "自动删除已完成的任务");
+    public static string TaskPolicyOverrides(int count) => count == 1
+        ? T("1 of your notes has its own choice for done tasks (in the note's ⋯ menu) and ignores the two switches above.",
+        "1 de tus notas tiene su propia opción para las tareas hechas (en el menú ⋯ de la nota) y no sigue los dos interruptores de arriba.",
+        "1 deiner Notizen hat eine eigene Einstellung für erledigte Aufgaben (im ⋯-Menü der Notiz) und ignoriert die beiden Schalter oben.",
+        "1 de vos notes a son propre choix pour les tâches faites (dans le menu ⋯ de la note) et ignore les deux interrupteurs ci-dessus.",
+        "1 das suas notas tem uma escolha própria para as tarefas concluídas (no menu ⋯ da nota) e ignora os dois interruptores acima.",
+        "1 delle tue note ha una scelta propria per le attività completate (nel menu ⋯ della nota) e ignora i due interruttori qui sopra.",
+        "1 件のノートは完了したタスクについて独自の設定（ノートの ⋯ メニュー）を持ち、上の2つのスイッチに従いません。",
+        "有 1 条笔记对已完成任务有自己的设置（笔记的 ⋯ 菜单），不受上面两个开关影响。")
+        : T($"{count} of your notes have their own choice for done tasks (in the note's ⋯ menu) and ignore the two switches above.",
+        $"{count} de tus notas tienen su propia opción para las tareas hechas (en el menú ⋯ de la nota) y no siguen los dos interruptores de arriba.",
+        $"{count} deiner Notizen haben eine eigene Einstellung für erledigte Aufgaben (im ⋯-Menü der Notiz) und ignorieren die beiden Schalter oben.",
+        $"{count} de vos notes ont leur propre choix pour les tâches faites (dans le menu ⋯ de la note) et ignorent les deux interrupteurs ci-dessus.",
+        $"{count} das suas notas têm uma escolha própria para as tarefas concluídas (no menu ⋯ da nota) e ignoram os dois interruptores acima.",
+        $"{count} delle tue note hanno una scelta propria per le attività completate (nel menu ⋯ della nota) e ignorano i due interruttori qui sopra.",
+        $"{count} 件のノートは完了したタスクについて独自の設定（ノートの ⋯ メニュー）を持ち、上の2つのスイッチに従いません。",
+        $"有 {count} 条笔记对已完成任务有自己的设置（笔记的 ⋯ 菜单），不受上面两个开关影响。");
+    public static string TaskDeleteSyncs => T("Sync is on: removing done tasks also removes them from your other devices, because the edit syncs like any other. A note can opt out in its ⋯ menu.",
+        "La sincronización está activa: quitar las tareas hechas también las quita de tus otros dispositivos, porque el cambio se sincroniza como cualquier edición. Una nota puede excluirse en su menú ⋯.",
+        "Die Synchronisierung ist aktiv: Das Entfernen erledigter Aufgaben entfernt sie auch auf deinen anderen Geräten, da die Änderung wie jede Bearbeitung synchronisiert wird. Eine Notiz kann das im ⋯-Menü ausschließen.",
+        "La synchronisation est activée : supprimer les tâches faites les supprime aussi de vos autres appareils, car la modification se synchronise comme toute autre. Une note peut s'exclure dans son menu ⋯.",
+        "A sincronização está ativa: remover as tarefas concluídas também as remove dos seus outros dispositivos, porque a alteração é sincronizada como qualquer edição. Uma nota pode ficar de fora no menu ⋯.",
+        "La sincronizzazione è attiva: rimuovere le attività completate le rimuove anche dagli altri dispositivi, perché la modifica si sincronizza come qualsiasi altra. Una nota può escludersi dal menu ⋯.",
+        "同期がオンです：完了したタスクを削除すると、他のデバイスからも削除されます（他の編集と同じく同期されます）。ノートは ⋯ メニューで対象外にできます。",
+        "同步已开启：删除已完成任务也会从您的其他设备中删除，因为该更改会像其他编辑一样同步。笔记可在其 ⋯ 菜单中选择不参与。");
     public static string AutoHideCompletedTasksHint => T("A checked task stays for a while so you can still see it, then its line is removed from the note for good.", "Una tarea marcada se queda un tiempo por si quieres verla, y después su línea se borra de la nota para siempre.",
         "Eine erledigte Aufgabe bleibt eine Weile sichtbar, dann wird ihre Zeile endgültig aus der Notiz entfernt.",
         "Une tâche cochée reste visible un moment pour que vous puissiez encore la voir, puis sa ligne est supprimée définitivement de la note.",

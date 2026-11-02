@@ -1271,6 +1271,10 @@ public sealed class AppCoordinator
         if (_openNoteWindows.TryGetValue(noteId, out var window)) window.ApplyExternalColor(color);
     }
 
+    /// <summary>How many active notes have their own choice for done tasks (their ⋯ menu), which overrides the device settings.</summary>
+    internal int CountNotesWithOwnTaskPolicy() =>
+        _repository.GetByState(NoteState.Active).Count(note => note.CompletedTasks != CompletedTasksPolicy.Default);
+
     /// <summary>Cuántas notas activas hay, para el mensaje de confirmación de Ajustes.</summary>
     internal int ActiveNoteCount => _repository.GetByState(NoteState.Active).Count;
 

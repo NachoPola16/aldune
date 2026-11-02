@@ -1245,6 +1245,7 @@ public partial class SettingsWindow : Window
     private void OnMoveCompletedTasksToggled(object sender, RoutedEventArgs e)
     {
         _settings.MoveCompletedTasksToEnd = MoveCompletedTasksCheck.IsChecked == true;
+        UpdateTaskPolicyNotes();
         _settingsService.Save(_settings);
     }
 
@@ -1265,6 +1266,23 @@ public partial class SettingsWindow : Window
     private void UpdateAutoHideTasksUi()
     {
         AutoHideTasksDelayPanel.IsEnabled = AutoHideTasksCheck.IsChecked == true;
+        UpdateTaskPolicyNotes();
+    }
+
+    /// <summary>
+    /// Says what the two switches will not do: a note with its own choice for done tasks (its ⋯ menu) ignores them, and with sync on a
+    /// deletion reaches the other devices as any edit does. Both used to be discovered by surprise (a task that did not move, a task that
+    /// vanished from the phone).
+    /// </summary>
+    private void UpdateTaskPolicyNotes()
+    {
+        int own = _coordinator?.CountNotesWithOwnTaskPolicy() ?? 0;
+        TaskPolicyOverrideNote.Visibility = own > 0 ? Visibility.Visible : Visibility.Collapsed;
+        TaskPolicyOverrideNote.Text = own > 0 ? Strings.TaskPolicyOverrides(own) : "";
+
+        bool syncOn = _settings.SyncProfiles.Any(profile => profile.SyncEnabled);
+        TaskPolicySyncNote.Visibility = AutoHideTasksCheck.IsChecked == true && syncOn ? Visibility.Visible : Visibility.Collapsed;
+        TaskPolicySyncNote.Text = Strings.TaskDeleteSyncs;
     }
 
     // Solo digitos: un desplegable de unidad al lado ya cubre "cuanto tiempo", y dejar pasar
