@@ -1006,9 +1006,11 @@ public partial class EdgeDockWindow : Window
             || !string.Equals(_lastTagFilter, tagFilter, StringComparison.OrdinalIgnoreCase);
         _lastView = view;
         _lastTagFilter = tagFilter;
-        UpdateViewIndicator();
+        bool swap = viewChanged && IsVisible && _fanState.IsExpanded && SystemParameters.ClientAreaAnimation;
+        // With the swap the name of the view changes together with the cards (inside the swap), not a moment before them.
+        if (!swap) UpdateViewIndicator();
         ApplyFooterPadding();
-        if (viewChanged && IsVisible && _fanState.IsExpanded && SystemParameters.ClientAreaAnimation)
+        if (swap)
         {
             SwapNotesThroughFade();
         }
@@ -1017,6 +1019,7 @@ public partial class EdgeDockWindow : Window
             _viewSwapToken++; // a swap still waiting for its fade is superseded by this one
             ResetTabsFadeIfStuck();
             SetNotes(LoadNotesForView(), animateArrivals: !viewChanged, fadeAll: viewChanged);
+            if (_labelOnSwap) { _labelOnSwap = false; ShowViewLabel(CurrentViewLabel()); }
         }
         if (viewChanged)
         {
@@ -1056,36 +1059,83 @@ public partial class EdgeDockWindow : Window
         }
     }
 
+    private const double DeckGatherMs = 95;
+    private const double DeckSpreadMs = 190;
+
     /// <summary>
-    /// A change of view fades through nothing: the old tabs fade out (short), the list and the window change while the strip is invisible, and the
-    /// new ones fade in. Cross-fading the two lists put two sets of text on top of each other and the new tabs showed for a frame at full strength
-    /// before their own fade started (a blink); this never shows both, and a resize of the window happens while nothing is drawn. Turns of the wheel
-    /// in a row restart it from wherever the strip is, and the notes are loaded only when the swap happens.
+    /// A change of view fades through nothing, with the cards moving like a deck: the old ones are gathered into a pile at the end next to the
+    /// button bar and fade out; the list, the window and the name of the view change while nothing is drawn; the new ones come out of that same
+    /// pile and spread to their places. The strip is never drawn with both lists (two sets of text on top of each other) and a window that
+    /// grows or shrinks (a tag with more or fewer notes) does so unseen, so nothing jumps. On the top and bottom edges, or with very many
+    /// notes, it is the plain fade. Turns of the wheel in a row restart it from wherever the strip is; the notes are loaded when the swap happens.
     /// </summary>
     private void SwapNotesThroughFade()
     {
         int token = ++_viewSwapToken;
-        var fadeOut = new DoubleAnimation(0, new Duration(TimeSpan.FromMilliseconds(75))) { EasingFunction = EaseOut() };
+        bool deck = _edge is EdgePosition.Left or EdgePosition.Right && _tabButtons.Count is > 1 and <= 14;
+        if (deck) AnimateDeck(gather: true);
+
+        var fadeOut = new DoubleAnimation(0, new Duration(TimeSpan.FromMilliseconds(deck ? DeckGatherMs - 35 : 75))) { EasingFunction = EaseOut(), BeginTime = TimeSpan.FromMilliseconds(deck ? 35 : 0) };
         fadeOut.Completed += (_, _) =>
         {
             if (token != _viewSwapToken) return;
             TabsScroll.BeginAnimation(OpacityProperty, null);
             TabsScroll.Opacity = 0;
+            foreach (var old in _tabButtons.Values)
+                if (old.RenderTransform is TranslateTransform { IsFrozen: false } oldMove) { oldMove.BeginAnimation(TranslateTransform.YProperty, null); oldMove.Y = 0; }
             SetNotes(LoadNotesForView(), animateArrivals: false, fadeAll: false);
-            var fadeIn = new DoubleAnimation(0, 1, new Duration(TimeSpan.FromMilliseconds(140))) { EasingFunction = EaseOut() };
+            UpdateViewIndicator();
+            var fadeIn = new DoubleAnimation(0, 1, new Duration(TimeSpan.FromMilliseconds(deck ? 90 : 140))) { EasingFunction = EaseOut() };
             fadeIn.Completed += (_, _) =>
             {
                 if (token != _viewSwapToken) return;
                 TabsScroll.BeginAnimation(OpacityProperty, null);
                 TabsScroll.Opacity = 1;
             };
-            // After the layout of the new list, so it never shows for a frame at full strength.
+            // After the layout of the new list, so it never shows for a frame at full strength (and the pile can be measured).
             Dispatcher.BeginInvoke(DispatcherPriority.Loaded, new Action(() =>
             {
-                if (token == _viewSwapToken) TabsScroll.BeginAnimation(OpacityProperty, fadeIn);
+                if (token != _viewSwapToken) return;
+                if (_edge is EdgePosition.Left or EdgePosition.Right && _tabButtons.Count is > 1 and <= 14) AnimateDeck(gather: false);
+                TabsScroll.BeginAnimation(OpacityProperty, fadeIn);
+                if (_labelOnSwap) { _labelOnSwap = false; ShowViewLabel(CurrentViewLabel()); }
             }));
         };
         TabsScroll.BeginAnimation(OpacityProperty, fadeOut);
+    }
+
+    /// <summary>Moves every card to the pile (gather) or from the pile to its place (spread). The pile is the card nearest the button bar.</summary>
+    private void AnimateDeck(bool gather)
+    {
+        var cards = _tabButtons.Values
+            .Where(button => button.IsVisible && button.ActualHeight > 0)
+            .Select(button => (Button: button, Y: button.TransformToAncestor(TabsList).Transform(new Point(0, 0)).Y))
+            .OrderBy(card => card.Y)
+            .ToList();
+        if (cards.Count < 2) return;
+        double pile = _edge == EdgePosition.Top ? cards[0].Y : cards[^1].Y;
+        foreach (var (button, y) in cards)
+        {
+            if (button.RenderTransform is not TranslateTransform { IsFrozen: false } move)
+            {
+                move = new TranslateTransform();
+                button.RenderTransform = move;
+            }
+            double offset = pile - y;
+            var animation = gather
+                ? new DoubleAnimation(0, offset, new Duration(TimeSpan.FromMilliseconds(DeckGatherMs))) { EasingFunction = new CubicEase { EasingMode = EasingMode.EaseIn } }
+                : new DoubleAnimation(offset, 0, new Duration(TimeSpan.FromMilliseconds(DeckSpreadMs))) { EasingFunction = new CubicEase { EasingMode = EasingMode.EaseOut } };
+            if (!gather)
+            {
+                move.Y = offset; // before the first frame: the cards start in the pile, not in their places
+                animation.Completed += (_, _) => { move.BeginAnimation(TranslateTransform.YProperty, null); move.Y = 0; };
+            }
+            else
+            {
+                animation.FillBehavior = FillBehavior.HoldEnd;
+            }
+            move.BeginAnimation(TranslateTransform.YProperty, animation);
+        }
     }
 
     /// <summary>
@@ -1949,11 +1999,21 @@ public partial class EdgeDockWindow : Window
     {
         BeginWheelSession();
         var (view, tag) = DockViewCycle.Next(_settings?.DockView ?? DockViewKind.Active, _settings?.DockTagFilter, BuildViewCounts(), direction, _settings?.WheelStops);
+        // Whether the view really changes, worked out before applying it (applying it refreshes the dock and updates what is compared here).
+        bool changes = view != (_settings?.DockView ?? DockViewKind.Active)
+            || !string.Equals(tag, _settings?.DockTagFilter, StringComparison.OrdinalIgnoreCase) && view == DockViewKind.Tag;
         _coordinator.SetDockViewCoalesced(view, tag);
         _wheelViewUntil = DateTime.UtcNow + WheelSessionLength;
         HoldOpenForNextInteraction();
-        if (showLabel) ShowViewLabel(CurrentViewLabel());
+        if (!showLabel) return;
+        // The name of the view appears when the cards change (inside the swap), not the instant the wheel turns: it used to name the new view
+        // over cards that still showed the old one. With nothing to wait for (no animation, or the view did not change) it shows at once.
+        bool willSwap = changes && IsVisible && _fanState.IsExpanded && SystemParameters.ClientAreaAnimation;
+        if (willSwap) _labelOnSwap = true;
+        else ShowViewLabel(CurrentViewLabel());
     }
+
+    private bool _labelOnSwap;
 
     private void OnManageArchiveWheel(object sender, MouseWheelEventArgs e)
     {

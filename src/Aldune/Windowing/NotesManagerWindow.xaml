@@ -589,9 +589,10 @@
                       Style="{StaticResource DarkComboBoxStyle}" />
         </StackPanel>
 
-        <Grid x:Name="RowsHost" Grid.Row="2" Margin="20,56,20,0">
+        <!-- The thumb ends on the right limit of everything above (search, order, «+»: 20 px from the edge) and the rows stop 8 px before it. -->
+            <Grid x:Name="RowsHost" Grid.Row="2" Margin="20,56,17,0">
             <ScrollViewer x:Name="RowsScroll" VerticalScrollBarVisibility="Auto"
-                          HorizontalScrollBarVisibility="Disabled" Padding="0">
+                          HorizontalScrollBarVisibility="Disabled" Padding="0,0,5,0">
                 <ItemsControl x:Name="RowsList">
                     <ItemsControl.ItemTemplate>
                         <DataTemplate>

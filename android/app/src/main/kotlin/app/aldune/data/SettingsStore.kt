@@ -77,6 +77,8 @@ data class AppSettings(
     val tagColors: String = "",
     /** The tags that exist (`TagOrder.encode`), so one that loses its last note stays (empty) until it is deleted. Local, like on Windows, where tags are a table of their own. */
     val knownTags: String = "",
+    /** The tag groups folded in the grouped list (`CollapsedGroups.encode`), kept between runs. Local: it is how this device shows the list. */
+    val collapsedGroups: String = "",
     /** «#» delante de las etiquetas (por defecto sí, como en Windows); apagado, un icono pequeño de etiqueta. */
     val showTagHash: Boolean = true,
     /** Settings tabs as one row of emoji (the name of the open one is the heading below) instead of the grid of named chips. Android only; off by default. */
@@ -172,6 +174,7 @@ class SettingsStore(context: Context) {
             tagOrder = prefs.getString(TAG_ORDER, d.tagOrder) ?: d.tagOrder,
             tagColors = prefs.getString(TAG_COLORS, d.tagColors) ?: d.tagColors,
             knownTags = prefs.getString(KNOWN_TAGS, d.knownTags) ?: d.knownTags,
+            collapsedGroups = prefs.getString(COLLAPSED_GROUPS, d.collapsedGroups) ?: d.collapsedGroups,
             showTagHash = prefs.getBoolean(SHOW_TAG_HASH, d.showTagHash),
             compactSettingsTabs = prefs.getBoolean(COMPACT_SETTINGS_TABS, d.compactSettingsTabs),
             settingsTabsAtBottom = prefs.getBoolean(SETTINGS_TABS_AT_BOTTOM, d.settingsTabsAtBottom),
@@ -230,6 +233,7 @@ class SettingsStore(context: Context) {
             .putString(TAG_ORDER, settings.tagOrder)
             .putString(TAG_COLORS, settings.tagColors)
             .putString(KNOWN_TAGS, settings.knownTags)
+            .putString(COLLAPSED_GROUPS, settings.collapsedGroups)
             .putBoolean(SHOW_TAG_HASH, settings.showTagHash)
             .putBoolean(COMPACT_SETTINGS_TABS, settings.compactSettingsTabs)
             .putBoolean(SETTINGS_TABS_AT_BOTTOM, settings.settingsTabsAtBottom)
@@ -301,6 +305,7 @@ class SettingsStore(context: Context) {
         const val TAG_ORDER = "tagOrder"
         const val TAG_COLORS = "tagColors"
         const val KNOWN_TAGS = "knownTags"
+        const val COLLAPSED_GROUPS = "collapsedGroups"
         const val SHOW_TAG_HASH = "showTagHash"
         const val COMPACT_SETTINGS_TABS = "compactSettingsTabs"
         const val SETTINGS_TABS_AT_BOTTOM = "settingsTabsAtBottom"

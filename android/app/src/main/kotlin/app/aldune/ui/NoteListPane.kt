@@ -97,6 +97,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.text.font.FontWeight
 import app.aldune.text.NoteThemes
 import app.aldune.domain.TagColors
+import app.aldune.domain.CollapsedGroups
 import app.aldune.domain.TagDrop
 import app.aldune.domain.TagViewCycle
 import app.aldune.domain.TagGrouping
@@ -373,7 +374,8 @@ fun NoteListPane(
                 // Vista agrupada de «Todas las notas»: una cabecera plegable por etiqueta y, debajo, sus notas. Una nota con varias etiquetas sale
                 // bajo cada una (por eso su clave lleva la sección). Con búsqueda o con una etiqueta elegida se enseña la lista de siempre.
                 val grouped = settingsNow.groupByTag && state.tag == null && state.query.isBlank()
-                var collapsed by rememberSaveable { mutableStateOf(emptySet<String>()) }
+                // Kept in the settings, not just in the saved state of the screen: it has to survive closing the app, not only turning the phone.
+                val collapsed = remember(settingsNow.collapsedGroups) { CollapsedGroups.decode(settingsNow.collapsedGroups) }
                 val untaggedLabel = stringResource(R.string.group_untagged)
                 // Dragging a header reorders the tags: while it lasts every group is folded (equal rows to swap) and the groups follow the local
                 // order; the tag order is saved when the finger lifts.
@@ -682,7 +684,9 @@ fun NoteListPane(
                                         },
                                     ),
                                 onMenu = if (entry.key != TagGrouping.UNTAGGED) ({ tagMenu = entry.title }) else null,
-                            ) { collapsed = if (entry.key in collapsed) collapsed - entry.key else collapsed + entry.key }
+                            ) {
+                                viewModel.updateSettings { st -> st.copy(collapsedGroups = CollapsedGroups.encode(CollapsedGroups.toggle(CollapsedGroups.decode(st.collapsedGroups), entry.key))) }
+                            }
                         }
                         is ListEntry.Note -> {
                         val item = entry.item
