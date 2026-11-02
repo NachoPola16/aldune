@@ -208,8 +208,10 @@ public partial class SettingsWindow
             var wash = accent.CloneCurrentValue();
             wash.Opacity = 0.22;
             var pen = new Pen(accent, 2);
-            var rect = new System.Windows.Rect(-6, -3, AdornedElement.RenderSize.Width + 12, AdornedElement.RenderSize.Height + 6);
-            context.DrawRoundedRectangle(wash, pen, rect, 6, 6);
+            // Exactly over the element (the frame inside its edge): rows that touch each other (the list of looks) must not get a piece of the
+            // light on their neighbours.
+            var size = AdornedElement.RenderSize;
+            context.DrawRoundedRectangle(wash, pen, new System.Windows.Rect(1, 1, Math.Max(0, size.Width - 2), Math.Max(0, size.Height - 2)), 5, 5);
         }
     }
 }
