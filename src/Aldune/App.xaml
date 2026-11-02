@@ -423,6 +423,10 @@
         </Canvas>
 
 
+        <!-- Air at the ends of a vertical scroll bar; a window with its own geometry overrides it in its resources (the bar stops as far from
+             the bottom as the thumb is from the right edge). -->
+        <Thickness x:Key="ScrollBarMargin">0,4,0,4</Thickness>
+
         <!-- One scroll bar for the whole app: 16 px wide with a 10 px thumb in the middle, so the thumb sits centred under the window's close
              button when the window puts the bar's right edge 20 px from its own edge (Manage notes, Settings; the note does the same by shifting its bar). -->
         <Style TargetType="ScrollBar">
@@ -460,7 +464,7 @@
                 <!-- A vertical bar stops short of the bottom of its view (the same air the rows keep), so its end sits inside the content
                      instead of running into the footer or the window edge. -->
                 <Trigger Property="Orientation" Value="Vertical">
-                    <Setter Property="Margin" Value="0,2,0,10" />
+                    <Setter Property="Margin" Value="{DynamicResource ScrollBarMargin}" />
                 </Trigger>
             </Style.Triggers>
         </Style>

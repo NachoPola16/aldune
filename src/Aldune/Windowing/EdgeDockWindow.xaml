@@ -574,13 +574,11 @@
                         HorizontalAlignment="Center"
                         VerticalAlignment="Stretch"
                         Margin="0,8"
-                        Background="{DynamicResource AlduneDockBarBrush}"
-                        CornerRadius="{DynamicResource AlduneRadius4}"
-                        BorderBrush="{DynamicResource AlduneDockRailBorderBrush}"
-                        BorderThickness="1" />
+                        Background="Transparent"
+                        CornerRadius="{DynamicResource AlduneRadius4}" />
                 <Canvas x:Name="ScrollRailCanvas" Margin="0,8">
                     <Border x:Name="ScrollRailThumb"
-                            Width="8"
+                            Width="10"
                             Height="32"
                             Background="{DynamicResource AlduneDockThumbBrush}"
                             BorderBrush="{DynamicResource AlduneDockThumbBorderBrush}"

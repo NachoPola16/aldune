@@ -20,6 +20,8 @@
         <WindowChrome CaptionHeight="34" ResizeBorderThickness="6" GlassFrameThickness="-1" CornerRadius="0" />
     </WindowChrome.WindowChrome>
     <Window.Resources>
+        <!-- The list bar runs the whole height of the list, with the same small gap at both ends. -->
+        <Thickness x:Key="ScrollBarMargin">0,0,0,0</Thickness>
         <local:NoteTitleConverter x:Key="NoteTitleConverter" />
         <local:NoteLinkedConverter x:Key="NoteLinkedConverter" />
         <local:PinToTopTextConverter x:Key="PinToTopTextConverter" />
