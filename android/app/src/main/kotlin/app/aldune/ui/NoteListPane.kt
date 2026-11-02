@@ -21,6 +21,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableLongStateOf
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.input.pointer.pointerInput
@@ -35,6 +36,10 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.material3.ScaffoldDefaults
+import androidx.compose.foundation.layout.windowInsetsPadding
+import androidx.compose.foundation.layout.only
+import androidx.compose.foundation.layout.WindowInsetsSides
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.isImeVisible
 import androidx.compose.ui.platform.LocalConfiguration
@@ -240,7 +245,11 @@ fun NoteListPane(
         // engranaje estaban arriba y el «+» abajo, así que para buscar había que soltar la mano de donde se sujeta el móvil.
         bottomBar = {
             Row(
-                Modifier.fillMaxWidth().navigationBarsPadding().imePadding().padding(horizontal = 16.dp, vertical = 8.dp),
+                // The same side insets as the content above (the Scaffold's own: navigation bar and camera cut-out): on its side a phone with a notch
+                // drew the search box and the buttons under the cut-out, out of line with the tabs and the notes.
+                Modifier.fillMaxWidth()
+                    .windowInsetsPadding(ScaffoldDefaults.contentWindowInsets.only(WindowInsetsSides.Horizontal))
+                    .navigationBarsPadding().imePadding().padding(horizontal = 16.dp, vertical = 8.dp),
                 verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp),
             ) {
                 // El buscador no puede tomar el foco hasta que se toca: si lo toma al arrancar (primer elemento enfocable), Android abre el
@@ -872,10 +881,14 @@ fun NoteListPane(
 
 @Composable
 private fun SearchField(query: String, onChange: (String) -> Unit, modifier: Modifier = Modifier) {
+    // In a narrow pane (a phone on its side, the list beside the note) the box is too small for its own hint: the hint wrapped into three lines
+    // («Searc / h / notes»). Below this width it shows only the magnifier, which says as much, and the line is never wrapped.
+    var width by remember { mutableIntStateOf(Int.MAX_VALUE) }
+    val roomForHint = with(LocalDensity.current) { width.toDp() } >= 190.dp
     OutlinedTextField(
         value = query, onValueChange = onChange, singleLine = true,
-        modifier = modifier,
-        placeholder = { Text(stringResource(R.string.search_hint)) },
+        modifier = modifier.onSizeChanged { width = it.width },
+        placeholder = if (roomForHint) ({ Text(stringResource(R.string.search_hint), maxLines = 1, overflow = TextOverflow.Ellipsis) }) else null,
         leadingIcon = { Icon(Icons.Default.Search, contentDescription = null) },
         trailingIcon = {
             if (query.isNotEmpty()) {
