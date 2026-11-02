@@ -641,30 +641,20 @@ public partial class NoteWindow : Window
     private bool _closingAnimationDone;
 
     /// <summary>
-    /// Fundido + un ligero crecimiento desde el 95% del tamaño final, siempre ya en su posición
-    /// definitiva. Toda nota se abre igual, tanto si es la primera vez (recién sacada del dock)
-    /// como si recuerda su última posición (ver <see cref="AppCoordinator.TryRestorePlacement"/>):
-    /// antes esta última aparecía de golpe mientras que una nota nueva se deslizaba desde su
-    /// pestaña, y esa inconsistencia — más el propio deslizamiento largo por la pantalla, un
-    /// candidato más a verse brusco — es lo que esta animación reemplaza. <c>RenderTransformOrigin</c>
-    /// centrado para que crezca hacia dentro/fuera de su propio centro, no desde una esquina.
+    /// Fade-in, always already in its final position. Every note opens the same way, the first time (just taken out of the dock) and when it
+    /// remembers its last position (see <see cref="AppCoordinator.TryRestorePlacement"/>).
     /// </summary>
     internal void PlayOpenAnimation()
     {
         if (!SystemParameters.ClientAreaAnimation) return;
 
+        // Only a fade. The grow from 95 % this used to do scaled the text of the opaque window as it is drawn (Display formatting, snapped to
+        // the pixel grid): for the 150 ms it lasted the note looked pixelated and then sharpened when the scale reached 1.
         var content = (UIElement)Content;
-        content.RenderTransformOrigin = new Point(0.5, 0.5);
-        var scale = new ScaleTransform(0.95, 0.95);
-        content.RenderTransform = scale;
-
+        content.RenderTransform = Transform.Identity;
         var duration = new Duration(OpenDuration);
-        IEasingFunction Ease() => new QuinticEase { EasingMode = EasingMode.EaseOut };
-
         content.Opacity = 0;
-        content.BeginAnimation(OpacityProperty, new DoubleAnimation(0, 1, duration) { EasingFunction = Ease() });
-        scale.BeginAnimation(ScaleTransform.ScaleXProperty, new DoubleAnimation(0.95, 1, duration) { EasingFunction = Ease() });
-        scale.BeginAnimation(ScaleTransform.ScaleYProperty, new DoubleAnimation(0.95, 1, duration) { EasingFunction = Ease() });
+        content.BeginAnimation(OpacityProperty, new DoubleAnimation(0, 1, duration) { EasingFunction = new QuinticEase { EasingMode = EasingMode.EaseOut } });
     }
 
     /// <summary>Desplaza la nota suavemente al elegir otra plantilla de disposición (o al devolverla a
