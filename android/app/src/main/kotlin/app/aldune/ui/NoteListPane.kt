@@ -294,7 +294,7 @@ fun NoteListPane(
                 onTrash = { val ids = picked; ids.forEach(viewModel::trash); picked = emptySet(); announce(if (ids.size == 1) trashedMsg else String.format(trashedManyTpl, ids.size)) { ids.forEach(viewModel::restore) } },
                 onRestore = { val ids = picked; ids.forEach(viewModel::restore); picked = emptySet(); announce(if (ids.size == 1) restoredMsg else String.format(restoredManyTpl, ids.size)) { ids.forEach(viewModel::trash) } },
                 onTag = { taggingPicked = true },
-            ) else if (!tight) Row(Modifier.fillMaxWidth().padding(top = 8.dp, end = 8.dp), verticalAlignment = Alignment.CenterVertically) {
+            ) else if (!tight) Row(Modifier.fillMaxWidth().padding(top = 8.dp), verticalAlignment = Alignment.CenterVertically) {
                 Box(Modifier.weight(1f)) { StateTabs(state, viewModel::setFilter) }
                 if (hasProfile && status != null) {
                     val line = formatStatus(status, rememberNow())
@@ -961,8 +961,9 @@ private fun TagRow(
     var sheetOpen by remember { mutableStateOf(false) }
     if (sheetOpen) AllTagsDialog(groupOrder, state.tag, showHash, onSelect = { sheetOpen = false; onSelect(it) }, onMove = onMoveTag, onDismiss = { sheetOpen = false },
         untaggedLabel = stringResource(R.string.group_untagged), uniformColorOn = uniformColorOn, tagColors = tagColors, paletteColors = paletteColors, onSetColor = onSetTagColor)
-    // end = 8.dp: the same margin as the row above, so the arrow sits right under the sync status icon.
-    Row(Modifier.padding(bottom = 10.dp, end = 8.dp), verticalAlignment = Alignment.CenterVertically) {
+    // No end padding, like the row above: the 48 dp touch area puts the arrow (and the sync icon over it) about 18 dp from the edge, near the
+    // 16 dp where the notes end; with 8 dp more they sat 26 dp in, out of line with the notes and the new-note button.
+    Row(Modifier.padding(bottom = 10.dp), verticalAlignment = Alignment.CenterVertically) {
     Box(Modifier.weight(1f)) {
         LazyRow(
             // Space below the chips equal to the space between them and the tabs (it was 20 dp above and 8 dp below).

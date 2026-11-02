@@ -1040,8 +1040,13 @@ private fun EditBar(
     onRedo: () -> Unit,
     inline: Boolean = false,
 ) {
-    val width = if (inline) 44.dp else 64.dp
-    Row(if (inline) Modifier else Modifier.widthIn(max = BAR_MAX_WIDTH).fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly) {
+    // Not inline: five 48 dp buttons spread edge to edge, with the glyph of the first and the last about where the text of the note starts and ends
+    // (16 dp). Evenly spaced 64 dp buttons left the outer icons about 38 dp from the edges, out of line with the text above them.
+    val width = if (inline) 44.dp else 48.dp
+    Row(
+        if (inline) Modifier else Modifier.widthIn(max = BAR_MAX_WIDTH).fillMaxWidth().padding(horizontal = 4.dp),
+        horizontalArrangement = if (inline) Arrangement.SpaceEvenly else Arrangement.SpaceBetween,
+    ) {
         BarButton(EditorIcons.Checkbox, stringResource(R.string.edit_checkbox), onCheckbox, width = width)
         BarButton(EditorIcons.Bullets, stringResource(R.string.edit_bullet), onBullet, width = width)
         BarButton(EditorIcons.Indent, stringResource(R.string.edit_indent), onIndent, onLongClick = onOutdent, longClickLabel = stringResource(R.string.edit_outdent), width = width)
@@ -1056,9 +1061,9 @@ private val BAR_MAX_WIDTH = 480.dp
 @Composable
 private fun BarButton(
     icon: androidx.compose.ui.graphics.vector.ImageVector, description: String, onClick: () -> Unit, enabled: Boolean = true,
-    onLongClick: (() -> Unit)? = null, longClickLabel: String? = null, width: androidx.compose.ui.unit.Dp = 64.dp,
+    onLongClick: (() -> Unit)? = null, longClickLabel: String? = null, width: androidx.compose.ui.unit.Dp = 48.dp,
 ) {
-    // 64 × 48 dp: el alto mínimo táctil, y más ancho porque son cinco y no siete. Inactivo se atenúa a la mitad (con 0,38 casi desaparecía).
+    // 48 × 48 dp: el mínimo táctil (eran 64 de ancho, pero separaban los iconos de los bordes). Inactivo se atenúa a la mitad (con 0,38 casi desaparecía).
     Box(
         Modifier.size(width = width, height = 48.dp)
             .combinedClickable(enabled = enabled, role = Role.Button, onClickLabel = null, onLongClickLabel = longClickLabel, onLongClick = onLongClick, onClick = onClick)
