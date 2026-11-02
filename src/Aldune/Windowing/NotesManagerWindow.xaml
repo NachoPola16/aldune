@@ -33,6 +33,7 @@
         <local:ManagerRowFaceConverter x:Key="ManagerRowFaceConverter" />
         <local:ManagerRowInkConverter x:Key="ManagerRowInkConverter" />
         <local:ManagerRowRimConverter x:Key="ManagerRowRimConverter" />
+        <local:NoteFaceConverter x:Key="NoteFaceConverter" />
         <local:ManagerRowStripeVisibilityConverter x:Key="ManagerRowStripeVisibilityConverter" />
         <local:LeftCornersConverter x:Key="LeftCornersConverter" />
         <local:NoteSnippetConverter x:Key="NoteSnippetConverter" />
@@ -615,7 +616,7 @@
                                     >
                                 <Border.Style>
                                     <Style TargetType="Border">
-                                        <Setter Property="BorderBrush" Value="{Binding Note.Color, Converter={StaticResource ManagerRowRimConverter}}" />
+                                        <Setter Property="BorderBrush" Value="{Binding Note, Converter={StaticResource ManagerRowRimConverter}}" />
                                         <Setter Property="BorderThickness" Value="1" />
                                         <Setter Property="Opacity" Value="0.96" />
                                         <Style.Triggers>
@@ -641,7 +642,7 @@
 
                                     <!-- With "note colour only on the edge" the row keeps the app's surface and this is the colour: a stripe on the left, like the dock cards. It covers the 1 px rim so the colour reaches the row's own corner (inside the rim it left a grey hairline). -->
                                     <Border Grid.ColumnSpan="2" HorizontalAlignment="Left" Width="5" Margin="-13,-9,0,-9" CornerRadius="{Binding CornerRadius, RelativeSource={RelativeSource AncestorType=Border}, Converter={StaticResource LeftCornersConverter}}"
-                                            Background="{Binding Note.Color, Converter={StaticResource NoteDisplayColorConverter}}"
+                                            Background="{Binding Note, Converter={StaticResource NoteFaceConverter}, ConverterParameter=Accent}"
                                             Visibility="{Binding Note.Color, Converter={StaticResource ManagerRowStripeVisibilityConverter}}"
                                             IsHitTestVisible="False" />
 

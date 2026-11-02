@@ -41,12 +41,16 @@ public sealed class ManagerRowInkConverter : IValueConverter
 public sealed class ManagerRowRimConverter : IValueConverter
 {
     private static readonly NoteRimConverter Filled = new();
-    private static readonly NoteDisplayColorConverter Colour = new();
+    private static readonly NoteFaceConverter Face = new();
 
     // With the colour on the edge only, the 1 px outline of the row is the note's colour too: the line goes all round the row (the stripe on the
     // left is the thicker part of it) instead of a grey frame with a coloured bar glued to one side. Square or rounded, it follows the row.
+    // The colour is the dock card's own (NoteFace: limited for contrast against the look's background, the channel colour in Telecom), so a
+    // note has the same colour on its tab and in its row. The value is the note itself, not its colour string.
     public object Convert(object? value, Type targetType, object? parameter, CultureInfo culture) =>
-        ManagerRows.ColourOnEdgeOnly ? Colour.Convert(value, targetType, parameter, culture) : Filled.Convert(value, targetType, parameter, culture);
+        ManagerRows.ColourOnEdgeOnly
+            ? Face.Convert(value, targetType, "Accent", culture)
+            : Filled.Convert(value is Note note ? note.Color : value, targetType, parameter, culture);
 
     public object ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture) => throw new NotSupportedException();
 }
