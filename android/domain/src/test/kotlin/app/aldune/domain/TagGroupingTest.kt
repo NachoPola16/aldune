@@ -53,4 +53,28 @@ class TagGroupingTest {
         val first = TagGrouping.group(items, listOf(TagGrouping.UNTAGGED, "a", "b")) { it.tags }
         assertEquals(listOf(null, "a", "b"), first.map { it.tag })
     }
+
+    @Test
+    fun `an empty tag goes after every group that has notes`() {
+        val keys = TagGrouping.sectionKeys(sequence = listOf("a", "empty", "b", TagGrouping.UNTAGGED), present = setOf("a", "b", TagGrouping.UNTAGGED), dragging = false)
+        assertEquals(listOf("a", "b", TagGrouping.UNTAGGED, "empty"), keys)
+    }
+
+    @Test
+    fun `while tags are dragged they keep their own order`() {
+        val keys = TagGrouping.sectionKeys(sequence = listOf("a", "empty", "b"), present = setOf("a", "b"), dragging = true)
+        assertEquals(listOf("a", "empty", "b"), keys)
+    }
+
+    @Test
+    fun `a group the order does not know yet goes last and nothing is hidden`() {
+        val keys = TagGrouping.sectionKeys(sequence = listOf("a"), present = setOf("a", "new"), dragging = false)
+        assertEquals(listOf("a", "new"), keys)
+    }
+
+    @Test
+    fun `section keys are lower case and not repeated`() {
+        val keys = TagGrouping.sectionKeys(sequence = listOf("Casa", "casa"), present = setOf("casa"), dragging = false)
+        assertEquals(listOf("casa"), keys)
+    }
 }

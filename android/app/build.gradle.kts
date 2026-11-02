@@ -106,6 +106,8 @@ dependencies {
 android.sourceSets.getByName("androidTest").assets.directories.add("$projectDir/schemas")
 
 dependencies {
+    // JVM tests of the app module: they read the sources and resources (no Android runtime), e.g. that Settings and its search stay in step.
+    testImplementation(libs.junit4)
     androidTestImplementation(libs.androidx.test.ext.junit)
     androidTestImplementation(libs.androidx.test.runner)
     androidTestImplementation(libs.androidx.room.testing)

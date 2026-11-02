@@ -96,6 +96,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.text.font.FontWeight
 import app.aldune.text.NoteThemes
 import app.aldune.domain.TagColors
+import app.aldune.domain.TagDrop
 import app.aldune.domain.TagGrouping
 import app.aldune.domain.TagOrder
 import androidx.compose.runtime.rememberCoroutineScope
@@ -382,13 +383,8 @@ fun NoteListPane(
                         val sequence = tagDragOrder ?: groupOrder
                         val groups = TagGrouping.group(order, sequence) { it.tags }
                         val byKey = groups.associateBy { it.tag?.lowercase() ?: TagGrouping.UNTAGGED }
-                        // Every tag has its group, in the order of the tags, an empty one too (a note can be dropped on it); a group the order does not
-                        // know yet goes last, so no note is ever hidden.
-                        val all = (sequence.map { it.lowercase() } + byKey.keys).distinct()
-                        // An empty tag goes to the end by itself, below every group that has notes, so it does not take room up in the list; while the
-                        // tags are being dragged they keep their own order, which is the one the drag works on.
-                        val keys = if (tagDrag != null) all else all.filter { it in byKey } + all.filter { it !in byKey }
-                        for (groupKey in keys) {
+                        // Every tag has its group, an empty one too, which goes after those with notes (see `sectionKeys`).
+                        for (groupKey in TagGrouping.sectionKeys(sequence, byKey.keys, dragging = tagDrag != null)) {
                             val group = byKey[groupKey]
                             if (group == null && groupKey == TagGrouping.UNTAGGED) continue
                             val title = group?.tag ?: if (groupKey == TagGrouping.UNTAGGED) untaggedLabel else sequence.first { it.lowercase() == groupKey }
@@ -575,28 +571,20 @@ fun NoteListPane(
                         val to = tagOf(target)
                         // Its place in the other tag: where it was let go (over a note: before or after it by the half; over the header: first).
                         val inTarget = order.filter { n -> n.id != id && (if (to == null) n.tags.isEmpty() else n.tags.any { t -> t.equals(to, ignoreCase = true) }) }.map { n -> n.id }
-                        val at = if (onId == null) 0 else (inTarget.indexOf(onId).takeIf { it >= 0 } ?: inTarget.size).let { if (below) it + 1 else it }
-                        val beforeId = inTarget.getOrNull(at - 1)
-                        val afterId = inTarget.getOrNull(at)
+                        val place = TagDrop.place(inTarget, onId, below)
                         // The note shows in its new group at once: waiting for the saved list, it jumped back to its old place for a frame.
-                        order = order.map { n ->
-                            if (n.id != id) n else {
-                                val kept = n.tags.filterNot { t -> from != null && t.equals(from, ignoreCase = true) }
-                                n.copy(tags = if (to != null && kept.none { t -> t.equals(to, ignoreCase = true) }) kept + to else kept)
-                            }
-                        }
-                        if (beforeId != null || afterId != null) {
+                        order = order.map { n -> if (n.id != id) n else n.copy(tags = TagDrop.retag(n.tags, from, to)) }
+                        if (place.hasNeighbours) {
                             val moved = order.first { n -> n.id == id }
                             val without = order.filter { n -> n.id != id }
-                            val index = if (afterId != null) without.indexOfFirst { n -> n.id == afterId } else without.indexOfFirst { n -> n.id == beforeId } + 1
-                            order = without.toMutableList().apply { add(index, moved) }
+                            order = without.toMutableList().apply { add(TagDrop.insertIndex(without.map { n -> n.id }, place), moved) }
                         }
                         // The list keeps its place by the key of its first visible row; if that row is the header of the tag that just emptied
                         // (it goes to the end), the list would follow it all the way down. Asking for the same place before the change is
                         // laid out keeps the view where it was, with no frame in between.
                         listState.requestScrollToItem(listState.firstVisibleItemIndex, listState.firstVisibleItemScrollOffset)
                         viewModel.moveNoteToTag(id, from, to)
-                        if (beforeId != null || afterId != null) viewModel.moveNote(id, beforeId, afterId)
+                        if (place.hasNeighbours) viewModel.moveNote(id, place.before, place.after)
                         val shownTo = to ?: untaggedLabel
                         announce(String.format(movedTagTpl, shownTo)) { viewModel.moveNoteToTag(id, to, from) }
                     } else if (plan != null) viewModel.moveNote(id, plan.before, plan.after) else order = state.items

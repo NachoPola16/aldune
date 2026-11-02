@@ -97,6 +97,7 @@ internal val SETTINGS_INDEX: List<SettingsEntry> = listOf(
     SettingsEntry(2, R.string.hide_done_tasks, R.string.hide_done_tasks_hint),
     SettingsEntry(2, R.string.hide_done_after),
 
+    SettingsEntry(3, R.string.settings_tab_colors),
     SettingsEntry(3, R.string.note_theme),
     SettingsEntry(3, R.string.new_note_tone),
     SettingsEntry(3, R.string.color_rule),
@@ -107,6 +108,8 @@ internal val SETTINGS_INDEX: List<SettingsEntry> = listOf(
     SettingsEntry(4, R.string.add_tile, R.string.add_tile_hint, R.string.capture_section),
     SettingsEntry(4, R.string.add_widget, R.string.add_widget_hint, R.string.capture_section),
     SettingsEntry(4, R.string.quick_list, R.string.quick_list_hint, R.string.capture_section),
+    SettingsEntry(4, R.string.widget_preview, R.string.widget_preview_hint, R.string.capture_section),
+    SettingsEntry(4, R.string.widget_tasks, R.string.widget_tasks_hint, R.string.capture_section),
     SettingsEntry(4, R.string.reminders_section),
     SettingsEntry(4, R.string.reminder_exact, R.string.reminder_exact_hint, R.string.reminders_section),
     SettingsEntry(4, R.string.reminder_includes_tasks, R.string.reminder_includes_tasks_hint, R.string.reminders_section),
@@ -122,9 +125,11 @@ internal val SETTINGS_INDEX: List<SettingsEntry> = listOf(
     SettingsEntry(5, R.string.sync_title),
     SettingsEntry(5, R.string.sync_now, group = R.string.sync_title),
     SettingsEntry(5, R.string.sync_transport_server, group = R.string.sync_title), SettingsEntry(5, R.string.sync_transport_webdav, group = R.string.sync_title),
+    SettingsEntry(5, R.string.sync_in_background, R.string.sync_in_background_hint, R.string.sync_title),
     SettingsEntry(5, R.string.backup_section),
     SettingsEntry(5, R.string.export_all, R.string.export_all_hint, R.string.backup_section),
     SettingsEntry(5, R.string.auto_export, R.string.auto_export_hint, R.string.backup_section),
+    SettingsEntry(5, R.string.auto_export_archived, group = R.string.backup_section),
 )
 
 /**

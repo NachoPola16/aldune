@@ -12,7 +12,9 @@ import app.aldune.export.AutoExportStatus
 import app.aldune.export.AutoExportWork
 import app.aldune.data.SettingsStore
 import app.aldune.domain.NoteVersion
+import app.aldune.domain.KnownTags
 import app.aldune.domain.TagColors
+import app.aldune.domain.TagDrop
 import app.aldune.domain.TagOrder
 import app.aldune.core.ProtectedNotes
 import app.aldune.core.UnlockedProtectedNote
@@ -467,7 +469,7 @@ class NotesViewModel(application: Application) : AndroidViewModel(application) {
         if (_state.value.let { it is UiState.Ready && it.tag.equals(from, ignoreCase = true) }) setTag(name)
         change {
             it.renameTag(from, name)
-            updateSettings { st -> st.copy(knownTags = TagOrder.encode(TagOrder.decode(st.knownTags).map { t -> if (t.equals(from, ignoreCase = true)) name else t })) }
+            updateSettings { st -> st.copy(knownTags = TagOrder.encode(KnownTags.rename(TagOrder.decode(st.knownTags), from, name))) }
         }
     }
 
@@ -483,7 +485,7 @@ class NotesViewModel(application: Application) : AndroidViewModel(application) {
         change {
             if (withNotes) it.trashNotesWithTag(tag) else it.removeTag(tag)
             // Forgotten only now, once no note carries it: a refresh in between would have remembered it again.
-            updateSettings { st -> st.copy(knownTags = TagOrder.encode(TagOrder.decode(st.knownTags).filterNot { t -> t.equals(tag, ignoreCase = true) })) }
+            updateSettings { st -> st.copy(knownTags = TagOrder.encode(KnownTags.forget(TagOrder.decode(st.knownTags), tag))) }
         }
     }
 
@@ -922,10 +924,7 @@ class NotesViewModel(application: Application) : AndroidViewModel(application) {
 
     /** Moves a note from the tag [from] to the tag [to] (`null` = no tag): drops the first and adds the second, leaving its other tags alone. */
     fun moveNoteToTag(noteId: String, from: String?, to: String?) = change { service ->
-        service.get(noteId)?.let { note ->
-            val kept = note.tags.filterNot { from != null && it.equals(from, ignoreCase = true) }
-            service.setTags(noteId, if (to != null && kept.none { it.equals(to, ignoreCase = true) }) kept + to else kept)
-        }
+        service.get(noteId)?.let { note -> service.setTags(noteId, TagDrop.retag(note.tags, from, to)) }
     }
 
     fun archive(id: String) = change { it.archive(id) }.also { sounds.play(SoundEvent.NOTE_ARCHIVED) }
@@ -986,10 +985,9 @@ class NotesViewModel(application: Application) : AndroidViewModel(application) {
         // The tags that exist: the ones on the notes plus the ones remembered. A tag whose last note moved elsewhere stays, empty, until it is
         // deleted on purpose (as on Windows); the active view is the one that lists them all, the others only list what they hold.
         val known = TagOrder.decode(_settings.value.knownTags)
-        val knownKeys = known.map { it.lowercase() }.toHashSet()
         val inUse = (notes.list(NoteState.ACTIVE) + notes.list(NoteState.ARCHIVED)).flatMap { it.tags }.distinctBy { it.lowercase() }
-        val fresh = inUse.filter { it.lowercase() !in knownKeys }
-        if (fresh.isNotEmpty()) updateSettings { st -> st.copy(knownTags = TagOrder.encode((TagOrder.decode(st.knownTags) + fresh).distinctBy { it.lowercase() })) }
+        val fresh = KnownTags.fresh(known, inUse)
+        if (fresh.isNotEmpty()) updateSettings { st -> st.copy(knownTags = TagOrder.encode(KnownTags.remember(TagOrder.decode(st.knownTags), inUse))) }
         val shownTags = notes.list(current.filter).flatMap { it.tags } + if (current.filter == NoteState.ACTIVE) known + fresh else emptyList()
         val tags = shownTags.distinctBy { it.lowercase() }.let { TagOrder.apply(it, TagOrder.decode(_settings.value.tagOrder)) }
         val orphans = ready?.conflicts?.orphans().orEmpty().mapNotNull { conflict ->
