@@ -186,8 +186,11 @@ public sealed class AppSettings
     /// <summary>Whether the tags (those with notes) are stops of the wheel; off, it only goes round the views (Active, Archived, Trash, All).</summary>
     public bool WheelStopTags { get; set; } = true;
 
+    /// <summary>Tags the wheel passes over (they stay in the gear menu and can be chosen by hand). Empty by default: every tag with notes is a stop.</summary>
+    public List<string> WheelSkipTags { get; set; } = [];
+
     /// <summary>Las paradas de la rueda según los ajustes.</summary>
-    public DockViewCycle.Stops WheelStops => new(WheelStopArchived, WheelStopTrash, WheelStopAll, WheelStopTags);
+    public DockViewCycle.Stops WheelStops => new(WheelStopArchived, WheelStopTrash, WheelStopAll, WheelStopTags, WheelSkipTags);
 
     /// <summary>
     /// Borde de la pantalla donde se ancla el dock de Aldune. Por defecto derecha (EdgePosition.Right).
@@ -312,6 +315,9 @@ public sealed class AppSettings
     /// apagada, las tarjetas quedan planas. Solo Windows: Android no tiene dock.
     /// </summary>
     public bool DockCardShadow { get; set; } = true;
+
+    /// <summary>A fifth round button in the dock's bar (a tag) that opens the list of views and changes view with the wheel. Off by default: the wheel on the gear and the fixed view label already do it.</summary>
+    public bool DockViewButton { get; set; }
 
     /// <summary>
     /// Oscuro, claro o como Windows. Solo el chrome: las notas conservan su tema. Un archivo antiguo sin el campo sigue en

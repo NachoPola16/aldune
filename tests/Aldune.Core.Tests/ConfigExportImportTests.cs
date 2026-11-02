@@ -366,13 +366,13 @@ public class ConfigExportImportTests
             "customThemes", "newNoteTone", "colorAssignment", "fixedNoteColor",
             "language", "simplifiedMode", "hotkeyEnabled", "hotkeyModifiers", "hotkeyKey",
             "recentHotkeyEnabled", "recentHotkeyModifiers", "recentHotkeyKey",
-            "managerHotkeyEnabled", "managerHotkeyModifiers", "managerHotkeyKey", "dockEdge", "dockAlignment", "dockViewLabel", "dockView", "dockCardShadow",
+            "managerHotkeyEnabled", "managerHotkeyModifiers", "managerHotkeyKey", "dockEdge", "dockAlignment", "dockViewLabel", "dockView", "dockViewButton", "dockCardShadow",
             "keepDockOpen", "showNotePreview", "hideOnFullscreen", "wheelChangesDockView", "wheelStopArchived", "wheelStopTrash", "wheelStopAll", "wheelStopTags", "trackpadGestures", "largeCheckboxes", "moveCompletedTasksToEnd",
             "autoHideCompletedTasks", "autoHideDelayValue", "autoHideDelayUnit", "trashRetentionDays",
             "rememberNotePositions", "rememberNoteSizes", "checkForUpdates", "reminderIncludesTasks", "textScale",
         ];
 
-        Assert.Equal(47, expected.Length);
+        Assert.Equal(48, expected.Length);
         Assert.Equal(expected, ConfigFields.All.Select(f => f.Id).ToArray());
     }
 
@@ -382,6 +382,7 @@ public class ConfigExportImportTests
         ["WrappedDatabaseKey"] = "clave de la base de datos, protegida por DPAPI en este equipo",
         ["LastSeenVersion"] = "qué novedades ya se enseñaron en este equipo",
         ["TagOrder"] = "orden propio de las etiquetas: es de este equipo, como en Android",
+        ["WheelSkipTags"] = "etiquetas que la rueda del dock pasa de largo: nombres de etiquetas de este equipo, como su orden",
         ["TagColors"] = "color de cada etiqueta: es de este equipo; lo que viaja es el color de cada nota",
         ["SyncEnabled"] = "sincronización: es de este equipo y de su perfil",
         ["SyncTransport"] = "sincronización: transporte del perfil",

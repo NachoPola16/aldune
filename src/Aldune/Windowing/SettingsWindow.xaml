@@ -766,6 +766,15 @@
                                    Foreground="{DynamicResource AlduneHintBrush}" FontSize="{DynamicResource AlduneTextSmall}" TextWrapping="Wrap" Margin="0,6,56,0" />
                     </StackPanel>
                     <StackPanel Margin="0,20,0,0">
+                        <CheckBox x:Name="DockViewButtonCheck"
+                                  Content="{x:Static res:Strings.DockViewButtonCheckbox}"
+                                  Foreground="{DynamicResource AlduneTextBrush}" Background="{DynamicResource AlduneGroundBrush}" FontSize="{DynamicResource AlduneTextBody}"
+                                  Style="{StaticResource SettingsSwitchStyle}"
+                                  Click="OnDockViewButtonToggled" />
+                        <TextBlock Text="{x:Static res:Strings.DockViewButtonHint}"
+                                   Foreground="{DynamicResource AlduneHintBrush}" FontSize="{DynamicResource AlduneTextSmall}" TextWrapping="Wrap" Margin="0,6,56,0" />
+                    </StackPanel>
+                    <StackPanel Margin="0,20,0,0">
                         <CheckBox x:Name="ShowNotePreviewCheck"
                                   Content="{x:Static res:Strings.ShowNotePreviewCheckbox}"
                                   Foreground="{DynamicResource AlduneTextBrush}" Background="{DynamicResource AlduneGroundBrush}" FontSize="{DynamicResource AlduneTextBody}"
@@ -829,6 +838,10 @@
                             <CheckBox x:Name="WheelStopTagsCheck" Content="{x:Static res:Strings.WheelStopTags}" Margin="0,10,0,0"
                                       Foreground="{DynamicResource AlduneTextBrush}" Background="{DynamicResource AlduneGroundBrush}" FontSize="{DynamicResource AlduneTextBody}"
                                       Style="{StaticResource SettingsSwitchStyle}" Click="OnWheelStopsToggled" />
+                            <!-- One switch per tag: an unticked one is passed over by the wheel (it stays in the gear menu). -->
+                            <TextBlock x:Name="WheelTagsHint" Text="{x:Static res:Strings.WheelTagsHint}" Margin="0,14,56,0" TextWrapping="Wrap"
+                                       Foreground="{DynamicResource AlduneHintBrush}" FontSize="{DynamicResource AlduneTextSmall}" />
+                            <StackPanel x:Name="WheelTagList" Margin="0,2,0,0" />
                         </StackPanel>
                     </StackPanel>
                 </StackPanel>

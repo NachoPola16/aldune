@@ -26,6 +26,30 @@ public sealed class DockViewCycleTests
     }
 
     [Fact]
+    public void ATagTheUserLeftOutIsNeverAStop_ButTheOthersAre()
+    {
+        var counts = Counts(3, 0, 0, ("casa", 2), ("secreta", 1), ("trabajo", 1));
+        var stops = new DockViewCycle.Stops(SkipTags: ["Secreta"]);
+        var seen = new List<string?>();
+        (DockViewKind view, string? tag) = (DockViewKind.Active, null);
+        for (int i = 0; i < 4; i++)
+        {
+            (view, tag) = DockViewCycle.Next(view, tag, counts, +1, stops);
+            seen.Add(view == DockViewKind.Tag ? tag : view.ToString());
+        }
+        Assert.Equal(["casa", "trabajo", "Active", "casa"], seen);
+    }
+
+    [Fact]
+    public void ALeftOutTagStillWorksFromWhereItWasChosenByHand()
+    {
+        var counts = Counts(3, 0, 0, ("casa", 2), ("secreta", 1), ("trabajo", 1));
+        var stops = new DockViewCycle.Stops(SkipTags: ["secreta"]);
+        Assert.Equal((DockViewKind.Tag, "trabajo"), DockViewCycle.Next(DockViewKind.Tag, "secreta", counts, +1, stops));
+        Assert.Equal((DockViewKind.Tag, "casa"), DockViewCycle.Next(DockViewKind.Tag, "secreta", counts, -1, stops));
+    }
+
+    [Fact]
     public void ForwardFollowsTheUsersOwnTagOrder()
     {
         var counts = new DockViewCycle.Counts(3, 0, 0,

@@ -551,9 +551,6 @@
                 </ItemsControl>
                 </ScrollViewer>
 
-                <!-- Snapshot of the tabs a change of view replaces: it fades out over the new ones fading in (see SnapshotTabs). -->
-                <Image x:Name="TabsGhost" Visibility="Collapsed" IsHitTestVisible="False" Stretch="None" />
-
             <!-- Indicador propio del dock: queda superpuesto al borde de las tarjetas y no consume
                  ancho del viewport como el ScrollBar de WPF. El desplazamiento sigue haciéndose
                  con la rueda; aquí solo mostramos la posición y cuánto contenido queda. -->
@@ -660,6 +657,16 @@
                         <Grid>
                             <TextBlock Text="&#xE713;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" FontSize="14" />
                         </Grid>
+                    </Button>
+                    <!-- Optional (Settings -> Dock): the list of views without having to keep the view label up. Click opens it, the wheel changes view. -->
+                    <Button x:Name="ViewButton" Click="OnViewButtonClick"
+                            PreviewMouseWheel="OnManageArchiveWheel"
+                            Visibility="Collapsed"
+                            Width="32" Height="32" Margin="1,0"
+                            Style="{StaticResource CircularIconButtonStyle}"
+                            ToolTip="{x:Static res:Strings.ViewButtonTooltip}"
+                            AutomationProperties.Name="{x:Static res:Strings.ViewButtonTooltip}">
+                        <TextBlock Text="&#xE8EC;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" FontSize="14" />
                     </Button>
                     <Button x:Name="SyncButton" Click="OnSyncClick"
                             PreviewMouseRightButtonUp="OnSyncRightClick"

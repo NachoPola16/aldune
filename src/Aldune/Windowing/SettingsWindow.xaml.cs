@@ -763,6 +763,13 @@ public partial class SettingsWindow : Window
         _coordinator?.RebuildDocks();
     }
 
+    private void OnDockViewButtonToggled(object sender, RoutedEventArgs e)
+    {
+        _settings.DockViewButton = DockViewButtonCheck.IsChecked == true;
+        _settingsService.Save(_settings);
+        _coordinator?.RebuildDocks();
+    }
+
     private void OnShowNotePreviewToggled(object sender, RoutedEventArgs e)
     {
         _settings.ShowNotePreview = ShowNotePreviewCheck.IsChecked == true;
@@ -983,8 +990,42 @@ public partial class SettingsWindow : Window
         _settingsService.Save(_settings);
     }
 
+    /// <summary>One switch per tag: unticked, the wheel of the dock passes over it (it stays in the gear menu and can still be chosen by hand).</summary>
+    private void PopulateWheelTags()
+    {
+        WheelTagList.Children.Clear();
+        var tags = _coordinator?.GetSyncTags() ?? [];
+        WheelTagsHint.Visibility = WheelTagList.Visibility = tags.Count == 0 ? Visibility.Collapsed : Visibility.Visible;
+        foreach (var tag in tags)
+        {
+            var check = new CheckBox
+            {
+                Content = "#" + tag,
+                Tag = tag,
+                Margin = new Thickness(0, 8, 0, 0),
+                IsChecked = !_settings.WheelSkipTags.Contains(tag, StringComparer.OrdinalIgnoreCase),
+                IsEnabled = _settings.WheelStopTags,
+                FontSize = (double)FindResource("AlduneTextBody"),
+                Style = (Style)FindResource("SettingsSwitchStyle"),
+            };
+            check.SetResourceReference(Control.ForegroundProperty, "AlduneTextBrush");
+            check.SetResourceReference(Control.BackgroundProperty, "AlduneGroundBrush");
+            check.Click += OnWheelTagToggled;
+            WheelTagList.Children.Add(check);
+        }
+    }
+
+    private void OnWheelTagToggled(object sender, RoutedEventArgs e)
+    {
+        if (sender is not CheckBox { Tag: string tag } check) return;
+        _settings.WheelSkipTags.RemoveAll(t => string.Equals(t, tag, StringComparison.OrdinalIgnoreCase));
+        if (check.IsChecked != true) _settings.WheelSkipTags.Add(tag);
+        _settingsService.Save(_settings);
+    }
+
     private void OnWheelStopsToggled(object sender, RoutedEventArgs e)
     {
+        foreach (var check in WheelTagList.Children.OfType<CheckBox>()) check.IsEnabled = WheelStopTagsCheck.IsChecked == true;
         _settings.WheelStopArchived = WheelStopArchivedCheck.IsChecked == true;
         _settings.WheelStopTrash = WheelStopTrashCheck.IsChecked == true;
         _settings.WheelStopAll = WheelStopAllCheck.IsChecked == true;
@@ -2406,6 +2447,7 @@ public partial class SettingsWindow : Window
         KeepDockOpenCheck.IsChecked = _settings.KeepDockOpen;
         ShowNotePreviewCheck.IsChecked = _settings.ShowNotePreview;
         DockCardShadowCheck.IsChecked = _settings.DockCardShadow;
+        DockViewButtonCheck.IsChecked = _settings.DockViewButton;
         ReminderIncludesTasksCheck.IsChecked = _settings.ReminderIncludesTasks;
         SoundsEnabledCheck.IsChecked = _settings.SoundsEnabled;
         BuildSoundRows();
@@ -2418,6 +2460,7 @@ public partial class SettingsWindow : Window
         WheelStopTrashCheck.IsChecked = _settings.WheelStopTrash;
         WheelStopAllCheck.IsChecked = _settings.WheelStopAll;
         WheelStopTagsCheck.IsChecked = _settings.WheelStopTags;
+        PopulateWheelTags();
         UpdateUniformColorUi();
         UpdateColorsLookNotice();
         SyncSignalCheck.IsChecked = _settings.SyncSignalVisible;

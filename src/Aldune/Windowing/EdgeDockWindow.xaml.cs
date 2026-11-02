@@ -134,6 +134,7 @@ public partial class EdgeDockWindow : Window
         _repository = repository;
         _coordinator = coordinator;
         _settings = settings;
+        ViewButton.Visibility = settings?.DockViewButton == true ? Visibility.Visible : Visibility.Collapsed;
         _keyboardHookProc = OnGlobalKeyboardHook;
         _mouseHookProc = OnGlobalMouseHook;
 
@@ -1007,6 +1008,26 @@ public partial class EdgeDockWindow : Window
         _lastTagFilter = tagFilter;
         UpdateViewIndicator();
         ApplyFooterPadding();
+        if (viewChanged && IsVisible && _fanState.IsExpanded && SystemParameters.ClientAreaAnimation)
+        {
+            SwapNotesThroughFade();
+        }
+        else
+        {
+            _viewSwapToken++; // a swap still waiting for its fade is superseded by this one
+            ResetTabsFadeIfStuck();
+            SetNotes(LoadNotesForView(), animateArrivals: !viewChanged, fadeAll: viewChanged);
+        }
+        if (viewChanged)
+        {
+            HoldHoverDuringLayout();
+            UpdateTagAwareTooltips();
+        }
+    }
+
+    private IReadOnlyList<Note> LoadNotesForView()
+    {
+        var view = _settings?.DockView ?? DockViewKind.Active;
         var notes = view switch
         {
             DockViewKind.Archived => _repository.GetByState(NoteState.Archived),
@@ -1021,12 +1042,50 @@ public partial class EdgeDockWindow : Window
         // hacer que su ventana y su pestaña discrepen. Con la vista Activa sin filtro ya está cargado.
         NoteChannelDisplay.Set(view == DockViewKind.Active ? notes : _repository.GetByState(NoteState.Active));
         LinkedNoteDisplay.Set(_repository.GetFileLinks());
-        SetNotes(notes, animateArrivals: !viewChanged, fadeAll: viewChanged);
-        if (viewChanged)
+        return notes;
+    }
+
+    private int _viewSwapToken;
+
+    private void ResetTabsFadeIfStuck()
+    {
+        if (TabsScroll.Opacity < 1 || TabsScroll.HasAnimatedProperties)
         {
-            HoldHoverDuringLayout();
-            UpdateTagAwareTooltips();
+            TabsScroll.BeginAnimation(OpacityProperty, null);
+            TabsScroll.Opacity = 1;
         }
+    }
+
+    /// <summary>
+    /// A change of view fades through nothing: the old tabs fade out (short), the list and the window change while the strip is invisible, and the
+    /// new ones fade in. Cross-fading the two lists put two sets of text on top of each other and the new tabs showed for a frame at full strength
+    /// before their own fade started (a blink); this never shows both, and a resize of the window happens while nothing is drawn. Turns of the wheel
+    /// in a row restart it from wherever the strip is, and the notes are loaded only when the swap happens.
+    /// </summary>
+    private void SwapNotesThroughFade()
+    {
+        int token = ++_viewSwapToken;
+        var fadeOut = new DoubleAnimation(0, new Duration(TimeSpan.FromMilliseconds(75))) { EasingFunction = EaseOut() };
+        fadeOut.Completed += (_, _) =>
+        {
+            if (token != _viewSwapToken) return;
+            TabsScroll.BeginAnimation(OpacityProperty, null);
+            TabsScroll.Opacity = 0;
+            SetNotes(LoadNotesForView(), animateArrivals: false, fadeAll: false);
+            var fadeIn = new DoubleAnimation(0, 1, new Duration(TimeSpan.FromMilliseconds(140))) { EasingFunction = EaseOut() };
+            fadeIn.Completed += (_, _) =>
+            {
+                if (token != _viewSwapToken) return;
+                TabsScroll.BeginAnimation(OpacityProperty, null);
+                TabsScroll.Opacity = 1;
+            };
+            // After the layout of the new list, so it never shows for a frame at full strength.
+            Dispatcher.BeginInvoke(DispatcherPriority.Loaded, new Action(() =>
+            {
+                if (token == _viewSwapToken) TabsScroll.BeginAnimation(OpacityProperty, fadeIn);
+            }));
+        };
+        TabsScroll.BeginAnimation(OpacityProperty, fadeOut);
     }
 
     /// <summary>
@@ -1114,10 +1173,6 @@ public partial class EdgeDockWindow : Window
         _knownNoteIds = notes.Select(n => n.Id).ToHashSet();
         _pendingReminders = _repository.GetPendingReminders();
 
-        // A change of view swaps every tab. Without a snapshot the old ones vanished in one frame and the new ones faded in from nothing: a
-        // blink. Now the old ones stay as a picture that fades out while the new ones fade in.
-        bool crossfade = fadeAll && _fanState.IsExpanded && SystemParameters.ClientAreaAnimation && SnapshotTabs();
-
         _tabButtons.Clear();
         TabsScroll.ScrollToHome();
         TabsList.ItemsSource = notes;
@@ -1162,7 +1217,6 @@ public partial class EdgeDockWindow : Window
 
         Dispatcher.BeginInvoke(DispatcherPriority.Loaded, new Action(() =>
         {
-            if (crossfade) FadeOutTabsGhost();
             RefreshOpenState();
             UpdateScrollIndicator();
 
@@ -1179,8 +1233,7 @@ public partial class EdgeDockWindow : Window
             {
                 if (fadeAll && SystemParameters.ClientAreaAnimation)
                 {
-                    // With the old tabs still fading out underneath, the new ones come in together (a small ripple) and not from an empty strip.
-                    PlayEntrance(button, crossfade ? Math.Min(ripple++, 5) * 10 : Math.Min(ripple++, 8) * 16, slideIn: false, durationMs: crossfade ? ViewCrossfadeMs : FanTiming.TabSweepMs);
+                    PlayEntrance(button, Math.Min(ripple++, 8) * 16, slideIn: false);
                 }
                 else if (button.Tag is Note note && arrived.Contains(note.Id))
                 {
@@ -1192,51 +1245,6 @@ public partial class EdgeDockWindow : Window
                 }
             }
         }));
-    }
-
-    private const double ViewCrossfadeMs = 150;
-
-    /// <summary>Puts a picture of the tabs as they are over them, so a change of view can fade it out. False when there is nothing to show.</summary>
-    private bool SnapshotTabs()
-    {
-        double width = TabsScroll.ActualWidth, height = TabsScroll.ActualHeight;
-        if (width < 1 || height < 1 || _tabButtons.Count == 0) return false;
-        try
-        {
-            var dpi = VisualTreeHelper.GetDpi(this);
-            var bitmap = new System.Windows.Media.Imaging.RenderTargetBitmap(
-                (int)Math.Ceiling(width * dpi.DpiScaleX), (int)Math.Ceiling(height * dpi.DpiScaleY), 96 * dpi.DpiScaleX, 96 * dpi.DpiScaleY, PixelFormats.Pbgra32);
-            bitmap.Render(TabsScroll);
-            bitmap.Freeze();
-            TabsGhost.BeginAnimation(OpacityProperty, null);
-            TabsGhost.Source = bitmap;
-            TabsGhost.Width = width;
-            TabsGhost.Height = height;
-            TabsGhost.HorizontalAlignment = TabsScroll.HorizontalAlignment;
-            TabsGhost.VerticalAlignment = TabsScroll.VerticalAlignment;
-            TabsGhost.Margin = TabsScroll.Margin;
-            TabsGhost.Opacity = 1;
-            TabsGhost.Visibility = Visibility.Visible;
-            return true;
-        }
-        catch (Exception ex) when (ex is InvalidOperationException or ArgumentException or OutOfMemoryException)
-        {
-            // Not worth a failure: the view still changes, just with the plain fade.
-            TabsGhost.Visibility = Visibility.Collapsed;
-            return false;
-        }
-    }
-
-    private void FadeOutTabsGhost()
-    {
-        var fade = new DoubleAnimation(1, 0, new Duration(TimeSpan.FromMilliseconds(ViewCrossfadeMs))) { EasingFunction = EaseOut() };
-        fade.Completed += (_, _) =>
-        {
-            TabsGhost.BeginAnimation(OpacityProperty, null);
-            TabsGhost.Visibility = Visibility.Collapsed;
-            TabsGhost.Source = null;
-        };
-        TabsGhost.BeginAnimation(OpacityProperty, fade);
     }
 
     private void OnTabsScrollChanged(object sender, ScrollChangedEventArgs e) => UpdateScrollIndicator();
@@ -1835,6 +1843,13 @@ public partial class EdgeDockWindow : Window
         e.Handled = true;
     }
 
+    private void OnViewButtonClick(object sender, RoutedEventArgs e)
+    {
+        e.Handled = true;
+        if (_dockViewToggle.ShouldConsumeOpen()) return;
+        OpenDockViewPopupFrom(ViewButton);
+    }
+
     private void OnManageArchiveRightClick(object sender, MouseButtonEventArgs e)
     {
         if (_dockViewToggle.ShouldConsumeOpen())
@@ -2193,7 +2208,7 @@ public partial class EdgeDockWindow : Window
         DockViewMenuPanel.Visibility = labelOptions ? Visibility.Collapsed : Visibility.Visible;
         DockLabelMenuPanel.Visibility = labelOptions ? Visibility.Visible : Visibility.Collapsed;
         // Opened from the fixed label, the menu appears next to the label (the thing that was clicked), not down at the button bar.
-        DockViewPopup.PlacementTarget = ReferenceEquals(trigger, _viewLabelBorder) && trigger is FrameworkElement label ? label : ManageArchiveButton;
+        DockViewPopup.PlacementTarget = (ReferenceEquals(trigger, _viewLabelBorder) || ReferenceEquals(trigger, ViewButton)) && trigger is FrameworkElement label ? label : ManageArchiveButton;
         DockViewPopup.Placement = _edge switch
         {
             EdgePosition.Top => PlacementMode.Bottom,
