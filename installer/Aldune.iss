@@ -35,6 +35,14 @@ Compression=lzma2/max
 SolidCompression=yes
 ; "dynamic": claro u oscuro según el tema de Windows, como el resto del sistema (Inno Setup 6.6+).
 WizardStyle=modern dynamic
+; Panel de bienvenida y ficha de la cabecera con el símbolo de la marca (generados por scripts/branding/generar-iconos.py,
+; uno por escala de pantalla: 100, 125, 150 y 200 %). El fondo es el marrón del logo, que se ve bien en el tema claro y en el oscuro.
+WizardImageFile=assets\wizard-164x314.png,assets\wizard-192x366.png,assets\wizard-246x459.png,assets\wizard-328x628.png
+WizardSmallImageFile=assets\wizard-small-55.png,assets\wizard-small-64.png,assets\wizard-small-80.png,assets\wizard-small-110.png
+; Enlaces que Windows enseña en «Aplicaciones instaladas».
+AppPublisherURL=https://github.com/NachoPola16/aldune
+AppSupportURL=https://github.com/NachoPola16/aldune/issues
+AppUpdatesURL=https://github.com/NachoPola16/aldune/releases
 ; Sin preguntar el idioma si el de Windows es uno de los dos del instalador: ese diálogo sale antes de
 ; InitializeSetup, con Aldune todavía abierta, y quedaba tapado por sus ventanas. Con otro idioma de
 ; Windows se sigue preguntando.
@@ -77,6 +85,16 @@ Root: HKCU; Subkey: "Software\Classes\Aldune.LinkedNote\shell\open\command"; Val
 Root: HKCU; Subkey: "Software\Classes\.md\OpenWithProgids"; ValueType: string; ValueName: "Aldune.LinkedNote"; ValueData: ""; Flags: uninsdeletevalue
 Root: HKCU; Subkey: "Software\Classes\.markdown\OpenWithProgids"; ValueType: string; ValueName: "Aldune.LinkedNote"; ValueData: ""; Flags: uninsdeletevalue
 Root: HKCU; Subkey: "Software\Classes\.txt\OpenWithProgids"; ValueType: string; ValueName: "Aldune.LinkedNote"; ValueData: ""; Flags: uninsdeletevalue
+
+[Messages]
+; Bienvenida con una frase que tranquiliza a quien actualiza: sus notas y ajustes no se tocan.
+english.WelcomeLabel2=This will install [name/ver] on your computer.%n%nYour notes and settings are kept when you update.
+spanish.WelcomeLabel2=Esto instalará [name/ver] en tu equipo.%n%nAl actualizar se conservan tus notas y ajustes.
+german.WelcomeLabel2=Dies installiert [name/ver] auf deinem Computer.%n%nBeim Aktualisieren bleiben deine Notizen und Einstellungen erhalten.
+french.WelcomeLabel2=Ceci va installer [name/ver] sur votre ordinateur.%n%nVos notes et vos réglages sont conservés lors d'une mise à jour.
+brazilianportuguese.WelcomeLabel2=Isto instalará o [name/ver] no seu computador.%n%nSuas notas e configurações são mantidas ao atualizar.
+italian.WelcomeLabel2=Verrà installato [name/ver] sul computer.%n%nLe note e le impostazioni vengono conservate durante l'aggiornamento.
+japanese.WelcomeLabel2=[name/ver] をコンピューターにインストールします。%n%nアップデートしても、ノートと設定はそのまま残ります。
 
 [CustomMessages]
 english.CloseAldune=Aldune is still running. Close it (tray icon > Exit) and press Retry.

@@ -219,6 +219,19 @@ def main():
     rasterizar(ficha, 512, fondo=FONDO, forma="ficha").save(out / "aldune-logo-512.png", optimize=True)
     rasterizar(ficha, 128, fondo=FONDO, forma="ficha").save(out / "aldune-logo-128.png", optimize=True)
 
+    # Imágenes del asistente del instalador (installer/Aldune.iss): el panel grande de bienvenida y la ficha pequeña de la cabecera,
+    # a los tamaños que Inno Setup elige según la escala de pantalla (100, 125, 150 y 200 %). Símbolo solo, sobre el fondo del logo.
+    inst = RAIZ / "installer" / "assets"
+    inst.mkdir(parents=True, exist_ok=True)
+    for ancho, alto in ((164, 314), (192, 366), (246, 459), (328, 628)):
+        lado = round(ancho * 0.62)
+        panel = Image.new("RGBA", (ancho, alto), hex_rgb(FONDO))
+        simb = rasterizar(ficha, lado, forma="libre")
+        panel.alpha_composite(simb, ((ancho - lado) // 2, round(alto * 0.20)))
+        panel.convert("RGB").save(inst / f"wizard-{ancho}x{alto}.png", optimize=True)
+    for lado in (55, 64, 80, 110):
+        rasterizar(ficha, lado, fondo=FONDO, forma="ficha").save(inst / f"wizard-small-{lado}.png", optimize=True)
+
     # Favicon: el símbolo sobre su ficha, 16/32/48
     escribir_ico(out / "favicon.ico", [(px, rasterizar(pequeno if px <= 24 else ficha, px, fondo=FONDO, forma="ficha")) for px in (16, 32, 48)])
     (out / "favicon.svg").write_text(svg_ficha(pequeno, ""), encoding="utf-8")
