@@ -479,7 +479,8 @@
                     </DataTemplate>
                 </ItemsControl.ItemTemplate>
             </ItemsControl>
-            <local:BevelEdge Margin="0,-5,0,0" />
+            <!-- The -5 top margin cancels the 5 px of top padding that the strip has on the side docks; on the top and bottom ones there is no padding (code). -->
+            <local:BevelEdge x:Name="RestStripBevel" Margin="0,-5,0,0" />
             </Grid>
         </Border>
 

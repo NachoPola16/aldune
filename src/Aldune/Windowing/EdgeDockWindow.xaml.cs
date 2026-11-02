@@ -355,6 +355,9 @@ public partial class EdgeDockWindow : Window
             ? new Thickness(0, 5, 0, 0)
             : new Thickness(0, 0, 0, 5);
         RestStrip.Padding = new Thickness(0);
+        // No padding here, so nothing to cancel: with the -5 the relief stuck out 5 px over the edge of the strip (an extra band of light grey on the
+        // top and bottom docks in the looks that have relief).
+        RestStripBevel.Margin = new Thickness(0);
         RestList.ItemsPanel = (ItemsPanelTemplate)FindResource("HorizontalItemsPanelTemplate");
         RestList.ItemTemplate = (DataTemplate)FindResource("HorizontalRestDashTemplate");
         // Cada guion lleva margen derecho para crear el hueco entre elementos. Se descuenta el
