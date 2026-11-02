@@ -1,4 +1,4 @@
-using System.Security.Cryptography;
+﻿using System.Security.Cryptography;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using Aldune.Core;
@@ -159,5 +159,33 @@ public sealed class SyncLookTests
         Assert.Null(SyncLook.Open(Key, [1, 2, 3]));
         Assert.Null(SyncLook.Open(Key, System.Text.Encoding.UTF8.GetBytes("""{"c":"!","n":"!","t":"!"}""")));
         Assert.Null(SyncLook.Open(Key, []));
+    }
+
+    // The look travels with the colours as chosen, and each device fits them to the look when it draws: a colour that would not be readable
+    // here must come out as readable on the device that receives it, the same as on the one that chose it.
+    [Theory]
+    [InlineData("#000000")]
+    [InlineData("#FFFFFF")]
+    [InlineData("#808080")]
+    public void ColoursThatArriveBySyncAreFittedForContrastLikeLocalOnes(string hostile)
+    {
+        foreach (var aspect in AspectCatalog.Retro)
+        {
+            var source = new AppSettings
+            {
+                Appearance = aspect.Mode,
+                AspectColors = new() { [aspect.Id] = aspect.Slots.ToDictionary(slot => slot.Id, _ => hostile) },
+            };
+            var target = new AppSettings();
+
+            SyncLook.Apply(target, Json(SyncLook.Capture(source).ToJsonString()));
+
+            var chosen = target.ColorsFor(aspect.Mode);
+            var received = AspectPalettes.Derive(aspect.Mode, AspectCatalog.Resolve(aspect.Mode, chosen));
+            var local = AspectPalettes.Derive(aspect.Mode, AspectCatalog.Resolve(aspect.Mode, source.ColorsFor(aspect.Mode)));
+            Assert.Equal(local, received);
+            foreach (var text in new[] { "Text", "TextStrong" })
+                Assert.True(ColorFit.Ratio(received[text], received["Ground"]) >= 4.5, $"{aspect.Id} {text} on Ground with {hostile}");
+        }
     }
 }
