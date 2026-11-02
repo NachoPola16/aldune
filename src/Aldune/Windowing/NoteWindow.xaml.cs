@@ -363,6 +363,14 @@ public partial class NoteWindow : Window
         DataObject.AddPastingHandler(TextBody, OnBodyPasting);
         TextBody.PreviewMouseLeftButtonDown += OnBodyMouseDown;
         TextBody.MouseMove += OnBodyMouseMove;
+        // The drag is followed in the tunnelling event: the TextBox captures the mouse and marks MouseMove as handled while it tracks a selection,
+        // so the bubbling handler below never saw the pointer move during a drag.
+        TextBody.PreviewMouseMove += (_, e) =>
+        {
+            if (_dragFromLine < 0) return;
+            UpdateTaskDrag(e.GetPosition(TextBody));
+            e.Handled = true;
+        };
         TextBody.PreviewMouseLeftButtonUp += (_, e) => { if (_dragFromLine >= 0) { EndTaskDrag(drop: true); e.Handled = true; } };
         TextBody.LostMouseCapture += (_, _) => EndTaskDrag(drop: false);
         TextBody.MouseLeave += OnBodyMouseLeave;

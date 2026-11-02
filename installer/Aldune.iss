@@ -35,10 +35,16 @@ Compression=lzma2/max
 SolidCompression=yes
 ; "dynamic": claro u oscuro según el tema de Windows, como el resto del sistema (Inno Setup 6.6+).
 WizardStyle=modern dynamic
+; Inno Setup hides the welcome page by default; it is where the large panel with the symbol and the line about keeping notes are shown.
+DisableWelcomePage=no
 ; Panel de bienvenida y ficha de la cabecera con el símbolo de la marca (generados por scripts/branding/generar-iconos.py,
 ; uno por escala de pantalla: 100, 125, 150 y 200 %). El fondo es el marrón del logo, que se ve bien en el tema claro y en el oscuro.
 WizardImageFile=assets\wizard-164x314.png,assets\wizard-192x366.png,assets\wizard-246x459.png,assets\wizard-328x628.png
 WizardSmallImageFile=assets\wizard-small-55.png,assets\wizard-small-64.png,assets\wizard-small-80.png,assets\wizard-small-110.png
+; WizardStyle "dynamic" takes the images below when Windows is in dark mode (without them the wizard showed no panel there). The artwork is the same: it
+; already sits on the dark brown of the logo.
+WizardImageFileDynamicDark=assets\wizard-164x314.png,assets\wizard-192x366.png,assets\wizard-246x459.png,assets\wizard-328x628.png
+WizardSmallImageFileDynamicDark=assets\wizard-small-55.png,assets\wizard-small-64.png,assets\wizard-small-80.png,assets\wizard-small-110.png
 ; Enlaces que Windows enseña en «Aplicaciones instaladas».
 AppPublisherURL=https://github.com/NachoPola16/aldune
 AppSupportURL=https://github.com/NachoPola16/aldune/issues
