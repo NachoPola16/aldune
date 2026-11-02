@@ -53,6 +53,12 @@ public sealed record DockHoverTuning(TimeSpan RestDwell, bool EdgePressOpens)
     public static readonly TimeSpan EngagedCloseDelay = TimeSpan.FromMilliseconds(400);
 
     /// <summary>
+    /// Cierre cuando el dock acaba de abrir una ventana propia (Gestionar notas, Ajustes) y el cursor se fue a ella: el trabajo ya está allí, así
+    /// que no hace falta la espera de «perdonar temblores», pero tampoco se pliega de golpe.
+    /// </summary>
+    public static readonly TimeSpan OwnWindowCloseDelay = TimeSpan.FromMilliseconds(200);
+
+    /// <summary>
     /// Por encima de esta velocidad (DIP/ms) el cursor va de paso: la espera en la tira vuelve a
     /// empezar. 1,5 DIP/ms son 75 DIP entre dos sondeos de 50 ms.
     /// </summary>
@@ -81,6 +87,7 @@ public sealed class DockHoverPolicy
     private TimeSpan? _outsideSince;
     private bool _engaged;
     private bool _pressedInside;
+    private bool _ownWindowOpen;
 
     public DockHoverPolicy(DockHoverTuning tuning) => _tuning = tuning;
 
@@ -112,10 +119,14 @@ public sealed class DockHoverPolicy
         IsPointerInside = true;
     }
 
+    /// <summary>The dock has just opened a window of its own: once the cursor leaves, it closes sooner than usual (until the cursor comes back).</summary>
+    public void OwnWindowOpened() => _ownWindowOpen = true;
+
     /// <summary>El dock se ha plegado por otra razón (pantalla completa, ocultarlo a mano).</summary>
     public void Collapsed()
     {
         _engaged = false;
+        _ownWindowOpen = false;
         _outsideSince = null;
         _dwellStart = null;
         IsPointerInside = false;
@@ -131,15 +142,17 @@ public sealed class DockHoverPolicy
             _outsideSince = null;
             IsPointerInside = true;
             if (sample.OnTarget) _engaged = true;
+            _ownWindowOpen = false; // back on the dock: the usual delays apply again
             return DockHoverDecision.None;
         }
 
         IsPointerInside = false;
         _outsideSince ??= sample.Time;
-        var delay = _engaged ? DockHoverTuning.EngagedCloseDelay : DockHoverTuning.QuickCloseDelay;
+        var delay = _ownWindowOpen ? DockHoverTuning.OwnWindowCloseDelay : _engaged ? DockHoverTuning.EngagedCloseDelay : DockHoverTuning.QuickCloseDelay;
         if (sample.Time - _outsideSince < delay) return DockHoverDecision.None;
 
         _engaged = false;
+        _ownWindowOpen = false;
         _outsideSince = null;
         return DockHoverDecision.Close;
     }

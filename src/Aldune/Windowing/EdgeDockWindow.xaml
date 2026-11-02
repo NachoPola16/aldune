@@ -303,9 +303,11 @@
                              mitad de ellos. Sobre fondo claro lo delatan el relleno y la sombra;
                              sobre fondo oscuro, el aro. Cualquiera de los dos basta. -->
                         <Grid>
+                            <!-- Two layers: an effect rasterizes what it is applied to at a fixed resolution, so the ring that carried it came out soft.
+                                 The shadow stays on a layer of its own and the ring and the fill are drawn without effect, at the real resolution. -->
+                            <Ellipse x:Name="BgShadow" Fill="{TemplateBinding Background}" Effect="{StaticResource ButtonShadow}" />
                             <Ellipse x:Name="Bg" Fill="{TemplateBinding Background}"
-                                     Stroke="#8FA79E90" StrokeThickness="1"
-                                     Effect="{StaticResource ButtonShadow}" />
+                                     Stroke="#8FA79E90" StrokeThickness="1" />
                             <Rectangle x:Name="SquareBg" Fill="{TemplateBinding Background}"
                                        Stroke="#8FA79E90" StrokeThickness="1"
                                        Effect="{StaticResource ButtonShadow}" Visibility="Collapsed" />
@@ -335,6 +337,7 @@
                             </Trigger>
                             <DataTrigger Binding="{Binding Square, Source={x:Static local:SkinState.Current}}" Value="True">
                                 <Setter TargetName="Bg" Property="Visibility" Value="Collapsed" />
+                                <Setter TargetName="BgShadow" Property="Visibility" Value="Collapsed" />
                                 <Setter TargetName="SquareBg" Property="Visibility" Value="Visible" />
                                 <Setter TargetName="SquareBg" Property="Effect" Value="{x:Null}" />
                             </DataTrigger>

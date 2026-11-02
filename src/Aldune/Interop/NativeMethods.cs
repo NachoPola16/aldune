@@ -23,6 +23,14 @@ internal static class NativeMethods
     private const uint SWP_NOMOVE = 0x0002;
     private const uint SWP_NOACTIVATE = 0x0010;
     private const uint SWP_FRAMECHANGED = 0x0020;
+    private const uint SWP_NOZORDER = 0x0004;
+
+    /// <summary>
+    /// Moves and resizes a window in one step, in device pixels, without activating it or touching its z-order. Setting a WPF window's Left, Top, Width
+    /// and Height one by one makes it pass through states that mix the old and the new rectangle, and a frame can be drawn in one of them.
+    /// </summary>
+    internal static bool SetBounds(IntPtr hwnd, int x, int y, int width, int height) =>
+        SetWindowPos(hwnd, IntPtr.Zero, x, y, width, height, SWP_NOZORDER | SWP_NOACTIVATE);
 
     [DllImport("user32.dll", SetLastError = true)]
     [return: MarshalAs(UnmanagedType.Bool)]

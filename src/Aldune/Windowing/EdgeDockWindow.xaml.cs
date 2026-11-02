@@ -72,6 +72,9 @@ public partial class EdgeDockWindow : Window
     /// </summary>
     private static readonly TimeSpan HoverOpenGrace = TimeSpan.FromMilliseconds(1200);
 
+    /// <summary>The grace after opening the manager or Settings: enough for the window to appear and take the focus; the dock does not hold on for longer.</summary>
+    private static readonly TimeSpan OwnWindowGrace = TimeSpan.FromMilliseconds(500);
+
     /// <summary>Hasta cuándo vale <see cref="HoverOpenGrace"/>; <c>MinValue</c> si no hay ninguno.</summary>
     private DateTime _hoverGraceUntil = DateTime.MinValue;
 
@@ -490,10 +493,31 @@ public partial class EdgeDockWindow : Window
     private void ApplyWindowRect()
     {
         var rect = EdgeGeometry.WindowRect(_workingArea, _edge, _noteCount, Alignment);
+        if (_hwnd != IntPtr.Zero && IsVisible)
+        {
+            // One step: with four separate assignments the window passed through a rectangle that mixed the old position and the new size.
+            var dpi = VisualTreeHelper.GetDpi(this);
+            int Px(double dip, double scale) => (int)Math.Round(dip * scale, MidpointRounding.AwayFromZero);
+            if (NativeMethods.SetBounds(_hwnd, Px(rect.X, dpi.DpiScaleX), Px(rect.Y, dpi.DpiScaleY), Px(rect.Width, dpi.DpiScaleX), Px(rect.Height, dpi.DpiScaleY))) return;
+        }
         Left = rect.X;
         Top = rect.Y;
         Width = rect.Width;
         Height = rect.Height;
+    }
+
+    /// <summary>Runs <paramref name="action"/> after <paramref name="frames"/> frames have been rendered (one tick of CompositionTarget.Rendering is one frame).</summary>
+    private static void AfterFrames(int frames, Action action)
+    {
+        int seen = 0;
+        EventHandler? handler = null;
+        handler = (_, _) =>
+        {
+            if (++seen < frames) return;
+            CompositionTarget.Rendering -= handler;
+            action();
+        };
+        CompositionTarget.Rendering += handler;
     }
 
     private void PollHoverState()
@@ -1079,11 +1103,9 @@ public partial class EdgeDockWindow : Window
         if (_viewLabelPopup is { IsOpen: true } && !_viewLabelTimer.IsEnabled) FadeViewLabel(show: false);
 
         var fadeOut = new DoubleAnimation(0, new Duration(TimeSpan.FromMilliseconds(deck ? DeckGatherMs - 35 : 75))) { EasingFunction = EaseOut(), BeginTime = TimeSpan.FromMilliseconds(deck ? 35 : 0) };
-        fadeOut.Completed += (_, _) =>
+        void SwapNow()
         {
-            if (token != _viewSwapToken) return;
-            NotesColumn.BeginAnimation(OpacityProperty, null);
-            NotesColumn.Opacity = 0;
+            if (token != _viewSwapToken) { Opacity = 1; return; }
             foreach (var old in _tabButtons.Values)
                 if (old.RenderTransform is TranslateTransform { IsFrozen: false } oldMove) { oldMove.BeginAnimation(TranslateTransform.YProperty, null); oldMove.Y = 0; }
             SetNotes(LoadNotesForView(), animateArrivals: false, fadeAll: false);
@@ -1105,6 +1127,7 @@ public partial class EdgeDockWindow : Window
                 bool flash = _labelOnSwap;
                 _labelOnSwap = false;
                 UpdateTagAwareTooltips();
+                AfterFrames(4, () => Opacity = 1);
                 var labelTimer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(deck ? DeckSpreadMs * 0.6 : 90) };
                 labelTimer.Tick += (_, _) =>
                 {
@@ -1115,6 +1138,17 @@ public partial class EdgeDockWindow : Window
                 };
                 labelTimer.Start();
             }));
+        }
+        fadeOut.Completed += (_, _) =>
+        {
+            if (token != _viewSwapToken) return;
+            NotesColumn.BeginAnimation(OpacityProperty, null);
+            NotesColumn.Opacity = 0;
+            // The whole window goes transparent and that has to reach the screen BEFORE the window changes size: while the interface thread builds the
+            // new cards, the composition thread keeps showing the last picture it was given (the old layout) pinned to the top-left corner of the
+            // enlarged window, and the button bar was seen there for about 30 ms. Two frames later the window is already invisible.
+            Opacity = 0;
+            AfterFrames(2, SwapNow);
         };
         NotesColumn.BeginAnimation(OpacityProperty, fadeOut);
     }
@@ -1903,7 +1937,7 @@ public partial class EdgeDockWindow : Window
     private void OnManageArchiveClick(object sender, RoutedEventArgs e)
     {
         HoldHoverDuringLayout();
-        HoldOpenForWindow();
+        HoldOpenForWindow(ownWindow: true);
         _coordinator.OpenOrActivateNotesManager(this, CurrentTagFilter);
         e.Handled = true;
     }
@@ -2483,7 +2517,7 @@ public partial class EdgeDockWindow : Window
 
     private void OnSyncRightClick(object sender, MouseButtonEventArgs e)
     {
-        HoldOpenForWindow();
+        HoldOpenForWindow(ownWindow: true);
         _coordinator.OpenSettings("Sync");
         e.Handled = true;
     }
@@ -3506,9 +3540,11 @@ public partial class EdgeDockWindow : Window
     /// Margen de cortesía al abrir otra ventana desde este dock. Fija el estado de hover para que el
     /// sondeo no lo cierre bajo los pies mientras la nueva ventana roba el foco.
     /// </summary>
-    private void HoldOpenForWindow()
+    private void HoldOpenForWindow(bool ownWindow = false)
     {
-        _hoverGraceUntil = DateTime.UtcNow.Add(HoverOpenGrace);
+        _hoverGraceUntil = DateTime.UtcNow.Add(ownWindow ? OwnWindowGrace : HoverOpenGrace);
+        // A window the dock opens for the work (the notes manager, Settings): when the cursor goes over to it, the dock folds sooner than usual.
+        if (ownWindow) _hover.OwnWindowOpened();
         _hover.Hold();
         if (_noteCount > 0 && !_fanState.IsExpanded) _fanState.PointerEntered();
     }

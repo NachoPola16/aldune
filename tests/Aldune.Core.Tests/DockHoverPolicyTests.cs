@@ -32,6 +32,31 @@ public class DockHoverPolicyTests
         return (DockHoverDecision.None, -1);
     }
 
+    // --- Cerrar tras abrir una ventana propia -----------------------------------------------------
+
+    [Fact]
+    public void AfterOpeningAWindowOfItsOwn_TheDockClosesFasterOnceTheCursorLeaves_ButNotAtOnce()
+    {
+        var policy = new DockHoverPolicy(DockHoverTuning.PhysicalEdge);
+        policy.OwnWindowOpened();
+        var (decision, at) = Run(policy, 0, 2000, t => Sample(t, expanded: true, zone: false));
+        Assert.Equal(DockHoverDecision.Close, decision);
+        Assert.Equal(DockHoverTuning.OwnWindowCloseDelay.TotalMilliseconds, at); // counted from the first sample outside
+        Assert.True(DockHoverTuning.OwnWindowCloseDelay > DockHoverTuning.QuickCloseDelay);
+        Assert.True(DockHoverTuning.OwnWindowCloseDelay < DockHoverTuning.EngagedCloseDelay);
+    }
+
+    [Fact]
+    public void ComingBackToTheDock_GoesBackToTheNormalDelay()
+    {
+        var policy = new DockHoverPolicy(DockHoverTuning.PhysicalEdge);
+        policy.OwnWindowOpened();
+        Assert.Equal(DockHoverDecision.None, policy.Update(Sample(0, expanded: true, zone: true, target: true)));
+        var (decision, at) = Run(policy, 50, 2000, t => Sample(t, expanded: true, zone: false));
+        Assert.Equal(DockHoverDecision.Close, decision);
+        Assert.Equal(DockHoverTuning.EngagedCloseDelay.TotalMilliseconds + 50, at);
+    }
+
     // --- Abrir ----------------------------------------------------------------------------------
 
     [Fact]
