@@ -1066,13 +1066,13 @@ public partial class EdgeDockWindow : Window
     /// A change of view fades through nothing, with the cards moving like a deck: the old ones are gathered into a pile at the end next to the
     /// button bar and fade out; the list, the window and the name of the view change while nothing is drawn; the new ones come out of that same
     /// pile and spread to their places. The strip is never drawn with both lists (two sets of text on top of each other) and a window that
-    /// grows or shrinks (a tag with more or fewer notes) does so unseen, so nothing jumps. On the top and bottom edges, or with very many
-    /// notes, it is the plain fade. Turns of the wheel in a row restart it from wherever the strip is; the notes are loaded when the swap happens.
+    /// grows or shrinks (a tag with more or fewer notes) does so unseen, so nothing jumps. On every edge the pile is at the end next to the button bar (the top card on the top edge, the last one on the others). With very many
+    /// notes it is the plain fade. Turns of the wheel in a row restart it from wherever the strip is; the notes are loaded when the swap happens.
     /// </summary>
     private void SwapNotesThroughFade()
     {
         int token = ++_viewSwapToken;
-        bool deck = _edge is EdgePosition.Left or EdgePosition.Right && _tabButtons.Count is > 1 and <= 14;
+        bool deck = _tabButtons.Count is > 1 and <= 14;
         if (deck) AnimateDeck(gather: true);
 
         var fadeOut = new DoubleAnimation(0, new Duration(TimeSpan.FromMilliseconds(deck ? DeckGatherMs - 35 : 75))) { EasingFunction = EaseOut(), BeginTime = TimeSpan.FromMilliseconds(deck ? 35 : 0) };
@@ -1096,7 +1096,7 @@ public partial class EdgeDockWindow : Window
             Dispatcher.BeginInvoke(DispatcherPriority.Loaded, new Action(() =>
             {
                 if (token != _viewSwapToken) return;
-                if (_edge is EdgePosition.Left or EdgePosition.Right && _tabButtons.Count is > 1 and <= 14) AnimateDeck(gather: false);
+                if (_tabButtons.Count is > 1 and <= 14) AnimateDeck(gather: false);
                 TabsScroll.BeginAnimation(OpacityProperty, fadeIn);
                 if (_labelOnSwap) { _labelOnSwap = false; ShowViewLabel(CurrentViewLabel()); }
             }));
