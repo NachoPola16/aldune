@@ -157,8 +157,8 @@ private const val KEYBOARD_DELAY_MS = 250L
 /** Lo que el campo no puede enfocarse al abrir una nota que no abre el teclado: lo que tarda Android en repartir el foco inicial. */
 private const val FOCUS_SETTLE_MS = 700L
 private val CheckboxSpan = SpanStyle(fontFamily = FontFamily(Font(R.font.aldune_check)))
-// The arrow of a bullet line in Roboto is a hairline at the height of the lowercase letters, next to text it looks lost: heavier, it reads as a bullet.
-private val BulletSpan = SpanStyle(fontWeight = androidx.compose.ui.text.font.FontWeight.Bold)
+// The arrow of a bullet line in Roboto is a hairline at the height of the lowercase letters, below the middle of the capitals: heavier and a little raised it reads as a bullet centred on the text.
+private val BulletSpan = SpanStyle(fontWeight = androidx.compose.ui.text.font.FontWeight.Bold, baselineShift = androidx.compose.ui.text.style.BaselineShift(0.16f))
 private val LinkSpan = SpanStyle(textDecoration = androidx.compose.ui.text.style.TextDecoration.Underline)
 private val LargeCheckboxSpan = SpanStyle(fontFamily = FontFamily(Font(R.font.aldune_check_large)))
 
