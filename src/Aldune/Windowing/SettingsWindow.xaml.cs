@@ -2170,6 +2170,7 @@ public partial class SettingsWindow : Window
         if (tag is NoteTone tone) _settings.NewNoteTone = tone;
         if (tag is NoteColorAssignment rule) _settings.ColorAssignment = rule;
         SaveThemeSettings(rebuild: false);
+        OfferApplyToExistingNotes();
     }
 
     private void OnThemeSelectionChanged(object sender, SelectionChangedEventArgs e)
@@ -2184,6 +2185,7 @@ public partial class SettingsWindow : Window
     {
         _settings.ActiveThemeId = id;
         SaveThemeSettings(rebuild);
+        if (!rebuild) OfferApplyToExistingNotes();
     }
 
     private void OnFixedColorClick(object sender, RoutedEventArgs e)
@@ -2242,7 +2244,11 @@ public partial class SettingsWindow : Window
         SaveThemeSettings();
     }
 
-    private void OnApplyThemeClick(object sender, RoutedEventArgs e)
+    private void OnApplyThemeClick(object sender, RoutedEventArgs e) => OfferApplyToExistingNotes();
+
+    /// <summary>Asks whether the colours just chosen (set, tone or rule) should also repaint the notes that already
+    /// exist; the same question as the button, offered right after the change so it is not missed.</summary>
+    private void OfferApplyToExistingNotes()
     {
         if (_coordinator is null) return;
 
