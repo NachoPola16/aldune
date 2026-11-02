@@ -25,6 +25,7 @@ import androidx.compose.ui.input.pointer.changedToUpIgnoreConsumed
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.text.TextLayoutResult
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import app.aldune.text.TaskLists
@@ -63,6 +64,20 @@ private fun taskLineAt(layout: TextLayoutResult, shown: String, yText: Float): I
 private fun lineAt(layout: TextLayoutResult, shown: String, yText: Float): Int {
     val clamped = yText.coerceIn(0f, (layout.size.height - 1).coerceAtLeast(0).toFloat())
     return app.aldune.text.TaskDrag.lineOf(shown, layout.getLineStart(layout.getLineForVerticalPosition(clamped)))
+}
+
+/**
+ * Top and bottom, in the layout's coordinates, of the whole LINE of the text (all the visual lines a long task wraps into). The drag works in
+ * lines of the text, so the lifted task, the dimmed origin and the drop line have to span the whole line: measuring only the visual line under
+ * the finger drew a two-line task one line high and put the drop line in the middle of a wrapped task above, where nothing can be dropped.
+ */
+private fun lineExtent(layout: TextLayoutResult, text: String, line: Int): Pair<Float, Float> {
+    val start = app.aldune.text.TaskDrag.lineStart(text, line)
+    val lf = text.indexOf('\n', start)
+    val end = if (lf < 0) text.length else lf
+    val first = layout.getLineForOffset(start.coerceAtMost(text.length))
+    val last = layout.getLineForOffset(end.coerceAtMost(text.length))
+    return layout.getLineTop(first) to layout.getLineBottom(maxOf(first, last))
 }
 
 /**
@@ -134,7 +149,11 @@ internal fun TaskDragOverlay(
     lift: Color = MaterialTheme.colorScheme.background,
 ) {
     val grip = ink.copy(alpha = 0.5f)
-    val accent = MaterialTheme.colorScheme.primary
+    // The look's accent when it can be seen on the page (3:1, enough for a line and an outline), the ink of the note when it cannot: the pink of
+    // the Aldune look on a yellow note made the drop line and the frame of the lifted task nearly invisible. Same rule as the cursor's colour.
+    val accent = MaterialTheme.colorScheme.primary.let { candidate ->
+        if (androidx.core.graphics.ColorUtils.calculateContrast(candidate.toArgb(), lift.copy(alpha = 1f).toArgb()) >= 3.0) candidate else ink
+    }
     // clipToBounds: una tarea a medio ver en el borde dibujaba su asa (las tres rayas) por fuera del campo, encima de la barra de abajo.
     Canvas(modifier.clipToBounds()) {
         val textLayout = layout() ?: return@Canvas
@@ -160,18 +179,18 @@ internal fun TaskDragOverlay(
         }
 
         val from = drag.from ?: return@Canvas
-        val fromVisual = textLayout.getLineForOffset(app.aldune.text.TaskDrag.lineStart(text, from))
-        val height = textLayout.getLineBottom(fromVisual) - textLayout.getLineTop(fromVisual)
+        val (fromLineTop, fromLineBottom) = lineExtent(textLayout, text, from)
+        val height = fromLineBottom - fromLineTop
         // La tarea «se levanta»: la de origen queda atenuada (se ve de dónde sale) y la que acompaña al dedo lleva su texto de verdad, sobre un
         // cuerpo con sombra y borde. Antes solo flotaba un marco translúcido y el texto no se movía: no se veía qué se estaba llevando.
         val bandTop = drag.y - scrollY + top - height / 2
-        val fromTop = textLayout.getLineTop(fromVisual) - scrollY + top
+        val fromTop = fromLineTop - scrollY + top
         val corner = CornerRadius(8.dp.toPx())
         drawRect(lift.copy(alpha = 0.6f), Offset(0f, fromTop), Size(size.width, height))
         drawRoundRect(Color.Black.copy(alpha = 0.2f), Offset(2.dp.toPx(), bandTop + 4.dp.toPx()), Size(size.width - 2.dp.toPx(), height), corner)
         drawRoundRect(lift, Offset(0f, bandTop), Size(size.width, height), corner)
         clipRect(0f, bandTop, size.width, bandTop + height) {
-            drawText(textLayout, topLeft = Offset(TASK_DRAG_PAD_START.toPx(), bandTop - textLayout.getLineTop(fromVisual)))
+            drawText(textLayout, topLeft = Offset(TASK_DRAG_PAD_START.toPx(), bandTop - fromLineTop))
         }
         drawRoundRect(accent, Offset(0f, bandTop), Size(size.width, height), corner, style = Stroke(1.5.dp.toPx()))
 
@@ -179,7 +198,9 @@ internal fun TaskDragOverlay(
         val clamped = drag.y.coerceIn(0f, (textLayout.size.height - 1).coerceAtLeast(0).toFloat())
         val targetVisual = textLayout.getLineForVerticalPosition(clamped)
         val targetLine = app.aldune.text.TaskDrag.lineOf(text, textLayout.getLineStart(targetVisual))
-        val y = if (targetLine >= from) textLayout.getLineBottom(targetVisual) else textLayout.getLineTop(targetVisual)
+        // Before or after the WHOLE target line, however many visual lines it wraps into.
+        val (targetTop, targetBottom) = lineExtent(textLayout, text, targetLine)
+        val y = if (targetLine >= from) targetBottom else targetTop
         val lineY = y - scrollY + top
         drawLine(accent, Offset(0f, lineY), Offset(size.width, lineY), strokeWidth = 3.dp.toPx())
         // El punto del extremo, como en cualquier lista que se reordena: la raya sola se confunde con un subrayado.
