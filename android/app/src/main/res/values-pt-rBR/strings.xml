@@ -562,4 +562,5 @@
     <string name="whatsnew_300_swipe">Deslize para o lado na parte vazia da lista para alternar entre Todas e cada tag.</string>
     <string name="whatsnew_300_folded">A lista lembra quais grupos de tags estavam recolhidos, mesmo depois de fechar o app.</string>
     <string name="whatsnew_300_plain">Nova opção: o editor pode usar o fundo do app enquanto as notas mantêm a cor na lista. O texto tem margens maiores e o widget perde a barra de rolagem.</string>
+    <string name="whatsnew_300_remember">De volta de onde parou: a lista lembra a tag, e a aba (Notas, Arquivadas, Lixeira) por 15 minutos. Recolher grupos rápido não abre mais uma nota sem querer, e o indicador de sync gira sem reiniciar. As cores de nota Pastel e XP agora têm versões escuras.</string>
 </resources>

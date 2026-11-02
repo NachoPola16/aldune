@@ -562,4 +562,5 @@
     <string name="whatsnew_300_swipe">在列表的空白处左右滑动，即可在“全部”和各个标签之间切换。</string>
     <string name="whatsnew_300_folded">即使关闭应用，列表也会记住您折叠了哪些标签分组。</string>
     <string name="whatsnew_300_plain">新设置：列表中笔记保留颜色，编辑器可使用应用自身的背景。文字边距更宽，小组件不再显示滚动条。</string>
+    <string name="whatsnew_300_remember">从上次的位置继续：列表会记住标签，并在15分钟内记住所在标签页（笔记、已归档、回收站）。快速折叠或展开分组不再误开笔记，同步指示器也不再从头重转。粉彩和 XP 便签配色现在有深色版本。</string>
 </resources>

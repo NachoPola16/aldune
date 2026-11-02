@@ -1239,6 +1239,24 @@ internal fun noteInk(hex: String): Color = runCatching { paletteColor(NoteColorC
 /** El icono discreto del estado de la sync. Sin conexión no es un error (no es culpa del usuario): se pinta apagado, no en rojo. */
 @Composable
 private fun SyncIcon(icon: StatusIcon, description: String) {
+    // Passes follow each other (an edit, then the one it triggers) and a quick one is over in a blink: the spinner was torn down and drawn
+    // again from its start angle each time, which looked like it "reloaded" instead of turning. It now stays up through short gaps and for
+    // a minimum time, so a run of passes is one continuous turn.
+    var shown by remember { mutableStateOf(icon) }
+    var shownSince by remember { mutableLongStateOf(0L) }
+    LaunchedEffect(icon) {
+        if (icon == StatusIcon.SYNCING) {
+            if (shown != StatusIcon.SYNCING) shownSince = System.currentTimeMillis()
+        } else if (shown == StatusIcon.SYNCING) {
+            delay(maxOf(SPINNER_GAP_MS, SPINNER_MIN_MS - (System.currentTimeMillis() - shownSince)))
+        }
+        shown = icon
+    }
+    SyncIconNow(shown, description)
+}
+
+@Composable
+private fun SyncIconNow(icon: StatusIcon, description: String) {
     when (icon) {
         StatusIcon.NONE -> Unit
         // "All good" is the usual state, so it stays small and dim; the warning and error icons below keep their full weight.
@@ -1258,6 +1276,8 @@ private const val MENU_HOLD_MS = 300L
 private const val MENU_CALM_MS = 700L
 // A bit longer than the rows' slide when a group folds or unfolds.
 private const val ROWS_MOVING_MS = 400L
+private const val SPINNER_GAP_MS = 500L
+private const val SPINNER_MIN_MS = 900L
 
 @OptIn(androidx.compose.foundation.layout.ExperimentalLayoutApi::class)
 @Composable

@@ -562,4 +562,5 @@
     <string name="whatsnew_300_swipe">Swipe sideways on the empty part of the list to move between All and each tag.</string>
     <string name="whatsnew_300_folded">The list remembers which tag groups you had folded, even after closing the app.</string>
     <string name="whatsnew_300_plain">New setting: the editor can use the app\'s own background while notes keep their color in the list. The text has roomier margins and the dock widget loses its scroll bar.</string>
+    <string name="whatsnew_300_remember">Back where you left it: the list remembers its tag, and its tab (Notes, Archived, Trash) for 15 minutes. Folding groups quickly no longer opens a note by accident, and the sync spinner turns without restarting. Pastel and XP note colours now have dark versions.</string>
 </resources>

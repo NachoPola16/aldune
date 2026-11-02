@@ -562,4 +562,5 @@
     <string name="whatsnew_300_swipe">Desliza de lado por la parte vacía de la lista para pasar de Todas a cada etiqueta.</string>
     <string name="whatsnew_300_folded">La lista recuerda qué grupos de etiquetas tenías plegados, incluso al cerrar la app.</string>
     <string name="whatsnew_300_plain">Ajuste nuevo: el editor puede usar el fondo de la app mientras las notas conservan su color en la lista. El texto tiene márgenes más amplios y el widget pierde su barra de scroll.</string>
+    <string name="whatsnew_300_remember">Vuelves donde lo dejaste: la lista recuerda la etiqueta, y la pestaña (Notas, Archivadas, Papelera) durante 15 minutos. Plegar grupos rápido ya no abre una nota sin querer, y el indicador de sync gira sin reiniciarse. Los colores de nota Pastel y XP tienen ahora versión oscura.</string>
 </resources>

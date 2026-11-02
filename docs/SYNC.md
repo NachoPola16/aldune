@@ -168,7 +168,8 @@ configure a URL such as `http://192.168.1.20:9000/` in Aldune. In Aldune select 
 enter the same token and use the same sync code on all devices. The token
 must be just the value to the right of `ALDUNE_SYNC_TOKEN=`. The `Sync now` button is
 available in Settings and in the dock; you can also turn on periodic sync and choose the
-interval. Settings shows the last successful sync.
+interval. With periodic sync on, a saved edit is also pushed about 5 seconds after you stop typing (never more
+often than one pass every 30 seconds), as on Android. Settings shows the last successful sync.
 
 Without a token the server refuses to start, so the failure is immediate and visible, not silent.
 

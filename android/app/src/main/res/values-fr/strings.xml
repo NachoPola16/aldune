@@ -562,4 +562,5 @@
     <string name="whatsnew_300_swipe">Balayez sur le côté dans la partie vide de la liste pour passer de Toutes aux différents tags.</string>
     <string name="whatsnew_300_folded">La liste se souvient des groupes de tags repliés, même après avoir fermé l’appli.</string>
     <string name="whatsnew_300_plain">Nouveau réglage : l\'éditeur peut utiliser le fond de l\'application tandis que les notes gardent leur couleur dans la liste. Le texte a des marges plus larges et le widget perd sa barre de défilement.</string>
+    <string name="whatsnew_300_remember">Retour là où vous étiez : la liste retient le tag, et l’onglet (Notes, Archivées, Corbeille) pendant 15 minutes. Plier vite les groupes n’ouvre plus une note par erreur, et l’indicateur de sync tourne sans repartir de zéro. Les couleurs Pastel et XP ont désormais des versions sombres.</string>
 </resources>
