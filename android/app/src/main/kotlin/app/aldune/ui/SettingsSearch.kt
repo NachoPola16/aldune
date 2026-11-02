@@ -5,6 +5,11 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.relocation.BringIntoViewRequester
 import androidx.compose.foundation.relocation.bringIntoViewRequester
+import androidx.compose.ui.geometry.Rect
+import androidx.compose.ui.layout.onSizeChanged
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.unit.IntSize
+import androidx.compose.ui.unit.dp
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -37,6 +42,8 @@ internal fun Modifier.settingsTarget(text: String): Modifier {
     val requester = remember { BringIntoViewRequester() }
     val scope = rememberCoroutineScope()
     var flash by remember { mutableStateOf(false) }
+    var size by remember { mutableStateOf(IntSize.Zero) }
+    val density = LocalDensity.current
     val mine = SettingsFocus.target?.let { FuzzySearch.normalize(it) == FuzzySearch.normalize(text) } == true
     LaunchedEffect(mine) {
         if (!mine) return@LaunchedEffect
@@ -44,13 +51,15 @@ internal fun Modifier.settingsTarget(text: String): Modifier {
         // On the scope of the row, not of this effect: clearing the target re-runs the effect, which would cut the flash short.
         scope.launch {
             delay(150)
-            requester.bringIntoView()
+            // A little more than the row itself: the minimal scroll leaves it flush with the bottom edge of the screen.
+            val air = with(density) { 96.dp.toPx() }
+            requester.bringIntoView(Rect(0f, -air, size.width.toFloat(), size.height + air))
             flash = true
             delay(1300)
             flash = false
         }
     }
-    return this.bringIntoViewRequester(requester).background(MaterialTheme.colorScheme.primary.copy(alpha = if (flash) 0.2f else 0f))
+    return this.onSizeChanged { size = it }.bringIntoViewRequester(requester).background(MaterialTheme.colorScheme.primary.copy(alpha = if (flash) 0.2f else 0f))
 }
 
 /** An option of Settings: the tab it lives in (as in `SettingsScreen`), its name and, when it has one, the line that explains it. */
