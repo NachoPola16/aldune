@@ -2093,6 +2093,7 @@ public partial class NoteWindow : Window
         }
         // Recién guardada, la nota ya no coincide con la base de la sync: pasa a pendiente.
         UpdateSyncSignal();
+        _coordinator.NoteSaved();
     }
 
     /// <summary>La señal ▂▄▆█ del pie; el estado se calcula siempre en el coordinador (base, conflictos y

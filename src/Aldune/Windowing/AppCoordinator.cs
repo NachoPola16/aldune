@@ -1821,6 +1821,38 @@ public sealed class AppCoordinator
     /// <summary>Al borrar un perfil de sync se olvidan sus bases y conflictos (si no, la señal de sync de sus notas se queda en pendiente).</summary>
     public void ForgetSyncProfile(string baseKey) => _repository.DeleteSyncProfile(baseKey);
 
+    private System.Threading.Timer? _editSyncTimer;
+
+    /// <summary>
+    /// A note's text was just saved: push it to the other devices after a quiet period (see <see cref="LocalEditSync"/>) instead of waiting for
+    /// the polling interval. Each save re-arms the timer, so a burst of typing makes one pass.
+    /// </summary>
+    public void NoteSaved()
+    {
+        if (_syncService is null || _settings is null) return;
+        if (!_settings.SyncProfiles.Any(profile => profile is { SyncEnabled: true, SyncAutomatically: true })) return;
+
+        var delay = LocalEditSync.DelayUntilRun(_lastSyncAttemptAt, DateTimeOffset.UtcNow);
+        if (_editSyncTimer is null) _editSyncTimer = new System.Threading.Timer(_ => RunEditSync(), null, delay, Timeout.InfiniteTimeSpan);
+        else _editSyncTimer.Change(delay, Timeout.InfiniteTimeSpan);
+    }
+
+    private void RunEditSync()
+    {
+        try
+        {
+            // A pass already running will not carry an edit saved after it read the notes: try again once it is done.
+            if (SyncInProgress) { _editSyncTimer?.Change(LocalEditSync.QuietPeriod, Timeout.InfiniteTimeSpan); return; }
+            var result = RunSyncTracked(automaticOnly: true);
+            if ((result.Succeeded || result.AppliedChanges) && Application.Current?.Dispatcher is { } dispatcher)
+                dispatcher.BeginInvoke(DispatcherPriority.Background, new Action(() => AfterSync(result.Succeeded, silent: true)));
+        }
+        catch (Exception ex)
+        {
+            AppLog.Write("sync", "la sync tras guardar una nota falló sin controlar: " + ex.GetType().Name + ": " + ex.Message);
+        }
+    }
+
     public void SyncForOpenedNote()
     {
         if (_syncService is null || _settings is null) return;
@@ -1863,6 +1895,8 @@ public sealed class AppCoordinator
     {
         _autoSyncTimer?.Dispose();
         _autoSyncTimer = null;
+        _editSyncTimer?.Dispose();
+        _editSyncTimer = null;
         _linkedWatch?.Dispose();
         _linkedWatch = null;
     }
