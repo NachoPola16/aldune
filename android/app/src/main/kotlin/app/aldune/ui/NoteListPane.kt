@@ -1342,7 +1342,7 @@ private fun GroupHeader(header: ListEntry.Header, modifier: Modifier = Modifier,
     val state = stringResource(if (header.open) R.string.group_expanded else R.string.group_collapsed)
     Row(
         modifier.fillMaxWidth().then(if (highlighted) Modifier.background(MaterialTheme.colorScheme.primary.copy(alpha = 0.18f), RoundedCornerShape(12.dp)) else Modifier)
-            .padding(start = 8.dp, end = 8.dp),
+            .padding(start = 11.5.dp, end = 8.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         // Arrow, title and count are one thing to tap (fold or unfold) and to read aloud; the options button is its own, so TalkBack keeps both.
@@ -1351,13 +1351,13 @@ private fun GroupHeader(header: ListEntry.Header, modifier: Modifier = Modifier,
             verticalAlignment = Alignment.CenterVertically,
         ) {
             // An icon turned a quarter, not the text glyphs ▾ ▸: those have different widths and sit on the baseline of the font (the title moved
-            // a little when a group was folded and the arrow was never centred on the line). 24 dp whatever the state, and the title starts 4 dp after it.
+            // a little when a group was folded and the arrow was never centred on the line). The 18 dp box puts the strokes of the arrow on the left
+            // edge of the cards (it stuck out 4 px with 24 dp) and the title where the text of the cards starts.
             val turn by androidx.compose.animation.core.animateFloatAsState(if (header.open) 0f else -90f, label = "groupArrow")
             Icon(
-                Icons.Filled.KeyboardArrowDown, null, Modifier.size(24.dp).graphicsLayer { rotationZ = turn },
+                Icons.Filled.KeyboardArrowDown, null, Modifier.size(18.dp).graphicsLayer { rotationZ = turn },
                 tint = MaterialTheme.colorScheme.onSurfaceVariant,
             )
-            Spacer(Modifier.width(4.dp))
             Text(header.title, Modifier.weight(1f), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
             Text(header.count.toString(), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
         }

@@ -583,13 +583,15 @@ fun NoteEditorPane(key: String, viewModel: NotesViewModel, onBack: () -> Unit, s
     ) {
         Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
             if (showBack) {
-                IconButton(onClick = { viewModel.playSound(SoundEvent.NOTE_CLOSED); onBack() }) { Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.back)) }
+                // The arrow itself (the drawn strokes sit 4 dp inside the 24 dp icon, which is centred in the 48 dp button) starts where the text of the
+                // note starts, 20 dp from the edge: the button is moved 4 dp in, and the title follows it directly.
+                IconButton(onClick = { viewModel.playSound(SoundEvent.NOTE_CLOSED); onBack() }, Modifier.padding(start = 4.dp)) { Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.back)) }
             }
             // El título, junto a la flecha, como la cabecera de la ventana de nota de Windows. Intro pasa al cuerpo. Una protegida cerrada no enseña nada.
             val titleEnabled = loaded && (!protectedNote || unlocked)
             BasicTextField(
                 state = title, enabled = titleEnabled, lineLimits = TextFieldLineLimits.SingleLine,
-                modifier = Modifier.weight(1f).padding(start = if (showBack) 4.dp else TASK_DRAG_PAD_START, end = 4.dp).focusProperties { this.canFocus = canFocus }.focusRequester(titleFocus),
+                modifier = Modifier.weight(1f).padding(start = if (showBack) 0.dp else TASK_DRAG_PAD_START, end = 4.dp).focusProperties { this.canFocus = canFocus }.focusRequester(titleFocus),
                 textStyle = MaterialTheme.typography.titleMedium.copy(color = ink),
                 cursorBrush = SolidColor(ink),
                 keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
