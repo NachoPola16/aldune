@@ -891,7 +891,7 @@ class NotesViewModel(application: Application) : AndroidViewModel(application) {
     /** Qué dice una comprobación manual de actualizaciones. */
     sealed interface UpdateCheckResult {
         data object UpToDate : UpdateCheckResult
-        data class Available(val version: String) : UpdateCheckResult
+        data class Available(val version: String, val tag: String) : UpdateCheckResult
         data object Failed : UpdateCheckResult
     }
 
@@ -905,7 +905,7 @@ class NotesViewModel(application: Application) : AndroidViewModel(application) {
         val found = AndroidReleaseUpdate.latest(json, currentVersion)
         updateSettings { it.copy(lastUpdateCheck = System.currentTimeMillis(), knownUpdate = found?.tag, dismissedUpdate = null) }
         _update.value = found
-        if (found == null) UpdateCheckResult.UpToDate else UpdateCheckResult.Available(found.version)
+        if (found == null) UpdateCheckResult.UpToDate else UpdateCheckResult.Available(found.version, found.tag)
     }
 
     private fun fetchReleases(): String {

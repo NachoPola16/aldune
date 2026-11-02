@@ -3,6 +3,8 @@ package app.aldune.ui
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.indication
+import androidx.compose.ui.draw.clip
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -1353,14 +1355,16 @@ private sealed interface ListEntry {
 @Composable
 private fun GroupHeader(header: ListEntry.Header, modifier: Modifier = Modifier, highlighted: Boolean = false, onMenu: (() -> Unit)? = null, onToggle: () -> Unit) {
     val state = stringResource(if (header.open) R.string.group_expanded else R.string.group_collapsed)
+    // The press feedback is drawn over the whole header (rounded, edge to edge), not only over the part that takes the tap: it looked cut off.
+    val press = remember { androidx.compose.foundation.interaction.MutableInteractionSource() }
     Row(
-        modifier.fillMaxWidth().then(if (highlighted) Modifier.background(MaterialTheme.colorScheme.primary.copy(alpha = 0.18f), RoundedCornerShape(12.dp)) else Modifier)
+        modifier.fillMaxWidth().clip(RoundedCornerShape(12.dp)).indication(press, androidx.compose.material3.ripple()).then(if (highlighted) Modifier.background(MaterialTheme.colorScheme.primary.copy(alpha = 0.18f), RoundedCornerShape(12.dp)) else Modifier)
             .padding(start = 12.dp, end = 8.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         // Arrow, title and count are one thing to tap (fold or unfold) and to read aloud; the options button is its own, so TalkBack keeps both.
         Row(
-            Modifier.weight(1f).heightIn(min = 48.dp).clickable(onClick = onToggle).semantics(mergeDescendants = true) { heading(); stateDescription = state },
+            Modifier.weight(1f).heightIn(min = 48.dp).clickable(interactionSource = press, indication = null, onClick = onToggle).semantics(mergeDescendants = true) { heading(); stateDescription = state },
             verticalAlignment = Alignment.CenterVertically,
         ) {
             // An icon turned a quarter, not the text glyphs ▾ ▸: those have different widths and sit on the baseline of the font (the title moved

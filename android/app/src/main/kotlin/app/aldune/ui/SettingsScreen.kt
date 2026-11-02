@@ -19,6 +19,8 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.RequiresApi
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.TextButton
+import app.aldune.text.AndroidReleaseUpdate
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -367,6 +369,22 @@ fun SettingsScreen(viewModel: NotesViewModel, onClose: () -> Unit) {
                     },
                     modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp), enabled = !checking,
                 ) { Text(stringResource(if (checking) R.string.update_checking else R.string.update_check_now)) }
+                // The same pop-up as in the list, here too: the person who pressed the button is looking at this screen, not at the list.
+                (checkResult as? NotesViewModel.UpdateCheckResult.Available)?.let { found ->
+                    AlertDialog(
+                        onDismissRequest = { checkResult = null },
+                        title = { Text(stringResource(R.string.update_available, found.version), Modifier.semantics { heading() }) },
+                        text = { Text(stringResource(R.string.update_dialog_body)) },
+                        confirmButton = {
+                            TextButton(onClick = {
+                                checkResult = null
+                                viewModel.updateSettings { it.copy(announcedUpdate = found.version) }
+                                activity?.startActivity(android.content.Intent(android.content.Intent.ACTION_VIEW, android.net.Uri.parse(AndroidReleaseUpdate.PAGE + found.tag)))
+                            }) { Text(stringResource(R.string.update_open)) }
+                        },
+                        dismissButton = { TextButton(onClick = { checkResult = null }) { Text(stringResource(R.string.update_dismiss)) } },
+                    )
+                }
                 checkResult?.let { result ->
                     Text(
                         when (result) {
