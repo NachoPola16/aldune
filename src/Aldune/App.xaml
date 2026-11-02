@@ -453,6 +453,13 @@
                     </ControlTemplate>
                 </Setter.Value>
             </Setter>
+            <Style.Triggers>
+                <!-- A vertical bar stops short of the bottom of its view (the same air the rows keep), so its end sits inside the content
+                     instead of running into the footer or the window edge. -->
+                <Trigger Property="Orientation" Value="Vertical">
+                    <Setter Property="Margin" Value="0,2,0,10" />
+                </Trigger>
+            </Style.Triggers>
         </Style>
 
         <!-- Botones y caja de texto de los diálogos pequeños (color personalizado, editor de

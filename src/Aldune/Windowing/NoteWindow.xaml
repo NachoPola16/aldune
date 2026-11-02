@@ -539,11 +539,8 @@
                          fijo. Pista transparente y pulgar fino que se ensancha al acercar el ratón: en
                          reposo casi no compite con el texto. -->
                     <Style TargetType="ScrollBar">
-                        <Setter Property="Margin" Value="8,0,0,0" />
+                        <Setter Property="Margin" Value="8,2,0,10" />
                         <Setter Property="Width" Value="10" />
-                        <!-- The system default style of a ScrollBar still sets a MinWidth of 17 under ours, which kept this bar at 17 (a 13 px thumb
-                             instead of the 6 px one drawn here). -->
-                        <Setter Property="MinWidth" Value="10" />
                         <Setter Property="Background" Value="Transparent" />
                         <!-- El relleno derecho del cuadro (15; a la izquierda hay 20 y, al partir la línea, sobra hasta un carácter, así que el hueco
                              derecho oscila en torno al izquierdo y el texto no llega casi al borde de la retícula) también empuja a la barra hacia dentro: este desplazamiento solo visual la devuelve al borde. -->
