@@ -48,6 +48,15 @@ public sealed class ManagerRowRimConverter : IValueConverter
     public object ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture) => throw new NotSupportedException();
 }
 
+/// <summary>The stripe of a row takes the row's own left corners (none with square corners), so it never pokes out of a squared row.</summary>
+public sealed class LeftCornersConverter : IValueConverter
+{
+    public object Convert(object? value, Type targetType, object? parameter, CultureInfo culture) =>
+        value is CornerRadius radius ? new CornerRadius(radius.TopLeft, 0, 0, radius.BottomLeft) : new CornerRadius(0);
+
+    public object ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture) => throw new NotSupportedException();
+}
+
 /// <summary>Visible only when the colour is on the edge alone: the stripe of the row.</summary>
 public sealed class ManagerRowStripeVisibilityConverter : IValueConverter
 {

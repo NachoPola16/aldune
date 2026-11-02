@@ -30,6 +30,7 @@
         <local:ManagerRowInkConverter x:Key="ManagerRowInkConverter" />
         <local:ManagerRowRimConverter x:Key="ManagerRowRimConverter" />
         <local:ManagerRowStripeVisibilityConverter x:Key="ManagerRowStripeVisibilityConverter" />
+        <local:LeftCornersConverter x:Key="LeftCornersConverter" />
         <local:NoteSnippetConverter x:Key="NoteSnippetConverter" />
         <local:NoteDateConverter x:Key="NoteDateConverter" />
 
@@ -475,7 +476,7 @@
                     <TextBlock Text="&#xE8EC;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" FontSize="{DynamicResource AlduneTextBody}" />
                 </Button>
                 <Button x:Name="NewNoteButton" Click="OnNewNoteClick"
-                        Width="30" Height="30" Padding="0"
+                        Width="31" Height="31" Padding="0"
                         ToolTip="{x:Static res:Strings.NewNoteTooltip}"
                         AutomationProperties.Name="{x:Static res:Strings.NewNoteTooltip}"
                         Style="{StaticResource AccentToolbarButtonStyle}">
@@ -634,7 +635,7 @@
                                     </Grid.ColumnDefinitions>
 
                                     <!-- With "note colour only on the edge" the row keeps the app's surface and this is the colour: a stripe on the left, like the dock cards. It covers the 1 px rim so the colour reaches the row's own corner (inside the rim it left a grey hairline). -->
-                                    <Border Grid.ColumnSpan="2" HorizontalAlignment="Left" Width="5" Margin="-13,-9,0,-9" CornerRadius="8,0,0,8"
+                                    <Border Grid.ColumnSpan="2" HorizontalAlignment="Left" Width="5" Margin="-13,-9,0,-9" CornerRadius="{Binding CornerRadius, RelativeSource={RelativeSource AncestorType=Border}, Converter={StaticResource LeftCornersConverter}}"
                                             Background="{Binding Note.Color, Converter={StaticResource NoteDisplayColorConverter}}"
                                             Visibility="{Binding Note.Color, Converter={StaticResource ManagerRowStripeVisibilityConverter}}"
                                             IsHitTestVisible="False" />

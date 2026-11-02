@@ -71,14 +71,25 @@ public static class NoteColorDerivation
     /// Franja de la piel <see cref="SkinCard.Stripe"/> (bash): la nota es del fondo de la terminal y su
     /// color va solo en 3 px a un lado, que tienen que verse aunque el color sea apagado. Mismo matiz,
     /// claridad fija (0.72 sobre un fondo oscuro, 0.5 sobre uno claro) y un croma mínimo para que no
-    /// parezca gris; un gris de verdad (croma casi 0, el de "mismo color" monocromo) se queda gris.
+    /// parezca gris. Un gris de verdad (croma casi 0: Grafito, el «mismo color» monocromo) se queda gris y conserva su tono: su claridad se
+    /// reparte por una banda que se lee sobre el fondo (con una sola claridad fija, los cinco pasos de Grafito salían como la misma franja).
     /// </summary>
     public static string StripeColor(string color, string ground)
     {
         if (!OklchColor.TryFromHex(color, out var face)) return color;
-        double lightness = IsDark(ground) ? 0.72 : 0.5;
-        double chroma = face.C < 0.02 ? face.C : Math.Max(face.C, 0.09);
-        return new OklchColor(lightness, chroma, face.H).ToHex();
+        bool dark = IsDark(ground);
+        if (face.C < 0.02)
+        {
+            // The shade keeps its place in the order and gets only as much lift as it needs: a dark grey is raised (up to +0.36) until it reads on a
+            // dark ground, a light one is left alone; on a light ground a light grey is pulled down (up to -0.45) and a dark one stays. The lift
+            // fades out with the lightness and never exceeds the slope of the curve, so it never reverses and neighbouring steps stay apart.
+            double grey = dark
+                ? Math.Min(0.97, face.L + 0.36 * (1 - Math.Clamp((face.L - 0.4) / 0.5, 0, 1)))
+                : face.L - 0.45 * Math.Clamp((face.L - 0.4) / 0.6, 0, 1);
+            return new OklchColor(grey, face.C, face.H).ToHex();
+        }
+        double lightness = dark ? 0.72 : 0.5;
+        return new OklchColor(lightness, Math.Max(face.C, 0.09), face.H).ToHex();
     }
 
     private static (string Face, string Rim, string Label)? FindClassic(string? color)

@@ -2313,6 +2313,10 @@ public partial class EdgeDockWindow : Window
 
         if (!busy) return;
 
+        // A click on the ✓ of the last result starts a new sync: what spins is the arrow, not the tick (the glyph still held the ✓ for the
+        // 2.6 s of feedback, so the check mark itself went round).
+        _syncFeedbackTimer.Stop();
+        ResetSyncGlyph();
         SyncButton.ToolTip = Strings.SyncInProgressStatus;
 
         var spin = new RotateTransform();
@@ -2342,13 +2346,18 @@ public partial class EdgeDockWindow : Window
         _syncFeedbackTimer.Start();
     }
 
+    private void ResetSyncGlyph()
+    {
+        SyncButtonGlyph.Text = "";
+        SyncButtonGlyph.FontSize = 17;
+        SyncButtonGlyph.ClearValue(TextBlock.ForegroundProperty);
+    }
+
     private void RestoreSyncButton()
     {
         if (_syncBusy) return; // el feedback caducado no debe reactivar un botón ocupado
 
-        SyncButtonGlyph.Text = "";
-        SyncButtonGlyph.FontSize = 17;
-        SyncButtonGlyph.ClearValue(TextBlock.ForegroundProperty);
+        ResetSyncGlyph();
         SyncButton.ToolTip = Strings.WithHint(Strings.SyncNowButton, Strings.SyncRightClickHint);
     }
 

@@ -51,12 +51,6 @@ public static class Strings
         "O lembrete é sempre da nota inteira. Isto só decide se o aviso lista as primeiras tarefas que faltam.", "Il promemoria riguarda sempre l'intera nota. Qui si decide solo se la notifica elenca le prime attività ancora da fare.", "リマインダーは常にノート全体が対象です。ここでは、通知に残りの最初のタスクを一覧表示するかどうかだけを決めます。", "提醒始终针对整条笔记。这里只决定通知中是否列出前几项尚未完成的任务。");
     public static string SkinColorNotice(SkinColorNoticeKind kind) => kind switch
     {
-        SkinColorNoticeKind.GrayStripe => T(
-            "With this look, black, white and grey show as the same light grey stripe.",
-            "Con este aspecto, el negro, el blanco y los grises se ven como la misma franja gris clara.",
-            "Mit diesem Aussehen erscheinen Schwarz, Weiß und Grau als derselbe hellgraue Streifen.",
-            "Avec cet aspect, le noir, le blanc et les gris apparaissent comme la même bande gris clair.",
-            "Com este visual, preto, branco e cinzas aparecem como a mesma faixa cinza-clara.", "Con questo aspetto, nero, bianco e grigi appaiono come la stessa striscia grigio chiaro.", "このデザインでは、黒・白・グレーはすべて同じ薄いグレーの帯で表示されます。", "使用此外观时，黑色、白色和灰色都显示为同一条浅灰色条带。"),
         SkinColorNoticeKind.ColorsNotShown => T(
             "This look doesn't show note colors.",
             "Este aspecto no muestra los colores de las notas.",
@@ -1654,6 +1648,8 @@ public static class Strings
         "Langue enregistrée. Redémarrez Aldune pour la voir dans toutes les fenêtres.",
         "Idioma salvo. Reinicie o Aldune para vê-lo em todas as janelas.", "Lingua salvata. Riavvia Aldune per vederla in tutte le finestre.",
         "言語を保存しました。すべてのウィンドウに反映するには Aldune を再起動してください。", "语言已保存。重新启动 Aldune 后，所有窗口都会生效。");
+    public static string RestartNowQuestion => T("Restart Aldune now?", "¿Reiniciar Aldune ahora?", "Aldune jetzt neu starten?", "Redémarrer Aldune maintenant ?", "Reiniciar o Aldune agora?", "Riavviare Aldune adesso?", "今すぐ Aldune を再起動しますか？", "现在重新启动 Aldune 吗？");
+
     public static string RestartNowButton => T("Restart now", "Reiniciar ahora", "Jetzt neu starten", "Redémarrer maintenant", "Reiniciar agora", "Riavvia ora", "今すぐ再起動", "立即重新启动");
 
     // --- Temas -----------------------------------------------------------------------------------

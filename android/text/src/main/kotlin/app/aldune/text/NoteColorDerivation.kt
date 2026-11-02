@@ -51,9 +51,14 @@ object NoteColorDerivation {
 
     fun stripeColor(color: String, ground: String): String {
         val face = OklchColor.fromHex(color) ?: return color
-        val lightness = if (isDark(ground)) 0.72 else 0.5
-        val chroma = if (face.c < 0.02) face.c else maxOf(face.c, 0.09)
-        return OklchColor(lightness, chroma, face.h).toHex()
+        val dark = isDark(ground)
+        if (face.c < 0.02) {
+            // A real grey keeps its place in the order and gets only the lift it needs (see the C# twin): raised on a dark ground, pulled down on a light one.
+            val grey = if (dark) minOf(0.97, face.l + 0.36 * (1 - ((face.l - 0.4) / 0.5).coerceIn(0.0, 1.0)))
+            else face.l - 0.45 * ((face.l - 0.4) / 0.6).coerceIn(0.0, 1.0)
+            return OklchColor(grey, face.c, face.h).toHex()
+        }
+        return OklchColor(if (dark) 0.72 else 0.5, maxOf(face.c, 0.09), face.h).toHex()
     }
 
     private fun findClassic(color: String?): Classic? = classic.firstOrNull { it.face.equals(color, ignoreCase = true) }

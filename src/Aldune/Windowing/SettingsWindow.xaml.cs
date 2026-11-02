@@ -1996,6 +1996,13 @@ public partial class SettingsWindow : Window
 
         _settings.Language = code;
         _settingsService.Save(_settings);
+        // A question with its options (restart now or later) instead of a line that was easy to miss; «later» leaves the row as a reminder.
+        if (AppDialog.Show(this, Strings.LanguageRestartNotice + "\n\n" + Strings.RestartNowQuestion, Strings.LanguageSectionTitle,
+                MessageBoxButton.YesNo, MessageBoxImage.Question, MessageBoxResult.Yes) == MessageBoxResult.Yes)
+        {
+            OnRestartClick(this, new RoutedEventArgs());
+            return;
+        }
         LanguageRestartRow.Visibility = Visibility.Visible;
         // No se recarga en caliente: los enlaces {x:Static} del XAML se resuelven al construir
         // cada ventana, así que un cambio de idioma solo se ve entero tras reiniciar (ver
@@ -2255,10 +2262,14 @@ public partial class SettingsWindow : Window
         if (!ConfigImportWindow.Show(this, plan, _settings)) return;
 
         if (!ApplyConfigurationImport(plan)) return;
-        var done = plan.ChangesLanguage
-            ? Strings.ConfigImportDone + "\n" + Strings.ConfigImportRestartForLanguage
-            : Strings.ConfigImportDone;
-        AppDialog.Show(this, done, Strings.ConfigImportTitle, MessageBoxButton.OK, MessageBoxImage.Information);
+        if (!plan.ChangesLanguage)
+        {
+            AppDialog.Show(this, Strings.ConfigImportDone, Strings.ConfigImportTitle, MessageBoxButton.OK, MessageBoxImage.Information);
+            return;
+        }
+        if (AppDialog.Show(this, Strings.ConfigImportDone + "\n" + Strings.ConfigImportRestartForLanguage + "\n\n" + Strings.RestartNowQuestion,
+                Strings.ConfigImportTitle, MessageBoxButton.YesNo, MessageBoxImage.Question, MessageBoxResult.Yes) == MessageBoxResult.Yes)
+            OnRestartClick(this, new RoutedEventArgs());
     }
 
     /// <summary>Lee el archivo y calcula qué cambiaría, sin tocar nada. Con un archivo ilegible o que no

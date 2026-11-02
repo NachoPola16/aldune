@@ -279,7 +279,7 @@ fun NoteListPane(
                 }
             }
             if (!tight && state.allTags.isNotEmpty()) TagRow(
-                state, settingsNow.showTagHash, viewModel::setTag, onMoveTag = viewModel::moveTag,
+                state, settingsNow.showTagHash, { tag -> calmUntil = System.currentTimeMillis() + MENU_CALM_MS; viewModel.setTag(tag) }, onMoveTag = viewModel::moveTag,
                 tagColors = remember(settingsNow.tagColors) { TagColors.decode(settingsNow.tagColors) },
                 paletteColors = NoteThemes.resolve(settingsNow.noteThemeId, null).let { it.lightColors + it.darkColors },
                 onSetTagColor = viewModel::setTagColor,
@@ -333,9 +333,15 @@ fun NoteListPane(
             // Tirar hacia abajo sincroniza (spec madre §2.1). Without a profile there is nothing to sync: no pass starts and the pull draws no
             // spinner, so the gesture does not suggest that something is being checked.
             val pullState = androidx.compose.material3.pulltorefresh.rememberPullToRefreshState()
+            // While the list is being pulled (and just after), a hold on a row is part of the pull, not a request for its options.
+            LaunchedEffect(pullState.distanceFraction) { if (pullState.distanceFraction > 0f) calmUntil = System.currentTimeMillis() + MENU_CALM_MS }
             PullToRefreshBox(
                 isRefreshing = status?.running == true,
-                onRefresh = { if (hasProfile) viewModel.syncEvent(SyncEvent.PullToRefresh) },
+                onRefresh = {
+                    // The finger that pulled the list is still around: for a moment nothing may read it as a request for a note's options.
+                    calmUntil = System.currentTimeMillis() + MENU_CALM_MS
+                    if (hasProfile) viewModel.syncEvent(SyncEvent.PullToRefresh)
+                },
                 modifier = Modifier.fillMaxSize(),
                 state = pullState,
                 indicator = {

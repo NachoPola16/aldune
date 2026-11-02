@@ -157,6 +157,22 @@ public class NoteColorDerivationTests
         Assert.True(grey.C < 0.03, $"C {grey.C}");
     }
 
+    [Theory]
+    [MemberData(nameof(DarkGrounds))]
+    public void StripeColor_GreysKeepTheirOrderOfShade_SoGraphiteStepsStayApart(string ground)
+    {
+        // Graphite is five greys from dark to light: in a stripe look they used to come out as one and the same light grey.
+        var graphite = NoteThemes.BuiltIn.First(t => t.Id == NoteThemes.GrayId);
+        foreach (var colors in new[] { graphite.DarkColors, graphite.LightColors })
+        {
+            var ordered = colors.OrderBy(c => { OklchColor.TryFromHex(c, out var o); return o.L; }).ToList();
+            var stripes = ordered.Select(c => NoteColorDerivation.StripeColor(c, ground)).ToList();
+            Assert.Equal(stripes.Count, stripes.Distinct().Count());
+            var lightness = stripes.Select(s => { OklchColor.TryFromHex(s, out var o); return o.L; }).ToList();
+            Assert.Equal(lightness.OrderBy(l => l).ToList(), lightness);
+        }
+    }
+
     private static double Ratio(string a, string b)
     {
         Assert.True(NoteColorContrast.TryGetLuminance(a, out var la));
