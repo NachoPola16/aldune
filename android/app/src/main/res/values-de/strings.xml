@@ -230,7 +230,8 @@
     <string name="widget_tasks_hint">Zeigt die ersten offenen Aufgaben jeder Liste unter ihrem Titel.</string>
     <string name="widget_config_title">Notizen in diesem Widget</string>
     <string name="widget_config_all">Alle Notizen</string>
-    <string name="widget_config_hint">Wähle ein Tag, um nur dessen Notizen zu zeigen.</string>
+    <string name="widget_config_hint">Wähle alle Notizen oder die eines Tags und bestätige. Du kannst das später ändern: Widget lange drücken und die Einstellungen öffnen.</string>
+    <string name="widget_config_confirm">Bestätigen</string>
     <string name="widget_filter_empty">Keine Notizen mit diesem Tag.</string>
     <string name="note_gone">Diese Notiz ist nicht mehr im Stapel</string>
     <string name="add_widget">Widget zum Startbildschirm hinzufügen</string>

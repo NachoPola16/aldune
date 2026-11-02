@@ -230,7 +230,8 @@
     <string name="widget_tasks_hint">Mostra as primeiras tarefas pendentes de cada lista sob o título.</string>
     <string name="widget_config_title">Notas deste widget</string>
     <string name="widget_config_all">Todas as notas</string>
-    <string name="widget_config_hint">Escolha uma etiqueta para mostrar só as notas dela.</string>
+    <string name="widget_config_hint">Escolha todas as notas ou as de uma etiqueta e confirme. Você pode mudar depois: toque e segure o widget e abra as configurações dele.</string>
+    <string name="widget_config_confirm">Confirmar</string>
     <string name="widget_filter_empty">Não há notas com esta etiqueta.</string>
     <string name="note_gone">Essa nota não está mais na pilha</string>
     <string name="add_widget">Adicionar o widget à tela inicial</string>

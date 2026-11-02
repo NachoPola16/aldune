@@ -230,7 +230,8 @@
     <string name="widget_tasks_hint">Mostra le prime attività in sospeso di ogni lista sotto il titolo.</string>
     <string name="widget_config_title">Note di questo widget</string>
     <string name="widget_config_all">Tutte le note</string>
-    <string name="widget_config_hint">Scegli un’etichetta per mostrare solo le sue note.</string>
+    <string name="widget_config_hint">Scegli tutte le note o quelle di un’etichetta e conferma. Potrai cambiarlo dopo: tieni premuto il widget e apri le sue impostazioni.</string>
+    <string name="widget_config_confirm">Conferma</string>
     <string name="widget_filter_empty">Nessuna nota con questa etichetta.</string>
     <string name="note_gone">Quella nota non è più nel mazzo</string>
     <string name="add_widget">Aggiungi il widget alla schermata Home</string>

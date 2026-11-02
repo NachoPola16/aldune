@@ -230,7 +230,8 @@
     <string name="widget_tasks_hint">Shows the first pending tasks of each list note under its title.</string>
     <string name="widget_config_title">Notes in this widget</string>
     <string name="widget_config_all">All notes</string>
-    <string name="widget_config_hint">Choose a tag to show only its notes.</string>
+    <string name="widget_config_hint">Choose all notes or the notes of one tag, then confirm. You can change it later by long-pressing the widget and opening its settings.</string>
+    <string name="widget_config_confirm">Confirm</string>
     <string name="widget_filter_empty">No notes with this tag.</string>
     <string name="note_gone">That note is no longer in the deck</string>
     <string name="add_widget">Add the widget to the home screen</string>

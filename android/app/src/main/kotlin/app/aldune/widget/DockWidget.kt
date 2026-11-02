@@ -186,13 +186,22 @@ class DockWidget : GlanceAppWidget() {
                     data.texts.appName + (data.tag?.let { "  ·  #$it" } ?: ""), GlanceModifier.defaultWeight().clickable(openApp),
                     style = TextStyle(color = data.colors.title, fontSize = 13.sp, fontWeight = FontWeight.Medium, fontFamily = data.colors.font),
                 )
-                Image(
-                    provider = ImageProvider(R.drawable.ic_new_note), contentDescription = data.texts.newNote,
-                    colorFilter = ColorFilter.tint(data.colors.plus),
-                    // Un botón relleno con la forma de las notas (o la elegida en Ajustes), no un «+» suelto.
-                    modifier = GlanceModifier.size(28.dp).background(data.colors.surface).cornerRadius(if (data.squareNewButton) 0.dp else 8.dp).padding(4.dp)
-                        .clickable(actionStartActivity(CaptureIntents.newNote(context))),
-                )
+                // The accent fill with a bare «+» in the card colour, in the same corners as the notes (rounded or square, so the two shapes no
+                // longer fight). The visible button is 32 dp but the touch target is 44 dp: 28 dp was too small to hit.
+                Box(
+                    GlanceModifier.size(44.dp).clickable(actionStartActivity(CaptureIntents.newNote(context))),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Box(
+                        GlanceModifier.size(32.dp).background(data.colors.plus).cornerRadius(if (data.squareNewButton) 0.dp else 12.dp),
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        Image(
+                            provider = ImageProvider(R.drawable.ic_widget_plus), contentDescription = data.texts.newNote,
+                            colorFilter = ColorFilter.tint(data.colors.ground), modifier = GlanceModifier.size(22.dp),
+                        )
+                    }
+                }
             }
             val content = data.content
             when {

@@ -230,7 +230,8 @@
     <string name="widget_tasks_hint">Affiche les premières tâches en attente de chaque liste sous son titre.</string>
     <string name="widget_config_title">Notes de ce widget</string>
     <string name="widget_config_all">Toutes les notes</string>
-    <string name="widget_config_hint">Choisissez une étiquette pour n’afficher que ses notes.</string>
+    <string name="widget_config_hint">Choisissez toutes les notes ou celles d’une étiquette, puis confirmez. Vous pourrez le modifier plus tard : appui long sur le widget, puis ouvrez ses paramètres.</string>
+    <string name="widget_config_confirm">Confirmer</string>
     <string name="widget_filter_empty">Aucune note avec cette étiquette.</string>
     <string name="note_gone">Cette note n\'est plus dans la pile</string>
     <string name="add_widget">Ajouter le widget à l\'écran d\'accueil</string>

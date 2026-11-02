@@ -8,6 +8,7 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -15,10 +16,12 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.systemBarsPadding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -71,16 +74,21 @@ class WidgetConfigActivity : ComponentActivity() {
                         Text(stringResource(R.string.widget_config_hint), style = MaterialTheme.typography.bodyMedium, modifier = Modifier.padding(top = 4.dp, bottom = 12.dp))
                         // A tag chosen earlier that no note carries any more stays in the list, so the choice is never invisible.
                         val options = listOf<String?>(null) + (tags + listOfNotNull(selected)).distinctBy { it.lowercase() }
-                        LazyColumn {
+                        LazyColumn(Modifier.weight(1f)) {
                             items(options) { tag ->
                                 Row(
-                                    Modifier.fillMaxWidth().clickable { selected = tag; finishWith(tag) }.padding(vertical = 4.dp),
+                                    Modifier.fillMaxWidth().clickable { selected = tag }.padding(vertical = 4.dp),
                                     verticalAlignment = Alignment.CenterVertically,
                                 ) {
-                                    RadioButton(selected = (tag == null && selected == null) || (tag != null && tag.equals(selected, ignoreCase = true)), onClick = { selected = tag; finishWith(tag) })
+                                    RadioButton(selected = (tag == null && selected == null) || (tag != null && tag.equals(selected, ignoreCase = true)), onClick = { selected = tag })
                                     Text(tag?.let { "#$it" } ?: stringResource(R.string.widget_config_all), style = MaterialTheme.typography.bodyLarge)
                                 }
                             }
+                        }
+                        // Picking a row only marks it: the choice applies on «Confirm», so it is clear when the widget is placed or changed.
+                        Row(Modifier.fillMaxWidth().padding(top = 8.dp), horizontalArrangement = Arrangement.End, verticalAlignment = Alignment.CenterVertically) {
+                            TextButton(onClick = { finish() }) { Text(stringResource(android.R.string.cancel)) }
+                            Button(onClick = { finishWith(selected) }, Modifier.padding(start = 8.dp)) { Text(stringResource(R.string.widget_config_confirm)) }
                         }
                     }
                 }

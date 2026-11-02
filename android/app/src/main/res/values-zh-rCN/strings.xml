@@ -230,7 +230,8 @@
     <string name="widget_tasks_hint">在每个清单笔记的标题下显示前几项待办任务。</string>
     <string name="widget_config_title">此小组件中的笔记</string>
     <string name="widget_config_all">所有笔记</string>
-    <string name="widget_config_hint">选择一个标签，仅显示该标签的笔记。</string>
+    <string name="widget_config_hint">选择所有笔记或某个标签的笔记，然后确认。之后可长按小组件并打开其设置进行更改。</string>
+    <string name="widget_config_confirm">确认</string>
     <string name="widget_filter_empty">没有带此标签的笔记。</string>
     <string name="note_gone">该笔记已不在牌组中</string>
     <string name="add_widget">将小组件添加到主屏幕</string>

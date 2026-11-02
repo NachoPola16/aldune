@@ -230,7 +230,8 @@
     <string name="widget_tasks_hint">各リストノートのタイトルの下に、未完了のタスクを先頭から表示します。</string>
     <string name="widget_config_title">このウィジェットのノート</string>
     <string name="widget_config_all">すべてのノート</string>
-    <string name="widget_config_hint">タグを選ぶと、そのノートだけを表示します。</string>
+    <string name="widget_config_hint">すべてのノートか、1つのタグのノートを選んで確定してください。後から変更するには、ウィジェットを長押ししてその設定を開きます。</string>
+    <string name="widget_config_confirm">確定</string>
     <string name="widget_filter_empty">このタグのノートはありません。</string>
     <string name="note_gone">そのノートはデッキにありません</string>
     <string name="add_widget">ウィジェットをホーム画面に追加</string>
