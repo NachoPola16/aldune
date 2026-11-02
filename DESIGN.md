@@ -35,7 +35,7 @@ A tab dock on an edge (it fans out), notes as windows with a header and tags, th
 
 ## Motion
 
-Short and functional (dock fan-out, note opening). Soft ease-out curves, no bounce. “Reduce motion” is respected.
+Short and functional (dock fan-out, the deck shuffling when the view changes with the wheel, a fade when a note opens or its tab comes back). Nothing scales: a scaled window pixelates. Soft ease-out curves, no bounce. “Reduce motion” is respected.
 
 ## Do / Don't
 

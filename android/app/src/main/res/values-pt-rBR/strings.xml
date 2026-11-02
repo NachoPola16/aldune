@@ -514,12 +514,12 @@
     <string name="existing_tags">Suas etiquetas</string>
     <string name="whatsnew_131_news">Selecione várias notas de uma vez (arquivar, lixeira, etiqueta), um aviso para novas versões e deslizes e caixas de tarefa mais seguros.</string>
     <string name="whatsnew_131_widget">O widget pode ser limitado a uma etiqueta e permite marcar tarefas direto nele.</string>
-    <string name="whatsnew_200_invite">Entre em um servidor compartilhado com um convite: cole e você terá seu próprio espaço privado.</string>
-    <string name="whatsnew_200_edit">Altere o endereço ou o token de um perfil de sync conectado sem desconectá-lo.</string>
-    <string name="whatsnew_200_group">“Agrupar por etiqueta” opcional em Todas as notas: seções recolhíveis, várias abertas ao mesmo tempo.</string>
-    <string name="whatsnew_200_widget">Widget: a prévia não repete mais as tarefas mostradas como caixas.</string>
-    <string name="whatsnew_200_tagcolor">Cores de tag: uma tag pode dar sua cor às suas notas (folha Todas as tags). Na lista agrupada, mantenha pressionado o cabeçalho de uma tag e arraste para reordenar as tags.</string>
-    <string name="whatsnew_200_look">Sincronizar a aparência: ative por perfil e sua aparência e cores acompanham você entre dispositivos.</string>
+    <string name="whatsnew_300_invite">Entre em um servidor compartilhado com um convite: cole e você terá seu próprio espaço privado.</string>
+    <string name="whatsnew_300_edit">Altere o endereço ou o token de um perfil de sync conectado sem desconectá-lo.</string>
+    <string name="whatsnew_300_group">“Agrupar por etiqueta” opcional em Todas as notas: seções recolhíveis, várias abertas ao mesmo tempo.</string>
+    <string name="whatsnew_300_widget">Widget: a prévia não repete mais as tarefas mostradas como caixas.</string>
+    <string name="whatsnew_300_tagcolor">Cores de tag: uma tag pode dar sua cor às suas notas (folha Todas as tags). Na lista agrupada, mantenha pressionado o cabeçalho de uma tag e arraste para reordenar as tags.</string>
+    <string name="whatsnew_300_look">Sincronizar a aparência: ative por perfil e sua aparência e cores acompanham você entre dispositivos.</string>
     <string name="update_dialog_body">Há uma nova versão no GitHub. Instalá-la sobre esta mantém suas notas.</string>
     <string name="select_notes">Selecionar</string>
     <string name="selection_count">%1$d selecionadas</string>
@@ -554,12 +554,12 @@
     <string name="invite_copy">Copiar</string>
     <string name="invite_share">Compartilhar</string>
     <string name="invite_scan_hint">Ou peça que escaneiem este código com “Escanear QR” ao entrar.</string>
-    <string name="whatsnew_200_people">Convide pelo celular: crie um convite com QR code e veja quem entrou no seu servidor (e revogue o acesso) em Configurações → Sincronização.</string>
+    <string name="whatsnew_300_people">Convide pelo celular: crie um convite com QR code e veja quem entrou no seu servidor (e revogue o acesso) em Configurações → Sincronização.</string>
     <string name="settings_search">Pesquisar nas configurações</string>
     <string name="settings_search_none">Nada encontrado</string>
     <string name="note_moved_tag">Movida para “%1$s”</string>
-    <string name="whatsnew_200_search">Busca nas configurações (a lupa ao lado do título), que perdoa erros de digitação. Arraste uma nota sobre outra tag para movê-la; uma tag vazia fica no fim da lista. Na horizontal, os botões de edição ficam na linha do título.</string>
-    <string name="whatsnew_200_swipe">Deslize para o lado na parte vazia da lista para alternar entre Todas e cada tag.</string>
-    <string name="whatsnew_200_folded">A lista lembra quais grupos de tags estavam recolhidos, mesmo depois de fechar o app.</string>
-    <string name="whatsnew_200_plain">Nova opção: o editor pode usar o fundo do app enquanto as notas mantêm a cor na lista. O texto tem margens maiores e o widget perde a barra de rolagem.</string>
+    <string name="whatsnew_300_search">Busca nas configurações (a lupa ao lado do título), que perdoa erros de digitação. Arraste uma nota sobre outra tag para movê-la; uma tag vazia fica no fim da lista. Na horizontal, os botões de edição ficam na linha do título.</string>
+    <string name="whatsnew_300_swipe">Deslize para o lado na parte vazia da lista para alternar entre Todas e cada tag.</string>
+    <string name="whatsnew_300_folded">A lista lembra quais grupos de tags estavam recolhidos, mesmo depois de fechar o app.</string>
+    <string name="whatsnew_300_plain">Nova opção: o editor pode usar o fundo do app enquanto as notas mantêm a cor na lista. O texto tem margens maiores e o widget perde a barra de rolagem.</string>
 </resources>

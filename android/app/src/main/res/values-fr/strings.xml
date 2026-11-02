@@ -514,12 +514,12 @@
     <string name="existing_tags">Vos étiquettes</string>
     <string name="whatsnew_131_news">Sélectionnez plusieurs notes à la fois (archiver, corbeille, étiquette), une fenêtre signale les nouvelles versions, et les balayages et cases sont plus sûrs.</string>
     <string name="whatsnew_131_widget">Le widget peut se limiter à une étiquette et permet de cocher des tâches directement.</string>
-    <string name="whatsnew_200_invite">Rejoignez un serveur partagé avec une invitation : collez-la et vous avez votre propre espace privé.</string>
-    <string name="whatsnew_200_edit">Modifiez l’adresse ou le jeton d’un profil de sync connecté sans le déconnecter.</string>
-    <string name="whatsnew_200_group">« Grouper par étiquette » facultatif pour Toutes les notes : sections repliables, plusieurs ouvertes à la fois.</string>
-    <string name="whatsnew_200_widget">Widget : l’aperçu ne répète plus les tâches affichées sous forme de cases.</string>
-    <string name="whatsnew_200_tagcolor">Couleurs de tag : un tag peut donner sa couleur à ses notes (feuille Tous les tags). Dans la liste groupée, appuyez longuement sur un en-tête de tag et faites-le glisser pour réordonner les tags.</string>
-    <string name="whatsnew_200_look">Synchroniser l’apparence : activez-le par profil et votre apparence et vos couleurs vous suivent d’un appareil à l’autre.</string>
+    <string name="whatsnew_300_invite">Rejoignez un serveur partagé avec une invitation : collez-la et vous avez votre propre espace privé.</string>
+    <string name="whatsnew_300_edit">Modifiez l’adresse ou le jeton d’un profil de sync connecté sans le déconnecter.</string>
+    <string name="whatsnew_300_group">« Grouper par étiquette » facultatif pour Toutes les notes : sections repliables, plusieurs ouvertes à la fois.</string>
+    <string name="whatsnew_300_widget">Widget : l’aperçu ne répète plus les tâches affichées sous forme de cases.</string>
+    <string name="whatsnew_300_tagcolor">Couleurs de tag : un tag peut donner sa couleur à ses notes (feuille Tous les tags). Dans la liste groupée, appuyez longuement sur un en-tête de tag et faites-le glisser pour réordonner les tags.</string>
+    <string name="whatsnew_300_look">Synchroniser l’apparence : activez-le par profil et votre apparence et vos couleurs vous suivent d’un appareil à l’autre.</string>
     <string name="update_dialog_body">Une nouvelle version est disponible sur GitHub. L\'installer par-dessus celle-ci conserve vos notes.</string>
     <string name="select_notes">Sélectionner</string>
     <string name="selection_count">%1$d sélectionnées</string>
@@ -554,12 +554,12 @@
     <string name="invite_copy">Copier</string>
     <string name="invite_share">Partager</string>
     <string name="invite_scan_hint">Ou faites-leur scanner ce code avec « Scanner le QR » en rejoignant.</string>
-    <string name="whatsnew_200_people">Invitez depuis votre téléphone : créez une invitation avec un QR code et voyez qui a rejoint votre serveur (et révoquez son accès) dans Réglages → Synchronisation.</string>
+    <string name="whatsnew_300_people">Invitez depuis votre téléphone : créez une invitation avec un QR code et voyez qui a rejoint votre serveur (et révoquez son accès) dans Réglages → Synchronisation.</string>
     <string name="settings_search">Rechercher dans les réglages</string>
     <string name="settings_search_none">Aucun résultat</string>
     <string name="note_moved_tag">Déplacée vers « %1$s »</string>
-    <string name="whatsnew_200_search">Recherche dans les réglages (la loupe à côté du titre), qui pardonne les fautes de frappe. Faites glisser une note sur un autre tag pour la déplacer ; un tag vide reste en fin de liste. En paysage, les boutons d’édition partagent la ligne du titre.</string>
-    <string name="whatsnew_200_swipe">Balayez sur le côté dans la partie vide de la liste pour passer de Toutes aux différents tags.</string>
-    <string name="whatsnew_200_folded">La liste se souvient des groupes de tags repliés, même après avoir fermé l’appli.</string>
-    <string name="whatsnew_200_plain">Nouveau réglage : l\'éditeur peut utiliser le fond de l\'application tandis que les notes gardent leur couleur dans la liste. Le texte a des marges plus larges et le widget perd sa barre de défilement.</string>
+    <string name="whatsnew_300_search">Recherche dans les réglages (la loupe à côté du titre), qui pardonne les fautes de frappe. Faites glisser une note sur un autre tag pour la déplacer ; un tag vide reste en fin de liste. En paysage, les boutons d’édition partagent la ligne du titre.</string>
+    <string name="whatsnew_300_swipe">Balayez sur le côté dans la partie vide de la liste pour passer de Toutes aux différents tags.</string>
+    <string name="whatsnew_300_folded">La liste se souvient des groupes de tags repliés, même après avoir fermé l’appli.</string>
+    <string name="whatsnew_300_plain">Nouveau réglage : l\'éditeur peut utiliser le fond de l\'application tandis que les notes gardent leur couleur dans la liste. Le texte a des marges plus larges et le widget perd sa barre de défilement.</string>
 </resources>

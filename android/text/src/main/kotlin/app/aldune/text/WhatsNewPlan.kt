@@ -10,8 +10,8 @@ object WhatsNewPlan {
     /** The `versionCode` of the last release before «What's new» existed (Android 1.2.0 is 18; 17 is 1.1.0). */
     const val BASELINE_FOR_UNKNOWN = 17
 
-    /** The oldest `versionCode` whose news is ever listed: 2.0.0 (21) covers what came before, so older entries do not pile up. */
-    const val OLDEST_LISTED = 21
+    /** The oldest `versionCode` whose news is ever listed: 3.0.0 (22) covers what came before, so older entries do not pile up. */
+    const val OLDEST_LISTED = 22
 
     /** The version codes to list, newest first: those after the last one seen (and not older than [oldest]), up to and including the running one. */
     fun toShow(lastSeen: Int, freshInstall: Boolean, current: Int, available: Collection<Int>, oldest: Int = 0): List<Int> {

@@ -514,12 +514,12 @@
     <string name="existing_tags">Your tags</string>
     <string name="whatsnew_131_news">Select several notes at once (archive, trash, tag), a pop-up for new versions, and safer swipes and task boxes.</string>
     <string name="whatsnew_131_widget">The widget can be limited to one tag and lets you tick tasks right on it.</string>
-    <string name="whatsnew_200_invite">Join a shared server with an invitation: paste it and you get your own private space.</string>
-    <string name="whatsnew_200_edit">Change the address or token of a connected sync profile without disconnecting it.</string>
-    <string name="whatsnew_200_group">Optional «Group by tag» for All notes: collapsible sections, several open at once.</string>
-    <string name="whatsnew_200_widget">Widget: the preview no longer repeats the tasks shown as boxes.</string>
-    <string name="whatsnew_200_tagcolor">Tag colours: a tag can give its colour to its notes (All tags sheet). In the grouped list, long-press a tag header and drag to reorder the tags.</string>
-    <string name="whatsnew_200_look">Sync the look: turn it on per profile and your appearance and colours follow you across devices.</string>
+    <string name="whatsnew_300_invite">Join a shared server with an invitation: paste it and you get your own private space.</string>
+    <string name="whatsnew_300_edit">Change the address or token of a connected sync profile without disconnecting it.</string>
+    <string name="whatsnew_300_group">Optional «Group by tag» for All notes: collapsible sections, several open at once.</string>
+    <string name="whatsnew_300_widget">Widget: the preview no longer repeats the tasks shown as boxes.</string>
+    <string name="whatsnew_300_tagcolor">Tag colours: a tag can give its colour to its notes (All tags sheet). In the grouped list, long-press a tag header and drag to reorder the tags.</string>
+    <string name="whatsnew_300_look">Sync the look: turn it on per profile and your appearance and colours follow you across devices.</string>
     <string name="update_dialog_body">A new version is on GitHub. Installing it over this one keeps your notes.</string>
     <string name="select_notes">Select</string>
     <string name="selection_count">%1$d selected</string>
@@ -554,12 +554,12 @@
     <string name="invite_copy">Copy</string>
     <string name="invite_share">Share</string>
     <string name="invite_scan_hint">Or let them scan this code with “Scan QR” when they join.</string>
-    <string name="whatsnew_200_people">Invite from your phone: create an invitation with a QR code and see who joined your server (and revoke their access) in Settings → Sync.</string>
+    <string name="whatsnew_300_people">Invite from your phone: create an invitation with a QR code and see who joined your server (and revoke their access) in Settings → Sync.</string>
     <string name="settings_search">Search settings</string>
     <string name="settings_search_none">Nothing found</string>
     <string name="note_moved_tag">Moved to “%1$s”</string>
-    <string name="whatsnew_200_search">Search in Settings (the magnifier next to the title), forgiving about typos. Drag a note onto another tag to move it; an empty tag stays at the end of the list. In landscape the editing buttons share the title row.</string>
-    <string name="whatsnew_200_swipe">Swipe sideways on the empty part of the list to move between All and each tag.</string>
-    <string name="whatsnew_200_folded">The list remembers which tag groups you had folded, even after closing the app.</string>
-    <string name="whatsnew_200_plain">New setting: the editor can use the app\'s own background while notes keep their color in the list. The text has roomier margins and the dock widget loses its scroll bar.</string>
+    <string name="whatsnew_300_search">Search in Settings (the magnifier next to the title), forgiving about typos. Drag a note onto another tag to move it; an empty tag stays at the end of the list. In landscape the editing buttons share the title row.</string>
+    <string name="whatsnew_300_swipe">Swipe sideways on the empty part of the list to move between All and each tag.</string>
+    <string name="whatsnew_300_folded">The list remembers which tag groups you had folded, even after closing the app.</string>
+    <string name="whatsnew_300_plain">New setting: the editor can use the app\'s own background while notes keep their color in the list. The text has roomier margins and the dock widget loses its scroll bar.</string>
 </resources>

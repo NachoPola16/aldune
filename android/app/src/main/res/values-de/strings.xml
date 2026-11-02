@@ -514,12 +514,12 @@
     <string name="existing_tags">Deine Tags</string>
     <string name="whatsnew_131_news">Mehrere Notizen auf einmal auswählen (archivieren, Papierkorb, Tag), Hinweisfenster bei neuen Versionen und sicherere Wischgesten und Aufgabenkästchen.</string>
     <string name="whatsnew_131_widget">Das Widget lässt sich auf ein Tag beschränken und erlaubt, Aufgaben direkt darin abzuhaken.</string>
-    <string name="whatsnew_200_invite">Tritt einem geteilten Server mit einer Einladung bei: einfügen und du hast deinen eigenen privaten Bereich.</string>
-    <string name="whatsnew_200_edit">Ändere Adresse oder Token eines verbundenen Sync-Profils, ohne es zu trennen.</string>
-    <string name="whatsnew_200_group">Optional „Nach Tag gruppieren“ für Alle Notizen: einklappbare Abschnitte, mehrere gleichzeitig offen.</string>
-    <string name="whatsnew_200_widget">Widget: Die Vorschau wiederholt die als Kästchen gezeigten Aufgaben nicht mehr.</string>
-    <string name="whatsnew_200_tagcolor">Tag-Farben: Ein Tag kann seine Farbe an seine Notizen weitergeben (Blatt «Alle Tags»). In der gruppierten Liste die Tag-Überschrift gedrückt halten und ziehen, um die Tags neu zu ordnen.</string>
-    <string name="whatsnew_200_look">Aussehen synchronisieren: pro Profil aktivieren, und Aussehen und Farben folgen dir auf allen Geräten.</string>
+    <string name="whatsnew_300_invite">Tritt einem geteilten Server mit einer Einladung bei: einfügen und du hast deinen eigenen privaten Bereich.</string>
+    <string name="whatsnew_300_edit">Ändere Adresse oder Token eines verbundenen Sync-Profils, ohne es zu trennen.</string>
+    <string name="whatsnew_300_group">Optional „Nach Tag gruppieren“ für Alle Notizen: einklappbare Abschnitte, mehrere gleichzeitig offen.</string>
+    <string name="whatsnew_300_widget">Widget: Die Vorschau wiederholt die als Kästchen gezeigten Aufgaben nicht mehr.</string>
+    <string name="whatsnew_300_tagcolor">Tag-Farben: Ein Tag kann seine Farbe an seine Notizen weitergeben (Blatt «Alle Tags»). In der gruppierten Liste die Tag-Überschrift gedrückt halten und ziehen, um die Tags neu zu ordnen.</string>
+    <string name="whatsnew_300_look">Aussehen synchronisieren: pro Profil aktivieren, und Aussehen und Farben folgen dir auf allen Geräten.</string>
     <string name="update_dialog_body">Eine neue Version ist auf GitHub. Wenn du sie über diese installierst, bleiben deine Notizen erhalten.</string>
     <string name="select_notes">Auswählen</string>
     <string name="selection_count">%1$d ausgewählt</string>
@@ -554,12 +554,12 @@
     <string name="invite_copy">Kopieren</string>
     <string name="invite_share">Teilen</string>
     <string name="invite_scan_hint">Oder lass sie diesen Code beim Beitritt mit „QR scannen“ einlesen.</string>
-    <string name="whatsnew_200_people">Vom Handy einladen: Erstelle eine Einladung mit QR-Code und sieh in Einstellungen → Synchronisierung, wer deinem Server beigetreten ist (und widerrufe den Zugang).</string>
+    <string name="whatsnew_300_people">Vom Handy einladen: Erstelle eine Einladung mit QR-Code und sieh in Einstellungen → Synchronisierung, wer deinem Server beigetreten ist (und widerrufe den Zugang).</string>
     <string name="settings_search">Einstellungen durchsuchen</string>
     <string name="settings_search_none">Nichts gefunden</string>
     <string name="note_moved_tag">Verschoben nach „%1$s“</string>
-    <string name="whatsnew_200_search">Suche in den Einstellungen (die Lupe neben dem Titel), die Tippfehler verzeiht. Zieh eine Notiz auf einen anderen Tag, um sie zu verschieben; ein leerer Tag bleibt am Ende der Liste. Im Querformat teilen sich die Bearbeitungsschaltflächen die Titelzeile.</string>
-    <string name="whatsnew_200_swipe">Wische seitlich über den leeren Teil der Liste, um zwischen Alle und den einzelnen Tags zu wechseln.</string>
-    <string name="whatsnew_200_folded">Die Liste merkt sich, welche Tag-Gruppen eingeklappt waren, auch nach dem Schließen der App.</string>
-    <string name="whatsnew_200_plain">Neue Einstellung: Der Editor kann den Hintergrund der App nutzen, während die Notizen in der Liste ihre Farbe behalten. Der Text hat größere Ränder und das Widget verliert seine Bildlaufleiste.</string>
+    <string name="whatsnew_300_search">Suche in den Einstellungen (die Lupe neben dem Titel), die Tippfehler verzeiht. Zieh eine Notiz auf einen anderen Tag, um sie zu verschieben; ein leerer Tag bleibt am Ende der Liste. Im Querformat teilen sich die Bearbeitungsschaltflächen die Titelzeile.</string>
+    <string name="whatsnew_300_swipe">Wische seitlich über den leeren Teil der Liste, um zwischen Alle und den einzelnen Tags zu wechseln.</string>
+    <string name="whatsnew_300_folded">Die Liste merkt sich, welche Tag-Gruppen eingeklappt waren, auch nach dem Schließen der App.</string>
+    <string name="whatsnew_300_plain">Neue Einstellung: Der Editor kann den Hintergrund der App nutzen, während die Notizen in der Liste ihre Farbe behalten. Der Text hat größere Ränder und das Widget verliert seine Bildlaufleiste.</string>
 </resources>

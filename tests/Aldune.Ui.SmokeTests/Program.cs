@@ -36,7 +36,8 @@ internal static class Program
             var tagged = repository.Create("Smoke tagged note", "#F7E6A3", "SMOKE");
             repository.SetTags(tagged.Id, ["smoke-tag"]);
             repository.Create("Smoke untagged note", "#F7E6A3", "SMOKE");
-            var monitor = new MonitorInfo("SMOKE", new WorkingArea(100000, 100000, 1920, 1080), 1, false);
+            // Far off every screen, but inside the 32767 limit: a window positioned beyond it is clamped there and its geometry stops matching the working area.
+            var monitor = new MonitorInfo("SMOKE", new WorkingArea(20000, 20000, 1920, 1080), 1, false);
             dock = new EdgeDockWindow(EdgePosition.Right, monitor, repository, coordinator, settings)
             {
                 ShowActivated = false,

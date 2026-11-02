@@ -514,12 +514,12 @@
     <string name="existing_tags">Le tue etichette</string>
     <string name="whatsnew_131_news">Seleziona più note insieme (archivia, cestino, etichetta), una finestra segnala le nuove versioni e scorrimenti e caselle più sicuri.</string>
     <string name="whatsnew_131_widget">Il widget può essere limitato a un’etichetta e permette di spuntare le attività direttamente.</string>
-    <string name="whatsnew_200_invite">Unisciti a un server condiviso con un invito: incollalo e avrai il tuo spazio privato.</string>
-    <string name="whatsnew_200_edit">Cambia indirizzo o token di un profilo di sync collegato senza scollegarlo.</string>
-    <string name="whatsnew_200_group">«Raggruppa per etichetta» facoltativo in Tutte le note: sezioni comprimibili, più aperte insieme.</string>
-    <string name="whatsnew_200_widget">Widget: l’anteprima non ripete più le attività mostrate come caselle.</string>
-    <string name="whatsnew_200_tagcolor">Colori delle etichette: un\'etichetta può dare il suo colore alle sue note (foglio Tutte le etichette). Nell\'elenco raggruppato, tieni premuta l\'intestazione di un\'etichetta e trascina per riordinarle.</string>
-    <string name="whatsnew_200_look">Sincronizza l’aspetto: attivalo per profilo e aspetto e colori ti seguono tra i dispositivi.</string>
+    <string name="whatsnew_300_invite">Unisciti a un server condiviso con un invito: incollalo e avrai il tuo spazio privato.</string>
+    <string name="whatsnew_300_edit">Cambia indirizzo o token di un profilo di sync collegato senza scollegarlo.</string>
+    <string name="whatsnew_300_group">«Raggruppa per etichetta» facoltativo in Tutte le note: sezioni comprimibili, più aperte insieme.</string>
+    <string name="whatsnew_300_widget">Widget: l’anteprima non ripete più le attività mostrate come caselle.</string>
+    <string name="whatsnew_300_tagcolor">Colori delle etichette: un\'etichetta può dare il suo colore alle sue note (foglio Tutte le etichette). Nell\'elenco raggruppato, tieni premuta l\'intestazione di un\'etichetta e trascina per riordinarle.</string>
+    <string name="whatsnew_300_look">Sincronizza l’aspetto: attivalo per profilo e aspetto e colori ti seguono tra i dispositivi.</string>
     <string name="update_dialog_body">C\'è una nuova versione su GitHub. Installandola sopra questa, le tue note restano.</string>
     <string name="select_notes">Seleziona</string>
     <string name="selection_count">%1$d selezionate</string>
@@ -554,12 +554,12 @@
     <string name="invite_copy">Copia</string>
     <string name="invite_share">Condividi</string>
     <string name="invite_scan_hint">Oppure fai scansionare questo codice con «Scansiona QR» quando si unisce.</string>
-    <string name="whatsnew_200_people">Invita dal telefono: crea un invito con codice QR e vedi chi si è unito al tuo server (e revoca l’accesso) in Impostazioni → Sincronizzazione.</string>
+    <string name="whatsnew_300_people">Invita dal telefono: crea un invito con codice QR e vedi chi si è unito al tuo server (e revoca l’accesso) in Impostazioni → Sincronizzazione.</string>
     <string name="settings_search">Cerca nelle impostazioni</string>
     <string name="settings_search_none">Nessun risultato</string>
     <string name="note_moved_tag">Spostata in «%1$s»</string>
-    <string name="whatsnew_200_search">Ricerca nelle impostazioni (la lente accanto al titolo), che perdona gli errori di battitura. Trascina una nota su un’altra etichetta per spostarla; un’etichetta vuota resta in fondo all’elenco. In orizzontale i pulsanti di modifica stanno nella riga del titolo.</string>
-    <string name="whatsnew_200_swipe">Scorri di lato nella parte vuota dell’elenco per passare da Tutte alle singole etichette.</string>
-    <string name="whatsnew_200_folded">L’elenco ricorda quali gruppi di etichette erano chiusi, anche dopo aver chiuso l’app.</string>
-    <string name="whatsnew_200_plain">Nuova impostazione: l\'editor può usare lo sfondo dell\'app mentre le note mantengono il colore nell\'elenco. Il testo ha margini più ampi e il widget perde la barra di scorrimento.</string>
+    <string name="whatsnew_300_search">Ricerca nelle impostazioni (la lente accanto al titolo), che perdona gli errori di battitura. Trascina una nota su un’altra etichetta per spostarla; un’etichetta vuota resta in fondo all’elenco. In orizzontale i pulsanti di modifica stanno nella riga del titolo.</string>
+    <string name="whatsnew_300_swipe">Scorri di lato nella parte vuota dell’elenco per passare da Tutte alle singole etichette.</string>
+    <string name="whatsnew_300_folded">L’elenco ricorda quali gruppi di etichette erano chiusi, anche dopo aver chiuso l’app.</string>
+    <string name="whatsnew_300_plain">Nuova impostazione: l\'editor può usare lo sfondo dell\'app mentre le note mantengono il colore nell\'elenco. Il testo ha margini più ampi e il widget perde la barra di scorrimento.</string>
 </resources>

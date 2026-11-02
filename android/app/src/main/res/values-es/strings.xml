@@ -514,12 +514,12 @@
     <string name="existing_tags">Tus etiquetas</string>
     <string name="whatsnew_131_news">Selecciona varias notas a la vez (archivar, papelera, etiqueta), aviso emergente de versiones nuevas y deslizamientos y casillas más seguros.</string>
     <string name="whatsnew_131_widget">El widget puede limitarse a una etiqueta y deja marcar tareas desde él.</string>
-    <string name="whatsnew_200_invite">Únete a un servidor compartido con una invitación: pégala y tendrás tu propio espacio privado.</string>
-    <string name="whatsnew_200_edit">Cambia la dirección o el token de un perfil de sync conectado sin desconectarlo.</string>
-    <string name="whatsnew_200_group">«Agrupar por etiqueta» opcional en Todas las notas: secciones plegables, varias abiertas a la vez.</string>
-    <string name="whatsnew_200_widget">Widget: la vista previa ya no repite las tareas que se ven como casillas.</string>
-    <string name="whatsnew_200_tagcolor">Colores de etiqueta: una etiqueta puede dar su color a sus notas (hoja Todas las etiquetas). En la lista agrupada, mantén pulsada la cabecera de una etiqueta y arrástrala para reordenarlas.</string>
-    <string name="whatsnew_200_look">Sincronizar el aspecto: actívalo por perfil y tu aspecto y tus colores te siguen entre dispositivos.</string>
+    <string name="whatsnew_300_invite">Únete a un servidor compartido con una invitación: pégala y tendrás tu propio espacio privado.</string>
+    <string name="whatsnew_300_edit">Cambia la dirección o el token de un perfil de sync conectado sin desconectarlo.</string>
+    <string name="whatsnew_300_group">«Agrupar por etiqueta» opcional en Todas las notas: secciones plegables, varias abiertas a la vez.</string>
+    <string name="whatsnew_300_widget">Widget: la vista previa ya no repite las tareas que se ven como casillas.</string>
+    <string name="whatsnew_300_tagcolor">Colores de etiqueta: una etiqueta puede dar su color a sus notas (hoja Todas las etiquetas). En la lista agrupada, mantén pulsada la cabecera de una etiqueta y arrástrala para reordenarlas.</string>
+    <string name="whatsnew_300_look">Sincronizar el aspecto: actívalo por perfil y tu aspecto y tus colores te siguen entre dispositivos.</string>
     <string name="update_dialog_body">Hay una versión nueva en GitHub. Si la instalas encima de esta, tus notas se conservan.</string>
     <string name="select_notes">Seleccionar</string>
     <string name="selection_count">%1$d seleccionadas</string>
@@ -554,12 +554,12 @@
     <string name="invite_copy">Copiar</string>
     <string name="invite_share">Compartir</string>
     <string name="invite_scan_hint">O que escaneen este código con «Escanear QR» al unirse.</string>
-    <string name="whatsnew_200_people">Invita desde el móvil: crea una invitación con código QR y mira quién se unió a tu servidor (y revoca su acceso) en Ajustes → Sincronización.</string>
+    <string name="whatsnew_300_people">Invita desde el móvil: crea una invitación con código QR y mira quién se unió a tu servidor (y revoca su acceso) en Ajustes → Sincronización.</string>
     <string name="settings_search">Buscar en Ajustes</string>
     <string name="settings_search_none">No se encontró nada</string>
     <string name="note_moved_tag">Movida a «%1$s»</string>
-    <string name="whatsnew_200_search">Buscador en Ajustes (la lupa junto al título) que perdona erratas. Arrastra una nota sobre otra etiqueta para moverla; una etiqueta vacía se queda al final de la lista. En horizontal, los botones de edición comparten la fila del título.</string>
-    <string name="whatsnew_200_swipe">Desliza de lado por la parte vacía de la lista para pasar de Todas a cada etiqueta.</string>
-    <string name="whatsnew_200_folded">La lista recuerda qué grupos de etiquetas tenías plegados, incluso al cerrar la app.</string>
-    <string name="whatsnew_200_plain">Ajuste nuevo: el editor puede usar el fondo de la app mientras las notas conservan su color en la lista. El texto tiene márgenes más amplios y el widget pierde su barra de scroll.</string>
+    <string name="whatsnew_300_search">Buscador en Ajustes (la lupa junto al título) que perdona erratas. Arrastra una nota sobre otra etiqueta para moverla; una etiqueta vacía se queda al final de la lista. En horizontal, los botones de edición comparten la fila del título.</string>
+    <string name="whatsnew_300_swipe">Desliza de lado por la parte vacía de la lista para pasar de Todas a cada etiqueta.</string>
+    <string name="whatsnew_300_folded">La lista recuerda qué grupos de etiquetas tenías plegados, incluso al cerrar la app.</string>
+    <string name="whatsnew_300_plain">Ajuste nuevo: el editor puede usar el fondo de la app mientras las notas conservan su color en la lista. El texto tiene márgenes más amplios y el widget pierde su barra de scroll.</string>
 </resources>

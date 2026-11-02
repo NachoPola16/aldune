@@ -14,6 +14,7 @@ Everything is in English. Quoted interface strings that appear in Spanish are th
 - [`BRANDING.md`](BRANDING.md): the logo and every format generated from it.
 - [`SETTINGS_PARITY.md`](SETTINGS_PARITY.md): which settings Windows and Android share, and the differences kept on purpose.
 - [`RELEASING.md`](RELEASING.md): how a Windows or Android version is published.
+- [`TRANSLATION_REVIEW.md`](TRANSLATION_REVIEW.md): how to review the Italian, Japanese and Chinese translations.
 - [`WPF_PROBES.md`](WPF_PROBES.md) and [`ANDROID_PROBES.md`](ANDROID_PROBES.md): how the interface is verified.
 - [`../tests/vectors/README.md`](../tests/vectors/README.md): the cross-platform compatibility vectors.
 

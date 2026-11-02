@@ -22,7 +22,7 @@ Only the releases where the picture really changes are shown. Each one was made 
 | ![Aldune 2.5.0: a smaller, quieter button bar](images/progress-windows-2.5.0.png) **2.5.0**, 31 October | The button bar of the dock became smaller and quieter, so the notes, not the controls, are what you see first. |
 | ![Aldune 2.7.3: the Aldune look](images/progress-windows-2.7.3.png) **2.7.3**, 1 November | The brand look: plum ink with the pink, cyan and yellow of the logo, now the default on a fresh install. |
 
-In 0.5.0 the five tabs all read "NEW NOTE" with these sample notes. By 0.8.0, three days later, they show the first line of each note. Windows 3.0.0 looks the same as 2.7.3 in this view: what it adds (invitations, a synced look) lives in Settings and in the sync.
+In 0.5.0 the five tabs all read "NEW NOTE" with these sample notes. By 0.8.0, three days later, they show the first line of each note. Windows 3.0.0 looks the same as 2.7.3 at rest: what it adds (invitations, a synced look) lives in Settings and in the sync, and what it changes in the dock (the deck shuffles when you change view with the wheel, and notes fade in and out instead of scaling) is a movement, so it is in the animation in the [README](../README.md), not in a still picture.
 
 ### Notebook looks
 
@@ -34,13 +34,13 @@ Since 2.1 the app can also wear the notebook looks, with paper under the text. T
 
 ### Android
 
-The first release candidate, 1.0.0 and today (2.0.0, in the "Aldune" look, with the list grouped by tag):
+The first release candidate, 1.0.0 and today (3.0.0, in the "Aldune" look, with the list grouped by tag):
 
-![Aldune for Android: 0.1.0-rc1 on 24 October, 1.0.0 on 29 October and 2.0.0 today](images/progress-android.png)
+![Aldune for Android: 0.1.0-rc1 on 24 October, 1.0.0 on 29 October and 3.0.0 today](images/progress-android.png)
 
 The first candidate was a plain list with a colour stripe; 1.0.0 added full-colour cards, the sync notice and the welcome message; today there is a bottom search bar with the settings gear, a preview line under each title and, if you want, sections by tag.
 
-Settings, full screen, on 2.0.0:
+Settings, full screen, on 2.0.0 (3.0.0 only added options to it):
 
 ![Aldune for Android: Settings, full screen](images/progress-android-settings.png)
 
@@ -125,12 +125,12 @@ The releases that changed the most, told as ideas: what we wanted, what it becam
 
 Smaller things people notice: pinned notes that sync (2.2), local version history (2.3), the mouse wheel to switch dock views and a quieter, smaller button bar (2.3 and 2.4), the view label above the notes as a control you can click (2.5 and 2.6), a "What's new" window shown once after an update, your own order for tags and safer links (2.7), and the wheel skipping empty views (2.7.2).
 
-### 3.0.0 and Android 2.0.0 (1 November)
+### 3.0.0 on both apps (1 to 3 November)
 
 - **The idea.** Let the family use one server without anyone editing configuration files, and without anyone seeing anyone else's notes.
 - **What it became.** Invitations. The owner makes a one-use code (with a QR code on Android); the other person pastes or scans it and gets a private space of their own. Both apps list who has joined and can revoke them. The look can follow you across devices, and the Android list can be grouped by tag.
 - **How.** The server stores only hashes of codes and tokens; a code has 128 bits, expires and works once; the sync key is created on the guest's device and the server never sees it; the admin token is asked for every time and never saved. Wrong guesses are limited per address on every route.
-- **The review before publishing.** Three read-only audits (server and sync, Android, and a bug hunt), with every finding checked against the code before it was fixed. They led to a cap on the number of notes per space, a look document that is never overwritten if it cannot be opened, bounded reads of server replies, a confirmation before sending an invitation or the admin token over plain `http` outside the home network, a long-press menu that works in the grouped list, and no pull-to-refresh spinner when there is no sync profile. The design pass added a text box that reaches the edges of the note (a click in the margin used to hit nothing, measured with a probe), switches filled with the accent colour, page titles in Settings that clearly stand above their sections, "Restore size and position of all notes", and colours per tag: a tag can give its colour to the notes that carry it (set in Manage tags on Windows, in the all-tags sheet on Android; the colour lands in each note, so it syncs and the sync format stays 4). A filter for notes not edited for a while was tried and dropped as noise. A last round before publishing added a search box in Settings on both apps (forgiving about typos and accents, and it takes you to the option and lights it), one red for destructive actions that is fitted to each look (measured so it reads on every background), two new note colour sets (Aldune and Jewel) with the dark looks suggesting the one that suits them, on Android notes that can be dragged to another tag and tags that stay when they are emptied, and a landscape editor whose buttons share the title row so the keyboard leaves room to write. The wheel on the dock can now leave the tags out (or only go round the tags), and Settings reflects what the dock changes, and the other way round, while it is open.
+- **The review before publishing.** Three read-only audits (server and sync, Android, and a bug hunt), with every finding checked against the code before it was fixed. They led to a cap on the number of notes per space, a look document that is never overwritten if it cannot be opened, bounded reads of server replies, a confirmation before sending an invitation or the admin token over plain `http` outside the home network, a long-press menu that works in the grouped list, and no pull-to-refresh spinner when there is no sync profile. The design pass added a text box that reaches the edges of the note (a click in the margin used to hit nothing, measured with a probe), switches filled with the accent colour, page titles in Settings that clearly stand above their sections, "Restore size and position of all notes", and colours per tag: a tag can give its colour to the notes that carry it (set in Manage tags on Windows, in the all-tags sheet on Android; the colour lands in each note, so it syncs and the sync format stays 4). A filter for notes not edited for a while was tried and dropped as noise. A last round before publishing added a search box in Settings on both apps (forgiving about typos and accents, and it takes you to the option and lights it), one red for destructive actions that is fitted to each look (measured so it reads on every background), two new note colour sets (Aldune and Jewel) with the dark looks suggesting the one that suits them, on Android notes that can be dragged to another tag and tags that stay when they are emptied, and a landscape editor whose buttons share the title row so the keyboard leaves room to write. The wheel on the dock can now leave the tags out (or only go round the tags), and Settings reflects what the dock changes, and the other way round, while it is open. The final round moved the dock itself: changing view with the wheel shuffles the deck for any number of notes (the name card stays still and returns already measured, and the window waits two frames before it changes size, so no stale drawing shows), the wheel also works over the gaps of the open dock, a click outside folds it at once, a closed note's tab fades back in and a note opens with a plain fade. A new switch keeps the note's colour on the tab and in the lists but gives the open note a plain background. On Android the list remembers which groups you folded, the group arrow sits on the edge of the cards with its title aligned to their text, the editor has roomier margins and a cursor that always contrasts, and in landscape the bottom bar follows the notch.
 
 ### How the work is done
 

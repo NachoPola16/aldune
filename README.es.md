@@ -29,32 +29,35 @@ ratón y se abren como ventanas propias. Sin cuenta, sin nube obligatoria, y con
 - **Recordatorios**, **etiquetas** (en el orden que quieras), **archivo** y **papelera**, y un gestor para buscar y ordenar.
 - **Novedades tras cada actualización**: una ventana breve con lo que ha cambiado (nunca en una instalación nueva; se reabre desde Ajustes).
 - **Enlaces web**: una dirección `http://` o `https://` en una nota se abre con `Ctrl`+clic en Windows; en Android, con el cursor sobre el enlace aparece un botón «Abrir». Nunca sola, y solo direcciones web.
+- **Historial por nota y reglas de tareas hechas**: hasta 20 versiones locales de cada nota que puedes ver y restaurar, y una elección por nota de qué pasa con las tareas hechas (así una lista de la compra compartida no la vacía otro dispositivo). En Windows, la rueda del ratón sobre el engranaje del dock (o sobre las pestañas cuando caben todas) cambia entre todas las notas, cada etiqueta, archivo y papelera; también funciona sobre los huecos del dock abierto, se salta las vacías y eliges en cuáles de archivo, papelera y todas se detiene. Un clic en cualquier sitio fuera pliega el dock al instante.
 - **Temas de color**: Clásico, Sereno y Grafito, con notas claras, oscuras o alternando, o los tuyos.
 - **Atajo global** para crear una nota desde cualquier sitio (por defecto `Ctrl+Mayús+N`).
 - **Notas con contraseña**, cifradas con una clave que sale de la contraseña (que no se guarda), con un nombre visible opcional para reconocerlas sin abrirlas.
 - **Sincronización opcional** entre dispositivos por carpeta compartida o NAS, por tu propio
-  servidor (Docker) o por WebDAV / Nextcloud, cifrada de extremo a extremo. Ver
+  servidor (Docker) o por WebDAV / Nextcloud, cifrada de extremo a extremo. Si alojas el servidor, alguien puede unirse con una invitación de un solo uso y tiene su propio espacio privado, y el aspecto puede seguirte entre dispositivos. Ver
   [docs/SYNC.es.md](docs/SYNC.es.md).
 - **Copias de seguridad automáticas**: una al día, se guardan las 7 más recientes.
 - **Accesible**: anillo de foco visible al navegar con Tab, colores de nota que se eligen con las flechas, «Tamaño del texto» (100–150 %) y zoom de una
-  nota con `Ctrl` + rueda, y alto contraste de Windows. El dock se abre con el ratón; sin ratón, el atajo opcional `Ctrl+Alt+M` (Ajustes → General)
+  nota con `Ctrl` + rueda, y alto contraste de Windows. El dock se abre con el ratón; con teclado, `Ctrl+Alt+D` lo enfoca (las flechas pasan de una pestaña a otra, Intro abre) y el atajo opcional `Ctrl+Alt+M` (Ajustes → General)
   abre la lista de notas (Intro abre una, Espacio la marca). Más en «Ayuda rápida» de Ajustes.
 - En **español**, **inglés**, **alemán**, **francés**, **italiano**, **portugués de Brasil**, **japonés** y **chino simplificado**.
 
 ### Aspectos
 
-Además de Oscuro, Claro, Pastel y Medianoche hay aspectos con carácter propio (también en Android). Tres de los últimos: la **libreta de viaje** (papel crema con pliegues), el **cuaderno de campo** (renglones y margen rojo) y el **cuaderno cuadriculado** (hoja de cuadros con margen rojo; sale en la próxima versión), cada uno en claro y en oscuro.
+Además de Oscuro, Claro, Pastel y Medianoche hay aspectos con carácter propio (también en Android). Tres de los últimos: la **libreta de viaje** (papel crema con pliegues), el **cuaderno de campo** (renglones y margen rojo) y el **cuaderno cuadriculado** (hoja de cuadros con margen rojo), cada uno en claro y en oscuro.
 
 | Libreta de viaje | Cuaderno de campo | Cuaderno cuadriculado |
 |---|---|---|
 | ![Libreta de viaje, clara](docs/images/aspecto-libreta-viaje.png) | ![Cuaderno de campo, claro](docs/images/aspecto-cuaderno-campo.png) | ![Cuaderno cuadriculado, claro](docs/images/aspecto-cuaderno-cuadriculado.png) |
 | ![Libreta de viaje, oscura](docs/images/aspecto-libreta-viaje-oscuro.png) | ![Cuaderno de campo, oscuro](docs/images/aspecto-cuaderno-campo-oscuro.png) | ![Cuaderno cuadriculado, oscuro](docs/images/aspecto-cuaderno-cuadriculado-oscuro.png) |
 
+En Ajustes → Apariencia hay además un interruptor para conservar el color de la nota en la pestaña y en las listas pero dar a la nota abierta el fondo liso del aspecto (en Android, «Editor con los colores de la app»).
+
 ## Instalar
 
 Descarga la última versión desde [Releases](https://github.com/NachoPola16/aldune/releases):
 
-- **Instalador** (`Aldune-Setup-x.y.z.exe`): accesos directos y desinstalador. No necesita permisos
+- **Instalador** (`Aldune-Setup-x.y.z.0.exe`): accesos directos y desinstalador. No necesita permisos
   de administrador. Desinstalar no borra tus notas.
 - **Portable** (`aldune-portable-win-x64.zip`): un solo `aldune.exe`, sin instalar nada.
 - **Portable para ARM** (`aldune-portable-win-arm64.zip`): lo mismo para Windows en ARM64 (Surface Pro X, portátiles Snapdragon). Los x64 también
@@ -66,7 +69,7 @@ Requisitos: Windows 10 u 11 de 64 bits. No hace falta instalar .NET.
 **Comprobar la descarga** (opcional, en PowerShell). El resultado tiene que ser igual a la línea de ese fichero en `SHA256SUMS.txt`:
 
 ```powershell
-(Get-FileHash .\Aldune-Setup-2.7.3.0.exe -Algorithm SHA256).Hash.ToLower()
+(Get-FileHash .\Aldune-Setup-3.0.0.0.exe -Algorithm SHA256).Hash.ToLower()
 ```
 
 Sirve para detectar una descarga corrupta o cambiada por el camino. No sustituye a una firma de código (ver «Firma y privacidad»): quien pudiera
@@ -146,12 +149,13 @@ Cómo se publica una versión y cómo se firma: [docs/RELEASING.md](docs/RELEASI
 
 ## Documentación
 
-- [`docs/SYNC.es.md`](docs/SYNC.es.md): sincronización, servidor propio y modelo de seguridad.
-- [`docs/PROGRESS.md`](docs/PROGRESS.md): la historia del proyecto para quien lo usa (en inglés).
+La historia hasta ahora, con capturas de antes y ahora y los fallos que importaron: [docs/PROGRESS.md](docs/PROGRESS.md) (en inglés).
+
+Ver el [índice de documentación](docs/README.md) (en inglés). La guía de sincronización ([`docs/SYNC.es.md`](docs/SYNC.es.md)) y la de notas protegidas ([`docs/PROTECTED_NOTES.es.md`](docs/PROTECTED_NOTES.es.md)) tienen copia en español; el resto está en inglés.
 
 ## Probar y dar tu opinión
 
-Si la estás probando: Windows [v2.7.3](https://github.com/NachoPola16/aldune/releases/tag/v2.7.3), Android [1.3.1](https://github.com/NachoPola16/aldune/releases/tag/android-v1.3.1).
+Si la estás probando: Windows [v3.0.0](https://github.com/NachoPola16/aldune/releases/tag/v3.0.0), Android [3.0.0](https://github.com/NachoPola16/aldune/releases/tag/android-v3.0.0).
 Un fallo, una duda o una idea van a [Issues](https://github.com/NachoPola16/aldune/issues/new): di qué versión usas, qué hiciste y qué esperabas.
 No pegues códigos de perfil, tokens ni el contenido de tus notas en un issue público.
 

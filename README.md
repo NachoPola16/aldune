@@ -29,7 +29,7 @@ their own. No account, no required cloud, and the content is encrypted.
 - **Reminders**, **tags** (in your own order), **archive** and **trash**, plus a manager to search and organize.
 - **What's new after every update**: a short window with what changed (never on a fresh install; reopen it from Settings).
 - **Web links**: an `http://` or `https://` address in a note opens with `Ctrl`+click on Windows; on Android, with the cursor on a link, an «Open» button appears. Never by itself, and only web addresses.
-- **Per-note history and done-task rules**: up to 20 local versions of each note you can preview and restore, and a per-note choice for what happens to done tasks (so a shared shopping list is never emptied by another device). On Windows, the mouse wheel on the dock's gear (or on the tabs when they all fit) switches between all notes, each tag, archived and trash; it skips the empty ones and you choose which of archived, trash and all it stops at.
+- **Per-note history and done-task rules**: up to 20 local versions of each note you can preview and restore, and a per-note choice for what happens to done tasks (so a shared shopping list is never emptied by another device). On Windows, the mouse wheel on the dock's gear (or on the tabs when they all fit) switches between all notes, each tag, archived and trash; it also works over the gaps of the open dock, skips the empty ones and lets you choose which of archived, trash and all it stops at. A click anywhere outside folds the dock at once.
 - **Color themes**: Classic, Serene and Graphite, with light, dark or alternating notes, or your own.
 - **A global shortcut** to create a note from anywhere (`Ctrl+Shift+N` by default).
 - **Password-protected notes**, encrypted with a key derived from the password (which is not stored), with an optional visible name to recognize them without opening them.
@@ -49,6 +49,8 @@ Besides Dark, Light, Pastel and Midnight there are looks with a character of the
 |---|---|---|
 | ![Travel notebook, light](docs/images/aspecto-libreta-viaje.png) | ![Field notebook, light](docs/images/aspecto-cuaderno-campo.png) | ![Graph-paper notebook, light](docs/images/aspecto-cuaderno-cuadriculado.png) |
 | ![Travel notebook, dark](docs/images/aspecto-libreta-viaje-oscuro.png) | ![Field notebook, dark](docs/images/aspecto-cuaderno-campo-oscuro.png) | ![Graph-paper notebook, dark](docs/images/aspecto-cuaderno-cuadriculado-oscuro.png) |
+
+Settings → Appearance also has a switch to keep the note's colour on the tab and in the lists but give the open note the look's own plain background (on Android, «Editor with the app's colors»).
 
 ## Install
 
@@ -152,7 +154,7 @@ context, branding, releasing and the probe guides are in English; the Spanish co
 
 ## Try it and give feedback
 
-If you are testing it: Windows [v2.7.3](https://github.com/NachoPola16/aldune/releases/tag/v2.7.3), Android [1.3.1](https://github.com/NachoPola16/aldune/releases/tag/android-v1.3.1).
+If you are testing it: Windows [v3.0.0](https://github.com/NachoPola16/aldune/releases/tag/v3.0.0), Android [3.0.0](https://github.com/NachoPola16/aldune/releases/tag/android-v3.0.0).
 A bug, a question or an idea goes to [Issues](https://github.com/NachoPola16/aldune/issues/new): say which version you use, what you did and what you expected.
 Do not paste profile codes, tokens or the contents of your notes in a public issue.
 
