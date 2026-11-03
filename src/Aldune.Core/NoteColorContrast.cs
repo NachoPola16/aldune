@@ -19,6 +19,36 @@ public static class NoteColorContrast
         return Contrast(luminance, 1) >= MinimumContrast ? White : Black;
     }
 
+    /// <summary>
+    /// The ink for secondary text (dates, snippets) on a face: the ink softened towards the face as far as it can go (up to 30 %) while
+    /// keeping 4.5:1. A plain opacity cannot promise that: 0.72 of an ink that already sits near 4.5:1 falls to about 3:1.
+    /// </summary>
+    public static string MutedInkFor(string? face, string ink)
+    {
+        if (!TryParse(face, out var f) || !TryParse(ink, out var i)) return ink;
+        for (double fade = 0.3; fade > 0.01; fade -= 0.02)
+        {
+            string mixed = ToHex(Mix(i, f, fade));
+            if (IsReadable(face, mixed)) return mixed;
+        }
+        return ink;
+    }
+
+    private static bool TryParse(string? color, out int rgb)
+    {
+        rgb = 0;
+        return TryGetLuminance(color, out _)
+            && int.TryParse(color.AsSpan(1), NumberStyles.HexNumber, CultureInfo.InvariantCulture, out rgb);
+    }
+
+    private static int Mix(int ink, int face, double fade)
+    {
+        int Part(int shift) => (int)Math.Round(((ink >> shift) & 0xFF) * (1 - fade) + ((face >> shift) & 0xFF) * fade);
+        return (Part(16) << 16) | (Part(8) << 8) | Part(0);
+    }
+
+    private static string ToHex(int rgb) => "#" + rgb.ToString("X6", CultureInfo.InvariantCulture);
+
     public static bool IsReadable(string? background, string? foreground) =>
         TryGetLuminance(background, out var backgroundLuminance)
         && TryGetLuminance(foreground, out var foregroundLuminance)

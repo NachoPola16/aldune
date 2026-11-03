@@ -38,6 +38,22 @@ public sealed class ManagerRowInkConverter : IValueConverter
     public object ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture) => throw new NotSupportedException();
 }
 
+/// <summary>Secondary text of a row (date, snippet): the row's ink softened as far as still reads at 4.5:1 on its face (an opacity could not promise that).</summary>
+public sealed class ManagerRowMutedInkConverter : IValueConverter
+{
+    public object Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
+    {
+        if (ManagerRows.ColourOnEdgeOnly) return ManagerRows.Resource("AlduneMutedTextBrush");
+        string face = NoteColorDisplay.Resolve(value as string);
+        var muted = Aldune.Core.NoteColorContrast.MutedInkFor(face, NoteColorPalette.LabelFor(face));
+        var brush = new SolidColorBrush((Color)ColorConverter.ConvertFromString(muted));
+        brush.Freeze();
+        return brush;
+    }
+
+    public object ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture) => throw new NotSupportedException();
+}
+
 public sealed class ManagerRowRimConverter : IValueConverter
 {
     private static readonly NoteRimConverter Filled = new();

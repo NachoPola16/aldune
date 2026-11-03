@@ -977,6 +977,12 @@ public partial class NotesManagerWindow : Window
             case Key.Space:
                 SelectFromRow(row, Keyboard.Modifiers);
                 break;
+            case Key.P when Keyboard.Modifiers == ModifierKeys.None:
+                ClickRowButton(rowElement, "RowPin");
+                break;
+            case Key.T when Keyboard.Modifiers == ModifierKeys.None:
+                ClickRowButton(rowElement, "RowTags");
+                break;
             case Key.Down or Key.Up:
                 rowElement.MoveFocus(new TraversalRequest(e.Key == Key.Down ? FocusNavigationDirection.Down : FocusNavigationDirection.Up));
                 break;
@@ -984,6 +990,21 @@ public partial class NotesManagerWindow : Window
                 return;
         }
         e.Handled = true;
+    }
+
+    // The pin and tags buttons are not Tab stops (the list is one stop); P and T on the row do what they do.
+    private static void ClickRowButton(DependencyObject row, string automationId)
+    {
+        for (int i = 0; i < VisualTreeHelper.GetChildrenCount(row); i++)
+        {
+            var child = VisualTreeHelper.GetChild(row, i);
+            if (child is Button button && System.Windows.Automation.AutomationProperties.GetAutomationId(button) == automationId)
+            {
+                button.RaiseEvent(new RoutedEventArgs(System.Windows.Controls.Primitives.ButtonBase.ClickEvent, button));
+                return;
+            }
+            ClickRowButton(child, automationId);
+        }
     }
 
     private void OnRowCheckBoxPreviewMouseLeftButtonDown(object sender, MouseButtonEventArgs e)

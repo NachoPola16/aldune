@@ -32,6 +32,7 @@
         <local:NoteLabelColorConverter x:Key="NoteLabelColorConverter" />
         <local:ManagerRowFaceConverter x:Key="ManagerRowFaceConverter" />
         <local:ManagerRowInkConverter x:Key="ManagerRowInkConverter" />
+        <local:ManagerRowMutedInkConverter x:Key="ManagerRowMutedInkConverter" />
         <local:ManagerRowRimConverter x:Key="ManagerRowRimConverter" />
         <local:NoteFaceConverter x:Key="NoteFaceConverter" />
         <local:ManagerRowStripeVisibilityConverter x:Key="ManagerRowStripeVisibilityConverter" />
@@ -601,7 +602,10 @@
             <Grid x:Name="RowsHost" Grid.Row="2" Margin="20,56,17,0">
             <ScrollViewer x:Name="RowsScroll" VerticalScrollBarVisibility="Auto"
                           HorizontalScrollBarVisibility="Disabled" Padding="0,0,5,0">
-                <ItemsControl x:Name="RowsList">
+                <!-- The list is ONE Tab stop (Once): Up/Down move between rows, Space selects, Enter opens, P pins and T edits the tags of the focused row.
+                     Without it five notes cost 20 Tab presses (row, tick box, pin and tags button each). -->
+                <ItemsControl x:Name="RowsList" KeyboardNavigation.TabNavigation="Once" KeyboardNavigation.ControlTabNavigation="Once"
+                              KeyboardNavigation.DirectionalNavigation="Contained">
                     <ItemsControl.ItemTemplate>
                         <DataTemplate>
                             <!-- TextElement.Foreground, no Foreground a secas: Border no es un
@@ -666,6 +670,7 @@
                                               Foreground="{Binding Note.Color, Converter={StaticResource ManagerRowInkConverter}}"
                                               Background="{Binding Note.Color, Converter={StaticResource ManagerRowFaceConverter}}"
                                               Style="{StaticResource AppCheckBoxStyle}"
+                                              IsTabStop="False"
                                               PreviewMouseLeftButtonDown="OnRowCheckBoxPreviewMouseLeftButtonDown"
                                               AutomationProperties.Name="{Binding Note, Converter={StaticResource NoteTitleConverter}}"
                                               VerticalAlignment="Center" Margin="0,0,12,0" />
@@ -691,7 +696,8 @@
                                                        ToolTip="{Binding Note, Converter={StaticResource NoteLinkedConverter}, ConverterParameter=Path}" />
                                             <!-- Fijar arriba en la lista (no el «siempre encima»): la chincheta es un interruptor,
                                                  tenue si la nota no está fijada y plena si lo está. -->
-                                            <Button DockPanel.Dock="Left" Tag="{Binding}" Click="OnPinToTopClick"
+                                            <Button DockPanel.Dock="Left" Tag="{Binding}" Click="OnPinToTopClick" IsTabStop="False"
+                                                    AutomationProperties.AutomationId="RowPin"
                                                     Margin="-4,-2,3,-2" VerticalAlignment="Center"
                                                     Foreground="{Binding Note.Color, Converter={StaticResource ManagerRowInkConverter}}"
                                                     ToolTip="{Binding Note.IsPinnedToTop, Converter={StaticResource PinToTopTextConverter}}"
@@ -723,15 +729,18 @@
                                         <TextBlock Grid.Column="1"
                                                    Text="{Binding Note.UpdatedAt, Converter={StaticResource NoteDateConverter}}"
                                                    ToolTip="{Binding Note.UpdatedAt, Converter={StaticResource NoteDateConverter}, ConverterParameter=full}"
-                                                   FontSize="{DynamicResource AlduneTextSmall}" Opacity="0.7" Margin="10,0,0,0"
+                                                   FontSize="{DynamicResource AlduneTextSmall}" Margin="10,0,0,0"
+                                                   Foreground="{Binding Note.Color, Converter={StaticResource ManagerRowMutedInkConverter}}"
                                                    HorizontalAlignment="Right" VerticalAlignment="Center" />
                                         <TextBlock Grid.Row="1" Grid.Column="0"
                                                    Text="{Binding Note, Converter={StaticResource NoteSnippetConverter}}"
-                                                   FontSize="{DynamicResource AlduneTextBody}" Opacity="0.72" Margin="0,2,0,0"
+                                                   FontSize="{DynamicResource AlduneTextBody}" Margin="0,2,0,0"
+                                                   Foreground="{Binding Note.Color, Converter={StaticResource ManagerRowMutedInkConverter}}"
                                                    VerticalAlignment="Center"
                                                    TextTrimming="CharacterEllipsis" />
                                         <Button Grid.Row="1" Grid.Column="1" Tag="{Binding}"
-                                                Click="OnEditTagsClick" Margin="10,1,-2,-2"
+                                                Click="OnEditTagsClick" Margin="10,1,-2,-2" IsTabStop="False"
+                                                AutomationProperties.AutomationId="RowTags"
                                                 HorizontalAlignment="Right"
                                                 Foreground="{Binding Note.Color, Converter={StaticResource ManagerRowInkConverter}}"
                                                 ToolTip="{x:Static res:Strings.EditTagsTooltip}"

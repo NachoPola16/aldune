@@ -88,4 +88,31 @@ public class NoteColorContrastTests
         Assert.True(NoteColorContrast.TryGetLuminance(color, out var luminance));
         Assert.InRange(Math.Abs(expected - luminance), 0, 0.000001);
     }
+
+    [Theory]
+    [InlineData("#EBD38B", "#614E00")]
+    [InlineData("#AAE6B1", "#006123")]
+    [InlineData("#FFFFFF", "#1E1A14")]
+    [InlineData("#777777", "#000000")]
+    [InlineData("#663399", "#FFFFFF")]
+    [InlineData("#000000", "#FFFFFF")]
+    public void MutedInk_IsSofterThanTheInkButStillReadable(string face, string ink)
+    {
+        string muted = NoteColorContrast.MutedInkFor(face, ink);
+        Assert.True(NoteColorContrast.IsReadable(face, muted), $"{muted} on {face}");
+        if (NoteColorContrast.IsReadable(face, ink)) Assert.True(NoteColorContrast.IsReadable(face, ink));
+    }
+
+    [Fact]
+    public void MutedInk_WithNoRoomToFade_ReturnsTheInk()
+    {
+        // Ink that barely reaches 4.5:1 cannot be softened without failing it.
+        Assert.Equal("#767676", NoteColorContrast.MutedInkFor("#FFFFFF", "#767676"));
+    }
+
+    [Fact]
+    public void MutedInk_FadesWhenThereIsRoom()
+    {
+        Assert.NotEqual("#000000", NoteColorContrast.MutedInkFor("#FFFFFF", "#000000"));
+    }
 }
