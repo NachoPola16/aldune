@@ -57,7 +57,12 @@ object BackupReminders {
         reminders.filter { it.noteId in noteIds && it.dueAt.isAfter(now) }
 }
 
-/** The automatic backup taken just before «Replace everything», kept in the app's own files (`files/backups/`). */
+/**
+ * The automatic backup taken just before «Replace everything», kept in the app's own files (`files/backups/`).
+ * Like every backup it holds the notes in plain text (protected notes stay password-encrypted); it is NOT encrypted with the app's data key,
+ * because that key is bound to the database wrapper and a second scheme was not invented. Only the app can read the folder (private storage);
+ * the newest three are kept.
+ */
 object SafetyBackups {
     const val DIRECTORY = "backups"
     private const val PREFIX = "aldune-safety-"

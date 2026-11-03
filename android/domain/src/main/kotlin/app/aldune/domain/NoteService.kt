@@ -103,7 +103,7 @@ class NoteService(
      * [RestoreMode.ADD_MISSING] never touches a note that exists and never deletes. [RestoreMode.REPLACE_ALL] deletes the notes that are not
      * in the backup (each leaves its tombstone, so the sync propagates it) and overwrites the ones that differ. A note that is overwritten
      * gets `updatedAt = now` and its previous text goes to the history first: with an older `updatedAt` the sync would hand the server's newer
-     * version straight back and the restore would silently undo itself. Notes that are only added keep their dates.
+     * version straight back and the restore would silently undo itself. Notes that are only added keep their dates, unless their id had a deletion marker here: then they get `updatedAt = now` too (and a history version).
      * [clearTombstone] drops a local deletion marker of a restored id, or the sync would keep signing the deletion of a note that is back.
      * Returns the ids of the notes that were written, so the caller can restore their reminders.
      */
@@ -117,6 +117,8 @@ class NoteService(
         var kept = 0
         var deleted = 0
         val written = LinkedHashSet<String>()
+        // Ids with a local deletion marker (older deletions, or the ones the replace below leaves): the server may hold a newer tombstone.
+        val tombstoned = store.tombstones().mapTo(HashSet()) { it.noteId }
         if (mode == RestoreMode.REPLACE_ALL) {
             val keep = notes.mapTo(HashSet()) { it.id }
             for (id in here.keys) if (id !in keep && store.delete(id, now)) deleted++
@@ -125,7 +127,10 @@ class NoteService(
             val current = here[note.id]
             when {
                 current == null -> {
-                    store.put(note.copy(syncAuthorDeviceId = null))
+                    val revived = note.id in tombstoned
+                    // A revived note keeps its old date only if nobody deleted it; otherwise a newer tombstone would delete it again in the next sync.
+                    store.put(note.copy(syncAuthorDeviceId = null, updatedAt = if (revived) now else note.updatedAt))
+                    if (revived) recordVersion(note.id)
                     clearTombstone(note.id)
                     added++
                     written += note.id

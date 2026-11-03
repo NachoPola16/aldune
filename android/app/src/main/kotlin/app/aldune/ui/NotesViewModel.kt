@@ -980,6 +980,9 @@ class NotesViewModel(application: Application) : AndroidViewModel(application) {
                 getApplication<Application>().contentResolver.openInputStream(uri)?.use { BackupArchive.read(it.buffered()) }
             } catch (e: kotlin.coroutines.cancellation.CancellationException) {
                 throw e
+            } catch (_: OutOfMemoryError) {
+                // A hostile or huge file that got past the size caps: report it as too large instead of crashing the app.
+                BackupReadResult.Failed(BackupFailure.TOO_LARGE)
             } catch (_: Exception) {
                 null
             }

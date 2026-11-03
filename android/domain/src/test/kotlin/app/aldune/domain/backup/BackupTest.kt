@@ -17,6 +17,9 @@ import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 
 class BackupTest {
+    private val A = "00000000-0000-4000-8000-00000000000a"
+    private val B = "00000000-0000-4000-8000-00000000000b"
+    private val C = "00000000-0000-4000-8000-00000000000c"
     private val at = Instant.parse("2026-11-03T10:00:00Z")
 
     private fun note(id: String, text: String = "hola", state: NoteState = NoteState.ACTIVE) = Note(
@@ -40,14 +43,14 @@ class BackupTest {
 
     @Test
     fun `every field of every kind of note survives a round trip`() {
-        val rich = note("a", "line1\nline2", NoteState.ARCHIVED).copy(
+        val rich = note(A, "line1\nline2", NoteState.ARCHIVED).copy(
             lineEnding = LineEnding.CRLF, tags = listOf("Work", "ideas"), dockPosition = 2.5, screenOrigin = "DISPLAY1",
             pinnedToTop = true, completedTasks = 2, color = "#abcdef",
         )
-        val trashed = note("b", "bin", NoteState.TRASHED)
-        val locked = note("c", "", NoteState.ACTIVE).copy(isProtected = true, protectedContentJson = """{"Salt":"x","Cipher":"y"}""", protectedTitle = "Bank")
+        val trashed = note(B, "bin", NoteState.TRASHED)
+        val locked = note(C, "", NoteState.ACTIVE).copy(isProtected = true, protectedContentJson = """{"Salt":"x","Cipher":"y"}""", protectedTitle = "Bank")
         val content = BackupContent(
-            listOf(rich, trashed, locked), listOf(Reminder("a", Instant.ofEpochMilli(1_900_000_000_000))),
+            listOf(rich, trashed, locked), listOf(Reminder(A, Instant.ofEpochMilli(1_900_000_000_000))),
             mapOf("appearance" to 3, "plainEditor" to true, "language" to "es"),
         )
         val read = roundTrip(content) as BackupReadResult.Ok
@@ -62,7 +65,7 @@ class BackupTest {
 
     @Test
     fun `a protected note is written exactly as stored and its text never appears`() {
-        val locked = note("c", "").copy(isProtected = true, protectedContentJson = "CIPHERTEXT-AS-STORED", protectedTitle = null)
+        val locked = note(C, "").copy(isProtected = true, protectedContentJson = "CIPHERTEXT-AS-STORED", protectedTitle = null)
         val out = ByteArrayOutputStream()
         BackupArchive.write(out, BackupContent(listOf(locked), emptyList()), "3.3.0", at)
         val back = (BackupArchive.read(ByteArrayInputStream(out.toByteArray())) as BackupReadResult.Ok).content.notes.single()
@@ -73,7 +76,7 @@ class BackupTest {
     @Test
     fun `the manifest counts notes and says whether settings are included`() {
         val out = ByteArrayOutputStream()
-        BackupArchive.write(out, BackupContent(listOf(note("a"), note("b")), emptyList()), "3.3.0", at)
+        BackupArchive.write(out, BackupContent(listOf(note(A), note(B)), emptyList()), "3.3.0", at)
         val manifest = java.util.zip.ZipInputStream(ByteArrayInputStream(out.toByteArray())).use { z ->
             generateSequence { z.nextEntry }.first { it.name == BackupArchive.MANIFEST_ENTRY }.let { z.readBytes().toString(Charsets.UTF_8) }
         }
@@ -102,7 +105,7 @@ class BackupTest {
     @Test
     fun `a truncated zip is not a backup and does not throw`() {
         val out = ByteArrayOutputStream()
-        BackupArchive.write(out, BackupContent(listOf(note("a")), emptyList()), "3.3.0", at)
+        BackupArchive.write(out, BackupContent(listOf(note(A)), emptyList()), "3.3.0", at)
         val bytes = out.toByteArray()
         val result = BackupArchive.read(ByteArrayInputStream(bytes.copyOf(bytes.size / 2)))
         assertTrue(result is BackupReadResult.Failed)
@@ -119,35 +122,35 @@ class BackupTest {
 
     @Test
     fun `an unreadable note or a repeated id is skipped and the rest is kept`() {
-        val good = """{"Id":"a","Text":"x","Color":"#FFFFFF","CreatedAt":"2026-01-01T00:00:00Z","UpdatedAt":"2026-01-01T00:00:00Z","State":0}"""
-        val badState = good.replace("\"State\":0", "\"State\":9").replace("\"a\"", "\"b\"")
-        val emptyProtected = good.replace("\"a\"", "\"c\"").replace("\"State\":0", "\"State\":0,\"IsProtected\":true")
+        val good = """{"Id":"$A","Text":"x","Color":"#FFFFFF","CreatedAt":"2026-01-01T00:00:00Z","UpdatedAt":"2026-01-01T00:00:00Z","State":0}"""
+        val badState = good.replace("\"State\":0", "\"State\":9").replace("\"$A\"", "\"$B\"")
+        val emptyProtected = good.replace("\"$A\"", "\"$C\"").replace("\"State\":0", "\"State\":0,\"IsProtected\":true")
         val bytes = zip(
             "manifest.json" to manifest(1),
             "notes.json" to """{"Notes":[$good,$badState,$emptyProtected,$good]}""",
         )
         val read = BackupArchive.read(ByteArrayInputStream(bytes)) as BackupReadResult.Ok
-        assertEquals(listOf("a"), read.content.notes.map { it.id })
+        assertEquals(listOf(A), read.content.notes.map { it.id })
         assertEquals(3, read.skippedNotes)
     }
 
     @Test
     fun `unknown keys and entries are ignored so a later compatible version still reads`() {
-        val n = """{"Id":"a","Text":"x","Color":"#FFFFFF","CreatedAt":"2026-01-01T00:00:00Z","UpdatedAt":"2026-01-01T00:00:00Z","State":0,"Future":{"a":1}}"""
+        val n = """{"Id":"$A","Text":"x","Color":"#FFFFFF","CreatedAt":"2026-01-01T00:00:00Z","UpdatedAt":"2026-01-01T00:00:00Z","State":0,"Future":{"a":1}}"""
         val bytes = zip("manifest.json" to manifest(1), "notes.json" to """{"Notes":[$n],"Other":1}""", "extra.bin" to "zzz")
         assertEquals(1, (BackupArchive.read(ByteArrayInputStream(bytes)) as BackupReadResult.Ok).content.notes.size)
     }
 
     @Test
     fun `reminders of unknown notes and settings of the wrong kind are dropped`() {
-        val n = """{"Id":"a","Text":"x","Color":"#FFFFFF","CreatedAt":"2026-01-01T00:00:00Z","UpdatedAt":"2026-01-01T00:00:00Z","State":0}"""
+        val n = """{"Id":"$A","Text":"x","Color":"#FFFFFF","CreatedAt":"2026-01-01T00:00:00Z","UpdatedAt":"2026-01-01T00:00:00Z","State":0}"""
         val bytes = zip(
             "manifest.json" to manifest(1), "notes.json" to """{"Notes":[$n]}""",
-            "reminders.json" to """{"Reminders":[{"NoteId":"a","DueAtEpochMillis":5},{"NoteId":"zz","DueAtEpochMillis":6},{"NoteId":"a"}]}""",
+            "reminders.json" to """{"Reminders":[{"NoteId":"$A","DueAtEpochMillis":5},{"NoteId":"zz","DueAtEpochMillis":6},{"NoteId":"$A"}]}""",
             "settings.json" to """{"Values":{"ok":1,"flag":true,"s":"t","nested":{"x":1},"f":1.5,"list":[1]}}""",
         )
         val read = BackupArchive.read(ByteArrayInputStream(bytes)) as BackupReadResult.Ok
-        assertEquals(listOf(Reminder("a", Instant.ofEpochMilli(5))), read.content.reminders)
+        assertEquals(listOf(Reminder(A, Instant.ofEpochMilli(5))), read.content.reminders)
         assertEquals(mapOf("ok" to 1, "flag" to true, "s" to "t"), read.content.settings)
     }
 
@@ -159,7 +162,7 @@ class BackupTest {
             z.putNextEntry(ZipEntry("manifest.json")); z.write(manifest(1).toByteArray()); z.closeEntry()
             z.putNextEntry(ZipEntry("notes.json"))
             val chunk = ByteArray(1024 * 1024) { 'a'.code.toByte() }
-            repeat(257) { z.write(chunk) }
+            repeat(49) { z.write(chunk) }
             z.closeEntry()
         }
         assertEquals(BackupReadResult.Failed(BackupFailure.TOO_LARGE), BackupArchive.read(ByteArrayInputStream(out.toByteArray())))
@@ -248,5 +251,75 @@ class BackupTest {
             "aldune-safety-20261104-000000.zip", "notes.txt", "aldune-safety-20261031-000000.zip.tmp",
         )
         assertEquals(listOf("aldune-safety-20261101-000000.zip"), SafetyBackups.surplus(names))
+    }
+
+    // ---- Security review fixes ----
+
+    private val uuid = "123e4567-e89b-12d3-a456-426614174000"
+
+    private fun noteBytes(id: String, updated: String = "2026-02-01T00:00:00Z") = zip(
+        "manifest.json" to manifest(1),
+        "notes.json" to """{"Notes":[{"Id":"$id","Text":"x","Color":"#FFDDD4","CreatedAt":"2026-01-01T00:00:00Z","UpdatedAt":"$updated","State":0}]}""",
+    )
+
+    @Test
+    fun `a note whose id is not a canonical uuid is skipped and counted`() {
+        val bad = zip(
+            "manifest.json" to manifest(1),
+            "notes.json" to """{"Notes":[
+                {"Id":"not-a-uuid","Text":"x","Color":"#FFDDD4","CreatedAt":"2026-01-01T00:00:00Z","UpdatedAt":"2026-02-01T00:00:00Z","State":0},
+                {"Id":"$uuid","Text":"y","Color":"#FFDDD4","CreatedAt":"2026-01-01T00:00:00Z","UpdatedAt":"2026-02-01T00:00:00Z","State":0}]}""",
+        )
+        val ok = BackupArchive.read(ByteArrayInputStream(bad)) as BackupReadResult.Ok
+        assertEquals(listOf(uuid), ok.content.notes.map { it.id })
+        assertEquals(1, ok.skippedNotes)
+        // Not canonical (no hyphens form accepted by lenient parsers, or other shapes) is refused too.
+        val r = BackupArchive.read(ByteArrayInputStream(noteBytes("1-1-1-1-1")))
+        assertEquals(BackupReadResult.Failed(BackupFailure.CORRUPT), r)
+    }
+
+    @Test
+    fun `an uppercase uuid is accepted`() {
+        val ok = BackupArchive.read(ByteArrayInputStream(noteBytes(uuid.uppercase()))) as BackupReadResult.Ok
+        assertEquals(1, ok.content.notes.size)
+    }
+
+    @Test
+    fun `a future UpdatedAt is clamped to now`() {
+        val ok = BackupArchive.read(ByteArrayInputStream(noteBytes(uuid, "2999-01-01T00:00:00Z"))) as BackupReadResult.Ok
+        assertTrue(ok.content.notes.single().updatedAt < Instant.parse("2100-01-01T00:00:00Z"))
+        assertTrue(!ok.content.notes.single().updatedAt.isAfter(Instant.now()))
+    }
+
+    @Test
+    fun `the whole zip is capped after inflating`() {
+        val out = ByteArrayOutputStream()
+        ZipOutputStream(out).use { z ->
+            val chunk = ByteArray(1024 * 1024) { 'a'.code.toByte() }
+            for (name in listOf("manifest.json", "notes.json", "reminders.json", "settings.json")) {
+                z.putNextEntry(ZipEntry(name))
+                repeat(40) { z.write(chunk) } // each under the entry cap, together over the total cap
+                z.closeEntry()
+            }
+        }
+        assertEquals(BackupReadResult.Failed(BackupFailure.TOO_LARGE), BackupArchive.read(ByteArrayInputStream(out.toByteArray())))
+    }
+
+    @Test
+    fun `an added note that had a local tombstone is stamped now so the restore wins in sync`() {
+        val fx = Fixture()
+        fx.store.put(note("b", "gone"))
+        fx.store.delete("b", fx.clock.now().minusSeconds(60))
+        fx.service.restoreBackup(listOf(note("b", "back")), RestoreMode.ADD_MISSING)
+        assertEquals(fx.clock.now(), fx.stored("b").updatedAt)
+        assertEquals("back", fx.stored("b").text)
+    }
+
+    @Test
+    fun `an added note without a tombstone keeps its date`() {
+        val fx = Fixture()
+        val n = note("b", "new")
+        fx.service.restoreBackup(listOf(n), RestoreMode.ADD_MISSING)
+        assertEquals(n.updatedAt, fx.stored("b").updatedAt)
     }
 }

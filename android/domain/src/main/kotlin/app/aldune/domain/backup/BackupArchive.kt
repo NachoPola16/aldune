@@ -39,7 +39,8 @@ import kotlinx.serialization.json.put
  *
  * Trashed and archived notes are included with their state. A password-protected note is stored EXACTLY as it is in the database: its
  * `ProtectedContent` is the password-encrypted JSON and is never decrypted here, so reading it back needs the same password. Every other note
- * is written as plain text (that is what makes the file portable), so the zip must be kept like the notes themselves. Sync keys, tokens and
+ * is written as plain text (that is what makes the file portable), so the zip must be kept like the notes themselves. The same goes for the
+ * safety copies in `files/backups/` (see [SafetyBackups]): they are plain text in the app's private storage, not encrypted with the data key. Sync keys, tokens and
  * the app's data key are never part of it: after restoring on a new phone the sync is set up again with the profile code.
  *
  * The format version is checked on read: a zip written by a newer format is refused ([BackupFailure.TOO_NEW]) instead of being half understood.
@@ -53,8 +54,11 @@ object BackupArchive {
     const val REMINDERS_ENTRY = "reminders.json"
     const val SETTINGS_ENTRY = "settings.json"
 
-    /** Per entry, after inflating: a corrupt or hostile zip must not fill the memory of the phone. 256 MB is far above any real set of notes. */
-    const val MAX_ENTRY_BYTES: Long = 256L * 1024 * 1024
+    /** Per entry, after inflating: a corrupt or hostile zip must not fill the memory of the phone. 48 MB is far above any real set of notes. */
+    const val MAX_ENTRY_BYTES: Long = 48L * 1024 * 1024
+
+    /** For all the entries together, after inflating (the text is held in memory several times while it is parsed). */
+    const val MAX_TOTAL_BYTES: Long = 96L * 1024 * 1024
     const val MAX_NOTES = 200_000
 
     private val WANTED = setOf(MANIFEST_ENTRY, NOTES_ENTRY, REMINDERS_ENTRY, SETTINGS_ENTRY)
@@ -119,12 +123,15 @@ object BackupArchive {
     /** Reads and validates a backup. Never throws for bad data: the answer says what was wrong. */
     fun read(input: InputStream): BackupReadResult {
         val entries = HashMap<String, ByteArray>()
+        var total = 0L
         try {
             ZipInputStream(input, Charsets.UTF_8).use { zip ->
                 while (true) {
                     val e = zip.nextEntry ?: break
                     if (e.isDirectory || e.name !in WANTED) continue
-                    entries[e.name] = readBounded(zip) ?: return BackupReadResult.Failed(BackupFailure.TOO_LARGE)
+                    val bytes = readBounded(zip, MAX_TOTAL_BYTES - total) ?: return BackupReadResult.Failed(BackupFailure.TOO_LARGE)
+                    total += bytes.size
+                    entries[e.name] = bytes
                 }
             }
         } catch (_: Exception) {
@@ -172,8 +179,9 @@ object BackupArchive {
         return BackupReadResult.Ok(manifest, BackupContent(notes, reminders, settings), skipped)
     }
 
-    /** Inflates one entry, or `null` when it is bigger than [MAX_ENTRY_BYTES]. */
-    private fun readBounded(zip: ZipInputStream): ByteArray? {
+    /** Inflates one entry, or `null` when it is bigger than [MAX_ENTRY_BYTES] or than what is left of the total budget ([remaining]). */
+    private fun readBounded(zip: ZipInputStream, remaining: Long): ByteArray? {
+        val limit = minOf(MAX_ENTRY_BYTES, remaining)
         val out = java.io.ByteArrayOutputStream()
         val buffer = ByteArray(64 * 1024)
         var total = 0L
@@ -181,7 +189,7 @@ object BackupArchive {
             val n = zip.read(buffer)
             if (n < 0) break
             total += n
-            if (total > MAX_ENTRY_BYTES) return null
+            if (total > limit) return null
             out.write(buffer, 0, n)
         }
         return out.toByteArray()
@@ -196,10 +204,13 @@ object BackupArchive {
     private fun JsonObject.bool(key: String): Boolean? = (this[key] as? JsonPrimitive)?.takeIf { !it.isString }?.booleanOrNull
 
     private fun parseNote(o: JsonObject): Note? {
-        val id = o.str("Id")?.takeIf { it.isNotBlank() } ?: return null
+        // The sync mapping needs a canonical UUID and throws on anything else, so a tampered id must not get in.
+        val id = o.str("Id")?.lowercase()?.takeIf { id -> runCatching { java.util.UUID.fromString(id).toString() == id }.getOrDefault(false) }
+            ?: return null
         val color = o.str("Color")?.takeIf { it.isNotBlank() } ?: return null
         val created = o.str("CreatedAt")?.let { runCatching { Instant.parse(it) }.getOrNull() } ?: return null
-        val updated = o.str("UpdatedAt")?.let { runCatching { Instant.parse(it) }.getOrNull() } ?: return null
+        // A date in the future would win every sync conflict from then on, so it is capped at now.
+        val updated = o.str("UpdatedAt")?.let { runCatching { Instant.parse(it) }.getOrNull() }?.let { minOf(it, Instant.now()) } ?: return null
         val state = o.int("State")?.let(NoteState::fromCode) ?: return null
         val isProtected = o.bool("IsProtected") ?: false
         val protectedContent = o.str("ProtectedContent")
