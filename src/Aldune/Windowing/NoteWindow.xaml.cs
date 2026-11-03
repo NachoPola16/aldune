@@ -653,7 +653,7 @@ public partial class NoteWindow : Window
         SavePlacementOnce(this, new System.ComponentModel.CancelEventArgs());
     }
 
-    private static readonly TimeSpan OpenDuration = TimeSpan.FromMilliseconds(150);
+    private static readonly TimeSpan OpenDuration = TimeSpan.FromMilliseconds(180);
     private static readonly TimeSpan CloseDuration = TimeSpan.FromMilliseconds(140);
 
     private bool _closingAnimationDone;
@@ -672,7 +672,8 @@ public partial class NoteWindow : Window
         content.RenderTransform = Transform.Identity;
         var duration = new Duration(OpenDuration);
         content.Opacity = 0;
-        content.BeginAnimation(OpacityProperty, new DoubleAnimation(0, 1, duration) { EasingFunction = new QuinticEase { EasingMode = EasingMode.EaseOut } });
+        // Cubic, not quintic: quintic-out finished the whole fade in ~60 ms and it read as a pop.
+        content.BeginAnimation(OpacityProperty, new DoubleAnimation(0, 1, duration) { EasingFunction = new CubicEase { EasingMode = EasingMode.EaseOut } });
     }
 
     /// <summary>Desplaza la nota suavemente al elegir otra plantilla de disposición (o al devolverla a

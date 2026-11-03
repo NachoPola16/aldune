@@ -860,11 +860,18 @@ public partial class EdgeDockWindow : Window
 
     // --- Estado y animación ---------------------------------------------------------------------
 
-    private static readonly Duration SideCrossfadeDuration = new(TimeSpan.FromMilliseconds(150));
-    private static readonly Duration TopBottomCrossfadeDuration = new(TimeSpan.FromMilliseconds(120));
+    private static readonly Duration SideCrossfadeDuration = new(TimeSpan.FromMilliseconds(170));
+    private static readonly Duration TopBottomCrossfadeDuration = new(TimeSpan.FromMilliseconds(140));
 
     private static IEasingFunction EaseOut() =>
         new QuinticEase { EasingMode = EasingMode.EaseOut };
+
+    /// <summary>
+    /// Curve for opacity fades. Quintic-out spends almost its whole change in the first frames (a 150 ms fade was over by ~60 ms and read
+    /// as a pop); cubic-out still answers at once but keeps changing for most of the duration.
+    /// </summary>
+    private static IEasingFunction EaseFade() =>
+        new CubicEase { EasingMode = EasingMode.EaseOut };
 
     /// <summary>
     /// Cruza entre la tira de reposo y el abanico. Sin región que mantener sincronizada, esto es
@@ -915,7 +922,7 @@ public partial class EdgeDockWindow : Window
 
     private static void Fade(UIElement element, double to, Duration duration)
     {
-        var animation = new DoubleAnimation(to, duration) { EasingFunction = EaseOut() };
+        var animation = new DoubleAnimation(to, duration) { EasingFunction = EaseFade() };
         // FillBehavior.HoldEnd deja la animación enganchada por encima de cualquier asignación
         // posterior; limpiarla y fijar el valor final evita que un cambio de estado posterior sea
         // un no-op silencioso.
@@ -1060,11 +1067,13 @@ public partial class EdgeDockWindow : Window
         bool swap = viewChanged && IsVisible && _fanState.IsExpanded && SystemParameters.ClientAreaAnimation;
         // Folded dock (the view was changed from Manage notes or by the wheel's last notch): the strip of pills changes in a soft swap too.
         bool restSwap = !swap && viewChanged && IsVisible && !_fanState.IsExpanded && _noteCount > 0 && SystemParameters.ClientAreaAnimation;
+        double? resumeStripFrom = null;
         if (_restSwapActive && !restSwap)
         {
             // A refresh that is not a view change arrived while the strip was fading (a sync, a saved note): that swap is superseded, so the
             // strip would have stayed invisible. Put it back as the state says.
             _restSwapActive = false;
+            resumeStripFrom = RestStrip.Opacity; // animated value: read before the animation is cleared
             RestStrip.BeginAnimation(OpacityProperty, null);
             ApplyState(animate: false);
         }
@@ -1086,6 +1095,15 @@ public partial class EdgeDockWindow : Window
             ResetTabsFadeIfStuck();
             SetNotes(LoadNotesForView(), animateArrivals: !viewChanged, fadeAll: viewChanged);
             if (_labelOnSwap) { _labelOnSwap = false; ShowViewLabel(CurrentViewLabel()); }
+        }
+        // Continue the strip's fade from where the superseded swap left it instead of showing it at full strength in one frame. After
+        // SetNotes, which may itself reset the strip (a change in the number of notes calls ApplyState).
+        if (resumeStripFrom is { } from && from < 0.99 && !_fanState.IsExpanded && _noteCount > 0 && SystemParameters.ClientAreaAnimation)
+        {
+            var resume = new DoubleAnimation(from, 1, new Duration(TimeSpan.FromMilliseconds(150))) { EasingFunction = EaseFade() };
+            resume.Completed += (_, _) => { RestStrip.BeginAnimation(OpacityProperty, null); RestStrip.Opacity = 1; };
+            RestStrip.Opacity = from; // until the clock ticks the base value shows, which must not be the full one
+            RestStrip.BeginAnimation(OpacityProperty, resume);
         }
         if (viewChanged)
         {
@@ -1241,7 +1259,7 @@ public partial class EdgeDockWindow : Window
         _restSwapActive = true;
         _viewLabelHold = false;
         ResetTabsFadeIfStuck();
-        var fadeOut = new DoubleAnimation(0, new Duration(TimeSpan.FromMilliseconds(150))) { EasingFunction = EaseOut() };
+        var fadeOut = new DoubleAnimation(0, new Duration(TimeSpan.FromMilliseconds(130))) { EasingFunction = EaseFade() };
         fadeOut.Completed += (_, _) =>
         {
             if (token != _viewSwapToken) return;
@@ -1250,25 +1268,27 @@ public partial class EdgeDockWindow : Window
             // A change in the number of notes makes ApplyState show the strip at once: it stays hidden until the new pills are in place.
             RestStrip.BeginAnimation(OpacityProperty, null);
             RestStrip.Opacity = 0;
-            Dispatcher.BeginInvoke(DispatcherPriority.Loaded, new Action(() => AfterFrames(2, () =>
+            Dispatcher.BeginInvoke(DispatcherPriority.Loaded, new Action(() => AfterFrames(1, () =>
             {
                 if (token != _viewSwapToken) return;
                 _restSwapActive = false;
                 if (_fanState.IsExpanded || _noteCount == 0) { ApplyState(animate: false); return; }
-                for (int i = 0; i < RestList.Items.Count; i++)
+                int count = RestList.Items.Count;
+                for (int i = 0; i < count; i++)
                 {
                     if (RestList.ItemContainerGenerator.ContainerFromIndex(i) is not UIElement pill) continue;
                     pill.BeginAnimation(OpacityProperty, null);
                     pill.Opacity = 0;
-                    var appear = new DoubleAnimation(0, 1, new Duration(TimeSpan.FromMilliseconds(200)))
+                    // The stagger is capped as a whole (not per pill count), so 40 notes take as long to settle as 10.
+                    var appear = new DoubleAnimation(0, 1, new Duration(TimeSpan.FromMilliseconds(190)))
                     {
-                        BeginTime = TimeSpan.FromMilliseconds(Math.Min(i, 10) * 35),
-                        EasingFunction = EaseOut(),
+                        BeginTime = TimeSpan.FromMilliseconds(Math.Min(i * 35.0, 150.0 * i / Math.Max(1, count - 1))),
+                        EasingFunction = EaseFade(),
                     };
                     appear.Completed += (_, _) => { pill.BeginAnimation(OpacityProperty, null); pill.Opacity = 1; };
                     pill.BeginAnimation(OpacityProperty, appear);
                 }
-                var fadeIn = new DoubleAnimation(0, 1, new Duration(TimeSpan.FromMilliseconds(190))) { EasingFunction = EaseOut() };
+                var fadeIn = new DoubleAnimation(0, 1, new Duration(TimeSpan.FromMilliseconds(160))) { EasingFunction = EaseFade() };
                 fadeIn.Completed += (_, _) => { RestStrip.BeginAnimation(OpacityProperty, null); RestStrip.Opacity = 1; };
                 RestStrip.BeginAnimation(OpacityProperty, fadeIn);
             })));

@@ -820,7 +820,8 @@ public partial class NotesManagerWindow : Window
         IEasingFunction Ease() => new QuinticEase { EasingMode = EasingMode.EaseOut };
 
         content.Opacity = 0;
-        content.BeginAnimation(OpacityProperty, new DoubleAnimation(0, 1, duration) { EasingFunction = Ease() });
+        // Opacity uses a gentler curve than the scale: with quintic-out it was complete after ~60 ms and read as a pop.
+        content.BeginAnimation(OpacityProperty, new DoubleAnimation(0, 1, duration) { EasingFunction = new CubicEase { EasingMode = EasingMode.EaseOut } });
         scale.BeginAnimation(ScaleTransform.ScaleXProperty, new DoubleAnimation(0.95, 1, duration) { EasingFunction = Ease() });
         scale.BeginAnimation(ScaleTransform.ScaleYProperty, new DoubleAnimation(0.95, 1, duration) { EasingFunction = Ease() });
     }
