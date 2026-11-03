@@ -16,7 +16,7 @@ public partial class SettingsWindow
 {
     private sealed record SettingEntry(string Page, string Text, FrameworkElement Element);
 
-    private static readonly string[] SearchablePages = ["General", "Appearance", "Notes", "Sounds", "Colors", "Dock", "Sync", "Help"];
+    private static readonly string[] SearchablePages = ["General", "Appearance", "Notes", "Sounds", "Colors", "Dock", "Sync", "Help", "About"];
     private const int MaxSearchResults = 9;
 
     private List<SettingEntry> _searchHits = [];
@@ -122,6 +122,7 @@ public partial class SettingsWindow
         "Colors" => Strings.SettingsPageColors,
         "Dock" => Strings.SettingsPageDock,
         "Sync" => Strings.SettingsPageSync,
+        "About" => Strings.SettingsPageAbout,
         _ => Strings.SettingsPageHelp,
     };
 

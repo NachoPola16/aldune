@@ -9,7 +9,7 @@ namespace Aldune.Core;
 /// cifradas con una clave que solo vive (envuelta con DPAPI) en settings.json, así que una sin la
 /// otra no sirve. Por eso mismo la copia solo se restaura con el mismo usuario de Windows.
 /// </summary>
-public static class LocalBackup
+public static partial class LocalBackup
 {
     public const string FolderName = "backups";
     public const int KeepDays = 7;

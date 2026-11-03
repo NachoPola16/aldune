@@ -2441,4 +2441,98 @@ public static class Strings
     public static string ImportDone(int created, int failed) => failed == 0
         ? T($"Done: {created} note(s) imported.", $"Hecho: {created} nota(s) importada(s).", $"Fertig: {created} Notiz(en) importiert.", $"Terminé : {created} note(s) importée(s).", $"Pronto: {created} nota(s) importada(s).", $"Fatto: {created} nota/e importata/e.", $"完了：{created} 件のノートをインポートしました。", $"完成：已导入 {created} 条笔记。")
         : T($"Done: {created} note(s) imported, {failed} could not be saved.", $"Hecho: {created} nota(s) importada(s); {failed} no se pudieron guardar.", $"Fertig: {created} Notiz(en) importiert, {failed} konnten nicht gespeichert werden.", $"Terminé : {created} note(s) importée(s), {failed} n'ont pas pu être enregistrées.", $"Pronto: {created} nota(s) importada(s); {failed} não puderam ser salvas.", $"Fatto: {created} nota/e importata/e, {failed} non è stato possibile salvarle.", $"完了：{created} 件をインポートし、{failed} 件は保存できませんでした。", $"完成：已导入 {created} 条笔记，{failed} 条无法保存。");
+
+    // --- Backup and restore (Settings > About) ---
+    public static string BackupSectionTitle => T("Backup", "Copia de seguridad", "Sicherung", "Sauvegarde", "Cópia de segurança", "Backup", "バックアップ", "备份");
+    public static string BackupAboutHint => T(
+        "Saves all your notes and settings in one file. It only restores on this Windows account, because the notes are encrypted with a key tied to it. Aldune also keeps a daily copy for the last 7 days.",
+        "Guarda todas tus notas y ajustes en un solo archivo. Solo se puede restaurar en esta cuenta de Windows, porque las notas van cifradas con una clave ligada a ella. Aldune además guarda una copia diaria de los últimos 7 días.",
+        "Speichert alle deine Notizen und Einstellungen in einer Datei. Sie lässt sich nur unter diesem Windows-Konto wiederherstellen, weil die Notizen mit einem daran gebundenen Schlüssel verschlüsselt sind. Aldune legt außerdem täglich eine Kopie der letzten 7 Tage an.",
+        "Enregistre toutes vos notes et réglages dans un seul fichier. Il ne peut être restauré que sur ce compte Windows, car les notes sont chiffrées avec une clé qui lui est liée. Aldune garde aussi une copie quotidienne des 7 derniers jours.",
+        "Salva todas as suas notas e configurações em um único arquivo. Só pode ser restaurado nesta conta do Windows, porque as notas são criptografadas com uma chave ligada a ela. O Aldune também guarda uma cópia diária dos últimos 7 dias.",
+        "Salva tutte le note e le impostazioni in un unico file. Si può ripristinare solo su questo account Windows, perché le note sono cifrate con una chiave legata ad esso. Aldune conserva anche una copia giornaliera degli ultimi 7 giorni.",
+        "すべてのノートと設定を 1 つのファイルに保存します。ノートはこの Windows アカウントに結び付いた鍵で暗号化されているため、このアカウントでのみ復元できます。Aldune は直近 7 日分の毎日のコピーも保管しています。",
+        "将所有笔记和设置保存到一个文件中。由于笔记使用与此 Windows 账户绑定的密钥加密，只能在此账户上恢复。Aldune 还会保留最近 7 天的每日副本。");
+    public static string BackupNowButton => T("Back up now…", "Hacer copia ahora…", "Jetzt sichern…", "Sauvegarder maintenant…", "Fazer cópia agora…", "Esegui backup ora…", "今すぐバックアップ…", "立即备份…");
+    public static string BackupRestoreFileButton => T("Restore from a file…", "Restaurar desde un archivo…", "Aus Datei wiederherstellen…", "Restaurer depuis un fichier…", "Restaurar de um arquivo…", "Ripristina da un file…", "ファイルから復元…", "从文件恢复…");
+    public static string BackupRestoreDailyButton => T("Restore a daily copy…", "Restaurar una copia diaria…", "Tageskopie wiederherstellen…", "Restaurer une copie quotidienne…", "Restaurar uma cópia diária…", "Ripristina una copia giornaliera…", "毎日のコピーから復元…", "恢复每日副本…");
+    public static string BackupFileFilter => T("Aldune backup (*.zip)|*.zip", "Copia de Aldune (*.zip)|*.zip", "Aldune-Sicherung (*.zip)|*.zip", "Sauvegarde Aldune (*.zip)|*.zip", "Cópia do Aldune (*.zip)|*.zip", "Backup di Aldune (*.zip)|*.zip", "Aldune バックアップ (*.zip)|*.zip", "Aldune 备份 (*.zip)|*.zip");
+    public static string BackupNoDailyCopies => T("There are no daily copies yet.", "Todavía no hay copias diarias.", "Es gibt noch keine Tageskopien.", "Il n'y a pas encore de copie quotidienne.", "Ainda não há cópias diárias.", "Non ci sono ancora copie giornaliere.", "毎日のコピーはまだありません。", "还没有每日副本。");
+    public static string BackupDailyItem(string day, int notes) => T($"{day} · {notes} notes", $"{day} · {notes} notas", $"{day} · {notes} Notizen", $"{day} · {notes} notes", $"{day} · {notes} notas", $"{day} · {notes} note", $"{day} · ノート {notes} 件", $"{day} · {notes} 条笔记");
+    public static string BackupDone(string path, int notes) => T(
+        $"Backup saved ({notes} notes):\n{path}",
+        $"Copia guardada ({notes} notas):\n{path}",
+        $"Sicherung gespeichert ({notes} Notizen):\n{path}",
+        $"Sauvegarde enregistrée ({notes} notes) :\n{path}",
+        $"Cópia salva ({notes} notas):\n{path}",
+        $"Backup salvato ({notes} note):\n{path}",
+        $"バックアップを保存しました（ノート {notes} 件）:\n{path}",
+        $"备份已保存（{notes} 条笔记）：\n{path}");
+    public static string BackupFailed => T("The backup could not be written. Check that the folder is writable and there is free space.", "No se ha podido escribir la copia. Comprueba que la carpeta admite escritura y que hay espacio libre.", "Die Sicherung konnte nicht geschrieben werden. Prüfe, ob der Ordner beschreibbar ist und Speicherplatz frei ist.", "La sauvegarde n'a pas pu être écrite. Vérifiez que le dossier est accessible en écriture et qu'il reste de l'espace.", "Não foi possível gravar a cópia. Verifique se a pasta permite gravação e se há espaço livre.", "Impossibile scrivere il backup. Controlla che la cartella sia scrivibile e che ci sia spazio libero.", "バックアップを書き込めませんでした。フォルダーが書き込み可能で、空き容量があることを確認してください。", "无法写入备份。请检查文件夹是否可写以及是否有可用空间。");
+    public static string BackupRestoreConfirm(string whenText, int notes) => T(
+        $"Restore the backup from {whenText} ({notes} notes)?\n\nThis REPLACES all your current notes and settings with the ones in the backup, including any note made since then. Your current data is not deleted: it is kept next to the originals as notes.db.before-restore and settings.json.before-restore.\n\nThe restore is applied the next time Aldune starts.",
+        $"¿Restaurar la copia del {whenText} ({notes} notas)?\n\nEsto SUSTITUYE todas tus notas y ajustes actuales por los de la copia, incluidas las notas hechas desde entonces. Tus datos actuales no se borran: se guardan junto a los originales como notes.db.before-restore y settings.json.before-restore.\n\nLa restauración se aplica la próxima vez que arranque Aldune.",
+        $"Die Sicherung vom {whenText} ({notes} Notizen) wiederherstellen?\n\nDadurch werden alle aktuellen Notizen und Einstellungen durch die der Sicherung ERSETZT, auch Notizen, die seitdem entstanden sind. Deine aktuellen Daten werden nicht gelöscht: Sie bleiben neben den Originalen als notes.db.before-restore und settings.json.before-restore erhalten.\n\nDie Wiederherstellung wird beim nächsten Start von Aldune angewendet.",
+        $"Restaurer la sauvegarde du {whenText} ({notes} notes) ?\n\nCela REMPLACE toutes vos notes et réglages actuels par ceux de la sauvegarde, y compris les notes créées depuis. Vos données actuelles ne sont pas supprimées : elles sont conservées à côté des originaux sous les noms notes.db.before-restore et settings.json.before-restore.\n\nLa restauration est appliquée au prochain démarrage d'Aldune.",
+        $"Restaurar a cópia de {whenText} ({notes} notas)?\n\nIsso SUBSTITUI todas as suas notas e configurações atuais pelas da cópia, inclusive as notas feitas desde então. Seus dados atuais não são apagados: ficam ao lado dos originais como notes.db.before-restore e settings.json.before-restore.\n\nA restauração é aplicada na próxima vez que o Aldune iniciar.",
+        $"Ripristinare il backup del {whenText} ({notes} note)?\n\nQuesto SOSTITUISCE tutte le note e le impostazioni attuali con quelle del backup, comprese le note create da allora. I dati attuali non vengono eliminati: restano accanto agli originali come notes.db.before-restore e settings.json.before-restore.\n\nIl ripristino viene applicato al prossimo avvio di Aldune.",
+        $"{whenText} のバックアップ（ノート {notes} 件）を復元しますか？\n\n現在のノートと設定は、その後に作成したノートも含めて、バックアップの内容に置き換えられます。現在のデータは削除されず、元のファイルの隣に notes.db.before-restore と settings.json.before-restore として残ります。\n\n復元は次回 Aldune の起動時に適用されます。",
+        $"要恢复 {whenText} 的备份（{notes} 条笔记）吗？\n\n这会用备份中的内容替换你当前所有的笔记和设置，包括此后创建的笔记。当前数据不会被删除：它们会以 notes.db.before-restore 和 settings.json.before-restore 的名称保存在原文件旁边。\n\n恢复将在下次启动 Aldune 时应用。");
+    public static string BackupRestoreStaged => T(
+        "The restore is ready and will be applied when Aldune starts again.",
+        "La restauración está lista y se aplicará cuando Aldune vuelva a arrancar.",
+        "Die Wiederherstellung ist vorbereitet und wird beim nächsten Start von Aldune angewendet.",
+        "La restauration est prête et sera appliquée au prochain démarrage d'Aldune.",
+        "A restauração está pronta e será aplicada quando o Aldune iniciar novamente.",
+        "Il ripristino è pronto e verrà applicato al prossimo avvio di Aldune.",
+        "復元の準備ができました。次回 Aldune を起動したときに適用されます。",
+        "恢复已准备就绪，将在 Aldune 再次启动时应用。");
+    public static string BackupRestoreApplied => T(
+        "Your backup was restored. The data that was there before is kept as notes.db.before-restore and settings.json.before-restore in the Aldune data folder.",
+        "Se ha restaurado tu copia. Los datos que había antes se conservan como notes.db.before-restore y settings.json.before-restore en la carpeta de datos de Aldune.",
+        "Deine Sicherung wurde wiederhergestellt. Die bisherigen Daten bleiben als notes.db.before-restore und settings.json.before-restore im Aldune-Datenordner erhalten.",
+        "Votre sauvegarde a été restaurée. Les données précédentes sont conservées sous les noms notes.db.before-restore et settings.json.before-restore dans le dossier de données d'Aldune.",
+        "Sua cópia foi restaurada. Os dados que existiam antes foram mantidos como notes.db.before-restore e settings.json.before-restore na pasta de dados do Aldune.",
+        "Il backup è stato ripristinato. I dati precedenti sono conservati come notes.db.before-restore e settings.json.before-restore nella cartella dati di Aldune.",
+        "バックアップを復元しました。それまでのデータは Aldune のデータフォルダーに notes.db.before-restore と settings.json.before-restore として残してあります。",
+        "已恢复你的备份。之前的数据在 Aldune 数据文件夹中保留为 notes.db.before-restore 和 settings.json.before-restore。");
+    public static string BackupRestoreApplyFailed => T(
+        "The pending restore could not be applied (a file is in use or the disk refused). Your current data was not changed; it will be tried again next start.",
+        "No se ha podido aplicar la restauración pendiente (un archivo está en uso o el disco la ha rechazado). Tus datos actuales no han cambiado; se reintentará en el próximo arranque.",
+        "Die ausstehende Wiederherstellung konnte nicht angewendet werden (eine Datei ist in Benutzung oder der Datenträger hat sie abgelehnt). Deine aktuellen Daten wurden nicht verändert; beim nächsten Start wird es erneut versucht.",
+        "La restauration en attente n'a pas pu être appliquée (un fichier est utilisé ou le disque l'a refusée). Vos données actuelles n'ont pas changé ; une nouvelle tentative aura lieu au prochain démarrage.",
+        "Não foi possível aplicar a restauração pendente (um arquivo está em uso ou o disco a recusou). Seus dados atuais não foram alterados; será tentado de novo na próxima inicialização.",
+        "Impossibile applicare il ripristino in sospeso (un file è in uso o il disco lo ha rifiutato). I dati attuali non sono cambiati; si riproverà al prossimo avvio.",
+        "保留中の復元を適用できませんでした（ファイルが使用中か、ディスクが拒否しました）。現在のデータは変更されていません。次回の起動時に再試行します。",
+        "无法应用待处理的恢复（文件正在使用或磁盘拒绝了操作）。当前数据未被更改；下次启动时会重试。");
+    public static string BackupProblemText(Aldune.Core.BackupProblem problem) => problem switch
+    {
+        Aldune.Core.BackupProblem.TooNew => T(
+            "That backup was made by a newer version of Aldune. Update Aldune to restore it.",
+            "Esa copia la hizo una versión más reciente de Aldune. Actualiza Aldune para restaurarla.",
+            "Diese Sicherung stammt von einer neueren Aldune-Version. Aktualisiere Aldune, um sie wiederherzustellen.",
+            "Cette sauvegarde a été créée par une version plus récente d'Aldune. Mettez Aldune à jour pour la restaurer.",
+            "Essa cópia foi feita por uma versão mais recente do Aldune. Atualize o Aldune para restaurá-la.",
+            "Quel backup è stato creato da una versione più recente di Aldune. Aggiorna Aldune per ripristinarlo.",
+            "このバックアップは、より新しいバージョンの Aldune で作成されました。復元するには Aldune を更新してください。",
+            "该备份由更新版本的 Aldune 创建。请更新 Aldune 后再恢复。"),
+        Aldune.Core.BackupProblem.DatabaseDamaged => T(
+            "The notes inside that backup are damaged, so it cannot be restored. Nothing was changed.",
+            "Las notas de esa copia están dañadas y no se puede restaurar. No se ha cambiado nada.",
+            "Die Notizen in dieser Sicherung sind beschädigt, sie kann nicht wiederhergestellt werden. Es wurde nichts geändert.",
+            "Les notes de cette sauvegarde sont endommagées, elle ne peut pas être restaurée. Rien n'a été modifié.",
+            "As notas dessa cópia estão danificadas, então ela não pode ser restaurada. Nada foi alterado.",
+            "Le note in quel backup sono danneggiate e non può essere ripristinato. Non è stato cambiato nulla.",
+            "このバックアップ内のノートは破損しているため復元できません。何も変更していません。",
+            "该备份中的笔记已损坏，无法恢复。未做任何更改。"),
+        _ => T(
+            "That is not a complete Aldune backup (it needs the notes, the settings and the manifest). Nothing was changed.",
+            "Eso no es una copia completa de Aldune (necesita las notas, los ajustes y el manifiesto). No se ha cambiado nada.",
+            "Das ist keine vollständige Aldune-Sicherung (sie braucht Notizen, Einstellungen und das Manifest). Es wurde nichts geändert.",
+            "Ce n'est pas une sauvegarde Aldune complète (il faut les notes, les réglages et le manifeste). Rien n'a été modifié.",
+            "Isso não é uma cópia completa do Aldune (precisa das notas, das configurações e do manifesto). Nada foi alterado.",
+            "Non è un backup completo di Aldune (servono le note, le impostazioni e il manifesto). Non è stato cambiato nulla.",
+            "これは完全な Aldune バックアップではありません（ノート、設定、マニフェストが必要です）。何も変更していません。",
+            "这不是完整的 Aldune 备份（需要笔记、设置和清单）。未做任何更改。"),
+    };
 }

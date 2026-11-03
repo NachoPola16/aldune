@@ -105,6 +105,17 @@ public partial class App : Application
         var settingsPath = Path.Combine(appDataDir, "settings.json");
         var databasePath = Path.Combine(appDataDir, BrandIdentity.DatabaseFileName);
 
+        // A restore chosen in Settings was only staged (the running app held the database open). This is
+        // the one moment nothing has opened the files yet, so the swap is safe; the previous files are kept
+        // as *.before-restore. If it fails, the staged copy stays and the live data is untouched.
+        bool restoreApplied = false, restoreFailed = false;
+        try { restoreApplied = LocalBackup.ApplyPendingRestore(appDataDir); }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or SqliteException)
+        {
+            restoreFailed = true;
+            AppLog.Write("app", $"restauración pendiente no aplicada, se reintentará: {ex.Message}");
+        }
+
         if (DatabaseCorruptionGuard.IsValidSqliteFile(databasePath) is false && File.Exists(databasePath))
         {
             DatabaseCorruptionGuard.BackupAndRemove(databasePath);
@@ -274,6 +285,12 @@ public partial class App : Application
         _settings = settings;
         _settingsService = settingsService;
         StartDailyBackups(appDataDir);
+        if (restoreApplied || restoreFailed)
+        {
+            // Settings are loaded by now, so the message is in the user's language. Deferred: the docks are not built yet.
+            Dispatcher.BeginInvoke(() => AppDialog.Show(null, restoreApplied ? Strings.BackupRestoreApplied : Strings.BackupRestoreApplyFailed,
+                Strings.BackupSectionTitle, MessageBoxButton.OK, restoreApplied ? MessageBoxImage.Information : MessageBoxImage.Warning));
+        }
         _autoExport = new AutoExportService(repository, settings);
         _singleInstance.ListenForActivation(() => Dispatcher.BeginInvoke(() =>
         {
