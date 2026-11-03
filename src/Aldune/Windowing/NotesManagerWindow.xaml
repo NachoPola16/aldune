@@ -547,7 +547,7 @@
                            Margin="28,0,0,0"
                            HorizontalAlignment="Left" VerticalAlignment="Center"
                            IsHitTestVisible="False" />
-                <TextBox x:Name="SearchBox"
+                <TextBox x:Name="SearchBox" AutomationProperties.Name="{x:Static res:Strings.SearchPlaceholder}"
                          Background="Transparent" Foreground="{DynamicResource AlduneTextBrush}" CaretBrush="{DynamicResource AlduneTextBrush}"
                          FontSize="{DynamicResource AlduneTextBody}" BorderThickness="0"
                          Padding="0,9" Margin="28,0,28,0"
@@ -667,6 +667,7 @@
                                               Background="{Binding Note.Color, Converter={StaticResource ManagerRowFaceConverter}}"
                                               Style="{StaticResource AppCheckBoxStyle}"
                                               PreviewMouseLeftButtonDown="OnRowCheckBoxPreviewMouseLeftButtonDown"
+                                              AutomationProperties.Name="{Binding Note, Converter={StaticResource NoteTitleConverter}}"
                                               VerticalAlignment="Center" Margin="0,0,12,0" />
 
                                     <!-- Dos líneas: título y fecha; debajo, el principio del texto y
@@ -820,7 +821,7 @@
                 <!-- The -8 cancels the left margin of the first button, so the row ends exactly at the 20 px margin and needs 8 px less. -->
                 <WrapPanel HorizontalAlignment="Right" Margin="-8,0,0,0">
                     <!-- Brings notes in from other apps. Like Export it does not depend on the selection. -->
-                    <Button x:Name="ImportButton" Click="OnImportNotesClick" MinWidth="130" Margin="8,3,0,3"
+                    <Button x:Name="ImportButton" AutomationProperties.Name="{x:Static res:Strings.ImportNotesButton}" Click="OnImportNotesClick" MinWidth="130" Margin="8,3,0,3"
                             ToolTip="{x:Static res:Strings.ImportNotesTooltip}"
                             Style="{StaticResource ToolbarButtonStyle}">
                         <StackPanel Orientation="Horizontal">
@@ -833,7 +834,7 @@
                          no — no depende de tener algo seleccionado, a diferencia de los botones de
                          abajo. Glifo elegido sin verificación visual del render real, igual que ya
                          pasó una vez con el de "abrir todas" (ver docs/STATUS.md). -->
-                    <Button x:Name="ExportButton" Click="OnExportSelectedClick" MinWidth="130" Margin="8,3,0,3"
+                    <Button x:Name="ExportButton" AutomationProperties.Name="{x:Static res:Strings.Export}" Click="OnExportSelectedClick" MinWidth="130" Margin="8,3,0,3"
                             Style="{StaticResource ToolbarButtonStyle}">
                         <StackPanel Orientation="Horizontal">
                             <TextBlock Text="&#xE896;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets"
@@ -841,7 +842,7 @@
                             <TextBlock Text="{x:Static res:Strings.Export}" VerticalAlignment="Center" />
                         </StackPanel>
                     </Button>
-                    <Button x:Name="ArchiveButton" Click="OnArchiveSelectedClick" MinWidth="130" Margin="8,3,0,3"
+                    <Button x:Name="ArchiveButton" AutomationProperties.Name="{x:Static res:Strings.Archive}" Click="OnArchiveSelectedClick" MinWidth="130" Margin="8,3,0,3"
                             Style="{StaticResource ToolbarButtonStyle}">
                         <StackPanel Orientation="Horizontal">
                             <TextBlock Text="&#xE7B8;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets"
@@ -849,7 +850,7 @@
                             <TextBlock Text="{x:Static res:Strings.Archive}" VerticalAlignment="Center" />
                         </StackPanel>
                     </Button>
-                    <Button x:Name="RestoreButton" Click="OnRestoreSelectedClick" MinWidth="130" Margin="8,3,0,3"
+                    <Button x:Name="RestoreButton" AutomationProperties.Name="{x:Static res:Strings.Restore}" Click="OnRestoreSelectedClick" MinWidth="130" Margin="8,3,0,3"
                             Style="{StaticResource ToolbarButtonStyle}">
                         <StackPanel Orientation="Horizontal">
                             <TextBlock Text="&#xE7A7;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets"
@@ -857,7 +858,7 @@
                             <TextBlock Text="{x:Static res:Strings.Restore}" VerticalAlignment="Center" />
                         </StackPanel>
                     </Button>
-                    <Button x:Name="TrashButton" Click="OnTrashSelectedClick" MinWidth="130" Margin="8,3,0,3"
+                    <Button x:Name="TrashButton" AutomationProperties.Name="{x:Static res:Strings.Trash}" Click="OnTrashSelectedClick" MinWidth="130" Margin="8,3,0,3"
                             Style="{StaticResource DangerToolbarButtonStyle}">
                         <StackPanel Orientation="Horizontal">
                             <TextBlock Text="&#xE74D;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets"

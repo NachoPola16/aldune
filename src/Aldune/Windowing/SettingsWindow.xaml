@@ -943,7 +943,7 @@
                             </Grid.ColumnDefinitions>
                             <TextBlock Text="{x:Static res:Strings.SyncProfileNameLabel}" Foreground="{DynamicResource AlduneHintBrush}"
                                        VerticalAlignment="Center" Margin="0,0,8,0" />
-                            <TextBox x:Name="SyncProfileNameBox" Grid.Column="1"
+                            <TextBox x:Name="SyncProfileNameBox" AutomationProperties.Name="{x:Static res:Strings.SyncProfileNameLabel}" Grid.Column="1"
                                      Background="{DynamicResource AlduneSurfaceBrush}" Foreground="{DynamicResource AlduneTextBrush}" BorderThickness="0"
                                      Padding="7,5" LostFocus="OnSyncProfileNameLostFocus" />
                         </Grid>
@@ -1002,7 +1002,7 @@
                             </Grid.ColumnDefinitions>
                             <TextBlock Text="{x:Static res:Strings.SyncFolderLabel}" Foreground="{DynamicResource AlduneTextBrush}"
                                        VerticalAlignment="Center" Margin="0,0,8,0" />
-                            <TextBox x:Name="SyncFolderPathBox" Grid.Column="1" MinWidth="130"
+                            <TextBox x:Name="SyncFolderPathBox" AutomationProperties.Name="{x:Static res:Strings.SyncFolderLabel}" Grid.Column="1" MinWidth="130"
                                      Background="{DynamicResource AlduneSurfaceBrush}" Foreground="{DynamicResource AlduneTextBrush}" BorderThickness="0"
                                      Padding="7,6" TextChanged="OnSyncValueChanged" />
                             <Button x:Name="SyncBrowseButton" Grid.Column="2"
@@ -1017,7 +1017,7 @@
                             </Grid.ColumnDefinitions>
                             <TextBlock Text="{x:Static res:Strings.SyncServerUrlLabel}" Foreground="{DynamicResource AlduneTextBrush}"
                                        VerticalAlignment="Center" Margin="0,0,8,0" />
-                            <TextBox x:Name="SyncServerUrlBox" Grid.Column="1" MinWidth="130"
+                            <TextBox x:Name="SyncServerUrlBox" AutomationProperties.Name="{x:Static res:Strings.SyncServerUrlLabel}" Grid.Column="1" MinWidth="130"
                                      Background="{DynamicResource AlduneSurfaceBrush}" Foreground="{DynamicResource AlduneTextBrush}" BorderThickness="0"
                                      Padding="7,6" TextChanged="OnSyncValueChanged" />
                         </Grid>
@@ -1082,7 +1082,7 @@
 
                         <TextBlock Text="{x:Static res:Strings.SyncCodeLabel}" Foreground="{DynamicResource AlduneTextBrush}"
                                    Margin="0,12,0,0" />
-                        <TextBox x:Name="SyncCodeBox" Margin="0,6,0,0"
+                        <TextBox x:Name="SyncCodeBox" AutomationProperties.Name="{x:Static res:Strings.SyncCodeLabel}" Margin="0,6,0,0"
                                  Background="{DynamicResource AlduneSurfaceBrush}" Foreground="{DynamicResource AlduneTextBrush}" BorderThickness="0"
                                  Padding="7,6" />
                         <TextBlock Text="{x:Static res:Strings.SyncCodeHint}" Foreground="{DynamicResource AlduneHintBrush}"
@@ -1124,7 +1124,7 @@
                             <TextBlock Text="{x:Static res:Strings.SyncIntervalLabel}" Foreground="{DynamicResource AlduneTextBrush}"
                                        VerticalAlignment="Center" Margin="0,0,8,0" />
                             <Border Background="{DynamicResource AlduneSurfaceBrush}" CornerRadius="{DynamicResource AlduneRadius6}">
-                                <TextBox x:Name="SyncIntervalValueBox" MinWidth="44" MaxLength="4" FontSize="{DynamicResource AlduneTextBody}"
+                                <TextBox x:Name="SyncIntervalValueBox" AutomationProperties.Name="{x:Static res:Strings.SyncIntervalLabel}" MinWidth="44" MaxLength="4" FontSize="{DynamicResource AlduneTextBody}"
                                          Background="Transparent" Foreground="{DynamicResource AlduneTextBrush}" CaretBrush="{DynamicResource AlduneTextBrush}"
                                          BorderThickness="0" Padding="6,5" TextAlignment="Center"
                                          PreviewTextInput="OnSyncIntervalPreviewTextInput"

@@ -184,7 +184,7 @@
                                Style="{StaticResource TitlePlaceholderStyle}"
                                Margin="4,0,0,0"
                                VerticalAlignment="Center" />
-                    <TextBox x:Name="TitleBox"
+                    <TextBox x:Name="TitleBox" AutomationProperties.Name="{x:Static res:Strings.TitlePlaceholder}"
                              Style="{StaticResource NoteTextBoxStyle}"
                              FontFamily="{DynamicResource AlduneNoteTitleFont}"
                              FontSize="{DynamicResource AlduneNoteTitleFontSize}"
@@ -510,7 +510,7 @@
                        Style="{StaticResource PlaceholderStyle}" TextWrapping="Wrap" />
             <!-- Tinta tintada hacia el cálido, nunca #000 puro: sobre un pastel, el negro
                  absoluto es el único color de la ventana que no comparte hue con nada. -->
-            <TextBox x:Name="TextBody"
+            <TextBox x:Name="TextBody" AutomationProperties.Name="{x:Static res:Strings.BodyPlaceholder}"
                      Style="{StaticResource NoteTextBoxStyle}"
                      AcceptsReturn="True"
                      AcceptsTab="True"
