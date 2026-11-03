@@ -26,13 +26,15 @@ from shapely.geometry.polygon import orient
 RAIZ = Path(__file__).resolve().parents[2]
 # (destino, ascendente, descendente): cada plataforma lleva las métricas de línea de la fuente con la que convive,
 # porque si la de la casilla fuera más alta, las líneas con casilla saldrían más altas que las demás.
+# La última columna baja el dibujo (unidades de em/2048): con la caja grande en Windows, anclada a la línea de base, su centro quedaba
+# ~2 px por encima de la flecha «→» de una viñeta y del texto; 250 la deja a ~0,2 px (medido con la sonda probe72).
 # Cada destino se escribe también en versión «grande» (ajuste «Casillas grandes»): la misma caja un 25 % mayor, con su avance.
 GRANDE = 1.25
 DESTINOS = [
-    (RAIZ / "src" / "Aldune" / "Assets" / "AlduneCheck.ttf", "AlduneCheck", 1.0, 2210, 514),  # Segoe UI Symbol / Variable
-    (RAIZ / "src" / "Aldune" / "Assets" / "AlduneCheckLarge.ttf", "AlduneCheckLarge", GRANDE, 2210, 514),
-    (RAIZ / "android" / "app" / "src" / "main" / "res" / "font" / "aldune_check.ttf", "AlduneCheck", 1.0, 1900, 500),  # Roboto
-    (RAIZ / "android" / "app" / "src" / "main" / "res" / "font" / "aldune_check_large.ttf", "AlduneCheckLarge", GRANDE, 1900, 500),
+    (RAIZ / "src" / "Aldune" / "Assets" / "AlduneCheck.ttf", "AlduneCheck", 1.0, 2210, 514, 0),  # Segoe UI Symbol / Variable
+    (RAIZ / "src" / "Aldune" / "Assets" / "AlduneCheckLarge.ttf", "AlduneCheckLarge", GRANDE, 2210, 514, 250),
+    (RAIZ / "android" / "app" / "src" / "main" / "res" / "font" / "aldune_check.ttf", "AlduneCheck", 1.0, 1900, 500, 0),  # Roboto
+    (RAIZ / "android" / "app" / "src" / "main" / "res" / "font" / "aldune_check_large.ttf", "AlduneCheckLarge", GRANDE, 1900, 500, 0),
 ]
 
 EM = 2048
@@ -77,13 +79,17 @@ def escalar(forma, escala):
     return affinity.scale(forma, escala, escala, origin=(0, 0))
 
 
-def fuente(nombre, escala, asc, desc):
+def bajar(forma, unidades):
+    return affinity.translate(forma, 0, -unidades)
+
+
+def fuente(nombre, escala, asc, desc, baja=0):
     nombres = [".notdef", "uni2610", "uni2612"]
     fb = FontBuilder(EM, isTTF=True)
     fb.setupGlyphOrder(nombres)
     fb.setupCharacterMap({0x2610: "uni2610", 0x2611: "uni2612", 0x2612: "uni2612"})
     vacio = TTGlyphPen(None).glyph()
-    fb.setupGlyf({".notdef": vacio, "uni2610": _dibuja(escalar(caja_vacia(), escala)), "uni2612": _dibuja(escalar(caja_con_tick(), escala))})
+    fb.setupGlyf({".notdef": vacio, "uni2610": _dibuja(bajar(escalar(caja_vacia(), escala), baja)), "uni2612": _dibuja(bajar(escalar(caja_con_tick(), escala), baja))})
     fb.setupHorizontalMetrics({n: (round(AVANCE * escala), round(X0 * escala)) if n != ".notdef" else (round(AVANCE * escala), 0) for n in nombres})
     fb.setupHorizontalHeader(ascent=asc, descent=-desc)
     fb.setupNameTable({"familyName": nombre, "styleName": "Regular"})
@@ -93,9 +99,9 @@ def fuente(nombre, escala, asc, desc):
 
 
 def main():
-    for destino, nombre, escala, asc, desc in DESTINOS:
+    for destino, nombre, escala, asc, desc, baja in DESTINOS:
         destino.parent.mkdir(parents=True, exist_ok=True)
-        fuente(nombre, escala, asc, desc).save(destino)
+        fuente(nombre, escala, asc, desc, baja).save(destino)
         print("escrito", destino.relative_to(RAIZ))
 
 

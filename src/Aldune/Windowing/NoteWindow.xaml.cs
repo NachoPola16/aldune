@@ -1334,9 +1334,9 @@ public partial class NoteWindow : Window
         double tightLeft = glyphRect.Left + caretWidth * 0.093;
         double tightWidth = caretWidth * 0.82;
         // «Casillas grandes»: la caja es un 25 % mayor y sube por encima de donde llegaba (mismas medidas, vueltas a tomar sobre
-        // AlduneCheckLarge: 0,151 y 0,661 del alto de línea en lugar de 0,282 y 0,53; el ancho sigue siendo proporcional al avance).
+        // AlduneCheckLarge: 0,243 y 0,661 del alto de línea en lugar de 0,282 y 0,53; el ancho sigue siendo proporcional al avance).
         bool large = ThemeManager.LargeCheckboxes;
-        double tightTop = glyphRect.Top + glyphRect.Height * (large ? 0.151 : 0.282);
+        double tightTop = glyphRect.Top + glyphRect.Height * (large ? 0.243 : 0.282);
         double tightHeight = glyphRect.Height * (large ? 0.661 : 0.53);
 
         var visualRect = new System.Windows.Rect(
@@ -1609,10 +1609,13 @@ public partial class NoteWindow : Window
             var firstLine = TextBody.GetRectFromCharacterIndex(LineIndexStart(TextBody.Text, line));
             double lineHeight = firstLine.IsEmpty ? 18 : firstLine.Height;
             // Centred in the margin: measured, the dots then sit 8 px from the edge of the note and 8 px from the checkbox.
+            // Vertically it is centred on the ink of the checkbox, not on the line: the square sits a little below the middle of the line
+            // (measured on screen: centre at 0.537 / 0.552 of the line height).
+            double centre = top + lineHeight * (ThemeManager.LargeCheckboxes ? 0.552 : 0.537);
             Canvas.SetLeft(TaskGrip, 8.0);
-            Canvas.SetTop(TaskGrip, top + (lineHeight - 12) / 2);
+            Canvas.SetTop(TaskGrip, centre - 6);
             Canvas.SetLeft(TaskGripHover, 3.5);
-            Canvas.SetTop(TaskGripHover, top + (lineHeight - 20) / 2);
+            Canvas.SetTop(TaskGripHover, centre - 10);
             TaskGrip.Visibility = Visibility.Visible;
             TaskGrip.Opacity = inMargin ? 0.95 : 0.5;
             TaskGripHover.Visibility = inMargin ? Visibility.Visible : Visibility.Collapsed;
