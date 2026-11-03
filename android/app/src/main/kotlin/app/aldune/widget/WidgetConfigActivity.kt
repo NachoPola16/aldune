@@ -67,7 +67,7 @@ class WidgetConfigActivity : ComponentActivity() {
             AldunaTheme(settings.appearance, settings.aspectColors, NoteLook(settings.uniformNoteColor, settings.cornersSquare, settings.syncSignalVisible, settings.colorFill, settings.newButtonSquare)) {
                 Surface(Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {
                     var tags by remember { mutableStateOf<List<String>>(emptyList()) }
-                    var selected by remember { mutableStateOf(WidgetTagStore.get(this@WidgetConfigActivity, appWidgetId)) }
+                    var selected by androidx.compose.runtime.saveable.rememberSaveable { mutableStateOf(WidgetTagStore.get(this@WidgetConfigActivity, appWidgetId)) }
                     LaunchedEffect(Unit) { tags = withContext(Dispatchers.IO) { loadTags() } }
                     Column(Modifier.systemBarsPadding().padding(horizontal = 16.dp, vertical = 24.dp)) {
                         Text(stringResource(R.string.widget_config_title), style = MaterialTheme.typography.titleLarge)

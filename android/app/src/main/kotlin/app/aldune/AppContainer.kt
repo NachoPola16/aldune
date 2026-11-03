@@ -107,7 +107,8 @@ class AppContainer(context: Context) {
             val reminderStore = RoomReminderStore(database)
             val reminders = Reminders(appContext, store, reminderStore, SystemClock)
             // Una pasada que trae notas archivadas o borradas deja recordatorios sin nota: se reconcilian también sin interfaz.
-            sync.afterNotesChanged = reminders::reconcile
+            // The widget is redrawn too: a pass with the app closed (SyncWorker) used to leave it showing the old notes until the app was opened.
+            sync.afterNotesChanged = { reminders.reconcile(); app.aldune.widget.WidgetUpdater.request(appContext) }
             val conflictStore = RoomConflictStore(database, cipher)
             // Recuperar una nota con «Usar la otra» tiene que quitar su lápida local, o la sync seguiría firmando el borrado (informe de F7).
             val eraser = TombstoneEraser { database.notes().deleteTombstone(it) }

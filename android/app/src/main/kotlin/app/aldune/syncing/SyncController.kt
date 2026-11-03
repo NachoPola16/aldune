@@ -211,6 +211,8 @@ class SyncController(
                 // The look rides along only after the notes synced fine, and never fails them.
                 if (result is SyncOutcome.Success) reconcileLook(profile, transport, secrets.key)
                 result
+            } catch (e: kotlinx.coroutines.CancellationException) {
+                throw e // a cancelled pass (WorkManager, scope) is not a network failure: no "sync failed" sound and no retry
             } catch (e: Exception) {
                 // Un fallo de programa (dato local que no cuadra) no debe tumbar la app: queda en el estado, con su detalle, para el diagnóstico.
                 SyncOutcome.Failure(classifyFailure(e))

@@ -290,9 +290,9 @@ fun NoteListPane(
             if (picked.isNotEmpty()) SelectionBar(
                 count = picked.size, filter = state.filter,
                 onAll = { picked = state.items.map { it.id }.toSet() }, onExit = { picked = emptySet() },
-                onArchive = { val ids = picked; ids.forEach(viewModel::archive); picked = emptySet(); announce(if (ids.size == 1) archivedMsg else String.format(archivedManyTpl, ids.size)) { ids.forEach(viewModel::restore) } },
-                onTrash = { val ids = picked; ids.forEach(viewModel::trash); picked = emptySet(); announce(if (ids.size == 1) trashedMsg else String.format(trashedManyTpl, ids.size)) { ids.forEach(viewModel::restore) } },
-                onRestore = { val ids = picked; ids.forEach(viewModel::restore); picked = emptySet(); announce(if (ids.size == 1) restoredMsg else String.format(restoredManyTpl, ids.size)) { ids.forEach(viewModel::trash) } },
+                onArchive = { val ids = picked; val before = state.items.filter { it.id in ids }.associate { it.id to it.state }; ids.forEach(viewModel::archive); picked = emptySet(); announce(if (ids.size == 1) archivedMsg else String.format(archivedManyTpl, ids.size)) { before.forEach { (id, was) -> viewModel.setState(id, was) } } },
+                onTrash = { val ids = picked; val before = state.items.filter { it.id in ids }.associate { it.id to it.state }; ids.forEach(viewModel::trash); picked = emptySet(); announce(if (ids.size == 1) trashedMsg else String.format(trashedManyTpl, ids.size)) { before.forEach { (id, was) -> viewModel.setState(id, was) } } },
+                onRestore = { val ids = picked; val before = state.items.filter { it.id in ids }.associate { it.id to it.state }; ids.forEach(viewModel::restore); picked = emptySet(); announce(if (ids.size == 1) restoredMsg else String.format(restoredManyTpl, ids.size)) { before.forEach { (id, was) -> viewModel.setState(id, was) } } },
                 onTag = { taggingPicked = true },
             ) else if (!tight) Row(Modifier.fillMaxWidth().padding(top = 8.dp), verticalAlignment = Alignment.CenterVertically) {
                 Box(Modifier.weight(1f)) { StateTabs(state, viewModel::setFilter) }
@@ -802,9 +802,9 @@ fun NoteListPane(
                             moves = ReorderPlan.available(sameGroup(order, item.id), item.id, reorderable), onMove = { delta -> moveBy(item.id, delta) },
                             channel = order.indexOfFirst { it.id == item.id },
                             signal = if (look.syncSignal) NoteSyncSignal.of(hasProfile, item.id in conflicted, bases[item.id], item.updatedAt) else NoteSyncSignal.State.HIDDEN,
-                            onArchive = { viewModel.archive(item.id); announce(archivedMsg) { viewModel.restore(item.id) } },
-                            onTrash = { viewModel.trash(item.id); announce(trashedMsg) { viewModel.restore(item.id) } },
-                            onRestore = { viewModel.restore(item.id); announce(restoredMsg) { viewModel.trash(item.id) } },
+                            onArchive = { val before = item.state; viewModel.archive(item.id); announce(archivedMsg) { viewModel.setState(item.id, before) } },
+                            onTrash = { val before = item.state; viewModel.trash(item.id); announce(trashedMsg) { viewModel.setState(item.id, before) } },
+                            onRestore = { val before = item.state; viewModel.restore(item.id); announce(restoredMsg) { viewModel.setState(item.id, before) } },
                             onDelete = { deleting = item },
                         )
                         }
@@ -867,9 +867,9 @@ fun NoteListPane(
         NoteActionsDialog(
             item, openInEditor = item.id == selectedId, viewModel = viewModel, onOpen = { onOpen(item.id) }, onClose = { menuFor = null },
             moves = ReorderPlan.available(sameGroup(state.items, item.id), item.id, reorderable), onMove = { delta -> moveBy(item.id, delta) },
-            onArchive = { viewModel.archive(item.id); announce(archivedMsg) { viewModel.restore(item.id) } },
-            onTrash = { viewModel.trash(item.id); announce(trashedMsg) { viewModel.restore(item.id) } },
-            onRestore = { viewModel.restore(item.id); announce(restoredMsg) { viewModel.trash(item.id) } },
+            onArchive = { val before = item.state; viewModel.archive(item.id); announce(archivedMsg) { viewModel.setState(item.id, before) } },
+            onTrash = { val before = item.state; viewModel.trash(item.id); announce(trashedMsg) { viewModel.setState(item.id, before) } },
+            onRestore = { val before = item.state; viewModel.restore(item.id); announce(restoredMsg) { viewModel.setState(item.id, before) } },
             onSelect = { picked = setOf(item.id) },
         )
     }

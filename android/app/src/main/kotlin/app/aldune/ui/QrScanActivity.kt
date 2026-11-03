@@ -124,7 +124,11 @@ private fun CameraPreview(onCode: (String) -> Unit, onBack: () -> Unit) {
                 val view = PreviewView(ctx)
                 val future = ProcessCameraProvider.getInstance(ctx)
                 future.addListener({
-                    val p = future.get()
+                    // The camera can be unavailable (in use by another app, blocked by policy): that must not crash the screen.
+                    val p = runCatching { future.get() }.getOrElse {
+                        Toast.makeText(ctx, ctx.getString(R.string.scan_qr_denied), Toast.LENGTH_LONG).show()
+                        return@addListener
+                    }
                     provider = p
                     val analysis = ImageAnalysis.Builder().setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST).build()
                     analysis.setAnalyzer(executor) { image ->

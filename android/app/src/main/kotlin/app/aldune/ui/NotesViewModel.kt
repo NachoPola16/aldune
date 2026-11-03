@@ -881,16 +881,17 @@ class NotesViewModel(application: Application) : AndroidViewModel(application) {
     fun checkForUpdates(currentVersion: String, now: Long = System.currentTimeMillis()) {
         val s = _settings.value
         if (!s.checkUpdates || currentVersion.isBlank()) { _update.value = null; return }
-        launchIo {
-            if (now - s.lastUpdateCheck >= UPDATE_CHECK_INTERVAL_MS) {
-                val json = runCatching { fetchReleases() }.getOrNull()
-                if (json != null) {
-                    val found = AndroidReleaseUpdate.latest(json, currentVersion)
-                    updateSettings { it.copy(lastUpdateCheck = now, knownUpdate = found?.tag) }
-                }
+        viewModelScope.launch(Dispatchers.IO) {
+            // The request (up to ~16 s on a bad network) is made outside the `io` lock: inside it, opening a note or saving waited for it.
+            val json = if (now - s.lastUpdateCheck >= UPDATE_CHECK_INTERVAL_MS) runCatching { fetchReleases() }.getOrNull() else null
+            io.withLock {
+            if (json != null) {
+                val found = AndroidReleaseUpdate.latest(json, currentVersion)
+                updateSettings { it.copy(lastUpdateCheck = now, knownUpdate = found?.tag) }
             }
             val shown = AndroidReleaseUpdate.fromTag(_settings.value.knownUpdate, currentVersion)
             _update.value = shown?.takeIf { it.version != _settings.value.dismissedUpdate }
+            }
         }
     }
 
@@ -945,6 +946,9 @@ class NotesViewModel(application: Application) : AndroidViewModel(application) {
     fun trash(id: String) = change { it.trash(id) }.also { sounds.play(SoundEvent.NOTE_DELETED) }
 
     fun restore(id: String) = change { it.restore(id) }
+
+    /** Puts a note back in the state it had (the undo of archive, trash and restore: it may have come from the archive, not only from the active list). */
+    fun setState(id: String, state: NoteState) = change { when (state) { NoteState.ACTIVE -> it.restore(id); NoteState.ARCHIVED -> it.archive(id); NoteState.TRASHED -> it.trash(id) } }
 
     fun deleteForever(id: String) = change { it.deleteForever(id) }.also { sounds.play(SoundEvent.NOTE_DELETED) }
 

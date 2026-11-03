@@ -49,6 +49,9 @@ class QuickAddReceiver : BroadcastReceiver() {
         thread(name = "quick-add") {
             try {
                 handle(context.applicationContext, noteId, item)
+            } catch (e: Exception) {
+                // A locked database or a failing Keystore must not take the process down from this thread (the reminder receiver does the same).
+                android.util.Log.w("QuickAdd", "could not add the item: ${e.javaClass.simpleName}")
             } finally {
                 pending.finish()
             }
