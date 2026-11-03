@@ -1453,7 +1453,7 @@ public partial class SettingsWindow : Window
         var profile = SyncProfileStore.GetActive(_settings);
         var name = SyncProfileNameBox.Text.Trim();
         if (string.IsNullOrWhiteSpace(name)) name = Strings.SyncProfileNewName(1);
-        if (profile.Name == name) return;
+        if (profile.Name == name || Strings.SyncProfileDisplayName(profile.Name) == name) return; // the translated default shown in the box is not an edit
 
         profile.Name = name;
         _settingsService.Save(_settings);
@@ -1468,12 +1468,12 @@ public partial class SettingsWindow : Window
             SyncProfileBox.Items.Clear();
             foreach (var profile in _settings.SyncProfiles)
             {
-                SyncProfileBox.Items.Add(new ComboBoxItem { Content = profile.Name, Tag = profile.Id });
+                SyncProfileBox.Items.Add(new ComboBoxItem { Content = Strings.SyncProfileDisplayName(profile.Name), Tag = profile.Id });
             }
 
             var index = _settings.SyncProfiles.FindIndex(profile => profile.Id == _settings.ActiveSyncProfileId);
             SyncProfileBox.SelectedIndex = index < 0 ? 0 : index;
-            var activeName = SyncProfileStore.GetActive(_settings).Name;
+            var activeName = Strings.SyncProfileDisplayName(SyncProfileStore.GetActive(_settings).Name);
             SyncProfileNameBox.Text = activeName;
             SyncProfileNameDisplayText.Text = activeName;
             bool hasProfileChoices = _settings.SyncProfiles.Count > 1;
@@ -1506,7 +1506,7 @@ public partial class SettingsWindow : Window
     {
         // El nombre también es del perfil activo: sin esto, al cambiar de perfil la caja se quedaba con el del anterior y, al perder el foco,
         // OnSyncProfileNameLostFocus le ponía ese nombre al perfil nuevo.
-        var activeName = SyncProfileStore.GetActive(_settings).Name;
+        var activeName = Strings.SyncProfileDisplayName(SyncProfileStore.GetActive(_settings).Name);
         SyncProfileNameBox.Text = activeName;
         SyncProfileNameDisplayText.Text = activeName;
         SyncEnabledCheck.IsChecked = _settings.SyncEnabled;

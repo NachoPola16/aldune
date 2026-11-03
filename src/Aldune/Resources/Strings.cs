@@ -1444,6 +1444,9 @@ public static class Strings
         "Synchronisiere…", "Synchronisation en cours…", "Sincronizando…", "Sincronizzazione in corso…", "同期中…", "正在同步…");
     public static string SyncProfileLabel => T("Sync profile", "Perfil de sincronización",
         "Synchronisierungsprofil", "Profil de synchronisation", "Perfil de sincronização", "Profilo di sincronizzazione", "同期プロファイル", "同步配置");
+    /// <summary>The first profile is stored with a Spanish name ("Mis dispositivos"); other languages show it translated, the stored name is untouched.</summary>
+    public static string SyncProfileDisplayName(string name) => name == "Mis dispositivos" ? T("My devices", "Mis dispositivos",
+        "Meine Geräte", "Mes appareils", "Meus dispositivos", "I miei dispositivi", "マイデバイス", "我的设备") : name;
     public static string SyncProfileNameLabel => T("Name:", "Nombre:",
         "Name:", "Nom :", "Nome:", "Nome:", "名前:", "名称：");
     public static string SyncNewProfile => T("New", "Nuevo",
