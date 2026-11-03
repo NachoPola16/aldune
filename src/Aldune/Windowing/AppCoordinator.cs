@@ -327,6 +327,7 @@ public sealed class AppCoordinator
         // La pasada de abrir una nota es de fondo: no suena cada vez que se abre una.
         if (fullySucceeded && !silent) PlaySound(SoundEvent.SyncDone);
         PruneCompletedTasksInClosedNotes();
+        foreach (var window in _openNoteWindows.Values.ToList()) window.ReloadIfChangedBySync();
         // Lo que llegó por la sync a una nota vinculada es un cambio pendiente que hay que escribir en el archivo.
         foreach (var link in _repository.GetFileLinks().Where(link => link.SyncEnabled)) RequestLinkedCheck(link.NoteId);
         // Con las señales de sync de las notas abiertas incluidas: su estado acaba de cambiar.

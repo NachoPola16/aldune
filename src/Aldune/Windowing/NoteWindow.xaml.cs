@@ -2205,6 +2205,18 @@ public partial class NoteWindow : Window
         Flush();
     }
 
+    /// <summary>
+    /// A sync pass may have brought a newer text for this note (edited on another device). If nothing is waiting to be saved here, the window
+    /// shows it; before, the window kept the old text and the next keystroke saved it over the remote edit, which was then lost without a conflict.
+    /// With an edit pending nothing is touched (what is being typed is not discarded), and protected notes are left alone (the stored text is encrypted).
+    /// </summary>
+    internal void ReloadIfChangedBySync()
+    {
+        if (_hasPendingEdit || _note.IsProtected) return;
+        if (_repository.GetById(_note.Id) is not { } fresh || fresh.Text == CurrentText) return;
+        ReloadFromRepository();
+    }
+
     /// <summary>El archivo cambió por fuera y la nota ya tiene su texto: se pone en la ventana sin marcarla
     /// como editada, con el cursor en la misma línea si existe.</summary>
     internal void ReloadFromRepository()
@@ -2266,7 +2278,6 @@ public partial class NoteWindow : Window
     private void Flush()
     {
         if (!_hasPendingEdit) return;
-        _hasPendingEdit = false;
         if (_note.IsProtected)
         {
             if (_protectionPassword is null) throw new InvalidOperationException("The protected note is locked.");
@@ -2279,6 +2290,8 @@ public partial class NoteWindow : Window
             // se pide escribir el archivo, en segundo plano.
             if (IsLinked) _coordinator.RequestLinkedCheck(_note.Id);
         }
+        // Only after the save went through: if it throws (database busy, disk full) the edit stays pending and the close handler tries again.
+        _hasPendingEdit = false;
         // Recién guardada, la nota ya no coincide con la base de la sync: pasa a pendiente.
         UpdateSyncSignal();
         _coordinator.NoteSaved();

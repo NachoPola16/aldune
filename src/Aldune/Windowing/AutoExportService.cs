@@ -81,8 +81,9 @@ internal sealed class AutoExportService : IDisposable
                 _doneKey = key;
                 LastError = null;
             }
-            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or Microsoft.Data.Sqlite.SqliteException or ArgumentException or NotSupportedException)
+            catch (Exception ex)
             {
+                // Any failure (a row that does not decrypt included) is reported in Settings instead of faulting a task nobody observes.
                 LastError = ex.Message;
                 AppLog.Write("copia automatica", $"no se pudo escribir: {ex.GetType().Name}: {ex.Message}");
             }
