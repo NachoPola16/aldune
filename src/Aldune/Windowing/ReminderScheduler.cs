@@ -26,6 +26,7 @@ internal sealed class ReminderScheduler : IDisposable
     private readonly ToastCenter _toasts;
     private readonly AppSettings _settings;
     private readonly DispatcherTimer _timer;
+    private readonly HashSet<Guid> _announced = new();
 
     internal ReminderScheduler(NotesRepository repository, AppCoordinator coordinator, ToastCenter toasts, AppSettings settings)
     {
@@ -52,18 +53,29 @@ internal sealed class ReminderScheduler : IDisposable
             if (due.Count == 0) return;
 
             // Primero se avisa y después se borra el recordatorio: si el aviso falla, sigue pendiente.
-            _coordinator.PlaySound(SoundEvent.Reminder);
-            if (due.Count == 1)
+            // The ones already announced in this session are not announced again: if clearing a reminder fails (database busy), the next poll
+            // only retries the clearing, instead of showing the toast and playing the sound every 30 s until it works.
+            var fresh = due.Where(item => !_announced.Contains(item.NoteId)).ToList();
+            if (fresh.Count > 0)
             {
-                ShowSingle(due[0].NoteId);
-            }
-            else
-            {
-                _toasts.Show(new ToastContent(Strings.ReminderToastTitle, Strings.ReminderManyDue(due.Count),
-                    [new ToastAction(Strings.ReminderShowNotes, _coordinator.OpenNotesManager, Primary: true)]));
+                _coordinator.PlaySound(SoundEvent.Reminder);
+                if (fresh.Count == 1)
+                {
+                    ShowSingle(fresh[0].NoteId);
+                }
+                else
+                {
+                    _toasts.Show(new ToastContent(Strings.ReminderToastTitle, Strings.ReminderManyDue(fresh.Count),
+                        [new ToastAction(Strings.ReminderShowNotes, _coordinator.OpenNotesManager, Primary: true)]));
+                }
+                foreach (var (noteId, _) in fresh) _announced.Add(noteId);
             }
 
-            foreach (var (noteId, _) in due) _repository.ClearReminder(noteId);
+            foreach (var (noteId, _) in due)
+            {
+                _repository.ClearReminder(noteId);
+                _announced.Remove(noteId);
+            }
             _coordinator.RefreshAll();
         }
         catch (Exception ex)

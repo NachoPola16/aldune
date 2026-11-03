@@ -7,7 +7,7 @@ namespace Aldune.Core;
 /// Transporte contra el servidor autohosteable. El servidor solo enumera y almacena sobres cifrados;
 /// no recibe la clave de sincronización.
 /// </summary>
-public sealed class HttpSyncTransport : ISyncTransport, ILookStore
+public sealed class HttpSyncTransport : ISyncTransport, ILookStore, IDisposable
 {
     /// <summary>Lo que se espera a un servidor que no contesta, aquí y en WebDAV: corto para no dejar la sync
     /// colgada al salir de casa sin VPN, largo para una subida lenta.</summary>
@@ -31,6 +31,9 @@ public sealed class HttpSyncTransport : ISyncTransport, ILookStore
     /// servidor ajeno (WebDAV) no puede agotar la memoria con ocho descargas a la vez.</summary>
     internal const long MaxResponseBytes = 8 * 1024 * 1024;
 
+    /// <summary>Releases the connections of this pass: a new client is made for every pass, and left alone its sockets and TLS sessions lingered until the GC.</summary>
+    public void Dispose() => _client.Dispose();
+
     internal TimeSpan Timeout => _client.Timeout;
 
     internal long MaxResponseBufferSize => _client.MaxResponseContentBufferSize;
@@ -47,7 +50,8 @@ public sealed class HttpSyncTransport : ISyncTransport, ILookStore
             using var response = await _client.GetAsync(BuildUri($"api/v1/objects/{descriptor.NoteId:N}")).ConfigureAwait(false);
             EnsureSuccess(response);
             var bytes = await response.Content.ReadAsByteArrayAsync().ConfigureAwait(false);
-            return new SyncRemoteObject(SyncEnvelopeCodec.Deserialize(bytes), bytes);
+            try { return new SyncRemoteObject(SyncEnvelopeCodec.Deserialize(bytes), bytes); }
+            catch (Exception ex) when (ex is FormatException or System.Text.Json.JsonException) { return null; } // one damaged object must not fail the pass
         });
     }
 

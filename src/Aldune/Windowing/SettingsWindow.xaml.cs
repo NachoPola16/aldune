@@ -1640,7 +1640,7 @@ public partial class SettingsWindow : Window
         try
         {
             SyncCodeBox.Text = _syncService.GetOrCreateSyncCode();
-            Clipboard.SetText(SyncCodeBox.Text);
+            SecretClipboard.SetText(SyncCodeBox.Text);
             SyncStatusText.Text = Strings.SyncCodeCopiedStatus;
         }
         catch (Exception ex)
@@ -1655,7 +1655,7 @@ public partial class SettingsWindow : Window
         try
         {
             SyncCodeBox.Text = _syncService.GetOrCreateShareCode();
-            Clipboard.SetText(SyncCodeBox.Text);
+            SecretClipboard.SetText(SyncCodeBox.Text);
             SyncStatusText.Text = Strings.SyncShareCodeCopiedStatus;
         }
         catch (Exception ex)

@@ -398,6 +398,7 @@ public sealed class SyncService
                 // las versiones acordadas con este almacén acabarían guardadas (y los conflictos anotados) bajo el otro perfil.
                 var baseKey = CurrentBaseKey();
                 var transport = CreateTransport();
+                using var transportLifetime = transport as IDisposable; // the network transports hold a client per pass
                 var classified = ClassifyRemote(transport.ReadAll(), key);
                 var unreadable = transport.UnreadableIds.ToHashSet();
                 if (!classified.NoReadableNotes) ReconcileLook(transport, key);
@@ -596,6 +597,7 @@ public sealed class SyncService
 
             nextKey = DatabaseKeyProvider.Unwrap(_settings.WrappedPendingSyncKey);
             var transport = CreateTransport();
+            using var transportLifetime = transport as IDisposable;
             var scopedIds = _settings.SyncScope == SyncScopeKind.SelectedNotes
                 ? _settings.SyncNoteIds.ToHashSet()
                 : null;

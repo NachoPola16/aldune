@@ -97,7 +97,7 @@ internal partial class InviteWindow : Window
             // The clipboard can be locked by another program (COMException); that must not reach the global crash notice.
             try
             {
-                Clipboard.SetText(ResultBox.Text);
+                SecretClipboard.SetText(ResultBox.Text);
                 ShowStatus(Strings.InviteCopied, error: false);
             }
             catch (System.Runtime.InteropServices.COMException)

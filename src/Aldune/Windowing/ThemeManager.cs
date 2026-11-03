@@ -74,14 +74,18 @@ public static class ThemeManager
     internal static void ScaleWindowToText(Window window)
     {
         if (TextFactor <= 1.001) return;
-        var work = SystemParameters.WorkArea;
+        // The screen where the pointer is (where the window is going to open), not the primary one: on a bigger secondary screen the window
+        // was capped to the size of the primary.
+        var area = MonitorEnumerator.MonitorContainingCursor()?.WorkArea;
+        double workWidth = area?.Width ?? SystemParameters.WorkArea.Width;
+        double workHeight = area?.Height ?? SystemParameters.WorkArea.Height;
         double Grow(double value, double limit) => double.IsNaN(value) || value <= 0 ? value : Math.Min(Math.Round(value * TextFactor), limit);
-        window.Width = Grow(window.Width, work.Width * 0.9);
-        window.MinWidth = Grow(window.MinWidth, work.Width * 0.9);
+        window.Width = Grow(window.Width, workWidth * 0.9);
+        window.MinWidth = Grow(window.MinWidth, workWidth * 0.9);
         // Con SizeToContent=Height el alto lo da el contenido: tocarlo aquí lo fijaría.
         if (window.SizeToContent is not (SizeToContent.Height or SizeToContent.WidthAndHeight))
-            window.Height = Grow(window.Height, work.Height * 0.9);
-        window.MinHeight = Grow(window.MinHeight, work.Height * 0.9);
+            window.Height = Grow(window.Height, workHeight * 0.9);
+        window.MinHeight = Grow(window.MinHeight, workHeight * 0.9);
     }
 
     public static void ApplyTextScale(Application app, int percent)

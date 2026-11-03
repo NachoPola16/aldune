@@ -568,7 +568,7 @@ public partial class App : Application
         try
         {
             var database = new NotesDatabase(databasePath);
-            return new NotesRepository(database, cipher);
+            return new NotesRepository(database, cipher) { UnreadableNoteReported = message => AppLog.Write("notes", message) };
         }
         catch (SqliteException) when (allowRetry)
         {

@@ -76,10 +76,12 @@ public sealed class NotesRepository
 
         var results = new List<Note>();
         using var reader = command.ExecuteReader();
+        Exception? failure = null;
         while (reader.Read())
         {
-            results.Add(ReadNote(reader));
+            if (TryReadNote(reader, ref failure) is { } note) results.Add(note);
         }
+        ThrowIfNothingReadable(results.Count, failure);
         HydrateTags(results);
         return results;
     }
@@ -114,7 +116,9 @@ public sealed class NotesRepository
 
         var results = new List<Note>();
         using var reader = command.ExecuteReader();
-        while (reader.Read()) results.Add(ReadNote(reader));
+        Exception? failure = null;
+        while (reader.Read()) { if (TryReadNote(reader, ref failure) is { } note) results.Add(note); }
+        ThrowIfNothingReadable(results.Count, failure);
         HydrateTags(results);
         return results;
     }
@@ -366,7 +370,9 @@ public sealed class NotesRepository
         command.Parameters.AddWithValue("$state", state.ToString());
         command.Parameters.AddWithValue("$tag", tag);
         using var reader = command.ExecuteReader();
-        while (reader.Read()) notes.Add(ReadNote(reader));
+        Exception? failure = null;
+        while (reader.Read()) { if (TryReadNote(reader, ref failure) is { } note) notes.Add(note); }
+        ThrowIfNothingReadable(notes.Count, failure);
         HydrateTags(notes);
         return notes;
     }
@@ -1625,6 +1631,34 @@ public sealed class NotesRepository
             if (PruneExpiredCompletedTasks(note.Id, note.Text, delay)) changed++;
         }
         return changed;
+    }
+
+    /// <summary>Told (with the id) when a row could not be read and was left out of a list; the app writes it to its log.</summary>
+    public Action<string>? UnreadableNoteReported { get; set; }
+
+    /// <summary>
+    /// <see cref="ReadNote"/> for the lists: a row that does not decrypt or has a damaged field is skipped and reported, instead of making the
+    /// dock, the manager, the sync and the automatic copy fail for every note because of one.
+    /// </summary>
+    private Note? TryReadNote(SqliteDataReader reader, ref Exception? firstFailure)
+    {
+        try { return ReadNote(reader); }
+        catch (Exception ex) when (ex is System.Security.Cryptography.CryptographicException or FormatException or ArgumentException or InvalidCastException or OverflowException)
+        {
+            string id = reader["Id"] as string ?? "?";
+            UnreadableNoteReported?.Invoke($"note {id} could not be read and was skipped: {ex.GetType().Name}");
+            firstFailure ??= ex;
+            return null;
+        }
+    }
+
+    /// <summary>
+    /// When NOTHING in a list could be read, the cause is the key (a wrong or lost one), not a damaged row: that still fails loudly, as the app's
+    /// recovery path expects, instead of showing an empty dock.
+    /// </summary>
+    private static void ThrowIfNothingReadable(int read, Exception? firstFailure)
+    {
+        if (read == 0 && firstFailure is not null) System.Runtime.ExceptionServices.ExceptionDispatchInfo.Capture(firstFailure).Throw();
     }
 
     private Note ReadNote(SqliteDataReader reader)

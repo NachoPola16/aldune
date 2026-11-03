@@ -11,7 +11,7 @@ namespace Aldune.Core;
 /// Transporte WebDAV para Nextcloud, ownCloud y servidores WebDAV compatibles.
 /// Solo sube sobres cifrados; la clave de sincronización nunca sale del dispositivo.
 /// </summary>
-public sealed class WebDavSyncTransport : ISyncTransport, ILookStore
+public sealed class WebDavSyncTransport : ISyncTransport, ILookStore, IDisposable
 {
     private static readonly XNamespace Dav = "DAV:";
     private readonly HttpClient _client;
@@ -40,6 +40,9 @@ public sealed class WebDavSyncTransport : ISyncTransport, ILookStore
         var credentials = Convert.ToBase64String(Encoding.UTF8.GetBytes($"{username}:{password}"));
         _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Basic", credentials);
     }
+
+    /// <summary>Releases the connections of this pass (see <see cref="HttpSyncTransport.Dispose"/>).</summary>
+    public void Dispose() => _client.Dispose();
 
     internal TimeSpan Timeout => _client.Timeout;
 
@@ -106,6 +109,11 @@ public sealed class WebDavSyncTransport : ISyncTransport, ILookStore
                     return null;
                 }
                 return new SyncRemoteObject(SyncEnvelopeCodec.Deserialize(bytes), bytes);
+            }
+            catch (HttpRequestException ex) when (ex.StatusCode == HttpStatusCode.NotFound)
+            {
+                // Deleted by another device between the listing and this download: it is gone, which is not a failure of the pass.
+                return null;
             }
             catch (FormatException)
             {
