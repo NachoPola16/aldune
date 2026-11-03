@@ -1230,7 +1230,7 @@ public partial class EdgeDockWindow : Window
         int token = ++_viewSwapToken; // supersedes any swap still waiting
         _viewLabelHold = false;
         ResetTabsFadeIfStuck();
-        var fadeOut = new DoubleAnimation(0, new Duration(TimeSpan.FromMilliseconds(90))) { EasingFunction = EaseOut() };
+        var fadeOut = new DoubleAnimation(0, new Duration(TimeSpan.FromMilliseconds(150))) { EasingFunction = EaseOut() };
         fadeOut.Completed += (_, _) =>
         {
             if (token != _viewSwapToken) return;
@@ -1248,15 +1248,15 @@ public partial class EdgeDockWindow : Window
                     if (RestList.ItemContainerGenerator.ContainerFromIndex(i) is not UIElement pill) continue;
                     pill.BeginAnimation(OpacityProperty, null);
                     pill.Opacity = 0;
-                    var appear = new DoubleAnimation(0, 1, new Duration(TimeSpan.FromMilliseconds(120)))
+                    var appear = new DoubleAnimation(0, 1, new Duration(TimeSpan.FromMilliseconds(200)))
                     {
-                        BeginTime = TimeSpan.FromMilliseconds(Math.Min(i, 10) * 22),
+                        BeginTime = TimeSpan.FromMilliseconds(Math.Min(i, 10) * 35),
                         EasingFunction = EaseOut(),
                     };
                     appear.Completed += (_, _) => { pill.BeginAnimation(OpacityProperty, null); pill.Opacity = 1; };
                     pill.BeginAnimation(OpacityProperty, appear);
                 }
-                var fadeIn = new DoubleAnimation(0, 1, new Duration(TimeSpan.FromMilliseconds(110))) { EasingFunction = EaseOut() };
+                var fadeIn = new DoubleAnimation(0, 1, new Duration(TimeSpan.FromMilliseconds(190))) { EasingFunction = EaseOut() };
                 fadeIn.Completed += (_, _) => { RestStrip.BeginAnimation(OpacityProperty, null); RestStrip.Opacity = 1; };
                 RestStrip.BeginAnimation(OpacityProperty, fadeIn);
             })));
