@@ -219,6 +219,7 @@ public partial class SettingsWindow : Window
             ((FrameworkElement)FindName(name + "Page")).Visibility = name == page ? Visibility.Visible : Visibility.Collapsed;
 
         _currentPage = page;
+        _peekSyncDetails = false;
         s_lastPage = page;
         s_lastPageAt = DateTime.UtcNow;
         PageNav(page).IsChecked = true;
@@ -1776,6 +1777,7 @@ public partial class SettingsWindow : Window
         bool folder = SyncFolderRadio.IsChecked == true;
         bool server = SyncServerRadio.IsChecked == true;
         bool webDav = SyncWebDavRadio.IsChecked == true;
+        SyncDetails.Visibility = enabled || _peekSyncDetails ? Visibility.Visible : Visibility.Collapsed;
         SyncFolderRadio.IsEnabled = enabled;
         SyncServerRadio.IsEnabled = enabled;
         SyncWebDavRadio.IsEnabled = enabled;

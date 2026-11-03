@@ -127,10 +127,20 @@ public partial class SettingsWindow
     };
 
     /// <summary>Opens the page of the setting, scrolls it into view and marks it for a moment so the eye finds it.</summary>
+    // With sync off its details are collapsed; a search result or notice that points into them shows them (until the page changes).
+    private bool _peekSyncDetails;
+
+    private void PeekSyncDetails(FrameworkElement? target)
+    {
+        _peekSyncDetails = target is not null && target.IsDescendantOf(SyncDetails);
+        if (_peekSyncDetails) UpdateSyncUi();
+    }
+
     private void GoToSetting(SettingEntry hit)
     {
         SettingsSearchBox.Clear();
         ShowPage(hit.Page);
+        PeekSyncDetails(hit.Element);
         Dispatcher.BeginInvoke(DispatcherPriority.Loaded, () =>
         {
             Reveal(hit.Element);
@@ -159,6 +169,7 @@ public partial class SettingsWindow
     internal void ShowOption(string page, string? elementName)
     {
         ShowPage(page);
+        PeekSyncDetails(elementName is null ? null : FindName(elementName) as FrameworkElement);
         if (elementName is null || FindName(elementName) is not FrameworkElement element) return;
         Dispatcher.BeginInvoke(DispatcherPriority.Loaded, () =>
         {

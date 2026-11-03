@@ -953,6 +953,8 @@
                                   Foreground="{DynamicResource AlduneTextBrush}" Background="{DynamicResource AlduneGroundBrush}" FontSize="{DynamicResource AlduneTextBody}"
                                   Style="{StaticResource SettingsSwitchStyle}"
                                   Click="OnSyncEnabledToggled" />
+                        <!-- Everything below only means something once sync is on: with it off the page is the switch and nothing else (shown again by the search when a result lives here). -->
+                        <StackPanel x:Name="SyncDetails">
                         <TextBlock Text="{x:Static res:Strings.SyncScopeHint}" Foreground="{DynamicResource AlduneHintBrush}"
                                    FontSize="{DynamicResource AlduneTextSmall}" TextWrapping="Wrap" Margin="0,8,56,0" />
                         <StackPanel Orientation="Horizontal" Margin="0,7,0,0">
@@ -1141,6 +1143,7 @@
                                     Content="{x:Static res:Strings.SyncConflictsButton}"
                                     Click="OnSyncConflictsClick" Margin="10,0,0,0" Padding="9,5"
                                     Style="{StaticResource RecordButtonStyle}" />
+                        </StackPanel>
                         </StackPanel>
                     </StackPanel>
                     <Border Background="{DynamicResource AlduneRaisedBrush}" Height="1" Margin="0,20,0,0" />
