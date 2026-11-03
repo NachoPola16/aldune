@@ -1897,15 +1897,61 @@ public partial class SettingsWindow : Window
             var radio = new RadioButton
             {
                 GroupName = "AppearanceGroup",
-                Style = (Style)FindResource("MonitorRadioStyle"),
+                Style = (Style)FindResource("AppearanceCardStyle"),
                 Tag = mode,
-                Content = label,
+                Content = AppearanceCard(mode, label),
                 IsChecked = _settings.Appearance == mode
             };
+            System.Windows.Automation.AutomationProperties.SetName(radio, label);
             radio.Checked += OnAppearanceSelectionChanged;
             AppearanceListContainer.Children.Add(radio);
         }
         PopulateAspectColors();
+    }
+
+    /// <summary>
+    /// A miniature of the app in <paramref name="mode"/>'s own palette (title bar, a card with two lines of text, an accent pill) above its name,
+    /// so a look can be chosen by seeing it. Colours come from the palette the look really applies, never from literals.
+    /// </summary>
+    private UIElement AppearanceCard(AppearanceMode mode, string label)
+    {
+        var palette = AppPalette.For(mode, ThemeManager.WindowsUsesLightTheme(), _settings.ColorsFor(mode));
+        SolidColorBrush Brush(string token)
+        {
+            var brush = new SolidColorBrush((Color)ColorConverter.ConvertFromString(palette[token]));
+            brush.Freeze();
+            return brush;
+        }
+        Border Bar(string token, double width, double height, double opacity = 1) => new()
+        {
+            Width = width, Height = height, Background = Brush(token), CornerRadius = new CornerRadius(2), Opacity = opacity,
+            HorizontalAlignment = HorizontalAlignment.Left, Margin = new Thickness(0, 0, 0, 4),
+        };
+
+        var card = new StackPanel { Margin = new Thickness(8, 6, 8, 8) };
+        card.Children.Add(Bar("Text", 70, 5));
+        card.Children.Add(Bar("MutedText", 108, 4, 0.8));
+        card.Children.Add(Bar("MutedText", 84, 4, 0.8));
+        card.Children.Add(new Border { Width = 34, Height = 11, Background = Brush("Accent"), CornerRadius = new CornerRadius(5), HorizontalAlignment = HorizontalAlignment.Right, Margin = new Thickness(0, 2, 0, 0) });
+
+        var preview = new Border
+        {
+            Background = Brush("Ground"), BorderBrush = Brush("Border"), BorderThickness = new Thickness(1), CornerRadius = new CornerRadius(4),
+            Height = 84, ClipToBounds = true,
+            Child = new DockPanel
+            {
+                Children =
+                {
+                    new Border { Height = 14, Background = Brush("TitleBar"), Child = new Border { Width = 28, Height = 4, Background = Brush("MutedText"), CornerRadius = new CornerRadius(2), HorizontalAlignment = HorizontalAlignment.Left, Margin = new Thickness(8, 0, 0, 0) } },
+                    new Border { Background = Brush("Surface"), CornerRadius = new CornerRadius(3), Margin = new Thickness(8, 6, 8, 6), Child = card },
+                },
+            },
+        };
+        DockPanel.SetDock(((DockPanel)preview.Child).Children[0], Dock.Top);
+
+        var name = new TextBlock { Text = label, Margin = new Thickness(2, 6, 2, 0), TextTrimming = TextTrimming.CharacterEllipsis };
+        name.SetResourceReference(TextBlock.ForegroundProperty, "AlduneTextBrush");
+        return new StackPanel { Children = { preview, name } };
     }
 
     /// <summary>Los huecos de color del aspecto elegido (solo los retro tienen): cada uno con su muestra,

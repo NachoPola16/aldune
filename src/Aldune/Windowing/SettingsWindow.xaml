@@ -179,6 +179,39 @@
             </Setter>
         </Style>
 
+        <!-- A look as a card: a miniature of the app in that look's own colours with its name under it. The selected one gets a strong frame. -->
+        <Style x:Key="AppearanceCardStyle" TargetType="RadioButton">
+            <Setter Property="Foreground" Value="{DynamicResource AlduneTextBrush}" />
+            <Setter Property="FontSize" Value="{DynamicResource AlduneTextSmall}" />
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="Margin" Value="0,0,10,10" />
+            <Setter Property="FocusVisualStyle" Value="{StaticResource AlduneFocusVisual}" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="RadioButton">
+                        <Border x:Name="Frame" Width="176" Background="{DynamicResource AlduneSurfaceBrush}" CornerRadius="{DynamicResource AlduneRadius8}"
+                                BorderBrush="Transparent" BorderThickness="2" Padding="6">
+                            <ContentPresenter>
+                                <ContentPresenter.Resources>
+                                    <Style TargetType="TextBlock">
+                                        <Setter Property="TextWrapping" Value="Wrap" />
+                                    </Style>
+                                </ContentPresenter.Resources>
+                            </ContentPresenter>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Frame" Property="Background" Value="{DynamicResource AlduneRaisedHoverBrush}" />
+                            </Trigger>
+                            <Trigger Property="IsChecked" Value="True">
+                                <Setter TargetName="Frame" Property="Background" Value="{DynamicResource AlduneSelectedBrush}" />
+                                <Setter TargetName="Frame" Property="BorderBrush" Value="{DynamicResource AlduneTextStrongBrush}" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
         <Style x:Key="MonitorRadioStyle" TargetType="RadioButton">
             <Setter Property="Foreground" Value="{DynamicResource AlduneTextBrush}" />
             <Setter Property="FontSize" Value="{DynamicResource AlduneTextBody}" />
@@ -538,7 +571,7 @@
                                    Foreground="{DynamicResource AlduneTextBrush}" FontSize="{DynamicResource AlduneTextBody}" FontWeight="SemiBold" />
                         <TextBlock Text="{x:Static res:Strings.AppearanceSectionHint}"
                                    Foreground="{DynamicResource AlduneHintBrush}" FontSize="{DynamicResource AlduneTextSmall}" TextWrapping="Wrap" Margin="0,4,0,10" />
-                        <StackPanel x:Name="AppearanceListContainer" />
+                        <WrapPanel x:Name="AppearanceListContainer" />
                         <!-- Colores del aspecto elegido (solo los retro tienen): cada hueco con su muestra,
                              su valor, muestras de un clic y "Elegir color…"; paletas de bash; restablecer. -->
                         <StackPanel x:Name="AspectColorsContainer" Margin="0,8,0,0" />
