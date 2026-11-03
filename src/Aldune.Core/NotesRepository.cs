@@ -993,6 +993,7 @@ public sealed class NotesRepository
             DELETE FROM NoteUnpinned WHERE NoteId = $id;
             DELETE FROM Note WHERE Id = $id;
             DELETE FROM NotePlacement WHERE NoteId = $id;
+            DELETE FROM NoteOrder WHERE NoteId = $id;
             DELETE FROM TaskCompletion WHERE NoteId = $id;
             DELETE FROM NoteVersion WHERE NoteId = $id;
             DELETE FROM NoteReminder WHERE NoteId = $id;
@@ -1279,33 +1280,49 @@ public sealed class NotesRepository
     {
         var cutoff = DateTimeOffset.UtcNow - retention;
         using var connection = _database.OpenConnection();
-        using var countCommand = connection.CreateCommand();
-        countCommand.CommandText = """
-            SELECT COUNT(*) FROM Note WHERE State = $state AND UpdatedAt < $cutoff;
-            """;
-        countCommand.Parameters.AddWithValue("$state", NoteState.Trashed.ToString());
-        countCommand.Parameters.AddWithValue("$cutoff", cutoff.ToString("O"));
-        int removed = Convert.ToInt32(countCommand.ExecuteScalar());
-        if (removed == 0) return 0;
+        // One transaction for the read and every delete: the rows purged are exactly the ones whose tombstone is written.
+        using var transaction = connection.BeginTransaction();
+        var expired = new List<(string Id, DateTimeOffset TrashedAt)>();
+        using (var select = connection.CreateCommand())
+        {
+            select.Transaction = transaction;
+            select.CommandText = "SELECT Id, UpdatedAt FROM Note WHERE State = $state AND UpdatedAt < $cutoff;";
+            select.Parameters.AddWithValue("$state", NoteState.Trashed.ToString());
+            select.Parameters.AddWithValue("$cutoff", cutoff.ToString("O"));
+            using var reader = select.ExecuteReader();
+            while (reader.Read())
+                expired.Add(((string)reader["Id"], DateTimeOffset.Parse((string)reader["UpdatedAt"], System.Globalization.CultureInfo.InvariantCulture)));
+        }
+        if (expired.Count == 0) return 0;
 
         using var command = connection.CreateCommand();
+        command.Transaction = transaction;
         command.CommandText = """
-            INSERT OR REPLACE INTO SyncTombstone (NoteId, DeletedAt, DeviceId)
-            SELECT Id, $deletedAt, 'local' FROM Note
-            WHERE State = $state AND UpdatedAt < $cutoff;
-            DELETE FROM NotePlacement WHERE NoteId IN (SELECT Id FROM Note WHERE State = $state AND UpdatedAt < $cutoff);
-            DELETE FROM NoteReminder WHERE NoteId IN (SELECT Id FROM Note WHERE State = $state AND UpdatedAt < $cutoff);
-            DELETE FROM NoteTag WHERE NoteId IN (SELECT Id FROM Note WHERE State = $state AND UpdatedAt < $cutoff);
-            DELETE FROM NoteFileLink WHERE NoteId IN (SELECT Id FROM Note WHERE State = $state AND UpdatedAt < $cutoff);
-            DELETE FROM NoteUnpinned WHERE NoteId IN (SELECT Id FROM Note WHERE State = $state AND UpdatedAt < $cutoff);
-            DELETE FROM NoteVersion WHERE NoteId IN (SELECT Id FROM Note WHERE State = $state AND UpdatedAt < $cutoff);
-            DELETE FROM Note WHERE State = $state AND UpdatedAt < $cutoff;
+            INSERT OR REPLACE INTO SyncTombstone (NoteId, DeletedAt, DeviceId) VALUES ($id, $deletedAt, 'local');
+            DELETE FROM NotePlacement WHERE NoteId = $id;
+            DELETE FROM NoteOrder WHERE NoteId = $id;
+            DELETE FROM TaskCompletion WHERE NoteId = $id;
+            DELETE FROM NoteReminder WHERE NoteId = $id;
+            DELETE FROM NoteTag WHERE NoteId = $id;
+            DELETE FROM NoteFileLink WHERE NoteId = $id;
+            DELETE FROM NoteUnpinned WHERE NoteId = $id;
+            DELETE FROM NoteVersion WHERE NoteId = $id;
+            DELETE FROM Note WHERE Id = $id;
             """;
-        command.Parameters.AddWithValue("$state", NoteState.Trashed.ToString());
-        command.Parameters.AddWithValue("$cutoff", cutoff.ToString("O"));
-        command.Parameters.AddWithValue("$deletedAt", DateTimeOffset.UtcNow.ToString("O"));
-        command.ExecuteNonQuery();
-        return removed;
+        var idParameter = command.Parameters.Add("$id", SqliteType.Text);
+        var deletedAtParameter = command.Parameters.Add("$deletedAt", SqliteType.Text);
+        foreach (var (id, trashedAt) in expired)
+        {
+            idParameter.Value = id;
+            // The tombstone carries the moment the note entered the bin (the decision to delete), not the purge: a restore or edit made
+            // meanwhile on a device that was offline is then newer and wins, instead of being deleted by a purge it never saw. The extra
+            // millisecond breaks the tie with the trashed version already in the store (same date and author), which would otherwise
+            // leave the store note untouched and the purge never reaching the other devices. The tombstone is still signed as usual.
+            deletedAtParameter.Value = trashedAt.AddMilliseconds(1).ToString("O");
+            command.ExecuteNonQuery();
+        }
+        transaction.Commit();
+        return expired.Count;
     }
 
     /// <summary>

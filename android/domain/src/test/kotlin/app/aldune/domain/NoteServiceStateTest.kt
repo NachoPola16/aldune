@@ -204,6 +204,14 @@ class NoteServiceStateTest {
         assertEquals(0, f.service.purgeTrashed().getOrThrow())
     }
 
+    @Test fun `la lapida de la purga lleva la fecha de entrada en la papelera mas un milisegundo, no la de la purga`() {
+        val f = Fixture()
+        trashedAgo(f, "n", Duration.ofDays(40))
+        val trashedAt = f.stored("n").updatedAt
+        f.service.purgeTrashed().getOrThrow()
+        assertEquals(listOf(Tombstone("n", trashedAt.plusMillis(1), Tombstone.LOCAL_DEVICE)), f.store.tombstones())
+    }
+
     @Test fun `los dias de purga se pueden elegir y no pueden ser negativos`() {
         val f = Fixture()
         trashedAgo(f, "n", Duration.ofDays(8))

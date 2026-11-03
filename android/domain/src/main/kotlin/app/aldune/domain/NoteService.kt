@@ -277,7 +277,11 @@ class NoteService(
         val now = clock.now()
         val cutoff = now.minus(Duration.ofDays(days.toLong()))
         val expired = store.all().filter { it.state == NoteState.TRASHED && it.updatedAt < cutoff }
-        expired.forEach { store.delete(it.id, now); history?.forget(it.id); lastTextEdit.remove(it.id) }
+        // The tombstone carries the moment the note entered the bin, not the purge: a restore or edit made meanwhile on a device that was
+        // offline is then newer and wins instead of being deleted by a purge it never saw. The extra millisecond breaks the tie with the
+        // trashed version already in the store (same date and author), which would otherwise never be replaced by the tombstone.
+        // (Android keeps the deck position in the note row, so there are no order or task leftovers to clean here.)
+        expired.forEach { store.delete(it.id, it.updatedAt.plusMillis(1)); history?.forget(it.id); lastTextEdit.remove(it.id) }
         NoteResult.Ok(expired.size)
     }
 
