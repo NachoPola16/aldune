@@ -34,6 +34,15 @@ import app.aldune.domain.NoteService
 import app.aldune.domain.SharedNote
 import app.aldune.domain.SharedNoteText
 import app.aldune.domain.NoteState
+import app.aldune.domain.importing.ImportColorPolicy
+import app.aldune.domain.importing.ImportFailure
+import app.aldune.domain.importing.ImportInput
+import app.aldune.domain.importing.ImportPlan
+import app.aldune.domain.importing.ImportPreview
+import app.aldune.domain.importing.ImportResult
+import app.aldune.domain.importing.ImportSourceKind
+import app.aldune.domain.importing.ImportSources
+import app.aldune.domain.importing.NoteImporter
 import app.aldune.syncclient.ConflictKind
 import app.aldune.syncclient.ProtectionError
 import app.aldune.text.ProtectedTitleRules
@@ -873,6 +882,111 @@ class NotesViewModel(application: Application) : AndroidViewModel(application) {
                 null
             }
             _exportOutcome.value = ExportOutcome(result)
+        }
+    }
+
+    // ───────────── Importar notas de otras apps ─────────────
+
+    enum class ImportPhase { CHOOSE, READING, PREVIEW, IMPORTING, DONE }
+
+    /**
+     * Everything the import dialog shows. It lives here, not in the composable, so rotating the phone or leaving Settings in the middle of a
+     * preview loses nothing, and an import that already started keeps running (the same reason as [exportAllTo]).
+     */
+    data class ImportUi(
+        val kind: ImportSourceKind = ImportSourceKind.KEEP,
+        val phase: ImportPhase = ImportPhase.CHOOSE,
+        val files: Int = 0,
+        val preview: ImportPreview? = null,
+        val plan: ImportPlan? = null,
+        val done: Int = 0,
+        val result: ImportResult? = null,
+    )
+
+    private val _import = MutableStateFlow<ImportUi?>(null)
+
+    /** `null` while the dialog is closed. */
+    val importUi: StateFlow<ImportUi?> = _import.asStateFlow()
+    private var importJob: Job? = null
+
+    fun openImport() { _import.value = ImportUi() }
+
+    fun closeImport() {
+        importJob?.cancel()
+        _import.value = null
+    }
+
+    fun importKind(kind: ImportSourceKind) {
+        val current = _import.value ?: return
+        if (current.phase == ImportPhase.IMPORTING || current.phase == ImportPhase.READING) return
+        _import.value = ImportUi(kind = kind)
+    }
+
+    /** Reads the picked files (nothing is written) and builds the preview: how many notes would be added and how many are already there. */
+    fun importPick(uris: List<android.net.Uri>) {
+        val kind = _import.value?.kind ?: return
+        if (uris.isEmpty()) return
+        _import.update { it?.copy(phase = ImportPhase.READING, files = uris.size, preview = null, plan = null) }
+        importJob?.cancel()
+        importJob = viewModelScope.launch(Dispatchers.IO) {
+            val resolver = getApplication<Application>().contentResolver
+            val inputs = uris.map { uri -> toImportInput(resolver, uri) }
+            val preview = try {
+                ImportSources.of(kind).read(inputs)
+            } catch (e: kotlin.coroutines.cancellation.CancellationException) {
+                throw e
+            } catch (_: Exception) {
+                ImportPreview.failed(ImportFailure.UNREADABLE)
+            }
+            val plan = io.withLock { service?.let { NoteImporter.plan(preview, existingNotes(it)) } } ?: NoteImporter.plan(preview, emptyList())
+            _import.update { it?.copy(phase = ImportPhase.PREVIEW, preview = preview, plan = plan) }
+        }
+    }
+
+    private fun existingNotes(service: NoteService) =
+        service.list(NoteState.ACTIVE) + service.list(NoteState.ARCHIVED) + service.list(NoteState.TRASHED)
+
+    private fun toImportInput(resolver: android.content.ContentResolver, uri: android.net.Uri): ImportInput {
+        var name = uri.lastPathSegment ?: "file"
+        var size = -1L
+        var modified: Long? = null
+        try {
+            resolver.query(uri, null, null, null, null)?.use { c ->
+                if (c.moveToFirst()) {
+                    c.getColumnIndex(android.provider.OpenableColumns.DISPLAY_NAME).takeIf { it >= 0 }?.let { c.getString(it)?.let { n -> name = n } }
+                    c.getColumnIndex(android.provider.OpenableColumns.SIZE).takeIf { it >= 0 && !c.isNull(it) }?.let { size = c.getLong(it) }
+                    c.getColumnIndex(android.provider.DocumentsContract.Document.COLUMN_LAST_MODIFIED).takeIf { it >= 0 && !c.isNull(it) }?.let { modified = c.getLong(it) }
+                }
+            }
+        } catch (_: Exception) {
+            // A provider that cannot be queried still gives the stream; the name falls back to the last path segment.
+        }
+        return ImportInput(name, size, modified) { resolver.openInputStream(uri) ?: throw java.io.IOException("No stream for $uri") }
+    }
+
+    /**
+     * Writes the planned notes, one `importNote` (one store write) each, off the main thread and under the same lock as every other change. The
+     * plan is recomputed inside the lock so a note added since the preview is not duplicated.
+     */
+    fun importRun() {
+        val current = _import.value ?: return
+        val preview = current.preview ?: return
+        if (current.phase != ImportPhase.PREVIEW) return
+        _import.update { it?.copy(phase = ImportPhase.IMPORTING, done = 0) }
+        importJob = viewModelScope.launch(Dispatchers.IO + NonCancellable) {
+            val settings = newNoteColors()
+            val policy = ImportColorPolicy(settings.theme, settings.tone, settings.rule, settings.fixedColor)
+            val result = io.withLock {
+                val svc = service ?: return@withLock ImportResult(0, 0)
+                val plan = NoteImporter.plan(preview, existingNotes(svc))
+                val result = NoteImporter.run(plan, svc, policy, Instant.now()) { n -> _import.update { it?.copy(done = n) } }
+                ready?.reminders?.reconcile()
+                refresh()
+                result
+            }
+            syncEvent(SyncEvent.LocalChange)
+            widgetChanged()
+            _import.update { it?.copy(phase = ImportPhase.DONE, result = result) }
         }
     }
 

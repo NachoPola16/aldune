@@ -75,6 +75,26 @@ class NoteService(
         NoteResult.Ok(note)
     }
 
+    /**
+     * Adds a note that comes from another app (the importer), keeping its original dates, state, tags and pin. It is a single `store.put`, so
+     * a note is either fully there or not at all; `syncAuthorDeviceId = null` makes the sync upload it as an edit of this device. Dates are
+     * taken as given (the importer clamps them): the clock is deliberately not used. Existing notes are never touched.
+     */
+    fun importNote(
+        text: String, color: String, createdAt: Instant, updatedAt: Instant,
+        state: NoteState, tags: List<String>, pinned: Boolean,
+    ): NoteResult<Note> = synchronized(lock) {
+        val normalized = LineEnding.normalize(text)
+        if (normalized.isEmpty()) return NoteResult.Err(NoteError.EmptyText)
+        if (color.isBlank()) return NoteResult.Err(NoteError.InvalidArgument("El color no puede estar vacío"))
+        val note = Note(
+            id = idFactory.newId(), text = normalized, lineEnding = LineEnding.LF, color = color,
+            createdAt = createdAt, updatedAt = updatedAt, state = state, tags = normalizeTags(tags), pinnedToTop = pinned,
+        )
+        store.put(note)
+        NoteResult.Ok(note)
+    }
+
     private fun nextColor(settings: NewNoteColorSettings, viewTag: String?): String {
         val dockColors = list(NoteState.ACTIVE, tag = viewTag).map { it.color }
         return NoteColorAssigner.assign(settings.theme, settings.tone, settings.rule, settings.fixedColor, dockColors)

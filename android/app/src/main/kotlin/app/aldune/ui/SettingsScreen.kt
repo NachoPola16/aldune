@@ -474,6 +474,11 @@ private fun BackupSection(viewModel: NotesViewModel) {
         onClick = { launcher.launch(exportFileName + ".zip") },
         Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
     ) { Text(stringResource(R.string.export_all)) }
+    OutlinedButton(
+        onClick = { viewModel.openImport() },
+        Modifier.padding(horizontal = 16.dp, vertical = 4.dp),
+    ) { Text(stringResource(R.string.import_notes)) }
+    ImportDialog(viewModel)
     // El resultado se anuncia solo (región viva): el selector de documentos se cierra y quien usa TalkBack no ve otra señal.
     message?.let {
         Text(
