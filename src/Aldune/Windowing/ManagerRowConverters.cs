@@ -16,24 +16,47 @@ internal static class ManagerRows
     public static bool ColourOnEdgeOnly => SkinState.Current.Card is SkinCard.Stripe or SkinCard.Tinted;
 
     public static Brush Resource(string key) => (Brush)Application.Current.Resources[key];
+
+    /// <summary>
+    /// The face of a row: the note colour with its chroma reduced (same lightness and hue). Five saturated bars in a column are heavy next to the
+    /// calm chrome; the note keeps its exact colour on the dock and in its own window, and the rim and the stripe of a row stay the full colour.
+    /// The ink and the secondary ink are derived from THIS face, so contrast is guaranteed on what is really drawn.
+    /// </summary>
+    public const double FaceChroma = 0.6;
+
+    public static Brush BrushOf(string hex, Brush fallback)
+    {
+        try
+        {
+            var brush = new SolidColorBrush((Color)ColorConverter.ConvertFromString(hex));
+            brush.Freeze();
+            return brush;
+        }
+        catch (FormatException)
+        {
+            return fallback;
+        }
+    }
+
+    public static string SoftFace(object? noteColor) =>
+        NoteColorDerivation.SoftenFace(NoteColorDisplay.Resolve(noteColor as string), FaceChroma);
 }
 
 public sealed class ManagerRowFaceConverter : IValueConverter
 {
-    private static readonly NoteDisplayColorConverter Filled = new();
-
+    // Built here and not through NoteDisplayColorConverter: that one resolves the colour again, and with a uniform note colour it would
+    // replace the softened face by the uniform one.
     public object Convert(object? value, Type targetType, object? parameter, CultureInfo culture) =>
-        ManagerRows.ColourOnEdgeOnly ? ManagerRows.Resource("AlduneSurfaceBrush") : Filled.Convert(value, targetType, parameter, culture);
+        ManagerRows.ColourOnEdgeOnly ? ManagerRows.Resource("AlduneSurfaceBrush") : ManagerRows.BrushOf(ManagerRows.SoftFace(value), Brushes.Transparent);
 
     public object ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture) => throw new NotSupportedException();
 }
 
 public sealed class ManagerRowInkConverter : IValueConverter
 {
-    private static readonly NoteLabelColorConverter Filled = new();
-
     public object Convert(object? value, Type targetType, object? parameter, CultureInfo culture) =>
-        ManagerRows.ColourOnEdgeOnly ? ManagerRows.Resource("AlduneTextBrush") : Filled.Convert(value, targetType, parameter, culture);
+        ManagerRows.ColourOnEdgeOnly ? ManagerRows.Resource("AlduneTextBrush")
+            : ManagerRows.BrushOf(NoteColorPalette.LabelFor(ManagerRows.SoftFace(value)), Brushes.Black);
 
     public object ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture) => throw new NotSupportedException();
 }
@@ -44,7 +67,7 @@ public sealed class ManagerRowMutedInkConverter : IValueConverter
     public object Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
     {
         if (ManagerRows.ColourOnEdgeOnly) return ManagerRows.Resource("AlduneMutedTextBrush");
-        string face = NoteColorDisplay.Resolve(value as string);
+        string face = ManagerRows.SoftFace(value);
         var muted = Aldune.Core.NoteColorContrast.MutedInkFor(face, NoteColorPalette.LabelFor(face));
         var brush = new SolidColorBrush((Color)ColorConverter.ConvertFromString(muted));
         brush.Freeze();

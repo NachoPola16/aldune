@@ -31,6 +31,14 @@ public static class NoteColorDerivation
     public static bool IsDark(string? color) =>
         OklchColor.TryFromHex(color, out var oklch) && oklch.L < DarkThreshold;
 
+    /// <summary>
+    /// The same face with its chroma multiplied by <paramref name="factor"/> (same lightness and hue): a calmer version of a note colour for places
+    /// where many faces sit side by side, such as the rows of Manage notes. Lightness is kept so that ink contrast does not change much; callers
+    /// derive the label from the softened face, which falls back to a readable ink if it must.
+    /// </summary>
+    public static string SoftenFace(string color, double factor) =>
+        OklchColor.TryFromHex(color, out var face) ? (face with { C = face.C * factor }).ToHex() : color;
+
     public static string RimFor(string color)
     {
         if (FindClassic(color) is { } classic) return classic.Rim;

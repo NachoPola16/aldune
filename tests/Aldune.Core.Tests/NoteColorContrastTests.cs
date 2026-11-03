@@ -115,4 +115,31 @@ public class NoteColorContrastTests
     {
         Assert.NotEqual("#000000", NoteColorContrast.MutedInkFor("#FFFFFF", "#000000"));
     }
+
+    [Theory]
+    [InlineData("#EBD38B")]
+    [InlineData("#AAE6B1")]
+    [InlineData("#83E7F2")]
+    [InlineData("#C2D4FF")]
+    [InlineData("#F9BEF2")]
+    [InlineData("#FFC5AF")]
+    [InlineData("#663399")]
+    [InlineData("#777777")]
+    public void SoftenedFace_KeepsTheLightnessAndHue_LosesChroma_AndItsLabelStaysReadable(string color)
+    {
+        string soft = NoteColorDerivation.SoftenFace(color, 0.6);
+
+        Assert.True(OklchColor.TryFromHex(color, out var original));
+        Assert.True(OklchColor.TryFromHex(soft, out var softened));
+        Assert.InRange(softened.L, original.L - 0.02, original.L + 0.02);
+        Assert.True(softened.C <= original.C + 0.001, $"{soft} is not less saturated than {color}");
+        Assert.True(NoteColorContrast.IsReadable(soft, NoteColorDerivation.LabelFor(soft)), $"label on {soft}");
+        Assert.True(NoteColorContrast.IsReadable(soft, NoteColorContrast.MutedInkFor(soft, NoteColorDerivation.LabelFor(soft))));
+    }
+
+    [Fact]
+    public void SoftenFace_LeavesWhatItCannotParseAlone()
+    {
+        Assert.Equal("not a colour", NoteColorDerivation.SoftenFace("not a colour", 0.6));
+    }
 }
