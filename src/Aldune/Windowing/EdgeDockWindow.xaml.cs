@@ -2267,6 +2267,18 @@ public partial class EdgeDockWindow : Window
 
     private bool _labelOnSwap;
 
+    /// <summary>The current view is no longer allowed by the wheel settings: go to the next stop (a no-op when it still is, or when no other stop exists).</summary>
+    internal void EnsureViewIsAnEnabledWheelStop()
+    {
+        if (_settings is null) return;
+        var view = _settings.DockView;
+        var tag = _settings.DockTagFilter;
+        if (DockViewCycle.IsEnabledStop(view, tag, _settings.WheelStops)) return;
+        var (nextView, nextTag) = DockViewCycle.Next(view, tag, BuildViewCounts(), 1, _settings.WheelStops);
+        if (nextView == view && string.Equals(nextTag, tag, StringComparison.OrdinalIgnoreCase)) return;
+        _coordinator.SetDockView(nextView, nextTag);
+    }
+
     private void OnManageArchiveWheel(object sender, MouseWheelEventArgs e)
     {
         if (_settings is not { WheelChangesDockView: true } || e.Delta == 0) return;

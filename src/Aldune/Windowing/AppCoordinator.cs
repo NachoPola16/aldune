@@ -1645,6 +1645,12 @@ public sealed class AppCoordinator
         RefreshAll();
     }
 
+    /// <summary>
+    /// After the settings of the wheel change: if the dock shows a view that is no longer a stop of the wheel (its switch was turned off, or its tag
+    /// was left out), it moves on to the next stop now, with the swap of any change of view, instead of staying on it until the wheel is used.
+    /// </summary>
+    public void EnsureDockViewIsAWheelStop() => _docks.FirstOrDefault()?.EnsureViewIsAnEnabledWheelStop();
+
     public void RefreshAll()
     {
         foreach (var dock in _docks) dock.Refresh();

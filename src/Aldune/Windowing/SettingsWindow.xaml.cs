@@ -1052,16 +1052,20 @@ public partial class SettingsWindow : Window
         _settings.WheelSkipTags.RemoveAll(t => string.Equals(t, tag, StringComparison.OrdinalIgnoreCase));
         if (check.IsChecked != true) _settings.WheelSkipTags.Add(tag);
         _settingsService.Save(_settings);
+        _coordinator?.EnsureDockViewIsAWheelStop();
     }
 
     private void OnWheelStopsToggled(object sender, RoutedEventArgs e)
     {
         foreach (var check in WheelTagList.Children.OfType<CheckBox>()) check.IsEnabled = WheelStopTagsCheck.IsChecked == true;
+        _settings.WheelStopActive = WheelStopActiveCheck.IsChecked == true;
         _settings.WheelStopArchived = WheelStopArchivedCheck.IsChecked == true;
         _settings.WheelStopTrash = WheelStopTrashCheck.IsChecked == true;
         _settings.WheelStopAll = WheelStopAllCheck.IsChecked == true;
         _settings.WheelStopTags = WheelStopTagsCheck.IsChecked == true;
         _settingsService.Save(_settings);
+        // A dock showing a view that has just left the wheel moves on at once (with the same swap as any other change of view).
+        _coordinator?.EnsureDockViewIsAWheelStop();
     }
 
     private void OnTrackpadGesturesToggled(object sender, RoutedEventArgs e)
@@ -2523,6 +2527,7 @@ public partial class SettingsWindow : Window
         RememberSizesCheck.IsChecked = _settings.NoteSizesRemembered;
         PopulateTrackpadGestures();
         WheelChangesViewCheck.IsChecked = _settings.WheelChangesDockView;
+        WheelStopActiveCheck.IsChecked = _settings.WheelStopActive;
         WheelStopArchivedCheck.IsChecked = _settings.WheelStopArchived;
         WheelStopTrashCheck.IsChecked = _settings.WheelStopTrash;
         WheelStopAllCheck.IsChecked = _settings.WheelStopAll;

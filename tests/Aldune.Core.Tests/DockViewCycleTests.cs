@@ -104,6 +104,38 @@ public sealed class DockViewCycleTests
     }
 
     [Fact]
+    public void ActiveCanBeLeftOutOfTheWheelToo()
+    {
+        var counts = Counts(active: 3, archived: 2, trashed: 5, ("casa", 2));
+        var noActive = new DockViewCycle.Stops(Active: false);
+
+        // From the last stop the wheel goes round to the first one that is on, skipping Active.
+        Assert.Equal((DockViewKind.Tag, (string?)"casa"), DockViewCycle.Next(DockViewKind.All, null, counts, +1, noActive));
+        Assert.Equal((DockViewKind.All, (string?)null), DockViewCycle.Next(DockViewKind.Tag, "casa", counts, -1, noActive));
+    }
+
+    [Fact]
+    public void WithActiveOffAndNothingElseToShowTheWheelFallsBackToActive()
+    {
+        var counts = Counts(active: 3, archived: 0, trashed: 0);
+
+        Assert.Equal((DockViewKind.Active, (string?)null), DockViewCycle.Next(DockViewKind.Active, null, counts, +1, new DockViewCycle.Stops(Active: false)));
+    }
+
+    [Fact]
+    public void IsEnabledStop_SaysWhetherTheSettingsStillAllowTheView_RegardlessOfHowManyNotesItHas()
+    {
+        var noArchivedNoTagsNoActive = new DockViewCycle.Stops(Archived: false, Tags: false, Active: false);
+
+        Assert.False(DockViewCycle.IsEnabledStop(DockViewKind.Active, null, noArchivedNoTagsNoActive));
+        Assert.False(DockViewCycle.IsEnabledStop(DockViewKind.Archived, null, noArchivedNoTagsNoActive));
+        Assert.False(DockViewCycle.IsEnabledStop(DockViewKind.Tag, "casa", noArchivedNoTagsNoActive));
+        Assert.True(DockViewCycle.IsEnabledStop(DockViewKind.Trashed, null, noArchivedNoTagsNoActive));
+        Assert.True(DockViewCycle.IsEnabledStop(DockViewKind.All, null, noArchivedNoTagsNoActive));
+        Assert.False(DockViewCycle.IsEnabledStop(DockViewKind.Tag, "Secreta", new DockViewCycle.Stops(SkipTags: ["secreta"])));
+    }
+
+    [Fact]
     public void TagsLeftOutOfTheWheelAreSkippedAndOnlyTheViewsRemain()
     {
         var counts = Counts(active: 3, archived: 2, trashed: 5, ("casa", 2), ("trabajo", 1));

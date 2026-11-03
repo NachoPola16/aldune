@@ -838,6 +838,9 @@
                                        Foreground="{DynamicResource AlduneHintBrush}" FontSize="{DynamicResource AlduneTextSmall}" TextWrapping="Wrap" Margin="0,6,56,0" />
                             <TextBlock Text="{x:Static res:Strings.WheelStopsTitle}"
                                        Foreground="{DynamicResource AlduneTextBrush}" FontSize="{DynamicResource AlduneTextBody}" TextWrapping="Wrap" Margin="0,14,56,6" />
+                            <CheckBox x:Name="WheelStopActiveCheck" Content="{x:Static res:Strings.DockViewActive}" Margin="0,10,0,0"
+                                      Foreground="{DynamicResource AlduneTextBrush}" Background="{DynamicResource AlduneGroundBrush}" FontSize="{DynamicResource AlduneTextBody}"
+                                      Style="{StaticResource SettingsSwitchStyle}" Click="OnWheelStopsToggled" />
                             <CheckBox x:Name="WheelStopArchivedCheck" Content="{x:Static res:Strings.DockViewArchived}" Margin="0,10,0,0"
                                       Foreground="{DynamicResource AlduneTextBrush}" Background="{DynamicResource AlduneGroundBrush}" FontSize="{DynamicResource AlduneTextBody}"
                                       Style="{StaticResource SettingsSwitchStyle}" Click="OnWheelStopsToggled" />

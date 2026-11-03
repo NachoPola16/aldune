@@ -13,8 +13,11 @@ public static class DockViewCycle
     /// <summary>Cuántas notas hay en cada vista; <paramref name="Tags"/> son las etiquetas con sus notas ACTIVAS.</summary>
     public sealed record Counts(int Active, int Archived, int Trashed, IReadOnlyDictionary<string, int> Tags, IReadOnlyList<string>? CustomTagOrder = null);
 
-    /// <summary>Qué vistas entran en la rueda cuando tienen notas: Archivadas, Papelera, Todas y las etiquetas. Activas siempre entra.</summary>
-    public sealed record Stops(bool Archived = true, bool Trash = true, bool All = true, bool Tags = true, IReadOnlyCollection<string>? SkipTags = null);
+    /// <summary>
+    /// Qué vistas entran en la rueda cuando tienen notas: Archivadas, Papelera, Todas y las etiquetas. Activas también se puede quitar: si no queda
+    /// ninguna otra parada con notas, la rueda vuelve a Activas igualmente (nunca se queda sin sitio al que ir).
+    /// </summary>
+    public sealed record Stops(bool Archived = true, bool Trash = true, bool All = true, bool Tags = true, IReadOnlyCollection<string>? SkipTags = null, bool Active = true);
 
     public static (DockViewKind View, string? Tag) Next(DockViewKind view, string? tag, Counts counts, int direction, Stops? stops = null)
     {
@@ -69,7 +72,20 @@ public static class DockViewCycle
         DockViewKind.Archived => stops.Archived && counts.Archived > 0,
         DockViewKind.Trashed => stops.Trash && counts.Trashed > 0,
         DockViewKind.All => stops.All && counts.Archived + counts.Trashed > 0,
-        _ => true // Active: always, so the wheel can always come back
+        _ => stops.Active // Active: on by default; with every stop off (or empty) Next still falls back to it
+    };
+
+    /// <summary>
+    /// Whether the settings still let the wheel stop at this view, no matter how many notes it has. The dock uses it right after a switch of
+    /// the settings changes: a dock showing a view that has just been taken off the wheel moves on to the next stop at once.
+    /// </summary>
+    public static bool IsEnabledStop(DockViewKind view, string? tag, Stops stops) => view switch
+    {
+        DockViewKind.Tag => stops.Tags && stops.SkipTags?.Contains(tag ?? "", StringComparer.OrdinalIgnoreCase) != true,
+        DockViewKind.Archived => stops.Archived,
+        DockViewKind.Trashed => stops.Trash,
+        DockViewKind.All => stops.All,
+        _ => stops.Active
     };
 
     private static int IndexOf(List<(DockViewKind View, string? Tag)> steps, DockViewKind view, string? tag) =>

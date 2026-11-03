@@ -91,6 +91,7 @@ public static class ConfigFields
         Bool("wheelChangesDockView", nameof(AppSettings.WheelChangesDockView), ConfigSections.Settings, s => s.WheelChangesDockView, (s, v) => s.WheelChangesDockView = v),
         Bool("wheelStopArchived", nameof(AppSettings.WheelStopArchived), ConfigSections.Settings, s => s.WheelStopArchived, (s, v) => s.WheelStopArchived = v),
         Bool("wheelStopTrash", nameof(AppSettings.WheelStopTrash), ConfigSections.Settings, s => s.WheelStopTrash, (s, v) => s.WheelStopTrash = v),
+        Bool("wheelStopActive", nameof(AppSettings.WheelStopActive), ConfigSections.Settings, s => s.WheelStopActive, (s, v) => s.WheelStopActive = v),
         Bool("wheelStopAll", nameof(AppSettings.WheelStopAll), ConfigSections.Settings, s => s.WheelStopAll, (s, v) => s.WheelStopAll = v),
         Bool("wheelStopTags", nameof(AppSettings.WheelStopTags), ConfigSections.Settings, s => s.WheelStopTags, (s, v) => s.WheelStopTags = v),
         Bool("trackpadGestures", nameof(AppSettings.TrackpadGestures), ConfigSections.Settings, s => s.TrackpadGestures, (s, v) => s.TrackpadGestures = v),

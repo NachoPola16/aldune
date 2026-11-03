@@ -181,6 +181,9 @@ public sealed class AppSettings
 
     public bool WheelStopTrash { get; set; } = true;
 
+    /// <summary>Whether «Active notes» is a stop of the wheel (on by default; with it off the wheel goes round the other stops).</summary>
+    public bool WheelStopActive { get; set; } = true;
+
     public bool WheelStopAll { get; set; } = true;
 
     /// <summary>Whether the tags (those with notes) are stops of the wheel; off, it only goes round the views (Active, Archived, Trash, All).</summary>
@@ -190,7 +193,7 @@ public sealed class AppSettings
     public List<string> WheelSkipTags { get; set; } = [];
 
     /// <summary>Las paradas de la rueda según los ajustes.</summary>
-    public DockViewCycle.Stops WheelStops => new(WheelStopArchived, WheelStopTrash, WheelStopAll, WheelStopTags, WheelSkipTags);
+    public DockViewCycle.Stops WheelStops => new(WheelStopArchived, WheelStopTrash, WheelStopAll, WheelStopTags, WheelSkipTags, WheelStopActive);
 
     /// <summary>
     /// Borde de la pantalla donde se ancla el dock de Aldune. Por defecto derecha (EdgePosition.Right).
