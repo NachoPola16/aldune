@@ -435,6 +435,8 @@ ALDUNE_SYNC_MAX_SPACES=20
 
 Every store is also capped at `ALDUNE_SYNC_MAX_OBJECTS` notes (default 5000): past it, a PUT of a *new* note answers `507`, while existing notes keep updating. This bounds the disk one token can fill.
 
+Each store is also capped in bytes by `ALDUNE_SYNC_MAX_STORE_BYTES` (default 209715200, 200 MB): a PUT that would grow the store past it answers `507` too (same as the object cap), while a store that already holds more keeps working and can still shrink or update in place. Uploads are serialized per store, not server-wide, so a slow guest does not delay other spaces.
+
 - The owner makes a code with `POST /admin/v1/invites` (header `Authorization: Bearer <admin token>`, optional JSON `{"label":"my brother","expiresInHours":168}`). A code works **once** and expires (7 days by default, 30 at most).
 - The guest sends it to `POST /invites/v1/redeem` (`{"code":"…"}`) and gets back a **new token** for a **new space** (`/data/spaces/u-xxxxxxxx/objects`). The sync key is generated on the guest's device; the server never sees it.
 - `GET /admin/v1/spaces` lists them and `DELETE /admin/v1/spaces/<name>` revokes one: its token stops working and its files stay on disk until you delete them.

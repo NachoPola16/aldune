@@ -60,6 +60,9 @@ if (adminToken is { Length: < RecommendedTokenLength })
 var maxSpaces = int.TryParse(Environment.GetEnvironmentVariable(BrandIdentity.SyncMaxSpacesEnvVar), out var parsedMax) && parsedMax > 0 ? parsedMax : 20;
 // Per-store object cap: without it a token holder could PUT unlimited distinct ids and fill the disk every store shares.
 var maxObjects = int.TryParse(Environment.GetEnvironmentVariable(BrandIdentity.SyncMaxObjectsEnvVar), out var parsedObjects) && parsedObjects > 0 ? parsedObjects : 5000;
+// Per-store byte cap: the object cap alone still allowed ~25 GB per store. Stores that already hold more keep working;
+// only an upload that would grow the store past the cap is refused.
+var maxStoreBytes = long.TryParse(Environment.GetEnvironmentVariable(BrandIdentity.SyncMaxStoreBytesEnvVar), out var parsedBytes) && parsedBytes > 0 ? parsedBytes : 200L * 1024 * 1024;
 SyncRegistry? registry = null;
 if (adminToken is not null)
 {
@@ -67,7 +70,12 @@ if (adminToken is not null)
     registry = new SyncRegistry(Path.Combine(dataPath, "registry.json"), TimeProvider.System, maxSpaces);
 }
 
-var putGate = new SemaphoreSlim(1, 1);
+// One gate per store: the version check + write only has to be atomic within a store, and a global gate let a guest
+// with a slow upload (or a big folder to count) delay everyone else's uploads.
+var putGates = new System.Collections.Concurrent.ConcurrentDictionary<string, SemaphoreSlim>();
+// Listing cache keyed by file path and validated by (length, last write): the listing only needs four fields, so an
+// unchanged file is never read or deserialized again. A null descriptor remembers an unreadable file.
+var listCache = new System.Collections.Concurrent.ConcurrentDictionary<string, (long Length, DateTime Written, object? Descriptor)>();
 // The original store keeps /data/objects (only if its token is configured, as before); each space gets /data/spaces/<name>/objects.
 foreach (var path in (tokens.Count > 0 ? new[] { SyncSpaces.ObjectsPath(dataPath, null) } : Array.Empty<string>())
              .Concat(spaces.Select(space => SyncSpaces.ObjectsPath(dataPath, space.Name))))
@@ -129,18 +137,27 @@ app.MapGet("/api/v1/objects", (HttpContext http) =>
 {
     var objectPath = ObjectsOf(http);
     var descriptors = new List<object>();
-    foreach (var path in Directory.EnumerateFiles(objectPath, "*.json", SearchOption.TopDirectoryOnly))
+    foreach (var info in new DirectoryInfo(objectPath).EnumerateFiles("*.json", SearchOption.TopDirectoryOnly))
     {
+        var path = info.FullName;
+        if (listCache.TryGetValue(path, out var cached) && cached.Length == info.Length && cached.Written == info.LastWriteTimeUtc)
+        {
+            if (cached.Descriptor is not null) descriptors.Add(cached.Descriptor);
+            continue;
+        }
+
+        object? descriptor = null;
         try
         {
             var envelope = SyncEnvelopeCodec.Deserialize(File.ReadAllBytes(path));
-            descriptors.Add(new
+            descriptor = new
             {
                 envelope.NoteId,
                 envelope.Tombstone,
                 envelope.UpdatedAt,
                 envelope.DeviceId
-            });
+            };
+            descriptors.Add(descriptor);
         }
         catch (FormatException)
         {
@@ -150,6 +167,13 @@ app.MapGet("/api/v1/objects", (HttpContext http) =>
         {
             // Igual que arriba: el servidor no debe dejar de servir todo el almacén por un archivo.
         }
+        catch (IOException)
+        {
+            // Deleted or locked between the enumeration and the read: skip it now and do not cache the miss.
+            continue;
+        }
+
+        listCache[path] = (info.Length, info.LastWriteTimeUtc, descriptor);
     }
 
     return Results.Json(descriptors);
@@ -201,10 +225,18 @@ app.MapPut("/api/v1/objects/{id:guid}", async (Guid id, HttpRequest request) =>
     var finalPath = ObjectFile(objectPath, id);
     // Comprobar la versión y escribir va junto: sin esto, dos dispositivos subiendo la misma nota a la vez
     // pasaban los dos la comprobación contra la misma versión y la vieja podía acabar pisando a la nueva.
+    var putGate = putGates.GetOrAdd(objectPath, _ => new SemaphoreSlim(1, 1));
     await putGate.WaitAsync();
     try
     {
-        if (!File.Exists(finalPath) && Directory.EnumerateFiles(objectPath, "*.json", SearchOption.TopDirectoryOnly).Count() >= maxObjects)
+        var existing = new FileInfo(finalPath);
+        var files = new DirectoryInfo(objectPath).EnumerateFiles("*.json", SearchOption.TopDirectoryOnly).ToList();
+        if (!existing.Exists && files.Count >= maxObjects)
+            return Results.StatusCode(StatusCodes.Status507InsufficientStorage);
+
+        // Only growth is refused, so a store already over the cap (older version, lower setting) can still shrink or update in place.
+        var oldSize = existing.Exists ? existing.Length : 0;
+        if (stream.Length > oldSize && files.Sum(f => f.Length) - oldSize + stream.Length > maxStoreBytes)
             return Results.StatusCode(StatusCodes.Status507InsufficientStorage);
 
         if (File.Exists(finalPath))
@@ -280,6 +312,7 @@ app.MapDelete("/api/v1/objects/{id:guid}", (Guid id, HttpContext http) =>
 {
     var path = ObjectFile(ObjectsOf(http), id);
     if (File.Exists(path)) File.Delete(path);
+    listCache.TryRemove(path, out _);
     return Results.NoContent();
 });
 

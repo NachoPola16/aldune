@@ -65,6 +65,9 @@ public static class BrandIdentity
     /// <summary>Server only: the most objects (notes) one store can hold (default 5000). Bounds the disk a token can fill.</summary>
     public const string SyncMaxObjectsEnvVar = "ALDUNE_SYNC_MAX_OBJECTS";
 
+    /// <summary>Server only: the most bytes of objects one store can hold (default 200 MB). New uploads past it answer 507.</summary>
+    public const string SyncMaxStoreBytesEnvVar = "ALDUNE_SYNC_MAX_STORE_BYTES";
+
     public const string SyncPortEnvVar = "ALDUNE_SYNC_PORT";
 
     public const string SyncDataDirEnvVar = "ALDUNE_DATA_DIR";

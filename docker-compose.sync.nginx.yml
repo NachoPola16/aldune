@@ -18,6 +18,8 @@ services:
       ALDUNE_SYNC_SPACES: ${ALDUNE_SYNC_SPACES:-}
       ALDUNE_SYNC_ADMIN_TOKEN: ${ALDUNE_SYNC_ADMIN_TOKEN:-}
       ALDUNE_SYNC_MAX_SPACES: ${ALDUNE_SYNC_MAX_SPACES:-}
+      ALDUNE_SYNC_MAX_OBJECTS: ${ALDUNE_SYNC_MAX_OBJECTS:-}
+      ALDUNE_SYNC_MAX_STORE_BYTES: ${ALDUNE_SYNC_MAX_STORE_BYTES:-}
       ALDUNE_DATA_DIR: /data
       # Failed-token attempt limit per address (docs/SYNC.md → "Failed-attempt limit").
       # Off by default in this variant: behind Nginx or Cloudflare Tunnel every connection arrives from the proxy's address and, without

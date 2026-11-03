@@ -100,6 +100,73 @@ public sealed class SyncServerSpacesTests : IDisposable
     }
 
     [Fact]
+    public async Task TheByteCapRejectsGrowthWith507_ButNeverAffectsAnotherSpaceOrUpdatesInPlace()
+    {
+        var size = SyncEnvelopeCodec.Serialize(Envelope(Guid.NewGuid())).Length;
+        // Room for two objects, not three.
+        Environment.SetEnvironmentVariable(BrandIdentity.SyncMaxStoreBytesEnvVar, (size * 2 + 10).ToString());
+        try
+        {
+            using var anonymous = Start(Legacy, $"madre={Madre},familia={Familia}");
+            using var madre = As(Madre);
+            using var familia = As(Familia);
+            var ids = Enumerable.Range(0, 3).Select(_ => Guid.NewGuid()).ToArray();
+
+            var first = await madre.PutAsync($"/api/v1/objects/{ids[0]}", Json(Envelope(ids[0])));
+            var second = await madre.PutAsync($"/api/v1/objects/{ids[1]}", Json(Envelope(ids[1])));
+            var third = await madre.PutAsync($"/api/v1/objects/{ids[2]}", Json(Envelope(ids[2])));
+            var other = await familia.PutAsync($"/api/v1/objects/{ids[2]}", Json(Envelope(ids[2])));
+            var update = await madre.PutAsync($"/api/v1/objects/{ids[0]}", Json(Envelope(ids[0])));
+
+            Assert.Equal(HttpStatusCode.NoContent, first.StatusCode);
+            Assert.Equal(HttpStatusCode.NoContent, second.StatusCode);
+            Assert.Equal(HttpStatusCode.InsufficientStorage, third.StatusCode);
+            Assert.Equal(HttpStatusCode.NoContent, other.StatusCode);
+            Assert.Equal(HttpStatusCode.NoContent, update.StatusCode);
+            Assert.Equal(HttpStatusCode.NotFound, (await madre.GetAsync($"/api/v1/objects/{ids[2]}")).StatusCode);
+        }
+        finally
+        {
+            Environment.SetEnvironmentVariable(BrandIdentity.SyncMaxStoreBytesEnvVar, null);
+        }
+    }
+
+    [Fact]
+    public async Task TheListing_FollowsPutsAndDeletesAndSkipsUnreadableFiles()
+    {
+        using var anonymous = Start(null, $"madre={Madre}");
+        using var madre = As(Madre);
+        var a = Guid.NewGuid();
+        var b = Guid.NewGuid();
+        await madre.PutAsync($"/api/v1/objects/{a}", Json(Envelope(a)));
+        await madre.PutAsync($"/api/v1/objects/{b}", Json(Envelope(b)));
+        await File.WriteAllTextAsync(Path.Combine(_dataDir, "spaces", "madre", "objects", $"{Guid.NewGuid():N}.json"), "{ not json");
+
+        var before = await ListAsync(madre);
+        var again = await ListAsync(madre); // answered from the cache: must be identical
+        var newer = Envelope(a);
+        newer.UpdatedAt = newer.UpdatedAt.AddHours(1);
+        newer.Tombstone = true;
+        await madre.PutAsync($"/api/v1/objects/{a}", Json(newer));
+        await madre.DeleteAsync($"/api/v1/objects/{b}");
+        var after = await ListAsync(madre);
+
+        Assert.Equal(2, before.GetArrayLength());
+        Assert.Equal(before.GetRawText(), again.GetRawText());
+        Assert.Equal(1, after.GetArrayLength());
+        Assert.Equal(a, after[0].GetProperty("noteId").GetGuid());
+        Assert.True(after[0].GetProperty("tombstone").GetBoolean());
+        Assert.Equal(newer.UpdatedAt, after[0].GetProperty("updatedAt").GetDateTimeOffset());
+    }
+
+    private static async Task<System.Text.Json.JsonElement> ListAsync(HttpClient client)
+    {
+        using var response = await client.GetAsync("/api/v1/objects");
+        using var doc = System.Text.Json.JsonDocument.Parse(await response.Content.ReadAsStringAsync());
+        return doc.RootElement.Clone();
+    }
+
+    [Fact]
     public void AConfigurationThatCouldMixSpacesRefusesToStart()
     {
         Environment.SetEnvironmentVariable(BrandIdentity.SyncDataDirEnvVar, _dataDir);
