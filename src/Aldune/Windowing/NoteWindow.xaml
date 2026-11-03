@@ -78,6 +78,21 @@
             <Setter Property="Foreground" Value="{DynamicResource NoteHeaderInkBrush}" />
             <Setter Property="FontSize" Value="12" />
         </Style>
+        <!-- Minimize and maximize only show while the pointer is over the note or the keyboard focus is on one of the header buttons (a note being typed in has the focus in its text, so focus on the window would keep them always visible): a note is used for a few
+             seconds and those two are rarely needed, so at rest the header is just the title, the menu and close. Opacity and hit-testing,
+             not Collapsed, so the buttons do not move when they appear. -->
+        <Style x:Key="WindowActionButtonStyle" TargetType="Button" BasedOn="{StaticResource CloseButtonStyle}">
+            <Style.Triggers>
+                <MultiDataTrigger>
+                    <MultiDataTrigger.Conditions>
+                        <Condition Binding="{Binding IsMouseOver, RelativeSource={RelativeSource AncestorType=Window}}" Value="False" />
+                        <Condition Binding="{Binding IsKeyboardFocusWithin, RelativeSource={RelativeSource AncestorType=StackPanel}}" Value="False" />
+                    </MultiDataTrigger.Conditions>
+                    <Setter Property="Opacity" Value="0" />
+                    <Setter Property="IsHitTestVisible" Value="False" />
+                </MultiDataTrigger>
+            </Style.Triggers>
+        </Style>
         <Style x:Key="NoteTextBoxStyle" TargetType="TextBox">
             <Setter Property="Background" Value="Transparent" />
             <Setter Property="BorderBrush" Value="Transparent" />
@@ -221,7 +236,7 @@
                         AutomationProperties.Name="{x:Static res:Strings.MinimizeWindowTooltip}"
                         Click="OnMinimizeClick"
                         WindowChrome.IsHitTestVisibleInChrome="True"
-                        Style="{StaticResource CloseButtonStyle}">
+                        Style="{StaticResource WindowActionButtonStyle}">
                     <Border Width="10" Height="1" VerticalAlignment="Center" Margin="0,6,0,0"
                                 UseLayoutRounding="True" SnapsToDevicePixels="True"
                                 Background="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}" />
@@ -232,7 +247,7 @@
                         AutomationProperties.Name="{x:Static res:Strings.MaximizeWindowTooltip}"
                         Click="OnMaximizeClick"
                         WindowChrome.IsHitTestVisibleInChrome="True"
-                        Style="{StaticResource CloseButtonStyle}">
+                        Style="{StaticResource WindowActionButtonStyle}">
                     <local:MaximizeGlyph x:Name="MaximizeGlyph" Ink="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}" />
                 </Button>
                 <Button x:Name="MenuButton"
