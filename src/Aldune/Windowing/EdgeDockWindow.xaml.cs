@@ -1058,12 +1058,18 @@ public partial class EdgeDockWindow : Window
         _lastView = view;
         _lastTagFilter = tagFilter;
         bool swap = viewChanged && IsVisible && _fanState.IsExpanded && SystemParameters.ClientAreaAnimation;
+        // Folded dock (the view was changed from Manage notes or by the wheel's last notch): the strip of pills changes in a soft swap too.
+        bool restSwap = !swap && viewChanged && IsVisible && !_fanState.IsExpanded && _noteCount > 0 && SystemParameters.ClientAreaAnimation;
         // With the swap the name of the view changes together with the cards (inside the swap), not a moment before them.
-        if (!swap) UpdateViewIndicator();
+        if (!swap && !restSwap) UpdateViewIndicator();
         ApplyFooterPadding();
         if (swap)
         {
             SwapNotesThroughFade();
+        }
+        else if (restSwap)
+        {
+            SwapRestStrip();
         }
         else
         {
@@ -1213,6 +1219,49 @@ public partial class EdgeDockWindow : Window
         var barFade = new DoubleAnimation(0, new Duration(TimeSpan.FromMilliseconds(deck ? DeckGatherMs - 45 : 40))) { EasingFunction = EaseOut(), BeginTime = TimeSpan.FromMilliseconds(deck ? 45 : 35) };
         root.BeginAnimation(OpacityProperty, barFade);
         NotesColumn.BeginAnimation(OpacityProperty, fadeOut);
+    }
+
+    /// <summary>
+    /// The folded dock changing view: the strip of pills fades out, the list (and the size of the window, unseen) changes while nothing is
+    /// drawn, and the strip comes back with its pills appearing one after another. Before this the pills and the strip's length jumped.
+    /// </summary>
+    private void SwapRestStrip()
+    {
+        int token = ++_viewSwapToken; // supersedes any swap still waiting
+        _viewLabelHold = false;
+        ResetTabsFadeIfStuck();
+        var fadeOut = new DoubleAnimation(0, new Duration(TimeSpan.FromMilliseconds(90))) { EasingFunction = EaseOut() };
+        fadeOut.Completed += (_, _) =>
+        {
+            if (token != _viewSwapToken) return;
+            UpdateViewIndicator();
+            SetNotes(LoadNotesForView(), animateArrivals: false, fadeAll: false);
+            // A change in the number of notes makes ApplyState show the strip at once: it stays hidden until the new pills are in place.
+            RestStrip.BeginAnimation(OpacityProperty, null);
+            RestStrip.Opacity = 0;
+            Dispatcher.BeginInvoke(DispatcherPriority.Loaded, new Action(() => AfterFrames(2, () =>
+            {
+                if (token != _viewSwapToken) return;
+                if (_fanState.IsExpanded || _noteCount == 0) { ApplyState(animate: false); return; }
+                for (int i = 0; i < RestList.Items.Count; i++)
+                {
+                    if (RestList.ItemContainerGenerator.ContainerFromIndex(i) is not UIElement pill) continue;
+                    pill.BeginAnimation(OpacityProperty, null);
+                    pill.Opacity = 0;
+                    var appear = new DoubleAnimation(0, 1, new Duration(TimeSpan.FromMilliseconds(120)))
+                    {
+                        BeginTime = TimeSpan.FromMilliseconds(Math.Min(i, 10) * 22),
+                        EasingFunction = EaseOut(),
+                    };
+                    appear.Completed += (_, _) => { pill.BeginAnimation(OpacityProperty, null); pill.Opacity = 1; };
+                    pill.BeginAnimation(OpacityProperty, appear);
+                }
+                var fadeIn = new DoubleAnimation(0, 1, new Duration(TimeSpan.FromMilliseconds(110))) { EasingFunction = EaseOut() };
+                fadeIn.Completed += (_, _) => { RestStrip.BeginAnimation(OpacityProperty, null); RestStrip.Opacity = 1; };
+                RestStrip.BeginAnimation(OpacityProperty, fadeIn);
+            })));
+        };
+        RestStrip.BeginAnimation(OpacityProperty, fadeOut);
     }
 
     /// <summary>
