@@ -2267,13 +2267,15 @@ public partial class EdgeDockWindow : Window
 
     private bool _labelOnSwap;
 
-    /// <summary>The current view is no longer allowed by the wheel settings: go to the next stop (a no-op when it still is, or when no other stop exists).</summary>
-    internal void EnsureViewIsAnEnabledWheelStop()
+    /// <summary>The view was a stop before the change and no longer is: go to the next stop (a no-op otherwise, or when no other stop exists).</summary>
+    internal void EnsureViewIsAnEnabledWheelStop(DockViewCycle.Stops before)
     {
         if (_settings is null) return;
         var view = _settings.DockView;
         var tag = _settings.DockTagFilter;
-        if (DockViewCycle.IsEnabledStop(view, tag, _settings.WheelStops)) return;
+        // Only when the switch that was just moved is the one that took THIS view off the wheel: a view picked by hand that was never a stop
+        // (Trash taken off the wheel earlier, then chosen from the gear menu) must not be left because an unrelated switch was moved.
+        if (!DockViewCycle.IsEnabledStop(view, tag, before) || DockViewCycle.IsEnabledStop(view, tag, _settings.WheelStops)) return;
         var (nextView, nextTag) = DockViewCycle.Next(view, tag, BuildViewCounts(), 1, _settings.WheelStops);
         if (nextView == view && string.Equals(nextTag, tag, StringComparison.OrdinalIgnoreCase)) return;
         _coordinator.SetDockView(nextView, nextTag);

@@ -1019,7 +1019,21 @@ public partial class SettingsWindow : Window
     {
         _settings.WheelChangesDockView = WheelChangesViewCheck.IsChecked == true;
         _settingsService.Save(_settings);
+        UpdateWheelStopSwitchesEnabled();
     }
+
+    /// <summary>With the wheel turned off its stops mean nothing: the switches are dimmed and moving them leaves the dock alone.</summary>
+    private void UpdateWheelStopSwitchesEnabled()
+    {
+        bool on = WheelChangesViewCheck.IsChecked == true;
+        foreach (var check in new[] { WheelStopActiveCheck, WheelStopArchivedCheck, WheelStopTrashCheck, WheelStopAllCheck, WheelStopTagsCheck })
+            check.IsEnabled = on;
+        foreach (var check in WheelTagList.Children.OfType<CheckBox>()) check.IsEnabled = on && WheelStopTagsCheck.IsChecked == true;
+    }
+
+    /// <summary>The stops as they are right now, with their own copy of the skipped tags (the setting's list is edited in place).</summary>
+    private DockViewCycle.Stops WheelStopsSnapshot() =>
+        _settings.WheelStops with { SkipTags = _settings.WheelSkipTags.ToList() };
 
     /// <summary>One switch per tag: unticked, the wheel of the dock passes over it (it stays in the gear menu and can still be chosen by hand).</summary>
     private void PopulateWheelTags()
@@ -1049,14 +1063,16 @@ public partial class SettingsWindow : Window
     private void OnWheelTagToggled(object sender, RoutedEventArgs e)
     {
         if (sender is not CheckBox { Tag: string tag } check) return;
+        var before = WheelStopsSnapshot();
         _settings.WheelSkipTags.RemoveAll(t => string.Equals(t, tag, StringComparison.OrdinalIgnoreCase));
         if (check.IsChecked != true) _settings.WheelSkipTags.Add(tag);
         _settingsService.Save(_settings);
-        _coordinator?.EnsureDockViewIsAWheelStop();
+        if (_settings.WheelChangesDockView) _coordinator?.EnsureDockViewIsAWheelStop(before);
     }
 
     private void OnWheelStopsToggled(object sender, RoutedEventArgs e)
     {
+        var before = WheelStopsSnapshot();
         foreach (var check in WheelTagList.Children.OfType<CheckBox>()) check.IsEnabled = WheelStopTagsCheck.IsChecked == true;
         _settings.WheelStopActive = WheelStopActiveCheck.IsChecked == true;
         _settings.WheelStopArchived = WheelStopArchivedCheck.IsChecked == true;
@@ -1065,7 +1081,7 @@ public partial class SettingsWindow : Window
         _settings.WheelStopTags = WheelStopTagsCheck.IsChecked == true;
         _settingsService.Save(_settings);
         // A dock showing a view that has just left the wheel moves on at once (with the same swap as any other change of view).
-        _coordinator?.EnsureDockViewIsAWheelStop();
+        if (_settings.WheelChangesDockView) _coordinator?.EnsureDockViewIsAWheelStop(before);
     }
 
     private void OnTrackpadGesturesToggled(object sender, RoutedEventArgs e)
@@ -2533,6 +2549,7 @@ public partial class SettingsWindow : Window
         WheelStopAllCheck.IsChecked = _settings.WheelStopAll;
         WheelStopTagsCheck.IsChecked = _settings.WheelStopTags;
         PopulateWheelTags();
+        UpdateWheelStopSwitchesEnabled();
         UpdateUniformColorUi();
         UpdateColorsLookNotice();
         SyncSignalCheck.IsChecked = _settings.SyncSignalVisible;
