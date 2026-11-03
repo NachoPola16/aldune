@@ -471,6 +471,9 @@ public sealed class SyncService
                         settled[id] = SyncBaseVersion.Of(agreed);
                 }
 
+                // The notes that only exist in the store (a new device, or notes made elsewhere) are written in groups, not one commit each.
+                // Anything that has a local side may write elsewhere (history, conflicts), so the group is flushed first.
+                using var bulkWrite = _repository.BeginBulkSyncWrite();
                 foreach (var id in local.Keys.Union(remote.Keys).ToList())
                 {
                     // Existe en el almacén pero no se pudo leer: ni subirla encima ni darla por acordada.
@@ -478,6 +481,7 @@ public sealed class SyncService
 
                     bool hasLocal = local.TryGetValue(id, out var localEnvelope);
                     bool hasRemote = remote.TryGetValue(id, out var remoteObject);
+                    if (hasLocal) _repository.FlushBulkSyncWrite();
 
                     if (!hasLocal)
                     {
@@ -532,6 +536,8 @@ public sealed class SyncService
                     Settle(id, comparison >= 0 ? localEnvelope! : remoteObject.Envelope);
                 }
 
+                // Written before the bases are saved: a base must never be recorded for a note that did not land.
+                bulkWrite.Dispose();
                 if (settled.Count > 0) _repository.SetSyncBases(settled, baseKey);
                 var result = new SyncResult(uploaded, downloaded, conflicts, tombstones);
                 _settings.LastSyncAt = DateTimeOffset.UtcNow;

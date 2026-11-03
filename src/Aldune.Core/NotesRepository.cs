@@ -1015,12 +1015,18 @@ public sealed class NotesRepository
             throw new FormatException("A protected note is missing its encrypted content.");
         // Lo que llega de otro dispositivo reemplaza el texto local: se guarda antes, por si el reemplazo no era lo que se quería.
         if (!note.IsProtected && GetById(note.Id) is { IsProtected: false } existing && existing.Text != note.Text)
+        {
+            FlushBulkSyncWrite();
             InsertVersion(note.Id, existing.Text, DateTimeOffset.UtcNow);
+        }
         var encrypted = _cipher.Encrypt(note.IsProtected ? string.Empty : note.Text);
-        using var connection = _database.OpenConnection();
         // One transaction for the row, the order and the tags: a cut in between used to leave the new text with the old tags, and those then
         // won over the other devices' on the next pass. The history version above stays outside on purpose (it is only ever extra safety).
-        using var transaction = connection.BeginTransaction();
+        RunSyncWrite((connection, transaction) => ApplySyncNoteRows(connection, transaction, note, authorDeviceId, encrypted));
+    }
+
+    private static void ApplySyncNoteRows(SqliteConnection connection, SqliteTransaction transaction, Note note, string? authorDeviceId, EncryptedContent encrypted)
+    {
         using var command = connection.CreateCommand();
         command.Transaction = transaction;
         command.CommandText = """
@@ -1088,15 +1094,17 @@ public sealed class NotesRepository
         }
 
         ReplaceTags(connection, transaction, note.Id, note.Tags, touch: false);
-        transaction.Commit();
     }
 
     /// <summary>Aplica una eliminación remota sin generar una segunda tombstone local.</summary>
     public void ApplySyncTombstone(SyncTombstone tombstone)
     {
-        using var connection = _database.OpenConnection();
         // Una sola transacción: un cierre a medias no puede dejar la nota medio borrada.
-        using var transaction = connection.BeginTransaction();
+        RunSyncWrite((connection, transaction) => ApplySyncTombstoneRows(connection, transaction, tombstone));
+    }
+
+    private static void ApplySyncTombstoneRows(SqliteConnection connection, SqliteTransaction transaction, SyncTombstone tombstone)
+    {
         using var command = connection.CreateCommand();
         command.Transaction = transaction;
         command.CommandText = """
@@ -1116,7 +1124,106 @@ public sealed class NotesRepository
         command.Parameters.AddWithValue("$deletedAt", tombstone.DeletedAt.ToString("O"));
         command.Parameters.AddWithValue("$deviceId", tombstone.DeviceId);
         command.ExecuteNonQuery();
+    }
+
+    private BulkSyncWrite? _bulk;
+    private int _bulkThread;
+
+    /// <summary>
+    /// Groups the notes a sync pass applies into a few transactions instead of one each. On a new device that downloads thousands of notes
+    /// the per-note commit cost ~10 ms each (30 s for 3000 notes); grouped it is a fraction of that. Every note still goes in under its own
+    /// savepoint (a failing one is rolled back alone, as before), and the group is committed every <see cref="BulkSyncWrite.BatchSize"/> notes
+    /// and when this is disposed. Only the thread that opened it uses it; any other writer keeps its own connection.
+    /// </summary>
+    public IDisposable BeginBulkSyncWrite()
+    {
+        if (_bulk is not null) return NoopDisposable.Instance;
+        _bulk = new BulkSyncWrite(_database.OpenConnection(), () => _bulk = null);
+        _bulkThread = Environment.CurrentManagedThreadId;
+        return _bulk;
+    }
+
+    /// <summary>
+    /// Commits what the open group holds so far. SQLite lets one writer at a time: any other write made on another connection while the
+    /// group is open (a history version, a conflict record) would wait for it and fail, so those paths flush first.
+    /// </summary>
+    public void FlushBulkSyncWrite()
+    {
+        if (_bulk is not null && _bulkThread == Environment.CurrentManagedThreadId) _bulk.Flush();
+    }
+
+    private void RunSyncWrite(Action<SqliteConnection, SqliteTransaction> write)
+    {
+        var bulk = _bulk;
+        if (bulk is not null && _bulkThread == Environment.CurrentManagedThreadId)
+        {
+            bulk.Run(write);
+            return;
+        }
+
+        using var connection = _database.OpenConnection();
+        using var transaction = connection.BeginTransaction();
+        write(connection, transaction);
         transaction.Commit();
+    }
+
+    private sealed class NoopDisposable : IDisposable
+    {
+        public static readonly NoopDisposable Instance = new();
+        public void Dispose() { }
+    }
+
+    private sealed class BulkSyncWrite(SqliteConnection connection, Action onDispose) : IDisposable
+    {
+        public const int BatchSize = 250;
+        private SqliteTransaction? _transaction;
+        private int _inBatch;
+
+        public void Run(Action<SqliteConnection, SqliteTransaction> write)
+        {
+            _transaction ??= connection.BeginTransaction();
+            Exec("SAVEPOINT sync_note");
+            try
+            {
+                write(connection, _transaction);
+                Exec("RELEASE sync_note");
+            }
+            catch
+            {
+                Exec("ROLLBACK TO sync_note");
+                Exec("RELEASE sync_note");
+                throw;
+            }
+            if (++_inBatch >= BatchSize) Commit();
+        }
+
+        private void Exec(string sql)
+        {
+            using var command = connection.CreateCommand();
+            command.Transaction = _transaction;
+            command.CommandText = sql;
+            command.ExecuteNonQuery();
+        }
+
+        public void Flush() => Commit();
+
+        private void Commit()
+        {
+            _transaction?.Commit();
+            _transaction?.Dispose();
+            _transaction = null;
+            _inBatch = 0;
+        }
+
+        public void Dispose()
+        {
+            try { Commit(); }
+            finally
+            {
+                connection.Dispose();
+                onDispose();
+            }
+        }
     }
 
     public ProtectedNoteContent Protect(Guid id, string password)
