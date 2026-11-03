@@ -221,8 +221,6 @@ public partial class NotesManagerWindow : Window
 
         // Borrar del todo solo tiene sentido sobre lo que ya esta en la papelera.
         DeleteButton.Visibility = _filter == Filter.Trashed ? Visibility.Visible : Visibility.Collapsed;
-        // En la papelera "Mover a la papelera" no hace nada y se confunde con eliminar.
-        TrashButton.Visibility = _filter == Filter.Trashed ? Visibility.Collapsed : Visibility.Visible;
         UpdateSelectionState();
     }
 
@@ -237,6 +235,11 @@ public partial class NotesManagerWindow : Window
         int selected = _allRows.Count(r => r.IsSelected);
         bool any = selected > 0;
 
+        // The actions on a selection only appear once there is one (a row of disabled buttons said nothing and cost attention); Import and Export,
+        // which do not need a selection, stay. In the trash "Move to trash" does nothing and reads like delete, so it stays out there.
+        ArchiveButton.Visibility = any ? Visibility.Visible : Visibility.Collapsed;
+        RestoreButton.Visibility = any ? Visibility.Visible : Visibility.Collapsed;
+        TrashButton.Visibility = any && _filter != Filter.Trashed ? Visibility.Visible : Visibility.Collapsed;
         ArchiveButton.IsEnabled = any;
         RestoreButton.IsEnabled = any;
         TrashButton.IsEnabled = any;
