@@ -1,5 +1,7 @@
 package app.aldune.domain
 
+import app.aldune.domain.backup.RestoreMode
+import app.aldune.domain.backup.RestoreResult
 import app.aldune.text.TaskLists
 import app.aldune.text.NoteColorAssigner
 import app.aldune.text.NoteColorAssignment
@@ -94,6 +96,55 @@ class NoteService(
         store.put(note)
         NoteResult.Ok(note)
     }
+
+    /**
+     * Puts the notes of a backup back (see `BackupArchive`). One pass under the lock, so no edit lands in the middle.
+     *
+     * [RestoreMode.ADD_MISSING] never touches a note that exists and never deletes. [RestoreMode.REPLACE_ALL] deletes the notes that are not
+     * in the backup (each leaves its tombstone, so the sync propagates it) and overwrites the ones that differ. A note that is overwritten
+     * gets `updatedAt = now` and its previous text goes to the history first: with an older `updatedAt` the sync would hand the server's newer
+     * version straight back and the restore would silently undo itself. Notes that are only added keep their dates.
+     * [clearTombstone] drops a local deletion marker of a restored id, or the sync would keep signing the deletion of a note that is back.
+     * Returns the ids of the notes that were written, so the caller can restore their reminders.
+     */
+    fun restoreBackup(
+        notes: List<Note>, mode: RestoreMode, clearTombstone: (String) -> Unit = {},
+    ): Pair<RestoreResult, Set<String>> = synchronized(lock) {
+        val now = clock.now()
+        val here = store.all().associateBy { it.id }
+        var added = 0
+        var replaced = 0
+        var kept = 0
+        var deleted = 0
+        val written = LinkedHashSet<String>()
+        if (mode == RestoreMode.REPLACE_ALL) {
+            val keep = notes.mapTo(HashSet()) { it.id }
+            for (id in here.keys) if (id !in keep && store.delete(id, now)) deleted++
+        }
+        for (note in notes) {
+            val current = here[note.id]
+            when {
+                current == null -> {
+                    store.put(note.copy(syncAuthorDeviceId = null))
+                    clearTombstone(note.id)
+                    added++
+                    written += note.id
+                }
+                mode == RestoreMode.ADD_MISSING -> kept++
+                // Same content: nothing to write (and nothing for the sync to upload).
+                sameContent(current, note) -> kept++
+                else -> {
+                    recordVersion(note.id)
+                    store.put(note.copy(syncAuthorDeviceId = null, updatedAt = now))
+                    replaced++
+                    written += note.id
+                }
+            }
+        }
+        RestoreResult(added, replaced, kept, deleted) to written
+    }
+
+    private fun sameContent(a: Note, b: Note) = a.copy(syncAuthorDeviceId = null, updatedAt = b.updatedAt) == b.copy(syncAuthorDeviceId = null)
 
     private fun nextColor(settings: NewNoteColorSettings, viewTag: String?): String {
         val dockColors = list(NoteState.ACTIVE, tag = viewTag).map { it.color }

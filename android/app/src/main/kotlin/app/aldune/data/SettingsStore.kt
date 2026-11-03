@@ -216,6 +216,44 @@ class SettingsStore(context: Context) {
         )
     }
 
+    /**
+     * The preferences that travel in a backup (`BackupArchive`): how the app looks and behaves. Left out on purpose: language (applying it
+     * needs a restart of the activity), everything that is bound to this phone or to a permission (the capture notification, exact alarms,
+     * the auto-export folder and its grant, the quick list, update-check state, the welcome flags) and the view state. No secret lives in
+     * these preferences; sync keys are in the vault, not here.
+     */
+    fun backupValues(): Map<String, Any> {
+        val out = LinkedHashMap<String, Any>()
+        for ((key, value) in prefs.all) {
+            val kind = portableKind(key) ?: continue
+            when {
+                kind == 'i' && value is Int -> out[key] = value
+                kind == 'b' && value is Boolean -> out[key] = value
+                kind == 's' && value is String -> out[key] = value
+            }
+        }
+        return out
+    }
+
+    /**
+     * Writes back what [backupValues] produced. A key that is not portable, or whose value has the wrong kind (a hand-edited or newer file), is
+     * ignored; `load()` then clamps ranges as it always does. Keys the backup does not mention keep their current value.
+     */
+    fun restoreBackupValues(values: Map<String, Any>) {
+        val editor = prefs.edit()
+        for ((key, value) in values) {
+            when (portableKind(key)) {
+                'i' -> if (value is Int) editor.putInt(key, value)
+                'b' -> if (value is Boolean) editor.putBoolean(key, value)
+                's' -> if (value is String) editor.putString(key, value)
+                else -> {}
+            }
+        }
+        editor.apply()
+    }
+
+    private fun portableKind(key: String): Char? = if (key.startsWith(SOUND_PREFIX)) 'i' else PORTABLE[key]
+
     private fun nullableBoolean(key: String): Boolean? = if (prefs.contains(key)) prefs.getBoolean(key, false) else null
 
     fun save(settings: AppSettings) {
@@ -281,6 +319,17 @@ class SettingsStore(context: Context) {
 
     private companion object {
         const val FILE = "settings"
+        /** Portable preference keys and the kind of value each holds: i = Int, b = Boolean, s = String (see [backupValues]). */
+        val PORTABLE: Map<String, Char> = mapOf(
+            APPEARANCE to 'i', TRASH_DAYS to 'i', NEW_BUTTON_SHAPE to 'i', LIST_ORDER to 'i', COLOR_RULE to 'i', KEYBOARD_ON_OPEN to 'i',
+            HIDE_DONE_AFTER_HOURS to 'i', SOUND_VOLUME to 'i',
+            REORDER_ON_CHECK to 'b', LARGE_CHECKBOXES to 'b', PLAIN_EDITOR to 'b', DARK_NOTES to 'b', WIDGET_PREVIEW to 'b', WIDGET_TASKS to 'b',
+            FILL_NOTE_COLOR to 'b', SQUARE_CORNERS to 'b', SHOW_SYNC_SIGNAL to 'b', REMINDER_INCLUDES_TASKS to 'b', SYNC_IN_BACKGROUND to 'b',
+            HIDE_DONE_TASKS to 'b', SHOW_TAG_HASH to 'b', COMPACT_SETTINGS_TABS to 'b', SETTINGS_TABS_AT_BOTTOM to 'b', GROUP_BY_TAG to 'b',
+            SIMPLIFIED_MODE to 'b', SOUNDS_ENABLED to 'b', CHECK_UPDATES to 'b',
+            ASPECT_COLORS to 's', NOTE_THEME_ID to 's', UNIFORM_NOTE_COLOR to 's', FIXED_NOTE_COLOR to 's', TAG_ORDER to 's', TAG_COLORS to 's',
+            KNOWN_TAGS to 's',
+        )
         const val WELCOME_SEEN = "welcomeSeen"
         const val LAST_SEEN_VERSION_CODE = "lastSeenVersionCode"
         const val BACKUP_NOTICE_DISMISSED = "backupNoticeDismissed"

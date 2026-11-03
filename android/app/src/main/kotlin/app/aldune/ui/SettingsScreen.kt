@@ -487,6 +487,8 @@ private fun BackupSection(viewModel: NotesViewModel) {
         )
     }
     HorizontalDivider(Modifier.padding(vertical = 12.dp))
+    FullBackupSection(viewModel)
+    HorizontalDivider(Modifier.padding(vertical = 12.dp))
     AutoExportSection(viewModel)
 }
 

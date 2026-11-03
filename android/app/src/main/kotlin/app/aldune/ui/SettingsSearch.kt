@@ -138,6 +138,8 @@ internal val SETTINGS_INDEX: List<SettingsEntry> = listOf(
     SettingsEntry(5, R.string.sync_in_background, R.string.sync_in_background_hint, R.string.sync_title),
     SettingsEntry(5, R.string.backup_section),
     SettingsEntry(5, R.string.export_all, R.string.export_all_hint, R.string.backup_section),
+    SettingsEntry(5, R.string.backup_now, R.string.backup_now_hint, R.string.backup_section),
+    SettingsEntry(5, R.string.restore_from_backup, R.string.restore_hint, R.string.backup_section),
     SettingsEntry(5, R.string.auto_export, R.string.auto_export_hint, R.string.backup_section),
     SettingsEntry(5, R.string.auto_export_archived, group = R.string.backup_section),
 )

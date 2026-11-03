@@ -34,6 +34,16 @@ import app.aldune.domain.NoteService
 import app.aldune.domain.SharedNote
 import app.aldune.domain.SharedNoteText
 import app.aldune.domain.NoteState
+import app.aldune.domain.backup.BackupArchive
+import app.aldune.domain.backup.BackupContent
+import app.aldune.domain.backup.BackupFailure
+import app.aldune.domain.backup.BackupManifest
+import app.aldune.domain.backup.BackupReadResult
+import app.aldune.domain.backup.BackupReminders
+import app.aldune.domain.backup.RestoreMode
+import app.aldune.domain.backup.RestorePreview
+import app.aldune.domain.backup.RestoreResult
+import app.aldune.domain.backup.SafetyBackups
 import app.aldune.domain.importing.ImportColorPolicy
 import app.aldune.domain.importing.ImportFailure
 import app.aldune.domain.importing.ImportInput
@@ -883,6 +893,203 @@ class NotesViewModel(application: Application) : AndroidViewModel(application) {
             }
             _exportOutcome.value = ExportOutcome(result)
         }
+    }
+
+    // ───────────── Full backup and restore (one .zip, see BackupArchive) ─────────────
+
+    /** How the last «Back up now» ended: [notes] is `null` when it failed. */
+    class BackupOutcome(val notes: Int?, val protectedNotes: Int)
+
+    private val _backupOutcome = MutableStateFlow<BackupOutcome?>(null)
+    val backupOutcome: StateFlow<BackupOutcome?> = _backupOutcome.asStateFlow()
+
+    private fun appVersionName(): String = try {
+        getApplication<Application>().let { it.packageManager.getPackageInfo(it.packageName, 0).versionName }.orEmpty()
+    } catch (_: Exception) {
+        ""
+    }
+
+    /** Everything a backup holds, read under the io lock so no edit lands halfway. `null` while the database is not ready. */
+    private fun backupContentLocked(): BackupContent? {
+        val svc = service ?: return null
+        return BackupContent(svc.listByState().values.flatten(), ready?.reminders?.all().orEmpty(), settingsStore.backupValues())
+    }
+
+    /**
+     * Writes the backup into [uri] from the ViewModel scope, not the screen's: leaving Settings or rotating must not cancel the write and
+     * leave a truncated zip. A failed write removes the half-written document when the provider allows it.
+     */
+    fun backupTo(uri: android.net.Uri) {
+        viewModelScope.launch(Dispatchers.IO) {
+            _backupOutcome.value = null
+            val resolver = getApplication<Application>().contentResolver
+            val outcome = try {
+                val content = io.withLock { backupContentLocked() }
+                val out = resolver.openOutputStream(uri, "wt")
+                if (content == null || out == null) null else {
+                    out.buffered().use { BackupArchive.write(it, content, appVersionName(), Instant.now()) }
+                    BackupOutcome(content.notes.size, content.notes.count { it.isProtected })
+                }
+            } catch (e: kotlin.coroutines.cancellation.CancellationException) {
+                throw e
+            } catch (_: Exception) {
+                runCatching { android.provider.DocumentsContract.deleteDocument(resolver, uri) }
+                null
+            }
+            _backupOutcome.value = outcome ?: BackupOutcome(null, 0)
+        }
+    }
+
+    enum class RestorePhase { READING, PREVIEW, CONFIRM_REPLACE, RESTORING, DONE, FAILED }
+
+    /**
+     * Everything the restore dialog shows. It lives here (like [ImportUi]) so a rotation loses nothing and a restore that started keeps
+     * running. Nothing is written until the user presses «Restore» (and, for «Replace everything», confirms).
+     */
+    data class RestoreUi(
+        val phase: RestorePhase = RestorePhase.READING,
+        val failure: BackupFailure? = null,
+        val manifest: BackupManifest? = null,
+        val content: BackupContent? = null,
+        val skippedNotes: Int = 0,
+        val preview: RestorePreview? = null,
+        val mode: RestoreMode = RestoreMode.ADD_MISSING,
+        val result: RestoreResult? = null,
+        val safetyBackup: String? = null,
+        val safetyFailed: Boolean = false,
+    )
+
+    private val _restore = MutableStateFlow<RestoreUi?>(null)
+
+    /** `null` while the dialog is closed. */
+    val restoreUi: StateFlow<RestoreUi?> = _restore.asStateFlow()
+    private var restoreJob: Job? = null
+
+    fun closeRestore() {
+        if (_restore.value?.phase == RestorePhase.RESTORING) return // it cannot be cancelled halfway: the user would not know what was done
+        restoreJob?.cancel()
+        _restore.value = null
+    }
+
+    /** Reads and validates the picked file (nothing is written) and builds the preview. */
+    fun restorePick(uri: android.net.Uri) {
+        _restore.value = RestoreUi(RestorePhase.READING)
+        restoreJob?.cancel()
+        restoreJob = viewModelScope.launch(Dispatchers.IO) {
+            val read = try {
+                getApplication<Application>().contentResolver.openInputStream(uri)?.use { BackupArchive.read(it.buffered()) }
+            } catch (e: kotlin.coroutines.cancellation.CancellationException) {
+                throw e
+            } catch (_: Exception) {
+                null
+            }
+            when (read) {
+                null -> _restore.value = RestoreUi(RestorePhase.FAILED) // could not even open it
+                is BackupReadResult.Failed -> _restore.value = RestoreUi(RestorePhase.FAILED, failure = read.reason)
+                is BackupReadResult.Ok -> {
+                    val existing = io.withLock { service?.let(::existingNotes) }.orEmpty()
+                    _restore.value = RestoreUi(
+                        RestorePhase.PREVIEW, manifest = read.manifest, content = read.content, skippedNotes = read.skippedNotes,
+                        preview = RestorePreview.of(read.content, existing),
+                    )
+                }
+            }
+        }
+    }
+
+    fun restoreMode(mode: RestoreMode) = _restore.update { if (it?.phase == RestorePhase.PREVIEW) it.copy(mode = mode) else it }
+
+    /** «Restore»: adding goes straight through; replacing first asks for confirmation. */
+    fun restoreRun() {
+        val ui = _restore.value ?: return
+        if (ui.phase != RestorePhase.PREVIEW) return
+        if (ui.mode == RestoreMode.REPLACE_ALL) _restore.value = ui.copy(phase = RestorePhase.CONFIRM_REPLACE) else restoreApply()
+    }
+
+    fun restoreConfirmReplace() {
+        if (_restore.value?.phase == RestorePhase.CONFIRM_REPLACE) restoreApply()
+    }
+
+    fun restoreBackToPreview() = _restore.update { if (it?.phase == RestorePhase.CONFIRM_REPLACE) it.copy(phase = RestorePhase.PREVIEW) else it }
+
+    /** The files/backups folder where the safety backup of «Replace everything» goes. */
+    private fun safetyDirectory() = java.io.File(getApplication<Application>().filesDir, SafetyBackups.DIRECTORY)
+
+    /** Saves the current state next to the app's files, then keeps only the newest few. Returns the file name, or `null` if it failed. */
+    private fun writeSafetyBackupLocked(): String? = try {
+        val content = backupContentLocked()
+        if (content == null) null else {
+            val dir = safetyDirectory().apply { mkdirs() }
+            val name = SafetyBackups.fileName(Instant.now())
+            val tmp = java.io.File(dir, "$name.tmp")
+            tmp.outputStream().buffered().use { BackupArchive.write(it, content, appVersionName(), Instant.now()) }
+            if (!tmp.renameTo(java.io.File(dir, name))) {
+                tmp.delete()
+                null
+            } else {
+                SafetyBackups.surplus(dir.list().orEmpty().toList()).forEach { java.io.File(dir, it).delete() }
+                name
+            }
+        }
+    } catch (_: Exception) {
+        null
+    }
+
+    private fun restoreApply() {
+        val ui = _restore.value ?: return
+        val content = ui.content ?: return
+        val mode = ui.mode
+        _restore.value = ui.copy(phase = RestorePhase.RESTORING)
+        // Non-cancellable: leaving the screen must not stop a restore between «delete the rest» and «put the notes back».
+        restoreJob = viewModelScope.launch(Dispatchers.IO + NonCancellable) {
+            var safety: String? = null
+            var safetyFailed = false
+            var result: RestoreResult? = null
+            io.withLock {
+                val svc = service ?: return@withLock
+                if (mode == RestoreMode.REPLACE_ALL) {
+                    // Without a safety copy a replace is not allowed to start: it is the only way back from a wrong file.
+                    safety = writeSafetyBackupLocked()
+                    if (safety == null) {
+                        safetyFailed = true
+                        return@withLock
+                    }
+                }
+                val (done, written) = svc.restoreBackup(content.notes, mode) { id -> ready?.database?.notes()?.deleteTombstone(id) }
+                result = done
+                ready?.reminders?.let { reminders ->
+                    if (mode == RestoreMode.REPLACE_ALL) reminders.all().forEach { reminders.clear(it.noteId) }
+                    val ids = if (mode == RestoreMode.REPLACE_ALL) content.notes.mapTo(HashSet()) { it.id } else written
+                    BackupReminders.future(content.reminders, ids, Instant.now()).forEach { reminders.set(it.noteId, it.dueAt) }
+                    reminders.reconcile()
+                }
+                // The look settings come only with a full replace: «add missing» promises not to change anything the user has.
+                if (mode == RestoreMode.REPLACE_ALL && content.settings.isNotEmpty()) applyRestoredSettings(content.settings)
+                refresh()
+            }
+            val finished = result
+            if (finished != null) {
+                syncEvent(SyncEvent.LocalChange)
+                widgetChanged()
+            }
+            _restore.update {
+                it?.copy(
+                    phase = if (finished == null) RestorePhase.FAILED else RestorePhase.DONE,
+                    result = finished, safetyBackup = safety, safetyFailed = safetyFailed,
+                )
+            }
+        }
+    }
+
+    private fun applyRestoredSettings(values: Map<String, Any>) {
+        val previous = _settings.value
+        settingsStore.restoreBackupValues(values)
+        val next = settingsStore.load()
+        _settings.value = next
+        // The same side effects as updateSettings, for the settings that have any.
+        if (next.tagColors != previous.tagColors) service?.tagColors = TagColors.decode(next.tagColors)
+        if (next.syncInBackground != previous.syncInBackground) _sync.value?.refreshSchedule()
+        if (next.sounds.enabled && !previous.sounds.enabled) sounds.preload()
     }
 
     // ───────────── Importar notas de otras apps ─────────────
