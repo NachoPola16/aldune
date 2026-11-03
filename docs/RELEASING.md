@@ -52,6 +52,11 @@ After every release the own sync server also has to be updated (see
 
 ## Android: signed APK
 
+> **Unattended publishing (optional).** `guardar-clave-android.ps1` (next to the publishing scripts, outside the repository) stores the signing
+> password once, encrypted for your Windows user with DPAPI, in `%USERPROFILE%\.aldune-keystore.dpapi`; the publishing script then runs without
+> asking. Anything running as your user on that PC can decrypt it, so run it with `-Quitar` when you do not need it. The keystore itself still
+> never leaves your machine.
+
 Android **has no workflow**: the APK is built and signed locally and uploaded by hand to a GitHub Release. The tag is
 `android-v0.1.0-rcN` (with a hyphen: it comes out as a pre-release) and it does not trigger the Windows workflow, which only looks at `v*`.
 
