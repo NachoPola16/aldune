@@ -51,7 +51,9 @@ class NoteHistory(private val store: VersionStore) {
 
     /** Lo que llega por sync de otro dispositivo va a reemplazar el texto local: se guarda antes, por si el reemplazo no era lo que se quería. */
     fun keepBeforeOverwrite(noteId: String, localText: String, localProtected: Boolean, incomingText: String, incomingProtected: Boolean, at: Instant) {
-        if (localProtected || incomingProtected || localText == incomingText) return
+        // A note that arrives protected must not leave older readable versions behind: protecting it is meant to take its plain text away.
+        if (incomingProtected) { forget(noteId); return }
+        if (localProtected || localText == incomingText) return
         add(noteId, localText, at)
     }
 

@@ -569,4 +569,8 @@
     <string name="whatsnew_330_drag">Eine Aufgabe über mehrere Zeilen wird beim Ziehen jetzt komplett angehoben und zeigt, wo sie landet; der Ziehrahmen ist bei jeder Notizfarbe gut sichtbar.</string>
     <string name="whatsnew_330_menu">Behoben: Das Optionsmenü einer Notiz öffnet sich nicht mehr von selbst, wenn Tag-Gruppen schnell ein- oder ausgeklappt werden.</string>
     <string name="whatsnew_330_widget">Die Notizauswahl des Widgets hat jetzt Bestätigen- und Abbrechen-Schaltflächen, und die «+»-Schaltfläche des Widgets wurde passend zu den Ecken der Notizen neu gestaltet.</string>
+    <string name="shared_code_title">Mit diesem Server verbinden?</string>
+    <string name="shared_code_message">Eine andere App hat Aldune einen Profilcode geschickt. Wenn du fortfährst, würden deine Notizen mit %1$s synchronisiert. Fahre nur fort, wenn das dein Server ist.</string>
+    <string name="shared_code_message_named">Eine andere App hat Aldune den Profilcode „%1$s“ geschickt. Wenn du fortfährst, würden deine Notizen mit %2$s synchronisiert. Fahre nur fort, wenn das dein Server ist.</string>
+    <string name="scan_qr_unavailable">Die Kamera ist gerade nicht verfügbar (vielleicht nutzt sie eine andere App, oder sie ist gesperrt). Schließe andere Kamera-Apps und versuche es erneut, oder füge den Code ein.</string>
 </resources>

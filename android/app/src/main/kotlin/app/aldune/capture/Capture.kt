@@ -13,8 +13,8 @@ sealed interface CaptureRequest {
     /** Lo que otra app compartió con Aldune (`ACTION_SEND` de texto): `EXTRA_TEXT` y, si trae, `EXTRA_SUBJECT`. */
     data class SharedText(val text: String?, val subject: String?) : CaptureRequest
 
-    /** Un código de perfil de sync (`aldune-profile-v2:…`) que llegó compartido: no es una nota, abre «Añadir perfil» con el código puesto. */
-    data class ProfileCode(val code: String) : CaptureRequest
+    /** Un código de perfil de sync (`aldune-profile-v2:…`) que llegó compartido: no es una nota, abre «Añadir perfil» con el código puesto. [confirmed]: el usuario ya aceptó, en un diálogo, conectar con el servidor que nombra. */
+    data class ProfileCode(val code: String, val confirmed: Boolean = false) : CaptureRequest
 
     /** Tocar una tira del widget: abrir la nota [id]. */
     data class OpenNote(val id: String) : CaptureRequest

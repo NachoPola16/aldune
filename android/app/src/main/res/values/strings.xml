@@ -569,4 +569,8 @@
     <string name="whatsnew_330_drag">Dragging a task that spans several lines now lifts it whole and shows where it will land, and the drag frame is always visible, whatever the note colour.</string>
     <string name="whatsnew_330_menu">Fixed: a note\'s options menu no longer opens by itself after folding or unfolding tag groups quickly.</string>
     <string name="whatsnew_330_widget">The widget\'s note picker now has Confirm and Cancel buttons, and the widget\'s «+» button was redesigned to match the notes\' corners.</string>
+    <string name="shared_code_title">Connect to this server?</string>
+    <string name="shared_code_message">Another app sent Aldune a profile code. If you continue, your notes would sync with %1$s. Only continue if that is your server.</string>
+    <string name="shared_code_message_named">Another app sent Aldune the profile code \"%1$s\". If you continue, your notes would sync with %2$s. Only continue if that is your server.</string>
+    <string name="scan_qr_unavailable">The camera is not available right now (another app may be using it, or it is blocked). Close other camera apps and try again, or paste the code instead.</string>
 </resources>

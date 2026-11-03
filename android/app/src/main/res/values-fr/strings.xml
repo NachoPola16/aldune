@@ -569,4 +569,8 @@
     <string name="whatsnew_330_drag">Faire glisser une tâche sur plusieurs lignes la soulève maintenant en entier et montre où elle tombera ; le cadre du glissement reste visible quelle que soit la couleur de la note.</string>
     <string name="whatsnew_330_menu">Corrigé : le menu d\'options d\'une note ne s\'ouvre plus tout seul quand on replie ou déplie vite des groupes de tags.</string>
     <string name="whatsnew_330_widget">Le sélecteur de notes du widget a maintenant des boutons Confirmer et Annuler, et le bouton «+» du widget a été redessiné pour suivre les coins des notes.</string>
+    <string name="shared_code_title">Se connecter à ce serveur ?</string>
+    <string name="shared_code_message">Une autre appli a envoyé à Aldune un code de profil. Si tu continues, tes notes seraient synchronisées avec %1$s. Continue seulement si c\'est ton serveur.</string>
+    <string name="shared_code_message_named">Une autre appli a envoyé à Aldune le code du profil « %1$s ». Si tu continues, tes notes seraient synchronisées avec %2$s. Continue seulement si c\'est ton serveur.</string>
+    <string name="scan_qr_unavailable">La caméra n\'est pas disponible pour le moment (une autre appli l\'utilise peut-être, ou elle est bloquée). Ferme les autres applis de caméra et réessaie, ou colle le code.</string>
 </resources>

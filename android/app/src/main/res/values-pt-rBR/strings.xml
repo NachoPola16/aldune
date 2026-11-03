@@ -569,4 +569,8 @@
     <string name="whatsnew_330_drag">Arrastar uma tarefa de várias linhas agora a levanta inteira e mostra onde ela vai cair; a moldura do arrasto fica sempre visível, seja qual for a cor da nota.</string>
     <string name="whatsnew_330_menu">Corrigido: o menu de opções de uma nota não abre mais sozinho ao recolher ou expandir grupos de tags rapidamente.</string>
     <string name="whatsnew_330_widget">O seletor de notas do widget agora tem botões Confirmar e Cancelar, e o botão «+» do widget foi redesenhado para combinar com os cantos das notas.</string>
+    <string name="shared_code_title">Conectar a este servidor?</string>
+    <string name="shared_code_message">Outro app enviou ao Aldune um código de perfil. Se você continuar, suas notas seriam sincronizadas com %1$s. Continue só se for o seu servidor.</string>
+    <string name="shared_code_message_named">Outro app enviou ao Aldune o código do perfil \"%1$s\". Se você continuar, suas notas seriam sincronizadas com %2$s. Continue só se for o seu servidor.</string>
+    <string name="scan_qr_unavailable">A câmera não está disponível agora (outro app pode estar usando, ou ela está bloqueada). Feche outros apps de câmera e tente de novo, ou cole o código.</string>
 </resources>

@@ -113,4 +113,16 @@ class NoteVersionHistoryTest {
         f.service.edit(note.id, "v1")
         assertTrue(f.service.versions(note.id).isEmpty())
     }
+
+    @Test
+    fun `a note that arrives protected loses its readable history`() {
+        val versions = InMemoryVersionStore()
+        val history = NoteHistory(versions)
+        val at = java.time.Instant.parse("2026-03-01T10:00:00Z")
+        history.record("n1", "old plain text", at)
+        history.record("n2", "other note", at)
+        history.keepBeforeOverwrite("n1", "local", false, "secret", true, at)
+        assertTrue(versions.list("n1").isEmpty())
+        assertEquals(listOf("other note"), versions.list("n2").map { it.text })
+    }
 }

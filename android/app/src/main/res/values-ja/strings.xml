@@ -569,4 +569,8 @@
     <string name="whatsnew_330_drag">複数行にわたるタスクをドラッグすると、全体が持ち上がり、落ちる位置が表示されます。ドラッグの枠はノートの色に関係なく常に見えます。</string>
     <string name="whatsnew_330_menu">修正：タググループをすばやく折りたたんだり開いたりしても、ノートのオプションメニューが勝手に開かなくなりました。</string>
     <string name="whatsnew_330_widget">ウィジェットのノート選択に［確定］と［キャンセル］ボタンが付き、ウィジェットの「+」ボタンはノートの角に合わせて作り直しました。</string>
+    <string name="shared_code_title">このサーバーに接続しますか？</string>
+    <string name="shared_code_message">別のアプリが Aldune にプロファイルコードを送信しました。続けると、ノートが %1$s と同期されます。あなたのサーバーである場合のみ続けてください。</string>
+    <string name="shared_code_message_named">別のアプリが Aldune にプロファイル「%1$s」のコードを送信しました。続けると、ノートが %2$s と同期されます。あなたのサーバーである場合のみ続けてください。</string>
+    <string name="scan_qr_unavailable">現在カメラを使えません（他のアプリが使用中か、ブロックされている可能性があります）。他のカメラアプリを閉じてもう一度試すか、代わりにコードを貼り付けてください。</string>
 </resources>

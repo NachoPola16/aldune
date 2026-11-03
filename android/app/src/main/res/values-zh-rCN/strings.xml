@@ -569,4 +569,8 @@
     <string name="whatsnew_330_drag">拖动跨多行的任务时，现在会整条抬起并显示落点；无论笔记是什么颜色，拖动边框都清晰可见。</string>
     <string name="whatsnew_330_menu">已修复：快速折叠或展开标签分组时，笔记的选项菜单不再自动弹出。</string>
     <string name="whatsnew_330_widget">小组件的笔记选择现在有“确认”和“取消”按钮，小组件的“+”按钮也重新设计，与笔记的边角保持一致。</string>
+    <string name="shared_code_title">要连接到此服务器吗？</string>
+    <string name="shared_code_message">另一个应用向 Aldune 发送了配置文件同步码。如果继续，您的笔记将与 %1$s 同步。只有在这是您自己的服务器时才继续。</string>
+    <string name="shared_code_message_named">另一个应用向 Aldune 发送了配置文件“%1$s”的同步码。如果继续，您的笔记将与 %2$s 同步。只有在这是您自己的服务器时才继续。</string>
+    <string name="scan_qr_unavailable">目前无法使用摄像头（可能被其他应用占用，或已被禁用）。请关闭其他相机应用后重试，或者改为粘贴同步码。</string>
 </resources>

@@ -181,4 +181,41 @@ class AutoExportPlannerTest {
         assertTrue(plan.actions.isEmpty())
         assertTrue(plan.manifest.files.isEmpty())
     }
+
+    @Test
+    fun `a failed write is not recorded so the next pass rewrites the main file`() {
+        val folder = FakeFolder()
+        val first = run(folder, ExportManifest(), listOf(note("Mia\nuno", id = "a")))
+        val edited = listOf(note("Mia\ndos", id = "a"))
+        val plan = AutoExportPlanner.plan(edited, first.manifest, true, placeholder, folder::hashOf)
+        assertEquals(1, plan.actions.size)
+        // The write threw: nothing was applied, so the saved manifest must equal the previous one.
+        val saved = AutoExportPlanner.manifestAfter(first.manifest, plan, emptySet())
+        assertEquals(first.manifest, saved)
+        val retry = run(folder, saved, edited)
+        assertEquals("notas/Mia.md", (retry.actions.single() as ExportAction.Write).path) // not "Mia (Aldune).md"
+    }
+
+    @Test
+    fun `a new note whose write failed has no entry and applied notes keep theirs`() {
+        val folder = FakeFolder()
+        val notes = listOf(note("Uno", id = "a"), note("Dos", id = "b"))
+        val plan = AutoExportPlanner.plan(notes, ExportManifest(), true, placeholder, folder::hashOf)
+        val indexOfA = plan.owners.indexOf("a")
+        val saved = AutoExportPlanner.manifestAfter(ExportManifest(), plan, setOf(indexOfA))
+        assertEquals(setOf("a"), saved.files.keys)
+        assertEquals(plan.manifest.files["a"], saved.files["a"])
+    }
+
+    @Test
+    fun `a move that ran before a failed write is recorded at its new path`() {
+        val folder = FakeFolder()
+        val first = run(folder, ExportManifest(), listOf(note("Nota\nuno", id = "a")))
+        val archived = listOf(note("Nota\ndos", NoteState.ARCHIVED, id = "a"))
+        val plan = AutoExportPlanner.plan(archived, first.manifest, true, placeholder, folder::hashOf)
+        val moveIndex = plan.actions.indexOfFirst { it is ExportAction.Move }
+        val saved = AutoExportPlanner.manifestAfter(first.manifest, plan, setOf(moveIndex))
+        assertEquals("archivadas/Nota.md", saved.files["a"]?.path)
+        assertEquals(first.manifest.files["a"]?.hash, saved.files["a"]?.hash) // the moved file still has the old content
+    }
 }

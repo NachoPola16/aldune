@@ -126,7 +126,7 @@ private fun CameraPreview(onCode: (String) -> Unit, onBack: () -> Unit) {
                 future.addListener({
                     // The camera can be unavailable (in use by another app, blocked by policy): that must not crash the screen.
                     val p = runCatching { future.get() }.getOrElse {
-                        Toast.makeText(ctx, ctx.getString(R.string.scan_qr_denied), Toast.LENGTH_LONG).show()
+                        Toast.makeText(ctx, ctx.getString(R.string.scan_qr_unavailable), Toast.LENGTH_LONG).show()
                         return@addListener
                     }
                     provider = p

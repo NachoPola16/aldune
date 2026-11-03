@@ -157,7 +157,7 @@ fun SyncSection(viewModel: NotesViewModel) {
     val capture by viewModel.capture.collectAsStateWithLifecycle()
     var sharedCode by remember { mutableStateOf<String?>(null) }
     LaunchedEffect(capture) {
-        (capture as? CaptureRequest.ProfileCode)?.let { sharedCode = it.code; adding = true; viewModel.captureHandled() }
+        (capture as? CaptureRequest.ProfileCode)?.takeIf { it.confirmed }?.let { sharedCode = it.code; adding = true; viewModel.captureHandled() }
     }
     if (profiles.isEmpty()) {
         ConnectForm(c, additional = false, initialCode = sharedCode, onCodeTaken = { sharedCode = null }, onDone = { adding = false; sharedCode = null })

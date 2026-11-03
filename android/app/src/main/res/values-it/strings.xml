@@ -569,4 +569,8 @@
     <string name="whatsnew_330_drag">Trascinare un\'attività su più righe ora la solleva per intero e mostra dove cadrà; il riquadro del trascinamento è sempre visibile, qualunque sia il colore della nota.</string>
     <string name="whatsnew_330_menu">Corretto: il menu delle opzioni di una nota non si apre più da solo quando si chiudono o aprono in fretta i gruppi di etichette.</string>
     <string name="whatsnew_330_widget">Il selettore di note del widget ora ha i pulsanti Conferma e Annulla, e il pulsante «+» del widget è stato ridisegnato per seguire gli angoli delle note.</string>
+    <string name="shared_code_title">Connettersi a questo server?</string>
+    <string name="shared_code_message">Un\'altra app ha inviato ad Aldune un codice profilo. Se continui, le tue note verrebbero sincronizzate con %1$s. Continua solo se è il tuo server.</string>
+    <string name="shared_code_message_named">Un\'altra app ha inviato ad Aldune il codice del profilo \"%1$s\". Se continui, le tue note verrebbero sincronizzate con %2$s. Continua solo se è il tuo server.</string>
+    <string name="scan_qr_unavailable">La fotocamera non è disponibile al momento (un\'altra app potrebbe usarla, oppure è bloccata). Chiudi le altre app che usano la fotocamera e riprova, oppure incolla il codice.</string>
 </resources>

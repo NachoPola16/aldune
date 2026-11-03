@@ -21,16 +21,34 @@ object AutoExportRunner {
             val manifest = ExportManifest.fromJson(folder.readText(ExportManifest.FILE_NAME))
             val plan = AutoExportPlanner.plan(notes, manifest, includeArchived, placeholder, folder::hashOf)
             if (plan.actions.isEmpty() && plan.manifest == manifest) return 0
+            // Each action is recorded only once it succeeded (the plan's own manifest assumes all did). After a failure the rest of that note's
+            // actions are skipped, since they depend on the earlier one, but other notes still go ahead.
+            val applied = mutableSetOf<Int>()
+            val failedOwners = mutableSetOf<String>()
+            var failure: Exception? = null
             try {
-                for (action in plan.actions) when (action) {
-                    is ExportAction.Write -> folder.write(action.path, action.content)
-                    is ExportAction.Move -> folder.move(action.from, action.to)
+                for ((i, action) in plan.actions.withIndex()) {
+                    val owner = plan.owners[i]
+                    if (owner in failedOwners) continue
+                    try {
+                        when (action) {
+                            is ExportAction.Write -> folder.write(action.path, action.content)
+                            is ExportAction.Move -> folder.move(action.from, action.to)
+                        }
+                        applied += i
+                    } catch (e: SecurityException) {
+                        throw e
+                    } catch (e: Exception) {
+                        failedOwners += owner
+                        if (failure == null) failure = e
+                    }
                 }
             } finally {
-                // También si una acción falló a medias: sin el manifiesto, lo ya escrito pasaría a ser «ajeno» en la siguiente pasada.
-                folder.write(ExportManifest.FILE_NAME, plan.manifest.toJson())
+                // Also on a lost permission: what was already written would otherwise become "foreign" on the next pass.
+                folder.write(ExportManifest.FILE_NAME, AutoExportPlanner.manifestAfter(manifest, plan, applied).toJson())
             }
-            return plan.actions.size
+            failure?.let { throw it }
+            return applied.size
         } catch (e: SecurityException) {
             throw FolderLostException("el sistema quitó el permiso de la carpeta", e)
         }

@@ -16,6 +16,7 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.isImeVisible
 import androidx.compose.ui.platform.LocalConfiguration
@@ -56,7 +57,29 @@ fun NotesApp(viewModel: NotesViewModel) {
     // Una petición de captura saca de Ajustes: el editor está en la pantalla de notas. (No se atiende aquí: lo hace el andamio.)
     val capture by viewModel.capture.collectAsStateWithLifecycle()
     // Un código de perfil compartido lleva a Ajustes (a «Añadir perfil», que lo recoge); el resto de peticiones salen de Ajustes al editor.
-    LaunchedEffect(capture) { if (capture != null) showSettings = capture is CaptureRequest.ProfileCode }
+    // A code that arrives from outside (another app's Share) is never opened silently: any app can craft one pointing at its own server.
+    // The confirmation lives in the view model's request, so it survives rotation; pasting or scanning a code never goes through here.
+    val pendingCode = (capture as? CaptureRequest.ProfileCode)?.takeUnless { it.confirmed }
+    val preview = remember(pendingCode?.code) { pendingCode?.let { app.aldune.syncclient.SharedProfileCodePreview.of(it.code) } }
+    LaunchedEffect(capture) {
+        val c = capture
+        if (c is CaptureRequest.ProfileCode && !c.confirmed && preview == null) viewModel.requestCapture(c.copy(confirmed = true)) // nothing to confirm
+        else if (c != null && !(c is CaptureRequest.ProfileCode && !c.confirmed)) showSettings = c is CaptureRequest.ProfileCode
+    }
+    if (pendingCode != null && preview != null) {
+        AlertDialog(
+            onDismissRequest = viewModel::captureHandled,
+            title = { Text(stringResource(R.string.shared_code_title)) },
+            text = {
+                Text(
+                    preview.profileName?.let { stringResource(R.string.shared_code_message_named, it, preview.host) }
+                        ?: stringResource(R.string.shared_code_message, preview.host),
+                )
+            },
+            confirmButton = { TextButton(onClick = { viewModel.requestCapture(pendingCode.copy(confirmed = true)) }) { Text(stringResource(R.string.sync_continue)) } },
+            dismissButton = { TextButton(onClick = viewModel::captureHandled) { Text(stringResource(R.string.cancel)) } },
+        )
+    }
     val settings by viewModel.settings.collectAsStateWithLifecycle()
     viewModel.setPlaceholder(stringResource(R.string.new_note_title))
     viewModel.setProtectedTitle(stringResource(R.string.protected_note_title))

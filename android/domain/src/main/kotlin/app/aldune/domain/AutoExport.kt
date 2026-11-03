@@ -57,7 +57,11 @@ data class ExportManifest(val files: Map<String, ExportEntry> = emptyMap()) {
     }
 }
 
-data class AutoExportPlan(val actions: List<ExportAction>, val manifest: ExportManifest)
+/**
+ * [manifest] assumes every action succeeds; [owners] gives the note id each action belongs to (same order as [actions]) so that
+ * [AutoExportPlanner.manifestAfter] can rebuild the manifest from what was really applied.
+ */
+data class AutoExportPlan(val actions: List<ExportAction>, val manifest: ExportManifest, val owners: List<String> = emptyList())
 
 /**
  * Decide qué escribir en la carpeta de la copia automática: el port de `AutoExportPlanner` de Core, con las mismas reglas. Pura: ve la carpeta
@@ -81,6 +85,10 @@ object AutoExportPlanner {
 
     fun plan(notes: List<ExportNote>, manifest: ExportManifest, includeArchived: Boolean, placeholder: String, readHash: (String) -> String?): AutoExportPlan {
         val actions = mutableListOf<ExportAction>()
+        val owners = mutableListOf<String>()
+        // Every action added below is attributed to the note being processed (see the `owner` assignments).
+        var owner = ""
+        fun sync() { while (owners.size < actions.size) owners += owner }
         val files = manifest.files.filterValues { isSafe(it.path) && (it.sidePath == null || isSafe(it.sidePath)) }.toMutableMap()
         val used = files.values.flatMap { listOfNotNull(it.path, it.sidePath) }.map { it.lowercase() }.toMutableSet()
 
@@ -89,13 +97,17 @@ object AutoExportPlanner {
         // Lo que ya no se exporta: su fichero se aparta si sigue como lo dejamos; si el usuario lo cambió, se deja donde está.
         for ((id, entry) in files.entries.filter { it.key !in wanted }.sortedBy { it.key }) {
             files.remove(id)
+            owner = id
             if (readHash(entry.path) != entry.hash) continue
             // Una nota que pasó a protegida: el fichero (nuestro, intacto) se reescribe sin su texto antes de apartarlo. No se borra nada: es reescribir lo propio.
             if (notes.any { it.id == id && it.isProtected }) actions += ExportAction.Write(entry.path, PROTECTED_STUB)
             actions += ExportAction.Move(entry.path, uniquePath(REMOVED_DIR, fileNameOf(entry.path), used, readHash, checkDisk = true))
+            sync()
         }
 
         for (note in notes.filter { it.id in wanted }) {
+            sync()
+            owner = note.id
             val dir = if (note.state == NoteState.ARCHIVED) ARCHIVED_DIR else ACTIVE_DIR
             val content = MarkdownExport.toMarkdown(note.text, placeholder)
             val hash = hashOf(content)
@@ -148,7 +160,37 @@ object AutoExportPlanner {
                 files[note.id] = entry.copy(sidePath = side, sideHash = hash)
             }
         }
-        return AutoExportPlan(actions, ExportManifest(files))
+        sync()
+        return AutoExportPlan(actions, ExportManifest(files), owners)
+    }
+
+    /**
+     * The manifest to save after running [plan] when only the actions in [applied] (indices into `plan.actions`) succeeded. The plan's own
+     * manifest assumes all of them did; saving it after a failure would record a hash for a file that was never written, so the next change
+     * would look like a user edit and go to `name (Aldune).md`. For a note with an unapplied action, its entry is rebuilt from the previous
+     * manifest plus only the actions that did run.
+     */
+    fun manifestAfter(previous: ExportManifest, plan: AutoExportPlan, applied: Set<Int>): ExportManifest {
+        val failedIds = plan.actions.indices.filter { it !in applied }.map { plan.owners[it] }.toSet()
+        if (failedIds.isEmpty()) return plan.manifest
+        val files = plan.manifest.files.toMutableMap()
+        for (id in failedIds) {
+            val target = plan.manifest.files[id]
+            var e = previous.files[id]
+            for (i in plan.actions.indices) {
+                if (plan.owners[i] != id || i !in applied) continue
+                when (val a = plan.actions[i]) {
+                    is ExportAction.Move -> if (e != null && e.path == a.from) e = e.copy(path = a.to)
+                    is ExportAction.Write -> when {
+                        e == null -> if (target != null && target.path == a.path) e = ExportEntry(a.path, hashOf(a.content))
+                        e.path == a.path -> e = e.copy(hash = hashOf(a.content))
+                        target?.sidePath == a.path -> e = e.copy(sidePath = a.path, sideHash = hashOf(a.content))
+                    }
+                }
+            }
+            if (e == null) files.remove(id) else files[id] = e
+        }
+        return ExportManifest(files)
     }
 
     /** Ruta de la copia que va junto a [mainPath] (`nombre (Aldune).md`, `(Aldune 2)`…): la primera libre o que ya tenga este contenido. Devuelve la ruta y si hay que escribirla. */
