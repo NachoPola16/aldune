@@ -26,6 +26,12 @@ public sealed class FolderSyncTransport : ISyncTransport, ILookStore
                 var bytes = File.ReadAllBytes(path);
                 result.Add(new SyncRemoteObject(SyncEnvelopeCodec.Deserialize(bytes), bytes));
             }
+            catch (UnsupportedFormatException)
+            {
+                // A newer format is not a damaged file: skipping it would let this older version think the note is missing and upload over
+                // it. Same as the Android HTTP client, the pass stops with a clear "update Aldune" message.
+                throw;
+            }
             catch (FormatException)
             {
                 // Un fichero incompleto o de otra versión no debe impedir que se sincronicen los demás.
@@ -49,6 +55,11 @@ public sealed class FolderSyncTransport : ISyncTransport, ILookStore
             {
                 var current = SyncEnvelopeCodec.Deserialize(File.ReadAllBytes(finalPath));
                 if (SyncVersion.Compare(envelope, current) < 0) return;
+            }
+            catch (UnsupportedFormatException)
+            {
+                // Never replace what a newer version wrote: this writer would drop the fields it does not know.
+                throw;
             }
             catch (FormatException)
             {

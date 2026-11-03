@@ -194,6 +194,8 @@ object SyncEnvelopeCodec {
     }
 
     private fun validate(envelope: SyncEnvelope) {
+        if (envelope.format > SyncCompatibility.CURRENT_FORMAT)
+            throw UnsupportedSyncFormatException(SyncCompatibility.unsupportedFormatMessage(envelope.format))
         if (!SyncCompatibility.isSupported(envelope.format))
             throw SyncFormatException(SyncCompatibility.unsupportedFormatMessage(envelope.format))
 

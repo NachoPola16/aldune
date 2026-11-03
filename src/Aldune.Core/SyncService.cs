@@ -590,39 +590,154 @@ public sealed class SyncService
         if (!_settings.SyncKeyRotationPending) return true;
 
         byte[]? nextKey = null;
+        byte[]? oldKey = null;
         try
         {
             if (_settings.WrappedPendingSyncKey is null)
                 throw new InvalidOperationException("The pending sync key is missing.");
 
             nextKey = DatabaseKeyProvider.Unwrap(_settings.WrappedPendingSyncKey);
+            oldKey = GetExistingKey();
             var transport = CreateTransport();
             using var transportLifetime = transport as IDisposable;
+            var baseKey = CurrentBaseKey();
             var scopedIds = _settings.SyncScope == SyncScopeKind.SelectedNotes
                 ? _settings.SyncNoteIds.ToHashSet()
                 : null;
             var deviceId = EnsureDeviceId();
             var localOnly = _repository.GetUnsyncedLinkedNoteIds();
-            var localNotes = _repository.GetAllForSync()
+            var allNotes = _repository.GetAllForSync();
+            var localNotes = allNotes
                 .Where(note => SyncScopeFilter.Includes(note, _settings, localOnly))
                 .ToDictionary(note => note.Id);
+            var leftTheTag = _settings.SyncScope == SyncScopeKind.Tag
+                ? allNotes.Where(note => !localOnly.Contains(note.Id) && !localNotes.ContainsKey(note.Id))
+                    .ToDictionary(note => note.Id, note => note.UpdatedAt)
+                : new Dictionary<Guid, DateTimeOffset>();
             var localTombstones = _repository.GetSyncTombstones()
                 .Where(tombstone => scopedIds is null || scopedIds.Contains(tombstone.NoteId))
                 .ToDictionary(item => item.NoteId);
-            var localIds = localNotes.Keys.Union(localTombstones.Keys).ToHashSet();
-            var remoteIds = transport.ReadAll()
-                .Select(item => item.Envelope.NoteId)
-                .Where(id => scopedIds is null || scopedIds.Contains(id))
-                .ToHashSet();
+            var authors = _repository.GetSyncAuthors();
 
+            // An interrupted rotation leaves the store half under each key while a device that still holds the old code may keep
+            // writing to it. So the store is read first, with both keys, and whatever is newer there is merged here before anything is
+            // rewritten: stamping the (possibly older) local copies with "now" would beat those edits and delete the notes made meanwhile.
+            var objects = transport.ReadAll();
+            var unreadable = transport.UnreadableIds.ToHashSet();
+            var remote = new Dictionary<Guid, RotationRemote>();
+            foreach (var item in objects)
+            {
+                var candidate = ReadWithEitherKey(item, oldKey, nextKey);
+                // Not ours or damaged: neither merged nor deleted (nobody could read it with the old code either).
+                if (candidate is null) continue;
+                var id = item.Envelope.NoteId;
+                if (scopedIds is not null && !scopedIds.Contains(id)) continue;
+                if (localOnly.Contains(id)) continue;
+                if (_settings.SyncScope == SyncScopeKind.Tag && !string.IsNullOrWhiteSpace(_settings.SyncTag) && !candidate.Envelope.Tombstone
+                    && !(candidate.Note?.Tags.Any(tag => string.Equals(tag, _settings.SyncTag, StringComparison.OrdinalIgnoreCase)) ?? false))
+                    continue;
+                if (!remote.TryGetValue(id, out var known) || SyncVersion.Compare(candidate.Envelope, known.Envelope) > 0)
+                    remote[id] = candidate;
+            }
+
+            var bases = _repository.GetSyncBases(baseKey);
+            var settled = new Dictionary<Guid, SyncBaseVersion>();
             var rekeyedAt = DateTimeOffset.UtcNow;
-            foreach (var note in localNotes.Values)
-                transport.Write(CreateRekeyedNoteEnvelope(note, nextKey, deviceId, rekeyedAt));
-            foreach (var tombstone in localTombstones.Values)
-                transport.Write(CreateRekeyedTombstoneEnvelope(tombstone, nextKey, deviceId, rekeyedAt));
-            foreach (var remoteId in remoteIds.Except(localIds))
-                transport.Delete(remoteId);
+            int ignoredDownloaded = 0, ignoredTombstones = 0;
 
+            // Rewrites a remote version under the new key keeping its own date and author: a new date would make it win over edits
+            // that other devices make after this point.
+            void RewriteRemote(RotationRemote item)
+            {
+                if (item.UnderNext) return; // already under the new key (a previous attempt wrote it)
+                if (item.Envelope.Tombstone)
+                    transport.Write(SyncEnvelopeCodec.CreateTombstone(
+                        new SyncTombstone(item.Envelope.NoteId, item.Envelope.UpdatedAt, item.Envelope.DeviceId), nextKey, item.Envelope.DeviceId));
+                else
+                    transport.Write(SyncEnvelopeCodec.CreateNote(item.Note!, nextKey, item.Envelope.DeviceId));
+            }
+
+            void RewriteLocal(Guid id, Note? note)
+            {
+                if (note is not null) transport.Write(CreateRekeyedNoteEnvelope(note, nextKey, deviceId, rekeyedAt));
+                else transport.Write(CreateRekeyedTombstoneEnvelope(localTombstones[id], nextKey, deviceId, rekeyedAt));
+            }
+
+            void Import(RotationRemote item)
+            {
+                ApplyRemote(item.Object, item.UnderNext ? nextKey : oldKey!, ref ignoredDownloaded, ref ignoredTombstones);
+                RewriteRemote(item);
+                settled[item.Envelope.NoteId] = SyncBaseVersion.Of(item.Envelope);
+            }
+
+            foreach (var id in localNotes.Keys.Union(localTombstones.Keys).Union(remote.Keys).ToList())
+            {
+                // Exists in the store but could not be read: neither written over nor settled.
+                if (unreadable.Contains(id)) continue;
+
+                SyncEnvelope? localHeader = null;
+                if (localNotes.TryGetValue(id, out var localNote))
+                    localHeader = new SyncEnvelope { NoteId = id, UpdatedAt = localNote.UpdatedAt, DeviceId = authors.GetValueOrDefault(id, deviceId) };
+                else if (localTombstones.TryGetValue(id, out var localTombstone))
+                    localHeader = new SyncEnvelope
+                    {
+                        NoteId = id, Tombstone = true, UpdatedAt = localTombstone.DeletedAt,
+                        DeviceId = localTombstone.DeviceId is "local" or "" ? deviceId : localTombstone.DeviceId
+                    };
+                remote.TryGetValue(id, out var remoteItem);
+
+                if (localHeader is null)
+                {
+                    // Out of the tag scope here but with a newer remote version: that version is what counts, as in a normal pass.
+                    if (leftTheTag.TryGetValue(id, out var editedHere) && (remoteItem!.Envelope.Tombstone || editedHere >= remoteItem.Envelope.UpdatedAt))
+                        continue; // handled below: it leaves the profile
+                    Import(remoteItem!);
+                    continue;
+                }
+
+                if (remoteItem is null)
+                {
+                    RewriteLocal(id, localNote);
+                    continue;
+                }
+
+                int comparison = SyncVersion.Compare(localHeader, remoteItem.Envelope);
+                if (comparison != 0 && IsRealConflict(localHeader, remoteItem.Envelope, bases.GetValueOrDefault(id)))
+                {
+                    var localVersion = ToConflictVersion(localHeader, localNotes, nextKey);
+                    var remoteVersion = ToConflictVersion(remoteItem.Envelope, null, remoteItem.UnderNext ? nextKey : oldKey!);
+                    // Both sides changed to the same content: nothing to choose, so no false conflict.
+                    if (!NoteEquivalence.SameContent(localVersion.Note, remoteVersion.Note))
+                    {
+                        var winner = comparison > 0 ? localVersion : remoteVersion;
+                        var losing = comparison > 0 ? remoteVersion : localVersion;
+                        _repository.SaveSyncConflict(new SyncConflict(Guid.NewGuid(), id, DateTimeOffset.UtcNow, winner, losing, baseKey));
+                    }
+                }
+
+                if (comparison > 0)
+                {
+                    RewriteLocal(id, localNote);
+                }
+                else if (comparison < 0)
+                {
+                    // Edited or deleted here while the store was being read: leave it, the next pass publishes it.
+                    if (ChangedSinceSnapshot(id, localNotes, localHeader.Tombstone)) continue;
+                    Import(remoteItem);
+                }
+                else
+                {
+                    RewriteRemote(remoteItem);
+                    settled[id] = SyncBaseVersion.Of(remoteItem.Envelope);
+                }
+            }
+
+            // A note that lost the tag here keeps no place in the profile when the store only has its older tagged version.
+            foreach (var (id, editedHere) in leftTheTag)
+                if (!unreadable.Contains(id) && remote.TryGetValue(id, out var stale) && (stale.Envelope.Tombstone || stale.Envelope.UpdatedAt <= editedHere))
+                    transport.Delete(id);
+
+            if (settled.Count > 0) _repository.SetSyncBases(settled, baseKey);
             _settings.WrappedSyncKey = _settings.WrappedPendingSyncKey;
             _settings.WrappedPendingSyncKey = null;
             _settings.SyncKeyRotationPending = false;
@@ -637,7 +752,31 @@ public sealed class SyncService
         finally
         {
             if (nextKey is not null) CryptographicOperations.ZeroMemory(nextKey);
+            if (oldKey is not null) CryptographicOperations.ZeroMemory(oldKey);
         }
+    }
+
+    /// <summary>A store object read during a rotation, and which of the two keys opened it.</summary>
+    private sealed record RotationRemote(SyncRemoteObject Object, bool UnderNext, Note? Note)
+    {
+        public SyncEnvelope Envelope => Object.Envelope;
+    }
+
+    private static RotationRemote? ReadWithEitherKey(SyncRemoteObject item, byte[]? oldKey, byte[] nextKey)
+    {
+        if (item.Envelope.Tombstone)
+        {
+            if (oldKey is not null && SyncEnvelopeCodec.IsAuthenticTombstone(item.Envelope, oldKey)) return new(item, false, null);
+            return SyncEnvelopeCodec.IsAuthenticTombstone(item.Envelope, nextKey) ? new(item, true, null) : null;
+        }
+
+        foreach (var (key, underNext) in new[] { (oldKey, false), (nextKey, true) })
+        {
+            if (key is null) continue;
+            try { return new(item, underNext, SyncEnvelopeCodec.DecryptNote(item.Envelope, key)); }
+            catch (Exception ex) when (ex is CryptographicException or FormatException or System.Text.Json.JsonException) { }
+        }
+        return null;
     }
 
     private sealed record RemoteClassification(

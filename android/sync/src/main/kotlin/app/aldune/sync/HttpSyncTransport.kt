@@ -1,7 +1,9 @@
 package app.aldune.sync
 
 import app.aldune.core.SyncEnvelope
+import app.aldune.core.SyncCompatibility
 import app.aldune.core.SyncEnvelopeCodec
+import app.aldune.core.UnsupportedSyncFormatException
 import okhttp3.HttpUrl
 import okhttp3.HttpUrl.Companion.toHttpUrlOrNull
 import okhttp3.MediaType.Companion.toMediaType
@@ -68,7 +70,15 @@ class HttpSyncTransport(
     override fun write(envelope: SyncEnvelope) {
         val body = SyncEnvelopeCodec.serialize(envelope).toRequestBody(JSON)
         val request = request("api/v1/objects/${compact(envelope.noteId)}").put(body).build()
-        execute(request) { }
+        client.newCall(request).execute().use { response ->
+            // 409: el servidor se niega a reemplazar un objeto escrito por un formato más nuevo (su mensaje ya dice «actualiza Aldune»).
+            if (response.code == 409) {
+                throw UnsupportedSyncFormatException(
+                    response.readLimitedString().ifBlank { SyncCompatibility.unsupportedFormatMessage(SyncCompatibility.CURRENT_FORMAT + 1) },
+                )
+            }
+            ensureSuccess(response)
+        }
     }
 
     override fun delete(noteId: UUID) {

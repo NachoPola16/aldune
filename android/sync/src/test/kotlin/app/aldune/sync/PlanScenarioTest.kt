@@ -33,5 +33,5 @@ class PlanScenarioTest {
 
     // Tarea 5: errores.
     @TestFactory
-    fun `ninguna nota descifra y formato desconocido`() = cases("E23", "E24")
+    fun `ninguna nota descifra`() = cases("E23")
 }

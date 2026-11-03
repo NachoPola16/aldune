@@ -3,6 +3,7 @@ package app.aldune.sync
 import app.aldune.core.SyncEnvelope
 import app.aldune.core.SyncEnvelopeCodec
 import app.aldune.core.SyncNote
+import app.aldune.core.UnsupportedSyncFormatException
 import okhttp3.mockwebserver.Dispatcher
 import okhttp3.mockwebserver.MockResponse
 import okhttp3.mockwebserver.MockWebServer
@@ -182,19 +183,16 @@ class WebDavSyncTransportTest {
     }
 
     @Test
-    fun `un objeto de formato 5 o dañado se salta y los demas se leen`() {
+    fun `un objeto dañado se salta y los demas se leen`() {
         val good = envelope("bueno", 10)
-        val future = SyncEnvelopeCodec.serialize(envelope("futura", 10, UUID(0, 5))).replace("\"format\":4", "\"format\":5")
         serve(
             multistatus(
-                fileEntry("/dav/objects/00000000000000000000000000000005.json"),
                 fileEntry("/dav/objects/00000000000000000000000000000006.json"),
                 fileEntry("/dav/objects/00000000000000000000000000000007.json"),
                 fileEntry("/dav/objects/00000000000000000000000000000008.json"),
                 fileEntry("/dav/objects/$idN.json"),
             ),
             mapOf(
-                "/dav/objects/00000000000000000000000000000005.json" to future,
                 "/dav/objects/00000000000000000000000000000006.json" to "{ esto no es json",
                 "/dav/objects/00000000000000000000000000000007.json" to "",
                 "/dav/objects/00000000000000000000000000000008.json" to """{"format":4,"noteId":"no-es-un-guid"}""",
@@ -202,6 +200,25 @@ class WebDavSyncTransportTest {
             ),
         )
         assertEquals(listOf(good.noteId), transport().readAll().map { it.noteId })
+    }
+
+    @Test
+    fun `un objeto de formato mas nuevo aborta la lectura en lugar de saltarse`() {
+        // Saltarlo haria creer que la nota no existe y se subiria encima, perdiendo los campos que esta version no conoce.
+        val good = envelope("bueno", 10)
+        val future = SyncEnvelopeCodec.serialize(envelope("futura", 10, UUID(0, 5))).replace("\"format\":4", "\"format\":5")
+        serve(
+            multistatus(
+                fileEntry("/dav/objects/00000000000000000000000000000005.json"),
+                fileEntry("/dav/objects/$idN.json"),
+            ),
+            mapOf(
+                "/dav/objects/00000000000000000000000000000005.json" to future,
+                "/dav/objects/$idN.json" to SyncEnvelopeCodec.serialize(good),
+            ),
+        )
+        val error = assertThrows(UnsupportedSyncFormatException::class.java) { transport().readAll() }
+        assertTrue(error.message!!.contains("newer Aldune version"), error.message)
     }
 
     @Test

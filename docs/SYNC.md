@@ -483,6 +483,12 @@ introduces an incompatible change, the format goes up and each client accepts on
 read (`MinimumSupportedFormat`-`CurrentFormat`). A version that is too old or too new returns
 a clear error and does not apply partial data.
 
+An object written by a **newer** format is not treated as damaged. A damaged or half-written object is skipped (and, on a server or a folder, can be replaced
+by a valid upload), but a newer one holds valid data this version cannot read, so replacing it would drop its fields. Hence: every client (Windows folder, server and WebDAV;
+Android server and WebDAV) stops the pass with «This sync data requires a newer Aldune version (format N)» instead of skipping it, and never writes over it. The
+server lists such an object (with a `format` field in its descriptor) instead of hiding it, and answers `409` with the same message to a `PUT` that would replace it.
+Only WebDAV cannot refuse a write by itself (a plain `PUT` has no condition), so it relies on the read that always precedes the write in the same pass.
+
 The envelope format and the API are JSON/HTTP and do not depend on Windows, WPF, SQLite or DPAPI. A
 future client for Android, iOS, macOS or Linux can reuse the server. DPAPI only protects the
 key and the token stored locally in the Windows version.
@@ -511,6 +517,12 @@ first syncs the current version, generates a new key and re-encrypts the link's 
 Devices that keep an old code will stop syncing; then generate a new
 invitation and share it only with those who should continue. The server token does not change. If the
 application is closed during the process, the next sync tries to finish the rotation.
+
+Resuming an interrupted rotation does not trust the local copies: the store may be half under the old key and half under the new one, and a device that still
+has the old code may have kept editing meanwhile. So it first reads the store with **both** keys and merges with the normal rules (newest version wins, a real
+conflict is kept in the conflicts list, a signed deletion applies), and only then re-encrypts. A version taken from the store keeps its own date and author
+(a new date would let it beat later edits made elsewhere); only a local version that is newer than the store's is stamped with the time of the rotation, as before.
+Nothing is deleted from the store unless it was imported first: objects that neither key opens are left alone.
 
 Revocation prevents decrypting future versions of the store, but cannot delete a copy that another
 device had already downloaded before revoking.

@@ -4,7 +4,14 @@ import java.time.OffsetDateTime
 import java.util.UUID
 
 /** Equivale a FormatException en Aldune.Core: el dato no cumple el formato (se rechaza sin aplicar nada). */
-class SyncFormatException(message: String, cause: Throwable? = null) : Exception(message, cause)
+open class SyncFormatException(message: String, cause: Throwable? = null) : Exception(message, cause)
+
+/**
+ * Un objeto escrito por un formato MÁS NUEVO que el que lee esta versión (equivale a `UnsupportedFormatException` en Core). No es un
+ * objeto dañado: se salta o se sobrescribe solo si es basura, pero esto son datos válidos de una versión futura. Los transportes paran la
+ * pasada con este error en lugar de omitirlo (omitirlo haría creer que la nota no existe y se subiría encima, perdiendo sus campos nuevos).
+ */
+class UnsupportedSyncFormatException(message: String) : SyncFormatException(message)
 
 /** Ventana de formatos que sabe leer esta versión (igual que SyncCompatibility en Core). */
 object SyncCompatibility {

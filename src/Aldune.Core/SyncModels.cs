@@ -45,6 +45,27 @@ public static class SyncCompatibility
 }
 
 /// <summary>
+/// An object written by a NEWER sync format than this version reads. It is a <see cref="FormatException"/> so existing callers keep
+/// working, but it is not the same as a damaged object: the data is fine and belongs to a newer Aldune, so it must never be skipped and
+/// then overwritten (the older writer would drop the fields it does not know). Transports let it abort the pass with a clear message,
+/// and the server refuses to replace it.
+/// </summary>
+public sealed class UnsupportedFormatException : FormatException
+{
+    /// <summary>The envelope header as far as it could be read (no content is decrypted), so a server can still list the object.</summary>
+    public SyncEnvelope? Header { get; }
+
+    public UnsupportedFormatException(SyncEnvelope header) : base(SyncCompatibility.UnsupportedFormatMessage(header.Format))
+    {
+        Header = header;
+    }
+
+    public UnsupportedFormatException(string message) : base(message)
+    {
+    }
+}
+
+/// <summary>
 /// Authentication tokens accepted by the self-hosted server. A comma-separated token list lets an
 /// administrator overlap old and new credentials during rotation without exposing a management
 /// endpoint that could itself become an attack surface.
@@ -470,6 +491,8 @@ public static class SyncEnvelopeCodec
 
     private static void Validate(SyncEnvelope envelope)
     {
+        if (envelope.Format > SyncCompatibility.CurrentFormat)
+            throw new UnsupportedFormatException(envelope);
         if (!SyncCompatibility.IsSupported(envelope.Format))
             throw new FormatException(SyncCompatibility.UnsupportedFormatMessage(envelope.Format));
 

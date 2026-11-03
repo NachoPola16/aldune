@@ -3,6 +3,7 @@ package app.aldune.sync
 import app.aldune.core.SyncEnvelope
 import app.aldune.core.SyncEnvelopeCodec
 import app.aldune.core.SyncFormatException
+import app.aldune.core.UnsupportedSyncFormatException
 import okhttp3.Credentials
 import okhttp3.HttpUrl
 import okhttp3.HttpUrl.Companion.toHttpUrlOrNull
@@ -29,9 +30,9 @@ import javax.xml.parsers.DocumentBuilderFactory
  * - 401 → [IllegalStateException] (Core: `InvalidOperationException`);
  * - otro código que no sea 2xx → [IOException] (Core: `HttpRequestException`);
  * - un listado que no es XML → [IOException];
- * - un objeto ilegible o de formato desconocido se **salta** al leer, a diferencia de HTTP, que aborta la pasada:
- *   en una carpeta compartida puede haber ficheros a medio escribir o de una versión futura, y no deben
- *   impedir sincronizar el resto (es lo que hace Core con WebDAV).
+ * - un objeto ilegible (a medio escribir, dañado) se **salta** al leer, a diferencia de HTTP, que aborta la pasada: no debe
+ *   impedir sincronizar el resto (es lo que hace Core con WebDAV). Uno de un formato MÁS NUEVO no es un objeto dañado: aborta la
+ *   pasada con [UnsupportedSyncFormatException], como HTTP.
  */
 class WebDavSyncTransport(
     serverUrl: String,
@@ -102,6 +103,10 @@ class WebDavSyncTransport(
             }
             try {
                 SyncEnvelopeCodec.deserialize(bytes)
+            } catch (e: UnsupportedSyncFormatException) {
+                // Un formato más nuevo no es un archivo dañado: saltarlo haría creer que la nota no existe y se subiría encima. Para la pasada
+                // con un aviso claro («actualiza Aldune»), igual que HTTP y que Core.
+                throw e
             } catch (_: SyncFormatException) {
                 // Un archivo incompleto o de otra versión no debe impedir el resto de la sincronización.
                 null

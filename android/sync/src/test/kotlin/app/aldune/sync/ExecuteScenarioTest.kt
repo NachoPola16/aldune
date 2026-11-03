@@ -21,5 +21,5 @@ class ExecuteScenarioTest {
     }
 
     @Test
-    fun `los 34 escenarios estan cubiertos`() = assertEquals(34, Scenario.all.size)
+    fun `los 33 escenarios estan cubiertos`() = assertEquals(33, Scenario.all.size)
 }

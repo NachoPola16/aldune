@@ -398,8 +398,8 @@ public sealed class SyncScenarioVectorsTests
             .Has(N(2, "local", 10)).Store(N(1, "ajena", 10), key: OtherKey);
         Add("E23b el almacén solo tiene borrados de otra clave: no aborta", "SyncService.cs:560-584")
             .Has(N(1, "x", 10), Peer).Base(1, 10).StoreGone(1, 20, signed: false);
-        Add("E24 objeto con format 5: la carpeta lo salta", "FolderSyncTransport.cs:27-35")
-            .Has(N(2, "local", 10)).Store(N(1, "futura", 10), format: 5);
+        // E24 (a format-5 object skipped by the folder) was removed on purpose: a newer format now aborts the pass in every transport
+        // instead of being skipped (SyncNewerFormatTests in C#, the transport tests in android/sync), so no scenario can describe it.
         Add("E25 solo cambia dockPosition: se sube", "SyncModels.cs:335-350")
             .Has(N(1, "igual", 20, dock: 3)).Base(1, 10).Store(N(1, "igual", 10, dock: 1));
         Add("E26 borrado local con alcance por etiqueta: asimetría actual", "SyncService.cs:368-370", SyncScopeKind.Tag, "work")

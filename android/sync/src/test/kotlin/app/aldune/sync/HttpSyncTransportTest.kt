@@ -4,6 +4,7 @@ import app.aldune.core.SyncEnvelope
 import app.aldune.core.SyncEnvelopeCodec
 import app.aldune.core.SyncFormatException
 import app.aldune.core.SyncNote
+import app.aldune.core.UnsupportedSyncFormatException
 import okhttp3.mockwebserver.Dispatcher
 import okhttp3.mockwebserver.MockResponse
 import okhttp3.mockwebserver.MockWebServer
@@ -127,7 +128,15 @@ class HttpSyncTransportTest {
             override fun dispatch(request: RecordedRequest) =
                 if (request.path == "/api/v1/objects") MockResponse().setBody("""[{"noteId":"$id"}]""") else MockResponse().setBody(future)
         }
-        val error = assertThrows(SyncFormatException::class.java) { HttpSyncTransport(url(), "t").readAll() }
+        val error = assertThrows(UnsupportedSyncFormatException::class.java) { HttpSyncTransport(url(), "t").readAll() }
+        assertTrue(error.message!!.contains("newer Aldune version"), error.message)
+    }
+
+    @Test
+    fun `un 409 del servidor al subir es un formato mas nuevo y no un fallo de red`() {
+        // El servidor responde 409 cuando el objeto guardado es de un formato que esta version no entiende y se niega a reemplazarlo.
+        server.enqueue(MockResponse().setResponseCode(409).setBody("This sync data requires a newer Aldune version (format 5)."))
+        val error = assertThrows(UnsupportedSyncFormatException::class.java) { HttpSyncTransport(url(), "t").write(envelope("vieja", 10)) }
         assertTrue(error.message!!.contains("newer Aldune version"), error.message)
     }
 

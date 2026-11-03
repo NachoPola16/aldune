@@ -51,6 +51,7 @@ public sealed class HttpSyncTransport : ISyncTransport, ILookStore, IDisposable
             EnsureSuccess(response);
             var bytes = await response.Content.ReadAsByteArrayAsync().ConfigureAwait(false);
             try { return new SyncRemoteObject(SyncEnvelopeCodec.Deserialize(bytes), bytes); }
+            catch (UnsupportedFormatException) { throw; } // newer format: stop the pass ("update Aldune"), do not mistake it for damage
             catch (Exception ex) when (ex is FormatException or System.Text.Json.JsonException) { return null; } // one damaged object must not fail the pass
         });
     }
@@ -61,6 +62,11 @@ public sealed class HttpSyncTransport : ISyncTransport, ILookStore, IDisposable
         content.Headers.ContentType = new MediaTypeHeaderValue("application/json");
         using var response = _client.PutAsync(BuildUri($"api/v1/objects/{envelope.NoteId:N}"), content)
             .GetAwaiter().GetResult();
+        // 409 is how the server refuses to replace an object written by a newer format (see its PUT handler).
+        if (response.StatusCode == System.Net.HttpStatusCode.Conflict)
+            throw new UnsupportedFormatException(response.Content.ReadAsStringAsync().GetAwaiter().GetResult() is { Length: > 0 } message
+                ? message
+                : SyncCompatibility.UnsupportedFormatMessage(SyncCompatibility.CurrentFormat + 1));
         EnsureSuccess(response);
     }
 

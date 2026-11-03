@@ -159,9 +159,16 @@ app.MapGet("/api/v1/objects", (HttpContext http) =>
             };
             descriptors.Add(descriptor);
         }
+        catch (UnsupportedFormatException ex) when (ex.Header is { NoteId: var noteId } header && noteId != Guid.Empty && header.DeviceId.Length > 0)
+        {
+            // A newer format is listed, not hidden: a client that cannot read it must find out ("update Aldune") instead of believing the
+            // note does not exist and uploading over it. Its content is never touched here.
+            descriptor = new { header.NoteId, header.Tombstone, header.UpdatedAt, header.DeviceId, header.Format };
+            descriptors.Add(descriptor);
+        }
         catch (FormatException)
         {
-            // Ignorar archivos incompletos o de una versión futura; los demás siguen disponibles.
+            // Ignorar archivos incompletos; los demás siguen disponibles.
         }
         catch (JsonException)
         {
@@ -245,6 +252,11 @@ app.MapPut("/api/v1/objects/{id:guid}", async (Guid id, HttpRequest request) =>
             {
                 var current = SyncEnvelopeCodec.Deserialize(await File.ReadAllBytesAsync(finalPath));
                 if (SyncVersion.Compare(envelope, current) < 0) return Results.NoContent();
+            }
+            catch (UnsupportedFormatException ex)
+            {
+                // Replacing it would drop the fields of the newer format: refuse and say why, so the client stops instead of retrying.
+                return Results.Text(ex.Message, "text/plain", statusCode: StatusCodes.Status409Conflict);
             }
             catch (Exception ex) when (ex is FormatException or JsonException)
             {

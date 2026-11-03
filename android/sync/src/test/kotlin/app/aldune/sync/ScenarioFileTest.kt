@@ -10,9 +10,9 @@ import org.junit.jupiter.api.Assertions.assertEquals
 
 class ScenarioFileTest {
     @Test
-    fun `el archivo de escenarios trae los 34 casos de F0`() {
+    fun `el archivo de escenarios trae los 33 casos de F0`() {
         val dir = File(System.getProperty("aldune.vectors.dir") ?: error("falta aldune.vectors.dir"))
         val root = Json.parseToJsonElement(File(dir, "sync-scenarios.json").readText(Charsets.UTF_8)).jsonObject
-        assertEquals(34, root.getValue("scenarios").jsonArray.size)
+        assertEquals(33, root.getValue("scenarios").jsonArray.size)
     }
 }

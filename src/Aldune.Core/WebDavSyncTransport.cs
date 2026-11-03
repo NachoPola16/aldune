@@ -115,6 +115,11 @@ public sealed class WebDavSyncTransport : ISyncTransport, ILookStore, IDisposabl
                 // Deleted by another device between the listing and this download: it is gone, which is not a failure of the pass.
                 return null;
             }
+            catch (UnsupportedFormatException)
+            {
+                // A newer format is not damage: skipping it would make this version upload over it. The pass stops instead, as on HTTP.
+                throw;
+            }
             catch (FormatException)
             {
                 // Un archivo incompleto o de otra versión no debe impedir el resto de la sincronización.

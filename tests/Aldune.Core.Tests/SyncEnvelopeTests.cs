@@ -115,7 +115,7 @@ public sealed class SyncEnvelopeTests
             Tombstone = true
         };
 
-        var error = Assert.Throws<FormatException>(() => SyncEnvelopeCodec.Deserialize(
+        var error = Assert.Throws<UnsupportedFormatException>(() => SyncEnvelopeCodec.Deserialize(
             SyncEnvelopeCodec.Serialize(envelope)));
 
         Assert.Contains("newer Aldune version", error.Message, StringComparison.Ordinal);
