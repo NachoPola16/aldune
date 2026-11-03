@@ -724,7 +724,7 @@
 
                         <StackPanel Orientation="Horizontal">
                             <Border Background="{DynamicResource AlduneSurfaceBrush}" CornerRadius="{DynamicResource AlduneRadius6}" VerticalAlignment="Center">
-                                <TextBox x:Name="TrashRetentionValueBox"
+                                <TextBox x:Name="TrashRetentionValueBox" AutomationProperties.Name="{x:Static res:Strings.TrashRetentionTitle}"
                                          Background="Transparent" Foreground="{DynamicResource AlduneTextBrush}" CaretBrush="{DynamicResource AlduneTextBrush}"
                                          BorderThickness="0" FontSize="{DynamicResource AlduneTextBody}" MinWidth="40" MaxLength="3"
                                          TextAlignment="Center" Padding="6,6"
@@ -909,7 +909,7 @@
                         <TextBlock Text="{x:Static res:Strings.ThemesSectionHint}"
                                    Foreground="{DynamicResource AlduneHintBrush}" FontSize="{DynamicResource AlduneTextSmall}" TextWrapping="Wrap" Margin="0,4,0,10" />
 
-                        <ComboBox x:Name="ThemeCombo" Style="{StaticResource SyncProfileComboStyle}"
+                        <ComboBox x:Name="ThemeCombo" AutomationProperties.Name="{x:Static res:Strings.ThemesSectionTitle}" Style="{StaticResource SyncProfileComboStyle}"
                                   SelectionChanged="OnThemeSelectionChanged" />
                         <StackPanel x:Name="ThemePreview" Margin="0,8,0,0" IsHitTestVisible="False" />
 

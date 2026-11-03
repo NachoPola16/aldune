@@ -605,7 +605,7 @@
                           HorizontalScrollBarVisibility="Disabled" Padding="0,0,5,0">
                 <!-- The list is ONE Tab stop (Once): Up/Down move between rows, Space selects, Enter opens, P pins and T edits the tags of the focused row.
                      Without it five notes cost 20 Tab presses (row, tick box, pin and tags button each). -->
-                <ItemsControl x:Name="RowsList" KeyboardNavigation.TabNavigation="Once" KeyboardNavigation.ControlTabNavigation="Once"
+                <ItemsControl x:Name="RowsList" AutomationProperties.Name="{x:Static res:Strings.ManageNotesTitle}" KeyboardNavigation.TabNavigation="Once" KeyboardNavigation.ControlTabNavigation="Once"
                               KeyboardNavigation.DirectionalNavigation="Contained">
                     <ItemsControl.ItemTemplate>
                         <DataTemplate>
