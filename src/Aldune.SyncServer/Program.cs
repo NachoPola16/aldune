@@ -53,6 +53,10 @@ if (string.IsNullOrEmpty(adminToken)) adminToken = null;
 if (adminToken is not null && (adminToken == ExampleToken || tokens.Contains(adminToken) || spaces.Any(space => space.Token == adminToken)))
     throw new InvalidOperationException(
         $"{BrandIdentity.SyncAdminTokenEnvVar} must be its own long random value, different from every store token.");
+if (adminToken is { Length: < RecommendedTokenLength })
+    app.Logger.LogWarning(
+        "The admin token is shorter than {Length} characters. It creates invitations and revokes spaces: use a long random value, for example the output of 'openssl rand -base64 32'.",
+        RecommendedTokenLength);
 var maxSpaces = int.TryParse(Environment.GetEnvironmentVariable(BrandIdentity.SyncMaxSpacesEnvVar), out var parsedMax) && parsedMax > 0 ? parsedMax : 20;
 // Per-store object cap: without it a token holder could PUT unlimited distinct ids and fill the disk every store shares.
 var maxObjects = int.TryParse(Environment.GetEnvironmentVariable(BrandIdentity.SyncMaxObjectsEnvVar), out var parsedObjects) && parsedObjects > 0 ? parsedObjects : 5000;

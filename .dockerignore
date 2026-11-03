@@ -6,3 +6,10 @@ publish
 publish-next
 *.user
 *.suo
+.env
+.env.*
+!.env.example
+android
+dist
+*.apk
+*.jks
