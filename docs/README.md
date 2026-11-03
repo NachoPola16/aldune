@@ -5,6 +5,8 @@ Everything is in English. Quoted interface strings that appear in Spanish are th
 ## For users
 
 - [`SYNC.md`](SYNC.md): sync, your own server, WebDAV and the security model (Spanish copy: [`SYNC.es.md`](SYNC.es.md)).
+- [`FEATURES.md`](FEATURES.md): what every setting and feature does (dock, view wheel, notes, Manage notes, Settings, shortcuts, sync, Android differences).
+- [`MIGRATION.md`](MIGRATION.md): moving your notes from Sticky Notes, Google Keep, Evernote or Markdown files.
 - [`PROTECTED_NOTES.md`](PROTECTED_NOTES.md): how password-protected notes work (Spanish copy: [`PROTECTED_NOTES.es.md`](PROTECTED_NOTES.es.md)).
 
 ## For contributors
