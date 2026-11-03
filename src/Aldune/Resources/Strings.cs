@@ -657,6 +657,33 @@ public static class Strings
         "Dieses Passwort ist nicht korrekt.",
         "Ce mot de passe est incorrect.",
         "Essa senha não está correta.", "La password non è corretta.", "パスワードが正しくありません。", "密码不正确。");
+    public static string ProtectedEditSavedAsCopy => T(
+        "This protected note was changed on another device while you were editing it. Your text was saved as a new protected note (same password), and this window now shows the synced version.",
+        "Esta nota protegida se cambió en otro dispositivo mientras la editabas. Tu texto se guardó como una nota protegida nueva (con la misma contraseña) y esta ventana muestra ahora la versión sincronizada.",
+        "Diese geschützte Notiz wurde auf einem anderen Gerät geändert, während Sie sie bearbeitet haben. Ihr Text wurde als neue geschützte Notiz (gleiches Passwort) gespeichert, und dieses Fenster zeigt jetzt die synchronisierte Version.",
+        "Cette note protégée a été modifiée sur un autre appareil pendant que vous la modifiiez. Votre texte a été enregistré dans une nouvelle note protégée (même mot de passe), et cette fenêtre affiche maintenant la version synchronisée.",
+        "Esta nota protegida foi alterada em outro dispositivo enquanto você a editava. Seu texto foi salvo como uma nova nota protegida (mesma senha), e esta janela agora mostra a versão sincronizada.",
+        "Questa nota protetta è stata modificata su un altro dispositivo mentre la modificavi. Il tuo testo è stato salvato come nuova nota protetta (stessa password) e questa finestra ora mostra la versione sincronizzata.",
+        "この保護されたノートは、編集中に別のデバイスで変更されました。入力した内容は新しい保護ノート(同じパスワード)として保存され、このウィンドウには同期されたバージョンが表示されています。",
+        "这条受保护的便笺在你编辑时已在另一台设备上被修改。你输入的内容已保存为一条新的受保护便笺(密码相同),此窗口现在显示的是已同步的版本。");
+    public static string EditSavedAsCopyBecauseProtected => T(
+        "This note was protected on another device while you were editing it. Your last edit was saved as a new note.",
+        "Esta nota se protegió en otro dispositivo mientras la editabas. Tu última edición se guardó como una nota nueva.",
+        "Diese Notiz wurde auf einem anderen Gerät geschützt, während Sie sie bearbeitet haben. Ihre letzte Änderung wurde als neue Notiz gespeichert.",
+        "Cette note a été protégée sur un autre appareil pendant que vous la modifiiez. Votre dernière modification a été enregistrée dans une nouvelle note.",
+        "Esta nota foi protegida em outro dispositivo enquanto você a editava. Sua última edição foi salva como uma nova nota.",
+        "Questa nota è stata protetta su un altro dispositivo mentre la modificavi. La tua ultima modifica è stata salvata come nuova nota.",
+        "このノートは、編集中に別のデバイスで保護されました。最後の編集は新しいノートとして保存されました。",
+        "这条便笺在你编辑时已在另一台设备上被设为受保护。你最后的编辑已保存为一条新便笺。");
+    public static string ExportSkippedProtected(int count) => T(
+        $"{count} protected note(s) were not exported: their text is encrypted.",
+        $"{count} nota(s) protegida(s) no se exportaron: su texto está cifrado.",
+        $"{count} geschützte Notiz(en) wurden nicht exportiert: Ihr Text ist verschlüsselt.",
+        $"{count} note(s) protégée(s) n'ont pas été exportée(s) : leur texte est chiffré.",
+        $"{count} nota(s) protegida(s) não foram exportadas: o texto delas está criptografado.",
+        $"{count} nota/e protetta/e non sono state esportate: il loro testo è cifrato.",
+        $"保護されたノート {count} 件はエクスポートされませんでした(本文が暗号化されているため)。",
+        $"有 {count} 条受保护的便笺未导出:它们的内容已加密。");
     public static string Accept => T("Accept", "Aceptar",
         "Bestätigen", "Accepter", "Aceitar", "Accetta", "同意する", "接受");
     public static string ProtectNoteTitle => T("Protect with a password", "Proteger con contraseña",

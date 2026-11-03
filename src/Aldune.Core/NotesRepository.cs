@@ -3,6 +3,8 @@ using System.Text.Json;
 
 namespace Aldune.Core;
 
+public sealed record ProtectedSaveResult(bool Saved, ProtectedNoteContent? Content);
+
 public sealed class NotesRepository
 {
     // No manual "permanently delete" action exists in the UI — trash empties itself after this
@@ -304,6 +306,15 @@ public sealed class NotesRepository
     /// </summary>
     private void SetTags(Guid noteId, IEnumerable<string> tags, bool touch)
     {
+        using var connection = _database.OpenConnection();
+        using var transaction = connection.BeginTransaction();
+        ReplaceTags(connection, transaction, noteId, tags, touch);
+        transaction.Commit();
+    }
+
+    /// <summary>The body of <see cref="SetTags"/> on a connection and transaction the caller owns, so a bigger write (a synced note) can include it.</summary>
+    private static void ReplaceTags(SqliteConnection connection, SqliteTransaction transaction, Guid noteId, IEnumerable<string> tags, bool touch)
+    {
         var normalized = tags
             .Select(tag => tag.Trim())
             .Where(tag => tag.Length > 0)
@@ -311,8 +322,6 @@ public sealed class NotesRepository
             .Take(20)
             .ToList();
 
-        using var connection = _database.OpenConnection();
-        using var transaction = connection.BeginTransaction();
         using (var delete = connection.CreateCommand())
         {
             delete.Transaction = transaction;
@@ -348,7 +357,6 @@ public sealed class NotesRepository
 
         // Sin limpiar las etiquetas que se quedan sin notas: se crean y se borran en el gestor, y una
         // creada para usarla más adelante desaparecía en cuanto se guardaban las de cualquier nota.
-        transaction.Commit();
     }
 
     public IReadOnlyList<Note> GetByTag(string tag, NoteState state)
@@ -542,8 +550,15 @@ public sealed class NotesRepository
         return results;
     }
 
+    /// <summary>
+    /// Stores the losing side of a conflict. There is one row per note and profile (no schema change), so a second unreviewed conflict
+    /// replaces the first; before that happens the first loser's text goes to the version history, where it stays recoverable. The limit:
+    /// only the text survives (not colour, tags or the other fields), the history is capped at <see cref="NoteVersionRules.MaxVersions"/>,
+    /// and a protected loser is not copied (the history never holds protected text).
+    /// </summary>
     public void SaveSyncConflict(SyncConflict conflict)
     {
+        KeepReplacedConflictText(conflict);
         EncryptedContent? encryptedNote = null;
         if (conflict.Losing.Note is not null)
         {
@@ -576,6 +591,15 @@ public sealed class NotesRepository
         command.Parameters.AddWithValue("$noteNonce", (object?)encryptedNote?.Nonce ?? DBNull.Value);
         command.Parameters.AddWithValue("$noteTag", (object?)encryptedNote?.Tag ?? DBNull.Value);
         command.ExecuteNonQuery();
+    }
+
+    private void KeepReplacedConflictText(SyncConflict incoming)
+    {
+        var previous = GetSyncConflicts().FirstOrDefault(c => c.NoteId == incoming.NoteId && c.ProfileKey == incoming.ProfileKey);
+        // The same conflict saved again by a later pass is not a loss.
+        if (previous?.Losing.Note is not { IsProtected: false } lost || previous.Losing.UpdatedAt == incoming.Losing.UpdatedAt) return;
+        if (GetById(incoming.NoteId) is not { IsProtected: false }) return;
+        InsertVersion(incoming.NoteId, lost.Text, DateTimeOffset.UtcNow);
     }
 
     /// <summary>
@@ -784,7 +808,27 @@ public sealed class NotesRepository
         System.Globalization.CultureInfo.InvariantCulture,
         System.Globalization.DateTimeStyles.RoundtripKind);
 
-    public void UpdateText(Guid id, string newText, DateTimeOffset? now = null)
+    /// <summary>
+    /// Replaces the text of an unprotected note. Returns whether a row was written: false when the note is gone or became protected (a sync
+    /// can do that between a read and this write), so a caller never believes a discarded edit was saved.
+    /// </summary>
+    public bool UpdateText(Guid id, string newText, DateTimeOffset? now = null) => WriteText(id, newText, now, expectedUpdatedAt: null);
+
+    /// <summary>
+    /// Saves what the user typed in a window whose last known text was <paramref name="baseText"/>. If the stored text is no longer that one (a
+    /// sync applied another device's edit meanwhile) it is first kept as a version, whatever the 5-minute interval says: the typed text wins
+    /// (it derives from the old one) but the remote edit stays recoverable instead of vanishing. False when nothing was written (see <see cref="UpdateText"/>).
+    /// </summary>
+    public bool SaveEditedText(Guid id, string newText, string baseText)
+    {
+        if (GetById(id) is { IsProtected: false } current && current.Text != baseText && current.Text != newText)
+            InsertVersion(id, current.Text, DateTimeOffset.UtcNow);
+        return UpdateText(id, newText);
+    }
+
+    /// <param name="expectedUpdatedAt">When given, the write only happens if the row still has this <c>UpdatedAt</c> (an optimistic check
+    /// against a sync landing between the caller's read and this write).</param>
+    private bool WriteText(Guid id, string newText, DateTimeOffset? now, DateTimeOffset? expectedUpdatedAt)
     {
         var at = now ?? DateTimeOffset.UtcNow;
         KeepPreviousTextIfDue(id, newText, at);
@@ -793,14 +837,15 @@ public sealed class NotesRepository
         using var command = connection.CreateCommand();
         command.CommandText = """
             UPDATE Note SET EncryptedText = $text, Nonce = $nonce, Tag = $tag, UpdatedAt = $updatedAt, SyncAuthorDeviceId = NULL
-            WHERE Id = $id AND IsProtected = 0;
+            WHERE Id = $id AND IsProtected = 0 AND ($expected IS NULL OR UpdatedAt = $expected);
             """;
         command.Parameters.AddWithValue("$text", encrypted.CipherText);
         command.Parameters.AddWithValue("$nonce", encrypted.Nonce);
         command.Parameters.AddWithValue("$tag", encrypted.Tag);
         command.Parameters.AddWithValue("$updatedAt", at.ToString("O"));
         command.Parameters.AddWithValue("$id", id.ToString());
-        command.ExecuteNonQuery();
+        command.Parameters.AddWithValue("$expected", (object?)expectedUpdatedAt?.ToString("O") ?? DBNull.Value);
+        return command.ExecuteNonQuery() > 0;
     }
 
     // ---- Historial de versiones (local; ver NoteVersionRules) ----
@@ -886,8 +931,7 @@ public sealed class NotesRepository
         var note = GetById(noteId);
         if (note is null || note.IsProtected) return false;
         RecordVersion(noteId, force: true);
-        UpdateText(noteId, version.Text);
-        return true;
+        return UpdateText(noteId, version.Text);
     }
 
     private void DeleteVersions(Guid id)
@@ -973,7 +1017,11 @@ public sealed class NotesRepository
             InsertVersion(note.Id, existing.Text, DateTimeOffset.UtcNow);
         var encrypted = _cipher.Encrypt(note.IsProtected ? string.Empty : note.Text);
         using var connection = _database.OpenConnection();
+        // One transaction for the row, the order and the tags: a cut in between used to leave the new text with the old tags, and those then
+        // won over the other devices' on the next pass. The history version above stays outside on purpose (it is only ever extra safety).
+        using var transaction = connection.BeginTransaction();
         using var command = connection.CreateCommand();
+        command.Transaction = transaction;
         command.CommandText = """
             INSERT INTO Note (Id, EncryptedText, Nonce, Tag, Color, CreatedAt, UpdatedAt, State, ScreenOrigin,
                               IsProtected, ProtectionSalt, ProtectionCipherText, ProtectionNonce, ProtectionTag,
@@ -999,7 +1047,10 @@ public sealed class NotesRepository
                 CompletedTasks = excluded.CompletedTasks,
                 SyncAuthorDeviceId = excluded.SyncAuthorDeviceId;
             DELETE FROM SyncTombstone WHERE NoteId = $id;
-            """;
+            """
+            // A note that arrives protected must not leave its clear-text history behind on this device (Protect() clears it only where the
+            // protection was set). Inside the transaction so the row and the wipe go together.
+            + (note.IsProtected ? "\nDELETE FROM NoteVersion WHERE NoteId = $id;" : string.Empty);
         command.Parameters.AddWithValue("$id", note.Id.ToString());
         command.Parameters.AddWithValue("$text", encrypted.CipherText);
         command.Parameters.AddWithValue("$nonce", encrypted.Nonce);
@@ -1026,6 +1077,7 @@ public sealed class NotesRepository
         if (note.DockPosition is { } position)
         {
             using var orderCommand = connection.CreateCommand();
+            orderCommand.Transaction = transaction;
             orderCommand.CommandText = """
                 INSERT OR REPLACE INTO NoteOrder (NoteId, Position) VALUES ($noteId, $position);
                 """;
@@ -1034,7 +1086,8 @@ public sealed class NotesRepository
             orderCommand.ExecuteNonQuery();
         }
 
-        SetTags(note.Id, note.Tags, touch: false);
+        ReplaceTags(connection, transaction, note.Id, note.Tags, touch: false);
+        transaction.Commit();
     }
 
     /// <summary>Aplica una eliminación remota sin generar una segunda tombstone local.</summary>
@@ -1160,8 +1213,31 @@ public sealed class NotesRepository
             _cipher.Encrypt(string.Empty));
     }
 
-    private void UpdateProtectionColumns(Guid id, ProtectedNoteContent protectedContent,
-        EncryptedContent normalContent)
+    /// <summary>
+    /// Saves a protected note's text only if its protected content is still <paramref name="expected"/> (what the window read when it unlocked
+    /// or last saved). If another device synced a new one meanwhile, nothing is written and <c>Saved</c> is false: overwriting it would drop
+    /// that edit without a conflict. Same idea as Android's <c>StaleWrite</c>. The check is part of the UPDATE, so a sync landing between
+    /// the read and the write cannot slip through.
+    /// </summary>
+    public ProtectedSaveResult TryUpdateProtectedText(Guid id, string newText, string password, ProtectedNoteContent expected)
+    {
+        var note = GetById(id) ?? throw new InvalidOperationException("The note no longer exists.");
+        if (!note.IsProtected || note.ProtectedContent is null ||
+            !note.ProtectedContent.TryUnprotect(password, out _))
+            throw new UnauthorizedAccessException("The protected note password is incorrect.");
+        if (!SameProtectedContent(note.ProtectedContent, expected)) return new ProtectedSaveResult(false, null);
+
+        var updated = note.ProtectedContent.Reprotect(newText, password);
+        return UpdateProtectionColumns(id, updated, _cipher.Encrypt(string.Empty), expected)
+            ? new ProtectedSaveResult(true, updated)
+            : new ProtectedSaveResult(false, null);
+    }
+
+    public static bool SameProtectedContent(ProtectedNoteContent a, ProtectedNoteContent b) =>
+        a.Salt == b.Salt && a.CipherText == b.CipherText && a.Nonce == b.Nonce && a.Tag == b.Tag;
+
+    private bool UpdateProtectionColumns(Guid id, ProtectedNoteContent protectedContent,
+        EncryptedContent normalContent, ProtectedNoteContent? expected = null)
     {
         using var connection = _database.OpenConnection();
         using var command = connection.CreateCommand();
@@ -1170,8 +1246,14 @@ public sealed class NotesRepository
                 IsProtected = 1, ProtectionSalt = $salt, ProtectionCipherText = $protectedText,
                 ProtectionNonce = $protectedNonce, ProtectionTag = $protectedTag,
                 UpdatedAt = $updatedAt, SyncAuthorDeviceId = NULL
-            WHERE Id = $id;
+            WHERE Id = $id
+              AND ($expectedCipher IS NULL OR (IsProtected = 1 AND ProtectionSalt = $expectedSalt AND ProtectionCipherText = $expectedCipher
+                   AND ProtectionNonce = $expectedNonce AND ProtectionTag = $expectedTag));
             """;
+        command.Parameters.AddWithValue("$expectedSalt", (object?)expected?.Salt ?? DBNull.Value);
+        command.Parameters.AddWithValue("$expectedCipher", (object?)expected?.CipherText ?? DBNull.Value);
+        command.Parameters.AddWithValue("$expectedNonce", (object?)expected?.Nonce ?? DBNull.Value);
+        command.Parameters.AddWithValue("$expectedTag", (object?)expected?.Tag ?? DBNull.Value);
         AddEncryptedParameters(command, normalContent);
         command.Parameters.AddWithValue("$salt", protectedContent.Salt);
         command.Parameters.AddWithValue("$protectedText", protectedContent.CipherText);
@@ -1179,7 +1261,7 @@ public sealed class NotesRepository
         command.Parameters.AddWithValue("$protectedTag", protectedContent.Tag);
         command.Parameters.AddWithValue("$updatedAt", DateTimeOffset.UtcNow.ToString("O"));
         command.Parameters.AddWithValue("$id", id.ToString());
-        command.ExecuteNonQuery();
+        return command.ExecuteNonQuery() > 0;
     }
 
     private static void AddEncryptedParameters(SqliteCommand command, EncryptedContent encrypted)
@@ -1602,6 +1684,9 @@ public sealed class NotesRepository
     public bool PruneExpiredCompletedTasks(Guid noteId, string currentText, TimeSpan delay)
     {
         var now = DateTimeOffset.UtcNow;
+        // The caller read currentText a while ago; if a sync replaced the note since, pruning that old text and saving it with a new date would
+        // bring the old text back over the remote one. Skip now and let the next pass (with fresh text) do it.
+        if (GetById(noteId) is not { IsProtected: false } stored || stored.Text != currentText) return false;
         var (title, body) = NoteText.Split(currentText);
         var result = TaskCompletion.Prune(body, GetTaskCompletions(noteId), now, delay);
 
@@ -1610,9 +1695,10 @@ public sealed class NotesRepository
 
         if (result.Changed)
         {
-            UpdateText(noteId, NoteText.Join(title, result.Text));
+            // Conditional on the row not having changed since it was read above; a refused write is dropped and retried on the next pass.
+            return WriteText(noteId, NoteText.Join(title, result.Text), now: null, expectedUpdatedAt: stored.UpdatedAt);
         }
-        return result.Changed;
+        return false;
     }
 
     /// <summary>

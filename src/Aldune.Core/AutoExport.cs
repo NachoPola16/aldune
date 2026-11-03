@@ -166,6 +166,36 @@ public static class AutoExportPlanner
         return new AutoExportPlan(actions, new ExportManifest { Files = files });
     }
 
+    /// <summary>
+    /// The manifest to keep when a run stopped after <paramref name="applied"/> actions: the planned entry of every note whose files were not
+    /// touched by an unapplied action, and the previous entry (or none) for the rest, so the next run plans them again from what is really on disk.
+    /// </summary>
+    public static ExportManifest ManifestAfterPartialRun(ExportManifest previous, AutoExportPlan plan, int applied)
+    {
+        var pending = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        foreach (var action in plan.Actions.Skip(applied))
+        {
+            switch (action)
+            {
+                case ExportAction.Write w: pending.Add(w.Path); break;
+                case ExportAction.Move m: pending.Add(m.From); pending.Add(m.To); break;
+            }
+        }
+
+        bool Touches(ExportEntry? e) => e is not null && (pending.Contains(e.Path) || (e.SidePath is not null && pending.Contains(e.SidePath)));
+
+        var files = new Dictionary<string, ExportEntry>();
+        foreach (var id in plan.Manifest.Files.Keys.Concat(previous.Files.Keys).Distinct())
+        {
+            plan.Manifest.Files.TryGetValue(id, out var planned);
+            previous.Files.TryGetValue(id, out var old);
+            // A note that leaves the export has no planned entry; its old one stays while its move is still pending.
+            var keep = planned is not null ? (Touches(planned) ? old : planned) : (Touches(old) ? old : null);
+            if (keep is not null) files[id] = keep;
+        }
+        return new ExportManifest { Files = files };
+    }
+
     /// <summary>Ruta de la copia que va junto a <paramref name="mainPath"/>: <c>nombre (Aldune).md</c>, <c>(Aldune 2)</c>… la primera que no
     /// exista o que ya tenga justo este contenido. <paramref name="write"/> dice si hay que escribirla.</summary>
     private static string SidePathFor(string mainPath, string hash, string? ownSideHash, HashSet<string> used, Func<string, string?> readHash, out bool write)
@@ -252,6 +282,9 @@ public static class AutoExportRunner
         var plan = AutoExportPlanner.Plan(notes, manifest, includeArchived, HashOnDisk);
         if (plan.Actions.Count == 0 && JsonEquals(manifest, plan.Manifest)) return 0;
 
+        // Only what was really applied goes into the manifest: recording a hash for a write that threw made the next run believe the file
+        // was current (or edited by hand) and send the new text to "name (Aldune).md" or skip it for good.
+        var applied = 0;
         try
         {
             foreach (var action in plan.Actions)
@@ -269,13 +302,15 @@ public static class AutoExportRunner
                         File.Move(Path.Combine(root, m.From), to);
                         break;
                 }
+                applied++;
             }
         }
         finally
         {
+            var toSave = applied == plan.Actions.Count ? plan.Manifest : AutoExportPlanner.ManifestAfterPartialRun(manifest, plan, applied);
             // Atómico: en un fichero temporal y luego reemplazo, para que un corte a medias no deje un manifiesto roto (que se leería como vacío).
             var temp = manifestPath + ".tmp";
-            File.WriteAllText(temp, plan.Manifest.ToJson(), Utf8NoBom);
+            File.WriteAllText(temp, toSave.ToJson(), Utf8NoBom);
             File.Move(temp, manifestPath, overwrite: true);
         }
         return plan.Actions.Count;

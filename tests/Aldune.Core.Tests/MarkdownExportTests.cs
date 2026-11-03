@@ -144,4 +144,17 @@ public class MarkdownExportTests
         var result = MarkdownExport.ToMarkdown("Título\r\n→ ☐ comprar pan\r\n  → ☒ hecho");
         Assert.Equal("# Título\r\n\r\n- [ ] comprar pan\r\n  - [x] hecho", result);
     }
+
+    [Theory]
+    [InlineData("CON", "_CON.md")]
+    [InlineData("nul", "_nul.md")]
+    [InlineData("Com1", "_Com1.md")]
+    [InlineData("LPT9", "_LPT9.md")]
+    [InlineData("aux.txt", "_aux.txt.md")]
+    [InlineData("Console", "Console.md")]
+    [InlineData("COM10", "COM10.md")]
+    public void SuggestedFileName_EscapesWindowsReservedDeviceNames(string title, string expected)
+    {
+        Assert.Equal(expected, MarkdownExport.SuggestedFileName(title));
+    }
 }

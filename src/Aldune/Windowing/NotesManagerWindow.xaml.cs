@@ -1136,6 +1136,16 @@ public partial class NotesManagerWindow : Window
         if (toExport.Count == 0 && _menuTargets is null) toExport = _rows;
         if (toExport.Count == 0) return;
 
+        // A protected note's list text is empty (it is encrypted), so exporting it would write an empty "Nueva nota.md". Leave them out and say so.
+        var protectedCount = toExport.Count(r => r.Note.IsProtected);
+        if (protectedCount > 0)
+        {
+            toExport = toExport.Where(r => !r.Note.IsProtected).ToList();
+            AppDialog.Show(this, Strings.ExportSkippedProtected(protectedCount), Strings.ExportFormatTitle,
+                MessageBoxButton.OK, MessageBoxImage.Information);
+            if (toExport.Count == 0) return;
+        }
+
         var choice = AppDialog.Show(this, Strings.ExportAsZipPrompt, Strings.ExportFormatTitle,
             MessageBoxButton.YesNoCancel, MessageBoxImage.Question, MessageBoxResult.Yes);
         if (choice == MessageBoxResult.Cancel) return;

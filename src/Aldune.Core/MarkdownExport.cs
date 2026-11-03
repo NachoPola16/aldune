@@ -79,6 +79,18 @@ public static class MarkdownExport
 
         var result = builder.ToString().Trim();
         if (result.Length > MaxFileNameLength) result = result[..MaxFileNameLength].TrimEnd();
-        return result.Length == 0 ? "Nota" : result;
+        if (result.Length == 0) return "Nota";
+        // Windows reserves device names (CON, NUL, COM1...) with or without an extension, so "CON.md" cannot be created. The prefix keeps the
+        // title readable; the check is on the part before the first dot because "aux.txt.md" is just as reserved.
+        var stem = result.Split('.')[0].TrimEnd();
+        return IsReservedDeviceName(stem) ? "_" + result : result;
+    }
+
+    private static bool IsReservedDeviceName(string stem)
+    {
+        if (stem.Equals("CON", StringComparison.OrdinalIgnoreCase) || stem.Equals("PRN", StringComparison.OrdinalIgnoreCase) ||
+            stem.Equals("AUX", StringComparison.OrdinalIgnoreCase) || stem.Equals("NUL", StringComparison.OrdinalIgnoreCase)) return true;
+        return stem.Length == 4 && stem[3] is >= '1' and <= '9' &&
+            (stem.StartsWith("COM", StringComparison.OrdinalIgnoreCase) || stem.StartsWith("LPT", StringComparison.OrdinalIgnoreCase));
     }
 }

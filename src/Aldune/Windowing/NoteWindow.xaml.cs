@@ -39,6 +39,10 @@ public partial class NoteWindow : Window
     private readonly AppCoordinator _coordinator;
     private readonly AppSettings? _settings;
     private string? _protectionPassword;
+    // What this window last read from or wrote to the database. Flush compares the stored state against these before overwriting, so a text
+    // or protected content that another device synced in the meantime is not replaced silently (see SaveEditedText / TryUpdateProtectedText).
+    private string _baseText = string.Empty;
+    private ProtectedNoteContent? _baseProtected;
     private readonly DispatcherTimer _autosaveTimer;
     private readonly DispatcherTimer _taskPruneTimer;
     private bool _hasPendingEdit;
@@ -106,6 +110,8 @@ public partial class NoteWindow : Window
         _coordinator = coordinator;
         _settings = settings;
         _protectionPassword = protectionPassword;
+        _baseText = note.Text;
+        _baseProtected = note.ProtectedContent;
         coordinator.SyncProgressChanged += UpdateSyncingText;
         Closed += (_, _) => coordinator.SyncProgressChanged -= UpdateSyncingText;
         UpdateSyncingText();
@@ -2152,6 +2158,8 @@ public partial class NoteWindow : Window
 
             _note.IsProtected = false;
             _note.ProtectedContent = null;
+            _baseProtected = null;
+            _baseText = CurrentText;
             _note.ProtectedTitle = null;
             VisibleNameButton.Visibility = Visibility.Collapsed;
             _note.IsUnlocked = true;
@@ -2168,6 +2176,7 @@ public partial class NoteWindow : Window
         {
             Flush();
             _note.ProtectedContent = _repository.Protect(_note.Id, password);
+            _baseProtected = _note.ProtectedContent;
             if (visibleName is not null) _repository.SetProtectedTitle(_note.Id, visibleName);
             _note.ProtectedTitle = visibleName;
             _note.IsProtected = true;
@@ -2212,9 +2221,52 @@ public partial class NoteWindow : Window
     /// </summary>
     internal void ReloadIfChangedBySync()
     {
-        if (_hasPendingEdit || _note.IsProtected) return;
+        if (_note.IsProtected)
+        {
+            ReloadProtectedIfChangedBySync();
+            return;
+        }
+        if (_hasPendingEdit) return;
         if (_repository.GetById(_note.Id) is not { } fresh || fresh.Text == CurrentText) return;
         ReloadFromRepository();
+    }
+
+    /// <summary>
+    /// The protected counterpart: with no edit pending, a protected content that arrived by sync is decrypted again with the password the window
+    /// kept and shown, so the next keystroke is not made on top of the old text. If the password no longer opens it (it was changed elsewhere)
+    /// nothing is shown and the next save is refused as stale instead of overwriting it.
+    /// </summary>
+    private void ReloadProtectedIfChangedBySync()
+    {
+        if (_hasPendingEdit || _protectionPassword is null || _baseProtected is null) return;
+        if (_repository.GetById(_note.Id) is not { IsProtected: true, ProtectedContent: { } stored }) return;
+        if (NotesRepository.SameProtectedContent(stored, _baseProtected)) return;
+        if (!stored.TryUnprotect(_protectionPassword, out var plaintext)) return;
+        _baseProtected = stored;
+        ShowReloadedText(plaintext);
+    }
+
+    /// <summary>The window had pending typing over a stale protected note (or one protected elsewhere): the typed text goes to a new note so it is
+    /// never lost, and the window shows what is stored now.</summary>
+    private void SaveTypedTextAsCopy(bool protectedCopy)
+    {
+        var typed = CurrentText;
+        var copy = _repository.Create(typed, _note.Color, _note.ScreenOrigin);
+        if (protectedCopy && _protectionPassword is not null) _repository.Protect(copy.Id, _protectionPassword);
+        _hasPendingEdit = false;
+        _autosaveTimer.Stop();
+        if (protectedCopy && _repository.GetById(_note.Id) is { IsProtected: true, ProtectedContent: { } stored })
+        {
+            _baseProtected = stored;
+            if (_protectionPassword is not null && stored.TryUnprotect(_protectionPassword, out var plaintext)) ShowReloadedText(plaintext);
+        }
+        else if (_repository.GetById(_note.Id) is { IsProtected: false } fresh)
+        {
+            ShowReloadedText(fresh.Text);
+        }
+        _coordinator.RefreshAll();
+        AppDialog.Show(this, protectedCopy ? Strings.ProtectedEditSavedAsCopy : Strings.EditSavedAsCopyBecauseProtected, Strings.AppName,
+            MessageBoxButton.OK, MessageBoxImage.Information);
     }
 
     /// <summary>El archivo cambió por fuera y la nota ya tiene su texto: se pone en la ventana sin marcarla
@@ -2236,12 +2288,19 @@ public partial class NoteWindow : Window
             return;
         }
         if (_repository.GetById(_note.Id) is not { } fresh) return;
+        ShowReloadedText(fresh.Text);
+    }
+
+    /// <summary>Puts <paramref name="text"/> (already stored) in the window without marking it as edited, keeping the caret line and the scroll.</summary>
+    private void ShowReloadedText(string text)
+    {
         int line = TextBody.GetLineIndexFromCharacterIndex(TextBody.CaretIndex);
         double scroll = TextBody.VerticalOffset;
-        var (title, body) = NoteText.Split(fresh.Text);
+        var (title, body) = NoteText.Split(text);
         TitleBox.Text = title;
         TextBody.Text = body;
-        _note.Text = fresh.Text;
+        _note.Text = text;
+        _baseText = text;
         // Los TextChanged de arriba marcan "hay cambios": no los hay, lo que se ve es lo guardado.
         _hasPendingEdit = false;
         _autosaveTimer.Stop();
@@ -2284,11 +2343,27 @@ public partial class NoteWindow : Window
         if (_note.IsProtected)
         {
             if (_protectionPassword is null) throw new InvalidOperationException("The protected note is locked.");
-            _repository.UpdateProtectedText(_note.Id, CurrentText, _protectionPassword);
+            // The base is set on open and on protecting; reading the stored content is only a safety net.
+            if (_baseProtected is null) _baseProtected = _repository.GetById(_note.Id)?.ProtectedContent;
+            var result = _baseProtected is null
+                ? throw new InvalidOperationException("The protected note has no content to save over.")
+                : _repository.TryUpdateProtectedText(_note.Id, CurrentText, _protectionPassword, _baseProtected);
+            if (!result.Saved)
+            {
+                SaveTypedTextAsCopy(protectedCopy: true);
+                return;
+            }
+            _baseProtected = result.Content;
         }
         else
         {
-            _repository.UpdateText(_note.Id, CurrentText);
+            if (!_repository.SaveEditedText(_note.Id, CurrentText, _baseText))
+            {
+                // The note stopped being an unprotected one (another device protected it) between the last read and this write.
+                SaveTypedTextAsCopy(protectedCopy: false);
+                return;
+            }
+            _baseText = CurrentText;
             // La nota vinculada se guarda primero en la base de datos (a salvo aunque el disco falle) y luego
             // se pide escribir el archivo, en segundo plano.
             if (IsLinked) _coordinator.RequestLinkedCheck(_note.Id);

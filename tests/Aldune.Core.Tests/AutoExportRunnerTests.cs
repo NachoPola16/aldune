@@ -1,4 +1,4 @@
-using Microsoft.Data.Sqlite;
+﻿using Microsoft.Data.Sqlite;
 using Xunit;
 
 namespace Aldune.Core.Tests;
@@ -106,5 +106,39 @@ public class AutoExportRunnerTests : IDisposable
         Assert.NotEqual(empty, created);
         Assert.NotEqual(created, archived);
         Assert.Equal(archived, repo.ChangeStamp());   // sin cambios, la misma huella
+    }
+
+    [Fact]
+    public void AFailedWrite_IsNotRecordedAsDone_SoTheNextRunRewritesTheFile()
+    {
+        var id = Guid.NewGuid();
+        AutoExportRunner.Run(_root, [N("Mia\nv1", id)], true);
+        var file = Path.Combine(_root, "notas", "Mia.md");
+        File.SetAttributes(file, FileAttributes.ReadOnly);   // the write of v2 will throw
+        Assert.ThrowsAny<Exception>(() => AutoExportRunner.Run(_root, [N("Mia\nv2", id)], true));
+        File.SetAttributes(file, FileAttributes.Normal);
+
+        AutoExportRunner.Run(_root, [N("Mia\nv2", id)], true);
+
+        Assert.Contains("v2", File.ReadAllText(file));
+        Assert.False(File.Exists(Path.Combine(_root, "notas", "Mia (Aldune).md")));
+    }
+
+    [Fact]
+    public void ANoteWhoseFirstWriteFailed_IsNotInTheManifest_AndIsWrittenNextTime()
+    {
+        var blocked = Path.Combine(_root, "notas", "Dos.md");
+        Directory.CreateDirectory(blocked);   // a folder where the file should go: the write throws
+        var notes = new[] { N("Uno"), N("Dos"), N("Tres") };
+        Assert.ThrowsAny<Exception>(() => AutoExportRunner.Run(_root, notes, true));
+        var manifest = ExportManifest.FromJson(File.ReadAllText(Path.Combine(_root, ExportManifest.FileName)));
+        Assert.Single(manifest.Files);   // only "Uno" was really written
+        Directory.Delete(blocked);
+
+        AutoExportRunner.Run(_root, notes, true);
+
+        Assert.True(File.Exists(Path.Combine(_root, "notas", "Dos.md")));
+        Assert.True(File.Exists(Path.Combine(_root, "notas", "Tres.md")));
+        Assert.Empty(Directory.GetFiles(Path.Combine(_root, "notas"), "*(Aldune)*"));
     }
 }
