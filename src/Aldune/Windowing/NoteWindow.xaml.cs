@@ -1564,7 +1564,9 @@ public partial class NoteWindow : Window
 
         for (int i = 0; i < index; i++) if (text[i] == '\n') line++;
         if (!TryMeasureLine(text, line, out top, out bottom)) return false;
-        isTask = TaskLines.GlyphIndex(TaskLines.LineContaining(text, index)) >= 0;
+        // A bullet ("→ ") carries the grip too, so the whole list can be reordered the same way as the tasks.
+        var current = TaskLines.LineContaining(text, index);
+        isTask = TaskLines.GlyphIndex(current) >= 0 || BulletLines.GlyphIndex(current) >= 0;
         return true;
     }
 
@@ -1627,7 +1629,7 @@ public partial class NoteWindow : Window
         }
     }
 
-    /// <summary>Starts a drag if the press is on the grip of a task line. True when it took the press.</summary>
+    /// <summary>Starts a drag if the press is on the grip of a task or bullet line. True when it took the press.</summary>
     private bool TryBeginTaskDrag(Point position)
     {
         if (position.X < 0 || position.X > GripZoneRight) return false;
