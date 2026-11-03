@@ -1060,6 +1060,14 @@ public partial class EdgeDockWindow : Window
         bool swap = viewChanged && IsVisible && _fanState.IsExpanded && SystemParameters.ClientAreaAnimation;
         // Folded dock (the view was changed from Manage notes or by the wheel's last notch): the strip of pills changes in a soft swap too.
         bool restSwap = !swap && viewChanged && IsVisible && !_fanState.IsExpanded && _noteCount > 0 && SystemParameters.ClientAreaAnimation;
+        if (_restSwapActive && !restSwap)
+        {
+            // A refresh that is not a view change arrived while the strip was fading (a sync, a saved note): that swap is superseded, so the
+            // strip would have stayed invisible. Put it back as the state says.
+            _restSwapActive = false;
+            RestStrip.BeginAnimation(OpacityProperty, null);
+            ApplyState(animate: false);
+        }
         // With the swap the name of the view changes together with the cards (inside the swap), not a moment before them.
         if (!swap && !restSwap) UpdateViewIndicator();
         ApplyFooterPadding();
@@ -1225,9 +1233,12 @@ public partial class EdgeDockWindow : Window
     /// The folded dock changing view: the strip of pills fades out, the list (and the size of the window, unseen) changes while nothing is
     /// drawn, and the strip comes back with its pills appearing one after another. Before this the pills and the strip's length jumped.
     /// </summary>
+    private bool _restSwapActive;
+
     private void SwapRestStrip()
     {
         int token = ++_viewSwapToken; // supersedes any swap still waiting
+        _restSwapActive = true;
         _viewLabelHold = false;
         ResetTabsFadeIfStuck();
         var fadeOut = new DoubleAnimation(0, new Duration(TimeSpan.FromMilliseconds(150))) { EasingFunction = EaseOut() };
@@ -1242,6 +1253,7 @@ public partial class EdgeDockWindow : Window
             Dispatcher.BeginInvoke(DispatcherPriority.Loaded, new Action(() => AfterFrames(2, () =>
             {
                 if (token != _viewSwapToken) return;
+                _restSwapActive = false;
                 if (_fanState.IsExpanded || _noteCount == 0) { ApplyState(animate: false); return; }
                 for (int i = 0; i < RestList.Items.Count; i++)
                 {
@@ -3827,6 +3839,8 @@ public partial class EdgeDockWindow : Window
         _fullscreenPollTimer.Stop();
         _arrowScrollTimer.Stop();
         _syncFeedbackTimer.Stop();
+        StopSmoothScroll();
+        _openAllMenuTopmostTimer.Stop();
         NativeMethods.UninstallHook(_keyboardHook);
         _keyboardHook = IntPtr.Zero;
         StopWatchingClicksOutside();

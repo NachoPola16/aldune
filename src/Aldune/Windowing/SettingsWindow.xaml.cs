@@ -2483,6 +2483,11 @@ public partial class SettingsWindow : Window
         if (dockViewChanged) _coordinator?.SetDockView(_settings.DockView, _settings.DockTagFilter, save: false);
 
         if (Changed("textScale")) ThemeManager.ApplyTextScale(Application.Current, _settings.TextScalePercent);
+        if (Changed("largeCheckboxes"))
+        {
+            ThemeManager.LargeCheckboxes = _settings.LargeCheckboxes;
+            ThemeManager.ApplySkin(Application.Current, ThemeManager.Skin);
+        }
 
         if (Changed("appearance", "aspectColors", "squareCorners", "syncSignal"))
         {

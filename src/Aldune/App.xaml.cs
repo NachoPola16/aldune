@@ -426,6 +426,7 @@ public partial class App : Application
             SystemEvents.DisplaySettingsChanged -= OnDisplaySettingsChanged;
             SystemEvents.UserPreferenceChanged -= OnUserPreferenceChanged;
             SystemEvents.SessionEnding -= OnSessionEnding;
+            SecretClipboard.ClearIfStillHeld();
             _updateNotifier?.Dispose();
             _reminderScheduler?.Dispose();
             _toastCenter?.Dispose();

@@ -1640,13 +1640,16 @@ public sealed class NotesRepository
     /// <see cref="ReadNote"/> for the lists: a row that does not decrypt or has a damaged field is skipped and reported, instead of making the
     /// dock, the manager, the sync and the automatic copy fail for every note because of one.
     /// </summary>
+    private readonly HashSet<string> _reportedUnreadable = new();
+
     private Note? TryReadNote(SqliteDataReader reader, ref Exception? firstFailure)
     {
         try { return ReadNote(reader); }
         catch (Exception ex) when (ex is System.Security.Cryptography.CryptographicException or FormatException or ArgumentException or InvalidCastException or OverflowException)
         {
             string id = reader["Id"] as string ?? "?";
-            UnreadableNoteReported?.Invoke($"note {id} could not be read and was skipped: {ex.GetType().Name}");
+            // Once per note: the lists are read all the time (dock, manager, sync, copy) and a damaged row would fill the log.
+            if (_reportedUnreadable.Add(id)) UnreadableNoteReported?.Invoke($"note {id} could not be read and was skipped: {ex.GetType().Name}");
             firstFailure ??= ex;
             return null;
         }
@@ -1656,9 +1659,30 @@ public sealed class NotesRepository
     /// When NOTHING in a list could be read, the cause is the key (a wrong or lost one), not a damaged row: that still fails loudly, as the app's
     /// recovery path expects, instead of showing an empty dock.
     /// </summary>
-    private static void ThrowIfNothingReadable(int read, Exception? firstFailure)
+    private void ThrowIfNothingReadable(int read, Exception? firstFailure)
     {
-        if (read == 0 && firstFailure is not null) System.Runtime.ExceptionServices.ExceptionDispatchInfo.Capture(firstFailure).Throw();
+        // Judged on the whole table, not on this list: a damaged note alone in Archived (or the only active one) is not a wrong key.
+        if (read == 0 && firstFailure is not null && !AnyNoteReadable())
+            System.Runtime.ExceptionServices.ExceptionDispatchInfo.Capture(firstFailure).Throw();
+    }
+
+    /// <summary>True when at least one stored text decrypts with the current key (it stops at the first one that does).</summary>
+    private bool AnyNoteReadable()
+    {
+        using var connection = _database.OpenConnection();
+        using var command = connection.CreateCommand();
+        command.CommandText = "SELECT EncryptedText, Nonce, Tag FROM Note WHERE IsProtected = 0;";
+        using var reader = command.ExecuteReader();
+        while (reader.Read())
+        {
+            try
+            {
+                _cipher.Decrypt(new EncryptedContent((byte[])reader["EncryptedText"], (byte[])reader["Nonce"], (byte[])reader["Tag"]));
+                return true;
+            }
+            catch (Exception ex) when (ex is System.Security.Cryptography.CryptographicException or InvalidCastException) { }
+        }
+        return false;
     }
 
     private Note ReadNote(SqliteDataReader reader)

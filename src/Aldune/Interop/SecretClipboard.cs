@@ -14,8 +14,20 @@ internal static class SecretClipboard
     private static readonly TimeSpan ClearAfter = TimeSpan.FromSeconds(60);
     private static DispatcherTimer? _timer;
 
+    private static string? _held;
+
+    /// <summary>On exit: the timer dies with the app, so a secret still on the clipboard is cleared now.</summary>
+    public static void ClearIfStillHeld()
+    {
+        if (_held is null) return;
+        try { if (Clipboard.ContainsText() && Clipboard.GetText() == _held) Clipboard.Clear(); }
+        catch (System.Runtime.InteropServices.COMException) { }
+        _held = null;
+    }
+
     public static void SetText(string text)
     {
+        _held = text;
         var data = new DataObject();
         data.SetText(text);
         // The formats Windows documents for this: a DWORD of 1 / 0 as a memory stream.
@@ -33,6 +45,7 @@ internal static class SecretClipboard
             {
                 // Only if the clipboard still holds the secret: something else the person copied since is not touched.
                 if (Clipboard.ContainsText() && Clipboard.GetText() == text) Clipboard.Clear();
+                _held = null;
             }
             catch (System.Runtime.InteropServices.COMException) { } // the clipboard is busy: leave it
         };

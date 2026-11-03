@@ -2237,6 +2237,7 @@ public partial class NoteWindow : Window
         }
         if (_repository.GetById(_note.Id) is not { } fresh) return;
         int line = TextBody.GetLineIndexFromCharacterIndex(TextBody.CaretIndex);
+        double scroll = TextBody.VerticalOffset;
         var (title, body) = NoteText.Split(fresh.Text);
         TitleBox.Text = title;
         TextBody.Text = body;
@@ -2245,6 +2246,8 @@ public partial class NoteWindow : Window
         _hasPendingEdit = false;
         _autosaveTimer.Stop();
         if (line >= 0 && line < TextBody.LineCount) TextBody.CaretIndex = TextBody.GetCharacterIndexFromLineIndex(line);
+        // After the layout of the new text: a text that arrived by sync must not send the reader back to the top.
+        Dispatcher.BeginInvoke(DispatcherPriority.Loaded, new Action(() => TextBody.ScrollToVerticalOffset(scroll)));
     }
 
     /// <summary>Con <paramref name="path"/>: archivo no disponible, solo lectura. Con null: normal.</summary>

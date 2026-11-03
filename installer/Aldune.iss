@@ -191,7 +191,8 @@ begin
   Result := True;
   while not CloseRunningAldune() do
   begin
-    if MsgBox(CustomMessage('CloseAldune'), mbError, MB_RETRYCANCEL) = IDCANCEL then
+    // A silent uninstall cannot ask: one attempt, and stop (the default answer of the box would be Retry, forever).
+    if UninstallSilent or (MsgBox(CustomMessage('CloseAldune'), mbError, MB_RETRYCANCEL) = IDCANCEL) then
     begin
       Result := False;
       Exit;

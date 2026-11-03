@@ -52,6 +52,32 @@ public class NotesRepositoryUnreadableRowTests : IDisposable
         Assert.Equal([good.Id], _repository.GetAllForSync().Select(n => n.Id));
     }
 
+    [Fact]
+    public void ADamagedNoteAloneInItsStateDoesNotThrowWhileOthersDecrypt()
+    {
+        _repository.Create("activa buena", "#EBD38B", "primary");
+        var archived = _repository.Create("archivada rota", "#AAE6B1", "primary");
+        _repository.SetState(archived.Id, NoteState.Archived);
+        Damage(archived.Id);
+
+        Assert.Empty(_repository.GetByState(NoteState.Archived));
+    }
+
+    [Fact]
+    public void ReportsAnUnreadableNoteOnlyOnce()
+    {
+        _repository.Create("buena", "#EBD38B", "primary");
+        var bad = _repository.Create("rota", "#AAE6B1", "primary");
+        Damage(bad.Id);
+        var reported = new List<string>();
+        _repository.UnreadableNoteReported = reported.Add;
+
+        _repository.GetByState(NoteState.Active);
+        _repository.GetByState(NoteState.Active);
+
+        Assert.Single(reported);
+    }
+
     public void Dispose()
     {
         SqliteConnection.ClearAllPools();
