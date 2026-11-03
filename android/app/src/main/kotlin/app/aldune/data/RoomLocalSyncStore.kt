@@ -33,9 +33,12 @@ class RoomLocalSyncStore(
         LocalSnapshot(
             notes.all(),
             notes.tombstones(),
-            syncDao.bases(profileId).associate { it.noteId to SyncBase(OffsetDateTime.parse(it.updatedAt), it.deviceId) },
+            bases(),
         )
     }
+
+    override fun bases(): Map<String, SyncBase> =
+        syncDao.bases(profileId).associate { it.noteId to SyncBase(OffsetDateTime.parse(it.updatedAt), it.deviceId) }
 
     override fun commit(commit: LocalCommit): CommitReport = database.runInTransaction<CommitReport> {
         // Dentro de la transacción nadie escribe entre la comparación y la aplicación. Una versión distinta de la que vio la foto

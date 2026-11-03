@@ -226,3 +226,26 @@ class NoteServiceStateTest {
         assertEquals(0, f.store.writeCount)
     }
 }
+
+class NoteServiceListByStateTest {
+    @Test fun `listByState agrupa por estado igual que list y lee el almacen una vez`() {
+        val f = Fixture()
+        val t = f.clock.current
+        listOf(NoteState.ACTIVE, NoteState.ACTIVE, NoteState.ARCHIVED, NoteState.TRASHED).forEachIndexed { i, state ->
+            f.store.put(Note("n$i", "texto $i", LineEnding.LF, "#FFDDD4", t, t, state, tags = listOf("a")))
+        }
+        val grouped = f.service.listByState()
+        for (state in NoteState.entries) assertEquals(f.service.list(state).map { it.id }, grouped.getValue(state).map { it.id })
+        assertEquals(2, grouped.getValue(NoteState.ACTIVE).size)
+    }
+
+    @Test fun `matching aplica etiqueta y busqueda a notas ya leidas`() {
+        val f = Fixture()
+        val t = f.clock.current
+        f.store.put(Note("a", "hola", LineEnding.LF, "#FFDDD4", t, t, NoteState.ACTIVE, tags = listOf("Work")))
+        f.store.put(Note("b", "adios", LineEnding.LF, "#FFDDD4", t, t, NoteState.ACTIVE))
+        val all = f.service.list(NoteState.ACTIVE)
+        assertEquals(listOf("a"), f.service.matching(all, tag = "work").map { it.id })
+        assertEquals(listOf("b"), f.service.matching(all, query = "adios").map { it.id })
+    }
+}

@@ -298,10 +298,21 @@ class NoteService(
      * cerrado con contraseña.
      */
     fun list(filter: NoteState, query: String = "", tag: String? = null): List<Note> = synchronized(lock) {
-        dockOrdered(store.all().filter { it.state == filter })
-            .filter { note -> tag == null || note.tags.any { it.equals(tag, ignoreCase = true) } }
-            .filter { searchable(it, query) }
+        matching(dockOrdered(store.all().filter { it.state == filter }), query, tag)
     }
+
+    /**
+     * Every state's notes, each in dock order, from ONE read of the store. The list screen needs several views of the same data (items,
+     * per-state counters, tags); asking [list] for each decrypted every note again, on every autosave.
+     */
+    fun listByState(): Map<NoteState, List<Note>> = synchronized(lock) {
+        val all = store.all()
+        NoteState.entries.associateWith { state -> dockOrdered(all.filter { it.state == state }) }
+    }
+
+    /** The tag and search filters of [list], applied to notes already read (keeps their order). */
+    fun matching(notes: List<Note>, query: String = "", tag: String? = null): List<Note> =
+        notes.filter { note -> tag == null || note.tags.any { it.equals(tag, ignoreCase = true) } }.filter { searchable(it, query) }
 
     /**
      * Pone la nota [id] justo después de [beforeId] y antes de [afterId], que son sus vecinas en la lista que el usuario está viendo

@@ -118,11 +118,12 @@ fun AllTagsDialog(
                         }
                         if (paletteFor.equals(tag, ignoreCase = true)) {
                             @OptIn(androidx.compose.foundation.layout.ExperimentalLayoutApi::class)
-                            FlowRow(Modifier.fillMaxWidth().padding(start = 4.dp, bottom = 8.dp), horizontalArrangement = Arrangement.spacedBy(10.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                            FlowRow(Modifier.fillMaxWidth().padding(start = 4.dp, bottom = 8.dp), horizontalArrangement = Arrangement.spacedBy(0.dp), verticalArrangement = Arrangement.spacedBy(0.dp)) {
                                 for (hex in paletteColors) {
+                                    val chosen = tagColors.entries.firstOrNull { it.key.equals(tag, ignoreCase = true) }?.value?.equals(hex, ignoreCase = true) == true
                                     Box(
-                                        Modifier.size(36.dp).clip(CircleShape).background(noteFace(hex)).border(1.dp, MaterialTheme.colorScheme.outline, CircleShape)
-                                            .clickable { onSetColor(tag, hex); paletteFor = null }.semantics { contentDescription = hex },
+                                        Modifier.colorChoice(hex, chosen) { onSetColor(tag, hex); paletteFor = null }
+                                            .size(36.dp).clip(CircleShape).background(noteFace(hex)).border(1.dp, MaterialTheme.colorScheme.outline, CircleShape),
                                     )
                                 }
                                 TextButton({ onSetColor(tag, null); paletteFor = null }) { Text(stringResource(R.string.tag_colour_none)) }

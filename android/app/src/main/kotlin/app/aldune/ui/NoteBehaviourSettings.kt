@@ -70,13 +70,13 @@ fun NoteColorRuleSettings(settings: AppSettings, onChange: ((AppSettings) -> App
         // Solo colores del tema: `NoteColorAssigner` ignora un fijo que no lo sea y usa el primero del tema, así que un color libre aquí
         // parecería que no hace nada.
         val chosen = settings.fixedNoteColor ?: DEFAULT_FIXED
-        FlowRow(Modifier.fillMaxWidth().padding(horizontal = 16.dp), horizontalArrangement = Arrangement.spacedBy(10.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+        FlowRow(Modifier.fillMaxWidth().padding(horizontal = 16.dp), horizontalArrangement = Arrangement.spacedBy(0.dp), verticalArrangement = Arrangement.spacedBy(0.dp)) {
             for (hex in themeColors) {
                 val selected = hex.equals(chosen, ignoreCase = true)
                 Box(
-                    Modifier.size(40.dp).clip(CircleShape).background(noteFace(hex))
-                        .border(BorderStroke(if (selected) 3.dp else 1.dp, if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outline), CircleShape)
-                        .clickable { onChange { it.copy(fixedNoteColor = hex) } }.semantics { contentDescription = hex },
+                    Modifier.colorChoice(hex, selected) { onChange { it.copy(fixedNoteColor = hex) } }
+                        .size(40.dp).clip(CircleShape).background(noteFace(hex))
+                        .border(BorderStroke(if (selected) 3.dp else 1.dp, if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outline), CircleShape),
                 )
             }
         }

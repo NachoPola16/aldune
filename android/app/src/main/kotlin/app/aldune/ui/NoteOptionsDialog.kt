@@ -306,7 +306,7 @@ private fun Swatch(hex: String, selected: Boolean, onClick: () -> Unit) {
     ) {}
 }
 
-private fun colorNameRes(name: ColorName): Int = when (name) {
+internal fun colorNameRes(name: ColorName): Int = when (name) {
     ColorName.RED -> R.string.color_name_red
     ColorName.ORANGE -> R.string.color_name_orange
     ColorName.YELLOW -> R.string.color_name_yellow

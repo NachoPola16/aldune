@@ -74,9 +74,10 @@ fun AspectSection(settings: AppSettings, onChange: ((AppSettings) -> AppSettings
                 }
                 TextButton(onClick = { editing = slot.id }) { Text(stringResource(R.string.aspect_color_change)) }
             }
-            Row(Modifier.padding(top = 2.dp), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+            Row(Modifier.padding(top = 2.dp), horizontalArrangement = Arrangement.spacedBy(0.dp)) {
                 for (hex in slot.suggestions) {
-                    Swatch(hex, Modifier.size(32.dp).clickable { onChange { it.withAspectColor(aspect.id, slot.id, hex) } }, description = hex)
+                    // Role.Button: it applies the colour to this slot (the slot's current colour is not a selection among these).
+                    Swatch(hex, Modifier.colorChoice(hex, selected = null) { onChange { it.withAspectColor(aspect.id, slot.id, hex) } }.size(32.dp))
                 }
             }
         }
@@ -110,7 +111,6 @@ fun AspectSection(settings: AppSettings, onChange: ((AppSettings) -> AppSettings
 
 /** Un círculo de color con borde, para que se vea también cuando se parece al fondo. */
 @Composable
-private fun Swatch(hex: String, modifier: Modifier, description: String? = null) {
-    val base = modifier.clip(CircleShape).background(noteFace(hex)).border(BorderStroke(1.dp, MaterialTheme.colorScheme.outline), CircleShape)
-    Box(if (description != null) base.semantics { contentDescription = description } else base)
+private fun Swatch(hex: String, modifier: Modifier) {
+    Box(modifier.clip(CircleShape).background(noteFace(hex)).border(BorderStroke(1.dp, MaterialTheme.colorScheme.outline), CircleShape))
 }

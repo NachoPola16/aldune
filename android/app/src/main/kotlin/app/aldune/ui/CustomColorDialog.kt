@@ -90,13 +90,13 @@ fun CustomColorDialog(initial: String, onDismiss: () -> Unit, onApply: (String) 
                     )
                 }
                 Text(stringResource(R.string.custom_color_pick), style = MaterialTheme.typography.labelLarge, modifier = Modifier.padding(top = 4.dp))
-                FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp), maxItemsInEachRow = 6) {
+                FlowRow(horizontalArrangement = Arrangement.spacedBy(0.dp), verticalArrangement = Arrangement.spacedBy(0.dp), maxItemsInEachRow = 6) {
                     for (hex in ColorHsv.swatches) {
                         val selected = hex.equals(color, ignoreCase = true)
                         Box(
-                            Modifier.size(40.dp).clip(CircleShape).background(noteFace(hex))
-                                .border(if (selected) 3.dp else 1.dp, if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outline, CircleShape)
-                                .clickable { pick(hex) }.semantics { contentDescription = hex },
+                            Modifier.colorChoice(hex, selected) { pick(hex) }
+                                .size(40.dp).clip(CircleShape).background(noteFace(hex))
+                                .border(if (selected) 3.dp else 1.dp, if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outline, CircleShape),
                         )
                     }
                 }

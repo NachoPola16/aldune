@@ -997,15 +997,18 @@ class NotesViewModel(application: Application) : AndroidViewModel(application) {
         if (AutoExportWork.isActive(_settings.value)) AutoExportWork.kick(getApplication())
         val current = _state.value as? UiState.Ready ?: return
         val order = NoteListOrder.fromCode(_settings.value.listOrder)
-        val items = NoteListing.sort(notes.list(current.filter, current.query, current.tag), order).map { NoteListItem.from(it, placeholder, protectedTitle) }
-        val counts = NoteState.entries.associateWith { notes.list(it).size }
+        // One read of the store (it decrypts every row) while holding the io lock; everything below is derived from it.
+        val byState = notes.listByState()
+        val inState = byState.getValue(current.filter)
+        val items = NoteListing.sort(notes.matching(inState, current.query, current.tag), order).map { NoteListItem.from(it, placeholder, protectedTitle) }
+        val counts = NoteState.entries.associateWith { byState.getValue(it).size }
         // The tags that exist: the ones on the notes plus the ones remembered. A tag whose last note moved elsewhere stays, empty, until it is
         // deleted on purpose (as on Windows); the active view is the one that lists them all, the others only list what they hold.
         val known = TagOrder.decode(_settings.value.knownTags)
-        val inUse = (notes.list(NoteState.ACTIVE) + notes.list(NoteState.ARCHIVED)).flatMap { it.tags }.distinctBy { it.lowercase() }
+        val inUse = (byState.getValue(NoteState.ACTIVE) + byState.getValue(NoteState.ARCHIVED)).flatMap { it.tags }.distinctBy { it.lowercase() }
         val fresh = KnownTags.fresh(known, inUse)
         if (fresh.isNotEmpty()) updateSettings { st -> st.copy(knownTags = TagOrder.encode(KnownTags.remember(TagOrder.decode(st.knownTags), inUse))) }
-        val shownTags = notes.list(current.filter).flatMap { it.tags } + if (current.filter == NoteState.ACTIVE) known + fresh else emptyList()
+        val shownTags = inState.flatMap { it.tags } + if (current.filter == NoteState.ACTIVE) known + fresh else emptyList()
         val tags = shownTags.distinctBy { it.lowercase() }.let { TagOrder.apply(it, TagOrder.decode(_settings.value.tagOrder)) }
         val orphans = ready?.conflicts?.orphans().orEmpty().mapNotNull { conflict ->
             val note = conflict.losing.note ?: return@mapNotNull null

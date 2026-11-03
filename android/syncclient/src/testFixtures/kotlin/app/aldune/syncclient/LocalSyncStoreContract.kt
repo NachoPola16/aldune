@@ -101,6 +101,14 @@ abstract class LocalSyncStoreContract {
 
     // --- acciones locales ---
 
+    @Test fun basesDevuelveSoloLasBasesSinTocarLasNotas() {
+        assertTrue(h.sync.bases().isEmpty())
+        h.notes.put(note(id1))
+        h.sync.commit(LocalCommit(emptyList(), mapOf(id3 to base("pc02")), emptyMap()))
+        assertEquals(mapOf(id3 to base("pc02")), h.sync.bases())
+        assertEquals(h.sync.snapshot().bases, h.sync.bases())
+    }
+
     @Test fun applynoteInsertaLaNotaConElAutorRemoto() {
         val remote = note(id1, "del pc", author = "pc01")
         val report = h.sync.commit(commitOf(LocalAction.ApplyNote(remote)))

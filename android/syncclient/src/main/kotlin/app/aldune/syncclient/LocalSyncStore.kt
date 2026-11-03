@@ -13,6 +13,9 @@ interface LocalSyncStore {
     /** Notas, lápidas y bases leídas en una sola transacción. */
     fun snapshot(): LocalSnapshot
 
+    /** Solo las bases de este perfil. Como `snapshot().bases` pero sin leer ni descifrar las notas (para quien solo mira fechas). */
+    fun bases(): Map<String, SyncBase>
+
     /**
      * Aplica todo lo local de una pasada en UNA transacción: o entra todo o no entra nada. Nunca hace red.
      * Devuelve qué se aplicó y qué se saltó por una edición hecha mientras la sync esperaba al almacén (ver [LocalCommit]).

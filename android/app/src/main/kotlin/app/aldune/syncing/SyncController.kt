@@ -291,7 +291,7 @@ class SyncController(
         val stores = _profiles.value.map { storeFor(it.id) }
         _conflicted.value = stores.flatMap { it.conflictedNoteIds() }.toSet()
         val merged = HashMap<String, java.time.Instant>()
-        for (store in stores) for ((id, base) in store.snapshot().bases) {
+        for (store in stores) for ((id, base) in store.bases()) {
             val at = base.updatedAt.toInstant()
             merged.merge(id, at) { old, new -> if (new < old) new else old }
         }

@@ -24,6 +24,8 @@ class InMemoryLocalSyncStore(val notes: InMemoryNoteStore = InMemoryNoteStore())
         LocalSnapshot(notes.all(), notes.tombstones(), LinkedHashMap(baseMap))
     }
 
+    override fun bases(): Map<String, SyncBase> = synchronized(notes) { LinkedHashMap(baseMap) }
+
     override fun commit(commit: LocalCommit): CommitReport = synchronized(notes) {
         val skipped = commit.actions.map { it.noteId }.toSet()
             .filter { currentVersion(it) != commit.expected.getValue(it) }.toSet()
