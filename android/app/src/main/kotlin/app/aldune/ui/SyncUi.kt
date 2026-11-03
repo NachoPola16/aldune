@@ -24,6 +24,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.platform.LocalClipboard
@@ -494,7 +495,8 @@ private fun ConnectedPanel(controller: SyncController, profile: SyncProfile) {
     val line = formatStatus(status, now)
     var confirming by remember { mutableStateOf(false) }
     var editing by remember { mutableStateOf(false) }
-    var inviting by remember { mutableStateOf(false) }
+    // Saveable (a plain Boolean) so the dialog, and the invitation held by its ViewModel, survive a rotation.
+    var inviting by rememberSaveable { mutableStateOf(false) }
 
     Column(Modifier.padding(horizontal = 16.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
         Text(stringResource(R.string.sync_connected_to, profile.profileName?.takeIf { it.isNotBlank() } ?: profile.url))

@@ -449,6 +449,7 @@
     <string name="auto_export_folder">Dossier : %1$s</string>
     <string name="auto_export_archived">Inclure les notes archivées</string>
     <string name="auto_export_lost">La copie automatique a été désactivée : Aldune a perdu l\'accès au dossier. Choisissez à nouveau un dossier dans les réglages pour la reprendre.</string>
+    <string name="auto_export_invalid">Ce dossier ne peut pas être utilisé : le système a refusé de conserver l\'accès. Choisissez-en un autre.</string>
     <string name="sound_event_text_deleted">Effacement du texte</string>
     <string name="sound_choice_eraser">Gomme</string>
     <string name="sound_silenced_ringer">Le téléphone est en silencieux ou en vibreur : les sons d’Aldune ne seront pas joués.</string>

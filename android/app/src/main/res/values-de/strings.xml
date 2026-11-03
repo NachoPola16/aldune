@@ -449,6 +449,7 @@
     <string name="auto_export_folder">Ordner: %1$s</string>
     <string name="auto_export_archived">Archivierte Notizen einbeziehen</string>
     <string name="auto_export_lost">Die automatische Kopie wurde ausgeschaltet: Aldune hat den Zugriff auf den Ordner verloren. Wähle in den Einstellungen erneut einen Ordner, um sie fortzusetzen.</string>
+    <string name="auto_export_invalid">Dieser Ordner kann nicht verwendet werden: Das System hat den dauerhaften Zugriff verweigert. Wähle einen anderen.</string>
     <string name="sound_event_text_deleted">Text löschen</string>
     <string name="sound_choice_eraser">Radiergummi</string>
     <string name="sound_silenced_ringer">Das Telefon ist stumm oder auf Vibration, daher werden die Töne von Aldune nicht abgespielt.</string>

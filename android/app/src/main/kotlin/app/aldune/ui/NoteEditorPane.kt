@@ -107,6 +107,7 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusProperties
 import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalHapticFeedback
@@ -208,6 +209,8 @@ fun NoteEditorPane(key: String, viewModel: NotesViewModel, onBack: () -> Unit, s
     // Si hay salto tras el título. Una nota «título\n» (cuerpo vacío) no debe perder ese salto al abrirla, o abrir y cerrar la reescribiría.
     var breakAfterTitle by remember(key) { mutableStateOf(false) }
     val titleFocus = remember { FocusRequester() }
+    // Undo/redo act on the field being edited: the title has its own history, separate from the body's.
+    var titleFocused by remember { mutableStateOf(false) }
     fun fullText(): String {
         val body = state.text.toString()
         return if (body.isNotEmpty() || breakAfterTitle) title.text.toString() + "\n" + body else title.text.toString()
@@ -568,7 +571,11 @@ fun NoteEditorPane(key: String, viewModel: NotesViewModel, onBack: () -> Unit, s
     }
 
     // A phone on its side: the keyboard would leave the text a sliver between a title row and a button bar.
-    val compactHeight = LocalConfiguration.current.screenHeightDp < 480
+    // Only a real landscape counts: a vertical split screen or a floating window is also short but narrow, and moving the bar into the header
+    // there squashes it (the narrow case keeps the bar on its own row below the text).
+    val editedUndo = if (titleFocused) title.undoState else state.undoState
+    val configuration = LocalConfiguration.current
+    val compactHeight = configuration.screenHeightDp < 480 && configuration.screenWidthDp > configuration.screenHeightDp
     // On its side the status bar costs a tenth of the height; it goes while a note is open and comes back with a swipe from the edge.
     DisposableEffect(compactHeight) {
         val controller = context.findActivity()?.window?.let { WindowCompat.getInsetsController(it, view) }
@@ -601,7 +608,7 @@ fun NoteEditorPane(key: String, viewModel: NotesViewModel, onBack: () -> Unit, s
             val titleEnabled = loaded && (!protectedNote || unlocked)
             BasicTextField(
                 state = title, enabled = titleEnabled, lineLimits = TextFieldLineLimits.SingleLine,
-                modifier = Modifier.weight(1f).padding(start = if (showBack) 0.dp else TASK_DRAG_PAD_START, end = 4.dp).focusProperties { this.canFocus = canFocus }.focusRequester(titleFocus),
+                modifier = Modifier.weight(1f).padding(start = if (showBack) 0.dp else TASK_DRAG_PAD_START, end = 4.dp).focusProperties { this.canFocus = canFocus }.focusRequester(titleFocus).onFocusChanged { titleFocused = it.isFocused },
                 textStyle = MaterialTheme.typography.titleMedium.copy(color = ink),
                 cursorBrush = SolidColor(ink),
                 keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
@@ -636,8 +643,8 @@ fun NoteEditorPane(key: String, viewModel: NotesViewModel, onBack: () -> Unit, s
                     onBullet = { commitKeepingScroll(BulletLines.toggleBulletLineAt(text(), caret())) },
                     onOutdent = ::outdent,
                     onIndent = ::indent,
-                    canUndo = state.undoState.canUndo, canRedo = state.undoState.canRedo,
-                    onUndo = { state.undoState.undo() }, onRedo = { state.undoState.redo() },
+                    canUndo = editedUndo.canUndo, canRedo = editedUndo.canRedo,
+                    onUndo = { editedUndo.undo() }, onRedo = { editedUndo.redo() },
                     inline = true,
                 )
             }
@@ -966,8 +973,8 @@ fun NoteEditorPane(key: String, viewModel: NotesViewModel, onBack: () -> Unit, s
                 onBullet = { commitKeepingScroll(BulletLines.toggleBulletLineAt(text(), caret())) },
                 onOutdent = ::outdent,
                 onIndent = ::indent,
-                canUndo = state.undoState.canUndo, canRedo = state.undoState.canRedo,
-                onUndo = { state.undoState.undo() }, onRedo = { state.undoState.redo() },
+                canUndo = editedUndo.canUndo, canRedo = editedUndo.canRedo,
+                onUndo = { editedUndo.undo() }, onRedo = { editedUndo.redo() },
             )
         }
     }

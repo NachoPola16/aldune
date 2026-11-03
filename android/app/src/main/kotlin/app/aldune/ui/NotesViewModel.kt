@@ -852,6 +852,30 @@ class NotesViewModel(application: Application) : AndroidViewModel(application) {
             app.aldune.domain.NotesExport.write(out, notes, placeholder, omittedNote)
         }
 
+    /** How the last «export everything» ended: [result] is `null` when it failed. */
+    class ExportOutcome(val result: app.aldune.domain.NotesExport.Result?)
+
+    private val _exportOutcome = MutableStateFlow<ExportOutcome?>(null)
+    val exportOutcome: StateFlow<ExportOutcome?> = _exportOutcome.asStateFlow()
+
+    /**
+     * Runs [exportAll] into [uri] from the ViewModel scope, not the screen's: leaving Settings or rotating must not cancel the write halfway
+     * and leave a truncated ZIP. The outcome is exposed as state for the screen to announce.
+     */
+    fun exportAllTo(uri: android.net.Uri, placeholder: String, omittedNote: (Int) -> String) {
+        viewModelScope.launch {
+            _exportOutcome.value = null
+            val result = try {
+                getApplication<Application>().contentResolver.openOutputStream(uri)?.use { out -> exportAll(out, placeholder, omittedNote) }
+            } catch (e: kotlin.coroutines.cancellation.CancellationException) {
+                throw e
+            } catch (_: Exception) {
+                null
+            }
+            _exportOutcome.value = ExportOutcome(result)
+        }
+    }
+
     fun setNoteColor(noteId: String, color: String) = change { it.setColor(noteId, color) }
 
     /**

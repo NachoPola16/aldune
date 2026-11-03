@@ -449,6 +449,7 @@
     <string name="auto_export_folder">Carpeta: %1$s</string>
     <string name="auto_export_archived">Incluir las notas archivadas</string>
     <string name="auto_export_lost">La copia automática se apagó: Aldune perdió el acceso a la carpeta. Elige una carpeta otra vez en Ajustes para reanudarla.</string>
+    <string name="auto_export_invalid">Esa carpeta no se puede usar: el sistema no ha permitido conservar el acceso. Elige otra.</string>
     <string name="sound_event_text_deleted">Borrar texto</string>
     <string name="sound_choice_eraser">Goma de borrar</string>
     <string name="sound_silenced_ringer">El teléfono está en silencio o en vibración, así que los sonidos de Aldune no se oirán.</string>

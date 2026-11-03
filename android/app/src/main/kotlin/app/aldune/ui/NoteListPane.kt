@@ -103,6 +103,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.listSaver
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.text.font.FontWeight
 import app.aldune.text.NoteThemes
@@ -189,7 +190,8 @@ fun NoteListPane(
     // La nota cuyo menú (mantener pulsada) está abierto.
     var menuFor by remember { mutableStateOf<NoteListItem?>(null) }
     // Selection mode: notes picked for a bulk action (archive, trash, restore, tag). Empty = normal list.
-    var picked by remember { mutableStateOf<Set<String>>(emptySet()) }
+    // Saveable so a rotation does not drop the selection (note ids are not secret).
+    var picked by rememberSaveable(stateSaver = listSaver<Set<String>, String>(save = { it.toList() }, restore = { it.toSet() })) { mutableStateOf<Set<String>>(emptySet()) }
     var taggingPicked by remember { mutableStateOf(false) }
     androidx.activity.compose.BackHandler(enabled = picked.isNotEmpty()) { picked = emptySet() }
     LaunchedEffect(state.items) { if (picked.isNotEmpty()) picked = picked.filter { id -> state.items.any { it.id == id } }.toSet() }
@@ -1379,7 +1381,9 @@ private fun SelectionBar(
         Text(stringResource(R.string.selection_count, count), Modifier.weight(1f), style = MaterialTheme.typography.titleMedium, maxLines = 1, overflow = TextOverflow.Ellipsis)
         TextButton(onClick = onAll) { Text(stringResource(R.string.selection_all)) }
     }
-    Row(Modifier.fillMaxWidth().padding(horizontal = 8.dp), horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+    // A flow row, not a plain Row: with long translations (German, Portuguese, French) or a 2.0 font the three actions do not fit on one line.
+    @OptIn(androidx.compose.foundation.layout.ExperimentalLayoutApi::class)
+    androidx.compose.foundation.layout.FlowRow(Modifier.fillMaxWidth().padding(horizontal = 8.dp), horizontalArrangement = Arrangement.spacedBy(4.dp)) {
         if (filter == NoteState.ACTIVE) TextButton(onClick = onArchive) { Text(stringResource(R.string.archive)) } else TextButton(onClick = onRestore) { Text(stringResource(R.string.restore)) }
         if (filter != NoteState.TRASHED) TextButton(onClick = onTrash) { Text(stringResource(R.string.move_to_trash)) }
         if (filter != NoteState.TRASHED) TextButton(onClick = onTag) { Text(stringResource(R.string.selection_tag)) }

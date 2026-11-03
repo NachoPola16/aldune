@@ -1,8 +1,13 @@
 package app.aldune.ui
 
 import android.content.ClipData
+import android.content.ClipDescription
 import android.content.Intent
+import android.content.pm.ApplicationInfo
+import android.os.Build
+import android.os.PersistableBundle
 import android.text.format.DateUtils
+import android.view.WindowManager
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -20,7 +25,9 @@ import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
+import androidx.activity.compose.LocalActivity
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -40,6 +47,8 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewmodel.compose.viewModel
 import app.aldune.R
 import app.aldune.data.SyncProfile
 import app.aldune.sync.Invitations
@@ -50,6 +59,16 @@ import app.aldune.syncclient.isCleartextOutsideLan
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+
+/**
+ * Holds the freshly created invitation (code + QR, which carry the profile key) across activity recreation (rotation, theme, language).
+ * Kept only in memory, never in a Bundle or rememberSaveable; losing it would orphan the space just created on the server. The admin token
+ * is deliberately NOT held here.
+ */
+internal class InviteViewModel : ViewModel() {
+    var profileId: String? = null
+    var invitation by mutableStateOf<String?>(null)
+}
 
 /**
  * «Invitar a alguien» y «Personas de este servidor» (docs/SYNC.md → «Invitations»), del lado de quien aloja. Las dos cosas piden el token de
@@ -67,10 +86,26 @@ internal fun InviteDialog(profile: SyncProfile, onDone: () -> Unit) {
     var busy by remember { mutableStateOf(false) }
     var error by remember { mutableStateOf<Int?>(null) }
     var notice by remember { mutableStateOf<Int?>(null) }
-    var invitation by remember { mutableStateOf<String?>(null) }
+    val holder: InviteViewModel = viewModel()
+    // An invitation belongs to the profile that created it; a stale one from another profile is never shown.
+    if (holder.profileId != profile.id) { holder.profileId = profile.id; holder.invitation = null }
+    var invitation by holder::invitation
     var people by remember { mutableStateOf<List<SpaceInfo>?>(null) }
     var revoking by remember { mutableStateOf<SpaceInfo?>(null) }
     val url = profile.url
+
+    // While an invitation is on screen (it carries the profile key): no screenshots and no Recents thumbnail. Same pattern as the code field in
+    // SyncUi: release builds only, and the flag is left alone if another screen already set it.
+    val activity = LocalActivity.current
+    val showingInvitation = invitation != null
+    DisposableEffect(showingInvitation) {
+        val window = activity?.window
+        val debuggable = activity != null && activity.applicationInfo.flags and ApplicationInfo.FLAG_DEBUGGABLE != 0
+        val added = showingInvitation && !debuggable && window != null &&
+            window.attributes.flags and WindowManager.LayoutParams.FLAG_SECURE == 0
+        if (added) window.addFlags(WindowManager.LayoutParams.FLAG_SECURE)
+        onDispose { if (added) window.clearFlags(WindowManager.LayoutParams.FLAG_SECURE) }
+    }
     // The admin token travels with every call here: over plain http outside the home network it needs the same explicit confirmation as the sync token.
     val needsHttpConfirm = isCleartextOutsideLan(url)
     var httpAccepted by remember { mutableStateOf(false) }
@@ -93,7 +128,7 @@ internal fun InviteDialog(profile: SyncProfile, onDone: () -> Unit) {
         else -> R.string.invite_create_title
     }
     AlertDialog(
-        onDismissRequest = { if (!busy) onDone() },
+        onDismissRequest = { if (!busy) { holder.invitation = null; onDone() } },
         title = { Text(stringResource(title), Modifier.semantics { heading() }) },
         text = {
             Column(Modifier.verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -107,7 +142,12 @@ internal fun InviteDialog(profile: SyncProfile, onDone: () -> Unit) {
                         Text(stringResource(R.string.invite_scan_hint), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                             TextButton(onClick = {
-                                scope.launch { clipboard.setClipEntry(ClipEntry(ClipData.newPlainText("Aldune", text))) }
+                                val clip = ClipData.newPlainText("Aldune", text)
+                                // Keeps the keyboard's clipboard preview and the system copy toast from showing the code (API 33+).
+                                if (Build.VERSION.SDK_INT >= 33) {
+                                    clip.description.extras = PersistableBundle().apply { putBoolean(ClipDescription.EXTRA_IS_SENSITIVE, true) }
+                                }
+                                scope.launch { clipboard.setClipEntry(ClipEntry(clip)) }
                                 notice = R.string.invite_copied
                             }) { Text(stringResource(R.string.invite_copy)) }
                             TextButton(onClick = {
@@ -171,7 +211,7 @@ internal fun InviteDialog(profile: SyncProfile, onDone: () -> Unit) {
                 TextButton(onClick = { invitation = null; people = null; notice = null }) { Text(stringResource(R.string.scan_qr_back)) }
             }
         },
-        dismissButton = { TextButton(enabled = !busy, onClick = onDone) { Text(stringResource(R.string.done)) } },
+        dismissButton = { TextButton(enabled = !busy, onClick = { holder.invitation = null; onDone() }) { Text(stringResource(R.string.done)) } },
     )
 
     revoking?.let { space ->

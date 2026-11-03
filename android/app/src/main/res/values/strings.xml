@@ -449,6 +449,7 @@
     <string name="auto_export_folder">Folder: %1$s</string>
     <string name="auto_export_archived">Include archived notes</string>
     <string name="auto_export_lost">The automatic copy was turned off: Aldune lost access to the folder. Choose a folder again in Settings to resume it.</string>
+    <string name="auto_export_invalid">That folder cannot be used: the system refused to keep access to it. Choose another one.</string>
     <string name="sound_event_text_deleted">Deleting text</string>
     <string name="sound_choice_eraser">Eraser</string>
     <string name="sound_silenced_ringer">Your phone is on silent or vibrate, so Aldune sounds will not play.</string>

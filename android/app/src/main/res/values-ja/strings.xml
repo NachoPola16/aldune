@@ -449,6 +449,7 @@
     <string name="auto_export_folder">フォルダー: %1$s</string>
     <string name="auto_export_archived">アーカイブしたノートを含める</string>
     <string name="auto_export_lost">自動コピーをオフにしました。Aldune がフォルダーにアクセスできなくなりました。再開するには、設定でもう一度フォルダーを選んでください。</string>
+    <string name="auto_export_invalid">このフォルダーは使用できません。システムがアクセスの保持を拒否しました。別のフォルダーを選んでください。</string>
     <string name="sound_event_text_deleted">テキストの削除</string>
     <string name="sound_choice_eraser">消しゴム</string>
     <string name="sound_silenced_ringer">スマートフォンがマナーモード（サイレントまたはバイブレーション）のため、Aldune のサウンドは再生されません。</string>

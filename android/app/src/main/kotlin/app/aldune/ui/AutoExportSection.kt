@@ -3,6 +3,7 @@ package app.aldune.ui
 import android.content.Intent
 import android.net.Uri
 import android.provider.DocumentsContract
+import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.padding
@@ -32,7 +33,17 @@ fun AutoExportSection(viewModel: NotesViewModel) {
 
     val picker = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocumentTree()) { uri ->
         if (uri == null) return@rememberLauncherForActivityResult   // cancelado: queda como estaba (apagada si no había carpeta)
-        context.contentResolver.takePersistableUriPermission(uri, Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION)
+        // Some providers refuse the persistable grant (SecurityException); without it the copy would be lost on the next boot, so do not enable it.
+        val granted = try {
+            context.contentResolver.takePersistableUriPermission(uri, Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION)
+            true
+        } catch (_: SecurityException) {
+            false
+        }
+        if (!granted) {
+            Toast.makeText(context, R.string.auto_export_invalid, Toast.LENGTH_LONG).show()
+            return@rememberLauncherForActivityResult
+        }
         // Se suelta el permiso de la carpeta anterior: no hay que dejar acceso a un sitio que ya no se usa.
         settings.autoExportUri?.takeIf { it != uri.toString() }?.let { old ->
             runCatching { context.contentResolver.releasePersistableUriPermission(Uri.parse(old), Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION) }

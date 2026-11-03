@@ -449,6 +449,7 @@
     <string name="auto_export_folder">Cartella: %1$s</string>
     <string name="auto_export_archived">Includi le note archiviate</string>
     <string name="auto_export_lost">La copia automatica è stata disattivata: Aldune ha perso l\'accesso alla cartella. Scegli di nuovo una cartella nelle Impostazioni per riprenderla.</string>
+    <string name="auto_export_invalid">Questa cartella non può essere usata: il sistema ha rifiutato di mantenere l\'accesso. Scegline un\'altra.</string>
     <string name="sound_event_text_deleted">Cancellazione del testo</string>
     <string name="sound_choice_eraser">Gomma</string>
     <string name="sound_silenced_ringer">Il telefono è in silenzioso o in vibrazione, quindi i suoni di Aldune non verranno riprodotti.</string>

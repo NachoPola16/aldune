@@ -19,6 +19,7 @@ import app.aldune.domain.ExportNote
 import app.aldune.domain.NoteState
 import java.io.IOException
 import java.util.concurrent.TimeUnit
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -102,6 +103,17 @@ class AutoExportWorker(context: Context, params: WorkerParameters) : CoroutineWo
         } catch (e: IOException) {
             // Un fallo de disco pasajero: unos reintentos y se deja; la siguiente edición o el trabajo diario lo vuelven a intentar.
             if (runAttemptCount < 3) Result.retry() else Result.success()
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: RuntimeException) {
+            // Third-party SAF providers throw IllegalArgumentException, UnsupportedOperationException or IllegalStateException instead of
+            // IOException. Uncaught, the worker would die with no notice; treat it like a transient failure for a few attempts, and if it
+            // persists, like a lost folder so the user is told once and can pick another one.
+            if (runAttemptCount < 3) Result.retry() else {
+                AutoExportStatus.setLost(applicationContext, true)
+                AutoExportWork.apply(applicationContext, settings)
+                Result.success()
+            }
         }
     }
 

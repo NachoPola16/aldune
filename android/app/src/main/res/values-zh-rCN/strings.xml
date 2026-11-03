@@ -449,6 +449,7 @@
     <string name="auto_export_folder">文件夹：%1$s</string>
     <string name="auto_export_archived">包含已归档的笔记</string>
     <string name="auto_export_lost">自动复制已关闭：Aldune 失去了对该文件夹的访问权限。请在设置中重新选择文件夹以恢复。</string>
+    <string name="auto_export_invalid">无法使用该文件夹：系统拒绝保留访问权限。请选择其他文件夹。</string>
     <string name="sound_event_text_deleted">删除文字</string>
     <string name="sound_choice_eraser">橡皮擦声</string>
     <string name="sound_silenced_ringer">您的手机处于静音或振动模式，因此不会播放 Aldune 的声音。</string>

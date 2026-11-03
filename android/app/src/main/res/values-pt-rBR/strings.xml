@@ -449,6 +449,7 @@
     <string name="auto_export_folder">Pasta: %1$s</string>
     <string name="auto_export_archived">Incluir as notas arquivadas</string>
     <string name="auto_export_lost">A cópia automática foi desligada: o Aldune perdeu o acesso à pasta. Escolha uma pasta de novo nos ajustes para retomá-la.</string>
+    <string name="auto_export_invalid">Essa pasta não pode ser usada: o sistema recusou manter o acesso. Escolha outra.</string>
     <string name="sound_event_text_deleted">Apagar texto</string>
     <string name="sound_choice_eraser">Borracha</string>
     <string name="sound_silenced_ringer">O telefone está no silencioso ou no modo vibrar, então os sons do Aldune não serão tocados.</string>

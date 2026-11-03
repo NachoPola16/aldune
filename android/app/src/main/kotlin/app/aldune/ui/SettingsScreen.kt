@@ -41,7 +41,10 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.IntrinsicSize
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -186,13 +189,14 @@ fun SettingsScreen(viewModel: NotesViewModel, onClose: () -> Unit) {
                     val compact = settings.compactSettingsTabs
                     val columns = if (shortScreen || compact) labels.size else TAB_COLUMNS
                     labels.withIndex().chunked(columns).forEach { row ->
-                        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        // IntrinsicSize.Min: when a long label wraps to two lines the chips of the row grow together.
+                        Row(Modifier.fillMaxWidth().height(IntrinsicSize.Min), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                             for ((index, label) in row) {
                                 // Aspecto Aldune: las pestañas sin borde y con un fondo tonal suave, para que el contenido pese más que el marco (en Windows la barra
                                 // lateral tampoco los lleva). Los aspectos retro conservan el borde: es parte de su estética.
                                 val quiet = settings.appearance == AppPalette.ALDUNE
                                 FilterChip(
-                                    selected = selectedTab == index, onClick = { tab = index; lastTab = index; lastTabAt = System.currentTimeMillis() }, modifier = Modifier.weight(1f).then(Modifier.height(48.dp)),
+                                    selected = selectedTab == index, onClick = { tab = index; lastTab = index; lastTabAt = System.currentTimeMillis() }, modifier = Modifier.weight(1f).fillMaxHeight().heightIn(min = 48.dp),
                                     label = {
                                         val name = stringResource(label)
                                         if (compact) Icon(
@@ -200,7 +204,7 @@ fun SettingsScreen(viewModel: NotesViewModel, onClose: () -> Unit) {
                                             // The open tab in the accent colour of the theme, the others in the plain text colour.
                                             tint = if (selectedTab == index) MaterialTheme.colorScheme.primary else androidx.compose.material3.LocalContentColor.current,
                                         )
-                                        else Text(name, Modifier.fillMaxWidth(), textAlign = TextAlign.Center, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                                        else Text(name, Modifier.fillMaxWidth(), textAlign = TextAlign.Center, maxLines = 2, overflow = TextOverflow.Ellipsis)
                                     },
                                     colors = if (quiet) FilterChipDefaults.filterChipColors(containerColor = MaterialTheme.colorScheme.surfaceContainerLow) else FilterChipDefaults.filterChipColors(),
                                     border = if (quiet) null else FilterChipDefaults.filterChipBorder(enabled = true, selected = selectedTab == index),
@@ -439,8 +443,6 @@ fun SettingsScreen(viewModel: NotesViewModel, onClose: () -> Unit) {
 @Composable
 private fun BackupSection(viewModel: NotesViewModel) {
     val context = LocalContext.current
-    val scope = androidx.compose.runtime.rememberCoroutineScope()
-    var message by rememberSaveable { mutableStateOf<String?>(null) }
     val placeholder = stringResource(R.string.new_note_title)
     // The export messages are read here (configuration-aware) and formatted when the export ends.
     val omittedFileTpl = stringResource(R.string.export_all_omitted_file)
@@ -451,18 +453,16 @@ private fun BackupSection(viewModel: NotesViewModel) {
     val exportFileName = stringResource(R.string.export_file_name)
     val launcher = rememberLauncherForActivityResult(ActivityResultContracts.CreateDocument("application/zip")) { uri ->
         if (uri == null) return@rememberLauncherForActivityResult
-        scope.launch {
-            val result = runCatching {
-                context.contentResolver.openOutputStream(uri)?.use { out ->
-                    viewModel.exportAll(out, placeholder) { count -> String.format(omittedFileTpl, count) }
-                }
-            }.getOrNull()
-            message = when {
-                result == null -> failedMsg
-                result.exported == 0 && result.omittedProtected == 0 -> emptyMsg
-                result.omittedProtected > 0 -> String.format(doneSkippedTpl, result.exported, result.omittedProtected)
-                else -> String.format(doneTpl, result.exported)
-            }
+        viewModel.exportAllTo(uri, placeholder) { count -> String.format(omittedFileTpl, count) }
+    }
+    val outcome by viewModel.exportOutcome.collectAsStateWithLifecycle()
+    val message = outcome?.let { done ->
+        val result = done.result
+        when {
+            result == null -> failedMsg
+            result.exported == 0 && result.omittedProtected == 0 -> emptyMsg
+            result.omittedProtected > 0 -> String.format(doneSkippedTpl, result.exported, result.omittedProtected)
+            else -> String.format(doneTpl, result.exported)
         }
     }
     Section(R.string.backup_section)
