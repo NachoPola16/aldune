@@ -45,6 +45,10 @@ public static partial class LocalBackup
 
     private const string ManifestName = "manifest.json";
     private const string SettingsName = "settings.json";
+    private const long MaxDatabaseBytes = 4L * 1024 * 1024 * 1024;
+    private const long MaxSettingsBytes = 16L * 1024 * 1024;
+    private static readonly string[] RequiredNoteColumns =
+        ["Id", "EncryptedText", "Nonce", "Tag", "Color", "CreatedAt", "UpdatedAt", "State", "ScreenOrigin"];
 
     /// <summary>
     /// One portable .zip with a hot copy of the database, settings.json and a manifest. It is written to
@@ -150,8 +154,10 @@ public static partial class LocalBackup
 
         var stagedDb = Path.Combine(pending, BrandIdentity.DatabaseFileName);
         var stagedSettings = Path.Combine(pending, SettingsName);
-        // The staged copy sat on disk between two runs: trust it only after checking it again.
-        if (!File.Exists(stagedSettings) || !File.Exists(stagedDb) || CheckDatabase(stagedDb).Problem != BackupProblem.None)
+        // The staged copy sat on disk between two runs: trust it only after checking it again, settings included (a database restored with
+        // settings that do not parse would start the app with a key it cannot read).
+        if (!File.Exists(stagedSettings) || !File.Exists(stagedDb) || !SettingsAreJson(stagedSettings)
+            || CheckDatabase(stagedDb).Problem != BackupProblem.None)
         {
             DeleteTemp(pending);
             return false;
@@ -166,21 +172,61 @@ public static partial class LocalBackup
 
         bool AnyExists(string s) => new[] { liveDb, liveDb + "-wal", liveDb + "-shm", liveSettings }.Any(f => File.Exists(f + s));
 
-        // A leftover journal of the old database must not be replayed onto the restored one.
-        foreach (var side in new[] { "-wal", "-shm" })
-            if (File.Exists(liveDb + side)) File.Move(liveDb + side, liveDb + suffix + side);
+        // Both new files are copied next to the live ones BEFORE anything is touched: if that fails the live data and the staged copy are
+        // exactly as they were. Then the live files are renamed aside, the new ones renamed in, and any failure puts the originals back.
+        const string incoming = ".restore-new";
+        File.Copy(stagedDb, liveDb + incoming, overwrite: true);
+        File.Copy(stagedSettings, liveSettings + incoming, overwrite: true);
 
-        Swap(stagedDb, liveDb, liveDb + suffix);
-        Swap(stagedSettings, liveSettings, liveSettings + suffix);
+        var moved = new List<(string Live, string Kept)>();
+        var placed = new List<string>();
+        try
+        {
+            // A leftover journal of the old database must not be replayed onto the restored one.
+            foreach (var live in new[] { liveDb, liveDb + "-wal", liveDb + "-shm", liveSettings })
+            {
+                if (!File.Exists(live)) continue;
+                File.Move(live, live + suffix);
+                moved.Add((live, live + suffix));
+            }
+            foreach (var live in new[] { liveDb, liveSettings })
+            {
+                File.Move(live + incoming, live);
+                placed.Add(live);
+            }
+        }
+        catch
+        {
+            foreach (var live in placed) TryDelete(live);
+            foreach (var (live, kept) in moved)
+            {
+                try { File.Move(kept, live); }
+                catch (Exception ex) when (ex is IOException or UnauthorizedAccessException) { }
+            }
+            TryDelete(liveDb + incoming);
+            TryDelete(liveSettings + incoming);
+            throw;
+        }
+
         DeleteTemp(pending);
         return true;
     }
 
-    private static void Swap(string staged, string live, string kept)
+    private static void TryDelete(string path)
     {
-        // File.Replace keeps the old file under its new name in one step.
-        if (File.Exists(live)) File.Replace(staged, live, kept);
-        else File.Move(staged, live);
+        try { File.Delete(path); }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException) { }
+    }
+
+    private static bool SettingsAreJson(string path)
+    {
+        try
+        {
+            using var stream = File.OpenRead(path);
+            using var document = JsonDocument.Parse(stream);
+            return document.RootElement.ValueKind == JsonValueKind.Object;
+        }
+        catch (Exception ex) when (ex is JsonException or IOException or UnauthorizedAccessException) { return false; }
     }
 
     /// <summary>Extracts the database and settings of <paramref name="source"/> into <paramref name="dest"/> and checks them.</summary>
@@ -226,6 +272,8 @@ public static partial class LocalBackup
                 if (dbEntry is null) return new(BackupProblem.MissingDatabase, manifest);
                 var settingsEntry = archive.GetEntry(SettingsName);
                 if (settingsEntry is null) return new(BackupProblem.MissingSettings, manifest);
+                // A tiny zip can claim gigabytes: refuse what no real backup looks like before writing anything.
+                if (dbEntry.Length > MaxDatabaseBytes || settingsEntry.Length > MaxSettingsBytes) return new(BackupProblem.Unreadable, manifest);
                 dbEntry.ExtractToFile(dbPath);
                 settingsEntry.ExtractToFile(settingsPath);
             }
@@ -235,6 +283,7 @@ public static partial class LocalBackup
             return new(BackupProblem.Unreadable, null);
         }
 
+        if (!SettingsAreJson(settingsPath)) return new(BackupProblem.MissingSettings, manifest);
         var (problem, notes, schema) = CheckDatabase(dbPath);
         // The counts come from the database itself, not from what the manifest claims.
         var verified = manifest with { NoteCount = notes, SchemaVersion = schema };
@@ -256,6 +305,15 @@ public static partial class LocalBackup
             }
             if (Scalar(connection, "SELECT COUNT(*) FROM sqlite_master WHERE type = 'table' AND name = 'Note';") != 1)
                 return (BackupProblem.DatabaseDamaged, 0, schema);
+            // A valid SQLite file with a Note table of another shape would start the app on something it cannot read.
+            var columns = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            using (var info = connection.CreateCommand())
+            {
+                info.CommandText = "SELECT name FROM pragma_table_info('Note');";
+                using var reader = info.ExecuteReader();
+                while (reader.Read()) columns.Add(reader.GetString(0));
+            }
+            if (!RequiredNoteColumns.All(columns.Contains)) return (BackupProblem.DatabaseDamaged, 0, schema);
             return (BackupProblem.None, Scalar(connection, "SELECT COUNT(*) FROM Note;"), schema);
         }
         catch (SqliteException)

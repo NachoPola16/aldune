@@ -1014,6 +1014,8 @@ public sealed class NotesRepository
         if (note.IsProtected && note.ProtectedContent is null)
             throw new FormatException("A protected note is missing its encrypted content.");
         // Lo que llega de otro dispositivo reemplaza el texto local: se guarda antes, por si el reemplazo no era lo que se quería.
+        // The read below uses another connection while a group may be open: a read is not blocked by the group's pending writes, and the
+        // group is flushed before the only write made here (the history version). Flushing on every note would undo the grouping.
         if (!note.IsProtected && GetById(note.Id) is { IsProtected: false } existing && existing.Text != note.Text)
         {
             FlushBulkSyncWrite();
@@ -1138,8 +1140,8 @@ public sealed class NotesRepository
     public IDisposable BeginBulkSyncWrite()
     {
         if (_bulk is not null) return NoopDisposable.Instance;
-        _bulk = new BulkSyncWrite(_database.OpenConnection(), () => _bulk = null);
         _bulkThread = Environment.CurrentManagedThreadId;
+        _bulk = new BulkSyncWrite(_database.OpenConnection(), () => _bulk = null);
         return _bulk;
     }
 

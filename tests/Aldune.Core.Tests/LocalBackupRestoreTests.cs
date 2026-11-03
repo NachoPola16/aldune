@@ -290,4 +290,73 @@ public sealed class LocalBackupRestoreTests : IDisposable
     {
         Assert.False(LocalBackup.ApplyPendingRestore(_data));
     }
+
+    [Fact]
+    public void ADatabaseWhoseNoteTableLacksTheExpectedColumns_IsRejected()
+    {
+        var folder = Path.Combine(_out, "odd");
+        Directory.CreateDirectory(folder);
+        var db = Path.Combine(folder, "notes.db");
+        using (var connection = new SqliteConnection(new SqliteConnectionStringBuilder { DataSource = db }.ToString()))
+        {
+            connection.Open();
+            using var command = connection.CreateCommand();
+            command.CommandText = "CREATE TABLE Note (Foo TEXT);";
+            command.ExecuteNonQuery();
+        }
+        ClearPool(db);
+        File.WriteAllText(Path.Combine(folder, "settings.json"), "{}");
+
+        Assert.Equal(BackupProblem.DatabaseDamaged, LocalBackup.Verify(folder).Problem);
+    }
+
+    [Fact]
+    public void SettingsThatAreNotJson_AreRejectedAtVerifyAndNeverSwapped()
+    {
+        CreateData(_data, "{\"A\":1}", "keep me");
+        var good = MakeZipFrom("other");
+        var broken = Path.Combine(_out, "broken.zip");
+        File.Copy(good, broken);
+        using (var archive = ZipFile.Open(broken, ZipArchiveMode.Update))
+        {
+            archive.GetEntry("settings.json")!.Delete();
+            using var writer = new StreamWriter(archive.CreateEntry("settings.json").Open());
+            writer.Write("not json {{{");
+        }
+
+        Assert.Equal(BackupProblem.MissingSettings, LocalBackup.Verify(broken).Problem);
+        Assert.Equal(new[] { "keep me" }, TextsOf(_data));
+    }
+
+    [Fact]
+    public void WhenTheSwapFailsHalfWay_TheLiveFilesComeBackAndTheStagedCopyStays()
+    {
+        var zip = MakeZipFrom("from backup");
+        var live = Path.Combine(_root, "live");
+        CreateData(live, "{\"Live\":true}", "live note");
+        Assert.True(LocalBackup.StageRestore(live, zip).IsOk);
+
+        // A program holding settings.json open (an antivirus, say) makes the second file of the swap fail after the first one moved.
+        using (new FileStream(Path.Combine(live, "settings.json"), FileMode.Open, FileAccess.Read, FileShare.Read))
+        {
+            Assert.ThrowsAny<IOException>(() => LocalBackup.ApplyPendingRestore(live));
+        }
+
+        Assert.Equal(new[] { "live note" }, TextsOf(live));
+        Assert.Contains("Live", File.ReadAllText(Path.Combine(live, "settings.json")));
+        Assert.True(LocalBackup.HasPendingRestore(live));
+
+        // Once the file is free the same staged copy applies.
+        Assert.True(LocalBackup.ApplyPendingRestore(live));
+        Assert.Equal(new[] { "from backup" }, TextsOf(live));
+    }
+
+    private string MakeZipFrom(params string[] texts)
+    {
+        var source = Path.Combine(_root, "src-" + Guid.NewGuid().ToString("N"));
+        CreateData(source, "{\"FromBackup\":1}", texts);
+        var zip = Path.Combine(_out, Guid.NewGuid().ToString("N") + ".zip");
+        LocalBackup.CreateManual(source, zip, "9.9.9", Now);
+        return zip;
+    }
 }

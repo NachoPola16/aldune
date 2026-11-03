@@ -46,6 +46,19 @@ public sealed class SyncDiagnosticsTests
     }
 
     [Fact]
+    public void LocalPathsEmailsAndInternalAddresses_AreHidden()
+    {
+        string report = SyncDiagnostics.Render(Info(Attempt(
+            @"Could not read C:\Users\nacho\Sync\notes.json, \\nas\share\x, mail me@example.com, socket 192.168.1.77:8443 refused")));
+
+        Assert.DoesNotContain("nacho", report);
+        Assert.DoesNotContain("nas\\share", report);
+        Assert.DoesNotContain("me@example.com", report);
+        Assert.DoesNotContain("192.168", report);
+        Assert.Contains("refused", report);
+    }
+
+    [Fact]
     public void NoAttemptsYet_SaysSo()
     {
         Assert.Contains("no sync attempts", SyncDiagnostics.Render(Info()), StringComparison.OrdinalIgnoreCase);

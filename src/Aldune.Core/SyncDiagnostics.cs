@@ -73,12 +73,26 @@ public static partial class SyncDiagnostics
             var host = Uri.TryCreate(match.Value, UriKind.Absolute, out var uri) ? uri.Host : "address";
             return host;
         });
-        return SecretPattern().Replace(withoutUrls, "<hidden>").Replace('\r', ' ').Replace('\n', ' ');
+        // Local paths carry the user name, e-mail addresses and internal IP:port pairs identify people and networks: none of that is needed to
+        // understand a failure.
+        string cleaned = PathPattern().Replace(withoutUrls, "<path>");
+        cleaned = EmailPattern().Replace(cleaned, "<email>");
+        cleaned = AddressPattern().Replace(cleaned, "<address>");
+        return SecretPattern().Replace(cleaned, "<hidden>").Replace('\r', ' ').Replace('\n', ' ');
     }
 
     [GeneratedRegex(@"https?://[^\s""'<>]+", RegexOptions.IgnoreCase)]
     private static partial Regex UrlPattern();
 
-    [GeneratedRegex(@"[A-Za-z0-9_\-+/=]{24,}")]
+    [GeneratedRegex(@"[A-Za-z0-9_\-+/=]{20,}")]
     private static partial Regex SecretPattern();
+
+    [GeneratedRegex(@"(?:[A-Za-z]:[\\/]|\\\\)[^\s""'<>|]+")]
+    private static partial Regex PathPattern();
+
+    [GeneratedRegex(@"[A-Za-z0-9._%+\-]+@[A-Za-z0-9.\-]+\.[A-Za-z]{2,}")]
+    private static partial Regex EmailPattern();
+
+    [GeneratedRegex(@"\b\d{1,3}(?:\.\d{1,3}){3}(?::\d+)?\b")]
+    private static partial Regex AddressPattern();
 }
