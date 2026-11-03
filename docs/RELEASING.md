@@ -100,7 +100,7 @@ Android **has no workflow**: the APK is built and signed locally and uploaded by
 
 **Stable Android version (`0.1.0`, without `-rcN`).** It is published the same way, but with tag `android-v0.1.0`, **without** `--prerelease` and with
 `--latest=false`, and **after** the Windows one that is due: that way “the latest” (`releases/latest`) stays the Windows one and the
-Windows apps keep notifying. Check at the end with `gh release list` that the “Latest” row is `v1.7.x` and not the Android one:
+Windows apps keep notifying. Check at the end with `gh release list` that the “Latest” row is the Windows release (`v3.x`) and not the Android one:
 
 ```powershell
 gh release create android-v0.1.0 .\aldune-0.1.0.apk --target main --latest=false --title "Aldune for Android 0.1.0" --notes-file notes.md

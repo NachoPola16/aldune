@@ -7,7 +7,7 @@ Before sending a Pull Request, open an issue to talk about it: the project has d
 
 ## Project rules
 
-- **UI text** always goes through `Strings.T(en, es, de, fr, pt)` (`src/Aldune/Resources/Strings.cs`): all five languages, nothing hard-coded in XAML or code. On Android, strings live in `android/strings.tsv`
+- **UI text** always goes through `Strings.T(en, es, de, fr, pt, it, ja, zh)` (`src/Aldune/Resources/Strings.cs`): all eight languages, nothing hard-coded in XAML or code. On Android, strings live in `android/strings.tsv`
   (edit there and run `python android/scripts/gen_strings.py`).
 - **New logic goes in `Aldune.Core`, test first.** The UI is verified with a throwaway probe ([docs/WPF_PROBES.md](docs/WPF_PROBES.md); Android: [docs/ANDROID_PROBES.md](docs/ANDROID_PROBES.md)).
 - **Write comments and documentation in English**, explaining the why (the code already says the what). A lot of the existing comments are still in Spanish: translate them when you touch that code. Everything in `docs/` is in English except the historical archives noted in `docs/README.md`.

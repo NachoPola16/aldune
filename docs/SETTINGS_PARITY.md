@@ -3,7 +3,7 @@
 They are the same app on two platforms, so a setting that exists on both **has the same name in the interface, the same values and the same default**. This table
 lists which settings are common, which belong to one platform only, and the differences that were left on purpose. It is reviewed whenever a setting is added.
 
-State as of 2026-10-30. Windows: `src/Aldune.Core/AppSettings.cs`. Android: `AppSettings` in `android/app/.../data/SettingsStore.kt`.
+State as of 2026-11-03. Windows: `src/Aldune.Core/AppSettings.cs`. Android: `AppSettings` in `android/app/.../data/SettingsStore.kt`.
 
 ## Settings tabs
 
