@@ -1449,6 +1449,18 @@ public static class Strings
         "Meine Geräte", "Mes appareils", "Meus dispositivos", "I miei dispositivi", "マイデバイス", "我的设备") : name;
     public static string SyncProfileNameLabel => T("Name:", "Nombre:",
         "Name:", "Nom :", "Nome:", "Nome:", "名前:", "名称：");
+    public static string SyncCopyReportButton => T("Copy sync report", "Copiar informe de sync",
+        "Sync-Bericht kopieren", "Copier le rapport de synchro", "Copiar relatório de sincronização", "Copia rapporto di sincronizzazione", "同期レポートをコピー", "复制同步报告");
+    public static string SyncCopyReportTooltip => T("Copies the last sync attempts (times, counts, errors) to paste into a message. It has no notes, keys or full addresses.",
+        "Copia los últimos intentos de sincronización (horas, cifras, errores) para pegarlos en un mensaje. No lleva notas, claves ni direcciones completas.",
+        "Kopiert die letzten Synchronisierungsversuche (Zeiten, Zahlen, Fehler) zum Einfügen in eine Nachricht. Enthält keine Notizen, Schlüssel oder vollständigen Adressen.",
+        "Copie les dernières tentatives de synchronisation (heures, chiffres, erreurs) à coller dans un message. Sans notes, clés ni adresses complètes.",
+        "Copia as últimas tentativas de sincronização (horários, números, erros) para colar numa mensagem. Sem notas, chaves nem endereços completos.",
+        "Copia gli ultimi tentativi di sincronizzazione (orari, numeri, errori) da incollare in un messaggio. Non contiene note, chiavi o indirizzi completi.",
+        "直近の同期の試行(時刻、件数、エラー)をコピーします。メモ、鍵、完全なアドレスは含まれません。",
+        "复制最近的同步尝试(时间、数量、错误),可粘贴到消息中。不含笔记、密钥或完整地址。");
+    public static string SyncReportCopiedStatus => T("Sync report copied.", "Informe de sync copiado.",
+        "Sync-Bericht kopiert.", "Rapport de synchro copié.", "Relatório de sincronização copiado.", "Rapporto di sincronizzazione copiato.", "同期レポートをコピーしました。", "已复制同步报告。");
     public static string SyncNewProfile => T("New", "Nuevo",
         "Neu", "Nouveau", "Novo", "Nuovo", "新規", "新建");
     public static string SyncDeleteProfile => T("Delete", "Eliminar",

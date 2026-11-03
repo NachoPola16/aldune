@@ -1144,6 +1144,10 @@
                             <Button x:Name="SyncNowButton" Content="{x:Static res:Strings.SyncNowButton}"
                                     Click="OnSyncNowClick" Margin="0,0,7,6" Padding="10,6"
                                     Style="{StaticResource RecordButtonStyle}" />
+                            <Button x:Name="SyncCopyReportButton" Content="{x:Static res:Strings.SyncCopyReportButton}"
+                                    ToolTip="{x:Static res:Strings.SyncCopyReportTooltip}"
+                                    Click="OnSyncCopyReportClick" Margin="0,0,7,6" Padding="10,6"
+                                    Style="{StaticResource RecordButtonStyle}" />
                         </WrapPanel>
                         <TextBlock Text="{x:Static res:Strings.SyncRevokeAccessHint}" Foreground="{DynamicResource AlduneHintBrush}"
                                    FontSize="{DynamicResource AlduneTextSmall}" TextWrapping="Wrap" Margin="0,5,56,0" />

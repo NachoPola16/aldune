@@ -293,6 +293,56 @@ public sealed class SyncService
     /// </summary>
     public SyncResult Synchronize(bool automaticOnly = false)
     {
+        var clock = System.Diagnostics.Stopwatch.StartNew();
+        var started = DateTimeOffset.UtcNow;
+        SyncResult result;
+        try { result = SynchronizeAll(automaticOnly); }
+        catch (Exception ex)
+        {
+            Record(new SyncAttempt(started, clock.Elapsed, automaticOnly, new SyncResult(0, 0, 0, 0, ex.GetType().Name + ": " + ex.Message)));
+            throw;
+        }
+        // A silent automatic pass with nothing to do is not an attempt worth listing.
+        if (!(automaticOnly && result is { Succeeded: true, Uploaded: 0, Downloaded: 0, ConflictsResolved: 0, TombstonesApplied: 0 }))
+            Record(new SyncAttempt(started, clock.Elapsed, automaticOnly, result));
+        return result;
+    }
+
+    /// <summary>The plain-text sync report (see <see cref="SyncDiagnostics"/>) for the profile and the passes of this run.</summary>
+    public string BuildDiagnosticsReport(string appVersion, string platform)
+    {
+        string? host = null;
+        if (_settings.SyncTransport != SyncTransportKind.Folder && Uri.TryCreate(_settings.SyncServerUrl, UriKind.Absolute, out var uri)) host = uri.Host;
+        return SyncDiagnostics.Render(new SyncDiagnosticsInfo
+        {
+            AppVersion = appVersion, Platform = platform, Transport = _settings.SyncTransport.ToString(), Scope = _settings.SyncScope.ToString(),
+            ServerHost = host,
+            ProfilesTotal = _settings.SyncProfiles.Count, ProfilesEnabled = _settings.SyncProfiles.Count(profile => profile.SyncEnabled),
+            ActiveNotes = _repository.GetByState(NoteState.Active).Count, ArchivedNotes = _repository.GetByState(NoteState.Archived).Count,
+            TrashedNotes = _repository.GetByState(NoteState.Trashed).Count, OpenConflicts = _repository.GetSyncConflicts().Count,
+            LastSyncAt = _settings.LastSyncAt, Attempts = RecentAttempts,
+        });
+    }
+
+    private readonly List<SyncAttempt> _attempts = [];
+
+    /// <summary>The last <see cref="SyncDiagnostics.MaxAttempts"/> passes of this run, oldest first, for the diagnostics report.</summary>
+    public IReadOnlyList<SyncAttempt> RecentAttempts
+    {
+        get { lock (_attempts) return _attempts.ToList(); }
+    }
+
+    private void Record(SyncAttempt attempt)
+    {
+        lock (_attempts)
+        {
+            _attempts.Add(attempt);
+            if (_attempts.Count > SyncDiagnostics.MaxAttempts) _attempts.RemoveAt(0);
+        }
+    }
+
+    private SyncResult SynchronizeAll(bool automaticOnly)
+    {
         lock (_syncGate)
         {
             // Lo que haya en los campos del perfil elegido pasa a su perfil: los demás se leen de la lista.

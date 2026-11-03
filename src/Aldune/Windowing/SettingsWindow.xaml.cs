@@ -1771,6 +1771,21 @@ public partial class SettingsWindow : Window
         }
     }
 
+    private void OnSyncCopyReportClick(object sender, RoutedEventArgs e)
+    {
+        if (_syncService is null) return;
+        try
+        {
+            Clipboard.SetText(_syncService.BuildDiagnosticsReport(AppInfo.Version, Environment.OSVersion.VersionString));
+            SyncStatusText.Text = Strings.SyncReportCopiedStatus;
+        }
+        catch (Exception ex) when (ex is System.Runtime.InteropServices.ExternalException or InvalidOperationException)
+        {
+            // The clipboard can be held by another program for a moment.
+            SyncStatusText.Text = Strings.SyncErrorStatus(ex.Message);
+        }
+    }
+
     private void UpdateSyncUi()
     {
         bool enabled = SyncEnabledCheck.IsChecked == true;
