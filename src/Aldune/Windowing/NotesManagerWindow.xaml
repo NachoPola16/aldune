@@ -4,8 +4,8 @@
         xmlns:local="clr-namespace:Aldune.Windowing"
         xmlns:res="clr-namespace:Aldune.Resources"
         Title="{x:Static res:Strings.ManageNotesTitle}"
-        Width="450" Height="560"
-        MinWidth="380" MinHeight="360"
+        Width="900" Height="700"
+        MinWidth="880" MinHeight="460"
         UseLayoutRounding="True"
         SnapsToDevicePixels="True"
         WindowStyle="None"
@@ -801,7 +801,7 @@
                      atras de toda la app, asi que no comparte vecindario con las reversibles.
                      Solo aparece en la papelera — ofrecerlo en las demas vistas permitiria saltarse
                      la papelera, que es justo la red de seguridad que la hace util. -->
-                <Button x:Name="DeleteButton" DockPanel.Dock="Left"
+                <Button x:Name="DeleteButton" DockPanel.Dock="Left" MinWidth="130"
                         Click="OnDeleteSelectedClick"
                         Visibility="Collapsed"
                         VerticalAlignment="Center"
@@ -817,12 +817,23 @@
                      muy estrecho, las dos líneas se tocaban y los botones parecían solaparse. -->
                 <!-- Pegados a la derecha (las acciones sobre la selección van al final) y los cuatro del mismo ancho: antes Export y Trash eran más
                      estrechos que Archive y Restore y la fila parecía desigual. -->
-                <WrapPanel HorizontalAlignment="Right">
+                <!-- The -8 cancels the left margin of the first button, so the row ends exactly at the 20 px margin and needs 8 px less. -->
+                <WrapPanel HorizontalAlignment="Right" Margin="-8,0,0,0">
+                    <!-- Brings notes in from other apps. Like Export it does not depend on the selection. -->
+                    <Button x:Name="ImportButton" Click="OnImportNotesClick" MinWidth="130" Margin="8,3,0,3"
+                            ToolTip="{x:Static res:Strings.ImportNotesTooltip}"
+                            Style="{StaticResource ToolbarButtonStyle}">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="&#xE898;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets"
+                                       VerticalAlignment="Center" Margin="0,0,6,0" />
+                            <TextBlock Text="{x:Static res:Strings.ImportNotesButton}" VerticalAlignment="Center" />
+                        </StackPanel>
+                    </Button>
                     <!-- Exporta la selección si hay alguna marcada, o todas las del filtro actual si
                          no — no depende de tener algo seleccionado, a diferencia de los botones de
                          abajo. Glifo elegido sin verificación visual del render real, igual que ya
                          pasó una vez con el de "abrir todas" (ver docs/STATUS.md). -->
-                    <Button x:Name="ExportButton" Click="OnExportSelectedClick" MinWidth="86" Margin="8,3,0,3"
+                    <Button x:Name="ExportButton" Click="OnExportSelectedClick" MinWidth="130" Margin="8,3,0,3"
                             Style="{StaticResource ToolbarButtonStyle}">
                         <StackPanel Orientation="Horizontal">
                             <TextBlock Text="&#xE896;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets"
@@ -830,7 +841,7 @@
                             <TextBlock Text="{x:Static res:Strings.Export}" VerticalAlignment="Center" />
                         </StackPanel>
                     </Button>
-                    <Button x:Name="ArchiveButton" Click="OnArchiveSelectedClick" MinWidth="86" Margin="8,3,0,3"
+                    <Button x:Name="ArchiveButton" Click="OnArchiveSelectedClick" MinWidth="130" Margin="8,3,0,3"
                             Style="{StaticResource ToolbarButtonStyle}">
                         <StackPanel Orientation="Horizontal">
                             <TextBlock Text="&#xE7B8;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets"
@@ -838,7 +849,7 @@
                             <TextBlock Text="{x:Static res:Strings.Archive}" VerticalAlignment="Center" />
                         </StackPanel>
                     </Button>
-                    <Button x:Name="RestoreButton" Click="OnRestoreSelectedClick" MinWidth="86" Margin="8,3,0,3"
+                    <Button x:Name="RestoreButton" Click="OnRestoreSelectedClick" MinWidth="130" Margin="8,3,0,3"
                             Style="{StaticResource ToolbarButtonStyle}">
                         <StackPanel Orientation="Horizontal">
                             <TextBlock Text="&#xE7A7;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets"
@@ -846,7 +857,7 @@
                             <TextBlock Text="{x:Static res:Strings.Restore}" VerticalAlignment="Center" />
                         </StackPanel>
                     </Button>
-                    <Button x:Name="TrashButton" Click="OnTrashSelectedClick" MinWidth="86" Margin="8,3,0,3"
+                    <Button x:Name="TrashButton" Click="OnTrashSelectedClick" MinWidth="130" Margin="8,3,0,3"
                             Style="{StaticResource DangerToolbarButtonStyle}">
                         <StackPanel Orientation="Horizontal">
                             <TextBlock Text="&#xE74D;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets"

@@ -2251,4 +2251,194 @@ public static class Strings
         "Eine verknüpfte Notiz ist die Datei selbst, und die Datei ist unverschlüsselt. Wandle sie in eine normale Notiz um, um sie zu schützen.",
         "Une note liée est le fichier lui-même, et le fichier est en clair. Convertissez-la en note normale pour la protéger.",
         "Uma nota vinculada é o próprio arquivo, e o arquivo está sem criptografia. Converta-a em nota normal para protegê-la.", "Una nota collegata è il file stesso, e il file è testo semplice. Convertila in una nota normale per proteggerla.", "リンクされたノートはファイルそのものであり、ファイルはプレーンテキストです。保護するには、通常のノートに変換してください。", "链接笔记就是文件本身，而文件是纯文本。要保护它，请先将其转换为普通笔记。");
+
+    // --- Import notes from other apps (Sticky Notes, Google Keep, Evernote, Markdown folders) -----------------------------------
+
+    public static string ImportNotesButton => T("Import", "Importar",
+        "Importieren", "Importer", "Importar", "Importa", "インポート", "导入");
+    public static string ImportNotesTooltip => T("Import notes from another app…", "Importar notas de otra aplicación…",
+        "Notizen aus einer anderen App importieren…", "Importer des notes depuis une autre application…", "Importar notas de outro aplicativo…", "Importa note da un'altra app…", "他のアプリからノートをインポート…", "从其他应用导入笔记…");
+    public static string ImportNotesTitle => T("Import notes", "Importar notas",
+        "Notizen importieren", "Importer des notes", "Importar notas", "Importa note", "ノートをインポート", "导入笔记");
+    public static string ImportNotesHint => T(
+        "Bring in your notes from another app. Nothing you already have in Aldune is changed: imported notes are added as new ones.",
+        "Trae tus notas de otra aplicación. Nada de lo que ya tienes en Aldune se modifica: las notas importadas se añaden como nuevas.",
+        "Hole deine Notizen aus einer anderen App. Nichts, was du schon in Aldune hast, wird verändert: Importierte Notizen werden als neue hinzugefügt.",
+        "Importez vos notes depuis une autre application. Rien de ce que vous avez déjà dans Aldune n'est modifié : les notes importées sont ajoutées comme nouvelles.",
+        "Traga suas notas de outro aplicativo. Nada do que você já tem no Aldune é alterado: as notas importadas são adicionadas como novas.",
+        "Porta le tue note da un'altra app. Nulla di ciò che hai già in Aldune viene modificato: le note importate vengono aggiunte come nuove.",
+        "他のアプリからノートを取り込みます。Aldune に既にあるものは変更されません。インポートしたノートは新しいノートとして追加されます。",
+        "从其他应用带入你的笔记。Aldune 中已有的内容不会被修改：导入的笔记会作为新笔记添加。");
+    public static string ImportFromLabel => T("Import from", "Importar desde",
+        "Importieren aus", "Importer depuis", "Importar de", "Importa da", "インポート元", "导入来源");
+    public static string ImportSourceSticky => T("Microsoft Sticky Notes", "Microsoft Sticky Notes (Notas rápidas)",
+        "Microsoft Sticky Notes (Haftnotizen)", "Microsoft Sticky Notes (Pense-bêtes)", "Microsoft Sticky Notes (Notas Autoadesivas)", "Microsoft Sticky Notes", "Microsoft Sticky Notes（付箋）", "Microsoft Sticky Notes（便笺）");
+    public static string ImportSourceKeep => T("Google Keep (Takeout)", "Google Keep (Takeout)",
+        "Google Keep (Takeout)", "Google Keep (Takeout)", "Google Keep (Takeout)", "Google Keep (Takeout)", "Google Keep（Takeout）", "Google Keep（Takeout）");
+    public static string ImportSourceEvernote => T("Evernote (.enex)", "Evernote (.enex)",
+        "Evernote (.enex)", "Evernote (.enex)", "Evernote (.enex)", "Evernote (.enex)", "Evernote（.enex）", "Evernote（.enex）");
+    public static string ImportSourceFolder => T("Folder of .md / .txt files", "Carpeta de archivos .md / .txt",
+        "Ordner mit .md-/.txt-Dateien", "Dossier de fichiers .md / .txt", "Pasta de arquivos .md / .txt", "Cartella di file .md / .txt", ".md / .txt ファイルのフォルダー", ".md / .txt 文件所在的文件夹");
+    public static string ImportHelpSticky => T(
+        "Reads the database of the Sticky Notes app (plum.sqlite). Use the one from Windows, or choose a copy. Pictures and ink are not imported.",
+        "Lee la base de datos de la aplicación Notas rápidas (plum.sqlite). Usa la de Windows o elige una copia. Las imágenes y la tinta no se importan.",
+        "Liest die Datenbank der Haftnotizen-App (plum.sqlite). Nimm die von Windows oder wähle eine Kopie. Bilder und Handschrift werden nicht importiert.",
+        "Lit la base de données de l'application Pense-bêtes (plum.sqlite). Utilisez celle de Windows ou choisissez une copie. Les images et l'encre ne sont pas importées.",
+        "Lê o banco de dados do aplicativo Notas Autoadesivas (plum.sqlite). Use o do Windows ou escolha uma cópia. Imagens e tinta não são importadas.",
+        "Legge il database dell'app Sticky Notes (plum.sqlite). Usa quello di Windows o scegli una copia. Immagini e inchiostro non vengono importati.",
+        "付箋アプリのデータベース（plum.sqlite）を読み込みます。Windows のものを使うか、コピーを選んでください。画像と手書きはインポートされません。",
+        "读取便笺应用的数据库（plum.sqlite）。使用 Windows 自带的，或选择一份副本。图片和墨迹不会导入。");
+    public static string ImportHelpKeep => T(
+        "Choose the Google Takeout .zip, or the Keep folder inside it (one .json per note). Lists become tasks, labels become tags, and trash, archive and pins are kept. Images and audio are not imported.",
+        "Elige el .zip de Google Takeout o la carpeta Keep que contiene (un .json por nota). Las listas pasan a tareas, las etiquetas a etiquetas, y se conservan la papelera, el archivo y las fijadas. Las imágenes y el audio no se importan.",
+        "Wähle die .zip-Datei von Google Takeout oder den darin enthaltenen Ordner Keep (eine .json pro Notiz). Listen werden zu Aufgaben, Labels zu Tags; Papierkorb, Archiv und angeheftete Notizen bleiben erhalten. Bilder und Audio werden nicht importiert.",
+        "Choisissez le .zip de Google Takeout ou le dossier Keep qu'il contient (un .json par note). Les listes deviennent des tâches, les libellés des étiquettes ; corbeille, archive et notes épinglées sont conservées. Les images et l'audio ne sont pas importés.",
+        "Escolha o .zip do Google Takeout ou a pasta Keep dentro dele (um .json por nota). As listas viram tarefas, os marcadores viram etiquetas; lixeira, arquivo e fixadas são mantidos. Imagens e áudio não são importados.",
+        "Scegli lo .zip di Google Takeout o la cartella Keep al suo interno (un .json per nota). Le liste diventano attività, le etichette diventano tag; cestino, archivio e note fissate vengono mantenuti. Immagini e audio non vengono importati.",
+        "Google Takeout の .zip、またはその中の Keep フォルダー（ノートごとに 1 つの .json）を選んでください。リストはタスクに、ラベルはタグになり、ごみ箱・アーカイブ・固定は引き継がれます。画像と音声はインポートされません。",
+        "选择 Google Takeout 的 .zip，或其中的 Keep 文件夹（每条笔记一个 .json）。清单会变成任务，标签会变成标签，回收站、归档和置顶都会保留。图片和音频不会导入。");
+    public static string ImportHelpEvernote => T(
+        "Choose an .enex file exported from Evernote. Check boxes become tasks and tags are kept. Attachments are not imported.",
+        "Elige un archivo .enex exportado desde Evernote. Las casillas pasan a tareas y se conservan las etiquetas. Los adjuntos no se importan.",
+        "Wähle eine aus Evernote exportierte .enex-Datei. Kontrollkästchen werden zu Aufgaben, Tags bleiben erhalten. Anhänge werden nicht importiert.",
+        "Choisissez un fichier .enex exporté depuis Evernote. Les cases à cocher deviennent des tâches et les étiquettes sont conservées. Les pièces jointes ne sont pas importées.",
+        "Escolha um arquivo .enex exportado do Evernote. As caixas de seleção viram tarefas e as etiquetas são mantidas. Os anexos não são importados.",
+        "Scegli un file .enex esportato da Evernote. Le caselle diventano attività e i tag vengono mantenuti. Gli allegati non vengono importati.",
+        "Evernote からエクスポートした .enex ファイルを選んでください。チェックボックスはタスクに、タグは引き継がれます。添付ファイルはインポートされません。",
+        "选择从 Evernote 导出的 .enex 文件。复选框会变成任务，标签会保留。附件不会导入。");
+    public static string ImportHelpFolder => T(
+        "Each .md, .markdown or .txt file in the folder (and its subfolders) becomes a note. The title is the first heading, or the file name.",
+        "Cada archivo .md, .markdown o .txt de la carpeta (y sus subcarpetas) pasa a ser una nota. El título es el primer encabezado o, si no hay, el nombre del archivo.",
+        "Jede .md-, .markdown- oder .txt-Datei im Ordner (und seinen Unterordnern) wird zu einer Notiz. Der Titel ist die erste Überschrift oder der Dateiname.",
+        "Chaque fichier .md, .markdown ou .txt du dossier (et de ses sous-dossiers) devient une note. Le titre est le premier titre, ou à défaut le nom du fichier.",
+        "Cada arquivo .md, .markdown ou .txt da pasta (e de suas subpastas) vira uma nota. O título é o primeiro cabeçalho ou, se não houver, o nome do arquivo.",
+        "Ogni file .md, .markdown o .txt nella cartella (e nelle sue sottocartelle) diventa una nota. Il titolo è la prima intestazione oppure il nome del file.",
+        "フォルダー（とそのサブフォルダー）内の .md、.markdown、.txt ファイルが、それぞれ 1 つのノートになります。タイトルは最初の見出し、なければファイル名です。",
+        "文件夹（及其子文件夹）中的每个 .md、.markdown 或 .txt 文件都会成为一条笔记。标题取第一个标题，没有则用文件名。");
+    public static string ImportChooseFile => T("Choose file…", "Elegir archivo…",
+        "Datei wählen…", "Choisir un fichier…", "Escolher arquivo…", "Scegli file…", "ファイルを選択…", "选择文件…");
+    public static string ImportChooseFolder => T("Choose folder…", "Elegir carpeta…",
+        "Ordner wählen…", "Choisir un dossier…", "Escolher pasta…", "Scegli cartella…", "フォルダーを選択…", "选择文件夹…");
+    public static string ImportChooseZip => T("Choose .zip…", "Elegir .zip…",
+        ".zip wählen…", "Choisir un .zip…", "Escolher .zip…", "Scegli .zip…", ".zip を選択…", "选择 .zip…");
+    public static string ImportUseWindows => T("Use the one from Windows", "Usar la de Windows",
+        "Die von Windows verwenden", "Utiliser celle de Windows", "Usar a do Windows", "Usa quello di Windows", "Windows のものを使う", "使用 Windows 自带的");
+    public static string ImportNothingChosen => T("Nothing chosen yet.", "Aún no has elegido nada.",
+        "Noch nichts ausgewählt.", "Rien n'a encore été choisi.", "Nada escolhido ainda.", "Non hai ancora scelto nulla.", "まだ何も選択されていません。", "尚未选择。");
+    public static string ImportReading => T("Reading…", "Leyendo…",
+        "Wird gelesen …", "Lecture…", "Lendo…", "Lettura…", "読み込み中…", "正在读取…");
+    public static string ImportImporting => T("Importing…", "Importando…",
+        "Wird importiert …", "Importation…", "Importando…", "Importazione…", "インポート中…", "正在导入…");
+    public static string ImportRunButton => T("Import", "Importar",
+        "Importieren", "Importer", "Importar", "Importa", "インポート", "导入");
+    public static string ImportClose => T("Close", "Cerrar",
+        "Schließen", "Fermer", "Fechar", "Chiudi", "閉じる", "关闭");
+    public static string ImportFolderDialogTitle => T("Choose the folder to import from", "Elige la carpeta de la que importar",
+        "Ordner zum Importieren wählen", "Choisir le dossier à importer", "Escolha a pasta da qual importar", "Scegli la cartella da cui importare", "インポート元のフォルダーを選択", "选择要导入的文件夹");
+    public static string ImportFilterSticky => T("Sticky Notes database (*.sqlite)|*.sqlite|All files (*.*)|*.*", "Base de datos de Notas rápidas (*.sqlite)|*.sqlite|Todos los archivos (*.*)|*.*",
+        "Haftnotizen-Datenbank (*.sqlite)|*.sqlite|Alle Dateien (*.*)|*.*", "Base de données Pense-bêtes (*.sqlite)|*.sqlite|Tous les fichiers (*.*)|*.*", "Banco de dados das Notas Autoadesivas (*.sqlite)|*.sqlite|Todos os arquivos (*.*)|*.*", "Database di Sticky Notes (*.sqlite)|*.sqlite|Tutti i file (*.*)|*.*", "付箋のデータベース (*.sqlite)|*.sqlite|すべてのファイル (*.*)|*.*", "便笺数据库 (*.sqlite)|*.sqlite|所有文件 (*.*)|*.*");
+    public static string ImportFilterEvernote => T("Evernote export (*.enex)|*.enex|All files (*.*)|*.*", "Exportación de Evernote (*.enex)|*.enex|Todos los archivos (*.*)|*.*",
+        "Evernote-Export (*.enex)|*.enex|Alle Dateien (*.*)|*.*", "Export Evernote (*.enex)|*.enex|Tous les fichiers (*.*)|*.*", "Exportação do Evernote (*.enex)|*.enex|Todos os arquivos (*.*)|*.*", "Esportazione di Evernote (*.enex)|*.enex|Tutti i file (*.*)|*.*", "Evernote のエクスポート (*.enex)|*.enex|すべてのファイル (*.*)|*.*", "Evernote 导出文件 (*.enex)|*.enex|所有文件 (*.*)|*.*");
+
+    public static string ImportWillAdd(int count) => count == 1
+        ? T("1 note will be added.", "Se añadirá 1 nota.", "1 Notiz wird hinzugefügt.", "1 note sera ajoutée.", "1 nota será adicionada.", "Verrà aggiunta 1 nota.", "1 件のノートが追加されます。", "将添加 1 条笔记。")
+        : T($"{count} notes will be added.", $"Se añadirán {count} notas.", $"{count} Notizen werden hinzugefügt.", $"{count} notes seront ajoutées.", $"{count} notas serão adicionadas.", $"Verranno aggiunte {count} note.", $"{count} 件のノートが追加されます。", $"将添加 {count} 条笔记。");
+    public static string ImportNothingToAdd => T("There is nothing new to add.", "No hay nada nuevo que añadir.",
+        "Es gibt nichts Neues hinzuzufügen.", "Il n'y a rien de nouveau à ajouter.", "Não há nada de novo para adicionar.", "Non c'è nulla di nuovo da aggiungere.", "追加する新しいものはありません。", "没有可添加的新内容。");
+    public static string ImportAlreadyThere(int count) => T(
+        $"Already in Aldune (same text and date), not added again: {count}",
+        $"Ya están en Aldune (mismo texto y fecha), no se añaden otra vez: {count}",
+        $"Bereits in Aldune (gleicher Text und gleiches Datum), nicht erneut hinzugefügt: {count}",
+        $"Déjà dans Aldune (même texte et même date), non ajoutées de nouveau : {count}",
+        $"Já estão no Aldune (mesmo texto e data), não serão adicionadas de novo: {count}",
+        $"Già in Aldune (stesso testo e stessa data), non vengono aggiunte di nuovo: {count}",
+        $"すでに Aldune にある（同じテキストと日付）ため追加しません：{count} 件",
+        $"已在 Aldune 中（文本和日期相同），不会重复添加：{count} 条");
+    public static string ImportSkippedEmpty(int count) => T(
+        $"Left out, empty: {count}",
+        $"Omitidas, vacías: {count}",
+        $"Ausgelassen, leer: {count}",
+        $"Ignorées, vides : {count}",
+        $"Omitidas, vazias: {count}",
+        $"Escluse, vuote: {count}",
+        $"除外（空）：{count} 件",
+        $"已跳过（为空）：{count} 条");
+    public static string ImportSkippedTooLarge(int count) => T(
+        $"Left out, too large: {count}",
+        $"Omitidas, demasiado grandes: {count}",
+        $"Ausgelassen, zu groß: {count}",
+        $"Ignorées, trop volumineuses : {count}",
+        $"Omitidas, grandes demais: {count}",
+        $"Escluse, troppo grandi: {count}",
+        $"除外（大きすぎる）：{count} 件",
+        $"已跳过（过大）：{count} 条");
+    public static string ImportSkippedNotText(int count) => T(
+        $"Left out, not plain text (binary or unsupported encoding): {count}",
+        $"Omitidos, no son texto (binarios o con una codificación no admitida): {count}",
+        $"Ausgelassen, kein reiner Text (binär oder nicht unterstützte Kodierung): {count}",
+        $"Ignorés, pas du texte brut (binaires ou encodage non pris en charge) : {count}",
+        $"Omitidos, não são texto simples (binários ou codificação não suportada): {count}",
+        $"Esclusi, non sono testo semplice (binari o con codifica non supportata): {count}",
+        $"除外（プレーンテキストではない：バイナリまたは未対応の文字コード）：{count} 件",
+        $"已跳过（不是纯文本：二进制或不支持的编码）：{count} 个");
+    public static string ImportSkippedUnreadable(int count) => T(
+        $"Left out, could not be read: {count}",
+        $"Omitidas, no se pudieron leer: {count}",
+        $"Ausgelassen, nicht lesbar: {count}",
+        $"Ignorées, illisibles : {count}",
+        $"Omitidas, não puderam ser lidas: {count}",
+        $"Escluse, non leggibili: {count}",
+        $"除外（読み取れない）：{count} 件",
+        $"已跳过（无法读取）：{count} 条");
+    public static string ImportSkippedLimit(int count) => T(
+        $"Left out, beyond the limit of {Aldune.Core.Importing.ImportLimits.MaxNotes} notes per import (import again for the rest): {count}",
+        $"Omitidas, por encima del límite de {Aldune.Core.Importing.ImportLimits.MaxNotes} notas por importación (importa de nuevo para el resto): {count}",
+        $"Ausgelassen, über dem Limit von {Aldune.Core.Importing.ImportLimits.MaxNotes} Notizen pro Import (importiere erneut für den Rest): {count}",
+        $"Ignorées, au-delà de la limite de {Aldune.Core.Importing.ImportLimits.MaxNotes} notes par importation (importez de nouveau pour le reste) : {count}",
+        $"Omitidas, acima do limite de {Aldune.Core.Importing.ImportLimits.MaxNotes} notas por importação (importe de novo para o restante): {count}",
+        $"Escluse, oltre il limite di {Aldune.Core.Importing.ImportLimits.MaxNotes} note per importazione (importa di nuovo per il resto): {count}",
+        $"除外（1 回の上限 {Aldune.Core.Importing.ImportLimits.MaxNotes} 件を超過。残りはもう一度インポート）：{count} 件",
+        $"已跳过（超出每次导入 {Aldune.Core.Importing.ImportLimits.MaxNotes} 条的上限，再次导入可带入其余的）：{count} 条");
+    public static string ImportAttachmentsIgnored(int attachments, int notes) => T(
+        $"{attachments} image, audio, file or drawing attachment(s) in {notes} note(s) are not imported: Aldune only holds text. The text of those notes is imported.",
+        $"{attachments} adjunto(s) (imágenes, audio, archivos o dibujos) de {notes} nota(s) no se importan: Aldune solo guarda texto. El texto de esas notas sí se importa.",
+        $"{attachments} Anhang/Anhänge (Bilder, Audio, Dateien oder Zeichnungen) in {notes} Notiz(en) werden nicht importiert: Aldune speichert nur Text. Der Text dieser Notizen wird importiert.",
+        $"{attachments} pièce(s) jointe(s) (images, audio, fichiers ou dessins) dans {notes} note(s) ne sont pas importées : Aldune ne conserve que du texte. Le texte de ces notes est importé.",
+        $"{attachments} anexo(s) (imagens, áudio, arquivos ou desenhos) em {notes} nota(s) não são importados: o Aldune guarda apenas texto. O texto dessas notas é importado.",
+        $"{attachments} allegato/i (immagini, audio, file o disegni) in {notes} nota/e non vengono importati: Aldune conserva solo testo. Il testo di quelle note viene importato.",
+        $"{notes} 件のノートにある添付 {attachments} 件（画像・音声・ファイル・手書き）はインポートされません。Aldune はテキストのみを保存します。これらのノートのテキストはインポートされます。",
+        $"{notes} 条笔记中的 {attachments} 个附件（图片、音频、文件或绘图）不会导入：Aldune 只保存文本。这些笔记的文本会导入。");
+    public static string ImportColoursNote => T("Colours are matched to the nearest colour of your current note theme. Original dates are kept.",
+        "Los colores se ajustan al más cercano del tema de notas actual. Se conservan las fechas originales.",
+        "Farben werden der ähnlichsten Farbe deines aktuellen Notizdesigns zugeordnet. Die ursprünglichen Daten bleiben erhalten.",
+        "Les couleurs sont associées à la plus proche de votre thème de notes actuel. Les dates d'origine sont conservées.",
+        "As cores são associadas à mais próxima do tema de notas atual. As datas originais são mantidas.",
+        "I colori vengono abbinati al più vicino del tema note attuale. Le date originali vengono mantenute.",
+        "色は現在のノートテーマで最も近い色に置き換えられます。元の日付は保持されます。",
+        "颜色会匹配到当前笔记主题中最接近的颜色。原始日期会保留。");
+    public static string ImportFailureText(Aldune.Core.Importing.ImportFailure failure, bool sticky) => failure switch
+    {
+        Aldune.Core.Importing.ImportFailure.NotFound when sticky => T(
+            "Sticky Notes data was not found on this account. If you have a copy of plum.sqlite, choose it.",
+            "No se han encontrado datos de Notas rápidas en esta cuenta. Si tienes una copia de plum.sqlite, elígela.",
+            "Auf diesem Konto wurden keine Haftnotizen-Daten gefunden. Wenn du eine Kopie von plum.sqlite hast, wähle sie.",
+            "Aucune donnée Pense-bêtes n'a été trouvée sur ce compte. Si vous avez une copie de plum.sqlite, choisissez-la.",
+            "Não foram encontrados dados das Notas Autoadesivas nesta conta. Se você tem uma cópia de plum.sqlite, escolha-a.",
+            "Non sono stati trovati dati di Sticky Notes su questo account. Se hai una copia di plum.sqlite, sceglila.",
+            "このアカウントで付箋のデータが見つかりませんでした。plum.sqlite のコピーがあれば、それを選んでください。",
+            "在此账户上未找到便笺数据。如果你有 plum.sqlite 的副本，请选择它。"),
+        Aldune.Core.Importing.ImportFailure.NotFound => T("That file or folder no longer exists.", "Ese archivo o carpeta ya no existe.",
+            "Diese Datei oder dieser Ordner existiert nicht mehr.", "Ce fichier ou dossier n'existe plus.", "Esse arquivo ou pasta não existe mais.", "Quel file o cartella non esiste più.", "そのファイルまたはフォルダーはもう存在しません。", "该文件或文件夹已不存在。"),
+        Aldune.Core.Importing.ImportFailure.TooLarge => T("That file is too large to import safely.", "Ese archivo es demasiado grande para importarlo con seguridad.",
+            "Diese Datei ist zu groß, um sie sicher zu importieren.", "Ce fichier est trop volumineux pour être importé en toute sécurité.", "Esse arquivo é grande demais para ser importado com segurança.", "Quel file è troppo grande per essere importato in sicurezza.", "このファイルは大きすぎて安全にインポートできません。", "该文件太大，无法安全导入。"),
+        Aldune.Core.Importing.ImportFailure.WrongFormat => T("That does not look like the right kind of file for this source.", "Eso no parece el tipo de archivo adecuado para este origen.",
+            "Das scheint nicht die richtige Dateiart für diese Quelle zu sein.", "Ce n'est pas le bon type de fichier pour cette source.", "Isso não parece ser o tipo de arquivo certo para esta origem.", "Non sembra il tipo di file giusto per questa origine.", "この取り込み元に適したファイルではないようです。", "这看起来不是此来源对应的文件类型。"),
+        Aldune.Core.Importing.ImportFailure.NothingFound => T("No notes were found there.", "No se ha encontrado ninguna nota ahí.",
+            "Dort wurden keine Notizen gefunden.", "Aucune note n'a été trouvée à cet endroit.", "Nenhuma nota foi encontrada ali.", "Non è stata trovata nessuna nota.", "そこにはノートが見つかりませんでした。", "在那里没有找到笔记。"),
+        _ => T("That could not be read.", "No se ha podido leer.",
+            "Das konnte nicht gelesen werden.", "Impossible de lire cela.", "Não foi possível ler isso.", "Non è stato possibile leggerlo.", "読み取れませんでした。", "无法读取。"),
+    };
+    public static string ImportDone(int created, int failed) => failed == 0
+        ? T($"Done: {created} note(s) imported.", $"Hecho: {created} nota(s) importada(s).", $"Fertig: {created} Notiz(en) importiert.", $"Terminé : {created} note(s) importée(s).", $"Pronto: {created} nota(s) importada(s).", $"Fatto: {created} nota/e importata/e.", $"完了：{created} 件のノートをインポートしました。", $"完成：已导入 {created} 条笔记。")
+        : T($"Done: {created} note(s) imported, {failed} could not be saved.", $"Hecho: {created} nota(s) importada(s); {failed} no se pudieron guardar.", $"Fertig: {created} Notiz(en) importiert, {failed} konnten nicht gespeichert werden.", $"Terminé : {created} note(s) importée(s), {failed} n'ont pas pu être enregistrées.", $"Pronto: {created} nota(s) importada(s); {failed} não puderam ser salvas.", $"Fatto: {created} nota/e importata/e, {failed} non è stato possibile salvarle.", $"完了：{created} 件をインポートし、{failed} 件は保存できませんでした。", $"完成：已导入 {created} 条笔记，{failed} 条无法保存。");
 }

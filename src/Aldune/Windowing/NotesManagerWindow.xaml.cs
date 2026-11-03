@@ -46,6 +46,9 @@ public partial class NotesManagerWindow : Window
         MaximizeHook.Install(this);
         // Con «Tamaño del texto» al 130 o 150 % la ventana crece con él (ver ThemeManager.ScaleWindowToText).
         ThemeManager.ScaleWindowToText(this);
+        // Same family as Settings (900 x 700 by default): the width is the one the footer needs in every language (one row of equal buttons),
+        // never a size per language. On a small screen the default height gives way, like Settings does, to 90 % of the work area.
+        Height = Math.Min(Height, SystemParameters.WorkArea.Height * 0.9);
         NativeMethods.CloakUntilFirstFrame(this);
         WindowCloseAnimation.Attach(this);
         KeyDown += OnWindowKeyDown;
@@ -1152,6 +1155,14 @@ public partial class NotesManagerWindow : Window
 
         if (choice == MessageBoxResult.Yes) ExportAsZip(toExport);
         else ExportAsFolder(toExport);
+    }
+
+    /// <summary>Opens the import dialog; when it added notes, the lists and the dock are refreshed.</summary>
+    private void OnImportNotesClick(object sender, RoutedEventArgs e)
+    {
+        if (ImportNotesWindow.Show(this, _repository, _coordinator) <= 0) return;
+        LoadRows();
+        _coordinator.RefreshAll();
     }
 
     private void ExportAsFolder(List<NoteRow> toExport)

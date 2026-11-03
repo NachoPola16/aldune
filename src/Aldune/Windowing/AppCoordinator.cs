@@ -1234,6 +1234,13 @@ public sealed class AppCoordinator
         _settings?.FixedNoteColor,
         NotesForCurrentDockView().Select(note => note.Color).ToList());
 
+    /// <summary>The colour rules imported notes follow: the same theme, tone and assignment as a new note, so an import looks like the rest.</summary>
+    internal Aldune.Core.Importing.ImportColorPolicy ImportColorPolicy => new(
+        ActiveTheme,
+        _settings?.NewNoteTone ?? NoteTone.Light,
+        _settings?.ColorAssignment ?? NoteColorAssignment.RotateAvoidNeighbors,
+        _settings?.FixedNoteColor);
+
     /// <summary>
     /// Vuelve a colorear todas las notas activas con el tema, el tono y la regla actuales, en el
     /// orden del dock y como si se crearan una tras otra: así "rotar sin repetir el de al lado"
