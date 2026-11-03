@@ -43,6 +43,9 @@ public partial class NotesManagerWindow : Window
     public NotesManagerWindow(NotesRepository repository, AppCoordinator coordinator, string? tagFilter = null)
     {
         InitializeComponent();
+        // The readable-width cap grows with the text size: the window itself does (by the same factor), and a fixed cap left the body
+        // centred and narrower than the header at 150 %.
+        BodyGrid.MaxWidth = Math.Round(1100 * ThemeManager.TextFactor);
         MaximizeHook.Install(this);
         // Con «Tamaño del texto» al 130 o 150 % la ventana crece con él (ver ThemeManager.ScaleWindowToText).
         ThemeManager.ScaleWindowToText(this);

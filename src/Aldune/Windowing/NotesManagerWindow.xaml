@@ -1,4 +1,5 @@
 ﻿<Window x:Class="Aldune.Windowing.NotesManagerWindow"
+        KeyboardNavigation.TabNavigation="Cycle"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:local="clr-namespace:Aldune.Windowing"
@@ -423,7 +424,7 @@
 
         <!-- Cuerpo (búsqueda, filtros y lista): en una ventana maximizada se queda en un ancho legible y centrado, igual que Ajustes
              limita el suyo; barra de título y pie ocupan todo el ancho. -->
-        <Grid Grid.Row="1" Grid.RowSpan="3" MaxWidth="1100" HorizontalAlignment="Stretch">
+        <Grid x:Name="BodyGrid" Grid.Row="1" Grid.RowSpan="3" MaxWidth="1100" HorizontalAlignment="Stretch">
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto" />
                 <RowDefinition Height="Auto" />
