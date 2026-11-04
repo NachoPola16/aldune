@@ -412,6 +412,12 @@ fun NoteListPane(
                 // rows are built from the old items with the new view, and the groups jumped when going back to «All».
                 var orderSource by remember { mutableStateOf(state.items) }
                 if (draggedId == null && orderSource !== state.items) { orderSource = state.items; order = state.items }
+                // Which Move up / Move down arrows each row offers, computed once per list: asking per row copied and searched the whole notebook
+                // for every row that scrolled into view (with ~2000 notes that alone made most frames janky).
+                val moveOptions = remember(order, reorderable) {
+                    if (!reorderable) emptyMap<String, Set<ReorderPlan.Direction>>()
+                    else buildMap { order.groupBy { it.pinnedToTop }.values.forEach { group -> putAll(ReorderPlan.availableAll(group.map { it.id })) } }
+                }
 
                 // Vista agrupada de «Todas las notas»: una cabecera plegable por etiqueta y, debajo, sus notas. Una nota con varias etiquetas sale
                 // bajo cada una (por eso su clave lleva la sección). Con búsqueda o con una etiqueta elegida se enseña la lista de siempre.
@@ -801,7 +807,7 @@ fun NoteListPane(
                                 ),
                             item = item, selected = item.id == selectedId || item.id == highlight || item.id in picked, swipeEnabled = picked.isEmpty(), conflicted = item.id in conflicted, reminder = state.reminders[item.id],
                             onOpen = { if (System.currentTimeMillis() < rowsMovingUntil) Unit else if (picked.isNotEmpty()) picked = if (item.id in picked) picked - item.id else picked + item.id else if (!hold.active) onOpen(item.id) }, onMenu = { menuFor = item },
-                            moves = ReorderPlan.available(sameGroup(order, item.id), item.id, reorderable), onMove = { delta -> moveBy(item.id, delta) },
+                            moves = moveOptions[item.id] ?: emptySet(), onMove = { delta -> moveBy(item.id, delta) },
                             channel = order.indexOfFirst { it.id == item.id },
                             signal = if (look.syncSignal) NoteSyncSignal.of(hasProfile, item.id in conflicted, bases[item.id], item.updatedAt) else NoteSyncSignal.State.HIDDEN,
                             onArchive = { val before = item.state; viewModel.archive(item.id); announce(archivedMsg) { viewModel.setState(item.id, before) } },

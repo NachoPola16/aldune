@@ -41,4 +41,24 @@ object ReorderPlan {
             if (index < ids.lastIndex) add(Direction.DOWN)
         }
     }
+
+    /**
+     * [available] for every id of one group in a single pass. The list asks per visible row, and answering each with an `indexOf` over thousands
+     * of notes (plus copying the group) made scrolling a big notebook janky; the screen builds this once per list instead.
+     */
+    fun availableAll(ids: List<String>): Map<String, Set<Direction>> {
+        val up = setOf(Direction.UP)
+        val down = setOf(Direction.DOWN)
+        val both = setOf(Direction.UP, Direction.DOWN)
+        val result = HashMap<String, Set<Direction>>(ids.size * 2)
+        ids.forEachIndexed { index, id ->
+            result[id] = when {
+                ids.size < 2 -> emptySet()
+                index == 0 -> down
+                index == ids.lastIndex -> up
+                else -> both
+            }
+        }
+        return result
+    }
 }

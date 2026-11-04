@@ -65,4 +65,11 @@ class ReorderPlanTest {
         assertEquals(emptySet<ReorderPlan.Direction>(), ReorderPlan.available(ids, "b", reorderable = false))
         assertEquals(emptySet<ReorderPlan.Direction>(), ReorderPlan.available(listOf("a"), "a", reorderable = true))
     }
+
+    @Test fun elMapaDeFlechasCoincideConAvailableParaCadaNota() {
+        val map = ReorderPlan.availableAll(ids)
+        for (id in ids) assertEquals(ReorderPlan.available(ids, id, reorderable = true), map[id])
+        assertEquals(emptyMap<String, Set<ReorderPlan.Direction>>(), ReorderPlan.availableAll(emptyList()))
+        assertEquals(emptySet<ReorderPlan.Direction>(), ReorderPlan.availableAll(listOf("a"))["a"])
+    }
 }

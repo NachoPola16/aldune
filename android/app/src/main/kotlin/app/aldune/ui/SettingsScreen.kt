@@ -706,7 +706,8 @@ internal fun Choice(label: String, selected: Boolean, preview: (@Composable () -
         verticalAlignment = Alignment.CenterVertically,
     ) {
         RadioButton(selected = selected, onClick = null)
-        Text(label, Modifier.padding(start = 16.dp).padding(vertical = 10.dp).weight(1f))
+        // The end padding keeps a long label ("Telekom dunkel (Oszilloskop)") from touching the swatch.
+        Text(label, Modifier.padding(start = 16.dp, end = if (preview != null) 12.dp else 0.dp).padding(vertical = 10.dp).weight(1f))
         preview?.invoke()
     }
 }
