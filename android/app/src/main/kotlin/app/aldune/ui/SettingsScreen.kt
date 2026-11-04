@@ -150,6 +150,8 @@ fun SettingsScreen(viewModel: NotesViewModel, onClose: () -> Unit) {
     // En una pantalla ancha (tableta) los ajustes van en una columna centrada, no estirados a todo el ancho.
     // En horizontal (poca altura) las pestañas caben en una sola fila, ancha: en dos filas se comían casi la mitad de la pantalla.
     val shortScreen = androidx.compose.ui.platform.LocalConfiguration.current.screenHeightDp < 480
+    // Short but also narrow (split screen, a small window): six named tabs in one row broke every label mid-word, so they become icons.
+    val iconTabs = settings.compactSettingsTabs || (shortScreen && androidx.compose.ui.platform.LocalConfiguration.current.screenWidthDp < 600)
     val labels = buildList {
         add(R.string.settings_tab_general); add(R.string.settings_tab_appearance); add(R.string.settings_tab_notes); add(R.string.settings_tab_colors); add(R.string.settings_tab_alerts)
         if (show(SettingsSection.SYNC) || show(SettingsSection.BACKUP)) add(R.string.settings_tab_sync)
@@ -159,7 +161,7 @@ fun SettingsScreen(viewModel: NotesViewModel, onClose: () -> Unit) {
             Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
                 IconButton(onClick = onClose) { Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.back)) }
                 // With the compact row (emoji only) the title also says which tab is open.
-                val openTab = if (tabs && settings.compactSettingsTabs) " · " + stringResource(labels[tab.coerceAtMost(labels.lastIndex)]) else ""
+                val openTab = if (tabs && iconTabs) " · " + stringResource(labels[tab.coerceAtMost(labels.lastIndex)]) else ""
                 Text(stringResource(R.string.settings) + openTab, Modifier.weight(1f), style = MaterialTheme.typography.titleLarge)
                 if (tabs) IconButton(onClick = { searchOpen = !searchOpen; if (!searchOpen) searchQuery = "" }, Modifier.padding(end = 8.dp)) {
                     Icon(Icons.Filled.Search, contentDescription = stringResource(R.string.settings_search))
@@ -186,7 +188,7 @@ fun SettingsScreen(viewModel: NotesViewModel, onClose: () -> Unit) {
                 if (atBottom) HorizontalDivider()
                 Column(Modifier.fillMaxWidth().padding(start = 12.dp, end = 12.dp, top = 8.dp, bottom = if (atBottom) 8.dp else 20.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     // Compact: one row, an icon per tab (the name is spoken by TalkBack and shown as the heading of the open tab).
-                    val compact = settings.compactSettingsTabs
+                    val compact = iconTabs
                     // With a very large system font three columns are too narrow for "Appearance" (it broke mid-word as "Appear/ance"): two columns.
                     val bigFont = androidx.compose.ui.platform.LocalDensity.current.fontScale >= 1.5f
                     val columns = if (shortScreen || compact) labels.size else if (bigFont) 2 else TAB_COLUMNS
