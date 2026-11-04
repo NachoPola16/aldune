@@ -19,6 +19,10 @@
   </ItemGroup>
 
   <ItemGroup>
+    <None Update="Fixtures\plum-real.sqlite" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\..\src\Aldune.Core\Aldune.Core.csproj" />
   </ItemGroup>
 

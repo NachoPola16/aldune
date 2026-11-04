@@ -3,7 +3,7 @@ using Microsoft.Data.Sqlite;
 
 namespace Aldune.Core.Tests.Importing;
 
-/// <summary>Synthetic plum.sqlite files: the schema is the one Microsoft Sticky Notes 3.x is known to use (Note, Media and Stroke tables).</summary>
+/// <summary>Synthetic plum.sqlite files with the schema of Microsoft Sticky Notes (Note, Media and Stroke tables), plus one written by the real app (see ReadsADatabaseWrittenByTheRealApp).</summary>
 public sealed class StickyNotesSourceTests : IDisposable
 {
     private readonly string _root = Path.Combine(Path.GetTempPath(), $"aldune-sticky-{Guid.NewGuid():N}");
@@ -158,5 +158,29 @@ public sealed class StickyNotesSourceTests : IDisposable
     {
         var p = StickyNotesSource.DefaultPath();
         Assert.True(p is null || p.EndsWith("plum.sqlite", StringComparison.OrdinalIgnoreCase));
+    }
+
+    /// <summary>
+    /// A plum.sqlite written by the real Microsoft Sticky Notes 4.0 on Windows 11 (4 notes typed through the app: two with text, two empty).
+    /// What it taught: paragraphs are separated by LF, each starting with "\id=GUID "; dates are .NET ticks; the colour is a name ("Yellow").
+    /// </summary>
+    [Fact]
+    public void ReadsADatabaseWrittenByTheRealApp()
+    {
+        var path = Path.Combine(AppContext.BaseDirectory, "Fixtures", "plum-real.sqlite");
+
+        var preview = new StickyNotesSource().Read(path);
+
+        Assert.Equal(ImportFailure.None, preview.Failure);
+        Assert.Equal(2, preview.Notes.Count);
+        Assert.Equal(2, preview.Skipped.Count(s => s.Reason == ImportSkipReason.Empty));
+        var shopping = preview.Notes.Single(n => n.Text.StartsWith("milk", StringComparison.Ordinal));
+        Assert.Equal("milk\r\nbread", shopping.Text);
+        Assert.Equal(ImportHue.Yellow, shopping.Hue);
+        Assert.Equal(NoteState.Active, shopping.State);
+        Assert.Equal(2026, shopping.CreatedAt!.Value.Year);
+        Assert.True(shopping.UpdatedAt >= shopping.CreatedAt);
+        // Nothing of the app's own markup survives in the text.
+        Assert.DoesNotContain(preview.Notes, n => n.Text.Contains("\\id=", StringComparison.Ordinal));
     }
 }
