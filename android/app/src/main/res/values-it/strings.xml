@@ -288,6 +288,8 @@
     <string name="reminders_section">Promemoria</string>
     <string name="reminder_exact">Ora esatta</string>
     <string name="reminder_exact_hint">Avvisa al minuto esatto. Usa un po\' più di batteria; Android potrebbe chiederti di consentirlo.</string>
+    <string name="reminder_battery">I promemoria potrebbero arrivare in ritardo</string>
+    <string name="reminder_battery_hint">Alcuni telefoni (Xiaomi, Samsung, Huawei…) mettono in pausa le app per risparmiare batteria. Rimuovi la restrizione per Aldune così i promemoria arrivano in orario.</string>
     <string name="sync_howto">In Aldune per Windows: Impostazioni → Sincronizzazione → Condividi profilo, e copia il codice. Il token non è nel codice: lo digiti nel passaggio successivo.</string>
     <string name="uniform_color">Stesso colore su tutte le note</string>
     <string name="uniform_color_hint">Cambia solo come appaiono; ogni nota mantiene il proprio colore.</string>

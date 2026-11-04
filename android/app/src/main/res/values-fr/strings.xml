@@ -288,6 +288,8 @@
     <string name="reminders_section">Rappels</string>
     <string name="reminder_exact">Heure exacte</string>
     <string name="reminder_exact_hint">Sonne à la minute exacte. Consomme un peu plus de batterie ; Android peut demander l’autorisation.</string>
+    <string name="reminder_battery">Les rappels peuvent arriver en retard</string>
+    <string name="reminder_battery_hint">Certains téléphones (Xiaomi, Samsung, Huawei…) mettent les applis en veille pour économiser la batterie. Levez la restriction pour Aldune afin que les rappels arrivent à l’heure.</string>
     <string name="sync_howto">Dans Aldune pour Windows : Paramètres → Synchronisation → Partager le profil, puis copie le code. Le jeton n’est pas dans le code : tu le saisis à l’étape suivante.</string>
     <string name="uniform_color">Même couleur pour toutes les notes</string>
     <string name="uniform_color_hint">Ne change que l’affichage ; chaque note garde sa couleur.</string>

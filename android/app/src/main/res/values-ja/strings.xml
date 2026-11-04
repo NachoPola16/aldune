@@ -288,6 +288,8 @@
     <string name="reminders_section">リマインダー</string>
     <string name="reminder_exact">正確な時刻</string>
     <string name="reminder_exact_hint">ちょうどその分に通知します。バッテリーを少し多く使います。Android が許可を求める場合があります。</string>
+    <string name="reminder_battery">リマインダーが遅れることがあります</string>
+    <string name="reminder_battery_hint">一部のスマートフォン（Xiaomi、Samsung、Huawei など）は電池節約のためアプリを休止させます。Aldune の制限を解除すると、リマインダーが時刻どおりに届きます。</string>
     <string name="sync_howto">Windows 版 Aldune で: 設定 → 同期 → プロファイルを共有 を開き、コードをコピーします。トークンはコードに含まれません。次の手順で入力します。</string>
     <string name="uniform_color">すべてのノートを同じ色にする</string>
     <string name="uniform_color_hint">見た目だけを変えます。各ノートは自分の色を保ちます。</string>

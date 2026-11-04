@@ -13,6 +13,7 @@ import android.content.Context
 import android.content.Intent
 import android.graphics.drawable.Icon
 import android.os.Build
+import android.os.PowerManager
 import android.provider.Settings
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -588,11 +589,14 @@ private fun CaptureSection(viewModel: NotesViewModel, notificationOn: Boolean) {
 private fun RemindersSection(viewModel: NotesViewModel, exactOn: Boolean) {
     val context = LocalContext.current
     var waiting by remember { mutableStateOf(false) }
+    // Read again on every return from the system screen, so the row disappears as soon as the restriction is lifted.
+    var batteryRestricted by remember { mutableStateOf(isBatteryRestricted(context)) }
     fun apply(on: Boolean) {
         viewModel.updateSettings { it.copy(exactReminders = on) }
         viewModel.reconcileReminders()
     }
     LifecycleEventEffect(Lifecycle.Event.ON_RESUME) {
+        batteryRestricted = isBatteryRestricted(context)
         if (waiting) {
             waiting = false
             if (ReminderScheduler.canScheduleExact(context)) apply(true)
@@ -614,7 +618,23 @@ private fun RemindersSection(viewModel: NotesViewModel, exactOn: Boolean) {
             }
         }
     }
+    if (batteryRestricted) {
+        // The list of apps, not a direct "allow" prompt: the direct one needs REQUEST_IGNORE_BATTERY_OPTIMIZATIONS, which stores restrict, and the
+        // user stays in charge of the choice. Phones with their own power manager (Xiaomi, Huawei...) have a second switch the user finds from there.
+        Column(
+            Modifier.fillMaxWidth()
+                .clickable { runCatching { context.startActivity(Intent(Settings.ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS)) } }
+                .padding(horizontal = 16.dp, vertical = 10.dp),
+        ) {
+            Text(stringResource(R.string.reminder_battery))
+            Text(stringResource(R.string.reminder_battery_hint), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        }
+    }
 }
+
+/** True while the system may put the app to sleep (the default). Reminders still work, but can come minutes late on some phones. */
+private fun isBatteryRestricted(context: Context): Boolean =
+    !context.getSystemService(PowerManager::class.java).isIgnoringBatteryOptimizations(context.packageName)
 
 /**
  * La lista rápida: una nota a la que la notificación de captura añade artículos sin abrir la app. Hace falta la notificación activada

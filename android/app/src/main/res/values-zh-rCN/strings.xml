@@ -288,6 +288,8 @@
     <string name="reminders_section">提醒</string>
     <string name="reminder_exact">精确时间</string>
     <string name="reminder_exact_hint">在精确的那一分钟提醒。会多耗一点电量；Android 可能会请您允许。</string>
+    <string name="reminder_battery">提醒可能会延迟</string>
+    <string name="reminder_battery_hint">部分手机（小米、三星、华为等）会为省电让应用休眠。请解除对 Aldune 的限制，提醒才能准时送达。</string>
     <string name="sync_howto">在 Windows 版 Aldune 中：设置 → 同步 → 分享配置，然后复制同步码。令牌不在同步码里：您将在下一步输入它。</string>
     <string name="uniform_color">所有笔记使用同一颜色</string>
     <string name="uniform_color_hint">只改变外观；每条笔记保留自己的颜色。</string>

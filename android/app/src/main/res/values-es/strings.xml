@@ -288,6 +288,8 @@
     <string name="reminders_section">Recordatorios</string>
     <string name="reminder_exact">Hora exacta</string>
     <string name="reminder_exact_hint">Avisa en el minuto exacto. Gasta algo más de batería; Android puede pedirte que lo permitas.</string>
+    <string name="reminder_battery">Los recordatorios pueden llegar tarde</string>
+    <string name="reminder_battery_hint">Algunos móviles (Xiaomi, Samsung, Huawei…) duermen las apps para ahorrar batería. Quita la restricción a Aldune para que los avisos lleguen a su hora.</string>
     <string name="sync_howto">En Aldune para Windows: Ajustes → Sincronización → Compartir perfil, y copia el código. El token no va dentro del código: lo escribes en el paso siguiente.</string>
     <string name="uniform_color">Mismo color en todas las notas</string>
     <string name="uniform_color_hint">Solo cambia cómo se ven; cada nota conserva su color.</string>
