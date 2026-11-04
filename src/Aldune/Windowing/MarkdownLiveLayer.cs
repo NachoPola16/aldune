@@ -37,15 +37,27 @@ internal sealed class MarkdownLiveLayer : Canvas
         ClipToBounds = true;
         SnapsToDevicePixels = false;
 
-        box.TextChanged += (_, _) => { box.UpdateLayout(); Refresh(); };
-        box.SelectionChanged += (_, _) => Refresh();
-        box.SizeChanged += (_, _) => Refresh();
-        box.GotKeyboardFocus += (_, _) => Refresh();
-        box.LostKeyboardFocus += (_, _) => Refresh();
-        box.AddHandler(ScrollViewer.ScrollChangedEvent, new ScrollChangedEventHandler((_, _) => Refresh()));
+        box.TextChanged += (_, _) => { box.UpdateLayout(); Changed(); };
+        box.SelectionChanged += (_, _) => Changed();
+        box.SizeChanged += (_, _) => Changed();
+        box.GotKeyboardFocus += (_, _) => Changed();
+        box.LostKeyboardFocus += (_, _) => Changed();
+        box.AddHandler(ScrollViewer.ScrollChangedEvent, new ScrollChangedEventHandler((_, _) => Changed()));
         // Zoom changes the font size without touching the text: nothing else would tell the layer to draw again.
         var size = DependencyPropertyDescriptor.FromProperty(Control.FontSizeProperty, typeof(TextBox));
         size.AddValueChanged(box, (_, _) => Dispatcher.BeginInvoke(System.Windows.Threading.DispatcherPriority.Loaded, new Action(Refresh)));
+    }
+
+    // The drawn pieces repeat the text box's own text: a screen reader must read the box once, never these copies. WPF has no per-element
+    // switch for this, so the layer gets a peer that is neither a control nor content and shows no children.
+    protected override System.Windows.Automation.Peers.AutomationPeer OnCreateAutomationPeer() => new HiddenPeer(this);
+
+    private sealed class HiddenPeer(FrameworkElement owner) : System.Windows.Automation.Peers.FrameworkElementAutomationPeer(owner)
+    {
+        protected override bool IsContentElementCore() => false;
+        protected override bool IsControlElementCore() => false;
+        protected override List<System.Windows.Automation.Peers.AutomationPeer>? GetChildrenCore() => null;
+        protected override string GetClassNameCore() => nameof(MarkdownLiveLayer);
     }
 
     /// <summary>True while the layer is the one drawing the text (the box's own glyphs are then transparent).</summary>
@@ -62,6 +74,18 @@ internal sealed class MarkdownLiveLayer : Canvas
     {
         _ink = ink;
         Refresh();
+    }
+
+    private bool _settlePending;
+
+    // Something that changes what is drawn happened. Draw now (so a typed letter never waits a frame), and once more when the layout has
+    // settled: during a layout pass the box can still answer for the previous layout, which lost a wrapped line at some zoom levels.
+    private void Changed()
+    {
+        Refresh();
+        if (_settlePending) return;
+        _settlePending = true;
+        Dispatcher.BeginInvoke(System.Windows.Threading.DispatcherPriority.Loaded, new Action(() => { _settlePending = false; Refresh(); }));
     }
 
     internal void Refresh()
@@ -105,20 +129,17 @@ internal sealed class MarkdownLiveLayer : Canvas
 
     private void DrawVisibleLines(string text)
     {
-        int firstLine = _box.GetFirstVisibleLineIndex();
-        int lastLine = _box.GetLastVisibleLineIndex();
-        if (firstLine < 0 || lastLine < firstLine) return;
+        var starts = VisualLineStarts(text);
+        if (starts.Count == 0) return;
 
         int selStart = -1, selEnd = -1;
         if (_box.IsSelectionActive && _box.SelectionLength > 0) { selStart = _box.SelectionStart; selEnd = selStart + _box.SelectionLength; }
 
         int spanIndex = 0;
-        for (int line = firstLine; line <= lastLine; line++)
+        for (int i = 0; i < starts.Count; i++)
         {
-            int start = _box.GetCharacterIndexFromLineIndex(line);
-            int length = _box.GetLineLength(line);
-            if (start < 0 || length <= 0) continue;
-            int end = start + length;
+            int start = starts[i];
+            int end = i + 1 < starts.Count ? starts[i + 1] : text.Length;
             while (end > start && (text[end - 1] == '\r' || text[end - 1] == '\n')) end--;
             if (end <= start) continue;
 
@@ -131,9 +152,45 @@ internal sealed class MarkdownLiveLayer : Canvas
                 var span = _spans[s];
                 int from = Math.Max(span.Start, start);
                 int to = Math.Min(span.Start + span.Length, end);
-                DrawPiece(text, from, to, span.Style, lineRect.Top, lineRect.Height, selStart, selEnd);
+                if (to > from) DrawPiece(text, from, to, span.Style, lineRect.Top, lineRect.Height, selStart, selEnd);
             }
         }
+    }
+
+    /// <summary>
+    /// The index of the first character of each visual line in view, found by asking the box what is at the left edge of each line band.
+    /// The box's own line-index methods are not used: with some looks (a taller line height than the font, the terminal looks) they
+    /// repeat a line and report a last visible line that does not exist, which drew lines twice and left the last ones out.
+    /// </summary>
+    // A fraction of a line, not a whole one: at a zoom the real line pitch is a fraction of a pixel off the box's reported height, and a
+    // whole-line step eventually jumps over a line. The same line found twice is skipped by index.
+    private const double LineProbeStep = 0.6;
+
+    private List<int> VisualLineStarts(string text)
+    {
+        var starts = new List<int>();
+        double viewport = _box.ViewportHeight > 0 ? _box.ViewportHeight : _box.ActualHeight;
+        if (viewport <= 0) return starts;
+
+        int firstChar = _box.GetCharacterIndexFromPoint(new Point(0, 1), snapToText: true);
+        if (firstChar < 0) return starts;
+        var firstRect = _box.GetRectFromCharacterIndex(firstChar);
+        double height = firstRect.IsEmpty ? 0 : firstRect.Height;
+        if (height < 4) return starts;
+
+        // Walk down the viewport one line band at a time (from the middle of the first line), and one band past it for a line half in view.
+        double y = firstRect.Top + height / 2;
+        int previous = -1;
+        for (int guard = 0; y < viewport + height && guard < 4000; guard++, y += height * LineProbeStep)
+        {
+            int index = _box.GetCharacterIndexFromPoint(new Point(0, y), snapToText: true);
+            if (index < 0 || index <= previous) continue;
+            // The same index twice means the band is below the last line: snapping returns the end of the text.
+            if (index >= text.Length && previous >= 0 && starts.Count > 0 && _box.GetRectFromCharacterIndex(index).Top <= _box.GetRectFromCharacterIndex(previous).Top) break;
+            starts.Add(index);
+            previous = index;
+        }
+        return starts;
     }
 
     // Spans are sorted and contiguous: walk back to the one that covers `start` (the cursor `from` only ever moves forward, line to line).
@@ -228,9 +285,8 @@ internal sealed class MarkdownLiveLayer : Canvas
             FontStretch = _box.FontStretch,
             Foreground = ink,
             TextWrapping = TextWrapping.NoWrap,
-            // The box's own line metrics: a fixed line height with the text placed in it, so the baseline lands where the box's glyphs would be.
-            LineHeight = TextBlock.GetLineHeight(_box),
-            LineStackingStrategy = TextBlock.GetLineStackingStrategy(_box),
+            // No fixed line height here: a box with one (the terminal and notebook looks) puts the text at the top of its line, while a text
+            // block with the same height puts it lower, so each piece is natural height and sits on the top of the box's line instead.
             IsHitTestVisible = false,
         };
         TextOptions.SetTextFormattingMode(block, TextOptions.GetTextFormattingMode(_box));
