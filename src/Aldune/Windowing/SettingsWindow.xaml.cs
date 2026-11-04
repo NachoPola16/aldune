@@ -2181,6 +2181,15 @@ public partial class SettingsWindow : Window
         _settingsService.Save(_settings);
         ApplyAppearance();
         UpdateColorsLookNotice();
+        RefreshAppearanceCards();
+    }
+
+    /// <summary>The look miniatures are drawn once from each look's palette: when a look's colours are edited they are drawn again, so a card never shows the old ones.</summary>
+    private void RefreshAppearanceCards()
+    {
+        foreach (var radio in AppearanceListContainer.Children.OfType<RadioButton>())
+            if (radio.Tag is AppearanceMode mode)
+                radio.Content = AppearanceCard(mode, System.Windows.Automation.AutomationProperties.GetName(radio));
     }
 
     private void OnColorsLookNoticeClick(object sender, MouseButtonEventArgs e)

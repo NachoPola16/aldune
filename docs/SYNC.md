@@ -489,6 +489,8 @@ Android server and WebDAV) stops the pass with «This sync data requires a newer
 server lists such an object (with a `format` field in its descriptor) instead of hiding it, and answers `409` with the same message to a `PUT` that would replace it.
 Only WebDAV cannot refuse a write by itself (a plain `PUT` has no condition), so it relies on the read that always precedes the write in the same pass.
 
+A consequence worth knowing for a **shared folder or WebDAV**: anyone who can write there, even without the key, can leave a file with a future `format` and every client will stop with that message until it is deleted by hand. The same people could also just delete or corrupt the objects, so the rule is the usual one: give write access only to people you trust. The Docker server does not have this weakness (it rejects such a `PUT` with `400`).
+
 The envelope format and the API are JSON/HTTP and do not depend on Windows, WPF, SQLite or DPAPI. A
 future client for Android, iOS, macOS or Linux can reuse the server. DPAPI only protects the
 key and the token stored locally in the Windows version.
