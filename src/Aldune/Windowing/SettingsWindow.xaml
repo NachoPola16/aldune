@@ -37,7 +37,14 @@
                                 <ColumnDefinition Width="*" />
                                 <ColumnDefinition Width="Auto" />
                             </Grid.ColumnDefinitions>
-                            <ContentPresenter VerticalAlignment="Center" Margin="0,0,16,0" />
+                            <!-- A label longer than the row (a long language, a wide font, a big text size) wraps instead of being cut under the switch. -->
+                            <ContentPresenter VerticalAlignment="Center" Margin="0,0,16,0">
+                                <ContentPresenter.Resources>
+                                    <Style TargetType="TextBlock">
+                                        <Setter Property="TextWrapping" Value="Wrap" />
+                                    </Style>
+                                </ContentPresenter.Resources>
+                            </ContentPresenter>
                             <Border x:Name="Track" Grid.Column="1" Width="38" Height="20" CornerRadius="10"
                                     BorderBrush="{TemplateBinding Foreground}" BorderThickness="1.5"
                                     Background="Transparent" VerticalAlignment="Center">
