@@ -83,15 +83,12 @@ public sealed class ManagerRowMutedInkConverter : IValueConverter
 public sealed class ManagerRowRimConverter : IValueConverter
 {
     private static readonly NoteRimConverter Filled = new();
-    private static readonly NoteFaceConverter Face = new();
 
-    // With the colour on the edge only, the 1 px outline of the row is the note's colour too: the line goes all round the row (the stripe on the
-    // left is the thicker part of it) instead of a grey frame with a coloured bar glued to one side. Square or rounded, it follows the row.
-    // The colour is the dock card's own (NoteFace: limited for contrast against the look's background, the channel colour in Telecom), so a
-    // note has the same colour on its tab and in its row. The value is the note itself, not its colour string.
     public object Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
     {
-        if (ManagerRows.ColourOnEdgeOnly) return Face.Convert(value, targetType, "Accent", culture);
+        // Only the stripe carries the colour; the outline is the look's neutral line. The stripe is a crescent that tapers into it at the
+        // corners, so the row reads as one calm frame with a coloured edge instead of a coloured frame.
+        if (ManagerRows.ColourOnEdgeOnly) return ManagerRows.Resource("AlduneBorderSubtleBrush");
         var rim = Filled.Convert(value is Note note ? note.Color : value, targetType, parameter, culture);
         return SoftenedAgainstFace(rim, value is Note n ? n.Color : value as string);
     }
