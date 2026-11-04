@@ -647,4 +647,5 @@
     <string name="whatsnew_400_backup">Faça um backup de todas as suas notas em um único .zip e restaure-o: adicione só as que faltam ou substitua tudo (uma cópia de segurança é feita antes).</string>
     <string name="whatsnew_400_import">Traga suas notas do Google Keep, Evernote ou de arquivos de texto (Markdown ou .txt).</string>
     <string name="whatsnew_400_restore">Uma nota restaurada de um backup não é mais apagada de novo por uma sincronização vinda de outro dispositivo.</string>
+    <string name="whatsnew_400_markdown">Markdown ao escrever: negrito, itálico, títulos, código e links aparecem desenhados na nota (dá para desligar nas configurações).</string>
 </resources>

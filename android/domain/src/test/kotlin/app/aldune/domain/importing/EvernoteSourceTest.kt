@@ -58,6 +58,32 @@ class EvernoteSourceTest {
         assertTrue(read(xml).notes.isEmpty())
     }
 
+    private val bomb = "<!DOCTYPE en-export [<!ENTITY a \"aaaaaaaaaa\"><!ENTITY b \"&a;&a;&a;&a;&a;&a;&a;&a;\">]><en-export><note><title>&b;</title></note></en-export>"
+
+    @Test fun `a dtd hidden behind padding in the prolog is still refused`() {
+        val preview = read("<?xml version=\"1.0\"?><!--" + "x".repeat(40_000) + "-->" + bomb)
+        assertTrue(preview.notes.isEmpty())
+        assertNotEquals(ImportFailure.NONE, preview.failure)
+    }
+
+    @Test fun `a fake root inside a huge comment does not hide the dtd`() {
+        val preview = read("<!-- <en-export> " + "x".repeat(1_200_000) + " -->" + bomb)
+        assertTrue(preview.notes.isEmpty())
+        assertNotEquals(ImportFailure.NONE, preview.failure)
+    }
+
+    @Test fun `utf-16 without a byte order mark is refused`() {
+        val xml = "<?xml version=\"1.0\" encoding=\"UTF-16LE\"?>" + bomb
+        val preview = EvernoteSource.read(listOf(ImportInput.ofBytes("x.enex", xml.toByteArray(Charsets.UTF_16LE), null)))
+        assertTrue(preview.notes.isEmpty())
+        assertNotEquals(ImportFailure.NONE, preview.failure)
+    }
+
+    @Test fun `comments and instructions before the export are fine`() {
+        val xml = "<?xml version=\"1.0\"?><!-- made by a tool --><?tool v=1?>" + export(note("ok", "<div>x</div>")).removePrefix("<?xml version=\"1.0\" encoding=\"UTF-8\"?>")
+        assertEquals(1, read(xml).notes.size)
+    }
+
     @Test fun `not an enex is a wrong format`() {
         assertEquals(ImportFailure.WRONG_FORMAT, read("<html><body>hi</body></html>").failure)
         assertEquals(ImportFailure.WRONG_FORMAT, read("plain text, not xml").failure)

@@ -24,7 +24,9 @@ import javax.xml.parsers.SAXParserFactory
  */
 object EvernoteSource : ImportSource {
     private val dateFormat = DateTimeFormatter.ofPattern("yyyyMMdd'T'HHmmss'Z'")
-    private const val PEEK = 16 * 1024
+    // The whole prolog (everything before the root element) is inspected, not just its first bytes: padding it with comments must not hide a
+    // DOCTYPE from the check. A prolog longer than this is refused.
+    private const val PEEK = 1024 * 1024
 
     private class Stop : SAXException("stop")
     private class WrongRoot : SAXException("not an enex")
@@ -52,7 +54,7 @@ object EvernoteSource : ImportSource {
         var n = 0
         while (n < PEEK) { val r = stream.read(head, n, PEEK - n); if (r < 0) break; n += r }
         stream.reset()
-        if (hasInternalSubset(head, n)) { builder.lastFailure = ImportFailure.UNREADABLE; return }
+        if (!prologIsSafe(head, n)) { builder.lastFailure = ImportFailure.UNREADABLE; return }
 
         val handler = Handler(builder)
         try {
@@ -82,15 +84,40 @@ object EvernoteSource : ImportSource {
         }
     }
 
-    // An UTF-16 or otherwise odd prolog is not what Evernote writes, and it could hide the DOCTYPE from this scan: refuse it too.
-    private fun hasInternalSubset(head: ByteArray, length: Int): Boolean {
-        val text = String(head, 0, length, Charsets.ISO_8859_1)
-        if (length >= 2 && ((head[0] == 0xFF.toByte() && head[1] == 0xFE.toByte()) || (head[0] == 0xFE.toByte() && head[1] == 0xFF.toByte()))) return true
-        val at = text.indexOf("<!DOCTYPE")
-        if (at < 0) return text.contains("<!ENTITY")
-        val bracket = text.indexOf('[', at)
-        val close = text.indexOf('>', at)
-        return close < 0 || (bracket in 0 until close)
+    /**
+     * Walks the prolog the way an XML parser would (comments and processing instructions skipped, quotes honoured) up to the first start tag,
+     * where no DOCTYPE can follow. Refused: a DOCTYPE with an internal subset (`[`), any entity declaration, a prolog that does not end
+     * inside the inspected bytes, and encodings that hide ASCII from this scan (a UTF-16/32 byte order mark, or NUL bytes up front).
+     */
+    private fun prologIsSafe(head: ByteArray, length: Int): Boolean {
+        if (length >= 2 && ((head[0] == 0xFF.toByte() && head[1] == 0xFE.toByte()) || (head[0] == 0xFE.toByte() && head[1] == 0xFF.toByte()))) return false
+        if ((0 until minOf(length, 4)).any { head[it] == 0.toByte() }) return false
+        val s = String(head, 0, length, Charsets.ISO_8859_1)
+        var i = 0
+        while (true) {
+            val lt = s.indexOf('<', i)
+            if (lt < 0) return length < PEEK   // no tag at all: the parser will say it is not an enex (unless the prolog was cut short)
+            when {
+                s.startsWith("<!--", lt) -> { val end = s.indexOf("-->", lt + 4); if (end < 0) return false; i = end + 3 }
+                s.startsWith("<?", lt) -> { val end = s.indexOf("?>", lt + 2); if (end < 0) return false; i = end + 2 }
+                s.startsWith("<!DOCTYPE", lt) -> {
+                    var j = lt + 9
+                    var quote = 0.toChar()
+                    while (j < s.length) {
+                        val c = s[j]
+                        if (quote != 0.toChar()) { if (c == quote) quote = 0.toChar() }
+                        else if (c.code == 34 || c.code == 39) quote = c   // a double or a single quote
+                        else if (c == '[') return false
+                        else if (c == '>') break
+                        j++
+                    }
+                    if (j >= s.length) return false
+                    i = j + 1
+                }
+                s.startsWith("<!ENTITY", lt) -> return false
+                else -> return true   // the root start tag: a DOCTYPE can no longer appear
+            }
+        }
     }
 
     private class Handler(private val builder: ImportPreviewBuilder) : DefaultHandler() {

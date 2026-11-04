@@ -59,6 +59,9 @@ object BackupArchive {
 
     /** For all the entries together, after inflating (the text is held in memory several times while it is parsed). */
     const val MAX_TOTAL_BYTES: Long = 96L * 1024 * 1024
+
+    /** A real backup holds a handful of files. More entries than this is not one, and each unwanted entry still costs its inflating time. */
+    const val MAX_ENTRIES = 1000
     const val MAX_NOTES = 200_000
 
     private val WANTED = setOf(MANIFEST_ENTRY, NOTES_ENTRY, REMINDERS_ENTRY, SETTINGS_ENTRY)
@@ -124,10 +127,12 @@ object BackupArchive {
     fun read(input: InputStream): BackupReadResult {
         val entries = HashMap<String, ByteArray>()
         var total = 0L
+        var entryCount = 0
         try {
             ZipInputStream(input, Charsets.UTF_8).use { zip ->
                 while (true) {
                     val e = zip.nextEntry ?: break
+                    if (++entryCount > MAX_ENTRIES) return BackupReadResult.Failed(BackupFailure.NOT_A_BACKUP)
                     if (e.isDirectory || e.name !in WANTED) continue
                     val bytes = readBounded(zip, MAX_TOTAL_BYTES - total) ?: return BackupReadResult.Failed(BackupFailure.TOO_LARGE)
                     total += bytes.size

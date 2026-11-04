@@ -647,4 +647,5 @@
     <string name="whatsnew_400_backup">Sichere alle Notizen in einer .zip-Datei und stelle sie wieder her: nur fehlende hinzufügen oder alles ersetzen (vorher wird eine Sicherheitskopie angelegt).</string>
     <string name="whatsnew_400_import">Hole deine Notizen aus Google Keep, Evernote oder Textdateien (Markdown oder .txt).</string>
     <string name="whatsnew_400_restore">Eine Notiz, die du aus einer Sicherung wiederherstellst, wird durch eine Synchronisierung von einem anderen Gerät nicht mehr erneut gelöscht.</string>
+    <string name="whatsnew_400_markdown">Markdown beim Tippen: Fett, Kursiv, Überschriften, Code und Links werden in der Notiz dargestellt (in den Einstellungen abschaltbar).</string>
 </resources>

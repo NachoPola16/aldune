@@ -967,6 +967,24 @@ public static class Strings
         "Impostazioni > Aspetto mostra ogni aspetto con una piccola anteprima, e Gestisci note ha righe più sobrie e i tasti P e T (fissa, tag).",
         "設定 > 外観 では各テーマが小さなプレビューで表示され、ノート管理は行が落ち着いた見た目になり、P と T のキー（固定、タグ）が使えます。",
         "“设置 > 外观”以小预览显示每种外观；笔记管理器的行更柔和，并支持 P 和 T 键（置顶、标签）。");
+    public static string WhatsNew400QuickFind => T(
+        "Quick find: switch on the shortcut in Settings (Ctrl+Alt+F) to search your notes from any program. Enter opens a note, Ctrl+Enter copies it, and screen readers announce the results.",
+        "Búsqueda rápida: activa el atajo en Ajustes (Ctrl+Alt+F) para buscar tus notas desde cualquier programa. Intro abre una nota, Ctrl+Intro la copia y los lectores de pantalla anuncian los resultados.",
+        "Schnellsuche: Aktiviere das Tastenkürzel in den Einstellungen (Strg+Alt+F), um deine Notizen aus jedem Programm zu durchsuchen. Enter öffnet eine Notiz, Strg+Enter kopiert sie, und Screenreader kündigen die Ergebnisse an.",
+        "Recherche rapide : activez le raccourci dans Réglages (Ctrl+Alt+F) pour chercher vos notes depuis n'importe quel programme. Entrée ouvre une note, Ctrl+Entrée la copie, et les lecteurs d'écran annoncent les résultats.",
+        "Busca rápida: ative o atalho em Configurações (Ctrl+Alt+F) para pesquisar suas notas de qualquer programa. Enter abre uma nota, Ctrl+Enter a copia e os leitores de tela anunciam os resultados.",
+        "Ricerca rapida: attiva la scorciatoia in Impostazioni (Ctrl+Alt+F) per cercare le note da qualsiasi programma. Invio apre una nota, Ctrl+Invio la copia e gli screen reader annunciano i risultati.",
+        "クイック検索: 設定でショートカット（Ctrl+Alt+F）を有効にすると、どのプログラムからでもノートを検索できます。Enter で開き、Ctrl+Enter でコピーでき、スクリーンリーダーが結果を読み上げます。",
+        "快速查找：在设置中启用快捷键（Ctrl+Alt+F），即可在任何程序中搜索笔记。Enter 打开笔记，Ctrl+Enter 复制，屏幕阅读器会播报结果。");
+    public static string WhatsNew400Markdown => T(
+        "Markdown as you type: bold, italic, headings, code and links are drawn in the note (switch it off in Settings). Hold Ctrl over a link to see the site it opens; Ctrl+click opens it.",
+        "Markdown al escribir: la negrita, la cursiva, los títulos, el código y los enlaces se dibujan en la nota (se desactiva en Ajustes). Con Ctrl sobre un enlace ves el sitio al que va; Ctrl+clic lo abre.",
+        "Markdown beim Tippen: Fett, Kursiv, Überschriften, Code und Links werden in der Notiz dargestellt (in den Einstellungen abschaltbar). Mit gedrückter Strg über einem Link siehst du die Zielseite; Strg+Klick öffnet ihn.",
+        "Markdown pendant la saisie : le gras, l'italique, les titres, le code et les liens s'affichent dans la note (désactivable dans Réglages). Avec Ctrl sur un lien, vous voyez le site visé ; Ctrl+clic l'ouvre.",
+        "Markdown ao escrever: negrito, itálico, títulos, código e links aparecem desenhados na nota (dá para desligar em Configurações). Com Ctrl sobre um link você vê o site de destino; Ctrl+clique o abre.",
+        "Markdown mentre scrivi: grassetto, corsivo, titoli, codice e link vengono disegnati nella nota (si disattiva in Impostazioni). Tenendo Ctrl su un link vedi il sito di destinazione; Ctrl+clic lo apre.",
+        "入力中の Markdown 表示: 太字、斜体、見出し、コード、リンクがノート上に表示されます（設定でオフにできます）。リンク上で Ctrl を押すと移動先のサイトが表示され、Ctrl+クリックで開きます。",
+        "输入时显示 Markdown：粗体、斜体、标题、代码和链接会在便笺中绘制（可在设置中关闭）。按住 Ctrl 悬停在链接上可看到目标网站，Ctrl+单击打开。");
     public static string WhatsNew300Plain => T(
         "New option: open notes can use the look's plain background while the dock tab and Manage notes keep the note's color. The dock now folds at once when you click elsewhere.",
         "Opción nueva: las notas abiertas pueden usar el fondo neutro del aspecto mientras la pestaña del dock y Gestionar notas conservan el color de la nota. El dock se pliega al momento si pulsas fuera.",
@@ -2647,6 +2665,15 @@ public static class Strings
             "Quel backup è stato creato da una versione più recente di Aldune. Aggiorna Aldune per ripristinarlo.",
             "このバックアップは、より新しいバージョンの Aldune で作成されました。復元するには Aldune を更新してください。",
             "该备份由更新版本的 Aldune 创建。请更新 Aldune 后再恢复。"),
+        Aldune.Core.BackupProblem.KeyNotUsable => T(
+            "That backup was made with another Windows account or on another computer, and its notes can only be unlocked there. Nothing was changed. To move notes between computers, use sync.",
+            "Esa copia se hizo con otra cuenta de Windows o en otro equipo, y sus notas solo se pueden abrir allí. No se ha cambiado nada. Para llevar notas a otro equipo, usa la sincronización.",
+            "Diese Sicherung wurde mit einem anderen Windows-Konto oder auf einem anderen Computer erstellt, und ihre Notizen lassen sich nur dort entsperren. Es wurde nichts geändert. Um Notizen auf einen anderen Computer zu bringen, nutze die Synchronisierung.",
+            "Cette sauvegarde a été faite avec un autre compte Windows ou sur un autre ordinateur, et ses notes ne peuvent être déverrouillées que là. Rien n'a été modifié. Pour déplacer des notes vers un autre ordinateur, utilisez la synchronisation.",
+            "Essa cópia foi feita com outra conta do Windows ou em outro computador, e suas notas só podem ser abertas lá. Nada foi alterado. Para levar notas a outro computador, use a sincronização.",
+            "Quel backup è stato creato con un altro account Windows o su un altro computer, e le sue note si possono sbloccare solo lì. Non è stato cambiato nulla. Per spostare le note su un altro computer, usa la sincronizzazione.",
+            "このバックアップは別の Windows アカウントまたは別のコンピューターで作成されたため、ノートはそこでしか開けません。何も変更していません。ノートを別のコンピューターに移すには同期を使ってください。",
+            "该备份是用另一个 Windows 账户或在另一台电脑上创建的，其中的笔记只能在那里解锁。未做任何更改。要在电脑之间转移笔记，请使用同步。"),
         Aldune.Core.BackupProblem.DatabaseDamaged => T(
             "The notes inside that backup are damaged, so it cannot be restored. Nothing was changed.",
             "Las notas de esa copia están dañadas y no se puede restaurar. No se ha cambiado nada.",

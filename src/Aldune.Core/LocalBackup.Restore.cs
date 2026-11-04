@@ -1,5 +1,6 @@
 ﻿using System.Globalization;
 using System.IO.Compression;
+using System.Security.Cryptography;
 using System.Text.Json;
 using Microsoft.Data.Sqlite;
 
@@ -28,6 +29,8 @@ public enum BackupProblem
     DatabaseDamaged,
     /// <summary>Written by a newer Aldune (manifest format or database schema): restoring it here could damage it.</summary>
     TooNew,
+    /// <summary>The database key in the settings was wrapped for another Windows user or computer (DPAPI): the notes could never be opened here.</summary>
+    KeyNotUsable,
 }
 
 public sealed record BackupCheck(BackupProblem Problem, BackupManifest? Manifest)
@@ -156,7 +159,7 @@ public static partial class LocalBackup
         var stagedSettings = Path.Combine(pending, SettingsName);
         // The staged copy sat on disk between two runs: trust it only after checking it again, settings included (a database restored with
         // settings that do not parse would start the app with a key it cannot read).
-        if (!File.Exists(stagedSettings) || !File.Exists(stagedDb) || !SettingsAreJson(stagedSettings)
+        if (!File.Exists(stagedSettings) || !File.Exists(stagedDb) || !SettingsAreJson(stagedSettings) || !KeyCanBeUnwrapped(stagedSettings)
             || CheckDatabase(stagedDb).Problem != BackupProblem.None)
         {
             DeleteTemp(pending);
@@ -218,6 +221,20 @@ public static partial class LocalBackup
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException) { }
     }
 
+    /// <summary>
+    /// False when the settings carry a database key that this Windows user cannot unwrap (the backup came from another account or computer).
+    /// A settings file without a key is left to the existing checks: it is the same as before.
+    /// </summary>
+    private static bool KeyCanBeUnwrapped(string settingsPath)
+    {
+        byte[]? wrapped;
+        try { wrapped = new SettingsService(settingsPath).Load().WrappedDatabaseKey; }
+        catch (Exception ex) when (ex is JsonException or IOException or UnauthorizedAccessException) { return true; }
+        if (wrapped is null) return true;
+        try { CryptographicOperations.ZeroMemory(DatabaseKeyProvider.Unwrap(wrapped)); return true; }
+        catch (CryptographicException) { return false; }
+    }
+
     private static bool SettingsAreJson(string path)
     {
         try
@@ -274,8 +291,9 @@ public static partial class LocalBackup
                 if (settingsEntry is null) return new(BackupProblem.MissingSettings, manifest);
                 // A tiny zip can claim gigabytes: refuse what no real backup looks like before writing anything.
                 if (dbEntry.Length > MaxDatabaseBytes || settingsEntry.Length > MaxSettingsBytes) return new(BackupProblem.Unreadable, manifest);
-                dbEntry.ExtractToFile(dbPath);
-                settingsEntry.ExtractToFile(settingsPath);
+                // The sizes above are the zip's own claim: what is actually written is bounded too.
+                using (var db = dbEntry.Open()) BoundedCopy.ToFile(db, dbPath, MaxDatabaseBytes);
+                using (var settings = settingsEntry.Open()) BoundedCopy.ToFile(settings, settingsPath, MaxSettingsBytes);
             }
         }
         catch (Exception ex) when (ex is InvalidDataException or IOException or UnauthorizedAccessException or NotSupportedException)
@@ -284,6 +302,7 @@ public static partial class LocalBackup
         }
 
         if (!SettingsAreJson(settingsPath)) return new(BackupProblem.MissingSettings, manifest);
+        if (!KeyCanBeUnwrapped(settingsPath)) return new(BackupProblem.KeyNotUsable, manifest);
         var (problem, notes, schema) = CheckDatabase(dbPath);
         // The counts come from the database itself, not from what the manifest claims.
         var verified = manifest with { NoteCount = notes, SchemaVersion = schema };

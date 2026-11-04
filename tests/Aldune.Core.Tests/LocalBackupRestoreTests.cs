@@ -328,6 +328,41 @@ public sealed class LocalBackupRestoreTests : IDisposable
         Assert.Equal(new[] { "keep me" }, TextsOf(_data));
     }
 
+    // The database key sits in settings.json wrapped with Windows DPAPI for one user: on another account or computer it cannot be unwrapped
+    // and every note would be unreadable, after the live files had already been moved aside. It has to be caught before anything is staged.
+    private string WithWrappedKey(string zip, byte[] wrapped)
+    {
+        var path = Path.Combine(_out, $"keyed-{Guid.NewGuid():N}.zip");
+        File.Copy(zip, path);
+        var settingsFile = Path.Combine(_out, $"s-{Guid.NewGuid():N}.json");
+        new SettingsService(settingsFile).Save(new AppSettings { WrappedDatabaseKey = wrapped });
+        using var archive = ZipFile.Open(path, ZipArchiveMode.Update);
+        archive.GetEntry("settings.json")!.Delete();
+        using var writer = new StreamWriter(archive.CreateEntry("settings.json").Open());
+        writer.Write(File.ReadAllText(settingsFile));
+        return path;
+    }
+
+    [Fact]
+    public void ABackupWhoseKeyBelongsToAnotherWindowsUser_IsRefusedAndNothingIsStaged()
+    {
+        CreateData(_data, "{\"A\":1}", "keep me");
+        var foreign = WithWrappedKey(MakeZipFrom("other"), new byte[] { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32 });
+
+        Assert.Equal(BackupProblem.KeyNotUsable, LocalBackup.Verify(foreign).Problem);
+        Assert.False(LocalBackup.StageRestore(_data, foreign).IsOk);
+        Assert.Equal(new[] { "keep me" }, TextsOf(_data));
+    }
+
+    [Fact]
+    public void ABackupWhoseKeyWasWrappedForThisUser_IsAccepted()
+    {
+        CreateData(_data, "{\"A\":1}", "keep me");
+        var mine = WithWrappedKey(MakeZipFrom("other"), DatabaseKeyProvider.Wrap(new byte[32]));
+
+        Assert.Equal(BackupProblem.None, LocalBackup.Verify(mine).Problem);
+    }
+
     [Fact]
     public void WhenTheSwapFailsHalfWay_TheLiveFilesComeBackAndTheStagedCopyStays()
     {

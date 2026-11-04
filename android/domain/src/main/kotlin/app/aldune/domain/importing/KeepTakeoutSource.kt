@@ -72,7 +72,8 @@ object KeepTakeoutSource : ImportSource {
             ZipInputStream(input.open().buffered()).use { zip ->
                 while (!s.builder.exhausted) {
                     val entry = zip.nextEntry ?: break
-                    seen++
+                    // Entries that are not notes are skipped, but each is still inflated to be skipped: cap how many are walked.
+                    if (++seen > ImportLimits.MAX_FILES * 5) break
                     if (entry.isDirectory || !isCandidate(entry.name)) continue
                     if (++s.entries > ImportLimits.MAX_FILES) break
                     // The declared size can lie, so the real read is bounded again.

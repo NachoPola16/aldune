@@ -53,7 +53,7 @@ public sealed partial class StickyNotesSource : IImportSource
 
             return ReadCopy(copy);
         }
-        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or SqliteException)
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or SqliteException or InvalidDataException)
         {
             return ImportPreview.Failed(ImportFailure.Unreadable);
         }
@@ -75,8 +75,8 @@ public sealed partial class StickyNotesSource : IImportSource
     private static void CopyShared(string from, string to)
     {
         using var source = new FileStream(from, FileMode.Open, FileAccess.Read, FileShare.ReadWrite | FileShare.Delete);
-        using var target = new FileStream(to, FileMode.Create, FileAccess.Write, FileShare.None);
-        source.CopyTo(target);
+        // The -wal and -shm files grow with the app that owns them: the same ceiling as the database itself, counted while copying.
+        BoundedCopy.ToFile(source, to, ImportLimits.MaxDatabaseBytes);
     }
 
     private static ImportPreview ReadCopy(string copy)

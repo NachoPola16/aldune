@@ -306,6 +306,15 @@ class BackupTest {
     }
 
     @Test
+    fun `a zip stuffed with unwanted entries is refused instead of being inflated forever`() {
+        val out = ByteArrayOutputStream()
+        ZipOutputStream(out).use { z ->
+            repeat(BackupArchive.MAX_ENTRIES + 50) { i -> z.putNextEntry(ZipEntry("junk/$i.bin")); z.write(i); z.closeEntry() }
+        }
+        assertEquals(BackupReadResult.Failed(BackupFailure.NOT_A_BACKUP), BackupArchive.read(ByteArrayInputStream(out.toByteArray())))
+    }
+
+    @Test
     fun `an added note that had a local tombstone is stamped now so the restore wins in sync`() {
         val fx = Fixture()
         fx.store.put(note("b", "gone"))

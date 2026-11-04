@@ -232,7 +232,8 @@ public partial class NotesManagerWindow : Window
     /// </summary>
     private void UpdateSelectionState()
     {
-        int selected = _allRows.Count(r => r.IsSelected);
+        // Only the rows in view: a selection kept under another filter cannot be acted on from here, so it must not enable (or count in) the actions.
+        int selected = _rows.Count(r => r.IsSelected);
         bool any = selected > 0;
 
         // The actions on a selection only appear once there is one (a row of disabled buttons said nothing and cost attention); Import and Export,
@@ -988,6 +989,8 @@ public partial class NotesManagerWindow : Window
                 break;
             case Key.P when Keyboard.Modifiers == ModifierKeys.None:
                 ClickRowButton(rowElement, "RowPin");
+                // Pinning rebuilds and re-sorts the rows: put the keyboard back on this note's row so the arrow keys keep working.
+                FocusRowLater(row.Note.Id);
                 break;
             case Key.T when Keyboard.Modifiers == ModifierKeys.None:
                 ClickRowButton(rowElement, "RowTags");
@@ -1002,6 +1005,22 @@ public partial class NotesManagerWindow : Window
     }
 
     // The pin and tags buttons are not Tab stops (the list is one stop); P and T on the row do what they do.
+    private void FocusRowLater(Guid noteId) => Dispatcher.BeginInvoke(DispatcherPriority.Loaded, new Action(() =>
+    {
+        // The row is the focusable Border whose data is this note (the first one met going down: the inner borders are not focusable).
+        Border? Find(DependencyObject parent)
+        {
+            for (int i = 0; i < VisualTreeHelper.GetChildrenCount(parent); i++)
+            {
+                var child = VisualTreeHelper.GetChild(parent, i);
+                if (child is Border { Focusable: true, DataContext: NoteRow candidate } border && candidate.Note.Id == noteId) return border;
+                if (Find(child) is { } found) return found;
+            }
+            return null;
+        }
+        Find(RowsList)?.Focus();
+    }));
+
     private static void ClickRowButton(DependencyObject row, string automationId)
     {
         for (int i = 0; i < VisualTreeHelper.GetChildrenCount(row); i++)

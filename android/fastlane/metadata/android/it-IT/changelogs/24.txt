@@ -1,1 +1,1 @@
-Salva tutte le note in un .zip e ripristinale (aggiungi le mancanti o sostituisci tutto, con copia di sicurezza prima). Importa da Google Keep, Evernote e file di testo. Una nota ripristinata non viene più eliminata di nuovo da una sincronizzazione da un altro dispositivo.
+Salva tutte le note in un .zip e ripristinale (aggiungi le mancanti o sostituisci tutto, con copia di sicurezza prima). Importa da Google Keep, Evernote e file di testo. Una nota ripristinata non viene più eliminata di nuovo da una sincronizzazione da un altro dispositivo. Markdown mentre scrivi.

@@ -278,6 +278,10 @@ Notes are encrypted before they leave the device; the store only sees ids, dates
 - **Import Markdown as a note…** and **Open file…** (linked file): right-click the dock's New note button.
 - **Automatic copy to a folder**: Settings → Sync (above).
 - **Export / import settings**: Settings → About → Configuration.
+- **Backup and restore** (4.0): all your notes and settings go to one `.zip`, and a backup can be restored later. Things worth knowing:
+  - *Windows*: the restore is prepared and applied the next time Aldune starts, all or nothing; what was there before is kept as `notes.db.before-restore` and `settings.json.before-restore` in the data folder. The notes' key is tied to your Windows account, so a backup made under another account or on another computer is refused before anything changes (use sync to move notes between computers).
+  - *Android*: you can add only the missing notes or replace everything (a safety copy is made first, and the last three are kept in the app's private storage, unencrypted like the notes there). A restored note is dated now when sync is connected, so a deletion made elsewhere cannot delete it again.
+  - *Windows with sync on*: the restored database comes back with its old dates. A note that was deleted from another device after the backup was made is deleted again at the next sync, and a note edited elsewhere after the backup keeps the newer version.
 - On Android: Settings → Sync tab → **Export all notes** (a `.zip` with one Markdown file per note, active and archived) and **Import notes…**.
 
 ## Android differences

@@ -960,7 +960,7 @@ fun NoteEditorPane(key: String, viewModel: NotesViewModel, onBack: () -> Unit, s
             AssistChip(
                 onClick = {
                     try {
-                        linkContext.startActivity(android.content.Intent(android.content.Intent.ACTION_VIEW, android.net.Uri.parse(caretLink)))
+                        linkContext.startActivity(android.content.Intent(android.content.Intent.ACTION_VIEW, android.net.Uri.parse(java.net.URI(caretLink).toASCIIString())))
                     } catch (_: android.content.ActivityNotFoundException) {
                         // No browser installed: nothing to open.
                     }

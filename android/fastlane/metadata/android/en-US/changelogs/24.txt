@@ -1,1 +1,1 @@
-Back up all your notes to one .zip file and restore it (add the missing ones or replace everything, with a safety copy first). Import from Google Keep, Evernote and text files. A restored note is no longer deleted again by a sync from another device.
+Back up all your notes to one .zip file and restore it (add the missing ones or replace everything, with a safety copy first). Import from Google Keep, Evernote and text files. A restored note is no longer deleted again by a sync from another device. Markdown as you type.
