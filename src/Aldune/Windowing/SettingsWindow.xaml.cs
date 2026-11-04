@@ -1362,7 +1362,15 @@ public partial class SettingsWindow : Window
 
     private void OnAutoHideTasksToggled(object sender, RoutedEventArgs e)
     {
-        _settings.AutoHideCompletedTasks = AutoHideTasksCheck.IsChecked == true;
+        bool turningOn = AutoHideTasksCheck.IsChecked == true;
+        // The deletion reaches every device and every person the note is shared with: say so at the moment it is turned on, and let it be cancelled.
+        if (turningOn && !_settings.AutoHideCompletedTasks && _settings.SyncProfiles.Any(profile => profile.SyncEnabled)
+            && AppDialog.Show(this, Strings.TaskAutoDeleteConfirm, Title, MessageBoxButton.YesNo, MessageBoxImage.Warning, MessageBoxResult.No) != MessageBoxResult.Yes)
+        {
+            AutoHideTasksCheck.IsChecked = false;   // raises this handler again with the switch off: nothing else to do now
+            return;
+        }
+        _settings.AutoHideCompletedTasks = turningOn;
         _settingsService.Save(_settings);
         UpdateAutoHideTasksUi();
     }
