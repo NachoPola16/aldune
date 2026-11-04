@@ -1089,6 +1089,8 @@ private fun EditBar(
     // Not inline: five 48 dp buttons spread edge to edge, with the glyph of the first and the last about where the text of the note starts and ends
     // (16 dp). Evenly spaced 64 dp buttons left the outer icons about 38 dp from the edges, out of line with the text above them.
     val width = if (inline) 44.dp else 48.dp
+    // In a wide pane (the tablet's editor next to the list) the capped bar sat against the left edge with empty space to its right: it is centred.
+    Box(if (inline) Modifier else Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
     Row(
         if (inline) Modifier else Modifier.widthIn(max = BAR_MAX_WIDTH).fillMaxWidth().padding(horizontal = 4.dp),
         horizontalArrangement = if (inline) Arrangement.SpaceEvenly else Arrangement.SpaceBetween,
@@ -1098,6 +1100,7 @@ private fun EditBar(
         BarButton(EditorIcons.Indent, stringResource(R.string.edit_indent), onIndent, onLongClick = onOutdent, longClickLabel = stringResource(R.string.edit_outdent), width = width)
         BarButton(EditorIcons.Undo, stringResource(R.string.edit_undo), onUndo, canUndo, width = width)
         BarButton(EditorIcons.Redo, stringResource(R.string.edit_redo), onRedo, canRedo, width = width)
+    }
     }
 }
 
