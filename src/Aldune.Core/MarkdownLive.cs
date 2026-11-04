@@ -1,4 +1,4 @@
-namespace Aldune.Core;
+﻿namespace Aldune.Core;
 
 [Flags]
 public enum MarkdownStyle
@@ -91,7 +91,7 @@ public static class MarkdownLive
         {
             char c = t[i];
 
-            if (c == '\\' && i + 1 < end && char.IsPunctuation(t[i + 1]))
+            if (c == '\\' && i + 1 < end && IsEscapable(t[i + 1]))
             {
                 Flush(o, plainFrom, i, style);
                 Add(o, i, 1, MarkdownStyle.Marker);
@@ -148,6 +148,9 @@ public static class MarkdownLive
         }
         Flush(o, plainFrom, end, style);
     }
+
+    // ASCII punctuation and symbols, as in CommonMark: the backtick and the tilde are symbols for .NET, not punctuation.
+    private static bool IsEscapable(char c) => c < 128 && (char.IsPunctuation(c) || char.IsSymbol(c));
 
     private static int Run(string t, int i, int end)
     {

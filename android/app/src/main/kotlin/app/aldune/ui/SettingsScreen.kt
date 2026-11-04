@@ -303,6 +303,9 @@ fun SettingsScreen(viewModel: NotesViewModel, onClose: () -> Unit) {
                     SwitchRow(stringResource(R.string.large_checkboxes), stringResource(R.string.large_checkboxes_hint), settings.largeCheckboxes) { on ->
                         viewModel.updateSettings { it.copy(largeCheckboxes = on) }
                     }
+                    SwitchRow(stringResource(R.string.live_markdown), stringResource(R.string.live_markdown_hint), settings.liveMarkdown) { on ->
+                        viewModel.updateSettings { it.copy(liveMarkdown = on) }
+                    }
                     SwitchRow(stringResource(R.string.reorder_on_check), stringResource(R.string.reorder_on_check_hint), settings.reorderOnCheck) { on ->
                         viewModel.updateSettings { it.copy(reorderOnCheck = on) }
                     }

@@ -370,6 +370,8 @@
     <string name="welcome_ok">Entendi</string>
     <string name="large_checkboxes">Caixas de tarefa maiores</string>
     <string name="large_checkboxes_hint">Aumenta as caixas para acertá-las com mais facilidade.</string>
+    <string name="live_markdown">Mostrar a formatação Markdown ao escrever</string>
+    <string name="live_markdown_hint">Negrito, itálico, títulos, código e links aparecem desenhados enquanto você escreve. Os caracteres continuam no texto, apenas atenuados, e a nota não é alterada.</string>
     <string name="sync_paste">Colar</string>
     <string name="bg_never">A sincronização em segundo plano ainda não rodou.</string>
     <string name="bg_ok">Última sincronização em segundo plano %1$s</string>

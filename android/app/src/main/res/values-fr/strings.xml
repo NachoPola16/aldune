@@ -370,6 +370,8 @@
     <string name="welcome_ok">Compris</string>
     <string name="large_checkboxes">Cases de tâche plus grandes</string>
     <string name="large_checkboxes_hint">Agrandit les cases pour les toucher plus facilement.</string>
+    <string name="live_markdown">Afficher la mise en forme Markdown pendant la saisie</string>
+    <string name="live_markdown_hint">Le gras, l\'italique, les titres, le code et les liens s\'affichent pendant que vous écrivez. Les caractères restent dans le texte, simplement atténués, et la note n\'est pas modifiée.</string>
     <string name="sync_paste">Coller</string>
     <string name="bg_never">La synchro en arrière-plan n\'a pas encore eu lieu.</string>
     <string name="bg_ok">Dernière synchro en arrière-plan %1$s</string>

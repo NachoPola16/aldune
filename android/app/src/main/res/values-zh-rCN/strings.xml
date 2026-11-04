@@ -370,6 +370,8 @@
     <string name="welcome_ok">知道了</string>
     <string name="large_checkboxes">更大的任务复选框</string>
     <string name="large_checkboxes_hint">放大复选框，更容易点按。</string>
+    <string name="live_markdown">输入时显示 Markdown 格式</string>
+    <string name="live_markdown_hint">书写时绘制粗体、斜体、标题、代码和链接。符号仍保留在文本中，只是变淡，便笺内容不会被修改。</string>
     <string name="sync_paste">粘贴</string>
     <string name="bg_never">后台同步尚未运行。</string>
     <string name="bg_ok">上次后台同步 %1$s</string>

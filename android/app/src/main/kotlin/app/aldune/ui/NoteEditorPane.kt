@@ -57,6 +57,8 @@ import androidx.compose.ui.graphics.Color
 import app.aldune.data.CompletedTasksStore
 import app.aldune.domain.CompletedTasksPolicy
 import app.aldune.domain.KeyboardOnOpen
+import app.aldune.text.MarkdownLive
+import app.aldune.text.MarkdownStyle
 import app.aldune.text.HiddenTasks
 import app.aldune.text.LinkText
 import androidx.compose.foundation.text.input.TextFieldState
@@ -163,6 +165,26 @@ private val CheckboxSpan = SpanStyle(fontFamily = FontFamily(Font(R.font.aldune_
 // The arrow of a bullet line in Roboto is a hairline at the height of the lowercase letters, below the middle of the capitals: heavier and a little raised it reads as a bullet centred on the text.
 private val BulletSpan = SpanStyle(fontWeight = androidx.compose.ui.text.font.FontWeight.Bold, baselineShift = androidx.compose.ui.text.style.BaselineShift(0.16f))
 private val LinkSpan = SpanStyle(textDecoration = androidx.compose.ui.text.style.TextDecoration.Underline)
+
+// Live Markdown: how one stretch found by MarkdownLive is drawn. The syntax characters stay in the text, only dimmed.
+private fun markdownSpanStyle(style: Int): SpanStyle? {
+    if (style == 0) return null
+    if (style and MarkdownStyle.MARKER != 0) return SpanStyle(color = androidx.compose.ui.graphics.Color(0xA0808080))   // a mid grey that reads on light and dark faces alike
+    val decorations = buildList {
+        if (style and MarkdownStyle.STRIKE != 0) add(androidx.compose.ui.text.style.TextDecoration.LineThrough)
+        if (style and MarkdownStyle.LINK != 0) add(androidx.compose.ui.text.style.TextDecoration.Underline)
+    }
+    return SpanStyle(
+        fontWeight = if (style and MarkdownStyle.BOLD != 0) androidx.compose.ui.text.font.FontWeight.Bold else null,
+        fontStyle = if (style and MarkdownStyle.ITALIC != 0) androidx.compose.ui.text.font.FontStyle.Italic else null,
+        fontFamily = if (style and MarkdownStyle.CODE != 0) androidx.compose.ui.text.font.FontFamily.Monospace else null,
+        background = if (style and MarkdownStyle.CODE != 0) androidx.compose.ui.graphics.Color(0x24808080) else androidx.compose.ui.graphics.Color.Unspecified,
+        textDecoration = if (decorations.isEmpty()) null else androidx.compose.ui.text.style.TextDecoration.combine(decorations),
+    )
+}
+
+// Past this the note is drawn as plain text: the scanner and the styles are meant for notes, not for a pasted file.
+private const val MARKDOWN_MAX_LENGTH = 150_000
 private val LargeCheckboxSpan = SpanStyle(fontFamily = FontFamily(Font(R.font.aldune_check_large)), baselineShift = androidx.compose.ui.text.style.BaselineShift(-0.085f))
 
 /**
@@ -461,7 +483,8 @@ fun NoteEditorPane(key: String, viewModel: NotesViewModel, onBack: () -> Unit, s
         }
         with(density) { measurer.measure(styled, bodyStyle).size.width.toSp() }
     }
-    val hideTransformation = remember(hideActive, showDone, completed, hideDelayMs, checkboxSpan) {
+    val liveMarkdown = settings.liveMarkdown
+    val hideTransformation = remember(hideActive, showDone, completed, hideDelayMs, checkboxSpan, liveMarkdown) {
         OutputTransformation {
             if (hideActive && !showDone) {
                 val spans = HiddenTasks.hiddenSpans(asCharSequence().toString(), completed, System.currentTimeMillis(), hideDelayMs)
@@ -482,6 +505,10 @@ fun NoteEditorPane(key: String, viewModel: NotesViewModel, onBack: () -> Unit, s
             }
             // Web addresses are underlined (the text itself never changes); they open from the chip below, never by themselves.
             for (link in LinkText.findAll(shown)) addStyle(LinkSpan, link.start, link.end)
+            // Markdown as it is typed: styles only, the text is not touched (so search, sync and export see what was typed).
+            if (liveMarkdown && shown.length <= MARKDOWN_MAX_LENGTH) {
+                for (span in MarkdownLive.parse(shown)) markdownSpanStyle(span.style)?.let { addStyle(it, span.start, span.end) }
+            }
         }
     }
 

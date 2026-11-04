@@ -51,7 +51,7 @@ It is **not** Windows' "always on top of other windows" (`NoteUnpinned`, local, 
 | Language | `Language` | `language` | The same eight languages. |
 | Look and look colors | `Appearance`, `AspectColors` | `appearance`, `aspectColors` | Same numbers and same color slots per look. |
 | Simplified mode | `SimplifiedMode` | `simplifiedMode` | |
-| Markdown as you type | `LiveMarkdown` | `liveMarkdown` | Windows only for now (on by default). A display option: the text is never changed. |
+| Markdown as you type | `LiveMarkdown` | `liveMarkdown` | On by default. A display option: the text is never changed. Windows draws it in a layer over the plain editor (headings are bold, not bigger); Android styles the text with real bold and italic. |
 | Large checkboxes | `LargeCheckboxes` | `largeCheckboxes` | Factory default: off on Windows, on only in new Android installs (touch screen). |
 | Move done to the end | `MoveCompletedTasksToEnd` | `reorderOnCheck` | |
 | Hide done tasks | `AutoHideCompletedTasks` + value and unit | `hideDoneTasks` + hours | Windows: minutes, hours, days or weeks with a number. Android: 1 hour, 1 day or 1 week. |

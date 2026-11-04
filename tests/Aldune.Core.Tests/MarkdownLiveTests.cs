@@ -88,6 +88,13 @@ public class MarkdownLiveTests
     public void Escape_KeepsTheStarLiteral() => Assert.Equal("\\[m]*a*[]", Show("\\*a*"));
 
     [Fact]
+    public void Escape_AlsoWorksOnBacktickAndTilde()
+    {
+        Assert.Equal("\\[m]`a`[]", Show("\\`a`"));
+        Assert.Equal("\\[m]~~a~~[]", Show("\\~~a~~"));
+    }
+
+    [Fact]
     public void Styles_NeverCrossALine() => Assert.Equal("*a\nb*[]", Show("*a\nb*"));
 
     [Fact]

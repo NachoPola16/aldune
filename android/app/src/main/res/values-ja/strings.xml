@@ -370,6 +370,8 @@
     <string name="welcome_ok">わかりました</string>
     <string name="large_checkboxes">タスクのチェックボックスを大きくする</string>
     <string name="large_checkboxes_hint">ボックスを大きくして、タップしやすくします。</string>
+    <string name="live_markdown">入力中に Markdown の書式を表示する</string>
+    <string name="live_markdown_hint">太字、斜体、見出し、コード、リンクを入力中に表示します。記号はテキストに残り、薄く表示されるだけで、メモは変更されません。</string>
     <string name="sync_paste">貼り付け</string>
     <string name="bg_never">バックグラウンド同期はまだ実行されていません。</string>
     <string name="bg_ok">最後のバックグラウンド同期 %1$s</string>
