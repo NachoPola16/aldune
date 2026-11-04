@@ -132,6 +132,7 @@ import androidx.compose.ui.text.coerceIn
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.em
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LifecycleEventEffect
@@ -160,9 +161,13 @@ private const val KEYBOARD_DELAY_MS = 250L
 
 /** Lo que el campo no puede enfocarse al abrir una nota que no abre el teclado: lo que tarda Android en repartir el foco inicial. */
 private const val FOCUS_SETTLE_MS = 700L
-// The square of a task is centred on the capitals of its text by a baseline shift, measured on screenshots (centre of the square minus centre of
-// a capital, at 41 px of text): the large square sat 3.5 px high (lowered by 0.085 em), the normal one 1 px low (raised by 0.025 em).
-private val CheckboxSpan = SpanStyle(fontFamily = FontFamily(Font(R.font.aldune_check)), baselineShift = androidx.compose.ui.text.style.BaselineShift(0.025f))
+// The square of a task, measured on screenshots at 41 px of text (4-11-2026, in px; the capitals are 30 px tall, the lowercase x-height 22 px):
+// drawn at full size it was 37 px tall, 7 px taller than the capitals, with its bottom 4 px under the baseline and its centre 3.5 px above the
+// middle of the lowercase letters, so it read as high and heavy. Scaled down and raised a little it ends up the height of the capitals, on the baseline.
+// The hanging indent of a wrapped task is measured with this same span (taskIndent), so it follows the narrower box.
+private val CheckboxSpan = SpanStyle(fontFamily = FontFamily(Font(R.font.aldune_check)), fontSize = CHECKBOX_SCALE.em, baselineShift = androidx.compose.ui.text.style.BaselineShift(CHECKBOX_SHIFT))
+private const val CHECKBOX_SCALE = 0.88f
+private const val CHECKBOX_SHIFT = 0.02f
 // The arrow of a bullet line in Roboto is a hairline at the height of the lowercase letters, below the middle of the capitals: heavier and a little raised it reads as a bullet centred on the text.
 private val BulletSpan = SpanStyle(fontWeight = androidx.compose.ui.text.font.FontWeight.Bold, baselineShift = androidx.compose.ui.text.style.BaselineShift(0.16f))
 private val LinkSpan = SpanStyle(textDecoration = androidx.compose.ui.text.style.TextDecoration.Underline)
