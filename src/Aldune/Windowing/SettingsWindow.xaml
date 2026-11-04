@@ -1020,6 +1020,8 @@
                                   Foreground="{DynamicResource AlduneTextBrush}" Background="{DynamicResource AlduneGroundBrush}" FontSize="{DynamicResource AlduneTextBody}"
                                   Style="{StaticResource SettingsSwitchStyle}"
                                   Click="OnSyncEnabledToggled" />
+                        <TextBlock Text="{x:Static res:Strings.SyncSecurityNote}" Foreground="{DynamicResource AlduneHintBrush}"
+                                   FontSize="{DynamicResource AlduneTextSmall}" TextWrapping="Wrap" Margin="0,6,56,0" />
                         <!-- Everything below only means something once sync is on: with it off the page is the switch and nothing else (shown again by the search when a result lives here). -->
                         <StackPanel x:Name="SyncDetails">
                         <TextBlock Text="{x:Static res:Strings.SyncScopeHint}" Foreground="{DynamicResource AlduneHintBrush}"

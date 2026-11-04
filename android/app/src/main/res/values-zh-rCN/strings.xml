@@ -126,6 +126,7 @@
     <string name="done">完成</string>
     <string name="sync_title">同步</string>
     <string name="sync_intro">粘贴电脑上 Aldune 的配置同步码，即可将您的笔记与服务器同步。</string>
+    <string name="sync_security_note">笔记在离开此设备之前就已加密。服务器或文件夹只保存加密文件，无法读取其内容。</string>
     <string name="sync_code_label">配置同步码</string>
     <string name="sync_continue">继续</string>
     <string name="sync_transport_server">Aldune 服务器</string>

@@ -126,6 +126,7 @@
     <string name="done">Done</string>
     <string name="sync_title">Sync</string>
     <string name="sync_intro">Paste the profile code from Aldune on your PC to sync your notes with your server.</string>
+    <string name="sync_security_note">Your notes are encrypted on this device before they leave it. The server or folder only keeps encrypted files and cannot read them.</string>
     <string name="sync_code_label">Profile code</string>
     <string name="sync_continue">Continue</string>
     <string name="sync_transport_server">Aldune server</string>

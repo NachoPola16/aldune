@@ -126,6 +126,7 @@
     <string name="done">完了</string>
     <string name="sync_title">同期</string>
     <string name="sync_intro">PC の Aldune のプロファイルコードを貼り付けて、ノートをサーバーと同期します。</string>
+    <string name="sync_security_note">ノートはこのデバイスを出る前に暗号化されます。サーバーやフォルダーには暗号化されたファイルだけが保存され、中身は読めません。</string>
     <string name="sync_code_label">プロファイルコード</string>
     <string name="sync_continue">続ける</string>
     <string name="sync_transport_server">Aldune サーバー</string>

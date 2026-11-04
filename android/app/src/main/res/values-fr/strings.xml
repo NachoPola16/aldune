@@ -126,6 +126,7 @@
     <string name="done">Terminé</string>
     <string name="sync_title">Synchronisation</string>
     <string name="sync_intro">Colle le code de profil d\'Aldune sur ton PC pour synchroniser tes notes avec ton serveur.</string>
+    <string name="sync_security_note">Vos notes sont chiffrées sur cet appareil avant d’en sortir. Le serveur ou le dossier ne garde que des fichiers chiffrés et ne peut pas les lire.</string>
     <string name="sync_code_label">Code de profil</string>
     <string name="sync_continue">Continuer</string>
     <string name="sync_transport_server">Serveur Aldune</string>

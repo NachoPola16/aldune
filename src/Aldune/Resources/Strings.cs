@@ -1484,6 +1484,14 @@ public static class Strings
         "Les notes restent chiffrées. Utilisez un dossier partagé, votre propre serveur Aldune ou WebDAV.",
         "As notas permanecem criptografadas. Use uma pasta compartilhada, seu próprio servidor Aldune ou WebDAV.", "Le note restano cifrate. Usa una cartella condivisa, un tuo server Aldune o WebDAV.", "ノートは暗号化されたままです。共有フォルダー、自前の Aldune サーバー、または WebDAV を使えます。", "笔记始终保持加密。可使用共享文件夹、您自己的 Aldune 服务器或 WebDAV。");
     public static string SyncEnabledCheckbox => T("Sync this profile (turn this on in every profile you want synced; they all sync together)", "Sincronizar este perfil (actívalo en cada perfil que quieras sincronizar; se sincronizan todos a la vez)", "Dieses Profil synchronisieren (in jedem gewünschten Profil aktivieren; alle laufen gemeinsam)", "Synchroniser ce profil (à activer dans chaque profil voulu ; ils se synchronisent tous ensemble)", "Sincronizar este perfil (ative em cada perfil que quiser sincronizar; todos sincronizam juntos)", "Sincronizza questo profilo (attivalo in ogni profilo che vuoi sincronizzare; si sincronizzano tutti insieme)", "このプロファイルを同期する（同期したい各プロファイルでオンにしてください。オンのものはすべて一緒に同期されます）", "同步此配置文件（请在每个要同步的配置文件中开启；开启的将一起同步）");
+    public static string SyncSecurityNote => T("Your notes are encrypted on this device before they leave it. The server or folder only keeps encrypted files and cannot read them.",
+        "Tus notas se cifran en este dispositivo antes de salir de él. El servidor o la carpeta solo guarda archivos cifrados y no puede leerlos.",
+        "Deine Notizen werden auf diesem Gerät verschlüsselt, bevor sie es verlassen. Server oder Ordner speichern nur verschlüsselte Dateien und können sie nicht lesen.",
+        "Vos notes sont chiffrées sur cet appareil avant d’en sortir. Le serveur ou le dossier ne garde que des fichiers chiffrés et ne peut pas les lire.",
+        "Suas notas são criptografadas neste dispositivo antes de sair dele. O servidor ou a pasta guarda apenas arquivos criptografados e não consegue lê-los.",
+        "Le tue note vengono cifrate su questo dispositivo prima di lasciarlo. Il server o la cartella conserva solo file cifrati e non può leggerli.",
+        "ノートはこのデバイスを出る前に暗号化されます。サーバーやフォルダーには暗号化されたファイルだけが保存され、中身は読めません。",
+        "笔记在离开此设备之前就已加密。服务器或文件夹只保存加密文件，无法读取其内容。");
     public static string SyncFolderOption => T("Shared folder / NAS", "Carpeta compartida / NAS",
         "Freigegebener Ordner / NAS", "Dossier partagé / NAS", "Pasta compartilhada / NAS", "Cartella condivisa / NAS", "共有フォルダー / NAS", "共享文件夹 / NAS");
     public static string SyncServerOption => T("Self-hosted server", "Servidor propio",

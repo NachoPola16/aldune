@@ -126,6 +126,7 @@
     <string name="done">Fertig</string>
     <string name="sync_title">Synchronisierung</string>
     <string name="sync_intro">Füge den Profilcode aus Aldune auf deinem PC ein, um deine Notizen mit deinem Server zu synchronisieren.</string>
+    <string name="sync_security_note">Deine Notizen werden auf diesem Gerät verschlüsselt, bevor sie es verlassen. Server oder Ordner speichern nur verschlüsselte Dateien und können sie nicht lesen.</string>
     <string name="sync_code_label">Profilcode</string>
     <string name="sync_continue">Weiter</string>
     <string name="sync_transport_server">Aldune-Server</string>

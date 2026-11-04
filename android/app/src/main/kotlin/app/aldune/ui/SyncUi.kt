@@ -152,6 +152,11 @@ fun SyncSection(viewModel: NotesViewModel) {
     val profiles by c.profiles.collectAsStateWithLifecycle()
     val status by c.status.collectAsStateWithLifecycle()
     Section(R.string.sync_title)
+    // What the server can and cannot see, said up front: it is the first thing people wonder before connecting a device.
+    Text(
+        stringResource(R.string.sync_security_note), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant,
+        modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp),
+    )
     var adding by remember { mutableStateOf(false) }
     // Un código compartido desde otra app (WhatsApp, correo…) llega aquí: se abre el formulario con el código puesto.
     val capture by viewModel.capture.collectAsStateWithLifecycle()
