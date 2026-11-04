@@ -142,4 +142,22 @@ public class NoteColorContrastTests
     {
         Assert.Equal("not a colour", NoteColorDerivation.SoftenFace("not a colour", 0.6));
     }
+
+    [Fact]
+    public void HighContrastInk_ReadsAtSevenToOneOnEveryBuiltInNoteColour()
+    {
+        foreach (var theme in NoteThemes.BuiltIn)
+            foreach (var face in theme.LightColors.Concat(theme.DarkColors))
+            {
+                var ink = NoteColorContrast.HighContrastInkFor(face);
+                Assert.True(ColorFit.Ratio(ink, face) >= 7.0, $"{theme.Id} {face}: {ink} = {ColorFit.Ratio(ink, face):0.00}");
+            }
+    }
+
+    [Theory]
+    [InlineData(null, "#000000")]
+    [InlineData("", "#000000")]
+    [InlineData("#FFFFFF", "#000000")]
+    [InlineData("#101010", "#FFFFFF")]
+    public void HighContrastInk_IsBlackOrWhite(string? face, string expected) => Assert.Equal(expected, NoteColorContrast.HighContrastInkFor(face));
 }

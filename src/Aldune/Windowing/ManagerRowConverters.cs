@@ -56,6 +56,7 @@ public sealed class ManagerRowInkConverter : IValueConverter
 {
     public object Convert(object? value, Type targetType, object? parameter, CultureInfo culture) =>
         ManagerRows.ColourOnEdgeOnly ? ManagerRows.Resource("AlduneTextBrush")
+            : ThemeManager.IsHighContrast ? ManagerRows.BrushOf(NoteColorContrast.HighContrastInkFor(ManagerRows.SoftFace(value)), Brushes.Black)
             : ManagerRows.BrushOf(NoteColorPalette.LabelFor(ManagerRows.SoftFace(value)), Brushes.Black);
 
     public object ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture) => throw new NotSupportedException();
@@ -68,7 +69,9 @@ public sealed class ManagerRowMutedInkConverter : IValueConverter
     {
         if (ManagerRows.ColourOnEdgeOnly) return ManagerRows.Resource("AlduneMutedTextBrush");
         string face = ManagerRows.SoftFace(value);
-        var muted = Aldune.Core.NoteColorContrast.MutedInkFor(face, NoteColorPalette.LabelFor(face));
+        // High contrast: the secondary text is as strong as the main one (7:1), not softened to 4.5:1.
+        var muted = ThemeManager.IsHighContrast ? NoteColorContrast.HighContrastInkFor(face)
+            : Aldune.Core.NoteColorContrast.MutedInkFor(face, NoteColorPalette.LabelFor(face));
         var brush = new SolidColorBrush((Color)ColorConverter.ConvertFromString(muted));
         brush.Freeze();
         return brush;

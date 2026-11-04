@@ -23,6 +23,16 @@ public static class NoteColorContrast
     /// The ink for secondary text (dates, snippets) on a face: the ink softened towards the face as far as it can go (up to 30 %) while
     /// keeping 4.5:1. A plain opacity cannot promise that: 0.72 of an ink that already sits near 4.5:1 falls to about 3:1.
     /// </summary>
+    /// <summary>
+    /// The ink for a note colour under a Windows high contrast theme: pure black or pure white, whichever reads better on the face (7:1 or more
+    /// on every pastel of the built-in themes; the note colour itself is the person's and is kept).
+    /// </summary>
+    public static string HighContrastInkFor(string? face)
+    {
+        if (string.IsNullOrEmpty(face)) return "#000000";
+        return ColorFit.Ratio("#000000", face) >= ColorFit.Ratio("#FFFFFF", face) ? "#000000" : "#FFFFFF";
+    }
+
     public static string MutedInkFor(string? face, string ink)
     {
         if (!TryParse(face, out var f) || !TryParse(ink, out var i)) return ink;
