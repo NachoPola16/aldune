@@ -25,6 +25,27 @@ object MarkdownLive {
     // Past this a line is left plain: looking for a closing delimiter is quadratic in the worst case, and a line this long is a pasted log.
     private const val MAX_LINE_LENGTH = 4000
     private const val MAX_DEPTH = 4
+    /** Notes longer than this are not styled at all (the editor checks it too, and so does [linkUrlAt]). */
+    const val MAX_NOTE_LENGTH = 150_000
+
+    // A search for a closing delimiter that failed from some position fails from any later one too (the range only shrinks), so the first
+    // failure per delimiter is remembered for the line. Without it a line of many unclosed openers costs openers x length.
+    private val failedFrom = ThreadLocal.withInitial { HashMap<Int, Int>() }
+    private val failedLineEnd = ThreadLocal.withInitial { 0 }
+
+    private fun knownToFail(c: Char, n: Int, from: Int): Boolean {
+        val at = failedFrom.get()[(c.code shl 4) or n]
+        return at != null && from >= at
+    }
+
+    private fun record(c: Char, n: Int, from: Int, end: Int, found: Int): Int {
+        if (found < 0 && end == failedLineEnd.get()) {
+            val key = (c.code shl 4) or n
+            val at = failedFrom.get()[key]
+            if (at == null || from < at) failedFrom.get()[key] = from
+        }
+        return found
+    }
 
     fun parse(text: String?): List<MarkdownSpan> {
         val spans = ArrayList<MarkdownSpan>()
@@ -59,7 +80,7 @@ object MarkdownLive {
      * brackets are not links, as in [parse]. The caller still has to check that it is an http(s) address before opening it.
      */
     fun linkUrlAt(text: String?, index: Int): String? {
-        if (text.isNullOrEmpty() || index < 0 || index >= text.length) return null
+        if (text.isNullOrEmpty() || index < 0 || index >= text.length || text.length > MAX_NOTE_LENGTH) return null
 
         val lineStart = if (index == 0) 0 else text.lastIndexOf('\n', index - 1) + 1
         var lineEnd = text.indexOf('\n', index)
@@ -94,6 +115,8 @@ object MarkdownLive {
     private fun line(t: String, start: Int, end: Int, o: MutableList<MarkdownSpan>) {
         if (end <= start) return
         if (end - start > MAX_LINE_LENGTH) { add(o, start, end - start, 0); return }
+        failedFrom.get().clear()
+        failedLineEnd.set(end)
 
         var hashes = 0
         while (start + hashes < end && t[start + hashes] == '#') hashes++
@@ -121,7 +144,7 @@ object MarkdownLive {
 
             if (c == '`') {
                 val n = run(t, i, end)
-                val close = findExactRun(t, '`', n, i + n, end)
+                val close = if (knownToFail('`', n, i + n)) -1 else record('`', n, i + n, end, findExactRun(t, '`', n, i + n, end))
                 if (close > i + n) {
                     flush(o, plainFrom, i, style)
                     add(o, i, n, MarkdownStyle.MARKER)
@@ -155,7 +178,9 @@ object MarkdownLive {
                     3 -> MarkdownStyle.BOLD or MarkdownStyle.ITALIC
                     else -> 0
                 }
-                val close = if (added != 0 && depth < MAX_DEPTH && canOpen(t, c, i, n, end)) findCloser(t, c, n, i + n, end) else -1
+                val close = if (added != 0 && depth < MAX_DEPTH && canOpen(t, c, i, n, end)) {
+                    if (knownToFail(c, n, i + n)) -1 else record(c, n, i + n, end, findCloser(t, c, n, i + n, end))
+                } else -1
                 if (close > 0) {
                     flush(o, plainFrom, i, style)
                     add(o, i, n, MarkdownStyle.MARKER)

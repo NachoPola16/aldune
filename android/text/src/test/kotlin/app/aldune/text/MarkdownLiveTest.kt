@@ -107,4 +107,19 @@ class MarkdownLiveTest {
         assertNull(MarkdownLive.linkUrlAt("[a](https://x.y)", 99))
         assertNull(MarkdownLive.linkUrlAt(null, 0))
     }
+
+    @Test fun `many unclosed openers are not quadratic`() {
+        val line = "*a `b ".repeat(665)
+        val text = (1..40).joinToString(10.toChar().toString()) { line }
+        val start = System.nanoTime()
+        val spans = MarkdownLive.parse(text)
+        val ms = (System.nanoTime() - start) / 1_000_000
+        assertTrue(spans.isNotEmpty())
+        assertTrue(ms < 1500, "took $ms ms")
+    }
+
+    @Test fun `the memo does not change the answer`() = assertEquals("*[m]a *b[i]*[m] *c[]", show("*a *b* *c"))
+
+    @Test fun `linkUrlAt ignores notes over the size cap`() =
+        assertNull(MarkdownLive.linkUrlAt("[a](https://x.y)" + "x".repeat(MarkdownLive.MAX_NOTE_LENGTH), 2))
 }

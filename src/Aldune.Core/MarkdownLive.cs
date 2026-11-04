@@ -28,6 +28,25 @@ public static class MarkdownLive
     // Past this a line is left plain: looking for a closing delimiter is quadratic in the worst case, and a line this long is a pasted log, not prose.
     private const int MaxLineLength = 4000;
     private const int MaxDepth = 4;
+    /// <summary>Notes longer than this are not styled at all (the editors check it too, and so does <see cref="LinkUrlAt"/>).</summary>
+    public const int MaxNoteLength = 150_000;
+
+    // A search for a closing delimiter that failed from some position fails from any later one too (the range only shrinks), so the first
+    // failure per delimiter is remembered for the line. Without it a line of many unclosed openers costs openers x length.
+    [ThreadStatic] private static Dictionary<int, int>? _failedFrom;
+    [ThreadStatic] private static int _failedLineEnd;
+
+    private static bool KnownToFail(char c, int n, int from) => _failedFrom is { } f && f.TryGetValue((c << 4) | n, out int at) && from >= at;
+
+    private static int Record(char c, int n, int from, int end, int found)
+    {
+        if (found < 0 && end == _failedLineEnd && _failedFrom is { } f)
+        {
+            int key = (c << 4) | n;
+            if (!f.TryGetValue(key, out int at) || from < at) f[key] = from;
+        }
+        return found;
+    }
 
     public static IReadOnlyList<MarkdownSpan> Parse(string? text)
     {
@@ -72,7 +91,7 @@ public static class MarkdownLive
     /// </summary>
     public static string? LinkUrlAt(string? text, int index)
     {
-        if (string.IsNullOrEmpty(text) || index < 0 || index >= text.Length) return null;
+        if (string.IsNullOrEmpty(text) || index < 0 || index >= text.Length || text.Length > MaxNoteLength) return null;
 
         int lineStart = index == 0 ? 0 : text.LastIndexOf('\n', index - 1) + 1;
         int lineEnd = text.IndexOf('\n', index);
@@ -114,6 +133,8 @@ public static class MarkdownLive
     {
         if (end <= start) return;
         if (end - start > MaxLineLength) { Add(o, start, end - start, MarkdownStyle.None); return; }
+        (_failedFrom ??= new()).Clear();
+        _failedLineEnd = end;
 
         int hashes = 0;
         while (start + hashes < end && t[start + hashes] == '#') hashes++;
@@ -146,7 +167,7 @@ public static class MarkdownLive
             if (c == '`')
             {
                 int n = Run(t, i, end);
-                int close = FindExactRun(t, '`', n, i + n, end);
+                int close = KnownToFail('`', n, i + n) ? -1 : Record('`', n, i + n, end, FindExactRun(t, '`', n, i + n, end));
                 if (close > i + n)
                 {
                     Flush(o, plainFrom, i, style);
@@ -175,7 +196,7 @@ public static class MarkdownLive
                 var added = c == '~' ? (n == 2 ? MarkdownStyle.Strike : MarkdownStyle.None)
                     : n switch { 1 => MarkdownStyle.Italic, 2 => MarkdownStyle.Bold, 3 => MarkdownStyle.Bold | MarkdownStyle.Italic, _ => MarkdownStyle.None };
 
-                if (added != MarkdownStyle.None && depth < MaxDepth && CanOpen(t, c, i, n, end) && FindCloser(t, c, n, i + n, end) is var close && close > 0)
+                if (added != MarkdownStyle.None && depth < MaxDepth && CanOpen(t, c, i, n, end) && (KnownToFail(c, n, i + n) ? -1 : Record(c, n, i + n, end, FindCloser(t, c, n, i + n, end))) is var close && close > 0)
                 {
                     Flush(o, plainFrom, i, style);
                     Add(o, i, n, MarkdownStyle.Marker);

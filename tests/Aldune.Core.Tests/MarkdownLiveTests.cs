@@ -152,4 +152,27 @@ public class MarkdownLiveTests
         Assert.Null(MarkdownLive.LinkUrlAt("[a](https://x.y)", 99));
         Assert.Null(MarkdownLive.LinkUrlAt(null, 0));
     }
+
+    [Fact]
+    public void ManyUnclosedOpeners_AreNotQuadratic()
+    {
+        // 40 lines of ~3990 characters, each full of openers with no closer: openers x length per line unless failures are remembered.
+        string line = string.Concat(Enumerable.Repeat("*a `b ", 665));
+        string text = string.Join((char)10, Enumerable.Repeat(line, 40));
+        var clock = System.Diagnostics.Stopwatch.StartNew();
+        var spans = MarkdownLive.Parse(text);
+        clock.Stop();
+        Assert.NotEmpty(spans);
+        Assert.True(clock.ElapsedMilliseconds < 1500, "took " + clock.ElapsedMilliseconds + " ms");
+    }
+
+    [Fact]
+    public void Memo_DoesNotChangeTheAnswer() => Assert.Equal("*[m]a *b[i]*[m] *c[]", Show("*a *b* *c"));
+
+    [Fact]
+    public void LinkUrlAt_IgnoresNotesOverTheSizeCap()
+    {
+        string text = "[a](https://x.y)" + new string('x', MarkdownLive.MaxNoteLength);
+        Assert.Null(MarkdownLive.LinkUrlAt(text, 2));
+    }
 }

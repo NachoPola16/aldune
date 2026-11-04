@@ -402,6 +402,7 @@ public static class Strings
         "managerHotkeyEnabled" => T("Open notes shortcut", "Atajo de abrir las notas", "Tastenkürzel zum Öffnen der Notizen", "Raccourci d'ouverture des notes", "Atalho para abrir as notas", "Scorciatoia apri note", "ノート一覧を開くショートカット", "打开笔记快捷键"),
         "managerHotkeyModifiers" => T("Open notes shortcut (modifier keys)", "Atajo de abrir las notas (modificadores)", "Tastenkürzel zum Öffnen der Notizen (Zusatztasten)", "Raccourci d'ouverture des notes (touches modificatrices)", "Atalho para abrir as notas (teclas modificadoras)", "Scorciatoia apri note (tasti modificatori)", "ノート一覧を開くショートカット（修飾キー）", "打开笔记快捷键（修饰键）"),
         "managerHotkeyKey" => T("Open notes shortcut (key)", "Atajo de abrir las notas (tecla)", "Tastenkürzel zum Öffnen der Notizen (Taste)", "Raccourci d'ouverture des notes (touche)", "Atalho para abrir as notas (tecla)", "Scorciatoia apri note (tasto)", "ノート一覧を開くショートカット（キー）", "打开笔记快捷键（按键）"),
+        "liveMarkdown" => T("Markdown as you type", "Markdown al escribir", "Markdown beim Tippen", "Markdown pendant la saisie", "Markdown ao escrever", "Markdown mentre scrivi", "入力中の Markdown 表示", "输入时的 Markdown"),
         "quickFindHotkeyEnabled" => T("Quick find shortcut", "Atajo de búsqueda rápida", "Tastenkürzel für die Schnellsuche", "Raccourci de recherche rapide", "Atalho da busca rápida", "Scorciatoia ricerca rapida", "クイック検索のショートカット", "快速查找快捷键"),
         "quickFindHotkeyModifiers" => T("Quick find shortcut (modifier keys)", "Atajo de búsqueda rápida (modificadores)", "Tastenkürzel für die Schnellsuche (Zusatztasten)", "Raccourci de recherche rapide (touches modificatrices)", "Atalho da busca rápida (teclas modificadoras)", "Scorciatoia ricerca rapida (tasti modificatori)", "クイック検索のショートカット（修飾キー）", "快速查找快捷键（修饰键）"),
         "quickFindHotkeyKey" => T("Quick find shortcut (key)", "Atajo de búsqueda rápida (tecla)", "Tastenkürzel für die Schnellsuche (Taste)", "Raccourci de recherche rapide (touche)", "Atalho da busca rápida (tecla)", "Scorciatoia ricerca rapida (tasto)", "クイック検索のショートカット（キー）", "快速查找快捷键（按键）"),
@@ -1186,6 +1187,10 @@ public static class Strings
     public static string QuickFindFooter => T("Enter opens · Ctrl+Enter copies · Esc closes", "Intro abre · Ctrl+Intro copia · Esc cierra",
         "Eingabe öffnet · Strg+Eingabe kopiert · Esc schließt", "Entrée ouvre · Ctrl+Entrée copie · Échap ferme", "Enter abre · Ctrl+Enter copia · Esc fecha",
         "Invio apre · Ctrl+Invio copia · Esc chiude", "Enter で開く · Ctrl+Enter でコピー · Esc で閉じる", "Enter 打开 · Ctrl+Enter 复制 · Esc 关闭");
+    public static string QuickFindCopyFailed => T("Could not copy: another program is using the clipboard.", "No se pudo copiar: otro programa está usando el portapapeles.",
+        "Kopieren nicht möglich: Ein anderes Programm verwendet die Zwischenablage.",
+        "Copie impossible : un autre programme utilise le presse-papiers.",
+        "Não foi possível copiar: outro programa está usando a área de transferência.", "Impossibile copiare: un altro programma sta usando gli appunti.", "コピーできませんでした。他のプログラムがクリップボードを使用しています。", "无法复制：另一个程序正在使用剪贴板。");
     public static string QuickFindLockedCopy => T("This note is protected, so it cannot be copied. Open it with Enter.",
         "Esta nota está protegida, así que no se puede copiar. Ábrela con Intro.",
         "Diese Notiz ist geschützt und kann nicht kopiert werden. Öffne sie mit der Eingabetaste.",

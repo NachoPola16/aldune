@@ -169,7 +169,7 @@ private val LinkSpan = SpanStyle(textDecoration = androidx.compose.ui.text.style
 // Live Markdown: how one stretch found by MarkdownLive is drawn. The syntax characters stay in the text, only dimmed.
 private fun markdownSpanStyle(style: Int): SpanStyle? {
     if (style == 0) return null
-    if (style and MarkdownStyle.MARKER != 0) return SpanStyle(color = androidx.compose.ui.graphics.Color(0xA0808080))   // a mid grey that reads on light and dark faces alike
+    if (style and MarkdownStyle.MARKER != 0) return SpanStyle(color = androidx.compose.ui.graphics.Color(0xC0808080))   // a mid grey that reads on light and dark faces alike
     val decorations = buildList {
         if (style and MarkdownStyle.STRIKE != 0) add(androidx.compose.ui.text.style.TextDecoration.LineThrough)
         if (style and MarkdownStyle.LINK != 0) add(androidx.compose.ui.text.style.TextDecoration.Underline)
@@ -183,8 +183,6 @@ private fun markdownSpanStyle(style: Int): SpanStyle? {
     )
 }
 
-// Past this the note is drawn as plain text: the scanner and the styles are meant for notes, not for a pasted file.
-private const val MARKDOWN_MAX_LENGTH = 150_000
 private val LargeCheckboxSpan = SpanStyle(fontFamily = FontFamily(Font(R.font.aldune_check_large)), baselineShift = androidx.compose.ui.text.style.BaselineShift(-0.085f))
 
 /**
@@ -506,7 +504,7 @@ fun NoteEditorPane(key: String, viewModel: NotesViewModel, onBack: () -> Unit, s
             // Web addresses are underlined (the text itself never changes); they open from the chip below, never by themselves.
             for (link in LinkText.findAll(shown)) addStyle(LinkSpan, link.start, link.end)
             // Markdown as it is typed: styles only, the text is not touched (so search, sync and export see what was typed).
-            if (liveMarkdown && shown.length <= MARKDOWN_MAX_LENGTH) {
+            if (liveMarkdown && shown.length <= MarkdownLive.MAX_NOTE_LENGTH) {
                 for (span in MarkdownLive.parse(shown)) markdownSpanStyle(span.style)?.let { addStyle(it, span.start, span.end) }
             }
         }

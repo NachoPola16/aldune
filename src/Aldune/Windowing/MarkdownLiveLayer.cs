@@ -17,13 +17,15 @@ namespace Aldune.Windowing;
 internal sealed class MarkdownLiveLayer : Canvas
 {
     // Past this the note is drawn by the text box alone: the scanner and the layer are meant for notes, not for a pasted file.
-    private const int MaxTextLength = 150_000;
+    private const int MaxTextLength = MarkdownLive.MaxNoteLength;
     // Second strike of a bold piece: far enough to read as weight, close enough not to blur the glyph.
     private const double BoldOffset = 0.7;
     private const double ItalicSkewDegrees = -11;
-    private const double MarkerOpacity = 0.38;
+    private const double MarkerOpacity = 0.55;
 
     private readonly TextBox _box;
+    private static readonly DependencyPropertyDescriptor _fontSize = DependencyPropertyDescriptor.FromProperty(Control.FontSizeProperty, typeof(TextBox));
+    private readonly EventHandler _fontSizeChanged;
     private Brush _ink = Brushes.Black;
     private bool _enabled;
     private string? _parsedText;
@@ -43,9 +45,11 @@ internal sealed class MarkdownLiveLayer : Canvas
         box.GotKeyboardFocus += (_, _) => Changed();
         box.LostKeyboardFocus += (_, _) => Changed();
         box.AddHandler(ScrollViewer.ScrollChangedEvent, new ScrollChangedEventHandler((_, _) => Changed()));
-        // Zoom changes the font size without touching the text: nothing else would tell the layer to draw again.
-        var size = DependencyPropertyDescriptor.FromProperty(Control.FontSizeProperty, typeof(TextBox));
-        size.AddValueChanged(box, (_, _) => Dispatcher.BeginInvoke(System.Windows.Threading.DispatcherPriority.Loaded, new Action(Refresh)));
+        // Zoom changes the font size without touching the text: nothing else would tell the layer to draw again. The descriptor keeps the
+        // box alive for as long as the handler is subscribed, so it is only subscribed while the box is loaded.
+        _fontSizeChanged = (_, _) => Dispatcher.BeginInvoke(System.Windows.Threading.DispatcherPriority.Loaded, new Action(Refresh));
+        box.Loaded += (_, _) => { _fontSize.RemoveValueChanged(box, _fontSizeChanged); _fontSize.AddValueChanged(box, _fontSizeChanged); };
+        box.Unloaded += (_, _) => _fontSize.RemoveValueChanged(box, _fontSizeChanged);
     }
 
     // The drawn pieces repeat the text box's own text: a screen reader must read the box once, never these copies. WPF has no per-element
@@ -100,31 +104,31 @@ internal sealed class MarkdownLiveLayer : Canvas
     {
         Children.Clear();
         string text = _box.Text;
-        bool draw = _enabled && text.Length > 0 && text.Length <= MaxTextLength;
-        // Foreground is the one thing shared with the rest of the window: it flips only when the answer changes.
-        var wanted = draw ? Brushes.Transparent : _ink;
-        if (!ReferenceEquals(_box.Foreground, wanted)) _box.Foreground = wanted;
-        IsDrawing = draw;
-        if (!draw) return;
-
-        try
+        bool drew = false;
+        if (_enabled && text.Length > 0 && text.Length <= MaxTextLength)
         {
-            if (!ReferenceEquals(_parsedText, text) && _parsedText != text)
+            try
             {
-                _spans = MarkdownLive.Parse(text);
-                _parsedText = text;
+                if (!ReferenceEquals(_parsedText, text) && _parsedText != text)
+                {
+                    _spans = MarkdownLive.Parse(text);
+                    _parsedText = text;
+                }
+                DrawVisibleLines(text);
+                drew = Children.Count > 0;
             }
-            DrawVisibleLines(text);
+            catch (Exception ex)
+            {
+                // Never leave the person with invisible text: if drawing fails, the box shows its own glyphs again and the layer stays off.
+                AppLog.Write("markdown", "live markdown layer failed, using the plain text box: " + ex.Message);
+                Children.Clear();
+                _enabled = false;
+            }
         }
-        catch (Exception ex)
-        {
-            // Never leave the person with invisible text: if drawing fails, the box shows its own glyphs again and the layer stays off.
-            AppLog.Write("markdown", "live markdown layer failed, using the plain text box: " + ex.Message);
-            Children.Clear();
-            IsDrawing = false;
-            _enabled = false;
-            _box.Foreground = _ink;
-        }
+        // The box's glyphs go transparent only once something is drawn in their place (never on a box that has not been measured yet).
+        IsDrawing = drew;
+        var wanted = drew ? Brushes.Transparent : _ink;
+        if (!ReferenceEquals(_box.Foreground, wanted)) _box.Foreground = wanted;
     }
 
     private void DrawVisibleLines(string text)

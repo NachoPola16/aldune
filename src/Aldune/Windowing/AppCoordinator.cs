@@ -909,6 +909,8 @@ public sealed class AppCoordinator
                 System.Threading.Thread.Sleep(40);
             }
         }
+        // Every attempt failed: say so instead of closing the palette as if the text were on the clipboard.
+        ToastSink?.Invoke(new ToastContent(Strings.AppName, Strings.QuickFindCopyFailed, AutoDismiss: TimeSpan.FromSeconds(5)));
         return true;
     }
 

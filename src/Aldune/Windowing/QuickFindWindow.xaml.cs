@@ -168,6 +168,8 @@ internal sealed partial class QuickFindWindow : Window
     /// <summary>Enter: open the selected note and close. Ctrl+Enter: copy its text (never a protected note's) and close.</summary>
     internal void Choose(bool copy)
     {
+        // A keystroke still waiting for its filter (large collections wait 70 ms) must not leave Enter acting on the previous query's list.
+        if (_debounce.IsEnabled) { _debounce.Stop(); Refilter(); }
         if (Selected is not { } row) return;
 
         if (!copy)

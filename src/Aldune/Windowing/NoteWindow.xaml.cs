@@ -1372,7 +1372,7 @@ public partial class NoteWindow : Window
         int index = TextBody.GetCharacterIndexFromPoint(position, snapToText: false);
         // A Markdown link opens from its text too (only while Markdown is drawn, so the plain text box behaves as before); the address still
         // has to pass the same http(s) check as a bare one.
-        if (index >= 0 && _markdownLayer.Enabled && MarkdownLive.LinkUrlAt(TextBody.Text, index) is { } written && LinkText.TryGetUri(written, out var markdownUri))
+        if (index >= 0 && _markdownLayer.IsDrawing && MarkdownLive.LinkUrlAt(TextBody.Text, index) is { } written && LinkText.TryGetUri(written, out var markdownUri))
             return markdownUri;
         if (index < 0 || LinkText.FindAt(TextBody.Text, index) is not { } span) return null;
         return LinkText.TryGetUri(TextBody.Text.Substring(span.Start, span.Length), out var uri) ? uri : null;
