@@ -531,6 +531,25 @@
                         <TextBlock x:Name="ManagerHotkeyHint"
                                    Foreground="{DynamicResource AlduneHintBrush}" FontSize="{DynamicResource AlduneTextSmall}" TextWrapping="Wrap" Margin="0,10,56,0" />
                     </StackPanel>
+                    <StackPanel Margin="0,20,0,0">
+                        <CheckBox x:Name="QuickFindHotkeyCheck"
+                                  Content="{x:Static res:Strings.QuickFindHotkeyCheckbox}"
+                                  Foreground="{DynamicResource AlduneTextBrush}" Background="{DynamicResource AlduneGroundBrush}" FontSize="{DynamicResource AlduneTextBody}"
+                                  Style="{StaticResource SettingsSwitchStyle}"
+                                  Click="OnQuickFindHotkeyToggled" />
+
+                        <StackPanel Orientation="Horizontal" Margin="0,10,0,0">
+                            <Button x:Name="QuickFindHotkeyButton" Click="OnRecordQuickFindHotkeyClick"
+                                    MinWidth="150" Padding="12,7"
+                                    Style="{StaticResource RecordButtonStyle}" />
+                            <Button x:Name="QuickFindHotkeyResetButton" Content="{x:Static res:Strings.HotkeyResetButton}" Click="OnResetQuickFindHotkeyClick"
+                                    Margin="8,0,0,0" Padding="12,7"
+                                    Style="{StaticResource RecordButtonStyle}" />
+                        </StackPanel>
+
+                        <TextBlock x:Name="QuickFindHotkeyHint"
+                                   Foreground="{DynamicResource AlduneHintBrush}" FontSize="{DynamicResource AlduneTextSmall}" TextWrapping="Wrap" Margin="0,10,56,0" />
+                    </StackPanel>
                     <Border Background="{DynamicResource AlduneRaisedBrush}" Height="1" Margin="0,20,0,0" />
                     <StackPanel Margin="0,20,0,0">
                         <TextBlock Text="{x:Static res:Strings.LanguageSectionTitle}"

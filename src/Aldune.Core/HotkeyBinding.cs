@@ -55,6 +55,12 @@ public sealed record HotkeyBinding(uint Modifiers, uint Key)
     public static HotkeyBinding ManagerDefault => new(ModControl | ModAlt, 0x4D);
 
     /// <summary>
+    /// Ctrl + Alt + F: the quick-find palette (F for find). Optional and off by default, like <see cref="ManagerDefault"/>. Ctrl+Alt+H and
+    /// Ctrl+Alt+D are fixed shortcuts of the dock, so F stays clear of them; without Win, to leave the system's shortcuts alone.
+    /// </summary>
+    public static HotkeyBinding QuickFindDefault => new(ModControl | ModAlt, 0x46);
+
+    /// <summary>
     /// Si la combinación es registrable. Sin al menos un modificador, un atajo global se tragaría
     /// esa tecla en todo el sistema, que es justo lo que no debe hacer una app de notas.
     /// </summary>

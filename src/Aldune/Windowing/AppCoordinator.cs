@@ -866,6 +866,52 @@ public sealed class AppCoordinator
         OpenOrActivateNotesManager(dock);
     }
 
+    private QuickFindWindow? _quickFind;
+
+    /// <summary>
+    /// The global quick-find shortcut: a small palette over whatever program has the focus. A second press while it is open closes it, so
+    /// the same shortcut toggles it. The notes are read when it opens (not kept), so it never lists a note that was trashed a minute ago.
+    /// </summary>
+    public void OpenQuickFind()
+    {
+        if (_quickFind is { } open)
+        {
+            open.Close();
+            return;
+        }
+
+        var window = new QuickFindWindow(_repository.GetByState(NoteState.Active), OpenFromQuickFind, CopyFromQuickFind);
+        _quickFind = window;
+        window.Closed += (_, _) => { if (ReferenceEquals(_quickFind, window)) _quickFind = null; };
+        window.ShowCentredOnCursorMonitor();
+    }
+
+    // The palette closes itself before calling this, so a protected note's password prompt does not open under it.
+    private void OpenFromQuickFind(QuickFindHit hit) => OpenNoteById(hit.Note.Id);
+
+    /// <summary>Copies the note's whole text and says so. Returns false (and copies nothing) for a protected note.</summary>
+    private bool CopyFromQuickFind(QuickFindHit hit)
+    {
+        if (QuickFind.CopyText(hit.Note) is not { } text) return false;
+
+        // The clipboard is shared with every program and can be held open by one for a few milliseconds: try a few times, then give up quietly.
+        for (int attempt = 0; attempt < 4; attempt++)
+        {
+            try
+            {
+                Clipboard.SetText(text);
+                ToastSink?.Invoke(new ToastContent(Strings.AppName, Strings.QuickFindCopiedToast(hit.Title),
+                    AutoDismiss: TimeSpan.FromSeconds(4)));
+                return true;
+            }
+            catch (System.Runtime.InteropServices.COMException)
+            {
+                System.Threading.Thread.Sleep(40);
+            }
+        }
+        return true;
+    }
+
     /// <summary>
     /// Crea una nota y la abre. Es el camino del atajo global, del menu de la bandeja y del "+" de
     /// "Gestionar notas": los sitios donde se pide una nota sin haber pulsado el "+" de ningun dock.

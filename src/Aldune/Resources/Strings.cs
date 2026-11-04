@@ -371,6 +371,8 @@ public static class Strings
         "Tastenkürzel für letzte Notiz (Kombination)", "Raccourci de la dernière note (combinaison)", "Atalho da última nota (combinação)", "Scorciatoia ultima nota (combinazione)", "最後のノートのショートカット（組み合わせ）", "最近笔记快捷键（组合键）");
     public static string ConfigFieldManagerHotkeyCombo => T("Open notes shortcut (combination)", "Atajo de abrir las notas (combinación)",
         "Tastenkürzel zum Öffnen der Notizen (Kombination)", "Raccourci d'ouverture des notes (combinaison)", "Atalho para abrir as notas (combinação)", "Scorciatoia apri note (combinazione)", "ノート一覧を開くショートカット（組み合わせ）", "打开笔记快捷键（组合键）");
+    public static string ConfigFieldQuickFindHotkeyCombo => T("Quick find shortcut (combination)", "Atajo de búsqueda rápida (combinación)",
+        "Tastenkürzel für die Schnellsuche (Kombination)", "Raccourci de recherche rapide (combinaison)", "Atalho da busca rápida (combinação)", "Scorciatoia ricerca rapida (combinazione)", "クイック検索のショートカット（組み合わせ）", "快速查找快捷键（组合键）");
     public static string ConfigImportDone => T("Settings imported.", "Configuración importada.",
         "Einstellungen importiert.", "Configuration importée.", "Configuração importada.", "Impostazioni importate.", "設定をインポートしました。", "设置已导入。");
 
@@ -400,6 +402,9 @@ public static class Strings
         "managerHotkeyEnabled" => T("Open notes shortcut", "Atajo de abrir las notas", "Tastenkürzel zum Öffnen der Notizen", "Raccourci d'ouverture des notes", "Atalho para abrir as notas", "Scorciatoia apri note", "ノート一覧を開くショートカット", "打开笔记快捷键"),
         "managerHotkeyModifiers" => T("Open notes shortcut (modifier keys)", "Atajo de abrir las notas (modificadores)", "Tastenkürzel zum Öffnen der Notizen (Zusatztasten)", "Raccourci d'ouverture des notes (touches modificatrices)", "Atalho para abrir as notas (teclas modificadoras)", "Scorciatoia apri note (tasti modificatori)", "ノート一覧を開くショートカット（修飾キー）", "打开笔记快捷键（修饰键）"),
         "managerHotkeyKey" => T("Open notes shortcut (key)", "Atajo de abrir las notas (tecla)", "Tastenkürzel zum Öffnen der Notizen (Taste)", "Raccourci d'ouverture des notes (touche)", "Atalho para abrir as notas (tecla)", "Scorciatoia apri note (tasto)", "ノート一覧を開くショートカット（キー）", "打开笔记快捷键（按键）"),
+        "quickFindHotkeyEnabled" => T("Quick find shortcut", "Atajo de búsqueda rápida", "Tastenkürzel für die Schnellsuche", "Raccourci de recherche rapide", "Atalho da busca rápida", "Scorciatoia ricerca rapida", "クイック検索のショートカット", "快速查找快捷键"),
+        "quickFindHotkeyModifiers" => T("Quick find shortcut (modifier keys)", "Atajo de búsqueda rápida (modificadores)", "Tastenkürzel für die Schnellsuche (Zusatztasten)", "Raccourci de recherche rapide (touches modificatrices)", "Atalho da busca rápida (teclas modificadoras)", "Scorciatoia ricerca rapida (tasti modificatori)", "クイック検索のショートカット（修飾キー）", "快速查找快捷键（修饰键）"),
+        "quickFindHotkeyKey" => T("Quick find shortcut (key)", "Atajo de búsqueda rápida (tecla)", "Tastenkürzel für die Schnellsuche (Taste)", "Raccourci de recherche rapide (touche)", "Atalho da busca rápida (tecla)", "Scorciatoia ricerca rapida (tasto)", "クイック検索のショートカット（キー）", "快速查找快捷键（按键）"),
         "textScale" => T("Text size", "Tamaño del texto", "Textgröße", "Taille du texte", "Tamanho do texto", "Dimensione del testo", "文字サイズ", "文字大小"),
         "dockEdge" => T("Dock edge", "Borde del dock", "Dock-Rand", "Bord du dock", "Borda do dock", "Bordo del dock", "ドックの端", "程序坞边缘"),
         "dockView" => T("Dock view", "Vista del dock", "Dock-Ansicht", "Vue du dock", "Visualização do dock", "Vista del dock", "ドックの表示", "程序坞视图"),
@@ -1130,6 +1135,44 @@ public static class Strings
         "Notizenliste mit Tastenkombination öffnen",
         "Ouvrir la liste des notes avec un raccourci clavier",
         "Abrir a lista de notas com um atalho de teclado", "Apri l'elenco delle note con una scorciatoia da tastiera", "キーボードショートカットでノート一覧を開く", "用键盘快捷键打开笔记列表");
+
+    public static string QuickFindHotkeyCheckbox => T("Find a note from any program with a keyboard shortcut",
+        "Buscar una nota desde cualquier programa con un atajo de teclado",
+        "Notiz aus jedem Programm per Tastenkombination suchen",
+        "Rechercher une note depuis n'importe quel programme avec un raccourci clavier",
+        "Procurar uma nota de qualquer programa com um atalho de teclado", "Cerca una nota da qualsiasi programma con una scorciatoia da tastiera", "キーボードショートカットでどのプログラムからでもノートを検索する", "用键盘快捷键在任何程序中查找笔记");
+
+    // --- Quick find (the palette the shortcut opens) ---
+    public static string QuickFindWindowName => T("Quick find", "Búsqueda rápida", "Schnellsuche", "Recherche rapide", "Busca rápida", "Ricerca rapida", "クイック検索", "快速查找");
+    public static string QuickFindPlaceholder => T("Find a note…", "Buscar una nota…", "Notiz suchen…", "Rechercher une note…", "Procurar uma nota…", "Cerca una nota…", "ノートを検索…", "查找笔记…");
+    public static string QuickFindListName => T("Matching notes", "Notas encontradas", "Gefundene Notizen", "Notes trouvées", "Notas encontradas", "Note trovate", "見つかったノート", "找到的笔记");
+    public static string QuickFindNone => T("No notes match.", "Ninguna nota coincide.", "Keine passende Notiz.", "Aucune note ne correspond.", "Nenhuma nota corresponde.", "Nessuna nota corrisponde.", "一致するノートはありません。", "没有匹配的笔记。");
+    public static string QuickFindFooter => T("Enter opens · Ctrl+Enter copies · Esc closes", "Intro abre · Ctrl+Intro copia · Esc cierra",
+        "Eingabe öffnet · Strg+Eingabe kopiert · Esc schließt", "Entrée ouvre · Ctrl+Entrée copie · Échap ferme", "Enter abre · Ctrl+Enter copia · Esc fecha",
+        "Invio apre · Ctrl+Invio copia · Esc chiude", "Enter で開く · Ctrl+Enter でコピー · Esc で閉じる", "Enter 打开 · Ctrl+Enter 复制 · Esc 关闭");
+    public static string QuickFindLockedCopy => T("This note is protected, so it cannot be copied. Open it with Enter.",
+        "Esta nota está protegida, así que no se puede copiar. Ábrela con Intro.",
+        "Diese Notiz ist geschützt und kann nicht kopiert werden. Öffne sie mit der Eingabetaste.",
+        "Cette note est protégée, elle ne peut donc pas être copiée. Ouvrez-la avec Entrée.",
+        "Esta nota está protegida e não pode ser copiada. Abra-a com Enter.", "Questa nota è protetta e non può essere copiata. Aprila con Invio.", "このノートは保護されているため、コピーできません。Enter で開いてください。", "此笔记已受保护，无法复制。请按 Enter 打开。");
+    public static string QuickFindCopiedToast(string title) => T($"Copied “{title}” to the clipboard.", $"Copiada «{title}» al portapapeles.",
+        $"„{title}“ in die Zwischenablage kopiert.", $"« {title} » copiée dans le presse-papiers.", $"«{title}» copiada para a área de transferência.",
+        $"“{title}” copiata negli appunti.", $"「{title}」をクリップボードにコピーしました。", $"已将“{title}”复制到剪贴板。");
+    public static string QuickHelpKeyboardQuickFindOn(string combo) =>
+        T($"• {combo} opens a search over any program: type, Up and Down choose a note, Enter opens it, Ctrl+Enter copies its text, Esc closes.",
+          $"• {combo} abre una búsqueda sobre cualquier programa: escribe, Arriba y Abajo eligen una nota, Intro la abre, Ctrl+Intro copia su texto y Esc cierra.",
+          $"• {combo} öffnet eine Suche über jedem Programm: tippen, mit Pfeil nach oben und unten eine Notiz wählen, Eingabe öffnet sie, Strg+Eingabe kopiert ihren Text, Esc schließt.",
+          $"• {combo} ouvre une recherche par-dessus n'importe quel programme : tapez, Haut et Bas choisissent une note, Entrée l'ouvre, Ctrl+Entrée copie son texte, Échap ferme.",
+          $"• {combo} abre uma busca sobre qualquer programa: digite, Cima e Baixo escolhem uma nota, Enter a abre, Ctrl+Enter copia o texto e Esc fecha.",
+          $"• {combo} apre una ricerca sopra qualsiasi programma: scrivi, Su e Giù scelgono una nota, Invio la apre, Ctrl+Invio ne copia il testo, Esc chiude.",
+          $"• {combo} で、どのプログラムの上にも検索を開きます。入力して、上下キーでノートを選び、Enter で開き、Ctrl+Enter でテキストをコピーし、Esc で閉じます。",
+          $"• {combo} 在任何程序上方打开查找框：输入后，用上下键选择笔记，Enter 打开，Ctrl+Enter 复制其文本，Esc 关闭。");
+    public static string QuickHelpKeyboardQuickFindOff => T(
+        "• To find a note from any program, turn on “Find a note from any program with a keyboard shortcut” above.",
+        "• Para buscar una nota desde cualquier programa, activa arriba «Buscar una nota desde cualquier programa con un atajo de teclado».",
+        "• Um eine Notiz aus jedem Programm zu suchen, aktiviere oben „Notiz aus jedem Programm per Tastenkombination suchen“.",
+        "• Pour rechercher une note depuis n'importe quel programme, activez plus haut « Rechercher une note depuis n'importe quel programme avec un raccourci clavier ».",
+        "• Para procurar uma nota de qualquer programa, ative acima «Procurar uma nota de qualquer programa com um atalho de teclado».", "• Per cercare una nota da qualsiasi programma, attiva sopra “Cerca una nota da qualsiasi programma con una scorciatoia da tastiera”.", "• どのプログラムからでもノートを検索するには、上の「キーボードショートカットでどのプログラムからでもノートを検索する」をオンにしてください。", "• 若要在任何程序中查找笔记，请开启上面的“用键盘快捷键在任何程序中查找笔记”。");
 
     public static string HotkeyCheckbox => T("Create a note with a keyboard shortcut", "Crear una nota con un atajo de teclado",
         "Notiz mit Tastenkombination erstellen",

@@ -128,6 +128,20 @@ public sealed class AppSettings
             ? new HotkeyBinding(mods, key)
             : HotkeyBinding.ManagerDefault;
 
+    /// <summary>
+    /// Global shortcut for the quick-find palette (a small search window over any program). Off by default, because a global shortcut
+    /// takes the combination from another app that already uses it; a settings.json from before this field simply loads with it off.
+    /// Nulls = the factory combination.
+    /// </summary>
+    public bool QuickFindHotkeyEnabled { get; set; }
+    public uint? QuickFindHotkeyModifiers { get; set; }
+    public uint? QuickFindHotkeyKey { get; set; }
+
+    public HotkeyBinding QuickFindHotkey =>
+        QuickFindHotkeyModifiers is { } mods && QuickFindHotkeyKey is { } key && new HotkeyBinding(mods, key).IsValid
+            ? new HotkeyBinding(mods, key)
+            : HotkeyBinding.QuickFindDefault;
+
     /// <summary>«Tamaño del texto» en porcentaje (<see cref="TextScale.Steps"/>); 100 = el de siempre. Un settings.json anterior no lo
     /// trae y carga como 100.</summary>
     public int TextScalePercent { get; set; } = TextScale.Default;

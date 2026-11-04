@@ -2,7 +2,7 @@
 
 A guide to Aldune as it behaves today. Interface names are quoted as they appear in English. The app runs on Windows and Android; unless a section says otherwise it describes Windows, and [Android differences](#android-differences) lists what changes on the phone. For the longer stories see [SYNC.md](SYNC.md), [PROTECTED_NOTES.md](PROTECTED_NOTES.md) and [MIGRATION.md](MIGRATION.md); for which settings both platforms share, [SETTINGS_PARITY.md](SETTINGS_PARITY.md).
 
-Contents: [The dock](#the-dock) · [The view wheel](#the-view-wheel) · [Notes](#notes) · [Manage notes](#manage-notes) · [Settings pages](#settings-pages) · [Keyboard shortcuts](#keyboard-shortcuts) · [Sync](#sync) · [Import and export](#import-and-export) · [Android differences](#android-differences)
+Contents: [The dock](#the-dock) · [The view wheel](#the-view-wheel) · [Notes](#notes) · [Manage notes](#manage-notes) · [Settings pages](#settings-pages) · [Quick find](#quick-find) · [Keyboard shortcuts](#keyboard-shortcuts) · [Sync](#sync) · [Import and export](#import-and-export) · [Android differences](#android-differences)
 
 ## The dock
 
@@ -137,6 +137,7 @@ Open Settings from the tray icon or the dock. The left list has nine pages; the 
 | Create a note with a keyboard shortcut | Global shortcut for a new note (default Ctrl+Shift+N; on by default; **Reset** restores the default). |
 | Open the last edited note with a keyboard shortcut | Default Ctrl+Alt+L; on by default. |
 | Open the notes list with a keyboard shortcut | Default Ctrl+Alt+M; **off** by default. |
+| Find a note from any program with a keyboard shortcut | Default Ctrl+Alt+F; **off** by default. Opens the [quick-find palette](#quick-find) over whatever program is in front. |
 | Language | English, Spanish, German, French, Italian, Portuguese (Brazil), Japanese, Simplified Chinese. A restart applies it to every window (**Restart now**). |
 | Check for new versions automatically | Once a day asks GitHub for the list of releases and only opens the release page; nothing about you is sent. |
 
@@ -201,6 +202,20 @@ See [Sync](#sync).
 
 **Help** is a short guide to the dock, notes, lists, sync and keyboard use. **About** has the version, **Check for updates…**, **What's new**, **Restart Aldune**, **Exit Aldune**, and **Configuration**: **Export settings…** / **Import settings…** save or load your look and settings to a file (sync settings, keys, passwords, the chosen screen and note positions are never included).
 
+## Quick find
+
+The optional global shortcut (Settings > General, default Ctrl+Alt+F, off until you turn it on) opens a small borderless window in the middle of the screen where the pointer is, over any program. Pressing the shortcut again closes it.
+
+| You do | What happens |
+|---|---|
+| Type | The list of notes narrows as you type. It forgives case, accents and a typo or two. Notes whose **title** matches come first, then notes whose text or tags match (the line that matched is shown); within each group the most recently edited note is first. With nothing typed it lists the most recent notes. Only active notes are listed. |
+| Up / Down (Page Up / Page Down) | Moves the selection. |
+| Enter, or a click on a row | Opens the note (or brings its window to the front) and closes the palette. |
+| Ctrl+Enter | Copies the note's whole text to the clipboard, says so in a toast and closes the palette. |
+| Esc, a click anywhere else, or the shortcut again | Closes it. |
+
+Each row shows the title, one line of the text and the tags. A **protected** note shows only its visible name (or “Protected note”) and a padlock: its text and tags are neither shown nor searched. Enter asks for the password as usual; Ctrl+Enter never copies a protected note and says so in the footer of the palette instead.
+
 ## Keyboard shortcuts
 
 **Global (work from any application):**
@@ -210,6 +225,7 @@ See [Sync](#sync).
 | Ctrl+Shift+N | New note | Yes (General) |
 | Ctrl+Alt+L | Open the last edited note | Yes |
 | Ctrl+Alt+M | Open Manage notes (off by default) | Yes |
+| Ctrl+Alt+F | Quick find: a search box over any program (off by default) | Yes |
 | Ctrl+Alt+H | Hide / show the dock (also in the tray menu) | No |
 | Ctrl+Alt+D | Put the keyboard on the dock: Up/Down between tabs, Home/End, Enter opens the note, Tab reaches the buttons, Esc gives the keyboard back | No |
 
