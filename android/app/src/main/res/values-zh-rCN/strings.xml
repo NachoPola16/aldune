@@ -479,6 +479,7 @@
     <string name="color_name_white">白色</string>
     <string name="color_name_black">黑色</string>
     <string name="note_pin">固定在列表顶部</string>
+    <string name="note_share">分享文本</string>
     <string name="note_unpin">取消固定在列表顶部</string>
     <string name="done_tasks_default">已完成任务：按我的设置</string>
     <string name="done_tasks_keep">已完成任务：保持原位</string>

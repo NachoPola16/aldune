@@ -479,6 +479,7 @@
     <string name="color_name_white">Bianco</string>
     <string name="color_name_black">Nero</string>
     <string name="note_pin">Fissa in cima all\'elenco</string>
+    <string name="note_share">Condividi il testo</string>
     <string name="note_unpin">Togli dalla cima dell\'elenco</string>
     <string name="done_tasks_default">Attività completate: come nelle mie impostazioni</string>
     <string name="done_tasks_keep">Attività completate: restano dove sono</string>

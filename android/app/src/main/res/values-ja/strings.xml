@@ -479,6 +479,7 @@
     <string name="color_name_white">白</string>
     <string name="color_name_black">黒</string>
     <string name="note_pin">リストの先頭に固定</string>
+    <string name="note_share">テキストを共有</string>
     <string name="note_unpin">リストの先頭への固定を解除</string>
     <string name="done_tasks_default">完了したタスク: 設定に従う</string>
     <string name="done_tasks_keep">完了したタスク: そのまま残す</string>

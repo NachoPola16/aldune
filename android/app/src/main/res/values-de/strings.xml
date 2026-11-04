@@ -479,6 +479,7 @@
     <string name="color_name_white">Weiß</string>
     <string name="color_name_black">Schwarz</string>
     <string name="note_pin">Oben in der Liste anheften</string>
+    <string name="note_share">Text teilen</string>
     <string name="note_unpin">Von der Listenspitze lösen</string>
     <string name="done_tasks_default">Erledigte Aufgaben: wie in meinen Einstellungen</string>
     <string name="done_tasks_keep">Erledigte Aufgaben: bleiben an ihrem Platz</string>

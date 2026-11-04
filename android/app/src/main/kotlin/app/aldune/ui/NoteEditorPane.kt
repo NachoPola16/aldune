@@ -3,6 +3,7 @@ package app.aldune.ui
 import android.app.Activity
 import android.content.Context
 import android.content.ContextWrapper
+import android.content.Intent
 import android.widget.Toast
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.gestures.awaitEachGesture
@@ -705,6 +706,17 @@ fun NoteEditorPane(key: String, viewModel: NotesViewModel, onBack: () -> Unit, s
                             }
                         },
                     )
+                    // Hands the plain text to any app (a messenger, mail...). Never for a protected note: its text must not leave the app by a shortcut.
+                    if (!protectedNote && text().isNotBlank()) {
+                        DropdownMenuItem(
+                            text = { Text(stringResource(R.string.note_share)) },
+                            onClick = {
+                                topMenu = false
+                                val send = Intent(Intent.ACTION_SEND).setType("text/plain").putExtra(Intent.EXTRA_TEXT, text())
+                                runCatching { context.startActivity(Intent.createChooser(send, null)) }
+                            },
+                        )
+                    }
                     DropdownMenuItem(
                         text = { Text(stringResource(R.string.archive)) },
                         onClick = { topMenu = false; scope.launch { viewModel.noteOptions(key)?.let { viewModel.archive(it.noteId); onBack() } } },

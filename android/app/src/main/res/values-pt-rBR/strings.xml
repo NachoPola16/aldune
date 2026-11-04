@@ -479,6 +479,7 @@
     <string name="color_name_white">Branco</string>
     <string name="color_name_black">Preto</string>
     <string name="note_pin">Fixar no topo da lista</string>
+    <string name="note_share">Compartilhar o texto</string>
     <string name="note_unpin">Soltar do topo da lista</string>
     <string name="done_tasks_default">Tarefas feitas: conforme minhas configurações</string>
     <string name="done_tasks_keep">Tarefas feitas: ficam no lugar</string>
