@@ -187,7 +187,9 @@ fun SettingsScreen(viewModel: NotesViewModel, onClose: () -> Unit) {
                 Column(Modifier.fillMaxWidth().padding(start = 12.dp, end = 12.dp, top = 8.dp, bottom = if (atBottom) 8.dp else 20.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     // Compact: one row, an icon per tab (the name is spoken by TalkBack and shown as the heading of the open tab).
                     val compact = settings.compactSettingsTabs
-                    val columns = if (shortScreen || compact) labels.size else TAB_COLUMNS
+                    // With a very large system font three columns are too narrow for "Appearance" (it broke mid-word as "Appear/ance"): two columns.
+                    val bigFont = androidx.compose.ui.platform.LocalDensity.current.fontScale >= 1.5f
+                    val columns = if (shortScreen || compact) labels.size else if (bigFont) 2 else TAB_COLUMNS
                     labels.withIndex().chunked(columns).forEach { row ->
                         // IntrinsicSize.Min: when a long label wraps to two lines the chips of the row grow together.
                         Row(Modifier.fillMaxWidth().height(IntrinsicSize.Min), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
