@@ -642,4 +642,7 @@
     <string name="restore_fail_corrupt">La sauvegarde est endommagée et illisible.</string>
     <string name="restore_fail_too_large">La sauvegarde est trop volumineuse pour être lue.</string>
     <string name="restore_fail_io">Impossible d\'ouvrir le fichier.</string>
+    <string name="whatsnew_400_backup">Sauvegardez toutes vos notes dans un seul .zip et restaurez-le : n\'ajoutez que les manquantes ou remplacez tout (une copie de sécurité est faite avant).</string>
+    <string name="whatsnew_400_import">Importez vos notes depuis Google Keep, Evernote ou des fichiers texte (Markdown ou .txt).</string>
+    <string name="whatsnew_400_restore">Une note restaurée depuis une sauvegarde n\'est plus supprimée de nouveau par une synchronisation depuis un autre appareil.</string>
 </resources>

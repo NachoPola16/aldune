@@ -642,4 +642,7 @@
     <string name="restore_fail_corrupt">バックアップが壊れていて読み込めません。</string>
     <string name="restore_fail_too_large">バックアップが大きすぎて読み込めません。</string>
     <string name="restore_fail_io">ファイルを開けませんでした。</string>
+    <string name="whatsnew_400_backup">すべてのノートを1つの .zip にバックアップして復元できます。足りないものだけを追加するか、すべてを置き換えます（事前に安全のためのコピーを作成）。</string>
+    <string name="whatsnew_400_import">Google Keep、Evernote、テキストファイル（Markdown または .txt）からノートを取り込めます。</string>
+    <string name="whatsnew_400_restore">バックアップから復元したノートが、別のデバイスからの同期で再び削除されることはなくなりました。</string>
 </resources>

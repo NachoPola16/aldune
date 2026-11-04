@@ -642,4 +642,7 @@
     <string name="restore_fail_corrupt">备份已损坏，无法读取。</string>
     <string name="restore_fail_too_large">备份太大，无法读取。</string>
     <string name="restore_fail_io">无法打开文件。</string>
+    <string name="whatsnew_400_backup">可将所有笔记备份为一个 .zip 并还原：只添加缺少的笔记，或替换全部（会先做一份安全副本）。</string>
+    <string name="whatsnew_400_import">可从 Google Keep、Evernote 或文本文件（Markdown 或 .txt）导入笔记。</string>
+    <string name="whatsnew_400_restore">从备份还原的笔记不会再被其他设备的同步再次删除。</string>
 </resources>

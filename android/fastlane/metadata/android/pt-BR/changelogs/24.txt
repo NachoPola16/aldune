@@ -1,0 +1,1 @@
+Faça um backup de todas as notas em um .zip e restaure-o (adicione as que faltam ou substitua tudo, com cópia de segurança antes). Importe do Google Keep, Evernote e arquivos de texto. Uma nota restaurada não é mais apagada de novo por uma sincronização vinda de outro dispositivo.

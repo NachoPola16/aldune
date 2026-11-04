@@ -925,6 +925,42 @@ public static class Strings
         "Dettagli più curati: la pagina delle Impostazioni sfuma ai bordi dove continua a scorrere, le righe colorate di Gestisci note hanno angoli più puliti e il programma di installazione ha un nuovo pannello di benvenuto.",
         "細部の改善：スクロールが続く端で設定ページがフェードし、ノート管理の色付きの行は角がきれいになり、インストーラーには新しいウェルカムパネルが付きました。",
         "细节更精致：设置页在可继续滚动的边缘会渐隐，笔记管理器中带颜色的行边角更干净，安装程序也有了新的欢迎面板。");
+    public static string WhatsNew400Backup => T(
+        "Back up all your notes to one file and restore it from Settings > About. The daily copy Aldune already makes can be restored from there too.",
+        "Haz una copia de todas tus notas en un solo archivo y restáurala desde Ajustes > Acerca de. La copia diaria que Aldune ya hace también se puede restaurar desde ahí.",
+        "Sichere alle Notizen in einer Datei und stelle sie unter Einstellungen > Info wieder her. Auch die tägliche Kopie, die Aldune schon anlegt, lässt sich dort wiederherstellen.",
+        "Sauvegardez toutes vos notes dans un seul fichier et restaurez-le depuis Réglages > À propos. La copie quotidienne que fait déjà Aldune peut aussi y être restaurée.",
+        "Faça um backup de todas as suas notas em um único arquivo e restaure-o em Configurações > Sobre. A cópia diária que o Aldune já faz também pode ser restaurada ali.",
+        "Salva tutte le tue note in un unico file e ripristinale da Impostazioni > Informazioni. Anche la copia giornaliera che Aldune già crea si può ripristinare da lì.",
+        "すべてのノートを1つのファイルにバックアップし、設定 > バージョン情報から復元できます。Aldune がすでに作成している毎日のコピーも、そこから復元できます。",
+        "可将所有笔记备份到一个文件，并在“设置 > 关于”中还原。Aldune 已有的每日副本也可以从那里还原。");
+    public static string WhatsNew400Import => T(
+        "Bring in your notes from Sticky Notes, Google Keep, Evernote or text files: Manage notes > Import.",
+        "Trae tus notas de Sticky Notes, Google Keep, Evernote o de archivos de texto: Gestionar notas > Importar.",
+        "Hole deine Notizen aus Sticky Notes, Google Keep, Evernote oder Textdateien: Notizen verwalten > Importieren.",
+        "Importez vos notes depuis Sticky Notes, Google Keep, Evernote ou des fichiers texte : Gérer les notes > Importer.",
+        "Traga suas notas do Sticky Notes, Google Keep, Evernote ou de arquivos de texto: Gerenciar notas > Importar.",
+        "Porta le tue note da Sticky Notes, Google Keep, Evernote o da file di testo: Gestisci note > Importa.",
+        "付箋、Google Keep、Evernote、テキストファイルからノートを取り込めます：ノート管理 > インポート。",
+        "可从 Sticky Notes、Google Keep、Evernote 或文本文件导入笔记：笔记管理器 > 导入。");
+    public static string WhatsNew400Sync => T(
+        "The first sync of a big library is much faster, and Settings > Sync has a button to copy a report of the last attempts to share when something fails.",
+        "La primera sincronización de una biblioteca grande es mucho más rápida, y Ajustes > Sincronización tiene un botón para copiar un informe de los últimos intentos y compartirlo cuando algo falle.",
+        "Die erste Synchronisierung einer großen Bibliothek ist deutlich schneller, und unter Einstellungen > Synchronisierung kopiert eine Schaltfläche einen Bericht der letzten Versuche, den du bei Problemen weitergeben kannst.",
+        "La première synchronisation d'une grande bibliothèque est bien plus rapide, et Réglages > Synchronisation a un bouton pour copier un rapport des dernières tentatives à partager en cas de problème.",
+        "A primeira sincronização de uma biblioteca grande está muito mais rápida, e Configurações > Sincronização tem um botão para copiar um relatório das últimas tentativas e compartilhar quando algo falhar.",
+        "La prima sincronizzazione di una grande libreria è molto più veloce, e in Impostazioni > Sincronizzazione c'è un pulsante per copiare un resoconto degli ultimi tentativi da condividere quando qualcosa non va.",
+        "大量のノートの初回同期がかなり速くなり、設定 > 同期 には、問題が起きたときに共有できる直近の試行のレポートをコピーするボタンがあります。",
+        "大型笔记库的首次同步快了很多，“设置 > 同步”中新增按钮，可复制最近几次尝试的报告，出问题时用来分享。");
+    public static string WhatsNew400Look => T(
+        "Settings > Appearance shows each look as a small preview, and Manage notes has calmer rows and the keys P and T (pin, tags).",
+        "Ajustes > Apariencia muestra cada aspecto con una vista previa pequeña, y Gestionar notas tiene filas más tranquilas y las teclas P y T (fijar, etiquetas).",
+        "Einstellungen > Darstellung zeigt jedes Aussehen als kleine Vorschau, und die Notizenverwaltung hat ruhigere Zeilen und die Tasten P und T (anheften, Tags).",
+        "Réglages > Apparence montre chaque style en petit aperçu, et Gérer les notes a des lignes plus calmes et les touches P et T (épingler, tags).",
+        "Configurações > Aparência mostra cada visual em uma pequena prévia, e Gerenciar notas tem linhas mais calmas e as teclas P e T (fixar, tags).",
+        "Impostazioni > Aspetto mostra ogni aspetto con una piccola anteprima, e Gestisci note ha righe più sobrie e i tasti P e T (fissa, tag).",
+        "設定 > 外観 では各テーマが小さなプレビューで表示され、ノート管理は行が落ち着いた見た目になり、P と T のキー（固定、タグ）が使えます。",
+        "“设置 > 外观”以小预览显示每种外观；笔记管理器的行更柔和，并支持 P 和 T 键（置顶、标签）。");
     public static string WhatsNew300Plain => T(
         "New option: open notes can use the look's plain background while the dock tab and Manage notes keep the note's color. The dock now folds at once when you click elsewhere.",
         "Opción nueva: las notas abiertas pueden usar el fondo neutro del aspecto mientras la pestaña del dock y Gestionar notas conservan el color de la nota. El dock se pliega al momento si pulsas fuera.",

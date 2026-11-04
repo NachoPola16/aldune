@@ -642,4 +642,7 @@
     <string name="restore_fail_corrupt">La copia está dañada y no se puede leer.</string>
     <string name="restore_fail_too_large">La copia es demasiado grande para leerla.</string>
     <string name="restore_fail_io">No se pudo abrir el archivo.</string>
+    <string name="whatsnew_400_backup">Haz una copia de todas tus notas en un solo .zip y restáurala: añade solo las que faltan o reemplaza todo (antes se hace una copia de seguridad).</string>
+    <string name="whatsnew_400_import">Trae tus notas de Google Keep, Evernote o de archivos de texto (Markdown o .txt).</string>
+    <string name="whatsnew_400_restore">Una nota que restauras desde una copia ya no se vuelve a borrar por una sincronización desde otro dispositivo.</string>
 </resources>

@@ -642,4 +642,7 @@
     <string name="restore_fail_corrupt">Die Sicherung ist beschädigt und kann nicht gelesen werden.</string>
     <string name="restore_fail_too_large">Die Sicherung ist zu groß zum Lesen.</string>
     <string name="restore_fail_io">Die Datei konnte nicht geöffnet werden.</string>
+    <string name="whatsnew_400_backup">Sichere alle Notizen in einer .zip-Datei und stelle sie wieder her: nur fehlende hinzufügen oder alles ersetzen (vorher wird eine Sicherheitskopie angelegt).</string>
+    <string name="whatsnew_400_import">Hole deine Notizen aus Google Keep, Evernote oder Textdateien (Markdown oder .txt).</string>
+    <string name="whatsnew_400_restore">Eine Notiz, die du aus einer Sicherung wiederherstellst, wird durch eine Synchronisierung von einem anderen Gerät nicht mehr erneut gelöscht.</string>
 </resources>

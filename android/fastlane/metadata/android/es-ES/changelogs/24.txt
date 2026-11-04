@@ -1,0 +1,1 @@
+Haz una copia de todas tus notas en un .zip y restáurala (añade las que faltan o reemplaza todo, con copia de seguridad previa). Importa desde Google Keep, Evernote y archivos de texto. Una nota restaurada ya no se vuelve a borrar por una sincronización desde otro dispositivo.

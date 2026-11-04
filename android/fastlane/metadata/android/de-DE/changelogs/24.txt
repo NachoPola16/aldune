@@ -1,0 +1,1 @@
+Alle Notizen in einer .zip-Datei sichern und wiederherstellen (Fehlendes hinzufügen oder alles ersetzen, vorher mit Sicherheitskopie). Import aus Google Keep, Evernote und Textdateien. Eine wiederhergestellte Notiz wird durch eine Synchronisierung von einem anderen Gerät nicht mehr erneut gelöscht.

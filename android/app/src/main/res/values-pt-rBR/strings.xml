@@ -642,4 +642,7 @@
     <string name="restore_fail_corrupt">O backup está danificado e não pode ser lido.</string>
     <string name="restore_fail_too_large">O backup é grande demais para ser lido.</string>
     <string name="restore_fail_io">Não foi possível abrir o arquivo.</string>
+    <string name="whatsnew_400_backup">Faça um backup de todas as suas notas em um único .zip e restaure-o: adicione só as que faltam ou substitua tudo (uma cópia de segurança é feita antes).</string>
+    <string name="whatsnew_400_import">Traga suas notas do Google Keep, Evernote ou de arquivos de texto (Markdown ou .txt).</string>
+    <string name="whatsnew_400_restore">Uma nota restaurada de um backup não é mais apagada de novo por uma sincronização vinda de outro dispositivo.</string>
 </resources>

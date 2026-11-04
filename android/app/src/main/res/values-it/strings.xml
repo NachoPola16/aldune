@@ -642,4 +642,7 @@
     <string name="restore_fail_corrupt">Il backup è danneggiato e non si può leggere.</string>
     <string name="restore_fail_too_large">Il backup è troppo grande per essere letto.</string>
     <string name="restore_fail_io">Impossibile aprire il file.</string>
+    <string name="whatsnew_400_backup">Salva tutte le tue note in un unico .zip e ripristinale: aggiungi solo quelle mancanti o sostituisci tutto (prima viene creata una copia di sicurezza).</string>
+    <string name="whatsnew_400_import">Porta le tue note da Google Keep, Evernote o da file di testo (Markdown o .txt).</string>
+    <string name="whatsnew_400_restore">Una nota ripristinata da un backup non viene più eliminata di nuovo da una sincronizzazione da un altro dispositivo.</string>
 </resources>
