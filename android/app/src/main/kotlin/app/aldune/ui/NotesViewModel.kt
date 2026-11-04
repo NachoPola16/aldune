@@ -1048,27 +1048,32 @@ class NotesViewModel(application: Application) : AndroidViewModel(application) {
             var safety: String? = null
             var safetyFailed = false
             var result: RestoreResult? = null
-            io.withLock {
-                val svc = service ?: return@withLock
-                if (mode == RestoreMode.REPLACE_ALL) {
-                    // Without a safety copy a replace is not allowed to start: it is the only way back from a wrong file.
-                    safety = writeSafetyBackupLocked()
-                    if (safety == null) {
-                        safetyFailed = true
-                        return@withLock
+            // A store failure (disk full, say) must end in the failed state, not crash the app with the dialog stuck on «restoring».
+            try {
+                io.withLock {
+                    val svc = service ?: return@withLock
+                    if (mode == RestoreMode.REPLACE_ALL) {
+                        // Without a safety copy a replace is not allowed to start: it is the only way back from a wrong file.
+                        safety = writeSafetyBackupLocked()
+                        if (safety == null) {
+                            safetyFailed = true
+                            return@withLock
+                        }
                     }
+                    val (done, written) = svc.restoreBackup(content.notes, mode) { id -> ready?.database?.notes()?.deleteTombstone(id) }
+                    result = done
+                    ready?.reminders?.let { reminders ->
+                        if (mode == RestoreMode.REPLACE_ALL) reminders.all().forEach { reminders.clear(it.noteId) }
+                        val ids = if (mode == RestoreMode.REPLACE_ALL) content.notes.mapTo(HashSet()) { it.id } else written
+                        BackupReminders.future(content.reminders, ids, Instant.now()).forEach { reminders.set(it.noteId, it.dueAt) }
+                        reminders.reconcile()
+                    }
+                    // The look settings come only with a full replace: «add missing» promises not to change anything the user has.
+                    if (mode == RestoreMode.REPLACE_ALL && content.settings.isNotEmpty()) applyRestoredSettings(content.settings)
+                    refresh()
                 }
-                val (done, written) = svc.restoreBackup(content.notes, mode) { id -> ready?.database?.notes()?.deleteTombstone(id) }
-                result = done
-                ready?.reminders?.let { reminders ->
-                    if (mode == RestoreMode.REPLACE_ALL) reminders.all().forEach { reminders.clear(it.noteId) }
-                    val ids = if (mode == RestoreMode.REPLACE_ALL) content.notes.mapTo(HashSet()) { it.id } else written
-                    BackupReminders.future(content.reminders, ids, Instant.now()).forEach { reminders.set(it.noteId, it.dueAt) }
-                    reminders.reconcile()
-                }
-                // The look settings come only with a full replace: «add missing» promises not to change anything the user has.
-                if (mode == RestoreMode.REPLACE_ALL && content.settings.isNotEmpty()) applyRestoredSettings(content.settings)
-                refresh()
+            } catch (e: Exception) {
+                result = null
             }
             val finished = result
             if (finished != null) {

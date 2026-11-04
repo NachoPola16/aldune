@@ -72,6 +72,26 @@ public sealed class SyncScaleTests : IDisposable
         Assert.Equal(NoteCount, _a.Repository.GetByState(NoteState.Active).Count); // -1 trashed, +1 new
     }
 
+    [Fact]
+    public void LargeNotes_DoNotStallTheGroupedWrites()
+    {
+        // 300 notes of ~20 KB: one group of 250 holds ~5 MB, more than SQLite's page cache, so it spills and takes the write lock. A read on another
+        // connection made at that moment used to wait for the timeout and fail the pass.
+        const int count = 300;
+        for (int i = 0; i < count; i++)
+            _a.Repository.Create($"Big {i}\n" + new string('x', 20_000), "#EBD38B", "primary");
+        _b.Sync.ImportSyncCode(_a.Sync.GetOrCreateSyncCode());
+        Assert.True(_a.Sync.Synchronize().Succeeded);
+
+        var clock = Stopwatch.StartNew();
+        var download = _b.Sync.Synchronize();
+
+        Assert.True(download.Succeeded, download.Error);
+        Assert.Equal(count, download.Downloaded);
+        Assert.True(clock.Elapsed < TimeSpan.FromSeconds(20), $"took {clock.Elapsed}");
+        Assert.Equal(count, _b.Repository.GetByState(NoteState.Active).Count);
+    }
+
     private T Timed<T>(string label, Func<T> action)
     {
         var clock = Stopwatch.StartNew();

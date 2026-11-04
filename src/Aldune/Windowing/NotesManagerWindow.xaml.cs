@@ -237,9 +237,12 @@ public partial class NotesManagerWindow : Window
 
         // The actions on a selection only appear once there is one (a row of disabled buttons said nothing and cost attention); Import and Export,
         // which do not need a selection, stay. In the trash "Move to trash" does nothing and reads like delete, so it stays out there.
+        // If the keyboard focus is on one of the actions that is about to disappear (the selection was just used up), keep it in the window.
+        bool lostFocus = !any && (ArchiveButton.IsKeyboardFocusWithin || RestoreButton.IsKeyboardFocusWithin || TrashButton.IsKeyboardFocusWithin);
         ArchiveButton.Visibility = any ? Visibility.Visible : Visibility.Collapsed;
         RestoreButton.Visibility = any ? Visibility.Visible : Visibility.Collapsed;
         TrashButton.Visibility = any && _filter != Filter.Trashed ? Visibility.Visible : Visibility.Collapsed;
+        if (lostFocus) SelectAllCheck.Focus();
         ArchiveButton.IsEnabled = any;
         RestoreButton.IsEnabled = any;
         TrashButton.IsEnabled = any;

@@ -1024,7 +1024,7 @@ public sealed class NotesRepository
         var encrypted = _cipher.Encrypt(note.IsProtected ? string.Empty : note.Text);
         // One transaction for the row, the order and the tags: a cut in between used to leave the new text with the old tags, and those then
         // won over the other devices' on the next pass. The history version above stays outside on purpose (it is only ever extra safety).
-        RunSyncWrite((connection, transaction) => ApplySyncNoteRows(connection, transaction, note, authorDeviceId, encrypted));
+        RunSyncWrite((connection, transaction) => ApplySyncNoteRows(connection, transaction, note, authorDeviceId, encrypted), encrypted.CipherText.Length);
     }
 
     private static void ApplySyncNoteRows(SqliteConnection connection, SqliteTransaction transaction, Note note, string? authorDeviceId, EncryptedContent encrypted)
@@ -1154,12 +1154,12 @@ public sealed class NotesRepository
         if (_bulk is not null && _bulkThread == Environment.CurrentManagedThreadId) _bulk.Flush();
     }
 
-    private void RunSyncWrite(Action<SqliteConnection, SqliteTransaction> write)
+    private void RunSyncWrite(Action<SqliteConnection, SqliteTransaction> write, long approximateBytes = 0)
     {
         var bulk = _bulk;
         if (bulk is not null && _bulkThread == Environment.CurrentManagedThreadId)
         {
-            bulk.Run(write);
+            bulk.Run(write, approximateBytes);
             return;
         }
 
@@ -1178,10 +1178,15 @@ public sealed class NotesRepository
     private sealed class BulkSyncWrite(SqliteConnection connection, Action onDispose) : IDisposable
     {
         public const int BatchSize = 250;
+        // SQLite keeps an open write transaction in its page cache (about 2 MB by default); past that it spills and takes the exclusive lock,
+        // and any read on another connection (the existing-note lookup of the next note) would wait for the timeout and fail the pass. So a
+        // group is also closed by size, well under that limit.
+        public const long BatchBytes = 512 * 1024;
         private SqliteTransaction? _transaction;
         private int _inBatch;
+        private long _bytes;
 
-        public void Run(Action<SqliteConnection, SqliteTransaction> write)
+        public void Run(Action<SqliteConnection, SqliteTransaction> write, long approximateBytes)
         {
             _transaction ??= connection.BeginTransaction();
             Exec("SAVEPOINT sync_note");
@@ -1196,7 +1201,8 @@ public sealed class NotesRepository
                 Exec("RELEASE sync_note");
                 throw;
             }
-            if (++_inBatch >= BatchSize) Commit();
+            _bytes += approximateBytes;
+            if (++_inBatch >= BatchSize || _bytes >= BatchBytes) Commit();
         }
 
         private void Exec(string sql)
@@ -1215,6 +1221,7 @@ public sealed class NotesRepository
             _transaction?.Dispose();
             _transaction = null;
             _inBatch = 0;
+            _bytes = 0;
         }
 
         public void Dispose()
