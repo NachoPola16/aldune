@@ -1445,7 +1445,7 @@ public partial class NoteWindow : Window
         _coordinator.PlaySound(SoundEvent.TaskChecked);
 
         int caret = TextBody.CaretIndex;
-        var settled = _settings is { } moveSettings && CompletedTasksPolicyRules.ShouldMoveToEnd(_note.CompletedTasks, moveSettings) && !IsLinked
+        var settled = _settings is { } moveSettings && CompletedTasksPolicyRules.ShouldMoveToEnd(CurrentCompletedTasks(), moveSettings) && !IsLinked
             ? TaskLists.SettleToggled(toggled, glyphIndex)
             : TextEdit.Unchanged(toggled);
 
@@ -1781,7 +1781,7 @@ public partial class NoteWindow : Window
     {
         if (IsLinked) return;   // no se borran líneas del archivo solas (spec, decisión 4)
         if (_settings is not { AutoHideCompletedTasks: true } settings) return;
-        if (!CompletedTasksPolicyRules.MayDelete(_note.CompletedTasks, settings)) return;   // «se quedan» / «al final» nunca borran
+        if (!CompletedTasksPolicyRules.MayDelete(CurrentCompletedTasks(), settings)) return;   // «se quedan» / «al final» nunca borran
         if (!_coordinator.TaskPruningAllowed) return;
         if (TextBody.IsKeyboardFocusWithin && DateTime.UtcNow - _lastBodyKeyAt < TypingGrace) return;
 
@@ -2205,7 +2205,7 @@ public partial class NoteWindow : Window
     private void OnDoneTasksPolicyClick(object sender, RoutedEventArgs e)
     {
         Flush();
-        _note.CompletedTasks = CompletedTasksPolicyRules.Next(_note.CompletedTasks);
+        _note.CompletedTasks = CompletedTasksPolicyRules.Next(CurrentCompletedTasks());
         _repository.SetCompletedTasksPolicy(_note.Id, _note.CompletedTasks);
         UpdateDoneTasksPolicyButton();
         _coordinator.RefreshAll();
@@ -2224,7 +2224,18 @@ public partial class NoteWindow : Window
     }
 
     private void UpdateDoneTasksPolicyButton() =>
-        DoneTasksPolicyButton.Content = Strings.DoneTasksPolicyLabel(_note.CompletedTasks);
+        DoneTasksPolicyButton.Content = Strings.DoneTasksPolicyLabel(CurrentCompletedTasks());
+
+    /// <summary>
+    /// The done-tasks policy as stored now. It is chosen per note and travels by sync, so another device can change it while this window stays open;
+    /// <see cref="ReloadIfChangedBySync"/> only looks at the text, and a window that kept the old value kept deleting done tasks (auto-delete) in a note
+    /// that had been set to «stay in place» elsewhere, and its menu showed the old choice. Every decision about done tasks reads it through here.
+    /// </summary>
+    private CompletedTasksPolicy CurrentCompletedTasks()
+    {
+        if (_repository.GetById(_note.Id) is { } stored) _note.CompletedTasks = stored.CompletedTasks;
+        return _note.CompletedTasks;
+    }
 
     private void UpdatePinToTopButton() =>
         PinToTopButton.Content = _note.IsPinnedToTop ? Strings.UnpinFromTop : Strings.PinToTop;
