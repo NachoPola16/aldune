@@ -1937,8 +1937,8 @@ public partial class NoteWindow : Window
 
     /// <summary>
     /// Opens the actions menu where it fits. It sits under the "..." button; on a short screen (or with the note low on it) it does not fit there, so
-    /// it goes above when the room is bigger, and when neither side has enough its height is capped and the list scrolls. Before this the menu simply
-    /// ran off the bottom of the screen and its last entries could not be reached.
+    /// its height is capped to the room below and the list scrolls (never flips upwards, so it always opens in the same place). Before this the menu
+    /// simply ran off the bottom of the screen and its last entries could not be reached.
     /// </summary>
     private void FitActionsMenu()
     {
@@ -1958,15 +1958,12 @@ public partial class NoteWindow : Window
             if (centre.X < left || centre.X >= right || centre.Y < top || centre.Y >= bottom) continue;
 
             double below = (bottom - bottomRight.Y) / scale;
-            double above = (topLeft.Y - top) / scale;
             if (need <= below) return;
-            if (need <= above) { ActionsPopup.Placement = System.Windows.Controls.Primitives.PlacementMode.Top; return; }
 
-            bool useBelow = below >= above;
-            ActionsPopup.Placement = useBelow ? System.Windows.Controls.Primitives.PlacementMode.Bottom : System.Windows.Controls.Primitives.PlacementMode.Top;
-            // The grid's margin and the panel's padding are chrome around the scrolling list.
+            // Vertically the menu never flips to the other side of the button (it would open in a different place each time): it stays below and
+            // scrolls. Only horizontally does it move to the side with room (the popup does that by itself).
             double chrome = need - ((FrameworkElement)ActionsScroll.Content).DesiredSize.Height;
-            ActionsScroll.MaxHeight = Math.Max(120, (useBelow ? below : above) - chrome);
+            ActionsScroll.MaxHeight = Math.Max(160, below - chrome);
             return;
         }
     }

@@ -443,7 +443,7 @@
                     </Style>
                 </Border.Style>
                 <Grid>
-                <WrapPanel HorizontalAlignment="Left" Margin="0,0,78,0">
+                <WrapPanel HorizontalAlignment="Left" VerticalAlignment="Center" Margin="0,0,78,0">
                 <!-- IsChecked se fija desde el code-behind tras InitializeComponent, no aquí: un
                      IsChecked="True" en XAML dispara Checked mientras el árbol se está
                      construyendo, antes de que RowsList exista — ver el constructor. -->
