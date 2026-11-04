@@ -28,7 +28,7 @@ public sealed class SyncLookServiceTests : IDisposable
     public void Dispose()
     {
         _listener.Stop();
-        Microsoft.Data.Sqlite.SqliteConnection.ClearAllPools();
+        TestPools.ReleaseDirectory(_root);
         try { Directory.Delete(_root, recursive: true); } catch (IOException) { }
     }
 

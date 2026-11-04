@@ -12,7 +12,7 @@ public sealed class StickyNotesSourceTests : IDisposable
 
     public void Dispose()
     {
-        SqliteConnection.ClearAllPools();
+        TestPools.ReleaseDirectory(_root);
         try { Directory.Delete(_root, true); } catch { }
     }
 

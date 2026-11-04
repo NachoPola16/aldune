@@ -59,7 +59,7 @@ public sealed partial class StickyNotesSource : IImportSource
         }
         finally
         {
-            SqliteConnection.ClearAllPools();
+            // No pool to clear: the copy is opened with Pooling=false. (ClearAllPools here also cut the connections the app itself was using.)
             try { Directory.Delete(temp, recursive: true); } catch (Exception ex) when (ex is IOException or UnauthorizedAccessException) { }
         }
     }

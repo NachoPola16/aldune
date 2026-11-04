@@ -15,7 +15,7 @@ public sealed class SyncUnreadableRemoteTests : IDisposable
     public void Dispose()
     {
         _cipher.Dispose();
-        SqliteConnection.ClearAllPools();
+        TestPools.ReleaseDirectory(_dir);
         try { Directory.Delete(_dir, true); } catch (IOException) { }
     }
 

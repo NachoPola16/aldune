@@ -80,7 +80,7 @@ public class NotesRepositoryUnreadableRowTests : IDisposable
 
     public void Dispose()
     {
-        SqliteConnection.ClearAllPools();
+        TestPools.ReleaseFile(_databasePath);
         try { File.Delete(_databasePath); } catch (IOException) { }
     }
 }

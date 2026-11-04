@@ -114,7 +114,7 @@ public class NotesRepositoryPlacementTests : IDisposable
         }
         finally
         {
-            SqliteConnection.ClearAllPools();
+            TestPools.ReleaseFile(path);
             if (File.Exists(path)) File.Delete(path);
         }
     }

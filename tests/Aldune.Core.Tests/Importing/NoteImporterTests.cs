@@ -19,7 +19,7 @@ public sealed class NoteImporterTests : IDisposable
     public void Dispose()
     {
         _cipher.Dispose();
-        Microsoft.Data.Sqlite.SqliteConnection.ClearAllPools();
+        TestPools.ReleaseDirectory(_dir);
         try { Directory.Delete(_dir, true); } catch { }
     }
 

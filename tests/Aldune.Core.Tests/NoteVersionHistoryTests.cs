@@ -122,7 +122,7 @@ public sealed class NoteVersionHistoryTests : IDisposable
     {
         var note = _repo.Create("topsecret-marker", "#EBD38B", "primary");
         _repo.UpdateText(note.Id, "other");
-        SqliteConnection.ClearAllPools();
+        TestPools.ReleaseFile(_path);
 
         var raw = File.ReadAllBytes(_path);
         Assert.DoesNotContain("topsecret-marker", System.Text.Encoding.UTF8.GetString(raw));
@@ -171,7 +171,7 @@ public sealed class NoteVersionHistoryTests : IDisposable
 
     public void Dispose()
     {
-        SqliteConnection.ClearAllPools();
+        TestPools.ReleaseFile(_path);
         try { File.Delete(_path); } catch (IOException) { }
     }
 }

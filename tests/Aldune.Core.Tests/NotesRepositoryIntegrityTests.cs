@@ -21,7 +21,7 @@ public sealed class NotesRepositoryIntegrityTests : IDisposable
 
     public void Dispose()
     {
-        SqliteConnection.ClearAllPools();
+        TestPools.ReleaseFile(_path);
         try { File.Delete(_path); } catch (IOException) { }
     }
 

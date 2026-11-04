@@ -16,7 +16,7 @@ public sealed class SyncLookFolderAndWebDavTests : IDisposable
 
     public void Dispose()
     {
-        Microsoft.Data.Sqlite.SqliteConnection.ClearAllPools();
+        TestPools.ReleaseDirectory(_root);
         try { Directory.Delete(_root, recursive: true); } catch (IOException) { }
     }
 
