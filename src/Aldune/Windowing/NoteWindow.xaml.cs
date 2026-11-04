@@ -1792,6 +1792,9 @@ public partial class NoteWindow : Window
 
         if (result.Changed)
         {
+            // Same rule as the sweep of closed notes: what the automatic deletion removes is kept in the version history first, ignoring the gap
+            // between automatic versions. (Anything typed and not yet saved is not in the store; the deletion is skipped while typing, see TypingGrace.)
+            _repository.RecordVersion(_note.Id, force: true);
             ApplyEdit(result.Edit);
         }
     }

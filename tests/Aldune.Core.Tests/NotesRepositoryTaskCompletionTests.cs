@@ -88,6 +88,25 @@ public class NotesRepositoryTaskCompletionTests : IDisposable
     }
 
     [Fact]
+    public void PruneExpiredCompletedTasks_KeepsTheTextWithTheTasksInTheHistory_EvenRightAfterAnotherVersion()
+    {
+        // The automatic deletion is the one change nobody typed, so it must always be recoverable: the usual 5 minute gap between automatic
+        // versions must not apply to it (a version saved a minute ago would otherwise leave the deleted lines nowhere).
+        var line = "☒ tarea vencida";
+        var note = _sut.Create("algo", "#F5E3B3", "primary");
+        _sut.RecordVersion(note.Id, force: true);                    // a version "a moment ago": the 5 minute rule now refuses another one
+        var text = $"algo\r\n{line}";
+        _sut.UpdateText(note.Id, text);                              // the task arrives inside that window, so no version holds it
+        Assert.DoesNotContain(_sut.GetVersions(note.Id), v => v.Text.Contains(line));
+        _sut.RecordTaskCompletion(note.Id, TaskCompletion.HashLine(line), DateTimeOffset.UtcNow - TimeSpan.FromDays(3));
+
+        Assert.True(_sut.PruneExpiredCompletedTasks(note.Id, text, TimeSpan.FromDays(1)));
+
+        Assert.Contains(_sut.GetVersions(note.Id), v => v.Text.Contains(line));
+        Assert.DoesNotContain(line, _sut.GetById(note.Id)!.Text);
+    }
+
+    [Fact]
     public void PruneExpiredCompletedTasks_CleansUpTheCompletionRecordForTheRemovedLine()
     {
         var line = "☒ tarea vencida";

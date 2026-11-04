@@ -1828,6 +1828,9 @@ public sealed class NotesRepository
 
         if (result.Changed)
         {
+            // The automatic deletion is the one edit nobody typed: the text with the tasks is always kept in the history first, ignoring the usual
+            // gap between automatic versions (a recent version would otherwise leave the deleted lines nowhere). InsertVersion skips a duplicate.
+            InsertVersion(noteId, stored.Text, now);
             // Conditional on the row not having changed since it was read above; a refused write is dropped and retried on the next pass.
             return WriteText(noteId, NoteText.Join(title, result.Text), now: null, expectedUpdatedAt: stored.UpdatedAt);
         }
