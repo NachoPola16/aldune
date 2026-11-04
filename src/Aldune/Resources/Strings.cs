@@ -1363,6 +1363,14 @@ public static class Strings
         "Vergrößert die Kästchen und ihren Klickbereich, damit sie leichter zu treffen sind.",
         "Agrandit les cases et leur zone de clic pour les atteindre plus facilement.",
         "Aumenta as caixas e a área de clique, para acertá-las com mais facilidade.", "Ingrandisce le caselle e la loro area di clic, così sono più facili da colpire.", "ボックスとクリック範囲を大きくして、押しやすくします。", "放大复选框及其点击区域，更容易点中。");
+    public static string LiveMarkdownCheckbox => T("Show Markdown formatting as you type", "Mostrar el formato Markdown al escribir",
+        "Markdown-Formatierung beim Tippen anzeigen",
+        "Afficher la mise en forme Markdown pendant la saisie",
+        "Mostrar a formatação Markdown ao escrever", "Mostra la formattazione Markdown mentre scrivi", "入力中に Markdown の書式を表示する", "输入时显示 Markdown 格式");
+    public static string LiveMarkdownHint => T("Bold, italic, headings, code and links are drawn in the note while you write. The characters stay in the text, only dimmed, and the note itself is not changed.", "La negrita, la cursiva, los títulos, el código y los enlaces se dibujan en la nota mientras escribes. Los signos siguen en el texto, solo atenuados, y la nota no se modifica.",
+        "Fett, kursiv, Überschriften, Code und Links werden beim Schreiben in der Notiz dargestellt. Die Zeichen bleiben im Text, nur abgeblendet, und die Notiz selbst wird nicht verändert.",
+        "Le gras, l'italique, les titres, le code et les liens s'affichent dans la note pendant que vous écrivez. Les caractères restent dans le texte, simplement atténués, et la note elle-même n'est pas modifiée.",
+        "Negrito, itálico, títulos, código e links aparecem desenhados na nota enquanto você escreve. Os caracteres continuam no texto, apenas atenuados, e a nota em si não é alterada.", "Grassetto, corsivo, titoli, codice e link vengono disegnati nella nota mentre scrivi. I caratteri restano nel testo, solo attenuati, e la nota in sé non viene modificata.", "太字、斜体、見出し、コード、リンクを入力中にメモ上で表示します。記号はテキストに残り、薄く表示されるだけで、メモ自体は変更されません。", "书写时在便笺中绘制粗体、斜体、标题、代码和链接。符号仍保留在文本中，只是变淡，便笺内容本身不会被修改。");
     public static string MoveCompletedTasksCheckbox => T("Move checked tasks to the end of the list", "Mover las tareas hechas al final de la lista",
         "Erledigte Aufgaben ans Ende der Liste verschieben",
         "Déplacer les tâches cochées en bas de la liste",

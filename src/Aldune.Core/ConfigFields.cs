@@ -98,6 +98,7 @@ public static class ConfigFields
         Bool("wheelStopAll", nameof(AppSettings.WheelStopAll), ConfigSections.Settings, s => s.WheelStopAll, (s, v) => s.WheelStopAll = v),
         Bool("wheelStopTags", nameof(AppSettings.WheelStopTags), ConfigSections.Settings, s => s.WheelStopTags, (s, v) => s.WheelStopTags = v),
         Bool("trackpadGestures", nameof(AppSettings.TrackpadGestures), ConfigSections.Settings, s => s.TrackpadGestures, (s, v) => s.TrackpadGestures = v),
+        Bool("liveMarkdown", nameof(AppSettings.LiveMarkdown), ConfigSections.Settings, s => s.LiveMarkdown, (s, v) => s.LiveMarkdown = v),
         Bool("largeCheckboxes", nameof(AppSettings.LargeCheckboxes), ConfigSections.Settings, s => s.LargeCheckboxes, (s, v) => s.LargeCheckboxes = v),
         Bool("moveCompletedTasksToEnd", nameof(AppSettings.MoveCompletedTasksToEnd), ConfigSections.Settings, s => s.MoveCompletedTasksToEnd, (s, v) => s.MoveCompletedTasksToEnd = v),
         Bool("autoHideCompletedTasks", nameof(AppSettings.AutoHideCompletedTasks), ConfigSections.Settings, s => s.AutoHideCompletedTasks, (s, v) => s.AutoHideCompletedTasks = v),

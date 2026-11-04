@@ -1325,6 +1325,19 @@ public partial class SettingsWindow : Window
         _settingsService.Save(_settings);
     }
 
+    private void OnLiveMarkdownToggled(object sender, RoutedEventArgs e)
+    {
+        _settings.LiveMarkdown = LiveMarkdownCheck.IsChecked == true;
+        _settingsService.Save(_settings);
+        ApplyLiveMarkdownToOpenNotes();
+    }
+
+    // Open notes switch at once: the layer is a display option, so there is nothing to reload.
+    private void ApplyLiveMarkdownToOpenNotes()
+    {
+        foreach (var note in Application.Current.Windows.OfType<NoteWindow>()) note.SetLiveMarkdown(_settings.LiveMarkdown);
+    }
+
     private void OnLargeCheckboxesToggled(object sender, RoutedEventArgs e)
     {
         _settings.LargeCheckboxes = LargeCheckboxesCheck.IsChecked == true;
@@ -2642,6 +2655,7 @@ public partial class SettingsWindow : Window
         if (dockViewChanged) _coordinator?.SetDockView(_settings.DockView, _settings.DockTagFilter, save: false);
 
         if (Changed("textScale")) ThemeManager.ApplyTextScale(Application.Current, _settings.TextScalePercent);
+        if (Changed("liveMarkdown")) ApplyLiveMarkdownToOpenNotes();
         if (Changed("largeCheckboxes"))
         {
             ThemeManager.LargeCheckboxes = _settings.LargeCheckboxes;
@@ -2697,6 +2711,7 @@ public partial class SettingsWindow : Window
         UpdateNoteColorStripeUi();
         MoveCompletedTasksCheck.IsChecked = _settings.MoveCompletedTasksToEnd;
         LargeCheckboxesCheck.IsChecked = _settings.LargeCheckboxes;
+        LiveMarkdownCheck.IsChecked = _settings.LiveMarkdown;
         CheckForUpdatesAutomaticallyCheck.IsChecked = _settings.CheckForUpdatesAutomatically;
         AutoHideTasksCheck.IsChecked = _settings.AutoHideCompletedTasks;
         AutoHideTasksDelayValueBox.Text = _settings.AutoHideCompletedTasksDelayValue.ToString();

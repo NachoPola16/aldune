@@ -27,6 +27,7 @@ public class ConfigExportImportTests
         ShowNotePreview = false,
         TrashRetentionDays = 45,
         AutoHideCompletedTasks = true,
+        LiveMarkdown = false,
         AutoHideCompletedTasksDelayValue = 3,
         AutoHideCompletedTasksDelayUnit = TaskDelayUnit.Hours,
     };
@@ -368,12 +369,12 @@ public class ConfigExportImportTests
             "recentHotkeyEnabled", "recentHotkeyModifiers", "recentHotkeyKey",
             "managerHotkeyEnabled", "managerHotkeyModifiers", "managerHotkeyKey",
             "quickFindHotkeyEnabled", "quickFindHotkeyModifiers", "quickFindHotkeyKey", "dockEdge", "dockAlignment", "dockViewLabel", "dockView", "dockViewButton", "dockCardShadow",
-            "keepDockOpen", "showNotePreview", "hideOnFullscreen", "wheelChangesDockView", "wheelStopArchived", "wheelStopTrash", "wheelStopActive", "wheelStopAll", "wheelStopTags", "trackpadGestures", "largeCheckboxes", "moveCompletedTasksToEnd",
+            "keepDockOpen", "showNotePreview", "hideOnFullscreen", "wheelChangesDockView", "wheelStopArchived", "wheelStopTrash", "wheelStopActive", "wheelStopAll", "wheelStopTags", "trackpadGestures", "liveMarkdown", "largeCheckboxes", "moveCompletedTasksToEnd",
             "autoHideCompletedTasks", "autoHideDelayValue", "autoHideDelayUnit", "trashRetentionDays",
             "rememberNotePositions", "rememberNoteSizes", "checkForUpdates", "reminderIncludesTasks", "textScale",
         ];
 
-        Assert.Equal(53, expected.Length);
+        Assert.Equal(54, expected.Length);
         Assert.Equal(expected, ConfigFields.All.Select(f => f.Id).ToArray());
     }
 

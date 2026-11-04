@@ -137,6 +137,12 @@ public sealed class AppSettings
     public uint? QuickFindHotkeyModifiers { get; set; }
     public uint? QuickFindHotkeyKey { get; set; }
 
+    /// <summary>
+    /// Draw Markdown in the note body as it is typed (bold, italic, headings, code, links; the syntax stays visible but dimmed). The text is
+    /// never changed, so it is a display option only. A settings.json from before this field loads with it on.
+    /// </summary>
+    public bool LiveMarkdown { get; set; } = true;
+
     public HotkeyBinding QuickFindHotkey =>
         QuickFindHotkeyModifiers is { } mods && QuickFindHotkeyKey is { } key && new HotkeyBinding(mods, key).IsValid
             ? new HotkeyBinding(mods, key)

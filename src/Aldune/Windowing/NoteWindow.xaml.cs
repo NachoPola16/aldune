@@ -38,6 +38,7 @@ public partial class NoteWindow : Window
     private readonly NotesRepository _repository;
     private readonly AppCoordinator _coordinator;
     private readonly AppSettings? _settings;
+    private readonly MarkdownLiveLayer _markdownLayer;
     private string? _protectionPassword;
     // What this window last read from or wrote to the database. Flush compares the stored state against these before overwriting, so a text
     // or protected content that another device synced in the meantime is not replaced silently (see SaveEditedText / TryUpdateProtectedText).
@@ -88,10 +89,16 @@ public partial class NoteWindow : Window
     /// fuera la elegida, y "restaurar posiciones originales" la tomaba por buena.</summary>
     private bool _isLayoutMove;
 
+    /// <summary>Turns live Markdown drawing on or off for this note (the Settings switch).</summary>
+    internal void SetLiveMarkdown(bool on) => _markdownLayer.Enabled = on;
+
     public NoteWindow(Note note, NotesRepository repository, AppCoordinator coordinator,
         AppSettings? settings = null, string? protectionPassword = null)
     {
         InitializeComponent();
+        // Between the text box and the find highlight, so a match is still drawn over the text.
+        _markdownLayer = new MarkdownLiveLayer(TextBody) { Enabled = settings?.LiveMarkdown ?? true };
+        BodyHost.Children.Insert(BodyHost.Children.IndexOf(FindLayer), _markdownLayer);
         MaximizeHook.Install(this);
         NativeMethods.CloakUntilFirstFrame(this);
         _initialWidth = Width;
@@ -2474,7 +2481,7 @@ public partial class NoteWindow : Window
         Resources["NoteHoverBrush"] = BrushOf(darkenHover ? "#40000000" : "#40FFFFFF");
         Resources["NotePressedBrush"] = BrushOf(darkenHover ? "#66000000" : "#66FFFFFF");
         Resources["NoteTaskHoverBrush"] = BrushOf(darkenHover ? "#26000000" : "#26FFFFFF");
-        TextBody.Foreground = ink;
+        _markdownLayer.SetInk(ink);   // also sets the box's own foreground (transparent while the layer draws the text)
         TextBody.CaretBrush = ink;
         // La selección NO puede ser la tinta opaca: un bloque macizo del color del texto tapa lo
         // seleccionado y se lee como un rectángulo negro (reportado por el usuario). Translúcida se

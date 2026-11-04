@@ -649,6 +649,14 @@
                     <StackPanel Margin="0,20,0,0">
                         <TextBlock Text="{x:Static res:Strings.NotesTasksSectionTitle}"
                                    Foreground="{DynamicResource AlduneTextBrush}" FontSize="{DynamicResource AlduneTextBody}" FontWeight="SemiBold" Margin="0,0,0,12" />
+                        <CheckBox x:Name="LiveMarkdownCheck"
+                                  Content="{x:Static res:Strings.LiveMarkdownCheckbox}"
+                                  Foreground="{DynamicResource AlduneTextBrush}" Background="{DynamicResource AlduneGroundBrush}" FontSize="{DynamicResource AlduneTextBody}"
+                                  Style="{StaticResource SettingsSwitchStyle}"
+                                  Click="OnLiveMarkdownToggled" />
+                        <TextBlock Text="{x:Static res:Strings.LiveMarkdownHint}"
+                                   Foreground="{DynamicResource AlduneHintBrush}" FontSize="{DynamicResource AlduneTextSmall}" TextWrapping="Wrap" Margin="0,6,56,16" />
+
                         <CheckBox x:Name="LargeCheckboxesCheck"
                                   Content="{x:Static res:Strings.LargeCheckboxesCheckbox}"
                                   Foreground="{DynamicResource AlduneTextBrush}" Background="{DynamicResource AlduneGroundBrush}" FontSize="{DynamicResource AlduneTextBody}"
