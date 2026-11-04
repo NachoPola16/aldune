@@ -37,6 +37,7 @@ public partial class NotesManagerWindow : Window
     private readonly PopupToggle _tagManagerToggle;
     private readonly PopupToggle _tagEditorToggle;
     private AutoScrollManager? _autoScroll;
+    private ScrollViewer RowsScroll = null!;
     private NoteRow? _tagEditRow;
     private NoteRow? _selectionAnchor;
 
@@ -72,6 +73,9 @@ public partial class NotesManagerWindow : Window
         };
 
         FilterActive.IsChecked = true;
+        // The scroll viewer is inside the list's template (so the rows can be virtualized): fetch it once the template is applied.
+        RowsList.ApplyTemplate();
+        RowsScroll = (ScrollViewer)RowsList.Template.FindName("RowsScroll", RowsList);
         _autoScroll = new AutoScrollManager(RowsHost, RowsScroll, null);
         _tagManagerToggle = new PopupToggle(TagManagerPopup);
         _tagEditorToggle = new PopupToggle(TagEditorPopup);
@@ -996,12 +1000,31 @@ public partial class NotesManagerWindow : Window
                 ClickRowButton(rowElement, "RowTags");
                 break;
             case Key.Down or Key.Up:
-                rowElement.MoveFocus(new TraversalRequest(e.Key == Key.Down ? FocusNavigationDirection.Down : FocusNavigationDirection.Up));
+                {
+                    // The list is virtualized: the neighbour may not exist as an element yet, so scroll it into existence by index first.
+                    int next = _rows.IndexOf(row) + (e.Key == Key.Down ? 1 : -1);
+                    if (next >= 0 && next < _rows.Count)
+                    {
+                        FindVisualChild<VirtualizingStackPanel>(RowsList)?.BringIndexIntoViewPublic(next);
+                        FocusRowLater(_rows[next].Note.Id);
+                    }
+                }
                 break;
             default:
                 return;
         }
         e.Handled = true;
+    }
+
+    private static T? FindVisualChild<T>(DependencyObject parent) where T : DependencyObject
+    {
+        for (int i = 0; i < VisualTreeHelper.GetChildrenCount(parent); i++)
+        {
+            var child = VisualTreeHelper.GetChild(parent, i);
+            if (child is T match) return match;
+            if (FindVisualChild<T>(child) is { } found) return found;
+        }
+        return null;
     }
 
     // The pin and tags buttons are not Tab stops (the list is one stop); P and T on the row do what they do.

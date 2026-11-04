@@ -601,12 +601,25 @@
 
         <!-- The thumb ends on the right limit of everything above (search, order, «+»: 20 px from the edge) and the rows stop 8 px before it. -->
             <Grid x:Name="RowsHost" Grid.Row="2" Margin="20,56,17,0">
-            <ScrollViewer x:Name="RowsScroll" VerticalScrollBarVisibility="Auto"
-                          HorizontalScrollBarVisibility="Disabled" Padding="0,0,5,0">
                 <!-- The list is ONE Tab stop (Once): Up/Down move between rows, Space selects, Enter opens, P pins and T edits the tags of the focused row.
                      Without it five notes cost 20 Tab presses (row, tick box, pin and tags button each). -->
-                <ItemsControl x:Name="RowsList" AutomationProperties.Name="{x:Static res:Strings.ManageNotesTitle}" KeyboardNavigation.TabNavigation="Once" KeyboardNavigation.ControlTabNavigation="Once"
+                <ItemsControl x:Name="RowsList" VirtualizingPanel.IsVirtualizing="True" VirtualizingPanel.ScrollUnit="Pixel" ScrollViewer.CanContentScroll="True" AutomationProperties.Name="{x:Static res:Strings.ManageNotesTitle}" KeyboardNavigation.TabNavigation="Once" KeyboardNavigation.ControlTabNavigation="Once"
                               KeyboardNavigation.DirectionalNavigation="Contained">
+                    <!-- Virtualized: with 3000 notes the manager built 3000 rows up front and took ~10 s to open. The scroll viewer lives in the
+                         template so the panel can see the viewport and only create the rows that are on screen. -->
+                    <ItemsControl.Template>
+                        <ControlTemplate TargetType="ItemsControl">
+                            <ScrollViewer x:Name="RowsScroll" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" Padding="0,0,5,0" Focusable="False">
+                                <ItemsPresenter />
+                            </ScrollViewer>
+                        </ControlTemplate>
+                    </ItemsControl.Template>
+                    <ItemsControl.ItemsPanel>
+                        <ItemsPanelTemplate>
+                            <VirtualizingStackPanel />
+                        </ItemsPanelTemplate>
+                    </ItemsControl.ItemsPanel>
+
                     <ItemsControl.ItemTemplate>
                         <DataTemplate>
                             <!-- TextElement.Foreground, no Foreground a secas: Border no es un
@@ -791,7 +804,6 @@
                         </DataTemplate>
                     </ItemsControl.ItemTemplate>
                 </ItemsControl>
-            </ScrollViewer>
 
             <!-- Estado vacío: dice qué pasa y por qué, en vez de dejar un hueco en blanco. -->
             <TextBlock x:Name="EmptyState"

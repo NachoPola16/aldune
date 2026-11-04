@@ -17,7 +17,10 @@ namespace Aldune.Windowing;
 internal sealed class MarkdownLiveLayer : Canvas
 {
     // Past this the note is drawn by the text box alone: the scanner and the layer are meant for notes, not for a pasted file.
-    private const int MaxTextLength = MarkdownLive.MaxNoteLength;
+    // Past this the layer stays off for that note and the box shows its own plain text. Every redraw asks the box about each visible line and
+    // that costs time in proportion to the text before it: measured with the caret in the middle, a key took ~70 ms at 5 000 characters,
+    // 160 ms at 10 000 and seconds at 100 000, while the plain box stays under 3 ms. Over ~100 ms typing is felt as lag.
+    private const int MaxTextLength = 6_000;
     // Second strike of a bold piece: far enough to read as weight, close enough not to blur the glyph.
     private const double BoldOffset = 0.7;
     private const double ItalicSkewDegrees = -11;
@@ -47,7 +50,7 @@ internal sealed class MarkdownLiveLayer : Canvas
         box.AddHandler(ScrollViewer.ScrollChangedEvent, new ScrollChangedEventHandler((_, _) => Changed()));
         // Zoom changes the font size without touching the text: nothing else would tell the layer to draw again. The descriptor keeps the
         // box alive for as long as the handler is subscribed, so it is only subscribed while the box is loaded.
-        _fontSizeChanged = (_, _) => Dispatcher.BeginInvoke(System.Windows.Threading.DispatcherPriority.Loaded, new Action(Refresh));
+        _fontSizeChanged = (_, _) => Dispatcher.BeginInvoke(System.Windows.Threading.DispatcherPriority.Loaded, new Action(() => Refresh(force: true)));
         box.Loaded += (_, _) => { _fontSize.RemoveValueChanged(box, _fontSizeChanged); _fontSize.AddValueChanged(box, _fontSizeChanged); };
         box.Unloaded += (_, _) => _fontSize.RemoveValueChanged(box, _fontSizeChanged);
     }
@@ -70,14 +73,14 @@ internal sealed class MarkdownLiveLayer : Canvas
     internal bool Enabled
     {
         get => _enabled;
-        set { if (_enabled == value) return; _enabled = value; Refresh(); }
+        set { if (_enabled == value) return; _enabled = value; Refresh(force: true); }
     }
 
     /// <summary>The ink of the note: used for the drawn text, and for the text box itself whenever the layer is not drawing.</summary>
     internal void SetInk(Brush ink)
     {
         _ink = ink;
-        Refresh();
+        Refresh(force: true);
     }
 
     private bool _settlePending;
@@ -89,12 +92,19 @@ internal sealed class MarkdownLiveLayer : Canvas
         Refresh();
         if (_settlePending) return;
         _settlePending = true;
-        Dispatcher.BeginInvoke(System.Windows.Threading.DispatcherPriority.Loaded, new Action(() => { _settlePending = false; Refresh(); }));
+        Dispatcher.BeginInvoke(System.Windows.Threading.DispatcherPriority.Loaded, new Action(() => { _settlePending = false; Refresh(force: true); }));
     }
 
-    internal void Refresh()
+    // What the last drawing was made from. One key press raises TextChanged, SelectionChanged and ScrollChanged, each asking for a redraw
+    // of the same state; every redraw asks the box about each visible line, which is slow in a long note, so a repeat is skipped.
+    private (string?, int, int, double, double, double, double, double, bool) _drawnFrom;
+
+    internal void Refresh(bool force = false)
     {
         if (_building) return;
+        var from = ((string?)_box.Text, _box.SelectionStart, _box.SelectionLength, _box.VerticalOffset, _box.HorizontalOffset, _box.ActualWidth, _box.ActualHeight, _box.FontSize, _box.IsKeyboardFocused);
+        if (!force && from.Equals(_drawnFrom) && IsDrawing == (_enabled && _box.Text.Length > 0 && _box.Text.Length <= MaxTextLength)) return;
+        _drawnFrom = from;
         _building = true;
         try { Rebuild(); }
         finally { _building = false; }
