@@ -30,8 +30,11 @@ RAIZ = Path(__file__).resolve().parents[2]
 # ~2 px por encima de la flecha «→» de una viñeta y del texto; 250 la deja a ~0,2 px (medido con la sonda probe72).
 # Cada destino se escribe también en versión «grande» (ajuste «Casillas grandes»): la misma caja un 25 % mayor, con su avance.
 GRANDE = 1.25
+# Normal Windows box lowered by 100 (2026-11-04): anchored to the baseline its centre sat level with the capitals but ~1.5 px above the middle of
+# lowercase letters (x-height), so it read as high on ordinary text. At 100 it is +1.0 px from the x-height centre and -0.5 px from the capitals' centre,
+# 0.5 px under the baseline (measured at 15 px with an in-process render of six fonts).
 DESTINOS = [
-    (RAIZ / "src" / "Aldune" / "Assets" / "AlduneCheck.ttf", "AlduneCheck", 1.0, 2210, 514, 0),  # Segoe UI Symbol / Variable
+    (RAIZ / "src" / "Aldune" / "Assets" / "AlduneCheck.ttf", "AlduneCheck", 1.0, 2210, 514, 100),  # Segoe UI Symbol / Variable; 100: see the note below
     (RAIZ / "src" / "Aldune" / "Assets" / "AlduneCheckLarge.ttf", "AlduneCheckLarge", GRANDE, 2210, 514, 250),
     (RAIZ / "android" / "app" / "src" / "main" / "res" / "font" / "aldune_check.ttf", "AlduneCheck", 1.0, 1900, 500, 0),  # Roboto
     (RAIZ / "android" / "app" / "src" / "main" / "res" / "font" / "aldune_check_large.ttf", "AlduneCheckLarge", GRANDE, 1900, 500, 0),
