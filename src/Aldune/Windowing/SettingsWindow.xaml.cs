@@ -25,6 +25,7 @@ public partial class SettingsWindow : Window
     private readonly GlobalHotkey _hotkey;
     private readonly GlobalHotkey? _recentHotkey;
     private readonly GlobalHotkey? _managerHotkey;
+    private readonly GlobalHotkey? _quickFindHotkey;
     private readonly AppCoordinator? _coordinator;
     private readonly SyncService? _syncService;
     private readonly Action? _checkForUpdates;
@@ -33,6 +34,8 @@ public partial class SettingsWindow : Window
     private bool _recordingRecent;
     // Y el tercero: abrir la lista de notas.
     private bool _recordingManager;
+    // And the fourth: the quick-find palette.
+    private bool _recordingQuickFind;
     private bool _syncUiReady;
     private bool _loadingSyncProfile;
 
@@ -47,7 +50,8 @@ public partial class SettingsWindow : Window
         SyncService? syncService = null,
         Action? checkForUpdates = null,
         GlobalHotkey? recentHotkey = null,
-        GlobalHotkey? managerHotkey = null)
+        GlobalHotkey? managerHotkey = null,
+        GlobalHotkey? quickFindHotkey = null)
     {
         InitializeComponent();
         PageScroller.ScrollChanged += (_, _) => UpdatePageFades();
@@ -65,6 +69,7 @@ public partial class SettingsWindow : Window
         _hotkey = hotkey;
         _recentHotkey = recentHotkey;
         _managerHotkey = managerHotkey;
+        _quickFindHotkey = quickFindHotkey;
         _coordinator = coordinator;
         if (coordinator is not null)
         {
@@ -450,8 +455,10 @@ public partial class SettingsWindow : Window
         _recording = true;
         _recordingRecent = false;
         _recordingManager = false;
+        _recordingQuickFind = false;
         UpdateRecentHotkeyUi();
         UpdateManagerHotkeyUi();
+        UpdateQuickFindHotkeyUi();
         HotkeyButton.Content = Strings.HotkeyRecording;
         HotkeyButton.Focus();
     }
@@ -475,6 +482,7 @@ public partial class SettingsWindow : Window
             UpdateHotkeyUi();
             UpdateRecentHotkeyUi();
             UpdateManagerHotkeyUi();
+            UpdateQuickFindHotkeyUi();
             return;
         }
 
@@ -494,12 +502,13 @@ public partial class SettingsWindow : Window
         if (!candidate.IsValid)
         {
             // Sin modificador, el atajo se tragaria esa tecla en todo el sistema.
-            (_recordingManager ? ManagerHotkeyHint : _recordingRecent ? RecentHotkeyHint : HotkeyHint).Text = Strings.HotkeyNeedsModifier;
+            (_recordingQuickFind ? QuickFindHotkeyHint : _recordingManager ? ManagerHotkeyHint : _recordingRecent ? RecentHotkeyHint : HotkeyHint).Text = Strings.HotkeyNeedsModifier;
             return;
         }
 
         _recording = false;
-        if (_recordingManager) ApplyManagerBinding(candidate);
+        if (_recordingQuickFind) ApplyQuickFindBinding(candidate);
+        else if (_recordingManager) ApplyManagerBinding(candidate);
         else if (_recordingRecent) ApplyRecentBinding(candidate);
         else ApplyBinding(candidate);
     }
@@ -522,8 +531,10 @@ public partial class SettingsWindow : Window
         _recording = true;
         _recordingRecent = true;
         _recordingManager = false;
+        _recordingQuickFind = false;
         UpdateHotkeyUi();
         UpdateManagerHotkeyUi();
+        UpdateQuickFindHotkeyUi();
         RecentHotkeyButton.Content = Strings.HotkeyRecording;
         RecentHotkeyButton.Focus();
     }
@@ -575,8 +586,10 @@ public partial class SettingsWindow : Window
         _recording = true;
         _recordingRecent = false;
         _recordingManager = true;
+        _recordingQuickFind = false;
         UpdateHotkeyUi();
         UpdateRecentHotkeyUi();
+        UpdateQuickFindHotkeyUi();
         ManagerHotkeyButton.Content = Strings.HotkeyRecording;
         ManagerHotkeyButton.Focus();
     }
@@ -608,6 +621,62 @@ public partial class SettingsWindow : Window
         ManagerHotkeyHint.Text = !on ? Strings.HotkeyDisabled
             : _managerHotkey?.IsRegistered == true ? Strings.HotkeyWorks
             : Strings.HotkeyConflict(_settings.ManagerHotkey.DisplayName);
+        UpdateQuickHelp();
+    }
+
+    private void OnQuickFindHotkeyToggled(object sender, RoutedEventArgs e)
+    {
+        bool wanted = QuickFindHotkeyCheck.IsChecked == true;
+
+        if (wanted) _quickFindHotkey?.Enable(_settings.QuickFindHotkey);
+        else _quickFindHotkey?.Disable();
+
+        _settings.QuickFindHotkeyEnabled = wanted;
+        _settingsService.Save(_settings);
+
+        UpdateQuickFindHotkeyUi();
+    }
+
+    private void OnRecordQuickFindHotkeyClick(object sender, RoutedEventArgs e)
+    {
+        _recording = true;
+        _recordingRecent = false;
+        _recordingManager = false;
+        _recordingQuickFind = true;
+        UpdateHotkeyUi();
+        UpdateRecentHotkeyUi();
+        UpdateManagerHotkeyUi();
+        QuickFindHotkeyButton.Content = Strings.HotkeyRecording;
+        QuickFindHotkeyButton.Focus();
+    }
+
+    private void OnResetQuickFindHotkeyClick(object sender, RoutedEventArgs e)
+    {
+        _recording = false;
+        ApplyQuickFindBinding(HotkeyBinding.QuickFindDefault);
+    }
+
+    private void ApplyQuickFindBinding(HotkeyBinding binding)
+    {
+        _settings.QuickFindHotkeyModifiers = binding.Modifiers;
+        _settings.QuickFindHotkeyKey = binding.Key;
+
+        if (_settings.QuickFindHotkeyEnabled) _quickFindHotkey?.Enable(binding);
+        _settingsService.Save(_settings);
+
+        UpdateQuickFindHotkeyUi();
+    }
+
+    private void UpdateQuickFindHotkeyUi()
+    {
+        bool on = QuickFindHotkeyCheck.IsChecked == true;
+        QuickFindHotkeyButton.Content = _settings.QuickFindHotkey.DisplayName;
+        QuickFindHotkeyButton.IsEnabled = on;
+        QuickFindHotkeyResetButton.IsEnabled = on;
+
+        QuickFindHotkeyHint.Text = !on ? Strings.HotkeyDisabled
+            : _quickFindHotkey?.IsRegistered == true ? Strings.HotkeyWorks
+            : Strings.HotkeyConflict(_settings.QuickFindHotkey.DisplayName);
         UpdateQuickHelp();
     }
 
@@ -674,6 +743,7 @@ public partial class SettingsWindow : Window
             (Strings.QuickHelpKeyboardGroup, new[]
             {
                 _settings.ManagerHotkeyEnabled ? Strings.QuickHelpKeyboardManagerOn(_settings.ManagerHotkey.DisplayName) : Strings.QuickHelpKeyboardManagerOff,
+                _settings.QuickFindHotkeyEnabled ? Strings.QuickHelpKeyboardQuickFindOn(_settings.QuickFindHotkey.DisplayName) : Strings.QuickHelpKeyboardQuickFindOff,
                 Strings.QuickHelpKeyboardDock, Strings.QuickHelpKeyboardZoom, Strings.QuickHelpKeyboardFocus,
             }),
         };
@@ -2561,6 +2631,11 @@ public partial class SettingsWindow : Window
             if (_settings.ManagerHotkeyEnabled) _managerHotkey?.Enable(_settings.ManagerHotkey);
             else _managerHotkey?.Disable();
         }
+        if (Changed("quickFindHotkeyEnabled", "quickFindHotkeyModifiers", "quickFindHotkeyKey"))
+        {
+            if (_settings.QuickFindHotkeyEnabled) _quickFindHotkey?.Enable(_settings.QuickFindHotkey);
+            else _quickFindHotkey?.Disable();
+        }
 
         // Otra vista del dock es otra mesa de trabajo: SetDockView cierra las notas que ya no pertenecen
         // a ella, igual que al cambiarla desde el dock. Va antes de rehacer los docks.
@@ -2594,6 +2669,7 @@ public partial class SettingsWindow : Window
         HotkeyCheck.IsChecked = _settings.GlobalHotkeyEnabled;
         RecentHotkeyCheck.IsChecked = _settings.RecentNoteHotkeyEnabled;
         ManagerHotkeyCheck.IsChecked = _settings.ManagerHotkeyEnabled;
+        QuickFindHotkeyCheck.IsChecked = _settings.QuickFindHotkeyEnabled;
         HideOnFullscreenCheck.IsChecked = _settings.HideOnFullscreen;
         KeepDockOpenCheck.IsChecked = _settings.KeepDockOpen;
         ShowNotePreviewCheck.IsChecked = _settings.ShowNotePreview;
@@ -2628,6 +2704,7 @@ public partial class SettingsWindow : Window
         UpdateHotkeyUi(); // tambien deja lista la seccion de Ayuda rapida, ver UpdateQuickHelp
         UpdateRecentHotkeyUi();
         UpdateManagerHotkeyUi();
+        UpdateQuickFindHotkeyUi();
         PopulateTextScale();
         PopulateEdges();
         PopulateAppearance();

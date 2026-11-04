@@ -15,7 +15,7 @@ internal static class ConfigPreview
     public static IReadOnlyList<ConfigPreviewRow> Rows(ConfigImportPlan plan, AppSettings current)
     {
         var rows = new List<ConfigPreviewRow>();
-        bool hotkeyDone = false, recentDone = false, managerDone = false;
+        bool hotkeyDone = false, recentDone = false, managerDone = false, quickFindDone = false;
 
         foreach (var change in plan.Changes)
         {
@@ -43,6 +43,13 @@ internal static class ConfigPreview
                     AddCombination(rows, plan, Strings.ConfigFieldManagerHotkeyCombo, "managerHotkeyModifiers", "managerHotkeyKey",
                         current.ManagerHotkeyModifiers, current.ManagerHotkeyKey, current.ManagerHotkey,
                         HotkeyBinding.ManagerDefault);
+                    break;
+                case "quickFindHotkeyModifiers" or "quickFindHotkeyKey":
+                    if (quickFindDone) break;
+                    quickFindDone = true;
+                    AddCombination(rows, plan, Strings.ConfigFieldQuickFindHotkeyCombo, "quickFindHotkeyModifiers", "quickFindHotkeyKey",
+                        current.QuickFindHotkeyModifiers, current.QuickFindHotkeyKey, current.QuickFindHotkey,
+                        HotkeyBinding.QuickFindDefault);
                     break;
                 default:
                     rows.Add(new(Strings.ConfigFieldName(change.FieldId),

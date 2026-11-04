@@ -400,13 +400,18 @@ public partial class App : Application
         _managerHotkey = new GlobalHotkey(coordinator.OpenNotesManager);
         if (settings.ManagerHotkeyEnabled) _managerHotkey.Enable(settings.ManagerHotkey);
 
+        // Fifth, optional and off by default: the quick-find palette, a small search window over whatever program has the focus.
+        _quickFindHotkey = new GlobalHotkey(coordinator.OpenQuickFind);
+        if (settings.QuickFindHotkeyEnabled) _quickFindHotkey.Enable(settings.QuickFindHotkey);
+
         var hotkey = _hotkey;
         var recentHotkey = _recentHotkey;
         var managerHotkey = _managerHotkey;
+        var quickFindHotkey = _quickFindHotkey;
         var loadedSettings = settings;
         coordinator.SettingsWindowFactory = () => new SettingsWindow(
             settingsService, loadedSettings, hotkey, coordinator, syncService,
-            () => _updateNotifier?.CheckManually(), recentHotkey, managerHotkey);
+            () => _updateNotifier?.CheckManually(), recentHotkey, managerHotkey, quickFindHotkey);
         // Unos segundos después de arrancar, no al instante: que el dock y las notas se pinten antes
         // de salir a la red.
         coordinator.ConfigureAutomaticSync(firstRunIn: TimeSpan.FromSeconds(5));
@@ -455,6 +460,7 @@ public partial class App : Application
             _dockFocusHotkey?.Dispose();
             _recentHotkey?.Dispose();
             _managerHotkey?.Dispose();
+            _quickFindHotkey?.Dispose();
             _backupTimer?.Stop();
             _autoExport?.FlushNow();
             _autoExport?.Dispose();
@@ -609,6 +615,7 @@ public partial class App : Application
     private GlobalHotkey? _dockFocusHotkey;
     private GlobalHotkey? _recentHotkey;
     private GlobalHotkey? _managerHotkey;
+    private GlobalHotkey? _quickFindHotkey;
     private NotesRepository? _repository;
     private AppSettings? _settings;
     private DispatcherTimer? _rebuildDebounce;
