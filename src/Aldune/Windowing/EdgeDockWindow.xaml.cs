@@ -53,6 +53,8 @@ public partial class EdgeDockWindow : Window
     private string? _lastTagFilter;
     /// <summary>Set by <see cref="ReloadLookSoftly"/>: the next <see cref="Refresh"/> goes through the same soft swap as a change of view.</summary>
     private bool _lookReload;
+    /// <summary>1 for a change of view; a bit lower for a change of look (shadow, corners...), which people toggle back and forth and which should not make them wait.</summary>
+    private double _swapSpeed = 1;
 
     /// <summary>Pantalla de destino elegida en el menú de "abrir todas", o <c>null</c> para la de este
     /// dock. Se reinicia cada vez que se abre el menú (ver <see cref="PopulateOpenAllMonitors"/>).</summary>
@@ -1063,6 +1065,24 @@ public partial class EdgeDockWindow : Window
     /// closing and recreating the window, which showed as a flash: the strip fades out, the tabs are rebuilt with the new setting while nothing is
     /// drawn and they come back through the same swap a change of view uses. Tabs read these settings when they are created, hence the rebuild.
     /// </summary>
+    /// <summary>The whole window fades out before it is closed to be built again somewhere else (another edge, alignment or screen).</summary>
+    public void FadeOutThen(Action done)
+    {
+        var fade = new DoubleAnimation(0, new Duration(TimeSpan.FromMilliseconds(110))) { EasingFunction = EaseFade() };
+        // At zero and with two frames drawn BEFORE the heavy work (closing and creating windows): otherwise the compositor keeps showing the
+        // last frame it was given, a half-faded dock, for as long as the interface thread is busy.
+        fade.Completed += (_, _) => { BeginAnimation(OpacityProperty, null); Opacity = 0; AfterFrames(2, done); };
+        BeginAnimation(OpacityProperty, fade);
+    }
+
+    /// <summary>The new window of a rebuild comes in with a fade (it is created at opacity 0).</summary>
+    public void FadeInAfterRebuild()
+    {
+        var fade = new DoubleAnimation(0, 1, new Duration(TimeSpan.FromMilliseconds(170))) { EasingFunction = EaseFade() };
+        fade.Completed += (_, _) => { BeginAnimation(OpacityProperty, null); Opacity = 1; };
+        BeginAnimation(OpacityProperty, fade);
+    }
+
     public void ReloadLookSoftly()
     {
         ViewButton.Visibility = _settings?.DockViewButton == true ? Visibility.Visible : Visibility.Collapsed;
@@ -1076,6 +1096,7 @@ public partial class EdgeDockWindow : Window
         var tagFilter = _settings?.DockTagFilter;
         bool viewChanged = _lookReload || _lastView != view
             || !string.Equals(_lastTagFilter, tagFilter, StringComparison.OrdinalIgnoreCase);
+        _swapSpeed = _lookReload ? 0.65 : 1;
         _lookReload = false;
         _lastView = view;
         _lastTagFilter = tagFilter;
@@ -1274,7 +1295,8 @@ public partial class EdgeDockWindow : Window
         _restSwapActive = true;
         _viewLabelHold = false;
         ResetTabsFadeIfStuck();
-        var fadeOut = new DoubleAnimation(0, new Duration(TimeSpan.FromMilliseconds(130))) { EasingFunction = EaseFade() };
+        double speed = _swapSpeed;
+        var fadeOut = new DoubleAnimation(0, new Duration(TimeSpan.FromMilliseconds(130 * speed))) { EasingFunction = EaseFade() };
         fadeOut.Completed += (_, _) =>
         {
             if (token != _viewSwapToken) return;
@@ -1295,15 +1317,15 @@ public partial class EdgeDockWindow : Window
                     pill.BeginAnimation(OpacityProperty, null);
                     pill.Opacity = 0;
                     // The stagger is capped as a whole (not per pill count), so 40 notes take as long to settle as 10.
-                    var appear = new DoubleAnimation(0, 1, new Duration(TimeSpan.FromMilliseconds(190)))
+                    var appear = new DoubleAnimation(0, 1, new Duration(TimeSpan.FromMilliseconds(190 * speed)))
                     {
-                        BeginTime = TimeSpan.FromMilliseconds(Math.Min(i * 35.0, 150.0 * i / Math.Max(1, count - 1))),
+                        BeginTime = TimeSpan.FromMilliseconds(speed * Math.Min(i * 35.0, 150.0 * i / Math.Max(1, count - 1))),
                         EasingFunction = EaseFade(),
                     };
                     appear.Completed += (_, _) => { pill.BeginAnimation(OpacityProperty, null); pill.Opacity = 1; };
                     pill.BeginAnimation(OpacityProperty, appear);
                 }
-                var fadeIn = new DoubleAnimation(0, 1, new Duration(TimeSpan.FromMilliseconds(160))) { EasingFunction = EaseFade() };
+                var fadeIn = new DoubleAnimation(0, 1, new Duration(TimeSpan.FromMilliseconds(160 * speed))) { EasingFunction = EaseFade() };
                 fadeIn.Completed += (_, _) => { RestStrip.BeginAnimation(OpacityProperty, null); RestStrip.Opacity = 1; };
                 RestStrip.BeginAnimation(OpacityProperty, fadeIn);
             })));

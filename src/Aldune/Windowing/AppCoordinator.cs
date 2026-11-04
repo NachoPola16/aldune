@@ -350,6 +350,15 @@ public sealed class AppCoordinator
     /// For a setting that only changes how the tabs look (not where the dock is): every dock rebuilds its tabs behind a soft fade instead of being closed
     /// and created again. A change of edge, alignment or screen still needs <see cref="RebuildDocks"/>: the window itself moves.
     /// </summary>
+    /// <summary>Fades every dock out, for a rebuild that moves the windows, and calls <paramref name="done"/> when the last one is gone (at once without animations).</summary>
+    public void FadeOutDocks(Action done)
+    {
+        var docks = _docks.ToList();
+        if (docks.Count == 0 || !System.Windows.SystemParameters.ClientAreaAnimation) { done(); return; }
+        int left = docks.Count;
+        foreach (var dock in docks) dock.FadeOutThen(() => { if (--left == 0) done(); });
+    }
+
     public void ReloadDocksLook()
     {
         foreach (var dock in _docks) dock.ReloadLookSoftly();

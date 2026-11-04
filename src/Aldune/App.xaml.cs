@@ -415,10 +415,21 @@ public partial class App : Application
         // Unos segundos después de arrancar, no al instante: que el dock y las notas se pinten antes
         // de salir a la red.
         coordinator.ConfigureAutomaticSync(firstRunIn: TimeSpan.FromSeconds(5));
+        // A change of edge, alignment or screen moves the windows, so they are built again; the old ones fade out and the new ones fade in
+        // instead of vanishing and popping up. A second request while one is running is run once, after it.
         coordinator.RebuildDocksAction = () =>
         {
-            coordinator.CloseAllDocks();
-            BuildDocks();
+            if (_dockRebuildBusy) { _dockRebuildAgain = true; return; }
+            _dockRebuildBusy = true;
+            coordinator.FadeOutDocks(() =>
+            {
+                bool animate = SystemParameters.ClientAreaAnimation && coordinator.DockCount > 0;
+                coordinator.CloseAllDocks();
+                _softDockRebuild = animate;
+                try { BuildDocks(); }
+                finally { _softDockRebuild = false; _dockRebuildBusy = false; }
+                if (_dockRebuildAgain) { _dockRebuildAgain = false; coordinator.RebuildDocks(); }
+            });
         };
 
         _toastCenter = new ToastCenter();
@@ -632,6 +643,10 @@ public partial class App : Application
     /// Crea un dock por cada monitor conectado ahora mismo. Se llama al arrancar y cada vez que
     /// cambia la configuración de pantallas.
     /// </summary>
+    private bool _softDockRebuild;
+    private bool _dockRebuildBusy;
+    private bool _dockRebuildAgain;
+
     private void BuildDocks()
     {
         if (_coordinator is null || _repository is null) return;
@@ -680,7 +695,9 @@ public partial class App : Application
             // "se coloca"). Refrescar antes de mostrar deja el dock ya con sus datos reales desde el
             // primer frame que se pinta.
             dock.Refresh();
+            if (_softDockRebuild) dock.Opacity = 0;
             dock.Show();
+            if (_softDockRebuild) dock.FadeInAfterRebuild();
         }
 
         _coordinator.RefreshAll();
