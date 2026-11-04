@@ -623,6 +623,7 @@
                                     MouseRightButtonUp="OnRowMouseRightButtonUp"
                                     KeyDown="OnRowKeyDown"
                                     AutomationProperties.Name="{Binding Note, Converter={StaticResource NoteTitleConverter}}"
+                                    AutomationProperties.HelpText="{x:Static res:Strings.ManagerRowKeysHint}"
                                     >
                                 <Border.Style>
                                     <Style TargetType="Border">
@@ -698,7 +699,7 @@
                                             <!-- Fijar arriba en la lista (no el «siempre encima»): la chincheta es un interruptor,
                                                  tenue si la nota no está fijada y plena si lo está. -->
                                             <Button DockPanel.Dock="Left" Tag="{Binding}" Click="OnPinToTopClick" IsTabStop="False"
-                                                    AutomationProperties.AutomationId="RowPin"
+                                                    AutomationProperties.AutomationId="RowPin" AutomationProperties.AccessKey="P"
                                                     Margin="-4,-2,3,-2" VerticalAlignment="Center"
                                                     Foreground="{Binding Note.Color, Converter={StaticResource ManagerRowInkConverter}}"
                                                     ToolTip="{Binding Note.IsPinnedToTop, Converter={StaticResource PinToTopTextConverter}}"
@@ -741,7 +742,7 @@
                                                    TextTrimming="CharacterEllipsis" />
                                         <Button Grid.Row="1" Grid.Column="1" Tag="{Binding}"
                                                 Click="OnEditTagsClick" Margin="10,1,-2,-2" IsTabStop="False"
-                                                AutomationProperties.AutomationId="RowTags"
+                                                AutomationProperties.AutomationId="RowTags" AutomationProperties.AccessKey="T"
                                                 HorizontalAlignment="Right"
                                                 Foreground="{Binding Note.Color, Converter={StaticResource ManagerRowInkConverter}}"
                                                 ToolTip="{x:Static res:Strings.EditTagsTooltip}"

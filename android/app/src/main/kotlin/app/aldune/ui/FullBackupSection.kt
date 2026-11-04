@@ -105,7 +105,12 @@ private fun RestoreDialog(viewModel: NotesViewModel) {
         onDismissRequest = { if (!busy) viewModel.closeRestore() },
         title = { Text(stringResource(R.string.restore_title), Modifier.semantics { heading() }) },
         text = {
-            Column(Modifier.verticalScroll(rememberScrollState()).semantics { liveRegion = LiveRegionMode.Polite }, verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            // Progress, result and failure are announced; the preview is not a live region, or switching the mode would make TalkBack read all the counts again.
+            val announce = state.phase != RestorePhase.PREVIEW && state.phase != RestorePhase.CONFIRM_REPLACE
+            Column(
+                Modifier.verticalScroll(rememberScrollState()).semantics { if (announce) liveRegion = LiveRegionMode.Polite },
+                verticalArrangement = Arrangement.spacedBy(8.dp),
+            ) {
                 when (state.phase) {
                     RestorePhase.READING -> {
                         Text(stringResource(R.string.restore_reading))

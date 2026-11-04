@@ -1782,7 +1782,7 @@ public partial class SettingsWindow : Window
         catch (Exception ex) when (ex is System.Runtime.InteropServices.ExternalException or InvalidOperationException)
         {
             // The clipboard can be held by another program for a moment.
-            SyncStatusText.Text = Strings.SyncErrorStatus(ex.Message);
+            SyncStatusText.Text = Strings.SyncCopyReportFailed;
         }
     }
 

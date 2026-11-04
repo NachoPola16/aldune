@@ -1146,12 +1146,14 @@
                                     Style="{StaticResource RecordButtonStyle}" />
                             <Button x:Name="SyncCopyReportButton" Content="{x:Static res:Strings.SyncCopyReportButton}"
                                     ToolTip="{x:Static res:Strings.SyncCopyReportTooltip}"
+                                    AutomationProperties.HelpText="{x:Static res:Strings.SyncCopyReportTooltip}"
                                     Click="OnSyncCopyReportClick" Margin="0,0,7,6" Padding="10,6"
                                     Style="{StaticResource RecordButtonStyle}" />
                         </WrapPanel>
                         <TextBlock Text="{x:Static res:Strings.SyncRevokeAccessHint}" Foreground="{DynamicResource AlduneHintBrush}"
                                    FontSize="{DynamicResource AlduneTextSmall}" TextWrapping="Wrap" Margin="0,5,56,0" />
                         <TextBlock x:Name="SyncStatusText" Foreground="{DynamicResource AlduneHintBrush}" FontSize="{DynamicResource AlduneTextSmall}"
+                                   AutomationProperties.LiveSetting="Polite"
                                    TextWrapping="Wrap" Margin="0,8,56,0" />
                         <CheckBox x:Name="SyncAutomaticCheck"
                                   Content="{x:Static res:Strings.SyncAutomaticCheckbox}"

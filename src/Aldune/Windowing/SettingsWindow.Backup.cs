@@ -44,39 +44,63 @@ public partial class SettingsWindow
         }
     }
 
-    private void OnBackupRestoreFileClick(object sender, RoutedEventArgs e)
+    private async void OnBackupRestoreFileClick(object sender, RoutedEventArgs e)
     {
         var dialog = new Microsoft.Win32.OpenFileDialog { Filter = Strings.BackupFileFilter, DefaultExt = ".zip", CheckFileExists = true };
         if (dialog.ShowDialog(this) != true) return;
-        RestoreFrom(dialog.FileName, whenText: null);
+        await RestoreFromAsync(dialog.FileName, whenText: null);
     }
 
     private async void OnBackupRestoreDailyClick(object sender, RoutedEventArgs e)
     {
         var directory = AppDataDirectory;
-        // Verifying opens each copy's database, so it is done off the UI thread.
-        var copies = await Task.Run(() => LocalBackup.ListNewestFirst(directory)
-            .Select(folder => (Folder: folder, Check: LocalBackup.Verify(folder)))
-            .Where(copy => copy.Check.IsOk)
-            .ToList());
+        // Verifying opens each copy's database, so it is done off the UI thread. This is an async void handler: nothing may escape it.
+        List<(string Folder, BackupCheck Check)> copies;
+        try
+        {
+            copies = await Task.Run(() => LocalBackup.ListNewestFirst(directory)
+                .Select(folder => (Folder: folder, Check: LocalBackup.Verify(folder)))
+                .Where(copy => copy.Check.IsOk)
+                .ToList());
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or SqliteException)
+        {
+            AppDialog.Show(this, Strings.BackupFailed, Strings.BackupSectionTitle, MessageBoxButton.OK, MessageBoxImage.Error);
+            return;
+        }
+
+        if (copies.Count == 0)
+        {
+            // A disabled menu item is easy for a screen reader to skip: say it in a dialog instead.
+            AppDialog.Show(this, Strings.BackupNoDailyCopies, Strings.BackupSectionTitle, MessageBoxButton.OK, MessageBoxImage.Information);
+            return;
+        }
 
         var menu = new ContextMenu { PlacementTarget = (UIElement)sender, Placement = System.Windows.Controls.Primitives.PlacementMode.Bottom };
-        if (copies.Count == 0)
-            menu.Items.Add(new MenuItem { Header = Strings.BackupNoDailyCopies, IsEnabled = false });
         foreach (var (folder, check) in copies)
         {
             var day = Path.GetFileName(folder);
             var item = new MenuItem { Header = Strings.BackupDailyItem(day, check.Manifest!.NoteCount) };
-            item.Click += (_, _) => RestoreFrom(folder, day);
+            item.Click += async (_, _) => await RestoreFromAsync(folder, day);
             menu.Items.Add(item);
         }
         menu.IsOpen = true;
     }
 
     /// <summary>Verifies, asks, and stages. <paramref name="whenText"/> is the day of a daily copy; null for a file (its own date is used).</summary>
-    private void RestoreFrom(string source, string? whenText)
+    private async Task RestoreFromAsync(string source, string? whenText)
     {
-        var check = LocalBackup.Verify(source);
+        BackupCheck check;
+        try
+        {
+            // Verifying extracts the database and checks it: off the UI thread, a large backup would freeze the window.
+            check = await Task.Run(() => LocalBackup.Verify(source));
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or SqliteException)
+        {
+            AppDialog.Show(this, Strings.BackupFailed, Strings.BackupSectionTitle, MessageBoxButton.OK, MessageBoxImage.Error);
+            return;
+        }
         if (!check.IsOk)
         {
             AppDialog.Show(this, Strings.BackupProblemText(check.Problem), Strings.BackupSectionTitle, MessageBoxButton.OK, MessageBoxImage.Warning);

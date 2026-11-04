@@ -1449,8 +1449,8 @@ public static class Strings
         "Meine Geräte", "Mes appareils", "Meus dispositivos", "I miei dispositivi", "マイデバイス", "我的设备") : name;
     public static string SyncProfileNameLabel => T("Name:", "Nombre:",
         "Name:", "Nom :", "Nome:", "Nome:", "名前:", "名称：");
-    public static string SyncCopyReportButton => T("Copy sync report", "Copiar informe de sync",
-        "Sync-Bericht kopieren", "Copier le rapport de synchro", "Copiar relatório de sincronização", "Copia rapporto di sincronizzazione", "同期レポートをコピー", "复制同步报告");
+    public static string SyncCopyReportButton => T("Copy sync report", "Copiar informe de sincronización",
+        "Synchronisierungsbericht kopieren", "Copier le rapport de synchronisation", "Copiar relatório de sincronização", "Copia rapporto di sincronizzazione", "同期レポートをコピー", "复制同步报告");
     public static string SyncCopyReportTooltip => T("Copies the last sync attempts (times, counts, errors) to paste into a message. It has no notes, keys or full addresses.",
         "Copia los últimos intentos de sincronización (horas, cifras, errores) para pegarlos en un mensaje. No lleva notas, claves ni direcciones completas.",
         "Kopiert die letzten Synchronisierungsversuche (Zeiten, Zahlen, Fehler) zum Einfügen in eine Nachricht. Enthält keine Notizen, Schlüssel oder vollständigen Adressen.",
@@ -1459,8 +1459,24 @@ public static class Strings
         "Copia gli ultimi tentativi di sincronizzazione (orari, numeri, errori) da incollare in un messaggio. Non contiene note, chiavi o indirizzi completi.",
         "直近の同期の試行(時刻、件数、エラー)をコピーします。メモ、鍵、完全なアドレスは含まれません。",
         "复制最近的同步尝试(时间、数量、错误),可粘贴到消息中。不含笔记、密钥或完整地址。");
-    public static string SyncReportCopiedStatus => T("Sync report copied.", "Informe de sync copiado.",
-        "Sync-Bericht kopiert.", "Rapport de synchro copié.", "Relatório de sincronização copiado.", "Rapporto di sincronizzazione copiato.", "同期レポートをコピーしました。", "已复制同步报告。");
+    public static string SyncReportCopiedStatus => T("Sync report copied.", "Informe de sincronización copiado.",
+        "Synchronisierungsbericht kopiert.", "Rapport de synchronisation copié.", "Relatório de sincronização copiado.", "Rapporto di sincronizzazione copiato.", "同期レポートをコピーしました。", "已复制同步报告。");
+    public static string SyncCopyReportFailed => T("Could not copy the report: another program is using the clipboard. Try again.",
+        "No se pudo copiar el informe: otro programa está usando el portapapeles. Inténtalo de nuevo.",
+        "Der Bericht konnte nicht kopiert werden: ein anderes Programm verwendet die Zwischenablage. Versuche es erneut.",
+        "Impossible de copier le rapport : un autre programme utilise le presse-papiers. Réessayez.",
+        "Não foi possível copiar o relatório: outro programa está usando a área de transferência. Tente de novo.",
+        "Impossibile copiare il rapporto: un altro programma sta usando gli appunti. Riprova.",
+        "レポートをコピーできませんでした。別のプログラムがクリップボードを使用しています。もう一度お試しください。",
+        "无法复制报告：另一个程序正在使用剪贴板。请重试。");
+    public static string ManagerRowKeysHint => T("Up and Down move between notes, Space selects, Enter opens, P pins to the top, T edits the tags.",
+        "Arriba y Abajo cambian de nota, Espacio selecciona, Intro abre, P fija arriba, T edita las etiquetas.",
+        "Pfeil nach oben und unten wechseln die Notiz, Leertaste wählt aus, Eingabe öffnet, P pinnt oben an, T bearbeitet die Tags.",
+        "Haut et Bas changent de note, Espace sélectionne, Entrée ouvre, P épingle en haut, T modifie les étiquettes.",
+        "Seta para cima e para baixo mudam de nota, Espaço seleciona, Enter abre, P fixa no topo, T edita as etiquetas.",
+        "Su e Giù cambiano nota, Spazio seleziona, Invio apre, P fissa in alto, T modifica le etichette.",
+        "上下キーでノートを移動、スペースで選択、Enterで開く、Pで先頭に固定、Tでタグを編集します。",
+        "上下键切换笔记，空格键选择，回车键打开，P 固定到顶部，T 编辑标签。");
     public static string SyncNewProfile => T("New", "Nuevo",
         "Neu", "Nouveau", "Novo", "Nuovo", "新規", "新建");
     public static string SyncDeleteProfile => T("Delete", "Eliminar",
@@ -2458,7 +2474,7 @@ public static class Strings
         : T($"Done: {created} note(s) imported, {failed} could not be saved.", $"Hecho: {created} nota(s) importada(s); {failed} no se pudieron guardar.", $"Fertig: {created} Notiz(en) importiert, {failed} konnten nicht gespeichert werden.", $"Terminé : {created} note(s) importée(s), {failed} n'ont pas pu être enregistrées.", $"Pronto: {created} nota(s) importada(s); {failed} não puderam ser salvas.", $"Fatto: {created} nota/e importata/e, {failed} non è stato possibile salvarle.", $"完了：{created} 件をインポートし、{failed} 件は保存できませんでした。", $"完成：已导入 {created} 条笔记，{failed} 条无法保存。");
 
     // --- Backup and restore (Settings > About) ---
-    public static string BackupSectionTitle => T("Backup", "Copia de seguridad", "Sicherung", "Sauvegarde", "Cópia de segurança", "Backup", "バックアップ", "备份");
+    public static string BackupSectionTitle => T("Backup", "Copia de seguridad", "Sicherung", "Sauvegarde", "Backup", "Backup", "バックアップ", "备份");
     public static string BackupAboutHint => T(
         "Saves all your notes and settings in one file. It only restores on this Windows account, because the notes are encrypted with a key tied to it. Aldune also keeps a daily copy for the last 7 days.",
         "Guarda todas tus notas y ajustes en un solo archivo. Solo se puede restaurar en esta cuenta de Windows, porque las notas van cifradas con una clave ligada a ella. Aldune además guarda una copia diaria de los últimos 7 días.",
@@ -2468,7 +2484,7 @@ public static class Strings
         "Salva tutte le note e le impostazioni in un unico file. Si può ripristinare solo su questo account Windows, perché le note sono cifrate con una chiave legata ad esso. Aldune conserva anche una copia giornaliera degli ultimi 7 giorni.",
         "すべてのノートと設定を 1 つのファイルに保存します。ノートはこの Windows アカウントに結び付いた鍵で暗号化されているため、このアカウントでのみ復元できます。Aldune は直近 7 日分の毎日のコピーも保管しています。",
         "将所有笔记和设置保存到一个文件中。由于笔记使用与此 Windows 账户绑定的密钥加密，只能在此账户上恢复。Aldune 还会保留最近 7 天的每日副本。");
-    public static string BackupNowButton => T("Back up now…", "Hacer copia ahora…", "Jetzt sichern…", "Sauvegarder maintenant…", "Fazer cópia agora…", "Esegui backup ora…", "今すぐバックアップ…", "立即备份…");
+    public static string BackupNowButton => T("Back up now…", "Hacer copia ahora…", "Jetzt sichern…", "Sauvegarder maintenant…", "Fazer backup agora…", "Esegui backup ora…", "今すぐバックアップ…", "立即备份…");
     public static string BackupRestoreFileButton => T("Restore from a file…", "Restaurar desde un archivo…", "Aus Datei wiederherstellen…", "Restaurer depuis un fichier…", "Restaurar de um arquivo…", "Ripristina da un file…", "ファイルから復元…", "从文件恢复…");
     public static string BackupRestoreDailyButton => T("Restore a daily copy…", "Restaurar una copia diaria…", "Tageskopie wiederherstellen…", "Restaurer une copie quotidienne…", "Restaurar uma cópia diária…", "Ripristina una copia giornaliera…", "毎日のコピーから復元…", "恢复每日副本…");
     public static string BackupFileFilter => T("Aldune backup (*.zip)|*.zip", "Copia de Aldune (*.zip)|*.zip", "Aldune-Sicherung (*.zip)|*.zip", "Sauvegarde Aldune (*.zip)|*.zip", "Cópia do Aldune (*.zip)|*.zip", "Backup di Aldune (*.zip)|*.zip", "Aldune バックアップ (*.zip)|*.zip", "Aldune 备份 (*.zip)|*.zip");
@@ -2481,7 +2497,7 @@ public static class Strings
         $"Sauvegarde enregistrée ({notes} notes) :\n{path}",
         $"Cópia salva ({notes} notas):\n{path}",
         $"Backup salvato ({notes} note):\n{path}",
-        $"バックアップを保存しました（ノート {notes} 件）:\n{path}",
+        $"バックアップを保存しました（ノート {notes} 件）：\n{path}",
         $"备份已保存（{notes} 条笔记）：\n{path}");
     public static string BackupFailed => T("The backup could not be written. Check that the folder is writable and there is free space.", "No se ha podido escribir la copia. Comprueba que la carpeta admite escritura y que hay espacio libre.", "Die Sicherung konnte nicht geschrieben werden. Prüfe, ob der Ordner beschreibbar ist und Speicherplatz frei ist.", "La sauvegarde n'a pas pu être écrite. Vérifiez que le dossier est accessible en écriture et qu'il reste de l'espace.", "Não foi possível gravar a cópia. Verifique se a pasta permite gravação e se há espaço livre.", "Impossibile scrivere il backup. Controlla che la cartella sia scrivibile e che ci sia spazio libero.", "バックアップを書き込めませんでした。フォルダーが書き込み可能で、空き容量があることを確認してください。", "无法写入备份。请检查文件夹是否可写以及是否有可用空间。");
     public static string BackupRestoreConfirm(string whenText, int notes) => T(
