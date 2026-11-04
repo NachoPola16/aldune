@@ -51,6 +51,8 @@ public partial class EdgeDockWindow : Window
     private int _noteCount;
     private DockViewKind? _lastView;
     private string? _lastTagFilter;
+    /// <summary>Set by <see cref="ReloadLookSoftly"/>: the next <see cref="Refresh"/> goes through the same soft swap as a change of view.</summary>
+    private bool _lookReload;
 
     /// <summary>Pantalla de destino elegida en el menú de "abrir todas", o <c>null</c> para la de este
     /// dock. Se reinicia cada vez que se abre el menú (ver <see cref="PopulateOpenAllMonitors"/>).</summary>
@@ -1056,12 +1058,25 @@ public partial class EdgeDockWindow : Window
 
     // --- Contenido ------------------------------------------------------------------------------
 
+    /// <summary>
+    /// A setting that changes how every tab is drawn (card shadow, corners, the colour strip, the view button, the look) is taken up without
+    /// closing and recreating the window, which showed as a flash: the strip fades out, the tabs are rebuilt with the new setting while nothing is
+    /// drawn and they come back through the same swap a change of view uses. Tabs read these settings when they are created, hence the rebuild.
+    /// </summary>
+    public void ReloadLookSoftly()
+    {
+        ViewButton.Visibility = _settings?.DockViewButton == true ? Visibility.Visible : Visibility.Collapsed;
+        _lookReload = true;
+        Refresh();
+    }
+
     public void Refresh()
     {
         var view = _settings?.DockView ?? DockViewKind.Active;
         var tagFilter = _settings?.DockTagFilter;
-        bool viewChanged = _lastView != view
+        bool viewChanged = _lookReload || _lastView != view
             || !string.Equals(_lastTagFilter, tagFilter, StringComparison.OrdinalIgnoreCase);
+        _lookReload = false;
         _lastView = view;
         _lastTagFilter = tagFilter;
         bool swap = viewChanged && IsVisible && _fanState.IsExpanded && SystemParameters.ClientAreaAnimation;

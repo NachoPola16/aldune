@@ -346,6 +346,16 @@ public sealed class AppCoordinator
 
     public void RebuildDocks() => RebuildDocksAction?.Invoke();
 
+    /// <summary>
+    /// For a setting that only changes how the tabs look (not where the dock is): every dock rebuilds its tabs behind a soft fade instead of being closed
+    /// and created again. A change of edge, alignment or screen still needs <see cref="RebuildDocks"/>: the window itself moves.
+    /// </summary>
+    public void ReloadDocksLook()
+    {
+        foreach (var dock in _docks) dock.ReloadLookSoftly();
+        _notesManagerWindow?.Refresh();
+    }
+
     /// <summary>Tras activar, arrastrar o redimensionar una nota: los docks vuelven a quedar por encima de ella.</summary>
     internal void RaiseDocksAboveNotes()
     {
@@ -1687,10 +1697,13 @@ public sealed class AppCoordinator
     }
 
     /// <summary>Tras cambiar una opción de aspecto de las notas: notas abiertas, docks y gestor.</summary>
-    public void RefreshNoteAppearance()
+    /// <param name="softDocks">The change is only in how things look: the docks take it up through <see cref="ReloadDocksLook"/> (a soft fade) instead of an
+    /// immediate rebuild of their tabs, which would cut that fade short.</param>
+    public void RefreshNoteAppearance(bool softDocks = false)
     {
         foreach (var window in _openNoteWindows.Values) window.ReapplyAppearance();
-        RefreshAll();
+        if (softDocks) ReloadDocksLook();
+        else RefreshAll();
     }
 
     /// <summary>

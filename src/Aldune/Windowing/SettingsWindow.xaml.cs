@@ -267,8 +267,8 @@ public partial class SettingsWindow : Window
         _settings.SquareCorners = SquareCornersCheck.IsChecked == true;
         _settingsService.Save(_settings);
         ThemeManager.ApplyShape(Application.Current, _settings.CornersSquare);
-        // Las pestañas del dock fijan su forma por código al crearse: hay que rehacerlas.
-        _coordinator?.RebuildDocks();
+        // Las pestañas del dock fijan su forma por código al crearse: hay que rehacerlas (con el fundido suave, sin recrear la ventana).
+        _coordinator?.ReloadDocksLook();
     }
 
     /// <summary>
@@ -296,8 +296,7 @@ public partial class SettingsWindow : Window
         UpdateNoteColorStripeUi();
         ThemeManager.ApplySkin(Application.Current, AppSkin.For(_settings.Appearance, _settings.NoteColorAsStripe));
         // Las ventanas de nota se repintan con RefreshNoteAppearance; las pestañas del dock, al rehacerlas.
-        _coordinator?.RefreshNoteAppearance();
-        _coordinator?.RebuildDocks();
+        _coordinator?.RefreshNoteAppearance(softDocks: true);
     }
 
     private void OnPlainNoteWindowToggled(object sender, RoutedEventArgs e)
@@ -862,15 +861,15 @@ public partial class SettingsWindow : Window
     {
         _settings.DockCardShadow = DockCardShadowCheck.IsChecked == true;
         _settingsService.Save(_settings);
-        // Cada pestaña lleva su sombra en la plantilla: se rehacen para que OnTabLoaded la quite o la ponga.
-        _coordinator?.RebuildDocks();
+        // Cada pestaña lleva su sombra en la plantilla: se rehacen para que OnTabLoaded la quite o la ponga (con el fundido suave).
+        _coordinator?.ReloadDocksLook();
     }
 
     private void OnDockViewButtonToggled(object sender, RoutedEventArgs e)
     {
         _settings.DockViewButton = DockViewButtonCheck.IsChecked == true;
         _settingsService.Save(_settings);
-        _coordinator?.RebuildDocks();
+        _coordinator?.ReloadDocksLook();
     }
 
     private void OnShowNotePreviewToggled(object sender, RoutedEventArgs e)
@@ -878,7 +877,7 @@ public partial class SettingsWindow : Window
         _settings.ShowNotePreview = ShowNotePreviewCheck.IsChecked == true;
         _settingsService.Save(_settings);
         NoteSnippetConverter.Enabled = _settings.ShowNotePreview;
-        _coordinator?.RefreshAll();
+        _coordinator?.ReloadDocksLook();
     }
 
     // --- Sonidos -------------------------------------------------------------------------------------
@@ -2226,9 +2225,8 @@ public partial class SettingsWindow : Window
         SquareCornersCheck.IsChecked = _settings.CornersSquare;
         UpdateNoteColorStripeUi();
         SyncSignalCheck.IsChecked = _settings.SyncSignalVisible;
-        // Esquinas y pestañas espejadas se fijan al crear cada pestaña: hay que rehacer el dock.
-        _coordinator?.RebuildDocks();
-        _coordinator?.RefreshNoteAppearance();
+        // Esquinas y pestañas espejadas se fijan al crear cada pestaña: hay que rehacer las pestañas (con el fundido suave, sin recrear la ventana).
+        _coordinator?.RefreshNoteAppearance(softDocks: true);
         PopulateAspectColors();
     }
 
