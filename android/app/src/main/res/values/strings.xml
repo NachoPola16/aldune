@@ -654,4 +654,6 @@
     <string name="whatsnew_400_import">Bring in your notes from Google Keep, Evernote or text files (Markdown or .txt).</string>
     <string name="whatsnew_400_restore">A note you restore from a backup is no longer deleted again by a sync from another device.</string>
     <string name="whatsnew_400_markdown">Markdown as you type: bold, italic, headings, code and links are drawn in the note (switch it off in Settings).</string>
+    <string name="whatsnew_400_share">Share the text of a note with any app from the editor menu.</string>
+    <string name="whatsnew_400_battery">Reminders: if your phone puts Aldune to sleep, Settings now says so and takes you to where the restriction is lifted.</string>
 </resources>

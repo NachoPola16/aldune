@@ -654,4 +654,6 @@
     <string name="whatsnew_400_import">Hole deine Notizen aus Google Keep, Evernote oder Textdateien (Markdown oder .txt).</string>
     <string name="whatsnew_400_restore">Eine Notiz, die du aus einer Sicherung wiederherstellst, wird durch eine Synchronisierung von einem anderen Gerät nicht mehr erneut gelöscht.</string>
     <string name="whatsnew_400_markdown">Markdown beim Tippen: Fett, Kursiv, Überschriften, Code und Links werden in der Notiz dargestellt (in den Einstellungen abschaltbar).</string>
+    <string name="whatsnew_400_share">Teile den Text einer Notiz über das Editor-Menü mit jeder App.</string>
+    <string name="whatsnew_400_battery">Erinnerungen: Schickt dein Handy Aldune schlafen, sagen es dir die Einstellungen jetzt und führen dich dorthin, wo du die Einschränkung aufhebst.</string>
 </resources>

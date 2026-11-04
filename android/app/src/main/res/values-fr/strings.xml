@@ -654,4 +654,6 @@
     <string name="whatsnew_400_import">Importez vos notes depuis Google Keep, Evernote ou des fichiers texte (Markdown ou .txt).</string>
     <string name="whatsnew_400_restore">Une note restaurée depuis une sauvegarde n\'est plus supprimée de nouveau par une synchronisation depuis un autre appareil.</string>
     <string name="whatsnew_400_markdown">Markdown pendant la saisie : le gras, l\'italique, les titres, le code et les liens s\'affichent dans la note (désactivable dans les réglages).</string>
+    <string name="whatsnew_400_share">Partagez le texte d’une note avec n’importe quelle appli depuis le menu de l’éditeur.</string>
+    <string name="whatsnew_400_battery">Rappels : si votre téléphone met Aldune en veille, les Réglages vous le disent et vous mènent à l’endroit où lever la restriction.</string>
 </resources>

@@ -654,4 +654,6 @@
     <string name="whatsnew_400_import">Trae tus notas de Google Keep, Evernote o de archivos de texto (Markdown o .txt).</string>
     <string name="whatsnew_400_restore">Una nota que restauras desde una copia ya no se vuelve a borrar por una sincronización desde otro dispositivo.</string>
     <string name="whatsnew_400_markdown">Markdown al escribir: la negrita, la cursiva, los títulos, el código y los enlaces se dibujan en la nota (se desactiva en Ajustes).</string>
+    <string name="whatsnew_400_share">Comparte el texto de una nota con cualquier app desde el menú del editor.</string>
+    <string name="whatsnew_400_battery">Recordatorios: si tu móvil duerme Aldune, Ajustes ahora te lo dice y te lleva a donde quitar la restricción.</string>
 </resources>

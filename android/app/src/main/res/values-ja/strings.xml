@@ -654,4 +654,6 @@
     <string name="whatsnew_400_import">Google Keep、Evernote、テキストファイル（Markdown または .txt）からノートを取り込めます。</string>
     <string name="whatsnew_400_restore">バックアップから復元したノートが、別のデバイスからの同期で再び削除されることはなくなりました。</string>
     <string name="whatsnew_400_markdown">入力中の Markdown 表示: 太字、斜体、見出し、コード、リンクがノート上に表示されます（設定でオフにできます）。</string>
+    <string name="whatsnew_400_share">エディターのメニューから、ノートのテキストを任意のアプリに共有できます。</string>
+    <string name="whatsnew_400_battery">リマインダー: スマートフォンが Aldune を休止させている場合、設定でお知らせし、制限を解除する画面へご案内します。</string>
 </resources>

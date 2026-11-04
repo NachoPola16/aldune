@@ -654,4 +654,6 @@
     <string name="whatsnew_400_import">Porta le tue note da Google Keep, Evernote o da file di testo (Markdown o .txt).</string>
     <string name="whatsnew_400_restore">Una nota ripristinata da un backup non viene più eliminata di nuovo da una sincronizzazione da un altro dispositivo.</string>
     <string name="whatsnew_400_markdown">Markdown mentre scrivi: grassetto, corsivo, titoli, codice e link vengono disegnati nella nota (si disattiva nelle impostazioni).</string>
+    <string name="whatsnew_400_share">Condividi il testo di una nota con qualsiasi app dal menu dell\'editor.</string>
+    <string name="whatsnew_400_battery">Promemoria: se il telefono mette in pausa Aldune, le Impostazioni ora te lo dicono e ti portano dove rimuovere la restrizione.</string>
 </resources>

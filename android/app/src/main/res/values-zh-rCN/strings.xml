@@ -654,4 +654,6 @@
     <string name="whatsnew_400_import">可从 Google Keep、Evernote 或文本文件（Markdown 或 .txt）导入笔记。</string>
     <string name="whatsnew_400_restore">从备份还原的笔记不会再被其他设备的同步再次删除。</string>
     <string name="whatsnew_400_markdown">输入时显示 Markdown：粗体、斜体、标题、代码和链接会在便笺中绘制（可在设置中关闭）。</string>
+    <string name="whatsnew_400_share">可在编辑器菜单中把笔记文本分享给任何应用。</string>
+    <string name="whatsnew_400_battery">提醒：如果手机让 Aldune 休眠，设置现在会提示你，并带你前往解除限制的位置。</string>
 </resources>
