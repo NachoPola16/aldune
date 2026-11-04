@@ -664,16 +664,12 @@
                                         <ColumnDefinition Width="*" />
                                     </Grid.ColumnDefinitions>
 
-                                    <!-- With "note colour only on the edge" the row keeps the app's surface and this is the colour: a stripe on the left, like the dock cards. It covers the 1 px rim so the colour reaches the row's own corner (inside the rim it left a grey hairline). -->
-                                    <Border Grid.ColumnSpan="2" HorizontalAlignment="Left" Width="{Binding CornerRadius, RelativeSource={RelativeSource AncestorType=Border}, Converter={StaticResource StripeWidthConverter}}" Margin="-13,-9,0,-9" CornerRadius="{Binding CornerRadius, RelativeSource={RelativeSource AncestorType=Border}, Converter={StaticResource LeftCornersConverter}}"
-                                            Background="{Binding Note, Converter={StaticResource NoteFaceConverter}, ConverterParameter=Accent}"
-                                            Visibility="{Binding Note.Color, Converter={StaticResource ManagerRowStripeVisibilityConverter}}"
-                                            IsHitTestVisible="False" />
-                                    <!-- The stripe is as wide as the row's corner radius so that its outer edge is the same circle as the row's corner (a 5 px wide
-                                         piece cut the corner short); this covers what is beyond 5 px with the row's surface, inside the 1 px rim. -->
-                                    <Border Grid.ColumnSpan="2" HorizontalAlignment="Left" Margin="-8,-8,0,-8"
-                                            Width="{Binding CornerRadius, RelativeSource={RelativeSource AncestorType=Border}, Converter={StaticResource StripeWidthConverter}, ConverterParameter=cover}"
-                                            Background="{Binding Note.Color, Converter={StaticResource ManagerRowFaceConverter}}"
+                                    <!-- With "note colour only on the edge" the row keeps the app's surface and this is the colour: a stripe on the left, like the dock cards. It is built
+                                         like theirs: a layer over the whole row with the row's own corner radius whose border is 3 px on the left only, so the stripe
+                                         curves with the corner and tapers to nothing at the top and bottom (two separate pieces met the 1 px outline in a point). -->
+                                    <Border Grid.ColumnSpan="2" Margin="-13,-9,-13,-9" BorderThickness="4,0,0,0"
+                                            CornerRadius="{Binding CornerRadius, RelativeSource={RelativeSource AncestorType=Border}}"
+                                            BorderBrush="{Binding Note, Converter={StaticResource NoteFaceConverter}, ConverterParameter=Accent}"
                                             Visibility="{Binding Note.Color, Converter={StaticResource ManagerRowStripeVisibilityConverter}}"
                                             IsHitTestVisible="False" />
 
