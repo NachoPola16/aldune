@@ -197,8 +197,15 @@ object MarkdownLive {
         flush(o, plainFrom, end, style)
     }
 
+    // The set the Windows scanner gets from char.IsWhiteSpace: Unicode space, line and paragraph separators (the no-break spaces too), the
+    // controls U+0009-U+000D and NEL. Kotlin's own isWhitespace differs (it skips the no-break spaces and accepts U+001C-U+001F), so the same
+    // note could be styled differently on the two platforms.
+    private fun isSpace(c: Char): Boolean =
+        c.category.let { it == CharCategory.SPACE_SEPARATOR || it == CharCategory.LINE_SEPARATOR || it == CharCategory.PARAGRAPH_SEPARATOR } ||
+            c.code in 0x09..0x0D || c.code == 0x85
+
     // ASCII punctuation and symbols, as in CommonMark (the backtick and the tilde are symbols, not punctuation, for the platform).
-    private fun isEscapable(c: Char): Boolean = c.code < 128 && !c.isLetterOrDigit() && !c.isWhitespace() && !c.isISOControl()
+    private fun isEscapable(c: Char): Boolean = c.code < 128 && !c.isLetterOrDigit() && !isSpace(c) && !c.isISOControl()
 
     private fun run(t: String, i: Int, end: Int): Int {
         var n = 1
@@ -219,7 +226,7 @@ object MarkdownLive {
 
     // An opener is followed by something visible; an underscore inside a word (snake_case) is not emphasis.
     private fun canOpen(t: String, c: Char, i: Int, n: Int, end: Int): Boolean {
-        if (i + n >= end || t[i + n].isWhitespace()) return false
+        if (i + n >= end || isSpace(t[i + n])) return false
         return c != '_' || i == 0 || !t[i - 1].isLetterOrDigit()
     }
 
@@ -238,7 +245,7 @@ object MarkdownLive {
             if (t[p] != c) { p++; continue }
 
             val m = run(t, p, end)
-            if (m == n && p > from && !t[p - 1].isWhitespace() && (c != '_' || p + m >= end || !t[p + m].isLetterOrDigit())) return p
+            if (m == n && p > from && !isSpace(t[p - 1]) && (c != '_' || p + m >= end || !t[p + m].isLetterOrDigit())) return p
             p += m
         }
         return -1
@@ -251,7 +258,7 @@ object MarkdownLive {
         if (j >= end || t[j] != ']' || j == i + 1 || j + 2 >= end || t[j + 1] != '(') return null
 
         var k = j + 2
-        while (k < end && t[k] != ')' && !t[k].isWhitespace()) k++
+        while (k < end && t[k] != ')' && !isSpace(t[k])) k++
         if (k >= end || t[k] != ')' || k == j + 2) return null
         return j to k + 1
     }

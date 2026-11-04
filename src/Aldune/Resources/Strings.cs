@@ -1192,6 +1192,9 @@ public static class Strings
         $"{name}, {index} sur {count}", $"{name}, {index} de {count}", $"{name}, {index} di {count}", $"{name}、{index} / {count}", $"{name}，第 {index} 条，共 {count} 条");
     public static string QuickFindCountAnnouncement(int count) => T($"Notes found: {count}", $"Notas encontradas: {count}", $"Gefundene Notizen: {count}",
         $"Notes trouvées : {count}", $"Notas encontradas: {count}", $"Note trovate: {count}", $"見つかったメモ: {count}", $"找到的便笺：{count}");
+    // Shown as a tooltip while Ctrl is held over a link in a note, so the person sees where Ctrl+click goes before it opens (as the Open link chip does on Android).
+    public static string OpenLinkHostHint(string host) => T($"Ctrl+click to open {host}", $"Ctrl+clic para abrir {host}", $"Strg+Klick öffnet {host}", $"Ctrl+clic pour ouvrir {host}",
+        $"Ctrl+clique para abrir {host}", $"Ctrl+clic per aprire {host}", $"Ctrl+クリックで {host} を開く", $"Ctrl+单击打开 {host}");
     public static string QuickFindCopyFailed => T("Could not copy: another program is using the clipboard.", "No se pudo copiar: otro programa está usando el portapapeles.",
         "Kopieren nicht möglich: Ein anderes Programm verwendet die Zwischenablage.",
         "Copie impossible : un autre programme utilise le presse-papiers.",

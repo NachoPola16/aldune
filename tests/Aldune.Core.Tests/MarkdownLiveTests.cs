@@ -175,4 +175,15 @@ public class MarkdownLiveTests
         string text = "[a](https://x.y)" + new string('x', MarkdownLive.MaxNoteLength);
         Assert.Null(MarkdownLive.LinkUrlAt(text, 2));
     }
+
+    // The same characters count as space in both scanners (the C# one uses char.IsWhiteSpace): no-break space and NEL are space, the
+    // C0 separators U+001C-U+001F are not (Kotlin's isWhitespace says they are, so the port spells the set out).
+    [Fact]
+    public void Whitespace_IsTheSameSetOnBothPlatforms()
+    {
+        string nbsp = "**a" + (char)0xA0 + "**", nel = "**a" + (char)0x85 + "**", fs = "**a" + (char)0x1C + "**";
+        Assert.Equal(nbsp + "[]", Show(nbsp));
+        Assert.Equal(nel + "[]", Show(nel));
+        Assert.Equal("**[m]a" + (char)0x1C + "[b]**[m]", Show(fs));
+    }
 }

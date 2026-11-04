@@ -122,4 +122,13 @@ class MarkdownLiveTest {
 
     @Test fun `linkUrlAt ignores notes over the size cap`() =
         assertNull(MarkdownLive.linkUrlAt("[a](https://x.y)" + "x".repeat(MarkdownLive.MAX_NOTE_LENGTH), 2))
+
+    @Test fun `whitespace is the same set as on Windows`() {
+        val nbsp = "**a" + 0xA0.toChar() + "**"
+        val nel = "**a" + 0x85.toChar() + "**"
+        val fs = "**a" + 0x1C.toChar() + "**"
+        assertEquals("$nbsp[]", show(nbsp))
+        assertEquals("$nel[]", show(nel))
+        assertEquals("**[m]a" + 0x1C.toChar() + "[b]**[m]", show(fs))
+    }
 }

@@ -1525,8 +1525,22 @@ public partial class NoteWindow : Window
         {
             TaskHoverHighlight.Visibility = Visibility.Collapsed;
             // With Ctrl held, a link under the pointer shows the hand: that is the hint that Ctrl+click opens it.
-            TextBody.Cursor = Keyboard.Modifiers == ModifierKeys.Control && LinkUriAt(position) is not null ? Cursors.Hand : Cursors.IBeam;
+            var hoveredLink = Keyboard.Modifiers == ModifierKeys.Control ? LinkUriAt(position) : null;
+            TextBody.Cursor = hoveredLink is not null ? Cursors.Hand : Cursors.IBeam;
+            ShowLinkHost(hoveredLink);
         }
+    }
+
+    /// <summary>
+    /// While Ctrl is held over a link, a tooltip names the site it opens. A Markdown link can show one thing and go to another
+    /// ([bank.com](https://elsewhere.example)), so the destination is said before the click, not after.
+    /// </summary>
+    private void ShowLinkHost(Uri? link)
+    {
+        string? hint = link is null ? null : Strings.OpenLinkHostHint(link.Host);
+        if (Equals(TextBody.ToolTip, hint)) return;
+        TextBody.ToolTip = hint;
+        if (hint is not null) ToolTipService.SetInitialShowDelay(TextBody, 150);
     }
 
     private void OnBodyMouseMove(object sender, MouseEventArgs e)
