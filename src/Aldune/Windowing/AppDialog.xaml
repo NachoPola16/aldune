@@ -38,7 +38,14 @@
     </Window.Resources>
 
     <Border BorderBrush="{DynamicResource AlduneBorderSubtleBrush}" BorderThickness="1" Padding="20,18,20,16">
-        <StackPanel>
+        <Grid>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="*" />
+                <RowDefinition Height="Auto" />
+            </Grid.RowDefinitions>
+            <!-- A long message (What's new lists every version) scrolls inside the window instead of making it taller than the screen, which
+                 pushed the buttons off it. The window's MaxHeight is set from the work area in the code-behind. -->
+            <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" Focusable="False">
             <Grid>
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="Auto" />
@@ -53,7 +60,8 @@
                                LineHeight="19" Margin="0,8,0,0" />
                 </StackPanel>
             </Grid>
-            <StackPanel x:Name="ButtonsPanel" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,20,0,0" />
-        </StackPanel>
+            </ScrollViewer>
+            <StackPanel x:Name="ButtonsPanel" Grid.Row="1" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,20,0,0" />
+        </Grid>
     </Border>
 </Window>
