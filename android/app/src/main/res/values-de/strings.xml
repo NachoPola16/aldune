@@ -370,6 +370,8 @@
     <string name="welcome_ok">Verstanden</string>
     <string name="large_checkboxes">Größere Aufgabenkästchen</string>
     <string name="large_checkboxes_hint">Vergrößert die Kästchen, damit sie leichter zu treffen sind.</string>
+    <string name="justify_text">Text im Blocksatz mit Silbentrennung</string>
+    <string name="justify_text_hint">Fließtext reicht bis an beide Ränder, lange Wörter werden an Silben getrennt. Listen und kurze Zeilen werden nicht gedehnt.</string>
     <string name="live_markdown">Markdown-Formatierung beim Tippen anzeigen</string>
     <string name="live_markdown_hint">Fett, kursiv, Überschriften, Code und Links werden beim Schreiben dargestellt. Die Zeichen bleiben im Text, nur abgeblendet, und die Notiz wird nicht verändert.</string>
     <string name="sync_paste">Einfügen</string>

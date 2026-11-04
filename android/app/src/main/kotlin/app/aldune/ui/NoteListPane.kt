@@ -1359,17 +1359,20 @@ private fun currentVersionName(context: android.content.Context): String =
 
 @Composable
 private fun NoBackupNotice(message: Int, onSettings: () -> Unit, onDismiss: () -> Unit) {
+    // One row (the text, and a close button): the whole notice opens Settings. It used to be the text plus a row of two buttons, a quarter of the
+    // screen, which mattered most with the keyboard open in the search.
+    val openLabel = stringResource(R.string.settings)
     androidx.compose.material3.Surface(
-        Modifier.fillMaxWidth().padding(start = 16.dp, end = 16.dp, top = 4.dp, bottom = NOTICE_GAP),
+        Modifier.fillMaxWidth().padding(start = 16.dp, end = 16.dp, top = 4.dp, bottom = NOTICE_GAP)
+            .clip(MaterialTheme.shapes.medium).clickable(onClickLabel = openLabel, onClick = onSettings),
         shape = MaterialTheme.shapes.medium, color = MaterialTheme.colorScheme.surfaceVariant,
     ) {
-        Column(Modifier.padding(start = 12.dp, end = 4.dp, top = 8.dp, bottom = 0.dp)) {
-            Text(stringResource(message), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
-                // Botones de texto con menos relleno: el alto táctil sigue siendo el mínimo, pero el aviso deja de ocupar media pantalla.
-                TextButton(onClick = onDismiss, contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 12.dp)) { Text(stringResource(R.string.no_backup_dismiss)) }
-                TextButton(onClick = onSettings, contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 12.dp)) { Text(stringResource(R.string.settings)) }
-            }
+        Row(Modifier.padding(start = 12.dp), verticalAlignment = Alignment.CenterVertically) {
+            Text(
+                stringResource(message), Modifier.weight(1f).padding(vertical = 8.dp),
+                style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+            IconButton(onClick = onDismiss) { Icon(Icons.Filled.Close, contentDescription = stringResource(R.string.no_backup_dismiss), Modifier.size(20.dp)) }
         }
     }
 }

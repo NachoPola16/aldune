@@ -370,6 +370,8 @@
     <string name="welcome_ok">知道了</string>
     <string name="large_checkboxes">更大的任务复选框</string>
     <string name="large_checkboxes_hint">放大复选框，更容易点按。</string>
+    <string name="justify_text">两端对齐文本并断词</string>
+    <string name="justify_text_hint">正文延伸到两侧边缘，长单词按音节断开。列表和短行不会被拉伸。</string>
     <string name="live_markdown">输入时显示 Markdown 格式</string>
     <string name="live_markdown_hint">书写时绘制粗体、斜体、标题、代码和链接。符号仍保留在文本中，只是变淡，便笺内容不会被修改。</string>
     <string name="sync_paste">粘贴</string>

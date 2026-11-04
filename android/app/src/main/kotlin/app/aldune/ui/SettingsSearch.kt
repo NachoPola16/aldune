@@ -104,6 +104,7 @@ internal val SETTINGS_INDEX: List<SettingsEntry> = listOf(
     SettingsEntry(2, R.string.keyboard_on_open),
     SettingsEntry(2, R.string.live_markdown, R.string.live_markdown_hint),
     SettingsEntry(2, R.string.large_checkboxes, R.string.large_checkboxes_hint),
+    SettingsEntry(2, R.string.justify_text, R.string.justify_text_hint),
     SettingsEntry(2, R.string.reorder_on_check, R.string.reorder_on_check_hint),
     SettingsEntry(2, R.string.hide_done_tasks, R.string.hide_done_tasks_hint),
     SettingsEntry(2, R.string.hide_done_after),

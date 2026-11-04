@@ -370,6 +370,8 @@
     <string name="welcome_ok">Entendi</string>
     <string name="large_checkboxes">Caixas de tarefa maiores</string>
     <string name="large_checkboxes_hint">Aumenta as caixas para acertá-las com mais facilidade.</string>
+    <string name="justify_text">Justificar o texto e separar palavras</string>
+    <string name="justify_text_hint">O texto corrido vai até as duas margens e as palavras longas são divididas por sílabas. Listas e linhas curtas não são esticadas.</string>
     <string name="live_markdown">Mostrar a formatação Markdown ao escrever</string>
     <string name="live_markdown_hint">Negrito, itálico, títulos, código e links aparecem desenhados enquanto você escreve. Os caracteres continuam no texto, apenas atenuados, e a nota não é alterada.</string>
     <string name="sync_paste">Colar</string>

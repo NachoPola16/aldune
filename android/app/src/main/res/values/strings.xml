@@ -370,6 +370,8 @@
     <string name="welcome_ok">Got it</string>
     <string name="large_checkboxes">Larger task checkboxes</string>
     <string name="large_checkboxes_hint">Makes the boxes bigger, so they are easier to tap.</string>
+    <string name="justify_text">Justify text and hyphenate words</string>
+    <string name="justify_text_hint">Running text reaches both edges and long words split at syllables. Lists and short lines are not stretched.</string>
     <string name="live_markdown">Show Markdown formatting as you type</string>
     <string name="live_markdown_hint">Bold, italic, headings, code and links are drawn while you write. The characters stay in the text, only dimmed, and the note is not changed.</string>
     <string name="sync_paste">Paste</string>

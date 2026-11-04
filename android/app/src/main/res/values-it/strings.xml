@@ -370,6 +370,8 @@
     <string name="welcome_ok">Ho capito</string>
     <string name="large_checkboxes">Caselle delle attività più grandi</string>
     <string name="large_checkboxes_hint">Ingrandisce le caselle, così sono più facili da toccare.</string>
+    <string name="justify_text">Giustifica il testo e sillaba le parole</string>
+    <string name="justify_text_hint">Il testo corrente arriva a entrambi i bordi e le parole lunghe vanno a capo per sillabe. Elenchi e righe brevi non vengono allungati.</string>
     <string name="live_markdown">Mostra la formattazione Markdown mentre scrivi</string>
     <string name="live_markdown_hint">Grassetto, corsivo, titoli, codice e link vengono disegnati mentre scrivi. I caratteri restano nel testo, solo attenuati, e la nota non viene modificata.</string>
     <string name="sync_paste">Incolla</string>

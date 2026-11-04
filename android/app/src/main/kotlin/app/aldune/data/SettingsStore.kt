@@ -28,6 +28,8 @@ data class AppSettings(
     val reorderOnCheck: Boolean = false,
     /** Casillas de tarea un 25 % mayores (fuente AlduneCheckLarge). Solo cambia cómo se dibujan. En una instalación nueva viene activado (ver `load`). */
     val largeCheckboxes: Boolean = false,
+    /** Running text justified to both edges, with words split at syllables (the system's hyphenation dictionary). Off by default; editor only. */
+    val justifyText: Boolean = false,
     /** Bold, italic, headings, code and links drawn as Markdown while editing; the text itself is never changed. On by default. */
     val liveMarkdown: Boolean = true,
     /** The note editor uses the app's own background even when the notes are filled with their colour in the list. */
@@ -170,6 +172,7 @@ class SettingsStore(context: Context) {
             plainEditor = prefs.getBoolean(PLAIN_EDITOR, false),
             liveMarkdown = prefs.getBoolean(LIVE_MARKDOWN, true),
             largeCheckboxes = if (prefs.contains(LARGE_CHECKBOXES)) prefs.getBoolean(LARGE_CHECKBOXES, false) else prefs.all.isEmpty(),
+            justifyText = prefs.getBoolean(JUSTIFY_TEXT, d.justifyText),
             darkNotes = prefs.getBoolean(DARK_NOTES, d.darkNotes),
             noteThemeId = prefs.getString(NOTE_THEME_ID, d.noteThemeId) ?: d.noteThemeId,
             captureNotification = prefs.getBoolean(CAPTURE_NOTIFICATION, d.captureNotification),
@@ -267,6 +270,7 @@ class SettingsStore(context: Context) {
             .putInt(TRASH_DAYS, settings.trashDays)
             .putBoolean(REORDER_ON_CHECK, settings.reorderOnCheck)
             .putBoolean(LARGE_CHECKBOXES, settings.largeCheckboxes)
+            .putBoolean(JUSTIFY_TEXT, settings.justifyText)
             .putBoolean(PLAIN_EDITOR, settings.plainEditor)
             .putBoolean(LIVE_MARKDOWN, settings.liveMarkdown)
             .putBoolean(DARK_NOTES, settings.darkNotes)
@@ -327,7 +331,7 @@ class SettingsStore(context: Context) {
         val PORTABLE: Map<String, Char> = mapOf(
             APPEARANCE to 'i', TRASH_DAYS to 'i', NEW_BUTTON_SHAPE to 'i', LIST_ORDER to 'i', COLOR_RULE to 'i', KEYBOARD_ON_OPEN to 'i',
             HIDE_DONE_AFTER_HOURS to 'i', SOUND_VOLUME to 'i',
-            REORDER_ON_CHECK to 'b', LARGE_CHECKBOXES to 'b', PLAIN_EDITOR to 'b', DARK_NOTES to 'b', WIDGET_PREVIEW to 'b', WIDGET_TASKS to 'b',
+            REORDER_ON_CHECK to 'b', LARGE_CHECKBOXES to 'b', JUSTIFY_TEXT to 'b', PLAIN_EDITOR to 'b', DARK_NOTES to 'b', WIDGET_PREVIEW to 'b', WIDGET_TASKS to 'b',
             FILL_NOTE_COLOR to 'b', SQUARE_CORNERS to 'b', SHOW_SYNC_SIGNAL to 'b', REMINDER_INCLUDES_TASKS to 'b', SYNC_IN_BACKGROUND to 'b',
             HIDE_DONE_TASKS to 'b', SHOW_TAG_HASH to 'b', COMPACT_SETTINGS_TABS to 'b', SETTINGS_TABS_AT_BOTTOM to 'b', GROUP_BY_TAG to 'b',
             SIMPLIFIED_MODE to 'b', SOUNDS_ENABLED to 'b', CHECK_UPDATES to 'b',
@@ -352,6 +356,7 @@ class SettingsStore(context: Context) {
         const val TRASH_DAYS = "trashDays"
         const val REORDER_ON_CHECK = "reorderOnCheck"
         const val LARGE_CHECKBOXES = "largeCheckboxes"
+        const val JUSTIFY_TEXT = "justifyText"
         const val PLAIN_EDITOR = "plainEditor"
         const val LIVE_MARKDOWN = "liveMarkdown"
         const val DARK_NOTES = "darkNotes"

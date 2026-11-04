@@ -932,7 +932,15 @@ fun NoteEditorPane(key: String, viewModel: NotesViewModel, onBack: () -> Unit, s
                 color = ink,
                 lineHeight = if (hasTasks && settings.largeCheckboxes && !(look.telecomGrid || look.paper == AspectSkin.Paper.RULED || look.paper == AspectSkin.Paper.GRID)) bodyStyle.lineHeight * 1.15f else bodyStyle.lineHeight,
                 textIndent = if (hasTasks && !plainWraps) TextIndent(firstLine = 0.sp, restLine = taskIndent) else null,
-            ),
+            ).let { style ->
+                // Optional: justified running text with syllable hyphenation. Only wrapped lines stretch, so lists, tasks and short lines keep their
+                // shape; the hyphenation dictionary is the system's (it follows the app language).
+                if (settings.justifyText) style.copy(
+                    textAlign = androidx.compose.ui.text.style.TextAlign.Justify,
+                    hyphens = androidx.compose.ui.text.style.Hyphens.Auto,
+                    lineBreak = androidx.compose.ui.text.style.LineBreak.Paragraph,
+                ) else style
+            },
             // The accent when it can be seen on the page, the ink of the note when it cannot: the accent on a yellow or a pink note was lost.
             cursorBrush = SolidColor(MaterialTheme.colorScheme.primary.let { accent ->
                 val page = faceHex?.let { noteFace(it) } ?: MaterialTheme.colorScheme.background
