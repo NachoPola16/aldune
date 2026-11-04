@@ -1060,7 +1060,7 @@ class NotesViewModel(application: Application) : AndroidViewModel(application) {
                             return@withLock
                         }
                     }
-                    val (done, written) = svc.restoreBackup(content.notes, mode) { id -> ready?.database?.notes()?.deleteTombstone(id) }
+                    val (done, written) = svc.restoreBackup(content.notes, mode, syncConnected = ready?.sync?.profiles?.value?.isNotEmpty() == true) { id -> ready?.database?.notes()?.deleteTombstone(id) }
                     result = done
                     ready?.reminders?.let { reminders ->
                         if (mode == RestoreMode.REPLACE_ALL) reminders.all().forEach { reminders.clear(it.noteId) }

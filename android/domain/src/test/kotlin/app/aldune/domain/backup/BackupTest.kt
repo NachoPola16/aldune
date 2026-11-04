@@ -322,4 +322,20 @@ class BackupTest {
         fx.service.restoreBackup(listOf(n), RestoreMode.ADD_MISSING)
         assertEquals(n.updatedAt, fx.stored("b").updatedAt)
     }
+
+    @Test
+    fun `with sync connected a restored note is dated now so a deletion the server holds cannot delete it again`() {
+        val fx = Fixture()
+        val incoming = note("b", "restored")
+        fx.service.restoreBackup(listOf(incoming), RestoreMode.ADD_MISSING, syncConnected = true)
+        assertEquals(fx.clock.now(), fx.stored("b").updatedAt)
+    }
+
+    @Test
+    fun `without sync a restored note keeps its own date`() {
+        val fx = Fixture()
+        val incoming = note("b", "restored")
+        fx.service.restoreBackup(listOf(incoming), RestoreMode.ADD_MISSING, syncConnected = false)
+        assertEquals(incoming.updatedAt, fx.stored("b").updatedAt)
+    }
 }

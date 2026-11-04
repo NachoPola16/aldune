@@ -108,7 +108,7 @@ class NoteService(
      * Returns the ids of the notes that were written, so the caller can restore their reminders.
      */
     fun restoreBackup(
-        notes: List<Note>, mode: RestoreMode, clearTombstone: (String) -> Unit = {},
+        notes: List<Note>, mode: RestoreMode, syncConnected: Boolean = false, clearTombstone: (String) -> Unit = {},
     ): Pair<RestoreResult, Set<String>> = synchronized(lock) {
         val now = clock.now()
         val here = store.all().associateBy { it.id }
@@ -127,8 +127,10 @@ class NoteService(
             val current = here[note.id]
             when {
                 current == null -> {
-                    val revived = note.id in tombstoned
-                    // A revived note keeps its old date only if nobody deleted it; otherwise a newer tombstone would delete it again in the next sync.
+                    // With sync connected, the server may hold a deletion of this id that this device never saw (it was deleted elsewhere): that
+                    // tombstone would be newer than the backup's date and delete the note again at the next sync, silently. A restored note is
+                    // dated now in that case (and when a local tombstone existed). Without sync nothing can delete it, so its own date stays.
+                    val revived = note.id in tombstoned || syncConnected
                     store.put(note.copy(syncAuthorDeviceId = null, updatedAt = if (revived) now else note.updatedAt))
                     if (revived) recordVersion(note.id)
                     clearTombstone(note.id)
