@@ -278,7 +278,7 @@
                 <!-- Dos capas en vez de un Border con Effect: el Effect rasteriza el subárbol entero
                      (texto incluido) a un bitmap de resolución fija, borroso en monitores con escala
                      >100%. La capa de sombra no lleva contenido; la de contenido va sin Effect. -->
-                <Grid Margin="10">
+                <Grid x:Name="ActionsMenuRoot" Margin="10">
                     <Border Background="{DynamicResource AlduneGroundBrush}" CornerRadius="{DynamicResource AlduneRadius10}">
                         <Border.Effect>
                             <DropShadowEffect BlurRadius="16" ShadowDepth="3" Direction="270"
@@ -286,6 +286,35 @@
                         </Border.Effect>
                     </Border>
                     <Border Background="{DynamicResource AlduneGroundBrush}" CornerRadius="{DynamicResource AlduneRadius10}" Padding="8">
+                    <!-- The menu is taller than the room under (or over) the note on a short screen: FitActionsMenu opens it on the roomier side and, when neither
+                         side is enough, caps this height so the list scrolls instead of running off the screen. -->
+                    <ScrollViewer x:Name="ActionsScroll" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" Focusable="False">
+                    <ScrollViewer.Resources>
+                        <Style TargetType="ScrollBar">
+                            <Setter Property="Width" Value="8" />
+                            <Setter Property="MinWidth" Value="8" />
+                            <Setter Property="Background" Value="Transparent" />
+                            <Setter Property="Template">
+                                <Setter.Value>
+                                    <ControlTemplate TargetType="ScrollBar">
+                                        <Track x:Name="PART_Track" IsDirectionReversed="True">
+                                            <Track.Thumb>
+                                                <Thumb>
+                                                    <Thumb.Template>
+                                                        <ControlTemplate TargetType="Thumb">
+                                                            <Border Background="{DynamicResource AlduneTextBrush}" Opacity="0.35" CornerRadius="3" Margin="1,0" />
+                                                        </ControlTemplate>
+                                                    </Thumb.Template>
+                                                </Thumb>
+                                            </Track.Thumb>
+                                            <Track.DecreaseRepeatButton><RepeatButton Command="ScrollBar.PageUpCommand" Opacity="0" Focusable="False" /></Track.DecreaseRepeatButton>
+                                            <Track.IncreaseRepeatButton><RepeatButton Command="ScrollBar.PageDownCommand" Opacity="0" Focusable="False" /></Track.IncreaseRepeatButton>
+                                        </Track>
+                                    </ControlTemplate>
+                                </Setter.Value>
+                            </Setter>
+                        </Style>
+                    </ScrollViewer.Resources>
                     <StackPanel MinWidth="230" Grid.IsSharedSizeScope="True">
                         <!-- Agrupado por intención, no por orden de implementación: arriba lo que se usa
                              escribiendo (tarea y viñeta, con su atajo a la vista — es la única forma de
@@ -447,6 +476,7 @@
                                 Content="{x:Static res:Strings.MoveToTrash}"
                                 Style="{StaticResource NoteMenuDangerStyle}" />
                     </StackPanel>
+                    </ScrollViewer>
                     </Border>
                 </Grid>
             </Popup>

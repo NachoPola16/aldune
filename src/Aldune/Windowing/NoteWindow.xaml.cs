@@ -39,6 +39,8 @@ public partial class NoteWindow : Window
     private readonly AppCoordinator _coordinator;
     private readonly AppSettings? _settings;
     private readonly MarkdownLiveLayer _markdownLayer;
+    private readonly TrimmedTitle _trimmedTitle;
+    private Brush _titleInk = Brushes.Black;
     private string? _protectionPassword;
     // What this window last read from or wrote to the database. Flush compares the stored state against these before overwriting, so a text
     // or protected content that another device synced in the meantime is not replaced silently (see SaveEditedText / TryUpdateProtectedText).
@@ -96,6 +98,15 @@ public partial class NoteWindow : Window
         AppSettings? settings = null, string? protectionPassword = null)
     {
         InitializeComponent();
+        // The title ends in an ellipsis when it does not fit (see TrimmedTitle): it lives in the title box's own cell, above it.
+        // 2 px: the text box starts its text that far in from its edge.
+        _trimmedTitle = new TrimmedTitle(TitleBox) { VerticalAlignment = VerticalAlignment.Center, Margin = new Thickness(2, 0, 0, 0), Visibility = Visibility.Collapsed };
+        ((Grid)TitleBox.Parent).Children.Add(_trimmedTitle);
+        TitleBox.TextChanged += (_, _) => UpdateTrimmedTitle();
+        TitleBox.SizeChanged += (_, _) => UpdateTrimmedTitle();
+        TitleBox.GotKeyboardFocus += (_, _) => UpdateTrimmedTitle();
+        TitleBox.LostKeyboardFocus += (_, _) => UpdateTrimmedTitle();
+        TitleBox.Loaded += (_, _) => Dispatcher.BeginInvoke(DispatcherPriority.Loaded, new Action(UpdateTrimmedTitle));
         // Between the text box and the find highlight, so a match is still drawn over the text.
         _markdownLayer = new MarkdownLiveLayer(TextBody) { Enabled = settings?.LiveMarkdown ?? true };
         BodyHost.Children.Insert(BodyHost.Children.IndexOf(FindLayer), _markdownLayer);
@@ -1910,6 +1921,56 @@ public partial class NoteWindow : Window
         _windowStateBefore = WindowState;
     }
 
+    /// <summary>
+    /// While the title is not being edited and is wider than its box, the box's glyphs go transparent and <see cref="TrimmedTitle"/> draws the same
+    /// text ending in an ellipsis; in every other case the box shows its own text as before.
+    /// </summary>
+    private void UpdateTrimmedTitle()
+    {
+        bool overflows = TitleBox.Text.Length > 0 && TitleBox.ExtentWidth > TitleBox.ViewportWidth + 0.5;
+        bool show = overflows && !TitleBox.IsKeyboardFocusWithin;
+        _trimmedTitle.Visibility = show ? Visibility.Visible : Visibility.Collapsed;
+        var wanted = show ? Brushes.Transparent : _titleInk;
+        if (!ReferenceEquals(TitleBox.Foreground, wanted)) TitleBox.Foreground = wanted;
+        if (show) _trimmedTitle.Refresh();
+    }
+
+    /// <summary>
+    /// Opens the actions menu where it fits. It sits under the "..." button; on a short screen (or with the note low on it) it does not fit there, so
+    /// it goes above when the room is bigger, and when neither side has enough its height is capped and the list scrolls. Before this the menu simply
+    /// ran off the bottom of the screen and its last entries could not be reached.
+    /// </summary>
+    private void FitActionsMenu()
+    {
+        ActionsScroll.MaxHeight = double.PositiveInfinity;
+        ActionsPopup.Placement = System.Windows.Controls.Primitives.PlacementMode.Bottom;
+        ActionsMenuRoot.Measure(new Size(double.PositiveInfinity, double.PositiveInfinity));
+        double need = ActionsMenuRoot.DesiredSize.Height;
+
+        var topLeft = MenuButton.PointToScreen(new Point(0, 0));
+        var bottomRight = MenuButton.PointToScreen(new Point(MenuButton.ActualWidth, MenuButton.ActualHeight));
+        var centre = new Point((topLeft.X + bottomRight.X) / 2, (topLeft.Y + bottomRight.Y) / 2);
+        foreach (var monitor in MonitorEnumerator.EnumerateMonitors())
+        {
+            double scale = monitor.DpiScale > 0 ? monitor.DpiScale : 1.0;
+            var area = monitor.WorkArea;   // in DIPs: back to pixels to compare with the screen position
+            double left = area.X * scale, top = area.Y * scale, right = left + area.Width * scale, bottom = top + area.Height * scale;
+            if (centre.X < left || centre.X >= right || centre.Y < top || centre.Y >= bottom) continue;
+
+            double below = (bottom - bottomRight.Y) / scale;
+            double above = (topLeft.Y - top) / scale;
+            if (need <= below) return;
+            if (need <= above) { ActionsPopup.Placement = System.Windows.Controls.Primitives.PlacementMode.Top; return; }
+
+            bool useBelow = below >= above;
+            ActionsPopup.Placement = useBelow ? System.Windows.Controls.Primitives.PlacementMode.Bottom : System.Windows.Controls.Primitives.PlacementMode.Top;
+            // The grid's margin and the panel's padding are chrome around the scrolling list.
+            double chrome = need - ((FrameworkElement)ActionsScroll.Content).DesiredSize.Height;
+            ActionsScroll.MaxHeight = Math.Max(120, (useBelow ? below : above) - chrome);
+            return;
+        }
+    }
+
     private void OnMenuClick(object sender, RoutedEventArgs e)
     {
         // El descarte de StaysOpen=False ocurre en el mouse-down, antes de este Click: si ese
@@ -1927,6 +1988,7 @@ public partial class NoteWindow : Window
         UncheckAllButton.Visibility = listActions;
         RemoveCheckedButton.Visibility = listActions;
         UpdateLinkedMenu();
+        FitActionsMenu();
         ActionsPopup.IsOpen = true;
     }
 
@@ -2522,7 +2584,10 @@ public partial class NoteWindow : Window
             ? (Brush)FindResource("AlduneOnTitleBarBrush")
             : skin.Card == SkinCard.Tinted ? BrushOf(face.Label) : ink;
         Resources["NoteHeaderInkBrush"] = headerInk;
-        TitleBox.Foreground = TitleBox.CaretBrush = headerInk;
+        _titleInk = headerInk;
+        TitleBox.CaretBrush = headerInk;
+        _trimmedTitle.SetInk(headerInk);
+        UpdateTrimmedTitle();
         Perforation.Visibility = skin.TitleBar == SkinTitleBar.Plain ? Visibility.Visible : Visibility.Collapsed;
 
         FaceStripe.Visibility = skin.Card == SkinCard.Stripe ? Visibility.Visible : Visibility.Collapsed;
