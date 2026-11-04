@@ -946,11 +946,15 @@ fun NoteEditorPane(key: String, viewModel: NotesViewModel, onBack: () -> Unit, s
         }
         // A web link under the cursor offers «Open <host>». The host is shown so the user sees where it goes; only http(s) ever qualifies
         // (LinkText), and nothing opens without this tap.
-        val caretLink = remember(state.text, state.selection) {
+        val caretLink = remember(state.text, state.selection, liveMarkdown) {
             val raw = state.text.toString()
             val at = state.selection.start
             if (!state.selection.collapsed) null
-            else (LinkText.findAt(raw, at) ?: LinkText.findAt(raw, at - 1))?.let { raw.substring(it.start, it.end) }
+            else {
+                // A Markdown link offers its address from its text too (while Markdown is drawn); it must pass the same http(s) check.
+                val written = if (liveMarkdown) (MarkdownLive.linkUrlAt(raw, at) ?: MarkdownLive.linkUrlAt(raw, at - 1))?.takeIf { LinkText.toUri(it) != null } else null
+                written ?: (LinkText.findAt(raw, at) ?: LinkText.findAt(raw, at - 1))?.let { raw.substring(it.start, it.end) }
+            }
         }
         if (caretLink != null) {
             val linkContext = LocalContext.current

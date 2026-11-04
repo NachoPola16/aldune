@@ -1,6 +1,7 @@
 package app.aldune.text
 
 import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertNull
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 
@@ -86,4 +87,24 @@ class MarkdownLiveTest {
     }
 
     @Test fun `a huge line does not blow up`() = assertTrue(MarkdownLive.parse("*a ".repeat(20000)).isNotEmpty())
+
+    @Test fun `linkUrlAt finds the url from the text the markers and the url`() {
+        val text = "see [Aldune](https://x.y/a) now"
+        val open = text.indexOf('[')
+        for (index in listOf(open, open + 3, text.indexOf(']'), text.indexOf("https"), text.indexOf(')')))
+            assertEquals("https://x.y/a", MarkdownLive.linkUrlAt(text, index))
+        assertNull(MarkdownLive.linkUrlAt(text, 0))
+        assertNull(MarkdownLive.linkUrlAt(text, text.indexOf(')') + 1))
+    }
+
+    @Test fun `linkUrlAt works on any line`() = assertEquals("http://a.b", MarkdownLive.linkUrlAt("first\n[x](http://a.b)\nlast", 8))
+
+    @Test fun `linkUrlAt ignores code escapes and out of range`() {
+        assertNull(MarkdownLive.linkUrlAt("`[a](https://x.y)`", 3))
+        assertNull(MarkdownLive.linkUrlAt("```\n[a](https://x.y)\n```", 6))
+        assertNull(MarkdownLive.linkUrlAt("\\[a](https://x.y)", 2))
+        assertNull(MarkdownLive.linkUrlAt("[a](https://x.y)", -1))
+        assertNull(MarkdownLive.linkUrlAt("[a](https://x.y)", 99))
+        assertNull(MarkdownLive.linkUrlAt(null, 0))
+    }
 }

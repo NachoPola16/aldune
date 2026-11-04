@@ -127,4 +127,29 @@ public class MarkdownLiveTests
         var text = string.Concat(Enumerable.Repeat("*a ", 20000));
         Assert.NotEmpty(MarkdownLive.Parse(text));
     }
+
+    [Fact]
+    public void LinkUrlAt_FindsTheUrlFromTheTextTheMarkersAndTheUrl()
+    {
+        const string text = "see [Aldune](https://x.y/a) now";
+        int open = text.IndexOf('[');
+        foreach (int index in new[] { open, open + 3, text.IndexOf(']'), text.IndexOf("https", StringComparison.Ordinal), text.IndexOf(')') })
+            Assert.Equal("https://x.y/a", MarkdownLive.LinkUrlAt(text, index));
+        Assert.Null(MarkdownLive.LinkUrlAt(text, 0));
+        Assert.Null(MarkdownLive.LinkUrlAt(text, text.IndexOf(')') + 1));
+    }
+
+    [Fact]
+    public void LinkUrlAt_WorksOnAnyLine() => Assert.Equal("http://a.b", MarkdownLive.LinkUrlAt("first\n[x](http://a.b)\nlast", 8));
+
+    [Fact]
+    public void LinkUrlAt_IgnoresCodeEscapesAndOutOfRange()
+    {
+        Assert.Null(MarkdownLive.LinkUrlAt("`[a](https://x.y)`", 3));
+        Assert.Null(MarkdownLive.LinkUrlAt("```\n[a](https://x.y)\n```", 6));
+        Assert.Null(MarkdownLive.LinkUrlAt("\\[a](https://x.y)", 2));
+        Assert.Null(MarkdownLive.LinkUrlAt("[a](https://x.y)", -1));
+        Assert.Null(MarkdownLive.LinkUrlAt("[a](https://x.y)", 99));
+        Assert.Null(MarkdownLive.LinkUrlAt(null, 0));
+    }
 }

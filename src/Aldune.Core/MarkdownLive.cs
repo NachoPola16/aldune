@@ -65,6 +65,49 @@ public static class MarkdownLive
         return spans;
     }
 
+    /// <summary>
+    /// The address of the <c>[text](url)</c> link that contains <paramref name="index"/> (on its text, its brackets or its address), or null.
+    /// Code and escaped brackets are not links, as in <see cref="Parse"/>. The caller still has to check that it is an http(s) address
+    /// before opening it: this only says what the note spells.
+    /// </summary>
+    public static string? LinkUrlAt(string? text, int index)
+    {
+        if (string.IsNullOrEmpty(text) || index < 0 || index >= text.Length) return null;
+
+        int lineStart = index == 0 ? 0 : text.LastIndexOf('\n', index - 1) + 1;
+        int lineEnd = text.IndexOf('\n', index);
+        if (lineEnd < 0) lineEnd = text.Length;
+        if (lineEnd - lineStart > MaxLineLength) return null;
+
+        // Only the opening bracket can start a link, and none can start after the index.
+        IReadOnlyList<MarkdownSpan>? spans = null;
+        for (int open = text.LastIndexOf('[', index, index - lineStart + 1); open >= lineStart; open = open == lineStart ? -1 : text.LastIndexOf('[', open - 1, open - lineStart))
+        {
+            if (!TryLink(text, open, lineEnd, out int textEnd, out int linkEnd)) continue;
+            if (index >= linkEnd) continue;
+
+            spans ??= Parse(text);
+            if (IsEscaped(text, open) || InCode(spans, open)) return null;
+            int urlStart = text.IndexOf('(', textEnd) + 1;
+            return text.Substring(urlStart, linkEnd - 1 - urlStart);
+        }
+        return null;
+    }
+
+    private static bool IsEscaped(string t, int i)
+    {
+        int slashes = 0;
+        while (i - 1 - slashes >= 0 && t[i - 1 - slashes] == '\\') slashes++;
+        return slashes % 2 == 1;
+    }
+
+    private static bool InCode(IReadOnlyList<MarkdownSpan> spans, int at)
+    {
+        foreach (var span in spans)
+            if (at >= span.Start && at < span.Start + span.Length) return span.Style.HasFlag(MarkdownStyle.Code) && !span.Style.HasFlag(MarkdownStyle.Marker) || span.Style == (MarkdownStyle.Marker | MarkdownStyle.Code);
+        return false;
+    }
+
     private static bool IsFence(string t, int start, int end) => end - start >= 3 && t[start] == '`' && t[start + 1] == '`' && t[start + 2] == '`';
 
     private static void Line(string t, int start, int end, List<MarkdownSpan> o)

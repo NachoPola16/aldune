@@ -54,6 +54,41 @@ object MarkdownLive {
         return spans
     }
 
+    /**
+     * The address of the `[text](url)` link that contains [index] (on its text, its brackets or its address), or null. Code and escaped
+     * brackets are not links, as in [parse]. The caller still has to check that it is an http(s) address before opening it.
+     */
+    fun linkUrlAt(text: String?, index: Int): String? {
+        if (text.isNullOrEmpty() || index < 0 || index >= text.length) return null
+
+        val lineStart = if (index == 0) 0 else text.lastIndexOf('\n', index - 1) + 1
+        var lineEnd = text.indexOf('\n', index)
+        if (lineEnd < 0) lineEnd = text.length
+        if (lineEnd - lineStart > MAX_LINE_LENGTH) return null
+
+        // Only the opening bracket can start a link, and none can start after the index.
+        var open = text.lastIndexOf('[', index)
+        while (open >= lineStart) {
+            val link = tryLink(text, open, lineEnd)
+            if (link != null && index < link.second) {
+                if (isEscaped(text, open) || inCode(parse(text), open)) return null
+                val urlStart = text.indexOf('(', link.first) + 1
+                return text.substring(urlStart, link.second - 1)
+            }
+            open = if (open == 0) -1 else text.lastIndexOf('[', open - 1)
+        }
+        return null
+    }
+
+    private fun isEscaped(t: String, i: Int): Boolean {
+        var slashes = 0
+        while (i - 1 - slashes >= 0 && t[i - 1 - slashes] == '\\') slashes++
+        return slashes % 2 == 1
+    }
+
+    private fun inCode(spans: List<MarkdownSpan>, at: Int): Boolean =
+        spans.firstOrNull { at >= it.start && at < it.end }?.let { it.style and MarkdownStyle.CODE != 0 } ?: false
+
     private fun isFence(t: String, start: Int, end: Int) = end - start >= 3 && t[start] == '`' && t[start + 1] == '`' && t[start + 2] == '`'
 
     private fun line(t: String, start: Int, end: Int, o: MutableList<MarkdownSpan>) {
