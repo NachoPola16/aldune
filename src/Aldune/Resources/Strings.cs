@@ -1187,6 +1187,11 @@ public static class Strings
     public static string QuickFindFooter => T("Enter opens · Ctrl+Enter copies · Esc closes", "Intro abre · Ctrl+Intro copia · Esc cierra",
         "Eingabe öffnet · Strg+Eingabe kopiert · Esc schließt", "Entrée ouvre · Ctrl+Entrée copie · Échap ferme", "Enter abre · Ctrl+Enter copia · Esc fecha",
         "Invio apre · Ctrl+Invio copia · Esc chiude", "Enter で開く · Ctrl+Enter でコピー · Esc で閉じる", "Enter 打开 · Ctrl+Enter 复制 · Esc 关闭");
+    // Spoken by a screen reader as the selection moves (focus stays in the search box, so nothing else would say which note is highlighted).
+    public static string QuickFindSelected(string name, int index, int count) => T($"{name}, {index} of {count}", $"{name}, {index} de {count}", $"{name}, {index} von {count}",
+        $"{name}, {index} sur {count}", $"{name}, {index} de {count}", $"{name}, {index} di {count}", $"{name}、{index} / {count}", $"{name}，第 {index} 条，共 {count} 条");
+    public static string QuickFindCountAnnouncement(int count) => T($"Notes found: {count}", $"Notas encontradas: {count}", $"Gefundene Notizen: {count}",
+        $"Notes trouvées : {count}", $"Notas encontradas: {count}", $"Note trovate: {count}", $"見つかったメモ: {count}", $"找到的便笺：{count}");
     public static string QuickFindCopyFailed => T("Could not copy: another program is using the clipboard.", "No se pudo copiar: otro programa está usando el portapapeles.",
         "Kopieren nicht möglich: Ein anderes Programm verwendet die Zwischenablage.",
         "Copie impossible : un autre programme utilise le presse-papiers.",

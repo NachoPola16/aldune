@@ -51,6 +51,8 @@ internal sealed partial class QuickFindWindow : Window
     // jump about while the number of results changes.
     private const double FullHeight = 560;
     private bool _closing;
+    // Announcements start once the window is shown: before that there is no automation peer to speak through.
+    private bool _announce;
 
     internal QuickFindWindow(IReadOnlyList<Note> notes, Action<QuickFindHit> open, Func<QuickFindHit, bool> copy)
     {
@@ -97,6 +99,8 @@ internal sealed partial class QuickFindWindow : Window
         NativeMethods.ForceActivate(this);
         SearchBox.Focus();
         Keyboard.Focus(SearchBox);
+        _announce = true;
+        AnnounceResults();
     }
 
     // --- Filtering ---------------------------------------------------------------------------------------------------------------------
@@ -117,6 +121,28 @@ internal sealed partial class QuickFindWindow : Window
         NoneText.Visibility = any ? Visibility.Collapsed : Visibility.Visible;
         ResetFooter();
         if (any) Select(0);
+        AnnounceResults();
+    }
+
+    private string SelectionText() => Selected is { } row ? Strings.QuickFindSelected(row.AutomationName, Results.SelectedIndex + 1, Results.Items.Count) : "";
+
+    /// <summary>Says through UI Automation what the keyboard cannot show: how many notes match and which one is highlighted.</summary>
+    private void AnnounceResults() =>
+        Announce(Results.Items.Count == 0 ? Strings.QuickFindNone : Strings.QuickFindCountAnnouncement(Results.Items.Count) + ". " + SelectionText());
+
+    private void Announce(string text)
+    {
+        if (!_announce || text.Length == 0) return;
+        try
+        {
+            System.Windows.Automation.Peers.UIElementAutomationPeer.CreatePeerForElement(SearchBox)?.RaiseNotificationEvent(
+                System.Windows.Automation.AutomationNotificationKind.Other,
+                System.Windows.Automation.AutomationNotificationProcessing.MostRecent, text, "aldune-quickfind");
+        }
+        catch (Exception)
+        {
+            // No screen reader attached or the peer is gone: the announcement is a courtesy, never a reason to fail a keystroke.
+        }
     }
 
     private void ResetFooter() => FooterText.Text = Strings.QuickFindFooter;
@@ -157,6 +183,7 @@ internal sealed partial class QuickFindWindow : Window
         if (Results.Items.Count == 0) return;
         Select(Math.Clamp(Math.Max(0, Results.SelectedIndex) + delta, 0, Results.Items.Count - 1));
         ResetFooter();
+        Announce(SelectionText());
     }
 
     private void Select(int index)
