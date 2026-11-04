@@ -108,6 +108,63 @@ public sealed class CompletedTasksPolicyTests : IDisposable
     }
 
     [Fact]
+    public void ADeviceWithAutoDeleteOn_AfterReceivingKeepInPlace_NeverDeletesThatNotesDoneTasks()
+    {
+        // The case of a shared list: one person sets "stay in place" and every other device, whatever its own switches say, must obey.
+        var line = "☒ leche";
+        var text = $"Compra\r\n{line}\r\n☐ pan";
+        var shared = _a.Repository.Create(text, "#EBD38B", "primary");
+        var control = _a.Repository.Create(text, "#EBD38B", "primary");   // same text, left on Default
+        ShareKeyAndSync();
+        _a.Repository.SetCompletedTasksPolicy(shared.Id, CompletedTasksPolicy.KeepInPlace);
+        SyncBoth();
+
+        // Device B has the done tasks expired and would delete them (auto-delete on).
+        foreach (var id in new[] { shared.Id, control.Id })
+            _b.Repository.RecordTaskCompletion(id, TaskCompletion.HashLine(line), DateTimeOffset.UtcNow - TimeSpan.FromDays(3));
+        var changed = _b.Repository.PruneExpiredCompletedTasksInActiveNotes(TimeSpan.FromDays(1), new HashSet<Guid>());
+
+        Assert.Equal(1, changed);                                                      // only the note left on Default
+        Assert.Equal(text, _b.Repository.GetById(shared.Id)!.Text);                    // the shared list is untouched
+        Assert.DoesNotContain(line, _b.Repository.GetById(control.Id)!.Text);
+    }
+
+    [Fact]
+    public void TwoPeopleChangingThePolicyAtTheSameTime_EndUpWithTheSameChoiceOnBothDevices()
+    {
+        var note = _a.Repository.Create("Compra\r\n☒ leche", "#EBD38B", "primary");
+        ShareKeyAndSync();
+
+        _a.Repository.SetCompletedTasksPolicy(note.Id, CompletedTasksPolicy.KeepInPlace);
+        Thread.Sleep(30);
+        _b.Repository.SetCompletedTasksPolicy(note.Id, CompletedTasksPolicy.MoveToEnd);   // the later choice
+        SyncBoth();
+        SyncBoth();
+
+        var onA = _a.Repository.GetById(note.Id)!.CompletedTasks;
+        var onB = _b.Repository.GetById(note.Id)!.CompletedTasks;
+        Assert.Equal(onA, onB);
+        Assert.Equal(CompletedTasksPolicy.MoveToEnd, onA);
+        Assert.Equal("Compra\r\n☒ leche", _a.Repository.GetById(note.Id)!.Text);        // no copy, no loss of text
+    }
+
+    [Fact]
+    public void ADeletionOnADefaultNoteTravels_ButTheDeletedTasksStayInTheHistoryOfTheDeviceThatDeleted()
+    {
+        var line = "☒ leche";
+        var note = _a.Repository.Create($"Compra\r\n{line}", "#EBD38B", "primary");
+        ShareKeyAndSync();
+        _a.Repository.RecordVersion(note.Id, force: true);   // a recent version: the usual 5 minute gap must not hide the deletion
+        _a.Repository.RecordTaskCompletion(note.Id, TaskCompletion.HashLine(line), DateTimeOffset.UtcNow - TimeSpan.FromDays(3));
+
+        _a.Repository.PruneExpiredCompletedTasks(note.Id, _a.Repository.GetById(note.Id)!.Text, TimeSpan.FromDays(1));
+        SyncBoth();
+
+        Assert.DoesNotContain(line, _b.Repository.GetById(note.Id)!.Text);                 // the deletion reaches the other device...
+        Assert.Contains(_a.Repository.GetVersions(note.Id), v => v.Text.Contains(line));   // ...but whoever deleted can still recover it
+    }
+
+    [Fact]
     public void GoingBackToDefaultTravelsToo_SoTheSettingCanBeUndone()
     {
         var note = _a.Repository.Create("x", "#EBD38B", "primary");
