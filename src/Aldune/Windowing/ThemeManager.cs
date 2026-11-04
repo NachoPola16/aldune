@@ -122,6 +122,12 @@ public static class ThemeManager
         var ring = new SolidColorBrush((System.Windows.Media.Color)ColorConverter.ConvertFromString(AppPalette.FocusRing(palette)));
         ring.Freeze();
         dictionary["AlduneFocusRingBrush"] = ring;
+        // Outline of the filled buttons: only in a Windows high contrast theme, where a fill cannot be far enough from the window to show the
+        // control (the text must keep 7:1 on it). Elsewhere nothing is drawn and the buttons keep their exact size.
+        var edge = highContrast ? new SolidColorBrush((System.Windows.Media.Color)ColorConverter.ConvertFromString(palette["Text"])) : (SolidColorBrush)Brushes.Transparent;
+        if (edge.CanFreeze) edge.Freeze();
+        dictionary["AlduneControlEdgeBrush"] = edge;
+        dictionary["AlduneControlEdgeThickness"] = highContrast ? new Thickness(1) : new Thickness(0);
 
         if (_current is not null) app.Resources.MergedDictionaries.Remove(_current);
         app.Resources.MergedDictionaries.Add(dictionary);

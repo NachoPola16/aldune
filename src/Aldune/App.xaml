@@ -483,7 +483,7 @@
                 <Setter.Value>
                     <ControlTemplate TargetType="Button">
                         <Grid>
-                            <Border x:Name="ButtonBackground" Background="{TemplateBinding Background}" CornerRadius="{DynamicResource AlduneRadius6}">
+                            <Border x:Name="ButtonBackground" Background="{TemplateBinding Background}" CornerRadius="{DynamicResource AlduneRadius6}" BorderBrush="{DynamicResource AlduneControlEdgeBrush}" BorderThickness="{DynamicResource AlduneControlEdgeThickness}">
                                 <ContentPresenter Margin="{TemplateBinding Padding}"
                                                   HorizontalAlignment="Center" VerticalAlignment="Center" />
                             </Border>
