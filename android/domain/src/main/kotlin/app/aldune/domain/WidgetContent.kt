@@ -44,10 +44,21 @@ data class WidgetOptions(
     val tasksPerNote: Int = 0,
     /** Solo las notas con esta etiqueta (sin distinguir mayúsculas); `null` = todas. */
     val tag: String? = null,
+    /** Tareas pendientes en total entre todas las tiras: las primeras notas las llevan y el resto se queda sin casillas (ver [DEFAULT_TASK_BUDGET]). */
+    val taskBudget: Int = DEFAULT_TASK_BUDGET,
 ) {
     companion object {
         /** Tope de seguridad: un `RemoteViews` enorme lo rechaza el lanzador. */
         const val DEFAULT_LIMIT = 50
+
+        /**
+         * Medido en un emulador con ~2000 notas: una tira cuesta ~12 kB del ~1 MB que acepta el lanzador y una fila de tarea ~9 kB. 50 tiras con
+         * 40 filas daban 940 kB y se rechazaban (TransactionTooLargeException, «Can't show content»); 30 tiras + 12 filas son ~470 kB.
+         */
+        const val DEFAULT_TASK_BUDGET = 12
+
+        /** Tope de tiras cuando el widget lleva casillas de tarea (sin casillas sigue valiendo [DEFAULT_LIMIT]). */
+        const val TASK_MODE_LIMIT = 30
     }
 }
 
@@ -59,11 +70,18 @@ object WidgetContentBuilder {
 
     fun build(notes: Collection<Note>, options: WidgetOptions): WidgetContent {
         val active = DockOrder.sort(notes.filter { it.state == NoteState.ACTIVE && (options.tag == null || it.tags.any { tag -> tag.equals(options.tag, ignoreCase = true) }) })
-        val shown = active.take(options.limit.coerceAtLeast(0))
-        return WidgetContent(shown.map { strip(it, options) }, active.size - shown.size)
+        val limit = if (options.tasksPerNote > 0) minOf(options.limit, WidgetOptions.TASK_MODE_LIMIT) else options.limit
+        val shown = active.take(limit.coerceAtLeast(0))
+        var budget = options.taskBudget.coerceAtLeast(0)
+        val strips = shown.map { note ->
+            val strip = strip(note, options, tasksAllowed = minOf(options.tasksPerNote, budget))
+            if (strip is WidgetStrip.Open) budget -= strip.tasks.size
+            strip
+        }
+        return WidgetContent(strips, active.size - shown.size)
     }
 
-    private fun strip(note: Note, options: WidgetOptions): WidgetStrip {
+    private fun strip(note: Note, options: WidgetOptions, tasksAllowed: Int): WidgetStrip {
         // Antes de mirar nada más: de una protegida solo se usan el id, el color y el nombre visible, aunque tenga texto en memoria (nota desbloqueada).
         if (note.isProtected) {
             return WidgetStrip.Locked(note.id, note.color, ProtectedTitleRules.visible(true, note.protectedTitle)?.let { truncate(it, MAX_TITLE_LENGTH) })
@@ -71,20 +89,20 @@ object WidgetContentBuilder {
 
         val title = truncate(NoteTitleHelper.getTitle(note.text, options.placeholder), MAX_TITLE_LENGTH)
         val preview = if (options.showPreview) {
-            NoteTitleHelper.getPreview(previewSource(note.text, options)).takeIf { it.isNotEmpty() }?.let { truncate(it, MAX_PREVIEW_LENGTH) }
+            NoteTitleHelper.getPreview(previewSource(note.text, tasksAllowed)).takeIf { it.isNotEmpty() }?.let { truncate(it, MAX_PREVIEW_LENGTH) }
         } else {
             null
         }
         val tasks = app.aldune.text.TaskLines.count(note.text)
-        return WidgetStrip.Open(note.id, note.color, title, preview, tasks.done, tasks.total, note.pinnedToTop, pendingTasks(note.text, options.tasksPerNote))
+        return WidgetStrip.Open(note.id, note.color, title, preview, tasks.done, tasks.total, note.pinnedToTop, pendingTasks(note.text, tasksAllowed))
     }
 
     /**
      * El texto del que sale la vista previa. Si la tira ya lleva casillas para marcar (`tasksPerNote` > 0), las líneas de tarea se quitan: la
      * previa las repetía justo encima de las mismas casillas (y el contador «0/4» ya dice cuántas hay). Sin casillas en la tira, el texto entero.
      */
-    private fun previewSource(text: String, options: WidgetOptions): String {
-        if (options.tasksPerNote <= 0) return text
+    private fun previewSource(text: String, tasksAllowed: Int): String {
+        if (tasksAllowed <= 0) return text
         val lines = text.split('\n')
         return lines.filterIndexed { i, line -> i == 0 || app.aldune.text.TaskLines.glyphIndex(line) < 0 }.joinToString("\n")
     }

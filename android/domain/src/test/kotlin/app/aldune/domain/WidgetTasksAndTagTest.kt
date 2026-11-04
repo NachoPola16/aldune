@@ -31,6 +31,32 @@ class WidgetTasksAndTagTest {
         assertEquals(listOf("a", "b"), strip.tasks.map { it.text })
     }
 
+    @Test fun `el total de tareas del widget tiene tope, las primeras notas las llevan y las demas se quedan sin casillas`() {
+        // With thousands of notes, 50 strips x 3 task rows made the widget's view tree bigger than the 1 MB the launcher accepts
+        // (TransactionTooLargeException, "Can't show content"). The number of strips stays; the task rows are budgeted across them.
+        val notes = (1..30).map { note("n$it", "Nota $it\n☐ a\n☐ b\n☐ c") }
+        val content = WidgetContentBuilder.build(notes, WidgetOptions("x", tasksPerNote = 3, taskBudget = 10))
+        val perStrip = content.strips.map { (it as WidgetStrip.Open).tasks.size }
+
+        assertEquals(10, perStrip.sum())
+        assertEquals(listOf(3, 3, 3, 1), perStrip.take(4))
+        assertTrue(perStrip.drop(4).all { it == 0 })
+        assertEquals(30, content.strips.size)
+    }
+
+    @Test fun `con casillas el widget enseña menos tiras, y sin casillas conserva el tope de siempre`() {
+        // Measured on an emulator with ~2000 notes: a strip costs ~12 kB of the launcher's ~1 MB limit and a task row ~9 kB, so the strips are
+        // capped lower when the tasks are on (50 strips + 40 task rows was 940 kB and still refused).
+        val notes = (1..80).map { note("n$it", "Nota $it\n☐ a") }
+        val withTasks = WidgetContentBuilder.build(notes, WidgetOptions("x", tasksPerNote = 3))
+        assertEquals(WidgetOptions.TASK_MODE_LIMIT, withTasks.strips.size)
+        assertEquals(80 - WidgetOptions.TASK_MODE_LIMIT, withTasks.hiddenCount)
+        assertEquals(WidgetOptions.DEFAULT_TASK_BUDGET, withTasks.strips.sumOf { (it as WidgetStrip.Open).tasks.size })
+
+        val withoutTasks = WidgetContentBuilder.build(notes, WidgetOptions("x"))
+        assertEquals(WidgetOptions.DEFAULT_LIMIT, withoutTasks.strips.size)
+    }
+
     @Test fun `una protegida no lleva tareas`() {
         val strip = WidgetContentBuilder.build(listOf(note("n", "☐ secreto", protectedNote = true)), WidgetOptions("x", tasksPerNote = 3)).strips.single()
         assertTrue(strip is WidgetStrip.Locked)
