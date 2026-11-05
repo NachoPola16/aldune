@@ -976,6 +976,15 @@ public static class Strings
         "Ricerca rapida: attiva la scorciatoia in Impostazioni (Ctrl+Alt+F) per cercare le note da qualsiasi programma. Invio apre una nota, Ctrl+Invio la copia e gli screen reader annunciano i risultati.",
         "クイック検索: 設定でショートカット（Ctrl+Alt+F）を有効にすると、どのプログラムからでもノートを検索できます。Enter で開き、Ctrl+Enter でコピーでき、スクリーンリーダーが結果を読み上げます。",
         "快速查找：在设置中启用快捷键（Ctrl+Alt+F），即可在任何程序中搜索笔记。Enter 打开笔记，Ctrl+Enter 复制，屏幕阅读器会播报结果。");
+    public static string WhatsNew400NoteFont => T(
+        "Note font: choose System, Serif, Easy to read or Monospace, one of the fonts installed on your PC, or import a .ttf/.otf file (Settings > Notes). Only the note text changes, and the choice stays on this PC.",
+        "Fuente de las notas: elige Sistema, Con serifa, Fácil de leer o Monoespaciada, una de las fuentes instaladas en tu PC, o importa un archivo .ttf/.otf (Ajustes > Notas). Solo cambia el texto de las notas y la elección se queda en este PC.",
+        "Notizschrift: Wähle System, Serif, Leicht lesbar oder Monospace, eine auf dem PC installierte Schrift oder importiere eine .ttf/.otf-Datei (Einstellungen > Notizen). Nur der Text der Notizen ändert sich, und die Wahl bleibt auf diesem PC.",
+        "Police des notes : choisissez Système, Avec empattement, Facile à lire ou Chasse fixe, une police installée sur votre PC, ou importez un fichier .ttf/.otf (Réglages > Notes). Seul le texte des notes change, et le choix reste sur ce PC.",
+        "Fonte das notas: escolha Sistema, Com serifa, Fácil de ler ou Monoespaçada, uma fonte instalada no PC, ou importe um arquivo .ttf/.otf (Configurações > Notas). Só muda o texto das notas e a escolha fica neste PC.",
+        "Carattere delle note: scegli Sistema, Con grazie, Facile da leggere o Spaziatura fissa, un carattere installato sul PC, oppure importa un file .ttf/.otf (Impostazioni > Note). Cambia solo il testo delle note e la scelta resta su questo PC.",
+        "ノートのフォント:システム、セリフ体、読みやすい書体、等幅、PC にインストール済みのフォント、または .ttf/.otf ファイルの読み込みから選べます(設定 > ノート)。変わるのはノートの文字だけで、この設定はこの PC だけのものです。",
+        "便笺字体:可选择系统、衬线体、易读字体、等宽字体,或本机已安装的字体,也可导入 .ttf/.otf 文件(设置 > 便笺)。只改变便笺文字,该设置仅保存在此电脑上。");
     public static string WhatsNew400Markdown => T(
         "Markdown as you type: bold, italic, headings, code and links are drawn in the note (switch it off in Settings). Hold Ctrl over a link to see the site it opens; Ctrl+click opens it.",
         "Markdown al escribir: la negrita, la cursiva, los títulos, el código y los enlaces se dibujan en la nota (se desactiva en Ajustes). Con Ctrl sobre un enlace ves el sitio al que va; Ctrl+clic lo abre.",
