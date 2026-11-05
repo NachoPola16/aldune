@@ -2550,7 +2550,7 @@ public partial class NoteWindow : Window
         // cuadrícula en vez de pegarse a su borde superior.
         _bodyPadding ??= TextBody.Padding;
         _placeholderMargin ??= BodyPlaceholder.Margin;
-        var hostMargin = skin.NoteGrid ? new Thickness(16, 14, 16, 20) : new Thickness(0, 14, 20, 20);
+        var hostMargin = skin.NoteGrid ? new Thickness(16, 14, 16, 26) : new Thickness(0, 14, 20, 26);
         BodyHost.Margin = hostMargin;
         double gridInset = skin.NoteGrid ? 6 : 0;
         // The text box reaches the right and bottom edges of the body row (a negative margin the size of the host's) and takes the same amount as padding,
