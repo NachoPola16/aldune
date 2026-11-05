@@ -81,7 +81,7 @@
         <!-- Right margin 17: the 16 px bar's 10 px thumb ends 20 px from the window edge, like Manage notes and Settings; the cards stop 5 px
              before the bar (8 px before its thumb) instead of running into it. -->
         <Grid Grid.Row="1" Margin="20,0,17,20">
-            <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="0,0,5,0">
+            <ScrollViewer x:Name="ConflictsScroll" VerticalScrollBarVisibility="Auto" Padding="0,0,5,0">
                 <ItemsControl x:Name="ConflictsList">
                     <ItemsControl.ItemTemplate>
                         <DataTemplate>

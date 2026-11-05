@@ -77,6 +77,7 @@ public partial class NotesManagerWindow : Window
         RowsList.ApplyTemplate();
         RowsScroll = (ScrollViewer)RowsList.Template.FindName("RowsScroll", RowsList);
         _autoScroll = new AutoScrollManager(RowsHost, RowsScroll, null);
+        ScrollEdgeFade.Attach(RowsScroll, RowsHost);
         _tagManagerToggle = new PopupToggle(TagManagerPopup);
         _tagEditorToggle = new PopupToggle(TagEditorPopup);
         Closed += (_, _) => { _autoScroll.Stop(); };

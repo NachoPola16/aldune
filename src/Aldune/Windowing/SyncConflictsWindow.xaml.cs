@@ -14,6 +14,7 @@ public partial class SyncConflictsWindow : Window
     public SyncConflictsWindow(SyncService syncService, AppCoordinator coordinator)
     {
         InitializeComponent();
+        ScrollEdgeFade.Attach(ConflictsScroll, (System.Windows.Controls.Panel)ConflictsScroll.Parent);
         // Con «Tamaño del texto» al 130 o 150 % la ventana crece con él (ver ThemeManager.ScaleWindowToText).
         ThemeManager.ScaleWindowToText(this);
         NativeMethods.CloakUntilFirstFrame(this);

@@ -63,7 +63,7 @@
                   Style="{StaticResource SyncCheckStyle}" Margin="22,14,20,4"
                   Click="OnSelectAllClick" />
 
-        <ScrollViewer Grid.Row="2" VerticalScrollBarVisibility="Auto" Margin="20,4,12,8">
+        <ScrollViewer x:Name="NotesScroll" Grid.Row="2" VerticalScrollBarVisibility="Auto" Margin="20,4,12,8">
             <ItemsControl x:Name="NotesList">
                 <ItemsControl.ItemTemplate>
                     <DataTemplate>
