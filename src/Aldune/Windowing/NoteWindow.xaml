@@ -585,7 +585,9 @@
                          fijo. Pista transparente y pulgar fino que se ensancha al acercar el ratón: en
                          reposo casi no compite con el texto. -->
                     <Style TargetType="ScrollBar">
-                        <Setter Property="Margin" Value="8,2,0,16" />
+                        <!-- Negative on purpose: the bar is drawn 20 px to the right of its column (see the translation below), so a positive margin here left a dead
+                             strip of ~37 px between the end of the text and the bar. -11 reserves 5 px for the column and leaves ~12 px from the text to the thumb. -->
+                        <Setter Property="Margin" Value="-11,2,0,16" />
                         <Setter Property="Width" Value="16" />
                         <Setter Property="MinWidth" Value="16" />
                         <Setter Property="Background" Value="Transparent" />
@@ -699,14 +701,16 @@
         </StackPanel>
 
         <!-- «Sincronizando…» mientras corre una pasada de sync (ver UpdateSyncingText). Abajo a la izquierda, frente a la señal. -->
-        <TextBlock x:Name="SyncingText" Grid.Row="3" HorizontalAlignment="Left" VerticalAlignment="Bottom"
-                   Margin="14,-8,0,10" FontSize="{DynamicResource AlduneTextSmall}" Text="{x:Static res:Strings.SyncInProgressStatus}"
+        <!-- En la fila del cuerpo y no en la de abajo: ahí se pinta dentro de los 20 px vacíos bajo el texto (BodyHost.Margin.Bottom), sin
+             tapar la última línea y sin que la fila de abajo crezca (y el texto salte) cada vez que empieza una sync. -->
+        <TextBlock x:Name="SyncingText" Grid.Row="2" HorizontalAlignment="Left" VerticalAlignment="Bottom"
+                   Margin="14,0,0,3" FontSize="{DynamicResource AlduneTextSmall}" Text="{x:Static res:Strings.SyncInProgressStatus}"
                    Foreground="{DynamicResource NoteInkBrush}" Opacity="0.7" IsHitTestVisible="False" Visibility="Collapsed" />
 
         <!-- Señal de sincronización (opción de Ajustes → Aspecto). En la fila de abajo, a la derecha,
              para no tapar texto; monoespaciada para que las barras ▂▄▆█ queden alineadas. -->
-        <TextBlock x:Name="SyncSignalText" Grid.Row="3" HorizontalAlignment="Right" VerticalAlignment="Bottom"
-                   Margin="0,-8,14,10" FontFamily="Cascadia Mono, Consolas" FontSize="{DynamicResource AlduneTextSmall}"
+        <TextBlock x:Name="SyncSignalText" Grid.Row="2" HorizontalAlignment="Right" VerticalAlignment="Bottom"
+                   Margin="0,0,14,3" FontFamily="Cascadia Mono, Consolas" FontSize="{DynamicResource AlduneTextSmall}"
                    Foreground="{DynamicResource NoteInkBrush}" Opacity="0.7" Visibility="Collapsed" />
 
         <!-- Franja de la piel Stripe: el color de la nota va solo aquí (ver NoteFace). -->

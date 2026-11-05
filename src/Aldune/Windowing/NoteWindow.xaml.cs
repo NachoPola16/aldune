@@ -1590,7 +1590,9 @@ public partial class NoteWindow : Window
     // all the visual lines it wraps into, so a long task is carried whole and the drop line goes before or after the whole line under the
     // pointer, never in the middle of a wrapped task.
 
-    private const double GripZoneRight = 18;
+    // Right edge of the grip's hit zone: the same as the right edge of its hover pill (3.5 + 16), so the cross cursor appears exactly
+    // while the pointer is over the pill. The checkbox starts at the 20 px padding, so it stays clickable.
+    private const double GripZoneRight = 19.5;
     private int _dragFromLine = -1;
     private int _dragTargetLine = -1;
     private Point _dragStart;
@@ -1656,9 +1658,10 @@ public partial class NoteWindow : Window
             // Centred in the margin: measured, the dots then sit 8 px from the edge of the note and 8 px from the checkbox.
             // Vertically it is centred on the ink of the checkbox, not on the line: the square sits a little below the middle of the line
             // (measured on screen: centre at 0.537 / 0.552 of the line height).
-            double centre = top + lineHeight * (ThemeManager.LargeCheckboxes ? 0.552 : 0.537);
-            Canvas.SetLeft(TaskGrip, 8.0);
-            Canvas.SetTop(TaskGrip, centre - 6);
+            double centre = top + lineHeight * (ThemeManager.LargeCheckboxes ? 0.552 : 0.565);
+            // The dots are 7.4 x 12.2 and the pill 16 x 20: both are placed from their own centre so they share it exactly.
+            Canvas.SetLeft(TaskGrip, 11.5 - 3.7);
+            Canvas.SetTop(TaskGrip, centre - 6.1);
             Canvas.SetLeft(TaskGripHover, 3.5);
             Canvas.SetTop(TaskGripHover, centre - 10);
             TaskGrip.Visibility = Visibility.Visible;
