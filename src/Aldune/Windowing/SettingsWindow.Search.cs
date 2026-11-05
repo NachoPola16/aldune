@@ -46,6 +46,10 @@ public partial class SettingsWindow
         {
             foreach (var child in LogicalTreeHelper.GetChildren(node).OfType<DependencyObject>())
             {
+                // A row or notice that is hidden right now (the «Sync is on…» warning under the done-tasks switch only shows with that switch and sync
+                // on) would lead nowhere: the result opened the page and lit a dot at its corner. The sync details are the exception: they are
+                // collapsed while sync is off and a result inside them shows them (see PeekSyncDetails).
+                if (child is UIElement { Visibility: not Visibility.Visible } && !ReferenceEquals(child, SyncDetails)) continue;
                 string? text = child switch
                 {
                     TextBlock block => block.Text,
@@ -185,6 +189,7 @@ public partial class SettingsWindow
     private void Flash(FrameworkElement element)
     {
         ClearFlash();
+        if (!element.IsVisible || element.ActualWidth <= 0) return;   // nothing to light: its frame would be a dot at the corner of the page
         var layer = System.Windows.Documents.AdornerLayer.GetAdornerLayer(element);
         if (layer is null) return;
         var adorner = new FlashAdorner(element);
