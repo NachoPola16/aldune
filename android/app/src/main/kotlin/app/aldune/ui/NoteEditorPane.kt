@@ -44,6 +44,7 @@ import androidx.core.view.WindowCompat
 import app.aldune.text.AppPalette
 import app.aldune.text.AspectSkin
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import app.aldune.text.NoteChannels
@@ -616,7 +617,18 @@ fun NoteEditorPane(key: String, viewModel: NotesViewModel, onBack: () -> Unit, s
         }
         onDispose { controller?.show(androidx.core.view.WindowInsetsCompat.Type.statusBars()) }
     }
-    CompositionLocalProvider(LocalContentColor provides ink) {
+    // The selection handles (the teardrop under the cursor) and the selection highlight follow the same rule as the cursor: the accent when it can be seen on
+    // the page, the ink of the note when it cannot (a pink handle on a yellow note was lost).
+    val selectionAccent = MaterialTheme.colorScheme.primary.let { accent ->
+        val page = faceHex?.let { noteFace(it) } ?: MaterialTheme.colorScheme.background
+        if (androidx.core.graphics.ColorUtils.calculateContrast(accent.toArgb(), page.copy(alpha = 1f).toArgb()) >= 4.5) accent else ink
+    }
+    CompositionLocalProvider(
+        LocalContentColor provides ink,
+        androidx.compose.foundation.text.selection.LocalTextSelectionColors provides androidx.compose.foundation.text.selection.TextSelectionColors(
+            handleColor = selectionAccent, backgroundColor = selectionAccent.copy(alpha = 0.3f),
+        ),
+    ) {
     Column(
         Modifier.fillMaxSize()
             .then(if (faceHex != null) Modifier.background(noteFace(faceHex)) else Modifier)
@@ -645,9 +657,13 @@ fun NoteEditorPane(key: String, viewModel: NotesViewModel, onBack: () -> Unit, s
                 keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
                 onKeyboardAction = { focus.requestFocus() },
                 decorator = { inner ->
-                    Box(contentAlignment = Alignment.CenterStart) {
+                    Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.CenterStart) {
                         if (title.text.isEmpty() && titleEnabled) Text(stringResource(R.string.new_note_title), style = MaterialTheme.typography.titleMedium, color = muted)
-                        inner()
+                        // A title longer than the bar is cut with an ellipsis while the field is not being edited (the field itself cannot draw one: it would
+                        // be cut in a straight line against the task counter and the menu). The real field stays on top, invisible, so a tap still edits it.
+                        val ellipsize = !titleFocused && title.text.isNotEmpty()
+                        if (ellipsize) Text(title.text.toString(), style = MaterialTheme.typography.titleMedium, color = ink, maxLines = 1, overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis)
+                        Box(Modifier.alpha(if (ellipsize) 0f else 1f)) { inner() }
                     }
                 },
             )

@@ -20,8 +20,8 @@ class AccentOnGroundTest {
         }
     }
 
-    @Test fun `the accent is seen against the ground and the surface of every look`() {
-        for ((label, p) in palettes()) for (background in listOf("Ground", "Surface")) {
+    @Test fun `the accent is seen against the ground, the surface and the raised surface (dialogs, menus) of every look`() {
+        for ((label, p) in palettes()) for (background in listOf("Ground", "Surface", "Raised")) {
             val ratio = ColorFit.ratio(p.getValue("Accent"), p.getValue(background))
             assertTrue(ratio >= 3.0, "$label: Accent on $background: %.2f < 3.0".format(ratio))
         }
