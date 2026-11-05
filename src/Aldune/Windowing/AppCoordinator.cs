@@ -1695,6 +1695,12 @@ public sealed class AppCoordinator
         }
     }
 
+    /// <summary>
+    /// ¿Tiene esta nota un conflicto de sync guardado sin resolver? Es independiente de si el aspecto muestra la señal ▂▄▆█: un conflicto guarda la
+    /// única copia de la versión perdida, así que la nota lo dice siempre que la sync esté activa.
+    /// </summary>
+    internal bool NoteHasSyncConflict(Guid noteId) => _settings?.SyncEnabled == true && _repository.HasSyncConflict(noteId);
+
     /// <summary>Estado de la señal de sincronización de una nota (ver <see cref="NoteSyncSignal"/>).</summary>
     internal SyncSignalState SyncSignalFor(Guid noteId)
     {

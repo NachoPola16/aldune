@@ -1746,6 +1746,15 @@ public static class Strings
             $"Letzte Synchronisierung: {at.ToLocalTime():g}",
             $"Dernière synchronisation : {at.ToLocalTime():g}",
             $"Última sincronização: {at.ToLocalTime():g}", $"Ultima sincronizzazione: {at.ToLocalTime():g}", $"最後の同期: {at.ToLocalTime():g}", $"上次同步：{at.ToLocalTime():g}");
+    public static string SyncConflictNoteTooltip => T(
+        "This note had a sync conflict: the other version was kept aside. Click to review it.",
+        "Esta nota tuvo un conflicto de sincronización: la otra versión se guardó aparte. Pulsa para revisarla.",
+        "Diese Notiz hatte einen Synchronisierungskonflikt: Die andere Version wurde separat gesichert. Zum Prüfen klicken.",
+        "Cette note a eu un conflit de synchronisation : l'autre version a été mise de côté. Cliquez pour la vérifier.",
+        "Esta nota teve um conflito de sincronização: a outra versão foi guardada à parte. Clique para revisar.",
+        "Questa nota ha avuto un conflitto di sincronizzazione: l'altra versione è stata messa da parte. Fai clic per rivederla.",
+        "このノートで同期の競合が起きました。もう一方のバージョンは別に保存されています。クリックして確認できます。",
+        "此便笺发生了同步冲突：另一个版本已另行保存。点击查看。");
     public static string SyncConflictsButton => T("Review conflicts", "Revisar conflictos",
         "Konflikte prüfen", "Vérifier les conflits", "Revisar conflitos", "Rivedi i conflitti", "競合を確認", "查看冲突");
     public static string SyncConflictsCount(int count) =>

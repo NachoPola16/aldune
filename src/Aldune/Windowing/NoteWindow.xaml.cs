@@ -231,6 +231,7 @@ public partial class NoteWindow : Window
         Loaded += (_, _) => PruneExpiredTasks();
         Loaded += (_, _) => UpdateAllDoneBar();
         Loaded += (_, _) => UpdateSyncSignal();
+        SyncSignalText.MouseLeftButtonUp += OnSyncSignalClick;
 
         // Una nota que ya traía más o menos texto del que le corresponde a su alto guardado (escrito
         // antes de que existiera el ajuste automático, o el alto de la última sesión ya no encaja)
@@ -2484,11 +2485,26 @@ public partial class NoteWindow : Window
     {
         // Comparte fila y esquina con la franja "Todo hecho": en una nota estrecha se pisarían, y esa
         // franja es pasajera (hasta archivar o desmarcar), así que cede el sitio.
-        var state = _settings?.SyncSignalVisible == true && AllDoneBar.Visibility != Visibility.Visible
+        bool room = AllDoneBar.Visibility != Visibility.Visible;
+        var state = _settings?.SyncSignalVisible == true && room
             ? _coordinator.SyncSignalFor(_note.Id)
             : SyncSignalState.Hidden;
+        // A saved conflict holds the only copy of the version that lost, so it is shown even when the look hides the signal, and it is the one
+        // state that can be clicked (it opens the conflicts window).
+        if (room && state != SyncSignalState.Conflict && _coordinator.NoteHasSyncConflict(_note.Id)) state = SyncSignalState.Conflict;
+        bool conflict = state == SyncSignalState.Conflict;
         SyncSignalText.Visibility = state == SyncSignalState.Hidden ? Visibility.Collapsed : Visibility.Visible;
         SyncSignalText.Text = $"{NoteSyncSignal.Glyph(state)} {Strings.SyncSignalLabel(state)}";
+        SyncSignalText.IsHitTestVisible = conflict;
+        SyncSignalText.Cursor = conflict ? System.Windows.Input.Cursors.Hand : null;
+        SyncSignalText.TextDecorations = conflict ? TextDecorations.Underline : null;
+        SyncSignalText.ToolTip = conflict ? Strings.SyncConflictNoteTooltip : null;
+        SyncSignalText.Opacity = conflict ? 1 : 0.7;
+    }
+
+    private void OnSyncSignalClick(object sender, System.Windows.Input.MouseButtonEventArgs e)
+    {
+        if (SyncSignalText.IsHitTestVisible) _coordinator.OpenSyncConflicts();
     }
 
     /// <summary>El color de esta nota ha cambiado fuera de su ventana (aplicar un tema desde
