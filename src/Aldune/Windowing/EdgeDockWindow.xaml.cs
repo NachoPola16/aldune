@@ -1129,7 +1129,17 @@ public partial class EdgeDockWindow : Window
             _viewSwapToken++; // a swap still waiting for its fade is superseded by this one
             _viewLabelHold = false;
             ResetTabsFadeIfStuck();
-            SetNotes(LoadNotesForView(), animateArrivals: !viewChanged, fadeAll: viewChanged);
+            var notes = LoadNotesForView();
+            if (!viewChanged && _tabsSignature is { } known && known == TabsSignature(notes, _repository.GetPendingReminders()))
+            {
+                // Nothing a tab draws has changed (a done-tasks policy, a note minimized, a reminder that was already counted): rebuilding every
+                // tab would flash the strip and send its scroll back to the top for nothing. Only what depends on the open windows is updated.
+                Dispatcher.BeginInvoke(DispatcherPriority.Loaded, new Action(RefreshOpenState));
+            }
+            else
+            {
+                SetNotes(notes, animateArrivals: !viewChanged, fadeAll: viewChanged);
+            }
             if (_labelOnSwap) { _labelOnSwap = false; ShowViewLabel(CurrentViewLabel()); }
         }
         // Continue the strip's fade from where the superseded swap left it instead of showing it at full strength in one frame. After
@@ -1492,15 +1502,51 @@ public partial class EdgeDockWindow : Window
         if (TabsScroll.VerticalOffset > Math.Max(0, TabsScroll.ExtentHeight - TabsScroll.ViewportHeight)) TabsScroll.ScrollToHome();
     }
 
+    private int? _tabsSignature;
+    private List<Guid> _tabsOrder = new();
+
+    /// <summary>
+    /// Everything the tabs draw, folded into one number: the notes' visible fields, their channel, link and reminder, and the settings (which
+    /// decide label lengths, sizes and looks). Not <c>UpdatedAt</c> or the done-tasks policy: nothing on a tab shows them.
+    /// </summary>
+    private int TabsSignature(IReadOnlyList<Note> notes, IReadOnlyDictionary<Guid, DateTimeOffset> reminders)
+    {
+        var hash = new HashCode();
+        hash.Add(_settings is null ? 0 : System.Text.Json.JsonSerializer.Serialize(_settings).GetHashCode());
+        foreach (var n in notes)
+        {
+            hash.Add(n.Id); hash.Add(n.Text); hash.Add(n.Color); hash.Add(n.State); hash.Add(n.IsPinnedToTop);
+            hash.Add(n.IsProtected); hash.Add(n.IsUnlocked); hash.Add(n.ProtectedTitle); hash.Add(n.DockPosition); hash.Add(n.ScreenOrigin);
+            foreach (var tag in n.Tags) hash.Add(tag);
+            hash.Add(NoteChannelDisplay.Of(n.Id));
+            hash.Add(LinkedNoteDisplay.IsLinked(n.Id) ? LinkedNoteDisplay.PathOf(n.Id) : null);
+            hash.Add(reminders.TryGetValue(n.Id, out var due) ? due : (DateTimeOffset?)null);
+        }
+        return hash.ToHashCode();
+    }
+
     public void SetNotes(IReadOnlyList<Note> notes, bool animateArrivals = true, bool fadeAll = false)
     {
         var previousIds = _knownNoteIds;
         _knownNoteIds = notes.Select(n => n.Id).ToHashSet();
         _pendingReminders = _repository.GetPendingReminders();
+        _tabsSignature = TabsSignature(notes, _pendingReminders);
+
+        // The same notes in the same order (a colour or a tag changed): the strip keeps where it was scrolled instead of jumping to the start.
+        var order = notes.Select(n => n.Id).ToList();
+        bool sameOrder = !fadeAll && order.SequenceEqual(_tabsOrder);
+        _tabsOrder = order;
+        double keepV = TabsScroll.VerticalOffset, keepH = TabsScroll.HorizontalOffset;
 
         _tabButtons.Clear();
         TabsScroll.ScrollToHome();
         TabsList.ItemsSource = notes;
+        if (sameOrder && (keepV > 0 || keepH > 0))
+        {
+            TabsScroll.UpdateLayout();
+            TabsScroll.ScrollToVerticalOffset(keepV);
+            TabsScroll.ScrollToHorizontalOffset(keepH);
+        }
 
         // La tira de reposo no hace scroll, así que solo se dibujan los guiones que caben: el resto
         // se recortarían contra el borde de la ventana (ver EdgeGeometry.VisibleRestDashes).
