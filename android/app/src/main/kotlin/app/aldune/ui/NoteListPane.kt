@@ -1187,15 +1187,15 @@ private fun NoteRow(item: NoteListItem, selected: Boolean, conflicted: Boolean, 
                     val titleColor = noteFace(tint.title)
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Text(NoteChannels.number(channel), Modifier.padding(end = 8.dp), style = MaterialTheme.typography.titleMedium, fontWeight = androidx.compose.ui.text.font.FontWeight.Bold, color = titleColor)
-                        Text(item.title, Modifier.weight(1f), style = MaterialTheme.typography.titleMedium, maxLines = 1, overflow = TextOverflow.Ellipsis, color = titleColor)
+                        Text(item.title, Modifier.weight(1f), style = MaterialTheme.typography.titleMedium.withNoteFont(LocalNoteFont.current), maxLines = 1, overflow = TextOverflow.Ellipsis, color = titleColor)
                         ChannelWave(channel, noteFace(tint.accent), Modifier.padding(start = 8.dp))
                     }
                 } else {
-                    Text(item.title, style = MaterialTheme.typography.titleMedium, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                    Text(item.title, style = MaterialTheme.typography.titleMedium.withNoteFont(LocalNoteFont.current), maxLines = 1, overflow = TextOverflow.Ellipsis)
                 }
                 if (item.preview.isNotEmpty()) {
                     Text(
-                        item.preview, style = MaterialTheme.typography.bodyMedium, maxLines = 1, overflow = TextOverflow.Ellipsis,
+                        item.preview, style = MaterialTheme.typography.bodyMedium.withNoteFont(LocalNoteFont.current), maxLines = 1, overflow = TextOverflow.Ellipsis,
                         color = muted,
                     )
                 }

@@ -373,6 +373,18 @@
     <string name="welcome_ok">Entendi</string>
     <string name="large_checkboxes">Caixas de tarefa maiores</string>
     <string name="large_checkboxes_hint">Aumenta as caixas para acertá-las com mais facilidade.</string>
+    <string name="note_font">Fonte das notas</string>
+    <string name="note_font_system">Sistema (padrão)</string>
+    <string name="note_font_serif">Com serifa</string>
+    <string name="note_font_easy">Fácil de ler</string>
+    <string name="note_font_mono">Monoespaçada</string>
+    <string name="note_font_imported">Importada: %s</string>
+    <string name="note_font_import">Importar uma fonte…</string>
+    <string name="note_font_remove">Remover</string>
+    <string name="note_font_hint">Só muda o texto das notas, não os menus do app. Os aspectos com fonte própria (terminal, cadernos) a mantêm. A escolha fica neste celular e não é sincronizada. Fontes grátis: baixe um .ttf ou .otf (por exemplo do Google Fonts) e importe.</string>
+    <string name="note_font_rejected_extension">Escolha um arquivo .ttf ou .otf.</string>
+    <string name="note_font_rejected_too_large">Esse arquivo de fonte tem mais de 10 MB.</string>
+    <string name="note_font_rejected_invalid">Esse arquivo não é uma fonte que o Aldune possa usar.</string>
     <string name="justify_text">Justificar o texto e separar palavras</string>
     <string name="justify_text_hint">O texto corrido vai até as duas margens e as palavras longas são divididas por sílabas. Listas e linhas curtas não são esticadas.</string>
     <string name="live_markdown">Mostrar a formatação Markdown ao escrever</string>
@@ -654,6 +666,7 @@
     <string name="whatsnew_400_import">Traga suas notas do Google Keep, Evernote ou de arquivos de texto (Markdown ou .txt).</string>
     <string name="whatsnew_400_restore">Uma nota restaurada de um backup não é mais apagada de novo por uma sincronização vinda de outro dispositivo.</string>
     <string name="whatsnew_400_markdown">Markdown ao escrever: negrito, itálico, títulos, código e links aparecem desenhados na nota (dá para desligar nas configurações).</string>
+    <string name="whatsnew_400_notefont">Fonte das notas: escolha Sistema, Com serifa, Fácil de ler ou Monoespaçada, ou importe um arquivo .ttf/.otf (Configurações &gt; Notas). Só muda o texto das notas e a escolha fica neste celular.</string>
     <string name="whatsnew_400_share">Compartilhe o texto de uma nota com qualquer app pelo menu do editor.</string>
     <string name="whatsnew_400_battery">Lembretes: se o celular põe o Aldune para dormir, as Configurações agora avisam e levam você a onde tirar a restrição.</string>
 </resources>

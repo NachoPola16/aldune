@@ -373,6 +373,18 @@
     <string name="welcome_ok">知道了</string>
     <string name="large_checkboxes">更大的任务复选框</string>
     <string name="large_checkboxes_hint">放大复选框，更容易点按。</string>
+    <string name="note_font">便笺字体</string>
+    <string name="note_font_system">系统(默认)</string>
+    <string name="note_font_serif">衬线体</string>
+    <string name="note_font_easy">易读字体</string>
+    <string name="note_font_mono">等宽字体</string>
+    <string name="note_font_imported">已导入:%s</string>
+    <string name="note_font_import">导入字体…</string>
+    <string name="note_font_remove">移除</string>
+    <string name="note_font_hint">只改变便笺的文字,不改变应用的菜单。自带字体的外观(终端、笔记本)会保留其字体。该设置仅保存在此手机上,不会同步。免费字体:下载 .ttf 或 .otf 文件(例如来自 Google Fonts)后导入。</string>
+    <string name="note_font_rejected_extension">请选择 .ttf 或 .otf 文件。</string>
+    <string name="note_font_rejected_too_large">该字体文件超过 10 MB。</string>
+    <string name="note_font_rejected_invalid">该文件不是 Aldune 可以使用的字体。</string>
     <string name="justify_text">两端对齐文本并断词</string>
     <string name="justify_text_hint">正文延伸到两侧边缘，长单词按音节断开。列表和短行不会被拉伸。</string>
     <string name="live_markdown">输入时显示 Markdown 格式</string>
@@ -654,6 +666,7 @@
     <string name="whatsnew_400_import">可从 Google Keep、Evernote 或文本文件（Markdown 或 .txt）导入笔记。</string>
     <string name="whatsnew_400_restore">从备份还原的笔记不会再被其他设备的同步再次删除。</string>
     <string name="whatsnew_400_markdown">输入时显示 Markdown：粗体、斜体、标题、代码和链接会在便笺中绘制（可在设置中关闭）。</string>
+    <string name="whatsnew_400_notefont">便笺字体:可选择系统、衬线体、易读字体、等宽字体,或导入 .ttf/.otf 文件(设置 &gt; 便笺)。只改变便笺文字,该设置仅保存在此手机上。</string>
     <string name="whatsnew_400_share">可在编辑器菜单中把笔记文本分享给任何应用。</string>
     <string name="whatsnew_400_battery">提醒：如果手机让 Aldune 休眠，设置现在会提示你，并带你前往解除限制的位置。</string>
 </resources>

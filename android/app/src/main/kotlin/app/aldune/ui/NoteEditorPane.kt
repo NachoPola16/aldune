@@ -478,7 +478,7 @@ fun NoteEditorPane(key: String, viewModel: NotesViewModel, onBack: () -> Unit, s
     // the width of "checkbox + space" measured in the font the field draws; Android applies it to each hard line. (A paragraph style per task
     // line was tried: a line feed outside the paragraph needs a paragraph of its own and the cursor at the end of a line then lands in it.)
     val measurer = androidx.compose.ui.text.rememberTextMeasurer()
-    val bodyStyle = MaterialTheme.typography.bodyLarge
+    val bodyStyle = MaterialTheme.typography.bodyLarge.withNoteFont(LocalNoteFont.current)
     val density = LocalDensity.current
     val taskIndent = remember(checkboxSpan, bodyStyle, density, measurer) {
         val styled = androidx.compose.ui.text.buildAnnotatedString {

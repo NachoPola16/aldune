@@ -28,6 +28,12 @@ data class AppSettings(
     val reorderOnCheck: Boolean = false,
     /** Casillas de tarea un 25 % mayores (fuente AlduneCheckLarge). Solo cambia cómo se dibujan. En una instalación nueva viene activado (ver `load`). */
     val largeCheckboxes: Boolean = false,
+    /** The note text font (`NoteFonts`: system 0, serif 1, easy to read 2, monospace 3, imported 5). Local to the device, never synced or exported. */
+    val noteFont: Int = 0,
+    /** The family name of the imported font, shown in Settings. */
+    val noteFontName: String? = null,
+    /** File name (no folder) of the imported font inside `filesDir/fonts`. */
+    val noteFontFile: String? = null,
     /** Running text justified to both edges, with words split at syllables (the system's hyphenation dictionary). Off by default; editor only. */
     val justifyText: Boolean = false,
     /** Bold, italic, headings, code and links drawn as Markdown while editing; the text itself is never changed. On by default. */
@@ -173,6 +179,9 @@ class SettingsStore(context: Context) {
             liveMarkdown = prefs.getBoolean(LIVE_MARKDOWN, true),
             largeCheckboxes = if (prefs.contains(LARGE_CHECKBOXES)) prefs.getBoolean(LARGE_CHECKBOXES, false) else prefs.all.isEmpty(),
             justifyText = prefs.getBoolean(JUSTIFY_TEXT, d.justifyText),
+            noteFont = prefs.getInt(NOTE_FONT, 0),
+            noteFontName = prefs.getString(NOTE_FONT_NAME, null),
+            noteFontFile = prefs.getString(NOTE_FONT_FILE, null),
             darkNotes = prefs.getBoolean(DARK_NOTES, d.darkNotes),
             noteThemeId = prefs.getString(NOTE_THEME_ID, d.noteThemeId) ?: d.noteThemeId,
             captureNotification = prefs.getBoolean(CAPTURE_NOTIFICATION, d.captureNotification),
@@ -271,6 +280,9 @@ class SettingsStore(context: Context) {
             .putBoolean(REORDER_ON_CHECK, settings.reorderOnCheck)
             .putBoolean(LARGE_CHECKBOXES, settings.largeCheckboxes)
             .putBoolean(JUSTIFY_TEXT, settings.justifyText)
+            .putInt(NOTE_FONT, settings.noteFont)
+            .putString(NOTE_FONT_NAME, settings.noteFontName)
+            .putString(NOTE_FONT_FILE, settings.noteFontFile)
             .putBoolean(PLAIN_EDITOR, settings.plainEditor)
             .putBoolean(LIVE_MARKDOWN, settings.liveMarkdown)
             .putBoolean(DARK_NOTES, settings.darkNotes)
@@ -356,6 +368,9 @@ class SettingsStore(context: Context) {
         const val TRASH_DAYS = "trashDays"
         const val REORDER_ON_CHECK = "reorderOnCheck"
         const val LARGE_CHECKBOXES = "largeCheckboxes"
+        const val NOTE_FONT = "noteFont"
+        const val NOTE_FONT_NAME = "noteFontName"
+        const val NOTE_FONT_FILE = "noteFontFile"
         const val JUSTIFY_TEXT = "justifyText"
         const val PLAIN_EDITOR = "plainEditor"
         const val LIVE_MARKDOWN = "liveMarkdown"

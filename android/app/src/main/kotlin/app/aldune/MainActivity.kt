@@ -93,7 +93,9 @@ class MainActivity : ComponentActivity() {
                 onDispose {}
             }
             AldunaTheme(settings.appearance, settings.aspectColors, NoteLook(settings.uniformNoteColor, settings.cornersSquare, settings.syncSignalVisible, settings.colorFill, settings.newButtonSquare)) {
-                NotesApp(viewModel)
+                androidx.compose.runtime.CompositionLocalProvider(app.aldune.ui.LocalNoteFont provides app.aldune.ui.rememberNoteFontFamily(settings)) {
+                    NotesApp(viewModel)
+                }
             }
         }
     }

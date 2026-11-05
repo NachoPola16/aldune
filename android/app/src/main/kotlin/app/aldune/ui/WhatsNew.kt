@@ -34,7 +34,7 @@ internal object WhatsNew {
         Entry(20, "1.3.1", listOf(R.string.whatsnew_131_look, R.string.whatsnew_131_news, R.string.whatsnew_131_widget)),
         Entry(22, "3.0.0", listOf(R.string.whatsnew_300_invite, R.string.whatsnew_300_people, R.string.whatsnew_300_look, R.string.whatsnew_300_edit, R.string.whatsnew_300_group, R.string.whatsnew_300_tagcolor, R.string.whatsnew_300_widget, R.string.whatsnew_300_search, R.string.whatsnew_300_swipe, R.string.whatsnew_300_folded, R.string.whatsnew_300_plain, R.string.whatsnew_300_remember, R.string.whatsnew_300_accent)),
         Entry(23, "3.3.0", listOf(R.string.whatsnew_330_drag, R.string.whatsnew_330_menu, R.string.whatsnew_330_widget)),
-        Entry(24, "4.0.0", listOf(R.string.whatsnew_400_backup, R.string.whatsnew_400_import, R.string.whatsnew_400_restore, R.string.whatsnew_400_markdown, R.string.whatsnew_400_share, R.string.whatsnew_400_battery)),
+        Entry(24, "4.0.0", listOf(R.string.whatsnew_400_backup, R.string.whatsnew_400_import, R.string.whatsnew_400_restore, R.string.whatsnew_400_markdown, R.string.whatsnew_400_share, R.string.whatsnew_400_battery, R.string.whatsnew_400_notefont)),
     )
 
     val codes: List<Int> get() = entries.map { it.versionCode }

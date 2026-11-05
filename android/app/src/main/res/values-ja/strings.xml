@@ -373,6 +373,18 @@
     <string name="welcome_ok">わかりました</string>
     <string name="large_checkboxes">タスクのチェックボックスを大きくする</string>
     <string name="large_checkboxes_hint">ボックスを大きくして、タップしやすくします。</string>
+    <string name="note_font">ノートのフォント</string>
+    <string name="note_font_system">システム(既定)</string>
+    <string name="note_font_serif">セリフ体</string>
+    <string name="note_font_easy">読みやすい書体</string>
+    <string name="note_font_mono">等幅</string>
+    <string name="note_font_imported">読み込み済み:%s</string>
+    <string name="note_font_import">フォントを読み込む…</string>
+    <string name="note_font_remove">削除</string>
+    <string name="note_font_hint">変わるのはノートの文字だけで、アプリのメニューは変わりません。独自のフォントを持つスタイル(ターミナル、ノート)はそれを保ちます。この設定はこの端末だけのもので、同期されません。無料フォント:.ttf または .otf をダウンロード(Google Fonts など)して読み込んでください。</string>
+    <string name="note_font_rejected_extension">.ttf または .otf ファイルを選んでください。</string>
+    <string name="note_font_rejected_too_large">このフォントファイルは 10 MB を超えています。</string>
+    <string name="note_font_rejected_invalid">このファイルは Aldune で使えるフォントではありません。</string>
     <string name="justify_text">テキストを両端揃えにして単語をハイフネーションする</string>
     <string name="justify_text_hint">本文は両端まで広がり、長い単語は音節で分割されます。リストや短い行は引き伸ばされません。</string>
     <string name="live_markdown">入力中に Markdown の書式を表示する</string>
@@ -654,6 +666,7 @@
     <string name="whatsnew_400_import">Google Keep、Evernote、テキストファイル（Markdown または .txt）からノートを取り込めます。</string>
     <string name="whatsnew_400_restore">バックアップから復元したノートが、別のデバイスからの同期で再び削除されることはなくなりました。</string>
     <string name="whatsnew_400_markdown">入力中の Markdown 表示: 太字、斜体、見出し、コード、リンクがノート上に表示されます（設定でオフにできます）。</string>
+    <string name="whatsnew_400_notefont">ノートのフォント:システム、セリフ体、読みやすい書体、等幅から選ぶか、.ttf/.otf ファイルを読み込めます(設定 &gt; ノート)。変わるのはノートの文字だけで、この設定はこの端末だけのものです。</string>
     <string name="whatsnew_400_share">エディターのメニューから、ノートのテキストを任意のアプリに共有できます。</string>
     <string name="whatsnew_400_battery">リマインダー: スマートフォンが Aldune を休止させている場合、設定でお知らせし、制限を解除する画面へご案内します。</string>
 </resources>

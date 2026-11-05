@@ -373,6 +373,18 @@
     <string name="welcome_ok">Entendido</string>
     <string name="large_checkboxes">Casillas de tarea más grandes</string>
     <string name="large_checkboxes_hint">Agranda las casillas para acertarlas con más facilidad.</string>
+    <string name="note_font">Fuente de las notas</string>
+    <string name="note_font_system">Sistema (por defecto)</string>
+    <string name="note_font_serif">Con serifa</string>
+    <string name="note_font_easy">Fácil de leer</string>
+    <string name="note_font_mono">Monoespaciada</string>
+    <string name="note_font_imported">Importada: %s</string>
+    <string name="note_font_import">Importar una fuente…</string>
+    <string name="note_font_remove">Quitar</string>
+    <string name="note_font_hint">Solo cambia el texto de las notas, no los menús de la app. Los aspectos con fuente propia (terminal, cuadernos) la conservan. La elección se queda en este móvil y no se sincroniza. Fuentes gratis: descarga un .ttf o .otf (por ejemplo de Google Fonts) e impórtalo.</string>
+    <string name="note_font_rejected_extension">Elige un archivo .ttf o .otf.</string>
+    <string name="note_font_rejected_too_large">Ese archivo de fuente pesa más de 10 MB.</string>
+    <string name="note_font_rejected_invalid">Ese archivo no es una fuente que Aldune pueda usar.</string>
     <string name="justify_text">Justificar el texto y separar palabras con guiones</string>
     <string name="justify_text_hint">El texto corrido llega a los dos bordes y las palabras largas se parten por sílabas. Las listas y las líneas cortas no se estiran.</string>
     <string name="live_markdown">Mostrar el formato Markdown al escribir</string>
@@ -654,6 +666,7 @@
     <string name="whatsnew_400_import">Trae tus notas de Google Keep, Evernote o de archivos de texto (Markdown o .txt).</string>
     <string name="whatsnew_400_restore">Una nota que restauras desde una copia ya no se vuelve a borrar por una sincronización desde otro dispositivo.</string>
     <string name="whatsnew_400_markdown">Markdown al escribir: la negrita, la cursiva, los títulos, el código y los enlaces se dibujan en la nota (se desactiva en Ajustes).</string>
+    <string name="whatsnew_400_notefont">Fuente de las notas: elige Sistema, Con serifa, Fácil de leer o Monoespaciada, o importa un archivo .ttf/.otf (Ajustes &gt; Notas). Solo cambia el texto de las notas y la elección se queda en este móvil.</string>
     <string name="whatsnew_400_share">Comparte el texto de una nota con cualquier app desde el menú del editor.</string>
     <string name="whatsnew_400_battery">Recordatorios: si tu móvil duerme Aldune, Ajustes ahora te lo dice y te lleva a donde quitar la restricción.</string>
 </resources>

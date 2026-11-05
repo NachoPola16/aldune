@@ -308,6 +308,7 @@ fun SettingsScreen(viewModel: NotesViewModel, onClose: () -> Unit) {
                     SwitchRow(stringResource(R.string.large_checkboxes), stringResource(R.string.large_checkboxes_hint), settings.largeCheckboxes) { on ->
                         viewModel.updateSettings { it.copy(largeCheckboxes = on) }
                     }
+                    NoteFontSection(viewModel)
                     SwitchRow(stringResource(R.string.justify_text), stringResource(R.string.justify_text_hint), settings.justifyText) { on ->
                         viewModel.updateSettings { it.copy(justifyText = on) }
                     }
