@@ -278,6 +278,15 @@ public sealed class AppSettings
     /// </summary>
     public bool LargeCheckboxes { get; set; }
 
+    /// <summary>The font of the note text (see <see cref="NoteFontChoice"/>). System by default: an old settings.json loads unchanged. Local to the device.</summary>
+    public NoteFontChoice NoteFontChoice { get; set; }
+
+    /// <summary>The family chosen under <see cref="NoteFontChoice.Installed"/>, or the name shown for the <see cref="NoteFontChoice.Imported"/> font.</summary>
+    public string? NoteFontName { get; set; }
+
+    /// <summary>File name (no folder) of the imported font inside the app's <c>fonts</c> folder. Never exported or synced: a path is local.</summary>
+    public string? NoteFontFile { get; set; }
+
     /// <summary>
     /// El color de la nota como una franja lateral sobre el fondo de la app, en vez de teñir la nota entera. Solo afecta a
     /// los aspectos de cara llena (ver <see cref="AppSkin.For(AppearanceMode, bool)"/>). Apagado: la nota entera de su color, como siempre.

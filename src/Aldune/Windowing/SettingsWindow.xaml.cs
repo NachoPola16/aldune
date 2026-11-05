@@ -2726,6 +2726,7 @@ public partial class SettingsWindow : Window
         UpdateNoteColorStripeUi();
         MoveCompletedTasksCheck.IsChecked = _settings.MoveCompletedTasksToEnd;
         LargeCheckboxesCheck.IsChecked = _settings.LargeCheckboxes;
+        PopulateNoteFont();
         LiveMarkdownCheck.IsChecked = _settings.LiveMarkdown;
         CheckForUpdatesAutomaticallyCheck.IsChecked = _settings.CheckForUpdatesAutomatically;
         AutoHideTasksCheck.IsChecked = _settings.AutoHideCompletedTasks;

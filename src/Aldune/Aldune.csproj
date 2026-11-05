@@ -19,6 +19,9 @@
     <!-- AlduneCheck: la fuente de las casillas ☐/☒ (scripts/branding/generar-fuente-check.py). -->
     <Resource Include="Assets\AlduneCheck.ttf" />
     <Resource Include="Assets\AlduneCheckLarge.ttf" />
+    <!-- Atkinson Hyperlegible (SIL OFL, licence beside it): the «Easy to read» note font. -->
+    <Resource Include="Assets\AtkinsonHyperlegible-Regular.ttf" />
+    <Resource Include="Assets\AtkinsonHyperlegible-Bold.ttf" />
   </ItemGroup>
 
   <ItemGroup>

@@ -672,6 +672,23 @@
                         <TextBlock Text="{x:Static res:Strings.LargeCheckboxesHint}"
                                    Foreground="{DynamicResource AlduneHintBrush}" FontSize="{DynamicResource AlduneTextSmall}" TextWrapping="Wrap" Margin="0,6,56,16" />
 
+                        <TextBlock Text="{x:Static res:Strings.NoteFontLabel}"
+                                   Foreground="{DynamicResource AlduneTextBrush}" FontSize="{DynamicResource AlduneTextBody}" Margin="0,0,0,6" />
+                        <ComboBox x:Name="NoteFontCombo" AutomationProperties.Name="{x:Static res:Strings.NoteFontLabel}" Style="{StaticResource SyncProfileComboStyle}"
+                                  ItemContainerStyle="{StaticResource SyncProfileItemStyle}" HorizontalAlignment="Left" MinWidth="260"
+                                  SelectionChanged="OnNoteFontSelectionChanged" />
+                        <WrapPanel Margin="0,8,0,0">
+                            <Button Content="{x:Static res:Strings.NoteFontInstalledButton}" Padding="12,7" Margin="0,0,8,0"
+                                    Click="OnNoteFontInstalledClick" Style="{StaticResource RecordButtonStyle}" />
+                            <Button Content="{x:Static res:Strings.NoteFontImportButton}" Padding="12,7" Margin="0,0,8,0"
+                                    Click="OnNoteFontImportClick" Style="{StaticResource RecordButtonStyle}" />
+                            <Button x:Name="NoteFontRemoveButton" Content="{x:Static res:Strings.NoteFontRemoveButton}" Padding="12,7"
+                                    Click="OnNoteFontRemoveClick" Style="{StaticResource RecordButtonStyle}" />
+                        </WrapPanel>
+                        <TextBlock Text="{x:Static res:Strings.NoteFontHint}"
+                                   Foreground="{DynamicResource AlduneHintBrush}" FontSize="{DynamicResource AlduneTextSmall}" TextWrapping="Wrap" Margin="0,6,56,16" />
+
+
                         <CheckBox x:Name="MoveCompletedTasksCheck"
                                   Content="{x:Static res:Strings.MoveCompletedTasksCheckbox}"
                                   Foreground="{DynamicResource AlduneTextBrush}" Background="{DynamicResource AlduneGroundBrush}" FontSize="{DynamicResource AlduneTextBody}"

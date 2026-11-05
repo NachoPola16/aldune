@@ -381,6 +381,9 @@ public class ConfigExportImportTests
     // Propiedades de AppSettings que NUNCA viajan por el archivo de configuración, cada una con su razón.
     private static readonly Dictionary<string, string> NotExported = new()
     {
+        ["NoteFontChoice"] = "fuente de las notas: puede apuntar a una fuente instalada o importada que el otro equipo no tiene",
+        ["NoteFontName"] = "fuente de las notas: nombre de una familia de este equipo",
+        ["NoteFontFile"] = "fuente importada: fichero de la carpeta de datos de este equipo; las exportaciones no llevan rutas ni ficheros",
         ["WrappedDatabaseKey"] = "clave de la base de datos, protegida por DPAPI en este equipo",
         ["LastSeenVersion"] = "qué novedades ya se enseñaron en este equipo",
         ["TagOrder"] = "orden propio de las etiquetas: es de este equipo, como en Android",

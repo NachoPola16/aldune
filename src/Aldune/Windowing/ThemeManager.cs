@@ -1,4 +1,5 @@
 ﻿using System.Windows;
+using System.IO;
 using System.Windows.Media;
 using Aldune.Core;
 using Aldune.Interop;
@@ -43,6 +44,41 @@ public static class ThemeManager
 
     /// <summary>Ajuste «Casillas grandes»: elige la fuente de las casillas y la zona de clic de NoteWindow.</summary>
     public static bool LargeCheckboxes { get; set; }
+
+    /// <summary>The note font setting (see <see cref="NoteFontChoice"/>); applied by <see cref="ApplySkin"/> only where the look uses the system font.</summary>
+    public static NoteFontChoice NoteFontChoice { get; set; }
+    public static string? NoteFontName { get; set; }
+    /// <summary>Full path of the imported font file, or null when there is none or it has gone missing (the note font then falls back to System).</summary>
+    public static string? NoteFontFilePath { get; set; }
+
+    private static readonly Uri AppBase = new("pack://application:,,,/aldune;component/");
+
+    /// <summary>Takes the note font from the settings. <paramref name="fontsDirectory"/> is the app's own <c>fonts</c> folder, where an imported file lives.</summary>
+    public static void ApplyNoteFontSettings(AppSettings settings, string fontsDirectory)
+    {
+        NoteFontChoice = NoteFonts.Normalize(settings.NoteFontChoice);
+        NoteFontName = settings.NoteFontName;
+        // Only a bare file name is trusted: the value comes from a settings.json that could have been edited.
+        NoteFontFilePath = string.IsNullOrEmpty(settings.NoteFontFile) || settings.NoteFontFile != Path.GetFileName(settings.NoteFontFile)
+            ? null : Path.Combine(fontsDirectory, settings.NoteFontFile);
+    }
+
+    /// <summary>
+    /// The font entry (a name or an absolute font-folder URI with <c>#family</c>) the note text starts with; empty = the system font. A look that
+    /// defines its own font keeps it. An imported font is addressed by the folder of its file, so the platform loader (not Aldune) reads it.
+    /// </summary>
+    internal static string NoteFontSource(AppSkin skin)
+    {
+        if (NoteFonts.LookKeepsItsFont(skin.NoteFont)) return skin.NoteFont;
+        return NoteFonts.Normalize(NoteFontChoice) switch
+        {
+            NoteFontChoice.EasyToRead => "./Assets/#" + NoteFonts.WindowsFamily(NoteFontChoice.EasyToRead, null),
+            NoteFontChoice.Imported when NoteFontFilePath is { Length: > 0 } path && File.Exists(path) && !string.IsNullOrWhiteSpace(NoteFontName)
+                => new Uri(Path.GetDirectoryName(path)! + Path.DirectorySeparatorChar).AbsoluteUri + "#" + NoteFontName,
+            NoteFontChoice.Imported => "",
+            var choice => NoteFonts.WindowsFamily(choice, NoteFontName)
+        };
+    }
 
     /// <summary>Paleta activa, para quien calcula colores en Core (NoteFace).</summary>
     public static IReadOnlyDictionary<string, string> Palette => _palette;
@@ -148,7 +184,9 @@ public static class ThemeManager
     /// </summary>
     public static void ApplySkin(Application app, AppSkin skin)
     {
-        var noteFont = string.IsNullOrEmpty(skin.NoteFont) ? SystemFonts.MessageFontFamily : new FontFamily(skin.NoteFont);
+        var noteSource = NoteFontSource(skin);
+        var noteFont = string.IsNullOrEmpty(noteSource) ? SystemFonts.MessageFontFamily : new FontFamily(AppBase, noteSource);
+        var bodySource = string.IsNullOrEmpty(noteSource) ? SystemFonts.MessageFontFamily.Source : noteSource;
         var dictionary = new ResourceDictionary
         {
             ["AldunePrimaryFont"] = // Vacío = la fuente de sistema, igual que la de la nota.
@@ -157,7 +195,7 @@ public static class ThemeManager
             noteFont,
             // El cuerpo de la nota: la fuente de la nota y, de respaldo, AlduneCheck, que solo trae ☐ y ☒ (con el
             // tick). Va DETRÁS para que el interlineado lo marque la fuente de la nota, no ella.
-            ["AlduneNoteBodyFont"] = new FontFamily(new Uri("pack://application:,,,/aldune;component/"), $"{noteFont.Source}, ./Assets/#{(LargeCheckboxes ? "AlduneCheckLarge" : "AlduneCheck")}"),
+            ["AlduneNoteBodyFont"] = new FontFamily(AppBase, $"{bodySource}, ./Assets/#{(LargeCheckboxes ? "AlduneCheckLarge" : "AlduneCheck")}"),
             ["AlduneNoteTitleFont"] = new FontFamily(skin.NoteTitleFont),
             ["AlduneNoteTitleFontSize"] = Math.Round(skin.NoteTitleFontSize * TextFactor),
             ["AlduneNoteBodySize"] = Math.Round(NoteBodyBaseSize * TextFactor),
