@@ -11,6 +11,8 @@
         <WindowChrome CaptionHeight="34" ResizeBorderThickness="6" GlassFrameThickness="-1" CornerRadius="0" />
     </WindowChrome.WindowChrome>
     <Window.Resources>
+        <!-- The bar runs from the top of the first card to the bottom of the last one: the 10 px under the cards (their margin) are not content. -->
+        <Thickness x:Key="ScrollBarMargin">0,0,0,10</Thickness>
         <Style x:Key="ConflictButtonStyle" TargetType="Button">
             <Setter Property="Foreground" Value="{DynamicResource AlduneTextBrush}" />
             <Setter Property="Background" Value="{DynamicResource AlduneRaisedBrush}" />
@@ -76,8 +78,10 @@
             </StackPanel>
         </Grid>
 
-        <Grid Grid.Row="1" Margin="20,0,20,20">
-            <ScrollViewer VerticalScrollBarVisibility="Auto">
+        <!-- Right margin 17: the 16 px bar's 10 px thumb ends 20 px from the window edge, like Manage notes and Settings; the cards stop 5 px
+             before the bar (8 px before its thumb) instead of running into it. -->
+        <Grid Grid.Row="1" Margin="20,0,17,20">
+            <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="0,0,5,0">
                 <ItemsControl x:Name="ConflictsList">
                     <ItemsControl.ItemTemplate>
                         <DataTemplate>
