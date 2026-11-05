@@ -116,6 +116,7 @@ public partial class NoteWindow : Window
         _initialHeight = Height;
         _autoScroll = new AutoScrollManager(BodyHost, null, TextBody);
         BodyHost.SizeChanged += (_, _) => RefreshPaper();
+        Header.SizeChanged += (_, _) => FitPerforation();
         SizeChanged += (_, _) => FitFindBar();
         TextBody.AddHandler(ScrollViewer.ScrollChangedEvent, new ScrollChangedEventHandler(OnBodyScrollChanged));
         _menuToggle = new PopupToggle(ActionsPopup);
@@ -2615,6 +2616,20 @@ public partial class NoteWindow : Window
     }
 
     // «Sincronizando…» mientras corre una pasada: la nota sigue editable (sin red no se podría escribir) y, si llega algo, se repinta al acabar.
+    /// <summary>
+    /// The dashed rule under the title: a whole number of dashes (3 on, 3 off) centred in the header, so it starts and ends with a dash and the
+    /// gap to the note's edge is the same on both sides. Stretched to the full width it ended on a gap, 2 px short on the right.
+    /// </summary>
+    private void FitPerforation()
+    {
+        double available = Header.ActualWidth - 28;
+        if (available < 9) return;
+        int dashes = (int)Math.Floor((available - 3) / 6) + 1;
+        Perforation.HorizontalAlignment = HorizontalAlignment.Center;
+        Perforation.Margin = new Thickness(0);
+        Perforation.Width = 6 * (dashes - 1) + 3;
+    }
+
     private void UpdateSyncingText() =>
         SyncingText.Visibility = _coordinator.SyncInProgress ? Visibility.Visible : Visibility.Collapsed;
 
