@@ -223,7 +223,8 @@ fun SettingsScreen(viewModel: NotesViewModel, onClose: () -> Unit) {
                 if (!atBottom) HorizontalDivider()
             } }
             if (!atBottom) tabBar()
-            Column(Modifier.weight(1f).verticalScroll(settingsScroll).padding(bottom = 24.dp)) {
+            // The options thin out at the bottom instead of being cut by the system bar (or by the tab bar when the tabs are at the bottom).
+            Column(Modifier.weight(1f).fadeBottomEdge().verticalScroll(settingsScroll).padding(bottom = 24.dp)) {
                 if (searching) SettingsSearchResults(searchQuery, labels) { picked, title ->
                     tab = picked; lastTab = picked; lastTabAt = System.currentTimeMillis()
                     searchQuery = ""; searchOpen = false

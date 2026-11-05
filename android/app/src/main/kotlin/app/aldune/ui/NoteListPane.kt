@@ -24,7 +24,6 @@ import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.input.pointer.pointerInput
@@ -665,20 +664,9 @@ fun NoteListPane(
                 // A swipe over the empty part of the list (below the last note, when the notes do not fill the screen) goes to the next view: All,
                 // then each tag, then All again. Rows keep their own swipes: a gesture that starts on a note is not read here.
                 val swipeMinimum = with(LocalDensity.current) { 64.dp.toPx() }
-                val fadePx = with(LocalDensity.current) { 20.dp.toPx() }
                 LazyColumn(
-                    // The notes thin out over the last 20 dp instead of being cut in a straight line by the bar below. A transparency mask (not a
-                    // coloured overlay), so it works on any look and on paper textures; at the end of the list that strip is the empty bottom padding.
-                    Modifier.fillMaxSize()
-                        .graphicsLayer { compositingStrategy = androidx.compose.ui.graphics.CompositingStrategy.Offscreen }
-                        .drawWithContent {
-                            drawContent()
-                            drawRect(
-                                brush = Brush.verticalGradient(listOf(Color.Black, Color.Transparent), startY = size.height - fadePx, endY = size.height),
-                                topLeft = Offset(0f, size.height - fadePx), size = androidx.compose.ui.geometry.Size(size.width, fadePx),
-                                blendMode = androidx.compose.ui.graphics.BlendMode.DstIn,
-                            )
-                        }
+                    // The notes thin out over the last 20 dp instead of being cut in a straight line by the bar below (see fadeBottomEdge).
+                    Modifier.fillMaxSize().fadeBottomEdge()
                         .pointerInput(state.allTags, state.tag) {
                         awaitEachGesture {
                             val down = awaitFirstDown(requireUnconsumed = false)
@@ -698,7 +686,7 @@ fun NoteListPane(
                         }
                     },
                     state = listState, verticalArrangement = Arrangement.spacedBy(8.dp),
-                    contentPadding = androidx.compose.foundation.layout.PaddingValues(top = with(LocalDensity.current) { tagDragPad.toDp() }, bottom = 16.dp),
+                    contentPadding = androidx.compose.foundation.layout.PaddingValues(top = with(LocalDensity.current) { tagDragPad.toDp() }, bottom = EDGE_FADE),
                 ) {
                     items(entries, key = { it.key }) { entry ->
                       when (entry) {
