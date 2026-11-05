@@ -162,6 +162,7 @@ Open Settings from the tray icon or the dock. The left list has nine pages; the 
 | Remember note positions / sizes | A note reopens where and as big as you left it. Off: next to the dock, standard size growing with the text. |
 | Restore size and position of all notes | Resets every note, including open ones; text untouched. |
 | Larger task checkboxes | Bigger boxes and click area; lines are roomier. |
+| Note font | System, Serif, Easy to read (Atkinson Hyperlegible, bundled), Monospace, **Installed fonts…** (any family installed on the PC, each shown in its own face) or **Import a font…** (a `.ttf`/`.otf` file, checked and kept in the app's own `fonts` folder; one at a time, **Remove** goes back to System). Only the note text changes, never the menus; looks with their own font (terminal, XP, notebooks) keep it. Local to the PC: never synced, backed up or exported. |
 | Move checked tasks to the end of the list | Pending tasks stay together on top. |
 | Delete completed tasks automatically, **After:** | A checked task stays for the delay you choose (minutes, hours, days or weeks; default 1 day) and then its line is removed from the note. |
 | Show pending tasks in the reminder | The reminder notification lists the first tasks left. On by default. |
@@ -295,6 +296,7 @@ Same app, same note format, same sync. What changes:
 - **Quick capture:** a silent notification with a button to start a note, a Quick Settings tile, a **Quick list** you can add to by replying from the notification, and sharing text into Aldune.
 - **Reminders:** per note (In 1 hour, Tonight 20:00, or pick date and time); they alert on that device only. **Exact time** (Alerts) uses exact alarms.
 - **Sync:** Aldune server and WebDAV only (a shared-folder code is rejected). Paste a profile code or tap **Scan QR** next to **Paste**; add several profiles. Background sync roughly every 15 minutes when Android allows. **Share profile** is done on Windows; **Invite someone…** (server invitations) exists on both, see [SYNC.md](SYNC.md).
+- **Note font:** Settings → Notes → *Note font*: System, Serif, Easy to read, Monospace or one imported `.ttf`/`.otf` file (no installed-fonts list: Android has no public API for it). It changes the note text and the list previews, not the app; the terminal and notebook looks keep theirs. Local to the phone.
 - **Notes:** the editor bar has checkbox, bullet, indent, move line, undo/redo; each note has an options sheet (colour, tags, pin, history and more). “Hide completed tasks” only hides them while you edit (Windows deletes the line); trash retention and hide-after use fixed choices. **Keyboard when opening a note** (only new notes / every note / never) is Android-only.
 - **Backup:** Settings → Sync tab has **Export all notes**, **Import notes…**, and the automatic copy to a folder. Android's own backup does not include your notes or the key.
   The full-backup zip and the safety copies the app keeps in its private `files/backups/` before «Replace everything» (newest three) hold notes as plain text (protected notes stay password-encrypted); the safety copies are not encrypted with the data key.

@@ -53,6 +53,7 @@ It is **not** Windows' "always on top of other windows" (`NoteUnpinned`, local, 
 | Simplified mode | `SimplifiedMode` | `simplifiedMode` | |
 | Markdown as you type | `LiveMarkdown` | `liveMarkdown` | On by default. A display option: the text is never changed. Windows draws it in a layer over the plain editor (headings are bold, not bigger); Android styles the text with real bold and italic. |
 | Large checkboxes | `LargeCheckboxes` | `largeCheckboxes` | Factory default: off on Windows, on only in new Android installs (touch screen). |
+| Note font | `NoteFontChoice`, `NoteFontName`, `NoteFontFile` | `noteFont`, `noteFontName`, `noteFontFile` | Same numbers (System 0, Serif 1, Easy to read 2, Monospace 3, Imported 5); Windows adds *Installed* (4, a family picked from the PC's fonts). Local, never synced and never in the config export (`NotExported` in the tests). The imported file lives in the app's own `fonts` folder and is checked by `FontFileInspector` (C#) / `FontFileInspector` (Kotlin, same test cases). Looks with their own font keep it. |
 | Move done to the end | `MoveCompletedTasksToEnd` | `reorderOnCheck` | |
 | Hide done tasks | `AutoHideCompletedTasks` + value and unit | `hideDoneTasks` + hours | Windows: minutes, hours, days or weeks with a number. Android: 1 hour, 1 day or 1 week. |
 | Days in the trash | `TrashRetentionDays` | `trashDays` | Windows: free number. Android: 7, 14, 30, 60 or 90. |
