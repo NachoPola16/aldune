@@ -131,6 +131,7 @@ public partial class NoteWindow : Window
         _protectionPassword = protectionPassword;
         _baseText = note.Text;
         _baseProtected = note.ProtectedContent;
+        WireWindowButtonsOnHover();
         coordinator.SyncProgressChanged += UpdateSyncingText;
         Closed += (_, _) => coordinator.SyncProgressChanged -= UpdateSyncingText;
         UpdateSyncingText();
@@ -2517,11 +2518,46 @@ public partial class NoteWindow : Window
     }
 
     /// <summary>Repinta con los ajustes de aspecto actuales (color único y, desde la señal, su estado).</summary>
+    /// <summary>
+    /// Minimize and maximize show only while the pointer is over the title strip (or one of them has the keyboard focus); close and "..." stay.
+    /// They are never collapsed: they keep their place and stay clickable and reachable by keyboard, so the title does not move. The looks with
+    /// a drawn title bar (XP, Windows 98) keep them always visible, like the window they imitate.
+    /// </summary>
+    private void WireWindowButtonsOnHover()
+    {
+        var strip = (UIElement)MinimizeButton.Parent;
+        foreach (var source in new UIElement[] { TitleBox, DragHandle, strip })
+        {
+            source.MouseEnter += (_, _) => UpdateWindowButtons();
+            source.MouseLeave += (_, _) => UpdateWindowButtons();
+        }
+        foreach (var button in new[] { MinimizeButton, MaximizeButton })
+        {
+            button.GotKeyboardFocus += (_, _) => UpdateWindowButtons();
+            button.LostKeyboardFocus += (_, _) => UpdateWindowButtons();
+        }
+        Loaded += (_, _) => UpdateWindowButtons(animate: false);
+    }
+
+    private void UpdateWindowButtons(bool animate = true)
+    {
+        bool alwaysShown = ThemeManager.Skin.TitleBar != SkinTitleBar.Plain;
+        bool show = alwaysShown || TitleBox.IsMouseOver || DragHandle.IsMouseOver || ((UIElement)MinimizeButton.Parent).IsMouseOver
+            || MinimizeButton.IsKeyboardFocused || MaximizeButton.IsKeyboardFocused;
+        foreach (var button in new[] { MinimizeButton, MaximizeButton })
+        {
+            double target = show ? 1 : 0;
+            if (!animate || !SystemParameters.ClientAreaAnimation) { button.BeginAnimation(OpacityProperty, null); button.Opacity = target; continue; }
+            button.BeginAnimation(OpacityProperty, new System.Windows.Media.Animation.DoubleAnimation(target, new Duration(TimeSpan.FromMilliseconds(120))));
+        }
+    }
+
     internal void ReapplyAppearance()
     {
         ApplyColor(_note.Color);
         ApplyTextZoom();
         UpdateSyncSignal();
+        UpdateWindowButtons(animate: false);
         // Otra piel cambia las fuentes y el prompt (user@aldune:~/notes$) y con ello cuánto sitio ocupa el
         // texto; sin reajustar, el cuerpo se pasaba unos píxeles de la ventana y la rueda lo desplazaba
         // (con la barra oculta no se ve por qué). Tras el layout, que es cuando se conocen las medidas nuevas.

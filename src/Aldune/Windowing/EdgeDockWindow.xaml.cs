@@ -1461,10 +1461,7 @@ public partial class EdgeDockWindow : Window
             // restaura (ver AppCoordinator.OpenOrActivateNote). Solo desaparece la pestaña cuando la
             // ventana está a la vista de verdad — antes bastaba con que existiera, así que minimizar
             // una nota la borraba del dock sin forma de recuperarla desde ahí.
-            bool onDesk = button.Tag is Note note
-                && _coordinator.IsNoteOpen(note.Id)
-                && !_coordinator.IsNoteMinimized(note.Id)
-                && !_coordinator.IsNoteClosing(note.Id);
+            bool onDesk = button.Tag is Note note && IsOnDesk(note);
             // Hidden y no Collapsed: conserva su hueco, y el mazo enseña el sitio vacío de donde se
             // sacó la ficha.
             bool returning = !onDesk && button.Visibility == Visibility.Hidden && IsVisible;
@@ -3811,6 +3808,20 @@ public partial class EdgeDockWindow : Window
         if (TagEditorPopup.IsOpen) TagEditorPopup.IsOpen = false;
         if (TabMenuPopup.IsOpen || _tabMenuNote is not null) CloseTabMenu();
     }
+
+    /// <summary>
+    /// A rebuilt strip (a sync that changed what a tab draws) creates every tab visible, and <see cref="RefreshOpenState"/> only hides the ones whose
+    /// note is open at Loaded priority, after a frame has been drawn: the open note's tab flashed in the dock. The data context arrives before the
+    /// first layout, so the tab is hidden from its very first frame.
+    /// </summary>
+    private void OnTabDataContextChanged(object sender, DependencyPropertyChangedEventArgs e)
+    {
+        if (sender is Button { DataContext: Note note } button && IsOnDesk(note))
+            button.Visibility = Visibility.Hidden;
+    }
+
+    private bool IsOnDesk(Note note) =>
+        _coordinator.IsNoteOpen(note.Id) && !_coordinator.IsNoteMinimized(note.Id) && !_coordinator.IsNoteClosing(note.Id);
 
     private void OnTabLoaded(object sender, RoutedEventArgs e)
     {
