@@ -233,6 +233,9 @@ fun NoteListPane(
     // Folding or unfolding a group slides the rows under the finger for a moment: a quick second tap meant for the header would land on a note that
     // is still on its way and open it (reported when folding and unfolding tags fast).
     var rowsMovingUntil by remember { mutableLongStateOf(0L) }
+    // Folding a tag that leaves the list shorter than the screen makes it settle back at the top. The rows above (scrolled out of sight a moment
+    // ago) must not fly down from there to their places: for that fold they just take their new place, and only the folded rows fade out.
+    var noSlideUntil by remember { mutableLongStateOf(0L) }
     fun announce(message: String, undo: () -> Unit) {
         calmUntil = System.currentTimeMillis() + MENU_CALM_MS
         scope.launch {
@@ -695,7 +698,7 @@ fun NoteListPane(
                             val headerDragging = tagDrag == entry.key
                             GroupHeader(
                                 entry, highlighted = dropGroup == entry.key,
-                                modifier = (if (headerDragging) Modifier.zIndex(1f).graphicsLayer { translationY = tagDragDelta } else Modifier.animateItem())
+                                modifier = (if (headerDragging) Modifier.zIndex(1f).graphicsLayer { translationY = tagDragDelta } else if (System.currentTimeMillis() < noSlideUntil) Modifier.animateItem(placementSpec = null) else Modifier.animateItem())
                                     .then(
                                         Modifier.pointerInput(entry.key, groupOrder) {
                                             // Holding a header and moving it reorders the tags. The folding of the groups waits for the first
@@ -742,6 +745,12 @@ fun NoteListPane(
                                 // list re-anchors by index, travelling back up to wherever there is content. Asking for the folded header at the top
                                 // before the change is laid out keeps the view on the tag that was tapped.
                                 if (entry.open) {
+                                    // Fewer rows will be left after this group than are now drawn below its header: the list will not fill the screen.
+                                    val folded = entries.indexOfFirst { it is ListEntry.Header && it.key == entry.key }
+                                    if (folded >= 0) {
+                                        val rowsAfter = entries.size - (folded + 1 + entry.count)
+                                        if (rowsAfter < listState.layoutInfo.visibleItemsInfo.count { it.index > folded }) noSlideUntil = System.currentTimeMillis() + ROWS_MOVING_MS
+                                    }
                                     val firstKey = listState.layoutInfo.visibleItemsInfo.firstOrNull()?.key as? String
                                     if (firstKey?.startsWith(entry.key + "/") == true) {
                                         val headerIndex = entries.indexOfFirst { it is ListEntry.Header && it.key == entry.key }
@@ -758,7 +767,7 @@ fun NoteListPane(
                         // abrir la nota, que es lo que haría el toque de la fila al levantar el dedo.
                         val hold = remember(item.id) { PressHold() }
                         SwipeableRow(
-                            modifier = (if (dragging) Modifier.zIndex(1f).graphicsLayer { translationY = dragDelta } else Modifier.animateItem())
+                            modifier = (if (dragging) Modifier.zIndex(1f).graphicsLayer { translationY = dragDelta } else if (System.currentTimeMillis() < noSlideUntil) Modifier.animateItem(placementSpec = null) else Modifier.animateItem())
                                 .then(
                                     if (reorderable || groupedReorder) Modifier.pointerInput(item.id) {
                                         detectDragGesturesAfterLongPress(
