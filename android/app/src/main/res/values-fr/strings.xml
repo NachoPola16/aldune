@@ -672,4 +672,6 @@
     <string name="whatsnew_345_sync">Synchro : une note laissée ouverte récupère chaque minute ce que vos autres appareils ont écrit, donc deux appareils avec la même note ouverte ne se retrouvent plus en conflit. La synchronisation est aussi automatique par défaut.</string>
     <string name="whatsnew_345_fold">Tags : replier un tag alors que vous avez fait défiler sa liste garde la liste sur ce tag, et les lignes n’arrivent plus en volant depuis leur ancienne position.</string>
     <string name="whatsnew_345_win98">Apparences : Windows 98 sombre a une barre de titre d’un bleu plus profond et un nouveau bleu par défaut.</string>
+    <string name="whatsnew_346_notice">Avis de mise à jour : la carte « nouvelle version disponible » est maintenant une seule ligne compacte, avec l’action et un bouton de fermeture, aux couleurs de l’app.</string>
+    <string name="whatsnew_346_fold">Tags : quand vous repliez un tag, ses notes ne restent plus en fantôme sur le titre du tag suivant pendant que la liste remonte.</string>
 </resources>

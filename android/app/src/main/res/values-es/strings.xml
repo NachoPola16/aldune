@@ -672,4 +672,6 @@
     <string name="whatsnew_345_sync">Sync: una nota que dejas abierta recoge cada minuto lo que escribieron tus otros dispositivos, así que dos dispositivos con la misma nota abierta ya no acaban en conflicto. La sincronización también es automática por defecto.</string>
     <string name="whatsnew_345_fold">Etiquetas: al plegar una etiqueta estando desplazado dentro de ella, la lista se queda en esa etiqueta y las filas ya no entran volando desde donde estaban.</string>
     <string name="whatsnew_345_win98">Aspectos: Windows 98 oscuro tiene la barra de título en un azul más profundo y un azul por defecto nuevo.</string>
+    <string name="whatsnew_346_notice">Aviso de actualización: la tarjeta de «nueva versión disponible» es ahora una sola fila compacta, con la acción y un botón de cerrar, con los colores de la app.</string>
+    <string name="whatsnew_346_fold">Etiquetas: al plegar una etiqueta, sus notas ya no se quedan como un fantasma sobre el título de la siguiente mientras la lista sube.</string>
 </resources>

@@ -36,6 +36,7 @@ internal object WhatsNew {
         Entry(23, "3.3.0", listOf(R.string.whatsnew_330_drag, R.string.whatsnew_330_menu, R.string.whatsnew_330_widget)),
         Entry(25, "3.4.1", listOf(R.string.whatsnew_400_backup, R.string.whatsnew_400_import, R.string.whatsnew_400_restore, R.string.whatsnew_400_markdown, R.string.whatsnew_400_share, R.string.whatsnew_400_battery, R.string.whatsnew_400_notefont)),
         Entry(26, "3.4.5", listOf(R.string.whatsnew_345_sync, R.string.whatsnew_345_fold, R.string.whatsnew_345_win98)),
+        Entry(27, "3.4.6", listOf(R.string.whatsnew_346_notice, R.string.whatsnew_346_fold)),
     )
 
     val codes: List<Int> get() = entries.map { it.versionCode }

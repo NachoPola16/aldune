@@ -672,4 +672,6 @@
     <string name="whatsnew_345_sync">Sync: Eine geöffnete Notiz übernimmt jede Minute, was deine anderen Geräte geschrieben haben; zwei Geräte mit derselben offenen Notiz geraten so nicht mehr in Konflikt. Die Synchronisierung ist außerdem standardmäßig automatisch.</string>
     <string name="whatsnew_345_fold">Tags: Wer einen Tag einklappt, während er darin weit unten ist, bleibt bei diesem Tag in der Liste, und die Zeilen fliegen nicht mehr von der alten Scrollposition herein.</string>
     <string name="whatsnew_345_win98">Aussehen: Windows 98 dunkel hat eine tieferblaue Titelleiste und ein neues Standardblau.</string>
+    <string name="whatsnew_346_notice">Update-Hinweis: Die Karte „Neue Version verfügbar“ ist jetzt eine einzelne kompakte Zeile mit Aktion und Schließen-Schaltfläche, in den Farben der App.</string>
+    <string name="whatsnew_346_fold">Tags: Beim Einklappen eines Tags bleiben seine Notizen nicht mehr als Geist über dem Titel des nächsten Tags stehen, während die Liste nach oben rutscht.</string>
 </resources>

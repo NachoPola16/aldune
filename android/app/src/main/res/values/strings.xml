@@ -672,4 +672,6 @@
     <string name="whatsnew_345_sync">Sync: a note you keep open picks up what your other devices wrote every minute, so two devices with the same note open no longer end up in conflict. Sync is also automatic by default.</string>
     <string name="whatsnew_345_fold">Tags: folding a tag while you are scrolled down inside it keeps the list on that tag, and the rows no longer fly in from where they were scrolled.</string>
     <string name="whatsnew_345_win98">Looks: Windows 98 dark has a deeper blue title bar and a new default blue.</string>
+    <string name="whatsnew_346_notice">Update notice: the «new version available» card is now a single compact row, with the action and a close button, in the app\'s colours.</string>
+    <string name="whatsnew_346_fold">Tags: when you fold a tag, its notes no longer linger as a ghost over the next tag\'s title while the list slides up.</string>
 </resources>

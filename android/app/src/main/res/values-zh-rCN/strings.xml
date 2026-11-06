@@ -672,4 +672,6 @@
     <string name="whatsnew_345_sync">同步：保持打开的便笺每分钟会拉取其他设备写入的内容，因此两台设备同时打开同一便笺不再产生冲突。同步现在默认自动进行。</string>
     <string name="whatsnew_345_fold">标签：在标签内滚动后折叠该标签时，列表会停留在该标签处，各行也不再从原来的滚动位置飞入。</string>
     <string name="whatsnew_345_win98">外观：Windows 98 深色的标题栏蓝色更深，默认蓝色也已更新。</string>
+    <string name="whatsnew_346_notice">更新提示：“有新版本”卡片现在是单行紧凑样式，带操作和关闭按钮，并使用应用的配色。</string>
+    <string name="whatsnew_346_fold">标签：折叠标签时，列表上滑过程中其便笺不再作为残影停留在下一个标签的标题上。</string>
 </resources>

@@ -672,4 +672,6 @@
     <string name="whatsnew_345_sync">Sync: uma nota que você deixa aberta recebe a cada minuto o que seus outros dispositivos escreveram, então dois dispositivos com a mesma nota aberta não entram mais em conflito. A sincronização também é automática por padrão.</string>
     <string name="whatsnew_345_fold">Tags: ao recolher uma tag estando rolado dentro dela, a lista fica nessa tag e as linhas não entram mais voando de onde estavam.</string>
     <string name="whatsnew_345_win98">Aparências: o Windows 98 escuro tem a barra de título em um azul mais profundo e um novo azul padrão.</string>
+    <string name="whatsnew_346_notice">Aviso de atualização: o cartão de «nova versão disponível» agora é uma única linha compacta, com a ação e um botão de fechar, nas cores do app.</string>
+    <string name="whatsnew_346_fold">Tags: ao recolher uma tag, as notas dela não ficam mais como um fantasma sobre o título da próxima enquanto a lista sobe.</string>
 </resources>
