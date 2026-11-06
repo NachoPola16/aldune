@@ -25,8 +25,8 @@
 **A 3.x.y release cut while `main` is already on the next major (3.4.0, 3.4.1).** `main` keeps the number of the version to come (4.0.0) and the release is cut from a
 branch made from `main` where **only the numbers change**: `Version`/`AssemblyVersion`/`FileVersion` in `Aldune.csproj`, `versionName` and **`versionCode`** in
 `android/app/build.gradle.kts`, and the «What's new» entry of the version to come renamed to the number being published (so whoever updates sees the news). The tag goes on that
-commit (`git tag v3.4.1 <commit>`, then push the tag; the branch is not pushed). `versionCode` must be higher than every APK already published (3.4.0 used 24, 3.4.1 uses 25, 3.4.5 uses 26),
-so the final 4.0.0 needs **27 or more** and a «What's new» entry that lists only what came after 3.4.5.
+commit (`git tag v3.4.1 <commit>`, then push the tag; the branch is not pushed). `versionCode` must be higher than every APK already published (3.4.0 used 24, 3.4.1 uses 25, 3.4.5 uses 26, 3.4.6 uses 27),
+so the final 4.0.0 needs **28 or more** and a «What's new» entry that lists only what came after 3.4.6 (Android) and 3.4.5 (Windows).
 
 **Every version carries its «What's new» entry** (from Windows 2.7.0 and Android 1.3.0 on). After an update the app shows, once, the news of the versions the person skipped (never on a fresh install); Settings → About reopens it. Before tagging, add the entry:
 - Windows: the strings (all eight languages) in `src/Aldune/Resources/Strings.cs` (`WhatsNew<version><topic>`) and one line in `src/Aldune/Resources/WhatsNew.cs`.

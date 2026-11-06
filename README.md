@@ -155,7 +155,7 @@ context, branding, releasing and the probe guides are in English; the Spanish co
 
 ## Try it and give feedback
 
-If you are testing it: Windows [v3.4.5](https://github.com/NachoPola16/aldune/releases/tag/v3.4.5), Android [3.4.5](https://github.com/NachoPola16/aldune/releases/tag/android-v3.4.5).
+If you are testing it: Windows [v3.4.5](https://github.com/NachoPola16/aldune/releases/tag/v3.4.5), Android [3.4.6](https://github.com/NachoPola16/aldune/releases/tag/android-v3.4.6).
 A bug, a question or an idea goes to [Issues](https://github.com/NachoPola16/aldune/issues/new): say which version you use, what you did and what you expected.
 Do not paste profile codes, tokens or the contents of your notes in a public issue.
 

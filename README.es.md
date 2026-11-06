@@ -156,7 +156,7 @@ Ver el [índice de documentación](docs/README.md) (en inglés). La guía de sin
 
 ## Probar y dar tu opinión
 
-Si la estás probando: Windows [v3.4.5](https://github.com/NachoPola16/aldune/releases/tag/v3.4.5), Android [3.4.5](https://github.com/NachoPola16/aldune/releases/tag/android-v3.4.5).
+Si la estás probando: Windows [v3.4.5](https://github.com/NachoPola16/aldune/releases/tag/v3.4.5), Android [3.4.6](https://github.com/NachoPola16/aldune/releases/tag/android-v3.4.6).
 Un fallo, una duda o una idea van a [Issues](https://github.com/NachoPola16/aldune/issues/new): di qué versión usas, qué hiciste y qué esperabas.
 No pegues códigos de perfil, tokens ni el contenido de tus notas en un issue público.
 
