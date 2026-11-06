@@ -236,6 +236,17 @@ fun NoteListPane(
     // Folding a tag that leaves the list shorter than the screen makes it settle back at the top. The rows above (scrolled out of sight a moment
     // ago) must not fly down from there to their places: for that fold they just take their new place, and only the folded rows fade out.
     var noSlideUntil by remember { mutableLongStateOf(0L) }
+    // Rows that leave because a tag was folded must not fade out in place: the rows below slide up over them and the next tag's header would be
+    // drawn on top of the fading card for a few frames. While the list is not allowed to slide (a short list) the rest does not slide either.
+    var foldingUntil by remember { mutableLongStateOf(0L) }
+    fun androidx.compose.foundation.lazy.LazyItemScope.rowMotion(): Modifier {
+        val now = System.currentTimeMillis()
+        return when {
+            now < noSlideUntil -> Modifier.animateItem(placementSpec = null, fadeOutSpec = null)
+            now < foldingUntil -> Modifier.animateItem(fadeOutSpec = null)
+            else -> Modifier.animateItem()
+        }
+    }
     fun announce(message: String, undo: () -> Unit) {
         calmUntil = System.currentTimeMillis() + MENU_CALM_MS
         scope.launch {
@@ -698,7 +709,7 @@ fun NoteListPane(
                             val headerDragging = tagDrag == entry.key
                             GroupHeader(
                                 entry, highlighted = dropGroup == entry.key,
-                                modifier = (if (headerDragging) Modifier.zIndex(1f).graphicsLayer { translationY = tagDragDelta } else if (System.currentTimeMillis() < noSlideUntil) Modifier.animateItem(placementSpec = null) else Modifier.animateItem())
+                                modifier = (if (headerDragging) Modifier.zIndex(1f).graphicsLayer { translationY = tagDragDelta } else rowMotion())
                                     .then(
                                         Modifier.pointerInput(entry.key, groupOrder) {
                                             // Holding a header and moving it reorders the tags. The folding of the groups waits for the first
@@ -745,6 +756,7 @@ fun NoteListPane(
                                 // list re-anchors by index, travelling back up to wherever there is content. Asking for the folded header at the top
                                 // before the change is laid out keeps the view on the tag that was tapped.
                                 if (entry.open) {
+                                    foldingUntil = System.currentTimeMillis() + ROWS_MOVING_MS
                                     // Fewer rows will be left after this group than are now drawn below its header: the list will not fill the screen.
                                     val folded = entries.indexOfFirst { it is ListEntry.Header && it.key == entry.key }
                                     if (folded >= 0) {
@@ -757,7 +769,12 @@ fun NoteListPane(
                                         if (headerIndex >= 0) listState.requestScrollToItem(headerIndex, 0)
                                     }
                                 }
-                                viewModel.updateSettings { st -> st.copy(collapsedGroups = CollapsedGroups.encode(CollapsedGroups.toggle(CollapsedGroups.decode(st.collapsedGroups), entry.key))) }
+                                val toggle = { viewModel.updateSettings { st -> st.copy(collapsedGroups = CollapsedGroups.encode(CollapsedGroups.toggle(CollapsedGroups.decode(st.collapsedGroups), entry.key))) } }
+                                if (entry.open) {
+                                    // Two frames, so the rows that are about to leave are recomposed with the no-fade modifier first: a row that is
+                                    // removed keeps the modifier of its last composition, and in the same frame that would still be the fading one.
+                                    scope.launch { androidx.compose.runtime.withFrameNanos { }; androidx.compose.runtime.withFrameNanos { }; toggle() }
+                                } else toggle()
                             }
                         }
                         is ListEntry.Note -> {
@@ -767,7 +784,7 @@ fun NoteListPane(
                         // abrir la nota, que es lo que haría el toque de la fila al levantar el dedo.
                         val hold = remember(item.id) { PressHold() }
                         SwipeableRow(
-                            modifier = (if (dragging) Modifier.zIndex(1f).graphicsLayer { translationY = dragDelta } else if (System.currentTimeMillis() < noSlideUntil) Modifier.animateItem(placementSpec = null) else Modifier.animateItem())
+                            modifier = (if (dragging) Modifier.zIndex(1f).graphicsLayer { translationY = dragDelta } else rowMotion())
                                 .then(
                                     if (reorderable || groupedReorder) Modifier.pointerInput(item.id) {
                                         detectDragGesturesAfterLongPress(
@@ -1357,20 +1374,24 @@ private class PressHold {
     var press = 0
 }
 
-/** El aviso de que, sin sincronización, no hay copia de las notas: lleva a Ajustes (sincronizar o exportar) y se puede descartar. */
-/** El aviso de que hay una versión nueva de Android: abre la página de la release en el navegador; no descarga nada. */
+/**
+ * El aviso de que hay una versión nueva de Android: abre la página de la release en el navegador; no descarga nada.
+ * One compact row like [NoBackupNotice] (the text, the action and a close button) instead of the text over a row of two buttons: the old card was
+ * tall, with the text glued to the top and the buttons floating at the bottom, and its grey surface did not match the rest of the list.
+ */
 @Composable
 private fun UpdateNotice(version: String, onDismiss: () -> Unit, onOpen: () -> Unit) {
     androidx.compose.material3.Surface(
         Modifier.fillMaxWidth().padding(start = 16.dp, end = 16.dp, top = 4.dp, bottom = NOTICE_GAP),
-        shape = MaterialTheme.shapes.medium, color = MaterialTheme.colorScheme.primaryContainer,
+        shape = MaterialTheme.shapes.medium, color = MaterialTheme.colorScheme.surfaceVariant,
     ) {
-        Column(Modifier.padding(horizontal = 12.dp, vertical = 8.dp)) {
-            Text(stringResource(R.string.update_available, version), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onPrimaryContainer)
-            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
-                TextButton(onClick = onDismiss) { Text(stringResource(R.string.update_dismiss)) }
-                TextButton(onClick = onOpen) { Text(stringResource(R.string.update_open)) }
-            }
+        Row(Modifier.padding(start = 16.dp), verticalAlignment = Alignment.CenterVertically) {
+            Text(
+                stringResource(R.string.update_available, version), Modifier.weight(1f).padding(vertical = 10.dp),
+                style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+            TextButton(onClick = onOpen) { Text(stringResource(R.string.update_open)) }
+            IconButton(onClick = onDismiss) { Icon(Icons.Filled.Close, contentDescription = stringResource(R.string.update_dismiss), Modifier.size(20.dp)) }
         }
     }
 }
@@ -1378,6 +1399,7 @@ private fun UpdateNotice(version: String, onDismiss: () -> Unit, onOpen: () -> U
 private fun currentVersionName(context: android.content.Context): String =
     runCatching { context.packageManager.getPackageInfo(context.packageName, 0).versionName }.getOrNull().orEmpty()
 
+/** El aviso de que, sin sincronización, no hay copia de las notas: lleva a Ajustes (sincronizar o exportar) y se puede descartar. */
 @Composable
 private fun NoBackupNotice(message: Int, onSettings: () -> Unit, onDismiss: () -> Unit) {
     // One row (the text, and a close button): the whole notice opens Settings. It used to be the text plus a row of two buttons, a quarter of the
