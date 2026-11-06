@@ -26,6 +26,7 @@ internal static class WhatsNew
         (new Version(3, 4, 2), () => [Strings.WhatsNew342Layout]),
         (new Version(3, 4, 3), () => [Strings.WhatsNew343Footer]),
         (new Version(3, 4, 4), () => [Strings.WhatsNew344Conflict]),
+        (new Version(3, 4, 5), () => [Strings.WhatsNew345Sync, Strings.WhatsNew345Look, Strings.WhatsNew345Windows]),
     ];
 
     /// <summary>The versions that have an entry.</summary>
