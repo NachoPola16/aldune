@@ -16,7 +16,7 @@ public sealed class SyncProfileSettings
     public byte[]? WrappedSyncServerToken { get; set; }
     public string? SyncWebDavUsername { get; set; }
     public byte[]? WrappedSyncWebDavPassword { get; set; }
-    public bool SyncAutomatically { get; set; }
+    public bool SyncAutomatically { get; set; } = true;
     public int SyncIntervalMinutes { get; set; } = 15;
     public DateTimeOffset? LastSyncAt { get; set; }
     public string? SyncDeviceId { get; set; }

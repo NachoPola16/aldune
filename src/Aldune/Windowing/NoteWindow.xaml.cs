@@ -2646,8 +2646,15 @@ public partial class NoteWindow : Window
         Perforation.Width = 6 * (dashes - 1) + 3;
     }
 
-    private void UpdateSyncingText() =>
-        SyncingText.Visibility = _coordinator.SyncInProgress ? Visibility.Visible : Visibility.Collapsed;
+    private void UpdateSyncingText()
+    {
+        // «Sincronizando…» (left) and the signal with its label (right) share the bottom strip and overlap on a narrow note. They say the same
+        // thing, so with the signal on (or a saved conflict showing in its place) the signal is enough and the text stays hidden.
+        UpdateSyncSignal();
+        SyncingText.Visibility = _coordinator.SyncInProgress && SyncSignalText.Visibility != Visibility.Visible
+            ? Visibility.Visible
+            : Visibility.Collapsed;
+    }
 
     private static Brush BrushOf(string hex) => (Brush)new BrushConverter().ConvertFromString(hex)!;
 

@@ -29,7 +29,7 @@ public sealed class AppSettings
     public bool SyncBasesKeyed { get; set; }
 
     /// <summary>Si se debe intentar sincronizar automáticamente de forma periódica.</summary>
-    public bool SyncAutomatically { get; set; }
+    public bool SyncAutomatically { get; set; } = true;
 
     /// <summary>Intervalo del sondeo automático, en minutos. Quince es el valor de fábrica.</summary>
     public int SyncIntervalMinutes { get; set; } = 15;

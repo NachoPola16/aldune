@@ -720,6 +720,7 @@ public sealed class AppCoordinator
         }
 
         _openNoteWindows[note.Id] = noteWindow;
+        EnsureOpenNotePoll();
         PlaySound(SoundEvent.NoteOpened);
         _openNoteIds[note.Id] = 0;
         noteWindow.Closed += (_, _) =>
@@ -1947,12 +1948,29 @@ public sealed class AppCoordinator
         }
     }
 
-    public void SyncForOpenedNote()
+    private DispatcherTimer? _openNotePoll;
+
+    /// <summary>
+    /// While any note window is open, pulls what other devices wrote every <see cref="OpenNoteLiveSync.Interval"/>: a shared note kept open
+    /// on two devices would otherwise drift until the next save or the slow polling interval, and end in a conflict. Runs on the UI thread,
+    /// where <c>_openNoteWindows</c> lives; the pass itself goes to the pool.
+    /// </summary>
+    private void EnsureOpenNotePoll()
+    {
+        if (_openNotePoll is not null) return;
+        _openNotePoll = new DispatcherTimer { Interval = OpenNoteLiveSync.Interval };
+        _openNotePoll.Tick += (_, _) => SyncForOpenedNote(requireOpenNote: true);
+        _openNotePoll.Start();
+    }
+
+    public void SyncForOpenedNote(bool requireOpenNote = false)
     {
         if (_syncService is null || _settings is null) return;
         // Solo con algún perfil activado Y automático: quien eligió sincronizar a mano no quiere que cada apertura de nota llame al servidor.
         bool configured = _settings.SyncProfiles.Any(profile => profile is { SyncEnabled: true, SyncAutomatically: true });
-        if (!NoteOpenSync.ShouldRun(configured, _lastSyncAttemptAt, DateTimeOffset.UtcNow, SyncInProgress)) return;
+        if (requireOpenNote
+                ? !OpenNoteLiveSync.ShouldRun(_openNoteWindows.Count, configured, _lastSyncAttemptAt, DateTimeOffset.UtcNow, SyncInProgress)
+                : !NoteOpenSync.ShouldRun(configured, _lastSyncAttemptAt, DateTimeOffset.UtcNow, SyncInProgress)) return;
         Task.Run(() =>
         {
             try
@@ -1991,6 +2009,8 @@ public sealed class AppCoordinator
         _autoSyncTimer = null;
         _editSyncTimer?.Dispose();
         _editSyncTimer = null;
+        _openNotePoll?.Stop();
+        _openNotePoll = null;
         _linkedWatch?.Dispose();
         _linkedWatch = null;
     }

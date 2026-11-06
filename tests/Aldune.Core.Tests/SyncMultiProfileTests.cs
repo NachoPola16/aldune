@@ -46,6 +46,8 @@ public sealed class SyncMultiProfileTests : IDisposable
         _settings.SyncFolderPath = _folderShared;
         _settings.SyncScope = SyncScopeKind.SelectedNotes;
         _settings.SyncNoteIds = [_shared.Id];
+        // Sync is automatic by default now; this profile is the manual one the tests below rely on.
+        _settings.SyncAutomatically = false;
         _sync.GetOrCreateSyncCode();
 
         // Se deja elegido el primero: el otro NO está seleccionado en el desplegable.

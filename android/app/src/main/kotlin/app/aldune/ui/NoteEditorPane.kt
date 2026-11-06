@@ -137,6 +137,7 @@ import androidx.compose.ui.unit.em
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LifecycleEventEffect
+import androidx.lifecycle.repeatOnLifecycle
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import app.aldune.syncclient.SyncEvent
 import app.aldune.R
@@ -299,6 +300,18 @@ fun NoteEditorPane(key: String, viewModel: NotesViewModel, onBack: () -> Unit, s
     // Abrir una nota trae antes lo que se haya escrito en otro dispositivo (la política limita a una pasada cada 30 s): si llega algo y no se
     // ha tocado, `externalEdits` recarga el texto. No se bloquea la edición: sin red no se podría escribir, y los conflictos ya se guardan.
     LaunchedEffect(key, loaded) { if (loaded && key.isNotEmpty()) viewModel.syncEvent(SyncEvent.NoteOpened) }
+    // Y mientras sigue abierta y la pantalla a la vista, cada minuto otra vez (la misma política: nunca más de una pasada cada 30 s). Si otro
+    // dispositivo edita la misma nota, se trae antes de que los dos diverjan y acaben en un conflicto.
+    val lifecycleOwner = androidx.lifecycle.compose.LocalLifecycleOwner.current
+    LaunchedEffect(key, loaded) {
+        if (!loaded || key.isEmpty()) return@LaunchedEffect
+        lifecycleOwner.lifecycle.repeatOnLifecycle(Lifecycle.State.STARTED) {
+            while (true) {
+                delay(60_000)
+                viewModel.syncEvent(SyncEvent.NoteOpened)
+            }
+        }
+    }
     // Una pasada de sync cambió el texto de esta nota mientras estaba abierta (y no se había tocado): se recarga, o la siguiente tecla guardaría
     // el texto viejo encima del recién llegado.
     LaunchedEffect(key) {
