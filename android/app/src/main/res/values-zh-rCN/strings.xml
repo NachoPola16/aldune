@@ -669,4 +669,7 @@
     <string name="whatsnew_400_notefont">便笺字体:可选择系统、衬线体、易读字体、等宽字体,或导入 .ttf/.otf 文件(设置 &gt; 便笺)。只改变便笺文字,该设置仅保存在此手机上。</string>
     <string name="whatsnew_400_share">可在编辑器菜单中把笔记文本分享给任何应用。</string>
     <string name="whatsnew_400_battery">提醒：如果手机让 Aldune 休眠，设置现在会提示你，并带你前往解除限制的位置。</string>
+    <string name="whatsnew_345_sync">同步：保持打开的便笺每分钟会拉取其他设备写入的内容，因此两台设备同时打开同一便笺不再产生冲突。同步现在默认自动进行。</string>
+    <string name="whatsnew_345_fold">标签：在标签内滚动后折叠该标签时，列表会停留在该标签处，各行也不再从原来的滚动位置飞入。</string>
+    <string name="whatsnew_345_win98">外观：Windows 98 深色的标题栏蓝色更深，默认蓝色也已更新。</string>
 </resources>

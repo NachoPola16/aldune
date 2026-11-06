@@ -669,4 +669,7 @@
     <string name="whatsnew_400_notefont">Fuente de las notas: elige Sistema, Con serifa, Fácil de leer o Monoespaciada, o importa un archivo .ttf/.otf (Ajustes &gt; Notas). Solo cambia el texto de las notas y la elección se queda en este móvil.</string>
     <string name="whatsnew_400_share">Comparte el texto de una nota con cualquier app desde el menú del editor.</string>
     <string name="whatsnew_400_battery">Recordatorios: si tu móvil duerme Aldune, Ajustes ahora te lo dice y te lleva a donde quitar la restricción.</string>
+    <string name="whatsnew_345_sync">Sync: una nota que dejas abierta recoge cada minuto lo que escribieron tus otros dispositivos, así que dos dispositivos con la misma nota abierta ya no acaban en conflicto. La sincronización también es automática por defecto.</string>
+    <string name="whatsnew_345_fold">Etiquetas: al plegar una etiqueta estando desplazado dentro de ella, la lista se queda en esa etiqueta y las filas ya no entran volando desde donde estaban.</string>
+    <string name="whatsnew_345_win98">Aspectos: Windows 98 oscuro tiene la barra de título en un azul más profundo y un azul por defecto nuevo.</string>
 </resources>

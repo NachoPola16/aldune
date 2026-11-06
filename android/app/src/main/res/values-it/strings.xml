@@ -669,4 +669,7 @@
     <string name="whatsnew_400_notefont">Carattere delle note: scegli Sistema, Con grazie, Facile da leggere o Spaziatura fissa, oppure importa un file .ttf/.otf (Impostazioni &gt; Note). Cambia solo il testo delle note e la scelta resta su questo telefono.</string>
     <string name="whatsnew_400_share">Condividi il testo di una nota con qualsiasi app dal menu dell\'editor.</string>
     <string name="whatsnew_400_battery">Promemoria: se il telefono mette in pausa Aldune, le Impostazioni ora te lo dicono e ti portano dove rimuovere la restrizione.</string>
+    <string name="whatsnew_345_sync">Sync: una nota lasciata aperta riceve ogni minuto ciò che hanno scritto i tuoi altri dispositivi, così due dispositivi con la stessa nota aperta non finiscono più in conflitto. La sincronizzazione è anche automatica per impostazione predefinita.</string>
+    <string name="whatsnew_345_fold">Etichette: richiudendo un’etichetta mentre sei scorso al suo interno, l’elenco resta su quell’etichetta e le righe non arrivano più in volo dalla posizione precedente.</string>
+    <string name="whatsnew_345_win98">Aspetti: Windows 98 scuro ha la barra del titolo di un blu più profondo e un nuovo blu predefinito.</string>
 </resources>
