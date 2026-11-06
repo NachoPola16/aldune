@@ -738,6 +738,16 @@ fun NoteListPane(
                                 onMenu = if (entry.key != TagGrouping.UNTAGGED) ({ tagMenu = entry.title }) else null,
                             ) {
                                 rowsMovingUntil = System.currentTimeMillis() + ROWS_MOVING_MS
+                                // Folding a tag while scrolled down inside it: the first visible row is one of the notes about to disappear, and the
+                                // list re-anchors by index, travelling back up to wherever there is content. Asking for the folded header at the top
+                                // before the change is laid out keeps the view on the tag that was tapped.
+                                if (entry.open) {
+                                    val firstKey = listState.layoutInfo.visibleItemsInfo.firstOrNull()?.key as? String
+                                    if (firstKey?.startsWith(entry.key + "/") == true) {
+                                        val headerIndex = entries.indexOfFirst { it is ListEntry.Header && it.key == entry.key }
+                                        if (headerIndex >= 0) listState.requestScrollToItem(headerIndex, 0)
+                                    }
+                                }
                                 viewModel.updateSettings { st -> st.copy(collapsedGroups = CollapsedGroups.encode(CollapsedGroups.toggle(CollapsedGroups.decode(st.collapsedGroups), entry.key))) }
                             }
                         }
