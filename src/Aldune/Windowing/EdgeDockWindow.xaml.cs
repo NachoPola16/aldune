@@ -1083,9 +1083,44 @@ public partial class EdgeDockWindow : Window
         BeginAnimation(OpacityProperty, fade);
     }
 
+    /// <summary>
+    /// Shows or hides the optional view button of the footer by growing it from nothing (or shrinking it to nothing) while it fades, so its neighbours
+    /// slide aside with it instead of jumping when the setting is switched. The layout transform scales the space it takes in either direction, so the
+    /// same code serves the docks on the sides and the ones on the top and bottom.
+    /// </summary>
+    private void SetViewButtonVisible(bool on)
+    {
+        bool shown = ViewButton.Visibility == Visibility.Visible;
+        if (on == shown) return;
+        if (!IsVisible || !SystemParameters.ClientAreaAnimation)
+        {
+            ViewButton.Visibility = on ? Visibility.Visible : Visibility.Collapsed;
+            return;
+        }
+
+        var scale = new ScaleTransform(on ? 0 : 1, on ? 0 : 1);
+        ViewButton.LayoutTransform = scale;
+        ViewButton.Visibility = Visibility.Visible;
+        var duration = new Duration(TimeSpan.FromMilliseconds(on ? 190 : 150));
+        double target = on ? 1 : 0;
+        var grow = new DoubleAnimation(target, duration) { EasingFunction = EaseOut() };
+        var fade = new DoubleAnimation(on ? 0 : 1, target, duration) { EasingFunction = EaseOut() };
+        grow.Completed += (_, _) =>
+        {
+            ViewButton.LayoutTransform = Transform.Identity;
+            ViewButton.BeginAnimation(OpacityProperty, null);
+            ViewButton.Opacity = 1;
+            // The setting may have been switched again while this ran: the last word is the setting's.
+            ViewButton.Visibility = _settings?.DockViewButton == true ? Visibility.Visible : Visibility.Collapsed;
+        };
+        scale.BeginAnimation(ScaleTransform.ScaleXProperty, grow);
+        scale.BeginAnimation(ScaleTransform.ScaleYProperty, grow.Clone());
+        ViewButton.BeginAnimation(OpacityProperty, fade);
+    }
+
     public void ReloadLookSoftly()
     {
-        ViewButton.Visibility = _settings?.DockViewButton == true ? Visibility.Visible : Visibility.Collapsed;
+        SetViewButtonVisible(_settings?.DockViewButton == true);
         _lookReload = true;
         Refresh();
     }
