@@ -3811,12 +3811,12 @@ public partial class EdgeDockWindow : Window
 
     /// <summary>
     /// A rebuilt strip (a sync that changed what a tab draws) creates every tab visible, and <see cref="RefreshOpenState"/> only hides the ones whose
-    /// note is open at Loaded priority, after a frame has been drawn: the open note's tab flashed in the dock. The data context arrives before the
-    /// first layout, so the tab is hidden from its very first frame.
+    /// note is open at Loaded priority, after a frame has been drawn: the open note's tab flashed in the dock. The first layout pass runs before
+    /// the first render (DataContextChanged is not raised for the first context of a template), so the tab is hidden from its very first frame.
     /// </summary>
-    private void OnTabDataContextChanged(object sender, DependencyPropertyChangedEventArgs e)
+    private void OnTabFirstLayout(object sender, SizeChangedEventArgs e)
     {
-        if (sender is Button { DataContext: Note note } button && IsOnDesk(note))
+        if (e.PreviousSize.Width == 0 && sender is Button { DataContext: Note note } button && IsOnDesk(note))
             button.Visibility = Visibility.Hidden;
     }
 

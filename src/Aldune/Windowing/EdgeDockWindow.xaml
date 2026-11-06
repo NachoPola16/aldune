@@ -543,7 +543,7 @@
                                     HorizontalAlignment="Right"
                                     Click="OnTabClick"
                                     Loaded="OnTabLoaded"
-                                    DataContextChanged="OnTabDataContextChanged"
+                                    SizeChanged="OnTabFirstLayout"
                                     MouseRightButtonUp="OnTabRightClick"
                                     PreviewMouseLeftButtonDown="OnTabDragStart"
                                     PreviewMouseMove="OnTabDragMove"
