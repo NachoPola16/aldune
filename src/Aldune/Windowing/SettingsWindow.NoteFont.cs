@@ -40,7 +40,12 @@ public partial class SettingsWindow
             NoteFontRemoveButton.Visibility = hasImported ? Visibility.Visible : Visibility.Collapsed;
         }
         finally { _loadingNoteFont = false; }
+        UpdateNoteFontLookNotice();
     }
+
+    /// <summary>Tells, under the font choice, when the look in use keeps its own font and so hides the choice (terminal, XP, notebooks).</summary>
+    private void UpdateNoteFontLookNotice() =>
+        NoteFontLookNoticeBox.Visibility = NoteFonts.LookKeepsItsFont(ThemeManager.Skin.NoteFont) ? Visibility.Visible : Visibility.Collapsed;
 
     private bool ImportedFontExists() =>
         !string.IsNullOrEmpty(_settings.NoteFontFile) && _settings.NoteFontFile == Path.GetFileName(_settings.NoteFontFile)

@@ -1979,12 +1979,13 @@ public partial class SettingsWindow : Window
         AppearanceListContainer.Children.Clear();
         foreach (var (mode, label) in new[]
                  {
+                     // Same order as the Android list: the "follow the system" choice first, then the plain looks, then the retro ones.
+                     (AppearanceMode.System, Strings.AppearanceSystem),
                      (AppearanceMode.Dark, Strings.AppearanceDark),
                      (AppearanceMode.Light, Strings.AppearanceLight),
                      (AppearanceMode.Pastel, Strings.AppearancePastel),
                      (AppearanceMode.Midnight, Strings.AppearanceMidnight),
                      (AppearanceMode.Aldune, Strings.AppearanceAldune),
-                     (AppearanceMode.System, Strings.AppearanceSystem),
                      (AppearanceMode.XpLight, Strings.AppearanceXpLight),
                      (AppearanceMode.XpDark, Strings.AppearanceXpDark),
                      (AppearanceMode.TelecomLight, Strings.AppearanceTelecomLight),
@@ -2188,6 +2189,7 @@ public partial class SettingsWindow : Window
         _settingsService.Save(_settings);
         ApplyAppearance();
         UpdateColorsLookNotice();
+        UpdateNoteFontLookNotice();
         RefreshAppearanceCards();
     }
 
