@@ -669,4 +669,7 @@
     <string name="whatsnew_400_notefont">Notizschrift: Wähle System, Serif, Leicht lesbar oder Monospace oder importiere eine .ttf/.otf-Datei (Einstellungen &gt; Notizen). Nur der Text der Notizen ändert sich, und die Wahl bleibt auf diesem Telefon.</string>
     <string name="whatsnew_400_share">Teile den Text einer Notiz über das Editor-Menü mit jeder App.</string>
     <string name="whatsnew_400_battery">Erinnerungen: Schickt dein Handy Aldune schlafen, sagen es dir die Einstellungen jetzt und führen dich dorthin, wo du die Einschränkung aufhebst.</string>
+    <string name="whatsnew_345_sync">Sync: Eine geöffnete Notiz übernimmt jede Minute, was deine anderen Geräte geschrieben haben; zwei Geräte mit derselben offenen Notiz geraten so nicht mehr in Konflikt. Die Synchronisierung ist außerdem standardmäßig automatisch.</string>
+    <string name="whatsnew_345_fold">Tags: Wer einen Tag einklappt, während er darin weit unten ist, bleibt bei diesem Tag in der Liste, und die Zeilen fliegen nicht mehr von der alten Scrollposition herein.</string>
+    <string name="whatsnew_345_win98">Aussehen: Windows 98 dunkel hat eine tieferblaue Titelleiste und ein neues Standardblau.</string>
 </resources>

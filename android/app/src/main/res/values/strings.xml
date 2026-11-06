@@ -669,4 +669,7 @@
     <string name="whatsnew_400_notefont">Note font: choose System, Serif, Easy to read or Monospace, or import a .ttf/.otf file (Settings &gt; Notes). Only the note text changes, and the choice stays on this phone.</string>
     <string name="whatsnew_400_share">Share the text of a note with any app from the editor menu.</string>
     <string name="whatsnew_400_battery">Reminders: if your phone puts Aldune to sleep, Settings now says so and takes you to where the restriction is lifted.</string>
+    <string name="whatsnew_345_sync">Sync: a note you keep open picks up what your other devices wrote every minute, so two devices with the same note open no longer end up in conflict. Sync is also automatic by default.</string>
+    <string name="whatsnew_345_fold">Tags: folding a tag while you are scrolled down inside it keeps the list on that tag, and the rows no longer fly in from where they were scrolled.</string>
+    <string name="whatsnew_345_win98">Looks: Windows 98 dark has a deeper blue title bar and a new default blue.</string>
 </resources>

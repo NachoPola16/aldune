@@ -669,4 +669,7 @@
     <string name="whatsnew_400_notefont">Fonte das notas: escolha Sistema, Com serifa, Fácil de ler ou Monoespaçada, ou importe um arquivo .ttf/.otf (Configurações &gt; Notas). Só muda o texto das notas e a escolha fica neste celular.</string>
     <string name="whatsnew_400_share">Compartilhe o texto de uma nota com qualquer app pelo menu do editor.</string>
     <string name="whatsnew_400_battery">Lembretes: se o celular põe o Aldune para dormir, as Configurações agora avisam e levam você a onde tirar a restrição.</string>
+    <string name="whatsnew_345_sync">Sync: uma nota que você deixa aberta recebe a cada minuto o que seus outros dispositivos escreveram, então dois dispositivos com a mesma nota aberta não entram mais em conflito. A sincronização também é automática por padrão.</string>
+    <string name="whatsnew_345_fold">Tags: ao recolher uma tag estando rolado dentro dela, a lista fica nessa tag e as linhas não entram mais voando de onde estavam.</string>
+    <string name="whatsnew_345_win98">Aparências: o Windows 98 escuro tem a barra de título em um azul mais profundo e um novo azul padrão.</string>
 </resources>
