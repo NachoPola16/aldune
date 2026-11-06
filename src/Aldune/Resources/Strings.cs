@@ -986,6 +986,33 @@ public static class Strings
         "Carattere delle note: scegli Sistema, Con grazie, Facile da leggere o Spaziatura fissa, un carattere installato sul PC, oppure importa un file .ttf/.otf (Impostazioni > Note). Cambia solo il testo delle note e la scelta resta su questo PC.",
         "ノートのフォント:システム、セリフ体、読みやすい書体、等幅、PC にインストール済みのフォント、または .ttf/.otf ファイルの読み込みから選べます(設定 > ノート)。変わるのはノートの文字だけで、この設定はこの PC だけのものです。",
         "便笺字体:可选择系统、衬线体、易读字体、等宽字体,或本机已安装的字体,也可导入 .ttf/.otf 文件(设置 > 便笺)。只改变便笺文字,该设置仅保存在此电脑上。");
+    public static string WhatsNew342Layout => T(
+        "Notes: the \"Syncing\" label no longer covers the last line, the text now runs up to the scroll bar, and the grip that moves a task is centred on its checkbox.",
+        "Notas: el aviso «Sincronizando» ya no tapa la última línea, el texto llega ahora hasta la barra de desplazamiento y el asa para mover una tarea queda centrada con su casilla.",
+        "Notizen: Die Anzeige „Synchronisiere“ verdeckt die letzte Zeile nicht mehr, der Text reicht jetzt bis zur Bildlaufleiste, und der Griff zum Verschieben einer Aufgabe sitzt mittig an ihrem Kästchen.",
+        "Notes : l'indication « Synchronisation » ne masque plus la dernière ligne, le texte va maintenant jusqu'à la barre de défilement et la poignée pour déplacer une tâche est centrée sur sa case.",
+        "Notas: o aviso \"Sincronizando\" não cobre mais a última linha, o texto agora vai até a barra de rolagem e a alça para mover uma tarefa fica centralizada na caixa.",
+        "Note: l'avviso \"Sincronizzazione\" non copre più l'ultima riga, il testo ora arriva fino alla barra di scorrimento e la maniglia per spostare un'attività è centrata sulla sua casella.",
+        "ノート: 「同期中」の表示が最後の行に重ならなくなり、文字がスクロールバーの近くまで使われるようになり、タスクを移動するハンドルがチェックボックスの中央に揃いました。",
+        "便笺：“正在同步”提示不再遮住最后一行，文字现在延伸到滚动条旁，移动任务的手柄也与复选框居中对齐。");
+    public static string WhatsNew343Footer => T(
+        "Notes: the \"Syncing\" label and the sync signal now sit clear of the text and of the scroll bar, and the dashed line under the title is centred, the restore icon is drawn crisp at every display scale, and the scroll bar in Sync conflicts no longer touches the cards.",
+        "Notas: el aviso «Sincronizando» y la señal de sync quedan ahora separados del texto y de la barra de desplazamiento, y la línea discontinua bajo el título está centrada, el icono de restaurar se dibuja nítido a cualquier escala de pantalla y la barra de desplazamiento de Conflictos de sincronización ya no toca las tarjetas.",
+        "Notizen: Die Anzeige „Synchronisiere“ und das Synchronisationssignal haben jetzt Abstand zu Text und Bildlaufleiste, und die gestrichelte Linie unter dem Titel ist zentriert, das Symbol „Wiederherstellen“ wird bei jeder Skalierung scharf gezeichnet, und die Bildlaufleiste unter „Synchronisationskonflikte“ berührt die Karten nicht mehr.",
+        "Notes : l'indication « Synchronisation » et le signal de synchro sont maintenant à distance du texte et de la barre de défilement, et la ligne pointillée sous le titre est centrée, l'icône de restauration est nette à toutes les échelles d'affichage et la barre de défilement de « Conflits de synchronisation » ne touche plus les cartes.",
+        "Notas: o aviso \"Sincronizando\" e o sinal de sincronização agora ficam afastados do texto e da barra de rolagem, e a linha tracejada sob o título está centralizada, o ícone de restaurar é desenhado com nitidez em qualquer escala de tela e a barra de rolagem de Conflitos de sincronização não encosta mais nos cartões.",
+        "Note: l'avviso \"Sincronizzazione\" e il segnale di sincronizzazione ora sono distanziati dal testo e dalla barra di scorrimento, e la linea tratteggiata sotto il titolo è centrata, l'icona di ripristino è nitida a qualsiasi scala dello schermo e la barra di scorrimento di Conflitti di sincronizzazione non tocca più le schede.",
+        "ノート: 「同期中」の表示と同期シグナルが、文字やスクロールバーから離れて表示されるようになり、タイトル下の破線も中央に揃い、元に戻すアイコンはどの表示倍率でも鮮明に描かれ、「同期の競合」のスクロールバーがカードに接しなくなりました。",
+        "便笺：“正在同步”提示和同步信号现在与文字及滚动条保持距离，标题下方的虚线也已居中，还原图标在任何显示缩放下都清晰绘制，“同步冲突”窗口的滚动条也不再紧贴卡片。");
+    public static string WhatsNew344Conflict => T(
+        "Sync conflicts: a note with a saved conflict now says so itself (click the notice to review it), and the Settings search no longer offers notices that are hidden. Manage notes, Sync conflicts and Sync notes fade their edges while there is more to scroll.",
+        "Conflictos de sincronización: una nota con un conflicto guardado lo dice ella misma (pulsa el aviso para revisarlo) y la búsqueda de Ajustes ya no ofrece avisos que están ocultos. Gestionar notas, Conflictos de sincronización y Notas a sincronizar difuminan sus bordes mientras hay más que desplazar.",
+        "Synchronisierungskonflikte: Eine Notiz mit gespeichertem Konflikt meldet das jetzt selbst (Hinweis anklicken, um ihn zu prüfen), und die Suche in den Einstellungen bietet keine verborgenen Hinweise mehr an. „Notizen verwalten“, „Synchronisierungskonflikte“ und „Notizen zum Synchronisieren“ blenden ihre Ränder aus, solange es mehr zu scrollen gibt.",
+        "Conflits de synchronisation : une note avec un conflit enregistré l'indique elle-même (cliquez sur l'avis pour le vérifier) et la recherche des Réglages ne propose plus d'avis masqués. Gérer les notes, Conflits de synchronisation et Notes à synchroniser estompent leurs bords tant qu'il reste du contenu à faire défiler.",
+        "Conflitos de sincronização: uma nota com um conflito salvo avisa por si mesma (clique no aviso para revisar) e a busca das Configurações não oferece mais avisos ocultos. Gerenciar notas, Conflitos de sincronização e Notas para sincronizar esmaecem suas bordas enquanto há mais a rolar.",
+        "Conflitti di sincronizzazione: una nota con un conflitto salvato lo segnala da sola (fai clic sull'avviso per rivederlo) e la ricerca nelle Impostazioni non propone più avvisi nascosti. Gestisci le note, Conflitti di sincronizzazione e Note da sincronizzare sfumano i bordi finché c'è altro da scorrere.",
+        "同期の競合: 競合が保存されたノートは自分でそれを表示します(通知をクリックして確認)。設定の検索では、非表示の通知が候補に出なくなりました。「ノートを管理」「同期の競合」「同期するノート」は、まだスクロールできる間、端が薄くなります。",
+        "同步冲突：存在已保存冲突的便笺会自行提示（点击提示即可查看）；设置搜索不再列出已隐藏的提示。“管理笔记”“同步冲突”和“要同步的笔记”在还可滚动时，边缘会渐隐。");
     public static string WhatsNew400Markdown => T(
         "Markdown as you type: bold, italic, headings, code and links are drawn in the note (switch it off in Settings). Hold Ctrl over a link to see the site it opens; Ctrl+click opens it.",
         "Markdown al escribir: la negrita, la cursiva, los títulos, el código y los enlaces se dibujan en la nota (se desactiva en Ajustes). Con Ctrl sobre un enlace ves el sitio al que va; Ctrl+clic lo abre.",
