@@ -44,6 +44,9 @@ public partial class NotesManagerWindow : Window
     public NotesManagerWindow(NotesRepository repository, AppCoordinator coordinator, string? tagFilter = null)
     {
         InitializeComponent();
+        // Any real input here (not the window merely being activated when Settings closes) means the person came back to it: see OnSettingsClick.
+        PreviewMouseDown += (_, _) => _touchedWhileSettingsOpen = true;
+        PreviewKeyDown += (_, _) => _touchedWhileSettingsOpen = true;
         // The readable-width cap grows with the text size: the window itself does (by the same factor), and a fixed cap left the body
         // centred and narrower than the header at 150 %.
         BodyGrid.MaxWidth = Math.Round(1100 * ThemeManager.TextFactor);
@@ -894,8 +897,24 @@ public partial class NotesManagerWindow : Window
         Focus();
         // Hay que fijar también el foco lógico: al reactivarse la ventana WPF restaura el del ámbito de foco (el engranaje), no el de teclado.
         FocusManager.SetFocusedElement(this, this);
+        bool wasOpen = _coordinator.CurrentSettingsWindow is not null;
         _coordinator.OpenSettings();
+        // Settings is often only a stop on the way ("change one thing and go back to work"): if this click is what opened it and nothing is touched
+        // here while it is up, closing it takes this window along instead of leaving it behind. Reaching for this window cancels that.
+        if (!wasOpen && _coordinator.CurrentSettingsWindow is { } settings && !ReferenceEquals(settings, _followedSettings))
+        {
+            _followedSettings = settings;
+            _touchedWhileSettingsOpen = false;
+            settings.Closed += (_, _) =>
+            {
+                if (ReferenceEquals(_followedSettings, settings) && !_touchedWhileSettingsOpen && IsVisible) Close();
+                _followedSettings = null;
+            };
+        }
     }
+
+    private SettingsWindow? _followedSettings;
+    private bool _touchedWhileSettingsOpen;
 
     private void OnNewNoteClick(object sender, RoutedEventArgs e)
     {

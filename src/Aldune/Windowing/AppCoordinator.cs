@@ -338,6 +338,9 @@ public sealed class AppCoordinator
     /// que saber de SettingsService ni del atajo global, solo de que hay una ventana unica.</summary>
     public Func<SettingsWindow>? SettingsWindowFactory { get; set; }
 
+    /// <summary>The Settings window if one is open (it may be closing), so a window that opened it can follow it.</summary>
+    internal SettingsWindow? CurrentSettingsWindow => _settingsWindow;
+
     /// <summary>
     /// Accion para reconstruir los docks en caliente (inyectada por App), usada al cambiar
     /// la pantalla elegida en Ajustes sin necesidad de reiniciar la app.

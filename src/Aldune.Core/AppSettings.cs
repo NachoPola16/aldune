@@ -143,6 +143,9 @@ public sealed class AppSettings
     /// </summary>
     public bool LiveMarkdown { get; set; } = true;
 
+    /// <summary>Underline misspelled words in the body of a note (Windows' own dictionaries, in the language of the app). Only marks them, never changes the text. Off by default.</summary>
+    public bool SpellCheck { get; set; }
+
     public HotkeyBinding QuickFindHotkey =>
         QuickFindHotkeyModifiers is { } mods && QuickFindHotkeyKey is { } key && new HotkeyBinding(mods, key).IsValid
             ? new HotkeyBinding(mods, key)

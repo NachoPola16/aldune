@@ -664,6 +664,14 @@
                         <TextBlock Text="{x:Static res:Strings.LiveMarkdownHint}"
                                    Foreground="{DynamicResource AlduneHintBrush}" FontSize="{DynamicResource AlduneTextSmall}" TextWrapping="Wrap" Margin="0,6,56,16" />
 
+                        <CheckBox x:Name="SpellCheckCheck"
+                                  Content="{x:Static res:Strings.SpellCheckCheckbox}"
+                                  Foreground="{DynamicResource AlduneTextBrush}" Background="{DynamicResource AlduneGroundBrush}" FontSize="{DynamicResource AlduneTextBody}"
+                                  Style="{StaticResource SettingsSwitchStyle}"
+                                  Click="OnSpellCheckToggled" />
+                        <TextBlock Text="{x:Static res:Strings.SpellCheckHint}"
+                                   Foreground="{DynamicResource AlduneHintBrush}" FontSize="{DynamicResource AlduneTextSmall}" TextWrapping="Wrap" Margin="0,6,56,16" />
+
                         <CheckBox x:Name="LargeCheckboxesCheck"
                                   Content="{x:Static res:Strings.LargeCheckboxesCheckbox}"
                                   Foreground="{DynamicResource AlduneTextBrush}" Background="{DynamicResource AlduneGroundBrush}" FontSize="{DynamicResource AlduneTextBody}"

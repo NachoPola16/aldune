@@ -125,6 +125,19 @@ public partial class NoteWindow : Window
     /// <summary>Turns live Markdown drawing on or off for this note (the Settings switch).</summary>
     internal void SetLiveMarkdown(bool on) => _markdownLayer.Enabled = on;
 
+    private System.Windows.Markup.XmlLanguage? _bodyLanguage;
+
+    /// <summary>
+    /// Red underline for misspelled words in the body (Windows' dictionaries; it never changes the text). The spell checker follows the element's
+    /// language, which is the app's, not the system's. The language is only set while the option is on, so the body's text shaping stays as it was otherwise.
+    /// </summary>
+    internal void SetSpellCheck(bool on)
+    {
+        _bodyLanguage ??= TextBody.Language;
+        TextBody.Language = on ? System.Windows.Markup.XmlLanguage.GetLanguage(Strings.Current switch { "pt" => "pt-BR", "zh" => "zh-CN", var code => code }) : _bodyLanguage;
+        SpellCheck.SetIsEnabled(TextBody, on);
+    }
+
     public NoteWindow(Note note, NotesRepository repository, AppCoordinator coordinator,
         AppSettings? settings = null, string? protectionPassword = null)
     {
@@ -140,6 +153,7 @@ public partial class NoteWindow : Window
         TitleBox.Loaded += (_, _) => Dispatcher.BeginInvoke(DispatcherPriority.Loaded, new Action(UpdateTrimmedTitle));
         // Between the text box and the find highlight, so a match is still drawn over the text.
         _markdownLayer = new MarkdownLiveLayer(TextBody) { Enabled = settings?.LiveMarkdown ?? true };
+        if (settings?.SpellCheck == true) SetSpellCheck(true);
         BodyHost.Children.Insert(BodyHost.Children.IndexOf(FindLayer), _markdownLayer);
         MaximizeHook.Install(this);
         NativeMethods.CloakUntilFirstFrame(this);

@@ -402,6 +402,7 @@ public static class Strings
         "managerHotkeyEnabled" => T("Open notes shortcut", "Atajo de abrir las notas", "Tastenkürzel zum Öffnen der Notizen", "Raccourci d'ouverture des notes", "Atalho para abrir as notas", "Scorciatoia apri note", "ノート一覧を開くショートカット", "打开笔记快捷键"),
         "managerHotkeyModifiers" => T("Open notes shortcut (modifier keys)", "Atajo de abrir las notas (modificadores)", "Tastenkürzel zum Öffnen der Notizen (Zusatztasten)", "Raccourci d'ouverture des notes (touches modificatrices)", "Atalho para abrir as notas (teclas modificadoras)", "Scorciatoia apri note (tasti modificatori)", "ノート一覧を開くショートカット（修飾キー）", "打开笔记快捷键（修饰键）"),
         "managerHotkeyKey" => T("Open notes shortcut (key)", "Atajo de abrir las notas (tecla)", "Tastenkürzel zum Öffnen der Notizen (Taste)", "Raccourci d'ouverture des notes (touche)", "Atalho para abrir as notas (tecla)", "Scorciatoia apri note (tasto)", "ノート一覧を開くショートカット（キー）", "打开笔记快捷键（按键）"),
+        "spellCheck" => T("Check spelling", "Revisar la ortografía", "Rechtschreibung prüfen", "Vérifier l'orthographe", "Verificar a ortografia", "Controlla l'ortografia", "スペルチェック", "检查拼写"),
         "liveMarkdown" => T("Markdown as you type", "Markdown al escribir", "Markdown beim Tippen", "Markdown pendant la saisie", "Markdown ao escrever", "Markdown mentre scrivi", "入力中の Markdown 表示", "输入时的 Markdown"),
         "quickFindHotkeyEnabled" => T("Quick find shortcut", "Atajo de búsqueda rápida", "Tastenkürzel für die Schnellsuche", "Raccourci de recherche rapide", "Atalho da busca rápida", "Scorciatoia ricerca rapida", "クイック検索のショートカット", "快速查找快捷键"),
         "quickFindHotkeyModifiers" => T("Quick find shortcut (modifier keys)", "Atajo de búsqueda rápida (modificadores)", "Tastenkürzel für die Schnellsuche (Zusatztasten)", "Raccourci de recherche rapide (touches modificatrices)", "Atalho da busca rápida (teclas modificadoras)", "Scorciatoia ricerca rapida (tasti modificatori)", "クイック検索のショートカット（修飾キー）", "快速查找快捷键（修饰键）"),
@@ -1423,6 +1424,15 @@ public static class Strings
     public static string NoteFontPickerSearch => T("Search fonts", "Buscar fuentes", "Schriften suchen", "Rechercher une police", "Buscar fontes", "Cerca caratteri", "フォントを検索", "搜索字体");
     public static string NoteFontInstalledItem(string name) => string.Format(T("Installed: {0}", "Instalada: {0}", "Installiert: {0}", "Installée : {0}", "Instalada: {0}", "Installato: {0}", "インストール済み:{0}", "已安装:{0}"), name);
     public static string NoteFontImportedItem(string name) => string.Format(T("Imported: {0}", "Importada: {0}", "Importiert: {0}", "Importée : {0}", "Importada: {0}", "Importato: {0}", "読み込み済み:{0}", "已导入:{0}"), name);
+    public static string SpellCheckCheckbox => T("Check spelling", "Revisar la ortografía", "Rechtschreibung prüfen", "Vérifier l'orthographe", "Verificar a ortografia", "Controlla l'ortografia", "スペルチェック", "检查拼写");
+    public static string SpellCheckHint => T("Underlines misspelled words in red with Windows' own dictionaries, in the language of the app. It only marks them: it never changes your text.",
+        "Subraya en rojo las palabras mal escritas con los diccionarios de Windows, en el idioma de la app. Solo las marca: nunca cambia tu texto.",
+        "Unterstreicht falsch geschriebene Wörter rot mit den Wörterbüchern von Windows, in der Sprache der App. Es markiert sie nur: Dein Text wird nie verändert.",
+        "Souligne en rouge les mots mal orthographiés avec les dictionnaires de Windows, dans la langue de l'application. Il se contente de les signaler : votre texte n'est jamais modifié.",
+        "Sublinha em vermelho as palavras com erro usando os dicionários do Windows, no idioma do app. Só as marca: nunca altera o seu texto.",
+        "Sottolinea in rosso le parole errate con i dizionari di Windows, nella lingua dell'app. Le segnala soltanto: non modifica mai il testo.",
+        "Windows の辞書を使い、アプリの言語で、綴りの誤りを赤い下線で示します。示すだけで、テキストは変更されません。",
+        "使用 Windows 自带词典，按应用语言用红色波浪线标出拼写错误的词。只做标记，不会改动你的文本。");
     public static string LiveMarkdownCheckbox => T("Show Markdown formatting as you type", "Mostrar el formato Markdown al escribir",
         "Markdown-Formatierung beim Tippen anzeigen",
         "Afficher la mise en forme Markdown pendant la saisie",

@@ -1337,6 +1337,18 @@ public partial class SettingsWindow : Window
         foreach (var note in Application.Current.Windows.OfType<NoteWindow>()) note.SetLiveMarkdown(_settings.LiveMarkdown);
     }
 
+    private void OnSpellCheckToggled(object sender, RoutedEventArgs e)
+    {
+        _settings.SpellCheck = SpellCheckCheck.IsChecked == true;
+        _settingsService.Save(_settings);
+        ApplySpellCheckToOpenNotes();
+    }
+
+    private void ApplySpellCheckToOpenNotes()
+    {
+        foreach (var note in Application.Current.Windows.OfType<NoteWindow>()) note.SetSpellCheck(_settings.SpellCheck);
+    }
+
     private void OnLargeCheckboxesToggled(object sender, RoutedEventArgs e)
     {
         _settings.LargeCheckboxes = LargeCheckboxesCheck.IsChecked == true;
@@ -2673,6 +2685,7 @@ public partial class SettingsWindow : Window
 
         if (Changed("textScale")) ThemeManager.ApplyTextScale(Application.Current, _settings.TextScalePercent);
         if (Changed("liveMarkdown")) ApplyLiveMarkdownToOpenNotes();
+        if (Changed("spellCheck")) ApplySpellCheckToOpenNotes();
         if (Changed("largeCheckboxes"))
         {
             ThemeManager.LargeCheckboxes = _settings.LargeCheckboxes;
@@ -2730,6 +2743,7 @@ public partial class SettingsWindow : Window
         LargeCheckboxesCheck.IsChecked = _settings.LargeCheckboxes;
         PopulateNoteFont();
         LiveMarkdownCheck.IsChecked = _settings.LiveMarkdown;
+        SpellCheckCheck.IsChecked = _settings.SpellCheck;
         CheckForUpdatesAutomaticallyCheck.IsChecked = _settings.CheckForUpdatesAutomatically;
         AutoHideTasksCheck.IsChecked = _settings.AutoHideCompletedTasks;
         AutoHideTasksDelayValueBox.Text = _settings.AutoHideCompletedTasksDelayValue.ToString();
