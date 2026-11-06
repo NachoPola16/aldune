@@ -145,6 +145,15 @@ internal static class NativeMethods
         return processId == GetCurrentProcessId();
     }
 
+    /// <summary>Whether the top-level window under the physical-pixel point is <paramref name="hwnd"/> itself (so no other window covers that spot).</summary>
+    internal static bool IsWindowAt(int x, int y, IntPtr hwnd)
+    {
+        var under = WindowFromPoint(new POINT { X = x, Y = y });
+        if (under == IntPtr.Zero) return false;
+        var root = GetAncestor(under, GaRoot);
+        return (root == IntPtr.Zero ? under : root) == hwnd;
+    }
+
     private const uint GaRoot = 2;
 
     [DllImport("user32.dll")]

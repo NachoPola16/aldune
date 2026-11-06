@@ -85,7 +85,7 @@
             <Style.Triggers>
                 <MultiDataTrigger>
                     <MultiDataTrigger.Conditions>
-                        <Condition Binding="{Binding IsMouseOver, RelativeSource={RelativeSource AncestorType=Window}}" Value="False" />
+                        <Condition Binding="{Binding HeaderHot, RelativeSource={RelativeSource AncestorType=Window}}" Value="False" />
                         <Condition Binding="{Binding IsKeyboardFocusWithin, RelativeSource={RelativeSource AncestorType=StackPanel}}" Value="False" />
                     </MultiDataTrigger.Conditions>
                     <Setter Property="Opacity" Value="0" />

@@ -53,6 +53,37 @@ public partial class NoteWindow : Window
     private int _lastBodyCaret;
     private bool _adjustingCaret;
 
+    /// <summary>
+    /// The pointer is over the title strip of this window (and no other window covers that spot). Minimize and maximize show only then (see
+    /// WindowActionButtonStyle). It is polled from the cursor position because the empty part of the strip is a caption zone: WPF raises no
+    /// mouse events there, so MouseEnter/IsMouseOver would hide the buttons just as the pointer reaches them.
+    /// </summary>
+    public static readonly DependencyProperty HeaderHotProperty =
+        DependencyProperty.Register(nameof(HeaderHot), typeof(bool), typeof(NoteWindow), new PropertyMetadata(false));
+
+    public bool HeaderHot
+    {
+        get => (bool)GetValue(HeaderHotProperty);
+        set => SetValue(HeaderHotProperty, value);
+    }
+
+    private void WatchHeaderHover()
+    {
+        var timer = new DispatcherTimer(DispatcherPriority.Background) { Interval = TimeSpan.FromMilliseconds(80) };
+        timer.Tick += (_, _) => HeaderHot = IsCursorOverHeader();
+        Loaded += (_, _) => timer.Start();
+        Closed += (_, _) => timer.Stop();
+    }
+
+    private bool IsCursorOverHeader()
+    {
+        if (!IsVisible || WindowState == WindowState.Minimized) return false;
+        var cursor = NativeMethods.GetCursorScreenPosition();
+        if (!NativeMethods.IsWindowAt((int)cursor.X, (int)cursor.Y, new WindowInteropHelper(this).Handle)) return false;
+        var local = Header.PointFromScreen(cursor);
+        return local.X >= 0 && local.Y >= 0 && local.X <= Header.ActualWidth && local.Y <= Header.ActualHeight;
+    }
+
     /// <summary>El objeto de nota asociado a esta ventana.</summary>
     public Note Note => _note;
 
@@ -131,6 +162,7 @@ public partial class NoteWindow : Window
         _protectionPassword = protectionPassword;
         _baseText = note.Text;
         _baseProtected = note.ProtectedContent;
+        WatchHeaderHover();
         coordinator.SyncProgressChanged += UpdateSyncingText;
         Closed += (_, _) => coordinator.SyncProgressChanged -= UpdateSyncingText;
         UpdateSyncingText();
