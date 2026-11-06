@@ -52,8 +52,9 @@ object AspectPalettes {
         val p = LinkedHashMap(AppPalette.tint(AppPalette.dark, neutralHue = 255.0, neutralChroma = 0.012, accentHue = hue(accent)))
         setAccent(p, accent)
         // Degradado horizontal de Windows 98: oscuro a la izquierda, el color elegido más claro a la derecha.
-        p["TitleBar"] = ColorFit.background(ColorFit.darker(bar, 0.12), WHITE, 4.5)
-        p["TitleBarEnd"] = ColorFit.background(ColorFit.lighter(bar, 0.08), WHITE, 4.5)
+        // Marcado como el de Windows 98 (marino profundo a azul vivo): con el 0,12/0,08 de antes el degradado casi no se veía.
+        p["TitleBar"] = ColorFit.background(ColorFit.darker(bar, 0.20), WHITE, 4.5)
+        p["TitleBarEnd"] = ColorFit.background(ColorFit.lighter(bar, 0.10), WHITE, 4.5)
         p["OnTitleBar"] = WHITE
         p["BevelLight"] = "#6A6E76"
         p["BevelDark"] = "#121316"

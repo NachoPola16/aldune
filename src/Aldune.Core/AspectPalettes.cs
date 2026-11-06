@@ -55,8 +55,9 @@ internal static class AspectPalettes
         var p = new Dictionary<string, string>(AppPalette.Tint(AppPalette.Dark, neutralHue: 255, neutralChroma: 0.012, accentHue: Hue(accent)));
         SetAccent(p, accent);
         // Degradado horizontal de Windows 98: oscuro a la izquierda, el color elegido más claro a la derecha.
-        p["TitleBar"] = ColorFit.Background(ColorFit.Darker(bar, 0.12), White, 4.5);
-        p["TitleBarEnd"] = ColorFit.Background(ColorFit.Lighter(bar, 0.08), White, 4.5);
+        // Marked like Windows 98 (deep navy to a vivid blue): with the 0.12 / 0.08 it had, the gradient hardly showed.
+        p["TitleBar"] = ColorFit.Background(ColorFit.Darker(bar, 0.20), White, 4.5);
+        p["TitleBarEnd"] = ColorFit.Background(ColorFit.Lighter(bar, 0.10), White, 4.5);
         p["OnTitleBar"] = White;
         p["BevelLight"] = "#6A6E76";
         p["BevelDark"] = "#121316";

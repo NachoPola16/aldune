@@ -28,7 +28,7 @@ public static class AspectCatalog
         ], [], NoteThemes.XpId),
         new(AppearanceMode.XpDark, "xp-dark",
         [
-            new("titleBar", "#1C4FA8", ["#1C4FA8", "#008080", "#6B2E8A", "#8A2E2E"]), // azul marino, verde azulado, morado, granate
+            new("titleBar", "#1050C8", ["#1050C8","#008080", "#6B2E8A", "#8A2E2E"]), // azul marino, verde azulado, morado, granate
             new("accent", "#4C86E8", ["#4C86E8", "#2EA8A8", "#C9A227"]),
         ], [], NoteThemes.SereneId),
         new(AppearanceMode.TelecomLight, "telecom-light",

@@ -27,7 +27,7 @@ object AspectCatalog {
         AspectDefinition(
             AppPalette.XP_DARK, "xp-dark",
             listOf(
-                AspectColorSlot("titleBar", "#1C4FA8", listOf("#1C4FA8", "#008080", "#6B2E8A", "#8A2E2E")),
+                AspectColorSlot("titleBar", "#1050C8", listOf("#1050C8","#008080", "#6B2E8A", "#8A2E2E")),
                 AspectColorSlot("accent", "#4C86E8", listOf("#4C86E8", "#2EA8A8", "#C9A227")),
             ),
             emptyList(), NoteThemes.SERENE_ID,
