@@ -237,16 +237,22 @@ public static class ThemeManager
     // números escritos en cada XAML para que el cambio se vea en vivo, como la paleta.
     private static readonly double[] Radii = [3, 4, 5, 6, 7, 8, 9, 10, 11, 21, 27];
 
+    // The rounded shape is drawn rounder than the radii written in the XAML (they were chosen for the first look, which barely curved): every
+    // radius grows by the same factor, so a corner inside another one still follows it.
+    private const double RoundedScale = 1.35;
+
+    private static double Rounded(double radius) => Math.Round(radius * RoundedScale);
+
     public static bool IsSquare { get; private set; }
 
     public static void ApplyShape(Application app, bool square)
     {
         var dictionary = new ResourceDictionary();
         foreach (var radius in Radii)
-            dictionary[$"AlduneRadius{radius}"] = new CornerRadius(square ? 0 : radius);
+            dictionary[$"AlduneRadius{radius}"] = new CornerRadius(square ? 0 : Rounded(radius));
         // Pestaña pegada al borde derecho de la pantalla (el dock la espeja por código a la izquierda).
-        dictionary["AlduneRadiusTabRight"] = square ? new CornerRadius(0) : new CornerRadius(10, 0, 0, 10);
-        dictionary["AlduneRadiusEndRight"] = square ? new CornerRadius(0) : new CornerRadius(0, 5, 5, 0);
+        dictionary["AlduneRadiusTabRight"] = square ? new CornerRadius(0) : new CornerRadius(Rounded(10), 0, 0, Rounded(10));
+        dictionary["AlduneRadiusEndRight"] = square ? new CornerRadius(0) : new CornerRadius(0, Rounded(5), Rounded(5), 0);
 
         if (_shape is not null) app.Resources.MergedDictionaries.Remove(_shape);
         app.Resources.MergedDictionaries.Add(dictionary);
