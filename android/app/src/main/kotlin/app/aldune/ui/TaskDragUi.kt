@@ -147,6 +147,8 @@ internal fun TaskDragOverlay(
     ink: Color = MaterialTheme.colorScheme.onBackground,
     /** El color de la hoja: con él se atenúa la tarea de origen y se pinta el cuerpo de la tarea levantada. */
     lift: Color = MaterialTheme.colorScheme.background,
+    /** The «larger task checkboxes» setting: the large box is centred a little lower than the normal one. */
+    largeBoxes: Boolean = false,
 ) {
     val grip = ink.copy(alpha = 0.5f)
     // The look's accent when it can be seen on the page (3:1, enough for a line and an outline), the ink of the note when it cannot: the pink of
@@ -163,6 +165,8 @@ internal fun TaskDragOverlay(
         val gripX = size.width - TASK_DRAG_ZONE.toPx() / 2
         val half = 7.dp.toPx()
         val step = 4.dp.toPx()
+        // The size the note text is drawn at; unspecified (never the case for the editor) falls back to the middle of the line.
+        val fontSize = textLayout.layoutInput.style.fontSize.let { if (it.isSp) with(textLayout.layoutInput.density) { it.toPx() } else 0f }
 
         var start = 0
         while (start <= text.length) {
@@ -170,7 +174,10 @@ internal fun TaskDragOverlay(
             val lineTop = textLayout.getLineTop(visual) - scrollY + top
             val lineBottom = textLayout.getLineBottom(visual) - scrollY + top
             if (lineBottom >= 0f && lineTop <= size.height && TaskLists.checkboxOnLine(text, start) != null) {
-                val cy = (lineTop + lineBottom) / 2
+                // On the centre of the checkbox of the first visual line, which hangs from the baseline (TaskBoxMetrics): the middle of the
+                // line sat 2 px lower with the default font and moves with the font and the look's line height.
+                val cy = if (fontSize > 0f) app.aldune.text.TaskBoxMetrics.centreY(textLayout.getLineBaseline(visual) - scrollY + top, fontSize, largeBoxes)
+                else (lineTop + lineBottom) / 2
                 for (i in -1..1) drawLine(grip, Offset(gripX - half, cy + i * step), Offset(gripX + half, cy + i * step), strokeWidth = 2.dp.toPx())
             }
             val lf = text.indexOf('\n', start)

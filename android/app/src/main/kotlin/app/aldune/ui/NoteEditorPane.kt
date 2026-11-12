@@ -994,7 +994,7 @@ fun NoteEditorPane(key: String, viewModel: NotesViewModel, onBack: () -> Unit, s
             }),
         )
         if (hasTasks) TaskDragOverlay(drag, layout = { layout?.invoke() }, scroll = fieldScroll, shown = ::shownText, modifier = Modifier.matchParentSize(), ink = ink,
-            lift = faceHex?.let { noteFace(it) } ?: MaterialTheme.colorScheme.background)
+            lift = faceHex?.let { noteFace(it) } ?: MaterialTheme.colorScheme.background, largeBoxes = settings.largeCheckboxes)
         }
         // A web link under the cursor offers «Open <host>». The host is shown so the user sees where it goes; only http(s) ever qualifies
         // (LinkText), and nothing opens without this tap.
