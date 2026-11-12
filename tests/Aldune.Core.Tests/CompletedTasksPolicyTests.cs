@@ -79,6 +79,54 @@ public sealed class CompletedTasksPolicyTests : IDisposable
     }
 
     [Fact]
+    public void ChangingTheDeviceSetting_ChangesOnlyTheNotesLeftOnAsInMySettings()
+    {
+        var inherited = _a.Repository.Create("☐ a", "#EBD38B", "primary");
+        var keeps = _a.Repository.Create("☐ a", "#EBD38B", "primary");
+        var moves = _a.Repository.Create("☐ a", "#EBD38B", "primary");
+        _a.Repository.SetCompletedTasksPolicy(keeps.Id, CompletedTasksPolicy.KeepInPlace);
+        _a.Repository.SetCompletedTasksPolicy(moves.Id, CompletedTasksPolicy.MoveToEnd);
+        var settings = new AppSettings { MoveCompletedTasksToEnd = false, AutoHideCompletedTasks = false };
+        (bool Move, bool Delete) Effective(Guid id)
+        {
+            var policy = _a.Repository.GetById(id)!.CompletedTasks;
+            return (CompletedTasksPolicyRules.ShouldMoveToEnd(policy, settings), CompletedTasksPolicyRules.MayDelete(policy, settings));
+        }
+        var keepsBefore = Effective(keeps.Id);
+        var movesBefore = Effective(moves.Id);
+        Assert.Equal((false, false), Effective(inherited.Id));
+
+        settings.MoveCompletedTasksToEnd = true;
+        settings.AutoHideCompletedTasks = true;
+
+        Assert.Equal((true, true), Effective(inherited.Id));    // the inherited note follows the switch...
+        Assert.Equal(keepsBefore, Effective(keeps.Id));         // ...the notes with a choice of their own do not
+        Assert.Equal(movesBefore, Effective(moves.Id));
+        Assert.Equal((false, false), keepsBefore);
+        Assert.Equal((true, false), movesBefore);
+    }
+
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public void GoingBackToAsInMySettings_StoresNoValueOfItsOwn_WhateverTheDeviceSettingIsThen(bool deviceMoves)
+    {
+        // "As in my settings" is the absence of a choice (0), never a copy of the switch at that moment: a copy would stop following it.
+        var settings = new AppSettings { MoveCompletedTasksToEnd = deviceMoves };
+        var note = _a.Repository.Create("☐ a", "#EBD38B", "primary");
+        _a.Repository.SetCompletedTasksPolicy(note.Id, CompletedTasksPolicy.MoveToEnd);
+
+        // The menu item cycles: move to the end -> as in my settings.
+        _a.Repository.SetCompletedTasksPolicy(note.Id, CompletedTasksPolicyRules.Next(CompletedTasksPolicy.MoveToEnd));
+
+        var stored = _a.Repository.GetById(note.Id)!.CompletedTasks;
+        Assert.Equal(CompletedTasksPolicy.Default, stored);
+        Assert.Equal(deviceMoves, CompletedTasksPolicyRules.ShouldMoveToEnd(stored, settings));
+        settings.MoveCompletedTasksToEnd = !deviceMoves;
+        Assert.Equal(!deviceMoves, CompletedTasksPolicyRules.ShouldMoveToEnd(stored, settings));
+    }
+
+    [Fact]
     public void ThePruneNeverTouchesANoteThatKeepsOrMovesItsTasks()
     {
         var keep = _a.Repository.Create("[x] done", "#EBD38B", "primary");
