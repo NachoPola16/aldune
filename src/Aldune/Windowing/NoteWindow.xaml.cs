@@ -1704,9 +1704,11 @@ public partial class NoteWindow : Window
             var firstLine = TextBody.GetRectFromCharacterIndex(LineIndexStart(TextBody.Text, line));
             double lineHeight = firstLine.IsEmpty ? 18 : firstLine.Height;
             // Centred in the margin: measured, the dots then sit 8 px from the edge of the note and 8 px from the checkbox.
-            // Vertically it is centred on the ink of the checkbox, not on the line: the square sits a little below the middle of the line
-            // (measured on screen: centre at 0.537 / 0.552 of the line height).
-            double centre = top + lineHeight * (ThemeManager.LargeCheckboxes ? 0.552 : 0.565);
+            // Vertically it is centred on the ink of the checkbox of the first visual line, not on the line: the box hangs from the baseline
+            // of the note font (TaskBoxMetrics), so this holds for any font. The share of the line height used before (0.565 / 0.552) was
+            // measured with the system font and left the grip up to 3 px low with others; it stays as the fallback for a font without metrics.
+            double fromTop = TaskBoxMetrics.CentreFromLineTop(TextBody.FontFamily.Baseline * TextBody.FontSize, TextBody.FontSize, ThemeManager.LargeCheckboxes);
+            double centre = top + (double.IsNaN(fromTop) ? lineHeight * (ThemeManager.LargeCheckboxes ? 0.552 : 0.565) : fromTop);
             // The dots are 7.4 x 12.2 and the pill 16 x 20: both are placed from their own centre so they share it exactly.
             Canvas.SetLeft(TaskGrip, 11.5 - 3.7);
             Canvas.SetTop(TaskGrip, centre - 6.1);
