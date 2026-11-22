@@ -133,3 +133,12 @@ when ending an empty list (task or bullet) the line is left empty: the indentati
 **App palette (F3b, `text-color.json`)**: `AppPalette.For` (mode 0 dark, 1 light, 2 system, 3 pastel, 4 midnight, and `windowsUsesLight`) returns the full dictionary of keys→color
 (`#RRGGBB` or `#AARRGGBB`, **alpha first**, like Android's `Color.parseColor`); `AppPalette.IsLight` for modes 0-10. `AppPalette.For` also accepts `aspectColors` (slot id → hex) and modes 5-10 (retro looks: XP, Telecom, Bash, Phosphor);
 `AspectCatalog.Retro` and `AspectCatalog.Resolve` fix the catalog (slots, swatches, Bash palettes, suggested theme); `ColorFit.*` and `ColorMix.Toward` fix the contrast adjustment and the mix.
+
+## Merge vectors (`merge-vectors.json`)
+
+Written by hand and verified by `tests/Aldune.Core.Tests/MergeVectorsTests.cs` against `LineMerge` (the three-way line merge behind the automatic merge of
+two edits of the same note, see `docs/specs/2026-11-22-sync-three-way-merge-design.md`). It is the contract of the Kotlin port in `android/sync`.
+Each case is `{name, base, local, remote, expectedText, conflict}`; when `conflict` is `true`, `expectedText` is `null` and the text is not compared.
+Rules these vectors fix: only overlapping, different changes are a conflict (adjacent lines are not); two insertions at the same spot are both kept,
+ordered by **ordinal comparison of UTF-16 units** (so U+1F600 sorts before U+FF5E); the result uses the base's line ending (CRLF if the base has any;
+a one-line base takes CRLF if either side has it); a side that did not change returns the other side's text exactly as written.

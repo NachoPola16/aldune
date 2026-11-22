@@ -1,0 +1,21 @@
+{
+  "notes": "Vectores de la fusion de texto por lineas (LineMerge): base, local, remote -> texto fusionado o conflicto. Contrato de android/sync. Ver tests/vectors/README.md. Los textos llevan LF, CRLF y mezclas; el orden de dos inserciones en el mismo sitio es ordinal (unidades UTF-16).",
+  "cases": [
+    { "name": "inserciones en sitios distintos", "base": "a\nb", "local": "a\nb\nx", "remote": "y\na\nb", "expectedText": "y\na\nb\nx", "conflict": false },
+    { "name": "tachar tareas distintas", "base": "☐ pan\n☐ leche", "local": "☒ pan\n☐ leche", "remote": "☐ pan\n☒ leche", "expectedText": "☒ pan\n☒ leche", "conflict": false },
+    { "name": "el mismo cambio en los dos lados cuenta una vez", "base": "a\nb", "local": "a\nb\nc", "remote": "a\nb\nc", "expectedText": "a\nb\nc", "conflict": false },
+    { "name": "mismo sitio, orden ordinal (local primero)", "base": "a", "local": "a\nleche", "remote": "a\nhuevos", "expectedText": "a\nhuevos\nleche", "conflict": false },
+    { "name": "mismo sitio, orden ordinal (lados cambiados)", "base": "a", "local": "a\nhuevos", "remote": "a\nleche", "expectedText": "a\nhuevos\nleche", "conflict": false },
+    { "name": "borrar una linea y editar otra", "base": "a\nb\nc", "local": "a\nc", "remote": "a\nb\nC", "expectedText": "a\nC", "conflict": false },
+    { "name": "lineas contiguas cambiadas por cada lado", "base": "a\nb\nc\nd", "local": "a\nB\nc\nd", "remote": "a\nb\nC\nd", "expectedText": "a\nB\nC\nd", "conflict": false },
+    { "name": "la misma linea cambiada distinto es conflicto", "base": "a\nb", "local": "a\nB1", "remote": "a\nB2", "expectedText": null, "conflict": true },
+    { "name": "borrar y editar la misma linea es conflicto", "base": "a\nb\nc", "local": "a\nc", "remote": "a\nB\nc", "expectedText": null, "conflict": true },
+    { "name": "CRLF y LF mezclados: manda el final de linea de la base", "base": "a\nb", "local": "a\r\nb\r\nc", "remote": "x\na\nb", "expectedText": "x\na\nb\nc", "conflict": false },
+    { "name": "base con CRLF conserva CRLF", "base": "a\r\nb", "local": "a\r\nb\r\nx", "remote": "y\r\na\r\nb", "expectedText": "y\r\na\r\nb\r\nx", "conflict": false },
+    { "name": "base de una linea: CRLF si algun lado lo usa", "base": "a", "local": "a\r\nb", "remote": "c\na", "expectedText": "c\r\na\r\nb", "conflict": false },
+    { "name": "un lado sin cambios devuelve el otro tal cual (CRLF)", "base": "a\r\nb", "local": "a\r\nb", "remote": "a\r\nb\r\nc", "expectedText": "a\r\nb\r\nc", "conflict": false },
+    { "name": "lineas en blanco y final de texto", "base": "☐ a\n\n\n☐ b", "local": "☐ a\n\n\n☐ b", "remote": "☐ a\n\nnuevo\n\n☐ b", "expectedText": "☐ a\n\nnuevo\n\n☐ b", "conflict": false },
+    { "name": "emoji y acentos", "base": "compra 🛒\nplátano", "local": "compra 🛒\nplátano\nñandú", "remote": "café ☕\ncompra 🛒\nplátano", "expectedText": "café ☕\ncompra 🛒\nplátano\nñandú", "conflict": false },
+    { "name": "orden ordinal por unidades UTF-16 (emoji antes que U+FF5E)", "base": "x", "local": "x\n😀", "remote": "x\n～", "expectedText": "x\n😀\n～", "conflict": false }
+  ]
+}
