@@ -88,9 +88,37 @@ fun planSync(input: SyncInput, key: ByteArray): SyncPlan {
     val local = createLocalEnvelopes(localNotes.values, localTombstones.values, key, input.deviceId)
 
     val settled = linkedMapOf<UUID, SyncBase>()
-    fun settle(id: UUID, agreed: SyncEnvelope) {
+    // El contenido de cada versión acordada también se guarda: es el ancestro común de la fusión automática. Se guarda además
+    // para las notas cuya base ya estaba bien pero que aún no tienen copia (instalaciones anteriores a la fusión).
+    val settledNotes = linkedMapOf<UUID, SyncNote>()
+    fun settle(id: UUID, agreed: SyncEnvelope, agreedNote: SyncNote? = null) {
         val known = input.bases[id]
         if (known == null || !known.matches(agreed)) settled[id] = SyncBase.of(agreed)
+        if (agreedNote != null && canKeepAsMergeBase(agreedNote)) {
+            val kept = input.baseNotes[id]
+            if (kept == null || kept.updatedAt.toInstant() != agreedNote.updatedAt.toInstant()) settledNotes[id] = agreedNote
+        }
+    }
+
+    // Las dos versiones cambiaron desde la acordada: si no chocan se fusionan (NoteMerge) y el resultado se sube. Null = sigue el
+    // camino del conflicto (sin copia base, base de otra versión, borrado, protegida o las mismas líneas cambiadas distinto).
+    fun tryMerge(id: UUID, localEnvelope: SyncEnvelope, remoteItem: RemoteItem): Pair<SyncEnvelope, SyncNote>? {
+        val common = input.bases[id] ?: return null
+        if (localEnvelope.tombstone || remoteItem.envelope.tombstone) return null
+        val baseNote = input.baseNotes[id] ?: return null
+        // Una copia de otra versión fusionaría contra el ancestro equivocado.
+        if (baseNote.updatedAt.toInstant() != common.updatedAt.toInstant()) return null
+        val localNote = localNotes[id]?.note?.forSync() ?: return null
+        val remoteNote = remoteItem.note ?: return null
+
+        val result = NoteMerge.merge(baseNote, localNote, localEnvelope.deviceId, remoteNote, remoteItem.envelope.deviceId)
+        val merged = result.merged ?: return null
+
+        // Estrictamente posterior a las dos versiones, aunque el reloj de otro equipo vaya adelantado.
+        val newest = if (localEnvelope.updatedAt.toInstant().isAfter(remoteItem.envelope.updatedAt.toInstant())) localEnvelope else remoteItem.envelope
+        val floor = newest.updatedAt.plusNanos(1_000_000).toTicks()
+        val stamped = merged.copy(updatedAt = if (now.isAfter(floor)) now else floor)
+        return SyncEnvelopeCodec.createNote(stamped, key, input.deviceId) to stamped
     }
 
     fun applyRemote(item: RemoteItem) {
@@ -114,19 +142,25 @@ fun planSync(input: SyncInput, key: ByteArray): SyncPlan {
             // Un borrado remoto no alcanza a una nota que aquí está fuera del alcance (igual que en Core).
             if (editedHere != null && remoteEnvelope.tombstone) continue
             applyRemote(remoteItem)
-            settle(id, remoteEnvelope)
+            settle(id, remoteEnvelope, remoteItem.note)
             continue
         }
 
         if (remoteItem == null) {
             actions += SyncAction.Upload(localEnvelope)
-            settle(id, localEnvelope)
+            settle(id, localEnvelope, localNotes[id]?.note?.forSync())
             continue
         }
 
         val remoteEnvelope = remoteItem.envelope
         val comparison = compareVersions(localEnvelope, remoteEnvelope)
         if (comparison != 0 && isRealConflict(localEnvelope, remoteEnvelope, input.bases[id])) {
+            tryMerge(id, localEnvelope, remoteItem)?.let { (mergedEnvelope, mergedNote) ->
+                actions += SyncAction.ApplyMerged(mergedNote)
+                actions += SyncAction.Upload(mergedEnvelope)
+                settle(id, mergedEnvelope, mergedNote)
+                continue
+            }
             val localVersion = ConflictVersion(
                 localEnvelope.updatedAt, localEnvelope.deviceId, localEnvelope.tombstone,
                 if (localEnvelope.tombstone) null else localNotes[id]?.note?.forSync(),
@@ -147,10 +181,11 @@ fun planSync(input: SyncInput, key: ByteArray): SyncPlan {
         } else if (comparison < 0) {
             applyRemote(remoteItem)
         }
-        settle(id, if (comparison >= 0) localEnvelope else remoteEnvelope)
+        if (comparison >= 0) settle(id, localEnvelope, localNotes[id]?.note?.forSync())
+        else settle(id, remoteEnvelope, remoteItem.note)
     }
 
-    return SyncPlan(actions, settled)
+    return SyncPlan(actions, settled, newBaseNotes = settledNotes)
 }
 
 private class RemoteItem(val envelope: SyncEnvelope, val note: SyncNote?)
@@ -194,6 +229,12 @@ private fun classifyRemote(objects: List<SyncEnvelope>, key: ByteArray): RemoteC
 
     return RemoteClassification(readable, unsigned, notes > 0 && unreadableNotes == notes)
 }
+
+/** Como en Core: las protegidas no guardan copia (el texto va cifrado con su contraseña) ni las de más de 256 KB de texto. */
+private const val MAX_MERGE_BASE_TEXT_BYTES = 262_144
+
+private fun canKeepAsMergeBase(note: SyncNote): Boolean =
+    !note.isProtected && note.text.toByteArray(Charsets.UTF_8).size <= MAX_MERGE_BASE_TEXT_BYTES
 
 private fun compareVersions(left: SyncEnvelope, right: SyncEnvelope): Int =
     SyncVersion.compare(SyncVersion.of(left), SyncVersion.of(right))

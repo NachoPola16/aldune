@@ -19,9 +19,11 @@ fun execute(plan: SyncPlan, local: LocalStore, transport: SyncTransport): SyncRe
             is SyncAction.TrashNote -> local.trashNote(action.noteId, action.at)
             is SyncAction.DeleteRemote -> transport.delete(action.noteId)
             is SyncAction.SaveConflict -> local.saveConflict(action.conflict)
+            is SyncAction.ApplyMerged -> local.applyMerged(action.note)
         }
     }
     if (plan.newBases.isNotEmpty()) local.setBases(plan.newBases)
+    if (plan.newBaseNotes.isNotEmpty()) local.setBaseNotes(plan.newBaseNotes)
 
     return SyncResult(plan.uploaded, plan.downloaded, plan.conflictsResolved, plan.tombstonesApplied)
 }

@@ -51,6 +51,11 @@ data class SyncInput(
     val excludedIds: Set<UUID>,
     val remote: List<SyncEnvelope>,
     val now: OffsetDateTime,
+    /**
+     * El contenido de la última versión acordada de cada nota (la base de la fusión automática). Solo vale si su fecha es la de
+     * [bases]: una copia de otra versión se ignora. Sin copia, dos ediciones concurrentes siguen siendo un conflicto.
+     */
+    val baseNotes: Map<UUID, SyncNote> = emptyMap(),
 )
 
 /** Una de las dos versiones de un conflicto. De la ganadora solo importan fecha y dispositivo: la nota viva es ella. */
@@ -85,6 +90,12 @@ sealed interface SyncAction {
     data class DeleteRemote(val noteId: UUID) : SyncAction
 
     data class SaveConflict(val conflict: SyncConflict) : SyncAction
+
+    /**
+     * El resultado de fusionar dos ediciones que no chocan: se escribe aquí como edición propia (sin autor remoto) y se sube
+     * con el [Upload] que lo acompaña. Con la fecha nueva, estrictamente posterior a las dos versiones.
+     */
+    data class ApplyMerged(val note: SyncNote) : SyncAction
 }
 
 /**
@@ -96,7 +107,10 @@ data class SyncPlan(
     /** Solo las bases que cambian; las demás siguen como estaban. */
     val newBases: Map<UUID, SyncBase> = emptyMap(),
     val error: String? = null,
+    /** Las versiones acordadas cuyo contenido hay que guardar como base de la próxima fusión (ver [SyncInput.baseNotes]). */
+    val newBaseNotes: Map<UUID, SyncNote> = emptyMap(),
 ) {
+    val merged: Int get() = actions.count { it is SyncAction.ApplyMerged }
     val uploaded: Int get() = actions.count { it is SyncAction.Upload }
     val downloaded: Int get() = actions.count { it is SyncAction.ApplyNote || it is SyncAction.ApplyTombstone }
     val tombstonesApplied: Int get() = actions.count { it is SyncAction.ApplyTombstone }
@@ -127,6 +141,12 @@ interface LocalStore {
 
     /** Se llama una sola vez, al final de la pasada, solo con las bases que cambian. */
     fun setBases(bases: Map<UUID, SyncBase>)
+
+    /** Escribe una nota fusionada como edición propia. Por defecto, como una recibida con el autor en blanco (en blanco = este equipo). */
+    fun applyMerged(note: SyncNote) = applyNote(note, "")
+
+    /** Guarda el contenido de las versiones acordadas (la base de la próxima fusión). Los dobles de prueba pueden ignorarlo. */
+    fun setBaseNotes(notes: Map<UUID, SyncNote>) = Unit
 }
 
 /** El almacén remoto, sea carpeta, servidor o WebDAV. */
