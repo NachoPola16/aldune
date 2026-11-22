@@ -116,7 +116,7 @@ class PinnedSyncTest {
         assertFalse(phone.notes.get(ID1)!!.pinnedToTop)
     }
 
-    @Test fun `el PC edita el texto despues de que el telefono fije y gana el PC, sin pin, con el pin perdido guardado en el conflicto`() {
+    @Test fun `el PC edita el texto despues de que el telefono fije y se fusionan, con el texto del PC y el pin, sin conflicto`() {
         putPc(wire(ID1, "acordada", T0.plusSeconds(10)))
         later()
         phone.syncOk() // base acordada
@@ -128,15 +128,15 @@ class PinnedSyncTest {
         later(120)
         val outcome = phone.syncOk()
 
-        assertEquals(1, outcome.conflicts)
+        assertEquals(0, outcome.conflicts)
+        assertEquals(1, outcome.merged)
         val kept = phone.notes.get(ID1)!!
         assertEquals("editada en el PC", kept.text)
-        assertFalse(kept.pinnedToTop)
-        val conflict = phone.store.conflicts.getValue(ID1)
-        assertTrue(conflict.losing.note!!.pinnedToTop, "la version perdedora es la fijada")
+        assertTrue(kept.pinnedToTop)
+        assertTrue(phone.store.conflictedNoteIds().isEmpty())
     }
 
-    @Test fun `el telefono fija despues de que el PC edite el texto y gana el telefono, con su pin y el texto viejo`() {
+    @Test fun `el telefono fija despues de que el PC edite el texto y se fusionan, con su pin y el texto del PC`() {
         putPc(wire(ID1, "acordada", T0.plusSeconds(10)))
         later()
         phone.syncOk()
@@ -147,13 +147,14 @@ class PinnedSyncTest {
         later()
         val outcome = phone.syncOk()
 
-        assertEquals(1, outcome.conflicts)
+        assertEquals(0, outcome.conflicts)
+        assertEquals(1, outcome.merged)
         assertTrue(phone.notes.get(ID1)!!.pinnedToTop)
-        assertEquals("acordada", phone.notes.get(ID1)!!.text)
+        assertEquals("editada en el PC", phone.notes.get(ID1)!!.text)
         val sent = remoteNote(ID1)
         assertTrue(sent.pinnedToTop)
-        assertEquals("acordada", sent.text)
-        assertEquals("editada en el PC", phone.store.conflicts.getValue(ID1).losing.note!!.text)
+        assertEquals("editada en el PC", sent.text)
+        assertTrue(phone.store.conflictedNoteIds().isEmpty())
     }
 
     @Test fun `si los dos lados fijan la misma nota no hay conflicto`() {

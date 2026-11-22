@@ -1,5 +1,6 @@
 package app.aldune.syncclient
 
+import app.aldune.core.SyncNote
 import app.aldune.domain.InMemoryNoteStore
 import app.aldune.domain.NoteState
 import app.aldune.domain.Tombstone
@@ -16,12 +17,13 @@ import app.aldune.sync.SyncConflict
 class InMemoryLocalSyncStore(val notes: InMemoryNoteStore = InMemoryNoteStore()) : LocalSyncStore {
     private val baseMap = LinkedHashMap<String, SyncBase>()
     private val conflictMap = LinkedHashMap<String, SyncConflict>()
+    private val baseNoteMap = LinkedHashMap<String, SyncNote>()
 
     val bases: Map<String, SyncBase> get() = synchronized(notes) { LinkedHashMap(baseMap) }
     val conflicts: Map<String, SyncConflict> get() = synchronized(notes) { LinkedHashMap(conflictMap) }
 
     override fun snapshot(): LocalSnapshot = synchronized(notes) {
-        LocalSnapshot(notes.all(), notes.tombstones(), LinkedHashMap(baseMap))
+        LocalSnapshot(notes.all(), notes.tombstones(), LinkedHashMap(baseMap), LinkedHashMap(baseNoteMap))
     }
 
     override fun bases(): Map<String, SyncBase> = synchronized(notes) { LinkedHashMap(baseMap) }
@@ -34,6 +36,7 @@ class InMemoryLocalSyncStore(val notes: InMemoryNoteStore = InMemoryNoteStore())
         var appliedTombstones = 0
         var trashed = 0
         var conflictsSaved = 0
+        var mergedNotes = 0
         for (action in commit.actions) {
             if (action.noteId in skipped) continue
             when (action) {
@@ -58,11 +61,17 @@ class InMemoryLocalSyncStore(val notes: InMemoryNoteStore = InMemoryNoteStore())
                     conflictMap[action.noteId] = action.conflict
                     conflictsSaved++
                 }
+                is LocalAction.ApplyMerged -> {
+                    notes.put(action.note)
+                    notes.removeTombstone(action.note.id)
+                    mergedNotes++
+                }
             }
         }
         val bases = commit.newBases.filterKeys { it !in skipped }
         baseMap.putAll(bases)
-        CommitReport(appliedNotes, appliedTombstones, trashed, conflictsSaved, bases.size, skipped)
+        baseNoteMap.putAll(commit.newBaseNotes.filterKeys { it !in skipped })
+        CommitReport(appliedNotes, appliedTombstones, trashed, conflictsSaved, bases.size, skipped, mergedNotes)
     }
 
     override fun conflictedNoteIds(): Set<String> = synchronized(notes) { conflictMap.keys.toSet() }
@@ -70,17 +79,20 @@ class InMemoryLocalSyncStore(val notes: InMemoryNoteStore = InMemoryNoteStore())
     override fun discardAllLocal() = synchronized(notes) {
         notes.clear()
         baseMap.clear()
+        baseNoteMap.clear()
         conflictMap.clear()
     }
 
     override fun discardTombstones() = synchronized(notes) {
         notes.clearTombstones()
         baseMap.clear()
+        baseNoteMap.clear()
         conflictMap.clear()
     }
 
     override fun forgetSyncState() = synchronized(notes) {
         baseMap.clear()
+        baseNoteMap.clear()
         conflictMap.clear()
     }
 

@@ -1,5 +1,6 @@
 package app.aldune.syncclient
 
+import app.aldune.core.SyncNote
 import app.aldune.domain.Note
 import app.aldune.sync.SyncBase
 import app.aldune.sync.SyncConflict
@@ -82,6 +83,14 @@ sealed interface LocalAction {
     data class SaveConflict(val conflict: SyncConflict) : LocalAction {
         override val noteId: String get() = conflict.noteId.toString()
     }
+
+    /**
+     * Escribe el resultado de una fusión automática como edición propia (`syncAuthorDeviceId` nulo: la próxima pasada lo firma este equipo).
+     * Antes de reemplazar, el texto local y [otherText] (el que traía el otro lado) pasan al historial, para que ninguno se pierda.
+     */
+    data class ApplyMerged(val note: Note, val otherText: String) : LocalAction {
+        override val noteId: String get() = note.id
+    }
 }
 
 /**
@@ -96,6 +105,8 @@ data class LocalCommit(
     val actions: List<LocalAction>,
     val newBases: Map<String, SyncBase>,
     val expected: Map<String, ExpectedVersion>,
+    /** El contenido de las versiones acordadas, para la próxima fusión. Como las bases, no se guarda de una nota con una edición concurrente. */
+    val newBaseNotes: Map<String, SyncNote> = emptyMap(),
 ) {
     init {
         val missing = actions.map { it.noteId }.toSet() - expected.keys
@@ -111,4 +122,6 @@ data class CommitReport(
     val conflictsSaved: Int = 0,
     val basesSet: Int = 0,
     val skippedConcurrent: Set<String> = emptySet(),
+    /** Notas fusionadas automáticamente que sí se escribieron. */
+    val mergedNotes: Int = 0,
 )

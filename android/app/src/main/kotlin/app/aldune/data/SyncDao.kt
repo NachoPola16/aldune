@@ -11,6 +11,9 @@ interface SyncDao {
     @Query("SELECT * FROM sync_base WHERE profileId = :profileId")
     fun bases(profileId: String): List<SyncBaseEntity>
 
+    @Query("SELECT * FROM sync_base WHERE profileId = :profileId AND noteId = :noteId")
+    fun base(profileId: String, noteId: String): SyncBaseEntity?
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     fun putBase(base: SyncBaseEntity)
 

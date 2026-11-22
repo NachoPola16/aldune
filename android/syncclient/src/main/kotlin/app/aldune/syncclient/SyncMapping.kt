@@ -57,6 +57,7 @@ fun buildSyncInput(
         // El marcador «local» se conserva: el motor lo sustituye por el deviceId al firmar.
         localTombstones = snapshot.tombstones.map { LocalTombstone(noteUuid(it.noteId), it.deletedAt.toWire(), it.deviceId) },
         bases = snapshot.bases.mapKeys { noteUuid(it.key) },
+        baseNotes = snapshot.baseNotes.mapKeys { noteUuid(it.key) },
         // Android no tiene notas vinculadas a archivos.
         excludedIds = emptySet(),
         remote = remote,
@@ -69,7 +70,7 @@ fun buildSyncInput(
  * conoce (p. ej. de un formato futuro; al volver a subirla se perdería) o una protegida sin su contenido. Quien aplica la
  * salta, no fija su base y la cuenta como «omitida».
  */
-fun toDomainNote(note: SyncNote, authorDeviceId: String): Note? {
+fun toDomainNote(note: SyncNote, authorDeviceId: String?): Note? {
     val state = NoteState.fromCode(note.state) ?: return null
     if (note.isProtected && note.protectedContent == null) return null
 

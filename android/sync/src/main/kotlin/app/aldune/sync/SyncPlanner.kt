@@ -156,7 +156,7 @@ fun planSync(input: SyncInput, key: ByteArray): SyncPlan {
         val comparison = compareVersions(localEnvelope, remoteEnvelope)
         if (comparison != 0 && isRealConflict(localEnvelope, remoteEnvelope, input.bases[id])) {
             tryMerge(id, localEnvelope, remoteItem)?.let { (mergedEnvelope, mergedNote) ->
-                actions += SyncAction.ApplyMerged(mergedNote)
+                actions += SyncAction.ApplyMerged(mergedNote, remoteItem.note!!.text)
                 actions += SyncAction.Upload(mergedEnvelope)
                 settle(id, mergedEnvelope, mergedNote)
                 continue

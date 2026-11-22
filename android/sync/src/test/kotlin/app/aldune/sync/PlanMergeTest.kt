@@ -44,7 +44,9 @@ class PlanMergeTest {
 
         assertEquals(1, plan.merged)
         assertEquals(0, plan.conflictsResolved)
-        val merged = plan.actions.filterIsInstance<SyncAction.ApplyMerged>().single().note
+        val action = plan.actions.filterIsInstance<SyncAction.ApplyMerged>().single()
+        val merged = action.note
+        assertEquals("y\na\nb", action.remoteText)
         assertEquals("y\na\nb\nx", merged.text)
         val uploaded = plan.actions.filterIsInstance<SyncAction.Upload>().single().envelope
         assertEquals(me, uploaded.deviceId)

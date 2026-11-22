@@ -93,9 +93,10 @@ sealed interface SyncAction {
 
     /**
      * El resultado de fusionar dos ediciones que no chocan: se escribe aquí como edición propia (sin autor remoto) y se sube
-     * con el [Upload] que lo acompaña. Con la fecha nueva, estrictamente posterior a las dos versiones.
+     * con el [Upload] que lo acompaña. Con la fecha nueva, estrictamente posterior a las dos versiones. [remoteText] es el texto
+     * que traía la versión remota: quien aplica lo guarda en el historial junto al local, para que ningún lado se pierda.
      */
-    data class ApplyMerged(val note: SyncNote) : SyncAction
+    data class ApplyMerged(val note: SyncNote, val remoteText: String) : SyncAction
 }
 
 /**

@@ -55,6 +55,13 @@ class SyncBaseEntity(
     val noteId: String,
     val updatedAt: String,
     val deviceId: String,
+    /**
+     * El contenido de esa versión acordada, cifrado como el texto de las notas (el id va como dato asociado, con prefijo `base:`).
+     * Es el ancestro común de la fusión automática y nunca sale del dispositivo. Las tres columnas van juntas o ninguna (filas de antes de la v7).
+     */
+    val baseCipher: ByteArray? = null,
+    val baseNonce: ByteArray? = null,
+    val baseTag: ByteArray? = null,
 )
 
 /**

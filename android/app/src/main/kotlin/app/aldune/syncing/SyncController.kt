@@ -186,7 +186,7 @@ class SyncController(
         var changed = false
         val outcomes = list.map { profile ->
             val outcome = runProfilePass(profile)
-            if (outcome is SyncOutcome.Success && outcome.received + outcome.tombstonesApplied + outcome.trashed + outcome.conflicts > 0) changed = true
+            if (outcome is SyncOutcome.Success && outcome.received + outcome.tombstonesApplied + outcome.trashed + outcome.conflicts + outcome.merged > 0) changed = true
             outcome
         }
         refreshConflicts()

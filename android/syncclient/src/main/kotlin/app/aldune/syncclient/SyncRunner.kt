@@ -18,6 +18,8 @@ sealed interface SyncOutcome {
         val omitted: Int = 0,
         /** Notas editadas mientras la sync esperaba al servidor: no se tocaron; el disparador pide otra pasada pronto (§4.4). */
         val skippedConcurrent: Int = 0,
+        /** Notas cuyas ediciones de dos dispositivos se fusionaron solas (sin conflicto) y se escribieron aquí. */
+        val merged: Int = 0,
     ) : SyncOutcome
 
     data class Failure(val failure: SyncFailure) : SyncOutcome
@@ -86,19 +88,24 @@ fun runSync(
             is SyncAction.ApplyTombstone -> local += LocalAction.ApplyTombstone(action.noteId.toString(), action.deletedAt.toInstant(), action.deviceId)
             is SyncAction.TrashNote -> local += LocalAction.TrashNote(action.noteId.toString(), action.at.toInstant())
             is SyncAction.SaveConflict -> local += LocalAction.SaveConflict(action.conflict)
+            is SyncAction.ApplyMerged -> {
+                val note = toDomainNote(action.note, null)
+                if (note != null) local += LocalAction.ApplyMerged(note, action.remoteText) else omittedIds += action.note.id.toString()
+            }
             is SyncAction.Upload, is SyncAction.DeleteRemote -> Unit
         }
     }
     // Una nota omitida no se aplica entera: ni su conflicto ni su base (con la base vieja, la pasada que sí la entienda la aplicará bien).
     val actions = local.filter { it.noteId !in omittedIds }
     val bases: Map<String, SyncBase> = plan.newBases.mapKeys { it.key.toString() }.filterKeys { it !in omittedIds }
+    val baseNotes = plan.newBaseNotes.mapKeys { it.key.toString() }.filterKeys { it !in omittedIds }
 
-    val report = if (actions.isEmpty() && bases.isEmpty()) {
+    val report = if (actions.isEmpty() && bases.isEmpty() && baseNotes.isEmpty()) {
         CommitReport()
     } else {
         val expected = actions.map { it.noteId }.toSet().associateWith { ExpectedVersion.of(snapshot, it) }
         try {
-            store.commit(LocalCommit(actions, bases, expected))
+            store.commit(LocalCommit(actions, bases, expected, baseNotes))
         } catch (e: Exception) {
             return SyncOutcome.Failure(classifyFailure(e))
         }
@@ -112,5 +119,6 @@ fun runSync(
         conflicts = report.conflictsSaved,
         omitted = omittedIds.size,
         skippedConcurrent = report.skippedConcurrent.size,
+        merged = report.mergedNotes,
     )
 }

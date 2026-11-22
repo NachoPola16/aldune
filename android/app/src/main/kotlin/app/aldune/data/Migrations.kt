@@ -38,6 +38,18 @@ val MIGRATION_2_3 = object : Migration(2, 3) {
     }
 }
 
+/**
+ * v6 → v7: el contenido de la última versión acordada de cada nota, en tres columnas nuevas (nulas) de `sync_base`. Las filas que había
+ * quedan sin copia: dos ediciones concurrentes de esas notas siguen siendo un conflicto hasta la siguiente pasada, que la guarda.
+ */
+val MIGRATION_6_7 = object : Migration(6, 7) {
+    override fun migrate(db: SupportSQLiteDatabase) {
+        db.execSQL("ALTER TABLE `sync_base` ADD COLUMN `baseCipher` BLOB")
+        db.execSQL("ALTER TABLE `sync_base` ADD COLUMN `baseNonce` BLOB")
+        db.execSQL("ALTER TABLE `sync_base` ADD COLUMN `baseTag` BLOB")
+    }
+}
+
 /** v5 → v6: ajuste de tareas hechas por nota (0 = según los ajustes del dispositivo) y la tabla del historial de versiones. Las notas que había quedan como estaban. */
 val MIGRATION_5_6 = object : Migration(5, 6) {
     override fun migrate(db: SupportSQLiteDatabase) {

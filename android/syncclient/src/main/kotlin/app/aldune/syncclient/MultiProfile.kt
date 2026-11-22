@@ -29,6 +29,7 @@ fun combineOutcomes(outcomes: List<SyncOutcome>): SyncOutcome {
         conflicts = ok.sumOf { it.conflicts },
         omitted = ok.sumOf { it.omitted },
         skippedConcurrent = ok.sumOf { it.skippedConcurrent },
+        merged = ok.sumOf { it.merged },
     )
 }
 

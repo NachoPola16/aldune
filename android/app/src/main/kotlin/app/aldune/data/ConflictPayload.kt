@@ -27,6 +27,11 @@ internal object ConflictPayload {
         )
     }
 
+    /** La nota sola, para la copia de la última versión acordada (`sync_base`): el mismo JSON local que usan los conflictos. */
+    fun writeNote(note: SyncNote): String = note(note).toString()
+
+    fun readNote(json: String): SyncNote = readNote(JSONObject(json))
+
     private fun version(v: ConflictVersion) = JSONObject()
         .put("updatedAt", v.updatedAt.toString())
         .put("deviceId", v.deviceId)

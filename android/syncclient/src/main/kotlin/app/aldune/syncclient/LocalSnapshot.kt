@@ -1,5 +1,6 @@
 package app.aldune.syncclient
 
+import app.aldune.core.SyncNote
 import app.aldune.domain.Note
 import app.aldune.domain.Tombstone
 import app.aldune.sync.SyncBase
@@ -13,4 +14,6 @@ data class LocalSnapshot(
     val notes: List<Note>,
     val tombstones: List<Tombstone>,
     val bases: Map<String, SyncBase>,
+    /** El contenido de la última versión acordada de cada nota (la base de la fusión automática), por id de nota. Puede faltar. */
+    val baseNotes: Map<String, SyncNote> = emptyMap(),
 )
