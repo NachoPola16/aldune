@@ -491,6 +491,61 @@ public sealed class NotesRepository
         transaction.Commit();
     }
 
+    /// <summary>Longest note text (UTF-8 bytes) for which the agreed version is kept as a merge base; bigger notes keep the plain conflict flow.</summary>
+    public const int SyncBaseNoteMaxTextBytes = 262144;
+
+    /// <summary>The content of the last agreed version of each note for a profile (table <c>SyncBaseNote</c>), the base of the three-way merge.</summary>
+    public IReadOnlyDictionary<Guid, Note> GetSyncBaseNotes(string profileKey = "")
+    {
+        using var connection = _database.OpenConnection();
+        using var command = connection.CreateCommand();
+        command.CommandText = "SELECT NoteId, EncryptedNote, Nonce, Tag FROM SyncBaseNote WHERE ProfileKey = $profile;";
+        command.Parameters.AddWithValue("$profile", profileKey);
+        using var reader = command.ExecuteReader();
+        var results = new Dictionary<Guid, Note>();
+        while (reader.Read())
+        {
+            try
+            {
+                var json = _cipher.Decrypt(new EncryptedContent((byte[])reader["EncryptedNote"], (byte[])reader["Nonce"], (byte[])reader["Tag"]));
+                if (JsonSerializer.Deserialize<Note>(json) is { } note) results[Guid.Parse(reader.GetString(0))] = note;
+            }
+            catch (Exception ex) when (ex is JsonException or System.Security.Cryptography.CryptographicException)
+            {
+                // An unreadable snapshot only means "no base": the note falls back to the conflict flow.
+            }
+        }
+        return results;
+    }
+
+    /// <summary>Stores the agreed content of notes as merge bases. Protected notes and texts over <see cref="SyncBaseNoteMaxTextBytes"/> are skipped (and any old snapshot of theirs dropped).</summary>
+    public void SetSyncBaseNotes(IEnumerable<KeyValuePair<Guid, Note>> notes, string profileKey = "")
+    {
+        using var connection = _database.OpenConnection();
+        using var transaction = connection.BeginTransaction();
+        foreach (var (noteId, note) in notes)
+        {
+            using var command = connection.CreateCommand();
+            command.Transaction = transaction;
+            command.Parameters.AddWithValue("$profile", profileKey);
+            command.Parameters.AddWithValue("$id", noteId.ToString());
+            if (note.IsProtected || System.Text.Encoding.UTF8.GetByteCount(note.Text) > SyncBaseNoteMaxTextBytes)
+            {
+                command.CommandText = "DELETE FROM SyncBaseNote WHERE ProfileKey = $profile AND NoteId = $id;";
+            }
+            else
+            {
+                var encrypted = _cipher.Encrypt(JsonSerializer.Serialize(note));
+                command.CommandText = "INSERT OR REPLACE INTO SyncBaseNote (ProfileKey, NoteId, EncryptedNote, Nonce, Tag) VALUES ($profile, $id, $note, $nonce, $tag);";
+                command.Parameters.AddWithValue("$note", encrypted.CipherText);
+                command.Parameters.AddWithValue("$nonce", encrypted.Nonce);
+                command.Parameters.AddWithValue("$tag", encrypted.Tag);
+            }
+            command.ExecuteNonQuery();
+        }
+        transaction.Commit();
+    }
+
     public IReadOnlyList<SyncTombstone> GetSyncTombstones()
     {
         using var connection = _database.OpenConnection();
@@ -611,7 +666,7 @@ public sealed class NotesRepository
     {
         using var connection = _database.OpenConnection();
         using var command = connection.CreateCommand();
-        command.CommandText = "DELETE FROM SyncBase WHERE ProfileKey = $profile;";
+        command.CommandText = "DELETE FROM SyncBase WHERE ProfileKey = $profile; DELETE FROM SyncBaseNote WHERE ProfileKey = $profile;";
         command.Parameters.AddWithValue("$profile", profileKey);
         command.ExecuteNonQuery();
     }
@@ -624,7 +679,7 @@ public sealed class NotesRepository
     {
         using var connection = _database.OpenConnection();
         using var transaction = connection.BeginTransaction();
-        foreach (var table in new[] { "SyncBase", "SyncConflict" })
+        foreach (var table in new[] { "SyncBase", "SyncBaseNote", "SyncConflict" })
         {
             using var command = connection.CreateCommand();
             command.Transaction = transaction;

@@ -129,6 +129,17 @@ public sealed class NotesDatabase
                 PRIMARY KEY (ProfileKey, NoteId)
             );
 
+            -- Content of the last agreed version of a note (same key as SyncBase), encrypted with the local database key.
+            -- It is the common ancestor for the automatic three-way merge; it never leaves this device.
+            CREATE TABLE IF NOT EXISTS SyncBaseNote (
+                ProfileKey TEXT NOT NULL DEFAULT '',
+                NoteId TEXT NOT NULL,
+                EncryptedNote BLOB NOT NULL,
+                Nonce BLOB NOT NULL,
+                Tag BLOB NOT NULL,
+                PRIMARY KEY (ProfileKey, NoteId)
+            );
+
             -- A conflict keeps only the losing version, encrypted with the local database key.
             -- It is a recovery queue, not a second sync source: dismissing it never changes the
             -- canonical remote version, while restoring it deliberately applies that version.
