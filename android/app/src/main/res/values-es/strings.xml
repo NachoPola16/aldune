@@ -667,6 +667,7 @@
     <string name="whatsnew_400_restore">Una nota que restauras desde una copia ya no se vuelve a borrar por una sincronización desde otro dispositivo.</string>
     <string name="whatsnew_400_markdown">Markdown al escribir: la negrita, la cursiva, los títulos, el código y los enlaces se dibujan en la nota (se desactiva en Ajustes).</string>
     <string name="whatsnew_400_notefont">Fuente de las notas: elige Sistema, Con serifa, Fácil de leer o Monoespaciada, o importa un archivo .ttf/.otf (Ajustes &gt; Notas). Solo cambia el texto de las notas y la elección se queda en este móvil.</string>
+    <string name="whatsnew_400_merge">Las notas compartidas se fusionan solas: si dos dispositivos editan la misma nota (por ejemplo, la lista de la compra de la familia) en líneas distintas, se conservan los dos cambios en vez de crear un conflicto.</string>
     <string name="whatsnew_400_share">Comparte el texto de una nota con cualquier app desde el menú del editor.</string>
     <string name="whatsnew_400_battery">Recordatorios: si tu móvil duerme Aldune, Ajustes ahora te lo dice y te lleva a donde quitar la restricción.</string>
 </resources>

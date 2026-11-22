@@ -667,6 +667,7 @@
     <string name="whatsnew_400_restore">从备份还原的笔记不会再被其他设备的同步再次删除。</string>
     <string name="whatsnew_400_markdown">输入时显示 Markdown：粗体、斜体、标题、代码和链接会在便笺中绘制（可在设置中关闭）。</string>
     <string name="whatsnew_400_notefont">便笺字体:可选择系统、衬线体、易读字体、等宽字体,或导入 .ttf/.otf 文件(设置 &gt; 便笺)。只改变便笺文字,该设置仅保存在此手机上。</string>
+    <string name="whatsnew_400_merge">共享笔记会自动合并：两台设备编辑同一条笔记（例如家人共用的购物清单）的不同行时，两处修改都会保留，而不会产生冲突。</string>
     <string name="whatsnew_400_share">可在编辑器菜单中把笔记文本分享给任何应用。</string>
     <string name="whatsnew_400_battery">提醒：如果手机让 Aldune 休眠，设置现在会提示你，并带你前往解除限制的位置。</string>
 </resources>

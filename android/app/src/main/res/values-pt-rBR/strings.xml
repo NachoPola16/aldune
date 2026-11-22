@@ -667,6 +667,7 @@
     <string name="whatsnew_400_restore">Uma nota restaurada de um backup não é mais apagada de novo por uma sincronização vinda de outro dispositivo.</string>
     <string name="whatsnew_400_markdown">Markdown ao escrever: negrito, itálico, títulos, código e links aparecem desenhados na nota (dá para desligar nas configurações).</string>
     <string name="whatsnew_400_notefont">Fonte das notas: escolha Sistema, Com serifa, Fácil de ler ou Monoespaçada, ou importe um arquivo .ttf/.otf (Configurações &gt; Notas). Só muda o texto das notas e a escolha fica neste celular.</string>
+    <string name="whatsnew_400_merge">As notas compartilhadas se mesclam sozinhas: quando dois dispositivos editam a mesma nota (a lista de compras da família, por exemplo) em linhas diferentes, as duas alterações são mantidas em vez de gerar um conflito.</string>
     <string name="whatsnew_400_share">Compartilhe o texto de uma nota com qualquer app pelo menu do editor.</string>
     <string name="whatsnew_400_battery">Lembretes: se o celular põe o Aldune para dormir, as Configurações agora avisam e levam você a onde tirar a restrição.</string>
 </resources>

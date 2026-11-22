@@ -475,6 +475,31 @@ paste the code and click `Import code`; the transport and the server URL fill in
 but the token must always be entered separately. The token never travels inside the code. Codes
 are generated with the prefix `aldune-profile-v2`.
 
+### Edits on two devices: automatic merge
+
+Two devices can edit the same note between two syncs (the family's shared shopping list is the typical case). A change is only a
+conflict when **both** sides changed the note since the last version they agreed on. Each device keeps, next to that version's date and
+author (`SyncBase`), the **content** of that version: the table `SyncBaseNote` on Windows, three nullable columns of `sync_base` on
+Android (Room v7). It is encrypted with the device's own database key, never leaves the device, is not kept for protected notes or for
+texts over 256 KB, and an install from before this feature simply has none until the next sync agrees the note.
+
+When both sides changed and that content is there, the engine merges instead of raising a conflict (`NoteMerge`, `LineMerge`; Kotlin port in
+`android/sync`, checked by `tests/vectors/merge-vectors.json`):
+
+- **Text**: three-way diff by lines against the stored version. Changes that do not overlap are both applied (ticking two different tasks, adding
+  different lines, adding a line while another is deleted). The same change on both sides counts once; two lines inserted at the same spot are both
+  kept, in ordinal order, so the result does not depend on which device merges. The line ending of the base is kept (CRLF on Windows).
+- **Colour, pinned, completed-tasks policy, dock position**: the side that changed it wins; if both changed it, the newer one, with no conflict.
+- **Tags**: merged as sets against the stored version. **State**: one side changing it is applied; both changing it differently, or trash against a
+  text edit, stays a conflict.
+- Still a conflict (today's flow: the newest version wins, the other goes to the conflicts list): the same lines changed differently, a deletion
+  against an edit, protected notes, notes with no stored content (or one that is not the version the base points to), and the key-rotation pass.
+
+The merged note is written locally as an edit of this device with a date strictly newer than both versions, uploaded on the same pass and becomes
+the new agreed version; the other devices receive it as an ordinary newer version, so **the sync format stays 4** and older clients keep working.
+Before it replaces anything, both pre-merge texts are kept in the note's history, and the sync result counts the merge (`Merged`; «merged
+automatically» in the Windows status line and the diagnostics).
+
 ## Future compatibility
 
 Compatibility is controlled by the sync format, not by Aldune's visible version number.

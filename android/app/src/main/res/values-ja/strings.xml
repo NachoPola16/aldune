@@ -667,6 +667,7 @@
     <string name="whatsnew_400_restore">バックアップから復元したノートが、別のデバイスからの同期で再び削除されることはなくなりました。</string>
     <string name="whatsnew_400_markdown">入力中の Markdown 表示: 太字、斜体、見出し、コード、リンクがノート上に表示されます（設定でオフにできます）。</string>
     <string name="whatsnew_400_notefont">ノートのフォント:システム、セリフ体、読みやすい書体、等幅から選ぶか、.ttf/.otf ファイルを読み込めます(設定 &gt; ノート)。変わるのはノートの文字だけで、この設定はこの端末だけのものです。</string>
+    <string name="whatsnew_400_merge">共有ノートが自動でマージされます。2台のデバイスが同じノート(たとえば家族の買い物リスト)の別の行を編集した場合、競合にならず両方の変更が残ります。</string>
     <string name="whatsnew_400_share">エディターのメニューから、ノートのテキストを任意のアプリに共有できます。</string>
     <string name="whatsnew_400_battery">リマインダー: スマートフォンが Aldune を休止させている場合、設定でお知らせし、制限を解除する画面へご案内します。</string>
 </resources>

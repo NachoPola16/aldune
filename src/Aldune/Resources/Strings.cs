@@ -986,6 +986,15 @@ public static class Strings
         "Carattere delle note: scegli Sistema, Con grazie, Facile da leggere o Spaziatura fissa, un carattere installato sul PC, oppure importa un file .ttf/.otf (Impostazioni > Note). Cambia solo il testo delle note e la scelta resta su questo PC.",
         "ノートのフォント:システム、セリフ体、読みやすい書体、等幅、PC にインストール済みのフォント、または .ttf/.otf ファイルの読み込みから選べます(設定 > ノート)。変わるのはノートの文字だけで、この設定はこの PC だけのものです。",
         "便笺字体:可选择系统、衬线体、易读字体、等宽字体,或本机已安装的字体,也可导入 .ttf/.otf 文件(设置 > 便笺)。只改变便笺文字,该设置仅保存在此电脑上。");
+    public static string WhatsNew400Merge => T(
+        "Shared notes merge on their own: when two devices edit the same note (a family shopping list, for instance) on different lines, both changes are kept instead of raising a conflict.",
+        "Las notas compartidas se fusionan solas: si dos dispositivos editan la misma nota (por ejemplo, la lista de la compra de la familia) en líneas distintas, se conservan los dos cambios en vez de crear un conflicto.",
+        "Geteilte Notizen werden von selbst zusammengeführt: Bearbeiten zwei Geräte dieselbe Notiz (etwa die Einkaufsliste der Familie) in verschiedenen Zeilen, bleiben beide Änderungen erhalten, statt einen Konflikt zu erzeugen.",
+        "Les notes partagées se fusionnent toutes seules : quand deux appareils modifient la même note (la liste de courses de la famille, par exemple) sur des lignes différentes, les deux changements sont conservés au lieu de créer un conflit.",
+        "As notas compartilhadas se mesclam sozinhas: quando dois dispositivos editam a mesma nota (a lista de compras da família, por exemplo) em linhas diferentes, as duas alterações são mantidas em vez de gerar um conflito.",
+        "Le note condivise si uniscono da sole: quando due dispositivi modificano la stessa nota (ad esempio la lista della spesa di famiglia) su righe diverse, entrambe le modifiche vengono mantenute invece di creare un conflitto.",
+        "共有ノートが自動でマージされます。2台のデバイスが同じノート(たとえば家族の買い物リスト)の別の行を編集した場合、競合にならず両方の変更が残ります。",
+        "共享笔记会自动合并：两台设备编辑同一条笔记（例如家人共用的购物清单）的不同行时，两处修改都会保留，而不会产生冲突。");
     public static string WhatsNew400Markdown => T(
         "Markdown as you type: bold, italic, headings, code and links are drawn in the note (switch it off in Settings). Hold Ctrl over a link to see the site it opens; Ctrl+click opens it.",
         "Markdown al escribir: la negrita, la cursiva, los títulos, el código y los enlaces se dibujan en la nota (se desactiva en Ajustes). Con Ctrl sobre un enlace ves el sitio al que va; Ctrl+clic lo abre.",

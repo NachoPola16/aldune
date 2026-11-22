@@ -667,6 +667,7 @@
     <string name="whatsnew_400_restore">Una nota ripristinata da un backup non viene più eliminata di nuovo da una sincronizzazione da un altro dispositivo.</string>
     <string name="whatsnew_400_markdown">Markdown mentre scrivi: grassetto, corsivo, titoli, codice e link vengono disegnati nella nota (si disattiva nelle impostazioni).</string>
     <string name="whatsnew_400_notefont">Carattere delle note: scegli Sistema, Con grazie, Facile da leggere o Spaziatura fissa, oppure importa un file .ttf/.otf (Impostazioni &gt; Note). Cambia solo il testo delle note e la scelta resta su questo telefono.</string>
+    <string name="whatsnew_400_merge">Le note condivise si uniscono da sole: quando due dispositivi modificano la stessa nota (ad esempio la lista della spesa di famiglia) su righe diverse, entrambe le modifiche vengono mantenute invece di creare un conflitto.</string>
     <string name="whatsnew_400_share">Condividi il testo di una nota con qualsiasi app dal menu dell\'editor.</string>
     <string name="whatsnew_400_battery">Promemoria: se il telefono mette in pausa Aldune, le Impostazioni ora te lo dicono e ti portano dove rimuovere la restrizione.</string>
 </resources>
