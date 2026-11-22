@@ -1088,6 +1088,7 @@ public sealed class NotesRepository
             DELETE FROM NoteVersion WHERE NoteId = $id;
             DELETE FROM NoteReminder WHERE NoteId = $id;
             DELETE FROM NoteTag WHERE NoteId = $id;
+            DELETE FROM SyncBaseNote WHERE NoteId = $id;
             """;
         command.Parameters.AddWithValue("$id", id.ToString());
         command.Parameters.AddWithValue("$deletedAt", DateTimeOffset.UtcNow.ToString("O"));
@@ -1225,6 +1226,7 @@ public sealed class NotesRepository
             DELETE FROM NoteVersion WHERE NoteId = $id;
             DELETE FROM NoteReminder WHERE NoteId = $id;
             DELETE FROM NoteTag WHERE NoteId = $id;
+            DELETE FROM SyncBaseNote WHERE NoteId = $id;
             INSERT OR REPLACE INTO SyncTombstone (NoteId, DeletedAt, DeviceId)
             VALUES ($id, $deletedAt, $deviceId);
             """;

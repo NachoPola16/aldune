@@ -116,6 +116,30 @@ public sealed class SyncBaseNoteStorageTests : IDisposable
     }
 
     [Fact]
+    public void DeletingANoteDropsItsSnapshots()
+    {
+        var note = _repository.Create("secreto", "#EBD38B", "primary");
+        _repository.SetSyncBaseNotes([new(note.Id, note)]);
+        _repository.SetSyncBaseNotes([new(note.Id, note)], "other");
+
+        Assert.True(_repository.Delete(note.Id));
+
+        Assert.Empty(_repository.GetSyncBaseNotes());
+        Assert.Empty(_repository.GetSyncBaseNotes("other"));
+    }
+
+    [Fact]
+    public void ApplyingARemoteDeletionDropsItsSnapshots()
+    {
+        var note = _repository.Create("secreto", "#EBD38B", "primary");
+        _repository.SetSyncBaseNotes([new(note.Id, note)]);
+
+        _repository.ApplySyncTombstone(new SyncTombstone(note.Id, DateTimeOffset.UtcNow, "device-b"));
+
+        Assert.Empty(_repository.GetSyncBaseNotes());
+    }
+
+    [Fact]
     public void ReplacingASnapshotKeepsOnlyTheLatest()
     {
         var note = Make("one");
