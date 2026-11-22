@@ -518,6 +518,40 @@ public sealed class NotesRepository
         return results;
     }
 
+    /// <summary>Which version (its date) each stored snapshot is, without decrypting them.</summary>
+    public IReadOnlyDictionary<Guid, DateTimeOffset> GetSyncBaseNoteStamps(string profileKey = "")
+    {
+        using var connection = _database.OpenConnection();
+        using var command = connection.CreateCommand();
+        command.CommandText = "SELECT NoteId, UpdatedAt FROM SyncBaseNote WHERE ProfileKey = $profile;";
+        command.Parameters.AddWithValue("$profile", profileKey);
+        using var reader = command.ExecuteReader();
+        var results = new Dictionary<Guid, DateTimeOffset>();
+        while (reader.Read()) results[Guid.Parse(reader.GetString(0))] = ParseDate(reader["UpdatedAt"]);
+        return results;
+    }
+
+    /// <summary>One snapshot, or null when there is none (or it cannot be read).</summary>
+    public Note? GetSyncBaseNote(Guid noteId, string profileKey = "")
+    {
+        using var connection = _database.OpenConnection();
+        using var command = connection.CreateCommand();
+        command.CommandText = "SELECT EncryptedNote, Nonce, Tag FROM SyncBaseNote WHERE ProfileKey = $profile AND NoteId = $id;";
+        command.Parameters.AddWithValue("$profile", profileKey);
+        command.Parameters.AddWithValue("$id", noteId.ToString());
+        using var reader = command.ExecuteReader();
+        if (!reader.Read()) return null;
+        try
+        {
+            var json = _cipher.Decrypt(new EncryptedContent((byte[])reader["EncryptedNote"], (byte[])reader["Nonce"], (byte[])reader["Tag"]));
+            return JsonSerializer.Deserialize<Note>(json);
+        }
+        catch (Exception ex) when (ex is JsonException or System.Security.Cryptography.CryptographicException)
+        {
+            return null;
+        }
+    }
+
     /// <summary>Stores the agreed content of notes as merge bases. Protected notes and texts over <see cref="SyncBaseNoteMaxTextBytes"/> are skipped (and any old snapshot of theirs dropped).</summary>
     public void SetSyncBaseNotes(IEnumerable<KeyValuePair<Guid, Note>> notes, string profileKey = "")
     {
@@ -536,7 +570,8 @@ public sealed class NotesRepository
             else
             {
                 var encrypted = _cipher.Encrypt(JsonSerializer.Serialize(note));
-                command.CommandText = "INSERT OR REPLACE INTO SyncBaseNote (ProfileKey, NoteId, EncryptedNote, Nonce, Tag) VALUES ($profile, $id, $note, $nonce, $tag);";
+                command.CommandText = "INSERT OR REPLACE INTO SyncBaseNote (ProfileKey, NoteId, UpdatedAt, EncryptedNote, Nonce, Tag) VALUES ($profile, $id, $updatedAt, $note, $nonce, $tag);";
+                command.Parameters.AddWithValue("$updatedAt", note.UpdatedAt.ToString("O"));
                 command.Parameters.AddWithValue("$note", encrypted.CipherText);
                 command.Parameters.AddWithValue("$nonce", encrypted.Nonce);
                 command.Parameters.AddWithValue("$tag", encrypted.Tag);
@@ -1080,6 +1115,22 @@ public sealed class NotesRepository
         // One transaction for the row, the order and the tags: a cut in between used to leave the new text with the old tags, and those then
         // won over the other devices' on the next pass. The history version above stays outside on purpose (it is only ever extra safety).
         RunSyncWrite((connection, transaction) => ApplySyncNoteRows(connection, transaction, note, authorDeviceId, encrypted), encrypted.CipherText.Length);
+    }
+
+    /// <summary>
+    /// Writes the result of an automatic merge as a local edit (no author is stored, so the next envelope is signed by this
+    /// device). The replaced local text is kept as a version by <see cref="ApplySyncNote"/>; the other side's text is kept
+    /// here, whatever the 5-minute interval says, so neither side's text can be lost to a merge.
+    /// </summary>
+    public void SaveMergedNote(Note merged, string remoteText)
+    {
+        if (merged.IsProtected) throw new InvalidOperationException("A protected note is never merged.");
+        if (remoteText != merged.Text)
+        {
+            FlushBulkSyncWrite();
+            InsertVersion(merged.Id, remoteText, DateTimeOffset.UtcNow);
+        }
+        ApplySyncNote(merged, authorDeviceId: null);
     }
 
     private static void ApplySyncNoteRows(SqliteConnection connection, SqliteTransaction transaction, Note note, string? authorDeviceId, EncryptedContent encrypted)

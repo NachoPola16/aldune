@@ -144,7 +144,8 @@ public sealed record SyncResult(
     int Downloaded,
     int ConflictsResolved,
     int TombstonesApplied,
-    string? Error = null)
+    string? Error = null,
+    int Merged = 0)
 {
     public bool Succeeded => Error is null;
 
@@ -152,7 +153,7 @@ public sealed record SyncResult(
     /// Algo llegó del almacén y se aplicó aquí. Con varios perfiles el resultado puede traer un fallo (otro perfil sin red) y aun así
     /// haber cambiado notas: quien repinta las ventanas o sincroniza los archivos vinculados debe mirar esto, no solo <see cref="Succeeded"/>.
     /// </summary>
-    public bool AppliedChanges => Downloaded > 0 || TombstonesApplied > 0;
+    public bool AppliedChanges => Downloaded > 0 || TombstonesApplied > 0 || Merged > 0;
 }
 
 public sealed record SyncConflictVersion(

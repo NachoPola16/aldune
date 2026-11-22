@@ -79,16 +79,17 @@ public sealed class SyncConflictTests : IDisposable
         var note = _deviceA.Repository.Create("compra\npan", "#EBD38B", "primary");
         ShareKeyAndSynchronizeInitialNote(note.Id);
 
-        _deviceB.Repository.UpdateText(note.Id, "compra\npan\nleche");
+        // The same line edited differently on both sides: not something the automatic merge can decide.
+        _deviceB.Repository.UpdateText(note.Id, "compra\npan integral");
         Assert.True(_deviceB.Sync.Synchronize().Succeeded);
         Thread.Sleep(20);
-        _deviceA.Repository.UpdateText(note.Id, "compra\npan\nhuevos");
+        _deviceA.Repository.UpdateText(note.Id, "compra\npan de molde");
         Assert.True(_deviceA.Sync.Synchronize().Succeeded);
 
         var conflict = _deviceA.Sync.GetConflicts().Single();
         Assert.True(_deviceA.Sync.MergeConflict(conflict.Id));
 
-        Assert.Equal("compra\npan\nleche\nhuevos", _deviceA.Repository.GetAllForSync().Single().Text);
+        Assert.Equal("compra\npan integral\npan de molde", _deviceA.Repository.GetAllForSync().Single().Text);
         Assert.Empty(_deviceA.Sync.GetConflicts());
         Assert.False(_deviceA.Sync.MergeConflict(conflict.Id)); // ya no existe
     }
@@ -208,9 +209,9 @@ public sealed class SyncConflictTests : IDisposable
     }
 
     [Fact]
-    public void RecolorOnOneDeviceAndEditOnTheOther_IsStillAConflict()
+    public void RecolorOnOneDeviceAndEditOnTheOther_MergesAndKeepsTheEdit()
     {
-        // La equivalencia no puede tragarse una edición real: color en B, texto en A.
+        // La equivalencia no puede tragarse una edición real: color en B, texto en A. Ahora se fusionan.
         var note = _deviceA.Repository.Create("original", "#EBD38B", "primary");
         ShareKeyAndSynchronizeInitialNote(note.Id);
 
@@ -222,7 +223,11 @@ public sealed class SyncConflictTests : IDisposable
         var uploaded = _deviceA.Sync.Synchronize();
 
         Assert.True(uploaded.Succeeded, uploaded.Error);
-        Assert.Equal(1, uploaded.ConflictsResolved);
+        Assert.Equal(0, uploaded.ConflictsResolved);
+        Assert.Equal(1, uploaded.Merged);
+        var merged = _deviceA.Repository.GetAllForSync().Single();
+        Assert.Equal("edit from A", merged.Text);
+        Assert.Equal("#C2D4FF", merged.Color);
     }
 
     [Fact]

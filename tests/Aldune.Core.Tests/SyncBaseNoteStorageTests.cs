@@ -101,6 +101,21 @@ public sealed class SyncBaseNoteStorageTests : IDisposable
     }
 
     [Fact]
+    public void StampsAndSingleReadDoNotNeedTheWholeSet()
+    {
+        var a = Make("a");
+        var b = Make("b");
+        _repository.SetSyncBaseNotes([new(a.Id, a), new(b.Id, b)]);
+
+        var stamps = _repository.GetSyncBaseNoteStamps();
+
+        Assert.Equal(a.UpdatedAt, stamps[a.Id]);
+        Assert.Equal(b.UpdatedAt, stamps[b.Id]);
+        Assert.Equal("b", _repository.GetSyncBaseNote(b.Id)!.Text);
+        Assert.Null(_repository.GetSyncBaseNote(Guid.NewGuid()));
+    }
+
+    [Fact]
     public void ReplacingASnapshotKeepsOnlyTheLatest()
     {
         var note = Make("one");

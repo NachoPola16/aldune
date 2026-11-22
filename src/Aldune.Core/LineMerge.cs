@@ -6,7 +6,7 @@ public sealed record LineMergeResult(string Text, bool Conflict);
 /// Three-way merge of a text by lines (diff3). Both sides are diffed against the common base; changes that do not
 /// overlap are applied together, an identical change on both sides counts once, and two insertions at the same
 /// spot are both kept in ordinal order so the result does not depend on which side is "local". Only overlapping,
-/// different changes are a conflict. Line endings are normalized to <c>\n</c>.
+/// different changes are a conflict. Lines are compared without their line ending; the result uses the base's ending.
 /// </summary>
 public static class LineMerge
 {
@@ -22,6 +22,15 @@ public static class LineMerge
 
     public static LineMergeResult Merge(string baseText, string localText, string remoteText)
     {
+        // Nothing to merge when one side did not move: hand back the other side exactly as written.
+        if (localText == remoteText || localText == baseText) return new LineMergeResult(remoteText, false);
+        if (remoteText == baseText) return new LineMergeResult(localText, false);
+
+        // Windows notes use \r\n. The base decides the line ending of the result (a one-line base: CRLF if either side has it).
+        string eol = baseText.Contains("\r\n") ? "\r\n"
+            : baseText.Contains('\n') ? "\n"
+            : localText.Contains("\r\n") || remoteText.Contains("\r\n") ? "\r\n" : "\n";
+
         var baseLines = Split(baseText);
         var local = Diff(baseLines, Split(localText));
         var remote = Diff(baseLines, Split(remoteText));
@@ -76,7 +85,7 @@ public static class LineMerge
         }
 
         CopyBaseUpTo(baseLines.Length);
-        return new LineMergeResult(string.Join("\n", output), false);
+        return new LineMergeResult(string.Join(eol, output), false);
     }
 
     private static bool Overlap(Hunk a, Hunk b)

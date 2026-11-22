@@ -59,9 +59,33 @@ public sealed class LineMergeTests
     [Fact]
     public void CrlfAndLfAreTheSameLines()
     {
-        var result = LineMerge.Merge("a\nb", "a\r\nb\r\nc", "a\nb");
+        var result = LineMerge.Merge("a\nb", "a\r\nb\r\nc", "x\na\nb");
         Assert.False(result.Conflict);
-        Assert.Equal("a\nb\nc", result.Text);
+        Assert.Equal("x\na\nb\nc", result.Text);
+    }
+
+    [Fact]
+    public void OnlyOneSideChangedReturnsItsExactText()
+    {
+        Assert.Equal("a\r\nb\r\nc", LineMerge.Merge("a\r\nb", "a\r\nb", "a\r\nb\r\nc").Text);
+        Assert.Equal("a\r\nb\r\nc", LineMerge.Merge("a\r\nb", "a\r\nb\r\nc", "a\r\nb").Text);
+    }
+
+    [Fact]
+    public void ACrlfBaseKeepsCrlfInTheMergedText()
+    {
+        var result = LineMerge.Merge("a\r\nb", "a\r\nb\r\nx", "y\r\na\r\nb");
+        Assert.False(result.Conflict);
+        Assert.Equal("y\r\na\r\nb\r\nx", result.Text);
+    }
+
+    [Fact]
+    public void ASingleLineBaseTakesCrlfIfEitherSideUsesIt()
+    {
+        var ab = LineMerge.Merge("a", "a\r\nb", "c\na");
+        var ba = LineMerge.Merge("a", "c\na", "a\r\nb");
+        Assert.Equal("c\r\na\r\nb", ab.Text);
+        Assert.Equal(ab.Text, ba.Text);
     }
 
     [Theory]

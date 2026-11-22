@@ -70,7 +70,7 @@ public sealed class PinnedToTopSyncTests : IDisposable
     }
 
     [Fact]
-    public void WhenOneSidePinsAndTheOtherEditsTheTextLater_TheEditWinsAndTheNoteEndsUnpinned()
+    public void WhenOneSidePinsAndTheOtherEditsTheTextLater_BothChangesSurviveWithoutAConflict()
     {
         var note = _deviceA.Repository.Create("original", "#EBD38B", "primary");
         ShareKeyAndSynchronize();
@@ -78,7 +78,7 @@ public sealed class PinnedToTopSyncTests : IDisposable
         _deviceA.Repository.SetPinnedToTop(note.Id, true);
         Assert.True(_deviceA.Sync.Synchronize().Succeeded);
         Thread.Sleep(20);
-        // B no ha visto el pin: edita sobre la versión vieja y, al ser la más reciente, su versión (sin pin) gana.
+        // B no ha visto el pin y edita sobre la versión vieja: al sincronizar se fusionan el pin y el texto.
         _deviceB.Repository.UpdateText(note.Id, "edit from B");
         var uploaded = _deviceB.Sync.Synchronize();
         var downloaded = _deviceA.Sync.Synchronize();
@@ -89,15 +89,14 @@ public sealed class PinnedToTopSyncTests : IDisposable
         {
             var winner = device.Repository.GetById(note.Id)!;
             Assert.Equal("edit from B", winner.Text);
-            Assert.False(winner.IsPinnedToTop);
+            Assert.True(winner.IsPinnedToTop);
         }
 
-        // La versión que pierde (la fijada) queda guardada en el conflicto de B, que fue quien lo vio.
-        Assert.Single(_deviceB.Sync.GetConflicts());
+        Assert.Empty(_deviceB.Sync.GetConflicts());
     }
 
     [Fact]
-    public void WhenOneSideEditsTheTextAndTheOtherPinsLater_ThePinWinsWithItsOldText()
+    public void WhenOneSideEditsTheTextAndTheOtherPinsLater_BothChangesSurviveWithoutAConflict()
     {
         var note = _deviceA.Repository.Create("original", "#EBD38B", "primary");
         ShareKeyAndSynchronize();
@@ -111,19 +110,14 @@ public sealed class PinnedToTopSyncTests : IDisposable
 
         Assert.True(uploaded.Succeeded, uploaded.Error);
         Assert.True(downloaded.Succeeded, downloaded.Error);
-        // No se mezcla campo a campo: gana la versión entera más reciente, con su pin y su texto.
+        // Se fusionan campo a campo: el pin de A y el texto de B, sin conflicto.
         foreach (var device in new[] { _deviceA, _deviceB })
         {
             var winner = device.Repository.GetById(note.Id)!;
-            Assert.Equal("original", winner.Text);
+            Assert.Equal("edit from B", winner.Text);
             Assert.True(winner.IsPinnedToTop);
         }
-
-        // Y la edición perdida se puede recuperar desde el conflicto de A.
-        var conflict = _deviceA.Sync.GetConflicts().Single();
-        Assert.True(_deviceA.Sync.RestoreConflict(conflict.Id));
-        Assert.Equal("edit from B", _deviceA.Repository.GetById(note.Id)!.Text);
-        Assert.False(_deviceA.Repository.GetById(note.Id)!.IsPinnedToTop);
+        Assert.Empty(_deviceA.Sync.GetConflicts());
     }
 
     [Fact]

@@ -134,6 +134,7 @@ public sealed class NotesDatabase
             CREATE TABLE IF NOT EXISTS SyncBaseNote (
                 ProfileKey TEXT NOT NULL DEFAULT '',
                 NoteId TEXT NOT NULL,
+                UpdatedAt TEXT NOT NULL,
                 EncryptedNote BLOB NOT NULL,
                 Nonce BLOB NOT NULL,
                 Tag BLOB NOT NULL,

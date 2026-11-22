@@ -367,7 +367,8 @@ public sealed class SyncService
                 ran.Sum(item => item.Result.Downloaded),
                 ran.Sum(item => item.Result.ConflictsResolved),
                 ran.Sum(item => item.Result.TombstonesApplied),
-                failures.Count == 0 ? null : string.Join(" · ", failures));
+                failures.Count == 0 ? null : string.Join(" · ", failures),
+                Merged: ran.Sum(item => item.Result.Merged));
         }
     }
 
@@ -515,10 +516,17 @@ public sealed class SyncService
                 int tombstones = 0;
                 var bases = _repository.GetSyncBases(baseKey);
                 var settled = new Dictionary<Guid, SyncBaseVersion>();
-                void Settle(Guid id, SyncEnvelope agreed)
+                // The content of each agreed version is kept too: it is the common ancestor of the automatic merge. It is also
+                // stored for notes whose base is already right but that have no snapshot yet (installs from before the merge).
+                var snapshotStamps = _repository.GetSyncBaseNoteStamps(baseKey);
+                var settledNotes = new Dictionary<Guid, Note>();
+                int merged = 0;
+                void Settle(Guid id, SyncEnvelope agreed, Note? agreedNote = null)
                 {
                     if (!bases.TryGetValue(id, out var known) || !known.Matches(agreed))
                         settled[id] = SyncBaseVersion.Of(agreed);
+                    if (agreedNote is not null && (!snapshotStamps.TryGetValue(id, out var stamp) || stamp != agreedNote.UpdatedAt))
+                        settledNotes[id] = agreedNote;
                 }
 
                 // The notes that only exist in the store (a new device, or notes made elsewhere) are written in groups, not one commit each.
@@ -542,8 +550,8 @@ public sealed class SyncService
                         // código del perfil solo puede tocar lo etiquetado, aunque conozca el id de otra nota.
                         if (leftTheTag.ContainsKey(id) && remoteObject!.Envelope.Tombstone)
                             continue;
-                        ApplyRemote(remoteObject!, key, ref downloaded, ref tombstones);
-                        Settle(id, remoteObject!.Envelope);
+                        var appliedRemote = ApplyRemote(remoteObject!, key, ref downloaded, ref tombstones);
+                        Settle(id, remoteObject!.Envelope, appliedRemote);
                         continue;
                     }
 
@@ -551,13 +559,25 @@ public sealed class SyncService
                     {
                         transport.Write(localEnvelope!);
                         uploaded++;
-                        Settle(id, localEnvelope!);
+                        Settle(id, localEnvelope!, localNotes.GetValueOrDefault(id));
                         continue;
                     }
 
                     int comparison = SyncVersion.Compare(localEnvelope!, remoteObject!.Envelope);
                     if (comparison != 0 && IsRealConflict(localEnvelope!, remoteObject.Envelope, bases.GetValueOrDefault(id)))
                     {
+                        // Both sides changed since the agreed version: if the changes do not collide, merge them instead of raising a conflict.
+                        var attempt = TryMerge(id, localEnvelope!, remoteObject, bases.GetValueOrDefault(id), localNotes, baseKey, key, deviceId);
+                        if (attempt.Deferred) continue; // edited here while the pass was running: the next pass sees it
+                        if (attempt.Envelope is { } mergedEnvelope)
+                        {
+                            transport.Write(mergedEnvelope);
+                            uploaded++;
+                            merged++;
+                            Settle(id, mergedEnvelope, attempt.Note);
+                            continue;
+                        }
+
                         var localVersion = ToConflictVersion(localEnvelope!, localNotes, key);
                         var remoteVersion = ToConflictVersion(remoteObject.Envelope, null, key);
                         // Los dos lados cambiaron, pero al mismo contenido: no hay nada que elegir. Se
@@ -576,20 +596,22 @@ public sealed class SyncService
                         transport.Write(localEnvelope!);
                         uploaded++;
                     }
-                    else if (comparison < 0)
+                    Note? agreedNote = comparison >= 0 ? localNotes.GetValueOrDefault(id) : null;
+                    if (comparison < 0)
                     {
                         // La foto local se tomó antes de la red: si mientras tanto se editó o borró aquí, aplicar lo
                         // remoto pisaría esa edición. Se deja para la siguiente pasada, que la verá ya.
                         if (ChangedSinceSnapshot(id, localNotes, localEnvelope!.Tombstone)) continue;
-                        ApplyRemote(remoteObject, key, ref downloaded, ref tombstones);
+                        agreedNote = ApplyRemote(remoteObject, key, ref downloaded, ref tombstones);
                     }
-                    Settle(id, comparison >= 0 ? localEnvelope! : remoteObject.Envelope);
+                    Settle(id, comparison >= 0 ? localEnvelope! : remoteObject.Envelope, agreedNote);
                 }
 
                 // Written before the bases are saved: a base must never be recorded for a note that did not land.
                 bulkWrite.Dispose();
                 if (settled.Count > 0) _repository.SetSyncBases(settled, baseKey);
-                var result = new SyncResult(uploaded, downloaded, conflicts, tombstones);
+                if (settledNotes.Count > 0) _repository.SetSyncBaseNotes(settledNotes, baseKey);
+                var result = new SyncResult(uploaded, downloaded, conflicts, tombstones, Merged: merged);
                 _settings.LastSyncAt = DateTimeOffset.UtcNow;
                 _persist(_settings);
                 return result;
@@ -949,12 +971,48 @@ public sealed class SyncService
         _repository.GetById(id) is not { } current ||
         current.UpdatedAt != before.UpdatedAt;
 
-    private void ApplyRemote(
+    private sealed record MergeAttempt(SyncEnvelope? Envelope, Note? Note, bool Deferred);
+
+    /// <summary>
+    /// Both sides changed the note since the version they agreed on. With the stored content of that version, merge the two
+    /// (<see cref="NoteMerge"/>): when nothing collides the merged note is written here (both pre-merge texts stay in the
+    /// history) and its envelope returned for the caller to upload. No result envelope means "keep the conflict flow"
+    /// (no base content, a deletion, a protected note, or the same lines changed differently); <c>Deferred</c> means the note
+    /// was edited here after this pass took its snapshot, so nothing is written now.
+    /// </summary>
+    private MergeAttempt TryMerge(
+        Guid id, SyncEnvelope local, SyncRemoteObject remote, SyncBaseVersion? common,
+        IReadOnlyDictionary<Guid, Note> localNotes, string baseKey, byte[] key, string deviceId)
+    {
+        var none = new MergeAttempt(null, null, false);
+        if (common is null || local.Tombstone || remote.Envelope.Tombstone) return none;
+        if (!localNotes.TryGetValue(id, out var localNote)) return none;
+        // The snapshot only counts if it is the very version the base points to; an older one would merge against the wrong ancestor.
+        var snapshot = _repository.GetSyncBaseNote(id, baseKey);
+        if (snapshot is null || snapshot.UpdatedAt != common.UpdatedAt) return none;
+
+        var remoteNote = SyncEnvelopeCodec.DecryptNote(remote.Envelope, key);
+        var result = NoteMerge.Merge(snapshot, localNote, local.DeviceId, remoteNote, remote.Envelope.DeviceId);
+        if (result.Conflict || result.Merged is not { } mergedNote) return none;
+        if (ChangedSinceSnapshot(id, localNotes, false)) return new MergeAttempt(null, null, true);
+
+        // Strictly newer than both sides, even with a device whose clock runs ahead.
+        var floor = (local.UpdatedAt > remote.Envelope.UpdatedAt ? local.UpdatedAt : remote.Envelope.UpdatedAt).AddMilliseconds(1);
+        var now = DateTimeOffset.UtcNow;
+        mergedNote.UpdatedAt = now > floor ? now : floor;
+
+        _repository.SaveMergedNote(mergedNote, remoteNote.Text);
+        return new MergeAttempt(SyncEnvelopeCodec.CreateNote(mergedNote, key, deviceId), mergedNote, false);
+    }
+
+    /// <summary>Applies a remote version and returns the note that was written (null for a deletion).</summary>
+    private Note? ApplyRemote(
         SyncRemoteObject remote,
         byte[] key,
         ref int downloaded,
         ref int tombstones)
     {
+        Note? applied = null;
         if (remote.Envelope.Tombstone)
         {
             _repository.ApplySyncTombstone(new SyncTombstone(
@@ -965,9 +1023,11 @@ public sealed class SyncService
         }
         else
         {
-            _repository.ApplySyncNote(SyncEnvelopeCodec.DecryptNote(remote.Envelope, key), remote.Envelope.DeviceId);
+            applied = SyncEnvelopeCodec.DecryptNote(remote.Envelope, key);
+            _repository.ApplySyncNote(applied, remote.Envelope.DeviceId);
         }
         downloaded++;
+        return applied;
     }
 
     /// <summary>

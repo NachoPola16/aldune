@@ -56,7 +56,7 @@ public static partial class SyncDiagnostics
             text.Append(CultureInfo.InvariantCulture, $"- {Stamp(attempt.At)} · {attempt.Duration.TotalSeconds:0.0} s · {(attempt.Automatic ? "automatic" : "manual")} · ");
             text.Append(result.Succeeded ? "OK" : "FAILED");
             text.Append(CultureInfo.InvariantCulture,
-                $" · up {result.Uploaded}, down {result.Downloaded}, conflicts {result.ConflictsResolved}, deletions {result.TombstonesApplied}");
+                $" · up {result.Uploaded}, down {result.Downloaded}, conflicts {result.ConflictsResolved}, merged {result.Merged}, deletions {result.TombstonesApplied}");
             if (result.Error is { } error) text.Append(" · ").Append(Scrub(error));
             text.AppendLine();
         }
