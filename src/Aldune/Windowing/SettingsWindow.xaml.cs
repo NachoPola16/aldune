@@ -1860,7 +1860,7 @@ public partial class SettingsWindow : Window
         {
             var result = _coordinator.Synchronize();
             SyncStatusText.Text = result.Succeeded
-                ? Strings.SyncCompletedStatus(result.Uploaded, result.Downloaded)
+                ? Strings.SyncCompletedStatus(result.Uploaded, result.Downloaded, result.Merged)
                 : result.Error?.Contains("401", StringComparison.Ordinal) == true
                     ? Strings.SyncUnauthorizedStatus
                     : Strings.SyncErrorStatus(result.Error ?? "Unknown error");

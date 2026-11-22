@@ -1735,6 +1735,12 @@ public static class Strings
             $"Synchronisierung abgeschlossen: {uploaded} hochgeladen, {downloaded} heruntergeladen.",
             $"Synchronisation terminée : {uploaded} envoyée(s), {downloaded} reçue(s).",
             $"Sincronização concluída: {uploaded} enviada(s), {downloaded} baixada(s).", $"Sincronizzazione completata: {uploaded} caricate, {downloaded} scaricate.", $"同期が完了しました: アップロード {uploaded} 件、ダウンロード {downloaded} 件。", $"同步完成：上传 {uploaded} 项，下载 {downloaded} 项。");
+    /// <summary>The usual completed line, plus how many notes were merged automatically (edits on two devices that did not collide).</summary>
+    public static string SyncCompletedStatus(int uploaded, int downloaded, int merged) =>
+        merged <= 0 ? SyncCompletedStatus(uploaded, downloaded) : SyncCompletedStatus(uploaded, downloaded) + " " +
+            T($"Merged automatically: {merged}.", $"Fusionadas automáticamente: {merged}.", $"Automatisch zusammengeführt: {merged}.",
+              $"Fusionnées automatiquement : {merged}.", $"Mescladas automaticamente: {merged}.", $"Unite automaticamente: {merged}.",
+              $"自動的にマージ: {merged} 件。", $"自动合并：{merged} 项。");
     public static string SyncErrorStatus(string details) => T($"Sync error: {details}", $"Error de sincronización: {details}",
         $"Synchronisierungsfehler: {details}",
         $"Erreur de synchronisation : {details}",

@@ -2902,7 +2902,7 @@ public partial class EdgeDockWindow : Window
 
             if (result.Succeeded)
             {
-                ShowSyncResult(ok: true, Strings.SyncCompletedStatus(result.Uploaded, result.Downloaded));
+                ShowSyncResult(ok: true, Strings.SyncCompletedStatus(result.Uploaded, result.Downloaded, result.Merged));
                 return;
             }
 
