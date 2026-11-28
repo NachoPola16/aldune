@@ -51,6 +51,7 @@ internal static class Program
             Pump(TimeSpan.FromMilliseconds(150));
             Check(Field<int>(dock, "_noteCount") == 2, "Initial repository refresh contains two notes");
             RunDockRound24(dock, settings, coordinator, repository);
+            RunDockAnimation(dock, settings);
             RunTagSelection(dock, settings);
             // The two scenarios below take the real mouse, grab the real screen and activate note windows (they steal keyboard focus):
             // ALDUNE_SMOKE_QUIET=1 skips them so the suite can run while someone is working at the PC.
@@ -147,6 +148,73 @@ internal static class Program
     /// Round 2.4.0 on the dock: accent ring on the cogwheel for a filtered view, the view label's fixed placement, the wheel session that keeps
     /// the window size and then releases it, and the note's closing ghost. No mouse involved; the state is restored for the next scenario.
     /// </summary>
+    /// <summary>
+    /// The dock's animation setting (DockAnimation). With Off the fan opens and folds at once, with nothing left to wait for; switching to Off while a
+    /// fade is running leaves the dock settled, not stuck half transparent; Calm still animates and then settles.
+    /// </summary>
+    private static void RunDockAnimation(EdgeDockWindow dock, AppSettings settings)
+    {
+        var fan = (UIElement)dock.FindName("FanPanel");
+        var strip = (UIElement)dock.FindName("RestStrip");
+        var state = Field<FanStateMachine>(dock, "_fanState");
+        void Fold() { state.PointerLeft(); state.CollapseTimerElapsed(); }
+        bool Settled(bool expanded) => fan.Opacity == (expanded ? 1 : 0) && strip.Opacity == (expanded ? 0 : 1);
+
+        settings.DockAnimation = DockAnimationMode.Off;
+        Fold();
+        Pump(TimeSpan.FromMilliseconds(100));
+        Check(Settled(expanded: false), "Dock animation Off: the folded dock shows the strip and not the fan");
+        state.PointerEntered();
+        Check(Settled(expanded: true), "Dock animation Off: the fan opens at once, with no fade to wait for");
+        Fold();
+        Check(Settled(expanded: false), "Dock animation Off: the fan folds at once");
+
+        // Switched to Off while a fade is running: the running fade ends on its own timing and the dock settles on the final state.
+        settings.DockAnimation = DockAnimationMode.Quick;
+        state.PointerEntered();
+        Pump(TimeSpan.FromMilliseconds(30));
+        settings.DockAnimation = DockAnimationMode.Off;
+        Fold();
+        Pump(TimeSpan.FromMilliseconds(500));
+        Check(Settled(expanded: false), "Dock animation Quick then Off in the middle of a fade: the dock ends settled, not half transparent");
+
+        settings.DockAnimation = DockAnimationMode.Calm;
+        settings.KeepDockOpen = true; // the hover poll would fold the fan while the cursor is elsewhere (as in RunDockRound24)
+        state.PointerEntered();
+        Check(fan.Opacity < 1, "Dock animation Calm still animates the opening");
+        Pump(TimeSpan.FromMilliseconds(600));
+        Check(Settled(expanded: true), "Dock animation Calm: the fan ends fully open");
+        settings.KeepDockOpen = false;
+        Fold();
+        Pump(TimeSpan.FromMilliseconds(600));
+        Check(Settled(expanded: false), "Dock animation Calm: the fan ends folded");
+
+        // How long the opening of the fan takes in each mode (side edge: 170 ms at Normal, so about 255 / 100 for Calm / Quick). Ordering only is
+        // asserted, with frame jitter of ±16 ms the numbers themselves are for reading.
+        long TimeToOpen(DockAnimationMode mode)
+        {
+            settings.DockAnimation = DockAnimationMode.Off;
+            settings.KeepDockOpen = false;
+            Fold();
+            Pump(TimeSpan.FromMilliseconds(100));
+            settings.DockAnimation = mode;
+            settings.KeepDockOpen = true;
+            var clock = System.Diagnostics.Stopwatch.StartNew();
+            state.PointerEntered();
+            while (fan.Opacity < 0.999 && clock.ElapsedMilliseconds < 2000) Pump(TimeSpan.FromMilliseconds(8));
+            long took = clock.ElapsedMilliseconds;
+            settings.KeepDockOpen = false;
+            return took;
+        }
+        long quick = TimeToOpen(DockAnimationMode.Quick), normal = TimeToOpen(DockAnimationMode.Normal), calm = TimeToOpen(DockAnimationMode.Calm);
+        Console.WriteLine($"INFO: time to open the fan: Quick {quick} ms, Normal {normal} ms, Calm {calm} ms");
+        Check(quick < normal && normal < calm, "Dock animation: Quick opens the fan faster than Normal, and Normal faster than Calm");
+        settings.DockAnimation = DockAnimationMode.Off;
+        Fold();
+        Pump(TimeSpan.FromMilliseconds(100));
+        settings.DockAnimation = DockAnimationMode.Normal;
+    }
+
     private static void RunDockRound24(EdgeDockWindow dock, AppSettings settings, AppCoordinator coordinator, NotesRepository repository)
     {
         // A filtered view keeps its label up while the fan is open (the cue that the dock is filtered); «Active» does not.
