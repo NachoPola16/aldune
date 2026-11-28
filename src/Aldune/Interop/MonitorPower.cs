@@ -54,17 +54,48 @@ internal static class MonitorPower
     private const byte VcpPowerMode = 0xD6;
 
     /// <summary>El estado de cada una de esas pantallas (por <see cref="MonitorInfo.DeviceName"/>).</summary>
+    private sealed class ReadState
+    {
+        public required IReadOnlyCollection<string> DeviceNames { get; init; }
+        public Dictionary<string, MonitorPowerReading> Readings { get; } = new();
+    }
+
+    // A static, never-collected delegate: the runtime aborted the app (FailFast, "callback on a garbage collected delegate of type
+    // MonitorEnumProc") when a fresh lambda passed on each call was invoked after it could be collected, which happens while the displays
+    // change (remote session, monitor turned off). The state travels through a GCHandle in the native `data` argument, so nothing is captured.
+    private static readonly MonitorEnumProc EnumCallback = OnMonitor;
+
+    private static bool OnMonitor(IntPtr hMonitor, IntPtr dc, ref RECT rect, IntPtr data)
+    {
+        try
+        {
+            if (GCHandle.FromIntPtr(data).Target is not ReadState state) return false;
+            var info = new MONITORINFOEX { Size = Marshal.SizeOf<MONITORINFOEX>() };
+            if (GetMonitorInfo(hMonitor, ref info) && state.DeviceNames.Contains(info.Device))
+                state.Readings[info.Device] = ReadOne(hMonitor);
+            return true;
+        }
+        catch
+        {
+            // An exception must never cross into native code; a monitor that cannot be read is simply left out.
+            return false;
+        }
+    }
+
     internal static Dictionary<string, MonitorPowerReading> Read(IReadOnlyCollection<string> deviceNames)
     {
-        var readings = new Dictionary<string, MonitorPowerReading>();
-        EnumDisplayMonitors(IntPtr.Zero, IntPtr.Zero, (IntPtr hMonitor, IntPtr _, ref RECT _, IntPtr _) =>
+        var state = new ReadState { DeviceNames = deviceNames };
+        var handle = GCHandle.Alloc(state);
+        try
         {
-            var info = new MONITORINFOEX { Size = Marshal.SizeOf<MONITORINFOEX>() };
-            if (GetMonitorInfo(hMonitor, ref info) && deviceNames.Contains(info.Device))
-                readings[info.Device] = ReadOne(hMonitor);
-            return true;
-        }, IntPtr.Zero);
-        return readings;
+            EnumDisplayMonitors(IntPtr.Zero, IntPtr.Zero, EnumCallback, GCHandle.ToIntPtr(handle));
+        }
+        finally
+        {
+            handle.Free();
+            GC.KeepAlive(EnumCallback);
+        }
+        return state.Readings;
     }
 
     private static MonitorPowerReading ReadOne(IntPtr hMonitor)
