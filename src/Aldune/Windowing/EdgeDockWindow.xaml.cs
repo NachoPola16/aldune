@@ -1667,7 +1667,8 @@ public partial class EdgeDockWindow : Window
             bool fits = TabsScroll.ScrollableHeight <= 0.5 || DateTime.UtcNow < _wheelViewUntil;
             if (Keyboard.Modifiers == ModifierKeys.Control || (Keyboard.Modifiers == ModifierKeys.None && fits))
             {
-                CycleDockView(e.Delta < 0 ? 1 : -1, showLabel: true);
+                int step = _wheelNotches.Add(e.Delta, DateTime.UtcNow);
+                if (step != 0) CycleDockView(step, showLabel: true);
                 e.Handled = true;
                 return;
             }
@@ -2269,6 +2270,7 @@ public partial class EdgeDockWindow : Window
     // --- Cambiar de vista con la rueda --------------------------------------------------------------
 
     private DateTime _wheelViewUntil = DateTime.MinValue;
+    private readonly WheelNotchAccumulator _wheelNotches = new();
 
     private DockViewCycle.Counts BuildViewCounts()
     {
@@ -2375,7 +2377,10 @@ public partial class EdgeDockWindow : Window
                     return NativeMethods.ContinueHook(_wheelHook, code, message, data);
                 }
 
-                Dispatcher.BeginInvoke(DispatcherPriority.Input, new Action(() => CycleDockView(delta < 0 ? 1 : -1, showLabel: true)));
+                // A trackpad sends many small deltas per gesture: they add up to a step per notch of travel (a mouse notch is a step at once).
+                // Every event is swallowed either way, so the small ones do not reach whatever is behind the dock.
+                int step = _wheelNotches.Add(delta, DateTime.UtcNow);
+                if (step != 0) Dispatcher.BeginInvoke(DispatcherPriority.Input, new Action(() => CycleDockView(step, showLabel: true)));
                 return (IntPtr)1; // swallowed: the view change is the only effect of this notch
             }
         }
