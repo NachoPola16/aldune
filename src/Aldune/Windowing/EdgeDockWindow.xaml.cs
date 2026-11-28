@@ -864,8 +864,12 @@ public partial class EdgeDockWindow : Window
 
     // --- Estado y animación ---------------------------------------------------------------------
 
-    private static readonly Duration SideCrossfadeDuration = new(TimeSpan.FromMilliseconds(170));
-    private static readonly Duration TopBottomCrossfadeDuration = new(TimeSpan.FromMilliseconds(140));
+    // The dock's animations read one factor (AppSettings.DockAnimation, see DockMotion): every duration below goes through Ms(), and every gate on
+    // «does it animate» through DockAnimationsOn, which puts the system's switch first. Hover and wheel timers are behaviour and stay as they are.
+    private bool DockAnimationsOn => DockMotionRuntime.On(_settings);
+    private double Ms(double baseMs) => DockMotionRuntime.Ms(_settings, baseMs);
+
+    private Duration FanCrossfadeDuration() => new(TimeSpan.FromMilliseconds(Ms(IsTopBottomEdge ? 140 : 170)));
 
     private static IEasingFunction EaseOut() =>
         new QuinticEase { EasingMode = EasingMode.EaseOut };
@@ -905,7 +909,7 @@ public partial class EdgeDockWindow : Window
         FanPanel.IsHitTestVisible = expanded;
         RestStrip.IsHitTestVisible = !expanded;
 
-        if (!animate || !SystemParameters.ClientAreaAnimation)
+        if (!animate || !DockAnimationsOn)
         {
             FanPanel.BeginAnimation(OpacityProperty, null);
             RestStrip.BeginAnimation(OpacityProperty, null);
@@ -916,7 +920,7 @@ public partial class EdgeDockWindow : Window
             return;
         }
 
-        var duration = IsTopBottomEdge ? TopBottomCrossfadeDuration : SideCrossfadeDuration;
+        var duration = FanCrossfadeDuration();
         Fade(FanPanel, expanded ? 1 : 0, duration);
         Fade(RestStrip, expanded ? 0 : 1, duration);
         UpdateScrollIndicator();
@@ -966,8 +970,8 @@ public partial class EdgeDockWindow : Window
     /// <summary>Una pestaña entra deslizándose desde el canto de la pantalla y apareciendo.</summary>
     private void PlayEntrance(Button button, double delayMs, bool slideIn, double durationMs = FanTiming.TabSweepMs)
     {
-        var delay = TimeSpan.FromMilliseconds(delayMs);
-        var duration = new Duration(TimeSpan.FromMilliseconds(durationMs));
+        var delay = TimeSpan.FromMilliseconds(Ms(delayMs));
+        var duration = new Duration(TimeSpan.FromMilliseconds(Ms(durationMs)));
 
         // Las dos animaciones se limpian al terminar y fijan su valor final como valor local plano.
         // Sin eso quedan enganchadas para siempre (FillBehavior.HoldEnd) y **cualquier asignación
@@ -1068,7 +1072,7 @@ public partial class EdgeDockWindow : Window
     /// <summary>The whole window fades out before it is closed to be built again somewhere else (another edge, alignment or screen).</summary>
     public void FadeOutThen(Action done)
     {
-        var fade = new DoubleAnimation(0, new Duration(TimeSpan.FromMilliseconds(110))) { EasingFunction = EaseFade() };
+        var fade = new DoubleAnimation(0, new Duration(TimeSpan.FromMilliseconds(Ms(110)))) { EasingFunction = EaseFade() };
         // At zero and with two frames drawn BEFORE the heavy work (closing and creating windows): otherwise the compositor keeps showing the
         // last frame it was given, a half-faded dock, for as long as the interface thread is busy.
         fade.Completed += (_, _) => { BeginAnimation(OpacityProperty, null); Opacity = 0; AfterFrames(2, done); };
@@ -1078,7 +1082,7 @@ public partial class EdgeDockWindow : Window
     /// <summary>The new window of a rebuild comes in with a fade (it is created at opacity 0).</summary>
     public void FadeInAfterRebuild()
     {
-        var fade = new DoubleAnimation(0, 1, new Duration(TimeSpan.FromMilliseconds(170))) { EasingFunction = EaseFade() };
+        var fade = new DoubleAnimation(0, 1, new Duration(TimeSpan.FromMilliseconds(Ms(170)))) { EasingFunction = EaseFade() };
         fade.Completed += (_, _) => { BeginAnimation(OpacityProperty, null); Opacity = 1; };
         BeginAnimation(OpacityProperty, fade);
     }
@@ -1092,7 +1096,7 @@ public partial class EdgeDockWindow : Window
     {
         bool shown = ViewButton.Visibility == Visibility.Visible;
         if (on == shown) return;
-        if (!IsVisible || !SystemParameters.ClientAreaAnimation)
+        if (!IsVisible || !DockAnimationsOn)
         {
             ViewButton.Visibility = on ? Visibility.Visible : Visibility.Collapsed;
             return;
@@ -1101,7 +1105,7 @@ public partial class EdgeDockWindow : Window
         var scale = new ScaleTransform(on ? 0 : 1, on ? 0 : 1);
         ViewButton.LayoutTransform = scale;
         ViewButton.Visibility = Visibility.Visible;
-        var duration = new Duration(TimeSpan.FromMilliseconds(on ? 190 : 150));
+        var duration = new Duration(TimeSpan.FromMilliseconds(Ms(on ? 190 : 150)));
         double target = on ? 1 : 0;
         var grow = new DoubleAnimation(target, duration) { EasingFunction = EaseOut() };
         var fade = new DoubleAnimation(on ? 0 : 1, target, duration) { EasingFunction = EaseOut() };
@@ -1135,9 +1139,9 @@ public partial class EdgeDockWindow : Window
         _lookReload = false;
         _lastView = view;
         _lastTagFilter = tagFilter;
-        bool swap = viewChanged && IsVisible && _fanState.IsExpanded && SystemParameters.ClientAreaAnimation;
+        bool swap = viewChanged && IsVisible && _fanState.IsExpanded && DockAnimationsOn;
         // Folded dock (the view was changed from Manage notes or by the wheel's last notch): the strip of pills changes in a soft swap too.
-        bool restSwap = !swap && viewChanged && IsVisible && !_fanState.IsExpanded && _noteCount > 0 && SystemParameters.ClientAreaAnimation;
+        bool restSwap = !swap && viewChanged && IsVisible && !_fanState.IsExpanded && _noteCount > 0 && DockAnimationsOn;
         double? resumeStripFrom = null;
         if (_restSwapActive && !restSwap)
         {
@@ -1179,9 +1183,9 @@ public partial class EdgeDockWindow : Window
         }
         // Continue the strip's fade from where the superseded swap left it instead of showing it at full strength in one frame. After
         // SetNotes, which may itself reset the strip (a change in the number of notes calls ApplyState).
-        if (resumeStripFrom is { } from && from < 0.99 && !_fanState.IsExpanded && _noteCount > 0 && SystemParameters.ClientAreaAnimation)
+        if (resumeStripFrom is { } from && from < 0.99 && !_fanState.IsExpanded && _noteCount > 0 && DockAnimationsOn)
         {
-            var resume = new DoubleAnimation(from, 1, new Duration(TimeSpan.FromMilliseconds(150))) { EasingFunction = EaseFade() };
+            var resume = new DoubleAnimation(from, 1, new Duration(TimeSpan.FromMilliseconds(Ms(150)))) { EasingFunction = EaseFade() };
             resume.Completed += (_, _) => { RestStrip.BeginAnimation(OpacityProperty, null); RestStrip.Opacity = 1; };
             RestStrip.Opacity = from; // until the clock ticks the base value shows, which must not be the full one
             RestStrip.BeginAnimation(OpacityProperty, resume);
@@ -1253,14 +1257,14 @@ public partial class EdgeDockWindow : Window
             FadeViewLabel(show: false, milliseconds: 90);
         }
 
-        var fadeOut = new DoubleAnimation(0, new Duration(TimeSpan.FromMilliseconds(deck ? DeckGatherMs - 35 : 75))) { EasingFunction = EaseOut(), BeginTime = TimeSpan.FromMilliseconds(deck ? 35 : 0) };
+        var fadeOut = new DoubleAnimation(0, new Duration(TimeSpan.FromMilliseconds(Ms(deck ? DeckGatherMs - 35 : 75)))) { EasingFunction = EaseOut(), BeginTime = TimeSpan.FromMilliseconds(Ms(deck ? 35 : 0)) };
         void SwapNow()
         {
             if (token != _viewSwapToken) { Cloak(false); return; }
             foreach (var old in _tabButtons.Values)
                 if (old.RenderTransform is TranslateTransform { IsFrozen: false } oldMove) { oldMove.BeginAnimation(TranslateTransform.YProperty, null); oldMove.Y = 0; }
             SetNotes(LoadNotesForView(), animateArrivals: false, fadeAll: false);
-            var fadeIn = new DoubleAnimation(0, 1, new Duration(TimeSpan.FromMilliseconds(deck ? 90 : 140))) { EasingFunction = EaseOut() };
+            var fadeIn = new DoubleAnimation(0, 1, new Duration(TimeSpan.FromMilliseconds(Ms(deck ? 90 : 140)))) { EasingFunction = EaseOut() };
             fadeIn.Completed += (_, _) =>
             {
                 if (token != _viewSwapToken) return;
@@ -1284,7 +1288,7 @@ public partial class EdgeDockWindow : Window
                     if (token != _viewSwapToken) { Cloak(false); return; }
                     Opacity = 1;
                     // The bar comes back with the cards instead of popping in.
-                    var rootFadeIn = new DoubleAnimation(0, 1, new Duration(TimeSpan.FromMilliseconds(90))) { EasingFunction = EaseOut() };
+                    var rootFadeIn = new DoubleAnimation(0, 1, new Duration(TimeSpan.FromMilliseconds(Ms(90)))) { EasingFunction = EaseOut() };
                     rootFadeIn.Completed += (_, _) => { root.BeginAnimation(OpacityProperty, null); root.Opacity = 1; };
                     root.BeginAnimation(OpacityProperty, rootFadeIn);
                     startSpread?.Invoke();
@@ -1295,7 +1299,7 @@ public partial class EdgeDockWindow : Window
                 });
                 void StartLabelTimer()
                 {
-                var labelTimer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(deck ? DeckSpreadMs * 0.45 : 90) };
+                var labelTimer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(Ms(deck ? DeckSpreadMs * 0.45 : 90)) };
                 labelTimer.Tick += (_, _) =>
                 {
                     labelTimer.Stop();
@@ -1323,7 +1327,7 @@ public partial class EdgeDockWindow : Window
             AfterFrames(SwapBlankFrames, SwapNow);
         };
         // The button bar fades out with the last of the cards (it is part of what is cleared before the window changes size).
-        var barFade = new DoubleAnimation(0, new Duration(TimeSpan.FromMilliseconds(deck ? DeckGatherMs - 45 : 40))) { EasingFunction = EaseOut(), BeginTime = TimeSpan.FromMilliseconds(deck ? 45 : 35) };
+        var barFade = new DoubleAnimation(0, new Duration(TimeSpan.FromMilliseconds(Ms(deck ? DeckGatherMs - 45 : 40)))) { EasingFunction = EaseOut(), BeginTime = TimeSpan.FromMilliseconds(Ms(deck ? 45 : 35)) };
         root.BeginAnimation(OpacityProperty, barFade);
         NotesColumn.BeginAnimation(OpacityProperty, fadeOut);
     }
@@ -1340,7 +1344,8 @@ public partial class EdgeDockWindow : Window
         _restSwapActive = true;
         _viewLabelHold = false;
         ResetTabsFadeIfStuck();
-        double speed = _swapSpeed;
+        // The look-reload factor (0.65) and the setting's factor multiply; Off never gets here (DockAnimationsOn gates this swap).
+        double speed = _swapSpeed * DockMotion.Factor(_settings?.DockAnimation ?? DockAnimationMode.Normal);
         var fadeOut = new DoubleAnimation(0, new Duration(TimeSpan.FromMilliseconds(130 * speed))) { EasingFunction = EaseFade() };
         fadeOut.Completed += (_, _) =>
         {
@@ -1393,7 +1398,7 @@ public partial class EdgeDockWindow : Window
     {
         foreach (var (move, offset) in DeckCards())
         {
-            var animation = new DoubleAnimation(0, offset, new Duration(TimeSpan.FromMilliseconds(DeckGatherMs))) { EasingFunction = new CubicEase { EasingMode = EasingMode.EaseIn }, FillBehavior = FillBehavior.HoldEnd };
+            var animation = new DoubleAnimation(0, offset, new Duration(TimeSpan.FromMilliseconds(Ms(DeckGatherMs)))) { EasingFunction = new CubicEase { EasingMode = EasingMode.EaseIn }, FillBehavior = FillBehavior.HoldEnd };
             move.BeginAnimation(TranslateTransform.YProperty, animation);
         }
     }
@@ -1407,7 +1412,7 @@ public partial class EdgeDockWindow : Window
         var cards = DeckCards();
         if (cards.Count == 0) return null;
         double span = cards.Max(card => Math.Abs(card.Offset));
-        var duration = new Duration(TimeSpan.FromMilliseconds(DeckSpreadMs + Math.Min(110, span * 0.08)));
+        var duration = new Duration(TimeSpan.FromMilliseconds(Ms(DeckSpreadMs + Math.Min(110, span * 0.08))));
         foreach (var (move, offset) in cards) move.Y = offset; // before the first frame: the cards start in the pile, not in their places
         return () =>
         {
@@ -1501,10 +1506,10 @@ public partial class EdgeDockWindow : Window
             // sacó la ficha.
             bool returning = !onDesk && button.Visibility == Visibility.Hidden && IsVisible;
             button.Visibility = onDesk ? Visibility.Hidden : Visibility.Visible;
-            if (returning && SystemParameters.ClientAreaAnimation)
+            if (returning && DockAnimationsOn)
             {
                 // The tab fades back in while its note fades out (the reverse of opening), instead of popping in when the note is gone.
-                var fadeIn = new DoubleAnimation(0, 1, new Duration(TimeSpan.FromMilliseconds(140))) { EasingFunction = EaseOut() };
+                var fadeIn = new DoubleAnimation(0, 1, new Duration(TimeSpan.FromMilliseconds(Ms(140)))) { EasingFunction = EaseOut() };
                 fadeIn.Completed += (_, _) => { button.BeginAnimation(OpacityProperty, null); button.Opacity = 1; };
                 button.Opacity = 0;
                 button.BeginAnimation(OpacityProperty, fadeIn);
@@ -1634,7 +1639,7 @@ public partial class EdgeDockWindow : Window
             int ripple = 0;
             foreach (var button in _tabButtons.Values)
             {
-                if (fadeAll && SystemParameters.ClientAreaAnimation)
+                if (fadeAll && DockAnimationsOn)
                 {
                     PlayEntrance(button, Math.Min(ripple++, 8) * 16, slideIn: false);
                 }
@@ -2400,7 +2405,7 @@ public partial class EdgeDockWindow : Window
         if (!showLabel) return;
         // The name of the view appears when the cards change (inside the swap), not the instant the wheel turns: it used to name the new view
         // over cards that still showed the old one. With nothing to wait for (no animation, or the view did not change) it shows at once.
-        bool willSwap = changes && IsVisible && _fanState.IsExpanded && SystemParameters.ClientAreaAnimation;
+        bool willSwap = changes && IsVisible && _fanState.IsExpanded && DockAnimationsOn;
         if (willSwap) _labelOnSwap = true;
         else ShowViewLabel(CurrentViewLabel());
     }
@@ -2471,11 +2476,11 @@ public partial class EdgeDockWindow : Window
         // A name that changes while the card is showing (a fixed card, or a refresh with no swap): it leaves, and comes back already with the
         // new size, instead of resizing in view (its window follows the new size a couple of frames late).
         if (_viewLabelPopup is { IsOpen: true } && _viewLabelBorder is { Opacity: > 0.05 } shown && _viewLabelText is { } current
-            && current.Text != text && SystemParameters.ClientAreaAnimation)
+            && current.Text != text && DockAnimationsOn)
         {
             int id = ++_viewLabelFade;
             _viewLabelTimer.Stop();
-            var leave = new DoubleAnimation(0, new Duration(TimeSpan.FromMilliseconds(70))) { EasingFunction = EaseOut() };
+            var leave = new DoubleAnimation(0, new Duration(TimeSpan.FromMilliseconds(Ms(70)))) { EasingFunction = EaseOut() };
             leave.Completed += (_, _) =>
             {
                 if (id != _viewLabelFade) return;
@@ -2561,7 +2566,7 @@ public partial class EdgeDockWindow : Window
         PlaceViewLabel();
         // The card is a window of its own and it takes a couple of frames to take the new size: it is kept invisible until then, or the fade-in
         // showed it with the size of the previous name (too wide or too narrow) and then jumping.
-        if (SystemParameters.ClientAreaAnimation && (_viewLabelPopup.IsOpen ? _viewLabelBorder.Opacity < 0.05 : true))
+        if (DockAnimationsOn && (_viewLabelPopup.IsOpen ? _viewLabelBorder.Opacity < 0.05 : true))
         {
             int pending = ++_viewLabelFade;
             if (!_viewLabelPopup.IsOpen)
@@ -2598,7 +2603,7 @@ public partial class EdgeDockWindow : Window
     {
         if (_viewLabelPopup is not { } popup || _viewLabelBorder is not { } border) return;
         int id = ++_viewLabelFade;
-        if (!SystemParameters.ClientAreaAnimation)
+        if (!DockAnimationsOn)
         {
             border.BeginAnimation(OpacityProperty, null);
             border.Opacity = 1;
@@ -2613,7 +2618,7 @@ public partial class EdgeDockWindow : Window
         }
         if (!show && !popup.IsOpen) return;
 
-        var animation = new DoubleAnimation(show ? 1 : 0, new Duration(TimeSpan.FromMilliseconds(milliseconds > 0 ? milliseconds : show ? 140 : 280))) { EasingFunction = EaseOut() };
+        var animation = new DoubleAnimation(show ? 1 : 0, new Duration(TimeSpan.FromMilliseconds(Ms(milliseconds > 0 ? milliseconds : show ? 140 : 280)))) { EasingFunction = EaseOut() };
         if (!show)
             animation.Completed += (_, _) => { if (id == _viewLabelFade) popup.IsOpen = false; };
         border.BeginAnimation(OpacityProperty, animation, HandoffBehavior.SnapshotAndReplace);

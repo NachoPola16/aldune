@@ -357,7 +357,7 @@ public sealed class AppCoordinator
     public void FadeOutDocks(Action done)
     {
         var docks = _docks.ToList();
-        if (docks.Count == 0 || !System.Windows.SystemParameters.ClientAreaAnimation) { done(); return; }
+        if (docks.Count == 0 || !DockMotionRuntime.On(_settings)) { done(); return; }
         int left = docks.Count;
         foreach (var dock in docks) dock.FadeOutThen(() => { if (--left == 0) done(); });
     }

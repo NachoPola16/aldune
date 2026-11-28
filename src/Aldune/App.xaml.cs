@@ -424,7 +424,7 @@ public partial class App : Application
             _dockRebuildBusy = true;
             coordinator.FadeOutDocks(() =>
             {
-                bool animate = SystemParameters.ClientAreaAnimation && coordinator.DockCount > 0;
+                bool animate = Aldune.Windowing.DockMotionRuntime.On(settings) && coordinator.DockCount > 0;
                 coordinator.CloseAllDocks();
                 _softDockRebuild = animate;
                 try { BuildDocks(); }
