@@ -897,6 +897,14 @@
                     <StackPanel x:Name="DockAdvancedPanel">
                         <Border Background="{DynamicResource AlduneRaisedBrush}" Height="1" Margin="0,20,0,0" />
                         <StackPanel Margin="0,20,0,0">
+                            <TextBlock Text="{x:Static res:Strings.DockAnimationTitle}"
+                                       Foreground="{DynamicResource AlduneTextBrush}" FontSize="{DynamicResource AlduneTextBody}" FontWeight="SemiBold" />
+                            <TextBlock Text="{x:Static res:Strings.DockAnimationHint}"
+                                       Foreground="{DynamicResource AlduneHintBrush}" FontSize="{DynamicResource AlduneTextSmall}" TextWrapping="Wrap" Margin="0,4,0,8" />
+                            <StackPanel x:Name="DockAnimationListContainer" />
+                        </StackPanel>
+                        <Border Background="{DynamicResource AlduneRaisedBrush}" Height="1" Margin="0,20,0,0" />
+                        <StackPanel Margin="0,20,0,0">
                             <CheckBox x:Name="HideOnFullscreenCheck"
                                       Content="{x:Static res:Strings.HideOnFullscreenCheckbox}"
                                       Foreground="{DynamicResource AlduneTextBrush}" Background="{DynamicResource AlduneGroundBrush}" FontSize="{DynamicResource AlduneTextBody}"

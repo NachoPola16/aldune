@@ -1359,6 +1359,20 @@ public static class Strings
     public static string DockCardShadowCheckbox => T("Shadow on the dock cards", "Sombra en las tarjetas del dock", "Schatten auf den Dock-Karten", "Ombre sur les cartes du dock", "Sombra nos cartões do dock", "Ombra sulle schede del dock", "ドックのカードに影をつける", "停靠栏卡片显示阴影");
     public static string DockCardShadowHint => T("Each card casts a soft shadow on the one beside it. Turned off, the cards are flat.", "Cada tarjeta proyecta una sombra suave sobre la de al lado. Si la desactivas, las tarjetas quedan planas.", "Jede Karte wirft einen weichen Schatten auf die Nachbarkarte. Deaktiviert sind die Karten flach.", "Chaque carte projette une ombre douce sur sa voisine. Désactivée, les cartes sont plates.", "Cada cartão projeta uma sombra suave no vizinho. Desativado, os cartões ficam planos.", "Ogni scheda proietta un'ombra morbida su quella accanto. Disattivata, le schede sono piatte.", "各カードが隣のカードに柔らかい影を落とします。オフにするとカードは平らになります。", "每张卡片会在相邻卡片上投下柔和的阴影。关闭后卡片为平面。");
 
+    public static string DockAnimationTitle => T("Dock animations", "Animaciones del dock", "Dock-Animationen", "Animations du dock", "Animações do dock", "Animazioni del dock", "ドックのアニメーション", "停靠栏动画");
+    public static string DockAnimationHint => T(
+        "How fast the dock's fades and slides run. Windows' own «animation effects» setting still applies: with it off, the dock does not animate whatever you choose here.",
+        "Qué tan rápidos son los fundidos y deslizamientos del dock. El ajuste «efectos de animación» de Windows sigue mandando: si está apagado, el dock no se anima elijas lo que elijas aquí.",
+        "Wie schnell die Überblendungen und Bewegungen des Docks laufen. Die Windows-Einstellung „Animationseffekte“ gilt weiterhin: Ist sie aus, animiert das Dock unabhängig von dieser Wahl nicht.",
+        "La vitesse des fondus et des glissements du dock. Le réglage Windows « effets d'animation » reste prioritaire : désactivé, le dock ne s'anime pas, quel que soit votre choix ici.",
+        "A rapidez dos desvanecimentos e deslizamentos do dock. A opção «efeitos de animação» do Windows continua a mandar: se estiver desligada, o dock não anima, escolha o que escolher aqui.",
+        "La velocità delle dissolvenze e degli scorrimenti del dock. L'impostazione «effetti di animazione» di Windows ha comunque la precedenza: se è disattivata, il dock non si anima, qualunque cosa scelga qui.",
+        "ドックのフェードやスライドの速さです。Windowsの「アニメーション効果」の設定が優先され、オフの場合はここでの選択に関係なくドックは動きません。",
+        "停靠栏淡入淡出和滑动的速度。Windows 的“动画效果”设置仍然优先：关闭时，无论此处如何选择，停靠栏都不会播放动画。");
+    public static string DockAnimationNormal => T("Normal", "Normal", "Normal", "Normal", "Normal", "Normale", "標準", "标准");
+    public static string DockAnimationOff => T("Off", "Desactivadas", "Aus", "Désactivées", "Desligadas", "Disattivate", "オフ", "关闭");
+    public static string DockAnimationCalm => T("Calm (slower)", "Suaves (más lentas)", "Ruhig (langsamer)", "Douces (plus lentes)", "Calmas (mais lentas)", "Calme (più lente)", "ゆっくり", "舒缓（更慢）");
+    public static string DockAnimationQuick => T("Quick", "Rápidas", "Zügig", "Rapides", "Rápidas", "Veloci", "素早く", "快速");
     public static string ShowNotePreviewHint => T("A second line with the start of each note, in the dock tabs and in Manage notes. Turned off, only titles are shown.", "Una segunda línea con el principio de cada nota, en las pestañas del dock y en Gestionar notas. Si la desactivas, solo se ven los títulos.",
         "Eine zweite Zeile mit dem Anfang jeder Notiz, in den Dock-Tabs und in Notizen verwalten. Deaktiviert werden nur Titel angezeigt.",
         "Une deuxième ligne avec le début de chaque note, dans les onglets du dock et dans Gérer les notes. Désactivé, seuls les titres sont affichés.",

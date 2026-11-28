@@ -1203,6 +1203,7 @@ public partial class SettingsWindow : Window
         AddEdgeRadio(EdgePosition.Bottom, Strings.EdgeBottom);
         PopulateAlignment();
         PopulateViewLabelModes();
+        PopulateDockAnimationModes();
     }
 
     /// <summary>Dónde va el dock a lo largo de su borde. Los extremos se llaman según el borde: en los
@@ -1244,6 +1245,40 @@ public partial class SettingsWindow : Window
     {
         KeepDockOpenCheck.IsChecked = _settings.KeepDockOpen;
         PopulateViewLabelModes();
+        PopulateDockAnimationModes();
+    }
+
+    /// <summary>How fast the dock's animations run (Core: <see cref="DockAnimationMode"/>); read by the dock whenever it animates, so nothing is reloaded.</summary>
+    private void PopulateDockAnimationModes()
+    {
+        DockAnimationListContainer.Children.Clear();
+        AddDockAnimationRadio(DockAnimationMode.Normal, Strings.DockAnimationNormal);
+        AddDockAnimationRadio(DockAnimationMode.Calm, Strings.DockAnimationCalm);
+        AddDockAnimationRadio(DockAnimationMode.Quick, Strings.DockAnimationQuick);
+        AddDockAnimationRadio(DockAnimationMode.Off, Strings.DockAnimationOff);
+    }
+
+    private void AddDockAnimationRadio(DockAnimationMode mode, string label)
+    {
+        var radio = new RadioButton
+        {
+            GroupName = "DockAnimationGroup",
+            Style = (Style)FindResource("MonitorRadioStyle"),
+            Tag = mode,
+            Content = label,
+            IsChecked = _settings.DockAnimation == mode
+        };
+        radio.Checked += OnDockAnimationModeChanged;
+        DockAnimationListContainer.Children.Add(radio);
+    }
+
+    private void OnDockAnimationModeChanged(object sender, RoutedEventArgs e)
+    {
+        if (sender is RadioButton { IsChecked: true, Tag: DockAnimationMode mode } && _settings.DockAnimation != mode)
+        {
+            _settings.DockAnimation = mode;
+            _settingsService.Save(_settings);
+        }
     }
 
     private void OnViewLabelModeChanged(object sender, RoutedEventArgs e)
