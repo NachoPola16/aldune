@@ -48,6 +48,15 @@ public partial class NoteWindow : Window
     private ProtectedNoteContent? _baseProtected;
     private readonly DispatcherTimer _autosaveTimer;
     private readonly DispatcherTimer _taskPruneTimer;
+    private readonly DispatcherTimer _placementSaveTimer;
+    private static readonly TimeSpan PlacementSaveDelay = TimeSpan.FromSeconds(1);
+
+    /// <summary>A change the user (or the content fit) made to the window's place or size: store it a second after the last one.</summary>
+    private void SchedulePlacementSave()
+    {
+        _placementSaveTimer.Stop();
+        _placementSaveTimer.Start();
+    }
     private bool _hasPendingEdit;
     // Posición anterior del cursor del cuerpo y guarda de reentrada del ajuste de cursor (ver el SelectionChanged del constructor).
     private int _lastBodyCaret;
@@ -300,8 +309,12 @@ public partial class NoteWindow : Window
                 // SizeChanged sin ratón —el cambio de escala al abrir la nota en un monitor con otro DPI, el
                 // sistema recolocando la ventana— no es una decisión del usuario; si se tomaba por una, la
                 // nota se quedaba sin ajuste de alto y el texto sobraba por abajo hasta cerrarla.
-                if (!_isAutoResizing && !_isConstrainingToMonitor && NativeMethods.IsLeftButtonDown())
+                bool dragging = NativeMethods.IsLeftButtonDown();
+                if (!_isAutoResizing && !_isConstrainingToMonitor && dragging)
                     _hasManualSize = true;
+                // Only changes with a known author: a drag, or the content fit. A resize the system does while the displays change is not
+                // stored, or it would replace the size the note had before.
+                if (IsLoaded && !_isConstrainingToMonitor && (_isAutoResizing || dragging)) SchedulePlacementSave();
             };
         };
 
@@ -378,6 +391,15 @@ public partial class NoteWindow : Window
         UpdatePromptLine(CurrentFace());
 
         Closing += SavePlacementOnce;
+        // Keeps the stored placement as current as the window: it used to be written only on close or when the note crossed to another
+        // monitor, and the restore after a display change (monitor off/on, remote session) put every open note back at that old row.
+        _placementSaveTimer = new DispatcherTimer { Interval = PlacementSaveDelay };
+        _placementSaveTimer.Tick += (_, _) =>
+        {
+            _placementSaveTimer.Stop();
+            if (IsLoaded && WindowState == WindowState.Normal) SavePlacementForCurrentMonitor();
+        };
+        Closed += (_, _) => _placementSaveTimer.Stop();
         // Una copia al cerrar (además de las de cada 5 minutos de edición): así el historial siempre termina en lo último que se vio.
         Closing += (_, _) => { Flush(); _repository.RecordVersion(_note.Id, force: true); };
 
@@ -495,6 +517,7 @@ public partial class NoteWindow : Window
             // Normal, así que llamarlo en cada frame del arrastre no cuesta writes de más.
             _coordinator.NoteMovedManually();
             ClampDuringMonitorDrag();
+            SchedulePlacementSave();
             return;
         }
 
