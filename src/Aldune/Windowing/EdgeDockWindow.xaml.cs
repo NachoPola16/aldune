@@ -958,10 +958,18 @@ public partial class EdgeDockWindow : Window
         }
     }
 
+    // Each tab remembers which entrance is its latest: the end of one that was replaced (the fan folded and opened again before the stagger
+    // finished) or cancelled (ResetTabEntrance) must not clear the newer animation and snap the tab to its final place.
+    private sealed class EntranceStamp { public int Value; }
+    private readonly System.Runtime.CompilerServices.ConditionalWeakTable<Button, EntranceStamp> _entranceStamps = new();
+    private int NextEntranceStamp(Button button) => ++_entranceStamps.GetOrCreateValue(button).Value;
+    private bool IsLatestEntrance(Button button, int stamp) => _entranceStamps.TryGetValue(button, out var current) && current.Value == stamp;
+
     private void ResetTabEntrance(bool settled)
     {
         foreach (var button in _tabButtons.Values)
         {
+            NextEntranceStamp(button);
             button.BeginAnimation(OpacityProperty, null);
             button.Opacity = settled ? 1 : 0;
             if (button.RenderTransform is TranslateTransform translate && !translate.IsFrozen)
@@ -977,6 +985,7 @@ public partial class EdgeDockWindow : Window
     /// <summary>Una pestaña entra deslizándose desde el canto de la pantalla y apareciendo.</summary>
     private void PlayEntrance(Button button, double delayMs, bool slideIn, double durationMs = FanTiming.TabSweepMs)
     {
+        int stamp = NextEntranceStamp(button);
         var delay = TimeSpan.FromMilliseconds(Ms(delayMs));
         var duration = new Duration(TimeSpan.FromMilliseconds(Ms(durationMs)));
 
@@ -991,6 +1000,7 @@ public partial class EdgeDockWindow : Window
         var fade = new DoubleAnimation(0, 1, duration) { BeginTime = delay };
         fade.Completed += (_, _) =>
         {
+            if (!IsLatestEntrance(button, stamp)) return;
             button.BeginAnimation(OpacityProperty, null);
             button.Opacity = 1;
         };
@@ -1044,6 +1054,7 @@ public partial class EdgeDockWindow : Window
         };
         slide.Completed += (_, _) =>
         {
+            if (!IsLatestEntrance(button, stamp)) return;
             if (vertical)
             {
                 translate.BeginAnimation(TranslateTransform.YProperty, null);
@@ -1193,7 +1204,14 @@ public partial class EdgeDockWindow : Window
         if (resumeStripFrom is { } from && from < 0.99 && !_fanState.IsExpanded && _noteCount > 0 && DockAnimationsOn)
         {
             var resume = new DoubleAnimation(from, 1, new Duration(TimeSpan.FromMilliseconds(Ms(150)))) { EasingFunction = EaseFade() };
-            resume.Completed += (_, _) => { RestStrip.BeginAnimation(OpacityProperty, null); RestStrip.Opacity = 1; };
+            // Not if the fan opened (or folded) meanwhile: ApplyState owns the strip's opacity from then on.
+            int resumeGeneration = _fanFadeGeneration;
+            resume.Completed += (_, _) =>
+            {
+                if (resumeGeneration != _fanFadeGeneration) return;
+                RestStrip.BeginAnimation(OpacityProperty, null);
+                RestStrip.Opacity = 1;
+            };
             RestStrip.Opacity = from; // until the clock ticks the base value shows, which must not be the full one
             RestStrip.BeginAnimation(OpacityProperty, resume);
         }
@@ -1383,7 +1401,15 @@ public partial class EdgeDockWindow : Window
                     pill.BeginAnimation(OpacityProperty, appear);
                 }
                 var fadeIn = new DoubleAnimation(0, 1, new Duration(TimeSpan.FromMilliseconds(160 * speed))) { EasingFunction = EaseFade() };
-                fadeIn.Completed += (_, _) => { RestStrip.BeginAnimation(OpacityProperty, null); RestStrip.Opacity = 1; };
+                // Not if the fan opened (or folded) while the strip was coming back: ApplyState owns the strip's opacity from then on, and this
+                // stale end used to leave the strip visible over the open fan.
+                int stripGeneration = _fanFadeGeneration;
+                fadeIn.Completed += (_, _) =>
+                {
+                    if (stripGeneration != _fanFadeGeneration) return;
+                    RestStrip.BeginAnimation(OpacityProperty, null);
+                    RestStrip.Opacity = 1;
+                };
                 RestStrip.BeginAnimation(OpacityProperty, fadeIn);
             })));
         };
