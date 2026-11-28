@@ -24,6 +24,7 @@ public class ConfigExportImportTests
         HotkeyKey = 78,
         DockEdge = EdgePosition.Left,
         KeepDockOpen = true,
+        DockAnimation = DockAnimationMode.Quick,
         ShowNotePreview = false,
         TrashRetentionDays = 45,
         AutoHideCompletedTasks = true,
@@ -134,6 +135,7 @@ public class ConfigExportImportTests
         Assert.True(fresh.SimplifiedMode);
         Assert.Equal(EdgePosition.Left, fresh.DockEdge);
         Assert.True(fresh.KeepDockOpen);
+        Assert.Equal(DockAnimationMode.Quick, fresh.DockAnimation);
         Assert.False(fresh.ShowNotePreview);
         Assert.Equal(45, fresh.TrashRetentionDays);
         Assert.Equal(3, fresh.AutoHideCompletedTasksDelayValue);
@@ -368,7 +370,7 @@ public class ConfigExportImportTests
             "language", "simplifiedMode", "hotkeyEnabled", "hotkeyModifiers", "hotkeyKey",
             "recentHotkeyEnabled", "recentHotkeyModifiers", "recentHotkeyKey",
             "managerHotkeyEnabled", "managerHotkeyModifiers", "managerHotkeyKey",
-            "quickFindHotkeyEnabled", "quickFindHotkeyModifiers", "quickFindHotkeyKey", "dockEdge", "dockAlignment", "dockViewLabel", "dockView", "dockViewButton", "dockCardShadow",
+            "quickFindHotkeyEnabled", "quickFindHotkeyModifiers", "quickFindHotkeyKey", "dockEdge", "dockAlignment", "dockViewLabel", "dockView", "dockViewButton", "dockCardShadow", "dockAnimation",
             "keepDockOpen", "showNotePreview", "hideOnFullscreen", "wheelChangesDockView", "wheelStopArchived", "wheelStopTrash", "wheelStopActive", "wheelStopAll", "wheelStopTags", "trackpadGestures", "liveMarkdown", "spellCheck", "largeCheckboxes", "moveCompletedTasksToEnd",
             "autoHideCompletedTasks", "autoHideDelayValue", "autoHideDelayUnit", "trashRetentionDays",
             "rememberNotePositions", "rememberNoteSizes", "checkForUpdates", "reminderIncludesTasks", "textScale",

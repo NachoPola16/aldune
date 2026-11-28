@@ -354,6 +354,12 @@ public sealed class AppSettings
     /// </summary>
     public bool DockCardShadow { get; set; } = true;
 
+    /// <summary>
+    /// How fast the dock's animations run (Normal, Off, Calm, Quick; see <see cref="DockMotion"/>). Local to this device, never synced. Normal is 0 so an
+    /// old settings.json keeps today's animations. Windows' own «animation effects» switch still wins over it.
+    /// </summary>
+    public DockAnimationMode DockAnimation { get; set; } = DockAnimationMode.Normal;
+
     /// <summary>A fifth round button in the dock's bar (a tag) that opens the list of views and changes view with the wheel. Off by default: the wheel on the gear and the fixed view label already do it.</summary>
     public bool DockViewButton { get; set; }
 

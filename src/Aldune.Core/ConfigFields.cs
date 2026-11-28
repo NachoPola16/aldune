@@ -88,6 +88,7 @@ public static class ConfigFields
         Enum<DockViewKind>("dockView", nameof(AppSettings.DockView), ConfigSections.Settings, s => s.DockView, (s, v) => s.DockView = v),
         Bool("dockViewButton", nameof(AppSettings.DockViewButton), ConfigSections.Settings, s => s.DockViewButton, (s, v) => s.DockViewButton = v),
         Bool("dockCardShadow", nameof(AppSettings.DockCardShadow), ConfigSections.Settings, s => s.DockCardShadow, (s, v) => s.DockCardShadow = v),
+        Enum<DockAnimationMode>("dockAnimation", nameof(AppSettings.DockAnimation), ConfigSections.Settings, s => s.DockAnimation, (s, v) => s.DockAnimation = v),
         Bool("keepDockOpen", nameof(AppSettings.KeepDockOpen), ConfigSections.Settings, s => s.KeepDockOpen, (s, v) => s.KeepDockOpen = v),
         Bool("showNotePreview", nameof(AppSettings.ShowNotePreview), ConfigSections.Settings, s => s.ShowNotePreview, (s, v) => s.ShowNotePreview = v),
         Bool("hideOnFullscreen", nameof(AppSettings.HideOnFullscreen), ConfigSections.Settings, s => s.HideOnFullscreen, (s, v) => s.HideOnFullscreen = v),

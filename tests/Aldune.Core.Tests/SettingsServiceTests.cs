@@ -271,6 +271,26 @@ public class SettingsServiceTests : IDisposable
     }
 
     [Fact]
+    public void Load_SettingsWrittenBeforeDockAnimation_KeepTodaysAnimations()
+    {
+        Directory.CreateDirectory(_tempDir);
+        File.WriteAllText(_settingsPath, "{\"KeepDockOpen\":true}");
+
+        Assert.Equal(DockAnimationMode.Normal, new SettingsService(_settingsPath).Load().DockAnimation);
+    }
+
+    [Fact]
+    public void DockAnimation_IsStoredAsANumber()
+    {
+        var sut = new SettingsService(_settingsPath);
+
+        sut.Save(new AppSettings { DockAnimation = DockAnimationMode.Calm });
+
+        Assert.Contains("\"DockAnimation\": 2", File.ReadAllText(_settingsPath).Replace("\"DockAnimation\":2", "\"DockAnimation\": 2"));
+        Assert.Equal(DockAnimationMode.Calm, sut.Load().DockAnimation);
+    }
+
+    [Fact]
     public void Load_SanitizesCustomThemes()
     {
         Directory.CreateDirectory(_tempDir);
