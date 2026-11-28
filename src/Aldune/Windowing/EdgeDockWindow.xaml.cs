@@ -909,6 +909,9 @@ public partial class EdgeDockWindow : Window
         FanPanel.IsHitTestVisible = expanded;
         RestStrip.IsHitTestVisible = !expanded;
 
+        // A fade that is still running must not write its old target when it ends after this call: with the setting changed to Off in the middle of
+        // an opening, the stale end of that fade left the fan fully visible over a folded dock.
+        int generation = ++_fanFadeGeneration;
         if (!animate || !DockAnimationsOn)
         {
             FanPanel.BeginAnimation(OpacityProperty, null);
@@ -921,14 +924,16 @@ public partial class EdgeDockWindow : Window
         }
 
         var duration = FanCrossfadeDuration();
-        Fade(FanPanel, expanded ? 1 : 0, duration);
-        Fade(RestStrip, expanded ? 0 : 1, duration);
+        Fade(FanPanel, expanded ? 1 : 0, duration, generation);
+        Fade(RestStrip, expanded ? 0 : 1, duration, generation);
         UpdateScrollIndicator();
 
         if (expanded) ReplayTabEntrance();
     }
 
-    private static void Fade(UIElement element, double to, Duration duration)
+    private int _fanFadeGeneration;
+
+    private void Fade(UIElement element, double to, Duration duration, int generation)
     {
         var animation = new DoubleAnimation(to, duration) { EasingFunction = EaseFade() };
         // FillBehavior.HoldEnd deja la animación enganchada por encima de cualquier asignación
@@ -936,6 +941,8 @@ public partial class EdgeDockWindow : Window
         // un no-op silencioso.
         animation.Completed += (_, _) =>
         {
+            // Superseded by a later ApplyState (a new fade, or the no-animation branch): that call owns the final value now.
+            if (generation != _fanFadeGeneration) return;
             element.BeginAnimation(OpacityProperty, null);
             element.Opacity = to;
         };
