@@ -280,6 +280,15 @@ public class SettingsServiceTests : IDisposable
     }
 
     [Fact]
+    public void Load_SettingsWrittenBeforeDockCorners_FollowTheLook()
+    {
+        Directory.CreateDirectory(_tempDir);
+        File.WriteAllText(_settingsPath, "{\"KeepDockOpen\":true}");
+
+        Assert.Equal(DockCornerStyle.FollowLook, new SettingsService(_settingsPath).Load().DockCorners);
+    }
+
+    [Fact]
     public void DockAnimation_IsStoredAsANumber()
     {
         var sut = new SettingsService(_settingsPath);

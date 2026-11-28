@@ -360,6 +360,12 @@ public sealed class AppSettings
     /// </summary>
     public DockAnimationMode DockAnimation { get; set; } = DockAnimationMode.Normal;
 
+    /// <summary>
+    /// The shape of the dock's corners (see <see cref="DockCorners"/>), apart from the app's «square corners». Local to this device, never synced.
+    /// <see cref="DockCornerStyle.FollowLook"/> is 0: an old settings.json keeps today's dock.
+    /// </summary>
+    public DockCornerStyle DockCorners { get; set; } = DockCornerStyle.FollowLook;
+
     /// <summary>A fifth round button in the dock's bar (a tag) that opens the list of views and changes view with the wheel. Off by default: the wheel on the gear and the fixed view label already do it.</summary>
     public bool DockViewButton { get; set; }
 

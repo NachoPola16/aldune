@@ -25,6 +25,7 @@ public class ConfigExportImportTests
         DockEdge = EdgePosition.Left,
         KeepDockOpen = true,
         DockAnimation = DockAnimationMode.Quick,
+        DockCorners = DockCornerStyle.Round,
         ShowNotePreview = false,
         TrashRetentionDays = 45,
         AutoHideCompletedTasks = true,
@@ -136,6 +137,7 @@ public class ConfigExportImportTests
         Assert.Equal(EdgePosition.Left, fresh.DockEdge);
         Assert.True(fresh.KeepDockOpen);
         Assert.Equal(DockAnimationMode.Quick, fresh.DockAnimation);
+        Assert.Equal(DockCornerStyle.Round, fresh.DockCorners);
         Assert.False(fresh.ShowNotePreview);
         Assert.Equal(45, fresh.TrashRetentionDays);
         Assert.Equal(3, fresh.AutoHideCompletedTasksDelayValue);
@@ -370,13 +372,13 @@ public class ConfigExportImportTests
             "language", "simplifiedMode", "hotkeyEnabled", "hotkeyModifiers", "hotkeyKey",
             "recentHotkeyEnabled", "recentHotkeyModifiers", "recentHotkeyKey",
             "managerHotkeyEnabled", "managerHotkeyModifiers", "managerHotkeyKey",
-            "quickFindHotkeyEnabled", "quickFindHotkeyModifiers", "quickFindHotkeyKey", "dockEdge", "dockAlignment", "dockViewLabel", "dockView", "dockViewButton", "dockCardShadow", "dockAnimation",
+            "quickFindHotkeyEnabled", "quickFindHotkeyModifiers", "quickFindHotkeyKey", "dockEdge", "dockAlignment", "dockViewLabel", "dockView", "dockViewButton", "dockCardShadow", "dockAnimation", "dockCorners",
             "keepDockOpen", "showNotePreview", "hideOnFullscreen", "wheelChangesDockView", "wheelStopArchived", "wheelStopTrash", "wheelStopActive", "wheelStopAll", "wheelStopTags", "trackpadGestures", "liveMarkdown", "spellCheck", "largeCheckboxes", "moveCompletedTasksToEnd",
             "autoHideCompletedTasks", "autoHideDelayValue", "autoHideDelayUnit", "trashRetentionDays",
             "rememberNotePositions", "rememberNoteSizes", "checkForUpdates", "reminderIncludesTasks", "textScale",
         ];
 
-        Assert.Equal(56, expected.Length);
+        Assert.Equal(57, expected.Length);
         Assert.Equal(expected, ConfigFields.All.Select(f => f.Id).ToArray());
     }
 
