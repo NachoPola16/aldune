@@ -138,7 +138,7 @@ public partial class App : Application
             ThemeManager.PlainNoteWindow = settings.PlainNoteWindow;
             ThemeManager.ApplyTextScale(this, settings.TextScalePercent);
             ThemeManager.ApplySkin(this, AppSkin.For(ThemeManager.SkinMode(settings.Appearance), settings.NoteColorAsStripe));
-            ThemeManager.ApplyShape(this, settings.CornersSquare);
+            ThemeManager.ApplyShape(this, settings.CornersSquare, settings.DockCorners);
 
             byte[] rawKey;
             if (settings.WrappedDatabaseKey is null && DatabaseKeyRecovery.DatabaseHasNotes(databasePath))
@@ -275,7 +275,7 @@ public partial class App : Application
         {
             ThemeManager.Apply(this, settings.Appearance, settings.ColorsFor(settings.Appearance));
             ThemeManager.ApplySkin(this, AppSkin.For(ThemeManager.SkinMode(settings.Appearance), settings.NoteColorAsStripe));
-            ThemeManager.ApplyShape(this, settings.CornersSquare);
+            ThemeManager.ApplyShape(this, settings.CornersSquare, settings.DockCorners);
             NoteColorDisplay.Uniform = settings.UniformNoteColor;
             coordinator.RebuildDocks();
             coordinator.RefreshNoteAppearance();
@@ -723,7 +723,7 @@ public partial class App : Application
             {
                 ThemeManager.Apply(this, _settings.Appearance, _settings.ColorsFor(_settings.Appearance));
                 ThemeManager.ApplySkin(this, AppSkin.For(ThemeManager.SkinMode(_settings.Appearance), _settings.NoteColorAsStripe));
-                ThemeManager.ApplyShape(this, _settings?.CornersSquare ?? false);
+                ThemeManager.ApplyShape(this, _settings?.CornersSquare ?? false, _settings?.DockCorners ?? DockCornerStyle.FollowLook);
                 _coordinator?.RefreshNoteAppearance();
             }
         });

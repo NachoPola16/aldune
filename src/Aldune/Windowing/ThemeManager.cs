@@ -245,7 +245,16 @@ public static class ThemeManager
 
     public static bool IsSquare { get; private set; }
 
-    public static void ApplyShape(Application app, bool square)
+    // The dock has its own radius keys («AlduneDockRadius…»), so its corners no longer depend on the app's «square corners»: FollowLook gives
+    // exactly the app's radii (today's dock), the other styles scale them (see DockCorners).
+    private static readonly double[] DockRadii = [4, 6, 10, 11, 21];
+    private static ResourceDictionary? _dockShape;
+    private static double _dockScale = 1;
+
+    /// <summary>True when the dock's corners are square (not the same as <see cref="IsSquare"/>, the app's).</summary>
+    public static bool DockIsSquare => _dockScale == 0;
+
+    public static void ApplyShape(Application app, bool square, DockCornerStyle dock)
     {
         var dictionary = new ResourceDictionary();
         foreach (var radius in Radii)
@@ -258,10 +267,27 @@ public static class ThemeManager
         app.Resources.MergedDictionaries.Add(dictionary);
         _shape = dictionary;
         IsSquare = square;
+        ApplyDockShape(app, DockCorners.Scale(dock, square));
         SkinState.Current.Square = square;
         NativeMethods.ReapplyCornerPreference();
         Changed?.Invoke();
     }
+
+    private static void ApplyDockShape(Application app, double scale)
+    {
+        var dictionary = new ResourceDictionary();
+        foreach (var radius in DockRadii)
+            dictionary[$"AlduneDockRadius{radius}"] = new CornerRadius(Rounded(radius) * scale);
+        dictionary["AlduneDockRadiusTabRight"] = scale == 0 ? new CornerRadius(0) : new CornerRadius(Rounded(10) * scale, 0, 0, Rounded(10) * scale);
+
+        if (_dockShape is not null) app.Resources.MergedDictionaries.Remove(_dockShape);
+        app.Resources.MergedDictionaries.Add(dictionary);
+        _dockShape = dictionary;
+        _dockScale = scale;
+    }
+
+    /// <summary>Like <see cref="Radius(double)"/> for what the dock sets in code (the cards of the top and bottom docks): follows the dock's style.</summary>
+    public static CornerRadius DockRadius(double uniform) => new(uniform * _dockScale);
 
     /// <summary>Radio para quien lo fija por código (pestañas espejadas, paneles creados a mano).</summary>
     public static CornerRadius Radius(double uniform) => new(IsSquare ? 0 : uniform);

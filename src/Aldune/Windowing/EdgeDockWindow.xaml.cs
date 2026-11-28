@@ -258,7 +258,7 @@ public partial class EdgeDockWindow : Window
     /// sides; the round look gets 4 px more there, the square one keeps its even 5.</summary>
     private void ApplyFooterPadding()
     {
-        double side = ThemeManager.IsSquare ? FooterPadding : FooterPadding + 4.5;
+        double side = ThemeManager.DockIsSquare ? FooterPadding : FooterPadding + 4.5;
         FooterBorder.Padding = new Thickness(side, FooterPadding, side, FooterPadding);
     }
 
@@ -2553,13 +2553,13 @@ public partial class EdgeDockWindow : Window
             // override the style's per-look triggers.
             var hover = new Border { Margin = new Thickness(-5), Opacity = 0.55, Visibility = Visibility.Collapsed, IsHitTestVisible = false };
             hover.SetResourceReference(Border.BackgroundProperty, "AlduneHoverBrush");
-            hover.SetResourceReference(Border.CornerRadiusProperty, "AlduneRadius21");
+            hover.SetResourceReference(Border.CornerRadiusProperty, "AlduneDockRadius21");
             var inner = new Grid();
             inner.Children.Add(hover);
             inner.Children.Add(content);
             inner.Children.Add(new BevelEdge { Margin = new Thickness(-FooterPadding), ShadowOutside = true });
             var border = new Border { Padding = new Thickness(FooterPadding), Child = inner, IsHitTestVisible = false, Style = (Style)FindResource("XpBarBorderStyle") };
-            border.SetResourceReference(Border.CornerRadiusProperty, "AlduneRadius21");
+            border.SetResourceReference(Border.CornerRadiusProperty, "AlduneDockRadius21");
             border.MouseEnter += (_, _) => hover.Visibility = Visibility.Visible;
             border.MouseLeave += (_, _) => hover.Visibility = Visibility.Collapsed;
             border.MouseLeftButtonUp += OnViewLabelClick;
@@ -3559,7 +3559,7 @@ public partial class EdgeDockWindow : Window
 
         // Arriba y abajo usan tarjetas separadas por un hueco real. Todas conservan sus cuatro
         // esquinas curvas, en vez de tapar la inferior de una tarjeta con la siguiente.
-        var radius = ThemeManager.Radius(10);
+        var radius = ThemeManager.DockRadius(10);
         var border = new Thickness(1);
 
         if (button.Template.FindName("CardBorder", button) is Border card)

@@ -266,7 +266,7 @@ public partial class SettingsWindow : Window
     {
         _settings.SquareCorners = SquareCornersCheck.IsChecked == true;
         _settingsService.Save(_settings);
-        ThemeManager.ApplyShape(Application.Current, _settings.CornersSquare);
+        ThemeManager.ApplyShape(Application.Current, _settings.CornersSquare, _settings.DockCorners);
         // Las pestañas del dock fijan su forma por código al crearse: hay que rehacerlas (con el fundido suave, sin recrear la ventana).
         _coordinator?.ReloadDocksLook();
     }
@@ -1204,6 +1204,7 @@ public partial class SettingsWindow : Window
         PopulateAlignment();
         PopulateViewLabelModes();
         PopulateDockAnimationModes();
+        PopulateDockCornerStyles();
     }
 
     /// <summary>Dónde va el dock a lo largo de su borde. Los extremos se llaman según el borde: en los
@@ -1246,6 +1247,44 @@ public partial class SettingsWindow : Window
         KeepDockOpenCheck.IsChecked = _settings.KeepDockOpen;
         PopulateViewLabelModes();
         PopulateDockAnimationModes();
+        PopulateDockCornerStyles();
+    }
+
+    /// <summary>The shape of the dock's corners, apart from the app's «square corners» (Core: <see cref="DockCornerStyle"/>).</summary>
+    private void PopulateDockCornerStyles()
+    {
+        DockCornersListContainer.Children.Clear();
+        AddDockCornersRadio(DockCornerStyle.FollowLook, Strings.DockCornersFollowLook);
+        AddDockCornersRadio(DockCornerStyle.Square, Strings.DockCornersSquare);
+        AddDockCornersRadio(DockCornerStyle.Soft, Strings.DockCornersSoft);
+        AddDockCornersRadio(DockCornerStyle.Round, Strings.DockCornersRound);
+    }
+
+    private void AddDockCornersRadio(DockCornerStyle style, string label)
+    {
+        var radio = new RadioButton
+        {
+            GroupName = "DockCornersGroup",
+            Style = (Style)FindResource("MonitorRadioStyle"),
+            Tag = style,
+            Content = label,
+            IsChecked = _settings.DockCorners == style
+        };
+        radio.Checked += OnDockCornersChanged;
+        DockCornersListContainer.Children.Add(radio);
+    }
+
+    private void OnDockCornersChanged(object sender, RoutedEventArgs e)
+    {
+        if (sender is RadioButton { IsChecked: true, Tag: DockCornerStyle style } && _settings.DockCorners != style)
+        {
+            _settings.DockCorners = style;
+            _settingsService.Save(_settings);
+            ThemeManager.ApplyShape(Application.Current, _settings.CornersSquare, _settings.DockCorners);
+            // The tabs fix their shape in code when they are made (the cards of the top and bottom docks, the bar's padding): they are rebuilt
+            // behind the soft swap, without recreating the window.
+            _coordinator?.ReloadDocksLook();
+        }
     }
 
     /// <summary>How fast the dock's animations run (Core: <see cref="DockAnimationMode"/>); read by the dock whenever it animates, so nothing is reloaded.</summary>
@@ -2269,7 +2308,7 @@ public partial class SettingsWindow : Window
         var mode = _settings.Appearance;
         ThemeManager.Apply(Application.Current, mode, _settings.ColorsFor(mode));
         ThemeManager.ApplySkin(Application.Current, AppSkin.For(ThemeManager.SkinMode(mode), _settings.NoteColorAsStripe));
-        ThemeManager.ApplyShape(Application.Current, _settings.CornersSquare);
+        ThemeManager.ApplyShape(Application.Current, _settings.CornersSquare, _settings.DockCorners);
         // Las casillas usan Click, no Checked: fijarlas desde código no dispara sus manejadores.
         SquareCornersCheck.IsChecked = _settings.CornersSquare;
         UpdateNoteColorStripeUi();

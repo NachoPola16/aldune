@@ -1369,6 +1369,20 @@ public static class Strings
         "La velocità delle dissolvenze e degli scorrimenti del dock. L'impostazione «effetti di animazione» di Windows ha comunque la precedenza: se è disattivata, il dock non si anima, qualunque cosa scelga qui.",
         "ドックのフェードやスライドの速さです。Windowsの「アニメーション効果」の設定が優先され、オフの場合はここでの選択に関係なくドックは動きません。",
         "停靠栏淡入淡出和滑动的速度。Windows 的“动画效果”设置仍然优先：关闭时，无论此处如何选择，停靠栏都不会播放动画。");
+    public static string DockCornersTitle => T("Dock corners", "Esquinas del dock", "Dock-Ecken", "Coins du dock", "Cantos do dock", "Angoli del dock", "ドックの角", "停靠栏圆角");
+    public static string DockCornersHint => T(
+        "The shape of the dock's cards and button bar, apart from the «square corners» of the whole app.",
+        "La forma de las tarjetas y de la barra de botones del dock, aparte de las «esquinas rectas» de toda la app.",
+        "Die Form der Dock-Karten und der Tastenleiste, unabhängig von den „eckigen Ecken“ der ganzen App.",
+        "La forme des cartes et de la barre de boutons du dock, indépendamment des « coins carrés » de toute l'application.",
+        "O formato dos cartões e da barra de botões do dock, à parte dos «cantos retos» de todo o app.",
+        "La forma delle schede e della barra dei pulsanti del dock, a prescindere dagli «angoli retti» di tutta l'app.",
+        "ドックのカードとボタンバーの形です。アプリ全体の「角を四角にする」設定とは別に選べます。",
+        "停靠栏卡片和按钮栏的形状，独立于整个应用的“直角”设置。");
+    public static string DockCornersFollowLook => T("Like the rest of the look", "Como el resto del aspecto", "Wie der Rest des Aussehens", "Comme le reste de l'aspect", "Como o resto do visual", "Come il resto dell'aspetto", "全体の外観に合わせる", "与整体外观一致");
+    public static string DockCornersSquare => T("Square", "Rectas", "Eckig", "Carrés", "Retos", "Retti", "四角", "直角");
+    public static string DockCornersSoft => T("Soft", "Suaves", "Weich", "Doux", "Suaves", "Morbidi", "やわらかく", "柔和");
+    public static string DockCornersRound => T("Round", "Redondas", "Rund", "Arrondis", "Arredondados", "Arrotondati", "丸く", "圆润");
     public static string DockAnimationNormal => T("Normal", "Normal", "Normal", "Normal", "Normal", "Normale", "標準", "标准");
     public static string DockAnimationOff => T("Off", "Desactivadas", "Aus", "Désactivées", "Desligadas", "Disattivate", "オフ", "关闭");
     public static string DockAnimationCalm => T("Calm (slower)", "Suaves (más lentas)", "Ruhig (langsamer)", "Douces (plus lentes)", "Calmas (mais lentas)", "Calme (più lente)", "ゆっくり", "舒缓（更慢）");

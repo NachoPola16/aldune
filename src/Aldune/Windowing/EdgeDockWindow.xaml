@@ -64,7 +64,7 @@
                 <Border Background="{Binding Converter={StaticResource NoteFaceConverter}, ConverterParameter=Pill}"
                         BorderBrush="{Binding Converter={StaticResource NoteFaceConverter}, ConverterParameter=PillRim}"
                         BorderThickness="{Binding Converter={StaticResource NoteFaceConverter}, ConverterParameter=PillRimThickness}"
-                        CornerRadius="{DynamicResource AlduneRadius6}" />
+                        CornerRadius="{DynamicResource AlduneDockRadius6}" />
                 <local:BevelEdge EdgeThickness="1" />
             </Grid>
         </DataTemplate>
@@ -134,8 +134,8 @@
                                     Background="{TemplateBinding Background}"
                                     BorderBrush="{Binding Converter={StaticResource NoteFaceConverter}, ConverterParameter=Rim}"
                                     BorderThickness="1,1,0,1"
-                                    CornerRadius="{DynamicResource AlduneRadiusTabRight}" />
-                            <Border x:Name="SheenBorder" Background="{StaticResource TabSheen}" CornerRadius="{DynamicResource AlduneRadiusTabRight}" />
+                                    CornerRadius="{DynamicResource AlduneDockRadiusTabRight}" />
+                            <Border x:Name="SheenBorder" Background="{StaticResource TabSheen}" CornerRadius="{DynamicResource AlduneDockRadiusTabRight}" />
                             <!-- Franja de la piel Stripe (bash) o del canal (Tinted), en el lado interior
                                  de la pestaña. Espejada por código con el dock a la izquierda, arriba o
                                  abajo (ApplyLeftEdgeTabShape / ApplyTopBottomTabShape). -->
@@ -213,7 +213,7 @@
                             </StackPanel>
 
                             <local:BevelEdge x:Name="CardBevel" />
-                            <Border x:Name="HoverOverlay" Background="#1E1A14" Opacity="0" CornerRadius="{DynamicResource AlduneRadiusTabRight}" />
+                            <Border x:Name="HoverOverlay" Background="#1E1A14" Opacity="0" CornerRadius="{DynamicResource AlduneDockRadiusTabRight}" />
                         </Grid>
                         <ControlTemplate.Triggers>
                             <DataTrigger Binding="{Binding Converter={StaticResource NoteSnippetConverter}}" Value="">
@@ -378,7 +378,7 @@
                                 Background="{TemplateBinding Background}"
                                 BorderBrush="{TemplateBinding BorderBrush}"
                                 BorderThickness="{TemplateBinding BorderThickness}"
-                                CornerRadius="{DynamicResource AlduneRadius11}">
+                                CornerRadius="{DynamicResource AlduneDockRadius11}">
                             <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
                         </Border>
                         <ControlTemplate.Triggers>
@@ -455,7 +455,7 @@
              comentario junto a FooterBorder más abajo, mismo bug y mismo arreglo. -->
         <Border x:Name="RestStrip"
                 Style="{StaticResource XpBarBorderStyle}"
-                CornerRadius="{DynamicResource AlduneRadius10}"
+                CornerRadius="{DynamicResource AlduneDockRadius10}"
                 HorizontalAlignment="Right"
                 VerticalAlignment="Center"
                 Width="20"
@@ -473,7 +473,7 @@
                             <Border Background="{Binding Converter={StaticResource NoteFaceConverter}, ConverterParameter=Pill}"
                                     BorderBrush="{Binding Converter={StaticResource NoteFaceConverter}, ConverterParameter=PillRim}"
                                     BorderThickness="{Binding Converter={StaticResource NoteFaceConverter}, ConverterParameter=PillRimThickness}"
-                                    CornerRadius="{DynamicResource AlduneRadius6}" />
+                                    CornerRadius="{DynamicResource AlduneDockRadius6}" />
                             <local:BevelEdge EdgeThickness="1" />
                         </Grid>
                     </DataTemplate>
@@ -577,7 +577,7 @@
                         VerticalAlignment="Stretch"
                         Margin="0,8"
                         Background="Transparent"
-                        CornerRadius="{DynamicResource AlduneRadius4}" />
+                        CornerRadius="{DynamicResource AlduneDockRadius4}" />
                 <Canvas x:Name="ScrollRailCanvas" Margin="0,8">
                     <Border x:Name="ScrollRailThumb"
                             Width="10"
@@ -585,7 +585,7 @@
                             Background="{DynamicResource AlduneDockThumbBrush}"
                             BorderBrush="{DynamicResource AlduneDockThumbBorderBrush}"
                             BorderThickness="1"
-                            CornerRadius="{DynamicResource AlduneRadius4}" />
+                            CornerRadius="{DynamicResource AlduneDockRadius4}" />
                 </Canvas>
                 </Grid>
 
@@ -636,7 +636,7 @@
                  de la pantalla, pero este contenido seguía alineado "a la derecha" sin más — es
                  decir, contra el lado INTERIOR del dock en vez del exterior, dejando un hueco entre
                  la tira/pestañas y el borde real de la pantalla. -->
-            <Border x:Name="FooterBorder" Grid.Row="1" Style="{StaticResource XpBarBorderStyle}" CornerRadius="{DynamicResource AlduneRadius21}"
+            <Border x:Name="FooterBorder" Grid.Row="1" Style="{StaticResource XpBarBorderStyle}" CornerRadius="{DynamicResource AlduneDockRadius21}"
                     HorizontalAlignment="Center" Margin="0,8,0,0" Padding="5">
                 <Grid>
                 <StackPanel x:Name="FooterPanel" Orientation="Horizontal">
