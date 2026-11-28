@@ -1475,8 +1475,9 @@ private fun GroupHeader(header: ListEntry.Header, modifier: Modifier = Modifier,
     val state = stringResource(if (header.open) R.string.group_expanded else R.string.group_collapsed)
     // The press feedback is drawn over the whole header (rounded, edge to edge), not only over the part that takes the tap: it looked cut off.
     val press = remember { androidx.compose.foundation.interaction.MutableInteractionSource() }
+    val rowShape = LocalNoteLook.current.rowShape(12.dp)
     Row(
-        modifier.fillMaxWidth().clip(RoundedCornerShape(12.dp)).indication(press, androidx.compose.material3.ripple()).then(if (highlighted) Modifier.background(MaterialTheme.colorScheme.primary.copy(alpha = 0.18f), RoundedCornerShape(12.dp)) else Modifier)
+        modifier.fillMaxWidth().clip(rowShape).indication(press, androidx.compose.material3.ripple()).then(if (highlighted) Modifier.background(MaterialTheme.colorScheme.primary.copy(alpha = 0.18f), rowShape) else Modifier)
             .padding(start = 12.dp, end = 8.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {

@@ -37,6 +37,9 @@ data class NoteLook(val uniformColor: String? = null, val squareCorners: Boolean
 ) {
     /** El radio de una tarjeta de nota (12 dp de siempre, recto con «esquinas rectas»). */
     val cardShape get() = if (squareCorners) RectangleShape else RoundedCornerShape(12.dp)
+
+    /** The shape of a row's pressed highlight / clip: rounded by [radius], square with «square corners», like the cards and the sheets. */
+    fun rowShape(radius: androidx.compose.ui.unit.Dp): androidx.compose.ui.graphics.Shape = if (squareCorners) RectangleShape else RoundedCornerShape(radius)
 }
 
 /** Los colores de la banda de título de un aspecto: degradado de [start] a [end], vertical (Luna) u horizontal (Windows 98), con [on] encima. */

@@ -85,6 +85,9 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.launch
 
+/** Side margin of the Sync panels. Their pressable rows are widened by it (`widenBy`) so the pressed highlight reaches the screen edges. */
+private val SYNC_PANEL_INSET = 16.dp
+
 /** La hora de ahora, refrescada cada 30 s: «hace 3 min» tiene que ir cambiando sin que ocurra nada más en pantalla. */
 @Composable
 fun rememberNow(): Instant {
@@ -283,7 +286,7 @@ private fun ConnectForm(controller: SyncController, additional: Boolean, initial
         }
     }
 
-    Column(Modifier.padding(horizontal = 16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+    Column(Modifier.padding(horizontal = SYNC_PANEL_INSET), verticalArrangement = Arrangement.spacedBy(8.dp)) {
         val step = parsed
         if (step == null) {
             Text(stringResource(if (additional) R.string.sync_add_intro else R.string.sync_intro), color = MaterialTheme.colorScheme.onSurfaceVariant)
@@ -300,7 +303,8 @@ private fun ConnectForm(controller: SyncController, additional: Boolean, initial
             var inviteHttpAccepted by remember { mutableStateOf(false) }
             if (inviteNeedsHttpConfirm) {
                 Row(
-                    Modifier.fillMaxWidth().toggleable(value = inviteHttpAccepted, role = Role.Checkbox, onValueChange = { inviteHttpAccepted = it }),
+                    Modifier.widenBy(SYNC_PANEL_INSET).toggleable(value = inviteHttpAccepted, role = Role.Checkbox, onValueChange = { inviteHttpAccepted = it })
+                        .padding(horizontal = SYNC_PANEL_INSET),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
                     Checkbox(checked = inviteHttpAccepted, onCheckedChange = null)
@@ -359,7 +363,8 @@ private fun ConnectForm(controller: SyncController, additional: Boolean, initial
             if (step is ProfileParse.NeedsTransport) {
                 for ((kind, label) in listOf(SyncTransportKind.SERVER to R.string.sync_transport_server, SyncTransportKind.WEBDAV to R.string.sync_transport_webdav)) {
                     Row(
-                        Modifier.fillMaxWidth().selectable(selected = transport == kind, role = Role.RadioButton, onClick = { transport = kind }),
+                        Modifier.widenBy(SYNC_PANEL_INSET).selectable(selected = transport == kind, role = Role.RadioButton, onClick = { transport = kind })
+                            .padding(horizontal = SYNC_PANEL_INSET),
                         verticalAlignment = Alignment.CenterVertically,
                     ) {
                         RadioButton(selected = transport == kind, onClick = null)
@@ -391,7 +396,8 @@ private fun ConnectForm(controller: SyncController, additional: Boolean, initial
             val needsHttpConfirm = isCleartextOutsideLan(url)
             if (needsHttpConfirm) {
                 Row(
-                    Modifier.fillMaxWidth().toggleable(value = publicHttpAccepted, role = Role.Checkbox, onValueChange = { publicHttpAccepted = it }),
+                    Modifier.widenBy(SYNC_PANEL_INSET).toggleable(value = publicHttpAccepted, role = Role.Checkbox, onValueChange = { publicHttpAccepted = it })
+                        .padding(horizontal = SYNC_PANEL_INSET),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
                     Checkbox(checked = publicHttpAccepted, onCheckedChange = null)
@@ -503,7 +509,7 @@ private fun ConnectedPanel(controller: SyncController, profile: SyncProfile) {
     // Saveable (a plain Boolean) so the dialog, and the invitation held by its ViewModel, survive a rotation.
     var inviting by rememberSaveable { mutableStateOf(false) }
 
-    Column(Modifier.padding(horizontal = 16.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+    Column(Modifier.padding(horizontal = SYNC_PANEL_INSET), verticalArrangement = Arrangement.spacedBy(6.dp)) {
         Text(stringResource(R.string.sync_connected_to, profile.profileName?.takeIf { it.isNotBlank() } ?: profile.url))
         Text(scopeText(profile.scope), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
         if (unreadable) {
@@ -521,7 +527,9 @@ private fun ConnectedPanel(controller: SyncController, profile: SyncProfile) {
         if (!unreadable) {
             // The look rides along with the notes (docs/specs/2026-11-01-sync-look-design.md): per profile, off by default.
             Row(
-                Modifier.fillMaxWidth().toggleable(value = profile.syncLook, role = Role.Switch, onValueChange = { controller.setSyncLook(profile.id, it) }),
+                // Widened over the panel's own padding so the pressed highlight runs edge to edge; the padding after `toggleable` puts the text back.
+                Modifier.widenBy(SYNC_PANEL_INSET).toggleable(value = profile.syncLook, role = Role.Switch, onValueChange = { controller.setSyncLook(profile.id, it) })
+                    .padding(horizontal = SYNC_PANEL_INSET),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 Column(Modifier.weight(1f).padding(end = 16.dp, top = 6.dp, bottom = 6.dp)) {

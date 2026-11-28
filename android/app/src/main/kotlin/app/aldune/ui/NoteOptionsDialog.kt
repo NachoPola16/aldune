@@ -250,8 +250,12 @@ private val SHEET_TEXT_INSET = 12.dp
 /** Moves a text button left by its own inner padding, so its text starts where the headings of the sheet start. */
 private fun Modifier.alignWithHeadings(): Modifier = this.offset(x = -SHEET_TEXT_INSET)
 
-/** Makes the element [by] wider on each side without changing the space it takes in its parent. */
-private fun Modifier.widenBy(by: androidx.compose.ui.unit.Dp): Modifier = this.layout { measurable, constraints ->
+/**
+ * Makes the element [by] wider on each side without changing the space it takes in its parent. Put it BEFORE `clickable`/`toggleable`/
+ * `selectable` so the pressed feedback spans the widened row, and add the same amount of padding AFTER them to keep the content where it was
+ * (a parent's horizontal padding would otherwise clip the ripple short of the screen edges).
+ */
+internal fun Modifier.widenBy(by: androidx.compose.ui.unit.Dp): Modifier = this.layout { measurable, constraints ->
     val extra = by.roundToPx()
     val width = constraints.maxWidth + 2 * extra
     val placeable = measurable.measure(constraints.copy(minWidth = width, maxWidth = width))
@@ -267,7 +271,7 @@ private fun CollapsibleSection(
     Row(
         // The highlight (pressed / focused) runs 12 dp beyond the text on each side, so the title is not flush against the band's edge, and
         // the row is widened by the same amount so the title still lines up with the other headings.
-        Modifier.widenBy(SHEET_TEXT_INSET).heightIn(min = 48.dp).clip(RoundedCornerShape(8.dp)).clickable(role = Role.Button) { open = !open; onToggle() }
+        Modifier.widenBy(SHEET_TEXT_INSET).heightIn(min = 48.dp).clip(LocalNoteLook.current.rowShape(8.dp)).clickable(role = Role.Button) { open = !open; onToggle() }
             .padding(horizontal = SHEET_TEXT_INSET)
             .semantics { stateDescription = if (open) "▲" else "▼" },
         verticalAlignment = Alignment.CenterVertically,
